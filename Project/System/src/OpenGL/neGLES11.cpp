@@ -3,52 +3,232 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//  OpenGL ES 1.1 backend. The enum<->GL mapping helpers below are decoded from
-//  the binary; the remaining virtual wrappers follow the same
-//  "validate against _MAX, then call the matching glXxx" pattern and are filled
-//  in progressively.
+//  OpenGL ES 1.1 backend. Every enum<->GL mapping table below is decoded
+//  byte-for-byte from the binary's __const region (addresses cited per table);
+//  the wrapper bodies follow the decompiled "validate against _MAX, index the
+//  table, call the matching glXxx" pattern (mapper functions cited per method).
 //
 
 #include <cassert>
 
 #include <OpenGLES/ES1/gl.h>
+#include <OpenGLES/ES1/glext.h>
 
 #include "neGLES11.h"
 
 namespace ne {
 
-// Ghidra: RenderKindToGLRenderKind @ 0x12f64 (table @ DAT_0012e110).
-static GLenum RenderKindToGLRenderKind(int kind) {
+// Ghidra: RenderKindToGLRenderKind @ FUN_00012f64 (table @ DAT_0012e110): the GL
+// ES OES framebuffer attachment points.
+static GLenum RenderKindToGL(int kind) {
     assert(kind >= 0 && kind < neIGLES::RENDER_KIND_MAX);
     static const GLenum kTable[neIGLES::RENDER_KIND_MAX] = {
-        GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN,  // TODO: confirm @ DAT_0012e110
+        GL_COLOR_ATTACHMENT0_OES,   // 0x8ce0
+        GL_DEPTH_ATTACHMENT_OES,    // 0x8d00
+        GL_STENCIL_ATTACHMENT_OES,  // 0x8d20
     };
     return kTable[kind];
 }
 
-// Ghidra: TexParamTypeFuncToGLType @ 0x13864 (table @ DAT_0012e2d0).
-static GLenum TexParamTypeFuncToGLType(int type) {
-    assert(type >= 0 && type < neIGLES::TEX_PARAM_TYPE_MAX);
-    static const GLenum kTable[neIGLES::TEX_PARAM_TYPE_MAX] = {
-        GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER,
-        GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T,
+// Renderbuffer storage format per RenderType (pairs 1:1 with RenderKind; no
+// separate DAT table — the attach path is inlined).
+static GLenum RenderTypeToGLFormat(int type) {
+    assert(type >= 0 && type < neIGLES::RENDER_TYPE_MAX);
+    static const GLenum kTable[neIGLES::RENDER_TYPE_MAX] = {
+        GL_RGBA8_OES, GL_DEPTH_COMPONENT16_OES, GL_STENCIL_INDEX8_OES,
     };
     return kTable[type];
 }
 
-// Ghidra: TextureFormatToGLFormat @ ~0x13970 (format 1 -> GL_RGB, 2 -> GL_RGBA).
-static GLenum TextureFormatToGLFormat(int format) {
-    assert(format >= 0 && format < neIGLES::TEX_FORMAT_MAX);
-    switch (format) {
-        case neIGLES::TEX_FORMAT_ALPHA: return GL_ALPHA;
-        case neIGLES::TEX_FORMAT_RGB:   return GL_RGB;
-        case neIGLES::TEX_FORMAT_RGBA:  return GL_RGBA;
+// Ghidra: setMatrixMode @ FUN_00013110 (table @ DAT_0012e11c). Index 0 is the
+// GL_MODELVIEW out-of-range default; 1..3 index the table.
+static GLenum MatrixModeToGL(int mode) {
+    assert(mode >= 0 && mode < neIGLES::MATRIX_MODE_MAX);
+    if (mode - 1U < 3U) {
+        static const GLenum kTable[3] = {
+            GL_PROJECTION,         // 0x1701
+            GL_TEXTURE,            // 0x1702
+            GL_MATRIX_PALETTE_OES, // 0x8840
+        };
+        return kTable[mode - 1];
     }
-    assert(0);
-    return 0;
+    return GL_MODELVIEW;           // 0x1700
 }
 
-// Ghidra: GLValueToTexParamValue @ 0x138cc (reverse map of glGetTexParameteriv).
+// glHint targets. Ghidra: table @ DAT_0012e290 (5 entries).
+static GLenum HintTargetToGL(int target) {
+    assert(target >= 0 && target < neIGLES::HINT_MAX);
+    static const GLenum kTable[neIGLES::HINT_MAX] = {
+        GL_FOG_HINT,                    // 0x0c54
+        GL_GENERATE_MIPMAP_HINT,        // 0x8192
+        GL_LINE_SMOOTH_HINT,            // 0x0c52
+        GL_PERSPECTIVE_CORRECTION_HINT, // 0x0c50
+        GL_POINT_SMOOTH_HINT,           // 0x0c51
+    };
+    return kTable[target];
+}
+
+// glFog(GL_FOG_MODE) modes. Ghidra: table @ DAT_0012e27c (3 entries).
+static GLenum FogModeToGL(int mode) {
+    assert(mode >= 0 && mode < neIGLES::FOG_MODE_MAX);
+    static const GLenum kTable[neIGLES::FOG_MODE_MAX] = {
+        GL_LINEAR, // 0x2601
+        GL_EXP,    // 0x0800
+        GL_EXP2,   // 0x0801
+    };
+    return kTable[mode];
+}
+
+// glEnableClientState array targets. Ghidra: table @ DAT_0012e25c (8 entries).
+static GLenum ClientStateToGL(int state) {
+    assert(state >= 0 && state < neIGLES::CS_MAX);
+    static const GLenum kTable[neIGLES::CS_MAX] = {
+        GL_MATRIX_PALETTE_OES,     // 0x8840
+        GL_COLOR_ARRAY,            // 0x8076
+        GL_MATRIX_INDEX_ARRAY_OES, // 0x8844
+        GL_NORMAL_ARRAY,           // 0x8075
+        GL_POINT_SIZE_ARRAY_OES,   // 0x8b9c
+        GL_TEXTURE_COORD_ARRAY,    // 0x8078
+        GL_VERTEX_ARRAY,           // 0x8074
+        GL_WEIGHT_ARRAY_OES,       // 0x86ad
+    };
+    return kTable[state];
+}
+
+// glEnable / glDisable capabilities. Ghidra: table @ DAT_0012e1d0 (35 entries).
+static GLenum EnableStateToGL(int state) {
+    assert(state >= 0 && state < neIGLES::ES_MAX);
+    static const GLenum kTable[neIGLES::ES_MAX] = {
+        GL_ALPHA_TEST,               // 0x0bc0
+        GL_BLEND,                    // 0x0be2
+        GL_COLOR_LOGIC_OP,           // 0x0bf2
+        GL_CLIP_PLANE0,              // 0x3000
+        GL_CLIP_PLANE1,              // 0x3001
+        GL_CLIP_PLANE2,              // 0x3002
+        GL_CLIP_PLANE3,              // 0x3003
+        GL_CLIP_PLANE4,              // 0x3004
+        GL_CLIP_PLANE5,              // 0x3005
+        GL_COLOR_MATERIAL,           // 0x0b57
+        GL_CULL_FACE,                // 0x0b44
+        GL_DEPTH_TEST,               // 0x0b71
+        GL_DITHER,                   // 0x0bd0
+        GL_FOG,                      // 0x0b60
+        GL_LIGHT0,                   // 0x4000
+        GL_LIGHT1,                   // 0x4001
+        GL_LIGHT2,                   // 0x4002
+        GL_LIGHT3,                   // 0x4003
+        GL_LIGHT4,                   // 0x4004
+        GL_LIGHT5,                   // 0x4005
+        GL_LIGHT6,                   // 0x4006
+        GL_LIGHT7,                   // 0x4007
+        GL_LIGHTING,                 // 0x0b50
+        GL_LINE_SMOOTH,              // 0x0b20
+        GL_MULTISAMPLE,              // 0x809d
+        GL_NORMALIZE,                // 0x0ba1
+        GL_POINT_SMOOTH,             // 0x0b10
+        GL_POINT_SPRITE_OES,         // 0x8861
+        GL_POLYGON_OFFSET_FILL,      // 0x8037
+        GL_RESCALE_NORMAL,           // 0x803a
+        GL_SAMPLE_ALPHA_TO_COVERAGE, // 0x809e
+        GL_SAMPLE_ALPHA_TO_ONE,      // 0x809f
+        GL_SAMPLE_COVERAGE,          // 0x80a0
+        GL_SCISSOR_TEST,             // 0x0c11
+        GL_TEXTURE_2D,               // 0x0de1
+    };
+    return kTable[state];
+}
+
+// glCullFace. Ghidra: table @ DAT_0012e1c0 (3 entries).
+static GLenum CullFaceToGL(int face) {
+    assert(face >= 0 && face < neIGLES::CULL_FACE_MAX);
+    static const GLenum kTable[neIGLES::CULL_FACE_MAX] = {
+        GL_FRONT,          // 0x0404
+        GL_BACK,           // 0x0405
+        GL_FRONT_AND_BACK, // 0x0408
+    };
+    return kTable[face];
+}
+
+// Depth/alpha compare functions. Ghidra: table @ DAT_0012e130 (8 entries).
+static GLenum CompareFuncToGL(int func) {
+    assert(func >= 0 && func < neIGLES::COMPARE_FUNC_MAX);
+    static const GLenum kTable[neIGLES::COMPARE_FUNC_MAX] = {
+        GL_NEVER,    // 0x0200
+        GL_LESS,     // 0x0201
+        GL_EQUAL,    // 0x0202
+        GL_LEQUAL,   // 0x0203
+        GL_GREATER,  // 0x0204
+        GL_NOTEQUAL, // 0x0205
+        GL_GEQUAL,   // 0x0206
+        GL_ALWAYS,   // 0x0207
+    };
+    return kTable[func];
+}
+
+// GL src blend factors. Ghidra: table @ DAT_0012e170 (9 entries; setBlendFunc
+// FUN_00013a34 asserts src < BLEND_SRC_VALUE_MAX at neGLES11.cpp:0xa8-0xa9).
+static GLenum BlendSrcToGL(int src) {
+    assert(src >= 0 && src < neIGLES::BLEND_SRC_VALUE_MAX);
+    static const GLenum kTable[neIGLES::BLEND_SRC_VALUE_MAX] = {
+        GL_ZERO,                // 0x0000
+        GL_ONE,                 // 0x0001
+        GL_DST_COLOR,           // 0x0306
+        GL_ONE_MINUS_DST_COLOR, // 0x0307
+        GL_SRC_ALPHA,           // 0x0302
+        GL_ONE_MINUS_SRC_ALPHA, // 0x0303
+        GL_DST_ALPHA,           // 0x0304
+        GL_ONE_MINUS_DST_ALPHA, // 0x0305
+        GL_SRC_ALPHA_SATURATE,  // 0x0308
+    };
+    return kTable[src];
+}
+
+// GL dest blend factors. Ghidra: table @ DAT_0012e1a0 (8 entries; setBlendFunc
+// FUN_00013a34 asserts dest < BLEND_DEST_VALUE_MAX at neGLES11.cpp:0xbd-0xbe).
+static GLenum BlendDestToGL(int dest) {
+    assert(dest >= 0 && dest < neIGLES::BLEND_DEST_VALUE_MAX);
+    static const GLenum kTable[neIGLES::BLEND_DEST_VALUE_MAX] = {
+        GL_ZERO,                // 0x0000
+        GL_ONE,                 // 0x0001
+        GL_SRC_COLOR,           // 0x0300
+        GL_ONE_MINUS_SRC_COLOR, // 0x0301
+        GL_SRC_ALPHA,           // 0x0302
+        GL_ONE_MINUS_SRC_ALPHA, // 0x0303
+        GL_DST_ALPHA,           // 0x0304
+        GL_ONE_MINUS_DST_ALPHA, // 0x0305
+    };
+    return kTable[dest];
+}
+
+// Ghidra: TexParamTypeFuncToGLType @ FUN_00013864 (table @ DAT_0012e2d0).
+static GLenum TexParamTypeToGL(int type) {
+    assert(type >= 0 && type < neIGLES::TEX_PARAM_TYPE_MAX);
+    static const GLenum kTable[neIGLES::TEX_PARAM_TYPE_MAX] = {
+        GL_TEXTURE_MAG_FILTER,  // 0x2800
+        GL_TEXTURE_MIN_FILTER,  // 0x2801
+        GL_TEXTURE_WRAP_S,      // 0x2802
+        GL_TEXTURE_WRAP_T,      // 0x2803
+    };
+    return kTable[type];
+}
+
+// glTexParameter value forward map. Ghidra: table @ DAT_0012e150 (8 entries).
+static GLint TexParamValueToGL(int value) {
+    assert(value >= 0 && value < neIGLES::TEX_PARAM_VALUE_MAX);
+    static const GLint kTable[neIGLES::TEX_PARAM_VALUE_MAX] = {
+        GL_NEAREST,                // 0x2600
+        GL_LINEAR,                 // 0x2601
+        GL_NEAREST_MIPMAP_NEAREST, // 0x2700
+        GL_LINEAR_MIPMAP_NEAREST,  // 0x2701
+        GL_NEAREST_MIPMAP_LINEAR,  // 0x2702
+        GL_LINEAR_MIPMAP_LINEAR,   // 0x2703
+        GL_CLAMP_TO_EDGE,          // 0x812f
+        GL_REPEAT,                 // 0x2901
+    };
+    return kTable[value];
+}
+
+// Ghidra: GLValueToTexParamValue @ FUN_000138cc (reverse of glGetTexParameteriv).
 static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
     switch (v) {
         case GL_NEAREST:                return neIGLES::TEX_PARAM_VALUE_NEAREST;
@@ -64,44 +244,127 @@ static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
     return neIGLES::TEX_PARAM_VALUE_NEAREST;
 }
 
+// Texture upload format. Ghidra: TextureFormatToGLFormat @ FUN_00013970.
+static GLenum TextureFormatToGL(int format) {
+    switch (format) {
+        case neIGLES::TEX_FORMAT_ALPHA: return GL_ALPHA;
+        case neIGLES::TEX_FORMAT_RGB:   return GL_RGB;
+        case neIGLES::TEX_FORMAT_RGBA:  return GL_RGBA;
+    }
+    assert(0);
+    return 0;
+}
+
 neGLES_11::neGLES_11() = default;
 neGLES_11::~neGLES_11() = default;
 
-// Ghidra: @ 0x13970 — upload a 2D texture (GL_TEXTURE_2D, level 0, UNSIGNED_BYTE).
+void neGLES_11::enable(EnableState state) {
+    glEnable(EnableStateToGL(state));
+}
+
+void neGLES_11::disable(EnableState state) {
+    glDisable(EnableStateToGL(state));
+}
+
+void neGLES_11::enableClientState(ClientState state) {
+    glEnableClientState(ClientStateToGL(state));
+}
+
+void neGLES_11::disableClientState(ClientState state) {
+    glDisableClientState(ClientStateToGL(state));
+}
+
+// Ghidra: FUN_00013110 — caches the mode (ivar 0x2c) and only re-issues
+// glMatrixMode on change.
+void neGLES_11::setMatrixMode(MatrixMode mode) {
+    if (_matrixMode == static_cast<unsigned>(mode)) {
+        return;
+    }
+    _matrixMode = mode;
+    glMatrixMode(MatrixModeToGL(mode));
+}
+
+void neGLES_11::setHint(Hint target, int mode) {
+    glHint(HintTargetToGL(target), static_cast<GLenum>(mode));
+}
+
+void neGLES_11::setFogMode(FogMode mode) {
+    glFogx(GL_FOG_MODE, static_cast<GLfixed>(FogModeToGL(mode)));
+}
+
+void neGLES_11::setCullFace(CullFace face) {
+    glCullFace(CullFaceToGL(face));
+}
+
+void neGLES_11::setFrontFace(FrontFace face) {
+    assert(face >= 0 && face < FRONT_FACE_MAX);
+    glFrontFace(face == FRONT_FACE_CW ? GL_CW : GL_CCW);
+}
+
+// Ghidra: FUN_00013a34 — caches (equation 0x19c, src 0x1a0, dest 0x1a4), skips
+// redundant calls, then glBlendEquationOES(equation); glBlendFunc(src, dest).
+void neGLES_11::setBlendFunc(BlendSrcValue src, BlendDestValue dest, unsigned equation) {
+    if (_blendSrc == static_cast<unsigned>(src) &&
+        _blendDest == static_cast<unsigned>(dest) &&
+        _blendEquation == equation) {
+        return;
+    }
+    _blendEquation = equation;
+    _blendSrc = src;
+    _blendDest = dest;
+    GLenum glSrc = BlendSrcToGL(src);
+    glBlendEquationOES(equation);
+    glBlendFunc(glSrc, BlendDestToGL(dest));
+}
+
+void neGLES_11::setDepthFunc(DepthTestFunc func) {
+    glDepthFunc(CompareFuncToGL(func));
+}
+
+void neGLES_11::setAlphaFunc(AlphaTestFunc func, float ref) {
+    glAlphaFunc(CompareFuncToGL(func), ref);
+}
+
+// Ghidra: FUN_00013970 — upload a 2D texture (GL_TEXTURE_2D, level 0, UNSIGNED_BYTE).
 void neGLES_11::texImage2D(TexFormat format, int width, int height, const void *pixels) {
-    GLenum glFormat = TextureFormatToGLFormat(format);
+    GLenum glFormat = TextureFormatToGL(format);
     glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0,
                  glFormat, GL_UNSIGNED_BYTE, pixels);
 }
 
-// Ghidra: @ 0x138cc — read a texture parameter back as our enum.
+void neGLES_11::setTexParameter(TexParamType type, TexParamValue value) {
+    glTexParameteri(GL_TEXTURE_2D, TexParamTypeToGL(type), TexParamValueToGL(value));
+}
+
+// Ghidra: FUN_000138cc — read a texture parameter back as our enum.
 neIGLES::TexParamValue neGLES_11::getTexParameter(TexParamType type) {
     GLint value = 0;
-    glGetTexParameteriv(GL_TEXTURE_2D, TexParamTypeFuncToGLType(type), &value);
+    glGetTexParameteriv(GL_TEXTURE_2D, TexParamTypeToGL(type), &value);
     return GLValueToTexParamValue(value);
 }
 
-// --- Remaining wrappers: validate then call the matching GL ES 1.1 entry point.
-//     Pattern established above; bodies filled progressively.
-void neGLES_11::enable(EnableState) {}
-void neGLES_11::disable(EnableState) {}
-void neGLES_11::enableClientState(ClientState) {}
-void neGLES_11::disableClientState(ClientState) {}
-void neGLES_11::setHint(Hint, int) {}
-void neGLES_11::setFogMode(FogMode) {}
-void neGLES_11::setCullFace(CullFace) {}
-void neGLES_11::setFrontFace(FrontFace) {}
-void neGLES_11::setBlendFunc(BlendSrcValue, BlendDestValue) {}
-void neGLES_11::setDepthFunc(DepthTestFunc) {}
-void neGLES_11::setAlphaFunc(AlphaTestFunc, float) {}
-
-void neGLES_11::setTexParameter(TexParamType type, TexParamValue value) {
-    // Forward map (TexParamValueToGLValue) is the inverse of GLValueToTexParamValue.
-    glTexParameteri(GL_TEXTURE_2D, TexParamTypeFuncToGLType(type), value);  // TODO: map value->GL
+// Ghidra: FUN_00013290 — invalidate any cached binding referring to this buffer
+// (ivars 0x44/0x50/0x5c/0x6c and the 8-slot texture array at 0xb4), then delete.
+void neGLES_11::deleteBuffer(unsigned buffer) {
+    if (_boundArrayBuffer == buffer) _boundArrayBuffer = 0;
+    if (_boundElementBuffer == buffer) _boundElementBuffer = 0;
+    if (_boundBuffer2 == buffer) _boundBuffer2 = 0;
+    if (_boundBuffer3 == buffer) _boundBuffer3 = 0;
+    for (auto &tex : _boundTextures) {
+        if (tex == buffer) {
+            tex = 0;
+        }
+    }
+    GLuint name = buffer;
+    glDeleteBuffers(1, &name);
 }
 
-void neGLES_11::draw(RenderKind kind, RenderType, int first, int count) {
-    glDrawArrays(RenderKindToGLRenderKind(kind), first, count);
+// Attach a renderbuffer at the given attachment point (GL ES OES FBO).
+void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned renderbuffer) {
+    glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
+    glRenderbufferStorageOES(GL_RENDERBUFFER_OES, RenderTypeToGLFormat(type), 0, 0);
+    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
+                                 GL_RENDERBUFFER_OES, renderbuffer);
 }
 
 }  // namespace ne
