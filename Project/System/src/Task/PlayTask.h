@@ -28,6 +28,12 @@ public:
 void PlayTaskInit(void *playData);       // Ghidra: FUN_0002e2d8 (allocate the scene)
 void PlayTaskGotoResult(void *playData); // Ghidra: FUN_0003003c (transition to results)
 
+// The current running score/gauge value used for end-of-song rank SEs.
+int PlayCurrentScore();                  // Ghidra: FUN_0002ff7c
+// Fire the song-clear rank jingle(s) chosen by the final score. Ghidra: the SE-
+// instance cascade in PlayTask_update state 6 (FUN_0002cba4/0002cac0/0002cb24).
+void PlayEndResultSe(void *playData, int score);
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

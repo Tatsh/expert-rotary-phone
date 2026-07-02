@@ -18,9 +18,14 @@
 // build + results-transition seams).
 
 namespace {
+inline char *pd(PlayTask *t) { return reinterpret_cast<char *>(t); }
 inline int &state(PlayTask *t) {   // play-data state @ +0x9fc
-    return *reinterpret_cast<int *>(reinterpret_cast<char *>(t) + 0x9fc);
+    return *reinterpret_cast<int *>(pd(t) + 0x9fc);
 }
+inline int &score(PlayTask *t)        { return *reinterpret_cast<int *>(pd(t) + 0x9b0); }  // gauge/score readout
+inline bool &endStarted(PlayTask *t)  { return *reinterpret_cast<bool *>(pd(t) + 0x9c8); } // song has ended
+inline bool &endSePlayed(PlayTask *t) { return *reinterpret_cast<bool *>(pd(t) + 0x9c9); } // clear/rank SE fired
+inline int &endPos(PlayTask *t)       { return *reinterpret_cast<int *>(pd(t) + 0x9f8); }  // position at song end
 }
 
 PlayTask::PlayTask() = default;
@@ -79,14 +84,37 @@ void PlayTask::update(int /*deltaMs*/) {
         aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0);
         PlayJudge_update(playData, nullptr, nullptr, 0);
         return;
-    case 6: {   // *** PLAYING ***: run the note judge/render pass, then combo SE etc.
+    case 6: {   // *** PLAYING ***: judge/render pass, gauge, then song-end handling
         PlayJudge_update(playData, touchXY, touchIds, touchCount);
-        // Combo-milestone SEs, gauge update, and song-end detection follow (they read
-        // the current position via NoteMng::getCurrentPosition and the tally).
-        (void)nm; (void)audio;
-        if (backTap) {   // pause: freeze the play and open the menu
-            NoteMng::shared().onResignActivePushHook();
+
+        // Cache the current gauge/score for the end-of-song rank SEs. Ghidra: FUN_0002ff7c.
+        score(this) = PlayCurrentScore();
+
+        // Song-end: once NoteMng has emitted its last note, latch the end position and,
+        // ~1s later, fire the clear + rank SEs exactly once. Ghidra: the FUN_0003181c
+        // guard + the +0x9c8/+0x9c9/+0x9f8 bookkeeping in state 6.
+        if (!endStarted(this) && nm.isFinished()) {
+            int pos = nm.getCurrentPosition();
+            if (endPos(this) == 0) {
+                endPos(this) = pos;
+            }
+            if (!endSePlayed(this) && (unsigned)(pos - endPos(this)) > 999) {
+                endSePlayed(this) = true;
+                [audio playSe:nil resourceId:0];         // the song-clear SE
+                PlayEndResultSe(playData, score(this));  // rank jingles keyed on the score
+            }
+        }
+
+        if (backTap) {   // a held back tap freezes the play and opens the pause menu
+            nm.onResignActivePushHook();
             state(this) = 5;
+            break;
+        }
+
+        // ~3s after the song ends, hand off to the fade-out.
+        if (endPos(this) != 0 &&
+            (unsigned)(nm.getCurrentPosition() - endPos(this)) >= 3000) {
+            state(this) = 8;
         }
         break;
     }

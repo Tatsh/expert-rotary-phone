@@ -178,6 +178,10 @@ public:
     // Ghidra: @ 0x34164 (used pervasively: 12 call sites).
     int getCurrentPosition() const;
 
+    // YES once the chart has emitted its last note and no notes remain live (the
+    // play-loop watches this to end the song). Ghidra: FUN_0003181c.
+    bool isFinished() const;
+
     // Fill `out` with the render data of the `index`-th still-judgeable active
     // note (kind < 10, not flagged 0x80). Ghidra: GetNoteObject @ 0x346c0, which
     // delegates the field copy to copyNoteRenderData (@ 0x34758).
