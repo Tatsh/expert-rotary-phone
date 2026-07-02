@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
+#import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
 #import "CharaManager.h"
@@ -18,12 +19,6 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
-
-// Title screen sprite/UI object (Ghidra: ctor FUN_0002c7d8, init FUN_0002c834,
-// draw FUN_0002caf8, tick FUN_0002ca9c) — a separate reconstruction unit.
-extern void *TitleViewCreate(const char *imageFolder);   // FUN_0002c7d8 + FUN_0002c834
-extern void TitleViewTick(void *view);                   // FUN_0002caf8
-extern void TitleViewRelease(void *view);                // FUN_0002ca9c
 
 // Aep resource-group load/unload for a named scene (Ghidra: FUN_0000f758 / FUN_0000f988).
 extern void AepLoadGroup(AepManager *aep, int slot, const char *name);
@@ -79,7 +74,8 @@ void TitleTask::setup() {
         m_titleFrames = 0x24;
         imageFolder = "IMG_IPAD";
     }
-    m_titleView = (TitleView *)TitleViewCreate(imageFolder);
+    m_titleLayer = new AepLyrCtrl();
+    m_titleLayer->init(1, imageFolder);   // group 1, the device image folder
 
     AudioManager *audio = [AudioManager sharedManager];
     NSString *sePath = [NSBundle.mainBundle pathForResource:@"v10" ofType:@"m4a"];
@@ -94,9 +90,9 @@ void TitleTask::setup() {
 // main-menu task.
 void TitleTask::finish() {
     [[AudioManager sharedManager] releaseSe:0 resourceId:0];
-    if (m_titleView != nullptr) {
-        TitleViewRelease(m_titleView);
-        m_titleView = nullptr;
+    if (m_titleLayer != nullptr) {
+        delete m_titleLayer;   // its dtor unlinks from the active-layer list
+        m_titleLayer = nullptr;
     }
     AepUnloadGroup(m_aep, 1);
     if (m_versionLabel != nil) {
@@ -154,7 +150,7 @@ void TitleTask::update(int /*deltaMs*/) {
         setup();
         [[AudioManager sharedManager] playBgm:0];
         m_aep->playTransition(1, 0x19, 0);   // fade in
-        TitleViewTick(m_titleView);
+        m_titleLayer->play();                // start the title animation
         m_state = 1;
         break;
     case 1:
@@ -252,10 +248,9 @@ void TitleTask::update(int /*deltaMs*/) {
         break;
     }
 
-    // Per-frame title draw (Ghidra tail: FUN_0002c924 / FUN_0002c52c).
-    if (m_titleView != nullptr) {
-        TitleViewTick(m_titleView);
-    }
+    // Per-frame title UI update + draw (Ghidra tail, run every state: FUN_0002c924
+    // updates the version label / touch buttons; FUN_0002c52c draws the title
+    // elements through the Aep layer list).
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

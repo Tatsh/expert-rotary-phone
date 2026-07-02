@@ -22,8 +22,14 @@ public:
 
     virtual void draw();              // vtable @ PTR_LAB_0002c82c
 
-    // Bind a texture / named resource to this layer. Ghidra: FUN_0002c834.
+    // Bind a texture / named resource to this layer. Ghidra: AepLyrCtrl_init
+    // (FUN_0002c834): resolves the layer via AepManager::getLyrNo/layerFrameCount and
+    // links into the active-layer list.
     void init(int group, const char *name);
+
+    // Start playing the layer's animation (Ghidra: AepLyrCtrl_play FUN_0002caf8):
+    // enters play state; a fully-faded layer seeks to its last frame, else frame 0.
+    void play();
 
     float z() const { return m_z; }
     bool isVisible() const { return m_visible; }
@@ -38,10 +44,14 @@ protected:
     int m_width;        // +0x20  (default 100)
     int m_height;       // +0x24  (default 100)
     float m_grpA[3];    // +0x28..0x30  (color or uv)  [roles TBD]
-    float m_grpB[3];    // +0x34..0x40  (scale or rotation) [roles TBD]
+    int m_blend;        // +0x34  blend mode (default 0x20)
+    int m_lyr;          // +0x38  resolved layer handle (AepManager::getLyrNo)
+    int m_frameCount;   // +0x3c  layer length (AepManager::layerFrameCount)
+    int m_frame;        // +0x40  current animation frame
     float m_alpha;      // +0x44  (default 1.0)
     float m_grpC[4];    // +0x48..0x54
     bool m_flag55;      // +0x55
+    int m_playState;    // +0x58  0 idle, 2 playing
     bool m_visible;     // +0x59
 };
 

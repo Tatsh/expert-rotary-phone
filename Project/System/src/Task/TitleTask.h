@@ -21,7 +21,7 @@
 
 @class CustomButton;
 class AepManager;
-class TitleView;   // the title screen's sprite/UI object (Ghidra ctor FUN_0002c7d8)
+class AepLyrCtrl;   // the title screen's animated sprite layer (Ghidra ctor FUN_0002c7d8)
 
 class TitleTask : public C_TASK {
 public:
@@ -35,7 +35,7 @@ private:
     void buildConversionButton();  // state-3 UI: the "conversion" button + code alert
 
     AepManager *m_aep = nullptr;         // +0x28 render manager
-    TitleView *m_titleView = nullptr;    // +0x30 title sprite/UI object
+    AepLyrCtrl *m_titleLayer = nullptr;  // +0x30 title animated sprite layer
     NSArray *m_dlFileList = nil;         // +0x34 DownloadMain's file-list result
     NSString *m_versionLabel = nil;      // +0x38 retained "Ver <n>"
     int m_titleSe = 0;                   // +0x3c title SE handle
