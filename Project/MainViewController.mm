@@ -11,9 +11,23 @@
 #import "MainViewController.h"
 #import "AcceptPolicyViewController.h"
 #import "AepManager.h"
+#import "FriendMngTopSplitViewController.h"
+#import "FriendMngTopViewController.h"
+#import "InputConversionPassViewController.h"
+#import "MapSelectSplitViewController.h"
+#import "MapSelectViewController.h"
+#import "SettingTableSplitViewController.h"
+#import "SettingTableViewController.h"
+#import "DefaultDataDownloadView.h"
+#import "DownloadMain.h"
+#import "neEngineBridge.h"
 #import "C_TASK.h"
 #import "neFrameTimer.h"
 #import "neGLView.h"
+
+// Scene-manager input-mode set, called when entering the conversion-pass screen
+// (Ghidra: FUN_0002c724(&DAT_00187b74, mode)) — a distinct engine reconstruction unit.
+extern "C" void neSceneSetInputMode(int mode);
 
 // Minimum seconds between rendered frames (Ghidra: DAT_0000be7c). Rendering is
 // skipped when the accumulated render time has not yet reached this.
@@ -32,6 +46,18 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     BOOL m_flgCapture;
     UIImage *m_capturedImg;
     AcceptPolicyViewController *_acceptPolicyCtrl;   // first-run policy modal
+    // Modal child controllers. On phone each screen is hosted in a navigation
+    // controller (…NaviCtrl); on iPad it is a split-view controller (…ViewCtrl).
+    UINavigationController *_settingNaviCtrl;
+    UIViewController *_settingViewCtrl;
+    BOOL _settingViewing;
+    UINavigationController *_mapSelectNaviCtrl;
+    UIViewController *_mapSelectViewCtrl;
+    UINavigationController *_friendMngNaviCtrl;
+    UIViewController *_friendMngViewCtrl;
+    UIViewController *_defaultDlViewController;
+    UINavigationController *_inputNameNaviCtrl;
+    UIViewController *_inputConvPassViewCtrl;
     // Wall-clock stopwatches pacing the task-update and render steps.
     neFrameTimer m_taskTime;
     neFrameTimer m_renderTime;
@@ -100,6 +126,94 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     _acceptPolicyCtrl = [[AcceptPolicyViewController alloc] init];
     [self.view addSubview:_acceptPolicyCtrl.view];
     [_acceptPolicyCtrl startOpenAnimation];
+    [self PauseLoop];
+}
+
+// @ 0xc160 — the settings screen. Phone: SettingTableViewController hosted in a nav
+// controller (with a custom navbar image); iPad: SettingTableSplitViewController.
+- (void)GotoSetting {
+    if (!neSceneManager::isPadDisplay()) {
+        SettingTableViewController *content = [[SettingTableViewController alloc] autorelease];
+        _settingNaviCtrl = [content initAtNavigationController];
+        [_settingNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
+                                             forBarMetrics:UIBarMetricsDefault];
+        [self.view addSubview:_settingNaviCtrl.view];
+        [content startOpenAnimation];
+    } else {
+        SettingTableSplitViewController *split = [[SettingTableSplitViewController alloc] init];
+        _settingViewCtrl = split;
+        [self.view addSubview:split.view];
+        [split startOpenAnimation];
+    }
+    [self PauseLoop];
+    _settingViewing = YES;
+}
+
+// @ 0xc7d8 — the sugoroku map-select screen (nav controller / split view per device).
+- (void)GotoMapSelect {
+    if (!neSceneManager::isPadDisplay()) {
+        MapSelectViewController *content = [[MapSelectViewController alloc] autorelease];
+        _mapSelectNaviCtrl = [content initAtNavigationController];
+        [_mapSelectNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
+                                               forBarMetrics:UIBarMetricsDefault];
+        [self.view addSubview:_mapSelectNaviCtrl.view];
+        [content startOpenAnimation];
+    } else {
+        MapSelectSplitViewController *split = [[MapSelectSplitViewController alloc] init];
+        _mapSelectViewCtrl = split;
+        [self.view addSubview:split.view];
+        [split startOpenAnimation];
+    }
+    [self PauseLoop];
+}
+
+// @ 0xcdc8 — the friend-management top screen (nav controller / split view per device).
+- (void)GotoFriendManage {
+    if (!neSceneManager::isPadDisplay()) {
+        FriendMngTopViewController *content = [[FriendMngTopViewController alloc] autorelease];
+        _friendMngNaviCtrl = [content initAtNavigationController];
+        [self.view addSubview:_friendMngNaviCtrl.view];
+        [content startOpenAnimation];
+    } else {
+        FriendMngTopSplitViewController *split = [[FriendMngTopSplitViewController alloc] init];
+        _friendMngViewCtrl = split;
+        [self.view addSubview:split.view];
+        [split startOpenAnimation];
+    }
+    [self PauseLoop];
+}
+
+// @ 0xd560 — the initial "default data" download screen; built once, seeded with
+// DownloadMain's file list.
+- (void)GotoDefaultDownload {
+    if (_defaultDlViewController != nil) {
+        return;
+    }
+    NSArray *files = [[DownloadMain getInstance] dlFileListDataArray];
+    _defaultDlViewController = [[DefaultDataDownloadView alloc] initWithFileDataArray:files];
+    [self.view addSubview:_defaultDlViewController.view];
+    [_defaultDlViewController startOpenAnimation];
+    [self PauseLoop];
+}
+
+// @ 0xe53c — the conversion-passcode entry screen; built once.
+- (void)GotoInConversionPass {
+    if (_inputConvPassViewCtrl != nil) {
+        return;
+    }
+    neSceneSetInputMode(2);   // Ghidra: FUN_0002c724(&DAT_00187b74, 2) — scene input mode
+    if (!neSceneManager::isPadDisplay()) {
+        InputConversionPassViewController *content =
+            [[InputConversionPassViewController alloc] autorelease];
+        _inputNameNaviCtrl = [content initAtNavigationController];
+        [self.view addSubview:_inputNameNaviCtrl.view];
+        [content startOpenAnimation];
+    } else {
+        InputConversionPassViewController *vc = [[InputConversionPassViewController alloc] init];
+        _inputConvPassViewCtrl = vc;
+        [self.view addSubview:vc.view];
+        [vc startOpenAnimation];
+    }
     [self PauseLoop];
 }
 

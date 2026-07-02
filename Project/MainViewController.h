@@ -34,6 +34,11 @@
 // *EndCallBack tears it down and resumes. This is the app's nav host that the
 // title/menu tasks drive via neSceneManager::rootViewController.
 - (void)GotoAcceptPolicy;               // @ 0xda40
+- (void)GotoSetting;                    // @ 0xc160
+- (void)GotoMapSelect;                  // @ 0xc7d8
+- (void)GotoFriendManage;               // @ 0xcdc8
+- (void)GotoDefaultDownload;            // @ 0xd560
+- (void)GotoInConversionPass;           // @ 0xe53c
 
 @end
 
