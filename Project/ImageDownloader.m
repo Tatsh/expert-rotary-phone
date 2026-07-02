@@ -9,11 +9,18 @@
 
 @implementation ImageDownloader
 
-// Open a connection for `url`; incoming bytes accumulate in activeDownload.
-- (void)startDownloadAtURL:(NSURL *)url {
+// @ 0x5a63c — open a connection for the stored imageURL; incoming bytes accumulate
+// in activeDownload.
+- (void)startDownload {
     self.activeDownload = [NSMutableData data];
+    NSURL *url = [NSURL URLWithString:self.imageURL];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     self.imageConnection = [[[NSURLConnection alloc] initWithRequest:request delegate:self] autorelease];
+}
+
+// @ 0x5a78c
+- (UIImage *)getImage {
+    return self.downloadedImage;
 }
 
 // @ 0x5a724 — stop: drop the delegate, cancel the connection, clear state.
