@@ -76,6 +76,18 @@
 // Whether the initial default download reported failure (read by TitleTask).
 - (BOOL)isDefaultDlFailed;
 
+// The GL view's last captured frame, kept behind a modal so the render loop can pause;
+// the result screen reads it (to know the backdrop is ready) then releases it once its
+// own scene is up. Ghidra: getCapturedImage @ 0xbbac, releaseCapturedImage @ 0xbbbc.
+- (UIImage *)getCapturedImage;
+- (void)releaseCapturedImage;
+
+// Show / hide the "communicating..." overlay while a network save is in flight (the
+// result screen raises it around the score upload). Ghidra: InsertCommunicating @
+// 0xd6a8, DeleteCommunicating @ 0xd744.
+- (void)InsertCommunicating;
+- (void)DeleteCommunicating;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

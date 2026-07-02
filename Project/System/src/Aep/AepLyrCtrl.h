@@ -55,6 +55,14 @@ protected:
     bool m_visible;     // +0x59
 };
 
+// Advance and draw every active animation layer in the global list (the intrusive
+// +0x08 chain from the DAT_00188490 head) for this frame: each playing layer is drawn
+// through AepManager::drawLayer at its current frame, then (when drawOnly == 0) its
+// frame is stepped by its play mode (1 once, 2 loop, 3 once-reverse) and finished
+// layers are marked done. The result screen calls this each update.
+// Ghidra: FUN_0002c924.
+void AepLyrCtrlUpdateAll(int drawOnly);
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

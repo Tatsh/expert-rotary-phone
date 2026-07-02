@@ -34,9 +34,15 @@
     * PlayBuildFieldLayers (16 AepLyrCtrl layers + handle table), PlayLoadCharaTextures.
     * PlayTaskDraw (FUN_00030944) — large per-note draw dispatcher (delegated draw unit,
       like PlayJudge's note-quad geometry).
-    * PlayResultCreateTask (FUN_0003d5bc) — a NEW task class, PlayResultTask (object
-      0x3a0 = C_TASK 0x28 + 0x378 data; ctor just memsets the data + sets the vptr).
-      Its update (FUN_0003d690) is a 13-state result screen (analysed, not yet written):
+    * PlayResultTask (FUN_0003d5bc ctor + FUN_0003d690 update) — DONE: ctor, factory
+      PlayResultCreateTask, update() touch preamble + 13-state dispatch with the
+      lifecycle states reconstructed inline (0 intro, 1 fade-in, 4/7 waits, 8/9
+      communicating, 10/0xb fade-out). Remaining handler bodies (declared, tracked):
+      resultSetup (FUN_0003dfe0), updateResultPresent (case 2: Twitter button + rank
+      cue), updateScoreCount (cases 3/5/6: count-up + result SEs — their playSe source
+      ids need field-tracing), resultGotoNext (FUN_0003f2e0), and the free function
+      AepLyrCtrlUpdateAll (FUN_0002c924, the per-frame layer tick+draw).
+      Original 13-state map (for the handler reconstructions):
         0  enterResult:   FUN_0003dfe0 (result setup) -> playBgm; ->1
         1  transitionIn:  playTransition(1,30,0); play layers +0x214/+0x228/+0x224;
                           [rootVC releaseCapturedImage]; ->2

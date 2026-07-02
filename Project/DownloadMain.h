@@ -54,6 +54,10 @@ typedef struct {
 // Whether the file-list request is in flight (its Downloader is non-nil). @ 0x979d8.
 - (BOOL)isGetDlFileListDownLoading;
 
+// Whether the score-save upload is still in flight (the result screen waits on this
+// before leaving). Ghidra: -[DownloadMain isSaveScoreDownLoading] @ 0x9541c.
+- (BOOL)isSaveScoreDownLoading;
+
 // The parsed file list — an NSArray of NSValue-wrapped DlFileListData. @ 0x999e8.
 - (NSArray *)dlFileListDataArray;
 
