@@ -132,8 +132,8 @@ BOOL gLaunchedFromPush = NO;
     // Kick off the download-list fetch (-1 = full list).
     [[DownloadMain getInstance] startGetDlFileListHttp:-1];
 
-    // Additional C++ engine object bootstrap (operator_new(0x4c); Ghidra:
-    // FUN_0002af58 then FUN_00027f08(obj, 3)). Pending Engine reconstruction.
+    // Create + register the app's boot task at priority 3.
+    neEngine::startBootTask();   // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_,3)
 
     // Start the render/update loop on the root controller.
     [self.viewController SetLoopInterval:1];
@@ -172,7 +172,7 @@ BOOL gLaunchedFromPush = NO;
 - (void)applicationWillResignActive:(UIApplication *)application {
     neEngine::onWillResignActive();            // Ghidra: FUN_0000b278
     if (/* DAT_00187b5a */ gLaunchedFromPush) {
-        // FUN_00034510(&DAT_00173ea4) — engine hook, pending.
+        neEngine::onResignActivePushHook();   // Ghidra: FUN_00034510(&DAT_00173ea4)
     }
     neEngine::onWillResignActive2();           // Ghidra: FUN_0000b35c
 
@@ -190,7 +190,7 @@ BOOL gLaunchedFromPush = NO;
     if (_mainTask)   neEngine::stopMainTask();    // Ghidra: FUN_00030710
     if (_acMainTask) neEngine::stopAcMainTask();  // Ghidra: FUN_0002314c
 
-    // If a resume is pending, pump the loop once so the last frame is flushed.
+    // If a resume is expected, pump the loop once so the last frame is flushed.
     if (_isNecessaryToResume) {
         [self.viewController mainLoop];
         [self.viewController mainLoop];
@@ -199,9 +199,8 @@ BOOL gLaunchedFromPush = NO;
 
 // -[AppDelegate applicationWillEnterForeground:]  @ 0x9728
 - (void)applicationWillEnterForeground:(UIApplication *)application {
-    // Walks the engine's circular observer list (head @ DAT_00188464) notifying
-    // each node via FUN_000188ac. Pending Engine reconstruction.
-    neSceneManager::shared();
+    // Notify every foreground observer (engine observer list, head @ DAT_00188464).
+    neEngine::notifyEnterForeground();   // Ghidra: FUN_000188ac walk
 }
 
 // -[AppDelegate applicationDidBecomeActive:]  @ 0x972c
@@ -300,6 +299,12 @@ BOOL gLaunchedFromPush = NO;
     return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
 }
 
+// -[AppDelegate appAppSupportDirectory] — downloadable data (rhythmin.lv, chr, ...).
++ (NSString *)appAppSupportDirectory {
+    return NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                               NSUserDomainMask, YES).lastObject;
+}
+
 // -[AppDelegate freeFileSystemSize]  @ 0x8be8
 + (unsigned long long)freeFileSystemSize {
     NSDictionary *attrs = [NSFileManager.defaultManager
@@ -323,9 +328,16 @@ BOOL gLaunchedFromPush = NO;
 }
 
 // Known hw.machine identifiers, in the order that defines hardwareType.
-// Ghidra: DAT_00130574 (40 entries). TODO: fill exact identifiers from the table
-// (e.g. "iPhone1,1", "iPhone1,2", "iPhone2,1", ...).
-static const char *const kHardwareModels[40] = { nullptr };
+// Ghidra: DAT_00130574 (40 entries).
+static const char *const kHardwareModels[40] = {
+    "iPhone1,1", "iPhone1,2", "iPhone2,1", "iPhone3,1", "iPhone3,2", "iPhone3,3",
+    "iPhone4,1", "iPhone4,2", "iPhone4,3", "iPhone5,1", "iPhone5,2", "iPhone5,3",
+    "iPhone5,4", "iPhone6,1", "iPhone6,2", "iPod1,1", "iPod2,1", "iPod3,1",
+    "iPod4,1", "iPod5,1", "iPad1,1", "iPad2,1", "iPad2,2", "iPad2,3", "iPad2,4",
+    "iPad3,1", "iPad3,2", "iPad3,3", "iPad3,4", "iPad3,5", "iPad3,6", "iPad4,1",
+    "iPad4,2", "iPad4,3", "iPad2,5", "iPad2,6", "iPad2,7", "iPad4,4", "iPad4,5",
+    "i386",
+};
 
 // -[AppDelegate initHardware]  @ 0xa58c
 // Reads hw.machine, records it as hardwareName, derives hardwareType (table

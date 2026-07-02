@@ -42,6 +42,7 @@
 
 // Documents directory + free-space helpers (class methods).
 + (NSString *)appDocumentsDirectory;      // Ghidra: -[AppDelegate appDocumentsDirectory] (class method)
++ (NSString *)appAppSupportDirectory;     // Application Support dir (downloadable data)
 + (unsigned long long)freeFileSystemSize; // @ 0x... freeFileSystemSize
 
 // Device model / capability probing.

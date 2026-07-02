@@ -60,6 +60,13 @@ namespace neEngine {
     void onDidEnterBackground();     // Ghidra: NEEngine_onDidEnterBackground (FUN_0001bdf8)
     void stopMainTask();             // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
     void stopAcMainTask();           // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
+
+    // Create + register the app's boot task at priority 3.
+    void startBootTask();            // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_,3)
+    // Push-notification resign hook.
+    void onResignActivePushHook();   // Ghidra: FUN_00034510(&DAT_00173ea4)
+    // Notify every foreground observer (observer list head @ DAT_00188464).
+    void notifyEnterForeground();    // Ghidra: FUN_000188ac walk
 }
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -27,6 +27,7 @@ static const int kTreasureMusicIds[9] = {
     NSMutableDictionary *m_PurchasedMusicDictionaris;
     NSMutableDictionary *m_PurchasedAcMusicDictionaris;
     NSArray *m_DefaultMusicIDs;
+    NSArray *m_AcDefaultMusicIDs;
     NSArray *m_OpenTreasureMusicIDs;
     NSArray *m_OpenInviteMusicIDs;
     NSArray *m_OpenCollaboMusicIDs;
@@ -186,21 +187,72 @@ static const int kTreasureMusicIds[9] = {
     m_MusicDataArrayDirty = NO;
 }
 
-// @ 0xcaabc — arcade catalog builder. [body pending full decompile]
+// @ 0xcaabc — arcade catalog: default AC songs (bundled, else purchased) plus
+// purchased AC songs.
 - (void)createAcMusicDataArray {
-    // TODO: reconstruct (mirror of createMusicDataArray for AC songs).
-    if (m_AcMusicDataArray == nil) {
-        m_AcMusicDataArray = [NSMutableArray array];
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:0];
+
+    for (NSNumber *idNum in m_AcDefaultMusicIDs) {
+        int musicId = idNum.intValue;
+        NSString *path = [NSBundle.mainBundle pathForResource:[self getAcMusicDataFilename:musicId]
+                                                       ofType:nil];
+        if (!RhFileExists(path)) {
+            path = [self getAcPathFromPurchased:musicId];
+            if (!RhFileExists(path)) {
+                continue;
+            }
+        }
+        AcMusicData *data = [AcMusicData dataWithPath:path ID:musicId];
+        if (data != nil) {
+            [array addObject:data];
+        }
     }
+
+    for (NSDictionary *entry in m_PurchasedAcMusicDictionaris) {
+        int musicId = [entry[@"ID"] intValue];
+        NSString *path = [self getAcPathFromPurchased:musicId];
+        if (RhFileExists(path)) {
+            AcMusicData *data = [AcMusicData dataWithPath:path ID:musicId];
+            if (data != nil) {
+                [array addObject:data];
+            }
+        }
+    }
+
+    m_AcMusicDataArray = [[NSMutableArray alloc] initWithArray:array];
     m_AcMusicDataArrayDirty = NO;
 }
 
-// Level-patch table builder. [body pending]
+// @ 0xcb610 — load downloadable per-song level overrides ("rhythmin.lv", a JSON
+// { "Music": [ { Id, N, H, Ex }, ... ] } in Application Support).
 - (void)createMusicLvPatchArray {
-    // TODO: reconstruct (populates m_MusicLvPatchArray with MusicPatch entries).
-    if (m_MusicLvPatchArray == nil) {
-        m_MusicLvPatchArray = [NSMutableArray array];
+    m_MusicLvPatchArray = nil;
+
+    NSString *path = [[AppDelegate appAppSupportDirectory]
+                      stringByAppendingPathComponent:@"rhythmin.lv"];
+    if (!RhFileExists(path)) {
+        return;
     }
+    NSData *data = [[NSData alloc] initWithContentsOfFile:path];
+    NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data
+                                                        options:NSJSONReadingMutableContainers
+                                                          error:nil];
+    NSMutableArray *patches = [NSMutableArray array];
+    for (NSDictionary *entry in json[@"Music"]) {
+        NSNumber *idNum = entry[@"Id"];
+        NSNumber *n = entry[@"N"];
+        NSNumber *h = entry[@"H"];
+        NSNumber *ex = entry[@"Ex"];
+        if (idNum != nil && n != nil && h != nil && ex != nil) {
+            MusicPatch *patch = [[MusicPatch alloc] init];
+            patch.musicId = idNum.intValue;
+            patch.lvN = n.intValue;
+            patch.lvH = h.intValue;
+            patch.lvEx = ex.intValue;
+            [patches addObject:patch];
+        }
+    }
+    m_MusicLvPatchArray = [patches mutableCopy];
 }
 
 #pragma mark - Purchased song lists (Blowfish)
@@ -262,6 +314,11 @@ static const int kTreasureMusicIds[9] = {
 - (NSString *)getPathFromPurchased:(int)musicId {
     return [[AppDelegate appDocumentsDirectory]
             stringByAppendingPathComponent:[self getMusicDataFilename:musicId]];
+}
+
+- (NSString *)getAcPathFromPurchased:(int)acMusicId {
+    return [[AppDelegate appDocumentsDirectory]
+            stringByAppendingPathComponent:[self getAcMusicDataFilename:acMusicId]];
 }
 
 @end

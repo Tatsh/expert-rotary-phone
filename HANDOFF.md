@@ -24,9 +24,10 @@ Root: `/Users/usr10013727/Documents/Project/Rhythmin/branches/v203/Project/`
 Confirmed files (reconstruct into these exact paths as they are tackled):
 - Project/AppDelegate.mm                                   [done]
 - Project/System/src/Aep/AepManager.mm, AepOrderingTable.mm, AepLyrCtrl.mm
-- Project/System/src/OpenGL/neGLES11.cpp        (class neIGLES; enums HINT_MAX,
-    FOG_MODE_MAX, CS_MAX, ES_MAX, CULL_FACE_MAX, FRONT_FACE_MAX, BLEND_*,
-    TEX_FORMAT_MAX, RENDER_KIND_MAX, RENDER_TYPE_MAX, …)
+- Project/System/src/OpenGL/neGLES11.cpp        (class neIGLES/neGLES_11; enums
+    RenderKind, RenderType, MatrixMode, Hint, FogMode, ClientState, EnableState,
+    CullFace, FrontFace, BlendSrcValue/BlendDestValue, TexFormat, TexParamType,
+    TexParamValue, CompareFunc — all GL tables decoded from DAT_0012e100-e2df)
 - Project/System/src/Render/neTextTexture.mm    (CreateNewTextTexture)
 - Project/System/src/Sound/caplayer.mm          (CoreAudio AUGraph: CAComponent)
 - Project/Game/Note/NoteMng.mm, AcNoteMng.mm
@@ -102,7 +103,8 @@ NSLog/debug identifiers; plus C++ RTTI. Use it before naming/placing new files.
       Core Data stack, push registration, + appDelegate/appDocumentsDirectory/
       freeFileSystemSize/uuId (keychain CFUUID)/initHardware/isOldHardware/
       hardwareType/displayType. RewardNetwork ad call neutralized. Engine calls
-      via neEngineBridge.h. Pending data: kHardwareModels[40] (DAT_00130574).
+      via neEngineBridge.h (startBootTask/onResignActivePushHook/notifyEnterForeground
+      + appAppSupportDirectory). kHardwareModels[40] filled from DAT_00130574. COMPLETE.
 - [ ] Init
 - [~] MainViewController — Project/MainViewController.{h,mm}. UIKit<->engine
       bridge: CADisplayLink loop (StartLoop/Pause/Resume/SetLoopInterval/Create/
@@ -128,13 +130,27 @@ class names recovered from RTTI type_info + Obj-C type-encoding strings.
       foreground observer walk (FUN_000188ac, head @ DAT_00188464).
 
 ### ne render engine — Project/System/src/{OpenGL,Render}
-- [~] ne::neGLES_11 (System/src/OpenGL/neGLES11.{h,cpp}) — GL ES 1.1 abstraction.
-      INTERFACE DONE: neIGLES enums (RENDER_KIND, TEX_FORMAT, TEX_PARAM_TYPE/VALUE
-      decoded; HINT/FOG/CS/ES/CULL/FRONT/BLEND/DEPTH/ALPHA sequential+MAX pending
-      exact values) + full virtual render API. Decoded: RenderKindToGLRenderKind
-      (0x12f64), TexParamTypeFuncToGLType (0x13864), TextureFormatToGLFormat
-      (0x13970), GLValueToTexParamValue (0x138cc), texImage2D, getTexParameter,
-      draw. Remaining wrappers stubbed (mechanical glXxx; ~xrefs @ 0x12f64-0x13b28).
+- [x] ne::neGLES_11 (System/src/OpenGL/neGLES11.{h,cpp}) — GL ES 1.1 abstraction.
+      ALL enum<->GL tables now DECODED BYTE-FOR-BINARY from the __const region and
+      cited per-table in-code (no more standard-order guesses). Verified tables:
+      RenderKind (DAT_0012e110, FBO OES COLOR/DEPTH/STENCIL attach); MatrixMode
+      (DAT_0012e11c + default GL_MODELVIEW 0x1700; 4-value enum over a 3-entry
+      table — see setMatrixMode 0x13110); CompareFunc shared depth/alpha
+      (DAT_0012e130, GL_NEVER..GL_ALWAYS); TexParamValue (DAT_0012e150);
+      BlendSrc 9 (DAT_0012e170) / BlendDest 8 (DAT_0012e1a0) + equation ->
+      glBlendEquationOES (setBlendFunc 0x13a34, now 3-arg); CullFace (DAT_0012e1c0);
+      EnableState 35 caps (DAT_0012e1d0, alphabetical, no STENCIL_TEST);
+      ClientState 8 arrays (DAT_0012e25c); FogMode LINEAR/EXP/EXP2 (DAT_0012e27c);
+      Hint 5 (DAT_0012e290); TexParamType (DAT_0012e2d0). Method bodies verified:
+      setMatrixMode (0x13110), deleteBuffer (0x13290, clears cached bindings at
+      ivars 0x44/0x50/0x5c/0x6c + 8-slot tex array 0xb4), setBlendFunc (0x13a34),
+      texImage2D (0x13970), get/setTexParameter (0x138cc/0x13864),
+      RenderKindToGL (0x12f64). Ghidra: those 6 renamed + plate-commented, saved.
+      Only two labeled INFERENCES remain (no DAT table exists — stated in-code):
+      RenderType renderbuffer storage formats (pair 1:1 with RenderKind) and
+      FrontFace CW/CCW (2 legal values, mapped inline). Note: the small-int
+      permutation table @ DAT_0012e2b0 {0,3,2,1,5,6,4} is NOT part of this class's
+      enum set (left unidentified rather than guessed).
 - [ ] neTextTexture (System/src/Render/neTextTexture.mm) — CreateNewTextTexture.
 - [ ] neTextureForiOS (.mm) — GL texture from image; 0x18-byte C++ obj, ctor
       FUN_00011818, load-from-path FUN_00011a2c.
@@ -217,12 +233,11 @@ MusicInfoStruct, RECT_GCU, ...). Driven by MainViewController's loop
       getMusicData/AcMusicData/arrays, getMusicDataFilename (%09d.orb),
       createMusicDataArray (defaults+purchased+treasure/invite/collabo/loginBonus
       + lv patches), loadPurchasedMusics (Blowfish/BFCodec, keyed by uuId).
-      PENDING bodies: createAcMusicDataArray @0xcaabc, createMusicLvPatchArray,
-      getPathFromBundle_/getPathFromPurchased_ (inferred), init.
-      PENDING deps: MusicData, AcMusicData, MusicPatch, BFCodec.
-      PENDING data: kTreasureMusicIds (DAT_0012fa58, 9 ids) — read from binary.
-      PENDING Ghidra renames: FUN_0005c434 (fileExists), FUN_0005c330
-      (parsePurchasedList), FUN_0005b4b8 (bfKeyFromCString).
+      createAcMusicDataArray @0xcaabc + createMusicLvPatchArray @0xcb610 DONE
+      (rhythmin.lv JSON level patches), getAcPathFromPurchased: added,
+      kTreasureMusicIds filled. File marker-clean. Deps done (MusicData/AcMusicData/
+      MusicPatch/BFCodec). Remaining: -init population of m_DefaultMusicIDs /
+      m_AcDefaultMusicIDs (populated by unlock logic elsewhere; not a stub).
 - .orb decode chain DONE for MusicData + AcMusicData: .orb is a ZIP; the "info"
   entry (name @ 0x137a78) is BFCodec-decrypted. Key = MD5(deobfuscated 25-byte
   const), where deobfuscation is byte+index -> "Popn Orbit Note. xjr1300.".
@@ -257,11 +272,21 @@ MusicInfoStruct, RECT_GCU, ...). Driven by MainViewController's loop
 - [x] PreferredCharaInfo — Project/Game/Data/Chara/PreferredCharaInfo.{h,m}
       (musicIds + charaIds)  [CharaInfo family corrected: CharaInfo also has
        info/rarity; Preferred/Limited also have musicIds — from loader @ 0xb85bc]
-- [x] CharaData — Project/Game/Data/Chara/CharaData.{h,mm} (30 built-in chara
-      table; struct name/info/skillName/skillId/rarity; GetHardCodeCharaDataStruct
-      @ 0xcb958. Pending: extract 30 entries @ DAT_00133298)
-- [x] SkillData — Project/Game/Data/Chara/SkillData.{h,cpp} (30 skills, 8-byte
-      struct; GetSkillDataStruct @ 0xcb9d0. Pending: fields + entries @ 0x133478)
+- [x] CharaData — Project/Game/Data/Chara/CharaData.{h,mm} COMPLETE. All 30
+      built-in characters extracted from the Mach-O __cfstring table (name/info/
+      skillName constant NSStrings — mostly UTF-16, entry 24 skillName 8-bit
+      "Hello World!"), plus skillId + rarity(100/70/50). Struct {NSString* name,
+      info, skillName; short skillId, rarity} @ 0x133298. Every Japanese string
+      has an inline English translation. Ghidra: GetHardCodeCharaDataStruct
+      @ 0xcb958 renamed + plate-commented, saved.
+- [x] SkillData — Project/Game/Data/Chara/SkillData.{h,mm} (renamed .cpp->.mm to
+      match assert path SkillData.mm:199). COMPLETE: two-level layout fully
+      decoded. Outer table @ 0x133478 = 30x{const Skill*, int weight}; inner Skill
+      objects @ 0x13aa48 = 30x{vtable(bss 0x1a7800), int base=2000, char16_t*
+      jp-desc, int len}; 30 UTF-16 Japanese descriptions @ 0x12d9c0 extracted from
+      the Mach-O (all lens verified == char count) with English translations added.
+      Skill class + 30 instances + weighted table reconstructed. Ghidra:
+      GetSkillDataStruct @ 0xcb9d0 renamed + plate-commented, saved.
 - [ ] CharaManager/loader (FUN_000b85bc) — builds CharaInfo[] from CharaData +
       downloadable chara_%03d.chr files (FUN_0005c508 decode + JSON: Preferred/
       Limited/Chara). Big; pending.
@@ -402,7 +427,7 @@ MusicInfoStruct, RECT_GCU, ...). Driven by MainViewController's loop
 - [ ] GameEffectView
 - [ ] ViewUtility
 - [x] SystemHardware — Project/System/src/SystemHardware.{h,m} (lazy hw.machine
-      detect, 14-entry table; pending: model strings @ DAT_001306ec)
+      detect; 14-entry model table filled from DAT_001306ec). COMPLETE.
 
 ## Next steps
 
