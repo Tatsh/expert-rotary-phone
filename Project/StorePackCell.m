@@ -6,9 +6,7 @@
 //
 
 #import "StorePackCell.h"
-
-// The app's UI font name (Ghidra: FUN_0005ef9c — a shared font-name helper).
-extern NSString *AppFontName(void);
+#import "AppFont.h"
 
 @implementation StorePackCell
 

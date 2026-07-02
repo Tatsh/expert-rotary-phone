@@ -8,10 +8,7 @@
 #import "StoreAcvManageViewController.h"
 #import "StoreViewController.h"
 
-extern "C" {
-void *NESceneManager_shared(void);
-extern char g_IsPadDisplay;   // Ghidra DAT_00187b84
-}
+#import "neEngineBridge.h"
 
 @implementation StoreAcvManageViewController
 
@@ -31,8 +28,8 @@ extern char g_IsPadDisplay;   // Ghidra DAT_00187b84
         m_ImgDelete = [[UIImage imageNamed:@"manage_delete"] retain];
         m_ImgDownload = [[UIImage imageNamed:@"manage_download"] retain];
 
-        NESceneManager_shared();
-        m_IsPad = g_IsPadDisplay;
+        neSceneManager::shared();
+        m_IsPad = neSceneManager::isPadDisplay();
         if (m_IsPad) {
             self.view.backgroundColor =
                 [UIColor colorWithPatternImage:[UIImage imageNamed:@"friman_bg"]];

@@ -21,6 +21,10 @@ BOOL RhFileExists(NSString *path);                 // Ghidra: FUN_0005c434
 // MD5 of a C string, as a 16-byte NSData (used as the Blowfish key = MD5(uuId)).
 NSData *RhMD5Data(const char *cString);            // Ghidra: FUN_0005b4b8
 
+// Lowercase hex-string digests of a C string.
+NSString *ComputeMD5HexString(const char *cString);     // Ghidra: FUN_0005b534 (CC_MD5)
+NSString *ComputeSHA256HexString(const char *cString);  // Ghidra: FUN_0005bc04 (CC_SHA256)
+
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :
 // code: language=Objective-C insertSpaces=true tabSize=4

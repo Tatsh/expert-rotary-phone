@@ -7,6 +7,7 @@
 
 #import "StoreUtil.h"
 #import "AppDelegate.h"
+#import "RhUtil.h"
 #import <StoreKit/StoreKit.h>
 #import <UIKit/UIKit.h>
 
@@ -16,12 +17,6 @@ static NSString *const kPackProductPrefix = @"rhythmin_pack";
 // Embedded digest salt — the game's internal codename. The digest slices
 // characters [2, 27) out of it (Ghidra CFString @ 0x1065a3, substringWithRange:).
 static NSString *const kReceiptSalt = @"Orbit Note Lumion Rhythmin Konami";
-
-// Hex-digest helpers implemented in the binary (Ghidra ComputeMD5HexString
-// @ 0x5b534 = CC_MD5, ComputeSHA256HexString @ 0x5bc04 = CC_SHA256; both return
-// lowercase hex NSStrings).
-extern NSString *ComputeMD5HexString(const char *cString);
-extern NSString *ComputeSHA256HexString(const char *cString);
 
 // A game-API endpoint path (Ghidra: the "%@%@%@" of "" + "/apr/main.cgi/" +
 // "<name>/index.jsp").

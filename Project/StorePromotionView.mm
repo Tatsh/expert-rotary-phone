@@ -7,11 +7,7 @@
 
 #import "StorePromotionView.h"
 
-// Engine glue: scene manager singleton + boot-time iPad-display flag (DAT_00187b84).
-extern "C" {
-void *NESceneManager_shared(void);
-extern char g_IsPadDisplay;
-}
+#import "neEngineBridge.h"
 
 @implementation StorePromotionView
 
@@ -53,8 +49,8 @@ extern char g_IsPadDisplay;
     [self addGestureRecognizer:tap];
     [tap release];
 
-    NESceneManager_shared();
-    if (g_IsPadDisplay) {
+    neSceneManager::shared();
+    if (neSceneManager::isPadDisplay()) {
         self.layer.cornerRadius = 8.0f;
         self.layer.borderColor = [UIColor colorWithWhite:0.561f alpha:1.0f].CGColor;
         self.layer.borderWidth = 1.5f;

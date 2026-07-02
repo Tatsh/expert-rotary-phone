@@ -98,6 +98,13 @@ namespace neEngine {
     void startBootTask();            // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_,3)
     // Notify every foreground observer (observer list head @ DAT_00188464).
     void notifyEnterForeground();    // Ghidra: FUN_000188ac walk
+
+    // Play a short UI system sound effect and cache its instance handle in slot
+    // `slot` of the scene manager's SE-handle table (so it can be stopped later).
+    // Slot 1 is the decide/confirm SE, slot 2 the cancel/back SE.
+    // Ghidra: SysSePlayIntoSlot (FUN_0002c724) — [[AudioManager sharedManager]
+    // playSe:resourceId:] storing the handle at the scene-manager global + 0x28.
+    void playSystemSe(int slot);
 }
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

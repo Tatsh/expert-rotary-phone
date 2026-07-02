@@ -10,20 +10,8 @@
 #import "StoreManageViewController.h"
 #import "StoreAcvManageViewController.h"
 #import "AudioManager.h"
-
-extern NSString *AppFontName(void);
-
-// Engine glue.
-//  - NESceneManager_shared(): touch/scene manager singleton.
-//  - NESceneManager_rootViewController(): the app's root VC (Ghidra FUN_0002c5bc).
-//  - SysSePlayIntoSlot(): plays a system SE into a slot (Ghidra 0x2c724); slot 2 is
-//    the cancel/back SE. g_SystemSeHandles is the SE-handle table (0x00187b74).
-extern "C" {
-void *NESceneManager_shared(void);
-UIViewController *NESceneManager_rootViewController(void);
-void SysSePlayIntoSlot(void *slotTable, int slot);
-extern int g_SystemSeHandles;
-}
+#import "AppFont.h"
+#import "neEngineBridge.h"
 
 @implementation StoreViewController
 
@@ -140,8 +128,8 @@ extern int g_SystemSeHandles;
     if (_recommendPackId > 0) {
         return;
     }
-    NESceneManager_shared();
-    UIViewController *rootVC = NESceneManager_rootViewController();
+    neSceneManager::shared();
+    UIViewController *rootVC = (__bridge UIViewController *)neSceneManager::rootViewController();
     // -[MainViewController StoreEndCallBack]
     [rootVC performSelector:@selector(StoreEndCallBack)];
 }
@@ -168,8 +156,8 @@ extern int g_SystemSeHandles;
         [audio playBgm:0.5f];
     }
 
-    NESceneManager_shared();
-    SysSePlayIntoSlot(&g_SystemSeHandles, 2);
+    neSceneManager::shared();
+    neEngine::playSystemSe(2);
     [self hideAnimation];
 }
 

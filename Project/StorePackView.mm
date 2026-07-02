@@ -9,20 +9,8 @@
 #import "StorePackInfo.h"
 #import "StoreUtil.h"
 #import "PurchaseManager.h"
-
-// The app's shared UI font name (Ghidra FUN_0005ef9c).
-extern NSString *AppFontName(void);
-
-// Engine glue.
-//  - NESceneManager_shared(): touch/scene manager singleton (Ghidra 0x0002c5xx).
-//  - SysSePlayIntoSlot(): plays a system SE via [[AudioManager sharedManager]
-//    playSe:resourceId:] and caches the handle (Ghidra 0x0002c724). g_SystemSeHandles
-//    is the global SE-handle table at 0x00187b74; slot 1 is the decide/click SE.
-extern "C" {
-void *NESceneManager_shared(void);
-void SysSePlayIntoSlot(void *slotTable, int slot);
-extern int g_SystemSeHandles;   // Ghidra DAT_00187b74
-}
+#import "AppFont.h"
+#import "neEngineBridge.h"
 
 @implementation StorePackView
 
@@ -185,8 +173,8 @@ extern int g_SystemSeHandles;   // Ghidra DAT_00187b74
     if (![m_Delegate respondsToSelector:@selector(packViewSelected:)]) {
         return;
     }
-    NESceneManager_shared();
-    SysSePlayIntoSlot(&g_SystemSeHandles, 1);
+    neSceneManager::shared();
+    neEngine::playSystemSe(1);
     [m_Delegate performSelector:@selector(packViewSelected:) withObject:self];
 }
 

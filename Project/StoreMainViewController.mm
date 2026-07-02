@@ -7,13 +7,7 @@
 
 #import "StoreMainViewController.h"
 #import "StoreViewController.h"
-
-// Engine glue: the scene manager singleton + its cached iPad-display flag
-// (Ghidra DAT_00187b84, set at boot from the device idiom).
-extern "C" {
-void *NESceneManager_shared(void);
-extern char g_IsPadDisplay;
-}
+#import "neEngineBridge.h"
 
 @implementation StoreMainViewController
 
@@ -36,8 +30,8 @@ extern char g_IsPadDisplay;
 
         m_ArtworkDownloaders = [[NSMutableDictionary alloc] initWithCapacity:32];
 
-        NESceneManager_shared();
-        m_IsPad = g_IsPadDisplay;
+        neSceneManager::shared();
+        m_IsPad = neSceneManager::isPadDisplay();
         m_OffsetForOS = 0;
         // On iOS 7+ the phone layout nudges content down by 46pt (status/nav bar).
         if (UIDevice.currentDevice.systemVersion.floatValue >= 7.0f) {
@@ -53,8 +47,8 @@ extern char g_IsPadDisplay;
     [super loadView];
     self.view.opaque = YES;
 
-    NESceneManager_shared();
-    if (!g_IsPadDisplay) {
+    neSceneManager::shared();
+    if (!neSceneManager::isPadDisplay()) {
         // RGB 226/227/228 (Ghidra 0x3f62e2e3 / 0x3f63e3e4 / 0x3f64e4e5).
         self.view.backgroundColor = [UIColor colorWithRed:226.0f / 255.0f
                                                     green:227.0f / 255.0f

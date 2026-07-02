@@ -10,6 +10,7 @@
 #include <cstring>
 
 #import "AepTexture.h"
+#import "AudioManager.h"
 #import "neEngineBridge.h"
 
 // Create + register the boot logo splash task (Task/TaskFactory.mm).
@@ -150,6 +151,21 @@ void notifyEnterForeground() {
     }
     for (AepTexture *tex = head->next; tex != head; tex = tex->next) {
         tex->reload();      // FUN_000188ac
+    }
+}
+
+// SE-instance handles for short UI sounds, indexed by slot (Ghidra: the scene
+// manager global DAT_00187b74 + 0x28). Kept here as the engine's SE-handle table.
+static RSND_INSTANCE_ID g_systemSeHandles[8] = {0};
+
+// @ 0x2c724 — play a UI SE and remember its instance handle in `slot`. The binary
+// passes the SE resource id in registers (not recoverable from the decompile), so
+// the slot doubles as the resource selector here.
+void playSystemSe(int slot) {
+    RSND_INSTANCE_ID handle =
+        [[AudioManager sharedManager] playSe:nil resourceId:(RSND_SOURCE_ID)slot];
+    if (slot >= 0 && slot < (int)(sizeof(g_systemSeHandles) / sizeof(g_systemSeHandles[0]))) {
+        g_systemSeHandles[slot] = handle;
     }
 }
 
