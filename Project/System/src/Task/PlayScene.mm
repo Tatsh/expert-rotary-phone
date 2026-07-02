@@ -79,9 +79,12 @@ void PlayBuildFieldLayers(void *playData);
 // characters in normal mode. Ghidra: the neTextureForiOS load block in FUN_0002e2d8.
 void PlayLoadCharaTextures(void *playData);
 
-// The play scene's per-frame draw hook, registered through the Aep manager.
-// Ghidra: FUN_00030944.
-void PlayTaskDraw(void *context);
+// The play scene's per-frame note-field draw pass, registered through the Aep manager
+// and invoked by AepDrawLayer's type-3 dispatch with the full per-frame draw args
+// (AepGroupDrawFn); the trailing `context` is the play data. Ghidra: FUN_00030944.
+void PlayTaskDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
+                  int anchorX, int anchorY, int color, int alpha, int rotation,
+                  uint32_t blend, int *clipRect, uint32_t p17, void *context);
 
 // Clear the note manager's active-play flag on teardown. Ghidra: FUN_0003395c
 // (a single store of 0 to NoteMng + 0x13cb6). Defined at the foot of this file.

@@ -122,7 +122,7 @@ public:
     // its note-field render pass here at build time; the manager invokes it (with the
     // stored `context`) while drawing. Ghidra: FUN_0000f9b0 (stores the callback at
     // this + slot*4 + 0x7f3a2c and its context at + 0x7f3a90).
-    void setGroupDrawCallback(int slot, void (*callback)(void *context), void *context);
+    void setGroupDrawCallback(int slot, AepGroupDrawFn callback, void *context);
 
 private:
     // Resolve the frame-entry array for the group encoded in `lyr` (Ghidra: a byte

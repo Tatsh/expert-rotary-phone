@@ -85,10 +85,13 @@ private:
     void applyMapScrollBounds(float anchorY); // Ghidra: FUN_000a4e84
 };
 
-// The group-5 sugoroku per-frame render pass the scene installs as its draw callback
-// (Ghidra: FUN_000a3724 @ 0xa3724 — a ~5.8 KB draw routine, declared here and
-// reconstructed separately). `context` is the owning AcMainTask.
-void AcMainSugorokuDraw(void *context);
+// The group-5 sugoroku per-frame render pass the scene installs as its draw callback,
+// invoked by AepDrawLayer's type-3 dispatch with the full per-frame draw args
+// (AepGroupDrawFn); the trailing `context` is the owning AcMainTask. (Ghidra:
+// FUN_000a3724 @ 0xa3724 — a ~5.8 KB draw routine, reconstructed separately.)
+void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
+                        int anchorX, int anchorY, int color, int alpha, int rotation,
+                        uint32_t blend, int *clipRect, uint32_t p17, void *context);
 
 // Unlock the board-8 bonus treasure record when its prerequisite purchased songs are
 // present on disk (Ghidra: FUN_000a345c; uses TreasureData + MusicManager). No args.

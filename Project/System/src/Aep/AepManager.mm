@@ -228,13 +228,14 @@ void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_
 }
 
 // Ghidra: FUN_0000f9b0 — install a per-group frame-tree draw callback + context
-// (stored at this+slot*4+0x7f3a2c / +0x7f3a90). Scenes install a `void(*)(void*)`;
-// it is retained as the wider AepGroupDrawFn the type-3 dispatch calls through.
-void AepManager::setGroupDrawCallback(int slot, void (*callback)(void *context), void *context) {
+// (stored at this+slot*4+0x7f3a2c / +0x7f3a90). The callback is invoked by the type-3
+// dispatch in AepDrawLayer with the full per-frame draw args (AepGroupDrawFn); its
+// last argument receives this stored context (the owning scene/task).
+void AepManager::setGroupDrawCallback(int slot, AepGroupDrawFn callback, void *context) {
     if (slot < 0 || slot >= kMaxAepGroups) {
         return;
     }
-    m_groupCallback[slot] = reinterpret_cast<AepGroupDrawFn>(callback);
+    m_groupCallback[slot] = callback;
     m_groupContext[slot] = context;
 }
 
