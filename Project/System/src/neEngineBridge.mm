@@ -65,6 +65,21 @@ void neSceneManager::attachRoot(void *viewController) {
     m_root = viewController;
 }
 
+// Live drawable metrics (Ghidra globals DAT_00187b7c/78/80).
+static float s_screenWidth = 640.0f;
+static float s_screenHeight = 960.0f;
+static float s_screenScale = 1.0f;
+
+float neSceneManager::screenWidth() { return s_screenWidth; }
+float neSceneManager::screenHeight() { return s_screenHeight; }
+float neSceneManager::screenScale() { return s_screenScale; }
+
+void neSceneManager::setScreenMetrics(float width, float height, float scale) {
+    s_screenWidth = width;
+    s_screenHeight = height;
+    s_screenScale = scale;
+}
+
 #pragma mark - neGraphics (singleton @ DAT_00188384, +0x88 = content scale)
 
 // Ghidra: NEGraphics_configure (FUN_00012368) — lazily creates the render manager

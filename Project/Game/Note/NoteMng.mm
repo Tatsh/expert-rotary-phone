@@ -20,15 +20,7 @@
 #import <Foundation/Foundation.h>
 
 #import "NoteMng.h"
-
-// The engine's live screen metrics (NESceneManager) used to place notes. These
-// are provided by the render layer; declared here to keep NoteMng decoupled.
-// Ghidra: DAT_00187b78 (height), DAT_00187b7c (width), DAT_00187b80 (scale).
-extern "C" {
-float neSceneScreenHeight();
-float neSceneScreenWidth();
-float neSceneScreenScale();
-}
+#import "neEngineBridge.h"
 
 namespace {
 
@@ -222,9 +214,9 @@ void NoteMng::makeNote(const NoteRecord *rec) {
 
     // On-screen position (Ghidra math: screen metrics / scale, then per-record
     // percentage offsets; constants 150 and 75 from MakeNote).
-    float scale = neSceneScreenScale();
-    int sx = (int)(neSceneScreenWidth() / scale);
-    int sy = (int)(neSceneScreenHeight() / scale) + 150;
+    float scale = neSceneManager::screenScale();
+    int sx = (int)(neSceneManager::screenWidth() / scale);
+    int sy = (int)(neSceneManager::screenHeight() / scale) + 150;
     note->x = (float)((sx * recByte(rec, 0xe)) / 100);
     note->y = (float)((sy * recByte(rec, 0x10)) / 100 - 75);
     note->x2 = (float)((sy * recByte(rec, 0x12)) / 100 - 75);

@@ -51,6 +51,13 @@ public:
     // pointer on the C++ side. Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
     void attachRoot(void *viewController);
 
+    // Live drawable metrics (Ghidra globals DAT_00187b7c/78/80), updated by the
+    // GL view on layout; used to place notes/sprites on screen.
+    static float screenWidth();
+    static float screenHeight();
+    static float screenScale();
+    static void setScreenMetrics(float width, float height, float scale);
+
 private:
     void *m_root = nullptr;   // +0x00 the bridged root UIViewController
 };

@@ -12,6 +12,7 @@
 #import <OpenGLES/ES1/glext.h>
 #import <QuartzCore/QuartzCore.h>
 
+#import "neEngineBridge.h"
 #import "neGLView.h"
 
 // Engine input entry points (the task manager dispatches touches to tasks).
@@ -130,6 +131,10 @@ static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
     [m_GLContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer *)self.layer];
     glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &m_FrontBufferWidth);
     glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &m_FrontBufferHeight);
+    // Publish the live drawable metrics to the scene manager so the note/sprite
+    // layout code places geometry against the current surface (points + scale).
+    neSceneManager::setScreenMetrics(CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds),
+                                     (float)self.contentScaleFactor);
     if ([self.delegate respondsToSelector:@selector(LayoutedGLView:)]) {
         [self.delegate LayoutedGLView:self];
     }
