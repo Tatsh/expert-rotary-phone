@@ -50,6 +50,46 @@ static_assert(sizeof(NoteRecord) == 20, "chart note record is 20 bytes");
 // entry free list built in InitPlayData, stride 0x3c).
 constexpr int kMaxActiveNotes = 1000;
 
+// Render kind, recomputed into a NoteRenderData by copyNoteRenderData (@ 0x34758):
+// 1 for a special chart kind (6..9), 2 for a long/hold note (start < end), else 0.
+enum NoteRenderKind : uint8_t {
+    NOTE_RENDER_NORMAL = 0,
+    NOTE_RENDER_SPECIAL = 1,
+    NOTE_RENDER_LONG = 2,
+};
+
+// A live note object, pooled in the free/active singly-linked lists. 60 bytes,
+// laid out from the decompiled slot (makeNote @ 0x341a4). makeNote fills the
+// screen position from the chart record's lane/position bytes scaled by the live
+// screen size; makeEvent (@ 0x343c8) spawns non-note events with kind 10.
+struct ActiveNote {
+    ActiveNote *next;       // +0x00  free/active list link
+    const NoteRecord *rec;  // +0x04  source chart record
+    uint32_t reserved08;    // +0x08
+    uint32_t startTick;     // +0x0c
+    uint32_t endTick;       // +0x10  == startTick for taps, later for holds
+    float scaleX;           // +0x14  (default 1024.0)
+    float scaleY;           // +0x18  (default 1024.0)
+    uint8_t kind;           // +0x1c  note kind (>= 10 marks an event)
+    uint8_t kindHi;         // +0x1d
+    uint8_t reserved1e[2];  // +0x1e
+    float x;                // +0x20  on-screen position
+    float y;                // +0x24
+    float x2;               // +0x28  hold-note end position
+    float y2;               // +0x2c
+    float targetX;          // +0x30  judge-line target
+    float targetY;          // +0x34
+    uint16_t flags;         // +0x38  bit 0x80 = judged / inactive
+    uint8_t spawnKind;      // +0x3a  1..5 (from the type-6..9 table, else 1)
+    uint8_t reserved3b;     // +0x3b
+};
+static_assert(sizeof(ActiveNote) == 60, "active note slot is 60 bytes");
+
+// Per-note render descriptor the renderer receives from getNoteObject: a subset
+// of ActiveNote (ticks, kind, scale, positions) plus the NoteRenderKind byte
+// recomputed at copy time. Field offsets mirror the ActiveNote block above.
+struct NoteRenderData;
+
 // The note manager owns a large (~0x13cbc byte) play-data block. Only the pieces
 // recovered so far are modelled; the rest of the block is opaque runtime state.
 class NoteMng {
@@ -70,6 +110,19 @@ public:
     // Register one tempo segment (bpm, at tick) into the tempo map. Ghidra:
     // AdvanceRegisterEvent @ 0x34bf0.
     int advanceRegisterEvent(int bpm, uint32_t tick);
+
+    // Spawn a live note from a chart record: take a free slot, copy the ticks,
+    // compute the on-screen position, and move it to the active list. Ghidra:
+    // MakeNote @ 0x341a4.
+    void makeNote(const NoteRecord *rec);
+
+    // Spawn a non-note event (kind 10) from a chart record. Ghidra: MakeEvent @ 0x343c8.
+    void makeEvent(const NoteRecord *rec);
+
+    // Fill `out` with the render data of the `index`-th still-judgeable active
+    // note (kind < 10, not flagged 0x80). Ghidra: GetNoteObject @ 0x346c0, which
+    // delegates the field copy to copyNoteRenderData (@ 0x34758).
+    void getNoteObject(NoteRenderData *out, int index);
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
