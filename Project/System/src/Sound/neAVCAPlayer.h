@@ -13,6 +13,11 @@
 
 #include <cstdint>
 
+#import <Foundation/Foundation.h>
+
+class CAComponent;
+class CASound;
+
 // Handle bit layout (shared with AudioManager): low 28 bits = (slot << 16) |
 // generation; 0x20000000 marks a CoreAudio (caplayer) instance.
 constexpr uint32_t kCAPlayerHandleFlag = 0x20000000;
@@ -26,6 +31,15 @@ public:
     // As load(), but also register a call-name for later lookup. Ghidra: FUN_0002648c.
     uint32_t loadNamed(const char *path, const char *callName, bool loop);
 
+    // Start CoreAudio with `voices` concurrent channels. Ghidra: FUN_0002615c.
+    void systemStart(int voices);
+
+    // Reserve a playing instance for a loaded source (by id or call name) at the
+    // given volume; returns the play handle, or -1 on failure. Ghidra: by-id
+    // FUN_0002669c / by-name FUN_000266f8.
+    uint32_t prepare(uint32_t sourceId, float volume);
+    uint32_t prepareNamed(const char *callName, float volume);
+
     // Start the sound referenced by `handle` (slot generation must still match).
     // Ghidra: FUN_00026784.
     bool play(uint32_t handle);
@@ -34,8 +48,16 @@ public:
     // resume FUN_000261ec.
     void suspend();
     void resume();
+
+private:
+    uint32_t addSource(CASound *source);   // first free slot, growing the array
+
+    CAComponent *m_component = nullptr;     // +0x00  the AUGraph mixer
+    NSMutableDictionary *m_nameMap = nil;   // +0x04  call name -> source id
+    CASound **m_sources = nullptr;          // +0x08  loaded sources
+    int m_capacity = 0;                     // +0x0c
 };
 
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4

@@ -26,6 +26,16 @@ public:
     // As load(), but also register a call-name for later lookup. Ghidra: FUN_00021328.
     int loadNamed(NSURL *url, NSString *callName, bool loop);
 
+    // Start the AVFoundation SE pool with `voices` concurrent players. Ghidra:
+    // FUN_0002120c.
+    void systemStart(int voices);
+
+    // Reserve a playing instance for a loaded source (by id or call name) at the
+    // given volume; returns the play handle, or -1 on failure. Ghidra: by-id
+    // FUN_00021438 / by-name FUN_00021464.
+    uint32_t prepare(uint32_t sourceId, float volume);
+    uint32_t prepareNamed(NSString *callName, float volume);
+
     // Start the AVAudioPlayer referenced by `handle`. Ghidra: FUN_000214a8.
     bool play(uint32_t handle);
 
@@ -33,6 +43,14 @@ public:
     // resume FUN_00021294.
     void suspend();
     void resume();
+
+private:
+    int addSource(NSURL *url, bool loop);   // first free slot, growing the pool
+
+    NSMutableArray *m_voices = nil;       // +0x08  AVAudioPlayer voice pool
+    NSMutableDictionary *m_nameMap = nil; // +0x04  call name -> source id
+    NSMutableArray *m_sources = nil;      // loaded source URLs
+    int m_capacity = 0;                   // +0x0c
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
