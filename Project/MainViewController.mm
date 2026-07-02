@@ -56,7 +56,8 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     UINavigationController *_friendMngNaviCtrl;
     UIViewController *_friendMngViewCtrl;
     UIViewController *_defaultDlViewController;
-    UINavigationController *_inputNameNaviCtrl;
+    BOOL _isDefaultDlFailed;
+    UINavigationController *_inputConvPassNaviCtrl;
     UIViewController *_inputConvPassViewCtrl;
     // Wall-clock stopwatches pacing the task-update and render steps.
     neFrameTimer m_taskTime;
@@ -205,8 +206,8 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (!neSceneManager::isPadDisplay()) {
         InputConversionPassViewController *content =
             [[InputConversionPassViewController alloc] autorelease];
-        _inputNameNaviCtrl = [content initAtNavigationController];
-        [self.view addSubview:_inputNameNaviCtrl.view];
+        _inputConvPassNaviCtrl = [content initAtNavigationController];
+        [self.view addSubview:_inputConvPassNaviCtrl.view];
         [content startOpenAnimation];
     } else {
         InputConversionPassViewController *vc = [[InputConversionPassViewController alloc] init];
@@ -216,6 +217,81 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     }
     [self PauseLoop];
 }
+
+#pragma mark - Navigation teardown
+
+// @ 0xdae4
+- (void)AcceptPolicyEndCallBack {
+    if (_acceptPolicyCtrl != nil) {
+        [_acceptPolicyCtrl release];
+        _acceptPolicyCtrl = nil;
+    }
+    [self ResumeLoop];
+}
+
+// @ 0xc300 — also clears the "settings visible" flag.
+- (void)SettingEndCallBack {
+    if (_settingViewCtrl != nil) {
+        [_settingViewCtrl release];
+        _settingViewCtrl = nil;
+    }
+    if (_settingNaviCtrl != nil) {
+        [_settingNaviCtrl release];
+        _settingNaviCtrl = nil;
+    }
+    _settingViewing = NO;
+    [self ResumeLoop];
+}
+
+// @ 0xc978
+- (void)MapSelectEndCallBack {
+    if (_mapSelectViewCtrl != nil) {
+        [_mapSelectViewCtrl release];
+        _mapSelectViewCtrl = nil;
+    }
+    if (_mapSelectNaviCtrl != nil) {
+        [_mapSelectNaviCtrl release];
+        _mapSelectNaviCtrl = nil;
+    }
+    [self ResumeLoop];
+}
+
+// @ 0xcf0c
+- (void)FriendManageEndCallBack {
+    if (_friendMngViewCtrl != nil) {
+        [_friendMngViewCtrl release];
+        _friendMngViewCtrl = nil;
+    }
+    if (_friendMngNaviCtrl != nil) {
+        [_friendMngNaviCtrl release];
+        _friendMngNaviCtrl = nil;
+    }
+    [self ResumeLoop];
+}
+
+// @ 0xd640 — latches whether the download failed (read later by TitleTask).
+- (void)DefaultDownloadEndCallBack {
+    _isDefaultDlFailed = [_defaultDlViewController isFailed] ? YES : NO;
+    [_defaultDlViewController release];
+    _defaultDlViewController = nil;
+    [self ResumeLoop];
+}
+
+// @ 0xe67c — re-enables touch on the GL view when the passcode screen closes.
+- (void)InConversionPassEndCallBack {
+    if (_inputConvPassViewCtrl != nil) {
+        [_inputConvPassViewCtrl release];
+        _inputConvPassViewCtrl = nil;
+    }
+    if (_inputConvPassNaviCtrl != nil) {
+        [_inputConvPassNaviCtrl release];
+        _inputConvPassNaviCtrl = nil;
+    }
+    self.view.userInteractionEnabled = YES;
+    [self ResumeLoop];
+}
+
+- (BOOL)isDefaultDlFailed { return _isDefaultDlFailed; }
 
 #pragma mark - Frame
 

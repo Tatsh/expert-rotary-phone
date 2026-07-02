@@ -40,6 +40,18 @@
 - (void)GotoDefaultDownload;            // @ 0xd560
 - (void)GotoInConversionPass;           // @ 0xe53c
 
+// Modal teardowns (invoked by each screen when it closes): release the controller
+// and resume the render loop.
+- (void)AcceptPolicyEndCallBack;        // @ 0xdae4
+- (void)SettingEndCallBack;             // @ 0xc300
+- (void)MapSelectEndCallBack;           // @ 0xc978
+- (void)FriendManageEndCallBack;        // @ 0xcf0c
+- (void)DefaultDownloadEndCallBack;     // @ 0xd640
+- (void)InConversionPassEndCallBack;    // @ 0xe67c
+
+// Whether the initial default download reported failure (read by TitleTask).
+- (BOOL)isDefaultDlFailed;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
