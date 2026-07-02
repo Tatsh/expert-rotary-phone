@@ -9,13 +9,27 @@
 
 #import <UIKit/UIKit.h>
 
+@class neGLView;
+
+// The view tells its delegate when the drawable (and thus the framebuffer size)
+// has changed. Ghidra: -[delegate LayoutedGLView:] in layoutSubviews (0x28428).
+@protocol neGLViewDelegate <NSObject>
+- (void)LayoutedGLView:(neGLView *)view;
+@end
+
 @interface neGLView : UIView
 
+@property (nonatomic, weak) id<neGLViewDelegate> delegate;
+
+// The GL drawable size, updated by -layoutSubviews from the renderbuffer.
+@property (nonatomic, readonly) int frontBufferWidth;
+@property (nonatomic, readonly) int frontBufferHeight;
+
 // Render surface control, called each frame by MainViewController -draw.
-- (void)BeginRender;            // bind the GL context / default framebuffer
-- (void)SetDefaultFrameBuffer;
-- (void)SetDefaultColorBuffer;
-- (void)Present;                // present the renderbuffer (swap)
+- (BOOL)BeginRender;            // make the GL context current. Ghidra: @ 0x28544
+- (void)SetDefaultFrameBuffer;  // bind the default framebuffer.  Ghidra: @ 0x28570
+- (void)SetDefaultColorBuffer;  // bind the colour renderbuffer.  Ghidra: @ 0x28594
+- (BOOL)Present;                // present the renderbuffer (swap). Ghidra: @ 0x285b8
 
 @end
 
