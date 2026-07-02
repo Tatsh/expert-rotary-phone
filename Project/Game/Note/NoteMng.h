@@ -13,10 +13,11 @@
 //  chart described below.
 //
 
-//  Chart-load flow: a %09d.orb / ac%09d.acv file (ZIP + BFCodec-encrypted "info")
-//  is decoded into a MusicData object; the play loader picks the sheet for the
-//  chosen difficulty (-[MusicData sheetNormal/sheetHyper/sheetEx]) and passes it
-//  to -[NoteMng initPlayDataWithData:] on the global manager (Ghidra: DAT_00173ea4).
+//  Chart-load flow: a %09d.orb / ac%09d.acv file (ZIP + BFCodec-encrypted entries)
+//  is decoded into an (Ac)MusicData object; the play loader picks the sheet for
+//  the chosen difficulty (-[AcMusicData sheetEasy/sheetNormal/sheetHyper/sheetEx],
+//  the "sheet_es/n/h/ex" ZIP entries) and passes it to
+//  -[NoteMng initPlayDataWithData:] on the global manager (Ghidra: DAT_00173ea4).
 //
 
 #pragma once
@@ -99,13 +100,42 @@ struct ActiveNote {
 static_assert(sizeof(ActiveNote) == 60, "active note slot is 60 bytes on armv7");
 #endif
 
-// Per-note render descriptor the renderer receives from getNoteObject: a subset
-// of ActiveNote (ticks, kind, scale, positions) plus the NoteRenderKind byte
-// recomputed at copy time. Field offsets mirror the ActiveNote block above.
-struct NoteRenderData;
+// Judgement tiers (best to worst). The numeric value doubles as the per-kind
+// hit-tally index. Ghidra: judgeNoteHit assigns these from the timing delta.
+enum NoteJudge {
+    NOTE_JUDGE_COOL = 0,
+    NOTE_JUDGE_GREAT = 1,
+    NOTE_JUDGE_GOOD = 2,
+    NOTE_JUDGE_BAD = 3,
+    NOTE_JUDGE_MISS = -1,   // outside every window (getNoteObject returns nothing)
+    NOTE_JUDGE_TIER_COUNT = 4,
+};
 
-// The note manager owns a large (~0x13cbc byte) play-data block. Only the pieces
-// recovered so far are modelled; the rest of the block is opaque runtime state.
+// The engine distinguishes this many note "kinds" (each keeps its own hit tally).
+constexpr int kNoteKindCount = 10;
+
+// Per-note render descriptor the renderer receives from getNoteObject: the ticks,
+// kind, scale and positions copied out of the ActiveNote plus a freshly-computed
+// NoteRenderKind. Ghidra: copyNoteRenderData @ 0x34758.
+struct NoteRenderData {
+    const NoteRecord *rec;
+    uint32_t startTick;
+    uint32_t endTick;
+    uint8_t kind;
+    uint8_t kindHi;
+    uint16_t flags;
+    NoteRenderKind renderKind;
+    float scaleX;
+    float scaleY;
+    uint8_t spawnKind;
+    float x;
+    float y;
+    float x2;         // hold-note end
+    float y2;
+    float targetX;    // judge-line target
+    float targetY;
+};
+
 class NoteMng {
 public:
     // Parse a decoded chart into the play-data timeline. `data` points at the
@@ -173,6 +203,55 @@ public:
     // otherwise it succeeds (flag 0x100, "NOTE_FLAGS_LONG_SUCCESS") and counts
     // toward the combo + tally. Ghidra: @ 0x34a78.
     int updateLongNote(unsigned index);
+
+    int combo() const { return m_combo; }
+    int maxCombo() const { return m_maxCombo; }
+    int judgeCount(int kind, NoteJudge tier) const { return m_tally[kind][tier]; }
+
+private:
+    // One BPM segment of the tempo map (registered from NOTE_TYPE_TEMPO records).
+    struct TempoSegment {
+        uint32_t startTick;   // chart tick this BPM takes effect
+        uint32_t startMs;     // its start time in ms (cumulative)
+        int16_t bpm;
+    };
+
+    ActiveNote *allocNote();                     // pop a free slot (nullptr if none)
+    void moveToActive(ActiveNote *note);         // free list -> active list
+    ActiveNote *activeNoteAt(unsigned index);    // n-th judgeable active note
+
+    // Parsed chart (records copied out of the decoded payload).
+    NoteRecord *m_records = nullptr;
+    int m_recordCount = 0;
+    uint16_t m_minTempoValue = 0x7fff;
+    uint16_t m_maxTempoValue = 0;
+    uint32_t m_endValue = 0;
+
+    // Tempo map + derived current time.
+    TempoSegment m_tempoMap[512] = {};
+    int m_tempoCount = 0;
+    uint32_t m_currentMs = 0;
+
+    // Play clock (gettimeofday at play start).
+    long m_startSec = 0;
+    long m_startUsec = 0;
+    int m_positionLeadIn = 0;   // constant offset added to elapsed by getCurrentPosition
+
+    // Timing windows, copied from g_noteJudgeWindows at initPlayData.
+    int m_judgeWindows[6] = {};
+
+    // Pooled note objects + the free/active singly-linked lists.
+    ActiveNote m_notePool[kMaxActiveNotes] = {};
+    ActiveNote *m_freeList = nullptr;
+    ActiveNote *m_activeList = nullptr;
+
+    // Scoring.
+    int m_combo = 0;
+    int m_maxCombo = 0;
+    int m_tally[kNoteKindCount][NOTE_JUDGE_TIER_COUNT] = {};   // per-kind hit counts
+    int m_earlyMiss[kNoteKindCount] = {};                     // too-early presses
+
+    bool m_autoPlay = false;   // Ghidra flag @ +0x13cb5 (skips manual judgement)
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
