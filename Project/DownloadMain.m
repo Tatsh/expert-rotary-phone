@@ -26,6 +26,8 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     Downloader *_dlDelBlockList;     // active remove-block action
     NSArray *_blPlayerIdArray;       // blocked player ids
     NSArray *_blNameArray;           // blocked player names (parallel to ids)
+    Downloader *_dlCancelFriend;     // active cancel-friend-request action
+    __unsafe_unretained id<DownloadMainDelegate> _delegateCancelFriend;
 }
 
 // @ 0x93dd4 — construct the singleton once, guarded by @synchronized.
@@ -80,6 +82,8 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
         [self addBlockListFinished];
     } else if (downloader == _dlDelBlockList) {
         [self delBlockListFinished];
+    } else if (downloader == _dlCancelFriend) {
+        [self cancelFriendFinished];
     }
 }
 
@@ -329,6 +333,54 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
 - (void)delBlockListFinished {
     [_dlDelBlockList release];
     _dlDelBlockList = nil;
+}
+
+#pragma mark - Cancel friend request
+
+// @ 0x99630 / 0x99644 — atomic delegate accessors (assign).
+- (id<DownloadMainDelegate>)delegateCancelFriend {
+    return _delegateCancelFriend;
+}
+
+- (void)setDelegateCancelFriend:(id<DownloadMainDelegate>)delegate {
+    _delegateCancelFriend = delegate;
+}
+
+// @ 0x9566c
+- (BOOL)isCancelFriendDownLoading {
+    return _dlCancelFriend != nil;
+}
+
+// @ 0x95554 — cancel an outbound friend request to playerId. No-op if in flight.
+- (void)startCancelFriendHttp:(NSString *)playerId {
+    if (_dlCancelFriend != nil) {
+        return;
+    }
+    NSString *body = [NSString stringWithFormat:@"uuid=%@&player_id=%@",
+                      AppDelegate.appDelegate.uuId, playerId];
+    _dlCancelFriend = [[Downloader alloc]
+        initWithURL:[StoreUtil cancelFriendURL]
+           delegate:self
+               Post:[body dataUsingEncoding:NSUTF8StringEncoding]
+        ContextType:@"application/json"];
+    [_dlCancelFriend startDownloading];
+}
+
+// @ 0x95684 — finish: notify the delegate. The reported flag is (json == nil),
+// exactly as in the binary (it signals the no-response / error state).
+- (void)cancelFriendFinished {
+    NSDictionary *json = [_dlCancelFriend getDataInJSON];
+    // The original reads ErrorCode and checks isKindOfClass:NSNumber without acting
+    // on the result; only the presence of a JSON body drives the delegate flag.
+    (void)json[@"ErrorCode"];
+
+    [_dlCancelFriend release];
+    _dlCancelFriend = nil;
+
+    if ([_delegateCancelFriend respondsToSelector:@selector(downloadMainFinished:)]) {
+        [_delegateCancelFriend performSelector:@selector(downloadMainFinished:)
+                                    withObject:[NSNumber numberWithBool:(json == nil)]];
+    }
 }
 
 @end

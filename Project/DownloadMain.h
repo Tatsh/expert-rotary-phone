@@ -89,6 +89,15 @@ typedef struct {
 - (void)startAddBlockListHttp:(NSString *)playerId;
 - (void)startDelBlockListHttp:(NSString *)playerId;
 
+// --- Cancel friend request ---
+
+// Delegate notified when a cancel completes. @ 0x99630 / 0x99644.
+@property (nonatomic, assign) id<DownloadMainDelegate> delegateCancelFriend;
+// In-flight flag. @ 0x9566c.
+- (BOOL)isCancelFriendDownLoading;
+// Cancel an outbound friend request to playerId. @ 0x95554.
+- (void)startCancelFriendHttp:(NSString *)playerId;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
