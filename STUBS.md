@@ -39,7 +39,7 @@
     * DONE: PlayLoadSong (FUN_00030720) — song resolve + async BGM block + sheet parse +
       tap SE. Pulled in the full MusicData zip-entry accessor family (music/musicPre/
       sheetNormal/Hyper/Ex @ 0xc78d8.. — all reconstructed) and the AudioManager
-      loadBgmData:isLoop: decl (@ 0x1e5b0; body still to add in AudioManager.mm).
+      loadBgmData:isLoop: method (@ 0x1e5b0, body now built in AudioManager.mm).
   Note: NoteMng::setPlayActive(true) still unlocated (only the read in
   applicationWillResignActive and the clear in PlayNoteMngDetach are found).
 

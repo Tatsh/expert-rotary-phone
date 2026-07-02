@@ -176,6 +176,23 @@ struct SeInstance {
     return YES;
 }
 
+// @ 0x1e5b0 — load the BGM straight from in-memory data (the play scene hands in the
+// decoded .orb "bgm" entry) rather than a file path. Mirrors loadBgm:isLoop:; releaseBgm
+// clears the cached path and the data variant has none to re-store.
+- (BOOL)loadBgmData:(NSData *)data isLoop:(BOOL)loop {
+    if (data == nil) {
+        return NO;
+    }
+    [self releaseBgm];
+    NSError *error = nil;
+    m_bgmPlayer = [[AVAudioPlayer alloc] initWithData:data error:&error];
+    if (error != nil) {
+        return NO;
+    }
+    [self initBgm:loop];
+    return YES;
+}
+
 // @ 0x1fcc0 — start the BGM, instantly or via a fade-in timer.
 - (BOOL)playBgm:(float)fadeSeconds {
     if (m_bgmPlayer == nil) {
