@@ -20,8 +20,11 @@
       1 (stateFadeIn), 2 (stateTreasureCheck).
     * TODO states 3..9+ (case 3 saves treasureTmp + AepLyrCtrl combo layers, etc.).
     * TODO sub-pieces called by the above (declared real methods, bodies pending):
-      AcMainTask::setupScene (FUN_0009fc90), AcMainTask::loadTreasureMap (FUN_000a0b58),
-      AcMainTaskSubInit (FUN_00062b20, select/option sub-state init @ +0x4f4).
+      AcMainTask::setupScene (FUN_0009fc90), AcMainTask::loadTreasureMap (FUN_000a0b58).
+    * DONE: the +0x4f4 sub-object is the xorshift128 PRNG, now fully reconstructed as
+      Project/Game/Util/Random.{h,cpp} (ctor FUN_00062b20, dtor FUN_00062b54, setSeed
+      FUN_00062b5c, getRandRangeInt FUN_00062be0 == GetRandRangeInt in the original
+      Random.cpp). The ctor placement-constructs it.
 - StoreMainViewController::viewDidLoad (FUN_00042eec) — NEON-obscured CGRect geometry
 - MenuMainTask::setup tail — news-text / RewardNetwork / event-unlock scan
 

@@ -19,12 +19,9 @@
 #include <cstdint>
 
 #include "C_TASK.h"
+#include "Random.h"      // embedded PRNG at this+0x4f4 (Ghidra: FUN_00062b20)
 
 struct neTouchPoint;   // System/src/Render/neGraphics.h (touch pool record)
-
-// Initialise the arcade task's select/option sub-state object (@ this+0x4f4), run
-// from the ctor. Ghidra: FUN_00062b20 (its own reconstruction piece).
-void AcMainTaskSubInit(void *sub);
 
 class AcMainTask : public C_TASK {
 public:
@@ -54,6 +51,10 @@ private:
 
     // The main play-data state field the update switch dispatches on (@ +0x9f8).
     int &state() { return field<int>(0x9f8); }
+
+    // The arcade RNG the ctor constructs in place at this+0x4f4 (map / character /
+    // treasure picks). Reached through the raw play-data storage.
+    Random &rng() { return *reinterpret_cast<Random *>(&field<uint8_t>(0x4f4)); }
 
     // Per-state handlers, lifted from AcMainTask_update's inlined switch cases.
     // Reconstructed incrementally from .decompile/AcMainTask_update.c; each sets the

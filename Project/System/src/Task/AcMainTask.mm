@@ -13,6 +13,8 @@
 
 #import "AcMainTask.h"
 
+#include <new>
+
 #import "AepManager.h"
 #import "AudioManager.h"
 #import "MainViewController.h"
@@ -20,11 +22,12 @@
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 
-// Ghidra: AcMainTask_ctor (FUN_00099ab0) — base C_TASK ctor, the select/option
-// sub-state init at +0x4f4, then the play-data block (already zeroed by m_playData's
-// initialiser) and three sentinels (@ +0x508 = -1, +0x62c = -0x63, +0x5a0 = 3).
+// Ghidra: AcMainTask_ctor (FUN_00099ab0) — base C_TASK ctor, the arcade RNG
+// constructed in place at +0x4f4, then the play-data block (already zeroed by
+// m_playData's initialiser) and three sentinels (@ +0x508 = -1, +0x62c = -0x63,
+// +0x5a0 = 3).
 AcMainTask::AcMainTask() {
-    AcMainTaskSubInit(&field<uint8_t>(0x4f4));   // FUN_00062b20
+    new (&field<uint8_t>(0x4f4)) Random();   // FUN_00062b20: construct the arcade RNG
     field<int>(0x508) = -1;      // no drag anchor yet
     field<int>(0x62c) = -0x63;   // stored as 0xffffff9d
     field<int>(0x5a0) = 3;
