@@ -7,15 +7,13 @@
 //
 
 #import "MainViewController.h"
+#import "AepManager.h"
+#import "C_TASK.h"
 #import "neGLView.h"
 
-// --- Engine entry points the loop calls into (cited; reconstructed in the
-//     engine .cpp). ---
+// --- Engine entry points the loop still calls into (not yet reconstructed as
+//     classes; referencing the real API is preferred once they are). ---
 extern "C" {
-// Advance every registered C_TASK by `fixedDt` (16.16 fixed seconds).
-void neTaskManagerUpdate(int fixedDt);          // Ghidra: FUN_00027f40
-// Draw the whole Aep scene (ordering table) for `aepManager`.
-void neAepManagerDraw(void *aepManager);        // Ghidra: FUN_0001058c
 // Clear the current framebuffer (GL_COLOR_BUFFER_BIT).
 void neGraphicsClear(void);                     // Ghidra: FUN_00012c14 + vtbl[0x4c](0x4000)
 // Compact the task manager's list, dropping tasks flagged for deletion.
@@ -39,7 +37,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     int m_LoopInterval;
     CADisplayLink *m_DisplayLink;
     neGLView *_glView;
-    void *m_AepManager;          // C++ AepManager* (scene owner)
+    AepManager *m_AepManager;    // C++ scene owner
     BOOL m_flgCapture;
     UIImage *m_capturedImg;
     // Opaque inline frame timers (engine struct; see neTimer* above).
@@ -113,7 +111,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 - (void)task {
     float dt = neTimerElapsedSeconds(m_TaskTime);
     neTimerReset(m_TaskTime);
-    neTaskManagerUpdate(SecondsToFixed(dt));
+    C_TASK::updateAll(SecondsToFixed(dt));
     // Sweep the task list: for each task, snapshot its state (prev = cur) and
     // swap-remove any flagged for deletion (original inlines this @ 0xbb5c).
     neTaskManagerReap();
@@ -126,7 +124,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
         neGraphicsClear();
-        neAepManagerDraw(m_AepManager);
+        m_AepManager->draw();
 
         if (m_flgCapture) {
             if (m_capturedImg != nil) {
