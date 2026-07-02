@@ -23,6 +23,18 @@ static const NSTimeInterval kTimeout = 15.0;
     NSDate *m_StartTime;
 }
 
+// Caller context accessors (backing ivar m_AdditionalData).
+- (id)addData {
+    return m_AdditionalData;
+}
+
+- (void)setAddData:(id)addData {
+    if (m_AdditionalData != addData) {
+        [m_AdditionalData release];
+        m_AdditionalData = [addData retain];
+    }
+}
+
 // Apply the request headers every request carries (Ghidra: shared by both inits).
 - (void)applyCommonHeadersTo:(NSMutableURLRequest *)request {
     [request setValue:AppDelegate.appDelegate.userAgent forHTTPHeaderField:@"User-Agent"];

@@ -447,6 +447,33 @@ static const char *const kHardwareModels[40] = {
     return result;
 }
 
+#pragma mark - Environment strings
+
+// -[AppDelegate appVersion]  @ 0xa408 — the bundle build number.
+- (NSString *)appVersion {
+    return NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"];
+}
+
+// -[AppDelegate osVersion]  @ 0xa3d4
+- (NSString *)osVersion {
+    return UIDevice.currentDevice.systemVersion;
+}
+
+// -[AppDelegate localeLanguage]  @ 0xa548
+- (NSString *)localeLanguage {
+    return [NSLocale.currentLocale objectForKey:NSLocaleLanguageCode];
+}
+
+// -[AppDelegate localeCountry]  @ 0xa504
+- (NSString *)localeCountry {
+    return [NSLocale.currentLocale objectForKey:NSLocaleCountryCode];
+}
+
+// -[AppDelegate localeString]  @ 0xa4a4 — "<language>_<country>", e.g. "ja_JP".
+- (NSString *)localeString {
+    return [NSString stringWithFormat:@"%@_%@", self.localeLanguage, self.localeCountry];
+}
+
 #pragma mark - Core Data stack
 
 // -[AppDelegate managedObjectContext]  @ 0xa810

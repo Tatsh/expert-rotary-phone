@@ -54,6 +54,13 @@
 // Persisted per-install identifier used in backend requests.
 - (NSString *)uuId;                       // -[AppDelegate uuId]
 
+// Environment strings sent in backend requests (receipt check, etc.).
+- (NSString *)appVersion;                 // CFBundleVersion            @ 0xa408
+- (NSString *)osVersion;                  // UIDevice.systemVersion     @ 0xa3d4
+- (NSString *)localeLanguage;             // NSLocaleLanguageCode       @ 0xa548
+- (NSString *)localeCountry;              // NSLocaleCountryCode        @ 0xa504
+- (NSString *)localeString;               // "<language>_<country>"     @ 0xa4a4
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

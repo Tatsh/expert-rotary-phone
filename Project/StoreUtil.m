@@ -6,10 +6,22 @@
 //
 
 #import "StoreUtil.h"
+#import "AppDelegate.h"
 #import <StoreKit/StoreKit.h>
+#import <UIKit/UIKit.h>
 
 // StoreKit product-identifier prefix (Ghidra: CFString cf_rhythmin_pack).
 static NSString *const kPackProductPrefix = @"rhythmin_pack";
+
+// Embedded digest salt — the game's internal codename. The digest slices
+// characters [2, 27) out of it (Ghidra CFString @ 0x1065a3, substringWithRange:).
+static NSString *const kReceiptSalt = @"Orbit Note Lumion Rhythmin Konami";
+
+// Hex-digest helpers implemented in the binary (Ghidra ComputeMD5HexString
+// @ 0x5b534 = CC_MD5, ComputeSHA256HexString @ 0x5bc04 = CC_SHA256; both return
+// lowercase hex NSStrings).
+extern NSString *ComputeMD5HexString(const char *cString);
+extern NSString *ComputeSHA256HexString(const char *cString);
 
 // A game-API endpoint path (Ghidra: the "%@%@%@" of "" + "/apr/main.cgi/" +
 // "<name>/index.jsp").
@@ -94,6 +106,53 @@ static NSString *ApiPath(NSString *name) {
     }
     int packID = [[productID substringFromIndex:kPackProductPrefix.length] intValue];
     return packID > 0 ? packID : -1;
+}
+
+// --- Receipt verification ---
+
+// @ 0x58f04
++ (NSURL *)receiptURL {
+    return [self createHttpsURL:ApiPath(@"verify_receipt")];
+}
+
+// @ 0x58830
++ (NSString *)deviceName {
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+        return @"ipad";
+    }
+    return @"iphone";
+}
+
+// @ 0x58880 — computed once, then cached (Ghidra DAT_001882f4).
++ (NSString *)identifierParams {
+    static NSString *sIdentifierParams = nil;
+    if (sIdentifierParams != nil) {
+        return sIdentifierParams;
+    }
+    NSString *seed = [[AppDelegate appDelegate].uuId stringByAppendingString:@"STORE"];
+    sIdentifierParams = [ComputeMD5HexString(seed.UTF8String) retain];
+    return sIdentifierParams;
+}
+
+// @ 0x5a2ac — wrap the receipt with client info for the verify endpoint.
++ (NSString *)createReceiptCheckJSON:(NSString *)base64Receipt {
+    AppDelegate *app = [AppDelegate appDelegate];
+    return [NSString stringWithFormat:
+            @"{\"receipt_data\":\"%@\",\"client_info\":{\"uuid\":\"%@\",\"version\":\"%@\","
+            @"\"device\":\"%@\",\"os\":\"%@\",\"locale\":\"%@\"}}",
+            base64Receipt,
+            [self identifierParams],
+            [app appVersion],
+            [self deviceName],
+            [app osVersion],
+            [app localeString]];
+}
+
+// @ 0x5a394 — SHA-256 hex of (salt[2,27) + json).
++ (NSString *)createReceiptChecckDigest:(NSString *)json {
+    NSString *salt = [kReceiptSalt substringWithRange:NSMakeRange(2, 27)];
+    NSString *seed = [NSString stringWithFormat:@"%@%@", salt, json];
+    return ComputeSHA256HexString(seed.UTF8String);
 }
 
 @end

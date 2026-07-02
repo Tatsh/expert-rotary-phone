@@ -20,6 +20,11 @@
 @property (nonatomic, copy) NSString *transactionID;  // transactionIdentifier
 @property (nonatomic, copy) NSDate *transactionDate;  // transactionDate
 
+// SHA-256 digest of the receipt-check request, set by PurchaseManager
+// checkNextReceipt and matched against the server's echoed "code".
+// Ghidra: setDigestString: (used @ 0x54fdc), digestString (read @ 0x55a50).
+@property (nonatomic, copy) NSString *digestString;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

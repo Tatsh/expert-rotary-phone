@@ -22,6 +22,11 @@
 
 @interface Downloader : NSObject
 
+// Caller-attached context, echoed back to the delegate to correlate a response
+// with its originating request (e.g. PurchaseManager attaches the transaction
+// being verified). Ghidra: addData / setAddData: (backing ivar m_AdditionalData).
+@property (nonatomic, retain) id addData;
+
 // GET. Ghidra: initWithURL:delegate: @ 0x620f4.
 - (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate;
 

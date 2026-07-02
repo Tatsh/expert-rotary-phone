@@ -57,6 +57,27 @@
 // Ghidra: packIDForProductID: @ 0x5a0d0.
 + (int)packIDForProductID:(NSString *)productID;
 
+// --- Receipt verification (server-side re-validation of StoreKit purchases) ---
+
+// Endpoint the base64 receipt + digest are POSTed to. Ghidra: receiptURL @ 0x58f04
+// (createHttpsURL of /apr/main.cgi/verify_receipt/index.jsp).
++ (NSURL *)receiptURL;
+
+// "iphone" or "ipad" by interface idiom. Ghidra: deviceName @ 0x58830.
++ (NSString *)deviceName;
+
+// Cached anonymised user token: MD5 hex of (uuId + "STORE").
+// Ghidra: identifierParams @ 0x58880.
++ (NSString *)identifierParams;
+
+// The receipt-check request body wrapping the base64 receipt with client info.
+// Ghidra: createReceiptCheckJSON: @ 0x5a2ac.
++ (NSString *)createReceiptCheckJSON:(NSString *)base64Receipt;
+
+// Tamper-binding digest: SHA-256 hex of (embedded salt + json).
+// Ghidra: createReceiptChecckDigest: @ 0x5a394 (sic — misspelled in the binary).
++ (NSString *)createReceiptChecckDigest:(NSString *)json;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
