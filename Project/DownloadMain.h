@@ -75,6 +75,20 @@ typedef struct {
 // @ 0x95794.
 - (void)startGetFriendListHttp;
 
+// --- Block list ---
+
+// The blocked-player id / name arrays (parallel). @ 0x9997c / 0x99990.
+- (NSArray *)blPlayerIdArray;
+- (NSArray *)blNameArray;
+// In-flight flags. @ 0x9658c / 0x96710.
+- (BOOL)isAddBlockListDownLoading;
+- (BOOL)isGetBlockListDownLoading;
+// Fetch the block list. @ 0x965fc.
+- (void)startGetBlockListHttp;
+// Block / unblock a player id (add refuses to block yourself). @ 0x96440 / 0x969cc.
+- (void)startAddBlockListHttp:(NSString *)playerId;
+- (void)startDelBlockListHttp:(NSString *)playerId;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

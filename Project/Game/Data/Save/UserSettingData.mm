@@ -144,6 +144,11 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveData:enc Key:kKeyCrypt109];
 }
 
+#pragma mark - Identity (plaintext)
+
+// @ 0x60260 — the player's server-assigned id string.
++ (NSString *)playerId               { return [self getString:@"PlayerId"]; }
+
 #pragma mark - Effects (plaintext)
 
 + (BOOL)isEffectOn                   { return [self getBOOL:kKeyIsEffectOn]; }          // @ 0x606bc

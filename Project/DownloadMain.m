@@ -10,6 +10,7 @@
 
 #import "AppDelegate.h"
 #import "StoreUtil.h"
+#import "UserSettingData.h"
 
 static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
 
@@ -20,6 +21,11 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     NSArray *_friendListArray;       // parsed friends (NSValue-wrapped FriendListData)
     int _friendRequestedCnt;         // pending inbound friend requests
     __unsafe_unretained id<DownloadMainDelegate> _delegateGetFriendList;
+    Downloader *_dlGetBlockList;     // active block-list fetch
+    Downloader *_dlAddBlockList;     // active add-block action
+    Downloader *_dlDelBlockList;     // active remove-block action
+    NSArray *_blPlayerIdArray;       // blocked player ids
+    NSArray *_blNameArray;           // blocked player names (parallel to ids)
 }
 
 // @ 0x93dd4 — construct the singleton once, guarded by @synchronized.
@@ -68,6 +74,12 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
         [self getDlFileListFinished];
     } else if (downloader == _dlGetFriendList) {
         [self getFriendListFinished];
+    } else if (downloader == _dlGetBlockList) {
+        [self getBlockListFinished];
+    } else if (downloader == _dlAddBlockList) {
+        [self addBlockListFinished];
+    } else if (downloader == _dlDelBlockList) {
+        [self delBlockListFinished];
     }
 }
 
@@ -208,6 +220,115 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
         [_delegateGetFriendList performSelector:@selector(downloadMainFinished:)
                                      withObject:[NSNumber numberWithBool:success]];
     }
+}
+
+#pragma mark - Block list
+
+// @ 0x9997c / 0x99990 — the parsed blocked-player id/name arrays (parallel).
+- (NSArray *)blPlayerIdArray {
+    return _blPlayerIdArray;
+}
+
+- (NSArray *)blNameArray {
+    return _blNameArray;
+}
+
+// @ 0x9658c / 0x96710
+- (BOOL)isAddBlockListDownLoading {
+    return _dlAddBlockList != nil;
+}
+
+- (BOOL)isGetBlockListDownLoading {
+    return _dlGetBlockList != nil;
+}
+
+// POST "uuid=<uuId>" to fetch the block list. Shared body builder for the two GETs.
+- (Downloader *)blockDownloaderForURL:(NSURL *)url uuidBody:(BOOL)uuidOnly
+                              playerId:(NSString *)playerId {
+    NSString *body;
+    if (uuidOnly) {
+        body = [NSString stringWithFormat:@"uuid=%@", AppDelegate.appDelegate.uuId];
+    } else {
+        body = [NSString stringWithFormat:@"uuid=%@&player_id=%@",
+                AppDelegate.appDelegate.uuId, playerId];
+    }
+    Downloader *downloader = [[Downloader alloc]
+        initWithURL:url
+           delegate:self
+               Post:[body dataUsingEncoding:NSUTF8StringEncoding]
+        ContextType:@"application/json"];
+    [downloader startDownloading];
+    return downloader;
+}
+
+// @ 0x965fc
+- (void)startGetBlockListHttp {
+    if (_dlGetBlockList != nil) {
+        return;
+    }
+    _dlGetBlockList = [self blockDownloaderForURL:[StoreUtil getBlockListURL]
+                                         uuidBody:YES
+                                         playerId:nil];
+}
+
+// @ 0x96440 — block a player; refuses to block yourself. No-op if already running.
+- (void)startAddBlockListHttp:(NSString *)playerId {
+    if ([playerId isEqualToString:[UserSettingData playerId]]) {
+        return;
+    }
+    if (_dlAddBlockList != nil) {
+        return;
+    }
+    _dlAddBlockList = [self blockDownloaderForURL:[StoreUtil addBlockListURL]
+                                         uuidBody:NO
+                                         playerId:playerId];
+}
+
+// @ 0x969cc — unblock a player. No-op if already running.
+- (void)startDelBlockListHttp:(NSString *)playerId {
+    if (_dlDelBlockList != nil) {
+        return;
+    }
+    _dlDelBlockList = [self blockDownloaderForURL:[StoreUtil delBlockListURL]
+                                         uuidBody:NO
+                                         playerId:playerId];
+}
+
+// @ 0x96728 — parse the block list into parallel id/name arrays.
+- (void)getBlockListFinished {
+    NSDictionary *json = [_dlGetBlockList getDataInJSON];
+    if (json[@"ErrorCode"] == nil) {
+        NSArray *block = json[@"Block"];
+        if (block.count != 0) {
+            NSMutableArray *ids = [NSMutableArray array];
+            NSMutableArray *names = [NSMutableArray array];
+            for (NSDictionary *entry in block) {
+                NSString *pid = entry[@"PlayerId"];
+                NSString *name = entry[@"Name"];
+                if (pid != nil && name != nil) {
+                    [ids addObject:pid];
+                    [names addObject:name];
+                }
+            }
+            [_blPlayerIdArray release];
+            _blPlayerIdArray = [[NSArray alloc] initWithArray:ids];
+            [_blNameArray release];
+            _blNameArray = [[NSArray alloc] initWithArray:names];
+        }
+    }
+    [_dlGetBlockList release];
+    _dlGetBlockList = nil;
+}
+
+// @ 0x965a4 / 0x96afc — the mutations only need to release their downloader.
+- (void)addBlockListFinished {
+    [_dlAddBlockList release];
+    _dlAddBlockList = nil;
+}
+
+- (void)delBlockListFinished {
+    [_dlDelBlockList release];
+    _dlDelBlockList = nil;
 }
 
 @end

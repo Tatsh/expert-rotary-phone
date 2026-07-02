@@ -51,6 +51,9 @@ typedef struct Crypt109Data {
 + (void)loadSettingData;      // @ 0x5efb4
 + (void)saveSettingData;      // @ 0x5f66c
 
+#pragma mark Identity (plaintext)
++ (NSString *)playerId;                   // @ 0x60260  (key "PlayerId")
+
 #pragma mark Effects (plaintext)
 + (BOOL)isEffectOn;                       // @ 0x606bc  (key "IsEffectOn")
 + (void)saveIsEffectOn:(BOOL)on;          // @ 0x606e4
