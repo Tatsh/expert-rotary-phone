@@ -61,6 +61,7 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)replyFriendURL        { return [self createHttpsURL:ApiPath(@"reply_friend")]; }         // 0x5928c
 + (NSURL *)removeFriendURL       { return [self createHttpsURL:ApiPath(@"remove_friend")]; }        // 0x5943c
 + (NSURL *)getRecommendFriendURL { return [self createHttpsURL:ApiPath(@"get_recommend_friend")]; } // 0x59a34
++ (NSURL *)saveTreasureURL       { return [self createHttpsURL:ApiPath(@"save_treasure")]; }        // 0x59884
 
 // --- Game API endpoints (name derived from the selector; identical pattern) ---
 + (NSURL *)getFriendRequestURL { return [self createHttpsURL:ApiPath(@"get_friend_request")]; }

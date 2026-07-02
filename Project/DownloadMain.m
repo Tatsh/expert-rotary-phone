@@ -11,6 +11,7 @@
 #import "AppDelegate.h"
 #import "StoreUtil.h"
 #import "UserSettingData.h"
+#import "TreasureData.h"
 
 static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
 
@@ -28,6 +29,7 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     NSArray *_blNameArray;           // blocked player names (parallel to ids)
     Downloader *_dlCancelFriend;     // active cancel-friend-request action
     __unsafe_unretained id<DownloadMainDelegate> _delegateCancelFriend;
+    Downloader *_dlSaveTreasure;     // active treasure-save action
 }
 
 // @ 0x93dd4 — construct the singleton once, guarded by @synchronized.
@@ -84,6 +86,8 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
         [self delBlockListFinished];
     } else if (downloader == _dlCancelFriend) {
         [self cancelFriendFinished];
+    } else if (downloader == _dlSaveTreasure) {
+        [self saveTreasureFinished];
     }
 }
 
@@ -381,6 +385,40 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
         [_delegateCancelFriend performSelector:@selector(downloadMainFinished:)
                                     withObject:[NSNumber numberWithBool:(json == nil)]];
     }
+}
+
+#pragma mark - Save treasure (sugoroku reward)
+
+// @ 0x97698 — POST the player's collected pieces for a map cell to the server.
+// mapId encodes main/sub as (mapId / 10, mapId % 10).
+- (void)startSaveTreasureHttp:(short)mapId visitor:(NSString *)visitor friendship:(int)friendship {
+    if (_dlSaveTreasure != nil) {
+        return;
+    }
+    NSManagedObjectContext *context = AppDelegate.appDelegate.managedObjectContext;
+    TreasureData *treasure = [TreasureData getTreasureData:mapId / 10
+                                                  subMapId:mapId % 10
+                                    inManagedObjectContext:context];
+    short charaId = [UserSettingData charaId];
+    int musicPiece = [treasure.musicPiece intValue];
+    int wallPiece = [treasure.wallPaperPiece intValue];
+
+    NSString *body = [NSString stringWithFormat:
+                      @"uuid=%@&chara_id=%d&map_id=%d&music_piece=%d&wall_piece=%d"
+                      @"&visitor=%@&friendship=%d",
+                      AppDelegate.appDelegate.uuId, charaId, mapId, musicPiece, wallPiece,
+                      visitor, friendship];
+    _dlSaveTreasure = [[Downloader alloc]
+        initWithURL:[StoreUtil saveTreasureURL]
+           delegate:self
+               Post:[body dataUsingEncoding:NSUTF8StringEncoding]
+        ContextType:@"application/json"];
+    [_dlSaveTreasure startDownloading];
+}
+
+- (void)saveTreasureFinished {
+    [_dlSaveTreasure release];
+    _dlSaveTreasure = nil;
 }
 
 @end

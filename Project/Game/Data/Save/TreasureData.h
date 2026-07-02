@@ -33,6 +33,12 @@
 @property (nonatomic, retain) NSNumber *goalTouchSound;   // Integer16
 @property (nonatomic, retain) NSNumber *fastRecord;       // Integer16
 
+// Fetch the record for a given main/sub map (nil if none). Ghidra:
+// getTreasureData:subMapId:inManagedObjectContext: @ 0xc088c.
++ (TreasureData *)getTreasureData:(short)mainMapId
+                         subMapId:(short)subMapId
+             inManagedObjectContext:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

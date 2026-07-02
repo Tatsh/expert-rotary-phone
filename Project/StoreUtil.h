@@ -37,6 +37,7 @@
 + (NSURL *)replyFriendURL;        // 0x5928c  reply_friend          (verified)
 + (NSURL *)removeFriendURL;       // 0x5943c  remove_friend         (verified)
 + (NSURL *)getRecommendFriendURL; // 0x59a34  get_recommend_friend  (verified)
++ (NSURL *)saveTreasureURL;       // 0x59884  save_treasure         (verified)
 + (NSURL *)getArcadeScoreURL;     // 0x5995c  get_arcade_score
 + (NSURL *)getOverScoreLogURL;    // 0x59d28  get_over_score_log
 + (NSURL *)getBlockListURL;       // 0x59580  get_block_list

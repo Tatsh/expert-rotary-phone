@@ -98,6 +98,12 @@ typedef struct {
 // Cancel an outbound friend request to playerId. @ 0x95554.
 - (void)startCancelFriendHttp:(NSString *)playerId;
 
+// --- Save treasure (sugoroku reward) ---
+
+// POST the collected pieces for map cell `mapId` (main = /10, sub = %10) with the
+// visiting friend and friendship level. @ 0x97698.
+- (void)startSaveTreasureHttp:(short)mapId visitor:(NSString *)visitor friendship:(int)friendship;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
