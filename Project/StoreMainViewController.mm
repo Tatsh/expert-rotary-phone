@@ -47,6 +47,41 @@ extern char g_IsPadDisplay;
     return self;
 }
 
+// @ 0x42d48 — root view backdrop. Phone: opaque light-grey table backdrop.
+// iPad: a clear view over a tiled "friman_bg" pattern image.
+- (void)loadView {
+    [super loadView];
+    self.view.opaque = YES;
+
+    NESceneManager_shared();
+    if (!g_IsPadDisplay) {
+        // RGB 226/227/228 (Ghidra 0x3f62e2e3 / 0x3f63e3e4 / 0x3f64e4e5).
+        self.view.backgroundColor = [UIColor colorWithRed:226.0f / 255.0f
+                                                    green:227.0f / 255.0f
+                                                     blue:228.0f / 255.0f
+                                                    alpha:1.0f];
+    } else {
+        self.view.backgroundColor = [UIColor clearColor];
+        UIImageView *bg =
+            [[[UIImageView alloc] initWithImage:[UIImage imageNamed:@"friman_bg"]] autorelease];
+        [self.view addSubview:bg];
+    }
+    self.view.autoresizingMask =
+        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    self.view.exclusiveTouch = YES;
+}
+
+// @ 0x42eec — viewDidLoad builds the full pack-browser hierarchy: the pack
+// UITableView (tag 10000) with its "show more" button + spinner + "push up to show
+// more" label (tag 100000) + store_fun image (tag 0x186a1), a loading label (tag
+// 0x2711) with a spinner, an empty-state label (tag 0x2712), the promotion banner
+// (StorePromotionView, tag 0x2775) + its dummy, and — on iPad — an inset table, a
+// dim cover view (handleTapCoverView:) and an embedded StorePackDetailViewPad; plus
+// the stretchable pack-cell backgrounds (store_pack_bg_0/1). RECONSTRUCTION DEFERRED:
+// the method's CGRect geometry is largely unrecoverable (ARM NEON vector spills in
+// the decompiler), and it depends on StorePromotionView + StorePackDetailViewPad
+// which are not yet reconstructed. Tracked in HANDOFF.md.
+
 // @ 0x4a2d8
 - (void)startStoreClose {
     m_IsStoreClosing = YES;
