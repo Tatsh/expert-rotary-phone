@@ -33,6 +33,12 @@ public:
     void setLastMusic(int music);
     int  lastSheet() const;              // DAT_00187bbc
     void setLastSheet(int sheet);
+
+private:
+    int m_lastMusic = 0;     // +0x00
+    int m_lastSheet = 0;     // +0x04
+    float m_state[16] = {};  // +0x08..0x44 (transient event-center state, zeroed by begin)
+    int m_flags[2] = {};     // +0x40..0x44
 };
 
 // Scene manager owning the root view controller (guarded singleton @ DAT_00187b74).
@@ -40,7 +46,13 @@ class neSceneManager {
 public:
     static neSceneManager &shared();          // Ghidra: NESceneManager_shared (FUN_0000b194)
                                               //   lazily ctors via FUN_0002c5c0 (NESceneManager_init)
-    void attachRoot(void *viewController);    // Ghidra: NESceneManager_attachRoot (FUN_0002c5b8)
+    // Store the app's root view controller. `viewController` is a bridged
+    // UIViewController — this is the ObjC->C++ boundary, so it stays an opaque
+    // pointer on the C++ side. Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
+    void attachRoot(void *viewController);
+
+private:
+    void *m_root = nullptr;   // +0x00 the bridged root UIViewController
 };
 
 // Renderer / graphics manager (singleton @ DAT_00188384, +0x88 = content scale).
