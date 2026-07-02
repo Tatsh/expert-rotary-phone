@@ -46,6 +46,25 @@ static const char kOrbKeyObfuscated[25] = {
     return [AcMusicData getZipData:entry Path:self.filePath];
 }
 
+// The per-difficulty note charts: each is a BF-decrypted ZIP entry of the .acv.
+// Ghidra: sheetEasy @ 0x66418 / sheetNormal @ 0x66434 / sheetHyper @ 0x66450 /
+// sheetEx @ 0x6646c.
+- (NSData *)sheetEasy {
+    return [self getZipData:@"sheet_es"];
+}
+
+- (NSData *)sheetNormal {
+    return [self getZipData:@"sheet_n"];
+}
+
+- (NSData *)sheetHyper {
+    return [self getZipData:@"sheet_h"];
+}
+
+- (NSData *)sheetEx {
+    return [self getZipData:@"sheet_ex"];
+}
+
 // @ 0x65c6c — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in place.
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);

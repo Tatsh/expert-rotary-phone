@@ -36,6 +36,17 @@
 // Ghidra: +[AcMusicData dataWithPath:ID:] @ 0x65e2c
 + (instancetype)dataWithPath:(NSString *)path ID:(int)acMusicId;
 
+// The decoded note chart for each difficulty tier — the ZIP entries "sheet_es"/
+// "sheet_n"/"sheet_h"/"sheet_ex" of the .acv, BF-decrypted (4-byte header +
+// 20-byte note records; see NoteMng). The play loader picks one by difficulty and
+// hands it to -[NoteMng initPlayDataWithData:].
+// Ghidra: sheetEasy @ 0x66418 / sheetNormal @ 0x66434 / sheetHyper @ 0x66450 /
+// sheetEx @ 0x6646c.
+- (NSData *)sheetEasy;
+- (NSData *)sheetNormal;
+- (NSData *)sheetHyper;
+- (NSData *)sheetEx;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
