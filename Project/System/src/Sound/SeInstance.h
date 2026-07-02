@@ -12,9 +12,11 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. These three
 //  controllers are tiny and fully recovered, so they are provided inline here rather
 //  than left as unresolved seams:
-//    - SeInstanceIsBusy   Ghidra: FUN_0002cba4  (command byte non-idle query)
-//    - SeInstancePlay     Ghidra: FUN_0002cac0  (arm forward/reverse playback)
-//    - SeInstancePlayMode Ghidra: FUN_0002cb24  (issue "play" command, optional rewind)
+//    - SeInstanceIsBusy    Ghidra: FUN_0002cba4  (command byte non-idle query)
+//    - SeInstancePlay      Ghidra: FUN_0002cac0  (arm forward/reverse playback)
+//    - SeInstancePlayMode  Ghidra: FUN_0002cb24  (issue "play" command, optional rewind)
+//    - SeInstanceIsPlaying Ghidra: FUN_0002cb64  (cursor still within its range)
+//    - SeInstanceStop      Ghidra: FUN_0002cb5c  (clear the command)
 //
 
 #pragma once
@@ -27,7 +29,7 @@ struct SeInstance {
     float cursor;       // +0x40  current playback position, in frames
     float rate;         // +0x44  playback rate (< 0 plays the sound in reverse)
     unsigned char reserved48[0x10];
-    int   command;      // +0x58  0 idle, 1 play-forward, 3 play (consumed per frame)
+    int   command;      // +0x58  0 idle, 1 play-forward, 3 play, 4 finished (per frame)
 };
 
 // True while a command is still pending (command byte != 0). Callers only fire a new
@@ -64,6 +66,27 @@ inline void SeInstancePlayMode(void *instance, int mode) {
     } else {
         o->cursor = 0.0f;
     }
+}
+
+// Whether the controller is still running its cursor. An idle (0) or finished (4)
+// command counts as stopped; otherwise a reverse-rate sound plays while the cursor is
+// still above the head, a forward one while it has not yet reached the last frame.
+// Ghidra: FUN_0002cb64.
+inline bool SeInstanceIsPlaying(void *instance) {
+    SeInstance *o = reinterpret_cast<SeInstance *>(instance);
+    if ((o->command | 4) == 4) {   // command 0 (idle) or 4 (finished)
+        return false;
+    }
+    if (o->rate <= 0.0f) {
+        return (int)o->cursor > 0;
+    }
+    return (int)o->cursor < o->frameCount;
+}
+
+// Stop the controller: clear its command so the per-frame tick skips it. Ghidra:
+// FUN_0002cb5c.
+inline void SeInstanceStop(void *instance) {
+    reinterpret_cast<SeInstance *>(instance)->command = 0;
 }
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
