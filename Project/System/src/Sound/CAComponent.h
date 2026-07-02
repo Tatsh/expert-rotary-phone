@@ -35,6 +35,14 @@ public:
     // Set a voice's mixer gain from the volume-level table. Ghidra: FUN_00023eb0.
     bool setPlayerVolume(int volumeIndex, int voice);
 
+    // Stop a voice (make it reusable) and query its state (-1 free/1 playing/
+    // 4 finished). `voice` is a play-handle's slot index.
+    bool stopVoice(int voice);
+    int voiceState(int voice) const;
+
+    // Set the mixer gain of every voice from the volume-level table.
+    void setAllVolume(int volumeIndex);
+
 private:
     // A single mixer input. Ghidra: the 0x18-byte object built in initGraph.
     struct CAVoice {

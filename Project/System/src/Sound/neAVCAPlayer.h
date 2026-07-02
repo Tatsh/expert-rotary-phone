@@ -44,6 +44,15 @@ public:
     // Ghidra: FUN_00026784.
     bool play(uint32_t handle);
 
+    // Stop the voice named by `handle`. Ghidra: FUN_0002679c.
+    bool stop(uint32_t handle);
+
+    // The voice's state (-1 free / 1 playing / 4 finished). Ghidra: FUN_000267cc.
+    int voiceState(uint32_t handle);
+
+    // Set the gain (volume level 0..127) of every voice. Ghidra: FUN_000267e4.
+    void setAllVoiceVolume(int level);
+
     // AudioSession interruption handling. Ghidra: suspend FUN_000261e0 /
     // resume FUN_000261ec.
     void suspend();

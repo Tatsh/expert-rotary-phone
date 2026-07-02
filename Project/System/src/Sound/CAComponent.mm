@@ -219,6 +219,29 @@ bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
     return true;
 }
 
+// Stop a voice: mark it finished so reserveVoice can recycle it.
+bool CAComponent::stopVoice(int voice) {
+    if (voice < 0 || voice >= m_voiceCount) {
+        return false;
+    }
+    m_voices[voice]->state = 4;   // finished
+    return true;
+}
+
+int CAComponent::voiceState(int voice) const {
+    if (voice < 0 || voice >= m_voiceCount) {
+        return -1;
+    }
+    return m_voices[voice]->state;
+}
+
+// Ghidra: FUN_000267e4 applied across the mixer inputs.
+void CAComponent::setAllVolume(int volumeIndex) {
+    for (int i = 0; i < m_voiceCount; i++) {
+        setPlayerVolume(volumeIndex, i);
+    }
+}
+
 // Ghidra: FUN_00024044 — the AURenderCallback: copy this voice's PCM into the
 // mixer, looping or finishing at the end of the source buffer.
 OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags *flags,

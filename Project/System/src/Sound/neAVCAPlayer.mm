@@ -119,3 +119,18 @@ bool neAVCAPlayer::play(uint32_t handle) {
     }
     return true;
 }
+
+// Ghidra: FUN_0002679c.
+bool neAVCAPlayer::stop(uint32_t handle) {
+    return m_component->stopVoice((int)((handle & 0x0fffffff) >> 16));
+}
+
+// Ghidra: FUN_000267cc.
+int neAVCAPlayer::voiceState(uint32_t handle) {
+    return m_component->voiceState((int)((handle & 0x0fffffff) >> 16));
+}
+
+// Ghidra: FUN_000267e4 (applied to all voices by setSeVolume:groupId:).
+void neAVCAPlayer::setAllVoiceVolume(int level) {
+    m_component->setAllVolume(level);
+}

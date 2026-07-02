@@ -135,6 +135,32 @@ bool neAVSePlayer::play(uint32_t handle) {
     return false;
 }
 
+// Ghidra: FUN_000214c0.
+bool neAVSePlayer::stop(uint32_t handle) {
+    neAVSeVoice *voice = voiceForHandle(m_voices, handle);
+    if (voice != nil) {
+        [voice.player stop];
+        return true;
+    }
+    return false;
+}
+
+// Ghidra: FUN_000214f0.
+int neAVSePlayer::voiceState(uint32_t handle) {
+    neAVSeVoice *voice = voiceForHandle(m_voices, handle);
+    if (voice == nil) {
+        return -1;
+    }
+    return voice.player.isPlaying ? 1 : 4;
+}
+
+// Set the volume of every AVAudioPlayer voice.
+void neAVSePlayer::setGroupVolume(float volume) {
+    for (neAVSeVoice *voice in m_voices) {
+        voice.player.volume = volume;
+    }
+}
+
 // Ghidra: FUN_00021288 — pause every voice.
 void neAVSePlayer::suspend() {
     for (neAVSeVoice *voice in m_voices) {

@@ -39,6 +39,15 @@ public:
     // Start the AVAudioPlayer referenced by `handle`. Ghidra: FUN_000214a8.
     bool play(uint32_t handle);
 
+    // Stop the voice named by `handle`. Ghidra: FUN_000214c0.
+    bool stop(uint32_t handle);
+
+    // The voice's state (-1 free/idle, 1 playing). Ghidra: FUN_000214f0.
+    int voiceState(uint32_t handle);
+
+    // Set the volume (0..1) of every voice in the pool.
+    void setGroupVolume(float volume);
+
     // AudioSession interruption handling. Ghidra: suspend FUN_00021288 /
     // resume FUN_00021294.
     void suspend();

@@ -19,16 +19,30 @@ static const float kBgmInstantFade = 0.0f;
 static const int kSeGroupCount = 16;
 static const int kSeVoiceCount = 8;   // onStartPlayer starts each backend with 8 voices
 
+// One live SE instance tracked for voice-stealing (Ghidra: the 8-entry seList,
+// 0xc bytes each). handle == kFreeInstance marks a free slot.
+static const RSND_INSTANCE_ID kFreeInstance = (RSND_INSTANCE_ID)-1;
+struct SeInstance {
+    RSND_INSTANCE_ID handle;
+    int group;   // 0 = caplayer, else AVFoundation
+};
+
 @implementation AudioManager {
     BOOL m_isStart;
     BOOL m_isSuspend;
-    BOOL m_isInterruption;
+    BOOL m_isInterruption;            // BGM interrupted
+    BOOL m_isInterruptionVoice;
     BOOL m_isPlaying;                 // BGM playing
+    BOOL m_isPlayingVoice;
     BOOL m_isOnPause;                 // BGM paused
+    BOOL m_isOnPauseVoice;
     AVAudioPlayer *m_bgmPlayer;
     AVAudioPlayer *m_pushBgmPlayer;   // the ducked/saved BGM
+    AVAudioPlayer *m_voicePlayer;     // the VOICE channel (a second BGM-like player)
     NSString *m_loadedBgmPath;        // path of the currently loaded BGM
+    NSTimeInterval m_voicePlayTime;   // VOICE resume position
     float m_bgmSettingVolume;
+    float m_unitVolume;               // per-tick fade delta
     NSTimer *m_fadeTimer;
     neAVCAPlayer *m_caPlayer;         // CoreAudio SE (group 0)
     neAVSePlayer *m_seAVPlayer;       // AVFoundation SE (other groups)
@@ -36,6 +50,27 @@ static const int kSeVoiceCount = 8;   // onStartPlayer starts each backend with 
     NSMutableArray *m_seNameList;     // registered call names
     NSMutableDictionary *m_seType;    // key (name or rid) -> packed handle/type
     float m_seVolume[kSeGroupCount];
+    SeInstance m_seList[8];           // live SE instances (oldest first)
+}
+
+- (instancetype)init {
+    if ((self = [super init])) {
+        m_caPlayer = new neAVCAPlayer();
+        m_seAVPlayer = new neAVSePlayer();
+        m_seRidList = [[NSMutableArray alloc] init];
+        m_seNameList = [[NSMutableArray alloc] init];
+        m_seType = [[NSMutableDictionary alloc] init];
+        for (int i = 0; i < 8; i++) {
+            m_seList[i].handle = kFreeInstance;
+            m_seList[i].group = 0;
+        }
+    }
+    return self;
+}
+
+- (void)dealloc {
+    delete m_caPlayer;
+    delete m_seAVPlayer;
 }
 
 // @ 0x1dea0 — thread-safe lazy singleton.
@@ -353,21 +388,247 @@ static const int kSeVoiceCount = 8;   // onStartPlayer starts each backend with 
     return [self playSe:name resourceId:resourceId];
 }
 
-#pragma mark - Helpers still to be filled (bodies tracked in HANDOFF)
+// @ 0x1f3d0 — stop the SE instance `handle` in whichever backend owns it.
+- (BOOL)stopSe:(RSND_INSTANCE_ID)instanceId {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].handle == instanceId) {
+            return m_seList[i].group != 0 ? m_seAVPlayer->stop((uint32_t)instanceId)
+                                          : m_caPlayer->stop((uint32_t)instanceId);
+        }
+    }
+    return NO;
+}
 
-// SE instance-list housekeeping (voice stealing). Ghidra: orderInstanceList
-// @ 0x1f??? / stopOldInstance / addInstance:group:.
-- (void)orderInstanceList {}
-- (void)stopOldInstance {}
-- (void)addInstance:(RSND_INSTANCE_ID)handle group:(int)group {}
+// @ 0x1f630 — stop every tracked SE instance.
+- (BOOL)stopSeAll {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].group != 0) {
+            m_seAVPlayer->stop((uint32_t)m_seList[i].handle);
+        } else {
+            m_caPlayer->stop((uint32_t)m_seList[i].handle);
+        }
+    }
+    return YES;
+}
 
-// BGM fade timers ramp the AVAudioPlayer volume toward 1.0 / 0.0 over `seconds`.
-// Ghidra: createBgmFadeInTimer: / createBgmFadeOutTimer:.
-- (void)createBgmFadeInTimer:(float)seconds {}
-- (void)createBgmFadeOutTimer:(float)seconds {}
+// @ 0x1f6dc — reap finished SE instances (state -1/4), freeing their voices, then
+// compact the list so the oldest live instance is first.
+- (void)orderInstanceList {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].handle == kFreeInstance) {
+            break;
+        }
+        int state = m_seList[i].group != 0 ? m_seAVPlayer->voiceState((uint32_t)m_seList[i].handle)
+                                           : m_caPlayer->voiceState((uint32_t)m_seList[i].handle);
+        if (state == -1 || state == 4) {
+            if (m_seList[i].group != 0) {
+                m_seAVPlayer->stop((uint32_t)m_seList[i].handle);
+            } else {
+                m_caPlayer->stop((uint32_t)m_seList[i].handle);
+            }
+            m_seList[i].handle = kFreeInstance;
+        }
+    }
+    // Compact: pull later live entries forward over the freed gaps.
+    for (int i = 0; i < 7; i++) {
+        if (m_seList[i].handle == kFreeInstance) {
+            for (int j = i + 1; j < 8; j++) {
+                if (m_seList[j].handle != kFreeInstance) {
+                    m_seList[i] = m_seList[j];
+                    m_seList[j].handle = kFreeInstance;
+                    break;
+                }
+            }
+        }
+    }
+}
 
-// Per-backend suspend/resume book-keeping. Ghidra: suspendPlayer: / resumePlayer:.
-- (void)suspendPlayer:(int)which {}
-- (void)resumePlayer:(int)which {}
+// @ 0x1f8fc — steal the oldest instance's voice to make room, shifting the list.
+- (void)stopOldInstance {
+    if (m_seList[0].group != 0) {
+        m_seAVPlayer->stop((uint32_t)m_seList[0].handle);
+    } else {
+        m_caPlayer->stop((uint32_t)m_seList[0].handle);
+    }
+    for (int i = 0; i < 7; i++) {
+        m_seList[i] = m_seList[i + 1];
+    }
+    m_seList[7].handle = kFreeInstance;
+    m_seList[7].group = 0;
+}
+
+// @ 0x1f964 — record a newly-prepared instance in the first free slot.
+- (void)addInstance:(RSND_INSTANCE_ID)handle group:(int)group {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].handle == kFreeInstance) {
+            m_seList[i].handle = handle;
+            m_seList[i].group = group;
+            return;
+        }
+    }
+}
+
+// @ 0x1f99c — set the SE volume for a group (level 0..127): the caplayer sets its
+// 8 voices, the AVFoundation pool scales each player.
+- (void)setSeVolume:(int)volume groupId:(int)group {
+    if (volume >= 0x80) {
+        return;
+    }
+    if (group >= 0 && group < kSeGroupCount) {
+        m_seVolume[group] = volume;
+    }
+    if (group != 0) {
+        m_seAVPlayer->setGroupVolume((float)volume / 127.0f);
+    } else {
+        m_caPlayer->setAllVoiceVolume(volume);
+    }
+}
+
+#pragma mark - VOICE channel (a second BGM-like player)
+
+// @ 0x1e708
+- (BOOL)loadVoice:(NSString *)path isLoop:(BOOL)loop {
+    if (path == nil) {
+        return NO;
+    }
+    m_voicePlayer = nil;
+    NSURL *url = [NSURL fileURLWithPath:path];
+    NSError *error = nil;
+    m_voicePlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+    if (error != nil) {
+        return NO;
+    }
+    m_voicePlayer.numberOfLoops = loop ? -1 : 0;
+    m_voicePlayer.delegate = self;
+    [m_voicePlayer prepareToPlay];
+    return YES;
+}
+
+// @ 0x2030c
+- (BOOL)playVoice {
+    if (m_voicePlayer == nil) {
+        return NO;
+    }
+    if (m_isOnPauseVoice) {
+        m_voicePlayer.currentTime = m_voicePlayTime;
+    }
+    [m_voicePlayer play];
+    m_isPlayingVoice = YES;
+    m_isOnPauseVoice = NO;
+    return YES;
+}
+
+// @ 0x20388
+- (BOOL)stopVoice {
+    if (m_voicePlayer == nil) {
+        return NO;
+    }
+    [m_voicePlayer stop];
+    m_isPlayingVoice = NO;
+    return YES;
+}
+
+// @ 0x203c8
+- (BOOL)onPauseVoice {
+    if (m_voicePlayer == nil) {
+        return NO;
+    }
+    m_voicePlayTime = m_voicePlayer.currentTime;
+    [m_voicePlayer stop];
+    m_isOnPauseVoice = YES;
+    return YES;
+}
+
+#pragma mark - BGM seek / fades / suspend
+
+// @ 0x202e0
+- (void)seekBgmToTop {
+    if (m_bgmPlayer != nil) {
+        m_bgmPlayer.currentTime = 0;
+    }
+}
+
+// @ 0x1fa38 — ramp the BGM volume up to its target over `seconds`.
+- (void)createBgmFadeInTimer:(float)seconds {
+    [self deleteFadeTimer];
+    const float kTick = 1.0f / 60.0f;   // Ghidra: DAT_0001fb20 (per-tick interval)
+    m_unitVolume = (m_bgmSettingVolume / seconds) * kTick;
+    m_fadeTimer = [NSTimer timerWithTimeInterval:kTick target:self
+                                        selector:@selector(onFadeInTimer:)
+                                        userInfo:nil repeats:YES];
+    [NSRunLoop.currentRunLoop addTimer:m_fadeTimer forMode:NSRunLoopCommonModes];
+}
+
+// @ 0x1fb28 — ramp the BGM volume down to zero over `seconds`.
+- (void)createBgmFadeOutTimer:(float)seconds {
+    [self deleteFadeTimer];
+    const float kTick = 1.0f / 60.0f;   // Ghidra: DAT_0001fc18
+    m_unitVolume = (-m_bgmSettingVolume / seconds) * kTick;
+    m_fadeTimer = [NSTimer timerWithTimeInterval:kTick target:self
+                                        selector:@selector(onFadeOutTimer:)
+                                        userInfo:nil repeats:YES];
+    [NSRunLoop.currentRunLoop addTimer:m_fadeTimer forMode:NSRunLoopCommonModes];
+}
+
+- (void)onFadeInTimer:(NSTimer *)timer {
+    float v = m_bgmPlayer.volume + m_unitVolume;
+    if (v >= m_bgmSettingVolume) {
+        v = m_bgmSettingVolume;
+        [self deleteFadeTimer];
+    }
+    m_bgmPlayer.volume = v;
+}
+
+- (void)onFadeOutTimer:(NSTimer *)timer {
+    float v = m_bgmPlayer.volume + m_unitVolume;
+    if (v <= 0.0f) {
+        v = 0.0f;
+        [self deleteFadeTimer];
+        [m_bgmPlayer pause];
+    }
+    m_bgmPlayer.volume = v;
+}
+
+// @ 0x20500 — interrupt a channel (0 = BGM, 1 = VOICE), stopping its player.
+- (void)suspendPlayer:(int)which {
+    if (which > 1) {
+        return;
+    }
+    if (which == 1) {
+        m_isInterruptionVoice = YES;
+        [m_voicePlayer stop];
+    } else {
+        m_isInterruption = YES;
+        [m_bgmPlayer stop];
+    }
+}
+
+// @ 0x20550 — resume a channel that was interrupted and had been playing.
+- (void)resumePlayer:(int)which {
+    if (which > 1) {
+        return;
+    }
+    if (which == 1) {
+        if (!m_isInterruptionVoice) return;
+        m_isInterruptionVoice = NO;
+        if (m_isPlayingVoice && !m_isOnPauseVoice) {
+            [self playVoice];
+        }
+    } else {
+        if (!m_isInterruption) return;
+        m_isInterruption = NO;
+        if (m_isPlaying && !m_isOnPause) {
+            [self playBgm:0];
+        }
+    }
+}
+
+// Tear the SE backends down. Ghidra: systemTerminate.
+- (void)systemTerminate {
+    [self stopSeAll];
+    m_caPlayer->suspend();
+    m_seAVPlayer->suspend();
+    m_isStart = NO;
+}
 
 @end

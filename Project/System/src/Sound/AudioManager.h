@@ -55,10 +55,10 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 - (BOOL)isPushBgm;                                    // Ghidra: @ 0x202c8
 
 // --- VOICE: a second BGM-like channel (no fade). readme.txt "VOICE操作" ---
-- (void)loadVoice:(NSString *)path isLoop:(BOOL)loop;
-- (void)playVoice;                   // selector @ 0x11a0ef
-- (void)stopVoice;                   // selector @ 0x11a007
-- (void)onPauseVoice;                // selector @ 0x11a3e3
+- (BOOL)loadVoice:(NSString *)path isLoop:(BOOL)loop;   // Ghidra: @ 0x1e708
+- (BOOL)playVoice;                   // Ghidra: @ 0x2030c
+- (BOOL)stopVoice;                   // Ghidra: @ 0x20388
+- (BOOL)onPauseVoice;                // Ghidra: @ 0x203c8
 
 // --- SE: low-latency CoreAudio (caplayer). readme.txt "SE操作" ---
 // Load a sound; keep it addressable by callName and/or the returned source id.
@@ -67,7 +67,9 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 // Play by callName or by source id; returns the playing-instance id.
 - (RSND_INSTANCE_ID)playSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId;                       // Ghidra: @ 0x1f234
 - (RSND_INSTANCE_ID)playSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId Volume:(float)volume;  // Ghidra: @ 0x1f2d8
-- (void)stopSe:(RSND_INSTANCE_ID)instanceId;         // selector @ 0x119656
+- (BOOL)stopSe:(RSND_INSTANCE_ID)instanceId;         // Ghidra: @ 0x1f3d0
+- (BOOL)stopSeAll;                                   // Ghidra: @ 0x1f630
+- (void)setSeVolume:(int)volume groupId:(int)group;  // Ghidra: @ 0x1f99c
 
 @end
 
