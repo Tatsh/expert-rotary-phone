@@ -21,6 +21,31 @@ typedef struct {
     int size;           // JSON "Size"
 } DlFileListData;
 
+// One friend's record. Obj-C type-encoding "{FriendListData=@@siii[3[7i]][3i][3i]}"
+// (verified in getFriendListFinished's NSValue wrapping). The two NSString* fields
+// are retained and must be released via releaseFriendList.
+typedef struct {
+    NSString *playerId;    // JSON "PlayerId" (retained)
+    NSString *name;        // JSON "Name" (retained)
+    short charaId;         // JSON "CharaId"
+    int totalScore;        // JSON "TotalScore"
+    int bestScore;         // JSON "BestScore"
+    int friendShip;        // JSON "FriendShip" (clamped to <= 100)
+    // Per-difficulty [N, H, Ex] x [S, AAA, AA, A, B, FullCombo, Perfect].
+    int rank[3][7];
+    // Per-difficulty FullCombo count minus Perfect count, floored at 0.
+    int fullComboOnly[3];
+    // Per-difficulty Perfect count.
+    int perfect[3];
+} FriendListData;
+
+@protocol DownloadMainDelegate <NSObject>
+@optional
+// Sent (via performSelector:) when a friend-list request completes; the object is
+// an NSNumber BOOL indicating success.
+- (void)downloadMainFinished:(NSNumber *)success;
+@end
+
 @interface DownloadMain : NSObject <DownloaderDelegate>
 
 // The shared instance (created under @synchronized on first use). Ghidra: 0x93dd4.
@@ -35,6 +60,20 @@ typedef struct {
 // POST the file-list request for `fileId` (-1 = all) at the current client version.
 // @ 0x978ac.
 - (void)startGetDlFileListHttp:(int)fileId;
+
+// --- Friend list ---
+
+// The parsed friend list — an NSArray of NSValue-wrapped FriendListData. @ 0x99914.
+- (NSArray *)friendListArray;
+// Number of pending inbound friend requests. @ 0x99734.
+- (int)friendRequestedCnt;
+// Delegate notified when the friend-list request finishes. @ 0x99604 / 0x99618.
+@property (nonatomic, assign) id<DownloadMainDelegate> delegateGetFriendList;
+// Whether the friend-list request is in flight. @ 0x958a8.
+- (BOOL)isGetFriendListDownLoading;
+// POST "uuid=<uuId>" to the friend-list URL and start it. No-op if already running.
+// @ 0x95794.
+- (void)startGetFriendListHttp;
 
 @end
 
