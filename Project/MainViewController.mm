@@ -9,6 +9,7 @@
 #import <OpenGLES/ES1/gl.h>
 
 #import "MainViewController.h"
+#import "AcceptPolicyViewController.h"
 #import "AepManager.h"
 #import "C_TASK.h"
 #import "neFrameTimer.h"
@@ -30,6 +31,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     AepManager *m_AepManager;    // C++ scene owner
     BOOL m_flgCapture;
     UIImage *m_capturedImg;
+    AcceptPolicyViewController *_acceptPolicyCtrl;   // first-run policy modal
     // Wall-clock stopwatches pacing the task-update and render steps.
     neFrameTimer m_taskTime;
     neFrameTimer m_renderTime;
@@ -88,6 +90,18 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 - (BOOL)isPause { return m_IsPause; }   // @ 0xf148
 - (BOOL)isLoop  { return m_IsLoop; }    // @ 0xf160
+
+#pragma mark - Navigation
+
+// @ 0xda40 — present the first-run accept-policy screen over the GL view and pause
+// the render loop. (The pattern every Goto* follows: alloc/init the child VC, add
+// its view, run its open animation, PauseLoop; the *EndCallBack reverses it.)
+- (void)GotoAcceptPolicy {
+    _acceptPolicyCtrl = [[AcceptPolicyViewController alloc] init];
+    [self.view addSubview:_acceptPolicyCtrl.view];
+    [_acceptPolicyCtrl startOpenAnimation];
+    [self PauseLoop];
+}
 
 #pragma mark - Frame
 

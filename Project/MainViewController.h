@@ -29,6 +29,12 @@
 - (BOOL)isPause;                        // @ 0xf148
 - (BOOL)isLoop;                         // @ 0xf160
 
+// Screen navigation. Each Goto* presents a modal child view controller over the GL
+// view (with its open animation) and pauses the render loop; the matching
+// *EndCallBack tears it down and resumes. This is the app's nav host that the
+// title/menu tasks drive via neSceneManager::rootViewController.
+- (void)GotoAcceptPolicy;               // @ 0xda40
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
