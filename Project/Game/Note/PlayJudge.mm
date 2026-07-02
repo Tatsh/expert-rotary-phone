@@ -263,9 +263,9 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
         *lastMilestone = (short)milestone;
     }
 
-    // If anything resolved this frame, refresh the score/gauge HUD.
+    // If anything resolved this frame, play the per-tap feedback SE.
     if (judgedAny || holdEnded) {
-        PlayScoreGaugeUpdate(playData);   // Ghidra: FUN_00031338
+        PlayScoreGaugeUpdate(playData);   // Ghidra: FUN_00031338 (per-tap feedback SE)
     }
 }
 

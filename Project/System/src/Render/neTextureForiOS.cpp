@@ -52,7 +52,7 @@ int neTextureForiOS::load(const char *path) {
 
     m_tileWidths[0] = m_tiles[0]->textureWidth();    // AepTexture +0x1c
     m_tileHeights[0] = m_tiles[0]->textureHeight();  // AepTexture +0x20
-    AepTextureUploadTiles(&m_tileRects[0]);          // FUN_000166ec
+    AepTextureUploadTiles(&m_tileRects[0], m_tiles[0]);   // FUN_000166ec
     return 0;
 }
 
@@ -96,7 +96,7 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name,
 
         m_tileWidths[i] = tex->textureWidth();    // AepTexture +0x1c
         m_tileHeights[i] = tex->textureHeight();  // AepTexture +0x20
-        AepTextureUploadTiles(&m_tileRects[i]);   // FUN_000166ec
+        AepTextureUploadTiles(&m_tileRects[i], tex);   // FUN_000166ec
     }
 }
 

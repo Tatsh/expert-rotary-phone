@@ -32,12 +32,13 @@ struct AepTile {
 
 // Acquire (ref-counted) the cached AepTexture for a bundled image path, loading +
 // uploading it on first use; returns null on load failure. Ghidra: FUN_0001bbf0 (the
-// shared texture cache, head list DAT_00188464). Its own reconstruction unit.
+// shared texture cache, head list DAT_00188464). Implemented in AepTexture.mm.
 AepTexture *AepTextureCacheAcquire(const char *path);
 
-// (Re)bind + reference-count the tile's uploaded AepTexture, releasing any texture it
-// was previously bound to. Called once per tile after acquire. Ghidra: FUN_000166ec.
-void AepTextureUploadTiles(AepTile *tile);
+// Rebind a tile to a texture: release the tile's previously-bound texture and retain
+// the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at the call
+// site, but it is a real incoming AepTexture* — verified in disassembly).
+void AepTextureUploadTiles(AepTile *tile, AepTexture *tex);
 
 // Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468 fills
 // into an AepSpriteCommand (offsets in comments). Zero-defaulted like a fresh quad.

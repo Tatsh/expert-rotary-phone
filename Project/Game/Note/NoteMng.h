@@ -212,6 +212,12 @@ public:
     int maxCombo() const { return m_maxCombo; }
     int judgeCount(int kind, NoteJudge tier) const { return m_tally[kind][tier]; }
 
+    // The chart's total playable-note count, fixed once the chart is parsed at
+    // initPlayData (the count of NOTE_TYPE_NORMAL records): the running score's
+    // denominator (PlayCurrentScore) and the full-combo / all-perfect threshold the
+    // song-clear jingles test. Ghidra: DAT_00178ccc.
+    int totalNoteCount() const { return m_totalNotes; }
+
     // The engine keeps one global standard-mode manager (Ghidra: DAT_00173ea4),
     // reached through a ___cxa_guard'd lazy accessor. Ghidra: NoteMng_shared
     // (FUN_0000b278), which constructs it once via NoteMng_init (FUN_00033514).
@@ -263,6 +269,7 @@ private:
     int m_combo = 0;
     int m_maxCombo = 0;
     int m_tally[kNoteKindCount][NOTE_JUDGE_TIER_COUNT] = {};   // per-kind hit counts
+    int m_totalNotes = 0;   // chart playable-note total (Ghidra: DAT_00178ccc)
     int m_earlyMiss[kNoteKindCount] = {};                     // too-early presses
 
     bool m_autoPlay = false;   // Ghidra flag @ +0x13cb5 (skips manual judgement)

@@ -32,6 +32,9 @@ public:
     bool reload();
 
     GLuint name() const { return m_name; }            // +0x18 GL texture name
+    // Original bundle path (+0x10), used as the shared-cache key. Ghidra: FUN_0001bbf0
+    // strcmp's this against the requested path when scanning the cache list.
+    const char *cacheKey() const { return m_path; }
     int width() const { return m_width; }             // +0x24 source width
     int height() const { return m_height; }           // +0x28 source height
     int textureWidth() const { return m_texWidth; }   // +0x1c padded (pow2) width

@@ -16,6 +16,7 @@
 #import <UIKit/UIKit.h>
 
 #import "AepTexture.h"
+#import "neTextureForiOS.h"   // AepTile + the cache/bind free functions declared here
 
 AepTexture::AepTexture() = default;   // Ghidra: FUN_000180c4
 
@@ -120,4 +121,69 @@ void AepTexture::uploadGL(int texWidth, int texHeight, const void *pixels) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0,
                  GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+}
+
+// Head of the shared texture cache. Ghidra: DAT_00188464 points at a circular,
+// sentinel-terminated doubly-linked list of AepTexture nodes (links at next/+0x08,
+// prev/+0x0c; refcount at +0x04). NEEngine_bootstrapB (FUN_0001ba60) builds the
+// sentinel — an empty AepTexture whose next/prev point back at itself. It is created
+// lazily here so the cache works regardless of which unit reaches it first.
+static AepTexture *AepTextureCacheSentinel() {
+    static AepTexture *sentinel = [] {
+        AepTexture *s = new AepTexture();   // operator new(0x48) + ctor FUN_000180c4
+        s->next = s;
+        s->prev = s;
+        return s;
+    }();
+    return sentinel;
+}
+
+// Ghidra: FUN_0001bbf0 — resolve a bundled image path through the shared cache. Returns
+// the existing entry (with its refcount bumped) when the path is already cached, else
+// loads a fresh AepTexture, links it to the front of the list, and returns it. Returns
+// null when the image fails to load.
+AepTexture *AepTextureCacheAcquire(const char *path) {
+    AepTexture *sentinel = AepTextureCacheSentinel();
+
+    for (AepTexture *node = sentinel->next; node != sentinel; node = node->next) {
+        if (node->cacheKey() != nullptr && std::strcmp(node->cacheKey(), path) == 0) {
+            ++node->refCount;   // +0x04
+            return node;
+        }
+    }
+
+    AepTexture *tex = new AepTexture();   // operator new(0x48) + ctor FUN_000180c4
+    if (!tex->load(path)) {               // FUN_00018218 (returns 1 on success)
+        return nullptr;
+    }
+    ++tex->refCount;                      // +0x04
+
+    // push_front: splice the new node in between the sentinel and the current first.
+    AepTexture *first = sentinel->next;
+    first->prev = tex;
+    tex->next = first;
+    tex->prev = sentinel;
+    sentinel->next = tex;
+    return tex;
+}
+
+// Ghidra: FUN_000166ec — release the tile's previously-bound texture (FUN_00018200),
+// then retain and bind the new one. The 2nd argument is a real incoming AepTexture*
+// (verified in the disassembly) that the decompiler drops at the call site.
+void AepTextureUploadTiles(AepTile *tile, AepTexture *tex) {
+    AepTexture *old = tile->uploaded;
+    if (old != nullptr && old != tex) {
+        // Drop our reference; on the last one, free the GL name, unlink from the
+        // shared cache list, and destroy it.
+        if (--old->refCount <= 0) {
+            old->releaseGL();
+            old->prev->next = old->next;
+            old->next->prev = old->prev;
+            delete old;
+        }
+    }
+    tile->uploaded = tex;
+    if (tex != nullptr) {
+        ++tex->refCount;   // +0x04 retain
+    }
 }

@@ -62,6 +62,7 @@ int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_
 
     // Reset play state.
     m_recordCount = 0;
+    m_totalNotes = 0;
     m_minTempoValue = 0x7fff;
     m_maxTempoValue = 0;
     m_endValue = 0;
@@ -82,6 +83,9 @@ int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_
     for (int i = 0; i < count; i++) {
         m_records[i] = src[i];
         switch (m_records[i].type) {
+            case NOTE_TYPE_NORMAL:
+                m_totalNotes++;   // the chart's playable-note total (Ghidra: DAT_00178ccc)
+                break;
             case NOTE_TYPE_MARK:
                 m_endValue = m_records[i].tick;
                 break;

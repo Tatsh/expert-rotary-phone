@@ -45,8 +45,11 @@ struct NoteJudgeState {
 void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
                       const int *touchIds, int touchCount);
 
-// Recompute the running score + gauge from the play data and refresh their HUD,
-// called after a frame that resolved any note. Ghidra: FUN_00031338.
+// Play the per-tap feedback SE (retriggering it if already sounding), gated by the
+// user's touch-sound volume and skipped while the pause menu is up. Called after a
+// frame that resolved any note. (Despite the historical name it does NOT recompute
+// the score/gauge — that is done by the play loop via PlayCurrentScore.)
+// Ghidra: FUN_00031338.
 void PlayScoreGaugeUpdate(MainTaskPlayData *playData);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
