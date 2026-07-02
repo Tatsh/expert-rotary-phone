@@ -155,6 +155,14 @@ static NSString *ApiPath(NSString *name) {
     return ComputeSHA256HexString(seed.UTF8String);
 }
 
+// @ 0x5a240 — must be an http(s) string that NSURL accepts.
++ (BOOL)isValidURL:(NSString *)urlString {
+    if (![urlString hasPrefix:@"http://"] && ![urlString hasPrefix:@"https://"]) {
+        return NO;
+    }
+    return [NSURL URLWithString:urlString] != nil;
+}
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

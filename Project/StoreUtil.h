@@ -78,6 +78,10 @@
 // Ghidra: createReceiptChecckDigest: @ 0x5a394 (sic — misspelled in the binary).
 + (NSString *)createReceiptChecckDigest:(NSString *)json;
 
+// YES if the string is an http(s) URL that NSURL can parse.
+// Ghidra: isValidURL: @ 0x5a240.
++ (BOOL)isValidURL:(NSString *)urlString;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
