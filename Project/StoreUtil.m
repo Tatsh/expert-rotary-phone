@@ -56,6 +56,12 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)getEventInfoURL   { return [self createHttpsURL:ApiPath(@"get_event_info")]; }     // 0x59d94
 + (NSURL *)getConvertCodeURL { return [self createHttpsURL:ApiPath(@"get_convert_code")]; }   // 0x59e00
 
+// --- Friend actions (verified endpoint names) ---
++ (NSURL *)requestFriendURL      { return [self createHttpsURL:ApiPath(@"request_friend")]; }       // 0x59220
++ (NSURL *)replyFriendURL        { return [self createHttpsURL:ApiPath(@"reply_friend")]; }         // 0x5928c
++ (NSURL *)removeFriendURL       { return [self createHttpsURL:ApiPath(@"remove_friend")]; }        // 0x5943c
++ (NSURL *)getRecommendFriendURL { return [self createHttpsURL:ApiPath(@"get_recommend_friend")]; } // 0x59a34
+
 // --- Game API endpoints (name derived from the selector; identical pattern) ---
 + (NSURL *)getFriendRequestURL { return [self createHttpsURL:ApiPath(@"get_friend_request")]; }
 + (NSURL *)getFriendScoreURL   { return [self createHttpsURL:ApiPath(@"get_friend_score")]; }

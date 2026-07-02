@@ -33,6 +33,10 @@
 + (NSURL *)getConvertCodeURL;     // 0x59e00  get_convert_code   (verified)
 + (NSURL *)getFriendRequestURL;   // 0x592f8  get_friend_request
 + (NSURL *)getFriendScoreURL;     // 0x59364  get_friend_score
++ (NSURL *)requestFriendURL;      // 0x59220  request_friend        (verified)
++ (NSURL *)replyFriendURL;        // 0x5928c  reply_friend          (verified)
++ (NSURL *)removeFriendURL;       // 0x5943c  remove_friend         (verified)
++ (NSURL *)getRecommendFriendURL; // 0x59a34  get_recommend_friend  (verified)
 + (NSURL *)getArcadeScoreURL;     // 0x5995c  get_arcade_score
 + (NSURL *)getOverScoreLogURL;    // 0x59d28  get_over_score_log
 + (NSURL *)getBlockListURL;       // 0x59580  get_block_list
