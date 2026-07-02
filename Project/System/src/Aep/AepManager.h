@@ -39,6 +39,15 @@ public:
         kDrawClampLast = 0x10,   // clamp past-the-end to the last frame (else skip)
     };
 
+    // Resolve a layer *name* within `group` to the encoded `lyr` value drawLayer
+    // consumes (group slot in the high 16 bits, layer index in the low 16). Asserts
+    // the name exists. Ghidra: getLyrNo FUN_0000fac8 (asserts at AepManager.mm:0x1d0).
+    int getLyrNo(int group, const char *name) const;
+
+    // The number of frames in the layer `lyr` (its entry chain's frameEnd).
+    // Ghidra: FUN_0000fb8c.
+    int layerFrameCount(int lyr) const;
+
     // Draw one animated layer: `lyr` encodes the resource group in its high 16 bits
     // and the layer index in its low 16 bits; `frame` is clamped/looped to the
     // layer's length; `root` is the root transform threaded into the fill. Ghidra:
@@ -52,6 +61,11 @@ private:
     // group-index table @ this+0x7c1748 selecting a per-group pointer @ +0x7f39c8).
     const AepFrameEntry *groupEntries(int lyr) const;
 
+    // Walk `entries`[layerNo]'s chain (stride 0x24) to its last entry and return
+    // its frameEnd (the layer's length). Ghidra: the shared loop in FUN_0000fd64 /
+    // FUN_0000fb8c.
+    static int layerLength(const AepFrameEntry *entries, int layerNo);
+
     // The z-sorted draw list (Ghidra: @ this + 0x727538).
     AepOrderingTable m_ot;
 
@@ -60,6 +74,16 @@ private:
     // slot's frame-entry array. Populated by loadAepData as resources load.
     const uint8_t *m_groupIndex = nullptr;               // +0x7c1748
     const AepFrameEntry *const *m_groupFrameData = nullptr;  // +0x7f39c8
+
+    // Layer-name -> index open-addressing hash table, one per group (Ghidra: the
+    // 0x2ffc-byte-strided region @ this+0x68b19c). Ghidra: FUN_0000fa30 probes it.
+    struct NameHashTable {
+        uint16_t value[2048];    // +0x0000 layer index stored per bucket
+        const char *key[2047];   // +0x1000 name per bucket (null = empty slot)
+    };
+    const NameHashTable *m_groupNames = nullptr;         // +0x68b19c (per-group)
+    const uint8_t *m_groupSlot = nullptr;                // +0x7c1948 (per-group high byte)
+    const uint16_t *m_layerNumbers = nullptr;            // +0x7210d4 (per-group, 256 stride)
 
     // Screen-transition (fade) state (Ghidra: @ this + 0x7f3af4..0x7f3b14).
     int m_transitionType = 0;         // 0 = none

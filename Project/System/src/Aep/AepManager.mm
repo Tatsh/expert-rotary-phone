@@ -9,9 +9,45 @@
 //
 
 #include <cassert>
+#include <cstring>
 
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
+
+// Ghidra: FUN_0000fa30 — resolve `name` in a group's open-addressing hash table.
+// A rolling rotate-add hash (mod 2047) picks the start bucket, then linear-probe
+// (wrapping) until the key matches (return its stored value) or an empty/looped
+// slot is hit (return -1).
+static int AepNameHashLookup(const char *name, const AepManager::NameHashTable *table) {
+    unsigned c = (unsigned char)name[0];
+    int bucket = 0;
+    if (c != 0) {
+        unsigned h = 0;
+        const char *p = name;
+        do {
+            ++p;
+            h += c;
+            unsigned r = (0x20 - (c & 0x1f)) & 0x1f;
+            c = (unsigned char)*p;
+            h = (h >> r) | (h << (0x20 - r));   // rotate-right by r
+        } while (c != 0);
+        bucket = (int)(h % 2047);
+    }
+    const int start = bucket;
+    for (;;) {
+        const char *key = table->key[bucket];
+        if (key == nullptr) {
+            return -1;
+        }
+        if (std::strcmp(name, key) == 0) {
+            return table->value[bucket];
+        }
+        bucket = (bucket + 1) % 2047;
+        if (bucket == start) {
+            return -1;
+        }
+    }
+}
 
 // Ghidra: FUN_0000f1ec — lazy accessor for the global scene manager (the
 // ~8 MB object at PTR_DAT_00130484, constructed once via FUN_00010b88). The
@@ -41,6 +77,30 @@ const AepFrameEntry *AepManager::groupEntries(int lyr) const {
     return m_groupFrameData[slot];
 }
 
+// Walk `entries`[layerNo]'s chain to its last entry and return its frameEnd — the
+// layer's length. Ghidra: the shared loop in FUN_0000fd64 / FUN_0000fb8c (stride
+// 0x24; scan forward while the entry's first field is non-negative).
+int AepManager::layerLength(const AepFrameEntry *entries, int layerNo) {
+    const AepFrameEntry *e = &entries[layerNo];
+    while (e->type >= 0) {
+        ++e;
+    }
+    return e->frameEnd;   // Ghidra: psVar2[5]
+}
+
+// Ghidra: getLyrNo FUN_0000fac8 — hash-resolve `name` in `group`'s table, assert
+// it exists, and pack (group slot << 16) | layer index into the encoded lyr.
+int AepManager::getLyrNo(int group, const char *name) const {
+    int idx = AepNameHashLookup(name, &m_groupNames[group]);
+    assert(idx >= 0);   // AepManager.mm:0x1d0 "0" (getLyrNo)
+    return (m_groupSlot[group] << 16) | m_layerNumbers[group * 256 + idx];
+}
+
+// Ghidra: FUN_0000fb8c — the layer's frame count (same walk as drawLayer).
+int AepManager::layerFrameCount(int lyr) const {
+    return layerLength(groupEntries(lyr), lyr & 0xffff);
+}
+
 // Ghidra: FUN_0000fd64 — resolve the layer's frame-entry array, clamp/loop the
 // requested frame to the layer's length, then fill it (AepDrawLayer / FUN_0000fe8c).
 void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
@@ -48,16 +108,7 @@ void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_
 
     const AepFrameEntry *entries = groupEntries(lyr);
     const int layerNo = lyr & 0xffff;
-
-    // Walk this layer's entry chain to its last entry; its frameEnd is the layer's
-    // total length (Ghidra: stride 0x24, scan while the first field is non-negative).
-    const AepFrameEntry *e = &entries[layerNo];
-    if (e->type >= 0) {
-        while (e->type >= 0) {
-            ++e;
-        }
-    }
-    const int length = e->frameEnd;   // Ghidra: psVar2[5]
+    const int length = layerLength(entries, layerNo);
     if (length == 0 || frame < 0) {
         return;
     }
