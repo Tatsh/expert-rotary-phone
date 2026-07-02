@@ -11,6 +11,7 @@
 #import "MainViewController.h"
 #import "AcceptPolicyViewController.h"
 #import "AepManager.h"
+#import "AppDelegate.h"
 #import "FriendMngTopSplitViewController.h"
 #import "FriendMngTopViewController.h"
 #import "InputConversionPassViewController.h"
@@ -27,6 +28,13 @@
 #import "PopnLinkTopSplitViewController.h"
 #import "PopnLinkTopViewController.h"
 #import "SearchView.h"
+#import "AcViewerCategoryViewController.h"
+#import "AcViewerSplitViewController.h"
+#import "OverScoreLogViewController.h"
+#import "PresentBoxViewController.h"
+#import "RecommendViewController.h"
+#import "SortSelectViewController.h"
+#import "StoreViewController.h"
 #import "neEngineBridge.h"
 #import "C_TASK.h"
 #import "neFrameTimer.h"
@@ -35,6 +43,10 @@
 // Scene-manager input-mode set, called when entering the conversion-pass screen
 // (Ghidra: FUN_0002c724(&DAT_00187b74, mode)) — a distinct engine reconstruction unit.
 extern "C" void neSceneSetInputMode(int mode);
+
+// The current title/content-area height in pixels used to vertically centre iPad
+// modal panels (Ghidra: FUN_0000f4a4 on the shared AepManager).
+extern "C" int neAepContentHeight(void);
 
 // Minimum seconds between rendered frames (Ghidra: DAT_0000be7c). Rendering is
 // skipped when the accumulated render time has not yet reached this.
@@ -72,6 +84,19 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     UIViewController *_inputNameViewCtrl;
     UINavigationController *_inviteNaviCtrl;
     UINavigationController *_searchNaviCtrl;
+    UIView *_coverView;                 // dim backdrop shown behind iPad modal panels
+    UINavigationController *_recommendNaviCtrl;
+    UIViewController *_recommendViewCtrl;
+    UINavigationController *_sortSelectNaviCtrl;
+    UIViewController *_sortSelectViewCtrl;
+    UINavigationController *_overScoreLogNaviCtrl;
+    UIViewController *_overScoreLogViewCtrl;
+    UINavigationController *_presentBoxNaviCtrl;
+    UIViewController *_presentBoxViewCtrl;
+    UIViewController *_storeViewController;
+    UINavigationController *_acViewerNaviCtrl;
+    UIViewController *_acViewerViewCtrl;
+    BOOL _acMusicSelViewing;
     // Wall-clock stopwatches pacing the task-update and render steps.
     neFrameTimer m_taskTime;
     neFrameTimer m_renderTime;
@@ -404,6 +429,193 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xd044 — mirror of GotoFriendScore: releases the shared friend nav, no ResumeLoop.
 - (void)FriendScoreEndCallBack {
     if (_friendMngNaviCtrl != nil) { [_friendMngNaviCtrl release]; _friendMngNaviCtrl = nil; }
+}
+
+// The shared iPad modal-panel styling used by the friend/recommend/store-style
+// screens: reveal the backdrop and centre a rounded, bordered 341x480 panel. The
+// vertical offset is uniform (Ghidra DAT = -480, then -10); `leftX` + `border`
+// differ per screen. Ghidra: the inlined block in the iPad branch of each Goto*.
+- (void)styleIPadPanel:(UINavigationController *)nav leftX:(CGFloat)leftX border:(UIColor *)border {
+    _coverView.hidden = NO;
+    CGFloat y = (neAepContentHeight() - 128) * 0.5f - 490.0f;
+    nav.view.backgroundColor = [UIColor colorWithRed:0.953f green:0.953f blue:0.953f alpha:1];
+    [nav.view setFrame:CGRectMake(leftX, y, 341, 480)];
+    nav.view.layer.borderColor = border.CGColor;
+    nav.view.layer.borderWidth = 3;
+    nav.view.layer.cornerRadius = 10;
+}
+
+// @ 0xc374 — the friend/recommend screen (param = context); a boxed iPad panel.
+- (void)GotoRecommend:(void *)context {
+    _recommendViewCtrl = [[RecommendViewController alloc] init];
+    [(RecommendViewController *)_recommendViewCtrl initAtNavigationController:context];
+    _recommendNaviCtrl = [[UINavigationController alloc] init];
+    _recommendNaviCtrl.view.clipsToBounds = YES;
+    if (neSceneManager::isPadDisplay()) {
+        [self styleIPadPanel:_recommendNaviCtrl leftX:141.5f
+                      border:[UIColor colorWithRed:1.0f green:0.62f blue:0.808f alpha:1]];
+    }
+    [_recommendNaviCtrl pushViewController:_recommendViewCtrl animated:NO];
+    [_recommendNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirec_navbar"]
+                                           forBarMetrics:UIBarMetricsDefault];
+    [self.view addSubview:_recommendNaviCtrl.view];
+    [_recommendViewCtrl startOpenAnimation];
+    if (!neSceneManager::isPadDisplay()) {
+        [self PauseLoop];
+    }
+    NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+    fmt.dateFormat = @"yyyy/MM/ddHH:mm";
+    [UserSettingData saveLastRecommendViewTimeString:[fmt stringFromDate:[NSDate date]]];
+}
+
+// @ 0xc9dc — the music sort-select screen (param = context); a boxed iPad panel.
+- (void)GotoSortSelect:(void *)context {
+    _sortSelectViewCtrl = [[SortSelectViewController alloc] init];
+    [(SortSelectViewController *)_sortSelectViewCtrl initAtNavigationController:context];
+    _sortSelectNaviCtrl = [[UINavigationController alloc] init];
+    _sortSelectNaviCtrl.view.clipsToBounds = YES;
+    if (neSceneManager::isPadDisplay()) {
+        [self styleIPadPanel:_sortSelectNaviCtrl leftX:22.0f
+                      border:[UIColor colorWithRed:0.929f green:0.659f blue:0.0784f alpha:1]];
+        _sortSelectNaviCtrl.view.userInteractionEnabled = YES;
+    }
+    [_sortSelectNaviCtrl pushViewController:_sortSelectViewCtrl animated:NO];
+    [_sortSelectNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"m_sort_navbar"]
+                                            forBarMetrics:UIBarMetricsDefault];
+    [self.view addSubview:_sortSelectNaviCtrl.view];
+    [_sortSelectViewCtrl startOpenAnimation];
+    if (!neSceneManager::isPadDisplay()) {
+        [self PauseLoop];
+    }
+}
+
+// @ 0xe170 — the over-score (friend score log) screen (param = context); iPad panel.
+- (void)GotoOverScoreLog:(void *)context {
+    _overScoreLogViewCtrl = [[OverScoreLogViewController alloc] init];
+    [(OverScoreLogViewController *)_overScoreLogViewCtrl initAtNavigationController:context];
+    _overScoreLogNaviCtrl = [[UINavigationController alloc] init];
+    _overScoreLogNaviCtrl.view.clipsToBounds = YES;
+    if (neSceneManager::isPadDisplay()) {
+        [self styleIPadPanel:_overScoreLogNaviCtrl leftX:261.0f
+                      border:[UIColor colorWithRed:0.792f green:0.933f blue:0.212f alpha:1]];
+    }
+    [_overScoreLogNaviCtrl pushViewController:_overScoreLogViewCtrl animated:NO];
+    [_overScoreLogNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"osl_friend_navbar"]
+                                              forBarMetrics:UIBarMetricsDefault];
+    [self.view addSubview:_overScoreLogNaviCtrl.view];
+    [_overScoreLogViewCtrl startOpenAnimation];
+    if (!neSceneManager::isPadDisplay()) {
+        [self PauseLoop];
+    }
+}
+
+// @ 0xdd8c — the present box (gifts) screen; iPad panel styling.
+- (void)GotoPresentBox {
+    _presentBoxViewCtrl = [[PresentBoxViewController alloc] init];
+    [(PresentBoxViewController *)_presentBoxViewCtrl initAtNavigationController];
+    _presentBoxNaviCtrl = [[UINavigationController alloc] init];
+    _presentBoxNaviCtrl.view.clipsToBounds = YES;
+    if (neSceneManager::isPadDisplay()) {
+        [self styleIPadPanel:_presentBoxNaviCtrl leftX:22.0f
+                      border:[UIColor colorWithRed:0.929f green:0.659f blue:0.0784f alpha:1]];
+    }
+    [_presentBoxNaviCtrl pushViewController:_presentBoxViewCtrl animated:NO];
+    [_presentBoxNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pbox_nav_gift"]
+                                            forBarMetrics:UIBarMetricsDefault];
+    [self.view addSubview:_presentBoxNaviCtrl.view];
+    [_presentBoxViewCtrl startOpenAnimation];
+    if (!neSceneManager::isPadDisplay()) {
+        [self PauseLoop];
+    }
+}
+
+// @ 0xd3d4 — the in-app store; built once, uses its own showAnimation (no PauseLoop),
+// and records the view timestamp.
+- (void)GotoStoreButton {
+    if (_storeViewController != nil) {
+        return;
+    }
+    _storeViewController = [[StoreViewController alloc] initWithRecommendPackId:-1];
+    [self.view addSubview:_storeViewController.view];
+    [(StoreViewController *)_storeViewController showAnimation];
+    NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+    fmt.dateFormat = @"yyyyMMddHH";
+    [UserSettingData saveLastStoreViewTimeString:[fmt stringFromDate:[NSDate date]]];
+}
+
+// @ 0xdb24 — the arcade (AC) viewer; phone nav / iPad split (guarded).
+- (void)GotoAcViewer {
+    _acMusicSelViewing = YES;
+    if (!neSceneManager::isPadDisplay()) {
+        AcViewerCategoryViewController *content =
+            [[AcViewerCategoryViewController alloc] autorelease];
+        _acViewerNaviCtrl = [content initAtNavigationController];
+        [_acViewerNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_category_navbar"]
+                                              forBarMetrics:UIBarMetricsDefault];
+        [self.view addSubview:_acViewerNaviCtrl.view];
+        [content startOpenAnimation];
+        [self PauseLoop];
+    } else if (_acViewerViewCtrl == nil) {
+        AcViewerSplitViewController *split = [[AcViewerSplitViewController alloc] init];
+        _acViewerViewCtrl = split;
+        [self.view addSubview:split.view];
+        [split startOpenAnimation];
+    }
+}
+
+// @ 0xe890 — open the Mail composer via a mailto: URL carrying `body`.
+- (void)GotoMailWithText:(NSString *)body {
+    NSString *urlStr = [NSString stringWithFormat:@"mailto:?body=%@", body];
+    [UIApplication.sharedApplication openURL:[NSURL URLWithString:urlStr]];
+}
+
+// @ 0xc754
+- (void)RecommendEndCallBack {
+    _coverView.hidden = YES;
+    if (_recommendViewCtrl != nil) { [_recommendViewCtrl release]; _recommendViewCtrl = nil; }
+    if (_recommendNaviCtrl != nil) { [_recommendNaviCtrl release]; _recommendNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xcd44
+- (void)SortSelectEndCallBack {
+    _coverView.hidden = YES;
+    if (_sortSelectViewCtrl != nil) { [_sortSelectViewCtrl release]; _sortSelectViewCtrl = nil; }
+    if (_sortSelectNaviCtrl != nil) { [_sortSelectNaviCtrl release]; _sortSelectNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xe4b8
+- (void)OverScoreLogEndCallBack {
+    _coverView.hidden = YES;
+    if (_overScoreLogViewCtrl != nil) { [_overScoreLogViewCtrl release]; _overScoreLogViewCtrl = nil; }
+    if (_overScoreLogNaviCtrl != nil) { [_overScoreLogNaviCtrl release]; _overScoreLogNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xe0d4
+- (void)PresentBoxEndCallBack {
+    _coverView.hidden = YES;
+    if (_presentBoxViewCtrl != nil) { [_presentBoxViewCtrl release]; _presentBoxViewCtrl = nil; }
+    if (_presentBoxNaviCtrl != nil) { [_presentBoxNaviCtrl release]; _presentBoxNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xd518 — the store closes without resuming the loop (it never paused it).
+- (void)StoreEndCallBack {
+    if (_storeViewController != nil) { [_storeViewController release]; _storeViewController = nil; }
+}
+
+// @ 0xdcd4 — on iPad also tears down the arcade play task before resuming.
+- (void)AcViewerEndCallBack {
+    if (_acViewerViewCtrl != nil) { [_acViewerViewCtrl release]; _acViewerViewCtrl = nil; }
+    if (_acViewerNaviCtrl != nil) { [_acViewerNaviCtrl release]; _acViewerNaviCtrl = nil; }
+    if (neSceneManager::isPadDisplay()) {
+        // Stop the arcade main task (Ghidra: acMainTask + FUN_0002315c) on close.
+        neEngine::stopAcMainTask(AppDelegate.appDelegate.acMainTask);
+        _acMusicSelViewing = NO;
+    }
+    [self ResumeLoop];
 }
 
 #pragma mark - Frame

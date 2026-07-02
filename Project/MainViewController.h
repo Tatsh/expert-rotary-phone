@@ -45,6 +45,13 @@
 - (void)GotoArcadeSearch;               // @ 0xd930
 - (void)GotoFriendScore:(unsigned int)musicId;  // @ 0xcf9c
 - (void)GotoReviewPage;                 // @ 0xe830
+- (void)GotoRecommend:(void *)context;  // @ 0xc374
+- (void)GotoSortSelect:(void *)context; // @ 0xc9dc
+- (void)GotoOverScoreLog:(void *)context; // @ 0xe170
+- (void)GotoPresentBox;                 // @ 0xdd8c
+- (void)GotoStoreButton;                // @ 0xd3d4
+- (void)GotoAcViewer;                   // @ 0xdb24
+- (void)GotoMailWithText:(NSString *)body;  // @ 0xe890
 
 // Modal teardowns (invoked by each screen when it closes): release the controller
 // and resume the render loop.
@@ -59,6 +66,12 @@
 - (void)InviteCodeEndCallBack;          // @ 0xd8d8
 - (void)ArcadeSearchEndCallBack;        // @ 0xd9e8
 - (void)FriendScoreEndCallBack;         // @ 0xd044
+- (void)RecommendEndCallBack;           // @ 0xc754
+- (void)SortSelectEndCallBack;          // @ 0xcd44
+- (void)OverScoreLogEndCallBack;        // @ 0xe4b8
+- (void)PresentBoxEndCallBack;          // @ 0xe0d4
+- (void)StoreEndCallBack;               // @ 0xd518
+- (void)AcViewerEndCallBack;            // @ 0xdcd4
 
 // Whether the initial default download reported failure (read by TitleTask).
 - (BOOL)isDefaultDlFailed;
