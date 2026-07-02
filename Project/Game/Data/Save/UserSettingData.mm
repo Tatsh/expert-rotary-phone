@@ -28,10 +28,14 @@ static NSString *const kKeyLastSheet    = @"LastSheet";
 static NSString *const kKeyIsEffectOn   = @"IsEffectOn";
 static NSString *const kKeyIsLongNotesEffectOn = @"IsLongNotesEffectOn";
 
-// Maps a sugoroku main-map id to its touch-sound bit index.
-// Ghidra: FUN_000a218c (project rb420, program PopnRhythmin) — pending full
-// reconstruction (lives under Project/Game/Data/TreasureMap).
-extern "C" int neSugorokuTouchSoundBit(int mainMapId);
+// Maps a sugoroku main-map id (0..8) to its touch-sound bit index. Ghidra:
+// FUN_000a218c — a 9-entry table (DAT_0012f958 = {1,2,...,9}), i.e. id + 1 for a
+// valid id, else 0.
+static int neSugorokuTouchSoundBit(int mainMapId) {
+    static const int kBits[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    unsigned id = (unsigned)mainMapId & 0xffff;
+    return id < 9 ? kBits[id] : 0;
+}
 
 @implementation UserSettingData
 
