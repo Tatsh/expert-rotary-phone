@@ -104,11 +104,17 @@
   applicationWillResignActive and the clear in PlayNoteMngDetach are found).
 
 ## Known modeling reconciliations needed
-- AepManager::drawLayer is reconstructed as a 4-arg simplification (lyr, frame, root,
-  flags). The binary's FUN_0000fd64 takes ~19 args (per-layer position/size/color/blend
-  from the AepLyrCtrl fields). AepLyrCtrlUpdateAll (FUN_0002c924) and PlayTaskDraw
-  (FUN_00030944) both call the full form, so that signature must be widened (or an
-  overload added) before those per-frame draw units can be reconstructed faithfully.
+- RESOLVED (agent, reviewed): the Aep render core is now a TRUE 1:1 reconstruction.
+  AepDrawLayer (FUN_0000fe8c, the full frame-tree fill — 4 keyframe channels [pos+0x14/
+  scale+0x18/color+0x1c/rot+0x20 double-indirect], rotation via aepSin/aepCos, blend
+  composition, the alpha>=100->0x200 split, type 0 sprite / 2 recurse / 3 callback) and
+  AepManager::drawLayer (FUN_0000fd64, full 19-arg form) replace the old lossy simplified
+  versions; a 4-arg AepTransform compat overload keeps MenuMainTask/PlayTask/AepLyrCtrl
+  callers working (color=100 opaque, priority->OT slot). AepFrameEntry now has the byte-
+  exact 0x24 layout. This UNBLOCKS the four draw units: PlayTaskDraw (FUN_00030944),
+  AcMainSugorokuDraw (FUN_000a3724), AepLyrCtrlUpdateAll (FUN_0002c924), PlayResultDrawCallback
+  (FUN_0003f5f0) — each can now call the full drawLayer / group callback. aepSin/aepCos
+  reproduce the DAT_0012ded2 trig LUT at the byte-verified 1.0==0xffff scale (data seam).
 
 ## Whole subsystems not started
 - Task #7: settings sub-tables, map/sugoroku UI (SugorokuMainTask FUN_000215a0), tutorial task (FUN_0002db10)

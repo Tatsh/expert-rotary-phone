@@ -182,26 +182,60 @@ int AepManager::layerFrameCount(int lyr) const {
 
 // Ghidra: FUN_0000fd64 — resolve the layer's frame-entry array, clamp/loop the
 // requested frame to the layer's length, then fill it (AepDrawLayer / FUN_0000fe8c).
-void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
+// The full 19-parameter form: `loopFlags` is param_13 (bit0 = loop, bit4 = clampLast);
+// every other arg threads straight into the frame-tree fill. A null clipRect defaults
+// to the full-screen rect cached at this+0x7f3af4.
+void AepManager::drawLayer(int lyr, int frame, int x, int y, int scaleX, int scaleY, int rotation,
+                           uint32_t loopFlags, int p9, int p10, int color, int colorHi,
+                           uint32_t blendFlags, uint32_t p15, int *clipRect, void *context,
+                           uint32_t p17, uint32_t p19) {
     assert(lyr >= 0);   // AepManager.mm:0x26a "0 <= lyr"
 
-    const AepFrameEntry *entries = groupEntries(lyr);
+    const unsigned slot = m_groupIndex[(unsigned)lyr >> 16];   // this+0x7c1748
+    const AepFrameEntry *entries = m_groupFrameData[slot];     // this+slot*4+0x7f39c8
     const int layerNo = lyr & 0xffff;
     const int length = layerLength(entries, layerNo);
     if (length == 0 || frame < 0) {
         return;
     }
 
-    if (flags & kDrawLoop) {
+    if (loopFlags & kDrawLoop) {
         frame %= length;                 // Ghidra: ___modsi3
     } else if (frame >= length) {
-        if ((flags & kDrawClampLast) == 0) {
+        if ((loopFlags & kDrawClampLast) == 0) {
             return;                      // past the end and not clamping -> skip
         }
         frame = length - 1;
     }
 
-    AepDrawLayer(&m_ot, entries, layerNo, frame, root);
+    // Default clip rect = the cached full-screen quad {x, y, w, h} at this+0x7f3af4.
+    int *clip = clipRect ? clipRect : m_transitionOverlay;
+
+    AepDrawLayer(this, (int)slot, layerNo, frame, x, y, scaleX, scaleY, p9, p10,
+                 color, colorHi, (uint32_t)rotation, blendFlags, p15, clip, p17, context, p19);
+}
+
+// Compatibility overload for the transform-only callers (MenuMainTask / PlayTask /
+// AepLyrCtrl). Maps the transform into the full form: colour = 100 and colourHi = 100
+// give a fully-opaque, un-tinted quad (the >=100 alpha split turns alpha 100 into the
+// 0x200 "opaque" blend bit); pivots and user words default to 0, no clip override, and
+// the transform's priority becomes the ordering-table priority (param_18 / p17).
+void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
+    drawLayer(lyr, frame, (int)root.x, (int)root.y, (int)root.sx, (int)root.sy,
+              (int)root.rotation, flags, /*p9*/ 0, /*p10*/ 0, /*color*/ 100, /*colorHi*/ 100,
+              /*blendFlags*/ 0, /*p15*/ 0, /*clipRect*/ nullptr, /*context*/ nullptr,
+              /*p17 = priority*/ (uint32_t)root.priority, /*p19*/ 0);
+}
+
+// Ghidra: FUN_0000f9b0 — install a per-group frame-tree draw callback + context
+// (stored at this+slot*4+0x7f3a2c / +0x7f3a90). Scenes install a `void(*)(void*)`;
+// it is retained as the wider AepGroupDrawFn the type-3 dispatch calls through.
+void AepManager::setGroupDrawCallback(int slot, void (*callback)(void *context), void *context) {
+    if (slot < 0 || slot >= kMaxAepGroups) {
+        return;
+    }
+    m_groupCallback[slot] = reinterpret_cast<AepGroupDrawFn>(callback);
+    m_groupContext[slot] = context;
 }
 
 // Ghidra: FUN_000106dc — start a fade transition (mode 1 in / 2 out; 0 or >=3

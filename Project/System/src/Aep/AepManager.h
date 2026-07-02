@@ -76,13 +76,34 @@ public:
     // Ghidra: FUN_00010730.
     bool isTransitionDone() const;
 
-    // Draw one animated layer: `lyr` encodes the resource group in its high 16 bits
-    // and the layer index in its low 16 bits; `frame` is clamped/looped to the
-    // layer's length; `root` is the root transform threaded into the fill. Ghidra:
-    // drawLayer FUN_0000fd64 -> AepDrawLayer (FUN_0000fe8c).
+    // Draw one animated layer (the full FUN_0000fd64 signature). `lyr` encodes the
+    // resource group in its high 16 bits and the layer index in its low 16 bits;
+    // `frame` is clamped/looped to the layer's length by `loopFlags` (bit0 = loop,
+    // bit4 = clampLast); the remaining args are the root transform / colour / alpha /
+    // rotation / blend / clip threaded into the frame-tree fill. Ghidra: FUN_0000fd64
+    // -> AepDrawLayer (FUN_0000fe8c).
+    void drawLayer(int lyr, int frame, int x, int y, int scaleX, int scaleY, int rotation,
+                   uint32_t loopFlags, int p9, int p10, int color, int colorHi,
+                   uint32_t blendFlags, uint32_t p15, int *clipRect, void *context,
+                   uint32_t p17, uint32_t p19);
+
+    // Compatibility overload: the scenes (MenuMainTask / PlayTask / AepLyrCtrl) drive
+    // layers with just a resolved transform and the loop flags. It maps the transform's
+    // x / y / sx / sy / rotation / priority into the full form (colour/alpha = fully
+    // opaque, no clip override) and forwards.
     void drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags);
 
     AepOrderingTable *orderingTable() { return &m_ot; }  // Ghidra: get_aepOt
+
+    // Frame-tree fill accessors used by AepDrawLayer (FUN_0000fe8c) to reach the
+    // per-group storage by resolved slot. Offsets are the manager object's.
+    const AepFrameEntry *frameEntries(int slot) const { return m_groupFrameData[slot]; }        // +0x7f39c8
+    const uint8_t *channelBase(int slot) const { return (const uint8_t *)m_idxData[slot].bytes; } // +0x7274d4
+    const int16_t *spriteRecord(int slot, int idx) const { return &m_framePos[slot][idx].x; }    // +0x7c1962 (stride 8)
+    int screenWidth() const { return m_transitionOverlay[2]; }   // +0x7f3afc
+    int screenHeight() const { return m_transitionOverlay[3]; }  // +0x7f3b00
+    AepGroupDrawFn groupCallback(int slot) const { return m_groupCallback[slot]; }  // +0x7f3a2c
+    void *groupContext(int slot) const { return m_groupContext[slot]; }             // +0x7f3a90
 
     // Base resource directory the single-file loaders resolve against (Ghidra: the
     // char buffer @ this + 0x100).
@@ -145,6 +166,12 @@ private:
     struct AepFramePos { int16_t x, y, span, h; };
     AepFramePos m_framePos[kMaxAepGroups][kMaxFrameData] = {};
     int m_frameCount[kMaxAepGroups] = {};                // +0x7f3964 per group
+
+    // Per-group frame-tree draw callback + context (Ghidra: this+slot*4+0x7f3a2c and
+    // this+slot*4+0x7f3a90). setGroupDrawCallback installs them; AepDrawLayer invokes
+    // the callback for type-3 frame entries.
+    AepGroupDrawFn m_groupCallback[kMaxAepGroups] = {};  // +0x7f3a2c
+    void *m_groupContext[kMaxAepGroups] = {};            // +0x7f3a90
 
     // Read "<path>" into m_idxData[group]; returns the parsed index base (the bytes
     // after the 4-byte header) or nil. Ghidra: readIndexFile (FUN_0000f770).

@@ -2,39 +2,59 @@
 //  AepFrameDraw.h
 //  pop'n rhythmin
 //
-//  The Aep animation fill: walks a layer's frame-data channels at the current
-//  frame, linearly interpolates each keyframe channel (position, scale, rotation,
-//  colour/alpha), applies the parent transform, and emits one sprite command per
-//  leaf into the ordering table (recursing for nested layers). Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (drawLayer FUN_0000fd64,
-//  drawFrameData FUN_0000fe8c, sprite fill FUN_000113d0).
+//  The Aep animated frame-tree renderer. For the current frame it walks a layer's
+//  frame-entry chain, interpolates every keyframe channel (position, scale, colour/
+//  alpha, rotation) in the engine's integer fixed-point form, composes the parent
+//  transform + blend flags, clips against the active clip rect, and then per entry
+//  type emits a sprite command into the ordering table, recurses into a child layer,
+//  or invokes the group draw callback.
+//
+//  TRUE 1:1 reconstruction from Ghidra project rb420, program PopnRhythmin:
+//    drawFrameData / AepDrawLayer  FUN_0000fe8c  (the core)
+//    drawLayer                     FUN_0000fd64  (frame clamp/loop + dispatch)
+//    child clip-rect builder       FUN_00010850
+//    cos / sin                     FUN_0001234c / FUN_0001228c (1/3-degree LUT @ DAT_0012ded2)
+//    sprite command fill           FUN_000113d0  (-> allocEntry FUN_00010be0)
 //
 
 #pragma once
 
 #include <cstdint>
 
-class AepOrderingTable;
+class AepManager;
 
-// One 36-byte frame-data entry (Ghidra: stride 0x24). Each entry animates one
-// child over the frame range [frameStart, frameEnd); `type` picks how it emits.
+// The per-frame group draw callback the play/result/sugoroku scenes install
+// (Ghidra: called through this+slot*4+0x7f3a2c inside FUN_0000fe8c). Its real ABI
+// takes the fully-composed child transform. Scenes that only need the context still
+// install a `void(*)(void*)`; AepManager stores it as this wider type and the two
+// forms share the same first (or, via the context slot, only) argument.
+using AepGroupDrawFn = void (*)(int child, int frame, int x, int y, int scaleX, int scaleY,
+                                int anchorX, int anchorY, int color, int alpha, int rotation,
+                                uint32_t blend, int *clipRect, uint32_t p17, void *context);
+
+// One 36-byte frame-data entry (Ghidra: stride 0x24). Each entry animates one child
+// over the frame range [frameStart, frameEnd); `type` selects how it emits. The four
+// channel fields hold BYTE OFFSETS into the group's idx buffer (0 = channel absent);
+// AepDrawLayer resolves them against AepManager::channelBase() (Ghidra: the pointer
+// at this+groupSlot*4+0x7274d4).
 struct AepFrameEntry {
-    int16_t type;         // +0x00  0 = leaf sprite, 2 = nested layer, else callback
-    int16_t child;        // +0x02  sprite / sub-layer index
-    int16_t reserved4[2]; // +0x04
+    int16_t type;         // +0x00  0 = leaf sprite, 2 = nested layer, 3 = group callback
+    int16_t child;        // +0x02  sprite record / sub-layer index
+    int16_t blendFlags;   // +0x04  per-entry blend bits (0x30 / 0xc0 / 0x400 composed at draw)
+    int16_t frameSpeed;   // +0x06  child frame remap divisor (>0 => childFrame = local*100/frameSpeed)
     int16_t frameStart;   // +0x08
     int16_t frameEnd;     // +0x0a
-    int16_t loopOffset;   // +0x0c
+    int16_t loopOffset;   // +0x0c  added to the child's local frame
     int16_t reserved0e;   // +0x0e
-    int16_t width;        // +0x10
-    int16_t height;       // +0x12
-    const int16_t *posChannel;    // +0x14  x/y keyframes
-    const int16_t *scaleChannel;  // +0x18  sx/sy keyframes
-    const int16_t *colorChannel;  // +0x1c  colour/alpha keyframes
-    const int16_t *rotChannel;    // +0x20  rotation keyframes
+    int16_t anchorX;      // +0x10  pivot X (child arg9); doubles as the sprite width for a leaf
+    int16_t anchorY;      // +0x12  pivot Y (child arg10); doubles as the sprite height for a leaf
+    int32_t posChannel;   // +0x14  x/y keyframes (offset into the idx buffer, 0 = none)
+    int32_t scaleChannel; // +0x18  sx/sy keyframes
+    int32_t colorChannel; // +0x1c  colour/alpha keyframes
+    int32_t rotChannel;   // +0x20  rotation keyframes (double-indirect: *(int*)(base+rotChannel) + base)
 };
 
-// A resolved 2D transform threaded down the layer tree.
+// A resolved 2D transform threaded into the compatibility drawLayer overload.
 struct AepTransform {
     float x = 0, y = 0;       // translation
     float sx = 100, sy = 100; // scale (percent)
@@ -42,10 +62,15 @@ struct AepTransform {
     int priority = 0;         // ordering-table priority
 };
 
-// Draw the layer `layerNo`'s frame `frame` into `ot`, under `parent`. Ghidra:
-// drawLayer FUN_0000fd64 -> drawFrameData FUN_0000fe8c.
-void AepDrawLayer(AepOrderingTable *ot, const AepFrameEntry *entries, int layerNo,
-                  int frame, const AepTransform &parent);
+// The faithful full-signature core (Ghidra: FUN_0000fe8c). `mgr`/`groupSlot` locate
+// the frame-entry array, channel buffer, sprite records, ordering table, group
+// callback and screen extents; the remaining args are the composed parent transform,
+// colour/alpha, rotation, blend flags and clip rect threaded down the frame tree.
+// (Arg order matches the binary's 19-parameter call exactly.)
+void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
+                  int x, int y, int scaleX, int scaleY, int p9, int p10,
+                  int color, int colorHi, uint32_t rotation, uint32_t blendFlags,
+                  uint32_t p15, int *clipRect, uint32_t p17, void *context, uint32_t p19);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
