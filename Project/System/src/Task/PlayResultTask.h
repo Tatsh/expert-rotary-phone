@@ -40,15 +40,17 @@ private:
 
     // Intricate sub-bodies lifted out of update()'s switch as their own reconstruction
     // pieces (declared real methods, called as if present):
-    //  * resultSetup (FUN_0003dfe0): populate the result data (score/rank/combo display
-    //    counters) and return the BGM fade the intro uses.
+    //  * resultSetup (FUN_0003dfe0): populate the result data (score/rank/combo counters
+    //    + treasure points), post the score save, build the result layers, load the ~130
+    //    number textures + the rank SEs, and load + volume the result BGM. Large asset
+    //    unit; a whole reconstruction piece of its own.
     //  * updateResultPresent (case 2): once the intro layer settles, build the Twitter
     //    share UIButton (device-branched frame from its image size) and watch for the
     //    dismiss tap; while it is still animating, fire the rank jingle on frame cues.
     //  * updateScoreCount (case 6): tick the displayed score up toward the final, firing
     //    the count SE every fifth step.
     //  * resultGotoNext (FUN_0003f2e0): tear the screen down and spawn the next scene.
-    float resultSetup();
+    void resultSetup();
     void updateResultPresent(bool tapped, int tapX, int tapY, int displayType);
     void updateScoreCount(bool tapped);
     void resultGotoNext();

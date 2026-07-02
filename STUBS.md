@@ -38,7 +38,10 @@
       PlayResultCreateTask, update() touch preamble + 13-state dispatch with the
       lifecycle states reconstructed inline (0 intro, 1 fade-in, 4/7 waits, 8/9
       communicating, 10/0xb fade-out). Remaining handler bodies (declared, tracked):
-      resultSetup (FUN_0003dfe0), updateResultPresent (case 2: Twitter button + rank
+      resultSetup (FUN_0003dfe0 — VOID, a large asset unit like PlayTaskInit: score/rank/
+      treasure counters, DownloadMain startSaveScoreHttp, ~130 number textures into the
+      +0x34.. arrays, the +0x214 result layers, 11 rank SEs @+0x2e4, and loadBgm result
+      BGM; case 0 then plays it), updateResultPresent (case 2: Twitter button + rank
       cue), updateScoreCount (cases 3/5/6: count-up + result SEs — their playSe source
       ids need field-tracing), resultGotoNext (FUN_0003f2e0), and the free function
       AepLyrCtrlUpdateAll (FUN_0002c924, the per-frame layer tick+draw).

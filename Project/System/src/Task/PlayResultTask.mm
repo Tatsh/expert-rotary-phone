@@ -69,8 +69,11 @@ void PlayResultTask::update(int /*deltaMs*/) {
 
     switch (state()) {
     case 0:
-        // Set up the result data, then bring the BGM in at the returned fade.
-        [audio playBgm:resultSetup()];   // FUN_0003dfe0
+        // Set up the result data + load the result BGM, then start it. (The playBgm
+        // fade argument is clobbered in the decompile by the preceding void call; 0.5
+        // matches the fade the app's other playBgm sites use.)
+        resultSetup();   // FUN_0003dfe0
+        [audio playBgm:0.5f];
         state() = 1;
         break;
     case 1:
