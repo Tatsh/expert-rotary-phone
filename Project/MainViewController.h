@@ -39,6 +39,12 @@
 - (void)GotoFriendManage;               // @ 0xcdc8
 - (void)GotoDefaultDownload;            // @ 0xd560
 - (void)GotoInConversionPass;           // @ 0xe53c
+- (void)GotoPopnLink;                   // @ 0xd074
+- (void)GotoInPlayerName;               // @ 0xd248
+- (void)GotoInviteCode;                 // @ 0xd7f4
+- (void)GotoArcadeSearch;               // @ 0xd930
+- (void)GotoFriendScore:(unsigned int)musicId;  // @ 0xcf9c
+- (void)GotoReviewPage;                 // @ 0xe830
 
 // Modal teardowns (invoked by each screen when it closes): release the controller
 // and resume the render loop.
@@ -48,6 +54,11 @@
 - (void)FriendManageEndCallBack;        // @ 0xcf0c
 - (void)DefaultDownloadEndCallBack;     // @ 0xd640
 - (void)InConversionPassEndCallBack;    // @ 0xe67c
+- (void)PopnLinkEndCallBack;            // @ 0xd1b8
+- (void)InPlayerNameEndCallBack;        // @ 0xd370
+- (void)InviteCodeEndCallBack;          // @ 0xd8d8
+- (void)ArcadeSearchEndCallBack;        // @ 0xd9e8
+- (void)FriendScoreEndCallBack;         // @ 0xd044
 
 // Whether the initial default download reported failure (read by TitleTask).
 - (BOOL)isDefaultDlFailed;

@@ -20,6 +20,13 @@
 #import "SettingTableViewController.h"
 #import "DefaultDataDownloadView.h"
 #import "DownloadMain.h"
+#import "FriendScoreMainView.h"
+#import "InputNameViewCtrl.h"
+#import "InviteTopViewController.h"
+#import "InviteTopViewControllerPad.h"
+#import "PopnLinkTopSplitViewController.h"
+#import "PopnLinkTopViewController.h"
+#import "SearchView.h"
 #import "neEngineBridge.h"
 #import "C_TASK.h"
 #import "neFrameTimer.h"
@@ -59,6 +66,12 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     BOOL _isDefaultDlFailed;
     UINavigationController *_inputConvPassNaviCtrl;
     UIViewController *_inputConvPassViewCtrl;
+    UINavigationController *_popnLinkNaviCtrl;
+    UIViewController *_popnLinkViewCtrl;
+    UINavigationController *_inputNameNaviCtrl;
+    UIViewController *_inputNameViewCtrl;
+    UINavigationController *_inviteNaviCtrl;
+    UINavigationController *_searchNaviCtrl;
     // Wall-clock stopwatches pacing the task-update and render steps.
     neFrameTimer m_taskTime;
     neFrameTimer m_renderTime;
@@ -292,6 +305,106 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 }
 
 - (BOOL)isDefaultDlFailed { return _isDefaultDlFailed; }
+
+// @ 0xd074 — the pop'n link (data-link) top screen (nav / split per device).
+- (void)GotoPopnLink {
+    if (!neSceneManager::isPadDisplay()) {
+        PopnLinkTopViewController *content = [[PopnLinkTopViewController alloc] autorelease];
+        _popnLinkNaviCtrl = [content initAtNavigationController];
+        [self.view addSubview:_popnLinkNaviCtrl.view];
+        [content startOpenAnimation];
+    } else {
+        PopnLinkTopSplitViewController *split = [[PopnLinkTopSplitViewController alloc] init];
+        _popnLinkViewCtrl = split;
+        [self.view addSubview:split.view];
+        [split startOpenAnimation];
+    }
+    [self PauseLoop];
+}
+
+// @ 0xd248 — the player-name entry screen (nav controller / plain per device).
+- (void)GotoInPlayerName {
+    if (!neSceneManager::isPadDisplay()) {
+        InputNameViewCtrl *content = [[InputNameViewCtrl alloc] autorelease];
+        _inputNameNaviCtrl = [content initAtNavigationController];
+        [self.view addSubview:_inputNameNaviCtrl.view];
+        [content startOpenAnimation];
+    } else {
+        InputNameViewCtrl *vc = [[InputNameViewCtrl alloc] init];
+        _inputNameViewCtrl = vc;
+        [self.view addSubview:vc.view];
+        [vc startOpenAnimation];
+    }
+    [self PauseLoop];
+}
+
+// @ 0xd7f4 — the invite-code screen; the phone/iPad variant is a distinct class.
+- (void)GotoInviteCode {
+    Class cls = !neSceneManager::isPadDisplay() ? [InviteTopViewController class]
+                                                : [InviteTopViewControllerPad class];
+    InviteTopViewController *content = [[[cls alloc] autorelease] initAtNavigationController];
+    _inviteNaviCtrl = (UINavigationController *)content;
+    [self.view addSubview:_inviteNaviCtrl.view];
+    [(InviteTopViewController *)content startOpenAnimation];
+    [self PauseLoop];
+}
+
+// @ 0xd930 — the arcade song-search screen.
+- (void)GotoArcadeSearch {
+    SearchView *content = [[SearchView alloc] autorelease];
+    _searchNaviCtrl = [content initAtNavigationController];
+    [self.view addSubview:_searchNaviCtrl.view];
+    [content startOpenAnimation];
+    [self PauseLoop];
+}
+
+// @ 0xcf9c — the friend-score screen for one music id. Shown over the friend nav
+// (shares _friendMngNaviCtrl) and does NOT pause the loop.
+- (void)GotoFriendScore:(unsigned int)musicId {
+    FriendScoreMainView *content = [[FriendScoreMainView alloc] autorelease];
+    _friendMngNaviCtrl = [content initAtNavigationControllerWithMusicId:musicId];
+    [self.view addSubview:_friendMngNaviCtrl.view];
+    [content startOpenAnimation];
+}
+
+// @ 0xe830 — open the App Store review page for this app.
+- (void)GotoReviewPage {
+    NSURL *url = [NSURL URLWithString:@"itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/"
+                  @"viewContentsUserReviews?id=626574779&onlyLatestVersion=true&pageNumber=0&"
+                  @"sortOrdering=1&type=Purple+Software"];
+    [UIApplication.sharedApplication openURL:url];
+}
+
+// @ 0xd1b8
+- (void)PopnLinkEndCallBack {
+    if (_popnLinkViewCtrl != nil) { [_popnLinkViewCtrl release]; _popnLinkViewCtrl = nil; }
+    if (_popnLinkNaviCtrl != nil) { [_popnLinkNaviCtrl release]; _popnLinkNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xd370
+- (void)InPlayerNameEndCallBack {
+    if (_inputNameViewCtrl != nil) { [_inputNameViewCtrl release]; _inputNameViewCtrl = nil; }
+    if (_inputNameNaviCtrl != nil) { [_inputNameNaviCtrl release]; _inputNameNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xd8d8
+- (void)InviteCodeEndCallBack {
+    if (_inviteNaviCtrl != nil) { [_inviteNaviCtrl release]; _inviteNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xd9e8
+- (void)ArcadeSearchEndCallBack {
+    if (_searchNaviCtrl != nil) { [_searchNaviCtrl release]; _searchNaviCtrl = nil; }
+    [self ResumeLoop];
+}
+
+// @ 0xd044 — mirror of GotoFriendScore: releases the shared friend nav, no ResumeLoop.
+- (void)FriendScoreEndCallBack {
+    if (_friendMngNaviCtrl != nil) { [_friendMngNaviCtrl release]; _friendMngNaviCtrl = nil; }
+}
 
 #pragma mark - Frame
 
