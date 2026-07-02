@@ -190,6 +190,20 @@ static NSString *ApiPath(NSString *name) {
     return [self createHttpsURL:path];
 }
 
+// @ 0x58b80 — /apr/main.cgi/packinfo/index.jsp?target=JP&pack=<id>[&<userInfo>]
++ (NSURL *)packInfoURL:(unsigned int)packID UserOpen:(BOOL)userOpen {
+    NSString *path;
+    if (userOpen) {
+        path = [NSString stringWithFormat:@"%@%@?target=%@&pack=%d&%@",
+                @"/apr/main.cgi/", @"packinfo/index.jsp", [self targetStore], packID,
+                [self userInfo]];
+    } else {
+        path = [NSString stringWithFormat:@"%@%@?target=%@&pack=%d",
+                @"/apr/main.cgi/", @"packinfo/index.jsp", [self targetStore], packID];
+    }
+    return [self createHttpsURL:path];
+}
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

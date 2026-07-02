@@ -91,6 +91,10 @@
 // Paginated pack-list endpoint. Ghidra: packListURL:limit:packId: @ 0x58abc.
 + (NSURL *)packListURL:(unsigned int)head limit:(unsigned int)limit packId:(int)packId;
 
+// Single-pack detail endpoint; appends the userInfo fragment when userOpen is YES
+// (an explicit user tap vs a background refresh). Ghidra: packInfoURL:UserOpen: @ 0x58b80.
++ (NSURL *)packInfoURL:(unsigned int)packID UserOpen:(BOOL)userOpen;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
