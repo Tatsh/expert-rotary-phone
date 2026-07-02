@@ -8,6 +8,8 @@
 //
 
 #include <cctype>
+#include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <string>
 
@@ -15,13 +17,10 @@
 #include "AepTexture.h"
 #include "neTextureForiOS.h"
 
-// Acquire (ref-counted) the cached AepTexture for a bundled image path, loading +
-// uploading it on first use. Ghidra: FUN_0001bbf0 (the texture cache; head list
-// DAT_00188464, see neEngineBridge). Distinct reconstruction unit — declared here.
-extern AepTexture *AepTextureCacheAcquire(const char *path);
-
-// Push the tile's decoded pixels to GL. Ghidra: FUN_000166ec (uploadGL wrapper).
-extern void AepTextureUploadTiles(void *subRects);
+// Ghidra: FUN_00015eb4 — clears the two reserved words and defaults the tile span to
+// 7x7; the vtable pointer is written by the compiler-generated prologue.
+AepTile::AepTile() = default;
+AepTile::~AepTile() = default;
 
 // Ghidra: FUN_00011818 — vtable + null fields (a detached, unloaded sprite).
 neTextureForiOS::neTextureForiOS() = default;
@@ -38,19 +37,67 @@ int neTextureForiOS::load(const char *path) {
         c = (char)std::tolower((unsigned char)c);
     }
 
-    // One tile for the common (non-split) case; the split-texture path allocates
-    // more. Ghidra: the +0x10/+0x14 heap arrays sized 1 here.
+    // One tile for the common (non-split) case; the split-texture path (loadFrames)
+    // allocates more. Ghidra: the +0x08/+0x0c/+0x10/+0x14 heap arrays sized 1 here.
     m_tileCount = 1;
     m_tiles = new AepTexture *[1];
-    m_tiles[0] = AepTextureCacheAcquire(key.c_str());
+    m_tileRects = new AepTile[1];      // 0x18-byte record (ctor FUN_00015eb4)
+    m_tileWidths = new int[1];
+    m_tileHeights = new int[1];
+
+    m_tiles[0] = AepTextureCacheAcquire(key.c_str());  // FUN_0001bbf0
     if (m_tiles[0] == nullptr) {
         return -5;   // 0xfffffffb: the texture failed to load
     }
 
-    m_width = m_tiles[0]->width();     // AepTexture +0x24
-    m_height = m_tiles[0]->height();   // AepTexture +0x28
-    AepTextureUploadTiles(m_subRects); // FUN_000166ec
+    m_tileWidths[0] = m_tiles[0]->textureWidth();    // AepTexture +0x1c
+    m_tileHeights[0] = m_tiles[0]->textureHeight();  // AepTexture +0x20
+    AepTextureUploadTiles(&m_tileRects[0]);          // FUN_000166ec
     return 0;
+}
+
+// Ghidra: FUN_00011e18 — index-driven tile load. The tile count is a uint16 at
+// indexBase+2; each tile i is acquired from the shared cache under the path
+// "<dir>/<name>_<i>.png" (or "<name>_<i>.png" when dir is null), its padded texture
+// size is recorded, and its upload record is bound. Bails early on a null argument
+// (-1 in the binary) or a tile that fails to load (-5); the return code is discarded
+// by the sole caller (AepManager), so this reconstruction is void.
+void neTextureForiOS::loadFrames(const char *dir, const char *name,
+                                 const uint8_t *indexBase) {
+    if (name == nullptr || indexBase == nullptr) {
+        return;   // 0xffffffff in FUN_00011e18
+    }
+
+    // Tile count: uint16 at indexBase+2. Ghidra: *(ushort *)(param_4 + 2).
+    const int tileCount = *reinterpret_cast<const uint16_t *>(indexBase + 2);
+
+    // Parallel per-tile arrays: handles (+0x10), upload records (+0x14), and padded
+    // width/height (+0x08/+0x0c). Ghidra: operator new[] for each, count at +0x04.
+    m_tiles = new AepTexture *[tileCount];
+    m_tileRects = new AepTile[tileCount];   // 0x18-byte records (ctor FUN_00015eb4)
+    m_tileWidths = new int[tileCount];
+    m_tileHeights = new int[tileCount];
+    m_tileCount = tileCount;
+
+    for (int i = 0; i < tileCount; ++i) {
+        // Build the bundled PNG path. Ghidra: sprintf "%s_%d.png" / "%s/%s_%d.png".
+        char path[320];
+        if (dir == nullptr) {
+            std::snprintf(path, sizeof(path), "%s_%d.png", name, i);
+        } else {
+            std::snprintf(path, sizeof(path), "%s/%s_%d.png", dir, name, i);
+        }
+
+        AepTexture *tex = AepTextureCacheAcquire(path);  // FUN_0001bbf0
+        m_tiles[i] = tex;
+        if (tex == nullptr) {
+            return;   // 0xfffffffb in FUN_00011e18
+        }
+
+        m_tileWidths[i] = tex->textureWidth();    // AepTexture +0x1c
+        m_tileHeights[i] = tex->textureHeight();  // AepTexture +0x20
+        AepTextureUploadTiles(&m_tileRects[i]);   // FUN_000166ec
+    }
 }
 
 // Ghidra: neTextureForiOS_draw (FUN_0000fbcc) is the wrapper that emits this sprite
@@ -78,9 +125,13 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     (void)p.clip;
 }
 
-// Release the cached tiles (the cache is ref-counted; drop our references).
+// Release the cached tiles (the cache is ref-counted; drop our references) and the
+// parallel per-tile arrays allocated by load()/loadFrames().
 neTextureForiOS::~neTextureForiOS() {
     delete[] m_tiles;
+    delete[] m_tileRects;
+    delete[] m_tileWidths;
+    delete[] m_tileHeights;
 }
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

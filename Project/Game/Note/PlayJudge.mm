@@ -21,7 +21,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "AudioManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "neGraphics.h"
@@ -38,6 +37,36 @@ inline float playScale(const MainTaskPlayData *p)   { return *reinterpret_cast<c
 inline float hitRadius(const MainTaskPlayData *p)    { return *reinterpret_cast<const float *>(pd(p) + 0x9b8); }
 inline bool  isSpatialTouch(const MainTaskPlayData *p) { return pd(p)[0x9e4] == 0; }   // 0 = distance test
 inline int   taskState(const MainTaskPlayData *p)    { return *reinterpret_cast<const int *>(pd(p) + 0x9fc); }
+
+// The three combo-milestone SE-instance handles the play data pre-creates:
+// +0x84 fires at 25 combo, +0x88 at 50, +0x8c at every 50 past 100. Each is a
+// pointer to an SE-instance/effect object owned elsewhere (Ghidra: the
+// FUN_0002cb24(*(playData+0x84/0x88/0x8c), 1) calls in the milestone tail).
+inline void *milestoneSe(const MainTaskPlayData *p, int off) {
+    return *reinterpret_cast<void *const *>(pd(p) + off);
+}
+
+// Milestone SEs only fire while the play is live (Ghidra: the milestone tail is
+// wrapped in pd[0x9c9]==0 && pd[0x9e5]!=0 && pd[0x9e7]==0 && pd[0x9ca]==0).
+inline bool milestoneSeEnabled(const MainTaskPlayData *p) {
+    return pd(p)[0x9c9] == 0 && pd(p)[0x9e5] != 0 &&
+           pd(p)[0x9e7] == 0 && pd(p)[0x9ca] == 0;
+}
+
+// Issue the SE-instance "play" command (Ghidra: FUN_0002cb24 with mode 1). The
+// object's command byte (+0x58) is set to 3 (play) and its frame cursor (+0x40,
+// a float) is rewound to the head, or to the last frame when the playback rate
+// (+0x44) runs backwards; the per-frame SE-instance update consumes the command.
+inline void seInstancePlay(void *inst) {
+    char *o = reinterpret_cast<char *>(inst);
+    *reinterpret_cast<int *>(o + 0x58) = 3;   // command = play
+    if (*reinterpret_cast<const float *>(o + 0x44) <= 0.0f) {
+        int frames = *reinterpret_cast<const int *>(o + 0x3c);
+        *reinterpret_cast<float *>(o + 0x40) = static_cast<float>(frames - 1);
+    } else {
+        *reinterpret_cast<float *>(o + 0x40) = 0.0f;
+    }
+}
 
 // The 60-entry judge-state pool lives at +0x3c8, each entry 24 bytes.
 inline NoteJudgeState *judgeStatePool(MainTaskPlayData *p) {
@@ -204,31 +233,39 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
 
     // Combo-milestone jingles (Ghidra: DAT_00179000 = combo). Fire once at 25, 50,
     // then every 50 beyond 100, tracked by the last milestone in the play data
-    // (+0x9c2) so a milestone is not re-triggered every frame.
+    // (+0x9c2) so a milestone is not re-triggered every frame. Each tier owns a
+    // pre-created SE-instance handle in the play data and firing the jingle means
+    // issuing that instance's "play" command (Ghidra: FUN_0002cb24(handle, 1) on
+    // *(playData+0x84) at 25, *(playData+0x88) at 50, *(playData+0x8c) past 100).
     g_combo = nm.combo();
     short *lastMilestone = reinterpret_cast<short *>(pdw(playData) + 0x9c2);
-    AudioManager *audio = [AudioManager sharedManager];
-    (void)audio;   // the milestone SEs play through the play-data voice handles
-                   // (+0x84/+0x88/+0x8c) via the SE-instance unit; see HANDOFF.md.
     int milestone = 0;
+    int seHandleOffset = 0;
     if (g_combo >= 25 && *lastMilestone < 25) {
         milestone = 25;
+        seHandleOffset = 0x84;
     } else if (g_combo >= 50 && *lastMilestone < 50) {
         milestone = 50;
+        seHandleOffset = 0x88;
     } else if (g_combo >= 100) {
         int step = (g_combo / 50) * 50;   // nearest 50 at or below the combo
         if (*lastMilestone < step) {
             milestone = step;
+            seHandleOffset = 0x8c;
         }
     }
     if (milestone != 0) {
+        // Fire the tier's jingle through its SE-instance handle, but only while
+        // the play is live (Ghidra: the milestone tail's enable gate).
+        if (milestoneSeEnabled(playData)) {
+            seInstancePlay(milestoneSe(playData, seHandleOffset));
+        }
         *lastMilestone = (short)milestone;
     }
 
     // If anything resolved this frame, refresh the score/gauge HUD.
-    // (Ghidra: FUN_00031338(playData) — the score/gauge update unit.)
     if (judgedAny || holdEnded) {
-        // scoreGaugeUpdate(playData);
+        PlayScoreGaugeUpdate(playData);   // Ghidra: FUN_00031338
     }
 }
 

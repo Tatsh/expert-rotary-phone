@@ -11,8 +11,33 @@
 
 #pragma once
 
+#include <cstdint>
+
 class AepTexture;
 class AepOrderingTable;
+
+// One GPU upload record per tile (0x18 bytes). A large image is split into several
+// GL-max-size tiles; each keeps the AepTexture it is currently bound to so a context
+// loss can re-upload it. Ghidra: ctor FUN_00015eb4 sets the defaults below; the
+// vtable pointer sits at +0x00 (the type is polymorphic).
+struct AepTile {
+    AepTile();                       // Ghidra: FUN_00015eb4
+    virtual ~AepTile();              // +0x00 vtable slot
+    AepTexture *uploaded = nullptr;  // +0x04 currently-bound texture (refcounted)
+    int reserved0 = 0;               // +0x08 (ctor: 0)
+    int reserved1 = 0;               // +0x0c (ctor: 0)
+    int tileX = 7;                   // +0x10 (ctor: 7)
+    int tileY = 7;                   // +0x14 (ctor: 7)
+};
+
+// Acquire (ref-counted) the cached AepTexture for a bundled image path, loading +
+// uploading it on first use; returns null on load failure. Ghidra: FUN_0001bbf0 (the
+// shared texture cache, head list DAT_00188464). Its own reconstruction unit.
+AepTexture *AepTextureCacheAcquire(const char *path);
+
+// (Re)bind + reference-count the tile's uploaded AepTexture, releasing any texture it
+// was previously bound to. Called once per tile after acquire. Ghidra: FUN_000166ec.
+void AepTextureUploadTiles(AepTile *tile);
 
 // Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468 fills
 // into an AepSpriteCommand (offsets in comments). Zero-defaulted like a fresh quad.
@@ -42,8 +67,15 @@ public:
     // source width/height from the resolved AepTexture. Ghidra: FUN_00011a2c.
     int load(const char *path);
 
-    int width() const { return m_width; }    // +0x08 (source width)
-    int height() const { return m_height; }  // +0x0c (source height)
+    // Load an index-driven set of tiles. `indexBase` is a bundled .idx blob whose
+    // tile count is a uint16 at +2; each tile i loads "<dir>/<name>_<i>.png" (or
+    // "<name>_<i>.png" when `dir` is null) through the shared texture cache, records
+    // its size and binds it for upload. A null `name`/`indexBase`, or a tile that
+    // fails to load, aborts the load early. Ghidra: FUN_00011e18.
+    void loadFrames(const char *dir, const char *name, const uint8_t *indexBase);
+
+    int width() const { return m_tileWidths ? m_tileWidths[0] : 0; }    // +0x08 tile-0 width
+    int height() const { return m_tileHeights ? m_tileHeights[0] : 0; } // +0x0c tile-0 height
 
     // Emit one textured-quad command for this sprite into `ot`. Ghidra: the wrapper
     // neTextureForiOS_draw (FUN_0000fbcc) -> AepOrderingTable_drawSprite (FUN_00011468).
@@ -51,13 +83,15 @@ public:
 
 private:
     // Split-texture storage: an image wider/taller than the GL max is loaded as
-    // several tiles. These parallel arrays hold the per-tile AepTexture handles and
-    // sub-rects (Ghidra: heap arrays at +0x10 / +0x14, tile width/height at +0x08/+0x0c).
-    AepTexture **m_tiles = nullptr;   // +0x10 cached AepTexture per tile
-    void *m_subRects = nullptr;       // +0x14 per-tile sub-rect / UV records
-    int m_width = 0;                  // +0x08 source width  (from AepTexture +0x24)
-    int m_height = 0;                 // +0x0c source height (from AepTexture +0x28)
-    int m_tileCount = 0;              // +0x04 number of tiles
+    // several tiles. These parallel heap arrays are all m_tileCount long. The width
+    // and height arrays hold the padded GL texture size of each tile, read from the
+    // resolved AepTexture (+0x1c / +0x20). Ghidra: operator new[] results stored at
+    // +0x08 / +0x0c / +0x10 / +0x14.
+    int m_tileCount = 0;                 // +0x04 number of tiles
+    int *m_tileWidths = nullptr;         // +0x08 per-tile texture width  (AepTexture +0x1c)
+    int *m_tileHeights = nullptr;        // +0x0c per-tile texture height (AepTexture +0x20)
+    AepTexture **m_tiles = nullptr;      // +0x10 cached AepTexture per tile
+    AepTile *m_tileRects = nullptr;      // +0x14 per-tile upload records (new AepTile[N])
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

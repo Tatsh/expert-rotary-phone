@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "C_TASK.h"
 
 class AepManager;
@@ -38,14 +40,23 @@ private:
     // engine hit-test FUN_0002d974). Returns true on a tap inside the rect.
     bool hitButton(int touchId, int rectField, int enableField);
 
-    // Field offsets into the ~0x1b0-byte task (documented, not fully modelled):
-    //   +0x28/+0x2c/+0x30 title/menu AepLyrCtrl layers; +0x50..+0x64 SE ids;
-    //   +0x68..+0x80 spawned sub-task / SE-instance slots; +0x94..+0x19c the mode
-    //   button rects + enable flags; +0x1a8 state; +0x1ac info-shown flag.
+    // The binary's task is a 0x1b0-byte object whose fields setup()/update()/
+    // hitButton() reach by raw byte offset from `this` (there are too many button
+    // rects / layer / SE slots to name). That storage MUST be reserved here or those
+    // accesses run off the object. C_TASK's base is exactly 0x28 bytes (vptr + 8
+    // words + killed flag + pad), so the padding below lands each named field at its
+    // true binary offset AND backs every raw offset in [0x28, 0x1b0). Documented
+    // regions: +0x28/+0x2c/+0x30 menu AepLyrCtrl layers; +0x34..+0x48 badge handles;
+    // +0x4c warning texture; +0x50..+0x64 SE ids; +0x68..+0x7c SE-instance slots;
+    // +0x84..+0x1a4 the mode-button rects + enable flags; +0xec pulse phase.
+    uint8_t m_pad0[0x80 - 0x28] = {};   // +0x28..+0x80
+    void *m_spawnedTask = nullptr;      // +0x80 the task being launched into
+    uint8_t m_pad1[0xb5 - 0x84] = {};   // +0x84..+0xb5
+    bool m_tutorialSkip = false;        // +0xb5 tutorial already played
+    uint8_t m_pad2[0x1a8 - 0xb6] = {};  // +0xb6..+0x1a8
     int m_state = 0;                    // +0x1a8
     bool m_infoFlag = false;            // +0x1ac
-    bool m_tutorialSkip = false;        // +0xb5 (tutorial already played)
-    void *m_spawnedTask = nullptr;      // +0x80 the task being launched into
+    uint8_t m_pad3[3] = {};             // +0x1ad..+0x1b0 tail padding
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -45,6 +45,10 @@ struct NoteJudgeState {
 void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
                       const int *touchIds, int touchCount);
 
+// Recompute the running score + gauge from the play data and refresh their HUD,
+// called after a frame that resolved any note. Ghidra: FUN_00031338.
+void PlayScoreGaugeUpdate(MainTaskPlayData *playData);
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4
