@@ -20,7 +20,7 @@ public:
     virtual ~C_TASK();
 
     // Per-frame hooks dispatched by the scheduler (vtable @ PTR_FUN_0002b02c).
-    virtual void update();
+    virtual void update(int deltaMs);
     virtual void draw();
 
     // Re-insert this task into the scheduler list at `priority`, keeping the
@@ -29,6 +29,19 @@ public:
     void setPriority(int priority);
 
     int priority() const { return m_priority; }
+
+    // Mark this task for destruction on the next scheduler pass.
+    void kill() { m_killed = true; }
+
+    // The scheduler tick: walk the priority list in order, update() every live
+    // task and destroy (reap) any task whose m_active flag is clear. Ghidra:
+    // FUN_00027f40 over the list head @ DAT_00188468.
+    static void updateAll(int deltaMs);
+
+private:
+    // The scheduler's sentinel head (Ghidra: DAT_00188468) — a self-linked node
+    // with max priority that bounds the circular priority list.
+    static C_TASK &scheduler();
 
 protected:
     // Intrusive list links + priority (offsets verified: +0x4 / +0x8 / +0xc).
@@ -42,7 +55,7 @@ protected:
     C_TASK *m_link2;     // +0x18
     C_TASK *m_link3;     // +0x1c
     char *m_name;        // +0x20
-    bool m_active;       // +0x24
+    bool m_killed;       // +0x24  (0 = alive; set to reap on the next pass)
 
     // Transform initialized by the ctor (position / scale; words 0xa..0x12).
     // TODO: name the individual transform fields.
