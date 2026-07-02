@@ -122,13 +122,16 @@
   arg order was "ABI-scrambled" and remapped it; DISASSEMBLING the bl @0x2c9ce proved the
   agent WRONG (it shift-rotated loopFlags/p9/p10/color/colorHi and swapped context/p17).
   Corrected to the disasm-verified mapping.
-- PlayTaskDraw (FUN_00030944) + PlayResultDrawCallback (FUN_0003f5f0) — reconstructed by
-  the agent (the child-id -> handle-table dispatch is offset-matched to PlayTaskInit/
-  resultSetup); the SAME systematic drawLayer arg-order defect was found in every
-  drawLayer call and corrected (loopFlags=1, p9/p10=anchors, colour/alpha through,
-  context=the p17 word, OT-priority p17=0). RESIDUAL: the full dispatch branches were NOT
-  each re-verified against the decompile, and the OT-priority/context threading has some
-  per-call uncertainty — these two need a careful per-branch verification pass.
+- PlayTaskDraw (FUN_00030944) + PlayResultDrawCallback (FUN_0003f5f0) — DONE, now fully
+  verified. The agent introduced the SAME systematic drawLayer arg-order defect in every
+  drawLayer call; corrected to loopFlags=1, p9/p10=anchors, colour/alpha through,
+  blend as-is, context=the callback p17 word, OT-priority p17=0. Both functions' entire
+  child-id -> handle-table dispatch was then re-verified branch-by-branch against the
+  decompiles (all offsets match: PlayTaskDraw combo/score/gauge/pause/tone/orb-eyes/frame
+  layers; PlayResultDrawCallback FC-stamp/tally-strips/score/jacket/chara/difficulty/
+  rank-effects/bonus-strips/treasure), and the corrected drawLayer args were confirmed
+  exactly against FUN_0003f5f0's own drawLayer calls (loopFlags=1, p9=param_7, p10=param_8,
+  colour=param_9, colourHi=param_10, blend=0x10/0x200, p17=0, context=param_14).
   New seams they added (real, cited): AepDrawSpriteHandle (FUN_0000fcd0, note-quad atlas
   draw), AepManager::groupSlotForHandle, PlayDrawCharaWindow (FUN_000313b0),
   MainViewController screenshot, and 5 NoteMng per-note tone-state accessors
