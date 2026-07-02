@@ -412,6 +412,15 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return out;
 }
 
+// @ 0x614f0 — persist the "pending treasure" snapshot back under the key
+// "TreasureTmpData". Serialises 0x54 bytes (the record + its trailing pad, as the
+// binary does) and hands them to saveData:Key:. The map loader and the sugoroku task
+// write the chosen bonus square / board state through here.
++ (void)saveTreasureTmp:(TreasureTmpData)data {
+    NSData *blob = [NSData dataWithBytes:&data length:0x54];
+    [self saveData:blob Key:@"TreasureTmpData"];
+}
+
 // @ 0x5f66c — persist last music/sheet (stored as floats, as in the original).
 + (void)saveSettingData {
     auto &ec = neAppEventCenter::shared();

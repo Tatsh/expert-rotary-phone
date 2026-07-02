@@ -33,7 +33,8 @@
       persisted via saveTreasureTmp, ConnectStruct edge list), TreasureMap::reset/dtor
       (FUN_000ce2e4/ce330), AcMainUnlockBonusTreasure (FUN_000a345c, board-8 unlock on
       prereq songs 200000204-207 + 208-211). Map format fully byte-verified; no defect on
-      review. NEW seam: +[UserSettingData saveTreasureTmp:] (@0x614f0, declared, body pending).
+      review. +[UserSettingData saveTreasureTmp:] (@0x614f0) — DONE (dataWithBytes:len 0x54
+      -> saveData:Key:"TreasureTmpData", the inverse of treasureTmp).
     * DONE (agent, reviewed): computeStepValues (FUN_000a1950, step tables {1,2,1,3,1,2,3}/
       {4,5,4,6,4,5,6}), buildSelectListLayout (FUN_000a21a8 — actually loads the 15 roulette
       SEs @+0x438; name inherited from the seam is misleading, documented in-file),
