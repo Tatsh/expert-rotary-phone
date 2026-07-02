@@ -26,8 +26,11 @@ public:
     // through a lazy accessor. Ghidra: FUN_0000f1ec (init FUN_00010b88).
     static AepManager &shared();
 
-    // Load an .aep animation/scene resource. Ghidra: loadAepData.
-    void loadAepData(NSString *name);
+    // Load an .aep animation/scene resource into group slot `group`. `single` picks
+    // "<dir>/<name>.idx" (true) vs "<dir>/<sub>/<name>.idx" (false, `sub` = name).
+    // Reads the index, uploads the texture, and copies the frame tables in.
+    // Ghidra: loadAepData (FUN_0000f4b0). Returns true on success.
+    bool loadAepData(int group, const char *dir, const char *name, bool single);
 
     // Per-frame render: advances the active screen transition (fade in/out over
     // a timer) then draws the ordering table. Ghidra: FUN_0001058c.
@@ -65,6 +68,13 @@ public:
 
     AepOrderingTable *orderingTable() { return &m_ot; }  // Ghidra: get_aepOt
 
+    // Base resource directory the single-file loaders resolve against (Ghidra: the
+    // char buffer @ this + 0x100).
+    const char *baseDir() const { return m_baseDir; }
+
+    // Drop a group's loaded texture (Ghidra: FUN_0000f988).
+    void unloadGroup(int group);
+
 private:
     // Resolve the frame-entry array for the group encoded in `lyr` (Ghidra: a byte
     // group-index table @ this+0x7c1748 selecting a per-group pointer @ +0x7f39c8).
@@ -78,14 +88,39 @@ private:
     // Queue the full-screen fade quad at the given opacity. Ghidra: FUN_0001151c.
     void drawTransitionOverlay(int alpha);
 
+    // Base resource directory (Ghidra: char buffer @ this + 0x100).
+    char m_baseDir[256] = {};
+
     // The z-sorted draw list (Ghidra: @ this + 0x727538).
     AepOrderingTable m_ot;
+
+    // Per-group loaded-resource storage. In the binary these are fixed-offset
+    // regions of the ~8 MB manager object; here they are modelled as per-group
+    // arrays. loadAepData() populates them; drawLayer()/getLyrNo() read them.
+    static const int kMaxAepGroups = 32;    // MAX_IDXBUFSIZE slots (0x40000 each)
+    static const int kMaxFrameData = 0x400; // MAX_FRAME_DATA per group
 
     // Loaded-resource tables (Ghidra: @ this + 0x7c1748 / +0x7f39c8). The byte
     // table maps a group id (lyr >> 16) to a slot; the pointer table gives that
     // slot's frame-entry array. Populated by loadAepData as resources load.
-    const uint8_t *m_groupIndex = nullptr;               // +0x7c1748
-    const AepFrameEntry *const *m_groupFrameData = nullptr;  // +0x7f39c8
+    uint8_t m_groupIndex[256] = {};                      // +0x7c1748 (group id -> slot)
+    const AepFrameEntry *m_groupFrameData[kMaxAepGroups] = {};  // +0x7f39c8
+
+    // Raw .idx file bytes per group (holds the frame tables the pointers above
+    // reference). Ghidra: this + group*0x40000 + 0x200 (readIndexFile @ FUN_0000f770).
+    NSData *m_idxData[kMaxAepGroups] = {};
+    // The sprite/texture object each group's frames draw from (neTextureForiOS).
+    // Ghidra: this + group*4 + 0x7c16e4.
+    neTextureForiOS *m_groupTexture[kMaxAepGroups] = {};
+    // 8-byte frame-position records copied out of the idx (Ghidra: @ 0x7c1962,
+    // stride 8, bounded by MAX_FRAME_DATA). x / y / span / h.
+    struct AepFramePos { int16_t x, y, span, h; };
+    AepFramePos m_framePos[kMaxAepGroups][kMaxFrameData] = {};
+    int m_frameCount[kMaxAepGroups] = {};                // +0x7f3964 per group
+
+    // Read "<path>" into m_idxData[group]; returns the parsed index base (the bytes
+    // after the 4-byte header) or nil. Ghidra: readIndexFile (FUN_0000f770).
+    const uint8_t *readIndexFile(int group, NSString *path);
 
     // Layer-name -> index open-addressing hash table, one per group (Ghidra: the
     // 0x2ffc-byte-strided region @ this+0x68b19c). Ghidra: FUN_0000fa30 probes it.

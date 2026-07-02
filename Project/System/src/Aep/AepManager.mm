@@ -13,6 +13,7 @@
 
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
+#import "neTextureForiOS.h"
 
 // Ghidra: FUN_0000fa30 — resolve `name` in a group's open-addressing hash table.
 // A rolling rotate-add hash (mod 2047) picks the start bucket, then linear-probe
@@ -57,16 +58,94 @@ AepManager &AepManager::shared() {
     return instance;
 }
 
-// Load one Aep .idx resource ("<dir>/<name>.idx" or "<dir>/<sub>/<name>.idx"):
-// opens the index, uploads its texture, and reads its frame table into the scene.
-// Ghidra: FUN_0000f4b0 (asserts n < MAX_FRAME_DATA at AepManager.mm:0x17a).
-void AepManager::loadAepData(NSString *name) {
-    assert(name != nil);
-    NSString *path = [NSString stringWithFormat:@"%@.idx", name];
-    // The concrete idx read (header + AepTexture upload + frame table parse) is
-    // handled by the engine texture/index loader; each frame is appended to the
-    // scene's frame data (bounded by MAX_FRAME_DATA = 0x400). See AepTexture.
-    (void)path;
+// Ghidra: readIndexFile (FUN_0000f770). Read the whole .idx into m_idxData[group];
+// the index proper begins 4 bytes in (the binary reads at +0x200, index at +0x204)
+// and its first int16 is overwritten with the group id. Returns the index base.
+const uint8_t *AepManager::readIndexFile(int group, NSString *path) {
+    if (group < 0 || group >= kMaxAepGroups) {
+        return nullptr;
+    }
+    NSData *data = [NSData dataWithContentsOfFile:path];
+    if (data == nil) {
+        return nullptr;
+    }
+    assert(data.length < 0x40000 && "fileSize < MAX_IDXBUFSIZE");
+    m_idxData[group] = [data copy];
+    uint8_t *bytes = (uint8_t *)m_idxData[group].bytes;
+    uint8_t *indexBase = bytes + 4;              // skip the 4-byte header
+    *reinterpret_cast<int16_t *>(indexBase) = (int16_t)group;  // stamp the group id
+    return indexBase;
+}
+
+// Ghidra: loadAepData (FUN_0000f4b0, asserts n < MAX_FRAME_DATA at AepManager.mm:0x17a).
+// Reads the index, uploads the group's texture, records the frame-position table and
+// the frame-entry pointer. The .idx stores its internal tables as byte offsets from
+// the index base (they are pre-relocated in the binary's fixed-buffer scheme; here
+// they are resolved against m_idxData's bytes).
+bool AepManager::loadAepData(int group, const char *dir, const char *name, bool single) {
+    assert(name != nullptr);
+    if (group < 0 || group >= kMaxAepGroups) {
+        return false;
+    }
+
+    NSString *path = single
+        ? [NSString stringWithFormat:@"%s/%s.idx", dir, name]
+        : [NSString stringWithFormat:@"%s/%s/%s.idx", dir, name, name];
+    const uint8_t *indexBase = readIndexFile(group, path);
+    if (indexBase == nullptr) {
+        return false;
+    }
+    int groupId = *reinterpret_cast<const int16_t *>(indexBase);
+
+    // Replace the group's texture.
+    delete m_groupTexture[group];
+    m_groupTexture[group] = new neTextureForiOS();
+    NSString *texDir = single ? nil : [NSString stringWithFormat:@"%s/%s", dir, name];
+    // The tile loader reads "<texDir>/<name>_<i>.png" for each of the index's tiles
+    // (Ghidra FUN_00011e18); it fills the sprite's tile/handle arrays.
+    m_groupTexture[group]->loadFrames(texDir.UTF8String, name, indexBase);
+
+    // group id -> slot maps (Ghidra: +0x7c1748 / +0x7c1948).
+    m_groupIndex[groupId] = (uint8_t)group;
+
+    // Copy the frame-position table (8-byte records, terminated by a zero span),
+    // bounded by MAX_FRAME_DATA.
+    uint32_t posOffset = *reinterpret_cast<const uint32_t *>(indexBase + 4);
+    const int16_t *pos = reinterpret_cast<const int16_t *>(m_idxData[group].bytes) +
+                         posOffset / 2;
+    int n = 0;
+    while (pos[2] != 0) {
+        assert(n < kMaxFrameData && "n < MAX_FRAME_DATA");
+        m_framePos[group][n] = { pos[0], pos[1], pos[2], pos[3] };
+        n++;
+        pos += 4;
+    }
+    m_frameCount[group] = n;
+
+    // The AepFrameEntry array the layer draw walks (Ghidra: +0x7f39c8 = *(idx+8)).
+    uint32_t entryOffset = *reinterpret_cast<const uint32_t *>(indexBase + 8);
+    m_groupFrameData[group] = reinterpret_cast<const AepFrameEntry *>(
+        reinterpret_cast<const uint8_t *>(m_idxData[group].bytes) + entryOffset);
+    return true;
+}
+
+// Ghidra: FUN_0000f988 — drop the group's texture (its dtor releases the tiles).
+void AepManager::unloadGroup(int group) {
+    if (group < 0 || group >= kMaxAepGroups) {
+        return;
+    }
+    delete m_groupTexture[group];
+    m_groupTexture[group] = nullptr;
+}
+
+// Ghidra: FUN_0000f758 — load a single-file group ("<baseDir>/<name>.idx") into slot.
+void AepLoadGroup(AepManager *aep, int slot, const char *name) {
+    aep->loadAepData(slot, aep->baseDir(), name, true);
+}
+
+// Ghidra: FUN_0000f988.
+void AepUnloadGroup(AepManager *aep, int slot) {
+    aep->unloadGroup(slot);
 }
 
 // Resolve the frame-entry array for the group encoded in `lyr`'s high 16 bits.
