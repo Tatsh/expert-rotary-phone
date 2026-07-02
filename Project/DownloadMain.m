@@ -56,6 +56,15 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     [_dlGetDlFileList startDownloading];
 }
 
+// DownloaderDelegate: route a finished download to the right handler. The file-list
+// request is dispatched to getDlFileListFinished; other downloads (the per-file
+// queue) are handled by their own paths.
+- (void)downloaderFinished:(Downloader *)downloader {
+    if (downloader == _dlGetDlFileList) {
+        [self getDlFileListFinished];
+    }
+}
+
 // Free the previously-parsed list (Ghidra: releaseFileListData).
 - (void)releaseFileListData {
     [_dlFileListDataArray release];
