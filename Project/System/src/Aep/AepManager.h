@@ -48,6 +48,15 @@ public:
     // Ghidra: FUN_0000fb8c.
     int layerFrameCount(int lyr) const;
 
+    // Start a screen transition (fade). `mode` 1 = fade in, 2 = fade out (0 or >=3
+    // clears it); `frames` is its length in frames; `flag` selects the overlay.
+    // Ghidra: FUN_000106dc.
+    void playTransition(int mode, int frames, int flag);
+
+    // Whether the active transition has finished (no frames left, or none active).
+    // Ghidra: FUN_00010730.
+    bool isTransitionDone() const;
+
     // Draw one animated layer: `lyr` encodes the resource group in its high 16 bits
     // and the layer index in its low 16 bits; `frame` is clamped/looped to the
     // layer's length; `root` is the root transform threaded into the fill. Ghidra:
@@ -65,6 +74,9 @@ private:
     // its frameEnd (the layer's length). Ghidra: the shared loop in FUN_0000fd64 /
     // FUN_0000fb8c.
     static int layerLength(const AepFrameEntry *entries, int layerNo);
+
+    // Queue the full-screen fade quad at the given opacity. Ghidra: FUN_0001151c.
+    void drawTransitionOverlay(int alpha);
 
     // The z-sorted draw list (Ghidra: @ this + 0x727538).
     AepOrderingTable m_ot;
@@ -86,10 +98,12 @@ private:
     const uint16_t *m_layerNumbers = nullptr;            // +0x7210d4 (per-group, 256 stride)
 
     // Screen-transition (fade) state (Ghidra: @ this + 0x7f3af4..0x7f3b14).
-    int m_transitionType = 0;         // 0 = none
-    float m_transitionElapsed = 0;    // seconds into the current transition
-    float m_transitionDuration = 0;   // total fade length
-    AepLyrCtrl *m_transitionOverlay = nullptr;  // full-screen fade quad
+    int m_transitionOverlay[4] = {};  // +0x7f3af4..0x7f3b00 overlay quad params
+    int m_transitionMode = 0;         // +0x7f3b04  0 none, 1 fade in, 2 fade out
+    int m_transitionFrames = 0;       // +0x7f3b08  frames remaining (counts down)
+    int m_transitionTotal = 0;        // +0x7f3b0c  total frames of the transition
+    int m_transitionFlag = 0;         // +0x7f3b10  overlay selector
+    int m_maxPriority = 0;            // +0x7f3b14  highest OT priority drawn last flush
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

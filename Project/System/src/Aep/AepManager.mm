@@ -125,22 +125,69 @@ void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_
     AepDrawLayer(&m_ot, entries, layerNo, frame, root);
 }
 
-// Ghidra: FUN_0001058c — advance the screen transition (a timed fade overlay),
-// then draw the whole ordering table, drawing the transition quad on top.
+// Ghidra: FUN_000106dc — start a fade transition (mode 1 in / 2 out; 0 or >=3
+// cancels). Length + total are set to `frames`; the overlay is chosen by `flag`.
+void AepManager::playTransition(int mode, int frames, int flag) {
+    if ((unsigned)mode < 3 && frames > 0) {
+        m_transitionMode = mode;
+        m_transitionFrames = frames;
+        m_transitionTotal = frames;
+        m_transitionFlag = flag;
+    } else {
+        m_transitionMode = 0;
+        m_transitionFrames = 0;
+    }
+}
+
+// Ghidra: FUN_00010730 — done when no frames remain, or no transition is active.
+bool AepManager::isTransitionDone() const {
+    if (m_transitionFrames > 0) {
+        return m_transitionMode == 0;
+    }
+    return true;
+}
+
+// Ghidra: FUN_0001058c — if a fade is active, draw its overlay quad at the current
+// alpha (100% * frames/total, offset per mode) over the ordering table and count
+// the frame down; then flush the OT and record the highest priority drawn.
 void AepManager::draw() {
-    if (m_transitionType != 0) {
-        m_transitionElapsed += 1.0f / 60.0f;
-        if (m_transitionElapsed >= m_transitionDuration) {
-            m_transitionElapsed = m_transitionDuration;
-            m_transitionType = 0;   // transition finished
+    if (m_transitionTotal > 0 && (m_transitionMode == 1 || m_transitionMode == 2)) {
+        // Progress runs 100 -> 0 as the frames count down.
+        float progress = (float)(m_transitionFrames * 100) / (float)m_transitionTotal;
+        // Fade out rises 0 -> 100 opaque; fade in is the complement (mode-1 base is
+        // ambiguous in the decompile, modelled as the mirror of fade out).
+        float alpha = (m_transitionMode == 2) ? (100.0f - progress) : progress;
+        if (alpha > 0.0f) {
+            if (alpha > 100.0f) {
+                alpha = 100.0f;
+            }
+            drawTransitionOverlay((int)alpha);
+        }
+        if (m_transitionFrames > 0) {
+            m_transitionFrames--;
         }
     }
 
-    // The ordering table has been filled this frame by drawLayer (per-layer
-    // animation -> allocEntry). Flush it: emit every queued sprite command,
-    // highest priority first. The transition overlay is queued as a high-priority
-    // command by the transition system, so it draws on top here.
+    // Flush the ordering table (filled this frame by drawLayer) highest priority
+    // first, and record the count drawn (Ghidra: FUN_000115d0 / FUN_000117dc).
     m_ot.flush();
+    m_maxPriority = m_ot.drawnCount();
+}
+
+// Ghidra: FUN_0001151c — queue the full-screen fade quad as a top-priority OT
+// command: geometry from m_transitionOverlay, opacity `alpha` (0..100), overlay
+// selector m_transitionFlag. (The exact colour packing is that unit's detail.)
+void AepManager::drawTransitionOverlay(int alpha) {
+    AepSpriteCommand *cmd = m_ot.allocEntry(kOtPriMax - 1);
+    if (cmd == nullptr) {
+        return;
+    }
+    cmd->x = m_transitionOverlay[0];
+    cmd->y = m_transitionOverlay[1];
+    cmd->w = m_transitionOverlay[2];
+    cmd->h = m_transitionOverlay[3];
+    cmd->color0 = (int16_t)alpha;
+    cmd->textureId = m_transitionFlag;
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
