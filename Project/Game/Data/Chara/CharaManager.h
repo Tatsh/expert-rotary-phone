@@ -52,6 +52,11 @@ private:
 // The single global instance (Ghidra: DAT_00187d98).
 extern CharaManager gCharaManager;
 
+// Ensure the global chara lists are built exactly once (lazy first-use guard),
+// then return the instance. Ghidra: FUN_0002980c — a ___cxa_guard-protected
+// one-shot around gCharaManager.reload() (FUN_000b85b8).
+CharaManager &CharaManagerShared();
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4

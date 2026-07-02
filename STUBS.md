@@ -52,7 +52,12 @@
 ## Declared real-ref units still needing a body
 - PlayTaskInit / PlayTaskGotoResult (FUN_0002e2d8 / FUN_0003003c) — DONE (PlayScene.mm).
   Delegated helpers still needing a body:
-    * PlayBuildFieldLayers (16 AepLyrCtrl layers + handle table), PlayLoadCharaTextures.
+    * DONE (agent, reviewed): PlayBuildFieldLayers (the 5 effect + 11 bg AepLyrCtrl layers
+      @+0x84..+0xc0 with device-tier anchors + the getLyrNo/getFrameNo/getUserNo handle
+      tables) and PlayLoadCharaTextures (portraits @+0x30[8] normal / window+panels bundled;
+      random unlocked-chara pick via RhTestBitInNumberArray). Build offsets match the
+      PlayTaskGotoResult teardown; no defect on review. New decls: RhUtil RhTestBitInNumberArray
+      (FUN_00028aa4), CharaManager CharaManagerShared (FUN_0002980c).
     * PlayTaskDraw (FUN_00030944) — large per-note draw dispatcher (delegated draw unit,
       like PlayJudge's note-quad geometry).
     * PlayResultTask (FUN_0003d5bc ctor + FUN_0003d690 update) — DONE: ctor, factory

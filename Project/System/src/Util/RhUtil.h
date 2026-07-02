@@ -18,6 +18,11 @@ NSMutableArray *RhParsePlistArray(NSData *data);   // Ghidra: FUN_0005c330
 // YES if a regular file (not a directory) exists at `path`.
 BOOL RhFileExists(NSString *path);                 // Ghidra: FUN_0005c434
 
+// Treat an NSArray of NSNumber as a packed bitfield (32 bits per element) and
+// return whether bit `bit` is set: element `bit/32`'s intValue tested against
+// `1 << (bit & 31)`. Out-of-range indices read as 0. Ghidra: FUN_00028aa4.
+BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit);
+
 // MD5 of a C string, as a 16-byte NSData (used as the Blowfish key = MD5(uuId)).
 NSData *RhMD5Data(const char *cString);            // Ghidra: FUN_0005b4b8
 
