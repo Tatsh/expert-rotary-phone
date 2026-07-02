@@ -71,6 +71,13 @@
   Note: NoteMng::setPlayActive(true) still unlocated (only the read in
   applicationWillResignActive and the clear in PlayNoteMngDetach are found).
 
+## Known modeling reconciliations needed
+- AepManager::drawLayer is reconstructed as a 4-arg simplification (lyr, frame, root,
+  flags). The binary's FUN_0000fd64 takes ~19 args (per-layer position/size/color/blend
+  from the AepLyrCtrl fields). AepLyrCtrlUpdateAll (FUN_0002c924) and PlayTaskDraw
+  (FUN_00030944) both call the full form, so that signature must be widened (or an
+  overload added) before those per-frame draw units can be reconstructed faithfully.
+
 ## Whole subsystems not started
 - Task #7: settings sub-tables, map/sugoroku UI (SugorokuMainTask FUN_000215a0), tutorial task (FUN_0002db10)
 - Task #6 friend VCs (data/networking layer done; the request/score VCs remain)
