@@ -288,12 +288,10 @@
 
 #pragma mark - SKProductsRequestDelegate
 
-// @ 0x55960
+// @ 0x55960 — the binary walks invalidProductIdentifiers without acting on them,
+// then forwards the valid products to the delegate.
 - (void)productsRequest:(SKProductsRequest *)request
      didReceiveResponse:(SKProductsResponse *)response {
-    for (NSString *invalid in response.invalidProductIdentifiers) {
-        (void)invalid;  // original iterates (diagnostic) without acting
-    }
     [m_Delegate finishRequest:response.products];
 }
 
@@ -347,12 +345,9 @@
     }
 }
 
-// @ 0x55554 — the original iterates but takes no action.
+// @ 0x55554 — the original walks the removed transactions but takes no action.
 - (void)paymentQueue:(SKPaymentQueue *)queue
     removedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
-    for (SKPaymentTransaction *transaction in transactions) {
-        (void)transaction;
-    }
 }
 
 // @ 0x555f4 — all restored transactions collected: pump receipt checks, or report
