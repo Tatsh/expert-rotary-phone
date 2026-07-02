@@ -22,15 +22,15 @@ AcMainTask::AcMainTask() = default;
 // Ghidra: AcMainTask_update (FUN_00099d18) — the arcade select+play state machine.
 // It mirrors the standard MainTask -> PlayTask flow (song/option select, then note
 // play through AcNoteMng with the arcade hi-speed + judge windows) and hands off to
-// the arcade result screen. The full ~24 KB per-state logic is a deferred unit; the
-// arcade note engine it drives (AcNoteMng) is already reconstructed.
+// the arcade result screen.
+//
+// NOT YET RECONSTRUCTED. This is the single largest function in the binary (~24 KB);
+// a faithful reconstruction requires reverse-engineering its full state table, which
+// is a dedicated unit tracked in STUBS.md — deliberately left empty here rather than
+// filled with an unverified skeleton or manager fetches that do nothing. The arcade
+// note engine it will drive (AcNoteMng) is already reconstructed, as is the parallel
+// standard-mode flow (MenuMainTask / MainTask / PlayTask) it mirrors.
 void AcMainTask::update(int /*deltaMs*/) {
-    AepManager &aep = AepManager::shared();
-    AcNoteMng &nm = AcNoteMng::shared();
-    (void)aep; (void)nm;
-    // TODO(deferred): the arcade select+play state machine (FUN_00099d18). Drives
-    // AcNoteMng::initPlayData / registerTempoEvents / changeTempo for the arcade
-    // charts, the arcade judge windows, and the arcade result. See HANDOFF.
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
