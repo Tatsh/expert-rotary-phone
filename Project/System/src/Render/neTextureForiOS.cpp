@@ -53,8 +53,9 @@ int neTextureForiOS::load(const char *path) {
     return 0;
 }
 
-// Ghidra: FUN_00011468 — reserve an ordering-table command (allocEntry) and fill
-// its sprite fields from `p`. A null clip defaults to the full screen bounds.
+// Ghidra: neTextureForiOS_draw (FUN_0000fbcc) is the wrapper that emits this sprite
+// into the ordering table via AepOrderingTable_drawSprite (FUN_00011468: allocEntry
+// FUN_00010be0 + the field fill inlined below). A null clip defaults to screen bounds.
 void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     AepSpriteCommand *cmd = ot->allocEntry(p.priority);
     if (cmd == nullptr) {

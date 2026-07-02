@@ -58,6 +58,12 @@ public:
     static float screenScale();
     static void setScreenMetrics(float width, float height, float scale);
 
+    // Device-class flag (Ghidra global DAT_00187b84). The boot logo setup uses it to
+    // pick phone- vs pad-sized branding assets, so it is modelled as "is a pad-class
+    // display" (true when the flag is non-zero); set at launch alongside the metrics.
+    static bool isPadDisplay();
+    static void setPadDisplay(bool isPad);
+
 private:
     void *m_root = nullptr;   // +0x00 the bridged root UIViewController
 };

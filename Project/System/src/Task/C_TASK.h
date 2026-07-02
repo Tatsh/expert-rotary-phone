@@ -20,8 +20,9 @@ public:
     virtual ~C_TASK();
 
     // Per-frame hooks dispatched by the scheduler; concrete tasks override them.
-    // (Base vtable @ PTR_LAB_00027f88; a drawable subclass — ctor FUN_0002af58,
-    // vtable PTR_FUN_0002b02c — adds a position/scale transform at +0x28.)
+    // (Base vtable @ PTR_LAB_00027f88.) Each concrete subclass — e.g. BootLogoTask
+    // (ctor FUN_0002af58, vtable PTR_FUN_0002b02c) — appends its own fields from
+    // +0x28 on.
     virtual void update(int deltaMs);
     virtual void draw();
 

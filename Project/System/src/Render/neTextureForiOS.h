@@ -45,8 +45,8 @@ public:
     int width() const { return m_width; }    // +0x08 (source width)
     int height() const { return m_height; }  // +0x0c (source height)
 
-    // Emit one textured-quad command for this sprite into `ot`. Ghidra: FUN_00011468
-    // (allocEntry FUN_00010be0 + field fill).
+    // Emit one textured-quad command for this sprite into `ot`. Ghidra: the wrapper
+    // neTextureForiOS_draw (FUN_0000fbcc) -> AepOrderingTable_drawSprite (FUN_00011468).
     void draw(AepOrderingTable *ot, const neSpriteDrawParams &p);
 
 private:

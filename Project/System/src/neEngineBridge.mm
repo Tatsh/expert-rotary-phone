@@ -76,6 +76,11 @@ void neSceneManager::setScreenMetrics(float width, float height, float scale) {
     s_screenScale = scale;
 }
 
+// Device-class flag (Ghidra global DAT_00187b84).
+static bool s_isPadDisplay = false;
+bool neSceneManager::isPadDisplay() { return s_isPadDisplay; }
+void neSceneManager::setPadDisplay(bool isPad) { s_isPadDisplay = isPad; }
+
 // neGraphics (the DAT_00188384 render/input manager) lives in Render/neGraphics.cpp.
 
 #pragma mark - Lifecycle hooks
