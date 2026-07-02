@@ -24,6 +24,7 @@
 #import "CharaInfo.h"
 #import "CharaManager.h"
 #import "MainViewController.h"
+#import "MusicData.h"
 #import "MusicManager.h"
 #import "RhUtil.h"
 #import "SkillData.h"
@@ -948,6 +949,48 @@ void AcMainUnlockBonusTreasure() {
         // Group A present but no group-B song owned — the binary stops after the first
         // matching group-A song (it does not keep scanning group A).
         return;
+    }
+}
+
+// The map's 9 music panels are laid out in a fixed non-sequential order; this maps a
+// panel's display slot to its index in the treasure-music array. Ghidra: FUN_000ce0c8
+// (linear search of DAT_0012faa0, byte-verified {0,3,4,5,6,1,2,7,8}).
+static int MapPanelOrder(int displaySlot) {
+    static const int kOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
+    for (int i = 0; i < 9; i++) {
+        if (kOrder[i] == displaySlot) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Ghidra: FUN_000a3550. Despite the seam name, this reloads the 9 jacket textures for
+// the map's music panels: drop the old textures (+0x1a4[9]) and the cached song array
+// (+0x640), re-fetch the treasure-music list, then load each visible panel's artwork
+// (the panels are drawn in the MapPanelOrder permutation). `mode` pages the list (only
+// page 0 fits the 9 panels, matching the < 9 guard).
+void AcMainTask::refreshMapScroll(int mode) {
+    for (int i = 0; i < 9; i++) {
+        if (neTextureForiOS *tex = field<neTextureForiOS *>(0x1a4 + i * 4)) {
+            delete tex;
+            field<neTextureForiOS *>(0x1a4 + i * 4) = nullptr;
+        }
+    }
+    if (field<void *>(0x640)) {
+        (void)(__bridge_transfer id)field<void *>(0x640);
+        field<void *>(0x640) = nullptr;
+    }
+
+    NSArray<MusicData *> *songs = [[MusicManager getInstance] getTreasureMusicDataArray];
+    field<void *>(0x640) = (__bridge_retained void *)songs;
+    const int count = (int)songs.count;
+
+    for (int slot = mode * 9; slot < count && slot < 9; slot++) {
+        MusicData *md = songs[MapPanelOrder(slot)];
+        neTextureForiOS *tex = new neTextureForiOS();
+        field<neTextureForiOS *>(0x1a4 + slot * 4) = tex;
+        tex->loadFromImageData((__bridge const void *)[md artwork2xData]);   // FUN_00011cbc
     }
 }
 
