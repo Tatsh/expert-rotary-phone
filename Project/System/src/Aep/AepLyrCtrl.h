@@ -25,10 +25,13 @@ public:
     // Bind a texture / named resource to this layer. Ghidra: FUN_0002c834.
     void init(int group, const char *name);
 
+    float z() const { return m_z; }
+    bool isVisible() const { return m_visible; }
+
 protected:
     // +0x04 / +0x08: intrusive links in the ordering table.
-    void *m_prev;       // +0x04
-    void *m_next;       // +0x08
+    AepLyrCtrl *m_prev; // +0x04
+    AepLyrCtrl *m_next; // +0x08
     int m_texId;        // +0x0c  (-1 = unassigned, sentinel)
     int m_field10;      // +0x10
     float m_x, m_y, m_z;// +0x14..0x1c  position

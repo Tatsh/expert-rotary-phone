@@ -33,9 +33,11 @@ private:
     // The z-sorted draw list (Ghidra: @ this + 0x727538).
     AepOrderingTable m_ot;
 
-    // Screen-transition (fade) state (Ghidra: @ this + 0x7f3af4..0x7f3b14):
-    // transition type, elapsed/duration timers, and the overlay layer params.
-    // TODO: model the transition sub-struct + the texture/sprite slot arrays.
+    // Screen-transition (fade) state (Ghidra: @ this + 0x7f3af4..0x7f3b14).
+    int m_transitionType = 0;         // 0 = none
+    float m_transitionElapsed = 0;    // seconds into the current transition
+    float m_transitionDuration = 0;   // total fade length
+    AepLyrCtrl *m_transitionOverlay = nullptr;  // full-screen fade quad
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <vector>
+
 class AepLyrCtrl;
 
 class AepOrderingTable {
@@ -30,6 +32,10 @@ public:
     void drawLayer(AepLyrCtrl *layer);
 
     void clear();
+
+private:
+    std::vector<AepLyrCtrl *> m_layers;   // ordered (back-to-front) draw list
+    int m_drawnCount = 0;                 // layers drawn on the last pass
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
