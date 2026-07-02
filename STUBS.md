@@ -1,21 +1,15 @@
 # STUBS — systematic inventory of incomplete reconstructions
-# Updated after the second agent round (AepTexture cache + play score/SE).
+# (void)local markers: 0. All extern seams: removed. All Japanese strings: byte-verified.
 
-## (a) (void)local casts remaining
-Project/System/src/Task/AcMainTask.mm:30:    (void)aep; (void)nm;
+## Explicitly-deferred large units (documented in-file, not disguised)
+- AcMainTask::update (FUN_00099d18) — 24KB arcade state machine, the binary's largest function
+- StoreMainViewController::viewDidLoad (FUN_00042eec) — NEON-obscured CGRect geometry
+- MenuMainTask::setup tail — news-text / RewardNetwork / event-unlock scan
 
-## (b) declared real-ref units still needing a body
-PlayTaskInit (FUN_0002e2d8) / PlayTaskGotoResult (FUN_0003003c) — declared in PlayTask.h, called from PlayTask.mm
-AepManager .idx internal-pointer format (modelled as offsets; baked-pointer scheme documented)
+## Declared real-ref units still needing a body
+- PlayTaskInit / PlayTaskGotoResult (FUN_0002e2d8 / FUN_0003003c) — IN PROGRESS (agent)
 
-## (c) large deferred functions
-AcMainTask::update — 24KB arcade state machine (FUN_00099d18) — the single largest
-StoreMainViewController::viewDidLoad — NEON-obscured CGRect geometry
-MenuMainTask::setup tail — news-text/RewardNetwork/event-unlock scan
-
-## DONE this session (removed from stubs):
-loadAepData, readIndexFile, AepLoad/UnloadGroup, neTextureForiOS::loadFrames,
-AepTextureCacheAcquire, AepTextureUploadTiles(2-arg), PlayJudge milestone SE,
-PlayCurrentScore, PlayScoreGaugeUpdate, PlayEndResultSe, SeInstance controllers,
-NoteMng::totalNoteCount/isFinished(decl), PlayTask case-6 song-end,
-MenuMainTask setup+overlay, all extern seams, all byte-verified strings.
+## Whole subsystems not started
+- Task #7: settings sub-tables, map/sugoroku UI (SugorokuMainTask FUN_000215a0), tutorial task (FUN_0002db10)
+- Task #6 friend VCs (data/networking layer done; the request/score VCs remain)
+- Task #5 store detail VCs (StoreDetailViewController @0x72d1c) + the StoreMainVC table datasource
