@@ -39,6 +39,13 @@
 // Ghidra: -[MusicData setLevelN:H:Ex:] @ 0xc776c
 - (void)setLevelN:(int)n H:(int)h Ex:(int)ex;
 
+// The decoded note chart for each difficulty tier, as the raw play-data buffer
+// (4-byte header + 20-byte note records; see NoteMng). The play loader picks one
+// by the selected difficulty and hands it to -[NoteMng initPlayDataWithData:].
+- (NSData *)sheetNormal;
+- (NSData *)sheetHyper;
+- (NSData *)sheetEx;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

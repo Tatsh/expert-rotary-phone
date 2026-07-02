@@ -13,9 +13,19 @@
 //  chart described below.
 //
 
+//  Chart-load flow: a %09d.orb / ac%09d.acv file (ZIP + BFCodec-encrypted "info")
+//  is decoded into a MusicData object; the play loader picks the sheet for the
+//  chosen difficulty (-[MusicData sheetNormal/sheetHyper/sheetEx]) and passes it
+//  to -[NoteMng initPlayDataWithData:] on the global manager (Ghidra: DAT_00173ea4).
+//
+
 #pragma once
 
 #include <cstdint>
+
+#ifdef __OBJC__
+@class NSData;
+#endif
 
 // ---------------------------------------------------------------------------
 // Chart format (decoded "info" payload)
@@ -98,6 +108,12 @@ public:
     // 4-byte header; `size` is the whole payload length. Ghidra: InitPlayData
     // @ 0x335a4 (asserts size validity at NoteMng.mm:0x45/0x59).
     int initPlayData(const void *data, int size, uint32_t arg4, uint32_t arg5);
+
+#ifdef __OBJC__
+    // Parse a chart straight from an NSData (bytes + length -> initPlayData); the
+    // sheet the play loader selected for the difficulty. Ghidra: @ 0x33550.
+    int initPlayDataWithData(NSData *data, uint32_t arg3, uint32_t arg4);
+#endif
 
     // Walk the parsed records and register every tempo (type 2) event into the
     // tempo map, counting bar lines (type 4). Ghidra: @ 0x337e0.
