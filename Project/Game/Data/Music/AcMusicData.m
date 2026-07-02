@@ -20,11 +20,54 @@ static const char kOrbKeyObfuscated[25] = {
     0x67, 0x57, 0x1f, 0x10, 0x67, 0x58, 0x5f, 0x1d, 0x1e, 0x1a, 0x19, 0x16
 };
 
+// The ten gojuon rows as katakana membership sets and their hiragana labels
+// (Ghidra: DAT_00131d64 / PTR_cf_B0_00131d8c — the same constant strings the
+// standard-mode MusicData yomi index uses).
+static NSString *const kGyoRows[10] = {
+    @"ァアィイゥウェエォオ",              // a-row
+    @"カガキギクグケゲコゴ",              // ka-row
+    @"サザシジスズセゼソゾ",              // sa-row
+    @"タダチヂッツヅテデトド",            // ta-row (incl. small tsu)
+    @"ナニヌネノ",                        // na-row
+    @"ハバパヒビピフブプヘベペホボポ",    // ha-row (dakuten + handakuten)
+    @"マミムメモ",                        // ma-row
+    @"ャヤュユョヨ",                      // ya-row (incl. small)
+    @"ラリルレロ",                        // ra-row
+    @"ヮワヰヱヲンヴヵヶ",                // wa-row / other
+};
+
+static NSString *const kGyoLabels[10] = {
+    @"あ", @"か", @"さ", @"た", @"な", @"は", @"ま", @"や", @"ら", @"わ",
+};
+
 @implementation AcMusicData
 
-// Kana-row ("gyo") initial mapping — pending dedicated reconstruction.
-+ (int)GetGyoIndex:(NSString *)ch;      // fwd
-+ (NSString *)GetGyoName:(int)index;    // fwd
+// @ 0x65bbc — map a reading's first character to its gojuon row 0..9 (9 = other,
+// -1 for nil/empty), scanning each row's katakana membership set.
++ (int)GetGyoIndex:(NSString *)ch {
+    if (ch == nil || ch.length == 0) {
+        return -1;
+    }
+    unichar c = [ch characterAtIndex:0];
+    for (int row = 0; row < 10; row++) {
+        NSString *members = kGyoRows[row];
+        NSUInteger n = members.length;
+        for (NSUInteger i = 0; i < n; i++) {
+            if ([members characterAtIndex:i] == c) {
+                return row;
+            }
+        }
+    }
+    return 9;
+}
+
+// @ 0x65c54 — the display label (hiragana) for a gojuon row; nil past the end.
++ (NSString *)GetGyoName:(int)index {
+    if (index < 10) {
+        return kGyoLabels[index];
+    }
+    return nil;
+}
 
 // @ 0x65d54 — .orb ZIP -> BF-decrypt its "info" entry.
 + (NSData *)getZipData:(NSString *)entry Path:(NSString *)path {

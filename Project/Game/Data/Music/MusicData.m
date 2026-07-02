@@ -24,15 +24,60 @@ static const char kOrbKeyObfuscated[25] = {
     0x67, 0x57, 0x1f, 0x10, 0x67, 0x58, 0x5f, 0x1d, 0x1e, 0x1a, 0x19, 0x16
 };
 
-// Default artist initial used when the artist reading is empty
-// (Ghidra: DAT_0018829c). TODO: confirm exact string (likely a kana "other").
-static NSString *const kDefaultInitial = @"";
+// Initial shown for anything that is not a kana reading (numbers, latin, empty):
+// index >= 10 falls through to this. Ghidra: DAT_0018829c = "#".
+static NSString *const kDefaultInitial = @"#";
+
+// The ten gojuon rows, as katakana membership sets (song "yomi" readings are
+// katakana). A reading's first character is matched against these to pick its row.
+// Ghidra: the DAT_0018824c[0..9] constant strings scanned by GetYomiIndex.
+static NSString *const kYomiRows[10] = {
+    @"ァアィイゥウェエォオ",              // a-row
+    @"カガキギクグケゲコゴ",              // ka-row
+    @"サザシジスズセゼソゾ",              // sa-row
+    @"タダチヂッツヅテデトド",            // ta-row (incl. small tsu)
+    @"ナニヌネノ",                        // na-row
+    @"ハバパヒビピフブプヘベペホボポ",    // ha-row (dakuten + handakuten)
+    @"マミムメモ",                        // ma-row
+    @"ャヤュユョヨ",                      // ya-row (incl. small)
+    @"ラリルレロ",                        // ra-row
+    @"ヮワヰヱヲンヴヵヶ",                // wa-row / other
+};
+
+// The row labels shown in the sort index, as hiragana. Ghidra: PTR_cf_B0_00188274[0..9].
+static NSString *const kYomiLabels[10] = {
+    @"あ", @"か", @"さ", @"た", @"な", @"は", @"ま", @"や", @"ら", @"わ",
+};
 
 @implementation MusicData
 
-// Kana "yomi" (reading-row) initial mapping — pending dedicated reconstruction.
-+ (int)GetYomiIndex:(NSString *)ch;      // fwd
-+ (NSString *)GetYomiString:(int)index;  // fwd
+// @ 0xc7054 — map a reading's first character to its gojuon row 0..9. Scans each
+// row's katakana membership set for the character; returns 9 (wa/other) if none
+// match, or -1 for a nil/empty input.
++ (int)GetYomiIndex:(NSString *)ch {
+    if (ch == nil || ch.length == 0) {
+        return -1;
+    }
+    unichar c = [ch characterAtIndex:0];
+    for (int row = 0; row < 10; row++) {
+        NSString *members = kYomiRows[row];
+        NSUInteger n = members.length;
+        for (NSUInteger i = 0; i < n; i++) {
+            if ([members characterAtIndex:i] == c) {
+                return row;
+            }
+        }
+    }
+    return 9;
+}
+
+// @ 0xc70e0 — the display label (hiragana) for a gojuon row; "#" past the end.
++ (NSString *)GetYomiString:(int)index {
+    if (index < 10) {
+        return kYomiLabels[index];
+    }
+    return kDefaultInitial;
+}
 
 // @ 0xc71ec — the .orb is a ZIP; read + BF-decrypt its "info" entry.
 + (NSData *)getZipData:(NSString *)entry Path:(NSString *)path DecodeType:(int)type {
