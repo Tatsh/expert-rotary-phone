@@ -30,6 +30,7 @@ extern BOOL gIsPad;
     CustomTextView *_messageView;
     __weak id<CommonAlertViewDelegate> _delegate;
     UIView *_dummyView;    // transparent backdrop that blocks touches
+    BOOL _isAnimationing;  // guards the open bounce (Ghidra ivar _isAnimationing)
 }
 
 // @ 0x4a350
@@ -185,9 +186,31 @@ extern BOOL gIsPad;
     [self dismiss];
 }
 
-// Open/close animations (Ghidra: startOpenAnimation @ ..., pending bodies).
+// @ 0x4b718 — the "pop open" bounce: snap to 75%, overshoot to 125% over 0.2s,
+// then settle back to 100% over 0.2s. Guarded so it only runs once at a time.
 - (void)startOpenAnimation {
-    // TODO: reconstruct the scale/fade-in animation.
+    if (_isAnimationing) {
+        return;
+    }
+    _isAnimationing = YES;
+    self.transform = CGAffineTransformMakeScale(0.75f, 0.75f);
+    [UIView animateWithDuration:0.2
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+        self.transform = CGAffineTransformMakeScale(1.25f, 1.25f);  // overshoot
+    }
+                     completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.2
+                              delay:0
+                            options:UIViewAnimationOptionAllowUserInteraction
+                         animations:^{
+            self.transform = CGAffineTransformMakeScale(1.0f, 1.0f);  // settle
+        }
+                         completion:^(BOOL done) {
+            self->_isAnimationing = NO;
+        }];
+    }];
 }
 
 - (void)dismiss {
