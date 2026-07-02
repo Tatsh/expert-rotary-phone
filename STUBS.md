@@ -69,8 +69,12 @@
       real v37-skip SE list and the 120 digit-texture names). Review fixed a duplicate
       neAppEventCenter::setLastMusic decl; AepLyrCtrl::init confirmed 5-arg (owner +
       order @0x12e698) via disassembly.
-      Remaining handler (declared, tracked): updateResultPresent (case 2: Twitter share
-      button build + rank-SE cascade). DONE: updateScoreCount (cases 3/5/6 count-up) —
+      DONE: updateResultPresent (case 2) — the intro-frame SE cascade (se07_count @+0x300
+      on frames 0x18/0x28/0x30/0x38/0x40; v32 @+0x2e8 perfect jingle at 0x46, all traced by
+      disasm), the capture gate, and the dismiss tap (tapX>0xdc || tapY<bottomEdge -> state
+      3). The one remaining seam is buildShareButton (the case-2 UIButton build: NEON-
+      obscured device-branched frame from the bt_twitter image + the TwitterUtil tweet
+      target). DONE: updateScoreCount (cases 3/5/6 count-up) —
       all 4 SE source ids traced by disassembly (v38 @+0x2fc line-in, se08_bonus_fai
       @+0x304 tally, se07_count @+0x300 tick, se09_bonus_cl @+0x308 finish); and
       AepLyrCtrlUpdateAll + PlayResultDrawCallback (see the Draw units section).

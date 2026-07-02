@@ -55,6 +55,13 @@ private:
     void updateScoreCount(bool tapped);
     void resultGotoNext();
 
+    // The case-2 Twitter share-button build (FUN_0003d690 @ ~0x3da3e): lay out the
+    // UIButton from the "bt_twitter" image size (device-branched, NEON-obscured frame),
+    // wrap a TwitterUtil(text,image) as its tweet target, add it over the GL view and
+    // fade it in. Isolated as its own piece (the frame math + the TwitterUtil class are
+    // its remaining work); updateResultPresent calls it once the backdrop is captured.
+    void buildShareButton(int displayType);
+
     // The 10-lane x 12-array number-texture load (num_cool_/great_/good_/bad_/com_/
     // score_/bonus_clear/bonus_combo/bonus_rank/bonus_perfect/points/pointb_), lifted
     // out of resultSetup as a real helper. Ghidra: FUN_0003dfe0's inner double loop

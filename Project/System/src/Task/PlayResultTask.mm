@@ -488,6 +488,48 @@ void PlayResultTask::loadNumberTextures() {
     }
 }
 
+// Ghidra: FUN_0003d690 case 2 — the results presentation. While the intro effect layer
+// (+0x214) is still animating, fire the score-tally count SE (se07_count @ +0x2e4[7]) on
+// its cue frames and the perfect jingle (v32 @ +0x2e4[1]) at frame 0x46; once it settles,
+// build the Twitter share button (once the GL backdrop has been captured) and wait for a
+// dismiss tap outside the button to advance to the count-up (state 3). All SE ids and the
+// frame cues traced from the disassembly.
+void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int displayType) {
+    AudioManager *audio = [AudioManager sharedManager];
+    SeInstance *intro = reinterpret_cast<SeInstance *>(field<void *>(0x214));
+
+    if (SeInstanceIsPlaying(intro)) {
+        const int frame = (int)intro->cursor;   // +0x214 play head (+0x40)
+        if (frame == 0x18 || frame == 0x28 || frame == 0x30 || frame == 0x38 || frame == 0x40) {
+            [audio stopSe:static_cast<RSND_INSTANCE_ID>(field<int>(0x32c))];
+            field<int>(0x32c) =
+                static_cast<int>([audio playSe:nil resourceId:field<RSND_SOURCE_ID>(0x300)]);
+        } else if (frame == 0x46 && field<unsigned char>(0x353) && field<short>(0x35c) != 0) {
+            // Perfect full-combo (non-zero rank): the celebratory jingle (v32 @ +0x2e4[1]).
+            [audio stopSe:static_cast<RSND_INSTANCE_ID>(field<int>(0x32c))];
+            field<int>(0x32c) =
+                static_cast<int>([audio playSe:nil resourceId:field<RSND_SOURCE_ID>(0x2e8)]);
+        }
+        return;
+    }
+
+    // Intro settled. Once the GL view has captured the backdrop, lay out the share button
+    // (only once). Then a tap outside the button's area dismisses the presentation.
+    if ([RootVC() getCapturedImage] != nil && field<void *>(0x398) == nullptr) {
+        buildShareButton(displayType);
+    }
+    if (tapped) {
+        const int bottomEdge = (displayType == 2) ? 0x370 : 0x30c;
+        if (tapX > 0xdc || tapY < bottomEdge) {
+            state() = 3;
+            UIButton *shareButton = (__bridge UIButton *)field<void *>(0x398);
+            if (shareButton != nil) {
+                [shareButton setUserInteractionEnabled:NO];
+            }
+        }
+    }
+}
+
 // Ghidra: FUN_0003d690 states 3/5/6 — the treasure-point count-up. State 4 (the wait
 // between them) is handled inline in update(). All four SE source ids were traced from
 // the disassembly (they index the 11-entry SE array resultSetup loaded @ +0x2e4):
