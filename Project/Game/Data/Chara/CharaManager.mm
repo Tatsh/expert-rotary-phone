@@ -1,0 +1,239 @@
+//
+//  CharaManager.mm
+//  pop'n rhythmin
+//
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
+//  Builds and queries the player's character lists. The hard-coded 30 come from
+//  GetHardCodeCharaDataStruct; the rest are downloaded as chara_%03d.chr files
+//  (BFCodec-encrypted JSON, same "Popn Orbit Note." key scheme as the .orb data).
+//
+
+#include <cstdint>
+
+#import "AppDelegate.h"
+#import "BFCodec.h"
+#import "CharaData.h"
+#import "CharaInfo.h"
+#import "CharaManager.h"
+#import "LimitedCharaInfo.h"
+#import "MusicManager.h"
+#import "PreferredCharaInfo.h"
+#import "RhCrypto.h"
+#import "RhUtil.h"
+#import "UserSettingData.h"
+
+CharaManager gCharaManager;
+
+namespace {
+
+// The obfuscated 25-byte key at DAT_0012fa0c. Deobfuscated as key[i]+i it spells
+// "Popn Orbit Note. xjr1300."; its MD5 is the BFCodec key (see charaDecodeChr).
+const uint8_t kCharaKeyObfuscated[25] = {
+    0x50, 0x6E, 0x6E, 0x6B, 0x1C, 0x4A, 0x6C, 0x5B, 0x61, 0x6B, 0x16, 0x43, 0x63,
+    0x67, 0x57, 0x1F, 0x10, 0x67, 0x58, 0x5F, 0x1D, 0x1E, 0x1A, 0x19, 0x16,
+};
+
+// Ghidra: FUN_0005c508 — deobfuscate the key (byte + index), MD5 it, then
+// BFCodec-decipher the data in place. Returns the data on success, nil on fail.
+NSData *charaDecodeChr(NSMutableData *data) {
+    const int length = (int)sizeof(kCharaKeyObfuscated);
+    auto *deob = new uint8_t[length];
+    for (int i = 0; i < length; i++) {
+        deob[i] = (uint8_t)(kCharaKeyObfuscated[i] + (uint8_t)i);
+    }
+    uint8_t digest[16];
+    RhMD5(deob, length, digest);
+    delete[] deob;
+
+    BFCodec *codec = [[[BFCodec alloc] init] autorelease];
+    [codec cipherInit:(const char *)digest keyLength:16];
+    if (![codec decipher:data]) {
+        return nil;
+    }
+    return data;
+}
+
+// Ghidra: FUN_00028aa4 — treat an NSArray of NSNumber as a packed bitfield
+// (32 bits per element) and test bit `bit`.
+bool charaTestGotBit(NSArray *bits, unsigned bit) {
+    unsigned word = bit >> 5;
+    if (word >= [bits count]) {
+        return false;
+    }
+    int value = [bits[word] intValue];
+    return (value & (1 << (bit & 0x1f))) != 0;
+}
+
+// Collect the "Id" values out of a JSON array of {"Id": n, ...} objects.
+NSArray *collectIds(NSArray *entries) {
+    NSMutableArray *ids = [NSMutableArray array];
+    for (NSDictionary *entry in entries) {
+        [ids addObject:entry[@"Id"]];
+    }
+    return ids;
+}
+
+}  // namespace
+
+// Ghidra: FUN_000b85bc.
+void CharaManager::reload() {
+    NSMutableArray *preferred = [NSMutableArray array];
+    NSMutableArray *limited = [NSMutableArray array];
+    NSMutableArray *allChara = [NSMutableArray array];
+    NSMutableArray *available = [NSMutableArray array];
+
+    [_preferred release]; _preferred = nil;
+    [_limited release]; _limited = nil;
+    [_available release]; _available = nil;
+
+    // The 30 built-in characters.
+    for (short i = 0; i < 30; i++) {
+        const CharaDataStruct *d = GetHardCodeCharaDataStruct(i);
+        CharaInfo *info = [[[CharaInfo alloc] init] autorelease];
+        info.charaId = i;
+        info.charaName = d->name;
+        info.info = d->info;
+        info.skillId = d->skillId;
+        info.skillName = d->skillName;
+        info.rarity = d->rarity;
+        [allChara addObject:info];
+    }
+
+    // Every downloaded chara_%03d.chr (numbered 0..999, stop at the first gap).
+    NSString *supportDir = [AppDelegate appAppSupportDirectory];
+    for (int n = 0; n < 1000; n++) {
+        NSString *name = [NSString stringWithFormat:@"chara_%03d.chr", n];
+        NSString *path = [supportDir stringByAppendingPathComponent:name];
+        if (!RhFileExists(path)) {
+            break;
+        }
+
+        NSData *raw = [[NSData alloc] initWithContentsOfFile:path];
+        NSMutableData *buffer = [NSMutableData dataWithData:raw];
+        NSData *decoded = charaDecodeChr(buffer);
+        NSDictionary *json = [NSJSONSerialization JSONObjectWithData:decoded
+                                                            options:NSJSONReadingMutableContainers
+                                                              error:nil];
+
+        // "Preferred": music<->chara pairings that unlock preferred characters.
+        for (NSDictionary *entry in json[@"Preferred"]) {
+            NSArray *music = entry[@"Music"];
+            NSArray *chara = entry[@"Chara"];
+            if (music && chara && [music count] && [chara count]) {
+                PreferredCharaInfo *pref = [[[PreferredCharaInfo alloc] init] autorelease];
+                pref.musicIds = [[collectIds(music) copy] autorelease];
+                pref.charaIds = [[collectIds(chara) copy] autorelease];
+                [preferred addObject:pref];
+            }
+        }
+
+        // "Limited": time-limited character sets (same shape as Preferred).
+        for (NSDictionary *entry in json[@"Limited"]) {
+            NSArray *music = entry[@"Music"];
+            NSArray *chara = entry[@"Chara"];
+            if (music && chara && [music count] && [chara count]) {
+                LimitedCharaInfo *lim = [[[LimitedCharaInfo alloc] init] autorelease];
+                lim.musicIds = [[collectIds(music) copy] autorelease];
+                lim.charaIds = [[collectIds(chara) copy] autorelease];
+                [limited addObject:lim];
+            }
+        }
+
+        // "Chara": additional character records defined by the download.
+        for (NSDictionary *entry in json[@"Chara"]) {
+            CharaInfo *info = [[[CharaInfo alloc] init] autorelease];
+            info.charaId = [entry[@"Id"] intValue];
+            info.charaName = entry[@"Name"];
+            info.info = entry[@"Info"];
+            info.skillId = [entry[@"SkillId"] intValue];
+            info.skillName = entry[@"SkillName"];
+            info.rarity = [entry[@"Rarity"] intValue];
+            [allChara addObject:info];
+        }
+    }
+
+    _preferred = [preferred copy];
+    _limited = [limited copy];
+
+    // Keep only the characters the player can currently use.
+    for (CharaInfo *info in allChara) {
+        if (isCharaAvailable((unsigned short)info.charaId)) {
+            [available addObject:info];
+        }
+    }
+    _available = [available copy];
+}
+
+// Ghidra: FUN_000b9048. A character is available unless it belongs to a limited
+// set that has not been unlocked (neither owned nor its music purchased).
+bool CharaManager::isCharaAvailable(unsigned short charaId) const {
+    NSArray *gotChara = [UserSettingData gotCharaArray];
+    bool inLimitedSet = false;
+
+    for (LimitedCharaInfo *lim in _limited) {
+        for (NSNumber *cid in lim.charaIds) {
+            if (([cid shortValue] & 0xffff) != charaId) {
+                continue;
+            }
+            inLimitedSet = true;
+            // Owned outright -> available.
+            if (charaTestGotBit(gotChara, [cid shortValue])) {
+                return true;
+            }
+            // Otherwise available only if any associated music is purchased.
+            for (NSNumber *mid in lim.musicIds) {
+                NSString *path = [[MusicManager getInstance] getPathFromPurchased:[mid intValue]];
+                if (RhFileExists(path)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Not in any limited set -> always available; in a set but locked -> not.
+    return !inLimitedSet;
+}
+
+// Ghidra: FUN_000b9308 — linear search of the available list by charaId.
+CharaInfo *CharaManager::availableInfoForCharaId(short charaId) const {
+    for (CharaInfo *info in _available) {
+        if (info.charaId == charaId) {
+            return info;
+        }
+    }
+    return nil;
+}
+
+// Ghidra: FUN_000b93d0 — mark preferred sets whose music is now purchased and
+// whose characters are owned, returning the ids that just unlocked.
+NSArray *CharaManager::collectUnlockedCharaIds() {
+    NSMutableArray *unlocked = [NSMutableArray array];
+    NSArray *gotChara = [UserSettingData gotCharaArray];
+
+    for (PreferredCharaInfo *pref in _preferred) {
+        if (!pref.getFlg) {
+            for (NSNumber *mid in pref.musicIds) {
+                NSString *path = [[MusicManager getInstance] getPathFromPurchased:[mid intValue]];
+                if (RhFileExists(path)) {
+                    for (NSNumber *cid in pref.charaIds) {
+                        if (charaTestGotBit(gotChara, [cid shortValue])) {
+                            pref.getFlg = YES;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        if (!pref.getFlg) {
+            for (NSNumber *cid in pref.charaIds) {
+                [unlocked addObject:cid];
+            }
+        }
+    }
+    return [[unlocked copy] autorelease];
+}
+
+// kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4

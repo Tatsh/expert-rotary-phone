@@ -12,6 +12,7 @@
 
 @property (nonatomic, strong) NSArray *musicIds;   // Ghidra: setMusicIds:
 @property (nonatomic, strong) NSArray *charaIds;   // Ghidra: charaIds @ 0x64298
+@property (atomic) BOOL getFlg;                    // Ghidra: getFlg/setGetFlg: (unlock flag)
 
 @end
 

@@ -1,0 +1,57 @@
+//
+//  CharaManager.h
+//  pop'n rhythmin
+//
+//  Owns the three character lists the game builds at startup and after any
+//  download. Reconstructed from Ghidra project rb420, program PopnRhythmin.
+//
+//  In the binary this is a global 12-byte struct at DAT_00187d98 (three ObjC
+//  array pointers) operated on by free functions that take its address; modeled
+//  here as a C++ class with a single global instance (gCharaManager). The three
+//  members are, in order: preferred sets, limited sets, and the filtered list of
+//  characters currently available to the player.
+//    * reload()                      = FUN_000b85bc
+//    * isCharaAvailable()            = FUN_000b9048 (private helper)
+//    * availableInfos()              = FUN_000b9304
+//    * availableInfoForCharaId()     = FUN_000b9308
+//    * collectUnlockedCharaIds()     = FUN_000b93d0
+//
+
+#pragma once
+
+#import <Foundation/Foundation.h>
+
+@class CharaInfo;
+
+class CharaManager {
+public:
+    // Rebuild all three lists: the 30 hard-coded characters plus every character
+    // and preferred/limited set found in the downloaded chara_%03d.chr files.
+    void reload();
+
+    // The characters currently available to the player (member +0x8).
+    NSArray *availableInfos() const { return _available; }
+
+    // The available CharaInfo whose charaId matches, or nil.
+    CharaInfo *availableInfoForCharaId(short charaId) const;
+
+    // Walk the preferred sets, mark any whose unlock condition is now met, and
+    // return the character ids that just became unlocked (for reveal effects).
+    NSArray *collectUnlockedCharaIds();
+
+private:
+    // True unless `charaId` is a limited character that has not been unlocked
+    // (i.e. it is not owned and none of its associated music has been purchased).
+    bool isCharaAvailable(unsigned short charaId) const;
+
+    NSArray *_preferred = nil;   // +0x0  PreferredCharaInfo objects
+    NSArray *_limited = nil;     // +0x4  LimitedCharaInfo objects
+    NSArray *_available = nil;   // +0x8  CharaInfo objects (player-available)
+};
+
+// The single global instance (Ghidra: DAT_00187d98).
+extern CharaManager gCharaManager;
+
+// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4
