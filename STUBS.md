@@ -43,7 +43,11 @@
       +0x34.. arrays, the +0x214 result layers, 11 rank SEs @+0x2e4, and loadBgm result
       BGM; case 0 then plays it), updateResultPresent (case 2: Twitter button + rank
       cue), updateScoreCount (cases 3/5/6: count-up + result SEs — their playSe source
-      ids need field-tracing), resultGotoNext (FUN_0003f2e0), and the free function
+      ids need field-tracing), resultGotoNext (FUN_0003f2e0 — mechanical teardown paired
+      with resultSetup: frees the 11 SEs @+0x2e4, the +0x28/+0x34.. texture arrays [10
+      lanes x 12], the 6 +0x214 layers, the share button/+0x39c, unloadGroup(4), then
+      spawns MainTask @+0x390; best written alongside resultSetup so the create/free
+      offsets stay paired), and the free function
       AepLyrCtrlUpdateAll (FUN_0002c924, the per-frame layer tick+draw).
       Original 13-state map (for the handler reconstructions):
         0  enterResult:   FUN_0003dfe0 (result setup) -> playBgm; ->1
