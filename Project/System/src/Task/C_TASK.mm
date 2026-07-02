@@ -6,12 +6,10 @@
 //  cooperative task scheduler: every task lives in one priority-sorted circular
 //  list bounded by a sentinel head (DAT_00188468). Each frame the manager walks
 //  the list in priority order, update()ing live tasks and reaping killed ones.
-//  Ctor FUN_0002af58 (base FUN_00027ea8), setPriority FUN_00027f08,
-//  updateAll FUN_00027f40.
+//  Base ctor FUN_00027ea8, setPriority FUN_00027f08, updateAll FUN_00027f40.
 //
 
 #include <climits>
-#include <cstring>
 
 #import "C_TASK.h"
 
@@ -27,13 +25,14 @@ C_TASK &C_TASK::scheduler() {
     return sentinel;
 }
 
-// Ghidra: FUN_0002af58 — a detached node (self-linked) until setPriority inserts
-// it into the scheduler list.
+// Ghidra: base ctor FUN_00027ea8 — sets the vtable, self-links the node, defaults
+// the priority to 9, and clears the name + killed flag. It stays detached (its own
+// prev/next) until setPriority inserts it into the scheduler list. (The scene-tree
+// links are left for the owner/subclass to populate; modelled as null here.)
 C_TASK::C_TASK()
-    : m_prev(this), m_next(this), m_priority(0),
+    : m_prev(this), m_next(this), m_priority(9),
       m_parent(nullptr), m_link1(nullptr), m_link2(nullptr), m_link3(nullptr),
       m_name(nullptr), m_killed(false) {
-    std::memset(m_transform, 0, sizeof(m_transform));
 }
 
 // Unlink from the scheduler list on destruction (Ghidra: the reaped-task path in

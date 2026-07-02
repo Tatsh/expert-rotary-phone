@@ -16,10 +16,12 @@
 
 class C_TASK {
 public:
-    C_TASK();                       // Ghidra: FUN_0002af58 (via base FUN_00027ea8)
+    C_TASK();                       // Ghidra: base ctor FUN_00027ea8 (vtable PTR_LAB_00027f88)
     virtual ~C_TASK();
 
-    // Per-frame hooks dispatched by the scheduler (vtable @ PTR_FUN_0002b02c).
+    // Per-frame hooks dispatched by the scheduler; concrete tasks override them.
+    // (Base vtable @ PTR_LAB_00027f88; a drawable subclass — ctor FUN_0002af58,
+    // vtable PTR_FUN_0002b02c — adds a position/scale transform at +0x28.)
     virtual void update(int deltaMs);
     virtual void draw();
 
@@ -57,9 +59,10 @@ protected:
     char *m_name;        // +0x20
     bool m_killed;       // +0x24  (0 = alive; set to reap on the next pass)
 
-    // Transform initialized by the ctor (position / scale; words 0xa..0x12).
-    // TODO: name the individual transform fields.
-    float m_transform[10];  // +0x28..
+    // NOTE: the position/scale transform at +0x28..+0x48 is NOT part of the base
+    // node — it is added and initialised by the drawable-task subclass (Ghidra:
+    // FUN_0002af58, vtable PTR_FUN_0002b02c). The base ctor (FUN_00027ea8) only sets
+    // the vtable, self-links, priority (9), name and killed flag.
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
