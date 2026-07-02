@@ -9,6 +9,7 @@
 #import "MainViewController.h"
 #import "AepManager.h"
 #import "C_TASK.h"
+#import "neFrameTimer.h"
 #import "neGLView.h"
 
 // --- Engine entry points the loop still calls into (not yet reconstructed as
@@ -18,10 +19,6 @@ extern "C" {
 void neGraphicsClear(void);                     // Ghidra: FUN_00012c14 + vtbl[0x4c](0x4000)
 // Compact the task manager's list, dropping tasks flagged for deletion.
 void neTaskManagerReap(void);                   // Ghidra: task-list sweep @ 0xbb5c
-
-// Frame timers (small structs owned inline by this controller).
-void  neTimerReset(void *timer);                // Ghidra: FUN_00028084
-float neTimerElapsedSeconds(void *timer);       // Ghidra: FUN_0002808c
 }
 
 // Minimum seconds between rendered frames (Ghidra: DAT_0000be7c). Rendering is
@@ -40,9 +37,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     AepManager *m_AepManager;    // C++ scene owner
     BOOL m_flgCapture;
     UIImage *m_capturedImg;
-    // Opaque inline frame timers (engine struct; see neTimer* above).
-    unsigned char m_TaskTime[8];
-    unsigned char m_RenderTime[8];
+    // Wall-clock stopwatches pacing the task-update and render steps.
+    neFrameTimer m_taskTime;
+    neFrameTimer m_renderTime;
 }
 
 #pragma mark - Loop control
@@ -78,8 +75,8 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (m_IsPause || !m_IsLoop) {
         return;
     }
-    neTimerReset(m_TaskTime);
-    neTimerReset(m_RenderTime);
+    m_taskTime.reset();
+    m_renderTime.reset();
     if (m_DisplayLink == nil) {
         m_DisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(mainLoop)];
         m_DisplayLink.frameInterval = m_LoopInterval;
@@ -109,8 +106,8 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 // @ 0xbb5c — advance all tasks by the elapsed time, then reap dead ones.
 - (void)task {
-    float dt = neTimerElapsedSeconds(m_TaskTime);
-    neTimerReset(m_TaskTime);
+    float dt = m_taskTime.elapsedSeconds();
+    m_taskTime.reset();
     C_TASK::updateAll(SecondsToFixed(dt));
     // Sweep the task list: for each task, snapshot its state (prev = cur) and
     // swap-remove any flagged for deletion (original inlines this @ 0xbb5c).
@@ -119,7 +116,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 // @ 0xbd30 — render the scene, frame-limited by the render timer.
 - (void)draw {
-    float dt = neTimerElapsedSeconds(m_RenderTime);
+    float dt = m_renderTime.elapsedSeconds();
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
@@ -137,7 +134,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
         [_glView SetDefaultColorBuffer];
         [_glView Present];
     }
-    neTimerReset(m_RenderTime);
+    m_renderTime.reset();
 }
 
 @end
