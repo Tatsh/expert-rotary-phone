@@ -102,6 +102,17 @@ static NSString *const kYomiLabels[10] = {
     return [MusicData getZipData:entry Path:self.filePath DecodeType:self.decodeType];
 }
 
+// The audio + chart payloads packed alongside "Info" in the .orb zip, each pulled
+// out (and BF-decoded) on demand. Ghidra: one-line getZipData: wrappers at
+// music @ 0xc78d8, musicPre @ 0xc78f4, sheetNormal @ 0xc7910, sheetHyper @ 0xc792c,
+// sheetEx @ 0xc7948 (the play scene loads "bgm" as the BGM and the difficulty's
+// sheet as the note chart).
+- (NSData *)music      { return [self getZipData:@"bgm"]; }
+- (NSData *)musicPre   { return [self getZipData:@"pre"]; }
+- (NSData *)sheetNormal { return [self getZipData:@"sheet_n"]; }
+- (NSData *)sheetHyper { return [self getZipData:@"sheet_h"]; }
+- (NSData *)sheetEx    { return [self getZipData:@"sheet_ex"]; }
+
 // @ 0xc7104 — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in place.
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);

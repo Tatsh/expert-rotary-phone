@@ -31,13 +31,17 @@
 ## Declared real-ref units still needing a body
 - PlayTaskInit / PlayTaskGotoResult (FUN_0002e2d8 / FUN_0003003c) — DONE (PlayScene.mm).
   Delegated helpers still needing a body:
-    * PlayLoadSong (FUN_00030720) — also the site that should set NoteMng::setPlayActive(true)
-      (the +0x13cb6 flag PlayNoteMngDetach clears).
     * PlayBuildFieldLayers (16 AepLyrCtrl layers + handle table), PlayLoadCharaTextures.
     * PlayTaskDraw (FUN_00030944) — large per-note draw dispatcher (delegated draw unit,
       like PlayJudge's note-quad geometry).
     * PlayResultCreateTask (FUN_0003d5bc, the result-screen task ctor).
     * DONE: PlayNoteMngDetach (FUN_0003395c) — clears NoteMng's play-active flag.
+    * DONE: PlayLoadSong (FUN_00030720) — song resolve + async BGM block + sheet parse +
+      tap SE. Pulled in the full MusicData zip-entry accessor family (music/musicPre/
+      sheetNormal/Hyper/Ex @ 0xc78d8.. — all reconstructed) and the AudioManager
+      loadBgmData:isLoop: decl (@ 0x1e5b0; body still to add in AudioManager.mm).
+  Note: NoteMng::setPlayActive(true) still unlocated (only the read in
+  applicationWillResignActive and the clear in PlayNoteMngDetach are found).
 
 ## Whole subsystems not started
 - Task #7: settings sub-tables, map/sugoroku UI (SugorokuMainTask FUN_000215a0), tutorial task (FUN_0002db10)

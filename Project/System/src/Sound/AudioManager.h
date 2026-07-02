@@ -44,6 +44,7 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 
 // --- BGM: one loaded resource at a time, with a save/restore stack ---
 - (BOOL)loadBgm:(NSString *)path isLoop:(BOOL)loop;   // Ghidra: @ 0x1e4a8
+- (BOOL)loadBgmData:(NSData *)data isLoop:(BOOL)loop; // Ghidra: @ 0x1e5b0 (in-memory BGM)
 - (BOOL)playBgm:(float)fadeSeconds;                   // Ghidra: @ 0x1fcc0
 - (BOOL)onPauseBgm:(float)fadeSeconds;                // Ghidra: @ 0x1fec8
 - (void)seekBgmToTop;                                 // selector @ 0x11a3d6

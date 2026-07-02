@@ -39,6 +39,16 @@
 // Ghidra: -[MusicData setLevelN:H:Ex:] @ 0xc776c
 - (void)setLevelN:(int)n H:(int)h Ex:(int)ex;
 
+// The audio + chart entries stored in the .orb zip (BF-decoded on demand). The play
+// scene loads `music` as the BGM and one of the three sheets as the note chart, per
+// the chosen difficulty. Ghidra: getZipData: wrappers @ 0xc78d8/0xc78f4/0xc7910/
+// 0xc792c/0xc7948.
+- (NSData *)music;         // "bgm"     — the full BGM
+- (NSData *)musicPre;      // "pre"     — the preview clip
+- (NSData *)sheetNormal;   // "sheet_n"
+- (NSData *)sheetHyper;    // "sheet_h"
+- (NSData *)sheetEx;       // "sheet_ex"
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

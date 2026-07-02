@@ -38,6 +38,8 @@
 #import "AepManager.h"
 #import "AppDelegate.h"
 #import "AudioManager.h"
+#import "MusicData.h"
+#import "MusicManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"        // MainTaskPlayData (fwd) + NoteJudgeState (judge pool)
 #import "PlayTask.h"         // PlayTaskInit / PlayTaskGotoResult / PlayCurrentScore
@@ -55,8 +57,10 @@
 
 // Ghidra: FUN_00030720. Load the chosen song's BGM (async), parse its sheet into the
 // global NoteMng play data (NoteMng_initPlayDataWithData), and load the per-tap
-// feedback SE into play data +0x398 at the user's touch-sound volume.
-void PlayLoadSong(void *playData);
+// feedback SE into play data +0x398 at the user's touch-sound volume. `reload` != 0
+// reparses the chart only (the state machine's mid-play reload), skipping the audio.
+// Defined at the foot of this file.
+void PlayLoadSong(void *playData, int reload);
 
 // Build the 16 note-field AepLyrCtrl layers (+0x84..+0xc0), position them per display
 // type, and resolve every note / combo-digit / tone / chara-animation layer handle
@@ -163,7 +167,7 @@ void PlayTaskInit(void *playData) {
     pdByte(playData, 0x9ca) = neSceneManager::isPadDisplay() ? 1 : 0;   // +0x9ca (DAT_00187b84)
 
     // Load the song's BGM + parse its chart into NoteMng + load the tap SE (+0x398).
-    PlayLoadSong(playData);   // Ghidra: FUN_00030720
+    PlayLoadSong(playData, 0);   // Ghidra: FUN_00030720 (reload = 0: full first load)
 
     // Gauge / score bookkeeping. +0x9cc is the per-note gauge weight: a fixed 3072-unit
     // budget (DAT_0002e768 == 3072.0) spread across the chart's playable-note total.
@@ -304,6 +308,67 @@ void PlayTaskGotoResult(void *playData) {
     }
     next->setPriority(3);   // Ghidra: C_TASK_setPriority
     pdByte(playData, 0x9c7) = 1;   // +0x9c7 = hand-off complete
+}
+
+// The per-tap feedback SE resource name for a touch-sound kind (clamped to 0..9).
+// Ghidra: FUN_0002c7a8 — a fixed "hit001".."hit010" table (the scene-manager argument
+// the binary threads in is unused).
+static NSString *TouchSeResourceName(int kind) {
+    if ((unsigned)kind > 9) {
+        kind = 0;
+    }
+    return [NSString stringWithFormat:@"hit%03d", kind + 1];
+}
+
+// Ghidra: FUN_00030720 — resolve the picked song, kick off the async BGM + tap-SE
+// load on a first load, and parse the chosen difficulty's sheet into the note manager.
+void PlayLoadSong(void *playData, int reload) {
+    AudioManager *audio = [AudioManager sharedManager];
+    NoteMng &nm = NoteMng::shared();
+
+    MusicData *music;
+    int sheetIndex;
+    if (pdByte(playData, 0x9c9) == 0) {
+        // Normal play: the event center carries the picked music id + difficulty.
+        neAppEventCenter *evc = reinterpret_cast<neAppEventCenter *>(pdPtr(playData, 0x968));
+        sheetIndex = evc->lastSheet();
+        music = [[MusicManager getInstance] getMusicData:evc->lastMusic()];
+    } else {
+        // Bundled demo / sugoroku: the fixed bundled song, always the normal sheet.
+        sheetIndex = 0;
+        music = [MusicData dataWithPath:[MusicManager getPathFromBundle:0] ID:0];
+    }
+
+    if (reload == 0) {
+        [audio stopBgm:0.0f];
+        // Decode + start the BGM off the main thread so the parse below is not blocked
+        // on the audio; flag it ready (@ +0x9c6) when done.
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            NSData *bgm = [music music];
+            [audio loadBgmData:bgm isLoop:NO];
+            [audio setBgmVolume:1.0f];
+            pdByte(playData, 0x9c6) = 1;
+        });
+    }
+
+    // Parse the chosen difficulty's sheet into the global note manager. The binary
+    // also threads a per-note spawn callback and this play data as the two context
+    // args; NoteMng::initPlayData does not consume them in this reconstruction, so only
+    // the play-data context is forwarded.
+    NSData *sheet = (sheetIndex == 2) ? [music sheetEx]
+                  : (sheetIndex == 1) ? [music sheetHyper]
+                                      : [music sheetNormal];
+    nm.initPlayDataWithData(sheet, 0, (uint32_t)(uintptr_t)playData);
+
+    if (reload == 0) {
+        // The per-tap feedback SE, named by the user's touch-sound kind, at their
+        // touch-sound volume.
+        const int kind = [UserSettingData touchSoundKind];
+        NSString *path = [[NSBundle mainBundle] pathForResource:TouchSeResourceName(kind)
+                                                         ofType:@"m4a"];
+        pdInt(playData, 0x398) = (int)[audio loadSe:path isLoop:NO callName:nil group:0];
+        [audio setSeVolume:pdShort(playData, 0x9b4) groupId:0];
+    }
 }
 
 // Ghidra: FUN_0003395c — the play scene releasing the note manager: clear its
