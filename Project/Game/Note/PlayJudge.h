@@ -4,36 +4,46 @@
 //
 //  The per-frame play/judge pass of the standard-mode main task: it walks the
 //  active notes, hit-tests the current touches against each, dispatches hits to
-//  NoteMng's judgement, auto-judges passed notes, draws them, and fires the
-//  combo-milestone sound effects. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (FUN_0002f1f8, the play megafunction).
+//  NoteMng's judgement, auto-judges in demo mode, resolves holds, draws each note
+//  + its effects, and fires the combo-milestone sound effects. Reconstructed from
+//  Ghidra project rb420, program PopnRhythmin (FUN_0002f1f8, the play megafunction).
 //
-//  Modelled as a free function on the play-data / task pointer, matching the
-//  binary (the play data is one large task struct). The intricate per-note screen
-//  geometry (16.16 fixed-point / SIMD in the original) is factored into the sprite
-//  draw; this file carries the game-logic control flow.
+//  The play data (param_1) is the standard-mode MainTask, a large task struct that
+//  is not yet reconstructed as a whole; the fields this pass touches are reached by
+//  cited byte offset. The per-note sprite/effect geometry (16.16-fixed / NEON in the
+//  original: FUN_0000fd64 note quad, FUN_0000fcd0 hit effect) is a separate draw
+//  unit — this file carries the verified judge control flow and delegates the pixel
+//  math to those helpers.
 //
 
 #pragma once
 
-#ifdef __OBJC__
-@class NSValue;
-#endif
+// Forward declaration of the not-yet-reconstructed standard-mode MainTask play
+// data. Accessed here only through documented byte offsets.
+struct MainTaskPlayData;
 
-// One touch this frame, in engine 16.16 fixed-point view coordinates.
-struct PlayTouch {
-    int x;
-    int y;
+// Per-note judge state. The play data owns a fixed pool of 60 of these at
+// +0x3c8 (each 24 bytes); FUN_0003126c looks one up by note id, allocating a free
+// slot (id < 0) on first touch. Ghidra: FUN_0003126c.
+struct NoteJudgeState {
+    int layerId;           // +0x00 the note's sprite/layer id (draw arg)
+    const void *noteKey;   // +0x04 owning note identity (nullptr when the slot is free)
+    int phase;             // +0x08 visual phase: 0 pending, 1 active, 2/3 resolved
+    int result;            // +0x0c judged tier: -1 unjudged, 0..3 (0 best)
+    int timestamp;         // +0x10 position when the phase/result last changed
+    int touchId;           // +0x14 bound neGraphics touch id (-1 = none)
 };
 
 // Run one play/judge pass over the global NoteMng's active notes.
-//   playData : the main task / play-data struct (opaque here; the fields used are
-//              cited by offset in the .mm).
-//   touches  : the current touch points (nullptr / count 0 when there is no input).
-//   noteIds  : optional per-touch note-id assignment buffer (from the input layer).
+//   playData  : the standard-mode MainTask play data.
+//   touchXY   : current touch points as (x, y) float pairs in view pixels; a
+//               negative x or y marks an empty/consumed slot. Up to 8 pairs.
+//   touchIds  : the neGraphics touch id parallel to each touchXY pair (bound to a
+//               note when its tap lands, so the hold can track the same finger).
+//   touchCount: number of touch pairs.
 // Ghidra: FUN_0002f1f8.
-void PlayJudge_update(void *playData, const PlayTouch *touches, int touchCount,
-                      const int *noteIds);
+void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
+                      const int *touchIds, int touchCount);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
