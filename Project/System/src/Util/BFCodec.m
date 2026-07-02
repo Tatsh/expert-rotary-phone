@@ -14,8 +14,7 @@
 //
 //  The initial P-array and S-boxes are the canonical Blowfish constants
 //  (fractional digits of pi): Ghidra ORIG_P @ DAT_0012f6c8 (18 words),
-//  ORIG_S @ DAT_0012e6c8 (4x256); identical to bfcodec's bf_init_bytes.inc.
-//  Library-standard, so referenced here rather than transcribed.
+//  ORIG_S @ DAT_0012e6c8 (4x256). Vendored verbatim as bf_init_bytes.inc.
 //
 
 #import "BFCodec.h"
@@ -25,10 +24,18 @@ typedef struct {
     uint32_t S[4][256];
 } BlowfishCtx;
 
-// Canonical Blowfish initial values (see header note). Populate from the
-// standard reference tables / from the binary's DAT_0012f6c8 & DAT_0012e6c8.
-extern const uint32_t kBlowfishInitP[18];        // Ghidra: DAT_0012f6c8
-extern const uint32_t kBlowfishInitS[4][256];    // Ghidra: DAT_0012e6c8
+// Canonical Blowfish initial P-array (18) + S-boxes (4x256), fractional digits
+// of pi. Vendored as big-endian bytes from bf_init_bytes.inc — identical to the
+// binary's DAT_0012f6c8 / DAT_0012e6c8 (confirmed to decode the game's data).
+static const unsigned char kBFInitBytes[] = {
+#include "bf_init_bytes.inc"
+};
+
+// Read a big-endian uint32 from a 4-byte buffer.
+static inline uint32_t BF_ReadU32BE(const unsigned char *p) {
+    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
+           ((uint32_t)p[2] << 8) | (uint32_t)p[3];
+}
 
 // Fixed CBC IV (Ghidra: DAT_0012e6c0). Confirmed constant, matches bfcodec's
 // kDefaultIv.
@@ -104,18 +111,28 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 - (void)cipherInit:(const char *)key keyLength:(int)length {
     memcpy(_iv, kInitialIV, 8);
 
-    // Seed S-boxes and P-array from the canonical constants.
-    memcpy(_blf->S, kBlowfishInitS, sizeof(_blf->S));
+    // Load the canonical P-array (18) then S-boxes (4x256) from the init table.
+    size_t idx = 0;
+    for (int i = 0; i < 18; i++) {
+        _blf->P[i] = BF_ReadU32BE(&kBFInitBytes[idx]);
+        idx += 4;
+    }
+    for (int box = 0; box < 4; box++) {
+        for (int i = 0; i < 256; i++) {
+            _blf->S[box][i] = BF_ReadU32BE(&kBFInitBytes[idx]);
+            idx += 4;
+        }
+    }
 
-    // XOR the key (cycled) into the P-array.
+    // XOR the cycled key into the P-array.
     int j = 0;
     for (int i = 0; i < 18; i++) {
         uint32_t data = ((uint32_t)(uint8_t)key[j % length] << 24) |
                         ((uint32_t)(uint8_t)key[(j + 1) % length] << 16) |
                         ((uint32_t)(uint8_t)key[(j + 2) % length] << 8) |
                         ((uint32_t)(uint8_t)key[(j + 3) % length]);
-        _blf->P[i] = kBlowfishInitP[i] ^ data;
-        j = (j + 4) % length;
+        _blf->P[i] ^= data;
+        j += 4;
     }
 
     // Diffuse: repeatedly encrypt the running block through P then all S-boxes.
