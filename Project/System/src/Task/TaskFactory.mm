@@ -8,6 +8,7 @@
 //  setPriority(3) in the original.
 //
 
+#import "AcMainTask.h"
 #import "BootLogoTask.h"
 #import "C_TASK.h"
 #import "MainTask.h"
@@ -46,6 +47,12 @@ C_TASK *MainTaskCreate() {
 // update PlayTask_update FUN_0002dc14) — drives the PlayJudge/NoteMng core.
 C_TASK *PlayTaskCreate() {
     return new PlayTask();
+}
+
+// MenuMainTask (arcade button) -> the arcade select+play task. Ghidra:
+// operator_new(0x9fc) + AcMainTask_ctor (FUN_00099ab0) — drives AcNoteMng.
+C_TASK *AcMainTaskCreate() {
+    return new AcMainTask();
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
