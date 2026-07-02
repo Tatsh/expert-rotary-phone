@@ -1,0 +1,263 @@
+//
+//  TitleTask.mm
+//  pop'n rhythmin
+//
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The title screen
+//  + first-run flow, handed off from BootLogoTask.
+//
+
+#import <UIKit/UIKit.h>
+
+#import "AepManager.h"
+#import "AppDelegate.h"
+#import "CharaManager.h"
+#import "CommonAlertView.h"
+#import "CustomButton.h"
+#import "DownloadMain.h"
+#import "TitleTask.h"
+#import "UserSettingData.h"
+#import "neEngineBridge.h"
+#import "neGraphics.h"
+
+// Title screen sprite/UI object (Ghidra: ctor FUN_0002c7d8, init FUN_0002c834,
+// draw FUN_0002caf8, tick FUN_0002ca9c) — a separate reconstruction unit.
+extern void *TitleViewCreate(const char *imageFolder);   // FUN_0002c7d8 + FUN_0002c834
+extern void TitleViewTick(void *view);                   // FUN_0002caf8
+extern void TitleViewRelease(void *view);                // FUN_0002ca9c
+
+// Aep resource-group load/unload for a named scene (Ghidra: FUN_0000f758 / FUN_0000f988).
+extern void AepLoadGroup(AepManager *aep, int slot, const char *name);
+extern void AepUnloadGroup(AepManager *aep, int slot);
+
+// The main-menu task spawned when the title finishes (Ghidra: operator_new(0x1b0) +
+// FUN_0006aba0 + FUN_0006d194 + setPriority(3)).
+extern C_TASK *MenuCreateTask();
+
+// Ghidra: TitleTask_ctor (FUN_0002b678) — base C_TASK ctor + zeroed fields.
+TitleTask::TitleTask() = default;
+
+// The root navigation view controller the flow drives (bridged from the engine).
+static UIViewController *RootVC() {
+    return (__bridge UIViewController *)neSceneManager::rootViewController();
+}
+
+// A touch released this frame that barely moved (< 11 px in x and y) counts as a
+// tap (Ghidra: the touch-pool scan at the top of TitleTask_update).
+bool TitleTask::tapReleased() const {
+    neGraphics &gfx = neGraphics::shared();
+    int count = gfx.activeTouchCount();
+    for (int i = 0; i < count; i++) {
+        const neTouchPoint *t = gfx.touchAt(i);
+        if (t == nullptr || t->released == 0) {
+            continue;
+        }
+        int dx = t->startX - t->x;   // +0x04 down vs +0x0c current
+        int dy = t->startY - t->y;
+        if (dx < 0) { dx = -dx; }
+        if (dy < 0) { dy = -dy; }
+        if (dx < 0xb && dy < 0xb) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Ghidra: TitleTask_setup (FUN_0002c084) — cache the render manager, build the
+// "Ver <n>" label, load the device-specific title scene + its image folder, and
+// load + start the title SE and looping BGM.
+void TitleTask::setup() {
+    m_aep = &AepManager::shared();
+    m_versionLabel = [[NSString stringWithFormat:@"Ver %@", AppDelegate.appDelegate.appVersion] retain];
+
+    const char *imageFolder;
+    if (!neSceneManager::isPadDisplay()) {
+        AepLoadGroup(m_aep, 1, "title");
+        m_titleFrames = 0x19;
+        imageFolder = (AppDelegate.appDelegate.displayType == 2) ? "1136IMG" : "640IMG";
+    } else {
+        AepLoadGroup(m_aep, 1, "title_ipad");
+        m_titleFrames = 0x24;
+        imageFolder = "IMG_IPAD";
+    }
+    m_titleView = (TitleView *)TitleViewCreate(imageFolder);
+
+    AudioManager *audio = [AudioManager sharedManager];
+    NSString *sePath = [NSBundle.mainBundle pathForResource:@"v10" ofType:@"m4a"];
+    m_titleSe = (int)[audio loadSe:sePath isLoop:NO callName:nil group:1];
+    NSString *bgmPath = [NSBundle.mainBundle pathForResource:@"bgm00_title" ofType:@"m4a"];
+    [audio loadBgm:bgmPath isLoop:YES];
+    [audio setBgmVolume:[UserSettingData bgmVolume]];
+}
+
+// Ghidra: TitleTask_finish (FUN_0002c3d0) — release SE/BGM/label + title view,
+// unload the title scene, reload character data, kill this task, and spawn the
+// main-menu task.
+void TitleTask::finish() {
+    [[AudioManager sharedManager] releaseSe:0 resourceId:0];
+    if (m_titleView != nullptr) {
+        TitleViewRelease(m_titleView);
+        m_titleView = nullptr;
+    }
+    AepUnloadGroup(m_aep, 1);
+    if (m_versionLabel != nil) {
+        [m_versionLabel release];
+        m_versionLabel = nil;
+    }
+    gCharaManager.reload();   // CharaManager_reload
+    kill();                   // +0x24 = 1
+
+    if (C_TASK *menu = MenuCreateTask()) {
+        menu->setPriority(3);
+    }
+}
+
+// State-3 UI: a "conversion" button faded in over the title, plus (if a convert
+// code is stored) an alert showing the player id + code.
+void TitleTask::buildConversionButton() {
+    UIViewController *root = RootVC();
+    UIImage *img = [UIImage imageNamed:@"bt_conversion"];
+    CGRect vf = root.view.frame;
+    CGSize sz = img.size;
+    CGRect frame = CGRectMake(vf.size.width - sz.width - 10.0f, -10.0f, sz.width, sz.height);
+    m_conversionButton = [[[CustomButton alloc] initWithFrame:frame] autorelease];
+    [m_conversionButton setTappableInsets:UIEdgeInsetsMake(-20, -20, -20, -20)];
+    m_conversionButton.exclusiveTouch = YES;
+    [m_conversionButton setBackgroundImage:img forState:UIControlStateNormal];
+    [m_conversionButton addTarget:root action:@selector(GotoInConversionPass)
+                 forControlEvents:UIControlEventTouchUpInside];
+    [root.view addSubview:m_conversionButton];
+    m_conversionButton.alpha = 0;
+    [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{ self->m_conversionButton.alpha = 1; }
+                     completion:nil];
+
+    NSString *code = [UserSettingData convertCode];
+    if (code != nil) {
+        NSString *msg = [NSString stringWithFormat:@"%@\n%@", [UserSettingData playerId], code];
+        CommonAlertView *alert = [[CommonAlertView alloc]
+            initWithTitle:nil message:msg delegate:nil cancelButtonTitle:nil otherButtonTitles:nil];
+        alert.tag = 0;
+        [alert show];
+        [alert release];
+    }
+    m_state3Built = true;
+}
+
+// Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run machine.
+void TitleTask::update(int /*deltaMs*/) {
+    const bool tap = tapReleased();
+    UIViewController *root = RootVC();
+    DownloadMain *dl = [DownloadMain getInstance];
+
+    switch (m_state) {
+    case 0:
+        setup();
+        [[AudioManager sharedManager] playBgm:0];
+        m_aep->playTransition(1, 0x19, 0);   // fade in
+        TitleViewTick(m_titleView);
+        m_state = 1;
+        break;
+    case 1:
+        if (![UserSettingData isPolicyAccepted]) {
+            m_state = 2;   // must accept the policy first
+            break;
+        }
+        m_state = 3;       // straight to the title
+        break;
+    case 2:   // wait for a tap, then go to the accept-policy screen
+        if (tap) {
+            [root GotoAcceptPolicy];
+            m_state = 1;
+        }
+        break;
+    case 3:
+        if (!m_state3Built) {
+            buildConversionButton();
+            break;
+        }
+        if (!tap) {
+            break;
+        }
+        // Tapped through the title: start the DL file-list fetch (unless running),
+        // show the "communicating" indicator, and advance.
+        [[AudioManager sharedManager] playSe:0 resourceId:0];
+        if (![dl isGetDlFileListDownLoading]) {
+            if (m_needUpdate) {
+                [[DownloadMain getInstance] startGetDlFileListHttp:-1];
+                [root InsertCommunicating];
+            }
+        } else {
+            [root InsertCommunicating];
+        }
+        if (m_conversionButton != nil) {
+            [UIView animateWithDuration:0.25 delay:0
+                                options:UIViewAnimationOptionAllowUserInteraction
+                             animations:^{ self->m_conversionButton.alpha = 0; }
+                             completion:nil];
+        }
+        m_state = 4;
+        break;
+    case 4:   // await the DL file list, then decide download vs skip
+        if ([dl isGetDlFileListDownLoading]) {
+            break;
+        }
+        [root DeleteCommunicating];
+        m_dlFileList = [dl dlFileListDataArray];
+        if (m_dlFileList == nil) {
+            m_needUpdate = true;
+            if ([UserSettingData lastCompletedClientVer] < AppDelegate.appDelegate.appVersionNum) {
+                CommonAlertView *a = [[CommonAlertView alloc]
+                    initWithTitle:@"" message:nil delegate:nil
+                    cancelButtonTitle:nil otherButtonTitles:@""];
+                [a show];
+                [a release];
+                m_state = 3;
+                break;
+            }
+        } else {
+            m_needUpdate = false;
+            if (m_dlFileList.count != 0) {
+                m_state = 5;
+                break;
+            }
+        }
+        m_state = 7;
+        break;
+    case 5:   // there are files to fetch: go to the default-download screen
+        [root GotoDefaultDownload];
+        m_state = 6;
+        break;
+    case 6:   // default download finished
+        if ([root isDefaultDlFailed] == 1) {
+            m_needUpdate = true;
+            m_state = 3;
+        } else {
+            [UserSettingData saveLastCompletedClientVer:AppDelegate.appDelegate.appVersionNum];
+            m_state = 7;
+        }
+        break;
+    case 7:
+        m_aep->playTransition(2, 0x19, 0);   // fade out
+        m_state = 8;
+        break;
+    case 8:
+        if (m_aep->isTransitionDone()) {
+            m_state = 9;
+        }
+        break;
+    case 9:
+        finish();
+        return;
+    default:
+        break;
+    }
+
+    // Per-frame title draw (Ghidra tail: FUN_0002c924 / FUN_0002c52c).
+    if (m_titleView != nullptr) {
+        TitleViewTick(m_titleView);
+    }
+}
+
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4

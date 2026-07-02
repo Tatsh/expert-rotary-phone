@@ -51,6 +51,11 @@ public:
     // pointer on the C++ side. Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
     void attachRoot(void *viewController);
 
+    // The stored root view controller (the app's navigation host the title/menu
+    // flow sends Goto*/Insert*/Delete* messages to). Ghidra:
+    // NESceneManager_rootViewController (FUN_0002c5bc) returns m_root.
+    static void *rootViewController();
+
     // Live drawable metrics (Ghidra globals DAT_00187b7c/78/80), updated by the
     // GL view on layout; used to place notes/sprites on screen.
     static float screenWidth();

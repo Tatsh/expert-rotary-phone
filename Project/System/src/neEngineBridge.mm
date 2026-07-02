@@ -61,6 +61,11 @@ void neSceneManager::attachRoot(void *viewController) {
     m_root = viewController;
 }
 
+// Ghidra: NESceneManager_rootViewController (FUN_0002c5bc) — returns m_root.
+void *neSceneManager::rootViewController() {
+    return shared().m_root;
+}
+
 // Live drawable metrics (Ghidra globals DAT_00187b7c/78/80).
 static float s_screenWidth = 640.0f;
 static float s_screenHeight = 960.0f;
