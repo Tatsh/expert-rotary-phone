@@ -36,11 +36,11 @@ void AepManager::draw() {
         }
     }
 
-    m_ot.draw();
-
-    if (m_transitionOverlay != nullptr && m_transitionType != 0) {
-        m_ot.drawLayer(m_transitionOverlay);
-    }
+    // The ordering table has been filled this frame by drawLayer (per-layer
+    // animation -> allocEntry). Flush it: emit every queued sprite command,
+    // highest priority first. The transition overlay is queued as a high-priority
+    // command by the transition system, so it draws on top here.
+    m_ot.flush();
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

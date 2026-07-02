@@ -2,49 +2,68 @@
 //  AepOrderingTable.h
 //  pop'n rhythmin
 //
-//  The z-sorted draw list of the Aep 2D scene: layers are drawn back-to-front in
-//  ordering-table order. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (strings: drawLayer / get_aepOt).
+//  The Aep ordering table: a PER-FRAME sprite command buffer. Reconstructed from
+//  Ghidra project rb420, program PopnRhythmin (AepOrderingTable.mm).
 //
-//  ARCHITECTURE NOTE (correction): the binary's ordering table is NOT a persistent
-//  list of layer objects — it is a PER-FRAME COMMAND BUFFER. get_aepOt (allocEntry,
-//  FUN_00010be0) hands out up to OT_REGIST_MAX (2047) fixed entries of 0x134 bytes,
-//  bucketed into OT_PRI_MAX (50) priority lists (bucket heads @ play-data +0x9a0dc).
-//  Each frame: the buffer is reset, drawLayer/FUN_000113d0 fill entries (position,
-//  uv, color, scale in the 0x50-byte payload at entry+0xc), and a batch flush walks
-//  the buckets high->low priority issuing GL quads via neGLES_11. The vector model
-//  below is a SIMPLIFICATION pending reconstruction of that command buffer + flush.
+//  Each frame the scene fills the buffer with textured-quad draw commands
+//  (drawLayer/FUN_000113d0 -> allocEntry/FUN_00010be0), bucketed by priority;
+//  the flush then walks the buckets high-priority-first and emits a GL quad per
+//  command through neGLES_11. Constants from get_aepOt asserts:
+//  OT_REGIST_MAX = 2047 entries, OT_PRI_MAX = 50 priorities.
 //
 
 #pragma once
 
-#include <vector>
+#include <cstdint>
 
-class AepLyrCtrl;
+// Fixed capacities (Ghidra: AepOrderingTable.mm:0x3d / 0x3e).
+constexpr int kOtRegistMax = 2047;   // OT_REGIST_MAX
+constexpr int kOtPriMax = 50;        // OT_PRI_MAX
+
+// One queued sprite draw command (Ghidra: OT entry, 0x134 bytes; the payload the
+// fill writes starts at +0x4 after the intrusive bucket link at +0x0). Only the
+// fields recovered from FUN_000113d0 are named; the tail is opaque per-command
+// state carried to the flush.
+struct AepSpriteCommand {
+    AepSpriteCommand *next;   // +0x00  priority-bucket link
+    int16_t priority;         // (stored at entry+0x12 by allocEntry)
+    int16_t reserved4;        // +0x04
+    int32_t textureId;        // +0x08  layer/texture id (param17)
+    int32_t u, v;             // +0x0c/+0x10  source origin
+    int32_t x, y;             // +0x14/+0x18  screen position
+    int32_t sx, sy;           // +0x1c/+0x20  scale
+    int32_t w, h;             // +0x24/+0x28  size
+    int32_t ex, ey;           // +0x2c/+0x30  extra (end pos for stretched sprites)
+    int16_t color0, color1;   // +0x34/+0x36
+    int32_t rotation;         // +0x38
+    int32_t blend;            // +0x3c
+    int16_t clip[4];          // +0x40..0x46  clip rect (defaults to screen bounds)
+    uint8_t opaque[0x134 - 0x48];  // remaining per-command state
+};
 
 class AepOrderingTable {
 public:
     AepOrderingTable();
-    ~AepOrderingTable();
 
-    // Insert a layer at its ordering slot.
-    void addLayer(AepLyrCtrl *layer);
+    // Reset the buffer for a new frame (Ghidra: m_OtCount -> 0, buckets cleared).
+    void reset();
 
-    // Draw every layer in order (issues the GL draw calls via neGLES_11).
-    // Ghidra: FUN_000115d0
-    void draw();
+    // Reserve a command entry at `priority` and link it into that bucket; returns
+    // the command to fill. Ghidra: get_aepOt/allocEntry FUN_00010be0.
+    AepSpriteCommand *allocEntry(int priority);
 
-    // Number of layers drawn on the last pass. Ghidra: FUN_000117dc
-    int drawnCount();
+    // Flush: walk the buckets from the highest used priority down, emitting a GL
+    // quad per command via neGLES_11. Ghidra: FUN_000115d0.
+    void flush();
 
-    // Draw a single layer (used by AepManager for the transition overlay).
-    void drawLayer(AepLyrCtrl *layer);
-
-    void clear();
+    int drawnCount() const { return m_drawnCount; }   // Ghidra: FUN_000117dc
 
 private:
-    std::vector<AepLyrCtrl *> m_layers;   // ordered (back-to-front) draw list
-    int m_drawnCount = 0;                 // layers drawn on the last pass
+    AepSpriteCommand m_entries[kOtRegistMax];   // the frame's command pool
+    AepSpriteCommand *m_buckets[kOtPriMax];     // per-priority list heads (+0x9a0dc)
+    int m_count = 0;                            // m_OtCount (+0x9a00c)
+    int m_maxPriority = 0;                      // highest used priority (+0x9a010)
+    int m_drawnCount = 0;
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
