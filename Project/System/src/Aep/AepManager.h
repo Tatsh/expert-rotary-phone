@@ -106,6 +106,11 @@ private:
     int m_maxPriority = 0;            // +0x7f3b14  highest OT priority drawn last flush
 };
 
+// Load / unload a named Aep resource group into a manager slot (the title/menu/play
+// scenes swap their layer groups this way). Ghidra: FUN_0000f758 / FUN_0000f988.
+void AepLoadGroup(AepManager *aep, int slot, const char *name);
+void AepUnloadGroup(AepManager *aep, int slot);
+
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4

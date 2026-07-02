@@ -14,6 +14,7 @@
 #import "AudioManager.h"
 #import "DownloadMain.h"
 #import "MainTask.h"
+#import "TaskFactory.h"
 #import "MusicManager.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
@@ -23,9 +24,7 @@ static UIViewController *RootVC() {
     return (__bridge UIViewController *)neSceneManager::rootViewController();
 }
 
-// The note-play + tutorial sub-tasks a chosen song launches (their own units).
-extern C_TASK *PlayTaskCreate();       // the actual note-render/judge task
-extern C_TASK *TutorialTaskCreate();   // FUN_0002db10
+// PlayTaskCreate / TutorialTaskCreate come from TaskFactory.h.
 
 // Ghidra: MainTask_ctor (FUN_00034d48) — base C_TASK ctor + zeroed 0xaa8 play data.
 MainTask::MainTask() = default;

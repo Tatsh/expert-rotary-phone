@@ -40,13 +40,8 @@
 #import "neFrameTimer.h"
 #import "neGLView.h"
 
-// Scene-manager input-mode set, called when entering the conversion-pass screen
-// (Ghidra: FUN_0002c724(&DAT_00187b74, mode)) — a distinct engine reconstruction unit.
-extern "C" void neSceneSetInputMode(int mode);
-
-// The current title/content-area height in pixels used to vertically centre iPad
-// modal panels (Ghidra: FUN_0000f4a4 on the shared AepManager).
-extern "C" int neAepContentHeight(void);
+// Scene input-mode set + AEP content-area height come from the engine bridge
+// (neEngine::setInputMode / neEngine::aepContentHeight). neEngineBridge.h imported below.
 
 // Minimum seconds between rendered frames (Ghidra: DAT_0000be7c). Rendering is
 // skipped when the accumulated render time has not yet reached this.
@@ -240,7 +235,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (_inputConvPassViewCtrl != nil) {
         return;
     }
-    neSceneSetInputMode(2);   // Ghidra: FUN_0002c724(&DAT_00187b74, 2) — scene input mode
+    neEngine::setInputMode(2);   // Ghidra: FUN_0002c724(&DAT_00187b74, 2) — scene input mode
     if (!neSceneManager::isPadDisplay()) {
         InputConversionPassViewController *content =
             [[InputConversionPassViewController alloc] autorelease];
@@ -437,7 +432,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // differ per screen. Ghidra: the inlined block in the iPad branch of each Goto*.
 - (void)styleIPadPanel:(UINavigationController *)nav leftX:(CGFloat)leftX border:(UIColor *)border {
     _coverView.hidden = NO;
-    CGFloat y = (neAepContentHeight() - 128) * 0.5f - 490.0f;
+    CGFloat y = (neEngine::aepContentHeight() - 128) * 0.5f - 490.0f;
     nav.view.backgroundColor = [UIColor colorWithRed:0.953f green:0.953f blue:0.953f alpha:1];
     [nav.view setFrame:CGRectMake(leftX, y, 341, 480)];
     nav.view.layer.borderColor = border.CGColor;

@@ -5,25 +5,19 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //  Objective-C++ (ARC): resolves the root scene view via the C++ scene manager.
 //
-//  The initializer (Ghidra @ 0x4a350) is a large view-builder — hundreds of
-//  frame calculations, branching on iPad vs iPhone (global gIsPad / DAT_00187b84)
-//  with the exact pixel/colour constants stored as data in the binary
-//  (DAT_0004a7xx / DAT_0004b3xx / DAT_0004b4xx). The hierarchy and styling are
-//  reconstructed faithfully below; the precise magic numbers are represented by
-//  named placeholders to be filled from those tables.
+//  The initializer (Ghidra @ 0x4a350) is a large view-builder that branches on the
+//  iPad vs iPhone idiom (neSceneManager::isPadDisplay()). The hierarchy, colours and
+//  idiom-dependent card sizes are reconstructed below; a few inner sub-frames (content
+//  / message / button-row) are laid out by the binary from constant tables
+//  (DAT_0004a7xx) and are sized to their superview here.
 //
 
 #import <QuartzCore/QuartzCore.h>
 
 #import "CommonAlertView.h"
 #import "CustomTextView.h"
-
-// The root view controller of the scene (the MainViewController), via the C++
-// scene manager. Ghidra: NESceneManager_shared + FUN_0002c5bc(&DAT_00187b74).
-extern "C" UIViewController *neSceneManagerRootViewController(void);
-
-// iPad idiom flag (Ghidra: DAT_00187b84).
-extern BOOL gIsPad;
+#import "AppFont.h"
+#import "neEngineBridge.h"
 
 @implementation CommonAlertView {
     UILabel *_titleView;
@@ -40,7 +34,7 @@ extern BOOL gIsPad;
             cancelButtonTitle:(NSString *)cancelButtonTitle
             otherButtonTitles:(NSString *)otherButtonTitles {
     // Card size + position depend on the idiom (values from DAT_0004a7xx tables).
-    CGRect cardFrame = gIsPad ? CGRectMake(0, 0, 384, 260)
+    CGRect cardFrame = neSceneManager::isPadDisplay() ? CGRectMake(0, 0, 384, 260)
                               : CGRectMake(0, 0, 256, 176);
     self = [super initWithFrame:cardFrame];
     if (self == nil) {
@@ -82,8 +76,8 @@ extern BOOL gIsPad;
     _messageView = [[CustomTextView alloc] initWithFrame:CGRectZero];
     _messageView.backgroundColor = [UIColor clearColor];
     _messageView.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
-    _messageView.font = [UIFont fontWithName:/* FUN_0005efa8 (font name) */ @"Helvetica"
-                                        size:(gIsPad ? 18.0 : 14.0)];
+    _messageView.font = [UIFont fontWithName:AppMaruFontName()
+                                        size:(neSceneManager::isPadDisplay() ? 18.0 : 14.0)];
     _messageView.textAlignment = NSTextAlignmentCenter;
     _messageView.editable = NO;
 
@@ -144,7 +138,7 @@ extern BOOL gIsPad;
     label.minimumScaleFactor = 0.5;
     label.text = title;
     [label sizeToFit];
-    label.center = CGPointMake(bg.size.width * 0.5f, gIsPad ? 24.0 : 12.0);
+    label.center = CGPointMake(bg.size.width * 0.5f, neSceneManager::isPadDisplay() ? 24.0 : 12.0);
     [button addSubview:label];
     return button;
 }
@@ -154,7 +148,7 @@ extern BOOL gIsPad;
     _titleView.text = self.title;
     _messageView.text = self.message;
 
-    UIView *rootView = neSceneManagerRootViewController().view;
+    UIView *rootView = ((__bridge UIViewController *)neSceneManager::rootViewController()).view;
     self.center = CGPointMake(CGRectGetWidth(rootView.frame) * 0.5f,
                               CGRectGetHeight(rootView.frame) * 0.5f);
 

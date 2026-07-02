@@ -24,6 +24,10 @@ public:
     void update(int deltaMs) override;   // Ghidra: PlayTask_update (FUN_0002dc14)
 };
 
+// Play-scene lifecycle seams operating on the play-data block.
+void PlayTaskInit(void *playData);       // Ghidra: FUN_0002e2d8 (allocate the scene)
+void PlayTaskGotoResult(void *playData); // Ghidra: FUN_0003003c (transition to results)
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

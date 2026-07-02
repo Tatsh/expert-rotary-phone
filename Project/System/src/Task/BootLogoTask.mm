@@ -11,13 +11,12 @@
 #import "AepManager.h"
 #import "AppDelegate.h"
 #import "BootLogoTask.h"
+#import "TaskFactory.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
 
-// The next task created after the splash (Ghidra: operator_new(0x54) + FUN_0002b678
-// + setPriority(3)) — the title/init task, a separate reconstruction unit.
-extern C_TASK *BootCreateNextTask();   // FUN_0002b678 ctor
+// BootCreateNextTask comes from TaskFactory.h.
 
 // Ghidra: BootLogoTask_ctor (FUN_0002af58) — base C_TASK ctor + zeroed fields.
 BootLogoTask::BootLogoTask() = default;

@@ -22,6 +22,7 @@
 #import "DownloadMain.h"
 #import "MenuMainTask.h"
 #import "MusicManager.h"
+#import "TaskFactory.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
@@ -31,20 +32,9 @@ static UIViewController *RootVC() {
     return (__bridge UIViewController *)neSceneManager::rootViewController();
 }
 
-// The play / tutorial / arcade / sugoroku sub-tasks the menu launches. Each is its
-// own reconstruction unit; declared here as the boot-flow seams (Ghidra sizes/ctors:
-// MainTask 0xaa8/FUN_00034d48, TutorialTask 0xa00/FUN_0002db10, AcMainTask
-// 0x9fc/FUN_00099ab0, SugorokuMainTask 0x210/FUN_000215a0).
-extern C_TASK *MainTaskCreate();
-extern C_TASK *TutorialTaskCreate();
-extern C_TASK *AcMainTaskCreate();
-extern C_TASK *SugorokuMainTaskCreate();
-extern C_TASK *TitleTaskCreate();   // relaunch the title (0x54/TitleTask_ctor FUN_0002b678)
-
-// Engine helpers: a menu button hit-test (point-in-rect vs the current touch) and
-// the scene input-mode set (Ghidra: FUN_0002d974 / FUN_0002c724).
-extern "C" bool neMenuButtonHit(void *gfx, int touchId, const int *rect, const int *enable);
-extern "C" void neSceneSetInputMode(int mode);
+// The play / tutorial / arcade / sugoroku sub-tasks the menu launches come from the
+// task factory; the menu button hit-test and input-mode set come from the engine
+// bridge. (TaskFactory.h / neEngineBridge.h imported above.)
 
 // Ghidra: MenuMainTask_ctor (FUN_0006aba0) — base C_TASK ctor + zeroed fields.
 MenuMainTask::MenuMainTask() = default;
@@ -162,11 +152,11 @@ void MenuMainTask::update(int /*deltaMs*/) {
             [root GotoPopnLink];
             m_state = 0x11;
         } else if (hitButton(touchId, 0x178, 0x17c)) {   // invite
-            neSceneSetInputMode([UserSettingData playerName] != nil ? 0 : 2);
+            neEngine::setInputMode([UserSettingData playerName] != nil ? 0 : 2);
             [root GotoInviteCode];
             m_state = 0x11;
         } else if (hitButton(touchId, 0x188, 0x18c)) {   // present box / arcade search
-            neSceneSetInputMode(1);
+            neEngine::setInputMode(1);
             [root GotoPresentBox];
             m_state = 0x11;
         } else if (hitButton(touchId, 0x198, 0x19c)) {   // sugoroku / map
@@ -178,7 +168,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         break;
     }
     case 0xd:   // settings screen
-        neSceneSetInputMode(1);
+        neEngine::setInputMode(1);
         [root GotoSetting];
         m_state = 0xe;
         break;
@@ -221,7 +211,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
 // Ghidra: FUN_0002d974 — hit-test the button rectangle (task fields) vs the touch.
 bool MenuMainTask::hitButton(int touchId, int rectField, int enableField) {
     (void)rectField; (void)enableField;
-    return neMenuButtonHit(&neGraphics::shared(), touchId, nullptr, nullptr);
+    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, nullptr, nullptr);
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

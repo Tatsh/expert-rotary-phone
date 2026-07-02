@@ -24,6 +24,9 @@
 class neAppEventCenter {
 public:
     static neAppEventCenter &shared();   // Ghidra: NEAppEventCenter_shared (FUN_0000b150)
+    // Record the last-played music id (drives the "continue from" / event state).
+    // Ghidra: neAppEventSetLastMusic (global DAT_00187bf0).
+    static void setLastMusic(int music);
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)
 
@@ -105,6 +108,19 @@ namespace neEngine {
     // Ghidra: SysSePlayIntoSlot (FUN_0002c724) — [[AudioManager sharedManager]
     // playSe:resourceId:] storing the handle at the scene-manager global + 0x28.
     void playSystemSe(int slot);
+
+    // Menu button hit-test: true when the active touch `touchId` in the render
+    // manager `gfx` lies inside `rect` (x,y,w,h) and `enable[0]` is set.
+    // Ghidra: FUN_0002d974.
+    bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable);
+
+    // Set the scene's touch input mode (0 = normal, non-zero = suspended while a
+    // modal/animation runs). Ghidra: neSceneSetInputMode.
+    void setInputMode(int mode);
+
+    // Height (in points) of the AEP-rendered content area, used to place UIKit
+    // overlays below the GL scene. Ghidra: neAepContentHeight.
+    int aepContentHeight();
 }
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

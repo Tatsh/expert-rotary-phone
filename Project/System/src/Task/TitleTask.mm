@@ -11,22 +11,19 @@
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
+#import "AepManager.h"
 #import "CharaManager.h"
 #import "CommonAlertView.h"
 #import "CustomButton.h"
 #import "DownloadMain.h"
+#import "TaskFactory.h"
 #import "TitleTask.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 
-// Aep resource-group load/unload for a named scene (Ghidra: FUN_0000f758 / FUN_0000f988).
-extern void AepLoadGroup(AepManager *aep, int slot, const char *name);
-extern void AepUnloadGroup(AepManager *aep, int slot);
-
-// The main-menu task spawned when the title finishes (Ghidra: operator_new(0x1b0) +
-// FUN_0006aba0 + FUN_0006d194 + setPriority(3)).
-extern C_TASK *MenuCreateTask();
+// AepLoadGroup / AepUnloadGroup are declared in AepManager.h; MenuCreateTask in
+// TaskFactory.h.
 
 // Ghidra: TitleTask_ctor (FUN_0002b678) — base C_TASK ctor + zeroed fields.
 TitleTask::TitleTask() = default;

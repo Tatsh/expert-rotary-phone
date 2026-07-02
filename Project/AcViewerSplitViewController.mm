@@ -15,7 +15,6 @@
 static UIViewController *RootVC() {
     return (__bridge UIViewController *)neSceneManager::rootViewController();
 }
-extern "C" void neAppEventSetLastMusic(int music);   // NEAppEventCenter DAT_00187bf0
 
 @implementation AcViewerSplitViewController {
     UIViewController *_leftViewCtrl;         // left button column
@@ -178,7 +177,7 @@ extern "C" void neAppEventSetLastMusic(int music);   // NEAppEventCenter DAT_001
         return;
     }
     _isAnimationing = YES;
-    neAppEventSetLastMusic(-1);
+    neAppEventCenter::setLastMusic(-1);
     if (!neSceneManager::isPadDisplay()) {
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationDuration:0.5];

@@ -14,11 +14,8 @@
 #import "PlayTask.h"
 #import "neGraphics.h"
 
-// The result screen this play hands off to (its own unit). Ghidra: FUN_0003003c.
-extern void PlayTaskGotoResult(void *playData);
-// Build the play scene — Aep layers, gauge, note field (Ghidra: PlayTask_init
-// FUN_0002e2d8). Its own reconstruction unit.
-extern void PlayTaskInit(void *playData);
+// PlayTaskInit / PlayTaskGotoResult are declared in PlayTask.h (the play-scene
+// build + results-transition seams).
 
 namespace {
 inline int &state(PlayTask *t) {   // play-data state @ +0x9fc
