@@ -695,7 +695,7 @@ void AcMainTask::loadTreasureMap() {
     field<float>(0x4ec) = yOrigin + halfH + marginBot;
     field<float>(0x4d8) = xOrigin + (float)((cur ? cur->x * 0x1a : 0) + 0x34);
     field<float>(0x4dc) = yOrigin + (float)((cur ? cur->y * 0x1a : 0) + 0x40);
-    applyMapScrollBounds(field<float>(0x4dc));   // FUN_000a4e84
+    unloadMapBgGroup();   // FUN_000a4e84 — drop the previous board bg before loading the new one
 
     // --- Board background: load the board-bg layer group + build its AepLyrCtrl. Only
     // reachable board indices (bit set in the 0x9f mask) get a background.
@@ -992,6 +992,17 @@ void AcMainTask::refreshMapScroll(int mode) {
         field<neTextureForiOS *>(0x1a4 + slot * 4) = tex;
         tex->loadFromImageData((__bridge const void *)[md artwork2xData]);   // FUN_00011cbc
     }
+}
+
+// Ghidra: FUN_000a4e84 — unlink + delete the board background layer (+0xd0) and unload
+// its asset group (6). loadTreasureMap calls this before loading the next board's bg.
+void AcMainTask::unloadMapBgGroup() {
+    if (AepLyrCtrl *bg = field<AepLyrCtrl *>(0xd0)) {
+        bg->unlink();     // FUN_0002ca9c
+        delete bg;
+        field<AepLyrCtrl *>(0xd0) = nullptr;
+    }
+    AepUnloadGroup(field<AepManager *>(0x28), 6);   // FUN_0000f988
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

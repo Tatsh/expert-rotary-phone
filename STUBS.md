@@ -26,7 +26,7 @@
       (Game/Data/TreasureMap/, ctor+findArea done; load FUN_000ce340 + dtor are seams).
       All strings byte-verified; no defect found on review (NEON map-scroll math flagged
       best-effort inline). NEW arcade-sugoroku seams now tracked (declared, bodies pending):
-      refreshMapScroll (FUN_000a3550), applyMapScrollBounds (FUN_000a4e84); free fns
+      free fns
       AcMainSugorokuDraw (FUN_000a3724, ~5.8KB group-5 draw pass).
     * DONE (agent, reviewed): TreasureMap::load (FUN_000ce340, the map-file parser — header
       0x50, node file-stride 0xaa -> mem-stride 0x120, ShiftJIS messages, rand bonus pick
@@ -42,6 +42,11 @@
       tables), buildMapPanelLayers (FUN_000a2650 — actually loads the goal-chara texture
       @+0xe0; name misleading, documented). All byte-verified; no defect on review. Added
       TreasureData +getAllTreasureData: (@0xc09a4).
+    * DONE: refreshMapScroll (FUN_000a3550 — reloads the 9 map-panel jacket textures via
+      getTreasureMusicDataArray + the MapPanelOrder permutation DAT_0012faa0, NOT scroll)
+      and unloadMapBgGroup (FUN_000a4e84 — unlink +0xd0 bg layer + unloadGroup(6); the
+      earlier "applyMapScrollBounds(float)" seam name+arg were a mis-read of an adjacent
+      scroll-rect float, corrected). Both are misnamed-seam corrections.
     * DONE: the +0x4f4 sub-object is the xorshift128 PRNG, now fully reconstructed as
       Project/Game/Util/Random.{h,cpp} (ctor FUN_00062b20, dtor FUN_00062b54, setSeed
       FUN_00062b5c, getRandRangeInt FUN_00062be0 == GetRandRangeInt in the original

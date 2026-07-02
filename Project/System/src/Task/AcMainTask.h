@@ -82,7 +82,11 @@ private:
     void buildMapCharaLayers();       // Ghidra: FUN_000a2264
     void buildMapPanelLayers();       // Ghidra: FUN_000a2650
     void refreshMapScroll(int mode);  // Ghidra: FUN_000a3550
-    void applyMapScrollBounds(float anchorY); // Ghidra: FUN_000a4e84
+    // Drop the current sugoroku map's background layer (+0xd0) and unload its asset
+    // group (6), so loadTreasureMap can bring a new board's bg up. Ghidra: FUN_000a4e84
+    // (takes only `this` — the earlier "applyMapScrollBounds(float)" seam name/arg were a
+    // mis-read of the adjacent scroll-rect float; this function is a teardown).
+    void unloadMapBgGroup();
 };
 
 // The group-5 sugoroku per-frame render pass the scene installs as its draw callback,
