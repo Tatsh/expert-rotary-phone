@@ -57,7 +57,6 @@ void MenuMainTask::update(int /*deltaMs*/) {
     DownloadMain *dl = [DownloadMain getInstance];
     AudioManager *audio = [AudioManager sharedManager];
     UIViewController *root = RootVC();
-    (void)aep; (void)audio;
 
     // A released touch that barely moved is a tap (its scaled position is logged).
     neGraphics &gfx = neGraphics::shared();
@@ -208,10 +207,13 @@ void MenuMainTask::update(int /*deltaMs*/) {
     // Per-frame menu UI update + draw (Ghidra tail: FUN_0002c924 / FUN_0006d428).
 }
 
-// Ghidra: FUN_0002d974 — hit-test the button rectangle (task fields) vs the touch.
+// Ghidra: FUN_0002d974 — hit-test a button whose screen rectangle (4 ints: x,y,w,h)
+// and enable flag live at byte offsets rectField / enableField within this task.
 bool MenuMainTask::hitButton(int touchId, int rectField, int enableField) {
-    (void)rectField; (void)enableField;
-    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, nullptr, nullptr);
+    const char *base = reinterpret_cast<const char *>(this);
+    const int *rect = reinterpret_cast<const int *>(base + rectField);
+    const int *enable = reinterpret_cast<const int *>(base + enableField);
+    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, rect, enable);
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
