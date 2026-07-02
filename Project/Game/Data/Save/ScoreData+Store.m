@@ -26,11 +26,8 @@
         ScoreData *record = [self recordWithMusicId:musicId inManagedObjectContext:context];
         NSError *error = nil;
         if (![context save:&error]) {
-            // Original walks NSDetailedErrorsKey here (diagnostic only).
-            NSArray *detailed = error.userInfo[NSDetailedErrorsKey];
-            for (NSError *sub in detailed) {
-                (void)sub;
-            }
+            // The original walks error.userInfo[NSDetailedErrorsKey] diagnostically
+            // without acting on the individual sub-errors.
         }
         return record;
     }

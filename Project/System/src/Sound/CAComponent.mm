@@ -245,7 +245,7 @@ void CAComponent::setAllVolume(int volumeIndex) {
 // Ghidra: FUN_00024044 — the AURenderCallback: copy this voice's PCM into the
 // mixer, looping or finishing at the end of the source buffer.
 OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags *flags,
-                                 const AudioTimeStamp *, UInt32, UInt32 frames,
+                                 const AudioTimeStamp *, UInt32, UInt32 /*frames*/,
                                  AudioBufferList *data) {
     CAVoice *v = static_cast<CAVoice *>(refCon);
     CASound *source = v->source;
@@ -279,6 +279,5 @@ OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags *flags
             }
         }
     }
-    (void)frames;
     return noErr;
 }
