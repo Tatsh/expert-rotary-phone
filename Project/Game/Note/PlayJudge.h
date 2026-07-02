@@ -29,7 +29,8 @@ struct NoteJudgeState {
     int layerId;           // +0x00 the note's sprite/layer id (draw arg)
     const void *noteKey;   // +0x04 owning note identity (nullptr when the slot is free)
     int phase;             // +0x08 visual phase: 0 pending, 1 active, 2/3 resolved
-    int result;            // +0x0c judged tier: -1 unjudged, 0..3 (0 best)
+    int result;            // +0x0c judged tier: -1 unjudged, else NoteJudge 0..3
+                           //        (0 = BAD/worst .. 3 = COOL/best)
     int timestamp;         // +0x10 position when the phase/result last changed
     int touchId;           // +0x14 bound neGraphics touch id (-1 = none)
 };

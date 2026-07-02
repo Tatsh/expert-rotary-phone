@@ -15,6 +15,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "TreasureTmpData.h"
+
 // Player-progress blob, version 109. Serialized as exactly 36 bytes (0x24),
 // AES-128-CBC encrypted, and stored under NSUserDefaults key "c".
 // Field offsets/types recovered from -[UserSettingData crypt109Data:] @ 0x615b4.
@@ -59,6 +61,22 @@ typedef struct Crypt109Data {
 + (void)saveIsEffectOn:(BOOL)on;          // @ 0x606e4
 + (BOOL)isLongNotesEffectOn;              // @ 0x6070c  (key "IsLongNotesEffectOn")
 + (void)saveIsLongNotesEffectOn:(BOOL)on; // @ 0x60734
+
+// Play-scene settings read by PlayTaskInit (Ghidra: FUN_0002e2d8). touchSoundVolume
+// is the per-tap SE volume (stored at play data +0x9b4); isSimpleMode selects the
+// simplified note field (+0x9e4); popkunSize is the note ("popkun") size, converted
+// to 16.16 fixed at +0x9bc.
++ (short)touchSoundVolume;                // -[UserSettingData touchSoundVolume]
++ (BOOL)isSimpleMode;                     // -[UserSettingData isSimpleMode]
++ (float)popkunSize;                      // -[UserSettingData popkunSize]
+
+#pragma mark Treasure (sugoroku pending-goal snapshot)
+// Read back the "pending treasure" record stored under the key "TreasureTmpData":
+// the goal the player just reached on the sugoroku board, carried across the arcade
+// launch. When no record is stored, returns a default whose subMapId is -1 ("nothing
+// pending"). The arcade task polls this to know when to load a map and start play.
+// Ghidra: -[UserSettingData treasureTmp:] @ 0x61448.
++ (TreasureTmpData)treasureTmp;
 
 #pragma mark Crypt109 blob (key "c")
 + (void)crypt109Data:(Crypt109Data *)out;         // @ 0x615b4 (read+decrypt)

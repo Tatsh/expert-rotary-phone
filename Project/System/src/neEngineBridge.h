@@ -30,6 +30,13 @@ public:
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)
 
+    // Record a finished play's result into the event center (so the result screen can
+    // read it back): looks up the stored high score for the current music/sheet, sets
+    // the "new record" flag when `score` beats it, and stashes the COOL/GREAT tallies
+    // and the score. Returns true when a new record was set. The play task additionally
+    // writes the rank (+0x14) and max combo (+0x18) after this call. Ghidra: FUN_0002930c.
+    bool recordPlayResult(int score, int cool, int great);
+
     // First two fields of the singleton (DAT_00187bb8 / DAT_00187bbc): the last
     // played music id and sheet (difficulty), persisted via UserSettingData.
     int  lastMusic() const;              // DAT_00187bb8

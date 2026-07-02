@@ -335,29 +335,29 @@ int NoteMng::judgeNoteHit(unsigned index) {
                         m_earlyMiss[note->kind]++;
                         return NOTE_JUDGE_MISS;
                     }
-                    tier = NOTE_JUDGE_COOL; note->flags |= 8;
+                    tier = NOTE_JUDGE_BAD; note->flags |= 8;
                     m_combo = 0;
                     countsCombo = false;
                 } else {
-                    tier = NOTE_JUDGE_GREAT; note->flags |= 1;
+                    tier = NOTE_JUDGE_GOOD; note->flags |= 1;
                 }
             } else {
                 // Central band: within ~50 ms is the tightest tier.
                 if ((unsigned)(delta + 50) < 101) {
-                    tier = NOTE_JUDGE_BAD; note->flags |= 4;
+                    tier = NOTE_JUDGE_COOL; note->flags |= 4;
                 } else {
-                    tier = NOTE_JUDGE_GOOD; note->flags |= 2;
+                    tier = NOTE_JUDGE_GREAT; note->flags |= 2;
                 }
             }
         } else {
-            tier = NOTE_JUDGE_GREAT; note->flags |= 1;
+            tier = NOTE_JUDGE_GOOD; note->flags |= 1;
         }
         if (countsCombo && !(note->startTick < note->endTick) && !special) {
             m_combo++;
             if (m_combo > m_maxCombo) m_maxCombo = m_combo;
         }
     } else {
-        tier = NOTE_JUDGE_COOL; note->flags |= 8;
+        tier = NOTE_JUDGE_BAD; note->flags |= 8;
         m_combo = 0;
         countsCombo = false;
     }

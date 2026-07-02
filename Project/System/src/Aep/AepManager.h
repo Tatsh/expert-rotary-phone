@@ -56,6 +56,12 @@ public:
     // Ghidra: FUN_000106dc.
     void playTransition(int mode, int frames, int flag);
 
+    // Scrub the *current* transition frame counter to `frame`, clamped to
+    // [0, total]. This does not change the mode or total set by playTransition; it
+    // just moves the fade to a given point (e.g. frame 0 == fully-faded for a
+    // fade-out, since draw() derives alpha from frames/total). Ghidra: FUN_00010758.
+    void setTransitionFrame(int frame);
+
     // Whether the active transition has finished (no frames left, or none active).
     // Ghidra: FUN_00010730.
     bool isTransitionDone() const;
@@ -74,6 +80,18 @@ public:
 
     // Drop a group's loaded texture (Ghidra: FUN_0000f988).
     void unloadGroup(int group);
+
+    // The two screen-quad extents cached from the transition-overlay region (the fade
+    // quad's width/height at this+0x7f3afc / +0x7f3b00). The play scene reads them into
+    // its play data at build. Ghidra: FUN_0000f498 / FUN_0000f4a4.
+    int transitionOverlayWidth() const;
+    int transitionOverlayHeight() const;
+
+    // Register a per-frame draw callback for group `slot`: the play scene installs
+    // its note-field render pass here at build time; the manager invokes it (with the
+    // stored `context`) while drawing. Ghidra: FUN_0000f9b0 (stores the callback at
+    // this + slot*4 + 0x7f3a2c and its context at + 0x7f3a90).
+    void setGroupDrawCallback(int slot, void (*callback)(void *context), void *context);
 
 private:
     // Resolve the frame-entry array for the group encoded in `lyr` (Ghidra: a byte

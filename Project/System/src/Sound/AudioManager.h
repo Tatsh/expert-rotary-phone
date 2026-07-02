@@ -70,6 +70,11 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 - (BOOL)stopSe:(RSND_INSTANCE_ID)instanceId;         // Ghidra: @ 0x1f3d0
 - (BOOL)stopSeAll;                                   // Ghidra: @ 0x1f630
 - (void)setSeVolume:(int)volume groupId:(int)group;  // Ghidra: @ 0x1f99c
+// Free a loaded SE source (by callName or source id). Ghidra: AudioManager::
+// releaseSe:resourceId: (PTR_s_releaseSe_resourceId_), called during scene teardown.
+- (void)releaseSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId;
+// Free the current BGM resource. Ghidra: AudioManager::releaseBgm (PTR_s_releaseBgm).
+- (void)releaseBgm;
 
 @end
 

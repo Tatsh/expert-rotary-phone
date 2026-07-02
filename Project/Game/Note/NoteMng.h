@@ -100,14 +100,20 @@ struct ActiveNote {
 static_assert(sizeof(ActiveNote) == 60, "active note slot is 60 bytes on armv7");
 #endif
 
-// Judgement tiers (best to worst). The numeric value doubles as the per-kind
-// hit-tally index. Ghidra: judgeNoteHit assigns these from the timing delta.
+// Judgement tiers. The numeric value doubles as the per-kind hit-tally column
+// index: the tally lives at NoteMng + 0x5164 + kind*0x10 + tier*4 (abs 0x179008 + ...
+// when the singleton is at 0x173ea4), and judgeNoteHit stores each hit in the column
+// matching the note flag it sets. Ordered worst -> best to match that layout, which is
+// also the order the scorer weights the columns (FUN_0002ff7c multiplies them by
+// 0 / 0.4 / 0.7 / 1.0). Ghidra: judgeNoteHit @ 0x347e8.
 enum NoteJudge {
-    NOTE_JUDGE_COOL = 0,
-    NOTE_JUDGE_GREAT = 1,
-    NOTE_JUDGE_GOOD = 2,
-    NOTE_JUDGE_BAD = 3,
-    NOTE_JUDGE_MISS = -1,   // outside every window (getNoteObject returns nothing)
+    NOTE_JUDGE_BAD = 0,     // note flag 8 (col +0x5164): pressed outside the scored
+                            //   windows; breaks combo; no score weight
+    NOTE_JUDGE_GOOD = 1,    // note flag 1 (col +0x5168): score weight 0.4
+    NOTE_JUDGE_GREAT = 2,   // note flag 2 (col +0x516c): score weight 0.7
+    NOTE_JUDGE_COOL = 3,    // note flag 4 (col +0x5170): central band |delta| < 50,
+                            //   score weight 1.0 (the tightest, best hit)
+    NOTE_JUDGE_MISS = -1,   // no note in any window (judgeNoteHit found nothing to grade)
     NOTE_JUDGE_TIER_COUNT = 4,
 };
 

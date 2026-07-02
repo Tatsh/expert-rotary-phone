@@ -218,6 +218,18 @@ void AepManager::playTransition(int mode, int frames, int flag) {
     }
 }
 
+// Ghidra: FUN_00010758 — clamp `frame` into [0, total] and store it as the current
+// transition frame counter (the value draw() counts down and derives alpha from).
+void AepManager::setTransitionFrame(int frame) {
+    if (frame < 0) {
+        frame = 0;
+    }
+    if (frame > m_transitionTotal) {
+        frame = m_transitionTotal;
+    }
+    m_transitionFrames = frame;
+}
+
 // Ghidra: FUN_00010730 — done when no frames remain, or no transition is active.
 bool AepManager::isTransitionDone() const {
     if (m_transitionFrames > 0) {

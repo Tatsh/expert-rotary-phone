@@ -51,6 +51,11 @@
 - (int)hardwareType;                      // -[AppDelegate hardwareType]  @ 0xb13c
 - (int)displayType;                       // display tier derived in initHardware
 
+// The engine's currently-running standard-mode play task (the play scene registers
+// itself here at build and clears it when it hands off to the result screen).
+// Ghidra: -[AppDelegate setMainTask:] (PTR_s_setMainTask_), stored on the delegate.
+- (void)setMainTask:(void *)mainTask;
+
 // Persisted per-install identifier used in backend requests.
 - (NSString *)uuId;                       // -[AppDelegate uuId]
 

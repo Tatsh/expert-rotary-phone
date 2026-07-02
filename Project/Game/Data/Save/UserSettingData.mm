@@ -388,6 +388,30 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     }
 }
 
+// @ 0x61448 — the "pending treasure" snapshot. If a blob is stored under the key
+// "TreasureTmpData" copy it straight back (capped at the record size); otherwise
+// hand back an empty record whose id fields are the -1 "nothing pending" sentinels.
+// (The binary's empty-record branch also writes uninitialised NEON lanes into the
+// unused fields — undefined values, not real state — so the faithful equivalent is a
+// zeroed record with the three sentinels set.)
++ (TreasureTmpData)treasureTmp {
+    TreasureTmpData out;
+    NSData *data = [self getData:@"TreasureTmpData"];
+    if (data != nil) {
+        NSUInteger len = data.length;
+        if (len > sizeof(out)) {
+            len = sizeof(out);
+        }
+        memcpy(&out, data.bytes, len);
+        return out;
+    }
+    memset(&out, 0, sizeof(out));
+    out.subMapId = -1;
+    out.raw0x04 = -1;
+    out.raw0x44 = -1;
+    return out;
+}
+
 // @ 0x5f66c — persist last music/sheet (stored as floats, as in the original).
 + (void)saveSettingData {
     auto &ec = neAppEventCenter::shared();
