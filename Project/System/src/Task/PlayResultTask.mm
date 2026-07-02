@@ -488,6 +488,65 @@ void PlayResultTask::loadNumberTextures() {
     }
 }
 
+// Ghidra: FUN_0003d690 states 3/5/6 — the treasure-point count-up. State 4 (the wait
+// between them) is handled inline in update(). All four SE source ids were traced from
+// the disassembly (they index the 11-entry SE array resultSetup loaded @ +0x2e4):
+//   +0x2fc = +0x2e4[6] "v38"           (case 3 line-in)
+//   +0x304 = +0x2e4[8] "se08_bonus_fai" (case 5 tally start)
+//   +0x300 = +0x2e4[7] "se07_count"     (case 6 per-step tick)
+//   +0x308 = +0x2e4[9] "se09_bonus_cl"  (case 6 finish)
+void PlayResultTask::updateScoreCount(bool tapped) {
+    AudioManager *audio = [AudioManager sharedManager];
+    switch (state()) {
+    case 3:
+        // Play the score line-in SE and start the score-line animation layer.
+        [audio playSe:nil resourceId:field<RSND_SOURCE_ID>(0x2fc)];
+        SeInstancePlay(field<void *>(0x218));
+        state() = 4;
+        break;
+    case 5:
+        // Stop the score line, start the count-up layer(s) (the second only on a perfect
+        // full-combo), reset the tick counter, and play the bonus-tally start SE.
+        SeInstanceStop(field<void *>(0x218));
+        SeInstancePlay(field<void *>(0x21c));
+        if (field<unsigned char>(0x353)) {
+            SeInstancePlay(field<void *>(0x220));
+        }
+        field<int>(0x388) = 0;
+        [audio playSe:nil resourceId:field<RSND_SOURCE_ID>(0x304)];
+        state() = 6;
+        break;
+    case 6: {
+        // Once the count layer settles, count the treasure total up. Every fifth step
+        // retriggers the count SE (stopping the previous instance @ +0x32c first); a tap
+        // snaps straight to the total. On reaching it, play the clear SE and finish.
+        if (SeInstanceIsPlaying(field<void *>(0x21c))) {
+            break;
+        }
+        const int total = field<int>(0x368) + field<int>(0x380);
+        if (field<int>(0x37c) < total) {
+            if (field<unsigned int>(0x388) % 5 == 0) {
+                [audio stopSe:static_cast<RSND_INSTANCE_ID>(field<int>(0x32c))];
+                field<int>(0x32c) =
+                    static_cast<int>([audio playSe:nil resourceId:field<RSND_SOURCE_ID>(0x300)]);
+            }
+            field<int>(0x37c) += 1;
+            field<unsigned int>(0x388) += 1;
+            if (tapped) {
+                field<int>(0x37c) = total;   // dismiss tap: jump to the final total
+            }
+        } else {
+            field<int>(0x37c) = total;
+            [audio playSe:nil resourceId:field<RSND_SOURCE_ID>(0x308)];
+            state() = 7;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 // Ghidra: FUN_0003f2e0 — tear the result screen down (freeing exactly what
 // resultSetup created) and hand off to the music-select task.
 void PlayResultTask::resultGotoNext() {

@@ -69,11 +69,11 @@
       real v37-skip SE list and the 120 digit-texture names). Review fixed a duplicate
       neAppEventCenter::setLastMusic decl; AepLyrCtrl::init confirmed 5-arg (owner +
       order @0x12e698) via disassembly.
-      Remaining handlers (declared, tracked): updateResultPresent (case 2: Twitter button
-      + rank cue), updateScoreCount (cases 3/5/6: count-up + result SEs — their playSe
-      source ids need field-tracing), the free function AepLyrCtrlUpdateAll (FUN_0002c924,
-      the per-frame layer tick+draw, blocked on the drawLayer widening below), and
-      PlayResultDrawCallback (FUN_0003f5f0, the result draw pass).
+      Remaining handler (declared, tracked): updateResultPresent (case 2: Twitter share
+      button build + rank-SE cascade). DONE: updateScoreCount (cases 3/5/6 count-up) —
+      all 4 SE source ids traced by disassembly (v38 @+0x2fc line-in, se08_bonus_fai
+      @+0x304 tally, se07_count @+0x300 tick, se09_bonus_cl @+0x308 finish); and
+      AepLyrCtrlUpdateAll + PlayResultDrawCallback (see the Draw units section).
       Original 13-state map (for the handler reconstructions):
         0  enterResult:   FUN_0003dfe0 (result setup) -> playBgm; ->1
         1  transitionIn:  playTransition(1,30,0); play layers +0x214/+0x228/+0x224;
