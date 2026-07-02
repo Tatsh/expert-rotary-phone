@@ -39,6 +39,10 @@
                          subMapId:(short)subMapId
              inManagedObjectContext:(NSManagedObjectContext *)context;
 
+// Fetch every persisted TreasureData record on the given context (the whole
+// sugoroku save table). Ghidra: getAllTreasureData: @ 0xc09a4.
++ (NSArray<TreasureData *> *)getAllTreasureData:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

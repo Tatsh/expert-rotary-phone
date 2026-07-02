@@ -25,6 +25,7 @@
 #import "CharaManager.h"
 #import "MainViewController.h"
 #import "SkillData.h"
+#import "TreasureData.h"
 #import "TreasureMap.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
@@ -746,6 +747,154 @@ void AcMainTask::loadTreasureMap() {
     [audio pushBgm];
     [audio loadBgm:bgmPath isLoop:YES];
     field<unsigned char>(0x5d8) = 0xff;
+}
+
+// ===========================================================================
+// computeStepValues — Ghidra FUN_000a1950. Fill the 7-entry per-skill "steps"
+// table at +0x578. The board-visited flags at +0x894 / +0x895 pick a base value
+// per index; the current roulette mode (short @ +0x8ac) then overrides (modes
+// 0..6 -> a fixed 1..7) or scales it (mode 0xe -> x2, mode 0xf -> x3). Any other
+// mode leaves the board-derived base unchanged.
+// ===========================================================================
+
+// Byte-verified base tables (both are word/int arrays: the loads at 0xa1976 /
+// 0xa1986 are `ldr.w`, not byte loads — Ghidra mistyped the first as undefined1).
+//   +0x894 >= 1 -> kStepBoardA (DAT_0012f97c, verified 0x12f97c)
+//   +0x895 >= 1 -> kStepBoardB (UNK_0012f998, verified 0x12f998)
+static const int kStepBoardA[7] = { 1, 2, 1, 3, 1, 2, 3 };
+static const int kStepBoardB[7] = { 4, 5, 4, 6, 4, 5, 6 };
+
+void AcMainTask::computeStepValues() {
+    for (int i = 0; i < 7; i++) {
+        // Board-derived base (computed for every index, though modes 0..6 discard
+        // it below — matching the binary, which evaluates the base before the tbb).
+        int value;
+        if (field<signed char>(0x894) >= 1) {
+            value = kStepBoardA[i];
+        } else if (field<signed char>(0x895) >= 1) {
+            value = kStepBoardB[i];
+        } else {
+            value = i + 1;
+        }
+
+        switch (field<short>(0x8ac)) {
+        case 0:   value = 1; break;
+        case 1:   value = 2; break;
+        case 2:   value = 3; break;
+        case 3:   value = 4; break;
+        case 4:   value = 5; break;
+        case 5:   value = 6; break;
+        case 6:   value = 7; break;
+        case 0xe: value = value << 1; break;   // double
+        case 0xf: value = value * 3;  break;   // triple
+        default:  break;                        // modes 7..0xd and >0xf keep the base
+        }
+
+        field<int>(0x578 + i * 4) = value;
+    }
+}
+
+// ===========================================================================
+// buildSelectListLayout — Ghidra FUN_000a21a8. Despite the declared name this
+// loads the 15 roulette / board sound effects into the SE-handle table at +0x438
+// (one loadSe per name). Only se12_roulturn (index 1) is looped; callName is nil
+// and the SE group is 1.
+// ===========================================================================
+
+// Byte-verified SE resource names (Ghidra: PTR_cf_se11_roulapp_00132ae0, an array
+// of 15 ASCII CFStrings, dataPtrs verified contiguous @ 0x10a6a4). Note the two
+// warp variants (se17_warp AND se17b_warp) and the gap from se23 straight to se25.
+static const char *const kRouletteSeNames[15] = {
+    "se11_roulapp", "se12_roulturn", "se13_roulstop", "se14_move", "se15_skill",
+    "se16_wana", "se17_warp", "se17b_warp", "se18_shield", "se19_peace",
+    "se20_peaceopen", "se21_itemget", "se22_goal", "se23_gacha", "se25_quiz_x"
+};
+
+void AcMainTask::buildSelectListLayout() {
+    AudioManager *audio = [AudioManager sharedManager];
+    for (int i = 0; i < 15; i++) {
+        NSString *path = [[NSBundle mainBundle] pathForResource:@(kRouletteSeNames[i])
+                                                         ofType:@"m4a"];
+        field<int>(0x438 + i * 4) =
+            (int)[audio loadSe:path isLoop:(i == 1) callName:nil group:1];
+    }
+}
+
+// ===========================================================================
+// buildMapCharaLayers — Ghidra FUN_000a2264 (called by loadTreasureMap). Rebuild
+// the per-board music / wallpaper "piece" unlock tables from the persisted
+// Core Data TreasureData records, then OR in the pending record's own masks for
+// the current board.
+//
+// The tables live at this+0x28 + {0x6b4, 0x720, 0x78c, 0x7f8}, i.e. this-relative
+// +0x6dc (music), +0x748 (wallpaper), +0x7b4 (music dup) and +0x820 (wallpaper
+// dup). Each is a 9x3 int grid indexed by mainMapId*0xc + subMapId*4 (mainMapId is
+// the board 0..8, subMapId the 0..2 sub-index). The binary writes the music and
+// wallpaper values into BOTH their primary and duplicate tables each iteration.
+// ===========================================================================
+void AcMainTask::buildMapCharaLayers() {
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+
+    // The binary only zeroes the first two tables (0xd8 bytes @ +0x6dc); the two
+    // duplicate tables are left to be overwritten row-by-row. Reproduce exactly.
+    std::memset(&field<uint8_t>(0x6dc), 0, 0xd8);
+
+    NSArray<TreasureData *> *all =
+        [TreasureData getAllTreasureData:[[AppDelegate appDelegate] managedObjectContext]];
+    for (TreasureData *rec in all) {
+        const int idx   = rec.mainMapId.intValue * 0xc + rec.subMapId.intValue * 4;
+        const int music = rec.musicPiece.intValue;
+        const int wall  = rec.wallPaperPiece.intValue;
+        field<int>(0x6dc + idx) = music;   // music table
+        field<int>(0x748 + idx) = wall;    // wallpaper table
+        field<int>(0x7b4 + idx) = music;   // music table (duplicate, as the binary writes)
+        field<int>(0x820 + idx) = wall;    // wallpaper table (duplicate)
+    }
+
+    // OR the pending record's own unlock masks into the current board's slot. The
+    // binary computes the index straight from the board-encoded subMapId (+0x620):
+    // (sm/10)*-0x1c + sm*4, which is exactly (sm/10)*0xc + (sm%10)*4 for sm >= 0.
+    const short sm     = field<short>(0x620);
+    const int   curIdx = (sm / 10) * -0x1c + sm * 4;
+    field<uint32_t>(0x6dc + curIdx) |= (uint32_t)tmp.raw0x08;   // music mask
+    field<uint32_t>(0x748 + curIdx) |= (uint32_t)tmp.raw0x0c;   // wallpaper mask
+}
+
+// ===========================================================================
+// buildMapPanelLayers — Ghidra FUN_000a2650 (called by loadTreasureMap). Despite
+// the declared name this (re)loads the goal-character portrait texture into +0xe0.
+// The whole rebuild is gated by the high byte of the pending record's raw0x4d
+// field (offset 0x50): when it is non-zero the routine is a no-op. Otherwise it
+// frees any previous texture and, if a goal character is present (raw0x20[0] != 0),
+// loads "sugo_chara%03d.png" for chara id raw0x12 from the app-support directory.
+// ===========================================================================
+void AcMainTask::buildMapPanelLayers() {
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+
+    // Byte 3 of raw0x4d (record offset 0x50) is the enable gate (Ghidra:
+    // field19_0x4d._3_1_). Non-zero -> leave the current texture untouched.
+    if ((uint8_t)((uint32_t)tmp.raw0x4d >> 24) != 0) {
+        return;
+    }
+
+    // Free the previously loaded portrait (Ghidra: the vtable[1] deleting dtor).
+    if (neTextureForiOS *old = field<neTextureForiOS *>(0xe0)) {
+        delete old;
+        field<neTextureForiOS *>(0xe0) = nullptr;
+    }
+
+    // No goal character on this record -> nothing more to load.
+    if (tmp.raw0x20[0] == 0) {
+        return;
+    }
+
+    neTextureForiOS *tex = new neTextureForiOS();
+    field<neTextureForiOS *>(0xe0) = tex;
+    NSString *file =
+        [NSString stringWithFormat:@"sugo_chara%03d.png", (int)(short)tmp.raw0x12];
+    NSString *path =
+        [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
+    tex->load([path UTF8String]);
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
