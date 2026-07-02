@@ -208,6 +208,16 @@ public:
     int maxCombo() const { return m_maxCombo; }
     int judgeCount(int kind, NoteJudge tier) const { return m_tally[kind][tier]; }
 
+    // The engine keeps one global standard-mode manager (Ghidra: DAT_00173ea4),
+    // reached through a ___cxa_guard'd lazy accessor. Ghidra: NoteMng_shared
+    // (FUN_0000b278), which constructs it once via NoteMng_init (FUN_00033514).
+    static NoteMng &shared();
+
+    // Resign/suspend hook (app resigns active): stop the BGM and remember the
+    // current play position so it can resume, guarded to run once. Ghidra:
+    // NEEngine_onResignActivePushHook (FUN_00034510), invoked on the global.
+    void onResignActivePushHook();
+
 private:
     // One BPM segment of the tempo map (registered from NOTE_TYPE_TEMPO records).
     struct TempoSegment {
@@ -252,6 +262,11 @@ private:
     int m_earlyMiss[kNoteKindCount] = {};                     // too-early presses
 
     bool m_autoPlay = false;   // Ghidra flag @ +0x13cb5 (skips manual judgement)
+
+    // Resign/suspend bookkeeping (Ghidra: within the play-data region, near +0x05;
+    // the recorded position field is written by FUN_00034510).
+    bool m_suspendedForResign = false;
+    int  m_resignPositionMs = 0;
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

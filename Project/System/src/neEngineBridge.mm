@@ -15,11 +15,7 @@
 // Engine sub-hooks these bridge entry points call. Each is a distinct
 // reconstruction unit; declared here with its Ghidra address.
 extern "C" {
-void neNoteMngOnResignActive(void *noteMng);        // FUN_00033514 (&DAT_00173ea4 = global NoteMng)
 void neBootTaskCreateAndRegister();                 // operator_new(0x4c)+FUN_0002af58+FUN_00027f08(_,3)
-void neNoteMngPushResignHook(void *noteMng);        // FUN_00034510(&DAT_00173ea4)
-void *neCurrentMainTask();                          // the running MainTask (play-data)
-void *neCurrentAcMainTask();                        // the running AcMainTask
 }
 
 // Head of the shared-texture cache list (Ghidra: DAT_00188464). Registered/
@@ -98,21 +94,6 @@ void bootstrapC(int /*flag*/) {
     if (!once) { once = true; }
 }
 
-// Ghidra: FUN_0000b278 — once-guarded pause of the running play on resign.
-void onWillResignActive() {
-    static bool once = false;
-    if (!once) {
-        once = true;
-        neNoteMngOnResignActive(nullptr);   // &DAT_00173ea4 (global NoteMng)
-    }
-}
-
-// Ghidra: FUN_0000b35c — second once-guarded resign hook.
-void onWillResignActive2() {
-    static bool once = false;
-    if (!once) { once = true; }
-}
-
 // Ghidra: FUN_0001bdf8 — walk the reloadable-texture list (circular, via +0x8)
 // and free every texture's GL name (invalidated by the GL context going away).
 void onDidEnterBackground() {
@@ -125,34 +106,31 @@ void onDidEnterBackground() {
     }
 }
 
-// Ghidra: FUN_00030710 — nudge the running MainTask toward its stop state (6->5).
-void stopMainTask() {
-    if (void *task = neCurrentMainTask()) {
-        int *state = reinterpret_cast<int *>(static_cast<char *>(task) + kTaskStateOffsetMain);
-        if (*state == 6) {
-            *state = 5;
-        }
+// Ghidra: FUN_00030710 — nudge the passed MainTask toward its stop state (6->5).
+void stopMainTask(void *mainTask) {
+    if (mainTask == nullptr) {
+        return;
+    }
+    int *state = reinterpret_cast<int *>(static_cast<char *>(mainTask) + kTaskStateOffsetMain);
+    if (*state == 6) {
+        *state = 5;
     }
 }
 
-// Ghidra: FUN_0002314c — nudge the running AcMainTask toward its stop state (6->0xc).
-void stopAcMainTask() {
-    if (void *task = neCurrentAcMainTask()) {
-        int *state = reinterpret_cast<int *>(static_cast<char *>(task) + kTaskStateOffsetAc);
-        if (*state == 6) {
-            *state = 0xc;
-        }
+// Ghidra: FUN_0002314c — nudge the passed AcMainTask toward its stop state (6->0xc).
+void stopAcMainTask(void *acMainTask) {
+    if (acMainTask == nullptr) {
+        return;
+    }
+    int *state = reinterpret_cast<int *>(static_cast<char *>(acMainTask) + kTaskStateOffsetAc);
+    if (*state == 6) {
+        *state = 0xc;
     }
 }
 
 // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_, 3).
 void startBootTask() {
     neBootTaskCreateAndRegister();
-}
-
-// Ghidra: FUN_00034510(&DAT_00173ea4).
-void onResignActivePushHook() {
-    neNoteMngPushResignHook(nullptr);   // &DAT_00173ea4
 }
 
 // Walk the same reloadable-texture list on foreground, re-decoding + re-uploading

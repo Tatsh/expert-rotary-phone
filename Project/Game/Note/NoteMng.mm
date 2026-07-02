@@ -19,8 +19,30 @@
 
 #import <Foundation/Foundation.h>
 
+#import "AudioManager.h"
 #import "NoteMng.h"
 #import "neEngineBridge.h"
+
+// The global standard-mode note manager (Ghidra: DAT_00173ea4). Ghidra:
+// NoteMng_shared (FUN_0000b278) is a ___cxa_guard'd lazy accessor; the function-
+// local static below reproduces that construct-once-on-first-use semantics.
+// NoteMng_init (FUN_00033514) zeroes the object and sets the defaults captured by
+// the member initialisers.
+NoteMng &NoteMng::shared() {
+    static NoteMng instance;
+    return instance;
+}
+
+// Ghidra: NEEngine_onResignActivePushHook (FUN_00034510). Runs once on resign:
+// stop the BGM and stash the current play position; a flag guards re-entry.
+void NoteMng::onResignActivePushHook() {
+    if (m_suspendedForResign) {
+        return;
+    }
+    [[AudioManager sharedManager] stopBgm:0.0f];   // 0s fade = stop now
+    m_resignPositionMs = getElapsedTimeMs();
+    m_suspendedForResign = true;
+}
 
 namespace {
 

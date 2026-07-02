@@ -61,6 +61,11 @@ public:
     void registerTempoEvents();
     void changeTempo(uint32_t tick);
 
+    // The engine keeps one global arcade manager (Ghidra: DAT_0015f1b0), reached
+    // through a ___cxa_guard'd lazy accessor. Ghidra: AcNoteMng_shared
+    // (FUN_0000b35c), which constructs it once via AcNoteMng_init (FUN_0007a744).
+    static AcNoteMng &shared();
+
 private:
     struct TempoSegment { uint32_t startTick; uint32_t startMs; int16_t bpm; };
 
@@ -73,7 +78,7 @@ private:
     int16_t m_laneCounts[kAcLaneCount] = {};
 
     // Play state.
-    float m_hiSpeed = 1.0f;              // +0x14cc4
+    float m_hiSpeed = 1.2f;              // +0x14cc4 (AcNoteMng_init default = 0x3f99999a)
     TempoSegment m_tempoMap[512] = {};
     int m_tempoCount = 0;
     uint32_t m_currentMs = 0;

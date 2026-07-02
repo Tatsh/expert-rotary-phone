@@ -129,6 +129,16 @@ void neGraphics::clearTouches() {
     }
 }
 
+// Ghidra: FUN_000124cc — linear scan of the recorded touches for a matching id.
+const neTouchPoint *neGraphics::findTouchById(int id) const {
+    for (int i = 0; i < m_touchCount; ++i) {
+        if (m_touches[i]->id == id) {
+            return m_touches[i];
+        }
+    }
+    return nullptr;
+}
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

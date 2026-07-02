@@ -54,6 +54,10 @@ public:
     const neTouchPoint *touchAt(int i) const { return m_touches[i]; }
     float contentScale() const { return m_contentScale; }  // +0x88
 
+    // Find a recorded touch by its rolling id, or nullptr. The play-judge loop
+    // uses this to tell whether the finger that started a hold is still down.
+    const neTouchPoint *findTouchById(int id) const;      // Ghidra: FUN_000124cc
+
 private:
     neGraphics();                    // Ghidra: FUN_0001243c (allocates the pool)
     neGraphics(const neGraphics &) = delete;

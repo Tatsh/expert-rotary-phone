@@ -21,6 +21,15 @@ static const float kAcHiSpeed[kAcHiSpeedCount] = {
     1.2f, 1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f, 4.5f, 5.0f, 5.5f, 6.0f,
 };
 
+// The global arcade note manager (Ghidra: DAT_0015f1b0). AcNoteMng_shared
+// (FUN_0000b35c) is a ___cxa_guard'd lazy accessor; the function-local static
+// reproduces its construct-once semantics. AcNoteMng_init (FUN_0007a744) zeroes
+// the object and defaults the hi-speed to 1.2 (captured by the member init).
+AcNoteMng &AcNoteMng::shared() {
+    static AcNoteMng instance;
+    return instance;
+}
+
 // Ghidra: FUN_0007a774. `data` points at the 8-byte header (magic 'E' at +4).
 int AcNoteMng::initPlayData(const void *data, int size, int difficulty) {
     assert(data != nullptr && size > 0);   // AcNoteMng.mm:0x59

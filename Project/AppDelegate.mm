@@ -18,8 +18,10 @@
 #import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
+#import "AcNoteMng.h"
 #import "MainViewController.h"
 #import "MusicManager.h"
+#import "NoteMng.h"
 #import "PurchaseManager.h"
 #import "RewardNetwork.h"   // -> Stubs/RewardNetwork.h (no-op ad SDK; see below)
 #import "StoreUtil.h"
@@ -171,11 +173,12 @@ BOOL gLaunchedFromPush = NO;
 
 // -[AppDelegate applicationWillResignActive:]  @ 0x95a8
 - (void)applicationWillResignActive:(UIApplication *)application {
-    neEngine::onWillResignActive();            // Ghidra: FUN_0000b278
+    NoteMng::shared();                         // Ghidra: NoteMng_shared (FUN_0000b278)
     if (/* DAT_00187b5a */ gLaunchedFromPush) {
-        neEngine::onResignActivePushHook();   // Ghidra: FUN_00034510(&DAT_00173ea4)
+        // Ghidra: NEEngine_onResignActivePushHook (FUN_00034510) on the global NoteMng.
+        NoteMng::shared().onResignActivePushHook();
     }
-    neEngine::onWillResignActive2();           // Ghidra: FUN_0000b35c
+    AcNoteMng::shared();                        // Ghidra: AcNoteMng_shared (FUN_0000b35c)
 
     [[AudioManager sharedManager] systemSuspend];
 
@@ -188,8 +191,8 @@ BOOL gLaunchedFromPush = NO;
     _isNecessaryToResume = resume;
     [self.viewController PauseLoop];
 
-    if (_mainTask)   neEngine::stopMainTask();    // Ghidra: FUN_00030710
-    if (_acMainTask) neEngine::stopAcMainTask();  // Ghidra: FUN_0002314c
+    if (_mainTask)   neEngine::stopMainTask(_mainTask);      // Ghidra: FUN_00030710
+    if (_acMainTask) neEngine::stopAcMainTask(_acMainTask);  // Ghidra: FUN_0002314c
 
     // If a resume is expected, pump the loop once so the last frame is flushed.
     if (_isNecessaryToResume) {

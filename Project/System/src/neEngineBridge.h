@@ -67,19 +67,24 @@ private:
 // live touch pool driven by neGLView.
 
 // Free-standing engine lifecycle hooks fired from the UIApplicationDelegate.
+//
+// NOTE: the app resign handler also *touches* the global NoteMng/AcNoteMng to
+// force their construction — those are NoteMng::shared() (FUN_0000b278) and
+// AcNoteMng::shared() (FUN_0000b35c), not engine hooks, so they live on those
+// classes rather than here. The actual resign work is NoteMng::onResignActivePushHook
+// (FUN_00034510).
 namespace neEngine {
     void bootstrapB();               // Ghidra: NEEngine_bootstrapB (FUN_0001ba2c)
     void bootstrapC(int flag);       // Ghidra: NEEngine_bootstrapC (FUN_0001796c)
-    void onWillResignActive();       // Ghidra: NEEngine_onWillResignActive  (FUN_0000b278)
-    void onWillResignActive2();      // Ghidra: NEEngine_onWillResignActive2 (FUN_0000b35c)
     void onDidEnterBackground();     // Ghidra: NEEngine_onDidEnterBackground (FUN_0001bdf8)
-    void stopMainTask();             // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
-    void stopAcMainTask();           // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
+
+    // Nudge the running MainTask / AcMainTask toward its stop state. The task
+    // pointer is passed in by the caller (AppDelegate's _mainTask / _acMainTask).
+    void stopMainTask(void *mainTask);     // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
+    void stopAcMainTask(void *acMainTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
 
     // Create + register the app's boot task at priority 3.
     void startBootTask();            // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_,3)
-    // Push-notification resign hook.
-    void onResignActivePushHook();   // Ghidra: FUN_00034510(&DAT_00173ea4)
     // Notify every foreground observer (observer list head @ DAT_00188464).
     void notifyEnterForeground();    // Ghidra: FUN_000188ac walk
 }
