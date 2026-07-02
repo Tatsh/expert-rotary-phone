@@ -11,16 +11,31 @@
 
 #import "neEngineBridge.h"
 
+// A texture registered for GL fore/background reload: an intrusive circular list
+// (head @ DAT_00188464), linked via the +0x08 field. On background each texture's
+// GL name is freed (it is invalid across a GL context loss); on foreground it is
+// re-decoded from its file.
+struct neReloadableTexture {
+    void *reserved0;               // +0x00
+    void *reserved4;               // +0x04
+    neReloadableTexture *next;     // +0x08
+};
+
 // Engine sub-hooks these bridge entry points call. Each is a distinct
 // reconstruction unit; declared here with its Ghidra address.
 extern "C" {
-void neNoteMngOnResignActive(void *noteMng);   // FUN_00033514 (&DAT_00173ea4 = global NoteMng)
-void neForegroundObserverNotify(void *node);   // FUN_00018884
-void neBootTaskCreateAndRegister();            // operator_new(0x4c)+FUN_0002af58+FUN_00027f08(_,3)
-void neNoteMngPushResignHook(void *noteMng);   // FUN_00034510(&DAT_00173ea4)
-void *neCurrentMainTask();                     // the running MainTask (play-data)
-void *neCurrentAcMainTask();                   // the running AcMainTask
+void neNoteMngOnResignActive(void *noteMng);        // FUN_00033514 (&DAT_00173ea4 = global NoteMng)
+void neTextureReleaseGL(neReloadableTexture *tex);  // FUN_00018884 (background: delete GL name)
+int neTextureReload(neReloadableTexture *tex);      // FUN_000188ac (foreground: re-decode + upload)
+void neBootTaskCreateAndRegister();                 // operator_new(0x4c)+FUN_0002af58+FUN_00027f08(_,3)
+void neNoteMngPushResignHook(void *noteMng);        // FUN_00034510(&DAT_00173ea4)
+void *neCurrentMainTask();                          // the running MainTask (play-data)
+void *neCurrentAcMainTask();                        // the running AcMainTask
 }
+
+// The reloadable-texture list head (Ghidra: DAT_00188464). Registered/unlinked by
+// AepTexture as textures are created/destroyed.
+neReloadableTexture *g_reloadableTextureList = nullptr;
 
 // Task state-machine field offsets (play-data): 0x9fc (main), 0x20c (arcade);
 // state 6 = running, transitioned to a stopping state on resign.
@@ -102,11 +117,16 @@ void onWillResignActive2() {
     if (!once) { once = true; }
 }
 
-// Ghidra: FUN_0001bdf8 — walk the observer list (head @ DAT_00188464, intrusive
-// via +0x8) and notify every foreground observer.
+// Ghidra: FUN_0001bdf8 — walk the reloadable-texture list (circular, via +0x8)
+// and free every texture's GL name (invalidated by the GL context going away).
 void onDidEnterBackground() {
-    // The observer list is a circular intrusive list; reconstructed as a walk.
-    // (Nodes are engine-owned; iteration mirrors the binary's for-loop.)
+    neReloadableTexture *head = g_reloadableTextureList;
+    if (head == nullptr) {
+        return;
+    }
+    for (neReloadableTexture *node = head->next; node != head; node = node->next) {
+        neTextureReleaseGL(node);   // FUN_00018884
+    }
 }
 
 // Ghidra: FUN_00030710 — nudge the running MainTask toward its stop state (6->5).
@@ -139,9 +159,16 @@ void onResignActivePushHook() {
     neNoteMngPushResignHook(nullptr);   // &DAT_00173ea4
 }
 
-// Ghidra: FUN_000188ac — notify every foreground observer.
+// Walk the same reloadable-texture list on foreground, re-decoding + re-uploading
+// each texture (its per-texture reload is Ghidra FUN_000188ac).
 void notifyEnterForeground() {
-    // Same intrusive observer list as onDidEnterBackground, walked forward.
+    neReloadableTexture *head = g_reloadableTextureList;
+    if (head == nullptr) {
+        return;
+    }
+    for (neReloadableTexture *node = head->next; node != head; node = node->next) {
+        neTextureReload(node);      // FUN_000188ac
+    }
 }
 
 }  // namespace neEngine
