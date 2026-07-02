@@ -27,8 +27,13 @@
       All strings byte-verified; no defect found on review (NEON map-scroll math flagged
       best-effort inline). NEW arcade-sugoroku seams now tracked (declared, bodies pending):
       refreshMapScroll (FUN_000a3550), applyMapScrollBounds (FUN_000a4e84); free fns
-      AcMainSugorokuDraw (FUN_000a3724, ~5.8KB group-5 draw pass) and
-      AcMainUnlockBonusTreasure (FUN_000a345c); TreasureMap::load/~TreasureMap.
+      AcMainSugorokuDraw (FUN_000a3724, ~5.8KB group-5 draw pass).
+    * DONE (agent, reviewed): TreasureMap::load (FUN_000ce340, the map-file parser — header
+      0x50, node file-stride 0xaa -> mem-stride 0x120, ShiftJIS messages, rand bonus pick
+      persisted via saveTreasureTmp, ConnectStruct edge list), TreasureMap::reset/dtor
+      (FUN_000ce2e4/ce330), AcMainUnlockBonusTreasure (FUN_000a345c, board-8 unlock on
+      prereq songs 200000204-207 + 208-211). Map format fully byte-verified; no defect on
+      review. NEW seam: +[UserSettingData saveTreasureTmp:] (@0x614f0, declared, body pending).
     * DONE (agent, reviewed): computeStepValues (FUN_000a1950, step tables {1,2,1,3,1,2,3}/
       {4,5,4,6,4,5,6}), buildSelectListLayout (FUN_000a21a8 — actually loads the 15 roulette
       SEs @+0x438; name inherited from the seam is misleading, documented in-file),

@@ -31,14 +31,37 @@ public:
     void load(const char *path);
 
     // One board square. id is the sub-map id; x / y are the board column / row in
-    // tile units (the scene multiplies by the 0x1a == 26 px tile size). The record
-    // is 0x120 bytes in the file image (stride verified in FUN_000ce934); only the
-    // leading id/x/y are read by the arcade scene.
+    // tile units (the scene multiplies by the 0x1a == 26 px tile size). The in-memory
+    // record is 0x120 bytes (stride verified in FUN_000ce934); the file image packs
+    // the same square into 0xaa bytes (see load()). The parser (FUN_000ce340) fills
+    // the leading five int16 fields verbatim from the file, resolves the neighbour ids
+    // into real Node pointers, and decodes the message text. The ObjC value-type name
+    // the binary uses for this record is "SquareStruct".
+    //
+    // NOTE: pointer members below are 4 bytes on the game's 32-bit (ILP32) target,
+    // which is what keeps the 0x120 stride exact — the same assumption the enclosing
+    // class layout (m_nodes @ +0x50, m_startSubId @ +0x54, ...) already relies on.
     struct Node {
-        int16_t id;                 // +0x00
-        int16_t x;                  // +0x02
-        int16_t y;                  // +0x04
-        uint8_t _rest[0x120 - 6];   // +0x06.. (unread board metadata)
+        int16_t id;          // +0x00 sub-map id
+        int16_t x;           // +0x02 board column (tile units)
+        int16_t y;           // +0x04 board row (tile units)
+        int16_t type;        // +0x06 square kind: -1 invalid (asserts), 0 start,
+                             //        2 deactivated bonus, 10 active bonus treasure
+        int16_t field8;      // +0x08 copied verbatim from the file record
+        int16_t _pad0a;      // +0x0a (zeroed; file neighbour ids are not stored here)
+        Node   *backLink;    // +0x0c neighbour resolved from file record +0x0a
+        Node   *links[3];    // +0x10 neighbours resolved from file record +0x0c/0e/10
+        char    text[0x100]; // +0x1c ShiftJIS->UTF8 message ("<br>" -> newline)
+        uint8_t _rest[4];    // +0x11c pad to the 0x120 stride
+    };
+
+    // A resolved board edge between two squares. Built into the +0x58 array by load();
+    // the binary boxes it in NSValue with the ObjC type encoding
+    // "{ConnectStruct=^{SquareStruct}^{SquareStruct}B}" (12 bytes: two Node* + a BOOL).
+    struct ConnectStruct {
+        Node *a;        // +0x00
+        Node *b;        // +0x04
+        bool  sameRow;  // +0x08 a->y == b->y
     };
 
     int nodeCount() const { return m_count; }        // +0x02
@@ -64,10 +87,27 @@ public:
     }
 
     int16_t startSubId() const { return m_startSubId ? *m_startSubId : 0; } // *(+0x54)
-    int     field58()    const { return m_field58; }  // +0x58 (copied to play data +0x4b8)
-    int16_t field5c()    const { return m_field5c; }  // +0x5c (copied to play data +0x4c6)
+    // +0x58 is the malloc'd ConnectStruct edge array (its raw pointer bits are what the
+    // arcade scene copies into play data +0x4b8); +0x5c is that array's element count
+    // (copied to play data +0x4c6). Kept as int/int16_t to match the fields the scene
+    // reads; edges()/edgeCount() re-expose them with their real meaning.
+    int     field58()    const { return m_field58; }  // +0x58
+    int16_t field5c()    const { return m_field5c; }  // +0x5c
+    const ConnectStruct *edges() const {
+        return reinterpret_cast<const ConnectStruct *>((intptr_t)m_field58);
+    }
+    int edgeCount() const { return m_field5c; }
 
 private:
+    // Ghidra: FUN_000ce2e4 — free the owned node table (+0x50) and edge array (+0x58),
+    // then zero the whole 0x60-byte object. Shared by load() (clear-before-parse) and
+    // the destructor.
+    void reset();
+
+    // Linear id -> Node* lookup used by load()'s neighbour resolution (the inline
+    // search in FUN_000ce340). Null for a negative / out-of-range id or an empty table.
+    Node *findNodeById(int id) const;
+
     // Byte-exact layout to alignment 4 (offsets verified in FUN_000ce2b0/340/934).
     uint8_t  m_head[2]       = {};       // +0x00
     int16_t  m_count         = 0;        // +0x02 node count

@@ -24,8 +24,11 @@
 #import "CharaInfo.h"
 #import "CharaManager.h"
 #import "MainViewController.h"
+#import "MusicManager.h"
+#import "RhUtil.h"
 #import "SkillData.h"
 #import "TreasureData.h"
+#import "TreasureData+Store.h"
 #import "TreasureMap.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
@@ -895,6 +898,57 @@ void AcMainTask::buildMapPanelLayers() {
     NSString *path =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
     tex->load([path UTF8String]);
+}
+
+// ===========================================================================
+// AcMainUnlockBonusTreasure — Ghidra FUN_000a345c. Called from setupScene() before
+// the map load. Unlock the board-8 / sub-0 bonus treasure record once the player owns
+// the prerequisite purchased songs: at least one song from group A AND at least one
+// from group B must be present on disk (their purchased ".orb" file exists).
+// ===========================================================================
+
+// Byte-verified prerequisite song ids (Ghidra: DAT_0012f9e0 / DAT_0012f9f0, each four
+// consecutive int32 ids). getPathFromPurchased: is queried per id and probed on disk.
+static const int kBonusPrereqSongsA[4] = {   // DAT_0012f9e0
+    200000204, 200000205, 200000206, 200000207   // 0x0bebc2cc..0x0bebc2cf
+};
+static const int kBonusPrereqSongsB[4] = {   // DAT_0012f9f0
+    200000208, 200000209, 200000210, 200000211   // 0x0bebc2d0..0x0bebc2d3
+};
+
+void AcMainUnlockBonusTreasure() {
+    NSManagedObjectContext *context = [[AppDelegate appDelegate] managedObjectContext];
+
+    // Already unlocked (board 8, sub 0)? Nothing to do.
+    if ([TreasureData getTreasureData:8 subMapId:0 inManagedObjectContext:context] != nil) {
+        return;
+    }
+
+    // The binary dispatches getPathFromPurchased: straight on the MusicManager classref
+    // (@ 0x15be34); the existing MusicManager reconstruction models it as an instance
+    // method on the singleton, so query it through getInstance to stay consistent.
+    MusicManager *music = [MusicManager getInstance];
+
+    // Require any one purchased song from group A to be present first.
+    for (int i = 0; i < 4; i++) {
+        NSString *pathA = [music getPathFromPurchased:kBonusPrereqSongsA[i]];
+        if (!RhFileExists(pathA)) {
+            continue;
+        }
+        // Group A satisfied: now require any one from group B as well.
+        for (int j = 0; j < 4; j++) {
+            NSString *pathB = [music getPathFromPurchased:kBonusPrereqSongsB[j]];
+            if (RhFileExists(pathB)) {
+                [TreasureData addRecordWithMainMapId:8
+                                            subMapId:0
+                              inManagedObjectContext:context];
+                return;
+            }
+        }
+        // Group A present but no group-B song owned — the binary stops after the first
+        // matching group-A song (it does not keep scanning group A).
+        return;
+    }
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

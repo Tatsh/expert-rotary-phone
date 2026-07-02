@@ -78,6 +78,12 @@ typedef struct Crypt109Data {
 // Ghidra: -[UserSettingData treasureTmp:] @ 0x61448.
 + (TreasureTmpData)treasureTmp;
 
+// Persist the "pending treasure" record back under the key "TreasureTmpData" (the raw
+// memory image is memcpy'd straight into the stored NSData blob). The sugoroku map
+// parser uses this to persist which bonus square it randomly picked as the session's
+// treasure. Ghidra: -[UserSettingData saveTreasureTmp:] @ 0x614f0.
++ (void)saveTreasureTmp:(TreasureTmpData)data;
+
 // The persisted "treasure read" progress index for a sugoroku sub-map (how far the
 // player has advanced its board story), or a negative sentinel when unread. The
 // arcade map loader reads it to resume the board. Ghidra: -[UserSettingData

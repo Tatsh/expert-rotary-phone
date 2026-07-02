@@ -45,7 +45,7 @@
 
 // Resolve a song id to its bundled / purchased (.orb) path.
 - (NSString *)getPathFromBundle:(int)musicId;
-- (NSString *)getPathFromPurchased:(int)musicId;
+- (NSString *)getPathFromPurchased:(int)musicId;   // @ 0xc7edc
 
 @end
 
