@@ -12,11 +12,9 @@
 #import "AepTexture.h"
 #import "neEngineBridge.h"
 
-// Engine sub-hooks these bridge entry points call. Each is a distinct
-// reconstruction unit; declared here with its Ghidra address.
-extern "C" {
-void neBootTaskCreateAndRegister();                 // operator_new(0x4c)+FUN_0002af58+FUN_00027f08(_,3)
-}
+// Create + register the boot logo splash task (Task/TaskFactory.mm).
+class C_TASK;
+C_TASK *BootCreateTask();   // operator_new(0x4c) + BootLogoTask_ctor + setPriority(3)
 
 // Head of the shared-texture cache list (Ghidra: DAT_00188464). Registered/
 // unlinked by AepTexture as cached textures are acquired/released.
@@ -138,9 +136,9 @@ void stopAcMainTask(void *acMainTask) {
     }
 }
 
-// Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_, 3).
+// Ghidra: operator_new(0x4c) + BootLogoTask_ctor + setPriority(3).
 void startBootTask() {
-    neBootTaskCreateAndRegister();
+    BootCreateTask();
 }
 
 // Walk the same reloadable-texture list on foreground, re-decoding + re-uploading
