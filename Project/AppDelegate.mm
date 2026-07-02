@@ -27,6 +27,7 @@
 #import "TreasureData.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
+#import "neGraphics.h"
 #import "neWindow.h"
 
 // Ad/analytics dependency intentionally removed (see README "Ad / analytics").

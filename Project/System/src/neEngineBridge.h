@@ -62,13 +62,9 @@ private:
     void *m_root = nullptr;   // +0x00 the bridged root UIViewController
 };
 
-// Renderer / graphics manager (singleton @ DAT_00188384, +0x88 = content scale).
-// Related to the neIGLES GL abstraction (Project/System/src/OpenGL/neGLES11.cpp).
-class neGraphics {
-public:
-    // Lazily creates the renderer and stores the content scale.
-    static void configure(float contentScale); // Ghidra: NEGraphics_configure (FUN_00012368)
-};
+// The renderer / graphics manager (singleton @ DAT_00188384, +0x88 = content
+// scale) is a full class of its own — see Render/neGraphics.h. It also owns the
+// live touch pool driven by neGLView.
 
 // Free-standing engine lifecycle hooks fired from the UIApplicationDelegate.
 namespace neEngine {

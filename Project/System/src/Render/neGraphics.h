@@ -1,0 +1,72 @@
+//
+//  neGraphics.h
+//  pop'n rhythmin
+//
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The
+//  render/input manager singleton (@ DAT_00188384, operator_new(0x8c)): it owns
+//  the device content scale and the pool of live touch points. The GL view
+//  (neGLView) feeds touches in; the play-judge loop reads them back out.
+//
+//  PROVISIONAL name: the exact class name is not recovered from RTTI, so this
+//  keeps the System-layer "ne" convention. The bridge accessor FUN_00012358
+//  simply returns the DAT_00188384 global (see HANDOFF.md — Engine).
+//
+
+#pragma once
+
+// One tracked touch. The manager pre-allocates a fixed pool of these
+// (operator_new(0x30) = 48 bytes each) at init and mutates them in place as
+// touches begin/move/end; slots are never freed. All coordinates are 16.16
+// fixed-point in *pixels* (the raw point value from UIKit is multiplied by the
+// content scale on the way in). Ghidra: sentinel-initialised by FUN_0001243c.
+struct neTouchPoint {
+    int id;                 // +0x00 rolling id assigned at began (-1 when never used)
+    int startX;             // +0x04 down point                     (pair A)
+    int startY;             // +0x08
+    int x;                  // +0x0c current point (the match key on move/end) (pair B)
+    int y;                  // +0x10
+    int prevX;              // +0x14 previous point                 (pair C)
+    int prevY;              // +0x18
+    int downX;              // +0x1c copy of the down point, left untouched by move (pair D)
+    int downY;              // +0x20
+    int width;              // +0x24 view width at began (fixed); 0x7fffffff when free
+    int height;             // +0x28 view height
+    unsigned char valid;    // +0x2c allocated-slot marker (init 1, always set)
+    unsigned char released; // +0x2d set on end/clear, cleared on began
+    unsigned char pad[2];   // +0x2e..+0x2f (record rounded up to 0x30)
+};
+
+// Render/input manager. Singleton created lazily by configure() at launch.
+class neGraphics {
+public:
+    static neGraphics &shared();                // Ghidra: FUN_00012358 (returns DAT_00188384)
+    static void configure(float contentScale);  // Ghidra: NEGraphics_configure (FUN_00012368)
+
+    // Touch plumbing. neGLView forwards UIKit touches here as 16.16 fixed-point
+    // point coordinates; this scales them to pixels and records them. The
+    // play-judge loop (FUN_0002f1f8) reads the pool back via shared().
+    void touchBegan(int x, int y, int width, int height);  // Ghidra: FUN_000124f8
+    void touchMoved(int x, int y, int prevX, int prevY);   // Ghidra: FUN_00012588
+    void touchEnded(int x, int y, int prevX, int prevY);   // Ghidra: FUN_000125ec
+    void clearTouches();                                   // Ghidra: FUN_00012698
+
+    int activeTouchCount() const { return m_touchCount; }  // +0x80
+    const neTouchPoint *touchAt(int i) const { return m_touches[i]; }
+    float contentScale() const { return m_contentScale; }  // +0x88
+
+private:
+    neGraphics();                    // Ghidra: FUN_0001243c (allocates the pool)
+    neGraphics(const neGraphics &) = delete;
+    neGraphics &operator=(const neGraphics &) = delete;
+
+    static const int kMaxTouches = 32;    // pool size (loop count 0x20 in FUN_0001243c)
+
+    neTouchPoint *m_touches[kMaxTouches]; // +0x00..+0x7c pool pointers
+    int m_touchCount = 0;                 // +0x80 touches recorded this frame
+    int m_nextTouchId = 0;                // +0x84 rolling id counter
+    float m_contentScale = 1.0f;          // +0x88 device content scale
+};
+
+// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=cpp sw=4 ts=4 et :
+// code: language=cpp insertSpaces=true tabSize=4

@@ -14,16 +14,10 @@
 
 #import "neEngineBridge.h"
 #import "neGLView.h"
+#import "neGraphics.h"
 
-// Engine input entry points (the task manager dispatches touches to tasks).
-extern "C" {
-void *neTaskManagerShared(void);                                  // Ghidra: FUN_00012358
-void neTaskInputTouchBegan(void *tm, int x, int y, int w, int h); // Ghidra: FUN_000124f8
-void neTaskInputTouchEnded(void *tm, int x, int y, int px, int py);// Ghidra: FUN_000125ec
-void neTaskInputClearTouches(void *tm);                           // Ghidra: FUN_00012698
-}
-
-// Engine touch coordinates are 16.16 fixed point.
+// Engine touch coordinates are 16.16 fixed point; the render/input manager
+// (neGraphics) scales them to pixels and records them for the play-judge loop.
 static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
 
 @implementation neGLView {
@@ -47,29 +41,38 @@ static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
 
 #pragma mark - Touch -> engine input
 
-// @ 0x285e8 — report each touch's location (+ the view size for mapping).
+// @ 0x28658 — report each touch's location (+ the view size for mapping).
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     CGRect frame = self.frame;
-    void *tm = neTaskManagerShared();
+    neGraphics &gfx = neGraphics::shared();
     for (UITouch *touch in touches) {
         CGPoint p = [touch locationInView:self];
-        neTaskInputTouchBegan(tm, ToFixed(p.x), ToFixed(p.y),
-                              ToFixed(CGRectGetWidth(frame)), ToFixed(CGRectGetHeight(frame)));
+        gfx.touchBegan(ToFixed(p.x), ToFixed(p.y),
+                       ToFixed(CGRectGetWidth(frame)), ToFixed(CGRectGetHeight(frame)));
+    }
+}
+
+// @ 0x287b0 — report each touch's new + previous location (drag tracking).
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    neGraphics &gfx = neGraphics::shared();
+    for (UITouch *touch in touches) {
+        CGPoint p = [touch locationInView:self];
+        CGPoint prev = [touch previousLocationInView:self];
+        gfx.touchMoved(ToFixed(p.x), ToFixed(p.y), ToFixed(prev.x), ToFixed(prev.y));
     }
 }
 
 // @ 0x28850 — if every touch ended, clear all; otherwise report each end.
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    void *tm = neTaskManagerShared();
+    neGraphics &gfx = neGraphics::shared();
     if (touches.count == [event touchesForView:self].count) {
-        neTaskInputClearTouches(tm);
+        gfx.clearTouches();
         return;
     }
     for (UITouch *touch in touches) {
         CGPoint p = [touch locationInView:self];
         CGPoint prev = [touch previousLocationInView:self];
-        neTaskInputTouchEnded(tm, ToFixed(p.x), ToFixed(p.y),
-                              ToFixed(prev.x), ToFixed(prev.y));
+        gfx.touchEnded(ToFixed(p.x), ToFixed(p.y), ToFixed(prev.x), ToFixed(prev.y));
     }
 }
 

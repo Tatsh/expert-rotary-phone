@@ -80,15 +80,7 @@ void neSceneManager::setScreenMetrics(float width, float height, float scale) {
     s_screenScale = scale;
 }
 
-#pragma mark - neGraphics (singleton @ DAT_00188384, +0x88 = content scale)
-
-// Ghidra: NEGraphics_configure (FUN_00012368) — lazily creates the render manager
-// and stores the content scale.
-void neGraphics::configure(float contentScale) {
-    static float sContentScale = 1.0f;
-    sContentScale = contentScale;
-    (void)sContentScale;
-}
+// neGraphics (the DAT_00188384 render/input manager) lives in Render/neGraphics.cpp.
 
 #pragma mark - Lifecycle hooks
 
