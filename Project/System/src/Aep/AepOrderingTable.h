@@ -6,6 +6,15 @@
 //  ordering-table order. Reconstructed from Ghidra project rb420, program
 //  PopnRhythmin (strings: drawLayer / get_aepOt).
 //
+//  ARCHITECTURE NOTE (correction): the binary's ordering table is NOT a persistent
+//  list of layer objects — it is a PER-FRAME COMMAND BUFFER. get_aepOt (allocEntry,
+//  FUN_00010be0) hands out up to OT_REGIST_MAX (2047) fixed entries of 0x134 bytes,
+//  bucketed into OT_PRI_MAX (50) priority lists (bucket heads @ play-data +0x9a0dc).
+//  Each frame: the buffer is reset, drawLayer/FUN_000113d0 fill entries (position,
+//  uv, color, scale in the 0x50-byte payload at entry+0xc), and a batch flush walks
+//  the buckets high->low priority issuing GL quads via neGLES_11. The vector model
+//  below is a SIMPLIFICATION pending reconstruction of that command buffer + flush.
+//
 
 #pragma once
 
