@@ -63,7 +63,7 @@
 
         // "Purchased" pill — a custom button that is always disabled; it only shows
         // a disabled-state background ("store_btn_disabled.png", 6pt stretchable caps)
-        // and a Japanese "purchased" title (Ghidra cf_eQn_0; glyphs not byte-verified).
+        // and the title "購入済み" ("Purchased") — Ghidra CFString @ 0x136bd8.
         m_PurchasedButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
         UIImage *disabledBg = [[UIImage imageNamed:@"store_btn_disabled.png"]
             stretchableImageWithLeftCapWidth:6 topCapHeight:6];
@@ -77,7 +77,7 @@
                                 forState:UIControlStateDisabled];
         [m_PurchasedButton setTitleShadowColor:[UIColor colorWithWhite:1.0f alpha:0.6f]
                                       forState:UIControlStateDisabled];
-        [m_PurchasedButton setTitle:@"購入済み"    // cf_eQn_0 (Japanese "purchased")
+        [m_PurchasedButton setTitle:@"購入済み"    // "Purchased"
                            forState:UIControlStateDisabled];
         m_PurchasedButton.enabled = NO;
         [m_PurchasedButton sizeToFit];

@@ -18,9 +18,8 @@
         m_StoreViewCtrl = parent;
         m_WorkingIndex = -1;
 
-        // Tab item: "ビューア管理" (Ghidra cf_0000000000; Japanese, glyphs not
-        // byte-verified).
-        self.tabBarItem.title = @"ビューア管理";
+        // Tab item: "アーケードビューアー" ("Arcade Viewer") — Ghidra CFString @ 0x138a88.
+        self.tabBarItem.title = @"アーケードビューアー";
         [self.tabBarItem
             setFinishedSelectedImage:[UIImage imageNamed:@"store_icon_manage2"]
              withFinishedUnselectedImage:[UIImage imageNamed:@"store_icon_manage2"]];

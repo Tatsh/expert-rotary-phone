@@ -18,8 +18,8 @@
         m_StoreViewCtrl = parent;
         m_WorkingIndex = -1;
 
-        // Tab item: "管理" (Ghidra cf_0000; Japanese, glyphs not byte-verified).
-        self.tabBarItem.title = @"管理";
+        // Tab item: "リズミン" ("Rhythmin") — Ghidra CFString @ 0x136968.
+        self.tabBarItem.title = @"リズミン";
         [self.tabBarItem
             setFinishedSelectedImage:[UIImage imageNamed:@"store_icon_manage"]
              withFinishedUnselectedImage:[UIImage imageNamed:@"store_icon_manage"]];

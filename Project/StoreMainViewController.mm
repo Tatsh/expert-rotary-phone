@@ -17,8 +17,8 @@
     if ((self = [super init])) {
         m_StoreViewCtrl = parent;
 
-        // Tab item: "ストア" (Ghidra cf_eQ; Japanese, glyphs not byte-verified).
-        self.tabBarItem.title = @"ストア";
+        // Tab item: "購入" ("Purchase") — Ghidra CFString @ 0x136728.
+        self.tabBarItem.title = @"購入";
         [self.tabBarItem
             setFinishedSelectedImage:[UIImage imageNamed:@"store_icon_store"]
              withFinishedUnselectedImage:[UIImage imageNamed:@"store_icon_store"]];
