@@ -1,0 +1,267 @@
+//
+//  MusicManager.m
+//  pop'n rhythmin
+//
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
+//
+
+#import "AcMusicData.h"
+#import "AppDelegate.h"
+#import "BFCodec.h"          // Blowfish cipher (cipherInit:/decipher:)
+#import "MusicData.h"
+#import "MusicManager.h"
+#import "MusicPatch.h"
+#import "RhUtil.h"           // RhFileExists / RhParsePlistArray / RhMD5Data
+
+// Treasure/sugoroku song ids, one per main map (Ghidra: DAT_0012fa58).
+static const int kTreasureMusicIds[9] = {
+    100000000, 100000001, 100000002, 100000003, 100000004,
+    100000005, 100000007, 100000006, 100000008,
+};
+
+@implementation MusicManager {
+    NSMutableArray *m_MusicDataArray;
+    BOOL m_MusicDataArrayDirty;
+    NSMutableArray *m_AcMusicDataArray;
+    BOOL m_AcMusicDataArrayDirty;
+    NSMutableDictionary *m_PurchasedMusicDictionaris;
+    NSMutableDictionary *m_PurchasedAcMusicDictionaris;
+    NSArray *m_DefaultMusicIDs;
+    NSArray *m_OpenTreasureMusicIDs;
+    NSArray *m_OpenInviteMusicIDs;
+    NSArray *m_OpenCollaboMusicIDs;
+    NSArray *m_OpenLoginBonusMusicIDs;
+    NSMutableArray *m_MusicLvPatchArray;
+    BOOL m_IsMusicData;
+}
+
+// @ 0xc7dd8
++ (instancetype)getInstance {
+    static MusicManager *sInstance = nil;
+    if (sInstance == nil) {
+        sInstance = [[MusicManager alloc] init];
+    }
+    return sInstance;
+}
+
+#pragma mark - Dirty flags / cache
+
+// @ 0xcae18
+- (void)setMusicDataArrayDirty { m_MusicDataArrayDirty = YES; }
+// @ 0xcae2c
+- (void)setAcMusicDataArrayDirty { m_AcMusicDataArrayDirty = YES; }
+// @ 0xcb248 — no-op in this build.
+- (void)releaseChacheMusicData { }
+
+#pragma mark - Accessors
+
+// @ 0xcae40
+- (NSArray *)getMusicDataArray {
+    if (m_MusicDataArray != nil && !m_MusicDataArrayDirty) {
+        return m_MusicDataArray;
+    }
+    [self createMusicDataArray];
+    return m_MusicDataArray;
+}
+
+// @ 0xcae84
+- (NSArray *)getAcMusicDataArray {
+    if (m_AcMusicDataArray != nil && !m_AcMusicDataArrayDirty) {
+        return m_AcMusicDataArray;
+    }
+    [self createAcMusicDataArray];
+    return m_AcMusicDataArray;
+}
+
+// @ 0xcb080 — linear search by MusicID.
+- (MusicData *)getMusicData:(int)musicId {
+    for (MusicData *data in m_MusicDataArray) {
+        if (data.MusicID == musicId) {
+            return data;
+        }
+    }
+    return nil;
+}
+
+// @ 0xcb154 — rebuilds AC array if needed, then linear search by acMusicId.
+- (AcMusicData *)getAcMusicData:(int)acMusicId {
+    if (m_AcMusicDataArray == nil) {
+        [self createAcMusicDataArray];
+    }
+    for (AcMusicData *data in m_AcMusicDataArray) {
+        if (data.acMusicId == acMusicId) {
+            return data;
+        }
+    }
+    return nil;
+}
+
+// @ 0xc7e20
+- (NSString *)getMusicDataFilename:(int)musicId {
+    return [NSString stringWithFormat:@"%09d.orb", musicId];
+}
+
+- (NSString *)getAcMusicDataFilename:(int)acMusicId {
+    // Same "%09d.orb" scheme (AC-specific prefix, if any, TBC).
+    return [NSString stringWithFormat:@"%09d.orb", acMusicId];
+}
+
+// @ 0xcaec8 — every treasure song bundled with the app (one per main map).
+- (NSArray *)getTreasureMusicDataArray {
+    NSMutableArray *array = [NSMutableArray array];
+    for (int i = 0; i < 9; i++) {
+        int musicId = kTreasureMusicIds[i];
+        NSString *path = [self getPathFromBundle:musicId];
+        if (RhFileExists(path)) {
+            MusicData *data = [MusicData dataWithPath:path ID:musicId];
+            if (data != nil) {
+                [array addObject:data];
+            }
+        }
+    }
+    return [array mutableCopy];
+}
+
+#pragma mark - Cache building
+
+// @ 0xca248 — assemble the playable song list from all unlock sources, then
+// apply level patches. Sources: defaults, purchased, open treasure/invite/
+// collabo/login-bonus songs.
+- (void)createMusicDataArray {
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:0];
+
+    // 1) Default (always available) songs, bundled.
+    for (NSNumber *idNum in m_DefaultMusicIDs) {
+        int musicId = idNum.intValue;
+        NSString *path = [self getPathFromBundle:musicId];
+        if (RhFileExists(path)) {
+            MusicData *data = [MusicData dataWithPath:path ID:musicId];
+            if (data != nil) {
+                [array addObject:data];
+            }
+        }
+    }
+
+    // 2) Purchased songs (downloaded into Documents), keyed "ID" in each entry.
+    for (NSDictionary *entry in m_PurchasedMusicDictionaris) {
+        NSNumber *idNum = entry[@"ID"];
+        int musicId = idNum.intValue;
+        NSString *path = [self getPathFromPurchased:musicId];
+        if (RhFileExists(path)) {
+            MusicData *data = [MusicData dataWithPath:path ID:musicId];
+            if (data != nil) {
+                [array addObject:data];
+            }
+        }
+    }
+
+    // 3) Unlocked treasure/invite/collabo/login-bonus songs, all bundled.
+    NSArray *bundledSources[] = { m_OpenTreasureMusicIDs, m_OpenInviteMusicIDs,
+                                  m_OpenCollaboMusicIDs, m_OpenLoginBonusMusicIDs };
+    for (NSUInteger s = 0; s < 4; s++) {
+        for (NSNumber *idNum in bundledSources[s]) {
+            int musicId = idNum.intValue;
+            NSString *path = [self getPathFromBundle:musicId];
+            if (RhFileExists(path)) {
+                MusicData *data = [MusicData dataWithPath:path ID:musicId];
+                if (data != nil) {
+                    [array addObject:data];
+                }
+            }
+        }
+    }
+
+    // 4) Apply level patches (difficulty overrides) by matching musicId.
+    [self createMusicLvPatchArray];
+    for (MusicPatch *patch in m_MusicLvPatchArray) {
+        for (MusicData *data in array) {
+            if (patch.musicId == data.MusicID) {
+                [data setLevelN:patch.lvN H:patch.lvH Ex:patch.lvEx];
+                break;
+            }
+        }
+    }
+
+    m_MusicDataArray = [[NSMutableArray alloc] initWithArray:array];
+    m_MusicDataArrayDirty = NO;
+}
+
+// @ 0xcaabc — arcade catalog builder. [body pending full decompile]
+- (void)createAcMusicDataArray {
+    // TODO: reconstruct (mirror of createMusicDataArray for AC songs).
+    if (m_AcMusicDataArray == nil) {
+        m_AcMusicDataArray = [NSMutableArray array];
+    }
+    m_AcMusicDataArrayDirty = NO;
+}
+
+// Level-patch table builder. [body pending]
+- (void)createMusicLvPatchArray {
+    // TODO: reconstruct (populates m_MusicLvPatchArray with MusicPatch entries).
+    if (m_MusicLvPatchArray == nil) {
+        m_MusicLvPatchArray = [NSMutableArray array];
+    }
+}
+
+#pragma mark - Purchased song lists (Blowfish)
+
+// @ 0xc8820 — load "mulist"/"acmulist" from Documents, Blowfish-decrypt with the
+// device uuId as key, skip the 4-byte header, parse into a dictionary.
+- (void)loadPurchasedMusics {
+    m_PurchasedMusicDictionaris = nil;
+    m_PurchasedAcMusicDictionaris = nil;
+
+    NSString *uuId = [AppDelegate appDelegate].uuId;
+
+    // Local purchased songs: "mulist".
+    NSString *muPath = [[AppDelegate appDocumentsDirectory]
+                        stringByAppendingPathComponent:@"mulist"];
+    if (RhFileExists(muPath)) {
+        NSMutableData *data = [[NSMutableData alloc] initWithContentsOfFile:muPath];
+        if (data != nil) {
+            BFCodec *codec = [[BFCodec alloc] init];
+            [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+            [codec decipher:data];
+            NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
+            m_PurchasedMusicDictionaris = RhParsePlistArray(body);
+            [self setMusicDataArrayDirty];
+        }
+    }
+    if (m_PurchasedMusicDictionaris == nil) {
+        m_PurchasedMusicDictionaris = [[NSMutableArray alloc] initWithCapacity:64];
+        [self setMusicDataArrayDirty];
+    }
+
+    // Arcade purchased songs: "acmulist".
+    NSString *acPath = [[AppDelegate appDocumentsDirectory]
+                        stringByAppendingPathComponent:@"acmulist"];
+    if (RhFileExists(acPath)) {
+        NSMutableData *data = [[NSMutableData alloc] initWithContentsOfFile:acPath];
+        if (data != nil) {
+            BFCodec *codec = [[BFCodec alloc] init];
+            [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+            [codec decipher:data];
+            NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
+            m_PurchasedAcMusicDictionaris = RhParsePlistArray(body);
+            [self setAcMusicDataArrayDirty];
+        }
+    }
+    if (m_PurchasedAcMusicDictionaris == nil) {
+        m_PurchasedAcMusicDictionaris = [[NSMutableArray alloc] initWithCapacity:64];
+        [self setAcMusicDataArrayDirty];
+    }
+}
+
+#pragma mark - Paths  [bodies inferred; confirm against getPathFromBundle_/Purchased_]
+
+- (NSString *)getPathFromBundle:(int)musicId {
+    return [NSBundle.mainBundle.resourcePath
+            stringByAppendingPathComponent:[self getMusicDataFilename:musicId]];
+}
+
+- (NSString *)getPathFromPurchased:(int)musicId {
+    return [[AppDelegate appDocumentsDirectory]
+            stringByAppendingPathComponent:[self getMusicDataFilename:musicId]];
+}
+
+@end

@@ -1,0 +1,26 @@
+//
+//  RhUtil.h
+//  pop'n rhythmin
+//
+//  Small shared helpers used across the app. Reconstructed from Ghidra project
+//  rb420, program PopnRhythmin.
+//
+
+#import <Foundation/Foundation.h>
+
+// Parse a property-list blob (the decoded .orb / list payloads are plists, not
+// JSON). Returns the root only if it is a dictionary / array respectively.
+// The original branched on iOS < 4.0 (CFPropertyListCreateFromXMLData) vs newer
+// (CFPropertyListCreateWithData); modernized here to NSPropertyListSerialization.
+NSDictionary *RhParsePlistDict(NSData *data);      // Ghidra: FUN_0005c258
+NSMutableArray *RhParsePlistArray(NSData *data);   // Ghidra: FUN_0005c330
+
+// YES if a regular file (not a directory) exists at `path`.
+BOOL RhFileExists(NSString *path);                 // Ghidra: FUN_0005c434
+
+// MD5 of a C string, as a 16-byte NSData (used as the Blowfish key = MD5(uuId)).
+NSData *RhMD5Data(const char *cString);            // Ghidra: FUN_0005b4b8
+
+// kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objc sw=4 ts=4 et :
+// code: language=Objective-C insertSpaces=true tabSize=4
