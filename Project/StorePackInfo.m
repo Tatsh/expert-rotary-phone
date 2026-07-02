@@ -55,6 +55,16 @@
     return m_IsNew;
 }
 
+// @ 0x573c0
+- (NSString *)s_comment {
+    return m_ShortComment;
+}
+
+// @ 0x57430
+- (int)acvNum {
+    return m_AcvNum;
+}
+
 // @ 0x56d50 — always formatted live from the bound product.
 - (NSString *)priceString {
     return [StoreUtil priceString:m_Product];
@@ -63,6 +73,7 @@
 - (void)dealloc {
     [m_Product release];
     [m_PackName release];
+    [m_ShortComment release];
     [super dealloc];
 }
 

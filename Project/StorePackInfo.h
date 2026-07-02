@@ -19,10 +19,12 @@
 @class SKProduct;
 
 @interface StorePackInfo : NSObject {
-    int m_PackID;           // numeric pack identifier (server-assigned)
-    SKProduct *m_Product;   // resolved StoreKit product (bound once, see setProduct:)
-    NSString *m_PackName;   // display name (populated by the pack-info downloader)
-    BOOL m_IsNew;           // shows the "new" marker when set
+    int m_PackID;            // numeric pack identifier (server-assigned)
+    SKProduct *m_Product;    // resolved StoreKit product (bound once, see setProduct:)
+    NSString *m_PackName;    // display name (populated by the pack-info downloader)
+    NSString *m_ShortComment;// one-line blurb shown under the name in StorePackView
+    int m_AcvNum;            // arcade-viewer song count (drives the arcade marker)
+    BOOL m_IsNew;            // shows the "new" marker when set
 }
 
 // Designated initializer — records the pack id; the product is bound later.
@@ -38,6 +40,11 @@
 
 - (NSString *)packName;
 - (BOOL)isNew;
+
+// Short one-line blurb (Ghidra selector "s_comment"). @ 0x573c0.
+- (NSString *)s_comment;
+// Number of songs available in the arcade viewer for this pack. @ 0x57430.
+- (int)acvNum;
 
 // Localised price text, derived live from the bound SKProduct (StoreUtil).
 - (NSString *)priceString;
