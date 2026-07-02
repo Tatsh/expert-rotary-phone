@@ -51,6 +51,16 @@ public:
     // Ghidra: FUN_0000fb8c.
     int layerFrameCount(int lyr) const;
 
+    // Resolve a *frame* resource name within `group` to its encoded handle (frame
+    // index in the low 16 bits | slot byte in bits 16..23). Asserts the name exists
+    // ("getFrmNo", AepManager.mm:0x1bb). Ghidra: FUN_0000f9cc.
+    int getFrameNo(int group, const char *name) const;
+
+    // Resolve a *user*/sprite resource name within `group` to its index in the
+    // group's user-frame table. Asserts the name exists ("getUsrNo",
+    // AepManager.mm:0x1e4). Ghidra: FUN_0000fb40.
+    int getUserNo(int group, const char *name) const;
+
     // Start a screen transition (fade). `mode` 1 = fade in, 2 = fade out (0 or >=3
     // clears it); `frames` is its length in frames; `flag` selects the overlay.
     // Ghidra: FUN_000106dc.

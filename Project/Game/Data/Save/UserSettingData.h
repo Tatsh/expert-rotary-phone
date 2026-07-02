@@ -104,6 +104,22 @@ typedef struct Crypt109Data {
 + (NSArray *)gotCharaArray;         // @ 0x60f54  (encrypted archived array, key "d")
 + (void)saveGotCharaArray:(short)charaIndex; // @ 0x610a0
 
+#pragma mark Uncomplete score-save queue
+// When a finished play cannot be uploaded immediately (score improved but the
+// HTTP save is deferred), the result screen queues the music/sheet here and
+// flushes the pending entry on a later result. The two getters return parallel
+// NSArrays of NSNumber (music ids / sheet indices). Referenced by
+// PlayResultTask::resultSetup (Ghidra FUN_0003dfe0 @ 0x3e246 / 0x3e482 / 0x3e49c).
++ (void)addUncompleteSaveMusic:(int)music sheet:(short)sheet; // selector @ 0x15a8e0
++ (NSArray *)uncompleteSaveMusic;                             // selector @ 0x15a8e8
++ (NSArray *)uncompleteSaveSheet;                             // selector @ 0x15a8ec
+
+#pragma mark Audio volumes (plaintext)
+// BGM master volume used when a scene (re)loads its BGM. Ghidra: -[UserSettingData
+// bgmVolume] (selector PTR_s_bgmVolume_0015a754), read by PlayResultTask::resultSetup
+// @ 0x3f0ac before -[AudioManager setBgmVolume:].
++ (float)bgmVolume;
+
 #pragma mark Legacy v108 readers (plaintext PascalCase keys; used by migration)
 + (int)inviteCnt108;              // key "InviteCnt"          @ 0x5fc5c
 + (int)invitePresent108;         // key "InvitePresent"      @ 0x5fc90

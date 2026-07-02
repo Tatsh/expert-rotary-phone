@@ -54,7 +54,18 @@ private:
     void updateResultPresent(bool tapped, int tapX, int tapY, int displayType);
     void updateScoreCount(bool tapped);
     void resultGotoNext();
+
+    // The 10-lane x 12-array number-texture load (num_cool_/great_/good_/bad_/com_/
+    // score_/bonus_clear/bonus_combo/bonus_rank/bonus_perfect/points/pointb_), lifted
+    // out of resultSetup as a real helper. Ghidra: FUN_0003dfe0's inner double loop
+    // @ 0x3ea84..0x3ef9e.
+    void loadNumberTextures();
 };
+
+// The result screen's per-frame draw pass, registered with the Aep manager as
+// group 4's draw callback (context = the task). Reconstructed separately.
+// Ghidra: FUN_0003f5f0.
+void PlayResultDrawCallback(void *context);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

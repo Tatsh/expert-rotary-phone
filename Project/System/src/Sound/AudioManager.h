@@ -76,6 +76,10 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 - (void)releaseSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId;
 // Free the current BGM resource. Ghidra: AudioManager::releaseBgm (PTR_s_releaseBgm).
 - (void)releaseBgm;
+// Tear down every playing SE instance / mixer state (scene teardown). Ghidra:
+// -[AudioManager cleanupSe] (selector @ 0x15a89c), called from PlayResultTask::
+// resultGotoNext (FUN_0003f2e0 @ 0x3f3ce).
+- (void)cleanupSe;
 
 @end
 

@@ -38,13 +38,41 @@ public:
     bool recordPlayResult(int score, int cool, int great);
 
     // First two fields of the singleton (DAT_00187bb8 / DAT_00187bbc): the last
-    // played music id and sheet (difficulty), persisted via UserSettingData.
+    // played music id and sheet (difficulty), persisted via UserSettingData. (The
+    // setter is the static setLastMusic above, which writes the DAT_00187bf0 global.)
     int  lastMusic() const;              // DAT_00187bb8
-    void setLastMusic(int music);
     int  lastSheet() const;              // DAT_00187bbc
-    void setLastSheet(int sheet);
+
+    // --- Just-finished play's result record ---
+    // The play task fills these (recordPlayResult + direct stores of rank/combo);
+    // the result screen (PlayResultTask::resultSetup, Ghidra FUN_0003dfe0) snapshots
+    // them. Offsets are the DAT_00187bxx globals relative to this singleton base
+    // (DAT_00187bb8 == +0x00) and sit inside the transient state region above, so
+    // they are read raw at their exact byte offsets.
+    short coolCount()  const { return raw<short>(0x08); }         // DAT_00187bc0 low
+    short greatCount() const { return raw<short>(0x0a); }         // DAT_00187bc0 high
+    short goodCount()  const { return raw<short>(0x0c); }         // DAT_00187bc4 low
+    short badCount()   const { return raw<short>(0x0e); }         // DAT_00187bc4 high
+    int   playScore()  const { return raw<int>(0x10); }           // DAT_00187bc8
+    short playRank()   const { return raw<short>(0x14); }         // DAT_00187bcc
+    short maxCombo()   const { return raw<short>(0x18); }         // DAT_00187bd0
+    bool  isCleared()  const { return raw<unsigned char>(0x1c) != 0; } // DAT_00187bd4
+    bool  isNewRecord()const { return raw<unsigned char>(0x32) != 0; } // DAT_00187bea
+
+    // Read the player's stored local best for this play's music/sheet (out-params
+    // may be null). Ghidra: FUN_000293c4 (-> ScoreData getScoreData... FUN_00029438).
+    void readStoredResult(int *outScore, short *outRank, int *outPlayCnt,
+                          bool *outFullCombo, bool *outPerfect);   // @ 0x293c4
+
+    // Commit this play's result into the local Core Data ScoreData store
+    // (setFullCombo/Perfect/Rank/Score/PlayCnt + save). Ghidra: FUN_00028ca0 @ 0x28ca0.
+    void commitResultToScoreData();
 
 private:
+    template <typename T> T raw(int off) const {
+        return *reinterpret_cast<const T *>(reinterpret_cast<const char *>(this) + off);
+    }
+
     int m_lastMusic = 0;     // +0x00
     int m_lastSheet = 0;     // +0x04
     float m_state[16] = {};  // +0x08..0x44 (transient event-center state, zeroed by begin)
@@ -78,6 +106,14 @@ public:
     // display" (true when the flag is non-zero); set at launch alongside the metrics.
     static bool isPadDisplay();
     static void setPadDisplay(bool isPad);
+
+    // The scene manager owns a small pool of shared "system" SEs (decide/cancel/…),
+    // reloaded on each scene change. A scene teardown releases the current pool,
+    // cleans up the mixer, then reloads it for the next scene. Ghidra:
+    // releaseSystemSe FUN_0002c6bc @ 0x2c6bc / loadSystemSe FUN_0002c5c8 @ 0x2c5c8
+    // (both operate on this singleton, DAT_00187b74).
+    void releaseSystemSe();
+    void loadSystemSe();
 
 private:
     void *m_root = nullptr;   // +0x00 the bridged root UIViewController

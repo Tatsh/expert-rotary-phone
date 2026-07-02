@@ -65,6 +65,18 @@ typedef struct {
 // @ 0x978ac.
 - (void)startGetDlFileListHttp:(int)fileId;
 
+// --- Score upload ---
+
+// POST a finished play's score to the backend. `medal` is the clear grade
+// (2 = perfect full-combo, 1 = cleared, 0 = failed) and `charaId` the player's
+// current character. The result screen (Ghidra FUN_0003dfe0 @ 0x3e282) fires this;
+// the isSaveScoreDownLoading flag above stays set until it completes.
+- (void)startSaveScoreHttp:(int)music sheet:(short)sheet score:(int)score medal:(int)medal charaId:(int)charaId;   // selector @ 0x15a8e4
+
+// The currently-active game-event music ids (an NSArray of NSNumber). The result
+// screen awards the event bonus when the played song matches one. @ 0x15a8f8.
+- (NSArray *)gameEventIdArray;
+
 // --- Friend list ---
 
 // The parsed friend list — an NSArray of NSValue-wrapped FriendListData. @ 0x99914.

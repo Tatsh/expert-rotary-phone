@@ -13,16 +13,25 @@
 
 #import "PlayResultTask.h"
 
+#import <UIKit/UIKit.h>
+
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
 #import "AudioManager.h"
 #import "DownloadMain.h"
+#import "MainTask.h"
 #import "MainViewController.h"
+#import "MusicData.h"
+#import "MusicManager.h"
+#import "NoteMng.h"
+#import "OverScoreData.h"
 #import "SeInstance.h"
 #import "TaskFactory.h"
+#import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
+#import "neTextureForiOS.h"
 
 // The root nav host (MainViewController) the result screen drives.
 static MainViewController *RootVC() {
@@ -149,6 +158,413 @@ void PlayResultTask::update(int /*deltaMs*/) {
 
     // Advance + draw every active animation layer this frame.
     AepLyrCtrlUpdateAll(0);   // FUN_0002c924
+}
+
+// Ghidra: FUN_0003dfe0 — build the whole result screen: snapshot the finished
+// play's global result vars (the neAppEventCenter singleton fields, DAT_00187bxx),
+// commit + upload the score, delete stale over-score records, compute the treasure
+// bonuses, build the 6 animation layers + the ~130 number/artwork/chara textures,
+// load the 11 rank SEs and the result BGM.
+void PlayResultTask::resultSetup() {
+    AepManager &aep = AepManager::shared();
+    neAppEventCenter &evt = neAppEventCenter::shared();
+    DownloadMain *dl = [DownloadMain getInstance];
+
+    // Cache the fade-quad extents this scene draws its transition through.
+    field<int>(0x33c) = aep.transitionOverlayWidth();    // FUN_0000f498
+    field<int>(0x340) = aep.transitionOverlayHeight();   // FUN_0000f4a4
+
+    // --- Snapshot the just-finished play's result (neAppEventCenter fields) ---
+    field<int>(0x344)   = evt.playScore();     // DAT_00187bc8 score
+    field<short>(0x350) = evt.maxCombo();      // DAT_00187bd0 max combo
+    field<short>(0x348) = evt.coolCount();     // DAT_00187bc0 low  COOL tally
+    field<short>(0x34a) = evt.greatCount();    // DAT_00187bc0 high GREAT tally
+    field<short>(0x34c) = evt.goodCount();     // DAT_00187bc4 low  GOOD tally
+    field<short>(0x34e) = evt.badCount();      // DAT_00187bc4 high BAD tally
+    field<unsigned char>(0x352) = evt.isNewRecord() ? 1 : 0;  // DAT_00187bea new-record flag
+    const bool cleared = evt.isCleared();      // DAT_00187bd4
+    field<unsigned char>(0x354) = cleared ? 1 : 0;
+
+    // +0x353: perfect full-combo == cleared with no GOOD and no BAD.
+    field<unsigned char>(0x353) =
+        (cleared && evt.goodCount() == 0 && evt.badCount() == 0) ? 1 : 0;
+
+    field<short>(0x358) = (short)evt.lastSheet();  // DAT_00187bbc difficulty index
+    field<short>(0x35c) = evt.playRank();          // DAT_00187bcc rank (0 best .. 6 fail)
+
+    const short treasureStart = [UserSettingData treasurePoint];
+    field<int>(0x360) = treasureStart;   // starting treasure point (for the count-up)
+    field<int>(0x364) = treasureStart;   // running treasure point
+
+    const int   music = evt.lastMusic();   // DAT_00187bb8
+    const short sheet = field<short>(0x358);
+    const short rank  = field<short>(0x35c);
+    field<int>(0x38c) = music;
+
+    // Pad-vs-phone display flag (scene manager DAT_00187b84).
+    neSceneManager::shared();
+    field<unsigned char>(0x355) = neSceneManager::isPadDisplay() ? 1 : 0;
+
+    // --- Decide + post the score save (FUN_0003dfe0 @ 0x3e12c..0x3e604) ---
+    int   stScore = 0;   short stRank = 0;   int stPlayCnt = 0;
+    bool  stFullCombo = false, stPerfect = false;
+    evt.readStoredResult(&stScore, &stRank, &stPlayCnt, &stFullCombo, &stPerfect);  // FUN_000293c4
+    evt.commitResultToScoreData();   // FUN_00028ca0 — write the new local best
+
+    const short charaId       = [UserSettingData charaId];
+    const short charaIdServer = [UserSettingData charaIdServer];
+    const bool  charaChanged  = (charaId != charaIdServer);
+    if (charaChanged) {
+        [UserSettingData saveCharaIdServer:[UserSettingData charaId]];
+    }
+
+    // Medal for the current play: 2 = perfect full-combo, else the cleared flag.
+    const int medalCur = field<unsigned char>(0x353) ? 2 : field<unsigned char>(0x354);
+
+    bool improved = false;
+    if (stScore < field<int>(0x344) || rank < stRank || (!stFullCombo && cleared)) {
+        improved = true;   // beat the stored score / rank, or first clear
+    } else if (!stPerfect) {
+        improved = (charaChanged || field<unsigned char>(0x353));  // new record / char resync
+    } else {
+        improved = charaChanged;
+    }
+
+    if (improved) {
+        [UserSettingData addUncompleteSaveMusic:music sheet:sheet];
+        [dl startSaveScoreHttp:music
+                         sheet:sheet
+                         score:field<int>(0x344)
+                         medal:medalCur
+                       charaId:[UserSettingData charaId]];
+    } else {
+        // Not improved: flush a previously-queued uncomplete-save entry if one
+        // exists, otherwise re-sync this chart's stored score.
+        NSArray *pendMusic = [UserSettingData uncompleteSaveMusic];
+        NSArray *pendSheet = [UserSettingData uncompleteSaveSheet];
+        if (pendMusic && pendSheet && pendMusic.count && pendSheet.count) {
+            const int   pMusic = (int)[[pendMusic objectAtIndex:0] longValue];
+            const short pSheet = (short)[[pendSheet objectAtIndex:0] intValue];
+            int  rScore = 0; short rRank = 0; int rPlay = 0; bool rFC = false, rPerfect = false;
+            evt.readStoredResult(&rScore, &rRank, &rPlay, &rFC, &rPerfect);  // re-read stored
+            const int medalPend = rPerfect ? 2 : field<unsigned char>(0x354);
+            [dl startSaveScoreHttp:pMusic
+                             sheet:pSheet
+                             score:rScore
+                             medal:medalPend
+                           charaId:[UserSettingData charaId]];
+        } else {
+            const int medalSync = stPerfect ? 2 : (stFullCombo ? 1 : 0);
+            [dl startSaveScoreHttp:music
+                             sheet:sheet
+                             score:stScore
+                             medal:medalSync
+                           charaId:[UserSettingData charaId]];
+        }
+    }
+
+    // Clear this chart's stale rival ("over") score records before a fresh fetch.
+    AppDelegate *app = [AppDelegate appDelegate];
+    [OverScoreData deleteRecordWithMusic:music
+                                  sheet:sheet
+                  inManagedObjectContext:[app managedObjectContext]];
+
+    // Award the event bonus if this song is one of the active game events. The
+    // binary evaluates a folded predicate (FUN_000e2c48(x) == (x == 0)) and then
+    // redundantly re-tests x == 0, so the net condition is [id intValue] == 0.
+    for (id eventId in [dl gameEventIdArray]) {
+        if ([eventId intValue] == 0) {
+            field<unsigned char>(0x356) = 1;
+        }
+    }
+
+    // --- Treasure-point bonuses ---
+    // Base award by stored play count (newer songs award more).
+    int treasureGain;
+    if (stPlayCnt < 5)       treasureGain = 100;
+    else if (stPlayCnt < 7)  treasureGain = 70;
+    else if (stPlayCnt < 9)  treasureGain = 50;
+    else if (stPlayCnt < 11) treasureGain = 30;
+    else                     treasureGain = 20;
+    field<int>(0x368) = treasureGain;
+    if (field<unsigned char>(0x356)) {   // event-song bonus
+        treasureGain += 100;
+        field<int>(0x368) = treasureGain;
+    }
+    field<int>(0x37c) = treasureGain;
+
+    // Clear bonus (20), zero on a wash-out (rank 6).
+    field<int>(0x36c) = (rank == 6) ? 0 : 20;
+
+    // Full-combo bonus, scaled by chart note count (only on a non-fail clear).
+    if (field<unsigned char>(0x354) && rank != 6) {
+        const int notes = NoteMng::shared().totalNoteCount();   // FUN_0000b278 / DAT_00178ccc
+        int fcBonus;
+        if (notes < 0x33)       fcBonus = 10;
+        else if (notes < 0x65)  fcBonus = 11;
+        else if (notes < 0x97)  fcBonus = 12;
+        else if (notes < 0xc9)  fcBonus = 13;
+        else if (notes < 0xfb)  fcBonus = 14;
+        else if (notes < 0x12d) fcBonus = 15;
+        else if (notes < 0x15f) fcBonus = 16;
+        else if (notes < 0x191) fcBonus = 18;
+        else                    fcBonus = 20;
+        field<int>(0x370) = fcBonus;
+    }
+
+    // Rank bonus (S..fail). The default (rank > 6) leaves +0x374 unchanged.
+    switch (rank) {
+    case 0: field<int>(0x374) = 50; break;
+    case 1: field<int>(0x374) = 40; break;
+    case 2: field<int>(0x374) = 30; break;
+    case 3: field<int>(0x374) = 20; break;
+    case 4: field<int>(0x374) = 10; break;
+    case 5: field<int>(0x374) = 5;  break;
+    case 6: field<int>(0x374) = 0;  break;
+    default: break;
+    }
+
+    // Perfect-full-combo bonus (10) and the total, then persist (capped at 9999).
+    field<int>(0x378) = field<unsigned char>(0x353) ? 10 : 0;
+    field<int>(0x380) =
+        field<int>(0x378) + field<int>(0x36c) + field<int>(0x370) + field<int>(0x374);
+    const short treasureTotal =
+        (short)(field<int>(0x380) + field<int>(0x360) + field<int>(0x368));
+    [UserSettingData saveTreasurePoint:(treasureTotal < 9999 ? treasureTotal : 9999)];
+
+    // Board scale for the result layout (100 on pad, 50 on phone).
+    field<int>(0x384) = field<unsigned char>(0x355) ? 100 : 50;
+
+    // --- Load the result asset group + build the animation layers ---
+    const bool pad = (field<unsigned char>(0x355) != 0);
+    AepLoadGroup(&aep, 4, pad ? "result_ipad" : "result");   // FUN_0000f758
+
+    // 4 effect layers resolved to raw layer handles + their frame counts.
+    static const char *const kEffLayers[4] = {
+        "DIFFICULTY_AAA_EFF", "DIFFICULTY_AA_EFF", "PERFECT_EFF_IN", "PERFECT_EFF_ROOP"
+    };
+    for (int i = 0; i < 4; i++) {
+        const int lyr = aep.getLyrNo(4, kEffLayers[i]);          // FUN_0000fac8
+        field<int>(0x2b4 + i * 4) = lyr;
+        field<int>(0x2c4 + i * 4) = aep.layerFrameCount(lyr);    // FUN_0000fb8c
+    }
+
+    // The 6 AepLyrCtrl overlay layers (device-branched names; per-layer order value
+    // from the static table @ 0x12e698; owner = this task).
+    static const char *const kLayerPhone[6] = {
+        "640IMG", "BONUS_FAILED_640", "BONUS_CLEAR_640",
+        "BONUS_PERFECT_640", "NEW_RECORD_640", "BONUS_EVENT"
+    };
+    static const char *const kLayerPad[6] = {
+        "1136IMG", "BONUS_FAILED_1136", "BONUS_CLEAR_1136",
+        "BONUS_PERFECT_1136", "NEW_RECORD_1136", "BONUS_EVENT"
+    };
+    static const int kLayerOrder[6] = { 12, 9, 9, 9, 10, 11 };
+    const int displayType = [[AppDelegate appDelegate] displayType];
+    const char *const *layerNames = (displayType == 2) ? kLayerPad : kLayerPhone;
+    for (int i = 0; i < 6; i++) {
+        AepLyrCtrl *layer = new AepLyrCtrl();                    // operator_new(0x60) + FUN_0002c7d8
+        field<AepLyrCtrl *>(0x214 + i * 4) = layer;
+        layer->init(4, layerNames[i], this, kLayerOrder[i]);     // FUN_0002c834
+    }
+
+    // Frame/sprite handles resolved by name (getFrmNo).
+    static const char *const kFrmA[4] = {
+        "FULLCOMBO", "PERFECT", "BONUS_COM_BOARD", "BONUS_FULLCOM_BOARD"
+    };
+    for (int i = 0; i < 4; i++) {
+        field<int>(0x22c + i * 4) = aep.getFrameNo(4, kFrmA[i]);   // FUN_0000f9cc
+    }
+    static const char *const kFrmB[3] = {
+        "DIFFICULTY_NORMAL_FONT", "DIFFICULTY_HYPER_FONT", "DIFFICULTY_EX_FONT"
+    };
+    for (int i = 0; i < 3; i++) {
+        field<int>(0x23c + i * 4) = aep.getFrameNo(4, kFrmB[i]);
+    }
+    // Note: entries 0 and 1 are both "..._AAA" in the binary (the AAA rank glyph is
+    // referenced twice); reproduced faithfully.
+    static const char *const kFrmC[7] = {
+        "DIFFICULTY_RUNK_NUMBER_AAA", "DIFFICULTY_RUNK_NUMBER_AAA",
+        "DIFFICULTY_RUNK_NUMBER_AA",  "DIFFICULTY_RUNK_NUMBER_A",
+        "DIFFICULTY_RUNK_NUMBER_B",   "DIFFICULTY_RUNK_NUMBER_C",
+        "DIFFICULTY_RUNK_NUMBER_D"
+    };
+    for (int i = 0; i < 7; i++) {
+        field<int>(0x248 + i * 4) = aep.getFrameNo(4, kFrmC[i]);
+    }
+
+    // User-frame handles resolved by name (getUsrNo).
+    static const char *const kUsr[20] = {
+        "MUSIC_TITLE", "RESULT_CHARA", "DIFFICULTY_RUNK_NUMBER_E",
+        "DIFFICULTY_RUNK_NUMBER_E2", "JACKET00", "FULLCOMBO", "COOL_0", "GREAT_0",
+        "GOOD_0", "BAD_0", "COM_0", "RESULT_SCORE", "DIFFICULTY_FONT",
+        "BONUS_COM_BOARD", "BONUS_CLEAR", "BONUS_COM", "BONUS_RANK",
+        "BONUS_PERFECT", "S_POINT_NUM", "S_POINT_NUM_BIG"
+    };
+    for (int i = 0; i < 20; i++) {
+        field<int>(0x264 + i * 4) = aep.getUserNo(4, kUsr[i]);    // FUN_0000fb40
+    }
+
+    // --- Artwork / name-image / chara textures ---
+    MusicManager *mm = [MusicManager getInstance];
+    [mm getMusicDataArray];                       // ensure the catalog cache is built
+    MusicData *md = [mm getMusicData:music];
+
+    neTextureForiOS *artTex = new neTextureForiOS();          // operator_new(0x18) + FUN_00011818
+    field<neTextureForiOS *>(0x28) = artTex;
+    artTex->loadFromImageData((__bridge const void *)[md artwork2xData]);       // FUN_00011cbc
+
+    neTextureForiOS *nameTex = new neTextureForiOS();
+    field<neTextureForiOS *>(0x2c) = nameTex;
+    nameTex->loadFromImageData((__bridge const void *)[md musicNameImage2xData]);
+
+    // Difficulty level for the played sheet (other sheet ids leave +0x35a as is).
+    switch (sheet) {
+    case 0: field<short>(0x35a) = (short)[md lvNormal]; break;
+    case 1: field<short>(0x35a) = (short)[md lvHyper];  break;
+    case 2: field<short>(0x35a) = (short)[md lvEx];     break;
+    default: break;
+    }
+
+    neTextureForiOS *charaTex = new neTextureForiOS();
+    field<neTextureForiOS *>(0x30) = charaTex;
+    NSString *charaFile =
+        [NSString stringWithFormat:@"result_chara%03d@2x.png", (int)[UserSettingData charaId]];
+    NSString *charaPath =
+        [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
+    charaTex->load([charaPath UTF8String]);        // FUN_00011a2c
+
+    loadNumberTextures();
+
+    // Install this scene's per-frame draw pass for group 4.
+    aep.setGroupDrawCallback(4, &PlayResultDrawCallback, this);   // FUN_0000f9b0 (cb FUN_0003f5f0)
+
+    // --- 11 rank SEs + the result BGM ---
+    AudioManager *audio = [AudioManager sharedManager];
+    // Entry 10 is a null pointer in the static image (a runtime-bound CFString that
+    // could not be resolved statically); the loop still issues 11 loads, matching
+    // the binary, so it stays as nil here.
+    static NSString *const kRankSe[11] = {
+        @"v31", @"v32", @"v33", @"v34", @"v35", @"v36", @"v38",
+        @"se07_count", @"se08_bonus_fai", @"se09_bonus_cl", nil
+    };
+    for (int i = 0; i < 11; i++) {
+        NSString *sePath = [[NSBundle mainBundle] pathForResource:kRankSe[i] ofType:@"m4a"];
+        field<RSND_SOURCE_ID>(0x2e4 + i * 4) =
+            [audio loadSe:sePath isLoop:NO callName:nil group:1];
+    }
+
+    NSString *bgmPath =
+        [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm03_result.m4a"];
+    [audio loadBgm:bgmPath isLoop:YES];
+    [audio setBgmVolume:[UserSettingData bgmVolume]];
+}
+
+// Ghidra: FUN_0003dfe0 inner double loop @ 0x3ea84..0x3ef9e — load the 10 digit
+// glyphs (0..9) of each of the 12 number groups into the per-lane texture arrays.
+void PlayResultTask::loadNumberTextures() {
+    // {field-array base, resource-name prefix}. The digit 0..9 is appended to the
+    // prefix; note the underscore is present/absent exactly as in the binary
+    // (byte-verified: e.g. num_bonus_clear<d> and num_points<d> have no separator).
+    struct NumGroup { int base; const char *prefix; };
+    static const NumGroup kGroups[12] = {
+        {0x34,  "num_cool_"},          {0x5c,  "num_great_"},
+        {0x84,  "num_good_"},          {0xac,  "num_bad_"},
+        {0xd4,  "num_com_"},           {0xfc,  "num_score_"},
+        {0x124, "num_bonus_clear"},    {0x14c, "num_bonus_combo"},
+        {0x174, "num_bonus_rank"},     {0x19c, "num_bonus_perfect"},
+        {0x1c4, "num_points"},         {0x1ec, "num_pointb_"},
+    };
+    NSBundle *bundle = [NSBundle mainBundle];
+    for (int lane = 0; lane < 10; lane++) {
+        for (int g = 0; g < 12; g++) {
+            const int off = kGroups[g].base + lane * 4;
+            neTextureForiOS *tex = new neTextureForiOS();       // operator_new(0x18) + FUN_00011818
+            field<neTextureForiOS *>(off) = tex;
+            NSString *name = [NSString stringWithFormat:@"%s%d", kGroups[g].prefix, lane];
+            NSString *path = [bundle pathForResource:name ofType:@"png"];
+            tex->load([path UTF8String]);                       // FUN_00011a2c
+        }
+    }
+}
+
+// Ghidra: FUN_0003f2e0 — tear the result screen down (freeing exactly what
+// resultSetup created) and hand off to the music-select task.
+void PlayResultTask::resultGotoNext() {
+    AepManager &aep = AepManager::shared();
+    AudioManager *audio = [AudioManager sharedManager];
+
+    // Stop + free the 11 rank SEs (@ 0x3f374).
+    for (int i = 0; i < 11; i++) {
+        RSND_SOURCE_ID se = field<RSND_SOURCE_ID>(0x2e4 + i * 4);
+        [audio stopSe:se];
+        [audio releaseSe:nil resourceId:se];
+    }
+
+    // Release the shared system SEs, clean up the mixer, then reload them for the
+    // next scene (@ 0x3f3a4..0x3f3e0).
+    neSceneManager::shared().releaseSystemSe();   // FUN_0002c6bc
+    [audio cleanupSe];
+    neSceneManager::shared().loadSystemSe();       // FUN_0002c5c8
+
+    // Delete the artwork / name / chara textures (+0x28/+0x2c/+0x30).
+    for (int i = 0; i < 3; i++) {
+        neTextureForiOS *tex = field<neTextureForiOS *>(0x28 + i * 4);
+        if (tex) {
+            delete tex;
+            field<neTextureForiOS *>(0x28 + i * 4) = nullptr;
+        }
+    }
+
+    // Delete the 10-lane x 12-array number textures (@ 0x3f414..0x3f4f0).
+    static const int kNumOffsets[12] = {
+        0x34, 0x5c, 0x84, 0xac, 0xd4, 0xfc,
+        0x124, 0x14c, 0x174, 0x19c, 0x1c4, 0x1ec
+    };
+    for (int lane = 0; lane < 10; lane++) {
+        for (int g = 0; g < 12; g++) {
+            const int off = kNumOffsets[g] + lane * 4;
+            neTextureForiOS *tex = field<neTextureForiOS *>(off);
+            if (tex) {
+                delete tex;
+                field<neTextureForiOS *>(off) = nullptr;
+            }
+        }
+    }
+
+    // Unlink + delete the 6 result layers (+0x214).
+    for (int i = 0; i < 6; i++) {
+        AepLyrCtrl *layer = field<AepLyrCtrl *>(0x214 + i * 4);
+        if (layer) {
+            layer->unlink();     // FUN_0002ca9c
+            delete layer;
+            field<AepLyrCtrl *>(0x214 + i * 4) = nullptr;
+        }
+    }
+
+    // Remove the Twitter share button and release the TwitterUtil (+0x398/+0x39c).
+    if (field<void *>(0x398)) {
+        UIButton *shareButton = (__bridge UIButton *)field<void *>(0x398);
+        [shareButton removeFromSuperview];
+        field<void *>(0x398) = nullptr;
+    }
+    if (field<void *>(0x39c)) {
+        // Held as an unmanaged raw +1 pointer; the binary sends -release, so transfer
+        // ownership to ARC and let it drop at the end of this statement.
+        (void)(__bridge_transfer id)field<void *>(0x39c);
+        field<void *>(0x39c) = nullptr;
+    }
+
+    // Drop the result asset group and mark this task dead.
+    AepUnloadGroup(&aep, 4);   // FUN_0000f988
+    kill();                    // +0x24 = 1
+
+    // Spawn (once) the standard music-select task and (re)prioritise it.
+    if (field<void *>(0x390) == nullptr) {
+        MainTask *next = new MainTask();      // operator_new(0xaa8) + FUN_00034d48
+        field<void *>(0x390) = next;
+    }
+    static_cast<C_TASK *>(field<void *>(0x390))->setPriority(3);   // FUN_00027f08
 }
 
 // Ghidra: FUN_0003d5bc call site in PlayTaskGotoResult (operator_new(0x3a0)).

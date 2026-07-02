@@ -68,6 +68,12 @@ public:
     // source width/height from the resolved AepTexture. Ghidra: FUN_00011a2c.
     int load(const char *path);
 
+    // Upload an already-decoded, in-memory image (a bridged NSData* of PNG bytes)
+    // as a single-tile texture. Used for artwork / name images the song record
+    // carries in memory rather than as a bundled file. Returns 0 on success, -1 for
+    // null data, -5 on upload failure. Ghidra: FUN_00011cbc (-> FUN_0001bb0c).
+    int loadFromImageData(const void *imageData);
+
     // Load an index-driven set of tiles. `indexBase` is a bundled .idx blob whose
     // tile count is a uint16 at +2; each tile i loads "<dir>/<name>_<i>.png" (or
     // "<name>_<i>.png" when `dir` is null) through the shared texture cache, records

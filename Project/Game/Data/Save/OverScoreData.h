@@ -24,6 +24,12 @@
 @property (nonatomic, retain) NSString *playerId;
 @property (nonatomic, retain) NSString *updateDate;
 
+// Delete every "over" record for a given music + sheet from the store (the result
+// screen clears them for the just-played chart before re-fetching). Ghidra:
+// +[OverScoreData deleteRecordWithMusic:sheet:inManagedObjectContext:] (selector
+// @ 0x15a8f4), called from PlayResultTask::resultSetup (FUN_0003dfe0 @ 0x3e2ec).
++ (void)deleteRecordWithMusic:(int)music sheet:(short)sheet inManagedObjectContext:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

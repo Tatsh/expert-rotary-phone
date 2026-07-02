@@ -27,6 +27,16 @@ public:
     // links into the active-layer list.
     void init(int group, const char *name);
 
+    // Full four-parameter form the binary actually exports (FUN_0002c834 takes
+    // this,group,name,arg3,arg4). `owner` is stored at +0x10 (the owning task the
+    // result screen threads in) and `order` at +0x14. The two-arg form above is the
+    // simplified reconstruction used by scenes that pass neither.
+    void init(int group, const char *name, void *owner, int order);
+
+    // Unlink this layer from the global active-layer list (DAT_00188490) without
+    // destroying it; the owner then deletes it. Ghidra: AepLyrCtrl_unlink @ 0x2ca9c.
+    void unlink();
+
     // Start playing the layer's animation (Ghidra: AepLyrCtrl_play FUN_0002caf8):
     // enters play state; a fully-faded layer seeks to its last frame, else frame 0.
     void play();

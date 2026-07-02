@@ -49,6 +49,13 @@
 - (NSData *)sheetHyper;    // "sheet_h"
 - (NSData *)sheetEx;       // "sheet_ex"
 
+// The @2x artwork / music-name-image PNGs stored in the .orb zip, decoded on
+// demand. The result screen uploads these straight into GPU textures. Ghidra:
+// -[MusicData artwork2xData] (selector @ 0x15a894, PlayResultTask FUN_0003dfe0
+// @ 0x3e8ec) / -[MusicData musicNameImage2xData] (selector @ 0x15a818 @ 0x3e928).
+- (NSData *)artwork2xData;
+- (NSData *)musicNameImage2xData;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

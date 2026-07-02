@@ -38,17 +38,16 @@
       PlayResultCreateTask, update() touch preamble + 13-state dispatch with the
       lifecycle states reconstructed inline (0 intro, 1 fade-in, 4/7 waits, 8/9
       communicating, 10/0xb fade-out). Remaining handler bodies (declared, tracked):
-      resultSetup (FUN_0003dfe0 — VOID, a large asset unit like PlayTaskInit: score/rank/
-      treasure counters, DownloadMain startSaveScoreHttp, ~130 number textures into the
-      +0x34.. arrays, the +0x214 result layers, 11 rank SEs @+0x2e4, and loadBgm result
-      BGM; case 0 then plays it), updateResultPresent (case 2: Twitter button + rank
-      cue), updateScoreCount (cases 3/5/6: count-up + result SEs — their playSe source
-      ids need field-tracing), resultGotoNext (FUN_0003f2e0 — mechanical teardown paired
-      with resultSetup: frees the 11 SEs @+0x2e4, the +0x28/+0x34.. texture arrays [10
-      lanes x 12], the 6 +0x214 layers, the share button/+0x39c, unloadGroup(4), then
-      spawns MainTask @+0x390; best written alongside resultSetup so the create/free
-      offsets stay paired), and the free function
-      AepLyrCtrlUpdateAll (FUN_0002c924, the per-frame layer tick+draw).
+      DONE (agent, reviewed): resultSetup (FUN_0003dfe0) + loadNumberTextures +
+      resultGotoNext (FUN_0003f2e0) — full asset build/teardown, byte-verified (incl. the
+      real v37-skip SE list and the 120 digit-texture names). Review fixed a duplicate
+      neAppEventCenter::setLastMusic decl; AepLyrCtrl::init confirmed 5-arg (owner +
+      order @0x12e698) via disassembly.
+      Remaining handlers (declared, tracked): updateResultPresent (case 2: Twitter button
+      + rank cue), updateScoreCount (cases 3/5/6: count-up + result SEs — their playSe
+      source ids need field-tracing), the free function AepLyrCtrlUpdateAll (FUN_0002c924,
+      the per-frame layer tick+draw, blocked on the drawLayer widening below), and
+      PlayResultDrawCallback (FUN_0003f5f0, the result draw pass).
       Original 13-state map (for the handler reconstructions):
         0  enterResult:   FUN_0003dfe0 (result setup) -> playBgm; ->1
         1  transitionIn:  playTransition(1,30,0); play layers +0x214/+0x228/+0x224;
