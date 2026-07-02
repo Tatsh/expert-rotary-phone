@@ -93,7 +93,11 @@ struct ActiveNote {
     uint8_t spawnKind;      // +0x3a  1..5 (from the type-6..9 table, else 1)
     uint8_t reserved3b;     // +0x3b
 };
-static_assert(sizeof(ActiveNote) == 60, "active note slot is 60 bytes");
+// The original armv7 slot was 60 bytes (stride 0x3c); the two pointers widen it
+// on the 64-bit rebuild target, so only assert the packed size on 32-bit.
+#if !defined(__LP64__) || !__LP64__
+static_assert(sizeof(ActiveNote) == 60, "active note slot is 60 bytes on armv7");
+#endif
 
 // Per-note render descriptor the renderer receives from getNoteObject: a subset
 // of ActiveNote (ticks, kind, scale, positions) plus the NoteRenderKind byte
@@ -135,10 +139,40 @@ public:
     // Spawn a non-note event (kind 10) from a chart record. Ghidra: MakeEvent @ 0x343c8.
     void makeEvent(const NoteRecord *rec);
 
+    // Milliseconds elapsed since play start (gettimeofday minus the stored start
+    // time; 0 before the clock is armed). Ghidra: @ 0x33c04.
+    int getElapsedTimeMs() const;
+
+    // The current chart scroll position, derived from getElapsedTimeMs() plus the
+    // per-play offsets — the time base every note is judged and drawn against.
+    // Ghidra: @ 0x34164 (used pervasively: 12 call sites).
+    int getCurrentPosition() const;
+
     // Fill `out` with the render data of the `index`-th still-judgeable active
     // note (kind < 10, not flagged 0x80). Ghidra: GetNoteObject @ 0x346c0, which
     // delegates the field copy to copyNoteRenderData (@ 0x34758).
     void getNoteObject(NoteRenderData *out, int index);
+
+    // Number of active notes still awaiting judgement (kind < 10, flag 0x80
+    // clear). Ghidra: @ 0x34694.
+    int getActiveNoteCount() const;
+
+    // --- Judgement ---------------------------------------------------------
+    // Grade a tap against the note `index`: delta = noteTick - getCurrentPosition
+    // is bucketed against the six timing windows (Ghidra: g_noteJudgeWindows @
+    // 0x12e64c = {-280,-280,-120,+120,+280,+280} ms, copied into the play data at
+    // InitPlayData). The tightest central band (|delta| within ~50 ms of the
+    // -120..+120 window) is the best tier; then the ±120 and ±280 bands; a delta
+    // outside ±280 misses (returns -1). Returns a tier 0..3 that also indexes the
+    // per-note-kind hit tally, sets the note's judged flags, and updates the
+    // current/max combo. Ghidra: judgeNoteHit @ 0x347e8.
+    int judgeNoteHit(unsigned index);
+
+    // Resolve a long/hold note once its tail passes: if released too late
+    // (delta < -60 ms) the hold fails (flag 0x200, "NOTE_FLAGS_LONG_FAILED"),
+    // otherwise it succeeds (flag 0x100, "NOTE_FLAGS_LONG_SUCCESS") and counts
+    // toward the combo + tally. Ghidra: @ 0x34a78.
+    int updateLongNote(unsigned index);
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
