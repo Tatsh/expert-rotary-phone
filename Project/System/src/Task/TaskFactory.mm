@@ -10,6 +10,7 @@
 
 #import "BootLogoTask.h"
 #import "C_TASK.h"
+#import "MainTask.h"
 #import "MenuMainTask.h"
 #import "TitleTask.h"
 
@@ -32,6 +33,12 @@ C_TASK *MenuCreateTask() {
 // MenuMainTask -> relaunch the title. Ghidra: operator_new(0x54) + TitleTask_ctor.
 C_TASK *TitleTaskCreate() {
     return new TitleTask();
+}
+
+// MenuMainTask (standard play button) -> the music-select task. Ghidra:
+// operator_new(0xaa8) + MainTask_ctor (FUN_00034d48).
+C_TASK *MainTaskCreate() {
+    return new MainTask();
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
