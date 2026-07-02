@@ -19,8 +19,18 @@
     * DONE: ctor, update() touch/SE preamble + state dispatch, states 0 (stateInit),
       1 (stateFadeIn), 2 (stateTreasureCheck).
     * TODO states 3..9+ (case 3 saves treasureTmp + AepLyrCtrl combo layers, etc.).
-    * TODO sub-pieces called by the above (declared real methods, bodies pending):
-      AcMainTask::setupScene (FUN_0009fc90), AcMainTask::loadTreasureMap (FUN_000a0b58).
+    * DONE (agent, reviewed): AcMainTask::setupScene (FUN_0009fc90, the sugoroku scene
+      builder — ~50 handle tables, ~35 AepLyrCtrl overlays, textures + mode BGM; split
+      into setupResolveHandles/BuildOverlays/LoadTextures) and AcMainTask::loadTreasureMap
+      (FUN_000a0b58, map load + per-map field snapshot + bg/BGM). New TreasureMap class
+      (Game/Data/TreasureMap/, ctor+findArea done; load FUN_000ce340 + dtor are seams).
+      All strings byte-verified; no defect found on review (NEON map-scroll math flagged
+      best-effort inline). NEW arcade-sugoroku seams now tracked (declared, bodies pending):
+      AcMainTask computeStepValues (FUN_000a1950), buildSelectListLayout (FUN_000a21a8),
+      buildMapCharaLayers (FUN_000a2264), buildMapPanelLayers (FUN_000a2650),
+      refreshMapScroll (FUN_000a3550), applyMapScrollBounds (FUN_000a4e84); free fns
+      AcMainSugorokuDraw (FUN_000a3724, ~5.8KB group-5 draw pass) and
+      AcMainUnlockBonusTreasure (FUN_000a345c); TreasureMap::load/~TreasureMap.
     * DONE: the +0x4f4 sub-object is the xorshift128 PRNG, now fully reconstructed as
       Project/Game/Util/Random.{h,cpp} (ctor FUN_00062b20, dtor FUN_00062b54, setSeed
       FUN_00062b5c, getRandRangeInt FUN_00062be0 == GetRandRangeInt in the original

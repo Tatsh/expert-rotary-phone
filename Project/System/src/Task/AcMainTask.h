@@ -67,7 +67,32 @@ private:
     // pieces). Declared here and called as real functions.
     void setupScene();         // Ghidra: FUN_0009fc90 (build the select/map scene)
     void loadTreasureMap();    // Ghidra: FUN_000a0b58 (load the sugoroku map data)
+
+    // setupScene() reconstruction helpers. These are not distinct Ghidra functions;
+    // they are the big resolve/build/load loops of FUN_0009fc90 lifted out for
+    // readability. Each takes the cached scene manager (this task's this+0x28).
+    void setupResolveHandles();       // the ~50 getLyrNo/getFrameNo/getUserNo tables
+    void setupBuildOverlays();        // the ~35 AepLyrCtrl overlay objects
+    void setupLoadTextures();         // circle/chara/number/event textures + BGM prep
+
+    // Genuine sub-routines the arcade scene builders call, kept as declared seams
+    // (reconstructed elsewhere / out of scope here). Each operates on `this`.
+    void computeStepValues();         // Ghidra: FUN_000a1950 (fills the +0x578 step table)
+    void buildSelectListLayout();     // Ghidra: FUN_000a21a8
+    void buildMapCharaLayers();       // Ghidra: FUN_000a2264
+    void buildMapPanelLayers();       // Ghidra: FUN_000a2650
+    void refreshMapScroll(int mode);  // Ghidra: FUN_000a3550
+    void applyMapScrollBounds(float anchorY); // Ghidra: FUN_000a4e84
 };
+
+// The group-5 sugoroku per-frame render pass the scene installs as its draw callback
+// (Ghidra: FUN_000a3724 @ 0xa3724 — a ~5.8 KB draw routine, declared here and
+// reconstructed separately). `context` is the owning AcMainTask.
+void AcMainSugorokuDraw(void *context);
+
+// Unlock the board-8 bonus treasure record when its prerequisite purchased songs are
+// present on disk (Ghidra: FUN_000a345c; uses TreasureData + MusicManager). No args.
+void AcMainUnlockBonusTreasure();
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

@@ -78,6 +78,12 @@ typedef struct Crypt109Data {
 // Ghidra: -[UserSettingData treasureTmp:] @ 0x61448.
 + (TreasureTmpData)treasureTmp;
 
+// The persisted "treasure read" progress index for a sugoroku sub-map (how far the
+// player has advanced its board story), or a negative sentinel when unread. The
+// arcade map loader reads it to resume the board. Ghidra: -[UserSettingData
+// treasureReadNo:] (selector PTR_s_treasureReadNo__ @ 0x15b6c8).
++ (int)treasureReadNo:(short)subMapId;
+
 #pragma mark Crypt109 blob (key "c")
 + (void)crypt109Data:(Crypt109Data *)out;         // @ 0x615b4 (read+decrypt)
 + (void)saveCrypt109Data:(const Crypt109Data *)data; // @ 0x61650 (encrypt+write)

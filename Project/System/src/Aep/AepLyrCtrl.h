@@ -44,6 +44,25 @@ public:
     float z() const { return m_z; }
     bool isVisible() const { return m_visible; }
 
+    // Mutable access to the resolved layer length / alpha. The sugoroku scene builder
+    // trims two of its roulette layers by hand after resolving them (Ghidra:
+    // FUN_0009fc90 pokes +0x3c / +0x44).
+    int   &frameCount() { return m_frameCount; }  // +0x3c
+    float &alpha()      { return m_alpha; }        // +0x44
+
+    // Stop this layer's animation without unlinking it. Ghidra: FUN_0002cb5c (clears
+    // the play-state field at +0x58); the arcade map reload calls it on every scene
+    // layer before rebuilding.
+    void stopPlay() { m_playState = 0; }
+
+    // Sugoroku roulette-layer anchor: clear the y slot and store a raw integer into
+    // the z slot (the scene copies play data field<int>(0x614) in as raw 4 bytes, not
+    // a float). Ghidra: the +0x18 / +0x1c stores in FUN_0009fc90.
+    void setRouletteAnchor(int value) {
+        m_y = 0.0f;
+        *reinterpret_cast<int *>(&m_z) = value;
+    }
+
 protected:
     // +0x04 / +0x08: intrusive links in the ordering table.
     AepLyrCtrl *m_prev; // +0x04
