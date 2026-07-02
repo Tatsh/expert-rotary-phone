@@ -43,13 +43,13 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 - (void)systemResume;                // selector @ 0x1170d9
 
 // --- BGM: one loaded resource at a time, with a save/restore stack ---
-- (void)loadBgm:(NSString *)path isLoop:(BOOL)loop;   // Ghidra: @ 0x1e4a8
+- (BOOL)loadBgm:(NSString *)path isLoop:(BOOL)loop;   // Ghidra: @ 0x1e4a8
 - (void)playBgm;
 - (void)stopBgm;
 - (void)onPauseBgm;
 - (void)seekBgmToTop;                                 // selector @ 0x11a3d6
-- (void)setBgmVolume:(float)volume;                   // Ghidra: @ 0x1fc20
-- (void)stopBgm:(float)fadeSeconds;                   // Ghidra: @ 0x1fe10
+- (BOOL)setBgmVolume:(float)volume;                   // Ghidra: @ 0x1fc20
+- (BOOL)stopBgm:(float)fadeSeconds;                   // Ghidra: @ 0x1fe10
 // Save/restore the current BGM so another can play over it and be swapped back.
 - (void)pushBgm;                                      // Ghidra: @ 0x201dc
 - (void)popBgm;                                       // Ghidra: @ 0x2027c
