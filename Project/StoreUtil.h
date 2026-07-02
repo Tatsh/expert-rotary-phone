@@ -82,6 +82,15 @@
 // Ghidra: isValidURL: @ 0x5a240.
 + (BOOL)isValidURL:(NSString *)urlString;
 
+// --- Store catalogue ---
+
+// Common client-info query fragment: uuid/version/device/os/locale.
+// Ghidra: userInfo @ 0x58910.
++ (NSString *)userInfo;
+
+// Paginated pack-list endpoint. Ghidra: packListURL:limit:packId: @ 0x58abc.
++ (NSURL *)packListURL:(unsigned int)head limit:(unsigned int)limit packId:(int)packId;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

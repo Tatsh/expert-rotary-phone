@@ -163,6 +163,33 @@ static NSString *ApiPath(NSString *name) {
     return [NSURL URLWithString:urlString] != nil;
 }
 
+// --- Store catalogue ---
+
+// @ 0x58910 — the client-info query fragment shared by catalogue requests.
++ (NSString *)userInfo {
+    AppDelegate *app = [AppDelegate appDelegate];
+    return [NSString stringWithFormat:
+            @"uuid=%@&version=%@&device=%@&os=%@&locale=%@",
+            [self identifierParams],
+            [app appVersion],
+            [self deviceName],
+            [app osVersion],
+            [app localeString]];
+}
+
+// @ 0x58abc — /apr/main.cgi/packlist/index.jsp?target=JP&head=..&limit=..&<userInfo>
+// with an optional &pack_id=.. seed.
++ (NSURL *)packListURL:(unsigned int)head limit:(unsigned int)limit packId:(int)packId {
+    NSString *path = [NSString stringWithFormat:
+                      @"%@%@?target=%@&head=%d&limit=%d&%@",
+                      @"/apr/main.cgi/", @"packlist/index.jsp", [self targetStore],
+                      head, limit, [self userInfo]];
+    if (packId > 0) {
+        path = [NSString stringWithFormat:@"%@&pack_id=%d", path, packId];
+    }
+    return [self createHttpsURL:path];
+}
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
