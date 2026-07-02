@@ -190,6 +190,23 @@ static void aepEmitSprite(AepManager *mgr, int groupSlot, int child, int x, int 
     }
 }
 
+// Ghidra: FUN_0000fcd0 — the note-quad wrapper. It resolves the sprite's group slot
+// from the handle's high 16 bits (the byte group table @ +0x7c1748) and its record from
+// the low 16 bits, then hands both to the sprite-command fill FUN_000113d0. Here the
+// record lookup is folded into aepEmitSprite(slot, child); `anchorX`/`anchorY` become the
+// quad width/height (the entry anchor doubles as size for a leaf), `colorMul` rides the
+// p15 user word. Exact float-vs-int arg positions in the original are VFP-ABI obscured;
+// the call-site value threading is reproduced.
+void AepDrawSpriteHandle(AepManager *mgr, int handle, int x, int y, int scaleX, int scaleY,
+                         int rotation, int anchorX, int anchorY, int color, int alpha,
+                         uint32_t blend, uint32_t colorMul, int *clipRect, int priority,
+                         uint32_t p19) {
+    const int groupSlot = mgr->groupSlotForHandle(handle);   // (handle >> 16) -> slot byte
+    const int child = handle & 0xffff;                       // low 16 bits = record index
+    aepEmitSprite(mgr, groupSlot, child, x, y, scaleX, scaleY, anchorX, anchorY, color, alpha,
+                  rotation, blend, clipRect, static_cast<uint32_t>(priority), colorMul, p19);
+}
+
 // Ghidra: FUN_0000fe8c. The 19-argument frame-tree fill.
 void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
                   int x, int y, int scaleX, int scaleY, int p9, int p10,

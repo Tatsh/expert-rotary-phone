@@ -90,6 +90,12 @@ void PlayTaskDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
 // (a single store of 0 to NoteMng + 0x13cb6). Defined at the foot of this file.
 void PlayNoteMngDetach(NoteMng *nm);
 
+// The demo-mode character-window gauge: maps the current scroll position through a table
+// of per-section fade ramps (+0x9f4), then draws the highlighted text panel (+0x58.. by
+// section) and the window frame (+0x2c) with a fade. A large position-table draw unit of
+// its own; declared here as a real seam (its own reconstruction). Ghidra: FUN_000313b0.
+void PlayDrawCharaWindow(void *playData, int x, int y);
+
 // --- Play-data field access ------------------------------------------------------
 // Same convention as PlayJudge.mm / PlayScore.mm: the standard-mode MainTask is not
 // reconstructed as a whole, so its fields are reached by documented byte offset.
@@ -756,6 +762,197 @@ void PlayLoadCharaTextures(void *playData) {
         NSString *path = [[NSBundle mainBundle] pathForResource:kTextPanelNames[i] ofType:@"png"];
         tex->load([path UTF8String]);
     }
+}
+
+// Ghidra: FUN_00030944 (PlayTaskDraw) — the note-field per-frame draw dispatcher the Aep
+// manager invokes for group 0. `child` is the layer id being drawn; `context` is the play
+// data. It matches `child` against the play-data handle tables PlayBuildFieldLayers filled
+// and emits the right sprite: an atlas quad (AepDrawSpriteHandle / FUN_0000fcd0), a nested
+// animated layer (AepManager::drawLayer / LAB_00031196), or a standalone texture
+// (neTextureForiOS). The dispatch structure and per-branch priority / handle selection are
+// reproduced from the binary; leaf per-sprite geometry is delegated to those draw units.
+void PlayTaskDraw(int child, int /*frame*/, int x, int y, int scaleX, int scaleY,
+                  int anchorX, int anchorY, int color, int alpha, int rotation,
+                  uint32_t blend, int *clipRect, uint32_t p17, void *context) {
+    AepManager &aep = AepManager::shared();          // Ghidra: AepManager_shared
+    NoteMng &nm = NoteMng::shared();                 // binary forces the manager up
+    void *pData = context;                              // the play data (param_15)
+
+    // Atlas-quad tail (Ghidra: LAB_00030cc6 -> FUN_0000fcd0). `handle`/`priority` vary.
+    auto noteQuad = [&](int handle, int priority) {
+        AepDrawSpriteHandle(&aep, handle, x, y, scaleX, scaleY, rotation, anchorX, anchorY,
+                            color, alpha, blend, 0xffffff, clipRect, priority, 1);
+    };
+    // Nested-layer tail (Ghidra: LAB_00031196 -> AepManager::drawLayer). Arg mapping
+    // corrected against the binary: loopFlags = 1, p9/p10 = anchorX/anchorY, colour/alpha
+    // pass straight through, blend 0x20, p15 0xffffff, p19 1; the OT priority slot (fe8c
+    // p17) is 0 in this call and the callback's p17 word is threaded as the context.
+    auto layerDraw = [&](int lyr, int lframe, int lscaleY, int *lclip, int /*unused*/) {
+        aep.drawLayer(lyr, lframe, x, y, scaleX, lscaleY, rotation,
+                      1, anchorX, anchorY, color, alpha, 0x20,
+                      0xffffff, lclip, reinterpret_cast<void *>((intptr_t)p17), 0, 1);
+    };
+
+    // --- Combo-count digits (NUM_COMBO_*, +0x334): only once combo exceeds 4 ---
+    // The binary reads DAT_00179000 (the combo mirror in the NoteMng region); the modelled
+    // accessor NoteMng::combo() carries the same gameplay combo (documented best-effort).
+    if (nm.combo() > 4) {
+        int v = nm.combo();
+        for (int i = 0; i < 3; ++i) {
+            if (pdInt(pData, 0x334 + i * 4) == child) {
+                noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);   // +0x248 EFF_C_NUM
+                return;
+            }
+            v /= 10;
+        }
+    }
+    // --- Score digits (SCO_0000NN user sprites, +0x340) ---
+    {
+        int v = pdInt(pData, 0x9b0);                                     // running score
+        for (int i = 0; i < 6; ++i) {
+            if (pdInt(pData, 0x340 + i * 4) == child) {
+                noteQuad(pdInt(pData, 0x220 + (v % 10) * 4), (int)p17);   // +0x220 SCO_N frames
+                return;
+            }
+            v /= 10;
+        }
+    }
+    // --- Gauge flash (GG_IFL, +0x2f8): this judge slot's gauge index @ +0x3d4 ---
+    if (pdInt(pData, 0x2f8) == child) {
+        const int gi = pdInt(pData, (int)p17 * 0x18 + 0x3d4);
+        if (gi < 0) return;
+        noteQuad(pdInt(pData, 0x270 + gi * 4), 0xe);                     // +0x270 GG_IFL_* frames
+        return;
+    }
+    // --- Pause command icon (CMD_PAUSE_1, +0x2fc) ---
+    if (pdInt(pData, 0x2fc) == child) {
+        noteQuad(pdInt(pData, 0x1fc), 9);                               // +0x1fc CMD_PAUSE_1_F
+        return;
+    }
+    // --- Tone lane graphic (TONE_1, +0x300): pick a tone sprite from this note's state ---
+    if (pdInt(pData, 0x300) == child) {
+        const int id      = pdInt(pData, (int)p17 * 0x18 + 0x3cc);      // this slot's tone note id
+        const int graphic = NoteToneGraphic(id);                    // FUN_00034bb4
+        const int flags   = NoteToneFlags(id);                      // FUN_00034b98
+        const int state   = NoteToneState(id);                      // FUN_00034b5c
+        int handle;
+        if ((flags & 2) == 0) {
+            if (state == 1) {
+                const int def = NoteToneDefaultGraphic(graphic);    // FUN_00034a5c
+                handle = pdInt(pData, 0x280 + (def - 1) * 4);          // +0x280 TONE_08 table
+            } else {
+                handle = pdInt(pData, 0x2a8 + graphic * 4);            // +0x2a8 tone-number table
+            }
+        } else {
+            handle = pdInt(pData, 0x2d0 + graphic * 4);                // +0x2d0 tone-same table
+        }
+        noteQuad(handle, 0x13);
+        return;
+    }
+    // --- Tone number overlay (TONE_08_NUM, +0x304) ---
+    if (pdInt(pData, 0x304) == child) {
+        const int id = pdInt(pData, (int)p17 * 0x18 + 0x3cc);
+        if (NoteToneState(id) != 1) return;
+        const int n = NoteToneCount(id);                            // FUN_00034bd0
+        if (n < 1) return;
+        noteQuad(pdInt(pData, 0x290 + n * 4), 0x11);                   // +0x290 TONE_08_NUM table
+        return;
+    }
+    // --- Pause-eye tone frames (ORB_EYES_*, +0x308..+0x318) ---
+    if (pdInt(pData, 0x308) == child) { noteQuad(pdInt(pData, 0x200), 0x12); return; }
+    if (pdInt(pData, 0x30c) == child) { noteQuad(pdInt(pData, 0x204), 0x12); return; }
+    if (pdInt(pData, 0x310) == child) { noteQuad(pdInt(pData, 0x208), 0x12); return; }
+    if (pdInt(pData, 0x314) == child) { noteQuad(pdInt(pData, 0x20c), 0x12); return; }
+    if (pdInt(pData, 0x318) == child) { noteQuad(pdInt(pData, 0x210), 0x12); return; }
+
+    // --- Background colour layer (BG_CL_COLOR, +0x31c): effects-on, new hardware only ---
+    if (pdInt(pData, 0x31c) == child) {
+        if (pdByte(pData, 0x9e5) == 0) return;                         // effects off
+        if (pdByte(pData, 0x9e7) != 0) return;                         // old hardware
+        layerDraw(pdInt(pData, 0x110), pdInt(pData, 0x3bc), scaleY, clipRect, (int)p17);
+        return;
+    }
+    // --- On-field combo digits (EFF_C_NUM001/010/100, +0x328/+0x32c/+0x330) ---
+    if (pdInt(pData, 0x328) == child) {
+        const int v = (int)pdShort(pData, 0x9c4);
+        noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);
+        return;
+    }
+    if (pdInt(pData, 0x32c) == child) {
+        const int v = (int)pdShort(pData, 0x9c4) / 10;
+        noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);
+        return;
+    }
+    if (pdInt(pData, 0x330) == child) {
+        if ((int)pdShort(pData, 0x9c4) < 100) return;
+        const int v = (int)pdShort(pData, 0x9c4) / 100;
+        noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);
+        return;
+    }
+    // --- Score star badge (FRAME_STAR, +0x320 == decimal 800) ---
+    if (pdInt(pData, 0x320) == child) {
+        int lyr, lframe;
+        if (pdInt(pData, 0x9b0) < 70000) {                             // FRAME_SIDEMT_BARSTAR0
+            lyr = pdInt(pData, 0xfc);  lframe = 0;
+        } else {                                                    // FRAME_SIDEMT_BARSTAR1
+            lyr = pdInt(pData, 0x100); lframe = pdInt(pData, 0x3c0);
+        }
+        layerDraw(lyr, lframe, 100, nullptr, 0x16);                 // scaleY forced to 100
+        return;
+    }
+    // --- Gauge side bar (FRAME_SIDEBAR, +0x324) ---
+    if (pdInt(pData, 0x324) == child) {
+        const int barCount = pdInt(pData, 0x13c);                     // FRAME_SIDEMT_BAR length
+        const int t = (int)pdShort(pData, 0x9c0) * (barCount - 1);    // gauge * (frames-1)
+        const int lframe = (t + (int)((unsigned)(t >> 31) >> 22)) >> 10;   // t / 1024 toward 0
+        layerDraw(pdInt(pData, 0x104), lframe, scaleY, nullptr, 0x16);
+        return;
+    }
+
+    // --- Character jump layers / portraits (CHARA[i] +0x358, CHARA[i]_ANM +0x378) ---
+    // Skipped entirely when effects are off and this is not the bundled demo.
+    if (pdByte(pData, 0x9e5) != 0 || pdByte(pData, 0x9c9) != 0) {
+        const int ivl = (int)NoteBeatIntervalMs();                 // beat interval, ms
+        const int pos = (ivl != 0) ? (nm.getCurrentPosition() % ivl) : 0;
+        int scoreGate = 0;                                         // i * 10000
+        for (int i = 0; i < 8; ++i) {
+            if (pdInt(pData, 0x358 + i * 4) == child) {               // chara i jump layer
+                if (pdByte(pData, 0x9c9) == 0) {                      // normal play
+                    if (pdInt(pData, 0x9b0) < scoreGate) return;      // score below chara threshold
+                    AepLyrCtrl *bg = reinterpret_cast<AepLyrCtrl *>(pdPtr(pData, 0xc0));
+                    if (i > 2 && bg != nullptr && bg->isAnimating()) return;
+                } else {                                           // bundled demo
+                    if (i > 2) return;
+                    if (i == 4) {
+                        PlayDrawCharaWindow(pData, x - (anchorX * scaleX) / 100,
+                                                y - (scaleY * anchorY) / 100);
+                    }
+                }
+                const int jumpCount = pdInt(pData, 0x1dc + i * 4);    // chara jump layer length
+                const int lframe = (ivl != 0) ? (pos * (jumpCount - 1)) / ivl : 0;
+                layerDraw(pdInt(pData, 0x17c + i * 4), lframe, scaleY, clipRect, 0x1a);
+                return;
+            }
+            if (pdInt(pData, 0x378 + i * 4) == child) {               // chara i portrait (anim)
+                neTextureForiOS *portrait =
+                    reinterpret_cast<neTextureForiOS *>(pdPtr(pData, 0x30 + i * 4));
+                if (portrait == nullptr) return;
+                const int csize = pdInt(pData, 0x9a8);                // chara draw size
+                neSpriteDrawParams p;
+                p.w = csize;  p.h = csize;
+                p.x = x;      p.y = y;
+                p.sx = scaleX; p.sy = scaleY;
+                p.ex = anchorX; p.ey = anchorY;
+                p.color = color; p.rotation = rotation;
+                p.blend0 = 0x20; p.blend1 = (short)alpha;          // alpha rides the sub-blend
+                p.colorMul = 0xffffff; p.priority = (int)p17;
+                portrait->draw(aep.orderingTable(), p);
+                return;
+            }
+            scoreGate += 10000;
+        }
+    }
+    // Unmatched child: nothing to draw (the binary's loop simply exhausts and returns).
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -294,6 +294,22 @@ private:
     int  m_resignPositionMs = 0;
 };
 
+// --- Per-note tone-graphic state accessors -----------------------------------------
+// The play-scene per-frame draw pass (PlayTaskDraw) reads these to choose the tone
+// sprite for a long/hold note. They index the standard manager's per-note tone-state
+// array (Ghidra: DAT_00173ea4 + noteId*0x3c, guarded by (noteId >> 3) < 0x7d). That
+// array is not yet modelled as a NoteMng member, so these stay reconstruction seams
+// (cited addresses) the draw pass calls into.
+int   NoteToneGraphic(int noteId);        // Ghidra: FUN_00034bb4  (state byte @ +0x00)
+int   NoteToneFlags(int noteId);          // Ghidra: FUN_00034b98  (flag byte  @ +0x01)
+int   NoteToneState(int noteId);          // Ghidra: FUN_00034b5c  (0 idle / 1 active / 2 pending)
+int   NoteToneDefaultGraphic(int type);   // Ghidra: FUN_00034a5c  (type 6..9 -> 2..5, else 1)
+int   NoteToneCount(int noteId);          // Ghidra: FUN_00034bd0  (char  @ +0x1e)
+
+// Current beat interval in milliseconds (60000 / current tempo; 0 when the tempo word is
+// not positive). Ghidra: FUN_00034664 (DAT_00034690 == 60000.0f / *(short *)(mgr+0x10)).
+float NoteBeatIntervalMs();
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

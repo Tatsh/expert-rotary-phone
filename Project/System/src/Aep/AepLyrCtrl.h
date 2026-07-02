@@ -44,6 +44,14 @@ public:
     float z() const { return m_z; }
     bool isVisible() const { return m_visible; }
 
+    // Whether this layer is still mid-animation: false when idle (play-state 0) or held
+    // (play-state 4), otherwise true while the play head at +0x40 has not reached the end
+    // of its travel (0..m_frameCount for a forward rate, >0 for a reverse rate). The play
+    // + result draw passes gate their layer draws on this. Ghidra: FUN_0002cb64. NOTE:
+    // the play head at +0x40 is a float in the binary, so it is read as such here even
+    // though the reconstructed m_frame models it as int.
+    bool isAnimating() const;
+
     // Mutable access to the resolved layer length / alpha. The sugoroku scene builder
     // trims two of its roulette layers by hand after resolving them (Ghidra:
     // FUN_0009fc90 pokes +0x3c / +0x44).

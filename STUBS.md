@@ -116,6 +116,25 @@
   (FUN_0003f5f0) — each can now call the full drawLayer / group callback. aepSin/aepCos
   reproduce the DAT_0012ded2 trig LUT at the byte-verified 1.0==0xffff scale (data seam).
 
+## Draw units (agent, partially reviewed — SYSTEMATIC DEFECT caught + corrected)
+- AepLyrCtrlUpdateAll (FUN_0002c924) — DONE, fully verified: the per-frame layer list
+  tick + draw + frame-advance state machine. The agent claimed the decompiler's drawLayer
+  arg order was "ABI-scrambled" and remapped it; DISASSEMBLING the bl @0x2c9ce proved the
+  agent WRONG (it shift-rotated loopFlags/p9/p10/color/colorHi and swapped context/p17).
+  Corrected to the disasm-verified mapping.
+- PlayTaskDraw (FUN_00030944) + PlayResultDrawCallback (FUN_0003f5f0) — reconstructed by
+  the agent (the child-id -> handle-table dispatch is offset-matched to PlayTaskInit/
+  resultSetup); the SAME systematic drawLayer arg-order defect was found in every
+  drawLayer call and corrected (loopFlags=1, p9/p10=anchors, colour/alpha through,
+  context=the p17 word, OT-priority p17=0). RESIDUAL: the full dispatch branches were NOT
+  each re-verified against the decompile, and the OT-priority/context threading has some
+  per-call uncertainty — these two need a careful per-branch verification pass.
+  New seams they added (real, cited): AepDrawSpriteHandle (FUN_0000fcd0, note-quad atlas
+  draw), AepManager::groupSlotForHandle, PlayDrawCharaWindow (FUN_000313b0),
+  MainViewController screenshot, and 5 NoteMng per-note tone-state accessors
+  (FUN_00034bb4/b98/b5c/a5c/bd0) + NoteBeatIntervalMs (FUN_00034664) — the tone accessors
+  index NoteMng's unmodeled +0x5248 per-note tone array (stride 0x3c), left as seams.
+
 ## Whole subsystems not started
 - Task #7: settings sub-tables, map/sugoroku UI (SugorokuMainTask FUN_000215a0), tutorial task (FUN_0002db10)
 - Task #6 friend VCs (data/networking layer done; the request/score VCs remain)

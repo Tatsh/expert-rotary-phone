@@ -105,6 +105,11 @@ public:
     AepGroupDrawFn groupCallback(int slot) const { return m_groupCallback[slot]; }  // +0x7f3a2c
     void *groupContext(int slot) const { return m_groupContext[slot]; }             // +0x7f3a90
 
+    // Resolve the group slot a sprite/layer handle addresses: the high 16 bits index
+    // the byte group table @ this+0x7c1748. Ghidra: the lookup in the note-quad draw
+    // FUN_0000fcd0 (`*(byte *)(this + (handle >> 0x10) + 0x7c1748)`).
+    int groupSlotForHandle(int handle) const { return m_groupIndex[(handle >> 16) & 0xff]; }
+
     // Base resource directory the single-file loaders resolve against (Ghidra: the
     // char buffer @ this + 0x100).
     const char *baseDir() const { return m_baseDir; }

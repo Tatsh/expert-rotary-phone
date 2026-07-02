@@ -62,6 +62,18 @@ struct AepTransform {
     int priority = 0;         // ordering-table priority
 };
 
+// Draw one already-resolved sprite handle (a note / effect / digit atlas quad) straight
+// into the ordering table. `handle` encodes the resource group in bits 16.. (indexing
+// AepManager::groupSlotForHandle) and the 8-byte sprite record in bits 0..15. The
+// remaining args are the composed transform / anchor / colour / alpha / rotation / blend
+// / clip the play + result per-frame draw passes thread in per sprite. Ghidra: the
+// note-quad wrapper FUN_0000fcd0 (-> the sprite-command fill FUN_000113d0). Arg order
+// follows the call sites; the leading duplicate scale word the VFP ABI emits is dropped.
+void AepDrawSpriteHandle(AepManager *mgr, int handle, int x, int y, int scaleX, int scaleY,
+                         int rotation, int anchorX, int anchorY, int color, int alpha,
+                         uint32_t blend, uint32_t colorMul, int *clipRect, int priority,
+                         uint32_t p19);
+
 // The faithful full-signature core (Ghidra: FUN_0000fe8c). `mgr`/`groupSlot` locate
 // the frame-entry array, channel buffer, sprite records, ordering table, group
 // callback and screen extents; the remaining args are the composed parent transform,

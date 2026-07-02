@@ -82,6 +82,12 @@
 - (UIImage *)getCapturedImage;
 - (void)releaseCapturedImage;
 
+// Capture the GL view's current frame into the backing store getCapturedImage reads. The
+// result screen's per-frame draw fires this once, on the last frame of its intro effect,
+// so the backdrop is frozen before the modal goes up. Ghidra: the "screenshot" selector
+// (PTR_s_screenshot_0015a8fc) sent from FUN_0003f5f0.
+- (void)screenshot;
+
 // Show / hide the "communicating..." overlay while a network save is in flight (the
 // result screen raises it around the score upload). Ghidra: InsertCommunicating @
 // 0xd6a8, DeleteCommunicating @ 0xd744.

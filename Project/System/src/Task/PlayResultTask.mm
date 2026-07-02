@@ -567,6 +567,226 @@ void PlayResultTask::resultGotoNext() {
     static_cast<C_TASK *>(field<void *>(0x390))->setPriority(3);   // FUN_00027f08
 }
 
+// --- Result per-frame draw ---------------------------------------------------------
+// PlayResultDrawCallback is a free function (the Aep group-4 draw callback), so it reaches
+// the result-task data block by cited byte offset, the same convention resultSetup uses.
+namespace {
+
+inline int   rcI(void *p, int off)  { return *reinterpret_cast<int *>(reinterpret_cast<char *>(p) + off); }
+inline short rcS(void *p, int off)  { return *reinterpret_cast<short *>(reinterpret_cast<char *>(p) + off); }
+inline unsigned char rcB(void *p, int off) { return *reinterpret_cast<unsigned char *>(reinterpret_cast<char *>(p) + off); }
+inline void *rcP(void *p, int off)  { return *reinterpret_cast<void **>(reinterpret_cast<char *>(p) + off); }
+inline int  &rcIR(void *p, int off) { return *reinterpret_cast<int *>(reinterpret_cast<char *>(p) + off); }
+
+// Ghidra: neTextureForiOS_draw (FUN_0000fbcc) -> AepOrderingTable_drawSprite (FUN_00011468).
+// Emit one standalone-texture quad. Field mapping per FUN_00011468: u/v, x/y, sx/sy, w/h,
+// ex=anchorX, ey=anchorY, colour @ +0x34, rotation @ +0x38, blend @ +0x3c; the wrapper's
+// separate alpha word rides the +0x42 sub-blend slot (its exact home in this path is not
+// fully pinned — best-effort so the fade survives).
+void drawTexQuad(AepManager &aep, neTextureForiOS *tex, int u, int v, int w, int h,
+                 int x, int y, int sx, int sy, int rotation, int anchorX, int anchorY,
+                 int color, int alpha, int blend, int priority) {
+    if (tex == nullptr) {
+        return;
+    }
+    neSpriteDrawParams p;
+    p.u = u; p.v = v; p.w = w; p.h = h;
+    p.x = x; p.y = y; p.sx = sx; p.sy = sy;
+    p.ex = anchorX; p.ey = anchorY;
+    p.color = color; p.rotation = rotation;
+    p.blend0 = (short)blend; p.blend1 = (short)alpha;
+    p.colorMul = 0xffffff; p.priority = priority;
+    tex->draw(aep.orderingTable(), p);
+}
+
+}  // namespace
+
+// Ghidra: FUN_0003f5f0 — the result screen's per-frame draw pass, registered as group 4's
+// draw callback (context = the PlayResultTask). It matches `child` against the result-data
+// handle tables resultSetup filled and draws the corresponding sprite: the tally / score /
+// bonus / treasure digit strips (num_* texture rows), the full-combo / rank / difficulty
+// glyphs (atlas quads), the jacket / name / chara portraits (standalone textures), and the
+// two rank-effect animation layers (with a one-shot screen capture on the last frame). The
+// dispatch structure and per-branch geometry are reproduced from the binary; leaf per-
+// sprite geometry is delegated to the draw units above / AepDrawSpriteHandle / drawLayer.
+void PlayResultDrawCallback(int child, int /*frame*/, int x, int y, int scaleX, int scaleY,
+                            int anchorX, int anchorY, int color, int alpha, int rotation,
+                            uint32_t blend, int *clipRect, uint32_t p17, void *context) {
+    AepManager &aep = AepManager::shared();   // Ghidra: AepManager_shared
+    void *pd = context;                       // the PlayResultTask (param_15)
+
+    // Atlas-quad tail (Ghidra: LAB_0003f8d6 -> FUN_0000fcd0): clip is always null here and
+    // the priority is the incoming p17.
+    auto rquad = [&](int handle) {
+        AepDrawSpriteHandle(&aep, handle, x, y, scaleX, scaleY, rotation, anchorX, anchorY,
+                            color, alpha, blend, 0xffffff, nullptr, (int)p17, 1);
+    };
+    // A right-to-left digit strip: draw `value`'s ones place, then shift left by
+    // (scaleX * dxStep)/100 per further digit, stopping once the value is a single digit
+    // or `maxDigits` is reached. `base` is the num_* texture row.
+    auto drawDigits = [&](int base, int value, int w, int h, int dxStep, int maxDigits) {
+        int v = value;
+        int cx = x;
+        for (int d = 0; d < maxDigits; ++d) {
+            neTextureForiOS *tex =
+                reinterpret_cast<neTextureForiOS *>(rcP(pd, base + (v % 10) * 4));
+            drawTexQuad(aep, tex, 0, 0, w, h, cx, y, scaleX, scaleY, rotation, anchorX, anchorY,
+                        color, alpha, (int)blend, (int)p17);
+            if (v < 10) {
+                return;
+            }
+            v /= 10;
+            cx += (scaleX * dxStep) / 100;
+        }
+    };
+
+    // --- Full-combo / perfect stamp (FULLCOMBO user, +0x278) ---
+    if (rcI(pd, 0x278) == child) {
+        if (rcS(pd, 0x35c) == 0) {           // rank 0: no stamp
+            return;
+        }
+        int handle;
+        if (rcB(pd, 0x353) == 0) {           // not perfect full-combo
+            if (rcB(pd, 0x354) == 0) {       // not cleared either
+                return;
+            }
+            handle = rcI(pd, 0x22c);         // FULLCOMBO frame
+        } else {
+            handle = rcI(pd, 0x230);         // PERFECT frame
+        }
+        rquad(handle);
+        return;
+    }
+    // --- Judge tally digit strips (COOL/GREAT/GOOD/BAD/COM, +0x27c..+0x28c) ---
+    if (rcI(pd, 0x27c) == child) { drawDigits(0x34, (int)rcS(pd, 0x348), 0x1a, 0x1e, -0x1c, 3); return; }
+    if (rcI(pd, 0x280) == child) { drawDigits(0x5c, (int)rcS(pd, 0x34a), 0x1a, 0x1e, -0x1c, 3); return; }
+    if (rcI(pd, 0x284) == child) { drawDigits(0x84, (int)rcS(pd, 0x34c), 0x1a, 0x1e, -0x1c, 3); return; }
+    if (rcI(pd, 0x288) == child) { drawDigits(0xac, (int)rcS(pd, 0x34e), 0x1a, 0x1e, -0x1c, 3); return; }
+    if (rcI(pd, 0x28c) == child) { drawDigits(0xd4, (int)rcS(pd, 0x350), 0x1a, 0x1e, -0x1c, 3); return; }
+    // --- Score digit strip (RESULT_SCORE, +0x290) ---
+    if (rcI(pd, 0x290) == child) { drawDigits(0xfc, rcI(pd, 0x344), 0x20, 0x28, -0x22, 6); return; }
+
+    // --- Jacket / music-name standalone textures (+0x274 / +0x264) ---
+    if (rcI(pd, 0x274) == child) {
+        drawTexQuad(aep, reinterpret_cast<neTextureForiOS *>(rcP(pd, 0x28)), 0, 0, 0x168, 0x168,
+                    x, y, scaleX, scaleY, rotation, anchorX, anchorY, color, alpha, (int)blend, (int)p17);
+        return;
+    }
+    if (rcI(pd, 0x264) == child) {
+        drawTexQuad(aep, reinterpret_cast<neTextureForiOS *>(rcP(pd, 0x2c)), 0, 0, 0x126, 0x20,
+                    x, y, scaleX, scaleY, rotation, anchorX, anchorY, color, alpha, (int)blend, (int)p17);
+        return;
+    }
+    // --- Character portrait (RESULT_CHARA, +0x268): board-scaled, anchors doubled on phone ---
+    if (rcI(pd, 0x268) == child) {
+        int ax = anchorX, ay = anchorY;
+        if (rcB(pd, 0x355) == 0) {           // phone
+            ay <<= 1;
+            ax <<= 1;
+        }
+        const int boardScale = rcI(pd, 0x384);
+        drawTexQuad(aep, reinterpret_cast<neTextureForiOS *>(rcP(pd, 0x30)), 0, 0, 0x75e, 0x38c,
+                    x, y, boardScale, boardScale, rotation, ax, ay, color, alpha, (int)blend, (int)p17);
+        return;
+    }
+
+    // --- Difficulty font glyph (DIFFICULTY_FONT, +0x294): selected by played sheet ---
+    if (rcI(pd, 0x294) == child) {
+        rquad(rcI(pd, 0x23c + (int)rcS(pd, 0x358) * 4));
+        return;
+    }
+    // --- Bonus board glyph (BONUS_COM_BOARD, +0x298): full-combo vs plain board ---
+    if (rcI(pd, 0x298) == child) {
+        const int idx = (rcB(pd, 0x354) == 0) ? 2 : 3;   // cleared -> BONUS_FULLCOM_BOARD
+        rquad(rcI(pd, 0x22c + idx * 4));
+        return;
+    }
+    // --- Bonus / treasure digit strips (+0x29c..+0x2b0) ---
+    if (rcI(pd, 0x29c) == child) { drawDigits(0x124, rcI(pd, 0x36c), 0x1e, 0x22, -0x21, 4); return; }  // clear bonus
+    if (rcI(pd, 0x2a0) == child) { drawDigits(0x14c, rcI(pd, 0x370), 0x1e, 0x22, -0x21, 4); return; }  // combo bonus
+    if (rcI(pd, 0x2a4) == child) { drawDigits(0x174, rcI(pd, 0x374), 0x1e, 0x22, -0x21, 4); return; }  // rank bonus
+    if (rcI(pd, 0x2a8) == child) { drawDigits(0x19c, rcI(pd, 0x378), 0x1e, 0x22, -0x21, 4); return; }  // perfect bonus
+    if (rcI(pd, 0x2b0) == child) { drawDigits(0x1ec, rcI(pd, 0x37c), 0x3c, 0x48, -0x3f, 4); return; }  // total (big)
+    // Treasure-point strip (S_POINT_NUM, +0x2ac): a fixed 4-digit field (capped at 9999),
+    // laid out at absolute x offsets, drawn most-significant-last.
+    if (rcI(pd, 0x2ac) == child) {
+        int v = rcI(pd, 0x364);
+        if (v > 9999) {
+            v = 9999;
+        }
+        for (int step = 0; step != -0x80; step -= 0x20) {
+            neTextureForiOS *tex =
+                reinterpret_cast<neTextureForiOS *>(rcP(pd, 0x1c4 + (v % 10) * 4));
+            drawTexQuad(aep, tex, 0, 0, 0x22, 0x26, step + x + 0x12, y, scaleX, scaleY, rotation,
+                        anchorX, anchorY, color, alpha, (int)blend, (int)p17);
+            v /= 10;
+        }
+        return;
+    }
+
+    // --- Rank-effect layer A + rank glyph (DIFFICULTY_RUNK_NUMBER_E, +0x26c) ---
+    if (rcI(pd, 0x26c) == child) {
+        const int rank = (int)rcS(pd, 0x35c);
+        if (rank == 0) {
+            // Cross-fade the two AAA/AA effect layers: play layer 2 until its counter
+            // reaches its length, then layer 3; freeze the backdrop the moment layer 2 ends.
+            const int count2 = rcI(pd, 0x2cc);          // effect layer 2 length
+            const int counter2 = rcI(pd, 0x2dc);        // effect layer 2 counter
+            const int idx = (counter2 < count2) ? 2 : 3;
+            const int fcnt = rcI(pd, 0x2d4 + idx * 4);
+            aep.drawLayer(rcI(pd, 0x2b4 + idx * 4), fcnt, x, y, scaleX, scaleY, 0,
+                          1, anchorX, anchorY, color, alpha, 0x10,
+                          0xffffff, nullptr, reinterpret_cast<void *>((intptr_t)p17), 0, 1);
+            rcIR(pd, 0x2d4 + idx * 4) += 1;
+            if (counter2 < count2) {
+                return;
+            }
+            MainViewController *vc = RootVC();
+            if ([vc getCapturedImage] == nil) {
+                [vc screenshot];
+            }
+            rcIR(pd, 0x2d4 + idx * 4) = rcI(pd, 0x2d4 + idx * 4) % rcI(pd, 0x2c4 + idx * 4);
+            return;
+        }
+        // rank != 0: play the ranked effect layer (additively) while the intro layer has
+        // settled, then draw the rank number glyph.
+        AepLyrCtrl *intro = reinterpret_cast<AepLyrCtrl *>(rcP(pd, 0x214));
+        if (intro == nullptr || !intro->isAnimating()) {   // FUN_0002cb64 == 0
+            if (static_cast<unsigned short>(rank - 1) < 2) {   // rank 1 or 2
+                const int b = (rank != 1) ? 4 : 0;
+                aep.drawLayer(rcI(pd, 0x2b4 + b), rcI(pd, 0x2d4 + b), x, y, scaleX, scaleY, rotation,
+                              static_cast<uint32_t>(anchorX), anchorY, color, alpha, 1, 0x200,
+                              0xffffff, clipRect, nullptr, static_cast<uint32_t>(p17), 1);
+                rcIR(pd, 0x2d4 + b) = (rcI(pd, 0x2d4 + b) + 1) % rcI(pd, 0x2c4 + b);
+            }
+            MainViewController *vc = RootVC();
+            if ([vc getCapturedImage] == nil) {
+                [vc screenshot];
+            }
+        }
+        rquad(rcI(pd, 0x248 + rank * 4));   // rank number glyph
+        return;
+    }
+    // --- Rank-effect layer B + rank glyph (DIFFICULTY_RUNK_NUMBER_E2, +0x270) ---
+    if (rcI(pd, 0x270) == child) {
+        const int rank = (int)rcS(pd, 0x35c);
+        if (rank == 0) {
+            return;
+        }
+        AepLyrCtrl *intro = reinterpret_cast<AepLyrCtrl *>(rcP(pd, 0x214));
+        if ((intro == nullptr || !intro->isAnimating()) &&
+            static_cast<unsigned short>(rank - 1) < 2) {
+            const int b = (rank != 1) ? 4 : 0;
+            aep.drawLayer(rcI(pd, 0x2b4 + b), rcI(pd, 0x2d4 + b), x, y, scaleX, scaleY, rotation,
+                          1, anchorX, anchorY, color, alpha, 0x200,
+                          0xffffff, clipRect, reinterpret_cast<void *>((intptr_t)p17), 0, 1);
+        }
+        rquad(rcI(pd, 0x248 + rank * 4));   // rank number glyph
+        return;
+    }
+    // Unmatched child: nothing to draw.
+}
+
 // Ghidra: FUN_0003d5bc call site in PlayTaskGotoResult (operator_new(0x3a0)).
 C_TASK *PlayResultCreateTask() {
     return new PlayResultTask();
