@@ -12,6 +12,7 @@
 #import "C_TASK.h"
 #import "MainTask.h"
 #import "MenuMainTask.h"
+#import "PlayTask.h"
 #import "TitleTask.h"
 
 // App boot: create + register the logo splash task at priority 3. Ghidra:
@@ -39,6 +40,12 @@ C_TASK *TitleTaskCreate() {
 // operator_new(0xaa8) + MainTask_ctor (FUN_00034d48).
 C_TASK *MainTaskCreate() {
     return new MainTask();
+}
+
+// MainTask (song chosen) -> the note-play task. Ghidra: PlayTask (state @ +0x9fc,
+// update PlayTask_update FUN_0002dc14) — drives the PlayJudge/NoteMng core.
+C_TASK *PlayTaskCreate() {
+    return new PlayTask();
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

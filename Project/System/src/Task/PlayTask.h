@@ -1,0 +1,29 @@
+//
+//  PlayTask.h
+//  pop'n rhythmin
+//
+//  The standard-mode NOTE-PLAY task: the actual gameplay screen. It runs the play
+//  clock, drives the per-frame note judge/render pass (PlayJudge_update / NoteMng),
+//  handles the pause menu, fires combo SEs, watches the gauge + song end, and hands
+//  off to the result screen. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin (init PlayTask_init FUN_0002e2d8, update PlayTask_update FUN_0002dc14).
+//
+//  This task's storage IS the play data the judge pass operates on (state @ +0x9fc,
+//  judge-state pool @ +0x3c8, scale/radius @ +0x974/+0x9b8 — see PlayJudge.h's
+//  MainTaskPlayData). The heavy per-state screen geometry is delegated to the note
+//  draw + pause-menu units.
+//
+
+#pragma once
+
+#include "C_TASK.h"
+
+class PlayTask : public C_TASK {
+public:
+    PlayTask();                          // Ghidra: MainTask spawns this; PlayTask_init
+    void update(int deltaMs) override;   // Ghidra: PlayTask_update (FUN_0002dc14)
+};
+
+// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=cpp sw=4 ts=4 et :
+// code: language=cpp insertSpaces=true tabSize=4
