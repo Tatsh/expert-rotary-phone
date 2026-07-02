@@ -32,8 +32,8 @@
 
 // Rebuild the caches (clears the dirty flag).
 - (void)createMusicDataArray;        // @ 0xca248
-- (void)createAcMusicDataArray;      // @ 0xcaabc  [body pending]
-- (void)createMusicLvPatchArray;     // @ (level-patch list)  [body pending]
+- (void)createAcMusicDataArray;      // @ 0xcaabc
+- (void)createMusicLvPatchArray;     // loads rhythmin.lv level patches
 
 // Load & Blowfish-decrypt the purchased-song lists ("mulist"/"acmulist").
 - (void)loadPurchasedMusics;         // @ 0xc8820
@@ -43,7 +43,7 @@
 - (void)setAcMusicDataArrayDirty;    // @ 0xcae2c
 - (void)releaseChacheMusicData;      // @ 0xcb248 (no-op in this build)
 
-// Resolve a song id to its bundled / purchased (.orb) path. [bodies pending]
+// Resolve a song id to its bundled / purchased (.orb) path.
 - (NSString *)getPathFromBundle:(int)musicId;
 - (NSString *)getPathFromPurchased:(int)musicId;
 
