@@ -6,20 +6,13 @@
 //  Objective-C++ (ARC): drives the C++ task/scene engine each display frame.
 //
 
+#import <OpenGLES/ES1/gl.h>
+
 #import "MainViewController.h"
 #import "AepManager.h"
 #import "C_TASK.h"
 #import "neFrameTimer.h"
 #import "neGLView.h"
-
-// --- Engine entry points the loop still calls into (not yet reconstructed as
-//     classes; referencing the real API is preferred once they are). ---
-extern "C" {
-// Clear the current framebuffer (GL_COLOR_BUFFER_BIT).
-void neGraphicsClear(void);                     // Ghidra: FUN_00012c14 + vtbl[0x4c](0x4000)
-// Compact the task manager's list, dropping tasks flagged for deletion.
-void neTaskManagerReap(void);                   // Ghidra: task-list sweep @ 0xbb5c
-}
 
 // Minimum seconds between rendered frames (Ghidra: DAT_0000be7c). Rendering is
 // skipped when the accumulated render time has not yet reached this.
@@ -108,10 +101,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 - (void)task {
     float dt = m_taskTime.elapsedSeconds();
     m_taskTime.reset();
+    // updateAll walks the priority list, updating live tasks and reaping (deleting)
+    // any flagged for deletion in the same pass — no separate sweep needed.
     C_TASK::updateAll(SecondsToFixed(dt));
-    // Sweep the task list: for each task, snapshot its state (prev = cur) and
-    // swap-remove any flagged for deletion (original inlines this @ 0xbb5c).
-    neTaskManagerReap();
 }
 
 // @ 0xbd30 — render the scene, frame-limited by the render timer.
@@ -120,7 +112,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
-        neGraphicsClear();
+        glClear(GL_COLOR_BUFFER_BIT);
         m_AepManager->draw();
 
         if (m_flgCapture) {
