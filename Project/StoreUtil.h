@@ -10,6 +10,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class SKProduct;
+
 @interface StoreUtil : NSObject
 
 // The store/region code sent as Accept-Language. Ghidra: targetStore @ 0x58904 = "JP".
@@ -40,6 +42,20 @@
 
 // Official eAmusement pages. Ghidra: getOfficialAppInfoURL 0x59f88 (verified).
 + (NSURL *)getOfficialAppInfoURL;
+
+// --- StoreKit helpers ---
+// Localised currency string for a product's price, or @"" if product is nil.
+// Ghidra: priceString: @ 0x5a16c.
++ (NSString *)priceString:(SKProduct *)product;
+
+// StoreKit product identifier for a pack: "rhythmin_pack%04d" (nil if packID < 1).
+// Ghidra: productIDForPackID: @ 0x5a088 (prefix CFString cf_rhythmin_pack).
++ (NSString *)productIDForPackID:(int)packID;
+
+// Inverse of productIDForPackID:: parses the numeric pack id out of a product
+// identifier, or -1 if it lacks the "rhythmin_pack" prefix / is non-positive.
+// Ghidra: packIDForProductID: @ 0x5a0d0.
++ (int)packIDForProductID:(NSString *)productID;
 
 @end
 

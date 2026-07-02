@@ -6,6 +6,10 @@
 //
 
 #import "StoreUtil.h"
+#import <StoreKit/StoreKit.h>
+
+// StoreKit product-identifier prefix (Ghidra: CFString cf_rhythmin_pack).
+static NSString *const kPackProductPrefix = @"rhythmin_pack";
 
 // A game-API endpoint path (Ghidra: the "%@%@%@" of "" + "/apr/main.cgi/" +
 // "<name>/index.jsp").
@@ -53,6 +57,43 @@ static NSString *ApiPath(NSString *name) {
 // @ 0x59f88 — official app-info page.
 + (NSURL *)getOfficialAppInfoURL {
     return [self createOfficialURL:@"/game/popn/rhythmin/app/appinfo.html"];
+}
+
+// --- StoreKit helpers ---
+
+// @ 0x5a16c — currency-formatted price via NSNumberFormatter using the product's
+// own priceLocale. Behavior 10.4, NSNumberFormatterCurrencyStyle.
++ (NSString *)priceString:(SKProduct *)product {
+    if (product == nil) {
+        return @"";
+    }
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+    [formatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+    [formatter setLocale:product.priceLocale];
+    NSString *result = [formatter stringFromNumber:product.price];
+    [formatter release];
+    return result;
+}
+
+// @ 0x5a088 — "rhythmin_pack" + zero-padded 4-digit id; nil for non-positive ids.
++ (NSString *)productIDForPackID:(int)packID {
+    if (packID < 1) {
+        return nil;
+    }
+    return [NSString stringWithFormat:@"%@%04d", kPackProductPrefix, packID];
+}
+
+// @ 0x5a0d0 — strip the prefix and read the trailing integer; -1 on mismatch.
++ (int)packIDForProductID:(NSString *)productID {
+    if (productID.length <= kPackProductPrefix.length) {
+        return -1;
+    }
+    if (![productID hasPrefix:kPackProductPrefix]) {
+        return -1;
+    }
+    int packID = [[productID substringFromIndex:kPackProductPrefix.length] intValue];
+    return packID > 0 ? packID : -1;
 }
 
 @end
