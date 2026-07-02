@@ -218,6 +218,13 @@ public:
     int maxCombo() const { return m_maxCombo; }
     int judgeCount(int kind, NoteJudge tier) const { return m_tally[kind][tier]; }
 
+    // The "a note-play session owns the manager" flag (Ghidra @ +0x13cb6). Read by
+    // -[AppDelegate applicationWillResignActive] to auto-pause play when the app is
+    // backgrounded; the play scene clears it on teardown (Ghidra: FUN_0003395c, via
+    // PlayNoteMngDetach).
+    bool isPlayActive() const { return m_playActive; }
+    void setPlayActive(bool active) { m_playActive = active; }
+
     // The chart's total playable-note count, fixed once the chart is parsed at
     // initPlayData (the count of NOTE_TYPE_NORMAL records): the running score's
     // denominator (PlayCurrentScore) and the full-combo / all-perfect threshold the
@@ -279,6 +286,7 @@ private:
     int m_earlyMiss[kNoteKindCount] = {};                     // too-early presses
 
     bool m_autoPlay = false;   // Ghidra flag @ +0x13cb5 (skips manual judgement)
+    bool m_playActive = false; // Ghidra flag @ +0x13cb6 (a play session is running)
 
     // Resign/suspend bookkeeping (Ghidra: within the play-data region, near +0x05;
     // the recorded position field is written by FUN_00034510).

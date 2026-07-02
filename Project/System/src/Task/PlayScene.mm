@@ -74,7 +74,8 @@ void PlayLoadCharaTextures(void *playData);
 // Ghidra: FUN_00030944.
 void PlayTaskDraw(void *context);
 
-// Clear the note manager's active-play flag on teardown. Ghidra: FUN_0003395c.
+// Clear the note manager's active-play flag on teardown. Ghidra: FUN_0003395c
+// (a single store of 0 to NoteMng + 0x13cb6). Defined at the foot of this file.
 void PlayNoteMngDetach(NoteMng *nm);
 
 // --- Play-data field access ------------------------------------------------------
@@ -303,6 +304,13 @@ void PlayTaskGotoResult(void *playData) {
     }
     next->setPriority(3);   // Ghidra: C_TASK_setPriority
     pdByte(playData, 0x9c7) = 1;   // +0x9c7 = hand-off complete
+}
+
+// Ghidra: FUN_0003395c — the play scene releasing the note manager: clear its
+// "play session active" flag (@ +0x13cb6) so a later app-resign does not try to
+// pause a scene that is already tearing down.
+void PlayNoteMngDetach(NoteMng *nm) {
+    nm->setPlayActive(false);
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
