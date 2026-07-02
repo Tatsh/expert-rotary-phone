@@ -7,6 +7,7 @@
 
 #import "AppDelegate.h"
 #import "BFCodec.h"
+#import "CommonAlertView.h"
 #import "Downloader.h"
 #import "PurchaseManager.h"
 #import "PurchaseTransactionCache.h"
@@ -190,9 +191,16 @@
         return NO;
     }
     if (![SKPaymentQueue canMakePayments]) {
-        // Ghidra: CommonAlertView "cannot purchase" (@ 0x136c88 / 0x136c98 / 0x1347f8;
-        // Japanese, glyphs not byte-verified) — deferred to keep this file's
-        // StoreKit dependencies minimal.
+        // "エラー" / "アプリ内課金が制限されています" / "OK"
+        // (Ghidra CFStrings @ 0x136c88 / 0x136c98 / 0x1347f8).
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:@"エラー"
+                                           message:@"アプリ内課金が制限されています"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK", nil];
+        [alert show];
+        [alert release];
         return NO;
     }
     m_Transactioing = YES;
