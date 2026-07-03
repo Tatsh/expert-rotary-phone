@@ -37,4 +37,12 @@
     }
 }
 
+
+// Fetch all ScoreData rows (parallel to TreasureData/CharaTicketData getAll*).
++ (NSArray *)getAllScoreData:(NSManagedObjectContext *)context {
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    request.entity = [NSEntityDescription entityForName:@"ScoreData" inManagedObjectContext:context];
+    return [context executeFetchRequest:request error:NULL];
+}
+
 @end

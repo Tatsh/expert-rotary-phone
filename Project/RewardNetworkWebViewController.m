@@ -7,28 +7,14 @@
 //
 
 #import "RewardNetworkWebViewController.h"
+#import "RewardNetworkIndicator.h"
+#import "RewardNetworkUtilities.h"
+#import "RewardNetworkMessage.h"
 
 // ---------------------------------------------------------------------------
 // Unreconstructed RewardNetwork ("applilink") SDK collaborators. Minimal forward
 // interfaces only — reconstruct these classes separately.
 // ---------------------------------------------------------------------------
-
-// TODO(dep): RewardNetworkIndicator — the SDK's activity-indicator view (a UIView).
-@interface RewardNetworkIndicator : UIView
-- (void)show;
-- (void)close;
-@end
-
-// TODO(dep): RewardNetworkUtilities — URL/param helpers + responder-chain probe.
-@interface RewardNetworkUtilities : NSObject
-+ (NSString *)appendParametersToURL:(NSString *)url parameters:(NSDictionary *)parameters;
-+ (BOOL)hasParentViewController:(id)responder;
-@end
-
-// TODO(dep): RewardNetworkMessage — localized UI strings by key.
-@interface RewardNetworkMessage : NSObject
-+ (NSString *)localizedMessage:(NSString *)key;
-@end
 
 // TODO(dep): NSString URL-decode category shipped with the SDK.
 @interface NSString (RewardNetworkURLDecode)

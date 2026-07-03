@@ -54,6 +54,10 @@
 //
 
 #import "ConversionView.h"
+#import "ScoreData.h"
+#import "TreasureData.h"
+#import "CharaTicketData.h"
+#import "MusicManager.h"
 
 #import "AppDelegate.h"        // +appDelegate -> uuId / managedObjectContext
 #import "AppFont.h"            // AppFontName() == getFontNameDFSoGei(), AppMaruFontName() == getFontNameDFMaruGothic()
@@ -64,54 +68,6 @@
 #import "UserSettingData.h"    // player save accessors
 
 #import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
-
-// TODO(dep): the Core Data record classes below (Game/Data/Save) are not part of the
-// reconstructed headers yet. -startConversionHttp / -commonAlertView:...: enumerate them
-// to build the upload payload, so their used selectors are declared here as informal
-// interfaces. Replace with the real headers once recovered.
-@interface ScoreData : NSObject
-+ (NSArray *)getAllScoreData:(id)managedObjectContext;
-@property (nonatomic, readonly) NSNumber *musicId;
-@property (nonatomic, readonly) NSNumber *playCntN;
-@property (nonatomic, readonly) NSNumber *playCntH;
-@property (nonatomic, readonly) NSNumber *playCntEx;
-@property (nonatomic, readonly) NSNumber *fullComboN;
-@property (nonatomic, readonly) NSNumber *fullComboH;
-@property (nonatomic, readonly) NSNumber *fullComboEx;
-@property (nonatomic, readonly) NSNumber *perfectN;
-@property (nonatomic, readonly) NSNumber *perfectH;
-@property (nonatomic, readonly) NSNumber *perfectEx;
-@property (nonatomic, readonly) NSNumber *scoreN;
-@property (nonatomic, readonly) NSNumber *scoreH;
-@property (nonatomic, readonly) NSNumber *scoreEx;
-@end
-
-@interface TreasureData : NSObject
-+ (NSArray *)getAllTreasureData:(id)managedObjectContext;
-+ (id)init:(id)managedObjectContext;   // wipe/reset treasure store (device-change confirm)
-@property (nonatomic, readonly) NSNumber *mainMapId;
-@property (nonatomic, readonly) NSNumber *subMapId;
-@property (nonatomic, readonly) NSNumber *musicPiece;
-@property (nonatomic, readonly) NSNumber *wallPaperPiece;
-@property (nonatomic, readonly) NSNumber *clearCnt;
-@property (nonatomic, readonly) NSNumber *friendMeetCnt;
-@property (nonatomic, readonly) NSNumber *fastRecord;
-@property (nonatomic, readonly) NSNumber *goalCharaTicket;
-@property (nonatomic, readonly) NSNumber *goalTouchSound;
-@end
-
-@interface CharaTicketData : NSObject
-+ (NSArray *)getAllData:(id)managedObjectContext;
-@property (nonatomic, readonly) NSNumber *productId;
-@end
-
-@interface MusicManager : NSObject
-+ (instancetype)getInstance;
-- (void)openCollaboMusic;
-- (void)openInviteMusic;
-- (void)openLoginBonusMusic;
-- (void)openTreasureMusic;
-@end
 
 @implementation ConversionView {
     BOOL isAnimationing;                  // +? close-fade guard

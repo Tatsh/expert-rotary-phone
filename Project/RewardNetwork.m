@@ -7,6 +7,8 @@
 //
 
 #import "RewardNetwork.h"
+#import "RewardNetworkUtilities.h"
+#import "RewardNetworkError.h"
 #import <UIKit/UIKit.h>
 
 #import "RewardNetworkWebAPI.h"
@@ -16,16 +18,6 @@
 // Unreconstructed RewardNetwork ("applilink") SDK collaborators. Minimal forward
 // interfaces only — reconstruct these classes separately.
 // ---------------------------------------------------------------------------
-
-// TODO(dep): RewardNetworkUtilities — SDK availability probe.
-@interface RewardNetworkUtilities : NSObject
-+ (BOOL)canUseRewardSdk;
-@end
-
-// TODO(dep): RewardNetworkError — builds localized NSError objects by code.
-@interface RewardNetworkError : NSObject
-+ (NSError *)localizedApplilinkErrorWithCode:(NSInteger)code;
-@end
 
 // Private helpers owned by RewardNetwork.
 @interface RewardNetwork ()
