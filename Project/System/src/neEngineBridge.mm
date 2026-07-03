@@ -70,6 +70,22 @@ void neAppEventCenter::commitAcViewerSelection() {
     g_wAcViewerSelDifficulty = g_wAcViewerDifficulty;
 }
 
+// Reset only the current browsing music id (@ 0x187bf0) to the "none" sentinel.
+void neAppEventCenter::clearAcViewerCurrentMusic() {
+    g_dwAcViewerMusicId = -1;
+}
+
+// e-AMUSEMENT login context (event-center region). The login flow populates these;
+// the music-checker score sync reads them. Modelled as file-static globals, matching
+// the AC-viewer selection state above.
+static id        g_pLinkRefId      = nil;    // g_pLinkRefId       @ 0x187be0 (+0x28)
+static NSString *g_pInputPassword  = nil;    // g_pInputPassword   @ 0x187be4 (+0x2c)
+static bool      g_bRequireOtpInput = false; // g_bRequireOtpInput @ 0x187be9 (+0x31)
+
+id        neAppEventCenter::linkRefId()      { return g_pLinkRefId; }
+NSString *neAppEventCenter::inputPassword()  { return g_pInputPassword; }
+bool      neAppEventCenter::requireOtpInput() { return g_bRequireOtpInput; }
+
 int neAppEventCenter::lastMusic() const { return m_lastMusic; }
 void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }
 int neAppEventCenter::lastSheet() const { return m_lastSheet; }

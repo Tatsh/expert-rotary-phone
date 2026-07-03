@@ -84,6 +84,17 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)delBlockListURL     { return [self createHttpsURL:ApiPath(@"del_block_list")]; }
 + (NSURL *)cancelFriendURL     { return [self createHttpsURL:ApiPath(@"cancel_friend")]; }
 
+// @ 0x59658 / 0x596cc — daily-quiz endpoints. Path is a literal "/apr/main.cgi/" +
+// "<name>/index.jsp" plus a "?target=JP" query (Ghidra fmt "%@%@?target=%@", store "JP").
++ (NSURL *)getQuizURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@?target=%@",
+                                 @"/apr/main.cgi/", @"get_quiz/index.jsp", @"JP"]];
+}
++ (NSURL *)replyQuizURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@?target=%@",
+                                 @"/apr/main.cgi/", @"reply_quiz/index.jsp", @"JP"]];
+}
+
 // @ 0x59f88 — official app-info page.
 + (NSURL *)getOfficialAppInfoURL {
     return [self createOfficialURL:@"/game/popn/rhythmin/app/appinfo.html"];

@@ -450,7 +450,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xc374 — the friend/recommend screen (param = context); a boxed iPad panel.
 - (void)GotoRecommend:(void *)context {
     _recommendViewCtrl = [[RecommendViewController alloc] init];
-    [(RecommendViewController *)_recommendViewCtrl initAtNavigationController:context];
+    [(RecommendViewController *)_recommendViewCtrl initAtNavigationController:(MusicSelTask *)context];
     _recommendNaviCtrl = [[UINavigationController alloc] init];
     _recommendNaviCtrl.view.clipsToBounds = YES;
     if (neSceneManager::isPadDisplay()) {
@@ -494,7 +494,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xe170 — the over-score (friend score log) screen (param = context); iPad panel.
 - (void)GotoOverScoreLog:(void *)context {
     _overScoreLogViewCtrl = [[OverScoreLogViewController alloc] init];
-    [(OverScoreLogViewController *)_overScoreLogViewCtrl initAtNavigationController:context];
+    [(OverScoreLogViewController *)_overScoreLogViewCtrl initAtNavigationController:(MusicSelTask *)context];
     _overScoreLogNaviCtrl = [[UINavigationController alloc] init];
     _overScoreLogNaviCtrl.view.clipsToBounds = YES;
     if (neSceneManager::isPadDisplay()) {

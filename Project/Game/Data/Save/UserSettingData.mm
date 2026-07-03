@@ -216,6 +216,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (NSString *)playerId               { return [self getString:@"PlayerId"]; }
 // @ 0x60210 — the player's display name.
 + (NSString *)playerName             { return [self getString:@"PlayerName"]; }
+// @ 0x602b0 — the player's e-AMUSEMENT / KONAMI id (music-checker score sync).
++ (NSString *)konamiId               { return [self getString:@"KonamiId"]; }
 
 #pragma mark - Friend list (plaintext)
 
@@ -700,6 +702,18 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return 0;
 }
 
+// @ 0x61378 — read the "ConsumedTreasurePoint" int, clamped to >= 0.
++ (short)consumedTreasurePoint {
+    short v = (short)[self getInt:@"ConsumedTreasurePoint"];
+    return v < 1 ? 0 : v;
+}
+
+// @ 0x613b0 — clamp to [0, 9999] and store under "ConsumedTreasurePoint".
++ (void)saveConsumedTreasurePoint:(short)value {
+    short clamped = value < 9999 ? value : 9999;
+    [self saveInt:(clamped < 0 ? 0 : clamped) Key:@"ConsumedTreasurePoint"];
+}
+
 #pragma mark - Uncomplete score-save queue
 
 // @ 0x60a90
@@ -760,6 +774,20 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     }
     [self saveInt:sum Key:@"SumPurchase"];
 }
+
+// --- Quiz progress counters (plaintext ints) ---
+// @ 0x616c4 / 0x616ec
++ (int)lastAnswerQuizId          { return [self getInt:@"LastAnswerQuizId"]; }
++ (void)saveLastAnswerQuizId:(int)v { [self saveInt:v Key:@"LastAnswerQuizId"]; }
+// @ 0x61714 / 0x6173c
++ (int)totalCorrectQuiz          { return [self getInt:@"TotalCorrectQuiz"]; }
++ (void)saveTotalCorrectQuiz:(int)v { [self saveInt:v Key:@"TotalCorrectQuiz"]; }
+// @ 0x61764 / 0x6178c
++ (int)totalInCorrectQuiz        { return [self getInt:@"TotalInCorrectQuiz"]; }
++ (void)saveTotalInCorrectQuiz:(int)v { [self saveInt:v Key:@"TotalInCorrectQuiz"]; }
+// @ 0x617b4 / 0x617dc
++ (int)consecutiveCorrectQuiz    { return [self getInt:@"ConsecutiveCorrectQuiz"]; }
++ (void)saveConsecutiveQuiz:(int)v { [self saveInt:v Key:@"ConsecutiveCorrectQuiz"]; }
 
 // @ 0x612b0 — grant character tickets (Crypt109 charaTicket += count); no-op for 0.
 + (void)addCharaTicket:(int)count {

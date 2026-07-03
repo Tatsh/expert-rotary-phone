@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 148 |
+| Complete | 156 |
 | Partial (file exists, methods missing) | 0 |
-| Fully missing (no source file) | 25 |
-| **Missing methods** | **501** |
+| Fully missing (no source file) | 17 |
+| **Missing methods** | **358** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 25
+## Fully missing classes — 17
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -37,18 +37,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `MapSelectSplitViewController` | 23 | 20 | `248` |
 | `RecommendWebView` | 23 | 7 | `76` |
 | `InputNameViewCtrl` | 22 | 4 | `177` |
-| `PresentBoxViewController` | 20 | 7 | `192` |
-| `QuizMainViewController` | 19 | 26 | `276` |
-| `AcViewerCategoryViewController` | 18 | 3 | `268` |
-| `CheckerCategoryViewController` | 18 | 3 | `272` |
 | `InputOTPViewCtrl` | 18 | 5 | `184` |
-| `OverScoreLogViewController` | 18 | 6 | `188` |
-| `RecommendViewController` | 18 | 6 | `184` |
 | `PopnLinkTopViewController` | 17 | 6 | `184` |
 | `DefaultDataDownloadView` | 16 | 11 | `204` |
-| `FreeRequestDetail` | 16 | 6 | `72` |
 | `InviteTopViewControllerPad` | 16 | 5 | `180` |
-| `SubMapSelectViewController` | 16 | 4 | `180` |
 | `SettingTableSplitViewController` | 14 | 7 | `308` |
 | `FriendMngTopSplitViewController` | 13 | 13 | `284` |
 | `PopnLinkTopSplitViewController` | 13 | 12 | `280` |
@@ -58,10 +50,11 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Class | Done | Total | Missing (binary + unimpl) |
 | --- | ---: | ---: | ---: |
 
-## Complete classes — 148
+## Complete classes — 156
 
 - `AcMusicData`
 - `AcViewerCategoryCell`
+- `AcViewerCategoryViewController`
 - `AcViewerDetailCell`
 - `AcViewerHiSpeedViewController`
 - `AcViewerHidSudViewController`
@@ -87,6 +80,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `CharaInfo`
 - `CharaTicketData`
 - `CheckerCategoryCell`
+- `CheckerCategoryViewController`
 - `CheckerDetail`
 - `CheckerMusicCell`
 - `CheckerMusicViewController`
@@ -104,6 +98,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `DownloadMain`
 - `DownloadProgresView`
 - `Downloader`
+- `FreeRequestDetail`
 - `FreeRequestListCell`
 - `FreeRequestListViewController`
 - `FriendListCell`
@@ -136,18 +131,22 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `MyInviteCodeViewController`
 - `OverScoreData`
 - `OverScoreLogCell`
+- `OverScoreLogViewController`
 - `PolicyView`
 - `PopkunSizeViewCtrl`
 - `PreferredCharaInfo`
 - `PresentBoxCell`
+- `PresentBoxViewController`
 - `PurchaseManager`
 - `PurchaseStore`
 - `PurchaseTransactionCache`
 - `QuizCell`
+- `QuizMainViewController`
 - `RandomLoginBonusView`
 - `RecommendAdId`
 - `RecommendListCell`
 - `RecommendNetwork`
+- `RecommendViewController`
 - `RecommendWebAPI`
 - `RecommendWebViewController`
 - `RewardNetwork`
@@ -195,6 +194,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `StoreUtil`
 - `StoreViewController`
 - `SubMapListCell`
+- `SubMapSelectViewController`
 - `SystemHardware`
 - `TouchRangeView`
 - `TouchRangeViewCtrl`
@@ -707,176 +707,6 @@ Methods **0/22** · unimpl 0 · ivars 4 · `instanceSize`=`177`
 | `_downloader` | `Downloader *` | `0xac` |
 | `m_IsAnimationing` | `BOOL` | `0xb0` |
 
-### `PresentBoxViewController` — ❌ missing
-
-Methods **0/20** · unimpl 0 · ivars 7 · `instanceSize`=`192`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0x24098` |
-| `initAtNavigationController` | `0x24938` |
-| `dealloc` | `0x24988` |
-| `viewDidLoad` | `0x24abc` |
-| `viewWillAppear:` | `0x24ba4` |
-| `didReceiveMemoryWarning` | `0x24c6c` |
-| `startOpenAnimation` | `0x24c98` |
-| `endOpenAnimation` | `0x2514c` |
-| `startCloseAnimation` | `0x25160` |
-| `endCloseAnimation` | `0x255bc` |
-| `numberOfSectionsInTableView:` | `0x25628` |
-| `tableView:numberOfRowsInSection:` | `0x2562c` |
-| `tableView:cellForRowAtIndexPath:` | `0x25668` |
-| `downloadMainFinished:` | `0x257a8` |
-| `backButtonFunc` | `0x25cdc` |
-| `allGetFunc` | `0x25d48` |
-| `indexPathForControlEvent:` | `0x25db4` |
-| `touchedGetButton:event:` | `0x25e34` |
-| `customAlertView:clickedButtonAtIndex:` | `0x260a4` |
-| `isAnimationing` | `0x26144` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_emptyImageView` | `UIImageView *` | `0xa8` |
-| `_btnGetAll` | `UIButton *` | `0xac` |
-| `_isAnimationing` | `BOOL` | `0xb0` |
-| `_presentDataArray` | `NSMutableArray *` | `0xb4` |
-| `_customAlert` | `CustomAlertView *` | `0xb8` |
-| `_presentDataValue` | `NSValue *` | `0xbc` |
-
-### `QuizMainViewController` — ❌ missing
-
-Methods **0/19** · unimpl 0 · ivars 26 · `instanceSize`=`276`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0xda198` |
-| `dealloc` | `0xdb2a4` |
-| `viewDidLoad` | `0xdb3d4` |
-| `didReceiveMemoryWarning` | `0xdb438` |
-| `numberOfSectionsInTableView:` | `0xdb464` |
-| `tableView:numberOfRowsInSection:` | `0xdb468` |
-| `tableView:cellForRowAtIndexPath:` | `0xdb538` |
-| `tableView:titleForHeaderInSection:` | `0xdb674` |
-| `tableView:didSelectRowAtIndexPath:` | `0xdb678` |
-| `downloaderFinished:` | `0xdb730` |
-| `downloaderProceed:` | `0xdb7ac` |
-| `downloaderError:` | `0xdb7b0` |
-| `touchedBackButton:` | `0xdb8cc` |
-| `getQuizFinished` | `0xdb968` |
-| `replyQuizFinished` | `0xdbda4` |
-| `startGetQuizHttp` | `0xdc2b8` |
-| `startReplyQuizHttp` | `0xdc36c` |
-| `drawResult` | `0xdc4ec` |
-| `touchesBegan:withEvent:` | `0xdca68` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_questionLbl` | `UILabel *` | `0xa8` |
-| `_rightView` | `UIImageView *` | `0xac` |
-| `_wrongView` | `UIImageView *` | `0xb0` |
-| `_blackBoardView` | `UIImageView *` | `0xb4` |
-| `_blackBoardResultView` | `UIImageView *` | `0xb8` |
-| `_hanamaruView` | `UIImageView *` | `0xbc` |
-| `_presentBaseView` | `UIView *` | `0xc0` |
-| `_defSsmView` | `UIImageView *` | `0xc4` |
-| `_rightSsmView` | `UIImageView *` | `0xc8` |
-| `_wrongSsmView` | `UIImageView *` | `0xcc` |
-| `_dlQuiz` | `Downloader *` | `0xd0` |
-| `_dlAnswer` | `Downloader *` | `0xd4` |
-| `_question` | `NSString *` | `0xd8` |
-| `_quizAnswerArray` | `NSArray *` | `0xdc` |
-| `_quizId` | `int` | `0xe0` |
-| `_rightAnswer` | `int` | `0xe4` |
-| `_totalCorrect` | `int` | `0xe8` |
-| `_totalIncorrect` | `int` | `0xec` |
-| `_consecutive` | `int` | `0xf0` |
-| `_finaleAnswer` | `int` | `0xf4` |
-| `_selectAnswer` | `int` | `0xf8` |
-| `_selectCell` | `UITableViewCell *` | `0xfc` |
-| `_isAnswerable` | `BOOL` | `0x100` |
-| `_presentSt` | `int` | `0x104` |
-| `_sdRscId` | `int[3]` | `0x108` |
-
-### `AcViewerCategoryViewController` — ❌ missing
-
-Methods **0/18** · unimpl 0 · ivars 3 · `instanceSize`=`268`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `getAcMusicData:` | `0x687f0` |
-| `initWithStyle:` | `0x68804` |
-| `initAtNavigationController` | `0x68d40` |
-| `dealloc` | `0x68ec8` |
-| `viewDidLoad` | `0x68f30` |
-| `didReceiveMemoryWarning` | `0x6903c` |
-| `startOpenAnimation` | `0x69068` |
-| `endOpenAnimation` | `0x691a0` |
-| `startCloseAnimation` | `0x691b8` |
-| `endCloseAnimation` | `0x692c0` |
-| `numberOfSectionsInTableView:` | `0x6932c` |
-| `tableView:numberOfRowsInSection:` | `0x69330` |
-| `tableView:cellForRowAtIndexPath:` | `0x69378` |
-| `tableView:titleForHeaderInSection:` | `0x694c4` |
-| `tableView:didSelectRowAtIndexPath:` | `0x694c8` |
-| `touchedBackButton:` | `0x696c4` |
-| `delegate` | `0x69740` |
-| `setDelegate:` | `0x69750` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_acMusicDataArray` | `NSArray *[24]` | `0xa4` |
-| `_isAnimationing` | `BOOL` | `0x104` |
-| `_delegate` | `<AcViewerViewControllerDelegate> *` | `0x108` |
-
-### `CheckerCategoryViewController` — ❌ missing
-
-Methods **0/18** · unimpl 0 · ivars 3 · `instanceSize`=`272`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0xcfb88` |
-| `dealloc` | `0xd04bc` |
-| `viewDidLoad` | `0xd0564` |
-| `viewWillAppear:` | `0xd05c4` |
-| `didReceiveMemoryWarning` | `0xd0688` |
-| `startGetArcadeScoreHttpWithOtp:` | `0xd06b4` |
-| `numberOfSectionsInTableView:` | `0xd0810` |
-| `tableView:numberOfRowsInSection:` | `0xd0814` |
-| `tableView:cellForRowAtIndexPath:` | `0xd085c` |
-| `tableView:titleForHeaderInSection:` | `0xd0988` |
-| `tableView:didSelectRowAtIndexPath:` | `0xd098c` |
-| `downloaderFinished:` | `0xd0ad8` |
-| `downloaderProceed:` | `0xd1884` |
-| `downloaderError:` | `0xd1888` |
-| `touchedBackButton:` | `0xd1960` |
-| `touchedGetDataButton:` | `0xd1a18` |
-| `convertReplaceChara:` | `0xd1b40` |
-| `convertCategoryId:` | `0xd1cac` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_scoreDataArray` | `NSArray *[25]` | `0xa8` |
-| `_dlGetArcadeScoreData` | `Downloader *` | `0x10c` |
-
 ### `InputOTPViewCtrl` — ❌ missing
 
 Methods **0/18** · unimpl 0 · ivars 5 · `instanceSize`=`184`
@@ -913,82 +743,6 @@ Methods **0/18** · unimpl 0 · ivars 5 · `instanceSize`=`184`
 | `_otpField` | `UITextField *` | `0xac` |
 | `_dummyView` | `UIViewController *` | `0xb0` |
 | `_scrollOffset` | `float` | `0xb4` |
-
-### `OverScoreLogViewController` — ❌ missing
-
-Methods **0/18** · unimpl 0 · ivars 6 · `instanceSize`=`188`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0x29928` |
-| `initAtNavigationController:` | `0x29e24` |
-| `dealloc` | `0x29fd8` |
-| `viewDidLoad` | `0x2a08c` |
-| `didReceiveMemoryWarning` | `0x2a180` |
-| `startOpenAnimation` | `0x2a1b0` |
-| `endOpenAnimation` | `0x2a664` |
-| `startCloseAnimation` | `0x2a678` |
-| `endCloseAnimation` | `0x2aad4` |
-| `numberOfSectionsInTableView:` | `0x2ab80` |
-| `tableView:heightForRowAtIndexPath:` | `0x2ab84` |
-| `tableView:numberOfRowsInSection:` | `0x2abe0` |
-| `tableView:cellForRowAtIndexPath:` | `0x2ac1c` |
-| `tableView:didSelectRowAtIndexPath:` | `0x2ad28` |
-| `downloadMainFinished:` | `0x2adac` |
-| `backButtonFunc` | `0x2aefc` |
-| `musicSelTask` | `0x2af2c` |
-| `setMusicSelTask:` | `0x2af40` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_isAnimationing` | `BOOL` | `0xa8` |
-| `_overScoreLogDataArray` | `NSMutableArray *` | `0xac` |
-| `_musicSelTask` | `struct MusicSelTask *` | `0xb0` |
-| `m_musicId` | `int` | `0xb4` |
-| `m_sheet` | `int` | `0xb8` |
-
-### `RecommendViewController` — ❌ missing
-
-Methods **0/18** · unimpl 0 · ivars 6 · `instanceSize`=`184`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0xbbd68` |
-| `initAtNavigationController:` | `0xbc30c` |
-| `dealloc` | `0xbc4c0` |
-| `viewDidLoad` | `0xbc524` |
-| `didReceiveMemoryWarning` | `0xbc5b4` |
-| `startOpenAnimation` | `0xbc5e0` |
-| `endOpenAnimation` | `0xbca94` |
-| `startCloseAnimation` | `0xbcaa8` |
-| `endCloseAnimation` | `0xbcf54` |
-| `numberOfSectionsInTableView:` | `0xbcfc0` |
-| `tableView:numberOfRowsInSection:` | `0xbcfc4` |
-| `tableView:cellForRowAtIndexPath:` | `0xbcfec` |
-| `tableView:titleForHeaderInSection:` | `0xbd0f8` |
-| `tableView:didSelectRowAtIndexPath:` | `0xbd0fc` |
-| `touchedBackButton:` | `0xbd2c4` |
-| `musicSelTask` | `0xbd3d4` |
-| `setMusicSelTask:` | `0xbd3e8` |
-| `isAnimationing` | `0xbd400` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_storeView` | `StoreViewController *` | `0xa8` |
-| `_recommendDataArray` | `NSArray *` | `0xac` |
-| `_isAnimationing` | `BOOL` | `0xb0` |
-| `_isBack` | `BOOL` | `0xb1` |
-| `_pMusicSelTask` | `void *` | `0xb4` |
 
 ### `PopnLinkTopViewController` — ❌ missing
 
@@ -1068,42 +822,6 @@ Methods **0/16** · unimpl 0 · ivars 11 · `instanceSize`=`204`
 | `_isAnimationing` | `BOOL` | `0xc5` |
 | `_tryCnt` | `int` | `0xc8` |
 
-### `FreeRequestDetail` — ❌ missing
-
-Methods **0/16** · unimpl 0 · ivars 6 · `instanceSize`=`72`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:friendData:` | `0xe3170` |
-| `addCntNum:sheet:y:view:` | `0xe40ac` |
-| `deallc` | `0xe4278` |
-| `startOpenAnimation` | `0xe42f8` |
-| `endOpenAnimation` | `0xe43d0` |
-| `startCloseAnimation` | `0xe43e8` |
-| `endCloseAnimation` | `0xe44a8` |
-| `downloaderFinished:` | `0xe44e0` |
-| `downloaderProceed:` | `0xe46a0` |
-| `downloaderError:` | `0xe46a4` |
-| `commonAlertView:clickedButtonAtIndex:` | `0xe476c` |
-| `startRequestFriendHttp` | `0xe477c` |
-| `touchedCancel` | `0xe490c` |
-| `touchesEnded:withEvent:` | `0xe493c` |
-| `isAnimationing` | `0xe4994` |
-| `isEnabled` | `0xe49ac` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIView *` | `0x34` |
-| `_friendData` | `NSValue *` | `0x38` |
-| `_isAnimationing` | `BOOL` | `0x3c` |
-| `_isEnabled` | `BOOL` | `0x3d` |
-| `_downloader` | `Downloader *` | `0x40` |
-| `_scaleForPad` | `float` | `0x44` |
-
 ### `InviteTopViewControllerPad` — ❌ missing
 
 Methods **0/16** · unimpl 0 · ivars 5 · `instanceSize`=`180`
@@ -1138,40 +856,6 @@ Methods **0/16** · unimpl 0 · ivars 5 · `instanceSize`=`180`
 | `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
 | `_downloader` | `Downloader *` | `0xac` |
 | `_scrollView` | `UIScrollView *` | `0xb0` |
-
-### `SubMapSelectViewController` — ❌ missing
-
-Methods **0/16** · unimpl 0 · ivars 4 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithTreasureData:mapHeadArray:mainMapId:` | `0xc1ea0` |
-| `dealloc` | `0xc2910` |
-| `viewDidLoad` | `0xc2aa0` |
-| `handleGesture:` | `0xc2b80` |
-| `didReceiveMemoryWarning` | `0xc2bec` |
-| `numberOfSectionsInTableView:` | `0xc2c18` |
-| `tableView:numberOfRowsInSection:` | `0xc2c1c` |
-| `tableView:cellForRowAtIndexPath:` | `0xc2c44` |
-| `tableView:titleForHeaderInSection:` | `0xc2d50` |
-| `tableView:didSelectRowAtIndexPath:` | `0xc2d54` |
-| `startCloseAnimation` | `0xc3088` |
-| `endCloseAnimation` | `0xc31a8` |
-| `downloadMainFinished:` | `0xc3204` |
-| `backButtonFunc` | `0xc3280` |
-| `delegate` | `0xc3334` |
-| `setDelegate:` | `0xc3344` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_subMapArray` | `NSArray *` | `0xa8` |
-| `_isDecide` | `BOOL` | `0xac` |
-| `_delegate` | `id` | `0xb0` |
 
 ### `SettingTableSplitViewController` — ❌ missing
 
@@ -1316,6 +1000,18 @@ Methods **31/31** · unimpl 0 · ivars 17 · `instanceSize`=`72`
 ### `AcViewerCategoryCell` — ✅ complete
 
 Methods **3/3** · unimpl 0 · ivars 0 · `instanceSize`=`52`
+
+### `AcViewerCategoryViewController` — ✅ complete
+
+Methods **18/18** · unimpl 0 · ivars 3 · `instanceSize`=`268`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_acMusicDataArray` | `NSArray *[24]` | `0xa4` |
+| `_isAnimationing` | `BOOL` | `0x104` |
+| `_delegate` | `<AcViewerViewControllerDelegate> *` | `0x108` |
 
 ### `AcViewerDetailCell` — ✅ complete
 
@@ -1621,6 +1317,18 @@ Methods **3/3** · unimpl 0 · ivars 7 · `instanceSize`=`84`
 | `offsetXForPad` | `int` | `0x4c` |
 | `imgMusicCntX` | `int` | `0x50` |
 
+### `CheckerCategoryViewController` — ✅ complete
+
+Methods **18/18** · unimpl 0 · ivars 3 · `instanceSize`=`272`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_scoreDataArray` | `NSArray *[25]` | `0xa8` |
+| `_dlGetArcadeScoreData` | `Downloader *` | `0x10c` |
+
 ### `CheckerDetail` — ✅ complete
 
 Methods **7/7** · unimpl 0 · ivars 15 · `instanceSize`=`368`
@@ -1915,6 +1623,21 @@ Methods **16/16** · unimpl 0 · ivars 7 · `instanceSize`=`36`
 | `m_Delegate` | `<DownloaderDelegate> *` | `0x18` |
 | `m_AdditionalData` | `NSObject *` | `0x1c` |
 | `m_StartTime` | `NSDate *` | `0x20` |
+
+### `FreeRequestDetail` — ✅ complete
+
+Methods **16/16** · unimpl 0 · ivars 6 · `instanceSize`=`72`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIView *` | `0x34` |
+| `_friendData` | `NSValue *` | `0x38` |
+| `_isAnimationing` | `BOOL` | `0x3c` |
+| `_isEnabled` | `BOOL` | `0x3d` |
+| `_downloader` | `Downloader *` | `0x40` |
+| `_scaleForPad` | `float` | `0x44` |
 
 ### `FreeRequestListCell` — ✅ complete
 
@@ -2440,6 +2163,21 @@ Methods **4/4** · unimpl 0 · ivars 7 · `instanceSize`=`104`
 | `m_lblFriendScore` | `UILabel *` | `0x48` |
 | `m_overScoreLogData` | `struct OverScoreLogData` | `0x4c` |
 
+### `OverScoreLogViewController` — ✅ complete
+
+Methods **18/18** · unimpl 0 · ivars 6 · `instanceSize`=`188`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_isAnimationing` | `BOOL` | `0xa8` |
+| `_overScoreLogDataArray` | `NSMutableArray *` | `0xac` |
+| `_musicSelTask` | `struct MusicSelTask *` | `0xb0` |
+| `m_musicId` | `int` | `0xb4` |
+| `m_sheet` | `int` | `0xb8` |
+
 ### `PolicyView` — ✅ complete
 
 Methods **11/11** · unimpl 0 · ivars 1 · `instanceSize`=`168`
@@ -2497,6 +2235,22 @@ Methods **5/5** · unimpl 0 · ivars 5 · `instanceSize`=`84`
 | `_lblInfo` | `UILabel *` | `0x40` |
 | `_presentData` | `struct PresentData` | `0x44` |
 
+### `PresentBoxViewController` — ✅ complete
+
+Methods **20/20** · unimpl 0 · ivars 7 · `instanceSize`=`192`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_emptyImageView` | `UIImageView *` | `0xa8` |
+| `_btnGetAll` | `UIButton *` | `0xac` |
+| `_isAnimationing` | `BOOL` | `0xb0` |
+| `_presentDataArray` | `NSMutableArray *` | `0xb4` |
+| `_customAlert` | `CustomAlertView *` | `0xb8` |
+| `_presentDataValue` | `NSValue *` | `0xbc` |
+
 ### `PurchaseManager` — ✅ complete
 
 Methods **30/30** · unimpl 0 · ivars 10 · `instanceSize`=`40`
@@ -2550,6 +2304,41 @@ Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 | --- | --- | ---: |
 | `_answerId` | `int` | `0x34` |
 | `_answerIdView` | `UIImageView *` | `0x38` |
+
+### `QuizMainViewController` — ✅ complete
+
+Methods **19/19** · unimpl 0 · ivars 26 · `instanceSize`=`276`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_questionLbl` | `UILabel *` | `0xa8` |
+| `_rightView` | `UIImageView *` | `0xac` |
+| `_wrongView` | `UIImageView *` | `0xb0` |
+| `_blackBoardView` | `UIImageView *` | `0xb4` |
+| `_blackBoardResultView` | `UIImageView *` | `0xb8` |
+| `_hanamaruView` | `UIImageView *` | `0xbc` |
+| `_presentBaseView` | `UIView *` | `0xc0` |
+| `_defSsmView` | `UIImageView *` | `0xc4` |
+| `_rightSsmView` | `UIImageView *` | `0xc8` |
+| `_wrongSsmView` | `UIImageView *` | `0xcc` |
+| `_dlQuiz` | `Downloader *` | `0xd0` |
+| `_dlAnswer` | `Downloader *` | `0xd4` |
+| `_question` | `NSString *` | `0xd8` |
+| `_quizAnswerArray` | `NSArray *` | `0xdc` |
+| `_quizId` | `int` | `0xe0` |
+| `_rightAnswer` | `int` | `0xe4` |
+| `_totalCorrect` | `int` | `0xe8` |
+| `_totalIncorrect` | `int` | `0xec` |
+| `_consecutive` | `int` | `0xf0` |
+| `_finaleAnswer` | `int` | `0xf4` |
+| `_selectAnswer` | `int` | `0xf8` |
+| `_selectCell` | `UITableViewCell *` | `0xfc` |
+| `_isAnswerable` | `BOOL` | `0x100` |
+| `_presentSt` | `int` | `0x104` |
+| `_sdRscId` | `int[3]` | `0x108` |
 
 ### `RandomLoginBonusView` — ✅ complete
 
@@ -2608,6 +2397,21 @@ Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `_initializeFlg` | `int` | `0x4` |
+
+### `RecommendViewController` — ✅ complete
+
+Methods **18/18** · unimpl 0 · ivars 6 · `instanceSize`=`184`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_storeView` | `StoreViewController *` | `0xa8` |
+| `_recommendDataArray` | `NSArray *` | `0xac` |
+| `_isAnimationing` | `BOOL` | `0xb0` |
+| `_isBack` | `BOOL` | `0xb1` |
+| `_pMusicSelTask` | `void *` | `0xb4` |
 
 ### `RecommendWebAPI` — ✅ complete
 
@@ -3248,6 +3052,19 @@ Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `_mapVal` | `NSValue *` | `0x34` |
+
+### `SubMapSelectViewController` — ✅ complete
+
+Methods **16/16** · unimpl 0 · ivars 4 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_subMapArray` | `NSArray *` | `0xa8` |
+| `_isDecide` | `BOOL` | `0xac` |
+| `_delegate` | `id` | `0xb0` |
 
 ### `SystemHardware` — ✅ complete
 

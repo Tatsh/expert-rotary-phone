@@ -36,30 +36,20 @@
 //   - The error alert strings are exact CFString decodes (UTF-16LE): title "フレンド申請",
 //     message "通信に失敗しました。\n電波状態の良い場所でやり直して下さい。", OK button.
 //   - -tableView:didSelectRowAtIndexPath: instantiates a FreeRequestDetail overlay sized to the
-//     nav host's superview (phone) or the root VC's view (pad); FreeRequestDetail is not yet in
-//     Project/ (see TODO(dep)).
+//     nav host's superview (phone) or the root VC's view (pad). FreeRequestDetail is now
+//     reconstructed (FreeRequestDetail.h/.mm) and imported directly.
 //
 
 #import "FreeRequestListViewController.h"
 
 #import "Downloader.h"          // Downloader + DownloaderDelegate
+#import "FreeRequestDetail.h"   // the friend-request confirm overlay
 #import "FreeRequestListCell.h" // one row per recommended friend
 #import "CommonAlertView.h"     // network-failure alert
 #import "AppDelegate.h"         // +appDelegate.uuId
 #import "StoreUtil.h"           // +getRecommendFriendURL
 #import "DownloadMain.h"        // FriendListData struct + @encode
 #import "neEngineBridge.h"      // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
-
-// TODO(dep): FreeRequestDetail — the friend-request confirm overlay raised from a selected row
-// (Ghidra PTR_FreeRequestDetail_0015c1a0, -[FreeRequestDetail initWithFrame:friendData:] @
-// 0x…b790, -isEnabled, -startOpenAnimation). That class is not yet present in Project/, so it is
-// only forward-declared here (a UIView subclass) to keep this reconstruction dangle-free. Swap in
-// the real FreeRequestDetail once recovered.
-@interface FreeRequestDetail : UIView
-- (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData;
-- (BOOL)isEnabled;
-- (void)startOpenAnimation;
-@end
 
 @interface FreeRequestListViewController () <DownloaderDelegate>
 - (void)releaseFriendList;

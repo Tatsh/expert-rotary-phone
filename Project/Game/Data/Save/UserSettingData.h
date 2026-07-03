@@ -68,6 +68,7 @@ typedef struct Crypt109Data {
 #pragma mark Identity (plaintext)
 + (NSString *)playerId;                   // @ 0x60260  (key "PlayerId")
 + (NSString *)playerName;                 // @ 0x60210  (key "PlayerName")
++ (NSString *)konamiId;                   // @ 0x602b0  (key "KonamiId")
 
 #pragma mark Friend list (plaintext)
 + (BOOL)isBestScoreSort;                  // @ 0x607ac  (key "IsBestScoreSort")
@@ -106,6 +107,12 @@ typedef struct Crypt109Data {
 // arcade map loader reads it to resume the board. Ghidra: -[UserSettingData
 // treasureReadNo:] (selector PTR_s_treasureReadNo__ @ 0x15b6c8).
 + (int)treasureReadNo:(short)subMapId;
+
+// The consumed sugoroku "treasure point" total, clamped to [0, 9999] on save and to >= 0
+// on read. Backed by the plaintext int key "ConsumedTreasurePoint". Ghidra:
+// consumedTreasurePoint @ 0x61378 / saveConsumedTreasurePoint: @ 0x613b0.
++ (short)consumedTreasurePoint;
++ (void)saveConsumedTreasurePoint:(short)value;
 
 #pragma mark Crypt109 blob (key "c")
 + (void)crypt109Data:(Crypt109Data *)out;         // @ 0x615b4 (read+decrypt)
@@ -240,6 +247,18 @@ typedef struct Crypt109Data {
 + (void)initTreasureTmp;
 // Setter paired with +isSimpleMode.
 + (void)saveIsSimpleMode:(BOOL)on;
+
+// Quiz progress counters (plaintext NSUserDefaults ints, via getInt:/saveInt:Key:).
+// Ghidra: lastAnswerQuizId @ 0x616c4 / saveLastAnswerQuizId: @ 0x616ec (key
+// "LastAnswerQuizId"), totalCorrectQuiz @ 0x61714 / saveTotalCorrectQuiz: @ 0x6173c
+// (key "TotalCorrectQuiz"), totalInCorrectQuiz @ 0x61764 / saveTotalInCorrectQuiz:
+// @ 0x6178c (key "TotalInCorrectQuiz"), consecutiveCorrectQuiz @ 0x617b4 /
+// saveConsecutiveQuiz: @ 0x617dc (key "ConsecutiveCorrectQuiz"). Read/written by
+// QuizMainViewController.
++ (int)lastAnswerQuizId;         + (void)saveLastAnswerQuizId:(int)v;
++ (int)totalCorrectQuiz;         + (void)saveTotalCorrectQuiz:(int)v;
++ (int)totalInCorrectQuiz;       + (void)saveTotalInCorrectQuiz:(int)v;
++ (int)consecutiveCorrectQuiz;   + (void)saveConsecutiveQuiz:(int)v;
 
 // Grant character tickets (Crypt109 charaTicket += count).
 + (void)addCharaTicket:(int)count;

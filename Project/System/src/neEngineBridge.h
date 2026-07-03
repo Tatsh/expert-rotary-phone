@@ -55,6 +55,18 @@ public:
     // Commit the current browsing pair as the pending one (Sel := current), done when
     // the arcade-viewer PLAY button is pressed.
     static void commitAcViewerSelection();
+    // Reset only the *current* AC-viewer browsing music id to the "none" sentinel (-1),
+    // leaving the difficulty untouched — done when the category list's back button
+    // cancels the viewer. Ghidra global g_dwAcViewerMusicId @ 0x187bf0.
+    static void clearAcViewerCurrentMusic();
+
+    // e-AMUSEMENT login context read by the music-checker score sync. The (not-yet-
+    // reconstructed) login flow populates these; they sit in the event-center region.
+    // Ghidra globals g_pLinkRefId @ 0x187be0 (event-center +0x28), g_pInputPassword
+    // @ 0x187be4 (+0x2c) and g_bRequireOtpInput @ 0x187be9 (+0x31).
+    static id linkRefId();            // the Core Data ref-id the arcade records key on
+    static NSString *inputPassword(); // the entered account password
+    static bool requireOtpInput();    // true when a one-time password must still be entered
 
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)

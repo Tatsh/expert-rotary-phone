@@ -47,6 +47,11 @@
 + (NSURL *)delBlockListURL;       // 0x595ec  del_block_list
 + (NSURL *)cancelFriendURL;       // 0x593d0  cancel_friend
 
+// Daily-quiz endpoints. Unlike the ApiPath endpoints above these build the path as
+// "/apr/main.cgi/" + "<name>/index.jsp" + "?target=<store>" (Ghidra fmt "%@%@?target=%@").
++ (NSURL *)getQuizURL;    // 0x59658  get_quiz/index.jsp   (verified)
++ (NSURL *)replyQuizURL;  // 0x596cc  reply_quiz/index.jsp (verified)
+
 // Official eAmusement pages. Ghidra: getOfficialAppInfoURL 0x59f88 (verified).
 + (NSURL *)getOfficialAppInfoURL;
 
