@@ -154,8 +154,14 @@
     }
 }
 
-// Requests sub-screen (send new friend requests) — STUB (FriendRequestViewController pending).
+// @ 0xa69a8 — DEFERRED STUB (intentionally left for a later pass; see HANDOFF.md).
+// The real implementation plays the decide SE and, on iPhone, pushes a FriendRequestViewController
+// (init; nav bar art "fripre_navbar"); on iPad it forwards to m_Delegate. That controller (send a
+// request by player id, with a FriendRequestTable of recommendations and a FreeRequestListViewController
+// "free request" list) is a separate reconstruction unit, so this action is a no-op stub for now.
 - (void)onRequestButtonTouched:(id)sender {
+    // TODO(friend-request): push FriendRequestViewController once it + FriendRequestTable +
+    // FreeRequestListViewController are reconstructed. Method/ivar map is recorded in HANDOFF.md.
 }
 
 // @ 0xa6ad4 — push the incoming-requests reply screen (iPhone); iPad forwards to the split hub.
