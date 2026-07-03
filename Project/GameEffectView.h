@@ -25,7 +25,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface GameEffectView : UITableViewController <UITableViewDataSource, UITableViewDelegate>
+@interface GameEffectView : UITableViewController
 
 // Custom nav-bar back button action (@ 0x737d8): plays the cancel SE, restores the
 // "settings_navbar" bar background, pops self, then re-applies the stored SE volume.

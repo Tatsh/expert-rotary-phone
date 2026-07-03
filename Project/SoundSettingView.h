@@ -25,7 +25,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface SoundSettingView : UITableViewController <UITableViewDataSource, UITableViewDelegate>
+@interface SoundSettingView : UITableViewController
 
 @end
 

@@ -5202,3 +5202,34 @@ Methods **0/0** · ivars 0 · `instanceSize`=`4`
 ### `neTextureForiOS` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
+---
+
+## C++ classes (engine / game core)
+
+C++ has no `__objc_classlist`; these are recovered from Ghidra namespace metadata (functions the
+reconstruction named `Class::method`). **Many more C++ methods remain hidden in the flat "free function" pool** — functions whose `param_1` is an implicit `this`. The plan (per review): identify those by the `this` first-arg and rename them into Ghidra namespaces (namespace = class), promoting the free-function pool into these class tables over subsequent passes.
+
+| C++ class | Methods (done/total) |
+| --- | ---: |
+| `AcMainTask` | 0/2 |
+| `AcNoteMng` | 0/2 |
+| `AepLyrCtrl` | 1/4 |
+| `AepManager` | 0/9 |
+| `AepOrderingTable` | 0/1 |
+| `BootLogoTask` | 0/6 |
+| `CharaManager` | 0/5 |
+| `MainTask` | 0/4 |
+| `MenuMainTask` | 0/3 |
+| `NEAppEventCenter` | 0/3 |
+| `NEEngine` | 0/7 |
+| `NEGraphics` | 0/10 |
+| `NESceneManager` | 0/4 |
+| `NoteMng` | 14/16 |
+| `PlayTask` | 0/2 |
+| `TitleTask` | 0/4 |
+
+**Free functions (unclassified C/C++, no namespace yet):** ~0 functions, ~0 reconstructed —
+includes real free functions (Aep* renderer, matrix/fixed-point math, `entry`) plus flat-named C++
+methods awaiting `this`-based promotion into the classes above. Library/runtime funcs excluded.
+
