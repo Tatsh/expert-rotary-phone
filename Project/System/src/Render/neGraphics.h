@@ -58,6 +58,12 @@ public:
     // uses this to tell whether the finger that started a hold is still down.
     const neTouchPoint *findTouchById(int id) const;      // Ghidra: FUN_000124cc
 
+    // Point-in-rect test primitive: true when (x,y) lies inside the rect
+    // (rx,ry,rw,rh). Ghidra: FUN_0002d974 — the same primitive the bridge's
+    // higher-level neEngine::menuButtonHit(gfx,touchId,rect,enable) wraps; the
+    // music-select task calls it directly with pre-scaled corners.
+    static bool pointInRect(int x, int y, int rx, int ry, int rw, int rh);
+
 private:
     neGraphics();                    // Ghidra: FUN_0001243c (allocates the pool)
     neGraphics(const neGraphics &) = delete;

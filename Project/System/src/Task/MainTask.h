@@ -8,25 +8,36 @@
 //  and spawns the actual note-play (or first-play tutorial) task once a song is
 //  chosen. Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor
 //  MainTask_ctor FUN_00034d48, dtor mainTask_dtor FUN_00034d90, update
-//  MainTask_update FUN_00035914; the engine work area is the "MusicSelTask" struct,
-//  0xcc1 bytes — the +0x28..+0xaa8 region is the zeroed play data, +0xaa8..+0xcc1
-//  the setup()-filled UI layout block).
+//  MainTask_update FUN_00035914).
 //
-//  This is a ~17-state machine. update()'s state flow, button dispatch and every
-//  manager/nav call are reconstructed faithfully. The engine work area is reached by
-//  raw byte offset (matching the MenuMainTask reconstruction): the WorkStruct HEAD
-//  fields (Aep layers, jacket-cell array, song-name/artist textures, music list) have
-//  exact offsets recovered from the struct layout; the packed SCALAR TAIL that holds
-//  the per-song select state + button rectangles is a documented seam — its field
-//  roles and the control flow that reads them are exact, the individual sub-offsets
-//  are best-effort (see the kOff* table + hitButton() in MainTask.mm).
+//  "MusicSelTask" is the binary's own name for THIS class: the dtor returns
+//  MusicSelTask* and DownloadMain.cppDelegateRecommendList is typed MusicSelTask*,
+//  both of which the code compares against `this` (a MainTask*). There is no
+//  separate ObjC class of that name (it is absent from the program's class list),
+//  so `MusicSelTask` is exposed below as a typedef of MainTask and the identity
+//  casts in the .mm are removed.
+//
+//  ---- work area (this class IS the 0xcc1-byte "MusicSelTask" struct) ----
+//  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
+//  binary offsets. Offsets that are read by flat `*(T*)(this+off)` accesses in the
+//  binary (the ctor + the setup / list-update / all-cells-ready / highlight /
+//  stop-and-save / info-panel helpers) are exact and named. The per-song "packed
+//  select state" (MusicSelState) is threaded through the widget array in the binary
+//  (element 0x15); its individual byte positions do not decompile cleanly, so this
+//  reconstruction gathers those scalars into a named block in the object tail — a
+//  documented seam (their ROLES and the control flow reading them are exact).
 //
 
 #pragma once
 
 #include <cstdint>
+#include <dispatch/dispatch.h>
 
 #include "C_TASK.h"
+
+class AepManager;
+class AepLyrCtrl;
+class neTextureForiOS;
 
 class MainTask : public C_TASK {
 public:
@@ -34,11 +45,19 @@ public:
     ~MainTask() override;                // Ghidra: mainTask_dtor  (FUN_00034d90)
     void update(int deltaMs) override;   // Ghidra: MainTask_update (FUN_00035914)
 
+    // ---- de-externed helpers: real methods (were extern "C" seams) ----
+    // Each takes `this` in the binary, so each is a MainTask method here.
+    void setup();                        // Ghidra: musicSelTaskSetup     (FUN_000370f0)
+    void updateList();                   // Ghidra: musicSelUpdate/mainTaskUpdate (FUN_00034f4c)
+    bool allCellsReady();                // Ghidra: musicSelAllCellsReady  (FUN_00037f38)
+    void updateHighlight();              // Ghidra: musicSelUpdateHighlight (FUN_000355fc)
+    void stopAndSave();                  // Ghidra: musicSelStopAndSave     (FUN_00038008)
+    void updateInfoPanel(int mode);      // Ghidra: musicSelUpdateInfoPanel (FUN_00037c88)
+
 private:
     // The music-select buttons hit-tested each frame. hitButton() maps each to its
-    // stored screen rectangle in the work area and tests the current tap against it
-    // (via the engine point-in-rect primitive, Ghidra FUN_0002d974). kBtnSongCell /
-    // kBtnFavToggle / kBtnDifficulty take a cell/row index.
+    // stored screen rectangle in the layout block and tests the current tap against
+    // it (via the engine point-in-rect primitive, Ghidra FUN_0002d974).
     enum Button {
         kBtnSettings, kBtnSort, kBtnRecommend, kBtnOverScoreLog,   // state 2 top row
         kBtnBackToMenu, kBtnTutorial, kBtnDiffToggle,              // state 2 overlay
@@ -48,25 +67,109 @@ private:
 
     // Hit-test `button` (screen rect scaled by the work area's UI-scale factor) against
     // the tap at (tapX, tapY). Ghidra: the inline FixedToFP/FloatVectorMult(...scale...)
-    // transform feeding pointInRect (FUN_0002d974). `cellIndex` selects the rect for the
-    // per-cell buttons. Rect storage is the packed-tail seam.
+    // transform feeding pointInRect (FUN_0002d974) — the ~13x-repeated inlined block
+    // extracted here. `cellIndex` selects the rect for the per-cell buttons.
     bool hitButton(int tapX, int tapY, Button button, int cellIndex = -1) const;
 
-    // state 3/4 seams into the packed work area (documented in MainTask.mm):
+    // state 3/4 seams into the packed select state (documented in MainTask.mm).
     void initOverscoreRows();            // fill the 3 over-score display counters
     void refreshScoreRows();             // re-read the 3 difficulty score rows
 
-    // ---- engine work area (raw-offset access; see MainTask.mm kOff* table) ----
-    // C_TASK's base is exactly 0x28 bytes, so this padding lands m_spawnedTask/m_state
-    // at their true binary offsets AND backs every raw offset in [0x28, 0xcc1).
-    uint8_t  m_pad0[0xaa0 - 0x28] = {};  // +0x28..+0xaa0 play data (Aep layers @+0x34,
-                                         //   jacket cells @+0x2d8, textures @+0x54/+0x58,
-                                         //   music list @+0x30, packed select scalars)
-    C_TASK  *m_spawnedTask = nullptr;    // +0xaa0 the note-play / tutorial / menu sub-task
-    int      m_state = 0;                // +0xaa4 state field
-    uint8_t  m_pad1[0xcc1 - 0xaa8] = {}; // +0xaa8..+0xcc1 setup()-filled UI layout (seam)
+    // ---- one widget cell of the select scene (Ghidra field26_0x2b0[], stride 0x38) ----
+    // Indices 0..0x13 are the song jacket cells (imageData/texture/loadState below);
+    // the higher indices are UI/button/state widgets whose per-widget detail (rect +
+    // animation + select state) lives in `detail` (its sub-layout is a seam).
+    struct MusicSelCell {                // 0x38 bytes
+        float             scale;         // +0x00 per-widget UI scale (pointInRect math)
+        int               loadState;     // +0x04 jacket state: 0 empty / 3 ready
+        __unsafe_unretained id imageData;// +0x08 bundled PNG data (released after upload)
+        neTextureForiOS  *texture;       // +0x0c uploaded jacket texture
+        uint8_t           detail[0x28];  // +0x10..0x38 per-widget rect/anim/state (seam)
+    };
+
+    // ---- packed per-song select state (documented seam; see header note) ----
+    struct MusicSelState {               // 0x40 bytes
+        uint8_t  listReady;              // song list built (else stream jacket textures)
+        uint8_t  inviteOpen;             // EX unlocked for this invite song
+        uint8_t  previewReady;           // jackets + score loaded (state 4 gate)
+        uint8_t  diffDirty;              // difficulty changed -> refresh score rows
+        uint8_t  favorite;               // favourite toggle
+        uint8_t  tutorialOffered;        // first-play tutorial offered for the tapped cell
+        uint8_t  scrollLatchA;           // list-scroll latch pair (diff-toggle / friend-score)
+        uint8_t  scrollLatchB;
+        uint8_t  fullCombo[3];           // FC medals  N / H / EX
+        uint8_t  perfect[3];             // PERFECT medals N / H / EX
+        uint8_t  _pad0[2];
+        unsigned musicId;                // current song id
+        int      difficulty;             // selected difficulty (0 N / 1 H / 2 EX)
+        int      levels[3];              // song levels N / H / EX
+        int      transitionLatch;        // fade-out phase latch (state 0xe/0xf)
+        int      selectSeId;             // select-SE source id
+        int      selectSeInst;           // select-SE playing instance (for stop)
+        int      scrollConfig;           // per-column scroll config (field14_0x13c[0])
+        int      overRowLen[3];          // over-score display row lengths
+    };
+
+    // ================= work-area layout (offsets are binary-exact) =================
+    AepManager      *m_aep = nullptr;                 // +0x28 Aep context (AepManager::shared)
+    uint8_t          _rsvd_2c[0x30 - 0x2c] = {};      // +0x2c
+    __unsafe_unretained id m_musicList = nullptr;         // +0x30 NSArray<MusicInfo*>*
+    AepLyrCtrl      *m_layers[4] = {};                // +0x34 BG / preview / loop transports
+    AepLyrCtrl      *m_introLayers[2] = {};           // +0x44 intro transports
+    neTextureForiOS *m_arrowTex[2] = {};              // +0x4c recommend / over-score arrows
+    neTextureForiOS *m_nameTex = nullptr;             // +0x54 song-name banner
+    neTextureForiOS *m_artistTex = nullptr;           // +0x58 artist-name banner
+    neTextureForiOS *m_digitTex[60] = {};             // +0x5c score/points/rank digit atlases
+    uint8_t          _rsvd_aepHandles[0x2d8 - 0x14c] = {}; // +0x14c resolved Aep lyr/frm/usr no. arrays
+    MusicSelCell     m_cells[27] = {};                // +0x2d8 jacket + widget array (stride 0x38)
+    int16_t          m_highlight = -1;                // +0x8c0 highlight index (ctor 0xffff)
+    uint8_t          m_highlightPrev = 0xff;          // +0x8c2 previous-highlight sentinel
+    uint8_t          _rsvd_8c3[0x8c4 - 0x8c3] = {};   // +0x8c3
+    int              m_seId[5] = {};                  // +0x8c4 loaded touch-SE source ids
+    int              m_seInst[5] = {};                // +0x8d8 touch-SE instance handles (-1 idle)
+    uint8_t          _rsvd_8ec[0x8f0 - 0x8ec] = {};   // +0x8ec
+    int              m_columnIndex = 0;               // +0x8f0 current list column
+    int              m_columnCount = 0;               // +0x8f4 total columns
+    int              m_chosenIndex = 0;               // +0x8f8 chosen song list index (save)
+    uint8_t          _rsvd_8fc[0x904 - 0x8fc] = {};   // +0x8fc
+    int              m_resultSheet = 0;               // +0x904 saved result sheet (difficulty)
+    uint8_t          _rsvd_908[0x91b - 0x908] = {};   // +0x908
+    uint8_t          m_suppressDraw = 0;              // +0x91b hide the scene during teardown
+    uint8_t          _rsvd_91c[0x91e - 0x91c] = {};   // +0x91c
+    uint8_t          m_tutorialBadge = 0;             // +0x91e first-play tutorial badge visible
+    uint8_t          m_recommendBadge = 0;            // +0x91f new-recommend badge visible
+    uint8_t          _rsvd_920[0x923 - 0x920] = {};   // +0x920
+    uint8_t          m_noSaveMode = 0;                // +0x923 guest / no-save teardown flag
+    uint8_t          m_overScoreBadge = 0;            // +0x924 over-score badge visible
+    uint8_t          m_isPadDisplay = 0;              // +0x925 pad-class display
+    uint8_t          _rsvd_926[0x928 - 0x926] = {};   // +0x926
+    int              m_selectedCell = -1;             // +0x928 drag touch id / chosen cell (ctor -1)
+    uint8_t          _rsvd_scroll[0x988 - 0x92c] = {};// +0x92c list-scroll physics ring (updateList)
+    int              m_layoutRects[(0xa64 - 0x988) / 4] = {}; // +0x988 setup()-filled button rects
+    int              m_screenWidth = 0;               // +0xa64 aep screen width
+    int              m_screenHeight = 0;              // +0xa68 aep screen height
+    int              m_uiScale = 0;                   // +0xa6c UI scale factor (g_dwUiScale)
+    int              m_treasurePoint = 0;             // +0xa70 treasure-point count
+    int              m_columnStride = 0;              // +0xa74 cells per column (6 phone / 9 pad)
+    uint8_t          _rsvd_touch[0xa84 - 0xa78] = {}; // +0xa78 current touch x / y / moved (updateList)
+    int              m_layoutBaseX = 0;               // +0xa84 layout base x (phone)
+    int              m_layoutBaseY = 0;               // +0xa88 layout base y
+    uint8_t          _rsvd_a8c[0xa90 - 0xa8c] = {};   // +0xa8c
+    dispatch_semaphore_t m_cellSem = nullptr;         // +0xa90 guards the jacket cell array
+    int              m_highlightAnim = 0;             // +0xa94 highlight pulse phase (0..0x96)
+    __unsafe_unretained id m_overScoreDict = nullptr;     // +0xa98 over-score "touched" set
+    uint8_t          _rsvd_a9c[0xaa0 - 0xa9c] = {};   // +0xa9c
+    C_TASK          *m_spawnedTask = nullptr;         // +0xaa0 launched play / tutorial / menu sub-task
+    int              m_state = 0;                     // +0xaa4 state-machine field
+    MusicSelState    m_sel = {};                      // +0xaa8 packed per-song select state (seam)
+    uint8_t          _reservedTail[0xcc1 - 0xae8] = {}; // +0xae8..0xcc1 remaining setup/layout tail
 };
 
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4
+// "MusicSelTask" is the binary's name for this very task (see header note); make the
+// two names one type so the DownloadMain delegate / MainViewController Goto* seams
+// take `this` directly with no identity cast.
+using MusicSelTask = MainTask;
+
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4

@@ -94,6 +94,20 @@ void AepLyrCtrl::play() {
     }
 }
 
+// Ghidra: aepLyrCtrlStop (FUN_0002cb24) — stop the layer's animation. `keepVisible`
+// leaves it drawn at its current frame (the preview freeze); clearing it hides the layer.
+void AepLyrCtrl::stop(int keepVisible) {
+    m_playState = 0;
+    if (keepVisible == 0) {
+        m_visible = false;
+    }
+}
+
+// Ghidra: aepLyrCtrlReset (FUN_0002cb5c) — rewind the play head to frame 0.
+void AepLyrCtrl::reset() {
+    m_frame = 0;
+}
+
 // Ghidra: FUN_0002cb64 — still-animating predicate. `(playState | 4) == 4` is true for
 // the idle (0) and held (4) states; otherwise the float play head at +0x40 is compared
 // against its travel: a reverse rate (+0x44 <= 0) animates while the head is > 0, a

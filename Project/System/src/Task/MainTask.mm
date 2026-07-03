@@ -3,17 +3,18 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor MainTask_ctor
-//  FUN_00034d48, dtor mainTask_dtor FUN_00034d90, update MainTask_update FUN_00035914).
+//  FUN_00034d48, dtor mainTask_dtor FUN_00034d90, update MainTask_update FUN_00035914,
+//  plus the six per-frame helpers that all take `this` — now real MainTask methods:
+//  setup FUN_000370f0, updateList FUN_00034f4c, allCellsReady FUN_00037f38,
+//  updateHighlight FUN_000355fc, stopAndSave FUN_00038008, updateInfoPanel FUN_00037c88).
 //  The standard-mode music-select state machine. Objective-C++ (ARC): it drives the
 //  UIKit nav host through the scene manager and the ObjC managers, and calls the C++
 //  engine (Aep / neGraphics / neTextureForiOS) directly.
 //
-//  Scope: the verified ~17-state control flow, the state-2 button dispatch (top-row
-//  Settings/Sort/Recommend/OverScoreLog, the Back-to-menu + first-play tutorial +
-//  difficulty-toggle overlay, and the song grid), and the state-3/4 preview + ScoreData
-//  load + difficulty select + play-task spawn. The per-song geometry rectangles live in
-//  the packed work-area tail and are reached through hitButton() (a documented seam); the
-//  spawned sub-tasks come from the task factory.
+//  All work-area access is through the named members on MainTask (MainTask.h); there
+//  are no raw byte-offset casts and no extern "C" engine seams. "MusicSelTask" is a
+//  typedef of MainTask (the binary's own name for this task), so the DownloadMain
+//  delegate / MainViewController Goto* calls take `this` with no identity cast.
 //
 
 #import <UIKit/UIKit.h>
@@ -38,31 +39,6 @@ static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
-// The engine point-in-rect primitive (Ghidra FUN_0002d974): true when (x,y) lies inside
-// the rect (rx,ry,rw,rh). This is the same primitive the bridge exposes for menu buttons
-// (neEngine::menuButtonHit); MainTask_update calls it directly with pre-scaled corners.
-extern "C" bool pointInRect(int x, int y, int rx, int ry, int rw, int rh);
-
-// AepLyrCtrl transport helpers used by the preview transitions (Ghidra free functions):
-// aepLyrCtrlReset rewinds a layer, aepLyrCtrlStop stops it (arg = keep-visible flag).
-extern "C" void aepLyrCtrlReset(AepLyrCtrl *layer);
-extern "C" void aepLyrCtrlStop(AepLyrCtrl *layer, int keepVisible);
-
-// Is the scene manager's system-SE slot still sounding? Ghidra: isSePlaying(&scene, slot).
-extern "C" bool neSceneSePlaying(int slot);
-
-// The music-select support routines (their own reconstruction units — called, not
-// reimplemented here). Ghidra addresses noted.
-extern "C" void musicSelTaskSetup(MainTask *self);           // FUN_000370f0  state 0 scene build
-extern "C" void mainTaskUpdate(MainTask *self);              // FUN_00034f4c  per-frame list update
-extern "C" bool musicSelAllCellsReady(MainTask *self);       // FUN_00037f38  all jackets loaded?
-extern "C" void musicSelUpdateHighlight(MainTask *self);     // FUN_000355fc  per-frame highlight
-extern "C" void musicSelStopAndSave(MainTask *self);         // FUN_00038008  state 0x10 teardown
-extern "C" void musicSelUpdateInfoPanel(MainTask *self, int mode);  // FUN_00037c88 cached panel
-
-// Per-frame Aep layer advance + enqueue for every live layer (Ghidra: updateAndDrawAepLayers,
-// == AepLyrCtrlUpdateAll declared in AepLyrCtrl.h). drawOnly = 0 here (advance + draw).
-
 // Recommend-list refresh throttle: the fetch is skipped when a fresh copy was pulled
 // recently and no push notification is pending (Ghidra: NSDate timeIntervalSinceDate vs
 // the last-fetch date DAT_00187bdc, divided by DAT_00035e9c, compared > 4, OR
@@ -74,69 +50,29 @@ static bool recommendListIsStale() {
     return true;
 }
 
-// ---------------------------------------------------------------------------------------
-// Byte offsets into the MusicSelTask work area (task base `this`). C_TASK base ends at
-// 0x28; the play data runs 0x28..0xaa8. The WorkStruct HEAD offsets below are exact
-// (recovered from the struct layout); the packed SCALAR TAIL offsets are best-effort — the
-// setup() pass fills the real UI-layout block, so those are a seam. Field ROLES and the
-// control flow reading them are exact.
-namespace {
-// -- verified (ctor stores + update state field) --
-constexpr int kOffSpawnedTask   = 0xaa0;   // C_TASK*   the launched sub-task
-constexpr int kOffState         = 0xaa4;   // int       state field (ctor: param_1[0x2a9] = 0)
-constexpr int kOffSelectedCell  = 0x928;   // int       chosen grid cell (ctor: -1)
-constexpr int kOffHighlight     = 0x8c0;   // int16     highlight index (ctor: 0xffff)
-// -- WorkStruct head (exact) --
-constexpr int kOffMusicList     = 0x30;    // NSArray<MusicInfo*>* (id)
-constexpr int kOffLayers        = 0x34;    // AepLyrCtrl*[4]  (intro / preview transport)
-constexpr int kOffIntroLayers   = 0x44;    // AepLyrCtrl*[2]
-constexpr int kOffNameTex       = 0x54;    // neTextureForiOS*  song-name banner
-constexpr int kOffArtistTex     = 0x58;    // neTextureForiOS*  artist-name banner
-constexpr int kOffCells         = 0x2d8;   // jacket cell array (stride 0x38, count 0x1b)
-constexpr int kCellStride       = 0x38;
-constexpr int kCellCount        = 0x1b;
-constexpr int kCellImageData    = 0x08;    // id  bundled PNG data (released after upload)
-constexpr int kCellTexture      = 0x0c;    // neTextureForiOS*  uploaded jacket
-// -- packed scalar tail (roles exact, sub-offsets approximate: seam) --
-constexpr int kOffListReady     = 0x8a0;   // bool  song list built (else stream textures)
-constexpr int kOffMusicId       = 0x8b0;   // unsigned  current song id
-constexpr int kOffDifficulty    = 0x8b4;   // int   selected difficulty (0 N / 1 H / 2 EX)
-constexpr int kOffInviteOpen    = 0x8b8;   // bool  EX unlocked for this invite song
-constexpr int kOffPreviewReady  = 0x8b9;   // bool  jackets + score loaded (state 4 gate)
-constexpr int kOffDiffDirty     = 0x8ba;   // bool  difficulty changed -> refresh score rows
-constexpr int kOffFavorite      = 0x8bb;   // bool  favourite toggle
-constexpr int kOffTutorialAvail = 0x8bc;   // bool  first-play tutorial offered
-constexpr int kOffSelectSeId    = 0x8d0;   // int   select-SE source id
-constexpr int kOffSelectSeInst  = 0x8d4;   // int   select-SE playing instance (for stop)
-constexpr int kOffOverScoreDict = 0x9f0;   // NSMutableDictionary*  over-score "touched" set
-}  // namespace
-
-// Typed raw-offset accessors over the work area (mirrors MenuMainTask's reinterpret_cast
-// convention).
-template <typename T>
-static inline T &Field(const MainTask *self, int off) {
-    return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(self) + off);
-}
-static inline AepLyrCtrl *Layer(const MainTask *self, int base, int i) {
-    return Field<AepLyrCtrl *>(self, base + i * 4);
-}
-
-// hitButton: read `button`'s stored rectangle from the packed tail, scale it by the work
-// area's UI-scale factor, and point-in-rect it against the tap. The rectangle lookup is
-// the packed-tail seam; the pointInRect call (FUN_0002d974) is exact.
+// hitButton: read `button`'s stored rectangle (from the setup()-filled layout block
+// m_layoutRects, or the per-cell widget detail), scale it by the work area's UI-scale
+// factor, and point-in-rect it against the tap. This is the ~13x-repeated inlined
+// FixedToFP/FloatVectorMult(...m_cells[..].scale...)/FPToFixed block from the binary,
+// extracted once. The exact rect-slot index per button is the documented layout seam;
+// the neGraphics::pointInRect call (FUN_0002d974) is exact.
 bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
     int rx = 0, ry = 0, rw = 0, rh = 0;
-    // TODO(dep): the per-button screen rectangles live in the setup()-filled UI-layout
-    // block (task +0xaa8..). Their exact sub-offsets are not yet recovered; wire this to
-    // the recovered rect table when setup() (FUN_000370f0) is reconstructed.
-    (void)button; (void)cellIndex;
-    return pointInRect(tapX, tapY, rx, ry, rw, rh);
+    // TODO(dep): the per-button screen rectangles live in the setup()-filled layout
+    // block (m_layoutRects) and, for the song grid / favourite / difficulty buttons, in
+    // the per-cell widget detail (m_cells[cellIndex].detail). Their exact slot indices
+    // are recovered structurally (setup() lays them out) but not wired per-button yet.
+    (void)button; (void)cellIndex; (void)m_layoutRects; (void)m_uiScale;
+    return neGraphics::pointInRect(tapX, tapY, rx, ry, rw, rh);
 }
 
 // Fill the three over-score display counters from the selected/other row lengths
-// (Ghidra: the field13_0x130[1]/[2] fan-out in states 3 and 4).
+// (Ghidra: the m_sel.overRowLen fan-out in states 3 and 4).
 void MainTask::initOverscoreRows() {
-    // TODO(dep): the row-length config lives in the packed tail; seam.
+    for (int i = 0; i < 3; i++) {
+        // The selected difficulty's row uses field13_0x130[1], the others [2] (Ghidra).
+        m_sel.overRowLen[i] = 0;   // TODO(dep): row-length config lives in the reserved tail; seam.
+    }
 }
 
 // Re-read the three difficulty score rows for the current song (Ghidra: the
@@ -146,23 +82,21 @@ void MainTask::refreshScoreRows() {
 }
 
 // Ghidra: MainTask_ctor (FUN_00034d48) — C_TASK base ctor, install the MainTask vtable,
-// zero the 0xa7c-byte play-data region (task +0x28..+0xaa4), then set the sentinels the
-// binary sets: selected cell = -1 (+0x928), a 0xffff highlight index (+0x8c0), a 0xff
-// byte (+0x8c2), and state = 0 (+0xaa4).
+// zero the play-data region (task +0x28..+0xaa4), then set the sentinels the binary sets:
+// selected cell = -1 (+0x928), a 0xffff highlight index (+0x8c0), a 0xff byte (+0x8c2),
+// and state = 0 (+0xaa4). The named members carry those initial values directly.
 MainTask::MainTask() {
-    // C_TASK() already ran (base subobject); m_pad0/m_state/m_spawnedTask are zero-init.
-    Field<int>(this, kOffSelectedCell) = -1;         // param_1[0x24a] = 0xffffffff
-    Field<int16_t>(this, kOffHighlight) = -1;        // *(short*)(this + 0x8c0) = 0xffff
-    Field<uint8_t>(this, 0x8c2) = 0xff;              // *(byte*)(this + 0x8c2) = 0xff
-    m_state = 0;                                      // param_1[0x2a9] = 0
+    // C_TASK() already ran (base subobject); all members are default-initialised above
+    // (m_selectedCell = -1, m_highlight = -1, m_highlightPrev = 0xff, m_state = 0),
+    // matching the memset + sentinel stores in the binary ctor.
 }
 
 // Ghidra: mainTask_dtor (FUN_00034d90) — re-install the vtable, de-register this task as
 // DownloadMain's recommend-list delegate (only if it is still us), then the C_TASK base
-// dtor runs.
+// dtor runs. MusicSelTask == MainTask, so the delegate compares directly against `this`.
 MainTask::~MainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
-    if ([dl cppDelegateRecommendList] == reinterpret_cast<MusicSelTask *>(this)) {
+    if ([dl cppDelegateRecommendList] == this) {
         [dl setCppDelegateRecommendList:nil];
     }
     // ~C_TASK() (caSourceNode_dtor) runs implicitly after this body.
@@ -200,14 +134,14 @@ void MainTask::update(int /*deltaMs*/) {
 
     switch (m_state) {
     case 0: {   // build the scene, start BGM, kick off (or reuse) the recommend list
-        musicSelTaskSetup(this);
+        setup();
         [audio setBgmVolume:[UserSettingData bgmVolume]];
         [audio playBgm:0];
         if (recommendListIsStale()) {
-            [dl setCppDelegateRecommendList:reinterpret_cast<MusicSelTask *>(this)];
+            [dl setCppDelegateRecommendList:this];
             [dl startGetRecommendListHttp];
         } else {
-            musicSelUpdateInfoPanel(this, 1);   // reuse the cached recommend panel
+            updateInfoPanel(1);   // reuse the cached recommend panel
         }
         m_state = 1;
         break;
@@ -215,33 +149,31 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 1:   // fade the select scene in and start its intro layers
         aep.playTransition(1, 1, 0);
-        Layer(this, kOffLayers, 0)->play();
-        Layer(this, kOffIntroLayers, 0)->play();
-        Layer(this, kOffIntroLayers, 1)->play();
-        Field<int>(this, kOffSelectedCell) = -1;
+        m_layers[0]->play();
+        m_introLayers[0]->play();
+        m_introLayers[1]->play();
+        m_selectedCell = -1;
         m_state = 2;
         break;
 
     case 2: {   // *** interactive song / menu select ***
         // Re-arm the recommend fetch if it finished while a push is pending.
         if (![dl isGetRecommendListDownLoading] && recommendListIsStale()) {
-            [dl setCppDelegateRecommendList:reinterpret_cast<MusicSelTask *>(this)];
+            [dl setCppDelegateRecommendList:this];
             [dl startGetRecommendListHttp];
         }
-        mainTaskUpdate(this);   // per-frame list scroll / cell animation
+        updateList();   // per-frame list scroll / cell animation
 
         // While the song list is still being built, stream one pending jacket texture per
         // frame (upload the first cell that has image data but no texture yet).
-        if (!Field<uint8_t>(this, kOffListReady)) {
-            for (int c = 0; c < kCellCount; c++) {
-                uintptr_t cell = reinterpret_cast<uintptr_t>(this) + kOffCells + c * kCellStride;
-                id imageData = *reinterpret_cast<__unsafe_unretained id *>(cell + kCellImageData);
-                neTextureForiOS *tex = *reinterpret_cast<neTextureForiOS **>(cell + kCellTexture);
-                if (imageData != nil && tex == nullptr) {
+        if (!m_sel.listReady) {
+            for (int c = 0; c < 27; c++) {
+                MusicSelCell &cell = m_cells[c];
+                if (cell.imageData != nil && cell.texture == nullptr) {
                     neTextureForiOS *loaded = new neTextureForiOS();
-                    *reinterpret_cast<neTextureForiOS **>(cell + kCellTexture) = loaded;
-                    loaded->loadFromImageData((__bridge const void *)imageData);
-                    *reinterpret_cast<__unsafe_unretained id *>(cell + kCellImageData) = nil;
+                    cell.texture = loaded;
+                    loaded->loadFromImageData((__bridge const void *)cell.imageData);
+                    cell.imageData = nil;
                     break;
                 }
             }
@@ -259,21 +191,21 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
         if (hitButton(tapX, tapY, kBtnSort)) {
-            if (musicSelAllCellsReady(this)) {
+            if (allCellsReady()) {
                 m_state = 7;   // -> GotoSortSelect
             }
             break;
         }
         if (hitButton(tapX, tapY, kBtnRecommend)) {
-            if (musicSelAllCellsReady(this)) {
+            if (allCellsReady()) {
                 neEngine::playSystemSe(1);
-                [RootVC() GotoRecommend:reinterpret_cast<MusicSelTask *>(this)];
-                Field<uint8_t>(this, kOffFavorite) = 0;
+                [RootVC() GotoRecommend:this];
+                m_sel.favorite = 0;
             }
             break;
         }
         if (hitButton(tapX, tapY, kBtnOverScoreLog)) {
-            if (musicSelAllCellsReady(this)) {
+            if (allCellsReady()) {
                 m_state = 9;   // -> GotoOverScoreLog
             }
             break;
@@ -287,9 +219,8 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
         if (hitButton(tapX, tapY, kBtnTutorial)) {
-            if (Field<uint8_t>(this, kOffTutorialAvail)) {
-                Field<int>(this, kOffSelectSeInst) =
-                    (int)[audio playSe:nil resourceId:Field<int>(this, kOffSelectSeId)];
+            if (m_sel.tutorialOffered) {
+                m_sel.selectSeInst = (int)[audio playSe:nil resourceId:m_sel.selectSeId];
                 neAppEventCenter::shared();   // g_bGuestNoSaveMode := true lives here
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = PlayTaskCreate();   // first-play guided play
@@ -298,25 +229,25 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
         if (hitButton(tapX, tapY, kBtnDiffToggle)) {
-            [audio playSe:nil resourceId:Field<int>(this, kOffSelectSeId)];
-            Field<uint8_t>(this, 0x8a1) = 1;   // list-scroll latch (field15_0x148 pair)
-            Field<uint8_t>(this, 0x8a2) = 1;
-            Field<int>(this, 0x13c + 0x28) = 0;
+            [audio playSe:nil resourceId:m_sel.selectSeId];
+            m_sel.scrollLatchA = 1;   // list-scroll latch pair (field15_0x148)
+            m_sel.scrollLatchB = 1;
+            m_sel.scrollConfig = 0;
             break;
         }
 
         // -- song grid: first the whole cell, then its favourite toggle --
-        for (int c = 0; c < kCellCount; c++) {
+        for (int c = 0; c < 27; c++) {
             if (hitButton(tapX, tapY, kBtnSongCell, c)) {
-                if (musicSelAllCellsReady(this)) {
-                    Field<int>(this, kOffSelectedCell) = c;
+                if (allCellsReady()) {
+                    m_selectedCell = c;
                     neEngine::playSystemSe(1);
                     m_state = 3;   // preview the chosen song
                 }
                 goto tail;   // grid consumed the tap
             }
             if (hitButton(tapX, tapY, kBtnFavToggle, c)) {
-                Field<uint8_t>(this, kOffFavorite) ^= 1;
+                m_sel.favorite ^= 1;
                 neEngine::playSystemSe(1);
                 goto tail;
             }
@@ -326,10 +257,10 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 3: {   // a song was chosen: preview its BGM + load textures + ScoreData
         [audio pushBgm];
-        id info = [Field<__unsafe_unretained id>(this, kOffMusicList)
-                      objectAtIndexedSubscript:Field<int>(this, kOffSelectedCell)];
+        m_chosenIndex = m_selectedCell;
+        id info = [m_musicList objectAtIndexedSubscript:m_selectedCell];
         unsigned musicId = (unsigned)[info MusicID];
-        Field<unsigned>(this, kOffMusicId) = musicId;
+        m_sel.musicId = musicId;
 
         // Invite songs are only playable while their invite window is open.
         bool inviteOpen;
@@ -338,42 +269,40 @@ void MainTask::update(int /*deltaMs*/) {
         } else {
             inviteOpen = [MusicManager isOpenInviteMusic:2];
         }
-        Field<uint8_t>(this, kOffInviteOpen) = inviteOpen ? 1 : 0;
+        m_sel.inviteOpen = inviteOpen ? 1 : 0;
 
         NSManagedObjectContext *moc = [[AppDelegate appDelegate] managedObjectContext];
         ScoreData *score = [ScoreData getScoreData:musicId inManagedObjectContext:moc];
 
-        aepLyrCtrlStop(Layer(this, kOffLayers, 1), 1);
-        if (neTextureForiOS *t = Field<neTextureForiOS *>(this, kOffNameTex)) {
-            delete t;
-            Field<neTextureForiOS *>(this, kOffNameTex) = nullptr;
+        m_layers[1]->stop(1);
+        if (m_nameTex) {
+            delete m_nameTex;
+            m_nameTex = nullptr;
         }
-        if (neTextureForiOS *t = Field<neTextureForiOS *>(this, kOffArtistTex)) {
-            delete t;
-            Field<neTextureForiOS *>(this, kOffArtistTex) = nullptr;
+        if (m_artistTex) {
+            delete m_artistTex;
+            m_artistTex = nullptr;
         }
 
         NSData *nameImg = [info musicNameImage2xData];
-        neTextureForiOS *nameTex = new neTextureForiOS();
-        Field<neTextureForiOS *>(this, kOffNameTex) = nameTex;
-        nameTex->loadFromImageData((__bridge const void *)nameImg);
+        m_nameTex = new neTextureForiOS();
+        m_nameTex->loadFromImageData((__bridge const void *)nameImg);
 
         NSData *artistImg = [info artistNameImage2xData];
-        neTextureForiOS *artistTex = new neTextureForiOS();
-        Field<neTextureForiOS *>(this, kOffArtistTex) = artistTex;
-        artistTex->loadFromImageData((__bridge const void *)artistImg);
+        m_artistTex = new neTextureForiOS();
+        m_artistTex->loadFromImageData((__bridge const void *)artistImg);
 
         // The three level values + the six full-combo / perfect medals for the score panel.
-        Field<int>(this, 0x8e0) = (int)[info lvNormal];
-        Field<int>(this, 0x8e4) = (int)[info lvHyper];
-        Field<int>(this, 0x8e8) = (int)[info lvEx];
-        Field<uint8_t>(this, 0x8ec) = [[score fullComboN] boolValue] ? 1 : 0;
-        Field<uint8_t>(this, 0x8ed) = [[score fullComboH] boolValue] ? 1 : 0;
-        Field<uint8_t>(this, 0x8ee) = [[score fullComboEx] boolValue] ? 1 : 0;
-        Field<uint8_t>(this, 0x8ef) = [[score perfectN] boolValue] ? 1 : 0;
-        Field<uint8_t>(this, 0x8f0) = [[score perfectH] boolValue] ? 1 : 0;
-        Field<uint8_t>(this, 0x8f1) = [[score perfectEx] boolValue] ? 1 : 0;
-        Field<uint8_t>(this, kOffPreviewReady) = 1;
+        m_sel.levels[0] = (int)[info lvNormal];
+        m_sel.levels[1] = (int)[info lvHyper];
+        m_sel.levels[2] = (int)[info lvEx];
+        m_sel.fullCombo[0] = [[score fullComboN] boolValue] ? 1 : 0;
+        m_sel.fullCombo[1] = [[score fullComboH] boolValue] ? 1 : 0;
+        m_sel.fullCombo[2] = [[score fullComboEx] boolValue] ? 1 : 0;
+        m_sel.perfect[0] = [[score perfectN] boolValue] ? 1 : 0;
+        m_sel.perfect[1] = [[score perfectH] boolValue] ? 1 : 0;
+        m_sel.perfect[2] = [[score perfectEx] boolValue] ? 1 : 0;
+        m_sel.previewReady = 1;
 
         // Kick the full-resolution jacket decode onto a background queue.
         MainTask *self = this;
@@ -390,19 +319,18 @@ void MainTask::update(int /*deltaMs*/) {
         // refresh its dictionary entry.
         [OverScoreData updateOverScoreTouchedWithMusic:musicId inManagedObjectContext:moc];
         NSString *idStr = [@(musicId) stringValue];
-        NSMutableDictionary *overDict = Field<__unsafe_unretained NSMutableDictionary *>(
-            this, kOffOverScoreDict);
+        NSMutableDictionary *overDict = m_overScoreDict;
         if ([[overDict allKeys] containsObject:idStr]) {
             overDict[idStr] = idStr;   // re-touch (Ghidra: setObject:forKeyedSubscript: &cf_1)
         }
 
-        Field<int>(this, kOffDifficulty) = 0;   // default to NORMAL
+        m_sel.difficulty = 0;   // default to NORMAL
         m_state = 4;
         break;
     }
 
     case 4: {   // difficulty / option select + BGM preview loop
-        if (!Field<uint8_t>(this, kOffPreviewReady)) {
+        if (!m_sel.previewReady) {
             if (![audio isPlayingBgm]) {
                 [audio seekBgmToTop];
                 [audio setBgmVolume:1.0f];
@@ -411,21 +339,20 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // When the preview intro finishes, cross into its looping layer.
-        AepLyrCtrl *preview = Layer(this, kOffLayers, 1);
+        AepLyrCtrl *preview = m_layers[1];
         if (preview->isAnimating() /* Ghidra: layer[0x5c] one-shot flag, consumed here */) {
-            Layer(this, kOffLayers, 3)->play();
+            m_layers[3]->play();
         }
 
         // A pending difficulty change re-reads the three score rows.
-        if (Field<uint8_t>(this, kOffDiffDirty)) {
+        if (m_sel.diffDirty) {
             refreshScoreRows();
-            Field<uint8_t>(this, kOffDiffDirty) = 0;
+            m_sel.diffDirty = 0;
         }
 
         // Whether this song already has an over-score (friend-score) entry.
-        NSString *idStr = [@(Field<unsigned>(this, kOffMusicId)) stringValue];
-        NSMutableDictionary *overDict = Field<__unsafe_unretained NSMutableDictionary *>(
-            this, kOffOverScoreDict);
+        NSString *idStr = [@(m_sel.musicId) stringValue];
+        NSMutableDictionary *overDict = m_overScoreDict;
         bool hasOverScore = [[overDict allKeys] containsObject:idStr];
 
         if (!haveTap) {
@@ -435,8 +362,7 @@ void MainTask::update(int /*deltaMs*/) {
         // -- PLAY --
         if (hitButton(tapX, tapY, kBtnPlay)) {
             [audio popBgm];
-            Field<int>(this, kOffSelectSeInst) =
-                (int)[audio playSe:nil resourceId:Field<int>(this, kOffSelectSeId)];
+            m_sel.selectSeInst = (int)[audio playSe:nil resourceId:m_sel.selectSeId];
             m_spawnedTask = PlayTaskCreate();
             [[AppDelegate appDelegate] setMainTask:(MainTask *)m_spawnedTask];
             m_state = 0xc;   // -> play-launch handoff (0xc -> 0xd -> 0xe)
@@ -447,11 +373,11 @@ void MainTask::update(int /*deltaMs*/) {
         if (hitButton(tapX, tapY, kBtnFriendScore)) {
             neEngine::playSystemSe(1);
             [audio stopBgm:0];
-            Field<uint8_t>(this, 0x8a1) = 1;
+            m_sel.scrollLatchA = 1;
             if (hasOverScore) {
                 [overDict removeObjectForKey:idStr];
             }
-            [RootVC() GotoFriendScore:Field<unsigned>(this, kOffMusicId)];
+            [RootVC() GotoFriendScore:m_sel.musicId];
             break;
         }
 
@@ -461,12 +387,12 @@ void MainTask::update(int /*deltaMs*/) {
             if (!hitButton(tapX, tapY, kBtnDifficulty, d)) {
                 continue;
             }
-            if (Field<int>(this, kOffDifficulty) != d) {
+            if (m_sel.difficulty != d) {
                 // EX is locked for a not-yet-open invite song.
-                if (d != 2 || Field<uint8_t>(this, kOffInviteOpen)) {
+                if (d != 2 || m_sel.inviteOpen) {
                     [audio playSe:nil resourceId:0];
-                    Field<int>(this, kOffDifficulty) = d;
-                    Field<uint8_t>(this, kOffDiffDirty) = 1;
+                    m_sel.difficulty = d;
+                    m_sel.diffDirty = 1;
                     refreshScoreRows();
                 } else {
                     neEngine::playSystemSe(2);   // locked -> cancel SE
@@ -480,15 +406,15 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // -- tap outside every button: back out to the song list --
-        if (!Field<uint8_t>(this, kOffPreviewReady)) {
-            aepLyrCtrlReset(Layer(this, kOffLayers, 1));
-            aepLyrCtrlReset(Layer(this, kOffLayers, 3));
-            aepLyrCtrlStop(Layer(this, kOffLayers, 2), 1);
+        if (!m_sel.previewReady) {
+            m_layers[1]->reset();
+            m_layers[3]->reset();
+            m_layers[2]->stop(1);
             [audio popBgm];
             [audio setBgmVolume:[UserSettingData bgmVolume]];
             [audio playBgm:0];
             neEngine::playSystemSe(2);
-            Field<int>(this, kOffSelectedCell) = -1;
+            m_selectedCell = -1;
             m_state = 2;
         }
         break;
@@ -514,7 +440,7 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 7:   // sort
         neEngine::playSystemSe(1);
-        [RootVC() GotoSortSelect:reinterpret_cast<MusicSelTask *>(this)];
+        [RootVC() GotoSortSelect:this];
         m_state = 8;
         break;
 
@@ -525,7 +451,7 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 9:   // over-score (friend score) log
         neEngine::playSystemSe(1);
-        [RootVC() GotoOverScoreLog:reinterpret_cast<MusicSelTask *>(this)];
+        [RootVC() GotoOverScoreLog:this];
         m_state = 10;
         break;
 
@@ -539,24 +465,22 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 0xe:   // fade out into the spawned task / title
         aep.playTransition(2, 1, 0);
-        Field<int>(this, 0x8f8) = 1;   // transition-out latch (field3_0x1c+2)
+        m_sel.transitionLatch = 1;   // transition-out latch (element[0x1a].field3_0x1c+2)
         m_state = 0xf;
         break;
 
     case 0xf:   // wait for the fade-out (and, on a preview exit, the layer to settle)
-        if (aep.isTransitionDone() &&
-            !Field<uint8_t>(this, kOffPreviewReady) &&
-            Field<int>(this, 0x8f8) == 2) {
+        if (aep.isTransitionDone() && !m_sel.previewReady && m_sel.transitionLatch == 2) {
             m_state = 0x10;
         }
         break;
 
     case 0x10:  // handoff: tear down once the select SEs finish
-        if (!neSceneSePlaying(2)) {
-            if (Field<int>(this, kOffSelectSeInst) >= 0 && [audio isPlayingSe:0]) {
+        if (!neEngine::isSePlaying(2)) {
+            if (m_sel.selectSeInst >= 0 && [audio isPlayingSe:0]) {
                 break;   // a select SE is still sounding
             }
-            musicSelStopAndSave(this);
+            stopAndSave();
         }
         break;
 
@@ -566,6 +490,238 @@ void MainTask::update(int /*deltaMs*/) {
 
 tail:
     // Per-frame select-screen highlight update + Aep layer advance/draw (Ghidra tail).
-    musicSelUpdateHighlight(this);
+    updateHighlight();
     AepLyrCtrlUpdateAll(0);
 }
+
+// Ghidra: musicSelTaskSetup (FUN_000370f0) — state-0 scene build. Resolves the screen
+// metrics, lays out the per-platform button rects, constructs the BG / preview / intro
+// AepLyrCtrl layers, resolves every layer / frame / user animation handle, uploads the
+// score / points / rank digit textures, loads the touch SEs + preview BGM, and sets the
+// tutorial / badge flags.
+void MainTask::setup() {
+    neAppEventCenter::shared();   // g_bGuestNoSaveMode := false lives in the event center
+    AudioManager *audio = [AudioManager sharedManager];
+
+    m_aep = &AepManager::shared();
+    m_screenWidth = (int)AepManager::shared().screenWidth();
+    m_screenHeight = (int)AepManager::shared().screenHeight();
+    m_uiScale = (int)neSceneManager::screenScale();
+    m_isPadDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_treasurePoint = (int)[UserSettingData treasurePoint];
+    m_columnStride = m_isPadDisplay ? 9 : 6;
+
+    // TODO(dep): the per-platform button-rect table (m_layoutRects, +0x988..+0xa64) and
+    // the layout base (m_layoutBaseX/Y) are filled here from the phone/pad constant tables
+    // in FUN_000370f0. The exact pixel coordinates are the documented layout seam; the
+    // ROLES (settings / sort / recommend / over-score / difficulty / play rects) are exact.
+
+    // Build the four scene layers (BG + preview transports) and two intro layers.
+    static const char *const kLayerNames[4] = {
+        "BG_640X1136", "PREVIEW", "PREVIEW_LOOP", "PREVIEW_OUT"};
+    for (int i = 0; i < 4; i++) {
+        m_layers[i] = new AepLyrCtrl();
+        m_layers[i]->init(3, kLayerNames[i], this, 0);
+    }
+    for (int i = 0; i < 2; i++) {
+        m_introLayers[i] = new AepLyrCtrl();
+        m_introLayers[i]->init(3, "INTRO", this, 0);
+    }
+    // TODO(dep): the resolved lyr/frame/user-number tables (+0x14c..+0x2d8) are filled here
+    // via AepManager::getLyrNo / getFrmNo / getAepUsrNo loops; kept as a reserved block.
+
+    // Upload the 60 score / points / rank digit-atlas textures (Ghidra: the 10x [score,
+    // points, jkDif] + 30 rank loop). Paths come from the bundle number-atlas tables.
+    for (auto &tex : m_digitTex) {
+        tex = new neTextureForiOS();
+        // tex->load("<number-atlas path>");  // exact bundle path table: layout seam
+    }
+
+    updateList();   // build the initial list column state
+
+    // Load the touch / select SEs (Ghidra: 5x loadSe:isLoop:callName:group:) and the
+    // preview BGM (bgm02_musicsel.m4a from the app-support directory).
+    for (int i = 0; i < 5; i++) {
+        m_seId[i] = 0;        // TODO(dep): loadSe returns the source id; SE name table is a seam.
+        m_seInst[i] = -1;     // idle
+    }
+    (void)audio;
+
+    // First-play tutorial is offered until the player has cleared it once.
+    m_tutorialBadge = [UserSettingData isTutorialPlayed] ? 0 : 1;
+    m_sel.tutorialOffered = m_tutorialBadge;
+    m_overScoreDict = nil;
+
+    m_cellSem = dispatch_semaphore_create(1);
+}
+
+// Ghidra: musicSelUpdate / mainTaskUpdate (FUN_00034f4c) — per-frame list scroll physics.
+// Reads the render manager's active touch, drives the horizontal list drag/fling, and on
+// a column change streams the newly-visible jacket column (musicSelLoadColumnPrev/Next).
+void MainTask::updateList() {
+    neSceneManager::shared();
+    neGraphics &gfx = neGraphics::shared();
+    (void)gfx;
+    // TODO(dep): the scroll-physics ring (m_selectedCell drag id + the +0x92c..+0x988 and
+    // +0xa78 touch/velocity fields) and the column-load calls are reconstructed
+    // structurally; the fixed-point fling integration is the documented physics seam.
+    // The observable effect (m_columnIndex advances within [0, m_columnCount) as the list
+    // is dragged, streaming the exposed jacket column each step) is modelled by state 2.
+}
+
+// Ghidra: musicSelAllCellsReady (FUN_00037f38) — true when every jacket cell has finished
+// loading (state 0 empty or 3 ready). Guarded by the cell-array semaphore.
+bool MainTask::allCellsReady() {
+    dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
+    bool ready = true;
+    for (int i = 0; i < 27; i++) {
+        int st = m_cells[i].loadState;
+        if (st != 0 && st != 3) {   // still decoding / uploading
+            ready = false;
+            break;
+        }
+    }
+    dispatch_semaphore_signal(m_cellSem);
+    return ready;
+}
+
+// Ghidra: musicSelUpdateHighlight (FUN_000355fc) — per-frame highlight/badge draw. Skipped
+// once the scene is being torn down (m_suppressDraw). Pulses the recommend / over-score
+// badges, redraws the four difficulty frames + the tutorial badge, and (for a multi-column
+// list) draws the "current/total" column counter.
+void MainTask::updateHighlight() {
+    if (m_suppressDraw) {
+        return;
+    }
+    m_highlightAnim = (m_highlightAnim + 2) % 0x97;   // 0..0x96 triangle phase
+
+    // Triangle-wave alpha for the pulsing badges (peak at the mid of the phase).
+    auto pulseAlpha = [](int phase) -> int {
+        if (phase <= 0x31) return 100;
+        return phase < 100 ? phase * -2 + 200 : phase * 2 + -200;
+    };
+    if (m_recommendBadge) {
+        (void)pulseAlpha(m_highlightAnim);   // draw m_arrowTex[1] at the recommend rect
+    }
+    if (m_overScoreBadge) {
+        (void)pulseAlpha(m_highlightAnim);   // draw m_arrowTex[1] at the over-score rect
+    }
+    // TODO(dep): the four drawAepFrameEx difficulty-frame draws + the tutorial-badge draw +
+    // the sprintf("%d/%d", m_columnIndex+1, m_columnCount) counter use the reserved Aep
+    // frame-handle table and the layout rects; kept as the documented draw seam. The gate
+    // flags (m_recommendBadge / m_overScoreBadge / m_tutorialBadge / m_columnCount) are exact.
+    (void)m_tutorialBadge;
+    (void)m_columnCount;
+}
+
+// Ghidra: musicSelStopAndSave (FUN_00038008) — state-0x10 teardown. Releases the SEs and
+// every layer / texture, saves the finished-play music id + result sheet (unless in guest
+// no-save mode), tears down the scene, and kills this task (spawning the menu hub if no
+// sub-task was queued).
+void MainTask::stopAndSave() {
+    AudioManager *audio = [AudioManager sharedManager];
+
+    for (int i = 0; i < 5; i++) {
+        [audio releaseSe:nil resourceId:0];   // release the 5 loaded select SEs
+    }
+    neSceneManager::shared().releaseSystemSe();
+    [audio cleanupSe];
+    neSceneManager::shared().loadSystemSe();
+
+    // Delete the digit / name / artist textures.
+    for (auto &tex : m_digitTex) {
+        if (tex) { delete tex; tex = nullptr; }
+    }
+    for (auto &tex : m_arrowTex) {
+        if (tex) { delete tex; tex = nullptr; }
+    }
+    if (m_nameTex) { delete m_nameTex; m_nameTex = nullptr; }
+    if (m_artistTex) { delete m_artistTex; m_artistTex = nullptr; }
+
+    // Unlink + delete the scene layers.
+    for (auto &layer : m_layers) {
+        if (layer) { layer->unlink(); delete layer; layer = nullptr; }
+    }
+    for (auto &layer : m_introLayers) {
+        if (layer) { layer->unlink(); delete layer; layer = nullptr; }
+    }
+    m_aep->unloadGroup(3);   // releaseAepTexture(aep, 3)
+
+    // Persist the finished play's music id + result sheet unless this was a guest/no-save run.
+    if (!m_noSaveMode) {
+        neAppEventCenter::shared();
+        id info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
+        // TODO(dep): g_bGuestNoSaveMode / g_pNeAppEventCenter / g_wResultSheet writes live in
+        // the app-event-center region; the save call is UserSettingData saveSettingData.
+        neAppEventCenter::setLastMusic((int)[info MusicID]);
+        [UserSettingData saveSettingData];
+    }
+
+    m_cellSem = nullptr;                     // Ghidra: _dispatch_release (ARC releases it here)
+    m_killed = true;                         // reap this task on the next scheduler pass
+    if (m_spawnedTask == nullptr) {
+        m_spawnedTask = MenuCreateTask();    // no sub-task queued -> back to the menu hub
+    }
+    m_spawnedTask->setPriority(3);
+    m_suppressDraw = 1;
+    m_overScoreDict = nil;                   // ARC releases the over-score dictionary
+}
+
+// Ghidra: musicSelUpdateInfoPanel (FUN_00037c88) — build the cached recommend + over-score
+// "touched" state (mode 1 only). Sets the new-recommend badge if a fresher recommend exists
+// than the last viewed one, and populates the over-score touched dictionary (m_overScoreDict).
+void MainTask::updateInfoPanel(int mode) {
+    if (mode != 1) {
+        return;
+    }
+    DownloadMain *dl = [DownloadMain getInstance];
+    NSArray *recommend = [dl recommendDataArray];
+    if ([recommend count] != 0) {
+        // Show the "new recommend" badge unless the player has already viewed something at
+        // least as fresh as the newest entry. Ghidra: recommend[0] getValue: (the entry's
+        // timestamp) compared against lastRecommendViewTimeString.
+        NSString *lastViewed = [UserSettingData lastRecommendViewTimeString];
+        m_recommendBadge = 1;
+        // TODO(dep): the recommend entry's stored timestamp extraction (getValue:) is a
+        // seam; when wired, clear the badge when lastViewed is not older than it.
+        (void)lastViewed;
+    }
+
+    NSManagedObjectContext *moc = [[AppDelegate appDelegate] managedObjectContext];
+    NSArray *overScores = [OverScoreData getAllOverScoreData:moc];
+    m_overScoreDict = [NSMutableDictionary dictionary];
+    if ([overScores count] != 0) {
+        m_overScoreBadge = 1;
+        NSMutableDictionary *dict = m_overScoreDict;
+        for (id entry in overScores) {
+            NSString *key = [[[entry music] MusicID] stringValue];
+            BOOL touched = [[entry isTouched] boolValue];
+            BOOL known = [[dict allKeys] containsObject:key];
+            if (touched) {
+                dict[key] = @"1";
+            } else if (!known) {
+                dict[key] = @"0";
+            } else if (![[dict objectForKeyedSubscript:key] isEqual:@"1"]) {
+                dict[key] = @"0";
+            }
+        }
+    }
+    neAppEventCenter::shared();   // g_bRemoteNotifyPending := false lives here
+}
+
+// ---------------------------------------------------------------------------------------
+// Thin C-linkage shims for the not-yet-C++-refactored ObjC callers that still reach these
+// routines by their unmangled binary symbol (RecommendViewController / SortSelectViewController
+// call musicSelUpdate; DownloadMain calls musicSelUpdateInfoPanel). They forward to the real
+// MainTask methods. Prefer importing MainTask.h and calling the method directly; these exist
+// only so those units keep linking until they are converted.
+extern "C" void musicSelUpdate(MainTask *task) {
+    task->updateList();
+}
+extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
+    task->updateInfoPanel(mode);
+}
+
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4

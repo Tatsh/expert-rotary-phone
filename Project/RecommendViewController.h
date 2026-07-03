@@ -19,10 +19,11 @@
 
 @class StoreViewController;
 
-// TODO(dep): MusicSelTask — the C++ music-select task (System/src/Task, not yet reconstructed)
-// whose song list this screen re-sorts. Held as a real forward-declared pointer (never void*);
-// this header is ObjC++ and every including unit is compiled as .mm.
-class MusicSelTask;
+// The C++ music-select task (System/src/Task/MainTask.h) whose song list this screen re-sorts.
+// "MusicSelTask" is the binary's name for MainTask, so it is an alias here. Held as a real
+// forward-declared pointer (never void*); this header is ObjC++ (every includer is .mm).
+class MainTask;
+using MusicSelTask = MainTask;
 
 @interface RecommendViewController : UITableViewController
 

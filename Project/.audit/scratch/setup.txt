@@ -1,0 +1,33 @@
+== FUN_000370f0 musicSelTaskSetup (state 0 scene build) ==
+Key stores into the work area (param_1 = task base, byte offsets):
+  0x28   = AepManager::shared()            aep context handle
+  0xa64  = aepGetScreenWidth()
+  0xa68  = aepGetScreenHeight()
+  0xa6c  = g_dwUiScale
+  0x925  = g_bIsPadDisplay (bool)
+  0xa70  = UserSettingData treasurePoint (uint from short)
+  0xa74  = column count (6 phone / 9 pad)
+  0xa84,0xa88 = layout base offsets (phone path); 0xa84=0 on pad
+  0x988..0xa60 = large block of button/layout RECT ints (per-platform values):
+        0x988 topRow0.x .. through 0xa60 — the setup()-filled UI-layout block.
+        These are the per-button screen rects hitButton() reads.
+  Layer construction:
+   layers[4]      @0x34  (AepLyrCtrl*, new+ctor+init "BG_640X1136" etc.)
+   introLayers[2] @0x44  (AepLyrCtrl*)
+   lyrNo[3]       @0x14c ; layerFrameCount[3] @0x158
+   frmNo[0x18]    @0x17c ; jacketTipFrm @0x1dc/@0x220 ; diffRankFrm @0x1e8/@0x204
+   aepUsrNo[0x16] @0x22c ; @0x284[6] ; @0x2a8 nested ; @0x29c/@0x2cc
+  Texture construction (neTextureForiOS_ctor + load, contiguous ptr region):
+   arrowTex[2]    @0x4c
+   nameTex        @0x54 ; artistTex @0x58
+   digitTex[60]   @0x5c..0x14c  (score#[10]@0x5c, points#[10]@0x84,
+                                 jkDif#[10]@0xac, rankDigit[30]@0xd4)
+  Jacket cells:
+   cells[27]      @0x2d8 stride 0x38 (see allcellsready/updatelist)
+  SE load loop (5 SEs): resource id @0x8c4 stride 4 (0x8c4..0x8d8),
+                        playing-inst @0x8d8 stride 4 (set 0xffffffff)
+  0x91e = !isTutorialPlayed (tutorial available)
+  0xa98 = 0  (over-score dict slot, filled later by info panel)
+  Calls musicSelUpdate(this) (== FUN_00034f4c) once to build initial list.
+NOTE: 0x8c4/0x8d8 SE arrays. Existing recon used kOffSelectSeId 0x8d0 / inst 0x8d4
+  as scalars — the real layout is arrays 0x8c4[5] (ids) + 0x8d8[5] (insts).

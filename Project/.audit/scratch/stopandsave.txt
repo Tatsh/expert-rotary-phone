@@ -1,0 +1,34 @@
+== FUN_00038008 musicSelStopAndSave (state 0x10 teardown/save) ==
+void musicSelStopAndSave(int param_1)
+{
+  IVar2 = AudioManager sharedManager;
+  for (i=-0x14; i!=0; i+=4) AudioManager releaseSe:resourceId:(0);   // release 5 SEs
+  NESceneManager_shared(); releaseSoundEffects(&g_pNeSceneManager);
+  AudioManager cleanupSe;
+  NESceneManager_shared(); loadSoundEffects(&g_pNeSceneManager);
+  // delete texture arrays: for cell i in 0..9: delete [0x5c],[0x84],[0xac]; delete [0xd4] x3
+  //   (vtable dtor slot +4 -> operator delete)
+  // delete [0x4c],[0x50] (arrowTex[2]); delete [0x54] name, [0x58] artist
+  // AepLyrCtrl::unlink + delete layers [0x34..0x44] (idx 0xd..0x11) and introLayers 0x11..0x13
+  releaseAepTexture(aep@0x28, 3);
+  if (*(char *)(param_1 + 0x923) == 0) {            // 0x923 guest/no-save flag (local)
+    neAppEventCenter::shared();
+    IVar2 = objectAtIndexedSubscript(*(param_1+0x30 musicList), *(param_1+0x8f8 selectedIndex));
+    if (g_bGuestNoSaveMode == false) {
+      g_pNeAppEventCenter = MusicID(IVar2);
+      g_wResultSheet = *(param_1 + 0x904);          // 0x904 result sheet / difficulty
+      UserSettingData saveSettingData;
+    } else { g_pNeAppEventCenter = 0; g_wResultSheet = 0; }
+  }
+  musicSelCleanup(param_1);
+  _dispatch_release(*(param_1 + 0xa90));             // semaphore
+  *(undefined1 *)(param_1 + 0x24) = 1;              // m_killed = 1
+  pvVar4 = *(void **)(param_1 + 0xaa0);             // spawnedTask
+  if (pvVar4 == 0) { pvVar4 = new MenuMainTask(0); *(param_1+0xaa0)=pvVar4; }
+  C_TASK_setPriority(pvVar4, 3);
+  *(undefined1 *)(param_1 + 0x91b) = 1;             // suppressDraw = 1
+  // print + release over-score dict @0xa98
+  if (*(param_1 + 0xa98) != 0) objc release(*(param_1+0xa98));
+}
+=> confirms: musicList@0x30, spawnedTask@0xaa0, semaphore@0xa90, overScoreDict@0xa98,
+   0x8f8 selectedMusicIndex, 0x904 resultSheet, 0x91b suppressDraw, 0x923 noSaveFlag.

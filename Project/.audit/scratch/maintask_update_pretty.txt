@@ -1,0 +1,1285 @@
+
+/* WARNING: Type propagation algorithm not settling */
+/* MainTask_update (was FUN_00035914)
+   Standard-mode MUSIC-SELECT task state machine (~17 states, 0xaa8-byte play data).
+   NOT the note-render loop. States: 0 setup (BGM + recommend-list fetch), 1 fade-in,
+   2 interactive song/menu select (button hit-test FUN_0002d974 -> spawn tutorial/play,
+   GotoRecommend), 3 song chosen (pushBgm, MusicID, ScoreData lookup), 4 preview BGM +
+   button hit-test, 5 GotoSetting, 6 settings-close/title check, 7 GotoSortSelect,
+   9 GotoOverScoreLog, 0xe fade-out, 0xf await transition, 0x10 handoff. Uses
+   MusicManager/ScoreData/AudioManager + the MainViewController Goto* nav.
+   Reconstructed (structural): rhythmin-src/Project/System/src/Task/MainTask.mm. */
+
+void MainTask_update(MusicSelTask *param_1)
+
+{
+  AepLyrCtrl AVar1;
+  int iVar2;
+  undefined *puVar3;
+  SEL pcVar4;
+  MusicSelTask *pMVar5;
+  char cVar6;
+  undefined1 uVar7;
+  undefined4 uVar8;
+  int iVar9;
+  int iVar10;
+  undefined4 extraout_r0;
+  AepLyrCtrl *pAVar11;
+  ID *pIVar12;
+  ID IVar13;
+  AepTexture *pAVar14;
+  dispatch_queue_t pdVar15;
+  ID IVar16;
+  ID IVar17;
+  uint uVar18;
+  undefined4 extraout_r0_00;
+  undefined4 extraout_r1;
+  int iVar19;
+  int extraout_r2;
+  int iVar20;
+  int iVar21;
+  MusicSelTask *pMVar22;
+  undefined4 *puVar23;
+  int iVar24;
+  int iVar25;
+  MusicInfoStruct *pMVar26;
+  bool bVar27;
+  bool bVar28;
+  undefined4 extraout_s1;
+  undefined4 extraout_s1_00;
+  undefined4 extraout_s1_01;
+  undefined4 extraout_s1_02;
+  undefined4 extraout_s1_03;
+  undefined4 extraout_s1_04;
+  undefined4 extraout_s1_05;
+  undefined4 extraout_s1_06;
+  undefined4 extraout_s1_07;
+  undefined4 extraout_s1_08;
+  undefined4 extraout_s1_09;
+  undefined4 extraout_s1_10;
+  undefined4 extraout_s1_11;
+  undefined4 extraout_s1_12;
+  undefined4 extraout_s1_13;
+  undefined4 extraout_s1_14;
+  undefined4 extraout_s1_15;
+  undefined4 extraout_s3;
+  undefined4 extraout_s3_00;
+  undefined4 extraout_s3_01;
+  undefined4 extraout_s3_02;
+  undefined4 extraout_s3_03;
+  undefined4 extraout_s3_04;
+  undefined4 extraout_s3_05;
+  undefined4 extraout_s3_06;
+  undefined8 uVar29;
+  undefined8 uVar30;
+  undefined8 uVar31;
+  undefined8 uVar32;
+  undefined8 uVar33;
+  undefined8 uVar34;
+  int local_100;
+  int local_fc;
+  undefined4 local_f8;
+  int local_f4;
+  undefined4 *local_f0;
+  undefined4 *local_ec;
+  undefined4 *local_e8;
+  ID local_e4;
+  bool *local_e0;
+  SEL local_dc;
+  MusicSelTask *local_d8;
+  ID local_d4;
+  ID *local_d0;
+  undefined *local_cc;
+  undefined4 local_c8;
+  undefined4 local_c4;
+  undefined4 local_c0;
+  undefined *puStack_bc;
+  ID *pIStack_b8;
+  MusicSelTask *local_b4;
+  void *local_b0;
+  void *local_ac;
+  AepTexture *local_a8;
+  AepTexture *local_a4;
+  AepTexture *local_a0;
+  void *local_9c;
+  void *local_98;
+  undefined1 auStack_94 [4];
+  undefined4 local_90;
+  undefined *local_7c;
+  int local_78;
+  undefined1 *local_74;
+  int local_70;
+  undefined1 *local_6c;
+  
+  local_dc = (SEL)AudioManager::sharedManager
+                            ((ID)PTR_AudioManager_0015be24,PTR_s_sharedManager_00159f7c);
+  NESceneManager_shared();
+  uVar8 = NEGraphics_shared();
+  iVar9 = NEGraphics_activeTouchCount();
+  bVar28 = false;
+  local_78 = DAT_000368bc + 0x35976;
+  local_7c = PTR____gxx_personality_sj0_00130440;
+  local_70 = (DAT_000368c0 | 1) + 0x3598e;
+  local_74 = &stack0xfffffff8;
+  local_6c = (undefined1 *)&local_100;
+  __Unwind_SjLj_Register(auStack_94);
+  if (iVar9 < 1) {
+    local_d4 = 0xffffffff;
+    local_d0 = (ID *)0xffffffff;
+  }
+  else {
+    local_d4 = 0xffffffff;
+    iVar25 = 0;
+    local_d0 = (ID *)0xffffffff;
+    do {
+      local_90 = 0xffffffff;
+      iVar10 = NEGraphics_touchAt(uVar8,iVar25);
+      if (*(char *)(iVar10 + 0x2c) != '\0') break;
+      if (bVar28) {
+        bVar28 = true;
+      }
+      else {
+        if (*(char *)(iVar10 + 0x2d) != '\0') {
+          iVar21 = *(int *)(iVar10 + 4) - *(ID *)(iVar10 + 0xc);
+          if (iVar21 < 0) {
+            iVar21 = -iVar21;
+          }
+          if (iVar21 < 0xb) {
+            iVar21 = *(int *)(iVar10 + 8) - (int)*(ID **)(iVar10 + 0x10);
+            if (iVar21 < 0) {
+              iVar21 = -iVar21;
+            }
+            if (iVar21 < 0xb) {
+              local_d0 = *(ID **)(iVar10 + 0x10);
+              local_d4 = *(ID *)(iVar10 + 0xc);
+            }
+            bVar28 = iVar21 < 0xb;
+            goto LAB_00035a08;
+          }
+        }
+        bVar28 = false;
+      }
+LAB_00035a08:
+      iVar25 = iVar25 + 1;
+    } while (iVar25 < iVar9);
+  }
+  local_d8 = param_1;
+  switch(*(undefined4 *)
+          ((int)(param_1->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10)) {
+  case 0:
+    local_90 = 0xffffffff;
+    musicSelTaskSetup(param_1);
+    local_90 = 0xffffffff;
+    UserSettingData::bgmVolume((ID)PTR_UserSettingData_0015be2c,PTR_s_bgmVolume_0015a754);
+    pcVar4 = local_dc;
+    local_90 = 0xffffffff;
+    _objc_msgSend((ID)local_dc,PTR_s_setBgmVolume__0015a5c4,extraout_r0);
+    local_90 = 0xffffffff;
+    _objc_msgSend((ID)pcVar4,PTR_s_playBgm__0015a55c,0,0x3fe00000);
+    local_90 = 0xffffffff;
+    IVar13 = NSDate::date((ID)PTR__OBJC_CLASS___NSDate_0015be50,PTR_s_date_0015a04c);
+    neAppEventCenter::shared();
+    if (DAT_00187bdc == 0) {
+LAB_00035b20:
+      local_90 = 0xffffffff;
+      IVar13 = DownloadMain::getInstance((ID)PTR_DownloadMain_0015be3c,PTR_s_getInstance_00159fa8);
+      local_90 = 0xffffffff;
+      DownloadMain::setCppDelegateRecommendList_
+                (IVar13,PTR_s_setCppDelegateRecommendList__0015a7f0,param_1);
+      local_90 = 0xffffffff;
+      DownloadMain::startGetRecommendListHttp(IVar13,PTR_s_startGetRecommendListHttp_0015a7f8);
+    }
+    else {
+      local_90 = 0xffffffff;
+      IVar13 = NSDate::timeIntervalSinceDate_(IVar13,PTR_s_timeIntervalSinceDate__0015a7f4);
+      uVar33 = FPToFixed(CONCAT44(extraout_s1,
+                                  (float)(double)CONCAT44(extraout_r1,IVar13) / DAT_00035e9c),0,0,3,
+                         0x20);
+      if ((4 < (int)uVar33) || (neAppEventCenter::shared(), g_bRemoteNotifyPending != false))
+      goto LAB_00035b20;
+      local_90 = 0xffffffff;
+      musicSelUpdateInfoPanel(param_1,1);
+    }
+    *(undefined4 *)((int)(param_1->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+         1;
+    break;
+  case 1:
+    local_90 = 0xffffffff;
+    setAepTransitionMode((param_1->field10_0x28).field0_0x0,1);
+    local_90 = 0xffffffff;
+    AepLyrCtrl::play((param_1->field10_0x28).field3_0xc[0]);
+    local_90 = 0xffffffff;
+    aepLyrCtrlPlay((param_1->field10_0x28).field4_0x1c[0]);
+    local_90 = 0xffffffff;
+    AepLyrCtrl::play((param_1->field10_0x28).field4_0x1c[1]);
+    (param_1->field10_0x28).field26_0x2b0[0x15].field4_0x10.field5_0x2e[0] = 0xffffffff;
+    *(undefined4 *)((int)(param_1->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+         2;
+    break;
+  case 2:
+    local_90 = 0xffffffff;
+    IVar13 = DownloadMain::getInstance((ID)PTR_DownloadMain_0015be3c,PTR_s_getInstance_00159fa8);
+    local_90 = 0xffffffff;
+    cVar6 = DownloadMain::isGetRecommendListDownLoading
+                      (IVar13,PTR_s_isGetRecommendListDownLoading_0015a7fc);
+    pMVar22 = local_d8;
+    if ((cVar6 == '\0') && (neAppEventCenter::shared(), g_bRemoteNotifyPending != false)) {
+      local_90 = 0xffffffff;
+      DownloadMain::setCppDelegateRecommendList_
+                (IVar13,PTR_s_setCppDelegateRecommendList__0015a7f0,pMVar22);
+      local_90 = 0xffffffff;
+      DownloadMain::startGetRecommendListHttp(IVar13,PTR_s_startGetRecommendListHttp_0015a7f8);
+    }
+    local_90 = 0xffffffff;
+    mainTaskUpdate(pMVar22);
+    pMVar5 = local_d8;
+    if ((char)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[1] == '\0') {
+      pIVar12 = &(pMVar22->field10_0x28).field26_0x2b0[0].field2_0x8;
+      uVar18 = 0;
+      do {
+        if ((*pIVar12 != 0) && ((AepTexture *)pIVar12[1] == (AepTexture *)0x0)) {
+          local_90 = 0xffffffff;
+          local_d0 = pIVar12;
+          local_a8 = operator_new(0x18);
+          local_90 = 3;
+          neTextureForiOS_ctor(local_a8);
+          pIVar12 = local_d0;
+          local_d0[1] = (ID)local_a8;
+          local_90 = 0xffffffff;
+          neTextureLoadSingle(local_a8,*local_d0);
+          local_90 = 0xffffffff;
+          _objc_msgSend(*pIVar12,PTR_s_release_00159f38);
+          *pIVar12 = 0;
+          break;
+        }
+        uVar18 = uVar18 + 1;
+        pIVar12 = pIVar12 + 0xe;
+      } while (uVar18 < 0x1b);
+      break;
+    }
+    uVar33 = FixedToFP(CONCAT44(extraout_s1_00,
+                                *(undefined4 *)
+                                 ((int)&(pMVar22->field10_0x28).field26_0x2b0[0x17].field0_0x0 + 2))
+                       ,0,0,0,0x20);
+    uVar33 = FloatVectorAbsolute(uVar33,4);
+    if (-1 < (int)((uint)((float)uVar33 < 10.0) << 0x1f)) break;
+    pMVar26 = &(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10;
+    uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar33 >> 0x20),
+                                *(undefined4 *)
+                                 ((int)(local_d8->field10_0x28).field26_0x2b0[0x17].field4_0x10.
+                                       field2_0x10 + 6)),0,0,0,0x20);
+    uVar30 = FixedToFP(CONCAT44(0x41200000,
+                                *(undefined4 *)
+                                 ((int)(local_d8->field10_0x28).field26_0x2b0[0x17].field4_0x10.
+                                       field2_0x10 + 2)),0,0,0,0x20);
+    uVar33 = CONCAT44(0x41200000,pMVar26->field0_0x0);
+    uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+    uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                *(undefined4 *)
+                                 ((local_d8->field10_0x28).field26_0x2b0[0x17].field4_0x10.
+                                  field3_0x1c + 1)),0,0,0,0x20);
+    uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                *(undefined4 *)
+                                 ((int)(local_d8->field10_0x28).field26_0x2b0[0x17].field4_0x10.
+                                       field2_0x10 + 10)),0,0,0,0x20);
+    local_90 = 0xffffffff;
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+    uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+    local_100 = (int)uVar33;
+    local_fc = (int)uVar31;
+    iVar9 = pointInRect(local_100,
+                        (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2],
+                        (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[0],
+                        (int)uVar30,(int)uVar29);
+    if (iVar9 == 1) {
+      *(undefined4 *)((int)(pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10)
+           = 5;
+      break;
+    }
+    uVar31 = FixedToFP(CONCAT44(extraout_s3,
+                                (pMVar5->field10_0x28).field26_0x2b0[0x17].field4_0x10.field4_0x22
+                                [1]),0,0,0,0x20);
+    uVar30 = FixedToFP(CONCAT44(extraout_s1_01,
+                                (pMVar5->field10_0x28).field26_0x2b0[0x17].field4_0x10.field4_0x22
+                                [0]),0,0,0,0x20);
+    uVar33 = CONCAT44(extraout_s1_01,pMVar26->field0_0x0);
+    uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+    uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                (pMVar5->field10_0x28).field26_0x2b0[0x17].field4_0x10.field5_0x2e
+                                [0]),0,0,0,0x20);
+    uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                (pMVar5->field10_0x28).field26_0x2b0[0x17].field4_0x10.field4_0x22
+                                [2]),0,0,0,0x20);
+    local_90 = 0xffffffff;
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+    uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+    local_100 = (int)uVar33;
+    local_fc = (int)uVar31;
+    iVar9 = pointInRect(local_100,
+                        (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2],
+                        (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[0],
+                        (int)uVar30,(int)uVar29);
+    if (iVar9 == 1) {
+      iVar9 = musicSelAllCellsReady(pMVar5);
+      if (iVar9 != 1) break;
+      uVar8 = 7;
+    }
+    else {
+      uVar31 = FixedToFP(CONCAT44(extraout_s3_03,
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x17].field4_0x10.field5_0x2e
+                                  [2]),0,0,0,0x20);
+      uVar30 = FixedToFP(CONCAT44(extraout_s1_06,
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x17].field4_0x10.field5_0x2e
+                                  [1]),0,0,0,0x20);
+      uVar33 = CONCAT44(extraout_s1_06,pMVar26->field0_0x0);
+      uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+      uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+      uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+      uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+      uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x18].field1_0x4),0,0,0,0x20)
+      ;
+      uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x18].field0_0x0),0,0,0,0x20)
+      ;
+      local_90 = 0xffffffff;
+      uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+      uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+      uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+      uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+      local_100 = (int)uVar33;
+      local_fc = (int)uVar31;
+      iVar9 = pointInRect(local_100,
+                          (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2],
+                          (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[0],
+                          (int)uVar30,(int)uVar29);
+      if (iVar9 == 1) {
+        iVar9 = musicSelAllCellsReady(pMVar5);
+        if (iVar9 == 1) {
+          local_90 = 0xffffffff;
+          SysSePlayIntoSlot(&g_pNeSceneManager,1);
+          local_90 = 0xffffffff;
+          NESceneManager_shared();
+          local_90 = 0xffffffff;
+          IVar13 = NESceneManager_rootViewController(&g_pNeSceneManager);
+          pMVar22 = local_d8;
+          local_90 = 0xffffffff;
+          _objc_msgSend(IVar13,PTR_s_GotoRecommend__0015a800,local_d8);
+          *(undefined1 *)
+           ((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 3) = 0;
+        }
+        break;
+      }
+      uVar31 = FixedToFP(CONCAT44(extraout_s3_04,
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x18].field3_0xc),0,0,0,0x20)
+      ;
+      uVar30 = FixedToFP(CONCAT44(extraout_s1_08,
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x18].field2_0x8),0,0,0,0x20)
+      ;
+      uVar33 = CONCAT44(extraout_s1_08,pMVar26->field0_0x0);
+      uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+      uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+      uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+      uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+      uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.field1_0x4
+                                  [0]),0,0,0,0x20);
+      uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                  (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.field0_0x0)
+                         ,0,0,0,0x20);
+      local_90 = 0xffffffff;
+      uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+      uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+      uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+      uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+      local_100 = (int)uVar33;
+      local_fc = (int)uVar31;
+      iVar9 = pointInRect(local_100,
+                          (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2],
+                          (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[0],
+                          (int)uVar30,(int)uVar29);
+      if (iVar9 != 1) {
+        uVar33 = CONCAT44(extraout_s1_09,pMVar26->field0_0x0);
+        uVar30 = FloatVectorMult(uVar33,0x4160000041600000,2,0x20);
+        local_90 = 0xffffffff;
+        uVar31 = FloatVectorMult(uVar33,0x4130000041300000,2,0x20);
+        uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+        uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+        uVar31 = FloatVectorMult(uVar33,CONCAT44((int)((ulonglong)uVar30 >> 0x20),DAT_000368cc),2,
+                                 0x20);
+        uVar33 = FloatVectorMult(uVar33,CONCAT44((int)((ulonglong)uVar29 >> 0x20),DAT_000368d0),2,
+                                 0x20);
+        uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+        uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+        local_100 = (int)uVar33;
+        local_fc = (int)uVar31;
+        iVar9 = pointInRect(local_100,
+                            (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2],
+                            (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[0],
+                            (int)uVar30,(int)uVar29);
+        if (iVar9 == 1) {
+          *(undefined1 *)
+           ((int)(pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 7) = 1;
+          local_90 = 0xffffffff;
+          local_b0 = operator_new(0x1b0);
+          local_90 = 1;
+          MenuMainTask_ctor(local_b0,0);
+          pMVar22 = local_d8;
+          *(void **)((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 6)
+               = local_b0;
+          local_90 = 0xffffffff;
+          SysSePlayIntoSlot(&g_pNeSceneManager,2);
+          *(undefined4 *)
+           ((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) = 0xe;
+        }
+        else {
+          uVar31 = FixedToFP(CONCAT44(extraout_s3_05,
+                                      *(undefined4 *)
+                                       (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                       field3_0x1c),0,0,0,0x20);
+          uVar30 = FixedToFP(CONCAT44(extraout_s1_10,
+                                      (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                      field2_0x10[2]),0,0,0,0x20);
+          uVar33 = CONCAT44(extraout_s1_10,pMVar26->field0_0x0);
+          uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+          uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+          uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+          uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+          uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                      *(undefined4 *)
+                                       ((int)(pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                             field4_0x22 + 2)),0,0,0,0x20);
+          uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                      *(undefined4 *)
+                                       ((pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                        field3_0x1c + 2)),0,0,0,0x20);
+          local_90 = 0xffffffff;
+          uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+          uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+          uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+          uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+          local_100 = (int)uVar33;
+          local_fc = (int)uVar31;
+          iVar9 = pointInRect(local_100,
+                              (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2],
+                              (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10[0],
+                              (int)uVar30,(int)uVar29);
+          pMVar22 = local_d8;
+          if (iVar9 == 1) {
+            if (*(char *)((int)(pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 +
+                         2) != '\0') {
+              local_90 = 0xffffffff;
+              IVar13 = _objc_msgSend((ID)local_dc,PTR_s_playSe_resourceId__0015a338,0,
+                                     *(undefined4 *)
+                                      ((local_d8->field10_0x28).field26_0x2b0[0x14].field4_0x10.
+                                       field3_0x1c + 2));
+              *(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x14].field4_0x10.field5_0x2e + 6)
+                   = IVar13;
+              neAppEventCenter::shared();
+              g_bGuestNoSaveMode = true;
+              local_90 = 0xffffffff;
+              UserSettingData::saveIsTutorialPlayed_
+                        ((ID)PTR_UserSettingData_0015be2c,PTR_s_saveIsTutorialPlayed__0015a804,
+                         '\x01');
+              local_90 = 0xffffffff;
+              local_ac = operator_new(0xa00);
+              local_90 = 2;
+              playTask_ctor(local_ac);
+              *(void **)((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e +
+                        6) = local_ac;
+              *(undefined4 *)
+               ((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+                   0xe;
+            }
+          }
+          else {
+            uVar31 = FixedToFP(CONCAT44(extraout_s3_06,
+                                        (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                        field1_0x4[2]),0,0,0,0x20);
+            uVar30 = FixedToFP(CONCAT44(extraout_s1_11,
+                                        (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                        field1_0x4[1]),0,0,0,0x20);
+            uVar33 = CONCAT44(extraout_s1_11,pMVar26->field0_0x0);
+            uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+            uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+            uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+            uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+            uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                        (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                        field2_0x10[1]),0,0,0,0x20);
+            uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                        (pMVar5->field10_0x28).field26_0x2b0[0x18].field4_0x10.
+                                        field2_0x10[0]),0,0,0,0x20);
+            local_90 = 0xffffffff;
+            uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+            uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+            uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+            uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+            local_100 = (int)uVar33;
+            local_fc = (int)uVar31;
+            iVar9 = pointInRect(local_100,
+                                (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[2]
+                                ,(pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field2_0x10
+                                 [0],(int)uVar30,(int)uVar29);
+            if (iVar9 == 1) {
+              local_90 = 0xffffffff;
+              _objc_msgSend((ID)local_dc,PTR_s_playSe_resourceId__0015a338,0,
+                            *(undefined4 *)
+                             ((int)(pMVar5->field10_0x28).field26_0x2b0[0x14].field4_0x10.
+                                   field4_0x22 + 2));
+              *(undefined1 *)
+               ((int)(pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 1) = 1;
+              *(undefined1 *)
+               ((int)(pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 2) = 1;
+              (pMVar5->field10_0x28).field14_0x13c[0] = 0;
+            }
+            else {
+              iVar24 = (pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[1];
+              iVar10 = *(int *)((int)&(pMVar5->field10_0x28).field26_0x2b0[0x15].field0_0x0 + 2) +
+                       -1;
+              iVar25 = *(int *)((int)&(pMVar5->field10_0x28).field26_0x2b0[0x15].field1_0x4 + 2);
+              iVar9 = ___divsi3(iVar10,iVar24);
+              iVar20 = iVar24;
+              uVar8 = extraout_s1_12;
+              if (iVar9 <= iVar25) {
+                iVar9 = ___modsi3(iVar10,iVar24);
+                iVar20 = iVar9 + 1;
+                uVar8 = extraout_s1_13;
+              }
+              if (0 < (int)iVar24) {
+                iVar24 = iVar20;
+              }
+              if (0 < (int)iVar24) {
+                iVar9 = 0;
+                do {
+                  uVar33 = CONCAT44(uVar8,pMVar26->field0_0x0);
+                  iVar10 = *(int *)((int)&(local_d8->field10_0x28).field26_0x2b0[0x17].field3_0xc +
+                                   2) * (iVar9 / 3) +
+                           (local_d8->field10_0x28).field26_0x2b0[0x19].field4_0x10.field4_0x22[0];
+                  iVar25 = *(int *)((int)&(local_d8->field10_0x28).field26_0x2b0[0x17].field2_0x8 +
+                                   2) * (iVar9 % 3) +
+                           *(int *)((local_d8->field10_0x28).field26_0x2b0[0x19].field4_0x10.
+                                    field3_0x1c + 1);
+                  uVar30 = FixedToFP(CONCAT44(iVar10,iVar10),0,0,0,0x20);
+                  uVar32 = FixedToFP(CONCAT44(iVar25,iVar25),0,0,0,0x20);
+                  uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+                  uVar31 = FloatVectorMult(uVar32,uVar33,2,0x20);
+                  uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+                  uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+                  uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                              (local_d8->field10_0x28).field26_0x2b0[0x19].
+                                              field4_0x10.field4_0x22[2]),0,0,0,0x20);
+                  local_90 = 0xffffffff;
+                  uVar34 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                              (local_d8->field10_0x28).field26_0x2b0[0x19].
+                                              field4_0x10.field4_0x22[1]),0,0,0,0x20);
+                  uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+                  uVar33 = FloatVectorMult(uVar33,uVar34,2,0x20);
+                  uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+                  uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+                  local_100 = (int)uVar33;
+                  local_fc = (int)uVar31;
+                  iVar25 = pointInRect(local_100,
+                                       (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                       field1_0x4[2],
+                                       (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                       field2_0x10[0],(int)uVar29,(int)uVar30);
+                  if (iVar25 == 1) {
+                    iVar25 = musicSelAllCellsReady(local_d8);
+                    pMVar22 = local_d8;
+                    if (iVar25 == 1) {
+                      *(int *)((int)&(local_d8->field10_0x28).field26_0x2b0[0x15].field3_0xc + 2) =
+                           *(int *)((int)&(local_d8->field10_0x28).field26_0x2b0[0x15].field1_0x4 +
+                                   2) *
+                           (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[1] +
+                           iVar9;
+                      local_90 = 0xffffffff;
+                      SysSePlayIntoSlot(&g_pNeSceneManager,1);
+                      *(undefined4 *)
+                       ((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e +
+                       10) = 3;
+                    }
+                    break;
+                  }
+                  uVar33 = CONCAT44(extraout_s1_14,pMVar26->field0_0x0);
+                  bVar27 = (local_d8->field10_0x28).field26_0x2b0[0x19].field4_0x10.field5_0x2e[1];
+                  uVar30 = FloatVectorMult(uVar32,uVar33,2,0x20);
+                  uVar31 = FixedToFP(CONCAT44(iVar10 - bVar27,iVar10 - bVar27),0,0,0,0x20);
+                  uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+                  uVar29 = FixedToFP(CONCAT44(bVar27,bVar27),0,0,0,0x20);
+                  uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+                  local_90 = 0xffffffff;
+                  uVar34 = FloatVectorMult(uVar33,uVar29,2,0x20);
+                  uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+                  uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                              (local_d8->field10_0x28).field26_0x2b0[0x19].
+                                              field4_0x10.field5_0x2e[0]),0,0,0,0x20);
+                  uVar31 = FPToFixed(uVar34,0,0,3,0x20);
+                  uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+                  uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+                  local_100 = (int)uVar33;
+                  local_fc = (int)uVar31;
+                  iVar25 = pointInRect(local_100,
+                                       (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                       field1_0x4[2],
+                                       (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                       field2_0x10[0],(int)uVar30,(int)uVar29);
+                  if (iVar25 == 1) {
+                    *(byte *)(local_d8->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 =
+                         (byte)(local_d8->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22
+                               [0] ^ 1;
+                    local_90 = 0xffffffff;
+                    SysSePlayIntoSlot(&g_pNeSceneManager,1);
+                    break;
+                  }
+                  iVar9 = iVar9 + 1;
+                  iVar24 = (local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[1];
+                  if (iVar9 < (int)iVar24) {
+                    iVar24 = iVar20;
+                  }
+                  uVar8 = extraout_s1_15;
+                } while (iVar9 < (int)iVar24);
+              }
+            }
+          }
+        }
+        break;
+      }
+      iVar9 = musicSelAllCellsReady(pMVar5);
+      if (iVar9 != 1) break;
+      uVar8 = 9;
+    }
+    goto LAB_00036000;
+  case 3:
+    local_90 = 0xffffffff;
+    _objc_msgSend((ID)local_dc,PTR_s_pushBgm_0015a808);
+    pMVar22 = local_d8;
+    local_90 = 0xffffffff;
+    pIVar12 = (ID *)_objc_msgSend((local_d8->field10_0x28).field2_0x8,
+                                  PTR_s_objectAtIndexedSubscript__0015a288,
+                                  *(undefined4 *)
+                                   ((int)&(local_d8->field10_0x28).field26_0x2b0[0x15].field3_0xc +
+                                   2));
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend((ID)pIVar12,PTR_s_MusicID_0015a80c);
+    *(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 2) = IVar13;
+    local_90 = 0xffffffff;
+    cVar6 = MusicManager::isInviteMusic_
+                      ((ID)PTR_MusicManager_0015be34,PTR_s_isInviteMusic__0015a810,IVar13);
+    if (cVar6 == '\0') {
+      bVar28 = true;
+    }
+    else {
+      local_90 = 0xffffffff;
+      cVar6 = MusicManager::isOpenInviteMusic_
+                        ((ID)PTR_MusicManager_0015be34,PTR_s_isOpenInviteMusic__0015a814,2);
+      bVar28 = cVar6 != '\0';
+    }
+    *(bool *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 5) = bVar28
+    ;
+    local_dc = PTR_s_appDelegate_0015a0a4;
+    local_90 = 0xffffffff;
+    IVar13 = AppDelegate::appDelegate((ID)PTR_AppDelegate_0015be04,PTR_s_appDelegate_0015a0a4);
+    local_e0 = (bool *)PTR_s_managedObjectContext_00159fa0;
+    local_90 = 0xffffffff;
+    IVar13 = AppDelegate::managedObjectContext(IVar13,PTR_s_managedObjectContext_00159fa0);
+    local_90 = 0xffffffff;
+    local_e4 = ScoreData::getScoreData_inManagedObjectContext_
+                         ((ID)PTR_ScoreData_0015bf24,PTR_s_getScoreData_inManagedObjectCont_0015a6a0
+                          ,*(unsigned_int *)
+                            ((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4
+                            + 2),IVar13);
+    local_90 = 0xffffffff;
+    aepLyrCtrlStop((pMVar22->field10_0x28).field3_0xc[1],1);
+    pAVar14 = (pMVar22->field10_0x28).field6_0x2c;
+    if (pAVar14 != (AepTexture *)0x0) {
+      local_90 = 0xffffffff;
+      (**(code **)(*(int *)pAVar14 + 4))();
+      (pMVar22->field10_0x28).field6_0x2c = (AepTexture *)0x0;
+    }
+    pAVar14 = (pMVar22->field10_0x28).field7_0x30;
+    if (pAVar14 != (AepTexture *)0x0) {
+      local_90 = 0xffffffff;
+      (**(code **)(*(int *)pAVar14 + 4))();
+      (pMVar22->field10_0x28).field7_0x30 = (AepTexture *)0x0;
+    }
+    local_90 = 0xffffffff;
+    local_d4 = _objc_msgSend((ID)pIVar12,PTR_s_musicNameImage2xData_0015a818);
+    local_90 = 0xffffffff;
+    local_a4 = operator_new(0x18);
+    local_90 = 4;
+    local_d0 = pIVar12;
+    neTextureForiOS_ctor(local_a4);
+    (local_d8->field10_0x28).field6_0x2c = local_a4;
+    local_90 = 0xffffffff;
+    neTextureLoadSingle(local_a4,local_d4);
+    local_90 = 0xffffffff;
+    local_d4 = _objc_msgSend((ID)local_d0,PTR_s_artistNameImage2xData_0015a81c);
+    local_90 = 0xffffffff;
+    local_a0 = operator_new(0x18);
+    local_90 = 5;
+    neTextureForiOS_ctor(local_a0);
+    pMVar22 = local_d8;
+    (local_d8->field10_0x28).field7_0x30 = local_a0;
+    local_90 = 0xffffffff;
+    neTextureLoadSingle(local_a0,local_d4);
+    pIVar12 = local_d0;
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend((ID)local_d0,PTR_s_lvNormal_0015a820);
+    *(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 10) = IVar13;
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend((ID)pIVar12,PTR_s_lvHyper_0015a824);
+    *(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field2_0x10 + 2) = IVar13;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend((ID)pIVar12,PTR_s_lvEx_0015a828);
+    IVar13 = local_e4;
+    *(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field2_0x10 + 6) = IVar16;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(local_e4,PTR_s_fullComboN_0015a438);
+    puVar3 = PTR_s_boolValue_0015a700;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar16,PTR_s_boolValue_0015a700);
+    uVar7 = (undefined1)IVar16;
+    if ((IVar16 & 0xff) != 0) {
+      uVar7 = 1;
+    }
+    *(undefined1 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field2_0x10 + 10) =
+         uVar7;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar13,PTR_s_fullComboH_0015a43c);
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar16,puVar3);
+    uVar7 = (undefined1)IVar16;
+    if ((IVar16 & 0xff) != 0) {
+      uVar7 = 1;
+    }
+    *(undefined1 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field2_0x10 + 0xb)
+         = uVar7;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar13,PTR_s_fullComboEx_0015a440);
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar16,puVar3);
+    uVar7 = (undefined1)IVar16;
+    if ((IVar16 & 0xff) != 0) {
+      uVar7 = 1;
+    }
+    *(undefined1 *)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c = uVar7;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar13,PTR_s_perfectN_0015a444);
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar16,puVar3);
+    uVar7 = (undefined1)IVar16;
+    if ((IVar16 & 0xff) != 0) {
+      uVar7 = 1;
+    }
+    *(undefined1 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c + 1) =
+         uVar7;
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar13,PTR_s_perfectH_0015a448);
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar16,puVar3);
+    uVar7 = (undefined1)IVar16;
+    if ((IVar16 & 0xff) != 0) {
+      uVar7 = 1;
+    }
+    *(undefined1 *)((pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c + 1) = uVar7
+    ;
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend(IVar13,PTR_s_perfectEx_0015a44c);
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend(IVar13,puVar3);
+    uVar7 = (undefined1)IVar13;
+    if ((IVar13 & 0xff) != 0) {
+      uVar7 = 1;
+    }
+    *(undefined1 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c + 3) =
+         uVar7;
+    *(undefined1 *)((pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c + 2) = 1;
+    iVar9 = 0;
+    pdVar15 = _dispatch_get_global_queue(0,0);
+    local_cc = PTR___NSConcreteStackBlock_0013043c;
+    local_c8 = 0xc2000000;
+    local_c4 = 0;
+    local_b4 = pMVar22;
+    local_c0 = 0x37f79;
+    puStack_bc = &DAT_001315b0;
+    pIStack_b8 = pIVar12;
+    _dispatch_async(pdVar15,&local_cc);
+    do {
+      if (iVar9 == *(int *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4
+                           + 6)) {
+        iVar24 = (pMVar22->field10_0x28).field13_0x130[1];
+      }
+      else {
+        iVar24 = (pMVar22->field10_0x28).field13_0x130[2];
+      }
+      (pMVar22->field10_0x28).field15_0x148[iVar9] = iVar24 - 1;
+      puVar3 = PTR_OverScoreData_0015bf68;
+      iVar9 = iVar9 + 1;
+    } while (iVar9 != 3);
+    iVar24 = *(int *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 2);
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend((ID)PTR_AppDelegate_0015be04,local_dc);
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend(IVar13,(SEL)local_e0);
+    local_90 = 0xffffffff;
+    OverScoreData::updateOverScoreTouchedWithMusic_inManagedObjectContext_
+              ((ID)puVar3,PTR_s_updateOverScoreTouchedWithMusic__0015a830,iVar24,IVar13);
+    local_90 = 0xffffffff;
+    IVar13 = NSNumber::alloc((ID)PTR__OBJC_CLASS___NSNumber_0015be00,PTR_s_alloc_00159ea8);
+    local_90 = 0xffffffff;
+    IVar13 = NSNumber::initWithInt_
+                       (IVar13,PTR_s_initWithInt__0015a834,
+                        *(undefined4 *)
+                         ((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 +
+                         2));
+    local_90 = 0xffffffff;
+    IVar13 = NSNumber::autorelease(IVar13,PTR_s_autorelease_00159ec0);
+    local_90 = 0xffffffff;
+    IVar13 = NSNumber::stringValue(IVar13,PTR_s_stringValue_0015a838);
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(*(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                        field4_0x22 + 10),PTR_s_allKeys_0015a83c);
+    local_90 = 0xffffffff;
+    IVar16 = _objc_msgSend(IVar16,PTR_s_containsObject__0015a840,IVar13);
+    if ((IVar16 & 0xff) != 0) {
+      local_90 = 0xffffffff;
+      _objc_msgSend(*(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field4_0x22
+                           + 10),PTR_s_setObject_forKeyedSubscript__0015a844,&cf_1,IVar13);
+    }
+    *(undefined4 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 6) = 0
+    ;
+    *(undefined4 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+         4;
+    break;
+  case 4:
+    if ((char)(param_1->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c[2] == '\0') {
+      local_90 = 0xffffffff;
+      IVar13 = _objc_msgSend((ID)local_dc,PTR_s_isPlayingBgm_0015a7e0);
+      pcVar4 = local_dc;
+      if (IVar13 == 0) {
+        local_90 = 0xffffffff;
+        _objc_msgSend((ID)local_dc,PTR_s_seekBgmToTop_0015a848);
+        local_90 = 0xffffffff;
+        _objc_msgSend((ID)pcVar4,PTR_s_setBgmVolume__0015a5c4,0x3f800000);
+        local_90 = 0xffffffff;
+        _objc_msgSend((ID)pcVar4,PTR_s_playBgm__0015a55c,0,0x3fe00000);
+      }
+    }
+    pAVar11 = (param_1->field10_0x28).field3_0xc[1];
+    AVar1 = pAVar11[0x5c];
+    pAVar11[0x5c] = (AepLyrCtrl)0x0;
+    if (AVar1 != (AepLyrCtrl)0x0) {
+      local_90 = 0xffffffff;
+      AepLyrCtrl::play((param_1->field10_0x28).field3_0xc[3]);
+    }
+    pMVar22 = param_1;
+    if ((char)(param_1->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22[1] != '\0') {
+      iVar9 = ___modsi3(*(undefined4 *)
+                         ((int)&(param_1->field10_0x28).field26_0x2b0[0x15].field3_0xc + 2),
+                        (param_1->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field1_0x4[1]);
+      iVar21 = -3;
+      iVar10 = 0x304;
+      iVar9 = iVar9 + *(char *)((int)(param_1->field10_0x28).field26_0x2b0[0x14].field4_0x10.
+                                     field2_0x10 + 1);
+      iVar25 = -0xc;
+      local_e0 = (param_1->field10_0x28).field26_0x2b0[0].field4_0x10.field4_0x22 + iVar9 * 0xe;
+      do {
+        neAppEventCenter::shared();
+        local_f8 = *(undefined4 *)
+                    ((int)(param_1->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 2);
+        local_90 = 0xffffffff;
+        local_f4 = (int)(short)((short)iVar21 + 3);
+        local_fc = (int)(param_1->field10_0x28).field26_0x2b0[0].field4_0x10.field4_0x22 +
+                   iVar21 + iVar9 * 0x38 + 6;
+        local_100 = (int)local_e0 + iVar21 + 3;
+        iVar2 = iVar25 + iVar9 * 0x38;
+        fetchScoreDataForMusic
+                  (&g_pNeAppEventCenter,
+                   (int)(param_1->field10_0x28).field26_0x2b0[0].field4_0x10.field2_0x10 + iVar2,
+                   (int)(param_1->field10_0x28).field3_0xc + iVar10 + iVar9 * 0x38 + -0x34,
+                   (int)(param_1->field10_0x28).field26_0x2b0[0].field4_0x10.field3_0x1c + iVar2);
+        iVar10 = iVar10 + 2;
+        iVar25 = iVar25 + 4;
+        iVar21 = iVar21 + 1;
+      } while (iVar21 != 0);
+      *(undefined1 *)((local_d8->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 1) = 0;
+      pMVar22 = local_d8;
+    }
+    local_e0 = (bool *)((int)(param_1->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 2)
+    ;
+    local_90 = 0xffffffff;
+    local_d8 = pMVar22;
+    IVar13 = NSNumber::alloc((ID)PTR__OBJC_CLASS___NSNumber_0015be00,PTR_s_alloc_00159ea8);
+    local_90 = 0xffffffff;
+    IVar13 = NSNumber::initWithInt_
+                       (IVar13,PTR_s_initWithInt__0015a834,
+                        *(undefined4 *)
+                         ((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 +
+                         2));
+    local_90 = 0xffffffff;
+    IVar13 = NSNumber::autorelease(IVar13,PTR_s_autorelease_00159ec0);
+    local_90 = 0xffffffff;
+    IVar16 = NSNumber::stringValue(IVar13,PTR_s_stringValue_0015a838);
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend(*(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                        field4_0x22 + 10),PTR_s_allKeys_0015a83c);
+    local_90 = 0xffffffff;
+    IVar17 = _objc_msgSend(IVar13,PTR_s_containsObject__0015a840,IVar16);
+    pIVar12 = local_d0;
+    IVar13 = local_d4;
+    pMVar22 = local_d8;
+    if (!bVar28) break;
+    pMVar26 = &(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10;
+    uVar31 = FixedToFP(CONCAT44(extraout_s3_00,
+                                *(undefined4 *)
+                                 ((int)&(local_d8->field10_0x28).field26_0x2b0[0x19].field4_0x10.
+                                        field0_0x0 + 2)),0,0,0,0x20);
+    uVar30 = FixedToFP(CONCAT44(extraout_s1_02,
+                                *(undefined4 *)
+                                 ((int)&(local_d8->field10_0x28).field26_0x2b0[0x19].field3_0xc + 2)
+                               ),0,0,0,0x20);
+    uVar33 = CONCAT44(extraout_s1_02,pMVar26->field0_0x0);
+    uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+    uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                *(undefined4 *)
+                                 ((int)(local_d8->field10_0x28).field26_0x2b0[0x19].field4_0x10.
+                                       field1_0x4 + 6)),0,0,0,0x20);
+    local_90 = 0xffffffff;
+    uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                *(undefined4 *)
+                                 ((int)(local_d8->field10_0x28).field26_0x2b0[0x19].field4_0x10.
+                                       field1_0x4 + 2)),0,0,0,0x20);
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+    uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+    local_100 = (int)uVar33;
+    local_fc = (int)uVar31;
+    local_e4 = IVar17;
+    iVar9 = pointInRect(local_100,local_d4,local_d0,(int)uVar30,(int)uVar29);
+    pcVar4 = local_dc;
+    if (iVar9 == 1) {
+      local_90 = 0xffffffff;
+      _objc_msgSend((ID)local_dc,PTR_s_popBgm_0015a84c);
+      local_90 = 0xffffffff;
+      IVar13 = _objc_msgSend((ID)pcVar4,PTR_s_playSe_resourceId__0015a338,0,
+                             *(undefined4 *)
+                              ((pMVar22->field10_0x28).field26_0x2b0[0x14].field4_0x10.field3_0x1c +
+                              2));
+      *(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x14].field4_0x10.field5_0x2e + 6) = IVar13
+      ;
+      local_90 = 0xffffffff;
+      local_9c = operator_new(0xa00);
+      local_90 = 6;
+      playTask_ctor(local_9c);
+      pMVar22 = local_d8;
+      *(void **)((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 6) =
+           local_9c;
+      local_90 = 0xffffffff;
+      IVar13 = AppDelegate::appDelegate((ID)PTR_AppDelegate_0015be04,PTR_s_appDelegate_0015a0a4);
+      local_90 = 0xffffffff;
+      AppDelegate::setMainTask_
+                (IVar13,PTR_s_setMainTask__0015a774,
+                 *(void **)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e
+                           + 6));
+      *(undefined4 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10)
+           = 0xc;
+      break;
+    }
+    local_f0 = (undefined4 *)
+               ((int)(pMVar22->field10_0x28).field26_0x2b0[0x19].field4_0x10.field2_0x10 + 2);
+    puVar23 = (undefined4 *)
+              ((int)(pMVar22->field10_0x28).field26_0x2b0[0x19].field4_0x10.field1_0x4 + 10);
+    local_ec = (undefined4 *)
+               ((int)(pMVar22->field10_0x28).field26_0x2b0[0x19].field4_0x10.field2_0x10 + 10);
+    uVar31 = FixedToFP(CONCAT44(extraout_s3_01,*local_f0),0,0,0,0x20);
+    uVar30 = FixedToFP(CONCAT44(extraout_s1_03,*puVar23),0,0,0,0x20);
+    uVar33 = CONCAT44(extraout_s1_03,pMVar26->field0_0x0);
+    local_e8 = (undefined4 *)
+               ((int)(pMVar22->field10_0x28).field26_0x2b0[0x19].field4_0x10.field2_0x10 + 6);
+    uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+    uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),*local_ec),0,0,0,0x20);
+    uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),*local_e8),0,0,0,0x20);
+    local_90 = 0xffffffff;
+    uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+    uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+    uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+    uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+    local_100 = (int)uVar33;
+    local_fc = (int)uVar31;
+    iVar9 = pointInRect(local_100,IVar13,pIVar12,(int)uVar30,(int)uVar29);
+    if (iVar9 == 0) {
+      uVar8 = extraout_s1_04;
+      if ((local_e4 & 0xff) != 0) {
+        uVar30 = FixedToFP(CONCAT44(extraout_s1_04,*puVar23),0,0,0,0x20);
+        uVar33 = CONCAT44(extraout_s1_04,pMVar26->field0_0x0);
+        uVar31 = FixedToFP(CONCAT44(extraout_s3_02,*local_f0),0,0,0,0x20);
+        uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+        uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+        uVar30 = FloatVectorAdd(uVar30,0x41a0000041a00000,2);
+        uVar31 = FloatVectorAdd(uVar31,CONCAT44(extraout_s3_02,DAT_000368c4),2);
+        uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+        uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+        uVar8 = (undefined4)((ulonglong)uVar30 >> 0x20);
+        uVar31 = FixedToFP(CONCAT44(uVar8,*local_ec),0,0,0,0x20);
+        local_90 = 0xffffffff;
+        uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),*local_e8),0,0,0,0x20);
+        uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+        uVar32 = FloatVectorMult(uVar33,uVar32,2,0x20);
+        uVar33 = FPToFixed(uVar31,0,0,3,0x20);
+        uVar31 = FloatVectorAdd(uVar32,CONCAT44(uVar8,DAT_000368c8),2);
+        uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+        local_100 = (int)uVar31;
+        local_fc = (int)uVar33;
+        iVar9 = pointInRect(local_fc,IVar13,local_d0,(int)uVar30,(int)uVar29);
+        uVar8 = extraout_s1_05;
+        if (iVar9 != 0) goto LAB_0003679c;
+      }
+      pIVar12 = local_d0;
+      iVar24 = 0;
+      do {
+        iVar9 = *(int *)((int)&(pMVar22->field10_0x28).field26_0x2b0[0x19].field2_0x8 + 2) * iVar24
+                + *(int *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x18].field4_0x10.field5_0x2e
+                          + 6);
+        uVar30 = FixedToFP(CONCAT44(uVar8,*(undefined4 *)
+                                           ((int)(pMVar22->field10_0x28).field26_0x2b0[0x18].
+                                                 field4_0x10.field5_0x2e + 10)),0,0,0,0x20);
+        uVar33 = CONCAT44(uVar8,pMVar26->field0_0x0);
+        uVar31 = FixedToFP(CONCAT44(iVar9,iVar9),0,0,0,0x20);
+        uVar30 = FloatVectorMult(uVar30,uVar33,2,0x20);
+        uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+        uVar30 = FPToFixed(uVar30,0,0,3,0x20);
+        uVar29 = FPToFixed(uVar31,0,0,3,0x20);
+        uVar31 = FixedToFP(CONCAT44((int)((ulonglong)uVar30 >> 0x20),
+                                    *(undefined4 *)
+                                     ((int)&(pMVar22->field10_0x28).field26_0x2b0[0x19].field1_0x4 +
+                                     2)),0,0,0,0x20);
+        local_90 = 0xffffffff;
+        uVar32 = FixedToFP(CONCAT44((int)((ulonglong)uVar29 >> 0x20),
+                                    *(undefined4 *)
+                                     ((int)&(pMVar22->field10_0x28).field26_0x2b0[0x19].field0_0x0 +
+                                     2)),0,0,0,0x20);
+        uVar31 = FloatVectorMult(uVar33,uVar31,2,0x20);
+        uVar33 = FloatVectorMult(uVar33,uVar32,2,0x20);
+        uVar31 = FPToFixed(uVar31,0,0,3,0x20);
+        uVar33 = FPToFixed(uVar33,0,0,3,0x20);
+        local_100 = (int)uVar33;
+        local_fc = (int)uVar31;
+        iVar9 = pointInRect(local_100,IVar13,pIVar12,(int)uVar29,(int)uVar30);
+        pMVar5 = local_d8;
+        if (iVar9 == 1) {
+          local_d8 = pMVar5;
+          if (*(int *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 6)
+              != iVar24) {
+            if (((iVar24 == 0) || (iVar24 == 1)) ||
+               ((iVar24 != 2 ||
+                (*(char *)((int)(local_d8->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22
+                          + 5) != '\0')))) {
+              local_90 = 0xffffffff;
+              _objc_msgSend((ID)local_dc,PTR_s_playSe_resourceId__0015a338,0);
+              iVar19 = 0;
+              iVar20 = extraout_r2;
+              do {
+                if (iVar19 != iVar24) {
+                  iVar20 = *(int *)((int)(pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.
+                                         field1_0x4 + 6);
+                }
+                if (iVar19 != iVar24 && iVar19 != iVar20) {
+                  iVar20 = (pMVar5->field10_0x28).field13_0x130[2] - 1;
+                  (pMVar5->field10_0x28).field15_0x148[iVar19] = iVar20;
+                }
+                else {
+                  (pMVar5->field10_0x28).field15_0x148[iVar19] = 0;
+                }
+                iVar19 = iVar19 + 1;
+              } while (iVar19 != 3);
+              *(int *)((int)(pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.field1_0x4 + 6) =
+                   iVar24;
+              local_d8 = pMVar5;
+            }
+            else {
+              local_90 = 0xffffffff;
+              SysSePlayIntoSlot(&g_pNeSceneManager,2);
+            }
+          }
+          goto switchD_00035a26_caseD_b;
+        }
+        iVar24 = iVar24 + 1;
+        uVar8 = extraout_s1_07;
+      } while ((int)iVar24 < 3);
+      local_d8 = pMVar5;
+      if ((char)(pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c[2] == '\0') {
+        local_90 = 0xffffffff;
+        aepLyrCtrlReset((local_d8->field10_0x28).field3_0xc[1]);
+        local_90 = 0xffffffff;
+        aepLyrCtrlReset((pMVar5->field10_0x28).field3_0xc[3]);
+        local_90 = 0xffffffff;
+        aepLyrCtrlStop((pMVar5->field10_0x28).field3_0xc[2],1);
+        pcVar4 = local_dc;
+        local_90 = 0xffffffff;
+        _objc_msgSend((ID)local_dc,PTR_s_popBgm_0015a84c);
+        local_90 = 0xffffffff;
+        UserSettingData::bgmVolume((ID)PTR_UserSettingData_0015be2c,PTR_s_bgmVolume_0015a754);
+        local_90 = 0xffffffff;
+        _objc_msgSend((ID)pcVar4,PTR_s_setBgmVolume__0015a5c4,extraout_r0_00);
+        local_90 = 0xffffffff;
+        _objc_msgSend((ID)pcVar4,PTR_s_playBgm__0015a55c,0,0x3fe00000);
+        local_90 = 0xffffffff;
+        SysSePlayIntoSlot(&g_pNeSceneManager,2);
+        (pMVar5->field10_0x28).field26_0x2b0[0x15].field4_0x10.field5_0x2e[0] = 0xffffffff;
+        *(undefined4 *)
+         ((int)(pMVar5->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) = 2;
+      }
+    }
+    else {
+LAB_0003679c:
+      local_90 = 0xffffffff;
+      SysSePlayIntoSlot(&g_pNeSceneManager,1);
+      local_90 = 0xffffffff;
+      _objc_msgSend((ID)local_dc,PTR_s_stopBgm__0015a514,0,0x3fe00000);
+      *(undefined1 *)((pMVar22->field10_0x28).field26_0x2b0[0x15].field4_0x10.field4_0x22 + 1) = 1;
+      if ((local_e4 & 0xff) != 0) {
+        local_90 = 0xffffffff;
+        _objc_msgSend(*(ID *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.
+                                   field4_0x22 + 10),PTR_s_removeObjectForKey__0015a4f0,IVar16);
+      }
+      local_90 = 0xffffffff;
+      NESceneManager_shared();
+      local_90 = 0xffffffff;
+      IVar13 = NESceneManager_rootViewController(&g_pNeSceneManager);
+      local_90 = 0xffffffff;
+      _objc_msgSend(IVar13,PTR_s_GotoFriendScore__0015a850,*local_e0);
+    }
+    break;
+  case 5:
+    local_90 = 0xffffffff;
+    SysSePlayIntoSlot(&g_pNeSceneManager,1);
+    local_90 = 0xffffffff;
+    NESceneManager_shared();
+    local_90 = 0xffffffff;
+    IVar13 = NESceneManager_rootViewController(&g_pNeSceneManager);
+    local_90 = 0xffffffff;
+    _objc_msgSend(IVar13,PTR_s_GotoSetting_0015a854);
+    uVar8 = 6;
+    goto LAB_00036000;
+  case 6:
+    local_90 = 0xffffffff;
+    NESceneManager_shared();
+    local_90 = 0xffffffff;
+    pIVar12 = (ID *)NESceneManager_rootViewController(&g_pNeSceneManager);
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend((ID)pIVar12,PTR_s_settingViewing_0015a858);
+    if (IVar13 != 0) break;
+    local_90 = 0xffffffff;
+    IVar13 = _objc_msgSend((ID)pIVar12,PTR_s_isGotoTitle_0015a85c);
+    if (IVar13 == 1) {
+      local_90 = 0xffffffff;
+      local_d0 = pIVar12;
+      local_98 = operator_new(0x54);
+      local_90 = 7;
+      TitleTask::ctor(local_98);
+      *(void **)((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 6) =
+           local_98;
+      *(undefined4 *)
+       ((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) = 0xe;
+      local_90 = 0xffffffff;
+      _objc_msgSend((ID)local_d0,PTR_s_setIsGotoTitle__0015a3fc,0);
+      break;
+    }
+  case 8:
+  case 10:
+    uVar8 = 2;
+    goto LAB_00036000;
+  case 7:
+    local_90 = 0xffffffff;
+    SysSePlayIntoSlot(&g_pNeSceneManager,1);
+    local_90 = 0xffffffff;
+    NESceneManager_shared();
+    local_90 = 0xffffffff;
+    IVar13 = NESceneManager_rootViewController(&g_pNeSceneManager);
+    pMVar22 = local_d8;
+    local_90 = 0xffffffff;
+    _objc_msgSend(IVar13,PTR_s_GotoSortSelect__0015a860,local_d8);
+    *(undefined4 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+         8;
+    break;
+  case 9:
+    local_90 = 0xffffffff;
+    SysSePlayIntoSlot(&g_pNeSceneManager,1);
+    local_90 = 0xffffffff;
+    NESceneManager_shared();
+    local_90 = 0xffffffff;
+    IVar13 = NESceneManager_rootViewController(&g_pNeSceneManager);
+    pMVar22 = local_d8;
+    local_90 = 0xffffffff;
+    _objc_msgSend(IVar13,PTR_s_GotoOverScoreLog__0015a864,local_d8);
+    *(undefined4 *)((int)(pMVar22->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+         10;
+    break;
+  case 0xc:
+    uVar8 = 0xd;
+    goto LAB_00036000;
+  case 0xd:
+    uVar8 = 0xe;
+    goto LAB_00036000;
+  case 0xe:
+    local_90 = 0xffffffff;
+    setAepTransitionMode((param_1->field10_0x28).field0_0x0,2);
+    *(undefined4 *)((param_1->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field3_0x1c + 2) = 1;
+    *(undefined4 *)((int)(param_1->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10) =
+         0xf;
+    break;
+  case 0xf:
+    local_90 = 0xffffffff;
+    iVar9 = AepManager::isTransitionDone((param_1->field10_0x28).field0_0x0);
+    if (((iVar9 != 1) ||
+        ((char)(local_d8->field10_0x28).field26_0x2b0[0x15].field4_0x10.field3_0x1c[2] != '\0')) ||
+       (*(int *)((local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field3_0x1c + 2) != 2))
+    break;
+    uVar8 = 0x10;
+LAB_00036000:
+    *(undefined4 *)((int)(local_d8->field10_0x28).field26_0x2b0[0x1a].field4_0x10.field5_0x2e + 10)
+         = uVar8;
+    break;
+  case 0x10:
+    local_90 = 0xffffffff;
+    NESceneManager_shared();
+    local_90 = 0xffffffff;
+    iVar9 = isSePlaying(&g_pNeSceneManager,2);
+    if (iVar9 == 0) {
+      if (-1 < *(int *)((int)(local_d8->field10_0x28).field26_0x2b0[0x14].field4_0x10.field5_0x2e +
+                       6)) {
+        local_90 = 0xffffffff;
+        IVar13 = _objc_msgSend((ID)local_dc,PTR_s_isPlayingSe__0015a59c);
+        if (IVar13 != 0) break;
+      }
+      local_90 = 0xffffffff;
+      musicSelStopAndSave(local_d8);
+    }
+  }
+switchD_00035a26_caseD_b:
+  local_90 = 0xffffffff;
+  musicSelUpdateHighlight(local_d8);
+  local_90 = 0xffffffff;
+  updateAndDrawAepLayers(0);
+  __Unwind_SjLj_Unregister(auStack_94);
+  return;
+}
+

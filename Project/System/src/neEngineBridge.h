@@ -241,6 +241,11 @@ namespace neEngine {
     // Ghidra: FUN_0002d974.
     bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable);
 
+    // True while the scene manager's system-SE slot `slot` is still sounding (slot 2
+    // is the cancel/back SE the music-select teardown waits on). Ghidra: isSePlaying
+    // (FUN_0002c764), which probes the SE-handle table on the scene manager global.
+    bool isSePlaying(int slot);
+
     // Set the scene's touch input mode (0 = normal, non-zero = suspended while a
     // modal/animation runs). Ghidra: neSceneSetInputMode.
     void setInputMode(int mode);

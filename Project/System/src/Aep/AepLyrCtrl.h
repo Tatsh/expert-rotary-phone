@@ -63,6 +63,15 @@ public:
     // layer before rebuilding.
     void stopPlay() { m_playState = 0; }
 
+    // Stop this layer, optionally leaving it drawn at its current frame. Ghidra:
+    // aepLyrCtrlStop (FUN_0002cb24) — the music-select preview transitions call it
+    // with keepVisible = 1 to freeze the preview layer on screen.
+    void stop(int keepVisible);
+
+    // Rewind this layer's play head to frame 0 (without unlinking). Ghidra:
+    // aepLyrCtrlReset (FUN_0002cb5c) — used when backing out of a song preview.
+    void reset();
+
     // Sugoroku roulette-layer anchor: clear the y slot and store a raw integer into
     // the z slot (the scene copies play data field<int>(0x614) in as raw 4 bytes, not
     // a float). Ghidra: the +0x18 / +0x1c stores in FUN_0009fc90.

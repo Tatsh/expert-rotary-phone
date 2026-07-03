@@ -251,4 +251,14 @@ void playSystemSe(int slot) {
     }
 }
 
+// @ 0x2c764 (isSePlaying) — true while the SE instance cached in `slot` is still
+// audible. The binary probes AudioManager isPlayingSe: on the handle stored at the
+// scene-manager global + 0x28; here that handle table is g_systemSeHandles.
+bool isSePlaying(int slot) {
+    if (slot < 0 || slot >= (int)(sizeof(g_systemSeHandles) / sizeof(g_systemSeHandles[0]))) {
+        return false;
+    }
+    return [[AudioManager sharedManager] isPlayingSe:g_systemSeHandles[slot]] != NO;
+}
+
 }  // namespace neEngine

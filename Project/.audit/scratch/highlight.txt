@@ -1,0 +1,24 @@
+== FUN_000355fc musicSelUpdateHighlight (per-frame draw) ==
+void musicSelUpdateHighlight(int param_1)
+{
+  if (*(char *)(param_1 + 0x91b) == 0) {          // 0x91b = suppress-draw flag (teardown)
+    iVar2 = (*(int *)(param_1 + 0xa94) + 2) % 0x97;  // 0xa94 highlight anim counter (0..0x96)
+    *(int *)(param_1 + 0xa94) = iVar2;
+    if (*(char *)(param_1 + 0x91f) != 0) {          // 0x91f recommend-badge visible
+      // pulse alpha; neTextureForiOS_draw(aep@0x28, tex@0x50 (arrowTex[1]), ...,
+      //   scaleX@0xa58, scaleY@0xa5c, rectX@0x9c0-2, rectY@0x9c4-10, ...)
+    }
+    if (*(char *)(param_1 + 0x924) != 0) {          // 0x924 over-score-badge visible
+      // same, rect @0x9d0/0x9d4
+    }
+    drawAepFrameEx(aep@0x28, frm@0x194, x@0x9a0, y@0x9a4, ...) x4   // 0x194,0x19c,0x1a0,0x1a4
+    if (*(char *)(param_1 + 0x91e) != 0)            // 0x91e tutorial-available badge
+      drawAepFrameEx(aep, frm@0x1bc, x@0x9f0, y@0x9f4, ...)
+    if (1 < *(int *)(param_1 + 0x8f4)) {            // >1 column: draw "cur/total"
+      sprintf("%d/%d", *(int*)(param_1+0x8f0)+1, ...);   // 0x8f0 col idx, 0x8f4 col count
+      aepManagerReset_a(aep, str, 0xa08, 0xa00, 0xa04, ...)
+    }
+  }
+}
+=> 0x91b suppressDraw, 0x91e tutorialBadge, 0x91f recommendBadge, 0x924 overScoreBadge,
+   0xa94 highlightAnimCounter, 0x50 arrowTex[1], 0x194.. aep frame handles.

@@ -19,10 +19,11 @@
 
 #import "DownloadMain.h"  // DownloadMainDelegate (the over-score-log download callback)
 
-// TODO(dep): MusicSelTask — the C++ music-select task (System/src/Task, not yet reconstructed)
-// whose song list this screen plays from. Held as a real forward-declared pointer (never void*);
-// this header is ObjC++ and every including unit is compiled as .mm.
-class MusicSelTask;
+// The C++ music-select task (System/src/Task/MainTask.h) whose song list this screen plays
+// from. "MusicSelTask" is the binary's name for MainTask, so it is an alias here. Held as a
+// real forward-declared pointer (never void*); this header is ObjC++ (every includer is .mm).
+class MainTask;
+using MusicSelTask = MainTask;
 
 @interface OverScoreLogViewController : UITableViewController <DownloadMainDelegate>
 
