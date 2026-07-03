@@ -49,8 +49,34 @@
     BOOL isInfoLoaded;                                   // detail fully fetched + shown
 }
 
-@property (nonatomic, retain) StorePackInfo *packInfo;   // @ 0x50b58 (setter)
-@property (nonatomic, weak) id<StorePackDetailViewPadDelegate> delegate;
+@property (nonatomic, retain) StorePackInfo *packInfo;   // getter @ 0x50b48, setter @ 0x50b58
+@property (nonatomic, weak) id<StorePackDetailViewPadDelegate> delegate;  // getter @ 0x50b68, setter @ 0x50b78
+
+// Kick the pack-detail download: if the pack already has its song list, tint + show the card;
+// otherwise grey it, spin the loading indicator and start a StorePackInfoDownloader. Ghidra:
+// @ 0x4f680.
+- (void)loadInfo;
+
+// Populate the detail card from the bound pack (name, comment, copyright, jacket, buy button, the
+// up-to-4 song rows and their .acv/artwork state); runs once (guarded by isInfoLoaded). Ghidra:
+// @ 0x4f318.
+- (void)showPackInfo;
+
+// Choose the purchase button's label for the current ownership/download state. Ghidra: @ 0x4ef54.
+- (void)selfCheckButtonText;
+
+// Set the purchase button to its "buy (price)" state (enabled). Ghidra: @ 0x4f024.
+- (void)setButtonTextBuy;
+
+// Set the purchase button to its localized "INSTALL" state (enabled). Ghidra: @ 0x4f0b8.
+- (void)setButtonTextInstall;
+
+// Set the purchase button to its localized "INSTALLING" state (disabled). Ghidra: @ 0x4f144.
+- (void)setButtonTextInstalling;
+
+// Set the purchase button to its "installed" state: greyed "INSTALLED" if already recommended,
+// otherwise the tappable "友達に勧める" (recommend) label. Ghidra: @ 0x4f1d0.
+- (void)setButtonTextInstalled;
 
 // Abort a pending pack-detail fetch (called when the panel is dismissed). Ghidra:
 // @ 0x4ecd0.

@@ -24,7 +24,8 @@
 
 @implementation StorePackDetailViewPad
 
-@synthesize delegate = m_Delegate;
+@synthesize packInfo = m_PackInfo;   // getter @ 0x50b48, setter @ 0x50b58 (objc_setProperty)
+@synthesize delegate = m_Delegate;   // getter @ 0x50b68, setter @ 0x50b78
 
 // @ 0x4dae8 — build the whole iPad pack-detail panel: a grey, soft-shadowed card holding the
 // pack header (jacket + name + comment + copyright + buy button), a 2x2 grid of song rows, a
@@ -199,15 +200,141 @@
     return self;
 }
 
-// @ 0x50b58 — retaining setter for the displayed pack (synthesized in the binary).
-- (StorePackInfo *)packInfo {
-    return m_PackInfo;
+// packInfo (@ 0x50b48) / setPackInfo: (@ 0x50b58, objc_setProperty) are synthesized in the
+// binary; the addresses are annotated on the @property in the header.
+
+// @ 0x4f680 — kick the pack-detail download. No-op without a bound pack. If the pack already
+// carries its song list (musicInfos != nil), just tint the card and show it; otherwise grey the
+// card, attach + spin the loading spinner/label, drop any in-flight detail fetch, and start a
+// fresh StorePackInfoDownloader (self is its delegate) fetching the full detail.
+- (void)loadInfo {
+    if (m_PackInfo == nil) {
+        return;
+    }
+    if ([m_PackInfo musicInfos] == nil) {
+        self.backgroundColor = [UIColor grayColor];
+        [self addSubview:indicator];
+        [self addSubview:labelLoading];
+        [indicator startAnimating];
+        if (m_StorePackInfoDownloader != nil) {
+            [m_StorePackInfoDownloader cancel];
+            m_StorePackInfoDownloader = nil;
+        }
+        m_StorePackInfoDownloader =
+            [[StorePackInfoDownloader alloc] initWithStorePackInfo:m_PackInfo];
+        [m_StorePackInfoDownloader setDelegate:(id)self];
+        [m_StorePackInfoDownloader downloadDetail];
+    } else {
+        self.backgroundColor = [UIColor colorWithWhite:0.863f alpha:1.0f];   // raw 0x3f5ced91
+        [self showPackInfo];
+    }
 }
 
-- (void)setPackInfo:(StorePackInfo *)packInfo {
-    if (m_PackInfo != packInfo) {
-        m_PackInfo = packInfo;
+// @ 0x4f318 — populate the detail card from the bound pack (once). Tint the background, fill in
+// the name / comment / copyright / jacket URL, pick the right buy-button label, reveal the pack
+// header, then for each of the 4 rows: if a song exists at that index bind it (flagging whether a
+// playable .acv chart is present by matching acMusicId against the pack's acvMusicInfos) and show
+// the row, else clear + hide it. Finally kick every artwork download, hide the artist button when
+// there is no artist URL, and latch isInfoLoaded so this only runs once.
+- (void)showPackInfo {
+    if (isInfoLoaded) {
+        return;
     }
+    self.backgroundColor = [UIColor colorWithWhite:0.863f alpha:1.0f];   // raw 0x3f5ced91
+    labelPackName.text = [m_PackInfo packName];
+    labelComment.text = [m_PackInfo comment];
+    copyrightView.text = [m_PackInfo copyright];
+    packArtworkView.imageURL = [m_PackInfo artworkURL];
+    [self selfCheckButtonText];
+    packView.hidden = NO;
+
+    NSArray *musicInfos = [m_PackInfo musicInfos];
+    for (int i = 0; i < 4; i++) {
+        if (i < [musicInfos count]) {
+            StoreMusicInfo *info = [musicInfos objectAtIndex:i];
+
+            // Is there an .acv (playable chart) for this song? Scan the pack's acvMusicInfos for
+            // one whose acMusicId matches this song's musicID.
+            BOOL isExistAcv = NO;
+            if ([[m_PackInfo acvMusicInfos] count] != 0) {
+                NSUInteger j = 0;
+                do {
+                    id acv = [[m_PackInfo acvMusicInfos] objectAtIndexedSubscript:j];
+                    if ([acv acMusicId] == [info musicID]) {
+                        isExistAcv = YES;
+                        break;
+                    }
+                    j++;
+                } while (j < [[m_PackInfo acvMusicInfos] count]);
+            }
+
+            [musicView[i] setIsExistAcv:isExistAcv];
+            [musicView[i] setInfo:info];
+            musicView[i].hidden = NO;
+        } else {
+            [musicView[i] setInfo:nil];
+            musicView[i].hidden = YES;
+        }
+    }
+
+    [packArtworkView startDownloadImage];
+    for (int i = 0; i < 4; i++) {
+        [musicView[i].artworkView startDownloadImage];
+    }
+    m_ArtistSiteButton.hidden = ([m_PackInfo artistURL] == nil);
+    isInfoLoaded = YES;
+}
+
+// @ 0x4ef54 — pick the purchase button's label for the current state: no pack or not owned -> buy;
+// owned but not fully downloaded -> install; owned + downloaded -> installed.
+- (void)selfCheckButtonText {
+    if (m_PackInfo != nil) {
+        NSString *productID = [StoreUtil productIDForPackID:m_PackInfo.packID];
+        if ([[PurchaseManager sharedManager] isPurchased:productID]) {
+            if ([self allDownloaded]) {
+                [self setButtonTextInstalled];
+            } else {
+                [self setButtonTextInstall];
+            }
+            return;
+        }
+    }
+    [self setButtonTextBuy];
+}
+
+// @ 0x4f024 — "buy" state: title "購入 (<price>)", button enabled.
+- (void)setButtonTextBuy {
+    [buttonPurchase setTitle:[NSString stringWithFormat:@"購入 (%@)", m_PackInfo.priceString]
+                    forState:UIControlStateNormal];
+    [buttonPurchase setEnabled:YES];
+}
+
+// @ 0x4f0b8 — "install" state: localized "INSTALL", button enabled.
+- (void)setButtonTextInstall {
+    NSString *title = [[NSBundle mainBundle] localizedStringForKey:@"INSTALL" value:@"" table:nil];
+    [buttonPurchase setTitle:title forState:UIControlStateNormal];
+    [buttonPurchase setEnabled:YES];
+}
+
+// @ 0x4f144 — "installing" state: localized "INSTALLING" on the disabled state, button disabled.
+- (void)setButtonTextInstalling {
+    NSString *title = [[NSBundle mainBundle] localizedStringForKey:@"INSTALLING" value:@"" table:nil];
+    [buttonPurchase setTitle:title forState:UIControlStateDisabled];
+    [buttonPurchase setEnabled:NO];
+}
+
+// @ 0x4f1d0 — "installed" state: if already recommended, fall through to the greyed-out
+// "INSTALLED" (setButtonTextInstalledForce); otherwise offer the still-tappable "友達に勧める"
+// ("recommend to friends") label so the user can register the pack as recommended.
+- (void)setButtonTextInstalled {
+    if ([self isRecommended]) {
+        [self setButtonTextInstalledForce];
+        return;
+    }
+    NSString *title =
+        [[NSBundle mainBundle] localizedStringForKey:@"友達に勧める" value:@"" table:nil];
+    [buttonPurchase setTitle:title forState:UIControlStateNormal];
+    [buttonPurchase setEnabled:YES];
 }
 
 // @ 0x4ecd0 — abort a pending pack-detail fetch. Re-points the downloader's delegate at
@@ -509,9 +636,94 @@
     return NO;
 }
 
+// @ 0x50100 — AudioManager BGM-finished callback (a looping preview clip reached its end): reset
+// every row's sample button and mark nothing playing. No BGM stop here (the clip already ended).
+- (void)finishBgm:(id)sender {
+    for (int i = 0; i < 4; i++) {
+        [musicView[i] sampleStop];
+    }
+    samplePlaying = -1;
+}
+
+// @ 0x505d8 — Downloader delegate: a fetch failed. For the preview downloader, reset the playing
+// row and drop it; for the recommend-registration POST, drop it and hide the cover. Either way show
+// the network-connection-error alert.
+- (void)downloaderError:(Downloader *)downloader {
+    if (m_SampleDownloader == downloader) {
+        if (samplePlaying >= 0) {
+            [musicView[samplePlaying] sampleStop];
+            samplePlaying = -1;
+        }
+        m_SampleDownloader = nil;
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:@"Error"
+                                            message:@"サーバに接続できません。\nネットワーク接続をご確認下さい。"
+                                           delegate:nil
+                                  cancelButtonTitle:@"OK"
+                                  otherButtonTitles:nil];
+        [alert show];
+    } else if (recommendDownloader == downloader) {
+        recommendDownloader = nil;
+        [dummyView.view setHidden:YES];
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:@"Error"
+                                            message:@"サーバに接続できません。\nネットワーク接続をご確認下さい。"
+                                           delegate:nil
+                                  cancelButtonTitle:@"OK"
+                                  otherButtonTitles:nil];
+        [alert show];
+    }
+}
+
+// @ 0x507a4 — Downloader delegate: incremental progress. No-op in this view.
+- (void)downloaderProceed:(Downloader *)downloader {
+}
+
+// @ 0x507a8 — StorePackInfoDownloader delegate: the pack detail arrived. Populate the card, stop
+// and pull the loading spinner + caption, then unhook + drop the downloader.
+- (void)storePackInfoDownloaderFinished:(StorePackInfoDownloader *)downloader {
+    [self showPackInfo];
+    [indicator stopAnimating];
+    [indicator removeFromSuperview];
+    [labelLoading removeFromSuperview];
+    [m_StorePackInfoDownloader setDelegate:nil];
+    m_StorePackInfoDownloader = nil;
+}
+
+// @ 0x50840 — StorePackInfoDownloader delegate: the detail fetch failed. Stop + pull the spinner
+// and caption, show the network-error alert (self is the alert delegate, so tapping OK closes the
+// detail view via commonAlertView:clickedButtonAtIndex:), then unhook + drop the downloader.
+- (void)storePackInfoDownloaderError:(StorePackInfoDownloader *)downloader {
+    [indicator stopAnimating];
+    [indicator removeFromSuperview];
+    [labelLoading removeFromSuperview];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"Error"
+                                        message:@"サーバに接続できません。\nネットワーク接続をご確認下さい。"
+                                       delegate:(id)self
+                              cancelButtonTitle:@"OK"
+                              otherButtonTitles:nil];
+    [alert show];
+    [m_StorePackInfoDownloader setDelegate:nil];
+    m_StorePackInfoDownloader = nil;
+}
+
+// @ 0x5093c — CommonAlertView delegate: a button was tapped. Ask the host to close the detail view.
+- (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
+    if ([m_Delegate respondsToSelector:@selector(detailViewClose)]) {
+        [m_Delegate performSelector:@selector(detailViewClose)];
+    }
+}
+
+// @ 0x50990 — teardown. The binary is MRC: it releases packView, the 4 song rows, the jacket,
+// the labels, the copyright/loading views and spinner, both downloaders, packInfo, the birthday
+// modal and the cached recommend-id array, then calls [super dealloc]. Under ARC only the
+// download-cancelling side effects are kept: unhook + cancel the in-flight detail fetch and cancel
+// the in-flight preview clip.
 - (void)dealloc {
+    [m_StorePackInfoDownloader setDelegate:nil];
+    [m_StorePackInfoDownloader cancel];
     [m_SampleDownloader cancel];
-    [recommendDownloader cancel];
 }
 
 @end

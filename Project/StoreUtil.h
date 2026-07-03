@@ -106,6 +106,10 @@
 // (an explicit user tap vs a background refresh). Ghidra: packInfoURL:UserOpen: @ 0x58b80.
 + (NSURL *)packInfoURL:(unsigned int)packID UserOpen:(BOOL)userOpen;
 
+// Arcade-viewer per-song info endpoint (used by the arcade-viewer manager to fetch a
+// missing song's metadata before re-download). Ghidra: acvMusicInfoURL: @ 0x5b534.
++ (NSURL *)acvMusicInfoURL:(unsigned int)acMusicId;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

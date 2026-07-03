@@ -11,7 +11,9 @@
 #import <stdlib.h>
 #import <string.h>
 
+#import <GameKit/GameKit.h>
 #import <Security/Security.h>
+#import <StoreKit/StoreKit.h>
 #import <sys/sysctl.h>
 
 #import "AppDelegate.h"
@@ -57,6 +59,11 @@ BOOL gLaunchedFromPush = NO;
     NSManagedObjectModel *_managedObjectModel;
     NSPersistentStoreCoordinator *_persistentStoreCoordinator;
 }
+
+// -[AppDelegate dealloc]  @ 0x8c74 — ARC-omitted.
+// The original only released the three owned objects (window, viewController,
+// strageAlert) and chained to [super dealloc]; ARC synthesizes all of that, so
+// no explicit dealloc is needed (object-only teardown).
 
 #pragma mark - Launch
 
@@ -318,7 +325,8 @@ BOOL gLaunchedFromPush = NO;
 
 // -[AppDelegate hardwareType]  @ 0xb13c
 - (int)hardwareType { return _hardwareType; }
-- (int)displayType  { return _displayType; }
+// displayType is a synthesized atomic getter (@ 0xb0a8); _displayType is written
+// directly in initHardware.
 
 // -[AppDelegate isOldHardware]  @ 0xad5c
 - (BOOL)isOldHardware {
@@ -447,11 +455,152 @@ static const char *const kHardwareModels[40] = {
     return result;
 }
 
+// -[AppDelegate deleteUuid]  @ 0x9c20
+// Removes the persisted install UUID keychain item (account "ApplicationUniqueID").
+- (void)deleteUuid {
+    NSString *service = NSBundle.mainBundle.bundleIdentifier;
+    NSDictionary *query = @{
+        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount:      @"ApplicationUniqueID",
+        (__bridge id)kSecAttrService:      service,
+        (__bridge id)kSecMatchLimit:       (__bridge id)kSecMatchLimitOne,
+        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+    };
+    CFTypeRef attrsRef = nullptr;
+    if (SecItemCopyMatching((__bridge CFDictionaryRef)query, &attrsRef) == errSecSuccess) {
+        NSDictionary *deleteQuery = @{
+            (__bridge id)kSecClass:       (__bridge id)kSecClassGenericPassword,
+            (__bridge id)kSecAttrAccount: @"ApplicationUniqueID",
+            (__bridge id)kSecAttrService: service,
+            (__bridge id)kSecMatchLimit:  (__bridge id)kSecMatchLimitOne,
+            // kSecReturnAttributes/kCFBooleanTrue carried over from the match query.
+            (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+        };
+        SecItemDelete((__bridge CFDictionaryRef)deleteQuery);
+    }
+}
+
+#pragma mark - Settings-version keychain record
+
+// -[AppDelegate setUsersettingVer:]  @ 0x9d58
+// Stores (adds or updates) the settings version string in a keychain generic-
+// password item keyed on account "UserSettingVer".
+- (void)setUsersettingVer:(NSString *)ver {
+    NSData *data = [ver dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *service = NSBundle.mainBundle.bundleIdentifier;
+
+    NSDictionary *query = @{
+        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount:      @"UserSettingVer",
+        (__bridge id)kSecAttrService:      service,
+        (__bridge id)kSecMatchLimit:       (__bridge id)kSecMatchLimitOne,
+        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+    };
+    CFTypeRef found = nullptr;
+    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &found);
+
+    if (status == errSecItemNotFound) {
+        // No record yet — add one.
+        NSMutableDictionary *add = [NSMutableDictionary dictionary];
+        add[(__bridge id)kSecClass]       = (__bridge id)kSecClassGenericPassword;
+        add[(__bridge id)kSecAttrAccount] = @"UserSettingVer";
+        add[(__bridge id)kSecValueData]   = data;
+        add[(__bridge id)kSecAttrService] = NSBundle.mainBundle.bundleIdentifier;
+        add[(__bridge id)kSecAttrLabel]       = @"";
+        add[(__bridge id)kSecAttrDescription] = @"";
+        add[(__bridge id)kSecAttrAccessible]  =
+            (__bridge id)kSecAttrAccessibleAfterFirstUnlock;
+        if (SecItemAdd((__bridge CFDictionaryRef)add, nullptr) == errSecSuccess) {
+            NSLog(@"setUsersettingVer add success.");
+        } else {
+            NSLog(@"setUsersettingVer add error. (%d)", (int)status);
+        }
+    } else if (status == errSecSuccess) {
+        // Record exists — update its data + modification date.
+        NSMutableDictionary *update = [NSMutableDictionary dictionary];
+        update[(__bridge id)kSecValueData]              = data;
+        update[(__bridge id)kSecAttrModificationDate]   = [NSDate date];
+        if (SecItemUpdate((__bridge CFDictionaryRef)query,
+                          (__bridge CFDictionaryRef)update) == errSecSuccess) {
+            NSLog(@"setUsersettingVer update success.");
+        } else {
+            NSLog(@"setUsersettingVer update error. (%d)", (int)status);
+        }
+    }
+}
+
+// -[AppDelegate getUsersettingVer]  @ 0xa044
+// Reads the stored settings version; returns @"0" when there is no record.
+- (NSString *)getUsersettingVer {
+    NSDictionary *query = @{
+        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount:      @"UserSettingVer",
+        (__bridge id)kSecAttrService:      NSBundle.mainBundle.bundleIdentifier,
+        (__bridge id)kSecMatchLimit:       (__bridge id)kSecMatchLimitOne,
+        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+    };
+    CFTypeRef attrsRef = nullptr;
+    if (SecItemCopyMatching((__bridge CFDictionaryRef)query, &attrsRef) == errSecSuccess) {
+        NSMutableDictionary *dataQuery =
+            [NSMutableDictionary dictionaryWithDictionary:(__bridge_transfer NSDictionary *)attrsRef];
+        dataQuery[(__bridge id)kSecClass]      = (__bridge id)kSecClassGenericPassword;
+        dataQuery[(__bridge id)kSecReturnData] = (__bridge id)kCFBooleanTrue;
+        CFTypeRef dataRef = nullptr;
+        if (SecItemCopyMatching((__bridge CFDictionaryRef)dataQuery, &dataRef) == errSecSuccess) {
+            NSData *data = (__bridge_transfer NSData *)dataRef;
+            NSString *stored = [[NSString alloc] initWithBytes:data.bytes
+                                                        length:data.length
+                                                      encoding:NSUTF8StringEncoding];
+            if (stored != nil) {
+                return stored;
+            }
+        }
+    }
+    return [NSString stringWithFormat:@"%@", @"0"];
+}
+
+// -[AppDelegate deleteUsersettingVer]  @ 0xa270
+- (void)deleteUsersettingVer {
+    NSString *service = NSBundle.mainBundle.bundleIdentifier;
+    NSDictionary *query = @{
+        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount:      @"UserSettingVer",
+        (__bridge id)kSecAttrService:      service,
+        (__bridge id)kSecMatchLimit:       (__bridge id)kSecMatchLimitOne,
+        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+    };
+    CFTypeRef attrsRef = nullptr;
+    if (SecItemCopyMatching((__bridge CFDictionaryRef)query, &attrsRef) == errSecSuccess) {
+        NSDictionary *deleteQuery = @{
+            (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
+            (__bridge id)kSecAttrAccount:      @"UserSettingVer",
+            (__bridge id)kSecAttrService:      service,
+            (__bridge id)kSecMatchLimit:       (__bridge id)kSecMatchLimitOne,
+            (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+        };
+        SecItemDelete((__bridge CFDictionaryRef)deleteQuery);
+    }
+}
+
 #pragma mark - Environment strings
+
+// -[AppDelegate userAgent]  @ 0xa3a8 — defensive copy of the cached UA string
+// (built in application:didFinishLaunchingWithOptions:).
+- (NSString *)userAgent {
+    return [NSString stringWithString:_userAgent];
+}
 
 // -[AppDelegate appVersion]  @ 0xa408 — the bundle build number.
 - (NSString *)appVersion {
     return NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"];
+}
+
+// -[AppDelegate appVersionNum]  @ 0xa458 — build number with dots stripped,
+// parsed as an integer ("2.0.3" -> 203).
+- (int)appVersionNum {
+    NSString *stripped = [self.appVersion stringByReplacingOccurrencesOfString:@"."
+                                                                    withString:@""];
+    return [stripped intValue];
 }
 
 // -[AppDelegate osVersion]  @ 0xa3d4
@@ -472,6 +621,76 @@ static const char *const kHardwareModels[40] = {
 // -[AppDelegate localeString]  @ 0xa4a4 — "<language>_<country>", e.g. "ja_JP".
 - (NSString *)localeString {
     return [NSString stringWithFormat:@"%@_%@", self.localeLanguage, self.localeCountry];
+}
+
+#pragma mark - StoreKit / purchases
+
+// -[AppDelegate finishRequest:]  @ 0xab44
+// PurchaseManager hands back the fetched SKProduct list; cache it and touch the
+// first element (as in the original).
+- (void)finishRequest:(NSArray *)products {
+    _products = products;
+    if (_products.count == 0) {
+        return;
+    }
+    (void)[_products objectAtIndex:0];
+}
+
+// -[AppDelegate purchaseSucceeded:]  @ 0xab9c — PurchaseManager delegate.
+- (void)purchaseSucceeded:(id)transaction {
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"Succeeded"
+                                       message:@"購入処理が完了しました。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK", nil];
+    [alert show];
+}
+
+// -[AppDelegate purchaseFailed:error:]  @ 0xac24 — PurchaseManager delegate.
+- (void)purchaseFailed:(id)transaction error:(NSError *)error {
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"Failed"
+                                       message:@"購入処理が失敗しました。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK", nil];
+    [alert show];
+}
+
+// -[AppDelegate getProduct:]  @ 0xacac
+// Linear search of the cached product list for a matching productIdentifier.
+- (SKProduct *)getProduct:(NSString *)productId {
+    if (self.products != nil) {
+        for (NSUInteger i = 0; i < self.products.count; i++) {
+            SKProduct *product = [self.products objectAtIndex:i];
+            if (product != nil &&
+                [product.productIdentifier isEqualToString:productId]) {
+                return product;
+            }
+        }
+    }
+    return nil;
+}
+
+#pragma mark - Game Center
+
+// -[AppDelegate loginGameCenter]  @ 0xb00c
+// Authenticates the local Game Center player. The iOS 6 authenticate handler is
+// invoked with a login view controller to present (or nil once resolved).
+- (void)loginGameCenter {
+    GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
+    localPlayer.authenticateHandler =
+        ^(UIViewController *viewController, NSError *error) {
+            // Block invoke @ 0xb07c (copy helper @ 0xb094, dispose @ 0xb0a0);
+            // captures self. Reconstructed from the Thumb block: presents the
+            // supplied login UI when Game Center asks for it.
+            if (viewController != nil) {
+                [self.viewController presentViewController:viewController
+                                                 animated:YES
+                                               completion:nil];
+            }
+        };
 }
 
 #pragma mark - Core Data stack
