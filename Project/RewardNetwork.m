@@ -26,8 +26,8 @@
 + (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(void (^)(void))callback;
 @end
 
-// Serial queue guarding the shared-instance handoff in -init.
-// TODO(dep): created by the unreconstructed SDK start path (g_pRewardNetworkDispatchQueue).
+// Serial queue guarding the shared-instance handoff in -init. Created in +allocWithZone:'s
+// dispatch_once body (g_pRewardNetworkDispatchQueue).
 static dispatch_queue_t g_pRewardNetworkDispatchQueue = NULL;
 
 // The +allocWithZone:/+sharedInstance singleton (both guarded by dispatch_once).
@@ -55,12 +55,10 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // @ 0xee634
 - (instancetype)init {
     __block id result = nil;
-    // Queue-guarded shared-instance handoff (Ghidra: dispatch_sync on
-    // g_pRewardNetworkDispatchQueue running rewardNetworkInitBlock_1).
+    // Queue-guarded shared-instance handoff (dispatch_sync on g_pRewardNetworkDispatchQueue).
     dispatch_sync(g_pRewardNetworkDispatchQueue, ^{
-        // TODO(dep): rewardNetworkInitBlock_1 — the queue-guarded singleton setup is
-        // not part of this reconstruction pass; faithful wiring only.
-        result = self;
+        // @ 0xee6fc — the block body just performs [super init].
+        result = [super init];
     });
     return result;
 }
@@ -68,8 +66,14 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // @ 0xee550
 + (instancetype)allocWithZone:(struct _NSZone *)zone {
     static dispatch_once_t onceToken;
+    // @ 0xee5bc — dispatch_once body: create the serial handoff queue, then alloc the
+    // singleton via [super allocWithZone:] and clear its initializeFlg.
     dispatch_once(&onceToken, ^{
-        g_pRewardNetworkInstance = [super allocWithZone:zone];
+        g_pRewardNetworkDispatchQueue = dispatch_queue_create("RewardNetwork", NULL);
+        if (g_pRewardNetworkInstance == nil) {
+            g_pRewardNetworkInstance = [super allocWithZone:zone];
+            [g_pRewardNetworkInstance setInitializeFlg:0];
+        }
     });
     return g_pRewardNetworkInstance;
 }
@@ -161,10 +165,38 @@ static NSDate *g_pRewardBannerExpireDate = nil;
         block([RewardNetworkError localizedApplilinkErrorWithCode:0x404]);
         return;
     }
+    // @ 0xeee40 (block literal @ 0x1341a0) — login-check completion.
     [RewardNetwork checkLoginWithBlock:^(id result, NSError *error) {
-        // TODO(dep): rewardNetworkRequestTokenCallback_1 (block invoke @ 0x1341a0) — on a
-        // successful login check forwards to `block`; body not reconstructed.
-        (void)block;
+        if (error != nil) {
+            [[RewardNetwork sharedInstance] debugLog];
+            block(error);
+            return;
+        }
+        if (result != nil) {
+            // Already logged in — the session is ready.
+            block(nil);
+            return;
+        }
+        // @ 0xeeef0 — token-request completion.
+        [RewardNetwork requestTokenWithBlock:^(id token, NSError *tokenError) {
+            if (token == nil || tokenError != nil) {
+                [[RewardNetwork sharedInstance] debugLog];
+                block(tokenError);
+                return;
+            }
+            // @ 0xeefb8 — login completion: seed the keychain UDID, then finish.
+            [RewardNetwork startLoginWithToken:token
+                                  withPriority:1
+                                      callback:^(NSError *loginError) {
+                if (loginError != nil) {
+                    [[RewardNetwork sharedInstance] debugLog];
+                    block(loginError);
+                    return;
+                }
+                [RewardNetworkUdid setUdidKeychainFromPasteBoard];
+                block(nil);
+            }];
+        }];
     }];
 }
 
@@ -350,12 +382,48 @@ static NSDate *g_pRewardBannerExpireDate = nil;
         callback([cached intValue], nil);
         return;
     }
+    // @ 0xf1cd5 — start-completion: issue the checkAllInstall request.
     [RewardNetwork startWithBlock:^(NSError *error) {
-        // TODO(dep): start-completion block @ 0xf1cd5 — requests the all-install flag using
-        // `inCompany`, caches it under "appInstallFlg", and forwards to `callback`. Body not
-        // reconstructed (uses __block accumulators from the enclosing frame).
-        (void)inCompany;
-        (void)callback;
+        if (error != nil) {
+            callback(-1, error);
+            return;
+        }
+        NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+        if (inCompany) { [params setValue:inCompany forKey:@"in_company"]; }
+        [params setValue:@"json" forKey:@"format"];
+        NSString *url =
+            [[RewardNetwork baseUrlSsl] stringByAppendingString:@"/reward/app/checkAllInstall.php"];
+        [RewardNetworkWebAPI requestAsynchronousWithURL:url
+                                                 method:@"GET"
+                                             parameters:params
+                                               userInfo:nil
+                                                    tag:0
+                                            cachePolicy:nil
+                                          finishedBlock:^(id response, id userInfo) {
+            // @ 0xf1a50 — read all_install_flg, cache it under "appInstallFlg", forward the flag.
+            if (![response isKindOfClass:[NSDictionary class]]) {
+                callback(0, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                return;
+            }
+            BOOL ok = [[response objectForKey:@"status"] boolValue] &&
+                      [[response objectForKey:@"error_code"] intValue] == 100000000;
+            if (!ok) {
+                callback(0, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                return;
+            }
+            id flg = [response objectForKey:@"all_install_flg"];
+            if (flg == nil) {
+                callback(-1, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                return;
+            }
+            [[RewardNetwork sharedInstance] setTemporaryCacheWithKey:@"appInstallFlg"
+                                                               value:[NSString stringWithFormat:@"%@", flg]
+                                                          expiration:0];
+            callback([flg intValue], nil);
+        }
+                                            failedBlock:^(NSURLRequest *request, NSError *failError) {
+            callback(-1, failError);
+        }];
     }];
 }
 
@@ -517,11 +585,46 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     }
 
     __weak RewardNetwork *weakSelf = self;
+    // @ 0xf0d2d — start-completion: report a start failure to the delegate, otherwise clear
+    // the already-installed applis before opening the panel.
     [RewardNetwork startWithBlock:^(NSError *error) {
-        (void)weakSelf;
-        // TODO(dep): the start-completion block (@ 0xf0d2d) opens the app-list panel via
-        // weakSelf using campaignId/inCompany/type/offset/limit/parentView/delegate; its
-        // exact body is not part of this reconstruction pass.
+        if (error != nil) {
+            if ([delegate respondsToSelector:@selector(appListFailLoadWithError:)]) {
+                [delegate appListFailLoadWithError:error];
+            }
+            return;
+        }
+        // @ 0xf0eec — install-report completion: build the app-index request params and
+        // load /reward/app/index.php into the (lazily created) web-view controller.
+        [weakSelf postAlreadyInstallAppWithCallback:^(NSError *reportError) {
+            RewardNetwork *strongSelf = weakSelf;
+            if (strongSelf == nil) {
+                return;
+            }
+            if (reportError != nil) {
+                if ([delegate respondsToSelector:@selector(appListFailLoadWithError:)]) {
+                    [delegate appListFailLoadWithError:reportError];
+                }
+                return;
+            }
+            NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+            if (campaignId) { [params setValue:campaignId forKey:@"campaign_id"]; }
+            if (inCompany)  { [params setValue:inCompany  forKey:@"in_company"]; }
+            if (type)       { [params setValue:type       forKey:@"type"]; }
+            if (offset)     { [params setValue:offset     forKey:@"offset"]; }
+            if (limit)      { [params setValue:limit      forKey:@"limit"]; }
+            if (strongSelf->_webViewController == nil) {
+                strongSelf->_webViewController = [[RewardNetworkWebViewController alloc] init];
+            }
+            if (parentView != nil) {
+                [strongSelf->_webViewController setParentView:parentView];
+            }
+            NSString *url =
+                [[RewardNetwork baseUrlSsl] stringByAppendingString:@"/reward/app/index.php"];
+            [strongSelf->_webViewController loadRequestWithURL:url
+                                                    parameters:params
+                                                      delegate:delegate];
+        }];
     }];
 }
 
@@ -548,12 +651,21 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): wraps `callback` (success) — block body not reconstructed.
-                                          (void)callback;
+                                          // @ 0xf154c — validate dict/status/error_code==1e8.
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              callback(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          BOOL ok = [[response objectForKey:@"status"] boolValue] &&
+                                                    [[response objectForKey:@"error_code"] intValue] == 100000000;
+                                          if (ok) {
+                                              callback(response, nil);
+                                          } else {
+                                              callback(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                          }
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): wraps `callback` (failure) — block body not reconstructed.
-                                          (void)callback;
+                                          callback(nil, error);
                                       }];
 }
 
@@ -606,17 +718,26 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): wraps `callback` (success) — block body not reconstructed.
-                                          (void)callback;
+                                          // @ 0xf2474 — validate dict/status/error_code==1e8 (variant).
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              callback(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          BOOL ok = [[response objectForKey:@"status"] boolValue] &&
+                                                    [[response objectForKey:@"error_code"] intValue] == 100000000;
+                                          if (ok) {
+                                              callback(response, nil);
+                                          } else {
+                                              callback(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                          }
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): wraps `callback` (failure) — block body not reconstructed.
-                                          (void)callback;
+                                          callback(nil, error);
                                       }];
 }
 
 // @ 0xf25fc
-- (void)postAppliInstallReportWithAppliList:(NSArray *)appliList callback:(RewardNetworkCallback)callback {
+- (void)postAppliInstallReportWithAppliList:(NSArray *)appliList callback:(RewardNetworkErrorBlock)callback {
     NSArray *batch;
     NSArray *remainder = nil;
     if ([appliList count] < 11) {
@@ -638,24 +759,63 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): on success, chains `remainder` via
-                                          // -postAppliInstallReportWithAppliList:callback: and forwards `callback`.
-                                          (void)remainder;
-                                          (void)callback;
+                                          // @ 0xf2864 — on success chain `remainder`, else map the error.
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              callback([RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          BOOL ok = [[response objectForKey:@"status"] boolValue] &&
+                                                    [[response objectForKey:@"error_code"] intValue] == 100000000;
+                                          if (!ok) {
+                                              callback([RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          if (remainder == nil || [remainder count] == 0) {
+                                              callback(nil);
+                                          } else {
+                                              [self postAppliInstallReportWithAppliList:remainder callback:callback];
+                                          }
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): wraps `callback` (failure) — block body not reconstructed.
-                                          (void)callback;
+                                          callback(error);
                                       }];
 }
 
 // @ 0xf2a48
-- (void)postAlreadyInstallAppWithCallback:(RewardNetworkCallback)callback {
+- (void)postAlreadyInstallAppWithCallback:(RewardNetworkErrorBlock)callback {
+    // @ 0xf2ab4 — filter the returned appli-id list down to apps that are actually installed
+    // (canOpenURL: on each default_scheme) and report them.
     [self appliIdListWithType:2 callback:^(id result, NSError *error) {
-        // TODO(dep): rewardNetworkFilterInstalledAppsAndReport — filters the returned appli
-        // id list down to apps actually installed (canOpenURL) and reports them via
-        // -postAppliInstallReportWithAppliList:callback:. Block body not reconstructed.
-        (void)callback;
+        if (error != nil) {
+            callback(error);
+            return;
+        }
+        if (![result isKindOfClass:[NSDictionary class]]) {
+            callback(nil);
+            return;
+        }
+        NSMutableArray *installed = [[NSMutableArray alloc] init];
+        for (NSDictionary *entry in [result objectForKey:@"list"]) {
+            NSDictionary *info = [entry objectForKey:@"appli_info"];
+            NSString *appliId = [info objectForKey:@"appli_id"];
+            NSString *scheme = [info objectForKey:@"default_scheme"];
+            if (scheme == nil || [scheme isKindOfClass:[NSNull class]]) {
+                continue;
+            }
+            NSString *urlString = scheme;
+            if ([scheme rangeOfString:@"://"].location == NSNotFound) {
+                urlString = [scheme stringByAppendingString:@"://"];
+            }
+            NSURL *url = [NSURL URLWithString:urlString];
+            if ([[UIApplication sharedApplication] canOpenURL:url]) {
+                [installed addObject:appliId];
+            }
+        }
+        if ([installed count] == 0) {
+            callback(nil);
+        } else {
+            [self postAppliInstallReportWithAppliList:installed callback:callback];
+        }
     }];
 }
 
@@ -699,6 +859,10 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 
 // TODO(dep): real ad-SDK network entry — deliberately a no-op (neutralized ad path).
 // @ 0xee8f0 — full applilink implementation in the binary; reconstructed here as a neutralized no-op.
+// @ 0xeec84 — in the real (non-neutralized) body this is the completion block passed to
+//   +postApplicationInstallWithPriority:callback:: on success it sets the shared instance's
+//   initializeFlg (1 ok / 0 failure, logging via -debugLog on failure) and forwards `callback`.
+//   It is intentionally not wired here because the ad start path is neutralized.
 + (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(void (^)(void))callback {
     // Not reconstructed in this pass.
 }

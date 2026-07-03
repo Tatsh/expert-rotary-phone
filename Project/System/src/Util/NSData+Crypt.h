@@ -4,16 +4,14 @@
 //
 //  AES-128-CBC helpers used to protect the user's save data.
 //
-//  NOTE ON FIDELITY: in the shipping binary the method bodies of
-//  -encryptWith128Key:initVector: / -decryptWith128Key:initVector: resolve only
-//  to import thunks (Ghidra: NSData::encryptWith128Key_initVector_ @ 0x1a0506,
-//  NSKeyedArchiver variant @ 0x1a1202) — the disassembly is not recoverable.
-//  The behavior is reconstructed from the observable contract: a 16-byte key
-//  ("4ZMw025eJIOTx26f") and 16-byte IV ("13U4RnAI73EdVMXB") passed as NSStrings,
-//  i.e. AES-128-CBC. PKCS#7 padding is assumed (the CommonCrypto default for
-//  this idiom). If a decrypted save fails to parse, revisit the padding/no-pad
-//  choice here.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Both public
+//  wrappers are thin: they forward to the shared core -mainOperation:key:initVector:
+//  with kCCEncrypt / kCCDecrypt. Key/IV are 16-char NSStrings copied to C via
+//  -getCString:maxLength:encoding: (key "4ZMw025eJIOTx26f", IV "13U4RnAI73EdVMXB")
+//  and the cipher is AES-128-CBC with PKCS#7 padding (kCCOptionPKCS7Padding).
 //
+
+#import <CommonCrypto/CommonCryptor.h> // CCOperation
 
 #import <Foundation/Foundation.h>
 
@@ -24,6 +22,10 @@
 
 // Decrypt an AES-128-CBC blob produced by the method above.
 - (NSData *)decryptWith128Key:(NSString *)key initVector:(NSString *)iv;
+
+// Shared AES-128-CBC core: `op` is kCCEncrypt or kCCDecrypt.
+// Ghidra: -[NSData mainOperation:key:initVector:] @ 0xbeaf8
+- (NSData *)mainOperation:(CCOperation)op key:(NSString *)key initVector:(NSString *)iv;
 
 @end
 

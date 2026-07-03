@@ -24,6 +24,15 @@ typedef struct {
     uint32_t S[4][256];
 } BlowfishCtx;
 
+// Zero the entire Blowfish context (P-array + S-boxes), wiping any key
+// material. This trivial memset over the whole 0x1048-byte context was emitted
+// by the compiler as three separate entry points, one per call site
+// (-init, -cipherInit:keyLength:, -dealloc); they are one logical clear.
+// @ 0x5b234 / 0x5b244 / 0x5b258
+static inline void blowfishCtxClear(BlowfishCtx *ctx) {
+    memset(ctx, 0, sizeof(BlowfishCtx)); // 0x1048 bytes
+}
+
 // Canonical Blowfish initial P-array (18) + S-boxes (4x256), fractional digits
 // of pi. Vendored as big-endian bytes from bf_init_bytes.inc — identical to the
 // binary's DAT_0012f6c8 / DAT_0012e6c8 (confirmed to decode the game's data).
@@ -91,8 +100,9 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 // @ 0x5ac14
 - (instancetype)init {
     if ((self = [super init])) {
-        memset(_iv, 0, sizeof(_iv));                          // Ghidra: _iv zeroed
-        _blf = (BlowfishCtx *)calloc(1, sizeof(BlowfishCtx)); // operator_new(0x1048) + clear
+        memset(_iv, 0, sizeof(_iv));                     // Ghidra: _iv zeroed
+        _blf = (BlowfishCtx *)malloc(sizeof(BlowfishCtx)); // operator new(0x1048)
+        blowfishCtxClear(_blf);                          // @ 0x5b244
     }
     return self;
 }
@@ -100,8 +110,8 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 // @ 0x5b154 — KEEP: frees the malloc'd Blowfish context (wipes key material first).
 - (void)dealloc {
     if (_blf) {
-        memset(_blf, 0, sizeof(BlowfishCtx)); // Ghidra: clear ctx before delete (zeroize)
-        free(_blf);                           // operator_delete
+        blowfishCtxClear(_blf); // @ 0x5b258 — zeroize key material before releasing
+        free(_blf);             // operator delete
     }
 }
 
@@ -115,6 +125,7 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 
 // @ 0x5ad0c — standard Blowfish key schedule.
 - (void)cipherInit:(const char *)key keyLength:(int)length {
+    blowfishCtxClear(_blf); // @ 0x5b234 — wipe the context before loading the schedule
     memcpy(_iv, kInitialIV, 8);
 
     // Load the canonical P-array (18) then S-boxes (4x256) from the init table.

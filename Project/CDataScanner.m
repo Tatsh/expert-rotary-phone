@@ -7,15 +7,10 @@
 
 #import "CDataScanner.h"
 
+#import "NSCharacterSet_Extensions.h"
+
 #import <ctype.h>
 #import <string.h>
-
-// TODO(dep): NSCharacterSet(Extensions) — the TouchJSON linebreaksCharacterSet
-// category is missing from this pass (used by scanCPlusPlusStyleComment:).
-// Reconstruct separately; the parent build registers it.
-@interface NSCharacterSet (Extensions)
-+ (NSCharacterSet *)linebreaksCharacterSet;
-@end
 
 @implementation CDataScanner
 

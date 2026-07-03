@@ -61,6 +61,7 @@
                                                  repeats:NO];
     self.receiveData = [NSMutableData data];
 
+    // @ 0xffcbc — the block body just starts the connection.
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.connection start];
     });

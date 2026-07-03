@@ -19,21 +19,18 @@
 // (g_pRewardNetworkUdidInstance in the binary).
 static RewardNetworkUdid *g_sharedInstance = nil;
 
+// The shared "ApplilinkUdid" serial queue (DAT_00188350), created in +allocWithZone:'s
+// dispatch_once body and used by -init to serialize the SDK's UDID/keychain work.
+static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
+
 @implementation RewardNetworkUdid
 
-// @ 0xf70c0 — the recovered -init dispatches its super initialization synchronously
-// onto a process-wide serial queue (block body @ 0xf7188 does just `self = [super
-// init]`). The queue serializes the SDK's UDID/keychain work; it is reproduced here
-// as a lazily-created serial queue.
+// @ 0xf70c0 — the recovered -init dispatches its super initialization synchronously onto
+// the shared "ApplilinkUdid" serial queue created by +allocWithZone: (block body @ 0xf7188
+// does just `self = [super init]`).
 - (instancetype)init {
-    static dispatch_queue_t queue;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        queue = dispatch_queue_create("jp.applilink.reward.udid", DISPATCH_QUEUE_SERIAL);
-    });
-
     __block RewardNetworkUdid *result = nil;
-    dispatch_sync(queue, ^{
+    dispatch_sync(g_pApplilinkUdidQueue, ^{
         result = [super init];
     });
     return result;
@@ -74,13 +71,16 @@ static RewardNetworkUdid *g_sharedInstance = nil;
 
 #pragma mark - Singleton (metaclass)
 
-// @ 0xf6ff0 — allocate the shared instance once (block @ 0x1344c0 does
-// `g_pRewardNetworkUdidInstance = [super allocWithZone:zone]`), then always hand
-// back that instance.
+// @ 0xf6ff0 — allocate the shared instance once, then always hand back that instance.
 + (instancetype)allocWithZone:(NSZone *)zone {
     static dispatch_once_t onceToken;
+    // @ 0xf705c — dispatch_once body: create the shared "ApplilinkUdid" serial queue and,
+    // if absent, alloc the singleton via [super allocWithZone:].
     dispatch_once(&onceToken, ^{
-        g_sharedInstance = [super allocWithZone:zone];
+        g_pApplilinkUdidQueue = dispatch_queue_create("ApplilinkUdid", NULL);
+        if (g_sharedInstance == nil) {
+            g_sharedInstance = [super allocWithZone:zone];
+        }
     });
     return g_sharedInstance;
 }

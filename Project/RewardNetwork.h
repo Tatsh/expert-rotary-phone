@@ -142,10 +142,12 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 
 // Report installed applis in batches of 10 (POST /reward/app/install/report/regist.php),
 // chaining the remainder. @ 0xf25fc
-- (void)postAppliInstallReportWithAppliList:(NSArray *)appliList callback:(RewardNetworkCallback)callback;
+// NOTE: the completion is error-only in the binary (invoked with a single NSError* argument).
+- (void)postAppliInstallReportWithAppliList:(NSArray *)appliList callback:(RewardNetworkErrorBlock)callback;
 
 // Query already-installed applis (type 2) and report those actually installed. @ 0xf2a48
-- (void)postAlreadyInstallAppWithCallback:(RewardNetworkCallback)callback;
+// NOTE: the completion is error-only in the binary (invoked with a single NSError* argument).
+- (void)postAlreadyInstallAppWithCallback:(RewardNetworkErrorBlock)callback;
 
 // No-op in release builds. @ 0xf3bf4
 - (void)debugLog;

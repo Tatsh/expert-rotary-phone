@@ -85,7 +85,7 @@ static int sRetryCount = 0;
     return request;
 }
 
-// @ 0xfad84  (with retry/watchdog block @ 0xfb0a9 and completion handler @ 0xfaef2; class entry allocs+forwards @ 0xfbe04)
+// @ 0xfad84  (with retry/watchdog block @ 0xfb0a9 and completion handler @ 0xfb30c; class entry allocs+forwards @ 0xfbe04)
 + (void)requestAsynchronousWithURL:(NSString *)url
                             method:(NSString *)method
                         parameters:(NSDictionary *)parameters
@@ -139,13 +139,22 @@ static int sRetryCount = 0;
         }
     });
 
-    // Actual request; completion runs on the main queue (Ghidra completion @ 0xfaef2).
+    // Actual request; completion runs on the main queue.
+    // @ 0xfb30c — completion handler: gate on the retry counter, treat HTTP 4xx/5xx (and
+    // transport errors other than a timeout) as failures, otherwise post-process the body
+    // and JSON-parse it before dispatching to the finished / failed block.
     [NSURLConnection sendAsynchronousRequest:request
                                        queue:[NSOperationQueue mainQueue]
                            completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-        finished = YES;
-        if (connectionError != nil) {
-            if (failedBlock) {
+        finished = YES;   // stop the watchdog (the binary suspends the private queue here)
+        if (sRetryCount > 1) {
+            return;
+        }
+        NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
+        BOOL httpError = (statusCode >= 400 && statusCode <= 599);
+        if (connectionError != nil || httpError) {
+            // Transport/HTTP failure. A genuine timeout is left for the watchdog to retry.
+            if ([connectionError code] != -1001 && failedBlock) {  // 0xfffffc17 == NSURLErrorTimedOut
                 failedBlock(request, connectionError);
             }
             return;
@@ -155,13 +164,34 @@ static int sRetryCount = 0;
                                                         data:data
                                                finishedBlock:finishedBlock
                                                  failedBlock:failedBlock];
-        if (finishedBlock) {
-            finishedBlock(processed, userInfo);
+        Class jsonClass = NSClassFromString(@"NSJSONSerialization");
+        if (jsonClass == nil) {
+            if (failedBlock) {
+                failedBlock(request, [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
+            }
+            return;
+        }
+        NSError *jsonError = nil;
+        id object = [jsonClass JSONObjectWithData:processed
+                                          options:NSJSONReadingAllowFragments  // 4
+                                            error:&jsonError];
+        if (jsonError != nil) {
+            if (failedBlock) {
+                failedBlock(request, jsonError);
+            }
+        } else if ([object isKindOfClass:[NSDictionary class]]) {
+            if (finishedBlock) {
+                finishedBlock(object, userInfo);
+            }
+        } else {
+            if (failedBlock) {
+                failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee]);
+            }
         }
     }];
 }
 
-// @ 0xfb58c  (line-enumeration accumulator block @ recommendCoreAppendResponseData; class entry allocs+forwards @ 0xfbf8c)
+// @ 0xfb58c  (line-enumeration accumulator block @ 0xfba3c; class entry allocs+forwards @ 0xfbf8c)
 + (NSData *)responseFromContentsServer:(NSString *)contentsServer
                                request:(NSURLRequest *)request
                                   data:(NSData *)data
@@ -186,6 +216,7 @@ static int sRetryCount = 0;
     __block NSString *status = nil;
     __block NSMutableString *bodyText = [[NSMutableString alloc] init];
     NSString *text = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    // @ 0xfba3c — line-enumeration accumulator: first line is the status, the rest is the body.
     [text enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
         if (status == nil) {
             status = line;

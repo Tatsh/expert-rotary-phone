@@ -53,6 +53,9 @@ target_sources(popnrhythmin PRIVATE
     MapAnnotation.m
     MyInviteCodeViewController.mm
     PurchaseStore.m
+    NSBundle+RewardNetwork.m
+    NSCharacterSet_Extensions.m
+    NSScanner_Extensions.m
     RecommendAdId.m
     RecommendNetwork.m
     RecommendWebAPI.m
@@ -245,6 +248,8 @@ target_sources(popnrhythmin PRIVATE
     neWindow.h
     AcViewerOptionViewController.h
     CDataScanner.h
+    NSCharacterSet_Extensions.h
+    NSScanner_Extensions.h
     ConversionView.h
     CustomWebView.h
     HowToViewCtrlPad.h

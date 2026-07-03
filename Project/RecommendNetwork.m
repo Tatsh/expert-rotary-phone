@@ -52,6 +52,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil;  // @ g_pRecommendNe
 - (instancetype)init {
     __block RecommendNetwork *result = nil;
     dispatch_sync(g_pRewardNetworkQueue, ^{
+        // @ 0xebb3c — the block body just performs [super init].
         result = [super init];
     });
     return result;
