@@ -10,6 +10,7 @@
 #import "PopnLinkTopSplitViewController.h"
 #import "PopnLinkTopViewController.h"       // left pane + PopnLinkTopViewControllerDelegate
 #import "CheckerCategoryViewController.h"   // score-checker section
+#import "MainViewController.h"              // scene root -PopnLinkEndCallBack
 #import "QuizMainViewController.h"          // quiz section
 #import "HowToViewCtrlPad.h"                // first-play how-to overlay
 #import "InputKIDViewCtrl.h"                // KONAMI-ID input controller (routed to while unlinked)
@@ -191,8 +192,8 @@
 // @ 0xe1960 — remove the panel and notify the nav host it closed.
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
-    UIViewController *root = neSceneManager::rootViewController();
-    [root performSelector:@selector(PopnLinkEndCallBack)];
+    MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
+    [root PopnLinkEndCallBack];
     _isAnimationing = NO;
 }
 

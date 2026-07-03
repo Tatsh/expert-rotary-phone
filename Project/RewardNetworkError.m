@@ -6,6 +6,7 @@
 //
 
 #import "RewardNetworkError.h"
+#import "NSBundle+RewardNetwork.h"   // +rewardBundle (RewardNetworkResources.bundle)
 
 // Error domain constant (CFString cf_ApplilinkErrorDomain @ 0x115d6d).
 static NSString *const RewardNetworkErrorDomain = @"ApplilinkErrorDomain";
@@ -33,20 +34,10 @@ static NSMutableDictionary *g_pRewardErrorMessageDict = nil;
 // NSLocalizedDescriptionKey.
 + (NSError *)localizedRewardNetworkErrorWithCode:(NSInteger)code
                                         userInfo:(NSDictionary *)userInfo {
-    // TODO(dep): +[NSBundle rewardBundle] is provided by the NSBundle+RewardNetwork
-    // category (genuinely unreconstructed). Resolve it dynamically so no call-site
-    // extern / category seam is introduced.
-    if (![NSBundle respondsToSelector:@selector(rewardBundle)]) {
-        NSLog(@"project link error NSBundle+RewardNetwork.h");
-        return [NSError errorWithDomain:RewardNetworkErrorDomain code:code userInfo:userInfo];
-    }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    // The localized "Error" strings come from RewardNetworkResources.bundle.
     NSBundle *(^rewardBundle)(void) = ^NSBundle *{
-        return [NSBundle performSelector:@selector(rewardBundle)];
+        return [NSBundle rewardBundle];
     };
-#pragma clang diagnostic pop
 
     if (g_pRewardErrorMessageDict == nil) {
         g_pRewardErrorMessageDict = [[NSMutableDictionary alloc] init];

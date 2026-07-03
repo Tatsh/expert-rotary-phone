@@ -13,6 +13,7 @@
 #import "CheckerCategoryViewController.h"  // owner type + -startGetArcadeScoreHttpWithOtp:
 #import "TouchableScrollView.h"            // the tap-through form host
 #import "neEngineBridge.h"                 // neEngine::playSystemSe, neSceneManager::rootViewController
+#import "MainViewController.h"             // scene root -PopnLinkEndCallBack
 
 // Own privates (button targets wired up by -initWithCategoryView:).
 @interface InputOTPViewCtrl ()
@@ -191,13 +192,9 @@
 - (void)endDirectCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
-    UIViewController *root = neSceneManager::rootViewController();
-    // TODO(dep): -PopnLinkEndCallBack lives on the reconstructed-elsewhere app root
-    // view controller; sent dynamically to avoid a bridging seam.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    [root performSelector:@selector(PopnLinkEndCallBack)];
-#pragma clang diagnostic pop
+    // The scene root is the app's MainViewController; notify it the applilink flow ended.
+    MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
+    [root PopnLinkEndCallBack];
 }
 
 #pragma mark - Keyboard notifications

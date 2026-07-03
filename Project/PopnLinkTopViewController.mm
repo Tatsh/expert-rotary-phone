@@ -11,6 +11,7 @@
 
 #import "InputKidViewController.h"
 #import "CheckerCategoryViewController.h"
+#import "MainViewController.h"   // scene root -PopnLinkEndCallBack
 #import "QuizMainViewController.h"
 #import "HowToViewCtrl.h"
 #import "AppDelegate.h"
@@ -242,7 +243,7 @@ static UIViewController *RootVC() {
 // @ 0xcda68 — remove the nav view and notify the host that pop'n-link closed.
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
-    [RootVC() performSelector:@selector(PopnLinkEndCallBack)];
+    [(MainViewController *)RootVC() PopnLinkEndCallBack];
     _isAnimationing = NO;
 }
 

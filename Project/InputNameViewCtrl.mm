@@ -14,6 +14,7 @@
 #import <QuartzCore/QuartzCore.h>  // CAGradientLayer / CALayer (pad card decoration)
 
 #import "AppDelegate.h"        // +appDelegate / -appVersionNum / -uuId (request fields)
+#import "MainViewController.h"  // scene root -InPlayerNameEndCallBack
 #import "AppFont.h"            // AppFontName() == getFontNameDFSoGei() (pad caption labels)
 #import "CommonAlertView.h"    // error alerts
 #import "StoreUtil.h"          // +playerNewURL, urlEncodeString()
@@ -242,13 +243,9 @@
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();
-    UIViewController *root = neSceneManager::rootViewController();
-    // TODO(dep): -InPlayerNameEndCallBack lives on the reconstructed-elsewhere app
-    // root view controller; sent dynamically to avoid a bridging seam.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    [root performSelector:@selector(InPlayerNameEndCallBack)];
-#pragma clang diagnostic pop
+    // The scene root is the app's MainViewController; notify it name entry ended.
+    MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
+    [root InPlayerNameEndCallBack];
     m_IsAnimationing = NO;
 }
 
