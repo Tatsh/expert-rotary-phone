@@ -39,13 +39,6 @@
 #import "AudioManager.h"     // -[AudioManager sharedManager], -setSeVolume:groupId:
 #import "UserSettingData.h"  // isEffectOn / isLongNotesEffectOn (+ save…) toggles
 
-// NOTE(dep): -[GameEffectView backButtonFunc] also calls +[UserSettingData seVolume],
-// which is not declared in the current UserSettingData.h reconstruction (only bgmVolume
-// is). The call is faithful to the binary; declare +seVolume there once recovered.
-@interface UserSettingData (GameEffectViewSeVolume)
-+ (short)seVolume;   // Ghidra: -[UserSettingData seVolume] (selector @ 0x15a758)
-@end
-
 @implementation GameEffectView
 
 // @ 0x72d4c — grouped-table styling. On phone the whole table gets a "back_bg_st"

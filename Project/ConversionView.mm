@@ -65,20 +65,6 @@
 
 #import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
 
-// TODO(dep): these UserSettingData class methods are used by the panel but are not yet
-// declared in UserSettingData.h (Game/Data/Save). Declared here so the reconstruction
-// compiles; fold into the real header once recovered.
-//   convertCode        — the stored issued pass ("%06d")
-//   saveConvertCode:   — persist the issued pass
-//   isFollowBonusGet   — sp_present_flag bit 1
-//   initForConvert     — wipe the local save for a fresh device
-@interface UserSettingData (ConversionViewMissing)
-+ (NSString *)convertCode;
-+ (void)saveConvertCode:(NSString *)code;
-+ (BOOL)isFollowBonusGet;
-+ (void)initForConvert;
-@end
-
 // TODO(dep): the Core Data record classes below (Game/Data/Save) are not part of the
 // reconstructed headers yet. -startConversionHttp / -commonAlertView:...: enumerate them
 // to build the upload payload, so their used selectors are declared here as informal

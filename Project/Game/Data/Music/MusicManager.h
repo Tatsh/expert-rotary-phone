@@ -94,6 +94,14 @@
 // Add a pack id to the encrypted "recpack" list (no-op if already present). Ghidra: @ 0xc9e20.
 - (void)saveRecommendedPack:(unsigned int)packID;
 
+#pragma mark Recovered selectors
+// Recovered from call sites (previously declared as a local category seam).
+
+// Unlock-gate queries used by the store / song-select UI.
++ (BOOL)isOpenInviteMusic:(int)index;
++ (BOOL)isOpenBemaniCollaboMusic;
++ (BOOL)isOpenLoginBonusMusic:(int)index;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

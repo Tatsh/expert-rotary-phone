@@ -16,6 +16,14 @@
 
 @property (nonatomic, retain) NSString *productId;
 
+#pragma mark Recovered selectors
+// Recovered from call sites (previously declared as local category seams).
+
+// YES if a row for `productID` already exists in the store.
++ (BOOL)isExistData:(NSString *)productID inManagedObjectContext:(NSManagedObjectContext *)context;
+// Insert a new character-ticket row for `productID`.
++ (void)addRecordWithProductId:(NSString *)productID inManagedObjectContext:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

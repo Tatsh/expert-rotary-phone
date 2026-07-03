@@ -12,12 +12,6 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
-// TODO(dep): present in the binary (UserSettingData::isAcvGenreName, returning whether the
-// arcade viewer shows the genre name instead of the song name) but not yet in UserSettingData.h.
-@interface UserSettingData (AcViewerOptions)
-+ (BOOL)isAcvGenreName;
-@end
-
 // One difficulty level label (identical layout for all four tiers; only the colour and the
 // level number differ). The binary unrolls this inline four times; collapsed here.
 static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {

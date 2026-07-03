@@ -110,7 +110,21 @@
 // missing song's metadata before re-download). Ghidra: acvMusicInfoURL: @ 0x5b534.
 + (NSURL *)acvMusicInfoURL:(unsigned int)acMusicId;
 
+#pragma mark Recovered selectors
+// Recovered from call sites (previously declared as local extern/category seams).
+
+// Arcade-viewer play-log POST endpoint. Ghidra: logAcvPlayURL.
++ (NSURL *)logAcvPlayURL;
+// Official eAmusement site path fragment / Twitter page.
++ (NSString *)getOfficialPath;
++ (NSURL *)getOfficialTwitterURL;
+// Store per-song info page for a music id.
++ (NSURL *)musicInfoURL:(unsigned int)musicId;
+
 @end
+
+// Percent-encode a string for use in a URL query. Ghidra: urlEncodeString @ 0x5c5ec.
+NSString *urlEncodeString(NSString *s);
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

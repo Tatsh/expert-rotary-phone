@@ -19,22 +19,6 @@
 #import "UserSettingData.h"    // +isFollowBonusGet / +treasurePoint / +saveTreasurePoint: / +saveIsFollowBonusGet: (see TODO(dep))
 #import "CommonAlertView.h"    // error + reward alerts
 
-// TODO(dep): StoreUtil in the reconstructed StoreUtil.h does not yet declare the two official-page
-// helpers this class uses (getOfficialPath, getOfficialTwitterURL — both verified present in the
-// binary: getOfficialTwitterURL @ string 0x11e58d). Forward-declared here as an informal category
-// until StoreUtil.h is regenerated with them.
-@interface StoreUtil (CustomWebViewDeps)
-+ (NSString *)getOfficialPath;
-+ (NSURL *)getOfficialTwitterURL;
-@end
-
-// TODO(dep): UserSettingData.h does not yet declare the Twitter-follow bonus accessors used here.
-// Forward-declared informally until that header is regenerated.
-@interface UserSettingData (CustomWebViewDeps)
-+ (BOOL)isFollowBonusGet;
-+ (void)saveIsFollowBonusGet:(BOOL)v;
-@end
-
 @implementation CustomWebView
 
 // @ 0x5df50 — stash the failure-alert title/message (plain assigns; ARC-strong).

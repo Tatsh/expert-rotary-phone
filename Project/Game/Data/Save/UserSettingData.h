@@ -177,6 +177,48 @@ typedef struct Crypt109Data {
 + (int)haveTouchSoundFlg108;     // key "HaveTouchSoundFlg"  @ 0x5fe2c
 + (BOOL)isBemaniCollaboOpened108;// key "IsBemaniCollaboOpened" @ 0x5fe60
 
+#pragma mark Recovered selectors
+// Recovered from call sites (previously declared as local extern/category seams).
+
+// Arcade-viewer play options (stored index per option kind).
++ (int)acvHiSpeed;
++ (int)acvPopKun;
++ (int)acvHidSud;
++ (int)acvRanMir;
+// YES if the arcade viewer shows the genre name instead of the song name.
++ (BOOL)isAcvGenreName;
+
+// Arcade convert-code (links the app to an arcade eAmusement account).
++ (NSString *)convertCode;
++ (void)saveConvertCode:(NSString *)code;
+// One-shot "follow bonus" (Twitter follow reward) claimed flag.
++ (BOOL)isFollowBonusGet;
++ (void)saveIsFollowBonusGet:(BOOL)got;
+// Reset the convert-code / follow-bonus state.
++ (void)initForConvert;
+
+// Last-seen store information banner id and last store-view timestamp string.
++ (int)lastInformationId;
++ (NSString *)lastStoreViewTimeString;
+
+// Identity setters (paired with +playerId / +playerName getters above).
++ (void)savePlayerId:(NSString *)playerId;
++ (void)savePlayerName:(NSString *)name;
+
+// Remove a queued uncomplete score-save entry (paired with addUncompleteSaveMusic:sheet:).
++ (void)subUncompleteSaveMusic:(int)music sheet:(short)sheet;
+
+// Clear the pending-treasure snapshot.
++ (void)initTreasureTmp;
+// Setter paired with +isSimpleMode.
++ (void)saveIsSimpleMode:(BOOL)on;
+
+// Grant character tickets (Crypt109 charaTicket += count).
++ (void)addCharaTicket:(int)count;
+// Setters paired with +lastUpdateSumPurchase / +sumPurchase (age-gate spending totals).
++ (void)saveLastUpdateSumPurchase:(NSDate *)date;
++ (void)saveSumPurchase:(int)sum;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

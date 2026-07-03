@@ -29,26 +29,6 @@
 #import "DownloadProgresView.h" // the shared modal dialog: layout: / labelMessage / progressView
 #import <StoreKit/StoreKit.h>   // SKProduct.price
 
-// A few singleton methods used here are real in PopnRhythmin (reached by selector in the
-// decompilation) but not yet surfaced in their partially-reconstructed headers; declare
-// them locally so the call sites compile without editing those files.
-@interface PurchaseManager (StoreMainViewControllerCalls)
-+ (BOOL)isPurchasable;                                       // gate on StoreKit availability
-- (void)setMusicDataDelegate:(id)delegate;                   // purchase/restore result sink
-- (void)addProductID:(NSString *)productID Save:(BOOL)save;  // remember a bought product
-@end
-
-@interface UserSettingData (StoreMainViewControllerCalls)
-+ (void)addCharaTicket:(int)count;                           // grant character tickets
-+ (void)saveLastUpdateSumPurchase:(NSDate *)date;            // parental spend guard
-+ (void)saveSumPurchase:(int)sum;
-@end
-
-@interface CharaTicketData (StoreMainViewControllerCalls)
-+ (BOOL)isExistData:(NSString *)productID inManagedObjectContext:(id)context;
-+ (void)addRecordWithProductId:(NSString *)productID inManagedObjectContext:(id)context;
-@end
-
 @interface StoreMainViewController ()
 // Inlined lazy-jacket loader used by tableView:cellForRowAtIndexPath: (see @ 0x4837c).
 - (UIImage *)artworkForInfo:(StorePackInfo *)info atIndexPath:(NSIndexPath *)indexPath;

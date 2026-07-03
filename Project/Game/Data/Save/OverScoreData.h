@@ -30,6 +30,14 @@
 // @ 0x15a8f4), called from PlayResultTask::resultSetup (FUN_0003dfe0 @ 0x3e2ec).
 + (void)deleteRecordWithMusic:(int)music sheet:(short)sheet inManagedObjectContext:(NSManagedObjectContext *)context;
 
+#pragma mark Recovered selectors
+// Recovered from call sites (previously declared as local category seams).
+
+// Update (or create) the "over" record's date for a music + sheet + remote playerId.
++ (OverScoreData *)updateOverScoreDateWithMusic:(int)music sheet:(short)sheet playerId:(NSString *)playerId date:(NSString *)date inManagedObjectContext:(NSManagedObjectContext *)context;
+// Insert a new "over" score record.
++ (void)addRecordWithMusic:(int)music sheet:(short)sheet playerId:(NSString *)playerId date:(NSString *)date inManagedObjectContext:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

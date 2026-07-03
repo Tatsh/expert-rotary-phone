@@ -35,13 +35,6 @@
 @class ConversionView;   // TODO(dep): ConversionView
 @class CustomWebView;    // TODO(dep): CustomWebView
 
-// -[UserSettingData initTreasureTmp] clears the pending "treasure" progress (the Retire
-// action). The selector exists in the binary but is not yet declared on UserSettingData.
-// TODO(dep): add +initTreasureTmp to UserSettingData.h once verified.
-@interface UserSettingData (SettingOtherRetire)
-+ (void)initTreasureTmp;
-@end
-
 // The app's root view controller (MainViewController), bridged from the C++ scene manager.
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();

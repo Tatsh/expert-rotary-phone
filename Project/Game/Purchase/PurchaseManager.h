@@ -69,6 +69,12 @@
 @property (nonatomic, weak) id<PurchaseManagerDelegate> delegate;
 @property (nonatomic, weak) id<PurchaseManagerMusicDelegate> musicDataDelegate;
 
+#pragma mark Recovered selectors
+// Recovered from call sites (previously declared as local category seams).
+
+// YES if in-app purchases are currently allowed (payments enabled / not restricted).
++ (BOOL)isPurchasable;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

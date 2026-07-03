@@ -17,40 +17,10 @@
 // C++ bridge helpers the scenes expose (unmangled -> declared extern "C"). Each pokes
 // its owning C++ scene when the matching download finishes. Ghidra: modeSelectRefreshNews
 // @ 0x6d8cc, musicSelUpdateInfoPanel @ 0x37c88.
+// TODO(dep): ModeSelTask / MusicSelTask C++ task classes are not reconstructed yet, so
+// these free functions stay locally declared until their owning headers exist.
 extern "C" void modeSelectRefreshNews(ModeSelTask *task, bool hasNews);
 extern "C" void musicSelUpdateInfoPanel(MusicSelTask *task, bool hasList);
-
-// Percent-escapes a string for a form body (autoreleased; nil-safe). A project-wide
-// helper in the binary (Ghidra: urlEncodeString @ 0x5c5ec) that is not yet
-// reconstructed, so it is forward-declared locally here.
-extern NSString *urlEncodeString(NSString *s);
-
-// getRecommendListFinished syncs the "Over" (someone-beat-you) records into CoreData
-// through these OverScoreData class methods. They exist in the binary but are not yet
-// declared in OverScoreData.h, so they are forward-declared locally here.
-// Ghidra: OverScoreData +updateOverScoreDateWithMusic:… / +addRecordWithMusic:…
-@interface OverScoreData (DownloadMainSync)
-+ (OverScoreData *)updateOverScoreDateWithMusic:(int)music
-                                          sheet:(short)sheet
-                                       playerId:(NSString *)playerId
-                                           date:(NSString *)date
-                         inManagedObjectContext:(NSManagedObjectContext *)context;
-+ (void)addRecordWithMusic:(int)music
-                     sheet:(short)sheet
-                  playerId:(NSString *)playerId
-                      date:(NSString *)date
-    inManagedObjectContext:(NSManagedObjectContext *)context;
-@end
-
-// UserSettingData accessors the player-get / news / score handlers use that are not yet
-// declared in UserSettingData.h. Forward-declared locally so this file compiles.
-@interface UserSettingData (DownloadMainHelpers)
-+ (int)lastInformationId;                                    // last-seen store info id
-+ (NSString *)lastStoreViewTimeString;                       // last store-view timestamp
-+ (void)savePlayerId:(NSString *)playerId;
-+ (void)savePlayerName:(NSString *)name;
-+ (void)subUncompleteSaveMusic:(int)music sheet:(short)sheet;// clears the "unsent score" mark
-@end
 
 // HTML-entity unescaping applied to news text / titles / bodies (mirrors the inline
 // replaceOccurrencesOfString: chains in newsGetFinished).

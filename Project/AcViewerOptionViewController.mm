@@ -23,18 +23,6 @@
 // non-ARC), passed straight through to the engine hooks. Ghidra: struct AcMainTask.
 class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
 
-// TODO(dep): present in the binary (StoreUtil::logAcvPlayURL — the arcade-viewer
-// play-log POST endpoint) but not yet declared in StoreUtil.h.
-@interface StoreUtil (AcvPlayLog)
-+ (NSURL *)logAcvPlayURL;
-@end
-
-// TODO(dep): present in the binary (UserSettingData::isAcvGenreName — whether the AC
-// viewer shows the genre name instead of the song name) but not yet in UserSettingData.h.
-@interface UserSettingData (AcViewerOptions)
-+ (BOOL)isAcvGenreName;
-@end
-
 // The app's root navigation host (bridged UIViewController on the C++ scene manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();

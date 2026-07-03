@@ -12,10 +12,8 @@
 //     お知らせ / 設定 / 遊び方 / トレジャーモード / 機種変更 / お問い合わせ (headers) and
 //     サウンド / ポップ君サイズ / ゲーム演出 / ゲームプレー / トレジャーモード / リタイア /
 //     機種変更 / お問い合わせ / 特定商取引法に基づく表記 / 利用規約 (rows).
-//   * CustomWebView, HowToViewCtrlPad and ConversionView are referenced by the decompile but
-//     are not present in Project/ (see the TODO(dep) minimal @interfaces below).
-//   * -[UserSettingData saveIsSimpleMode:] and +initTreasureTmp exist in the binary but are
-//     not declared in UserSettingData.h (TODO(dep) category below).
+//   * CustomWebView, HowToViewCtrlPad and ConversionView are referenced by the decompile and
+//     are reconstructed in Project/ (imported below).
 //   * viewDidAppear: (imp @ 0x7f2f0) genuinely tail-calls the *super* viewWillDisappear:
 //     selector in the binary; reproduced faithfully with a NOTE (matches the sibling
 //     SettingOtherTableViewController).
@@ -35,32 +33,10 @@
 #import "PopkunSizeViewCtrl.h"   // section 1, row 1
 #import "GameEffectView.h"       // section 1, row 2
 #import "HowToViewCtrl.h"        // section 2 (phone)
+#import "HowToViewCtrlPad.h"     // section 2 (iPad how-to overlay)
 #import "PolicyView.h"           // section 5, row 2
-
-// TODO(dep): these three app classes are referenced by the decompile but are missing from
-// Project/. Declared minimally so the faithful calls below compile and express intent.
-//   CustomWebView    — an in-app web view; -initWithURL:, -setErrorMsg:text:.
-//   HowToViewCtrlPad — the iPad how-to overlay; -initWithFileNameArray:.
-//   ConversionView   — the "device change" (data transfer) panel; -setDelegate:.
-@interface CustomWebView : UIViewController   // TODO(dep): CustomWebView
-- (instancetype)initWithURL:(NSURL *)url;
-- (void)setErrorMsg:(NSString *)title text:(NSString *)text;
-@end
-
-@interface HowToViewCtrlPad : UIViewController   // TODO(dep): HowToViewCtrlPad
-- (instancetype)initWithFileNameArray:(NSArray *)fileNameArray;
-@end
-
-@interface ConversionView : UIViewController   // TODO(dep): ConversionView
-- (void)setDelegate:(id)delegate;
-@end
-
-// -[UserSettingData saveIsSimpleMode:] and +initTreasureTmp exist as selectors in the binary
-// but are not declared on UserSettingData. TODO(dep): fold these into UserSettingData.h.
-@interface UserSettingData (SettingTableViewController)
-+ (void)saveIsSimpleMode:(BOOL)on;   // TODO(dep)
-+ (void)initTreasureTmp;             // TODO(dep)
-@end
+#import "CustomWebView.h"        // in-app web view (お問い合わせ / terms)
+#import "ConversionView.h"       // "device change" (data transfer) panel
 
 // Private action / target methods (wired from the back button and the toggle controls).
 @interface SettingTableViewController ()

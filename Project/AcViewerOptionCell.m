@@ -10,16 +10,6 @@
 #import "AppFont.h"
 #import "UserSettingData.h"
 
-// TODO(dep): these four arcade-viewer option accessors are present in the binary
-// (UserSettingData::acvHiSpeed / acvPopKun / acvHidSud / acvRanMir, each returning
-// the player's stored index) but are not yet declared in UserSettingData.h.
-@interface UserSettingData (AcViewerOptions)
-+ (int)acvHiSpeed;
-+ (int)acvPopKun;
-+ (int)acvHidSud;
-+ (int)acvRanMir;
-@end
-
 @implementation AcViewerOptionCell {
     UILabel *_optionKindLbl;    // left "HI-SPEED / POP-KUN / …" caption
     UILabel *_optionDetailLbl;  // right current-value readout

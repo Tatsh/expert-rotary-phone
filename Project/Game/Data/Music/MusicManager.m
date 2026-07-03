@@ -14,15 +14,6 @@
 #import "RhUtil.h"           // RhFileExists / RhParsePlistArray / RhMD5Data
 #import "TreasureData+Store.h"   // +isOpenMusic:inManagedObjectContext:
 
-// Unlock-gate class methods queried while (re)building the "open" song lists.
-// Defined elsewhere in the MusicManager implementation (not yet reconstructed).
-// TODO(dep): reconstruct these gate predicates.
-@interface MusicManager (UnlockGates)
-+ (BOOL)isOpenInviteMusic:(int)index;      // Ghidra: PTR_s_isOpenInviteMusic__0015a814
-+ (BOOL)isOpenBemaniCollaboMusic;          // Ghidra: PTR_s_isOpenBemaniCollaboMusic_0015b1f4
-+ (BOOL)isOpenLoginBonusMusic:(int)index;  // Ghidra: PTR_s_isOpenLoginBonusMusic__0015b8b4
-@end
-
 // Treasure/sugoroku song ids, one per main map (Ghidra: DAT_0012fa58).
 static const int kTreasureMusicIds[9] = {
     100000000, 100000001, 100000002, 100000003, 100000004,

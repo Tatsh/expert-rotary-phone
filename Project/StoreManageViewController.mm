@@ -16,13 +16,6 @@
 #import "StoreUtil.h"               // web-API URL builder
 #import "neEngineBridge.h"          // neSceneManager::isPadDisplay
 
-// musicInfoURL: is not yet declared in StoreUtil.h. TODO(dep): promote this to
-// StoreUtil.h once that class's reconstruction reaches it (Ghidra: StoreUtil::musicInfoURL_,
-// selector s_musicInfoURL_ @ 0x15ac04).
-@interface StoreUtil (StoreManageViewController)
-+ (NSURL *)musicInfoURL:(unsigned int)musicId;
-@end
-
 @implementation StoreManageViewController
 
 // @ 0x4bc40 — tab item + action icons; iPad gets a patterned background.
