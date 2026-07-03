@@ -57,6 +57,44 @@ extern CharaManager gCharaManager;
 // one-shot around gCharaManager.reload() (FUN_000b85b8).
 CharaManager &CharaManagerShared();
 
+// ---------------------------------------------------------------------------
+// Chara-select page-texture helpers (Ghidra rb420).
+// Called by AcMainSugorokuDraw (FUN_000a3724) and AcMainTask::update
+// (FUN_00099d18), which live in a different translation unit from
+// CharaManager.mm, so these must be declared in this shared header.
+// ---------------------------------------------------------------------------
+
+// Forward-declare the arcade scene type; its full definition is in AcMainTask.h.
+class AcMainTask;
+
+// Load (or reload) the 6 character thumbnail textures for page `page` into
+// the current-page texture array at AcMainTask +0x18c. Chooses
+// "open_chara_%03d.png" for owned characters and "lock_chara_%03d.png" for
+// locked ones; built-in chars (id < 30) are resolved from the main bundle,
+// downloaded chars from the app-support directory.
+// Ghidra: charaSelectLoadPageTextures @ 0xa27f0.
+void charaSelectLoadPageTextures(AcMainTask *task, int page);
+
+// Return the index in the available-chara array (AcMainTask +0x634) of the
+// entry whose charaId matches `charaId`.  Returns the array count when not
+// found (faithful to binary behaviour — the selected char is always present).
+// Ghidra: charaSelectFindCharaIndex @ 0xa2a40.
+int charaSelectFindCharaIndex(AcMainTask *task, int charaId);
+
+// Delete and null out all textures in the prev-page array (AcMainTask +0x174,
+// 6 slots), the current-page array (+0x18c, 6 slots), and the highlight
+// texture (+0xf0).  Called during scene teardown.
+// Ghidra: charaSelectReleaseTextures @ 0xa2b10.
+void charaSelectReleaseTextures(AcMainTask *task);
+
+// Popcount all 32-bit words in `gotCharaArray` (the NSArray of NSNumber
+// produced by [UserSettingData gotCharaArray]) and return 1 when the total
+// number of set bits (owned characters) is >= [gCharaManager.availableInfos()
+// count] — i.e. the player owns all currently available characters.  Returns
+// 0 when there are still characters to collect.
+// Ghidra: countAvailableCharacters @ 0x28b10 (4 xrefs).
+int countAvailableCharacters(NSArray *gotCharaArray);
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4

@@ -9,6 +9,7 @@
 #import "RhUtil.h"
 
 #import <CommonCrypto/CommonDigest.h>
+#import <sys/time.h>
 
 // Ghidra: FUN_0005c258 — plist -> NSDictionary (nil unless the root is a dict).
 NSDictionary *RhParsePlistDict(NSData *data) {
@@ -79,4 +80,85 @@ NSString *ComputeSHA256HexString(const char *cString) {
         [hex appendFormat:@"%02x", digest[i]];
     }
     return [NSString stringWithString:hex];
+}
+
+// Ghidra: getTimeMillis @ 0x2dae0 — gettimeofday reduced to milliseconds.
+long getTimeMillis(void) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+// Ghidra: utf8CharLen @ 0x17a84 — decode the byte-length of a UTF-8 sequence
+// from its lead byte. Only s[0] is examined:
+//   0xxxxxxx -> 1        110xxxxx -> 2        1110xxxx -> 3
+//   11110xxx -> 4        111110xx -> 5        1111110x -> 6
+//   10xxxxxx -> 0 (stray continuation byte)  0xFE/0xFF -> -1 (invalid)
+int utf8CharLen(const char *s) {
+    unsigned c = (unsigned char)s[0];
+    if ((c & 0x80) == 0) {
+        return 1;
+    }
+    if ((c & 0x40) == 0) {
+        return 0;
+    }
+    if ((c & 0x20) == 0) {
+        return 2;
+    }
+    if ((c & 0x10) == 0) {
+        return 3;
+    }
+    if ((c & 0x08) == 0) {
+        return 4;
+    }
+    if ((c & 0x04) == 0) {
+        return 5;
+    }
+    return (c & 0x02) == 0 ? 6 : -1;
+}
+
+// Ghidra: pointInCircle @ 0x2d9bc — inclusive squared-distance hit test.
+BOOL pointInCircle(int x, int y, int cx, int cy, int r) {
+    return (y - cy) * (y - cy) + (x - cx) * (x - cx) <= r * r;
+}
+
+// Ghidra: loadDeviceImage @ 0x5bd28 — idiom/scale-aware bundled PNG loader.
+// The retina suffix is "_pn" and the (legacy, scale==0) rebuild suffix is
+// "_pn2"; both fall back to the plain "name.png" resource. When a "_pn2" (or
+// its fallback) asset is used the image is rebuilt at scale 2.0 so it renders
+// at the intended point size.
+UIImage *loadDeviceImage(NSString *name) {
+    NSString *path = nil;
+    BOOL rebuildAtScale2 = NO;
+    NSBundle *bundle = [NSBundle mainBundle];
+
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+        path = [bundle pathForResource:name ofType:@"png"];
+        rebuildAtScale2 = NO;
+    } else {
+        CGFloat scale = [[UIScreen mainScreen] scale];
+        if (scale != 0.0) {
+            path = [bundle pathForResource:[name stringByAppendingString:@"_pn"] ofType:@"png"];
+            if (path == nil) {
+                path = [bundle pathForResource:name ofType:@"png"];
+            }
+            rebuildAtScale2 = NO;
+        } else {
+            path = [bundle pathForResource:[name stringByAppendingString:@"_pn2"] ofType:@"png"];
+            if (path == nil) {
+                path = [bundle pathForResource:name ofType:@"png"];
+            }
+            rebuildAtScale2 = YES;
+        }
+    }
+
+    if (path == nil) {
+        return nil;
+    }
+
+    UIImage *image = [[UIImage alloc] initWithContentsOfFile:path];
+    if (image != nil && rebuildAtScale2) {
+        image = [UIImage imageWithCGImage:image.CGImage scale:2.0f orientation:UIImageOrientationUp];
+    }
+    return image;
 }

@@ -10,6 +10,7 @@
 //
 
 #include <cassert>
+#include <cstdint>
 
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
@@ -255,6 +256,22 @@ static GLenum TextureFormatToGL(int format) {
     return 0;
 }
 
+// Engine primitive ordinal -> GL mode. Ghidra: table @ DAT_0012e2b0 (7 entries),
+// indexed by drawArrays/drawElements.
+static GLenum PrimitiveToGL(int mode) {
+    assert(mode >= 0 && mode < neIGLES::PRIM_MAX);
+    static const GLenum kTable[neIGLES::PRIM_MAX] = {
+        GL_POINTS,         // 0x0000
+        GL_LINE_STRIP,     // 0x0003
+        GL_LINE_LOOP,      // 0x0002
+        GL_LINES,          // 0x0001
+        GL_TRIANGLE_STRIP, // 0x0005
+        GL_TRIANGLE_FAN,   // 0x0006
+        GL_TRIANGLES,      // 0x0004
+    };
+    return kTable[mode];
+}
+
 neGLES_11::neGLES_11() = default;
 neGLES_11::~neGLES_11() = default;
 
@@ -365,6 +382,104 @@ void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned re
     glRenderbufferStorageOES(GL_RENDERBUFFER_OES, RenderTypeToGLFormat(type), 0, 0);
     glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
                                  GL_RENDERBUFFER_OES, renderbuffer);
+}
+
+// ---------------------------------------------------------------------------
+// neRenderer drawing slots (dispatched through by the neDraw* primitives). The
+// integer arguments carry the engine's own ordinals, mapped to GL via the tables
+// above / the enum-typed wrappers.
+// ---------------------------------------------------------------------------
+
+// Backend lifecycle. The shipped bodies (renderer vtbl +0x04/+0x08) are outside the
+// reconstructed subset; they unbind on replace / activate the default GL state.
+void neGLES_11::shutdown() {}
+void neGLES_11::initialize() {}
+
+void neGLES_11::setViewport(int x, int y, int w, int h) {
+    glViewport(x, y, w, h);
+}
+
+void neGLES_11::loadMatrix(int mode, const neMatrix4 &m) {
+    setMatrixMode(static_cast<MatrixMode>(mode));
+    glLoadMatrixf(m.m);
+}
+
+void neGLES_11::genBuffer(unsigned &outName) {
+    GLuint name = 0;
+    glGenBuffers(1, &name);
+    outName = name;
+}
+
+void neGLES_11::selectTextureUnit(int unit) {
+    glActiveTexture(GL_TEXTURE0 + unit);
+}
+
+void neGLES_11::colorPointer(const void *ptr, int stride) {
+    glColorPointer(4, GL_UNSIGNED_BYTE, stride, ptr);
+}
+
+void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
+    glVertexPointer(size, GL_FIXED, stride, ptr);   // 16.16 fixed-point positions
+}
+
+void neGLES_11::texCoordPointer(const void *ptr, int stride) {
+    glTexCoordPointer(2, GL_SHORT, stride, ptr);    // normalized GL_SHORT UVs
+}
+
+void neGLES_11::bindElementBuffer(unsigned name) {
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, name);
+}
+
+void neGLES_11::bufferData(const void *data, int size, int usage) {
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data,
+                 usage == 0 ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+}
+
+void neGLES_11::bindTexture(unsigned name) {
+    glBindTexture(GL_TEXTURE_2D, name);
+}
+
+void neGLES_11::applyTexParameter(int type, int value) {
+    setTexParameter(static_cast<TexParamType>(type), static_cast<TexParamValue>(value));
+}
+
+void neGLES_11::uploadTexture(int format, int w, int h, const void *pixels) {
+    texImage2D(static_cast<TexFormat>(format), w, h, pixels);
+}
+
+// The 2-argument primitive-blend slot uses the default add equation.
+void neGLES_11::setBlendFunc(int src, int dst) {
+    setBlendFunc(static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst),
+                 GL_FUNC_ADD_OES);
+}
+
+void neGLES_11::setBlendFuncSeparate(int src, int dst, unsigned equation) {
+    setBlendFunc(static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst), equation);
+}
+
+void neGLES_11::setEnable(int cap, bool on) {
+    if (on) {
+        enable(static_cast<EnableState>(cap));
+    } else {
+        disable(static_cast<EnableState>(cap));
+    }
+}
+
+void neGLES_11::setClientArray(int array, bool on) {
+    if (on) {
+        enableClientState(static_cast<ClientState>(array));
+    } else {
+        disableClientState(static_cast<ClientState>(array));
+    }
+}
+
+void neGLES_11::drawArrays(int mode, int count) {
+    glDrawArrays(PrimitiveToGL(mode), 0, count);
+}
+
+void neGLES_11::drawElements(int mode, int count, int offset) {
+    glDrawElements(PrimitiveToGL(mode), count, GL_UNSIGNED_SHORT,
+                   reinterpret_cast<const void *>(static_cast<intptr_t>(offset)));
 }
 
 }  // namespace ne

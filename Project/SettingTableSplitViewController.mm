@@ -21,14 +21,7 @@ static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
-@interface SettingTableSplitViewController ()
-- (void)endOpenAnimation;
-- (void)endCloseAnimation;
-- (void)startViewAnimation:(int)index;
-- (void)handleTapCoverView;
-@end
-
-@implementation SettingTableSplitViewController {
+@interface SettingTableSplitViewController () {
     BOOL _isAnimationing;
     SettingTopViewController *_leftViewCtrl;     // the four-button left column
     UINavigationController *_rightViewCtrl;      // the detail pane (swapped per tab)
@@ -37,6 +30,42 @@ static UIViewController *RootVC() {
     CGRect _viewFrm[4];                           // right-pane frame per tab
     CGRect _arrowFrm[4];                          // arrow frame per tab
 }
+- (void)endOpenAnimation;
+- (void)endCloseAnimation;
+- (void)startViewAnimation:(int)index;
+- (void)handleTapCoverView;
+@end
+
+// ---------------------------------------------------------------------------
+// Block invoke helpers emitted by the compiler after the animation methods.
+// Each captures self (at block-struct +0x14); settingTableSetRight/ArrowFrame
+// also capture the selected-tab index (+0x18).
+// ---------------------------------------------------------------------------
+
+// Ghidra: settingTableSyncRightViewFrame @ 0xb6d54
+// Zeroes the right navigation controller view's width while preserving its
+// x-origin and height (collapses the pane horizontally).
+static void settingTableSyncRightViewFrame(SettingTableSplitViewController *self) {
+    UIView *v = self->_rightViewCtrl.view;
+    CGRect fr = v ? v.frame : CGRectZero;
+    fr.size.width = 0.0f;
+    [self->_rightViewCtrl.view setFrame:fr];
+}
+
+// Ghidra: settingTableSetRightViewFrame @ 0xb6f2c
+// Applies the tab-indexed entry of _viewFrm to the right nav controller view.
+static void settingTableSetRightViewFrame(SettingTableSplitViewController *self,
+                                          NSInteger index) {
+    self->_rightViewCtrl.view.frame = self->_viewFrm[index];
+}
+
+// Ghidra: settingTableSetArrowFrame @ 0xb709c
+// Applies the tab-indexed entry of _arrowFrm to the selection arrow image view.
+static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSInteger index) {
+    self->_arrowImageView.frame = self->_arrowFrm[index];
+}
+
+@implementation SettingTableSplitViewController
 
 // .cxx_construct @ 0xb7144 — compiler-emitted C++ ivar constructor; not hand-written.
 

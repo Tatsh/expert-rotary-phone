@@ -28,6 +28,16 @@ public:
     const AudioStreamBasicDescription &format() const { return m_format; }
     bool isLoop() const { return m_loop; }
 
+    // Copy `bytes` of PCM from the play cursor `*pos` (byte offset) into `dst`, wrapping to the
+    // start when a non-looped source runs out (looped sources restart and reset `*total`).
+    // `*total` accumulates the bytes played for the current pass; `*pos` is advanced. Returns
+    // the number of bytes actually copied. Ghidra: caSourceRead @ 0x27e10 (the mixer render read).
+    size_t read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const;
+
+    // Free the decoded PCM buffer (and null it), leaving the object reusable. Ghidra:
+    // caSourceFreeBuffer @ 0x27bc0.
+    void freeBuffer();
+
 private:
     bool loadURL(CFURLRef url);                     // FUN_00027c58
     bool configureFormat(ExtAudioFileRef file);     // FUN_00027cb8

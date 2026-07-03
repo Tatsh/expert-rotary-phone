@@ -57,6 +57,14 @@ static NSArray *BuildSortDataArray(short currentSort) {
 - (void)backButtonFunc;
 @end
 
+// ─── File-static nav-frame helpers ───────────────────────────────────────────
+// Forward-declare so startOpenAnimation / startCloseAnimation can call them;
+// bodies are defined after @end. Single caller class → no shared header.
+static void friendNavSetFrameA(SortSelectViewController *);
+static void friendNavSetFrameB(SortSelectViewController *);
+static void friendNavSetFrameC(SortSelectViewController *);
+static void friendNavSetFrameFromView(SortSelectViewController *, UIViewController *);
+
 @implementation SortSelectViewController {
     BOOL _isAnimationing;            // an open/close animation is in flight
     NSArray *_sortDataArray;         // the six boxed SortData rows
@@ -162,25 +170,30 @@ static NSArray *BuildSortDataArray(short currentSort) {
         self.view.alpha = 1.0f;
         self.navigationController.view.alpha = 1.0f;
     } else {
-        // iPad: pre-position the nav view below the root scene, then slide it up to y = 420.
-        // NB: the completion runs a folded shared settle animation whose exact frame math is
-        // not recovered; modelled here as the lifecycle end (endOpenAnimation). Best-effort.
+        // iPad: pre-position the nav view below the root scene (y = rootVC.view.height),
+        // then slide it up to y = 420 (friendNavSetFrameA @ 0xc6530), then settle at
+        // y = 470 (friendNavSetFrameB @ 0xc6668).
         UIViewController *root = RootVC();
         CGRect navFrame = self.navigationController.view.frame;
         CGRect rootFrame = root.view.frame;
         self.navigationController.view.frame =
-            CGRectMake(navFrame.origin.x, rootFrame.size.height, navFrame.size.width, navFrame.size.height);
+            CGRectMake(navFrame.origin.x, rootFrame.size.height,
+                       navFrame.size.width, navFrame.size.height);
         [UIView animateWithDuration:(1.0 / 6.0)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
-                             CGRect f = self.navigationController.view.frame;
-                             self.navigationController.view.frame =
-                                 CGRectMake(f.origin.x, 420.0f, f.size.width, f.size.height);
-                         }
-                         completion:^(BOOL finished) {
-                             [self endOpenAnimation];
-                         }];
+            friendNavSetFrameA(self);
+        } completion:^(BOOL f1) {
+            [UIView animateWithDuration:(1.0 / 6.0)
+                                  delay:0.0
+                                options:UIViewAnimationOptionLayoutSubviews
+                             animations:^{
+                friendNavSetFrameB(self);
+            } completion:^(BOOL f2) {
+                [self endOpenAnimation];
+            }];
+        }];
     }
     [UIView commitAnimations];
 }
@@ -210,20 +223,25 @@ static NSArray *BuildSortDataArray(short currentSort) {
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
     } else {
-        // iPad: slide out; the folded completion is modelled as endCloseAnimation. Best-effort.
+        // iPad: pull back to y = 420 (friendNavSetFrameC @ 0xc6970), then exit to
+        // y = rootVC.view.height (friendNavSetFrameFromView @ 0xc6ab0 — two captures:
+        // self at +0x14, rootVC at +0x18 in the binary block struct).
         UIViewController *root = RootVC();
-        (void)root;
         [UIView animateWithDuration:(1.0 / 6.0)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
-                             CGRect f = self.navigationController.view.frame;
-                             self.navigationController.view.frame =
-                                 CGRectMake(f.origin.x, 420.0f, f.size.width, f.size.height);
-                         }
-                         completion:^(BOOL finished) {
-                             [self endCloseAnimation];
-                         }];
+            friendNavSetFrameC(self);
+        } completion:^(BOOL f1) {
+            [UIView animateWithDuration:(1.0 / 6.0)
+                                  delay:0.0
+                                options:UIViewAnimationOptionLayoutSubviews
+                             animations:^{
+                friendNavSetFrameFromView(self, root);
+            } completion:^(BOOL f2) {
+                [self endCloseAnimation];
+            }];
+        }];
     }
     [UIView commitAnimations];
 }
@@ -298,6 +316,64 @@ static NSArray *BuildSortDataArray(short currentSort) {
 }
 
 @end
+
+// ─── File-static nav-frame helpers ───────────────────────────────────────────
+// In the binary these are the block-invoke functions emitted by the compiler for
+// the ObjC block literals in startOpenAnimation (iPad) and startCloseAnimation (iPad).
+// All four are called only from this class → file-static, no shared header.
+//
+// Open animation sequence (iPad):
+//   pre-position: nav.view.origin.y = rootVC.view.frame.size.height  (off-screen below)
+//   → friendNavSetFrameA  (y = 420, fast slide-in)
+//   → friendNavSetFrameB  (y = 470, settle)
+//
+// Close animation sequence (iPad):
+//   → friendNavSetFrameC  (y = 420, pull up from resting 470)
+//   → friendNavSetFrameFromView  (y = rootVC.view.frame.size.height, exit off-screen)
+
+// Ghidra: friendNavSetFrameA @ 0xc6530
+// Animations-block invoke of the first open-animation step. Reads the current
+// nav view frame, overrides origin.y = 420.0f, sets it back.
+static void friendNavSetFrameA(SortSelectViewController *self) {
+    UIView *v = self.navigationController.view;
+    CGRect f = (v != nil) ? v.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    [self.navigationController.view setFrame:f];
+}
+
+// Ghidra: friendNavSetFrameB @ 0xc6668
+// Animations-block invoke of the settle step (completion of A). Overrides
+// origin.y = 470.0f — the final resting position of the panel on screen.
+static void friendNavSetFrameB(SortSelectViewController *self) {
+    UIView *v = self.navigationController.view;
+    CGRect f = (v != nil) ? v.frame : CGRectZero;
+    f.origin.y = 470.0f;
+    [self.navigationController.view setFrame:f];
+}
+
+// Ghidra: friendNavSetFrameC @ 0xc6970
+// Animations-block invoke of the first close-animation step. Body is identical
+// to friendNavSetFrameA (both encode 0x43d20000 = 420.0f); separate Thumb
+// addresses because the compiler emits one block-invoke function per lambda site.
+static void friendNavSetFrameC(SortSelectViewController *self) {
+    UIView *v = self.navigationController.view;
+    CGRect f = (v != nil) ? v.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    [self.navigationController.view setFrame:f];
+}
+
+// Ghidra: friendNavSetFrameFromView @ 0xc6ab0
+// Animations-block invoke of the exit step (completion of C). Two captures in
+// the binary block struct: self at +0x14, rootVC at +0x18. Reads the nav view
+// frame (or CGRectZero if nil), then replaces origin.y with rootVC.view's height
+// to push the panel off-screen below.
+static void friendNavSetFrameFromView(SortSelectViewController *self,
+                                      UIViewController *rootVC) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = (navView != nil) ? navView.frame : CGRectZero;
+    f.origin.y = (rootVC.view != nil) ? rootVC.view.frame.size.height : 0.0f;
+    [self.navigationController.view setFrame:f];
+}
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :

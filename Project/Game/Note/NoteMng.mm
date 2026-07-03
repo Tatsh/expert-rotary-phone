@@ -797,6 +797,86 @@ int NoteMng::updateLongNote(unsigned index) {
     return note->flags;
 }
 
+// Ghidra: noteMngJudgeHold @ 0x34964. Per-frame long-note "still held" judge, addressed by pool
+// slot id. The slot's spawnKind byte is repurposed as a hold-segment countdown: each call it is
+// decremented and the note's remaining distance to the judge line checked. If the head has
+// scrolled more than (graphic+1) judge-windows (0x118 = 280) past the note, the hold breaks and
+// the combo resets; when the countdown reaches zero the hold completes, advancing the combo and
+// the per-kind/tier tally. `tier` (< 4) selects the tally column. Returns the remaining count.
+int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
+    if (noteId >> 3 >= 0x7d) {   // noteId >= 1000
+        return 0;
+    }
+    ActiveNote &slot = m_notePool[noteId];
+    if (tier >= 4) {
+        return (int)(int8_t)slot.spawnKind;
+    }
+    if ((slot.flags & 0x2f) == 0 || (int8_t)slot.spawnKind < 1) {
+        slot.spawnKind = 0;
+        return 0;
+    }
+
+    const int startTick = (int)slot.startTick;
+    const int pos = getCurrentPosition();
+    // The note's spawn graphic (chart kind 6..9 -> 2..5, else 1), used as a distance scale.
+    int graphic;
+    if ((uint8_t)(slot.kind - 6) < 4) {
+        graphic = (int)(int8_t)(0x5040302 >> (((slot.kind - 6) & 0x1f) << 3));
+    } else {
+        graphic = 1;
+    }
+    const int8_t remaining = (int8_t)slot.spawnKind;
+    graphic -= remaining;
+    int8_t next = remaining;
+    if (remaining > 0) {
+        next = remaining - 1;
+        slot.spawnKind = (uint8_t)next;
+    }
+
+    if (graphic * 0x118 + 0x118 < startTick - pos) {
+        m_combo = 0;   // released too far from the note: the hold breaks
+    } else if (next == 0) {
+        int c = m_combo + 1;
+        m_combo = c;
+        if (m_maxCombo < c) {
+            m_maxCombo = c;
+        }
+        m_tally[slot.kind][tier]++;
+    }
+    return (int)(int8_t)slot.spawnKind;
+}
+
+// Ghidra: noteMngSetLaneFlag @ 0x347c8 — set the "lane held" flag (0x40) on note pool slot noteId.
+void NoteMng::setLaneFlag(unsigned noteId) {
+    if (noteId >> 3 >= 0x7d) {   // noteId >= 1000
+        return;
+    }
+    m_notePool[noteId].flags |= 0x40;
+}
+
+// Ghidra: noteMngTogglePause @ 0x34570 — resume play from a pause (the standard-mode twin of
+// AcNoteMng::resume). Only acts while held: fold the paused span into the lead-in, clear the
+// freeze bit, then (when the BGM start position is known and the chart has not ended) re-seek the
+// BGM to the current position and restart it.
+void NoteMng::togglePause() {
+    if (!m_holdFlag) {
+        return;
+    }
+    m_positionLeadIn += getElapsedTimeMs() - m_holdElapsed;
+    m_scrollTarget = 0;
+    m_bgmSynced = false;
+    m_holdElapsed = 0;
+    m_holdFlag = !m_holdFlag;   // clear the freeze bit
+
+    if (m_bgmStartPos != -1 && !m_endFlag) {
+        const int pos = getCurrentPosition();
+        AudioManager *am = [AudioManager sharedManager];
+        double seconds = (double)(pos - m_bgmStartPos) / 1000.0;   // DAT_00034660 = 1000.0
+        [am setBgmCurrentTime:seconds];
+    }
+    [[AudioManager sharedManager] playBgm:0];
+}
+
 // --- Per-note tone-graphic accessors (free functions the draw pass calls) -----------
 // Each reads one field of the standard manager's note pool slot `noteId` (the play
 // draw pass never touches a NoteMng instance directly). All share the same bounds gate

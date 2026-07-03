@@ -25,6 +25,15 @@ static NSString *const kMlistHeader[24] = {
     @"ppc_mlist_header_p21", @"ppc_mlist_header_p22"
 };
 
+// Ghidra: setNavControllerViewFrameShort @ 0xd31e0
+// Block invoke — resizes the navigation controller view to the "short" split
+// pane layout used when CheckerDetail is pushed: CGRectMake(385, 250, 320, 530).
+// Confirmed caller: tableView:didSelectRowAtIndexPath: (animations block, 0xd3030,
+// block invoke ptr = 0xd31e1 = ARM Thumb address of this function).
+static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
+    self.navigationController.view.frame = CGRectMake(385.0f, 250.0f, 320.0f, 530.0f);
+}
+
 @interface CheckerMusicViewController ()
 - (void)touchedBackButton:(id)sender;
 @end
@@ -149,8 +158,7 @@ static NSString *const kMlistHeader[24] = {
             [UIView animateWithDuration:0.6f delay:0.0f
                                 options:UIViewAnimationOptionAllowUserInteraction
                              animations:^{
-                                 self.navigationController.view.frame =
-                                     CGRectMake(385.0f, 250.0f, 320.0f, 530.0f);
+                                 setNavControllerViewFrameShort(self); // Ghidra: setNavControllerViewFrameShort @ 0xd31e0
                              }
                              completion:nil];
         }

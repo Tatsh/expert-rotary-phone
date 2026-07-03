@@ -134,3 +134,95 @@ int neAVCAPlayer::voiceState(uint32_t handle) {
 void neAVCAPlayer::setAllVoiceVolume(int level) {
     m_component->setAllVolume(level);
 }
+
+namespace {
+// A caplayer play handle packs (voice << 16 | generation) in its low 28 bits and is tagged
+// 0x20000000; decode the voice index / generation, treating a non-caplayer handle as invalid.
+inline uint32_t caHandleBits(uint32_t handle) {
+    return (handle & kCAPlayerHandleFlag) ? (handle & 0x0fffffff) : 0xffffffffu;
+}
+}  // namespace
+
+// Ghidra: caPlayerMgr_dtor @ 0x261f8.
+neAVCAPlayer::~neAVCAPlayer() {
+    if (m_component != nullptr) {
+        m_component->terminate();   // auGraphTerminate
+        delete m_component;
+        m_component = nullptr;
+    }
+    if (m_sources != nullptr) {
+        for (int i = 0; i < m_capacity; i++) {
+            CASound *source = m_sources[i];
+            if (source != nullptr) {
+                source->freeBuffer();   // caSourceFreeBuffer
+                delete source;          // caSource_dtor + operator_delete
+                m_sources[i] = nullptr;
+            }
+        }
+        std::free(m_sources);
+        m_sources = nullptr;
+    }
+    m_nameMap = nil;   // ARC releases the name map
+}
+
+// Ghidra: caHandlePause @ 0x267b4 — pause the voice named by `handle` (generation-checked).
+bool neAVCAPlayer::pause(uint32_t handle) {
+    const uint32_t bits = caHandleBits(handle);
+    return m_component->pauseVoice((int)(bits >> 16), (uint16_t)(bits & 0xffff));
+}
+
+// Ghidra: caHandleStopAndClear @ 0x26864.
+void neAVCAPlayer::stopAndClear(uint32_t handle) {
+    const uint32_t bits = caHandleBits(handle);
+    m_component->stopAndClearVoice((int)(bits >> 16), (uint16_t)(bits & 0xffff));
+}
+
+// Ghidra: caUnregisterSource @ 0x26610 — detach a loaded source from any voice and free its PCM.
+void neAVCAPlayer::unregisterSource(uint32_t sourceId) {
+    if ((int)sourceId >= m_capacity || (int)sourceId < 0) {
+        return;
+    }
+    CASound *source = m_sources[sourceId];
+    if (source == nullptr) {
+        return;
+    }
+    m_component->clearSourceRef(source);   // auClearSourceRef
+    source->freeBuffer();                  // caSourceFreeBuffer
+}
+
+// Ghidra: caUnregisterSourceNamed @ 0x26644 — unregister a source by call name, then drop the
+// name from the lookup map.
+void neAVCAPlayer::unregisterSourceNamed(NSString *callName) {
+    NSNumber *rid = m_nameMap[callName];
+    if (rid == nil) {
+        return;
+    }
+    unregisterSource((uint32_t)rid.intValue);
+    [m_nameMap removeObjectForKey:callName];
+}
+
+// Ghidra: caPrepareSourceByIndex @ 0x266c0 — reserve a *fixed* mixer voice for a loaded source id.
+uint32_t neAVCAPlayer::prepareAtVoice(uint32_t sourceId, int voiceIndex) {
+    if ((int)sourceId >= m_capacity || (int)sourceId < 0) {
+        return (uint32_t)-1;
+    }
+    if (m_sources[sourceId] == nullptr) {
+        return (uint32_t)-1;
+    }
+    // The original also carries a volume-level argument; the SetGroup caller leaves it at the
+    // default full level (0x7f).
+    int handle = m_component->preparePlayer(m_sources[sourceId], voiceIndex, 0x7f);
+    if (handle < 0) {
+        return (uint32_t)-1;
+    }
+    return (uint32_t)handle | kCAPlayerHandleFlag;
+}
+
+// Ghidra: caPrepareSourceNamed @ 0x2673c.
+uint32_t neAVCAPlayer::prepareNamedAtVoice(NSString *callName, int voiceIndex) {
+    NSNumber *rid = m_nameMap[callName];
+    if (rid != nil) {
+        return prepareAtVoice((uint32_t)rid.intValue, voiceIndex);
+    }
+    return (uint32_t)-1;
+}

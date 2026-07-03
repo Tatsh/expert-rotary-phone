@@ -16,10 +16,21 @@
 #import <UIKit/UIKit.h>
 
 #import "AepTexture.h"
+#import "neRenderer.h"        // current renderer for neTextureRebind
 #import "neTextureForiOS.h"   // AepTile + the cache/bind free functions declared here
 
-AepTexture::AepTexture() = default;   // Ghidra: FUN_000180c4
+// GPU texture-memory accounting (Ghidra: g_dwTextureMemTotal).
+int g_dwTextureMemTotal = 0;
 
+AepTexture::AepTexture() = default;   // Ghidra: FUN_000180cc (ctor sets vtable + m_scale=1.0)
+
+// NOTE: the shipped destructor neTextureForiOS_dtor (Ghidra: FUN_000180f8) additionally
+// unlinks the texture from the shared cache list (+0x08/+0x0c), decrements
+// g_dwTextureMemTotal by m_bufferSize, and routes the GL delete through the current
+// renderer's deleteTexture vtable slot (+0xb8) rather than glDeleteTextures directly.
+// neTextureForiOS_delete (FUN_00018160) is its compiler-emitted deleting-destructor thunk
+// (dtor + operator delete under an SjLj cleanup frame). The unlink/accounting here is
+// performed by neTextureRelease / AepTextureUploadTiles on the release path.
 AepTexture::~AepTexture() {
     releaseGL();
     free(m_path);
@@ -186,4 +197,128 @@ void AepTextureUploadTiles(AepTile *tile, AepTexture *tex) {
     if (tex != nullptr) {
         ++tex->refCount;   // +0x04 retain
     }
+}
+
+// Map the engine texture-format ordinal to its GL enum. The atlas path uses a 2-byte
+// LUMINANCE_ALPHA format; artwork uses RGBA.
+static GLenum TexDataFormatToGL(int format) {
+    switch (format) {
+        case 0:  return GL_ALPHA;
+        case 1:  return GL_LUMINANCE_ALPHA;
+        default: return GL_RGBA;   // 2
+    }
+}
+
+// GL upload shared by the data paths (Ghidra: neTextureUpload). Stores the padded texture
+// size + format, (re)creates the GL name and uploads the pixels.
+static void neTextureUpload(AepTexture *tex, int texW, int texH, int format, const void *pixels) {
+    tex->m_format = format;   // +0x40
+    tex->releaseGL();
+    GLuint name = 0;
+    glGenTextures(1, &name);
+    glBindTexture(GL_TEXTURE_2D, name);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    GLenum gl = TexDataFormatToGL(format);
+    glTexImage2D(GL_TEXTURE_2D, 0, gl, texW, texH, 0, gl, GL_UNSIGNED_BYTE, pixels);
+    // Publish the name + padded size back onto the texture (AepTexture +0x18/+0x1c/+0x20).
+    tex->adoptGLName(name, texW, texH);
+}
+
+// Ghidra: FUN_00018644 — record dims + byte size for pre-decoded pixels and upload.
+int neTextureSetDataParams(AepTexture *tex, int width, int height, int format,
+                           const void *pixels, int texW, int texH) {
+    tex->setSourceSize(texW, texH);            // +0x24/+0x28
+    int bytes = width * height * 4;
+    tex->setBufferSize(bytes);                 // +0x2c
+    g_dwTextureMemTotal += bytes;
+    neTextureUpload(tex, width, height, format, pixels);
+    return 1;
+}
+
+// Ghidra: FUN_00018684 — decode an in-memory image (bridged NSData*) and upload it as a
+// power-of-two GL texture.
+int neTextureLoadFromData(AepTexture *tex, const void *nsData) {
+    UIImage *image = [[UIImage alloc] initWithData:(__bridge NSData *)nsData];
+    if (image == nil) {
+        return 0;
+    }
+    if ([image respondsToSelector:@selector(scale)]) {
+        tex->setScale((float)image.scale);
+    }
+    CGImageRef cg = image.CGImage;
+    int w = (int)CGImageGetWidth(cg);
+    int h = (int)CGImageGetHeight(cg);
+    tex->setSourceSize(w, h);
+
+    int tw = 1; while (tw < w) tw <<= 1;   // pad to power of two
+    int th = 1; while (th < h) th <<= 1;
+    int bytes = tw * 4 * th;
+    tex->setBufferSize(bytes);
+    g_dwTextureMemTotal += bytes;
+
+    void *pixels = calloc(1, bytes);
+    CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(pixels, tw, th, 8, tw * 4, space,
+                                             kCGImageAlphaPremultipliedLast);
+    CGContextTranslateCTM(ctx, 0, h);      // flip to GL's bottom-left origin
+    CGContextScaleCTM(ctx, 1.0f, -1.0f);
+    CGContextDrawImage(ctx, CGRectMake(0, 0, w, h), cg);
+    CGContextRelease(ctx);
+    CGColorSpaceRelease(space);
+
+    neTextureUpload(tex, tw, th, /*RGBA*/ 2, pixels);
+    free(pixels);
+    return 1;
+}
+
+// Ghidra: FUN_00018828 — re-bind + re-upload through the current renderer.
+void neTextureRebind(AepTexture *tex, const void *pixels) {
+    neRenderer *r = neGetCurrentRenderer();
+    r->bindTexture(tex->name());                                                    // +0xc0
+    r->uploadTexture(tex->format(), tex->textureWidth(), tex->textureHeight(), pixels);  // +0xcc
+}
+
+// Ghidra: FUN_0001bcfc — build a cached AepTexture from raw pixel data.
+AepTexture *neCreateTextureFromData(int width, int height, int format, const void *pixels,
+                                    int texW, int texH) {
+    AepTexture *tex = new AepTexture();   // operator new(0x48) + ctor FUN_000180cc
+    if (neTextureSetDataParams(tex, width, height, format, pixels, texW, texH) != 1) {
+        delete tex;
+        return nullptr;
+    }
+    ++tex->refCount;   // +0x04
+
+    // push_front onto the shared cache list.
+    AepTexture *sentinel = AepTextureCacheSentinel();
+    AepTexture *first = sentinel->next;
+    first->prev = tex;
+    tex->next = first;
+    tex->prev = sentinel;
+    sentinel->next = tex;
+    return tex;
+}
+
+// Ghidra: FUN_0001be20 — walk the cache list and re-upload each texture's GL name after a
+// foreground return (NEEngine_notifyForegroundObserver per node).
+void neNotifyTexturesForeground(void) {
+    AepTexture *sentinel = AepTextureCacheSentinel();
+    for (AepTexture *node = sentinel->next; node != sentinel; node = node->next) {
+        node->reload();
+    }
+}
+
+// Ghidra: FUN_00018200 — drop one shared-cache reference; on the last, free the GL name,
+// unlink from the cache list and destroy.
+void neTextureRelease(void *tex) {
+    AepTexture *t = static_cast<AepTexture *>(tex);
+    if (--t->refCount > 0) {
+        return;
+    }
+    t->releaseGL();
+    t->prev->next = t->next;
+    t->next->prev = t->prev;
+    delete t;
 }

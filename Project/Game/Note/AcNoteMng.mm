@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <ctime>
 #include <sys/time.h>
 
 #import <Foundation/Foundation.h>
@@ -616,6 +617,179 @@ void AcNoteMng::update() {
         if (!m_endFlag && node->record->type == AC_NOTE_EVENT && node->tick <= pos) {
             node->flags |= 0x20;
             m_endFlag = 1;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Pause / resume + play-clock control (input-driven, outside the per-frame update).
+// ---------------------------------------------------------------------------
+
+// Ghidra: acNoteStartPlayback @ 0x7b5a0 — stamp the wall-clock baseline and clear the
+// pause/offset state so the play clock runs from now; state = 1 (playing).
+void AcNoteMng::startPlayback() {
+    timeval tv;
+    gettimeofday(&tv, nullptr);        // -> m_startSec/m_startUsec (@ +0x14cb8)
+    m_startSec = tv.tv_sec;
+    m_startUsec = tv.tv_usec;
+    m_frozenElapsed = getElapsedTimeMs();
+    m_startThreshold = 0;
+    m_holdElapsed = 0;
+    m_holdFlags = 0;
+    m_state = 1;
+}
+
+// Ghidra: acNotePause @ 0x7b638 — freeze the clock and stop the BGM, remembering the
+// elapsed time at the pause so resume() can fold the paused span back in. No-op if held.
+void AcNoteMng::pause() {
+    if (m_holdFlags & 1) {
+        return;
+    }
+    [[AudioManager sharedManager] stopBgm:0];
+    m_holdElapsed = getElapsedTimeMs();   // +0xfa40: the pause timestamp
+    m_holdFlags |= 1;
+}
+
+// Ghidra: acNoteResume @ 0x7b698 — release the freeze: advance the start threshold by the
+// paused span, reset the smoothed scroll base, then (once play is far enough in and the
+// chart has not ended) re-seek the BGM to the current position, restart it, and arm a
+// drift-sync adjust event. No-op unless currently held.
+void AcNoteMng::resume() {
+    if ((m_holdFlags & 1) == 0) {
+        return;
+    }
+    m_startThreshold += getElapsedTimeMs() - m_holdElapsed;
+    m_scrollTarget = 0;
+    m_scrollBase = 0;
+    m_holdElapsed = 0;
+    m_holdFlags ^= 1;                 // clear bit 0
+    m_state = 1;
+
+    const uint32_t pos = (uint32_t)getCurrentPosition();
+    if (pos >= (uint32_t)m_expectedTimeBase && m_endFlag == 0) {
+        AudioManager *am = [AudioManager sharedManager];
+        float seconds = (float)((int)pos - m_expectedTimeBase) / 1000.0f;   // DAT_0007b78c = 1000.0
+        [am setBgmCurrentTime:seconds];
+        [[AudioManager sharedManager] playBgm:0];
+        makeAdjustEvent(pos + 0x20);
+    }
+}
+
+// Ghidra: acNoteResetPlayFlag @ 0x7aea4.
+void AcNoteMng::resetPlayFlag() {
+    m_playFlag = 0;
+}
+
+// Ghidra: acNoteSetupLaneMapping @ 0x7ad14 — build the lane-remap table for the option.
+// The random modes (1/3) shuffle lanes 0..8 with a time-seeded generator and retry until the
+// result is a derangement (no lane maps to itself), capped at 100000 attempts as the binary does.
+void AcNoteMng::setupLaneMapping(int mode) {
+    m_laneMode = mode;
+    if (mode == 1 || mode == 3) {
+        // The binary uses the engine's C_Rand (rngStateInit / rngSeed(time) / GetRandRangeInt);
+        // modelled here with the same construction: time-seeded, in-place Fisher-Yates, retried
+        // until no fixed point remains.
+        unsigned rng = (unsigned)time(nullptr);
+        auto nextRange = [&rng](int range) -> int {
+            rng = rng * 1103515245u + 12345u;
+            return (int)((rng >> 16) % (unsigned)range);
+        };
+        for (int attempt = 0; attempt <= 99999; attempt++) {
+            for (int i = 0; i < 9; i++) {
+                m_laneRemap[i] = i;
+            }
+            for (int i = 0; i < 9; i++) {
+                int r = nextRange(9 - i);
+                int32_t tmp = m_laneRemap[i + r];
+                m_laneRemap[i + r] = m_laneRemap[i];
+                m_laneRemap[i] = tmp;
+            }
+            bool deranged = true;
+            for (int i = 0; i < 9; i++) {
+                if (m_laneRemap[i] == i) { deranged = false; break; }
+            }
+            if (deranged) {
+                break;
+            }
+        }
+    } else if (mode == 2) {
+        for (int i = 0; i < 9; i++) {
+            m_laneRemap[i] = 8 - i;
+        }
+    } else {
+        for (int i = 0; i < 9; i++) {
+            m_laneRemap[i] = i;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Play-state queries.
+// ---------------------------------------------------------------------------
+
+// Ghidra: acNoteGetTotalNoteCount @ 0x7b8ec — sum the 9 per-lane tap counters.
+int AcNoteMng::getTotalNoteCount() const {
+    int total = 0;
+    for (int lane = 0; lane < 9; lane++) {
+        total += m_laneCounts[lane];
+    }
+    return (int)(int16_t)total;
+}
+
+// Ghidra: acNoteGetJudgeTotal @ 0x7b908 — sum the whole 9x4 per-lane score/judge table
+// (m_laneResult, stride 0x10) and return the low 16 bits.
+int AcNoteMng::getJudgeTotal() const {
+    int total = 0;
+    for (int lane = 0; lane < 9; lane++) {
+        total += m_laneResult[lane].hits;
+        total += m_laneResult[lane]._reserved[0];
+        total += m_laneResult[lane]._reserved[1];
+        total += m_laneResult[lane]._reserved[2];
+    }
+    return (int)(int16_t)total;
+}
+
+// Ghidra: acNoteCountActiveNotes @ 0x7b93c — count on-screen notes (lane < 9) whose
+// "handled" bit (0x20) is still clear.
+int AcNoteMng::countActiveNotes() const {
+    int count = 0;
+    for (const AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
+        if (node->lane < 9 && (node->flags & 0x20) == 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+// Ghidra: acNoteGetNoteObject @ 0x7b968 — copy the `index`-th still-unresolved note into `out`.
+void AcNoteMng::getNoteObject(AcNoteObject *out, int index) const {
+    assert(out != nullptr);   // "GetNoteObject" AcNoteMng.mm:0x37c
+    int seen = 0;
+    for (const AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
+        if (node->lane < 9 && (node->flags & 0x20) == 0) {
+            if (seen == index) {
+                out->tick = node->tick;
+                out->lane = node->lane;
+                out->flags = node->flags;
+                out->drawY = node->drawY;
+                return;
+            }
+            seen++;
+        }
+    }
+    assert(false);   // "GetNoteObject" AcNoteMng.mm:0x395 (index out of range)
+}
+
+// Ghidra: acNoteSetNoteFlag @ 0x7b9fc — OR `flags` into the `index`-th still-unresolved note.
+void AcNoteMng::setNoteFlag(int index, uint16_t flags) {
+    int seen = 0;
+    for (AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
+        if (node->lane < 9 && (node->flags & 0x20) == 0) {
+            if (seen == index) {
+                node->flags |= flags;
+                return;
+            }
+            seen++;
         }
     }
 }

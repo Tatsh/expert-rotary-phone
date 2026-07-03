@@ -27,6 +27,14 @@
 //    pageControlDidChanged:                       @ 0x786fc
 //    backButtonFunc                               @ 0x78794
 //    isAnimationing                               @ 0x787d8
+//  File-static block-invoke helpers (MapSelect layout/scroll geometry):
+//    mapSelectResetArrowFrame                     @ 0x76fc8
+//    mapSelectAdvanceArrowFrame                   @ 0x7706c
+//    mapSelectLayoutRightDummyViews               @ 0x77208
+//    mapSelectSetRightDummyWidth                  @ 0x775b4
+//    mapSelectAdvanceArrowFrameAlt                @ 0x77a98
+//    mapSelectSetRightDummyWidthAlt               @ 0x77de8
+//    mapSelectSyncScrollToPage                    @ 0x780d0
 //  Objective-C++ for the C++ neSceneManager singleton / neEngine SE bridge. ARC.
 //
 //  Honesty notes:
@@ -36,9 +44,17 @@
 //     FloatVectorAdd deltas at DAT_00075c98 (-130) / DAT_00075c9c (-190).
 //   - Image resource names are best-effort decodes of the binary's C-string symbols
 //     (cf_map_select_bg -> "map_select_bg", etc.).
-//   - The animation/transition block bodies are reconstructed from the surrounding fixed-point
-//     frame arithmetic (arrow slide, right-panel relayout, event-carousel page sync); durations
-//     and the arrow-Y guard band [130, 520] are the binary's exact constants.
+//   - The 7 file-static helpers are block invoke functions Ghidra surfaced as top-level
+//     symbols; in the reconstructed ObjC++ they are expressed as static functions called
+//     from inside UIView transition animation/completion blocks. The binary stores captured
+//     float widths as int32_t in block structs (via vcvt.s32.f32 / vcvt.f32.s32); the
+//     ObjC++ captures them directly as CGFloat. The arrow "advance" helpers shift
+//     origin.x right by the arrow's own width (displacing it off panel); "reset" restores
+//     origin.x to _arrowFrm.origin.x (bringing it back). The "Alt" variants are separate
+//     compiled instances of the same logic at the scrollViewDidScroll: call sites.
+//   - -scrollViewDidScroll: origin.x guard corrected from origin.y (prior placeholder
+//     error) to origin.x, matching the binary's comparison of the first float of each
+//     CGRect stret result against _arrowFrm.origin.x (DAT comparisons in the decompile).
 //   - -dealloc is KEPT: it detaches this controller from DownloadMain's event-info delegate and
 //     tears down the how-to overlay. There is no retained NSTimer (the auto-scroll carousel uses
 //     -performSelector:withObject:afterDelay:), so nothing to invalidate. The child-controller /
@@ -92,6 +108,120 @@
 - (void)updateEventInfo;
 - (void)pageControlDidChanged:(UIPageControl *)pageControl;
 @end
+
+// ---------------------------------------------------------------------------
+// File-static geometry helpers — block invoke functions lifted by Ghidra as
+// top-level symbols; all operate exclusively on MapSelectSplitViewController
+// ivars so they live here as static (no seam needed).
+// ---------------------------------------------------------------------------
+
+// Ghidra: mapSelectResetArrowFrame @ 0x76fc8
+// Block invoke body: restore _arrowImageView.frame.origin.x to _arrowFrm.origin.x
+// while leaving origin.y/size unchanged.
+// Used in -touchWithTreasureData:… as the animations block when the arrow is already
+// displaced (origin.x != _arrowFrm.origin.x) AND the target row falls inside the
+// guard band [130, 520] — 0.5 s cross-dissolve slides the arrow back to home x.
+static void mapSelectResetArrowFrame(MapSelectSplitViewController *self) {
+    CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
+    f.origin.x = self->_arrowFrm.origin.x;
+    self->_arrowImageView.frame = f;
+}
+
+// Ghidra: mapSelectAdvanceArrowFrame @ 0x7706c
+// Block invoke body: shift _arrowImageView.frame.origin.x right by frame.size.width,
+// displacing the arrow off the left panel.
+// Used in -touchWithTreasureData:… as the animations block when the arrow is at rest
+// (origin.x == _arrowFrm.origin.x) AND the target row falls OUTSIDE the guard band —
+// quick 0.1 s cross-dissolve.
+static void mapSelectAdvanceArrowFrame(MapSelectSplitViewController *self) {
+    CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
+    f.origin.x += f.size.width;
+    self->_arrowImageView.frame = f;
+}
+
+// Ghidra: mapSelectLayoutRightDummyViews @ 0x77208
+// Block invoke body: collapse _rightDummyView and _rightHeaderDummyView to width 10.0
+// (0x41200000); origin and height are preserved from the views' current frames.
+// Used as the animations block of the right-panel cross-dissolve in both
+// -touchWithTreasureData:… and -scrollViewDidScroll:.
+static void mapSelectLayoutRightDummyViews(MapSelectSplitViewController *self) {
+    if (self->_rightDummyView) {
+        CGRect f = self->_rightDummyView.frame;
+        f.size.width = 10.0f;
+        self->_rightDummyView.frame = f;
+    }
+    if (self->_rightHeaderDummyView) {
+        CGRect f = self->_rightHeaderDummyView.frame;
+        f.size.width = 10.0f;
+        self->_rightHeaderDummyView.frame = f;
+    }
+}
+
+// Ghidra: mapSelectSetRightDummyWidth @ 0x775b4
+// Block invoke body: restore _rightDummyView and _rightHeaderDummyView widths from
+// values captured before the collapsing animation (stored as int32_t via
+// vcvt.s32.f32 in the binary's block captures; recovered by vcvt.f32.s32).
+// In the ObjC++ reconstruction the widths are captured directly as CGFloat.
+// Used as the (nested) completion block in -touchWithTreasureData:…'s right-panel
+// cross-dissolve (LAB_000772f8_1 → nested block invoke).
+static void mapSelectSetRightDummyWidth(MapSelectSplitViewController *self,
+                                        CGFloat rightDummyWidth,
+                                        CGFloat rightHeaderDummyWidth) {
+    if (self->_rightDummyView) {
+        CGRect f = self->_rightDummyView.frame;
+        f.size.width = rightDummyWidth;
+        self->_rightDummyView.frame = f;
+    }
+    if (self->_rightHeaderDummyView) {
+        CGRect f = self->_rightHeaderDummyView.frame;
+        f.size.width = rightHeaderDummyWidth;
+        self->_rightHeaderDummyView.frame = f;
+    }
+}
+
+// Ghidra: mapSelectAdvanceArrowFrameAlt @ 0x77a98
+// Block invoke body: identical logic to mapSelectAdvanceArrowFrame; a separate
+// compiled block literal at the -scrollViewDidScroll: call site.
+// Used when the map list is scrolled and the arrow is at home x — the arrow is
+// displaced off-panel (0.1 s cross-dissolve, duration DAT_00077a90).
+static void mapSelectAdvanceArrowFrameAlt(MapSelectSplitViewController *self) {
+    CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
+    f.origin.x += f.size.width;
+    self->_arrowImageView.frame = f;
+}
+
+// Ghidra: mapSelectSetRightDummyWidthAlt @ 0x77de8
+// Block invoke body: identical logic to mapSelectSetRightDummyWidth; separate compiled
+// instance for -scrollViewDidScroll:'s right-panel cross-dissolve completion block
+// (LAB_00077c8c_1 captures self + int32_t widths at +0x18/+0x1c).
+static void mapSelectSetRightDummyWidthAlt(MapSelectSplitViewController *self,
+                                           CGFloat rightDummyWidth,
+                                           CGFloat rightHeaderDummyWidth) {
+    if (self->_rightDummyView) {
+        CGRect f = self->_rightDummyView.frame;
+        f.size.width = rightDummyWidth;
+        self->_rightDummyView.frame = f;
+    }
+    if (self->_rightHeaderDummyView) {
+        CGRect f = self->_rightHeaderDummyView.frame;
+        f.size.width = rightHeaderDummyWidth;
+        self->_rightHeaderDummyView.frame = f;
+    }
+}
+
+// Ghidra: mapSelectSyncScrollToPage @ 0x780d0
+// Block invoke body: set _scrollView.contentOffset.x = frame.size.width *
+// _pageCtrl.currentPage, preserving the current contentOffset.y.
+// Used as the animations block in -autoScroll's cross-dissolve page transition.
+static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
+    CGFloat pageWidth = self->_scrollView ? self->_scrollView.frame.size.width : 0.0f;
+    NSInteger page    = [self->_pageCtrl currentPage];
+    CGPoint   offset  = self->_scrollView ? self->_scrollView.contentOffset : CGPointZero;
+    offset.x = pageWidth * (CGFloat)page;
+    [self->_scrollView setContentOffset:offset];
+}
+
+// ---------------------------------------------------------------------------
 
 @implementation MapSelectSplitViewController
 
@@ -340,16 +470,15 @@
     targetY -= _mapSelectViewCtrl.tableView.contentOffset.y;
 
     if (_arrowImageView.frame.origin.x == _arrowFrm.origin.x) {
-        // Arrow at rest: cross-dissolve it to the new Y. Inside the guard band [130, 520] the
-        // slide is a slow 0.5s dissolve; outside it, a quick 0.1s snap.
+        // Arrow at rest: cross-dissolve it to the new Y.  Inside the guard band [130, 520]
+        // the slide is a slow 0.5 s dissolve to the target row; outside it, a quick 0.1 s
+        // snap that displaces the arrow off the panel (mapSelectAdvanceArrowFrame @ 0x7706c).
         if (targetY < 130.0f || 520.0f < targetY) {   // DAT_00076fc0 / DAT_00076fc4
             [UIView transitionWithView:_arrowImageView
                               duration:0.1   // DAT_00076fb8
                                options:UIViewAnimationOptionTransitionCrossDissolve
                             animations:^{
-                                CGRect f = self->_arrowImageView.frame;
-                                f.origin.y = targetY;
-                                self->_arrowImageView.frame = f;
+                                mapSelectAdvanceArrowFrame(self); // Ghidra: @ 0x7706c
                             }
                             completion:nil];
         } else {
@@ -364,7 +493,9 @@
                             completion:nil];
         }
     } else {
-        // Arrow already displaced: place it directly, then (inside the band) dissolve it home.
+        // Arrow already displaced: place it directly at the target Y, then (if the target
+        // is inside the guard band) dissolve the x back to home (mapSelectResetArrowFrame
+        // @ 0x76fc8).
         CGRect f = _arrowImageView.frame;
         f.origin.y = targetY;
         _arrowImageView.frame = f;
@@ -372,18 +503,30 @@
             [UIView transitionWithView:_arrowImageView
                               duration:0.5
                                options:UIViewAnimationOptionTransitionCrossDissolve
-                            animations:^{ /* settle at the resolved arrow frame */ }
+                            animations:^{
+                                mapSelectResetArrowFrame(self); // Ghidra: @ 0x76fc8
+                            }
                             completion:nil];
         }
     }
 
-    // Cross-fade the right area panel: rebuild it for the freshly-selected map/area (the binary's
-    // mapSelectLayoutRightDummyViews block relayouts the right dummy + header clips and swaps in
-    // the new SubMapSelectViewController), then clear the animating guard.
+    // Cross-fade the right area panel.
+    // animations (mapSelectLayoutRightDummyViews @ 0x77208): collapse both clips to width 10.
+    // completion (LAB_000772f8_1): swap in the new SubMapSelectViewController, clear the
+    //   animating guard, then restore the original clip widths via mapSelectSetRightDummyWidth
+    //   (@ 0x775b4, a nested block invoke created inside the completion with the pre-animation
+    //   widths captured as int32_t via vcvt.s32.f32 in the binary).
+    CGFloat origDummyW  = _rightDummyView         ? _rightDummyView.frame.size.width         : 0.0f;
+    CGFloat origHeaderW = _rightHeaderDummyView   ? _rightHeaderDummyView.frame.size.width   : 0.0f;
     [UIView transitionWithView:_rightDummyView
                       duration:0.25
                        options:UIViewAnimationOptionTransitionCrossDissolve
                     animations:^{
+                        mapSelectLayoutRightDummyViews(self); // Ghidra: @ 0x77208
+                    }
+                    completion:^(BOOL finished) {
+                        // Ghidra: LAB_000772f8_1 — swap SubMapSelectViewController,
+                        // release animating guard, restore panel widths.
                         [self->_subMapSelectViewCtrl.view removeFromSuperview];
                         self->_subMapSelectViewCtrl =
                             [[SubMapSelectViewController alloc] initWithTreasureData:treasureData
@@ -392,8 +535,8 @@
                         [self->_subMapSelectViewCtrl setDelegate:self];
                         [self->_rightDummyView addSubview:self->_subMapSelectViewCtrl.view];
                         self->_isAnimationing = NO;
-                    }
-                    completion:nil];
+                        mapSelectSetRightDummyWidth(self, origDummyW, origHeaderW); // Ghidra: @ 0x775b4
+                    }];
 }
 
 #pragma mark - UIScrollViewDelegate
@@ -401,25 +544,39 @@
 // @ 0x77768 — drive the event carousel's page control, or (for the map list) snap the arrow home.
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (_scrollView != scrollView) {
-        // The left map list moved: if the arrow is at rest and nothing is animating, dissolve it
-        // back to its home frame and relayout the right panels.
-        if (_arrowImageView.frame.origin.y != _arrowFrm.origin.y) {
+        // The left map list moved: if the arrow is at home x and nothing is animating,
+        // displace it off the panel and collapse/restore the right clips.
+        // Guard: compare origin.x (first float of the frame struct) against _arrowFrm.origin.x.
+        if (_arrowImageView.frame.origin.x != _arrowFrm.origin.x) {
             return;
         }
         if (_isAnimationing) {
             return;
         }
         neEngine::playSystemSe(2);
+        // Shift the arrow off-panel (mapSelectAdvanceArrowFrameAlt @ 0x77a98;
+        // completion body LAB_00077b3c_1 not yet reconstructed → nil).
         [UIView transitionWithView:_arrowImageView
                           duration:0.1   // DAT_00077a90
                            options:UIViewAnimationOptionTransitionCrossDissolve
-                        animations:^{ self->_arrowImageView.frame = self->_arrowFrm; }
+                        animations:^{
+                            mapSelectAdvanceArrowFrameAlt(self); // Ghidra: @ 0x77a98
+                        }
                         completion:nil];
+        // Collapse right clips, then restore widths (mapSelectSetRightDummyWidthAlt @ 0x77de8,
+        // LAB_00077c8c_1).  animations body at LAB_00077b9c_1 is the same collapse logic as
+        // mapSelectLayoutRightDummyViews (separate compiled instance in the binary).
+        CGFloat origDummyW  = _rightDummyView       ? _rightDummyView.frame.size.width       : 0.0f;
+        CGFloat origHeaderW = _rightHeaderDummyView ? _rightHeaderDummyView.frame.size.width : 0.0f;
         [UIView transitionWithView:_rightDummyView
                           duration:0.25
                            options:UIViewAnimationOptionTransitionCrossDissolve
-                        animations:^{ /* relayout the right dummy / header views */ }
-                        completion:nil];
+                        animations:^{
+                            mapSelectLayoutRightDummyViews(self); // Ghidra: @ 0x77208 (same logic as LAB_00077b9c_1)
+                        }
+                        completion:^(BOOL finished) {
+                            mapSelectSetRightDummyWidthAlt(self, origDummyW, origHeaderW); // Ghidra: @ 0x77de8
+                        }];
         return;
     }
 
@@ -477,14 +634,14 @@
     NSInteger pages = _pageCtrl.numberOfPages;
     NSInteger next = (current == pages - 1) ? 0 : current + 1;
     _pageCtrl.currentPage = next;
+    // Cross-dissolve the carousel to the new page; the animations block syncs the scroll
+    // offset to _pageCtrl.currentPage (already set to `next` above).
+    // Ghidra: mapSelectSyncScrollToPage @ 0x780d0 as the animations block invoke.
     [UIView transitionWithView:_scrollView
                       duration:0.25
                        options:UIViewAnimationOptionTransitionCrossDissolve
                     animations:^{
-                        CGFloat width = self->_scrollView.frame.size.width;
-                        [self->_scrollView scrollRectToVisible:CGRectMake(width * next, 0.0f,
-                                                                          width, self->_scrollView.frame.size.height)
-                                                      animated:NO];
+                        mapSelectSyncScrollToPage(self); // Ghidra: @ 0x780d0
                     }
                     completion:nil];
     [self performSelector:@selector(autoScroll) withObject:nil afterDelay:5.0];

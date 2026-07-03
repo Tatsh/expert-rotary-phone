@@ -16,8 +16,54 @@ CASound::CASound() = default;
 
 // Ghidra: FUN_00027bdc.
 CASound::~CASound() {
-    free(m_buffer);
+    freeBuffer();
+}
+
+// Ghidra: caSourceFreeBuffer @ 0x27bc0.
+void CASound::freeBuffer() {
+    if (m_buffer != nullptr) {
+        free(m_buffer);
+    }
     m_buffer = nullptr;
+    m_bufferSize = 0;
+}
+
+// Ghidra: caSourceRead @ 0x27e10 — the mixer render read. Copies from the current byte cursor,
+// clamping each copy to the buffer end; a looped source wraps (and clears the pass total), a
+// one-shot stops at the end.
+size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const {
+    if (bytes == 0) {
+        return 0;
+    }
+    size_t copied = 0;
+    UInt32 cursor = *pos;
+    const uint8_t *src = static_cast<const uint8_t *>(m_buffer) + cursor;
+    uint8_t *out = static_cast<uint8_t *>(dst);
+    while (true) {
+        size_t chunk = bytes;
+        if ((int)(cursor + bytes) >= (int)m_bufferSize) {
+            chunk = m_bufferSize - cursor;
+        }
+        if (chunk != 0) {
+            memcpy(out, src, chunk);
+        }
+        copied += chunk;
+        const bool done = (bytes == chunk);
+        cursor += (UInt32)chunk;
+        *pos = cursor;
+        *total += (UInt32)chunk;
+        bytes -= chunk;
+        if (done || !m_loop) {
+            break;
+        }
+        // Loop: restart from the top of the buffer and reset the pass total.
+        src = static_cast<const uint8_t *>(m_buffer);
+        cursor = 0;
+        *pos = 0;
+        *total = 0;
+        out += chunk;
+    }
+    return copied;
 }
 
 // Ghidra: FUN_00027bf8 — build a CFURL from the path and load through it.

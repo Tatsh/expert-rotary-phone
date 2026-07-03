@@ -236,6 +236,22 @@ public:
     // toward the combo + tally. Ghidra: @ 0x34a78.
     int updateLongNote(unsigned index);
 
+    // Per-frame hold-note tick judge (long note held down): counts down the note pool slot's
+    // hold-segment counter; if the head has scrolled too far past the note the hold breaks and
+    // the combo resets, otherwise once the counter reaches zero the hold completes and the combo
+    // + per-kind tally advance. `tier` (0..3) selects the tally column. Returns the remaining
+    // count. Ghidra: noteMngJudgeHold @ 0x34964.
+    int judgeHold(unsigned noteId, unsigned tier);
+
+    // Mark the note pool slot `noteId` with the "long-note lane held" flag (0x40). Input sets
+    // this while a lane is held. Ghidra: noteMngSetLaneFlag @ 0x347c8.
+    void setLaneFlag(unsigned noteId);
+
+    // Resume play from a pause (the standard-mode twin of AcNoteMng::resume): fold the paused
+    // span into the lead-in, clear the freeze bit, re-seek + restart the BGM at the current
+    // position. Only acts while currently held. Ghidra: noteMngTogglePause @ 0x34570.
+    void togglePause();
+
     int combo() const { return m_combo; }
     int maxCombo() const { return m_maxCombo; }
     int judgeCount(int kind, NoteJudge tier) const { return m_tally[kind][tier]; }
@@ -357,6 +373,7 @@ private:
     int m_expectedTimeBase = 0;    // +0x4e48 expected time used by the BGM drift sync
     bool m_bgmSynced = false;      // +0x4e50 the one-shot BGM drift sync has run
     bool m_holdFlag = false;       // +0x4e51 bit0: play is held/paused (freezes the update)
+    int  m_holdElapsed = 0;        // elapsed time stamped when play was paused (folded back by togglePause)
 
     // Resign/suspend bookkeeping (Ghidra: within the play-data region, near +0x05;
     // the recorded position field is written by FUN_00034510).

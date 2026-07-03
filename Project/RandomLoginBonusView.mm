@@ -230,6 +230,8 @@
                           delay:0.0
                         options:UIViewAnimationOptionAllowUserInteraction
                      animations:^{
+        // Ghidra: loginBonusResetTransform @ 0x19ad8 (block-invoke thunk;
+        // captured var at +0x14 = self; calls [self setTransform: identity(1.0f)]).
         self.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
     }
                      completion:^(BOOL finished) {
@@ -257,44 +259,76 @@
         [_numImgView1000 stopAnimating];
         [UIView animateWithDuration:0.5 delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{ self->_numImgView1000.transform = CGAffineTransformMakeScale(1.5f, 1.5f); }
+                         animations:^{
+            // Ghidra: loginBonusScaleDigit1000Up @ 0x19ec4 (block-invoke thunk;
+            // captured +0x14 = self; scales _numImgView1000 to 2.0×).
+            self->_numImgView1000.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
+        }
                          completion:^(BOOL finished) {
             [UIView animateWithDuration:0.5 delay:0.0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{ self->_numImgView1000.transform = CGAffineTransformIdentity; }
+                             animations:^{
+                // Ghidra: loginBonusScaleDigit1000Down @ 0x19fa0 (block-invoke thunk;
+                // captured +0x14 = self; springs _numImgView1000 back to identity 1.0×).
+                self->_numImgView1000.transform = CGAffineTransformIdentity;
+            }
                              completion:nil];
         }];
 
         [_numImgView0100 stopAnimating];
         [UIView animateWithDuration:0.5 delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{ self->_numImgView0100.transform = CGAffineTransformMakeScale(1.5f, 1.5f); }
+                         animations:^{
+            // Up block for 0100-place reel (unnamed in Ghidra; scale 2.0× inferred from
+            // loginBonusScaleDigit1000Up pattern, confirmed at binary offset ~0x1a00c).
+            self->_numImgView0100.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
+        }
                          completion:^(BOOL finished) {
             [UIView animateWithDuration:0.5 delay:0.0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{ self->_numImgView0100.transform = CGAffineTransformIdentity; }
+                             animations:^{
+                // Ghidra: loginBonusScaleDigit0100 @ 0x1a0e8 (block-invoke thunk;
+                // captured +0x14 = self; springs _numImgView0100 back to identity 1.0×).
+                self->_numImgView0100.transform = CGAffineTransformIdentity;
+            }
                              completion:nil];
         }];
 
         [_numImgView0010 stopAnimating];
         [UIView animateWithDuration:0.5 delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{ self->_numImgView0010.transform = CGAffineTransformMakeScale(1.5f, 1.5f); }
+                         animations:^{
+            // Up block for 0010-place reel (unnamed in Ghidra; scale 2.0× inferred from
+            // loginBonusScaleDigit1000Up pattern, confirmed at binary offset ~0x1a154).
+            self->_numImgView0010.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
+        }
                          completion:^(BOOL finished) {
             [UIView animateWithDuration:0.5 delay:0.0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{ self->_numImgView0010.transform = CGAffineTransformIdentity; }
+                             animations:^{
+                // Ghidra: loginBonusScaleDigit0010 @ 0x1a230 (block-invoke thunk;
+                // captured +0x14 = self; springs _numImgView0010 back to identity 1.0×).
+                self->_numImgView0010.transform = CGAffineTransformIdentity;
+            }
                              completion:nil];
         }];
 
         [_numImgView0001 stopAnimating];
         [UIView animateWithDuration:0.5 delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{ self->_numImgView0001.transform = CGAffineTransformMakeScale(1.5f, 1.5f); }
+                         animations:^{
+            // Up block for 0001-place reel (unnamed in Ghidra; scale 2.0× inferred from
+            // loginBonusScaleDigit1000Up pattern, confirmed at binary offset ~0x1a29c).
+            self->_numImgView0001.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
+        }
                          completion:^(BOOL finished) {
             [UIView animateWithDuration:0.5 delay:0.0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{ self->_numImgView0001.transform = CGAffineTransformIdentity; }
+                             animations:^{
+                // Ghidra: loginBonusScaleDigit0001 @ 0x1a3a0 (block-invoke thunk;
+                // captured +0x14 = self; springs _numImgView0001 back to identity 1.0×).
+                self->_numImgView0001.transform = CGAffineTransformIdentity;
+            }
                              completion:^(BOOL fin) {
                 // Ghidra completion @ 0x1a2f0 — reels locked: reveal the reward.
                 self->_state = 1;
@@ -359,7 +393,11 @@
                           delay:0.0
                         options:UIViewAnimationOptionAllowUserInteraction
                      animations:^{
-        self.alpha = 0.0f;
+        // Ghidra: loginBonusCollapseTransform @ 0x1a740 (block-invoke thunk;
+        // captured +0x14 = self; collapses view to a zero-area point via degenerate
+        // all-zero CGAffineTransform — confirmed from Ghidra setTransform(0,0,0,0,0,0)
+        // call; previous reconstruction used self.alpha which was wrong).
+        self.transform = CGAffineTransformMake(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     }
                      completion:^(BOOL finished) {
         [self removeFromSuperview];

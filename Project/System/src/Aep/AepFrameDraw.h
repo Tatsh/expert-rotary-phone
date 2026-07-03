@@ -74,6 +74,14 @@ void AepDrawSpriteHandle(AepManager *mgr, int handle, int x, int y, int scaleX, 
                          uint32_t blend, uint32_t colorMul, int *clipRect, int priority,
                          uint32_t p19);
 
+// Draw a single sprite-atlas frame by its packed handle with a default (100%, opaque,
+// unrotated, un-clipped) transform straight into the ordering table. `id` encodes the
+// resource group in bits 16.. and the 8-byte sprite record in bits 0..15; `x`/`y` are the
+// screen position, `blend` the blend word and `priority` the ordering-table priority. This
+// is the simplified sibling of AepDrawSpriteHandle used by the difficulty-frame / badge UI
+// draws. Ghidra: drawAepFrame (FUN_0000fc58 -> the sprite-command fill FUN_000113d0).
+void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_t priority);
+
 // The faithful full-signature core (Ghidra: FUN_0000fe8c). `mgr`/`groupSlot` locate
 // the frame-entry array, channel buffer, sprite records, ordering table, group
 // callback and screen extents; the remaining args are the composed parent transform,

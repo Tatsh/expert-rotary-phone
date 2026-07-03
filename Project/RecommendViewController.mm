@@ -36,6 +36,76 @@ static NSInteger RecommendCompareByDate(id obj1, id obj2, void *context) {
     return [b.updateDate localizedCaseInsensitiveCompare:a.updateDate];
 }
 
+// ---------------------------------------------------------------------------
+// settingNav* — block invoke functions emitted by the compiler immediately
+// after startOpenAnimation (0xbc5e0) and startCloseAnimation (0xbcaa8).
+// Each captures self (block-struct +0x14); settingNavSetFrameFromView also
+// captures a reference UIViewController (+0x18) whose view height it reads.
+// Placement: file-static (single owner — RecommendViewController).
+// ---------------------------------------------------------------------------
+
+// Ghidra: settingNavSetFrameA @ 0xbc888
+// Slides the navigation controller view to y = 420.0.
+// Animations block for the first phase of startOpenAnimation (iPad path).
+static void settingNavSetFrameA(RecommendViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: settingNavSetFrameB @ 0xbc9c0
+// Settles the navigation controller view to y = 470.0.
+// Animations block inside settingNavAnimateShow (settle phase).
+static void settingNavSetFrameB(RecommendViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 470.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: settingNavAnimateShow @ 0xbc920
+// Completion block of the first open-animation step.  Runs a 0.25 s settle
+// animation (UIViewAnimationOptionAllowUserInteraction = 2) that slides the
+// nav view from y = 420 down to y = 470, then calls -endOpenAnimation.
+// The two inner block invokes are settingNavSetFrameB (animations, @ 0xbc9c0)
+// and an unnamed completion that calls [self endOpenAnimation] (@ ~0xbca58).
+static void settingNavAnimateShow(RecommendViewController *self) {
+    [UIView animateWithDuration:0.25
+                          delay:0.0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                         settingNavSetFrameB(self);   // Ghidra: settingNavSetFrameB @ 0xbc9c0
+                     }
+                     completion:^(BOOL finished) {
+                         [self endOpenAnimation];      // completion block @ ~0xbca58
+                     }];
+}
+
+// Ghidra: settingNavSetFrameC @ 0xbccb8
+// Slides the navigation controller view back to y = 420.0.
+// Animations block for the first phase of startCloseAnimation (iPad path).
+static void settingNavSetFrameC(RecommendViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: settingNavSetFrameFromView @ 0xbcdf8
+// Parks the navigation controller view off-screen below the root view.
+// Animations block for the second phase of startCloseAnimation.  Captures
+// self and a reference controller; sets nav-view origin.y to refController's
+// view height (moves the panel just out of sight below the root scene).
+static void settingNavSetFrameFromView(RecommendViewController *self,
+                                       UIViewController *refController) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    UIView *ref = refController.view;
+    f.origin.y = ref ? ref.frame.size.height : 0.0f;
+    self.navigationController.view.frame = f;
+}
+
 @interface RecommendViewController ()
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
@@ -161,24 +231,23 @@ static NSInteger RecommendCompareByDate(id obj1, id obj2, void *context) {
         self.view.alpha = 1.0f;
         self.navigationController.view.alpha = 1.0f;
     } else {
-        // iPad: pre-position the nav view below the root scene, then slide it up. The completion
-        // runs a folded shared settle animation (settingNavAnimateShow) whose exact frame math is
-        // not recovered; modelled here as the lifecycle end (endOpenAnimation). Best-effort.
+        // iPad: park the nav view just below the root scene, then two-phase slide it into place.
+        // Phase 1 (~1/6 s): slide up to y = 420 (settingNavSetFrameA @ 0xbc888).
+        // Phase 2 (0.25 s, UIViewAnimationOptionAllowUserInteraction): settle to y = 470
+        //   (settingNavAnimateShow @ 0xbc920 → settingNavSetFrameB @ 0xbc9c0), then
+        //   call -endOpenAnimation (completion block @ ~0xbca58).
         UIViewController *root = RootVC();
-        CGRect navFrame = self.navigationController.view.frame;
-        CGRect rootFrame = root.view.frame;
-        self.navigationController.view.frame =
-            CGRectMake(navFrame.origin.x, rootFrame.size.height, navFrame.size.width, navFrame.size.height);
+        CGRect f = self.navigationController.view.frame;
+        f.origin.y = root.view.frame.size.height;   // park below screen
+        self.navigationController.view.frame = f;
         [UIView animateWithDuration:(1.0 / 6.0)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
-                             CGRect f = self.navigationController.view.frame;
-                             self.navigationController.view.frame =
-                                 CGRectMake(f.origin.x, 420.0f, f.size.width, f.size.height);
+                             settingNavSetFrameA(self);    // Ghidra: settingNavSetFrameA @ 0xbc888
                          }
                          completion:^(BOOL finished) {
-                             [self endOpenAnimation];
+                             settingNavAnimateShow(self);  // Ghidra: settingNavAnimateShow @ 0xbc920
                          }];
     }
     [UIView commitAnimations];
@@ -209,19 +278,28 @@ static NSInteger RecommendCompareByDate(id obj1, id obj2, void *context) {
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
     } else {
-        // iPad: slide out; the folded completion is modelled as endCloseAnimation. Best-effort.
+        // iPad: two-phase slide out.
+        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (settingNavSetFrameC @ 0xbccb8).
+        // Phase 2 (~1/6 s): park below the root view (settingNavSetFrameFromView @ 0xbcdf8),
+        //   then call -endCloseAnimation.
         UIViewController *root = RootVC();
-        (void)root;
         [UIView animateWithDuration:(1.0 / 6.0)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
-                             CGRect f = self.navigationController.view.frame;
-                             self.navigationController.view.frame =
-                                 CGRectMake(f.origin.x, 420.0f, f.size.width, f.size.height);
+                             settingNavSetFrameC(self);   // Ghidra: settingNavSetFrameC @ 0xbccb8
                          }
                          completion:^(BOOL finished) {
-                             [self endCloseAnimation];
+                             [UIView animateWithDuration:(1.0 / 6.0)
+                                                   delay:0.0
+                                                 options:UIViewAnimationOptionLayoutSubviews
+                                              animations:^{
+                                                  // Ghidra: settingNavSetFrameFromView @ 0xbcdf8
+                                                  settingNavSetFrameFromView(self, root);
+                                              }
+                                              completion:^(BOOL finished2) {
+                                                  [self endCloseAnimation];
+                                              }];
                          }];
     }
     [UIView commitAnimations];

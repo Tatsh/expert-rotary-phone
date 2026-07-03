@@ -76,6 +76,11 @@ public:
     // Ghidra: FUN_00010730.
     bool isTransitionDone() const;
 
+    // The active transition mode word (0 none, 1 fade in, 2 fade out) at +0x7f3b04.
+    // Ghidra: getAepTransitionMode (FUN_00010724). Scenes poll it to gate input during
+    // a fade.
+    int transitionMode() const { return m_transitionMode; }
+
     // Draw one animated layer (the full FUN_0000fd64 signature). `lyr` encodes the
     // resource group in its high 16 bits and the layer index in its low 16 bits;
     // `frame` is clamped/looped to the layer's length by `loopFlags` (bit0 = loop,
@@ -142,6 +147,9 @@ private:
     // Queue the full-screen fade quad at the given opacity. Ghidra: FUN_0001151c.
     void drawTransitionOverlay(int alpha);
 
+    // Free-function entry (FUN_00010530) forwards to the private overlay push.
+    friend void drawAepTransitionOverlay(AepManager *mgr, int alpha);
+
     // Base resource directory (Ghidra: char buffer @ this + 0x100).
     char m_baseDir[256] = {};
 
@@ -188,9 +196,15 @@ private:
         uint16_t value[2048];    // +0x0000 layer index stored per bucket
         const char *key[2047];   // +0x1000 name per bucket (null = empty slot)
     };
-    const NameHashTable *m_groupNames = nullptr;         // +0x68b19c (per-group)
-    const uint8_t *m_groupSlot = nullptr;                // +0x7c1948 (per-group high byte)
-    const uint16_t *m_layerNumbers = nullptr;            // +0x7210d4 (per-group, 256 stride)
+    // Per-group name->index hash tables, filled by relocateAepData when a group loads and
+    // probed by getLyrNo / getFrameNo / getUserNo. In the binary these are three separate
+    // fixed-offset regions of the manager object (frame names @ +0x640200, layer names @
+    // +0x68b19c, user names @ +0x6d6138); here they are the modelled per-group arrays.
+    NameHashTable m_frameNames[kMaxAepGroups] = {};      // +0x640200
+    NameHashTable m_groupNames[kMaxAepGroups] = {};      // +0x68b19c (layer names)
+    NameHashTable m_userNames[kMaxAepGroups] = {};       // +0x6d6138
+    uint8_t m_groupSlot[kMaxAepGroups] = {};             // +0x7c1948 (per-group high byte)
+    uint16_t m_layerNumbers[kMaxAepGroups][256] = {};    // +0x7210d4 (per-group layer ordinals)
 
     // Screen-transition (fade) state (Ghidra: @ this + 0x7f3af4..0x7f3b14).
     int m_transitionOverlay[4] = {};  // +0x7f3af4..0x7f3b00 overlay quad params
@@ -199,12 +213,57 @@ private:
     int m_transitionTotal = 0;        // +0x7f3b0c  total frames of the transition
     int m_transitionFlag = 0;         // +0x7f3b10  overlay selector
     int m_maxPriority = 0;            // +0x7f3b14  highest OT priority drawn last flush
+
+    // Free-function initialisers that populate the private storage above.
+    friend void aepManagerInit(AepManager *mgr, const char *basePath, const char *dataPath,
+                               int screenW, int screenH, float scale);
+    friend void relocateAepData(AepManager *mgr, int group, int32_t *indexHeader,
+                                const uint8_t *idxBase);
 };
 
 // Load / unload a named Aep resource group into a manager slot (the title/menu/play
 // scenes swap their layer groups this way). Ghidra: FUN_0000f758 / FUN_0000f988.
 void AepLoadGroup(AepManager *aep, int slot, const char *name);
 void AepUnloadGroup(AepManager *aep, int slot);
+
+// Initialise the scene manager against its resource paths and screen surface. Copies
+// `basePath` (the bundle path) to this+0, `dataPath` (the on-disk texture root) to the
+// base-dir buffer at this+0x100, zeroes the frame tables, seeds the identity transform
+// matrices, and hands the screen extents + device-pixel `scale` to the ordering table.
+// Ghidra: aepManagerInit (FUN_0000f33c). Called once from MainViewController -loadView.
+void aepManagerInit(AepManager *mgr, const char *basePath, const char *dataPath, int screenW,
+                    int screenH, float scale);
+
+// Fix up (relocate) a freshly-loaded group's .idx name tables: builds the per-group
+// frame-name / layer-name / user-name open-addressed hash tables from the NUL-separated
+// string blocks the index header points at, rewriting each header offset in place to the
+// post-block cursor and copying the resolved layer ordinals into the layer-number table.
+// Ghidra: relocateAepData (FUN_0000f824). `indexHeader` is the loaded index header (its
+// name-block offsets at +0x04 / +0x10 / +0x14); `idxBase` is the group's idx buffer base.
+void relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uint8_t *idxBase);
+
+// The active transition mode (free-function form of AepManager::transitionMode()).
+// Ghidra: getAepTransitionMode (FUN_00010724).
+int getAepTransitionMode(const AepManager *mgr);
+
+// Draw the screen-transition (fade) overlay quad at `alpha`. Free-function entry that
+// forwards to the ordering table's overlay push. Ghidra: drawAepTransitionOverlay
+// (FUN_00010530 -> FUN_0001151c).
+void drawAepTransitionOverlay(AepManager *mgr, int alpha);
+
+// Queue a single-line text draw through the manager's ordering table (type-6 command).
+// `drawAepManagerText` uses the default colour vector; `...Ex` threads an explicit one.
+// The six numeric words are positional (see AepTextCommand). Ghidra: FUN_00010540 (audit
+// label "aepManagerReset_a" — a misnomer; it is the manager-level text draw) / FUN_0001057c.
+void drawAepManagerText(AepManager *mgr, const char *text, int a0, int a1, int a2, int a3, int a4,
+                        int a5, int priority);
+void drawAepManagerTextEx(AepManager *mgr, const char *text, int a0, int a1, int a2, int a3,
+                          int a4, int a5, const void *colorVec, int priority);
+
+// Draw a multi-line ('\n'-separated) string vertically centred about `y`, one text command
+// per line spaced `lineHeight` apart. Ghidra: drawAepTextMultiline (FUN_0002d8b0).
+void drawAepTextMultiline(const char *text, int a0, int y, int a3, int a4, int lineHeight, int a6,
+                          int a7, int a8);
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :

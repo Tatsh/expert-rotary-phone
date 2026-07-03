@@ -59,6 +59,15 @@ static NSString *const kScoBaseYou[4]  = { @"ppc_ps_scobase_eyou",  @"ppc_ps_sco
 static const NSInteger kSheetButtonTag[4] = { 200, 201, 202, 203 };
 static const NSInteger kNamePlateTag[4]   = { 204, 205, 206, 207 };
 
+// Ghidra: setNavControllerViewFrameTall @ 0xd9750
+// Block invoke — restores the navigation controller view to the "tall" split
+// pane layout used when popping back to CheckerMusicViewController:
+// CGRectMake(385, 182, 320, 716).
+// Owner: CheckerDetail.touchedBackButton: (animations block @ ~0xd9678).
+static void setNavControllerViewFrameTall(CheckerDetail *self) {
+    self.navigationController.view.frame = CGRectMake(385.0f, 182.0f, 320.0f, 716.0f);
+}
+
 @interface CheckerDetail ()
 - (void)touchedBackButton:(id)sender;
 - (void)touchedSheetButton:(id)sender;
@@ -532,8 +541,7 @@ static const NSInteger kNamePlateTag[4]   = { 204, 205, 206, 207 };
         [UIView animateWithDuration:0.4f delay:0.0f
                             options:UIViewAnimationOptionAllowUserInteraction
                          animations:^{
-                             self.navigationController.view.frame =
-                                 CGRectMake(385.0f, 182.0f, 320.0f, 716.0f);
+                             setNavControllerViewFrameTall(self); // Ghidra: setNavControllerViewFrameTall @ 0xd9750
                          }
                          completion:nil];
     }

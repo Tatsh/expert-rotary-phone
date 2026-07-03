@@ -63,6 +63,13 @@ public:
     // layer before rebuilding.
     void stopPlay() { m_playState = 0; }
 
+    // Freeze this layer on its current frame without unlinking or hiding it: enters the
+    // "held" play-state (4). AepLyrCtrl::isAnimating() treats state 4 as done, and
+    // AepLyrCtrlUpdateAll keeps drawing the held frame but stops advancing it (the
+    // `playState == 4` early-continue). Ghidra: aepLyrCtrlPause FUN_0002cb54 (stores 4
+    // at +0x58). The music-select preview pauses its layer this way between songs.
+    void pause() { m_playState = 4; }   // @ 0x2cb54
+
     // Stop this layer, optionally leaving it drawn at its current frame. Ghidra:
     // aepLyrCtrlStop (FUN_0002cb24) — the music-select preview transitions call it
     // with keepVisible = 1 to freeze the preview layer on screen.

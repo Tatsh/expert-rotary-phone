@@ -1,0 +1,64 @@
+//
+//  neTextTexture.h
+//  pop'n rhythmin
+//
+//  The dynamic text/glyph subsystem: a singleton manager owning a cache of rendered
+//  glyphs and a list of 256x256 grayscale atlas textures they are packed into, plus
+//  the string layout + draw entry point neDrawText. Reconstructed from Ghidra project
+//  rb420, program PopnRhythmin (original tree:
+//  .../Project/System/src/Render/neTextTexture.mm).
+//
+
+#pragma once
+
+#include <cstdint>
+
+// One glyph atlas: a 256x256 GL_ALPHA texture (created via neCreateTextureFromData) plus
+// the CPU-side pixel buffer it was uploaded from. Ghidra: CreateNewTextTexture
+// (FUN_00017b28) fills these; the destructor is FUN_000180a4.
+class neTextTexture {
+public:
+    ~neTextTexture();      // Ghidra: FUN_000180a4
+
+    int32_t index = 0;             // +0x00 atlas index (its slot in the manager's list)
+    void *texture = nullptr;       // +0x04 AepTexture* (released on destroy)
+    int32_t penX = 0;              // +0x08 current pack cursor X
+    int32_t penY = 0;              // +0x0c current pack cursor Y
+    int32_t rowHeight = 0;         // +0x10 tallest glyph in the current row
+    uint8_t *pixels = nullptr;     // +0x14 CPU pixel buffer (delete[] on destroy)
+    neTextTexture *next = nullptr; // +0x18 manager list link
+};
+
+// The text-texture manager singleton (Ghidra: DAT_0018845c). Owns the glyph cache list
+// (+0x04) and the atlas list (+0x0c); +0x00 is the content-scale shift applied to point
+// sizes, +0x08 the atlas count.
+struct neTextTextureMgr {
+    int8_t scaleShift;     // +0x00 log2 content scale (glyph sizes are << by this)
+    int8_t _pad[3];        // +0x01
+    void *glyphList;        // +0x04 rendered-glyph cache (each: data +0x00, next +0x08)
+    int32_t atlasCount;    // +0x08
+    neTextTexture *atlases; // +0x0c atlas list (linked via neTextTexture::next)
+};
+
+// The manager singleton. Ghidra: FUN_00017998 returns DAT_0018845c.
+neTextTextureMgr *neGetTextTextureMgr(void);
+
+// Free every cached glyph and destroy every atlas texture (also used to evict the atlas
+// cache once it grows past 4 textures). Ghidra: FUN_000179a8.
+void neTextTextureMgr_dtor(neTextTextureMgr *mgr);
+
+// Byte length (1..6) of the UTF-8 sequence led by *s, or -1 on an invalid lead byte,
+// 0 on a stray continuation byte. Ghidra: FUN_00017a84.
+int utf8CharLen(neTextTextureMgr *mgr, const char *s);
+
+// Draw `text` at (x,y). `size` is the point size, `align` picks left/center/right, and
+// (alpha,red,green,blue) tint the glyphs; `clipRect` (or null) installs clip planes.
+// Glyphs are laid out through the atlas cache and rendered as batched textured quads via
+// the current renderer. Ghidra: FUN_0001551c.
+void neDrawText(const char *text, void *font, int size, int x, int y, int align,
+                int alpha, int red, int green, int blue,
+                const int *clipRect);
+
+// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=cpp sw=4 ts=4 et :
+// code: language=cpp insertSpaces=true tabSize=4

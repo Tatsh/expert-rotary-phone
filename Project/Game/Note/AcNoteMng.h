@@ -53,6 +53,17 @@ struct AcActiveNote {
     uint16_t flags = 0;                    // +0x12 bit0=counted, bit2=judged, bit5=handled
 };
 
+// The render descriptor GetNoteObject copies out for one active arcade note: its tick,
+// lane, flags and current on-screen scroll position. Ghidra: the 12-byte struct
+// acNoteGetNoteObject (@ 0x7b968) fills — tick@+0x0, lane@+0x4, flags@+0x6, drawY@+0x8.
+struct AcNoteObject {
+    uint32_t tick;   // +0x0  timing (copied from the node)
+    uint8_t  lane;   // +0x4  lane 0..8
+    uint8_t  _pad5;  // +0x5
+    uint16_t flags;  // +0x6  node flags
+    float    drawY;  // +0x8  on-screen scroll position
+};
+
 // One scroll/tempo segment (the binary's 0xc-byte record at +0xfa4c, stride 0xc): a scroll
 // speed (bpm * 1024 / 480000), the tick it starts at, and the raw BPM. The segment array is
 // kept sorted by startTick; changeTempo() pops the front as play passes each boundary.
@@ -111,6 +122,46 @@ public:
     // each note's scroll position and the per-lane "nearest note" table that input resolves
     // against. Ghidra: FUN_0007ac00.
     void update();
+
+    // --- Pause / resume (input-driven, mirrors NoteMng::togglePause) -------
+    // Pause play: stop the BGM and stamp the pause time, then set the freeze bit so the
+    // play clock stops advancing. No-op if already held. Ghidra: acNotePause @ 0x7b638.
+    void pause();
+    // Resume play: fold the paused span into the start threshold, clear the freeze bit,
+    // re-seek + restart the BGM at the current position and arm a drift-sync adjust event.
+    // No-op unless currently held. Ghidra: acNoteResume @ 0x7b698.
+    void resume();
+
+    // Arm the play clock from now (gettimeofday baseline), clear the pause/offset fields and
+    // set state = playing. A lighter clock-start than startPlay(). Ghidra: acNoteStartPlayback
+    // @ 0x7b5a0.
+    void startPlayback();
+
+    // Clear the per-play "playing" flag (Ghidra: the byte @ +0x14cc2, cleared on teardown).
+    // Ghidra: acNoteResetPlayFlag @ 0x7aea4.
+    void resetPlayFlag();
+
+    // Build the logical-lane -> display-lane table for the selected lane option: 1/3 = random
+    // (a time-seeded derangement of lanes 0..8, retried until no lane maps to itself), 2 = mirror
+    // (lane i -> 8-i), anything else = identity. Ghidra: acNoteSetupLaneMapping @ 0x7ad14.
+    void setupLaneMapping(int mode);
+
+    // --- Play-state queries the draw / result passes read --------------------
+    // The chart's total playable-note count (sum of the 9 per-lane tap counters). Ghidra:
+    // acNoteGetTotalNoteCount @ 0x7b8ec.
+    int getTotalNoteCount() const;
+    // The running judged-note total: the sum of the 9x4 per-lane score/judge table (low 16
+    // bits). Ghidra: acNoteGetJudgeTotal @ 0x7b908.
+    int getJudgeTotal() const;
+    // The number of still-unresolved on-screen notes (lane < 9, "handled" bit 5 clear). Ghidra:
+    // acNoteCountActiveNotes @ 0x7b93c.
+    int countActiveNotes() const;
+    // Copy the `index`-th still-unresolved on-screen note (lane < 9, bit 5 clear) into `out`;
+    // asserts on a null out or an out-of-range index. Ghidra: acNoteGetNoteObject @ 0x7b968.
+    void getNoteObject(AcNoteObject *out, int index) const;
+    // OR `flags` into the `index`-th still-unresolved on-screen note (input marks a note hit).
+    // Ghidra: acNoteSetNoteFlag @ 0x7b9fc.
+    void setNoteFlag(int index, uint16_t flags);
 
     // The engine keeps one global arcade manager (Ghidra: DAT_0015f1b0), reached
     // through a ___cxa_guard'd lazy accessor. Ghidra: AcNoteMng_shared
@@ -185,6 +236,7 @@ private:
     float m_playSpeed = 0.0f;        // +0xfa4c  base scroll speed (also scroll segment 0's speed)
     uint8_t m_endFlag = 0;           // +0x14cc0 the end (type 6) note has been reached
     uint8_t m_autoPlay = 0;          // +0x14cc1 auto-play (attract/replay) drives the hits itself
+    uint8_t m_playFlag = 0;          // +0x14cc2 per-play "playing" flag (cleared by resetPlayFlag)
     int m_laneMode = 0;              // +0x14cc8 3 = rotating lane assignment
     int32_t m_laneRemap[16] = {};    // +0x14ccc logical lane -> display lane
     int m_nearestThreshold = 0;      // +0x14c58 max +dt still eligible as the lane's "nearest"

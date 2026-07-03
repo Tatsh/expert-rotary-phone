@@ -11,11 +11,7 @@
 #import "neEngineBridge.h"
 #import "AppDelegate.h"
 #import "TreasureData.h"
-
-// TODO(dep): C helper present in the binary (getTreasureMapTableEntry) that returns
-// the number of earned "goal" stars for a main/sub map; not yet reconstructed into a
-// header. Returns 0 when the area has no stars.
-extern int getTreasureMapTableEntry(int mainMapId, int subMapId);
+#import "TreasureMap.h"
 
 // The NSValue payload getValue: fills for a sub-map (area) row.
 typedef struct {

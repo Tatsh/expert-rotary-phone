@@ -155,7 +155,7 @@ static void aepEmitSprite(AepManager *mgr, int groupSlot, int child, int x, int 
     }
     const int16_t *rec = mgr->spriteRecord(groupSlot, child);  // this+slot*0x2000+child*8+0x7c1962
 
-    cmd->reserved4 = 0;
+    cmd->type = 0;                           // +0x04  type 0 = textured sprite
     cmd->textureId = groupSlot;              // +0x08
     // The binary copies the 8-byte sprite record verbatim as two 32-bit words
     // (packed {x|y<<16} and {span|h<<16}); the GL layer unpacks the source rect.
@@ -417,4 +417,16 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
         }
         // type 1 (and any other): no emission (matches FUN_0000fe8c).
     }
+}
+
+// Ghidra: drawAepFrame (FUN_0000fc58). Resolve the handle's group slot (the byte group
+// table @ +0x7c1748) and its sprite record (low 16 bits), then queue a full-scale, opaque
+// sprite command. The binary passes 100.0f scale, colour 100, alpha 0, no rotation and the
+// full-screen clip sentinel; those map onto aepEmitSprite's integer-percentage form.
+void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_t priority) {
+    const int groupSlot = mgr->groupSlotForHandle(id);   // (id >> 16) -> slot byte
+    const int child = id & 0xffff;                       // low 16 bits = record index
+    aepEmitSprite(mgr, groupSlot, child, x, y, /*scaleX*/ 100, /*scaleY*/ 100, /*w*/ 0, /*h*/ 0,
+                  /*color*/ 100, /*alpha*/ 0, /*rotation*/ 0, blend, /*clipRect*/ nullptr,
+                  priority, /*p15*/ 0, /*p19*/ 0);
 }

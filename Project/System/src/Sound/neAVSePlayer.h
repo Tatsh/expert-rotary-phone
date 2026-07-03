@@ -2,10 +2,12 @@
 //  neAVSePlayer.h
 //  pop'n rhythmin
 //
-//  Sound-effect backend built on AVFoundation (AVAudioPlayer), used for the SE
-//  groups the low-latency CoreAudio backend (neAVCAPlayer) does not serve. It
-//  keeps a pool of AVAudioPlayer instances indexed by a play handle. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (FUN_00021xxx).
+//  Sound-effect backend built on AVFoundation, used for the SE groups the low-latency
+//  CoreAudio backend (neAVCAPlayer) does not serve. It owns a pool of AVBus voices (each
+//  wrapping one AVAudioPlayer) and a table of loaded sources; a play handle packs the voice
+//  index and a per-voice generation so a stale handle can't restart a recycled voice.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin (FUN_00020xxx / FUN_00021xxx;
+//  the "audioMixer" of AVBus voices at +0x0, the source table at +0x8).
 //
 
 #pragma once
@@ -19,55 +21,63 @@ constexpr uint32_t kAVSePlayerHandleFlag = 0x10000000;
 
 class neAVSePlayer {
 public:
-    // Load a URL into a new AVAudioPlayer slot; returns its index, or -1 on
-    // failure. Ghidra: FUN_000212d0.
+    // Tear down the AVFoundation SE engine: drop the source table, the name map and the AVBus
+    // voice pool. Ghidra: audioMixerDtor @ 0x212a0.
+    ~neAVSePlayer();
+
+    // Load a URL into a new source slot; returns its index, or -1 on failure. Ghidra:
+    // registerSound @ 0x212d0.
     int load(NSURL *url, bool loop);
 
-    // As load(), but also register a call-name for later lookup. Ghidra: FUN_00021328.
+    // As load(), but also register a call-name for later lookup. Ghidra: registerSoundNamed
+    // @ 0x21328.
     int loadNamed(NSURL *url, NSString *callName, bool loop);
 
-    // Start the AVFoundation SE pool with `voices` concurrent players. Ghidra:
-    // FUN_0002120c.
+    // Start the AVFoundation SE pool with `voices` AVBus voices. Ghidra: soundEngine_ctor
+    // @ 0x2120c (which calls audioMixerInit @ 0x20d1c).
     void systemStart(int voices);
 
-    // Reserve a playing instance for a loaded source (by id or call name) at the
-    // given volume; returns the play handle, or -1 on failure. Ghidra: by-id
-    // FUN_00021438 / by-name FUN_00021464.
+    // Reserve a playing instance for a loaded source (by id or call name) at the given volume;
+    // returns the play handle, or -1/0 on failure. Ghidra: playSoundByIndex @ 0x21438 /
+    // playSoundNamed @ 0x21464 (both delegate the voice grab to audioPlaySource @ 0x20ed8).
     uint32_t prepare(uint32_t sourceId, float volume);
     uint32_t prepareNamed(NSString *callName, float volume);
 
-    // Start the AVAudioPlayer referenced by `handle`. Ghidra: FUN_000214a8.
+    // Start / stop / pause the voice named by `handle`. Ghidra: audioHandlePlay @ 0x214a8 /
+    // audioHandleStop @ 0x214c0 / audioHandlePause @ 0x214d8.
     bool play(uint32_t handle);
-
-    // Stop the voice named by `handle`. Ghidra: FUN_000214c0.
     bool stop(uint32_t handle);
-
-    // Pause the voice named by `handle` (resume via play()). Ghidra: audioHandlePause.
     bool pause(uint32_t handle);
 
-    // The voice's state (-1 free/idle, 1 playing). Ghidra: FUN_000214f0.
+    // Stop the voice named by `handle` and detach its source so the voice is immediately free.
+    // Ghidra: audioHandleStopAndRemove @ 0x21588.
+    void stopAndRemove(uint32_t handle);
+
+    // The voice's AVBus status (-1 none / 1 prepared / 2 playing / 3 paused / 4 stopped), or
+    // -1 for a stale handle. Ghidra: audioHandleGetStatus @ 0x214f0.
     int voiceState(uint32_t handle);
 
-    // Unload a loaded source (by id or call name). Ghidra: unregisterSound /
-    // unregisterSoundNamed.
+    // Unload a loaded source (by id or call name): detach it from every voice, then free it.
+    // Ghidra: unregisterSound @ 0x213d4 / unregisterSoundNamed @ 0x213fc.
     void unregisterSource(uint32_t sourceId);
     void unregisterSourceNamed(NSString *callName);
 
     // Set the volume (0..1) of every voice in the pool.
     void setGroupVolume(float volume);
 
-    // AudioSession interruption handling. Ghidra: suspend FUN_00021288 /
-    // resume FUN_00021294.
+    // AudioSession interruption handling. Ghidra: audioPauseAll @ 0x21288 (pause every voice) /
+    // audioResumeAll @ 0x21294 (offPause every voice).
     void suspend();
     void resume();
 
 private:
-    int addSource(NSURL *url, bool loop);   // first free slot, growing the pool
+    int addSource(NSURL *url, bool loop);   // first free slot, growing the table (allocSoundSlot)
 
-    NSMutableArray *m_voices = nil;       // +0x08  AVAudioPlayer voice pool
-    NSMutableDictionary *m_nameMap = nil; // +0x04  call name -> source id
-    NSMutableArray *m_sources = nil;      // loaded source URLs
-    int m_capacity = 0;                   // +0x0c
+    // The AVBus voice pool (Ghidra: the "audioMixer" object at +0x0, its voice array at +0x8).
+    NSMutableArray *m_buses = nil;          // AVBus voices
+    int m_voiceCount = 0;                   // mixer +0x4
+    NSMutableDictionary *m_nameMap = nil;   // +0x04  call name -> source id
+    NSMutableArray *m_sources = nil;        // +0x08  loaded sources (NSNull = free slot)
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

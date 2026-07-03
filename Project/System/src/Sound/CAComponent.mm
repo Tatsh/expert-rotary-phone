@@ -33,17 +33,27 @@ CAComponent::CAComponent(int voices) {
 }
 
 CAComponent::~CAComponent() {
+    terminate();
+}
+
+// Ghidra: auGraphTerminate @ 0x23d40 — stop the graph, dispose it, and free the voice pool.
+// Idempotent: safe to call from both the caplayer dtor (caPlayerMgr_dtor) and ~CAComponent.
+void CAComponent::terminate() {
     if (m_graph != nullptr) {
-        AUGraphStop(m_graph);
+        stop();                       // auGraphStop (only if still running)
         AUGraphUninitialize(m_graph);
         AUGraphClose(m_graph);
-        DisposeAUGraph(m_graph);
+        if (DisposeAUGraph(m_graph) != noErr) {
+            NSLog(@"CAComponent terminate: DisposeAUGraph failed");
+        }
+        m_graph = nullptr;
     }
     if (m_voices != nullptr) {
         for (int i = 0; i < m_voiceCount; i++) {
             delete m_voices[i];
         }
         free(m_voices);
+        m_voices = nullptr;
     }
 }
 
@@ -136,7 +146,7 @@ void CAComponent::start() {
     setPlayerVolume(0x7f, 0);
 }
 
-// Ghidra: FUN_000261e0.
+// Ghidra: auGraphStop @ 0x23d0c (also reached via the caplayer's FUN_000261e0 suspend).
 void CAComponent::stop() {
     if (m_running) {
         if (AUGraphStop(m_graph) != noErr) {
@@ -159,8 +169,8 @@ uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
     return 0xffffffff;
 }
 
-// Ghidra: FUN_00023dac — bind `source` to voice `voice`: set the input stream
-// format, install the render callback, set volume, mark it playing.
+// Ghidra: auMixerPreparePlayer (FUN_00023dac) — bind `source` to voice `voice`: set the input
+// stream format, install the render callback, set volume, reset the cursors, mark it playing.
 int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     CAVoice *v = m_voices[voice];
     if (v->state != -1 && v->state != 4) {
@@ -186,6 +196,7 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     setRenderCallback(voice);
     setPlayerVolume(volumeIndex, voice);
     v->playPos = 0;
+    v->total = 0;
     v->state = 1;   // playing
     return (int)(generation | (voice << 16));
 }
@@ -242,6 +253,41 @@ void CAComponent::setAllVolume(int volumeIndex) {
     }
 }
 
+// Ghidra: auClearSourceRef @ 0x24014 — drop `source` from any voice still pointing at it.
+void CAComponent::clearSourceRef(CASound *source) {
+    for (int i = 0; i < m_voiceCount; i++) {
+        if (m_voices[i]->source == source) {
+            m_voices[i]->source = nullptr;
+        }
+    }
+}
+
+// Ghidra: caHandlePause @ 0x267b4 — pause voice `voice` if its generation matches.
+bool CAComponent::pauseVoice(int voice, uint16_t generation) {
+    if (voice < 0 || voice >= m_voiceCount) {
+        return false;
+    }
+    CAVoice *v = m_voices[voice];
+    if (v->generation != generation) {
+        return false;
+    }
+    v->state = 3;   // paused
+    return true;
+}
+
+// Ghidra: caHandleStopAndClear @ 0x26864 — free voice `voice` (state 4 + drop its source) if its
+// generation matches, so reserveVoice can recycle it immediately.
+void CAComponent::stopAndClearVoice(int voice, uint16_t generation) {
+    if (voice < 0 || voice >= m_voiceCount) {
+        return;
+    }
+    CAVoice *v = m_voices[voice];
+    if (v->generation == generation) {
+        v->state = 4;         // finished
+        v->source = nullptr;
+    }
+}
+
 // Ghidra: FUN_00024044 — the AURenderCallback: copy this voice's PCM into the
 // mixer, looping or finishing at the end of the source buffer.
 OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags *flags,
@@ -257,27 +303,13 @@ OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags *flags
         return noErr;
     }
 
-    const uint8_t *src = static_cast<const uint8_t *>(source->buffer());
-    UInt32 total = source->bufferSize();
-    uint8_t *dst = static_cast<uint8_t *>(out.mData);
-    UInt32 want = out.mDataByteSize;
-    UInt32 written = 0;
-
-    while (written < want) {
-        UInt32 avail = total - v->playPos;
-        UInt32 chunk = (avail < want - written) ? avail : (want - written);
-        std::memcpy(dst + written, src + v->playPos, chunk);
-        written += chunk;
-        v->playPos += chunk;
-        if (v->playPos >= total) {
-            if (source->isLoop()) {
-                v->playPos = 0;   // wrap
-            } else {
-                std::memset(dst + written, 0, want - written);   // pad silence
-                v->state = 4;     // finished -> voice becomes reusable
-                break;
-            }
-        }
+    // The copy + loop/finish handling lives in CASound::read (Ghidra: caSourceRead).
+    const UInt32 want = out.mDataByteSize;
+    const size_t got = source->read(out.mData, want, &v->total, &v->playPos);
+    if (got < want) {
+        // A one-shot source ran dry: pad the tail with silence and free the voice.
+        std::memset(static_cast<uint8_t *>(out.mData) + got, 0, want - got);
+        v->state = 4;   // finished -> voice becomes reusable
     }
     return noErr;
 }

@@ -136,11 +136,8 @@ void TreasureMap::load(const char *path) {
         // type gate (Ghidra: node+0x6). A -1 square is corrupt and the original aborts.
         const int16_t type = m_nodes[i].type;
         if (type == -1) {
-            // Ghidra: ___assert_rtn("Init", ".../SugorokuMap.mm", 0x215, "0").
-            __assert_rtn("Init",
-                         "/Users/usr10013727/Documents/Project/Rhythmin/branches/v203/"
-                         "Project/Game/Data/TreasureMap/SugorokuMap.mm",
-                         0x215, "0");
+            // Original aborts on a corrupt (-1) square. Ghidra: ___assert_rtn @ SugorokuMap.mm:0x215.
+            assert(0);
         } else if (type == 10) {
             bonusCount++;
         } else if (type == 0) {
@@ -251,4 +248,245 @@ TreasureMap::Node *TreasureMap::findNodeById(int id) const {
         }
     }
     return nullptr;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Free sugoroku-map C helpers  (Ghidra cluster ~0xce000)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ── Small const lookup tables baked from the binary data section ─────────────
+
+// Ghidra: DAT_0012fac4.  Goal-star counts indexed [mainMapId][subMapId].
+// Row stride 0xc (3 × int32_t), column stride 4.  9 maps × 3 sub-map slots.
+// Source: read_memory(0x12fac4, 108).
+static const int32_t kTreasureMapTable[9][3] = {   // DAT_0012fac4
+    {1, 1, 2},   // mainMapId 0
+    {4, 3, 4},   // mainMapId 1
+    {3, 3, 4},   // mainMapId 2
+    {5, 5, 5},   // mainMapId 3
+    {5, 5, 5},   // mainMapId 4
+    {2, 2, 2},   // mainMapId 5
+    {2, 2, 2},   // mainMapId 6
+    {5, 5, 5},   // mainMapId 7
+    {5, 5, 5},   // mainMapId 8
+};
+
+// Ghidra: DAT_0012fb30.  Parent map id for each main map; -1 = root (no parent).
+// The same table is used verbatim in TreasureData.m as kParentMapId[].
+// Element stride 4 (int32_t).  Source: read_memory(0x12fb30, 36).
+static const int32_t kParentMapTable[9] = {        // DAT_0012fb30
+    5, 2, 3, 4, -1, 1, 7, -1, -1
+};
+
+// Ghidra: DAT_0012fb54.  Sub-map type flags per main map.
+// Element stride 4 (int32_t).  0x12fb54 == 0x12fb30 + 9 * sizeof(int32_t).
+// Source: read_memory(0x12fb30, 72), bytes [36..71].
+static const int32_t kSubMapFlagTable[9] = {       // DAT_0012fb54
+    0, 1, 0, 1, 0, 1, 0, 1, 2
+};
+
+// Ghidra: DAT_0012fb90 / DAT_0012fb9c.  Per-slot character message counts.
+// Source: read_memory(0x12fb90, 24) — 6 int32_t values, two groups of three.
+static const int32_t kAssetCountsGroup6[3] = { 41, 35, 47 };  // DAT_0012fb90
+static const int32_t kAssetCountsGroup8[3] = { 64, 72, 71 };  // DAT_0012fb9c
+
+// ── Character message string pools (DAT_0x1335c8 … DAT_0x1339d4) ─────────────
+//
+// Each array is a char* table indexed by slot_index.  The strings are UTF-8
+// encoded Japanese game messages (~330 total, ~66 KB of text).  Binary addresses:
+//   kCharGroup6Slot0 — 41 strings  pointer-table @ 0x1335c8
+//   kCharGroup6Slot1 — 35 strings  pointer-table @ 0x13366c
+//   kCharGroup6Slot2 — 47 strings  pointer-table @ 0x1336f8  (wac)
+//   kCharGroup8Slot0 — 64 strings  pointer-table @ 0x1337b4
+//   kCharGroup8Slot1 — 72 strings  pointer-table @ 0x1338b4  (TOMOSUKE)
+//   kCharGroup8Slot2 — 71 strings  pointer-table @ 0x1339d4
+//
+// TODO(strings): Extract the full string content via objdump or a Ghidra script.
+// Until then the arrays are zero-initialised; getCharacterAssetName returns null.
+static const char * const kCharGroup6Slot0[41] = {};   // @ 0x1335c8
+static const char * const kCharGroup6Slot1[35] = {};   // @ 0x13366c
+static const char * const kCharGroup6Slot2[47] = {};   // @ 0x1336f8  (wac)
+static const char * const kCharGroup8Slot0[64] = {};   // @ 0x1337b4
+static const char * const kCharGroup8Slot1[72] = {};   // @ 0x1338b4  (TOMOSUKE)
+static const char * const kCharGroup8Slot2[71] = {};   // @ 0x1339d4
+
+// ── Function definitions ──────────────────────────────────────────────────────
+
+// Ghidra: FUN_000ce0ec
+unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink) {
+    if (checkBackLink != 0) {
+        return node->backLink != nullptr ? 1u : 0u;
+    }
+    unsigned int count = 0;
+    do {
+        if (node->links[count] == nullptr) {
+            return count;
+        }
+        count++;
+    } while ((int)count < 3);
+    return count;
+}
+
+// Ghidra: FUN_000ce114
+// direction 0 — link to the left  (link.x < node.x, same y)
+// direction 1 — link to the right (link.x > node.x, same y)
+// direction 2 — link above        (link.y < node.y, same x)
+// direction 3 — link below        (link.y > node.y, same x)
+int findAdjacentSquareIndex(const TreasureMap::Node *node, int direction) {
+    for (int i = 0; i <= 2; i++) {
+        const TreasureMap::Node *link = node->links[i];
+        if (link == nullptr) {
+            return -1;
+        }
+        int16_t sVar1, sVar2;
+        switch (direction) {
+        case 0:
+            sVar1 = node->x;
+            sVar2 = link->x;
+            break;
+        case 1:
+            sVar1 = link->x;
+            sVar2 = node->x;
+            break;
+        case 2:
+            sVar1 = node->y;
+            sVar2 = link->y;
+            goto LAB_ce162;
+        case 3:
+            sVar1 = link->y;
+            sVar2 = node->y;
+LAB_ce162:
+            if (sVar2 < sVar1) {
+                sVar2 = node->x;
+                sVar1 = link->x;
+                goto LAB_ce16c;
+            }
+            continue;  // switchD default: advance to next link
+        default:
+            continue;
+        }
+        // Cases 0 and 1 land here.
+        if (sVar2 < sVar1) {
+            sVar2 = node->y;
+            sVar1 = link->y;
+LAB_ce16c:
+            if (sVar1 == sVar2) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+// Ghidra: FUN_000ce180
+int getTreasureMapTableEntry(int mainMapId, int subMapId) {
+    return kTreasureMapTable[mainMapId][subMapId];
+}
+
+// Ghidra: FUN_000ce198
+int getTreasureMapValue_fb30(int mapId) {
+    return kParentMapTable[mapId];
+}
+
+// Ghidra: FUN_000ce1c8
+int getCharacterAssetCount(int characterId) {
+    short group = (short)(characterId / 10);
+    short slot  = (short)(characterId - group * 10);   // == characterId % 10
+    if ((characterId / 10 & 0xffffu) == 8) {
+        if ((unsigned int)(int)slot < 3u) {
+            return kAssetCountsGroup8[slot];
+        }
+    } else if (group == 6 && (unsigned int)(int)slot < 3u) {
+        return kAssetCountsGroup6[slot];
+    }
+    return 0;
+}
+
+// Ghidra: FUN_000ce200
+const char *getCharacterAssetName(int characterId, int slotIndex) {
+    const int count = getCharacterAssetCount(characterId);
+    if (slotIndex < 0) {
+        return nullptr;
+    }
+    // Signed comparison: proceed only when 0 <= slotIndex < count.
+    if (!(slotIndex < count)) {
+        return nullptr;
+    }
+
+    unsigned int slot = (unsigned int)(characterId % 10);
+    short group = (short)(characterId / 10);
+    const char * const *strings = nullptr;
+
+    if ((characterId / 10 & 0xffffu) == 8) {
+        if (slot == 2)      strings = kCharGroup8Slot2;
+        else if (slot == 1) strings = kCharGroup8Slot1;
+        else if (slot == 0) strings = kCharGroup8Slot0;
+        else                return nullptr;
+    } else if (group == 6) {
+        if (slot == 2)      strings = kCharGroup6Slot2;
+        else if (slot == 1) strings = kCharGroup6Slot1;
+        else if (slot == 0) strings = kCharGroup6Slot0;
+        else                return nullptr;
+    } else {
+        return nullptr;
+    }
+
+    return strings[slotIndex];
+}
+
+// Ghidra: FUN_000ce96c  (SugorokuMap::GetWarpSquare)
+// Asserts node is a warp square (type 8), then scans all nodes in map for the
+// partner warp square: different id, same type 8, same field8 (warp-pair id).
+TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node) {
+    if (node->type != 8) {
+        assert(0);
+    }
+    const int n = map->m_count;
+    if (n > 0) {
+        TreasureMap::Node *cur = map->m_nodes;
+        for (int i = 0; i < n; i++, cur++) {
+            if (cur->id != node->id && cur->type == 8 && cur->field8 == node->field8) {
+                return cur;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// Ghidra: FUN_000ce9d4  (SugorokuMap::GetButtobiSquare)
+// Picks a random non-warp, non-reserved, non-current destination node.
+// The random node is chosen by index; if unsuitable, the links[0] chain from that
+// node is walked until a valid node is found. Falls back to the start node.
+// Node types skipped: 8 (warp), 1 (reserved/unused in TreasureMap.h type list).
+TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *currentNode) {
+    const int16_t count = map->m_count;
+    if (count < 1) {
+        assert(0);
+    }
+    const int randIdx = std::rand() % (int)count;
+    TreasureMap::Node *node = map->m_nodes + randIdx;
+    if (node->type != 1 && node->type != 8 && node != currentNode) {
+        return node;
+    }
+    // Walk the links[0] chain from the same random starting node.
+    TreasureMap::Node *follow = map->m_nodes + randIdx;
+    while ((follow = follow->links[0]) != nullptr) {
+        if (follow->type != 8) {
+            if (follow->type == 1) {
+                break;
+            }
+            if (follow != currentNode) {
+                return follow;
+            }
+        }
+    }
+    // Fallback: return the start node (m_startSubId points to Node.id at offset 0).
+    return reinterpret_cast<TreasureMap::Node *>(map->m_startSubId);
+}
+
+// Ghidra: FUN_000cea50
+// param_1 (first argument) is ignored by the binary (undefined4 in Ghidra);
+// preserved here for ABI fidelity.
+int getTreasureMapValue_fb54(int /*unused*/, int mapId) {
+    return kSubMapFlagTable[mapId];
 }

@@ -40,6 +40,7 @@
 #import "C_TASK.h"
 #import "neFrameTimer.h"
 #import "neGLView.h"
+#import "neRenderer.h"
 #import "CommonAlertView.h"
 #import "CustomAlertView.h"
 #import "CommunicatingView.h"
@@ -726,8 +727,8 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     CGFloat scale = UIScreen.mainScreen.scale;
     // Engine boot against the data paths; the surface is passed in device pixels
     // (points * scale). Kept as a bridge call — the AEP internals are not reimplemented.
-    aepManagerInit(bounds.size.width * scale, bounds.size.height * scale, &aep,
-                   texDir.UTF8String, bundlePath.UTF8String, scale);
+    aepManagerInit(&aep, bundlePath.UTF8String, texDir.UTF8String,
+                   (int)(bounds.size.width * scale), (int)(bounds.size.height * scale), scale);
     neSceneManager::shared();   // force scene-manager lazy init
     g_dwUiScale = scale * 0.5f; // publish the UI scale (half the screen scale)
 
@@ -784,7 +785,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     neGetCurrentRenderer();
     int w = [view GetFrontBufferWidth];
     int h = [view GetFrontBufferHeight];
-    void *viewport = neCreateOrthoViewport((float)w, (float)h, 0, 0, w, h);
+    neViewport *viewport = neCreateOrthoViewport((float)w, (float)h, 0, 0, w, h);
     neSetCurrentViewport(viewport);
     neReleaseRef(viewport);
     [view BeginRender];

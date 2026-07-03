@@ -46,6 +46,55 @@ inline id TaskMusicList(MusicSelTask *task) {
 }
 }  // namespace
 
+// ---------------------------------------------------------------------------
+// Block invoke helpers emitted by the compiler after startOpenAnimation
+// (0x2a1b0) and startCloseAnimation (0x2a678).  Placement: file-static.
+// ---------------------------------------------------------------------------
+
+// Ghidra: setNavViewFrameD @ 0x2a458
+// Slides the navigation controller view to y = 420.0.
+// Animations block, first phase of the iPad open animation.
+static void setNavViewFrameD(OverScoreLogViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: setNavViewFrameE @ 0x2a590
+// Settles the navigation controller view to y = 470.0.
+// Animations block of the settle phase (second step of open).
+static void setNavViewFrameE(OverScoreLogViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 470.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: setNavViewFrameF @ 0x2a838
+// Slides the navigation controller view back to y = 420.0.
+// Animations block, first phase of the iPad close animation.
+static void setNavViewFrameF(OverScoreLogViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: setNavViewFrameFromSubview2 @ 0x2a978
+// Parks the navigation controller view off-screen below the root view.
+// Animations block, second phase of the iPad close animation.  Captures self
+// and a reference UIViewController; sets nav-view origin.y to refController's
+// view height.
+static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
+                                        UIViewController *refController) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    UIView *ref = refController.view;
+    f.origin.y = ref ? ref.frame.size.height : 0.0f;
+    self.navigationController.view.frame = f;
+}
+
 @interface OverScoreLogViewController ()
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
@@ -179,24 +228,30 @@ inline id TaskMusicList(MusicSelTask *task) {
         self.view.alpha = 1.0f;
         self.navigationController.view.alpha = 1.0f;
     } else {
-        // iPad: pre-position the nav view below the root scene, then slide it up. The completion
-        // runs a folded shared settle animation whose exact frame math is not recovered; modelled
-        // here as the lifecycle end (endOpenAnimation). Best-effort.
+        // iPad: park the nav view below the root scene, then two-phase slide into place.
+        // Phase 1 (~1/6 s): slide to y = 420 (setNavViewFrameD @ 0x2a458).
+        // Phase 2 (~1/6 s): settle to y = 470 (setNavViewFrameE @ 0x2a590), then
+        //   call -endOpenAnimation.
         UIViewController *root = RootVC();
-        CGRect navFrame = self.navigationController.view.frame;
-        CGRect rootFrame = root.view.frame;
-        self.navigationController.view.frame =
-            CGRectMake(navFrame.origin.x, rootFrame.size.height, navFrame.size.width, navFrame.size.height);
+        CGRect f = self.navigationController.view.frame;
+        f.origin.y = root.view.frame.size.height;   // park below screen
+        self.navigationController.view.frame = f;
         [UIView animateWithDuration:(1.0 / 6.0)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
-                             CGRect f = self.navigationController.view.frame;
-                             self.navigationController.view.frame =
-                                 CGRectMake(f.origin.x, 420.0f, f.size.width, f.size.height);
+                             setNavViewFrameD(self);   // Ghidra: setNavViewFrameD @ 0x2a458
                          }
                          completion:^(BOOL finished) {
-                             [self endOpenAnimation];
+                             [UIView animateWithDuration:(1.0 / 6.0)
+                                                   delay:0.0
+                                                 options:UIViewAnimationOptionLayoutSubviews
+                                              animations:^{
+                                                  setNavViewFrameE(self); // Ghidra: setNavViewFrameE @ 0x2a590
+                                              }
+                                              completion:^(BOOL f2) {
+                                                  [self endOpenAnimation];
+                                              }];
                          }];
     }
     [UIView commitAnimations];
@@ -223,19 +278,28 @@ inline id TaskMusicList(MusicSelTask *task) {
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
     } else {
-        // iPad: slide out; the folded completion is modelled as endCloseAnimation. Best-effort.
+        // iPad: two-phase slide out.
+        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (setNavViewFrameF @ 0x2a838).
+        // Phase 2 (~1/6 s): park below the root view (setNavViewFrameFromSubview2 @ 0x2a978),
+        //   then call -endCloseAnimation.
         UIViewController *root = RootVC();
-        (void)root;
         [UIView animateWithDuration:(1.0 / 6.0)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
-                             CGRect f = self.navigationController.view.frame;
-                             self.navigationController.view.frame =
-                                 CGRectMake(f.origin.x, 420.0f, f.size.width, f.size.height);
+                             setNavViewFrameF(self);   // Ghidra: setNavViewFrameF @ 0x2a838
                          }
                          completion:^(BOOL finished) {
-                             [self endCloseAnimation];
+                             [UIView animateWithDuration:(1.0 / 6.0)
+                                                   delay:0.0
+                                                 options:UIViewAnimationOptionLayoutSubviews
+                                              animations:^{
+                                                  // Ghidra: setNavViewFrameFromSubview2 @ 0x2a978
+                                                  setNavViewFrameFromSubview2(self, root);
+                                              }
+                                              completion:^(BOOL f2) {
+                                                  [self endCloseAnimation];
+                                              }];
                          }];
     }
     [UIView commitAnimations];

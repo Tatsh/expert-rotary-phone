@@ -138,3 +138,13 @@ const neTouchPoint *neGraphics::findTouchById(int id) const {
     }
     return nullptr;
 }
+
+// Ghidra: FUN_000124bc — returns the count at +0x80.
+extern "C" int NEGraphics_activeTouchCount(const neGraphics *g) {
+    return g->m_touchCount;
+}
+
+// Ghidra: FUN_000124c4 — returns the i-th pointer from the pool array at +0x00.
+extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i) {
+    return g->m_touches[i];
+}

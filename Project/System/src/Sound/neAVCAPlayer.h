@@ -24,6 +24,10 @@ constexpr uint32_t kCAPlayerHandleFlag = 0x20000000;
 
 class neAVCAPlayer {
 public:
+    // Tear down the CoreAudio SE engine: terminate + delete the mixer, free every loaded
+    // CASound, drop the source array and the name map. Ghidra: caPlayerMgr_dtor @ 0x261f8.
+    ~neAVCAPlayer();
+
     // Load a file into a new CASound slot; returns a source id, or 0xffffffff on
     // failure. Ghidra: FUN_00026320.
     uint32_t load(const char *path, bool loop);
@@ -56,6 +60,10 @@ public:
 
     // Pause the voice named by `handle` (resume via play()). Ghidra: caHandlePause.
     bool pause(uint32_t handle);
+
+    // Stop the voice named by `handle` and drop its source so the mixer can recycle it
+    // immediately (used when reaping a finished SetGroup voice). Ghidra: caHandleStopAndClear.
+    void stopAndClear(uint32_t handle);
 
     // The voice's state (-1 free / 1 playing / 4 finished). Ghidra: FUN_000267cc.
     int voiceState(uint32_t handle);

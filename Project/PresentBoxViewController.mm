@@ -19,12 +19,14 @@
 //     confirm uses the item text as title ("キャラチケ %d枚" / "トレジャーポイント %dP"),
 //     the row's Info blurb as message, "キャンセル" (index 0) and "受け取る" (index 1).
 //   - Open/close animations: on phone a 0.3s alpha fade (didStop -> end*Animation); on
-//     pad a 0.1667s frame slide of the nav host to y=420 via animateWithDuration
-//     (completion -> end*Animation). The pad open first parks the nav host just below
-//     the root view (origin.y = rootView height). NOTE: the binary's pad open- and
-//     close-animation blocks are byte-identical (both set nav-view origin.y = 420), and
-//     it calls +[UIView commitAnimations] unconditionally after both the phone and pad
-//     branches (a stray no-op on the pad/block path) — reproduced here for fidelity.
+//     pad a two-phase ~1/6 s frame slide via animateWithDuration.  Open: park at
+//     rootView.height, slide to y=420 (setNavViewFrameA @ 0x24f40), then settle to
+//     y=470 (setNavViewFrameB @ 0x25078), then endOpenAnimation.  Close: slide from
+//     470 → 420 (setNavViewFrameC @ 0x25320), then park below screen
+//     (setNavViewFrameFromSubview @ 0x25460), then endCloseAnimation.  The binary's
+//     two first-phase animation blocks are byte-identical (both target y=420); the
+//     +[UIView commitAnimations] call is unconditional after both phone and pad
+//     branches (a stray no-op on the pad/block path) — reproduced for fidelity.
 //   - -endCloseAnimation removes the nav host and pokes the menu's -PresentBoxEndCallBack
 //     (the root VC is a MainViewController, which owns that selector @ 0xe0d4).
 //   - The dummy overlay carries the download spinner; -isAnimationing is an atomic read
@@ -40,6 +42,55 @@
 #import "UserSettingData.h"   // charaTicket / treasurePoint credit
 #import "MainViewController.h" // -PresentBoxEndCallBack (root VC)
 #import "neEngineBridge.h"    // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
+
+// ---------------------------------------------------------------------------
+// Block invoke helpers emitted by the compiler after startOpenAnimation
+// (0x24c98) and startCloseAnimation (0x25160).  Placement: file-static.
+// ---------------------------------------------------------------------------
+
+// Ghidra: setNavViewFrameA @ 0x24f40
+// Slides the navigation controller view to y = 420.0.
+// Animations block, first phase of the iPad open animation.
+static void setNavViewFrameA(PresentBoxViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: setNavViewFrameB @ 0x25078
+// Settles the navigation controller view to y = 470.0.
+// Animations block of the settle phase (second step of open).
+static void setNavViewFrameB(PresentBoxViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 470.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: setNavViewFrameC @ 0x25320
+// Slides the navigation controller view back to y = 420.0.
+// Animations block, first phase of the iPad close animation.
+static void setNavViewFrameC(PresentBoxViewController *self) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    f.origin.y = 420.0f;
+    self.navigationController.view.frame = f;
+}
+
+// Ghidra: setNavViewFrameFromSubview @ 0x25460
+// Parks the navigation controller view off-screen below the root view.
+// Animations block, second phase of the iPad close animation.  Captures self
+// and a reference UIViewController; sets nav-view origin.y to refController's
+// view height.
+static void setNavViewFrameFromSubview(PresentBoxViewController *self,
+                                       UIViewController *refController) {
+    UIView *navView = self.navigationController.view;
+    CGRect f = navView ? navView.frame : CGRectZero;
+    UIView *ref = refController.view;
+    f.origin.y = ref ? ref.frame.size.height : 0.0f;
+    self.navigationController.view.frame = f;
+}
 
 @interface PresentBoxViewController () <DownloadMainDelegate>
 - (void)endOpenAnimation;
@@ -222,14 +273,22 @@
         CGRect start = self.navigationController.view.frame;
         start.origin.y = rootVC.view.frame.size.height;
         self.navigationController.view.frame = start;
-        __weak PresentBoxViewController *weakSelf = self;
-        [UIView animateWithDuration:0.16666667 delay:0 options:0 animations:^{   // DAT_00024f30
-            CGRect f = weakSelf.navigationController.view.frame;
-            f.origin.y = 420.0f;
-            weakSelf.navigationController.view.frame = f;
-        } completion:^(BOOL finished) {
-            [weakSelf endOpenAnimation];
-        }];
+        // Phase 1 (~1/6 s): slide from off-screen to y = 420 (setNavViewFrameA @ 0x24f40).
+        // Phase 2 (~1/6 s): settle to y = 470 (setNavViewFrameB @ 0x25078), then
+        //   call -endOpenAnimation.
+        [UIView animateWithDuration:0.16666667 delay:0 options:0     // DAT_00024f30
+                         animations:^{
+                             setNavViewFrameA(self);   // Ghidra: setNavViewFrameA @ 0x24f40
+                         }
+                         completion:^(BOOL finished) {
+                             [UIView animateWithDuration:0.16666667 delay:0 options:0
+                                              animations:^{
+                                                  setNavViewFrameB(self); // Ghidra: setNavViewFrameB @ 0x25078
+                                              }
+                                              completion:^(BOOL f2) {
+                                                  [self endOpenAnimation];
+                                              }];
+                         }];
     }
     [UIView commitAnimations];   // paired on phone; a stray no-op on the pad/block path
 }
@@ -254,15 +313,26 @@
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
     } else {
-        (void)neSceneManager::rootViewController();
-        __weak PresentBoxViewController *weakSelf = self;
-        [UIView animateWithDuration:0.16666667 delay:0 options:0 animations:^{   // DAT_00025310
-            CGRect f = weakSelf.navigationController.view.frame;
-            f.origin.y = 420.0f;   // byte-identical to the open block in the binary
-            weakSelf.navigationController.view.frame = f;
-        } completion:^(BOOL finished) {
-            [weakSelf endCloseAnimation];
-        }];
+        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (setNavViewFrameC @ 0x25320).
+        // NOTE: the binary's open- and close-animation first blocks are byte-identical
+        // (both target y = 420); the symmetry here is intentional — reproduced for fidelity.
+        // Phase 2 (~1/6 s): park below screen (setNavViewFrameFromSubview @ 0x25460), then
+        //   call -endCloseAnimation.
+        UIViewController *rootVC = neSceneManager::rootViewController();
+        [UIView animateWithDuration:0.16666667 delay:0 options:0     // DAT_00025310
+                         animations:^{
+                             setNavViewFrameC(self);   // Ghidra: setNavViewFrameC @ 0x25320
+                         }
+                         completion:^(BOOL finished) {
+                             [UIView animateWithDuration:0.16666667 delay:0 options:0
+                                              animations:^{
+                                                  // Ghidra: setNavViewFrameFromSubview @ 0x25460
+                                                  setNavViewFrameFromSubview(self, rootVC);
+                                              }
+                                              completion:^(BOOL f2) {
+                                                  [self endCloseAnimation];
+                                              }];
+                         }];
     }
     [UIView commitAnimations];   // paired on phone; a stray no-op on the pad/block path
 }

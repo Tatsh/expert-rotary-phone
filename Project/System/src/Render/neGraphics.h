@@ -36,6 +36,14 @@ struct neTouchPoint {
     unsigned char pad[2];   // +0x2e..+0x2f (record rounded up to 0x30)
 };
 
+// C-ABI accessors the play-judge loop uses on the raw manager pointer. Ghidra:
+// FUN_000124bc reads +0x80 (touch count); FUN_000124c4 reads the +0x00 pool array
+// (i-th touch pointer). Thin wrappers over the class members; declared here (ahead of
+// the class) so the friend declarations below bind to these C-linkage functions.
+class neGraphics;
+extern "C" int NEGraphics_activeTouchCount(const neGraphics *g);      // Ghidra: FUN_000124bc
+extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i); // Ghidra: FUN_000124c4
+
 // Render/input manager. Singleton created lazily by configure() at launch.
 class neGraphics {
 public:
@@ -75,6 +83,9 @@ private:
     int m_touchCount = 0;                 // +0x80 touches recorded this frame
     int m_nextTouchId = 0;                // +0x84 rolling id counter
     float m_contentScale = 1.0f;          // +0x88 device content scale
+
+    friend int NEGraphics_activeTouchCount(const neGraphics *g);
+    friend const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i);
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -108,6 +108,11 @@ private:
     // search in FUN_000ce340). Null for a negative / out-of-range id or an empty table.
     Node *findNodeById(int id) const;
 
+    // Free helpers in TreasureMap.mm that need private member access (m_nodes,
+    // m_count, m_startSubId). Ghidra: FUN_000ce96c, FUN_000ce9d4.
+    friend Node *GetWarpSquare(TreasureMap *map, Node *node);
+    friend Node *getButtobiSquare(TreasureMap *map, const Node *currentNode);
+
     // Byte-exact layout to alignment 4 (offsets verified in FUN_000ce2b0/340/934).
     uint8_t  m_head[2]       = {};       // +0x00
     int16_t  m_count         = 0;        // +0x02 node count
@@ -118,6 +123,57 @@ private:
     int16_t  m_field5c       = 0;        // +0x5c
     uint8_t  m_tail[0x60-0x5e] = {};     // +0x5e
 };
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Free sugoroku-map C helpers (binary cluster ~0xce000, defined in TreasureMap.mm).
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Ghidra: FUN_000ce0ec
+// If checkBackLink != 0: returns 1 when node->backLink is non-null, else 0.
+// If checkBackLink == 0: counts non-null slots in node->links[0..2] (stop at first null).
+unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink);
+
+// Ghidra: FUN_000ce114
+// Searches node->links[0..2] for a neighbour that lies in the given cardinal direction
+// relative to node (0=left, 1=right, 2=up, 3=down, same-axis coordinate must match).
+// Returns the slot index (0..2) of the matching link, or -1 if not found.
+int findAdjacentSquareIndex(const TreasureMap::Node *node, int direction);
+
+// Ghidra: FUN_000ce180
+// Indexes kTreasureMapTable[mainMapId][subMapId] (DAT_0012fac4, row stride 0xc).
+// Returns the earned goal-star count for the given map/area pair.
+int getTreasureMapTableEntry(int mainMapId, int subMapId);
+
+// Ghidra: FUN_000ce198
+// Returns kParentMapTable[mapId] (DAT_0012fb30) — parent main-map id, -1 for roots.
+int getTreasureMapValue_fb30(int mapId);
+
+// Ghidra: FUN_000ce1c8
+// Returns the number of character message strings for the given character id.
+// characterId encodes: group = id/10 (valid: 6, 8), slot = id%10 (valid: 0..2).
+// Called by both getCharacterAssetName and charaSelectReloadData.
+int getCharacterAssetCount(int characterId);
+
+// Ghidra: FUN_000ce200
+// Returns a UTF-8 character message string from the baked pool for the given
+// (characterId, slotIndex). slotIndex must be in [0, getCharacterAssetCount(characterId)).
+// Returns null for out-of-range or unrecognised ids.
+const char *getCharacterAssetName(int characterId, int slotIndex);
+
+// Ghidra: FUN_000ce96c  (SugorokuMap::GetWarpSquare)
+// Asserts node->type == 8 (warp square), then returns the OTHER warp square in map
+// that shares the same field8 (warp-pair id). Returns null if none found.
+TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node);
+
+// Ghidra: FUN_000ce9d4  (SugorokuMap::GetButtobiSquare)
+// Picks a random destination node in map that is not a warp (type 8), not a
+// start-reserved (type 1), and not currentNode. Falls back to the start node.
+TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *currentNode);
+
+// Ghidra: FUN_000cea50
+// Returns kSubMapFlagTable[mapId] (DAT_0012fb54). The first argument is ignored
+// by the binary (matches the undefined4 Ghidra type; preserved for ABI fidelity).
+int getTreasureMapValue_fb54(int unused, int mapId);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

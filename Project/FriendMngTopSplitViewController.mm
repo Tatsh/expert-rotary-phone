@@ -23,6 +23,18 @@
 - (void)handleTapCoverView;
 @end
 
+// ─── File-static frame helpers ───────────────────────────────────────────────
+// Forward-declare so the section-handler methods below can call them; bodies are
+// defined after @end (where @implementation { } ivars are already visible).
+// Single caller per helper → no shared header needed.
+static void friendMngSyncRightViewFrame(FriendMngTopSplitViewController *);
+static void friendMngSetListFrame(FriendMngTopSplitViewController *);
+static void friendMngSetListArrowFrame(FriendMngTopSplitViewController *);
+static void friendMngSetRequestFrame(FriendMngTopSplitViewController *);
+static void friendMngSetRequestArrowFrame(FriendMngTopSplitViewController *);
+static void friendMngSetReplyFrame(FriendMngTopSplitViewController *);
+static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
+
 @implementation FriendMngTopSplitViewController {
     BOOL _isAnimationing;                     // guards a transition against re-entry
     UIImageView *_markView;                    // "new reply" warning badge (assigned by the left VC)
@@ -207,17 +219,29 @@
         _isAnimationing = YES;
         UIBarButtonItem *rightItem = vc.navigationItem.rightBarButtonItem;
         vc.navigationItem.rightBarButtonItem = nil;
+        // Outer flip: collapse right view width → friendMngSyncRightViewFrame @ 0xc43b8.
+        // Completion = friendMngShowListView @ 0xc4448: swap VC, then inner flip →
+        // friendMngSetListFrame @ 0xc45a0; inner completion → friendMngSetListArrowFrame @ 0xc4700.
         [UIView transitionWithView:_rightViewCtrl.view
                           duration:0.3
                            options:UIViewAnimationOptionCurveEaseIn
                         animations:^{
+            friendMngSyncRightViewFrame(self);
+        } completion:^(BOOL finished) {
             [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frilis_navbar"]
                                                forBarMetrics:UIBarMetricsDefault];
             [_rightViewCtrl popToRootViewControllerAnimated:NO];
             [_rightViewCtrl pushViewController:vc animated:NO];
-        } completion:^(BOOL finished) {
-            vc.navigationItem.rightBarButtonItem = rightItem;
-            _isAnimationing = NO;
+            [UIView transitionWithView:_rightViewCtrl.view
+                              duration:0.3
+                               options:UIViewAnimationOptionCurveEaseIn
+                            animations:^{
+                friendMngSetListFrame(self);
+            } completion:^(BOOL fin) {
+                friendMngSetListArrowFrame(self);
+                vc.navigationItem.rightBarButtonItem = rightItem;
+                _isAnimationing = NO;
+            }];
         }];
     }
     _selectedIndex = 0;
@@ -244,17 +268,29 @@
         _isAnimationing = YES;
         UIBarButtonItem *rightItem = vc.navigationItem.rightBarButtonItem;
         vc.navigationItem.rightBarButtonItem = nil;
+        // Outer flip: friendMngSyncRightViewFrame2 @ 0xc4a48 (identical to 0xc43b8).
+        // Completion = friendMngShowRequestView @ 0xc4ad8: swap VC + inner flip →
+        // friendMngSetRequestFrame @ 0xc4c30; inner completion → friendMngSetRequestArrowFrame @ 0xc4d90.
         [UIView transitionWithView:_rightViewCtrl.view
                           duration:0.3
                            options:UIViewAnimationOptionCurveEaseIn
                         animations:^{
+            friendMngSyncRightViewFrame(self);
+        } completion:^(BOOL finished) {
             [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"fripre_navbar"]
                                                forBarMetrics:UIBarMetricsDefault];
             [_rightViewCtrl popToRootViewControllerAnimated:NO];
             [_rightViewCtrl pushViewController:vc animated:NO];
-        } completion:^(BOOL finished) {
-            vc.navigationItem.rightBarButtonItem = rightItem;
-            _isAnimationing = NO;
+            [UIView transitionWithView:_rightViewCtrl.view
+                              duration:0.3
+                               options:UIViewAnimationOptionCurveEaseIn
+                            animations:^{
+                friendMngSetRequestFrame(self);
+            } completion:^(BOOL fin) {
+                friendMngSetRequestArrowFrame(self);
+                vc.navigationItem.rightBarButtonItem = rightItem;
+                _isAnimationing = NO;
+            }];
         }];
     }
     _selectedIndex = 1;
@@ -280,16 +316,28 @@
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
         _isAnimationing = YES;
+        // Outer flip: friendMngSyncRightViewFrame3 @ 0xc50b0 (identical to 0xc43b8).
+        // Completion = friendMngShowReplyView @ 0xc5140: swap VC + inner flip →
+        // friendMngSetReplyFrame @ 0xc5290; inner completion → friendMngSetReplyArrowFrame @ 0xc5370.
         [UIView transitionWithView:_rightViewCtrl.view
                           duration:0.3
                            options:UIViewAnimationOptionCurveEaseIn
                         animations:^{
+            friendMngSyncRightViewFrame(self);
+        } completion:^(BOOL finished) {
             [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
                                                forBarMetrics:UIBarMetricsDefault];
             [_rightViewCtrl popToRootViewControllerAnimated:NO];
             [_rightViewCtrl pushViewController:vc animated:NO];
-        } completion:^(BOOL finished) {
-            _isAnimationing = NO;
+            [UIView transitionWithView:_rightViewCtrl.view
+                              duration:0.3
+                               options:UIViewAnimationOptionCurveEaseIn
+                            animations:^{
+                friendMngSetReplyFrame(self);
+            } completion:^(BOOL fin) {
+                friendMngSetReplyArrowFrame(self);
+                _isAnimationing = NO;
+            }];
         }];
     }
     _selectedIndex = 2;
@@ -305,6 +353,64 @@
 }
 
 @end
+
+// ─── File-static frame helpers ───────────────────────────────────────────────
+// In the binary these are the block-invoke functions emitted by the compiler for
+// the ObjC block literals captured in on{List,Request,Reply}ButtonTouched: and
+// the friendMngShow*View completion helpers. Each has exactly one caller class
+// (FriendMngTopSplitViewController) → file-static, no shared header.
+//
+// NOTE: friendMngSyncRightViewFrame{,2,3} (0xc43b8, 0xc4a48, 0xc50b0) are
+// byte-for-byte identical in the binary; a single static body serves all three.
+
+// Ghidra: friendMngSyncRightViewFrame @ 0xc43b8
+// (and friendMngSyncRightViewFrame2 @ 0xc4a48, friendMngSyncRightViewFrame3 @ 0xc50b0)
+// Outer-transition animations block: reads _rightViewCtrl.view.frame, zeroes
+// size.width, then writes the modified frame back → collapses the right pane to
+// zero width so the VC swap starts from an invisible right pane.
+static void friendMngSyncRightViewFrame(FriendMngTopSplitViewController *self) {
+    UIView *v = self->_rightViewCtrl.view;
+    CGRect f = (v != nil) ? v.frame : CGRectZero;
+    f.size.width = 0.0f;
+    [self->_rightViewCtrl.view setFrame:f];
+}
+
+// Ghidra: friendMngSetListFrame @ 0xc45a0
+// Inner-transition animations block inside friendMngShowListView (0xc4448):
+// restores the right view's frame from the stored _listFrm after the VC swap.
+static void friendMngSetListFrame(FriendMngTopSplitViewController *self) {
+    [self->_rightViewCtrl.view setFrame:self->_listFrm];
+}
+
+// Ghidra: friendMngSetListArrowFrame @ 0xc4700
+// Inner-transition completion: repositions the selection arrow to the list row.
+static void friendMngSetListArrowFrame(FriendMngTopSplitViewController *self) {
+    [self->_arrowImageView setFrame:self->_listArrowFrm];
+}
+
+// Ghidra: friendMngSetRequestFrame @ 0xc4c30
+// Analogous to friendMngSetListFrame but for the "presenting" (requests) section.
+static void friendMngSetRequestFrame(FriendMngTopSplitViewController *self) {
+    [self->_rightViewCtrl.view setFrame:self->_requestFrm];
+}
+
+// Ghidra: friendMngSetRequestArrowFrame @ 0xc4d90
+// Inner-transition completion for the request section.
+static void friendMngSetRequestArrowFrame(FriendMngTopSplitViewController *self) {
+    [self->_arrowImageView setFrame:self->_requestArrowFrm];
+}
+
+// Ghidra: friendMngSetReplyFrame @ 0xc5290
+// Analogous to friendMngSetListFrame but for the reply section.
+static void friendMngSetReplyFrame(FriendMngTopSplitViewController *self) {
+    [self->_rightViewCtrl.view setFrame:self->_replyFrm];
+}
+
+// Ghidra: friendMngSetReplyArrowFrame @ 0xc5370
+// Inner-transition completion for the reply section.
+static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *self) {
+    [self->_arrowImageView setFrame:self->_replyArrowFrm];
+}
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :

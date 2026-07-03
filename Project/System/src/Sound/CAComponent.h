@@ -43,6 +43,24 @@ public:
     // Set the mixer gain of every voice from the volume-level table.
     void setAllVolume(int volumeIndex);
 
+    // Detach `source` from any voice still referencing it (called when the source is unloaded).
+    // Ghidra: auClearSourceRef @ 0x24014.
+    void clearSourceRef(CASound *source);
+
+    // Pause / stop-and-clear a single voice, guarded by its generation (a stale play handle is
+    // ignored). pauseVoice sets state 3; stopAndClearVoice frees the voice (state 4 + drop the
+    // source). Ghidra: caHandlePause @ 0x267b4 / caHandleStopAndClear @ 0x26864.
+    bool pauseVoice(int voice, uint16_t generation);
+    void stopAndClearVoice(int voice, uint16_t generation);
+
+    // Prepare a *specific* voice for `source` (the fixed-voice SetGroup path): wire its stream
+    // format + render callback, set volume, mark it playing, and return the play handle
+    // (generation | voice << 16), or -1 if the voice is busy. Ghidra: auMixerPreparePlayer.
+    int preparePlayer(CASound *source, int voice, int volumeIndex);
+
+    // Tear the AUGraph down and free the voices (idempotent). Ghidra: auGraphTerminate @ 0x23d40.
+    void terminate();
+
 private:
     // A single mixer input. Ghidra: the 0x18-byte object built in initGraph.
     struct CAVoice {
@@ -50,12 +68,12 @@ private:
         bool callbackSet = false;     // +0x04
         uint16_t generation = 0;      // +0x10
         uint32_t playPos = 0;         // +0x08  byte offset into source buffer
-        int32_t state = -1;           // +0x14  -1 free, 1 playing, 4 finished
+        uint32_t total = 0;           // +0x0c  bytes played this pass (reset on loop wrap)
+        int32_t state = -1;           // +0x14  -1 free, 1 playing, 3 paused, 4 finished
     };
 
     bool prepareGraph();                                  // FUN_00023a6c
     bool initGraph(int voices);                           // FUN_00023b74
-    int preparePlayer(CASound *source, int voice, int volumeIndex);   // FUN_00023dac
     void setRenderCallback(int voice);                    // FUN_00023e5c
 
     // The AURenderCallback that copies a voice's PCM into the mixer. FUN_00024044.

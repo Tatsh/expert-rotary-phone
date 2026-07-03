@@ -1004,3 +1004,961 @@ void AcMainTask::unloadMapBgGroup() {
     }
     AepUnloadGroup(field<AepManager *>(0x28), 6);   // FUN_0000f988
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Sugoroku board draw / logic helpers  (Ghidra 0xa14a0 – 0xa5740).
+// All are file-static (anonymous namespace = internal linkage).  They were
+// erroneously placed in a fabricated SugorokuMainTask class by a prior agent;
+// they belong here, operating on AcMainTask *.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#import "TreasureTmpData.h"
+#include <cmath>    // cosf, sinf, M_PI
+#include <cstdio>   // snprintf
+
+namespace {
+
+// ── flat-blob field accessor (mirrors CharaManager.mm pattern) ───────────────
+template <typename T>
+T &acField(AcMainTask *task, ptrdiff_t off) {
+    return *reinterpret_cast<T *>(reinterpret_cast<char *>(task) + off);
+}
+
+// ── sprite draw helper ────────────────────────────────────────────────────────
+// Reorders Ghidra call-site arg order  (u,v,w,h,x,y,sx,sy,ex,ey,extra,color,
+// rotation,blend0,colorMul,blend1,priority) into neSpriteDrawParams field order
+// (u,v,x,y,sx,sy,w,h,ex,ey,color,rotation,blend0,blend1,colorMul,extra,
+// clip,priority).
+void drawSprite(AepManager *mgr, neTextureForiOS *tex,
+                int u, int v, int w, int h,
+                int x, int y, int sx, int sy,
+                int ex, int ey, int extra,
+                int color, int rotation,
+                int blend0, int colorMul, int blend1,
+                int priority) {
+    neSpriteDrawParams p;
+    p.u = u;   p.v = v;
+    p.w = w;   p.h = h;
+    p.x = x;   p.y = y;
+    p.sx = sx; p.sy = sy;
+    p.ex = ex; p.ey = ey;
+    p.extra    = extra;
+    p.color    = static_cast<uint32_t>(color);
+    p.rotation = rotation;
+    p.blend0   = static_cast<short>(blend0);
+    p.colorMul = static_cast<uint32_t>(colorMul);
+    p.blend1   = static_cast<short>(blend1);
+    p.clip     = nullptr;
+    p.priority = priority;
+    tex->draw(mgr->orderingTable(), p);
+}
+
+// ── forward declarations (enable mutual recursion within this namespace) ──────
+int  sugorokuDrawSkillPanel(AcMainTask *task);
+int  sugorokuDrawButtonHitTest(AcMainTask *task);
+bool sugorokuEasePositionPairA(AcMainTask *task);
+bool sugorokuEasePositionPairB(AcMainTask *task);
+void sugorokuDrawSquareText(AcMainTask *task);
+void sugorokuSaveTreasureProgress(AcMainTask *task);
+void sugorokuSetupScrollBounds(AcMainTask *task);
+void sugorokuLoadWallTextures(AcMainTask *task, int page);
+void sugorokuTaskDispose(AcMainTask *task);
+void sugorokuDrawBoard(AcMainTask *task);
+void sugorokuDrawBackground(AcMainTask *task);
+void sugorokuDrawSquare(AcMainTask *task, const TreasureMap::Node *node);
+void sugorokuDrawPath(AcMainTask *task, const TreasureMap::ConnectStruct *edge);
+void sugorokuDrawPlayerAndUi(AcMainTask *task);
+void sugorokuDrawFriendMeet(AcMainTask *task);
+
+// ── cross-file helpers (TODO: promote to their own .h/.mm when decompiled) ───
+
+// Ghidra: FUN_??? — 2-D AABB overlap cull used by sugorokuDrawBoard.
+// Tests whether node box [x0..extX] × [y0..y1] overlaps camera rect
+// [camL..camR] × [camT..camH].  The call site passes x0 twice (NEON artefact);
+// only x0, extX, y0 and y1 carry real information.
+bool isWithinRange2D(float x0, float /*x1*/, float extX,
+                     float y0,  float y1,
+                     float camL, float camT, float camR, float camH) {
+    return x0 < camR && extX > camL && y0 < camH && y1 > camT;
+}
+
+// Ghidra: FUN_??? — maps a sugoroku square id to the wall-nail texture index
+// in kTreasureMapTable.  Stub (identity) until the function is decompiled.
+short findTreasureMapIndexById(int id) { return static_cast<short>(id); }
+
+// Ghidra: FUN_??? — unlink + delete the "goal" AEP layer.  Stub.
+void sugorokuReleaseGoalLayer(AcMainTask */*task*/) {}
+
+// Ghidra: FUN_??? — reset global sugoroku progress data.  Stub.
+void resetTreasureMapData() {}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 1.  sugorokuDrawSkillPanel — Ghidra: FUN_000a14a0
+// ════════════════════════════════════════════════════════════════════════════
+// Draw the skill-selection overlay centred on the player sprite and return
+// which button was tapped this frame: 0 = left button, 1 = right button,
+// -1 = no hit.
+int sugorokuDrawSkillPanel(AcMainTask *task) {
+    AepManager       *mgr   = acField<AepManager *>(task, 0x28);
+    const neGraphics &gfx   = neGraphics::shared();
+    float             scale = gfx.contentScale();
+
+    // Player board → screen position.
+    float scrollOffX = acField<float>(task, 0x4d8) - acField<float>(task, 0x514);
+    float scrollOffY = acField<float>(task, 0x4dc) - acField<float>(task, 0x518);
+    int   halfW      = acField<int>(task, 0x524) / 2;
+    int   halfH      = acField<int>(task, 0x528) / 2;
+    int   iVar7      = (int)(acField<float>(task, 0x5cc) - scrollOffX + (float)halfW);
+    int   iVar10     = (int)(acField<float>(task, 0x5d0) - scrollOffY + (float)halfH);
+
+    // Draw skill panel AEP art (FUN_000a14a0 step).
+    drawAepFrame(mgr, acField<int>(task, 0x21c),
+                 iVar7 + 52, iVar10 - 300, 0x20, 0x22);
+
+    // Skill name label.
+    __unsafe_unretained id skillObj =
+        (__bridge id)acField<void *>(task, 0x8a4);
+    if (skillObj) {
+        NSString *nameStr = [skillObj skillName];
+        if (nameStr)
+            drawAepManagerText(mgr, [nameStr UTF8String],
+                               0x12, iVar7 + 52, iVar10 - 272,
+                               1, 100, 0x615245, 0x1f);
+    }
+
+    // Skill points (short at task[0x8a8]+4).
+    void *descPtr = acField<void *>(task, 0x8a8);
+    if (descPtr) {
+        int pts = *reinterpret_cast<short *>(
+            reinterpret_cast<char *>(descPtr) + 4);
+        char ptsBuf[16];
+        snprintf(ptsBuf, sizeof(ptsBuf), "%d", pts);
+        drawAepManagerText(mgr, ptsBuf,
+                           0x12, iVar7 + 52, iVar10 - 248,
+                           1, 100, 0x615245, 0x1f);
+    }
+
+    // Touch hit-test.
+    float hw = 230.0f * scale, hh = 92.0f * scale;
+    int   n  = gfx.activeTouchCount();
+    for (int i = 0; i < n; i++) {
+        const neTouchPoint *tp = gfx.touchAt(i);
+        if (!tp || !tp->released) continue;
+        int tx = tp->x >> 16;   // 16.16 fixed-point → integer pixel
+        int ty = tp->y >> 16;
+        // Tap test: finger displacement < 11 px (coords are 16.16).
+        int adx = tp->x - tp->startX; if (adx < 0) adx = -adx;
+        int ady = tp->y - tp->startY; if (ady < 0) ady = -ady;
+        if (adx >= (11 << 16) || ady >= (11 << 16)) continue;
+        // Button 1 (left).
+        if (neGraphics::pointInRect(tx, ty,
+                (int)((iVar7  - 0xbb) * scale),
+                (int)((iVar10 - 0xbc) * scale),
+                (int)hw, (int)hh))
+            return 0;
+        // Button 2 (right).
+        if (neGraphics::pointInRect(tx, ty,
+                (int)((iVar7  + 0x3f) * scale),
+                (int)((iVar10 - 0xbc) * scale),
+                (int)hw, (int)hh))
+            return 1;
+    }
+    return -1;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 2.  sugorokuDrawButtonHitTest — Ghidra: FUN_000a178c
+// ════════════════════════════════════════════════════════════════════════════
+// Draw a generic two-button dialog panel (layerId @ +0x220, layout data @
+// +0x990..+0x9b4) and return: 1 = button 1 hit, -1 = button 2 hit, 0 = miss.
+int sugorokuDrawButtonHitTest(AcMainTask *task) {
+    AepManager       *mgr   = acField<AepManager *>(task, 0x28);
+    const neGraphics &gfx   = neGraphics::shared();
+    float             scale = gfx.contentScale();
+
+    int panelW = acField<int>(task, 0x990);
+    int panelH = acField<int>(task, 0x994);
+    int iVar5  = acField<int>(task, 0x524) / 2;          // half-screen width
+    int iVar6  = acField<int>(task, 0x528) / 2 - panelH / 2;  // panel top Y
+
+    // Draw panel: AEP layer handle @ +0x220, frame = panelW/2.
+    mgr->drawLayer(acField<int>(task, 0x220), panelW / 2,
+                   iVar5, iVar6,
+                   100, 100, 0, 0, 0, 0, 100, 0, 0x20, 0, nullptr, nullptr, 0x20, 1);
+
+    // Touch hit-test.
+    int n = gfx.activeTouchCount();
+    for (int i = 0; i < n; i++) {
+        const neTouchPoint *tp = gfx.touchAt(i);
+        if (!tp || !tp->released) continue;
+        int tx = tp->x >> 16;
+        int ty = tp->y >> 16;
+        // Button 1.
+        if (neGraphics::pointInRect(tx, ty,
+                (int)((iVar5 - panelW / 2 + acField<int>(task, 0x998)) * scale),
+                (int)((acField<int>(task, 0x99c) + iVar6)               * scale),
+                (int)(acField<int>(task, 0x9a0) * scale),
+                (int)(acField<int>(task, 0x9a4) * scale)))
+            return 1;
+        // Button 2.
+        if (neGraphics::pointInRect(tx, ty,
+                (int)((iVar5 - panelW / 2 + acField<int>(task, 0x9a8)) * scale),
+                (int)((acField<int>(task, 0x9ac) + iVar6)               * scale),
+                (int)(acField<int>(task, 0x9b0) * scale),
+                (int)(acField<int>(task, 0x9b4) * scale)))
+            return -1;
+    }
+    return 0;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 3.  sugorokuEasePositionPairA — Ghidra: FUN_000a19dc
+// ════════════════════════════════════════════════════════════════════════════
+// Ease the scroll position (+0x4d8/+0x4dc) toward the target (+0x5a4/+0x5a8)
+// using stored velocities (+0x5ac/+0x5b0).  Returns true while still moving.
+bool sugorokuEasePositionPairA(AcMainTask *task) {
+    // X axis.
+    float velX    = acField<float>(task, 0x5ac);
+    float posX    = acField<float>(task, 0x4d8);
+    float targetX = acField<float>(task, 0x5a4);
+    if (-velX < posX - targetX) {
+        acField<float>(task, 0x4d8) = posX + velX;
+    } else {
+        acField<float>(task, 0x4d8) = targetX;
+        acField<float>(task, 0x5ac) = 0.0f;
+        velX = 0.0f;
+    }
+    // Y axis.
+    float velY    = acField<float>(task, 0x5b0);
+    float posY    = acField<float>(task, 0x4dc);
+    float targetY = acField<float>(task, 0x5a8);
+    bool  yDone;
+    if (-velY < posY - targetY) {
+        acField<float>(task, 0x4dc) = posY + velY;
+        yDone = false;
+    } else {
+        acField<float>(task, 0x4dc) = targetY;
+        acField<float>(task, 0x5b0) = 0.0f;
+        yDone = true;
+    }
+    // True while either axis is still moving (bitwise OR matches Ghidra).
+    return static_cast<bool>((velX != 0.0f) |
+                             static_cast<unsigned>(!yDone && velY != 0.0f));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 4.  sugorokuEasePositionPairB — Ghidra: FUN_000a1ac8
+// ════════════════════════════════════════════════════════════════════════════
+// Ease the player board position (+0x5cc/+0x5d0) toward its target
+// (+0x5bc/+0x5c0) using stored velocities (+0x5c4/+0x5c8).
+// Returns true while still moving.
+bool sugorokuEasePositionPairB(AcMainTask *task) {
+    // X axis.
+    float velX    = acField<float>(task, 0x5c4);
+    float posX    = acField<float>(task, 0x5cc);
+    float targetX = acField<float>(task, 0x5bc);
+    if (-velX < posX - targetX) {
+        acField<float>(task, 0x5cc) = posX + velX;
+    } else {
+        acField<float>(task, 0x5cc) = targetX;
+        acField<float>(task, 0x5c4) = 0.0f;
+        velX = 0.0f;
+    }
+    // Y axis.
+    float velY    = acField<float>(task, 0x5c8);
+    float posY    = acField<float>(task, 0x5d0);
+    float targetY = acField<float>(task, 0x5c0);
+    bool  yDone;
+    if (-velY < posY - targetY) {
+        acField<float>(task, 0x5d0) = posY + velY;
+        yDone = false;
+    } else {
+        acField<float>(task, 0x5d0) = targetY;
+        acField<float>(task, 0x5c8) = 0.0f;
+        yDone = true;
+    }
+    return static_cast<bool>((velX != 0.0f) |
+                             static_cast<unsigned>(!yDone && velY != 0.0f));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 5.  sugorokuDrawSquareText — Ghidra: FUN_000a1bb4
+// ════════════════════════════════════════════════════════════════════════════
+// If the current node (+0x4bc) has a visible text label, draw it with
+// drawAepTextMultiline.  The text source depends on node->type.
+void sugorokuDrawSquareText(AcMainTask *task) {
+    const TreasureMap::Node *node = acField<const TreasureMap::Node *>(task, 0x4bc);
+    if (!node) return;
+
+    int         iVar8 = acField<int>(task, 0x88c);   // frame / slot index
+    int         type  = node->type;
+    const char *text  = nullptr;
+    unsigned    uVar7 = 0;
+
+    switch (type) {
+    case 2: {   // character message square
+        if (acField<int>(task, 0x8c0) > 0 &&
+            acField<int>(task, 0x278) > acField<int>(task, 0x8bc)) {
+            text  = getCharacterAssetName(acField<int>(task, 0x620), iVar8);
+            iVar8 -= 0xe6;
+        }
+        break;
+    }
+    case 3:     // bonus / treasure (check mapType / game-state) — TODO: full logic
+        break;
+    case 5: {   // sub-map flag square
+        int flag = getTreasureMapValue_fb54(0, acField<int>(task, 0x620));
+        // TODO: check against completion state; set text if locked.
+        (void)flag;
+        break;
+    }
+    case 6:     // music square — TODO: check unlock bit in task[...+0x748]
+        break;
+    case 7:     // wallpaper square — TODO: check unlock bit in task[...+0x6dc]
+        break;
+    case 10: {  // friend-meet square
+        TreasureTmpData tmp = [UserSettingData treasureTmp];
+        if (acField<void *>(task, 0xe0) &&
+            ((tmp.raw0x4d >> 24) & 0xFF)) {
+            // TODO: set text from task data
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (text) {
+        drawAepTextMultiline(text, iVar8,
+                             (int)(acField<float>(task, 0x890) - 63.0f),
+                             uVar7, 0x1b, 0x2e, 0x615245, 0x18, 100);
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 6.  sugorokuSaveTreasureProgress — Ghidra: FUN_000a1ddc
+// ════════════════════════════════════════════════════════════════════════════
+// Flush the in-flight TreasureTmpData to Core-Data (TreasureData) for the
+// square that was just visited.  Called when the board-walk animation ends.
+void sugorokuSaveTreasureProgress(AcMainTask *task) {
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+    short subId = static_cast<short>(tmp.subMapId);
+    if (subId < 0) return;
+
+    NSManagedObjectContext *ctx =
+        [AppDelegate appDelegate].managedObjectContext;
+    [ctx reset];
+
+    TreasureData *td =
+        [TreasureData getTreasureData:subId / 10
+                             subMapId:subId % 10
+               inManagedObjectContext:ctx];
+    if (!td) return;
+
+    td.musicPiece     = @([td.musicPiece intValue]     | (int)tmp.raw0x08);
+    td.wallPaperPiece = @([td.wallPaperPiece intValue] | (int)tmp.raw0x0c);
+
+    // Goal type: task[0x8b1] == 2 → sound ticket; 1 → chara ticket.
+    uint8_t goalType = acField<uint8_t>(task, 0x8b1);
+    if (goalType == 2)
+        td.goalTouchSound = @([td.goalTouchSound intValue] + 1);
+    else if (goalType == 1)
+        td.goalCharaTicket = @([td.goalCharaTicket intValue] + 1);
+
+    td.clearCnt = @([td.clearCnt intValue] + 1);
+
+    // Keep the best (minimum) fast-record score.
+    int existFast = [td.fastRecord intValue];
+    int newFast   = static_cast<int>(tmp.raw0x49);
+    td.fastRecord = @(existFast < newFast ? existFast : newFast);
+
+    // Friend-meet flag: byte 3 of raw0x4d.
+    if ((tmp.raw0x4d >> 24) & 0xFF)
+        td.friendMeetCnt = @([td.friendMeetCnt intValue] + 1);
+
+    NSError *saveErr = nil;
+    [ctx save:&saveErr];
+    // (error handling intentionally omitted: reconstruction)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 7.  sugorokuSetupScrollBounds — Ghidra: FUN_000a2544
+// ════════════════════════════════════════════════════════════════════════════
+// Snap the player draw position (+0x5cc/+0x5d0) to the node tile centre,
+// compute a clamped scroll target (+0x5a4/+0x5a8) and arm the ease velocities
+// (+0x5ac/+0x5b0) so the viewport glides there.
+void sugorokuSetupScrollBounds(AcMainTask *task) {
+    const TreasureMap::Node *node = acField<const TreasureMap::Node *>(task, 0x4bc);
+    if (!node) return;
+
+    float nodeX = static_cast<float>(node->x * 0x1a);   // tile → pixel
+    float nodeY = static_cast<float>(node->y * 0x1a);
+
+    // Snap player board position.
+    acField<float>(task, 0x5cc) = nodeX;
+    acField<float>(task, 0x5d0) = nodeY;
+
+    // Clamped scroll target: add small offset then clamp to map bounds.
+    float minX = acField<float>(task, 0x4e0);
+    float maxX = acField<float>(task, 0x4e8);
+    float minY = acField<float>(task, 0x4e4);
+    float maxY = acField<float>(task, 0x4ec);
+
+    float targetX = nodeX + 52.0f;
+    if (targetX < minX) targetX = minX;
+    if (targetX > maxX) targetX = maxX;
+
+    float targetY = nodeY + 64.0f;
+    if (targetY < minY) targetY = minY;
+    if (targetY > maxY) targetY = maxY;
+
+    acField<float>(task, 0x5a4) = targetX;
+    acField<float>(task, 0x5a8) = targetY;
+
+    // Arm velocities: ±10 px/frame toward target.
+    acField<float>(task, 0x5ac) =
+        (acField<float>(task, 0x4d8) < targetX) ? 10.0f : -10.0f;
+    acField<float>(task, 0x5b0) =
+        (acField<float>(task, 0x4dc) < targetY) ? 10.0f : -10.0f;
+
+    acField<float>(task, 0x5b4) = 0.0f;
+    acField<float>(task, 0x5b8) = 0.0f;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 8.  sugorokuLoadWallTextures — Ghidra: FUN_000a2b64
+// ════════════════════════════════════════════════════════════════════════════
+// Replace the 9 wall-nail textures (+0x1c8) for the given wallpaper page.
+// Old textures are deleted before loading the new set.
+void sugorokuLoadWallTextures(AcMainTask *task, int page) {
+    // Delete existing wall textures.
+    for (int i = 0; i < 9; i++) {
+        neTextureForiOS *&slot = acField<neTextureForiOS *>(task, 0x1c8 + i * 4);
+        if (slot) { delete slot; slot = nullptr; }
+    }
+    int base = page * 9;
+    for (int i = 0; i < 9; i++) {
+        short idx = findTreasureMapIndexById(base + i);
+        neTextureForiOS *t = new neTextureForiOS();
+        acField<neTextureForiOS *>(task, 0x1c8 + i * 4) = t;
+        NSString *name = [NSString stringWithFormat:@"sugo_wall_nail_%02d", (int)idx];
+        NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"png"];
+        if (path) t->load([path UTF8String]);
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 9.  sugorokuTaskDispose — Ghidra: FUN_000a2d00
+// ════════════════════════════════════════════════════════════════════════════
+// Full teardown of the sugoroku board scene: delete all textures and layers,
+// unload assets, release sound effects, then kill this task and activate the
+// next one (+0x948).
+void sugorokuTaskDispose(AcMainTask *task) {
+    AudioManager *audioMgr = [AudioManager sharedManager];
+
+    // 1. Delete sprite textures at slot indices 0x35..0x3e (offsets 0xd4..0xf8).
+    for (int i = 0x35; i < 0x3f; i++) {
+        neTextureForiOS *&s = acField<neTextureForiOS *>(task, i * 4);
+        if (s) { delete s; s = nullptr; }
+    }
+
+    // 2. Delete 3 wall-nail arrays × 10 items (byte bases 0xfc, 0x124, 0x14c).
+    static const int kWallBases[] = {0xfc, 0x124, 0x14c};
+    for (int base : kWallBases) {
+        for (int j = 0; j < 10; j++) {
+            neTextureForiOS *&s = acField<neTextureForiOS *>(task, base + j * 4);
+            if (s) { delete s; s = nullptr; }
+        }
+    }
+
+    // 3. Delete music-artwork, wall and extra textures
+    //    (slot ranges 0x69..0x71, 0x72..0x7a, 0x7b..0x86).
+    for (int i = 0x69; i <= 0x86; i++) {
+        neTextureForiOS *&s = acField<neTextureForiOS *>(task, i * 4);
+        if (s) { delete s; s = nullptr; }
+    }
+
+    // 4. Release character-select textures.
+    charaSelectReleaseTextures(task);
+
+    // 5. Unlink + delete AEP layer slots (Ghidra loop order preserved).
+    auto deleteLayer = [&](int off) {
+        AepLyrCtrl *&lyr = acField<AepLyrCtrl *>(task, off);
+        if (lyr) { lyr->unlink(); delete lyr; lyr = nullptr; }
+    };
+    for (int i = 0x0b; i < 0x28; i++) deleteLayer(i * 4);   // offsets 0x2c..0x9c
+    for (int i = 0x30; i < 0x34; i++) deleteLayer(i * 4);   // offsets 0xc0..0xcc
+    for (int i = 0x28; i < 0x30; i++) deleteLayer(i * 4);   // offsets 0xa0..0xbc
+
+    // 6. Unload AEP asset group 5.
+    AepUnloadGroup(acField<AepManager *>(task, 0x28), 5);
+
+    // 7. Release the "goal" AEP layer.
+    sugorokuReleaseGoalLayer(task);
+
+    // 8. Delete the TreasureMap.
+    TreasureMap *tm = acField<TreasureMap *>(task, 0x4b0);
+    if (tm) {
+        resetTreasureMapData();
+        delete tm;
+        acField<TreasureMap *>(task, 0x4b0) = nullptr;
+    }
+
+    // 9. Release Objective-C objects stored in the blob.
+    acField<__unsafe_unretained id>(task, 0x944) = nil;
+    acField<__unsafe_unretained id>(task, 0x630) = nil;
+    acField<__unsafe_unretained id>(task, 0x640) = nil;
+
+    // 10. Release sound effects (15 IDs at +0x438).
+    // The IDs are stored as int (4 bytes, matching 32-bit ILP32 loadSe return).
+    for (int i = 0; i < 15; i++) {
+        RSND_SOURCE_ID rid =
+            static_cast<RSND_SOURCE_ID>(acField<uint32_t>(task, 0x438 + i * 4));
+        [audioMgr releaseSe:nil resourceId:rid];
+    }
+
+    // 11. Release / reload system SEs.
+    neSceneManager::shared().releaseSystemSe();
+    [audioMgr cleanupSe];
+    neSceneManager::shared().loadSystemSe();
+
+    // 12. Kill this task and activate the next one (+0x948).
+    static_cast<C_TASK *>(task)->kill();
+    void *nextTask = acField<void *>(task, 0x948);
+    if (nextTask)
+        static_cast<C_TASK *>(nextTask)->setPriority(3);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 10.  sugorokuDrawBoard — Ghidra: FUN_000a303c
+// ════════════════════════════════════════════════════════════════════════════
+// Cull and draw all board squares, edges, the player sprite and the HUD for
+// the current frame.
+void sugorokuDrawBoard(AcMainTask *task) {
+    AepManager *mgr = acField<AepManager *>(task, 0x28);
+
+    float scrollOffX = acField<float>(task, 0x4d8) - acField<float>(task, 0x514);
+    float scrollOffY = acField<float>(task, 0x4dc) - acField<float>(task, 0x518);
+    int   screenW    = acField<int>(task, 0x524);   // full screen width
+    int   screenH    = acField<int>(task, 0x528);
+    int   halfW      = screenW / 2;
+    int   halfH      = screenH / 2;
+
+    // Camera AABB (in board-pixel space).
+    float camL = scrollOffX - (float)halfW;
+    float camR = scrollOffX + (float)halfW;
+    float camT = scrollOffY - (float)halfH;
+    float camH = scrollOffY + (float)halfH;
+
+    // Draw squares.
+    const TreasureMap::Node *nodes =
+        acField<const TreasureMap::Node *>(task, 0x4b4);
+    int nodeCount = acField<int>(task, 0x4c4);
+    for (int i = 0; i < nodeCount; i++) {
+        const TreasureMap::Node *n = nodes + i;   // stride 0x120
+        float nx = (float)(n->x * 26);
+        float ny = (float)(n->y * 26);
+        if (isWithinRange2D(nx, nx, nx + 104.0f,
+                            ny, ny + 128.0f,
+                            camL, camT, camR, camH))
+            sugorokuDrawSquare(task, n);
+    }
+
+    // Draw edges.
+    const TreasureMap::ConnectStruct *edges =
+        reinterpret_cast<const TreasureMap::ConnectStruct *>(
+            static_cast<intptr_t>(acField<int>(task, 0x4b8)));
+    int edgeCount = static_cast<int>(acField<int16_t>(task, 0x4c6));
+    for (int i = 0; i < edgeCount; i++) {
+        const TreasureMap::ConnectStruct *e = edges + i;
+        float ax = (float)(e->a->x * 26), ay = (float)(e->a->y * 26);
+        float bx = (float)(e->b->x * 26), by = (float)(e->b->y * 26);
+        float minX = ax < bx ? ax : bx, maxX = ax > bx ? ax : bx;
+        float minY = ay < by ? ay : by, maxY = ay > by ? ay : by;
+        if (isWithinRange2D(minX, minX, maxX + 104.0f,
+                            minY, maxY + 128.0f,
+                            camL, camT, camR, camH))
+            sugorokuDrawPath(task, e);
+    }
+
+    sugorokuDrawPlayerAndUi(task);
+
+    // Overlay frame (FUN_000a303c: draw if fade-flag && bonus-count > 0).
+    if (acField<uint8_t>(task, 0x5f7) && acField<int>(task, 0x628) > 0)
+        drawAepFrame(mgr, acField<int>(task, 0x364), halfW, halfH, 0x20, 0x20);
+
+    // HUD (four possible frames; state selected by task[0x62c] / task[0x5f2]).
+    {
+        uint8_t flag  = acField<uint8_t>(task, 0x5f2);
+        int     state = acField<int>(task, 0x62c);
+        int     h;
+        if (flag)         h = acField<int>(task, 0x2ec);
+        else if (state)   h = acField<int>(task, 0x2e8);
+        else              h = acField<int>(task, 0x2e0);
+        if (h) drawAepFrame(mgr, h, halfW, halfH, 0x20, 0x24);
+    }
+
+    // Notice layer.
+    if (acField<uint8_t>(task, 0x89a))
+        drawAepFrame(mgr, acField<int>(task, 0x324), halfW, halfH, 0x20, 0x24);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 11.  sugorokuDrawBackground — Ghidra: FUN_000a3308
+// ════════════════════════════════════════════════════════════════════════════
+// Draw the scrolling background tile for the current scroll position, apply
+// the transition fade overlay, and drive the background animation layer.
+void sugorokuDrawBackground(AcMainTask *task) {
+    AepManager       *mgr     = acField<AepManager *>(task, 0x28);
+    neTextureForiOS  *bgTex   = acField<neTextureForiOS *>(task, 0xd8);
+    if (!bgTex) return;
+
+    int   scrollX = (int)(acField<float>(task, 0x4d8) - acField<float>(task, 0x514));
+    int   screenW = acField<int>(task, 0x524);
+    bool  fadeFl  = acField<uint8_t>(task, 0x5f7) != 0;
+    int   sx      = fadeFl ? 201 : 100;
+    int   sy      = fadeFl ? 200 : 100;
+    int   bgW     = acField<int>(task, 0x530);
+    int   bgH     = acField<int>(task, 0x534);
+
+    // Two-tile horizontal wrap.
+    for (int i = 0; i < 2; i++) {
+        int x = screenW * i + (screenW / 2 - scrollX);
+        if (x < 0)
+            x = screenW - ((-x) % (screenW * 2));
+        else
+            x = (x % (screenW * 2)) - screenW;
+        drawSprite(mgr, bgTex,
+                   0, 0, bgW, bgH,
+                   x, 0, sx, sy,
+                   0, 0, 0,
+                   100, 0,
+                   0x20, 0xffffff, 0,
+                   0x25);
+    }
+
+    // Transition overlay fade.
+    int alpha = acField<int>(task, 0x950);
+    if (acField<uint8_t>(task, 0x5fa) == 0) {
+        if (alpha >= 1) alpha -= 4;
+    } else {
+        if (alpha < 0x34) alpha += 4;
+    }
+    acField<int>(task, 0x950) = alpha;
+    if (alpha > 0)
+        drawAepTransitionOverlay(mgr, alpha);
+
+    // Background animation layer (+0x9c): play/reset driven by board state.
+    AepLyrCtrl *bgLyr = acField<AepLyrCtrl *>(task, 0x9c);
+    if (bgLyr) {
+        int bgState = acField<int>(task, 0x5d4);
+        if ((bgState - 1) < 2) {
+            if (!bgLyr->isAnimating()) bgLyr->play();
+        } else {
+            if (bgLyr->isAnimating()) bgLyr->reset();
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 12.  sugorokuDrawSquare — Ghidra: FUN_000a4eb4
+// ════════════════════════════════════════════════════════════════════════════
+// Select the AEP frame sprite for node type, then draw it at the node's
+// board-pixel position adjusted for the current scroll.
+void sugorokuDrawSquare(AcMainTask *task, const TreasureMap::Node *node) {
+    AepManager *mgr       = acField<AepManager *>(task, 0x28);
+    int         scrollOffX = (int)(acField<float>(task, 0x4d8) - acField<float>(task, 0x514));
+    int         scrollOffY = (int)(acField<float>(task, 0x4dc) - acField<float>(task, 0x518));
+    int         screenW    = acField<int>(task, 0x524);
+    int         screenH    = acField<int>(task, 0x528);
+    int         type       = node->type;
+
+    // "Active move" override: display the move-hint frame for walkable squares.
+    if (acField<int>(task, 0x8a2) > 0 && type != 1 && type != 8) {
+        drawAepFrame(mgr, acField<int>(task, 0x340),
+                     node->x * 26 - scrollOffX + screenW / 2,
+                     node->y * 26 - 32 - scrollOffY + screenH / 2,
+                     0x20, 0x22);
+        return;
+    }
+
+    int frameHandle = 0;
+    switch (type) {
+    case 0:   frameHandle = acField<int>(task, 0x338); break;   // start
+    case 1:   frameHandle = acField<int>(task, 0x33c); break;   // player-start
+    case 3:                                                      // bonus (locked)
+    case 4:   frameHandle = acField<int>(task, 0x344); break;   // treasure — TODO: unlock check → 0x348
+    case 5: { // sub-map flag
+        int flag = getTreasureMapValue_fb54(0, node->id);
+        if (flag < 0) flag = 0;
+        frameHandle = acField<int>(task, 0x390 + flag * 4);
+        break;
+    }
+    case 6:   frameHandle = acField<int>(task, 0x34c); break;   // music — TODO: unlock → 0x350
+    case 7:   frameHandle = acField<int>(task, 0x354); break;   // wallpaper — TODO: unlock → 0x358
+    case 8: { // warp
+        int warpIdx = node->field8;
+        if (warpIdx < 0) warpIdx = 0;
+        if (warpIdx > 9) warpIdx = 9;
+        frameHandle = acField<int>(task, 0x368 + warpIdx * 4);
+        break;
+    }
+    case 9:   frameHandle = acField<int>(task, 0x35c); break;   // bonus (active)
+    case 10:  // friend-meet: draw the overlay, then the base frame
+        sugorokuDrawFriendMeet(task);
+        frameHandle = acField<int>(task, 0x360);
+        break;
+    default:  frameHandle = acField<int>(task, 0x340); break;
+    }
+
+    if (frameHandle)
+        drawAepFrame(mgr, frameHandle,
+                     node->x * 26 - scrollOffX + screenW / 2,
+                     node->y * 26 - 32 - scrollOffY + screenH / 2,
+                     0x20, 0x22);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 13.  sugorokuDrawPath — Ghidra: FUN_000a50dc
+// ════════════════════════════════════════════════════════════════════════════
+// Draw the arrow chain connecting edge->a to edge->b.  Vertical edges use 6
+// arrows; horizontal edges use 4 arrows.  Back-links use a separate sprite set.
+void sugorokuDrawPath(AcMainTask *task, const TreasureMap::ConnectStruct *edge) {
+    AepManager *mgr = acField<AepManager *>(task, 0x28);
+    int scrollOffX  = (int)(acField<float>(task, 0x4d8) - acField<float>(task, 0x514));
+    int scrollOffY  = (int)(acField<float>(task, 0x4dc) - acField<float>(task, 0x518));
+    int halfW       = acField<int>(task, 0x524) / 2;
+    int halfH       = acField<int>(task, 0x528) / 2;
+
+    const TreasureMap::Node *nodeA = edge->a;
+    const TreasureMap::Node *nodeB = edge->b;
+    bool sameRow = edge->sameRow;
+
+    // Back-link arrows use a different sprite set (+0x3b8 vs +0x3a0).
+    const int *arr = (nodeB->backLink == nodeA)
+        ? &acField<int>(task, 0x3b8)
+        : &acField<int>(task, 0x3a0);
+
+    if (!sameRow) {
+        // Vertical path (nodeA and nodeB are in different rows, Y changes).
+        int rot = (nodeA->y < nodeB->y) ? 0 : 0xb4;   // 0 = down, 180 = up
+        int startX = nodeA->x * 26 + 0x28 - scrollOffX + halfW;
+        int startY = (nodeA->y < nodeB->y)
+            ? nodeA->y * 26 + 0x60 - scrollOffY + halfH
+            : nodeA->y * 26 + 8    - scrollOffY + halfH;
+        int dy = (nodeB->y * 26 - nodeA->y * 26) / 7;  // 6 arrows, 7 gaps
+        if (dy < 0) dy = -dy;
+        for (int j = 0; j < 6; j++) {
+            int ay = startY + dy * (j + 1);
+            AepDrawSpriteHandle(mgr, arr[j],
+                                startX + 0xb, ay + 0xc,
+                                0x42c80000, 0x42c80000,
+                                rot, 0xc, 0xc,
+                                100, 0, 8, 0xffffff,
+                                nullptr, 0x23, 1);
+        }
+    } else {
+        // Horizontal path (nodeA and nodeB are in the same row, X changes).
+        int rot = (nodeA->x < nodeB->x) ? -0x5a : 0x5a;  // -90 = right, 90 = left
+        int startY = nodeA->y * 26 + 0x69 - scrollOffY + halfH;
+        int startX = (nodeA->x < nodeB->x)
+            ? nodeA->x * 26 + 0x5a - scrollOffX + halfW
+            : nodeA->x * 26 + 8    - scrollOffX + halfW;
+        int dx = (nodeB->x * 26 - nodeA->x * 26) / 5;    // 4 arrows, 5 gaps
+        if (dx < 0) dx = -dx;
+        for (int j = 0; j < 4; j++) {
+            int ax = startX + dx * (j + 1);
+            AepDrawSpriteHandle(mgr, arr[j * 4],
+                                ax + 0xb, startY + 0xc,
+                                0x42c80000, 0x42c80000,
+                                rot, 0xc, 0xc,
+                                100, 0, 8, 0xffffff,
+                                nullptr, 0x23, 1);
+        }
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 14.  sugorokuDrawPlayerAndUi — Ghidra: FUN_000a52f0
+// ════════════════════════════════════════════════════════════════════════════
+// Draw the player sprite (with warp-spin or board-enter bounce), the rank
+// badge, the event badge, the roulette result frame and the 4 hit-flash layers.
+void sugorokuDrawPlayerAndUi(AcMainTask *task) {
+    AepManager *mgr = acField<AepManager *>(task, 0x28);
+
+    float scrollOffX = acField<float>(task, 0x4d8) - acField<float>(task, 0x514);
+    float scrollOffY = acField<float>(task, 0x4dc) - acField<float>(task, 0x518);
+    int   halfW      = acField<int>(task, 0x524) / 2;
+    int   halfH      = acField<int>(task, 0x528) / 2;
+    int   screenX    = (int)(acField<float>(task, 0x5cc) - scrollOffX + (float)halfW);
+    int   screenY    = (int)(acField<float>(task, 0x5d0) - scrollOffY + (float)halfH);
+    int   iVar6      = screenX + 0x34;   // player draw X (offset from board node centre)
+
+    // Warp / board-entry horizontal scale (squish animation).
+    int warpSX = 30;
+    if (acField<uint8_t>(task, 0x5f0) != 0) {
+        // Bounce using the active AepLyrCtrl's frame counter.
+        void  *lyrPtr    = acField<void *>(task, 0x70);   // AepLyrCtrl* slot
+        int    frameTotal = *reinterpret_cast<int *>(
+                               reinterpret_cast<char *>(lyrPtr) + 0x3c) - 1;
+        float  frame      = *reinterpret_cast<float *>(
+                               reinterpret_cast<char *>(lyrPtr) + 0x40);
+        double angle      = (frameTotal > 0)
+            ? (double)frame * 18.8496 / (double)frameTotal
+            : 0.0;
+        warpSX = (int)(cosf((float)angle) * 30.0f);
+    }
+    // Reverse horizontal scale when moving right (board-state bit).
+    if ((acField<int>(task, 0x5d4) & ~1) == 2) warpSX = -warpSX;
+
+    // Player sprite (hidden during warp flash).
+    if (acField<uint8_t>(task, 0x5ef) == 0) {
+        drawSprite(mgr, acField<neTextureForiOS *>(task, 0xdc),
+                   0, 0, 0x228, 0x228,
+                   iVar6, screenY, warpSX, 0x1e,
+                   0, 0x114, 0x114,
+                   100, 0,
+                   0x20, 0xffffff, 0,
+                   0x21);
+    }
+
+    // Rank badge (types 0..3, stored at +0x8b0; hidden if type >= 4).
+    uint8_t badgeType = acField<uint8_t>(task, 0x8b0);
+    if (badgeType < 4) {
+        int badgeLyrHandle = acField<int>(task, (int)badgeType * 4 + 0x258);
+        int badgeFrameCnt  = acField<int>(task, (int)badgeType * 4 + 0x268);
+        int &frameCtr      = acField<int>(task, 0x278);
+        int  frame         = (badgeFrameCnt > 0) ? (frameCtr % badgeFrameCnt) : 0;
+        mgr->drawLayer(badgeLyrHandle, frame,
+                       screenX + 0x7a, screenY - 100,
+                       100, 100, 0, 0, 0, 0, 100, 0, 0x20, 0, nullptr, nullptr, 0x20, 1);
+        frameCtr++;
+    }
+
+    // Event badge (+0x89b).
+    if (acField<uint8_t>(task, 0x89b)) {
+        int evHandle = acField<int>(task, 0x320);
+        AepDrawSpriteHandle(mgr, evHandle,
+                            screenX + 0x43, screenY + 0x28,
+                            0x42c80000, 0x42c80000,
+                            0, 0, 0, 100, 0, 0x20, 0xffffff,
+                            nullptr, 0x21, 0);
+    }
+
+    // Roulette result frame (+0x8ac, visible when player is idle).
+    if (acField<uint8_t>(task, 0x5ef) == 0) {
+        int roulVal = acField<int>(task, 0x8ac);
+        if (roulVal >= -1) {
+            AepLyrCtrl *resultLyr = acField<AepLyrCtrl *>(task, 0x68);
+            if (!resultLyr || !resultLyr->isAnimating()) {
+                int rHandle = 0;
+                switch (roulVal) {
+                case 10: rHandle = acField<int>(task, 0x308); break;
+                case 11: rHandle = acField<int>(task, 0x30c); break;
+                case 12: rHandle = acField<int>(task, 0x310); break;
+                case 13: rHandle = acField<int>(task, 0x314); break;
+                case 16: rHandle = acField<int>(task, 0x31c); break;
+                case 19: rHandle = acField<int>(task, 0x318); break;
+                case 20: rHandle = acField<int>(task, 0x328); break;
+                case 21: rHandle = acField<int>(task, 0x32c); break;
+                case 22: rHandle = acField<int>(task, 0x330); break;
+                case 23: rHandle = acField<int>(task, 0x334); break;
+                default: break;
+                }
+                if (rHandle)
+                    drawAepFrame(mgr, rHandle,
+                                 screenX, screenY, 0x20, 0x22);
+            }
+        }
+    }
+
+    // 4 hit-flash animation layers (+0xc0..+0xcf); position each to its
+    // screen slot while it is playing.
+    for (int i = 0; i < 4; i++) {
+        AepLyrCtrl *lyr = acField<AepLyrCtrl *>(task, 0xc0 + i * 4);
+        if (!lyr || !lyr->isAnimating()) continue;
+        int lx, ly;
+        switch (i) {
+        case 0: ly = screenY + 0x3c; lx = screenX - 0x94; break;
+        case 1: ly = screenY + 0x3c; lx = screenX + 0xfc; break;
+        case 2: ly = screenY - 0xaa; lx = iVar6;           break;
+        case 3: ly = screenY + 0x118; lx = iVar6;          break;
+        default: lx = ly = 0; break;
+        }
+        *reinterpret_cast<int *>(reinterpret_cast<char *>(lyr) + 0x18) = lx;
+        *reinterpret_cast<int *>(reinterpret_cast<char *>(lyr) + 0x1c) = ly;
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 15.  sugorokuDrawFriendMeet — Ghidra: FUN_000a5740
+// ════════════════════════════════════════════════════════════════════════════
+// If a friend sprite is loaded (+0xe0), draw it at the current node's screen
+// position with a cos/sin scale bounce, then fade it out.  Also overlay the
+// friend's name label.
+void sugorokuDrawFriendMeet(AcMainTask *task) {
+    void *friendTex = acField<void *>(task, 0xe0);
+    if (!friendTex) return;
+    int opacity = acField<int>(task, 0x61c);
+    if (!opacity) return;
+
+    int scrollOffX = (int)(acField<float>(task, 0x4d8) - acField<float>(task, 0x514));
+    int scrollOffY = (int)(acField<float>(task, 0x4dc) - acField<float>(task, 0x518));
+    int screenW    = acField<int>(task, 0x524);
+    int screenH    = acField<int>(task, 0x528);
+
+    const TreasureMap::Node *node = acField<const TreasureMap::Node *>(task, 0x4bc);
+    int iVar7 = node
+        ? node->x * 26 + 0x34 - scrollOffX + screenW / 2
+        : screenW / 2;
+    int iVar6 = node
+        ? node->y * 26 - scrollOffY + screenH / 2
+        : screenH / 2;
+
+    // Cos/sin bounce animation (30 frames: first 15 = cos, next 15 = sin).
+    int   frame = acField<int>(task, 0x5e8);
+    float animVal;
+    if (frame < 15) {
+        animVal = cosf((float)((double)frame * M_PI / 15.0));
+    } else {
+        animVal = sinf((float)((double)(frame - 15) * M_PI / 15.0));
+    }
+    int animScale = (int)(animVal * 30.0f);
+
+    AepManager *mgr = acField<AepManager *>(task, 0x28);
+    drawSprite(mgr, reinterpret_cast<neTextureForiOS *>(friendTex),
+               0, 0, 0x228, 0x228,
+               iVar7, iVar6, animScale, 0x1e,
+               0, 0x114, 0x114,
+               opacity, 100 - opacity,
+               0x20, 0xffffff, 0,
+               0x21);
+
+    // Name label.
+    __unsafe_unretained NSString *nameStr =
+        (__bridge NSString *)acField<void *>(task, 0x944);
+    if (nameStr) {
+        mgr->drawLayer(acField<int>(task, 0x22c), 0,
+                       iVar7, iVar6 + 0x5a,
+                       100, 100, 0, 0, 0, 0, 100, 0, 1, 0x20, nullptr, nullptr, 0x20, 1);
+
+        const char *utf8 = [nameStr UTF8String];
+        char buf[8] = {};
+        size_t len = utf8 ? strnlen(utf8, 4) : 0;
+        memcpy(buf, utf8, len);
+        // Truncate to 4 visible chars + "..".
+        if (utf8 && strlen(utf8) > 4) {
+            buf[4] = '.'; buf[5] = '.'; buf[6] = '\0';
+        }
+        drawAepManagerText(mgr, buf,
+                           0x12, iVar7, iVar6 + 0x4e,
+                           1, 100, 0x615245, 0x1f);
+    }
+
+    // Fade out.
+    int v = opacity - 5;
+    acField<int>(task, 0x61c) = (v < 1) ? 0 : v;
+}
+
+}  // anonymous namespace  (end of file-static sugoroku helpers)

@@ -10,6 +10,7 @@
 
 #include <cstdint>
 
+#import "AcMainTask.h"
 #import "AppDelegate.h"
 #import "BFCodec.h"
 #import "CharaData.h"
@@ -21,6 +22,7 @@
 #import "RhCrypto.h"
 #import "RhUtil.h"
 #import "UserSettingData.h"
+#include "neTextureForiOS.h"
 
 CharaManager gCharaManager;
 
@@ -232,4 +234,123 @@ NSArray *CharaManager::collectUnlockedCharaIds() {
         }
     }
     return [unlocked copy];
+}
+
+// ---------------------------------------------------------------------------
+// Chara-select page-texture helpers.
+// Byte-offset accessor for AcMainTask's flat play-data block.  Mirrors the
+// private field<T>(off) template inside AcMainTask without requiring access
+// to its private members.  Offsets are binary-exact from Ghidra rb420.
+// ---------------------------------------------------------------------------
+namespace {
+
+template <typename T>
+static inline T &acField(AcMainTask *task, ptrdiff_t off) {
+    return *reinterpret_cast<T *>(reinterpret_cast<char *>(task) + off);
+}
+
+} // namespace
+
+// Ghidra: charaSelectLoadPageTextures @ 0xa27f0.
+void charaSelectLoadPageTextures(AcMainTask *task, int page) {
+    __unsafe_unretained NSArray *available =
+        acField<__unsafe_unretained NSArray *>(task, 0x634);
+    __unsafe_unretained NSArray *gotChara =
+        acField<__unsafe_unretained NSArray *>(task, 0x630);
+
+    const int start = page * 6;
+    for (int i = 0; i < 6; i++) {
+        const auto idx = static_cast<unsigned>(start + i);
+        if (idx >= static_cast<unsigned>([available count])) {
+            break;
+        }
+
+        CharaInfo *info = available[idx];
+        const int charaId = info.charaId;
+
+        // Release the occupant of the current-page texture slot (+0x18c[i]).
+        auto &slot = acField<neTextureForiOS *>(task, 0x18c + i * 4);
+        if (slot) {
+            delete slot;
+            slot = nullptr;
+        }
+        slot = new neTextureForiOS();
+
+        // Characters 0-29 are bundled resources; 30+ are downloaded to
+        // the app-support directory.  Owned chars use the "open" art;
+        // locked chars use the "lock" placeholder.
+        BOOL owned = RhTestBitInNumberArray(gotChara, static_cast<unsigned>(static_cast<short>(charaId)));
+        NSString *imageName = [NSString stringWithFormat:
+            (owned ? @"open_chara_%03d.png" : @"lock_chara_%03d.png"),
+            (int)charaId];
+
+        NSString *path;
+        if (charaId < 30) {
+            path = [[NSBundle mainBundle] pathForResource:imageName ofType:nil];
+        } else {
+            path = [[AppDelegate appAppSupportDirectory]
+                    stringByAppendingPathComponent:imageName];
+        }
+        slot->load([path UTF8String]);
+    }
+}
+
+// Ghidra: charaSelectFindCharaIndex @ 0xa2a40.
+int charaSelectFindCharaIndex(AcMainTask *task, int charaId) {
+    __unsafe_unretained NSArray *available =
+        acField<__unsafe_unretained NSArray *>(task, 0x634);
+    int idx = 0;
+    for (CharaInfo *info in available) {
+        if (info.charaId == charaId) {
+            return idx;
+        }
+        ++idx;
+    }
+    // Not found: faithful to the binary, which returns the total array count.
+    // In practice the selected character is always in the available list.
+    return idx;
+}
+
+// Ghidra: charaSelectReleaseTextures @ 0xa2b10.
+void charaSelectReleaseTextures(AcMainTask *task) {
+    for (int i = 0; i < 6; i++) {
+        // Prev-page texture array at +0x174 (6 × neTextureForiOS*).
+        auto &prev = acField<neTextureForiOS *>(task, 0x174 + i * 4);
+        if (prev) {
+            delete prev;
+            prev = nullptr;
+        }
+        // Current-page texture array at +0x18c (6 × neTextureForiOS*).
+        auto &curr = acField<neTextureForiOS *>(task, 0x18c + i * 4);
+        if (curr) {
+            delete curr;
+            curr = nullptr;
+        }
+    }
+    // Highlight texture at +0xf0.
+    auto &highlight = acField<neTextureForiOS *>(task, 0xf0);
+    if (highlight) {
+        delete highlight;
+        highlight = nullptr;
+    }
+}
+
+// Ghidra: countAvailableCharacters @ 0x28b10.
+// The binary uses NEON SIMD to popcount each 32-bit word; __builtin_popcount
+// produces the same result portably.
+int countAvailableCharacters(NSArray *gotCharaArray) {
+    // Count the total number of owned characters (set bits in the gotChara
+    // bitfield, where each NSNumber element holds 32 bits).
+    unsigned totalOwned = 0;
+    for (NSNumber *word in gotCharaArray) {
+        totalOwned += static_cast<unsigned>(
+            __builtin_popcount(static_cast<unsigned>([word intValue])));
+    }
+    // Lazy-init gCharaManager if needed (binary calls getCharaManager() here).
+    CharaManagerShared();
+    NSUInteger available = [gCharaManager.availableInfos() count];
+    // Return 1 when the player owns at least as many characters as are
+    // currently available (all unlocked); 0 when there are still chars to
+    // collect.
+    return static_cast<int>(available <= static_cast<NSUInteger>(totalOwned));
 }

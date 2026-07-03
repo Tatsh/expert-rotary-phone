@@ -6,8 +6,11 @@
 //  texture and primitive is drawn through. Reconstructed from Ghidra project
 //  rb420, program PopnRhythmin (RTTI: ne::neGLES_11, "N2ne9neGLES_11E" @ DAT_0012e100).
 //
-//  `neIGLES` is the abstract interface (holds the enum vocabulary, referenced in
+//  `neIGLES` is the abstract GL interface (holds the enum vocabulary, referenced in
 //  the binary as "neIGLES::HINT_MAX" etc.); `neGLES_11` is the GL ES 1.1 backend.
+//  neIGLES derives from the engine's abstract `neRenderer` (System/src/Render), so the
+//  immediate-mode primitives dispatch their drawing-slot virtuals through the very same
+//  object; neGLES_11 implements both those slots and the enum-typed wrappers below.
 //
 //  Every enum below is decoded from its mapping table in the __const region and
 //  each member is annotated with the exact GL constant that ordinal maps to. The
@@ -19,12 +22,12 @@
 
 #pragma once
 
+#include "neRenderer.h"   // ::neRenderer abstract drawing interface + neMatrix4
+
 namespace ne {
 
-class neIGLES {
+class neIGLES : public ::neRenderer {
 public:
-    virtual ~neIGLES() {}
-
     // Framebuffer attachment points. Table @ DAT_0012e110 (3 entries), consumed
     // by RenderKindToGLRenderKind (FUN_00012f64; asserts kind < RENDER_KIND_MAX).
     enum RenderKind {
@@ -223,6 +226,19 @@ public:
     using DepthTestFunc = CompareFunc;   // asserts func < DEPTH_TEST_FUNC_MAX
     using AlphaTestFunc = CompareFunc;   // asserts func < ALPHA_TEST_FUNC_MAX
 
+    // Engine primitive ordinals -> GL mode. Table @ DAT_0012e2b0 (7 entries), indexed by
+    // the mode the neDraw* free functions pass to drawArrays/drawElements.
+    enum Primitive {
+        PRIM_POINTS = 0,         // GL_POINTS         (0x0000)
+        PRIM_LINE_STRIP,         // GL_LINE_STRIP     (0x0003)
+        PRIM_LINE_LOOP,          // GL_LINE_LOOP      (0x0002)
+        PRIM_LINES,              // GL_LINES          (0x0001)
+        PRIM_TRIANGLE_STRIP,     // GL_TRIANGLE_STRIP (0x0005)
+        PRIM_TRIANGLE_FAN,       // GL_TRIANGLE_FAN   (0x0006)
+        PRIM_TRIANGLES,          // GL_TRIANGLES      (0x0004)
+        PRIM_MAX
+    };
+
     // --- render API (thin GL ES 1.1 wrappers; bodies in the backend) ---
     virtual void enable(EnableState state) = 0;
     virtual void disable(EnableState state) = 0;
@@ -251,6 +267,10 @@ public:
     neGLES_11();
     ~neGLES_11() override;
 
+    // Un-hide the enum-typed setBlendFunc so the drawing-slot overload below can delegate.
+    using neIGLES::setBlendFunc;
+
+    // --- enum-typed GL wrappers (neIGLES) ---
     void enable(EnableState state) override;
     void disable(EnableState state) override;
     void enableClientState(ClientState state) override;
@@ -268,6 +288,41 @@ public:
     TexParamValue getTexParameter(TexParamType type) override;
     void deleteBuffer(unsigned buffer) override;
     void attachRenderbuffer(RenderKind kind, RenderType type, unsigned renderbuffer) override;
+
+    // --- drawing slots (::neRenderer) dispatched through by the neDraw* primitives ---
+    void shutdown() override;
+    void initialize() override;
+    void setViewport(int x, int y, int w, int h) override;
+    void loadMatrix(int mode, const neMatrix4 &m) override;
+    void genBuffer(unsigned &outName) override;
+    void selectTextureUnit(int unit) override;
+    void colorPointer(const void *ptr, int stride) override;
+    void vertexPointer(const void *ptr, int size, int stride) override;
+    void texCoordPointer(const void *ptr, int stride) override;
+    void bindElementBuffer(unsigned name) override;
+    void bufferData(const void *data, int size, int usage) override;
+    void bindTexture(unsigned name) override;
+    void applyTexParameter(int type, int value) override;
+    void uploadTexture(int format, int w, int h, const void *pixels) override;
+    void setBlendFunc(int src, int dst) override;
+    void setBlendFuncSeparate(int src, int dst, unsigned equation) override;
+    void setEnable(int cap, bool on) override;
+    void setClientArray(int array, bool on) override;
+    void drawArrays(int mode, int count) override;
+    void drawElements(int mode, int count, int offset) override;
+
+    // Redundant texture-bind + delete caches driven by the engine helpers neBindTexture
+    // (FUN_0001342c) / neDeleteTexture (FUN_00013778). Public because those helpers live
+    // in neRenderer.cpp and operate on this backend's state (renderer ivars +0x44/+0x60/
+    // +0x64/+0x68 and the 8-slot bound-name cache at +0xfc).
+    struct TexBindCache {
+        bool selectUnitPending = false;   // +0x44
+        int target = 0;                   // +0x60
+        int name = -1;                    // +0x64
+        int unit = 0;                     // +0x68
+        unsigned names[8] = {};           // +0xfc
+    };
+    TexBindCache texBindCache;
 
 private:
     // Cached GL state, at the ivar offsets observed in the decompiled backend.

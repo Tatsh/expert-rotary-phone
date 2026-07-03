@@ -7,11 +7,17 @@ target_sources(popnrhythmin PRIVATE
     AepTexture.mm
     neGLView.mm
     neGraphics.cpp
+    neRenderer.cpp
+    neTextTexture.mm
     neTextureForiOS.cpp
+    neTextureRef.cpp
     AepTexture.h
     neGLView.h
     neGraphics.h
+    neRenderer.h
+    neTextTexture.h
     neTextureForiOS.h
+    neTextureRef.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)
