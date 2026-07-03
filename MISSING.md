@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 83 |
-| Partial (file exists, methods missing) | 12 |
+| Complete | 84 |
+| Partial (file exists, methods missing) | 11 |
 | Fully missing (no source file) | 78 |
-| **Missing methods** | **1355** |
+| **Missing methods** | **1339** |
 
 ## Scope decisions
 
@@ -106,7 +106,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 12
+## Partial classes — 11
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
@@ -121,9 +121,8 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `StoreManageViewController` | 1 | 23 | 22 |
 | `AppDelegate` | 24 | 43 | 19 |
 | `StorePackDetailViewPad` | 15 | 32 | 17 |
-| `SettingTableViewController` | 4 | 20 | 16 |
 
-## Complete classes — 83
+## Complete classes — 84
 
 - `AcViewerDetailCell`
 - `AcViewerMusicCell`
@@ -174,6 +173,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `SettingGameTableViewController`
 - `SettingHowtoTableViewController`
 - `SettingOtherTableViewController`
+- `SettingTableViewController`
 - `SortCell`
 - `SoundSettingView`
 - `StoreAcMusicInfo`
@@ -3344,43 +3344,6 @@ Methods **15/32** · ivars 20 · `instanceSize`=`144`
 | `recommendPackIdArr` | `NSArray *` | `0x88` |
 | `m_BirthDayView` | `BirthDayViewController *` | `0x8c` |
 
-### `SettingTableViewController` — 🟡 partial
-
-Methods **4/20** · ivars 7 · `instanceSize`=`186`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initAtNavigationController` | `0x7ed98` |
-| `dealloc` | `0x7ef98` |
-| `endCloseAnimation` | `0x7f250` |
-| `viewDidAppear:` | `0x7f2f0` |
-| `viewDidLoad` | `0x7f31c` |
-| `didReceiveMemoryWarning` | `0x7f348` |
-| `numberOfSectionsInTableView:` | `0x7f374` |
-| `tableView:numberOfRowsInSection:` | `0x7f378` |
-| `tableView:cellForRowAtIndexPath:` | `0x7f390` |
-| `tableView:titleForHeaderInSection:` | `0x7f708` |
-| `tableView:accessoryTypeForRowWithIndexPath:` | `0x7f764` |
-| `tableView:didSelectRowAtIndexPath:` | `0x7f818` |
-| `commonAlertView:clickedButtonAtIndex:` | `0x80128` |
-| `settingClose` | `0x801dc` |
-| `onEffectOnChanged:` | `0x801ec` |
-| `onSimpleModeChanged:` | `0x8029c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_effectSwitch` | `UIButton *` | `0xa4` |
-| `_simpleModeSwitch` | `UISwitch *` | `0xa8` |
-| `_treasureRetireAlertView` | `CommonAlertView *` | `0xac` |
-| `_isAnimationing` | `BOOL` | `0xb0` |
-| `howtoViewCtrlPad` | `HowToViewCtrlPad *` | `0xb4` |
-| `isPad` | `BOOL` | `0xb8` |
-| `_isEffectOn` | `BOOL` | `0xb9` |
-
 ### `AcViewerDetailCell` — ✅ complete
 
 Methods **7/7** · ivars 5 · `instanceSize`=`72`
@@ -4067,6 +4030,22 @@ Methods **23/23** · ivars 8 · `instanceSize`=`208`
 | `_convDummyFrm` | `struct CGRect` | `0xb8` |
 | `_arrowTopView` | `UIImageView *` | `0xc8` |
 | `_arrowUnderView` | `UIImageView *` | `0xcc` |
+
+### `SettingTableViewController` — ✅ complete
+
+Methods **20/20** · ivars 7 · `instanceSize`=`186`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_effectSwitch` | `UIButton *` | `0xa4` |
+| `_simpleModeSwitch` | `UISwitch *` | `0xa8` |
+| `_treasureRetireAlertView` | `CommonAlertView *` | `0xac` |
+| `_isAnimationing` | `BOOL` | `0xb0` |
+| `howtoViewCtrlPad` | `HowToViewCtrlPad *` | `0xb4` |
+| `isPad` | `BOOL` | `0xb8` |
+| `_isEffectOn` | `BOOL` | `0xb9` |
 
 ### `SortCell` — ✅ complete
 
