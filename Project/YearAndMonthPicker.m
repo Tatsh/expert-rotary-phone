@@ -22,8 +22,8 @@
         self.dataSource = self;
         self.backgroundColor = [UIColor clearColor];
 
-        NSMutableArray *months = [[NSMutableArray arrayWithCapacity:168] retain];
-        monthArr = months;
+        NSMutableArray *months = [NSMutableArray arrayWithCapacity:168];
+        monthArr = months;   // strong ivar under ARC — retained on assignment
         for (int rep = 0; rep < 14; rep++) {
             for (int m = 1; m <= 12; m++) {
                 [months addObject:[NSString stringWithFormat:@" %d", m]];
@@ -37,9 +37,9 @@
     return self;
 }
 
-// @ 0x8f410 / sibling — the selected values (kept up to date by -pickerView:didSelectRow:).
-- (int)year  { return _year; }
-- (int)month { return _month; }
+// @ 0x8f410 / 0x8f424 — the selected values (kept up to date by -pickerView:didSelectRow:).
+- (int)year  { return _year; }    // @ 0x8f410
+- (int)month { return _month; }   // @ 0x8f424
 
 // @ 0x8f030 — a year wheel and a month wheel.
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
@@ -78,7 +78,7 @@
 // wheel; black HelveticaNeue-Bold 18, white background on iOS 7+ (clear before).
 - (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row
           forComponent:(NSInteger)component reusingView:(UIView *)view {
-    UILabel *label = [[[UILabel alloc] init] autorelease];
+    UILabel *label = [[UILabel alloc] init];
     label.textColor = [UIColor blackColor];
     label.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:18.0f];
 
@@ -99,10 +99,7 @@
     return label;
 }
 
-- (void)dealloc {
-    [monthArr release];
-    [super dealloc];
-}
+// dealloc @ 0x8efe4 — ARC-omitted (released only the strong monthArr ivar; ARC synthesizes it).
 
 @end
 

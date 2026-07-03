@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 28 |
-| Partial (file exists, methods missing) | 67 |
+| Complete | 42 |
+| Partial (file exists, methods missing) | 53 |
 | Fully missing (no source file) | 78 |
-| **Missing methods** | **1672** |
+| **Missing methods** | **1646** |
 
 ## Scope decisions
 
@@ -106,7 +106,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 67
+## Partial classes — 53
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
@@ -162,36 +162,29 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `StoreDownloadTask` | 2 | 5 | 3 |
 | `StoreImageView` | 4 | 7 | 3 |
 | `StoreTableCell` | 1 | 4 | 3 |
-| `AcViewerOptionCell` | 1 | 3 | 2 |
-| `BFCodec` | 4 | 6 | 2 |
-| `CheckerCategoryCell` | 1 | 3 | 2 |
-| `CustomTextView` | 2 | 4 | 2 |
-| `FriendScoreTableCell` | 1 | 3 | 2 |
-| `MapListCell` | 1 | 3 | 2 |
-| `SortCell` | 1 | 3 | 2 |
-| `StoreDetailCopyrightCell` | 1 | 3 | 2 |
-| `StorePromotionTableCell` | 1 | 3 | 2 |
-| `SubMapListCell` | 1 | 3 | 2 |
-| `SystemHardware` | 3 | 5 | 2 |
-| `YearAndMonthPicker` | 7 | 9 | 2 |
 | `CommunicatingView` | 10 | 11 | 1 |
-| `FriendListCell` | 2 | 3 | 1 |
-| `SettingOtherTableViewController` | 23 | 24 | 1 |
 
-## Complete classes — 28
+## Complete classes — 42
 
+- `AcViewerOptionCell`
 - `ArcadeScoreData`
+- `BFCodec`
 - `CharaTicketData`
+- `CheckerCategoryCell`
 - `CustomAlertView`
 - `CustomSplitViewController`
+- `CustomTextView`
 - `DelayImageView`
 - `DownloadProgresView`
+- `FriendListCell`
 - `FriendListDetail`
 - `FriendListDetailChara`
 - `FriendListViewController`
 - `FriendReplyViewController`
+- `FriendScoreTableCell`
 - `GameEffectView`
 - `HowToView`
+- `MapListCell`
 - `OverScoreData`
 - `PolicyView`
 - `PopkunSizeViewCtrl`
@@ -199,14 +192,21 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `SettingCustomerTableViewController`
 - `SettingGameTableViewController`
 - `SettingHowtoTableViewController`
+- `SettingOtherTableViewController`
+- `SortCell`
 - `SoundSettingView`
+- `StoreDetailCopyrightCell`
+- `StorePromotionTableCell`
 - `StoreUtil`
+- `SubMapListCell`
+- `SystemHardware`
 - `TouchRangeView`
 - `TouchRangeViewCtrl`
 - `TouchableScrollView`
 - `TouchableTableView`
 - `TreasureData`
 - `UserSettingData`
+- `YearAndMonthPicker`
 - `neTextureForiOS`
 
 ---
@@ -4522,235 +4522,6 @@ Methods **1/4** · ivars 2 · `instanceSize`=`60`
 | `m_LeftPackView` | `StorePackView *` | `0x34` |
 | `m_RightPackView` | `StorePackView *` | `0x38` |
 
-### `AcViewerOptionCell` — 🟡 partial
-
-Methods **1/3** · ivars 2 · `instanceSize`=`60`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x654c8` |
-| `setData:` | `0x654f4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_optionKindLbl` | `UILabel *` | `0x34` |
-| `_optionDetailLbl` | `UILabel *` | `0x38` |
-
-### `BFCodec` — 🟡 partial
-
-Methods **4/6** · ivars 2 · `instanceSize`=`16`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x5ac14` |
-| `dealloc` | `0x5b154` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_iv` | `unsigned char[8]` | `0x4` |
-| `_blf` | `struct C_BLOWFISH *` | `0xc` |
-
-### `CheckerCategoryCell` — 🟡 partial
-
-Methods **1/3** · ivars 7 · `instanceSize`=`84`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xcf5c8` |
-| `setData:category:` | `0xcf5f4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_musicCntBaseView` | `UIImageView *` | `0x34` |
-| `_musicCntNumView` | `UIImageView *[3]` | `0x38` |
-| `_bgView` | `UIImageView *` | `0x44` |
-| `isOS7` | `BOOL` | `0x48` |
-| `isPad` | `BOOL` | `0x49` |
-| `offsetXForPad` | `int` | `0x4c` |
-| `imgMusicCntX` | `int` | `0x50` |
-
-### `CustomTextView` — 🟡 partial
-
-Methods **2/4** · ivars 0 · `instanceSize`=`56`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0x27fd0` |
-| `dealloc` | `0x28008` |
-
-### `FriendScoreTableCell` — 🟡 partial
-
-Methods **1/3** · ivars 23 · `instanceSize`=`144`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xae25c` |
-| `setScoreData:` | `0xae288` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_bgImgView` | `UIImageView *` | `0x34` |
-| `_youImgView` | `UIImageView *` | `0x38` |
-| `_rankImgView01` | `UIImageView *` | `0x3c` |
-| `_rankImgView10` | `UIImageView *` | `0x40` |
-| `_charaBgImgView` | `UIImageView *` | `0x44` |
-| `_charaImgView` | `UIImageView *` | `0x48` |
-| `_playerNameLbl` | `UILabel *` | `0x4c` |
-| `_scoreBaseImgView` | `UIImageView *` | `0x50` |
-| `_scoreLbl` | `UILabel *` | `0x54` |
-| `_scoreRankImgView` | `UIImageView *` | `0x58` |
-| `_fullcomboMarkImgView` | `UIImageView *` | `0x5c` |
-| `isOS7` | `bool` | `0x60` |
-| `imgYouX` | `int` | `0x64` |
-| `imgFrameX` | `int` | `0x68` |
-| `imgFrame10X` | `int` | `0x6c` |
-| `imgFrame01X` | `int` | `0x70` |
-| `imgOrderX` | `int` | `0x74` |
-| `imgCharaX` | `int` | `0x78` |
-| `imgPlayerNameX` | `int` | `0x7c` |
-| `imgScoreBaseX` | `int` | `0x80` |
-| `imgScoreX` | `int` | `0x84` |
-| `imgRankX` | `int` | `0x88` |
-| `imgFullComboX` | `int` | `0x8c` |
-
-### `MapListCell` — 🟡 partial
-
-Methods **1/3** · ivars 2 · `instanceSize`=`60`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xbe2b8` |
-| `setMapData:isSelect:` | `0xbe2e4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_mapVal` | `NSValue *` | `0x34` |
-| `_bgImgView` | `UIImageView *` | `0x38` |
-
-### `SortCell` — 🟡 partial
-
-Methods **1/3** · ivars 4 · `instanceSize`=`68`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xc5460` |
-| `setSortData:` | `0xc548c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_sortVal` | `NSValue *` | `0x34` |
-| `_titleImageView` | `UIImageView *` | `0x38` |
-| `_checkImageView` | `UIImageView *` | `0x3c` |
-| `_bgImgView` | `UIImageView *` | `0x40` |
-
-### `StoreDetailCopyrightCell` — 🟡 partial
-
-Methods **1/3** · ivars 1 · `instanceSize`=`56`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x7547c` |
-| `labelCopyright` | `0x754c8` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `labelCopyright` | `UILabel *` | `0x34` |
-
-### `StorePromotionTableCell` — 🟡 partial
-
-Methods **1/3** · ivars 0 · `instanceSize`=`52`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `setSelected:animated:` | `0x738f4` |
-| `layoutSubviews` | `0x73924` |
-
-### `SubMapListCell` — 🟡 partial
-
-Methods **1/3** · ivars 1 · `instanceSize`=`56`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xc0fd4` |
-| `setMapData:` | `0xc1000` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_mapVal` | `NSValue *` | `0x34` |
-
-### `SystemHardware` — 🟡 partial
-
-Methods **3/5** · ivars 2 · `instanceSize`=`12`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x12718` |
-| `dealloc` | `0x12758` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_HardwareType` | `int` | `0x4` |
-| `m_HardwareName` | `NSString *` | `0x8` |
-
-### `YearAndMonthPicker` — 🟡 partial
-
-Methods **7/9** · ivars 3 · `instanceSize`=`64`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x8efe4` |
-| `month` | `0x8f424` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_year` | `int` | `0x34` |
-| `_month` | `int` | `0x38` |
-| `monthArr` | `NSMutableArray *` | `0x3c` |
-
 ### `CommunicatingView` — 🟡 partial
 
 Methods **10/11** · ivars 5 · `instanceSize`=`178`
@@ -4771,70 +4542,51 @@ Methods **10/11** · ivars 5 · `instanceSize`=`178`
 | `_isAnimationing` | `BOOL` | `0xb0` |
 | `_isCloseReserve` | `BOOL` | `0xb1` |
 
-### `FriendListCell` — 🟡 partial
+### `AcViewerOptionCell` — ✅ complete
 
-Methods **2/3** · ivars 19 · `instanceSize`=`128`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xb3494` |
+Methods **3/3** · ivars 2 · `instanceSize`=`60`
 
 #### Ivars
 
 | Name | Type | Offset |
 | --- | --- | ---: |
-| `_bgImgView` | `UIImageView *` | `0x34` |
-| `_youImgView` | `UIImageView *` | `0x38` |
-| `_rankImgView01` | `UIImageView *` | `0x3c` |
-| `_rankImgView10` | `UIImageView *` | `0x40` |
-| `_charaBgImgView` | `UIImageView *` | `0x44` |
-| `_charaImgView` | `UIImageView *` | `0x48` |
-| `_playerNameLbl` | `UILabel *` | `0x4c` |
-| `_scoreBaseImgView` | `UIImageView *` | `0x50` |
-| `_scoreLbl` | `UILabel *` | `0x54` |
-| `isOS7` | `bool` | `0x58` |
-| `imgYouX` | `int` | `0x5c` |
-| `imgFrameX` | `int` | `0x60` |
-| `imgFrame10X` | `int` | `0x64` |
-| `imgFrame01X` | `int` | `0x68` |
-| `imgOrderX` | `int` | `0x6c` |
-| `imgCharaX` | `int` | `0x70` |
-| `imgPlayerNameX` | `int` | `0x74` |
-| `imgScoreBaseX` | `int` | `0x78` |
-| `imgScoreX` | `int` | `0x7c` |
-
-### `SettingOtherTableViewController` — 🟡 partial
-
-Methods **23/24** · ivars 8 · `instanceSize`=`208`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `.cxx_construct` | `0xd5880` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_treasureRetireAlertView` | `CommonAlertView *` | `0xa4` |
-| `_isAnimationing` | `BOOL` | `0xa8` |
-| `_viewCmnDelegate` | `<ViewCmnProtocol> *` | `0xac` |
-| `_selectedIndexPath` | `NSIndexPath *` | `0xb0` |
-| `_convDetailView` | `UIViewController *` | `0xb4` |
-| `_convDummyFrm` | `struct CGRect` | `0xb8` |
-| `_arrowTopView` | `UIImageView *` | `0xc8` |
-| `_arrowUnderView` | `UIImageView *` | `0xcc` |
+| `_optionKindLbl` | `UILabel *` | `0x34` |
+| `_optionDetailLbl` | `UILabel *` | `0x38` |
 
 ### `ArcadeScoreData` — ✅ complete
 
 Methods **1/1** · ivars 0 · `instanceSize`=`48`
 
+### `BFCodec` — ✅ complete
+
+Methods **6/6** · ivars 2 · `instanceSize`=`16`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_iv` | `unsigned char[8]` | `0x4` |
+| `_blf` | `struct C_BLOWFISH *` | `0xc` |
+
 ### `CharaTicketData` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`48`
+
+### `CheckerCategoryCell` — ✅ complete
+
+Methods **3/3** · ivars 7 · `instanceSize`=`84`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_musicCntBaseView` | `UIImageView *` | `0x34` |
+| `_musicCntNumView` | `UIImageView *[3]` | `0x38` |
+| `_bgView` | `UIImageView *` | `0x44` |
+| `isOS7` | `BOOL` | `0x48` |
+| `isPad` | `BOOL` | `0x49` |
+| `offsetXForPad` | `int` | `0x4c` |
+| `imgMusicCntX` | `int` | `0x50` |
 
 ### `CustomAlertView` — ✅ complete
 
@@ -4863,6 +4615,10 @@ Methods **9/9** · ivars 3 · `instanceSize`=`176`
 | `m_rightViewCtrl` | `UIViewController *` | `0xa8` |
 | `m_leftViewWidth` | `int` | `0xac` |
 
+### `CustomTextView` — ✅ complete
+
+Methods **4/4** · ivars 0 · `instanceSize`=`56`
+
 ### `DelayImageView` — ✅ complete
 
 Methods **3/3** · ivars 1 · `instanceSize`=`56`
@@ -4885,6 +4641,34 @@ Methods **7/7** · ivars 4 · `instanceSize`=`80`
 | `_labelMessage` | `UILabel *` | `0x38` |
 | `_progressView` | `UIProgressView *` | `0x3c` |
 | `_dialogFrame` | `struct CGRect` | `0x40` |
+
+### `FriendListCell` — ✅ complete
+
+Methods **3/3** · ivars 19 · `instanceSize`=`128`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_bgImgView` | `UIImageView *` | `0x34` |
+| `_youImgView` | `UIImageView *` | `0x38` |
+| `_rankImgView01` | `UIImageView *` | `0x3c` |
+| `_rankImgView10` | `UIImageView *` | `0x40` |
+| `_charaBgImgView` | `UIImageView *` | `0x44` |
+| `_charaImgView` | `UIImageView *` | `0x48` |
+| `_playerNameLbl` | `UILabel *` | `0x4c` |
+| `_scoreBaseImgView` | `UIImageView *` | `0x50` |
+| `_scoreLbl` | `UILabel *` | `0x54` |
+| `isOS7` | `bool` | `0x58` |
+| `imgYouX` | `int` | `0x5c` |
+| `imgFrameX` | `int` | `0x60` |
+| `imgFrame10X` | `int` | `0x64` |
+| `imgFrame01X` | `int` | `0x68` |
+| `imgOrderX` | `int` | `0x6c` |
+| `imgCharaX` | `int` | `0x70` |
+| `imgPlayerNameX` | `int` | `0x74` |
+| `imgScoreBaseX` | `int` | `0x78` |
+| `imgScoreX` | `int` | `0x7c` |
 
 ### `FriendListDetail` — ✅ complete
 
@@ -4944,6 +4728,38 @@ Methods **17/17** · ivars 8 · `instanceSize`=`196`
 | `dlReplyFriend` | `Downloader *` | `0xbc` |
 | `_replyPlayerId` | `NSString *` | `0xc0` |
 
+### `FriendScoreTableCell` — ✅ complete
+
+Methods **3/3** · ivars 23 · `instanceSize`=`144`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_bgImgView` | `UIImageView *` | `0x34` |
+| `_youImgView` | `UIImageView *` | `0x38` |
+| `_rankImgView01` | `UIImageView *` | `0x3c` |
+| `_rankImgView10` | `UIImageView *` | `0x40` |
+| `_charaBgImgView` | `UIImageView *` | `0x44` |
+| `_charaImgView` | `UIImageView *` | `0x48` |
+| `_playerNameLbl` | `UILabel *` | `0x4c` |
+| `_scoreBaseImgView` | `UIImageView *` | `0x50` |
+| `_scoreLbl` | `UILabel *` | `0x54` |
+| `_scoreRankImgView` | `UIImageView *` | `0x58` |
+| `_fullcomboMarkImgView` | `UIImageView *` | `0x5c` |
+| `isOS7` | `bool` | `0x60` |
+| `imgYouX` | `int` | `0x64` |
+| `imgFrameX` | `int` | `0x68` |
+| `imgFrame10X` | `int` | `0x6c` |
+| `imgFrame01X` | `int` | `0x70` |
+| `imgOrderX` | `int` | `0x74` |
+| `imgCharaX` | `int` | `0x78` |
+| `imgPlayerNameX` | `int` | `0x7c` |
+| `imgScoreBaseX` | `int` | `0x80` |
+| `imgScoreX` | `int` | `0x84` |
+| `imgRankX` | `int` | `0x88` |
+| `imgFullComboX` | `int` | `0x8c` |
+
 ### `GameEffectView` — ✅ complete
 
 Methods **11/11** · ivars 0 · `instanceSize`=`162`
@@ -4958,6 +4774,17 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 | --- | --- | ---: |
 | `_imageList` | `NSArray *` | `0x34` |
 | `_bgImage` | `UIImage *` | `0x38` |
+
+### `MapListCell` — ✅ complete
+
+Methods **3/3** · ivars 2 · `instanceSize`=`60`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_mapVal` | `NSValue *` | `0x34` |
+| `_bgImgView` | `UIImageView *` | `0x38` |
 
 ### `OverScoreData` — ✅ complete
 
@@ -5033,6 +4860,36 @@ Methods **14/14** · ivars 2 · `instanceSize`=`168`
 | `_isAnimationing` | `BOOL` | `0xa2` |
 | `howtoViewCtrlPad` | `HowToViewCtrlPad *` | `0xa4` |
 
+### `SettingOtherTableViewController` — ✅ complete
+
+Methods **24/24** · ivars 8 · `instanceSize`=`208`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_treasureRetireAlertView` | `CommonAlertView *` | `0xa4` |
+| `_isAnimationing` | `BOOL` | `0xa8` |
+| `_viewCmnDelegate` | `<ViewCmnProtocol> *` | `0xac` |
+| `_selectedIndexPath` | `NSIndexPath *` | `0xb0` |
+| `_convDetailView` | `UIViewController *` | `0xb4` |
+| `_convDummyFrm` | `struct CGRect` | `0xb8` |
+| `_arrowTopView` | `UIImageView *` | `0xc8` |
+| `_arrowUnderView` | `UIImageView *` | `0xcc` |
+
+### `SortCell` — ✅ complete
+
+Methods **3/3** · ivars 4 · `instanceSize`=`68`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_sortVal` | `NSValue *` | `0x34` |
+| `_titleImageView` | `UIImageView *` | `0x38` |
+| `_checkImageView` | `UIImageView *` | `0x3c` |
+| `_bgImgView` | `UIImageView *` | `0x40` |
+
 ### `SoundSettingView` — ✅ complete
 
 Methods **22/22** · ivars 8 · `instanceSize`=`196`
@@ -5050,9 +4907,44 @@ Methods **22/22** · ivars 8 · `instanceSize`=`196`
 | `_touchSoundHaveFlg` | `int` | `0xbc` |
 | `_touchSoundArray` | `NSMutableArray *` | `0xc0` |
 
+### `StoreDetailCopyrightCell` — ✅ complete
+
+Methods **3/3** · ivars 1 · `instanceSize`=`56`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `labelCopyright` | `UILabel *` | `0x34` |
+
+### `StorePromotionTableCell` — ✅ complete
+
+Methods **3/3** · ivars 0 · `instanceSize`=`52`
+
 ### `StoreUtil` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
+### `SubMapListCell` — ✅ complete
+
+Methods **3/3** · ivars 1 · `instanceSize`=`56`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_mapVal` | `NSValue *` | `0x34` |
+
+### `SystemHardware` — ✅ complete
+
+Methods **5/5** · ivars 2 · `instanceSize`=`12`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_HardwareType` | `int` | `0x4` |
+| `m_HardwareName` | `NSString *` | `0x8` |
 
 ### `TouchRangeView` — ✅ complete
 
@@ -5096,6 +4988,18 @@ Methods **1/1** · ivars 0 · `instanceSize`=`48`
 ### `UserSettingData` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
+### `YearAndMonthPicker` — ✅ complete
+
+Methods **9/9** · ivars 3 · `instanceSize`=`64`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_year` | `int` | `0x34` |
+| `_month` | `int` | `0x38` |
+| `monthArr` | `NSMutableArray *` | `0x3c` |
 
 ### `neTextureForiOS` — ✅ complete
 

@@ -10,6 +10,11 @@
 #import <UIKit/UIKit.h>
 
 @interface FriendScoreTableCell : UITableViewCell
+
+// Populate the row from an NSValue-wrapped ScoreDataStruct (see the .m). Rebuilt on every
+// reuse; the local player's own row (nil name) gets the "you" marker. @ 0xae288.
+- (void)setScoreData:(NSValue *)scoreData;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

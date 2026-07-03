@@ -88,15 +88,21 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     uint8_t _iv[8];      // Ghidra ivar _iv
 }
 
+// @ 0x5ac14
 - (instancetype)init {
     if ((self = [super init])) {
-        _blf = (BlowfishCtx *)calloc(1, sizeof(BlowfishCtx)); // Ghidra: FUN_0005b234
+        memset(_iv, 0, sizeof(_iv));                          // Ghidra: _iv zeroed
+        _blf = (BlowfishCtx *)calloc(1, sizeof(BlowfishCtx)); // operator_new(0x1048) + clear
     }
     return self;
 }
 
+// @ 0x5b154 — KEEP: frees the malloc'd Blowfish context (wipes key material first).
 - (void)dealloc {
-    free(_blf);
+    if (_blf) {
+        memset(_blf, 0, sizeof(BlowfishCtx)); // Ghidra: clear ctx before delete (zeroize)
+        free(_blf);                           // operator_delete
+    }
 }
 
 // @ 0x5ad64

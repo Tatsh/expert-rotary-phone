@@ -29,12 +29,15 @@ static const char *const kSystemHardwareModels[14] = {
     NSString *m_HardwareName;
 }
 
+// @ 0x12718
 - (instancetype)init {
     if ((self = [super init])) {
         m_HardwareType = kHardwareUndetected;
     }
     return self;
 }
+
+// dealloc @ 0x12758 — ARC-omitted (releases ivars only: m_HardwareName).
 
 // @ 0x127f4
 - (void)initHardware {

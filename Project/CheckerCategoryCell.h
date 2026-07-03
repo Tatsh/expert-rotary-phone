@@ -10,6 +10,12 @@
 #import <UIKit/UIKit.h>
 
 @interface CheckerCategoryCell : UITableViewCell
+
+// Bind the row to a music-checker category: `category` (0 = etc, 1 = TV, 2..23 = p01..p22,
+// >=24 = "near") picks the base banner image, and `playedList`'s count drives the small
+// "played" digit badge. Layout offsets come from the init-computed device/OS ivars.
+- (void)setData:(NSArray *)playedList category:(short)category;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

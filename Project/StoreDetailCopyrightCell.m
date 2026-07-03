@@ -24,6 +24,9 @@
     return self;
 }
 
+// labelCopyright @ 0x754c8 — synthesized getter (returns the labelCopyright ivar).
+// dealloc @ 0x7547c — ARC-omitted (releases the labelCopyright ivar only).
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

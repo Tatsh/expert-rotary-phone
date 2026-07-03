@@ -60,6 +60,9 @@ static UIViewController *RootVC() {
 
 @synthesize viewCmnDelegate = _viewCmnDelegate;   // @ 0xd5860 / 0xd5870
 
+// .cxx_construct @ 0xd5880 — compiler-emitted C++ ivar constructor (zero-inits struct ivars
+// such as CGRect _convDummyFrm); not hand-written.
+
 // @ 0xd4180 — grouped table with no separators; computes the expanded-panel frame per OS.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
@@ -90,30 +93,21 @@ static UIViewController *RootVC() {
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(settingClose)
       forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"] forBarMetrics:UIBarMetricsDefault];
     return nav;
 }
 
-// @ 0xd4578
-- (void)dealloc {
-    if (_selectedIndexPath != nil) {
-        [_selectedIndexPath release];
-        _selectedIndexPath = nil;
-    }
-    if (_convDetailView != nil) {
-        [_convDetailView release];
-    }
-    [super dealloc];
-}
+// dealloc @ 0xd4578 — ARC-omitted (released only the strong _selectedIndexPath / _convDetailView
+// ivars; ARC synthesizes their release).
 
 #pragma mark - Modal open/close animation
 
@@ -221,8 +215,8 @@ static UIViewController *RootVC() {
 
 // @ 0xd5334 — a 320x32 clear header carrying the section title label (14pt app font).
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    UIView *header = [[[UIView alloc]
-        initWithFrame:CGRectMake(15.0f, 0.0f, 320.0f, 32.0f)] autorelease];
+    UIView *header = [[UIView alloc]
+        initWithFrame:CGRectMake(15.0f, 0.0f, 320.0f, 32.0f)];
     header.backgroundColor = [UIColor clearColor];
 
     NSString *title;
@@ -233,8 +227,8 @@ static UIViewController *RootVC() {
         default: title = @"";               break;
     }
 
-    UILabel *label = [[[UILabel alloc]
-        initWithFrame:CGRectMake(15.0f, 0.0f, 320.0f, 32.0f)] autorelease];
+    UILabel *label = [[UILabel alloc]
+        initWithFrame:CGRectMake(15.0f, 0.0f, 320.0f, 32.0f)];
     label.font = [UIFont fontWithName:AppFontName() size:14.0f];   // 0x41600000
     label.backgroundColor = [UIColor clearColor];
     label.text = title;
@@ -261,8 +255,8 @@ static UIViewController *RootVC() {
         return cell;
     }
 
-    cell = [[[UITableViewCell alloc]
-        initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+    cell = [[UITableViewCell alloc]
+        initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
     cell.backgroundView = nil;
     cell.backgroundColor = [UIColor clearColor];
     cell.clipsToBounds = YES;
@@ -272,7 +266,7 @@ static UIViewController *RootVC() {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
         // Outer pill sized to the pre-computed panel frame; greenish border + light-green fill.
-        UIView *pill = [[[UIView alloc] initWithFrame:_convDummyFrm] autorelease];
+        UIView *pill = [[UIView alloc] initWithFrame:_convDummyFrm];
         pill.layer.borderWidth = 3.0f;
         pill.layer.borderColor = [UIColor colorWithRed:0.580f green:0.961f blue:0.373f alpha:1.0f].CGColor;
         pill.layer.cornerRadius = 5.0f;
@@ -280,7 +274,7 @@ static UIViewController *RootVC() {
         pill.backgroundColor = [UIColor colorWithRed:0.741f green:1.0f blue:0.600f alpha:1.0f];
 
         // Inner clear container, inset by (10, 2) with a (-20, -4) size delta [NEON].
-        UIView *inner = [[[UIView alloc] init] autorelease];
+        UIView *inner = [[UIView alloc] init];
         inner.backgroundColor = [UIColor clearColor];
         const CGFloat innerW = _convDummyFrm.size.width - 20.0f;
         const CGFloat innerH = _convDummyFrm.size.height - 4.0f;
@@ -334,7 +328,7 @@ static UIViewController *RootVC() {
     [cell.contentView addSubview:pill];
 
     // Title label centered over the pill.
-    UILabel *label = [[[UILabel alloc] init] autorelease];
+    UILabel *label = [[UILabel alloc] init];
     label.backgroundColor = [UIColor clearColor];
     label.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
     label.backgroundColor = [UIColor whiteColor];
@@ -348,7 +342,6 @@ static UIViewController *RootVC() {
     label.text = title;
     label.center = pill.center;   // [NEON: y term 30.0 best-effort]
     [cell.contentView addSubview:label];
-    [pill release];
 
     return cell;
 }
@@ -370,10 +363,9 @@ static UIViewController *RootVC() {
         if (indexPath.row == 0) {
             if (_selectedIndexPath == nil ||
                 [_selectedIndexPath compare:indexPath] != NSOrderedSame) {
-                _selectedIndexPath = [indexPath retain];
+                _selectedIndexPath = indexPath;   // strong ivar retains under ARC
             } else {
-                [_selectedIndexPath release];
-                _selectedIndexPath = nil;
+                _selectedIndexPath = nil;         // ARC releases the previous value
             }
             [tableView reloadRowsAtIndexPaths:@[indexPath]
                              withRowAnimation:UITableViewRowAnimationFade];   // animation best-effort
@@ -389,8 +381,8 @@ static UIViewController *RootVC() {
             cancelButtonTitle:@"Cancel"
             otherButtonTitles:@"OK"];
             [_treasureRetireAlertView show];
-            // Released here; the pointer is kept only to identify the alert in the delegate.
-            [_treasureRetireAlertView release];
+            // The strong ivar keeps the shown alert alive; it is nilled in the delegate callback
+            // once a button is tapped (the pointer is used there only to identify this alert).
         }
     } else if (indexPath.section == 0) {
         // News: open the official app-info page in the in-app web view.
@@ -398,7 +390,7 @@ static UIViewController *RootVC() {
             CustomWebView *web = [[CustomWebView alloc]
                 initWithURL:[StoreUtil getOfficialAppInfoURL]];   // TODO(dep): CustomWebView
             [(id)web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
-            [web release];
+            (void)web;   // ARC: the web view installs itself; the local reference is not retained
             neEngine::playSystemSe(1);
         }
     }
@@ -417,7 +409,7 @@ static UIViewController *RootVC() {
         cancelButtonTitle:nil
         otherButtonTitles:@"OK"];
         [done show];
-        [done release];
+        (void)done;   // ARC: the alert retains itself while shown; local reference not needed
     }
     _treasureRetireAlertView = nil;
 }
