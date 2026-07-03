@@ -67,6 +67,11 @@ typedef struct Crypt109Data {
 
 #pragma mark Identity (plaintext)
 + (NSString *)playerId;                   // @ 0x60260  (key "PlayerId")
++ (NSString *)playerName;                 // @ 0x60210  (key "PlayerName")
+
+#pragma mark Friend list (plaintext)
++ (BOOL)isBestScoreSort;                  // @ 0x607ac  (key "IsBestScoreSort")
++ (void)saveIsBestScoreSort:(BOOL)best;   // @ 0x607d4
 
 #pragma mark Effects (plaintext)
 + (BOOL)isEffectOn;                       // @ 0x606bc  (key "IsEffectOn")

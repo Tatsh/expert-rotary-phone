@@ -20,8 +20,10 @@ target_sources(popnrhythmin PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/DownloadMain.m
     ${CMAKE_CURRENT_SOURCE_DIR}/Downloader.m
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendListCell.mm
+    ${CMAKE_CURRENT_SOURCE_DIR}/FriendListDetail.mm
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendListDetailChara.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/FriendMngTopViewController.m
+    ${CMAKE_CURRENT_SOURCE_DIR}/FriendListViewController.mm
+    ${CMAKE_CURRENT_SOURCE_DIR}/FriendMngTopViewController.mm
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendReplyCell.m
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendRequestCell.m
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendScoreTableCell.m

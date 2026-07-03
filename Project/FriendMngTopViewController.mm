@@ -12,6 +12,8 @@
 #import "FriendMngTopViewController.h"
 #import "HowToViewCtrl.h"
 #import "UserSettingData.h"
+#import "FriendListViewController.h"
+#import "neEngineBridge.h"          // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation FriendMngTopViewController
 
@@ -132,11 +134,26 @@
     _isAnimationing = NO;
 }
 
-// Section navigations — push the friend list / requests / replies screens. STUBS (the sub-screen
-// controllers are a separate reconstruction piece; tracked in HANDOFF.md).
+// @ 0xa687c — push the friend ranking list (iPhone); on iPad forward to the split hub delegate.
+// The nav-bar art is swapped to the list's on the way in (backButtonFunc restores friman_navbar).
 - (void)onListButtonTouched:(id)sender {
+    neEngine::playSystemSe(1);
+    if (!neSceneManager::isPadDisplay()) {
+        FriendListViewController *vc = [[[FriendListViewController alloc]
+            initWithStyle:UITableViewStyleGrouped] autorelease];
+        if (self.navigationController.topViewController != self) {
+            return;
+        }
+        [self.navigationController pushViewController:vc animated:YES];
+        [self.navigationController.navigationBar
+            setBackgroundImage:[UIImage imageNamed:@"frilis_navbar"]
+                 forBarMetrics:UIBarMetricsDefault];
+    } else {
+        [m_Delegate onListButtonTouched:sender];
+    }
 }
 
+// Requests / replies sub-screens — STUBS (separate reconstruction pieces; tracked in HANDOFF.md).
 - (void)onRequestButtonTouched:(id)sender {
 }
 

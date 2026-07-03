@@ -198,6 +198,14 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // @ 0x60260 — the player's server-assigned id string.
 + (NSString *)playerId               { return [self getString:@"PlayerId"]; }
+// @ 0x60210 — the player's display name.
++ (NSString *)playerName             { return [self getString:@"PlayerName"]; }
+
+#pragma mark - Friend list (plaintext)
+
+// @ 0x607ac / 0x607d4 — friend ranking sort mode (best-score vs. total-score).
++ (BOOL)isBestScoreSort              { return [self getBOOL:@"IsBestScoreSort"]; }
++ (void)saveIsBestScoreSort:(BOOL)best { [self saveBOOL:best Key:@"IsBestScoreSort"]; }
 
 #pragma mark - Effects (plaintext)
 
