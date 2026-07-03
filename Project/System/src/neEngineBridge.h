@@ -68,6 +68,15 @@ public:
     static NSString *inputPassword(); // the entered account password
     static bool requireOtpInput();    // true when a one-time password must still be entered
 
+    // Writers for the login context above, driven by the pop'n-link KID-input screen
+    // (InputKIDViewCtrl): the decide button stashes the entered password and, on a
+    // successful link POST, the returned ref-id / whether an OTP is still required.
+    // Ghidra: raw stores into g_pInputPassword @ 0x187be4 (retain), g_pLinkRefId @
+    // 0x187be0 (retain) and g_bRequireOtpInput @ 0x187be9.
+    static void setInputPassword(NSString *password);
+    static void setLinkRefId(id refId);
+    static void setRequireOtpInput(bool require);
+
     // pop'n-link availability flag (event-center region global, read only after
     // shared() has forced the singleton's init): true once the player has linked
     // their pop'n-link (e-AMUSEMENT KID), which is what enables the score-checker /
@@ -75,6 +84,11 @@ public:
     // the KID-input screen instead. Ghidra global g_bLinkButtonsEnabled, read after
     // NEAppEventCenter_shared() at 0xccacc / 0xcca48 / 0xcd4e4 / 0xcd5a8.
     static bool linkButtonsEnabled();
+    // Set once a successful pop'n-link enables the checker / quiz buttons (and cleared
+    // to force the KID-input screen while the link POST is in flight). Written by
+    // InputKIDViewCtrl's decide button / link-finished handler. Ghidra: raw store into
+    // g_bLinkButtonsEnabled.
+    static void setLinkButtonsEnabled(bool enabled);
 
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)

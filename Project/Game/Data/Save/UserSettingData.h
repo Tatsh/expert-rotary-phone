@@ -102,6 +102,18 @@ typedef struct Crypt109Data {
 // treasure. Ghidra: -[UserSettingData saveTreasureTmp:] @ 0x614f0.
 + (void)saveTreasureTmp:(TreasureTmpData)data;
 
+// The main-map id whose sugoroku map-select/area screen is currently being shown, backed by
+// the plaintext int key "SelectedMapId". The pad map-select hub reads it to know which map to
+// build. Ghidra: treasureSelectedMapId @ 0x6209c / saveTreasureSelectedMapId: @ 0x620cc.
++ (short)treasureSelectedMapId;
++ (void)saveTreasureSelectedMapId:(short)mapId;
+
+// Remembers whether the sugoroku "treasure" first-run how-to has been shown (so the
+// two-page how-to only appears once), backed by a plaintext BOOL key. Ghidra:
+// isTreasureSelected @ 0x60018 / saveIsTreasureSelected: @ 0x60040.
++ (BOOL)isTreasureSelected;
++ (void)saveIsTreasureSelected:(BOOL)selected;
+
 // The persisted "treasure read" progress index for a sugoroku sub-map (how far the
 // player has advanced its board story), or a negative sentinel when unread. The
 // arcade map loader reads it to resume the board. Ghidra: -[UserSettingData
@@ -246,6 +258,9 @@ typedef struct Crypt109Data {
 // Identity setters (paired with +playerId / +playerName getters above).
 + (void)savePlayerId:(NSString *)playerId;
 + (void)savePlayerName:(NSString *)name;
+// Store the e-AMUSEMENT KONAMI ID (key "KonamiId"), written when the KID-input screen's
+// decide button starts the pop'n-link. Ghidra: saveKonamiId: @ 0x602d8.
++ (void)saveKonamiId:(NSString *)konamiId;
 
 // Remove a queued uncomplete score-save entry (paired with addUncompleteSaveMusic:sheet:).
 + (void)subUncompleteSaveMusic:(int)music sheet:(short)sheet;

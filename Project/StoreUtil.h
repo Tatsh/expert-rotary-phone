@@ -31,6 +31,7 @@
 + (NSURL *)getFriendListURL;      // 0x594a8  get_friend_list    (verified)
 + (NSURL *)getEventInfoURL;       // 0x59d94  get_event_info     (verified)
 + (NSURL *)getConvertCodeURL;     // 0x59e00  get_convert_code   (verified)
++ (NSURL *)convertURL;            // 0x59e6c  convert            (verified)
 + (NSURL *)getFriendRequestURL;   // 0x592f8  get_friend_request
 + (NSURL *)getFriendScoreURL;     // 0x59364  get_friend_score
 + (NSURL *)requestFriendURL;      // 0x59220  request_friend        (verified)
@@ -40,6 +41,8 @@
 + (NSURL *)saveTreasureURL;       // 0x59884  save_treasure         (verified)
 + (NSURL *)recommendPackURL;      // 0x59740  pack_recommend/index.jsp (literal "/apr/main/cgi/")
 + (NSURL *)invitedURL;            // 0x59148  invited/index.jsp        (literal "/apr/main/cgi/")
++ (NSURL *)playerNewURL;          // 0x59070  new_player/index.jsp     (literal "/apr/main/cgi/")
++ (NSURL *)linkKidURL;            // 0x598f0  link_kid/index.jsp       (literal "/apr/main/cgi/")
 + (NSURL *)getArcadeScoreURL;     // 0x5995c  get_arcade_score
 + (NSURL *)getOverScoreLogURL;    // 0x59d28  get_over_score_log
 + (NSURL *)getBlockListURL;       // 0x59580  get_block_list
@@ -126,6 +129,15 @@
 + (NSURL *)getOfficialTwitterURL;
 // Store per-song info page for a music id.
 + (NSURL *)musicInfoURL:(unsigned int)musicId;
+
+// --- Arcade-locator ("game center" map) endpoints (used by SearchView) ---
+// Master list feed: the marker-image / model-info master consumed to build the map pins.
+// GET https://.../apr/main.cgi/search_master/index.jsp?target=<store><userInfo>.
+// Ghidra: searchMasterURL @ 0x58f70 (createHttpsURL of search_master/index.jsp).
++ (NSURL *)searchMasterURL;
+// Per-region arcade query: POSTed a "lat=&long=&range=" body to fetch the arcades in view.
+// https://.../apr/main.cgi/gamecenter/index.jsp. Ghidra: searchURL @ 0x59004.
++ (NSURL *)searchURL;
 
 @end
 

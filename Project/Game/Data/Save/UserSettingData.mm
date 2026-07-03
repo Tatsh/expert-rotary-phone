@@ -84,6 +84,24 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:selected Key:@"FriendSelected"];
 }
 
+// @ 0x6209c / 0x620cc — the main-map id whose sugoroku map-select screen is shown (key best-effort).
++ (short)treasureSelectedMapId {
+    return (short)[self getInt:@"SelectedMapId"];
+}
+
++ (void)saveTreasureSelectedMapId:(short)mapId {
+    [self saveInt:mapId Key:@"SelectedMapId"];
+}
+
+// @ 0x60018 / 0x60040 — remembers whether the treasure how-to has been shown (key best-effort).
++ (BOOL)isTreasureSelected {
+    return [self getBOOL:@"IsTreasureSelected"];
+}
+
++ (void)saveIsTreasureSelected:(BOOL)selected {
+    [self saveBOOL:selected Key:@"IsTreasureSelected"];
+}
+
 // Remembers whether the pop'n-link first-run how-to has been shown (key best-effort).
 + (BOOL)isPopnLinkSelected {
     return [self getBOOL:@"PopnLinkSelected"];
@@ -762,6 +780,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (void)savePlayerId:(NSString *)playerId { [self saveString:playerId Key:@"PlayerId"]; }
 // @ 0x60238
 + (void)savePlayerName:(NSString *)name   { [self saveString:name Key:@"PlayerName"]; }
+// @ 0x602d8
++ (void)saveKonamiId:(NSString *)konamiId { [self saveString:konamiId Key:@"KonamiId"]; }
 
 #pragma mark - Store / news / spending
 

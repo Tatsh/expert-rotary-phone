@@ -4,6 +4,15 @@
 # defined in the root CMakeLists, and puts the directory on the include path. Bare filenames.
 
 target_sources(popnrhythmin PRIVATE
+    FriendScoreMainView.mm
+    InputConversionPassViewController.mm
+    InputKIDViewCtrl.mm
+    InputNameViewCtrl.mm
+    MapSelectSplitViewController.mm
+    MapSelectViewController.mm
+    RecommendCore.m
+    RecommendWebView.m
+    SearchView.mm
     DefaultDataDownloadView.mm
     FriendMngTopSplitViewController.mm
     InputOTPViewCtrl.mm
@@ -293,6 +302,15 @@ target_sources(popnrhythmin PRIVATE
     PopnLinkTopViewController.h
     RewardNetworkURLConnection.h
     SettingTableSplitViewController.h
+    FriendScoreMainView.h
+    InputConversionPassViewController.h
+    InputKIDViewCtrl.h
+    InputNameViewCtrl.h
+    MapSelectSplitViewController.h
+    MapSelectViewController.h
+    RecommendCore.h
+    RecommendWebView.h
+    SearchView.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

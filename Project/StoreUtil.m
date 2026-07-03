@@ -51,6 +51,7 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)getFriendListURL  { return [self createHttpsURL:ApiPath(@"get_friend_list")]; }    // 0x594a8
 + (NSURL *)getEventInfoURL   { return [self createHttpsURL:ApiPath(@"get_event_info")]; }     // 0x59d94
 + (NSURL *)getConvertCodeURL { return [self createHttpsURL:ApiPath(@"get_convert_code")]; }   // 0x59e00
++ (NSURL *)convertURL        { return [self createHttpsURL:ApiPath(@"convert")]; }            // 0x59e6c
 
 // --- Friend actions (verified endpoint names) ---
 + (NSURL *)requestFriendURL      { return [self createHttpsURL:ApiPath(@"request_friend")]; }       // 0x59220
@@ -72,6 +73,20 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)invitedURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                  @"/apr/main/cgi/", @"invited/index.jsp"]];
+}
+
+// @ 0x59070 — the "register a new player name" endpoint. Same literal-path form
+// (byte-verified "/apr/main/cgi/" slashes) plus "new_player/index.jsp".
++ (NSURL *)playerNewURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"new_player/index.jsp"]];
+}
+
+// @ 0x598f0 — the pop'n-link (KONAMI ID) linking endpoint. Same literal-path form
+// (byte-verified "/apr/main/cgi/" slashes) plus "link_kid/index.jsp".
++ (NSURL *)linkKidURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"link_kid/index.jsp"]];
 }
 
 // --- Game API endpoints (name derived from the selector; identical pattern) ---
@@ -302,6 +317,22 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)logAcvPlayURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                  @"/apr/main.cgi/", @"log_acv_play/index.jsp"]];
+}
+
+// @ 0x58f70 — arcade-locator master feed (marker images + arcade/model info):
+// https://apr-s.konaminet.jp/apr/main.cgi/search_master/index.jsp?target=JP<userInfo>
++ (NSURL *)searchMasterURL {
+    NSString *path = [NSString stringWithFormat:@"%@%@?target=%@%@",
+                      @"/apr/main.cgi/", @"search_master/index.jsp",
+                      [self targetStore], [self userInfo]];
+    return [self createHttpsURL:path];
+}
+
+// @ 0x59004 — per-region arcade query (POST lat/long/range body attached by the caller):
+// https://apr-s.konaminet.jp/apr/main.cgi/gamecenter/index.jsp
++ (NSURL *)searchURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main.cgi/", @"gamecenter/index.jsp"]];
 }
 
 // @ 0x59ed8 — the official eAmusement site base string:

@@ -86,11 +86,18 @@ id        neAppEventCenter::linkRefId()      { return g_pLinkRefId; }
 NSString *neAppEventCenter::inputPassword()  { return g_pInputPassword; }
 bool      neAppEventCenter::requireOtpInput() { return g_bRequireOtpInput; }
 
+// Writers for the login context, driven by the KID-input screen. Under ARC the strong
+// static ivars take care of the retain/release the binary did by hand.
+void neAppEventCenter::setInputPassword(NSString *password) { g_pInputPassword = password; }
+void neAppEventCenter::setLinkRefId(id refId)               { g_pLinkRefId = refId; }
+void neAppEventCenter::setRequireOtpInput(bool require)     { g_bRequireOtpInput = require; }
+
 // pop'n-link availability (event-center region global @ g_bLinkButtonsEnabled). Populated
 // by the (not-yet-reconstructed) pop'n-link login flow; false until the KID is linked, so
 // the score-checker / quiz buttons stay disabled and the top screen forces KID input.
 static bool g_bLinkButtonsEnabled = false;
 bool      neAppEventCenter::linkButtonsEnabled() { return g_bLinkButtonsEnabled; }
+void      neAppEventCenter::setLinkButtonsEnabled(bool enabled) { g_bLinkButtonsEnabled = enabled; }
 
 int neAppEventCenter::lastMusic() const { return m_lastMusic; }
 void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }

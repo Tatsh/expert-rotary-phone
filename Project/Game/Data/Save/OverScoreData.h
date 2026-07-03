@@ -30,6 +30,16 @@
 // @ 0x15a8f4), called from PlayResultTask::resultSetup (FUN_0003dfe0 @ 0x3e2ec).
 + (void)deleteRecordWithMusic:(int)music sheet:(short)sheet inManagedObjectContext:(NSManagedObjectContext *)context;
 
+// Every persisted "over" record on the context (the whole rival table). Ghidra:
+// +[OverScoreData getAllOverScoreData:] @ 0xba2b0. Read by the friend-score screen
+// to mark which difficulties a rival already beat.
++ (NSArray<OverScoreData *> *)getAllOverScoreData:(NSManagedObjectContext *)context;
+
+// Delete every "over" record for a given music id (all sheets) and save. The
+// friend-score back button clears the just-viewed song's rival rows. Ghidra:
+// +[OverScoreData deleteRecordWithMusic:inManagedObjectContext:] @ 0xba6e8.
++ (void)deleteRecordWithMusic:(int)music inManagedObjectContext:(NSManagedObjectContext *)context;
+
 #pragma mark Recovered selectors
 // Recovered from call sites (previously declared as local category seams).
 

@@ -22,6 +22,16 @@
 
 #import <UIKit/UIKit.h>
 
+// Callback interface the KID-input screen (InputKIDViewCtrl) sends to its owning split
+// controller once the pop'n-link succeeds on pad: rebuild the left column's inputs and
+// re-enter the score-checker section. PopnLinkTopSplitViewController conforms via its own
+// -reloadLeftView / -onScoreCheckerButtonTouched: below. Ghidra: sent from InputKIDViewCtrl
+// -commonAlertView:clickedButtonAtIndex: @ 0xd7284.
+@protocol PopnLinkTopSplitViewControllerDelegate <NSObject>
+- (void)reloadLeftView;
+- (void)onScoreCheckerButtonTouched:(id)sender;
+@end
+
 @interface PopnLinkTopSplitViewController : UIViewController
 
 // Fade the panel (and its nav view) in / out. Ghidra: startOpenAnimation @ 0xe1538 /
