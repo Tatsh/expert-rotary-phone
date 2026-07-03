@@ -195,7 +195,8 @@ enum {
         self.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
     }
                      completion:^(BOOL finished) {
-        // Ghidra: resetViewTransform — belt-and-suspenders identity restore.
+        // @ 0x7c870 resetViewTransform — belt-and-suspenders identity restore
+        // (setTransform: with the identity matrix; 0x3f800000 on the diagonal).
         self.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
     }];
 }
@@ -231,6 +232,8 @@ enum {
         stamp.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
     }
                      completion:^(BOOL finished) {
+        // @ 0x7cbd8 resetViewTransformDup — identity restore on the stamp (duplicate of
+        // resetViewTransform; setTransform: with the identity matrix).
         stamp.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
     }];
 
@@ -287,7 +290,9 @@ enum {
                               delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
                          animations:^{
-            self.transform = CGAffineTransformMakeScale(0.01f, 0.01f);
+            // @ 0x7cf58 zeroViewTransform — collapse to a zero matrix
+            // (setTransform: with all six components 0, i.e. scale (0, 0)).
+            self.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
         }
                          completion:^(BOOL finished) {
             [self removeFromSuperview];

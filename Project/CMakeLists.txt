@@ -161,6 +161,8 @@ target_sources(popnrhythmin PRIVATE
     CustomWebView.mm
     HowToViewCtrlPad.mm
     StoreDialogView.m
+    UIImage+Effects.m
+    UIView+neSystemAddFunc.m
     AcViewerDetailCell.h
     AcViewerMusicCell.h
     AcViewerOptionCell.h
@@ -245,6 +247,8 @@ target_sources(popnrhythmin PRIVATE
     CheckerMusicCell.h
     QuizCell.h
     ViewUtility.h
+    UIImage+Effects.h
+    UIView+neSystemAddFunc.h
     neWindow.h
     AcViewerOptionViewController.h
     CDataScanner.h

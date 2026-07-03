@@ -222,14 +222,35 @@ static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
         _isAnimationing = YES;
+        // Two-stage flip: collapse the pane's width to 0, swap its top controller, then
+        // expand it back to the KONAMI-ID frame. The selection arrow slides concurrently.
         [UIView transitionWithView:_rightViewCtrl.view
-                          duration:0.3
-                           options:UIViewAnimationOptionCurveEaseIn
-                        animations:^{
+                          duration:0.3   // DAT_000e1c78 (0.3)
+                           options:UIViewAnimationOptionCurveEaseIn   // 0x10000
+                        animations:^{   // @ 0xe1c88 — collapse rightViewCtrl.view width to 0
+            CGRect f = _rightViewCtrl.view.frame;
+            f.size.width = 0.0f;
+            _rightViewCtrl.view.frame = f;
+        } completion:^(BOOL finished) {
+            // showKonamiIdView @ 0xe1d18 — set the navbar art, swap in the KID input, then
+            // expand the pane to its section frame.
+            [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
+                                               forBarMetrics:UIBarMetricsDefault];
             [_rightViewCtrl popToRootViewControllerAnimated:NO];
             [_rightViewCtrl pushViewController:vc animated:NO];
-        } completion:^(BOOL finished) {
-            _isAnimationing = NO;
+            [UIView transitionWithView:_rightViewCtrl.view
+                              duration:0.3   // DAT_000e1e60 (0.3)
+                               options:UIViewAnimationOptionCurveEaseIn
+                            animations:^{   // @ 0xe1e68 — expand to _konamiIdFrm
+                _rightViewCtrl.view.frame = _konamiIdFrm;
+            } completion:^(BOOL done) {
+                self->_isAnimationing = NO;
+            }];
+        }];
+        // @ 0xe1f48 — slide the selection arrow to the KONAMI-ID row (runs concurrently).
+        [UIView animateWithDuration:0.6   // DAT_000e1c80 (0.6)
+                         animations:^{
+            _konamiIdArrowImageView.frame = _konamiIdArrowFrm;
         }];
     }
     _selectedIndex = 0;
@@ -262,14 +283,30 @@ static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
         _isAnimationing = YES;
         [UIView transitionWithView:_rightViewCtrl.view
                           duration:0.3
-                           options:UIViewAnimationOptionCurveLinear
-                        animations:^{
+                           options:UIViewAnimationOptionCurveEaseIn   // 0x10000
+                        animations:^{   // @ 0xe2290 — collapse rightViewCtrl.view width to 0
+            CGRect f = _rightViewCtrl.view.frame;
+            f.size.width = 0.0f;
+            _rightViewCtrl.view.frame = f;
+        } completion:^(BOOL finished) {
+            // showCheckerView @ 0xe2320 — set the navbar art, swap in the checker, then expand.
             [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
                                                forBarMetrics:UIBarMetricsDefault];
             [_rightViewCtrl popToRootViewControllerAnimated:NO];
             [_rightViewCtrl pushViewController:vc animated:NO];
-        } completion:^(BOOL finished) {
-            _isAnimationing = NO;
+            [UIView transitionWithView:_rightViewCtrl.view
+                              duration:0.3
+                               options:UIViewAnimationOptionCurveEaseIn
+                            animations:^{   // @ 0xe2470 — expand to _checkerFrm
+                _rightViewCtrl.view.frame = _checkerFrm;
+            } completion:^(BOOL done) {
+                self->_isAnimationing = NO;
+            }];
+        }];
+        // @ 0xe2550 — slide the selection arrow to the checker row (runs concurrently).
+        [UIView animateWithDuration:0.6
+                         animations:^{
+            _konamiIdArrowImageView.frame = _checkerArrowFrm;
         }];
     }
     _selectedIndex = 1;
@@ -302,14 +339,30 @@ static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
         _isAnimationing = YES;
         [UIView transitionWithView:_rightViewCtrl.view
                           duration:0.3
-                           options:UIViewAnimationOptionCurveEaseIn
-                        animations:^{
+                           options:UIViewAnimationOptionCurveEaseIn   // 0x10000
+                        animations:^{   // @ 0xe2898 — collapse rightViewCtrl.view width to 10
+            CGRect f = _rightViewCtrl.view.frame;
+            f.size.width = 10.0f;   // 0x41200000
+            _rightViewCtrl.view.frame = f;
+        } completion:^(BOOL finished) {
+            // showQuizView @ 0xe2928 — set the navbar art, swap in the quiz, then expand.
             [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_konamiid_navbar"]
                                                forBarMetrics:UIBarMetricsDefault];
             [_rightViewCtrl popToRootViewControllerAnimated:NO];
             [_rightViewCtrl pushViewController:vc animated:NO];
-        } completion:^(BOOL finished) {
-            _isAnimationing = NO;
+            [UIView transitionWithView:_rightViewCtrl.view
+                              duration:0.3
+                               options:UIViewAnimationOptionCurveEaseIn
+                            animations:^{   // @ 0xe2a78 — expand to _quizFrm
+                _rightViewCtrl.view.frame = _quizFrm;
+            } completion:^(BOOL done) {
+                self->_isAnimationing = NO;
+            }];
+        }];
+        // @ 0xe2b58 — slide the selection arrow to the quiz row (runs concurrently).
+        [UIView animateWithDuration:0.6
+                         animations:^{
+            _konamiIdArrowImageView.frame = _quizArrowFrm;
         }];
     }
     _selectedIndex = 2;

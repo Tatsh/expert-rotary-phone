@@ -8,6 +8,8 @@
 
 #import "AcViewerSplitViewController.h"
 #import "AcViewerCategoryViewController.h"
+#import "AcViewerMusicViewController.h"
+#import "UserSettingData.h"
 #import "neEngineBridge.h"
 
 // Root nav host + last-selected reset live on the engine singletons (Ghidra:
@@ -27,7 +29,7 @@ static UIViewController *RootVC() {
     CGRect _categoryArrowFrm;                // 365,307,…
     CGRect _musicNameArrowFrm;               // 365,469,…
     CGRect _genreArrowFrm;                   // 365,631,…
-    int _selectedButton;
+    UIButton *_selectedButton;               // currently-selected left-column button (nil = none)
     BOOL _isAnimationing;
 }
 
@@ -262,20 +264,99 @@ static UIViewController *RootVC() {
 
 #pragma mark - Handlers
 
-// @ 0x32d90 — a left-column button was tapped: switch the right pane's list and move
-// the selection arrow to that row. (Selection wiring modeled; the tapped button sets
-// _selectedButton and the arrow frame accordingly.)
+// @ 0x32d90 — a left-column button was tapped. If a transition isn't already running and
+// the tapped button isn't the current selection, play the confirm SE, strip the current
+// top VC's bar-button items, build the destination list controller for the button, then
+// run a width "flip" transition on the right pane (collapse to 0 width -> swap the pushed
+// VC -> expand back) while sliding the selection arrow to the tapped row. The four nested
+// blocks (@ 0x33170 / 0x33200 / 0x33358 / 0x334b8) are annotated inline below.
+//
+// Durations: outer + inner width transitions 0.3 s (DAT_00033160 / DAT_00033350),
+// arrow slide 0.6 s (DAT_00033168). Options 0x10000 = UIViewAnimationOptionCurveEaseIn;
+// the arrow uses 0x2 = UIViewAnimationOptionAllowUserInteraction.
 - (void)onButtonTouched:(UIButton *)sender {
-    if (sender == _btnCategory) {
-        _selectedButton = 0;
-        _arrowImageView.frame = _categoryArrowFrm;
-    } else if (sender == _btnMusicName) {
-        _selectedButton = 1;
-        _arrowImageView.frame = _musicNameArrowFrm;
-    } else if (sender == _btnGenre) {
-        _selectedButton = 2;
-        _arrowImageView.frame = _genreArrowFrm;
+    if (_isAnimationing) {
+        return;
     }
+    if (_selectedButton == sender) {
+        return;
+    }
+    neEngine::playSystemSe(1);
+
+    // Clear the currently shown top controller's bar-button items before the swap.
+    _rightViewCtrl.topViewController.navigationItem.leftBarButtonItem = nil;
+    _rightViewCtrl.topViewController.navigationItem.rightBarButtonItem = nil;
+
+    UIViewController *dest;
+    CGRect targetArrowFrm;
+    if (sender == _btnCategory) {
+        AcViewerCategoryViewController *cat =
+            [[AcViewerCategoryViewController alloc] initWithStyle:UITableViewStyleGrouped];
+        cat.delegate = (id)self;
+        dest = cat;
+        targetArrowFrm = _categoryArrowFrm;
+    } else if (sender == _btnGenre) {
+        [UserSettingData saveIsAcvGenreName:YES];
+        AcViewerMusicViewController *music =
+            [[AcViewerMusicViewController alloc] initWithData:nil];
+        music.delegate = (id)self;
+        dest = music;
+        targetArrowFrm = _genreArrowFrm;
+    } else {
+        [UserSettingData saveIsAcvGenreName:NO];
+        AcViewerMusicViewController *music =
+            [[AcViewerMusicViewController alloc] initWithData:nil];
+        music.delegate = (id)self;
+        dest = music;
+        targetArrowFrm = _musicNameArrowFrm;
+    }
+
+    dest.navigationItem.hidesBackButton = YES;
+    _isAnimationing = YES;
+
+    UIBarButtonItem *savedRightItem = dest.navigationItem.rightBarButtonItem;
+    dest.navigationItem.rightBarButtonItem = nil;
+    dest.navigationItem.leftBarButtonItem = nil;
+
+    [UIView transitionWithView:_rightViewCtrl.view
+                      duration:0.3
+                       options:UIViewAnimationOptionCurveEaseIn
+                    animations:^{
+        // @ 0x33170 — collapse the right pane to zero width for the flip-in.
+        CGRect f = _rightViewCtrl.view.frame;
+        f.size.width = 0;
+        _rightViewCtrl.view.frame = f;
+    }
+                    completion:^(BOOL finished) {
+        // @ 0x33200 — swap in the destination list, then expand the pane back.
+        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_friman_navbar"]
+                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl popToRootViewControllerAnimated:NO];
+        [_rightViewCtrl pushViewController:dest animated:NO];
+        [UIView transitionWithView:_rightViewCtrl.view
+                          duration:0.3
+                           options:UIViewAnimationOptionCurveEaseIn
+                        animations:^{
+            // @ 0x33358 — restore the pane to its full stored frame.
+            _rightViewCtrl.view.frame = _rightViewFrm;
+        }
+                        completion:^(BOOL innerFinished) {
+            // @ 0x333d0 — put the saved right bar-button item back and release the guard.
+            dest.navigationItem.rightBarButtonItem = savedRightItem;
+            _isAnimationing = NO;
+        }];
+    }];
+
+    [UIView animateWithDuration:0.6
+                          delay:0.0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+        // @ 0x334b8 — slide the selection arrow to the tapped row.
+        _arrowImageView.frame = targetArrowFrm;
+    }
+                     completion:nil];
+
+    _selectedButton = sender;
 }
 
 // @ 0x32d44 — the back button: play the cancel SE, clear the pending AC-viewer selection

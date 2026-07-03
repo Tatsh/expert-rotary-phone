@@ -284,14 +284,14 @@
         [UIView animateWithDuration:0.25
                               delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{
+                         animations:^{    // @ 0x27674 — overshoot to 1.25
             self->mBgImageView.transform = CGAffineTransformMakeScale(1.25f, 1.25f);
         }
                          completion:^(BOOL finished) {
             [UIView animateWithDuration:0.25
                                   delay:0.0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{
+                             animations:^{    // @ 0x27748 — settle back to 1.0
                 self->mBgImageView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
             }
                              completion:nil];
@@ -309,20 +309,20 @@
 // @ 0x277b8
 - (void)removeView {
     if (m_CloseAnimeType == CustomAlertViewAnimeTypeScale) {
-        // Reverse bounce: 1.0 -> 1.25 (0.25s) -> settle, then remove.
+        // Reverse bounce: 1.0 -> 1.25 (0.25s) -> collapse to 0 (0.25s), then remove.
         mBgImageView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
         [UIView animateWithDuration:0.25
                               delay:0.0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{
+                         animations:^{    // @ 0x27958 — overshoot to 1.25
             self->mBgImageView.transform = CGAffineTransformMakeScale(1.25f, 1.25f);
         }
                          completion:^(BOOL finished) {
             [UIView animateWithDuration:0.25
                                   delay:0.0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{
-                self->mBgImageView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
+                             animations:^{    // @ 0x27a48 — collapse to zero (setTransform: all-zero matrix)
+                self->mBgImageView.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
             }
                              completion:^(BOOL done) {
                 [self endCloseAnimation];

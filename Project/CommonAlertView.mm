@@ -228,14 +228,14 @@
     [UIView animateWithDuration:0.2
                           delay:0
                         options:UIViewAnimationOptionAllowUserInteraction
-                     animations:^{
+                     animations:^{    // @ 0x4b800 — overshoot animation block
         self.transform = CGAffineTransformMakeScale(1.25f, 1.25f);  // overshoot
     }
-                     completion:^(BOOL finished) {
+                     completion:^(BOOL finished) {   // @ 0x4b848 — completion: start the settle
         [UIView animateWithDuration:0.2
                               delay:0
                             options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{
+                         animations:^{    // @ 0x4b8f0 — settle animation block
             self.transform = CGAffineTransformMakeScale(1.0f, 1.0f);  // settle
         }
                          completion:^(BOOL done) {

@@ -349,7 +349,7 @@
         // A hosting view controller owns rotation; just adopt the new bounds.
         [self.view setBounds:newBounds];
     } else {
-        [UIView animateWithDuration:duration animations:^{
+        [UIView animateWithDuration:duration animations:^{   // @ 0xedef8 — animate transform + bounds
             self.view.transform = xf;
             self.view.bounds = newBounds;
         }];
