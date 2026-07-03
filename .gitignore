@@ -12,3 +12,4 @@ CMakeFiles/
 /.theos/
 /packages/
 /obj/
+/.audit/
