@@ -13,6 +13,7 @@
 #import "UserSettingData.h"
 #import "TreasureData.h"
 #import "OverScoreData.h"
+#import "neEngineBridge.h"   // neAppEventCenter::shared().setEndDate()
 
 // C++ bridge helpers the scenes expose (unmangled -> declared extern "C"). Each pokes
 // its owning C++ scene when the matching download finishes. Ghidra: modeSelectRefreshNews
@@ -914,8 +915,10 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
             hasList = YES;
             [self releaseRecommendData];
             _recommendDataArray = [[NSArray alloc] initWithArray:out];
-            // TODO(dep): NEAppEventCenter_shared(); setEndDate(&g_pNeAppEventCenter);
-            //   marks the session end time; analytics globals not yet reconstructed.
+            // @ 0x292c0 — mark the session end time now the recommend-list fetch (the last
+            // event of the download cycle) has parsed. Ghidra: NEAppEventCenter_shared();
+            // setEndDate(&g_pNeAppEventCenter).
+            neAppEventCenter::shared().setEndDate();
         }
         NSArray *over = json[@"Over"];
         if (over != nil) {

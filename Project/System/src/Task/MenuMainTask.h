@@ -80,6 +80,18 @@ private:
     // +0x94), so it is tested separately.
     bool hitSettingsButton(int touchId) const;
 
+    // Alert-dismissed callback for the mode-select confirm dialogs: clears the root VC's
+    // alert callback then advances the state machine (7 & 11 -> 6, 9 -> 10, else -> 12).
+    // Ghidra: FUN_0006d1a4 @ 0x6d1a4.
+    void onAlertClosed();
+
+    // Per-frame NEWS-ticker draw callback registered on the news AEP layer. `handle` is the
+    // layer being drawn (only our resolved news handle acts); `drawCtx` is the AEP draw
+    // context. The binary passes `this` as the trailing callback argument. It scrolls the
+    // current news line and pages through the news array with a pause/reset ramp.
+    // Ghidra: FUN_0006d6d4 @ 0x6d6d4.
+    void updateNewsTicker(int handle, int drawCtx);
+
     // ---- packed top-row cluster (+0x94.. settings/gift rects, overlapping fields) ----
     struct TopCluster {
         int rowY;         // +0x94 shared top-row Y (also the settings enable field)
@@ -113,10 +125,21 @@ private:
     uint8_t          m_giftEnabled = 0;       // +0xb6 gift button/label enabled
     uint8_t          m_treasureEvent = 0;     // +0xb7 treasure-event badge visible
     uint8_t          m_gameEvent = 0;         // +0xb8 game-event badge visible
-    // +0xb9..+0xe8 the news-text array copy + reward/event scan state (news seam;
-    // populated by the tail of FUN_0006c6a4, read by the news branch of the binary's
-    // update — outside this reconstruction's scope). Kept as a documented block.
-    uint8_t          _reserved_newsCache[0xe8 - 0xb9] = {};
+    // +0xb9..+0xc0 reward/event scan state (news seam; populated by the tail of
+    // FUN_0006c6a4, outside this reconstruction's scope). Kept as a documented block.
+    uint8_t          _reserved_newsScan[0xc0 - 0xb9] = {};
+    // ---- NEWS-ticker run state (used by updateNewsTicker, FUN_0006d6d4) ----
+    id               m_newsArray = nil;       // +0xc0 the news-text array copy (retained)
+    uint8_t          _reserved_c4[0xc8 - 0xc4] = {};  // +0xc4
+    id               m_newsCurLine = nil;     // +0xc8 current news line (retained)
+    int              m_newsIndex = 0;         // +0xcc index into m_newsArray
+    int              m_newsFrame = 0;         // +0xd0 per-line frame counter
+    int              m_newsScrollX = 0;       // +0xd4 current scroll x
+    int              m_newsSegment = 0;       // +0xd8 line-segment counter
+    int              m_newsPauseCounter = 0;  // +0xdc pause/fade ramp value (0..100)
+    int              m_newsPauseStep = 0;     // +0xe0 pause ramp step (-2 out, +2 in; 0 = uninit)
+    uint8_t          m_newsPaused = 0;        // +0xe4 true while ramping the pause
+    uint8_t          _reserved_e5[0xe8 - 0xe5] = {};  // +0xe5..+0xe8 pad
     int              m_layoutYOffset = 0;     // +0xe8 tall-screen vertical shift
     int              m_pulsePhase = 0;        // +0xec attention-pulse phase counter
     int              m_unlockStep = 0;        // +0xf0 invite-present unlock step (case-6 seam)

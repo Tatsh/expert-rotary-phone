@@ -36,12 +36,20 @@ neAppEventCenter &neAppEventCenter::shared() {
 // Ghidra: FUN_00028c70 — zero the transient event-center state.
 void neAppEventCenter::begin() {
     std::memset(m_state, 0, sizeof(m_state));
+    _endDate = nil;
+    std::memset(m_state2, 0, sizeof(m_state2));
     m_flags[0] = 0;
     m_flags[1] = 0;
 }
 
 // Ghidra: FUN_00028c9c — a no-op in this build.
 void neAppEventCenter::flush() {}
+
+// @ 0x292c0 — record the session end time (_endDate @ +0x24). The binary released the
+// previous NSDate and retained [NSDate date]; the ARC strong-ivar store does both.
+void neAppEventCenter::setEndDate() {
+    _endDate = [NSDate date];
+}
 
 // AC-viewer selection state (event-center region): the current browsing pair and the
 // pending "Sel" pair carried into the play scene.

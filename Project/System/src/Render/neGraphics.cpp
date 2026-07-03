@@ -9,6 +9,8 @@
 
 #include "neGraphics.h"
 
+#include <cstring>   // strchr
+
 // 16.16 fixed-point <-> float. UIKit hands neGLView point coordinates already
 // converted to fixed; the manager scales them to pixels with the content scale.
 static inline float FixedToFloat(int v) { return (float)v / 65536.0f; }
@@ -147,4 +149,39 @@ extern "C" int NEGraphics_activeTouchCount(const neGraphics *g) {
 // Ghidra: FUN_000124c4 — returns the i-th pointer from the pool array at +0x00.
 extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i) {
     return g->m_touches[i];
+}
+
+#pragma mark - Free text / geometry helpers
+
+// @ 0x2d858 — count '\n'-separated lines. The loop advances past each newline and, when
+// the newline was the last character, stops without counting a trailing empty line.
+int countLines(const char *text) {
+    if (*text == '\0') {
+        return 0;
+    }
+    int count = 1;
+    for (;;) {
+        const char *nl = strchr(text, '\n');
+        if (nl == nullptr) {
+            return count;             // no more newlines: current line is the last
+        }
+        text = nl + 1;
+        if (*text == '\0') {
+            return count;             // trailing newline: no extra empty line
+        }
+        ++count;
+    }
+}
+
+// @ 0x2d9dc — returns true iff x1<=xMax1 && x2<=xMax2 && y1>=yMin1 && y2>=yMin2. The
+// binary encodes the two `<=` comparisons with the usual NaN-aware two-stage compare.
+bool isWithinRange2D(float x1, float y1, float x2, float y2,
+                     float yMin1, float xMax1, float yMin2, float xMax2) {
+    if (x1 <= xMax1 && x2 <= xMax2) {
+        if (y1 < yMin1) {
+            return false;
+        }
+        return y2 >= yMin2;
+    }
+    return false;
 }

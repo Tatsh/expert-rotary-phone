@@ -88,6 +88,20 @@ private:
     friend const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i);
 };
 
+// ---- free text / geometry helpers (siblings of neGraphics::pointInRect) ----
+// These are plain C-linkage-shaped free functions in the binary (no `this`); they live
+// beside the pointInRect primitive as the engine's small layout helpers.
+
+// Count the '\n'-separated lines in a C string. Empty string -> 0; a trailing newline is
+// NOT counted as an extra empty line. Ghidra: FUN_0002d858.
+int countLines(const char *text);
+
+// 2D range containment over eight floats. Recovered predicate (FUN_0002d9dc): true when
+// the pair (x1,x2) is at/under the upper bounds (xMax1,xMax2) AND the pair (y1,y2) is
+// at/above the lower bounds (yMin1,yMin2) — i.e. two corners inside a half-open box.
+bool isWithinRange2D(float x1, float y1, float x2, float y2,
+                     float yMin1, float xMax1, float yMin2, float xMax2);
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

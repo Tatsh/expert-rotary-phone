@@ -106,6 +106,11 @@ public:
     int  lastMusic() const;              // DAT_00187bb8
     int  lastSheet() const;              // DAT_00187bbc
 
+    // Stamp the session end time into the +0x24 ivar (_endDate). The binary lazily
+    // released any prior date and retained a fresh [NSDate date]; under ARC the strong
+    // ivar assignment does that. Called at the end of the recommend-list download.
+    void setEndDate();                   // @ 0x292c0
+
     // --- Just-finished play's result record ---
     // The play task fills these (recordPlayResult + direct stores of rank/combo);
     // the result screen (PlayResultTask::resultSetup, Ghidra FUN_0003dfe0) snapshots
@@ -136,10 +141,12 @@ private:
         return *reinterpret_cast<const T *>(reinterpret_cast<const char *>(this) + off);
     }
 
-    int m_lastMusic = 0;     // +0x00
-    int m_lastSheet = 0;     // +0x04
-    float m_state[16] = {};  // +0x08..0x44 (transient event-center state, zeroed by begin)
-    int m_flags[2] = {};     // +0x40..0x44
+    int m_lastMusic = 0;      // +0x00
+    int m_lastSheet = 0;      // +0x04
+    float m_state[7] = {};    // +0x08..0x24 transient event-center state (zeroed by begin)
+    __strong id _endDate = nil; // +0x24 session end timestamp (NSDate); setEndDate @ 0x292c0
+    float m_state2[6] = {};   // +0x28..0x40 remaining transient state (zeroed by begin)
+    int m_flags[2] = {};      // +0x40..0x48
 };
 
 // Scene manager owning the root view controller (guarded singleton @ DAT_00187b74).

@@ -181,3 +181,31 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 @end
+
+// ---- generic percent-encode / decode free helpers ----
+// These are a SEPARATE pair from +[RewardNetworkUtilities URLEncodedString:] (@ 0xfa6fc):
+// plain C-linkage-shaped free functions that sit in the RewardNetwork SDK's __text
+// neighborhood (next to the dispatch_once accessor @ 0xfc0cc). No direct code caller was
+// recoverable — they are reached only through a data function-pointer table (@ 0x1593bc /
+// 0x193a28), so they are homed here in the SDK's utilities grab-bag (see HANDOFF.md).
+
+// @ 0xfc1d0 — percent-escape `string` for a URL query (escapes "!*'();:@&=+$,/?%#[]"; UTF-8).
+NSString *urlEncodeString(NSString *string) {
+    return (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(
+        kCFAllocatorDefault,
+        (__bridge CFStringRef)string,
+        NULL,
+        CFSTR("!*'();:@&=+$,/?%#[]"),
+        kCFStringEncodingUTF8));
+}
+
+// @ 0xfc218 — percent-decode `string` (UTF-8). The binary passes a shared "%d/%02d/15
+// 12:00:00" CFString (@ 0x10869e) as charactersToLeaveEscaped — recovered verbatim; the
+// reused date-format literal is unusual but faithful to the binary.
+NSString *urlDecodeString(NSString *string) {
+    return (NSString *)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(
+        kCFAllocatorDefault,
+        (__bridge CFStringRef)string,
+        CFSTR("%d/%02d/15 12:00:00"),
+        kCFStringEncodingUTF8));
+}

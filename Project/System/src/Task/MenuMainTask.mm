@@ -435,3 +435,93 @@ bool MenuMainTask::hitButton(int touchId, Button button) const {
 bool MenuMainTask::hitSettingsButton(int touchId) const {
     return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.settingsX, &m_top.rowY);
 }
+
+// @ 0x6d1a4 — the mode-select confirm dialogs' alert-dismissed callback. Detach the root
+// VC's alert callback, then step the state machine: 7 & 11 -> 6, 9 -> 10, anything else
+// (incl. the default) -> 12.
+void MenuMainTask::onAlertClosed() {
+    [RootVC() SetAlertViewCallback:NULL param:NULL];
+    switch (m_state) {
+    case 7:
+    case 11:
+        m_state = 6;
+        break;
+    case 9:
+        m_state = 10;
+        break;
+    default:
+        m_state = 12;
+        break;
+    }
+}
+
+// @ 0x6d6d4 — NEWS-ticker per-frame draw callback (the binary hands `this` in as the
+// trailing callback argument; `handle` is the AEP layer being drawn). Only acts on our
+// resolved news handle. Scrolls the current news line right-to-left through the ticker
+// params, paging to the next line (cycling the news array) with a 100->0->100 fade ramp
+// at each end.
+void MenuMainTask::updateNewsTicker(int handle, int drawCtx) {
+    AepManager &aep = AepManager::shared();
+    if (m_newsHandle != handle) {
+        return;
+    }
+    if (m_newsArray == nil || [m_newsArray count] == 0) {
+        return;
+    }
+
+    // First tick (pause step still 0): prime the scroll x / pause ramp and grab line 0.
+    if (m_newsPauseStep == 0) {
+        m_newsScrollX = m_newsTickerParams[0];   // base x
+        m_newsPauseCounter = 100;
+        m_newsPauseStep = -2;
+        m_newsCurLine = [m_newsArray objectAtIndex:0];
+    }
+
+    int elapsed = m_newsFrame++;
+    if (elapsed > 0x3b) {                          // ~60 frames of hold elapsed
+        if (!m_newsPaused) {
+            unsigned segment = (unsigned)m_newsSegment;
+            unsigned lineSegments =
+                (unsigned)[m_newsCurLine length] / (unsigned)(m_newsTickerParams[4] + 1);
+            if (segment < lineSegments) {
+                m_newsScrollX -= 2;                // scroll left
+                int nextSegment = m_newsSegment + 1;
+                int slotX = m_newsTickerParams[0] - nextSegment * m_newsTickerParams[2];
+                if (m_newsScrollX <= slotX) {      // snapped to the next segment slot
+                    m_newsFrame = 0;
+                    m_newsScrollX = slotX;
+                    m_newsSegment = nextSegment;
+                }
+                goto draw;
+            }
+        }
+        // Line finished scrolling: run the pause/fade ramp.
+        m_newsPaused = 1;
+        m_newsPauseCounter += m_newsPauseStep;
+        if (m_newsPauseStep < 0) {
+            if (m_newsPauseCounter < 1) {          // faded out: advance to the next line
+                m_newsScrollX = m_newsTickerParams[0];
+                m_newsSegment = 0;
+                m_newsPauseCounter = 0;
+                m_newsPauseStep = 2;
+                m_newsIndex = (m_newsIndex + 1) % (int)[m_newsArray count];
+                m_newsCurLine = [m_newsArray objectAtIndex:m_newsIndex];
+            }
+        } else if (m_newsPauseCounter > 99) {      // faded back in: resume scrolling
+            m_newsPauseCounter = 100;
+            m_newsPauseStep = -2;
+            m_newsFrame = 0;
+            m_newsPaused = 0;
+        }
+    }
+
+draw:
+    // Ghidra: aepManagerReset_b — the drawAepManagerTextEx text-draw seam (FUN_0001057c).
+    // The a5 slot carried &DAT_00181818 (the manager's opaque default news-text style blob)
+    // and the colour-vector slot carried &m_newsTickerParams[0]; `drawCtx` is the OT
+    // priority the callback was handed.
+    drawAepManagerTextEx(&aep, [m_newsCurLine UTF8String],
+                         0x1b, m_newsScrollX, m_newsTickerParams[1], 0,
+                         m_newsPauseCounter, 0 /* &DAT_00181818 style seam */,
+                         &m_newsTickerParams[0], drawCtx);
+}

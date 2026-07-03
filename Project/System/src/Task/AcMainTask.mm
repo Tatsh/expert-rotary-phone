@@ -822,6 +822,31 @@ static const char *const kRouletteSeNames[15] = {
     "se20_peaceopen", "se21_itemget", "se22_goal", "se23_gacha", "se25_quiz_x"
 };
 
+// @ 0xe2c54 — roulette result-item caption by index (nullptr when index >= 12). The
+// sugoroku roulette-result draw (AcMainSugorokuDraw, FUN_000a3724) looks the hit item's
+// description up here. Byte-verified from the 12-entry const table PTR_s__00133fac (its
+// UTF-8 string pointers @ 0x115434..0x1156b4).
+static const char *getStringByIndex12(unsigned index) {
+    static const char *const kItemDescriptions[12] = {
+        u8"ルーレットが超ゆっくりになるよ♪ 狙った目を出すチャンス！",
+        u8"ルーレットがゆっくりになるよ♪ 狙った目を出すチャンス！",
+        u8"進むマスがマップから消えるよ♪",
+        u8"戻るマスがマップから消えるよ♪",
+        u8"一時停止マスがマップから消えるよ♪",
+        u8"マップから全ての罠マスが消えるよ♪",
+        u8"マップから赤色の罠マスが消えるよ♪",
+        u8"マップから青色の罠マスが消えるよ♪",
+        u8"マップから緑色の罠マスが消えるよ♪",
+        u8"マップから黄色の罠マスが消えるよ♪",
+        u8"ゴールでタッチサウンドが貰える確率がアップ♪",
+        u8"ルーレットに必要なトレジャーポイントが少なくなるよ♪",
+    };
+    if (index < 12) {
+        return kItemDescriptions[index];
+    }
+    return nullptr;
+}
+
 void AcMainTask::buildSelectListLayout() {
     AudioManager *audio = [AudioManager sharedManager];
     for (int i = 0; i < 15; i++) {
