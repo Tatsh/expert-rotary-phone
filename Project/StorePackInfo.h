@@ -72,6 +72,10 @@
 // Localised price text, derived live from the bound SKProduct (StoreUtil).
 - (NSString *)priceString;
 
+// YES while the pack still needs its detail info fetched (the song lists aren't built
+// yet, so setDictionary: hasn't run). Ghidra: @ 0x571e4.
+- (BOOL)downloadDetailInfo;
+
 // YES if every song in the pack (standard + arcade) is downloaded. Ghidra: @ 0x571fc.
 - (BOOL)allDownloaded;
 

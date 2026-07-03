@@ -11,4 +11,5 @@
 
 @implementation MusicPatch
 // musicId/lvN/lvH/lvEx are auto-synthesized (atomic scalar accessors).
+// dealloc @ 0x787f4 — ARC-omitted (object ivars only; only calls [super dealloc]).
 @end

@@ -21,6 +21,7 @@
 
 @protocol StorePackInfoDownloaderDelegate <NSObject>
 @optional
+- (void)storePackInfoDownloaderProceed:(StorePackInfoDownloader *)downloader;
 - (void)storePackInfoDownloaderFinished:(StorePackInfoDownloader *)downloader;
 - (void)storePackInfoDownloaderError:(StorePackInfoDownloader *)downloader;
 @end

@@ -13,7 +13,9 @@
 //    packIDList @ 0x57a34   promotionList @ 0x57a44   packlistContinued @ 0x58820
 //    downloaderFinished: @ 0x57f48   downloaderError: @ 0x584ec
 //    productsRequest:didReceiveResponse: @ 0x58544
-//    updatePackInfo:SKProductsResponse: @ 0x57bac
+//    updatePackInfo:SKProductsResponse: @ 0x57bac   packInfos @ 0x57a24
+//    downloaderProceed: @ 0x58540   request:didFailWithError: @ 0x58698
+//    dealloc @ 0x58714   delegate @ 0x58800 / setDelegate: @ 0x58810
 //
 
 #import <Foundation/Foundation.h>
@@ -56,6 +58,7 @@
 - (StorePackInfo *)getPackInfo:(int)packId;
 - (StorePackInfo *)addPackInfoFromID:(int)packId;
 
+- (NSArray *)packInfos;         // the StorePackInfo cache (m_ArrayPackInfo)
 - (NSArray *)packIDList;        // ordered NSNumber pack ids
 - (NSArray *)promotionList;     // promotion-banner dictionaries
 - (BOOL)packlistContinued;      // whether more packs remain

@@ -11,10 +11,14 @@
 
 @interface MusicPatch : NSObject
 
-@property (atomic) int musicId;  // Ghidra: setMusicId: @ 0x78834
-@property (atomic) int lvN;      // Ghidra: lvN @ 0x7884c
-@property (atomic) int lvH;      // Ghidra: lvH @ 0x78878
-@property (atomic) int lvEx;     // Ghidra: lvEx @ 0x788a4
+// Synthesized: musicId @ 0x78820, setMusicId: @ 0x78834.
+@property (atomic) int musicId;
+// Synthesized: lvN @ 0x7884c, setLvN: @ 0x78860.
+@property (atomic) int lvN;
+// Synthesized: lvH @ 0x78878, setLvH: @ 0x7888c.
+@property (atomic) int lvH;
+// Synthesized: lvEx @ 0x788a4, setLvEx: @ 0x788b8.
+@property (atomic) int lvEx;
 
 @end
 

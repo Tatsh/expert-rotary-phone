@@ -57,6 +57,13 @@
     m_Downloader = nil;
 }
 
+// @ 0x57690 — Downloader progress callback; forward as a proceed notification.
+- (void)downloaderProceed:(Downloader *)downloader {
+    if ([m_Delegate respondsToSelector:@selector(storePackInfoDownloaderProceed:)]) {
+        [m_Delegate storePackInfoDownloaderProceed:self];
+    }
+}
+
 // @ 0x575fc — fold the response into the pack, then notify success.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];

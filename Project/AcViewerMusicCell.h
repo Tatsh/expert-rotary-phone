@@ -10,12 +10,20 @@
 
 #import <UIKit/UIKit.h>
 
+@class AcMusicData;
+
 @interface AcViewerMusicCell : UITableViewCell
 
-@property (nonatomic, retain) UIButton *easyBtn;    // tag 100 (acv_viewer_diff_ea)
-@property (nonatomic, retain) UIButton *normalBtn;  // tag 101 (acv_viewer_diff_n)
-@property (nonatomic, retain) UIButton *hyperBtn;   // tag 102 (acv_viewer_diff_h)
-@property (nonatomic, retain) UIButton *exBtn;      // tag 103 (acv_viewer_diff_ex)
+// atomic retain (the binary getters read the ivar behind a DataMemoryBarrier; the buttons are
+// released in -dealloc). Getter addresses annotated.
+@property (atomic, retain) UIButton *easyBtn;    // tag 100 (acv_viewer_diff_ea); getter @ 0x4168c
+@property (atomic, retain) UIButton *normalBtn;  // tag 101 (acv_viewer_diff_n);  getter @ 0x416a0
+@property (atomic, retain) UIButton *hyperBtn;   // tag 102 (acv_viewer_diff_h);  getter @ 0x416b4
+@property (atomic, retain) UIButton *exBtn;      // tag 103 (acv_viewer_diff_ex);  getter @ 0x416c8
+
+// Bind the row to one arcade song: banner background, song/genre title, and the level number
+// for each available difficulty (drawn inside its difficulty button). Ghidra: setData: @ 0x409e0.
+- (void)setData:(AcMusicData *)data;
 
 @end
 

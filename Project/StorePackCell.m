@@ -6,6 +6,9 @@
 //
 
 #import "StorePackCell.h"
+#import "StorePackInfo.h"
+#import "StoreUtil.h"
+#import "PurchaseManager.h"
 #import "AppFont.h"
 
 @implementation StorePackCell
@@ -69,6 +72,46 @@
     }
     return self;
 }
+
+// @ 0x6f604 — bind a pack model: name, price and "new" marker, then the live purchased
+// state. Purchased → show the "purchased" label and hide the chara-ticket & arcade
+// markers; not purchased → hide it, show the chara-ticket marker, and show the arcade
+// marker only when the pack has arcade content.
+- (void)loadPackInfo:(StorePackInfo *)packInfo {
+    _labelName.text = [packInfo packName];
+    _labelPrice.text = [packInfo priceString];
+    _newMarker.hidden = ![packInfo isNew];
+
+    NSString *productID = [StoreUtil productIDForPackID:[packInfo packID]];
+    BOOL purchased = [[PurchaseManager sharedManager] isPurchased:productID];
+    if (purchased) {
+        _labelPurchased.hidden = NO;
+        _charaTicket.hidden = YES;
+        _arcadeViewer.hidden = YES;
+    } else {
+        _labelPurchased.hidden = YES;
+        _charaTicket.hidden = NO;
+        _arcadeViewer.hidden = ([packInfo acvNum] < 1);
+    }
+}
+
+// @ 0x6f7b4 — swap the row's background image.
+- (void)setBgImage:(UIImage *)image {
+    [_bgView setImage:image];
+}
+
+// @ 0x6f5a8 — purchased iff the "purchased" label is visible.
+- (BOOL)isPurchased {
+    return !_labelPurchased.hidden;
+}
+
+// @ 0x6f5d8 — toggle the "purchased" label's visibility.
+- (void)setIsPurchased:(BOOL)isPurchased {
+    _labelPurchased.hidden = !isPurchased;
+}
+
+// dealloc @ 0x6f7d4 — ARC-omitted (object ivars only).
+// artworkView @ 0x6f8b0 — synthesized getter (reads _artworkView).
 
 @end
 

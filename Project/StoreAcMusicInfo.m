@@ -27,6 +27,8 @@
     return self;
 }
 
+// Trivial ivar getters. Ghidra: acMusicId @ 0x854e4, title @ 0x854f4, genre @ 0x85504,
+// itemURL @ 0x85514, sampleURL @ 0x85524.
 - (int)acMusicId        { return m_AcMusicId; }
 - (NSString *)title      { return m_Title; }
 - (NSString *)genre      { return m_Genre; }
@@ -38,7 +40,7 @@
     return RhFileExists([[MusicManager getInstance] getAcPathFromPurchased:m_AcMusicId]);
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// dealloc @ 0x85458 — ARC-omitted (object ivars only).
 
 @end
 

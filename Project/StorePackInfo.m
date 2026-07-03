@@ -211,6 +211,12 @@
     return m_AcvMusicInfos;
 }
 
+// @ 0x571e4 — YES while the pack still needs its detail fetched: the song lists aren't
+// built yet (setDictionary: hasn't run), so the detail screen should request them.
+- (BOOL)downloadDetailInfo {
+    return m_MusicInfos == nil;
+}
+
 // @ 0x571fc — YES once every song in the pack (both the standard and arcade lists) has
 // its purchased file on disk.
 - (BOOL)allDownloaded {
@@ -232,7 +238,7 @@
     return [StoreUtil priceString:m_Product];
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// dealloc @ 0x570f4 — ARC-omitted (object ivars only).
 
 @end
 

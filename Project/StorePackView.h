@@ -10,7 +10,8 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin:
 //    initWithFrame:      @ 0x51a44   loadPackInfo:index: @ 0x5258c
 //    isPurchased         @ 0x52530   handleTap:          @ 0x524c8
-//    setArtwork:         @ 0x524a8
+//    setArtwork:         @ 0x524a8   setBgImage:         @ 0x52488
+//    setIsPurchased:     @ 0x52560   index               @ 0x527a4
 //
 
 #import <UIKit/UIKit.h>
@@ -48,8 +49,14 @@
 // Replace the jacket artwork image.
 - (void)setArtwork:(UIImage *)artwork;
 
+// Replace the tile's background image.
+- (void)setBgImage:(UIImage *)image;
+
 // YES while the "purchased" button is visible (derived from its hidden flag).
 - (BOOL)isPurchased;
+
+// Show/hide the "purchased" button (the source of truth for -isPurchased).
+- (void)setIsPurchased:(BOOL)purchased;
 
 @end
 

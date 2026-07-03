@@ -18,6 +18,8 @@
 
 @implementation BirthDayViewController
 
+// Plain assign accessors (the delegate is not retained). Ghidra: delegate getter @ 0x850c4 /
+// setDelegate: @ 0x850d4 (synthesized).
 @synthesize delegate = _delegate;
 
 // @ 0x8396c — build the whole age-gate: a full-screen touch blocker, a rounded gradient-
@@ -302,7 +304,11 @@
     m_IsAnimationing = NO;
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// viewDidLoad @ 0x8506c — super-only override, omitted.
+// didReceiveMemoryWarning @ 0x85098 — super-only override, omitted.
+
+// dealloc @ 0x847e8 — ARC-omitted (object ivars only: unhooks the panel subviews from the
+// hierarchy and releases the picker; ARC handles this).
 
 @end
 
