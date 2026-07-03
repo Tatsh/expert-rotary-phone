@@ -71,10 +71,27 @@
 // 0x2711) with a spinner, an empty-state label (tag 0x2712), the promotion banner
 // (StorePromotionView, tag 0x2775) + its dummy, and — on iPad — an inset table, a
 // dim cover view (handleTapCoverView:) and an embedded StorePackDetailViewPad; plus
-// the stretchable pack-cell backgrounds (store_pack_bg_0/1). RECONSTRUCTION DEFERRED:
-// the method's CGRect geometry is largely unrecoverable (ARM NEON vector spills in
-// the decompiler), and it depends on StorePromotionView + StorePackDetailViewPad
-// which are not yet reconstructed. Tracked in HANDOFF.md.
+// the stretchable pack-cell backgrounds (store_pack_bg_0/1).
+//
+// RECONSTRUCTION DEFERRED (dep audit updated 2026-07-02). The original blocker was
+// stale: StorePromotionView (fully reconstructed) and StorePackDetailViewPad (a data-
+// holder) both exist now. The remaining work is a connected chunk, so it is done as
+// one dedicated pass rather than piecemeal (leaving dangling refs would break the
+// no-unimplemented-refs rule). It needs, all in one go:
+//   * 9 new ivars: m_PromotionView (StorePromotionView*), m_PromotionViewDummy
+//     (UIImageView*), m_PackTableLabel (UILabel*), m_ShowMoreButton (UIButton*),
+//     m_ShowMoreIndicator (UIActivityIndicatorView*), m_CoverViewPad (UIView*),
+//     m_PackDetailViewPad (StorePackDetailViewPad*), m_PackBgImage0/1 (UIImage*),
+//     plus m_IsLoadingMoreList (BOOL, used by selectShowMore).
+//   * action handlers selectShowMore (@0x494cc) + handleTapCoverView: (@0x45940),
+//     which in turn need closeDetailAnimStop:finished:context:, StorePackListController
+//     -startFetchingPack:, and StorePackDetailViewPad -cancelLoading/-stopSample.
+//   * geometry: most rects are self.view.bounds-derived (center = bounds.w*0.5,
+//     bounds.h*0.5 +/- an offset) and thus recoverable; the StorePromotionView /
+//     StorePackDetailViewPad initWithFrame: rects are NEON-spilled and need per-call-
+//     site disassembly (iPad promo = 730x240 @0x44368000/0x43700000, detail = 650x650
+//     @0x44228000 are visible in the pseudocode; the phone promo frame is spilled).
+// Full structure + decoded float constants are catalogued in HANDOFF.md.
 
 // @ 0x4a2d8
 - (void)startStoreClose {
@@ -84,6 +101,29 @@
 // @ 0x4a2ec
 - (BOOL)isAlertViewShowing {
     return _isAlertViewShowing;
+}
+
+// @ 0x494cc — tapped the pack table's "show more" footer button. Guarded so a second
+// tap while a fetch is in flight is ignored. Swaps the button caption to the loading
+// text (byte-verified CFString @ 0x136798) without moving it (capture the centre,
+// -sizeToFit to the new title, then restore the centre), reveals the spinner, hides the
+// "push up to show more" hint label (tag 100000), and asks the pack list for the next
+// page (-1 = "the page after the last one loaded").
+- (void)selectShowMore {
+    if (m_IsLoadingMoreList) {
+        return;
+    }
+    m_IsLoadingMoreList = YES;
+
+    [m_ShowMoreButton setTitle:@"読み込み中..." forState:UIControlStateNormal];  // "Loading..."
+    CGPoint center = m_ShowMoreButton ? m_ShowMoreButton.center : CGPointZero;
+    [m_ShowMoreButton sizeToFit];
+    m_ShowMoreButton.center = center;
+
+    m_ShowMoreIndicator.hidden = NO;
+    [[self.view viewWithTag:100000] setHidden:YES];
+
+    [m_PackListCtrl startFetchingPack:-1];
 }
 
 - (void)dealloc {

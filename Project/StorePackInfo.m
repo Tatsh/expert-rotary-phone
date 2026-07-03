@@ -220,6 +220,22 @@
     return m_AcvMusicInfos;
 }
 
+// @ 0x571fc — YES once every song in the pack (both the standard and arcade lists) has
+// its purchased file on disk.
+- (BOOL)allDownloaded {
+    for (StoreMusicInfo *info in m_MusicInfos) {
+        if (![info fileExist]) {
+            return NO;
+        }
+    }
+    for (StoreAcMusicInfo *info in m_AcvMusicInfos) {
+        if (![info fileExist]) {
+            return NO;
+        }
+    }
+    return YES;
+}
+
 // @ 0x56d50 — always formatted live from the bound product.
 - (NSString *)priceString {
     return [StoreUtil priceString:m_Product];

@@ -46,6 +46,56 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return (int)[NSUserDefaults.standardUserDefaults integerForKey:key];
 }
 
+// @ 0x5f990 — fetch a stored object (used for NSDate values).
++ (id)getDate:(NSString *)key {
+    return [NSUserDefaults.standardUserDefaults objectForKey:key];
+}
+
+// Store an object (an NSDate) under `key`.
++ (void)saveDate:(id)value Key:(NSString *)key {
+    [NSUserDefaults.standardUserDefaults setObject:value forKey:key];
+}
+
+// @ 0x60824 — persist the birthday entered in the age gate.
++ (void)saveBirthDay:(NSDate *)date {
+    [self saveDate:date Key:@"BirthDay"];
+}
+
+// @ 0x6084c — did the user dismiss the age gate without entering a birthday?
++ (BOOL)isBirthDayCanceled {
+    return [self getBOOL:@"BirthDayCancel"];
+}
+
+// @ 0x60874 — record whether the age gate was cancelled.
++ (void)saveIsBirthDayCanceled:(BOOL)canceled {
+    [self saveBOOL:canceled Key:@"BirthDayCancel"];
+}
+
+// @ 0x5ffc8 / 0x5fff0 — remembers whether the friend how-to has been shown (key best-effort).
++ (BOOL)isFriendSelected {
+    return [self getBOOL:@"FriendSelected"];
+}
+
++ (void)saveIsFriendSelected:(BOOL)selected {
+    [self saveBOOL:selected Key:@"FriendSelected"];
+}
+
+// @ 0x607fc — the user's stored birthday (nil until they enter it in the age gate).
++ (NSDate *)birthDay {
+    return [self getDate:@"BirthDay"];
+}
+
+// @ 0x6089c — when the monthly purchase total was last reset.
++ (NSDate *)lastUpdateSumPurchase {
+    return [self getDate:@"LastUpdateSumPurchase"];
+}
+
+// @ 0x608ec — yen spent this month (clamped at 0), for the youth spending limit.
++ (int)sumPurchase {
+    int value = [self getInt:@"SumPurchase"];
+    return value < 0 ? 0 : value;
+}
+
 // @ 0x5f774
 + (void)saveInt:(int)value Key:(NSString *)key {
     NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;

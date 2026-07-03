@@ -42,6 +42,10 @@
 // userInfo query fragment) from a background refresh.
 - (void)downloadDetail:(BOOL)userOpen;
 
+// Abort an in-flight detail fetch: cancel the wrapped Downloader and drop it.
+// Ghidra: @ 0x575b8.
+- (void)cancel;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

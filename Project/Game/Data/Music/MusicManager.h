@@ -46,6 +46,14 @@
 // Resolve a song id to its bundled / purchased (.orb) path.
 - (NSString *)getPathFromBundle:(int)musicId;
 - (NSString *)getPathFromPurchased:(int)musicId;   // @ 0xc7edc
+- (NSString *)getAcPathFromPurchased:(int)acMusicId;   // @ 0xc7f38 (arcade music variant)
+
+// The recommended-pack id list (decoded from the encrypted "recpack" file). Ghidra:
+// @ 0xc9bd0.
+- (NSArray *)getRecommendPackArray;
+
+// Add a pack id to the encrypted "recpack" list (no-op if already present). Ghidra: @ 0xc9e20.
+- (void)saveRecommendedPack:(unsigned int)packID;
 
 @end
 

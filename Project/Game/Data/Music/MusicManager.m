@@ -321,4 +321,83 @@ static const int kTreasureMusicIds[9] = {
             stringByAppendingPathComponent:[self getAcMusicDataFilename:acMusicId]];
 }
 
+// @ 0xc9bd0 — the recommended-pack id list: decode the encrypted "recpack" file (same
+// Blowfish-with-MD5(uuid) scheme as the purchased-music lists), then collect each entry's
+// "ID". Returns an empty array when there is no recommend file.
+- (NSArray *)getRecommendPackArray {
+    NSString *path = [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"recpack"];
+    NSArray *entries = nil;
+    if (RhFileExists(path)) {
+        NSString *uuId = [AppDelegate appDelegate].uuId;
+        NSMutableData *data = [[NSMutableData alloc] initWithContentsOfFile:path];
+        if (data != nil) {
+            BFCodec *codec = [[BFCodec alloc] init];
+            [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+            [codec decipher:data];
+            [codec release];
+            NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
+            [data release];
+            entries = RhParsePlistArray(body);
+        }
+    }
+    NSMutableArray *ids = [NSMutableArray array];
+    for (NSDictionary *entry in entries) {
+        [ids addObject:[entry objectForKey:@"ID"]];
+    }
+    return ids;
+}
+
+// @ 0xc9e20 — add `packID` to the encrypted "recpack" list (a no-op if it is already there).
+// Decodes the existing list (same BFCodec + MD5(uuid) scheme), appends a {ID: packID} entry,
+// then re-encodes it behind 4 random salt bytes and writes it back.
+- (void)saveRecommendedPack:(unsigned int)packID {
+    NSString *path = [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"recpack"];
+    NSString *uuId = [AppDelegate appDelegate].uuId;
+
+    NSMutableArray *entries = nil;
+    if (RhFileExists(path)) {
+        NSMutableData *data = [[NSMutableData alloc] initWithContentsOfFile:path];
+        if (data != nil) {
+            BFCodec *codec = [[BFCodec alloc] init];
+            [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+            [codec decipher:data];
+            [codec release];
+            NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
+            [data release];
+            entries = RhParsePlistArray(body);   // mutable array
+            if (entries != nil) {
+                for (NSDictionary *entry in entries) {
+                    if ([[entry objectForKey:@"ID"] unsignedIntValue] == packID) {
+                        return;   // already recommended
+                    }
+                }
+            }
+        }
+    }
+    if (entries == nil) {
+        entries = [[NSMutableArray alloc] initWithCapacity:64];
+    }
+
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:5];
+    [dict setObject:[NSNumber numberWithUnsignedInt:packID] forKey:@"ID"];
+    [entries addObject:[NSDictionary dictionaryWithDictionary:dict]];
+
+    NSData *xml = [NSPropertyListSerialization dataWithPropertyList:entries
+                                                            format:NSPropertyListXMLFormat_v1_0
+                                                           options:0
+                                                             error:NULL];
+    NSMutableData *out = [[NSMutableData alloc] initWithCapacity:128];
+    uint32_t salt = arc4random();
+    [out appendBytes:&salt length:4];
+    [out appendData:xml];
+
+    BFCodec *codec = [[BFCodec alloc] init];
+    [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+    [codec encipher:out];
+    [codec release];
+
+    [out writeToFile:path atomically:YES];
+    [out release];
+}
+
 @end

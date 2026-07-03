@@ -38,6 +38,7 @@
 + (NSURL *)removeFriendURL;       // 0x5943c  remove_friend         (verified)
 + (NSURL *)getRecommendFriendURL; // 0x59a34  get_recommend_friend  (verified)
 + (NSURL *)saveTreasureURL;       // 0x59884  save_treasure         (verified)
++ (NSURL *)recommendPackURL;      // 0x59740  pack_recommend/index.jsp (literal "/apr/main/cgi/")
 + (NSURL *)getArcadeScoreURL;     // 0x5995c  get_arcade_score
 + (NSURL *)getOverScoreLogURL;    // 0x59d28  get_over_score_log
 + (NSURL *)getBlockListURL;       // 0x59580  get_block_list
@@ -61,6 +62,11 @@
 // identifier, or -1 if it lacks the "rhythmin_pack" prefix / is non-positive.
 // Ghidra: packIDForProductID: @ 0x5a0d0.
 + (int)packIDForProductID:(NSString *)productID;
+
+// Youth-spending-limit gate: YES if a purchase of `price` yen is allowed given the user's
+// age (from the saved birthday; 18+ unrestricted) and this month's running total.
+// Ghidra: isPurchasable: @ 0x5a400.
++ (BOOL)isPurchasable:(unsigned int)price;
 
 // --- Receipt verification (server-side re-validation of StoreKit purchases) ---
 

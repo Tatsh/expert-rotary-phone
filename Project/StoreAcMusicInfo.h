@@ -28,6 +28,9 @@
 @property (nonatomic, readonly) NSString *itemURL;
 @property (nonatomic, readonly) NSString *sampleURL;
 
+// YES if this arcade song's purchased file is already on disk. Ghidra: @ 0x85418.
+- (BOOL)fileExist;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

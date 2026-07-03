@@ -87,6 +87,26 @@ static const NSTimeInterval kTimeout = 15.0;
     m_StartTime = [[NSDate date] retain];
 }
 
+// @ 0x6249c — abort in flight. Clears the (unretained) delegate first so a callback
+// already queued on the run loop is ignored, then tears down the connection + buffer.
+- (void)cancel {
+    m_Delegate = nil;
+    if (m_Connection != nil) {
+        [m_Connection cancel];
+        [m_Connection release];
+        m_Connection = nil;
+    }
+    if (m_DownloadedData != nil) {
+        [m_DownloadedData release];
+        m_DownloadedData = nil;
+    }
+}
+
+// @ 0x62938 — the raw buffered response bytes.
+- (NSData *)getData {
+    return m_DownloadedData;
+}
+
 // @ 0x62948 — decode the buffered body as JSON (system serializer, TouchJSON fallback).
 - (NSDictionary *)getDataInJSON {
     if (m_DownloadedData == nil) {

@@ -77,9 +77,18 @@
       DONE: updateResultPresent (case 2) — the intro-frame SE cascade (se07_count @+0x300
       on frames 0x18/0x28/0x30/0x38/0x40; v32 @+0x2e8 perfect jingle at 0x46, all traced by
       disasm), the capture gate, and the dismiss tap (tapX>0xdc || tapY<bottomEdge -> state
-      3). The one remaining seam is buildShareButton (the case-2 UIButton build: NEON-
-      obscured device-branched frame from the bt_twitter image + the TwitterUtil tweet
-      target). DONE: updateScoreCount (cases 3/5/6 count-up) —
+      3). DONE: buildShareButton (the case-2 UIButton build @ 0x3daf8..0x3df1e) —
+      byte-verified the tweet-format CFString @ 0x135FF8 (UTF-16, "%@をプレイしたよ！
+      スコア:%d ランク:%@ http://bit.ly/188OxQr #リズミン"; args = musicName, score@+0x344,
+      rankLetter[+0x35c] from PTR_cf_S_00131884 {S,AAA,AA,A,B,C,D}); the device-branched
+      frame (x=5.0; phone y=435.0 / 527.0@displayType2, Retina board halves the image +
+      y+=15.0; pad y=965.0; w/h = bt_twitter image size); TwitterUtil(text,captured-image)
+      wired as the @selector(tweet) target; and the two-stage bounce-in (0.2s scale->2.0,
+      0.5s ->1.0, completion re-enables taps; options=UIViewAnimationOptionAllowUserInteraction
+      =2). The innermost completion (FUN @ 0x3f2ac, unmarked-Thumb "bad data") was hand-
+      decoded from raw halfwords to [button setUserInteractionEnabled:YES]. TwitterUtil
+      class fully reconstructed (Social.framework SLComposeViewController). DONE:
+      updateScoreCount (cases 3/5/6 count-up) —
       all 4 SE source ids traced by disassembly (v38 @+0x2fc line-in, se08_bonus_fai
       @+0x304 tally, se07_count @+0x300 tick, se09_bonus_cl @+0x308 finish); and
       AepLyrCtrlUpdateAll + PlayResultDrawCallback (see the Draw units section).

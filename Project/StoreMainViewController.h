@@ -27,6 +27,11 @@
     int m_OffsetForOS;                                // iOS7 layout nudge (46 on phone)
     BOOL m_IsStoreClosing;                            // set while the host fades out
     BOOL _isAlertViewShowing;                         // an alert is up (atomic)
+
+    // Pack-table "show more" controls (built by viewDidLoad, driven by selectShowMore).
+    UIButton *m_ShowMoreButton;                       // the "もっと見る" / "読み込み中..." button
+    UIActivityIndicatorView *m_ShowMoreIndicator;     // spinner shown while fetching more
+    BOOL m_IsLoadingMoreList;                         // a "load more packs" fetch is in flight
 }
 
 - (instancetype)initWithParent:(StoreViewController *)parent;
@@ -35,6 +40,10 @@
 - (void)startStoreClose;
 // YES while a modal alert is on screen (blocks the back button).
 - (BOOL)isAlertViewShowing;
+
+// The pack table's "show more" button action: flips the button to a loading title +
+// spinner and kicks off the next page fetch. Ghidra: @ 0x494cc.
+- (void)selectShowMore;
 
 @end
 

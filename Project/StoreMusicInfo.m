@@ -7,6 +7,8 @@
 
 #import "StoreMusicInfo.h"
 #import "StoreUtil.h"
+#import "MusicManager.h"
+#import "RhUtil.h"
 
 // Clamp a level into [lo, hi]; sub-range values pass through.
 static int ClampLevel(int value, int lo, int hi) {
@@ -71,6 +73,11 @@ static int ClampLevel(int value, int lo, int hi) {
 - (int)lvBasic  { return m_LvBasic; }
 - (int)lvMedium { return m_LvMedium; }
 - (int)lvHard   { return m_LvHard; }
+
+// @ 0x56678 — the purchased song file exists on disk (path resolved by MusicManager).
+- (BOOL)fileExist {
+    return RhFileExists([[MusicManager getInstance] getPathFromPurchased:m_MusicID]);
+}
 
 - (void)dealloc {
     [m_Name release];

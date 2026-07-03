@@ -72,6 +72,9 @@
 // Localised price text, derived live from the bound SKProduct (StoreUtil).
 - (NSString *)priceString;
 
+// YES if every song in the pack (standard + arcade) is downloaded. Ghidra: @ 0x571fc.
+- (BOOL)allDownloaded;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

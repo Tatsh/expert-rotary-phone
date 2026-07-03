@@ -50,6 +50,12 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 - (void)seekBgmToTop;                                 // selector @ 0x11a3d6
 - (BOOL)setBgmVolume:(float)volume;                   // Ghidra: @ 0x1fc20
 - (BOOL)stopBgm:(float)fadeSeconds;                   // Ghidra: @ 0x1fe10
+// YES while the BGM player exists and is playing. Ghidra: isPlayingBgm @ 0x1fff8.
+- (BOOL)isPlayingBgm;
+// The BGM player's playhead (seconds). Ghidra: bgmCurrentTime @ 0x1ff58 /
+// setBgmCurrentTime: @ 0x1ffb0 (the setter also re-primes the player via prepareToPlay).
+- (NSTimeInterval)bgmCurrentTime;
+- (void)setBgmCurrentTime:(NSTimeInterval)time;
 // Save/restore the current BGM so another can play over it and be swapped back.
 - (void)pushBgm;                                      // Ghidra: @ 0x201dc
 - (void)popBgm;                                       // Ghidra: @ 0x2027c

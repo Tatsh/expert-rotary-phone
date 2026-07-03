@@ -20,11 +20,15 @@
 // Arcade chart: an 8-byte header (magic 'E' at offset +4) then N 8-byte note
 // records, N = (size / 8) - 2. Each record's type byte is at +0x4, its value
 // (lane/BPM) at +0x6.
+// NOTE: the names below are historical; the binary's semantics (from InitPlayData /
+// the update closure) are: type 3 = BGM-start / drift-sync anchor (its tick -> the sync
+// reference time), type 6 = the true end-of-chart marker (its tick -> the end value, and
+// the appended terminator is stamped type 6 so update() can raise the end flag).
 enum AcNoteType : uint8_t {
     AC_NOTE_TAP = 1,     // playable note (counted per lane)
-    AC_NOTE_END = 3,     // end-of-chart marker
+    AC_NOTE_END = 3,     // BGM-start / drift-sync anchor (NOT the chart end)
     AC_NOTE_TEMPO = 4,   // tempo/BPM event (min/max tracked)
-    AC_NOTE_EVENT = 6,   // stored as the last event value
+    AC_NOTE_EVENT = 6,   // the real end-of-chart marker
 };
 
 // One 8-byte arcade chart record.
@@ -35,6 +39,28 @@ struct AcNoteRecord {
     uint16_t value;     // +0x6  lane (low nibble) / BPM
 };
 static_assert(sizeof(AcNoteRecord) == 8, "arcade note record is 8 bytes");
+
+// One active (on-screen / in-flight) note. A fixed pool is threaded onto either the free
+// list or the active list; play never allocates. Layout mirrors the binary's node:
+// next@0x0, record@0x4, tick@0x8, drawY@0xc, lane@0x10, flags@0x12.
+struct AcActiveNote {
+    AcActiveNote *next = nullptr;          // +0x00 free/active list link
+    const AcNoteRecord *record = nullptr;  // +0x04 source chart record
+    uint32_t tick = 0;                     // +0x08 timing (copied from the record)
+    float drawY = 0.0f;                    // +0x0c on-screen scroll position (init 1024.0)
+    uint8_t lane = 0;                      // +0x10 lane 0..8, or 9 = non-playable event
+    uint8_t _pad11 = 0;                    // +0x11
+    uint16_t flags = 0;                    // +0x12 bit0=counted, bit2=judged, bit5=handled
+};
+
+// One scroll/tempo segment (the binary's 0xc-byte record at +0xfa4c, stride 0xc): a scroll
+// speed (bpm * 1024 / 480000), the tick it starts at, and the raw BPM. The segment array is
+// kept sorted by startTick; changeTempo() pops the front as play passes each boundary.
+struct AcScrollSegment {
+    float speed = 0.0f;            // +0x0  units/ms (0 until registered)
+    uint32_t startTick = 0xffffffff; // +0x4  sentinel -1 until registered
+    int16_t bpm = -1;              // +0x8  sentinel -1 until registered
+};
 
 // Arcade layout lane count (the per-lane tap counters at play-data +0xfa14).
 constexpr int kAcLaneCount = 16;
@@ -57,9 +83,34 @@ public:
 #endif
 
     // Register tempo events / convert ticks to ms (arcade tempo map). Ghidra:
-    // FUN_0007aa90 / FUN_0007aaf8.
+    // FUN_0007aa90 / FUN_0007aaf8. registerTempoEvents walks the chart and inserts a scroll
+    // segment per tempo event; changeTempo pops the front segment once play passes it and
+    // recomputes the spawn look-ahead, returning non-zero while a segment was retired.
     void registerTempoEvents();
-    void changeTempo(uint32_t tick);
+    int changeTempo(uint32_t tick);
+
+    // Arm the play clock and begin: set state=playing, freeze the clock, stamp the start time,
+    // settle the tempo, and prime one frame. Ghidra: FUN_0007b86c.
+    void startPlay(uint32_t pos);
+
+    // --- Play clock --------------------------------------------------------
+    // Wall-clock ms since play start (gettimeofday delta; 0 before the clock is
+    // armed). Ghidra: FUN_0007b5e0.
+    int getElapsedTimeMs() const;
+
+    // The current chart position the arcade note update judges + scrolls against:
+    // the elapsed time (frozen while the hold bit is set) plus the per-play offset,
+    // added onto the smoothed scroll base once it passes the start threshold. Ghidra:
+    // FUN_0007aeb4. (The offset / threshold / scroll-base fields are driven by the
+    // arcade per-frame update -update(), below; until play starts they are 0, so this
+    // returns the scroll base like the standard engine's lead-in path.)
+    int getCurrentPosition();
+
+    // Arcade per-frame update: smooth the scroll base one step toward its target, spawn every
+    // chart record now due, judge + retire the active notes, advance the tempo, then refresh
+    // each note's scroll position and the per-lane "nearest note" table that input resolves
+    // against. Ghidra: FUN_0007ac00.
+    void update();
 
     // The engine keeps one global arcade manager (Ghidra: DAT_0015f1b0), reached
     // through a ___cxa_guard'd lazy accessor. Ghidra: AcNoteMng_shared
@@ -67,7 +118,29 @@ public:
     static AcNoteMng &shared();
 
 private:
-    struct TempoSegment { uint32_t startTick; uint32_t startMs; int16_t bpm; };
+    // --- arcade per-frame update helpers (Ghidra addresses noted) ---
+    void spawnNotes(uint32_t pos);                            // FUN_0007aef8
+    void makeNoteEvent(const AcNoteRecord *rec);              // FUN_0007b2f4 ("MakeNoteEvent")
+    void makeEvent(const AcNoteRecord *rec);                  // FUN_0007b3dc ("MakeEvent")
+    void makeAdjustEvent(uint32_t tick);                      // FUN_0007b790 ("MakeAdjustEvent")
+    void judgeActiveNote(AcActiveNote *node, uint32_t pos);   // FUN_0007b028
+    void retireActiveNote(AcActiveNote **node, uint32_t pos); // FUN_0007b0a8
+    void updateNearest(AcActiveNote *node, uint32_t pos);     // FUN_0007b1bc
+    void updateDrawPos(AcActiveNote *node, uint32_t pos);     // FUN_0007b268
+    float computeScrollY(const AcActiveNote *node, uint32_t pos) const; // FUN_0007bb30
+    void triggerBgmStart();                                   // FUN_0007b484
+    void applyBgmSync(const AcNoteRecord *rec);               // FUN_0007b4f0
+    // List moves shared by the make*/retire helpers.
+    void moveNodeFreeToActive(AcActiveNote *node);
+    void retireNode(AcActiveNote *node);
+    // Build the free list from the node pool (tail of InitPlayData FUN_0007a774).
+    void initNodePool();
+    // Insert one tempo/scroll segment sorted by startTick; returns non-zero if the table is
+    // full (max 63). Ghidra: FUN_0007ba3c ("AdvanceRegisterEvent").
+    int registerScrollSegment(int16_t bpm, uint32_t tick);
+    // Recompute the spawn look-ahead (m_spawnLookahead) from the front scroll segments (shared
+    // tail of registerScrollSegment / changeTempo).
+    void recomputeSpawnLookahead(uint32_t pos);
 
     // Parsed chart.
     AcNoteRecord *m_records = nullptr;
@@ -79,16 +152,53 @@ private:
 
     // Play state.
     float m_hiSpeed = 1.2f;              // +0x14cc4 (AcNoteMng_init default = 0x3f99999a)
-    TempoSegment m_tempoMap[512] = {};
-    int m_tempoCount = 0;
-    uint32_t m_currentMs = 0;
+    int16_t m_scrollCount = 0;           // +0xfd4c  live scroll-segment count (max 63)
+    int16_t m_chartBarCount = 0;         // +0xfa32  total measure lines seen while registering
+
+    // Play clock (Ghidra fields inside the arcade play-data region). m_startSec/
+    // m_startUsec (@ +0x14cb8/+0x14cbc) are the gettimeofday stamp taken when play
+    // starts; the rest are driven by the per-frame update FUN_0007ac00.
+    long m_startSec = 0;
+    long m_startUsec = 0;
+    int  m_frozenElapsed = 0;   // +0xfa38  cached elapsed while the hold bit is set
+    int  m_holdElapsed = 0;     // +0xfa40  hold/pause clock accumulator (reset on startPlay)
+    int  m_positionOffset = 0;  // +0xfa44  constant offset added to elapsed
+    uint32_t m_startThreshold = 0; // +0xfa3c  position at which the scroll base advances
+    int  m_scrollBase = 0;      // +0xfe18  smoothed scroll/position base
+    uint8_t m_holdFlags = 0;    // +0xfa48  bit 0 = freeze the clock (pause/hold)
 
     // Timing windows (Ghidra: copied from DAT_0012f868).
     int m_judgeWindows[6] = {};
 
     // Scoring.
-    int m_combo = 0;
-    int m_maxCombo = 0;
+    int m_combo = 0;            // +0xfd54
+    int m_maxCombo = 0;         // +0xfd58
+
+    // --- per-frame arcade update state (Ghidra offsets into the play-data blob) ---
+    int m_state = 0;                 // +0xfd50  1=playing, 3=ending, 4=finished
+    int m_scrollTarget = 0;          // +0xfe14  scroll base is smoothed toward this
+    int m_expectedTimeBase = 0;      // +0xfe10  expected time used by the BGM drift sync
+    AcNoteRecord *m_spawnCursor = nullptr; // +0xfa0c  next chart record awaiting spawn
+    int m_spawnLookahead = 0;        // +0xfa2c  look-ahead added to the position for spawning
+    int16_t m_barCount = 0;          // +0xfa30  measure counter
+    int16_t m_beatCount = 0;         // +0xfa34  beat counter (reset each measure)
+    float m_playSpeed = 0.0f;        // +0xfa4c  base scroll speed (also scroll segment 0's speed)
+    uint8_t m_endFlag = 0;           // +0x14cc0 the end (type 6) note has been reached
+    uint8_t m_autoPlay = 0;          // +0x14cc1 auto-play (attract/replay) drives the hits itself
+    int m_laneMode = 0;              // +0x14cc8 3 = rotating lane assignment
+    int32_t m_laneRemap[16] = {};    // +0x14ccc logical lane -> display lane
+    int m_nearestThreshold = 0;      // +0x14c58 max +dt still eligible as the lane's "nearest"
+    AcNoteRecord m_adjustRecord = {};// +0xfa04 injected BGM-sync event; its .value (@+0xfa0a)
+                                     //          doubles as the "adjust in flight" flag
+    AcActiveNote *m_activeHead = nullptr;  // +0x14c40 on-screen notes
+    AcActiveNote *m_freeHead = nullptr;    // +0x14c3c recycled-node free list
+    AcActiveNote m_notePool[kAcMaxActiveNotes] = {}; // the fixed node pool (linked at play init)
+    AcScrollSegment m_scrollMap[64] = {};  // +0xfa4c scroll/tempo segments (max 63 + guard)
+
+    struct LaneResult { int hits = 0; int _reserved[3] = {}; }; // +0xfd68, stride 0x10
+    LaneResult m_laneResult[9];
+    struct NearestNote { AcActiveNote *note = nullptr; int dt = 0; }; // +0x14c5c, stride 8
+    NearestNote m_nearest[9];
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -49,6 +49,18 @@
     [downloader startDownloading];
 }
 
+// @ 0x575b8 — abort an in-flight fetch. Cancels the wrapped Downloader, then drops it
+// with -autorelease (the binary uses autorelease here, not the setter's -release, so a
+// cancel issued from inside a delegate callback still survives the current cycle).
+- (void)cancel {
+    if (m_Downloader == nil) {
+        return;
+    }
+    [m_Downloader cancel];
+    [m_Downloader autorelease];
+    m_Downloader = nil;
+}
+
 // @ 0x575fc — fold the response into the pack, then notify success.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];

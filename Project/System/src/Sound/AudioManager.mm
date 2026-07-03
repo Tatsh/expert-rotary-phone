@@ -239,6 +239,31 @@ struct SeInstance {
     return YES;
 }
 
+// @ 0x1fff8 — YES only when a player is loaded and actually playing.
+- (BOOL)isPlayingBgm {
+    if (m_bgmPlayer == nil) {
+        return NO;
+    }
+    return [m_bgmPlayer isPlaying];
+}
+
+// @ 0x1ff58 — the player's current playhead (seconds); 0 when nothing is loaded.
+- (NSTimeInterval)bgmCurrentTime {
+    if (m_bgmPlayer == nil) {
+        return 0;
+    }
+    return m_bgmPlayer.currentTime;
+}
+
+// @ 0x1ffb0 — move the playhead and re-prime the player so playback resumes cleanly.
+- (void)setBgmCurrentTime:(NSTimeInterval)time {
+    if (m_bgmPlayer == nil) {
+        return;
+    }
+    m_bgmPlayer.currentTime = time;
+    [m_bgmPlayer prepareToPlay];
+}
+
 // @ 0x1fec8 — pause the BGM (immediately or via a fade-out timer).
 - (BOOL)onPauseBgm:(float)fadeSeconds {
     if (m_bgmPlayer == nil) {

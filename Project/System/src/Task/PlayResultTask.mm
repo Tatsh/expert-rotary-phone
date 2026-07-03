@@ -28,6 +28,7 @@
 #import "OverScoreData.h"
 #import "SeInstance.h"
 #import "TaskFactory.h"
+#import "TwitterUtil.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
@@ -528,6 +529,96 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
             }
         }
     }
+}
+
+// Ghidra: FUN_0003d690 case 2, share-button build (@ 0x3daf8..0x3df1e). Lay out the
+// "bt_twitter" UIButton over the captured result backdrop, wrap a TwitterUtil as its
+// tweet target, add it to the root view and bounce it in.
+//
+// Frame math (device-branched, byte-verified from the disassembly):
+//   x = 5.0 always (0x40a00000).
+//   phone (not a pad display): y = 435.0 (0x43d98000), or 526.9921875 == 527.0
+//     (0x4403c000) when displayType == 2 (the tall-screen layout). On a Retina board
+//     (transition overlay >= 640x960) the image is drawn at half size and y += 15.0.
+//   pad: y = 965.0 (0x44714000); no half-scaling.
+//   w/h come straight from the "bt_twitter" image size (0,0 if it failed to load).
+//
+// The tweet text is stringWithFormat @ 0x135FF8 (UTF-16): song title, score (@ +0x344)
+// and rank letter (rankLetter[@ +0x35c]); it embeds the bit.ly short link + #リズミン
+// hashtag literally. English: "I played <title>! Score:<n> Rank:<R> <link> #Rhythmin".
+void PlayResultTask::buildShareButton(int displayType) {
+    UIImage *btImage = [UIImage imageNamed:@"bt_twitter"];
+
+    MusicManager *mm = [MusicManager getInstance];
+    [mm getMusicDataArray];                       // ensure the catalog cache is built
+    MusicData *md = [mm getMusicData:field<int>(0x38c)];
+
+    // Rank-letter table (PTR_cf_S_00131884): index by the play rank (0 best .. 6 fail).
+    static NSString *const kRankLetter[7] = { @"S", @"AAA", @"AA", @"A", @"B", @"C", @"D" };
+    NSString *tweetText =
+        [NSString stringWithFormat:@"%@をプレイしたよ！スコア:%d ランク:%@ http://bit.ly/188OxQr #リズミン",
+                                   [md musicName], field<int>(0x344),
+                                   kRankLetter[field<short>(0x35c)]];
+
+    AepManager &aep = AepManager::shared();
+    neSceneManager::shared();   // ensure the scene singleton (pad flag) is live
+
+    CGSize size = (btImage != nil) ? btImage.size : CGSizeZero;
+    CGFloat y;
+    if (!neSceneManager::isPadDisplay()) {   // DAT_00187b84 == 0 : phone layout
+        y = (displayType == 2) ? 527.0 : 435.0;
+        // Retina board (>= 640 x 960): draw the button at half size, nudged down 15pt.
+        if (aep.transitionOverlayWidth() > 0x27f && aep.transitionOverlayHeight() > 0x3bf) {
+            size.width  *= 0.5f;
+            size.height *= 0.5f;
+            y += 15.0;
+        }
+    } else {                                 // pad layout
+        y = 965.0;
+    }
+
+    UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(5.0, y, size.width, size.height)];
+    // Non-owning: addSubview below takes the retain and the binary then -releases the
+    // alloc/init +1 (ARC drops the local `button` at end of scope for the same effect);
+    // resultGotoNext later just -removeFromSuperview + nils this slot.
+    field<void *>(0x398) = (__bridge void *)button;
+
+    // The share sheet attaches the captured result screenshot.
+    UIImage *captured = [RootVC() getCapturedImage];
+    TwitterUtil *tweeter = [[TwitterUtil alloc] initWithText:tweetText image:captured];
+    // Owning +1: UIControl targets are unretained, so this slot keeps the tweeter alive
+    // until resultGotoNext transfers it back to ARC and releases it.
+    field<void *>(0x39c) = (__bridge_retained void *)tweeter;
+
+    // Disabled until the bounce-in settles (re-enabled in the final completion below).
+    button.userInteractionEnabled = NO;
+    [button setBackgroundImage:btImage forState:UIControlStateNormal];
+    [button addTarget:tweeter
+               action:@selector(tweet)
+     forControlEvents:UIControlEventTouchUpInside];
+    [[RootVC() view] addSubview:button];
+
+    // Bounce-in (Ghidra: FUN_0003f19c / FUN_0003f1d0 / FUN_0003f278 + its completion):
+    // grow to 2x over 0.2s, spring back to 1x over 0.5s, then re-enable taps. Both stages
+    // pass UIViewAnimationOptionAllowUserInteraction (the literal `2`).
+    [UIView animateWithDuration:0.2
+                          delay:0.0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+        UIButton *b = (__bridge UIButton *)field<void *>(0x398);
+        b.transform = CGAffineTransformMake(2.0, 0.0, 0.0, 2.0, 0.0, 0.0);
+    } completion:^(BOOL /*finished*/) {
+        [UIView animateWithDuration:0.5
+                              delay:0.0
+                            options:UIViewAnimationOptionAllowUserInteraction
+                         animations:^{
+            UIButton *b = (__bridge UIButton *)field<void *>(0x398);
+            b.transform = CGAffineTransformMake(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        } completion:^(BOOL /*finished*/) {
+            UIButton *b = (__bridge UIButton *)field<void *>(0x398);
+            b.userInteractionEnabled = YES;
+        }];
+    }];
 }
 
 // Ghidra: FUN_0003d690 states 3/5/6 — the treasure-point count-up. State 4 (the wait

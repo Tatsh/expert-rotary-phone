@@ -8,6 +8,7 @@
 #import "StoreUtil.h"
 #import "AppDelegate.h"
 #import "RhUtil.h"
+#import "UserSettingData.h"
 #import <StoreKit/StoreKit.h>
 #import <UIKit/UIKit.h>
 
@@ -58,6 +59,14 @@ static NSString *ApiPath(NSString *name) {
 + (NSURL *)getRecommendFriendURL { return [self createHttpsURL:ApiPath(@"get_recommend_friend")]; } // 0x59a34
 + (NSURL *)saveTreasureURL       { return [self createHttpsURL:ApiPath(@"save_treasure")]; }        // 0x59884
 
+// @ 0x59740 — the recommended-pack endpoint. Note this one does NOT use ApiPath: its path
+// is a byte-verified literal "/apr/main/cgi/" (slashes, not the "main.cgi" dot form) plus
+// "pack_recommend/index.jsp".
++ (NSURL *)recommendPackURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"pack_recommend/index.jsp"]];
+}
+
 // --- Game API endpoints (name derived from the selector; identical pattern) ---
 + (NSURL *)getFriendRequestURL { return [self createHttpsURL:ApiPath(@"get_friend_request")]; }
 + (NSURL *)getFriendScoreURL   { return [self createHttpsURL:ApiPath(@"get_friend_score")]; }
@@ -96,6 +105,51 @@ static NSString *ApiPath(NSString *name) {
         return nil;
     }
     return [NSString stringWithFormat:@"%@%04d", kPackProductPrefix, packID];
+}
+
+// @ 0x5a400 — Japan youth-spending-limit check: can a purchase of `price` yen proceed?
+// Age is derived from the saved birthday (defaulting to 14 when none is set); 18+ has no
+// limit. Under-16 is capped at 5000 yen/month, 16-17 at 10000 yen/month, counting the
+// running monthly total (reset implicitly when the stored month no longer matches now).
++ (BOOL)isPurchasable:(unsigned int)price {
+    NSDate *birthDay = [UserSettingData birthDay];
+    NSCalendar *cal = [[[NSCalendar alloc]
+        initWithCalendarIdentifier:NSCalendarIdentifierGregorian] autorelease];
+    NSDateComponents *now = [cal components:(NSCalendarUnitYear | NSCalendarUnitMonth)
+                                   fromDate:[NSDate date]];
+
+    NSInteger age;
+    if (birthDay == nil) {
+        age = 14;   // no recorded birthday -> treated as a minor
+    } else {
+        // Age as of the 1st of this month at noon (parsed back through a formatter so the
+        // day/time are pinned, matching the binary).
+        NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+        fmt.dateFormat = @"yyyy-MM-ddHH:mm:ss";
+        NSString *cutoffStr = [NSString stringWithFormat:@"%04ld-%02ld-0112:00:00",
+                               (long)now.year, (long)now.month];
+        NSDate *cutoff = [fmt dateFromString:cutoffStr];
+        NSDateComponents *span =
+            [cal components:(NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay)
+                   fromDate:birthDay toDate:cutoff options:0];
+        age = span.year;
+        if (age > 17) {
+            return YES;   // adult: no spending limit
+        }
+    }
+
+    int spent = 0;
+    NSDate *lastUpdate = [UserSettingData lastUpdateSumPurchase];
+    if (lastUpdate != nil) {
+        NSDateComponents *last = [cal components:(NSCalendarUnitYear | NSCalendarUnitMonth)
+                                        fromDate:lastUpdate];
+        if (last.year == now.year && last.month == now.month) {
+            spent = [UserSettingData sumPurchase];   // same month: include the running total
+        }
+    }
+
+    unsigned int limit = (age < 16) ? 5001 : 10001;   // 0x1389 / 0x2711
+    return (price + spent) < limit;
 }
 
 // @ 0x5a0d0 — strip the prefix and read the trailing integer; -1 on mismatch.

@@ -66,6 +66,7 @@ void PlayTask::update(int /*deltaMs*/) {
         state(this) = 1;
         [[fallthrough]];
     case 1:   // NoteMng bring-up + fade in + start SEs
+        nm.primePlay();   // Ghidra: FUN_0003396c — spawn the lead-in + position the notes
         aep.playTransition(1, 1, 0);
         state(this) = 2;
         [[fallthrough]];
@@ -78,13 +79,16 @@ void PlayTask::update(int /*deltaMs*/) {
         }
         break;
     case 4:   // wait for the start SE, then start NoteMng's clock -> playing
+        nm.startClock();   // Ghidra: FUN_000344c4 — stamp the play clock, clear offsets/state
         state(this) = 6;
         break;
     case 5:   // pause menu: hit-test resume / retry / quit; draw the pause layer
+        nm.update();   // Ghidra: FUN_00033ae4 — keep the notes scrolling behind the menu
         aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0);
         PlayJudge_update(playData, nullptr, nullptr, 0);
         return;
-    case 6: {   // *** PLAYING ***: judge/render pass, gauge, then song-end handling
+    case 6: {   // *** PLAYING ***: drive the note engine, then judge/render, gauge, song-end
+        nm.updatePlaying();   // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll + BGM drift sync
         PlayJudge_update(playData, touchXY, touchIds, touchCount);
 
         // Cache the current gauge/score for the end-of-song rank SEs. Ghidra: FUN_0002ff7c.

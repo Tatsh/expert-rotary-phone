@@ -38,6 +38,13 @@
 // Kick off the request (records the start time). Ghidra: @ 0x623f0.
 - (void)startDownloading;
 
+// Abort an in-flight request: drop the delegate (so no late callbacks fire), cancel +
+// release the NSURLConnection, and free the response buffer. Ghidra: @ 0x6249c.
+- (void)cancel;
+
+// The raw buffered response bytes (e.g. an audio preview clip). Ghidra: @ 0x62938.
+- (NSData *)getData;
+
 // Parse the buffered response as JSON — NSJSONSerialization when available, else the
 // bundled TouchJSON category. Ghidra: @ 0x62948.
 - (NSDictionary *)getDataInJSON;

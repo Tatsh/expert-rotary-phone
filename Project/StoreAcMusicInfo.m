@@ -7,6 +7,9 @@
 
 #import "StoreAcMusicInfo.h"
 
+#import "MusicManager.h"
+#import "RhUtil.h"
+
 @implementation StoreAcMusicInfo
 
 // @ 0x852dc
@@ -30,6 +33,11 @@
 - (NSString *)genre      { return m_Genre; }
 - (NSString *)itemURL    { return m_ItemURL; }
 - (NSString *)sampleURL  { return m_SampleURL; }
+
+// @ 0x85418 — the purchased arcade-music file exists on disk.
+- (BOOL)fileExist {
+    return RhFileExists([[MusicManager getInstance] getAcPathFromPurchased:m_AcMusicId]);
+}
 
 - (void)dealloc {
     [m_Title release];

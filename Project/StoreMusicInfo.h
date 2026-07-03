@@ -39,6 +39,9 @@
 @property (nonatomic, readonly) int lvMedium;
 @property (nonatomic, readonly) int lvHard;
 
+// YES if this song's purchased file is already on disk. Ghidra: @ 0x56678.
+- (BOOL)fileExist;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

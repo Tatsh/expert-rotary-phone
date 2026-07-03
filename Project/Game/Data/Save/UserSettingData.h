@@ -40,6 +40,8 @@ typedef struct Crypt109Data {
 #pragma mark NSUserDefaults primitives
 + (int)getInt:(NSString *)key;
 + (void)saveInt:(int)value Key:(NSString *)key;
++ (id)getDate:(NSString *)key;   // @ 0x5f990 (stored NSDate)
++ (void)saveDate:(id)value Key:(NSString *)key;
 + (float)getFloat:(NSString *)key;
 + (void)saveFloat:(float)value Key:(NSString *)key;
 + (NSString *)getString:(NSString *)key;
@@ -48,6 +50,16 @@ typedef struct Crypt109Data {
 + (void)saveBOOL:(BOOL)value Key:(NSString *)key;
 + (NSData *)getData:(NSString *)key;
 + (void)saveData:(NSData *)value Key:(NSString *)key;
+
+#pragma mark Purchase / age-gate (youth spending limit)
++ (NSDate *)birthDay;                // @ 0x607fc
++ (void)saveBirthDay:(NSDate *)date; // @ 0x60824
++ (BOOL)isBirthDayCanceled;          // @ 0x6084c
++ (void)saveIsBirthDayCanceled:(BOOL)canceled;  // @ 0x60874
++ (BOOL)isFriendSelected;                       // @ 0x5ffc8 (friend how-to seen)
++ (void)saveIsFriendSelected:(BOOL)selected;    // @ 0x5fff0
++ (NSDate *)lastUpdateSumPurchase;   // @ 0x6089c
++ (int)sumPurchase;                  // @ 0x608ec (yen spent this month, clamped >= 0)
 
 #pragma mark Lifecycle
 + (void)loadSettingData;      // @ 0x5efb4
