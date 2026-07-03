@@ -49,6 +49,10 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 - (BOOL)onPauseBgm:(float)fadeSeconds;                // Ghidra: @ 0x1fec8
 - (void)seekBgmToTop;                                 // selector @ 0x11a3d6
 - (BOOL)setBgmVolume:(float)volume;                   // Ghidra: @ 0x1fc20
+// Set the BGM volume immediately with no fade (the "just" variant used while a
+// volume slider is being dragged). Ghidra: AudioManager::setJustBgmVolume_
+// (PTR_s_setJustBgmVolume__0015b43c), called from -[SoundSettingView bgmSliderValChanged:].
+- (void)setJustBgmVolume:(float)volume;
 - (BOOL)stopBgm:(float)fadeSeconds;                   // Ghidra: @ 0x1fe10
 // YES while the BGM player exists and is playing. Ghidra: isPlayingBgm @ 0x1fff8.
 - (BOOL)isPlayingBgm;

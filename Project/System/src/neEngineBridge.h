@@ -115,6 +115,17 @@ public:
     void releaseSystemSe();
     void loadSystemSe();
 
+    // Touch-sound ("hit sound") name tables owned by the scene manager. Both take a
+    // touch-sound kind index (0..9) and return a bridged NSString (cast with
+    // __bridge on the ObjC side, mirroring rootViewController()):
+    //  * hitSoundName   -> the bundle resource base-name of the SE previewed for that
+    //    kind (used to build the ".m4a" path loaded into the low-latency SE player).
+    //  * normalSoundName -> the kind's user-facing display name (shown in the touch-
+    //    sound picker rows).
+    // Ghidra: getHitSoundName(&g_pNeSceneManager, no) / getNormalSoundName(&g_pNeSceneManager, no).
+    static void *hitSoundName(int soundNo);
+    static void *normalSoundName(int soundNo);
+
 private:
     void *m_root = nullptr;   // +0x00 the bridged root UIViewController
 };

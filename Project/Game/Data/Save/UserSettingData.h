@@ -148,6 +148,21 @@ typedef struct Crypt109Data {
 // bgmVolume] (selector PTR_s_bgmVolume_0015a754), read by PlayResultTask::resultSetup
 // @ 0x3f0ac before -[AudioManager setBgmVolume:].
 + (float)bgmVolume;
+// Paired setter for +bgmVolume. Ghidra: -[UserSettingData saveBgmVolume:]
+// (PTR_s_saveBgmVolume__0015afc0), written by -[SoundSettingView dealloc] and
+// -[SoundSettingView bgmSliderValChanged:] (iPad).
++ (void)saveBgmVolume:(float)volume;
+
+// SE master volume, stored as a fixed-point short (0..127). Read by SoundSettingView
+// to seed its SE slider. Ghidra: -[UserSettingData seVolume]
+// (PTR_s_seVolume_0015a758) / -[UserSettingData saveSeVolume:] (PTR_s_saveSeVolume__0015afbc).
++ (short)seVolume;
++ (void)saveSeVolume:(short)volume;
+
+// Paired setter for +touchSoundVolume (declared under "Effects" above). Ghidra:
+// -[UserSettingData saveTouchSoundVolume:] (PTR_s_saveTouchSoundVolume__0015afc4),
+// written by SoundSettingView.
++ (void)saveTouchSoundVolume:(short)volume;
 
 #pragma mark Legacy v108 readers (plaintext PascalCase keys; used by migration)
 + (int)inviteCnt108;              // key "InviteCnt"          @ 0x5fc5c
