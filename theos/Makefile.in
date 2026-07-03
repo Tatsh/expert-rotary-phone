@@ -1,0 +1,28 @@
+# theos/Makefile.in — template consumed by the root CMakeLists.txt (configure_file @ONLY),
+# which substitutes @...@ and writes ./Makefile. Do not build from this .in file directly.
+#
+# Theos application project for pop'n rhythmin. Builds every reconstructed translation
+# unit under Project/ into PopnRhythmin.app. Resources (Info.plist + the extracted game
+# assets you drop into ./Resources/) are copied into the bundle by application.mk.
+
+export ARCHS = @THEOS_ARCHS@
+export TARGET = @THEOS_TARGET@
+
+include $(THEOS)/makefiles/common.mk
+
+APPLICATION_NAME = PopnRhythmin
+
+# All sources, discovered the same way the CMake build does.
+PopnRhythmin_FILES = $(shell find Project \( -name '*.m' -o -name '*.mm' -o -name '*.c' -o -name '*.cpp' \))
+
+# Manual Reference Counting (matches the original binary); every Project subdir on -I.
+PopnRhythmin_CFLAGS  = -fno-objc-arc -fobjc-exceptions -Wno-deprecated-declarations \
+                       -IProject $(addprefix -I,$(shell find Project -type d))
+PopnRhythmin_CCFLAGS = -std=gnu++14 -stdlib=libc++
+
+PopnRhythmin_FRAMEWORKS = @THEOS_FRAMEWORKS@
+PopnRhythmin_LDFLAGS    = @THEOS_LDFLAGS@
+
+include $(THEOS)/makefiles/application.mk
+
+# kate: hl Makefile;

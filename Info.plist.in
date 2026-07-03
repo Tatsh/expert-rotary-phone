@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Info.plist template for pop'n rhythmin. Consumed by CMake (configure_file @ONLY),
+  which substitutes the @...@ placeholders. The original bundle's own Info.plist is
+  NOT reused (it references the 64-bit-less Mach-O and Konami provisioning); this one
+  reproduces the keys the reconstructed code actually reads at runtime, chiefly
+  CFBundleVersion (AppDelegate reads infoDictionary[@"CFBundleVersion"]).
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>@APP_DISPLAY_NAME@</string>
+    <key>CFBundleName</key>
+    <string>PopnRhythmin</string>
+    <key>CFBundleExecutable</key>
+    <string>PopnRhythmin</string>
+    <key>CFBundleIdentifier</key>
+    <string>@APP_BUNDLE_ID@</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@APP_VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@APP_BUILD@</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>MinimumOSVersion</key>
+    <string>@IOS_DEPLOYMENT_TARGET@</string>
+
+    <!-- Do NOT require a specific CPU arch here: this rebuild ships both 32-bit
+         (armv7/armv7s) and 64-bit (arm64/arm64e) slices, and requiring "armv7" would
+         block installation on the arm64-only iOS 11+ devices this reconstruction exists
+         to reach. Only the real hardware requirement (OpenGL ES 2) is asserted. -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>opengles-2</string>
+    </array>
+
+    <!-- iPhone + iPad: the reconstructed UI branches on neSceneManager::isPadDisplay(). -->
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+
+    <!-- Rhythm gameplay runs full-screen; allow both portrait and landscape and let the
+         controllers drive it. Adjust if the shipped app was orientation-locked. -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <key>UIStatusBarHidden</key>
+    <true/>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+</dict>
+</plist>
