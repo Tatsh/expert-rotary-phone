@@ -95,6 +95,8 @@
 
 @implementation MapSelectSplitViewController
 
+// .cxx_construct @ 0x787f0 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0x754d8 — build the whole split hub (backdrop, left map list, arrow, right area panel,
 // header banner, event carousel, back button) then arm the auto-scroll carousel.
 - (instancetype)init {

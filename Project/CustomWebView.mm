@@ -21,6 +21,8 @@
 
 @implementation CustomWebView
 
+// .cxx_construct @ 0x5ef8c — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0x5df50 — stash the failure-alert title/message (plain assigns; ARC-strong).
 - (void)setErrorMsg:(NSString *)errorMsg text:(NSString *)text {
     _errorTitle = errorMsg;

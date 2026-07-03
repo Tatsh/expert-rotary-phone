@@ -22,6 +22,7 @@
 
 
 // Delete every persisted CharaTicketData row (called by -[UserSettingData initForConvert]).
+// @ 0xe2ebc
 + (void)deleteAll:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"CharaTicketData" inManagedObjectContext:context];

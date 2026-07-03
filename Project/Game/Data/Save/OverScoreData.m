@@ -14,7 +14,13 @@
 @dynamic updateDate;
 
 
+// @ 0xba0a0 — no-op stub taking a context argument (not the designated initializer);
+// the original IMP does nothing and returns void.
++ (void)init:(NSManagedObjectContext *)context {
+}
+
 // Delete every persisted OverScoreData row (called by -[UserSettingData initForConvert]).
+// @ 0xbaacc
 + (void)deleteAll:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"OverScoreData" inManagedObjectContext:context];

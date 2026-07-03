@@ -69,6 +69,7 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // The fixed content height of a song cell (heightForRow adds padding). Best-effort constant
 // matching the jacket area; Ghidra +cellHeight returns a fixed value.
+// @ 0x74574
 + (CGFloat)cellHeight {
     return 88.0f;
 }

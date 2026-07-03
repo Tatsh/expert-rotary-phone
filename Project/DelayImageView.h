@@ -17,6 +17,9 @@
 // returns the ivar directly, the setter is the retaining property setter).
 @property (nonatomic, retain) UIImage *image;
 
+// Build a DelayImageView for `image` with a spinner overlay and start -threadFunc off-thread.
++ (instancetype)allocWithImage:(UIImage *)image;  // @ 0x8690
+
 // Build a UIImageView from `image`, size it to the image, and add it as a subview.
 - (void)threadFunc;
 

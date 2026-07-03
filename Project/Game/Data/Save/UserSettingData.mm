@@ -55,7 +55,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return [NSUserDefaults.standardUserDefaults objectForKey:key];
 }
 
-// Store an object (an NSDate) under `key`.
+// @ 0x5f9c8 — store an object (an NSDate) under `key`.
 + (void)saveDate:(id)value Key:(NSString *)key {
     [NSUserDefaults.standardUserDefaults setObject:value forKey:key];
 }
@@ -102,7 +102,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:selected Key:@"IsTreasureSelected"];
 }
 
-// Remembers whether the pop'n-link first-run how-to has been shown (key best-effort).
+// @ 0x5ff78 / 0x5ffa0 — remembers whether the pop'n-link first-run how-to has been shown (key best-effort).
 + (BOOL)isPopnLinkSelected {
     return [self getBOOL:@"PopnLinkSelected"];
 }
@@ -266,13 +266,16 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     Crypt109Data d; [self crypt109Data:&d];
     return d.inviteCnt < 0 ? 0 : d.inviteCnt;
 }
+// @ 0x60980
 + (void)saveInviteCnt:(int)v {
     Crypt109Data d; [self crypt109Data:&d]; d.inviteCnt = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x609c8
 + (int)invitePresent {
     Crypt109Data d; [self crypt109Data:&d]; return d.invitePresent;
 }
+// @ 0x609f8
 + (void)saveInvitePresent:(int)v {
     Crypt109Data d; [self crypt109Data:&d]; d.invitePresent = v; [self saveCrypt109Data:&d];
 }
@@ -281,62 +284,79 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     Crypt109Data d; [self crypt109Data:&d];
     return d.charaTicket < 1 ? 0 : d.charaTicket;
 }
+// @ 0x6126c
 + (void)saveCharaTicket:(short)v {
     Crypt109Data d; [self crypt109Data:&d]; d.charaTicket = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x612f4
 + (short)treasurePoint {
     Crypt109Data d; [self crypt109Data:&d]; return d.treasurePoint;
 }
+// @ 0x61328
 + (void)saveTreasurePoint:(short)v {
     Crypt109Data d; [self crypt109Data:&d]; d.treasurePoint = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x60130
 + (int)getOpenedLoginBonusId {
     Crypt109Data d; [self crypt109Data:&d]; return d.openedLoginBonusId;
 }
+// @ 0x6015c
 + (void)saveOpenedLoginBonusId:(int)v {
     Crypt109Data d; [self crypt109Data:&d]; d.openedLoginBonusId = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x601a0
 + (int)getLoginBonusCnt {
     Crypt109Data d; [self crypt109Data:&d]; return d.loginBonusCnt;
 }
+// @ 0x601cc
 + (void)saveLoginBonusCnt:(int)v {
     Crypt109Data d; [self crypt109Data:&d]; d.loginBonusCnt = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x60e44
 + (short)charaId {
     Crypt109Data d; [self crypt109Data:&d]; return d.charaId;
 }
+// @ 0x60e70
 + (void)saveCharaId:(short)v {
     Crypt109Data d; [self crypt109Data:&d]; d.charaId = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x60eb4
 + (short)charaIdServer {
     Crypt109Data d; [self crypt109Data:&d]; return d.charaIdServer;
 }
+// @ 0x60ee0
 + (void)saveCharaIdServer:(short)v {
     Crypt109Data d; [self crypt109Data:&d]; d.charaIdServer = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x604ac
 + (int)touchSoundKind {
     Crypt109Data d; [self crypt109Data:&d]; return d.touchSoundKind;
 }
+// @ 0x604e8
 + (void)saveTouchSoundKind:(int)v {
     Crypt109Data d; [self crypt109Data:&d]; d.touchSoundKind = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x6052c
 + (int)haveTouchSoundFlg {           // getter verified (used in loadSettingData)
     Crypt109Data d; [self crypt109Data:&d]; return d.haveTouchSoundFlg;
 }
+// @ 0x6055c
 + (void)saveHaveTouchSoundFlg:(int)v { // @ setter verified (saveHaveTouchSoundFlg_)
     Crypt109Data d; [self crypt109Data:&d]; d.haveTouchSoundFlg = v; [self saveCrypt109Data:&d];
 }
 
+// @ 0x600b8
 + (BOOL)isBemaniCollaboOpened {
     Crypt109Data d; [self crypt109Data:&d]; return d.isBemaniCollaboOpened != 0;
 }
+// @ 0x600e4
 + (void)saveIsBemaniCollaboOpened:(BOOL)v {
     Crypt109Data d; [self crypt109Data:&d];
     d.isBemaniCollaboOpened = v ? 1 : 0;
@@ -582,11 +602,11 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 #pragma mark - AC-viewer play options (plaintext)
 
++ (void)saveAcvHiSpeed:(int)v { [self saveInt:v Key:@"AcViewerHiSpeed"]; }   // @ 0x618cc
++ (void)saveAcvPopKun:(int)v  { [self saveInt:v Key:@"AcViewerPopKun"]; }    // @ 0x6191c
++ (void)saveAcvHidSud:(int)v  { [self saveInt:v Key:@"AcViewerHidSud"]; }    // @ 0x6196c
++ (void)saveAcvRanMir:(int)v  { [self saveInt:v Key:@"AcViewerRanMir"]; }    // @ 0x619bc
 // @ 0x618a4
-+ (void)saveAcvHiSpeed:(int)v { [self saveInt:v Key:@"AcViewerHiSpeed"]; }
-+ (void)saveAcvPopKun:(int)v  { [self saveInt:v Key:@"AcViewerPopKun"]; }
-+ (void)saveAcvHidSud:(int)v  { [self saveInt:v Key:@"AcViewerHidSud"]; }
-+ (void)saveAcvRanMir:(int)v  { [self saveInt:v Key:@"AcViewerRanMir"]; }
 + (int)acvHiSpeed { return [self getInt:@"AcViewerHiSpeed"]; }
 // @ 0x618f4
 + (int)acvPopKun  { return [self getInt:@"AcViewerPopKun"]; }

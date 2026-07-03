@@ -28,6 +28,7 @@
 
 
 // Delete every persisted ScoreData row (called by -[UserSettingData initForConvert]).
+// @ 0x6dd44
 + (void)deleteAll:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ScoreData" inManagedObjectContext:context];

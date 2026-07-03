@@ -99,6 +99,10 @@
 // (PTR_s_screenshot_0015a8fc) sent from FUN_0003f5f0.
 - (void)screenshot;
 
+// Snapshot the GL view's current renderbuffer into an upright UIImage (used by -draw when a
+// screenshot has been armed).
++ (UIImage *)capture:(neGLView *)glView;  // @ 0xbbec
+
 // Show / hide the "communicating..." overlay while a network save is in flight (the
 // result screen raises it around the score upload). Ghidra: InsertCommunicating @
 // 0xd6a8, DeleteCommunicating @ 0xd744.

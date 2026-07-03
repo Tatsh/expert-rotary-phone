@@ -99,6 +99,7 @@
 
 // Unlock-gate queries used by the store / song-select UI.
 + (BOOL)isOpenInviteMusic:(int)index;
++ (BOOL)isInviteMusic:(int)musicId;    // @ 0xc7fd4 (YES if id == 4)
 + (BOOL)isOpenBemaniCollaboMusic;
 + (BOOL)isOpenLoginBonusMusic:(int)index;
 

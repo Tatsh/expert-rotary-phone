@@ -49,6 +49,9 @@
 + (void)addRecordWithMusic:(int)music sheet:(short)sheet playerId:(NSString *)playerId date:(NSString *)date inManagedObjectContext:(NSManagedObjectContext *)context;
 
 
+// No-op stub taking a context argument (not the designated initializer). Ghidra: @ 0xba0a0.
++ (void)init:(NSManagedObjectContext *)context;
+
 // Delete every persisted OverScoreData record (device-change / initForConvert reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 

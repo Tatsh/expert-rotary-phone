@@ -51,18 +51,18 @@ static NSString *ApiPath(NSString *name) {
 }
 
 // --- Game API endpoints (verified names) ---
-+ (NSURL *)getDlFileListURL  { return [self createHttpsURL:ApiPath(@"get_dl_file_list")]; }   // 0x599c8
-+ (NSURL *)getFriendListURL  { return [self createHttpsURL:ApiPath(@"get_friend_list")]; }    // 0x594a8
-+ (NSURL *)getEventInfoURL   { return [self createHttpsURL:ApiPath(@"get_event_info")]; }     // 0x59d94
-+ (NSURL *)getConvertCodeURL { return [self createHttpsURL:ApiPath(@"get_convert_code")]; }   // 0x59e00
-+ (NSURL *)convertURL        { return [self createHttpsURL:ApiPath(@"convert")]; }            // 0x59e6c
++ (NSURL *)getDlFileListURL  { return [self createHttpsURL:ApiPath(@"get_dl_file_list")]; }   // @ 0x599c8
++ (NSURL *)getFriendListURL  { return [self createHttpsURL:ApiPath(@"get_friend_list")]; }    // @ 0x594a8
++ (NSURL *)getEventInfoURL   { return [self createHttpsURL:ApiPath(@"get_event_info")]; }     // @ 0x59d94
++ (NSURL *)getConvertCodeURL { return [self createHttpsURL:ApiPath(@"get_convert_code")]; }   // @ 0x59e00
++ (NSURL *)convertURL        { return [self createHttpsURL:ApiPath(@"convert")]; }            // @ 0x59e6c
 
 // --- Friend actions (verified endpoint names) ---
-+ (NSURL *)requestFriendURL      { return [self createHttpsURL:ApiPath(@"request_friend")]; }       // 0x59220
-+ (NSURL *)replyFriendURL        { return [self createHttpsURL:ApiPath(@"reply_friend")]; }         // 0x5928c
-+ (NSURL *)removeFriendURL       { return [self createHttpsURL:ApiPath(@"remove_friend")]; }        // 0x5943c
-+ (NSURL *)getRecommendFriendURL { return [self createHttpsURL:ApiPath(@"get_recommend_friend")]; } // 0x59a34
-+ (NSURL *)saveTreasureURL       { return [self createHttpsURL:ApiPath(@"save_treasure")]; }        // 0x59884
++ (NSURL *)requestFriendURL      { return [self createHttpsURL:ApiPath(@"request_friend")]; }       // @ 0x59220
++ (NSURL *)replyFriendURL        { return [self createHttpsURL:ApiPath(@"reply_friend")]; }         // @ 0x5928c
++ (NSURL *)removeFriendURL       { return [self createHttpsURL:ApiPath(@"remove_friend")]; }        // @ 0x5943c
++ (NSURL *)getRecommendFriendURL { return [self createHttpsURL:ApiPath(@"get_recommend_friend")]; } // @ 0x59a34
++ (NSURL *)saveTreasureURL       { return [self createHttpsURL:ApiPath(@"save_treasure")]; }        // @ 0x59884
 
 // @ 0x59740 — the recommended-pack endpoint. Note this one does NOT use ApiPath: its path
 // is a byte-verified literal "/apr/main/cgi/" (slashes, not the "main.cgi" dot form) plus
@@ -94,14 +94,14 @@ static NSString *ApiPath(NSString *name) {
 }
 
 // --- Game API endpoints (name derived from the selector; identical pattern) ---
-+ (NSURL *)getFriendRequestURL { return [self createHttpsURL:ApiPath(@"get_friend_request")]; }
-+ (NSURL *)getFriendScoreURL   { return [self createHttpsURL:ApiPath(@"get_friend_score")]; }
-+ (NSURL *)getArcadeScoreURL   { return [self createHttpsURL:ApiPath(@"get_arcade_score")]; }
-+ (NSURL *)getOverScoreLogURL  { return [self createHttpsURL:ApiPath(@"get_over_score_log")]; }
-+ (NSURL *)getBlockListURL     { return [self createHttpsURL:ApiPath(@"get_block_list")]; }
-+ (NSURL *)addBlockListURL     { return [self createHttpsURL:ApiPath(@"add_block_list")]; }
-+ (NSURL *)delBlockListURL     { return [self createHttpsURL:ApiPath(@"del_block_list")]; }
-+ (NSURL *)cancelFriendURL     { return [self createHttpsURL:ApiPath(@"cancel_friend")]; }
++ (NSURL *)getFriendRequestURL { return [self createHttpsURL:ApiPath(@"get_friend_request")]; }  // @ 0x592f8
++ (NSURL *)getFriendScoreURL   { return [self createHttpsURL:ApiPath(@"get_friend_score")]; }    // @ 0x59364
++ (NSURL *)getArcadeScoreURL   { return [self createHttpsURL:ApiPath(@"get_arcade_score")]; }    // @ 0x5995c
++ (NSURL *)getOverScoreLogURL  { return [self createHttpsURL:ApiPath(@"get_over_score_log")]; }  // @ 0x59d28
++ (NSURL *)getBlockListURL     { return [self createHttpsURL:ApiPath(@"get_block_list")]; }      // @ 0x59580
++ (NSURL *)addBlockListURL     { return [self createHttpsURL:ApiPath(@"add_block_list")]; }      // @ 0x59514
++ (NSURL *)delBlockListURL     { return [self createHttpsURL:ApiPath(@"del_block_list")]; }      // @ 0x595ec
++ (NSURL *)cancelFriendURL     { return [self createHttpsURL:ApiPath(@"cancel_friend")]; }       // @ 0x593d0
 
 // @ 0x59658 / 0x596cc — daily-quiz endpoints. Path is a literal "/apr/main.cgi/" +
 // "<name>/index.jsp" plus a "?target=JP" query (Ghidra fmt "%@%@?target=%@", store "JP").

@@ -7,6 +7,7 @@
 //
 
 #import <OpenGLES/ES1/gl.h>
+#import <OpenGLES/ES1/glext.h>
 
 #import "MainViewController.h"
 #import "AcceptPolicyViewController.h"
@@ -60,6 +61,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 @interface MainViewController () <neGLViewDelegate, CommonAlertViewDelegate, CustomAlertViewDelegate>
 @end
 
+// .cxx_construct @ 0xf1e8 — compiler-emitted C++ ivar constructor; not hand-written.
 @implementation MainViewController {
     BOOL m_IsLoop;
     BOOL m_IsPause;
@@ -658,6 +660,41 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
         [_glView Present];
     }
     m_renderTime.reset();
+}
+
+// +[MainViewController capture:]  @ 0xbbec — grab the GL view's current renderbuffer into a
+// UIImage. Reads the bound renderbuffer's RGBA8 pixels, wraps them in a CGImage, then redraws
+// (copy blend) into a UIKit image context at the view's content scale so the returned image is
+// upright at point size. Ghidra-faithful.
++ (UIImage *)capture:(neGLView *)glView {
+    GLint width = 0, height = 0;
+    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &width);
+    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &height);
+
+    NSInteger byteCount = width * height * 4;
+    GLubyte *data = (GLubyte *)malloc(byteCount);
+    glPixelStorei(GL_PACK_ALIGNMENT, 4);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, byteCount, NULL);
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGImageRef iref = CGImageCreate(width, height, 8, 32, width * 4, colorSpace,
+                                    kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big,
+                                    provider, NULL, YES, kCGRenderingIntentDefault);
+
+    CGFloat scale = glView.contentScaleFactor;
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(width / scale, height / scale), NO, 0.0f);
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
+    CGContextSetBlendMode(ctx, kCGBlendModeCopy);
+    CGContextDrawImage(ctx, CGRectMake(0, 0, width / scale, height / scale), iref);
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    free(data);
+    CFRelease(provider);
+    CFRelease(colorSpace);
+    CGImageRelease(iref);
+    return image;
 }
 
 #pragma mark - Lifecycle

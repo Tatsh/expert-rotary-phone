@@ -310,10 +310,26 @@ BOOL gLaunchedFromPush = NO;
     return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
 }
 
-// -[AppDelegate appAppSupportDirectory] — downloadable data (rhythmin.lv, chr, ...).
+// -[AppDelegate appAppSupportDirectory]  @ 0x8a1c — downloadable data (rhythmin.lv, chr, ...).
 + (NSString *)appAppSupportDirectory {
     return NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
                                                NSUserDomainMask, YES).lastObject;
+}
+
+// +[AppDelegate addSkipBackupAttributeToItemAtURL:]  @ 0x8af8
+// Mark an existing file/dir as excluded from iCloud/iTunes backup
+// (NSURLIsExcludedFromBackupKey). The binary asserts the item already exists.
++ (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL {
+    NSAssert([NSFileManager.defaultManager fileExistsAtPath:URL.path],
+             @"[[NSFileManager defaultManager] fileExistsAtPath:[URL path]]");
+    NSError *error = nil;
+    BOOL success = [URL setResourceValue:@YES
+                                  forKey:NSURLIsExcludedFromBackupKey
+                                   error:&error];
+    if (!success) {
+        NSLog(@"Error excluding %@ from backup %@", URL.lastPathComponent, error);
+    }
+    return success;
 }
 
 // -[AppDelegate appCachesDirectory] — Caches dir, holds dev-data downloads.  @ 0x89f8

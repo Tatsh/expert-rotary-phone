@@ -38,6 +38,8 @@ static UIViewController *RootVC() {
     CGRect _arrowFrm[4];                          // arrow frame per tab
 }
 
+// .cxx_construct @ 0xb7144 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0xb5cb0 — build the dimmed backdrop (tap to close), the artwork panel, the left
 // SettingTopViewController column (self is its split delegate), the right rounded nav
 // pane pre-loaded with the ゲーム table, the selection arrow, and a top cover strip.

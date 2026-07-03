@@ -49,7 +49,7 @@ static NSString *RecommendURLDecode(NSString *s) {
 
 @implementation RecommendCore
 
-// recommendCoreSharedAlloc @ 0xfc2c4 — create the serial queue and the single instance once.
+// @ 0xfc258 (dispatch_once block recommendCoreSharedAlloc @ 0xfc2c4) — create the serial queue and the single instance once.
 + (instancetype)allocWithZone:(NSZone *)zone {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -463,7 +463,7 @@ static NSString *RecommendURLDecode(NSString *s) {
 //   initializeFlg / countryCode accessors @ 0xfe660..0xfe770 — synthesized (copy for the block,
 //   strong for the objects, assign for the int); getCountryCode/getCategoryId/isInitialized above
 //   are thin public wrappers over them.
-// .cxx_destruct — compiler-emitted ARC teardown for the object ivars; not hand-written.
+// .cxx_destruct @ 0xfe798 — compiler-emitted ARC teardown for the object ivars; not hand-written.
 
 @end
 

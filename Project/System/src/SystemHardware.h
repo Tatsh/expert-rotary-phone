@@ -11,6 +11,9 @@
 
 @interface SystemHardware : NSObject
 
+// Lazily-created shared instance. Ghidra: @ 0x127ac
++ (instancetype)getInstance;
+
 // Detect the model via hw.machine (no-op once detected). Ghidra: @ 0x127f4
 - (void)initHardware;
 

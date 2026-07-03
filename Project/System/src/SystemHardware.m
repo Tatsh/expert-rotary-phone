@@ -24,9 +24,20 @@ static const char *const kSystemHardwareModels[14] = {
     "iPad1,1", "iPad2,1", "iPad2,2", "iPad2,3", "i386",
 };
 
+// Lazily-created shared instance (Ghidra global g_pSystemHardwareInstance).
+static SystemHardware *s_instance = nil;
+
 @implementation SystemHardware {
     int m_HardwareType;
     NSString *m_HardwareName;
+}
+
+// +[SystemHardware getInstance]  @ 0x127ac — lazily-created shared instance.
++ (instancetype)getInstance {
+    if (s_instance == nil) {
+        s_instance = [[SystemHardware alloc] init];
+    }
+    return s_instance;
 }
 
 // @ 0x12718

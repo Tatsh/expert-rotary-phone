@@ -160,6 +160,9 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     return YES;
 }
 
+// YES if `musicId` is the invite-reward song (id 4).
++ (BOOL)isInviteMusic:(int)musicId { return musicId == 4; }   // @ 0xc7fd4
+
 // @ 0xc7fe0 — BEMANI-collabo (jubeat plus x REFLEC BEAT plus x GITADORA) unlock predicate.
 // Open when the bundled collabo song (id 5) is present AND either the saved collabo flag is
 // set or all three companion BEMANI apps are installed (their URL schemes can be opened).
@@ -268,6 +271,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     return [NSString stringWithFormat:@"%09d.orb", musicId];
 }
 
+// @ 0xc7e50
 - (NSString *)getAcMusicDataFilename:(int)acMusicId {
     // Same "%09d.orb" scheme (AC-specific prefix, if any, TBC).
     return [NSString stringWithFormat:@"%09d.orb", acMusicId];
@@ -472,6 +476,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
 
 #pragma mark - Paths  [bodies inferred; confirm against getPathFromBundle_/Purchased_]
 
+// @ 0xc7e80
 - (NSString *)getPathFromBundle:(int)musicId {
     return [NSBundle.mainBundle.resourcePath
             stringByAppendingPathComponent:[self getMusicDataFilename:musicId]];

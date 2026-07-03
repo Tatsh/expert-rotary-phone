@@ -258,7 +258,7 @@
 //   (copy) accessors for the _callbackForOpenAppliList block ivar.
 // lastErrorForOpenAppliList / setLastErrorForOpenAppliList: @ 0xff93c / 0xff94c — synthesized
 //   (strong) accessors for the _lastErrorForOpenAppliList ivar.
-// .cxx_destruct — compiler-emitted ARC teardown for the object ivars; not hand-written.
+// .cxx_destruct @ 0xff974 — compiler-emitted ARC teardown for the object ivars; not hand-written.
 
 @end
 

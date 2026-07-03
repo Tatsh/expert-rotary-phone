@@ -83,7 +83,19 @@
 }
 
 
+// @ 0xc0f64 — YES if `mainMapId` is one of the two root ("default") maps (0 or 6).
++ (BOOL)isDefaultMap:(short)mainMapId {
+    static const short kRootMapIds[2] = {0, 6};   // DAT_0012fa28
+    for (int i = 0; i < 2; i++) {
+        if (kRootMapIds[i] == mainMapId) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 // Delete every persisted TreasureData row (called by -[UserSettingData initForConvert]).
+// @ 0xc0a44
 + (void)deleteAll:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData" inManagedObjectContext:context];

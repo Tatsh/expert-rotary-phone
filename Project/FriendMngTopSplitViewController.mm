@@ -39,6 +39,8 @@
     HowToViewCtrlPad *_howToView;              // first-play how-to overlay
 }
 
+// .cxx_construct @ 0xc5414 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0xc3358 — build the dimmed backdrop (tap to close), the artwork panel, the left
 // section column (FriendMngTopViewController), the right navigation pane, the selection
 // arrow, and a top cover strip; then populate the list section.

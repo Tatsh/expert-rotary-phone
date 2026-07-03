@@ -8,11 +8,24 @@
 #import "DevDataDownloader.h"
 #import "AppDelegate.h"
 
+// Lazily-created shared instance (Ghidra global g_pDevDataDownloaderInstance).
+static DevDataDownloader *s_instance = nil;
+
 @implementation DevDataDownloader
 
 // delegate / setDelegate: @ 0x8ee00 / 0x8ee10, isOld / setIsOld: @ 0x8ee20 / 0x8ee38.
 @synthesize delegate = m_Delegate;
 @synthesize isOld = m_IsOld;
+
+// +[DevDataDownloader getInstance]  @ 0x8e894 — shared instance; resets isOld to NO on every
+// access (as in the binary).
++ (instancetype)getInstance {
+    if (s_instance == nil) {
+        s_instance = [[DevDataDownloader alloc] init];
+    }
+    s_instance.isOld = NO;
+    return s_instance;
+}
 
 // @ 0x8e984 — build the Downloader for a dev-data file and kick it off.
 - (BOOL)startDownload:(NSString *)title file:(NSString *)fileName {

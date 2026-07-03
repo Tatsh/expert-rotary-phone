@@ -39,7 +39,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 
 @implementation RewardNetwork
 
-// @ 0xee3f8
+// @ 0xee3f8   (sharedInstance forwarder twin @ 0xee3b0)
 - (int)initializeFlg {
     if (![RewardNetworkUdid isAdvertisingTrackingEnabled]) {
         return 0;
@@ -495,7 +495,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 
 // .cxx_destruct @ 0xf3bf8 — compiler-emitted; not hand-written.
 
-// @ 0xf0a80
+// @ 0xf0a80   (sharedInstance forwarder twin @ 0xf11fc)
 - (void)openAppListWebViewWithCampaignId:(NSString *)campaignId
                                inCompany:(NSString *)inCompany
                                     type:(NSString *)type
@@ -557,7 +557,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                       }];
 }
 
-// @ 0xf1ff8
+// @ 0xf1ff8   (sharedInstance forwarder twin @ 0xf1fa4)
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
     [_webViewController willAnimateRotationToInterfaceOrientation:orientation duration:duration];
@@ -698,6 +698,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // TODO(dep): real ad-SDK network entry — deliberately a no-op (neutralized ad path).
+// @ 0xee8f0 — full applilink implementation in the binary; reconstructed here as a neutralized no-op.
 + (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(void (^)(void))callback {
     // Not reconstructed in this pass.
 }

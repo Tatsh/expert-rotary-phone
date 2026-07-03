@@ -70,6 +70,10 @@
                                     refId:(NSString *)refId
                    inManagedObjectContext:(NSManagedObjectContext *)context;
 
+// Every stored record for `refId`, sorted by category (descending) then title (ascending).
+// Ghidra: @ 0xcee4c.
++ (NSArray *)getAllData:(NSString *)refId context:(NSManagedObjectContext *)context;
+
 // Delete every persisted ArcadeScoreData record (device-change / initForConvert reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 

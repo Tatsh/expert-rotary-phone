@@ -20,6 +20,10 @@
 // (neGraphics) scales them to pixels and records them for the play-judge loop.
 static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
 
+// The most-recently-created view, published for GetInstance. The binary keeps a raw
+// (non-owning) pointer here: initWithFrame: stores self, dealloc clears it. @ 0x1882e4
+static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
+
 @implementation neGLView {
     // The binary routes the framebuffer/renderbuffer binds through m_GLInterface
     // (neGLES_11); those virtuals wrap exactly these GL ES 1.1 / OES FBO calls,
@@ -41,9 +45,14 @@ static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
 // @ 0x28534
 - (int)GetFrontBufferHeight { return m_FrontBufferHeight; }
 
-// GL ES views are backed by a CAEAGLLayer.
+// GL ES views are backed by a CAEAGLLayer. @ 0x280e4
 + (Class)layerClass {
     return [CAEAGLLayer class];
+}
+
+// @ 0x280d4 — the live view instance (raw global set in initWithFrame:).
++ (neGLView *)GetInstance {
+    return g_pGLViewInstance;
 }
 
 #pragma mark - Touch -> engine input
@@ -108,6 +117,7 @@ static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
         self.backgroundColor = [UIColor clearColor];
         self.multipleTouchEnabled = YES;
         [self createFramebuffer];
+        g_pGLViewInstance = self;   // @ 0x28312 — publish for GetInstance.
     }
     return self;
 }
@@ -140,6 +150,7 @@ static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
     if ([EAGLContext currentContext] == m_GLContext) {
         [EAGLContext setCurrentContext:nil];
     }
+    g_pGLViewInstance = nil;   // @ 0x2841c
 }
 
 // @ 0x28544 — make the GL context current.

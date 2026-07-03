@@ -40,6 +40,9 @@
 // getter @ 0x8ee20 / setter @ 0x8ee38 (atomic, DataMemoryBarrier)
 @property (assign) BOOL isOld;
 
+// Shared instance (resets isOld to NO on every access). Ghidra: @ 0x8e894.
++ (instancetype)getInstance;
+
 // Build the Downloader for <title>/<fileName> and start it. Returns NO if a request is
 // already in flight. Ghidra: @ 0x8e984.
 - (BOOL)startDownload:(NSString *)title file:(NSString *)fileName;

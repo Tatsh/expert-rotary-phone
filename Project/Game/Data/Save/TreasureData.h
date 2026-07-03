@@ -44,6 +44,9 @@
 + (NSArray<TreasureData *> *)getAllTreasureData:(NSManagedObjectContext *)context;
 
 
+// YES if `mainMapId` is one of the two root ("default") maps (0 or 6). Ghidra: @ 0xc0f64.
++ (BOOL)isDefaultMap:(short)mainMapId;
+
 // Delete every persisted TreasureData record (device-change / initForConvert reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 

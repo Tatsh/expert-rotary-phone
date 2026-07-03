@@ -66,6 +66,9 @@ struct SeVoiceSlot {
     SeVoiceSlot m_seManageId[kSeSetGroupCount][kSeSetGroupVoices];  // SetGroup pool
 }
 
+// .cxx_construct @ 0x207a0 — compiler-emitted C++ ivar constructor (constructs the
+// C++ SeInstance/SeVoiceSlot ivars); not hand-written.
+
 // @ 0x1df8c
 - (instancetype)init {
     if ((self = [super init])) {

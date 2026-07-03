@@ -19,6 +19,9 @@
 
 @interface neGLView : UIView
 
+// The live view instance (raw global set on init, cleared on dealloc). Ghidra: @ 0x280d4
++ (neGLView *)GetInstance;
+
 // Ghidra: -delegate/-setDelegate: are atomic accessors (DataMemoryBarrier around
 // a plain pointer store — assign, not ARC weak). Addresses annotated in the .mm.
 @property (atomic, assign) id<neGLViewDelegate> delegate;

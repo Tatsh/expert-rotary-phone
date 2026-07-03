@@ -34,6 +34,15 @@ static NSString *const kDownloadErrorMessage =
 
 @synthesize delegate = m_Delegate;   // delegate @ 0x58800 / setDelegate: @ 0x58810 (synthesized)
 
+// +[StorePackListController storeCountry]  @ 0x577a4 — the store country code cached from the
+// last resolved product's priceLocale (nil until a products request has succeeded).
++ (NSString *)storeCountry {
+    if (s_storeCountry != nil) {
+        return [NSString stringWithString:s_storeCountry];
+    }
+    return nil;
+}
+
 // @ 0x577dc — start "continued", with a 50-slot pack cache and id list.
 - (instancetype)init {
     if ((self = [super init])) {

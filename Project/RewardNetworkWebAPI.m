@@ -85,7 +85,7 @@ static int sRetryCount = 0;
     return request;
 }
 
-// @ 0xfad84  (with retry/watchdog block @ 0xfb0a9 and completion handler @ 0xfaef2)
+// @ 0xfad84  (with retry/watchdog block @ 0xfb0a9 and completion handler @ 0xfaef2; class entry allocs+forwards @ 0xfbe04)
 + (void)requestAsynchronousWithURL:(NSString *)url
                             method:(NSString *)method
                         parameters:(NSDictionary *)parameters
@@ -161,7 +161,7 @@ static int sRetryCount = 0;
     }];
 }
 
-// @ 0xfb58c  (line-enumeration accumulator block @ recommendCoreAppendResponseData)
+// @ 0xfb58c  (line-enumeration accumulator block @ recommendCoreAppendResponseData; class entry allocs+forwards @ 0xfbf8c)
 + (NSData *)responseFromContentsServer:(NSString *)contentsServer
                                request:(NSURLRequest *)request
                                   data:(NSData *)data
@@ -211,7 +211,7 @@ static int sRetryCount = 0;
     return result;
 }
 
-// @ 0xfbb34
+// @ 0xfbb34   (class entry allocs+forwards @ 0xfbee0)
 + (id)requestSynchronousWithURL:(NSString *)url
                          method:(NSString *)method
                      parameters:(NSDictionary *)parameters

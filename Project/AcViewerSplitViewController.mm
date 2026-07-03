@@ -31,6 +31,8 @@ static UIViewController *RootVC() {
     BOOL _isAnimationing;
 }
 
+// .cxx_construct @ 0x33510 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0x318e8 — build the dimmed backdrop (tap to close), the artwork panel, the left
 // button column (initForLeftView), the right navigation pane hosting the category
 // list, the selection arrow, and a back button.

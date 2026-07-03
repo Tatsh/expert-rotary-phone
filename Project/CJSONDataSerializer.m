@@ -15,12 +15,18 @@ static NSData *g_pJsonFalseData = nil;
 
 @implementation CJSONDataSerializer
 
+// @ 0x66bdc
 + (void)initialize {
     if (g_pJsonNullData == nil) {
         g_pJsonNullData = [[NSData alloc] initWithBytes:"null" length:4];
         g_pJsonTrueData = [[NSData alloc] initWithBytes:"true" length:4];
         g_pJsonFalseData = [[NSData alloc] initWithBytes:"false" length:5];
     }
+}
+
+// +[CJSONDataSerializer serializer]  @ 0x66dc8 — autoreleased convenience instance.
++ (CJSONDataSerializer *)serializer {
+    return [[self alloc] init];
 }
 
 // @ 0x66e00

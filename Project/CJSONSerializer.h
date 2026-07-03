@@ -18,6 +18,8 @@
     CJSONDataSerializer *serializer;
 }
 
++ (CJSONSerializer *)serializer;   // @ 0x6a2a0 (convenience constructor)
+
 - (NSString *)serializeObject:(id)inObject;
 - (NSString *)serializeArray:(NSArray *)inArray;
 - (NSString *)serializeDictionary:(NSDictionary *)inDictionary;

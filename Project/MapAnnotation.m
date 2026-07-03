@@ -14,6 +14,8 @@
     NSString *m_ModelName;                 // @+0x1c
 }
 
+// .cxx_construct @ 0x852d8 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0x850e4 — store the coordinate by value and immutable copies of the three strings.
 - (id)initWithCoordinate:(CLLocationCoordinate2D)coordinate
                    Title:(NSString *)title

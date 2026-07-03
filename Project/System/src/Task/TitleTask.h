@@ -26,6 +26,7 @@ class AepLyrCtrl;   // the title screen's animated sprite layer (Ghidra ctor FUN
 class TitleTask : public C_TASK {
 public:
     TitleTask();                        // Ghidra: TitleTask_ctor (FUN_0002b678)
+    ~TitleTask() override;              // Ghidra: TitleTask dtor (FUN_0002b6b0)
     void update(int deltaMs) override;  // Ghidra: TitleTask_update (FUN_0002b838)
 
 private:

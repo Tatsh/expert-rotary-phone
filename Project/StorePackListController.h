@@ -47,6 +47,9 @@
 
 @property (nonatomic, weak) id<StorePackListControllerDelegate> delegate;
 
+// Store country code cached from the last resolved product's priceLocale (nil until known).
++ (NSString *)storeCountry;    // @ 0x577a4
+
 // A request (pack-list download or StoreKit lookup) is in flight.
 - (BOOL)isFetching;
 // Cancel any in-flight request.

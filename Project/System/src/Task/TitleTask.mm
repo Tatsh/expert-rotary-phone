@@ -28,6 +28,17 @@
 // Ghidra: TitleTask_ctor (FUN_0002b678) — base C_TASK ctor + zeroed fields.
 TitleTask::TitleTask() = default;
 
+// Ghidra: TitleTask dtor (FUN_0002b6b0) — detach the conversion button from its
+// superview before the base source-node teardown; ARC releases the other members. The
+// compiler-implicit dtor would drop m_conversionButton without removing it from the
+// view hierarchy, so this behaviour is reproduced explicitly. @ 0x2b6b0
+TitleTask::~TitleTask() {
+    if (m_conversionButton != nil) {
+        [m_conversionButton removeFromSuperview];
+        m_conversionButton = nil;
+    }
+}
+
 // The root navigation view controller the flow drives (bridged from the engine).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();

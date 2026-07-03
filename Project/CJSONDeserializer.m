@@ -12,6 +12,11 @@ NSString *const kJSONDeserializerErrorDomain = @"CJSONDeserializerErrorDomain";
 
 @implementation CJSONDeserializer
 
+// +[CJSONDeserializer deserializer]  @ 0x67550 — autoreleased convenience instance.
++ (CJSONDeserializer *)deserializer {
+    return [[self alloc] init];
+}
+
 // @ 0x67588
 - (id)deserialize:(NSData *)inData error:(NSError **)outError {
     if (inData != NULL && [inData length] != 0) {

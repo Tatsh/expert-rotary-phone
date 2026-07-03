@@ -10,6 +10,11 @@
 
 @implementation CJSONSerializer
 
+// +[CJSONSerializer serializer]  @ 0x6a2a0 — autoreleased convenience instance.
++ (CJSONSerializer *)serializer {
+    return [[self alloc] init];
+}
+
 // @ 0x6a2d8
 - (id)init {
     if ((self = [super init]) != nil) {

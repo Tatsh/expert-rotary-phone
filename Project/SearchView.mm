@@ -93,6 +93,8 @@ static NSString *const kDataErrorMessage      = @"データの取得に失敗し
 
 @implementation SearchView
 
+// .cxx_construct @ 0x88b04 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0x85538 — wrap self in a styled UINavigationController and return it (see header).
 - (id)initAtNavigationController {
     if (!(self = [super init])) {

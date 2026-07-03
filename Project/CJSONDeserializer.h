@@ -13,6 +13,8 @@
 
 @interface CJSONDeserializer : NSObject
 
++ (CJSONDeserializer *)deserializer;   // @ 0x67550 (convenience constructor)
+
 - (id)deserialize:(NSData *)inData error:(NSError **)outError;
 - (NSDictionary *)deserializeAsDictionary:(NSData *)inData error:(NSError **)outError;
 - (NSArray *)deserializeAsArray:(NSData *)inData error:(NSError **)outError;

@@ -42,6 +42,8 @@ static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
     HowToViewCtrlPad *_howToView;                  // first-play how-to overlay
 }
 
+// .cxx_construct @ 0xe2c38 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0xe0b40 — build the dimmed backdrop (tap to close), the artwork panel, the left
 // section column (PopnLinkTopViewController), the right navigation pane, the selection
 // arrow (positioned per link state), and a top cover strip; then populate the initial

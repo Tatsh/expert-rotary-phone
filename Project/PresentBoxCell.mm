@@ -27,6 +27,8 @@ typedef struct {
 
 @synthesize getBtn = _getBtn;
 
+// .cxx_construct @ 0x6ed48 — compiler-emitted C++ ivar constructor; not hand-written.
+
 // @ 0x6e3ac — non-selectable, clear background, no background view (the gift artwork
 // is added by the VC).
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {

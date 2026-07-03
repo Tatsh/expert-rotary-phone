@@ -503,6 +503,8 @@
     return nil;
 }
 
+// .cxx_destruct @ 0xeba60 — compiler-emitted ARC teardown; not hand-written.
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
