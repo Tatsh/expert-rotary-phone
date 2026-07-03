@@ -7,9 +7,9 @@
 //  through the root view controller and the ObjC managers).
 //
 //  Scope: the verified ~20-state control flow and the mode-button dispatch. The
-//  per-button screen rectangles (task fields +0x94..+0x19c) and the individual
-//  play/tutorial/arcade/sugoroku sub-task constructors are referenced as seams —
-//  each is its own reconstruction unit (see HANDOFF).
+//  per-button screen rectangles are now recovered as real members on the task (see
+//  MenuMainTask.h); the individual play/tutorial/arcade/sugoroku sub-task
+//  constructors are referenced as seams via the task factory.
 //
 
 #import <UIKit/UIKit.h>
@@ -39,73 +39,12 @@ static int AepBaselineY(AepManager &aep) {
     return *reinterpret_cast<int *>(reinterpret_cast<char *>(&aep) + 0x7f3b00);
 }
 
-// The per-frame menu overlay pass (Ghidra: FUN_0006d428): the friend-request warning
-// badge, the "new music pack" / event badges, and the always-on mode-button labels,
-// each pulsed by a triangle-wave phase counter at +0xec. Task fields are reached by
-// raw offset, matching hitButton()'s reinterpret_cast<char *>(this) convention.
-static void MenuDrawOverlay(MenuMainTask *self) {
-    char *base = reinterpret_cast<char *>(self);
-    auto I = [&](int off) -> int { return *reinterpret_cast<int *>(base + off); };
-    auto B = [&](int off) -> bool { return *reinterpret_cast<unsigned char *>(base + off) != 0; };
-
-    if (B(0xb4)) {   // +0xb4: overlay suppressed while the task is tearing down
-        return;
-    }
-    AepManager &aep = AepManager::shared();
-    DownloadMain *dl = [DownloadMain getInstance];
-
-    // Attention pulse: 100 for the first 0x32 frames, then a triangle wave; the phase
-    // at +0xec advances by 2 modulo 0x97 each frame.
-    int phase = I(0xec);
-    int pulse = phase < 0x32 ? 100 : (phase < 100 ? 200 - phase * 2 : phase * 2 - 200);
-    *reinterpret_cast<int *>(base + 0xec) = (phase + 2) % 0x97;
-
-    // Friend-request warning badge (a bundled texture at +0x4c, not an Aep layer):
-    // drawn straight into the ordering table, faded by the pulse.
-    if ([dl friendRequestedCnt] > 0) {
-        neTextureForiOS *warn = *reinterpret_cast<neTextureForiOS **>(base + 0x4c);
-        neSpriteDrawParams p;
-        p.x = I(0x120); p.y = I(0x124);
-        p.sx = I(0xac); p.sy = I(0xb0);
-        p.color = pulse;
-        p.priority = 0xc;
-        warn->draw(aep.orderingTable(), p);
-    }
-
-    // The Aep frame-sprite badges/labels. Their handles (group << 16 | index) were
-    // resolved in setup(); position comes from the matching rect field, priority 0xc
-    // for the pulsing badges and 0xd for the static button labels. In the engine the
-    // pulse feeds each sprite's colour (Ghidra: FUN_0000fcd0's fade args).
-    AepTransform xform;
-
-    if ([dl isNewMusicPackReleased]) {              // "new music pack" badge (+0x38)
-        xform.x = I(0x108); xform.y = I(0x10c); xform.priority = 0xc;
-        aep.drawLayer(I(0x38), 0, xform, 0);
-    }
-    if (B(0xb7) && B(0xb5)) {                        // treasure-event badge (+0x48)
-        xform.x = I(0x110); xform.y = I(0x114); xform.priority = 0xc;
-        aep.drawLayer(I(0x48), 0, xform, 0);
-    }
-    if (B(0xb8) && B(0xb5)) {                        // game-event badge (+0x48)
-        xform.x = I(0x118); xform.y = I(0x11c); xform.priority = 0xc;
-        aep.drawLayer(I(0x48), 0, xform, 0);
-    }
-
-    xform.x = I(0x88); xform.y = I(0x84); xform.priority = 0xd;   // settings label (+0x3c)
-    aep.drawLayer(I(0x3c), 0, xform, 0);
-    xform.x = I(0x8c); xform.y = I(0x84); xform.priority = 0xd;   // store label (+0x40)
-    aep.drawLayer(I(0x40), 0, xform, 0);
-    if (B(0xb6)) {                                                // gift label (+0x44)
-        xform.x = I(0x90); xform.y = I(0x84); xform.priority = 0xd;
-        aep.drawLayer(I(0x44), 0, xform, 0);
-    }
-}
-
 // The play / tutorial / arcade / sugoroku sub-tasks the menu launches come from the
 // task factory; the menu button hit-test and input-mode set come from the engine
 // bridge. (TaskFactory.h / neEngineBridge.h imported above.)
 
-// Ghidra: MenuMainTask_ctor (FUN_0006aba0) — base C_TASK ctor + zeroed fields.
+// Ghidra: MenuMainTask_ctor (FUN_0006aba0) — base C_TASK ctor + memset(this+0x28,
+// 0, 0x185) (every field zero-initialised, matching the members' default inits).
 MenuMainTask::MenuMainTask() = default;
 
 // Ghidra: MenuMainTask_setInfoFlag (FUN_0006d194) @ +0x1ac.
@@ -115,12 +54,8 @@ void MenuMainTask::setInfoFlag(bool shown) {
 
 // Ghidra: FUN_0006c6a4 — build the menu scene: pick the device layout, fill every
 // per-button screen rect + SE id, then load the mode-select Aep group and its three
-// animated layers, the warning texture and the menu BGM. Undeclared task fields are
-// written by raw offset, matching hitButton()'s reinterpret_cast<char *>(this) style.
+// animated layers, the warning texture and the menu BGM.
 void MenuMainTask::setup() {
-    char *base = reinterpret_cast<char *>(this);
-    auto rect = [&](int off) -> int & { return *reinterpret_cast<int *>(base + off); };
-
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
     const int baseY = AepBaselineY(aep);
@@ -136,46 +71,71 @@ void MenuMainTask::setup() {
     if (!isPad) {
         const bool tall = (AppDelegate.appDelegate.displayType == 2);
         const int yoff = tall ? 0x50 : 0;
-        rect(0xe8) = yoff;
-        rect(0x84) = baseY - 0x3c; rect(0x88) = 8;         rect(0x8c) = 0xa6;  rect(0x90) = 0x144;
-        rect(0xa4) = 0xa3;         rect(0xa8) = 0x4b;
-        rect(0x94) = baseY - 0x4b; rect(0x98) = 0;         rect(0x9c) = 0xa3;  rect(0xa0) = 0x146;
-        rect(0xf4) = 0x5b;         rect(0xf8) = 0xb;       rect(0xfc) = 0x21e; rect(0x100) = 100;
-        rect(0x104) = 0x14;        rect(0x108) = 0x1b;
-        rect(0x10c) = yoff + 0x2d4; rect(0x110) = 0x15c;   rect(0x114) = yoff + 0x11c;
-        rect(0x118) = 0x30;        rect(0x11c) = yoff | 0x8c;
-        rect(0x128) = 0x30;        rect(0x12c) = yoff + 0x39; rect(0x130) = 0x132; rect(0x134) = 300;
-        rect(0x138) = 0x1f;        rect(0x13c) = yoff + 0x262; rect(0x140) = 0xc9; rect(0x144) = 0xd2;
-        rect(0x148) = 0xff;        rect(0x14c) = yoff + 0x1f2; rect(0x150) = 0xca; rect(0x154) = 0xcc;
-        rect(0x158) = 0x16c;       rect(0x15c) = yoff + 0xe8;  rect(0x160) = 0xfa; rect(0x164) = 0x14e;
-        rect(0x168) = 0x16c;       rect(0x16c) = yoff | 0x2d;  rect(0x170) = 0xfa; rect(0x174) = 0xb9;
-        rect(0x178) = 0xe;         rect(0x17c) = yoff + 0x16f; rect(0x180) = 0xf6; rect(0x184) = 0xe3;
-        rect(0x188) = 0xf1;        rect(0x18c) = yoff + 0x2df; rect(0x190) = 0x99; rect(0x194) = 0x99;
-        rect(0x198) = 0x1a1;       rect(0x19c) = yoff + 0x24a; rect(0x1a0) = 0xe7; rect(0x1a4) = 0xdf;
-        rect(0x120) = 0x18b;       rect(0x124) = yoff | 0x206;
-        rect(0xac) = 0x2a;         rect(0xb0) = 0x2a;
+        m_layoutYOffset = yoff;                                                // +0xe8
+        m_labelRowY = baseY - 0x3c;                                           // +0x84
+        m_settingsLabelX = 8;                                                 // +0x88
+        m_storeLabelX = 0xa6;                                                 // +0x8c
+        m_giftLabelX = 0x144;                                                 // +0x90
+        m_top.fielda4 = 0xa3;                                                 // +0xa4
+        m_top.fielda8 = 0x4b;                                                 // +0xa8
+        m_top.rowY = baseY - 0x4b;                                            // +0x94
+        m_top.settingsX = 0;                                                  // +0x98
+        m_top.field9c = 0xa3;                                                 // +0x9c
+        m_top.fielda0 = 0x146;                                                // +0xa0
+        m_newsTickerParams[0] = 0x5b;                                         // +0xf4
+        m_newsTickerParams[1] = 0xb;                                          // +0xf8
+        m_newsTickerParams[2] = 0x21e;                                        // +0xfc
+        m_newsTickerParams[3] = 100;                                          // +0x100
+        m_newsTickerParams[4] = 0x14;                                         // +0x104
+        m_newPackBadgePos = {0x1b, yoff + 0x2d4};                             // +0x108
+        m_treasureBadgePos = {0x15c, yoff + 0x11c};                           // +0x110
+        m_gameBadgePos = {0x30, yoff | 0x8c};                                 // +0x118
+        m_buttons[kBtnPlay] = {0x30, yoff + 0x39, 0x132, 300};               // +0x128
+        m_buttons[kBtnStore] = {0x1f, yoff + 0x262, 0xc9, 0xd2};             // +0x138
+        m_buttons[kBtnFriend] = {0xff, yoff + 0x1f2, 0xca, 0xcc};            // +0x148
+        m_buttons[kBtnArcade] = {0x16c, yoff + 0xe8, 0xfa, 0x14e};           // +0x158
+        m_buttons[kBtnPopnLink] = {0x16c, yoff | 0x2d, 0xfa, 0xb9};          // +0x168
+        m_buttons[kBtnInvite] = {0xe, yoff + 0x16f, 0xf6, 0xe3};             // +0x178
+        m_buttons[kBtnPresentBox] = {0xf1, yoff + 0x2df, 0x99, 0x99};        // +0x188
+        m_buttons[kBtnSugoroku] = {0x1a1, yoff + 0x24a, 0xe7, 0xdf};         // +0x198
+        m_warnBadgePos = {0x18b, yoff | 0x206};                              // +0x120
+        m_warnScaleX = 0x2a;                                                  // +0xac
+        m_warnScaleY = 0x2a;                                                  // +0xb0
         sceneGroup    = "mode_select";
         layerNames[0] = tall ? "BG_IMG_1136_OPEN" : "BG_IMG_640_OPEN";
         layerNames[1] = tall ? "BG_IMG_1136_ROOP" : "BG_IMG_640_ROOP";
         layerNames[2] = tall ? "TRY_1136" : "TRY_960";
     } else {
-        rect(0xe8) = 0;
-        rect(0x84) = baseY - 0x71; rect(0x88) = 0x1e;      rect(0x8c) = 0x10d; rect(0x90) = 0x1fc;
-        rect(0xa4) = 0xef;         rect(0xa8) = 0x82;
-        rect(0x94) = baseY - 0x80; rect(0x98) = 0x14;      rect(0x9c) = 0x103; rect(0xa0) = 0x1f2;
-        rect(0xf4) = 0x80;         rect(0xf8) = 0xb;       rect(0xfc) = 0x540; rect(0x100) = 100;
-        rect(0x104) = 0x37;        rect(0x108) = 0x348;    rect(0x10c) = 0x492; rect(0x110) = 0x2da;
-        rect(0x114) = 0x172;       rect(0x118) = 0x76;     rect(0x11c) = 0x118;
-        rect(0x128) = 0x76;        rect(0x12c) = 0x5a;     rect(0x130) = 0x284; rect(0x134) = 0x272;
-        rect(0x138) = 0x326;       rect(0x13c) = 0x3ac;    rect(0x140) = 0x1cc; rect(0x144) = 0x1c2;
-        rect(0x148) = 0x118;       rect(0x14c) = 0x2d4;    rect(0x150) = 500;   rect(0x154) = 0x1de;
-        rect(0x158) = 0x310;       rect(0x15c) = 0x1ac;    rect(0x160) = 0x244; rect(0x164) = 0x1f8;
-        rect(0x168) = 0x3f0;       rect(0x16c) = 0x57b;    rect(0x170) = 0x202; rect(0x174) = 0x15a;
-        rect(0x178) = 0x22;        rect(0x17c) = 0x4d4;    rect(0x180) = 0x226; rect(0x184) = 0x20d;
-        rect(0x188) = 0x4a8;       rect(0x18c) = 0x52;     rect(0x190) = 0x188; rect(0x194) = 0x154;
-        rect(0x198) = 0x24d;       rect(0x19c) = 0x5b4;    rect(0x1a0) = 0x1a4; rect(0x1a4) = 0x1bd;
-        rect(0x120) = 0x274;       rect(0x124) = 0x2e8;
-        rect(0xac) = 0x56;         rect(0xb0) = 0x56;
+        m_layoutYOffset = 0;                                                  // +0xe8
+        m_labelRowY = baseY - 0x71;                                           // +0x84
+        m_settingsLabelX = 0x1e;                                              // +0x88
+        m_storeLabelX = 0x10d;                                               // +0x8c
+        m_giftLabelX = 0x1fc;                                                // +0x90
+        m_top.fielda4 = 0xef;                                                // +0xa4
+        m_top.fielda8 = 0x82;                                               // +0xa8
+        m_top.rowY = baseY - 0x80;                                           // +0x94
+        m_top.settingsX = 0x14;                                              // +0x98
+        m_top.field9c = 0x103;                                              // +0x9c
+        m_top.fielda0 = 0x1f2;                                              // +0xa0
+        m_newsTickerParams[0] = 0x80;                                        // +0xf4
+        m_newsTickerParams[1] = 0xb;                                         // +0xf8
+        m_newsTickerParams[2] = 0x540;                                       // +0xfc
+        m_newsTickerParams[3] = 100;                                         // +0x100
+        m_newsTickerParams[4] = 0x37;                                        // +0x104
+        m_newPackBadgePos = {0x348, 0x492};                                  // +0x108
+        m_treasureBadgePos = {0x2da, 0x172};                                 // +0x110
+        m_gameBadgePos = {0x76, 0x118};                                      // +0x118
+        m_buttons[kBtnPlay] = {0x76, 0x5a, 0x284, 0x272};                   // +0x128
+        m_buttons[kBtnStore] = {0x326, 0x3ac, 0x1cc, 0x1c2};                // +0x138
+        m_buttons[kBtnFriend] = {0x118, 0x2d4, 500, 0x1de};                 // +0x148
+        m_buttons[kBtnArcade] = {0x310, 0x1ac, 0x244, 0x1f8};               // +0x158
+        m_buttons[kBtnPopnLink] = {0x3f0, 0x57b, 0x202, 0x15a};             // +0x168
+        m_buttons[kBtnInvite] = {0x22, 0x4d4, 0x226, 0x20d};                // +0x178
+        m_buttons[kBtnPresentBox] = {0x4a8, 0x52, 0x188, 0x154};            // +0x188
+        m_buttons[kBtnSugoroku] = {0x24d, 0x5b4, 0x1a4, 0x1bd};             // +0x198
+        m_warnBadgePos = {0x274, 0x2e8};                                     // +0x120
+        m_warnScaleX = 0x56;                                                 // +0xac
+        m_warnScaleY = 0x56;                                                 // +0xb0
         sceneGroup    = "mode_select_ipad";
         layerNames[0] = "BG_IMG_PAD_OPEN";
         layerNames[1] = "BG_IMG_PAD_ROOP";
@@ -188,7 +148,7 @@ void MenuMainTask::setup() {
     for (int i = 0; i < 3; i++) {
         AepLyrCtrl *layer = new AepLyrCtrl();
         layer->init(2, layerNames[i]);
-        *reinterpret_cast<AepLyrCtrl **>(base + 0x28 + i * 4) = layer;
+        m_layers[i] = layer;
     }
 
     // Overlay handles the draw pass reads: the NEWS ticker (+0x34) plus five badge /
@@ -197,14 +157,14 @@ void MenuMainTask::setup() {
     static const char *const kBadgeNames[5] = {
         "NEWS", "BT_SETTING", "NEW_STORE", "BT_GIFT", "BT_FEATU",
     };
-    rect(0x34) = aep.getLyrNo(2, "NEWS");
+    m_newsHandle = aep.getLyrNo(2, "NEWS");
     for (int i = 0; i < 5; i++) {
-        rect(0x38 + i * 4) = aep.getLyrNo(2, kBadgeNames[i]);
+        m_badgeHandles[i] = aep.getLyrNo(2, kBadgeNames[i]);
     }
 
     // The friend-request warning texture (a bundled PNG drawn straight into the OT).
     neTextureForiOS *warn = new neTextureForiOS();
-    *reinterpret_cast<neTextureForiOS **>(base + 0x4c) = warn;
+    m_warnTexture = warn;
     NSString *warnPath = [[NSBundle mainBundle] pathForResource:@"vie_cmn_warning@2x"
                                                          ofType:@"png"];
     warn->load([warnPath UTF8String]);
@@ -221,8 +181,8 @@ void MenuMainTask::setup() {
     for (int i = 0; i < 6; i++) {
         NSString *sePath = [[NSBundle mainBundle] pathForResource:@(kSeNames[i]) ofType:@"m4a"];
         RSND_SOURCE_ID sid = [audio loadSe:sePath isLoop:NO callName:nil group:1];
-        rect(0x50 + i * 4) = static_cast<int>(sid);
-        rect(0x68 + i * 4) = static_cast<int>(RSND_INSTANCE_ID_ERROR);
+        m_seId[i] = static_cast<int>(sid);
+        m_seInst[i] = static_cast<int>(RSND_INSTANCE_ID_ERROR);
     }
 
     // The news-text array copy, reward-banner query, and treasure/game-event unlock
@@ -307,8 +267,8 @@ void MenuMainTask::update(int /*deltaMs*/) {
             break;
         }
         // Play (standard): launch the tutorial task on a first play, else the play
-        // task; the exact rect is at +0x128 (seam).
-        if (hitButton(touchId, 0x128, 300)) {
+        // task; the exact rect is m_buttons[kBtnPlay] (+0x128).
+        if (hitButton(touchId, kBtnPlay)) {
             [audio playSe:0 resourceId:0];
             if (!m_tutorialSkip) {
                 [UserSettingData saveIsTutorialPlayed:YES];
@@ -317,31 +277,31 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 m_spawnedTask = MainTaskCreate();
             }
             m_state = 0x12;
-        } else if (hitButton(touchId, 0x158, 0x15c)) {   // arcade
+        } else if (hitButton(touchId, kBtnArcade)) {
             m_spawnedTask = AcMainTaskCreate();
             m_state = 0x12;
-        } else if (hitButton(touchId, 0x148, 0x14c)) {   // friend
+        } else if (hitButton(touchId, kBtnFriend)) {
             [root GotoFriendManage];
             m_state = 0x11;
-        } else if (hitButton(touchId, 0x138, 0x13c)) {   // store
+        } else if (hitButton(touchId, kBtnStore)) {
             [[DownloadMain getInstance] setIsNewMusicPackReleased:NO];
             [root GotoStoreButton];
             m_state = 0x11;
-        } else if (hitButton(touchId, 0x168, 0x16c)) {   // pop'n link
+        } else if (hitButton(touchId, kBtnPopnLink)) {
             [root GotoPopnLink];
             m_state = 0x11;
-        } else if (hitButton(touchId, 0x178, 0x17c)) {   // invite
+        } else if (hitButton(touchId, kBtnInvite)) {
             neEngine::setInputMode([UserSettingData playerName] != nil ? 0 : 2);
             [root GotoInviteCode];
             m_state = 0x11;
-        } else if (hitButton(touchId, 0x188, 0x18c)) {   // present box / arcade search
+        } else if (hitButton(touchId, kBtnPresentBox)) {
             neEngine::setInputMode(1);
             [root GotoPresentBox];
             m_state = 0x11;
-        } else if (hitButton(touchId, 0x198, 0x19c)) {   // sugoroku / map
+        } else if (hitButton(touchId, kBtnSugoroku)) {
             m_spawnedTask = SugorokuMainTaskCreate();
             m_state = 0x12;
-        } else if (hitButton(touchId, 0x98, 0x94)) {     // settings
+        } else if (hitSettingsButton(touchId)) {
             m_state = 0xd;
         }
         break;
@@ -389,20 +349,79 @@ void MenuMainTask::update(int /*deltaMs*/) {
     // layers this task linked into the global list via AepLyrCtrl::init — then emit the
     // menu's own overlay sprites through the AepManager.
     for (int i = 0; i < 3; i++) {   // +0x28 intro / +0x2c loop bg / +0x30 prompt
-        AepLyrCtrl *layer =
-            *reinterpret_cast<AepLyrCtrl **>(reinterpret_cast<char *>(this) + 0x28 + i * 4);
+        AepLyrCtrl *layer = m_layers[i];
         if (layer != nullptr && layer->isVisible()) {
             layer->draw();   // Ghidra: FUN_0002c924 per-layer advance + enqueue
         }
     }
-    MenuDrawOverlay(this);   // Ghidra: FUN_0006d428
+    drawOverlay();   // Ghidra: FUN_0006d428
 }
 
-// Ghidra: FUN_0002d974 — hit-test a button whose screen rectangle (4 ints: x,y,w,h)
-// and enable flag live at byte offsets rectField / enableField within this task.
-bool MenuMainTask::hitButton(int touchId, int rectField, int enableField) {
-    const char *base = reinterpret_cast<const char *>(this);
-    const int *rect = reinterpret_cast<const int *>(base + rectField);
-    const int *enable = reinterpret_cast<const int *>(base + enableField);
-    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, rect, enable);
+// Ghidra: modeSelectTaskDraw (FUN_0006d428): the per-frame menu overlay pass — the
+// friend-request warning badge, the "new music pack" / event badges, and the always-on
+// mode-button labels, each pulsed by a triangle-wave phase counter at +0xec.
+void MenuMainTask::drawOverlay() {
+    if (m_suppressOverlay) {   // +0xb4: overlay suppressed while the task is tearing down
+        return;
+    }
+    AepManager &aep = AepManager::shared();
+    DownloadMain *dl = [DownloadMain getInstance];
+
+    // Attention pulse: 100 for the first 0x32 frames, then a triangle wave; the phase
+    // at +0xec advances by 2 modulo 0x97 each frame.
+    const int phase = m_pulsePhase;
+    const int pulse = phase < 0x32 ? 100 : (phase < 100 ? 200 - phase * 2 : phase * 2 - 200);
+    m_pulsePhase = (phase + 2) % 0x97;
+
+    // Friend-request warning badge (a bundled texture at +0x4c, not an Aep layer):
+    // drawn straight into the ordering table, faded by the pulse.
+    if ([dl friendRequestedCnt] > 0) {
+        neSpriteDrawParams p;
+        p.x = m_warnBadgePos.x; p.y = m_warnBadgePos.y;
+        p.sx = m_warnScaleX; p.sy = m_warnScaleY;
+        p.color = pulse;
+        p.priority = 0xc;
+        m_warnTexture->draw(aep.orderingTable(), p);
+    }
+
+    // The Aep frame-sprite badges/labels. Their handles (group << 16 | index) were
+    // resolved in setup(); position comes from the matching badge/label field, priority
+    // 0xc for the pulsing badges and 0xd for the static button labels. In the engine the
+    // pulse feeds each sprite's colour (Ghidra: FUN_0000fcd0's fade args).
+    AepTransform xform;
+
+    if ([dl isNewMusicPackReleased]) {              // "new music pack" badge (+0x38)
+        xform.x = m_newPackBadgePos.x; xform.y = m_newPackBadgePos.y; xform.priority = 0xc;
+        aep.drawLayer(m_badgeHandles[0], 0, xform, 0);
+    }
+    if (m_treasureEvent && m_tutorialSkip) {         // treasure-event badge (+0x48)
+        xform.x = m_treasureBadgePos.x; xform.y = m_treasureBadgePos.y; xform.priority = 0xc;
+        aep.drawLayer(m_badgeHandles[4], 0, xform, 0);
+    }
+    if (m_gameEvent && m_tutorialSkip) {             // game-event badge (+0x48)
+        xform.x = m_gameBadgePos.x; xform.y = m_gameBadgePos.y; xform.priority = 0xc;
+        aep.drawLayer(m_badgeHandles[4], 0, xform, 0);
+    }
+
+    xform.x = m_settingsLabelX; xform.y = m_labelRowY; xform.priority = 0xd;   // settings label (+0x3c)
+    aep.drawLayer(m_badgeHandles[1], 0, xform, 0);
+    xform.x = m_storeLabelX; xform.y = m_labelRowY; xform.priority = 0xd;      // store label (+0x40)
+    aep.drawLayer(m_badgeHandles[2], 0, xform, 0);
+    if (m_giftEnabled) {                                                        // gift label (+0x44)
+        xform.x = m_giftLabelX; xform.y = m_labelRowY; xform.priority = 0xd;
+        aep.drawLayer(m_badgeHandles[3], 0, xform, 0);
+    }
+}
+
+// Ghidra: FUN_0002d974 — hit-test one of the eight array mode buttons: its screen
+// rectangle (x @ rectField, y @ rectField+4, w, h) is tested against the current tap.
+bool MenuMainTask::hitButton(int touchId, Button button) const {
+    const ButtonRect &r = m_buttons[button];
+    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &r.x, &r.y);
+}
+
+// The settings button lives in the packed top cluster (rect x @ +0x98, enable/y @
+// +0x94), so its two field pointers are taken separately. Ghidra: FUN_0002d974.
+bool MenuMainTask::hitSettingsButton(int touchId) const {
+    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.settingsX, &m_top.rowY);
 }
