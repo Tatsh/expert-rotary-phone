@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 95 |
+| Complete | 105 |
 | Partial (file exists, methods missing) | 0 |
-| Fully missing (no source file) | 78 |
-| **Missing methods** | **964** |
+| Fully missing (no source file) | 68 |
+| **Missing methods** | **927** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 78
+## Fully missing classes — 68
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -70,7 +70,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `StoreDialogView` | 11 | 5 | `72` |
 | `AcViewerHiSpeedViewController` | 10 | 0 | `162` |
 | `AcceptPolicyViewController` | 10 | 5 | `180` |
-| `CJSONScanner` | 10 | 1 | `29` |
 | `CheckerMusicViewController` | 10 | 1 | `168` |
 | `HttpConn` | 10 | 6 | `28` |
 | `AcViewerHidSudViewController` | 9 | 0 | `162` |
@@ -85,35 +84,27 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `CheckerDetail` | 7 | 15 | `368` |
 | `DownloadImageView` | 7 | 3 | `68` |
 | `MapAnnotation` | 7 | 4 | `32` |
-| `CJSONDataSerializer` | 6 | 0 | `4` |
 | `RecommendWebViewController` | 6 | 0 | `153` |
 | `RewardNetworkIndicator` | 6 | 1 | `52` |
-| `CJSONSerializer` | 5 | 1 | `8` |
 | `MyInviteCodeViewController` | 4 | 0 | `162` |
 | `PurchaseStore` | 4 | 1 | `5` |
 | `RewardNetworkUdid` | 4 | 1 | `8` |
-| `AcViewerCategoryCell` | 3 | 0 | `52` |
-| `CJSONDeserializer` | 3 | 0 | `4` |
-| `CSerializedJSONData` | 3 | 1 | `8` |
-| `CheckerMusicCell` | 3 | 10 | `92` |
 | `FreeRequestListCell` | 3 | 11 | `96` |
-| `QuizCell` | 3 | 2 | `60` |
 | `RecommendNetwork` | 3 | 1 | `8` |
-| `neWindow` | 1 | 0 | `144` |
 | `RecommendWebAPI` | 0 | 0 | `4` |
 | `RewardNetworkError` | 0 | 0 | `4` |
 | `RewardNetworkMessage` | 0 | 0 | `4` |
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
-| `ViewUtility` | 0 | 0 | `4` |
 
 ## Partial classes — 0
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
 
-## Complete classes — 95
+## Complete classes — 105
 
 - `AcMusicData`
+- `AcViewerCategoryCell`
 - `AcViewerDetailCell`
 - `AcViewerMusicCell`
 - `AcViewerOptionCell`
@@ -123,9 +114,15 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `AudioManager`
 - `BFCodec`
 - `BirthDayViewController`
+- `CJSONDataSerializer`
+- `CJSONDeserializer`
+- `CJSONScanner`
+- `CJSONSerializer`
+- `CSerializedJSONData`
 - `CharaInfo`
 - `CharaTicketData`
 - `CheckerCategoryCell`
+- `CheckerMusicCell`
 - `CommonAlertView`
 - `CommunicatingView`
 - `CustomAlertView`
@@ -163,6 +160,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `PresentBoxCell`
 - `PurchaseManager`
 - `PurchaseTransactionCache`
+- `QuizCell`
 - `RecommendListCell`
 - `ScoreData`
 - `SettingCustomerTableViewController`
@@ -205,9 +203,11 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `TreasureData`
 - `TwitterUtil`
 - `UserSettingData`
+- `ViewUtility`
 - `YearAndMonthPicker`
 - `neGLView`
 - `neTextureForiOS`
+- `neWindow`
 
 ---
 
@@ -1896,31 +1896,6 @@ Methods **0/10** · ivars 5 · `instanceSize`=`180`
 | `_policyView` | `UINavigationController *` | `0xac` |
 | `_naviCtrl` | `UINavigationController *` | `0xb0` |
 
-### `CJSONScanner` — ❌ missing
-
-Methods **0/10** · ivars 1 · `instanceSize`=`29`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x67760` |
-| `dealloc` | `0x677a0` |
-| `setData:` | `0x677cc` |
-| `scanJSONObject:error:` | `0x678d0` |
-| `scanJSONDictionary:error:` | `0x67a74` |
-| `scanJSONArray:error:` | `0x67f48` |
-| `scanJSONStringConstant:error:` | `0x682c8` |
-| `scanJSONNumberConstant:error:` | `0x68690` |
-| `scanNotQuoteCharactersIntoString:` | `0x68734` |
-| `strictEscapeCodes` | `0x687e0` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `strictEscapeCodes` | `BOOL` | `0x1c` |
-
 ### `CheckerMusicViewController` — ❌ missing
 
 Methods **0/10** · ivars 1 · `instanceSize`=`168`
@@ -2265,21 +2240,6 @@ Methods **0/7** · ivars 4 · `instanceSize`=`32`
 | `m_SubTitle` | `NSString *` | `0x18` |
 | `m_ModelName` | `NSString *` | `0x1c` |
 
-### `CJSONDataSerializer` — ❌ missing
-
-Methods **0/6** · ivars 0 · `instanceSize`=`4`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `serializeObject:` | `0x66e00` |
-| `serializeNull:` | `0x6704c` |
-| `serializeNumber:` | `0x6705c` |
-| `serializeString:` | `0x670cc` |
-| `serializeArray:` | `0x672cc` |
-| `serializeDictionary:` | `0x673d0` |
-
 ### `RecommendWebViewController` — ❌ missing
 
 Methods **0/6** · ivars 0 · `instanceSize`=`153`
@@ -2315,26 +2275,6 @@ Methods **0/6** · ivars 1 · `instanceSize`=`52`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `_indicator` | `UIActivityIndicatorView *` | `0x30` |
-
-### `CJSONSerializer` — ❌ missing
-
-Methods **0/5** · ivars 1 · `instanceSize`=`8`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x6a2d8` |
-| `dealloc` | `0x6a33c` |
-| `serializeObject:` | `0x6a38c` |
-| `serializeArray:` | `0x6a3f4` |
-| `serializeDictionary:` | `0x6a45c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `serializer` | `CJSONDataSerializer *` | `0x4` |
 
 ### `MyInviteCodeViewController` — ❌ missing
 
@@ -2387,75 +2327,6 @@ Methods **0/4** · ivars 1 · `instanceSize`=`8`
 | --- | --- | ---: |
 | `_pasteBoard` | `RewardNetworkPasteBoard *` | `0x4` |
 
-### `AcViewerCategoryCell` — ❌ missing
-
-Methods **0/3** · ivars 0 · `instanceSize`=`52`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:reuseIdentifier:` | `0x1a804` |
-| `dealloc` | `0x1a84c` |
-| `setData:` | `0x1a878` |
-
-### `CJSONDeserializer` — ❌ missing
-
-Methods **0/3** · ivars 0 · `instanceSize`=`4`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `deserialize:error:` | `0x67588` |
-| `deserializeAsDictionary:error:` | `0x67628` |
-| `deserializeAsArray:error:` | `0x676c4` |
-
-### `CSerializedJSONData` — ❌ missing
-
-Methods **0/3** · ivars 1 · `instanceSize`=`8`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithData:` | `0x6a4c4` |
-| `dealloc` | `0x6a4f0` |
-| `data` | `0x6a540` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `data` | `NSData *` | `0x4` |
-
-### `CheckerMusicCell` — ❌ missing
-
-Methods **0/3** · ivars 10 · `instanceSize`=`92`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:reuseIdentifier:` | `0xd1d28` |
-| `dealloc` | `0xd1ea0` |
-| `setData:` | `0xd1ecc` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_scoreData` | `ArcadeScoreData *` | `0x34` |
-| `_bgImg` | `UIImageView *` | `0x38` |
-| `_dateLbl` | `UILabel *` | `0x3c` |
-| `_titleLbl` | `UILabel *` | `0x40` |
-| `_genreLbl` | `UILabel *` | `0x44` |
-| `isOS7` | `bool` | `0x48` |
-| `bgX` | `int` | `0x4c` |
-| `dateX` | `int` | `0x50` |
-| `titleX` | `int` | `0x54` |
-| `genreX` | `int` | `0x58` |
-
 ### `FreeRequestListCell` — ❌ missing
 
 Methods **0/3** · ivars 11 · `instanceSize`=`96`
@@ -2484,25 +2355,6 @@ Methods **0/3** · ivars 11 · `instanceSize`=`96`
 | `imgScoreBaseX` | `int` | `0x58` |
 | `imgScoreX` | `int` | `0x5c` |
 
-### `QuizCell` — ❌ missing
-
-Methods **0/3** · ivars 2 · `instanceSize`=`60`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:reuseIdentifier:` | `0xd9bac` |
-| `dealloc` | `0xd9bf4` |
-| `setData:answerId:rightId:selectId:` | `0xd9c20` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_answerId` | `int` | `0x34` |
-| `_answerIdView` | `UIImageView *` | `0x38` |
-
 ### `RecommendNetwork` — ❌ missing
 
 Methods **0/3** · ivars 1 · `instanceSize`=`8`
@@ -2521,16 +2373,6 @@ Methods **0/3** · ivars 1 · `instanceSize`=`8`
 | --- | --- | ---: |
 | `_initializeFlg` | `int` | `0x4` |
 
-### `neWindow` — ❌ missing
-
-Methods **0/1** · ivars 0 · `instanceSize`=`144`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0x28a00` |
-
 ### `RecommendWebAPI` — ❌ missing
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
@@ -2544,10 +2386,6 @@ Methods **0/0** · ivars 0 · `instanceSize`=`4`
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
 ### `RewardNetworkUtilities` — ❌ missing
-
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
-
-### `ViewUtility` — ❌ missing
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
@@ -2576,6 +2414,10 @@ Methods **31/31** · ivars 17 · `instanceSize`=`72`
 | `m_genreNameKana` | `NSString *` | `0x3c` |
 | `m_musicNameInitial` | `NSString *` | `0x40` |
 | `m_genreNameInitial` | `NSString *` | `0x44` |
+
+### `AcViewerCategoryCell` — ✅ complete
+
+Methods **3/3** · ivars 0 · `instanceSize`=`52`
 
 ### `AcViewerDetailCell` — ✅ complete
 
@@ -2735,6 +2577,44 @@ Methods **13/13** · ivars 8 · `instanceSize`=`196`
 | `_subBorderView` | `UIView *` | `0xbc` |
 | `_dummyView` | `UIView *` | `0xc0` |
 
+### `CJSONDataSerializer` — ✅ complete
+
+Methods **6/6** · ivars 0 · `instanceSize`=`4`
+
+### `CJSONDeserializer` — ✅ complete
+
+Methods **3/3** · ivars 0 · `instanceSize`=`4`
+
+### `CJSONScanner` — ✅ complete
+
+Methods **10/10** · ivars 1 · `instanceSize`=`29`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `strictEscapeCodes` | `BOOL` | `0x1c` |
+
+### `CJSONSerializer` — ✅ complete
+
+Methods **5/5** · ivars 1 · `instanceSize`=`8`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `serializer` | `CJSONDataSerializer *` | `0x4` |
+
+### `CSerializedJSONData` — ✅ complete
+
+Methods **3/3** · ivars 1 · `instanceSize`=`8`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `data` | `NSData *` | `0x4` |
+
 ### `CharaInfo` — ✅ complete
 
 Methods **13/13** · ivars 6 · `instanceSize`=`28`
@@ -2769,6 +2649,25 @@ Methods **3/3** · ivars 7 · `instanceSize`=`84`
 | `isPad` | `BOOL` | `0x49` |
 | `offsetXForPad` | `int` | `0x4c` |
 | `imgMusicCntX` | `int` | `0x50` |
+
+### `CheckerMusicCell` — ✅ complete
+
+Methods **3/3** · ivars 10 · `instanceSize`=`92`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_scoreData` | `ArcadeScoreData *` | `0x34` |
+| `_bgImg` | `UIImageView *` | `0x38` |
+| `_dateLbl` | `UILabel *` | `0x3c` |
+| `_titleLbl` | `UILabel *` | `0x40` |
+| `_genreLbl` | `UILabel *` | `0x44` |
+| `isOS7` | `bool` | `0x48` |
+| `bgX` | `int` | `0x4c` |
+| `dateX` | `int` | `0x50` |
+| `titleX` | `int` | `0x54` |
+| `genreX` | `int` | `0x58` |
 
 ### `CommonAlertView` — ✅ complete
 
@@ -3425,6 +3324,17 @@ Methods **8/8** · ivars 5 · `instanceSize`=`24`
 | `m_TransactionDate` | `NSDate *` | `0x10` |
 | `m_DigestString` | `NSString *` | `0x14` |
 
+### `QuizCell` — ✅ complete
+
+Methods **3/3** · ivars 2 · `instanceSize`=`60`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_answerId` | `int` | `0x34` |
+| `_answerIdView` | `UIImageView *` | `0x38` |
+
 ### `RecommendListCell` — ✅ complete
 
 Methods **5/5** · ivars 11 · `instanceSize`=`96`
@@ -4025,6 +3935,10 @@ Methods **6/6** · ivars 2 · `instanceSize`=`172`
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
+### `ViewUtility` — ✅ complete
+
+Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
 ### `YearAndMonthPicker` — ✅ complete
 
 Methods **9/9** · ivars 3 · `instanceSize`=`64`
@@ -4057,6 +3971,10 @@ Methods **15/15** · ivars 8 · `instanceSize`=`84`
 ### `neTextureForiOS` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
+### `neWindow` — ✅ complete
+
+Methods **1/1** · ivars 0 · `instanceSize`=`144`
 
 
 ---

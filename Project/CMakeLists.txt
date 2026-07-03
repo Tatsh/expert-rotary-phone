@@ -80,6 +80,16 @@ target_sources(popnrhythmin PRIVATE
     TouchableTableView.m
     YearAndMonthPicker.m
     main.m
+    AcViewerCategoryCell.mm
+    CJSONDataSerializer.m
+    CJSONDeserializer.m
+    CJSONScanner.m
+    CJSONSerializer.m
+    CSerializedJSONData.m
+    CheckerMusicCell.mm
+    QuizCell.mm
+    ViewUtility.m
+    neWindow.m
     AcViewerDetailCell.h
     AcViewerMusicCell.h
     AcViewerOptionCell.h
@@ -155,6 +165,16 @@ target_sources(popnrhythmin PRIVATE
     TouchableScrollView.h
     TouchableTableView.h
     YearAndMonthPicker.h
+    AcViewerCategoryCell.h
+    CJSONDataSerializer.h
+    CJSONDeserializer.h
+    CJSONScanner.h
+    CJSONSerializer.h
+    CSerializedJSONData.h
+    CheckerMusicCell.h
+    QuizCell.h
+    ViewUtility.h
+    neWindow.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)
