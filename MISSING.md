@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 22 |
-| Partial (file exists, methods missing) | 68 |
-| Fully missing (no source file) | 83 |
-| **Missing methods** | **1707** |
+| Complete | 28 |
+| Partial (file exists, methods missing) | 67 |
+| Fully missing (no source file) | 78 |
+| **Missing methods** | **1672** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 83
+## Fully missing classes — 78
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -66,7 +66,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `SettingTopViewController` | 14 | 2 | `168` |
 | `RewardNetwork` | 13 | 2 | `12` |
 | `InputKidViewController` | 12 | 3 | `176` |
-| `TouchRangeViewCtrl` | 12 | 6 | `192` |
 | `RandomLoginBonusView` | 11 | 9 | `104` |
 | `StoreDialogView` | 11 | 5 | `72` |
 | `AcViewerHiSpeedViewController` | 10 | 0 | `162` |
@@ -78,7 +77,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `AcViewerHidSudViewController` | 9 | 0 | `162` |
 | `AcViewerPopKunViewController` | 9 | 0 | `162` |
 | `AcViewerRanMirViewController` | 9 | 0 | `162` |
-| `CustomSplitViewController` | 9 | 3 | `176` |
 | `DevDataDownloader` | 9 | 6 | `25` |
 | `LoginBonusView` | 9 | 3 | `61` |
 | `RecommendAdId` | 9 | 1 | `8` |
@@ -88,7 +86,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `CheckerDetail` | 7 | 15 | `368` |
 | `DownloadImageView` | 7 | 3 | `68` |
 | `RewardNetworkIndicator` | 7 | 1 | `52` |
-| `TouchRangeView` | 7 | 3 | `61` |
 | `CJSONDataSerializer` | 6 | 0 | `4` |
 | `RecommendWebViewController` | 6 | 0 | `153` |
 | `CJSONSerializer` | 5 | 1 | `8` |
@@ -102,8 +99,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `FreeRequestListCell` | 3 | 11 | `96` |
 | `QuizCell` | 3 | 2 | `60` |
 | `RecommendNetwork` | 3 | 1 | `8` |
-| `TouchableTableView` | 3 | 0 | `56` |
-| `TouchableScrollView` | 2 | 0 | `56` |
 | `neWindow` | 1 | 0 | `144` |
 | `RecommendWebAPI` | 0 | 0 | `4` |
 | `RewardNetworkError` | 0 | 0 | `4` |
@@ -111,7 +106,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 68
+## Partial classes — 67
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
@@ -170,7 +165,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `AcViewerOptionCell` | 1 | 3 | 2 |
 | `BFCodec` | 4 | 6 | 2 |
 | `CheckerCategoryCell` | 1 | 3 | 2 |
-| `CustomAlertView` | 16 | 18 | 2 |
 | `CustomTextView` | 2 | 4 | 2 |
 | `FriendScoreTableCell` | 1 | 3 | 2 |
 | `MapListCell` | 1 | 3 | 2 |
@@ -184,10 +178,12 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `FriendListCell` | 2 | 3 | 1 |
 | `SettingOtherTableViewController` | 23 | 24 | 1 |
 
-## Complete classes — 22
+## Complete classes — 28
 
 - `ArcadeScoreData`
 - `CharaTicketData`
+- `CustomAlertView`
+- `CustomSplitViewController`
 - `DelayImageView`
 - `DownloadProgresView`
 - `FriendListDetail`
@@ -205,6 +201,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `SettingHowtoTableViewController`
 - `SoundSettingView`
 - `StoreUtil`
+- `TouchRangeView`
+- `TouchRangeViewCtrl`
+- `TouchableScrollView`
+- `TouchableTableView`
 - `TreasureData`
 - `UserSettingData`
 - `neTextureForiOS`
@@ -1795,38 +1795,6 @@ Methods **0/12** · ivars 3 · `instanceSize`=`176`
 | `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
 | `_downloader` | `Downloader *` | `0xac` |
 
-### `TouchRangeViewCtrl` — ❌ missing
-
-Methods **0/12** · ivars 6 · `instanceSize`=`192`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `viewDidLoad` | `0x8a360` |
-| `didReceiveMemoryWarning` | `0x8a9d0` |
-| `viewWillDisappear:` | `0x8a9fc` |
-| `sliderValChanged:` | `0x8aa9c` |
-| `touchedResetButton:` | `0x8aad0` |
-| `isEnablePoint:` | `0x8ab04` |
-| `touchesBegan:withEvent:` | `0x8abd0` |
-| `touchesMoved:withEvent:` | `0x8ad0c` |
-| `touchesEnded:withEvent:` | `0x8af28` |
-| `touchesCancelled:withEvent:` | `0x8b15c` |
-| `backButtonFunc` | `0x8b16c` |
-| `.cxx_construct` | `0x8b208` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_infoView` | `UIImageView *` | `0xa4` |
-| `_radiusSlider` | `UISlider *` | `0xa8` |
-| `_resetButton` | `UIButton *` | `0xac` |
-| `_toucheRangeView` | `TouchRangeView *` | `0xb0` |
-| `_touchedPoint` | `struct CGPoint` | `0xb4` |
-| `_radius` | `float` | `0xbc` |
-
 ### `RandomLoginBonusView` — ❌ missing
 
 Methods **0/11** · ivars 9 · `instanceSize`=`104`
@@ -2099,32 +2067,6 @@ Methods **0/9** · ivars 0 · `instanceSize`=`162`
 | `tableView:didSelectRowAtIndexPath:` | `0xa7668` |
 | `touchedBackButton:` | `0xa7738` |
 
-### `CustomSplitViewController` — ❌ missing
-
-Methods **0/9** · ivars 3 · `instanceSize`=`176`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:leftViewWidth:leftViewController:rightView:` | `0x5dbc0` |
-| `initWithLeftViewWidth:leftViewController:rightView:` | `0x5dde0` |
-| `dealloc` | `0x5de28` |
-| `viewDidLoad` | `0x5dea0` |
-| `didReceiveMemoryWarning` | `0x5decc` |
-| `leftViewCtrl` | `0x5def8` |
-| `setLeftViewCtrl:` | `0x5df0c` |
-| `rightViewCtrl` | `0x5df24` |
-| `setRightViewCtrl:` | `0x5df38` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_leftViewCtrl` | `UIViewController *` | `0xa4` |
-| `m_rightViewCtrl` | `UIViewController *` | `0xa8` |
-| `m_leftViewWidth` | `int` | `0xac` |
-
 ### `DevDataDownloader` — ❌ missing
 
 Methods **0/9** · ivars 6 · `instanceSize`=`25`
@@ -2358,30 +2300,6 @@ Methods **0/7** · ivars 1 · `instanceSize`=`52`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `_indicator` | `UIActivityIndicatorView *` | `0x30` |
-
-### `TouchRangeView` — ❌ missing
-
-Methods **0/7** · ivars 3 · `instanceSize`=`61`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFilename:touched:` | `0x8b20c` |
-| `dealloc` | `0x8b2c0` |
-| `drawRect:` | `0x8b324` |
-| `getImageWidth` | `0x8b364` |
-| `getImageHeight` | `0x8b3a4` |
-| `isTouched` | `0x8b3e4` |
-| `setIsTouched:` | `0x8b3fc` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_untouchedPopkun` | `UIImage *` | `0x34` |
-| `_touchedPopkun` | `UIImage *` | `0x38` |
-| `_isTouched` | `BOOL` | `0x3c` |
 
 ### `CJSONDataSerializer` — ❌ missing
 
@@ -2618,29 +2536,6 @@ Methods **0/3** · ivars 1 · `instanceSize`=`8`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `_initializeFlg` | `int` | `0x4` |
-
-### `TouchableTableView` — ❌ missing
-
-Methods **0/3** · ivars 0 · `instanceSize`=`56`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0xe96ec` |
-| `dealloc` | `0xe9724` |
-| `touchesBegan:withEvent:` | `0xe9750` |
-
-### `TouchableScrollView` — ❌ missing
-
-Methods **0/2** · ivars 0 · `instanceSize`=`56`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0xe30dc` |
-| `touchesBegan:withEvent:` | `0xe3114` |
 
 ### `neWindow` — ❌ missing
 
@@ -4686,28 +4581,6 @@ Methods **1/3** · ivars 7 · `instanceSize`=`84`
 | `offsetXForPad` | `int` | `0x4c` |
 | `imgMusicCntX` | `int` | `0x50` |
 
-### `CustomAlertView` — 🟡 partial
-
-Methods **16/18** · ivars 6 · `instanceSize`=`80`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `delegate` | `0x27b8c` |
-| `setDelegate:` | `0x27b9c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `mDelegate` | `<CustomAlertViewDelegate> *` | `0x38` |
-| `mBgImageView` | `UIView *` | `0x3c` |
-| `_title` | `UILabel *` | `0x40` |
-| `_text` | `CustomTextView *` | `0x44` |
-| `m_OpenAnimeType` | `int` | `0x48` |
-| `m_CloseAnimeType` | `int` | `0x4c` |
-
 ### `CustomTextView` — 🟡 partial
 
 Methods **2/4** · ivars 0 · `instanceSize`=`56`
@@ -4963,6 +4836,33 @@ Methods **1/1** · ivars 0 · `instanceSize`=`48`
 
 Methods **0/0** · ivars 0 · `instanceSize`=`48`
 
+### `CustomAlertView` — ✅ complete
+
+Methods **18/18** · ivars 6 · `instanceSize`=`80`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `mDelegate` | `<CustomAlertViewDelegate> *` | `0x38` |
+| `mBgImageView` | `UIView *` | `0x3c` |
+| `_title` | `UILabel *` | `0x40` |
+| `_text` | `CustomTextView *` | `0x44` |
+| `m_OpenAnimeType` | `int` | `0x48` |
+| `m_CloseAnimeType` | `int` | `0x4c` |
+
+### `CustomSplitViewController` — ✅ complete
+
+Methods **9/9** · ivars 3 · `instanceSize`=`176`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_leftViewCtrl` | `UIViewController *` | `0xa4` |
+| `m_rightViewCtrl` | `UIViewController *` | `0xa8` |
+| `m_leftViewWidth` | `int` | `0xac` |
+
 ### `DelayImageView` — ✅ complete
 
 Methods **3/3** · ivars 1 · `instanceSize`=`56`
@@ -5153,6 +5053,41 @@ Methods **22/22** · ivars 8 · `instanceSize`=`196`
 ### `StoreUtil` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
+### `TouchRangeView` — ✅ complete
+
+Methods **7/7** · ivars 3 · `instanceSize`=`61`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_untouchedPopkun` | `UIImage *` | `0x34` |
+| `_touchedPopkun` | `UIImage *` | `0x38` |
+| `_isTouched` | `BOOL` | `0x3c` |
+
+### `TouchRangeViewCtrl` — ✅ complete
+
+Methods **12/12** · ivars 6 · `instanceSize`=`192`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_infoView` | `UIImageView *` | `0xa4` |
+| `_radiusSlider` | `UISlider *` | `0xa8` |
+| `_resetButton` | `UIButton *` | `0xac` |
+| `_toucheRangeView` | `TouchRangeView *` | `0xb0` |
+| `_touchedPoint` | `struct CGPoint` | `0xb4` |
+| `_radius` | `float` | `0xbc` |
+
+### `TouchableScrollView` — ✅ complete
+
+Methods **2/2** · ivars 0 · `instanceSize`=`56`
+
+### `TouchableTableView` — ✅ complete
+
+Methods **3/3** · ivars 0 · `instanceSize`=`56`
 
 ### `TreasureData` — ✅ complete
 

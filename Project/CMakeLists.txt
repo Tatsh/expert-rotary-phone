@@ -1,10 +1,7 @@
 # CMakeLists.txt — Project
 #
-# Adds this directory's translation units (and headers, for Xcode project navigation +
-# its dep tracking) to the single app target defined in the root CMakeLists, and puts the
-# directory on the include path. Bare filenames — this CMakeLists is co-located with them.
-# (Make/Ninja track header deps automatically via compiler depfiles; the headers are listed
-# for the Xcode generator's benefit.)
+# Adds this directory's translation units (and headers, for Xcode) to the single app target
+# defined in the root CMakeLists, and puts the directory on the include path. Bare filenames.
 
 target_sources(popnrhythmin PRIVATE
     AcViewerDetailCell.m
@@ -16,10 +13,14 @@ target_sources(popnrhythmin PRIVATE
     BirthDayViewController.mm
     CheckerCategoryCell.m
     CommonAlertView.mm
+    CommunicatingView.mm
     CustomAlertView.mm
     CustomButton.m
+    CustomSplitViewController.m
     CustomTextView.m
+    DelayImageView.m
     DownloadMain.m
+    DownloadProgresView.m
     Downloader.m
     FriendListCell.mm
     FriendListDetail.mm
@@ -30,12 +31,15 @@ target_sources(popnrhythmin PRIVATE
     FriendReplyViewController.mm
     FriendRequestCell.m
     FriendScoreTableCell.m
+    GameEffectView.mm
     HowToView.mm
     HowToViewCtrl.m
     ImageDownloader.m
     MainViewController.mm
     MapListCell.m
     OverScoreLogCell.m
+    PolicyView.mm
+    PopkunSizeViewCtrl.mm
     PresentBoxCell.m
     RecommendListCell.m
     SettingCustomerTableViewController.mm
@@ -44,6 +48,7 @@ target_sources(popnrhythmin PRIVATE
     SettingOtherTableViewController.mm
     SettingTableViewController.m
     SortCell.m
+    SoundSettingView.mm
     StoreAcMusicInfo.m
     StoreAcvManageViewController.mm
     StoreDetailCopyrightCell.m
@@ -69,6 +74,10 @@ target_sources(popnrhythmin PRIVATE
     StoreUtil.m
     StoreViewController.mm
     SubMapListCell.m
+    TouchRangeView.m
+    TouchRangeViewCtrl.mm
+    TouchableScrollView.m
+    TouchableTableView.m
     YearAndMonthPicker.m
     main.m
     AcViewerDetailCell.h
@@ -80,10 +89,14 @@ target_sources(popnrhythmin PRIVATE
     BirthDayViewController.h
     CheckerCategoryCell.h
     CommonAlertView.h
+    CommunicatingView.h
     CustomAlertView.h
     CustomButton.h
+    CustomSplitViewController.h
     CustomTextView.h
+    DelayImageView.h
     DownloadMain.h
+    DownloadProgresView.h
     Downloader.h
     FriendListCell.h
     FriendListDetail.h
@@ -94,12 +107,15 @@ target_sources(popnrhythmin PRIVATE
     FriendReplyViewController.h
     FriendRequestCell.h
     FriendScoreTableCell.h
+    GameEffectView.h
     HowToView.h
     HowToViewCtrl.h
     ImageDownloader.h
     MainViewController.h
     MapListCell.h
     OverScoreLogCell.h
+    PolicyView.h
+    PopkunSizeViewCtrl.h
     PresentBoxCell.h
     RecommendListCell.h
     SettingCustomerTableViewController.h
@@ -108,6 +124,7 @@ target_sources(popnrhythmin PRIVATE
     SettingOtherTableViewController.h
     SettingTableViewController.h
     SortCell.h
+    SoundSettingView.h
     StoreAcMusicInfo.h
     StoreAcvManageViewController.h
     StoreDetailCopyrightCell.h
@@ -133,6 +150,10 @@ target_sources(popnrhythmin PRIVATE
     StoreUtil.h
     StoreViewController.h
     SubMapListCell.h
+    TouchRangeView.h
+    TouchRangeViewCtrl.h
+    TouchableScrollView.h
+    TouchableTableView.h
     YearAndMonthPicker.h
 )
 

@@ -41,6 +41,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
 
 @interface CustomAlertView : UIImageView
 
+// Synthesized accessors: delegate @ 0x27b8c, setDelegate: @ 0x27b9c.
 @property (nonatomic, weak) id<CustomAlertViewDelegate> delegate;
 
 // Installs into the root scene view (neSceneManager::rootViewController().view),
