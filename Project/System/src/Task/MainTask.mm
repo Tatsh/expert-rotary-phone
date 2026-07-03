@@ -649,12 +649,13 @@ void MainTask::rebuildList() {
             unsigned musicId = (unsigned)[song MusicID];
             bool hasScore = false;
             for (int diff = 0; diff < 3; diff++) {
-                // TODO(dep): fetchScoreDataForMusic (app-event-center score store, @ 0x39xxx)
-                // is not reconstructed yet; it fills a score record for (musicId, diff) and
-                // reports (> 0) whether a record exists. Treat as "no record" until wired.
-                (void)musicId; (void)diff;
-                int recordCount = 0;   // fetchScoreDataForMusic(currentMusicId(), musicId, diff)
-                if (recordCount > 0) {
+                // A song counts as scored if any difficulty has a stored play count (Ghidra
+                // musicSelUpdate @ 0x3835c: `if (0 < outPlayCnt) break;`).
+                int score = 0; short rank = 0; int playCnt = 0;
+                bool fullCombo = false, perfect = false;
+                fetchScoreDataForMusic(&neAppEventCenter::shared(), &score, &rank, &playCnt,
+                                       &fullCombo, &perfect, musicId, diff);
+                if (playCnt > 0) {
                     hasScore = true;
                     break;
                 }
@@ -760,10 +761,15 @@ void MainTask::rebuildList() {
 // cell's detail region (+0x14.. from the cell base).
 void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
     for (int diff = 0; diff < 3; diff++) {
-        // TODO(dep): fetchScoreDataForMusic (app-event-center score store) is not reconstructed
-        // yet; when wired it fills cell.detail's per-difficulty score/medal fields for
-        // (musicId, diff). Left as a documented seam.
-        (void)cell; (void)musicId; (void)diff;
+        // Ghidra musicSelUpdate @ 0x3835c writes each difficulty's fetchScoreDataForMusic result
+        // straight into the cell's score-row block (score/rank/playCnt/fullCombo/perfect).
+        bool fullCombo = false, perfect = false;
+        fetchScoreDataForMusic(&neAppEventCenter::shared(),
+                               &cell.scores.score[diff], &cell.scores.rank[diff],
+                               &cell.scores.playCnt[diff], &fullCombo, &perfect,
+                               musicId, diff);
+        cell.scores.fullCombo[diff] = fullCombo ? 1 : 0;
+        cell.scores.perfect[diff] = perfect ? 1 : 0;
     }
 }
 

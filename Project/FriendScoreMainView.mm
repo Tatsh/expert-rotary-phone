@@ -594,15 +594,25 @@ static int scoreToRank(int score) {
             }
         }
 
-        // The local player's own best per difficulty.
-        // TODO(dep): the binary reads the local best from the app-event-center score store
-        // (fetchScoreDataForMusic) and persists any server "Me" high score back into it
-        // (updateHighScore / saveScoreData). That store is not yet reconstructed; the row is
-        // populated here from the server "Me" record only (see honesty note).
+        // The local player's own best per difficulty. The binary first reads it from the local
+        // score store (Ghidra: the fetchScoreDataForMusic N/H/EX loop at the head of
+        // downloaderFinished @ 0xac7f0), then reconciles it with the server "Me" record, showing
+        // the better of the two.
         int myScore[3]  = { 0, 0, 0 };
         short myRank[3] = { 0, 0, 0 };
         BOOL myPerfect[3]   = { NO, NO, NO };
         BOOL myFullCombo[3] = { NO, NO, NO };
+        for (int d = 0; d < 3; d++) {
+            int playCnt = 0;
+            bool fc = false, pf = false;
+            fetchScoreDataForMusic(&neAppEventCenter::shared(), &myScore[d], &myRank[d], &playCnt,
+                                   &fc, &pf, musicId, d);
+            myFullCombo[d] = fc ? YES : NO;
+            myPerfect[d]   = pf ? YES : NO;
+        }
+        // TODO(dep): the binary also persists a higher server "Me" score BACK into the local store
+        // here (updateHighScore / saveScoreData, gated on the g_wResultSheet / g_wResultClearRank
+        // result-screen globals that are not yet reconstructed); that write-back is left a seam.
         if (me != nil) {
             NSNumber *mN  = [me objectForKey:@"ScoreN"];
             NSNumber *mH  = [me objectForKey:@"ScoreH"];
@@ -612,10 +622,16 @@ static int scoreToRank(int score) {
                 NSNumber *meScore[3] = { mN, mH, mEx };
                 int flag = [mFlg intValue];
                 for (int d = 0; d < 3; d++) {
-                    myScore[d]      = [meScore[d] intValue];
-                    myRank[d]       = (short)scoreToRank(myScore[d]);
-                    myFullCombo[d]  = (flag & (1 << d)) != 0;
-                    myPerfect[d]    = (flag & (1 << (d + 3))) != 0;
+                    int srvScore = [meScore[d] intValue];
+                    if (srvScore > myScore[d]) {
+                        myScore[d] = srvScore;   // display the better of local vs. server
+                    }
+                    short srvRank = (short)scoreToRank(srvScore);
+                    if (srvRank < myRank[d]) {
+                        myRank[d] = srvRank;
+                    }
+                    if ((flag & (1 << d)) != 0)       { myFullCombo[d] = YES; }
+                    if ((flag & (1 << (d + 3))) != 0) { myPerfect[d]   = YES; }
                 }
             }
         }

@@ -23,8 +23,59 @@
 // translation unit is .mm). Using the true types instead of opaque void* keeps the bridge
 // signatures honest.
 @class UIViewController;
+@class ScoreData;   // Game/Data/Save/ScoreData.h (Core Data entity, per-song play records)
 class MainTask;     // System/src/Task/MainTask.h   (: C_TASK)
 class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
+
+// The just-finished play's result record — the transient block the app-event-center singleton
+// fills and the score store persists. This IS the leading layout of neAppEventCenter (the
+// binary's free score-store functions take the singleton pointer, DAT_00187bb8, as a
+// `unsigned int *`), named here so the store touches real fields instead of raw byte offsets.
+// The COOL/GREAT/GOOD/BAD tallies at +0x08..+0x0e mirror neAppEventCenter::coolCount()..badCount().
+struct PlayScore {
+    unsigned      musicId;          // +0x00 music id being scored (== lastMusic)
+    int           difficulty;       // +0x04 sheet index (0 N / 1 H / 2 EX) (== lastSheet)
+    short         coolCount;        // +0x08 COOL tally
+    short         greatCount;       // +0x0a GREAT tally
+    short         goodCount;        // +0x0c GOOD tally  (a "miss/near" counter)
+    short         badCount;         // +0x0e BAD  tally  (a "miss/near" counter)
+    int           score;            // +0x10 final score
+    short         rank;             // +0x14 rank (0 best .. 6 fail); written by the play task
+    short         _pad16;           // +0x16
+    short         maxCombo;         // +0x18 max combo; written by the play task
+    short         _pad1a;           // +0x1a
+    unsigned char fullCombo;        // +0x1c full-combo flag
+    unsigned char _pad1d[0x15];     // +0x1d..+0x31 (transient state / _endDate region)
+    unsigned char isNewHighScore;   // +0x32 set when this play beat the stored score
+    unsigned char _pad33[0x15];     // +0x33..+0x47 (pad to the 0x48-byte singleton size)
+};
+
+// ===== Score store (Core Data ScoreData entity) — free functions the binary calls directly on
+// the app-event-center singleton. Reconstructed in neEngineBridge.mm. =====
+
+// Read the player's stored local best for (musicId, difficulty) out of the ScoreData entity.
+// `center` is the app-event-center pointer the binary passes as the first argument; it is
+// vestigial (unused). Out-params may be null (guarded). Ghidra: fetchScoreDataForMusic @ 0x293c4.
+void fetchScoreDataForMusic(void *center, int *outScore, short *outRank, int *outPlayCnt,
+                            bool *outFullCombo, bool *outPerfect,
+                            unsigned musicId, int difficulty);
+
+// Read the score/rank/playCnt/fullCombo/perfect fields for `difficulty` (0 N / 1 H / 2 EX) out
+// of a fetched ScoreData record. `rec` and `recDup` are the same object (the binary passes it
+// twice). Ghidra: readScoreDataFields @ 0x29438.
+void readScoreDataFields(ScoreData *rec, int *outScore, short *outRank, int *outPlayCnt,
+                         bool *outFullCombo, bool *outPerfect, ScoreData *recDup, int difficulty);
+
+// Commit a finished play (`s`) into the local Core Data ScoreData store: full-combo / perfect /
+// rank / score / play-count for its difficulty, re-hash the checksum, stamp the play date, save.
+// Ghidra: saveScoreData @ 0x28ca0.
+void saveScoreData(PlayScore *s);
+
+// Pre-save "did we beat the record" check: read the current stored best for `s`, set
+// s->isNewHighScore (return YES) when the stored score is lower than `newScore`, then write the
+// passed tallies/score/full-combo into `s`. Ghidra: updateHighScore @ 0x2930c.
+BOOL updateHighScore(PlayScore *s, unsigned newScore, short cool, short great,
+                     short good, short bad, char fullCombo);
 
 // App-wide event / notification center (guarded singleton @ DAT_00187bb8).
 // Touched at launch, flushed on background/terminate, poked on push.
@@ -95,10 +146,12 @@ public:
 
     // Record a finished play's result into the event center (so the result screen can
     // read it back): looks up the stored high score for the current music/sheet, sets
-    // the "new record" flag when `score` beats it, and stashes the COOL/GREAT tallies
-    // and the score. Returns true when a new record was set. The play task additionally
-    // writes the rank (+0x14) and max combo (+0x18) after this call. Ghidra: FUN_0002930c.
-    bool recordPlayResult(int score, int cool, int great);
+    // the "new record" flag when `score` beats it, and stashes the COOL/GREAT/GOOD/BAD
+    // tallies, the score and the full-combo flag. Returns true when a new record was set.
+    // The play task additionally writes the rank (+0x14) and max combo (+0x18) after this
+    // call. A thin wrapper over updateHighScore (Ghidra: FUN_0002930c) on this singleton.
+    bool recordPlayResult(unsigned score, short cool, short great, short good, short bad,
+                          bool fullCombo);
 
     // First two fields of the singleton (DAT_00187bb8 / DAT_00187bbc): the last
     // played music id and sheet (difficulty), persisted via UserSettingData. (The
@@ -127,13 +180,13 @@ public:
     bool  isCleared()  const { return raw<unsigned char>(0x1c) != 0; } // DAT_00187bd4
     bool  isNewRecord()const { return raw<unsigned char>(0x32) != 0; } // DAT_00187bea
 
-    // Read the player's stored local best for this play's music/sheet (out-params
-    // may be null). Ghidra: FUN_000293c4 (-> ScoreData getScoreData... FUN_00029438).
+    // Read the player's stored local best for this play's music/sheet (out-params may be null).
+    // Thin wrapper over the free fetchScoreDataForMusic (below) on this singleton.
     void readStoredResult(int *outScore, short *outRank, int *outPlayCnt,
-                          bool *outFullCombo, bool *outPerfect);   // @ 0x293c4
+                          bool *outFullCombo, bool *outPerfect);
 
     // Commit this play's result into the local Core Data ScoreData store
-    // (setFullCombo/Perfect/Rank/Score/PlayCnt + save). Ghidra: FUN_00028ca0 @ 0x28ca0.
+    // (setFullCombo/Perfect/Rank/Score/PlayCnt + save). Thin wrapper over the free saveScoreData.
     void commitResultToScoreData();
 
 private:

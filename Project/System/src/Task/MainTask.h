@@ -108,7 +108,21 @@ private:
         __unsafe_unretained id imageData;// +0x08 bundled PNG data (released after upload)
         neTextureForiOS  *texture;       // +0x0c uploaded jacket texture
         __unsafe_unretained id name;     // +0x10 truncated song-name string (jacket cells)
-        uint8_t           detail[0x24];  // +0x14..0x38 per-cell score rows / widget state (seam)
+        // +0x14..0x38 per-cell detail. For jacket cells this is the three-difficulty score-row
+        // block loadCellScoreRows fills (musicSelUpdate @ 0x3835c writes each difficulty's
+        // fetchScoreDataForMusic result into these exact sub-offsets); for the button/UI widgets
+        // (indices >= 0x14) the same 0x24 bytes hold widget rect/animation/select state (a seam).
+        struct ScoreRows {               // 0x24 bytes
+            int     score[3];            // +0x00 per-difficulty best score  (N / H / EX)
+            int     playCnt[3];          // +0x0c per-difficulty play count
+            short   rank[3];             // +0x18 per-difficulty rank
+            uint8_t fullCombo[3];        // +0x1e FC medal
+            uint8_t perfect[3];          // +0x21 PERFECT medal
+        };
+        union {
+            uint8_t   detail[0x24];      // widget state (button/UI widgets)
+            ScoreRows scores;            // jacket-cell score rows
+        };
     };
 
     // ---- packed per-song select state (documented seam; see header note) ----

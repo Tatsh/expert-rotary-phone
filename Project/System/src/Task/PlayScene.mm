@@ -293,16 +293,21 @@ void PlayTaskGotoResult(void *playData) {
     // Record the result into the event center for the result screen to read back —
     // unless the play was aborted (+0x9e8 set, e.g. quit from the pause menu).
     if (pdByte(playData, 0x9e8) == 0) {
-        int cool = 0, great = 0;
+        int cool = 0, great = 0, good = 0, bad = 0;
         for (int k = 0; k < kNoteKindCount; ++k) {
             cool  += nm.judgeCount(k, NOTE_JUDGE_COOL);   // DAT_00179014 columns
             great += nm.judgeCount(k, NOTE_JUDGE_GREAT);  // DAT_00179010 columns
+            good  += nm.judgeCount(k, NOTE_JUDGE_GOOD);   // GOOD tally
+            bad   += nm.judgeCount(k, NOTE_JUDGE_BAD);    // BAD tally
         }
-        const int score = PlayCurrentScore();   // Ghidra: FUN_0002ff7c
-        const int rank  = scoreToRank(score);    // Ghidra: FUN_00028a40
+        const int  score     = PlayCurrentScore();   // Ghidra: FUN_0002ff7c
+        const int  rank      = scoreToRank(score);    // Ghidra: FUN_00028a40
+        const bool fullCombo = nm.maxCombo() >= nm.totalNoteCount();
 
         neAppEventCenter *event = reinterpret_cast<neAppEventCenter *>(pdPtr(playData, 0x968));
-        event->recordPlayResult(score, cool, great);      // Ghidra: FUN_0002930c
+        // Ghidra: FUN_0002930c (updateHighScore on the event center).
+        event->recordPlayResult((unsigned)score, (short)cool, (short)great, (short)good,
+                                (short)bad, fullCombo);
         pdInt(event, 0x18)   = nm.maxCombo();             // event +0x18 (DAT_00179004)
         pdShort(event, 0x14) = (short)rank;               // event +0x14
     }

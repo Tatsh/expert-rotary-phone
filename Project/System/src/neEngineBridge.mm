@@ -7,10 +7,14 @@
 //  local statics reproduce the binary's __cxa_guard'd lazy singletons.
 //
 
+#include <cstddef>
 #include <cstring>
 
 #import "AepTexture.h"
+#import "AppDelegate.h"       // [AppDelegate appDelegate] / managedObjectContext (score store)
 #import "AudioManager.h"
+#import "ScoreData+Store.h"  // +[ScoreData getScoreData:inManagedObjectContext:] / hashScore:
+#import "ScoreData.h"        // ScoreData entity score/rank/playCnt/fullCombo/perfect properties
 #import "neEngineBridge.h"
 #import "neGraphics.h"       // findCharIndexForColumn declaration (defined below)
 
@@ -112,6 +116,170 @@ int neAppEventCenter::lastMusic() const { return m_lastMusic; }
 void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }
 int neAppEventCenter::lastSheet() const { return m_lastSheet; }
 void neAppEventCenter::setLastSheet(int sheet) { m_lastSheet = sheet; }
+
+#pragma mark - Score store (Core Data ScoreData entity)
+
+// PlayScore is the named view of this singleton's result region; the reinterpret_casts in the
+// three member wrappers below rely on it overlaying the singleton exactly.
+static_assert(sizeof(PlayScore) == 0x48, "PlayScore must overlay the neAppEventCenter singleton");
+static_assert(offsetof(PlayScore, coolCount) == 0x08, "PlayScore.coolCount @ +0x08");
+static_assert(offsetof(PlayScore, score) == 0x10, "PlayScore.score @ +0x10");
+static_assert(offsetof(PlayScore, fullCombo) == 0x1c, "PlayScore.fullCombo @ +0x1c");
+static_assert(offsetof(PlayScore, isNewHighScore) == 0x32, "PlayScore.isNewHighScore @ +0x32");
+
+// @ 0x29438 — read one difficulty's columns out of a fetched ScoreData record. `rec` is unused
+// (the binary reads everything from `recDup`, the same object); the null guard mirrors the
+// binary (only the score/rank/playCnt out-params are checked).
+void readScoreDataFields(ScoreData *rec, int *outScore, short *outRank, int *outPlayCnt,
+                         bool *outFullCombo, bool *outPerfect, ScoreData *recDup, int difficulty) {
+    (void)rec;
+    if (outScore == nullptr || outRank == nullptr || outPlayCnt == nullptr) {
+        return;
+    }
+    *outScore = 0;
+    NSNumber *score, *rank, *playCnt, *fullCombo, *perfect;
+    switch (difficulty) {
+    case 0:
+        score = recDup.scoreN;  rank = recDup.rankN;  playCnt = recDup.playCntN;
+        fullCombo = recDup.fullComboN;  perfect = recDup.perfectN;
+        break;
+    case 1:
+        score = recDup.scoreH;  rank = recDup.rankH;  playCnt = recDup.playCntH;
+        fullCombo = recDup.fullComboH;  perfect = recDup.perfectH;
+        break;
+    case 2:
+        score = recDup.scoreEx; rank = recDup.rankEx; playCnt = recDup.playCntEx;
+        fullCombo = recDup.fullComboEx; perfect = recDup.perfectEx;
+        break;
+    default:
+        return;   // unknown difficulty: leave *outScore == 0, others untouched
+    }
+    *outScore     = [score intValue];
+    *outRank      = (short)[rank intValue];
+    *outPlayCnt   = [playCnt intValue];
+    *outFullCombo = [fullCombo boolValue];
+    *outPerfect   = [perfect boolValue];
+}
+
+// @ 0x293c4 — fetch the ScoreData record for `musicId` and hand it to readScoreDataFields.
+// `center` is the app-event-center pointer the binary passes as arg 0; it is vestigial (unused).
+void fetchScoreDataForMusic(void *center, int *outScore, short *outRank, int *outPlayCnt,
+                            bool *outFullCombo, bool *outPerfect,
+                            unsigned musicId, int difficulty) {
+    (void)center;
+    NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
+    ScoreData *rec = [ScoreData getScoreData:(int)musicId inManagedObjectContext:ctx];
+    readScoreDataFields(rec, outScore, outRank, outPlayCnt, outFullCombo, outPerfect, rec, difficulty);
+}
+
+// @ 0x28ca0 — persist a finished play into the ScoreData store for its difficulty.
+void saveScoreData(PlayScore *s) {
+    NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
+    [ctx reset];
+    ScoreData *rec = [ScoreData getScoreData:(int)s->musicId inManagedObjectContext:ctx];
+    const int diff = s->difficulty;
+
+    // Full combo -> set this difficulty's FC medal; a spotless sheet (no GOOD and no BAD) also
+    // sets the PERFECT medal.
+    if (s->fullCombo) {
+        switch (diff) {
+        case 0: rec.fullComboN = @YES; break;
+        case 1: rec.fullComboH = @YES; break;
+        case 2: rec.fullComboEx = @YES; break;
+        }
+        if (s->badCount == 0 && s->goodCount == 0) {
+            switch (diff) {
+            case 0: rec.perfectN = @YES; break;
+            case 1: rec.perfectH = @YES; break;
+            case 2: rec.perfectEx = @YES; break;
+            }
+        }
+    }
+
+    // Better rank (lower is better) -> store it. A stored rank of -1 means "unset".
+    const int newRank = s->rank;
+    switch (diff) {
+    case 0: { int ex = [rec.rankN intValue];  if (ex == -1 || newRank < ex) rec.rankN = @(newRank); break; }
+    case 1: { int ex = [rec.rankH intValue];  if (ex == -1 || newRank < ex) rec.rankH = @(newRank); break; }
+    case 2: { int ex = [rec.rankEx intValue]; if (ex == -1 || newRank < ex) rec.rankEx = @(newRank); break; }
+    }
+
+    // New high score -> store it and re-hash the tamper checksum.
+    if (s->isNewHighScore) {
+        switch (diff) {
+        case 0: rec.scoreN = @(s->score); break;
+        case 1: rec.scoreH = @(s->score); break;
+        case 2: rec.scoreEx = @(s->score); break;
+        }
+        rec.chksco = [ScoreData hashScore:rec];
+    }
+
+    rec.lastPlayDate = [NSDate date];
+
+    // Bump this difficulty's play count.
+    switch (diff) {
+    case 0: rec.playCntN = @([rec.playCntN intValue] + 1); break;
+    case 1: rec.playCntH = @([rec.playCntH intValue] + 1); break;
+    case 2: rec.playCntEx = @([rec.playCntEx intValue] + 1); break;
+    }
+
+    NSError *err = nil;
+    if (![ctx save:&err]) {
+        // On failure the binary walks the validation sub-errors (NSDetailedErrorsKey). No
+        // user-visible handling beyond the enumeration; the enumeration-mutation / stack-guard
+        // scaffolding around it is compiler glue and is omitted.
+        NSArray *detailed = [[err userInfo] objectForKey:NSDetailedErrorsKey];
+        for (NSError *sub in detailed) {
+            (void)sub;
+        }
+    }
+}
+
+// @ 0x2930c — pre-save "beat the record" check: read the current stored best, flag a new high
+// score, then write the passed play tallies / score / full-combo into the record `s`.
+BOOL updateHighScore(PlayScore *s, unsigned newScore, short cool, short great,
+                     short good, short bad, char fullCombo) {
+    s->isNewHighScore = 0;
+
+    int   curScore = 0;  short curRank = 0;  int curPlayCnt = 0;
+    bool  curFullCombo = false, curPerfect = false;
+    ScoreData *rec = [ScoreData getScoreData:(int)s->musicId
+                      inManagedObjectContext:[[AppDelegate appDelegate] managedObjectContext]];
+    readScoreDataFields(rec, &curScore, &curRank, &curPlayCnt, &curFullCombo, &curPerfect,
+                        rec, s->difficulty);
+
+    const BOOL isNew = (curScore < (int)newScore);
+    s->isNewHighScore = isNew ? 1 : 0;
+
+    s->coolCount  = cool;
+    s->greatCount = great;
+    s->goodCount  = good;
+    s->badCount   = bad;
+    s->score      = (int)newScore;
+    s->fullCombo  = (unsigned char)fullCombo;
+    return isNew;
+}
+
+#pragma mark - neAppEventCenter score-store wrappers
+
+// The three OO faces the ObjC layer calls; each reinterprets the singleton as a PlayScore (they
+// share a layout — see the static_asserts above) and forwards to the free store functions.
+
+void neAppEventCenter::readStoredResult(int *outScore, short *outRank, int *outPlayCnt,
+                                        bool *outFullCombo, bool *outPerfect) {
+    fetchScoreDataForMusic(this, outScore, outRank, outPlayCnt, outFullCombo, outPerfect,
+                           (unsigned)m_lastMusic, m_lastSheet);
+}
+
+void neAppEventCenter::commitResultToScoreData() {
+    saveScoreData(reinterpret_cast<PlayScore *>(this));
+}
+
+bool neAppEventCenter::recordPlayResult(unsigned score, short cool, short great, short good,
+                                        short bad, bool fullCombo) {
+    return updateHighScore(reinterpret_cast<PlayScore *>(this), score, cool, great, good, bad,
+                           fullCombo ? 1 : 0) != NO;
+}
 
 #pragma mark - neSceneManager (guarded singleton @ DAT_00187b74)
 
