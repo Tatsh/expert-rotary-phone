@@ -39,6 +39,7 @@
 + (instancetype)sharedManager;              // Ghidra: @ 0x54450
 
 - (void)start;                              // add self as payment observer @ 0x546c0
+- (void)end;                                // remove self as payment observer @ 0x546f8
 - (void)loadProductList;                    // decrypt "prodlist" @ 0x548d8
 - (void)saveProductList;                    // encrypt + write "prodlist" @ 0x54730
 
@@ -61,6 +62,9 @@
 
 // Queue a purchased/restored transaction for server receipt verification.
 - (BOOL)addPurchaseCheckTransaction:(PurchaseTransactionCache *)cache;  // @ 0x54f6c
+
+// Start an SKProductsRequest for the given identifiers (self is the delegate). @ 0x55170
+- (SKProductsRequest *)startProductRequest:(NSSet<NSString *> *)productIdentifiers;
 
 @property (nonatomic, weak) id<PurchaseManagerDelegate> delegate;
 @property (nonatomic, weak) id<PurchaseManagerMusicDelegate> musicDataDelegate;

@@ -31,6 +31,10 @@
 // sample/link buttons hidden) when info is nil. Ghidra: setInfo: @ 0x51408.
 - (void)setInfo:(StoreMusicInfo *)info;
 
+// Show/hide the arcade-availability badge (shown iff the song exists in the arcade).
+// Ghidra: setIsExistAcv: @ 0x5171c.
+- (void)setIsExistAcv:(BOOL)isExistAcv;
+
 // Reset the sample button to its idle image and stop its spinner. Ghidra: @ 0x51748.
 - (void)sampleStop;
 
@@ -48,8 +52,15 @@
 // -buttonSample / -buttonLink so the parent can wire their taps.
 - (void)setBG:(int)index;
 
-// The iTunes-link button (parent wires its tap to -handleLink:). Ghidra ivar buttonLink.
+// The iTunes-link button (parent wires its tap to -handleLink:). Ghidra: @ 0x51a34.
 - (UIButton *)buttonLink;
+
+// Plain subview accessors the parent reads. Ghidra: artworkView @ 0x519e4,
+// labelName @ 0x519f4, labelArtist @ 0x51a04, labelLevels @ 0x51a14.
+- (StoreImageView *)artworkView;
+- (UILabel *)labelName;
+- (UILabel *)labelArtist;
+- (UILabel *)labelLevels;
 
 @end
 

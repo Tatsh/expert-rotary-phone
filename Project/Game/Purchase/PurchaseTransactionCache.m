@@ -20,4 +20,6 @@
     return self;
 }
 
+// dealloc @ 0x56254 — ARC-omitted (object ivars only).
+
 @end

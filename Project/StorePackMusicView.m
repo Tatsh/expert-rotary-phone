@@ -148,12 +148,36 @@ static UILabel *MakeClearLabel(CGRect frame) {
     [buttonSample setImage:[UIImage imageNamed:@"store_sample_2.png"] forState:UIControlStateNormal];
 }
 
+// Ghidra: setIsExistAcv: @ 0x5171c — toggle the arcade-availability badge: the badge is
+// shown iff the song is playable in the arcade (arcadeViewer.hidden = NO when isExistAcv is
+// YES). Byte-verified: [arcadeViewer setHidden:(isExistAcv == 0)].
+- (void)setIsExistAcv:(BOOL)isExistAcv {
+    arcadeViewer.hidden = (isExistAcv == NO);
+}
+
 // Ghidra: buttonSample @ 0x51a24 — the sample button accessor.
 - (UIButton *)buttonSample {
     return buttonSample;
 }
 
-// The iTunes-link button accessor (parent wires its tap).
+// Plain ivar accessors (parent reads these to configure the row).
+- (StoreImageView *)artworkView {   // @ 0x519e4
+    return artworkView;
+}
+
+- (UILabel *)labelName {   // @ 0x519f4
+    return labelName;
+}
+
+- (UILabel *)labelArtist {   // @ 0x51a04
+    return labelArtist;
+}
+
+- (UILabel *)labelLevels {   // @ 0x51a14
+    return labelLevels;
+}
+
+// The iTunes-link button accessor (parent wires its tap). Ghidra: @ 0x51a34.
 - (UIButton *)buttonLink {
     return buttonLink;
 }
@@ -173,7 +197,8 @@ static UILabel *MakeClearLabel(CGRect frame) {
     m_BG.image = bg;
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// dealloc @ 0x5191c — ARC-omitted (released object ivars only: artworkView, labelName,
+// labelArtist, labelLevels, buttonSample, indicatorSample, buttonLink).
 
 @end
 

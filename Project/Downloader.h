@@ -24,8 +24,9 @@
 
 // Caller-attached context, echoed back to the delegate to correlate a response
 // with its originating request (e.g. PurchaseManager attaches the transaction
-// being verified). Ghidra: addData / setAddData: (backing ivar m_AdditionalData).
-@property (nonatomic, retain) id addData;
+// being verified). Synthesized atomic-retain accessors (backing ivar m_AdditionalData):
+// getter @ 0x62afc (objc_getProperty), setter @ 0x62b10 (objc_setProperty).
+@property (retain) id addData;
 
 // GET. Ghidra: initWithURL:delegate: @ 0x620f4.
 - (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate;
@@ -48,6 +49,16 @@
 // Parse the buffered response as JSON — NSJSONSerialization when available, else the
 // bundled TouchJSON category. Ghidra: @ 0x62948.
 - (NSDictionary *)getDataInJSON;
+
+// Bytes buffered so far. Ghidra: @ 0x62888.
+- (NSUInteger)currentSize;
+
+// Buffered bytes / expected content length (0..1), or 0 when the length is unknown.
+// Ghidra: @ 0x628a8.
+- (float)currentProgress;
+
+// Time interval relative to the download start (see .m). Ghidra: @ 0x629bc.
+- (NSTimeInterval)getProgressSec;
 
 @end
 

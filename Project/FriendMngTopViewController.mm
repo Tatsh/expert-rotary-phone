@@ -14,9 +14,24 @@
 #import "UserSettingData.h"
 #import "FriendListViewController.h"
 #import "FriendReplyViewController.h"
+#import "DownloadMain.h"            // friendRequestedCnt (drives the reply badge)
 #import "neEngineBridge.h"          // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation FriendMngTopViewController
+
+// delegate @ 0xa6c00 / setDelegate: @ 0xa6c10 — synthesized assign accessors over m_Delegate.
+@synthesize delegate = m_Delegate;
+
+// dealloc @ 0xa6488 — ARC-omitted (super-only; _markView released automatically).
+// viewDidLoad @ 0xa64b4 — super-only override, omitted.
+// didReceiveMemoryWarning @ 0xa64e0 — super-only override, omitted.
+
+// @ 0xa650c — refresh the "new reply" badge on appear: shown only when at least one
+// friend request is pending (DownloadMain friendRequestedCnt).
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    _markView.hidden = ([[DownloadMain getInstance] friendRequestedCnt] < 1);
+}
 
 // @ 0xa59f0 — build the hub + wrap it in a navigation controller.
 - (UINavigationController *)initAtNavigationController {
@@ -108,29 +123,40 @@
     [UIView commitAnimations];
 }
 
+// @ 0xa66bc
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
-// Fade the hub out, then tear it down (the didStop callback removes the nav view). Ghidra:
-// startCloseAnimation. Best-effort mirror of startOpenAnimation.
+// @ 0xa66d0 — play the cancel SE, then (iPhone) fade the hub + its nav view out over
+// 0.3 s with endCloseAnimation as the didStop; on iPad forward the close to the split-hub
+// delegate. NB: the binary *clears* _isAnimationing here (strb #0 @ 0xa6742) instead of
+// raising the guard — reproduced exactly as decompiled.
 - (void)startCloseAnimation {
-    if (_isAnimationing) {
-        return;
+    neEngine::playSystemSe(2);
+    if (!neSceneManager::isPadDisplay()) {
+        if (_isAnimationing) {
+            return;
+        }
+        _isAnimationing = NO;
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:0.3];
+        [UIView setAnimationDelegate:self];
+        [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
+        self.view.alpha = 0;
+        self.navigationController.view.alpha = 0;
+        [UIView commitAnimations];
+    } else {
+        [m_Delegate startCloseAnimation];
     }
-    _isAnimationing = YES;
-
-    [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
-    self.view.alpha = 0;
-    self.navigationController.view.alpha = 0;
-    [UIView commitAnimations];
 }
 
+// @ 0xa6810 — pull the nav view, notify the root VC the friend hub closed
+// (FriendManageEndCallBack), then clear the animation guard.
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
+    UIViewController *root = (__bridge UIViewController *)neSceneManager::rootViewController();
+    [root performSelector:@selector(FriendManageEndCallBack)];
     _isAnimationing = NO;
 }
 
@@ -180,8 +206,6 @@
         [m_Delegate onReplyButtonTouched:sender];
     }
 }
-
-// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

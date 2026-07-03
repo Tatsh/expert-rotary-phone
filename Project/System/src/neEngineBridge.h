@@ -27,6 +27,11 @@ public:
     // Record the last-played music id (drives the "continue from" / event state).
     // Ghidra: neAppEventSetLastMusic (global DAT_00187bf0).
     static void setLastMusic(int music);
+    // Reset the AC-viewer's pending selection to the "none" sentinels (music id -1,
+    // difficulty 0xffff) — done when the viewer is cancelled. Ghidra globals
+    // g_dwAcViewerSelMusicId @ 0x187bf8 / g_wAcViewerSelDifficulty @ 0x187bfc (in the
+    // event-center region; NEAppEventCenter_shared() is touched first to force init).
+    static void clearAcViewerSelection();
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)
 

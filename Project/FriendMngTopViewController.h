@@ -12,10 +12,15 @@
 #import <UIKit/UIKit.h>
 
 @interface FriendMngTopViewController : UIViewController {
-    __weak id m_Delegate;         // the hosting MainViewController (self-set)
+    __unsafe_unretained id m_Delegate;  // hosting VC (self-set; plain assign, not retained)
     UIImageView *_markView;       // "new reply" warning badge over the reply button
     BOOL _isAnimationing;         // an open/close animation is running (guards re-entry)
 }
+
+// The hosting controller (MainViewController on iPhone; the split hub on iPad) that
+// section taps / close are forwarded to. Synthesized accessors backing m_Delegate.
+// Ghidra: delegate @ 0xa6c00 / setDelegate: @ 0xa6c10.
+@property (nonatomic, assign) id delegate;
 
 // Build the hub view + its navigation controller (custom back button, section buttons) and return
 // the navigation controller. Ghidra: initAtNavigationController @ 0xa59f0.

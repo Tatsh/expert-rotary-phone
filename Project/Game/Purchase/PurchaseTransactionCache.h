@@ -15,14 +15,17 @@
 // Ghidra: initWithTransaction: @ 0x56168
 - (instancetype)initWithTransaction:(SKPaymentTransaction *)transaction;
 
-@property (nonatomic, copy) NSString *productID;      // payment.productIdentifier
-@property (nonatomic, copy) NSData *receiptData;      // transactionReceipt (legacy)
-@property (nonatomic, copy) NSString *transactionID;  // transactionIdentifier
-@property (nonatomic, copy) NSDate *transactionDate;  // transactionDate
+// Snapshot fields captured at init; read-only to callers.
+// Synthesized getters (plain ivar reads):
+@property (nonatomic, copy, readonly) NSString *productID;      // payment.productIdentifier // @ 0x56338
+@property (nonatomic, copy, readonly) NSData *receiptData;      // transactionReceipt (legacy) // @ 0x56348
+@property (nonatomic, copy, readonly) NSString *transactionID;  // transactionIdentifier // @ 0x56358
+@property (nonatomic, copy, readonly) NSDate *transactionDate;  // transactionDate // @ 0x56368
 
 // SHA-256 digest of the receipt-check request, set by PurchaseManager
 // checkNextReceipt and matched against the server's echoed "code".
-// Ghidra: setDigestString: (used @ 0x54fdc), digestString (read @ 0x55a50).
+// Call sites: setDigestString: used @ 0x54fdc, digestString read @ 0x55a50.
+// Synthesized: digestString @ 0x56378 (getter) / setDigestString: @ 0x56388 (objc_setProperty copy).
 @property (nonatomic, copy) NSString *digestString;
 
 @end

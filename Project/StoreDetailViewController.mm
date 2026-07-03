@@ -52,8 +52,8 @@
 
 @implementation StoreDetailViewController
 
-@synthesize packInfo;
-@synthesize delegate;
+@synthesize packInfo;   // getter @ 0x72d0c, setter @ 0x72d1c
+@synthesize delegate;   // getter @ 0x72d2c, setter @ 0x72d3c
 
 // @ 0x6f8c0 — a plain view controller with a custom "back" button (navi_btn_back) installed as
 // the navigation item's left bar button.
@@ -172,6 +172,47 @@
     [super viewDidLoad];
 }
 
+// viewWillAppear: @ 0x72ad0 — super-only override, omitted.
+
+// @ 0x72afc — on the first appearance (the table is still hidden) start the detail load.
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    if (m_PackTableView.hidden) {
+        [self loadInfo];
+    }
+}
+
+// @ 0x72b60 — leaving the screen: stop any preview, cancel the in-flight sample + detail
+// downloads, and restore the store's nav-bar background image.
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self stopSample];
+    [sampleDownloader cancel];
+    sampleDownloader = nil;
+    if (m_StorePackInfoDownloader != nil) {
+        [m_StorePackInfoDownloader setDelegate:nil];
+        [m_StorePackInfoDownloader cancel];
+        m_StorePackInfoDownloader = nil;
+    }
+    UIImage *navbar = [UIImage imageNamed:@"p_store_navbar"];
+    [self.navigationController.navigationBar setBackgroundImage:navbar
+                                                  forBarMetrics:UIBarMetricsDefault];
+}
+
+// viewDidDisappear: @ 0x72c88 — super-only override, omitted.
+
+// @ 0x728c4 — the view was torn down: drop the row backgrounds, cancel + clear the jacket
+// downloads (the ARC-released ivars are niled after super).
+- (void)viewDidUnload {
+    [super viewDidUnload];
+    packBgImage0 = nil;
+    packBgImage1 = nil;
+    [self stopDownloadArtworks];
+    artworkDownloaders = nil;
+}
+
+// didReceiveMemoryWarning @ 0x72898 — super-only override, omitted.
+
 // @ 0x72970 — release every owned ivar (the table / labels / spinners are hierarchy-owned and
 // are not released here). Cancels the in-flight detail + sample downloads first.
 - (void)dealloc {
@@ -187,9 +228,13 @@
     [self stopDownloadArtworks];
 }
 
-// Ghidra: selector backButtonFunc. Best-effort: pop this detail screen off the nav stack (the
-// method body is not yet decompiled; this is the standard custom-back-button behaviour).
+// @ 0x72cb4 — the nav-bar back button: ignore taps while a recommend POST is in flight; else
+// play the cancel SE and pop this detail screen off the nav stack.
 - (void)backButtonFunc {
+    if (recommendDownloader != nil) {
+        return;
+    }
+    neEngine::playSystemSe(2);   // cancel SE (Ghidra: SysSePlayIntoSlot(2))
     [self.navigationController popViewControllerAnimated:YES];
 }
 

@@ -21,18 +21,12 @@ static const NSTimeInterval kTimeout = 15.0;
     NSMutableData *m_DownloadedData;
     id m_AdditionalData;
     NSDate *m_StartTime;
+    long long m_DownloadSize;   // expected content length from the response (0 until known)
 }
 
-// Caller context accessors (backing ivar m_AdditionalData).
-- (id)addData {
-    return m_AdditionalData;
-}
-
-- (void)setAddData:(id)addData {
-    if (m_AdditionalData != addData) {
-        m_AdditionalData = addData;
-    }
-}
+// addData / setAddData: are synthesized from the @addData property — the binary emits
+// objc_getProperty @ 0x62afc / objc_setProperty @ 0x62b10 (atomic retain), so they are
+// annotated on the @property in Downloader.h rather than hand-written here.
 
 // Apply the request headers every request carries (Ghidra: shared by both inits).
 - (void)applyCommonHeadersTo:(NSMutableURLRequest *)request {
@@ -115,7 +109,51 @@ static const NSTimeInterval kTimeout = 15.0;
     return [NSDictionary dictionaryWithJSONData:m_DownloadedData error:NULL];   // TouchJSON
 }
 
+// @ 0x62888 — bytes buffered so far (the live length of the response buffer).
+- (NSUInteger)currentSize {
+    return m_DownloadedData.length;
+}
+
+// @ 0x628a8 — fractional progress: buffered bytes over the expected content length, or 0
+// when the length is not (yet) known / non-positive.
+- (float)currentProgress {
+    if (m_DownloadSize > 0) {
+        return (float)m_DownloadedData.length / (float)m_DownloadSize;
+    }
+    return 0.0f;
+}
+
+// @ 0x629bc — time interval relative to the download's start (as-decompiled:
+// -timeIntervalSinceNow, negative and growing while in flight); 0 before startDownloading.
+- (NSTimeInterval)getProgressSec {
+    if (m_StartTime != nil) {
+        return [m_StartTime timeIntervalSinceNow];
+    }
+    return 0.0;
+}
+
 #pragma mark - NSURLConnection delegate
+
+// @ 0x62514 — capture the expected length and pre-size the buffer. A 404 is treated as a
+// hard error: cancel the connection and notify the delegate instead of buffering.
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+    if ([response respondsToSelector:@selector(statusCode)] &&
+        [(NSHTTPURLResponse *)response statusCode] == 404) {
+        [connection cancel];
+        if (m_Connection == connection) {
+            m_Connection = nil;
+        }
+        if ([m_Delegate respondsToSelector:@selector(downloaderError:)]) {
+            [m_Delegate performSelector:@selector(downloaderError:) withObject:self];
+        }
+        return;
+    }
+
+    m_DownloadSize = response.expectedContentLength;
+    if (m_DownloadSize > 0) {
+        m_DownloadedData = [[NSMutableData alloc] initWithCapacity:(NSUInteger)m_DownloadSize];
+    }
+}
 
 // @ 0x6267c — buffer each chunk (lazily creating a 64 KB-seeded NSMutableData) and
 // notify the delegate of progress.
@@ -150,6 +188,15 @@ static const NSTimeInterval kTimeout = 15.0;
     if ([m_Delegate respondsToSelector:@selector(downloaderError:)]) {
         [m_Delegate performSelector:@selector(downloaderError:) withObject:self];
     }
+}
+
+// @ 0x629f8 — KEEP under ARC: the object-ivar releases are ARC-omitted, but dealloc still
+// does real work — drop the (unretained) delegate and cancel the connection so a callback
+// already queued on the run loop can't fire after the object is gone.
+- (void)dealloc {
+    m_Delegate = nil;
+    [m_Connection cancel];
+    m_Connection = nil;
 }
 
 @end

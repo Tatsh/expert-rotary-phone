@@ -30,10 +30,9 @@
     Downloader *m_Downloader;   // in-flight receipt-check request
 }
 
-- (void)setDelegate:(id<PurchaseManagerDelegate>)delegate { m_Delegate = delegate; }
-- (id<PurchaseManagerDelegate>)delegate { return m_Delegate; }
-- (void)setMusicDataDelegate:(id<PurchaseManagerMusicDelegate>)d { m_MusicDataDelegate = d; }
-- (id<PurchaseManagerMusicDelegate>)musicDataDelegate { return m_MusicDataDelegate; }
+// Plain weak accessors, synthesized onto the m_* ivars.
+@synthesize delegate = m_Delegate;                    // getter @ 0x56128, setter @ 0x56138
+@synthesize musicDataDelegate = m_MusicDataDelegate;  // getter @ 0x56148, setter @ 0x56158
 
 // @ 0x54450 — lazy singleton.
 + (instancetype)sharedManager {
@@ -60,6 +59,18 @@
 // @ 0x546c0 — become the StoreKit payment-queue observer.
 - (void)start {
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
+}
+
+// @ 0x546f8 — stop observing the payment queue (teardown counterpart of -start).
+- (void)end {
+    [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
+}
+
+// @ 0x545b8 — cancel the in-flight receipt-check download; the four backing arrays are
+// ARC-released. (Original also nils musicDataDelegate and releases the arrays by hand.)
+- (void)dealloc {
+    [self setMusicDataDelegate:nil];
+    [m_Downloader cancel];
 }
 
 #pragma mark - Purchased-product persistence
@@ -287,6 +298,16 @@
 
 #pragma mark - SKProductsRequestDelegate
 
+// @ 0x55170 — query the store for a set of product identifiers (self is the delegate); the
+// response arrives in -productsRequest:didReceiveResponse:.
+- (SKProductsRequest *)startProductRequest:(NSSet<NSString *> *)productIdentifiers {
+    SKProductsRequest *request = [[SKProductsRequest alloc]
+        initWithProductIdentifiers:productIdentifiers];
+    request.delegate = self;
+    [request start];
+    return request;
+}
+
 // @ 0x55960 — the binary walks invalidProductIdentifiers without acting on them,
 // then forwards the valid products to the delegate.
 - (void)productsRequest:(SKProductsRequest *)request
@@ -462,6 +483,10 @@
     m_Downloader = nil;
     m_Transactioing = NO;
     m_IsRestored = NO;
+}
+
+// @ 0x55eb8 — DownloaderDelegate progress hook (no-op in this manager).
+- (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // The empty-domain, empty-description NSError the original builds on receipt

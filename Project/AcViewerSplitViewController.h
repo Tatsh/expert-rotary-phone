@@ -24,6 +24,10 @@
 - (void)startOpenAnimation;   // @ 0x3272c
 - (void)startCloseAnimation;  // @ 0x32870
 
+// Fade the panel out (or, non-animated, after a short delay) and swap the right pane to
+// the AcViewer option screen. Ghidra: startHiddenAnimation: @ 0x32a80.
+- (void)startHiddenAnimation:(BOOL)animated;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

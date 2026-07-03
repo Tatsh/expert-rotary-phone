@@ -19,11 +19,13 @@
 
 @interface neGLView : UIView
 
-@property (nonatomic, weak) id<neGLViewDelegate> delegate;
+// Ghidra: -delegate/-setDelegate: are atomic accessors (DataMemoryBarrier around
+// a plain pointer store — assign, not ARC weak). Addresses annotated in the .mm.
+@property (atomic, assign) id<neGLViewDelegate> delegate;
 
 // The GL drawable size, updated by -layoutSubviews from the renderbuffer.
-@property (nonatomic, readonly) int frontBufferWidth;
-@property (nonatomic, readonly) int frontBufferHeight;
+- (int)GetFrontBufferWidth;   // Ghidra: @ 0x28524
+- (int)GetFrontBufferHeight;  // Ghidra: @ 0x28534
 
 // Render surface control, called each frame by MainViewController -draw.
 - (BOOL)BeginRender;            // make the GL context current. Ghidra: @ 0x28544

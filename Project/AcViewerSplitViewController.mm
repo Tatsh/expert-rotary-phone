@@ -51,7 +51,7 @@ static UIViewController *RootVC() {
         cover.userInteractionEnabled = YES;
         [self.view addSubview:cover];
         [cover addGestureRecognizer:[[UITapGestureRecognizer alloc]
-            initWithTarget:self action:@selector(handleTapCoverView:)]];
+            initWithTarget:self action:@selector(handleTapCoverView)]];
 
         // Artwork panel that holds the split view, centred on the screen.
         UIImage *bgImg = [UIImage imageNamed:@"acv_bg"];
@@ -94,7 +94,7 @@ static UIViewController *RootVC() {
             CGRectMake(0, 0, self.view.frame.size.width, 140)];
         [self.view addSubview:topCover];
         [topCover addGestureRecognizer:[[UITapGestureRecognizer alloc]
-            initWithTarget:self action:@selector(handleTapCoverView:)]];
+            initWithTarget:self action:@selector(handleTapCoverView)]];
 
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
         UIButton *back = [[UIButton alloc] initWithFrame:
@@ -145,6 +145,17 @@ static UIViewController *RootVC() {
         forControlEvents:UIControlEventTouchUpInside];
     [_leftViewCtrl.view addSubview:_btnGenre];
 }
+
+#pragma mark - Lifecycle
+
+// @ 0x32234 — detach the selection arrow from its superview on teardown; the left/right
+// panel controllers are released automatically under ARC.
+- (void)dealloc {
+    [_arrowImageView removeFromSuperview];
+}
+
+// viewDidLoad @ 0x326d4 — super-only override, omitted.
+// didReceiveMemoryWarning @ 0x32700 — super-only override, omitted.
 
 #pragma mark - Open/close animation (shared modal-VC lifecycle)
 
@@ -200,6 +211,53 @@ static UIViewController *RootVC() {
     _isAnimationing = NO;
 }
 
+#pragma mark - Hide -> option-screen transition
+
+// @ 0x32a80 — begin hiding the split panel to reveal the AC-viewer option screen: freeze
+// input on the nav view, then either fade the view + nav view out over 0.3 s (animated,
+// didStop -> endHiddenAnimation) or, non-animated, fire hiddenFunc after a 0.3 s delay.
+- (void)startHiddenAnimation:(BOOL)animated {
+    if (_isAnimationing) {
+        return;
+    }
+    _isAnimationing = YES;
+    self.navigationController.view.userInteractionEnabled = NO;
+    if (animated) {
+        self.view.alpha = 1;
+        self.navigationController.view.alpha = 1;
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:0.3];
+        [UIView setAnimationDelegate:self];
+        [UIView setAnimationDidStopSelector:@selector(endHiddenAnimation)];
+        self.view.alpha = 0;
+        self.navigationController.view.alpha = 0;
+        [UIView commitAnimations];
+    } else {
+        [self performSelector:@selector(hiddenFunc) withObject:nil afterDelay:0.3];
+    }
+}
+
+// @ 0x32c18 — non-animated hide path: snap the view + nav view transparent, then run
+// endHiddenAnimation.
+- (void)hiddenFunc {
+    self.view.alpha = 0;
+    self.navigationController.view.alpha = 0;
+    [self endHiddenAnimation];
+}
+
+// @ 0x32c7c — swap the right pane from the category list to the AC-viewer option screen
+// (delegate = self) and flag the root VC that the AC music selection is no longer viewing.
+- (void)endHiddenAnimation {
+    _isAnimationing = NO;
+    // TODO(dep): AcViewerOptionViewController is a separate, not-yet-reconstructed unit
+    // (see MISSING.md); instantiated by name so this compiles until its header lands.
+    UIViewController *opt = [[NSClassFromString(@"AcViewerOptionViewController") alloc] init];
+    [opt performSelector:@selector(setDelegate:) withObject:self];
+    [_rightViewCtrl popViewControllerAnimated:NO];
+    [_rightViewCtrl pushViewController:opt animated:NO];
+    [RootVC() performSelector:@selector(setAcMusicSelViewing:) withObject:nil];
+}
+
 #pragma mark - Handlers
 
 // @ 0x32d90 — a left-column button was tapped: switch the right pane's list and move
@@ -218,13 +276,17 @@ static UIViewController *RootVC() {
     }
 }
 
-// @ 0x32... — the back button / backdrop tap both close the panel.
+// @ 0x32d44 — the back button: play the cancel SE, clear the pending AC-viewer selection
+// (music id / difficulty -> "none"), then fade the panel out.
 - (void)onBackButtonTouched:(UIButton *)sender {
+    neEngine::playSystemSe(2);
+    neAppEventCenter::clearAcViewerSelection();
     [self startCloseAnimation];
 }
 
-- (void)handleTapCoverView:(UITapGestureRecognizer *)gesture {
-    [self startCloseAnimation];
+// @ 0x3350c — the dimmed backdrop / top-cover taps are swallowed (the real handler is
+// empty; the covers just block touches from falling through to the panel).
+- (void)handleTapCoverView {
 }
 
 @end

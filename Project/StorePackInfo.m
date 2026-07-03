@@ -190,10 +190,12 @@
     return m_ArtworkURL;
 }
 
+// @ 0x57410
 - (NSString *)artistURL {
     return m_ArtistURL;
 }
 
+// @ 0x57420 — Ghidra selector "bunnerURL"; plain read of m_ArtistBunnerURL.
 - (NSString *)artistBunnerURL {
     return m_ArtistBunnerURL;
 }
@@ -203,10 +205,12 @@
     return m_AcvNum;
 }
 
+// @ 0x573f0
 - (NSArray *)musicInfos {
     return m_MusicInfos;
 }
 
+// @ 0x57400
 - (NSArray *)acvMusicInfos {
     return m_AcvMusicInfos;
 }
