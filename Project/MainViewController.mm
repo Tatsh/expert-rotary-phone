@@ -473,7 +473,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xc9dc — the music sort-select screen (param = context); a boxed iPad panel.
 - (void)GotoSortSelect:(void *)context {
     _sortSelectViewCtrl = [[SortSelectViewController alloc] init];
-    [(SortSelectViewController *)_sortSelectViewCtrl initAtNavigationController:context];
+    [(SortSelectViewController *)_sortSelectViewCtrl initAtNavigationController:(MusicSelTask *)context];
     _sortSelectNaviCtrl = [[UINavigationController alloc] init];
     _sortSelectNaviCtrl.view.clipsToBounds = YES;
     if (neSceneManager::isPadDisplay()) {

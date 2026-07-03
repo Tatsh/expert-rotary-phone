@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 142 |
+| Complete | 148 |
 | Partial (file exists, methods missing) | 0 |
-| Fully missing (no source file) | 31 |
-| **Missing methods** | **590** |
+| Fully missing (no source file) | 25 |
+| **Missing methods** | **501** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 31
+## Fully missing classes — 25
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -45,17 +45,11 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `OverScoreLogViewController` | 18 | 6 | `188` |
 | `RecommendViewController` | 18 | 6 | `184` |
 | `PopnLinkTopViewController` | 17 | 6 | `184` |
-| `SortSelectViewController` | 17 | 4 | `176` |
 | `DefaultDataDownloadView` | 16 | 11 | `204` |
 | `FreeRequestDetail` | 16 | 6 | `72` |
 | `InviteTopViewControllerPad` | 16 | 5 | `180` |
 | `SubMapSelectViewController` | 16 | 4 | `180` |
-| `AcViewerMusicViewController` | 15 | 5 | `184` |
-| `FriendRequestTable` | 15 | 4 | `180` |
-| `FreeRequestListViewController` | 14 | 4 | `180` |
-| `FriendRequestViewController` | 14 | 4 | `180` |
 | `SettingTableSplitViewController` | 14 | 7 | `308` |
-| `SettingTopViewController` | 14 | 2 | `168` |
 | `FriendMngTopSplitViewController` | 13 | 13 | `284` |
 | `PopnLinkTopSplitViewController` | 13 | 12 | `280` |
 
@@ -64,7 +58,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Class | Done | Total | Missing (binary + unimpl) |
 | --- | ---: | ---: | ---: |
 
-## Complete classes — 142
+## Complete classes — 148
 
 - `AcMusicData`
 - `AcViewerCategoryCell`
@@ -72,6 +66,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `AcViewerHiSpeedViewController`
 - `AcViewerHidSudViewController`
 - `AcViewerMusicCell`
+- `AcViewerMusicViewController`
 - `AcViewerOptionCell`
 - `AcViewerOptionViewController`
 - `AcViewerPopKunViewController`
@@ -110,6 +105,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `DownloadProgresView`
 - `Downloader`
 - `FreeRequestListCell`
+- `FreeRequestListViewController`
 - `FriendListCell`
 - `FriendListDetail`
 - `FriendListDetailChara`
@@ -118,6 +114,8 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `FriendReplyCell`
 - `FriendReplyViewController`
 - `FriendRequestCell`
+- `FriendRequestTable`
+- `FriendRequestViewController`
 - `FriendScoreTableCell`
 - `GameEffectView`
 - `HowToView`
@@ -167,7 +165,9 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `SettingHowtoTableViewController`
 - `SettingOtherTableViewController`
 - `SettingTableViewController`
+- `SettingTopViewController`
 - `SortCell`
+- `SortSelectViewController`
 - `SoundSettingView`
 - `StoreAcMusicInfo`
 - `StoreAcvManageViewController`
@@ -1027,41 +1027,6 @@ Methods **0/17** · unimpl 0 · ivars 6 · `instanceSize`=`184`
 | `_delegate` | `id` | `0xb0` |
 | `_scrollView` | `UIScrollView *` | `0xb4` |
 
-### `SortSelectViewController` — ❌ missing
-
-Methods **0/17** · unimpl 0 · ivars 4 · `instanceSize`=`176`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0xc5988` |
-| `initAtNavigationController:` | `0xc6018` |
-| `dealloc` | `0xc61cc` |
-| `viewDidLoad` | `0xc6230` |
-| `didReceiveMemoryWarning` | `0xc625c` |
-| `startOpenAnimation` | `0xc6288` |
-| `endOpenAnimation` | `0xc673c` |
-| `startCloseAnimation` | `0xc6750` |
-| `endCloseAnimation` | `0xc6c0c` |
-| `numberOfSectionsInTableView:` | `0xc6c78` |
-| `tableView:numberOfRowsInSection:` | `0xc6c7c` |
-| `tableView:cellForRowAtIndexPath:` | `0xc6ca4` |
-| `tableView:titleForHeaderInSection:` | `0xc6db0` |
-| `tableView:didSelectRowAtIndexPath:` | `0xc6db4` |
-| `backButtonFunc` | `0xc6fe4` |
-| `musicSelTask` | `0xc7028` |
-| `setMusicSelTask:` | `0xc703c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0xa2` |
-| `_pMusicSelTask` | `void *` | `0xa4` |
-| `_sortDataArray` | `NSArray *` | `0xa8` |
-| `_dummyView` | `UIViewController *` | `0xac` |
-
 ### `DefaultDataDownloadView` — ❌ missing
 
 Methods **0/16** · unimpl 0 · ivars 11 · `instanceSize`=`204`
@@ -1208,137 +1173,6 @@ Methods **0/16** · unimpl 0 · ivars 4 · `instanceSize`=`180`
 | `_isDecide` | `BOOL` | `0xac` |
 | `_delegate` | `id` | `0xb0` |
 
-### `AcViewerMusicViewController` — ❌ missing
-
-Methods **0/15** · unimpl 0 · ivars 5 · `instanceSize`=`184`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithData:` | `0xcba44` |
-| `dealloc` | `0xcc218` |
-| `viewDidLoad` | `0xcc2ec` |
-| `handleGesture:` | `0xcc31c` |
-| `didReceiveMemoryWarning` | `0xcc388` |
-| `numberOfSectionsInTableView:` | `0xcc3b4` |
-| `tableView:numberOfRowsInSection:` | `0xcc3b8` |
-| `tableView:cellForRowAtIndexPath:` | `0xcc3e0` |
-| `tableView:titleForHeaderInSection:` | `0xcc588` |
-| `touchedBackButton:` | `0xcc58c` |
-| `touchedChangeButton:` | `0xcc664` |
-| `indexPathForControlEvent:` | `0xcc7ac` |
-| `touchedSheetButton:event:` | `0xcc82c` |
-| `delegate` | `0xcca24` |
-| `setDelegate:` | `0xcca34` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_acMusicDataArray` | `NSArray *` | `0xa4` |
-| `_genreButton` | `UIImage *` | `0xa8` |
-| `_titleButton` | `UIImage *` | `0xac` |
-| `_changeButton` | `UIButton *` | `0xb0` |
-| `_delegate` | `<AcViewerViewControllerDelegate> *` | `0xb4` |
-
-### `FriendRequestTable` — ❌ missing
-
-Methods **0/15** · unimpl 0 · ivars 4 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0xb7148` |
-| `dealloc` | `0xb794c` |
-| `viewDidLoad` | `0xb79e8` |
-| `didReceiveMemoryWarning` | `0xb7a28` |
-| `reDownloadGetFriendRequest` | `0xb7a54` |
-| `numberOfSectionsInTableView:` | `0xb7b98` |
-| `tableView:numberOfRowsInSection:` | `0xb7b9c` |
-| `tableView:cellForRowAtIndexPath:` | `0xb7bc4` |
-| `tableView:titleForHeaderInSection:` | `0xb7cd0` |
-| `tableView:didSelectRowAtIndexPath:` | `0xb7cd4` |
-| `releaseSendDataArray` | `0xb7cd8` |
-| `backButtonFunc` | `0xb7d9c` |
-| `downloaderFinished:` | `0xb7e38` |
-| `downloaderProceed:` | `0xb84dc` |
-| `downloaderError:` | `0xb84e0` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_lonelyImageView` | `UIImageView *` | `0xa8` |
-| `dlGetFriendRequest` | `Downloader *` | `0xac` |
-| `_sendDataArray` | `NSMutableArray *` | `0xb0` |
-
-### `FreeRequestListViewController` — ❌ missing
-
-Methods **0/14** · unimpl 0 · ivars 4 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:` | `0xe5430` |
-| `dealloc` | `0xe5bb4` |
-| `viewDidLoad` | `0xe5c5c` |
-| `didReceiveMemoryWarning` | `0xe5ccc` |
-| `numberOfSectionsInTableView:` | `0xe5cf8` |
-| `tableView:numberOfRowsInSection:` | `0xe5cfc` |
-| `tableView:cellForRowAtIndexPath:` | `0xe5d24` |
-| `tableView:titleForHeaderInSection:` | `0xe5e3c` |
-| `tableView:didSelectRowAtIndexPath:` | `0xe5e40` |
-| `releaseFriendList` | `0xe60cc` |
-| `downloaderFinished:` | `0xe61e0` |
-| `downloaderError:` | `0xe6c80` |
-| `startGetRecommendFriendHttp` | `0xe6d60` |
-| `backButtonFunc` | `0xe6ea4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_dummyView` | `UIViewController *` | `0xa4` |
-| `_frinedDataArray` | `NSArray *` | `0xa8` |
-| `_downloader` | `Downloader *` | `0xac` |
-| `_freeRequestDetail` | `FreeRequestDetail *` | `0xb0` |
-
-### `FriendRequestViewController` — ❌ missing
-
-Methods **0/14** · unimpl 0 · ivars 4 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xb1c08` |
-| `dealloc` | `0xb27bc` |
-| `viewDidLoad` | `0xb28ac` |
-| `didReceiveMemoryWarning` | `0xb2908` |
-| `textFieldShouldBeginEditing:` | `0xb2934` |
-| `textFieldShouldReturn:` | `0xb2938` |
-| `textField:shouldChangeCharactersInRange:replacementString:` | `0xb2960` |
-| `touchedRequestButton:` | `0xb29c8` |
-| `touchedFreeRequestButton:` | `0xb2bb0` |
-| `downloaderFinished:` | `0xb2ccc` |
-| `downloaderError:` | `0xb2ecc` |
-| `downloadMainFinished:` | `0xb2f98` |
-| `startFriendRequestHttp:` | `0xb303c` |
-| `backButtonFunc` | `0xb317c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_playerIdField` | `UITextField *` | `0xa4` |
-| `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
-| `_requestTable` | `FriendRequestTable *` | `0xac` |
-| `_downloader` | `Downloader *` | `0xb0` |
-
 ### `SettingTableSplitViewController` — ❌ missing
 
 Methods **0/14** · unimpl 0 · ivars 7 · `instanceSize`=`308`
@@ -1373,36 +1207,6 @@ Methods **0/14** · unimpl 0 · ivars 7 · `instanceSize`=`308`
 | `_selectedIndex` | `int` | `0xb0` |
 | `_viewFrm` | `struct CGRect[4]` | `0xb4` |
 | `_arrowFrm` | `struct CGRect[4]` | `0xf4` |
-
-### `SettingTopViewController` — ❌ missing
-
-Methods **0/14** · unimpl 0 · ivars 2 · `instanceSize`=`168`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x13fe8` |
-| `initAtNavigationController` | `0x14464` |
-| `viewDidLoad` | `0x1463c` |
-| `didReceiveMemoryWarning` | `0x14668` |
-| `startOpenAnimation` | `0x14694` |
-| `endOpenAnimation` | `0x147c0` |
-| `startCloseAnimation` | `0x147d8` |
-| `endCloseAnimation` | `0x148f8` |
-| `onGameButtonTouched:` | `0x14964` |
-| `onHowtoButtonTouched:` | `0x14a90` |
-| `onCustomerButtonTouched:` | `0x14ae0` |
-| `onOtherButtonTouched:` | `0x14b30` |
-| `settingTopDelegate` | `0x14b80` |
-| `setSettingTopDelegate:` | `0x14b90` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0xa2` |
-| `_settingTopDelegate` | `<SettingTopViewControllerDalegate> *` | `0xa4` |
 
 ### `FriendMngTopSplitViewController` — ❌ missing
 
@@ -1556,6 +1360,20 @@ Methods **7/7** · unimpl 0 · ivars 13 · `instanceSize`=`104`
 | `isPad` | `BOOL` | `0x5c` |
 | `offsetForPad1` | `int` | `0x60` |
 | `offsetForPad2` | `int` | `0x64` |
+
+### `AcViewerMusicViewController` — ✅ complete
+
+Methods **15/15** · unimpl 0 · ivars 5 · `instanceSize`=`184`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_acMusicDataArray` | `NSArray *` | `0xa4` |
+| `_genreButton` | `UIImage *` | `0xa8` |
+| `_titleButton` | `UIImage *` | `0xac` |
+| `_changeButton` | `UIButton *` | `0xb0` |
+| `_delegate` | `<AcViewerViewControllerDelegate> *` | `0xb4` |
 
 ### `AcViewerOptionCell` — ✅ complete
 
@@ -2118,6 +1936,19 @@ Methods **3/3** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 | `imgScoreBaseX` | `int` | `0x58` |
 | `imgScoreX` | `int` | `0x5c` |
 
+### `FreeRequestListViewController` — ✅ complete
+
+Methods **14/14** · unimpl 0 · ivars 4 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_frinedDataArray` | `NSArray *` | `0xa8` |
+| `_downloader` | `Downloader *` | `0xac` |
+| `_freeRequestDetail` | `FreeRequestDetail *` | `0xb0` |
+
 ### `FriendListCell` — ✅ complete
 
 Methods **3/3** · unimpl 0 · ivars 19 · `instanceSize`=`128`
@@ -2259,6 +2090,32 @@ Methods **4/4** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 | `imgPlayerNameX` | `int` | `0x54` |
 | `imgDateX` | `int` | `0x58` |
 | `btnCancelX` | `int` | `0x5c` |
+
+### `FriendRequestTable` — ✅ complete
+
+Methods **15/15** · unimpl 0 · ivars 4 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_dummyView` | `UIViewController *` | `0xa4` |
+| `_lonelyImageView` | `UIImageView *` | `0xa8` |
+| `dlGetFriendRequest` | `Downloader *` | `0xac` |
+| `_sendDataArray` | `NSMutableArray *` | `0xb0` |
+
+### `FriendRequestViewController` — ✅ complete
+
+Methods **14/14** · unimpl 0 · ivars 4 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_playerIdField` | `UITextField *` | `0xa4` |
+| `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
+| `_requestTable` | `FriendRequestTable *` | `0xac` |
+| `_downloader` | `Downloader *` | `0xb0` |
 
 ### `FriendScoreTableCell` — ✅ complete
 
@@ -2911,6 +2768,17 @@ Methods **20/20** · unimpl 0 · ivars 7 · `instanceSize`=`186`
 | `isPad` | `BOOL` | `0xb8` |
 | `_isEffectOn` | `BOOL` | `0xb9` |
 
+### `SettingTopViewController` — ✅ complete
+
+Methods **14/14** · unimpl 0 · ivars 2 · `instanceSize`=`168`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0xa2` |
+| `_settingTopDelegate` | `<SettingTopViewControllerDalegate> *` | `0xa4` |
+
 ### `SortCell` — ✅ complete
 
 Methods **3/3** · unimpl 0 · ivars 4 · `instanceSize`=`68`
@@ -2923,6 +2791,19 @@ Methods **3/3** · unimpl 0 · ivars 4 · `instanceSize`=`68`
 | `_titleImageView` | `UIImageView *` | `0x38` |
 | `_checkImageView` | `UIImageView *` | `0x3c` |
 | `_bgImgView` | `UIImageView *` | `0x40` |
+
+### `SortSelectViewController` — ✅ complete
+
+Methods **17/17** · unimpl 0 · ivars 4 · `instanceSize`=`176`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0xa2` |
+| `_pMusicSelTask` | `void *` | `0xa4` |
+| `_sortDataArray` | `NSArray *` | `0xa8` |
+| `_dummyView` | `UIViewController *` | `0xac` |
 
 ### `SoundSettingView` — ✅ complete
 

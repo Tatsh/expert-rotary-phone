@@ -196,6 +196,15 @@ typedef struct Crypt109Data {
 + (void)saveAcvRanMir:(int)value;
 // YES if the arcade viewer shows the genre name instead of the song name.
 + (BOOL)isAcvGenreName;
+// Toggle the arcade-viewer genre/song-name mode (written by the AC-viewer song list's
+// change button). Ghidra: saveIsAcvGenreName: @ 0x61a0c (key "AcViewerIsGenreName").
++ (void)saveIsAcvGenreName:(BOOL)genreName;
+
+// Music-list sort mode (0 title / 1 artist / 2 Lv N / 3 Lv H / 4 Lv EX / 5 best-score),
+// clamped to 0..5. Read/written by the sort-select screen. Ghidra: musicSort @ 0x60dd0 /
+// saveMusicSort: @ 0x60e10 (key "MusicSort").
++ (short)musicSort;
++ (void)saveMusicSort:(short)sort;
 
 // Arcade convert-code (links the app to an arcade eAmusement account).
 + (NSString *)convertCode;

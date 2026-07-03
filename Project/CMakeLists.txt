@@ -4,6 +4,12 @@
 # defined in the root CMakeLists, and puts the directory on the include path. Bare filenames.
 
 target_sources(popnrhythmin PRIVATE
+    AcViewerMusicViewController.mm
+    FreeRequestListViewController.mm
+    FriendRequestTable.mm
+    FriendRequestViewController.mm
+    SettingTopViewController.mm
+    SortSelectViewController.mm
     AcceptPolicyViewController.mm
     CheckerDetail.mm
     CheckerMusicViewController.mm
@@ -249,6 +255,12 @@ target_sources(popnrhythmin PRIVATE
     InviteTopViewController.h
     LoginBonusView.h
     RandomLoginBonusView.h
+    AcViewerMusicViewController.h
+    FreeRequestListViewController.h
+    FriendRequestTable.h
+    FriendRequestViewController.h
+    SettingTopViewController.h
+    SortSelectViewController.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

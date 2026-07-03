@@ -567,6 +567,28 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (int)acvRanMir  { return [self getInt:@"AcViewerRanMir"]; }
 // @ 0x619e4
 + (BOOL)isAcvGenreName { return [self getBOOL:@"AcViewerIsGenreName"]; }
+// @ 0x61a0c
++ (void)saveIsAcvGenreName:(BOOL)genreName { [self saveBOOL:genreName Key:@"AcViewerIsGenreName"]; }
+
+#pragma mark - Music-list sort (plaintext)
+
+// @ 0x60dd0 — clamp the stored sort index to 0..5.
++ (short)musicSort {
+    int v = [self getInt:@"MusicSort"];
+    short sort = ((short)v < 5) ? (short)v : 5;
+    if (sort < 0) {
+        sort = 0;
+    }
+    return sort;
+}
+
+// @ 0x60e10 — anything above 4 collapses to 5 (best-score).
++ (void)saveMusicSort:(short)sort {
+    if (sort > 4) {
+        sort = 5;
+    }
+    [self saveInt:sort Key:@"MusicSort"];
+}
 
 #pragma mark - Simple mode / popkun
 
