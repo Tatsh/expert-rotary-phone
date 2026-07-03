@@ -143,14 +143,22 @@ endif()
 set(INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in" "${INFO_PLIST}" @ONLY)
 
-# Target is created empty; each directory's CMakeLists appends its own sources via
-# target_sources() and adds itself to the include path.
+# Single app target, fed by per-directory CMakeLists (each appends its own translation
+# units via target_sources(popnrhythmin ...) and puts its dir on the include path).
+#
+# NOTE: per-directory STATIC LIBRARIES were tried and reverted. Unlike C, Objective-C
+# classes referenced only by name/selector (NSStringFromClass, imageNamed:, string-keyed
+# lookups) carry no link-time reference, so the linker strips whole classes/categories out
+# of a static archive — you have to paper over it with -force_load/-ObjC. That is not the
+# clean "C static lib" model, so we keep one translation-unit set in a single target.
 add_executable(popnrhythmin MACOSX_BUNDLE)
+target_include_directories(popnrhythmin PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Project")
 
 add_subdirectory(Project)
 
 target_compile_options(popnrhythmin PRIVATE
-    -fno-objc-arc -fobjc-exceptions -Wno-deprecated-declarations)
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fno-objc-arc>
+    -fobjc-exceptions -Wno-deprecated-declarations)
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"

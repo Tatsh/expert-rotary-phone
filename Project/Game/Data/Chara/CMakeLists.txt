@@ -1,17 +1,24 @@
 # CMakeLists.txt — Project/Game/Data/Chara
 #
-# Per-directory source list for the PopnRhythmin app target (defined in the root
-# CMakeLists.txt). Adds this directory's translation units and puts the directory
-# on the include path so its quote-imported headers resolve. Regenerate with the
-# generator in the repo if you add/rename files, or just edit by hand.
+# Adds this directory's translation units (and headers, for Xcode project navigation +
+# its dep tracking) to the single app target defined in the root CMakeLists, and puts the
+# directory on the include path. Bare filenames — this CMakeLists is co-located with them.
+# (Make/Ninja track header deps automatically via compiler depfiles; the headers are listed
+# for the Xcode generator's benefit.)
 
 target_sources(popnrhythmin PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/CharaData.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/CharaInfo.m
-    ${CMAKE_CURRENT_SOURCE_DIR}/CharaManager.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/LimitedCharaInfo.m
-    ${CMAKE_CURRENT_SOURCE_DIR}/PreferredCharaInfo.m
-    ${CMAKE_CURRENT_SOURCE_DIR}/SkillData.mm
+    CharaData.mm
+    CharaInfo.m
+    CharaManager.mm
+    LimitedCharaInfo.m
+    PreferredCharaInfo.m
+    SkillData.mm
+    CharaData.h
+    CharaInfo.h
+    CharaManager.h
+    LimitedCharaInfo.h
+    PreferredCharaInfo.h
+    SkillData.h
 )
 
-target_include_directories(popnrhythmin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(popnrhythmin PRIVATE .)

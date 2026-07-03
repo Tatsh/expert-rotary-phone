@@ -1,15 +1,20 @@
 # CMakeLists.txt — Project/System/src/Aep
 #
-# Per-directory source list for the PopnRhythmin app target (defined in the root
-# CMakeLists.txt). Adds this directory's translation units and puts the directory
-# on the include path so its quote-imported headers resolve. Regenerate with the
-# generator in the repo if you add/rename files, or just edit by hand.
+# Adds this directory's translation units (and headers, for Xcode project navigation +
+# its dep tracking) to the single app target defined in the root CMakeLists, and puts the
+# directory on the include path. Bare filenames — this CMakeLists is co-located with them.
+# (Make/Ninja track header deps automatically via compiler depfiles; the headers are listed
+# for the Xcode generator's benefit.)
 
 target_sources(popnrhythmin PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/AepFrameDraw.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/AepLyrCtrl.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/AepManager.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/AepOrderingTable.mm
+    AepFrameDraw.mm
+    AepLyrCtrl.mm
+    AepManager.mm
+    AepOrderingTable.mm
+    AepFrameDraw.h
+    AepLyrCtrl.h
+    AepManager.h
+    AepOrderingTable.h
 )
 
-target_include_directories(popnrhythmin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(popnrhythmin PRIVATE .)
