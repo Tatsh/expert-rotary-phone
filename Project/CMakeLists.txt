@@ -4,6 +4,15 @@
 # defined in the root CMakeLists, and puts the directory on the include path. Bare filenames.
 
 target_sources(popnrhythmin PRIVATE
+    AcceptPolicyViewController.mm
+    CheckerDetail.mm
+    CheckerMusicViewController.mm
+    DevDataDownloader.m
+    HttpConn.m
+    InputKidViewController.mm
+    InviteTopViewController.mm
+    LoginBonusView.mm
+    RandomLoginBonusView.mm
     AcViewerHiSpeedViewController.mm
     AcViewerHidSudViewController.mm
     AcViewerPopKunViewController.mm
@@ -231,6 +240,15 @@ target_sources(popnrhythmin PRIVATE
     RewardNetworkUtilities.h
     RewardNetworkWebAPI.h
     RewardNetworkWebViewController.h
+    AcceptPolicyViewController.h
+    CheckerDetail.h
+    CheckerMusicViewController.h
+    DevDataDownloader.h
+    HttpConn.h
+    InputKidViewController.h
+    InviteTopViewController.h
+    LoginBonusView.h
+    RandomLoginBonusView.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

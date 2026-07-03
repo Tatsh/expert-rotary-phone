@@ -210,6 +210,12 @@ typedef struct Crypt109Data {
 + (void)saveLastCompletedClientVer:(int)ver;
 + (void)saveIsPolicyAccepted:(BOOL)accepted;
 
+// Whether the player has already redeemed an invite code (a code may be entered
+// only once). Backed by the plaintext BOOL key "IsInputInviteCode".
+// Ghidra: isInputInviteCode @ 0x60a40 / saveIsInputInviteCode: @ 0x60a68.
++ (BOOL)isInputInviteCode;
++ (void)saveIsInputInviteCode:(BOOL)v;
+
 // Last-seen store information banner id and last store-view timestamp string.
 + (int)lastInformationId;
 + (NSString *)lastStoreViewTimeString;

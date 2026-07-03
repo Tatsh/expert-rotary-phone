@@ -619,6 +619,11 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x60090 — record acceptance of the privacy policy / terms (key "IsPolicyAccepted").
 + (void)saveIsPolicyAccepted:(BOOL)accepted { [self saveBOOL:accepted Key:@"IsPolicyAccepted"]; }
 
+// @ 0x60a40 — whether the player has already redeemed an invite code (key "IsInputInviteCode").
++ (BOOL)isInputInviteCode { return [self getBOOL:@"IsInputInviteCode"]; }
+// @ 0x60a68
++ (void)saveIsInputInviteCode:(BOOL)v { [self saveBOOL:v Key:@"IsInputInviteCode"]; }
+
 // @ 0x5f418 — device-change reset: wipe the persistent domain, then re-seed the
 // factory defaults and clear all local Core Data progress records.
 + (void)initForConvert {

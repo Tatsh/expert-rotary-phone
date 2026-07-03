@@ -316,6 +316,11 @@ BOOL gLaunchedFromPush = NO;
                                                NSUserDomainMask, YES).lastObject;
 }
 
+// -[AppDelegate appCachesDirectory] — Caches dir, holds dev-data downloads.  @ 0x89f8
++ (NSString *)appCachesDirectory {
+    return NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).lastObject;
+}
+
 // -[AppDelegate freeFileSystemSize]  @ 0x8be8
 + (unsigned long long)freeFileSystemSize {
     NSDictionary *attrs = [NSFileManager.defaultManager

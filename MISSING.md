@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 133 |
+| Complete | 142 |
 | Partial (file exists, methods missing) | 0 |
-| Fully missing (no source file) | 40 |
-| **Missing methods** | **676** |
+| Fully missing (no source file) | 31 |
+| **Missing methods** | **590** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 40
+## Fully missing classes — 31
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -58,22 +58,13 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `SettingTopViewController` | 14 | 2 | `168` |
 | `FriendMngTopSplitViewController` | 13 | 13 | `284` |
 | `PopnLinkTopSplitViewController` | 13 | 12 | `280` |
-| `InputKidViewController` | 12 | 3 | `176` |
-| `RandomLoginBonusView` | 11 | 9 | `104` |
-| `AcceptPolicyViewController` | 10 | 5 | `180` |
-| `CheckerMusicViewController` | 10 | 1 | `168` |
-| `HttpConn` | 10 | 6 | `28` |
-| `DevDataDownloader` | 9 | 6 | `25` |
-| `LoginBonusView` | 9 | 3 | `61` |
-| `InviteTopViewController` | 8 | 1 | `163` |
-| `CheckerDetail` | 7 | 15 | `368` |
 
 ## Partial classes — 0
 
 | Class | Done | Total | Missing (binary + unimpl) |
 | --- | ---: | ---: | ---: |
 
-## Complete classes — 133
+## Complete classes — 142
 
 - `AcMusicData`
 - `AcViewerCategoryCell`
@@ -86,6 +77,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `AcViewerPopKunViewController`
 - `AcViewerRanMirViewController`
 - `AcViewerSplitViewController`
+- `AcceptPolicyViewController`
 - `AppDelegate`
 - `ArcadeScoreData`
 - `AudioManager`
@@ -100,7 +92,9 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `CharaInfo`
 - `CharaTicketData`
 - `CheckerCategoryCell`
+- `CheckerDetail`
 - `CheckerMusicCell`
+- `CheckerMusicViewController`
 - `CommonAlertView`
 - `CommunicatingView`
 - `ConversionView`
@@ -110,6 +104,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `CustomTextView`
 - `CustomWebView`
 - `DelayImageView`
+- `DevDataDownloader`
 - `DownloadImageView`
 - `DownloadMain`
 - `DownloadProgresView`
@@ -128,8 +123,12 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `HowToView`
 - `HowToViewCtrl`
 - `HowToViewCtrlPad`
+- `HttpConn`
 - `ImageDownloader`
+- `InputKidViewController`
+- `InviteTopViewController`
 - `LimitedCharaInfo`
+- `LoginBonusView`
 - `MainViewController`
 - `MapAnnotation`
 - `MapListCell`
@@ -147,6 +146,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `PurchaseStore`
 - `PurchaseTransactionCache`
 - `QuizCell`
+- `RandomLoginBonusView`
 - `RecommendAdId`
 - `RecommendListCell`
 - `RecommendNetwork`
@@ -1483,267 +1483,6 @@ Methods **0/13** · unimpl 0 · ivars 12 · `instanceSize`=`280`
 | `_quizArrowFrm` | `struct CGRect` | `0x104` |
 | `_howToView` | `HowToViewCtrlPad *` | `0x114` |
 
-### `InputKidViewController` — ❌ missing
-
-Methods **0/12** · unimpl 0 · ivars 3 · `instanceSize`=`176`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xe7cec` |
-| `viewDidLoad` | `0xe84ec` |
-| `didReceiveMemoryWarning` | `0xe8518` |
-| `textFieldShouldBeginEditing:` | `0xe8544` |
-| `textFieldShouldReturn:` | `0xe8548` |
-| `textField:shouldChangeCharactersInRange:replacementString:` | `0xe8570` |
-| `touchedDecideButton:` | `0xe85d8` |
-| `touchedBackButton` | `0xe87fc` |
-| `downloaderFinished:` | `0xe8840` |
-| `downloaderError:` | `0xe8a5c` |
-| `commonAlertView:clickedButtonAtIndex:` | `0xe8b28` |
-| `startInviteHttp:` | `0xe8b5c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_codeField` | `UITextField *` | `0xa4` |
-| `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
-| `_downloader` | `Downloader *` | `0xac` |
-
-### `RandomLoginBonusView` — ❌ missing
-
-Methods **0/11** · unimpl 0 · ivars 9 · `instanceSize`=`104`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `getBonus` | `0x18a38` |
-| `initWithCoder:` | `0x18a90` |
-| `initWithFrame:` | `0x18aa0` |
-| `init` | `0x18ab0` |
-| `dealloc` | `0x19884` |
-| `show` | `0x19960` |
-| `touchEvent:` | `0x19b9c` |
-| `startCloseAnimation` | `0x1a448` |
-| `endCloseAnimation` | `0x1a508` |
-| `showAlertView` | `0x1a558` |
-| `customAlertView:clickedButtonAtIndex:` | `0x1a650` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_bonus` | `int` | `0x34` |
-| `_numImgView1000` | `UIImageView *` | `0x38` |
-| `_numImgView0100` | `UIImageView *` | `0x3c` |
-| `_numImgView0010` | `UIImageView *` | `0x40` |
-| `_numImgView0001` | `UIImageView *` | `0x44` |
-| `_seRscId` | `int[3]` | `0x48` |
-| `_seInstId` | `int[3]` | `0x54` |
-| `_isAnimationing` | `BOOL` | `0x60` |
-| `_state` | `int` | `0x64` |
-
-### `AcceptPolicyViewController` — ❌ missing
-
-Methods **0/10** · unimpl 0 · ivars 5 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xaf848` |
-| `dealloc` | `0xb02bc` |
-| `onYesBtn:` | `0xb032c` |
-| `onNoBtn:` | `0xb037c` |
-| `onDetailBtn:` | `0xb03ac` |
-| `onBackBtn:` | `0xb04e4` |
-| `startOpenAnimation` | `0xb0540` |
-| `endOpenAnimation` | `0xb0630` |
-| `startCloseAnimation` | `0xb0648` |
-| `endCloseAnimation` | `0xb0718` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `isAnimationing` | `BOOL` | `0xa2` |
-| `_topView` | `UIView *` | `0xa4` |
-| `_detailView` | `UIImageView *` | `0xa8` |
-| `_policyView` | `UINavigationController *` | `0xac` |
-| `_naviCtrl` | `UINavigationController *` | `0xb0` |
-
-### `CheckerMusicViewController` — ❌ missing
-
-Methods **0/10** · unimpl 0 · ivars 1 · `instanceSize`=`168`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithScoreData:category:` | `0xd27b8` |
-| `dealloc` | `0xd2e20` |
-| `viewDidLoad` | `0xd2e98` |
-| `didReceiveMemoryWarning` | `0xd2ec4` |
-| `numberOfSectionsInTableView:` | `0xd2ef0` |
-| `tableView:numberOfRowsInSection:` | `0xd2ef4` |
-| `tableView:cellForRowAtIndexPath:` | `0xd2f1c` |
-| `tableView:titleForHeaderInSection:` | `0xd3028` |
-| `tableView:didSelectRowAtIndexPath:` | `0xd3030` |
-| `touchedBackButton:` | `0xd3254` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_scoreDataArray` | `NSArray *` | `0xa4` |
-
-### `HttpConn` — ❌ missing
-
-Methods **0/10** · unimpl 0 · ivars 6 · `instanceSize`=`28`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x6a550` |
-| `get:` | `0x6a58c` |
-| `post:paramString:` | `0x6a6c4` |
-| `connection:didReceiveResponse:` | `0x6a8c0` |
-| `connection:didReceiveData:` | `0x6a978` |
-| `connection:didFailWithError:` | `0x6a9c8` |
-| `connectionDidFinishLoading:` | `0x6aa38` |
-| `receivedString` | `0x6ab60` |
-| `status` | `0x6ab74` |
-| `setStatus:` | `0x6ab88` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `receivedData` | `NSMutableData *` | `0x4` |
-| `receivedString` | `NSString *` | `0x8` |
-| `encoding` | `unsigned int` | `0xc` |
-| `conn` | `NSURLConnection *` | `0x10` |
-| `statusCode` | `int` | `0x14` |
-| `status` | `int` | `0x18` |
-
-### `DevDataDownloader` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 6 · `instanceSize`=`25`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x8e8ec` |
-| `startDownload:file:` | `0x8e984` |
-| `downloaderFinished:` | `0x8eb1c` |
-| `downloaderProceed:` | `0x8ed78` |
-| `downloaderError:` | `0x8ed7c` |
-| `delegate` | `0x8ee00` |
-| `setDelegate:` | `0x8ee10` |
-| `isOld` | `0x8ee20` |
-| `setIsOld:` | `0x8ee38` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_Downloader` | `Downloader *` | `0x4` |
-| `m_Title` | `NSString *` | `0x8` |
-| `m_FileName` | `NSString *` | `0xc` |
-| `m_IsOld` | `BOOL` | `0x10` |
-| `m_Delegate` | `<DevDataDownloaderDelegate> *` | `0x14` |
-| `isAcv` | `BOOL` | `0x18` |
-
-### `LoginBonusView` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 3 · `instanceSize`=`61`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithCoder:` | `0x7bfc8` |
-| `initWithFrame:` | `0x7bfd8` |
-| `init` | `0x7bfe8` |
-| `dealloc` | `0x7c540` |
-| `getReward` | `0x7c594` |
-| `show` | `0x7c728` |
-| `touchEvent:` | `0x7c8e0` |
-| `showAlertView` | `0x7cc68` |
-| `customAlertView:clickedButtonAtIndex:` | `0x7ce50` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_BgImgView` | `UIImageView *` | `0x34` |
-| `m_OldLoginCnt` | `int` | `0x38` |
-| `m_IsTouch` | `BOOL` | `0x3c` |
-
-### `InviteTopViewController` — ❌ missing
-
-Methods **0/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initAtNavigationController` | `0xe6f88` |
-| `touchedInviteButton:` | `0xe7860` |
-| `touchedInputButton:` | `0xe7914` |
-| `touchedBackButton` | `0xe79c8` |
-| `startOpenAnimation` | `0xe7a38` |
-| `endOpenAnimation` | `0xe7b70` |
-| `startCloseAnimation` | `0xe7b88` |
-| `endCloseAnimation` | `0xe7c90` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `isAnimationing` | `BOOL` | `0xa2` |
-
-### `CheckerDetail` — ❌ missing
-
-Methods **0/7** · unimpl 0 · ivars 15 · `instanceSize`=`368`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `convertGrayScaleImage:` | `0xd7418` |
-| `initWithScoreData:` | `0xd752c` |
-| `deallc` | `0xd9620` |
-| `viewDidLoad` | `0xd964c` |
-| `touchedBackButton:` | `0xd9678` |
-| `touchedSheetButton:` | `0xd97c4` |
-| `touchesBegan:withEvent:` | `0xd9aac` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_arcadeScoreData` | `ArcadeScoreData *` | `0xa4` |
-| `_selectedSheet` | `int` | `0xa8` |
-| `_isNameMode` | `bool` | `0xac` |
-| `_scoreLineOff` | `UIImageView *[4]` | `0xb0` |
-| `_scoreLineOn` | `UIImageView *[4]` | `0xc0` |
-| `_topIconOff` | `UIImageView *[4]` | `0xd0` |
-| `_topIconOn` | `UIImageView *[4]` | `0xe0` |
-| `_meanIconOff` | `UIImageView *[4]` | `0xf0` |
-| `_meanIconOn` | `UIImageView *[4]` | `0x100` |
-| `_myIconOff` | `UIImageView *[4]` | `0x110` |
-| `_myIconOn` | `UIImageView *[4]` | `0x120` |
-| `_topScoreBase` | `UIImageView *[4]` | `0x130` |
-| `_topNameBase` | `UIImageView *[4]` | `0x140` |
-| `_meanBase` | `UIImageView *[4]` | `0x150` |
-| `_myBase` | `UIImageView *[4]` | `0x160` |
-
 ### `AcMusicData` — ✅ complete
 
 Methods **31/31** · unimpl 0 · ivars 17 · `instanceSize`=`72`
@@ -1871,6 +1610,20 @@ Methods **15/15** · unimpl 0 · ivars 12 · `instanceSize`=`256`
 | `_btnMusicName` | `UIButton *` | `0xf4` |
 | `_btnGenre` | `UIButton *` | `0xf8` |
 | `_selectedButton` | `UIButton *` | `0xfc` |
+
+### `AcceptPolicyViewController` — ✅ complete
+
+Methods **10/10** · unimpl 0 · ivars 5 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `isAnimationing` | `BOOL` | `0xa2` |
+| `_topView` | `UIView *` | `0xa4` |
+| `_detailView` | `UIImageView *` | `0xa8` |
+| `_policyView` | `UINavigationController *` | `0xac` |
+| `_naviCtrl` | `UINavigationController *` | `0xb0` |
 
 ### `AppDelegate` — ✅ complete
 
@@ -2050,6 +1803,30 @@ Methods **3/3** · unimpl 0 · ivars 7 · `instanceSize`=`84`
 | `offsetXForPad` | `int` | `0x4c` |
 | `imgMusicCntX` | `int` | `0x50` |
 
+### `CheckerDetail` — ✅ complete
+
+Methods **7/7** · unimpl 0 · ivars 15 · `instanceSize`=`368`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_arcadeScoreData` | `ArcadeScoreData *` | `0xa4` |
+| `_selectedSheet` | `int` | `0xa8` |
+| `_isNameMode` | `bool` | `0xac` |
+| `_scoreLineOff` | `UIImageView *[4]` | `0xb0` |
+| `_scoreLineOn` | `UIImageView *[4]` | `0xc0` |
+| `_topIconOff` | `UIImageView *[4]` | `0xd0` |
+| `_topIconOn` | `UIImageView *[4]` | `0xe0` |
+| `_meanIconOff` | `UIImageView *[4]` | `0xf0` |
+| `_meanIconOn` | `UIImageView *[4]` | `0x100` |
+| `_myIconOff` | `UIImageView *[4]` | `0x110` |
+| `_myIconOn` | `UIImageView *[4]` | `0x120` |
+| `_topScoreBase` | `UIImageView *[4]` | `0x130` |
+| `_topNameBase` | `UIImageView *[4]` | `0x140` |
+| `_meanBase` | `UIImageView *[4]` | `0x150` |
+| `_myBase` | `UIImageView *[4]` | `0x160` |
+
 ### `CheckerMusicCell` — ✅ complete
 
 Methods **3/3** · unimpl 0 · ivars 10 · `instanceSize`=`92`
@@ -2068,6 +1845,16 @@ Methods **3/3** · unimpl 0 · ivars 10 · `instanceSize`=`92`
 | `dateX` | `int` | `0x50` |
 | `titleX` | `int` | `0x54` |
 | `genreX` | `int` | `0x58` |
+
+### `CheckerMusicViewController` — ✅ complete
+
+Methods **10/10** · unimpl 0 · ivars 1 · `instanceSize`=`168`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_scoreDataArray` | `NSArray *` | `0xa4` |
 
 ### `CommonAlertView` — ✅ complete
 
@@ -2182,6 +1969,21 @@ Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `image` | `UIImage *` | `0x34` |
+
+### `DevDataDownloader` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 6 · `instanceSize`=`25`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_Downloader` | `Downloader *` | `0x4` |
+| `m_Title` | `NSString *` | `0x8` |
+| `m_FileName` | `NSString *` | `0xc` |
+| `m_IsOld` | `BOOL` | `0x10` |
+| `m_Delegate` | `<DevDataDownloaderDelegate> *` | `0x14` |
+| `isAcv` | `BOOL` | `0x18` |
 
 ### `DownloadImageView` — ✅ complete
 
@@ -2537,6 +2339,21 @@ Methods **19/19** · unimpl 0 · ivars 7 · `instanceSize`=`192`
 | `m_CoverView` | `UIView *` | `0xb8` |
 | `_pageImgs` | `UIView *` | `0xbc` |
 
+### `HttpConn` — ✅ complete
+
+Methods **10/10** · unimpl 0 · ivars 6 · `instanceSize`=`28`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `receivedData` | `NSMutableData *` | `0x4` |
+| `receivedString` | `NSString *` | `0x8` |
+| `encoding` | `unsigned int` | `0xc` |
+| `conn` | `NSURLConnection *` | `0x10` |
+| `statusCode` | `int` | `0x14` |
+| `status` | `int` | `0x18` |
+
 ### `ImageDownloader` — ✅ complete
 
 Methods **20/20** · unimpl 0 · ivars 6 · `instanceSize`=`28`
@@ -2552,6 +2369,28 @@ Methods **20/20** · unimpl 0 · ivars 6 · `instanceSize`=`28`
 | `m_ImageConnection` | `NSURLConnection *` | `0x14` |
 | `m_DownloadedImage` | `UIImage *` | `0x18` |
 
+### `InputKidViewController` — ✅ complete
+
+Methods **12/12** · unimpl 0 · ivars 3 · `instanceSize`=`176`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_codeField` | `UITextField *` | `0xa4` |
+| `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
+| `_downloader` | `Downloader *` | `0xac` |
+
+### `InviteTopViewController` — ✅ complete
+
+Methods **8/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `isAnimationing` | `BOOL` | `0xa2` |
+
 ### `LimitedCharaInfo` — ✅ complete
 
 Methods **7/7** · unimpl 0 · ivars 3 · `instanceSize`=`13`
@@ -2563,6 +2402,18 @@ Methods **7/7** · unimpl 0 · ivars 3 · `instanceSize`=`13`
 | `_musicIds` | `NSArray *` | `0x4` |
 | `_charaIds` | `NSArray *` | `0x8` |
 | `_getFlg` | `BOOL` | `0xc` |
+
+### `LoginBonusView` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 3 · `instanceSize`=`61`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_BgImgView` | `UIImageView *` | `0x34` |
+| `m_OldLoginCnt` | `int` | `0x38` |
+| `m_IsTouch` | `BOOL` | `0x3c` |
 
 ### `MainViewController` — ✅ complete
 
@@ -2842,6 +2693,24 @@ Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 | --- | --- | ---: |
 | `_answerId` | `int` | `0x34` |
 | `_answerIdView` | `UIImageView *` | `0x38` |
+
+### `RandomLoginBonusView` — ✅ complete
+
+Methods **11/11** · unimpl 0 · ivars 9 · `instanceSize`=`104`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_bonus` | `int` | `0x34` |
+| `_numImgView1000` | `UIImageView *` | `0x38` |
+| `_numImgView0100` | `UIImageView *` | `0x3c` |
+| `_numImgView0010` | `UIImageView *` | `0x40` |
+| `_numImgView0001` | `UIImageView *` | `0x44` |
+| `_seRscId` | `int[3]` | `0x48` |
+| `_seInstId` | `int[3]` | `0x54` |
+| `_isAnimationing` | `BOOL` | `0x60` |
+| `_state` | `int` | `0x64` |
 
 ### `RecommendAdId` — ✅ complete
 

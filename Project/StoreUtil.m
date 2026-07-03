@@ -67,6 +67,13 @@ static NSString *ApiPath(NSString *name) {
                                  @"/apr/main/cgi/", @"pack_recommend/index.jsp"]];
 }
 
+// @ 0x59148 — the invite-code redemption endpoint. Same literal-path form as
+// recommendPackURL (byte-verified "/apr/main/cgi/" slashes) plus "invited/index.jsp".
++ (NSURL *)invitedURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"invited/index.jsp"]];
+}
+
 // --- Game API endpoints (name derived from the selector; identical pattern) ---
 + (NSURL *)getFriendRequestURL { return [self createHttpsURL:ApiPath(@"get_friend_request")]; }
 + (NSURL *)getFriendScoreURL   { return [self createHttpsURL:ApiPath(@"get_friend_score")]; }
