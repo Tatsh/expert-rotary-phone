@@ -9,4 +9,9 @@
 #import "CharaInfo.h"
 
 @implementation CharaInfo
+
+// All accessors are compiler-synthesized plain ivar reads/writes
+// (charaId/skillId/rarity are atomic; the NSString properties are nonatomic).
+// dealloc @ 0x640b8 — ARC-omitted (object ivars only).
+
 @end

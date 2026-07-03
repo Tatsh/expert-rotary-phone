@@ -21,12 +21,12 @@
 
 @interface ImageDownloader : NSObject
 
-@property (nonatomic, assign) id<ImageDownloaderDelegate> delegate;
-@property (nonatomic, retain) NSString *imageURL;                // source URL string @ 0x5ab54/0x5ab64
-@property (nonatomic, retain) NSURLConnection *imageConnection;   // in-flight connection
-@property (nonatomic, retain) NSMutableData *activeDownload;      // received bytes
-@property (nonatomic, retain) UIImage *downloadedImage;          // decoded result
-@property (nonatomic, retain) NSIndexPath *indexPathInTableView; // the row to refresh
+@property (nonatomic, assign) id<ImageDownloaderDelegate> delegate;  // getter @ 0x5ab94 / setter @ 0x5aba4
+@property (nonatomic, retain) NSString *imageURL;                // source URL string, getter @ 0x5ab54 / setter @ 0x5ab64
+@property (nonatomic, retain) NSURLConnection *imageConnection;   // in-flight connection, getter @ 0x5abd4 / setter @ 0x5abe4
+@property (nonatomic, retain) NSMutableData *activeDownload;      // received bytes, getter @ 0x5abb4 / setter @ 0x5abc4
+@property (nonatomic, retain) UIImage *downloadedImage;          // decoded result, getter @ 0x5abf4 / setter @ 0x5ac04
+@property (nonatomic, retain) NSIndexPath *indexPathInTableView; // the row to refresh, getter @ 0x5ab74 / setter @ 0x5ab84
 
 - (void)startDownload;                     // open the connection using imageURL @ 0x5a63c
 - (void)cancelDownload;                    // @ 0x5a724

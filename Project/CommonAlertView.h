@@ -30,8 +30,12 @@
 - (void)show;             // @ 0x4b4cc — add over the root view + open animation
 - (BOOL)isVisible;        // @ 0x4bb9c — !self.isHidden
 
-@property (nonatomic, copy) NSString *title;
-@property (nonatomic, copy) NSString *message;
+// Atomic copy properties (objc_getProperty/objc_setProperty, atomic flag set).
+@property (copy) NSString *title;      // getter @ 0x4bbc0, setter @ 0x4bbd4
+@property (copy) NSString *message;    // getter @ 0x4bbe4, setter @ 0x4bbf8
+
+// Atomic assign (unsafe_unretained) — plain barrier'd pointer store, not weak.
+@property (assign) id<CommonAlertViewDelegate> delegate;  // getter @ 0x4bc08, setter @ 0x4bc1c
 
 @end
 

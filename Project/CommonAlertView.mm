@@ -22,10 +22,22 @@
 @implementation CommonAlertView {
     UILabel *_titleView;
     CustomTextView *_messageView;
-    __weak id<CommonAlertViewDelegate> _delegate;
     UIView *_dummyView;    // transparent backdrop that blocks touches
-    BOOL _isAnimationing;  // guards the open bounce (Ghidra ivar _isAnimationing)
+    BOOL _isAnimationing;  // guards the open/close animation (Ghidra ivar _isAnimationing)
 }
+// title/message/delegate are @property-backed (accessors annotated in the header).
+
+// @ 0x4a308 — designated UIView initializer: chain to super and clear the animation guard.
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self != nil) {
+        _isAnimationing = NO;
+    }
+    return self;
+}
+
+// dealloc @ 0x4b474 — ARC-omitted: the binary only nils the copy'd title/message (via
+// setTitle:/setMessage:) and releases object ivars before [super dealloc]; nothing to cancel.
 
 // @ 0x4a350
 - (instancetype)initWithTitle:(NSString *)title
@@ -170,14 +182,39 @@
 
 #pragma mark - Buttons
 
+// @ 0x4b970 — "other"/yes button: play the decide SE, then route through the click handler.
 - (void)onYesButton {
-    [_delegate commonAlertView:self clickedButtonAtIndex:1];
-    [self dismiss];
+    neEngine::playSystemSe(1);   // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 1)
+    [self commonAlertView:self clickedButtonAtIndex:1];
 }
 
+// @ 0x4b9a4 — "cancel"/no button: play the cancel SE, then route through the click handler.
 - (void)onNoButton {
-    [_delegate commonAlertView:self clickedButtonAtIndex:0];
-    [self dismiss];
+    neEngine::playSystemSe(2);   // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2)
+    [self commonAlertView:self clickedButtonAtIndex:0];
+}
+
+// @ 0x4b9d8 — the view is its own button target: run the fade-out close animation, then
+// (once) notify the real delegate with the button index and tear the alert down. Guarded by
+// _isAnimationing so a second tap during the close is ignored.
+- (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
+    if (_isAnimationing) {
+        return;
+    }
+    _isAnimationing = YES;
+    [UIView animateWithDuration:0.3   // DAT_0004baa0 (0.3f)
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{    // @ 0x4baa8 — animations block
+        self.alpha = 0.0f;
+    }
+                     completion:^(BOOL finished) {   // @ 0x4bad0 — completion block
+        self->_isAnimationing = NO;
+        if ([self->_delegate respondsToSelector:@selector(commonAlertView:clickedButtonAtIndex:)]) {
+            [self->_delegate commonAlertView:alertView clickedButtonAtIndex:index];
+        }
+        [self dismiss];   // removes _dummyView backdrop + self
+    }];
 }
 
 // @ 0x4b718 — the "pop open" bounce: snap to 75%, overshoot to 125% over 0.2s,

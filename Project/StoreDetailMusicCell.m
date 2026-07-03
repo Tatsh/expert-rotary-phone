@@ -14,15 +14,20 @@
 
 static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
+@interface StoreDetailMusicCell ()
+// The resolved iTunes URL (nil hides buttonLink). Backed by the `linkURL` ivar.
+@property (nonatomic, retain) NSURL *linkURL;   // getter @ 0x752f4, setter @ 0x75304
+@end
+
 @implementation StoreDetailMusicCell {
     UIImageView *bgView;                    // stretchable row background (the cell's backgroundView)
     UIView *sampleView;                     // dimmed overlay on the jacket while sampling
     UIActivityIndicatorView *indicator;     // buffering spinner (inside sampleView)
     UIImageView *playingView;               // "play" glyph shown while the clip plays
     UIButton *buttonLink;                   // iTunes-link button
-    NSURL *linkURL;                         // the resolved iTunes URL (nil hides buttonLink)
 }
-@synthesize labelName, labelArtist, labelLevels, artworkView, arcadeViewer;
+// linkURL is a private @property (accessors below); the other views are @synthesize'd.
+@synthesize labelName, labelArtist, labelLevels, artworkView, arcadeViewer, linkURL;
 
 // @ 0x7501c — set the iTunes link (hides the link button when there is none).
 - (void)setLink:(NSString *)url {
@@ -30,7 +35,7 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     buttonLink.hidden = (linkURL == nil);
 }
 
-// The iTunes-link button opens the stored URL. Ghidra selector handleLink:.
+// @ 0x74fb0 — the iTunes-link button opens the stored URL. Ghidra selector handleLink:.
 - (void)handleLink:(id)sender {
     if (linkURL != nil) {
         [[UIApplication sharedApplication] openURL:linkURL];
@@ -43,22 +48,21 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     sampleView.hidden = YES;
 }
 
-// Buffering the clip: show the dimmed overlay + spinner, hide the play glyph. Ghidra:
-// sampleDownloading.
+// @ 0x750dc — buffering the clip: start the spinner, hide the play glyph, show the overlay.
 - (void)sampleDownloading {
-    sampleView.hidden = NO;
-    playingView.hidden = YES;
     [indicator startAnimating];
+    playingView.hidden = YES;
+    sampleView.hidden = NO;
 }
 
-// The clip is playing: show the overlay + play glyph, stop the spinner. Ghidra: samplePlaying.
+// @ 0x7513c — the clip is playing: stop the spinner, show the play glyph + overlay.
 - (void)samplePlaying {
-    sampleView.hidden = NO;
     [indicator stopAnimating];
     playingView.hidden = NO;
+    sampleView.hidden = NO;
 }
 
-// The stretchable even/odd row background. Ghidra: setBgImage:.
+// @ 0x74ffc — the stretchable even/odd row background. Ghidra: setBgImage:.
 - (void)setBgImage:(UIImage *)image {
     bgView.image = image;
 }
@@ -160,7 +164,9 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     return self;
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// dealloc @ 0x7519c — ARC-omitted: the binary only -releases object ivars (bgView, artworkView,
+// labelName, labelArtist, labelLevels, sampleView, indicator, playingView, buttonLink, linkURL,
+// arcadeViewer) before [super dealloc]; nothing to cancel.
 
 @end
 

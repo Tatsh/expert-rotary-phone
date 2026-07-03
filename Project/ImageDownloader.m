@@ -33,6 +33,18 @@
 
 #pragma mark - NSURLConnection delegate
 
+// @ 0x5a79c — treat a 404 response as a failure: cancel the connection, drop the
+// buffer, and tell the delegate the row's image could not be loaded.
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+    if ([response respondsToSelector:@selector(statusCode)] &&
+        [(NSHTTPURLResponse *)response statusCode] == 404) {
+        [connection cancel];
+        self.activeDownload = nil;
+        self.imageConnection = nil;
+        [self.delegate imageDownloaderDidFail:self didLoad:self.indexPathInTableView];
+    }
+}
+
 // @ 0x5a854
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     [self.activeDownload appendData:data];
@@ -70,6 +82,14 @@
     if ([self.delegate respondsToSelector:@selector(imageDownloaderDidFail:didLoad:)]) {
         [self.delegate imageDownloaderDidFail:self didLoad:self.indexPathInTableView];
     }
+}
+
+#pragma mark -
+
+// @ 0x5aaa4 — cancel any in-flight connection before going away (ARC frees the
+// remaining object ivars).
+- (void)dealloc {
+    [_imageConnection cancel];
 }
 
 @end

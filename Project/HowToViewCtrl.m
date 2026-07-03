@@ -2,18 +2,19 @@
 //  HowToViewCtrl.m
 //  pop'n rhythmin
 //
-//  See HowToViewCtrl.h. Reconstructed from Ghidra project rb420, program PopnRhythmin. -init and
-//  -viewDidLoad are byte-reconstructed; the page-control / scroll interactions (backButtonFunc,
-//  pageControlDidChanged:, scrollViewDidScroll:) are best-effort standard behaviour (their bodies
-//  are not yet decompiled). Some frame origins are NEON-spilled and flagged.
+//  See HowToViewCtrl.h. Reconstructed from Ghidra project rb420, program PopnRhythmin. -init,
+//  -viewDidLoad and the page-control / scroll interactions (backButtonFunc, pageControlDidChanged:,
+//  scrollViewDidScroll:) are decompiled. Some frame origins are NEON-spilled and flagged.
 //
 
 #import "HowToViewCtrl.h"
 #import "HowToView.h"
+#import "neEngineBridge.h"      // neEngine::playSystemSe (page / cancel SE)
 
 @implementation HowToViewCtrl
 
 @synthesize isCloseButtonEnable = _isCloseButtonEnable;
+@synthesize fromNaviBarImage = _fromNaviBarImage;
 @synthesize backGroundImage = _backGroundImage;
 
 // @ 0x82e5c — retain the ordered image-name list.
@@ -87,28 +88,47 @@
     }
 }
 
-// Close the tutorial (back / close button). Ghidra selector backButtonFunc — best-effort pop.
+// @ 0x837bc — back / close button: play the cancel SE, restore the previous navbar background
+// image (if this overlay had overridden it) and pop.
 - (void)backButtonFunc {
+    // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) — cancel SE.
+    neEngine::playSystemSe(2);
+    if (_fromNaviBarImage) {
+        [self.navigationController.navigationBar setBackgroundImage:_fromNaviBarImage
+                                                     forBarMetrics:UIBarMetricsDefault];
+        _fromNaviBarImage = nil;   // ARC: was release + nil.
+    }
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-// Page control tapped: scroll to that page. Ghidra selector pageControlDidChanged: — best-effort.
-- (void)pageControlDidChanged:(id)sender {
-    CGFloat w = _scrollView.frame.size.width;
-    [_scrollView setContentOffset:CGPointMake(w * _pageCtrl.currentPage, 0) animated:YES];
+// @ 0x835d8 — page control tapped: scroll the strip so the selected page is visible.
+- (void)pageControlDidChanged:(UIPageControl *)sender {
+    CGRect frame = _scrollView.frame;
+    frame.origin.x = frame.size.width * sender.currentPage;
+    frame.origin.y = 0;
+    [_scrollView scrollRectToVisible:frame animated:YES];
 }
 
-// Track the current page as the user swipes; reveal the close button on the last page. Best-effort.
+// @ 0x83670 — track the current page as the user swipes; on a page change play the page SE and,
+// in close-button mode, reveal the close button only once the last page is reached.
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    NSInteger oldPage = _pageCtrl.currentPage;
     NSInteger page = (NSInteger)(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);
     _pageCtrl.currentPage = page;
-    _pageCtrl.hidden = NO;
-    if (_isCloseButtonEnable && page == (NSInteger)_fileNameArray.count - 1) {
-        _closeBtn.hidden = NO;
+    if (oldPage != _pageCtrl.currentPage) {
+        // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 4) — page SE.
+        neEngine::playSystemSe(4);
+        if (_isCloseButtonEnable) {
+            _closeBtn.hidden = (_pageCtrl.currentPage != (NSInteger)_fileNameArray.count - 1);
+        }
     }
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// didReceiveMemoryWarning @ 0x834e0 — super-only override, omitted.
+// viewWillDisappear: @ 0x8350c — super-only override, omitted.
+
+// dealloc @ 0x83538 — ARC-omitted (released object ivars only: _fileNameArray, _scrollView,
+// _pageCtrl, _fromNaviBarImage, _backGroundImage).
 
 @end
 

@@ -10,9 +10,11 @@
 //  recommended pack).
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithRecommendPackId: @ 0x53140   showAnimation @ 0x53e88
+//    initWithRecommendPackId: @ 0x53140   loadView @ 0x537d8   showAnimation @ 0x53e88
 //    showAnimationEnd @ 0x54030   hideAnimation @ 0x540b0   hideAnimationEnd @ 0x54178
 //    pushBarBtnBack: @ 0x541e0   recommendPackId @ 0x54424   setRecommendPackId: @ 0x54438
+//    showModalDialog: @ 0x53b10   hideModalDialog @ 0x53cd8   modalDialog @ 0x54414
+//    shouldAutorotateToInterfaceOrientation: @ 0x53e58   dealloc @ 0x53708
 //
 
 #import <UIKit/UIKit.h>
@@ -22,16 +24,28 @@
     UINavigationController *m_ManageNavCtrl;     // purchased-music manager tab
     UINavigationController *m_AcvManageNavCtrl;  // arcade-viewer manager tab
     BOOL m_Animation;                            // a fade is in progress
+    UIView *m_CoverView;                         // dimming backdrop behind the modal dialog
+    id m_ModalDialog;                            // StoreDialogView (TODO(dep): not yet reconstructed)
+    BOOL m_IsModalDialogAnimation;               // a modal-dialog fade is in progress
 }
 
 // Present opened for a specific recommended pack id (0/negative = the plain store).
 @property (nonatomic, assign) int recommendPackId;
+
+// The shared modal "please wait / abort" dialog built in -loadView. Ghidra: modalDialog @ 0x54414.
+// Typed id because StoreDialogView is not yet reconstructed (TODO(dep)).
+@property (nonatomic, readonly) id modalDialog;
 
 - (instancetype)initWithRecommendPackId:(int)recommendPackId;
 
 // Cross-fade the store in / out.
 - (void)showAnimation;
 - (void)hideAnimation;
+
+// Fade the modal dialog / dimming cover in (with delegate) and out. Both return whether the
+// requested transition started (showModalDialog: is a no-op while a fade is already running).
+- (BOOL)showModalDialog:(id)delegate;
+- (BOOL)hideModalDialog;
 
 // Nav-bar back button target.
 - (void)pushBarBtnBack:(id)sender;

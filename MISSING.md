@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 75 |
-| Partial (file exists, methods missing) | 20 |
+| Complete | 83 |
+| Partial (file exists, methods missing) | 12 |
 | Fully missing (no source file) | 78 |
-| **Missing methods** | **1449** |
+| **Missing methods** | **1355** |
 
 ## Scope decisions
 
@@ -106,7 +106,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 20
+## Partial classes — 12
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
@@ -122,16 +122,8 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `AppDelegate` | 24 | 43 | 19 |
 | `StorePackDetailViewPad` | 15 | 32 | 17 |
 | `SettingTableViewController` | 4 | 20 | 16 |
-| `ImageDownloader` | 7 | 20 | 13 |
-| `StoreViewController` | 8 | 21 | 13 |
-| `HowToViewCtrl` | 2 | 14 | 12 |
-| `StoreDetailMusicCell` | 3 | 15 | 12 |
-| `CharaInfo` | 2 | 13 | 11 |
-| `CommonAlertView` | 4 | 15 | 11 |
-| `StoreDownloadManager` | 1 | 12 | 11 |
-| `StoreMusicInfo` | 2 | 13 | 11 |
 
-## Complete classes — 75
+## Complete classes — 83
 
 - `AcViewerDetailCell`
 - `AcViewerMusicCell`
@@ -140,8 +132,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `ArcadeScoreData`
 - `BFCodec`
 - `BirthDayViewController`
+- `CharaInfo`
 - `CharaTicketData`
 - `CheckerCategoryCell`
+- `CommonAlertView`
 - `CommunicatingView`
 - `CustomAlertView`
 - `CustomButton`
@@ -161,6 +155,8 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `FriendScoreTableCell`
 - `GameEffectView`
 - `HowToView`
+- `HowToViewCtrl`
+- `ImageDownloader`
 - `LimitedCharaInfo`
 - `MapListCell`
 - `MusicPatch`
@@ -183,9 +179,12 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `StoreAcMusicInfo`
 - `StoreDetailCopyrightCell`
 - `StoreDetailHeaderView`
+- `StoreDetailMusicCell`
 - `StoreDetailViewController`
+- `StoreDownloadManager`
 - `StoreDownloadTask`
 - `StoreImageView`
+- `StoreMusicInfo`
 - `StorePackCell`
 - `StorePackInfo`
 - `StorePackInfoDownloader`
@@ -196,6 +195,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `StorePromotionView`
 - `StoreTableCell`
 - `StoreUtil`
+- `StoreViewController`
 - `SubMapListCell`
 - `SystemHardware`
 - `TouchRangeView`
@@ -3381,272 +3381,6 @@ Methods **4/20** · ivars 7 · `instanceSize`=`186`
 | `isPad` | `BOOL` | `0xb8` |
 | `_isEffectOn` | `BOOL` | `0xb9` |
 
-### `ImageDownloader` — 🟡 partial
-
-Methods **7/20** · ivars 6 · `instanceSize`=`28`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `connection:didReceiveResponse:` | `0x5a79c` |
-| `dealloc` | `0x5aaa4` |
-| `setImageURL:` | `0x5ab64` |
-| `indexPathInTableView` | `0x5ab74` |
-| `setIndexPathInTableView:` | `0x5ab84` |
-| `delegate` | `0x5ab94` |
-| `setDelegate:` | `0x5aba4` |
-| `activeDownload` | `0x5abb4` |
-| `setActiveDownload:` | `0x5abc4` |
-| `imageConnection` | `0x5abd4` |
-| `setImageConnection:` | `0x5abe4` |
-| `downloadedImage` | `0x5abf4` |
-| `setDownloadedImage:` | `0x5ac04` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_ImageURL` | `NSString *` | `0x4` |
-| `m_IndexPathInTableView` | `NSIndexPath *` | `0x8` |
-| `delegate` | `<ImageDownloaderDelegate> *` | `0xc` |
-| `m_ActiveDownload` | `NSMutableData *` | `0x10` |
-| `m_ImageConnection` | `NSURLConnection *` | `0x14` |
-| `m_DownloadedImage` | `UIImage *` | `0x18` |
-
-### `StoreViewController` — 🟡 partial
-
-Methods **8/21** · ivars 8 · `instanceSize`=`192`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x53708` |
-| `loadView` | `0x537d8` |
-| `showModalDialog:` | `0x53b10` |
-| `openDialogAnimStop:finished:context:` | `0x53c88` |
-| `hideModalDialog` | `0x53cd8` |
-| `closeDialogAnimStop:finished:context:` | `0x53df0` |
-| `shouldAutorotateToInterfaceOrientation:` | `0x53e58` |
-| `didReceiveMemoryWarning` | `0x54338` |
-| `viewWillAppear:` | `0x54364` |
-| `viewDidAppear:` | `0x54390` |
-| `viewWillDisappear:` | `0x543bc` |
-| `viewDidDisappear:` | `0x543e8` |
-| `modalDialog` | `0x54414` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_CoverView` | `UIView *` | `0xa4` |
-| `m_ModalDialog` | `StoreDialogView *` | `0xa8` |
-| `m_MainNavCtrl` | `UINavigationController *` | `0xac` |
-| `m_ManageNavCtrl` | `UINavigationController *` | `0xb0` |
-| `m_AcvManageNavCtrl` | `UINavigationController *` | `0xb4` |
-| `m_Animation` | `BOOL` | `0xb8` |
-| `m_IsModalDialogAnimation` | `BOOL` | `0xb9` |
-| `_recommendPackId` | `int` | `0xbc` |
-
-### `HowToViewCtrl` — 🟡 partial
-
-Methods **2/14** · ivars 7 · `instanceSize`=`189`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `didReceiveMemoryWarning` | `0x834e0` |
-| `viewWillDisappear:` | `0x8350c` |
-| `dealloc` | `0x83538` |
-| `pageControlDidChanged:` | `0x835d8` |
-| `scrollViewDidScroll:` | `0x83670` |
-| `backButtonFunc` | `0x837bc` |
-| `fromNaviBarImage` | `0x8385c` |
-| `setFromNaviBarImage:` | `0x83870` |
-| `backGroundImage` | `0x83880` |
-| `setBackGroundImage:` | `0x83894` |
-| `isCloseButtonEnable` | `0x838a4` |
-| `setIsCloseButtonEnable:` | `0x838bc` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_fileNameArray` | `NSArray *` | `0xa4` |
-| `_scrollView` | `UIScrollView *` | `0xa8` |
-| `_pageCtrl` | `UIPageControl *` | `0xac` |
-| `_closeBtn` | `UIButton *` | `0xb0` |
-| `_fromNaviBarImage` | `UIImage *` | `0xb4` |
-| `_backGroundImage` | `UIImage *` | `0xb8` |
-| `_isCloseButtonEnable` | `BOOL` | `0xbc` |
-
-### `StoreDetailMusicCell` — 🟡 partial
-
-Methods **3/15** · ivars 11 · `instanceSize`=`96`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `handleLink:` | `0x74fb0` |
-| `setBgImage:` | `0x74ffc` |
-| `sampleDownloading` | `0x750dc` |
-| `samplePlaying` | `0x7513c` |
-| `dealloc` | `0x7519c` |
-| `artworkView` | `0x752b4` |
-| `labelName` | `0x752c4` |
-| `labelArtist` | `0x752d4` |
-| `labelLevels` | `0x752e4` |
-| `linkURL` | `0x752f4` |
-| `setLinkURL:` | `0x75304` |
-| `arcadeViewer` | `0x75314` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `bgView` | `UIImageView *` | `0x34` |
-| `artworkView` | `UIImageView *` | `0x38` |
-| `labelName` | `UILabel *` | `0x3c` |
-| `labelArtist` | `UILabel *` | `0x40` |
-| `labelLevels` | `UILabel *` | `0x44` |
-| `sampleView` | `UIView *` | `0x48` |
-| `indicator` | `UIActivityIndicatorView *` | `0x4c` |
-| `playingView` | `UIImageView *` | `0x50` |
-| `buttonLink` | `UIButton *` | `0x54` |
-| `linkURL` | `NSURL *` | `0x58` |
-| `arcadeViewer` | `UIImageView *` | `0x5c` |
-
-### `CharaInfo` — 🟡 partial
-
-Methods **2/13** · ivars 6 · `instanceSize`=`28`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x640b8` |
-| `setCharaId:` | `0x64144` |
-| `charaName` | `0x6415c` |
-| `setCharaName:` | `0x6416c` |
-| `info` | `0x6417c` |
-| `setInfo:` | `0x6418c` |
-| `setSkillId:` | `0x641b0` |
-| `skillName` | `0x641c8` |
-| `setSkillName:` | `0x641d8` |
-| `rarity` | `0x641e8` |
-| `setRarity:` | `0x641fc` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_charaId` | `int` | `0x4` |
-| `_charaName` | `NSString *` | `0x8` |
-| `_info` | `NSString *` | `0xc` |
-| `_skillId` | `int` | `0x10` |
-| `_skillName` | `NSString *` | `0x14` |
-| `_rarity` | `int` | `0x18` |
-
-### `CommonAlertView` — 🟡 partial
-
-Methods **4/15** · ivars 7 · `instanceSize`=`80`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0x4a308` |
-| `dealloc` | `0x4b474` |
-| `onYesButton` | `0x4b970` |
-| `onNoButton` | `0x4b9a4` |
-| `commonAlertView:clickedButtonAtIndex:` | `0x4b9d8` |
-| `title` | `0x4bbc0` |
-| `setTitle:` | `0x4bbd4` |
-| `message` | `0x4bbe4` |
-| `setMessage:` | `0x4bbf8` |
-| `delegate` | `0x4bc08` |
-| `setDelegate:` | `0x4bc1c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0x34` |
-| `_titleView` | `UILabel *` | `0x38` |
-| `_messageView` | `CustomTextView *` | `0x3c` |
-| `_dummyView` | `UIView *` | `0x40` |
-| `_delegate` | `<CommonAlertViewDelegate> *` | `0x44` |
-| `_title` | `NSString *` | `0x48` |
-| `_message` | `NSString *` | `0x4c` |
-
-### `StoreDownloadManager` — 🟡 partial
-
-Methods **1/12** · ivars 5 · `instanceSize`=`21`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithTasks:delegate:` | `0x41fec` |
-| `currentProgress` | `0x42090` |
-| `overallProgress` | `0x420b0` |
-| `numTasks` | `0x42120` |
-| `start` | `0x42140` |
-| `cancel` | `0x422a0` |
-| `downloaderProceed:` | `0x42568` |
-| `downloaderError:` | `0x425bc` |
-| `dealloc` | `0x42664` |
-| `currentIndex` | `0x426e0` |
-| `tasks` | `0x426f0` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_Tasks` | `NSArray *` | `0x4` |
-| `m_FileDownloader` | `Downloader *` | `0x8` |
-| `m_Delegate` | `<StoreDownloadManagerDelegate> *` | `0xc` |
-| `m_CurrentIndex` | `unsigned int` | `0x10` |
-| `m_IsStarted` | `BOOL` | `0x14` |
-
-### `StoreMusicInfo` — 🟡 partial
-
-Methods **2/13** · ivars 10 · `instanceSize`=`44`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x566b8` |
-| `musicID` | `0x5676c` |
-| `name` | `0x5677c` |
-| `artist` | `0x5678c` |
-| `itemURL` | `0x5679c` |
-| `artworkURL` | `0x567ac` |
-| `sampleURL` | `0x567bc` |
-| `itunesURL` | `0x567cc` |
-| `lvBasic` | `0x567dc` |
-| `lvMedium` | `0x567ec` |
-| `lvHard` | `0x567fc` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `musicID` | `int` | `0x4` |
-| `name` | `NSString *` | `0x8` |
-| `artist` | `NSString *` | `0xc` |
-| `itemURL` | `NSString *` | `0x10` |
-| `artworkURL` | `NSString *` | `0x14` |
-| `sampleURL` | `NSString *` | `0x18` |
-| `itunesURL` | `NSString *` | `0x1c` |
-| `lvBasic` | `int` | `0x20` |
-| `lvMedium` | `int` | `0x24` |
-| `lvHard` | `int` | `0x28` |
-
 ### `AcViewerDetailCell` — ✅ complete
 
 Methods **7/7** · ivars 5 · `instanceSize`=`72`
@@ -3747,6 +3481,21 @@ Methods **13/13** · ivars 8 · `instanceSize`=`196`
 | `_subBorderView` | `UIView *` | `0xbc` |
 | `_dummyView` | `UIView *` | `0xc0` |
 
+### `CharaInfo` — ✅ complete
+
+Methods **13/13** · ivars 6 · `instanceSize`=`28`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_charaId` | `int` | `0x4` |
+| `_charaName` | `NSString *` | `0x8` |
+| `_info` | `NSString *` | `0xc` |
+| `_skillId` | `int` | `0x10` |
+| `_skillName` | `NSString *` | `0x14` |
+| `_rarity` | `int` | `0x18` |
+
 ### `CharaTicketData` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`48`
@@ -3766,6 +3515,22 @@ Methods **3/3** · ivars 7 · `instanceSize`=`84`
 | `isPad` | `BOOL` | `0x49` |
 | `offsetXForPad` | `int` | `0x4c` |
 | `imgMusicCntX` | `int` | `0x50` |
+
+### `CommonAlertView` — ✅ complete
+
+Methods **15/15** · ivars 7 · `instanceSize`=`80`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0x34` |
+| `_titleView` | `UILabel *` | `0x38` |
+| `_messageView` | `CustomTextView *` | `0x3c` |
+| `_dummyView` | `UIView *` | `0x40` |
+| `_delegate` | `<CommonAlertViewDelegate> *` | `0x44` |
+| `_title` | `NSString *` | `0x48` |
+| `_message` | `NSString *` | `0x4c` |
 
 ### `CommunicatingView` — ✅ complete
 
@@ -4049,6 +3814,37 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 | --- | --- | ---: |
 | `_imageList` | `NSArray *` | `0x34` |
 | `_bgImage` | `UIImage *` | `0x38` |
+
+### `HowToViewCtrl` — ✅ complete
+
+Methods **14/14** · ivars 7 · `instanceSize`=`189`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_fileNameArray` | `NSArray *` | `0xa4` |
+| `_scrollView` | `UIScrollView *` | `0xa8` |
+| `_pageCtrl` | `UIPageControl *` | `0xac` |
+| `_closeBtn` | `UIButton *` | `0xb0` |
+| `_fromNaviBarImage` | `UIImage *` | `0xb4` |
+| `_backGroundImage` | `UIImage *` | `0xb8` |
+| `_isCloseButtonEnable` | `BOOL` | `0xbc` |
+
+### `ImageDownloader` — ✅ complete
+
+Methods **20/20** · ivars 6 · `instanceSize`=`28`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_ImageURL` | `NSString *` | `0x4` |
+| `m_IndexPathInTableView` | `NSIndexPath *` | `0x8` |
+| `delegate` | `<ImageDownloaderDelegate> *` | `0xc` |
+| `m_ActiveDownload` | `NSMutableData *` | `0x10` |
+| `m_ImageConnection` | `NSURLConnection *` | `0x14` |
+| `m_DownloadedImage` | `UIImage *` | `0x18` |
 
 ### `LimitedCharaInfo` — ✅ complete
 
@@ -4342,6 +4138,26 @@ Methods **7/7** · ivars 7 · `instanceSize`=`80`
 | `m_ButtonPurchase` | `UIButton *` | `0x48` |
 | `m_NewMarker` | `UIImageView *` | `0x4c` |
 
+### `StoreDetailMusicCell` — ✅ complete
+
+Methods **15/15** · ivars 11 · `instanceSize`=`96`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `bgView` | `UIImageView *` | `0x34` |
+| `artworkView` | `UIImageView *` | `0x38` |
+| `labelName` | `UILabel *` | `0x3c` |
+| `labelArtist` | `UILabel *` | `0x40` |
+| `labelLevels` | `UILabel *` | `0x44` |
+| `sampleView` | `UIView *` | `0x48` |
+| `indicator` | `UIActivityIndicatorView *` | `0x4c` |
+| `playingView` | `UIImageView *` | `0x50` |
+| `buttonLink` | `UIButton *` | `0x54` |
+| `linkURL` | `NSURL *` | `0x58` |
+| `arcadeViewer` | `UIImageView *` | `0x5c` |
+
 ### `StoreDetailViewController` — ✅ complete
 
 Methods **48/48** · ivars 17 · `instanceSize`=`232`
@@ -4368,6 +4184,20 @@ Methods **48/48** · ivars 17 · `instanceSize`=`232`
 | `recommendDownloader` | `Downloader *` | `0xe0` |
 | `dummyView` | `UIViewController *` | `0xe4` |
 
+### `StoreDownloadManager` — ✅ complete
+
+Methods **12/12** · ivars 5 · `instanceSize`=`21`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_Tasks` | `NSArray *` | `0x4` |
+| `m_FileDownloader` | `Downloader *` | `0x8` |
+| `m_Delegate` | `<StoreDownloadManagerDelegate> *` | `0xc` |
+| `m_CurrentIndex` | `unsigned int` | `0x10` |
+| `m_IsStarted` | `BOOL` | `0x14` |
+
 ### `StoreDownloadTask` — ✅ complete
 
 Methods **5/5** · ivars 3 · `instanceSize`=`16`
@@ -4390,6 +4220,25 @@ Methods **7/7** · ivars 2 · `instanceSize`=`64`
 | --- | --- | ---: |
 | `m_ImageURL` | `NSString *` | `0x38` |
 | `m_ImageDownloader` | `ImageDownloader *` | `0x3c` |
+
+### `StoreMusicInfo` — ✅ complete
+
+Methods **13/13** · ivars 10 · `instanceSize`=`44`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `musicID` | `int` | `0x4` |
+| `name` | `NSString *` | `0x8` |
+| `artist` | `NSString *` | `0xc` |
+| `itemURL` | `NSString *` | `0x10` |
+| `artworkURL` | `NSString *` | `0x14` |
+| `sampleURL` | `NSString *` | `0x18` |
+| `itunesURL` | `NSString *` | `0x1c` |
+| `lvBasic` | `int` | `0x20` |
+| `lvMedium` | `int` | `0x24` |
+| `lvHard` | `int` | `0x28` |
 
 ### `StorePackCell` — ✅ complete
 
@@ -4534,6 +4383,23 @@ Methods **4/4** · ivars 2 · `instanceSize`=`60`
 ### `StoreUtil` — ✅ complete
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
+
+### `StoreViewController` — ✅ complete
+
+Methods **21/21** · ivars 8 · `instanceSize`=`192`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_CoverView` | `UIView *` | `0xa4` |
+| `m_ModalDialog` | `StoreDialogView *` | `0xa8` |
+| `m_MainNavCtrl` | `UINavigationController *` | `0xac` |
+| `m_ManageNavCtrl` | `UINavigationController *` | `0xb0` |
+| `m_AcvManageNavCtrl` | `UINavigationController *` | `0xb4` |
+| `m_Animation` | `BOOL` | `0xb8` |
+| `m_IsModalDialogAnimation` | `BOOL` | `0xb9` |
+| `_recommendPackId` | `int` | `0xbc` |
 
 ### `SubMapListCell` — ✅ complete
 

@@ -66,6 +66,44 @@
     return self;
 }
 
+// @ 0x537d8 — build the dimming cover and the centred modal (please-wait / abort) dialog over the
+// tab bar's view; on retina match the GL scene's native contentScaleFactor.
+- (void)loadView {
+    [super loadView];
+
+    if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)] &&
+        [self.view respondsToSelector:@selector(contentScaleFactor)]) {
+        self.view.contentScaleFactor = [UIScreen mainScreen].scale;
+    }
+
+    CGRect bounds = self.view.bounds;
+
+    // 40%-black dimming backdrop, resized with the view and hidden until a dialog is shown.
+    m_CoverView = [[UIView alloc] initWithFrame:bounds];
+    m_CoverView.opaque = NO;
+    m_CoverView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
+    m_CoverView.autoresizingMask =
+        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    m_CoverView.hidden = YES;
+    [self.view addSubview:m_CoverView];
+
+    // TODO(dep): StoreDialogView is a separate, not-yet-reconstructed unit; instantiated by name so
+    // this compiles until its header lands. The dialog frame sizes are NEON-spilled (best-effort).
+    Class dialogClass = NSClassFromString(@"StoreDialogView");
+    UIFont *messageFont;
+    if (neSceneManager::isPadDisplay()) {
+        m_ModalDialog = [[dialogClass alloc] initWithFrame:CGRectMake(0, 0, 400, 300)];
+        messageFont = [UIFont fontWithName:AppFontName() size:18.0f];
+    } else {
+        m_ModalDialog = [[dialogClass alloc] initWithFrame:CGRectMake(0, 0, 300, 270)];
+        messageFont = [UIFont fontWithName:AppFontName() size:16.0f];
+    }
+    UILabel *messageLabel = [m_ModalDialog performSelector:@selector(labelMessage)];
+    messageLabel.font = messageFont;
+    [m_ModalDialog setCenter:CGPointMake(bounds.size.width * 0.5f, bounds.size.height * 0.5f)];
+    [m_CoverView addSubview:m_ModalDialog];
+}
+
 // @ 0x54424 / 0x54438 — atomic accessors for the recommended-pack seed.
 - (int)recommendPackId {
     return _recommendPackId;
@@ -158,7 +196,85 @@
     [self hideAnimation];
 }
 
-// dealloc — ARC-omitted (released object ivars only).
+// @ 0x53b10 — fade the dimming cover in and reveal the modal dialog (spinner running, abort button
+// disabled) with the given animation delegate. No-op (returns NO) while a fade is already running.
+- (BOOL)showModalDialog:(id)delegate {
+    if (m_IsModalDialogAnimation) {
+        return NO;
+    }
+    m_IsModalDialogAnimation = YES;
+    m_CoverView.alpha = 0.0f;
+    m_CoverView.hidden = NO;
+    [[m_ModalDialog performSelector:@selector(indicatorView)] startAnimating];
+    [[m_ModalDialog performSelector:@selector(buttonAbort)] setEnabled:NO];
+    [m_ModalDialog setDelegate:delegate];
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationCurve:UIViewAnimationCurveLinear];
+    [UIView setAnimationDuration:0.3];
+    [UIView setAnimationDelegate:self];
+    [UIView setAnimationDidStopSelector:@selector(openDialogAnimStop:finished:context:)];
+    m_CoverView.alpha = 1.0f;
+    [UIView commitAnimations];
+    return YES;
+}
+
+// @ 0x53c88 — open animation finished: clear the busy flag and re-enable the abort button.
+- (void)openDialogAnimStop:(NSString *)animationID
+                   finished:(NSNumber *)finished
+                    context:(void *)context {
+    m_IsModalDialogAnimation = NO;
+    [[m_ModalDialog performSelector:@selector(buttonAbort)] setEnabled:YES];
+}
+
+// @ 0x53cd8 — fade the dimming cover out; disables the abort button and drops the dialog delegate.
+- (BOOL)hideModalDialog {
+    m_IsModalDialogAnimation = YES;
+    [[m_ModalDialog performSelector:@selector(buttonAbort)] setEnabled:NO];
+    [m_ModalDialog setDelegate:nil];
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationCurve:UIViewAnimationCurveLinear];
+    [UIView setAnimationDuration:0.3];
+    [UIView setAnimationDelegate:self];
+    [UIView setAnimationDidStopSelector:@selector(closeDialogAnimStop:finished:context:)];
+    m_CoverView.alpha = 0.0f;
+    [UIView commitAnimations];
+    return YES;
+}
+
+// @ 0x53df0 — close animation finished: clear the busy flag, stop the spinner and hide the cover.
+- (void)closeDialogAnimStop:(NSString *)animationID
+                    finished:(NSNumber *)finished
+                     context:(void *)context {
+    m_IsModalDialogAnimation = NO;
+    [[m_ModalDialog performSelector:@selector(indicatorView)] stopAnimating];
+    m_CoverView.hidden = YES;
+}
+
+// @ 0x53e58 — iPad locks to portrait; iPhone allows every orientation.
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    if (neSceneManager::isPadDisplay()) {
+        return interfaceOrientation == UIInterfaceOrientationPortrait ||
+               interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown;
+    }
+    return YES;
+}
+
+// @ 0x54414 — the shared modal dialog built in -loadView.
+- (id)modalDialog {
+    return m_ModalDialog;
+}
+
+// didReceiveMemoryWarning @ 0x54338 — super-only override, omitted.
+// viewWillAppear: @ 0x54364 — super-only override, omitted.
+// viewDidAppear: @ 0x54390 — super-only override, omitted.
+// viewWillDisappear: @ 0x543bc — super-only override, omitted.
+// viewDidDisappear: @ 0x543e8 — super-only override, omitted.
+
+// @ 0x53708 — reset the app-wide tab-bar item title appearance installed in -init; the
+// nav-controller / dialog / cover ivars are released by ARC.
+- (void)dealloc {
+    [[UITabBarItem appearance] setTitleTextAttributes:nil forState:UIControlStateNormal];
+}
 
 @end
 

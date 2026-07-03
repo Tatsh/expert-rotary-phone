@@ -13,11 +13,11 @@
 
 @interface StoreDetailMusicCell : UITableViewCell
 
-@property (nonatomic, retain) UILabel *labelName;       // song title
-@property (nonatomic, retain) UILabel *labelArtist;     // artist
-@property (nonatomic, retain) UILabel *labelLevels;     // "LEVEL b/m/h"
-@property (nonatomic, retain) UIImageView *artworkView; // jacket
-@property (nonatomic, retain) UIView *arcadeViewer;     // arcade-chart badge (hidden unless present)
+@property (nonatomic, retain) UILabel *labelName;       // song title — getter @ 0x752c4
+@property (nonatomic, retain) UILabel *labelArtist;     // artist — getter @ 0x752d4
+@property (nonatomic, retain) UILabel *labelLevels;     // "LEVEL b/m/h" — getter @ 0x752e4
+@property (nonatomic, retain) UIImageView *artworkView; // jacket — getter @ 0x752b4
+@property (nonatomic, retain) UIView *arcadeViewer;     // arcade-chart badge — getter @ 0x75314
 
 // The fixed content height of a song cell (the row height adds padding). Ghidra: +cellHeight.
 + (CGFloat)cellHeight;
