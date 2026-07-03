@@ -163,7 +163,23 @@ private:
     neTextureForiOS *m_nameTex = nullptr;             // +0x54 song-name banner
     neTextureForiOS *m_artistTex = nullptr;           // +0x58 artist-name banner
     neTextureForiOS *m_digitTex[60] = {};             // +0x5c score/points/rank digit atlases
-    uint8_t          _rsvd_aepHandles[0x2d8 - 0x14c] = {}; // +0x14c resolved Aep lyr/frm/usr no. arrays
+    // ---- resolved Aep handle tables (+0x14c..+0x2d8) ----
+    // setup() fills these by name via AepManager::getLyrNo / layerFrameCount / getFrameNo /
+    // getUserNo over the byte-verified const name lists in MainTask.mm. The user-number arrays
+    // are what MusicSelAepDraw's per-element dispatch keys on (@ +0x22c etc.).
+    int              m_bgLyrNo[3] = {};               // +0x14c getLyrNo(BG_NEKO / DIFFICULTY_STAR_OPEN / _OUT)
+    int              m_bgLyrFrames[3] = {};           // +0x158 layerFrameCount of each m_bgLyrNo
+    uint8_t          _rsvd_164[0x17c - 0x164] = {};   // +0x164 (6 ints) not written by setup()
+    int              m_frmNo[24] = {};                // +0x17c getFrameNo(kFrmNames[24]) button/icon frames
+    int              m_starFrmNo[3] = {};             // +0x1dc getFrameNo(DIFFICULTY_STAR_GREEN/YELLOW/RED)
+    int              m_musicRankFrmNo[7] = {};        // +0x1e8 getFrameNo(MUSIC_RUNK_NUMBER_S/AAA/AA/A/B/C/D)
+    int              m_diffRankFrmNo[7] = {};         // +0x204 getFrameNo(DIFFICULTY_RUNK_NUMBER_S/AAA/AA/A/B/C/D)
+    int              m_jacketTipFrmNo[3] = {};        // +0x220 getFrameNo(JACKET_TIP00/01/02)
+    int              m_elemUsrNo[22] = {};            // +0x22c getUserNo(kElemUsrNames[22]) — draw dispatch
+    int              m_scoreDigitUsrNo[6] = {};       // +0x284 getUserNo(SCORE0 .. SCORE000000)
+    int              m_diffBlackUsrNo[3] = {};        // +0x29c getUserNo(DIFFICULTY_BLACK/BLACK2/BLACK3)
+    int              m_placeDigitUsrNo[9] = {};       // +0x2a8 getUserNo(GREEN/YELLOW/PINK _0/_0_0/_0_0_0)
+    int              m_jacketTipUsrNo[3] = {};        // +0x2cc getUserNo(JACKET_TIP00/01/02)
     MusicSelCell     m_cells[27] = {};                // +0x2d8 jacket + widget array (stride 0x38)
     // Three packed per-column row-load latches (0xff == idle). The binary treats these as three
     // separate bytes; the ctor's 0xffff/0xff stores (@ +0x8c0 / +0x8c2) set all three idle. A

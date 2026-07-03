@@ -19,6 +19,8 @@
 
 #import <UIKit/UIKit.h>
 
+#include <cstring>
+
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
@@ -78,10 +80,19 @@ void MainTask::initOverscoreRows() {
     }
 }
 
-// Re-read the three difficulty score rows for the current song (Ghidra: the
-// fetchScoreDataForMusic loop in state 4, driven off the app-event-center store).
+// Re-read the three difficulty score rows for the current song (Ghidra: the diffDirty
+// fetchScoreDataForMusic loop in update state 4 @ 0x35914). Each of the three difficulties
+// is re-fetched from the local ScoreData store into the previewed song's jacket-cell score
+// rows (the same MusicSelCell::ScoreRows block loadCellScoreRows fills). The destination
+// storage is the named cell block; only the visible-row *index* the binary computes
+// (___modsi3 of the scroll config) derives from the unrecovered scroll-physics seam, so the
+// chosen cell is taken as m_selectedCell (the cell tapped to enter the preview).
 void MainTask::refreshScoreRows() {
-    // TODO(dep): fetchScoreDataForMusic (app-event-center) not yet reconstructed; seam.
+    if (m_selectedCell < 0 || m_selectedCell >= 27) {
+        return;   // no cell in preview
+    }
+    // fetchScoreDataForMusic (neEngineBridge.h) is reconstructed; drive it per difficulty.
+    loadCellScoreRows(m_cells[m_selectedCell], m_sel.musicId);
 }
 
 // Ghidra: MainTask_ctor (FUN_00034d48) — C_TASK base ctor, install the MainTask vtable,
@@ -500,11 +511,112 @@ tail:
     AepLyrCtrlUpdateAll(0);
 }
 
+// ===== byte-verified const tables setup() resolves against (Ghidra project rb420) =====
+// All of the strings/coordinates below were read from the binary's .const_data; see the
+// per-table Ghidra address annotations.
+
+// Per-platform button-rect layout table (m_layoutRects[55], +0x988..+0xa64). These are the
+// immediate stores FUN_000370f0 makes in its !isPad / isPad branches. Slots that the binary
+// computes at runtime from the screen metrics / layout base are 0 here and patched in setup()
+// below (phone: 7/11/15/19/23/27/31/34/39/43; pad: 31; slots 46/47 are the draw-time grid-
+// origin cache, never written by setup). Button roles: settings/sort/recommend/over-score-log
+// row, back/tutorial/diff-toggle overlay, song-cell/fav grid, play/friend-score/difficulty.
+static const int kPhoneLayoutRects[55] = {
+    0xd2, 0x13a, 0,     -30,   -48,   0,     5,     0,      // 0..7
+    0x9c, 0x34,  0xa8,  0,     0x9c,  0x34,  0x141, 0,      // 8..15
+    0x9c, 0x34,  0x1df, 0,     0x9c,  0x34,  0x50,  0,      // 16..23
+    0x8c, 0x93,  0xfa,  0,     0x138, 0xa4,  0x26c, 0,      // 24..31
+    0x1e, 0x48,  0,     0x87,  0x86,  0xb2,  0xcd,  0,      // 32..39
+    0xe3, 0x4d,  0x14,  0,     0x15e, 0x5a,  0,     0,      // 40..47
+    0xb4, 0xb4,  0xbe,  0x32,  0x2a,  0x2a,  0x14           // 48..54
+};
+static const int kPadLayoutRects[55] = {
+    0x1e4, 0x210, -1,    -53,   -88,   -13,   0x1e,  0x78f,  // 0..7
+    0xea,  0x4e,  0x10d, 0x78f, 0xea,  0x4e,  0x1fc, 0x78f,  // 8..15
+    0xea,  0x4e,  0x2eb, 0x78f, 0xea,  0x4e,  0x4ea, 0x6c0,  // 16..23
+    0xae,  0x11a, 0x306, 0x677, 0x1e2, 0x113, 0x5ec, 0,      // 24..31
+    0x26,  0x198, 0x4f4, 0xde,  0xd6,  0xf4,  0x22e, 0x604,  // 32..39
+    0x1a0, 200,   0x1ce, 0x48e, 400,   0x56,  0,     0,      // 40..47
+    0x132, 400,   0x132, 0x55,  0x56,  0x56,  0x1b           // 48..54
+};
+
+// getLyrNo layer names -> m_bgLyrNo[3] (@ DAT_001315c8).
+static const char *const kBgLyrNames[3] = {
+    "BG_NEKO", "DIFFICULTY_STAR_OPEN", "DIFFICULTY_STAR_OUT"};
+// The 4 scene-layer names + ordering-table priorities (@ DAT_001315d4 / DAT_0012e670).
+static const char *const kLayerNames[4] = {
+    "BG_640X1136", "DIFFICULTY_OPEN", "DIFFICULTY_CLOSE", "DIFFICULTY_ROOP"};
+static const int kLayerOrder[4] = {13, 9, 9, 9};
+// The 2 intro-layer names + priorities, device-branched (@ DAT_001315e8/f0 / DAT_0012e680).
+static const char *const kIntroNamesTall[2]  = {"1024IMG", "BG_IMG_1136"};  // displayType == 2
+static const char *const kIntroNamesShort[2] = {"640IMG",  "BG_IMG_640"};
+static const int kIntroOrder[2] = {15, 14};
+// getFrameNo names -> m_frmNo[24] (@ DAT_001315f8).
+static const char *const kFrmNames[24] = {
+    "DIFFICULTY_BT00", "JACKET10_LOAD", "NEW_BOARD", "FULLCOMBO", "PERFECT", "PERFECT1",
+    "BT_SETTING", "BT_RETURN", "BT_SORT", "BT_OSSUME", "BT_EMULATE", "JACKET_LINE0",
+    "BG_NEKO", "JACKET_TIP_FONT0", "JACKET_TIP_PERFECT1", "JACKET_TIP_PERFECT2",
+    "BT_TUTORIAL", "FRIEND_SCORE_FONT", "FRIEND_UPDEF_FONT", "FRIEND_SCORE_ICON",
+    "FRIEND_UPDEF_ICON", "FRIEND_UPDEF_FONTBAR", "FRIEND_UP_ICON", "FRIEND_UP_FIRST_ICON"};
+// getFrameNo -> m_starFrmNo[3] (@ DAT_00131658).
+static const char *const kStarFrmNames[3] = {
+    "DIFFICULTY_STAR_GREEN", "DIFFICULTY_STAR_YELLOW", "DIFFICULTY_STAR_RED"};
+// getFrameNo -> m_musicRankFrmNo[7] (@ DAT_00131664).
+static const char *const kMusicRankFrmNames[7] = {
+    "MUSIC_RUNK_NUMBER_S", "MUSIC_RUNK_NUMBER_AAA", "MUSIC_RUNK_NUMBER_AA", "MUSIC_RUNK_NUMBER_A",
+    "MUSIC_RUNK_NUMBER_B", "MUSIC_RUNK_NUMBER_C", "MUSIC_RUNK_NUMBER_D"};
+// getFrameNo -> m_diffRankFrmNo[7] (@ DAT_00131680).
+static const char *const kDiffRankFrmNames[7] = {
+    "DIFFICULTY_RUNK_NUMBER_S", "DIFFICULTY_RUNK_NUMBER_AAA", "DIFFICULTY_RUNK_NUMBER_AA",
+    "DIFFICULTY_RUNK_NUMBER_A", "DIFFICULTY_RUNK_NUMBER_B", "DIFFICULTY_RUNK_NUMBER_C",
+    "DIFFICULTY_RUNK_NUMBER_D"};
+// JACKET_TIP names, resolved BOTH as frames (m_jacketTipFrmNo) and users (m_jacketTipUsrNo)
+// (@ PTR_s_JACKET_TIP00_0013173c).
+static const char *const kJacketTipNames[3] = {"JACKET_TIP00", "JACKET_TIP01", "JACKET_TIP02"};
+// getUserNo -> m_elemUsrNo[22] (@ DAT_0013169c) — MusicSelAepDraw per-element dispatch keys.
+static const char *const kElemUsrNames[22] = {
+    "JACKET00", "JACKET09", "DIFFICULTY_STAR_GREEN", "DIFFICULTY_STAR_YELLOW",
+    "DIFFICULTY_STAR_RED", "MUSIC_RUNK_NUM_GREEN", "MUSIC_RUNK_NUM_YELLOW", "MUSIC_RUNK_NUM_RED",
+    "DIFFICULTY_RUNK_NUMBER_E", "DIFFICULTY_BT00", "MUSIC_TITLE", "DIFFICULTY_TITLE",
+    "DIFFICULTY_NAME", "NEW_BOARD", "FULLCOMBO", "BG_NEKO", "S_POINT_NUM", "FRIEND_SCORE_FONT",
+    "FRIEND_SCORE_ICON", "FRIEND_UPDEF_FONTBAR", "FRIEND_UP_ICON", "FRIEND_UP_FIRST_ICON"};
+// getUserNo -> m_scoreDigitUsrNo[6] (@ DAT_001316f4).
+static const char *const kScoreDigitUsrNames[6] = {
+    "SCORE0", "SCORE00", "SCORE000", "SCORE0000", "SCORE00000", "SCORE000000"};
+// getUserNo -> m_diffBlackUsrNo[3] (@ DAT_0013170c).
+static const char *const kDiffBlackUsrNames[3] = {
+    "DIFFICULTY_BLACK", "DIFFICULTY_BLACK2", "DIFFICULTY_BLACK3"};
+// getUserNo -> m_placeDigitUsrNo[9] (@ DAT_00131718): the 3 colours x 3 digit places.
+static const char *const kPlaceDigitUsrNames[9] = {
+    "GREEN_0", "GREEN_0_0", "GREEN_0_0_0", "YELLOW_0", "YELLOW_0_0", "YELLOW_0_0_0",
+    "PINK_0", "PINK_0_0", "PINK_0_0_0"};
+
+// The 60 digit-atlas bundle resource names -> m_digitTex[60] (each loaded as "<name>.png").
+// Index order matches the binary's write offsets: score(+0x5c), points(+0x84), jk_dif(+0xac),
+// then the 30-entry rank block (+0xd4) written as green/yellow/pink 10s (@ 0x131748..).
+static const char *const kDigitAtlasNames[60] = {
+    "num_score_0", "num_score_1", "num_score_2", "num_score_3", "num_score_4",
+    "num_score_5", "num_score_6", "num_score_7", "num_score_8", "num_score_9",   // [0..9]
+    "num_points0", "num_points1", "num_points2", "num_points3", "num_points4",
+    "num_points5", "num_points6", "num_points7", "num_points8", "num_points9",   // [10..19]
+    "num_jk_dif_0", "num_jk_dif_1", "num_jk_dif_2", "num_jk_dif_3", "num_jk_dif_4",
+    "num_jk_dif_5", "num_jk_dif_6", "num_jk_dif_7", "num_jk_dif_8", "num_jk_dif_9", // [20..29]
+    "num_green_0", "num_green_1", "num_green_2", "num_green_3", "num_green_4",
+    "num_green_5", "num_green_6", "num_green_7", "num_green_8", "num_green_9",     // [30..39]
+    "num_yellow_0", "num_yellow_1", "num_yellow_2", "num_yellow_3", "num_yellow_4",
+    "num_yellow_5", "num_yellow_6", "num_yellow_7", "num_yellow_8", "num_yellow_9", // [40..49]
+    "num_pink_0", "num_pink_1", "num_pink_2", "num_pink_3", "num_pink_4",
+    "num_pink_5", "num_pink_6", "num_pink_7", "num_pink_8", "num_pink_9"};         // [50..59]
+// The 2 badge/arrow atlases -> m_arrowTex[2] (@ DAT_00131838), loaded as "<name>.png".
+static const char *const kArrowNames[2] = {"circle", "vie_cmn_warning@2x"};
+// The 5 touch/select SE names -> m_seId[5] (@ PTR_cf_v18_00131840), loaded as "<name>.m4a".
+static const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya"};
+
 // Ghidra: musicSelTaskSetup (FUN_000370f0) — state-0 scene build. Resolves the screen
-// metrics, lays out the per-platform button rects, constructs the BG / preview / intro
-// AepLyrCtrl layers, resolves every layer / frame / user animation handle, uploads the
-// score / points / rank digit textures, loads the touch SEs + preview BGM, and sets the
-// tutorial / badge flags.
+// metrics, lays out the per-platform button rects, loads the music-select Aep group and
+// constructs its scene + intro AepLyrCtrl layers, resolves every layer / frame / user
+// animation handle, uploads the score / points / rank digit textures, loads the touch SEs +
+// preview BGM, and sets the tutorial / badge flags. @ 0x370f0
 void MainTask::setup() {
     neAppEventCenter::shared();   // g_bGuestNoSaveMode := false lives in the event center
     AudioManager *audio = [AudioManager sharedManager];
@@ -514,51 +626,117 @@ void MainTask::setup() {
     m_screenHeight = (int)AepManager::shared().screenHeight();
     m_uiScale = (int)neSceneManager::screenScale();
     m_isPadDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_columnStride = m_isPadDisplay ? 9 : 6;   // +0xa74 cells per column
+
+    // ---- per-platform button-rect layout table (m_layoutRects + base) ----
+    const int displayType = (int)[[AppDelegate appDelegate] displayType];
+    if (!m_isPadDisplay) {
+        int baseY, rectSort, rectDiff;   // iVar16 / iVar13 (+0xa10) / iVar14 (+0xa24)
+        if (displayType == 2) {          // tall (notch/1136) phone
+            baseY = 0xaa;
+            rectSort = 0x311;
+            rectDiff = 0x3c6;
+            m_layoutBaseX = 0x6a;        // +0xa84
+            m_layoutBaseY = 0xaa;        // +0xa88
+        } else {
+            baseY = m_layoutBaseY;               // 0
+            rectDiff = m_layoutBaseX + 0x35c;    // 0x35c
+            rectSort = m_layoutBaseX + 0x2a7;    // 0x2a7
+        }
+        memcpy(m_layoutRects, kPhoneLayoutRects, sizeof(m_layoutRects));
+        const int scoreScaleH = baseY + 899;     // the 4 score-scale rows share this height
+        m_layoutRects[7] = m_layoutRects[11] = m_layoutRects[15] = m_layoutRects[19] = scoreScaleH;
+        m_layoutRects[23] = baseY + 700;
+        m_layoutRects[27] = baseY + 0x298;
+        m_layoutRects[31] = m_screenHeight - 100;
+        m_layoutRects[34] = rectSort;
+        m_layoutRects[39] = rectDiff;
+        m_layoutRects[43] = m_layoutBaseX + 0x23a;
+    } else {
+        memcpy(m_layoutRects, kPadLayoutRects, sizeof(m_layoutRects));
+        m_layoutRects[31] = m_screenHeight - 0x46;
+    }
+
     m_treasurePoint = (int)[UserSettingData treasurePoint];
-    m_columnStride = m_isPadDisplay ? 9 : 6;
 
-    // TODO(dep): the per-platform button-rect table (m_layoutRects, +0x988..+0xa64) and
-    // the layout base (m_layoutBaseX/Y) are filled here from the phone/pad constant tables
-    // in FUN_000370f0. The exact pixel coordinates are the documented layout seam; the
-    // ROLES (settings / sort / recommend / over-score / difficulty / play rects) are exact.
+    // ---- load the music-select Aep group (3) + resolve its BG layer handles ----
+    m_aep->loadAepData(3, m_aep->baseDir(),
+                       m_isPadDisplay ? "music_select_ipad" : "music_select", true);
+    for (int i = 0; i < 3; i++) {
+        m_bgLyrNo[i] = m_aep->getLyrNo(3, kBgLyrNames[i]);
+        m_bgLyrFrames[i] = m_aep->layerFrameCount(m_bgLyrNo[i]);
+    }
 
-    // Build the four scene layers (BG + preview transports) and two intro layers.
-    static const char *const kLayerNames[4] = {
-        "BG_640X1136", "PREVIEW", "PREVIEW_LOOP", "PREVIEW_OUT"};
+    // ---- build the 4 scene layers, then the 2 device-branched intro layers ----
     for (int i = 0; i < 4; i++) {
         m_layers[i] = new AepLyrCtrl();
-        m_layers[i]->init(3, kLayerNames[i], this, 0);
+        m_layers[i]->init(3, kLayerNames[i], this, kLayerOrder[i]);
+    }
+    const char *const *introNames;
+    if (displayType == 2) {
+        // Tall-phone/pad nudge: park each scene layer at y=0, z=0x6a (Ghidra: the +0x18/+0x1c
+        // stores). setRouletteAnchor performs exactly that (m_y = 0, raw z = value).
+        for (int i = 0; i < 4; i++) {
+            m_layers[i]->setRouletteAnchor(0x6a);
+        }
+        introNames = kIntroNamesTall;
+    } else {
+        m_layoutBaseX = 0;               // +0xa84 re-zeroed for the short-phone branch
+        introNames = kIntroNamesShort;
     }
     for (int i = 0; i < 2; i++) {
         m_introLayers[i] = new AepLyrCtrl();
-        m_introLayers[i]->init(3, "INTRO", this, 0);
-    }
-    // TODO(dep): the resolved lyr/frame/user-number tables (+0x14c..+0x2d8) are filled here
-    // via AepManager::getLyrNo / getFrmNo / getAepUsrNo loops; kept as a reserved block.
-
-    // Upload the 60 score / points / rank digit-atlas textures (Ghidra: the 10x [score,
-    // points, jkDif] + 30 rank loop). Paths come from the bundle number-atlas tables.
-    for (auto &tex : m_digitTex) {
-        tex = new neTextureForiOS();
-        // tex->load("<number-atlas path>");  // exact bundle path table: layout seam
+        m_introLayers[i]->init(3, introNames[i], this, kIntroOrder[i]);
     }
 
-    updateList();   // build the initial list column state
+    // ---- resolve the frame / user animation handles into their named arrays ----
+    for (int i = 0; i < 24; i++) m_frmNo[i]        = m_aep->getFrameNo(3, kFrmNames[i]);
+    for (int i = 0; i < 3;  i++) m_starFrmNo[i]    = m_aep->getFrameNo(3, kStarFrmNames[i]);
+    for (int i = 0; i < 7;  i++) m_musicRankFrmNo[i] = m_aep->getFrameNo(3, kMusicRankFrmNames[i]);
+    for (int i = 0; i < 7;  i++) m_diffRankFrmNo[i] = m_aep->getFrameNo(3, kDiffRankFrmNames[i]);
+    for (int i = 0; i < 3;  i++) m_jacketTipFrmNo[i] = m_aep->getFrameNo(3, kJacketTipNames[i]);
+    for (int i = 0; i < 22; i++) m_elemUsrNo[i]    = m_aep->getUserNo(3, kElemUsrNames[i]);
+    for (int i = 0; i < 6;  i++) m_scoreDigitUsrNo[i] = m_aep->getUserNo(3, kScoreDigitUsrNames[i]);
+    for (int i = 0; i < 3;  i++) m_diffBlackUsrNo[i] = m_aep->getUserNo(3, kDiffBlackUsrNames[i]);
+    for (int i = 0; i < 9;  i++) m_placeDigitUsrNo[i] = m_aep->getUserNo(3, kPlaceDigitUsrNames[i]);
+    for (int i = 0; i < 3;  i++) m_jacketTipUsrNo[i] = m_aep->getUserNo(3, kJacketTipNames[i]);
 
-    // Load the touch / select SEs (Ghidra: 5x loadSe:isLoop:callName:group:) and the
-    // preview BGM (bgm02_musicsel.m4a from the app-support directory).
+    // ---- upload the 60 score / points / rank digit-atlas textures ----
+    for (int i = 0; i < 60; i++) {
+        neTextureForiOS *tex = new neTextureForiOS();
+        m_digitTex[i] = tex;
+        NSString *path = [[NSBundle mainBundle] pathForResource:@(kDigitAtlasNames[i]) ofType:@"png"];
+        tex->load(path.UTF8String);
+    }
+
+    rebuildList();   // musicSelUpdate — build the initial sorted list + column state
+
+    // ---- the 2 badge/arrow atlases ----
+    for (int i = 0; i < 2; i++) {
+        neTextureForiOS *tex = new neTextureForiOS();
+        m_arrowTex[i] = tex;
+        NSString *path = [[NSBundle mainBundle] pathForResource:@(kArrowNames[i]) ofType:@"png"];
+        tex->load(path.UTF8String);
+    }
+
+    // Install the per-frame scene draw callback for group 3 (Ghidra: setAepCallbacks).
+    m_aep->setGroupDrawCallback(3, reinterpret_cast<AepGroupDrawFn>(&MusicSelAepDraw), this);
+
+    // ---- load the 5 touch/select SEs (group 1) + the preview BGM ----
     for (int i = 0; i < 5; i++) {
-        m_seId[i] = 0;        // TODO(dep): loadSe returns the source id; SE name table is a seam.
-        m_seInst[i] = -1;     // idle
+        NSString *sePath = [[NSBundle mainBundle] pathForResource:@(kSeNames[i]) ofType:@"m4a"];
+        RSND_SOURCE_ID sid = [audio loadSe:sePath isLoop:NO callName:nil group:1];
+        m_seId[i] = (int)sid;   // +0x8c4
+        m_seInst[i] = -1;       // +0x8d8 idle
     }
-    (void)audio;
+    NSString *bgmPath = [[AppDelegate appAppSupportDirectory]
+        stringByAppendingPathComponent:@"bgm02_musicsel.m4a"];
+    [audio loadBgm:bgmPath isLoop:YES];
 
     // First-play tutorial is offered until the player has cleared it once.
     m_tutorialBadge = [UserSettingData isTutorialPlayed] ? 0 : 1;
     m_sel.tutorialOffered = m_tutorialBadge;
-    m_overScoreDict = nil;
-
-    m_cellSem = dispatch_semaphore_create(1);
+    m_overScoreDict = nil;   // +0xa98
 }
 
 // Ghidra: mainTaskUpdate (FUN_00034f4c) — per-frame list scroll physics. Reads the render
