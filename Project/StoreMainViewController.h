@@ -136,8 +136,8 @@
 // --- Pack-table row bookkeeping ------------------------------------------------------
 - (NSInteger)numPackRows;
 
-// Reconstructed elsewhere (viewDidLoad cluster). TODO(dep): showDetailViewForPhone:,
-// packViewSelected:, handleTapCoverView: are separate methods pending their own pass.
+// Detail-open helpers (implemented in StoreMainViewController.mm alongside the viewDidLoad
+// cluster): phone push / pad in-place card / dim-cover tap dismiss.
 - (void)showDetailViewForPhone:(int)packID;
 - (void)packViewSelected:(id)packView;
 - (void)handleTapCoverView:(id)sender;

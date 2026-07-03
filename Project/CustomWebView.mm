@@ -15,8 +15,8 @@
 #import "CustomWebView.h"
 
 #import "neEngineBridge.h"     // neSceneManager::shared / rootViewController / isPadDisplay, neEngine::playSystemSe
-#import "StoreUtil.h"          // +getOfficialPath / +getOfficialTwitterURL (see TODO(dep))
-#import "UserSettingData.h"    // +isFollowBonusGet / +treasurePoint / +saveTreasurePoint: / +saveIsFollowBonusGet: (see TODO(dep))
+#import "StoreUtil.h"          // +getOfficialPath / +getOfficialTwitterURL
+#import "UserSettingData.h"    // +isFollowBonusGet / +treasurePoint / +saveTreasurePoint: / +saveIsFollowBonusGet:
 #import "CommonAlertView.h"    // error + reward alerts
 
 @implementation CustomWebView
@@ -254,14 +254,14 @@
         short pts = [UserSettingData treasurePoint];
         [UserSettingData saveTreasurePoint:(short)(pts + 3000)];
 
-        // TODO(dep): exact reward text (Ghidra CFString cf_000000000_) is stored as a wide string
-        // and not recovered; a "%d" format taking the 3000-point award is used as a best-effort.
+        // Reward text recovered from the binary (Ghidra UTF-16 CFString @ 0x1374c8, formatted with
+        // the 3000-point award; "OK" dismiss button CFString @ 0x1347f8).
         CommonAlertView *alert = [[CommonAlertView alloc]
             initWithTitle:nil
-                  message:[NSString stringWithFormat:@"%d", 3000]
+                  message:[NSString stringWithFormat:@"トレジャーポイント%dPゲットしました", 3000]
                  delegate:nil
         cancelButtonTitle:nil
-        otherButtonTitles:nil];
+        otherButtonTitles:@"OK"];
         [alert show];
         // [alert release] is ARC-omitted.
 

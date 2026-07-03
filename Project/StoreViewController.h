@@ -18,6 +18,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "StoreDialogView.h"
 
 @interface StoreViewController : UITabBarController {
     UINavigationController *m_MainNavCtrl;       // pack store tab
@@ -25,7 +26,7 @@
     UINavigationController *m_AcvManageNavCtrl;  // arcade-viewer manager tab
     BOOL m_Animation;                            // a fade is in progress
     UIView *m_CoverView;                         // dimming backdrop behind the modal dialog
-    id m_ModalDialog;                            // StoreDialogView (TODO(dep): not yet reconstructed)
+    StoreDialogView *m_ModalDialog;              // the shared "please wait / abort" dialog
     BOOL m_IsModalDialogAnimation;               // a modal-dialog fade is in progress
 }
 
@@ -33,8 +34,7 @@
 @property (nonatomic, assign) int recommendPackId;
 
 // The shared modal "please wait / abort" dialog built in -loadView. Ghidra: modalDialog @ 0x54414.
-// Typed id because StoreDialogView is not yet reconstructed (TODO(dep)).
-@property (nonatomic, readonly) id modalDialog;
+@property (nonatomic, readonly) StoreDialogView *modalDialog;
 
 - (instancetype)initWithRecommendPackId:(int)recommendPackId;
 

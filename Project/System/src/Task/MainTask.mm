@@ -39,6 +39,9 @@ static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
+// findCharIndexForColumn (song-name truncation in rebuildList()) is declared in neGraphics.h
+// beside its sibling text helpers and defined in neEngineBridge.mm.
+
 // Recommend-list refresh throttle: the fetch is skipped when a fresh copy was pulled
 // recently and no push notification is pending (Ghidra: NSDate timeIntervalSinceDate vs
 // the last-fetch date DAT_00187bdc, divided by DAT_00035e9c, compared > 4, OR
@@ -557,9 +560,10 @@ void MainTask::setup() {
     m_cellSem = dispatch_semaphore_create(1);
 }
 
-// Ghidra: musicSelUpdate / mainTaskUpdate (FUN_00034f4c) — per-frame list scroll physics.
-// Reads the render manager's active touch, drives the horizontal list drag/fling, and on
-// a column change streams the newly-visible jacket column (musicSelLoadColumnPrev/Next).
+// Ghidra: mainTaskUpdate (FUN_00034f4c) — per-frame list scroll physics. Reads the render
+// manager's active touch, drives the horizontal list drag/fling, and on a column change
+// streams the newly-visible jacket column (musicSelLoadColumnPrev/Next). This is NOT the
+// re-sort routine: that is rebuildList() (musicSelUpdate FUN_0003835c), a separate function.
 void MainTask::updateList() {
     neSceneManager::shared();
     neGraphics &gfx = neGraphics::shared();
@@ -569,6 +573,198 @@ void MainTask::updateList() {
     // structurally; the fixed-point fling integration is the documented physics seam.
     // The observable effect (m_columnIndex advances within [0, m_columnCount) as the list
     // is dragged, streaming the exposed jacket column each step) is modelled by state 2.
+}
+
+// Ghidra: musicSelCleanup (FUN_0003cfb0) — release the previous sorted list and clear all 27
+// jacket cells before a re-sort. Frees each cell's uploaded texture (+0xc), bundled image
+// data (+0x8) and truncated-name string (+0x10), then resets the three per-column row latches
+// (+0x8c0/+0x8c1/+0x8c2) and the current column back to 0. Called at the top of rebuildList().
+// @ 0x3cfb0
+void MainTask::cleanup() {
+    if (m_musicList != nil) {
+        CFBridgingRelease((__bridge CFTypeRef)m_musicList);   // Ghidra: [m_musicList release]
+        m_musicList = nil;
+    }
+    for (MusicSelCell &cell : m_cells) {
+        if (cell.texture != nullptr) {
+            delete cell.texture;                              // vtable[1] dtor on the texture
+            cell.texture = nullptr;
+        }
+        if (cell.imageData != nil) {
+            cell.imageData = nil;                             // ARC releases the bundled PNG data
+        }
+        if (cell.name != nil) {
+            cell.name = nil;                                  // ARC releases the truncated name
+        }
+    }
+    // The packed per-column row latches (see MainTask.h note): next-column row @ +0x8c2 back to
+    // the 0xff "idle" sentinel, the current/prev-column pair @ +0x8c0 to 0xffff, column := 0.
+    m_highlightPrev = 0xff;
+    m_highlight = -1;
+    m_columnIndex = 0;
+}
+
+// Ghidra: musicSelUpdate (FUN_0003835c) — re-sort / rebuild the music-select list. Distinct
+// from updateList() (per-frame scroll physics, FUN_00034f4c): this runs once after the sort
+// order changes (SortSelect / Recommend close). It re-reads UserSettingData musicSort, re-sorts
+// the MusicManager song array into m_musicList, recomputes the column geometry, streams the
+// current column's jacket cells + score rows, (re)kicks the background jacket loader, and
+// primes the adjacent columns. @ 0x3835c
+void MainTask::rebuildList() {
+    neAppEventCenter::shared();   // force the event center (current-song id) live
+    cleanup();                    // release the old list + clear the 27 cells (@ 0x3cfb0)
+
+    NSArray *music = [[MusicManager getInstance] getMusicDataArray];
+    short sort = [UserSettingData musicSort];
+    m_appliedSort = sort;         // remember the sort we are applying (read by MusicSelAppliedSort)
+
+    // ---- 1. sort the song array per the applied order (retained into m_musicList) ----
+    NSArray *sorted = nil;
+    switch ((unsigned short)sort) {
+    case 0:
+        sorted = [music sortedArrayUsingSelector:@selector(compareMusicNameCustom:)];
+        break;
+    case 1:
+        sorted = [music sortedArrayUsingSelector:@selector(compareArtistNameCustom:)];
+        break;
+    case 2:
+        sorted = [music sortedArrayUsingSelector:@selector(compareDifficultyNormal:)];
+        break;
+    case 3:
+        sorted = [music sortedArrayUsingSelector:@selector(compareDifficultyHyper:)];
+        break;
+    case 4:
+        sorted = [music sortedArrayUsingSelector:@selector(compareDifficultyEx:)];
+        break;
+    case 5: {
+        // "Played" sort: order by music id, then partition into songs that have NO score
+        // record vs. songs that do, and concatenate un-scored-first then scored (Ghidra: the
+        // local_140 ++ local_13c order). A song counts as scored if any of its three
+        // difficulties has a stored score.
+        NSMutableArray *byId =
+            [[music sortedArrayUsingSelector:@selector(compareMusicID:)] mutableCopy];
+        NSMutableArray *unplayed = [NSMutableArray array];
+        NSMutableArray *played = [NSMutableArray array];
+        for (id song in byId) {
+            unsigned musicId = (unsigned)[song MusicID];
+            bool hasScore = false;
+            for (int diff = 0; diff < 3; diff++) {
+                // TODO(dep): fetchScoreDataForMusic (app-event-center score store, @ 0x39xxx)
+                // is not reconstructed yet; it fills a score record for (musicId, diff) and
+                // reports (> 0) whether a record exists. Treat as "no record" until wired.
+                (void)musicId; (void)diff;
+                int recordCount = 0;   // fetchScoreDataForMusic(currentMusicId(), musicId, diff)
+                if (recordCount > 0) {
+                    hasScore = true;
+                    break;
+                }
+            }
+            [(hasScore ? played : unplayed) addObject:song];
+        }
+        sorted = [unplayed arrayByAddingObjectsFromArray:played];
+        break;
+    }
+    default:
+        sorted = m_musicList;   // unknown sort: keep the existing (already-cleared) list
+        break;
+    }
+    if ((unsigned short)sort <= 5) {
+        m_musicList = (__bridge id)CFBridgingRetain(sorted);   // Ghidra: [sorted retain]
+    }
+
+    // ---- 2. column geometry ----
+    m_songCount = (int)[m_musicList count];
+    const int stride = m_columnStride;                 // cells per column (6 phone / 9 pad)
+    m_columnIndex = 0;
+    m_columnCount = (m_songCount - 1) / stride + 1;
+
+    // ---- 3. land the current column on the app-event-center's current song ----
+    // Ghidra compares [song MusicID] against g_pNeAppEventCenter (the event center's current
+    // music id). The exact global is a seam; model it via the reconstructed accessor.
+    const int currentId = neAppEventCenter::shared().lastMusic();   // g_pNeAppEventCenter (seam)
+    for (int i = 0; i < m_songCount; i++) {
+        id song = [m_musicList objectAtIndexedSubscript:i];
+        if ((int)[song MusicID] == currentId) {
+            m_columnIndex = i / stride;
+            break;
+        }
+    }
+
+    // ---- 4. stream the current column's visible jacket cells ----
+    // Song-name truncation width: 0x15 chars on pad, 0xf on phone.
+    const int nameWidth = m_isPadDisplay ? 0x15 : 0xf;
+    if (stride > 0) {
+        int songIdx = m_columnIndex * stride;
+        for (int slot = 0; slot < stride; slot++) {
+            if (songIdx >= m_songCount) {
+                break;
+            }
+            id song = [m_musicList objectAtIndexedSubscript:songIdx];
+            unsigned musicId = (unsigned)[song MusicID];
+            NSData *artwork = [song artwork2xData];
+            MusicSelCell &cell = m_cells[slot];
+
+            // Upload the @2x jacket art straight into a fresh texture.
+            neTextureForiOS *tex = new neTextureForiOS();   // neTextureForiOS_ctor
+            cell.texture = tex;
+            tex->loadFromImageData((__bridge const void *)artwork);   // neTextureLoadSingle
+
+            // Cache a (possibly ellipsis-truncated) copy of the song name for the cell label.
+            NSString *name = [[song musicName] copy];
+            cell.name = name;
+            int cut = findCharIndexForColumn(name, nameWidth);
+            if (cut > 0) {
+                cell.name = [[name substringToIndex:cut] stringByAppendingString:@"…"];
+            }
+
+            loadCellScoreRows(cell, musicId);   // 3-difficulty score rows into cell detail
+
+            cell.songIndex = slot;   // running cell index within the column
+            cell.loadState = 3;      // ready
+            cell.imageData = nil;    // no pending bundled image (art already uploaded)
+            songIdx++;
+        }
+    }
+
+    // ---- 5. (re)kick the background jacket loader exactly once ----
+    // +0x8c1 (the current-column widget-row latch; see the packed-latch note in MainTask.h) is
+    // reset so the current column draws from cell row 0.
+    reinterpret_cast<uint8_t *>(this)[0x8c1] = 0;
+    if (!m_cellLoaderStarted) {
+        m_loaderCursor = 0;
+        m_cellSem = dispatch_semaphore_create(1);
+        MainTask *self = this;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            // Background jacket loader (Ghidra: block invoke @ 0x3d040). Walks the column cells
+            // under m_cellSem and uploads each song's jacket art as it decodes. Best-effort:
+            // the block body is a documented seam.
+            (void)self;
+        });
+        m_cellLoaderStarted = 1;
+    }
+
+    // ---- 6. prime the adjacent columns' jacket rows ----
+    int row = stride;   // next column fills widget rows [stride, 2*stride)
+    if (m_columnIndex + 1 < m_columnCount) {
+        loadColumnNext(row);
+        row += stride;   // prev column fills widget rows [2*stride, 3*stride)
+    }
+    if (m_columnIndex - 1 >= 0) {
+        loadColumnPrev(row);
+    }
+}
+
+// De-inlined from rebuildList (@ 0x3835c): read the three difficulty score rows for `musicId`
+// into the jacket cell's detail block. In the binary each iteration calls fetchScoreDataForMusic
+// with the (musicId, difficulty) pair and writes the resulting score / medal bytes into the
+// cell's detail region (+0x14.. from the cell base).
+void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
+    for (int diff = 0; diff < 3; diff++) {
+        // TODO(dep): fetchScoreDataForMusic (app-event-center score store) is not reconstructed
+        // yet; when wired it fills cell.detail's per-difficulty score/medal fields for
+        // (musicId, diff). Left as a documented seam.
+        (void)cell; (void)musicId; (void)diff;
+    }
 }
 
 // Ghidra: musicSelAllCellsReady (FUN_00037f38) — true when every jacket cell has finished
@@ -718,7 +914,7 @@ void MainTask::updateInfoPanel(int mode) {
 // MainTask methods. Prefer importing MainTask.h and calling the method directly; these exist
 // only so those units keep linking until they are converted.
 extern "C" void musicSelUpdate(MainTask *task) {
-    task->updateList();
+    task->rebuildList();   // musicSelUpdate (FUN_0003835c) is the re-sort, not the scroll step
 }
 extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
     task->updateInfoPanel(mode);
@@ -785,7 +981,11 @@ void MainTask::loadColumnNext(int column) {
 
 // @ 0x35520 — stream the column before the current one into row `column`.
 void MainTask::loadColumnPrev(int column) {
-    if (m_highlight == -1 /* latch @ +0x8c0 idle (low byte) */ && at<int>(this, 0x8f0) != 0) {
+    // The prev-column latch is the +0x8c0 byte only (the low byte of the int16 m_highlight
+    // slot; its high byte @ +0x8c1 is the separate current-column row latch). Check the byte
+    // directly so rebuildList's +0x8c1 write does not spuriously gate this off.
+    const uint8_t prevLatch = *reinterpret_cast<uint8_t *>(raw(this) + 0x8c0);
+    if (prevLatch == 0xff && at<int>(this, 0x8f0) != 0) {
         loadColumn(this, column, -1, *reinterpret_cast<int8_t *>(raw(this) + 0x8c0));
     }
 }

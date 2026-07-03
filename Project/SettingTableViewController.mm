@@ -25,7 +25,7 @@
 #import "SettingTableViewController.h"
 
 #import "neEngineBridge.h"     // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
-#import "UserSettingData.h"    // +isEffectOn / +saveIsEffectOn: (see TODO(dep) category)
+#import "UserSettingData.h"    // +isEffectOn / +saveIsEffectOn: / +saveIsSimpleMode: / +initTreasureTmp
 #import "StoreUtil.h"          // +getOfficialAppInfoURL
 #import "CommonAlertView.h"    // retire-confirm alert
 
@@ -305,7 +305,7 @@ static UIViewController *RootVC() {
                 return;
             }
             CustomWebView *web = [[CustomWebView alloc]
-                initWithURL:[StoreUtil getOfficialAppInfoURL]];   // TODO(dep): CustomWebView
+                initWithURL:[StoreUtil getOfficialAppInfoURL]];
             [web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
             (void)web;   // ARC: the web view installs itself; the local ref is not retained
             break;
@@ -347,7 +347,7 @@ static UIViewController *RootVC() {
             if (_isPad) {
                 _howtoViewCtrlPad = nil;   // MRC released the previous overlay first
                 _howtoViewCtrlPad =
-                    [[HowToViewCtrlPad alloc] initWithFileNameArray:files];   // TODO(dep)
+                    [[HowToViewCtrlPad alloc] initWithFileNameArray:files];
                 if (indexPath.row == 0) {
                     // The basic how-to also themes the overlay's nav bar.
                     [_howtoViewCtrlPad.navigationController.navigationBar
@@ -387,7 +387,7 @@ static UIViewController *RootVC() {
             if (indexPath.row != 0) {
                 return;
             }
-            ConversionView *conv = [[ConversionView alloc] init];   // TODO(dep): ConversionView
+            ConversionView *conv = [[ConversionView alloc] init];
             [conv setDelegate:self];
             [self.navigationController.navigationBar
                 setBackgroundImage:[UIImage imageNamed:@"conv_navbar_change"]

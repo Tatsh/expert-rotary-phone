@@ -48,7 +48,8 @@ public:
     // ---- de-externed helpers: real methods (were extern "C" seams) ----
     // Each takes `this` in the binary, so each is a MainTask method here.
     void setup();                        // Ghidra: musicSelTaskSetup     (FUN_000370f0)
-    void updateList();                   // Ghidra: musicSelUpdate/mainTaskUpdate (FUN_00034f4c)
+    void updateList();                   // Ghidra: mainTaskUpdate (FUN_00034f4c) — per-frame scroll
+    void rebuildList();                  // Ghidra: musicSelUpdate (FUN_0003835c) — re-sort / rebuild
     bool allCellsReady();                // Ghidra: musicSelAllCellsReady  (FUN_00037f38)
     void updateHighlight();              // Ghidra: musicSelUpdateHighlight (FUN_000355fc)
     void stopAndSave();                  // Ghidra: musicSelStopAndSave     (FUN_00038008)
@@ -83,16 +84,31 @@ private:
     void initOverscoreRows();            // fill the 3 over-score display counters
     void refreshScoreRows();             // re-read the 3 difficulty score rows
 
+    // Release the old list + clear the 27 jacket cells before a re-sort/rebuild.
+    void cleanup();                      // Ghidra: musicSelCleanup (FUN_0003cfb0)
+
+    // De-inlined from rebuildList: fetch this song's three difficulty score rows into the
+    // jacket cell's detail block (the inner fetchScoreDataForMusic loop @ 0x3835c).
+    void loadCellScoreRows(MusicSelCell &cell, unsigned musicId);
+
     // ---- one widget cell of the select scene (Ghidra field26_0x2b0[], stride 0x38) ----
     // Indices 0..0x13 are the song jacket cells (imageData/texture/loadState below);
     // the higher indices are UI/button/state widgets whose per-widget detail (rect +
     // animation + select state) lives in `detail` (its sub-layout is a seam).
     struct MusicSelCell {                // 0x38 bytes
-        float             scale;         // +0x00 per-widget UI scale (pointInRect math)
+        // +0x00 is a float UI-scale for the button/UI widgets (indices >= 0x14, used by
+        // the pointInRect math); for the jacket cells (0..0x13) the SAME word instead
+        // holds the running list index of the song shown (rebuildList / loadColumn write
+        // it as an int). A documented overlap seam.
+        union {
+            float         scale;         // +0x00 per-widget UI scale (button widgets)
+            int           songIndex;     // +0x00 jacket cells: list index of the song
+        };
         int               loadState;     // +0x04 jacket state: 0 empty / 3 ready
         __unsafe_unretained id imageData;// +0x08 bundled PNG data (released after upload)
         neTextureForiOS  *texture;       // +0x0c uploaded jacket texture
-        uint8_t           detail[0x28];  // +0x10..0x38 per-widget rect/anim/state (seam)
+        __unsafe_unretained id name;     // +0x10 truncated song-name string (jacket cells)
+        uint8_t           detail[0x24];  // +0x14..0x38 per-cell score rows / widget state (seam)
     };
 
     // ---- packed per-song select state (documented seam; see header note) ----
@@ -135,18 +151,20 @@ private:
     uint8_t          _rsvd_8c3[0x8c4 - 0x8c3] = {};   // +0x8c3
     int              m_seId[5] = {};                  // +0x8c4 loaded touch-SE source ids
     int              m_seInst[5] = {};                // +0x8d8 touch-SE instance handles (-1 idle)
-    uint8_t          _rsvd_8ec[0x8f0 - 0x8ec] = {};   // +0x8ec
+    int              m_songCount = 0;                 // +0x8ec total songs in m_musicList (rebuildList)
     int              m_columnIndex = 0;               // +0x8f0 current list column
     int              m_columnCount = 0;               // +0x8f4 total columns
     int              m_chosenIndex = 0;               // +0x8f8 chosen song list index (save)
-    uint8_t          _rsvd_8fc[0x904 - 0x8fc] = {};   // +0x8fc
+    int              m_appliedSort = 0;               // +0x8fc music-sort rebuildList last applied
+    uint8_t          _rsvd_900[0x904 - 0x900] = {};   // +0x900
     int              m_resultSheet = 0;               // +0x904 saved result sheet (difficulty)
     uint8_t          _rsvd_908[0x91b - 0x908] = {};   // +0x908
     uint8_t          m_suppressDraw = 0;              // +0x91b hide the scene during teardown
     uint8_t          _rsvd_91c[0x91e - 0x91c] = {};   // +0x91c
     uint8_t          m_tutorialBadge = 0;             // +0x91e first-play tutorial badge visible
     uint8_t          m_recommendBadge = 0;            // +0x91f new-recommend badge visible
-    uint8_t          _rsvd_920[0x923 - 0x920] = {};   // +0x920
+    uint8_t          _rsvd_920[0x922 - 0x920] = {};   // +0x920
+    uint8_t          m_cellLoaderStarted = 0;         // +0x922 background jacket loader launched
     uint8_t          m_noSaveMode = 0;                // +0x923 guest / no-save teardown flag
     uint8_t          m_overScoreBadge = 0;            // +0x924 over-score badge visible
     uint8_t          m_isPadDisplay = 0;              // +0x925 pad-class display
@@ -162,7 +180,7 @@ private:
     uint8_t          _rsvd_touch[0xa84 - 0xa78] = {}; // +0xa78 current touch x / y / moved (updateList)
     int              m_layoutBaseX = 0;               // +0xa84 layout base x (phone)
     int              m_layoutBaseY = 0;               // +0xa88 layout base y
-    uint8_t          _rsvd_a8c[0xa90 - 0xa8c] = {};   // +0xa8c
+    int              m_loaderCursor = 0;              // +0xa8c async jacket-loader progress cursor
     dispatch_semaphore_t m_cellSem = nullptr;         // +0xa90 guards the jacket cell array
     int              m_highlightAnim = 0;             // +0xa94 highlight pulse phase (0..0x96)
     __unsafe_unretained id m_overScoreDict = nullptr;     // +0xa98 over-score "touched" set

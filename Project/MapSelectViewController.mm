@@ -70,11 +70,7 @@
 NSArray *loadAllTreasureMapHeaders(void);
 bool isIndexInRange12(unsigned int index);
 
-// NSValue payload for one visible main-map row. Obj-C type-encoding "{MainMapData=s@}".
-typedef struct MainMapData {
-    short mainMapId;
-    NSString *__unsafe_unretained name;   // map name (Shift-JIS decoded)
-} MainMapData;
+// MainMapData (the NSValue payload of -mapDataArray) is declared in MapSelectViewController.h.
 
 @interface MapSelectViewController () <DownloadMainDelegate>
 - (void)backButtonFunc;

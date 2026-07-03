@@ -29,14 +29,14 @@
 //   - -[... cellForRowAtIndexPath:] centres the button/label from the *cell frame* via
 //     NEON-spilled math; the centre X (cell.frame.size.width * 0.5, shifted -10 pre-iOS 7)
 //     and centre Y (32) are best-effort reconstructions of that spill.
-//   - row 2 shows a PolicyView terms-of-use overlay; PolicyView is not yet in Project/,
-//     so a bare UIViewController stands in (see TODO(dep) below) to keep this dangle-free.
+//   - row 2 shows a PolicyView terms-of-use overlay, wrapped in a UINavigationController.
 //
 
 #import "SettingCustomerTableViewController.h"
 
 #import "AppFont.h"            // AppFontName (DFSoGei gothic face)
 #import "neEngineBridge.h"     // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
+#import "PolicyView.h"         // row 2 terms-of-use overlay (@ PTR_PolicyView_0015c0b4)
 
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
@@ -185,11 +185,8 @@ static UIViewController *RootVC() {
     switch (indexPath.row) {
         case 2: {   // 利用規約 -> in-app Terms-of-Use overlay
             if (_policyView == nil) {
-                // TODO(dep): PolicyView — the terms-of-use screen instantiated here is a
-                // PolicyView (Ghidra: PTR_PolicyView_0015c0b4, -[PolicyView init]). That class
-                // is not yet present in Project/, so a bare UIViewController stands in to keep
-                // this reconstruction dangle-free. Swap in PolicyView once recovered.
-                UIViewController *policy = [[UIViewController alloc] init];
+                // Ghidra: PTR_PolicyView_0015c0b4, -[PolicyView init] @ 0x52a04.
+                PolicyView *policy = [[PolicyView alloc] init];
                 _policyView = [[UINavigationController alloc] initWithRootViewController:policy];
                 [_policyView.navigationBar
                     setBackgroundImage:[UIImage imageNamed:@"set_agreement_navbar"]

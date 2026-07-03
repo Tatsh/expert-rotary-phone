@@ -9,9 +9,7 @@
 
 #import "AppFont.h"
 #import "neEngineBridge.h"
-// TODO(dep): UserSettingData is reconstructed at Game/Data/Save/UserSettingData.h but
-// does not yet declare the class method +lastRecommendViewTimeString used below.
-#import "Game/Data/Save/UserSettingData.h"
+#import "Game/Data/Save/UserSettingData.h"   // +lastRecommendViewTimeString ("NEW" badge gate)
 
 // The NSValue payload getValue: fills for a recommend row. The leading record id is
 // unused by the cell; the four object fields drive the thumbnail, name, date and player.

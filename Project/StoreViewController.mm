@@ -87,19 +87,16 @@
     m_CoverView.hidden = YES;
     [self.view addSubview:m_CoverView];
 
-    // TODO(dep): StoreDialogView is a separate, not-yet-reconstructed unit; instantiated by name so
-    // this compiles until its header lands. The dialog frame sizes are NEON-spilled (best-effort).
-    Class dialogClass = NSClassFromString(@"StoreDialogView");
+    // The dialog frame sizes are NEON-spilled (best-effort).
     UIFont *messageFont;
     if (neSceneManager::isPadDisplay()) {
-        m_ModalDialog = [[dialogClass alloc] initWithFrame:CGRectMake(0, 0, 400, 300)];
+        m_ModalDialog = [[StoreDialogView alloc] initWithFrame:CGRectMake(0, 0, 400, 300)];
         messageFont = [UIFont fontWithName:AppFontName() size:18.0f];
     } else {
-        m_ModalDialog = [[dialogClass alloc] initWithFrame:CGRectMake(0, 0, 300, 270)];
+        m_ModalDialog = [[StoreDialogView alloc] initWithFrame:CGRectMake(0, 0, 300, 270)];
         messageFont = [UIFont fontWithName:AppFontName() size:16.0f];
     }
-    UILabel *messageLabel = [m_ModalDialog performSelector:@selector(labelMessage)];
-    messageLabel.font = messageFont;
+    m_ModalDialog.labelMessage.font = messageFont;
     [m_ModalDialog setCenter:CGPointMake(bounds.size.width * 0.5f, bounds.size.height * 0.5f)];
     [m_CoverView addSubview:m_ModalDialog];
 }
@@ -205,9 +202,9 @@
     m_IsModalDialogAnimation = YES;
     m_CoverView.alpha = 0.0f;
     m_CoverView.hidden = NO;
-    [[m_ModalDialog performSelector:@selector(indicatorView)] startAnimating];
-    [[m_ModalDialog performSelector:@selector(buttonAbort)] setEnabled:NO];
-    [m_ModalDialog setDelegate:delegate];
+    [m_ModalDialog.indicatorView startAnimating];
+    [m_ModalDialog.buttonAbort setEnabled:NO];
+    m_ModalDialog.delegate = delegate;
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationCurve:UIViewAnimationCurveLinear];
     [UIView setAnimationDuration:0.3];
@@ -223,14 +220,14 @@
                    finished:(NSNumber *)finished
                     context:(void *)context {
     m_IsModalDialogAnimation = NO;
-    [[m_ModalDialog performSelector:@selector(buttonAbort)] setEnabled:YES];
+    [m_ModalDialog.buttonAbort setEnabled:YES];
 }
 
 // @ 0x53cd8 — fade the dimming cover out; disables the abort button and drops the dialog delegate.
 - (BOOL)hideModalDialog {
     m_IsModalDialogAnimation = YES;
-    [[m_ModalDialog performSelector:@selector(buttonAbort)] setEnabled:NO];
-    [m_ModalDialog setDelegate:nil];
+    [m_ModalDialog.buttonAbort setEnabled:NO];
+    m_ModalDialog.delegate = nil;
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationCurve:UIViewAnimationCurveLinear];
     [UIView setAnimationDuration:0.3];
@@ -246,7 +243,7 @@
                     finished:(NSNumber *)finished
                      context:(void *)context {
     m_IsModalDialogAnimation = NO;
-    [[m_ModalDialog performSelector:@selector(indicatorView)] stopAnimating];
+    [m_ModalDialog.indicatorView stopAnimating];
     m_CoverView.hidden = YES;
 }
 
@@ -260,7 +257,7 @@
 }
 
 // @ 0x54414 — the shared modal dialog built in -loadView.
-- (id)modalDialog {
+- (StoreDialogView *)modalDialog {
     return m_ModalDialog;
 }
 

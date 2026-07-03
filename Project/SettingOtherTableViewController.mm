@@ -12,9 +12,10 @@
 //     best-effort (marked NEON below).
 //   * -tableView:didSelectRowAtIndexPath:'s reloadRowsAtIndexPaths:withRowAnimation: was a
 //     tail call; the row-animation argument was not recoverable — Fade is used best-effort.
-//   * -[UserSettingData initTreasureTmp] is invoked by the retire flow but is NOT declared
-//     in the current UserSettingData.h (see TODO(dep) below).
-//   * ConversionView and CustomWebView are not present in Project/ (TODO(dep)).
+//   * -[UserSettingData initTreasureTmp] is invoked by the retire flow (declared in
+//     UserSettingData.h).
+//   * The embedded ConversionView panel and the CustomWebView in-app web view are both
+//     reconstructed in Project/ (imported below).
 //   * viewDidAppear: (imp @ 0xd48bc) genuinely tail-calls the *super* viewWillDisappear:
 //     selector in the binary; reproduced faithfully with a NOTE.
 //   * Japanese CFStrings decoded from UTF-16LE (flags 0x7d0); ASCII from flags 0x7c8.
@@ -24,16 +25,11 @@
 
 #import "neEngineBridge.h"     // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
 #import "StoreUtil.h"          // +getOfficialAppInfoURL
-#import "UserSettingData.h"    // +initTreasureTmp (see TODO(dep) note)
+#import "UserSettingData.h"    // +initTreasureTmp
 #import "AppFont.h"            // AppFontName
 
-// TODO(dep): these two app classes are referenced by the decompile but are missing from
-// Project/. Forward-declared so the faithful calls below still express what the binary does.
-//   ConversionView : UIViewController — the embedded "device change" (data transfer) panel;
-//                    responds to -init, -setDelegate:, -view.
-//   CustomWebView  : an in-app web view; responds to -initWithURL:, -setErrorMsg:text:.
-@class ConversionView;   // TODO(dep): ConversionView
-@class CustomWebView;    // TODO(dep): CustomWebView
+#import "ConversionView.h"     // embedded "device change" (data transfer) panel (section 2, row 1)
+#import "CustomWebView.h"      // in-app web view for the official app-info page (section 0)
 
 // The app's root view controller (MainViewController), bridged from the C++ scene manager.
 static UIViewController *RootVC() {
@@ -275,9 +271,9 @@ static UIViewController *RootVC() {
 
         // Lazily build the ConversionView and forward our common delegate to it.
         if (_convDetailView == nil) {
-            ConversionView *conv = [[ConversionView alloc] init];   // TODO(dep): ConversionView
-            _convDetailView = (UIViewController *)conv;
-            [(id)conv setDelegate:_viewCmnDelegate];
+            ConversionView *conv = [[ConversionView alloc] init];
+            _convDetailView = conv;
+            [conv setDelegate:_viewCmnDelegate];
         }
         [_convDetailView.view setFrame:CGRectMake(0, 0, innerW, innerH)];
         [inner addSubview:_convDetailView.view];
@@ -381,8 +377,8 @@ static UIViewController *RootVC() {
         // News: open the official app-info page in the in-app web view.
         if (indexPath.row == 0) {
             CustomWebView *web = [[CustomWebView alloc]
-                initWithURL:[StoreUtil getOfficialAppInfoURL]];   // TODO(dep): CustomWebView
-            [(id)web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
+                initWithURL:[StoreUtil getOfficialAppInfoURL]];
+            [web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
             (void)web;   // ARC: the web view installs itself; the local reference is not retained
             neEngine::playSystemSe(1);
         }

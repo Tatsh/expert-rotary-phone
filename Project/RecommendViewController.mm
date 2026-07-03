@@ -12,17 +12,13 @@
 #import "DownloadMain.h"
 #import "RecommendListCell.h"
 #import "StoreViewController.h"
+#import "MainTask.h"          // MusicSelTask == MainTask: the real rebuildList() re-sort method
 #import "neEngineBridge.h"
 
 // The app's root navigation host (bridged UIViewController on the C++ scene manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
-
-// TODO(dep): the C++ music-select re-sort routine (Ghidra musicSelUpdate FUN_0003835c) lives in
-// the not-yet-reconstructed MusicSelTask unit. Declared extern "C" (the symbol is unmangled in the
-// binary), mirroring SortSelectViewController.mm / MainTask.mm's musicSel* engine-hook declarations.
-extern "C" void musicSelUpdate(MusicSelTask *task);
 
 // @ 0xbc2cc — the recommend list's sort comparator (binary symbol "compareByLocalizedName", used
 // via -sortedArrayUsingFunction:context:). It boxes/reads both RecommendData records and orders by
@@ -266,7 +262,7 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     }
     _isAnimationing = YES;
     if (_storeView != nil) {
-        musicSelUpdate(_pMusicSelTask);
+        _pMusicSelTask->rebuildList();
         _dummyView.view.hidden = YES;
     }
     neSceneManager::shared();

@@ -18,12 +18,8 @@
 #import "StoreUtil.h"                    // +getArcadeScoreURL
 #import "AppDelegate.h"                  // +appDelegate.managedObjectContext
 #import "UserSettingData.h"              // +konamiId
+#import "InputOTPViewCtrl.h"             // OTP-input screen (initWithCategoryView:)
 #import "neEngineBridge.h"
-
-// TODO(dep): the OTP-input screen pushed when an e-AMUSEMENT one-time password is
-// required is not yet reconstructed. It is instantiated dynamically (as elsewhere in
-// this project, e.g. AcViewerOptionViewController) so no bridging @interface/@class is
-// needed; it takes -initWithCategoryView: and calls back -startGetArcadeScoreHttpWithOtp:.
 
 // Alert messages (Ghidra CFStrings cf_Ok01YWeW0_0W0_00 @ 0x134a78 and
 // cf_s_W00000k0j0c0f0D00 @ 0x13afe8).
@@ -462,13 +458,7 @@ static NSString *const kMsgNoPlayData =
         [self.navigationController.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"input_kid_navbar"]
                  forBarMetrics:UIBarMetricsDefault];
-        // TODO(dep): InputOTPViewCtrl is not yet reconstructed; instantiate it
-        // dynamically to avoid a bridging seam.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-        id otpViewCtrl = [[NSClassFromString(@"InputOTPViewCtrl") alloc]
-                          performSelector:@selector(initWithCategoryView:) withObject:self];
-#pragma clang diagnostic pop
+        InputOTPViewCtrl *otpViewCtrl = [[InputOTPViewCtrl alloc] initWithCategoryView:self];
         [self.navigationController pushViewController:otpViewCtrl animated:YES];
     }
 }

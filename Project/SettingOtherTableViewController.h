@@ -36,9 +36,11 @@
 
 #import "CommonAlertView.h"   // CommonAlertViewDelegate (protocol_list @ 0x1552ac)
 
-// TODO(dep): ViewCmnProtocol is not present in Project/. The class holds a weak
-// (assign) id<ViewCmnProtocol> delegate that it forwards to the embedded ConversionView.
-// Forward-declared here so the property type resolves; recover the real protocol later.
+// ViewCmnProtocol is defined in ConversionView.h (declares -startCloseAnimation). This VC
+// holds a weak (assign) id<ViewCmnProtocol> delegate and forwards it to the embedded
+// ConversionView. Forward-declared here so the property type resolves without pulling
+// ConversionView.h (and its Downloader/CommonAlertView deps) into this header; the .mm
+// imports the real definition.
 @protocol ViewCmnProtocol;
 
 @interface SettingOtherTableViewController : UITableViewController <CommonAlertViewDelegate>

@@ -13,9 +13,8 @@
 //  font size 15.0 (0x41700000). Label texts are UTF-16LE CFStrings (flags 0x7d0):
 //  "ゲームプレー" @0x12c6d6, "トレジャーモード" @0x12c6e4.
 //
-//  DANGLING DEP: HowToViewCtrlPad is NOT reconstructed in Project/ (only the phone
-//  variant HowToViewCtrl exists). Its use in -tableView:didSelectRowAtIndexPath: is
-//  kept faithful to the binary and flagged with TODO(dep) below.
+//  -tableView:didSelectRowAtIndexPath: presents the iPad how-to overlay controller
+//  HowToViewCtrlPad (the sibling of the phone variant HowToViewCtrl).
 //
 //  The tile / label frame *centres* in -tableView:cellForRowAtIndexPath: are computed
 //  in the binary via NEON vector ops (cell.frame.size * 0.5, a -10.0 bias, and a
@@ -27,12 +26,8 @@
 
 #import "AppFont.h"
 #import "HowToViewCtrl.h"       // declares -initWithFileNameArray: (shared how-to selector)
+#import "HowToViewCtrlPad.h"    // iPad how-to overlay presented by -didSelectRowAtIndexPath:
 #import "neEngineBridge.h"
-
-// TODO(dep): HowToViewCtrlPad not reconstructed — the iPad how-to overlay controller
-// pushed by -tableView:didSelectRowAtIndexPath:. Only a forward declaration is used
-// here; replace with a real header once the class is recovered.
-@class HowToViewCtrlPad;
 
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
@@ -238,7 +233,6 @@ static UIViewController *RootVC() {
         if (_howtoViewCtrlPad != nil) {
             _howtoViewCtrlPad = nil;
         }
-        // TODO(dep): HowToViewCtrlPad not reconstructed — faithful to the binary.
         _howtoViewCtrlPad = [[HowToViewCtrlPad alloc] initWithFileNameArray:images];
         [RootVC().view addSubview:_howtoViewCtrlPad.view];
     } else if (indexPath.row == 0) {
@@ -247,7 +241,6 @@ static UIViewController *RootVC() {
         if (_howtoViewCtrlPad != nil) {
             _howtoViewCtrlPad = nil;
         }
-        // TODO(dep): HowToViewCtrlPad not reconstructed — faithful to the binary.
         _howtoViewCtrlPad = [[HowToViewCtrlPad alloc] initWithFileNameArray:images];
         [_howtoViewCtrlPad.navigationController.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"howto_navbar"]

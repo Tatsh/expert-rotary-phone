@@ -102,6 +102,15 @@ int countLines(const char *text);
 bool isWithinRange2D(float x1, float y1, float x2, float y2,
                      float yMin1, float xMax1, float yMin2, float xMax2);
 
+#ifdef __OBJC__
+// Character index at which `text` first fills `columnWidth` display columns, counting a
+// full-width (CJK / non-halfwidth) glyph as 2 columns and a halfwidth glyph as 1 — used to
+// ellipsis-truncate song/artist names to a fixed banner width. Returns -1 (0xffffffff) when
+// the whole string fits. Sibling engine text helper; defined in neEngineBridge.mm because it
+// needs Foundation (NSString). Ghidra: findCharIndexForColumn @ 0x2da34.
+int findCharIndexForColumn(NSString *text, int columnWidth);
+#endif
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

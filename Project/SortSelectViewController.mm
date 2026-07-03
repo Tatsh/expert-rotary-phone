@@ -12,17 +12,13 @@
 
 #import "SortCell.h"
 #import "UserSettingData.h"
+#import "MainTask.h"          // MusicSelTask == MainTask: the real rebuildList() re-sort method
 #import "neEngineBridge.h"
 
 // The app's root navigation host (bridged UIViewController on the C++ scene manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
-
-// TODO(dep): the C++ music-select re-sort routine (Ghidra musicSelUpdate FUN_0003835c) lives
-// in the not-yet-reconstructed MusicSelTask unit. Declared extern "C" (the symbol is
-// unmangled in the binary), mirroring MainTask.mm's musicSel* engine-hook declarations.
-extern "C" void musicSelUpdate(MusicSelTask *task);
 
 namespace {
 // The NSValue payload each SortCell reads: sort index + checked flag. Encodes as the
@@ -32,8 +28,9 @@ struct SortData {
     char isChecked;
 };
 
-// The task caches the music sort it last applied at +0x8fc (musicSelUpdate writes it there).
-// Read raw at its byte offset — MusicSelTask is an incomplete type on the ObjC side.
+// The task caches the music sort it last applied at +0x8fc (MainTask::rebuildList writes it
+// there — m_appliedSort). Read at its documented byte offset so this ObjC unit need not pull
+// in the private MainTask layout.
 inline unsigned MusicSelAppliedSort(MusicSelTask *task) {
     return *reinterpret_cast<unsigned *>(reinterpret_cast<char *>(task) + 0x8fc);
 }
@@ -211,7 +208,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
     }
     _isAnimationing = YES;
     if ((unsigned)[UserSettingData musicSort] != MusicSelAppliedSort(_pMusicSelTask)) {
-        musicSelUpdate(_pMusicSelTask);
+        _pMusicSelTask->rebuildList();
         _dummyView.view.hidden = YES;
     }
     neSceneManager::shared();

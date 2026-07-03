@@ -12,16 +12,13 @@
 #import "CheckerCategoryViewController.h"   // score-checker section
 #import "QuizMainViewController.h"          // quiz section
 #import "HowToViewCtrlPad.h"                // first-play how-to overlay
+#import "InputKIDViewCtrl.h"                // KONAMI-ID input controller (routed to while unlinked)
 #import "UserSettingData.h"                 // isPopnLinkSelected / saveIsPopnLinkSelected:
 #import "neEngineBridge.h"                  // neAppEventCenter::linkButtonsEnabled, neEngine::playSystemSe,
                                             //   neSceneManager::rootViewController
 
-// TODO(dep): the KONAMI-ID input controller InputKIDViewCtrl is not yet reconstructed
-// (MISSING.md — missing). It is instantiated by name (NSClassFromString) and typed as a
-// plain UIViewController here so this hub compiles and links until that unit lands.
-static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
-
-@interface PopnLinkTopSplitViewController () <PopnLinkTopViewControllerDelegate>
+@interface PopnLinkTopSplitViewController ()
+    <PopnLinkTopViewControllerDelegate, PopnLinkTopSplitViewControllerDelegate>
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
 - (void)handleTapCoverView;
@@ -144,7 +141,7 @@ static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
 
     neAppEventCenter::shared();
     if (!neAppEventCenter::linkButtonsEnabled()) {
-        UIViewController *inKid = [[NSClassFromString(kInputKIDViewCtrl) alloc] init]; // TODO(dep)
+        InputKIDViewCtrl *inKid = [[InputKIDViewCtrl alloc] init];
         [self.navigationController pushViewController:inKid animated:NO];
         if (![UserSettingData isPopnLinkSelected]) {
             _howToView = [[HowToViewCtrlPad alloc] initWithFileNameArray:@[@"firstplay_popnlink"]];
@@ -211,9 +208,9 @@ static NSString *const kInputKIDViewCtrl = @"InputKIDViewCtrl";
     _rightViewCtrl.topViewController.navigationItem.leftBarButtonItem = nil;
     _rightViewCtrl.topViewController.navigationItem.rightBarButtonItem = nil;
 
-    UIViewController *vc = [[NSClassFromString(kInputKIDViewCtrl) alloc] init]; // TODO(dep)
+    InputKIDViewCtrl *vc = [[InputKIDViewCtrl alloc] init];
     vc.navigationItem.hidesBackButton = YES;
-    [vc performSelector:@selector(setDelegate:) withObject:self];
+    vc.delegate = self;
 
     if (_selectedIndex < 0) {
         [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]

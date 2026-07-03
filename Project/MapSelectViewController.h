@@ -30,6 +30,14 @@
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView;
 @end
 
+// NSValue payload for one visible main-map row (the elements of -mapDataArray). Obj-C
+// type-encoding "{MainMapData=s@}". Owned by this controller; the pad split-view host reads it
+// back to label its header banner.
+typedef struct MainMapData {
+    short mainMapId;
+    NSString *__unsafe_unretained name;   // map name (Shift-JIS decoded)
+} MainMapData;
+
 @interface MapSelectViewController : UITableViewController
 
 // Wrap self in a UINavigationController (with the custom back button); on first-ever entry

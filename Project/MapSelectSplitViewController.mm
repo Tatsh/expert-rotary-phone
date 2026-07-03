@@ -60,14 +60,13 @@
 //     -performSelector:withObject:afterDelay:), so nothing to invalidate. The child-controller /
 //     index-path -release calls are ARC-omitted.
 //   - The header map-name lookup unwraps _mapSelectViewCtrl.mapDataArray NSValues; that record's
-//     layout is owned by MapSelectViewController (see TODO(dep)).
+//     layout (MainMapData) is declared in MapSelectViewController.h.
 //
 
 #import "MapSelectSplitViewController.h"
 
-#import "MapSelectViewController.h"     // TODO(dep): reconstructed in parallel — must declare
-                                        // -setMapSelectDelegate:, -treasureDataArray,
-                                        // -mapHeadArray, -mapDataArray (map-data record layout).
+#import "MapSelectViewController.h"     // left map list: -setMapSelectDelegate:, -treasureDataArray,
+                                        // -mapHeadArray, -mapDataArray + the MainMapData record.
 #import "SubMapSelectViewController.h"  // right area panel
 #import "HowToViewCtrlPad.h"            // first-run treasure how-to overlay
 #import "MainViewController.h"          // MapSelectEndCallBack on the app root VC
@@ -319,11 +318,9 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         // Find this map's display name in the map-data table for the header label.
         NSString *headerName = nil;
         for (NSValue *entry in [_mapSelectViewCtrl mapDataArray]) {
-            // Record layout owned by MapSelectViewController: leading short is the main-map id,
-            // followed by the display-name string (see TODO(dep) at the imports).
-            struct { short mapId; short pad; NSString *__unsafe_unretained name; } record = {0, 0, nil};
+            MainMapData record;
             [entry getValue:&record];
-            if (record.mapId == mainMapId) {
+            if (record.mainMapId == mainMapId) {
                 headerName = record.name;
                 break;
             }

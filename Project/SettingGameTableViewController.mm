@@ -18,10 +18,9 @@
 //  the matching detail row (row+1) from 0 to its dummy-frame height and cellForRow lazily builds
 //  a rounded, coloured container that embeds the detail sub-controller's view.
 //
-//  DEPENDENCY NOTE: rows 1/3/5 embed three sub-controllers that are not yet reconstructed --
-//  SoundSettingView, GameEffectView and PopkunSizeViewCtrl (see the TODO(dep) markers). Their
-//  instantiation is left commented so this file references only existing/system classes; the
-//  coloured detail container is still built so the layout stays faithful.
+//  Rows 1/3/5 embed three sub-controllers -- SoundSettingView, GameEffectView and
+//  PopkunSizeViewCtrl -- each lazily built into _detailView[0/2/4] and hosted inside the
+//  coloured detail container. All three are reconstructed and wired below.
 //
 //  Honesty note: the panel/label centering in cellForRowAtIndexPath: and the row-container frames
 //  are NEON-spilled in the binary (best-effort here, flagged inline). Frame origins/sizes recovered
@@ -33,9 +32,9 @@
 #import "neEngineBridge.h"   // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
 #import "AppFont.h"          // AppFontName (label typeface)
 
-// TODO(dep): SoundSettingView not yet reconstructed (row 1 detail -- initWithStyle:).
-// TODO(dep): GameEffectView not yet reconstructed (row 3 detail -- initWithStyle:).
-// TODO(dep): PopkunSizeViewCtrl not yet reconstructed (row 5 detail -- init).
+#import "SoundSettingView.h"    // row 1 detail sub-controller (@ PTR_SoundSettingView_0015c0a0)
+#import "GameEffectView.h"      // row 3 detail sub-controller (@ PTR_GameEffectView_0015c0a8)
+#import "PopkunSizeViewCtrl.h"  // row 5 detail sub-controller (@ PTR_PopkunSizeViewCtrl_0015c0a4)
 
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
@@ -242,11 +241,10 @@ static UIViewController *RootVC() {
             inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
             [box addSubview:inner];
             if (_detailView[0] == nil) {
-                // TODO(dep): SoundSettingView not yet reconstructed.
-                // _detailView[0] = [[SoundSettingView alloc] initWithStyle:UITableViewStyleGrouped];
+                _detailView[0] = [[SoundSettingView alloc] initWithStyle:UITableViewStyleGrouped];
             }
-            // _detailView[0].view.frame = CGRectMake(0, 0, frm.size.width - 20, frm.size.height - 4);
-            // [inner addSubview:_detailView[0].view];
+            _detailView[0].view.frame = CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+            [inner addSubview:_detailView[0].view];
             [cell.contentView addSubview:box];
             return cell;
         }
@@ -266,11 +264,10 @@ static UIViewController *RootVC() {
             inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
             [box addSubview:inner];
             if (_detailView[2] == nil) {
-                // TODO(dep): GameEffectView not yet reconstructed.
-                // _detailView[2] = [[GameEffectView alloc] initWithStyle:UITableViewStyleGrouped];
+                _detailView[2] = [[GameEffectView alloc] initWithStyle:UITableViewStyleGrouped];
             }
-            // _detailView[2].view.frame = CGRectMake(0, 0, frm.size.width - 20, frm.size.height - 4);
-            // [inner addSubview:_detailView[2].view];
+            _detailView[2].view.frame = CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+            [inner addSubview:_detailView[2].view];
             [cell.contentView addSubview:box];
             return cell;
         }
@@ -291,11 +288,10 @@ static UIViewController *RootVC() {
             inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 20.0f);
             [box addSubview:inner];
             if (_detailView[4] == nil) {
-                // TODO(dep): PopkunSizeViewCtrl not yet reconstructed.
-                // _detailView[4] = [[PopkunSizeViewCtrl alloc] init];
+                _detailView[4] = [[PopkunSizeViewCtrl alloc] init];
             }
-            // _detailView[4].view.frame = CGRectMake(0, 0, frm.size.width - 20, frm.size.height - 20);
-            // [inner addSubview:_detailView[4].view];
+            _detailView[4].view.frame = CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 20.0f);
+            [inner addSubview:_detailView[4].view];
             [cell.contentView addSubview:box];
             return cell;
         }

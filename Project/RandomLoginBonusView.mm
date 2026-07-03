@@ -35,27 +35,33 @@
 
 @implementation RandomLoginBonusView
 
+// @ 0x0012e318 — the weighted-random {value, weight} roulette table (7 rows).
+// Recovered verbatim from the const-data blob (Ghidra &UNK_0012e318 values /
+// &DAT_0012e31c weights, interleaved 8 bytes per row). The weights sum to 1000, which
+// matches the arc4random() % 1000 + 1 roll below.
+static const struct { int value; int weight; } kBonusTable[7] = {
+    {  100, 150 },   // @ 0x0012e318
+    {  200, 150 },   // @ 0x0012e320
+    {  300, 300 },   // @ 0x0012e328
+    {  400, 300 },   // @ 0x0012e330
+    {  500,  78 },   // @ 0x0012e338
+    { 1000,  20 },   // @ 0x0012e340
+    { 9999,   2 },   // @ 0x0012e348
+};
+
 // @ 0x18a38 — weighted-random roll into _bonus.
 //
-// arc4random() % 1000 + 1 is walked down a 7-row {value, weight} table (weights
-// sum to 1000); the first row whose running weight covers the roll supplies the
-// value.
-//
-// TODO(dep): the {value, weight} table is PIC-relative const data (Ghidra
-// &UNK_0012e318 / &DAT_0012e31c); its resolved absolute address lands in
-// unrelated code, so the concrete 7 rows are not recovered here. -bonusWeights /
-// -bonusValues must be backed by the extracted table.
+// arc4random() % 1000 + 1 is walked down the 7-row {value, weight} table (weights sum
+// to 1000); the first row whose running weight covers the roll supplies the value.
 - (void)getBonus {
     _bonus = 0;
     int roll = (int)(arc4random() % 1000) + 1;
     for (int i = 0; i < 7; i++) {
-        int weight = 0;   // TODO(dep): table[i].weight
-        int value  = 0;   // TODO(dep): table[i].value
-        if (roll <= weight) {
-            _bonus = value;
+        if (roll <= kBonusTable[i].weight) {
+            _bonus = kBonusTable[i].value;
             return;
         }
-        roll -= weight;
+        roll -= kBonusTable[i].weight;
     }
 }
 
@@ -144,9 +150,17 @@
 
         // Layout. Ghidra positions the reels relative to the board on phone and at
         // fixed coordinates on iPad; y is 523 on iPad.
-        // TODO(dep): the phone-idiom per-reel x/y deltas are float consts
-        // (DAT_0001952c / DAT_00019530 / DAT_0001987c / DAT_00019880); the iPad
-        // literals below are recovered exactly.
+        //
+        // Phone-idiom per-reel deltas recovered from the const-data floats:
+        //   DAT_0001952c / DAT_0001987c = 133.0f (0x43050000) — reel Y offset from board.
+        //   DAT_00019530 / DAT_00019880 =  54.0f (0x42580000) — reel-to-reel X step.
+        // The base X delta from board.origin.x is 24.0f (0x41c00000). Each reel's Y is
+        // taken from the board (not the previous reel); each reel's X is the previous
+        // reel's origin.x + 54.0.
+        static const CGFloat kReelBaseXDelta = 24.0f;    // 0x41c00000
+        static const CGFloat kReelXStep      = 54.0f;    // 0x42580000 (DAT_00019530 / DAT_00019880)
+        static const CGFloat kReelYDelta     = 133.0f;   // 0x43050000 (DAT_0001952c / DAT_0001987c)
+
         BOOL isPad = neSceneManager::isPadDisplay();
         UIImage *digitImg = up.firstObject;
         CGSize dSize = digitImg.size;
@@ -156,14 +170,14 @@
             _numImgView0010.frame = CGRectMake(398.0f, 523.0f, dSize.width, dSize.height);
             _numImgView0001.frame = CGRectMake(503.0f, 523.0f, dSize.width, dSize.height);
         } else {
-            // Phone: reels sit on the board, stepping right by the board-relative
-            // deltas noted above (base near board.origin + (24, 133)).
+            // Phone: reels sit on the board, stepping right by a fixed 54pt each.
             CGRect b = board.frame;
-            CGFloat y = b.origin.y + 133.0f;
-            _numImgView1000.frame = CGRectMake(b.origin.x + 24.0f,  y, dSize.width, dSize.height);
-            _numImgView0100.frame = CGRectMake(CGRectGetMaxX(_numImgView1000.frame), y, dSize.width, dSize.height);
-            _numImgView0010.frame = CGRectMake(CGRectGetMaxX(_numImgView0100.frame), y, dSize.width, dSize.height);
-            _numImgView0001.frame = CGRectMake(CGRectGetMaxX(_numImgView0010.frame), y, dSize.width, dSize.height);
+            CGFloat y  = b.origin.y + kReelYDelta;
+            CGFloat x0 = b.origin.x + kReelBaseXDelta;
+            _numImgView1000.frame = CGRectMake(x0,                     y, dSize.width, dSize.height);
+            _numImgView0100.frame = CGRectMake(x0 + kReelXStep,        y, dSize.width, dSize.height);
+            _numImgView0010.frame = CGRectMake(x0 + kReelXStep * 2.0f, y, dSize.width, dSize.height);
+            _numImgView0001.frame = CGRectMake(x0 + kReelXStep * 3.0f, y, dSize.width, dSize.height);
         }
 
         [self addSubview:_numImgView1000];
@@ -369,10 +383,11 @@
 
 // @ 0x1a558 — report the rolled bonus in a gift-styled CustomAlertView.
 - (void)showAlertView {
-    // TODO(dep): title/message CFStrings (cf_00000000, cf_0000000000G "%d ...")
-    // are wide strings not reconstructed here; the %d amount slot is kept.
-    NSString *title   = [NSString stringWithFormat:@"%@", @""];
-    NSString *message = [NSString stringWithFormat:@"%d", _bonus];
+    // UTF-16 CFStrings recovered from the binary:
+    //   title   @ 0x00134c18 -> data 0x0012b94c : "ログインボーナス"
+    //   message @ 0x00134c28 -> data 0x0012b95e : "トレジャーポイントをGET！\n[%dP]"
+    NSString *title   = [NSString stringWithFormat:@"ログインボーナス"];
+    NSString *message = [NSString stringWithFormat:@"トレジャーポイントをGET！\n[%dP]", _bonus];
 
     CustomAlertView *alert =
         [[CustomAlertView alloc] initWithView:self

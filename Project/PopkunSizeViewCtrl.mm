@@ -40,10 +40,7 @@
 #import "neEngineBridge.h"    // neSceneManager::isPadDisplay, neEngine::playSystemSe
 #import "AppFont.h"           // AppMaruFontName (info label typeface)
 #import "UserSettingData.h"   // popkunSize getter (+ savePopkunSize: setter)
-
-// TODO(dep): CustomAlertView not yet reconstructed (the _hoge overlay created in
-// viewDidLoad). Forward-declared so this file references only existing/system classes.
-@class CustomAlertView;
+#import "CustomAlertView.h"   // CustomAlertView (the _hoge overlay created in viewDidLoad)
 
 // The size slider's backing font (CFString cf_BullyBold in the binary); a bundled
 // display face with no AppFont helper, so the literal name is used directly.
@@ -61,7 +58,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     int              offsetYForPad2; // @0xd0  iPhone Y bias: slider
     int              offsetYForPad3; // @0xd4  iPhone Y bias: reset button
     int              offsetYForPad4; // @0xd8  iPhone Y bias: pop-kun preview
-    CustomAlertView *_hoge;         // @0xdc  full-screen alert overlay (TODO(dep))
+    CustomAlertView *_hoge;         // @0xdc  full-screen alert overlay
 }
 
 // @ 0x8b44c
@@ -87,7 +84,8 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     _size = [UserSettingData popkunSize];
 
     // Full-screen alert overlay, added first so it sits behind the controls.
-    // TODO(dep): CustomAlertView not yet reconstructed.
+    // @ 0x8b4d0 — bare -[CustomAlertView init] (inherited UIImageView init; no custom
+    // designated initializer is used here).
     _hoge = [[CustomAlertView alloc] init];
     [self.view addSubview:_hoge];
 

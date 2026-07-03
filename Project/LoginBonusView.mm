@@ -23,15 +23,23 @@
 // table is indexed by DownloadMain.loginBonusId with a 0x600-byte (128-record)
 // stride. A record with type == kLoginBonusRewardEnd terminates a row.
 //
-// TODO(dep): the concrete table data is a const blob baked into the binary at
-// 0x001320d0; it is not reconstructed here. -rewardTableForLoginBonusId:
-// reproduces exactly the address arithmetic the binary performs so the reward
-// logic below stays faithful; supply the extracted table to make it runnable.
+// Record layout recovered from the blob at 0x001320d0:
+//   +0x0 int requiredLoginCnt   +0x4 int type   +0x8 NSString *value
+// The value cell is a pointer to a baked constant NSString whose -intValue yields the
+// treasure-point amount (type 0). loginBonusId 0's row is days 1..N of treasure points
+// cycling through "300"/"100"/"800" (@ 0x00138458 / 0x00138468 / 0x00138478).
+//
+// TODO(dep): the blob itself stays opaque — it is a large 2-D table indexed by the
+// server-driven DownloadMain.loginBonusId, and each row's `value` cells are pointers to
+// Objective-C NSString objects baked at absolute addresses, not a plain C array.
+// -rewardTableForLoginBonusId: reproduces exactly the address arithmetic the binary
+// performs so the reward logic below stays faithful; supply the extracted blob (with its
+// NSString objects mapped) to make it runnable.
 // ---------------------------------------------------------------------------
 typedef struct {
-    int requiredLoginCnt;   // login count at which this reward unlocks
-    int type;               // 0 = treasure point, 1 = music unlock, 2 = terminator
-    int value;              // type 0: treasure-point amount (Ghidra reads it via -intValue)
+    int requiredLoginCnt;                  // login count at which this reward unlocks
+    int type;                              // 0 = treasure point, 1 = music unlock, 2 = terminator
+    NSString * __unsafe_unretained value;  // type 0: treasure amount as text (read via -intValue)
 } LoginBonusRewardEntry;
 
 enum {
@@ -47,14 +55,14 @@ enum {
 }
 - (void)touchEvent:(id)sender;   // @ 0x7c8e0
 - (void)showAlertView;           // @ 0x7cc68
-+ (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId;  // TODO(dep)
++ (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId;  // @ 0x7c05c (opaque blob; see note)
 @end
 
 @implementation LoginBonusView
 
 // @ 0x7c05c — helper mirroring the binary's table base arithmetic (see note above).
 + (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId {
-    // TODO(dep): const table baked at 0x001320d0 (Ghidra &DAT_001320d4 - offsetof(type)).
+    // Const blob baked at 0x001320d0 (Ghidra &DAT_001320d4 - offsetof(type)); see note above.
     const uint8_t *base = (const uint8_t *)0x001320d0;
     return (const LoginBonusRewardEntry *)(base + (size_t)loginBonusId * 0x600);
 }
@@ -169,8 +177,8 @@ enum {
         if (m_OldLoginCnt < threshold && threshold <= dl.loginCnt) {
             if (table[i].type == kLoginBonusRewardTreasure) {
                 short have = [UserSettingData treasurePoint];
-                // Ghidra reads the amount via -[value intValue]; modelled as int.
-                [UserSettingData saveTreasurePoint:(short)(have + table[i].value)];
+                // Ghidra reads the amount via -[value intValue] (value is a baked NSString).
+                [UserSettingData saveTreasurePoint:(short)(have + [table[i].value intValue])];
             } else if (table[i].type == kLoginBonusRewardMusic) {
                 [UserSettingData saveOpenedLoginBonusId:dl.loginBonusId];
                 [[MusicManager getInstance] openLoginBonusMusic];
@@ -248,20 +256,23 @@ enum {
     dl.isLoginCntUpdate = NO;
     m_OldLoginCnt += 1;
 
-    // TODO(dep): exact title text is a wide CFString (Ghidra cf_0000_).
-    NSString *title = [NSString stringWithFormat:@"%@", @""];
+    // UTF-16 CFString recovered @ 0x00138428 -> data 0x0012c662 : "ログイン%d日目"
+    // (the %d is the day being acknowledged, m_OldLoginCnt after the increment above).
+    NSString *title = [NSString stringWithFormat:@"ログイン%d日目", m_OldLoginCnt];
 
-    // TODO(dep): reward message CFStrings (cf_0000000000G "%d ...", cf__if0yW0_00k_,
-    // default cf___) are wide strings not reconstructed here; the %d slot is kept.
-    NSString *message = @"";
+    // Reward message CFStrings recovered from the binary:
+    //   treasure @ 0x00138448 -> 0x0012c688 : "トレジャーポイントをGET！\n[%@P]"  (value NSString)
+    //   music    @ 0x00138438 -> 0x0012c674 : "楽曲を解禁したよ♫"
+    //   default  @ 0x00134818                : "" (empty)
+    NSString *message = @"";   // cf___ default (empty)
     int maxCnt = [LoginBonusView getRewardMaxCnt];
     const LoginBonusRewardEntry *table = [LoginBonusView rewardTableForLoginBonusId:loginBonusId];
     for (int i = 0; i < maxCnt; i++) {
         if (table[i].requiredLoginCnt == m_OldLoginCnt) {
             if (table[i].type == kLoginBonusRewardTreasure) {
-                message = [NSString stringWithFormat:@"%d", table[i].value];   // cf_0000000000G
+                message = [NSString stringWithFormat:@"トレジャーポイントをGET！\n[%@P]", table[i].value];
             } else if (table[i].type == kLoginBonusRewardMusic) {
-                message = @"";   // cf__if0yW0_00k_ (music-unlock text)
+                message = @"楽曲を解禁したよ♫";
             }
             break;
         }

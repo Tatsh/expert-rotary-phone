@@ -12,6 +12,7 @@
 #import "AepTexture.h"
 #import "AudioManager.h"
 #import "neEngineBridge.h"
+#import "neGraphics.h"       // findCharIndexForColumn declaration (defined below)
 
 // Create + register the boot logo splash task (Task/TaskFactory.mm).
 class C_TASK;
@@ -286,3 +287,34 @@ bool isSePlaying(int slot) {
 }
 
 }  // namespace neEngine
+
+// @ 0x2da34
+// Ghidra: findCharIndexForColumn. Sibling engine text helper declared in neGraphics.h (defined
+// here because it needs Foundation). Walks `text` one character at a time accumulating a display
+// width — a halfwidth glyph is 1 column, a full-width (CJK) glyph is 2 — and returns the index of
+// the character at which the running width first reaches `columnWidth`; returns -1 when the whole
+// string fits. Full-width is detected by NON-membership in a halfwidth matcher: the binary tests
+// each glyph with `-rangeOfString:options:NSRegularExpressionSearch` (options 0x400) against a
+// regex constant, and a glyph that does NOT match counts as 2 columns. kHalfWidthPattern is a
+// best-effort recovery of that regex constant (the binary's cf__ string): printable ASCII plus the
+// halfwidth-katakana range.
+int findCharIndexForColumn(NSString *text, int columnWidth) {
+    static NSString *const kHalfWidthPattern = @"[\\x01-\\x7e\\uff61-\\uffdc\\uffe8-\\uffee]";
+    NSUInteger length = [text length];
+    int width = 0;
+    for (NSUInteger i = 0; i < length; i++) {
+        NSString *ch = [text substringWithRange:NSMakeRange(i, 1)];
+        int columns = 1;
+        if (ch) {
+            NSRange match = [ch rangeOfString:kHalfWidthPattern options:NSRegularExpressionSearch];
+            if (match.location == NSNotFound) {
+                columns = 2;   // not a halfwidth glyph -> counts as two display columns
+            }
+        }
+        width += columns;
+        if (width >= columnWidth) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
