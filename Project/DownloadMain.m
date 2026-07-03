@@ -132,6 +132,11 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     return _friendRequestedCnt;
 }
 
+// @ 0x99748 — updated by the reply screen after fetching/answering requests.
+- (void)setFriendRequestedCnt:(int)cnt {
+    _friendRequestedCnt = cnt;
+}
+
 // @ 0x99604 / 0x99618 — atomic delegate accessors (assign).
 - (id<DownloadMainDelegate>)delegateGetFriendList {
     return _delegateGetFriendList;

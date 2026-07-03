@@ -81,8 +81,9 @@ typedef struct {
 
 // The parsed friend list — an NSArray of NSValue-wrapped FriendListData. @ 0x99914.
 - (NSArray *)friendListArray;
-// Number of pending inbound friend requests. @ 0x99734.
+// Number of pending inbound friend requests. @ 0x99734 (get) / 0x99748 (set).
 - (int)friendRequestedCnt;
+- (void)setFriendRequestedCnt:(int)cnt;
 // Delegate notified when the friend-list request finishes. @ 0x99604 / 0x99618.
 @property (nonatomic, assign) id<DownloadMainDelegate> delegateGetFriendList;
 // Whether the friend-list request is in flight. @ 0x958a8.

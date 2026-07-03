@@ -24,7 +24,8 @@ target_sources(popnrhythmin PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendListDetailChara.mm
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendListViewController.mm
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendMngTopViewController.mm
-    ${CMAKE_CURRENT_SOURCE_DIR}/FriendReplyCell.m
+    ${CMAKE_CURRENT_SOURCE_DIR}/FriendReplyCell.mm
+    ${CMAKE_CURRENT_SOURCE_DIR}/FriendReplyViewController.mm
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendRequestCell.m
     ${CMAKE_CURRENT_SOURCE_DIR}/FriendScoreTableCell.m
     ${CMAKE_CURRENT_SOURCE_DIR}/HowToView.mm

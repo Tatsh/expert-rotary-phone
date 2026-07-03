@@ -13,6 +13,7 @@
 #import "HowToViewCtrl.h"
 #import "UserSettingData.h"
 #import "FriendListViewController.h"
+#import "FriendReplyViewController.h"
 #import "neEngineBridge.h"          // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation FriendMngTopViewController
@@ -153,11 +154,26 @@
     }
 }
 
-// Requests / replies sub-screens — STUBS (separate reconstruction pieces; tracked in HANDOFF.md).
+// Requests sub-screen (send new friend requests) — STUB (FriendRequestViewController pending).
 - (void)onRequestButtonTouched:(id)sender {
 }
 
+// @ 0xa6ad4 — push the incoming-requests reply screen (iPhone); iPad forwards to the split hub.
 - (void)onReplyButtonTouched:(id)sender {
+    neEngine::playSystemSe(1);
+    if (!neSceneManager::isPadDisplay()) {
+        FriendReplyViewController *vc = [[[FriendReplyViewController alloc]
+            initWithStyle:UITableViewStyleGrouped] autorelease];
+        if (self.navigationController.topViewController != self) {
+            return;
+        }
+        [self.navigationController pushViewController:vc animated:YES];
+        [self.navigationController.navigationBar
+            setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
+                 forBarMetrics:UIBarMetricsDefault];
+    } else {
+        [m_Delegate onReplyButtonTouched:sender];
+    }
 }
 
 - (void)dealloc {
