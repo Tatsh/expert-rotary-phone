@@ -139,6 +139,34 @@
 // https://.../apr/main.cgi/gamecenter/index.jsp. Ghidra: searchURL @ 0x59004.
 + (NSURL *)searchURL;
 
+#pragma mark Recovered selectors (store / player / present endpoints)
+// All build on the byte-verified slash-form base "/apr/main/cgi/" (as recommendPackURL et al.).
+
+// "register/refresh player" info feed. Ghidra: storeNewInfoURL @ 0x58d8c
+// (createHttpsURL of /apr/main/cgi/new/index.jsp?target=JP&<userInfo>).
++ (NSURL *)storeNewInfoURL;
+// Report a completed purchase (pid), tamper-bound with a trailing SHA-256 key.
+// Ghidra: purchasedURL: @ 0x58e20.
++ (NSURL *)purchasedURL:(unsigned int)pid;
+// Player fetch / score save. Ghidra: playerGetURL @ 0x590dc, saveScoreURL @ 0x591b4.
++ (NSURL *)playerGetURL;
++ (NSURL *)saveScoreURL;
+// Recommend list / visitor list. Ghidra: getRecommendListURL @ 0x597ac, getVisitorURL @ 0x59818.
++ (NSURL *)getRecommendListURL;
++ (NSURL *)getVisitorURL;
+// Character-lottery play log / APNs token registration.
+// Ghidra: logCharaKujiURL @ 0x59aa0, saveApnsTokenURL @ 0x59b78.
++ (NSURL *)logCharaKujiURL;
++ (NSURL *)saveApnsTokenURL;
+// Reward login token / present box. Ghidra: getRewardLoginTokenURL @ 0x59be4,
+// getPresentListURL @ 0x59c50, getPresentURL @ 0x59cbc.
++ (NSURL *)getRewardLoginTokenURL;
++ (NSURL *)getPresentListURL;
++ (NSURL *)getPresentURL;
+// Official eAmusement "old info" page. Ghidra: getOfficialOldInfoURL @ 0x59ff4
+// (createOfficialURL of /game/popn/rhythmin/app/old_info.html).
++ (NSURL *)getOfficialOldInfoURL;
+
 @end
 
 // Percent-encode a string for use in a URL query. Ghidra: urlEncodeString @ 0x5c5ec.

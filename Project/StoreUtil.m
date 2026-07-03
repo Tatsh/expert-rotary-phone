@@ -19,6 +19,10 @@ static NSString *const kPackProductPrefix = @"rhythmin_pack";
 // characters [2, 27) out of it (Ghidra CFString @ 0x1065a3, substringWithRange:).
 static NSString *const kReceiptSalt = @"Orbit Note Lumion Rhythmin Konami";
 
+// Embedded salt appended to the purchase params before the SHA-256 "key" digest
+// (Ghidra CFString @ 0x1064a8, used by purchasedURL:).
+static NSString *const kPurchaseKeySalt = @"kdRhdvruVoJ1sUan4TJpsXYvgsSNG2yn";
+
 // A game-API endpoint path (Ghidra: the "%@%@%@" of "" + "/apr/main.cgi/" +
 // "<name>/index.jsp").
 static NSString *ApiPath(NSString *name) {
@@ -345,6 +349,91 @@ static NSString *ApiPath(NSString *name) {
 // @ 0x5a060 — official pop'n team Twitter page.
 + (NSURL *)getOfficialTwitterURL {
     return [NSURL URLWithString:@"https://twitter.com/popn_team"];
+}
+
+// --- Recovered store / player / present endpoints ---
+// All use the byte-verified slash-form base "/apr/main/cgi/" (like recommendPackURL).
+
+// @ 0x58d8c — "register/refresh player" info feed:
+// https://apr-s.konaminet.jp/apr/main/cgi/new/index.jsp?target=JP&<userInfo>
++ (NSURL *)storeNewInfoURL {
+    NSString *path = [NSString stringWithFormat:@"%@%@?target=%@&%@",
+                      @"/apr/main/cgi/", @"new/index.jsp", @"JP", [self userInfo]];
+    return [self createHttpsURL:path];
+}
+
+// @ 0x58e20 — report a completed purchase:
+// https://.../apr/main/cgi/purchase/index.jsp?target=JP&pid=<pid>&<userInfo>&key=<sha256>
+// where key = SHA-256 hex of ("target=JP&pid=<pid>&<userInfo>" + kPurchaseKeySalt).
++ (NSURL *)purchasedURL:(unsigned int)pid {
+    NSString *params = [NSString stringWithFormat:@"target=%@&pid=%d&%@",
+                        @"JP", pid, [self userInfo]];
+    NSString *salted = [params stringByAppendingString:kPurchaseKeySalt];
+    NSString *key = ComputeSHA256HexString(salted.UTF8String);
+    NSString *path = [NSString stringWithFormat:@"%@%@?%@&key=%@",
+                      @"/apr/main/cgi/", @"purchase/index.jsp", params, key];
+    return [self createHttpsURL:path];
+}
+
+// @ 0x590dc — https://.../apr/main/cgi/get_player/index.jsp
++ (NSURL *)playerGetURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"get_player/index.jsp"]];
+}
+
+// @ 0x591b4 — https://.../apr/main/cgi/save_score/index.jsp
++ (NSURL *)saveScoreURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"save_score/index.jsp"]];
+}
+
+// @ 0x597ac — https://.../apr/main/cgi/get_recommend_list/index.jsp
++ (NSURL *)getRecommendListURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"get_recommend_list/index.jsp"]];
+}
+
+// @ 0x59818 — https://.../apr/main/cgi/get_visitor/index.jsp
++ (NSURL *)getVisitorURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"get_visitor/index.jsp"]];
+}
+
+// @ 0x59aa0 — https://.../apr/main/cgi/log_chara_kuji/index.jsp
++ (NSURL *)logCharaKujiURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"log_chara_kuji/index.jsp"]];
+}
+
+// @ 0x59b78 — https://.../apr/main/cgi/save_apns_token/index.jsp
++ (NSURL *)saveApnsTokenURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"save_apns_token/index.jsp"]];
+}
+
+// @ 0x59be4 — https://.../apr/main/cgi/get_reward_login_token/index.jsp
++ (NSURL *)getRewardLoginTokenURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"get_reward_login_token/index.jsp"]];
+}
+
+// @ 0x59c50 — https://.../apr/main/cgi/get_present_list/index.jsp
++ (NSURL *)getPresentListURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"get_present_list/index.jsp"]];
+}
+
+// @ 0x59cbc — https://.../apr/main/cgi/get_present/index.jsp
++ (NSURL *)getPresentURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main/cgi/", @"get_present/index.jsp"]];
+}
+
+// @ 0x59ff4 — official eAmusement "old info" page:
+// http://p.eagate.573.jp/game/popn/rhythmin/app/old_info.html
++ (NSURL *)getOfficialOldInfoURL {
+    return [self createOfficialURL:[NSString stringWithFormat:@"%@%@",
+                                    @"/game/popn/rhythmin/", @"app/old_info.html"]];
 }
 
 @end

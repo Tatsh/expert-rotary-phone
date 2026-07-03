@@ -28,10 +28,80 @@
 // Single result/error callback used by the app-index / install-report requests.
 typedef void (^RewardNetworkCallback)(id result, NSError *error);
 
+// Error-only completion (session start, login, install report).
+typedef void (^RewardNetworkErrorBlock)(NSError *error);
+
+// Integer-flag + error completion (all-install flag / banner-enabled queries).
+typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
+
 @interface RewardNetwork : NSObject {
     RewardNetworkWebViewController *_webViewController;   // the reward app-list panel
     int _initializeFlg;                                    // SDK initialization state
 }
+
+// --- read-only class "properties" (custom getters, not ivar-backed) ---
+
+// Persisted appli id (NSUserDefaults "ApplilinkReward.appliId"). @ 0xee1d4
+@property (class, readonly, nonatomic) NSString *appliId;
+// SDK version string from +[RewardNetworkUtilities getSdkVersion]. @ 0xee230
+@property (class, readonly, nonatomic) NSString *version;
+// Reward UDID (Value of the first valid stored record), or nil. @ 0xee24c
+@property (class, readonly, nonatomic) NSString *udid;
+// Advertising reward UDID, or nil. @ 0xee2f0
+@property (class, readonly, nonatomic) NSString *ad_udid;
+// Legacy keychain UDID, or nil. @ 0xee350
+@property (class, readonly, nonatomic) NSString *old_udid;
+
+// Shared-instance singleton (dispatch_once). @ 0xee774
++ (instancetype)sharedInstance;
+
+// Campaign flag from NSUserDefaults, gated on ad-tracking + initializeFlg==1; -2 otherwise. @ 0xee448
++ (int)campaignFlg;
+
+// YES when the SDK can run on this iOS version (== +canUseRewardSdk). @ 0xee52c
++ (BOOL)isSupportediOSVersion;
+
+// Persist the session appli URL / parameters / method into NSUserDefaults. @ 0xee804
++ (void)setSessionParameters:(id)parameters url:(NSString *)url method:(NSString *)method;
+
+// Start a reward session: check login, then run `block` with any error. @ 0xeed2c
++ (void)startSessionWithBlock:(RewardNetworkErrorBlock)block;
+
+// Create/register the device UDID, writing to the first empty storage slot. @ 0xef274
++ (BOOL)createUdidWithError:(NSError **)error;
+
+// POST the application-install report. @ 0xef4c4
++ (void)postApplicationInstallWithPriority:(int)priority callback:(RewardNetworkErrorBlock)callback;
+
+// GET the login status (/reward/auth/checkLoginStatus.php). @ 0xefc14
++ (void)checkLoginWithBlock:(RewardNetworkCallback)block;
+
+// Request an auth token using the stored session parameters. @ 0xeff88
++ (void)requestTokenWithBlock:(RewardNetworkCallback)block;
+
+// POST login (/reward/auth/login.php) with an optional token. @ 0xf04bc
++ (void)startLoginWithToken:(NSString *)token withPriority:(int)priority callback:(RewardNetworkErrorBlock)callback;
+
+// Query the all-install flag (cached under "appInstallFlg"). @ 0xf16d4
++ (void)allInstallFlgWithInCompany:(NSString *)inCompany callback:(RewardNetworkFlgCallback)callback;
+
+// Delete every stored reward UDID slot + reset session state. @ 0xf2e14
++ (void)clearUDID;
+// Delete the legacy keychain UDID + reset session state if all UDIDs gone. @ 0xf2fb4
++ (void)clearKeyChainOldUDID;
+// Delete every advertising reward UDID slot + reset session state. @ 0xf3110
++ (void)clearAdUDID;
+// Delete all cookies + stored session URL/parameters/method. @ 0xf3240
++ (void)clearSession;
+
+// GET the banner detail (/reward/banner/detail.php). @ 0xf33dc
++ (void)bannerInfoWithBlock:(RewardNetworkCallback)block;
+// Report whether the banner is enabled (uses the banner cache when fresh). @ 0xf3714
++ (void)isEnabledBannerWithBlock:(RewardNetworkFlgCallback)block;
+// YES if any UDID exists (else evicts the banner cache). @ 0xf3b28
++ (BOOL)canUseBannerCache;
+// Evict the in-memory banner cache. @ 0xf3bd0
++ (void)clearBannerCache;
 
 // initializeFlg getter also gates on ad-tracking being enabled (returns 0 if not). @ 0xee3f8
 - (int)initializeFlg;

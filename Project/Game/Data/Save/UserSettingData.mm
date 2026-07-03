@@ -827,4 +827,125 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveCharaTicket:(short)(cur + count)];
 }
 
+#pragma mark - Store / recommend view timestamps
+
+// @ 0x5feb0 — paired setter for +lastStoreViewTimeString (same key "LastUpdateTime").
++ (void)saveLastStoreViewTimeString:(NSString *)time {
+    [self saveString:time Key:@"LastUpdateTime"];
+}
+
+// @ 0x5fed8 — timestamp string of the last store-recommend view.
++ (NSString *)lastRecommendViewTimeString {
+    return [self getString:@"LastRecommendViewTime"];
+}
+
+// @ 0x5ff00 — persist the last store-recommend view timestamp string.
++ (void)saveLastRecommendViewTimeString:(NSString *)time {
+    [self saveString:time Key:@"LastRecommendViewTime"];
+}
+
+#pragma mark - Tutorial / policy
+
+// @ 0x5ff28 / 0x5ff50 — first-run tutorial played flag (key "IsTutorialPlayed").
++ (BOOL)isTutorialPlayed { return [self getBOOL:@"IsTutorialPlayed"]; }
++ (void)saveIsTutorialPlayed:(BOOL)played { [self saveBOOL:played Key:@"IsTutorialPlayed"]; }
+
+// @ 0x60068 — getter paired with +saveIsPolicyAccepted:. The binary's shared CFString
+// literal is the misspelled "IsPolicyAccesped"; the key is kept in sync with the
+// existing setter's "IsPolicyAccepted" here.
++ (BOOL)isPolicyAccepted { return [self getBOOL:@"IsPolicyAccepted"]; }
+
+#pragma mark - Touch radius / popkun setter
+
+// @ 0x605a4 — the note touch radius. In the binary this getter returns a hardcoded
+// constant (0x42880000 == 68.0), ignoring the stored value.
++ (float)touchRadius {
+    return 68.0f;
+}
+
+// @ 0x605ac — clamp to [40.0, 148.0] (min against 148, then max against 40) and persist.
++ (void)saveTouchRadius:(float)radius {
+    float v = radius < 148.0f ? radius : 148.0f;
+    v = v > 40.0f ? v : 40.0f;
+    [self saveFloat:v Key:@"TouchRadius"];
+}
+
+// @ 0x60668 — clamp to [50.0, 100.0] (min against 100, then max against 50) and persist (key "b").
++ (void)savePopkunSize:(float)size {
+    float v = size < 100.0f ? size : 100.0f;
+    v = v > 50.0f ? v : 50.0f;
+    [self saveFloat:v Key:@"b"];
+}
+
+#pragma mark - Store information banner / info-view day
+
+// @ 0x6187c — setter paired with +lastInformationId (note the original key's typo).
++ (void)saveLastInformationId:(int)informationId {
+    [self saveInt:informationId Key:@"LastInfomationId"];
+}
+
+// @ 0x61b44 / 0x61b6c — the day the store information banner was last viewed (key "InfoViewDay").
++ (NSDate *)getInfoViewDay { return [self getDate:@"InfoViewDay"]; }
++ (void)saveInfoViewDay:(NSDate *)day { [self saveDate:day Key:@"InfoViewDay"]; }
+
+// @ 0x61b94 — YES if `day` and the stored InfoViewDay fall on the same calendar day,
+// compared as "yyyy/MM/dd"-formatted strings.
++ (BOOL)isEqualToInfoViewDay:(NSDate *)day {
+    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
+    [fmt setDateFormat:@"yyyy/MM/dd"];
+    NSString *stored = [fmt stringFromDate:[self getInfoViewDay]];
+    NSString *other = [fmt stringFromDate:day];
+    return [stored isEqualToString:other];
+}
+
+#pragma mark - Treasure (consumed points / read progress)
+
+// @ 0x613ec — add to the consumed treasure-point total, clamped to [0, 9999]
+// (key "ConsumedTreasurePoint").
++ (void)addConsumedTreasurePoint:(short)value {
+    short cur = [self consumedTreasurePoint];
+    int total = (short)(cur + value);
+    if (total > 9998) {   // Ghidra: 0x270e < total
+        total = 9999;
+    }
+    if (total < 0) {
+        total = 0;
+    }
+    [self saveInt:total Key:@"ConsumedTreasurePoint"];
+}
+
+// @ 0x61dc0 — persist the "treasure read" progress index for a sugoroku sub-map into the
+// "e" array of {mapid, readno} dictionaries: update the matching entry's readno, or append
+// a new {mapid, readno} entry when the sub-map has none yet.
++ (void)saveTreasureReadNo:(short)subMapId no:(int)no {
+    NSMutableArray *array = [[self getArray:@"e"] mutableCopy];
+    BOOL matched = NO;
+    NSUInteger index = 0;
+    for (NSDictionary *entry in array) {
+        if ([[entry objectForKey:@"mapid"] shortValue] == subMapId) {
+            NSMutableDictionary *updated = [entry mutableCopy];
+            if (updated == nil) {
+                break;   // Ghidra: falls through to the append branch
+            }
+            [updated setObject:[NSNumber numberWithInt:no] forKey:@"readno"];
+            [array replaceObjectAtIndex:index withObject:[updated copy]];
+            matched = YES;
+            break;
+        }
+        index++;
+    }
+    if (!matched) {
+        if (array == nil) {
+            array = [NSMutableArray array];
+        }
+        NSMutableDictionary *entry = [NSMutableDictionary dictionary];
+        [entry setObject:[NSNumber numberWithShort:subMapId] forKey:@"mapid"];
+        [entry setObject:[NSNumber numberWithShort:(short)no] forKey:@"readno"];
+        [array addObject:entry];
+        NSLog(@"%@", entry);
+    }
+    NSLog(@"%@", array);
+    [self saveArray:[array copy] Key:@"e"];
+}
+
 @end

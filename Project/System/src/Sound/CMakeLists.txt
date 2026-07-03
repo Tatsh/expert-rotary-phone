@@ -15,6 +15,8 @@ target_sources(popnrhythmin PRIVATE
     SeInstance.h
     neAVCAPlayer.h
     neAVSePlayer.h
+    AVBus.mm
+    AVBus.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

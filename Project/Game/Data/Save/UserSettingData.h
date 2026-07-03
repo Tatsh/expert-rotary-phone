@@ -288,6 +288,54 @@ typedef struct Crypt109Data {
 + (void)saveLastUpdateSumPurchase:(NSDate *)date;
 + (void)saveSumPurchase:(int)sum;
 
+#pragma mark Store / recommend view timestamps
+// Setter paired with +lastStoreViewTimeString (both back the key "LastUpdateTime").
+// Ghidra: saveLastStoreViewTimeString: @ 0x5feb0.
++ (void)saveLastStoreViewTimeString:(NSString *)time;
+// Timestamp string of the last store-recommend view (key "LastRecommendViewTime").
+// Ghidra: lastRecommendViewTimeString @ 0x5fed8 / saveLastRecommendViewTimeString: @ 0x5ff00.
++ (NSString *)lastRecommendViewTimeString;
++ (void)saveLastRecommendViewTimeString:(NSString *)time;
+
+#pragma mark Tutorial / policy
+// Whether the first-run tutorial has already been played (key "IsTutorialPlayed").
+// Ghidra: isTutorialPlayed @ 0x5ff28 / saveIsTutorialPlayed: @ 0x5ff50.
++ (BOOL)isTutorialPlayed;
++ (void)saveIsTutorialPlayed:(BOOL)played;
+// Getter paired with +saveIsPolicyAccepted: (privacy policy / terms acceptance).
+// Ghidra: isPolicyAccepted @ 0x60068.
++ (BOOL)isPolicyAccepted;
+
+#pragma mark Touch radius / popkun setter
+// Note ("popkun") touch radius. In the binary the getter is a hardcoded constant
+// (68.0), independent of the stored value; the setter clamps to [40, 148] before
+// persisting (key "TouchRadius"). Ghidra: touchRadius @ 0x605a4 / saveTouchRadius: @ 0x605ac.
++ (float)touchRadius;
++ (void)saveTouchRadius:(float)radius;
+// Setter paired with +popkunSize (key "b"); clamps to [50, 100].
+// Ghidra: savePopkunSize: @ 0x60668.
++ (void)savePopkunSize:(float)size;
+
+#pragma mark Store information banner
+// Setter paired with +lastInformationId (note the original key's typo "LastInfomationId").
+// Ghidra: saveLastInformationId: @ 0x6187c.
++ (void)saveLastInformationId:(int)informationId;
+// The day (NSDate) the store information banner was last viewed (key "InfoViewDay").
+// isEqualToInfoViewDay: compares against the stored day at yyyy/MM/dd granularity.
+// Ghidra: getInfoViewDay @ 0x61b44 / saveInfoViewDay: @ 0x61b6c / isEqualToInfoViewDay: @ 0x61b94.
++ (NSDate *)getInfoViewDay;
++ (void)saveInfoViewDay:(NSDate *)day;
++ (BOOL)isEqualToInfoViewDay:(NSDate *)day;
+
+#pragma mark Treasure (consumed points / read progress)
+// Add to the consumed sugoroku "treasure point" total, clamped to [0, 9999]
+// (key "ConsumedTreasurePoint"). Ghidra: addConsumedTreasurePoint: @ 0x613ec.
++ (void)addConsumedTreasurePoint:(short)value;
+// Persist the "treasure read" progress index for a sugoroku sub-map into the "e" array
+// of {mapid, readno} dictionaries (update the matching entry, or append a new one).
+// Ghidra: saveTreasureReadNo:no: @ 0x61dc0.
++ (void)saveTreasureReadNo:(short)subMapId no:(int)no;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
