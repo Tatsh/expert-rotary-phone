@@ -27,26 +27,25 @@ static int ClampLevel(int value, int lo, int hi) {
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary {
     // Reject entries without a positive id before allocating anything real.
     if ([dictionary[@"ID"] intValue] < 1) {
-        [self release];
         return nil;
     }
     if ((self = [super init])) {
         m_MusicID = [dictionary[@"ID"] intValue];
-        m_Name = [dictionary[@"Name"] retain];
-        m_Artist = [dictionary[@"Artist"] retain];
-        m_ItemURL = [dictionary[@"ItemURL"] retain];
+        m_Name = dictionary[@"Name"];
+        m_Artist = dictionary[@"Artist"];
+        m_ItemURL = dictionary[@"ItemURL"];
 
         NSString *sample = dictionary[@"SampleURL"];
         if ([StoreUtil isValidURL:sample]) {
-            m_SampleURL = [sample retain];
+            m_SampleURL = sample;
         }
         NSString *artwork = dictionary[@"ArtworkURL"];
         if ([StoreUtil isValidURL:artwork]) {
-            m_ArtworkURL = [artwork retain];
+            m_ArtworkURL = artwork;
         }
         NSString *itunes = dictionary[@"iTunesURL"];
         if ([StoreUtil isValidURL:itunes]) {
-            m_iTunesURL = [itunes retain];
+            m_iTunesURL = itunes;
         }
 
         // Difficulty triple lives in "Level" = [basic, medium, hard].
@@ -79,15 +78,7 @@ static int ClampLevel(int value, int lo, int hi) {
     return RhFileExists([[MusicManager getInstance] getPathFromPurchased:m_MusicID]);
 }
 
-- (void)dealloc {
-    [m_Name release];
-    [m_Artist release];
-    [m_ItemURL release];
-    [m_SampleURL release];
-    [m_ArtworkURL release];
-    [m_iTunesURL release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

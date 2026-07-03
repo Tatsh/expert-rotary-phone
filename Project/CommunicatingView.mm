@@ -78,6 +78,8 @@
 
 // didReceiveMemoryWarning @ 0xdec5c — super-only override, omitted (no added behavior)
 
+// dealloc @ 0xdec88 — ARC-omitted (chains to super only; releases object ivars only).
+
 // @ 0xdecb4 — enter the "failed" state.
 - (void)failed {
     [communicatingView setHidden:YES];

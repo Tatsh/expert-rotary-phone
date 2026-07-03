@@ -72,8 +72,9 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
     return self;
 }
 
-// @ 0x8131c -- commit every setting, tear down the two loaded SEs, release the sliders
-// and the touch-sound list. The retainCount NSLogs are leftover debug traces.
+// @ 0x8131c -- commit every setting and tear down the two loaded SEs. (Slider/array
+// releases and the leftover retainCount NSLog debug traces are ARC-omitted -- ARC
+// forbids -retainCount and manages the object ivars.)
 - (void)dealloc {
     [UserSettingData saveBgmVolume:_bgmSlider.value];
     [UserSettingData saveSeVolume:SoundFPToFixed(_seSlider.value)];
@@ -85,18 +86,6 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
     [audio releaseSe:nil resourceId:_touchSoundRscId];
     [[AudioManager sharedManager] stopSe:_seRscId];
     [[AudioManager sharedManager] releaseSe:nil resourceId:_seRscId];
-
-    NSLog(@"%lu", (unsigned long)[_bgmSlider retainCount]);
-    NSLog(@"%lu", (unsigned long)[_seSlider retainCount]);
-    NSLog(@"%lu", (unsigned long)[_touchSoundSlider retainCount]);
-    NSLog(@"%lu", (unsigned long)[_touchSoundArray retainCount]);
-
-    [_bgmSlider release];
-    [_seSlider release];
-    [_touchSoundSlider release];
-    [_touchSoundArray release];
-
-    [super dealloc];
 }
 
 // @ 0x81564 -- read the persisted touch-sound state, build the unlocked-kinds list,
@@ -111,7 +100,7 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
         _selectedTouchSoundNo = 0;   // fall back to the default (always-owned) kind 0
     }
 
-    _touchSoundArray = [[NSMutableArray array] retain];
+    _touchSoundArray = [NSMutableArray array];
     for (int i = 0; i < 10; i++) {
         if ([self isHaveTouchSound:i]) {
             [_touchSoundArray addObject:[NSNumber numberWithInt:i]];
@@ -133,13 +122,13 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
         // iPhone: custom "navi_btn_back" left bar button wired to backButtonFunc.
         UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
         CGSize sz = backImage ? backImage.size : CGSizeZero;
-        UIButton *backButton = [[[UIButton alloc]
-            initWithFrame:CGRectMake(0, 0, sz.width, sz.height)] autorelease];
+        UIButton *backButton = [[UIButton alloc]
+            initWithFrame:CGRectMake(0, 0, sz.width, sz.height)];
         [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
         [backButton addTarget:self action:@selector(backButtonFunc)
              forControlEvents:UIControlEventTouchUpInside];   // 0x40
         self.navigationItem.leftBarButtonItem =
-            [[[UIBarButtonItem alloc] initWithCustomView:backButton] autorelease];
+            [[UIBarButtonItem alloc] initWithCustomView:backButton];
     } else {
         // iPad: hosted inside a panel, so just suppress the system back button.
         self.navigationItem.hidesBackButton = YES;
@@ -188,12 +177,12 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
 
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                       reuseIdentifier:cellId] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                      reuseIdentifier:cellId];
 
         // iPad: give the volume cells a rounded, light-cream backgroundView.
         if (neSceneManager::isPadDisplay() && indexPath.section != 3) {
-            UIView *bg = [[[UIView alloc] init] autorelease];
+            UIView *bg = [[UIView alloc] init];
             bg.layer.borderWidth = 0.5f;    // 0x3f000000
             bg.layer.cornerRadius = 5.0f;   // 0x40a00000
             bg.backgroundColor = [UIColor colorWithRed:0.964706f green:0.949020f
@@ -281,14 +270,14 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
         // (check/background frame maths are NEON-spilled -- best-effort placement.)
         NSString *checkName = (soundNo == _selectedTouchSoundNo) ? @"m_sort_check_01"
                                                                  : @"m_sort_check_00";
-        UIImageView *check = [[[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:checkName]] autorelease];
+        UIImageView *check = [[UIImageView alloc]
+            initWithImage:[UIImage imageNamed:checkName]];
         CGRect cf = check.frame;
         CGFloat checkX = ([UIDevice currentDevice].systemVersion.floatValue >= 7.0f)
                          ? 230.0f : 210.0f;   // DAT_00082778 / DAT_0008277c
         check.frame = CGRectMake(cf.origin.x + checkX, cf.origin.y + 7.0f,   // +7.0 (0x40e00000)
                                  cf.size.width + 8.0f, cf.size.height + 8.0f);
-        for (UIView *sub in [[cell.contentView.subviews copy] autorelease]) {
+        for (UIView *sub in [cell.contentView.subviews copy]) {
             [sub removeFromSuperview];
         }
         [cell.contentView addSubview:check];
@@ -301,8 +290,8 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
         } else {
             bgName = @"custom_bt02_center";
         }
-        cell.backgroundView = [[[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:bgName]] autorelease];
+        cell.backgroundView = [[UIImageView alloc]
+            initWithImage:[UIImage imageNamed:bgName]];
         return cell;
     }
 
@@ -321,8 +310,8 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
 // @ 0x82784 -- a transparent header carrying the section title in the app font.
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     // Header container: x = 5, w = 320, h = 32.
-    UIView *header = [[[UIView alloc]
-        initWithFrame:CGRectMake(5.0f, 0.0f, 320.0f, 32.0f)] autorelease];  // 0x40a00000 / 0x43a00000 / 0x42000000
+    UIView *header = [[UIView alloc]
+        initWithFrame:CGRectMake(5.0f, 0.0f, 320.0f, 32.0f)];  // 0x40a00000 / 0x43a00000 / 0x42000000
     header.backgroundColor = [UIColor clearColor];
 
     NSString *title;
@@ -334,8 +323,8 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
         default: title = @""; break;                           // cf_"" (empty)
     }
 
-    UILabel *label = [[[UILabel alloc]
-        initWithFrame:CGRectMake(5.0f, 0.0f, 320.0f, 32.0f)] autorelease];
+    UILabel *label = [[UILabel alloc]
+        initWithFrame:CGRectMake(5.0f, 0.0f, 320.0f, 32.0f)];
     label.backgroundColor = [UIColor clearColor];
     label.font = [UIFont fontWithName:AppFontName() size:14.0f];   // 0x41600000
     label.text = title;

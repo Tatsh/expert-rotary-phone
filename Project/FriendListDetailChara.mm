@@ -53,7 +53,7 @@
     [self setUserInteractionEnabled:YES];
 
     // Close button, top-right; dismisses the popup.
-    UIButton *closeButton = [[[UIButton alloc] init] autorelease];
+    UIButton *closeButton = [[UIButton alloc] init];
     UIImage *closeImg = [UIImage imageNamed:@"frilis_btn_close"];
     [closeButton setFrame:CGRectMake(237.0f * s, 8.0f * s, closeImg.size.width, closeImg.size.height)];
     [closeButton setImage:closeImg forState:UIControlStateNormal];
@@ -65,8 +65,8 @@
     NSString *portraitFile = [NSString stringWithFormat:@"result_chara_%03d_2x.png", (int)charaId];
     NSURL *portraitURL = [NSURL fileURLWithPath:
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:portraitFile]];
-    UIImageView *portrait = [[[UIImageView alloc]
-        initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:portraitURL]]] autorelease];
+    UIImageView *portrait = [[UIImageView alloc]
+        initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:portraitURL]]];
     // Frame scaled from the portrait's own size (constants 29.5, 0.2); NEON-spilled origin.
     CGRect pf = portrait.frame;
     [portrait setFrame:CGRectMake(29.5f * s, 0.2f * s * pf.size.height,
@@ -74,7 +74,7 @@
     [self addSubview:portrait];
 
     // Rounded, bordered skill card.
-    UIView *card = [[[UIView alloc] init] autorelease];
+    UIView *card = [[UIView alloc] init];
     [card setFrame:CGRectMake(137.0f * s, 0, 323.0f * s, 122.0f * s)];
     card.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
     card.center = CGPointMake(self.bounds.size.width * 0.5f, card.center.y);
@@ -94,8 +94,8 @@
     } else {
         iconImg = [UIImage imageNamed:iconFile];
     }
-    UIImageView *iconView = [[[UIImageView alloc]
-        initWithFrame:CGRectMake(0, 0, 44.0f * s, 44.0f * s)] autorelease];   // DAT_000bb0bc = 44
+    UIImageView *iconView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(0, 0, 44.0f * s, 44.0f * s)];   // DAT_000bb0bc = 44
     [iconView setImage:iconImg];
     iconView.backgroundColor = [UIColor whiteColor];
     iconView.clipsToBounds = YES;
@@ -112,8 +112,8 @@
     const SkillDataStruct *skill = GetSkillDataStruct((int)info.skillId);
 
     // Chara name label.
-    UILabel *nameLabel = [[[UILabel alloc]
-        initWithFrame:CGRectMake(107.0f * s, 62.0f * s, 20.0f * s, 20.0f * s)] autorelease];
+    UILabel *nameLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake(107.0f * s, 62.0f * s, 20.0f * s, 20.0f * s)];
     nameLabel.backgroundColor = [UIColor whiteColor];
     nameLabel.textColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0f];
     nameLabel.text = info.charaName;
@@ -125,8 +125,8 @@
     [card addSubview:nameLabel];
 
     // Speech bubble holding the skill name.
-    UIImageView *fukidasi = [[[UIImageView alloc]
-        initWithImage:[UIImage imageNamed:@"frilis_fukidasi"]] autorelease];
+    UIImageView *fukidasi = [[UIImageView alloc]
+        initWithImage:[UIImage imageNamed:@"frilis_fukidasi"]];
     // Positioned below the name label, offset by 7pt*scale (constant 0x40e00000) + half its height.
     CGFloat fukidasiCX = card.frame.size.width * 0.5f;
     CGFloat fukidasiCY = nameLabel.frame.origin.y + nameLabel.frame.size.height
@@ -135,8 +135,8 @@
     [card addSubview:fukidasi];
 
     // Skill name label (centred in the bubble).
-    UILabel *skillNameLabel = [[[UILabel alloc]
-        initWithFrame:CGRectMake(0, 0, 96.0f * s, 19.0f * s)] autorelease];   // DAT_000bba1c = 96
+    UILabel *skillNameLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake(0, 0, 96.0f * s, 19.0f * s)];   // DAT_000bba1c = 96
     skillNameLabel.backgroundColor = [UIColor clearColor];
     skillNameLabel.textColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0f];
     skillNameLabel.text = info.skillName;
@@ -147,8 +147,8 @@
     [fukidasi addSubview:skillNameLabel];
 
     // Skill description (multi-line, centred in the bubble).
-    UILabel *skillDescLabel = [[[UILabel alloc]
-        initWithFrame:CGRectMake(52.0f * s, 110.0f * s, 22.0f * s, 14.0f * s)] autorelease];
+    UILabel *skillDescLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake(52.0f * s, 110.0f * s, 22.0f * s, 14.0f * s)];
     skillDescLabel.backgroundColor = [UIColor clearColor];
     skillDescLabel.textColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0f];
     skillDescLabel.text = skill->description;
@@ -162,8 +162,8 @@
     NSString *sugoFile = [NSString stringWithFormat:@"sugo_chara_%03d.png", (int)charaId];
     NSURL *sugoURL = [NSURL fileURLWithPath:
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:sugoFile]];
-    UIImageView *sugoView = [[[UIImageView alloc]
-        initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:sugoURL]]] autorelease];
+    UIImageView *sugoView = [[UIImageView alloc]
+        initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:sugoURL]]];
     sugoView.backgroundColor = [UIColor clearColor];
     CGRect sf = sugoView.frame;
     // Scaled by 0.22 (DAT_000bbb14) then the global scale; NEON-spilled origin.
@@ -174,10 +174,7 @@
     return self;
 }
 
-// @ 0xbbb18
-- (void)dealloc {
-    [super dealloc];
-}
+// dealloc @ 0xbbb18 — ARC-omitted (super-only override; no ivar releases).
 
 // @ 0xbbb48 — fade in over 0.3s (DAT_000bbc10).
 - (void)startOpenAnimation {

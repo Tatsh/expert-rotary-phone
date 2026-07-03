@@ -23,14 +23,14 @@
                               navbarImage:(NSString *)navbarImageName {
     UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
     UIButton *backButton =
-        [[[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImage.size.width,
-                                                    backImage.size.height)] autorelease];
+        [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImage.size.width,
+                                                    backImage.size.height)];
     [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
     [backButton addTarget:self
                    action:@selector(pushBarBtnBack:)
          forControlEvents:UIControlEventTouchUpInside];
     root.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backButton] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backButton];
 
     UINavigationController *nav =
         [[UINavigationController alloc] initWithRootViewController:root];
@@ -52,17 +52,14 @@
         StoreMainViewController *mainVC =
             [[StoreMainViewController alloc] initWithParent:self];
         m_MainNavCtrl = [self wrapController:mainVC navbarImage:@"p_store_navbar"];
-        [mainVC release];
 
         StoreManageViewController *manageVC =
             [[StoreManageViewController alloc] initWithParent:self];
         m_ManageNavCtrl = [self wrapController:manageVC navbarImage:@"store_ryzumanage_navbar"];
-        [manageVC release];
 
         StoreAcvManageViewController *acvVC =
             [[StoreAcvManageViewController alloc] initWithParent:self];
         m_AcvManageNavCtrl = [self wrapController:acvVC navbarImage:@"store_viewmanage_navbar"];
-        [acvVC release];
 
         self.viewControllers = @[ m_MainNavCtrl, m_ManageNavCtrl, m_AcvManageNavCtrl ];
     }
@@ -161,12 +158,7 @@
     [self hideAnimation];
 }
 
-- (void)dealloc {
-    [m_MainNavCtrl release];
-    [m_ManageNavCtrl release];
-    [m_AcvManageNavCtrl release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

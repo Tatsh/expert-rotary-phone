@@ -24,12 +24,12 @@
                     backGroundImg:(UIImage *)backGroundImg {
     self = [super initWithFrame:frame];
     if (self != nil) {
-        _imageList = [imageList retain];
+        _imageList = imageList;
         if (neSceneManager::isPadDisplay()) {
             self.backgroundColor = [UIColor clearColor];
         }
         if (backGroundImg != nil) {
-            _bgImage = [backGroundImg retain];
+            _bgImage = backGroundImg;
         }
     }
     return self;
@@ -57,7 +57,7 @@
     } else {
         // iPad: an image view per page.
         for (UIImage *img in _imageList) {
-            UIImageView *iv = [[[UIImageView alloc] initWithImage:img] autorelease];
+            UIImageView *iv = [[UIImageView alloc] initWithImage:img];
             iv.frame = CGRectMake(x, 0, img.size.width, img.size.height);
             [self addSubview:iv];
             x += img.size.width;
@@ -65,12 +65,7 @@
     }
 }
 
-// @ 0xe9304
-- (void)dealloc {
-    [_imageList release];
-    [_bgImage release];
-    [super dealloc];
-}
+// dealloc @ 0xe9304 — ARC-omitted (released object ivars only).
 
 @end
 

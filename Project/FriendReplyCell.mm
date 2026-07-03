@@ -62,7 +62,7 @@
     if (_ngButton)         { [_ngButton removeFromSuperview];         _ngButton = nil; }
 
     // Row background: cell backgroundView on phone; content-view subview on iPad.
-    _bgImgView = [[[UIImageView alloc] initWithFrame:self.bounds] autorelease];
+    _bgImgView = [[UIImageView alloc] initWithFrame:self.bounds];
     UIImage *bgImg = [UIImage imageNamed:@"frirep_base"];
     [_bgImgView setImage:bgImg];
     [_bgImgView setFrame:CGRectMake(padOffset, 0, bgImg.size.width, bgImg.size.height)];
@@ -74,13 +74,13 @@
     self.backgroundColor = [UIColor clearColor];
 
     // Chara icon plate + icon (built-in charas from the bundle, downloaded from disk).
-    _charaBgView = [[[UIImageView alloc] init] autorelease];
+    _charaBgView = [[UIImageView alloc] init];
     UIImage *plate = [UIImage imageNamed:@"frisco_icon_cmn"];
     [_charaBgView setImage:plate];
     [_charaBgView setFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, plate.size.width, plate.size.height)];
     [_bgImgView addSubview:_charaBgView];
 
-    _charaView = [[[UIImageView alloc] init] autorelease];
+    _charaView = [[UIImageView alloc] init];
     short charaId = data.charaId;
     if (charaId < 0) {
         charaId = 0;
@@ -95,8 +95,8 @@
     [_bgImgView addSubview:_charaView];
 
     // Requester name.
-    _playerNameLabel = [[[UILabel alloc]
-        initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)] autorelease];
+    _playerNameLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)];
     _playerNameLabel.backgroundColor = [UIColor clearColor];
     _playerNameLabel.textColor = [UIColor colorWithRed:0.36458503f green:0.34506654f
                                                   blue:0.32941106f alpha:1.0f];   // rgb(93,88,84)
@@ -109,8 +109,8 @@
     [_bgImgView addSubview:_playerNameLabel];
 
     // Request date.
-    _requestDateLabel = [[[UILabel alloc]
-        initWithFrame:CGRectMake((CGFloat)_dateX, 25.0f, 200.0f, 20.0f)] autorelease];
+    _requestDateLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake((CGFloat)_dateX, 25.0f, 200.0f, 20.0f)];
     _requestDateLabel.backgroundColor = [UIColor clearColor];
     _requestDateLabel.textColor = [UIColor colorWithRed:0.36458503f green:0.34506654f
                                                    blue:0.32941106f alpha:1.0f];
@@ -123,7 +123,7 @@
     [_bgImgView addSubview:_requestDateLabel];
 
     // NG (reject) button.
-    _ngButton = [[[UIButton alloc] init] autorelease];
+    _ngButton = [[UIButton alloc] init];
     UIImage *ngImg = [UIImage imageNamed:@"frirep_btn_no"];
     [_ngButton setBackgroundImage:ngImg forState:UIControlStateNormal];
     [_ngButton setFrame:CGRectMake((CGFloat)(_btnNoX + padOffset), 43.0f,
@@ -133,7 +133,7 @@
     [self.contentView addSubview:_ngButton];
 
     // OK (accept) button.
-    _okButton = [[[UIButton alloc] init] autorelease];
+    _okButton = [[UIButton alloc] init];
     UIImage *okImg = [UIImage imageNamed:@"frirep_btn_ok"];
     [_okButton setBackgroundImage:okImg forState:UIControlStateNormal];
     [_okButton setFrame:CGRectMake((CGFloat)(_btnYesX + padOffset), 43.0f,
@@ -163,6 +163,9 @@
         [_delegate startReplyFriendHttp:data.playerId reply:0];
     }
 }
+
+// dealloc @ 0xa9280 — super-only override, omitted (chains to super only; every subview is owned
+// by its superview and _replyData/_delegate are assign, so nothing is released here).
 
 @end
 

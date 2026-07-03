@@ -55,13 +55,11 @@ static NSString *const kDownloadErrorMessage =
 - (void)cancelFetching {
     if (m_PacklistDownloader != nil) {
         [m_PacklistDownloader cancel];
-        [m_PacklistDownloader release];
         m_PacklistDownloader = nil;
     }
     if (m_ProductsRequest != nil) {
         [m_ProductsRequest cancel];
         m_ProductsRequest.delegate = nil;
-        [m_ProductsRequest release];
         m_ProductsRequest = nil;
     }
 }
@@ -74,7 +72,6 @@ static NSString *const kDownloadErrorMessage =
     NSURL *url = [StoreUtil packListURL:m_FetchedPackNum + 1 limit:8 packId:packId];
     if (m_PacklistDownloader != nil) {
         [m_PacklistDownloader cancel];
-        [m_PacklistDownloader release];
         m_PacklistDownloader = nil;
     }
     m_PacklistDownloader = [[Downloader alloc] initWithURL:url delegate:self];
@@ -100,7 +97,6 @@ static NSString *const kDownloadErrorMessage =
     if (info == nil) {
         info = [[StorePackInfo alloc] initWithPackID:packId];
         [m_ArrayPackInfo addObject:info];
-        [info release];
     }
     return info;
 }
@@ -173,12 +169,10 @@ static NSString *const kDownloadErrorMessage =
                 }
             } else {
                 // Buffer the JSON and resolve the new products via StoreKit.
-                [m_TmpPackList release];
                 m_TmpPackList = [[NSDictionary alloc] initWithDictionary:json];
                 if (m_ProductsRequest != nil) {
                     [m_ProductsRequest cancel];
                     m_ProductsRequest.delegate = nil;
-                    [m_ProductsRequest release];
                     m_ProductsRequest = nil;
                 }
                 m_ProductsRequest =
@@ -193,14 +187,12 @@ static NSString *const kDownloadErrorMessage =
         }
     }
 
-    [m_PacklistDownloader autorelease];
     m_PacklistDownloader = nil;
 }
 
 // @ 0x584ec
 - (void)downloaderError:(Downloader *)downloader {
     [m_Delegate packListDownloadError:self errorMessage:kDownloadErrorMessage];
-    [m_PacklistDownloader autorelease];
     m_PacklistDownloader = nil;
 }
 
@@ -213,16 +205,13 @@ static NSString *const kDownloadErrorMessage =
         NSString *country =
             [response.products.lastObject.priceLocale objectForKey:NSLocaleCountryCode];
         if (s_storeCountry == nil || ![s_storeCountry isEqualToString:country]) {
-            [s_storeCountry release];
             s_storeCountry = [[NSString alloc] initWithString:country];
         }
     }
     [self updatePackInfo:m_TmpPackList SKProductsResponse:response];
     if (m_ProductsRequest != nil) {
-        [m_ProductsRequest release];
         m_ProductsRequest = nil;
     }
-    [m_TmpPackList release];
     m_TmpPackList = nil;
 }
 
@@ -235,7 +224,6 @@ static NSString *const kDownloadErrorMessage =
             if ([self getPackInfo:packId] == nil) {
                 StorePackInfo *info = [[StorePackInfo alloc] initWithProduct:product];
                 [m_ArrayPackInfo addObject:info];
-                [info release];
             }
         }
     }
@@ -259,16 +247,10 @@ static NSString *const kDownloadErrorMessage =
         [m_ListPackID addObjectsFromArray:addedIDs];
         [m_Delegate packListDownloadSuccess:self];
     }
-    [addedIDs release];
 }
 
 - (void)dealloc {
     [self cancelFetching];
-    [m_ArrayPackInfo release];
-    [m_ListPackID release];
-    [m_PromotionList release];
-    [m_TmpPackList release];
-    [super dealloc];
 }
 
 @end

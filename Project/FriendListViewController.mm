@@ -54,16 +54,16 @@
     } else {
         headerH = (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) ? 47.0f : 55.0f;
     }
-    UIView *header = [[[UIView alloc]
-        initWithFrame:CGRectMake(0, 0, viewFrame.size.width, headerH)] autorelease];
+    UIView *header = [[UIView alloc]
+        initWithFrame:CGRectMake(0, 0, viewFrame.size.width, headerH)];
     header.backgroundColor = [UIColor clearColor];
     self.tableView.tableHeaderView = header;
 
     // Phone: a friman_bg backdrop behind the table. iPad: transparent.
     if (!isPad) {
         UIImage *bg = [UIImage imageNamed:@"friman_bg"];
-        UIImageView *bgView = [[[UIImageView alloc]
-            initWithImage:bg] autorelease];
+        UIImageView *bgView = [[UIImageView alloc]
+            initWithImage:bg];
         [bgView setFrame:CGRectMake(0, 0, bg.size.width, bg.size.height)];
         self.tableView.backgroundView = bgView;
     } else {
@@ -78,8 +78,8 @@
     _dummyView.view.hidden = YES;
     [self.view addSubview:_dummyView.view];
 
-    UIActivityIndicatorView *spinner = [[[UIActivityIndicatorView alloc]
-        initWithFrame:CGRectMake(0, 0, 24, 24)] autorelease];
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+        initWithFrame:CGRectMake(0, 0, 24, 24)];
     [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
     if (!isPad) {
         spinner.center = CGPointMake(viewFrame.size.width * 0.5f, viewFrame.size.height * 0.5f - 10.0f);
@@ -93,24 +93,24 @@
     // Back button (phone only).
     if (!isPad) {
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backBtn = [[[UIButton alloc]
-            initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+        UIButton *backBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
         [backBtn addTarget:self action:@selector(backButtonFunc)
           forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem =
-            [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+            [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     }
 
     // Sort toggle (total-score vs. best-score art).
     UIImage *sortImg = [UIImage imageNamed:(_isBestScoreSort ? @"frilis_btn_bssort" : @"frilis_btn_tssort")];
-    _sortButton = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, sortImg.size.width, sortImg.size.height)] autorelease];
+    _sortButton = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, sortImg.size.width, sortImg.size.height)];
     [_sortButton setBackgroundImage:sortImg forState:UIControlStateNormal];
     [_sortButton addTarget:self action:@selector(sortButtonFunc)
           forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.rightBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:_sortButton] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:_sortButton];
 
     // "No friends yet" placeholder, centred.
     UIImage *lonely = [UIImage imageNamed:@"frilis_mes_empty"];
@@ -161,8 +161,8 @@
                             (int)indexPath.section, (int)indexPath.row];
     FriendListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
-        cell = [[[FriendListCell alloc]
-            initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+        cell = [[FriendListCell alloc]
+            initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
         cell.backgroundColor = [UIColor redColor];
     }
     [cell setFriendData:_frinedDataArray[indexPath.row]
@@ -199,7 +199,6 @@
         frame = parent.frame;
     }
 
-    [_detailView release];
     _detailView = [[FriendListDetail alloc]
         initWithFrame:frame friendData:_frinedDataArray[indexPath.row]];
     [parent addSubview:_detailView];
@@ -226,8 +225,7 @@
     _isBestScoreSort = !_isBestScoreSort;
     [UserSettingData saveIsBestScoreSort:_isBestScoreSort];
 
-    [_frinedDataArray autorelease];
-    _frinedDataArray = [[self sortedRows:_frinedDataArray best:_isBestScoreSort] retain];
+    _frinedDataArray = [self sortedRows:_frinedDataArray best:_isBestScoreSort];
     [self.tableView reloadData];
 
     if ([_frinedDataArray count] > 1) {
@@ -255,11 +253,9 @@
         cancelButtonTitle:nil
         otherButtonTitles:@"OK"];
         [alert show];
-        [alert release];
         return;
     }
 
-    [_frinedDataArray release];
     _frinedDataArray = nil;
 
     NSMutableArray *rows = [[[DownloadMain getInstance] friendListArray] mutableCopy];
@@ -276,8 +272,7 @@
     me.charaId = [UserSettingData charaId];
     [rows addObject:[NSValue value:&me withObjCType:"{FriendListData=@@siii[3[7i]][3i][3i]}"]];
 
-    _frinedDataArray = [[self sortedRows:rows best:_isBestScoreSort] retain];
-    [rows release];
+    _frinedDataArray = [self sortedRows:rows best:_isBestScoreSort];
 
     [self.tableView reloadData];
 
@@ -306,17 +301,10 @@
 
 // @ 0xb1064
 - (void)dealloc {
-    if (_frinedDataArray != nil) {
-        [_frinedDataArray release];
-    }
-    [_dummyView release];
-    [_lonelyImageView release];
-    [_detailView release];
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl delegateGetFriendList] == self) {
         [dl setDelegateGetFriendList:nil];
     }
-    [super dealloc];
 }
 
 @end

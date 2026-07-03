@@ -88,7 +88,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 
     // Full-screen alert overlay, added first so it sits behind the controls.
     // TODO(dep): CustomAlertView not yet reconstructed.
-    _hoge = [[[CustomAlertView alloc] init] autorelease];
+    _hoge = [[CustomAlertView alloc] init];
     [self.view addSubview:_hoge];
 
     // Horizontal layout reference width: the live view width on iPhone, a fixed
@@ -103,7 +103,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
             [UIColor colorWithPatternImage:[UIImage imageNamed:@"popkun_size_bg"]]];
 
         UIImage *textImg = [UIImage imageNamed:@"popkun_size_text"];
-        _infoView = [[[UIImageView alloc] initWithImage:textImg] autorelease];
+        _infoView = [[UIImageView alloc] initWithImage:textImg];
         [_infoView setFrame:CGRectMake(0, 0, textImg.size.width, textImg.size.height)];
         [_infoView setCenter:CGPointMake(W * 0.5f, offsetYForPad1 + 40)];
         [self.view addSubview:_infoView];
@@ -111,8 +111,8 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 
     // --- Size slider ---
     const CGFloat sliderW = W * (isPad ? 0.6f : 0.95f);   // 0x3f19999a / 0x3f733333
-    _sizeSlider = [[[UISlider alloc]
-        initWithFrame:CGRectMake(0, 0, sliderW, 30.0f)] autorelease];   // h 0x41f00000
+    _sizeSlider = [[UISlider alloc]
+        initWithFrame:CGRectMake(0, 0, sliderW, 30.0f)];   // h 0x41f00000
     if (isPad) {
         [_sizeSlider setCenter:CGPointMake(134.0f, 90.0f)];   // 0x43060000 / 0x42b40000
     } else {
@@ -130,7 +130,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 
     if (isPad) {
         // Info label: "ポップ君の大きさを変更できるよ！"
-        UILabel *infoLbl = [[[UILabel alloc] init] autorelease];
+        UILabel *infoLbl = [[UILabel alloc] init];
         infoLbl.backgroundColor = [UIColor clearColor];
         infoLbl.textColor = [UIColor colorWithRed:0.188235f green:0.188235f blue:0.188235f
                                             alpha:1.0f];   // 0x3e40c0c1
@@ -145,8 +145,8 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
         [self.view addSubview:infoLbl];
 
         // Preview art below the info label.
-        UIImageView *preview = [[[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:@"popkun_size_preview"]] autorelease];
+        UIImageView *preview = [[UIImageView alloc]
+            initWithImage:[UIImage imageNamed:@"popkun_size_preview"]];
         preview.frame = preview.frame;   // (binary re-sets the frame to the image frame)
         preview.center = CGPointMake(136.0f, 240.0f);   // 0x43080000 / 0x43700000
         [self.view addSubview:preview];
@@ -155,7 +155,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     // --- Preview pop-kun (both layouts) ---
     UIImage *popkunImg = [UIImage imageNamed:@"popkun_size_popkun"];
     _orgFrame = CGRectMake(0, 0, popkunImg.size.width, popkunImg.size.height);
-    _popkun = [[[UIImageView alloc] initWithImage:popkunImg] autorelease];
+    _popkun = [[UIImageView alloc] initWithImage:popkunImg];
     if (isPad) {
         [_popkun setCenter:CGPointMake(134.0f, 240.0f)];   // 0x43060000 / 0x43700000
     } else {
@@ -163,7 +163,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     }
 
     // --- Size readout label ---
-    _sizeLbl = [[[UILabel alloc] init] autorelease];
+    _sizeLbl = [[UILabel alloc] init];
     _sizeLbl.font = [UIFont fontWithName:kPopkunSizeLabelFontName size:16.0f];   // 0x41800000
     [_sizeLbl setTextColor:[UIColor colorWithWhite:0.8f alpha:1.0f]];            // 0x3f4ccccd
     [_sizeLbl setTextAlignment:NSTextAlignmentCenter];
@@ -197,13 +197,13 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     if (!isPad) {
         // iPhone: custom back bar button.
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backBtn = [[[UIButton alloc]
-            initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+        UIButton *backBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
         [backBtn addTarget:self action:@selector(backButtonFunc)
           forControlEvents:UIControlEventTouchUpInside];   // 0x40
         self.navigationItem.leftBarButtonItem =
-            [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+            [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     } else {
         // iPad: use the system back button.
         [self.navigationItem setHidesBackButton:YES];
@@ -220,11 +220,8 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     [super viewWillDisappear:animated];
 }
 
-// @ 0x8c1fc -- all sub-views are autoreleased + retained by the view hierarchy, so
-// dealloc only chains to super (matches the binary).
-- (void)dealloc {
-    [super dealloc];
-}
+// dealloc @ 0x8c1fc — ARC-omitted (chained to super only; all sub-views retained by the
+// view hierarchy).
 
 // @ 0x8c228 -- live slider drag: track the value and re-apply it.
 - (void)sliderValChanged:(id)sender {

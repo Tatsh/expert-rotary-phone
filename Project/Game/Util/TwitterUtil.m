@@ -32,6 +32,16 @@ static void PresentTweet(NSString *text, UIImage *image) {
 
 @implementation TwitterUtil
 
+// dealloc @ 0x788d0 — ARC-omitted (the recovered body only releases the m_Text/m_Img object
+//   ivars before calling super; ARC does that automatically).
+// setText: @ 0x789a8 / setImage: @ 0x78a08 — synthesized copy/strong setters; annotated on
+//   the @property declarations in TwitterUtil.h.
+
+// Ghidra: @ 0x78934.
+- (instancetype)init {
+    return [self initWithText:nil image:nil];
+}
+
 // Ghidra: @ 0x78948.
 - (instancetype)initWithText:(NSString *)text image:(UIImage *)image {
     self = [super init];

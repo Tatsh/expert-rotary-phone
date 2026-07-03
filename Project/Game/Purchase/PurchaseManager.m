@@ -200,7 +200,6 @@
                                  cancelButtonTitle:nil
                                  otherButtonTitles:@"OK", nil];
         [alert show];
-        [alert release];
         return NO;
     }
     m_Transactioing = YES;

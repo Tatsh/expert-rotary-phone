@@ -61,12 +61,12 @@
     UIColor *g2 = [UIColor colorWithRed:254/255.0f green:162/255.0f blue:174/255.0f alpha:1.0f];
 
     // --- full-screen transparent touch blocker (owned by the hierarchy) ---
-    _dummyView = [[[UIView alloc] initWithFrame:root.view.frame] autorelease];
+    _dummyView = [[UIView alloc] initWithFrame:root.view.frame];
     _dummyView.backgroundColor = [UIColor clearColor];
     [root.view addSubview:_dummyView];
 
     // --- outer gradient border panel: a 3 px frame around the info panel, rounded + clipped ---
-    _borderView = [[[UIView alloc] init] autorelease];
+    _borderView = [[UIView alloc] init];
     _borderView.frame = CGRectMake(0, 0, infoW + 6.0f, infoH + 6.0f);
     _borderView.clipsToBounds = YES;
     _borderView.layer.cornerRadius = 5.0f;
@@ -80,7 +80,7 @@
     [root.view addSubview:_borderView];
 
     // --- info panel inside the border (3 px inset), rounded + patterned background ---
-    _infoView = [[[UIView alloc] initWithFrame:CGRectMake(3.0f, 3.0f, infoW, infoH)] autorelease];
+    _infoView = [[UIView alloc] initWithFrame:CGRectMake(3.0f, 3.0f, infoW, infoH)];
     _infoView.userInteractionEnabled = YES;
     _infoView.clipsToBounds = YES;
     _infoView.layer.cornerRadius = 2.5f;
@@ -88,8 +88,8 @@
     [_borderView addSubview:_infoView];
 
     // --- non-editable instruction text (a scroll view; the OK button lives in its content) ---
-    UITextView *textView = [[[UITextView alloc]
-        initWithFrame:CGRectMake(10.0f, 10.0f, infoW - 20.0f, infoH - 20.0f)] autorelease];
+    UITextView *textView = [[UITextView alloc]
+        initWithFrame:CGRectMake(10.0f, 10.0f, infoW - 20.0f, infoH - 20.0f)];
     textView.backgroundColor = [UIColor clearColor];
     textView.editable = NO;
     textView.text = @"◆年齢確認◆\n\n有料サービスのご利用にあたり、生年月の設定をお願いしております。\n"
@@ -116,7 +116,7 @@
     }
 
     // --- OK button, centred in the text width, sitting at the bottom of the scroll content ---
-    UIButton *okButton = [[[UIButton alloc] init] autorelease];
+    UIButton *okButton = [[UIButton alloc] init];
     UIImage *okImg = [UIImage imageNamed:@"birthday_ok"];
     CGSize okSize = okImg ? okImg.size : CGSizeZero;
     CGFloat okX = ((infoW - 20.0f) - okSize.width) * 0.5f;
@@ -137,7 +137,7 @@
     // --- picker sub-panel: always iPhone-sized (286x341), hidden until OK is tapped ---
     const CGRect subBase = CGRectMake(0, 0, 286.0f, 341.0f);   // 0x438f0000 x 0x43aa8000
 
-    _subBorderView = [[[UIView alloc] init] autorelease];
+    _subBorderView = [[UIView alloc] init];
     _subBorderView.frame = CGRectMake(subBase.origin.x, subBase.origin.y,
                                       subBase.size.width + 6.0f, subBase.size.height + 6.0f);
     _subBorderView.clipsToBounds = YES;
@@ -171,7 +171,6 @@
     title.textAlignment = NSTextAlignmentCenter;   // 1
     title.backgroundColor = [UIColor clearColor];
     [_subView addSubview:title];
-    [title release];
 
     UIButton *cancelBtn = [UIButton buttonWithType:UIButtonTypeRoundedRect];   // raw type 1
     cancelBtn.frame = CGRectMake(14.0f, 280.0f, 121.0f, 47.0f);
@@ -208,7 +207,7 @@
 - (void)onDecideBtn:(id)sender {
     neEngine::playSystemSe(1);
 
-    NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
     fmt.dateFormat = @"yyyy-MM-ddHH:mm:ss";
     NSString *str = [NSString stringWithFormat:@"%d-%02d-1512:00:00",
                      _selectDate.year, _selectDate.month];
@@ -303,13 +302,7 @@
     m_IsAnimationing = NO;
 }
 
-- (void)dealloc {
-    // Only _subView and _selectDate are +1-owned (created without autorelease in -init);
-    // the border/dummy/info panels are autoreleased there and owned by the view hierarchy.
-    [_subView release];
-    [_selectDate release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

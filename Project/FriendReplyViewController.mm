@@ -53,8 +53,8 @@
 
     // Header views (populated + empty variants). The message art sits inside a 140pt-tall spacer.
     UIImage *messager = [UIImage imageNamed:@"frirep_messager"];
-    UIImageView *messagerView = [[[UIImageView alloc]
-        initWithImage:messager] autorelease];
+    UIImageView *messagerView = [[UIImageView alloc]
+        initWithImage:messager];
     [messagerView setFrame:CGRectMake(22.0f, 33.0f, messager.size.width, messager.size.height)];
     _headView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, messager.size.width, 140.0f)];
     [_headView addSubview:messagerView];
@@ -63,7 +63,7 @@
 
     if (!isPad) {
         UIImage *bg = [UIImage imageNamed:@"frirep_bg"];
-        UIImageView *bgView = [[[UIImageView alloc] initWithImage:bg] autorelease];
+        UIImageView *bgView = [[UIImageView alloc] initWithImage:bg];
         [bgView setFrame:CGRectMake(0, 0, bg.size.width, bg.size.height)];
         self.tableView.backgroundView = bgView;
     } else {
@@ -78,8 +78,8 @@
     _dummyView.view.hidden = YES;
     [self.view addSubview:_dummyView.view];
 
-    UIActivityIndicatorView *spinner = [[[UIActivityIndicatorView alloc]
-        initWithFrame:CGRectMake(0, 0, 24, 24)] autorelease];
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+        initWithFrame:CGRectMake(0, 0, 24, 24)];
     [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
     if (!isPad) {
         spinner.center = CGPointMake(viewFrame.size.width * 0.5f, viewFrame.size.height * 0.5f - 10.0f);
@@ -93,13 +93,13 @@
     // Back button (phone only).
     if (!isPad) {
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backBtn = [[[UIButton alloc]
-            initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+        UIButton *backBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
         [backBtn addTarget:self action:@selector(backButtonFunc)
           forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem =
-            [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+            [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     }
 
     // "No requests" placeholder.
@@ -169,8 +169,8 @@
                             (long)indexPath.section, (long)indexPath.row];
     FriendReplyCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
-        cell = [[[FriendReplyCell alloc]
-            initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier] autorelease];
+        cell = [[FriendReplyCell alloc]
+            initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
     }
     [cell setReplyData:_receiveDataArray[indexPath.row]];
     [cell setDelegate:self];
@@ -193,11 +193,7 @@
         for (NSUInteger i = 0; i < [_receiveDataArray count]; i++) {
             ReplyDataStruct data;
             [_receiveDataArray[i] getValue:&data];
-            [data.playerId release];
-            [data.name release];
-            [data.message release];
         }
-        [_receiveDataArray release];
         _receiveDataArray = nil;
     }
 }
@@ -220,11 +216,9 @@
 // @ 0xa8620 — transport-level failure on either request: clear it, hide cover, generic alert.
 - (void)downloaderError:(Downloader *)downloader {
     if (dlGetFriendRequest == downloader) {
-        [downloader release];
         dlGetFriendRequest = nil;
     }
     if (dlReplyFriend == downloader) {
-        [downloader release];
         dlReplyFriend = nil;
     }
     _dummyView.view.hidden = YES;
@@ -235,7 +229,6 @@
     cancelButtonTitle:nil
     otherButtonTitles:@"OK"];
     [alert show];
-    [alert release];
 }
 
 // @ 0xa87f0 — parse the "Receive" request list into ReplyDataStruct rows; swap headers/placeholder
@@ -268,14 +261,14 @@
             }
             if ([ids count] != 0) {
                 [self releaseReceiveDataArray];
-                _receiveDataArray = [[NSMutableArray array] retain];
+                _receiveDataArray = [NSMutableArray array];
                 for (NSUInteger i = 0; i < [ids count]; i++) {
                     ReplyDataStruct data;
                     memset(&data, 0, sizeof(data));
-                    data.playerId = [ids[i] retain];
-                    data.name     = [names[i] retain];
-                    data.message  = [messages[i] retain];
-                    data.date     = [dates[i] retain];
+                    data.playerId = ids[i];
+                    data.name     = names[i];
+                    data.message  = messages[i];
+                    data.date     = dates[i];
                     data.charaId  = (short)[charaIds[i] intValue];
                     [_receiveDataArray addObject:
                         [NSValue value:&data withObjCType:"{ReplyDataStruct=@@@@s[7i]}"]];
@@ -297,7 +290,6 @@
         errorMessage = @"エラーが発生しました。";   // best-effort: cf_Ok01YWeW0_0W0_00
     }
 
-    [dlGetFriendRequest release];
     dlGetFriendRequest = nil;
 
     if (errorMessage != nil) {
@@ -305,7 +297,6 @@
             initWithTitle:nil message:errorMessage delegate:nil
         cancelButtonTitle:nil otherButtonTitles:@"OK"];
         [alert show];
-        [alert release];
     }
 }
 
@@ -339,14 +330,12 @@
         message = @"エラーが発生しました。";   // best-effort: cf_Ok01YWeW0_0W0_00
     }
 
-    [dlReplyFriend release];
     dlReplyFriend = nil;
 
     CommonAlertView *alert = [[CommonAlertView alloc]
         initWithTitle:nil message:message delegate:nil
     cancelButtonTitle:nil otherButtonTitles:@"OK"];
     [alert show];
-    [alert release];
 }
 
 // @ 0xa90b4 — cancel SE, restore the hub nav bar art, pop.
@@ -359,20 +348,13 @@
 
 // @ 0xa81ec
 - (void)dealloc {
-    [_dummyView release];
-    [_lonelyImageView release];
-    [_headView release];
-    [_lonelyHeadView release];
     if (dlGetFriendRequest != nil) {
         [dlGetFriendRequest cancel];
-        [dlGetFriendRequest release];
     }
     if (dlReplyFriend != nil) {
         [dlReplyFriend cancel];
-        [dlReplyFriend release];
     }
     [self releaseReceiveDataArray];
-    [super dealloc];
 }
 
 @end

@@ -59,7 +59,7 @@ bool TitleTask::tapReleased() const {
 // load + start the title SE and looping BGM.
 void TitleTask::setup() {
     m_aep = &AepManager::shared();
-    m_versionLabel = [[NSString stringWithFormat:@"Ver %@", AppDelegate.appDelegate.appVersion] retain];
+    m_versionLabel = [NSString stringWithFormat:@"Ver %@", AppDelegate.appDelegate.appVersion];
 
     const char *imageFolder;
     if (!neSceneManager::isPadDisplay()) {
@@ -93,7 +93,6 @@ void TitleTask::finish() {
     }
     AepUnloadGroup(m_aep, 1);
     if (m_versionLabel != nil) {
-        [m_versionLabel release];
         m_versionLabel = nil;
     }
     gCharaManager.reload();   // CharaManager_reload
@@ -112,7 +111,7 @@ void TitleTask::buildConversionButton() {
     CGRect vf = root.view.frame;
     CGSize sz = img.size;
     CGRect frame = CGRectMake(vf.size.width - sz.width - 10.0f, -10.0f, sz.width, sz.height);
-    m_conversionButton = [[[CustomButton alloc] initWithFrame:frame] autorelease];
+    m_conversionButton = [[CustomButton alloc] initWithFrame:frame];
     [m_conversionButton setTappableInsets:UIEdgeInsetsMake(-20, -20, -20, -20)];
     m_conversionButton.exclusiveTouch = YES;
     [m_conversionButton setBackgroundImage:img forState:UIControlStateNormal];
@@ -131,7 +130,6 @@ void TitleTask::buildConversionButton() {
             initWithTitle:nil message:msg delegate:nil cancelButtonTitle:nil otherButtonTitles:nil];
         alert.tag = 0;
         [alert show];
-        [alert release];
     }
     m_state3Built = true;
 }
@@ -203,7 +201,6 @@ void TitleTask::update(int /*deltaMs*/) {
                     initWithTitle:@"" message:nil delegate:nil
                     cancelButtonTitle:nil otherButtonTitles:@""];
                 [a show];
-                [a release];
                 m_state = 3;
                 break;
             }

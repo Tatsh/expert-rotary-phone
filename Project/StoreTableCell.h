@@ -12,8 +12,8 @@
 
 @interface StoreTableCell : UITableViewCell
 
-@property (nonatomic, retain) StorePackView *leftPackView;
-@property (nonatomic, retain) StorePackView *rightPackView;
+@property (nonatomic, retain) StorePackView *leftPackView;   // synthesized getter @ 0x529e4
+@property (nonatomic, retain) StorePackView *rightPackView;  // synthesized getter @ 0x529f4
 
 @end
 

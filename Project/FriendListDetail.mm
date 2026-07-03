@@ -58,9 +58,9 @@ static const int kColX[3] = { 139, 190, 242 };
     int dx = 0;                       // ones, tens, hundreds — 15pt apart, right to left
     for (int i = 0; i < 3; i++) {
         UIImage *img = [UIImage imageNamed:kNumImg[sheet][v % 10]];
-        UIImageView *iv = [[[UIImageView alloc]
+        UIImageView *iv = [[UIImageView alloc]
             initWithFrame:CGRectMake((baseX + dx) * s, y * s,
-                                     img.size.width * s, img.size.height * s)] autorelease];
+                                     img.size.width * s, img.size.height * s)];
         [iv setImage:img];
         [view addSubview:iv];
         v /= 10;
@@ -89,10 +89,10 @@ static const int kColX[3] = { 139, 190, 242 };
 
     // Window, centred in the frame; parents every element below (tag 100).
     UIImage *windowImg = [UIImage imageNamed:@"frilis_window"];
-    UIImageView *window = [[[UIImageView alloc]
+    UIImageView *window = [[UIImageView alloc]
         initWithFrame:CGRectMake((frame.size.width  - windowImg.size.width)  * 0.5f,
                                  (frame.size.height - windowImg.size.height) * 0.5f,
-                                 windowImg.size.width, windowImg.size.height)] autorelease];
+                                 windowImg.size.width, windowImg.size.height)];
     [window setImage:windowImg];
     [window setUserInteractionEnabled:YES];
     [window setTag:100];
@@ -103,8 +103,8 @@ static const int kColX[3] = { 139, 190, 242 };
     _dummyView.backgroundColor = [UIColor colorWithWhite:0.5f alpha:0];
     [_dummyView setHidden:YES];
     [self addSubview:_dummyView];
-    UIActivityIndicatorView *spinner = [[[UIActivityIndicatorView alloc]
-        initWithFrame:CGRectMake(0, 0, 24, 24)] autorelease];
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
+        initWithFrame:CGRectMake(0, 0, 24, 24)];
     [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
     spinner.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f - 10.0f);
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
@@ -113,7 +113,7 @@ static const int kColX[3] = { 139, 190, 242 };
 
     // Close button (top-right of the window).
     UIImage *closeImg = [UIImage imageNamed:@"frilis_btn_close"];
-    UIButton *closeBtn = [[[UIButton alloc] init] autorelease];
+    UIButton *closeBtn = [[UIButton alloc] init];
     [closeBtn setFrame:CGRectMake(347.0f * s, 8.0f * s, closeImg.size.width, closeImg.size.height)];
     [closeBtn setImage:closeImg forState:UIControlStateNormal];
     [closeBtn addTarget:self action:@selector(startCloseAnimation)
@@ -123,7 +123,7 @@ static const int kColX[3] = { 139, 190, 242 };
     // Unfriend button — friends only (you cannot unfriend yourself).
     if (isFriend) {
         UIImage *delImg = [UIImage imageNamed:@"frilis_btn_delate"];
-        UIButton *delBtn = [[[UIButton alloc] init] autorelease];
+        UIButton *delBtn = [[UIButton alloc] init];
         delBtn.backgroundColor = [UIColor clearColor];
         // Origin is NEON-spilled (DAT_000b4a90/94 pad offsets); best-effort placement.
         [delBtn setFrame:CGRectMake((windowImg.size.width - delImg.size.width) - 12.0f * s,
@@ -144,12 +144,12 @@ static const int kColX[3] = { 139, 190, 242 };
     // iPad: the large sugo_chara art loaded from Application Support.
     UIImageView *charaView;
     if (!isPad) {
-        UIImageView *plate = [[[UIImageView alloc]
-            initWithFrame:CGRectMake(18, 36, 55, 55)] autorelease];
+        UIImageView *plate = [[UIImageView alloc]
+            initWithFrame:CGRectMake(18, 36, 55, 55)];
         [plate setImage:[UIImage imageNamed:@"frilis_btn_chara"]];
         [window addSubview:plate];
 
-        charaView = [[[UIImageView alloc] initWithFrame:CGRectMake(25, 38, 43, 43)] autorelease];
+        charaView = [[UIImageView alloc] initWithFrame:CGRectMake(25, 38, 43, 43)];
         NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
         UIImage *icon = (charaId > 0x1d)
             ? [UIImage imageWithContentsOfFile:
@@ -157,7 +157,7 @@ static const int kColX[3] = { 139, 190, 242 };
             : [UIImage imageNamed:iconFile];
         [charaView setImage:icon];
     } else {
-        charaView = [[[UIImageView alloc] initWithFrame:CGRectMake(66, 72, 125, 120)] autorelease];
+        charaView = [[UIImageView alloc] initWithFrame:CGRectMake(66, 72, 125, 120)];
         NSString *sugoFile = [NSString stringWithFormat:@"sugo_chara_%03d.png", (int)charaId];
         NSURL *sugoURL = [NSURL fileURLWithPath:
             [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:sugoFile]];
@@ -169,7 +169,7 @@ static const int kColX[3] = { 139, 190, 242 };
     [window addSubview:charaView];
 
     // Name.
-    UILabel *nameLabel = [[[UILabel alloc] init] autorelease];
+    UILabel *nameLabel = [[UILabel alloc] init];
     nameLabel.backgroundColor = [UIColor clearColor];
     nameLabel.textColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0f];
     nameLabel.text = data.name;
@@ -182,7 +182,7 @@ static const int kColX[3] = { 139, 190, 242 };
     [window addSubview:nameLabel];
 
     // Player id (own id for the self row). Black on phone, white on iPad.
-    UILabel *playerIdLabel = [[[UILabel alloc] init] autorelease];
+    UILabel *playerIdLabel = [[UILabel alloc] init];
     playerIdLabel.backgroundColor = [UIColor clearColor];
     playerIdLabel.textColor = isPad ? [UIColor whiteColor]
                                     : [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0f];
@@ -196,7 +196,7 @@ static const int kColX[3] = { 139, 190, 242 };
     [window addSubview:playerIdLabel];
 
     // Friendship value (friends only).
-    UILabel *friendshipLabel = [[[UILabel alloc] init] autorelease];
+    UILabel *friendshipLabel = [[UILabel alloc] init];
     friendshipLabel.backgroundColor = [UIColor clearColor];
     friendshipLabel.textColor = isPad ? [UIColor whiteColor]
                                       : [UIColor colorWithRed:0 green:0 blue:0 alpha:1.0f];
@@ -272,8 +272,8 @@ static const int kColX[3] = { 139, 190, 242 };
     if ([[[touches anyObject] view] tag] == 0x65) {
         neEngine::playSystemSe(1);
         UIView *portrait = [self viewWithTag:100];
-        FriendListDetailChara *card = [[[FriendListDetailChara alloc]
-            initWithFrame:portrait.frame friendData:_friendData] autorelease];
+        FriendListDetailChara *card = [[FriendListDetailChara alloc]
+            initWithFrame:portrait.frame friendData:_friendData];
         [card setTag:0x66];
         [portrait addSubview:card];
         [card startOpenAnimation];
@@ -300,7 +300,6 @@ static const int kColX[3] = { 139, 190, 242 };
         cancelButtonTitle:@"Cancel"
         otherButtonTitles:@"OK"];
         [alert show];
-        [alert release];
     }
 }
 
@@ -343,7 +342,6 @@ static const int kColX[3] = { 139, 190, 242 };
         message = @"解除しました。";          // best-effort: cf_Ok01YWeW0_0W0_00 (unfriended)
         delegate = nil;
     }
-    [_dlRemoveFriend release];
     _dlRemoveFriend = nil;
     [_dummyView setHidden:YES];
 
@@ -355,7 +353,6 @@ static const int kColX[3] = { 139, 190, 242 };
     otherButtonTitles:@"OK"];
     [alert setTag:100];
     [alert show];
-    [alert release];
 }
 
 // @ 0xb57cc — no-op.
@@ -364,7 +361,6 @@ static const int kColX[3] = { 139, 190, 242 };
 
 // @ 0xb57d0 — unfriend POST failed at the transport level: generic comms-error alert.
 - (void)downloaderError:(Downloader *)downloader {
-    [_dlRemoveFriend release];
     _dlRemoveFriend = nil;
     [_dummyView setHidden:YES];
     CommonAlertView *alert = [[CommonAlertView alloc]
@@ -374,7 +370,6 @@ static const int kColX[3] = { 139, 190, 242 };
     cancelButtonTitle:nil
     otherButtonTitles:@"OK"];
     [alert show];
-    [alert release];
 }
 
 // @ 0xb5c98
@@ -384,12 +379,9 @@ static const int kColX[3] = { 139, 190, 242 };
 
 // @ 0xb53fc
 - (void)dealloc {
-    [_dummyView release];
     if (_dlRemoveFriend != nil) {
         [_dlRemoveFriend cancel];
-        [_dlRemoveFriend release];
     }
-    [super dealloc];
 }
 
 @end

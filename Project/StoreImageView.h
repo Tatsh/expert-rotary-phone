@@ -26,6 +26,10 @@
 // already running. Ghidra: @ 0x42884.
 - (void)startDownloadImage;
 
+// Cancel any in-flight fetch and set the view's image to the supplied one (pass nil to
+// clear it). Ghidra: @ 0x42928.
+- (void)unloadImage:(UIImage *)image;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

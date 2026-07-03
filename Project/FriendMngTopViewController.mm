@@ -24,21 +24,21 @@
     m_Delegate = self;
 
     // Backdrop.
-    UIImageView *bg = [[[UIImageView alloc]
-        initWithImage:[UIImage imageNamed:@"friman_bg"]] autorelease];
+    UIImageView *bg = [[UIImageView alloc]
+        initWithImage:[UIImage imageNamed:@"friman_bg"]];
     [self.view addSubview:bg];
 
     // Wrap self in its own navigation controller with a custom back button + nav-bar art.
     UINavigationController *nav =
         [[UINavigationController alloc] initWithRootViewController:self];
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(startCloseAnimation)
       forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"friman_navbar"] forBarMetrics:UIBarMetricsDefault];
 
@@ -53,16 +53,15 @@
     };
     for (int i = 0; i < 3; i++) {
         UIImage *bimg = [UIImage imageNamed:sections[i].btn];
-        UIButton *b = [[[UIButton alloc]
-            initWithFrame:CGRectMake(cx - bimg.size.width * 0.5f, y, bimg.size.width, bimg.size.height)]
-            autorelease];
+        UIButton *b = [[UIButton alloc]
+            initWithFrame:CGRectMake(cx - bimg.size.width * 0.5f, y, bimg.size.width, bimg.size.height)];
         b.exclusiveTouch = YES;
         [b setBackgroundImage:bimg forState:UIControlStateNormal];
         [b addTarget:self action:sections[i].action forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:b];
 
         UIImage *timg = [UIImage imageNamed:sections[i].text];
-        UIImageView *t = [[[UIImageView alloc] initWithImage:timg] autorelease];
+        UIImageView *t = [[UIImageView alloc] initWithImage:timg];
         t.frame = CGRectMake(cx - timg.size.width * 0.5f, y, timg.size.width, timg.size.height);
         [self.view addSubview:t];
 
@@ -79,8 +78,8 @@
 
     // On first entry (this is the iPhone hub) push the friend how-to tutorial, then mark it seen.
     if (![UserSettingData isFriendSelected]) {
-        HowToViewCtrl *howto = [[[HowToViewCtrl alloc]
-            initWithFileNameArray:@[@"firstplay_friend"]] autorelease];
+        HowToViewCtrl *howto = [[HowToViewCtrl alloc]
+            initWithFileNameArray:@[@"firstplay_friend"]];
         howto.isCloseButtonEnable = YES;
         howto.backGroundImage = [UIImage imageNamed:@"friman_bg"];
         [self.navigationController pushViewController:howto animated:NO];
@@ -140,8 +139,8 @@
 - (void)onListButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
-        FriendListViewController *vc = [[[FriendListViewController alloc]
-            initWithStyle:UITableViewStyleGrouped] autorelease];
+        FriendListViewController *vc = [[FriendListViewController alloc]
+            initWithStyle:UITableViewStyleGrouped];
         if (self.navigationController.topViewController != self) {
             return;
         }
@@ -168,8 +167,8 @@
 - (void)onReplyButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
-        FriendReplyViewController *vc = [[[FriendReplyViewController alloc]
-            initWithStyle:UITableViewStyleGrouped] autorelease];
+        FriendReplyViewController *vc = [[FriendReplyViewController alloc]
+            initWithStyle:UITableViewStyleGrouped];
         if (self.navigationController.topViewController != self) {
             return;
         }
@@ -182,10 +181,7 @@
     }
 }
 
-- (void)dealloc {
-    [_markView release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

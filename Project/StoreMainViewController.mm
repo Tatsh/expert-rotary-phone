@@ -57,7 +57,7 @@
     } else {
         self.view.backgroundColor = [UIColor clearColor];
         UIImageView *bg =
-            [[[UIImageView alloc] initWithImage:[UIImage imageNamed:@"friman_bg"]] autorelease];
+            [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"friman_bg"]];
         [self.view addSubview:bg];
     }
     self.view.autoresizingMask =
@@ -126,12 +126,7 @@
     [m_PackListCtrl startFetchingPack:-1];
 }
 
-- (void)dealloc {
-    [m_PackListCtrl release];
-    [m_RecommendPackListCtrl release];
-    [m_ArtworkDownloaders release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

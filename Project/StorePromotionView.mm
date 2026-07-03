@@ -11,7 +11,10 @@
 
 @implementation StorePromotionView
 
+// delegate @ 0x7a724 / setDelegate: @ 0x7a734 — synthesized weak accessors.
 @synthesize delegate = m_Delegate;
+
+// layoutSubviews @ 0x79c00 — super-only override, omitted.
 
 // @ 0x79900
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -35,11 +38,11 @@
 
     // Front/next image views are owned by the view hierarchy; the ivars are
     // unretained aliases (matching the binary — autorelease + addSubview, no retain).
-    m_FrontImageView = [[[UIImageView alloc] initWithFrame:self.bounds] autorelease];
+    m_FrontImageView = [[UIImageView alloc] initWithFrame:self.bounds];
     [self addSubview:m_FrontImageView];
     m_FrontImageView.hidden = YES;
 
-    m_NextImageView = [[[UIImageView alloc] initWithFrame:self.bounds] autorelease];
+    m_NextImageView = [[UIImageView alloc] initWithFrame:self.bounds];
     [self addSubview:m_NextImageView];
     m_NextImageView.alpha = 0.0f;
 
@@ -47,7 +50,6 @@
         [[UITapGestureRecognizer alloc] initWithTarget:self
                                                 action:@selector(handleTapPromotionView:)];
     [self addGestureRecognizer:tap];
-    [tap release];
 
     neSceneManager::shared();
     if (neSceneManager::isPadDisplay()) {
@@ -80,7 +82,6 @@
         downloader.delegate = self;
         [m_ImageDownloader addObject:downloader];
         [downloader startDownload];
-        [downloader release];
         i++;
     }
 }
@@ -90,6 +91,11 @@
     UIImage *image = [downloader getImage];
     NSUInteger index = [indexPath indexAtPosition:0];
     [self setImage:image Index:(int)index];
+    [m_ImageDownloader removeObject:downloader];
+}
+
+// @ 0x7a2a4 — download failed: just drop the downloader (no slot gets an image).
+- (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     [m_ImageDownloader removeObject:downloader];
 }
 
@@ -198,21 +204,16 @@
         downloader.delegate = nil;
         [downloader cancelDownload];
     }
-    [m_ImageDownloader release];
     m_ImageDownloader = nil;
     [self stopAnimation];
 }
 
 // @ 0x79994
 - (void)dealloc {
-    [m_Indicator release];
     for (ImageDownloader *downloader in m_ImageDownloader) {
         downloader.delegate = nil;
         [downloader cancelDownload];
     }
-    [m_ImageDownloader release];
-    [m_PromotionDataArray release];
-    [super dealloc];
 }
 
 @end

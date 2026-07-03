@@ -14,8 +14,9 @@
 @interface CustomButton : UIButton
 
 // Applied to the bounds before hit-testing (UIEdgeInsetsInsetRect); negative
-// values expand the tappable area. Synthesized atomic property (@ 0xdd0f8/0xdd11c).
-@property (nonatomic) UIEdgeInsets tappableInsets;
+// values expand the tappable area. Synthesized atomic property — the recovered
+// setter uses an atomic objc_copyStruct (@ 0xdd0f8 getter / 0xdd11c setter).
+@property (atomic) UIEdgeInsets tappableInsets;
 
 @end
 

@@ -88,14 +88,14 @@ static UIViewController *RootVC() {
 
     UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
     CGSize backSize = backImage ? backImage.size : CGSizeZero;
-    UIButton *backButton = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backSize.width, backSize.height)] autorelease];
+    UIButton *backButton = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backSize.width, backSize.height)];
     [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
     [backButton addTarget:self action:@selector(settingClose)
          forControlEvents:UIControlEventTouchUpInside];
 
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backButton] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backButton];
 
     UIImage *barImage = [UIImage imageNamed:@"frirep_navbar"];
     [self.navigationController.navigationBar setBackgroundImage:barImage
@@ -103,19 +103,7 @@ static UIViewController *RootVC() {
     return nav;
 }
 
-// @ 0x88f5c
-- (void)dealloc {
-    if (_selectedIndexPath != nil) {
-        [_selectedIndexPath release];
-        _selectedIndexPath = nil;
-    }
-    for (int i = 0; i < 6; i++) {
-        if (_detailView[i] != nil) {
-            [_detailView[i] release];
-        }
-    }
-    [super dealloc];
-}
+// dealloc @ 0x88f5c — ARC-omitted (released object ivars only).
 
 // @ 0x88ff0
 - (void)viewDidLoad {
@@ -227,8 +215,8 @@ static UIViewController *RootVC() {
         return cell;
     }
 
-    cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                   reuseIdentifier:cellId] autorelease];
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                  reuseIdentifier:cellId];
     cell.backgroundView = nil;
     cell.backgroundColor = [UIColor clearColor];
     cell.clipsToBounds = YES;
@@ -241,7 +229,7 @@ static UIViewController *RootVC() {
         case 1: {
             cell.selectionStyle = UITableViewCellSelectionStyleNone;
             CGRect frm = _dummyFrm[0];
-            UIView *box = [[[UIView alloc] initWithFrame:frm] autorelease];
+            UIView *box = [[UIView alloc] initWithFrame:frm];
             box.layer.borderWidth = 3.0f;
             box.layer.borderColor = [UIColor colorWithRed:1.0f green:0.647059f blue:0.627451f
                                                     alpha:1.0f].CGColor;   // 0x3f25a5a6 / 0x3f20a0a1
@@ -249,7 +237,7 @@ static UIViewController *RootVC() {
             box.clipsToBounds = YES;
             box.backgroundColor = [UIColor colorWithRed:0.996109f green:0.831373f blue:0.823529f
                                                   alpha:1.0f];             // 0x3f7efeff / 0x3f54d4d5 / 0x3f52d2d3
-            UIView *inner = [[[UIView alloc] init] autorelease];
+            UIView *inner = [[UIView alloc] init];
             inner.backgroundColor = [UIColor clearColor];
             inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
             [box addSubview:inner];
@@ -265,7 +253,7 @@ static UIViewController *RootVC() {
         case 3: {
             cell.selectionStyle = UITableViewCellSelectionStyleNone;
             CGRect frm = _dummyFrm[2];
-            UIView *box = [[[UIView alloc] initWithFrame:frm] autorelease];
+            UIView *box = [[UIView alloc] initWithFrame:frm];
             box.layer.borderWidth = 3.0f;
             box.layer.borderColor = [UIColor colorWithRed:1.0f green:0.733333f blue:0.313726f
                                                     alpha:1.0f].CGColor;   // 0x3f3bbbbc / 0x3ea0a0a1
@@ -273,7 +261,7 @@ static UIViewController *RootVC() {
             box.clipsToBounds = YES;
             box.backgroundColor = [UIColor colorWithRed:1.0f green:0.831373f blue:0.564706f
                                                   alpha:1.0f];             // 0x3f54d4d5 / 0x3f109091
-            UIView *inner = [[[UIView alloc] init] autorelease];
+            UIView *inner = [[UIView alloc] init];
             inner.backgroundColor = [UIColor clearColor];
             inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
             [box addSubview:inner];
@@ -289,7 +277,7 @@ static UIViewController *RootVC() {
         case 5: {
             cell.selectionStyle = UITableViewCellSelectionStyleNone;
             CGRect frm = _dummyFrm[4];
-            UIView *box = [[[UIView alloc] initWithFrame:frm] autorelease];
+            UIView *box = [[UIView alloc] initWithFrame:frm];
             box.layer.borderWidth = 3.0f;
             box.layer.borderColor = [UIColor colorWithRed:0.580392f green:0.960784f blue:0.372549f
                                                     alpha:1.0f].CGColor;   // 0x3f149495 / 0x3f75f5f6 / 0x3ebebebf
@@ -297,7 +285,7 @@ static UIViewController *RootVC() {
             box.clipsToBounds = YES;
             box.backgroundColor = [UIColor colorWithRed:0.741176f green:1.0f blue:0.6f
                                                   alpha:1.0f];             // 0x3f3dbdbe / 0x3f19999a
-            UIView *inner = [[[UIView alloc] init] autorelease];
+            UIView *inner = [[UIView alloc] init];
             inner.backgroundColor = [UIColor clearColor];
             // Row 5 trims 20 from the height (rows 1/3 trim 4).
             inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 20.0f);
@@ -334,7 +322,7 @@ static UIViewController *RootVC() {
         case 4: title = @"ポップ君サイズ"; break;      // ポップ君サイズ (Pop-kun size)
     }
 
-    UIView *panel = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 290.0f, 53.0f)] autorelease];
+    UIView *panel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 290.0f, 53.0f)];
     panel.layer.borderWidth = 3.0f;
     panel.layer.borderColor = headerColor.CGColor;
     panel.layer.cornerRadius = 5.0f;
@@ -347,7 +335,7 @@ static UIViewController *RootVC() {
     panel.center = CGPointMake(centerX, 32.0f);   // y 0x42000000 = 32
     [cell.contentView addSubview:panel];
 
-    UILabel *label = [[[UILabel alloc] init] autorelease];
+    UILabel *label = [[UILabel alloc] init];
     label.backgroundColor = [UIColor clearColor];                 // overwritten by whiteColor below
     label.textColor = [UIColor colorWithRed:0.188235f green:0.188235f blue:0.188235f alpha:1.0f]; // 0x3e40c0c1
     label.backgroundColor = [UIColor whiteColor];
@@ -372,10 +360,9 @@ static UIViewController *RootVC() {
     }
     if (_selectedIndexPath != nil && [_selectedIndexPath compare:indexPath] == NSOrderedSame) {
         // Tapped the already-expanded header -> collapse.
-        [_selectedIndexPath release];
         _selectedIndexPath = nil;
     } else {
-        _selectedIndexPath = [indexPath retain];
+        _selectedIndexPath = indexPath;
     }
     [tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath]
                      withRowAnimation:UITableViewRowAnimationNone];   // animation 5

@@ -15,15 +15,14 @@
 // @ 0x852dc
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary {
     if ([dictionary[@"ID"] intValue] <= 0) {
-        [self release];
         return nil;
     }
     if ((self = [super init])) {
         m_AcMusicId = [dictionary[@"ID"] intValue];
-        m_Title = [dictionary[@"Title"] retain];
-        m_Genre = [dictionary[@"Genre"] retain];
-        m_ItemURL = [dictionary[@"ItemURL"] retain];
-        m_SampleURL = [dictionary[@"SampleURL"] retain];
+        m_Title = dictionary[@"Title"];
+        m_Genre = dictionary[@"Genre"];
+        m_ItemURL = dictionary[@"ItemURL"];
+        m_SampleURL = dictionary[@"SampleURL"];
     }
     return self;
 }
@@ -39,13 +38,7 @@
     return RhFileExists([[MusicManager getInstance] getAcPathFromPurchased:m_AcMusicId]);
 }
 
-- (void)dealloc {
-    [m_Title release];
-    [m_Genre release];
-    [m_ItemURL release];
-    [m_SampleURL release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

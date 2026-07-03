@@ -20,7 +20,7 @@
 - (instancetype)initWithFileNameArray:(NSArray *)fileNameArray {
     self = [super init];
     if (self != nil) {
-        _fileNameArray = [fileNameArray retain];
+        _fileNameArray = fileNameArray;
     }
     return self;
 }
@@ -38,9 +38,9 @@
     // The horizontally-paged strip (count pages wide) over the optional background.
     const CGRect vf = self.view.frame;
     CGRect stripFrame = CGRectMake(0, 0, vf.size.width * _fileNameArray.count, vf.size.height);
-    HowToView *strip = [[[HowToView alloc] initWithImageList:images
-                                                       frame:stripFrame
-                                               backGroundImg:_backGroundImage] autorelease];
+    HowToView *strip = [[HowToView alloc] initWithImageList:images
+                                                      frame:stripFrame
+                                              backGroundImg:_backGroundImage];
 
     _scrollView = [[UIScrollView alloc] initWithFrame:self.view.frame];
     _scrollView.contentSize = strip.bounds.size;
@@ -61,13 +61,13 @@
 
     // Nav-bar back button.
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(backButtonFunc)
       forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     // In "close-button" mode, hide the back button and add a right-bar close button; with more
     // than one page it stays hidden until the last page (revealed in scrollViewDidScroll:).
@@ -80,7 +80,7 @@
         [_closeBtn addTarget:self action:@selector(backButtonFunc)
             forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.rightBarButtonItem =
-            [[[UIBarButtonItem alloc] initWithCustomView:_closeBtn] autorelease];
+            [[UIBarButtonItem alloc] initWithCustomView:_closeBtn];
         if (_fileNameArray.count > 1) {
             _closeBtn.hidden = YES;
         }
@@ -108,14 +108,7 @@
     }
 }
 
-- (void)dealloc {
-    [_fileNameArray release];
-    [_scrollView release];
-    [_pageCtrl release];
-    [_closeBtn release];
-    [_backGroundImage release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

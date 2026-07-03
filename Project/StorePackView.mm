@@ -24,19 +24,17 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         // Background image view fills the tile and owns the tap gesture.
-        m_BackGroundImageView = [[[UIImageView alloc] initWithFrame:self.bounds] autorelease];
+        m_BackGroundImageView = [[UIImageView alloc] initWithFrame:self.bounds];
         m_BackGroundImageView.userInteractionEnabled = YES;
         m_BackGroundImageView.exclusiveTouch = YES;
         UITapGestureRecognizer *tap =
             [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
         [m_BackGroundImageView addGestureRecognizer:tap];
-        [tap release];
-        [m_BackGroundImageView retain];   // held as an ivar (also added as subview below)
 
         // Jacket artwork: (15,15,110,110), aspect-fit, faint white fill, 1pt white
         // border, soft black drop shadow, rasterized.
         m_ArtworkImageView =
-            [[[UIImageView alloc] initWithFrame:CGRectMake(15, 15, 110, 110)] autorelease];
+            [[UIImageView alloc] initWithFrame:CGRectMake(15, 15, 110, 110)];
         m_ArtworkImageView.contentMode = UIViewContentModeScaleAspectFit;
         m_ArtworkImageView.opaque = NO;
         m_ArtworkImageView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.3f];
@@ -48,23 +46,21 @@
         artLayer.shadowOpacity = 0.6f;
         artLayer.shadowRadius = 2.0f;
         artLayer.shouldRasterize = YES;
-        [m_ArtworkImageView retain];
 
         // Name label — right of the jacket. Original x = frameWidth + (-145.0)
         // (DAT_0005204c). Width 140, height ~20, auto-shrinking font @ 17pt white.
         m_NameLabel = [[[UILabel alloc]
-            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 14, 140, 20)] autorelease];
+            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 14, 140, 20)];
         m_NameLabel.backgroundColor = [UIColor clearColor];
         m_NameLabel.font = [UIFont fontWithName:AppFontName() size:17.0f];
         m_NameLabel.textColor = [UIColor colorWithWhite:0.0f alpha:1.0f];
         m_NameLabel.adjustsFontSizeToFitWidth = YES;
         m_NameLabel.minimumScaleFactor = 0.6f;
-        [m_NameLabel retain];
 
         // "Purchased" pill — a custom button that is always disabled; it only shows
         // a disabled-state background ("store_btn_disabled.png", 6pt stretchable caps)
         // and the title "購入済み" ("Purchased") — Ghidra CFString @ 0x136bd8.
-        m_PurchasedButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+        m_PurchasedButton = [UIButton buttonWithType:UIButtonTypeCustom];
         UIImage *disabledBg = [[UIImage imageNamed:@"store_btn_disabled.png"]
             stretchableImageWithLeftCapWidth:6 topCapHeight:6];
         [m_PurchasedButton setBackgroundImage:disabledBg forState:UIControlStateDisabled];
@@ -87,40 +83,35 @@
         // subview; its construction was folded by the decompiler, so its frame mirrors
         // the name label's column.)
         m_CommentLabel = [[[UILabel alloc]
-            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 40, 140, 18)] autorelease];
+            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 40, 140, 18)];
         m_CommentLabel.backgroundColor = [UIColor clearColor];
         m_CommentLabel.font = [UIFont fontWithName:AppFontName() size:13.0f];
         m_CommentLabel.textColor = [UIColor colorWithWhite:0.0f alpha:1.0f];
-        [m_CommentLabel retain];
 
         // Price label — width 140, height 32, dim (white 0.196) @ 15pt.
         m_PriceLabel = [[[UILabel alloc]
-            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 100, 140, 32)] autorelease];
+            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 100, 140, 32)];
         m_PriceLabel.backgroundColor = [UIColor clearColor];
         m_PriceLabel.font = [UIFont fontWithName:AppFontName() size:15.0f];
         m_PriceLabel.textColor = [UIColor colorWithWhite:0.196f alpha:1.0f];
-        [m_PriceLabel retain];
 
         // "New" badge.
         m_NewMarker = [[[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:@"store_new.png"]] autorelease];
-        [m_NewMarker retain];
+            initWithImage:[UIImage imageNamed:@"store_new.png"]];
 
         // Arcade-viewer badge at (140,77), hidden until a pack has arcade content.
         UIImage *acvImg = [UIImage imageNamed:@"store_arcade_view_ic"];
-        m_ArcadeViewerImageView = [[[UIImageView alloc] initWithImage:acvImg] autorelease];
+        m_ArcadeViewerImageView = [[UIImageView alloc] initWithImage:acvImg];
         m_ArcadeViewerImageView.frame =
             CGRectMake(140.0f, 77.0f, acvImg.size.width, acvImg.size.height);
         m_ArcadeViewerImageView.hidden = YES;
-        [m_ArcadeViewerImageView retain];
 
         // Chara-ticket badge at (140, below the arcade badge).
         UIImage *charaImg = [UIImage imageNamed:@"store_chara_ic"];
         CGFloat ticketY = CGRectGetMaxY(m_ArcadeViewerImageView.frame);
-        m_TicketImageView = [[[UIImageView alloc] initWithImage:charaImg] autorelease];
+        m_TicketImageView = [[UIImageView alloc] initWithImage:charaImg];
         m_TicketImageView.frame =
             CGRectMake(140.0f, ticketY, charaImg.size.width, charaImg.size.height);
-        [m_TicketImageView retain];
 
         // Subview order matches the binary exactly.
         [self addSubview:m_BackGroundImageView];
@@ -178,18 +169,7 @@
     [m_Delegate performSelector:@selector(packViewSelected:) withObject:self];
 }
 
-- (void)dealloc {
-    [m_BackGroundImageView release];
-    [m_ArtworkImageView release];
-    [m_NameLabel release];
-    [m_CommentLabel release];
-    [m_PriceLabel release];
-    [m_PurchasedButton release];
-    [m_NewMarker release];
-    [m_ArcadeViewerImageView release];
-    [m_TicketImageView release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

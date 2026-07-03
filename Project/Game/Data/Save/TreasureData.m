@@ -28,7 +28,6 @@
                          mainMapId, subMapId];
     NSArray *results = [context executeFetchRequest:request error:NULL];
     TreasureData *found = (results.count != 0) ? [results lastObject] : nil;
-    [request release];
     return found;
 }
 

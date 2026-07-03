@@ -39,23 +39,23 @@ static UIViewController *RootVC() {
         _rightViewFrm = CGRectMake(385, 182, 320, 716);
 
         UIImage *arrow = [UIImage imageNamed:@"pl_konamiid_arrow"];
-        _arrowImageView = [[[UIImageView alloc] initWithImage:arrow] autorelease];
+        _arrowImageView = [[UIImageView alloc] initWithImage:arrow];
         _categoryArrowFrm  = CGRectMake(365, 307, arrow.size.width, arrow.size.height);
         _musicNameArrowFrm = CGRectMake(365, 469, arrow.size.width, arrow.size.height);
         _genreArrowFrm     = CGRectMake(365, 631, arrow.size.width, arrow.size.height);
         _arrowImageView.frame = _categoryArrowFrm;
 
         // Dimmed, tappable backdrop.
-        UIView *cover = [[[UIView alloc] initWithFrame:self.view.frame] autorelease];
+        UIView *cover = [[UIView alloc] initWithFrame:self.view.frame];
         cover.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5f];
         cover.userInteractionEnabled = YES;
         [self.view addSubview:cover];
-        [cover addGestureRecognizer:[[[UITapGestureRecognizer alloc]
-            initWithTarget:self action:@selector(handleTapCoverView:)] autorelease]];
+        [cover addGestureRecognizer:[[UITapGestureRecognizer alloc]
+            initWithTarget:self action:@selector(handleTapCoverView:)]];
 
         // Artwork panel that holds the split view, centred on the screen.
         UIImage *bgImg = [UIImage imageNamed:@"acv_bg"];
-        UIImageView *bg = [[[UIImageView alloc] initWithImage:bgImg] autorelease];
+        UIImageView *bg = [[UIImageView alloc] initWithImage:bgImg];
         bg.userInteractionEnabled = YES;
         bg.frame = CGRectMake(0, 0, bgImg.size.width, bgImg.size.height);
         bg.center = CGPointMake(self.view.frame.size.width * 0.5f,
@@ -81,7 +81,7 @@ static UIViewController *RootVC() {
         [bg addSubview:_rightViewCtrl.view];
 
         AcViewerCategoryViewController *cat =
-            [[[AcViewerCategoryViewController alloc] initWithStyle:UITableViewStyleGrouped] autorelease];
+            [[AcViewerCategoryViewController alloc] initWithStyle:UITableViewStyleGrouped];
         cat.delegate = (id)self;
         [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_friman_navbar"]
                                            forBarMetrics:UIBarMetricsDefault];
@@ -90,11 +90,11 @@ static UIViewController *RootVC() {
         [bg addSubview:_arrowImageView];
 
         // Secondary top cover strip + back button.
-        UIView *topCover = [[[UIView alloc] initWithFrame:
-            CGRectMake(0, 0, self.view.frame.size.width, 140)] autorelease];
+        UIView *topCover = [[UIView alloc] initWithFrame:
+            CGRectMake(0, 0, self.view.frame.size.width, 140)];
         [self.view addSubview:topCover];
-        [topCover addGestureRecognizer:[[[UITapGestureRecognizer alloc]
-            initWithTarget:self action:@selector(handleTapCoverView:)] autorelease]];
+        [topCover addGestureRecognizer:[[UITapGestureRecognizer alloc]
+            initWithTarget:self action:@selector(handleTapCoverView:)]];
 
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
         UIButton *back = [[UIButton alloc] initWithFrame:
@@ -117,8 +117,8 @@ static UIViewController *RootVC() {
     _leftViewCtrl.view.backgroundColor = [UIColor clearColor];
 
     UIImage *catImg = [UIImage imageNamed:@"acv_btn_ver"];
-    _btnCategory = [[[UIButton alloc] initWithFrame:
-        CGRectMake(0, 105, catImg.size.width, catImg.size.height)] autorelease];
+    _btnCategory = [[UIButton alloc] initWithFrame:
+        CGRectMake(0, 105, catImg.size.width, catImg.size.height)];
     _btnCategory.exclusiveTouch = YES;
     [_btnCategory setBackgroundImage:catImg forState:UIControlStateNormal];
     [_btnCategory addTarget:self action:@selector(onButtonTouched:)
@@ -127,8 +127,8 @@ static UIViewController *RootVC() {
 
     UIImage *mnImg = [UIImage imageNamed:@"acv_btn_musicname"];
     CGFloat mnY = CGRectGetMaxY(_btnCategory.frame) + 16;
-    _btnMusicName = [[[UIButton alloc] initWithFrame:
-        CGRectMake(0, mnY, mnImg.size.width, mnImg.size.height)] autorelease];
+    _btnMusicName = [[UIButton alloc] initWithFrame:
+        CGRectMake(0, mnY, mnImg.size.width, mnImg.size.height)];
     _btnMusicName.exclusiveTouch = YES;
     [_btnMusicName setBackgroundImage:mnImg forState:UIControlStateNormal];
     [_btnMusicName addTarget:self action:@selector(onButtonTouched:)
@@ -137,8 +137,8 @@ static UIViewController *RootVC() {
 
     UIImage *gnImg = [UIImage imageNamed:@"acv_btn_genrename"];
     CGFloat gnY = CGRectGetMaxY(_btnMusicName.frame) + 16;
-    _btnGenre = [[[UIButton alloc] initWithFrame:
-        CGRectMake(0, gnY, gnImg.size.width, gnImg.size.height)] autorelease];
+    _btnGenre = [[UIButton alloc] initWithFrame:
+        CGRectMake(0, gnY, gnImg.size.width, gnImg.size.height)];
     _btnGenre.exclusiveTouch = YES;
     [_btnGenre setBackgroundImage:gnImg forState:UIControlStateNormal];
     [_btnGenre addTarget:self action:@selector(onButtonTouched:)

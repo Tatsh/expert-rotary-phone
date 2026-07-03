@@ -18,7 +18,7 @@
 
 // Kick off the queue: keep the screen awake and download the first file.
 - (void)startWithTasks:(NSArray *)tasks {
-    m_Tasks = [tasks retain];
+    m_Tasks = tasks;
     m_CurrentIndex = 0;
     UIApplication.sharedApplication.idleTimerDisabled = YES;
     [self downloadCurrentTask];
@@ -39,7 +39,6 @@
 // library dirty and advance to the next file (or finish); on failure notify.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSData *data = [m_FileDownloader getData];
-    [m_FileDownloader autorelease];
     m_FileDownloader = nil;
 
     StoreDownloadTask *task = m_Tasks[m_CurrentIndex];

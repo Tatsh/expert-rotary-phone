@@ -334,9 +334,7 @@ static const int kTreasureMusicIds[9] = {
             BFCodec *codec = [[BFCodec alloc] init];
             [codec cipherInit:RhMD5Data(uuId.UTF8String)];
             [codec decipher:data];
-            [codec release];
             NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
-            [data release];
             entries = RhParsePlistArray(body);
         }
     }
@@ -361,9 +359,7 @@ static const int kTreasureMusicIds[9] = {
             BFCodec *codec = [[BFCodec alloc] init];
             [codec cipherInit:RhMD5Data(uuId.UTF8String)];
             [codec decipher:data];
-            [codec release];
             NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
-            [data release];
             entries = RhParsePlistArray(body);   // mutable array
             if (entries != nil) {
                 for (NSDictionary *entry in entries) {
@@ -394,10 +390,8 @@ static const int kTreasureMusicIds[9] = {
     BFCodec *codec = [[BFCodec alloc] init];
     [codec cipherInit:RhMD5Data(uuId.UTF8String)];
     [codec encipher:out];
-    [codec release];
 
     [out writeToFile:path atomically:YES];
-    [out release];
 }
 
 @end

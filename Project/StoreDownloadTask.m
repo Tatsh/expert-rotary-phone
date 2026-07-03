@@ -9,20 +9,27 @@
 
 @implementation StoreDownloadTask
 
-// fileURL @ 0x42854 / filePath @ 0x42864 are the synthesized property accessors.
-- (instancetype)initWithFileURL:(NSString *)fileURL filePath:(NSString *)filePath {
+// Synthesized getters: fileURL @ 0x42854, filePath @ 0x42864, addObject @ 0x42874.
+@synthesize fileURL = m_FileURL;
+@synthesize filePath = m_FilePath;
+@synthesize addObject = m_AddObject;
+
+// @ 0x42700 — copy the source URL and local path (NSString -initWithString:), and
+// retain the completion object (nil-safe: stored as nil when none is given).
+- (instancetype)initWithURL:(NSString *)url path:(NSString *)path AddObject:(id)object {
     if ((self = [super init])) {
-        _fileURL = [fileURL retain];
-        _filePath = [filePath retain];
+        m_FileURL = [[NSString alloc] initWithString:url];
+        m_FilePath = [[NSString alloc] initWithString:path];
+        if (object == nil) {
+            m_AddObject = nil;
+        } else {
+            m_AddObject = object;
+        }
     }
     return self;
 }
 
-- (void)dealloc {
-    [_fileURL release];
-    [_filePath release];
-    [super dealloc];
-}
+// dealloc @ 0x427dc — ARC-omitted (released object ivars only).
 
 @end
 

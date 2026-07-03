@@ -45,7 +45,7 @@ NSData *charaDecodeChr(NSMutableData *data) {
     RhMD5(deob, length, digest);
     delete[] deob;
 
-    BFCodec *codec = [[[BFCodec alloc] init] autorelease];
+    BFCodec *codec = [[BFCodec alloc] init];
     [codec cipherInit:(const char *)digest keyLength:16];
     if (![codec decipher:data]) {
         return nil;
@@ -82,14 +82,14 @@ void CharaManager::reload() {
     NSMutableArray *allChara = [NSMutableArray array];
     NSMutableArray *available = [NSMutableArray array];
 
-    [_preferred release]; _preferred = nil;
-    [_limited release]; _limited = nil;
-    [_available release]; _available = nil;
+    _preferred = nil;
+    _limited = nil;
+    _available = nil;
 
     // The 30 built-in characters.
     for (short i = 0; i < 30; i++) {
         const CharaDataStruct *d = GetHardCodeCharaDataStruct(i);
-        CharaInfo *info = [[[CharaInfo alloc] init] autorelease];
+        CharaInfo *info = [[CharaInfo alloc] init];
         info.charaId = i;
         info.charaName = d->name;
         info.info = d->info;
@@ -120,9 +120,9 @@ void CharaManager::reload() {
             NSArray *music = entry[@"Music"];
             NSArray *chara = entry[@"Chara"];
             if (music && chara && [music count] && [chara count]) {
-                PreferredCharaInfo *pref = [[[PreferredCharaInfo alloc] init] autorelease];
-                pref.musicIds = [[collectIds(music) copy] autorelease];
-                pref.charaIds = [[collectIds(chara) copy] autorelease];
+                PreferredCharaInfo *pref = [[PreferredCharaInfo alloc] init];
+                pref.musicIds = [collectIds(music) copy];
+                pref.charaIds = [collectIds(chara) copy];
                 [preferred addObject:pref];
             }
         }
@@ -132,16 +132,16 @@ void CharaManager::reload() {
             NSArray *music = entry[@"Music"];
             NSArray *chara = entry[@"Chara"];
             if (music && chara && [music count] && [chara count]) {
-                LimitedCharaInfo *lim = [[[LimitedCharaInfo alloc] init] autorelease];
-                lim.musicIds = [[collectIds(music) copy] autorelease];
-                lim.charaIds = [[collectIds(chara) copy] autorelease];
+                LimitedCharaInfo *lim = [[LimitedCharaInfo alloc] init];
+                lim.musicIds = [collectIds(music) copy];
+                lim.charaIds = [collectIds(chara) copy];
                 [limited addObject:lim];
             }
         }
 
         // "Chara": additional character records defined by the download.
         for (NSDictionary *entry in json[@"Chara"]) {
-            CharaInfo *info = [[[CharaInfo alloc] init] autorelease];
+            CharaInfo *info = [[CharaInfo alloc] init];
             info.charaId = [entry[@"Id"] intValue];
             info.charaName = entry[@"Name"];
             info.info = entry[@"Info"];
@@ -231,7 +231,7 @@ NSArray *CharaManager::collectUnlockedCharaIds() {
             }
         }
     }
-    return [[unlocked copy] autorelease];
+    return [unlocked copy];
 }
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

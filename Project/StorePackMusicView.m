@@ -35,7 +35,6 @@ static UILabel *MakeClearLabel(CGRect frame) {
     // Background fills the row (added first, released — the view hierarchy owns it).
     m_BG = [[UIImageView alloc] initWithFrame:self.bounds];
     [self addSubview:m_BG];
-    [m_BG release];
 
     // Jacket: async image, white backing, 1pt white border + soft drop shadow.
     artworkView = [[StoreImageView alloc] initWithFrame:CGRectMake(18.0f, 76.0f, 110.0f, 110.0f)];
@@ -59,7 +58,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
     labelArtist.textColor = [UIColor colorWithWhite:0.196f alpha:1.0f];   // 0x3e48c8c9
 
     // Sample-preview button + its buffering spinner (spinner is a subview of the button).
-    buttonSample = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+    buttonSample = [UIButton buttonWithType:UIButtonTypeCustom];
     [buttonSample setFrame:CGRectMake(277.0f, 20.0f, 32.0f, 35.0f)];
     buttonSample.contentMode = UIViewContentModeScaleAspectFit;
     [buttonSample setImage:[UIImage imageNamed:@"store_sample_1.png"] forState:UIControlStateNormal];
@@ -72,7 +71,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
     [buttonSample addSubview:indicatorSample];
 
     // iTunes-link button (background = the iTunes glyph, sized to the image).
-    buttonLink = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+    buttonLink = [UIButton buttonWithType:UIButtonTypeCustom];
     UIImage *itunesImage = [UIImage imageNamed:@"store_itunes.png"];
     [buttonLink setFrame:CGRectMake(146.0f, 120.0f, itunesImage.size.width, itunesImage.size.height)];
     [buttonLink setBackgroundImage:itunesImage forState:UIControlStateNormal];
@@ -84,7 +83,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
 
     // Arcade-availability badge (hidden until setInfo: decides).
     UIImage *arcadeImage = [UIImage imageNamed:@"store_arcade_view_ic"];
-    arcadeViewer = [[[UIImageView alloc] initWithImage:arcadeImage] autorelease];
+    arcadeViewer = [[UIImageView alloc] initWithImage:arcadeImage];
     [arcadeViewer setFrame:CGRectMake(142.0f, 165.0f, arcadeImage.size.width, arcadeImage.size.height)];
     arcadeViewer.hidden = YES;
 
@@ -174,18 +173,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
     m_BG.image = bg;
 }
 
-- (void)dealloc {
-    // Release the ivars this view owns a +1 on (m_BG + arcadeViewer were handed to the
-    // view hierarchy / autorelease pool at build time, so they are not released here).
-    [artworkView release];
-    [labelName release];
-    [labelArtist release];
-    [labelLevels release];
-    [buttonSample release];
-    [buttonLink release];
-    [indicatorSample release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

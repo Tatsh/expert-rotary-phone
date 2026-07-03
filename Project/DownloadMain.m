@@ -93,7 +93,6 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
 
 // Free the previously-parsed list (Ghidra: releaseFileListData).
 - (void)releaseFileListData {
-    [_dlFileListDataArray release];
     _dlFileListDataArray = nil;
 }
 
@@ -109,7 +108,7 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
             for (NSDictionary *entry in list) {
                 DlFileListData data;
                 data.fileId = [entry[@"Id"] intValue];
-                data.url = [entry[@"Url"] retain];
+                data.url = entry[@"Url"];
                 data.size = [entry[@"Size"] intValue];
                 [out addObject:[NSValue value:&data withObjCType:@encode(DlFileListData)]];
             }
@@ -117,7 +116,6 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
             _dlFileListDataArray = [[NSArray alloc] initWithArray:out];
         }
     }
-    [_dlGetDlFileList release];
     _dlGetDlFileList = nil;
 }
 
@@ -174,10 +172,7 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     for (NSValue *value in _friendListArray) {
         FriendListData data;
         [value getValue:&data];
-        [data.playerId release];
-        [data.name release];
     }
-    [_friendListArray release];
     _friendListArray = nil;
 }
 
@@ -196,8 +191,8 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
             NSMutableArray *out = [NSMutableArray array];
             for (NSDictionary *entry in friends) {
                 FriendListData data;
-                data.playerId = [entry[@"PlayerId"] retain];
-                data.name = [entry[@"Name"] retain];
+                data.playerId = entry[@"PlayerId"];
+                data.name = entry[@"Name"];
                 data.charaId = (short)[entry[@"CharaId"] intValue];
                 data.totalScore = [entry[@"TotalScore"] intValue];
                 data.bestScore = [entry[@"BestScore"] intValue];
@@ -226,7 +221,6 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
         success = YES;
     }
 
-    [_dlGetFriendList release];
     _dlGetFriendList = nil;
 
     if ([_delegateGetFriendList respondsToSelector:@selector(downloadMainFinished:)]) {
@@ -323,24 +317,19 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
                     [names addObject:name];
                 }
             }
-            [_blPlayerIdArray release];
             _blPlayerIdArray = [[NSArray alloc] initWithArray:ids];
-            [_blNameArray release];
             _blNameArray = [[NSArray alloc] initWithArray:names];
         }
     }
-    [_dlGetBlockList release];
     _dlGetBlockList = nil;
 }
 
 // @ 0x965a4 / 0x96afc — the mutations only need to release their downloader.
 - (void)addBlockListFinished {
-    [_dlAddBlockList release];
     _dlAddBlockList = nil;
 }
 
 - (void)delBlockListFinished {
-    [_dlDelBlockList release];
     _dlDelBlockList = nil;
 }
 
@@ -383,7 +372,6 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
     // on the result; only the presence of a JSON body drives the delegate flag.
     (void)json[@"ErrorCode"];
 
-    [_dlCancelFriend release];
     _dlCancelFriend = nil;
 
     if ([_delegateCancelFriend respondsToSelector:@selector(downloadMainFinished:)]) {
@@ -422,7 +410,6 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
 }
 
 - (void)saveTreasureFinished {
-    [_dlSaveTreasure release];
     _dlSaveTreasure = nil;
 }
 

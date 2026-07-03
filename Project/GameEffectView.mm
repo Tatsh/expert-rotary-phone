@@ -67,10 +67,7 @@
     return self;
 }
 
-// @ 0x72eb0 — the binary's dealloc only chains to super (class reports 0 ivars).
-- (void)dealloc {
-    [super dealloc];
-}
+// dealloc @ 0x72eb0 — ARC-omitted (chained to super only; class reports 0 ivars).
 
 // @ 0x72edc — phone: tile the table with "popkun_size_bg" and install a custom
 // "navi_btn_back" back button (targets -backButtonFunc). iPad: just hide the back button.
@@ -85,13 +82,13 @@
     if (!neSceneManager::isPadDisplay()) {
         UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
         CGSize backSize = backImage ? backImage.size : CGSizeZero;
-        UIButton *backButton = [[[UIButton alloc]
-            initWithFrame:CGRectMake(0, 0, backSize.width, backSize.height)] autorelease];
+        UIButton *backButton = [[UIButton alloc]
+            initWithFrame:CGRectMake(0, 0, backSize.width, backSize.height)];
         [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
         [backButton addTarget:self action:@selector(backButtonFunc)
              forControlEvents:UIControlEventTouchUpInside];   // 0x40
         self.navigationItem.leftBarButtonItem =
-            [[[UIBarButtonItem alloc] initWithCustomView:backButton] autorelease];
+            [[UIBarButtonItem alloc] initWithCustomView:backButton];
     } else {
         [self.navigationItem setHidesBackButton:YES];
     }
@@ -125,8 +122,8 @@
         return cell;
     }
 
-    cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                   reuseIdentifier:cellId] autorelease];
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                  reuseIdentifier:cellId];
     cell.textLabel.font = [UIFont fontWithName:AppFontName() size:15.0f];   // 0x41700000
     cell.textLabel.backgroundColor = [UIColor clearColor];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -141,8 +138,8 @@
     // iPad only: a per-row background art (top row vs. under row).
     if (neSceneManager::isPadDisplay()) {
         NSString *bgName = (indexPath.row == 0) ? @"custom_bt02_top" : @"custom_bt02_under";
-        UIImageView *bg = [[[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:bgName]] autorelease];
+        UIImageView *bg = [[UIImageView alloc]
+            initWithImage:[UIImage imageNamed:bgName]];
         cell.backgroundView = bg;
     }
 
@@ -150,7 +147,7 @@
     BOOL on = (indexPath.row == 0) ? [UserSettingData isEffectOn]
                                    : [UserSettingData isLongNotesEffectOn];
     UIImage *checkImage = [UIImage imageNamed:(on ? @"m_sort_check_01" : @"m_sort_check_00")];
-    UIImageView *checkView = [[[UIImageView alloc] initWithImage:checkImage] autorelease];
+    UIImageView *checkView = [[UIImageView alloc] initWithImage:checkImage];
 
     // NEON best-effort: origin starts at the image-sized (0,0,w,h) frame, then constant
     // offsets are added (recovered from DAT_00073514/0c/10). Phone: (+245, +15). iPad:
@@ -199,10 +196,10 @@
         fontSize = 14.0f;                                  // 0x41600000
     }
 
-    UIView *header = [[[UIView alloc] initWithFrame:frame] autorelease];
+    UIView *header = [[UIView alloc] initWithFrame:frame];
     header.backgroundColor = [UIColor clearColor];
 
-    UILabel *label = [[[UILabel alloc] initWithFrame:frame] autorelease];
+    UILabel *label = [[UILabel alloc] initWithFrame:frame];
     label.font = [UIFont fontWithName:AppFontName() size:fontSize];
     label.text = @"Sheet";   // ASCII @ 0x108f25 (verbatim leftover constant)
     label.backgroundColor = [UIColor clearColor];

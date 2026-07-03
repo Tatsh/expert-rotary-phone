@@ -24,8 +24,8 @@
             setFinishedSelectedImage:[UIImage imageNamed:@"store_icon_manage"]
              withFinishedUnselectedImage:[UIImage imageNamed:@"store_icon_manage"]];
 
-        m_ImgDelete = [[UIImage imageNamed:@"manage_delete"] retain];
-        m_ImgDownload = [[UIImage imageNamed:@"manage_download"] retain];
+        m_ImgDelete = [UIImage imageNamed:@"manage_delete"];
+        m_ImgDownload = [UIImage imageNamed:@"manage_download"];
 
         neSceneManager::shared();
         m_IsPad = neSceneManager::isPadDisplay();
@@ -37,11 +37,7 @@
     return self;
 }
 
-- (void)dealloc {
-    [m_ImgDelete release];
-    [m_ImgDownload release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

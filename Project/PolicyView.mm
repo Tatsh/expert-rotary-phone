@@ -14,7 +14,7 @@
 //    shouldAutorotateToInterfaceOrientation:                                @ 0x53030
 //    backButtonFunc                                                         @ 0x5303c
 //    layoutManager:lineSpacingAfterGlyphAtIndex:withProposedLineFragmentRect: @ 0x53134
-//  Objective-C++ for the C++ neEngine / neSceneManager singletons. MRC.
+//  Objective-C++ for the C++ neEngine / neSceneManager singletons. ARC.
 //
 //  Honesty notes:
 //   - The agreement body is NOT an embedded CFString: -viewDidLoad loads it from
@@ -67,13 +67,13 @@
         frame.origin.x += 10.0f;
         frame.size.width += -20.0f;
     }
-    UITextView *textView = [[[UITextView alloc] initWithFrame:frame] autorelease];
+    UITextView *textView = [[UITextView alloc] initWithFrame:frame];
 
     // Load the agreement body (UTF-8) from the bundle.
     NSString *path = [[NSBundle mainBundle] pathForResource:@"policy" ofType:@"txt"];
     NSData *data = [NSData dataWithContentsOfFile:path];
-    NSString *text = [[[NSString alloc] initWithData:data
-                                            encoding:NSUTF8StringEncoding] autorelease];
+    NSString *text = [[NSString alloc] initWithData:data
+                                           encoding:NSUTF8StringEncoding];
     if ([UIDevice currentDevice].systemVersion.floatValue >= 7.0f) {
         text = [text stringByAppendingString:@"\n"];
     }
@@ -93,13 +93,13 @@
 
     // Nav-bar back button.
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(backButtonFunc)
       forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 }
 
 // @ 0x52eec

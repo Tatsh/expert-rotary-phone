@@ -17,6 +17,11 @@
 // The buy / "INSTALLED" button the detail controller titles + wires to -onPurchaseButton:.
 - (UIButton *)buttonPurchase;
 
+// The pack name / description labels (the controller reads them back). Ghidra:
+// labelName @ 0x74544, labelComment @ 0x74554.
+- (UILabel *)labelName;
+- (UILabel *)labelComment;
+
 // Fill the header (jacket / name / copyright) from the pack. Ghidra: loadPackInfo: @ 0x718b8.
 - (void)loadPackInfo:(StorePackInfo *)packInfo;
 

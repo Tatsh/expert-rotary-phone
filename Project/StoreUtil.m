@@ -33,17 +33,17 @@ static NSString *ApiPath(NSString *name) {
 
 // @ 0x589f4
 + (NSURL *)createURL:(NSString *)path {
-    return [[[NSURL alloc] initWithScheme:@"http" host:@"apr.konaminet.jp" path:path] autorelease];
+    return [[NSURL alloc] initWithScheme:@"http" host:@"apr.konaminet.jp" path:path];
 }
 
 // @ 0x58a58
 + (NSURL *)createHttpsURL:(NSString *)path {
-    return [[[NSURL alloc] initWithScheme:@"https" host:@"apr-s.konaminet.jp" path:path] autorelease];
+    return [[NSURL alloc] initWithScheme:@"https" host:@"apr-s.konaminet.jp" path:path];
 }
 
 // @ 0x59f24
 + (NSURL *)createOfficialURL:(NSString *)path {
-    return [[[NSURL alloc] initWithScheme:@"http" host:@"p.eagate.573.jp" path:path] autorelease];
+    return [[NSURL alloc] initWithScheme:@"http" host:@"p.eagate.573.jp" path:path];
 }
 
 // --- Game API endpoints (verified names) ---
@@ -95,7 +95,6 @@ static NSString *ApiPath(NSString *name) {
     [formatter setNumberStyle:NSNumberFormatterCurrencyStyle];
     [formatter setLocale:product.priceLocale];
     NSString *result = [formatter stringFromNumber:product.price];
-    [formatter release];
     return result;
 }
 
@@ -113,8 +112,8 @@ static NSString *ApiPath(NSString *name) {
 // running monthly total (reset implicitly when the stored month no longer matches now).
 + (BOOL)isPurchasable:(unsigned int)price {
     NSDate *birthDay = [UserSettingData birthDay];
-    NSCalendar *cal = [[[NSCalendar alloc]
-        initWithCalendarIdentifier:NSCalendarIdentifierGregorian] autorelease];
+    NSCalendar *cal = [[NSCalendar alloc]
+        initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDateComponents *now = [cal components:(NSCalendarUnitYear | NSCalendarUnitMonth)
                                    fromDate:[NSDate date]];
 
@@ -124,7 +123,7 @@ static NSString *ApiPath(NSString *name) {
     } else {
         // Age as of the 1st of this month at noon (parsed back through a formatter so the
         // day/time are pinned, matching the binary).
-        NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+        NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
         fmt.dateFormat = @"yyyy-MM-ddHH:mm:ss";
         NSString *cutoffStr = [NSString stringWithFormat:@"%04ld-%02ld-0112:00:00",
                                (long)now.year, (long)now.month];
@@ -186,7 +185,7 @@ static NSString *ApiPath(NSString *name) {
         return sIdentifierParams;
     }
     NSString *seed = [[AppDelegate appDelegate].uuId stringByAppendingString:@"STORE"];
-    sIdentifierParams = [ComputeMD5HexString(seed.UTF8String) retain];
+    sIdentifierParams = ComputeMD5HexString(seed.UTF8String);
     return sIdentifierParams;
 }
 

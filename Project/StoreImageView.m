@@ -9,7 +9,8 @@
 
 @implementation StoreImageView
 
-// -imageURL is a plain retaining property (Ghidra: the objc_setProperty setter @ 0x42b30).
+// -imageURL is a plain retaining property (Ghidra: synthesized getter @ 0x42b20,
+// objc_setProperty setter @ 0x42b30).
 @synthesize imageURL = m_ImageURL;
 
 // @ 0x42884 — begin a fetch for the current URL, but only if there is a URL and one is not
@@ -34,23 +35,31 @@
         }
         self.image = img;
     }
-    [m_ImageDownloader autorelease];
     m_ImageDownloader = nil;
 }
 
 // @ 0x42a7c — fetch failed. Keep whatever placeholder is showing and just drop the
 // downloader.
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
-    [m_ImageDownloader autorelease];
     m_ImageDownloader = nil;
 }
 
+// @ 0x42928 — cancel any in-flight fetch (so its callback can't reach this view) and
+// drop the downloader, then swap in the supplied image (nil to clear the current one).
+- (void)unloadImage:(UIImage *)image {
+    if (m_ImageDownloader != nil) {
+        [m_ImageDownloader cancelDownload];
+        m_ImageDownloader = nil;
+    }
+    [self setImage:image];
+}
+
+// @ 0x42aa8 — release the URL, then stop + release any in-flight fetch so it cannot
+// call back into a freed view.
 - (void)dealloc {
-    // Stop any in-flight fetch so it cannot call back into a freed view, then release.
-    [m_ImageDownloader cancelDownload];
-    [m_ImageDownloader release];
-    [m_ImageURL release];
-    [super dealloc];
+    if (m_ImageDownloader != nil) {
+        [m_ImageDownloader cancelDownload];
+    }
 }
 
 @end

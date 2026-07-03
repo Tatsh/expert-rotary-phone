@@ -57,7 +57,6 @@
     UIImageView *bgView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 650.0f, 226.0f)];
     [bgView setImage:[bg stretchableImageWithLeftCapWidth:4 topCapHeight:4]];
     [packView addSubview:bgView];
-    [bgView release];
 
     // --- pack jacket (async), white bordered, drop-shadowed ---
     packArtworkView = [[StoreImageView alloc]
@@ -185,8 +184,8 @@
     dummyView.view.hidden = YES;
     [self addSubview:dummyView.view];
 
-    UIActivityIndicatorView *coverSpinner = [[[UIActivityIndicatorView alloc]
-        initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)] autorelease];
+    UIActivityIndicatorView *coverSpinner = [[UIActivityIndicatorView alloc]
+        initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
     coverSpinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;   // 2
     coverSpinner.center = CGPointMake(162.5f, 96.0f);
     // The binary factors this into a -[UIView setAutoresizingCenter] category (keep the loading
@@ -207,8 +206,7 @@
 
 - (void)setPackInfo:(StorePackInfo *)packInfo {
     if (m_PackInfo != packInfo) {
-        [m_PackInfo release];
-        m_PackInfo = [packInfo retain];
+        m_PackInfo = packInfo;
     }
 }
 
@@ -221,7 +219,6 @@
     if (m_StorePackInfoDownloader != nil) {
         [m_StorePackInfoDownloader setDelegate:(id)self];
         [m_StorePackInfoDownloader cancel];
-        [m_StorePackInfoDownloader release];
         m_StorePackInfoDownloader = nil;
     }
 }
@@ -230,7 +227,6 @@
 - (void)stopSample {
     [m_SampleDownloader cancel];
     if (m_SampleDownloader != nil) {
-        [m_SampleDownloader release];
         m_SampleDownloader = nil;
     }
     for (int i = 0; i < 4; i++) {
@@ -252,7 +248,6 @@
             [[AudioManager sharedManager] stopBgm:0.2f];
             [m_SampleDownloader cancel];
             if (m_SampleDownloader != nil) {
-                [m_SampleDownloader release];
                 m_SampleDownloader = nil;
             }
             [musicView[samplePlaying] sampleStop];
@@ -264,7 +259,6 @@
             [[AudioManager sharedManager] stopBgm:0.2f];
             [m_SampleDownloader cancel];
             if (m_SampleDownloader != nil) {
-                [m_SampleDownloader release];
                 m_SampleDownloader = nil;
             }
             [musicView[samplePlaying] sampleStop];
@@ -275,7 +269,6 @@
         [musicView[i] sampleDownloading];
         [m_SampleDownloader cancel];
         if (m_SampleDownloader != nil) {
-            [m_SampleDownloader release];
             m_SampleDownloader = nil;
         }
         m_SampleDownloader =
@@ -330,7 +323,6 @@
 // otherwise show the "can't purchase any more this month" alert. Default price 573 yen when
 // the pack has no bound product.
 - (void)birthDayViewClose {
-    [m_BirthDayView release];
     m_BirthDayView = nil;
 
     int price = (m_PackInfo.product != nil) ? [m_PackInfo.product.price intValue] : 573;
@@ -338,11 +330,11 @@
         [self doPurchase];
     } else {
         CommonAlertView *alert =
-            [[[CommonAlertView alloc] initWithTitle:nil
+            [[CommonAlertView alloc] initWithTitle:nil
                                             message:@"今月は、これ以上購入することは\nできません。"
                                            delegate:nil
                                   cancelButtonTitle:@"OK"
-                                  otherButtonTitles:nil] autorelease];
+                                  otherButtonTitles:nil];
         [alert show];
     }
 }
@@ -362,7 +354,6 @@
             [audio playBgm:0.0f];
             [musicView[samplePlaying] samplePlaying];
         }
-        [m_SampleDownloader autorelease];
         m_SampleDownloader = nil;
         return;
     }
@@ -384,7 +375,6 @@
         }
         [UserSettingData saveTreasurePoint:tp];
 
-        [recommendPackIdArr release];
         recommendPackIdArr = nil;
 
         // NOTE: the success message is a treasure-bonus notice with the awarded amount (300);
@@ -406,9 +396,7 @@
         otherButtonTitles:nil];
     }
     [alert show];
-    [alert release];
 
-    [recommendDownloader release];
     recommendDownloader = nil;
     [dummyView.view setHidden:YES];
 }
@@ -491,11 +479,11 @@
             [self doPurchase];
         } else if (bday != nil) {
             CommonAlertView *alert =
-                [[[CommonAlertView alloc] initWithTitle:nil
+                [[CommonAlertView alloc] initWithTitle:nil
                                                 message:@"今月は、これ以上購入することは\nできません。"
                                                delegate:nil
                                       cancelButtonTitle:@"OK"
-                                      otherButtonTitles:nil] autorelease];
+                                      otherButtonTitles:nil];
             [alert show];
         }
     } else if (m_BirthDayView == nil) {
@@ -510,7 +498,7 @@
 // test this pack's id against it.
 - (BOOL)isRecommended {
     if (recommendPackIdArr == nil) {
-        recommendPackIdArr = [[[MusicManager getInstance] getRecommendPackArray] retain];
+        recommendPackIdArr = [[MusicManager getInstance] getRecommendPackArray];
     }
     int packID = [m_PackInfo packID];
     for (NSNumber *num in recommendPackIdArr) {
@@ -523,15 +511,7 @@
 
 - (void)dealloc {
     [m_SampleDownloader cancel];
-    [m_SampleDownloader release];
     [recommendDownloader cancel];
-    [recommendDownloader release];
-    [recommendPackIdArr release];
-    [m_BirthDayView release];
-    [dummyView release];
-    [m_StorePackInfoDownloader release];
-    [m_PackInfo release];
-    [super dealloc];
 }
 
 @end

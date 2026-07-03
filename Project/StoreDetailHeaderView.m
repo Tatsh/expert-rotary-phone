@@ -32,6 +32,16 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
     return m_ButtonPurchase;
 }
 
+// @ 0x74544 — the pack name label.
+- (UILabel *)labelName {
+    return m_LabelName;
+}
+
+// @ 0x74554 — the pack description label.
+- (UILabel *)labelComment {
+    return m_LabelComment;
+}
+
 // @ 0x73a0c — build the header subviews.
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -74,7 +84,7 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
     [self addSubview:m_LabelComment];
 
     // Buy button: three stretchable states, white shadowed title.
-    m_ButtonPurchase = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+    m_ButtonPurchase = [UIButton buttonWithType:UIButtonTypeCustom];
     m_ButtonPurchase.frame = CGRectMake(96.0f, 63.0f, 120.0f, 25.0f);
     m_ButtonPurchase.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;   // 1
     [m_ButtonPurchase setBackgroundImage:[[UIImage imageNamed:@"store_btn_normal_1"]
@@ -151,16 +161,7 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
     [m_ReflectionArtworkView setImage:image];
 }
 
-- (void)dealloc {
-    [m_BgView release];
-    [m_ArtworkView release];
-    [m_ReflectionArtworkView release];
-    [m_LabelName release];
-    [m_LabelComment release];
-    [m_ButtonPurchase release];
-    [m_NewMarker release];
-    [super dealloc];
-}
+// dealloc @ 0x7447c — ARC-omitted (released object ivars only).
 
 @end
 

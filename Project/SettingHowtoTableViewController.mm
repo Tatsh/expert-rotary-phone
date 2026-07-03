@@ -72,13 +72,13 @@ static UIViewController *RootVC() {
 
     // Back button sized to the "navi_btn_back" art. (NEON-spilled size read; best-effort.)
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(settingClose)
         forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     // Nav-bar background art (Ghidra references the "frirep_navbar" asset here).
     [self.navigationController.navigationBar
@@ -88,11 +88,7 @@ static UIViewController *RootVC() {
     return nav;
 }
 
-// @ 0x80668 — the binary's dealloc only chains to super (it does not release
-// _howtoViewCtrlPad; reproduced faithfully).
-- (void)dealloc {
-    [super dealloc];
-}
+// dealloc @ 0x80668 — ARC-omitted (chained to super only; _howtoViewCtrlPad released by ARC).
 
 // @ 0x80694
 - (void)viewDidLoad {
@@ -180,8 +176,8 @@ static UIViewController *RootVC() {
         return cell;
     }
 
-    cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                   reuseIdentifier:identifier] autorelease];
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                  reuseIdentifier:identifier];
     cell.backgroundView = nil;
     cell.backgroundColor = [UIColor clearColor];
 
@@ -213,7 +209,7 @@ static UIViewController *RootVC() {
     [cell.contentView addSubview:tile];
 
     // Centred label (226 x 36).
-    UILabel *label = [[[UILabel alloc] init] autorelease];
+    UILabel *label = [[UILabel alloc] init];
     label.backgroundColor = [UIColor clearColor];
     label.textColor = [UIColor colorWithRed:0.188235f green:0.188235f blue:0.188235f alpha:1.0f];
     label.backgroundColor = [UIColor whiteColor];   // overrides the clear set above (as in binary)
@@ -240,7 +236,6 @@ static UIViewController *RootVC() {
             @"howto_tre01", @"howto_tre02", @"howto_tre03",
             @"howto_tre04", @"howto_tre05", @"howto_tre06", nil];
         if (_howtoViewCtrlPad != nil) {
-            [_howtoViewCtrlPad release];
             _howtoViewCtrlPad = nil;
         }
         // TODO(dep): HowToViewCtrlPad not reconstructed — faithful to the binary.
@@ -250,7 +245,6 @@ static UIViewController *RootVC() {
         NSArray *images = [NSArray arrayWithObjects:
             @"howto_01", @"howto_02", @"howto_03", @"howto_04", @"howto_05", nil];
         if (_howtoViewCtrlPad != nil) {
-            [_howtoViewCtrlPad release];
             _howtoViewCtrlPad = nil;
         }
         // TODO(dep): HowToViewCtrlPad not reconstructed — faithful to the binary.

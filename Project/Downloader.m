@@ -16,7 +16,7 @@ static const NSTimeInterval kTimeout = 15.0;
 
 @implementation Downloader {
     NSMutableURLRequest *m_Request;
-    id<DownloaderDelegate> m_Delegate;   // not retained
+    __weak id<DownloaderDelegate> m_Delegate;   // not retained (ARC weak; matches original assign)
     NSURLConnection *m_Connection;
     NSMutableData *m_DownloadedData;
     id m_AdditionalData;
@@ -30,8 +30,7 @@ static const NSTimeInterval kTimeout = 15.0;
 
 - (void)setAddData:(id)addData {
     if (m_AdditionalData != addData) {
-        [m_AdditionalData release];
-        m_AdditionalData = [addData retain];
+        m_AdditionalData = addData;
     }
 }
 
@@ -83,8 +82,7 @@ static const NSTimeInterval kTimeout = 15.0;
         return;
     }
     m_Connection = [[NSURLConnection alloc] initWithRequest:m_Request delegate:self];
-    [m_StartTime release];
-    m_StartTime = [[NSDate date] retain];
+    m_StartTime = [NSDate date];
 }
 
 // @ 0x6249c — abort in flight. Clears the (unretained) delegate first so a callback
@@ -93,11 +91,9 @@ static const NSTimeInterval kTimeout = 15.0;
     m_Delegate = nil;
     if (m_Connection != nil) {
         [m_Connection cancel];
-        [m_Connection release];
         m_Connection = nil;
     }
     if (m_DownloadedData != nil) {
-        [m_DownloadedData release];
         m_DownloadedData = nil;
     }
 }
@@ -136,10 +132,7 @@ static const NSTimeInterval kTimeout = 15.0;
 // @ 0x627f4 — release the connection and notify success.
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     if (m_Connection == connection) {
-        [m_Connection release];
         m_Connection = nil;
-    } else {
-        [connection autorelease];
     }
     if ([m_Delegate respondsToSelector:@selector(downloaderFinished:)]) {
         [m_Delegate performSelector:@selector(downloaderFinished:) withObject:self];
@@ -149,13 +142,9 @@ static const NSTimeInterval kTimeout = 15.0;
 // @ 0x6273c — release the connection + buffered data and notify failure.
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     if (m_Connection == connection) {
-        [m_Connection release];
         m_Connection = nil;
-    } else {
-        [connection autorelease];
     }
     if (m_DownloadedData != nil) {
-        [m_DownloadedData release];
         m_DownloadedData = nil;
     }
     if ([m_Delegate respondsToSelector:@selector(downloaderError:)]) {

@@ -33,8 +33,8 @@ static UIViewController *RootVC() {
                 self.tableView.contentInset = UIEdgeInsetsMake(20, 0, 0, 0);
             }
             self.view.backgroundColor = [UIColor clearColor];
-            self.tableView.backgroundView = [[[UIImageView alloc]
-                initWithImage:[UIImage imageNamed:@"side_bar_bg"]] autorelease];
+            self.tableView.backgroundView = [[UIImageView alloc]
+                initWithImage:[UIImage imageNamed:@"side_bar_bg"]];
         } else {
             self.tableView.backgroundColor =
                 [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
@@ -67,8 +67,8 @@ static UIViewController *RootVC() {
     static NSString *const kId = @"SettingCell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:kId];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                       reuseIdentifier:kId] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                      reuseIdentifier:kId];
     }
     return cell;
 }
@@ -76,14 +76,14 @@ static UIViewController *RootVC() {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UIViewController *sub = nil;
     switch (indexPath.row) {
-        case 0: sub = [[[SettingGameTableViewController alloc]
-                    initWithStyle:UITableViewStyleGrouped] autorelease]; break;
-        case 1: sub = [[[SettingHowtoTableViewController alloc]
-                    initWithStyle:UITableViewStyleGrouped] autorelease]; break;
-        case 2: sub = [[[SettingCustomerTableViewController alloc]
-                    initWithStyle:UITableViewStyleGrouped] autorelease]; break;
-        case 3: sub = [[[SettingOtherTableViewController alloc]
-                    initWithStyle:UITableViewStyleGrouped] autorelease]; break;
+        case 0: sub = [[SettingGameTableViewController alloc]
+                    initWithStyle:UITableViewStyleGrouped]; break;
+        case 1: sub = [[SettingHowtoTableViewController alloc]
+                    initWithStyle:UITableViewStyleGrouped]; break;
+        case 2: sub = [[SettingCustomerTableViewController alloc]
+                    initWithStyle:UITableViewStyleGrouped]; break;
+        case 3: sub = [[SettingOtherTableViewController alloc]
+                    initWithStyle:UITableViewStyleGrouped]; break;
     }
     if (sub != nil) {
         [self.navigationController pushViewController:sub animated:YES];

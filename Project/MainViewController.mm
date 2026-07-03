@@ -167,7 +167,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // controller (with a custom navbar image); iPad: SettingTableSplitViewController.
 - (void)GotoSetting {
     if (!neSceneManager::isPadDisplay()) {
-        SettingTableViewController *content = [[SettingTableViewController alloc] autorelease];
+        SettingTableViewController *content = [SettingTableViewController alloc];
         _settingNaviCtrl = [content initAtNavigationController];
         [_settingNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
                                              forBarMetrics:UIBarMetricsDefault];
@@ -186,7 +186,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xc7d8 — the sugoroku map-select screen (nav controller / split view per device).
 - (void)GotoMapSelect {
     if (!neSceneManager::isPadDisplay()) {
-        MapSelectViewController *content = [[MapSelectViewController alloc] autorelease];
+        MapSelectViewController *content = [MapSelectViewController alloc];
         _mapSelectNaviCtrl = [content initAtNavigationController];
         [_mapSelectNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
                                                forBarMetrics:UIBarMetricsDefault];
@@ -204,7 +204,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xcdc8 — the friend-management top screen (nav controller / split view per device).
 - (void)GotoFriendManage {
     if (!neSceneManager::isPadDisplay()) {
-        FriendMngTopViewController *content = [[FriendMngTopViewController alloc] autorelease];
+        FriendMngTopViewController *content = [FriendMngTopViewController alloc];
         _friendMngNaviCtrl = [content initAtNavigationController];
         [self.view addSubview:_friendMngNaviCtrl.view];
         [content startOpenAnimation];
@@ -238,7 +238,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     neEngine::setInputMode(2);   // Ghidra: FUN_0002c724(&DAT_00187b74, 2) — scene input mode
     if (!neSceneManager::isPadDisplay()) {
         InputConversionPassViewController *content =
-            [[InputConversionPassViewController alloc] autorelease];
+            [InputConversionPassViewController alloc];
         _inputConvPassNaviCtrl = [content initAtNavigationController];
         [self.view addSubview:_inputConvPassNaviCtrl.view];
         [content startOpenAnimation];
@@ -256,7 +256,6 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xdae4
 - (void)AcceptPolicyEndCallBack {
     if (_acceptPolicyCtrl != nil) {
-        [_acceptPolicyCtrl release];
         _acceptPolicyCtrl = nil;
     }
     [self ResumeLoop];
@@ -265,11 +264,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xc300 — also clears the "settings visible" flag.
 - (void)SettingEndCallBack {
     if (_settingViewCtrl != nil) {
-        [_settingViewCtrl release];
         _settingViewCtrl = nil;
     }
     if (_settingNaviCtrl != nil) {
-        [_settingNaviCtrl release];
         _settingNaviCtrl = nil;
     }
     _settingViewing = NO;
@@ -279,11 +276,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xc978
 - (void)MapSelectEndCallBack {
     if (_mapSelectViewCtrl != nil) {
-        [_mapSelectViewCtrl release];
         _mapSelectViewCtrl = nil;
     }
     if (_mapSelectNaviCtrl != nil) {
-        [_mapSelectNaviCtrl release];
         _mapSelectNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -292,11 +287,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xcf0c
 - (void)FriendManageEndCallBack {
     if (_friendMngViewCtrl != nil) {
-        [_friendMngViewCtrl release];
         _friendMngViewCtrl = nil;
     }
     if (_friendMngNaviCtrl != nil) {
-        [_friendMngNaviCtrl release];
         _friendMngNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -305,7 +298,6 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xd640 — latches whether the download failed (read later by TitleTask).
 - (void)DefaultDownloadEndCallBack {
     _isDefaultDlFailed = [_defaultDlViewController isFailed] ? YES : NO;
-    [_defaultDlViewController release];
     _defaultDlViewController = nil;
     [self ResumeLoop];
 }
@@ -313,11 +305,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xe67c — re-enables touch on the GL view when the passcode screen closes.
 - (void)InConversionPassEndCallBack {
     if (_inputConvPassViewCtrl != nil) {
-        [_inputConvPassViewCtrl release];
         _inputConvPassViewCtrl = nil;
     }
     if (_inputConvPassNaviCtrl != nil) {
-        [_inputConvPassNaviCtrl release];
         _inputConvPassNaviCtrl = nil;
     }
     self.view.userInteractionEnabled = YES;
@@ -329,7 +319,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xd074 — the pop'n link (data-link) top screen (nav / split per device).
 - (void)GotoPopnLink {
     if (!neSceneManager::isPadDisplay()) {
-        PopnLinkTopViewController *content = [[PopnLinkTopViewController alloc] autorelease];
+        PopnLinkTopViewController *content = [PopnLinkTopViewController alloc];
         _popnLinkNaviCtrl = [content initAtNavigationController];
         [self.view addSubview:_popnLinkNaviCtrl.view];
         [content startOpenAnimation];
@@ -345,7 +335,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xd248 — the player-name entry screen (nav controller / plain per device).
 - (void)GotoInPlayerName {
     if (!neSceneManager::isPadDisplay()) {
-        InputNameViewCtrl *content = [[InputNameViewCtrl alloc] autorelease];
+        InputNameViewCtrl *content = [InputNameViewCtrl alloc];
         _inputNameNaviCtrl = [content initAtNavigationController];
         [self.view addSubview:_inputNameNaviCtrl.view];
         [content startOpenAnimation];
@@ -362,7 +352,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 - (void)GotoInviteCode {
     Class cls = !neSceneManager::isPadDisplay() ? [InviteTopViewController class]
                                                 : [InviteTopViewControllerPad class];
-    InviteTopViewController *content = [[[cls alloc] autorelease] initAtNavigationController];
+    InviteTopViewController *content = [[cls alloc] initAtNavigationController];
     _inviteNaviCtrl = (UINavigationController *)content;
     [self.view addSubview:_inviteNaviCtrl.view];
     [(InviteTopViewController *)content startOpenAnimation];
@@ -371,7 +361,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 // @ 0xd930 — the arcade song-search screen.
 - (void)GotoArcadeSearch {
-    SearchView *content = [[SearchView alloc] autorelease];
+    SearchView *content = [SearchView alloc];
     _searchNaviCtrl = [content initAtNavigationController];
     [self.view addSubview:_searchNaviCtrl.view];
     [content startOpenAnimation];
@@ -381,7 +371,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xcf9c — the friend-score screen for one music id. Shown over the friend nav
 // (shares _friendMngNaviCtrl) and does NOT pause the loop.
 - (void)GotoFriendScore:(unsigned int)musicId {
-    FriendScoreMainView *content = [[FriendScoreMainView alloc] autorelease];
+    FriendScoreMainView *content = [FriendScoreMainView alloc];
     _friendMngNaviCtrl = [content initAtNavigationControllerWithMusicId:musicId];
     [self.view addSubview:_friendMngNaviCtrl.view];
     [content startOpenAnimation];
@@ -397,33 +387,33 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 // @ 0xd1b8
 - (void)PopnLinkEndCallBack {
-    if (_popnLinkViewCtrl != nil) { [_popnLinkViewCtrl release]; _popnLinkViewCtrl = nil; }
-    if (_popnLinkNaviCtrl != nil) { [_popnLinkNaviCtrl release]; _popnLinkNaviCtrl = nil; }
+    if (_popnLinkViewCtrl != nil) { _popnLinkViewCtrl = nil; }
+    if (_popnLinkNaviCtrl != nil) { _popnLinkNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xd370
 - (void)InPlayerNameEndCallBack {
-    if (_inputNameViewCtrl != nil) { [_inputNameViewCtrl release]; _inputNameViewCtrl = nil; }
-    if (_inputNameNaviCtrl != nil) { [_inputNameNaviCtrl release]; _inputNameNaviCtrl = nil; }
+    if (_inputNameViewCtrl != nil) { _inputNameViewCtrl = nil; }
+    if (_inputNameNaviCtrl != nil) { _inputNameNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xd8d8
 - (void)InviteCodeEndCallBack {
-    if (_inviteNaviCtrl != nil) { [_inviteNaviCtrl release]; _inviteNaviCtrl = nil; }
+    if (_inviteNaviCtrl != nil) { _inviteNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xd9e8
 - (void)ArcadeSearchEndCallBack {
-    if (_searchNaviCtrl != nil) { [_searchNaviCtrl release]; _searchNaviCtrl = nil; }
+    if (_searchNaviCtrl != nil) { _searchNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xd044 — mirror of GotoFriendScore: releases the shared friend nav, no ResumeLoop.
 - (void)FriendScoreEndCallBack {
-    if (_friendMngNaviCtrl != nil) { [_friendMngNaviCtrl release]; _friendMngNaviCtrl = nil; }
+    if (_friendMngNaviCtrl != nil) { _friendMngNaviCtrl = nil; }
 }
 
 // The shared iPad modal-panel styling used by the friend/recommend/store-style
@@ -458,7 +448,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
     }
-    NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
     fmt.dateFormat = @"yyyy/MM/ddHH:mm";
     [UserSettingData saveLastRecommendViewTimeString:[fmt stringFromDate:[NSDate date]]];
 }
@@ -533,7 +523,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     _storeViewController = [[StoreViewController alloc] initWithRecommendPackId:-1];
     [self.view addSubview:_storeViewController.view];
     [(StoreViewController *)_storeViewController showAnimation];
-    NSDateFormatter *fmt = [[[NSDateFormatter alloc] init] autorelease];
+    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
     fmt.dateFormat = @"yyyyMMddHH";
     [UserSettingData saveLastStoreViewTimeString:[fmt stringFromDate:[NSDate date]]];
 }
@@ -543,7 +533,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     _acMusicSelViewing = YES;
     if (!neSceneManager::isPadDisplay()) {
         AcViewerCategoryViewController *content =
-            [[AcViewerCategoryViewController alloc] autorelease];
+            [AcViewerCategoryViewController alloc];
         _acViewerNaviCtrl = [content initAtNavigationController];
         [_acViewerNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_category_navbar"]
                                               forBarMetrics:UIBarMetricsDefault];
@@ -567,44 +557,44 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xc754
 - (void)RecommendEndCallBack {
     _coverView.hidden = YES;
-    if (_recommendViewCtrl != nil) { [_recommendViewCtrl release]; _recommendViewCtrl = nil; }
-    if (_recommendNaviCtrl != nil) { [_recommendNaviCtrl release]; _recommendNaviCtrl = nil; }
+    if (_recommendViewCtrl != nil) { _recommendViewCtrl = nil; }
+    if (_recommendNaviCtrl != nil) { _recommendNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xcd44
 - (void)SortSelectEndCallBack {
     _coverView.hidden = YES;
-    if (_sortSelectViewCtrl != nil) { [_sortSelectViewCtrl release]; _sortSelectViewCtrl = nil; }
-    if (_sortSelectNaviCtrl != nil) { [_sortSelectNaviCtrl release]; _sortSelectNaviCtrl = nil; }
+    if (_sortSelectViewCtrl != nil) { _sortSelectViewCtrl = nil; }
+    if (_sortSelectNaviCtrl != nil) { _sortSelectNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xe4b8
 - (void)OverScoreLogEndCallBack {
     _coverView.hidden = YES;
-    if (_overScoreLogViewCtrl != nil) { [_overScoreLogViewCtrl release]; _overScoreLogViewCtrl = nil; }
-    if (_overScoreLogNaviCtrl != nil) { [_overScoreLogNaviCtrl release]; _overScoreLogNaviCtrl = nil; }
+    if (_overScoreLogViewCtrl != nil) { _overScoreLogViewCtrl = nil; }
+    if (_overScoreLogNaviCtrl != nil) { _overScoreLogNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xe0d4
 - (void)PresentBoxEndCallBack {
     _coverView.hidden = YES;
-    if (_presentBoxViewCtrl != nil) { [_presentBoxViewCtrl release]; _presentBoxViewCtrl = nil; }
-    if (_presentBoxNaviCtrl != nil) { [_presentBoxNaviCtrl release]; _presentBoxNaviCtrl = nil; }
+    if (_presentBoxViewCtrl != nil) { _presentBoxViewCtrl = nil; }
+    if (_presentBoxNaviCtrl != nil) { _presentBoxNaviCtrl = nil; }
     [self ResumeLoop];
 }
 
 // @ 0xd518 — the store closes without resuming the loop (it never paused it).
 - (void)StoreEndCallBack {
-    if (_storeViewController != nil) { [_storeViewController release]; _storeViewController = nil; }
+    if (_storeViewController != nil) { _storeViewController = nil; }
 }
 
 // @ 0xdcd4 — on iPad also tears down the arcade play task before resuming.
 - (void)AcViewerEndCallBack {
-    if (_acViewerViewCtrl != nil) { [_acViewerViewCtrl release]; _acViewerViewCtrl = nil; }
-    if (_acViewerNaviCtrl != nil) { [_acViewerNaviCtrl release]; _acViewerNaviCtrl = nil; }
+    if (_acViewerViewCtrl != nil) { _acViewerViewCtrl = nil; }
+    if (_acViewerNaviCtrl != nil) { _acViewerNaviCtrl = nil; }
     if (neSceneManager::isPadDisplay()) {
         // Stop the arcade main task (Ghidra: acMainTask + FUN_0002315c) on close.
         neEngine::stopAcMainTask(AppDelegate.appDelegate.acMainTask);

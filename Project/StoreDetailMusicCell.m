@@ -26,8 +26,7 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // @ 0x7501c — set the iTunes link (hides the link button when there is none).
 - (void)setLink:(NSString *)url {
-    [linkURL release];
-    linkURL = url ? [[NSURL URLWithString:url] retain] : nil;
+    linkURL = url ? [NSURL URLWithString:url] : nil;
     buttonLink.hidden = (linkURL == nil);
 }
 
@@ -140,7 +139,7 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     arcadeViewer.hidden = YES;
 
     // iTunes-link button — to the left of the arcade badge.
-    buttonLink = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
+    buttonLink = [UIButton buttonWithType:UIButtonTypeCustom];
     UIImage *itunesImg = [UIImage imageNamed:@"store_itunes"];
     buttonLink.frame = CGRectMake(content.frame.size.width - itunesImg.size.width - 10.0f,
                                   -15.0f, itunesImg.size.width, itunesImg.size.height);
@@ -161,20 +160,7 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     return self;
 }
 
-- (void)dealloc {
-    [bgView release];
-    [sampleView release];
-    [indicator release];
-    [playingView release];
-    [buttonLink release];
-    [linkURL release];
-    [labelName release];
-    [labelArtist release];
-    [labelLevels release];
-    [artworkView release];
-    [arcadeViewer release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

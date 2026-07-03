@@ -15,7 +15,7 @@
     self.activeDownload = [NSMutableData data];
     NSURL *url = [NSURL URLWithString:self.imageURL];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    self.imageConnection = [[[NSURLConnection alloc] initWithRequest:request delegate:self] autorelease];
+    self.imageConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
 }
 
 // @ 0x5a78c
@@ -54,7 +54,6 @@
             }
         }
         self.downloadedImage = result;
-        [image release];
     }
     self.activeDownload = nil;
     self.imageConnection = nil;

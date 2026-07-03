@@ -15,10 +15,10 @@
 // getFriendRequestFinished's NSValue wrapping). The four NSString* fields are retained; the
 // trailing int[7] is unused on this screen (left zero).
 typedef struct {
-    NSString *playerId;   // JSON "PlayerId"  (retained)  @0x0
-    NSString *name;       // JSON "Name"      (retained)  @0x4
-    NSString *message;    // JSON "Message"   (retained)  @0x8
-    NSString *date;       // JSON "Date"      (retained)  @0xc
+    NSString *__unsafe_unretained playerId;   // JSON "PlayerId"  (retained)  @0x0
+    NSString *__unsafe_unretained name;       // JSON "Name"      (retained)  @0x4
+    NSString *__unsafe_unretained message;    // JSON "Message"   (retained)  @0x8
+    NSString *__unsafe_unretained date;       // JSON "Date"      (retained)  @0xc
     short charaId;        // JSON "CharaId"                @0x10
     int rank[7];          // unused on the reply screen    @0x14
 } ReplyDataStruct;
@@ -30,7 +30,8 @@ typedef struct {
 
 @interface FriendReplyCell : UITableViewCell
 
-@property (nonatomic, assign) id<FriendReplyCellDelegate> delegate;
+// Synthesized accessors: delegate @ 0xa9dc0, setDelegate: @ 0xa9dd4 (DMB-guarded pointer store).
+@property (nonatomic, weak) id<FriendReplyCellDelegate> delegate;
 
 // Populate the row from an NSValue-wrapped ReplyDataStruct.
 - (void)setReplyData:(NSValue *)replyData;

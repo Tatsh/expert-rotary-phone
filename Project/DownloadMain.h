@@ -17,7 +17,7 @@
 // (verified in getDlFileListFinished's NSValue wrapping).
 typedef struct {
     int fileId;         // JSON "Id"
-    NSString *url;      // JSON "Url" (retained)
+    NSString *__unsafe_unretained url;      // JSON "Url" (retained)
     int size;           // JSON "Size"
 } DlFileListData;
 
@@ -25,8 +25,8 @@ typedef struct {
 // (verified in getFriendListFinished's NSValue wrapping). The two NSString* fields
 // are retained and must be released via releaseFriendList.
 typedef struct {
-    NSString *playerId;    // JSON "PlayerId" (retained)
-    NSString *name;        // JSON "Name" (retained)
+    NSString *__unsafe_unretained playerId;    // JSON "PlayerId" (retained)
+    NSString *__unsafe_unretained name;        // JSON "Name" (retained)
     short charaId;         // JSON "CharaId"
     int totalScore;        // JSON "TotalScore"
     int bestScore;         // JSON "BestScore"

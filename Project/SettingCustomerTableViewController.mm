@@ -69,13 +69,13 @@ static UIViewController *RootVC() {
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)] autorelease];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
     [backBtn addTarget:self action:@selector(settingClose)
       forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem =
-        [[[UIBarButtonItem alloc] initWithCustomView:backBtn] autorelease];
+        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
@@ -115,8 +115,8 @@ static UIViewController *RootVC() {
         return cell;
     }
 
-    cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                   reuseIdentifier:identifier] autorelease];
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                  reuseIdentifier:identifier];
     cell.backgroundView = nil;
     cell.backgroundColor = [UIColor clearColor];
 
@@ -160,10 +160,9 @@ static UIViewController *RootVC() {
     const CGPoint plateCenter = CGPointMake(centerX, 32.0f);
     plate.center = plateCenter;
     [cell.contentView addSubview:plate];
-    [plate release];
 
     // Centred label over the plate.
-    UILabel *label = [[[UILabel alloc] init] autorelease];
+    UILabel *label = [[UILabel alloc] init];
     label.backgroundColor = [UIColor clearColor];
     label.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
     label.backgroundColor = [UIColor whiteColor];          // faithful: overwrites the clear above
@@ -190,7 +189,7 @@ static UIViewController *RootVC() {
                 // PolicyView (Ghidra: PTR_PolicyView_0015c0b4, -[PolicyView init]). That class
                 // is not yet present in Project/, so a bare UIViewController stands in to keep
                 // this reconstruction dangle-free. Swap in PolicyView once recovered.
-                UIViewController *policy = [[[UIViewController alloc] init] autorelease];
+                UIViewController *policy = [[UIViewController alloc] init];
                 _policyView = [[UINavigationController alloc] initWithRootViewController:policy];
                 [_policyView.navigationBar
                     setBackgroundImage:[UIImage imageNamed:@"set_agreement_navbar"]
@@ -267,14 +266,7 @@ static UIViewController *RootVC() {
     [self startCloseAnimation];
 }
 
-// @ 0xd3640
-- (void)dealloc {
-    if (_policyView != nil) {
-        [_policyView release];
-        _policyView = nil;
-    }
-    [super dealloc];
-}
+// dealloc @ 0xd3640 — ARC-omitted (released object ivars only).
 
 @end
 

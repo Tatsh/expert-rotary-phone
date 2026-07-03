@@ -62,13 +62,13 @@
     if (self != nil) {
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
         CGSize sz = backImg ? backImg.size : CGSizeZero;
-        UIButton *backBtn = [[[UIButton alloc]
-            initWithFrame:CGRectMake(0, 0, sz.width, sz.height)] autorelease];
+        UIButton *backBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake(0, 0, sz.width, sz.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
         [backBtn addTarget:self action:@selector(backButtonFunc)
           forControlEvents:UIControlEventTouchUpInside];
-        UIBarButtonItem *item = [[[UIBarButtonItem alloc]
-            initWithCustomView:backBtn] autorelease];
+        UIBarButtonItem *item = [[UIBarButtonItem alloc]
+            initWithCustomView:backBtn];
         self.navigationItem.leftBarButtonItem = item;
     }
     return self;
@@ -80,7 +80,7 @@
     [super loadView];
 
     if (recommendPackIdArr == nil) {
-        recommendPackIdArr = [[[MusicManager getInstance] getRecommendPackArray] retain];
+        recommendPackIdArr = [[MusicManager getInstance] getRecommendPackArray];
     }
 
     self.view.opaque = YES;
@@ -91,8 +91,8 @@
     const CGFloat cy = bounds.size.height * 0.5f;
 
     // --- the song table (hidden until the detail loads) ---
-    UITableView *table = [[[UITableView alloc]
-        initWithFrame:bounds style:UITableViewStylePlain] autorelease];
+    UITableView *table = [[UITableView alloc]
+        initWithFrame:bounds style:UITableViewStylePlain];
     table.opaque = YES;
     table.backgroundColor = [UIColor colorWithWhite:0.4f alpha:1.0f];   // 0x3ecccccd
     table.separatorStyle = UITableViewCellSeparatorStyleNone;
@@ -115,7 +115,7 @@
     [buy setTitle:@"購入済み" forState:UIControlStateDisabled];   // best-effort (owned-state title)
 
     // --- "読み込み中..." overlay with a spinner ---
-    UILabel *accessing = [[[UILabel alloc] initWithFrame:bounds] autorelease];
+    UILabel *accessing = [[UILabel alloc] initWithFrame:bounds];
     accessing.backgroundColor = [UIColor clearColor];
     accessing.font = [UIFont fontWithName:@"DFSoGei-W5-WIN-RKSJ-H" size:18.0f];
     accessing.textColor = [UIColor colorWithWhite:0.2f alpha:1.0f];    // 0x3e4ccccd
@@ -129,8 +129,8 @@
     [self.view addSubview:accessing];
     m_AccessingLabel = accessing;
 
-    UIActivityIndicatorView *spin = [[[UIActivityIndicatorView alloc]
-        initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)] autorelease];
+    UIActivityIndicatorView *spin = [[UIActivityIndicatorView alloc]
+        initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
     spin.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
     spin.center = CGPointMake(cx, cy - 10.0f);
     spin.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin |
@@ -140,10 +140,10 @@
     m_AccessingIndicator = spin;
 
     // --- stretchable per-row backgrounds (even/odd) ---
-    packBgImage0 = [[[UIImage imageNamed:@"store_pack_bg_0"]
-        stretchableImageWithLeftCapWidth:4 topCapHeight:4] retain];
-    packBgImage1 = [[[UIImage imageNamed:@"store_pack_bg_1"]
-        stretchableImageWithLeftCapWidth:4 topCapHeight:4] retain];
+    packBgImage0 = [[UIImage imageNamed:@"store_pack_bg_0"]
+        stretchableImageWithLeftCapWidth:4 topCapHeight:4];
+    packBgImage1 = [[UIImage imageNamed:@"store_pack_bg_1"]
+        stretchableImageWithLeftCapWidth:4 topCapHeight:4];
 
     artworkDownloaders = [[NSMutableDictionary alloc] initWithCapacity:32];
 
@@ -154,8 +154,8 @@
     dummyView.view.hidden = YES;
     [self.view addSubview:dummyView.view];
 
-    UIActivityIndicatorView *coverSpin = [[[UIActivityIndicatorView alloc]
-        initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)] autorelease];
+    UIActivityIndicatorView *coverSpin = [[UIActivityIndicatorView alloc]
+        initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
     coverSpin.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
     coverSpin.center = CGPointMake(cx, cy - 10.0f);
     coverSpin.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin |
@@ -176,27 +176,15 @@
 // are not released here). Cancels the in-flight detail + sample downloads first.
 - (void)dealloc {
     if (m_HeaderView != nil) {
-        [m_HeaderView release];
         m_HeaderView = nil;
     }
     [m_StorePackInfoDownloader setDelegate:nil];
     [m_StorePackInfoDownloader cancel];
     if (m_StorePackInfoDownloader != nil) {
-        [m_StorePackInfoDownloader release];
         m_StorePackInfoDownloader = nil;
     }
     [sampleDownloader cancel];
-    [sampleDownloader release];
-    [packBgImage0 release];
-    [packBgImage1 release];
     [self stopDownloadArtworks];
-    [artworkDownloaders release];
-    [packInfo release];
-    [dummyView release];
-    if (recommendPackIdArr != nil) {
-        [recommendPackIdArr release];
-    }
-    [super dealloc];
 }
 
 // Ghidra: selector backButtonFunc. Best-effort: pop this detail screen off the nav stack (the
@@ -254,12 +242,12 @@
             return;
         }
         if (birthday != nil) {
-            CommonAlertView *alert = [[[CommonAlertView alloc]
+            CommonAlertView *alert = [[CommonAlertView alloc]
                 initWithTitle:nil
                       message:@"今月は、これ以上購入することは\nできません。"
                      delegate:nil
             cancelButtonTitle:@"OK"
-            otherButtonTitles:nil] autorelease];
+            otherButtonTitles:nil];
             [alert show];
             return;
         }
@@ -330,7 +318,6 @@
     [dl setDelegate:self];
     [artworkDownloaders setObject:dl forKey:ip];
     [dl startDownload];
-    [dl release];
 
     m_PackTableView.hidden = NO;
     [m_PackTableView reloadData];
@@ -342,7 +329,6 @@
     [[AudioManager sharedManager] stopBgm:0.2f];   // DAT_000705f8 fade
     [sampleDownloader cancel];
     if (sampleDownloader != nil) {
-        [sampleDownloader release];
         sampleDownloader = nil;
     }
     rowSamplePlayed = -1;
@@ -430,7 +416,7 @@
 // @ 0x70c14 — YES if this pack's id appears in the (lazily fetched) recommended-pack list.
 - (BOOL)isRecommended {
     if (recommendPackIdArr == nil) {
-        recommendPackIdArr = [[[MusicManager getInstance] getRecommendPackArray] retain];
+        recommendPackIdArr = [[MusicManager getInstance] getRecommendPackArray];
     }
     int packID = [packInfo packID];
     for (NSNumber *n in recommendPackIdArr) {
@@ -456,7 +442,6 @@
     m_AccessingLabel.hidden = YES;
     if (m_StorePackInfoDownloader == downloader) {
         [downloader setDelegate:nil];
-        [m_StorePackInfoDownloader autorelease];
         m_StorePackInfoDownloader = nil;
     }
 }
@@ -472,10 +457,8 @@
     cancelButtonTitle:@"OK"
     otherButtonTitles:nil];
     [alert show];
-    [alert release];
     if (m_StorePackInfoDownloader == downloader) {
         [downloader setDelegate:nil];
-        [m_StorePackInfoDownloader autorelease];
         m_StorePackInfoDownloader = nil;
     }
 }
@@ -483,7 +466,6 @@
 // @ 0x71334 — the age gate closed: drop it, then re-run the spending-limit check now that a
 // birthday is on record (over the limit -> alert, else proceed to the StoreKit purchase).
 - (void)birthDayViewClose {
-    [m_BirthDayView release];
     m_BirthDayView = nil;
 
     unsigned int price = 0x23d;   // 573: default when no product is bound
@@ -491,12 +473,12 @@
         price = (unsigned int)[[packInfo.product price] intValue];
     }
     if (![StoreUtil isPurchasable:price]) {
-        CommonAlertView *alert = [[[CommonAlertView alloc]
+        CommonAlertView *alert = [[CommonAlertView alloc]
             initWithTitle:nil
                   message:@"今月は、これ以上購入することは\nできません。"   // byte-verified @0x12c0b4
                  delegate:nil
         cancelButtonTitle:@"OK"
-        otherButtonTitles:nil] autorelease];
+        otherButtonTitles:nil];
         [alert show];
     } else {
         [self doPurchase];
@@ -517,7 +499,6 @@
             [[m_PackTableView cellForRowAtIndexPath:ip] samplePlaying];
             isDownloadingSample = NO;
         }
-        [sampleDownloader autorelease];
         sampleDownloader = nil;
     } else if (recommendDownloader == downloader) {
         NSDictionary *json = [downloader getDataInJSON];
@@ -545,8 +526,6 @@
                                          otherButtonTitles:nil];
         }
         [alert show];
-        [alert release];
-        [recommendDownloader release];
         recommendDownloader = nil;
         dummyView.view.hidden = YES;
     }
@@ -561,10 +540,8 @@
             [[m_PackTableView cellForRowAtIndexPath:ip] sampleStop];
             rowSamplePlayed = -1;
         }
-        [sampleDownloader autorelease];
         sampleDownloader = nil;
     } else if (recommendDownloader == downloader) {
-        [recommendDownloader release];
         recommendDownloader = nil;
         dummyView.view.hidden = YES;
     } else {
@@ -576,7 +553,6 @@
                                                  cancelButtonTitle:@"OK"
                                                  otherButtonTitles:nil];
     [alert show];
-    [alert release];
 }
 
 // @ 0x719a8 — DownloaderDelegate progress hook (no-op in this controller).
@@ -653,9 +629,9 @@
         StoreDetailCopyrightCell *cell =
             [tableView dequeueReusableCellWithIdentifier:@"StoreDetailTableCopyrightCell"];
         if (cell == nil) {
-            cell = [[[StoreDetailCopyrightCell alloc]
+            cell = [[StoreDetailCopyrightCell alloc]
                 initWithStyle:UITableViewCellStyleDefault
-              reuseIdentifier:@"StoreDetailTableCopyrightCell"] autorelease];
+              reuseIdentifier:@"StoreDetailTableCopyrightCell"];
             cell.labelCopyright.font = [UIFont fontWithName:@"DFSoGei-W5-WIN-RKSJ-H" size:10.0f];
         }
         NSString *copyright = [packInfo copyright];
@@ -674,9 +650,9 @@
 
     // --- song row ---
     [tableView dequeueReusableCellWithIdentifier:@"StoreDetailTableMusicCell"];  // (always builds fresh)
-    StoreDetailMusicCell *cell = [[[StoreDetailMusicCell alloc]
+    StoreDetailMusicCell *cell = [[StoreDetailMusicCell alloc]
         initWithStyle:UITableViewCellStyleDefault
-      reuseIdentifier:@"StoreDetailTableMusicCell"] autorelease];
+      reuseIdentifier:@"StoreDetailTableMusicCell"];
 
     StoreMusicInfo *music = [[packInfo musicInfos] objectAtIndex:row];
     if (music != nil) {
@@ -699,7 +675,6 @@
                 [nd setDelegate:self];
                 [artworkDownloaders setObject:nd forKey:indexPath];
                 [nd startDownload];
-                [nd release];
             }
             img = [UIImage imageNamed:@"store_jacket_128"];
         } else {
@@ -780,7 +755,6 @@
         [[AudioManager sharedManager] stopBgm:0.2f];   // DAT_000725f8 fade
         if (sampleDownloader != nil) {
             [sampleDownloader cancel];
-            [sampleDownloader release];
             sampleDownloader = nil;
         }
         NSIndexPath *ip = [NSIndexPath indexPathForRow:rowSamplePlayed inSection:0];
@@ -795,7 +769,6 @@
         [[AudioManager sharedManager] stopBgm:0.2f];
         if (sampleDownloader != nil) {
             [sampleDownloader cancel];
-            [sampleDownloader release];
             sampleDownloader = nil;
         }
         NSIndexPath *ip = [NSIndexPath indexPathForRow:rowSamplePlayed inSection:0];

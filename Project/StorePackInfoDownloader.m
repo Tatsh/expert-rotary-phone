@@ -17,15 +17,13 @@
 // @ 0x57754 / 0x577a0 — retaining setters for packInfo / downloader.
 - (void)setPackInfo:(StorePackInfo *)packInfo {
     if (m_PackInfo != packInfo) {
-        [m_PackInfo release];
-        m_PackInfo = [packInfo retain];
+        m_PackInfo = packInfo;
     }
 }
 
 - (void)setDownloader:(Downloader *)downloader {
     if (m_Downloader != downloader) {
-        [m_Downloader release];
-        m_Downloader = [downloader retain];
+        m_Downloader = downloader;
     }
 }
 
@@ -45,7 +43,6 @@
     NSURL *url = [StoreUtil packInfoURL:m_PackInfo.packID UserOpen:userOpen];
     Downloader *downloader = [[Downloader alloc] initWithURL:url delegate:self];
     [self setDownloader:downloader];
-    [downloader release];
     [downloader startDownloading];
 }
 
@@ -57,7 +54,6 @@
         return;
     }
     [m_Downloader cancel];
-    [m_Downloader autorelease];
     m_Downloader = nil;
 }
 
@@ -82,9 +78,6 @@
 // @ 0x57488
 - (void)dealloc {
     [self setDelegate:nil];
-    [self setPackInfo:nil];
-    [self setDownloader:nil];
-    [super dealloc];
 }
 
 @end

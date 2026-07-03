@@ -50,7 +50,7 @@
         if (product == nil) {
             return NO;
         }
-        m_Product = [product retain];
+        m_Product = product;
         return YES;
     }
     return NO;
@@ -65,53 +65,46 @@
     NSArray *musicList = dictionary[@"MusicList"];
     NSArray *acvMusicList = dictionary[@"AcvMusicList"];
 
-    [m_PackName release];
     m_PackName = nil;
     if (dictionary[@"Name"] != nil) {
-        m_PackName = [dictionary[@"Name"] retain];
+        m_PackName = dictionary[@"Name"];
     }
 
-    [m_Comment release];
     m_Comment = nil;
     if (dictionary[@"Comment"] != nil) {
-        m_Comment = [dictionary[@"Comment"] retain];
+        m_Comment = dictionary[@"Comment"];
     }
 
-    [m_ShortComment release];
     m_ShortComment = nil;
     if (dictionary[@"ShortComment"] != nil) {
-        m_ShortComment = [dictionary[@"ShortComment"] retain];
+        m_ShortComment = dictionary[@"ShortComment"];
     }
 
     if (dictionary[@"IsNew"] != nil) {
         m_IsNew = [dictionary[@"IsNew"] boolValue];
     }
 
-    [m_Copyright release];
     m_Copyright = nil;
     if (dictionary[@"Copyright"] != nil) {
-        m_Copyright = [dictionary[@"Copyright"] retain];
+        m_Copyright = dictionary[@"Copyright"];
     }
 
-    [m_ArtworkURL release];
     m_ArtworkURL = nil;
     NSString *artworkURL = dictionary[@"ArtworkURL"];
     if (artworkURL != nil && [StoreUtil isValidURL:artworkURL]) {
-        m_ArtworkURL = [artworkURL retain];
+        m_ArtworkURL = artworkURL;
     }
 
-    [m_ArtistURL release];
     m_ArtistURL = nil;
     NSString *artistURL = dictionary[@"ArtistURL"];
     if ([artistURL isKindOfClass:NSString.class] && [StoreUtil isValidURL:artistURL]) {
-        m_ArtistURL = [artistURL retain];
+        m_ArtistURL = artistURL;
     }
 
-    [m_ArtistBunnerURL release];
     m_ArtistBunnerURL = nil;
     NSString *bannerURL = dictionary[@"ArtistBunnerURL"];
     if ([bannerURL isKindOfClass:NSString.class] && [StoreUtil isValidURL:bannerURL]) {
-        m_ArtistBunnerURL = [bannerURL retain];
+        m_ArtistBunnerURL = bannerURL;
     }
 
     m_AcvNum = (dictionary[@"AcvNum"] != nil) ? [dictionary[@"AcvNum"] intValue] : 0;
@@ -133,7 +126,6 @@
         StoreMusicInfo *info = [[StoreMusicInfo alloc] initWithDictionary:dict];
         if (info != nil) {
             [infos addObject:info];
-            [info release];
             if (infos.count > 3) {
                 break;   // at most 4 songs shown per pack
             }
@@ -159,7 +151,6 @@
         StoreAcMusicInfo *info = [[StoreAcMusicInfo alloc] initWithDictionary:dict];
         if (info != nil) {
             [infos addObject:info];
-            [info release];
         }
     }
     if (infos.count != 0) {
@@ -241,19 +232,7 @@
     return [StoreUtil priceString:m_Product];
 }
 
-- (void)dealloc {
-    [m_Product release];
-    [m_PackName release];
-    [m_Comment release];
-    [m_ShortComment release];
-    [m_Copyright release];
-    [m_ArtworkURL release];
-    [m_ArtistURL release];
-    [m_ArtistBunnerURL release];
-    [m_MusicInfos release];
-    [m_AcvMusicInfos release];
-    [super dealloc];
-}
+// dealloc — ARC-omitted (released object ivars only).
 
 @end
 

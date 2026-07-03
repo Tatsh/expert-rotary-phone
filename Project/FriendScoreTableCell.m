@@ -16,8 +16,8 @@
 // type-encoding "{ScoreDataStruct=@@iBBcsB}" (verified in FriendScoreMainView's
 // -tableView:cellForRowAtIndexPath:).
 typedef struct {
-    NSString *playerId;   // @  nil => empty slot; non-nil with a nil name => the local player
-    NSString *name;       // @  nil on the self row (filled from UserSettingData)
+    NSString *__unsafe_unretained playerId;   // @  nil => empty slot; non-nil with a nil name => the local player
+    NSString *__unsafe_unretained name;       // @  nil on the self row (filled from UserSettingData)
     int score;            // i  -1 => no score recorded
     BOOL isPerfect;       // B
     BOOL isFullCombo;     // B

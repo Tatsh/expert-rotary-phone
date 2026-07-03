@@ -13,9 +13,15 @@
 
 @interface TwitterUtil : UIViewController
 
-// The pending tweet body + attached image (Ghidra ivars m_Text / m_Img).
-@property (nonatomic, retain) NSString *text;
-@property (nonatomic, retain) UIImage *image;
+// The pending tweet body + attached image (Ghidra ivars m_Text / m_Img). `text` is copied
+// (its setter @ 0x789a8 does [[NSString alloc] initWithString:]); `image` is retained
+// (setter @ 0x78a08). Synthesized accessors.
+@property (nonatomic, copy) NSString *text;
+@property (nonatomic, strong) UIImage *image;
+
+// Convenience initializer: empty pending tweet (forwards to -initWithText:image: with nils).
+// Ghidra: -[TwitterUtil init] @ 0x78934.
+- (instancetype)init;
 
 // Retain the text + image to tweet later (the result screen's share button owns one).
 // Ghidra: -[TwitterUtil initWithText:image:] @ 0x78948.
