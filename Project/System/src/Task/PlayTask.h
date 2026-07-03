@@ -21,7 +21,25 @@
 class PlayTask : public C_TASK {
 public:
     PlayTask();                          // Ghidra: MainTask spawns this; PlayTask_init
+    ~PlayTask() override;                // @ 0x2db74 (taskNode_deleteB deleting-dtor: base + delete)
     void update(int deltaMs) override;   // Ghidra: PlayTask_update (FUN_0002dc14)
+
+    // Reset the play scene for a fresh attempt: reload the chart, reset the animated
+    // layers, zero the 0x3c-entry judge pool (@ +0x3c8, stride 0x18) with sequential
+    // indices + -1 sentinels, and reset the gauge/score scalars (@ +0x9ac..+0x9dc).
+    // Ghidra: playTaskResetState (FUN_0002fed8).
+    void resetState();                   // @ 0x2fed8
+
+    // Nudge the life gauge (@ +0x9c0, clamped to [0, 0x400]) by the per-mode delta:
+    // mode 0 = miss/down (+0x9d4, also sets the "damaged" flag @ +0x9dc), 1 = good
+    // (+0x9d0), 2/3 = great/perfect (+0x9cc). Ghidra: updateGaugeValue (FUN_000312cc).
+    void updateGauge(int mode);          // @ 0x312cc
+
+private:
+    // Reload the chart into the play data (restart = the arg the reset path passes 1).
+    // Ghidra: playTaskLoadChart (FUN_..., not in this batch) — a PlayTask method (takes
+    // the play data as `this`).
+    void reloadChart(int restart);       // TODO(dep): owner method not yet reconstructed
 };
 
 // Play-scene lifecycle seams operating on the play-data block.

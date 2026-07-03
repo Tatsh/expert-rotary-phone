@@ -121,6 +121,22 @@ UIViewController *neSceneManager::rootViewController() {
     return shared().m_root;
 }
 
+// Ghidra: getNormalSoundName @ 0x2c7c0 — the display name for a touch-sound kind, indexed by kind
+// (low 16 bits; anything past the last entry folds to 0). The binary returns one of ten constant
+// CFStrings from PTR_cf_normal_001310d4; the picker rows show it. Returned as a __bridge void* to
+// match the header's opaque type (mirroring rootViewController()'s ObjC-on-the-far-side handoff).
+void *neSceneManager::normalSoundName(int soundNo) {
+    static NSString *const kNames[] = {
+        @"normal", @"water", @"crack",    @"shooting", @"tambourine",
+        @"sword",  @"cheer", @"shishamo", @"bag",      @"bat",
+    };
+    unsigned kind = static_cast<unsigned>(soundNo) & 0xffff;
+    if (kind > 9) {
+        kind = 0;
+    }
+    return (__bridge void *)kNames[kind];
+}
+
 // Live drawable metrics (Ghidra globals DAT_00187b7c/78/80).
 static float s_screenWidth = 640.0f;
 static float s_screenHeight = 960.0f;

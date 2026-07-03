@@ -272,7 +272,20 @@ static GLenum PrimitiveToGL(int mode) {
     return kTable[mode];
 }
 
-neGLES_11::neGLES_11() = default;
+// @ 0x12c78
+// Ghidra: neGLESRenderer_ctor — installs the vtable and primes the cached GL state to
+// the backend's power-on defaults: identity/zero matrices and colour vectors, the eight
+// per-texture-unit filter/wrap slots ({mag,min,wrapS,wrapT} ordinals {4,1,7,7}, bound
+// name -1), a straight-alpha add-equation blend, and every redundant-bind cache cleared.
+// Those zero/-1/identity defaults are carried by the in-class member initializers; the
+// three blend-state fields whose non-zero GL power-on values the ctor writes (ivars
+// 0x19c/0x1a0/0x1a4) are set explicitly here.
+neGLES_11::neGLES_11()
+    : _blendEquation(GL_FUNC_ADD_OES),   // ivar 0x19c  (&DAT_00008006)
+      _blendSrc(BLEND_SRC_ONE),          // ivar 0x1a0  (GL_ONE ordinal)
+      _blendDest(BLEND_DEST_ZERO) {      // ivar 0x1a4  (GL_ZERO ordinal)
+}
+
 neGLES_11::~neGLES_11() = default;
 
 void neGLES_11::enable(EnableState state) {
@@ -382,6 +395,40 @@ void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned re
     glRenderbufferStorageOES(GL_RENDERBUFFER_OES, RenderTypeToGLFormat(type), 0, 0);
     glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
                                  GL_RENDERBUFFER_OES, renderbuffer);
+}
+
+// ---------------------------------------------------------------------------
+// OES framebuffer-object management. `RenderKind` selects the attachment point
+// (color/depth/stencil) via RenderKindToGL.
+// ---------------------------------------------------------------------------
+
+// Ghidra: FUN_00012e94.
+void neGLES_11::deleteFramebuffer(unsigned framebuffer) {
+    GLuint name = framebuffer;
+    glDeleteFramebuffersOES(1, &name);
+}
+
+// Ghidra: FUN_00012eb8.
+void neGLES_11::deleteRenderbuffer(unsigned renderbuffer) {
+    GLuint name = renderbuffer;
+    glDeleteRenderbuffersOES(1, &name);
+}
+
+// Ghidra: FUN_00012f3c — attach a 2D texture's level 0 at attachment point `kind`.
+void neGLES_11::framebufferTexture2D(RenderKind kind, unsigned texture) {
+    glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
+                              GL_TEXTURE_2D, texture, 0);
+}
+
+// Ghidra: FUN_00012fcc — attach a renderbuffer at attachment point `kind`.
+void neGLES_11::framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer) {
+    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
+                                 GL_RENDERBUFFER_OES, renderbuffer);
+}
+
+// Ghidra: FUN_00012fec — free helper (no `this`).
+bool isFramebufferComplete() {
+    return glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) == GL_FRAMEBUFFER_COMPLETE_OES;
 }
 
 // ---------------------------------------------------------------------------

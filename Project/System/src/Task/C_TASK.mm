@@ -35,11 +35,16 @@ C_TASK::C_TASK()
       m_name(nullptr), m_killed(false) {
 }
 
-// Unlink from the scheduler list on destruction (Ghidra: the reaped-task path in
-// FUN_00027f40 saves ->next before invoking this).
+// Ghidra: base dtor @ 0x27ec8 (mislabelled "caSourceNode_dtor") — re-install the base vtable,
+// unlink the node from the scheduler list, then free the owned name buffer. The compiler's
+// deleting-destructor thunk @ 0x27ef8 ("caSourceNode_delete") is this destructor followed by
+// operator delete (the vtable delete slot) and is not written by hand. The reaped-task path in
+// FUN_00027f40 saves ->next before invoking this.
 C_TASK::~C_TASK() {
     m_next->m_prev = m_prev;
     m_prev->m_next = m_next;
+    delete[] m_name;   // the node owns its name buffer (the binary frees and nulls it here)
+    m_name = nullptr;
 }
 
 // Base per-frame hooks: overridden by concrete tasks (MainTask, TitleTask, ...).

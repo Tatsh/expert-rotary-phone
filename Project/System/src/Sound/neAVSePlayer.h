@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class AVBus;
+
 // 0x10000000 marks an AVFoundation instance in a play handle (cf. neAVCAPlayer).
 constexpr uint32_t kAVSePlayerHandleFlag = 0x10000000;
 
@@ -71,7 +73,15 @@ public:
     void resume();
 
 private:
-    int addSource(NSURL *url, bool loop);   // first free slot, growing the table (allocSoundSlot)
+    int addSource(NSURL *url, bool loop);   // build a descriptor (soundSourceInit) into a free slot
+
+    // Reserve the first free source slot, growing the table when it is full. Ghidra: allocSoundSlot
+    // @ 0x21510.
+    int allocSoundSlot();
+
+    // Resolve a (voice << 16 | generation) play handle to its live AVBus voice, or nil for a stale
+    // handle. Ghidra: getAudioBusForHandle @ 0x20fd8.
+    AVBus *busForHandle(uint32_t handle);
 
     // The AVBus voice pool (Ghidra: the "audioMixer" object at +0x0, its voice array at +0x8).
     NSMutableArray *m_buses = nil;          // AVBus voices

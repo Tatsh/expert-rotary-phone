@@ -5,6 +5,7 @@
 
 target_sources(popnrhythmin PRIVATE
     AcMainTask.mm
+    AcViewerTask.mm
     BootLogoTask.mm
     C_TASK.mm
     MainTask.mm
@@ -16,6 +17,7 @@ target_sources(popnrhythmin PRIVATE
     TaskFactory.mm
     TitleTask.mm
     AcMainTask.h
+    AcViewerTask.h
     BootLogoTask.h
     C_TASK.h
     MainTask.h

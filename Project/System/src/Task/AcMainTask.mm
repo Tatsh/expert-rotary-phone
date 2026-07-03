@@ -47,6 +47,14 @@ AcMainTask::AcMainTask() {
     field<int>(0x5a0) = 3;
 }
 
+// @ 0x99ba4 — acMainTaskDtor. The compiler's deleting-destructor thunk calls this then
+// operator delete; the real body only destroys the RNG the ctor placement-constructed in
+// the play-data blob (@ +0x4f4, Ghidra: rngStateDtorStub) and then chains to the C_TASK
+// base (caSourceNode_dtor), which runs implicitly after this body.
+AcMainTask::~AcMainTask() {
+    rng().~Random();
+}
+
 // Ghidra: AcMainTask_update (FUN_00099d18). Snapshot the touches (recording a drag
 // anchor and classifying a tap), refresh the "scrolled past the end" flag, then
 // dispatch on the play-data state (@ +0x9f8).

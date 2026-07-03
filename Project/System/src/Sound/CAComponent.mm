@@ -26,6 +26,9 @@ float caGainForLevel(int level) {
 
 }  // namespace
 
+// Ghidra: auGraphSetup @ 0x23a4c — build the AUGraph (auGraphCreate = prepareGraph) and, only if
+// that succeeds, size and initialise the mixer (auGraphInitMixer = initGraph). The caplayer manager
+// ctor (caPlayerMgr_ctor @ 0x26172) runs this on a freshly-allocated CAComponent.
 CAComponent::CAComponent(int voices) {
     if (prepareGraph()) {
         initGraph(voices);
@@ -288,28 +291,30 @@ void CAComponent::stopAndClearVoice(int voice, uint16_t generation) {
     }
 }
 
-// Ghidra: FUN_00024044 — the AURenderCallback: copy this voice's PCM into the
-// mixer, looping or finishing at the end of the source buffer.
-OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags *flags,
+// Ghidra: auMixerStartIfReady @ 0x23a20 — the per-voice render body. Only an actively-playing voice
+// (state 2) contributes sound; a merely-prepared (1), paused (3), finished (4) or free (-1) voice is
+// left as the silence the callback pre-cleared. The prepare -> play (1 -> 2) transition is issued by
+// the caplayer play path. When the source runs dry, the voice is marked finished so reserveVoice can
+// recycle it. The actual copy + loop/finish lives in CASound::read (Ghidra: caSourceRead).
+size_t CAComponent::CAVoice::readInto(void *dst, size_t size) {
+    if (source != nullptr && state == 2) {
+        const size_t got = source->read(dst, size, &total, &playPos);
+        if (got != 0) {
+            return got;
+        }
+        state = 4;   // source exhausted -> finished (voice becomes reusable)
+    }
+    return 0;
+}
+
+// Ghidra: auRenderCallback @ 0x24044 — the AURenderCallback. Clear the output buffer, then let the
+// voice (passed as refCon) mix its next PCM span in via readInto (auMixerStartIfReady).
+OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags * /*flags*/,
                                  const AudioTimeStamp *, UInt32, UInt32 /*frames*/,
                                  AudioBufferList *data) {
     CAVoice *v = static_cast<CAVoice *>(refCon);
-    CASound *source = v->source;
     AudioBuffer &out = data->mBuffers[0];
-
-    if (source == nullptr || v->state != 1) {
-        std::memset(out.mData, 0, out.mDataByteSize);
-        if (flags) *flags |= kAudioUnitRenderAction_OutputIsSilence;
-        return noErr;
-    }
-
-    // The copy + loop/finish handling lives in CASound::read (Ghidra: caSourceRead).
-    const UInt32 want = out.mDataByteSize;
-    const size_t got = source->read(out.mData, want, &v->total, &v->playPos);
-    if (got < want) {
-        // A one-shot source ran dry: pad the tail with silence and free the voice.
-        std::memset(static_cast<uint8_t *>(out.mData) + got, 0, want - got);
-        v->state = 4;   // finished -> voice becomes reusable
-    }
+    std::memset(out.mData, 0, out.mDataByteSize);
+    v->readInto(out.mData, out.mDataByteSize);
     return noErr;
 }

@@ -94,6 +94,8 @@ MainTask::MainTask() {
 // Ghidra: mainTask_dtor (FUN_00034d90) — re-install the vtable, de-register this task as
 // DownloadMain's recommend-list delegate (only if it is still us), then the C_TASK base
 // dtor runs. MusicSelTask == MainTask, so the delegate compares directly against `this`.
+// The compiler's deleting-destructor thunk mainTask_delete (@ 0x34eac: this dtor +
+// operator delete) is glue over this body. @ 0x34eac
 MainTask::~MainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl cppDelegateRecommendList] == this) {
@@ -720,6 +722,146 @@ extern "C" void musicSelUpdate(MainTask *task) {
 }
 extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
     task->updateInfoPanel(mode);
+}
+
+// ---------------------------------------------------------------------------------------
+// Column streaming + scene draw callback.
+//
+// These reach the widget cell array by its binary layout (element stride 0x38 @ +0x2d8,
+// each cell: index@+0, ready@+4, imageData@+8, texture(?)@+0xc, retained-id@+0x10) and a
+// handful of scalars (column index @ +0x8f0, per-row count @ +0xa74, song count @ +0x8ec,
+// the two direction latches @ +0x8c0/+0x8c2, the cell semaphore @ +0xa90). MainTask.h
+// models the same storage as MusicSelCell m_cells[27]; the raw offsets here match those
+// members but are kept literal to mirror the decompile 1:1.
+// ---------------------------------------------------------------------------------------
+namespace {
+inline char *raw(MainTask *t) { return reinterpret_cast<char *>(t); }
+template <typename T> inline T &at(MainTask *t, int off) {
+    return *reinterpret_cast<T *>(raw(t) + off);
+}
+// Free one streamed cell's GPU/ObjC resources before it is re-pointed (Ghidra: the
+// vtable[1] delete on the texture @ +0xc, then release on the ObjC ids @ +0x8/+0x10).
+inline void releaseCell(int *cell) {
+    if (cell[3] != 0) {           // +0xc uploaded texture -> delete
+        delete reinterpret_cast<neTextureForiOS *>(cell[3]);
+        cell[3] = 0;
+    }
+    if (cell[2] != 0) { cell[2] = 0; }   // +0x8 image data (ARC-released by owner)
+    if (cell[4] != 0) { cell[4] = 0; }   // +0x10 retained id
+}
+// Shared body of the two column loaders: `delta` is +1 (next) / -1 (prev). Ghidra:
+// FUN_00035448 / FUN_00035520 (identical but for the latch offset + column bound).
+inline void loadColumn(MainTask *t, int column, int delta, int8_t &latch) {
+    const int col = at<int>(t, 0x8f0);
+    dispatch_semaphore_wait(at<dispatch_semaphore_t>(t, 0xa90), DISPATCH_TIME_FOREVER);
+    const int perRow = at<int>(t, 0xa74);
+    if (perRow > 0) {
+        int *cell = &at<int>(t, column * 0x38 + 0x2d8);
+        const int songCount = at<int>(t, 0x8ec);
+        for (int i = 0; i < at<int>(t, 0xa74); i++) {
+            const int idx = perRow * (col + delta) + i;
+            if (idx < 0 || songCount <= idx) {
+                cell[0] = -1;   // +0x0 song index (none)
+                cell[1] = 0;    // +0x4 ready = empty
+            } else {
+                cell[0] = idx;
+                cell[1] = 1;    // ready = loading
+            }
+            releaseCell(cell);
+            cell += 0xe;        // stride 0x38 bytes
+        }
+    }
+    latch = (int8_t)column;
+    dispatch_semaphore_signal(at<dispatch_semaphore_t>(t, 0xa90));
+}
+}  // namespace
+
+// @ 0x35448 — stream the column after the current one into row `column`.
+void MainTask::loadColumnNext(int column) {
+    if (m_highlightPrev == 0xff && at<int>(this, 0x8f0) != -2) {   // latch @ +0x8c2 idle
+        loadColumn(this, column, +1, *reinterpret_cast<int8_t *>(raw(this) + 0x8c2));
+    }
+}
+
+// @ 0x35520 — stream the column before the current one into row `column`.
+void MainTask::loadColumnPrev(int column) {
+    if (m_highlight == -1 /* latch @ +0x8c0 idle (low byte) */ && at<int>(this, 0x8f0) != 0) {
+        loadColumn(this, column, -1, *reinterpret_cast<int8_t *>(raw(this) + 0x8c0));
+    }
+}
+
+// @ 0x389fc — musicSelAepDrawCallback. The music-select scene draw callback. This is a
+// ~98 KB routine that dispatches on the drawn layer's resolved user number and blits the
+// matching scene element. The head (recovered below) draws the three visible song-jacket
+// grids — current column (user no @ +0x22c), and the incoming next / previous columns
+// (latched via +0x8c1 / +0x8c2) — each a 3-wide grid of cells whose uploaded jacket
+// texture (@ cell+0xc) is blitted (or a placeholder frame @ +0x180 when not yet ready),
+// with the selection frame @ +0x1a8 over the highlighted cell. The long tail of the
+// function (score / difficulty-level / song-name / rank-digit / badge branches, keyed on
+// the other resolved user numbers) follows the same per-user-number dispatch and is a
+// documented seam here per rule 7 (best-effort: the geometry constants and the remaining
+// element blits are not fully transcribed).
+void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int scaleY,
+                     int anchorX, int anchorY, int color, int alpha, short rotation,
+                     int blend, int p13, int p14, void *context) {
+    (void)frame; (void)color; (void)alpha; (void)p13;
+    MainTask *self = static_cast<MainTask *>(context);
+    char *pd = reinterpret_cast<char *>(self);
+    auto F = [&](int off) -> int { return *reinterpret_cast<int *>(pd + off); };
+
+    // Blit one 3-column jacket grid starting at widget row `rowBase`, offset by `colX`
+    // screen columns. Each present cell draws its uploaded texture (or the placeholder
+    // frame @ +0x180 while streaming) plus the selection frame @ +0x1a8.
+    auto drawJacketGrid = [&](int rowBase, int columnIndex, int extraX) {
+        const int perRow = F(0xa74);
+        if (rowBase < 0 || perRow <= 0) {
+            return;
+        }
+        int *cell = reinterpret_cast<int *>(pd + rowBase * 0x38 + 0x2d8);
+        const int songCount = F(0x8ec);
+        for (int i = 0; i < perRow; i++) {
+            if (perRow * columnIndex + i >= songCount) {
+                break;
+            }
+            const int idx = cell[0];                 // +0x0 song index
+            const bool present = idx >= 0 ? (idx < songCount) : (idx != 0);
+            if (present && idx >= 0 && idx <= songCount) {
+                const int cellY = F(0x98c) * (i / 3) + y;
+                const int cellX = F(0x988) * (i % 3) + x + extraX + F(0x980);
+                if (cell[3] == 0) {                  // +0xc no texture yet -> placeholder
+                    drawAepFrameEx(&AepManager::shared(), F(0x180), F(0x990) + cellX, cellY,
+                                   scaleX, scaleY, rotation, anchorX, anchorY, blend, p14,
+                                   0xffffff, 0, p14, 1);
+                } else {
+                    neTextureForiOS_draw(&AepManager::shared(), *reinterpret_cast<void **>(cell + 3),
+                                         0, 0, 0x168, 0x168, F(0x990) + cellX, cellY, scaleX, scaleY,
+                                         rotation, anchorX, anchorY, blend, p14, 0xffffff, 0, p14, 1);
+                }
+                // Selection frame over the cell (@ +0x1a8, +0x994/+0x998 nudge).
+                drawAepFrameEx(&AepManager::shared(), F(0x1a8),
+                               F(0x994) + (cellX - (anchorX * scaleX) / 100),
+                               F(0x998) + (cellY - (anchorY * scaleY) / 100),
+                               0x42c80000, 0x42c80000, 0, 0, 0, 100, 0, blend, 0xffffff, 0, p14, 1);
+            }
+            cell += 0xe;
+        }
+    };
+
+    if (F(0x22c) == (int)child) {
+        // Current column grid. Cache the grid origin (@ +0xa40/+0xa44) for hit-testing.
+        *reinterpret_cast<int *>(pd + 0xa40) = x - (anchorX * scaleX) / 100;
+        *reinterpret_cast<int *>(pd + 0xa44) = y - (anchorY * scaleY) / 100;
+        const int8_t curRow = *reinterpret_cast<int8_t *>(pd + 0x8c1);
+        drawJacketGrid(curRow, F(0x8f0), 0);
+
+        // Incoming next column (latch @ +0x8c2), shifted one screen width right.
+        if (F(0x8f0) < F(0x8f4) - 1) {
+            const int8_t nextRow = *reinterpret_cast<int8_t *>(pd + 0x8c2);
+            drawJacketGrid(nextRow, F(0x8f0) + 1, F(0xa64));
+        }
+    }
+    // Remaining per-user-number branches (score / level / name / rank / badges): documented
+    // seam — see the function-level comment above. @ 0x389fc
 }
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

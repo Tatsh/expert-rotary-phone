@@ -21,8 +21,13 @@ class neTextureRef {
 public:
     virtual ~neTextureRef();   // Ghidra: FUN_00015edc (+ compiler-emitted deleting dtor FUN_00015f00)
 
+    // Set a per-frame render-state slot (0 = blend/opaque select, 1 = clipped flag) to
+    // `value`; stored in meta[slot]. Ghidra: FUN_00016710, called from the AepSprite draw
+    // path (drawAepSpriteClipped) on each frame's neTextureRef.
+    void setRenderStateSlot(int slot, int value);   // @ 0x16710
+
     void *texture = nullptr;   // +0x04 AepTexture* (cache reference)
-    int32_t meta[4] = {};      // +0x08..+0x17 per-frame metadata
+    int32_t meta[4] = {};      // +0x08..+0x17 per-frame metadata (render-state slots)
 };
 
 // A set of animation frames: parallel heap arrays (all `frameCount` long) of per-frame

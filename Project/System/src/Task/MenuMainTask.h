@@ -37,6 +37,7 @@ class neTextureForiOS;
 class MenuMainTask : public C_TASK {
 public:
     MenuMainTask();                     // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
+    ~MenuMainTask() override;           // @ 0x6abcc (modeSelTaskDtor; clears news delegate + base)
     void update(int deltaMs) override;  // Ghidra: MenuMainTask_update (FUN_0006ad88)
 
     // Set the "info screen already shown" flag (TitleTask passes 1). Ghidra:

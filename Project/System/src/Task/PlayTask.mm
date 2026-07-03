@@ -7,6 +7,9 @@
 //  hand-off. Field offsets into the play data are cited (see PlayJudge.h).
 //
 
+#include <cstring>
+
+#import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AudioManager.h"
 #import "NoteMng.h"
@@ -29,6 +32,77 @@ inline int &endPos(PlayTask *t)       { return *reinterpret_cast<int *>(pd(t) + 
 }
 
 PlayTask::PlayTask() = default;
+
+// @ 0x2db74 — taskNode_deleteB is the compiler's deleting-destructor thunk
+// (caSourceNode_dtor then operator delete). PlayTask's own destructor only chains to the
+// C_TASK base (the scene/notes are torn down through PlayTaskGotoResult / the scheduler),
+// so there is no per-member teardown here.
+PlayTask::~PlayTask() = default;
+
+// @ 0x2fed8 — playTaskResetState. Reset the play scene for a fresh attempt.
+void PlayTask::resetState() {
+    NoteMng::shared();               // ensure the note manager singleton exists
+    reloadChart(1);                  // FUN_0002fed8 calls playTaskLoadChart(this, 1)
+
+    // Reset the two animated-layer banks (5 @ +0x84, 11 @ +0x98).
+    for (int i = 0; i < 5; i++) {
+        if (AepLyrCtrl *l = *reinterpret_cast<AepLyrCtrl **>(pd(this) + 0x84 + i * 4)) {
+            l->reset();
+        }
+    }
+    for (int i = 0; i < 0xb; i++) {
+        if (AepLyrCtrl *l = *reinterpret_cast<AepLyrCtrl **>(pd(this) + 0x98 + i * 4)) {
+            l->reset();
+        }
+    }
+
+    *reinterpret_cast<int *>(pd(this) + 0x3a0) = -1;
+    *reinterpret_cast<int *>(pd(this) + 0x3a4) = -1;
+
+    // Zero the 0x3c-entry judge pool (@ +0x3c8, stride 0x18 == 6 words), then stamp each
+    // entry's index (word 0) and its -1 sentinel (word 1).
+    std::memset(pd(this) + 0x3c8, 0, 0x5a0);
+    int *entry = reinterpret_cast<int *>(pd(this) + 0x3c8);
+    for (int i = 0; i < 0x3c; i++) {
+        entry[0] = i;
+        entry[1] = -1;
+        entry += 6;              // 0x18 bytes
+    }
+
+    // Gauge / score scalars.
+    *reinterpret_cast<int *>(pd(this) + 0x9ec)      = -1;
+    *reinterpret_cast<int16_t *>(pd(this) + 0x9ac)  = (int16_t)g_wPlayDefaultGauge; // DAT_00178d00
+    *reinterpret_cast<int *>(pd(this) + 0x9b0)      = 0;
+    *reinterpret_cast<int16_t *>(pd(this) + 0x9c0)  = 0;   // gauge value
+    *reinterpret_cast<int16_t *>(pd(this) + 0x9c2)  = 0;
+    *reinterpret_cast<int *>(pd(this) + 0x9d8)      = 0;
+    *reinterpret_cast<unsigned char *>(pd(this) + 0x9dc) = 0;
+}
+
+// @ 0x312cc — updateGaugeValue. Nudge the life gauge by the per-mode delta and clamp it.
+void PlayTask::updateGauge(int mode) {
+    int16_t &gauge = *reinterpret_cast<int16_t *>(pd(this) + 0x9c0);
+    const float *delta = nullptr;
+    if ((unsigned)(mode - 2) < 2) {          // mode 2 or 3 (great / perfect)
+        delta = reinterpret_cast<float *>(pd(this) + 0x9cc);
+    } else if (mode == 0) {                   // miss / down
+        delta = reinterpret_cast<float *>(pd(this) + 0x9d4);
+        *reinterpret_cast<unsigned char *>(pd(this) + 0x9dc) = 1;   // damaged this frame
+    } else if (mode == 1) {                   // good
+        delta = reinterpret_cast<float *>(pd(this) + 0x9d0);
+    }
+
+    if (delta != nullptr) {
+        // gauge += *delta (fixed<->float round-trip in the binary).
+        gauge = (int16_t)((float)gauge + *delta);
+    }
+    if (gauge < 1) {
+        gauge = 0;
+    }
+    if (gauge > 0x400) {
+        gauge = 0x400;
+    }
+}
 
 // Ghidra: PlayTask_update (FUN_0002dc14).
 void PlayTask::update(int /*deltaMs*/) {

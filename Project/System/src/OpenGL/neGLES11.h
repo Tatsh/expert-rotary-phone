@@ -289,6 +289,15 @@ public:
     void deleteBuffer(unsigned buffer) override;
     void attachRenderbuffer(RenderKind kind, RenderType type, unsigned renderbuffer) override;
 
+    // --- OES framebuffer-object (FBO) management ---
+    // Thin GL ES 1.1 OES_framebuffer_object wrappers that pair with attachRenderbuffer;
+    // the attachment point maps through RenderKindToGL. These carry the renderer `this`
+    // but touch no cached state (pure GL). Ghidra addresses annotated per body.
+    void deleteFramebuffer(unsigned framebuffer);                          // @ 0x12e94
+    void deleteRenderbuffer(unsigned renderbuffer);                        // @ 0x12eb8
+    void framebufferTexture2D(RenderKind kind, unsigned texture);          // @ 0x12f3c
+    void framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer);  // @ 0x12fcc
+
     // --- drawing slots (::neRenderer) dispatched through by the neDraw* primitives ---
     void shutdown() override;
     void initialize() override;
@@ -336,6 +345,10 @@ private:
     unsigned _blendDest = 0;       // ivar 0x1a4
     unsigned _boundTextures[8] = {};       // ivar 0xb4[8] (cleared by deleteBuffer)
 };
+
+// Free helper (no `this`): is the currently-bound OES framebuffer complete? Ghidra:
+// FUN_00012fec — glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) == GL_FRAMEBUFFER_COMPLETE_OES.
+bool isFramebufferComplete();   // @ 0x12fec
 
 }  // namespace ne
 

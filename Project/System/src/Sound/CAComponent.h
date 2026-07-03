@@ -69,7 +69,12 @@ private:
         uint16_t generation = 0;      // +0x10
         uint32_t playPos = 0;         // +0x08  byte offset into source buffer
         uint32_t total = 0;           // +0x0c  bytes played this pass (reset on loop wrap)
-        int32_t state = -1;           // +0x14  -1 free, 1 playing, 3 paused, 4 finished
+        int32_t state = -1;           // +0x14  -1 free, 1 prepared, 2 playing, 3 paused, 4 finished
+
+        // Mix this voice's next PCM span into `dst` when it is actively playing (state 2); on the
+        // source running dry, mark the voice finished. Returns the bytes copied. Ghidra:
+        // auMixerStartIfReady @ 0x23a20 (the per-voice body of the render callback).
+        size_t readInto(void *dst, size_t size);
     };
 
     bool prepareGraph();                                  // FUN_00023a6c

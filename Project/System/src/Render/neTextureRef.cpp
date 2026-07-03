@@ -18,6 +18,12 @@ neTextureRef::~neTextureRef() {
     }
 }
 
+// @ 0x16710
+// Ghidra: FUN_00016710 — write one per-frame render-state slot (meta[slot] = value).
+void neTextureRef::setRenderStateSlot(int slot, int value) {
+    meta[slot] = value;
+}
+
 // Ghidra: FUN_00011838 — release every frame texture; the parallel arrays (and, with
 // them, each neTextureRef record's own cache reference) are freed by their unique_ptrs
 // in reverse declaration order, matching the shipped last-to-first teardown.

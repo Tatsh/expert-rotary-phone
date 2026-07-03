@@ -54,6 +54,14 @@ public:
     void stopAndSave();                  // Ghidra: musicSelStopAndSave     (FUN_00038008)
     void updateInfoPanel(int mode);      // Ghidra: musicSelUpdateInfoPanel (FUN_00037c88)
 
+    // Stream the jacket cells of the next / previous list column into the widget row
+    // `column` (guarded by the per-direction latch @ +0x8c2/+0x8c0 and the cell semaphore
+    // @ +0xa90): release the row's old image/texture, then point each cell at the song
+    // index for the adjacent column (or -1 past the ends). Ghidra: musicSelLoadColumnNext
+    // (FUN_00035448) / musicSelLoadColumnPrev (FUN_00035520).
+    void loadColumnNext(int column);     // @ 0x35448
+    void loadColumnPrev(int column);     // @ 0x35520
+
 private:
     // The music-select buttons hit-tested each frame. hitButton() maps each to its
     // stored screen rectangle in the layout block and tests the current tap against
@@ -164,6 +172,17 @@ private:
     MusicSelState    m_sel = {};                      // +0xaa8 packed per-song select state (seam)
     uint8_t          _reservedTail[0xcc1 - 0xae8] = {}; // +0xae8..0xcc1 remaining setup/layout tail
 };
+
+// The music-select scene's per-layer Aep draw callback (installed as the group draw
+// callback; `context` is the owning MainTask). It dispatches on the layer's resolved
+// user number (@ +0x22c etc.) and blits that scene element: the current / next / prev
+// column jacket grids, the song-name / artist banners, the score / level / rank digit
+// runs, and the badges. Ghidra: musicSelAepDrawCallback (FUN_000389fc) — a ~98 KB draw
+// routine; reconstructed best-effort (the jacket-grid dispatch is recovered, the long
+// tail of per-element branches is a documented seam). @ 0x389fc.
+void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int scaleY,
+                     int anchorX, int anchorY, int color, int alpha, short rotation,
+                     int blend, int p13, int p14, void *context);
 
 // "MusicSelTask" is the binary's name for this very task (see header note); make the
 // two names one type so the DownloadMain delegate / MainViewController Goto* seams

@@ -26,6 +26,7 @@ struct neTouchPoint;   // System/src/Render/neGraphics.h (touch pool record)
 class AcMainTask : public C_TASK {
 public:
     AcMainTask();                        // Ghidra: AcMainTask_ctor (FUN_00099ab0)
+    ~AcMainTask() override;              // @ 0x99ba4 (acMainTaskDtor; destroys the RNG + base)
     void update(int deltaMs) override;   // Ghidra: AcMainTask_update (FUN_00099d18)
 
 private:

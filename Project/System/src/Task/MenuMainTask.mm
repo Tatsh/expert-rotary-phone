@@ -47,6 +47,16 @@ static int AepBaselineY(AepManager &aep) {
 // 0, 0x185) (every field zero-initialised, matching the members' default inits).
 MenuMainTask::MenuMainTask() = default;
 
+// @ 0x6abcc — modeSelTaskDtor. This is the mode-select task's destructor (its vtable is
+// the MenuMainTask update vtable). De-register this task as DownloadMain's NEWS delegate
+// (only if it is still us), then the C_TASK base dtor (caSourceNode_dtor) runs implicitly.
+MenuMainTask::~MenuMainTask() {
+    DownloadMain *dl = [DownloadMain getInstance];
+    if ([dl cppDelegateNews] == (id)this) {
+        [dl setCppDelegateNews:nil];
+    }
+}
+
 // Ghidra: MenuMainTask_setInfoFlag (FUN_0006d194) @ +0x1ac.
 void MenuMainTask::setInfoFlag(bool shown) {
     m_infoFlag = shown;

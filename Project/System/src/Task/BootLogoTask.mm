@@ -21,6 +21,11 @@
 // Ghidra: BootLogoTask_ctor (FUN_0002af58) — base C_TASK ctor + zeroed fields.
 BootLogoTask::BootLogoTask() = default;
 
+// @ 0x2af8c — taskNode_deleteA is the compiler's deleting-destructor thunk
+// (caSourceNode_dtor then operator delete). BootLogoTask frees its three sprites in
+// finish(), so the real destructor only chains to the C_TASK base — nothing to do here.
+BootLogoTask::~BootLogoTask() = default;
+
 // A touch that has been released this frame skips the current screen (Ghidra: the
 // scan of NEGraphics's touch pool at the top of the update).
 bool BootLogoTask::skipRequested() const {
@@ -91,6 +96,13 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     p.colorMul = 0xffffff;
     p.priority = 5;
     logo->draw(m_aep->orderingTable(), p);
+}
+
+// @ 0x2b504 — BootLogoTask_drawLogo1. The concrete per-screen draw wrapper the state
+// machine calls to blit the second branding sprite (m_logo[1], @ +0x30); it is just
+// drawLogo() bound to that sprite.
+void BootLogoTask::drawLogo1() {
+    drawLogo(m_logo[1]);
 }
 
 // Ghidra: BootLogoTask_finish (FUN_0002b554) — log into Game Center, restore the

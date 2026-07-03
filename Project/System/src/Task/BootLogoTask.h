@@ -19,12 +19,14 @@ class neTextureForiOS;
 class BootLogoTask : public C_TASK {
 public:
     BootLogoTask();                       // Ghidra: BootLogoTask_ctor (FUN_0002af58)
+    ~BootLogoTask() override;             // @ 0x2af8c (taskNode_deleteA deleting-dtor: base + delete)
     void update(int deltaMs) override;    // Ghidra: BootLogoTask_update (FUN_0002b02c)
 
 private:
     void setup();                         // Ghidra: BootLogoTask_setup (FUN_0002b1f4)
     void finish();                        // Ghidra: BootLogoTask_finish (FUN_0002b554)
     void drawLogo(neTextureForiOS *logo); // Ghidra: neTextureForiOS_draw (FUN_0000fbcc)
+    void drawLogo1();                     // @ 0x2b504 (draws m_logo[1] via drawLogo)
     bool skipRequested() const;           // a touch was released this frame
 
     static const int kHoldFrames = 0x78;      // 120: hold length; advances past 0x77
