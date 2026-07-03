@@ -5,7 +5,7 @@
 
 target_sources(popnrhythmin PRIVATE
     Random.cpp
-    TwitterUtil.m
+    TwitterUtil.mm
     Random.h
     TwitterUtil.h
 )

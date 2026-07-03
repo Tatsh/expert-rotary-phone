@@ -5,13 +5,13 @@
 
 target_sources(popnrhythmin PRIVATE
     AcViewerDetailCell.m
-    AcViewerMusicCell.m
+    AcViewerMusicCell.mm
     AcViewerOptionCell.m
     AcViewerSplitViewController.mm
     AppDelegate.mm
     AppFont.m
     BirthDayViewController.mm
-    CheckerCategoryCell.m
+    CheckerCategoryCell.mm
     CommonAlertView.mm
     CommunicatingView.mm
     CustomAlertView.mm
@@ -29,25 +29,25 @@ target_sources(popnrhythmin PRIVATE
     FriendMngTopViewController.mm
     FriendReplyCell.mm
     FriendReplyViewController.mm
-    FriendRequestCell.m
-    FriendScoreTableCell.m
+    FriendRequestCell.mm
+    FriendScoreTableCell.mm
     GameEffectView.mm
     HowToView.mm
-    HowToViewCtrl.m
+    HowToViewCtrl.mm
     ImageDownloader.m
     MainViewController.mm
-    MapListCell.m
+    MapListCell.mm
     OverScoreLogCell.m
     PolicyView.mm
     PopkunSizeViewCtrl.mm
-    PresentBoxCell.m
-    RecommendListCell.m
+    PresentBoxCell.mm
+    RecommendListCell.mm
     SettingCustomerTableViewController.mm
     SettingGameTableViewController.mm
     SettingHowtoTableViewController.mm
     SettingOtherTableViewController.mm
-    SettingTableViewController.m
-    SortCell.m
+    SettingTableViewController.mm
+    SortCell.mm
     SoundSettingView.mm
     StoreAcMusicInfo.m
     StoreAcvManageViewController.mm
@@ -73,7 +73,7 @@ target_sources(popnrhythmin PRIVATE
     StoreTableCell.m
     StoreUtil.m
     StoreViewController.mm
-    SubMapListCell.m
+    SubMapListCell.mm
     TouchRangeView.m
     TouchRangeViewCtrl.mm
     TouchableScrollView.m

@@ -157,7 +157,7 @@ target_include_directories(popnrhythmin PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Pro
 add_subdirectory(Project)
 
 target_compile_options(popnrhythmin PRIVATE
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fno-objc-arc>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
     -fobjc-exceptions -Wno-deprecated-declarations)
 
 set_target_properties(popnrhythmin PROPERTIES
@@ -168,7 +168,7 @@ set_target_properties(popnrhythmin PROPERTIES
     XCODE_ATTRIBUTE_VALID_ARCHS "${IOS_ARCHS}"
     XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO"
     XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
-    XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "NO"
+    XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
     XCODE_ATTRIBUTE_GCC_C_LANGUAGE_STANDARD "gnu11"
     XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "gnu++14"
     XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
