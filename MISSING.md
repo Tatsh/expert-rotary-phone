@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 156 |
+| Complete | 164 |
 | Partial (file exists, methods missing) | 0 |
-| Fully missing (no source file) | 17 |
-| **Missing methods** | **358** |
+| Fully missing (no source file) | 9 |
+| **Missing methods** | **227** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 17
+## Fully missing classes — 9
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -32,25 +32,17 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `InputConversionPassViewController` | 27 | 6 | `188` |
 | `InputKIDViewCtrl` | 26 | 11 | `208` |
 | `MapSelectViewController` | 24 | 10 | `204` |
-| `RewardNetworkURLConnection` | 24 | 9 | `40` |
 | `FriendScoreMainView` | 23 | 12 | `212` |
 | `MapSelectSplitViewController` | 23 | 20 | `248` |
 | `RecommendWebView` | 23 | 7 | `76` |
 | `InputNameViewCtrl` | 22 | 4 | `177` |
-| `InputOTPViewCtrl` | 18 | 5 | `184` |
-| `PopnLinkTopViewController` | 17 | 6 | `184` |
-| `DefaultDataDownloadView` | 16 | 11 | `204` |
-| `InviteTopViewControllerPad` | 16 | 5 | `180` |
-| `SettingTableSplitViewController` | 14 | 7 | `308` |
-| `FriendMngTopSplitViewController` | 13 | 13 | `284` |
-| `PopnLinkTopSplitViewController` | 13 | 12 | `280` |
 
 ## Partial classes — 0
 
 | Class | Done | Total | Missing (binary + unimpl) |
 | --- | ---: | ---: | ---: |
 
-## Complete classes — 156
+## Complete classes — 164
 
 - `AcMusicData`
 - `AcViewerCategoryCell`
@@ -92,6 +84,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `CustomSplitViewController`
 - `CustomTextView`
 - `CustomWebView`
+- `DefaultDataDownloadView`
 - `DelayImageView`
 - `DevDataDownloader`
 - `DownloadImageView`
@@ -105,6 +98,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `FriendListDetail`
 - `FriendListDetailChara`
 - `FriendListViewController`
+- `FriendMngTopSplitViewController`
 - `FriendMngTopViewController`
 - `FriendReplyCell`
 - `FriendReplyViewController`
@@ -119,7 +113,9 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `HttpConn`
 - `ImageDownloader`
 - `InputKidViewController`
+- `InputOTPViewCtrl`
 - `InviteTopViewController`
+- `InviteTopViewControllerPad`
 - `LimitedCharaInfo`
 - `LoginBonusView`
 - `MainViewController`
@@ -134,6 +130,8 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `OverScoreLogViewController`
 - `PolicyView`
 - `PopkunSizeViewCtrl`
+- `PopnLinkTopSplitViewController`
+- `PopnLinkTopViewController`
 - `PreferredCharaInfo`
 - `PresentBoxCell`
 - `PresentBoxViewController`
@@ -154,6 +152,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `RewardNetworkIndicator`
 - `RewardNetworkMessage`
 - `RewardNetworkPasteBoard`
+- `RewardNetworkURLConnection`
 - `RewardNetworkUdid`
 - `RewardNetworkUtilities`
 - `RewardNetworkWebAPI`
@@ -163,6 +162,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `SettingGameTableViewController`
 - `SettingHowtoTableViewController`
 - `SettingOtherTableViewController`
+- `SettingTableSplitViewController`
 - `SettingTableViewController`
 - `SettingTopViewController`
 - `SortCell`
@@ -470,53 +470,6 @@ Methods **0/24** · unimpl 0 · ivars 10 · `instanceSize`=`204`
 | `_mapSelectDelegate` | `<MapSelectViewControllerDelegate> *` | `0xc4` |
 | `_selectedIndexRow` | `int` | `0xc8` |
 
-### `RewardNetworkURLConnection` — ❌ missing
-
-Methods **0/24** · unimpl 0 · ivars 9 · `instanceSize`=`40`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xff9d0` |
-| `requestAsynchronousWithURL:request:finishedBlock:failedBlock:` | `0xffa6c` |
-| `connectionTimeout:` | `0xffd08` |
-| `connection:didReceiveResponse:` | `0xffd58` |
-| `connection:didReceiveData:` | `0xffe00` |
-| `connectionDidFinishLoading:` | `0xffe50` |
-| `connection:didFailWithError:` | `0x1001cc` |
-| `retryConnection` | `0x1001dc` |
-| `request` | `0x1004bc` |
-| `setRequest:` | `0x1004cc` |
-| `connection` | `0x1004f4` |
-| `setConnection:` | `0x100504` |
-| `ApplilinkFailedBlock` | `0x10052c` |
-| `setApplilinkFailedBlock:` | `0x100540` |
-| `receiveData` | `0x100564` |
-| `setReceiveData:` | `0x100574` |
-| `isConnection` | `0x10059c` |
-| `setIsConnection:` | `0x1005ac` |
-| `timer` | `0x1005bc` |
-| `setTimer:` | `0x1005cc` |
-| `url` | `0x1005f4` |
-| `setUrl:` | `0x100604` |
-| `ApplilinkFinishedBlock` | `0x10062c` |
-| `setApplilinkFinishedBlock:` | `0x100640` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `retryCount` | `int` | `0x4` |
-| `_request` | `NSURLRequest *` | `0x8` |
-| `_connection` | `NSURLConnection *` | `0xc` |
-| `_ApplilinkFailedBlock` | `@?` | `0x10` |
-| `_receiveData` | `NSMutableData *` | `0x14` |
-| `_isConnection` | `BOOL` | `0x18` |
-| `_timer` | `NSTimer *` | `0x1c` |
-| `_url` | `NSString *` | `0x20` |
-| `_ApplilinkFinishedBlock` | `@?` | `0x24` |
-
 ### `FriendScoreMainView` — ❌ missing
 
 Methods **0/23** · unimpl 0 · ivars 12 · `instanceSize`=`212`
@@ -706,270 +659,6 @@ Methods **0/22** · unimpl 0 · ivars 4 · `instanceSize`=`177`
 | `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
 | `_downloader` | `Downloader *` | `0xac` |
 | `m_IsAnimationing` | `BOOL` | `0xb0` |
-
-### `InputOTPViewCtrl` — ❌ missing
-
-Methods **0/18** · unimpl 0 · ivars 5 · `instanceSize`=`184`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithCategoryView:` | `0x78d18` |
-| `didReceiveMemoryWarning` | `0x79518` |
-| `dealloc` | `0x79544` |
-| `viewDidLoad` | `0x79590` |
-| `viewDidUnload` | `0x795bc` |
-| `viewWillAppear:` | `0x795e8` |
-| `viewDidAppear:` | `0x79614` |
-| `viewWillDisappear:` | `0x79640` |
-| `viewDidDisappear:` | `0x7966c` |
-| `shouldAutorotateToInterfaceOrientation:` | `0x79698` |
-| `textFieldShouldBeginEditing:` | `0x796a4` |
-| `textFieldShouldReturn:` | `0x796a8` |
-| `touchedDecideButton:` | `0x796d4` |
-| `touchedBackButton:` | `0x797c4` |
-| `endDirectCloseAnimation` | `0x79860` |
-| `textField:shouldChangeCharactersInRange:replacementString:` | `0x798bc` |
-| `keyboardWasShown:` | `0x798f8` |
-| `keyboardWillBeHidden:` | `0x798fc` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_categoryView` | `CheckerCategoryViewController *` | `0xa4` |
-| `_scrollView` | `TouchableScrollView *` | `0xa8` |
-| `_otpField` | `UITextField *` | `0xac` |
-| `_dummyView` | `UIViewController *` | `0xb0` |
-| `_scrollOffset` | `float` | `0xb4` |
-
-### `PopnLinkTopViewController` — ❌ missing
-
-Methods **0/17** · unimpl 0 · ivars 6 · `instanceSize`=`184`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `updateButtonEnable` | `0xcca48` |
-| `init` | `0xccacc` |
-| `initAtNavigationController` | `0xcd2e0` |
-| `viewDidLoad` | `0xcd4b8` |
-| `viewWillAppear:` | `0xcd4e4` |
-| `didReceiveMemoryWarning` | `0xcd57c` |
-| `startOpenAnimation` | `0xcd5a8` |
-| `endOpenAnimation` | `0xcd8f4` |
-| `startCloseAnimation` | `0xcd908` |
-| `endCloseAnimation` | `0xcda68` |
-| `onInKidButtonTouched:` | `0xcdad4` |
-| `onScoreCheckerButtonTouched:` | `0xcdc18` |
-| `onQuizButtonTouched:` | `0xcdd5c` |
-| `delegate` | `0xcdea0` |
-| `setDelegate:` | `0xcdeb0` |
-| `scrollView` | `0xcdec0` |
-| `setScrollView:` | `0xcded0` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0xa2` |
-| `_btnId` | `UIButton *` | `0xa4` |
-| `_btnChecker` | `UIButton *` | `0xa8` |
-| `_btnQuiz` | `UIButton *` | `0xac` |
-| `_delegate` | `id` | `0xb0` |
-| `_scrollView` | `UIScrollView *` | `0xb4` |
-
-### `DefaultDataDownloadView` — ❌ missing
-
-Methods **0/16** · unimpl 0 · ivars 11 · `instanceSize`=`204`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithFileDataArray:` | `0xdd158` |
-| `viewDidLoad` | `0xdd3d4` |
-| `didReceiveMemoryWarning` | `0xdd400` |
-| `dealloc` | `0xdd42c` |
-| `downloadWithIdx:` | `0xdd4c0` |
-| `downloaderFinished:` | `0xdd6fc` |
-| `downloaderProceed:` | `0xdd9cc` |
-| `downloaderError:` | `0xddaf4` |
-| `startOpenAnimation` | `0xddbe8` |
-| `endOpenAnimation` | `0xddcd8` |
-| `startCloseAnimation` | `0xddf38` |
-| `endCloseAnimation` | `0xde028` |
-| `isDigit:` | `0xde084` |
-| `setJustDownloadedSize` | `0xde114` |
-| `isFailed` | `0xde1a0` |
-| `setIsFailed:` | `0xde1b8` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_downloadView` | `DownloadProgresView *` | `0xa4` |
-| `_dlFileListDataArray` | `NSArray *` | `0xa8` |
-| `_downloader` | `Downloader *` | `0xac` |
-| `_downloadingIdx` | `int` | `0xb0` |
-| `_filePath` | `NSString *` | `0xb4` |
-| `_fileSize` | `int` | `0xb8` |
-| `_totalFileSize` | `int` | `0xbc` |
-| `_downloadedFileSize` | `int` | `0xc0` |
-| `_isFailed` | `BOOL` | `0xc4` |
-| `_isAnimationing` | `BOOL` | `0xc5` |
-| `_tryCnt` | `int` | `0xc8` |
-
-### `InviteTopViewControllerPad` — ❌ missing
-
-Methods **0/16** · unimpl 0 · ivars 5 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initAtNavigationController` | `0x5c638` |
-| `dealloc` | `0x5d0fc` |
-| `touchedDecideButton:` | `0x5d128` |
-| `startOpenAnimation` | `0x5d350` |
-| `endOpenAnimation` | `0x5d488` |
-| `startCloseAnimation` | `0x5d4a0` |
-| `endCloseAnimation` | `0x5d5c0` |
-| `textFieldShouldBeginEditing:` | `0x5d61c` |
-| `textFieldDidEndEditing:` | `0x5d654` |
-| `textFieldShouldReturn:` | `0x5d698` |
-| `textField:shouldChangeCharactersInRange:replacementString:` | `0x5d6c0` |
-| `downloaderFinished:` | `0x5d728` |
-| `downloaderError:` | `0x5d944` |
-| `commonAlertView:clickedButtonAtIndex:` | `0x5da10` |
-| `startInviteHttp:` | `0x5da14` |
-| `onTweetButton` | `0x5db50` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `isAnimationing` | `BOOL` | `0xa2` |
-| `_codeField` | `UITextField *` | `0xa4` |
-| `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
-| `_downloader` | `Downloader *` | `0xac` |
-| `_scrollView` | `UIScrollView *` | `0xb0` |
-
-### `SettingTableSplitViewController` — ❌ missing
-
-Methods **0/14** · unimpl 0 · ivars 7 · `instanceSize`=`308`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xb5cb0` |
-| `dealloc` | `0xb6614` |
-| `viewDidLoad` | `0xb6684` |
-| `didReceiveMemoryWarning` | `0xb66b0` |
-| `startOpenAnimation` | `0xb66dc` |
-| `endOpenAnimation` | `0xb6808` |
-| `startCloseAnimation` | `0xb6820` |
-| `endCloseAnimation` | `0xb6928` |
-| `onGameButtonTouched:` | `0xb6984` |
-| `onHowtoButtonTouched:` | `0xb6998` |
-| `onCustomerButtonTouched:` | `0xb69ac` |
-| `onOtherButtonTouched:` | `0xb69c0` |
-| `startViewAnimation:` | `0xb69d4` |
-| `handleTapCoverView` | `0xb7100` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0xa2` |
-| `_leftViewCtrl` | `SettingTopViewController *` | `0xa4` |
-| `_rightViewCtrl` | `UINavigationController *` | `0xa8` |
-| `_arrowImageView` | `UIImageView *` | `0xac` |
-| `_selectedIndex` | `int` | `0xb0` |
-| `_viewFrm` | `struct CGRect[4]` | `0xb4` |
-| `_arrowFrm` | `struct CGRect[4]` | `0xf4` |
-
-### `FriendMngTopSplitViewController` — ❌ missing
-
-Methods **0/13** · unimpl 0 · ivars 13 · `instanceSize`=`284`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xc3358` |
-| `dealloc` | `0xc3bbc` |
-| `viewDidLoad` | `0xc3c2c` |
-| `didReceiveMemoryWarning` | `0xc3c58` |
-| `viewWillAppear:` | `0xc3c84` |
-| `startOpenAnimation` | `0xc3d08` |
-| `endOpenAnimation` | `0xc3e34` |
-| `startCloseAnimation` | `0xc3f68` |
-| `endCloseAnimation` | `0xc4070` |
-| `onListButtonTouched:` | `0xc40d0` |
-| `onRequestButtonTouched:` | `0xc4760` |
-| `onReplyButtonTouched:` | `0xc4df0` |
-| `handleTapCoverView` | `0xc53d0` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0xa2` |
-| `_markView` | `UIImageView *` | `0xa4` |
-| `_leftViewCtrl` | `FriendMngTopViewController *` | `0xa8` |
-| `_rightViewCtrl` | `UINavigationController *` | `0xac` |
-| `_arrowImageView` | `UIImageView *` | `0xb0` |
-| `_selectedIndex` | `int` | `0xb4` |
-| `_listFrm` | `struct CGRect` | `0xb8` |
-| `_requestFrm` | `struct CGRect` | `0xc8` |
-| `_replyFrm` | `struct CGRect` | `0xd8` |
-| `_listArrowFrm` | `struct CGRect` | `0xe8` |
-| `_requestArrowFrm` | `struct CGRect` | `0xf8` |
-| `_replyArrowFrm` | `struct CGRect` | `0x108` |
-| `_howToView` | `HowToViewCtrlPad *` | `0x118` |
-
-### `PopnLinkTopSplitViewController` — ❌ missing
-
-Methods **0/13** · unimpl 0 · ivars 12 · `instanceSize`=`280`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xe0b40` |
-| `dealloc` | `0xe1430` |
-| `viewDidLoad` | `0xe14e0` |
-| `didReceiveMemoryWarning` | `0xe150c` |
-| `startOpenAnimation` | `0xe1538` |
-| `endOpenAnimation` | `0xe1840` |
-| `startCloseAnimation` | `0xe1858` |
-| `endCloseAnimation` | `0xe1960` |
-| `onInKidButtonTouched:` | `0xe19c0` |
-| `onScoreCheckerButtonTouched:` | `0xe1fa8` |
-| `onQuizButtonTouched:` | `0xe25b0` |
-| `reloadLeftView` | `0xe2bb8` |
-| `handleTapCoverView` | `0xe2bf4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_isAnimationing` | `BOOL` | `0xa2` |
-| `_leftViewCtrl` | `PopnLinkTopViewController *` | `0xa4` |
-| `_rightViewCtrl` | `UINavigationController *` | `0xa8` |
-| `_konamiIdArrowImageView` | `UIImageView *` | `0xac` |
-| `_selectedIndex` | `int` | `0xb0` |
-| `_konamiIdFrm` | `struct CGRect` | `0xb4` |
-| `_checkerFrm` | `struct CGRect` | `0xc4` |
-| `_quizFrm` | `struct CGRect` | `0xd4` |
-| `_konamiIdArrowFrm` | `struct CGRect` | `0xe4` |
-| `_checkerArrowFrm` | `struct CGRect` | `0xf4` |
-| `_quizArrowFrm` | `struct CGRect` | `0x104` |
-| `_howToView` | `HowToViewCtrlPad *` | `0x114` |
 
 ### `AcMusicData` — ✅ complete
 
@@ -1486,6 +1175,26 @@ Methods **14/14** · unimpl 0 · ivars 10 · `instanceSize`=`116`
 | `webViewFrm` | `struct CGRect` | `0x54` |
 | `smallBtnFrm` | `struct CGRect` | `0x64` |
 
+### `DefaultDataDownloadView` — ✅ complete
+
+Methods **16/16** · unimpl 0 · ivars 11 · `instanceSize`=`204`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_downloadView` | `DownloadProgresView *` | `0xa4` |
+| `_dlFileListDataArray` | `NSArray *` | `0xa8` |
+| `_downloader` | `Downloader *` | `0xac` |
+| `_downloadingIdx` | `int` | `0xb0` |
+| `_filePath` | `NSString *` | `0xb4` |
+| `_fileSize` | `int` | `0xb8` |
+| `_totalFileSize` | `int` | `0xbc` |
+| `_downloadedFileSize` | `int` | `0xc0` |
+| `_isFailed` | `BOOL` | `0xc4` |
+| `_isAnimationing` | `BOOL` | `0xc5` |
+| `_tryCnt` | `int` | `0xc8` |
+
 ### `DelayImageView` — ✅ complete
 
 Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
@@ -1741,6 +1450,28 @@ Methods **12/12** · unimpl 0 · ivars 6 · `instanceSize`=`188`
 | `_isBestScoreSort` | `BOOL` | `0xb4` |
 | `_frinedDataArray` | `NSArray *` | `0xb8` |
 
+### `FriendMngTopSplitViewController` — ✅ complete
+
+Methods **13/13** · unimpl 0 · ivars 13 · `instanceSize`=`284`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0xa2` |
+| `_markView` | `UIImageView *` | `0xa4` |
+| `_leftViewCtrl` | `FriendMngTopViewController *` | `0xa8` |
+| `_rightViewCtrl` | `UINavigationController *` | `0xac` |
+| `_arrowImageView` | `UIImageView *` | `0xb0` |
+| `_selectedIndex` | `int` | `0xb4` |
+| `_listFrm` | `struct CGRect` | `0xb8` |
+| `_requestFrm` | `struct CGRect` | `0xc8` |
+| `_replyFrm` | `struct CGRect` | `0xd8` |
+| `_listArrowFrm` | `struct CGRect` | `0xe8` |
+| `_requestArrowFrm` | `struct CGRect` | `0xf8` |
+| `_replyArrowFrm` | `struct CGRect` | `0x108` |
+| `_howToView` | `HowToViewCtrlPad *` | `0x118` |
+
 ### `FriendMngTopViewController` — ✅ complete
 
 Methods **14/14** · unimpl 0 · ivars 3 · `instanceSize`=`172`
@@ -1961,6 +1692,20 @@ Methods **12/12** · unimpl 0 · ivars 3 · `instanceSize`=`176`
 | `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
 | `_downloader` | `Downloader *` | `0xac` |
 
+### `InputOTPViewCtrl` — ✅ complete
+
+Methods **18/18** · unimpl 0 · ivars 5 · `instanceSize`=`184`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_categoryView` | `CheckerCategoryViewController *` | `0xa4` |
+| `_scrollView` | `TouchableScrollView *` | `0xa8` |
+| `_otpField` | `UITextField *` | `0xac` |
+| `_dummyView` | `UIViewController *` | `0xb0` |
+| `_scrollOffset` | `float` | `0xb4` |
+
 ### `InviteTopViewController` — ✅ complete
 
 Methods **8/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
@@ -1970,6 +1715,20 @@ Methods **8/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `isAnimationing` | `BOOL` | `0xa2` |
+
+### `InviteTopViewControllerPad` — ✅ complete
+
+Methods **16/16** · unimpl 0 · ivars 5 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `isAnimationing` | `BOOL` | `0xa2` |
+| `_codeField` | `UITextField *` | `0xa4` |
+| `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
+| `_downloader` | `Downloader *` | `0xac` |
+| `_scrollView` | `UIScrollView *` | `0xb0` |
 
 ### `LimitedCharaInfo` — ✅ complete
 
@@ -2208,6 +1967,42 @@ Methods **9/9** · unimpl 0 · ivars 12 · `instanceSize`=`224`
 | `offsetYForPad3` | `int` | `0xd4` |
 | `offsetYForPad4` | `int` | `0xd8` |
 | `_hoge` | `CustomAlertView *` | `0xdc` |
+
+### `PopnLinkTopSplitViewController` — ✅ complete
+
+Methods **13/13** · unimpl 0 · ivars 12 · `instanceSize`=`280`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0xa2` |
+| `_leftViewCtrl` | `PopnLinkTopViewController *` | `0xa4` |
+| `_rightViewCtrl` | `UINavigationController *` | `0xa8` |
+| `_konamiIdArrowImageView` | `UIImageView *` | `0xac` |
+| `_selectedIndex` | `int` | `0xb0` |
+| `_konamiIdFrm` | `struct CGRect` | `0xb4` |
+| `_checkerFrm` | `struct CGRect` | `0xc4` |
+| `_quizFrm` | `struct CGRect` | `0xd4` |
+| `_konamiIdArrowFrm` | `struct CGRect` | `0xe4` |
+| `_checkerArrowFrm` | `struct CGRect` | `0xf4` |
+| `_quizArrowFrm` | `struct CGRect` | `0x104` |
+| `_howToView` | `HowToViewCtrlPad *` | `0x114` |
+
+### `PopnLinkTopViewController` — ✅ complete
+
+Methods **17/17** · unimpl 0 · ivars 6 · `instanceSize`=`184`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0xa2` |
+| `_btnId` | `UIButton *` | `0xa4` |
+| `_btnChecker` | `UIButton *` | `0xa8` |
+| `_btnQuiz` | `UIButton *` | `0xac` |
+| `_delegate` | `id` | `0xb0` |
+| `_scrollView` | `UIScrollView *` | `0xb4` |
 
 ### `PreferredCharaInfo` — ✅ complete
 
@@ -2461,6 +2256,24 @@ Methods **9/9** · unimpl 0 · ivars 2 · `instanceSize`=`12`
 | `_serviceName` | `NSString *` | `0x4` |
 | `_dataType` | `NSString *` | `0x8` |
 
+### `RewardNetworkURLConnection` — ✅ complete
+
+Methods **24/24** · unimpl 0 · ivars 9 · `instanceSize`=`40`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `retryCount` | `int` | `0x4` |
+| `_request` | `NSURLRequest *` | `0x8` |
+| `_connection` | `NSURLConnection *` | `0xc` |
+| `_ApplilinkFailedBlock` | `@?` | `0x10` |
+| `_receiveData` | `NSMutableData *` | `0x14` |
+| `_isConnection` | `BOOL` | `0x18` |
+| `_timer` | `NSTimer *` | `0x1c` |
+| `_url` | `NSString *` | `0x20` |
+| `_ApplilinkFinishedBlock` | `@?` | `0x24` |
+
 ### `RewardNetworkUdid` — ✅ complete
 
 Methods **4/4** · unimpl 0 · ivars 1 · `instanceSize`=`8`
@@ -2555,6 +2368,22 @@ Methods **23/23** · unimpl 0 · ivars 8 · `instanceSize`=`208`
 | `_convDummyFrm` | `struct CGRect` | `0xb8` |
 | `_arrowTopView` | `UIImageView *` | `0xc8` |
 | `_arrowUnderView` | `UIImageView *` | `0xcc` |
+
+### `SettingTableSplitViewController` — ✅ complete
+
+Methods **14/14** · unimpl 0 · ivars 7 · `instanceSize`=`308`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_isAnimationing` | `BOOL` | `0xa2` |
+| `_leftViewCtrl` | `SettingTopViewController *` | `0xa4` |
+| `_rightViewCtrl` | `UINavigationController *` | `0xa8` |
+| `_arrowImageView` | `UIImageView *` | `0xac` |
+| `_selectedIndex` | `int` | `0xb0` |
+| `_viewFrm` | `struct CGRect[4]` | `0xb4` |
+| `_arrowFrm` | `struct CGRect[4]` | `0xf4` |
 
 ### `SettingTableViewController` — ✅ complete
 

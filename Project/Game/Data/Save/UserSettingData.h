@@ -232,6 +232,13 @@ typedef struct Crypt109Data {
 + (BOOL)isInputInviteCode;
 + (void)saveIsInputInviteCode:(BOOL)v;
 
+// Whether the pop'n-link first-run how-to has already been shown. The pop'n-link top
+// screen sets it the first time the KID-input screen is pushed (so the "firstplay_popnlink"
+// how-to only appears once). Backed by a plaintext BOOL key. Ghidra: isPopnLinkSelected /
+// saveIsPopnLinkSelected: (read/written by PopnLinkTopViewController startOpenAnimation @ 0xcd5a8).
++ (BOOL)isPopnLinkSelected;
++ (void)saveIsPopnLinkSelected:(BOOL)selected;
+
 // Last-seen store information banner id and last store-view timestamp string.
 + (int)lastInformationId;
 + (NSString *)lastStoreViewTimeString;

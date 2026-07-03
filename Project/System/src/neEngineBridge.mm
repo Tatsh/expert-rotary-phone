@@ -86,6 +86,12 @@ id        neAppEventCenter::linkRefId()      { return g_pLinkRefId; }
 NSString *neAppEventCenter::inputPassword()  { return g_pInputPassword; }
 bool      neAppEventCenter::requireOtpInput() { return g_bRequireOtpInput; }
 
+// pop'n-link availability (event-center region global @ g_bLinkButtonsEnabled). Populated
+// by the (not-yet-reconstructed) pop'n-link login flow; false until the KID is linked, so
+// the score-checker / quiz buttons stay disabled and the top screen forces KID input.
+static bool g_bLinkButtonsEnabled = false;
+bool      neAppEventCenter::linkButtonsEnabled() { return g_bLinkButtonsEnabled; }
+
 int neAppEventCenter::lastMusic() const { return m_lastMusic; }
 void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }
 int neAppEventCenter::lastSheet() const { return m_lastSheet; }

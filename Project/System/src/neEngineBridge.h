@@ -68,6 +68,14 @@ public:
     static NSString *inputPassword(); // the entered account password
     static bool requireOtpInput();    // true when a one-time password must still be entered
 
+    // pop'n-link availability flag (event-center region global, read only after
+    // shared() has forced the singleton's init): true once the player has linked
+    // their pop'n-link (e-AMUSEMENT KID), which is what enables the score-checker /
+    // quiz buttons on the pop'n-link top screen. While false the top screen forces
+    // the KID-input screen instead. Ghidra global g_bLinkButtonsEnabled, read after
+    // NEAppEventCenter_shared() at 0xccacc / 0xcca48 / 0xcd4e4 / 0xcd5a8.
+    static bool linkButtonsEnabled();
+
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)
 

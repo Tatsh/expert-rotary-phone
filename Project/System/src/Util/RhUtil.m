@@ -43,6 +43,15 @@ BOOL RhFileExists(NSString *path) {
     return [NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDir] && !isDir;
 }
 
+// Ghidra: FUN_0005c48c — file byte size (int), or -1 when the file is absent.
+int getFileSize(NSString *path) {
+    if (!RhFileExists(path)) {
+        return -1;
+    }
+    NSDictionary *attrs = [NSFileManager.defaultManager attributesOfItemAtPath:path error:NULL];
+    return [[attrs objectForKey:NSFileSize] intValue];
+}
+
 // Ghidra: FUN_0005b4b8 — MD5 of a C string as NSData.
 NSData *RhMD5Data(const char *cString) {
     unsigned char digest[16];

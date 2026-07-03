@@ -84,6 +84,15 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:selected Key:@"FriendSelected"];
 }
 
+// Remembers whether the pop'n-link first-run how-to has been shown (key best-effort).
++ (BOOL)isPopnLinkSelected {
+    return [self getBOOL:@"PopnLinkSelected"];
+}
+
++ (void)saveIsPopnLinkSelected:(BOOL)selected {
+    [self saveBOOL:selected Key:@"PopnLinkSelected"];
+}
+
 // @ 0x607fc — the user's stored birthday (nil until they enter it in the age gate).
 + (NSDate *)birthDay {
     return [self getDate:@"BirthDay"];
