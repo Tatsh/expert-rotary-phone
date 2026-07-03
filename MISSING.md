@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 111 |
+| Complete | 133 |
 | Partial (file exists, methods missing) | 0 |
-| Fully missing (no source file) | 62 |
-| **Missing methods** | **820** |
+| Fully missing (no source file) | 40 |
+| **Missing methods** | **676** |
 
 ## Scope decisions
 
@@ -23,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 62
+## Fully missing classes — 40
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -31,7 +31,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RecommendCore` | 29 | 7 | `32` |
 | `InputConversionPassViewController` | 27 | 6 | `188` |
 | `InputKIDViewCtrl` | 26 | 11 | `208` |
-| `RewardNetworkWebViewController` | 25 | 6 | `180` |
 | `MapSelectViewController` | 24 | 10 | `204` |
 | `RewardNetworkURLConnection` | 24 | 9 | `40` |
 | `FriendScoreMainView` | 23 | 12 | `212` |
@@ -60,49 +59,32 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `FriendMngTopSplitViewController` | 13 | 13 | `284` |
 | `PopnLinkTopSplitViewController` | 13 | 12 | `280` |
 | `InputKidViewController` | 12 | 3 | `176` |
-| `RewardNetwork` | 12 | 2 | `12` |
 | `RandomLoginBonusView` | 11 | 9 | `104` |
-| `AcViewerHiSpeedViewController` | 10 | 0 | `162` |
 | `AcceptPolicyViewController` | 10 | 5 | `180` |
 | `CheckerMusicViewController` | 10 | 1 | `168` |
 | `HttpConn` | 10 | 6 | `28` |
-| `AcViewerHidSudViewController` | 9 | 0 | `162` |
-| `AcViewerPopKunViewController` | 9 | 0 | `162` |
-| `AcViewerRanMirViewController` | 9 | 0 | `162` |
 | `DevDataDownloader` | 9 | 6 | `25` |
 | `LoginBonusView` | 9 | 3 | `61` |
-| `RewardNetworkPasteBoard` | 9 | 2 | `12` |
-| `RewardNetworkWebAPI` | 9 | 1 | `8` |
 | `InviteTopViewController` | 8 | 1 | `163` |
-| `RecommendAdId` | 8 | 1 | `8` |
 | `CheckerDetail` | 7 | 15 | `368` |
-| `DownloadImageView` | 7 | 3 | `68` |
-| `MapAnnotation` | 7 | 4 | `32` |
-| `RecommendWebViewController` | 6 | 0 | `153` |
-| `RewardNetworkIndicator` | 6 | 1 | `52` |
-| `MyInviteCodeViewController` | 4 | 0 | `162` |
-| `PurchaseStore` | 4 | 1 | `5` |
-| `RewardNetworkUdid` | 4 | 1 | `8` |
-| `FreeRequestListCell` | 3 | 11 | `96` |
-| `RecommendNetwork` | 3 | 1 | `8` |
-| `RecommendWebAPI` | 0 | 0 | `4` |
-| `RewardNetworkError` | 0 | 0 | `4` |
-| `RewardNetworkMessage` | 0 | 0 | `4` |
-| `RewardNetworkUtilities` | 0 | 0 | `4` |
 
 ## Partial classes — 0
 
 | Class | Done | Total | Missing (binary + unimpl) |
 | --- | ---: | ---: | ---: |
 
-## Complete classes — 111
+## Complete classes — 133
 
 - `AcMusicData`
 - `AcViewerCategoryCell`
 - `AcViewerDetailCell`
+- `AcViewerHiSpeedViewController`
+- `AcViewerHidSudViewController`
 - `AcViewerMusicCell`
 - `AcViewerOptionCell`
 - `AcViewerOptionViewController`
+- `AcViewerPopKunViewController`
+- `AcViewerRanMirViewController`
 - `AcViewerSplitViewController`
 - `AppDelegate`
 - `ArcadeScoreData`
@@ -128,9 +110,11 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `CustomTextView`
 - `CustomWebView`
 - `DelayImageView`
+- `DownloadImageView`
 - `DownloadMain`
 - `DownloadProgresView`
 - `Downloader`
+- `FreeRequestListCell`
 - `FriendListCell`
 - `FriendListDetail`
 - `FriendListDetailChara`
@@ -147,10 +131,12 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `ImageDownloader`
 - `LimitedCharaInfo`
 - `MainViewController`
+- `MapAnnotation`
 - `MapListCell`
 - `MusicData`
 - `MusicManager`
 - `MusicPatch`
+- `MyInviteCodeViewController`
 - `OverScoreData`
 - `OverScoreLogCell`
 - `PolicyView`
@@ -158,9 +144,23 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `PreferredCharaInfo`
 - `PresentBoxCell`
 - `PurchaseManager`
+- `PurchaseStore`
 - `PurchaseTransactionCache`
 - `QuizCell`
+- `RecommendAdId`
 - `RecommendListCell`
+- `RecommendNetwork`
+- `RecommendWebAPI`
+- `RecommendWebViewController`
+- `RewardNetwork`
+- `RewardNetworkError`
+- `RewardNetworkIndicator`
+- `RewardNetworkMessage`
+- `RewardNetworkPasteBoard`
+- `RewardNetworkUdid`
+- `RewardNetworkUtilities`
+- `RewardNetworkWebAPI`
+- `RewardNetworkWebViewController`
 - `ScoreData`
 - `SettingCustomerTableViewController`
 - `SettingGameTableViewController`
@@ -421,51 +421,6 @@ Methods **0/26** · unimpl 0 · ivars 11 · `instanceSize`=`208`
 | `_scrollOffset` | `float` | `0xc4` |
 | `_isAninationing` | `BOOL` | `0xc8` |
 | `_delegate` | `<PopnLinkTopSplitViewControllerDelegate> *` | `0xcc` |
-
-### `RewardNetworkWebViewController` — ❌ missing
-
-Methods **0/25** · unimpl 0 · ivars 6 · `instanceSize`=`180`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xec4d8` |
-| `loadView` | `0xec514` |
-| `webViewDidStartLoad:` | `0xec868` |
-| `didReceiveMemoryWarning` | `0xec87c` |
-| `setNavigationBarHidden:` | `0xec8a8` |
-| `loadRequestWithURL:parameters:delegate:` | `0xec8b8` |
-| `viewDidDisappear:` | `0xecb28` |
-| `webViewDidFinishLoad:` | `0xecbd8` |
-| `webView:didFailLoadWithError:` | `0xecd24` |
-| `btnCloseClicked:` | `0xece64` |
-| `appliListClosed` | `0xece74` |
-| `updateIndicator:` | `0xecf50` |
-| `webView:shouldStartLoadWithRequest:navigationType:` | `0xecf8c` |
-| `shouldAutorotateToInterfaceOrientation:` | `0xed62c` |
-| `shouldAutorotate` | `0xed684` |
-| `supportedInterfaceOrientations` | `0xed688` |
-| `rotateWebViewWithInterfaceOrientation:duration:` | `0xed6cc` |
-| `willAnimateRotationToInterfaceOrientation:duration:` | `0xedf98` |
-| `hasParentViewController:` | `0xee000` |
-| `isNavigationBarHidden` | `0xee100` |
-| `setIsNavigationBarHidden:` | `0xee110` |
-| `delegate` | `0xee120` |
-| `setDelegate:` | `0xee130` |
-| `parentView` | `0xee140` |
-| `setParentView:` | `0xee150` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_webView` | `UIWebView *` | `0x9c` |
-| `_navigationBar` | `UINavigationBar *` | `0xa0` |
-| `_indicator` | `RewardNetworkIndicator *` | `0xa4` |
-| `_isNavigationBarHidden` | `BOOL` | `0xa8` |
-| `_delegate` | `<RewardNetworkDelegate> *` | `0xac` |
-| `_parentView` | `UIView *` | `0xb0` |
 
 ### `MapSelectViewController` — ❌ missing
 
@@ -1557,34 +1512,6 @@ Methods **0/12** · unimpl 0 · ivars 3 · `instanceSize`=`176`
 | `_indicator` | `UIActivityIndicatorView *` | `0xa8` |
 | `_downloader` | `Downloader *` | `0xac` |
 
-### `RewardNetwork` — ❌ missing
-
-Methods **0/12** · unimpl 0 · ivars 2 · `instanceSize`=`12`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initializeFlg` | `0xee3f8` |
-| `setInitializeFlg:` | `0xee438` |
-| `init` | `0xee634` |
-| `openAppListWebViewWithCampaignId:inCompany:type:offset:limit:parentView:delegate:` | `0xf0a80` |
-| `appListWithCampaignId:inCompany:type:offset:limit:callback:` | `0xf12d4` |
-| `rotateAppliListWithInterfaceOrientation:duration:` | `0xf1ff8` |
-| `setTemporaryCacheWithKey:value:expiration:` | `0xf2030` |
-| `getTemporaryCacheWithKey:` | `0xf2168` |
-| `appliIdListWithType:callback:` | `0xf22e0` |
-| `postAppliInstallReportWithAppliList:callback:` | `0xf25fc` |
-| `postAlreadyInstallAppWithCallback:` | `0xf2a48` |
-| `debugLog` | `0xf3bf4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_webViewController` | `RewardNetworkWebViewController *` | `0x4` |
-| `_initializeFlg` | `int` | `0x8` |
-
 ### `RandomLoginBonusView` — ❌ missing
 
 Methods **0/11** · unimpl 0 · ivars 9 · `instanceSize`=`104`
@@ -1618,25 +1545,6 @@ Methods **0/11** · unimpl 0 · ivars 9 · `instanceSize`=`104`
 | `_seInstId` | `int[3]` | `0x54` |
 | `_isAnimationing` | `BOOL` | `0x60` |
 | `_state` | `int` | `0x64` |
-
-### `AcViewerHiSpeedViewController` — ❌ missing
-
-Methods **0/10** · unimpl 0 · ivars 0 · `instanceSize`=`162`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x2cbb0` |
-| `viewDidLoad` | `0x2d484` |
-| `handleGesture:` | `0x2d4b4` |
-| `numberOfSectionsInTableView:` | `0x2d520` |
-| `tableView:numberOfRowsInSection:` | `0x2d524` |
-| `tableView:cellForRowAtIndexPath:` | `0x2d530` |
-| `tableView:titleForHeaderInSection:` | `0x2d660` |
-| `tableView:accessoryTypeForRowWithIndexPath:` | `0x2d664` |
-| `tableView:didSelectRowAtIndexPath:` | `0x2d668` |
-| `touchedBackButton:` | `0x2d738` |
 
 ### `AcceptPolicyViewController` — ❌ missing
 
@@ -1722,60 +1630,6 @@ Methods **0/10** · unimpl 0 · ivars 6 · `instanceSize`=`28`
 | `statusCode` | `int` | `0x14` |
 | `status` | `int` | `0x18` |
 
-### `AcViewerHidSudViewController` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x1adf4` |
-| `viewDidLoad` | `0x1b6c8` |
-| `numberOfSectionsInTableView:` | `0x1b6f8` |
-| `tableView:numberOfRowsInSection:` | `0x1b6fc` |
-| `tableView:cellForRowAtIndexPath:` | `0x1b708` |
-| `tableView:titleForHeaderInSection:` | `0x1b838` |
-| `tableView:accessoryTypeForRowWithIndexPath:` | `0x1b83c` |
-| `tableView:didSelectRowAtIndexPath:` | `0x1b840` |
-| `touchedBackButton:` | `0x1b910` |
-
-### `AcViewerPopKunViewController` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x7d01c` |
-| `viewDidLoad` | `0x7d8f0` |
-| `numberOfSectionsInTableView:` | `0x7d920` |
-| `tableView:numberOfRowsInSection:` | `0x7d924` |
-| `tableView:cellForRowAtIndexPath:` | `0x7d930` |
-| `tableView:titleForHeaderInSection:` | `0x7da60` |
-| `tableView:accessoryTypeForRowWithIndexPath:` | `0x7da64` |
-| `tableView:didSelectRowAtIndexPath:` | `0x7da68` |
-| `touchedBackButton:` | `0x7db38` |
-
-### `AcViewerRanMirViewController` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xa6c20` |
-| `viewDidLoad` | `0xa74f4` |
-| `numberOfSectionsInTableView:` | `0xa7520` |
-| `tableView:numberOfRowsInSection:` | `0xa7524` |
-| `tableView:cellForRowAtIndexPath:` | `0xa7530` |
-| `tableView:titleForHeaderInSection:` | `0xa7660` |
-| `tableView:accessoryTypeForRowWithIndexPath:` | `0xa7664` |
-| `tableView:didSelectRowAtIndexPath:` | `0xa7668` |
-| `touchedBackButton:` | `0xa7738` |
-
 ### `DevDataDownloader` — ❌ missing
 
 Methods **0/9** · unimpl 0 · ivars 6 · `instanceSize`=`25`
@@ -1831,55 +1685,6 @@ Methods **0/9** · unimpl 0 · ivars 3 · `instanceSize`=`61`
 | `m_OldLoginCnt` | `int` | `0x38` |
 | `m_IsTouch` | `BOOL` | `0x3c` |
 
-### `RewardNetworkPasteBoard` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 2 · `instanceSize`=`12`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithServiceName:dataType:` | `0xf5988` |
-| `storageData` | `0xf5a60` |
-| `storageDataWithStorageIndex:error:` | `0xf5bb8` |
-| `writeStorageData:error:` | `0xf604c` |
-| `writeStorageData:storageIndex:error:` | `0xf6214` |
-| `deleteWithStorageIndex:error:` | `0xf6560` |
-| `convertToData:storageIndex:` | `0xf6b90` |
-| `getServiceName` | `0xf6d64` |
-| `debugLog` | `0xf6e48` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_serviceName` | `NSString *` | `0x4` |
-| `_dataType` | `NSString *` | `0x8` |
-
-### `RewardNetworkWebAPI` — ❌ missing
-
-Methods **0/9** · unimpl 0 · ivars 1 · `instanceSize`=`8`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xfa744` |
-| `commonParameters` | `0xfa790` |
-| `requestWithURL:method:parameters:cachePolicy:` | `0xfa7e8` |
-| `requestForGetWithURL:parameters:` | `0xfa948` |
-| `requestForPostWithURL:parameters:` | `0xfa9f0` |
-| `requestAsynchronousWithURL:method:parameters:userInfo:tag:cachePolicy:finishedBlock:failedBlock:` | `0xfad84` |
-| `responseFromContentsServer:request:data:finishedBlock:failedBlock:` | `0xfb58c` |
-| `requestSynchronousWithURL:method:parameters:cachePolicy:error:` | `0xfbb34` |
-| `canUseNetworkRetry` | `0xfc048` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `retryCount` | `int` | `0x4` |
-
 ### `InviteTopViewController` — ❌ missing
 
 Methods **0/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
@@ -1902,29 +1707,6 @@ Methods **0/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `isAnimationing` | `BOOL` | `0xa2` |
-
-### `RecommendAdId` — ❌ missing
-
-Methods **0/8** · unimpl 0 · ivars 1 · `instanceSize`=`8`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithCountryCode:categoryId:` | `0xe997c` |
-| `getWithCountryCode:categoryId:error:` | `0xe9a34` |
-| `setWithAdIdFrom:countryCode:categoryId:adType:error:` | `0xe9eb8` |
-| `deleteWithCountryCode:categoryId:error:` | `0xea49c` |
-| `convertToData:` | `0xea914` |
-| `getPasteboardWithUdid:countryCode:categoryId:error:` | `0xead3c` |
-| `setPasteboardWithUdid:countryCode:categoryId:adIdFrom:adType:error:` | `0xeb23c` |
-| `deletePasteboardWithUdid:countryCode:categoryId:error:` | `0xeb678` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_serviceName` | `NSString *` | `0x4` |
 
 ### `CheckerDetail` — ❌ missing
 
@@ -1961,204 +1743,6 @@ Methods **0/7** · unimpl 0 · ivars 15 · `instanceSize`=`368`
 | `_topNameBase` | `UIImageView *[4]` | `0x140` |
 | `_meanBase` | `UIImageView *[4]` | `0x150` |
 | `_myBase` | `UIImageView *[4]` | `0x160` |
-
-### `DownloadImageView` — ❌ missing
-
-Methods **0/7** · unimpl 0 · ivars 3 · `instanceSize`=`68`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithURLString:` | `0x62be8` |
-| `initWithURLString:withImage:` | `0x62c5c` |
-| `dealloc` | `0x62cd0` |
-| `SetupView` | `0x62d30` |
-| `startDownload` | `0x62e24` |
-| `imageDownloader:didLoad:` | `0x62ef0` |
-| `imageDownloaderDidFail:didLoad:` | `0x62f60` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_ImageURL` | `NSString *` | `0x38` |
-| `m_ImageDownLoader` | `ImageDownloader *` | `0x3c` |
-| `m_IndicatorView` | `UIActivityIndicatorView *` | `0x40` |
-
-### `MapAnnotation` — ❌ missing
-
-Methods **0/7** · unimpl 0 · ivars 4 · `instanceSize`=`32`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithCoordinate:Title:SubTitle:Model:` | `0x850e4` |
-| `dealloc` | `0x851c8` |
-| `setCoordinate:` | `0x85264` |
-| `modelName` | `0x85288` |
-| `coordinate` | `0x85298` |
-| `title` | `0x852b0` |
-| `subtitle` | `0x852c4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_Coordinate` | `struct ?` | `0x4` |
-| `m_Title` | `NSString *` | `0x14` |
-| `m_SubTitle` | `NSString *` | `0x18` |
-| `m_ModelName` | `NSString *` | `0x1c` |
-
-### `RecommendWebViewController` — ❌ missing
-
-Methods **0/6** · unimpl 0 · ivars 0 · `instanceSize`=`153`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `viewDidLoad` | `0xe97ac` |
-| `didReceiveMemoryWarning` | `0xe97d8` |
-| `viewDidUnload` | `0xe9804` |
-| `removeFromSuperview` | `0xe9878` |
-| `appliListClosed` | `0xe988c` |
-| `webView:shouldStartLoadWithRequest:navigationType:` | `0xe98ec` |
-
-### `RewardNetworkIndicator` — ❌ missing
-
-Methods **0/6** · unimpl 0 · ivars 1 · `instanceSize`=`52`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0xf3c0c` |
-| `layoutSubviews` | `0xf3d58` |
-| `show` | `0xf3e14` |
-| `close` | `0xf3e64` |
-| `indicator` | `0xf3eb4` |
-| `setIndicator:` | `0xf3ec4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_indicator` | `UIActivityIndicatorView *` | `0x30` |
-
-### `MyInviteCodeViewController` — ❌ missing
-
-Methods **0/4** · unimpl 0 · ivars 0 · `instanceSize`=`162`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xe8c98` |
-| `viewDidLoad` | `0xe9194` |
-| `didReceiveMemoryWarning` | `0xe91c0` |
-| `touchedBackButton` | `0xe91ec` |
-
-### `PurchaseStore` — ❌ missing
-
-Methods **0/4** · unimpl 0 · ivars 1 · `instanceSize`=`5`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `purchaseSucceeded:` | `0x838d4` |
-| `purchaseFailed:error:` | `0x83928` |
-| `nowPurchasing` | `0x8393c` |
-| `setNowPurchasing:` | `0x83954` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `nowPurchasing` | `bool` | `0x4` |
-
-### `RewardNetworkUdid` — ❌ missing
-
-Methods **0/4** · unimpl 0 · ivars 1 · `instanceSize`=`8`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xf70c0` |
-| `bundleSeedID` | `0xf956c` |
-| `pasteBoard` | `0xf9828` |
-| `setPasteBoard:` | `0xf9838` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_pasteBoard` | `RewardNetworkPasteBoard *` | `0x4` |
-
-### `FreeRequestListCell` — ❌ missing
-
-Methods **0/3** · unimpl 0 · ivars 11 · `instanceSize`=`96`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `initWithStyle:reuseIdentifier:` | `0xe49c4` |
-| `dealloc` | `0xe4b34` |
-| `setFriendData:rank:` | `0xe4b60` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_bgImgView` | `UIImageView *` | `0x34` |
-| `_charaBgImgView` | `UIImageView *` | `0x38` |
-| `_charaImgView` | `UIImageView *` | `0x3c` |
-| `_playerNameLbl` | `UILabel *` | `0x40` |
-| `_scoreBaseImgView` | `UIImageView *` | `0x44` |
-| `_scoreLbl` | `UILabel *` | `0x48` |
-| `isOS7` | `bool` | `0x4c` |
-| `imgCharaX` | `int` | `0x50` |
-| `imgPlayerNameX` | `int` | `0x54` |
-| `imgScoreBaseX` | `int` | `0x58` |
-| `imgScoreX` | `int` | `0x5c` |
-
-### `RecommendNetwork` — ❌ missing
-
-Methods **0/3** · unimpl 0 · ivars 1 · `instanceSize`=`8`
-
-#### Missing methods (in binary, not reconstructed)
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xeba74` |
-| `initializeFlg` | `0xec4b4` |
-| `setInitializeFlg:` | `0xec4c4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_initializeFlg` | `int` | `0x4` |
-
-### `RecommendWebAPI` — ❌ missing
-
-Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
-
-### `RewardNetworkError` — ❌ missing
-
-Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
-
-### `RewardNetworkMessage` — ❌ missing
-
-Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
-
-### `RewardNetworkUtilities` — ❌ missing
-
-Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `AcMusicData` — ✅ complete
 
@@ -2203,6 +1787,14 @@ Methods **7/7** · unimpl 0 · ivars 5 · `instanceSize`=`72`
 | `_optionName` | `NSString *` | `0x3c` |
 | `_optionKind` | `int` | `0x40` |
 | `_index` | `int` | `0x44` |
+
+### `AcViewerHiSpeedViewController` — ✅ complete
+
+Methods **10/10** · unimpl 0 · ivars 0 · `instanceSize`=`162`
+
+### `AcViewerHidSudViewController` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
 ### `AcViewerMusicCell` — ✅ complete
 
@@ -2250,6 +1842,14 @@ Methods **21/21** · unimpl 0 · ivars 5 · `instanceSize`=`180`
 | `_isAnimationing` | `BOOL` | `0xa9` |
 | `_pAcMain` | `struct AcMainTask *` | `0xac` |
 | `_delegate` | `<AcViewerViewControllerDelegate> *` | `0xb0` |
+
+### `AcViewerPopKunViewController` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
+
+### `AcViewerRanMirViewController` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
 ### `AcViewerSplitViewController` — ✅ complete
 
@@ -2583,6 +2183,18 @@ Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
 | --- | --- | ---: |
 | `image` | `UIImage *` | `0x34` |
 
+### `DownloadImageView` — ✅ complete
+
+Methods **7/7** · unimpl 0 · ivars 3 · `instanceSize`=`68`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_ImageURL` | `NSString *` | `0x38` |
+| `m_ImageDownLoader` | `ImageDownloader *` | `0x3c` |
+| `m_IndicatorView` | `UIActivityIndicatorView *` | `0x40` |
+
 ### `DownloadMain` — ✅ complete
 
 Methods **119/119** · unimpl 0 · ivars 63 · `instanceSize`=`252`
@@ -2683,6 +2295,26 @@ Methods **16/16** · unimpl 0 · ivars 7 · `instanceSize`=`36`
 | `m_Delegate` | `<DownloaderDelegate> *` | `0x18` |
 | `m_AdditionalData` | `NSObject *` | `0x1c` |
 | `m_StartTime` | `NSDate *` | `0x20` |
+
+### `FreeRequestListCell` — ✅ complete
+
+Methods **3/3** · unimpl 0 · ivars 11 · `instanceSize`=`96`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_bgImgView` | `UIImageView *` | `0x34` |
+| `_charaBgImgView` | `UIImageView *` | `0x38` |
+| `_charaImgView` | `UIImageView *` | `0x3c` |
+| `_playerNameLbl` | `UILabel *` | `0x40` |
+| `_scoreBaseImgView` | `UIImageView *` | `0x44` |
+| `_scoreLbl` | `UILabel *` | `0x48` |
+| `isOS7` | `bool` | `0x4c` |
+| `imgCharaX` | `int` | `0x50` |
+| `imgPlayerNameX` | `int` | `0x54` |
+| `imgScoreBaseX` | `int` | `0x58` |
+| `imgScoreX` | `int` | `0x5c` |
 
 ### `FriendListCell` — ✅ complete
 
@@ -2992,6 +2624,19 @@ Methods **95/95** · unimpl 0 · ivars 51 · `instanceSize`=`356`
 | `_inviteViewCtrl` | `InviteTopViewControllerPad *` | `0x15c` |
 | `_blackBoardView` | `UIView *` | `0x160` |
 
+### `MapAnnotation` — ✅ complete
+
+Methods **7/7** · unimpl 0 · ivars 4 · `instanceSize`=`32`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_Coordinate` | `struct ?` | `0x4` |
+| `m_Title` | `NSString *` | `0x14` |
+| `m_SubTitle` | `NSString *` | `0x18` |
+| `m_ModelName` | `NSString *` | `0x1c` |
+
 ### `MapListCell` — ✅ complete
 
 Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
@@ -3062,6 +2707,10 @@ Methods **9/9** · unimpl 0 · ivars 4 · `instanceSize`=`20`
 | `_lvN` | `int` | `0x8` |
 | `_lvH` | `int` | `0xc` |
 | `_lvEx` | `int` | `0x10` |
+
+### `MyInviteCodeViewController` — ✅ complete
+
+Methods **4/4** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
 ### `OverScoreData` — ✅ complete
 
@@ -3159,6 +2808,16 @@ Methods **30/30** · unimpl 0 · ivars 10 · `instanceSize`=`40`
 | `m_Delegate` | `<PurchaseManagerDelegate> *` | `0x20` |
 | `m_MusicDataDelegate` | `<PurchaseManagerMusicDelegate> *` | `0x24` |
 
+### `PurchaseStore` — ✅ complete
+
+Methods **4/4** · unimpl 0 · ivars 1 · `instanceSize`=`5`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `nowPurchasing` | `bool` | `0x4` |
+
 ### `PurchaseTransactionCache` — ✅ complete
 
 Methods **8/8** · unimpl 0 · ivars 5 · `instanceSize`=`24`
@@ -3184,6 +2843,16 @@ Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 | `_answerId` | `int` | `0x34` |
 | `_answerIdView` | `UIImageView *` | `0x38` |
 
+### `RecommendAdId` — ✅ complete
+
+Methods **8/8** · unimpl 0 · ivars 1 · `instanceSize`=`8`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_serviceName` | `NSString *` | `0x4` |
+
 ### `RecommendListCell` — ✅ complete
 
 Methods **5/5** · unimpl 0 · ivars 11 · `instanceSize`=`96`
@@ -3203,6 +2872,103 @@ Methods **5/5** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 | `imgPackX` | `int` | `0x54` |
 | `dateX` | `int` | `0x58` |
 | `playerNameX` | `int` | `0x5c` |
+
+### `RecommendNetwork` — ✅ complete
+
+Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`8`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_initializeFlg` | `int` | `0x4` |
+
+### `RecommendWebAPI` — ✅ complete
+
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
+
+### `RecommendWebViewController` — ✅ complete
+
+Methods **6/6** · unimpl 0 · ivars 0 · `instanceSize`=`153`
+
+### `RewardNetwork` — ✅ complete
+
+Methods **12/12** · unimpl 0 · ivars 2 · `instanceSize`=`12`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_webViewController` | `RewardNetworkWebViewController *` | `0x4` |
+| `_initializeFlg` | `int` | `0x8` |
+
+### `RewardNetworkError` — ✅ complete
+
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
+
+### `RewardNetworkIndicator` — ✅ complete
+
+Methods **6/6** · unimpl 0 · ivars 1 · `instanceSize`=`52`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_indicator` | `UIActivityIndicatorView *` | `0x30` |
+
+### `RewardNetworkMessage` — ✅ complete
+
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
+
+### `RewardNetworkPasteBoard` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 2 · `instanceSize`=`12`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_serviceName` | `NSString *` | `0x4` |
+| `_dataType` | `NSString *` | `0x8` |
+
+### `RewardNetworkUdid` — ✅ complete
+
+Methods **4/4** · unimpl 0 · ivars 1 · `instanceSize`=`8`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_pasteBoard` | `RewardNetworkPasteBoard *` | `0x4` |
+
+### `RewardNetworkUtilities` — ✅ complete
+
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
+
+### `RewardNetworkWebAPI` — ✅ complete
+
+Methods **9/9** · unimpl 0 · ivars 1 · `instanceSize`=`8`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `retryCount` | `int` | `0x4` |
+
+### `RewardNetworkWebViewController` — ✅ complete
+
+Methods **25/25** · unimpl 0 · ivars 6 · `instanceSize`=`180`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_webView` | `UIWebView *` | `0x9c` |
+| `_navigationBar` | `UINavigationBar *` | `0xa0` |
+| `_indicator` | `RewardNetworkIndicator *` | `0xa4` |
+| `_isNavigationBarHidden` | `BOOL` | `0xa8` |
+| `_delegate` | `<RewardNetworkDelegate> *` | `0xac` |
+| `_parentView` | `UIView *` | `0xb0` |
 
 ### `ScoreData` — ✅ complete
 

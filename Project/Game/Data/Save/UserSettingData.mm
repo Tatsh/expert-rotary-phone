@@ -554,6 +554,10 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 #pragma mark - AC-viewer play options (plaintext)
 
 // @ 0x618a4
++ (void)saveAcvHiSpeed:(int)v { [self saveInt:v Key:@"AcViewerHiSpeed"]; }
++ (void)saveAcvPopKun:(int)v  { [self saveInt:v Key:@"AcViewerPopKun"]; }
++ (void)saveAcvHidSud:(int)v  { [self saveInt:v Key:@"AcViewerHidSud"]; }
++ (void)saveAcvRanMir:(int)v  { [self saveInt:v Key:@"AcViewerRanMir"]; }
 + (int)acvHiSpeed { return [self getInt:@"AcViewerHiSpeed"]; }
 // @ 0x618f4
 + (int)acvPopKun  { return [self getInt:@"AcViewerPopKun"]; }

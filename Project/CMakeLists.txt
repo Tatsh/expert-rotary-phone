@@ -4,6 +4,28 @@
 # defined in the root CMakeLists, and puts the directory on the include path. Bare filenames.
 
 target_sources(popnrhythmin PRIVATE
+    AcViewerHiSpeedViewController.mm
+    AcViewerHidSudViewController.mm
+    AcViewerPopKunViewController.mm
+    AcViewerRanMirViewController.mm
+    DownloadImageView.m
+    FreeRequestListCell.mm
+    MapAnnotation.m
+    MyInviteCodeViewController.mm
+    PurchaseStore.m
+    RecommendAdId.m
+    RecommendNetwork.m
+    RecommendWebAPI.m
+    RecommendWebViewController.m
+    RewardNetwork.m
+    RewardNetworkError.m
+    RewardNetworkIndicator.m
+    RewardNetworkMessage.m
+    RewardNetworkPasteBoard.m
+    RewardNetworkUdid.m
+    RewardNetworkUtilities.m
+    RewardNetworkWebAPI.m
+    RewardNetworkWebViewController.m
     AcViewerDetailCell.m
     AcViewerMusicCell.mm
     AcViewerOptionCell.m
@@ -187,6 +209,28 @@ target_sources(popnrhythmin PRIVATE
     CustomWebView.h
     HowToViewCtrlPad.h
     StoreDialogView.h
+    AcViewerHiSpeedViewController.h
+    AcViewerHidSudViewController.h
+    AcViewerPopKunViewController.h
+    AcViewerRanMirViewController.h
+    DownloadImageView.h
+    FreeRequestListCell.h
+    MapAnnotation.h
+    MyInviteCodeViewController.h
+    PurchaseStore.h
+    RecommendAdId.h
+    RecommendNetwork.h
+    RecommendWebAPI.h
+    RecommendWebViewController.h
+    RewardNetwork.h
+    RewardNetworkError.h
+    RewardNetworkIndicator.h
+    RewardNetworkMessage.h
+    RewardNetworkPasteBoard.h
+    RewardNetworkUdid.h
+    RewardNetworkUtilities.h
+    RewardNetworkWebAPI.h
+    RewardNetworkWebViewController.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

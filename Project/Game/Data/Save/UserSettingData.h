@@ -185,6 +185,15 @@ typedef struct Crypt109Data {
 + (int)acvPopKun;
 + (int)acvHidSud;
 + (int)acvRanMir;
+// Paired setters for the arcade-viewer play options, written by the per-option
+// detail screens (AcViewerHiSpeed/PopKun/HidSud/RanMirViewController) when a row is
+// selected. Ghidra selector pointers: -[UserSettingData saveAcvHiSpeed:]
+// (PTR_s_saveAcvHiSpeed__0015a764), saveAcvPopKun: (PTR_s_saveAcvPopKun__0015b390),
+// saveAcvHidSud: (PTR_s_saveAcvHidSud__0015a3c0), saveAcvRanMir: (PTR_s_saveAcvRanMir__0015b6f8).
++ (void)saveAcvHiSpeed:(int)value;
++ (void)saveAcvPopKun:(int)value;
++ (void)saveAcvHidSud:(int)value;
++ (void)saveAcvRanMir:(int)value;
 // YES if the arcade viewer shows the genre name instead of the song name.
 + (BOOL)isAcvGenreName;
 
