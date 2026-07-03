@@ -30,7 +30,7 @@ TitleTask::TitleTask() = default;
 
 // The root navigation view controller the flow drives (bridged from the engine).
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 // A touch released this frame that barely moved (< 11 px in x and y) counts as a

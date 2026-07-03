@@ -34,7 +34,7 @@
     }
 
     const BOOL isPad = neSceneManager::isPadDisplay();               // DAT_00187b84
-    UIViewController *root = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *root = neSceneManager::rootViewController();
 
     // Fully transparent backdrop; the open animation fades it up to 50% black.
     self.view.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0];

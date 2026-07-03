@@ -130,7 +130,7 @@
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();
-    UIViewController *root = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *root = neSceneManager::rootViewController();
     [root CommunicatingEndCallBack];
 }
 

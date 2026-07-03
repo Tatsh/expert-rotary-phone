@@ -38,7 +38,7 @@
 // TODO(dep): PopkunSizeViewCtrl not yet reconstructed (row 5 detail -- init).
 
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 @implementation SettingGameTableViewController {

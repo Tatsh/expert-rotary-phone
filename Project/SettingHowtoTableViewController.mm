@@ -35,7 +35,7 @@
 @class HowToViewCtrlPad;
 
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 @implementation SettingHowtoTableViewController {

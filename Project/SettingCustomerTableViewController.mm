@@ -39,7 +39,7 @@
 #import "neEngineBridge.h"     // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 @implementation SettingCustomerTableViewController {

@@ -30,7 +30,7 @@
 
 // The root nav host (MainViewController) the menu drives.
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 // The menu's baseline Y (the screen height cached in the Aep manager @ +0x7f3b00);

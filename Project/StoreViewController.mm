@@ -164,7 +164,7 @@
         return;
     }
     neSceneManager::shared();
-    UIViewController *rootVC = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *rootVC = neSceneManager::rootViewController();
     // -[MainViewController StoreEndCallBack]
     [rootVC performSelector:@selector(StoreEndCallBack)];
 }

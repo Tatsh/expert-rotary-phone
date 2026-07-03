@@ -179,7 +179,7 @@
 // @ 0xb13b4 — raise the friend detail overlay for the tapped row (guarded against re-entry while
 // one is already up).
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    UIViewController *root = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *root = neSceneManager::rootViewController();
     if (indexPath.section != 0) {
         return;
     }

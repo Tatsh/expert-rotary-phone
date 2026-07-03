@@ -21,7 +21,7 @@
 #import "neGraphics.h"
 
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 // PlayTaskCreate / TutorialTaskCreate come from TaskFactory.h.

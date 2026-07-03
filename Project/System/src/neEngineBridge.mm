@@ -43,6 +43,33 @@ void neAppEventCenter::begin() {
 // Ghidra: FUN_00028c9c — a no-op in this build.
 void neAppEventCenter::flush() {}
 
+// AC-viewer selection state (event-center region): the current browsing pair and the
+// pending "Sel" pair carried into the play scene.
+static int g_dwAcViewerMusicId       = -1;  // g_dwAcViewerMusicId      @ 0x187bf0
+static int g_wAcViewerDifficulty    = 0;   // g_wAcViewerDifficulty    @ 0x187bf4
+static int g_dwAcViewerSelMusicId    = -1;  // g_dwAcViewerSelMusicId   @ 0x187bf8
+static int g_wAcViewerSelDifficulty = 0;   // g_wAcViewerSelDifficulty @ 0x187bfc
+
+// Reset the pending selection to the "none" sentinels (music id -1, difficulty 0xffff)
+// — done when the viewer is cancelled.
+void neAppEventCenter::clearAcViewerSelection() {
+    g_dwAcViewerSelMusicId = -1;
+    g_wAcViewerSelDifficulty = 0xffff;
+}
+
+int  neAppEventCenter::acViewerMusicId() { return g_dwAcViewerMusicId; }
+int  neAppEventCenter::acViewerDifficulty() { return g_wAcViewerDifficulty; }
+void neAppEventCenter::setAcViewerSelection(int musicId, int difficulty) {
+    g_dwAcViewerMusicId = musicId;
+    g_wAcViewerDifficulty = difficulty;
+}
+int  neAppEventCenter::acViewerSelMusicId() { return g_dwAcViewerSelMusicId; }
+int  neAppEventCenter::acViewerSelDifficulty() { return g_wAcViewerSelDifficulty; }
+void neAppEventCenter::commitAcViewerSelection() {
+    g_dwAcViewerSelMusicId = g_dwAcViewerMusicId;
+    g_wAcViewerSelDifficulty = g_wAcViewerDifficulty;
+}
+
 int neAppEventCenter::lastMusic() const { return m_lastMusic; }
 void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }
 int neAppEventCenter::lastSheet() const { return m_lastSheet; }
@@ -56,12 +83,12 @@ neSceneManager &neSceneManager::shared() {
 }
 
 // Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
-void neSceneManager::attachRoot(void *viewController) {
+void neSceneManager::attachRoot(UIViewController *viewController) {
     m_root = viewController;
 }
 
 // Ghidra: NESceneManager_rootViewController (FUN_0002c5bc) — returns m_root.
-void *neSceneManager::rootViewController() {
+UIViewController *neSceneManager::rootViewController() {
     return shared().m_root;
 }
 
@@ -116,24 +143,50 @@ void onDidEnterBackground() {
 }
 
 // Ghidra: FUN_00030710 — nudge the passed MainTask toward its stop state (6->5).
-void stopMainTask(void *mainTask) {
+void stopMainTask(MainTask *mainTask) {
     if (mainTask == nullptr) {
         return;
     }
-    int *state = reinterpret_cast<int *>(static_cast<char *>(mainTask) + kTaskStateOffsetMain);
+    int *state = reinterpret_cast<int *>(reinterpret_cast<char *>(mainTask) + kTaskStateOffsetMain);
     if (*state == 6) {
         *state = 5;
     }
 }
 
 // Ghidra: FUN_0002314c — nudge the passed AcMainTask toward its stop state (6->0xc).
-void stopAcMainTask(void *acMainTask) {
+void stopAcMainTask(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
     }
-    int *state = reinterpret_cast<int *>(static_cast<char *>(acMainTask) + kTaskStateOffsetAc);
+    int *state = reinterpret_cast<int *>(reinterpret_cast<char *>(acMainTask) + kTaskStateOffsetAc);
     if (*state == 6) {
         *state = 0xc;
+    }
+}
+
+// Ghidra: requestGameExit (FUN_0002315c) — flag the running AcMainTask to leave the
+// arcade-viewer play (exit state @ +0x20c := 8, exit-request flag @ +0x1d9 := 1).
+void acMainRequestGameExit(AcMainTask *acMainTask) {
+    if (acMainTask == nullptr) {
+        return;
+    }
+    char *t = reinterpret_cast<char *>(acMainTask);
+    *reinterpret_cast<int *>(t + 0x20c) = 8;
+    *(t + 0x1d9) = 1;
+}
+
+// Ghidra: applyGameplaySettings (FUN_00023850). TODO(dep): the full routine also copies
+// the UserSettingData acv* selections into the task (+0x1f8 pop-kun / +0x1fc hid-sud /
+// +0x1f4 hi-speed / +0x200 ran-mir) and re-seeks the AcNoteMng note stream — those touch
+// note-engine internals not yet bridged. The observable tail (resume the render loop and,
+// on phone, advance the task's play state @ +0x20c := 0xd) is modelled here.
+void acMainApplyGameplaySettings(AcMainTask *acMainTask) {
+    if (acMainTask == nullptr) {
+        return;
+    }
+    [neSceneManager::rootViewController() performSelector:@selector(ResumeLoop)];
+    if (!neSceneManager::isPadDisplay()) {
+        *reinterpret_cast<int *>(reinterpret_cast<char *>(acMainTask) + 0x20c) = 0xd;
     }
 }
 

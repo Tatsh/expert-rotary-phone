@@ -155,7 +155,7 @@
 // (FriendManageEndCallBack), then clear the animation guard.
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
-    UIViewController *root = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *root = neSceneManager::rootViewController();
     [root performSelector:@selector(FriendManageEndCallBack)];
     _isAnimationing = NO;
 }

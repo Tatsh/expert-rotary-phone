@@ -15,7 +15,7 @@
 // view controller. Shared by -tweet and +tweetWithText:image: (the binary inlines the
 // same body in both). Ghidra: FUN_00078a4c / FUN_00078bb8.
 static void PresentTweet(NSString *text, UIImage *image) {
-    UIViewController *root = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *root = neSceneManager::rootViewController();
     SLComposeViewController *compose =
         [SLComposeViewController composeViewControllerForServiceType:SLServiceTypeTwitter];
     // The binary installs a completion handler (Ghidra: the DAT_0013208c block) that just

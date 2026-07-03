@@ -137,7 +137,7 @@ void AcMainTask::stateFadeIn() {
     [audio playBgm:0.5f];
 
     MainViewController *root =
-        (__bridge MainViewController *)neSceneManager::rootViewController();
+        (MainViewController *)neSceneManager::rootViewController();
     [root GotoMapSelect];   // -[MainViewController GotoMapSelect] @ 0xc7d8
     state() = 2;
 }

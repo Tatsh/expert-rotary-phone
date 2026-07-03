@@ -62,7 +62,7 @@
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
              otherButtonTitle:(NSString *)otherButtonTitle {
-    UIViewController *rootVC = (__bridge UIViewController *)neSceneManager::rootViewController();
+    UIViewController *rootVC = neSceneManager::rootViewController();
     UIView *view = rootVC.view;
     CGPoint center = view ? view.center : CGPointZero;
     return [self initWithView:view

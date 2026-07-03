@@ -13,7 +13,7 @@
 // Root nav host + last-selected reset live on the engine singletons (Ghidra:
 // NESceneManager_rootViewController, NEAppEventCenter last-music @ DAT_00187bf0).
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 @implementation AcViewerSplitViewController {

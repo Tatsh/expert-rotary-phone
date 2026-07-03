@@ -90,6 +90,12 @@ target_sources(popnrhythmin PRIVATE
     QuizCell.mm
     ViewUtility.m
     neWindow.m
+    AcViewerOptionViewController.mm
+    CDataScanner.m
+    ConversionView.mm
+    CustomWebView.mm
+    HowToViewCtrlPad.mm
+    StoreDialogView.m
     AcViewerDetailCell.h
     AcViewerMusicCell.h
     AcViewerOptionCell.h
@@ -175,6 +181,12 @@ target_sources(popnrhythmin PRIVATE
     QuizCell.h
     ViewUtility.h
     neWindow.h
+    AcViewerOptionViewController.h
+    CDataScanner.h
+    ConversionView.h
+    CustomWebView.h
+    HowToViewCtrlPad.h
+    StoreDialogView.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

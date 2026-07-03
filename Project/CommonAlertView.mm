@@ -160,7 +160,7 @@
     _titleView.text = self.title;
     _messageView.text = self.message;
 
-    UIView *rootView = ((__bridge UIViewController *)neSceneManager::rootViewController()).view;
+    UIView *rootView = (neSceneManager::rootViewController()).view;
     self.center = CGPointMake(CGRectGetWidth(rootView.frame) * 0.5f,
                               CGRectGetHeight(rootView.frame) * 0.5f);
 

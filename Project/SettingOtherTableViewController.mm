@@ -44,7 +44,7 @@
 
 // The app's root view controller (MainViewController), bridged from the C++ scene manager.
 static UIViewController *RootVC() {
-    return (__bridge UIViewController *)neSceneManager::rootViewController();
+    return neSceneManager::rootViewController();
 }
 
 @implementation SettingOtherTableViewController {

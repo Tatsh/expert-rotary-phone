@@ -19,6 +19,13 @@
 
 #pragma once
 
+// Real types used across the ObjC<->C++ boundary (this header is ObjC++; every including
+// translation unit is .mm). Using the true types instead of opaque void* keeps the bridge
+// signatures honest.
+@class UIViewController;
+class MainTask;     // System/src/Task/MainTask.h   (: C_TASK)
+class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
+
 // App-wide event / notification center (guarded singleton @ DAT_00187bb8).
 // Touched at launch, flushed on background/terminate, poked on push.
 class neAppEventCenter {
@@ -32,6 +39,23 @@ public:
     // g_dwAcViewerSelMusicId @ 0x187bf8 / g_wAcViewerSelDifficulty @ 0x187bfc (in the
     // event-center region; NEAppEventCenter_shared() is touched first to force init).
     static void clearAcViewerSelection();
+
+    // The AC-viewer's *current* browsing selection — the music id / difficulty the
+    // arcade-viewer list is showing right now. Read by the AC-viewer option screen to
+    // build its header (song banner, BPM, difficulty). Ghidra globals
+    // g_dwAcViewerMusicId @ 0x187bf0 / g_wAcViewerDifficulty @ 0x187bf4.
+    static int  acViewerMusicId();
+    static int  acViewerDifficulty();
+    static void setAcViewerSelection(int musicId, int difficulty);
+    // The *pending* selection carried into the play scene (compared against the current
+    // pair to decide "continue vs. play from start"). Ghidra globals
+    // g_dwAcViewerSelMusicId @ 0x187bf8 / g_wAcViewerSelDifficulty @ 0x187bfc.
+    static int  acViewerSelMusicId();
+    static int  acViewerSelDifficulty();
+    // Commit the current browsing pair as the pending one (Sel := current), done when
+    // the arcade-viewer PLAY button is pressed.
+    static void commitAcViewerSelection();
+
     void begin();                        // Ghidra: NEAppEventCenter_begin  (FUN_00028c70)
     void flush();                        // Ghidra: NEAppEventCenter_flush  (FUN_00028c9c)
 
@@ -89,15 +113,13 @@ class neSceneManager {
 public:
     static neSceneManager &shared();          // Ghidra: NESceneManager_shared (FUN_0000b194)
                                               //   lazily ctors via FUN_0002c5c0 (NESceneManager_init)
-    // Store the app's root view controller. `viewController` is a bridged
-    // UIViewController — this is the ObjC->C++ boundary, so it stays an opaque
-    // pointer on the C++ side. Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
-    void attachRoot(void *viewController);
+    // Store the app's root view controller. Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
+    void attachRoot(UIViewController *viewController);
 
     // The stored root view controller (the app's navigation host the title/menu
     // flow sends Goto*/Insert*/Delete* messages to). Ghidra:
     // NESceneManager_rootViewController (FUN_0002c5bc) returns m_root.
-    static void *rootViewController();
+    static UIViewController *rootViewController();
 
     // Live drawable metrics (Ghidra globals DAT_00187b7c/78/80), updated by the
     // GL view on layout; used to place notes/sprites on screen.
@@ -132,7 +154,10 @@ public:
     static void *normalSoundName(int soundNo);
 
 private:
-    void *m_root = nullptr;   // +0x00 the bridged root UIViewController
+    // +0x00 the root UIViewController. __unsafe_unretained so this C++ singleton stays a plain
+    // (trivial) type under ARC and does not own the VC (the UIWindow owns it), matching the
+    // binary's non-retaining raw pointer store.
+    __unsafe_unretained UIViewController *m_root = nullptr;
 };
 
 // The renderer / graphics manager (singleton @ DAT_00188384, +0x88 = content
@@ -153,8 +178,17 @@ namespace neEngine {
 
     // Nudge the running MainTask / AcMainTask toward its stop state. The task
     // pointer is passed in by the caller (AppDelegate's _mainTask / _acMainTask).
-    void stopMainTask(void *mainTask);     // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
-    void stopAcMainTask(void *acMainTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
+    void stopMainTask(MainTask *mainTask);     // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
+    void stopAcMainTask(AcMainTask *acMainTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
+
+    // Ask the running AcMainTask to leave the arcade-viewer play and exit back to the
+    // menu (sets its exit state @ +0x20c := 8 and exit-request flag @ +0x1d9 := 1).
+    // Ghidra: requestGameExit (FUN_0002315c).
+    void acMainRequestGameExit(AcMainTask *acMainTask);
+    // Push the arcade-viewer option selections (hi-speed / pop-kun / hid-sud / ran-mir)
+    // into the live AcMainTask, re-seek its note stream and resume the render loop.
+    // Ghidra: applyGameplaySettings (FUN_00023850).
+    void acMainApplyGameplaySettings(AcMainTask *acMainTask);
 
     // Create + register the app's boot task at priority 3.
     void startBootTask();            // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_,3)

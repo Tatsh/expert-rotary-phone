@@ -36,7 +36,7 @@
 
 // The root nav host (MainViewController) the result screen drives.
 static MainViewController *RootVC() {
-    return (__bridge MainViewController *)neSceneManager::rootViewController();
+    return (MainViewController *)neSceneManager::rootViewController();
 }
 
 // Ghidra: FUN_0003d5bc — base C_TASK ctor, set the vtable, and zero the 0x378-byte
