@@ -8,8 +8,8 @@
 //  drives AcNoteMng plus the note / life-gauge / HUD-digit draw passes.
 //
 //  See AcViewerTask.h for the naming note (Ghidra labels these acMainTask*; this is a
-//  distinct class from the repo's sugoroku AcMainTask). All play-data access is by the
-//  binary's flat byte offsets from `this` (cited inline) through field<T>().
+//  distinct class from the repo's sugoroku AcMainTask). Play-data is reached through the
+//  named members declared in AcViewerTask.h (each at its binary-exact offset, cited there).
 //
 
 #import "AcViewerTask.h"
@@ -77,27 +77,27 @@ void AcViewerTask::setup() {
     AcNoteMng &note = AcNoteMng::shared();
     AppDelegate *app = [AppDelegate appDelegate];
 
-    field<int>(0x104) = aep.screenWidth();     // aepGetScreenWidth
-    field<int>(0x108) = aep.screenHeight();     // aepGetScreenHeight
-    field<int>(0x10c) = g_dwUiScale;
-    field<int>(0x1ec) = -1;                     // HUD combo digit screen x (HUD writes it)
-    field<int>(0x1f0) = -1;                     // HUD combo digit screen y
+    m_screenWidth = aep.screenWidth();          // aepGetScreenWidth
+    m_screenHeight = aep.screenHeight();         // aepGetScreenHeight
+    m_uiScale = g_dwUiScale;
+    m_comboDigitX = -1;                          // HUD combo digit screen x (HUD writes it)
+    m_comboDigitY = -1;                          // HUD combo digit screen y
 
     // Player options snapshot.
-    field<int>(0x1f4) = [UserSettingData acvHiSpeed];   // +500
-    field<int>(0x1f8) = [UserSettingData acvPopKun];
-    field<int>(0x1fc) = [UserSettingData acvHidSud];
-    field<int>(0x200) = [UserSettingData acvRanMir];
-    field<int>(0x1dc) = (int)(short)g_wAcViewerDifficulty;
-    field<unsigned char>(0x1d8) = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_hiSpeed = [UserSettingData acvHiSpeed];    // +500
+    m_popKun = [UserSettingData acvPopKun];
+    m_hidSud = [UserSettingData acvHidSud];
+    m_ranMir = [UserSettingData acvRanMir];
+    m_difficulty = (int)(short)g_wAcViewerDifficulty;
+    m_padDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
 
     // Lane remap for the RAN/MIR option, then load + init the chart.
-    note.setupLaneMapping(field<int>(0x200));
+    note.setupLaneMapping(m_ranMir);
     loadChart();                                 // FUN_0002316c
 
     // Total note count + the initial gauge value (0x100 == full at 256/1024 scale).
-    field<int16_t>(0x100) = (int16_t)note.getTotalNoteCount();
-    field<int16_t>(0x1ca) = 0x100;
+    m_totalNoteCount = (int16_t)note.getTotalNoteCount();
+    m_gaugeValue = 0x100;
 
     // Per-lane scroll-speed table (@ +0x1cc[4]) derived from DAT_0012e350/0012e354 and
     // the note count. The exact fixed-point packing (___udivsi3 of value<<10) is
@@ -110,21 +110,21 @@ void AcViewerTask::setup() {
         } else {
             v = 1;
         }
-        field<int16_t>(0x1cc + i * 2) = v;
+        m_scrollSpeed[i] = v;
     }
 
     // Load the "TIMING" arcade SE and the group-7 viewer Aep data.
     AudioManager *audio = [AudioManager sharedManager];
     NSString *sePath = [[NSBundle mainBundle] pathForResource:@"v12" ofType:@"m4a"];
-    field<int>(0xd4) = (int)[audio loadSe:sePath isLoop:NO callName:nil group:1];
+    m_readySeId = (int)[audio loadSe:sePath isLoop:NO callName:nil group:1];
 
-    const bool pad = (field<unsigned char>(0x1d8) != 0);
+    const bool pad = (m_padDisplay != 0);
     AepLoadGroup(&aep, kAcvGroup, pad ? "arcade_viewer_ipad" : "arcade_viewer");
 
     // Two AepLyrCtrl overlays: the PAUSE_LOOP layer (+0x54) and the top banner (+0x58,
     // device-picked "TOP_960" / "TOP_1136" / "TOP_IPAD").
     AepLyrCtrl *pauseLayer = new AepLyrCtrl();
-    field<AepLyrCtrl *>(0x54) = pauseLayer;
+    m_pauseLayer = pauseLayer;
     pauseLayer->init(kAcvGroup, "PAUSE_LOOP", this);
 
     const char *topName = "TOP_960";
@@ -138,40 +138,40 @@ void AcViewerTask::setup() {
     // table @ +0x158[9]). These are ~80 pure-constant stores from DAT_0012e370 (phone) /
     // DAT_0012e394 (pad); reconstructed as a documented seam per rule 7 (the values are
     // fixed layout coordinates, not behaviour). setup() writes them here before the top
-    // layer is built. field<int>(0x124) = field<int>(0x120) + field<int>(0x128).
+    // layer is built. m_noteFieldX (+0x124) = m_noteClipTop (+0x120) + m_noteFieldY (+0x128).
     // (best-effort: full constant tables omitted — see the DAT_0012e3xx blocks.)
-    field<int>(0x124) = field<int>(0x120) + field<int>(0x128);
+    m_noteFieldX = m_noteClipTop + m_noteFieldY;
 
     AepLyrCtrl *topLayer = new AepLyrCtrl();
-    field<AepLyrCtrl *>(0x58) = topLayer;
+    m_topLayer = topLayer;
     topLayer->init(kAcvGroup, topName, this);
 
     // Resolve the HUD handles.
-    field<int>(0x5c) = aep.getLyrNo(kAcvGroup, "EFFECT_COOL");
-    field<int>(0x60) = aep.layerFrameCount(field<int>(0x5c));
+    m_effectCoolLyrNo = aep.getLyrNo(kAcvGroup, "EFFECT_COOL");
+    m_effectCoolFrames = aep.layerFrameCount(m_effectCoolLyrNo);
     for (int i = 0; i < 7; i++) {
-        field<int>(0xb8 + i * 4) = aep.getUserNo(kAcvGroup, kAcvUsrNames[i]);
+        m_usrNo[i] = aep.getUserNo(kAcvGroup, kAcvUsrNames[i]);
     }
     for (int i = 0; i < 9; i++) {
-        field<int>(0x94 + i * 4) = aep.getFrameNo(kAcvGroup, kAcvFrmNames[i]);
+        m_numFrm[i] = aep.getFrameNo(kAcvGroup, kAcvFrmNames[i]);
     }
-    field<int>(0x6c) = aep.getFrameNo(kAcvGroup, "GAUGE_02");
-    field<int>(0x70) = aep.getFrameNo(kAcvGroup, "GAUGE_01");
-    field<int>(0x74) = aep.getFrameNo(kAcvGroup, "GAUGE_OUT_02");
-    field<int>(0x78) = aep.getFrameNo(kAcvGroup, "GAUGE_OUT_01");
-    field<int>(0x7c) = aep.getFrameNo(kAcvGroup, "MUSIC_ON");
-    field<int>(0x80) = aep.getFrameNo(kAcvGroup, "MUSIC_OFF");
-    field<int>(0x84) = aep.getFrameNo(kAcvGroup, kAcvBarFrm[field<int>(0x1dc)]);
-    field<int>(0x88) = aep.getFrameNo(kAcvGroup, "TIME_LINE");
-    field<int>(0x8c) = aep.getFrameNo(kAcvGroup, "BEAT_POPN_WHITE");
-    field<int>(0x90) = aep.getFrameNo(kAcvGroup, "BEAT_POPN_BLUE");
+    m_gaugeLit02Frm = aep.getFrameNo(kAcvGroup, "GAUGE_02");
+    m_gaugeLit01Frm = aep.getFrameNo(kAcvGroup, "GAUGE_01");
+    m_gaugeEmpty02Frm = aep.getFrameNo(kAcvGroup, "GAUGE_OUT_02");
+    m_gaugeEmpty01Frm = aep.getFrameNo(kAcvGroup, "GAUGE_OUT_01");
+    m_musicOnFrm = aep.getFrameNo(kAcvGroup, "MUSIC_ON");
+    m_musicOffFrm = aep.getFrameNo(kAcvGroup, "MUSIC_OFF");
+    m_barFrm = aep.getFrameNo(kAcvGroup, kAcvBarFrm[m_difficulty]);
+    m_timeLineFrm = aep.getFrameNo(kAcvGroup, "TIME_LINE");
+    m_beatWhiteFrm = aep.getFrameNo(kAcvGroup, "BEAT_POPN_WHITE");
+    m_beatBlueFrm = aep.getFrameNo(kAcvGroup, "BEAT_POPN_BLUE");
 
     // 10 HUD digit textures (@ +0x2c[10]) from the bundle (device-picked "ticket_num%d"
     // / "num_pointb_%d" name tables PTR_cf_ticket_num0 / PTR_cf_num_pointb_0).
     NSBundle *bundle = [NSBundle mainBundle];
     for (int i = 0; i < 10; i++) {
         neTextureForiOS *tex = new neTextureForiOS();
-        field<neTextureForiOS *>(0x2c + i * 4) = tex;
+        m_digitTex[i] = tex;
         NSString *name = pad ? [NSString stringWithFormat:@"num_pointb_%d", i]
                              : [NSString stringWithFormat:@"ticket_num%d", i];
         tex->load([[bundle pathForResource:name ofType:@"png"] UTF8String]);
@@ -180,7 +180,7 @@ void AcViewerTask::setup() {
     // Register the per-layer HUD draw callback (Ghidra: setAepCallbacks(aep, 7, 0x23359,
     // this) — 0x23359 is &AcViewerHudDraw in Thumb).
     aep.setGroupDrawCallback(kAcvGroup, &AcViewerHudDraw, this);
-    field<unsigned char>(0x1d4) = 1;   // HUD ready
+    m_hudReady = 1;   // HUD ready
 }
 
 // ===========================================================================
@@ -196,20 +196,20 @@ void AcViewerTask::loadChart() {
 
     // Cache the display music name (+0x1e4, +1 retained); its length picks the HUD title
     // offsets (+0x1e8 x-advance / +0x1c4 baseline).
-    if (field<void *>(0x1e4)) {
-        (void)(__bridge_transfer id)field<void *>(0x1e4);
-        field<void *>(0x1e4) = nullptr;
+    if (m_songTitle) {
+        (void)(__bridge_transfer id)m_songTitle;
+        m_songTitle = nullptr;
     }
     NSString *name = [acMusic musicName];
-    field<void *>(0x1e4) = (__bridge_retained void *)name;
+    m_songTitle = (__bridge_retained void *)name;
 
-    const bool pad = (field<unsigned char>(0x1d8) != 0);
+    const bool pad = (m_padDisplay != 0);
     if (name.length < 0x14) {
-        field<int>(0x1e8) = pad ? 0x2a : 0x1c;
-        field<int>(0x1c4) = pad ? -22 : -20;
+        m_titleXAdvance = pad ? 0x2a : 0x1c;
+        m_titleBaselineY = pad ? -22 : -20;
     } else {
-        field<int>(0x1e8) = pad ? 0x18 : 0x10;
-        field<int>(0x1c4) = pad ? -12 : -12;
+        m_titleXAdvance = pad ? 0x18 : 0x10;
+        m_titleBaselineY = pad ? -12 : -12;
     }
 
     [audio stopBgm];
@@ -223,19 +223,19 @@ void AcViewerTask::loadChart() {
 
     // Release the previous sheet, pick the new one by difficulty (0 easy / 1 normal /
     // 2 hyper / 3 ex), retain it, and init the note timeline at the chosen hi-speed.
-    if (field<void *>(0x1e0)) {
-        (void)(__bridge_transfer id)field<void *>(0x1e0);
-        field<void *>(0x1e0) = nullptr;
+    if (m_sheet) {
+        (void)(__bridge_transfer id)m_sheet;
+        m_sheet = nullptr;
     }
     NSData *sheet;
-    switch (field<int>(0x1dc)) {
+    switch (m_difficulty) {
     case 0:  sheet = [acMusic sheetEasy];   break;
     case 2:  sheet = [acMusic sheetHyper];  break;
     case 3:  sheet = [acMusic sheetEx];     break;
     default: sheet = [acMusic sheetNormal]; break;
     }
-    field<void *>(0x1e0) = (__bridge_retained void *)sheet;
-    note.initPlayDataWithData(sheet, field<int>(0x1f4));
+    m_sheet = (__bridge_retained void *)sheet;
+    note.initPlayDataWithData(sheet, m_hiSpeed);
 }
 
 // ===========================================================================
@@ -250,12 +250,12 @@ void AcViewerTask::drawActiveNotes() {
     const int count = note.countActiveNotes();
     const uint32_t now = (uint32_t)note.getCurrentPosition();
 
-    int clip[4] = { 0, field<int>(0x120), field<int>(0x104), field<int>(0x108) };
+    int clip[4] = { 0, m_noteClipTop, m_screenWidth, m_screenHeight };
 
     for (int i = 0; i < count; i++) {
         AcNoteObject n;
         note.getNoteObject(&n, i);
-        const int laneFrame = field<int>(0x158 + n.lane * 4);
+        const int laneFrame = m_laneFrm[n.lane];
 
         if (n.tick < now) {
             // Note has passed the spawn point: scroll it toward the judge line. The exact
@@ -263,19 +263,19 @@ void AcViewerTask::drawActiveNotes() {
             // obscured; modelled best-effort. When it is still above the layer's frame
             // count it is drawn as the EFFECT_COOL layer.
             const int frame = (int)((float)(now - n.tick) * 1.0f + 0.5f);
-            if (frame < field<int>(0x60)) {
-                aep.drawLayer(field<int>(0x5c), frame,
-                              field<int>(0x124), field<int>(0x128),
-                              100, 100, 0, field<int>(0x148), field<int>(0x14c),
+            if (frame < m_effectCoolFrames) {
+                aep.drawLayer(m_effectCoolLyrNo, frame,
+                              m_noteFieldX, m_noteFieldY,
+                              100, 100, 0, m_coolLayerArgA, m_coolLayerArgB,
                               /*root flags placeholder*/ 0);
                 // First time a note crosses the line (and not in HID/SUD hidden state),
                 // add to the combo counter (@ +0x1ca, saturated to 0x3ff) and mark the
                 // note handled (bit 6). Ghidra: +0x1d2 combo step / acNoteSetNoteFlag.
-                if (field<char>(0x1d6) == 0 && field<char>(0x1d7) == 0 && (n.flags & 0x40) == 0) {
-                    int c = (int)field<int16_t>(0x1d2) + (int)field<int16_t>(0x1ca);
+                if (m_paused == 0 && m_pauseMenuOpen == 0 && (n.flags & 0x40) == 0) {
+                    int c = (int)m_scrollSpeed[3] + (int)m_gaugeValue;
                     if (c < 0) { c = 0; }
                     if (c > 0x3ff) { c = 0x3ff; }
-                    field<int16_t>(0x1ca) = (int16_t)c;
+                    m_gaugeValue = (int16_t)c;
                     note.setNoteFlag(i, 0x40);
                 }
             }
@@ -285,30 +285,30 @@ void AcViewerTask::drawActiveNotes() {
             // computed lane x (best-effort on the NEON transform). HID/SUD gating on
             // +0x1fc hides notes outside the visible band.
             const bool visible =
-                ((field<uint32_t>(0x1fc) | 2) != 3) || ((field<uint32_t>(0x1fc) & ~1u) != 2);
+                (((uint32_t)m_hidSud | 2) != 3) || (((uint32_t)m_hidSud & ~1u) != 2);
             if (visible) {
                 int frm;
-                if (field<int>(0x1f8) == 0) {
-                    frm = (n.lane & 1) ? field<int>(0x90) : field<int>(0x8c);  // blue / white
+                if (m_popKun == 0) {
+                    frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm;  // blue / white
                 } else {
-                    frm = (n.lane & 1) ? field<int>(0x90) : field<int>(0x8c);  // pop-kun variant
+                    frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm;  // pop-kun variant
                 }
-                drawAepFrameEx(&aep, frm, /*x*/ field<int>(0x124), /*y*/ 0x42c80000, 0x42c80000,
+                drawAepFrameEx(&aep, frm, /*x*/ m_noteFieldX, /*y*/ 0x42c80000, 0x42c80000,
                                0, 0, /*w/h*/ 100, 0, 0x20, 0xffffff, clip, 0xb, 1);
             }
         }
     }
 
     // Running judged total -> the combo readout (@ +0x102).
-    field<int16_t>(0x102) = (int16_t)note.getJudgeTotal();
+    m_judgeTotal = (int16_t)note.getJudgeTotal();
 
     // The time-line marker sweeps left->right across the song: x = barWidth * pos / total.
     const int total = 0x16ebd8;   // DAT_0016ebd8 (chart length denominator)
-    const int barW = field<int>(0x194);
+    const int barW = m_barWidth;
     const int cur = note.getCurrentPosition();
-    int lineClip[4] = { field<int>(0x18c), field<int>(0x190),
-                        (total ? barW * cur / total : 0), field<int>(0x108) };
-    drawAepFrameEx(&aep, field<int>(0x88), field<int>(0x18c), field<int>(0x190),
+    int lineClip[4] = { m_timeLineX, m_timeLineY,
+                        (total ? barW * cur / total : 0), m_screenHeight };
+    drawAepFrameEx(&aep, m_timeLineFrm, m_timeLineX, m_timeLineY,
                    0x42c80000, 0x42c80000, 0, 0, 0, 100, 0, 0x20, 0xffffff, lineClip, 0xc, 1);
 }
 
@@ -320,27 +320,27 @@ void AcViewerTask::drawActiveNotes() {
 void AcViewerTask::drawLifeGauge() {
     AepManager &aep = AepManager::shared();
 
-    int value = (int)field<int16_t>(0x1c8) + (int)field<int16_t>(0x1ca);
+    int value = (int)m_gaugeBase + (int)m_gaugeValue;
     if (value < 0) { value = 0; }
     // lit = value * 24 / 1024, clamped to [0, 24].
     int lit = value < 0x3ff ? (value * 0x18) / 0x400 : 0x18;
     if (lit < 0) { lit = 0; }
     if (lit > 0x17) { lit = 0x18; }
 
-    const bool pad = (field<unsigned char>(0x1d8) != 0);
+    const bool pad = (m_padDisplay != 0);
     const int nudge = pad ? 4 : 2;
 
     for (int cell = 0; cell < 0x18; cell++) {
         // Cells 0..15 use the "01" (lower) set, 16..23 use the "02" (upper) set.
         const bool lower = cell < 0x10;
-        const int emptyFrm = lower ? field<int>(0x74) : field<int>(0x78);   // GAUGE_OUT_01/02
-        const int x = field<int>(0x188) * cell + field<int>(0x184);
-        const int y = lower ? field<int>(0x17c) : field<int>(0x180);
+        const int emptyFrm = lower ? m_gaugeEmpty02Frm : m_gaugeEmpty01Frm;  // GAUGE_OUT_01/02
+        const int x = m_gaugeStrideX * cell + m_gaugeBaseX;
+        const int y = lower ? m_gaugeLowerY : m_gaugeUpperY;
         drawAepFrameEx(&aep, emptyFrm, x, y, 0x42c80000, 0x42c80000,
                        0, 0, 0, 100, 0, 0x20, 0xffffff, nullptr, 0xd, 1);
 
         if (cell < lit) {
-            const int litFrm = lower ? field<int>(0x6c) : field<int>(0x70);  // GAUGE_02/01 lit
+            const int litFrm = lower ? m_gaugeLit02Frm : m_gaugeLit01Frm;  // GAUGE_02/01 lit
             drawAepFrameEx(&aep, litFrm, x + nudge, y + nudge, 0x42c80000, 0x42c80000,
                            0, 0, 0, 100, 0, 0x20, 0xffffff, nullptr, 0xc, 1);
         }
@@ -350,9 +350,9 @@ void AcViewerTask::drawLifeGauge() {
 // ===========================================================================
 // cleanup — Ghidra AcMainTask::Cleanup (@ 0x22b44). Free the arcade-viewer play
 // resources and wipe the play-data region so a later attempt starts clean. Called from
-// update() state 9 once the fade-out has completed. Every offset below is a member of
-// the flat play-data block (backed by m_playData) reached through field<T>(), matching
-// the setup()/loadChart() idiom; the freed sub-objects were all allocated in setup().
+// update() state 9 once the fade-out has completed. Every field below is a named member
+// of the play-data block (each at its binary-exact offset), matching the setup()/loadChart()
+// idiom; the freed sub-objects were all allocated in setup().
 //
 // The only field that survives the wipe is the pad "board up" byte (@ +0x1d9): it is
 // saved before the memset and restored afterwards, but only on the pad display.
@@ -364,30 +364,30 @@ void AcViewerTask::cleanup() {
     // The play-state sub-task (@ +0x28, the first word of the play-data block): delete it
     // through its virtual destructor. (Modelled as a C_TASK sub-object; the exact subclass
     // is not recovered here — the vtbl-slot-1 deleting-destructor confirms it is deleted.)
-    if (C_TASK *stateTask = field<C_TASK *>(0x28)) {
+    if (C_TASK *stateTask = m_stateTask) {
         delete stateTask;
-        field<C_TASK *>(0x28) = nullptr;
+        m_stateTask = nullptr;
     }
 
     // The 10 HUD digit textures (@ +0x2c[10], allocated in setup()).
     for (int i = 0; i < 10; i++) {
-        if (neTextureForiOS *tex = field<neTextureForiOS *>(0x2c + i * 4)) {
+        if (neTextureForiOS *tex = m_digitTex[i]) {
             delete tex;
-            field<neTextureForiOS *>(0x2c + i * 4) = nullptr;
+            m_digitTex[i] = nullptr;
         }
     }
 
     // The two AepLyrCtrl overlays (@ +0x54 PAUSE_LOOP, +0x58 top banner): unlink from the
     // Aep layer list, then delete.
-    if (AepLyrCtrl *pauseLayer = field<AepLyrCtrl *>(0x54)) {
+    if (AepLyrCtrl *pauseLayer = m_pauseLayer) {
         pauseLayer->unlink();
         delete pauseLayer;
-        field<AepLyrCtrl *>(0x54) = nullptr;
+        m_pauseLayer = nullptr;
     }
-    if (AepLyrCtrl *topLayer = field<AepLyrCtrl *>(0x58)) {
+    if (AepLyrCtrl *topLayer = m_topLayer) {
         topLayer->unlink();
         delete topLayer;
-        field<AepLyrCtrl *>(0x58) = nullptr;
+        m_topLayer = nullptr;
     }
 
     // Free the group-7 arcade_viewer Aep textures. Ghidra: releaseAepTexture(aep, 7).
@@ -395,33 +395,33 @@ void AcViewerTask::cleanup() {
 
     // Release the cached sheet + song-title strong refs (ARC: __bridge_transfer balances
     // the +1 retains loadChart() took at +0x1e0 / +0x1e4, then nil the ivars).
-    if (field<void *>(0x1e0)) {
-        (void)(__bridge_transfer id)field<void *>(0x1e0);   // sheet NSData
-        field<void *>(0x1e0) = nullptr;
+    if (m_sheet) {
+        (void)(__bridge_transfer id)m_sheet;   // sheet NSData
+        m_sheet = nullptr;
     }
-    if (field<void *>(0x1e4)) {
-        (void)(__bridge_transfer id)field<void *>(0x1e4);   // song-title NSString
-        field<void *>(0x1e4) = nullptr;
+    if (m_songTitle) {
+        (void)(__bridge_transfer id)m_songTitle;   // song-title NSString
+        m_songTitle = nullptr;
     }
 
     // Stop + release the arcade timing SE (source id @ +0xd4) and the song BGM.
-    [audio stopSe:field<int>(0xd4)];
-    [audio releaseSe:nil resourceId:field<int>(0xd4)];
+    [audio stopSe:m_readySeId];
+    [audio releaseSe:nil resourceId:m_readySeId];
     [audio releaseBgm];
 
     // Release the arcade option-sheet controller (@ +0x208, ARC: __bridge_transfer + nil).
-    if (field<void *>(0x208)) {
-        (void)(__bridge_transfer id)field<void *>(0x208);
-        field<void *>(0x208) = nullptr;
+    if (m_optionVC) {
+        (void)(__bridge_transfer id)m_optionVC;
+        m_optionVC = nullptr;
     }
 
     // Wipe the whole play-data region (@ +0x28..+0x20b, up to state @ +0x20c). Preserve
     // the pad "board up" byte (@ +0x1d9) across the wipe, but only on the pad display
     // (Ghidra: g_bIsPadDisplay after NESceneManager_shared()).
-    const unsigned char boardUp = field<unsigned char>(0x1d9);
+    const unsigned char boardUp = m_padBoardUp;
     memset(reinterpret_cast<char *>(this) + 0x28, 0, 0x1e4);
     if (neSceneManager::isPadDisplay()) {
-        field<unsigned char>(0x1d9) = boardUp;
+        m_padBoardUp = boardUp;
     }
 }
 
@@ -447,7 +447,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     AcNoteMng &note = AcNoteMng::shared();
     neGraphics &gfx = neGraphics::shared();
 
-    field<unsigned char>(0xf8) = 0;   // per-frame "moved" flag (field17_0xd0; recomputed)
+    m_moved = 0;   // per-frame "moved" flag (field17_0xd0; recomputed)
 
     // --- Touch preamble (Ghidra: the drag/flick classifier at 0x216f6..0x21880). While
     // the HUD is up (ready byte @ +0x1d4) it latches a drag anchor on a held touch, or
@@ -456,27 +456,30 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // best-effort as a boolean "flick this frame".
     bool flick = false;
     int flickX = 0, flickY = 0;
-    if (field<unsigned char>(0x1d4) != 0) {
+    if (m_hudReady != 0) {
         const int n = gfx.activeTouchCount();
         for (int i = 0; i < n; i++) {
             const neTouchPoint *t = gfx.touchAt(i);
             if (t == nullptr) { continue; }
             if (t->released != 0) {
                 flick = true;
-                flickX = (int)((float)t->x / field<float>(0x10c));
-                flickY = (int)((float)t->y / field<float>(0x10c));
+                // +0x10c holds the UI-scale word; the touch classifier reads it as a float
+                // divisor (same bytes setup() wrote as g_dwUiScale).
+                const float scale = reinterpret_cast<float &>(m_uiScale);
+                flickX = (int)((float)t->x / scale);
+                flickY = (int)((float)t->y / scale);
                 break;
             }
         }
     }
 
     int next;
-    switch (state()) {
+    switch (m_state) {
     case 0:
         // Enter the arcade viewer nav screen (and, on pad, insert the black board), then
         // register this task on the AppDelegate.
         [AcvRootVC() GotoAcViewer];
-        if (neSceneManager::isPadDisplay() && field<char>(0x1d9) == 0) {
+        if (neSceneManager::isPadDisplay() && m_padBoardUp == 0) {
             [AcvRootVC() InsertBlackBoard];
         }
         [[AppDelegate appDelegate] setAcMainTask:this];
@@ -488,29 +491,29 @@ void AcViewerTask::update(int /*deltaMs*/) {
         break;
     case 2:
         setup();
-        state() = 3;
+        m_state = 3;
         [[fallthrough]];
     case 3:
         // Fade the HUD in and play the top banner.
         aep.playTransition(1, 0, 0);   // setAepTransitionMode(aep, 1)
-        field<AepLyrCtrl *>(0x58)->play();
-        state() = 4;
+        m_topLayer->play();
+        m_state = 4;
         [[fallthrough]];
     case 4:
-        if (field<char>(0x1d5) == 0 || !aep.isTransitionDone()) {
+        if (m_hudArmed == 0 || !aep.isTransitionDone()) {
             break;   // still transitioning
         }
         // On phone (or once the pad board is up) fire the ready SE, then advance.
-        if (!neSceneManager::isPadDisplay() || field<char>(0x1d9) != 0) {
-            field<int>(0xd8) = (int)[AcvRootVC() playSe:0 resourceId:field<int>(0xd4)];
+        if (!neSceneManager::isPadDisplay() || m_padBoardUp != 0) {
+            m_readySeInst = (int)[AcvRootVC() playSe:0 resourceId:m_readySeId];
         }
         next = 5;
         break;
     case 5:
         // When the ready SE finishes, start note playback.
-        if ([AcvRootVC() isPlayingSe:field<int>(0xd8)] == 0) {
+        if ([AcvRootVC() isPlayingSe:m_readySeInst] == 0) {
             note.startPlayback();
-            state() = 6;
+            m_state = 6;
         }
         if (neSceneManager::isPadDisplay()) {
             [AcvRootVC() FadeOutBlackBoard];
@@ -526,7 +529,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // end marker is reached). On finish, reset the end-hold counter (@ +0x204) and go to
         // the end-hold state; otherwise a flick over the note field opens the song-select.
         if (g_bAcNoteFinished) {
-            field<int>(0x204) = 0;
+            m_endHoldCounter = 0;
             next = 7;
         } else if (flick && [AcvRootVC() acMusicSelViewing]) {
             next = 10;
@@ -537,15 +540,15 @@ void AcViewerTask::update(int /*deltaMs*/) {
     }
     case 7: {
         // End-of-song hold: after ~30 frames, pause + snapshot and go to the pause state.
-        int t = field<int>(0x204);
+        int t = m_endHoldCounter;
         if (t > 0x1e) {
             note.pause();
-            field<int>(0xfc) = note.getCurrentPosition();
-            field<char>(0x1d6) = 1;
-            state() = 0xc;
-            t = field<int>(0x204);
+            m_pauseTime = note.getCurrentPosition();
+            m_paused = 1;
+            m_state = 0xc;
+            t = m_endHoldCounter;
         }
-        field<int>(0x204) = t + 1;
+        m_endHoldCounter = t + 1;
         break;
     }
     case 8:
@@ -565,28 +568,28 @@ void AcViewerTask::update(int /*deltaMs*/) {
     case 10:
         // Song-select viewing: pause + snapshot, then wait to resume.
         note.pause();
-        field<int>(0xfc) = note.getCurrentPosition();
-        field<char>(0x1d6) = 1;
+        m_pauseTime = note.getCurrentPosition();
+        m_paused = 1;
         next = 0xb;
         break;
     case 0xb:
         // Resume once the viewer is no longer showing the song-select.
-        if (neSceneManager::isPadDisplay() && field<char>(0x1d6) != 0) {
+        if (neSceneManager::isPadDisplay() && m_paused != 0) {
             note.resume();
-            field<char>(0x1d6) = 0;
-            state() = 6;
+            m_paused = 0;
+            m_state = 6;
         }
         break;
     case 0xc:
         // Pause menu: freeze play (if not already), play the pause overlay (phone) or the
         // black board (pad), and wait for the resume/quit tap.
-        if (field<char>(0x1d6) == 0) {
+        if (m_paused == 0) {
             note.pause();
-            field<int>(0xfc) = note.getCurrentPosition();
+            m_pauseTime = note.getCurrentPosition();
         }
-        field<char>(0x1d7) = 1;
+        m_pauseMenuOpen = 1;
         if (!neSceneManager::isPadDisplay()) {
-            field<AepLyrCtrl *>(0x54)->play();
+            m_pauseLayer->play();
         } else {
             [AcvRootVC() GotoAcViewer];
         }
@@ -596,23 +599,23 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // Wait in the pause menu (resume / retry / quit hit-testing lives here; the
         // per-button rect math is best-effort). On resume, restart the note engine.
         if (flick) {
-            field<AepLyrCtrl *>(0x54)->reset();
-            field<char>(0x1d7) = 0;
+            m_pauseLayer->reset();
+            m_pauseMenuOpen = 0;
             note.resume();
-            field<char>(0x1d6) = 0;
-            state() = 6;
+            m_paused = 0;
+            m_state = 6;
         }
         return;
     case 0xe: {
         // Open the arcade option sheet (hi-speed / pop-kun / hid-sud / ran-mir). Release any
         // previous controller (@ +0x208), build a fresh AcViewerOptionViewController bound to
         // this task, fire the open SE + animation, and resume the nav loop.
-        if (field<void *>(0x208)) {
-            (void)(__bridge_transfer id)field<void *>(0x208);
-            field<void *>(0x208) = nullptr;
+        if (m_optionVC) {
+            (void)(__bridge_transfer id)m_optionVC;
+            m_optionVC = nullptr;
         }
         id optVC = [[AcViewerOptionViewController alloc] initForAcMain:this];
-        field<void *>(0x208) = (__bridge_retained void *)optVC;
+        m_optionVC = (__bridge_retained void *)optVC;
         [optVC startOpenAnimationForAcMain];
         [AcvRootVC() ResumeLoop];
         next = 0xf;
@@ -625,24 +628,24 @@ void AcViewerTask::update(int /*deltaMs*/) {
             [AcvRootVC() FadeOutBlackBoard];
         }
         [[AppDelegate appDelegate] setAcMainTask:nil];
-        field<char>(0x1d9) = 0;
+        m_padBoardUp = 0;
         kill();   // +0x24 = 1
         {
             MenuMainTask *menu = new MenuMainTask();
             menu->setPriority(3);
         }
-        state() = 0x11;
+        m_state = 0x11;
         return;
     default:
         break;
     }
-    state() = next;
+    m_state = next;
 
     // Draw tail: update+draw all Aep layers, then (once the HUD is up and armed) the
     // note field and life gauge.
     (void)audio;
     updateAndDrawAepLayers(0);
-    if (field<char>(0x1d5) != 0 && field<char>(0x1d4) != 0) {
+    if (m_hudArmed != 0 && m_hudReady != 0) {
         drawActiveNotes();
         drawLifeGauge();
     }
@@ -660,54 +663,54 @@ void AcViewerHudDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
     (void)frame;
     AepManager &aep = AepManager::shared();
     AcViewerTask *self = static_cast<AcViewerTask *>(context);
-    char *pd = reinterpret_cast<char *>(self);
-    auto F = [&](int off) -> int { return *reinterpret_cast<int *>(pd + off); };
 
     // Digit-run blitter shared by the count cases: draw `n` digits of `val` right-to-left
-    // from the +0x2c digit-texture set, advancing x by -F(0x1a0) each step.
+    // from the m_digitTex[] set, advancing x by -m_digitAdvance each step.
     auto drawDigits = [&](int val, int n) {
         int cx = x;
         for (int k = 0; k < n; k++) {
-            neTextureForiOS_draw(&aep, *reinterpret_cast<void **>(pd + 0x2c + (val % 10) * 4),
-                                 0, 0, F(0x198), F(0x19c), cx, y, scaleX, scaleY, rotation,
-                                 anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p14, 1);
-            cx -= F(0x1a0);
+            neTextureForiOS_draw(&aep, self->m_digitTex[val % 10],
+                                 0, 0, self->m_digitScaleX, self->m_digitScaleY, cx, y,
+                                 scaleX, scaleY, rotation, anchorX, anchorY, color, alpha,
+                                 blend, 0xffffff, 0, p14, 1);
+            cx -= self->m_digitAdvance;
             val /= 10;
         }
     };
 
-    if (F(0xb8) == child) {
+    if (self->m_usrNo[0] == child) {
         // SCORE layer -> the difficulty bar frame (@ +0x84) at the scaled anchor.
-        drawAepFrameEx(&aep, F(0x84), x, y, scaleX, scaleY, rotation, anchorX, anchorY,
+        drawAepFrameEx(&aep, self->m_barFrm, x, y, scaleX, scaleY, rotation, anchorX, anchorY,
                        color, alpha, blend, 0xffffff, p13, 0xe, 1);
-    } else if (F(0xbc) == child) {
+    } else if (self->m_usrNo[1] == child) {
         // COMBO layer -> cache the combo-digit screen origin (@ +0x1ec/+0x1f0) for
         // drawActiveNotes, then draw the MUSIC_ON / MUSIC_OFF marker per the mute flag.
-        *reinterpret_cast<int *>(pd + 0x1f0) = y - (anchorY * scaleY) / 100;
-        const int dy = (unsigned char)F(0x1d8) == 0 ? -0xc : -0x18;   // phone vs pad offset
-        *reinterpret_cast<int *>(pd + 0x1ec) = (x - (anchorX * scaleX) / 100) + dy;
-        const int frm = *reinterpret_cast<char *>(pd + 0x1d6) == 0 ? F(0x80) : F(0x7c);
+        self->m_comboDigitY = y - (anchorY * scaleY) / 100;
+        const int dy = self->m_padDisplay == 0 ? -0xc : -0x18;   // phone vs pad offset
+        self->m_comboDigitX = (x - (anchorX * scaleX) / 100) + dy;
+        const int frm = self->m_paused == 0 ? self->m_musicOffFrm : self->m_musicOnFrm;
         drawAepFrameEx(&aep, frm, x, y, scaleX, scaleY, rotation, anchorX, anchorY,
                        color, alpha, blend, 0xffffff, p13, 0xe, 1);
-    } else if (F(0xc0) == child) {
+    } else if (self->m_usrNo[2] == child) {
         // MUSIC_NAME layer -> blit the cached song-title string (@ +0x1e4) at the HUD
         // baseline (Ghidra: aepManagerReset_a text blit with size @ +0x1e8, y bias @ +0x1c4).
-        NSString *title = (__bridge NSString *)*reinterpret_cast<void **>(pd + 0x1e4);
-        AepDrawText(&aep, title.UTF8String, F(0x1e8), x, y + F(0x1c4), 1, 100, 0xffffff, 0xe);
-    } else if (F(0xcc) == child) {
+        NSString *title = (__bridge NSString *)self->m_songTitle;
+        AepDrawText(&aep, title.UTF8String, self->m_titleXAdvance, x, y + self->m_titleBaselineY,
+                    1, 100, 0xffffff, 0xe);
+    } else if (self->m_usrNo[5] == child) {
         // COOL count layer -> 3 digits from the engine's COOL counter (DAT_0016ebe0).
         AcNoteMng::shared();
         drawDigits((int)g_dwAcCoolCount, 3);
-    } else if (F(0xd0) == child) {
+    } else if (self->m_usrNo[6] == child) {
         // GREAT count layer -> 2 digits from the GREAT counter (DAT_0016ebe4).
         AcNoteMng::shared();
         drawDigits((int)g_dwAcGreatCount, 2);
-    } else if (F(0xc8) == child) {
+    } else if (self->m_usrNo[4] == child) {
         // Note-count layer -> 4 digits of the total note count (@ +0x100).
-        drawDigits((int)*reinterpret_cast<int16_t *>(pd + 0x100), 4);
-    } else if (F(0xc4) == child) {
+        drawDigits((int)self->m_totalNoteCount, 4);
+    } else if (self->m_usrNo[3] == child) {
         // Judged-total layer -> 4 digits of the running judge total (@ +0x102).
-        drawDigits((int)*reinterpret_cast<int16_t *>(pd + 0x102), 4);
+        drawDigits((int)self->m_judgeTotal, 4);
     }
 }
 
