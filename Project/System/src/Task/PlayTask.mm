@@ -9,12 +9,18 @@
 
 #include <cstring>
 
+#import <Foundation/Foundation.h>
+
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AudioManager.h"
+#import "MusicData.h"
+#import "MusicManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "PlayTask.h"
+#import "UserSettingData.h"
+#import "neEngineBridge.h"   // neAppEventCenter / neSceneManager::hitSoundName
 #import "neGraphics.h"
 
 // PlayTaskInit / PlayTaskGotoResult are declared in PlayTask.h (the play-scene
@@ -77,6 +83,63 @@ void PlayTask::resetState() {
     *reinterpret_cast<int16_t *>(pd(this) + 0x9c2)  = 0;
     *reinterpret_cast<int *>(pd(this) + 0x9d8)      = 0;
     *reinterpret_cast<unsigned char *>(pd(this) + 0x9dc) = 0;
+}
+
+// @ 0x30720 — playTaskLoadChart. Reload the selected chart into the note manager:
+// resolve the picked song + difficulty, then (on a full load, restart == 0) restart the
+// BGM decode on a background queue, parse the chosen sheet into NoteMng, and load the
+// per-tap hit SE. `restart` != 0 reparses the chart only (the mid-play reset path calls
+// reloadChart(1)), skipping the audio work.
+void PlayTask::reloadChart(int restart) {
+    AudioManager *audio = [AudioManager sharedManager];
+    NoteMng &nm = NoteMng::shared();
+
+    MusicData *md;
+    int difficulty;
+    if (*reinterpret_cast<unsigned char *>(pd(this) + 0x9c9) == 0) {
+        // Normal play: the picked {musicId, sheet} pair the event center carries (@ +0x968).
+        neAppEventCenter *evc = *reinterpret_cast<neAppEventCenter **>(pd(this) + 0x968);
+        const int musicId = evc->lastMusic();           // pair[0]
+        difficulty = (short)evc->lastSheet();           // (short)pair[1]
+        md = [[MusicManager getInstance] getMusicData:musicId];
+    } else {
+        // Tutorial / bundled-demo play (flag @ +0x9c9): the fixed bundled song, normal sheet.
+        difficulty = 0;
+        md = [MusicData dataWithPath:[MusicManager getPathFromBundle:0] ID:0];
+    }
+
+    if (restart == 0) {
+        [audio stopBgm:0.0f];
+        // @ 0x3119c — decode + start this song's BGM off the main thread so the sheet parse
+        // below is not blocked on the audio; flag it ready (@ +0x9c6) when done. Captures
+        // the AudioManager + MusicData + this play data (Ghidra: the +0x968/+0x24 block vars).
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            NSData *bgm = [md music];
+            [audio loadBgmData:bgm isLoop:NO];
+            [audio setBgmVolume:1.0f];
+            *reinterpret_cast<unsigned char *>(pd(this) + 0x9c6) = 1;
+        });
+    }
+
+    // Pick the chosen difficulty's sheet (0 normal / 1 hyper / 2 ex) and parse it into the
+    // global note manager. Ghidra threads a per-note spawn callback (@ 0x3122c) and this
+    // play data as the two context args; only the play-data context is forwarded here.
+    NSData *sheet = (difficulty == 2) ? [md sheetEx]
+                  : (difficulty == 1) ? [md sheetHyper]
+                                      : [md sheetNormal];
+    nm.initPlayDataWithData(sheet, 0, (uint32_t)(uintptr_t)this);
+
+    if (restart == 0) {
+        // The per-tap feedback SE: the user's touch-sound kind (@ UserSettingData) -> the
+        // scene manager's hit-sound name -> the bundle ".m4a" path, loaded into play data
+        // +0x398 at the user's touch-sound volume (@ +0x9b4). Ghidra: getHitSoundName.
+        const int kind = [UserSettingData touchSoundKind];
+        NSString *name = (__bridge NSString *)neSceneManager::hitSoundName(kind);
+        NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"m4a"];
+        *reinterpret_cast<int *>(pd(this) + 0x398) =
+            (int)[audio loadSe:path isLoop:NO callName:nil group:0];
+        [audio setSeVolume:*reinterpret_cast<short *>(pd(this) + 0x9b4) groupId:0];
+    }
 }
 
 // @ 0x312cc — updateGaugeValue. Nudge the life gauge by the per-mode delta and clamp it.

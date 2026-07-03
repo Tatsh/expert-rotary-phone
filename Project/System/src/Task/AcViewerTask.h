@@ -53,8 +53,8 @@ private:
     void drawLifeGauge();  // @ 0x23000  drawLifeGauge — blit the 24-cell life gauge
 
     // Frees the task's HUD/textures/layers + AcNoteMng teardown. Called from state 9.
-    // Ghidra: AcMainTask::Cleanup (not part of this batch).
-    void cleanup();        // TODO(dep): owner method Cleanup not yet reconstructed
+    // Ghidra: AcMainTask::Cleanup.
+    void cleanup();        // @ 0x22b44
 
     // Reach a flat play-data field by its Ghidra byte offset from `this`.
     template <typename T> T &field(int off) {

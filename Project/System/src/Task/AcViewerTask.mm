@@ -14,6 +14,7 @@
 
 #import "AcViewerTask.h"
 
+#include <cstring>
 #include <new>
 
 #import "AcNoteMng.h"
@@ -343,6 +344,84 @@ void AcViewerTask::drawLifeGauge() {
             drawAepFrameEx(&aep, litFrm, x + nudge, y + nudge, 0x42c80000, 0x42c80000,
                            0, 0, 0, 100, 0, 0x20, 0xffffff, nullptr, 0xc, 1);
         }
+    }
+}
+
+// ===========================================================================
+// cleanup — Ghidra AcMainTask::Cleanup (@ 0x22b44). Free the arcade-viewer play
+// resources and wipe the play-data region so a later attempt starts clean. Called from
+// update() state 9 once the fade-out has completed. Every offset below is a member of
+// the flat play-data block (backed by m_playData) reached through field<T>(), matching
+// the setup()/loadChart() idiom; the freed sub-objects were all allocated in setup().
+//
+// The only field that survives the wipe is the pad "board up" byte (@ +0x1d9): it is
+// saved before the memset and restored afterwards, but only on the pad display.
+// ===========================================================================
+void AcViewerTask::cleanup() {
+    AepManager &aep = AepManager::shared();
+    AudioManager *audio = [AudioManager sharedManager];
+
+    // The play-state sub-task (@ +0x28, the first word of the play-data block): delete it
+    // through its virtual destructor. (Modelled as a C_TASK sub-object; the exact subclass
+    // is not recovered here — the vtbl-slot-1 deleting-destructor confirms it is deleted.)
+    if (C_TASK *stateTask = field<C_TASK *>(0x28)) {
+        delete stateTask;
+        field<C_TASK *>(0x28) = nullptr;
+    }
+
+    // The 10 HUD digit textures (@ +0x2c[10], allocated in setup()).
+    for (int i = 0; i < 10; i++) {
+        if (neTextureForiOS *tex = field<neTextureForiOS *>(0x2c + i * 4)) {
+            delete tex;
+            field<neTextureForiOS *>(0x2c + i * 4) = nullptr;
+        }
+    }
+
+    // The two AepLyrCtrl overlays (@ +0x54 PAUSE_LOOP, +0x58 top banner): unlink from the
+    // Aep layer list, then delete.
+    if (AepLyrCtrl *pauseLayer = field<AepLyrCtrl *>(0x54)) {
+        pauseLayer->unlink();
+        delete pauseLayer;
+        field<AepLyrCtrl *>(0x54) = nullptr;
+    }
+    if (AepLyrCtrl *topLayer = field<AepLyrCtrl *>(0x58)) {
+        topLayer->unlink();
+        delete topLayer;
+        field<AepLyrCtrl *>(0x58) = nullptr;
+    }
+
+    // Free the group-7 arcade_viewer Aep textures. Ghidra: releaseAepTexture(aep, 7).
+    aep.unloadGroup(kAcvGroup);
+
+    // Release the cached sheet + song-title strong refs (ARC: __bridge_transfer balances
+    // the +1 retains loadChart() took at +0x1e0 / +0x1e4, then nil the ivars).
+    if (field<void *>(0x1e0)) {
+        (void)(__bridge_transfer id)field<void *>(0x1e0);   // sheet NSData
+        field<void *>(0x1e0) = nullptr;
+    }
+    if (field<void *>(0x1e4)) {
+        (void)(__bridge_transfer id)field<void *>(0x1e4);   // song-title NSString
+        field<void *>(0x1e4) = nullptr;
+    }
+
+    // Stop + release the arcade timing SE (source id @ +0xd4) and the song BGM.
+    [audio stopSe:field<int>(0xd4)];
+    [audio releaseSe:nil resourceId:field<int>(0xd4)];
+    [audio releaseBgm];
+
+    // Release the arcade option-sheet controller (@ +0x208, ARC: __bridge_transfer + nil).
+    if (field<void *>(0x208)) {
+        (void)(__bridge_transfer id)field<void *>(0x208);
+        field<void *>(0x208) = nullptr;
+    }
+
+    // Wipe the whole play-data region (@ +0x28..+0x20b, up to state @ +0x20c). Preserve
+    // the pad "board up" byte (@ +0x1d9) across the wipe, but only on the pad display
+    // (Ghidra: g_bIsPadDisplay after NESceneManager_shared()).
+    const unsigned char boardUp = field<unsigned char>(0x1d9);
+    memset(reinterpret_cast<char *>(this) + 0x28, 0, 0x1e4);
+    if (neSceneManager::isPadDisplay()) {
+        field<unsigned char>(0x1d9) = boardUp;
     }
 }
 

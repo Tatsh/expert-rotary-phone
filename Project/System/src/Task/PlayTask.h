@@ -37,9 +37,8 @@ public:
 
 private:
     // Reload the chart into the play data (restart = the arg the reset path passes 1).
-    // Ghidra: playTaskLoadChart (FUN_..., not in this batch) — a PlayTask method (takes
-    // the play data as `this`).
-    void reloadChart(int restart);       // TODO(dep): owner method not yet reconstructed
+    // Ghidra: playTaskLoadChart — a PlayTask method (takes the play data as `this`).
+    void reloadChart(int restart);       // @ 0x30720
 };
 
 // Play-scene lifecycle seams operating on the play-data block.
