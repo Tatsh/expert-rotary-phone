@@ -56,14 +56,19 @@ public:
     void updateInfoPanel(int mode);      // Ghidra: musicSelUpdateInfoPanel (FUN_00037c88)
 
     // Stream the jacket cells of the next / previous list column into the widget row
-    // `column` (guarded by the per-direction latch @ +0x8c2/+0x8c0 and the cell semaphore
-    // @ +0xa90): release the row's old image/texture, then point each cell at the song
-    // index for the adjacent column (or -1 past the ends). Ghidra: musicSelLoadColumnNext
-    // (FUN_00035448) / musicSelLoadColumnPrev (FUN_00035520).
+    // `column` (guarded by the per-direction latch m_nextColLatch / m_prevColLatch and the
+    // cell semaphore m_cellSem): release the row's old image/texture, then point each cell at
+    // the song index for the adjacent column (or -1 past the ends). Ghidra:
+    // musicSelLoadColumnNext (FUN_00035448) / musicSelLoadColumnPrev (FUN_00035520).
     void loadColumnNext(int column);     // @ 0x35448
     void loadColumnPrev(int column);     // @ 0x35520
 
 private:
+    // Shared body of the two column loaders (they differ only by the direction `delta` = +1
+    // (next) / -1 (prev) and which latch byte gates them). Streams m_columnStride consecutive
+    // cells from row `rowBase`.
+    void loadColumn(int rowBase, int delta, uint8_t &latch);
+
     // The music-select buttons hit-tested each frame. hitButton() maps each to its
     // stored screen rectangle in the layout block and tests the current tap against
     // it (via the engine point-in-rect primitive, Ghidra FUN_0002d974).
@@ -160,8 +165,14 @@ private:
     neTextureForiOS *m_digitTex[60] = {};             // +0x5c score/points/rank digit atlases
     uint8_t          _rsvd_aepHandles[0x2d8 - 0x14c] = {}; // +0x14c resolved Aep lyr/frm/usr no. arrays
     MusicSelCell     m_cells[27] = {};                // +0x2d8 jacket + widget array (stride 0x38)
-    int16_t          m_highlight = -1;                // +0x8c0 highlight index (ctor 0xffff)
-    uint8_t          m_highlightPrev = 0xff;          // +0x8c2 previous-highlight sentinel
+    // Three packed per-column row-load latches (0xff == idle). The binary treats these as three
+    // separate bytes; the ctor's 0xffff/0xff stores (@ +0x8c0 / +0x8c2) set all three idle. A
+    // latch holds the row index whose jacket column is currently streaming, so a second load for
+    // the same direction is skipped until the async loader clears it. (Earlier reconstructions
+    // mismodelled +0x8c0 as an int16 "highlight index"; it is never read as one.)
+    uint8_t          m_prevColLatch = 0xff;           // +0x8c0 prev-column row-load latch
+    uint8_t          m_curColLatch = 0xff;            // +0x8c1 current-column widget-row latch
+    uint8_t          m_nextColLatch = 0xff;           // +0x8c2 next-column row-load latch
     uint8_t          _rsvd_8c3[0x8c4 - 0x8c3] = {};   // +0x8c3
     int              m_seId[5] = {};                  // +0x8c4 loaded touch-SE source ids
     int              m_seInst[5] = {};                // +0x8d8 touch-SE instance handles (-1 idle)

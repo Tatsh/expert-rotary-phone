@@ -86,11 +86,12 @@ void MainTask::refreshScoreRows() {
 
 // Ghidra: MainTask_ctor (FUN_00034d48) — C_TASK base ctor, install the MainTask vtable,
 // zero the play-data region (task +0x28..+0xaa4), then set the sentinels the binary sets:
-// selected cell = -1 (+0x928), a 0xffff highlight index (+0x8c0), a 0xff byte (+0x8c2),
-// and state = 0 (+0xaa4). The named members carry those initial values directly.
+// selected cell = -1 (+0x928), the packed column-row latches idle (0xffff @ +0x8c0 covers the
+// prev/current latch bytes, 0xff @ +0x8c2 the next latch), and state = 0 (+0xaa4). The named
+// members carry those initial values directly.
 MainTask::MainTask() {
     // C_TASK() already ran (base subobject); all members are default-initialised above
-    // (m_selectedCell = -1, m_highlight = -1, m_highlightPrev = 0xff, m_state = 0),
+    // (m_selectedCell = -1, m_prevColLatch = m_curColLatch = m_nextColLatch = 0xff, m_state = 0),
     // matching the memset + sentinel stores in the binary ctor.
 }
 
@@ -597,10 +598,11 @@ void MainTask::cleanup() {
             cell.name = nil;                                  // ARC releases the truncated name
         }
     }
-    // The packed per-column row latches (see MainTask.h note): next-column row @ +0x8c2 back to
-    // the 0xff "idle" sentinel, the current/prev-column pair @ +0x8c0 to 0xffff, column := 0.
-    m_highlightPrev = 0xff;
-    m_highlight = -1;
+    // Reset the three packed per-column row latches to the 0xff "idle" sentinel and the current
+    // column to 0 (the binary's 0xffff @ +0x8c0 / 0xff @ +0x8c2 stores cover all three bytes).
+    m_prevColLatch = 0xff;
+    m_curColLatch = 0xff;
+    m_nextColLatch = 0xff;
     m_columnIndex = 0;
 }
 
@@ -728,9 +730,8 @@ void MainTask::rebuildList() {
     }
 
     // ---- 5. (re)kick the background jacket loader exactly once ----
-    // +0x8c1 (the current-column widget-row latch; see the packed-latch note in MainTask.h) is
-    // reset so the current column draws from cell row 0.
-    reinterpret_cast<uint8_t *>(this)[0x8c1] = 0;
+    // The current-column widget-row latch is reset so the current column draws from cell row 0.
+    m_curColLatch = 0;
     if (!m_cellLoaderStarted) {
         m_loaderCursor = 0;
         m_cellSem = dispatch_semaphore_create(1);
@@ -927,72 +928,61 @@ extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
 }
 
 // ---------------------------------------------------------------------------------------
-// Column streaming + scene draw callback.
-//
-// These reach the widget cell array by its binary layout (element stride 0x38 @ +0x2d8,
-// each cell: index@+0, ready@+4, imageData@+8, texture(?)@+0xc, retained-id@+0x10) and a
-// handful of scalars (column index @ +0x8f0, per-row count @ +0xa74, song count @ +0x8ec,
-// the two direction latches @ +0x8c0/+0x8c2, the cell semaphore @ +0xa90). MainTask.h
-// models the same storage as MusicSelCell m_cells[27]; the raw offsets here match those
-// members but are kept literal to mirror the decompile 1:1.
+// Column streaming + scene draw callback. All work-area access is through the named
+// MainTask / MusicSelCell members (MainTask.h); the jacket cells are m_cells[27].
 // ---------------------------------------------------------------------------------------
-namespace {
-inline char *raw(MainTask *t) { return reinterpret_cast<char *>(t); }
-template <typename T> inline T &at(MainTask *t, int off) {
-    return *reinterpret_cast<T *>(raw(t) + off);
-}
-// Free one streamed cell's GPU/ObjC resources before it is re-pointed (Ghidra: the
-// vtable[1] delete on the texture @ +0xc, then release on the ObjC ids @ +0x8/+0x10).
-inline void releaseCell(int *cell) {
-    if (cell[3] != 0) {           // +0xc uploaded texture -> delete
-        delete reinterpret_cast<neTextureForiOS *>(cell[3]);
-        cell[3] = 0;
+
+// Free one streamed cell's GPU/ObjC resources before it is re-pointed (Ghidra: the vtable[1]
+// delete on the texture @ +0xc, then release on the ObjC ids @ +0x8/+0x10).
+static void releaseCell(MainTask::MusicSelCell &cell) {
+    if (cell.texture) {
+        delete cell.texture;
+        cell.texture = nullptr;
     }
-    if (cell[2] != 0) { cell[2] = 0; }   // +0x8 image data (ARC-released by owner)
-    if (cell[4] != 0) { cell[4] = 0; }   // +0x10 retained id
+    cell.imageData = nil;   // ARC-released by owner
+    cell.name = nil;
 }
-// Shared body of the two column loaders: `delta` is +1 (next) / -1 (prev). Ghidra:
-// FUN_00035448 / FUN_00035520 (identical but for the latch offset + column bound).
-inline void loadColumn(MainTask *t, int column, int delta, int8_t &latch) {
-    const int col = at<int>(t, 0x8f0);
-    dispatch_semaphore_wait(at<dispatch_semaphore_t>(t, 0xa90), DISPATCH_TIME_FOREVER);
-    const int perRow = at<int>(t, 0xa74);
+
+// @ 0x35448 / @ 0x35520 — shared body of the two column loaders. Streams m_columnStride
+// consecutive jacket cells from row `rowBase`, pointing each at the song for the adjacent
+// column (`delta` = +1 next / -1 prev), or -1 past the list ends. Guarded by `latch` and the
+// cell semaphore. Ghidra: musicSelLoadColumnNext / musicSelLoadColumnPrev (identical but for
+// the latch byte + column bound).
+void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
+    const int col = m_columnIndex;
+    dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
+    const int perRow = m_columnStride;
     if (perRow > 0) {
-        int *cell = &at<int>(t, column * 0x38 + 0x2d8);
-        const int songCount = at<int>(t, 0x8ec);
-        for (int i = 0; i < at<int>(t, 0xa74); i++) {
+        for (int i = 0; i < perRow; i++) {
+            MusicSelCell &cell = m_cells[rowBase + i];
             const int idx = perRow * (col + delta) + i;
-            if (idx < 0 || songCount <= idx) {
-                cell[0] = -1;   // +0x0 song index (none)
-                cell[1] = 0;    // +0x4 ready = empty
+            if (idx < 0 || m_songCount <= idx) {
+                cell.songIndex = -1;   // no song for this slot
+                cell.loadState = 0;    // empty
             } else {
-                cell[0] = idx;
-                cell[1] = 1;    // ready = loading
+                cell.songIndex = idx;
+                cell.loadState = 1;    // loading (async loader will upload the jacket)
             }
             releaseCell(cell);
-            cell += 0xe;        // stride 0x38 bytes
         }
     }
-    latch = (int8_t)column;
-    dispatch_semaphore_signal(at<dispatch_semaphore_t>(t, 0xa90));
+    latch = (uint8_t)rowBase;
+    dispatch_semaphore_signal(m_cellSem);
 }
-}  // namespace
 
 // @ 0x35448 — stream the column after the current one into row `column`.
 void MainTask::loadColumnNext(int column) {
-    if (m_highlightPrev == 0xff && at<int>(this, 0x8f0) != -2) {   // latch @ +0x8c2 idle
-        loadColumn(this, column, +1, *reinterpret_cast<int8_t *>(raw(this) + 0x8c2));
+    if (m_nextColLatch == 0xff && m_columnIndex != -2) {   // next-column latch idle
+        loadColumn(column, +1, m_nextColLatch);
     }
 }
 
-// @ 0x35520 — stream the column before the current one into row `column`.
+// @ 0x35520 — stream the column before the current one into row `column`. Gated by its own
+// latch byte (m_prevColLatch @ +0x8c0), independent of the current-column latch @ +0x8c1 that
+// rebuildList clears.
 void MainTask::loadColumnPrev(int column) {
-    // The prev-column latch is the +0x8c0 byte only (the low byte of the int16 m_highlight
-    // slot; its high byte @ +0x8c1 is the separate current-column row latch). Check the byte
-    // directly so rebuildList's +0x8c1 write does not spuriously gate this off.
-    const uint8_t prevLatch = *reinterpret_cast<uint8_t *>(raw(this) + 0x8c0);
-    if (prevLatch == 0xff && at<int>(this, 0x8f0) != 0) {
-        loadColumn(this, column, -1, *reinterpret_cast<int8_t *>(raw(this) + 0x8c0));
+    if (m_prevColLatch == 0xff && m_columnIndex != 0) {
+        loadColumn(column, -1, m_prevColLatch);
     }
 }
 
@@ -1057,12 +1047,12 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
         // Current column grid. Cache the grid origin (@ +0xa40/+0xa44) for hit-testing.
         *reinterpret_cast<int *>(pd + 0xa40) = x - (anchorX * scaleX) / 100;
         *reinterpret_cast<int *>(pd + 0xa44) = y - (anchorY * scaleY) / 100;
-        const int8_t curRow = *reinterpret_cast<int8_t *>(pd + 0x8c1);
+        const int8_t curRow = (int8_t)self->m_curColLatch;
         drawJacketGrid(curRow, F(0x8f0), 0);
 
-        // Incoming next column (latch @ +0x8c2), shifted one screen width right.
+        // Incoming next column (m_nextColLatch), shifted one screen width right.
         if (F(0x8f0) < F(0x8f4) - 1) {
-            const int8_t nextRow = *reinterpret_cast<int8_t *>(pd + 0x8c2);
+            const int8_t nextRow = (int8_t)self->m_nextColLatch;
             drawJacketGrid(nextRow, F(0x8f0) + 1, F(0xa64));
         }
     }
