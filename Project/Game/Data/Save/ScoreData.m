@@ -26,4 +26,15 @@
 @dynamic lastPlayDate;
 @dynamic chksco;
 
+
+// Delete every persisted ScoreData row (called by -[UserSettingData initForConvert]).
++ (void)deleteAll:(NSManagedObjectContext *)context {
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    request.entity = [NSEntityDescription entityForName:@"ScoreData" inManagedObjectContext:context];
+    NSArray *all = [context executeFetchRequest:request error:NULL];
+    for (NSManagedObject *object in all) {
+        [context deleteObject:object];
+    }
+}
+
 @end

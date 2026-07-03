@@ -9,7 +9,11 @@
 #import <string.h>
 
 #import "AppDelegate.h"
+#import "ArcadeScoreData.h"
+#import "CharaTicketData.h"
 #import "NSData+Crypt.h"
+#import "OverScoreData.h"
+#import "ScoreData.h"
 #import "TreasureData+Store.h"
 #import "TreasureData.h"
 #import "UserSettingData.h"
@@ -164,6 +168,18 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     if (cur != nil && [cur isEqualToData:value]) {
         return;
     }
+    [ud setObject:value forKey:key];
+    [ud synchronize];
+}
+
+// @ 0x5fb14
++ (NSArray *)getArray:(NSString *)key {
+    return [NSUserDefaults.standardUserDefaults arrayForKey:key];
+}
+
+// @ 0x5fb4c — unconditional write + synchronize (no unchanged-check, unlike saveData:).
++ (void)saveArray:(NSArray *)value Key:(NSString *)key {
+    NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;
     [ud setObject:value forKey:key];
     [ud synchronize];
 }
@@ -486,6 +502,241 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [ud setObject:[NSNumber numberWithFloat:(float)ec.lastMusic()] forKey:kKeyLastMusic];
     [ud setObject:[NSNumber numberWithFloat:(float)ec.lastSheet()] forKey:kKeyLastSheet];
     [ud synchronize];
+}
+
+#pragma mark - Audio volumes (plaintext)
+
+// @ 0x60300 — BGM master volume, clamped to [0.0, 1.0].
++ (float)bgmVolume {
+    float v = [self getFloat:@"BgmVolume"];
+    if (v >= 1.0f) v = 1.0f;
+    if (v < 0.0f)  v = 0.0f;
+    return v;
+}
+
+// @ 0x60364 — clamp to [0.0, 1.0] then persist.
++ (void)saveBgmVolume:(float)volume {
+    if (volume >= 1.0f) volume = 1.0f;
+    if (volume < 0.0f)  volume = 0.0f;
+    [self saveFloat:volume Key:@"BgmVolume"];
+}
+
+// @ 0x603c4 — SE master volume (0..127); values >= 127 cap at 127, negatives clamp to 0.
++ (short)seVolume {
+    int v = [self getInt:@"SeVolume"];
+    short r = 0x7f;
+    if (v < 0x7f) r = (short)v;
+    if (r < 0)    r = 0;
+    return r;
+}
+
+// @ 0x60404 — cap at 127 (no lower clamp in the original) and persist.
++ (void)saveSeVolume:(short)volume {
+    if (volume > 0x7e) volume = 0x7f;
+    [self saveInt:volume Key:@"SeVolume"];
+}
+
+// @ 0x60438 — per-tap SE volume (0..127); same clamp as seVolume.
++ (short)touchSoundVolume {
+    int v = [self getInt:@"TouchSoundVolume"];
+    short r = 0x7f;
+    if (v < 0x7f) r = (short)v;
+    if (r < 0)    r = 0;
+    return r;
+}
+
+// @ 0x60478 — cap at 127 and persist.
++ (void)saveTouchSoundVolume:(short)volume {
+    if (volume > 0x7e) volume = 0x7f;
+    [self saveInt:volume Key:@"TouchSoundVolume"];
+}
+
+#pragma mark - AC-viewer play options (plaintext)
+
+// @ 0x618a4
++ (int)acvHiSpeed { return [self getInt:@"AcViewerHiSpeed"]; }
+// @ 0x618f4
++ (int)acvPopKun  { return [self getInt:@"AcViewerPopKun"]; }
+// @ 0x61944
++ (int)acvHidSud  { return [self getInt:@"AcViewerHidSud"]; }
+// @ 0x61994
++ (int)acvRanMir  { return [self getInt:@"AcViewerRanMir"]; }
+// @ 0x619e4
++ (BOOL)isAcvGenreName { return [self getBOOL:@"AcViewerIsGenreName"]; }
+
+#pragma mark - Simple mode / popkun
+
+// @ 0x6075c
++ (BOOL)isSimpleMode { return [self getBOOL:@"SimpleMode"]; }
+// @ 0x60784
++ (void)saveIsSimpleMode:(BOOL)on { [self saveBOOL:on Key:@"SimpleMode"]; }
+
+// @ 0x60600 — note ("popkun") size, key "b". Valid range [50, 100]; anything outside
+// (including an unset 0) falls back to the default 100.
++ (float)popkunSize {
+    float v = [self getFloat:@"b"];
+    if (v > 100.0f || v < 50.0f) {
+        return 100.0f;
+    }
+    return v;
+}
+
+#pragma mark - Convert-code / device-change
+
+// @ 0x61a34 — AES-decrypt the blob under key "a" and decode it as UTF-8.
++ (NSString *)convertCode {
+    NSData *data = [self getData:@"a"];
+    if (data != nil) {
+        NSData *plain = [data decryptWith128Key:kAESKey initVector:kAESIV];
+        return [[NSString alloc] initWithData:plain encoding:NSUTF8StringEncoding];
+    }
+    return nil;
+}
+
+// @ 0x61ad0 — UTF-8 encode, AES-encrypt, store under key "a" (nil clears it).
++ (void)saveConvertCode:(NSString *)code {
+    NSData *enc = nil;
+    if (code != nil) {
+        NSData *plain = [code dataUsingEncoding:NSUTF8StringEncoding];
+        enc = [plain encryptWith128Key:kAESKey initVector:kAESIV];
+    }
+    [self saveData:enc Key:@"a"];
+}
+
+// @ 0x61c44
++ (BOOL)isFollowBonusGet { return [self getBOOL:@"IsFollowBonusGet"]; }
+// @ 0x61c6c
++ (void)saveIsFollowBonusGet:(BOOL)got { [self saveBOOL:got Key:@"IsFollowBonusGet"]; }
+
+// @ 0x61804 — the client version that last completed the device-change flow (key "LastCompletedClientVer").
++ (int)lastCompletedClientVer { return [self getInt:@"LastCompletedClientVer"]; }
+// @ 0x6182c
++ (void)saveLastCompletedClientVer:(int)ver { [self saveInt:ver Key:@"LastCompletedClientVer"]; }
+// @ 0x60090 — record acceptance of the privacy policy / terms (key "IsPolicyAccepted").
++ (void)saveIsPolicyAccepted:(BOOL)accepted { [self saveBOOL:accepted Key:@"IsPolicyAccepted"]; }
+
+// @ 0x5f418 — device-change reset: wipe the persistent domain, then re-seed the
+// factory defaults and clear all local Core Data progress records.
++ (void)initForConvert {
+    int clientVer = [self lastCompletedClientVer];
+
+    NSString *bundleId = NSBundle.mainBundle.bundleIdentifier;
+    NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;
+    [ud removePersistentDomainForName:bundleId];
+
+    [self saveSettingData];
+    [self saveSeVolume:100];
+    [self saveBgmVolume:1.0f];
+    [self saveIsEffectOn:YES];
+    [self saveIsLongNotesEffectOn:YES];
+    [self saveTouchSoundVolume:100];
+    [self saveTouchSoundKind:0];
+    [ud setObject:[NSNumber numberWithFloat:0] forKey:kKeyLastMusic];
+    [ud setObject:[NSNumber numberWithFloat:0] forKey:kKeyLastSheet];
+    [self saveIsPolicyAccepted:YES];
+    [self saveLastCompletedClientVer:clientVer];
+
+    NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
+    [ScoreData deleteAll:ctx];
+    [TreasureData deleteAll:ctx];
+    [CharaTicketData deleteAll:ctx];
+    [ArcadeScoreData deleteAll:ctx];
+    [OverScoreData deleteAll:ctx];
+}
+
+#pragma mark - Treasure
+
+// @ 0x61540 — reset the pending-treasure snapshot to the empty/"nothing pending"
+// record (the same default treasureTmp hands back) and persist it.
++ (void)initTreasureTmp {
+    TreasureTmpData data;
+    memset(&data, 0, sizeof(data));
+    data.subMapId = -1;
+    data.raw0x04  = -1;
+    data.raw0x44  = -1;
+    [self saveTreasureTmp:data];
+}
+
+// @ 0x61c94 — scan the "e" array of {mapid, readno} dictionaries for subMapId and
+// return its readno, or 0 when the sub-map has no stored entry.
++ (int)treasureReadNo:(short)subMapId {
+    NSArray *array = [self getArray:@"e"];
+    for (NSDictionary *entry in array) {
+        if ([[entry objectForKey:@"mapid"] shortValue] == subMapId) {
+            return [[entry objectForKey:@"readno"] intValue];
+        }
+    }
+    return 0;
+}
+
+#pragma mark - Uncomplete score-save queue
+
+// @ 0x60a90
++ (NSArray *)uncompleteSaveMusic { return [self getArray:@"UncompleteSaveMusic"]; }
+// @ 0x60ab8
++ (NSArray *)uncompleteSaveSheet { return [self getArray:@"UncompleteSaveSheet"]; }
+
+// @ 0x60ae0 — append music/sheet to the two parallel queues.
++ (void)addUncompleteSaveMusic:(int)music sheet:(short)sheet {
+    NSArray *musicArr = [self uncompleteSaveMusic];
+    NSArray *sheetArr = [self uncompleteSaveSheet];
+    NSMutableArray *music2 = musicArr != nil ? [musicArr mutableCopy] : [NSMutableArray array];
+    NSMutableArray *sheet2 = sheetArr != nil ? [sheetArr mutableCopy] : [NSMutableArray array];
+    [music2 addObject:[NSNumber numberWithLong:music]];
+    [sheet2 addObject:[NSNumber numberWithInt:sheet]];
+    [self saveArray:[music2 copy] Key:@"UncompleteSaveMusic"];
+    [self saveArray:[sheet2 copy] Key:@"UncompleteSaveSheet"];
+}
+
+// @ 0x60c74 — remove music/sheet from the two queues (no-op unless both exist).
++ (void)subUncompleteSaveMusic:(int)music sheet:(short)sheet {
+    NSArray *musicArr = [self uncompleteSaveMusic];
+    NSArray *sheetArr = [self uncompleteSaveSheet];
+    if (musicArr != nil && sheetArr != nil) {
+        NSMutableArray *music2 = [musicArr mutableCopy];
+        NSMutableArray *sheet2 = [sheetArr mutableCopy];
+        [music2 removeObject:[NSNumber numberWithLong:music]];
+        [sheet2 removeObject:[NSNumber numberWithInt:sheet]];
+        [self saveArray:[music2 copy] Key:@"UncompleteSaveMusic"];
+        [self saveArray:[sheet2 copy] Key:@"UncompleteSaveSheet"];
+    }
+}
+
+#pragma mark - Identity setters (plaintext)
+
+// @ 0x60288
++ (void)savePlayerId:(NSString *)playerId { [self saveString:playerId Key:@"PlayerId"]; }
+// @ 0x60238
++ (void)savePlayerName:(NSString *)name   { [self saveString:name Key:@"PlayerName"]; }
+
+#pragma mark - Store / news / spending
+
+// @ 0x61854 — last-seen store information banner id (note the original key's typo).
++ (int)lastInformationId { return [self getInt:@"LastInfomationId"]; }
+
+// @ 0x5fe88 — timestamp string of the last store view.
++ (NSString *)lastStoreViewTimeString { return [self getString:@"LastUpdateTime"]; }
+
+// @ 0x608c4 — when the monthly purchase total was last reset.
++ (void)saveLastUpdateSumPurchase:(NSDate *)date {
+    [self saveDate:date Key:@"LastUpdateSumPurchase"];
+}
+
+// @ 0x60920 — yen spent this month, clamped to >= 0 before persisting.
++ (void)saveSumPurchase:(int)sum {
+    if (sum < 0) {
+        sum = 0;
+    }
+    [self saveInt:sum Key:@"SumPurchase"];
+}
+
+// @ 0x612b0 — grant character tickets (Crypt109 charaTicket += count); no-op for 0.
++ (void)addCharaTicket:(int)count {
+    if (count == 0) {
+        return;
+    }
+    short cur = [self charaTicket];
+    [self saveCharaTicket:(short)(cur + count)];
 }
 
 @end

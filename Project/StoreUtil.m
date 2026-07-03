@@ -259,4 +259,54 @@ static NSString *ApiPath(NSString *name) {
     return [self createHttpsURL:path];
 }
 
+// @ 0x58c5c — store per-song info page:
+// /apr/main.cgi/musicinfo/index.jsp?target=JP&music=<id>&<userInfo>
++ (NSURL *)musicInfoURL:(unsigned int)musicId {
+    NSString *path = [NSString stringWithFormat:
+                      @"%@%@?target=%@&music=%d&%@",
+                      @"/apr/main.cgi/", @"musicinfo/index.jsp", [self targetStore],
+                      musicId, [self userInfo]];
+    return [self createHttpsURL:path];
+}
+
+// @ 0x58cf4 — arcade-viewer per-song info page:
+// /apr/main.cgi/acv_musicinfo/index.jsp?target=JP&music=<id>&<userInfo>
++ (NSURL *)acvMusicInfoURL:(unsigned int)acMusicId {
+    NSString *path = [NSString stringWithFormat:
+                      @"%@%@?target=%@&music=%d&%@",
+                      @"/apr/main.cgi/", @"acv_musicinfo/index.jsp", [self targetStore],
+                      acMusicId, [self userInfo]];
+    return [self createHttpsURL:path];
+}
+
+// @ 0x59b0c — arcade-viewer play-log POST endpoint:
+// https://apr-s.konaminet.jp/apr/main.cgi/log_acv_play/index.jsp
++ (NSURL *)logAcvPlayURL {
+    return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
+                                 @"/apr/main.cgi/", @"log_acv_play/index.jsp"]];
+}
+
+// @ 0x59ed8 — the official eAmusement site base string:
+// "http://p.eagate.573.jp/game/popn/rhythmin/".
++ (NSString *)getOfficialPath {
+    return [NSString stringWithFormat:@"http://%@%@",
+            @"p.eagate.573.jp", @"/game/popn/rhythmin/"];
+}
+
+// @ 0x5a060 — official pop'n team Twitter page.
++ (NSURL *)getOfficialTwitterURL {
+    return [NSURL URLWithString:@"https://twitter.com/popn_team"];
+}
+
 @end
+
+// @ 0x5c5ec — percent-encode a string for use in a URL query. Escapes the reserved
+// set "!*'();:@&=+$,/?%#[]" using UTF-8 (kCFStringEncodingUTF8). nil in -> nil out.
+NSString *urlEncodeString(NSString *s) {
+    if (s == nil) {
+        return nil;
+    }
+    return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(
+        kCFAllocatorDefault, (__bridge CFStringRef)s, NULL,
+        CFSTR("!*'();:@&=+$,/?%#[]"), kCFStringEncodingUTF8);
+}

@@ -43,6 +43,11 @@
     return sInstance;
 }
 
+// @ 0x5459c — StoreKit availability gate: tail-call [SKPaymentQueue canMakePayments].
++ (BOOL)isPurchasable {
+    return [SKPaymentQueue canMakePayments];
+}
+
 // @ 0x54498 — allocate the four backing arrays; flags start clear.
 - (instancetype)init {
     if ((self = [super init])) {

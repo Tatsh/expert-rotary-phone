@@ -24,6 +24,10 @@
 // Insert a new character-ticket row for `productID`.
 + (void)addRecordWithProductId:(NSString *)productID inManagedObjectContext:(NSManagedObjectContext *)context;
 
+
+// Delete every persisted CharaTicketData record (device-change / initForConvert reset).
++ (void)deleteAll:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

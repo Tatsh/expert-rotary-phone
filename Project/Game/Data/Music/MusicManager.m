@@ -8,11 +8,20 @@
 #import "AcMusicData.h"
 #import "AppDelegate.h"
 #import "BFCodec.h"          // Blowfish cipher (cipherInit:/decipher:)
+#import "DownloadMain.h"     // login-bonus id/count (getInstance/loginBonusId/loginCnt)
 #import "MusicData.h"
 #import "MusicManager.h"
 #import "MusicPatch.h"
 #import "RhUtil.h"           // RhFileExists / RhParsePlistArray / RhMD5Data
 #import "TreasureData+Store.h"   // +isOpenMusic:inManagedObjectContext:
+#import "UserSettingData.h"  // inviteCnt / getOpenedLoginBonusId / isBemaniCollaboOpened
+#import <UIKit/UIKit.h>
+
+// LoginBonusView is a UI class without a project header in this reconstruction; only its
+// +getRewardMaxCnt class method is referenced from here (Ghidra: LoginBonusView getRewardMaxCnt).
+@interface LoginBonusView : NSObject
++ (int)getRewardMaxCnt;
+@end
 
 // Treasure/sugoroku song ids, one per main map (Ghidra: DAT_0012fa58).
 static const int kTreasureMusicIds[9] = {
@@ -132,6 +141,74 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
         [array addObject:[NSNumber numberWithInt:kAcDefaultMusicIds[i]]];
     }
     m_AcDefaultMusicIDs = [[NSArray alloc] initWithArray:array];
+}
+
+#pragma mark - Unlock gates
+
+// @ 0xc7f94 — invite-reward unlock predicate. `index` selects the reward tier: tier 2
+// requires at least 7 accepted invites; tiers 0 and 1 require at least 5; any higher
+// tier is never open. (Ghidra: reads UserSettingData.inviteCnt.)
++ (BOOL)isOpenInviteMusic:(int)index {
+    int inviteCnt = [UserSettingData inviteCnt];
+    if (index == 2) {
+        if (inviteCnt < 7) {
+            return NO;
+        }
+    } else if (index > 1 || inviteCnt < 5) {
+        return NO;
+    }
+    return YES;
+}
+
+// @ 0xc7fe0 — BEMANI-collabo (jubeat plus x REFLEC BEAT plus x GITADORA) unlock predicate.
+// Open when the bundled collabo song (id 5) is present AND either the saved collabo flag is
+// set or all three companion BEMANI apps are installed (their URL schemes can be opened).
++ (BOOL)isOpenBemaniCollaboMusic {
+    NSString *path = [[MusicManager getInstance] getPathFromBundle:5];
+    if (!RhFileExists(path)) {
+        return NO;
+    }
+    if ([UserSettingData isBemaniCollaboOpened]) {
+        return YES;
+    }
+    UIApplication *app = [UIApplication sharedApplication];
+    if ([app canOpenURL:[NSURL URLWithString:@"jubeatplus:"]] &&
+        [app canOpenURL:[NSURL URLWithString:@"rbplus:"]] &&
+        [app canOpenURL:[NSURL URLWithString:@"gitadora:"]]) {
+        return YES;
+    }
+    return NO;
+}
+
+// @ 0xc8108 — login-bonus unlock predicate. `index` is the requested login-bonus reward tier.
+// Requires a non-negative saved opened-login-bonus id and that the tier's bundled song file
+// exists. An already-passed tier (index <= opened id) is open; the current tier (matching the
+// DownloadMain login-bonus id) opens once the day count reaches the reward maximum.
+// (Ghidra: DAT_0012fa48 is the login-bonus song-id table {6, ...}, indexed by the opened id.)
++ (BOOL)isOpenLoginBonusMusic:(int)index {
+    if (index < 0) {
+        return NO;
+    }
+    int openedId = [UserSettingData getOpenedLoginBonusId];
+    if (openedId < 0) {
+        return NO;
+    }
+    // Login-bonus song ids, indexed by the opened-login-bonus id (Ghidra DAT_0012fa48).
+    // Only tier 0 (song id 6) exists in this build.
+    static const int kLoginBonusMusicIds[] = { 6 };
+    int musicId = kLoginBonusMusicIds[openedId];
+    NSString *path = [[MusicManager getInstance] getPathFromBundle:musicId];
+    if (!RhFileExists(path)) {
+        return NO;
+    }
+    if (index <= openedId) {
+        return YES;
+    }
+    DownloadMain *download = [DownloadMain getInstance];
+    if (download.loginBonusId == index && download.loginCnt >= [LoginBonusView getRewardMaxCnt]) {
+        return YES;
+    }
+    return NO;
 }
 
 #pragma mark - Dirty flags / cache

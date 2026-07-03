@@ -38,6 +38,10 @@
 // Insert a new "over" score record.
 + (void)addRecordWithMusic:(int)music sheet:(short)sheet playerId:(NSString *)playerId date:(NSString *)date inManagedObjectContext:(NSManagedObjectContext *)context;
 
+
+// Delete every persisted OverScoreData record (device-change / initForConvert reset).
++ (void)deleteAll:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

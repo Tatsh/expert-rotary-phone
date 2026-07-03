@@ -92,7 +92,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 
 ## Partial classes — 0
 
-| Class | Done | Total | Missing |
+| Class | Done | Total | Missing (binary + unimpl) |
 | --- | ---: | ---: | ---: |
 
 ## Complete classes — 111
@@ -215,9 +215,9 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 
 ### `SearchView` — ❌ missing
 
-Methods **0/30** · ivars 17 · `instanceSize`=`251`
+Methods **0/30** · unimpl 0 · ivars 17 · `instanceSize`=`251`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -276,9 +276,9 @@ Methods **0/30** · ivars 17 · `instanceSize`=`251`
 
 ### `RecommendCore` — ❌ missing
 
-Methods **0/29** · ivars 7 · `instanceSize`=`32`
+Methods **0/29** · unimpl 0 · ivars 7 · `instanceSize`=`32`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -326,9 +326,9 @@ Methods **0/29** · ivars 7 · `instanceSize`=`32`
 
 ### `InputConversionPassViewController` — ❌ missing
 
-Methods **0/27** · ivars 6 · `instanceSize`=`188`
+Methods **0/27** · unimpl 0 · ivars 6 · `instanceSize`=`188`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -373,9 +373,9 @@ Methods **0/27** · ivars 6 · `instanceSize`=`188`
 
 ### `InputKIDViewCtrl` — ❌ missing
 
-Methods **0/26** · ivars 11 · `instanceSize`=`208`
+Methods **0/26** · unimpl 0 · ivars 11 · `instanceSize`=`208`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -424,9 +424,9 @@ Methods **0/26** · ivars 11 · `instanceSize`=`208`
 
 ### `RewardNetworkWebViewController` — ❌ missing
 
-Methods **0/25** · ivars 6 · `instanceSize`=`180`
+Methods **0/25** · unimpl 0 · ivars 6 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -469,9 +469,9 @@ Methods **0/25** · ivars 6 · `instanceSize`=`180`
 
 ### `MapSelectViewController` — ❌ missing
 
-Methods **0/24** · ivars 10 · `instanceSize`=`204`
+Methods **0/24** · unimpl 0 · ivars 10 · `instanceSize`=`204`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -517,9 +517,9 @@ Methods **0/24** · ivars 10 · `instanceSize`=`204`
 
 ### `RewardNetworkURLConnection` — ❌ missing
 
-Methods **0/24** · ivars 9 · `instanceSize`=`40`
+Methods **0/24** · unimpl 0 · ivars 9 · `instanceSize`=`40`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -564,9 +564,9 @@ Methods **0/24** · ivars 9 · `instanceSize`=`40`
 
 ### `FriendScoreMainView` — ❌ missing
 
-Methods **0/23** · ivars 12 · `instanceSize`=`212`
+Methods **0/23** · unimpl 0 · ivars 12 · `instanceSize`=`212`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -613,9 +613,9 @@ Methods **0/23** · ivars 12 · `instanceSize`=`212`
 
 ### `MapSelectSplitViewController` — ❌ missing
 
-Methods **0/23** · ivars 20 · `instanceSize`=`248`
+Methods **0/23** · unimpl 0 · ivars 20 · `instanceSize`=`248`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -670,9 +670,9 @@ Methods **0/23** · ivars 20 · `instanceSize`=`248`
 
 ### `RecommendWebView` — ❌ missing
 
-Methods **0/23** · ivars 7 · `instanceSize`=`76`
+Methods **0/23** · unimpl 0 · ivars 7 · `instanceSize`=`76`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -714,9 +714,9 @@ Methods **0/23** · ivars 7 · `instanceSize`=`76`
 
 ### `InputNameViewCtrl` — ❌ missing
 
-Methods **0/22** · ivars 4 · `instanceSize`=`177`
+Methods **0/22** · unimpl 0 · ivars 4 · `instanceSize`=`177`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -754,9 +754,9 @@ Methods **0/22** · ivars 4 · `instanceSize`=`177`
 
 ### `PresentBoxViewController` — ❌ missing
 
-Methods **0/20** · ivars 7 · `instanceSize`=`192`
+Methods **0/20** · unimpl 0 · ivars 7 · `instanceSize`=`192`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -795,9 +795,9 @@ Methods **0/20** · ivars 7 · `instanceSize`=`192`
 
 ### `QuizMainViewController` — ❌ missing
 
-Methods **0/19** · ivars 26 · `instanceSize`=`276`
+Methods **0/19** · unimpl 0 · ivars 26 · `instanceSize`=`276`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -854,9 +854,9 @@ Methods **0/19** · ivars 26 · `instanceSize`=`276`
 
 ### `AcViewerCategoryViewController` — ❌ missing
 
-Methods **0/18** · ivars 3 · `instanceSize`=`268`
+Methods **0/18** · unimpl 0 · ivars 3 · `instanceSize`=`268`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -889,9 +889,9 @@ Methods **0/18** · ivars 3 · `instanceSize`=`268`
 
 ### `CheckerCategoryViewController` — ❌ missing
 
-Methods **0/18** · ivars 3 · `instanceSize`=`272`
+Methods **0/18** · unimpl 0 · ivars 3 · `instanceSize`=`272`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -924,9 +924,9 @@ Methods **0/18** · ivars 3 · `instanceSize`=`272`
 
 ### `InputOTPViewCtrl` — ❌ missing
 
-Methods **0/18** · ivars 5 · `instanceSize`=`184`
+Methods **0/18** · unimpl 0 · ivars 5 · `instanceSize`=`184`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -961,9 +961,9 @@ Methods **0/18** · ivars 5 · `instanceSize`=`184`
 
 ### `OverScoreLogViewController` — ❌ missing
 
-Methods **0/18** · ivars 6 · `instanceSize`=`188`
+Methods **0/18** · unimpl 0 · ivars 6 · `instanceSize`=`188`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -999,9 +999,9 @@ Methods **0/18** · ivars 6 · `instanceSize`=`188`
 
 ### `RecommendViewController` — ❌ missing
 
-Methods **0/18** · ivars 6 · `instanceSize`=`184`
+Methods **0/18** · unimpl 0 · ivars 6 · `instanceSize`=`184`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1037,9 +1037,9 @@ Methods **0/18** · ivars 6 · `instanceSize`=`184`
 
 ### `PopnLinkTopViewController` — ❌ missing
 
-Methods **0/17** · ivars 6 · `instanceSize`=`184`
+Methods **0/17** · unimpl 0 · ivars 6 · `instanceSize`=`184`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1074,9 +1074,9 @@ Methods **0/17** · ivars 6 · `instanceSize`=`184`
 
 ### `SortSelectViewController` — ❌ missing
 
-Methods **0/17** · ivars 4 · `instanceSize`=`176`
+Methods **0/17** · unimpl 0 · ivars 4 · `instanceSize`=`176`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1109,9 +1109,9 @@ Methods **0/17** · ivars 4 · `instanceSize`=`176`
 
 ### `DefaultDataDownloadView` — ❌ missing
 
-Methods **0/16** · ivars 11 · `instanceSize`=`204`
+Methods **0/16** · unimpl 0 · ivars 11 · `instanceSize`=`204`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1150,9 +1150,9 @@ Methods **0/16** · ivars 11 · `instanceSize`=`204`
 
 ### `FreeRequestDetail` — ❌ missing
 
-Methods **0/16** · ivars 6 · `instanceSize`=`72`
+Methods **0/16** · unimpl 0 · ivars 6 · `instanceSize`=`72`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1186,9 +1186,9 @@ Methods **0/16** · ivars 6 · `instanceSize`=`72`
 
 ### `InviteTopViewControllerPad` — ❌ missing
 
-Methods **0/16** · ivars 5 · `instanceSize`=`180`
+Methods **0/16** · unimpl 0 · ivars 5 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1221,9 +1221,9 @@ Methods **0/16** · ivars 5 · `instanceSize`=`180`
 
 ### `SubMapSelectViewController` — ❌ missing
 
-Methods **0/16** · ivars 4 · `instanceSize`=`180`
+Methods **0/16** · unimpl 0 · ivars 4 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1255,9 +1255,9 @@ Methods **0/16** · ivars 4 · `instanceSize`=`180`
 
 ### `AcViewerMusicViewController` — ❌ missing
 
-Methods **0/15** · ivars 5 · `instanceSize`=`184`
+Methods **0/15** · unimpl 0 · ivars 5 · `instanceSize`=`184`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1289,9 +1289,9 @@ Methods **0/15** · ivars 5 · `instanceSize`=`184`
 
 ### `FriendRequestTable` — ❌ missing
 
-Methods **0/15** · ivars 4 · `instanceSize`=`180`
+Methods **0/15** · unimpl 0 · ivars 4 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1322,9 +1322,9 @@ Methods **0/15** · ivars 4 · `instanceSize`=`180`
 
 ### `FreeRequestListViewController` — ❌ missing
 
-Methods **0/14** · ivars 4 · `instanceSize`=`180`
+Methods **0/14** · unimpl 0 · ivars 4 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1354,9 +1354,9 @@ Methods **0/14** · ivars 4 · `instanceSize`=`180`
 
 ### `FriendRequestViewController` — ❌ missing
 
-Methods **0/14** · ivars 4 · `instanceSize`=`180`
+Methods **0/14** · unimpl 0 · ivars 4 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1386,9 +1386,9 @@ Methods **0/14** · ivars 4 · `instanceSize`=`180`
 
 ### `SettingTableSplitViewController` — ❌ missing
 
-Methods **0/14** · ivars 7 · `instanceSize`=`308`
+Methods **0/14** · unimpl 0 · ivars 7 · `instanceSize`=`308`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1421,9 +1421,9 @@ Methods **0/14** · ivars 7 · `instanceSize`=`308`
 
 ### `SettingTopViewController` — ❌ missing
 
-Methods **0/14** · ivars 2 · `instanceSize`=`168`
+Methods **0/14** · unimpl 0 · ivars 2 · `instanceSize`=`168`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1451,9 +1451,9 @@ Methods **0/14** · ivars 2 · `instanceSize`=`168`
 
 ### `FriendMngTopSplitViewController` — ❌ missing
 
-Methods **0/13** · ivars 13 · `instanceSize`=`284`
+Methods **0/13** · unimpl 0 · ivars 13 · `instanceSize`=`284`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1491,9 +1491,9 @@ Methods **0/13** · ivars 13 · `instanceSize`=`284`
 
 ### `PopnLinkTopSplitViewController` — ❌ missing
 
-Methods **0/13** · ivars 12 · `instanceSize`=`280`
+Methods **0/13** · unimpl 0 · ivars 12 · `instanceSize`=`280`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1530,9 +1530,9 @@ Methods **0/13** · ivars 12 · `instanceSize`=`280`
 
 ### `InputKidViewController` — ❌ missing
 
-Methods **0/12** · ivars 3 · `instanceSize`=`176`
+Methods **0/12** · unimpl 0 · ivars 3 · `instanceSize`=`176`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1559,9 +1559,9 @@ Methods **0/12** · ivars 3 · `instanceSize`=`176`
 
 ### `RewardNetwork` — ❌ missing
 
-Methods **0/12** · ivars 2 · `instanceSize`=`12`
+Methods **0/12** · unimpl 0 · ivars 2 · `instanceSize`=`12`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1587,9 +1587,9 @@ Methods **0/12** · ivars 2 · `instanceSize`=`12`
 
 ### `RandomLoginBonusView` — ❌ missing
 
-Methods **0/11** · ivars 9 · `instanceSize`=`104`
+Methods **0/11** · unimpl 0 · ivars 9 · `instanceSize`=`104`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1621,9 +1621,9 @@ Methods **0/11** · ivars 9 · `instanceSize`=`104`
 
 ### `AcViewerHiSpeedViewController` — ❌ missing
 
-Methods **0/10** · ivars 0 · `instanceSize`=`162`
+Methods **0/10** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1640,9 +1640,9 @@ Methods **0/10** · ivars 0 · `instanceSize`=`162`
 
 ### `AcceptPolicyViewController` — ❌ missing
 
-Methods **0/10** · ivars 5 · `instanceSize`=`180`
+Methods **0/10** · unimpl 0 · ivars 5 · `instanceSize`=`180`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1669,9 +1669,9 @@ Methods **0/10** · ivars 5 · `instanceSize`=`180`
 
 ### `CheckerMusicViewController` — ❌ missing
 
-Methods **0/10** · ivars 1 · `instanceSize`=`168`
+Methods **0/10** · unimpl 0 · ivars 1 · `instanceSize`=`168`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1694,9 +1694,9 @@ Methods **0/10** · ivars 1 · `instanceSize`=`168`
 
 ### `HttpConn` — ❌ missing
 
-Methods **0/10** · ivars 6 · `instanceSize`=`28`
+Methods **0/10** · unimpl 0 · ivars 6 · `instanceSize`=`28`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1724,9 +1724,9 @@ Methods **0/10** · ivars 6 · `instanceSize`=`28`
 
 ### `AcViewerHidSudViewController` — ❌ missing
 
-Methods **0/9** · ivars 0 · `instanceSize`=`162`
+Methods **0/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1742,9 +1742,9 @@ Methods **0/9** · ivars 0 · `instanceSize`=`162`
 
 ### `AcViewerPopKunViewController` — ❌ missing
 
-Methods **0/9** · ivars 0 · `instanceSize`=`162`
+Methods **0/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1760,9 +1760,9 @@ Methods **0/9** · ivars 0 · `instanceSize`=`162`
 
 ### `AcViewerRanMirViewController` — ❌ missing
 
-Methods **0/9** · ivars 0 · `instanceSize`=`162`
+Methods **0/9** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1778,9 +1778,9 @@ Methods **0/9** · ivars 0 · `instanceSize`=`162`
 
 ### `DevDataDownloader` — ❌ missing
 
-Methods **0/9** · ivars 6 · `instanceSize`=`25`
+Methods **0/9** · unimpl 0 · ivars 6 · `instanceSize`=`25`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1807,9 +1807,9 @@ Methods **0/9** · ivars 6 · `instanceSize`=`25`
 
 ### `LoginBonusView` — ❌ missing
 
-Methods **0/9** · ivars 3 · `instanceSize`=`61`
+Methods **0/9** · unimpl 0 · ivars 3 · `instanceSize`=`61`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1833,9 +1833,9 @@ Methods **0/9** · ivars 3 · `instanceSize`=`61`
 
 ### `RewardNetworkPasteBoard` — ❌ missing
 
-Methods **0/9** · ivars 2 · `instanceSize`=`12`
+Methods **0/9** · unimpl 0 · ivars 2 · `instanceSize`=`12`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1858,9 +1858,9 @@ Methods **0/9** · ivars 2 · `instanceSize`=`12`
 
 ### `RewardNetworkWebAPI` — ❌ missing
 
-Methods **0/9** · ivars 1 · `instanceSize`=`8`
+Methods **0/9** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1882,9 +1882,9 @@ Methods **0/9** · ivars 1 · `instanceSize`=`8`
 
 ### `InviteTopViewController` — ❌ missing
 
-Methods **0/8** · ivars 1 · `instanceSize`=`163`
+Methods **0/8** · unimpl 0 · ivars 1 · `instanceSize`=`163`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1905,9 +1905,9 @@ Methods **0/8** · ivars 1 · `instanceSize`=`163`
 
 ### `RecommendAdId` — ❌ missing
 
-Methods **0/8** · ivars 1 · `instanceSize`=`8`
+Methods **0/8** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1928,9 +1928,9 @@ Methods **0/8** · ivars 1 · `instanceSize`=`8`
 
 ### `CheckerDetail` — ❌ missing
 
-Methods **0/7** · ivars 15 · `instanceSize`=`368`
+Methods **0/7** · unimpl 0 · ivars 15 · `instanceSize`=`368`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1964,9 +1964,9 @@ Methods **0/7** · ivars 15 · `instanceSize`=`368`
 
 ### `DownloadImageView` — ❌ missing
 
-Methods **0/7** · ivars 3 · `instanceSize`=`68`
+Methods **0/7** · unimpl 0 · ivars 3 · `instanceSize`=`68`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -1988,9 +1988,9 @@ Methods **0/7** · ivars 3 · `instanceSize`=`68`
 
 ### `MapAnnotation` — ❌ missing
 
-Methods **0/7** · ivars 4 · `instanceSize`=`32`
+Methods **0/7** · unimpl 0 · ivars 4 · `instanceSize`=`32`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2013,9 +2013,9 @@ Methods **0/7** · ivars 4 · `instanceSize`=`32`
 
 ### `RecommendWebViewController` — ❌ missing
 
-Methods **0/6** · ivars 0 · `instanceSize`=`153`
+Methods **0/6** · unimpl 0 · ivars 0 · `instanceSize`=`153`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2028,9 +2028,9 @@ Methods **0/6** · ivars 0 · `instanceSize`=`153`
 
 ### `RewardNetworkIndicator` — ❌ missing
 
-Methods **0/6** · ivars 1 · `instanceSize`=`52`
+Methods **0/6** · unimpl 0 · ivars 1 · `instanceSize`=`52`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2049,9 +2049,9 @@ Methods **0/6** · ivars 1 · `instanceSize`=`52`
 
 ### `MyInviteCodeViewController` — ❌ missing
 
-Methods **0/4** · ivars 0 · `instanceSize`=`162`
+Methods **0/4** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2062,9 +2062,9 @@ Methods **0/4** · ivars 0 · `instanceSize`=`162`
 
 ### `PurchaseStore` — ❌ missing
 
-Methods **0/4** · ivars 1 · `instanceSize`=`5`
+Methods **0/4** · unimpl 0 · ivars 1 · `instanceSize`=`5`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2081,9 +2081,9 @@ Methods **0/4** · ivars 1 · `instanceSize`=`5`
 
 ### `RewardNetworkUdid` — ❌ missing
 
-Methods **0/4** · ivars 1 · `instanceSize`=`8`
+Methods **0/4** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2100,9 +2100,9 @@ Methods **0/4** · ivars 1 · `instanceSize`=`8`
 
 ### `FreeRequestListCell` — ❌ missing
 
-Methods **0/3** · ivars 11 · `instanceSize`=`96`
+Methods **0/3** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2128,9 +2128,9 @@ Methods **0/3** · ivars 11 · `instanceSize`=`96`
 
 ### `RecommendNetwork` — ❌ missing
 
-Methods **0/3** · ivars 1 · `instanceSize`=`8`
+Methods **0/3** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 
-#### Missing methods
+#### Missing methods (in binary, not reconstructed)
 
 | Selector | Address |
 | --- | --- |
@@ -2146,23 +2146,23 @@ Methods **0/3** · ivars 1 · `instanceSize`=`8`
 
 ### `RecommendWebAPI` — ❌ missing
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `RewardNetworkError` — ❌ missing
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `RewardNetworkMessage` — ❌ missing
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `RewardNetworkUtilities` — ❌ missing
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `AcMusicData` — ✅ complete
 
-Methods **31/31** · ivars 17 · `instanceSize`=`72`
+Methods **31/31** · unimpl 0 · ivars 17 · `instanceSize`=`72`
 
 #### Ivars
 
@@ -2188,11 +2188,11 @@ Methods **31/31** · ivars 17 · `instanceSize`=`72`
 
 ### `AcViewerCategoryCell` — ✅ complete
 
-Methods **3/3** · ivars 0 · `instanceSize`=`52`
+Methods **3/3** · unimpl 0 · ivars 0 · `instanceSize`=`52`
 
 ### `AcViewerDetailCell` — ✅ complete
 
-Methods **7/7** · ivars 5 · `instanceSize`=`72`
+Methods **7/7** · unimpl 0 · ivars 5 · `instanceSize`=`72`
 
 #### Ivars
 
@@ -2206,7 +2206,7 @@ Methods **7/7** · ivars 5 · `instanceSize`=`72`
 
 ### `AcViewerMusicCell` — ✅ complete
 
-Methods **7/7** · ivars 13 · `instanceSize`=`104`
+Methods **7/7** · unimpl 0 · ivars 13 · `instanceSize`=`104`
 
 #### Ivars
 
@@ -2228,7 +2228,7 @@ Methods **7/7** · ivars 13 · `instanceSize`=`104`
 
 ### `AcViewerOptionCell` — ✅ complete
 
-Methods **3/3** · ivars 2 · `instanceSize`=`60`
+Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 
 #### Ivars
 
@@ -2239,7 +2239,7 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 
 ### `AcViewerOptionViewController` — ✅ complete
 
-Methods **21/21** · ivars 5 · `instanceSize`=`180`
+Methods **21/21** · unimpl 0 · ivars 5 · `instanceSize`=`180`
 
 #### Ivars
 
@@ -2253,7 +2253,7 @@ Methods **21/21** · ivars 5 · `instanceSize`=`180`
 
 ### `AcViewerSplitViewController` — ✅ complete
 
-Methods **15/15** · ivars 12 · `instanceSize`=`256`
+Methods **15/15** · unimpl 0 · ivars 12 · `instanceSize`=`256`
 
 #### Ivars
 
@@ -2274,7 +2274,7 @@ Methods **15/15** · ivars 12 · `instanceSize`=`256`
 
 ### `AppDelegate` — ✅ complete
 
-Methods **43/43** · ivars 17 · `instanceSize`=`72`
+Methods **43/43** · unimpl 0 · ivars 17 · `instanceSize`=`72`
 
 #### Ivars
 
@@ -2300,11 +2300,11 @@ Methods **43/43** · ivars 17 · `instanceSize`=`72`
 
 ### `ArcadeScoreData` — ✅ complete
 
-Methods **1/1** · ivars 0 · `instanceSize`=`48`
+Methods **1/1** · unimpl 0 · ivars 0 · `instanceSize`=`48`
 
 ### `AudioManager` — ✅ complete
 
-Methods **68/68** · ivars 23 · `instanceSize`=`380`
+Methods **68/68** · unimpl 0 · ivars 23 · `instanceSize`=`380`
 
 #### Ivars
 
@@ -2336,7 +2336,7 @@ Methods **68/68** · ivars 23 · `instanceSize`=`380`
 
 ### `BFCodec` — ✅ complete
 
-Methods **6/6** · ivars 2 · `instanceSize`=`16`
+Methods **6/6** · unimpl 0 · ivars 2 · `instanceSize`=`16`
 
 #### Ivars
 
@@ -2347,7 +2347,7 @@ Methods **6/6** · ivars 2 · `instanceSize`=`16`
 
 ### `BirthDayViewController` — ✅ complete
 
-Methods **13/13** · ivars 8 · `instanceSize`=`196`
+Methods **13/13** · unimpl 0 · ivars 8 · `instanceSize`=`196`
 
 #### Ivars
 
@@ -2364,7 +2364,7 @@ Methods **13/13** · ivars 8 · `instanceSize`=`196`
 
 ### `CDataScanner` — ✅ complete
 
-Methods **22/22** · ivars 6 · `instanceSize`=`28`
+Methods **22/22** · unimpl 0 · ivars 6 · `instanceSize`=`28`
 
 #### Ivars
 
@@ -2379,15 +2379,15 @@ Methods **22/22** · ivars 6 · `instanceSize`=`28`
 
 ### `CJSONDataSerializer` — ✅ complete
 
-Methods **6/6** · ivars 0 · `instanceSize`=`4`
+Methods **6/6** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `CJSONDeserializer` — ✅ complete
 
-Methods **3/3** · ivars 0 · `instanceSize`=`4`
+Methods **3/3** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `CJSONScanner` — ✅ complete
 
-Methods **10/10** · ivars 1 · `instanceSize`=`29`
+Methods **10/10** · unimpl 0 · ivars 1 · `instanceSize`=`29`
 
 #### Ivars
 
@@ -2397,7 +2397,7 @@ Methods **10/10** · ivars 1 · `instanceSize`=`29`
 
 ### `CJSONSerializer` — ✅ complete
 
-Methods **5/5** · ivars 1 · `instanceSize`=`8`
+Methods **5/5** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 
 #### Ivars
 
@@ -2407,7 +2407,7 @@ Methods **5/5** · ivars 1 · `instanceSize`=`8`
 
 ### `CSerializedJSONData` — ✅ complete
 
-Methods **3/3** · ivars 1 · `instanceSize`=`8`
+Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`8`
 
 #### Ivars
 
@@ -2417,7 +2417,7 @@ Methods **3/3** · ivars 1 · `instanceSize`=`8`
 
 ### `CharaInfo` — ✅ complete
 
-Methods **13/13** · ivars 6 · `instanceSize`=`28`
+Methods **13/13** · unimpl 0 · ivars 6 · `instanceSize`=`28`
 
 #### Ivars
 
@@ -2432,11 +2432,11 @@ Methods **13/13** · ivars 6 · `instanceSize`=`28`
 
 ### `CharaTicketData` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`48`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`48`
 
 ### `CheckerCategoryCell` — ✅ complete
 
-Methods **3/3** · ivars 7 · `instanceSize`=`84`
+Methods **3/3** · unimpl 0 · ivars 7 · `instanceSize`=`84`
 
 #### Ivars
 
@@ -2452,7 +2452,7 @@ Methods **3/3** · ivars 7 · `instanceSize`=`84`
 
 ### `CheckerMusicCell` — ✅ complete
 
-Methods **3/3** · ivars 10 · `instanceSize`=`92`
+Methods **3/3** · unimpl 0 · ivars 10 · `instanceSize`=`92`
 
 #### Ivars
 
@@ -2471,7 +2471,7 @@ Methods **3/3** · ivars 10 · `instanceSize`=`92`
 
 ### `CommonAlertView` — ✅ complete
 
-Methods **15/15** · ivars 7 · `instanceSize`=`80`
+Methods **15/15** · unimpl 0 · ivars 7 · `instanceSize`=`80`
 
 #### Ivars
 
@@ -2487,7 +2487,7 @@ Methods **15/15** · ivars 7 · `instanceSize`=`80`
 
 ### `CommunicatingView` — ✅ complete
 
-Methods **11/11** · ivars 5 · `instanceSize`=`178`
+Methods **11/11** · unimpl 0 · ivars 5 · `instanceSize`=`178`
 
 #### Ivars
 
@@ -2501,7 +2501,7 @@ Methods **11/11** · ivars 5 · `instanceSize`=`178`
 
 ### `ConversionView` — ✅ complete
 
-Methods **20/20** · ivars 5 · `instanceSize`=`180`
+Methods **20/20** · unimpl 0 · ivars 5 · `instanceSize`=`180`
 
 #### Ivars
 
@@ -2515,7 +2515,7 @@ Methods **20/20** · ivars 5 · `instanceSize`=`180`
 
 ### `CustomAlertView` — ✅ complete
 
-Methods **18/18** · ivars 6 · `instanceSize`=`80`
+Methods **18/18** · unimpl 0 · ivars 6 · `instanceSize`=`80`
 
 #### Ivars
 
@@ -2530,7 +2530,7 @@ Methods **18/18** · ivars 6 · `instanceSize`=`80`
 
 ### `CustomButton` — ✅ complete
 
-Methods **5/5** · ivars 1 · `instanceSize`=`92`
+Methods **5/5** · unimpl 0 · ivars 1 · `instanceSize`=`92`
 
 #### Ivars
 
@@ -2540,7 +2540,7 @@ Methods **5/5** · ivars 1 · `instanceSize`=`92`
 
 ### `CustomSplitViewController` — ✅ complete
 
-Methods **9/9** · ivars 3 · `instanceSize`=`176`
+Methods **9/9** · unimpl 0 · ivars 3 · `instanceSize`=`176`
 
 #### Ivars
 
@@ -2552,11 +2552,11 @@ Methods **9/9** · ivars 3 · `instanceSize`=`176`
 
 ### `CustomTextView` — ✅ complete
 
-Methods **4/4** · ivars 0 · `instanceSize`=`56`
+Methods **4/4** · unimpl 0 · ivars 0 · `instanceSize`=`56`
 
 ### `CustomWebView` — ✅ complete
 
-Methods **14/14** · ivars 10 · `instanceSize`=`116`
+Methods **14/14** · unimpl 0 · ivars 10 · `instanceSize`=`116`
 
 #### Ivars
 
@@ -2575,7 +2575,7 @@ Methods **14/14** · ivars 10 · `instanceSize`=`116`
 
 ### `DelayImageView` — ✅ complete
 
-Methods **3/3** · ivars 1 · `instanceSize`=`56`
+Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
 
 #### Ivars
 
@@ -2585,7 +2585,7 @@ Methods **3/3** · ivars 1 · `instanceSize`=`56`
 
 ### `DownloadMain` — ✅ complete
 
-Methods **119/119** · ivars 63 · `instanceSize`=`252`
+Methods **119/119** · unimpl 0 · ivars 63 · `instanceSize`=`252`
 
 #### Ivars
 
@@ -2657,7 +2657,7 @@ Methods **119/119** · ivars 63 · `instanceSize`=`252`
 
 ### `DownloadProgresView` — ✅ complete
 
-Methods **6/6** · ivars 4 · `instanceSize`=`80`
+Methods **6/6** · unimpl 0 · ivars 4 · `instanceSize`=`80`
 
 #### Ivars
 
@@ -2670,7 +2670,7 @@ Methods **6/6** · ivars 4 · `instanceSize`=`80`
 
 ### `Downloader` — ✅ complete
 
-Methods **16/16** · ivars 7 · `instanceSize`=`36`
+Methods **16/16** · unimpl 0 · ivars 7 · `instanceSize`=`36`
 
 #### Ivars
 
@@ -2686,7 +2686,7 @@ Methods **16/16** · ivars 7 · `instanceSize`=`36`
 
 ### `FriendListCell` — ✅ complete
 
-Methods **3/3** · ivars 19 · `instanceSize`=`128`
+Methods **3/3** · unimpl 0 · ivars 19 · `instanceSize`=`128`
 
 #### Ivars
 
@@ -2714,7 +2714,7 @@ Methods **3/3** · ivars 19 · `instanceSize`=`128`
 
 ### `FriendListDetail` — ✅ complete
 
-Methods **15/15** · ivars 6 · `instanceSize`=`72`
+Methods **15/15** · unimpl 0 · ivars 6 · `instanceSize`=`72`
 
 #### Ivars
 
@@ -2729,7 +2729,7 @@ Methods **15/15** · ivars 6 · `instanceSize`=`72`
 
 ### `FriendListDetailChara` — ✅ complete
 
-Methods **6/6** · ivars 2 · `instanceSize`=`61`
+Methods **6/6** · unimpl 0 · ivars 2 · `instanceSize`=`61`
 
 #### Ivars
 
@@ -2740,7 +2740,7 @@ Methods **6/6** · ivars 2 · `instanceSize`=`61`
 
 ### `FriendListViewController` — ✅ complete
 
-Methods **12/12** · ivars 6 · `instanceSize`=`188`
+Methods **12/12** · unimpl 0 · ivars 6 · `instanceSize`=`188`
 
 #### Ivars
 
@@ -2755,7 +2755,7 @@ Methods **12/12** · ivars 6 · `instanceSize`=`188`
 
 ### `FriendMngTopViewController` — ✅ complete
 
-Methods **14/14** · ivars 3 · `instanceSize`=`172`
+Methods **14/14** · unimpl 0 · ivars 3 · `instanceSize`=`172`
 
 #### Ivars
 
@@ -2767,7 +2767,7 @@ Methods **14/14** · ivars 3 · `instanceSize`=`172`
 
 ### `FriendReplyCell` — ✅ complete
 
-Methods **7/7** · ivars 15 · `instanceSize`=`112`
+Methods **7/7** · unimpl 0 · ivars 15 · `instanceSize`=`112`
 
 #### Ivars
 
@@ -2791,7 +2791,7 @@ Methods **7/7** · ivars 15 · `instanceSize`=`112`
 
 ### `FriendReplyViewController` — ✅ complete
 
-Methods **17/17** · ivars 8 · `instanceSize`=`196`
+Methods **17/17** · unimpl 0 · ivars 8 · `instanceSize`=`196`
 
 #### Ivars
 
@@ -2808,7 +2808,7 @@ Methods **17/17** · ivars 8 · `instanceSize`=`196`
 
 ### `FriendRequestCell` — ✅ complete
 
-Methods **4/4** · ivars 11 · `instanceSize`=`96`
+Methods **4/4** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 
 #### Ivars
 
@@ -2828,7 +2828,7 @@ Methods **4/4** · ivars 11 · `instanceSize`=`96`
 
 ### `FriendScoreTableCell` — ✅ complete
 
-Methods **3/3** · ivars 23 · `instanceSize`=`144`
+Methods **3/3** · unimpl 0 · ivars 23 · `instanceSize`=`144`
 
 #### Ivars
 
@@ -2860,11 +2860,11 @@ Methods **3/3** · ivars 23 · `instanceSize`=`144`
 
 ### `GameEffectView` — ✅ complete
 
-Methods **11/11** · ivars 0 · `instanceSize`=`162`
+Methods **11/11** · unimpl 0 · ivars 0 · `instanceSize`=`162`
 
 ### `HowToView` — ✅ complete
 
-Methods **3/3** · ivars 2 · `instanceSize`=`60`
+Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 
 #### Ivars
 
@@ -2875,7 +2875,7 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 
 ### `HowToViewCtrl` — ✅ complete
 
-Methods **14/14** · ivars 7 · `instanceSize`=`189`
+Methods **14/14** · unimpl 0 · ivars 7 · `instanceSize`=`189`
 
 #### Ivars
 
@@ -2891,7 +2891,7 @@ Methods **14/14** · ivars 7 · `instanceSize`=`189`
 
 ### `HowToViewCtrlPad` — ✅ complete
 
-Methods **19/19** · ivars 7 · `instanceSize`=`192`
+Methods **19/19** · unimpl 0 · ivars 7 · `instanceSize`=`192`
 
 #### Ivars
 
@@ -2907,7 +2907,7 @@ Methods **19/19** · ivars 7 · `instanceSize`=`192`
 
 ### `ImageDownloader` — ✅ complete
 
-Methods **20/20** · ivars 6 · `instanceSize`=`28`
+Methods **20/20** · unimpl 0 · ivars 6 · `instanceSize`=`28`
 
 #### Ivars
 
@@ -2922,7 +2922,7 @@ Methods **20/20** · ivars 6 · `instanceSize`=`28`
 
 ### `LimitedCharaInfo` — ✅ complete
 
-Methods **7/7** · ivars 3 · `instanceSize`=`13`
+Methods **7/7** · unimpl 0 · ivars 3 · `instanceSize`=`13`
 
 #### Ivars
 
@@ -2934,7 +2934,7 @@ Methods **7/7** · ivars 3 · `instanceSize`=`13`
 
 ### `MainViewController` — ✅ complete
 
-Methods **95/95** · ivars 51 · `instanceSize`=`356`
+Methods **95/95** · unimpl 0 · ivars 51 · `instanceSize`=`356`
 
 #### Ivars
 
@@ -2994,7 +2994,7 @@ Methods **95/95** · ivars 51 · `instanceSize`=`356`
 
 ### `MapListCell` — ✅ complete
 
-Methods **3/3** · ivars 2 · `instanceSize`=`60`
+Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 
 #### Ivars
 
@@ -3005,7 +3005,7 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 
 ### `MusicData` — ✅ complete
 
-Methods **34/34** · ivars 16 · `instanceSize`=`68`
+Methods **34/34** · unimpl 0 · ivars 16 · `instanceSize`=`68`
 
 #### Ivars
 
@@ -3030,7 +3030,7 @@ Methods **34/34** · ivars 16 · `instanceSize`=`68`
 
 ### `MusicManager` — ✅ complete
 
-Methods **37/37** · ivars 13 · `instanceSize`=`56`
+Methods **37/37** · unimpl 0 · ivars 13 · `instanceSize`=`56`
 
 #### Ivars
 
@@ -3052,7 +3052,7 @@ Methods **37/37** · ivars 13 · `instanceSize`=`56`
 
 ### `MusicPatch` — ✅ complete
 
-Methods **9/9** · ivars 4 · `instanceSize`=`20`
+Methods **9/9** · unimpl 0 · ivars 4 · `instanceSize`=`20`
 
 #### Ivars
 
@@ -3065,11 +3065,11 @@ Methods **9/9** · ivars 4 · `instanceSize`=`20`
 
 ### `OverScoreData` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`48`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`48`
 
 ### `OverScoreLogCell` — ✅ complete
 
-Methods **4/4** · ivars 7 · `instanceSize`=`104`
+Methods **4/4** · unimpl 0 · ivars 7 · `instanceSize`=`104`
 
 #### Ivars
 
@@ -3085,7 +3085,7 @@ Methods **4/4** · ivars 7 · `instanceSize`=`104`
 
 ### `PolicyView` — ✅ complete
 
-Methods **11/11** · ivars 1 · `instanceSize`=`168`
+Methods **11/11** · unimpl 0 · ivars 1 · `instanceSize`=`168`
 
 #### Ivars
 
@@ -3095,7 +3095,7 @@ Methods **11/11** · ivars 1 · `instanceSize`=`168`
 
 ### `PopkunSizeViewCtrl` — ✅ complete
 
-Methods **9/9** · ivars 12 · `instanceSize`=`224`
+Methods **9/9** · unimpl 0 · ivars 12 · `instanceSize`=`224`
 
 #### Ivars
 
@@ -3116,7 +3116,7 @@ Methods **9/9** · ivars 12 · `instanceSize`=`224`
 
 ### `PreferredCharaInfo` — ✅ complete
 
-Methods **7/7** · ivars 3 · `instanceSize`=`13`
+Methods **7/7** · unimpl 0 · ivars 3 · `instanceSize`=`13`
 
 #### Ivars
 
@@ -3128,7 +3128,7 @@ Methods **7/7** · ivars 3 · `instanceSize`=`13`
 
 ### `PresentBoxCell` — ✅ complete
 
-Methods **5/5** · ivars 5 · `instanceSize`=`84`
+Methods **5/5** · unimpl 0 · ivars 5 · `instanceSize`=`84`
 
 #### Ivars
 
@@ -3142,7 +3142,7 @@ Methods **5/5** · ivars 5 · `instanceSize`=`84`
 
 ### `PurchaseManager` — ✅ complete
 
-Methods **30/30** · ivars 10 · `instanceSize`=`40`
+Methods **30/30** · unimpl 0 · ivars 10 · `instanceSize`=`40`
 
 #### Ivars
 
@@ -3161,7 +3161,7 @@ Methods **30/30** · ivars 10 · `instanceSize`=`40`
 
 ### `PurchaseTransactionCache` — ✅ complete
 
-Methods **8/8** · ivars 5 · `instanceSize`=`24`
+Methods **8/8** · unimpl 0 · ivars 5 · `instanceSize`=`24`
 
 #### Ivars
 
@@ -3175,7 +3175,7 @@ Methods **8/8** · ivars 5 · `instanceSize`=`24`
 
 ### `QuizCell` — ✅ complete
 
-Methods **3/3** · ivars 2 · `instanceSize`=`60`
+Methods **3/3** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 
 #### Ivars
 
@@ -3186,7 +3186,7 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 
 ### `RecommendListCell` — ✅ complete
 
-Methods **5/5** · ivars 11 · `instanceSize`=`96`
+Methods **5/5** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 
 #### Ivars
 
@@ -3206,11 +3206,11 @@ Methods **5/5** · ivars 11 · `instanceSize`=`96`
 
 ### `ScoreData` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`48`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`48`
 
 ### `SettingCustomerTableViewController` — ✅ complete
 
-Methods **14/14** · ivars 2 · `instanceSize`=`168`
+Methods **14/14** · unimpl 0 · ivars 2 · `instanceSize`=`168`
 
 #### Ivars
 
@@ -3221,7 +3221,7 @@ Methods **14/14** · ivars 2 · `instanceSize`=`168`
 
 ### `SettingGameTableViewController` — ✅ complete
 
-Methods **17/17** · ivars 4 · `instanceSize`=`288`
+Methods **17/17** · unimpl 0 · ivars 4 · `instanceSize`=`288`
 
 #### Ivars
 
@@ -3234,7 +3234,7 @@ Methods **17/17** · ivars 4 · `instanceSize`=`288`
 
 ### `SettingHowtoTableViewController` — ✅ complete
 
-Methods **14/14** · ivars 2 · `instanceSize`=`168`
+Methods **14/14** · unimpl 0 · ivars 2 · `instanceSize`=`168`
 
 #### Ivars
 
@@ -3245,7 +3245,7 @@ Methods **14/14** · ivars 2 · `instanceSize`=`168`
 
 ### `SettingOtherTableViewController` — ✅ complete
 
-Methods **23/23** · ivars 8 · `instanceSize`=`208`
+Methods **23/23** · unimpl 0 · ivars 8 · `instanceSize`=`208`
 
 #### Ivars
 
@@ -3262,7 +3262,7 @@ Methods **23/23** · ivars 8 · `instanceSize`=`208`
 
 ### `SettingTableViewController` — ✅ complete
 
-Methods **20/20** · ivars 7 · `instanceSize`=`186`
+Methods **20/20** · unimpl 0 · ivars 7 · `instanceSize`=`186`
 
 #### Ivars
 
@@ -3278,7 +3278,7 @@ Methods **20/20** · ivars 7 · `instanceSize`=`186`
 
 ### `SortCell` — ✅ complete
 
-Methods **3/3** · ivars 4 · `instanceSize`=`68`
+Methods **3/3** · unimpl 0 · ivars 4 · `instanceSize`=`68`
 
 #### Ivars
 
@@ -3291,7 +3291,7 @@ Methods **3/3** · ivars 4 · `instanceSize`=`68`
 
 ### `SoundSettingView` — ✅ complete
 
-Methods **22/22** · ivars 8 · `instanceSize`=`196`
+Methods **22/22** · unimpl 0 · ivars 8 · `instanceSize`=`196`
 
 #### Ivars
 
@@ -3308,7 +3308,7 @@ Methods **22/22** · ivars 8 · `instanceSize`=`196`
 
 ### `StoreAcMusicInfo` — ✅ complete
 
-Methods **8/8** · ivars 5 · `instanceSize`=`24`
+Methods **8/8** · unimpl 0 · ivars 5 · `instanceSize`=`24`
 
 #### Ivars
 
@@ -3322,7 +3322,7 @@ Methods **8/8** · ivars 5 · `instanceSize`=`24`
 
 ### `StoreAcvManageViewController` — ✅ complete
 
-Methods **24/24** · ivars 10 · `instanceSize`=`204`
+Methods **24/24** · unimpl 0 · ivars 10 · `instanceSize`=`204`
 
 #### Ivars
 
@@ -3341,7 +3341,7 @@ Methods **24/24** · ivars 10 · `instanceSize`=`204`
 
 ### `StoreDetailCopyrightCell` — ✅ complete
 
-Methods **3/3** · ivars 1 · `instanceSize`=`56`
+Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
 
 #### Ivars
 
@@ -3351,7 +3351,7 @@ Methods **3/3** · ivars 1 · `instanceSize`=`56`
 
 ### `StoreDetailHeaderView` — ✅ complete
 
-Methods **7/7** · ivars 7 · `instanceSize`=`80`
+Methods **7/7** · unimpl 0 · ivars 7 · `instanceSize`=`80`
 
 #### Ivars
 
@@ -3367,7 +3367,7 @@ Methods **7/7** · ivars 7 · `instanceSize`=`80`
 
 ### `StoreDetailMusicCell` — ✅ complete
 
-Methods **15/15** · ivars 11 · `instanceSize`=`96`
+Methods **15/15** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 
 #### Ivars
 
@@ -3387,7 +3387,7 @@ Methods **15/15** · ivars 11 · `instanceSize`=`96`
 
 ### `StoreDetailViewController` — ✅ complete
 
-Methods **48/48** · ivars 17 · `instanceSize`=`232`
+Methods **48/48** · unimpl 0 · ivars 17 · `instanceSize`=`232`
 
 #### Ivars
 
@@ -3413,7 +3413,7 @@ Methods **48/48** · ivars 17 · `instanceSize`=`232`
 
 ### `StoreDialogView` — ✅ complete
 
-Methods **11/11** · ivars 5 · `instanceSize`=`72`
+Methods **11/11** · unimpl 0 · ivars 5 · `instanceSize`=`72`
 
 #### Ivars
 
@@ -3427,7 +3427,7 @@ Methods **11/11** · ivars 5 · `instanceSize`=`72`
 
 ### `StoreDownloadManager` — ✅ complete
 
-Methods **12/12** · ivars 5 · `instanceSize`=`21`
+Methods **12/12** · unimpl 0 · ivars 5 · `instanceSize`=`21`
 
 #### Ivars
 
@@ -3441,7 +3441,7 @@ Methods **12/12** · ivars 5 · `instanceSize`=`21`
 
 ### `StoreDownloadTask` — ✅ complete
 
-Methods **5/5** · ivars 3 · `instanceSize`=`16`
+Methods **5/5** · unimpl 0 · ivars 3 · `instanceSize`=`16`
 
 #### Ivars
 
@@ -3453,7 +3453,7 @@ Methods **5/5** · ivars 3 · `instanceSize`=`16`
 
 ### `StoreImageView` — ✅ complete
 
-Methods **7/7** · ivars 2 · `instanceSize`=`64`
+Methods **7/7** · unimpl 0 · ivars 2 · `instanceSize`=`64`
 
 #### Ivars
 
@@ -3464,7 +3464,7 @@ Methods **7/7** · ivars 2 · `instanceSize`=`64`
 
 ### `StoreMainViewController` — ✅ complete
 
-Methods **64/64** · ivars 25 · `instanceSize`=`252`
+Methods **64/64** · unimpl 0 · ivars 25 · `instanceSize`=`252`
 
 #### Ivars
 
@@ -3498,7 +3498,7 @@ Methods **64/64** · ivars 25 · `instanceSize`=`252`
 
 ### `StoreManageViewController` — ✅ complete
 
-Methods **23/23** · ivars 9 · `instanceSize`=`197`
+Methods **23/23** · unimpl 0 · ivars 9 · `instanceSize`=`197`
 
 #### Ivars
 
@@ -3516,7 +3516,7 @@ Methods **23/23** · ivars 9 · `instanceSize`=`197`
 
 ### `StoreMusicInfo` — ✅ complete
 
-Methods **13/13** · ivars 10 · `instanceSize`=`44`
+Methods **13/13** · unimpl 0 · ivars 10 · `instanceSize`=`44`
 
 #### Ivars
 
@@ -3535,7 +3535,7 @@ Methods **13/13** · ivars 10 · `instanceSize`=`44`
 
 ### `StorePackCell` — ✅ complete
 
-Methods **7/7** · ivars 8 · `instanceSize`=`84`
+Methods **7/7** · unimpl 0 · ivars 8 · `instanceSize`=`84`
 
 #### Ivars
 
@@ -3552,7 +3552,7 @@ Methods **7/7** · ivars 8 · `instanceSize`=`84`
 
 ### `StorePackDetailViewPad` — ✅ complete
 
-Methods **32/32** · ivars 20 · `instanceSize`=`144`
+Methods **32/32** · unimpl 0 · ivars 20 · `instanceSize`=`144`
 
 #### Ivars
 
@@ -3581,7 +3581,7 @@ Methods **32/32** · ivars 20 · `instanceSize`=`144`
 
 ### `StorePackInfo` — ✅ complete
 
-Methods **24/24** · ivars 13 · `instanceSize`=`56`
+Methods **24/24** · unimpl 0 · ivars 13 · `instanceSize`=`56`
 
 #### Ivars
 
@@ -3603,7 +3603,7 @@ Methods **24/24** · ivars 13 · `instanceSize`=`56`
 
 ### `StorePackInfoDownloader` — ✅ complete
 
-Methods **14/14** · ivars 3 · `instanceSize`=`16`
+Methods **14/14** · unimpl 0 · ivars 3 · `instanceSize`=`16`
 
 #### Ivars
 
@@ -3615,7 +3615,7 @@ Methods **14/14** · ivars 3 · `instanceSize`=`16`
 
 ### `StorePackListController` — ✅ complete
 
-Methods **19/19** · ivars 10 · `instanceSize`=`41`
+Methods **19/19** · unimpl 0 · ivars 10 · `instanceSize`=`41`
 
 #### Ivars
 
@@ -3634,7 +3634,7 @@ Methods **19/19** · ivars 10 · `instanceSize`=`41`
 
 ### `StorePackMusicView` — ✅ complete
 
-Methods **14/14** · ivars 9 · `instanceSize`=`88`
+Methods **14/14** · unimpl 0 · ivars 9 · `instanceSize`=`88`
 
 #### Ivars
 
@@ -3652,7 +3652,7 @@ Methods **14/14** · ivars 9 · `instanceSize`=`88`
 
 ### `StorePackView` — ✅ complete
 
-Methods **11/11** · ivars 11 · `instanceSize`=`96`
+Methods **11/11** · unimpl 0 · ivars 11 · `instanceSize`=`96`
 
 #### Ivars
 
@@ -3672,11 +3672,11 @@ Methods **11/11** · ivars 11 · `instanceSize`=`96`
 
 ### `StorePromotionTableCell` — ✅ complete
 
-Methods **3/3** · ivars 0 · `instanceSize`=`52`
+Methods **3/3** · unimpl 0 · ivars 0 · `instanceSize`=`52`
 
 ### `StorePromotionView` — ✅ complete
 
-Methods **19/19** · ivars 8 · `instanceSize`=`84`
+Methods **19/19** · unimpl 0 · ivars 8 · `instanceSize`=`84`
 
 #### Ivars
 
@@ -3693,7 +3693,7 @@ Methods **19/19** · ivars 8 · `instanceSize`=`84`
 
 ### `StoreTableCell` — ✅ complete
 
-Methods **4/4** · ivars 2 · `instanceSize`=`60`
+Methods **4/4** · unimpl 0 · ivars 2 · `instanceSize`=`60`
 
 #### Ivars
 
@@ -3704,11 +3704,11 @@ Methods **4/4** · ivars 2 · `instanceSize`=`60`
 
 ### `StoreUtil` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `StoreViewController` — ✅ complete
 
-Methods **21/21** · ivars 8 · `instanceSize`=`192`
+Methods **21/21** · unimpl 0 · ivars 8 · `instanceSize`=`192`
 
 #### Ivars
 
@@ -3725,7 +3725,7 @@ Methods **21/21** · ivars 8 · `instanceSize`=`192`
 
 ### `SubMapListCell` — ✅ complete
 
-Methods **3/3** · ivars 1 · `instanceSize`=`56`
+Methods **3/3** · unimpl 0 · ivars 1 · `instanceSize`=`56`
 
 #### Ivars
 
@@ -3735,7 +3735,7 @@ Methods **3/3** · ivars 1 · `instanceSize`=`56`
 
 ### `SystemHardware` — ✅ complete
 
-Methods **5/5** · ivars 2 · `instanceSize`=`12`
+Methods **5/5** · unimpl 0 · ivars 2 · `instanceSize`=`12`
 
 #### Ivars
 
@@ -3746,7 +3746,7 @@ Methods **5/5** · ivars 2 · `instanceSize`=`12`
 
 ### `TouchRangeView` — ✅ complete
 
-Methods **7/7** · ivars 3 · `instanceSize`=`61`
+Methods **7/7** · unimpl 0 · ivars 3 · `instanceSize`=`61`
 
 #### Ivars
 
@@ -3758,7 +3758,7 @@ Methods **7/7** · ivars 3 · `instanceSize`=`61`
 
 ### `TouchRangeViewCtrl` — ✅ complete
 
-Methods **11/11** · ivars 6 · `instanceSize`=`192`
+Methods **11/11** · unimpl 0 · ivars 6 · `instanceSize`=`192`
 
 #### Ivars
 
@@ -3773,19 +3773,19 @@ Methods **11/11** · ivars 6 · `instanceSize`=`192`
 
 ### `TouchableScrollView` — ✅ complete
 
-Methods **2/2** · ivars 0 · `instanceSize`=`56`
+Methods **2/2** · unimpl 0 · ivars 0 · `instanceSize`=`56`
 
 ### `TouchableTableView` — ✅ complete
 
-Methods **3/3** · ivars 0 · `instanceSize`=`56`
+Methods **3/3** · unimpl 0 · ivars 0 · `instanceSize`=`56`
 
 ### `TreasureData` — ✅ complete
 
-Methods **1/1** · ivars 0 · `instanceSize`=`48`
+Methods **1/1** · unimpl 0 · ivars 0 · `instanceSize`=`48`
 
 ### `TwitterUtil` — ✅ complete
 
-Methods **6/6** · ivars 2 · `instanceSize`=`172`
+Methods **6/6** · unimpl 0 · ivars 2 · `instanceSize`=`172`
 
 #### Ivars
 
@@ -3796,15 +3796,15 @@ Methods **6/6** · ivars 2 · `instanceSize`=`172`
 
 ### `UserSettingData` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `ViewUtility` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `YearAndMonthPicker` — ✅ complete
 
-Methods **9/9** · ivars 3 · `instanceSize`=`64`
+Methods **9/9** · unimpl 0 · ivars 3 · `instanceSize`=`64`
 
 #### Ivars
 
@@ -3816,7 +3816,7 @@ Methods **9/9** · ivars 3 · `instanceSize`=`64`
 
 ### `neGLView` — ✅ complete
 
-Methods **15/15** · ivars 8 · `instanceSize`=`84`
+Methods **15/15** · unimpl 0 · ivars 8 · `instanceSize`=`84`
 
 #### Ivars
 
@@ -3833,11 +3833,11 @@ Methods **15/15** · ivars 8 · `instanceSize`=`84`
 
 ### `neTextureForiOS` — ✅ complete
 
-Methods **0/0** · ivars 0 · `instanceSize`=`4`
+Methods **0/0** · unimpl 0 · ivars 0 · `instanceSize`=`4`
 
 ### `neWindow` — ✅ complete
 
-Methods **1/1** · ivars 0 · `instanceSize`=`144`
+Methods **1/1** · unimpl 0 · ivars 0 · `instanceSize`=`144`
 
 
 ---
@@ -3867,21 +3867,3 @@ namespaces, promoting the pool into these class tables.
 | `NoteMng` | 14/16 |
 | `PlayTask` | 0/2 |
 | `TitleTask` | 0/4 |
-
----
-
-## Declared but not implemented — 50 methods in 8 classes
-
-Methods declared in an `@interface` (incl. categories) with no `@implementation` body and no
-`@property` accessor — i.e. the header promises a method the owner's `.m` does not define.
-
-| Class | Unimplemented selectors |
-| --- | --- |
-| `CharaTicketData` | `getAllData:` |
-| `MainViewController` | `DeleteCommunicating`, `getCapturedImage`, `releaseCapturedImage` |
-| `MusicManager` | `isOpenBemaniCollaboMusic`, `isOpenInviteMusic:`, `isOpenLoginBonusMusic:` |
-| `PurchaseManager` | `isPurchasable` |
-| `StoreMainViewController` | `handleTapCoverView:`, `packViewSelected:`, `showDetailViewForPhone:` |
-| `StoreUtil` | `acvMusicInfoURL:`, `getOfficialPath`, `getOfficialTwitterURL`, `logAcvPlayURL`, `musicInfoURL:` |
-| `TreasureData` | `getAllTreasureData:`, `init:` |
-| `UserSettingData` | `acvHiSpeed`, `acvHidSud`, `acvPopKun`, `acvRanMir`, `addCharaTicket:`, `addUncompleteSaveMusic:sheet:`, `bgmVolume`, `convertCode`, `initForConvert`, `initTreasureTmp`, `isAcvGenreName`, `isFollowBonusGet`, `isSimpleMode`, `lastInformationId`, `lastStoreViewTimeString`, `popkunSize`, `saveBgmVolume:`, `saveConvertCode:`, `saveIsFollowBonusGet:`, `saveIsSimpleMode:`, `saveLastUpdateSumPurchase:`, `savePlayerId:`, `savePlayerName:`, `saveSeVolume:`, `saveSumPurchase:`, `saveTouchSoundVolume:`, `seVolume`, `subUncompleteSaveMusic:sheet:`, `touchSoundVolume`, `treasureReadNo:`, `uncompleteSaveMusic`, `uncompleteSaveSheet` |

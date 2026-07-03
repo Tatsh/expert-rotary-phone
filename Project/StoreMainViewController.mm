@@ -398,6 +398,75 @@
     }
 }
 
+// @ 0x45318 — iPad: a StorePackView tile was tapped. Gate on no animation already running
+// and the catalogue table still allowing selection, freeze the promotion banner / restore
+// button, then slide the dim cover + embedded detail card in. The tapped tile is carried as
+// the animation context so -openDetailAnimStop:… can resolve its row index on completion.
+- (void)packViewSelected:(id)packView {
+    if (m_IsAnimationing) {
+        return;
+    }
+    m_IsAnimationing = YES;
+    if (![[self.view viewWithTag:10000] allowsSelection]) {
+        return;
+    }
+    if (m_PromotionView) {
+        [m_PromotionView stopAnimation];
+    }
+    if (m_RestoreButton) {
+        [m_RestoreButton setEnabled:NO];
+    }
+    [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
+    [m_CoverViewPad setAlpha:0.0f];
+    [m_PackDetailViewPad setAlpha:0.0f];
+    [m_CoverViewPad setHidden:NO];
+    [m_PackDetailViewPad setHidden:NO];
+    [UIView beginAnimations:nil context:(__bridge void *)packView];
+    [UIView setAnimationCurve:UIViewAnimationCurveLinear]; // 3
+    [UIView setAnimationDuration:0.3]; // DAT_00045508
+    [UIView setAnimationDelegate:self];
+    [UIView setAnimationDidStopSelector:@selector(openDetailAnimStop:finished:context:)];
+    [m_CoverViewPad setAlpha:1.0f];
+    [m_PackDetailViewPad setAlpha:1.0f];
+    [UIView commitAnimations];
+}
+
+// @ 0x45940 — iPad: the dim cover was tapped. Cancel any in-flight detail load / sample,
+// then slide the cover + detail card back out; -closeDetailAnimStop:… tears the card down
+// once the fade completes.
+- (void)handleTapCoverView:(id)sender {
+    [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
+    [m_PackDetailViewPad cancelLoading];
+    [m_PackDetailViewPad stopSample];
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationCurve:UIViewAnimationCurveLinear]; // 3
+    [UIView setAnimationDuration:0.3]; // DAT_00045a78
+    [UIView setAnimationDelegate:self];
+    [UIView setAnimationDidStopSelector:@selector(closeDetailAnimStop:finished:context:)];
+    [m_CoverViewPad setAlpha:0.0f];
+    [m_PackDetailViewPad setAlpha:0.0f];
+    [UIView commitAnimations];
+}
+
+// @ 0x4934c — phone: push a StoreDetailViewController for the tapped pack. No-op unless this
+// controller is on top of its nav stack. Resolves the pack info against whichever list is
+// populated (recommend first), skins the nav bar, then pushes the detail screen.
+- (void)showDetailViewForPhone:(int)packID {
+    if (self.navigationController.topViewController != self) {
+        return;
+    }
+    StoreDetailViewController *vc = [[StoreDetailViewController alloc] init];
+    [vc setDelegate:self];
+    StorePackListController *list = m_PackListCtrl;
+    if (m_RecommendPackListCtrl && [[m_RecommendPackListCtrl packIDList] count] != 0) {
+        list = m_RecommendPackListCtrl;
+    }
+    [vc setPackInfo:[list getPackInfo:packID]];
+    UIImage *navbar = [UIImage imageNamed:@"p_store_detail_navbar"];
+    [self.navigationController.navigationBar setBackgroundImage:navbar forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
 // @ 0x46270 — detail card asked to buy: gate on StoreKit availability + a valid product,
 // show the "処理中..." modal and begin the purchase.
 - (void)detailViewStartPurchase:(StorePackInfo *)packInfo {

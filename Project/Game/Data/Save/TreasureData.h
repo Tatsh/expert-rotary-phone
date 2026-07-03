@@ -43,6 +43,10 @@
 // sugoroku save table). Ghidra: getAllTreasureData: @ 0xc09a4.
 + (NSArray<TreasureData *> *)getAllTreasureData:(NSManagedObjectContext *)context;
 
+
+// Delete every persisted TreasureData record (device-change / initForConvert reset).
++ (void)deleteAll:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

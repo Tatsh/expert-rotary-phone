@@ -771,6 +771,18 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     m_flgCapture = YES;
 }
 
+// @ 0xbbac — return the stored screenshot image (nil until -draw services a capture).
+- (UIImage *)getCapturedImage {
+    return m_capturedImg;
+}
+
+// @ 0xbbbc — drop the stored screenshot (ARC releases on nil-assign).
+- (void)releaseCapturedImage {
+    if (m_capturedImg != nil) {
+        m_capturedImg = nil;
+    }
+}
+
 // @ 0xbed0 — stop the loop for good (title exit): clear the run flag then drop the timer.
 - (void)StopLoop {
     m_IsLoop = NO;
@@ -839,6 +851,12 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 // @ 0xd7a8 — switch the overlay to its "communication failed" caption.
 - (void)CommunicatingFailed {
     [_communicatingView failed];
+}
+
+// @ 0xd744 — begin removing the "communicating…" overlay: play its fade-out. The
+// overlay itself is dropped later in -CommunicatingEndCallBack when the animation ends.
+- (void)DeleteCommunicating {
+    [_communicatingView startCloseAnimation];
 }
 
 // @ 0xd7c8 — the overlay finished closing; drop it (ARC releases on nil-assign).

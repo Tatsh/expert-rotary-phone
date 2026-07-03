@@ -196,6 +196,10 @@ typedef struct Crypt109Data {
 + (void)saveIsFollowBonusGet:(BOOL)got;
 // Reset the convert-code / follow-bonus state.
 + (void)initForConvert;
+// Client version that last completed the device-change flow; policy-accepted flag.
++ (int)lastCompletedClientVer;
++ (void)saveLastCompletedClientVer:(int)ver;
++ (void)saveIsPolicyAccepted:(BOOL)accepted;
 
 // Last-seen store information banner id and last store-view timestamp string.
 + (int)lastInformationId;

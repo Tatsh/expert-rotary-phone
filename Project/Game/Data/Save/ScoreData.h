@@ -46,6 +46,10 @@
 @property (nonatomic, retain) NSDate *lastPlayDate;
 @property (nonatomic, retain) NSData *chksco;
 
+
+// Delete every persisted ScoreData record (device-change / initForConvert reset).
++ (void)deleteAll:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
