@@ -406,7 +406,3 @@ bool MenuMainTask::hitButton(int touchId, int rectField, int enableField) {
     const int *enable = reinterpret_cast<const int *>(base + enableField);
     return neEngine::menuButtonHit(&neGraphics::shared(), touchId, rect, enable);
 }
-
-// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objcpp sw=4 ts=4 et :
-// code: language=Objective-C++ insertSpaces=true tabSize=4

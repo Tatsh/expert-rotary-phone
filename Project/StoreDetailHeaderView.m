@@ -164,7 +164,3 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
 // dealloc @ 0x7447c — ARC-omitted (released object ivars only).
 
 @end
-
-// kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objc sw=4 ts=4 et :
-// code: language=Objective-C insertSpaces=true tabSize=4

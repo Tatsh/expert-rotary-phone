@@ -114,7 +114,3 @@
 // artworkView @ 0x6f8b0 — synthesized getter (reads _artworkView).
 
 @end
-
-// kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objc sw=4 ts=4 et :
-// code: language=Objective-C insertSpaces=true tabSize=4

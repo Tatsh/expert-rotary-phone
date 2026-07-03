@@ -68,7 +68,3 @@
 // dealloc @ 0xe9304 — ARC-omitted (released object ivars only).
 
 @end
-
-// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objcpp sw=4 ts=4 et :
-// code: language=Objective-C++ insertSpaces=true tabSize=4

@@ -418,7 +418,3 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
         // type 1 (and any other): no emission (matches FUN_0000fe8c).
     }
 }
-
-// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objcpp sw=4 ts=4 et :
-// code: language=Objective-C++ insertSpaces=true tabSize=4

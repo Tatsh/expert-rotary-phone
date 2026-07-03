@@ -47,7 +47,3 @@ int Random::getRandRangeInt(int max) {
     assert(max >= 0);
     return (int)((next() & 0x7fffffff) % (uint32_t)max);
 }
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

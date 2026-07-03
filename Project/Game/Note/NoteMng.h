@@ -384,6 +384,6 @@ int   NoteToneCount(int noteId);          // Ghidra: FUN_00034bd0  (slot spawnKi
 // is not positive). Ghidra: FUN_00034664 (signed short @ mgr+0x4e5c; DAT_00034690 = 60000.0f).
 float NoteBeatIntervalMs();
 
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4
