@@ -3867,3 +3867,21 @@ namespaces, promoting the pool into these class tables.
 | `NoteMng` | 14/16 |
 | `PlayTask` | 0/2 |
 | `TitleTask` | 0/4 |
+
+---
+
+## Declared but not implemented — 50 methods in 8 classes
+
+Methods declared in an `@interface` (incl. categories) with no `@implementation` body and no
+`@property` accessor — i.e. the header promises a method the owner's `.m` does not define.
+
+| Class | Unimplemented selectors |
+| --- | --- |
+| `CharaTicketData` | `getAllData:` |
+| `MainViewController` | `DeleteCommunicating`, `getCapturedImage`, `releaseCapturedImage` |
+| `MusicManager` | `isOpenBemaniCollaboMusic`, `isOpenInviteMusic:`, `isOpenLoginBonusMusic:` |
+| `PurchaseManager` | `isPurchasable` |
+| `StoreMainViewController` | `handleTapCoverView:`, `packViewSelected:`, `showDetailViewForPhone:` |
+| `StoreUtil` | `acvMusicInfoURL:`, `getOfficialPath`, `getOfficialTwitterURL`, `logAcvPlayURL`, `musicInfoURL:` |
+| `TreasureData` | `getAllTreasureData:`, `init:` |
+| `UserSettingData` | `acvHiSpeed`, `acvHidSud`, `acvPopKun`, `acvRanMir`, `addCharaTicket:`, `addUncompleteSaveMusic:sheet:`, `bgmVolume`, `convertCode`, `initForConvert`, `initTreasureTmp`, `isAcvGenreName`, `isFollowBonusGet`, `isSimpleMode`, `lastInformationId`, `lastStoreViewTimeString`, `popkunSize`, `saveBgmVolume:`, `saveConvertCode:`, `saveIsFollowBonusGet:`, `saveIsSimpleMode:`, `saveLastUpdateSumPurchase:`, `savePlayerId:`, `savePlayerName:`, `saveSeVolume:`, `saveSumPurchase:`, `saveTouchSoundVolume:`, `seVolume`, `subUncompleteSaveMusic:sheet:`, `touchSoundVolume`, `treasureReadNo:`, `uncompleteSaveMusic`, `uncompleteSaveSheet` |
