@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 92 |
-| Partial (file exists, methods missing) | 3 |
+| Complete | 95 |
+| Partial (file exists, methods missing) | 0 |
 | Fully missing (no source file) | 78 |
-| **Missing methods** | **1159** |
+| **Missing methods** | **964** |
 
 ## Scope decisions
 
@@ -106,15 +106,12 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 3
+## Partial classes — 0
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
-| `DownloadMain` | 25 | 119 | 94 |
-| `StoreMainViewController` | 10 | 64 | 54 |
-| `MainViewController` | 48 | 95 | 47 |
 
-## Complete classes — 92
+## Complete classes — 95
 
 - `AcMusicData`
 - `AcViewerDetailCell`
@@ -136,6 +133,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `CustomSplitViewController`
 - `CustomTextView`
 - `DelayImageView`
+- `DownloadMain`
 - `DownloadProgresView`
 - `Downloader`
 - `FriendListCell`
@@ -152,6 +150,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `HowToViewCtrl`
 - `ImageDownloader`
 - `LimitedCharaInfo`
+- `MainViewController`
 - `MapListCell`
 - `MusicData`
 - `MusicManager`
@@ -182,6 +181,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `StoreDownloadManager`
 - `StoreDownloadTask`
 - `StoreImageView`
+- `StoreMainViewController`
 - `StoreManageViewController`
 - `StoreMusicInfo`
 - `StorePackCell`
@@ -2551,382 +2551,6 @@ Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
-### `DownloadMain` — 🟡 partial
-
-Methods **25/119** · ivars 63 · `instanceSize`=`252`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x93ec0` |
-| `startPlayerGetHttp` | `0x93f14` |
-| `isPlayerGetDownLoading` | `0x94060` |
-| `getPlayerGetProgressSec` | `0x94078` |
-| `playerGetFinished` | `0x940c4` |
-| `startNewsHttp` | `0x94488` |
-| `isNewsDownLoading` | `0x9458c` |
-| `releaseInformationData` | `0x945a4` |
-| `newsGetFinished` | `0x946b8` |
-| `startSaveScoreHttp:sheet:score:medal:charaId:` | `0x952d4` |
-| `saveScoreFinished` | `0x95434` |
-| `isGetBlockListDownLoading` | `0x96710` |
-| `isDelBlockListDownLoading` | `0x96ae4` |
-| `delBlockListFinished` | `0x96afc` |
-| `startGetRecommendListHttp` | `0x96b54` |
-| `isGetRecommendListDownLoading` | `0x96c68` |
-| `releaseRecommendData` | `0x96c80` |
-| `compareToUpdateDate:` | `0x96db0` |
-| `getRecommendListFinished` | `0x96df0` |
-| `startGetVisitorHttp:type:` | `0x972e4` |
-| `isGetVisitorDownLoading` | `0x97410` |
-| `getVisitorFinished` | `0x97428` |
-| `isSaveTreasureDownLoading` | `0x97894` |
-| `releaseFileListData` | `0x979f0` |
-| `startGetPresentListHttp` | `0x97d60` |
-| `isGetPresentListDownLoading` | `0x97e74` |
-| `releasePresentList` | `0x97e8c` |
-| `getPresentListFinished` | `0x97f90` |
-| `startGetPresentHttp:` | `0x9829c` |
-| `isGetPresentDownLoading` | `0x983c0` |
-| `getPresentFinished` | `0x983d8` |
-| `startGetOverScoreLogHttp` | `0x984b4` |
-| `isGetOverScoreLogDownLoading` | `0x985c8` |
-| `releaseOverScoreLogArray` | `0x985e0` |
-| `getOverScoreLogFinished` | `0x98700` |
-| `startGetEventInfoHttp` | `0x98a6c` |
-| `isGetEventInfoDownLoading` | `0x98b7c` |
-| `getEventInfoFinished` | `0x98b94` |
-| `downloaderFinished:` | `0x98f78` |
-| `downloaderProceed:` | `0x9918c` |
-| `downloaderError:` | `0x99190` |
-| `cppDelegateNews` | `0x995ac` |
-| `setCppDelegateNews:` | `0x995c0` |
-| `cppDelegateRecommendList` | `0x995d8` |
-| `setCppDelegateRecommendList:` | `0x995ec` |
-| `setDelegateGetFriendList:` | `0x99618` |
-| `setDelegateCancelFriend:` | `0x99644` |
-| `delegateGetVisitor` | `0x9965c` |
-| `setDelegateGetVisitor:` | `0x99670` |
-| `delegateGetPresentList` | `0x99688` |
-| `setDelegateGetPresentList:` | `0x9969c` |
-| `delegateGetPresent` | `0x996b4` |
-| `setDelegateGetPresent:` | `0x996c8` |
-| `delegateGetEventInfo` | `0x996e0` |
-| `setDelegateGetEventInfo:` | `0x996f4` |
-| `informationDataArray` | `0x9970c` |
-| `arcadePt` | `0x99720` |
-| `errorGetPlayer` | `0x99760` |
-| `loginBonusId` | `0x99774` |
-| `loginCnt` | `0x99788` |
-| `isLoginCntUpdate` | `0x9979c` |
-| `setIsLoginCntUpdate:` | `0x997b4` |
-| `newsTextArray` | `0x997cc` |
-| `newsUrlArray` | `0x997e0` |
-| `lastGetNewsTime` | `0x997f4` |
-| `serverYear` | `0x99808` |
-| `serverMonth` | `0x9981c` |
-| `serverDay` | `0x99830` |
-| `serverHour` | `0x99844` |
-| `serverMinute` | `0x99858` |
-| `serverSecond` | `0x9986c` |
-| `isNewMusicPackReleased` | `0x99880` |
-| `setIsNewMusicPackReleased:` | `0x99898` |
-| `frSendPlayerIdArray` | `0x998b0` |
-| `frSendNameArray` | `0x998c4` |
-| `frReceivePlayerIdArray` | `0x998d8` |
-| `frReceiveNameArray` | `0x998ec` |
-| `frReceiveMessageArray` | `0x99900` |
-| `presentDataArray` | `0x99928` |
-| `getPresentId` | `0x9993c` |
-| `setGetPresentId:` | `0x99950` |
-| `overScoreLogArray` | `0x99968` |
-| `blNameArray` | `0x99990` |
-| `isGetVisitorSuccess` | `0x999a4` |
-| `setIsGetVisitorSuccess:` | `0x999bc` |
-| `recommendDataArray` | `0x999d4` |
-| `treasureEventIdArray` | `0x999fc` |
-| `gameEventIdArray` | `0x99a10` |
-| `isTreasureEventInfoUpdated` | `0x99a24` |
-| `setIsTreasureEventInfoUpdated:` | `0x99a3c` |
-| `isGameEventInfoUpdated` | `0x99a54` |
-| `setIsGameEventInfoUpdated:` | `0x99a6c` |
-| `delegateGetOverScoreLog` | `0x99a84` |
-| `setDelegateGetOverScoreLog:` | `0x99a98` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `dlGetPlayer` | `Downloader *` | `0x4` |
-| `_arcadePt` | `int` | `0x8` |
-| `_friendRequestedCnt` | `int` | `0xc` |
-| `_errorGetPlayer` | `int` | `0x10` |
-| `_loginBonusId` | `int` | `0x14` |
-| `_loginCnt` | `int` | `0x18` |
-| `_isLoginCntUpdate` | `BOOL` | `0x1c` |
-| `dlNews` | `Downloader *` | `0x20` |
-| `_cppDelegateNews` | `struct ModeSelTask *` | `0x24` |
-| `_lastNewsGetTime` | `NSDate *` | `0x28` |
-| `_storeUpdateTime` | `NSString *` | `0x2c` |
-| `_newsTextArray` | `NSArray *` | `0x30` |
-| `_newsUrlArray` | `NSArray *` | `0x34` |
-| `_informationDataArray` | `NSArray *` | `0x38` |
-| `_serverYear` | `int` | `0x3c` |
-| `_serverMonth` | `int` | `0x40` |
-| `_serverDay` | `int` | `0x44` |
-| `_serverHour` | `int` | `0x48` |
-| `_serverMinute` | `int` | `0x4c` |
-| `_serverSecond` | `int` | `0x50` |
-| `_isNewMusicPackReleased` | `BOOL` | `0x54` |
-| `dlSaveScore` | `Downloader *` | `0x58` |
-| `_saveMusic` | `unsigned int` | `0x5c` |
-| `_saveSheet` | `short` | `0x60` |
-| `dlCancelFriend` | `Downloader *` | `0x64` |
-| `_delegateCancelFriend` | `<DownloadMainDelegate> *` | `0x68` |
-| `dlGetFriendList` | `Downloader *` | `0x6c` |
-| `_delegateGetFriendList` | `<DownloadMainDelegate> *` | `0x70` |
-| `_friendListArray` | `NSArray *` | `0x74` |
-| `dlAddBlockList` | `Downloader *` | `0x78` |
-| `dlGetBlockList` | `Downloader *` | `0x7c` |
-| `_blPlayerIdArray` | `NSArray *` | `0x80` |
-| `_blNameArray` | `NSArray *` | `0x84` |
-| `dlDelBlockList` | `Downloader *` | `0x88` |
-| `dlGetRecommendList` | `Downloader *` | `0x8c` |
-| `_cppDelegateRecommendList` | `struct MusicSelTask *` | `0x90` |
-| `_recommendDataArray` | `NSArray *` | `0x94` |
-| `dlGetVisitor` | `Downloader *` | `0x98` |
-| `_delegateGetVisitor` | `<DownloadMainDelegate> *` | `0x9c` |
-| `_isGetVisitorSuccess` | `BOOL` | `0xa0` |
-| `dlGetPresentList` | `Downloader *` | `0xa4` |
-| `_delegateGetPresentList` | `<DownloadMainDelegate> *` | `0xa8` |
-| `_presentDataArray` | `NSArray *` | `0xac` |
-| `dlGetPresent` | `Downloader *` | `0xb0` |
-| `_delegateGetPresent` | `<DownloadMainDelegate> *` | `0xb4` |
-| `_getPresentId` | `int` | `0xb8` |
-| `dlGetOverScoreLog` | `Downloader *` | `0xbc` |
-| `_delegateGetOverScoreLog` | `<DownloadMainDelegate> *` | `0xc0` |
-| `_overScoreLogArray` | `NSArray *` | `0xc4` |
-| `dlSaveTreasure` | `Downloader *` | `0xc8` |
-| `dlGetDlFileList` | `Downloader *` | `0xcc` |
-| `_dlFileListDataArray` | `NSArray *` | `0xd0` |
-| `dlGetEventInfo` | `Downloader *` | `0xd4` |
-| `_delegateGetEventInfo` | `<DownloadMainDelegate> *` | `0xd8` |
-| `_treasureEventIdArray` | `NSArray *` | `0xdc` |
-| `_gameEventIdArray` | `NSArray *` | `0xe0` |
-| `_isTreasureEventInfoUpdated` | `BOOL` | `0xe4` |
-| `_isGameEventInfoUpdated` | `BOOL` | `0xe5` |
-| `_frSendPlayerIdArray` | `NSArray *` | `0xe8` |
-| `_frSendNameArray` | `NSArray *` | `0xec` |
-| `_frReceivePlayerIdArray` | `NSArray *` | `0xf0` |
-| `_frReceiveNameArray` | `NSArray *` | `0xf4` |
-| `_frReceiveMessageArray` | `NSArray *` | `0xf8` |
-
-### `StoreMainViewController` — 🟡 partial
-
-Methods **10/64** · ivars 25 · `instanceSize`=`252`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `showError:` | `0x44864` |
-| `pushBarBtnRestore:` | `0x44904` |
-| `packListDownloadError:errorMessage:` | `0x45108` |
-| `packListDownloadNothing:` | `0x45258` |
-| `openDetailAnimStop:finished:context:` | `0x45510` |
-| `storePromotionViewTaped:PackID:` | `0x45648` |
-| `openDetailAnimStopFromPromotion:finished:context:` | `0x45898` |
-| `closeDetailAnimStop:finished:context:` | `0x45a80` |
-| `startDownloadPackMusics:` | `0x45b48` |
-| `detailViewStartPurchase:` | `0x46270` |
-| `detailViewClose` | `0x46420` |
-| `storeDialogCancel:` | `0x46470` |
-| `connectionDidFinishLoading:` | `0x46584` |
-| `connection:didFailWithError:` | `0x46588` |
-| `updateMusicInfo:Save:` | `0x4658c` |
-| `updatePurchasedTableCell:` | `0x46798` |
-| `reDownloadPackMusics:` | `0x46a7c` |
-| `purchaseSucceeded:` | `0x46ab0` |
-| `purchaseFailed:error:` | `0x46d1c` |
-| `addRestorePackInfo:` | `0x46e58` |
-| `nextRestorePackInfo` | `0x46ef4` |
-| `askDownloadAllMusics` | `0x47134` |
-| `restoreDownloadAllMusics` | `0x4753c` |
-| `commonAlertView:clickedButtonAtIndex:` | `0x47a04` |
-| `restoreSucceeded` | `0x47c14` |
-| `restoreFailed:` | `0x47d50` |
-| `restoreNothing` | `0x47e40` |
-| `storePackInfoDownloaderFinished:` | `0x47e60` |
-| `storePackInfoDownloaderError:` | `0x47ef4` |
-| `downloadManagerStartTask:` | `0x47f38` |
-| `downloadManagerCompleted:` | `0x47ffc` |
-| `downloadManagerFailed:` | `0x48108` |
-| `downloadManagerProceed:` | `0x482c0` |
-| `numPackRows` | `0x4832c` |
-| `tableView:cellForRowAtIndexPath:` | `0x4837c` |
-| `numberOfSectionsInTableView:` | `0x48fc0` |
-| `tableView:numberOfRowsInSection:` | `0x48fd8` |
-| `tableView:heightForRowAtIndexPath:` | `0x49038` |
-| `tableView:willDisplayCell:forRowAtIndexPath:` | `0x4912c` |
-| `tableView:didSelectRowAtIndexPath:` | `0x49258` |
-| `imageDownloader:didLoad:` | `0x495e4` |
-| `imageDownloaderDidFail:didLoad:` | `0x49750` |
-| `scrollViewDidScroll:` | `0x49754` |
-| `scrollViewWillBeginDragging:` | `0x49b64` |
-| `scrollViewDidEndDragging:willDecelerate:` | `0x49b68` |
-| `stopDownloadArtworks` | `0x49b6c` |
-| `viewWillAppear:` | `0x49c84` |
-| `viewDidAppear:` | `0x49d64` |
-| `viewWillDisappear:` | `0x49e88` |
-| `viewDidDisappear:` | `0x49fe4` |
-| `shouldAutorotateToInterfaceOrientation:` | `0x4a010` |
-| `willRotateToInterfaceOrientation:duration:` | `0x4a014` |
-| `didReceiveMemoryWarning` | `0x4a018` |
-| `dealloc` | `0x4a044` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_StoreViewCtrl` | `StoreViewController *` | `0xa4` |
-| `m_PackListCtrl` | `StorePackListController *` | `0xa8` |
-| `m_ArtworkDownloaders` | `NSMutableDictionary *` | `0xac` |
-| `m_DownloadManager` | `StoreDownloadManager *` | `0xb0` |
-| `m_PurchasingPackInfo` | `StorePackInfo *` | `0xb4` |
-| `m_PromotionView` | `StorePromotionView *` | `0xb8` |
-| `m_PromotionViewDummy` | `UIImageView *` | `0xbc` |
-| `m_PackTableLabel` | `UILabel *` | `0xc0` |
-| `m_ShowMoreButton` | `UIButton *` | `0xc4` |
-| `m_ShowMoreIndicator` | `UIActivityIndicatorView *` | `0xc8` |
-| `m_CoverViewPad` | `UIView *` | `0xcc` |
-| `m_PackDetailViewPad` | `StorePackDetailViewPad *` | `0xd0` |
-| `m_RestoreProductID` | `NSMutableArray *` | `0xd4` |
-| `m_RestorePackInfo` | `NSMutableArray *` | `0xd8` |
-| `m_RestoreButton` | `UIButton *` | `0xdc` |
-| `m_StorePackInfoDownloader` | `StorePackInfoDownloader *` | `0xe0` |
-| `m_PackBgImage0` | `UIImage *` | `0xe4` |
-| `m_PackBgImage1` | `UIImage *` | `0xe8` |
-| `m_IsPad` | `BOOL` | `0xec` |
-| `m_IsLoadingMoreList` | `BOOL` | `0xed` |
-| `m_IsAnimationing` | `BOOL` | `0xee` |
-| `m_OffsetForOS` | `int` | `0xf0` |
-| `m_IsStoreClosing` | `BOOL` | `0xf4` |
-| `_isAlertViewShowing` | `BOOL` | `0xf5` |
-| `m_RecommendPackListCtrl` | `StorePackListController *` | `0xf8` |
-
-### `MainViewController` — 🟡 partial
-
-Methods **48/95** · ivars 51 · `instanceSize`=`356`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xb440` |
-| `didReceiveMemoryWarning` | `0xb4c4` |
-| `viewDidUnload` | `0xb4f0` |
-| `loadView` | `0xb51c` |
-| `viewDidLoad` | `0xb970` |
-| `viewWillAppear:` | `0xb9b0` |
-| `viewDidAppear:` | `0xb9dc` |
-| `viewWillDisappear:` | `0xba08` |
-| `viewDidDisappear:` | `0xba34` |
-| `shouldAutorotateToInterfaceOrientation:` | `0xba60` |
-| `LayoutedGLView:` | `0xba6c` |
-| `screenshot` | `0xbb98` |
-| `StopLoop` | `0xbed0` |
-| `GetGlView` | `0xc150` |
-| `IsFriendManageEnable` | `0xcf70` |
-| `IsPopnLinkEnable` | `0xd21c` |
-| `IsStoreEnable` | `0xd548` |
-| `InsertCommunicating` | `0xd6a8` |
-| `IsCommunicatingAnimationing` | `0xd764` |
-| `IsCommunicatingEnable` | `0xd790` |
-| `CommunicatingFailed` | `0xd7a8` |
-| `CommunicatingEndCallBack` | `0xd7c8` |
-| `IsInviteCodeEnable` | `0xd918` |
-| `IsArcadeSearchEnable` | `0xda28` |
-| `IsPresentBoxEnable` | `0xe158` |
-| `SaveToCameraRoll:` | `0xe704` |
-| `onCompleteCapture:didFinishSavingWithError:contextInfo:` | `0xe7c0` |
-| `SetAlertViewCallback:param:` | `0xe810` |
-| `commonAlertView:clickedButtonAtIndex:` | `0xe914` |
-| `customAlertView:clickedButtonAtIndex:` | `0xeac8` |
-| `appListDidAppear` | `0xeaec` |
-| `appListDidDisappear` | `0xeaf0` |
-| `appListFailLoadWithError:` | `0xeb1c` |
-| `handleTapCoverView:` | `0xeba8` |
-| `InsertBlackBoard` | `0xeca4` |
-| `FadeInBlackBoard` | `0xede8` |
-| `FadeOutBlackBoard` | `0xefdc` |
-| `settingViewing` | `0xf0d0` |
-| `cameraRollSaving` | `0xf0e8` |
-| `isDefaultDlFailed` | `0xf100` |
-| `rewardListViweing` | `0xf118` |
-| `setRewardListViweing:` | `0xf130` |
-| `isGotoTitle` | `0xf178` |
-| `setIsGotoTitle:` | `0xf190` |
-| `acMusicSelViewing` | `0xf1a8` |
-| `setAcMusicSelViewing:` | `0xf1c0` |
-| `cameraRollError` | `0xf1d8` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_glView` | `neGLView *` | `0xa4` |
-| `_settingViewing` | `bool` | `0xa8` |
-| `_cameraRollSaving` | `bool` | `0xa9` |
-| `_isDefaultDlFailed` | `bool` | `0xaa` |
-| `_rewardListViweing` | `bool` | `0xab` |
-| `_isGotoTitle` | `bool` | `0xac` |
-| `_acMusicSelViewing` | `bool` | `0xad` |
-| `_settingNaviCtrl` | `UINavigationController *` | `0xb0` |
-| `_friendMngNaviCtrl` | `UINavigationController *` | `0xb4` |
-| `_popnLinkNaviCtrl` | `UINavigationController *` | `0xb8` |
-| `_friendScoreNaviCtrl` | `UINavigationController *` | `0xbc` |
-| `_recommendNaviCtrl` | `UINavigationController *` | `0xc0` |
-| `_mapSelectNaviCtrl` | `UINavigationController *` | `0xc4` |
-| `_sortSelectNaviCtrl` | `UINavigationController *` | `0xc8` |
-| `_inputNameNaviCtrl` | `UINavigationController *` | `0xcc` |
-| `_inputConvPassNaviCtrl` | `UINavigationController *` | `0xd0` |
-| `_inviteNaviCtrl` | `UINavigationController *` | `0xd4` |
-| `_searchNaviCtrl` | `UINavigationController *` | `0xd8` |
-| `_acViewerNaviCtrl` | `UINavigationController *` | `0xdc` |
-| `_presentBoxNaviCtrl` | `UINavigationController *` | `0xe0` |
-| `_overScoreLogNaviCtrl` | `UINavigationController *` | `0xe4` |
-| `_storeViewController` | `StoreViewController *` | `0xe8` |
-| `_defaultDlViewController` | `DefaultDataDownloadView *` | `0xec` |
-| `_acceptPolicyCtrl` | `AcceptPolicyViewController *` | `0xf0` |
-| `_communicatingView` | `CommunicatingView *` | `0xf4` |
-| `_cameraRollError` | `NSError *` | `0xf8` |
-| `m_LoopInterval` | `int` | `0xfc` |
-| `m_DisplayLink` | `CADisplayLink *` | `0x100` |
-| `m_TaskTime` | `struct C_TIME` | `0x104` |
-| `m_RenderTime` | `struct C_TIME` | `0x10c` |
-| `m_IsPause` | `bool` | `0x114` |
-| `m_IsLoop` | `bool` | `0x115` |
-| `m_AepManager` | `struct AepManager *` | `0x118` |
-| `m_AlertViewCallback` | `void /*unknown*/ *` | `0x11c` |
-| `m_AlertViewCallbackParam` | `void *` | `0x120` |
-| `m_capturedImg` | `UIImage *` | `0x124` |
-| `m_flgCapture` | `BOOL` | `0x128` |
-| `_coverView` | `UIButton *` | `0x12c` |
-| `_presentBoxViewCtrl` | `PresentBoxViewController *` | `0x130` |
-| `_sortSelectViewCtrl` | `SortSelectViewController *` | `0x134` |
-| `_recommendViewCtrl` | `RecommendViewController *` | `0x138` |
-| `_overScoreLogViewCtrl` | `OverScoreLogViewController *` | `0x13c` |
-| `_settingViewCtrl` | `SettingTableSplitViewController *` | `0x140` |
-| `_mapSelectViewCtrl` | `MapSelectSplitViewController *` | `0x144` |
-| `_friendMngViewCtrl` | `FriendMngTopSplitViewController *` | `0x148` |
-| `_popnLinkViewCtrl` | `PopnLinkTopSplitViewController *` | `0x14c` |
-| `_inputNameViewCtrl` | `InputNameViewCtrl *` | `0x150` |
-| `_inputConvPassViewCtrl` | `InputConversionPassViewController *` | `0x154` |
-| `_acViewerViewCtrl` | `AcViewerSplitViewController *` | `0x158` |
-| `_inviteViewCtrl` | `InviteTopViewControllerPad *` | `0x15c` |
-| `_blackBoardView` | `UIView *` | `0x160` |
-
 ### `AcMusicData` — ✅ complete
 
 Methods **31/31** · ivars 17 · `instanceSize`=`72`
@@ -3227,6 +2851,78 @@ Methods **3/3** · ivars 1 · `instanceSize`=`56`
 | --- | --- | ---: |
 | `image` | `UIImage *` | `0x34` |
 
+### `DownloadMain` — ✅ complete
+
+Methods **119/119** · ivars 63 · `instanceSize`=`252`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `dlGetPlayer` | `Downloader *` | `0x4` |
+| `_arcadePt` | `int` | `0x8` |
+| `_friendRequestedCnt` | `int` | `0xc` |
+| `_errorGetPlayer` | `int` | `0x10` |
+| `_loginBonusId` | `int` | `0x14` |
+| `_loginCnt` | `int` | `0x18` |
+| `_isLoginCntUpdate` | `BOOL` | `0x1c` |
+| `dlNews` | `Downloader *` | `0x20` |
+| `_cppDelegateNews` | `struct ModeSelTask *` | `0x24` |
+| `_lastNewsGetTime` | `NSDate *` | `0x28` |
+| `_storeUpdateTime` | `NSString *` | `0x2c` |
+| `_newsTextArray` | `NSArray *` | `0x30` |
+| `_newsUrlArray` | `NSArray *` | `0x34` |
+| `_informationDataArray` | `NSArray *` | `0x38` |
+| `_serverYear` | `int` | `0x3c` |
+| `_serverMonth` | `int` | `0x40` |
+| `_serverDay` | `int` | `0x44` |
+| `_serverHour` | `int` | `0x48` |
+| `_serverMinute` | `int` | `0x4c` |
+| `_serverSecond` | `int` | `0x50` |
+| `_isNewMusicPackReleased` | `BOOL` | `0x54` |
+| `dlSaveScore` | `Downloader *` | `0x58` |
+| `_saveMusic` | `unsigned int` | `0x5c` |
+| `_saveSheet` | `short` | `0x60` |
+| `dlCancelFriend` | `Downloader *` | `0x64` |
+| `_delegateCancelFriend` | `<DownloadMainDelegate> *` | `0x68` |
+| `dlGetFriendList` | `Downloader *` | `0x6c` |
+| `_delegateGetFriendList` | `<DownloadMainDelegate> *` | `0x70` |
+| `_friendListArray` | `NSArray *` | `0x74` |
+| `dlAddBlockList` | `Downloader *` | `0x78` |
+| `dlGetBlockList` | `Downloader *` | `0x7c` |
+| `_blPlayerIdArray` | `NSArray *` | `0x80` |
+| `_blNameArray` | `NSArray *` | `0x84` |
+| `dlDelBlockList` | `Downloader *` | `0x88` |
+| `dlGetRecommendList` | `Downloader *` | `0x8c` |
+| `_cppDelegateRecommendList` | `struct MusicSelTask *` | `0x90` |
+| `_recommendDataArray` | `NSArray *` | `0x94` |
+| `dlGetVisitor` | `Downloader *` | `0x98` |
+| `_delegateGetVisitor` | `<DownloadMainDelegate> *` | `0x9c` |
+| `_isGetVisitorSuccess` | `BOOL` | `0xa0` |
+| `dlGetPresentList` | `Downloader *` | `0xa4` |
+| `_delegateGetPresentList` | `<DownloadMainDelegate> *` | `0xa8` |
+| `_presentDataArray` | `NSArray *` | `0xac` |
+| `dlGetPresent` | `Downloader *` | `0xb0` |
+| `_delegateGetPresent` | `<DownloadMainDelegate> *` | `0xb4` |
+| `_getPresentId` | `int` | `0xb8` |
+| `dlGetOverScoreLog` | `Downloader *` | `0xbc` |
+| `_delegateGetOverScoreLog` | `<DownloadMainDelegate> *` | `0xc0` |
+| `_overScoreLogArray` | `NSArray *` | `0xc4` |
+| `dlSaveTreasure` | `Downloader *` | `0xc8` |
+| `dlGetDlFileList` | `Downloader *` | `0xcc` |
+| `_dlFileListDataArray` | `NSArray *` | `0xd0` |
+| `dlGetEventInfo` | `Downloader *` | `0xd4` |
+| `_delegateGetEventInfo` | `<DownloadMainDelegate> *` | `0xd8` |
+| `_treasureEventIdArray` | `NSArray *` | `0xdc` |
+| `_gameEventIdArray` | `NSArray *` | `0xe0` |
+| `_isTreasureEventInfoUpdated` | `BOOL` | `0xe4` |
+| `_isGameEventInfoUpdated` | `BOOL` | `0xe5` |
+| `_frSendPlayerIdArray` | `NSArray *` | `0xe8` |
+| `_frSendNameArray` | `NSArray *` | `0xec` |
+| `_frReceivePlayerIdArray` | `NSArray *` | `0xf0` |
+| `_frReceiveNameArray` | `NSArray *` | `0xf4` |
+| `_frReceiveMessageArray` | `NSArray *` | `0xf8` |
+
 ### `DownloadProgresView` — ✅ complete
 
 Methods **6/6** · ivars 4 · `instanceSize`=`80`
@@ -3487,6 +3183,66 @@ Methods **7/7** · ivars 3 · `instanceSize`=`13`
 | `_musicIds` | `NSArray *` | `0x4` |
 | `_charaIds` | `NSArray *` | `0x8` |
 | `_getFlg` | `BOOL` | `0xc` |
+
+### `MainViewController` — ✅ complete
+
+Methods **95/95** · ivars 51 · `instanceSize`=`356`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_glView` | `neGLView *` | `0xa4` |
+| `_settingViewing` | `bool` | `0xa8` |
+| `_cameraRollSaving` | `bool` | `0xa9` |
+| `_isDefaultDlFailed` | `bool` | `0xaa` |
+| `_rewardListViweing` | `bool` | `0xab` |
+| `_isGotoTitle` | `bool` | `0xac` |
+| `_acMusicSelViewing` | `bool` | `0xad` |
+| `_settingNaviCtrl` | `UINavigationController *` | `0xb0` |
+| `_friendMngNaviCtrl` | `UINavigationController *` | `0xb4` |
+| `_popnLinkNaviCtrl` | `UINavigationController *` | `0xb8` |
+| `_friendScoreNaviCtrl` | `UINavigationController *` | `0xbc` |
+| `_recommendNaviCtrl` | `UINavigationController *` | `0xc0` |
+| `_mapSelectNaviCtrl` | `UINavigationController *` | `0xc4` |
+| `_sortSelectNaviCtrl` | `UINavigationController *` | `0xc8` |
+| `_inputNameNaviCtrl` | `UINavigationController *` | `0xcc` |
+| `_inputConvPassNaviCtrl` | `UINavigationController *` | `0xd0` |
+| `_inviteNaviCtrl` | `UINavigationController *` | `0xd4` |
+| `_searchNaviCtrl` | `UINavigationController *` | `0xd8` |
+| `_acViewerNaviCtrl` | `UINavigationController *` | `0xdc` |
+| `_presentBoxNaviCtrl` | `UINavigationController *` | `0xe0` |
+| `_overScoreLogNaviCtrl` | `UINavigationController *` | `0xe4` |
+| `_storeViewController` | `StoreViewController *` | `0xe8` |
+| `_defaultDlViewController` | `DefaultDataDownloadView *` | `0xec` |
+| `_acceptPolicyCtrl` | `AcceptPolicyViewController *` | `0xf0` |
+| `_communicatingView` | `CommunicatingView *` | `0xf4` |
+| `_cameraRollError` | `NSError *` | `0xf8` |
+| `m_LoopInterval` | `int` | `0xfc` |
+| `m_DisplayLink` | `CADisplayLink *` | `0x100` |
+| `m_TaskTime` | `struct C_TIME` | `0x104` |
+| `m_RenderTime` | `struct C_TIME` | `0x10c` |
+| `m_IsPause` | `bool` | `0x114` |
+| `m_IsLoop` | `bool` | `0x115` |
+| `m_AepManager` | `struct AepManager *` | `0x118` |
+| `m_AlertViewCallback` | `void /*unknown*/ *` | `0x11c` |
+| `m_AlertViewCallbackParam` | `void *` | `0x120` |
+| `m_capturedImg` | `UIImage *` | `0x124` |
+| `m_flgCapture` | `BOOL` | `0x128` |
+| `_coverView` | `UIButton *` | `0x12c` |
+| `_presentBoxViewCtrl` | `PresentBoxViewController *` | `0x130` |
+| `_sortSelectViewCtrl` | `SortSelectViewController *` | `0x134` |
+| `_recommendViewCtrl` | `RecommendViewController *` | `0x138` |
+| `_overScoreLogViewCtrl` | `OverScoreLogViewController *` | `0x13c` |
+| `_settingViewCtrl` | `SettingTableSplitViewController *` | `0x140` |
+| `_mapSelectViewCtrl` | `MapSelectSplitViewController *` | `0x144` |
+| `_friendMngViewCtrl` | `FriendMngTopSplitViewController *` | `0x148` |
+| `_popnLinkViewCtrl` | `PopnLinkTopSplitViewController *` | `0x14c` |
+| `_inputNameViewCtrl` | `InputNameViewCtrl *` | `0x150` |
+| `_inputConvPassViewCtrl` | `InputConversionPassViewController *` | `0x154` |
+| `_acViewerViewCtrl` | `AcViewerSplitViewController *` | `0x158` |
+| `_inviteViewCtrl` | `InviteTopViewControllerPad *` | `0x15c` |
+| `_blackBoardView` | `UIView *` | `0x160` |
 
 ### `MapListCell` — ✅ complete
 
@@ -3932,6 +3688,40 @@ Methods **7/7** · ivars 2 · `instanceSize`=`64`
 | --- | --- | ---: |
 | `m_ImageURL` | `NSString *` | `0x38` |
 | `m_ImageDownloader` | `ImageDownloader *` | `0x3c` |
+
+### `StoreMainViewController` — ✅ complete
+
+Methods **64/64** · ivars 25 · `instanceSize`=`252`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_StoreViewCtrl` | `StoreViewController *` | `0xa4` |
+| `m_PackListCtrl` | `StorePackListController *` | `0xa8` |
+| `m_ArtworkDownloaders` | `NSMutableDictionary *` | `0xac` |
+| `m_DownloadManager` | `StoreDownloadManager *` | `0xb0` |
+| `m_PurchasingPackInfo` | `StorePackInfo *` | `0xb4` |
+| `m_PromotionView` | `StorePromotionView *` | `0xb8` |
+| `m_PromotionViewDummy` | `UIImageView *` | `0xbc` |
+| `m_PackTableLabel` | `UILabel *` | `0xc0` |
+| `m_ShowMoreButton` | `UIButton *` | `0xc4` |
+| `m_ShowMoreIndicator` | `UIActivityIndicatorView *` | `0xc8` |
+| `m_CoverViewPad` | `UIView *` | `0xcc` |
+| `m_PackDetailViewPad` | `StorePackDetailViewPad *` | `0xd0` |
+| `m_RestoreProductID` | `NSMutableArray *` | `0xd4` |
+| `m_RestorePackInfo` | `NSMutableArray *` | `0xd8` |
+| `m_RestoreButton` | `UIButton *` | `0xdc` |
+| `m_StorePackInfoDownloader` | `StorePackInfoDownloader *` | `0xe0` |
+| `m_PackBgImage0` | `UIImage *` | `0xe4` |
+| `m_PackBgImage1` | `UIImage *` | `0xe8` |
+| `m_IsPad` | `BOOL` | `0xec` |
+| `m_IsLoadingMoreList` | `BOOL` | `0xed` |
+| `m_IsAnimationing` | `BOOL` | `0xee` |
+| `m_OffsetForOS` | `int` | `0xf0` |
+| `m_IsStoreClosing` | `BOOL` | `0xf4` |
+| `_isAlertViewShowing` | `BOOL` | `0xf5` |
+| `m_RecommendPackListCtrl` | `StorePackListController *` | `0xf8` |
 
 ### `StoreManageViewController` — ✅ complete
 

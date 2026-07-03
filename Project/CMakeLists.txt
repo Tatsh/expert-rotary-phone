@@ -19,7 +19,7 @@ target_sources(popnrhythmin PRIVATE
     CustomSplitViewController.m
     CustomTextView.m
     DelayImageView.m
-    DownloadMain.m
+    DownloadMain.mm
     DownloadProgresView.m
     Downloader.m
     FriendListCell.mm

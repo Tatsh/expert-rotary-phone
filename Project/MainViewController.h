@@ -20,6 +20,10 @@
 - (void)ResumeLoop;                     // @ 0xbf10
 - (void)CreateTimer;                    // @ 0xbf30
 - (void)RemoveTimer;                    // @ 0xc024
+- (void)StopLoop;                       // @ 0xbed0 — stop for good (clear loop flag + drop timer)
+
+// The hosted GL surface (the C++ scene renders into it).
+- (neGLView *)GetGlView;                // @ 0xc150
 
 // One frame: advance tasks then render. Called by the CADisplayLink.
 - (void)mainLoop;                       // @ 0xbe80
@@ -73,8 +77,15 @@
 - (void)StoreEndCallBack;               // @ 0xd518
 - (void)AcViewerEndCallBack;            // @ 0xdcd4
 
-// Whether the initial default download reported failure (read by TitleTask).
-- (BOOL)isDefaultDlFailed;
+// Synthesized state flags (atomic in the binary). Some are written internally via the
+// backing ivar directly (readonly here); the read/write ones expose an atomic setter.
+@property (atomic, readonly) BOOL settingViewing;      // @ 0xf0d0 — a settings modal is up
+@property (atomic, readonly) BOOL cameraRollSaving;    // @ 0xf0e8 — a camera-roll save is in flight
+@property (atomic, readonly) BOOL isDefaultDlFailed;   // @ 0xf100 — the initial download failed (read by TitleTask)
+@property (atomic) BOOL rewardListViweing;             // getter @ 0xf118, setter @ 0xf130 (name typo is real)
+@property (atomic) BOOL isGotoTitle;                   // getter @ 0xf178, setter @ 0xf190
+@property (atomic) BOOL acMusicSelViewing;             // getter @ 0xf1a8, setter @ 0xf1c0
+@property (nonatomic, readonly) NSError *cameraRollError;  // @ 0xf1d8 — last camera-roll save error
 
 // The GL view's last captured frame, kept behind a modal so the render loop can pause;
 // the result screen reads it (to know the backdrop is ready) then releases it once its
@@ -93,6 +104,36 @@
 // 0xd6a8, DeleteCommunicating @ 0xd744.
 - (void)InsertCommunicating;
 - (void)DeleteCommunicating;
+- (BOOL)IsCommunicatingEnable;          // @ 0xd790 — the overlay is present
+- (BOOL)IsCommunicatingAnimationing;    // @ 0xd764 — the overlay is mid-fade
+- (void)CommunicatingFailed;            // @ 0xd7a8 — switch to the "failed" caption
+- (void)CommunicatingEndCallBack;       // @ 0xd7c8 — the overlay finished closing; drop it
+
+// Feature-button gates the menu task reads before opening a screen: YES while the
+// matching modal is already up.
+- (BOOL)IsFriendManageEnable;           // @ 0xcf70
+- (BOOL)IsPopnLinkEnable;               // @ 0xd21c
+- (BOOL)IsStoreEnable;                  // @ 0xd548
+- (BOOL)IsInviteCodeEnable;             // @ 0xd918
+- (BOOL)IsArcadeSearchEnable;           // @ 0xda28
+- (BOOL)IsPresentBoxEnable;             // @ 0xe158
+
+// Save a captured screenshot (stored under the app-support dir as `fileName`) into the
+// camera roll; cameraRollSaving is YES until the async save completes.
+- (void)SaveToCameraRoll:(NSString *)fileName;  // @ 0xe704
+
+// Install a one-shot C confirm callback fired by the common/custom alert delegates.
+- (void)SetAlertViewCallback:(void (*)(void *))callback param:(void *)param;  // @ 0xe810
+
+// The fade-to-black scrim over the whole view (used on scene transitions).
+- (void)InsertBlackBoard;               // @ 0xeca4 — snap on, opaque, on top
+- (void)FadeInBlackBoard;               // @ 0xede8 — fade in over 0.3s
+- (void)FadeOutBlackBoard;              // @ 0xefdc — fade out over 0.5s
+
+// Reward app-list (offer wall) delegate callbacks; rewardListViweing tracks visibility.
+- (void)appListDidAppear;               // @ 0xeaec
+- (void)appListDidDisappear;            // @ 0xeaf0
+- (void)appListFailLoadWithError:(NSError *)error;  // @ 0xeb1c
 
 @end
 

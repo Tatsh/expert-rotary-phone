@@ -39,6 +39,11 @@
 #import "C_TASK.h"
 #import "neFrameTimer.h"
 #import "neGLView.h"
+#import "CommonAlertView.h"
+#import "CustomAlertView.h"
+#import "CommunicatingView.h"
+#import "MusicManager.h"
+#import "TreasureData.h"
 
 // Scene input-mode set + AEP content-area height come from the engine bridge
 // (neEngine::setInputMode / neEngine::aepContentHeight). neEngineBridge.h imported below.
@@ -49,6 +54,11 @@ static const float kRenderMinInterval = 1.0f / 60.0f;
 
 // Fixed-point (16.16) seconds helper for the task update step.
 static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
+
+// This VC is the neGLView render/layout delegate and the delegate for both the
+// common and custom alert views it raises.
+@interface MainViewController () <neGLViewDelegate, CommonAlertViewDelegate, CustomAlertViewDelegate>
+@end
 
 @implementation MainViewController {
     BOOL m_IsLoop;
@@ -95,6 +105,13 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     // Wall-clock stopwatches pacing the task-update and render steps.
     neFrameTimer m_taskTime;
     neFrameTimer m_renderTime;
+    // Modal "communicating…" network-activity overlay + the fade-to-black scrim.
+    CommunicatingView *_communicatingView;
+    UIView *_blackBoardView;
+    // A one-shot C callback fired from the alert delegates when the confirm button is
+    // hit (installed via SetAlertViewCallback:param:).
+    void (*m_AlertViewCallback)(void *);
+    void *m_AlertViewCallbackParam;
 }
 
 #pragma mark - Loop control
@@ -314,7 +331,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     [self ResumeLoop];
 }
 
-- (BOOL)isDefaultDlFailed { return _isDefaultDlFailed; }
+// isDefaultDlFailed is a synthesized @property accessor (@ 0xf100); see the header.
 
 // @ 0xd074 — the pop'n link (data-link) top screen (nav / split per device).
 - (void)GotoPopnLink {
@@ -642,5 +659,350 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     }
     m_renderTime.reset();
 }
+
+#pragma mark - Lifecycle
+
+// @ 0xb51c — build the GL surface and boot the AEP engine/scene. Creates the
+// neGLView sized to the screen (delegate = self), initialises AepManager against the
+// on-disk data path, seeds the scene manager with the UI scale, then lays a hidden,
+// clear cover button (with a tap recognizer) over the view — the backdrop the iPad
+// modal panels dim and dismiss-on-tap through.
+- (void)loadView {
+    [super loadView];
+    CGRect bounds = UIScreen.mainScreen.bounds;
+    self.view.frame = bounds;
+    if (_glView == nil) {
+        _glView = [[neGLView alloc] initWithFrame:bounds];
+        _glView.contentScaleFactor = UIScreen.mainScreen.scale;
+        _glView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    }
+    _glView.delegate = self;
+    [self.view addSubview:_glView];
+
+    // Texture data root lives under the Documents directory; the engine also needs the
+    // main bundle path. Ghidra: NSSearchPathForDirectoriesInDomains(9, 1, 1).
+    NSString *docDir = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                           NSUserDomainMask, YES)[0];
+    NSString *texDir = [NSString stringWithFormat:@"%@/data/tex/", docDir];
+    NSString *bundlePath = NSBundle.mainBundle.bundlePath;
+    AepManager &aep = AepManager::shared();
+    CGFloat scale = UIScreen.mainScreen.scale;
+    // Engine boot against the data paths; the surface is passed in device pixels
+    // (points * scale). Kept as a bridge call — the AEP internals are not reimplemented.
+    aepManagerInit(bounds.size.width * scale, bounds.size.height * scale, &aep,
+                   texDir.UTF8String, bundlePath.UTF8String, scale);
+    neSceneManager::shared();   // force scene-manager lazy init
+    g_dwUiScale = scale * 0.5f; // publish the UI scale (half the screen scale)
+
+    m_capturedImg = nil;
+    m_flgCapture = NO;
+
+    if (_coverView == nil) {
+        UIButton *cover = [[UIButton alloc] initWithFrame:self.view.frame];
+        _coverView = cover;
+        cover.backgroundColor = [UIColor clearColor];
+        _coverView.userInteractionEnabled = YES;
+        _coverView.hidden = YES;
+        [self.view addSubview:_coverView];
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
+                                       initWithTarget:self action:@selector(handleTapCoverView:)];
+        [_coverView addGestureRecognizer:tap];
+    }
+}
+
+// @ 0xb970 — cache the AepManager scene singleton after the base setup.
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    m_AepManager = &AepManager::shared();
+}
+
+// @ 0xb440 — real teardown only: stop the loop and detach the cover view. Under ARC
+// the object ivars (m_capturedImg, GL view, …) are released automatically and there is
+// no [super dealloc].
+- (void)dealloc {
+    [self StopLoop];
+    [_coverView removeFromSuperview];
+}
+
+// didReceiveMemoryWarning @ 0xb4c4 — super-only override, omitted.
+// viewDidUnload @ 0xb4f0 — super-only override, omitted.
+// viewWillAppear: @ 0xb9b0 — super-only override, omitted.
+// viewDidAppear: @ 0xb9dc — super-only override, omitted.
+// viewWillDisappear: @ 0xba08 — super-only override, omitted.
+// viewDidDisappear: @ 0xba34 — super-only override, omitted.
+
+// @ 0xba60 — allow every orientation except upside-down portrait.
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    return interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown;
+}
+
+#pragma mark - GL surface / loop
+
+// @ 0xba6c — neGLView layout delegate: the drawable was (re)sized, so rebuild the
+// engine's orthographic viewport to the new front-buffer (pixel) size, repaint once so
+// the resized surface isn't garbage, then record the new size into the scene manager.
+// neGetCurrentRenderer / neCreateOrthoViewport / neSetCurrentViewport / neReleaseRef are
+// System-layer engine calls, kept as-is (not reimplemented here).
+- (void)LayoutedGLView:(neGLView *)view {
+    neGetCurrentRenderer();
+    int w = [view GetFrontBufferWidth];
+    int h = [view GetFrontBufferHeight];
+    void *viewport = neCreateOrthoViewport((float)w, (float)h, 0, 0, w, h);
+    neSetCurrentViewport(viewport);
+    neReleaseRef(viewport);
+    [view BeginRender];
+    [view SetDefaultFrameBuffer];
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    [view SetDefaultColorBuffer];
+    [view Present];
+    // Publish the new drawable pixel size (keeps the scale set by neGLView
+    // -layoutSubviews). Ghidra: DAT_00187b78 / DAT_00187b7c.
+    neSceneManager::setScreenMetrics((float)w, (float)h, neSceneManager::screenScale());
+}
+
+// @ 0xc150 — the hosted GL view.
+- (neGLView *)GetGlView {
+    return _glView;
+}
+
+// @ 0xbb98 — arm a one-shot frame capture; -draw performs it on the next rendered frame.
+- (void)screenshot {
+    m_flgCapture = YES;
+}
+
+// @ 0xbed0 — stop the loop for good (title exit): clear the run flag then drop the timer.
+- (void)StopLoop {
+    m_IsLoop = NO;
+    [self RemoveTimer];
+}
+
+#pragma mark - Feature gates
+
+// @ 0xcf70 — the friend-manage screen is up (phone nav or iPad split).
+- (BOOL)IsFriendManageEnable {
+    if (_friendMngViewCtrl != nil) {
+        return YES;
+    }
+    return _friendMngNaviCtrl != nil;
+}
+
+// @ 0xd21c — the pop'n link screen is up (phone nav or iPad split).
+- (BOOL)IsPopnLinkEnable {
+    if (_popnLinkViewCtrl != nil) {
+        return YES;
+    }
+    return _popnLinkNaviCtrl != nil;
+}
+
+// @ 0xd548 — the store screen is up.
+- (BOOL)IsStoreEnable {
+    return _storeViewController != nil;
+}
+
+// @ 0xd918 — the invite-code screen is up.
+- (BOOL)IsInviteCodeEnable {
+    return _inviteNaviCtrl != nil;
+}
+
+// @ 0xda28 — the arcade-search screen is up.
+- (BOOL)IsArcadeSearchEnable {
+    return _searchNaviCtrl != nil;
+}
+
+// @ 0xe158 — the present-box screen is up.
+- (BOOL)IsPresentBoxEnable {
+    return _presentBoxViewCtrl != nil;
+}
+
+#pragma mark - Communicating overlay
+
+// @ 0xd6a8 — raise the "communicating…" overlay (built once) and play its fade-in.
+- (void)InsertCommunicating {
+    if (_communicatingView == nil) {
+        _communicatingView = [[CommunicatingView alloc] init];
+        [self.view addSubview:_communicatingView.view];
+        [_communicatingView startOpenAnimation];
+    }
+}
+
+// @ 0xd764 — YES while the overlay is mid-fade.
+- (BOOL)IsCommunicatingAnimationing {
+    return [_communicatingView isAnimationing];
+}
+
+// @ 0xd790 — YES while the overlay is present.
+- (BOOL)IsCommunicatingEnable {
+    return _communicatingView != nil;
+}
+
+// @ 0xd7a8 — switch the overlay to its "communication failed" caption.
+- (void)CommunicatingFailed {
+    [_communicatingView failed];
+}
+
+// @ 0xd7c8 — the overlay finished closing; drop it (ARC releases on nil-assign).
+- (void)CommunicatingEndCallBack {
+    _communicatingView = nil;
+}
+
+#pragma mark - Camera roll
+
+// @ 0xe704 — save a captured screenshot (stored under the app-support dir as `fileName`)
+// into the camera roll; completion routes to onCompleteCapture:….
+- (void)SaveToCameraRoll:(NSString *)fileName {
+    _cameraRollSaving = YES;
+    NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:fileName];
+    NSData *data = [NSData dataWithContentsOfURL:[NSURL fileURLWithPath:path]];
+    UIImage *image = [UIImage imageWithData:data];
+    UIImageWriteToSavedPhotosAlbum(image, self,
+        @selector(onCompleteCapture:didFinishSavingWithError:contextInfo:), NULL);
+}
+
+// @ 0xe7c0 — camera-roll save completion: stash the error (nil on success) and clear
+// the in-flight flag. (ARC drops the manual release/retain the binary does here.)
+- (void)onCompleteCapture:(UIImage *)image
+   didFinishSavingWithError:(NSError *)error
+                contextInfo:(void *)contextInfo {
+    _cameraRollError = error;
+    _cameraRollSaving = NO;
+}
+
+#pragma mark - Alerts
+
+// @ 0xe810 — install the one-shot confirm callback fired by the alert delegates.
+- (void)SetAlertViewCallback:(void (*)(void *))callback param:(void *)param {
+    m_AlertViewCallback = callback;
+    m_AlertViewCallbackParam = param;
+}
+
+// @ 0xe914 — CommonAlertView delegate. Tag 0 is the "device change" (account reset)
+// confirm dialog: perform the reset (reinit UserSettingData, reopen the collab/invite/
+// login-bonus/treasure music, rebuild TreasureData on the managed context) and show a
+// completion alert. Tag 1 routes to the registered confirm callback. (The button index
+// is unused — the binary re-reads the alert tag both times.)
+- (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
+    if (alertView.tag == 0) {
+        [UserSettingData initForConvert];
+        [[MusicManager getInstance] openCollaboMusic];
+        [[MusicManager getInstance] openInviteMusic];
+        [[MusicManager getInstance] openLoginBonusMusic];
+        [[MusicManager getInstance] openTreasureMusic];
+        [TreasureData init:AppDelegate.appDelegate.managedObjectContext];
+        CommonAlertView *done = [[CommonAlertView alloc] initWithTitle:@"機種変更"
+                                                              message:@"データの初期化が完了しました。"
+                                                             delegate:nil
+                                                    cancelButtonTitle:nil
+                                                    otherButtonTitles:@"OK"];
+        [done show];
+        return;
+    }
+    if (alertView.tag == 1 && m_AlertViewCallback != NULL) {
+        m_AlertViewCallback(m_AlertViewCallbackParam);
+    }
+}
+
+// @ 0xeac8 — CustomAlertView delegate: any dismissal fires the registered callback.
+- (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
+    if (m_AlertViewCallback != NULL) {
+        m_AlertViewCallback(m_AlertViewCallbackParam);
+    }
+}
+
+#pragma mark - Reward app list
+
+// @ 0xeaec — reward app-list appeared: nothing to do.
+- (void)appListDidAppear {
+}
+
+// @ 0xeaf0 — reward app-list dismissed: play the cancel SE and clear the "viewing" flag.
+- (void)appListDidDisappear {
+    neEngine::playSystemSe(2);
+    _rewardListViweing = NO;
+}
+
+// @ 0xeb1c — reward app-list failed to load: show a "communication failed" alert and
+// clear the "viewing" flag.
+- (void)appListFailLoadWithError:(NSError *)error {
+    CommonAlertView *alert = [[CommonAlertView alloc]
+        initWithTitle:nil
+              message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
+             delegate:nil
+    cancelButtonTitle:nil
+    otherButtonTitles:@"OK"];
+    [alert show];
+    _rewardListViweing = NO;
+}
+
+#pragma mark - Cover tap / black board
+
+// @ 0xeba8 — a tap on the dim cover behind an iPad modal panel: close whichever boxed
+// panel is open (present-box only when it isn't already animating), playing the cancel SE.
+- (void)handleTapCoverView:(UITapGestureRecognizer *)gesture {
+    if (_presentBoxViewCtrl != nil && ![_presentBoxViewCtrl isAnimationing]) {
+        neEngine::playSystemSe(2);
+        [_presentBoxViewCtrl startCloseAnimation];
+    }
+    if (_sortSelectViewCtrl != nil) {
+        neEngine::playSystemSe(2);
+        [_sortSelectViewCtrl startCloseAnimation];
+    }
+    if (_recommendViewCtrl != nil) {
+        neEngine::playSystemSe(2);
+        [_recommendViewCtrl startCloseAnimation];
+    }
+    if (_overScoreLogViewCtrl != nil) {
+        neEngine::playSystemSe(2);
+        [_overScoreLogViewCtrl startCloseAnimation];
+    }
+}
+
+// @ 0xeca4 — snap an opaque black scrim over the whole view (built once), on top.
+- (void)InsertBlackBoard {
+    if (_blackBoardView == nil) {
+        _blackBoardView = [[UIView alloc] initWithFrame:self.view.frame];
+        _blackBoardView.backgroundColor = [UIColor blackColor];
+        [self.view addSubview:_blackBoardView];
+    }
+    _blackBoardView.alpha = 1.0f;
+    [self.view bringSubviewToFront:_blackBoardView];
+}
+
+// @ 0xede8 — fade the black scrim in (alpha 0 -> 1 over 0.3s), building it if needed.
+- (void)FadeInBlackBoard {
+    if (_blackBoardView == nil) {
+        _blackBoardView = [[UIView alloc] initWithFrame:self.view.frame];
+        _blackBoardView.backgroundColor = [UIColor blackColor];
+        [self.view addSubview:_blackBoardView];
+    }
+    [self.view bringSubviewToFront:_blackBoardView];
+    _blackBoardView.alpha = 0.0f;
+    [UIView animateWithDuration:0.3
+                          delay:0.0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{ _blackBoardView.alpha = 1.0f; }
+                     completion:nil];
+}
+
+// @ 0xefdc — fade the black scrim out (alpha 1 -> 0 over 0.5s) if it exists.
+- (void)FadeOutBlackBoard {
+    if (_blackBoardView != nil) {
+        [self.view bringSubviewToFront:_blackBoardView];
+        [UIView animateWithDuration:0.5
+                              delay:0.0
+                            options:UIViewAnimationOptionAllowUserInteraction
+                         animations:^{ _blackBoardView.alpha = 0.0f; }
+                         completion:nil];
+    }
+}
+
+#pragma mark - Synthesized accessors
+
+// The remaining state accessors are synthesized @property accessors (atomic reads/
+// writes in the binary); their addresses are annotated on the @property lines in the
+// header: settingViewing @ 0xf0d0, cameraRollSaving @ 0xf0e8, isDefaultDlFailed @ 0xf100,
+// rewardListViweing @ 0xf118 / setRewardListViweing: @ 0xf130, isGotoTitle @ 0xf178 /
+// setIsGotoTitle: @ 0xf190, acMusicSelViewing @ 0xf1a8 / setAcMusicSelViewing: @ 0xf1c0,
+// cameraRollError @ 0xf1d8.
 
 @end
