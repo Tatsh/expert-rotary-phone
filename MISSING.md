@@ -9,10 +9,10 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 84 |
-| Partial (file exists, methods missing) | 11 |
+| Complete | 88 |
+| Partial (file exists, methods missing) | 7 |
 | Fully missing (no source file) | 78 |
-| **Missing methods** | **1339** |
+| **Missing methods** | **1240** |
 
 ## Scope decisions
 
@@ -106,29 +106,27 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 11
+## Partial classes — 7
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
 | `DownloadMain` | 25 | 119 | 94 |
 | `StoreMainViewController` | 10 | 64 | 54 |
 | `MainViewController` | 48 | 95 | 47 |
-| `AudioManager` | 41 | 68 | 27 |
-| `MusicData` | 9 | 34 | 25 |
-| `AcMusicData` | 7 | 31 | 24 |
-| `MusicManager` | 14 | 37 | 23 |
 | `StoreAcvManageViewController` | 1 | 24 | 23 |
 | `StoreManageViewController` | 1 | 23 | 22 |
 | `AppDelegate` | 24 | 43 | 19 |
 | `StorePackDetailViewPad` | 15 | 32 | 17 |
 
-## Complete classes — 84
+## Complete classes — 88
 
+- `AcMusicData`
 - `AcViewerDetailCell`
 - `AcViewerMusicCell`
 - `AcViewerOptionCell`
 - `AcViewerSplitViewController`
 - `ArcadeScoreData`
+- `AudioManager`
 - `BFCodec`
 - `BirthDayViewController`
 - `CharaInfo`
@@ -158,6 +156,8 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audi
 - `ImageDownloader`
 - `LimitedCharaInfo`
 - `MapListCell`
+- `MusicData`
+- `MusicManager`
 - `MusicPatch`
 - `OverScoreData`
 - `OverScoreLogCell`
@@ -2927,230 +2927,6 @@ Methods **48/95** · ivars 51 · `instanceSize`=`356`
 | `_inviteViewCtrl` | `InviteTopViewControllerPad *` | `0x15c` |
 | `_blackBoardView` | `UIView *` | `0x160` |
 
-### `AudioManager` — 🟡 partial
-
-Methods **41/68** · ivars 23 · `instanceSize`=`380`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0x1df8c` |
-| `cleanupSe` | `0x1e238` |
-| `loadBgmDataWithBytes:length:isLoop:` | `0x1e63c` |
-| `loadBgmDataWithBytesNoCopy:length:isLoop:` | `0x1e67c` |
-| `loadBgmDataWithBytesNoCopy:length:freeWhenDone:isLoop:` | `0x1e6bc` |
-| `loadVoiceData:isLoop:` | `0x1e7f0` |
-| `releaseSe:resourceId:` | `0x1eba8` |
-| `releaseSeAll` | `0x1eda8` |
-| `releaseVoice` | `0x1efdc` |
-| `prepareSetGroup:resourceId:groupId:` | `0x1f164` |
-| `playSeSetGroup:resourceId:groupId:` | `0x1f380` |
-| `onPauseSe:` | `0x1f434` |
-| `offPauseSe:` | `0x1f498` |
-| `isPlayingSe:` | `0x1f4fc` |
-| `onPauseSeAll` | `0x1f568` |
-| `offPauseSeAll` | `0x1f5cc` |
-| `stopAll` | `0x1f694` |
-| `orderInstanceList:` | `0x1f7ec` |
-| `setJustBgmVolume:` | `0x1fc6c` |
-| `bgmDeviceCurrentTime` | `0x1ff84` |
-| `onFadeInTimer:` | `0x2002c` |
-| `onFadeOutTimer:` | `0x200ec` |
-| `isPlayingVoice` | `0x2042c` |
-| `audioPlayerDidFinishPlaying:successfully:` | `0x20460` |
-| `audioPlayerBeginInterruption:` | `0x204ac` |
-| `audioPlayerEndInterruption:` | `0x204d4` |
-| `dealloc` | `0x206d8` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `sePlayer` | `struct CAPlayer *` | `0x4` |
-| `seAVPlayer` | `struct AVPlayer *` | `0x8` |
-| `seList` | `struct _SE_MANAGE_ID_[8]` | `0xc` |
-| `seNameList` | `NSMutableArray *` | `0x6c` |
-| `seRidList` | `NSMutableArray *` | `0x70` |
-| `isStart` | `bool` | `0x74` |
-| `isSuspend` | `bool` | `0x75` |
-| `isInterruption` | `bool[2]` | `0x76` |
-| `bgmPlayer` | `AVAudioPlayer *` | `0x78` |
-| `isPlaying` | `bool[2]` | `0x7c` |
-| `unitVolume` | `float` | `0x80` |
-| `voicePlayer` | `AVAudioPlayer *` | `0x84` |
-| `isOnPause` | `bool` | `0x88` |
-| `fadeTimer` | `NSTimer *` | `0x8c` |
-| `bgmPlayTime` | `double` | `0x90` |
-| `voicePlayTime` | `double` | `0x98` |
-| `isOnPauseVoice` | `bool` | `0xa0` |
-| `pushBgm` | `AVAudioPlayer *` | `0xa4` |
-| `seManageId` | `struct _SE_MANAGE_ID_[8][2]` | `0xa8` |
-| `seVolume` | `int[2]` | `0x168` |
-| `seType` | `NSMutableDictionary *` | `0x170` |
-| `bgmSettingVolume` | `float` | `0x174` |
-| `loadedBgmPath` | `NSString *` | `0x178` |
-
-### `MusicData` — 🟡 partial
-
-Methods **9/34** · ivars 16 · `instanceSize`=`68`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0xc779c` |
-| `artwork2xData` | `0xc7964` |
-| `musicNameImage2xData` | `0xc7980` |
-| `artistNameImage2xData` | `0xc799c` |
-| `compare:` | `0xc79b8` |
-| `compareMusicID:` | `0xc7a28` |
-| `compareMusicNameCustom:` | `0xc7a60` |
-| `compareArtistNameCustom:` | `0xc7ad4` |
-| `compareMusicNameHira:` | `0xc7b3c` |
-| `compareArtistNameHira:` | `0xc7bb0` |
-| `compareDifficultyNormal:` | `0xc7c18` |
-| `compareDifficultyHyper:` | `0xc7c50` |
-| `compareDifficultyEx:` | `0xc7c88` |
-| `lvNormal` | `0xc7cd4` |
-| `lvHyper` | `0xc7ce8` |
-| `bpm_MIN` | `0xc7d10` |
-| `bpm_MAX` | `0xc7d24` |
-| `musicName` | `0xc7d38` |
-| `musicNameHira` | `0xc7d4c` |
-| `artistName` | `0xc7d60` |
-| `artistNameHira` | `0xc7d74` |
-| `musicSortName` | `0xc7d88` |
-| `artistSortName` | `0xc7d9c` |
-| `musicNameInitial` | `0xc7db0` |
-| `artistNameInitial` | `0xc7dc4` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_FilePath` | `NSString *` | `0x4` |
-| `m_DecodeType` | `int` | `0x8` |
-| `m_MusicID` | `int` | `0xc` |
-| `m_lvNormal` | `int` | `0x10` |
-| `m_lvHyper` | `int` | `0x14` |
-| `m_lvEx` | `int` | `0x18` |
-| `m_BPM_MIN` | `int` | `0x1c` |
-| `m_BPM_MAX` | `int` | `0x20` |
-| `m_MusicName` | `NSString *` | `0x24` |
-| `m_MusicHira` | `NSString *` | `0x28` |
-| `m_ArtistName` | `NSString *` | `0x2c` |
-| `m_ArtistHira` | `NSString *` | `0x30` |
-| `m_MusicSortName` | `NSString *` | `0x34` |
-| `m_ArtistSortName` | `NSString *` | `0x38` |
-| `m_MusicNameInitial` | `NSString *` | `0x3c` |
-| `m_ArtistNameInitial` | `NSString *` | `0x40` |
-
-### `AcMusicData` — 🟡 partial
-
-Methods **7/31** · ivars 17 · `instanceSize`=`72`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x6629c` |
-| `getBackTrack:` | `0x66394` |
-| `compare:` | `0x66488` |
-| `compareAcMusicId:` | `0x664f8` |
-| `compareMusicNameCustom:` | `0x66530` |
-| `compareGenreNameCustom:` | `0x665a4` |
-| `compareLvEasy:` | `0x6660c` |
-| `compareLvNormal:` | `0x66644` |
-| `compareLvHyper:` | `0x6667c` |
-| `compareLvEx:` | `0x666b4` |
-| `lvEasy` | `0x66700` |
-| `lvNormal` | `0x66714` |
-| `lvHyper` | `0x66728` |
-| `bpmEasy` | `0x66750` |
-| `bpmNormal` | `0x66764` |
-| `bpmHyper` | `0x66778` |
-| `bpmEx` | `0x6678c` |
-| `category` | `0x667a0` |
-| `musicName` | `0x667b4` |
-| `musicNameKana` | `0x667c8` |
-| `genreName` | `0x667dc` |
-| `genreNameKana` | `0x667f0` |
-| `musicNameInitial` | `0x66804` |
-| `genreNameInitial` | `0x66818` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_filePath` | `NSString *` | `0x4` |
-| `m_acMusicId` | `int` | `0x8` |
-| `m_lvEasy` | `int` | `0xc` |
-| `m_lvNormal` | `int` | `0x10` |
-| `m_lvHyper` | `int` | `0x14` |
-| `m_lvEx` | `int` | `0x18` |
-| `m_bpmEasy` | `NSString *` | `0x1c` |
-| `m_bpmNormal` | `NSString *` | `0x20` |
-| `m_bpmHyper` | `NSString *` | `0x24` |
-| `m_bpmEx` | `NSString *` | `0x28` |
-| `m_category` | `int` | `0x2c` |
-| `m_musicName` | `NSString *` | `0x30` |
-| `m_musicNameKana` | `NSString *` | `0x34` |
-| `m_genreName` | `NSString *` | `0x38` |
-| `m_genreNameKana` | `NSString *` | `0x3c` |
-| `m_musicNameInitial` | `NSString *` | `0x40` |
-| `m_genreNameInitial` | `NSString *` | `0x44` |
-
-### `MusicManager` — 🟡 partial
-
-Methods **14/37** · ivars 13 · `instanceSize`=`56`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xc81dc` |
-| `dealloc` | `0xc827c` |
-| `createDefaultMusics` | `0xc8384` |
-| `createOpenTreasureMusics` | `0xc8440` |
-| `createOpenInviteMusics` | `0xc8554` |
-| `createOpenCollaboMusics` | `0xc8604` |
-| `createOpenLoginBonusMusics` | `0xc86b4` |
-| `createAcDefaultMusics` | `0xc8764` |
-| `savePurchasedMusics` | `0xc8bec` |
-| `getPurchasedMusicDictionaris` | `0xc8f28` |
-| `getPurchasedAcMusicDictionaris` | `0xc8f38` |
-| `addPurchasedMusic:` | `0xc8f48` |
-| `addPurchasedAcMusic:` | `0xc93f0` |
-| `deleteMusic:` | `0xc9898` |
-| `deleteAcMusic:` | `0xc9914` |
-| `isRecommendedPack:` | `0xc9990` |
-| `openTreasureMusic` | `0xcafc0` |
-| `openInviteMusic` | `0xcaff0` |
-| `openCollaboMusic` | `0xcb020` |
-| `openLoginBonusMusic` | `0xcb050` |
-| `getMusicIDs` | `0xcb24c` |
-| `getAcMusicIDs` | `0xcb474` |
-| `getMusicPatchArray` | `0xcb948` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `m_DefaultMusicIDs` | `NSArray *` | `0x4` |
-| `m_OpenTreasureMusicIDs` | `NSMutableArray *` | `0x8` |
-| `m_OpenInviteMusicIDs` | `NSMutableArray *` | `0xc` |
-| `m_OpenCollaboMusicIDs` | `NSMutableArray *` | `0x10` |
-| `m_OpenLoginBonusMusicIDs` | `NSMutableArray *` | `0x14` |
-| `m_PurchasedMusicDictionaris` | `NSMutableArray *` | `0x18` |
-| `m_PurchasedAcMusicDictionaris` | `NSMutableArray *` | `0x1c` |
-| `m_AcDefaultMusicIDs` | `NSArray *` | `0x20` |
-| `m_MusicDataArray` | `NSMutableArray *` | `0x24` |
-| `m_MusicDataArrayDirty` | `BOOL` | `0x28` |
-| `m_AcMusicDataArray` | `NSMutableArray *` | `0x2c` |
-| `m_AcMusicDataArrayDirty` | `BOOL` | `0x30` |
-| `m_MusicLvPatchArray` | `NSArray *` | `0x34` |
-
 ### `StoreAcvManageViewController` — 🟡 partial
 
 Methods **1/24** · ivars 10 · `instanceSize`=`204`
@@ -3344,6 +3120,32 @@ Methods **15/32** · ivars 20 · `instanceSize`=`144`
 | `recommendPackIdArr` | `NSArray *` | `0x88` |
 | `m_BirthDayView` | `BirthDayViewController *` | `0x8c` |
 
+### `AcMusicData` — ✅ complete
+
+Methods **31/31** · ivars 17 · `instanceSize`=`72`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_filePath` | `NSString *` | `0x4` |
+| `m_acMusicId` | `int` | `0x8` |
+| `m_lvEasy` | `int` | `0xc` |
+| `m_lvNormal` | `int` | `0x10` |
+| `m_lvHyper` | `int` | `0x14` |
+| `m_lvEx` | `int` | `0x18` |
+| `m_bpmEasy` | `NSString *` | `0x1c` |
+| `m_bpmNormal` | `NSString *` | `0x20` |
+| `m_bpmHyper` | `NSString *` | `0x24` |
+| `m_bpmEx` | `NSString *` | `0x28` |
+| `m_category` | `int` | `0x2c` |
+| `m_musicName` | `NSString *` | `0x30` |
+| `m_musicNameKana` | `NSString *` | `0x34` |
+| `m_genreName` | `NSString *` | `0x38` |
+| `m_genreNameKana` | `NSString *` | `0x3c` |
+| `m_musicNameInitial` | `NSString *` | `0x40` |
+| `m_genreNameInitial` | `NSString *` | `0x44` |
+
 ### `AcViewerDetailCell` — ✅ complete
 
 Methods **7/7** · ivars 5 · `instanceSize`=`72`
@@ -3415,6 +3217,38 @@ Methods **15/15** · ivars 12 · `instanceSize`=`256`
 ### `ArcadeScoreData` — ✅ complete
 
 Methods **1/1** · ivars 0 · `instanceSize`=`48`
+
+### `AudioManager` — ✅ complete
+
+Methods **68/68** · ivars 23 · `instanceSize`=`380`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `sePlayer` | `struct CAPlayer *` | `0x4` |
+| `seAVPlayer` | `struct AVPlayer *` | `0x8` |
+| `seList` | `struct _SE_MANAGE_ID_[8]` | `0xc` |
+| `seNameList` | `NSMutableArray *` | `0x6c` |
+| `seRidList` | `NSMutableArray *` | `0x70` |
+| `isStart` | `bool` | `0x74` |
+| `isSuspend` | `bool` | `0x75` |
+| `isInterruption` | `bool[2]` | `0x76` |
+| `bgmPlayer` | `AVAudioPlayer *` | `0x78` |
+| `isPlaying` | `bool[2]` | `0x7c` |
+| `unitVolume` | `float` | `0x80` |
+| `voicePlayer` | `AVAudioPlayer *` | `0x84` |
+| `isOnPause` | `bool` | `0x88` |
+| `fadeTimer` | `NSTimer *` | `0x8c` |
+| `bgmPlayTime` | `double` | `0x90` |
+| `voicePlayTime` | `double` | `0x98` |
+| `isOnPauseVoice` | `bool` | `0xa0` |
+| `pushBgm` | `AVAudioPlayer *` | `0xa4` |
+| `seManageId` | `struct _SE_MANAGE_ID_[8][2]` | `0xa8` |
+| `seVolume` | `int[2]` | `0x168` |
+| `seType` | `NSMutableDictionary *` | `0x170` |
+| `bgmSettingVolume` | `float` | `0x174` |
+| `loadedBgmPath` | `NSString *` | `0x178` |
 
 ### `BFCodec` — ✅ complete
 
@@ -3831,6 +3665,53 @@ Methods **3/3** · ivars 2 · `instanceSize`=`60`
 | --- | --- | ---: |
 | `_mapVal` | `NSValue *` | `0x34` |
 | `_bgImgView` | `UIImageView *` | `0x38` |
+
+### `MusicData` — ✅ complete
+
+Methods **34/34** · ivars 16 · `instanceSize`=`68`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_FilePath` | `NSString *` | `0x4` |
+| `m_DecodeType` | `int` | `0x8` |
+| `m_MusicID` | `int` | `0xc` |
+| `m_lvNormal` | `int` | `0x10` |
+| `m_lvHyper` | `int` | `0x14` |
+| `m_lvEx` | `int` | `0x18` |
+| `m_BPM_MIN` | `int` | `0x1c` |
+| `m_BPM_MAX` | `int` | `0x20` |
+| `m_MusicName` | `NSString *` | `0x24` |
+| `m_MusicHira` | `NSString *` | `0x28` |
+| `m_ArtistName` | `NSString *` | `0x2c` |
+| `m_ArtistHira` | `NSString *` | `0x30` |
+| `m_MusicSortName` | `NSString *` | `0x34` |
+| `m_ArtistSortName` | `NSString *` | `0x38` |
+| `m_MusicNameInitial` | `NSString *` | `0x3c` |
+| `m_ArtistNameInitial` | `NSString *` | `0x40` |
+
+### `MusicManager` — ✅ complete
+
+Methods **37/37** · ivars 13 · `instanceSize`=`56`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `m_DefaultMusicIDs` | `NSArray *` | `0x4` |
+| `m_OpenTreasureMusicIDs` | `NSMutableArray *` | `0x8` |
+| `m_OpenInviteMusicIDs` | `NSMutableArray *` | `0xc` |
+| `m_OpenCollaboMusicIDs` | `NSMutableArray *` | `0x10` |
+| `m_OpenLoginBonusMusicIDs` | `NSMutableArray *` | `0x14` |
+| `m_PurchasedMusicDictionaris` | `NSMutableArray *` | `0x18` |
+| `m_PurchasedAcMusicDictionaris` | `NSMutableArray *` | `0x1c` |
+| `m_AcDefaultMusicIDs` | `NSArray *` | `0x20` |
+| `m_MusicDataArray` | `NSMutableArray *` | `0x24` |
+| `m_MusicDataArrayDirty` | `BOOL` | `0x28` |
+| `m_AcMusicDataArray` | `NSMutableArray *` | `0x2c` |
+| `m_AcMusicDataArrayDirty` | `BOOL` | `0x30` |
+| `m_MusicLvPatchArray` | `NSArray *` | `0x34` |
 
 ### `MusicPatch` — ✅ complete
 

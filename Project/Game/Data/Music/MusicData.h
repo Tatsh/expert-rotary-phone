@@ -15,21 +15,23 @@
 @interface MusicData : NSObject
 
 @property (nonatomic) int MusicID;              // Ghidra: MusicID @ 0xc7cc0
-@property (nonatomic, copy) NSString *musicName;
-@property (nonatomic, copy) NSString *musicHira;
-@property (nonatomic, copy) NSString *artistName;
-@property (nonatomic, copy) NSString *artistHira;
-@property (nonatomic) int lvNormal;
-@property (nonatomic) int lvHyper;
+// The four display-name strings compile to *atomic* copy getters (objc_getProperty),
+// unlike the sort/initial strings below whose getters are plain nonatomic ivar loads.
+@property (copy) NSString *musicName;           // @ 0xc7d38
+@property (copy) NSString *musicNameHira;       // @ 0xc7d4c
+@property (copy) NSString *artistName;          // @ 0xc7d60
+@property (copy) NSString *artistNameHira;      // @ 0xc7d74
+@property (nonatomic) int lvNormal;             // @ 0xc7cd4
+@property (nonatomic) int lvHyper;              // @ 0xc7ce8
 @property (nonatomic) int lvEx;                 // Ghidra: lvEx @ 0xc7cfc
-@property (nonatomic) int bpmMin;
-@property (nonatomic) int bpmMax;
+@property (nonatomic) int bpm_MIN;              // @ 0xc7d10
+@property (nonatomic) int bpm_MAX;              // @ 0xc7d24
 @property (nonatomic, copy) NSString *filePath;
 @property (nonatomic) int decodeType;
-@property (nonatomic, copy) NSString *musicSortName;
-@property (nonatomic, copy) NSString *artistSortName;
-@property (nonatomic, copy) NSString *musicNameInitial;
-@property (nonatomic, copy) NSString *artistNameInitial;
+@property (nonatomic, copy) NSString *musicSortName;     // @ 0xc7d88
+@property (nonatomic, copy) NSString *artistSortName;    // @ 0xc7d9c
+@property (nonatomic, copy) NSString *musicNameInitial;  // @ 0xc7db0
+@property (nonatomic, copy) NSString *artistNameInitial; // @ 0xc7dc4
 
 // Decode + validate a song record from its .orb path (nil if id mismatch or
 // level values out of range). Ghidra: +[MusicData dataWithPath:ID:] @ 0xc72c8
@@ -49,12 +51,32 @@
 - (NSData *)sheetHyper;    // "sheet_h"
 - (NSData *)sheetEx;       // "sheet_ex"
 
-// The @2x artwork / music-name-image PNGs stored in the .orb zip, decoded on
-// demand. The result screen uploads these straight into GPU textures. Ghidra:
-// -[MusicData artwork2xData] (selector @ 0x15a894, PlayResultTask FUN_0003dfe0
-// @ 0x3e8ec) / -[MusicData musicNameImage2xData] (selector @ 0x15a818 @ 0x3e928).
+// The @2x artwork / name-image PNGs stored in the .orb zip, each pulled out (and
+// BF-decoded) on demand — plain getZipData: wrappers, no scaling. The result screen
+// uploads these straight into GPU textures. Ghidra: artwork2xData @ 0xc7964 (entry
+// "artwork2x"), musicNameImage2xData @ 0xc7980 (entry "title_2x"),
+// artistNameImage2xData @ 0xc799c (entry "artist_2x").
 - (NSData *)artwork2xData;
 - (NSData *)musicNameImage2xData;
+- (NSData *)artistNameImage2xData;
+
+// Sort comparators used by MusicManager to order the song list. `compare:` is the
+// default (by musicNameHira, shorter reading first); the rest sort by ID, by the
+// custom/hira sort keys (artist variants fall back to the music variant on a tie),
+// and by each difficulty level. Ghidra: compare: @ 0xc79b8, compareMusicID: @ 0xc7a28,
+// compareMusicNameCustom: @ 0xc7a60, compareArtistNameCustom: @ 0xc7ad4,
+// compareMusicNameHira: @ 0xc7b3c, compareArtistNameHira: @ 0xc7bb0,
+// compareDifficultyNormal: @ 0xc7c18, compareDifficultyHyper: @ 0xc7c50,
+// compareDifficultyEx: @ 0xc7c88.
+- (NSComparisonResult)compare:(MusicData *)other;
+- (NSComparisonResult)compareMusicID:(MusicData *)other;
+- (NSComparisonResult)compareMusicNameCustom:(MusicData *)other;
+- (NSComparisonResult)compareArtistNameCustom:(MusicData *)other;
+- (NSComparisonResult)compareMusicNameHira:(MusicData *)other;
+- (NSComparisonResult)compareArtistNameHira:(MusicData *)other;
+- (NSComparisonResult)compareDifficultyNormal:(MusicData *)other;
+- (NSComparisonResult)compareDifficultyHyper:(MusicData *)other;
+- (NSComparisonResult)compareDifficultyEx:(MusicData *)other;
 
 @end
 

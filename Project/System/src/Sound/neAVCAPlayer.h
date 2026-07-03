@@ -40,6 +40,13 @@ public:
     uint32_t prepare(uint32_t sourceId, float volume);
     uint32_t prepareNamed(const char *callName, float volume);
 
+    // Reserve a playing instance targeting a *fixed* voice index (used by
+    // AudioManager's SetGroup pool, which owns each caplayer voice permanently),
+    // by source id or by call name. Returns the play handle, or -1 on failure.
+    // Ghidra: caPrepareSourceByIndex / caPrepareSourceNamed.
+    uint32_t prepareAtVoice(uint32_t sourceId, int voiceIndex);
+    uint32_t prepareNamedAtVoice(NSString *callName, int voiceIndex);
+
     // Start the sound referenced by `handle` (slot generation must still match).
     // Ghidra: FUN_00026784.
     bool play(uint32_t handle);
@@ -47,8 +54,16 @@ public:
     // Stop the voice named by `handle`. Ghidra: FUN_0002679c.
     bool stop(uint32_t handle);
 
+    // Pause the voice named by `handle` (resume via play()). Ghidra: caHandlePause.
+    bool pause(uint32_t handle);
+
     // The voice's state (-1 free / 1 playing / 4 finished). Ghidra: FUN_000267cc.
     int voiceState(uint32_t handle);
+
+    // Unload a loaded source (by id or call name), freeing its CASound slot.
+    // Ghidra: caUnregisterSource / caUnregisterSourceNamed.
+    void unregisterSource(uint32_t sourceId);
+    void unregisterSourceNamed(NSString *callName);
 
     // Set the gain (volume level 0..127) of every voice. Ghidra: FUN_000267e4.
     void setAllVoiceVolume(int level);

@@ -108,6 +108,126 @@ static NSString *const kGyoLabels[10] = {
     return [self getZipData:@"sheet_ex"];
 }
 
+// @ 0x66394 — the difficulty's backing (BGM) track: "bgm_es"/"bgm_h"/"bgm_ex"
+// for Easy/Hyper/Ex, falling back to "bgm_n" if that entry is missing (and for
+// any other difficulty, i.e. Normal).
+- (NSData *)getBackTrack:(int)difficulty {
+    NSString *entry;
+    if (difficulty == 3) {
+        entry = @"bgm_ex";
+    } else if (difficulty == 2) {
+        entry = @"bgm_h";
+    } else if (difficulty == 0) {
+        entry = @"bgm_es";
+    } else {
+        return [self getZipData:@"bgm_n"];
+    }
+    NSData *data = [self getZipData:entry];
+    if (data != nil) {
+        return data;
+    }
+    return [self getZipData:@"bgm_n"];
+}
+
+// @ 0x66488 — order by the katakana music-name reading; on an equal compare,
+// tie-break so the shorter reading sorts first.
+- (NSComparisonResult)compare:(AcMusicData *)other {
+    NSString *a = [self musicNameKana];
+    NSString *b = [other musicNameKana];
+    NSComparisonResult result = [a compare:b];
+    if (result != NSOrderedSame) {
+        return result;
+    }
+    NSUInteger la = a.length;
+    NSUInteger lb = b.length;
+    if (lb > la) {
+        return NSOrderedAscending;
+    }
+    return (la != lb) ? NSOrderedDescending : NSOrderedSame;
+}
+
+// @ 0x664f8 — ascending by arcade music id.
+- (NSComparisonResult)compareAcMusicId:(AcMusicData *)other {
+    int a = [self acMusicId];
+    int b = [other acMusicId];
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0x66530 — like -compare: but a literal (NSLiteralSearch) comparison of the
+// music-name reading, with the same shorter-first length tie-break.
+- (NSComparisonResult)compareMusicNameCustom:(AcMusicData *)other {
+    NSString *a = [self musicNameKana];
+    NSString *b = [other musicNameKana];
+    NSComparisonResult result = [a compare:b options:NSLiteralSearch];
+    if (result != NSOrderedSame) {
+        return result;
+    }
+    NSUInteger la = a.length;
+    NSUInteger lb = b.length;
+    if (lb > la) {
+        return NSOrderedAscending;
+    }
+    return (la != lb) ? NSOrderedDescending : NSOrderedSame;
+}
+
+// @ 0x665a4 — literal comparison of the genre-name reading; defers to the music
+// name on a tie.
+- (NSComparisonResult)compareGenreNameCustom:(AcMusicData *)other {
+    NSComparisonResult result =
+        [[self genreNameKana] compare:[other genreNameKana] options:NSLiteralSearch];
+    if (result == NSOrderedSame) {
+        return [self compareMusicNameCustom:other];
+    }
+    return result;
+}
+
+// @ 0x6660c — ascending by Easy level.
+- (NSComparisonResult)compareLvEasy:(AcMusicData *)other {
+    int a = [self lvEasy];
+    int b = [other lvEasy];
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0x66644 — ascending by Normal level.
+- (NSComparisonResult)compareLvNormal:(AcMusicData *)other {
+    int a = [self lvNormal];
+    int b = [other lvNormal];
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0x6667c — ascending by Hyper level.
+- (NSComparisonResult)compareLvHyper:(AcMusicData *)other {
+    int a = [self lvHyper];
+    int b = [other lvHyper];
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0x666b4 — ascending by Ex level.
+- (NSComparisonResult)compareLvEx:(AcMusicData *)other {
+    int a = [self lvEx];
+    int b = [other lvEx];
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0x6629c — dealloc only releases its object ivars (musicName, musicNameKana,
+// genreName, genreNameKana, filePath, musicNameInitial, genreNameInitial) then
+// calls [super dealloc]; ARC synthesizes this, so no body is written here.
+
 // @ 0x65c6c — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in place.
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);

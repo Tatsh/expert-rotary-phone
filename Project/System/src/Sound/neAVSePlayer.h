@@ -42,8 +42,16 @@ public:
     // Stop the voice named by `handle`. Ghidra: FUN_000214c0.
     bool stop(uint32_t handle);
 
+    // Pause the voice named by `handle` (resume via play()). Ghidra: audioHandlePause.
+    bool pause(uint32_t handle);
+
     // The voice's state (-1 free/idle, 1 playing). Ghidra: FUN_000214f0.
     int voiceState(uint32_t handle);
+
+    // Unload a loaded source (by id or call name). Ghidra: unregisterSound /
+    // unregisterSoundNamed.
+    void unregisterSource(uint32_t sourceId);
+    void unregisterSourceNamed(NSString *callName);
 
     // Set the volume (0..1) of every voice in the pool.
     void setGroupVolume(float volume);

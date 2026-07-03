@@ -27,6 +27,18 @@ struct SeInstance {
     int group;   // 0 = caplayer, else AVFoundation
 };
 
+// The caplayer-only "SetGroup" SE pool (Ghidra: the seManageId 2-D array, 2 banks
+// of 8 slots, 0xc bytes each). Unlike m_seList, every slot owns a *fixed* caplayer
+// voice for its lifetime (banks 0/1 own voices 0..7 / 8..15) and prepare/play/stop
+// always go through m_caPlayer. handle == kFreeInstance marks an idle slot.
+static const int kSeSetGroupCount = 2;
+static const int kSeSetGroupVoices = 8;
+struct SeVoiceSlot {
+    RSND_INSTANCE_ID handle;
+    int voiceIndex;
+    int reserved;
+};
+
 @implementation AudioManager {
     BOOL m_isStart;
     BOOL m_isSuspend;
@@ -51,26 +63,53 @@ struct SeInstance {
     NSMutableDictionary *m_seType;    // key (name or rid) -> packed handle/type
     float m_seVolume[kSeGroupCount];
     SeInstance m_seList[8];           // live SE instances (oldest first)
+    SeVoiceSlot m_seManageId[kSeSetGroupCount][kSeSetGroupVoices];  // SetGroup pool
 }
 
+// @ 0x1df8c
 - (instancetype)init {
     if ((self = [super init])) {
         m_caPlayer = new neAVCAPlayer();
         m_seAVPlayer = new neAVSePlayer();
-        m_seRidList = [[NSMutableArray alloc] init];
-        m_seNameList = [[NSMutableArray alloc] init];
-        m_seType = [[NSMutableDictionary alloc] init];
+        m_isStart = NO;
         for (int i = 0; i < 8; i++) {
             m_seList[i].handle = kFreeInstance;
-            m_seList[i].group = 0;
         }
+        m_seNameList = [[NSMutableArray alloc] init];
+        m_seRidList = [[NSMutableArray alloc] init];
+        m_isInterruption = NO;
+        m_isInterruptionVoice = NO;
+        m_isPlaying = NO;
+        m_isPlayingVoice = NO;
+        m_isSuspend = NO;
+        m_isOnPauseVoice = NO;
+        m_isOnPause = NO;
+        m_bgmSettingVolume = 1.0f;
+        m_loadedBgmPath = nil;
+        // Each SetGroup bank starts empty; its 8 slots own consecutive caplayer
+        // voices (bank 0 -> 0..7, bank 1 -> 8..15).
+        for (int g = 0; g < kSeSetGroupCount; g++) {
+            m_seVolume[g] = 0x7f;
+            for (int v = 0; v < kSeSetGroupVoices; v++) {
+                m_seManageId[g][v].handle = kFreeInstance;
+                m_seManageId[g][v].voiceIndex = g * kSeSetGroupVoices + v;
+            }
+        }
+        m_seType = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
 
+// @ 0x206d8 — invalidate the fade timer and tear down the CoreAudio SE engine.
+// Per the binary only m_caPlayer is destroyed here (m_seAVPlayer is torn down in
+// cleanupSe / systemTerminate); the ObjC-object releases and [super dealloc] are
+// dropped under ARC.
 - (void)dealloc {
-    delete m_caPlayer;
-    delete m_seAVPlayer;
+    [m_fadeTimer invalidate];
+    if (m_caPlayer != nullptr) {
+        delete m_caPlayer;   // ~neAVCAPlayer: frees the AUGraph / CASound pool
+        m_caPlayer = nullptr;
+    }
 }
 
 // @ 0x1dea0 — thread-safe lazy singleton.
@@ -193,6 +232,24 @@ struct SeInstance {
     return YES;
 }
 
+// @ 0x1e63c — wrap a copy of the raw bytes in an NSData and load it as BGM.
+- (BOOL)loadBgmDataWithBytes:(const void *)bytes length:(NSUInteger)length isLoop:(BOOL)loop {
+    NSData *data = [NSData dataWithBytes:bytes length:length];
+    return [self loadBgmData:data isLoop:loop];
+}
+
+// @ 0x1e67c — as above but without copying (NSData frees the buffer when done).
+- (BOOL)loadBgmDataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length isLoop:(BOOL)loop {
+    NSData *data = [NSData dataWithBytesNoCopy:bytes length:length];
+    return [self loadBgmData:data isLoop:loop];
+}
+
+// @ 0x1e6bc — as above, letting the caller decide whether NSData frees the buffer.
+- (BOOL)loadBgmDataWithBytesNoCopy:(void *)bytes length:(NSUInteger)length freeWhenDone:(BOOL)freeWhenDone isLoop:(BOOL)loop {
+    NSData *data = [NSData dataWithBytesNoCopy:bytes length:length freeWhenDone:freeWhenDone];
+    return [self loadBgmData:data isLoop:loop];
+}
+
 // @ 0x1fcc0 — start the BGM, instantly or via a fade-in timer.
 - (BOOL)playBgm:(float)fadeSeconds {
     if (m_bgmPlayer == nil) {
@@ -255,6 +312,15 @@ struct SeInstance {
     return m_bgmPlayer.currentTime;
 }
 
+// @ 0x1ff84 — the audio device's absolute clock as seen by the BGM player; 0 when
+// nothing is loaded.
+- (NSTimeInterval)bgmDeviceCurrentTime {
+    if (m_bgmPlayer == nil) {
+        return 0;
+    }
+    return m_bgmPlayer.deviceCurrentTime;
+}
+
 // @ 0x1ffb0 — move the playhead and re-prime the player so playback resumes cleanly.
 - (void)setBgmCurrentTime:(NSTimeInterval)time {
     if (m_bgmPlayer == nil) {
@@ -288,6 +354,18 @@ struct SeInstance {
         return NO;
     }
     m_bgmSettingVolume = volume;
+    return YES;
+}
+
+// @ 0x1fc6c — set the BGM player's volume immediately (no fade, no stored target).
+- (BOOL)setJustBgmVolume:(float)volume {
+    if (m_bgmPlayer == nil) {
+        return NO;
+    }
+    if (volume < 0.0f || volume > 1.0f) {
+        return NO;
+    }
+    m_bgmPlayer.volume = volume;
     return YES;
 }
 
@@ -526,6 +604,241 @@ struct SeInstance {
     }
 }
 
+// @ 0x1f434 — pause the SE instance `instanceId` in whichever backend owns it.
+- (BOOL)onPauseSe:(RSND_INSTANCE_ID)instanceId {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].handle == instanceId) {
+            return m_seList[i].group != 0 ? m_seAVPlayer->pause((uint32_t)instanceId)
+                                          : m_caPlayer->pause((uint32_t)instanceId);
+        }
+    }
+    return NO;
+}
+
+// @ 0x1f498 — resume the SE instance `instanceId` in whichever backend owns it.
+- (BOOL)offPauseSe:(RSND_INSTANCE_ID)instanceId {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].handle == instanceId) {
+            return m_seList[i].group != 0 ? m_seAVPlayer->play((uint32_t)instanceId)
+                                          : m_caPlayer->play((uint32_t)instanceId);
+        }
+    }
+    return NO;
+}
+
+// @ 0x1f4fc — YES if the SE instance `instanceId` is currently playing (state 2).
+- (BOOL)isPlayingSe:(RSND_INSTANCE_ID)instanceId {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].handle == instanceId) {
+            int state = m_seList[i].group != 0 ? m_seAVPlayer->voiceState((uint32_t)instanceId)
+                                               : m_caPlayer->voiceState((uint32_t)instanceId);
+            return state == 2;
+        }
+    }
+    return NO;
+}
+
+// @ 0x1f568 — pause every tracked SE instance (all 8 slots, backend per slot).
+- (BOOL)onPauseSeAll {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].group != 0) {
+            m_seAVPlayer->pause((uint32_t)m_seList[i].handle);
+        } else {
+            m_caPlayer->pause((uint32_t)m_seList[i].handle);
+        }
+    }
+    return YES;
+}
+
+// @ 0x1f5cc — resume every tracked SE instance.
+- (BOOL)offPauseSeAll {
+    for (int i = 0; i < 8; i++) {
+        if (m_seList[i].group != 0) {
+            m_seAVPlayer->play((uint32_t)m_seList[i].handle);
+        } else {
+            m_caPlayer->play((uint32_t)m_seList[i].handle);
+        }
+    }
+    return YES;
+}
+
+#pragma mark - SE SetGroup pool (caplayer, fixed voices)
+
+// @ 0x1f7ec — reap finished voices in the bank, compact the live slots to the
+// front (each keeping its fixed voiceIndex), and return the first free slot index,
+// or -1 when the bank is full.
+- (int)orderInstanceList:(int)groupId {
+    for (int i = 0; i < kSeSetGroupVoices; i++) {
+        RSND_INSTANCE_ID handle = m_seManageId[groupId][i].handle;
+        if (handle == kFreeInstance) {
+            break;
+        }
+        int state = m_caPlayer->voiceState((uint32_t)handle);
+        if (state == -1 || state == 4) {
+            m_caPlayer->stop((uint32_t)handle);   // stop-and-clear the voice
+            m_seManageId[groupId][i].handle = kFreeInstance;
+        }
+    }
+    // Compact: pull a later live slot forward, swapping handle + fixed voiceIndex.
+    for (int i = 0; i < kSeSetGroupVoices - 1; i++) {
+        if (m_seManageId[groupId][i].handle == kFreeInstance) {
+            int j = i + 1;
+            while (j < kSeSetGroupVoices && m_seManageId[groupId][j].handle == kFreeInstance) {
+                j++;
+            }
+            if (j >= kSeSetGroupVoices) {
+                break;
+            }
+            RSND_INSTANCE_ID movedHandle = m_seManageId[groupId][j].handle;
+            int savedVoice = m_seManageId[groupId][i].voiceIndex;
+            m_seManageId[groupId][i].handle = movedHandle;
+            m_seManageId[groupId][i].voiceIndex = m_seManageId[groupId][j].voiceIndex;
+            m_seManageId[groupId][j].handle = kFreeInstance;
+            m_seManageId[groupId][j].voiceIndex = savedVoice;
+            if (m_seManageId[groupId][i].handle == kFreeInstance) {
+                break;
+            }
+        }
+    }
+    for (int i = 0; i < kSeSetGroupVoices; i++) {
+        if (m_seManageId[groupId][i].handle == kFreeInstance) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// @ 0x1f164 — reserve a caplayer voice in the given bank (stealing the bank's
+// oldest instance if it is full), prepare it on that slot's fixed voice, record
+// the handle and return it.
+- (RSND_INSTANCE_ID)prepareSetGroup:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId groupId:(int)groupId {
+    int slot = [self orderInstanceList:groupId];
+    if (slot == -1) {
+        [self stopSe:m_seManageId[groupId][0].handle];
+        slot = [self orderInstanceList:groupId];
+        if (slot == -1) {
+            return RSND_INSTANCE_ID_ERROR;
+        }
+    }
+    int voiceIndex = m_seManageId[groupId][slot].voiceIndex;
+    RSND_INSTANCE_ID handle;
+    if (name == nil) {
+        handle = m_caPlayer->prepareAtVoice((uint32_t)resourceId, voiceIndex);
+    } else {
+        handle = m_caPlayer->prepareNamedAtVoice(name, voiceIndex);
+    }
+    m_seManageId[groupId][slot].handle = handle;
+    return handle;
+}
+
+// @ 0x1f380 — prepare a SetGroup voice and start it.
+- (RSND_INSTANCE_ID)playSeSetGroup:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId groupId:(int)groupId {
+    if (name != nil || resourceId != (RSND_SOURCE_ID)-1) {
+        RSND_INSTANCE_ID handle = [self prepareSetGroup:name resourceId:resourceId groupId:groupId];
+        if (handle != (RSND_INSTANCE_ID)-1) {
+            m_caPlayer->play((uint32_t)handle);
+            return handle;
+        }
+    }
+    return RSND_INSTANCE_ID_ERROR;
+}
+
+#pragma mark - SE resource release
+
+// @ 0x1eba8 — free a single loaded SE source (by call name or source id) from its
+// backend and drop it from the load-order lists and the type table.
+- (void)releaseSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId {
+    int group = [self getGroupID:name resourceId:resourceId];
+    if (name == nil) {
+        if (group == 0) {
+            m_caPlayer->unregisterSource((uint32_t)(resourceId & 0xfffffff));
+        } else {
+            m_seAVPlayer->unregisterSource((uint32_t)(resourceId & 0xfffffff));
+        }
+        NSUInteger count = m_seRidList.count;
+        for (NSUInteger i = 0; i < count; i++) {
+            if ((RSND_SOURCE_ID)[m_seRidList[i] intValue] == resourceId) {
+                [m_seRidList removeObjectAtIndex:i];
+                break;
+            }
+            count = m_seRidList.count;
+        }
+        [m_seType removeObjectForKey:[NSNumber numberWithInt:(int)resourceId]];
+    } else {
+        if (group == 0) {
+            m_caPlayer->unregisterSourceNamed(name);
+        } else {
+            m_seAVPlayer->unregisterSourceNamed(name);
+        }
+        NSUInteger count = m_seNameList.count;
+        for (NSUInteger i = 0; i < count; i++) {
+            if ([name compare:m_seNameList[i]] == NSOrderedSame) {
+                [m_seNameList removeObjectAtIndex:i];
+                break;
+            }
+            count = m_seNameList.count;
+        }
+        [m_seType removeObjectForKey:name];
+    }
+}
+
+// @ 0x1eda8 — free every loaded SE source in both backends and clear the tables.
+- (void)releaseSeAll {
+    NSUInteger nameCount = m_seNameList.count;
+    for (NSUInteger i = 0; i < nameCount; i++) {
+        NSString *name = m_seNameList[i];
+        if ([self getGroupID:name resourceId:0] == 0) {
+            m_caPlayer->unregisterSourceNamed(name);
+        } else {
+            m_seAVPlayer->unregisterSourceNamed(name);
+        }
+        nameCount = m_seNameList.count;
+    }
+    [m_seNameList removeAllObjects];
+
+    NSUInteger ridCount = m_seRidList.count;
+    for (NSUInteger i = 0; i < ridCount; i++) {
+        RSND_SOURCE_ID rid = (RSND_SOURCE_ID)[m_seRidList[i] intValue];
+        if ([self getGroupID:nil resourceId:rid] == 0) {
+            m_caPlayer->unregisterSource((uint32_t)(rid & 0xfffffff));
+        } else {
+            m_seAVPlayer->unregisterSource((uint32_t)(rid & 0xfffffff));
+        }
+        ridCount = m_seRidList.count;
+    }
+    [m_seRidList removeAllObjects];
+    [m_seType removeAllObjects];
+}
+
+// @ 0x1e238 — full SE teardown/reset: release every source, destroy and rebuild
+// both backends, reset the lookup lists and both instance pools, then restart the
+// engines. The C++ engines are explicitly destroyed and re-created; the ObjC-list
+// releases are dropped under ARC (the reassignments free the old objects).
+- (void)cleanupSe {
+    [self releaseSeAll];
+
+    delete m_caPlayer;      // ~neAVCAPlayer
+    delete m_seAVPlayer;    // ~neAVSePlayer (audio mixer)
+    m_caPlayer = new neAVCAPlayer();
+    m_seAVPlayer = new neAVSePlayer();
+
+    m_seNameList = [[NSMutableArray alloc] init];
+    m_seRidList = [[NSMutableArray alloc] init];
+    m_seType = [[NSMutableDictionary alloc] init];
+
+    for (int i = 0; i < 8; i++) {
+        m_seList[i].handle = kFreeInstance;
+    }
+    for (int g = 0; g < kSeSetGroupCount; g++) {
+        m_seVolume[g] = 0x7f;
+        for (int v = 0; v < kSeSetGroupVoices; v++) {
+            m_seManageId[g][v].handle = kFreeInstance;
+            m_seManageId[g][v].voiceIndex = g * kSeSetGroupVoices + v;
+        }
+    }
+    [self onStartPlayer:nil];
+}
+
 #pragma mark - VOICE channel (a second BGM-like player)
 
 // @ 0x1e708
@@ -544,6 +857,39 @@ struct SeInstance {
     m_voicePlayer.delegate = self;
     [m_voicePlayer prepareToPlay];
     return YES;
+}
+
+// @ 0x1e7f0 — load the VOICE channel straight from in-memory data.
+- (BOOL)loadVoiceData:(NSData *)data isLoop:(BOOL)loop {
+    if (data == nil) {
+        return NO;
+    }
+    m_voicePlayer = nil;   // ARC releases the previous player
+    NSError *error = nil;
+    m_voicePlayer = [[AVAudioPlayer alloc] initWithData:data error:&error];
+    if (error != nil) {
+        return NO;
+    }
+    m_voicePlayer.numberOfLoops = loop ? -1 : 0;
+    m_voicePlayer.delegate = self;
+    [m_voicePlayer prepareToPlay];
+    return YES;
+}
+
+// @ 0x1efdc — release the VOICE player.
+- (void)releaseVoice {
+    if (m_voicePlayer == nil) {
+        return;
+    }
+    m_voicePlayer = nil;   // ARC releases the player
+}
+
+// @ 0x2042c — YES only when a VOICE player is loaded and actually playing.
+- (BOOL)isPlayingVoice {
+    if (m_voicePlayer == nil) {
+        return NO;
+    }
+    return [m_voicePlayer isPlaying];
 }
 
 // @ 0x2030c
@@ -612,21 +958,39 @@ struct SeInstance {
     [NSRunLoop.currentRunLoop addTimer:m_fadeTimer forMode:NSRunLoopCommonModes];
 }
 
+// @ 0x2002c — ramp the BGM volume up one tick; clamp to the target and stop the
+// timer once reached. Ignores stale timers that have already been replaced.
 - (void)onFadeInTimer:(NSTimer *)timer {
+    if (m_fadeTimer != timer) {
+        return;
+    }
     float v = m_bgmPlayer.volume + m_unitVolume;
     if (v >= m_bgmSettingVolume) {
-        v = m_bgmSettingVolume;
-        [self deleteFadeTimer];
+        m_bgmPlayer.volume = m_bgmSettingVolume;
+        [m_fadeTimer invalidate];
+        m_fadeTimer = nil;
     }
     m_bgmPlayer.volume = v;
 }
 
+// @ 0x200ec — ramp the BGM volume down one tick; on reaching zero stop the timer
+// and either pause (when this fade is a pause) or stop the player outright.
 - (void)onFadeOutTimer:(NSTimer *)timer {
+    if (m_fadeTimer != timer) {
+        return;
+    }
     float v = m_bgmPlayer.volume + m_unitVolume;
-    if (v <= 0.0f) {
-        v = 0.0f;
-        [self deleteFadeTimer];
+    if (v < 0.0f) {
+        m_bgmPlayer.volume = 0;
+        [m_fadeTimer invalidate];
+        m_fadeTimer = nil;
+        if (!m_isOnPause) {
+            [m_bgmPlayer stop];
+            m_isPlaying = NO;
+            return;
+        }
         [m_bgmPlayer pause];
+        return;
     }
     m_bgmPlayer.volume = v;
 }
@@ -663,6 +1027,42 @@ struct SeInstance {
             [self playBgm:0];
         }
     }
+}
+
+#pragma mark - Global stop
+
+// @ 0x1f694 — stop the BGM, the VOICE channel and every SE instance at once.
+- (BOOL)stopAll {
+    [self stopBgm:0];
+    [self stopVoice];
+    [self stopSeAll];
+    return YES;
+}
+
+#pragma mark - AVAudioPlayerDelegate
+
+// @ 0x20460 — a player finished: clear the matching channel's playing flag.
+- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+    if (m_bgmPlayer == player) {
+        m_isPlaying = NO;
+    }
+    if (m_voicePlayer == player) {
+        m_isPlayingVoice = NO;
+    }
+}
+
+// @ 0x204ac — audio session interrupted: mark the matching channel interrupted.
+- (void)audioPlayerBeginInterruption:(AVAudioPlayer *)player {
+    if (m_bgmPlayer == player) {
+        m_isInterruption = YES;
+    } else {
+        m_isInterruptionVoice = YES;
+    }
+}
+
+// @ 0x204d4 — interruption ended: resume the matching channel (0 = BGM, 1 = VOICE).
+- (void)audioPlayerEndInterruption:(AVAudioPlayer *)player {
+    [self resumePlayer:(m_bgmPlayer != player) ? 1 : 0];
 }
 
 // Tear the SE backends down. Ghidra: systemTerminate.

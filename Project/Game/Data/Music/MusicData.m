@@ -113,6 +113,14 @@ static NSString *const kYomiLabels[10] = {
 - (NSData *)sheetHyper { return [self getZipData:@"sheet_h"]; }
 - (NSData *)sheetEx    { return [self getZipData:@"sheet_ex"]; }
 
+// The @2x artwork / name-image PNGs packed in the .orb zip, each pulled out (and
+// BF-decoded) on demand — plain getZipData: wrappers, no scaling. Ghidra:
+// artwork2xData @ 0xc7964 (entry "artwork2x"), musicNameImage2xData @ 0xc7980
+// (entry "title_2x"), artistNameImage2xData @ 0xc799c (entry "artist_2x").
+- (NSData *)artwork2xData         { return [self getZipData:@"artwork2x"]; }
+- (NSData *)musicNameImage2xData  { return [self getZipData:@"title_2x"]; }
+- (NSData *)artistNameImage2xData { return [self getZipData:@"artist_2x"]; }
+
 // @ 0xc7104 — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in place.
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);
@@ -161,14 +169,14 @@ static NSString *const kYomiLabels[10] = {
     MusicData *data = [[MusicData alloc] init];
     data.MusicID = musicId;
     data.musicName = musicName;
-    data.musicHira = musicHira;
+    data.musicNameHira = musicHira;
     data.artistName = artistName;
-    data.artistHira = artistHira;
+    data.artistNameHira = artistHira;
     data.lvNormal = n;
     data.lvHyper = h;
     data.lvEx = ex;
-    data.bpmMin = [dict[@"BpmMin"] intValue];
-    data.bpmMax = [dict[@"BpmMax"] intValue];
+    data.bpm_MIN = [dict[@"BpmMin"] intValue];
+    data.bpm_MAX = [dict[@"BpmMax"] intValue];
     data.filePath = path;
     data.decodeType = 0;
 
@@ -194,5 +202,111 @@ static NSString *const kYomiLabels[10] = {
     self.lvHyper = h;
     self.lvEx = ex;
 }
+
+// @ 0xc79b8 — default sort: by the music reading (plain compare:); ties broken so
+// the shorter reading sorts first (ascending by length).
+- (NSComparisonResult)compare:(MusicData *)other {
+    NSString *a = self.musicNameHira;
+    NSString *b = other.musicNameHira;
+    NSComparisonResult r = [a compare:b];
+    if (r != NSOrderedSame) {
+        return r;
+    }
+    NSUInteger la = a.length, lb = b.length;
+    if (lb <= la) {
+        return (lb < la) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0xc7a28 — ascending by MusicID.
+- (NSComparisonResult)compareMusicID:(MusicData *)other {
+    int a = self.MusicID, b = other.MusicID;
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0xc7a60 — by the music sort key (literal compare); ties broken by shorter first.
+- (NSComparisonResult)compareMusicNameCustom:(MusicData *)other {
+    NSString *a = self.musicSortName;
+    NSString *b = other.musicSortName;
+    NSComparisonResult r = [a compare:b options:NSLiteralSearch];
+    if (r != NSOrderedSame) {
+        return r;
+    }
+    NSUInteger la = a.length, lb = b.length;
+    if (lb <= la) {
+        return (lb < la) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0xc7ad4 — by the artist sort key (literal compare); on a tie fall back to the
+// music-name-custom order.
+- (NSComparisonResult)compareArtistNameCustom:(MusicData *)other {
+    NSComparisonResult r =
+        [self.artistSortName compare:other.artistSortName options:NSLiteralSearch];
+    if (r == NSOrderedSame) {
+        return [self compareMusicNameCustom:other];
+    }
+    return r;
+}
+
+// @ 0xc7b3c — by the music reading (literal compare); ties broken by shorter first.
+- (NSComparisonResult)compareMusicNameHira:(MusicData *)other {
+    NSString *a = self.musicNameHira;
+    NSString *b = other.musicNameHira;
+    NSComparisonResult r = [a compare:b options:NSLiteralSearch];
+    if (r != NSOrderedSame) {
+        return r;
+    }
+    NSUInteger la = a.length, lb = b.length;
+    if (lb <= la) {
+        return (lb < la) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0xc7bb0 — by the artist reading (literal compare); on a tie fall back to the
+// music-name-hira order.
+- (NSComparisonResult)compareArtistNameHira:(MusicData *)other {
+    NSComparisonResult r =
+        [self.artistNameHira compare:other.artistNameHira options:NSLiteralSearch];
+    if (r == NSOrderedSame) {
+        return [self compareMusicNameHira:other];
+    }
+    return r;
+}
+
+// @ 0xc7c18 — ascending by Normal level.
+- (NSComparisonResult)compareDifficultyNormal:(MusicData *)other {
+    int a = self.lvNormal, b = other.lvNormal;
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0xc7c50 — ascending by Hyper level.
+- (NSComparisonResult)compareDifficultyHyper:(MusicData *)other {
+    int a = self.lvHyper, b = other.lvHyper;
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// @ 0xc7c88 — ascending by Ex level.
+- (NSComparisonResult)compareDifficultyEx:(MusicData *)other {
+    int a = self.lvEx, b = other.lvEx;
+    if (b <= a) {
+        return (b < a) ? NSOrderedDescending : NSOrderedSame;
+    }
+    return NSOrderedAscending;
+}
+
+// dealloc @ 0xc779c — ARC-omitted (object ivars only).
 
 @end

@@ -35,8 +35,47 @@
 - (void)createAcMusicDataArray;      // @ 0xcaabc
 - (void)createMusicLvPatchArray;     // loads rhythmin.lv level patches
 
+// Built-in song tables, assembled in -init from constant id lists / unlock gates.
+- (void)createDefaultMusics;         // @ 0xc8384 (ids {1,2,3})
+- (void)createOpenTreasureMusics;    // @ 0xc8440 (treasure ids, gated per main map)
+- (void)createOpenInviteMusics;      // @ 0xc8554 (id 4, invite gate)
+- (void)createOpenCollaboMusics;     // @ 0xc8604 (id 5, BEMANI-collabo gate)
+- (void)createOpenLoginBonusMusics;  // @ 0xc86b4 (id 6, login-bonus gate)
+- (void)createAcDefaultMusics;       // @ 0xc8764 (ids {1,2,3,300000000})
+
 // Load & Blowfish-decrypt the purchased-song lists ("mulist"/"acmulist").
 - (void)loadPurchasedMusics;         // @ 0xc8820
+
+// Blowfish-encrypt & write the purchased-song lists back to "mulist"/"acmulist".
+- (void)savePurchasedMusics;         // @ 0xc8bec
+
+// Accessors for the in-memory purchased-song lists.
+- (NSMutableArray *)getPurchasedMusicDictionaris;   // @ 0xc8f28
+- (NSMutableArray *)getPurchasedAcMusicDictionaris; // @ 0xc8f38
+
+// Add/merge a purchased song into the list (returns YES when the list changed).
+- (BOOL)addPurchasedMusic:(id)item;    // @ 0xc8f48
+- (BOOL)addPurchasedAcMusic:(id)item;  // @ 0xc93f0
+
+// Delete a downloaded (.orb) song file; returns YES if the file existed.
+- (BOOL)deleteMusic:(int)musicId;      // @ 0xc9898
+- (BOOL)deleteAcMusic:(int)acMusicId;  // @ 0xc9914
+
+// YES if `packID` appears in the encrypted "recpack" recommended list.
+- (BOOL)isRecommendedPack:(int)packID; // @ 0xc9990
+
+// Re-evaluate an unlock gate and mark the local cache dirty.
+- (void)openTreasureMusic;             // @ 0xcafc0
+- (void)openInviteMusic;               // @ 0xcaff0
+- (void)openCollaboMusic;              // @ 0xcb020
+- (void)openLoginBonusMusic;           // @ 0xcb050
+
+// Flat lists of all currently-available song ids (NSNumber).
+- (NSMutableArray *)getMusicIDs;       // @ 0xcb24c (default + purchased + treasure)
+- (NSMutableArray *)getAcMusicIDs;     // @ 0xcb474 (ac-default + purchased-ac)
+
+// The loaded level-patch records (rhythmin.lv), or nil.
+- (NSArray *)getMusicPatchArray;       // @ 0xcb948
 
 // Mark a cache stale so the next getter rebuilds it.
 - (void)setMusicDataArrayDirty;      // @ 0xcae18

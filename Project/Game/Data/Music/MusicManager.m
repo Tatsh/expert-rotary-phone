@@ -12,12 +12,28 @@
 #import "MusicManager.h"
 #import "MusicPatch.h"
 #import "RhUtil.h"           // RhFileExists / RhParsePlistArray / RhMD5Data
+#import "TreasureData+Store.h"   // +isOpenMusic:inManagedObjectContext:
+
+// Unlock-gate class methods queried while (re)building the "open" song lists.
+// Defined elsewhere in the MusicManager implementation (not yet reconstructed).
+// TODO(dep): reconstruct these gate predicates.
+@interface MusicManager (UnlockGates)
++ (BOOL)isOpenInviteMusic:(int)index;      // Ghidra: PTR_s_isOpenInviteMusic__0015a814
++ (BOOL)isOpenBemaniCollaboMusic;          // Ghidra: PTR_s_isOpenBemaniCollaboMusic_0015b1f4
++ (BOOL)isOpenLoginBonusMusic:(int)index;  // Ghidra: PTR_s_isOpenLoginBonusMusic__0015b8b4
+@end
 
 // Treasure/sugoroku song ids, one per main map (Ghidra: DAT_0012fa58).
 static const int kTreasureMusicIds[9] = {
     100000000, 100000001, 100000002, 100000003, 100000004,
     100000005, 100000007, 100000006, 100000008,
 };
+
+// Always-available bundled song ids (Ghidra: DAT_0012fa4c).
+static const int kDefaultMusicIds[3] = { 1, 2, 3 };
+
+// Default arcade catalog ids (Ghidra: DAT_0012fa80).
+static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
 
 @implementation MusicManager {
     NSMutableArray *m_MusicDataArray;
@@ -43,6 +59,88 @@ static const int kTreasureMusicIds[9] = {
         sInstance = [[MusicManager alloc] init];
     }
     return sInstance;
+}
+
+#pragma mark - Lifecycle
+
+// @ 0xc81dc — build all of the built-in song tables up front. Purchased lists
+// and level patches are loaded lazily/separately.
+- (instancetype)init {
+    self = [super init];
+    if (self != nil) {
+        [self createDefaultMusics];
+        [self createOpenTreasureMusics];
+        [self createOpenInviteMusics];
+        [self createOpenCollaboMusics];
+        [self createOpenLoginBonusMusics];
+        [self createAcDefaultMusics];
+    }
+    return self;
+}
+
+// @ 0xc827c — releases m_DefaultMusicIDs, m_PurchasedMusicDictionaris,
+// m_PurchasedAcMusicDictionaris, m_MusicDataArray, m_AcDefaultMusicIDs and
+// m_AcMusicDataArray, then [super dealloc]. All object-ivar cleanup; nothing
+// else. Under ARC this is automatic, so -dealloc is omitted.
+
+#pragma mark - Built-in song tables
+
+// @ 0xc8384 — the three always-available bundled songs.
+- (void)createDefaultMusics {
+    NSMutableArray *array = [NSMutableArray array];
+    for (int i = 0; i < 3; i++) {
+        [array addObject:[NSNumber numberWithInt:kDefaultMusicIds[i]]];
+    }
+    m_DefaultMusicIDs = [[NSArray alloc] initWithArray:array];
+}
+
+// @ 0xc8440 — treasure songs, one per main map (0..8), included only when the
+// map's music-piece collection gate is open.
+- (void)createOpenTreasureMusics {
+    NSMutableArray *array = [NSMutableArray array];
+    NSManagedObjectContext *moc = [AppDelegate appDelegate].managedObjectContext;
+    for (int i = 0; i < 9; i++) {
+        if ([TreasureData isOpenMusic:(short)i inManagedObjectContext:moc]) {
+            [array addObject:[NSNumber numberWithInt:kTreasureMusicIds[i]]];
+        }
+    }
+    m_OpenTreasureMusicIDs = array;
+}
+
+// @ 0xc8554 — invite-reward song (id 4), gated by the invite predicate.
+- (void)createOpenInviteMusics {
+    NSMutableArray *array = [NSMutableArray array];
+    if ([MusicManager isOpenInviteMusic:0]) {
+        [array addObject:[NSNumber numberWithInt:4]];
+    }
+    m_OpenInviteMusicIDs = array;
+}
+
+// @ 0xc8604 — BEMANI-collabo song (id 5), gated by the collabo predicate.
+- (void)createOpenCollaboMusics {
+    NSMutableArray *array = [NSMutableArray array];
+    if ([MusicManager isOpenBemaniCollaboMusic]) {
+        [array addObject:[NSNumber numberWithInt:5]];
+    }
+    m_OpenCollaboMusicIDs = array;
+}
+
+// @ 0xc86b4 — login-bonus song (id 6), gated by the login-bonus predicate.
+- (void)createOpenLoginBonusMusics {
+    NSMutableArray *array = [NSMutableArray array];
+    if ([MusicManager isOpenLoginBonusMusic:0]) {
+        [array addObject:[NSNumber numberWithInt:6]];
+    }
+    m_OpenLoginBonusMusicIDs = array;
+}
+
+// @ 0xc8764 — default arcade catalog ids.
+- (void)createAcDefaultMusics {
+    NSMutableArray *array = [NSMutableArray array];
+    for (int i = 0; i < 4; i++) {
+        [array addObject:[NSNumber numberWithInt:kAcDefaultMusicIds[i]]];
+    }
+    m_AcDefaultMusicIDs = [[NSArray alloc] initWithArray:array];
 }
 
 #pragma mark - Dirty flags / cache
@@ -393,5 +491,278 @@ static const int kTreasureMusicIds[9] = {
 
     [out writeToFile:path atomically:YES];
 }
+
+// @ 0xc8bec — Blowfish-encrypt each non-empty purchased list (device-uuid MD5
+// key) behind 4 random salt bytes and write it back to "mulist"/"acmulist".
+- (void)savePurchasedMusics {
+    NSString *uuId = [AppDelegate appDelegate].uuId;
+
+    if (m_PurchasedMusicDictionaris.count != 0) {
+        NSString *path = [[AppDelegate appDocumentsDirectory]
+                          stringByAppendingPathComponent:@"mulist"];
+        NSData *xml = [NSPropertyListSerialization
+                       dataWithPropertyList:m_PurchasedMusicDictionaris
+                                     format:NSPropertyListXMLFormat_v1_0
+                                    options:0
+                                      error:NULL];
+        NSMutableData *out = [[NSMutableData alloc] initWithCapacity:0x80];
+        uint32_t salt = arc4random();
+        [out appendBytes:&salt length:4];
+        [out appendData:xml];
+
+        BFCodec *codec = [[BFCodec alloc] init];
+        [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+        [codec encipher:out];
+        [out writeToFile:path atomically:YES];
+    }
+
+    if (m_PurchasedAcMusicDictionaris.count != 0) {
+        NSString *path = [[AppDelegate appDocumentsDirectory]
+                          stringByAppendingPathComponent:@"acmulist"];
+        NSData *xml = [NSPropertyListSerialization
+                       dataWithPropertyList:m_PurchasedAcMusicDictionaris
+                                     format:NSPropertyListXMLFormat_v1_0
+                                    options:0
+                                      error:NULL];
+        NSMutableData *out = [[NSMutableData alloc] initWithCapacity:0x80];
+        uint32_t salt = arc4random();
+        [out appendBytes:&salt length:4];
+        [out appendData:xml];
+
+        BFCodec *codec = [[BFCodec alloc] init];
+        [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+        [codec encipher:out];
+        [out writeToFile:path atomically:YES];
+    }
+}
+
+#pragma mark - Purchased list accessors
+
+// @ 0xc8f28 — synthesized-style accessor.
+- (NSMutableArray *)getPurchasedMusicDictionaris { return m_PurchasedMusicDictionaris; }
+// @ 0xc8f38 — synthesized-style accessor.
+- (NSMutableArray *)getPurchasedAcMusicDictionaris { return m_PurchasedAcMusicDictionaris; }
+
+// @ 0xc8f48 — merge `item` into the local purchased list. If an entry with the
+// same ID exists, update any differing metadata (returns YES only if something
+// changed); otherwise append a new entry (always YES). Marks the cache dirty.
+- (BOOL)addPurchasedMusic:(id)item {
+    unsigned int musicID = (unsigned int)[item musicID];
+    NSUInteger count = m_PurchasedMusicDictionaris.count;
+    for (NSUInteger i = 0; i < count; i++) {
+        NSDictionary *entry = [m_PurchasedMusicDictionaris objectAtIndex:i];
+        if ([[entry objectForKey:@"ID"] unsignedIntValue] == musicID) {
+            NSMutableDictionary *merged = [NSMutableDictionary dictionaryWithDictionary:entry];
+            BOOL changed = NO;
+            if ([item name] != nil &&
+                ![[item name] isEqualToString:[entry objectForKey:@"Name"]]) {
+                [merged setObject:[item name] forKey:@"Name"];
+                changed = YES;
+            }
+            if ([item artist] != nil &&
+                ![[item artist] isEqualToString:[entry objectForKey:@"Artist"]]) {
+                [merged setObject:[item artist] forKey:@"Artist"];
+                changed = YES;
+            }
+            if ([item itemURL] != nil &&
+                ![[item itemURL] isEqualToString:[entry objectForKey:@"ItemURL"]]) {
+                [merged setObject:[item itemURL] forKey:@"ItemURL"];
+                changed = YES;
+            }
+            BOOL result;
+            if ([item itunesURL] != nil &&
+                ![[item itunesURL] isEqualToString:[entry objectForKey:@"iTunesURL"]]) {
+                [merged setObject:[item itunesURL] forKey:@"iTunesURL"];
+                result = YES;
+            } else {
+                result = changed;
+            }
+            if (result) {
+                [m_PurchasedMusicDictionaris replaceObjectAtIndex:i
+                    withObject:[NSDictionary dictionaryWithDictionary:merged]];
+            }
+            [self setMusicDataArrayDirty];
+            return result;
+        }
+    }
+
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:5];
+    [dict setObject:[NSNumber numberWithUnsignedInt:musicID] forKey:@"ID"];
+    [dict setObject:([item name] != nil ? [item name] : @"") forKey:@"Name"];
+    [dict setObject:([item artist] != nil ? [item artist] : @"") forKey:@"Artist"];
+    if ([item itemURL] != nil) {
+        [dict setObject:[item itemURL] forKey:@"ItemURL"];
+    }
+    if ([item itunesURL] != nil) {
+        [dict setObject:[item itunesURL] forKey:@"iTunesURL"];
+    }
+    [m_PurchasedMusicDictionaris addObject:[NSDictionary dictionaryWithDictionary:dict]];
+    [self setMusicDataArrayDirty];
+    return YES;
+}
+
+// @ 0xc93f0 — arcade counterpart of -addPurchasedMusic: (keys Title/Genre/
+// ItemURL/SampleURL, matched by acMusicId). Marks the AC cache dirty.
+- (BOOL)addPurchasedAcMusic:(id)item {
+    unsigned int acMusicId = (unsigned int)[item acMusicId];
+    NSUInteger count = m_PurchasedAcMusicDictionaris.count;
+    for (NSUInteger i = 0; i < count; i++) {
+        NSDictionary *entry = [m_PurchasedAcMusicDictionaris objectAtIndex:i];
+        if ([[entry objectForKey:@"ID"] unsignedIntValue] == acMusicId) {
+            NSMutableDictionary *merged = [NSMutableDictionary dictionaryWithDictionary:entry];
+            BOOL changed = NO;
+            if ([item title] != nil &&
+                ![[item title] isEqualToString:[entry objectForKey:@"Title"]]) {
+                [merged setObject:[item title] forKey:@"Title"];
+                changed = YES;
+            }
+            if ([item genre] != nil &&
+                ![[item genre] isEqualToString:[entry objectForKey:@"Genre"]]) {
+                [merged setObject:[item genre] forKey:@"Genre"];
+                changed = YES;
+            }
+            if ([item itemURL] != nil &&
+                ![[item itemURL] isEqualToString:[entry objectForKey:@"ItemURL"]]) {
+                [merged setObject:[item itemURL] forKey:@"ItemURL"];
+                changed = YES;
+            }
+            BOOL result;
+            if ([item sampleURL] != nil &&
+                ![[item sampleURL] isEqualToString:[entry objectForKey:@"SampleURL"]]) {
+                [merged setObject:[item sampleURL] forKey:@"SampleURL"];
+                result = YES;
+            } else {
+                result = changed;
+            }
+            if (result) {
+                [m_PurchasedAcMusicDictionaris replaceObjectAtIndex:i
+                    withObject:[NSDictionary dictionaryWithDictionary:merged]];
+            }
+            [self setAcMusicDataArrayDirty];
+            return result;
+        }
+    }
+
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:5];
+    [dict setObject:[NSNumber numberWithUnsignedInt:acMusicId] forKey:@"ID"];
+    [dict setObject:([item title] != nil ? [item title] : @"") forKey:@"Title"];
+    [dict setObject:([item genre] != nil ? [item genre] : @"") forKey:@"Genre"];
+    if ([item itemURL] != nil) {
+        [dict setObject:[item itemURL] forKey:@"ItemURL"];
+    }
+    if ([item sampleURL] != nil) {
+        [dict setObject:[item sampleURL] forKey:@"SampleURL"];
+    }
+    [m_PurchasedAcMusicDictionaris addObject:[NSDictionary dictionaryWithDictionary:dict]];
+    [self setAcMusicDataArrayDirty];
+    return YES;
+}
+
+#pragma mark - Delete downloaded songs
+
+// @ 0xc9898 — remove a downloaded local song file; YES if it existed.
+- (BOOL)deleteMusic:(int)musicId {
+    NSString *path = [self getPathFromPurchased:musicId];
+    if (!RhFileExists(path)) {
+        return NO;
+    }
+    NSError *err = nil;
+    [[NSFileManager defaultManager] removeItemAtPath:path error:&err];
+    [self setMusicDataArrayDirty];
+    return YES;
+}
+
+// @ 0xc9914 — arcade counterpart of -deleteMusic:.
+- (BOOL)deleteAcMusic:(int)acMusicId {
+    NSString *path = [self getAcPathFromPurchased:acMusicId];
+    if (!RhFileExists(path)) {
+        return NO;
+    }
+    NSError *err = nil;
+    [[NSFileManager defaultManager] removeItemAtPath:path error:&err];
+    [self setAcMusicDataArrayDirty];
+    return YES;
+}
+
+// @ 0xc9990 — YES if `packID` is present in the encrypted "recpack" list (same
+// BFCodec + MD5(uuid) scheme as the purchased lists).
+- (BOOL)isRecommendedPack:(int)packID {
+    NSString *path = [[AppDelegate appDocumentsDirectory]
+                      stringByAppendingPathComponent:@"recpack"];
+    if (RhFileExists(path)) {
+        NSString *uuId = [AppDelegate appDelegate].uuId;
+        NSMutableData *data = [[NSMutableData alloc] initWithContentsOfFile:path];
+        if (data != nil) {
+            BFCodec *codec = [[BFCodec alloc] init];
+            [codec cipherInit:RhMD5Data(uuId.UTF8String)];
+            [codec decipher:data];
+            NSData *body = [data subdataWithRange:NSMakeRange(4, data.length - 4)];
+            NSArray *entries = RhParsePlistArray(body);
+            for (NSDictionary *entry in entries) {
+                if ([[entry objectForKey:@"ID"] unsignedIntValue] == (unsigned int)packID) {
+                    return YES;
+                }
+            }
+        }
+    }
+    return NO;
+}
+
+#pragma mark - Unlock gate refresh
+
+// @ 0xcafc0 — re-evaluate the treasure gate and invalidate the local cache.
+- (void)openTreasureMusic {
+    [self createOpenTreasureMusics];
+    [self setMusicDataArrayDirty];
+}
+// @ 0xcaff0
+- (void)openInviteMusic {
+    [self createOpenInviteMusics];
+    [self setMusicDataArrayDirty];
+}
+// @ 0xcb020
+- (void)openCollaboMusic {
+    [self createOpenCollaboMusics];
+    [self setMusicDataArrayDirty];
+}
+// @ 0xcb050
+- (void)openLoginBonusMusic {
+    [self createOpenLoginBonusMusics];
+    [self setMusicDataArrayDirty];
+}
+
+#pragma mark - Flat id lists
+
+// @ 0xcb24c — every currently-available local song id: defaults, then purchased
+// (each entry's "ID"), then unlocked treasure ids. (Invite/collabo/login-bonus
+// are intentionally not included here.)
+- (NSMutableArray *)getMusicIDs {
+    NSMutableArray *ids = [NSMutableArray arrayWithCapacity:4];
+    for (NSNumber *idNum in m_DefaultMusicIDs) {
+        [ids addObject:idNum];
+    }
+    for (NSDictionary *entry in m_PurchasedMusicDictionaris) {
+        [ids addObject:[entry objectForKey:@"ID"]];
+    }
+    for (NSNumber *idNum in m_OpenTreasureMusicIDs) {
+        [ids addObject:idNum];
+    }
+    return ids;
+}
+
+// @ 0xcb474 — arcade ids: default AC ids then purchased-AC entry "ID"s.
+- (NSMutableArray *)getAcMusicIDs {
+    NSMutableArray *ids = [NSMutableArray arrayWithCapacity:4];
+    for (NSNumber *idNum in m_AcDefaultMusicIDs) {
+        [ids addObject:idNum];
+    }
+    for (NSDictionary *entry in m_PurchasedAcMusicDictionaris) {
+        [ids addObject:[entry objectForKey:@"ID"]];
+    }
+    return ids;
+}
+
+// @ 0xcb948 — synthesized-style accessor.
+- (NSArray *)getMusicPatchArray { return m_MusicLvPatchArray; }
 
 @end
