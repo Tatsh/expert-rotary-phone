@@ -16,6 +16,7 @@ target_sources(popnrhythmin PRIVATE
     BirthDayViewController.mm
     CheckerCategoryCell.m
     CommonAlertView.mm
+    CustomAlertView.mm
     CustomButton.m
     CustomTextView.m
     DownloadMain.m
@@ -79,6 +80,7 @@ target_sources(popnrhythmin PRIVATE
     BirthDayViewController.h
     CheckerCategoryCell.h
     CommonAlertView.h
+    CustomAlertView.h
     CustomButton.h
     CustomTextView.h
     DownloadMain.h

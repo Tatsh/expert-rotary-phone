@@ -1,17 +1,18 @@
 # PopnRhythmin — Exhaustive Missing Inventory
 
 Machine-generated from Ghidra **rb420 / PopnRhythmin** (`__objc_classlist` walk) diffed against the
-reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate after adding sources.
+reconstructed `@ 0x…` annotations in `Project/`. Self-updating: rebuild `.audit/recon.txt`, then run
+`python3 .audit/gen_missing.py`.
 
 ## Totals — app Objective-C classes
 
 | Metric | Count |
 | --- | ---: |
 | Classes audited | 173 |
-| Complete | 21 |
-| Partial (file exists, methods missing) | 66 |
-| Fully missing (no source file) | 86 |
-| **Missing methods** | **1740** |
+| Complete | 22 |
+| Partial (file exists, methods missing) | 68 |
+| Fully missing (no source file) | 83 |
+| **Missing methods** | **1707** |
 
 ## Scope decisions
 
@@ -22,7 +23,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `BFCodec` (Blowfish) | ours | reconstruct |
 | `UnZipArchive` (ZipArchive) | 3rd-party ([ziparchive](https://code.google.com/archive/p/ziparchive/)) | **exclude** |
 
-## Fully missing classes — 86
+## Fully missing classes — 83
 
 | Class | Methods | Ivars | `instanceSize` |
 | --- | ---: | ---: | ---: |
@@ -45,7 +46,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `QuizMainViewController` | 19 | 26 | `276` |
 | `AcViewerCategoryViewController` | 18 | 3 | `268` |
 | `CheckerCategoryViewController` | 18 | 3 | `272` |
-| `CustomAlertView` | 18 | 6 | `80` |
 | `InputOTPViewCtrl` | 18 | 5 | `184` |
 | `OverScoreLogViewController` | 18 | 6 | `188` |
 | `RecommendViewController` | 18 | 6 | `184` |
@@ -67,7 +67,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `RewardNetwork` | 13 | 2 | `12` |
 | `InputKidViewController` | 12 | 3 | `176` |
 | `TouchRangeViewCtrl` | 12 | 6 | `192` |
-| `CommunicatingView` | 11 | 5 | `178` |
 | `RandomLoginBonusView` | 11 | 9 | `104` |
 | `StoreDialogView` | 11 | 5 | `72` |
 | `AcViewerHiSpeedViewController` | 10 | 0 | `162` |
@@ -88,7 +87,6 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `MapAnnotation` | 8 | 4 | `32` |
 | `CheckerDetail` | 7 | 15 | `368` |
 | `DownloadImageView` | 7 | 3 | `68` |
-| `DownloadProgresView` | 7 | 4 | `80` |
 | `RewardNetworkIndicator` | 7 | 1 | `52` |
 | `TouchRangeView` | 7 | 3 | `61` |
 | `CJSONDataSerializer` | 6 | 0 | `4` |
@@ -113,7 +111,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `RewardNetworkUtilities` | 0 | 0 | `4` |
 | `ViewUtility` | 0 | 0 | `4` |
 
-## Partial classes — 66
+## Partial classes — 68
 
 | Class | Done | Total | Missing |
 | --- | ---: | ---: | ---: |
@@ -172,6 +170,7 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `AcViewerOptionCell` | 1 | 3 | 2 |
 | `BFCodec` | 4 | 6 | 2 |
 | `CheckerCategoryCell` | 1 | 3 | 2 |
+| `CustomAlertView` | 16 | 18 | 2 |
 | `CustomTextView` | 2 | 4 | 2 |
 | `FriendScoreTableCell` | 1 | 3 | 2 |
 | `MapListCell` | 1 | 3 | 2 |
@@ -181,14 +180,16 @@ reconstructed `@ 0x…` annotations in `Project/`. Self-updating: regenerate aft
 | `SubMapListCell` | 1 | 3 | 2 |
 | `SystemHardware` | 3 | 5 | 2 |
 | `YearAndMonthPicker` | 7 | 9 | 2 |
+| `CommunicatingView` | 10 | 11 | 1 |
 | `FriendListCell` | 2 | 3 | 1 |
 | `SettingOtherTableViewController` | 23 | 24 | 1 |
 
-## Complete classes — 21
+## Complete classes — 22
 
 - `ArcadeScoreData`
 - `CharaTicketData`
 - `DelayImageView`
+- `DownloadProgresView`
 - `FriendListDetail`
 - `FriendListDetailChara`
 - `FriendListViewController`
@@ -1088,44 +1089,6 @@ Methods **0/18** · ivars 3 · `instanceSize`=`272`
 | `_scoreDataArray` | `NSArray *[25]` | `0xa8` |
 | `_dlGetArcadeScoreData` | `Downloader *` | `0x10c` |
 
-### `CustomAlertView` — ❌ missing
-
-Methods **0/18** · ivars 6 · `instanceSize`=`80`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `dealloc` | `0x26880` |
-| `setTitleColor:` | `0x268ac` |
-| `setTextColor:` | `0x268cc` |
-| `setTitleFontSize:` | `0x268ec` |
-| `setTextFontSize:` | `0x26940` |
-| `setOpenAnimeType:` | `0x26994` |
-| `setCloseAnimeType:` | `0x269ac` |
-| `initWithType:title:message:cancelButtonTitle:otherButtonTitle:` | `0x269c4` |
-| `initWithView:type:title:message:cancelButtonTitle:otherButtonTitle:` | `0x26a60` |
-| `initWithView:center:type:title:message:cancelButtonTitle:otherButtonTitle:` | `0x26abc` |
-| `show` | `0x274fc` |
-| `removeView` | `0x277b8` |
-| `endCloseAnimation` | `0x27ad0` |
-| `clickedYesButton:` | `0x27ae0` |
-| `clickedNoButton:` | `0x27b34` |
-| `customAlertView:clickedButtonAtIndex:` | `0x27b88` |
-| `delegate` | `0x27b8c` |
-| `setDelegate:` | `0x27b9c` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `mDelegate` | `<CustomAlertViewDelegate> *` | `0x38` |
-| `mBgImageView` | `UIView *` | `0x3c` |
-| `_title` | `UILabel *` | `0x40` |
-| `_text` | `CustomTextView *` | `0x44` |
-| `m_OpenAnimeType` | `int` | `0x48` |
-| `m_CloseAnimeType` | `int` | `0x4c` |
-
 ### `InputOTPViewCtrl` — ❌ missing
 
 Methods **0/18** · ivars 5 · `instanceSize`=`184`
@@ -1864,36 +1827,6 @@ Methods **0/12** · ivars 6 · `instanceSize`=`192`
 | `_touchedPoint` | `struct CGPoint` | `0xb4` |
 | `_radius` | `float` | `0xbc` |
 
-### `CommunicatingView` — ❌ missing
-
-Methods **0/11** · ivars 5 · `instanceSize`=`178`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `init` | `0xde740` |
-| `viewDidLoad` | `0xdec30` |
-| `didReceiveMemoryWarning` | `0xdec5c` |
-| `dealloc` | `0xdec88` |
-| `failed` | `0xdecb4` |
-| `startOpenAnimation` | `0xded10` |
-| `endOpenAnimation` | `0xdee00` |
-| `startCloseAnimation` | `0xdee48` |
-| `endCloseAnimation` | `0xdef48` |
-| `touchesBegan:withEvent:` | `0xdef94` |
-| `isAnimationing` | `0xdefd8` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `communicatingView` | `UIImageView *` | `0xa4` |
-| `communicateFailedView` | `UIImageView *` | `0xa8` |
-| `indicatorView` | `UIActivityIndicatorView *` | `0xac` |
-| `_isAnimationing` | `BOOL` | `0xb0` |
-| `_isCloseReserve` | `BOOL` | `0xb1` |
-
 ### `RandomLoginBonusView` — ❌ missing
 
 Methods **0/11** · ivars 9 · `instanceSize`=`104`
@@ -2403,31 +2336,6 @@ Methods **0/7** · ivars 3 · `instanceSize`=`68`
 | `m_ImageURL` | `NSString *` | `0x38` |
 | `m_ImageDownLoader` | `ImageDownloader *` | `0x3c` |
 | `m_IndicatorView` | `UIActivityIndicatorView *` | `0x40` |
-
-### `DownloadProgresView` — ❌ missing
-
-Methods **0/7** · ivars 4 · `instanceSize`=`80`
-
-#### Missing methods
-
-| Selector | Address |
-| --- | --- |
-| `initWithFrame:` | `0xde1d0` |
-| `dealloc` | `0xde630` |
-| `layout:` | `0xde65c` |
-| `.cxx_construct` | `0xde738` |
-| `indicatorView` | `0xde708` |
-| `labelMessage` | `0xde718` |
-| `progressView` | `0xde728` |
-
-#### Ivars
-
-| Name | Type | Offset |
-| --- | --- | ---: |
-| `_indicatorView` | `UIActivityIndicatorView *` | `0x34` |
-| `_labelMessage` | `UILabel *` | `0x38` |
-| `_progressView` | `UIProgressView *` | `0x3c` |
-| `_dialogFrame` | `struct CGRect` | `0x40` |
 
 ### `RewardNetworkIndicator` — ❌ missing
 
@@ -4778,6 +4686,28 @@ Methods **1/3** · ivars 7 · `instanceSize`=`84`
 | `offsetXForPad` | `int` | `0x4c` |
 | `imgMusicCntX` | `int` | `0x50` |
 
+### `CustomAlertView` — 🟡 partial
+
+Methods **16/18** · ivars 6 · `instanceSize`=`80`
+
+#### Missing methods
+
+| Selector | Address |
+| --- | --- |
+| `delegate` | `0x27b8c` |
+| `setDelegate:` | `0x27b9c` |
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `mDelegate` | `<CustomAlertViewDelegate> *` | `0x38` |
+| `mBgImageView` | `UIView *` | `0x3c` |
+| `_title` | `UILabel *` | `0x40` |
+| `_text` | `CustomTextView *` | `0x44` |
+| `m_OpenAnimeType` | `int` | `0x48` |
+| `m_CloseAnimeType` | `int` | `0x4c` |
+
 ### `CustomTextView` — 🟡 partial
 
 Methods **2/4** · ivars 0 · `instanceSize`=`56`
@@ -4948,6 +4878,26 @@ Methods **7/9** · ivars 3 · `instanceSize`=`64`
 | `_month` | `int` | `0x38` |
 | `monthArr` | `NSMutableArray *` | `0x3c` |
 
+### `CommunicatingView` — 🟡 partial
+
+Methods **10/11** · ivars 5 · `instanceSize`=`178`
+
+#### Missing methods
+
+| Selector | Address |
+| --- | --- |
+| `dealloc` | `0xdec88` |
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `communicatingView` | `UIImageView *` | `0xa4` |
+| `communicateFailedView` | `UIImageView *` | `0xa8` |
+| `indicatorView` | `UIActivityIndicatorView *` | `0xac` |
+| `_isAnimationing` | `BOOL` | `0xb0` |
+| `_isCloseReserve` | `BOOL` | `0xb1` |
+
 ### `FriendListCell` — 🟡 partial
 
 Methods **2/3** · ivars 19 · `instanceSize`=`128`
@@ -5022,6 +4972,19 @@ Methods **3/3** · ivars 1 · `instanceSize`=`56`
 | Name | Type | Offset |
 | --- | --- | ---: |
 | `image` | `UIImage *` | `0x34` |
+
+### `DownloadProgresView` — ✅ complete
+
+Methods **7/7** · ivars 4 · `instanceSize`=`80`
+
+#### Ivars
+
+| Name | Type | Offset |
+| --- | --- | ---: |
+| `_indicatorView` | `UIActivityIndicatorView *` | `0x34` |
+| `_labelMessage` | `UILabel *` | `0x38` |
+| `_progressView` | `UIProgressView *` | `0x3c` |
+| `_dialogFrame` | `struct CGRect` | `0x40` |
 
 ### `FriendListDetail` — ✅ complete
 
@@ -5203,12 +5166,15 @@ Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
 Methods **0/0** · ivars 0 · `instanceSize`=`4`
 
+
 ---
 
 ## C++ classes (engine / game core)
 
-C++ has no `__objc_classlist`; these are recovered from Ghidra namespace metadata (functions the
-reconstruction named `Class::method`). **Many more C++ methods remain hidden in the flat "free function" pool** — functions whose `param_1` is an implicit `this`. The plan (per review): identify those by the `this` first-arg and rename them into Ghidra namespaces (namespace = class), promoting the free-function pool into these class tables over subsequent passes.
+Recovered from Ghidra namespace metadata (functions named `Class::method`). Many more C++ methods
+remain in the flat *free-function* pool — functions whose `param_1` is an implicit `this`; the plan is
+to identify them by that `this` arg (and `___assert_rtn` source paths) and rename them into Ghidra
+namespaces, promoting the pool into these class tables.
 
 | C++ class | Methods (done/total) |
 | --- | ---: |
@@ -5228,8 +5194,3 @@ reconstruction named `Class::method`). **Many more C++ methods remain hidden in 
 | `NoteMng` | 14/16 |
 | `PlayTask` | 0/2 |
 | `TitleTask` | 0/4 |
-
-**Free functions (unclassified C/C++, no namespace yet):** ~0 functions, ~0 reconstructed —
-includes real free functions (Aep* renderer, matrix/fixed-point math, `entry`) plus flat-named C++
-methods awaiting `this`-based promotion into the classes above. Library/runtime funcs excluded.
-
