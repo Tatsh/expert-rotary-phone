@@ -17,6 +17,23 @@
 
 @class MapSelectViewController;
 
+// One bundled sugoroku map header (0x50 bytes; Ghidra ObjC-encoding "{MapFileHead=ss[24c][40c]s[10c]}").
+typedef struct MapFileHead {
+    int16_t mapId;        // +0x00
+    int16_t squareCount;  // +0x02
+    char    name[24];     // +0x04 map display name
+    char    detail[40];   // +0x1c map detail / theme
+    int16_t eventId;      // +0x44 associated event id
+    char    reserved[10]; // +0x46
+} MapFileHead;
+
+// Load every bundled "map_%02d_%d.map" header into an NSArray of NSValue-wrapped MapFileHead,
+// in the fixed display order (Ghidra: loadAllTreasureMapHeaders @ 0xcdee0). Sugoroku map layer.
+NSArray *loadAllTreasureMapHeaders(void);
+
+// True when `index` is a valid event id (< 12). Ghidra: isIndexInRange12 @ 0xe2c3c.
+bool isIndexInRange12(unsigned int index);
+
 // Sent to the pad overlay owner (MapSelectSplitViewController) that embeds this list.
 @protocol MapSelectViewControllerDelegate <NSObject>
 // Remember which row is highlighted (pad: the map whose areas fill the right pane).

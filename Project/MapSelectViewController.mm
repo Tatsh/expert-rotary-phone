@@ -63,12 +63,45 @@
 
 #import <string.h>
 
-// TODO(dep): free helpers owned by the not-yet-reconstructed sugoroku map layer.
-//   loadAllTreasureMapHeaders — Ghidra @ 0xcdee0: loads every bundled "map_%02d_%d.map" header
-//     (0x50-byte MapFileHead) and returns an NSArray of NSValue-wrapped records.
-//   isIndexInRange12 — Ghidra @ 0xe2c3c: returns (index < 12), used to drop out-of-range event ids.
-NSArray *loadAllTreasureMapHeaders(void);
-bool isIndexInRange12(unsigned int index);
+// @ 0xcdee0 — sugoroku map-header loader. For each of the 9 maps in display order, resolve its
+// bundle file number through the order table {0,3,4,5,6,1,2,7,8} (i.e. file number = position of
+// the display index in that table), then read the header of each of its up-to-3 variants
+// ("map_%02d_%d.map"). A missing/short file aborts the whole load (returns nil, matching the
+// binary). Each valid 0x50-byte header is boxed as an NSValue.
+NSArray *loadAllTreasureMapHeaders(void) {
+    // Display-order -> file-number order table (DAT_0012faa0). The binary finds the file number by
+    // scanning for the display index; this is that inverse lookup.
+    static const int kMapOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
+    NSMutableArray *heads = [NSMutableArray array];
+    for (int display = 0; display < 9; display++) {
+        int fileNo = -1;
+        for (int i = 0; i < 9; i++) {
+            if (kMapOrder[i] == display) { fileNo = i; break; }
+        }
+        for (int variant = 0; variant < 3; variant++) {
+            NSString *name = [NSString stringWithFormat:@"map_%02d_%d", fileNo, variant];
+            NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"map"];
+            FILE *fp = fopen([path UTF8String], "rb");
+            if (fp == NULL) {
+                return nil;   // any missing variant aborts the load (faithful to the binary)
+            }
+            fseek(fp, 0, SEEK_END);
+            long size = ftell(fp);
+            fseek(fp, 0, SEEK_SET);
+            MapFileHead head;
+            if (size >= (long)sizeof(MapFileHead) && fread(&head, sizeof(MapFileHead), 1, fp) == 1) {
+                [heads addObject:[NSValue value:&head withObjCType:@encode(MapFileHead)]];
+            }
+            fclose(fp);
+        }
+    }
+    return [NSArray arrayWithArray:heads];
+}
+
+// @ 0xe2c3c — valid event id iff < 12.
+bool isIndexInRange12(unsigned int index) {
+    return index < 12;
+}
 
 // MainMapData (the NSValue payload of -mapDataArray) is declared in MapSelectViewController.h.
 
