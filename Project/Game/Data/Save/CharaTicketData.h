@@ -28,6 +28,9 @@
 // Delete every persisted CharaTicketData record (device-change / initForConvert reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
+// Fetch every persisted CharaTicketData record (device-change conversion payload).
++ (id)getAllData:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
