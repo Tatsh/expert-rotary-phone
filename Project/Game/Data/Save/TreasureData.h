@@ -50,6 +50,9 @@
 // Delete every persisted TreasureData record (device-change / initForConvert reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
+// Seed the default treasure-map rows into the store (device-change reset); impl in .m @0x...
++ (id)init:(NSManagedObjectContext *)context;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

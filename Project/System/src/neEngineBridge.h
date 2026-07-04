@@ -348,6 +348,11 @@ namespace neEngine {
     int aepContentHeight();
 }
 
+// The UI scale = screenScale * 0.5, stored as float BITS in a 32-bit slot (binary: DAT written by
+// MainViewController::loadView @0xb51c as `(dword)float`). Task m_uiScale caches copy it as int and
+// reinterpret_cast<float&> to read it (see PlayScene.mm / AcViewerTask.mm).
+extern int g_dwUiScale;
+
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4

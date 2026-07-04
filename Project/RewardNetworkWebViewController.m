@@ -278,7 +278,7 @@
 }
 
 // @ 0xed688
-- (NSUInteger)supportedInterfaceOrientations {
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     // Reads (and discards) the device idiom, then returns all orientations
     // (UIInterfaceOrientationMaskAll == 0x1e).
     (void)[[UIDevice currentDevice] userInterfaceIdiom];

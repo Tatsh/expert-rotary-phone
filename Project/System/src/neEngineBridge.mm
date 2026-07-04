@@ -595,3 +595,7 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     delete[] pixels;
     return texture;
 }
+
+// UI scale (screenScale * 0.5) as float bits; published by MainViewController::loadView,
+// read by the task m_uiScale caches (neEngineBridge.h).
+int g_dwUiScale = 0;

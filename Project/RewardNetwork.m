@@ -506,7 +506,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     }
     for (int i = 0; i < 0x207; i++) {
         NSError *readError = nil;
-        NSString *entry = [RewardNetworkUdid udidWithStorageIndex:i error:&readError];
+        NSDictionary *entry = [RewardNetworkUdid udidWithStorageIndex:i error:&readError];
         if (entry != nil && readError == nil) {
             NSError *deleteError = nil;
             [RewardNetworkUdid deleteUDIDWithStorageIndex:i error:&deleteError];
@@ -710,7 +710,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
             }
             NSString *url =
                 [[RewardNetwork baseUrlSsl] stringByAppendingString:@"/reward/app/index.php"];
-            [strongSelf->_webViewController loadRequestWithURL:url
+            [strongSelf->_webViewController loadRequestWithURL:[NSURL URLWithString:url]
                                                     parameters:params
                                                       delegate:delegate];
         }];

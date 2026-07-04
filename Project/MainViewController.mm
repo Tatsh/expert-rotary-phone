@@ -619,7 +619,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (_acViewerNaviCtrl != nil) { _acViewerNaviCtrl = nil; }
     if (neSceneManager::isPadDisplay()) {
         // Stop the arcade main task (Ghidra: acMainTask + FUN_0002315c) on close.
-        neEngine::stopAcMainTask(AppDelegate.appDelegate.acMainTask);
+        neEngine::stopAcMainTask((AcMainTask *)AppDelegate.appDelegate.acMainTask);   // acMainTask stored as void*
         _acMusicSelViewing = NO;
     }
     [self ResumeLoop];
@@ -736,7 +736,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     aepManagerInit(&aep, bundlePath.UTF8String, texDir.UTF8String,
                    (int)(bounds.size.width * scale), (int)(bounds.size.height * scale), scale);
     neSceneManager::shared();   // force scene-manager lazy init
-    g_dwUiScale = scale * 0.5f; // publish the UI scale (half the screen scale)
+    reinterpret_cast<float &>(g_dwUiScale) = scale * 0.5f; // publish UI scale as float bits (binary @0xb51c)
 
     m_capturedImg = nil;
     m_flgCapture = NO;
