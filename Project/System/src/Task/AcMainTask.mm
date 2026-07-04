@@ -2073,3 +2073,21 @@ void AcMainTask::sugorokuDrawFriendMeet() {
     int v = opacity - 5;
     m_friendOpacity = (v < 1) ? 0 : v;
 }
+
+// Ghidra: charaSelectDrawAndInput (FUN_000a3724) — the group-5 per-element draw callback
+// for the SUGOROKU board / chara-select screen: a large (~20-branch, NEON-heavy fixed-point)
+// routine that blits the chara-thumbnail grid, name/skill text, treasure-map cells, roulette
+// digits and result panels, and drives the hit-select SE. Sugoroku is the DEPRIORITIZED
+// subsystem in this reconstruction (the rhythm game is the focus), and the decompile itself
+// is marked best-effort. Provided here as a LINKABLE PARTIAL so the app builds; the full
+// per-element blits are a documented reconstruction gap (the helpers it needs --
+// getStringByIndex12 / findTreasureMapIndexById / CharaManager_availableInfoForCharaId /
+// countAvailableCharacters / aepManagerReset_a,b / drawAepTextMultiline -- are already present
+// above). `context` is the AcMainTask. TODO(sugoroku): rebuild the element branches.
+void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
+                        int anchorX, int anchorY, int color, int alpha, int rotation,
+                        uint32_t blend, int *clipRect, uint32_t p17, void *context) {
+    (void)child; (void)frame; (void)x; (void)y; (void)scaleX; (void)scaleY;
+    (void)anchorX; (void)anchorY; (void)color; (void)alpha; (void)rotation;
+    (void)blend; (void)clipRect; (void)p17; (void)context;
+}

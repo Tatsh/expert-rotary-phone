@@ -676,6 +676,31 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     return texture;
 }
 
+// Ghidra: FUN_00011cbc (neTextureLoadSingle) — upload an in-memory PNG (a bridged NSData*
+// of image bytes) as a single-tile texture. Same one-tile setup as load(), but the tile
+// comes from LoadTexture (the in-memory decoder above) instead of the file cache. Defined
+// here rather than neTextureForiOS.cpp because LoadTexture needs NSData/CoreGraphics.
+// Returns 0 on success, -1 for null data, -5 on decode/upload failure.
+int neTextureForiOS::loadFromImageData(const void *imageData) {
+    if (imageData == nullptr) {
+        return -1;
+    }
+    m_tileCount = 1;
+    m_tiles = new AepTexture *[1];
+    m_tileRects = new AepTile[1];
+    m_tileWidths = new int[1];
+    m_tileHeights = new int[1];
+
+    m_tiles[0] = LoadTexture((__bridge NSData *)imageData);
+    if (m_tiles[0] == nullptr) {
+        return -5;
+    }
+    m_tileWidths[0] = m_tiles[0]->textureWidth();
+    m_tileHeights[0] = m_tiles[0]->textureHeight();
+    AepTextureUploadTiles(&m_tileRects[0], m_tiles[0]);
+    return 0;
+}
+
 // UI scale (screenScale * 0.5) as float bits; published by MainViewController::loadView,
 // read by the task m_uiScale caches (neEngineBridge.h).
 int g_dwUiScale = 0;
