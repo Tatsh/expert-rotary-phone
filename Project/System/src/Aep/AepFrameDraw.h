@@ -79,11 +79,13 @@ void AepDrawSpriteHandle(AepManager *mgr, int handle, int x, int y, int scaleX, 
 // as such and thread it through. Identical to AepDrawSpriteHandle otherwise.
 inline void drawAepFrameEx(AepManager *mgr, int handle, int x, int y, int scaleX, int scaleY,
                            int rotation, int anchorX, int anchorY, int color, int alpha,
-                           uint32_t blend, uint32_t colorMul, int clipRect, int priority,
+                           uint32_t blend, uint32_t colorMul, int *clipRect, int priority,
                            uint32_t p19) {
+    // clipRect is a pointer to the 4-int clip rect (nullptr = full screen). It was
+    // previously typed `int` and reinterpret-cast to a pointer, which truncated it on
+    // 64-bit; pass the real pointer through. Callers passing 0 still get a null clip.
     AepDrawSpriteHandle(mgr, handle, x, y, scaleX, scaleY, rotation, anchorX, anchorY,
-                        color, alpha, blend, colorMul,
-                        reinterpret_cast<int *>(static_cast<intptr_t>(clipRect)), priority, p19);
+                        color, alpha, blend, colorMul, clipRect, priority, p19);
 }
 
 // Draw a single sprite-atlas frame by its packed handle with a default (100%, opaque,

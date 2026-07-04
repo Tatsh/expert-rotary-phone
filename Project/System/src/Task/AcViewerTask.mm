@@ -17,6 +17,7 @@
 #include <cstring>
 #include <new>
 
+#import "AcMusicData.h"
 #import "AcNoteMng.h"
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
@@ -88,7 +89,7 @@ void AcViewerTask::setup() {
     m_popKun = [UserSettingData acvPopKun];
     m_hidSud = [UserSettingData acvHidSud];
     m_ranMir = [UserSettingData acvRanMir];
-    m_difficulty = (int)(short)g_wAcViewerDifficulty;
+    m_difficulty = (int)(short)neAppEventCenter::acViewerDifficulty();
     m_padDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
 
     // Lane remap for the RAN/MIR option, then load + init the chart.
@@ -125,7 +126,7 @@ void AcViewerTask::setup() {
     // device-picked "TOP_960" / "TOP_1136" / "TOP_IPAD").
     AepLyrCtrl *pauseLayer = new AepLyrCtrl();
     m_pauseLayer = pauseLayer;
-    pauseLayer->init(kAcvGroup, "PAUSE_LOOP", this);
+    pauseLayer->init(kAcvGroup, "PAUSE_LOOP", this, 0);   // order best-effort (overlay)
 
     const char *topName = "TOP_960";
     if (pad) {
@@ -144,7 +145,7 @@ void AcViewerTask::setup() {
 
     AepLyrCtrl *topLayer = new AepLyrCtrl();
     m_topLayer = topLayer;
-    topLayer->init(kAcvGroup, topName, this);
+    topLayer->init(kAcvGroup, topName, this, 0);   // order best-effort (overlay)
 
     // Resolve the HUD handles.
     m_effectCoolLyrNo = aep.getLyrNo(kAcvGroup, "EFFECT_COOL");
@@ -179,7 +180,10 @@ void AcViewerTask::setup() {
 
     // Register the per-layer HUD draw callback (Ghidra: setAepCallbacks(aep, 7, 0x23359,
     // this) — 0x23359 is &AcViewerHudDraw in Thumb).
-    aep.setGroupDrawCallback(kAcvGroup, &AcViewerHudDraw, this);
+    // The callback's natural signature carries a packed-short rotation (param 11), so it is
+    // reinterpret-cast to the generic AepGroupDrawFn at registration (same pattern as MainTask's
+    // MusicSelAepDraw); the ABI is compatible (short passed in a 32-bit register slot).
+    aep.setGroupDrawCallback(kAcvGroup, reinterpret_cast<AepGroupDrawFn>(&AcViewerHudDraw), this);
     m_hudReady = 1;   // HUD ready
 }
 
@@ -192,7 +196,7 @@ void AcViewerTask::loadChart() {
     AudioManager *audio = [AudioManager sharedManager];
     AcNoteMng &note = AcNoteMng::shared();
 
-    id acMusic = [[MusicManager getInstance] getAcMusicData:g_dwAcViewerMusicId];
+    AcMusicData *acMusic = [[MusicManager getInstance] getAcMusicData:neAppEventCenter::acViewerMusicId()];
 
     // Cache the display music name (+0x1e4, +1 retained); its length picks the HUD title
     // offsets (+0x1e8 x-advance / +0x1c4 baseline).
@@ -212,13 +216,17 @@ void AcViewerTask::loadChart() {
         m_titleBaselineY = pad ? -20 : -12;   // 0xffffffec / 0xfffffff4
     }
 
-    [audio stopBgm];
-    // Ghidra: the async BGM load is a dispatch_async(^{...}) block (LAB_000237bc) posted
-    // to the global queue; it streams the song's BGM in the background while play sets up.
+    [audio stopBgm:0.0f];   // FUN_0002316c: stopBgm:(SEL)0x0 -> fadeSeconds 0.0 (immediate)
+    // Ghidra: the async BGM load is a dispatch_async(^{...}) block (@ 0x237bc) posted to the
+    // global queue; it streams the song's BGM in the background while play sets up. The block
+    // (disasm 0x237bc): getBackTrack:m_difficulty -> loadBgmData:isLoop:NO -> playBgm:1.0f,
+    // then sets the bgm-ready flag (+0x1d5). playBgm: fade value best-effort (1.0f imm arg).
+    const int difficulty = m_difficulty;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        // @ 0x237bc — load this song's arcade BGM off the main thread (best-effort: the
-        // block captures the AudioManager + AcMusicData and calls its BGM loader).
-        [audio loadBgmForAcMusic:acMusic];
+        NSData *track = [acMusic getBackTrack:difficulty];
+        [audio loadBgmData:track isLoop:NO];
+        [audio playBgm:1.0f];
+        m_hudArmed = 1;   // +0x1d5 (strb 1 at block tail)
     });
 
     // Release the previous sheet, pick the new one by difficulty (0 easy / 1 normal /
@@ -264,10 +272,14 @@ void AcViewerTask::drawActiveNotes() {
             // count it is drawn as the EFFECT_COOL layer.
             const int frame = (int)((float)(now - n.tick) * 1.0f + 0.5f);
             if (frame < m_effectCoolFrames) {
+                // FUN_00022cac drawLayer args: x = per-lane note frame (@+0x158[lane]); y is the
+                // NEON-computed lane position (best-effort here). Constants are binary-exact:
+                // scale 100/100, loopFlags/p9 = m_coolLayerArg{A,B}, p10=100, color=0, colorHi=1,
+                // blend=0x200, p15=0xffffff, clip={0,top,w,h}, ctx=null, p17=0xb, p19=1.
                 aep.drawLayer(m_effectCoolLyrNo, frame,
-                              m_noteFieldX, m_noteFieldY,
-                              100, 100, 0, m_coolLayerArgA, m_coolLayerArgB,
-                              /*root flags placeholder*/ 0);
+                              m_laneFrm[n.lane], m_noteFieldY,
+                              100, 100, 0, m_coolLayerArgA, m_coolLayerArgB, 100,
+                              0, 1, 0x200, 0xffffff, clip, nullptr, 0xb, 1);
                 // First time a note crosses the line (and not in HID/SUD hidden state),
                 // add to the combo counter (@ +0x1ca, saturated to 0x3ff) and mark the
                 // note handled (bit 6). Ghidra: +0x1d2 combo step / acNoteSetNoteFlag.
@@ -293,8 +305,12 @@ void AcViewerTask::drawActiveNotes() {
                 } else {
                     frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm;  // pop-kun variant
                 }
-                drawAepFrameEx(&aep, frm, /*x*/ m_noteFieldX, /*y*/ 0x42c80000, 0x42c80000,
-                               0, 0, /*w/h*/ 100, 0, 0x20, 0xffffff, clip, 0xb, 1);
+                // FUN_00022cac note-sprite draw: x = per-lane frame (@+0x158[lane]); y + anchors are
+                // NEON-computed (best-effort here). Constants are binary-exact: scale 100.0/100.0f,
+                // rotation 0, color 100, alpha 0, blend 0x20, colorMul 0xffffff, clip, prio 0xb, p19 1.
+                drawAepFrameEx(&aep, frm, m_laneFrm[n.lane], m_noteFieldY,
+                               0x42c80000, 0x42c80000, 0, 0, 0,
+                               100, 0, 0x20, 0xffffff, clip, 0xb, 1);
             }
         }
     }
@@ -487,7 +503,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         break;
     case 1:
         // Wait for a valid song id (set when the viewer picks a song).
-        next = ((int)g_dwAcViewerMusicId < 0) ? 0x10 : 2;
+        next = (neAppEventCenter::acViewerMusicId() < 0) ? 0x10 : 2;
         break;
     case 2:
         setup();
@@ -505,7 +521,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         }
         // On phone (or once the pad board is up) fire the ready SE, then advance.
         if (!neSceneManager::isPadDisplay() || m_padBoardUp != 0) {
-            m_readySeInst = (int)[AcvRootVC() playSe:0 resourceId:m_readySeId];
+            m_readySeInst = (int)[[AudioManager sharedManager] playSe:0 resourceId:m_readySeId];
         }
         next = 5;
         break;
@@ -659,7 +675,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
 // ===========================================================================
 void AcViewerHudDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
                      int anchorX, int anchorY, int color, int alpha, int16_t rotation,
-                     int blend, int p13, int p14, void *context) {
+                     int blend, int *p13, int p14, void *context) {
     (void)frame;
     AepManager &aep = AepManager::shared();
     AcViewerTask *self = static_cast<AcViewerTask *>(context);
