@@ -173,7 +173,7 @@ public:
     uint8_t _rsvd_9e9[0x9ec - 0x9e9] = {};           // +0x9e9
     int              m_backTouchId = -1;             // +0x9ec held back-tap touch id (-1 none)
     int              m_backTouchTime = 0;            // +0x9f0 getTimeMillis at back-tap start
-    uint8_t _rsvd_9f4[0x9f8 - 0x9f4] = {};           // +0x9f4
+    int              m_beatPulse = 0;                // +0x9f4 demo chara-window beat pulse (0..100)
     int              m_endPos = 0;                   // +0x9f8 NoteMng position latched at song end
     int              m_state = 0;                    // +0x9fc play state-machine field
 };

@@ -759,6 +759,65 @@ void PlayLoadCharaTextures(void *playData) {
     }
 }
 
+// Ghidra: drawBeatIndicator (FUN_000313b0) — the demo-mode "chara window" beat overlay. It
+// steps a 0..100 pulse (m_beatPulse @ +0x9f4) up or down by 4 each frame according to which
+// playback-position window the song is in (each phrase ramps the pulse UP on the beat, DOWN
+// on release, or RESETS it to 0 in the gaps between phrases), selects that window's
+// text-panel texture, and cross-fades a beat flash (the panel) plus the window frame
+// (m_windowTex[1]) at colour=pulse / alpha=100-pulse. The position windows are a fixed table
+// baked for the bundled demo song; the tick thresholds are transcribed verbatim.
+void PlayDrawCharaWindow(void *playData, int x, int y) {
+    PlayTask *task = static_cast<PlayTask *>(playData);
+    AepManager &aep = AepManager::shared();
+    const int pos = NoteMng::shared().getCurrentPosition();
+
+    // { position < tick -> apply }. panel < 0 is a rest window (pulse -> 0, no beat flash);
+    // up=true ramps +4 (cap 100), up=false ramps -4 (floor 0). pos past the last tick is up[12].
+    struct BeatWindow { int tick; int panel; bool up; };
+    static const BeatWindow kWindows[] = {
+        {0x1d4c, -1, false}, {0x2f30, 0,  true },  {0x337c, 0,  false},
+        {0x431c, 1,  true }, {0x4704, 1,  false},  {0x523a, 2,  true },
+        {0x529e, 2,  false}, {0x79ae, -1, false},  {0x88c2, 3,  true },
+        {0x8962, 3,  false}, {0x951a, 4,  true },  {0x9d08, 4,  false},
+        {0xc3b4, -1, false}, {0xcf58, 5,  true },  {0xd2f0, 5,  false},
+        {0xdac0, 6,  true }, {0xea60, 6,  false},  {0x10e1e, -1, false},
+        {0x11d8c, 7, true }, {0x11e54, 7, false},  {0x12d2c, 8,  true },
+        {0x13498, 8, false}, {0x15c52, -1, false}, {0x1644a, 9,  true },
+        {0x167f6, 9, false}, {0x16f58, 10, true },  {0x17f34, 10, false},
+        {0x1f0f4, -1, false},{0x1f48c, 11, true },  {0x1f504, 11, false},
+    };
+    int panel = 12;       // pos >= final tick: up panel[12]
+    bool up = true;
+    bool rest = false;
+    for (const BeatWindow &w : kWindows) {
+        if (pos < w.tick) {
+            panel = w.panel;
+            up = w.up;
+            rest = (w.panel < 0);
+            break;
+        }
+    }
+
+    int pulse;
+    if (rest) {
+        pulse = 0;
+        task->m_beatPulse = 0;
+    } else {
+        pulse = task->m_beatPulse + (up ? 4 : -4);
+        if (pulse > 100) pulse = 100;
+        if (pulse < 0) pulse = 0;
+        task->m_beatPulse = pulse;
+        neTextureForiOS *tex = task->m_textPanels[panel];
+        if (tex != nullptr) {   // beat flash
+            neTextureForiOS_draw(&aep, tex, 0, 0, 0x1ea, 0x6e, x + 0x46, y - 0x3c,
+                                 100, 100, 0, 0, 0, pulse, 100 - pulse, 0x20, 0xffffff, 0, 0xd, 1);
+        }
+    }
+    // The window frame is always drawn (pulse 0 in a rest window).
+    neTextureForiOS_draw(&aep, task->m_windowTex[1], 0, 0, 0x21e, 0xcc, x + 0x32, y - 0x50,
+                         100, 100, 0, 0, 0, pulse, 100 - pulse, 0x20, 0xffffff, 0, 0xd, 1);
+}
+
 // Ghidra: FUN_00030944 (PlayTaskDraw) — the note-field per-frame draw dispatcher the Aep
 // manager invokes for group 0. `child` is the layer id being drawn; `context` is the play
 // data. It matches `child` against the play-data handle tables PlayBuildFieldLayers filled
