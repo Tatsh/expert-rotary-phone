@@ -27,13 +27,6 @@ struct SortData {
     short sortType;
     char isChecked;
 };
-
-// The task caches the music sort it last applied at +0x8fc (MainTask::rebuildList writes it
-// there — m_appliedSort). Read at its documented byte offset so this ObjC unit need not pull
-// in the private MainTask layout.
-inline unsigned MusicSelAppliedSort(MusicSelTask *task) {
-    return *reinterpret_cast<unsigned *>(reinterpret_cast<char *>(task) + 0x8fc);
-}
 }  // namespace
 
 // Six SortData rows (0..5), the one matching `currentSort` checked.
@@ -207,7 +200,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
         return;
     }
     _isAnimationing = YES;
-    if ((unsigned)[UserSettingData musicSort] != MusicSelAppliedSort(_pMusicSelTask)) {
+    if ((unsigned)[UserSettingData musicSort] != (unsigned)_pMusicSelTask->appliedSort()) {
         _pMusicSelTask->rebuildList();
         _dummyView.view.hidden = YES;
     }
@@ -291,7 +284,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
     SortData selected;
     [(NSValue *)[_sortDataArray objectAtIndex:indexPath.row] getValue:&selected];
     [UserSettingData saveMusicSort:selected.sortType];
-    if ((unsigned)[UserSettingData musicSort] != MusicSelAppliedSort(_pMusicSelTask)) {
+    if ((unsigned)[UserSettingData musicSort] != (unsigned)_pMusicSelTask->appliedSort()) {
         _sortDataArray = BuildSortDataArray(selected.sortType);
         [self.tableView reloadData];
         _dummyView.view.hidden = NO;

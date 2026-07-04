@@ -1164,6 +1164,34 @@ void MainTask::loadColumnPrev(int column) {
     }
 }
 
+// @ 0x2aad4 (inlined in OverScoreLogViewController -endCloseAnimation) — launch a play of the
+// chosen song. Shared by the list view controllers (over-score log / recommend) and mirrors the
+// in-scene state-4 PLAY handoff (@ 0x35914 case 4). Find `musicId` in m_musicList; on a match,
+// stash the selection, pop the menu BGM, fire the confirm SE, spawn the PlayTask and register it
+// with the app delegate, then hand off to the play-launch state (0xc). If the song is not
+// installed, drive the not-found state (2) and report failure.
+bool MainTask::launchPlayForMusicId(int musicId, int sheet) {
+    id musicList = m_musicList;
+    NSUInteger count = [musicList count];
+    for (NSUInteger i = 0; i < count; i++) {
+        id info = [musicList objectAtIndexedSubscript:i];
+        if ([info MusicID] == musicId) {
+            m_chosenIndex = (int)i;
+            m_chosenMusicId = musicId;
+            m_resultSheet = sheet;
+            AudioManager *audio = [AudioManager sharedManager];
+            [audio popBgm];
+            m_seInst[3] = (int)[audio playSe:nil resourceId:0];
+            m_spawnedTask = PlayTaskCreate();
+            [[AppDelegate appDelegate] setMainTask:(MainTask *)m_spawnedTask];
+            m_state = 0xc;   // -> play-launch handoff (0xc -> 0xd -> 0xe)
+            return true;
+        }
+    }
+    m_state = 2;   // not installed
+    return false;
+}
+
 // @ 0x389fc — musicSelAepDrawCallback. The music-select scene draw callback. This is a
 // ~98 KB routine that dispatches on the drawn layer's resolved user number and blits the
 // matching scene element. The head (recovered below) draws the three visible song-jacket

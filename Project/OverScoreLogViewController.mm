@@ -10,41 +10,16 @@
 
 #import "OverScoreLogViewController.h"
 
-#import "AppDelegate.h"
-#import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
 #import "OverScoreLogCell.h"
-#import "C_TASK.h"
-#import "TaskFactory.h"
-#import "MusicData.h"
+#import "MainTask.h"          // MusicSelTask == MainTask: the real launchPlayForMusicId() method
 #import "neEngineBridge.h"
 
 // The app's root navigation host (bridged UIViewController on the C++ scene manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
-
-namespace {
-// MusicSelTask fields touched when launching a play from the over-score log. MusicSelTask is not
-// yet reconstructed (TODO(dep): MusicSelTask); its storage is the same work area MainTask.mm maps,
-// so read raw at the exact byte offsets, mirroring SortSelectViewController.mm.
-constexpr int kOffMusicList    = 0x30;   // NSArray<MusicData *> * (id) — the loaded song list
-constexpr int kOffSelectIndex  = 0x8f8;  // int     chosen list index
-constexpr int kOffSelectMusic  = 0x900;  // int     chosen music id
-constexpr int kOffSelectSheet  = 0x904;  // int     chosen difficulty (sheet)
-constexpr int kOffSelectSeInst = 0x8e4;  // int     confirm-SE playing instance
-constexpr int kOffSpawnedTask  = 0xaa0;  // C_TASK* the launched PlayTask
-constexpr int kOffState        = 0xaa4;  // int     task state field
-
-template <typename T>
-inline T &TaskField(MusicSelTask *task, int off) {
-    return *reinterpret_cast<T *>(reinterpret_cast<char *>(task) + off);
-}
-inline id TaskMusicList(MusicSelTask *task) {
-    return *reinterpret_cast<__unsafe_unretained id *>(reinterpret_cast<char *>(task) + kOffMusicList);
-}
-}  // namespace
 
 // ---------------------------------------------------------------------------
 // Block invoke helpers emitted by the compiler after startOpenAnimation
@@ -317,32 +292,17 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     if (m_musicId == -1 || m_sheet == -1) {
         return;
     }
-    MusicSelTask *task = _musicSelTask;
-    id musicList = TaskMusicList(task);
-    NSUInteger count = [musicList count];
-    for (NSUInteger i = 0; i < count; i++) {
-        MusicData *info = [musicList objectAtIndexedSubscript:i];
-        if ([info MusicID] == m_musicId) {
-            TaskField<int>(task, kOffSelectIndex) = (int)i;
-            TaskField<int>(task, kOffSelectMusic) = m_musicId;
-            TaskField<int>(task, kOffSelectSheet) = m_sheet;
-            AudioManager *audio = [AudioManager sharedManager];
-            [audio popBgm];
-            TaskField<int>(task, kOffSelectSeInst) = (int)[audio playSe:nil resourceId:0];
-            TaskField<C_TASK *>(task, kOffSpawnedTask) = PlayTaskCreate();
-            [[AppDelegate appDelegate] setMainTask:TaskField<C_TASK *>(task, kOffSpawnedTask)];
-            TaskField<int>(task, kOffState) = 0xc;
-            return;
-        }
+    // Drive the owning task into a play of the chosen song. On a not-found song the method has
+    // already set the task's not-found state (2); we only surface the alert.
+    if (!_musicSelTask->launchPlayForMusicId(m_musicId, m_sheet)) {
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:nil
+                                           message:@"楽曲が見つかりませんでした。\nストアで楽曲をインストールしてください。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
+        [alert show];
     }
-    CommonAlertView *alert =
-        [[CommonAlertView alloc] initWithTitle:nil
-                                       message:@"楽曲が見つかりませんでした。\nストアで楽曲をインストールしてください。"
-                                      delegate:nil
-                             cancelButtonTitle:nil
-                             otherButtonTitles:@"OK"];
-    [alert show];
-    TaskField<int>(task, kOffState) = 2;
 }
 
 #pragma mark - UITableViewDataSource / UITableViewDelegate

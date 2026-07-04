@@ -63,6 +63,18 @@ public:
     void loadColumnNext(int column);     // @ 0x35448
     void loadColumnPrev(int column);     // @ 0x35520
 
+    // Launch a play of the chosen song on behalf of a list view controller (over-score log,
+    // recommend, in-scene select share this operation): find `musicId` in m_musicList, stash the
+    // selection (m_chosenIndex / m_chosenMusicId / m_resultSheet), pop the menu BGM, fire the
+    // confirm SE (m_seInst[3]), spawn the PlayTask and hand it to the app delegate, then drive
+    // m_state -> 0xc and return true. If the song is not installed, set m_state = 2 and return
+    // false. Ghidra: the launch block inlined at OverScoreLogViewController -endCloseAnimation
+    // (@ 0x2aad4).
+    bool launchPlayForMusicId(int musicId, int sheet);
+
+    // The music sort rebuildList last applied (m_appliedSort @ +0x8fc), read by SortSelectViewController.
+    int appliedSort() const { return m_appliedSort; }
+
 private:
     // Shared body of the two column loaders (they differ only by the direction `delta` = +1
     // (next) / -1 (prev) and which latch byte gates them). Streams m_columnStride consecutive
@@ -197,7 +209,7 @@ private:
     int              m_columnCount = 0;               // +0x8f4 total columns
     int              m_chosenIndex = 0;               // +0x8f8 chosen song list index (save)
     int              m_appliedSort = 0;               // +0x8fc music-sort rebuildList last applied
-    uint8_t          _rsvd_900[0x904 - 0x900] = {};   // +0x900
+    int              m_chosenMusicId = 0;             // +0x900 chosen music id (launch save)
     int              m_resultSheet = 0;               // +0x904 saved result sheet (difficulty)
     uint8_t          _rsvd_908[0x91b - 0x908] = {};   // +0x908
     uint8_t          m_suppressDraw = 0;              // +0x91b hide the scene during teardown
