@@ -15,7 +15,7 @@ CMakeFiles/
 /.audit/
 .audit/scratch/
 
-# CI build outputs (see .gitlab-ci.yml): ios-cmake clone, .ipa packaging, Theos install
+# CI build outputs (see .github/workflows/build.yml): ios-cmake clone, .ipa packaging, Theos install
 # + its per-project build dirs (theos/ is the project dir when `make -C theos` runs).
 /.ios-cmake/
 /.theos-install/

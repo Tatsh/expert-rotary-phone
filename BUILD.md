@@ -72,21 +72,24 @@ folder under `Project/` (each lists its own translation units and adds itself to
 include path); the root file wires them together, sets the MRC/arch/deployment flags,
 links the frameworks and copies resources.
 
-## Continuous integration (GitLab)
+## Continuous integration (GitHub Actions)
 
-[`.gitlab-ci.yml`](.gitlab-ci.yml) builds the app on a **macOS runner with Xcode** and
-produces an **ad-hoc-signed** artifact (identity `-`, no Apple Developer account needed):
+[`.github/workflows/build.yml`](.github/workflows/build.yml) builds the app on a **macOS
+runner with Xcode** (`macos-14`) and uploads an **ad-hoc-signed** artifact (identity `-`,
+no Apple Developer account needed):
 
-* `build:xcode` (default) — configures the CMake/Xcode backend with the fetched
-  leetal/ios-cmake toolchain, builds `Release`, ad-hoc-signs `PopnRhythmin.app`
-  (`codesign -s -`) and packages `PopnRhythmin-adhoc.ipa`.
-* `build:theos` (manual, `allow_failure`) — bootstraps Theos and runs `make -C theos
-  package` (Theos fake-signs via `ldid`), producing a `.deb`.
+* `xcode` (default) — configures the CMake/Xcode backend with the fetched leetal/ios-cmake
+  toolchain, builds `Release`, ad-hoc-signs `PopnRhythmin.app` (`codesign -s -`) and uploads
+  `PopnRhythmin-adhoc.ipa`.
+* `theos` (opt-in, `continue-on-error`) — runs only on a manual dispatch with
+  `run_theos=true`: bootstraps Theos and runs `make -C theos package` (Theos fake-signs via
+  `ldid`), producing a `.deb`.
 
-Defaults build **arm64 only** (SaaS runners run Xcode 12+, which cannot emit armv7). Set
-`IOS_ARCHS`, `DEPLOYMENT_TARGET`, `MACOS_RUNNER_TAG`, and optionally `POPNRHYTHMIN_BINARY`
-(embed the board dialogue) / `RESOURCES_DIR` (bundle assets) as CI/CD variables. Since the
-tree has never been compiled, the first run is expected to surface real compile errors.
+Defaults build **arm64 only** (GitHub runners run Xcode 12+, which cannot emit armv7). The
+`workflow_dispatch` inputs `ios_archs` / `deployment_target` override the slice set and floor;
+optional repository *variables* `POPNRHYTHMIN_BINARY` (embed the board dialogue) and
+`RESOURCES_DIR` (bundle assets) are passed through when set. Since the tree has never been
+compiled, the first run is expected to surface real compile errors.
 
 ## Notes / caveats
 

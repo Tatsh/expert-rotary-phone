@@ -1,0 +1,148 @@
+# .github/workflows/build.yml — build pop'n rhythmin (PopnRhythmin) for iOS with AD-HOC signing.
+#
+# iOS builds need a macOS runner with Xcode (GitHub-hosted `macos-14` ships Xcode 15+).
+# The primary job drives the CMake/Xcode backend (see BUILD.md), ad-hoc-signs the .app
+# (codesign -s -, i.e. the "-" adhoc identity — no Apple Developer account / provisioning
+# profile required) and uploads a .ipa artifact. An opt-in job exercises the fixed Theos
+# Makefile (ldid fake-signing) -> .deb.
+#
+# NOTE: this source tree has never been compiled (no Obj-C toolchain in the reconstruction
+# environment). The first real run is expected to surface genuine compile errors — that is
+# the point of wiring up CI. The build files themselves are correct by construction.
+#
+# Optional repository *variables* (Settings -> Secrets and variables -> Actions -> Variables):
+#   POPNRHYTHMIN_BINARY  path to an owned app binary on the runner -> embeds the copyrighted
+#                        sugoroku board dialogue (unset -> blank tables).
+#   RESOURCES_DIR        path to an extracted .app whose assets get bundled into the build.
+
+name: build
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      ios_archs:
+        description: "Architecture slices (space-separated). Runners on Xcode 12+ cannot emit armv7."
+        default: "arm64"
+      deployment_target:
+        description: "Minimum iOS version"
+        default: "9.0"
+      run_theos:
+        description: "Also run the Theos build"
+        type: boolean
+        default: false
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IOS_CMAKE_REF: "4.5.0"          # leetal/ios-cmake tag (the toolchain is not vendored)
+  BUILD_CONFIG: "Release"
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Primary: native CMake/Xcode build -> ad-hoc-signed .ipa
+  # -------------------------------------------------------------------------
+  xcode:
+    runs-on: macos-14
+    env:
+      IOS_ARCHS: ${{ github.event.inputs.ios_archs || 'arm64' }}
+      DEPLOYMENT_TARGET: ${{ github.event.inputs.deployment_target || '9.0' }}
+      POPNRHYTHMIN_BINARY: ${{ vars.POPNRHYTHMIN_BINARY }}
+      RESOURCES_DIR: ${{ vars.RESOURCES_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: |
+          xcodebuild -version
+          sw_vers
+
+      - name: Fetch ios-cmake toolchain
+        run: git clone --depth 1 --branch "$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake
+
+      - name: Configure
+        run: |
+          CMAKE_ARGS=(
+            -B build -G Xcode
+            -DCMAKE_TOOLCHAIN_FILE="$GITHUB_WORKSPACE/.ios-cmake/ios.toolchain.cmake"
+            -DPLATFORM=OS64
+            -DDEPLOYMENT_TARGET="$DEPLOYMENT_TARGET"
+            -DIOS_ARCHS="$IOS_ARCHS"
+            -DENABLE_BITCODE=NO
+          )
+          [ -n "$POPNRHYTHMIN_BINARY" ] && CMAKE_ARGS+=( -DPOPNRHYTHMIN_BINARY="$POPNRHYTHMIN_BINARY" )
+          [ -n "$RESOURCES_DIR" ]       && CMAKE_ARGS+=( -DRESOURCES_DIR="$RESOURCES_DIR" )
+          cmake "${CMAKE_ARGS[@]}"
+
+      - name: Build (ad-hoc signing)
+        run: |
+          cmake --build build --config "$BUILD_CONFIG" -- \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGNING_REQUIRED=NO \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
+
+      - name: Ad-hoc sign + package .ipa
+        run: |
+          APP="$(find build -type d -name 'PopnRhythmin.app' -print -quit)"
+          test -n "$APP" || { echo "PopnRhythmin.app not found under build/"; exit 1; }
+          echo "Built app: $APP"
+          codesign --force --sign - --timestamp=none "$APP"
+          codesign --verify --verbose=2 "$APP"
+          rm -rf Payload PopnRhythmin-adhoc.ipa
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          /usr/bin/zip -qry PopnRhythmin-adhoc.ipa Payload
+          echo "Packaged: PopnRhythmin-adhoc.ipa"
+
+      - name: Upload .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: PopnRhythmin-adhoc-ipa
+          path: PopnRhythmin-adhoc.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+  # -------------------------------------------------------------------------
+  # Opt-in: Theos build (fixed theos/Makefile). Theos fake-signs (ad-hoc) via ldid.
+  # Runs only on a manual dispatch with run_theos=true; never blocks the pipeline.
+  # -------------------------------------------------------------------------
+  theos:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_theos == 'true' }}
+    runs-on: macos-14
+    continue-on-error: true
+    env:
+      IOS_ARCHS: ${{ github.event.inputs.ios_archs || 'arm64' }}
+      THEOS: ${{ github.workspace }}/.theos-install
+      POPNRHYTHMIN_BINARY: ${{ vars.POPNRHYTHMIN_BINARY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bootstrap Theos
+        run: git clone --recursive https://github.com/theos/theos.git "$THEOS"
+
+      - name: Install ldid (ad-hoc / fake code signing)
+        run: brew list ldid >/dev/null 2>&1 || brew install ldid
+
+      - name: Build + package
+        run: |
+          MAKE_ARGS=( -C theos ARCHS="$IOS_ARCHS" FINALPACKAGE=1 )
+          [ -n "$POPNRHYTHMIN_BINARY" ] && MAKE_ARGS+=( POPNRHYTHMIN_BINARY="$POPNRHYTHMIN_BINARY" )
+          make "${MAKE_ARGS[@]}"
+          make "${MAKE_ARGS[@]}" package
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: PopnRhythmin-theos-deb
+          # `make -C theos` runs with theos/ as the project dir, so Theos writes here.
+          path: theos/packages/*.deb
+          if-no-files-found: warn
+          retention-days: 14
