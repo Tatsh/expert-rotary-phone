@@ -114,7 +114,8 @@ private:
     int              m_screenHeight = 0;             // +0x108 aep screen height
     int              m_uiScale = 0;                  // +0x10c UI scale (g_dwUiScale; read as float in update)
     // ---- device-branched HUD layout constants (+0x110..+0x1c4, documented seam) ----
-    uint8_t          _rsvd_110[0x118 - 0x110] = {};  // +0x110
+    uint8_t          _rsvd_110[0x114 - 0x110] = {};  // +0x110
+    int              m_pauseBtnHeight = 0;           // +0x114 pause-menu button full height (halved in the y-band test)
     int              m_seekScale = 0;                // +0x118 resume-seek scale constant (setup
                                                      //        writes 5 phone / 3 ipad); read as a
                                                      //        fixed-point value by the seek math
@@ -139,9 +140,10 @@ private:
     int              m_digitScaleX = 0;              // +0x198 HUD digit blit scale x
     int              m_digitScaleY = 0;              // +0x19c HUD digit blit scale y
     int              m_digitAdvance = 0;             // +0x1a0 HUD digit right-to-left x advance
-    // +0x1a4..+0x1b0 the pause-menu button y-anchors (0x1a4/0x1a8/0x1ac) + row height
-    // (0x1b0), y-only-hit-tested in case 0xd (wiring is the follow-up recovery pass).
-    uint8_t          _rsvd_1a4[0x1b4 - 0x1a4] = {};  // +0x1a4
+    // The pause-menu buttons (case 0xd, x-agnostic y-band hit-test): [0] options @0x1a4,
+    // [1] resume @0x1a8, [2] quit @0x1ac; each band is [anchor+height/2, +height/2+rowHeight].
+    int              m_pauseBtnY[3] = {};            // +0x1a4/+0x1a8/+0x1ac button y anchors
+    int              m_pauseBtnRowH = 0;             // +0x1b0 button row height
     int              m_exitTouchX = 0;               // +0x1b4 in-play exit/pause button rect x
     int              m_exitTouchY = 0;               // +0x1b8 in-play exit/pause button rect y
     int              m_exitTouchW = 0;               // +0x1bc in-play exit/pause button rect w

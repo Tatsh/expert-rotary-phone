@@ -608,14 +608,36 @@ void AcViewerTask::update(int /*deltaMs*/) {
         m_paused = 1;
         next = 0xb;
         break;
-    case 0xb:
-        // Resume once the viewer is no longer showing the song-select.
-        if (neSceneManager::isPadDisplay() && m_paused != 0) {
+    case 0xb: {
+        // Paused-for-song-select / seek-scrub state (Ghidra 0x21bd4).
+        next = 0xb;
+        // iPad resume-at-top: the binary resumes only when NOT paused (m_paused==0). Normally
+        // entered from state 10 with m_paused=1, so this branch rarely fires. (The old
+        // reconstruction had the condition inverted -- m_paused != 0 -- which resumed instantly.)
+        if (neSceneManager::isPadDisplay() && m_paused == 0) {
             note.resume();
             m_paused = 0;
-            m_state = 6;
+            next = 6;
         }
+        // A tap on the resume rect resumes play; a tap on the exit/pause rect opens the pause
+        // menu (same rects as case 6, FUN_0002d974 pointInRect).
+        if (flick && neGraphics::pointInRect(flickX, flickY, m_comboDigitX, m_comboDigitY,
+                                             m_playTouchW, m_playTouchH)) {
+            note.resume();
+            m_paused = 0;
+            next = 6;
+        } else if (flick && neGraphics::pointInRect(flickX, flickY, m_exitTouchX, m_exitTouchY,
+                                                    m_exitTouchW, m_exitTouchH)) {
+            next = 0xc;
+        }
+        // DOCUMENTED SEAM (NEON_ACCURACY.md #12): the full seek-scrub is not reproduced -- the
+        // per-frame drag accumulator (0xdc/0xe0/0xe8/0xf0/0xf8) feeding m_seekCoef, the gauge
+        // quantize (v*24/1023 via smmul 0x80200803, then ceil(q*42.5f | 1023.0f) into
+        // m_gaugeValue), and the live-seek (acNoteMng initPlayData + seekTo of
+        // m_pauseTime + m_seekCoef*m_seekScale). It requires the drag accumulator the preamble
+        // does not yet maintain; the tap resume/pause interactions above are the primary path.
         break;
+    }
     case 0xc:
         // Pause menu: freeze play (if not already), play the pause overlay (phone) or the
         // black board (pad), and wait for the resume/quit tap.
@@ -631,17 +653,54 @@ void AcViewerTask::update(int /*deltaMs*/) {
         }
         next = 0xd;
         break;
-    case 0xd:
-        // Wait in the pause menu (resume / retry / quit hit-testing lives here; the
-        // per-button rect math is best-effort). On resume, restart the note engine.
-        if (flick) {
+    case 0xd: {
+        // Pause menu (Ghidra 0x21cf2): three x-agnostic vertical button bands, y-only
+        // hit-tested against the tap. m_pauseBtnY[0]=options, [1]=resume, [2]=quit; each band
+        // is [anchor + height/2, anchor + height/2 + rowH]. Reaches the draw tail (the binary
+        // keeps drawing behind the menu), so `next` is set on every path.
+        next = 0xd;   // stay unless a button is hit / the pad overlay is dismissed
+        const int h = m_pauseBtnHeight / 2;
+        const int rowH = m_pauseBtnRowH;
+        const bool isPad = neSceneManager::isPadDisplay();
+        bool handled = false;
+        auto inBand = [&](int anchor) {
+            return flickY >= anchor + h && flickY <= anchor + h + rowH;
+        };
+        auto padResumeToViewer = [&]() {   // shared pad "close menu, resume" path
+            [AcvRootVC() GotoAcViewer];
             m_pauseLayer->reset();
             m_pauseMenuOpen = 0;
             note.resume();
             m_paused = 0;
-            m_state = 6;
+            next = 6;
+        };
+        if (flick) {
+            if (inBand(m_pauseBtnY[0])) {            // options
+                if (isPad) { neEngine::playSystemSe(1); padResumeToViewer(); }
+                else { next = 0xe; }
+                handled = true;
+            } else if (inBand(m_pauseBtnY[2])) {     // quit
+                neEngine::playSystemSe(1);
+                if (isPad) { padResumeToViewer(); }
+                else { next = 8; }
+                handled = true;
+            } else if (inBand(m_pauseBtnY[1])) {     // resume
+                m_pauseLayer->reset();
+                m_pauseMenuOpen = 0;
+                if (m_paused != 0) { next = 0xb; }
+                else { note.resume(); m_paused = 0; next = 6; }
+                handled = true;
+            }
         }
-        return;
+        // Pad tail: auto-resume once the song-select overlay is no longer showing.
+        if (!handled && isPad && [AcvRootVC() acMusicSelViewing] == 0) {
+            m_pauseMenuOpen = 0;
+            note.resume();
+            m_paused = 0;
+            next = 6;
+        }
+        break;
+    }
     case 0xe: {
         // Open the arcade option sheet (hi-speed / pop-kun / hid-sud / ran-mir). Release any
         // previous controller (@ +0x208), build a fresh AcViewerOptionViewController bound to
