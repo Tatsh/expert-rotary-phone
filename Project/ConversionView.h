@@ -20,10 +20,11 @@
 #import "CommonAlertView.h"   // CommonAlertViewDelegate
 #import "Downloader.h"        // DownloaderDelegate
 
-// TODO(dep): ViewCmnProtocol is not present in Project/. The embedded panel forwards
-// a "close the whole settings overlay" message up to its container through this weak
-// delegate. Only -startCloseAnimation is invoked on it (see -commonAlertView:...),
-// so it is forward-declared here as the minimal informal protocol.
+// ViewCmnProtocol — the embedded panel forwards a "close the whole settings overlay"
+// message up to its container through this weak delegate. Only -startCloseAnimation is
+// invoked on it (see -commonAlertView:...). This is the protocol's canonical
+// declaration; SettingOtherTableViewController.h forward-declares it (@protocol
+// ViewCmnProtocol;) and pulls in this header from its .mm.
 @protocol ViewCmnProtocol <NSObject>
 - (void)startCloseAnimation;
 @end

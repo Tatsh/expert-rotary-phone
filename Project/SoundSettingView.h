@@ -3,8 +3,8 @@
 //  pop'n rhythmin
 //
 //  The "Sound" sub-settings screen, embedded as the row-1 detail sub-controller of
-//  SettingGameTableViewController (which currently carries a `// TODO(dep):
-//  SoundSettingView` marker). A grouped table of volume sliders plus an optional
+//  SettingGameTableViewController (which imports SoundSettingView.h and instantiates
+//  it). A grouped table of volume sliders plus an optional
 //  touch-sound ("hit sound") picker:
 //
 //    * Section 0  "BGM ボリューム"          -- BGM master volume slider (linear 0..1)

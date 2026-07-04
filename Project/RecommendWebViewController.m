@@ -7,8 +7,8 @@
 
 #import "RecommendWebViewController.h"
 
-// TODO(dep): RecommendCore — the Recommend SDK core (redirect handling / SSL base URL) is not
-// part of this pass. It supplies +sharedInstance and -redirectWithRequest:.
+// RecommendCore — the Recommend SDK core (redirect handling / SSL base URL). It supplies
+// +sharedInstance and -redirectWithRequest:.
 #import "RecommendCore.h"
 
 @implementation RecommendWebViewController

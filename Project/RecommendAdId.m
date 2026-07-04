@@ -12,11 +12,11 @@
 #import <CommonCrypto/CommonCrypto.h>      // CC_SHA1, CCCrypt
 
 #import "RecommendWebAPI.h"
-// TODO(dep): RewardNetworkError — the Applilink error factory is not part of this pass. It
-// supplies +localizedApplilinkErrorWithCode: and +localizedRewardNetworkErrorWithCode:userInfo:.
+// RewardNetworkError — the Applilink error factory. It supplies
+// +localizedApplilinkErrorWithCode: and +localizedRewardNetworkErrorWithCode:userInfo:.
 #import "RewardNetworkError.h"
-// TODO(dep): RecommendCore — the Recommend SDK core is not part of this pass. It supplies the
-// +baseUrlSsl endpoint base used by the external-pasteboard web calls.
+// RecommendCore — the Recommend SDK core. It supplies the +baseUrlSsl endpoint
+// base used by the external-pasteboard web calls.
 #import "RecommendCore.h"
 
 @interface RecommendAdId () {

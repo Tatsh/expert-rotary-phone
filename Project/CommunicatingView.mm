@@ -13,14 +13,8 @@
 
 #import "CommunicatingView.h"
 
-#import "neEngineBridge.h"   // neSceneManager::shared / rootViewController
-
-// TODO(dep): the scene manager's root view controller (a MainViewController) is expected to
-// implement -CommunicatingEndCallBack; that class/method is not part of the reconstructed headers
-// yet, so it is forward-declared here as an informal protocol on NSObject.
-@interface NSObject (CommunicatingViewCallback)
-- (void)CommunicatingEndCallBack;
-@end
+#import "neEngineBridge.h"       // neSceneManager::shared / rootViewController
+#import "MainViewController.h"   // the scene manager's root VC; -CommunicatingEndCallBack
 
 @implementation CommunicatingView
 
@@ -130,7 +124,7 @@
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();
-    UIViewController *root = neSceneManager::rootViewController();
+    MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
     [root CommunicatingEndCallBack];
 }
 

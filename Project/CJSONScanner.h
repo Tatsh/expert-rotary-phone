@@ -12,17 +12,15 @@
 //
 //  Superclass determined from Ghidra: init/dealloc/setData: chain up to
 //  CDataScanner, and scanNotQuoteCharactersIntoString: reads CDataScanner's
-//  `current`/`end` byte-cursor ivars directly.
-//  TODO(dep): CDataScanner — the byte-cursor scanner superclass is itself
-//  missing and must be reconstructed separately; it supplies scannerWithData:,
-//  skipWhitespace, currentCharacter, scanCharacter, scanCharacter:,
-//  scanLocation, setScanLocation:, scanNumber:, scanUTF8String:intoString: and
-//  the protected `current`/`end` ivars used below.
+//  `current`/`end` byte-cursor ivars directly. CDataScanner (see
+//  CDataScanner.h) supplies scannerWithData:, skipWhitespace,
+//  currentCharacter, scanCharacter, scanCharacter:, scanLocation,
+//  setScanLocation:, scanNumber:, scanUTF8String:intoString: and the
+//  protected `current`/`end` ivars used below.
 //
 
 #import <Foundation/Foundation.h>
 
-// TODO(dep): CDataScanner — reconstruct separately (missing from this pass).
 #import "CDataScanner.h"
 
 @interface CJSONScanner : CDataScanner {

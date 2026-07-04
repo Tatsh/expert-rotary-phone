@@ -22,7 +22,7 @@
 
 #import <UIKit/UIKit.h>
 
-@class RewardNetworkIndicator;   // TODO(dep): app-provided loading-indicator view (unreconstructed)
+#import "RewardNetworkIndicator.h"   // app-provided loading-indicator view (the _indicator ivar)
 
 // Notifications the panel sends back to whoever opened it. All optional; each call site
 // guards with -respondsToSelector: (Ghidra @ 0xecb28 / 0xecbd8 / 0xecd24).

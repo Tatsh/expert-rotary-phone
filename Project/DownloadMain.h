@@ -86,9 +86,10 @@ typedef struct {
 // and newsGetFinished / getRecommendListFinished). Only visible to C++ translation
 // units so pure-Obj-C importers never see the C++ types.
 #ifdef __cplusplus
-class ModeSelTask;              // mode-select scene; owns the news panel
-class MainTask;                 // System/src/Task/MainTask.h (: C_TASK); music-select scene
-using MusicSelTask = MainTask;  // "MusicSelTask" is the binary's name for MainTask
+class MenuMainTask;                 // System/src/Task/MenuMainTask.h (: C_TASK); mode-select scene
+using ModeSelTask = MenuMainTask;   // "ModeSelTask" is the binary's name for the mode-select hub
+class MainTask;                     // System/src/Task/MainTask.h (: C_TASK); music-select scene
+using MusicSelTask = MainTask;      // "MusicSelTask" is the binary's name for MainTask
 #endif
 
 @protocol DownloadMainDelegate <NSObject>

@@ -13,13 +13,15 @@
 #import "UserSettingData.h"
 #import "TreasureData.h"
 #import "OverScoreData.h"
-#import "neEngineBridge.h"   // neAppEventCenter::shared().setEndDate()
+#import "neEngineBridge.h"   // neAppEventCenter::shared().setStartDate() / setEndDate()
 
 // C++ bridge helpers the scenes expose (unmangled -> declared extern "C"). Each pokes
 // its owning C++ scene when the matching download finishes. Ghidra: modeSelectRefreshNews
-// @ 0x6d8cc, musicSelUpdateInfoPanel @ 0x37c88.
-// TODO(dep): ModeSelTask / MusicSelTask C++ task classes are not reconstructed yet, so
-// these free functions stay locally declared until their owning headers exist.
+// @ 0x6d8cc, musicSelUpdateInfoPanel @ 0x37c88. Both scene classes are reconstructed:
+// ModeSelTask == MenuMainTask, MusicSelTask == MainTask (aliased in DownloadMain.h).
+// musicSelUpdateInfoPanel is defined in MainTask.mm (forwards to MainTask::updateInfoPanel);
+// TODO(dep): modeSelectRefreshNews (@ 0x6d8cc, MenuMainTask's news-panel refresh) is not yet
+// reconstructed, so it stays forward-declared here.
 extern "C" void modeSelectRefreshNews(ModeSelTask *task, bool hasNews);
 extern "C" void musicSelUpdateInfoPanel(MusicSelTask *task, bool hasList);
 
@@ -648,9 +650,9 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
             }
             [UserSettingData savePlayerId:playerId];
             [UserSettingData savePlayerName:playerName];
-            // TODO(dep): NEAppEventCenter_shared(); setStartDate(&g_pNeAppEventCenter);
-            //   marks the session start time; the analytics globals (setStartDate
-            //   @ 0x29274) are not yet reconstructed, so this side effect is omitted.
+            // @ 0x29274 — mark the session start time now the login (player-get) response
+            // has parsed. Ghidra: NEAppEventCenter_shared(); setStartDate(&g_pNeAppEventCenter).
+            neAppEventCenter::shared().setStartDate();
             _errorGetPlayer = -1;
             if (!sRegisteredForRemote) {
                 [[UIApplication sharedApplication] registerForRemoteNotificationTypes:

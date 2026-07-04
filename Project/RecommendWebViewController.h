@@ -17,9 +17,9 @@
 
 #import <UIKit/UIKit.h>
 
-// TODO(dep): RewardNetworkWebViewController — the Applilink reward web-view controller base
-// is not part of this pass. It supplies -setDelegate:, -isNavigationBarHidden, -appliListClosed
-// and the UIViewController/UIWebView plumbing chained up to below.
+// RewardNetworkWebViewController — the Applilink reward web-view controller base. It
+// supplies -setDelegate:, -isNavigationBarHidden, -appliListClosed and the
+// UIViewController/UIWebView plumbing chained up to below.
 #import "RewardNetworkWebViewController.h"
 
 @interface RecommendWebViewController : RewardNetworkWebViewController <UIWebViewDelegate>

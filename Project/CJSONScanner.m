@@ -374,7 +374,7 @@ finish:
 // @ 0x68734
 - (BOOL)scanNotQuoteCharactersIntoString:(NSString **)outString {
     // `current` and `end` are @protected byte-cursor ivars inherited from
-    // CDataScanner (see TODO(dep): CDataScanner in the header).
+    // CDataScanner.
     const char *P;
     for (P = current; P < end && *P != '"' && *P != '\\'; ++P) {
         ;

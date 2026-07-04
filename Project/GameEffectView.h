@@ -11,7 +11,7 @@
 //  updates. On iPad the rows also carry a "custom_bt02_top/under" background image.
 //
 //  Pushed as the row-3 detail controller of SettingGameTableViewController (which
-//  currently carries a `// TODO(dep): GameEffectView` marker). A UITableViewController
+//  imports GameEffectView.h and instantiates it). A UITableViewController
 //  subclass despite the "View" name. Reconstructed from Ghidra project rb420, program
 //  PopnRhythmin (initWithStyle: @ 0x72d4c, dealloc @ 0x72eb0, viewDidLoad @ 0x72edc,
 //  didReceiveMemoryWarning @ 0x730f4, numberOfSectionsInTableView: @ 0x73120,

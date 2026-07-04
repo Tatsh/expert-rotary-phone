@@ -15,8 +15,8 @@
 
 #import <Foundation/Foundation.h>
 
-// TODO(dep): RewardNetworkWebAPI — the synchronous Applilink web-API superclass is not part
-// of this pass. It supplies +requestSynchronousWithURL:method:parameters:cachePolicy:error:.
+// RewardNetworkWebAPI — the synchronous Applilink web-API superclass. It supplies
+// +requestSynchronousWithURL:method:parameters:cachePolicy:error:.
 #import "RewardNetworkWebAPI.h"
 
 @interface RecommendWebAPI : RewardNetworkWebAPI

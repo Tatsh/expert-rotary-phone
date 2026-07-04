@@ -41,6 +41,7 @@ neAppEventCenter &neAppEventCenter::shared() {
 // Ghidra: FUN_00028c70 — zero the transient event-center state.
 void neAppEventCenter::begin() {
     std::memset(m_state, 0, sizeof(m_state));
+    _startDate = nil;
     _endDate = nil;
     std::memset(m_state2, 0, sizeof(m_state2));
     m_flags[0] = 0;
@@ -49,6 +50,12 @@ void neAppEventCenter::begin() {
 
 // Ghidra: FUN_00028c9c — a no-op in this build.
 void neAppEventCenter::flush() {}
+
+// @ 0x29274 — record the session start time (_startDate @ +0x20). The binary released
+// the previous NSDate and retained [NSDate date]; the ARC strong-ivar store does both.
+void neAppEventCenter::setStartDate() {
+    _startDate = [NSDate date];
+}
 
 // @ 0x292c0 — record the session end time (_endDate @ +0x24). The binary released the
 // previous NSDate and retained [NSDate date]; the ARC strong-ivar store does both.
