@@ -854,7 +854,7 @@
 
     NSMutableArray *tasks = [NSMutableArray arrayWithCapacity:[musicInfos count]];
     for (StoreMusicInfo *info in musicInfos) {
-        NSString *path = [MusicManager getPathFromPurchased:[info musicID]];
+        NSString *path = [[MusicManager getInstance] getPathFromPurchased:[info musicID]];
         if (!RhFileExists(path)) {
             StoreDownloadTask *task =
                 [[StoreDownloadTask alloc] initWithURL:[info itemURL]
@@ -1041,7 +1041,7 @@
     int missing = 0;
     for (StorePackInfo *info in m_RestorePackInfo) {
         for (StoreMusicInfo *music in [info musicInfos]) {
-            NSString *path = [MusicManager getPathFromPurchased:[music musicID]];
+            NSString *path = [[MusicManager getInstance] getPathFromPurchased:[music musicID]];
             if (!RhFileExists(path)) {
                 missing++;
             }
@@ -1076,7 +1076,7 @@
                              inManagedObjectContext:[[AppDelegate appDelegate] managedObjectContext]];
         }
         for (StoreMusicInfo *music in [info musicInfos]) {
-            NSString *path = [MusicManager getPathFromPurchased:[music musicID]];
+            NSString *path = [[MusicManager getInstance] getPathFromPurchased:[music musicID]];
             if (!RhFileExists(path)) {
                 StoreDownloadTask *task =
                     [[StoreDownloadTask alloc] initWithURL:[music itemURL]
