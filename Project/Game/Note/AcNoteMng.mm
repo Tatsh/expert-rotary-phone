@@ -190,7 +190,7 @@ void AcNoteMng::recomputeSpawnLookahead(uint32_t pos) {
 
 // Ghidra: FUN_0007aaf8 — once play passes the current segment (the next segment's startTick has
 // arrived), retire the front segment (shift the array down) and report it; always refresh the
-// spawn look-ahead. Returns non-zero while a segment was retired (startPlay loops on it).
+// spawn look-ahead. Returns non-zero while a segment was retired (seekTo loops on it).
 int AcNoteMng::changeTempo(uint32_t tick) {
     int ret = 0;
     if (m_scrollMap[1].startTick <= tick) {
@@ -208,9 +208,12 @@ int AcNoteMng::changeTempo(uint32_t tick) {
     return ret;
 }
 
-// Ghidra: FUN_0007b86c — arm the play clock and begin. Skips if play is already at/past the end
-// (both the current offset and the requested position past the end value).
-void AcNoteMng::startPlay(uint32_t pos) {
+// Seek / fast-forward the internal play clock to the target tick `pos`. Skips if play is
+// already at/past the end (both the current offset and the requested position past the end
+// value) or the target is not ahead of it; else re-anchors the clock and rebuilds the active
+// notes at the seek target. The arcade engine uses one operation for both the initial start
+// (seek from 0) and the mid-play re-seek after an option change. // @ 0x7b86c (acNoteSeekTo)
+void AcNoteMng::seekTo(uint32_t pos) {
     const uint32_t endValue = m_endValue;
     bool proceed;
     if ((uint32_t)m_positionOffset < endValue) {
@@ -222,7 +225,7 @@ void AcNoteMng::startPlay(uint32_t pos) {
         return;
     }
 
-    m_state = 2;
+    m_state = 2;                           // seeking
     m_frozenElapsed = 0;
     m_holdElapsed = 0;
     m_startThreshold = 0;

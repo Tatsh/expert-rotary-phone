@@ -38,6 +38,12 @@
 
 class AepLyrCtrl;
 class neTextureForiOS;
+class AcViewerTask;   // (defined below) — named here so the neEngine bridge hook can befriend it
+
+// The neEngineBridge apply-settings hook (options sheet CONTINUE / BACK): pushes the recovered
+// option selections + re-seek into this task, writing its private option / seek fields directly.
+// Befriended below so it reaches them like the HUD callback does. Ghidra: FUN_00023850.
+namespace neEngine { void acMainApplyGameplaySettings(AcViewerTask *task); }
 
 // The registered group-7 per-layer HUD draw callback (score / combo / music-title /
 // gauge-digit blitter). It is a C function-pointer callback installed by setup() via
@@ -70,6 +76,9 @@ private:
                                 int anchorX, int anchorY, int color, int alpha, int16_t rotation,
                                 int blend, int p13, int p14, void *context);
 
+    // The apply-settings bridge hook writes the option / seek fields below directly.
+    friend void neEngine::acMainApplyGameplaySettings(AcViewerTask *task);
+
     // ================= work-area layout (offsets are binary-exact) =================
     C_TASK          *m_stateTask = nullptr;          // +0x28 play-state sub-task (deleted in cleanup)
     neTextureForiOS *m_digitTex[10] = {};            // +0x2c HUD digit textures ticket_num/num_pointb
@@ -92,7 +101,10 @@ private:
     int              m_usrNo[7] = {};                // +0xb8 HUD layer user numbers (draw dispatch)
     int              m_readySeId = 0;                // +0xd4 arcade timing-SE source id
     int              m_readySeInst = 0;              // +0xd8 ready-SE playing instance
-    uint8_t          _rsvd_dc[0xf8 - 0xdc] = {};     // +0xdc
+    uint8_t          _rsvd_dc[0xf4 - 0xdc] = {};     // +0xdc
+    float            m_seekCoef = 0.0f;              // +0xf4 resume-seek linear-combine coefficient
+                                                     //        (float; multiplied by m_seekScale in
+                                                     //        applyGameplaySettings' seek math)
     uint8_t          m_moved = 0;                    // +0xf8 per-frame touch "moved" flag
     uint8_t          _rsvd_f9[0xfc - 0xf9] = {};     // +0xf9
     int              m_pauseTime = 0;                // +0xfc pause-time position snapshot
@@ -102,7 +114,12 @@ private:
     int              m_screenHeight = 0;             // +0x108 aep screen height
     int              m_uiScale = 0;                  // +0x10c UI scale (g_dwUiScale; read as float in update)
     // ---- device-branched HUD layout constants (+0x110..+0x1c4, documented seam) ----
-    uint8_t          _rsvd_110[0x120 - 0x110] = {};  // +0x110
+    uint8_t          _rsvd_110[0x118 - 0x110] = {};  // +0x110
+    int              m_seekScale = 0;                // +0x118 resume-seek scale constant (setup
+                                                     //        writes 5 phone / 3 ipad); read as a
+                                                     //        fixed-point value by the seek math
+    uint8_t          _rsvd_11c[0x120 - 0x11c] = {};  // +0x11c setup writes 2 phone / 1 ipad here
+                                                     //        (paired with m_seekScale; role best-effort)
     int              m_noteClipTop = 0;              // +0x120 note-field clip top / y
     int              m_noteFieldX = 0;               // +0x124 note-field x (= m_noteClipTop + m_noteFieldY)
     int              m_noteFieldY = 0;               // +0x128 note-field y

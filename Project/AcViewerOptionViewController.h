@@ -33,10 +33,10 @@
 @property (nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
 // Build the options screen for the AC-main (in-game) flow: sets _forAcMain, keeps the
-// C++ AcMainTask pointer, wraps itself in its own UINavigationController and installs a
-// back button. `acMain` is the C++ AcMainTask* (opaque here). Ghidra: initForAcMain: @ 0xdfc0c.
-class AcMainTask;   // C++ task (System/src/Task/AcMainTask.h); this header is ObjC++
-- (instancetype)initForAcMain:(AcMainTask *)acMain;
+// C++ AcViewerTask pointer, wraps itself in its own UINavigationController and installs a
+// back button. `acMain` is the C++ AcViewerTask* (opaque here). Ghidra: initForAcMain: @ 0xdfc0c.
+class AcViewerTask;   // C++ task (System/src/Task/AcViewerTask.h); this header is ObjC++
+- (instancetype)initForAcMain:(AcViewerTask *)acMain;
 
 // Fade the AC-main nav controller's view in over 0.3 s. Ghidra: startOpenAnimationForAcMain @ 0xe0820.
 - (void)startOpenAnimationForAcMain;

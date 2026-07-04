@@ -19,9 +19,10 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
-// The C++ arcade-play task the AC-main flow owns; opaque on the ObjC side (a raw pointer,
-// non-ARC), passed straight through to the engine hooks. Ghidra: struct AcMainTask.
-class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
+// The C++ arcade note-play task the AC-main flow owns (the one AppDelegate holds in its
+// acMainTask property); opaque on the ObjC side (a raw pointer, non-ARC), passed straight
+// through to the engine hooks. Ghidra: struct AcViewerTask.
+class AcViewerTask;   // System/src/Task/AcViewerTask.h (: C_TASK)
 
 // The app's root navigation host (bridged UIViewController on the C++ scene manager).
 static UIViewController *RootVC() {
@@ -47,7 +48,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     UINavigationController *_naviCtrl;   // 0xa4 — own nav host (AC-main flow only)
     BOOL _forAcMain;                     // 0xa8 — hosted by the in-game AC-main task
     BOOL _isAnimationing;                // 0xa9 — a fade transition is in flight
-    AcMainTask *_pAcMain;                  // 0xac — C++ arcade-play task (non-ARC)
+    AcViewerTask *_pAcMain;                // 0xac — C++ arcade note-play task (non-ARC)
 }
 
 // @ 0xdeff0 — build the options table: a transparent, separator-less UITableView; the
@@ -167,7 +168,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0xdfc0c — options screen for the in-game AC-main flow: flag _forAcMain, keep the C++
 // task pointer, build the table (via init), wrap self in its own navigation controller and
 // install the back button + the "pl_navbar" nav-bar background.
-- (instancetype)initForAcMain:(AcMainTask *)acMain {
+- (instancetype)initForAcMain:(AcViewerTask *)acMain {
     _forAcMain = YES;
     _pAcMain = acMain;
     if (!(self = [self init])) {
@@ -328,7 +329,8 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
         return;
     }
     neEngine::playSystemSe(2);
-    neEngine::acMainApplyGameplaySettings(AppDelegate.appDelegate.acMainTask);
+    neEngine::acMainApplyGameplaySettings(
+        static_cast<AcViewerTask *>(AppDelegate.appDelegate.acMainTask));  // acMainTask is void*
     [self.delegate startHiddenAnimation:YES];
 }
 

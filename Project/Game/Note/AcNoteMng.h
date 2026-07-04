@@ -100,9 +100,14 @@ public:
     void registerTempoEvents();
     int changeTempo(uint32_t tick);
 
-    // Arm the play clock and begin: set state=playing, freeze the clock, stamp the start time,
-    // settle the tempo, and prime one frame. Ghidra: FUN_0007b86c.
-    void startPlay(uint32_t pos);
+    // Seek / fast-forward the internal play clock to the target tick `pos` (in ms). No-op if
+    // the current offset and the requested position are both already at/past the chart end, or
+    // the target is not ahead of the current offset. Otherwise: enter the seeking state
+    // (m_state = 2), clear the frozen-elapsed / hold / start-threshold fields, freeze the clock
+    // (m_holdFlags = 1), clamp+store the target as the play offset, restamp the wall clock,
+    // settle every tempo segment up to the new position, then prime one frame so the active-note
+    // cursor is rebuilt at the seek target. // @ 0x7b86c (acNoteSeekTo)
+    void seekTo(uint32_t pos);
 
     // --- Play clock --------------------------------------------------------
     // Wall-clock ms since play start (gettimeofday delta; 0 before the clock is
@@ -133,7 +138,7 @@ public:
     void resume();
 
     // Arm the play clock from now (gettimeofday baseline), clear the pause/offset fields and
-    // set state = playing. A lighter clock-start than startPlay(). Ghidra: acNoteStartPlayback
+    // set state = playing. A lighter clock-start than seekTo(). Ghidra: acNoteStartPlayback
     // @ 0x7b5a0.
     void startPlayback();
 
@@ -212,7 +217,7 @@ private:
     long m_startSec = 0;
     long m_startUsec = 0;
     int  m_frozenElapsed = 0;   // +0xfa38  cached elapsed while the hold bit is set
-    int  m_holdElapsed = 0;     // +0xfa40  hold/pause clock accumulator (reset on startPlay)
+    int  m_holdElapsed = 0;     // +0xfa40  hold/pause clock accumulator (reset on seekTo)
     int  m_positionOffset = 0;  // +0xfa44  constant offset added to elapsed
     uint32_t m_startThreshold = 0; // +0xfa3c  position at which the scroll base advances
     int  m_scrollBase = 0;      // +0xfe18  smoothed scroll/position base
@@ -226,7 +231,7 @@ private:
     int m_maxCombo = 0;         // +0xfd58
 
     // --- per-frame arcade update state (Ghidra offsets into the play-data blob) ---
-    int m_state = 0;                 // +0xfd50  1=playing, 3=ending, 4=finished
+    int m_state = 0;                 // +0xfd50  1=playing, 2=seeking, 3=ending, 4=finished
     int m_scrollTarget = 0;          // +0xfe14  scroll base is smoothed toward this
     int m_expectedTimeBase = 0;      // +0xfe10  expected time used by the BGM drift sync
     AcNoteRecord *m_spawnCursor = nullptr; // +0xfa0c  next chart record awaiting spawn

@@ -26,6 +26,7 @@
 @class ScoreData;   // Game/Data/Save/ScoreData.h (Core Data entity, per-song play records)
 class MainTask;     // System/src/Task/MainTask.h   (: C_TASK)
 class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
+class AcViewerTask; // System/src/Task/AcViewerTask.h (: C_TASK) — the arcade note-play task
 
 // The just-finished play's result record — the transient block the app-event-center singleton
 // fills and the score store persists. This IS the leading layout of neAppEventCenter (the
@@ -299,9 +300,10 @@ namespace neEngine {
     // Ghidra: requestGameExit (FUN_0002315c).
     void acMainRequestGameExit(AcMainTask *acMainTask);
     // Push the arcade-viewer option selections (hi-speed / pop-kun / hid-sud / ran-mir)
-    // into the live AcMainTask, re-seek its note stream and resume the render loop.
+    // into the live AcViewerTask (the arcade note-play task AppDelegate holds in its
+    // acMainTask property), re-seek its note stream and resume the render loop.
     // Ghidra: applyGameplaySettings (FUN_00023850).
-    void acMainApplyGameplaySettings(AcMainTask *acMainTask);
+    void acMainApplyGameplaySettings(AcViewerTask *task);
 
     // Create + register the app's boot task at priority 3.
     void startBootTask();            // Ghidra: operator_new(0x4c) + FUN_0002af58 + FUN_00027f08(_,3)
