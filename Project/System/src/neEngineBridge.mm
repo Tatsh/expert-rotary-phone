@@ -578,6 +578,33 @@ bool isSePlaying(int slot) {
     return [[AudioManager sharedManager] isPlayingSe:g_systemSeHandles[slot]] != NO;
 }
 
+// Menu button hit-test (the abstraction the ~13 inlined pointInRect hit-tests share):
+// true when the active touch `touchId` in render manager `gfx` lies inside `rect`
+// (x,y,w,h) and the button is enabled (enable[0] != 0). Ghidra: the inlined
+// findTouchById + neGraphics::pointInRect blocks in MainTask/MenuMainTask/AcMain update.
+bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
+    if (enable == nullptr || enable[0] == 0) {
+        return false;
+    }
+    const neTouchPoint *t = static_cast<neGraphics *>(gfx)->findTouchById(touchId);
+    if (t == nullptr) {
+        return false;
+    }
+    return neGraphics::pointInRect(t->x, t->y, rect[0], rect[1], rect[2], rect[3]);
+}
+
+// Scene touch input mode (0 = normal, non-zero = suspended while a modal/animation
+// runs). Ghidra: neSceneSetInputMode stores it on the scene-manager global; modelled
+// as a file-static since nothing in this rebuild reads it back yet.
+static int s_inputMode = 0;
+void setInputMode(int mode) { s_inputMode = mode; }
+
+// Height (points) of the AEP-rendered content area, used to place UIKit overlays below
+// the GL scene (iPad panel layout). Ghidra: neAepContentHeight — the AEP screen-quad
+// height (AepManager +0x7f3b00), which screenHeight() also reads. (Exact FUN not
+// isolated; the content height is the AEP quad height.)
+int aepContentHeight() { return AepManager::shared().screenHeight(); }
+
 }  // namespace neEngine
 
 // @ 0x2da34
