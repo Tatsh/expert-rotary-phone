@@ -262,13 +262,41 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): success block @ 0xef839 — forwards `callback`. Body not reconstructed.
-                                          (void)callback;
+                                          // @ 0xef838 — install response handler.
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              callback([RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          if ([[response objectForKey:@"status"] boolValue] &&
+                                              [[response objectForKey:@"error_code"] intValue] == 100000000) {
+                                              if (priority == 0 && [RewardNetworkUdid isUdidThreeKinds]) {
+                                                  [RewardNetwork postApplicationInstallWithPriority:1 callback:callback];
+                                              } else {
+                                                  [[NSUserDefaults standardUserDefaults] setObject:[response objectForKey:@"campaign_flg"]
+                                                                                            forKey:@"ApplilinkReward.campaignFlg"];
+                                                  [RewardNetworkUdid setUdidKeychainFromPasteBoard];
+                                                  callback(nil);
+                                              }
+                                              return;
+                                          }
+                                          NSError *mapped;
+                                          if ([[response objectForKey:@"error_code"] intValue] == 0xc106101) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3f1 userInfo:response];
+                                          } else if ([[response objectForKey:@"error_code"] intValue] == 999999999) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3f0 userInfo:response];
+                                          } else if ([[response objectForKey:@"kind"] isEqualToString:@"authorization"]) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ea userInfo:response];
+                                          } else if ([[response objectForKey:@"kind"] isEqualToString:@"parameter_error"]) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3e9 userInfo:response];
+                                          } else {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response];
+                                          }
+                                          callback(mapped);
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): failure block @ 0xefbf8 — captures `priority`; forwards `callback`.
-                                          (void)priority;
-                                          (void)callback;
+                                          // @ 0xefbf8 — tiny failure block, inlined/merged by the compiler
+                                          // (no standalone function); forwards the network error.
+                                          callback(error);
                                       }];
 }
 
@@ -291,12 +319,22 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): success block @ 0xefe11 — forwards `block`. Body not reconstructed.
-                                          (void)block;
+                                          // @ 0xefe10 — login-status response handler.
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              block(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          if (![[response objectForKey:@"status"] boolValue]) {
+                                              block(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          BOOL loginStatus = [[response objectForKey:@"login_status"] boolValue];
+                                          block((id)loginStatus, nil);
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): failure block @ 0xeff6c — forwards `block`. Body not reconstructed.
-                                          (void)block;
+                                          // @ 0xeff6c — tiny failure block, inlined/merged by the compiler
+                                          // (no standalone function); forwards the network error.
+                                          block(nil, error);
                                       }];
 }
 
@@ -322,12 +360,34 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): success block @ 0xf0211 — forwards `block`. Body not reconstructed.
-                                          (void)block;
+                                          // @ 0xf0210 — token response handler.
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              block(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          id token = [response objectForKey:@"token"];
+                                          if ([[response objectForKey:@"status"] boolValue] &&
+                                              [[response objectForKey:@"error_code"] intValue] == 100000000 &&
+                                              token != nil) {
+                                              block(token, nil);
+                                              return;
+                                          }
+                                          NSError *mapped;
+                                          if (token == nil) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ec userInfo:response];
+                                          } else if ([[response objectForKey:@"error_code"] intValue] == 999999999) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ed userInfo:response];
+                                          } else if ([[response objectForKey:@"kind"] isEqualToString:@"parameter_error"]) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3e9 userInfo:response];
+                                          } else {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response];
+                                          }
+                                          block(nil, mapped);
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): failure block @ 0xf04a0 — forwards `block`. Body not reconstructed.
-                                          (void)block;
+                                          // @ 0xf04a0 — tiny failure block, inlined/merged by the compiler
+                                          // (no standalone function); forwards the network error.
+                                          block(nil, error);
                                       }];
 }
 
@@ -356,14 +416,34 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): success block @ 0xf07c5 — captures `priority`/`token`; forwards `callback`.
-                                          (void)priority;
-                                          (void)token;
-                                          (void)callback;
+                                          // @ 0xf07c4 — login response handler.
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              callback([RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          if ([[response objectForKey:@"status"] boolValue] &&
+                                              [[response objectForKey:@"error_code"] intValue] == 100000000) {
+                                              if (priority == 0 && [RewardNetworkUdid isUdidThreeKinds]) {
+                                                  [RewardNetwork startLoginWithToken:token withPriority:1 callback:callback];
+                                              } else {
+                                                  callback(nil);
+                                              }
+                                              return;
+                                          }
+                                          NSError *mapped;
+                                          if ([[response objectForKey:@"error_code"] intValue] == 0xc106cb9) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ea userInfo:response];
+                                          } else if ([[response objectForKey:@"kind"] isEqualToString:@"parameter_error"]) {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3e9 userInfo:response];
+                                          } else {
+                                              mapped = [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response];
+                                          }
+                                          callback(mapped);
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): failure block @ 0xf0a64 — forwards `callback`. Body not reconstructed.
-                                          (void)callback;
+                                          // @ 0xf0a64 — tiny failure block, inlined/merged by the compiler
+                                          // (no standalone function); forwards the network error.
+                                          callback(error);
                                       }];
 }
 
@@ -500,13 +580,25 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                                 tag:0
                                         cachePolicy:nil
                                       finishedBlock:^(id response, id userInfo) {
-                                          // TODO(dep): success block @ 0xf358d — caches the banner info/expiry and
-                                          // forwards `block`. Body not reconstructed.
-                                          (void)block;
+                                          // @ 0xf358c — banner detail response handler: validate dict/status/error_code,
+                                          // forward the raw response dict. (The info/expiry caching happens in the
+                                          // isEnabledBanner completion @ 0xf397c, not here.)
+                                          if (![response isKindOfClass:[NSDictionary class]]) {
+                                              block(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                              return;
+                                          }
+                                          BOOL ok = [[response objectForKey:@"status"] boolValue] &&
+                                                    [[response objectForKey:@"error_code"] intValue] == 100000000;
+                                          if (ok) {
+                                              block(response, nil);
+                                          } else {
+                                              block(nil, [RewardNetworkError localizedRewardNetworkErrorWithCode:1000 userInfo:response]);
+                                          }
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
-                                          // TODO(dep): failure block @ 0xf36f8 — forwards `block`. Body not reconstructed.
-                                          (void)block;
+                                          // @ 0xf36f8 — tiny failure block, inlined/merged by the compiler
+                                          // (no standalone function); forwards the network error.
+                                          block(nil, error);
                                       }];
 }
 
@@ -536,9 +628,15 @@ static NSDate *g_pRewardBannerExpireDate = nil;
         return;
     }
     [RewardNetwork bannerInfoWithBlock:^(id result, NSError *error) {
-        // TODO(dep): block @ 0xf397d — re-reads the freshly fetched banner status and forwards
-        // it to `block`. Body not reconstructed.
-        (void)block;
+        // @ 0xf397c — cache the freshly fetched banner info/expiry, then forward its status.
+        if (error == nil && [result isKindOfClass:[NSDictionary class]]) {
+            g_pRewardBannerInfo = [result objectForKey:@"info"];
+            NSTimeInterval expire = (NSTimeInterval)[[g_pRewardBannerInfo objectForKey:@"expire"] intValue];
+            g_pRewardBannerExpireDate = [[NSDate date] dateByAddingTimeInterval:expire];
+            block([[g_pRewardBannerInfo objectForKey:@"status"] intValue], nil);
+        } else {
+            block(0, error);
+        }
     }];
 }
 
