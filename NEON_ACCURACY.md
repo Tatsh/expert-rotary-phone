@@ -12,7 +12,7 @@ Status: ☐ todo  ◐ in progress  ☑ fixed & verified  ✓ already accurate (n
 
 | # | Function @ addr | Source | Defect | Effort | Status |
 |---|---|---|---|---|---|
-| 1 | `neFrameTimer::elapsedSeconds` @0x280bc | neFrameTimer.h:30 | binary returns **milliseconds** (`sec*1000 + usec/1000`); source returns seconds (`/1000000`) — 1000× off. Verify consumers. | LOW | ☐ |
+| 1 | `neFrameTimer::elapsedSeconds` @0x280bc | neFrameTimer.h:30 | binary returns **milliseconds** (`sec*1000 + usec/1000`); source returned seconds (`/1000000`) — 1000× off. | LOW | ☑ (→elapsedMs; chain verified: draw threshold DAT_0000be7c=1000.0 & updateAll FPToFixed both already ms) |
 | 2 | `neDrawRect` @0x152f0 | neRenderer.cpp:213 | `x+w`/`y+h` done as **float** add (`vadd.f32`) in binary; source adds as `int`. Implies neDraw* positions are float, not 16.16. | MED | ☐ |
 | 3 | `menuButtonHit` (MenuMainTask_update) @0x6af58 | neEngineBridge.mm:596 | drops the `÷ g_dwUiScale` tap scale-divide before `pointInRect` → mode buttons mis-hit on Retina/iPad. | MED | ☐ |
 

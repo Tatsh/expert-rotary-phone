@@ -51,13 +51,14 @@
 // Scene input-mode set + AEP content-area height come from the engine bridge
 // (neEngine::playSystemSe / neEngine::aepContentHeight). neEngineBridge.h imported below.
 
-// Render-time gate threshold in seconds (Ghidra: DAT_0000be7c = 1000.0). -draw renders
-// only while the elapsed render time is below this, so in practice every frame draws (a
-// gap longer than this — e.g. after a long stall — skips that frame's render).
+// Render-time gate threshold in MILLISECONDS (Ghidra: DAT_0000be7c = 1000.0). -draw renders
+// only while the elapsed render time (ms) is below this, so in practice every frame draws (a
+// gap longer than 1000 ms — e.g. after a long stall — skips that frame's render).
 static const float kRenderMinInterval = 1000.0f;
 
-// Fixed-point (16.16) seconds helper for the task update step.
-static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
+// Float(ms)->fixed-point (16.16) helper for the task update step. The binary applies
+// FPToFixed(ms, round-toward-zero, 16 frac bits) to the elapsed-ms value before updateAll.
+static int FloatToFixed(float ms) { return (int)(ms * 65536.0f); }
 
 // This VC is the neGLView render/layout delegate and the delegate for both the
 // common and custom alert views it raises.
@@ -635,9 +636,9 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 // @ 0xbb5c — advance all tasks by the elapsed time, then reap dead ones.
 - (void)task {
-    float dt = m_taskTime.elapsedSeconds();
+    float dt = m_taskTime.elapsedMs();
     m_taskTime.reset();
-    C_TASK::updateAll(SecondsToFixed(dt));
+    C_TASK::updateAll(FloatToFixed(dt));
     // NOTE (Ghidra @ 0xbb5c): the binary then runs per-frame neGraphics touch-pool
     // upkeep inline here — for each active touch it clears the +0x2c frame marker,
     // copies the current point (+0xc/+0x10) into +0x1c/+0x20, and swap-removes any
@@ -648,7 +649,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 
 // @ 0xbd30 — render the scene, frame-limited by the render timer.
 - (void)draw {
-    float dt = m_renderTime.elapsedSeconds();
+    float dt = m_renderTime.elapsedMs();
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];

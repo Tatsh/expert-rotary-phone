@@ -3,10 +3,10 @@
 //  pop'n rhythmin
 //
 //  A wall-clock stopwatch: an 8-byte {sec, usec} snapshot taken at reset(), read
-//  back as elapsed seconds. Used by MainViewController to pace the task update and
-//  render steps. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (reset FUN_00028084, elapsedSeconds FUN_0002808c). Header-only: the two methods
-//  are small and inline.
+//  back as elapsed MILLISECONDS. Used by MainViewController to pace the task update
+//  and render steps. Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  (reset FUN_00028084, elapsed FUN_0002808c). Header-only: the two methods are small
+//  and inline.
 //
 
 #pragma once
@@ -23,11 +23,15 @@ public:
         m_usec = now.tv_usec;
     }
 
-    // Ghidra: FUN_0002808c — seconds elapsed since the last reset().
-    float elapsedSeconds() const {
+    // Ghidra: FUN_0002808c — MILLISECONDS elapsed since the last reset(). The binary
+    // computes sec_delta*1000 + usec_delta/1000 (both NEON vcvt.f32.s32, divisor/scale
+    // DAT_000280d0 = 1000.0); an earlier reconstruction used /1000000 (seconds), which
+    // was 1000x off and broke both consumers (the C_TASK::updateAll fixed-point delta and
+    // the draw() lag guard, whose threshold DAT_0000be7c = 1000.0f is a millisecond value).
+    float elapsedMs() const {
         timeval now;
         gettimeofday(&now, nullptr);
-        return (float)(now.tv_sec - m_sec) + (float)(now.tv_usec - m_usec) / 1000000.0f;
+        return (float)(now.tv_sec - m_sec) * 1000.0f + (float)(now.tv_usec - m_usec) / 1000.0f;
     }
 
 private:
