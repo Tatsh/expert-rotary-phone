@@ -81,6 +81,28 @@ private:
     // cells from row `rowBase`.
     void loadColumn(int rowBase, int delta, uint8_t &latch);
 
+    // ---- list-scroll settle states (m_scrollState @ +0x984) ----
+    enum ScrollState {
+        kScrollIdle      = 0,   // no drag / settled
+        kScrollFlingPrev = 1,   // fling toward the previous column (offset -> +columnWidth)
+        kScrollFlingNext = 2,   // fling toward the next column     (offset -> -columnWidth)
+        kScrollSnapRight = 3,   // rubber-band back to 0 after a rightward drag with no fling
+        kScrollSnapLeft  = 4,   // rubber-band back to 0 after a leftward drag with no fling
+    };
+    // Scroll-physics tuning constants (Ghidra DAT_000354xx floats). The fling integration
+    // works in plain px / ms; the 16.16 FixedToFP/FPToFixed pixel conversions the binary wraps
+    // around each step are modelled as identity — a documented Q-format seam.
+    static constexpr float kSpringAccel    = 0.2f;   // DAT_00035440/44: accel while completing a fling
+    static constexpr float kFrictionAccel  = 0.1f;   // DAT_00035434/38: decel past halfway / snap-back accel
+    static constexpr float kFrameStepMs    = 16.6f;  // DAT_0003543c: per-frame time step (px = vel*step)
+    static constexpr float kMaxVelocity    = 8.0f;   // fling velocity clamp
+    static constexpr float kMinVelocity    = 1.0f;   // minimum completing velocity
+    static constexpr float kFlingThreshold = 0.1f;   // DAT_00035434/38: |velocity| gate for fling vs snap-back
+
+    // Pick the free jacket row (0, m_columnStride, or 2*m_columnStride) not currently held by
+    // one of the three per-column row latches, so a committed column change streams into it.
+    int findFreeColumnRow() const;
+
     // The music-select buttons hit-tested each frame. hitButton() maps each to its
     // stored screen rectangle in the layout block and tests the current tap against
     // it (via the engine point-in-rect primitive, Ghidra FUN_0002d974).
@@ -223,14 +245,29 @@ private:
     uint8_t          m_isPadDisplay = 0;              // +0x925 pad-class display
     uint8_t          _rsvd_926[0x928 - 0x926] = {};   // +0x926
     int              m_selectedCell = -1;             // +0x928 drag touch id / chosen cell (ctor -1)
-    uint8_t          _rsvd_scroll[0x988 - 0x92c] = {};// +0x92c list-scroll physics ring (updateList)
+    // ---- list-scroll fling physics ring (updateList / mainTaskUpdate @ 0x34f4c) ----
+    // While a drag is active (m_selectedCell >= 0) the finger is sampled into a 10-deep ring
+    // each frame: the newest sample is index 0 (lowest address); the shift loop pushes older
+    // samples toward higher indices. The two arrays are contiguous in the work area (time[0]
+    // @ +0x92c .. x[9] @ +0x978) — the binary's shift loop rewrites both from one pointer that
+    // walks them 40 bytes (10 ints) apart. Fling velocity = (x[0]-x[old])/(t[0]-t[old]) using
+    // the oldest still-populated sample; on release the settle state (m_scrollState) integrates
+    // m_scrollOffset toward the adjacent column (fling) or back to 0 (snap-back).
+    int              m_dragSampleTime[10] = {};       // +0x92c sample timestamps (ms), [0] newest
+    int              m_dragSampleX[10] = {};          // +0x954 sample touch-x (px), [0] newest
+    float            m_scrollVelocity = 0.0f;         // +0x97c fling velocity (px/ms)
+    int              m_scrollOffset = 0;              // +0x980 scroll offset within the column (px)
+    int              m_scrollState = 0;               // +0x984 settle state (see ScrollState)
     int              m_layoutRects[(0xa64 - 0x988) / 4] = {}; // +0x988 setup()-filled button rects
     int              m_screenWidth = 0;               // +0xa64 aep screen width
     int              m_screenHeight = 0;              // +0xa68 aep screen height
     int              m_uiScale = 0;                   // +0xa6c UI scale factor (g_dwUiScale)
     int              m_treasurePoint = 0;             // +0xa70 treasure-point count
     int              m_columnStride = 0;              // +0xa74 cells per column (6 phone / 9 pad)
-    uint8_t          _rsvd_touch[0xa84 - 0xa78] = {}; // +0xa78 current touch x / y / moved (updateList)
+    int              m_touchX = -1;                   // +0xa78 current-frame drag touch x (-1 none)
+    int              m_touchY = -1;                   // +0xa7c current-frame drag touch y (-1 none)
+    uint8_t          m_touchReleased = 0;             // +0xa80 finger lifted this frame (settle trigger)
+    uint8_t          _rsvd_a81[0xa84 - 0xa81] = {};   // +0xa81
     int              m_layoutBaseX = 0;               // +0xa84 layout base x (phone)
     int              m_layoutBaseY = 0;               // +0xa88 layout base y
     int              m_loaderCursor = 0;              // +0xa8c async jacket-loader progress cursor

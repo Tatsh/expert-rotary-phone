@@ -19,6 +19,7 @@
 
 #import <UIKit/UIKit.h>
 
+#include <cmath>
 #include <cstring>
 
 #import "AepLyrCtrl.h"
@@ -32,6 +33,7 @@
 #import "ScoreData.h"
 #import "TaskFactory.h"
 #import "UserSettingData.h"
+#import "RhUtil.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
@@ -85,7 +87,7 @@ void MainTask::initOverscoreRows() {
 // is re-fetched from the local ScoreData store into the previewed song's jacket-cell score
 // rows (the same MusicSelCell::ScoreRows block loadCellScoreRows fills). The destination
 // storage is the named cell block; only the visible-row *index* the binary computes
-// (___modsi3 of the scroll config) derives from the unrecovered scroll-physics seam, so the
+// (___modsi3 of the packed per-cell select-state seam) does not decompile cleanly, so the
 // chosen cell is taken as m_selectedCell (the cell tapped to enter the preview).
 void MainTask::refreshScoreRows() {
     if (m_selectedCell < 0 || m_selectedCell >= 27) {
@@ -744,14 +746,234 @@ void MainTask::setup() {
 // streams the newly-visible jacket column (musicSelLoadColumnPrev/Next). This is NOT the
 // re-sort routine: that is rebuildList() (musicSelUpdate FUN_0003835c), a separate function.
 void MainTask::updateList() {
-    neSceneManager::shared();
-    neGraphics &gfx = neGraphics::shared();
-    (void)gfx;
-    // TODO(dep): the scroll-physics ring (m_selectedCell drag id + the +0x92c..+0x988 and
-    // +0xa78 touch/velocity fields) and the column-load calls are reconstructed
-    // structurally; the fixed-point fling integration is the documented physics seam.
-    // The observable effect (m_columnIndex advances within [0, m_columnCount) as the list
-    // is dragged, streaming the exposed jacket column each step) is modelled by state 2.
+    // @ 0x34f4c
+    neSceneManager::shared();                    // NESceneManager_shared — force the singleton
+    neGraphics &gfx = neGraphics::shared();      // NEGraphics_shared
+
+    // Clear the current-frame drag scratch (rewritten below only if a touch is present).
+    m_touchX = -1;                               // +0xa78
+    m_touchY = -1;                               // +0xa7c
+    m_touchReleased = 0;                         // +0xa80
+
+    // ---- a drag is in progress: follow / sample the finger ----------------------------
+    if (m_selectedCell >= 0) {
+        const neTouchPoint *t = gfx.findTouchById(m_selectedCell);   // NEGraphics_findTouchById
+        if (t == nullptr) {
+            // Finger vanished (lost the touch): drop the drag; the settle switch runs next frame.
+            m_selectedCell = -1;
+            return;
+        }
+
+        const int startX = t->startX;            // +0x04 drag anchor
+        m_touchX = t->x;                          // +0xa78 current point
+        m_touchY = t->y;                          // +0xa7c
+        const int curX = m_touchX;
+
+        // Push the ring one slot toward "older"; index 0 receives the new sample. The two
+        // arrays are shifted together (the binary walks them with a single pointer 40 bytes
+        // apart — i.e. m_dragSampleX[i] is m_dragSampleTime[i] + 10 ints).
+        for (int i = 9; i > 0; i--) {
+            m_dragSampleTime[i] = m_dragSampleTime[i - 1];
+            m_dragSampleX[i]    = m_dragSampleX[i - 1];
+        }
+        const int now = (int)getTimeMillis();
+        m_dragSampleTime[0] = now;
+        m_dragSampleX[0]    = curX;
+
+        // Live drag: the offset tracks the finger delta, sqrt-damped at the list ends.
+        const int delta = curX - startX;
+        const bool atRightEnd = (delta > 0 && m_columnIndex < 1);                    // first column
+        const bool atLeftEnd  = (delta < 0 && m_columnIndex >= m_columnCount - 1);   // last column
+        if (atRightEnd || atLeftEnd) {
+            const int a = (delta < 0) ? -delta : delta;   // |delta|
+            // Rubber-band resistance at the ends: FixedToFP(|delta|) -> -SQRT -> +0.5 -> FPToFixed.
+            // The sqrt-damped SHAPE is exact; the 16.16 Q-format scaling around the sqrt (the
+            // VCVT #fbits pixel conversions) is the documented pixel-math seam that sets the true
+            // sign/magnitude — modelled here as identity.
+            const float damped = 0.5f - std::sqrt((float)a);
+            m_scrollOffset = (int)damped;
+        } else {
+            m_scrollOffset = delta;
+        }
+
+        // Fling velocity (px/ms) from the oldest still-populated sample.
+        float velocity = 0.0f;
+        {
+            float dTime = 0.0f;
+            for (int i = 9; i >= 0; i--) {
+                if (m_dragSampleTime[i] != 0) {
+                    dTime    = (float)(now - m_dragSampleTime[i]);
+                    velocity = (float)(curX - m_dragSampleX[i]);
+                    break;
+                }
+            }
+            velocity = velocity / dTime;   // dPos / dTime (dTime == 0 only on the seed frame)
+        }
+        m_scrollVelocity = velocity;
+
+        if (t->released) {                        // +0x2d finger lifted this frame
+            m_touchReleased = 1;                  // +0xa80
+            if (curX < startX) {
+                // Dragged left -> advance toward the NEXT column, if a fast-enough fling and not last.
+                if (m_columnIndex < m_columnCount - 1 && velocity < -kFlingThreshold) {
+                    neEngine::playSystemSe(4);    // SysSePlayIntoSlot(...,4) — confirm SE on a real fling
+                    m_scrollState = kScrollFlingNext;
+                } else {
+                    m_scrollVelocity = 0.0f;
+                    m_scrollState = kScrollSnapLeft;
+                }
+            } else if (startX < curX) {
+                // Dragged right -> return toward the PREVIOUS column, if a fast-enough fling and not first.
+                if (m_columnIndex > 0 && velocity > kFlingThreshold) {
+                    neEngine::playSystemSe(4);    // confirm SE on a real fling
+                    m_scrollState = kScrollFlingPrev;
+                } else {
+                    m_scrollVelocity = 0.0f;
+                    m_scrollState = kScrollSnapRight;
+                }
+            } else {
+                // Released with no net movement: snap straight back to the current column.
+                m_scrollOffset = 0;
+                m_scrollVelocity = 0.0f;
+                m_scrollState = kScrollIdle;
+            }
+        }
+        return;   // a live drag frame never runs the settle switch below
+    }
+
+    // ---- no drag and settled: look for a fresh finger-down to start a new drag ---------
+    if (m_scrollState == kScrollIdle) {
+        for (int i = 0, n = gfx.activeTouchCount(); i < n; i++) {   // NEGraphics_activeTouchCount
+            const neTouchPoint *t = gfx.touchAt(i);                 // NEGraphics_touchAt
+            if (t->valid) {                       // +0x2c began-this-frame marker
+                // Seed the sample ring with this touch and latch it as the active drag.
+                for (int k = 0; k < 10; k++) {
+                    m_dragSampleTime[k] = 0;
+                    m_dragSampleX[k]    = 0;
+                }
+                m_selectedCell = t->id;           // +0x928 drag touch id
+                m_dragSampleTime[0] = (int)getTimeMillis();
+                m_scrollVelocity = 0.0f;
+                m_dragSampleX[0] = t->x;
+                break;
+            }
+        }
+    }
+
+    // ---- settle integration: ease the offset toward the target column or back to 0 -----
+    // The column width the offset is measured against is m_screenWidth (@ +0xa64) — one
+    // column is one screen on phone.
+    const int columnWidth = m_screenWidth;
+    switch (m_scrollState) {
+    case kScrollFlingPrev: {
+        float vel = m_scrollVelocity;
+        if (m_scrollOffset < columnWidth / 2) {
+            // First half: accelerate up to the max speed.
+            vel = vel + kSpringAccel;                       // +0.2
+            if (vel > kMaxVelocity) vel = kMaxVelocity;     // min(vel, 8.0)
+        } else {
+            // Past halfway: ease off (friction) but keep the minimum completing speed.
+            vel = vel - kFrictionAccel;                     // -0.1
+            if (vel < kMinVelocity) vel = kMinVelocity;     // max(1.0, vel)
+        }
+        m_scrollVelocity = vel;
+        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        if (m_scrollOffset >= columnWidth) {
+            // Column change committed: reset physics and step to the previous column.
+            m_scrollOffset = 0;
+            m_scrollVelocity = 0.0f;
+            m_scrollState = kScrollIdle;
+            m_columnIndex = m_columnIndex - 1;
+            if (m_columnIndex < 0) m_columnIndex = 0;
+            // Rotate the three row latches toward "prev" and mark the newly-freed row idle.
+            m_nextColLatch = m_curColLatch;
+            m_curColLatch  = m_prevColLatch;
+            m_prevColLatch = 0xff;
+            const int row = findFreeColumnRow();
+            if (m_columnIndex > 0) {
+                loadColumnPrev(row);
+                return;
+            }
+        }
+        break;
+    }
+    case kScrollFlingNext: {
+        float vel = m_scrollVelocity;
+        if (m_scrollOffset > -(columnWidth / 2)) {
+            vel = vel - kSpringAccel;                        // -0.2
+            if (vel < -kMaxVelocity) vel = -kMaxVelocity;    // max(-8.0, vel)
+        } else {
+            vel = vel + kFrictionAccel;                      // +0.1
+            if (vel > -kMinVelocity) vel = -kMinVelocity;    // min(-1.0, vel)
+        }
+        m_scrollVelocity = vel;
+        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        if (m_scrollOffset <= -columnWidth) {
+            m_scrollOffset = 0;
+            m_scrollVelocity = 0.0f;
+            m_scrollState = kScrollIdle;
+            const int next = m_columnIndex + 1;
+            const int last = m_columnCount - 1;
+            m_columnIndex = (next < last) ? next : last;
+            // Rotate the three row latches toward "next".
+            m_prevColLatch = m_curColLatch;
+            m_curColLatch  = m_nextColLatch;
+            m_nextColLatch = 0xff;
+            const int row = findFreeColumnRow();
+            if (m_columnIndex < m_columnCount - 1) {
+                loadColumnNext(row);
+                return;
+            }
+        }
+        break;
+    }
+    case kScrollSnapRight: {
+        float vel = m_scrollVelocity - kFrictionAccel;       // -0.1
+        if (vel < -kMinVelocity) vel = -kMinVelocity;         // max(-1.0, vel)
+        m_scrollVelocity = vel;
+        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        if ((unsigned)m_scrollOffset < 0x80000000u) break;    // still >= 0: keep animating
+        m_scrollOffset = 0;                                   // crossed below 0: settled
+        m_scrollVelocity = 0.0f;
+        m_scrollState = kScrollIdle;
+        break;
+    }
+    case kScrollSnapLeft: {
+        float vel = m_scrollVelocity + kFrictionAccel;        // +0.1
+        if (vel > kMinVelocity) vel = kMinVelocity;           // min(1.0, vel)
+        m_scrollVelocity = vel;
+        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        if (m_scrollOffset < 0) break;                        // still negative: keep animating
+        m_scrollOffset = 0;                                   // reached 0: settled
+        m_scrollVelocity = 0.0f;
+        m_scrollState = kScrollIdle;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+// De-inlined from updateList (the identical block in both column-commit paths): scan the three
+// candidate jacket rows (0, m_columnStride, 2*m_columnStride) and return the first one not held
+// by a per-column row latch, so the committed column change streams into a free row. @ 0x34f4c
+int MainTask::findFreeColumnRow() const {
+    const int stride = m_columnStride;   // +0xa74
+    int row = 0;
+    if (stride >= 1) {
+        const uint8_t latch[3] = { m_prevColLatch, m_curColLatch, m_nextColLatch };
+        for (;;) {
+            int k = 0;
+            while (k < 3) {
+                if (row == latch[k]) break;   // this row is currently streaming -> in use
+                k++;
+            }
+            if (k == 3) break;                // no latch holds it: free row found
+            row += stride;
+            if (row >= stride * 3) break;     // all three rows busy
+        }
+    }
+    return row;
 }
 
 // Ghidra: musicSelCleanup (FUN_0003cfb0) — release the previous sorted list and clear all 27
