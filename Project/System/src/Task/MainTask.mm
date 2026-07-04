@@ -31,6 +31,8 @@
 #import "DownloadMain.h"
 #import "MainTask.h"
 #import "MusicManager.h"
+#import "MusicData.h"            // MusicID/lvNormal/lvHyper/lvEx/musicNameImage2xData (m_musicList entries)
+#import "MainViewController.h"   // the concrete root VC: Goto*/settingViewing/isGotoTitle
 #import "OverScoreData.h"
 #import "ScoreData.h"
 #import "ScoreData+Store.h"   // +getScoreData:inManagedObjectContext: (background cell loader)
@@ -41,9 +43,10 @@
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
 
-// The root nav host (MainViewController) the select screen drives.
-static UIViewController *RootVC() {
-    return neSceneManager::rootViewController();
+// The root nav host is a MainViewController — it declares the Goto*/settingViewing/isGotoTitle
+// selectors the select screen drives; type RootVC() as such so they resolve.
+static MainViewController *RootVC() {
+    return (MainViewController *)neSceneManager::rootViewController();
 }
 
 // findCharIndexForColumn (song-name truncation in rebuildList()) is declared in neGraphics.h
@@ -368,7 +371,7 @@ void MainTask::update(int /*deltaMs*/) {
     case 3: {   // a song was chosen: preview its BGM + load textures + ScoreData
         [audio pushBgm];
         m_chosenIndex = m_selectedCell;
-        id info = [m_musicList objectAtIndexedSubscript:m_selectedCell];
+        MusicData *info = [m_musicList objectAtIndexedSubscript:m_selectedCell];
         unsigned musicId = (unsigned)[info MusicID];
         m_sel.musicId = musicId;
 
@@ -1177,7 +1180,7 @@ void MainTask::rebuildList() {
     // music id). The exact global is a seam; model it via the reconstructed accessor.
     const int currentId = neAppEventCenter::shared().lastMusic();   // g_pNeAppEventCenter (seam)
     for (int i = 0; i < m_songCount; i++) {
-        id song = [m_musicList objectAtIndexedSubscript:i];
+        MusicData *song = [m_musicList objectAtIndexedSubscript:i];
         if ((int)[song MusicID] == currentId) {
             m_columnIndex = i / stride;
             break;
@@ -1193,7 +1196,7 @@ void MainTask::rebuildList() {
             if (songIdx >= m_songCount) {
                 break;
             }
-            id song = [m_musicList objectAtIndexedSubscript:songIdx];
+            MusicData *song = [m_musicList objectAtIndexedSubscript:songIdx];
             unsigned musicId = (unsigned)[song MusicID];
             NSData *artwork = [song artwork2xData];
             MusicSelCell &cell = m_cells[slot];
@@ -1287,7 +1290,7 @@ void MainTask::backgroundCellLoader() {
             cell.loadState = 2;                          // processing
             dispatch_semaphore_signal(m_cellSem);
 
-            id md = [m_musicList objectAtIndexedSubscript:songIndex];
+            MusicData *md = [m_musicList objectAtIndexedSubscript:songIndex];
             const int musicId = (int)[md MusicID];
             id artwork;
             @autoreleasepool {
@@ -1462,7 +1465,7 @@ void MainTask::stopAndSave() {
     // persisted (setLastMusic == g_pNeAppEventCenter result music id, setLastSheet == g_wResultSheet).
     if (!m_noSaveMode) {
         neAppEventCenter &ec = neAppEventCenter::shared();
-        id info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
+        MusicData *info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
         if (!ec.guestNoSaveMode()) {
             ec.setLastMusic((int)[info MusicID]);
             ec.setLastSheet((int)m_resultSheet);
