@@ -712,8 +712,8 @@ void AcViewerHudDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
         // MUSIC_NAME layer -> blit the cached song-title string (@ +0x1e4) at the HUD
         // baseline (Ghidra: aepManagerReset_a text blit with size @ +0x1e8, y bias @ +0x1c4).
         NSString *title = (__bridge NSString *)self->m_songTitle;
-        AepDrawText(&aep, title.UTF8String, self->m_titleXAdvance, x, y + self->m_titleBaselineY,
-                    1, 100, 0xffffff, 0xe);
+        drawAepManagerText(&aep, title.UTF8String, self->m_titleXAdvance, x, y + self->m_titleBaselineY,
+                           1, 100, 0xffffff, 0xe);
     } else if (self->m_usrNo[5] == child) {
         // COOL count layer -> 3 digits from the engine's COOL counter (DAT_0016ebe0).
         AcNoteMng::shared();
