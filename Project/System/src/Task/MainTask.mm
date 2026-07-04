@@ -20,6 +20,7 @@
 #import <UIKit/UIKit.h>
 
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 
 #import "AepLyrCtrl.h"
@@ -1349,18 +1350,67 @@ void MainTask::updateHighlight() {
         if (phase <= 0x31) return 100;
         return phase < 100 ? phase * -2 + 200 : phase * 2 + -200;
     };
+    // The Aep frame handles and the badge/frame screen positions the draw reads are ALREADY
+    // named members: the frames are slots of the setup()-filled getFrameNo table m_frmNo[24]
+    // (m_frmNo[6]=BT_SETTING, [8]=BT_SORT, [9]=BT_OSSUME/recommend, [10]=BT_EMULATE/over-score,
+    // [16]=BT_TUTORIAL), and the x/y positions are slots of the per-platform layout table
+    // m_layoutRects[55] (+0x988), which setup() populates via the kPhone/kPadLayoutRects memcpy
+    // plus the runtime score-baseline / counter-y patches. Named-index constants below give the
+    // draw roles instead of magic indices; the raw pixel constants are setup()'s layout seam.
+    // (The decompile's "difficulty frames" are really the four state-2 top-row buttons.)
+    enum {                                   // m_layoutRects slots this draw samples
+        kLR_SettingX = 6,  kLR_SettingY = 7,       // BT_SETTING frame       (+0x9a0/+0x9a4)
+        kLR_SortX    = 10, kLR_SortY    = 11,      // BT_SORT frame          (+0x9b0/+0x9b4)
+        kLR_OssumeX  = 14, kLR_OssumeY  = 15,      // BT_OSSUME (recommend)  (+0x9c0/+0x9c4)
+        kLR_EmulateX = 18, kLR_EmulateY = 19,      // BT_EMULATE (over-score)(+0x9d0/+0x9d4)
+        kLR_TutorialX = 26, kLR_TutorialY = 27,    // BT_TUTORIAL badge      (+0x9f0/+0x9f4)
+        kLR_CounterX = 30, kLR_CounterY = 31, kLR_CounterStyle = 32,  // counter (+0xa00/04/08)
+        kLR_ScreenW  = 52, kLR_ScreenH  = 53,      // badge blit screen bounds (+0xa58/+0xa5c)
+    };
+    // 0x42c80000 == 100.0f scale, 0xffffff == white, 0x20 == blend mode, 10 == OT priority.
+    const int kScale100 = 0x42c80000;
+
+    // Pulsing new-recommend badge (m_arrowTex[1]) over the recommend button.
     if (m_recommendBadge) {
-        (void)pulseAlpha(m_highlightAnim);   // draw m_arrowTex[1] at the recommend rect
+        const int a = pulseAlpha(m_highlightAnim);
+        neTextureForiOS_draw(m_aep, m_arrowTex[1], 0, 0,
+                             m_layoutRects[kLR_ScreenW], m_layoutRects[kLR_ScreenH],
+                             m_layoutRects[kLR_OssumeX] - 2, m_layoutRects[kLR_OssumeY] - 10,
+                             100, 100, 0, 0, 0, a, 100 - a, 0x20, 0xffffff, 0, 10, 1);
     }
+    // Pulsing over-score badge (m_arrowTex[1]) over the over-score-log button.
     if (m_overScoreBadge) {
-        (void)pulseAlpha(m_highlightAnim);   // draw m_arrowTex[1] at the over-score rect
+        const int a = pulseAlpha(m_highlightAnim);
+        neTextureForiOS_draw(m_aep, m_arrowTex[1], 0, 0,
+                             m_layoutRects[kLR_ScreenW], m_layoutRects[kLR_ScreenH],
+                             m_layoutRects[kLR_EmulateX] - 2, m_layoutRects[kLR_EmulateY] - 10,
+                             100, 100, 0, 0, 0, a, 100 - a, 0x20, 0xffffff, 0, 10, 1);
     }
-    // TODO(dep): the four drawAepFrameEx difficulty-frame draws + the tutorial-badge draw +
-    // the sprintf("%d/%d", m_columnIndex+1, m_columnCount) counter use the reserved Aep
-    // frame-handle table and the layout rects; kept as the documented draw seam. The gate
-    // flags (m_recommendBadge / m_overScoreBadge / m_tutorialBadge / m_columnCount) are exact.
-    (void)m_tutorialBadge;
-    (void)m_columnCount;
+
+    // The four state-2 top-row button frames (settings / sort / recommend / over-score-log).
+    drawAepFrameEx(m_aep, m_frmNo[6],  m_layoutRects[kLR_SettingX], m_layoutRects[kLR_SettingY],
+                   kScale100, kScale100, 0, 0, 0, 100, 0, 0x20, 0xffffff, 0, 10, 1);
+    drawAepFrameEx(m_aep, m_frmNo[8],  m_layoutRects[kLR_SortX],    m_layoutRects[kLR_SortY],
+                   kScale100, kScale100, 0, 0, 0, 100, 0, 0x20, 0xffffff, 0, 10, 1);
+    drawAepFrameEx(m_aep, m_frmNo[9],  m_layoutRects[kLR_OssumeX],  m_layoutRects[kLR_OssumeY],
+                   kScale100, kScale100, 0, 0, 0, 100, 0, 0x20, 0xffffff, 0, 10, 1);
+    drawAepFrameEx(m_aep, m_frmNo[10], m_layoutRects[kLR_EmulateX], m_layoutRects[kLR_EmulateY],
+                   kScale100, kScale100, 0, 0, 0, 100, 0, 0x20, 0xffffff, 0, 10, 1);
+
+    // First-play tutorial badge (BT_TUTORIAL).
+    if (m_tutorialBadge) {
+        drawAepFrameEx(m_aep, m_frmNo[16], m_layoutRects[kLR_TutorialX], m_layoutRects[kLR_TutorialY],
+                       kScale100, kScale100, 0, 0, 0, 100, 0, 0x20, 0xffffff, 0, 10, 1);
+    }
+
+    // Multi-column list -> the "current/total" column counter text.
+    if (m_columnCount > 1) {
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%d/%d", m_columnIndex + 1, m_columnCount);
+        drawAepManagerText(m_aep, buf, m_layoutRects[kLR_CounterStyle],
+                           m_layoutRects[kLR_CounterX], m_layoutRects[kLR_CounterY],
+                           2, 100, 0 /* &DAT_00181818 default text-style seam */, 0xc);
+    }
 }
 
 // Ghidra: musicSelStopAndSave (FUN_00038008) — state-0x10 teardown. Releases the SEs and
