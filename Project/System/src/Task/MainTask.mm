@@ -1650,6 +1650,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
                      int blend, int p13, int p14, void *context) {
     (void)frame; (void)p13;
     MainTask *self = static_cast<MainTask *>(context);
+    using MusicSelCell = MainTask::MusicSelCell;   // nested type, unqualified in this free function
 
     // Blit one 3-column jacket grid starting at widget row `rowBase`, offset by `colX`
     // screen columns. Each present cell draws its uploaded texture (or the placeholder
