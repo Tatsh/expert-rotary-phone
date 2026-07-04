@@ -123,8 +123,9 @@ static int scoreToRank(int score) {
 
 // @ 0xa9df0
 - (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId __attribute__((objc_method_family(none))) {
-    self = [super init];
-    if (self == nil) {
+    // family(none) factory: returns the nav, not self, so it cannot assign self; super init
+    // returns the receiver in place -> self stays valid (matches the binary's super-init check).
+    if (![super init]) {
         return nil;
     }
     _musicId = musicId;

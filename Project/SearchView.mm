@@ -101,7 +101,10 @@ static NSString *const kDataErrorMessage      = @"データの取得に失敗し
 
 // @ 0x85538 — wrap self in a styled UINavigationController and return it (see header).
 - (id)initAtNavigationController __attribute__((objc_method_family(none))) {
-    if (!(self = [super init])) {
+    // Binary @0x85538: IVar4 = [super init]; return nil on failure. This is a factory (returns a
+    // nav controller, not self), so it's family(none) and cannot assign self — but UIViewController
+    // init returns the same receiver in place, so self stays valid and matches the binary's IVar4.
+    if (![super init]) {
         return nil;
     }
 

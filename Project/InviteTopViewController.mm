@@ -31,8 +31,9 @@
 
 // @ 0xe6f88 — build the top view + wrap it in a navigation controller.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
-    self = [super init];
-    if (self == nil) {
+    // family(none) factory: returns the nav, not self, so it cannot assign self; super init
+    // returns the receiver in place -> self stays valid (matches the binary's super-init check).
+    if (![super init]) {
         return nil;
     }
 
