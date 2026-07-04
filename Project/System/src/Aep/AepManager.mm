@@ -176,6 +176,22 @@ int AepManager::getLyrNo(int group, const char *name) const {
     return (m_groupSlot[group] << 16) | m_layerNumbers[group][idx];
 }
 
+// Ghidra: getFrmNo FUN_0000f9cc — hash-resolve `name` in `group`'s frame-name table
+// (@ +0x640200), assert, and pack (group slot << 16) | the looked-up frame number.
+int AepManager::getFrameNo(int group, const char *name) const {
+    int idx = AepNameHashLookup(name, &m_frameNames[group]);
+    assert(idx >= 0);   // AepManager.mm:0x1bb "getFrmNo"
+    return idx | (m_groupSlot[group] << 16);
+}
+
+// Ghidra: getUsrNo FUN_0000fb40 — hash-resolve `name` in `group`'s user-name table
+// (@ +0x6d6138), assert, and return the looked-up user number (no slot packing).
+int AepManager::getUserNo(int group, const char *name) const {
+    int idx = AepNameHashLookup(name, &m_userNames[group]);
+    assert(idx >= 0);   // AepManager.mm:0x1e4 "getUsrNo"
+    return idx;
+}
+
 // Ghidra: FUN_0000fb8c — the layer's frame count (same walk as drawLayer).
 int AepManager::layerFrameCount(int lyr) const {
     return layerLength(groupEntries(lyr), lyr & 0xffff);
