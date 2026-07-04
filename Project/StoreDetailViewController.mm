@@ -30,7 +30,9 @@
 #import <StoreKit/StoreKit.h>   // SKProduct.price
 
 // Private methods reconstructed alongside the content-load flow.
-@interface StoreDetailViewController ()
+// Delegate for the pack-info/image downloaders and the common alert (callbacks implemented below).
+@interface StoreDetailViewController () <DownloaderDelegate, ImageDownloaderDelegate,
+                                         CommonAlertViewDelegate>
 - (void)selfCheckButtonText;
 - (void)storePackInfoDownloaderFinished:(id)downloader;
 - (void)storePackInfoDownloaderError:(id)downloader;
@@ -557,7 +559,7 @@
                                                    message:msg
                                                   delegate:nil
                                          cancelButtonTitle:nil
-                                         otherButtonTitles:@"OK", nil];
+                                         otherButtonTitles:@"OK"];
             int tp = [UserSettingData treasurePoint] + 300;
             if (tp > 9999) {
                 tp = 9999;

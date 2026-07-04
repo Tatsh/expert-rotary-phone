@@ -673,7 +673,7 @@ static const char *const kHardwareModels[40] = {
                                        message:@"購入処理が完了しました。"
                                       delegate:nil
                              cancelButtonTitle:nil
-                             otherButtonTitles:@"OK", nil];
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
@@ -684,7 +684,7 @@ static const char *const kHardwareModels[40] = {
                                        message:@"購入処理が失敗しました。"
                                       delegate:nil
                              cancelButtonTitle:nil
-                             otherButtonTitles:@"OK", nil];
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 

@@ -214,7 +214,7 @@
                                            message:@"アプリ内課金が制限されています"
                                           delegate:nil
                                  cancelButtonTitle:nil
-                                 otherButtonTitles:@"OK", nil];
+                                 otherButtonTitles:@"OK"];
         [alert show];
         return NO;
     }
