@@ -1,10 +1,10 @@
-Package: @APP_BUNDLE_ID@
-Name: @APP_DISPLAY_NAME@
-Version: @APP_VERSION@
+Package: jp.co.konami.popnrhythmin
+Name: pop'n rhythmin
+Version: 2.0.3
 Architecture: iphoneos-arm
 Description: Reconstructed pop'n rhythmin (PopnRhythmin) — a source-level rebuild of the
  32-bit-only game with modern 64-bit (arm64/arm64e) slices added so it can run on iOS 11+.
 Maintainer: PopnRhythmin reconstruction
 Author: Konami (original) / reverse-engineering reconstruction
 Section: Games
-Depends: firmware (>= @IOS_DEPLOYMENT_TARGET@)
+Depends: firmware (>= 5.1.1)

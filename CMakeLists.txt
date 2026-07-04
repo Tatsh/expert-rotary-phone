@@ -12,12 +12,13 @@
 #                     iOS >= 12.1; drop it if your SDK rejects it.
 # Override with -DIOS_ARCHS="arm64" (etc.) to match what you have.
 #
-# This file ADAPTS to your build environment:
-#   * THEOS — if a Theos install is found (env $THEOS / -DTHEOS=.. / usual locations),
-#             generates a ready-to-run Theos `Makefile` + `control`; build:  make
-#   * XCODE — configure with `-G Xcode` + the leetal/ios-cmake toolchain to build a
-#             native .app target from the per-directory source tree.
-# Choose with -DBUILD_BACKEND=THEOS|XCODE|AUTO (default AUTO: Theos if present).
+# This file builds a NATIVE iOS .app. Configure with `-G Xcode` plus the leetal/ios-cmake
+# toolchain to build the .app target from the per-directory source tree.
+#
+#   cmake -G Xcode -DCMAKE_TOOLCHAIN_FILE=/path/to/ios.toolchain.cmake -DPLATFORM=OS64 ..
+#
+# Theos is supported too, but NOT through CMake: it has its own hand-maintained, fixed
+# Theos application Makefile under ./theos/ (build with `make -C theos`). See theos/Makefile.
 #
 # Deployment floor: a fat armv7+arm64 binary can carry a low MinimumOSVersion (the
 # arm64 slice simply won't load on the <iOS7 devices that only exist in 32-bit). We
@@ -35,17 +36,12 @@ project(PopnRhythmin
 # ---------------------------------------------------------------------------
 # User-facing options (all overridable via -D...)
 # ---------------------------------------------------------------------------
-set(BUILD_BACKEND "AUTO" CACHE STRING "Build backend: AUTO | THEOS | XCODE")
-set_property(CACHE BUILD_BACKEND PROPERTY STRINGS AUTO THEOS XCODE)
-
 set(IOS_ARCHS "armv7 armv7s arm64 arm64e" CACHE STRING "Space-separated architecture slices")
 set(IOS_DEPLOYMENT_TARGET "5.1.1" CACHE STRING "Minimum iOS version (fat-binary floor)")
 if(DEFINED DEPLOYMENT_TARGET)                 # leetal/ios-cmake spelling
     set(IOS_DEPLOYMENT_TARGET "${DEPLOYMENT_TARGET}")
 endif()
-set(IOS_SDK_VERSION "latest" CACHE STRING "SDK version for the Theos TARGET (e.g. 12.2 or 'latest')")
 
-set(THEOS      "$ENV{THEOS}" CACHE PATH "Path to a Theos install (blank = autodetect)")
 set(XCODE_PATH ""            CACHE PATH "Path to Xcode developer dir (blank = xcode-select)")
 
 set(APP_BUNDLE_ID    "jp.co.konami.popnrhythmin" CACHE STRING "CFBundleIdentifier")
@@ -57,23 +53,8 @@ set(RESOURCES_DIR    "" CACHE PATH "Directory of the ORIGINAL extracted .app who
                                    "verbatim into the built bundle. Leave empty to build code only.")
 
 # ---------------------------------------------------------------------------
-# Toolchain discovery
+# Toolchain discovery (informational)
 # ---------------------------------------------------------------------------
-if(NOT THEOS)
-    foreach(_cand "$ENV{HOME}/theos" "/opt/theos" "/var/theos" "/usr/local/theos")
-        if(EXISTS "${_cand}/makefiles/common.mk")
-            set(THEOS "${_cand}")
-            break()
-        endif()
-    endforeach()
-endif()
-if(THEOS AND EXISTS "${THEOS}/makefiles/common.mk")
-    set(THEOS_FOUND TRUE)
-    message(STATUS "PopnRhythmin: found Theos at ${THEOS}")
-else()
-    set(THEOS_FOUND FALSE)
-endif()
-
 if(NOT XCODE_PATH)
     find_program(XCODE_SELECT xcode-select)
     if(XCODE_SELECT)
@@ -86,22 +67,11 @@ if(NOT XCODE_PATH)
     endif()
 endif()
 if(XCODE_PATH AND EXISTS "${XCODE_PATH}")
-    set(XCODE_FOUND TRUE)
     message(STATUS "PopnRhythmin: found Xcode/developer dir at ${XCODE_PATH}")
-else()
-    set(XCODE_FOUND FALSE)
 endif()
+message(STATUS "PopnRhythmin: archs='${IOS_ARCHS}' iOS>=${IOS_DEPLOYMENT_TARGET}")
 
-if(BUILD_BACKEND STREQUAL "AUTO")
-    if(THEOS_FOUND)
-        set(BUILD_BACKEND "THEOS")
-    else()
-        set(BUILD_BACKEND "XCODE")
-    endif()
-endif()
-message(STATUS "PopnRhythmin: backend=${BUILD_BACKEND} archs='${IOS_ARCHS}' iOS>=${IOS_DEPLOYMENT_TARGET}")
-
-# Frameworks actually #import-ed across the sources (shared by both backends).
+# Frameworks actually #import-ed across the sources.
 set(SYS_FRAMEWORKS
     UIKit Foundation CoreGraphics QuartzCore CoreText
     OpenGLES AudioToolbox AVFoundation
@@ -109,36 +79,7 @@ set(SYS_FRAMEWORKS
     Security SystemConfiguration CFNetwork)
 
 # =========================================================================
-# BACKEND: THEOS — generate a Theos Makefile + control from templates, then stop.
-# Theos globs its own sources, so the per-directory CMakeLists are not needed here.
-# =========================================================================
-if(BUILD_BACKEND STREQUAL "THEOS")
-    if(NOT THEOS_FOUND)
-        message(FATAL_ERROR "BUILD_BACKEND=THEOS but no Theos found. Set -DTHEOS=/path/to/theos.")
-    endif()
-    set(THEOS_TARGET "iphone:clang:${IOS_SDK_VERSION}:${IOS_DEPLOYMENT_TARGET}")
-    set(THEOS_ARCHS  "${IOS_ARCHS}")
-    set(THEOS_FRAMEWORKS "UIKit Foundation CoreGraphics QuartzCore CoreText OpenGLES AudioToolbox AVFoundation CoreData StoreKit Social")
-    set(THEOS_LDFLAGS    "-framework Security -framework SystemConfiguration -framework CFNetwork -lz")
-
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/theos/Makefile.in"
-                   "${CMAKE_CURRENT_SOURCE_DIR}/Makefile" @ONLY)
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/theos/control.in"
-                   "${CMAKE_CURRENT_SOURCE_DIR}/control" @ONLY)
-    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
-                   "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Info.plist" @ONLY)
-    message(STATUS "PopnRhythmin: wrote Theos Makefile + control + Resources/Info.plist.")
-    message(STATUS "  Build:   THEOS=${THEOS} make        Package: THEOS=${THEOS} make package")
-    if(NOT (RESOURCES_DIR AND EXISTS "${RESOURCES_DIR}"))
-        message(WARNING "  RESOURCES_DIR not set: populate ./Resources/ from the original .app first.")
-    else()
-        message(STATUS "  Copy assets: rsync -a --exclude PopnRhythmin --exclude _CodeSignature --exclude Info.plist \"${RESOURCES_DIR}/\" Resources/")
-    endif()
-    return()
-endif()
-
-# =========================================================================
-# BACKEND: XCODE / native — real .app target, fed by per-directory CMakeLists.
+# NATIVE / Xcode — real .app target, fed by per-directory CMakeLists.
 # =========================================================================
 set(INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in" "${INFO_PLIST}" @ONLY)

@@ -15,11 +15,16 @@ Your installed toolchain decides which slices you can actually produce:
 
 On a 2017 MacBook Pro the two practical routes are **Theos** (easiest for legacy targets)
 and **Xcode 10.1–11** (last versions that still emit armv7). Override the slice set with
-`-DIOS_ARCHS="arm64"` (etc.) to match what you have.
+`-DIOS_ARCHS="arm64"` (CMake) or `ARCHS="arm64"` (Theos) to match what you have.
 
-Everything is configurable on the CMake command line (all options are cache entries):
-`APP_BUNDLE_ID`, `APP_DISPLAY_NAME`, `APP_VERSION`, `APP_BUILD`, `IOS_ARCHS`,
-`IOS_DEPLOYMENT_TARGET`, `IOS_SDK_VERSION`, `THEOS`, `XCODE_PATH`, `RESOURCES_DIR`.
+There are two independent build systems:
+
+* **Theos** — a fixed, hand-maintained Theos application project at [`theos/Makefile`](theos/Makefile).
+  It does **not** go through CMake; edit its values in place. Build with `make -C theos`.
+* **CMake/Xcode** — a native `.app` target. Everything is configurable on the CMake command
+  line (all options are cache entries): `APP_BUNDLE_ID`, `APP_DISPLAY_NAME`, `APP_VERSION`,
+  `APP_BUILD`, `IOS_ARCHS`, `IOS_DEPLOYMENT_TARGET`, `XCODE_PATH`, `RESOURCES_DIR`,
+  `POPNRHYTHMIN_BINARY`.
 
 ## Assets
 
@@ -31,18 +36,24 @@ so each `imageNamed:` / `NSBundle` lookup resolves.
 
 ## Theos (recommended for legacy targets)
 
+A fixed Theos project lives in [`theos/`](theos/) — `Makefile`, `control` and
+`Resources/Info.plist`, all hand-maintained (no CMake, no configure step). The Makefile
+anchors its paths to the repo root via its own location, so it builds from the subdirectory:
+
 ```sh
 export THEOS=~/theos
-cmake -B build -DBUILD_BACKEND=THEOS \
-      -DIOS_ARCHS="armv7 arm64" \
-      -DIOS_DEPLOYMENT_TARGET=5.1.1 \
-      -DRESOURCES_DIR=/path/to/PopnRhythmin.app
-# CMake writes ./Makefile, ./control and ./Resources/Info.plist:
-rsync -a --exclude PopnRhythmin --exclude _CodeSignature --exclude Info.plist \
-      /path/to/PopnRhythmin.app/ Resources/
-make            # -> PopnRhythmin.app
-make package    # -> a .deb
+# Optional: embed the copyrighted board dialogue from an owned binary (else blank).
+cp -r /path/to/PopnRhythmin.app/. theos/Resources/    # game assets -> the bundle
+make -C theos \
+     ARCHS="armv7 arm64" \
+     POPNRHYTHMIN_BINARY=/path/to/PopnRhythmin.app/PopnRhythmin   # -> PopnRhythmin.app
+make -C theos package                                             # -> a .deb
 ```
+
+Edit `theos/Makefile` directly to change the arch set, frameworks or flags; edit
+`theos/control` / `theos/Resources/Info.plist` for packaging and bundle metadata.
+Drop the extracted game assets into `theos/Resources/` (alongside `Info.plist`) so
+`application.mk` copies them into the bundle.
 
 ## Xcode (native CMake target)
 
@@ -51,7 +62,6 @@ Uses the [leetal/ios-cmake](https://github.com/leetal/ios-cmake) toolchain (not 
 ```sh
 cmake -B build -G Xcode \
       -DCMAKE_TOOLCHAIN_FILE=/path/to/ios.toolchain.cmake -DPLATFORM=OS \
-      -DBUILD_BACKEND=XCODE \
       -DIOS_ARCHS="armv7 armv7s arm64" -DDEPLOYMENT_TARGET=5.1.1 \
       -DRESOURCES_DIR=/path/to/PopnRhythmin.app
 cmake --build build --config Release
@@ -64,10 +74,11 @@ links the frameworks and copies resources.
 
 ## Notes / caveats
 
-* The whole codebase is **Manual Reference Counting** (explicit `-retain`/`-release`/
-  `-dealloc`, matching the original), so ARC is force-disabled (`-fno-objc-arc`).
-* A few files interoperate with C++ via `__bridge_*` casts (ARC spelling); under strict
-  MRC those become plain casts. Fix per compiler diagnostics if your clang rejects them.
+* The whole codebase is **ARC** (targeting iOS 5+; the original's manual retain/release
+  teardown is captured in `// @ 0xADDR` comments but synthesized by ARC), so both builds
+  compile with `-fobjc-arc`.
+* A few files interoperate with C++ via `__bridge_*` casts (ARC spelling) — 15 translation
+  units; these require ARC and are why `-fno-objc-arc` would break the build.
 * No Objective-C toolchain is available in the reconstruction container, so none of this
   has been compile-verified here — the build files are written to be correct by
   construction and by inspection against the sources.
