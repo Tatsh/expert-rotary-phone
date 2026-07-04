@@ -151,11 +151,12 @@ bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const
     (void)cellIndex; (void)m_layoutRects;
 
     // Scale the rect about the origin (the FixedToFP -> FloatVectorMult(scale) -> FPToFixed
-    // round block, ~13x-inlined in FUN_00035914; modelled here as float multiply + round).
-    const int rx = (int)lroundf((float)r.x * scale);
-    const int ry = (int)lroundf((float)r.y * scale);
-    const int rw = (int)lroundf((float)r.w * scale);
-    const int rh = (int)lroundf((float)r.h * scale);
+    // block, ~13x-inlined in FUN_00035914). Disasm: the FPToFixed vcvt.s32.f32 has no #fbits
+    // and rounds toward zero, i.e. a plain (int) truncation -- NOT round-to-nearest.
+    const int rx = (int)((float)r.x * scale);
+    const int ry = (int)((float)r.y * scale);
+    const int rw = (int)((float)r.w * scale);
+    const int rh = (int)((float)r.h * scale);
     return neGraphics::pointInRect(tapX, tapY, rx, ry, rw, rh);
 }
 
@@ -881,11 +882,11 @@ void MainTask::updateList() {
         const bool atLeftEnd  = (delta < 0 && m_columnIndex >= m_columnCount - 1);   // last column
         if (atRightEnd || atLeftEnd) {
             const int a = (delta < 0) ? -delta : delta;   // |delta|
-            // Rubber-band resistance at the ends: FixedToFP(|delta|) -> -SQRT -> +0.5 -> FPToFixed.
-            // The sqrt-damped SHAPE is exact; the 16.16 Q-format scaling around the sqrt (the
-            // VCVT #fbits pixel conversions) is the documented pixel-math seam that sets the true
-            // sign/magnitude — modelled here as identity.
-            const float damped = 0.5f - std::sqrt((float)a);
+            // Rubber-band resistance at the ends (disasm 0x34fe6..0x35018): the sqrt carries the
+            // SIGN of delta and 0.5 is ADDED, not subtracted -- damped = copysign(sqrt|delta|,
+            // delta) + 0.5. Both vcvt lack #fbits (plain int<->float, no 16.16), and the final
+            // vcvt.s32.f32 truncates. The old `0.5 - sqrt` matched only the delta<0 end.
+            const float damped = std::copysign(std::sqrt((float)a), (float)delta) + 0.5f;
             m_scrollOffset = (int)damped;
         } else {
             m_scrollOffset = delta;

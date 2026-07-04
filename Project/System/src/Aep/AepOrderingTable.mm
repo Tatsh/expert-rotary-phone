@@ -310,10 +310,14 @@ void drawAepOtSprite(AepOrderingTable *ot, const int16_t *spriteRec, int x, int 
 
     void *tex = ot->textureTable() ? ot->textureTable()[slot] : nullptr;
     // spriteRec: +0 u, +2 v, +4 width, +6 height.
+    // Disasm (drawAepOtSprite tail, four vdiv by DAT_00010e14=100.0): the forwarded quad
+    // width/height are the TRIPLE product base * renderScale * (sx|sy)/100 -- the /100 turns
+    // the sx/sy PERCENTAGE (100 = natural) into a fraction. The reconstruction dropped the
+    // *sx/100 and *sy/100 factors, so every non-100% sprite rendered at a fixed 100% size.
     drawAepSpriteClipped(s, tex, spriteRec[0], spriteRec[1], dstX, dstY, spriteRec[2],
                          spriteRec[3], (float)aepScale(sx, s), (float)aepScale(sy, s), blend,
-                         (float)aepScale(p7, s), (float)aepScale(p8, s), p9, maskedAlpha, p12, clip,
-                         visible ? 1 : 0, p15);
+                         (float)p7 * s * (float)sx / 100.0f, (float)p8 * s * (float)sy / 100.0f,
+                         p9, maskedAlpha, p12, clip, visible ? 1 : 0, p15);
 }
 
 // Ghidra: drawAepOtSpriteStretch (FUN_00010e18) — the stretched-sprite variant. Same gate
@@ -336,8 +340,11 @@ void drawAepOtSpriteStretch(AepOrderingTable *ot, void *frameObj, int frameCol, 
         return;
     }
 
+    // Disasm (drawAepOtSpriteStretch tail, vdiv by DAT_00010f94=100.0): quad width/height are
+    // base * renderScale * (ex|ey)/100 -- the stretch variant folds the END position ex/ey (not
+    // sx/sy) into the size. Same dropped */100 percentage factor as drawAepOtSprite.
     drawAepSpriteClipped(s, frameObj, frameCol, frameTime, aepScale(x, s), aepScale(y, s), ex, ey,
                          (float)aepScale(sx, s), (float)aepScale(sy, s), blend,
-                         (float)aepScale(p11, s), (float)aepScale(p12, s), p13, maskedAlpha, p16,
-                         clip, visible ? 1 : 0, p19);
+                         (float)p11 * s * (float)ex / 100.0f, (float)p12 * s * (float)ey / 100.0f,
+                         p13, maskedAlpha, p16, clip, visible ? 1 : 0, p19);
 }

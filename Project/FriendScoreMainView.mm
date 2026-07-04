@@ -192,7 +192,9 @@ static int scoreToRank(int score) {
         _selectedView = _tblViewCtrlN;
 
         CGRect tblFrame = _tblViewCtrlN.view ? _tblViewCtrlN.view.frame : CGRectZero;
-        CGFloat third = (CGFloat)(int)(tblFrame.size.width / 3.0f);
+        // Disasm 0xaaa1c: the /3.0 numerator is self.view.frame width (viewFrame @ sp+0x270),
+        // NOT the table VC's frame (which the binary never reads here). Divisor 3.0f, truncated.
+        CGFloat third = (CGFloat)(int)(viewFrame.size.width / 3.0f);
         NSString *const banner[3] = { @"frisco_table_no", @"frisco_table_hy", @"frisco_table_ex" };
         for (int i = 0; i < 3; i++) {
             UIImageView *hdr = [[UIImageView alloc] initWithImage:[UIImage imageNamed:banner[i]]];
@@ -268,7 +270,10 @@ static int scoreToRank(int score) {
             UIImage *warnImg = [UIImage imageNamed:@"vie_cmn_warning"];
             UIImageView *warnView = [[UIImageView alloc] initWithImage:warnImg];
             warnView.frame = CGRectMake(warnX[i], warnY, warnImg.size.width, warnImg.size.height);
-            [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionRepeat
+            // Disasm 0xab554/0xab698/0xab7ea: options = #0x18 = Repeat | Autoreverse (the
+            // reconstruction dropped the Autoreverse bit, leaving a hard alpha snap-back).
+            [UIView animateWithDuration:0.5 delay:0
+                                options:UIViewAnimationOptionRepeat | UIViewAnimationOptionAutoreverse
                              animations:^{ warnView.alpha = 0; }
                              completion:nil];
             [self.view addSubview:warnView];
