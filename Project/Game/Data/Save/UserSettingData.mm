@@ -461,7 +461,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
                 [self saveGotCharaArray:(short)i];
             }
         }
-        [[AppDelegate appDelegate] setUsersettingVer:109];
+        [[AppDelegate appDelegate] setUsersettingVer:@"109"];   // @0x137548 CFString "109"
     }
 
     // Merge any legacy touch-sound bits that the current record is missing.
