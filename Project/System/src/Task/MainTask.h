@@ -136,6 +136,7 @@ private:
 
     // De-inlined from rebuildList: fetch this song's three difficulty score rows into the
     // jacket cell's detail block (the inner fetchScoreDataForMusic loop @ 0x3835c).
+    struct MusicSelCell;   // defined below; forward-declared for the reference param here
     void loadCellScoreRows(MusicSelCell &cell, unsigned musicId);
 
     // Background jacket loader — the dispatch_async body rebuildList kicks off once. Round-robins
