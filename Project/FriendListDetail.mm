@@ -291,7 +291,10 @@ static const int kColX[3] = { 139, 190, 242 };
         return;
     }
     UIView *card = [[self viewWithTag:100] viewWithTag:0x66];
-    [(card ?: self) startCloseAnimation];
+    // card is a FriendListDetailChara, self a FriendListDetail — both implement
+    // startCloseAnimation, but the ternary's common type is UIView*, so dispatch
+    // dynamically (matches the binary's objc_msgSend on the selected receiver).
+    [(id)(card ?: self) startCloseAnimation];
 }
 
 // @ 0xb5be8 — confirm before unfriending (needs a friendData and no request already running).
