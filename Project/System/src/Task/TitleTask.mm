@@ -11,9 +11,10 @@
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
-#import "AepManager.h"
+#import "AudioManager.h"
 #import "CharaManager.h"
 #import "CommonAlertView.h"
+#import "MainViewController.h"   // the concrete root VC the title flow drives (Goto*/Communicating)
 #import "CustomButton.h"
 #import "DownloadMain.h"
 #import "TaskFactory.h"
@@ -39,9 +40,11 @@ TitleTask::~TitleTask() {
     }
 }
 
-// The root navigation view controller the flow drives (bridged from the engine).
-static UIViewController *RootVC() {
-    return neSceneManager::rootViewController();
+// The root navigation view controller the flow drives (bridged from the engine). During the
+// title flow the engine's root is the MainViewController (the binary dispatches Goto*/
+// InsertCommunicating/etc. to it dynamically); type it as such so those calls resolve.
+static MainViewController *RootVC() {
+    return (MainViewController *)neSceneManager::rootViewController();
 }
 
 // A touch released this frame that barely moved (< 11 px in x and y) counts as a
@@ -117,7 +120,7 @@ void TitleTask::finish() {
 // State-3 UI: a "conversion" button faded in over the title, plus (if a convert
 // code is stored) an alert showing the player id + code.
 void TitleTask::buildConversionButton() {
-    UIViewController *root = RootVC();
+    MainViewController *root = RootVC();
     UIImage *img = [UIImage imageNamed:@"bt_conversion"];
     CGRect vf = root.view.frame;
     CGSize sz = img.size;
@@ -131,7 +134,7 @@ void TitleTask::buildConversionButton() {
     [root.view addSubview:m_conversionButton];
     m_conversionButton.alpha = 0;
     [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionAllowUserInteraction
-                     animations:^{ self->m_conversionButton.alpha = 1; }
+                     animations:^{ this->m_conversionButton.alpha = 1; }
                      completion:nil];
 
     NSString *code = [UserSettingData convertCode];
@@ -140,7 +143,8 @@ void TitleTask::buildConversionButton() {
         // Localized title + dismiss-button strings kept external (@"" placeholders);
         // the alert reports back to the root VC (delegate).
         CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:@"" message:msg delegate:root cancelButtonTitle:nil otherButtonTitles:@""];
+            initWithTitle:@"" message:msg delegate:(id<CommonAlertViewDelegate>)root
+            cancelButtonTitle:nil otherButtonTitles:@""];   // root (MainViewController) conforms privately (its .mm extension)
         alert.tag = 0;
         [alert show];
     }
@@ -150,7 +154,7 @@ void TitleTask::buildConversionButton() {
 // Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run machine.
 void TitleTask::update(int /*deltaMs*/) {
     const bool tap = tapReleased();
-    UIViewController *root = RootVC();
+    MainViewController *root = RootVC();
     DownloadMain *dl = [DownloadMain getInstance];
 
     switch (m_state) {
@@ -196,7 +200,7 @@ void TitleTask::update(int /*deltaMs*/) {
         if (m_conversionButton != nil) {
             [UIView animateWithDuration:0.25 delay:0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{ self->m_conversionButton.alpha = 0; }
+                             animations:^{ this->m_conversionButton.alpha = 0; }
                              completion:nil];
         }
         m_state = 4;

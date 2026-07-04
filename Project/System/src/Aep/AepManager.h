@@ -19,6 +19,8 @@
 #include "AepFrameDraw.h"
 #include "AepOrderingTable.h"
 
+class neTextureForiOS;   // Render/neTextureForiOS.h; only pointers held here (see m_groupTexture)
+
 class AepManager {
 public:
     // The engine keeps one global scene manager (Ghidra: DAT @ PTR_DAT_00130484,
