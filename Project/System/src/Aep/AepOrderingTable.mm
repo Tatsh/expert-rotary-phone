@@ -28,11 +28,10 @@
 // recovered from FUN_00010f98 / _11054 / _1113c / _111f8 / _11310 / _12020.
 extern "C" {
 void neDrawLine(int x0, int y0, int x1, int y1, int alpha, int r, int g, int b);
-void neDrawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int alpha, int r,
-                    int g, int b);
+void neDrawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, int alpha, int r, int g, int b);
 void neDrawRect(int x0, int y0, int x1, int y1, int alpha, int r, int g, int b);
-void neDrawQuad(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int alpha,
-                int r, int g, int b);
+void neDrawQuad(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int alpha, int r,
+                int g, int b);
 void neDrawText(int size, const char *text, int p3, int x, int y, int size2, int p7, int alpha,
                 int r, int g, int b, const void *colorVec);
 void neDrawTexturedQuad(int stateSlot, int p2, int p3, int p4, int p5, float u0, float v0, float u1,
@@ -184,23 +183,26 @@ void drawAepOtRect(AepOrderingTable *ot, int x0, int y0, int x1, int y1, int alp
 }
 
 // Ghidra: drawAepOtTriangle (FUN_00011054). Every coordinate is scaled by the render
-// scale; the closing (7th) argument repeats the first vertex's x, as the binary emits.
-// (The exact VFP vertex permutation is register-allocator obscured; the three input
-// vertices are threaded in order.)
+// scale and the three input vertices are threaded in order. neDrawTriangle (FUN_00015188)
+// takes exactly the three vertices — the earlier reconstruction appended a fabricated
+// fourth x that the real, extern-"C" primitive silently discarded; removed for 1:1.
+// (The exact VFP vertex permutation is register-allocator obscured.)
 void drawAepOtTriangle(AepOrderingTable *ot, int x0, int y0, int x1, int y1, int x2, int y2,
                        int alpha, uint32_t color) {
     const float s = ot->renderScale();
     neDrawTriangle(aepScale(x0, s), aepScale(y0, s), aepScale(x1, s), aepScale(y1, s),
-                   aepScale(x2, s), aepScale(y2, s), aepScale(x0, s),
+                   aepScale(x2, s), aepScale(y2, s),
                    aepAlpha(alpha), aepColR(color), aepColG(color), aepColB(color));
 }
 
-// Ghidra: drawAepOtQuad (FUN_000111f8). Four scaled vertices plus the closing vertex.
+// Ghidra: drawAepOtQuad (FUN_000111f8). Four scaled corner vertices. neDrawQuad
+// (FUN_000153e8) consumes exactly those four; the earlier reconstruction appended a
+// fabricated fifth x (a discarded extern-"C" arg) — removed for 1:1.
 void drawAepOtQuad(AepOrderingTable *ot, int x0, int y0, int x1, int y1, int x2, int y2,
                    int x3, int y3, int alpha, uint32_t color) {
     const float s = ot->renderScale();
     neDrawQuad(aepScale(x0, s), aepScale(y0, s), aepScale(x1, s), aepScale(y1, s),
-               aepScale(x2, s), aepScale(y2, s), aepScale(x3, s), aepScale(y3, s), aepScale(x0, s),
+               aepScale(x2, s), aepScale(y2, s), aepScale(x3, s), aepScale(y3, s),
                aepAlpha(alpha), aepColR(color), aepColG(color), aepColB(color));
 }
 
