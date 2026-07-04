@@ -466,25 +466,36 @@ void AcViewerTask::update(int /*deltaMs*/) {
 
     m_moved = 0;   // per-frame "moved" flag (field17_0xd0; recomputed)
 
-    // --- Touch preamble (Ghidra: the drag/flick classifier at 0x216f6..0x21880). While
-    // the HUD is up (ready byte @ +0x1d4) it latches a drag anchor on a held touch, or
-    // resolves a flick on a released touch. The scaled-coordinate NEON math (FixedToFP /
-    // screen-scale divide @ +0x10c / FloatVectorSub) is decompiler-obscured; reconstructed
-    // best-effort as a boolean "flick this frame".
+    // --- Touch preamble (Ghidra: the drag/tap classifier at 0x21704..0x21880, recovered
+    // from the disassembly of acMainTaskUpdate FUN_00021678). While the HUD is up (ready
+    // byte @ +0x1d4) a released touch counts as a TAP only if it barely moved between press
+    // and release: |scaled(startX) - scaled(upX)| <= 10 and |scaled(startY) - scaled(upY)|
+    // < 11, where scaled(v) = (int)((float)v / m_uiScale). m_uiScale @ +0x10c is read as a
+    // float divisor (the g_dwUiScale bytes setup() stored). The tap's scaled up-position is
+    // the hit-test point used by the case 6 / 0xd rect tests below.
+    //   (The per-frame drag ANCHOR + accumulator @ +0xdc/+0xe0/+0xe8/+0xf0 and the m_moved
+    //    flag @ +0xf8 that feed the case 0xb seek-scrub are the follow-up recovery pass; the
+    //    tap classifier is all case 6 needs.)
     bool flick = false;
     int flickX = 0, flickY = 0;
     if (m_hudReady != 0) {
+        const float scale = reinterpret_cast<float &>(m_uiScale);
         const int n = gfx.activeTouchCount();
         for (int i = 0; i < n; i++) {
             const neTouchPoint *t = gfx.touchAt(i);
             if (t == nullptr) { continue; }
             if (t->released != 0) {
-                flick = true;
-                // +0x10c holds the UI-scale word; the touch classifier reads it as a float
-                // divisor (same bytes setup() wrote as g_dwUiScale).
-                const float scale = reinterpret_cast<float &>(m_uiScale);
-                flickX = (int)((float)t->x / scale);
-                flickY = (int)((float)t->y / scale);
+                const int upX = (int)((float)t->x / scale);
+                const int upY = (int)((float)t->y / scale);
+                const int dnX = (int)((float)t->startX / scale);
+                const int dnY = (int)((float)t->startY / scale);
+                const int adx = (dnX - upX) < 0 ? (upX - dnX) : (dnX - upX);
+                const int ady = (dnY - upY) < 0 ? (upY - dnY) : (dnY - upY);
+                if (adx <= 10 && ady < 11) {
+                    flick = true;
+                    flickX = upX;
+                    flickY = upY;
+                }
                 break;
             }
         }
@@ -544,12 +555,20 @@ void AcViewerTask::update(int /*deltaMs*/) {
         note.update();
         // DAT_00173e70 is the engine's global "chart finished" flag (raised when the type-6
         // end marker is reached). On finish, reset the end-hold counter (@ +0x204) and go to
-        // the end-hold state; otherwise a flick over the note field opens the song-select.
+        // the end-hold state. Otherwise a TAP is hit-tested by position (Ghidra: two
+        // pointInRect calls, FUN_0002d974): a tap inside the play/song-select rect opens the
+        // song-select (state 10); a tap on the exit/pause button opens the pause menu (0xc).
         if (g_bAcNoteFinished) {
             m_endHoldCounter = 0;
             next = 7;
-        } else if (flick && [AcvRootVC() acMusicSelViewing]) {
+        } else if (flick &&
+                   neGraphics::pointInRect(flickX, flickY, m_comboDigitX, m_comboDigitY,
+                                           m_playTouchW, m_playTouchH)) {
             next = 10;
+        } else if (flick &&
+                   neGraphics::pointInRect(flickX, flickY, m_exitTouchX, m_exitTouchY,
+                                           m_exitTouchW, m_exitTouchH)) {
+            next = 0xc;
         } else {
             break;
         }
@@ -666,7 +685,6 @@ void AcViewerTask::update(int /*deltaMs*/) {
         drawActiveNotes();
         drawLifeGauge();
     }
-    (void)flickX; (void)flickY;
 }
 
 // ===========================================================================

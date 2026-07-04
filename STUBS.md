@@ -44,12 +44,25 @@
   call + field offset checks out (difficulty @0x1dc read in loadChartData FUN_0002316c;
   end-hold counter @0x204 = the decompiler's field10_0x28.field77_0x1dc, i.e. 0x28+0x1dc,
   NOT a collision with difficulty; pauseTime @0xfc; state @0x20c). NO behavioural bug found.
-  KNOWN best-effort (disclosed in-file, unchanged): the flick/touch POSITION dispatch in
-  states 6 / 0xb / 0xd. The binary routes a flick by hit-testing two rects (abs @0x1b4 ->
-  pause menu state 0xc; abs @0x1ec -> song-select state 10) built from NEON-spilled scaled
-  coordinates; the reconstruction approximates this with an acMusicSelViewing gate and a
-  single flick bool, so the on-phone pause-menu-via-timeline-tap path is not position-exact.
-  Left approximated rather than invented (the rect geometry is not cleanly recoverable).
+  NEON touch recovery (2026-07-04, from the disassembly of FUN_00021678):
+    * DONE: the tap classifier + case 6 hit-tests. A released touch is a TAP iff it barely
+      moved (|scaled(startX)-scaled(upX)| <= 10 and |scaled(startY)-scaled(upY)| < 11;
+      scaled = (int)((float)v / m_uiScale@0x10c)); the scaled up-position is the hit point.
+      Case 6 now routes it by position via neGraphics::pointInRect (FUN_0002d974(px,py,
+      rx,ry,rw,rh)): tap in the play/song-select rect {x@0x1ec,y@0x1f0,w@0x150,h@0x154} ->
+      state 10; tap in the exit/pause rect {x@0x1b4,y@0x1b8,w@0x1bc,h@0x1c0} -> state 0xc
+      (the previously-missing on-phone pause path). Carved the exit-rect (0x1b4..0x1c0) and
+      play-touch w/h (0x150/0x154) fields byte-exact; m_comboDigitX/Y (0x1ec/0x1f0) double
+      as the song-select rect origin. Verified the NEON: vdiv.f32 scale-divide, the pointInRect
+      arg shape (r0/r1=point, r2/r3=origin, [sp+0/4]=size), and that m_seekCoef@0xf4 IS the
+      drag-Y accumulator (scrub feeds seek).
+    * REMAINING (follow-up pass): the per-frame drag ANCHOR + accumulator (0xdc drag id,
+      0xe0 start, 0xe8 last, 0xf0 accum, 0xf8 moved) and the two states that consume it:
+      case 0xb seek-scrub (the fixed-point gauge/seek math at 0x21fac..0x22016 — a signed
+      division by the magic constant 0x08020803 via smmul, then FPToFixed) and the case 0xd
+      pause-menu 3-button y-only hit-test (rows at 0x1a4/0x1a8/0x1ac, height 0x1b0, +0x114/2:
+      top=options/state 0xe, mid=quit/state 8, bottom=resume). Left as-is (simplified) with
+      their fields named as _rsvd until that pass; behaviour there is still approximate.
 
 ## Explicitly-deferred large units (documented in-file, not disguised)
 - AcMainTask::update (FUN_00099d18) — 24KB arcade state machine, the binary's largest function.

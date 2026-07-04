@@ -126,7 +126,8 @@ private:
     uint8_t          _rsvd_12c[0x148 - 0x12c] = {};  // +0x12c
     int              m_coolLayerArgA = 0;            // +0x148 EFFECT_COOL drawLayer arg (role best-effort)
     int              m_coolLayerArgB = 0;            // +0x14c EFFECT_COOL drawLayer arg (role best-effort)
-    uint8_t          _rsvd_150[0x158 - 0x150] = {};  // +0x150
+    int              m_playTouchW = 0;               // +0x150 in-play song-select touch rect width
+    int              m_playTouchH = 0;               // +0x154 in-play song-select touch rect height
     int              m_laneFrm[9] = {};              // +0x158 per-lane note frame table
     int              m_gaugeLowerY = 0;              // +0x17c gauge lower-cell y
     int              m_gaugeUpperY = 0;              // +0x180 gauge upper-cell y
@@ -138,7 +139,13 @@ private:
     int              m_digitScaleX = 0;              // +0x198 HUD digit blit scale x
     int              m_digitScaleY = 0;              // +0x19c HUD digit blit scale y
     int              m_digitAdvance = 0;             // +0x1a0 HUD digit right-to-left x advance
-    uint8_t          _rsvd_1a4[0x1c4 - 0x1a4] = {};  // +0x1a4
+    // +0x1a4..+0x1b0 the pause-menu button y-anchors (0x1a4/0x1a8/0x1ac) + row height
+    // (0x1b0), y-only-hit-tested in case 0xd (wiring is the follow-up recovery pass).
+    uint8_t          _rsvd_1a4[0x1b4 - 0x1a4] = {};  // +0x1a4
+    int              m_exitTouchX = 0;               // +0x1b4 in-play exit/pause button rect x
+    int              m_exitTouchY = 0;               // +0x1b8 in-play exit/pause button rect y
+    int              m_exitTouchW = 0;               // +0x1bc in-play exit/pause button rect w
+    int              m_exitTouchH = 0;               // +0x1c0 in-play exit/pause button rect h
     int              m_titleBaselineY = 0;           // +0x1c4 HUD title baseline y bias
     int16_t          m_gaugeBase = 0;                // +0x1c8 life-gauge base value
     int16_t          m_gaugeValue = 0;               // +0x1ca life-gauge / combo value (0x100 == full)
@@ -156,8 +163,10 @@ private:
     void            *m_sheet = nullptr;              // +0x1e0 chart sheet NSData (strong, ARC-bridged)
     void            *m_songTitle = nullptr;          // +0x1e4 song-title NSString (strong, ARC-bridged)
     int              m_titleXAdvance = 0;            // +0x1e8 HUD title x-advance (by name length)
-    int              m_comboDigitX = 0;              // +0x1ec cached combo-digit screen x
-    int              m_comboDigitY = 0;              // +0x1f0 cached combo-digit screen y
+    int              m_comboDigitX = 0;              // +0x1ec cached combo-digit x; also the
+                                                     //        in-play song-select touch rect origin x
+    int              m_comboDigitY = 0;              // +0x1f0 cached combo-digit y; also the
+                                                     //        in-play song-select touch rect origin y
     int              m_hiSpeed = 0;                  // +0x1f4 hi-speed option (+500)
     int              m_popKun = 0;                   // +0x1f8 pop-kun option
     int              m_hidSud = 0;                   // +0x1fc hid/sud option (read as uint32 mask)
