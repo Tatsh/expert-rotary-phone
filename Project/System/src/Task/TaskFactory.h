@@ -19,7 +19,7 @@ C_TASK *MainTaskCreate();       // standard music-select
 C_TASK *PlayTaskCreate();       // note-play
 C_TASK *AcMainTaskCreate();     // arcade main
 C_TASK *TutorialTaskCreate();   // tutorial (FUN_0002db10)
-C_TASK *SugorokuMainTaskCreate(); // sugoroku board (FUN_000215a0)
+C_TASK *AcViewerTaskCreate();   // arcade-viewer note-play (AcViewerTask ctor FUN_000215a0)
 C_TASK *BootCreateNextTask();   // the title task the boot logo hands off to (FUN_0002b678)
 C_TASK *PlayResultCreateTask(); // note-play result screen (operator_new(0x3a0) + FUN_0003d5bc)
 

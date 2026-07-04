@@ -12,6 +12,26 @@
 - Minor caveat (not blocking): PlayScore.mm's spotless check uses totalNoteCount()
   (DAT_00178ccc) as the threshold; the binary compares against *(short*)(NoteMng+0x28).
   Almost certainly the same chart-total value, stored separately.
+- MenuMainTask_update (FUN_0006ad88) case 0xc button dispatch mis-mapped +0x168..+0x198
+  and mis-attributed the +0x168 task class (address-sweep, 2026-07-04). Verified vs the
+  decompile/disasm: +0x168 -> AcViewerTask (ctor FUN_000215a0: operator_new(0x210),
+  memset 0x1e8, vtable @0x130bb8 / update FUN_00021678), NOT AcMainTask (ctor FUN_00099ab0,
+  0x9fc, vtable @0x1327c8) — Ghidra only labels the 0x130bb8 vtable acMainTask* because
+  AppDelegate stores the task in its `acMainTask` property. The reconstruction had a
+  spurious SugorokuMainTaskCreate()->new AcMainTask() (there is no sugoroku task; the
+  treasure/sugoroku board IS AcMainTask, spawned by +0x158). Replaced with
+  AcViewerTaskCreate()->new AcViewerTask() (AcViewerTask had never been instantiated
+  anywhere — dead task, now wired to its button). Also: +0x178 -> GotoPopnLink (was invite),
+  +0x188 -> invite code (was present box), +0x198 -> GotoArcadeSearch (was the sugoroku
+  spawn); present box is the +0x9c TOP-cluster button (hitPresentBoxButton added), not an
+  array slot; each array button now plays its SE (m_seInst[k]=[audio playSe:0
+  resourceId:m_seId[k]]). Enum + setup() labels renamed to true per-offset roles; rect
+  VALUES unchanged (already per-offset correct).
+  DOCUMENTED GAP (not gameplay): the +0xa0 "featured/reward" top button -> states 0xf/0x10
+  (RewardNetwork openAppListWebViewWithCampaignId offer-wall) is still unwired. Its 7-arg
+  web-view call is not cleanly recoverable from the decompile (only campaignId + a stray 0
+  survive; company/type/offset/limit/parentView/delegate are register/stack spills) and it
+  is a third-party offer-wall, not gameplay. Left as a precise deferral, not invented.
 
 ## Explicitly-deferred large units (documented in-file, not disguised)
 - AcMainTask::update (FUN_00099d18) — 24KB arcade state machine, the binary's largest function.

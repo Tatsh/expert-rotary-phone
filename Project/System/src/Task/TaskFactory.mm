@@ -9,6 +9,7 @@
 //
 
 #import "AcMainTask.h"
+#import "AcViewerTask.h"
 #import "BootLogoTask.h"
 #import "C_TASK.h"
 #import "MainTask.h"
@@ -61,10 +62,14 @@ C_TASK *TutorialTaskCreate() {
     return new PlayTask();
 }
 
-// MenuMainTask (sugoroku board) -> the arcade-main board task. Ghidra: FUN_000215a0
-// is AcMainTask_ctor (acMainTaskUpdate vtable). Sugoroku board == AcMainTask.
-C_TASK *SugorokuMainTaskCreate() {
-    return new AcMainTask();
+// MenuMainTask (arcade-viewer button) -> the arcade-viewer note-play task. Ghidra:
+// FUN_000215a0 is AcViewerTask_ctor (operator_new(0x210) + memset 0x1e8; distinct
+// vtable @ 0x130bb8, update FUN_00021678). It is NOT AcMainTask (ctor FUN_00099ab0,
+// 0x9fc bytes, vtable @ 0x1327c8): Ghidra only labels this vtable acMainTask* because
+// AppDelegate holds the task in its `acMainTask` property. The +0x168 menu button
+// spawns this.
+C_TASK *AcViewerTaskCreate() {
+    return new AcViewerTask();
 }
 
 // BootLogoTask_finish hands off to the title task. Ghidra: FUN_0002b678 is

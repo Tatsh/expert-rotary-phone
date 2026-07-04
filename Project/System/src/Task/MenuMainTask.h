@@ -54,15 +54,17 @@ public:
     };
 
     // The eight array-laid-out mode buttons hit-tested in state 0xc (+0x128..+0x1a4).
+    // Roles are the binary's FUN_0006ad88 dispatch by offset (present box / settings /
+    // reward live in the separate packed top cluster @ +0x94..+0xa0, not this array).
     enum Button {
-        kBtnPlay,        // +0x128 standard play (tutorial on first play)
-        kBtnStore,       // +0x138 store
-        kBtnFriend,      // +0x148 friend management
-        kBtnArcade,      // +0x158 arcade select+play
-        kBtnPopnLink,    // +0x168 pop'n link
-        kBtnInvite,      // +0x178 invite code
-        kBtnPresentBox,  // +0x188 present box
-        kBtnSugoroku,    // +0x198 sugoroku / arcade search
+        kBtnPlay,         // +0x128 standard play (tutorial on first play) -> PlayTask/MainTask
+        kBtnStore,        // +0x138 store
+        kBtnFriend,       // +0x148 friend management
+        kBtnArcade,       // +0x158 arcade select+play -> AcMainTask (treasure/sugoroku board)
+        kBtnAcViewer,     // +0x168 arcade viewer -> AcViewerTask (iPad seeds a default sel)
+        kBtnPopnLink,     // +0x178 pop'n link
+        kBtnInvite,       // +0x188 invite code (only when a player record exists)
+        kBtnArcadeSearch, // +0x198 arcade search
         kBtnCount,
     };
 
@@ -79,6 +81,9 @@ private:
     // The settings button is a packed rect in the top cluster (rect x @ +0x98, y @
     // +0x94), so it is tested separately.
     bool hitSettingsButton(int touchId) const;
+    // The present-box button shares the same overlapping top cluster (rect x @ +0x9c,
+    // enable/y @ +0x94). Ghidra: the +0x9c pointInRect in FUN_0006ad88 case 0xc.
+    bool hitPresentBoxButton(int touchId) const;
 
     // Alert-dismissed callback for the mode-select confirm dialogs: clears the root VC's
     // alert callback then advances the state machine (7 & 11 -> 6, 9 -> 10, else -> 12).

@@ -3,7 +3,7 @@
 //  pop'n rhythmin
 //
 //  Base class of the engine's task/scene framework. Every gameplay and animated
-//  screen (MainTask, TitleTask, MusicSelTask, ResultTask, SugorokuMainTask, ...)
+//  screen (MainTask, TitleTask, AcMainTask, PlayResultTask, AcViewerTask, ...)
 //  derives from C_TASK. Reconstructed from Ghidra project rb420, program
 //  PopnRhythmin (Obj-C type-encoding: "{C_TASK=^^?^{C_TASK}^{C_TASK}i...}").
 //

@@ -108,10 +108,10 @@ void MenuMainTask::setup() {
         m_buttons[kBtnStore] = {0x1f, yoff + 0x262, 0xc9, 0xd2};             // +0x138
         m_buttons[kBtnFriend] = {0xff, yoff + 0x1f2, 0xca, 0xcc};            // +0x148
         m_buttons[kBtnArcade] = {0x16c, yoff + 0xe8, 0xfa, 0x14e};           // +0x158
-        m_buttons[kBtnPopnLink] = {0x16c, yoff | 0x2d, 0xfa, 0xb9};          // +0x168
-        m_buttons[kBtnInvite] = {0xe, yoff + 0x16f, 0xf6, 0xe3};             // +0x178
-        m_buttons[kBtnPresentBox] = {0xf1, yoff + 0x2df, 0x99, 0x99};        // +0x188
-        m_buttons[kBtnSugoroku] = {0x1a1, yoff + 0x24a, 0xe7, 0xdf};         // +0x198
+        m_buttons[kBtnAcViewer] = {0x16c, yoff | 0x2d, 0xfa, 0xb9};          // +0x168
+        m_buttons[kBtnPopnLink] = {0xe, yoff + 0x16f, 0xf6, 0xe3};           // +0x178
+        m_buttons[kBtnInvite] = {0xf1, yoff + 0x2df, 0x99, 0x99};            // +0x188
+        m_buttons[kBtnArcadeSearch] = {0x1a1, yoff + 0x24a, 0xe7, 0xdf};     // +0x198
         m_warnBadgePos = {0x18b, yoff | 0x206};                              // +0x120
         m_warnScaleX = 0x2a;                                                  // +0xac
         m_warnScaleY = 0x2a;                                                  // +0xb0
@@ -143,10 +143,10 @@ void MenuMainTask::setup() {
         m_buttons[kBtnStore] = {0x326, 0x3ac, 0x1cc, 0x1c2};                // +0x138
         m_buttons[kBtnFriend] = {0x118, 0x2d4, 500, 0x1de};                 // +0x148
         m_buttons[kBtnArcade] = {0x310, 0x1ac, 0x244, 0x1f8};               // +0x158
-        m_buttons[kBtnPopnLink] = {0x3f0, 0x57b, 0x202, 0x15a};             // +0x168
-        m_buttons[kBtnInvite] = {0x22, 0x4d4, 0x226, 0x20d};                // +0x178
-        m_buttons[kBtnPresentBox] = {0x4a8, 0x52, 0x188, 0x154};            // +0x188
-        m_buttons[kBtnSugoroku] = {0x24d, 0x5b4, 0x1a4, 0x1bd};             // +0x198
+        m_buttons[kBtnAcViewer] = {0x3f0, 0x57b, 0x202, 0x15a};            // +0x168
+        m_buttons[kBtnPopnLink] = {0x22, 0x4d4, 0x226, 0x20d};             // +0x178
+        m_buttons[kBtnInvite] = {0x4a8, 0x52, 0x188, 0x154};               // +0x188
+        m_buttons[kBtnArcadeSearch] = {0x24d, 0x5b4, 0x1a4, 0x1bd};        // +0x198
         m_warnBadgePos = {0x274, 0x2e8};                                     // +0x120
         m_warnScaleX = 0x56;                                                 // +0xac
         m_warnScaleY = 0x56;                                                 // +0xb0
@@ -288,10 +288,13 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if (touchId < 0) {
             break;
         }
-        // Play (standard): launch the tutorial task on a first play, else the play
-        // task; the exact rect is m_buttons[kBtnPlay] (+0x128).
-        if (hitButton(touchId, kBtnPlay)) {
-            [audio playSe:0 resourceId:0];
+        // Each mode button plays its own UI SE (resource id m_seId[k] @ +0x50, handle
+        // cached in m_seInst[k] @ +0x68) then either spawns a sub-task (-> state 0x12)
+        // or pushes a UIKit screen (-> state 0x11). The binary also gates every branch
+        // on the prompt layer (+0x30) no longer animating; that intro-guard is elided
+        // here as it is throughout this reconstruction.
+        if (hitButton(touchId, kBtnPlay)) {            // +0x128 play (tutorial first time)
+            m_seInst[0] = [audio playSe:0 resourceId:m_seId[0]];
             if (!m_tutorialSkip) {
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = TutorialTaskCreate();
@@ -299,20 +302,37 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 m_spawnedTask = MainTaskCreate();
             }
             m_state = 0x12;
-        } else if (hitButton(touchId, kBtnArcade)) {
+        } else if (hitButton(touchId, kBtnArcade)) {   // +0x158 AcMainTask (treasure board)
+            m_seInst[1] = [audio playSe:0 resourceId:m_seId[1]];
             m_spawnedTask = AcMainTaskCreate();
             m_state = 0x12;
-        } else if (hitButton(touchId, kBtnFriend)) {
+        } else if (hitButton(touchId, kBtnAcViewer)) { // +0x168 AcViewerTask
+            // iPad primes a default browsing selection (music 1 / diff 0) if none is
+            // set, then clears the pending "Sel" pair. Ghidra: the g_bIsPadDisplay
+            // block seeding g_dwAcViewerMusicId / g_dwAcViewerSelMusicId.
+            if (neSceneManager::isPadDisplay()) {
+                if (neAppEventCenter::acViewerMusicId() < 1) {
+                    neAppEventCenter::setAcViewerSelection(1, 0);
+                }
+                neAppEventCenter::clearAcViewerSelection();
+            }
+            m_seInst[5] = [audio playSe:0 resourceId:m_seId[5]];
+            m_spawnedTask = AcViewerTaskCreate();
+            m_state = 0x12;
+        } else if (hitButton(touchId, kBtnFriend)) {   // +0x148 friend management
+            m_seInst[2] = [audio playSe:0 resourceId:m_seId[2]];
             [root GotoFriendManage];
             m_state = 0x11;
-        } else if (hitButton(touchId, kBtnStore)) {
+        } else if (hitButton(touchId, kBtnStore)) {    // +0x138 store
+            m_seInst[3] = [audio playSe:0 resourceId:m_seId[3]];
             [[DownloadMain getInstance] setIsNewMusicPackReleased:NO];
             [root GotoStoreButton];
             m_state = 0x11;
-        } else if (hitButton(touchId, kBtnPopnLink)) {
+        } else if (hitButton(touchId, kBtnPopnLink)) { // +0x178 pop'n link
+            m_seInst[4] = [audio playSe:0 resourceId:m_seId[4]];
             [root GotoPopnLink];
             m_state = 0x11;
-        } else if (hitButton(touchId, kBtnInvite)) {
+        } else if (hitButton(touchId, kBtnInvite)) {   // +0x188 invite code
             // Ghidra: only enter the invite screen when a player record exists —
             // play the confirm SE (slot 0) and navigate; otherwise play the deny SE
             // (slot 2) and stay on the menu (no GotoInviteCode, no state change).
@@ -323,16 +343,21 @@ void MenuMainTask::update(int /*deltaMs*/) {
             } else {
                 neEngine::playSystemSe(2);
             }
-        } else if (hitButton(touchId, kBtnPresentBox)) {
+        } else if (hitButton(touchId, kBtnArcadeSearch)) { // +0x198 arcade search
+            neEngine::playSystemSe(0);
+            [root GotoArcadeSearch];
+            m_state = 0x11;
+        } else if (hitPresentBoxButton(touchId)) {     // +0x9c present box (top cluster)
             neEngine::playSystemSe(1);
             [root GotoPresentBox];
             m_state = 0x11;
-        } else if (hitButton(touchId, kBtnSugoroku)) {
-            m_spawnedTask = SugorokuMainTaskCreate();
-            m_state = 0x12;
-        } else if (hitSettingsButton(touchId)) {
+        } else if (hitSettingsButton(touchId)) {       // +0x98 settings (top cluster)
             m_state = 0xd;
         }
+        // NOTE (documented gap): the +0xa0 "featured/reward" top button -> states 0xf/0x10
+        // (RewardNetwork openAppListWebViewWithCampaignId offer-wall) is not wired here;
+        // its 7-arg web-view call is not cleanly recoverable from the decompile and it is a
+        // third-party offer-wall, not gameplay. Tracked in STUBS.md.
         break;
     }
     case 0xd:   // settings screen
@@ -453,6 +478,12 @@ bool MenuMainTask::hitButton(int touchId, Button button) const {
 // +0x94), so its two field pointers are taken separately. Ghidra: FUN_0002d974.
 bool MenuMainTask::hitSettingsButton(int touchId) const {
     return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.settingsX, &m_top.rowY);
+}
+
+// The present-box button overlaps the same top cluster, its rect starting one field
+// later (x @ +0x9c), sharing the row-Y enable field (+0x94). Ghidra: FUN_0002d974.
+bool MenuMainTask::hitPresentBoxButton(int touchId) const {
+    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.field9c, &m_top.rowY);
 }
 
 // @ 0x6d1a4 — the mode-select confirm dialogs' alert-dismissed callback. Detach the root
