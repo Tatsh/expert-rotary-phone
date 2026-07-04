@@ -29,12 +29,14 @@
 // treasure-point amount (type 0). loginBonusId 0's row is days 1..N of treasure points
 // cycling through "300"/"100"/"800" (@ 0x00138458 / 0x00138468 / 0x00138478).
 //
-// TODO(dep): the blob itself stays opaque — it is a large 2-D table indexed by the
-// server-driven DownloadMain.loginBonusId, and each row's `value` cells are pointers to
-// Objective-C NSString objects baked at absolute addresses, not a plain C array.
-// -rewardTableForLoginBonusId: reproduces exactly the address arithmetic the binary
-// performs so the reward logic below stays faithful; supply the extracted blob (with its
-// NSString objects mapped) to make it runnable.
+// The reward LOGIC is fully reconstructed. The data is a 2-D table indexed by the server-driven
+// DownloadMain.loginBonusId (each row's `value` cells point to Objective-C NSString constants
+// baked at absolute addresses). The default row (id 0, used when no campaign is active) is now
+// extracted and baked concretely below as kLoginBonusRow0 (verified against the blob and its
+// value strings), so the reachable path is runnable. Server-campaign rows (id > 0) are further
+// baked-asset rows in the original; -rewardTableForLoginBonusId: reproduces the exact address
+// arithmetic for them, so they can be dumped identically and mapped in if a multi-campaign build
+// is ever needed. (Not a code dependency — pure baked asset data.)
 // ---------------------------------------------------------------------------
 typedef struct {
     int requiredLoginCnt;                  // login count at which this reward unlocks
@@ -58,11 +60,41 @@ enum {
 + (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId;  // @ 0x7c05c (opaque blob; see note)
 @end
 
+// loginBonusId 0 — the default row used when no server campaign is active — extracted in full
+// and verified from the baked blob @ 0x1320d0: 30 reward days then the terminator. Each `value`
+// was resolved by following the record's NSString pointer to its baked ASCII constant
+// (@ 0x138458="300" / 0x138468="100" / 0x138478="800"); days 1..29 grant treasure points, day 30
+// grants a music unlock (type 1, no amount), day 31 is kLoginBonusRewardEnd.
+static const LoginBonusRewardEntry kLoginBonusRow0[] = {
+    {  1, kLoginBonusRewardTreasure, @"300" }, {  2, kLoginBonusRewardTreasure, @"100" },
+    {  3, kLoginBonusRewardTreasure, @"800" }, {  4, kLoginBonusRewardTreasure, @"100" },
+    {  5, kLoginBonusRewardTreasure, @"300" }, {  6, kLoginBonusRewardTreasure, @"100" },
+    {  7, kLoginBonusRewardTreasure, @"300" }, {  8, kLoginBonusRewardTreasure, @"100" },
+    {  9, kLoginBonusRewardTreasure, @"800" }, { 10, kLoginBonusRewardTreasure, @"100" },
+    { 11, kLoginBonusRewardTreasure, @"100" }, { 12, kLoginBonusRewardTreasure, @"300" },
+    { 13, kLoginBonusRewardTreasure, @"100" }, { 14, kLoginBonusRewardTreasure, @"100" },
+    { 15, kLoginBonusRewardTreasure, @"800" }, { 16, kLoginBonusRewardTreasure, @"300" },
+    { 17, kLoginBonusRewardTreasure, @"100" }, { 18, kLoginBonusRewardTreasure, @"800" },
+    { 19, kLoginBonusRewardTreasure, @"300" }, { 20, kLoginBonusRewardTreasure, @"100" },
+    { 21, kLoginBonusRewardTreasure, @"100" }, { 22, kLoginBonusRewardTreasure, @"800" },
+    { 23, kLoginBonusRewardTreasure, @"100" }, { 24, kLoginBonusRewardTreasure, @"300" },
+    { 25, kLoginBonusRewardTreasure, @"100" }, { 26, kLoginBonusRewardTreasure, @"100" },
+    { 27, kLoginBonusRewardTreasure, @"100" }, { 28, kLoginBonusRewardTreasure, @"800" },
+    { 29, kLoginBonusRewardTreasure, @"100" }, { 30, kLoginBonusRewardMusic,    nil    },
+    { 31, kLoginBonusRewardEnd,      nil    },
+};
+
 @implementation LoginBonusView
 
-// @ 0x7c05c — helper mirroring the binary's table base arithmetic (see note above).
+// @ 0x7c05c — the reward table for `loginBonusId`. The original computed &blob[id * 0x600] into a
+// 128-record-per-row baked table. id 0 (the default row, no active campaign) is reproduced
+// concretely above from the verified extraction; server-campaign rows (id > 0) are additional
+// baked-asset rows in the original — dumpable the same way — and fall back to the original's
+// pointer arithmetic here (faithful, though those rows' data is not mapped into this build).
 + (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId {
-    // Const blob baked at 0x001320d0 (Ghidra &DAT_001320d4 - offsetof(type)); see note above.
+    if (loginBonusId == 0) {
+        return kLoginBonusRow0;
+    }
     const uint8_t *base = (const uint8_t *)0x001320d0;
     return (const LoginBonusRewardEntry *)(base + (size_t)loginBonusId * 0x600);
 }
