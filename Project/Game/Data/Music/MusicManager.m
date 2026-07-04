@@ -645,9 +645,9 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
                 changed = YES;
             }
             BOOL result;
-            if ([item itunesURL] != nil &&
-                ![[item itunesURL] isEqualToString:[entry objectForKey:@"iTunesURL"]]) {
-                [merged setObject:[item itunesURL] forKey:@"iTunesURL"];
+            if ([item iTunesURL] != nil &&
+                ![[item iTunesURL] isEqualToString:[entry objectForKey:@"iTunesURL"]]) {
+                [merged setObject:[item iTunesURL] forKey:@"iTunesURL"];
                 result = YES;
             } else {
                 result = changed;
@@ -668,8 +668,8 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     if ([item itemURL] != nil) {
         [dict setObject:[item itemURL] forKey:@"ItemURL"];
     }
-    if ([item itunesURL] != nil) {
-        [dict setObject:[item itunesURL] forKey:@"iTunesURL"];
+    if ([item iTunesURL] != nil) {
+        [dict setObject:[item iTunesURL] forKey:@"iTunesURL"];
     }
     [m_PurchasedMusicDictionaris addObject:[NSDictionary dictionaryWithDictionary:dict]];
     [self setMusicDataArrayDirty];
