@@ -7,6 +7,7 @@
 
 #import "StoreDownloadManager.h"
 
+#import <UIKit/UIKit.h>   // UIApplication.idleTimerDisabled (keep the device awake during a download)
 #import "MusicManager.h"
 #import "StoreDownloadTask.h"
 
