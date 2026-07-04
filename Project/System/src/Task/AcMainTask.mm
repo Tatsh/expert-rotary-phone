@@ -117,9 +117,73 @@ void AcMainTask::update(int /*deltaMs*/) {
     case 2:
         stateTreasureCheck();
         break;
+    case 0x10:
+        // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
+        // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at 0x9a6ba).
+        // The remainder of this state's body (board redraw / input arbitration) is not
+        // yet reconstructed.
+        applyDragScroll(gfx);
+        break;
+    case 0x4d:
+        // Same drag-scroll block, interleaved into state 0x4d at 0x9cb56 (byte-identical).
+        applyDragScroll(gfx);
+        break;
     default:
         break;
     }
+}
+
+// Per-frame drag / rubber-band scroll normalization. Ground truth is the disassembly
+// (0x9a6ba, byte-identical at 0x9cb56) — the decompiler garbles the vcvt/vsub NEON here.
+// The live drag delta (in screen units) is subtracted from the accumulated scroll, the
+// result is clamped to the map's scroll box, and any overshoot past the clamp is banked
+// into a rubber-band accumulator (m_scrollRubberX/Y) so the view springs back.
+void AcMainTask::applyDragScroll(neGraphics &gfx) {
+    if (m_dragAnchorId < 0) {
+        return;
+    }
+    const neTouchPoint *t = gfx.findTouchById(m_dragAnchorId);
+    if (!t) {
+        return;
+    }
+
+    // Drag delta from the latched anchor, converted to logical screen units. The binary
+    // does vcvt.f32.s32 on the raw touch coords, subtracts the float anchor, then divides
+    // by m_screenScale (vdiv) — no 65536 fixed-point scaling anywhere.
+    const float dX = ((float)t->x - m_dragAnchorX) / m_screenScale;
+    const float dY = ((float)t->y - m_dragAnchorY) / m_screenScale;
+
+    // Proposed scroll positions, minus whatever is already banked in the rubber-band.
+    // The clamp comparisons in the binary use the truncated (int)->(float) round-trip of
+    // these values, so mirror the int cast before comparing.
+    const int nx = (int)((m_scrollX - dX) - m_scrollRubberX);
+    const int ny = (int)((m_scrollY - dY) - m_scrollRubberY);
+
+    int fx;
+    if ((float)nx > m_clampCentreX2) {
+        m_scrollRubberX += (float)nx - m_clampCentreX2;
+        fx = (int)m_clampCentreX2;
+    } else if ((float)nx < m_clampCentreX) {
+        m_scrollRubberX += (float)nx - m_clampCentreX;
+        fx = (int)m_clampCentreX;
+    } else {
+        fx = nx;
+    }
+
+    int fy;
+    if ((float)ny > m_clampMaxY) {
+        m_scrollRubberY += (float)ny - m_clampMaxY;
+        fy = (int)m_clampMaxY;
+    } else if ((float)ny < m_clampMinY) {
+        m_scrollRubberY += (float)ny - m_clampMinY;
+        fy = (int)m_clampMinY;
+    } else {
+        fy = ny;
+    }
+
+    // Publish the clamped screen-space base the board draw subtracts from every layer.
+    m_scrollBaseX = m_scrollX - (float)fx;
+    m_scrollBaseY = m_scrollY - (float)fy;
 }
 
 // case 0 — build the select/map scene, then start the BGM if a treasure record is

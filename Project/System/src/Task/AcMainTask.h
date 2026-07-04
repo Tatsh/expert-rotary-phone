@@ -73,6 +73,7 @@ private:
     void buildMapCharaLayers();       // Ghidra: FUN_000a2264
     void buildMapPanelLayers();       // Ghidra: FUN_000a2650
     void refreshMapScroll(int mode);  // Ghidra: FUN_000a3550
+    void applyDragScroll(neGraphics &gfx); // drag/rubber-band scroll update (disasm 0x9a6ba / 0x9cb56)
     void unloadMapBgGroup();          // Ghidra: FUN_000a4e84
     void sugorokuReleaseGoalLayer();  // Ghidra: sibling of FUN_000a4e84 (same teardown effect)
 
@@ -172,7 +173,8 @@ private:
     float           m_dragAnchorY = {};             // +0x510 drag anchor y (float)
     float           m_scrollBaseX = {};             // +0x514 scroll base x (subtracted for screen space)
     float           m_scrollBaseY = {};             // +0x518 scroll base y
-    uint8_t          _rsvd_51c[0x524 - 0x51c] = {};   // +0x51c
+    float           m_scrollRubberX = {};           // +0x51c rubber-band overscroll accumulator x (disasm 0x9a6ba)
+    float           m_scrollRubberY = {};           // +0x520 rubber-band overscroll accumulator y
     int             m_overlayW = {};                // +0x524 transition-overlay width
     int             m_overlayH = {};                // +0x528 transition-overlay height
     float           m_screenScale = {};             // +0x52c screen scale
