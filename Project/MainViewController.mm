@@ -36,6 +36,7 @@
 #import "RecommendViewController.h"
 #import "SortSelectViewController.h"
 #import "StoreViewController.h"
+#import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "C_TASK.h"
 #import "neFrameTimer.h"
@@ -83,7 +84,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     UIViewController *_mapSelectViewCtrl;
     UINavigationController *_friendMngNaviCtrl;
     UIViewController *_friendMngViewCtrl;
-    UIViewController *_defaultDlViewController;
+    DefaultDataDownloadView *_defaultDlViewController;   // startOpenAnimation / isFailed
     BOOL _isDefaultDlFailed;
     UINavigationController *_inputConvPassNaviCtrl;
     UIViewController *_inputConvPassViewCtrl;
@@ -95,13 +96,13 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     UINavigationController *_searchNaviCtrl;
     UIView *_coverView;                 // dim backdrop shown behind iPad modal panels
     UINavigationController *_recommendNaviCtrl;
-    UIViewController *_recommendViewCtrl;
+    RecommendViewController *_recommendViewCtrl;
     UINavigationController *_sortSelectNaviCtrl;
-    UIViewController *_sortSelectViewCtrl;
+    SortSelectViewController *_sortSelectViewCtrl;
     UINavigationController *_overScoreLogNaviCtrl;
-    UIViewController *_overScoreLogViewCtrl;
+    OverScoreLogViewController *_overScoreLogViewCtrl;
     UINavigationController *_presentBoxNaviCtrl;
-    UIViewController *_presentBoxViewCtrl;
+    PresentBoxViewController *_presentBoxViewCtrl;
     UIViewController *_storeViewController;
     UINavigationController *_acViewerNaviCtrl;
     UIViewController *_acViewerViewCtrl;
