@@ -34,9 +34,8 @@
 #import "neGraphics.h"
 #import "neWindow.h"
 
-// Ad/analytics dependency intentionally removed (see README "Ad / analytics").
-// The original launch path called +[RewardNetwork startWithAppliId:env:callback:];
-// it is stubbed to a no-op and not linked.
+// The launch path starts the applilink reward SDK via +[RewardNetwork
+// startWithAppliId:env:callback:] (reconstructed 1:1; see -application:didFinishLaunching...).
 
 // Global set elsewhere: YES when running on iPad idiom (Ghidra: DAT_00187b84).
 BOOL gIsPad = NO;
