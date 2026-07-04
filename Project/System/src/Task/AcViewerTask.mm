@@ -14,6 +14,7 @@
 
 #import "AcViewerTask.h"
 
+#include <cmath>
 #include <cstring>
 #include <new>
 
@@ -467,36 +468,56 @@ void AcViewerTask::update(int /*deltaMs*/) {
     m_moved = 0;   // per-frame "moved" flag (field17_0xd0; recomputed)
 
     // --- Touch preamble (Ghidra: the drag/tap classifier at 0x21704..0x21880, recovered
-    // from the disassembly of acMainTaskUpdate FUN_00021678). While the HUD is up (ready
-    // byte @ +0x1d4) a released touch counts as a TAP only if it barely moved between press
-    // and release: |scaled(startX) - scaled(upX)| <= 10 and |scaled(startY) - scaled(upY)|
-    // < 11, where scaled(v) = (int)((float)v / m_uiScale). m_uiScale @ +0x10c is read as a
-    // float divisor (the g_dwUiScale bytes setup() stored). The tap's scaled up-position is
-    // the hit-test point used by the case 6 / 0xd rect tests below.
-    //   (The per-frame drag ANCHOR + accumulator @ +0xdc/+0xe0/+0xe8/+0xf0 and the m_moved
-    //    flag @ +0xf8 that feed the case 0xb seek-scrub are the follow-up recovery pass; the
-    //    tap classifier is all case 6 needs.)
-    bool flick = false;
+    // from the disassembly of FUN_00021678). While the HUD is up (m_hudReady @+0x1d4) it
+    // tracks a single drag anchor: when idle it latches the first valid touch as the anchor
+    // (recording the scaled start/last position and zeroing the accumulators); each following
+    // frame it accumulates the scaled delta (m_dragAccumX += dx, m_seekCoef += dy*10) and sets
+    // m_moved if anything moved. On release the anchor is dropped and, if the touch barely
+    // moved (|scaled(start)-scaled(up)| <= 10 in x, < 11 in y), it becomes a TAP whose scaled
+    // up-position is the hit-test point for the case 6 / 0xb / 0xd rect tests. scaled(v) =
+    // (int)((float)v / m_uiScale). The accumulators feed the case-0xb seek-scrub.
+    bool flick = false, released = false;
     int flickX = 0, flickY = 0;
     if (m_hudReady != 0) {
         const float scale = reinterpret_cast<float &>(m_uiScale);
         const int n = gfx.activeTouchCount();
-        for (int i = 0; i < n; i++) {
-            const neTouchPoint *t = gfx.touchAt(i);
-            if (t == nullptr) { continue; }
-            if (t->released != 0) {
-                const int upX = (int)((float)t->x / scale);
-                const int upY = (int)((float)t->y / scale);
-                const int dnX = (int)((float)t->startX / scale);
-                const int dnY = (int)((float)t->startY / scale);
-                const int adx = (dnX - upX) < 0 ? (upX - dnX) : (dnX - upX);
-                const int ady = (dnY - upY) < 0 ? (upY - dnY) : (dnY - upY);
-                if (adx <= 10 && ady < 11) {
-                    flick = true;
-                    flickX = upX;
-                    flickY = upY;
-                }
+        if (m_dragTouchId < 0) {
+            // Idle: latch the first valid touch as the drag anchor.
+            for (int i = 0; i < n; i++) {
+                const neTouchPoint *t = gfx.touchAt(i);
+                if (t == nullptr || t->valid == 0) { continue; }
+                m_dragTouchId = t->id;
+                const float sx = (float)t->x / scale;
+                const float sy = (float)t->y / scale;
+                m_dragStartX = sx; m_dragStartY = sy;
+                m_dragLastX = sx;  m_dragLastY = sy;
+                m_dragAccumX = 0.0f; m_seekCoef = 0.0f;
                 break;
+            }
+        } else {
+            const neTouchPoint *t = gfx.findTouchById(m_dragTouchId);
+            if (t == nullptr) {
+                // The tracked touch vanished: drop the anchor.
+                m_dragTouchId = -1;
+                m_dragStartX = 0.0f; m_dragStartY = 0.0f;
+                m_dragAccumX = 0.0f; m_seekCoef = 0.0f;
+            } else {
+                const float sx = (float)t->x / scale;
+                const float sy = (float)t->y / scale;
+                m_dragAccumX += sx - m_dragLastX;
+                m_seekCoef   += (sy - m_dragLastY) * 10.0f;
+                m_dragLastX = sx; m_dragLastY = sy;
+                if (m_dragAccumX != 0.0f || m_seekCoef != 0.0f) { m_moved = 1; }
+                if (t->released != 0) {
+                    m_dragTouchId = -1;
+                    released = true;
+                    const int upX = (int)sx, upY = (int)sy;
+                    const int dnX = (int)((float)t->startX / scale);
+                    const int dnY = (int)((float)t->startY / scale);
+                    const int adx = (dnX - upX) < 0 ? (upX - dnX) : (dnX - upX);
+                    const int ady = (dnY - upY) < 0 ? (upY - dnY) : (dnY - upY);
+                    if (adx <= 10 && ady < 11) { flick = true; flickX = upX; flickY = upY; }
+                }
             }
         }
     }
@@ -609,33 +630,61 @@ void AcViewerTask::update(int /*deltaMs*/) {
         next = 0xb;
         break;
     case 0xb: {
-        // Paused-for-song-select / seek-scrub state (Ghidra 0x21bd4).
+        // Paused-for-song-select / seek-scrub (Ghidra 0x21bd4, disasm-recovered). The drag
+        // anchor's scaled start-Y picks the interaction: at/below m_scrubZoneTopY is the scrub
+        // zone (>= m_seekGaugeSplitY = gauge scrub, else seek scrub); above it, a tap resumes
+        // play or opens the pause menu.
         next = 0xb;
-        // iPad resume-at-top: the binary resumes only when NOT paused (m_paused==0). Normally
-        // entered from state 10 with m_paused=1, so this branch rarely fires. (The old
-        // reconstruction had the condition inverted -- m_paused != 0 -- which resumed instantly.)
+        // (A) iPad resume-at-top: only when NOT paused (rarely fires; normally m_paused=1 here).
         if (neSceneManager::isPadDisplay() && m_paused == 0) {
-            note.resume();
-            m_paused = 0;
-            next = 6;
+            note.resume(); m_paused = 0; next = 6;
         }
-        // A tap on the resume rect resumes play; a tap on the exit/pause rect opens the pause
-        // menu (same rects as case 6, FUN_0002d974 pointInRect).
-        if (flick && neGraphics::pointInRect(flickX, flickY, m_comboDigitX, m_comboDigitY,
-                                             m_playTouchW, m_playTouchH)) {
-            note.resume();
-            m_paused = 0;
-            next = 6;
-        } else if (flick && neGraphics::pointInRect(flickX, flickY, m_exitTouchX, m_exitTouchY,
-                                                    m_exitTouchW, m_exitTouchH)) {
-            next = 0xc;
+        if (released) {
+            // (B) release side: snapshot the seek base, or quantize the gauge scrub.
+            if (m_dragStartY >= (float)m_scrubZoneTopY) {
+                if (m_dragStartY >= (float)m_seekGaugeSplitY) {
+                    // (C) gauge quantize: v -> 0..24 steps (v*24/1023, magic 0x80200803), each
+                    // 42.5 units, capped at 1023 (constants byte-verified).
+                    int v = (uint16_t)m_gaugeBase + (uint16_t)m_gaugeValue;
+                    if (v & 0x8000) { v = 0; }
+                    v = (int16_t)v;
+                    int q = (v * 24) / 1023;
+                    if (q < 0) { q = 0; } else if (q > 24) { q = 24; }
+                    const float f = (q < 24) ? (float)q * 42.5f : 1023.0f;
+                    m_gaugeValue = (int16_t)(int)std::ceil(f);
+                    m_gaugeBase = 0;
+                } else {
+                    m_pauseTime = note.getCurrentPosition();   // snapshot the seek base
+                }
+            }
+            // fall through to the tap tests (E)
+        } else if (m_dragTouchId >= 0 && m_moved != 0) {
+            // (D) mid-drag live scrub
+            if (m_dragStartY >= (float)m_scrubZoneTopY) {
+                if (m_dragStartY >= (float)m_seekGaugeSplitY) {
+                    m_gaugeBase = (int16_t)(int)(m_dragAccumX * (float)m_xScrubScale);   // x-scrub
+                } else {
+                    // live seek: re-init the chart then seek to base + accumulated dy*scale.
+                    // (Ghidra initPlayData args = m_sheet + m_hiSpeed @0x1e0/0x1f4; the 2nd arg's
+                    // exact role -- difficulty vs hi-speed -- is best-effort.)
+                    note.initPlayDataWithData((__bridge NSData *)m_sheet, m_hiSpeed);
+                    int seek = (int)((float)(uint32_t)m_pauseTime + m_seekCoef * (float)m_seekScale);
+                    if (seek < 0) { seek = 0; }
+                    note.seekTo((uint32_t)seek);
+                }
+            }
+            break;   // mid-drag returns without the tap tests
         }
-        // DOCUMENTED SEAM (NEON_ACCURACY.md #12): the full seek-scrub is not reproduced -- the
-        // per-frame drag accumulator (0xdc/0xe0/0xe8/0xf0/0xf8) feeding m_seekCoef, the gauge
-        // quantize (v*24/1023 via smmul 0x80200803, then ceil(q*42.5f | 1023.0f) into
-        // m_gaugeValue), and the live-seek (acNoteMng initPlayData + seekTo of
-        // m_pauseTime + m_seekCoef*m_seekScale). It requires the drag accumulator the preamble
-        // does not yet maintain; the tap resume/pause interactions above are the primary path.
+        // (E) tap tests -- only a tap above the scrub zone.
+        if (flick && m_dragStartY < (float)m_scrubZoneTopY) {
+            if (neGraphics::pointInRect(flickX, flickY, m_comboDigitX, m_comboDigitY,
+                                        m_playTouchW, m_playTouchH)) {
+                note.resume(); m_paused = 0; next = 6;
+            } else if (neGraphics::pointInRect(flickX, flickY, m_exitTouchX, m_exitTouchY,
+                                               m_exitTouchW, m_exitTouchH)) {
+                next = 0xc;
+            }
+        }
         break;
     }
     case 0xc:

@@ -101,10 +101,15 @@ private:
     int              m_usrNo[7] = {};                // +0xb8 HUD layer user numbers (draw dispatch)
     int              m_readySeId = 0;                // +0xd4 arcade timing-SE source id
     int              m_readySeInst = 0;              // +0xd8 ready-SE playing instance
-    uint8_t          _rsvd_dc[0xf4 - 0xdc] = {};     // +0xdc
-    float            m_seekCoef = 0.0f;              // +0xf4 resume-seek linear-combine coefficient
-                                                     //        (float; multiplied by m_seekScale in
-                                                     //        applyGameplaySettings' seek math)
+    int              m_dragTouchId = -1;             // +0xdc active drag-scrub touch id (-1 = none)
+    float            m_dragStartX = 0.0f;            // +0xe0 drag anchor scaled start x
+    float            m_dragStartY = 0.0f;            // +0xe4 drag anchor scaled start y
+    float            m_dragLastX = 0.0f;             // +0xe8 last frame's scaled x
+    float            m_dragLastY = 0.0f;             // +0xec last frame's scaled y
+    float            m_dragAccumX = 0.0f;            // +0xf0 accumulated scaled dx
+    float            m_seekCoef = 0.0f;              // +0xf4 accumulated scaled dy*10 (the seek
+                                                     //        coefficient; * m_seekScale in the
+                                                     //        case-0xb live seek)
     uint8_t          m_moved = 0;                    // +0xf8 per-frame touch "moved" flag
     uint8_t          _rsvd_f9[0xfc - 0xf9] = {};     // +0xf9
     int              m_pauseTime = 0;                // +0xfc pause-time position snapshot
@@ -119,12 +124,13 @@ private:
     int              m_seekScale = 0;                // +0x118 resume-seek scale constant (setup
                                                      //        writes 5 phone / 3 ipad); read as a
                                                      //        fixed-point value by the seek math
-    uint8_t          _rsvd_11c[0x120 - 0x11c] = {};  // +0x11c setup writes 2 phone / 1 ipad here
-                                                     //        (paired with m_seekScale; role best-effort)
+    int              m_xScrubScale = 0;              // +0x11c x-scrub scale (drag dx -> gauge base)
     int              m_noteClipTop = 0;              // +0x120 note-field clip top / y
     int              m_noteFieldX = 0;               // +0x124 note-field x (= m_noteClipTop + m_noteFieldY)
     int              m_noteFieldY = 0;               // +0x128 note-field y
-    uint8_t          _rsvd_12c[0x148 - 0x12c] = {};  // +0x12c
+    int              m_seekGaugeSplitY = 0;          // +0x12c drag start-Y split: >= gauge scrub, < seek scrub
+    int              m_scrubZoneTopY = 0;            // +0x130 top Y of the scrub zone (drag start-Y >= this)
+    uint8_t          _rsvd_134[0x148 - 0x134] = {};  // +0x134
     int              m_coolLayerArgA = 0;            // +0x148 EFFECT_COOL drawLayer arg (role best-effort)
     int              m_coolLayerArgB = 0;            // +0x14c EFFECT_COOL drawLayer arg (role best-effort)
     int              m_playTouchW = 0;               // +0x150 in-play song-select touch rect width
