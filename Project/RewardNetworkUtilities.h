@@ -49,7 +49,9 @@
 
 // Generic percent-encode / decode free helpers (a separate pair from +URLEncodedString:).
 // Reached only via a data function-pointer table in the binary; see the .m / HANDOFF.md.
-NSString *urlEncodeString(NSString *string);   // @ 0xfc1d0
+// NOTE: this reward-side urlEncodeString (@ 0xfc1d0) is functionally identical to StoreUtil's
+// (@ 0x5c5ec) and unused outside RewardNetworkUtilities.m, so it is file-static there (avoids a
+// duplicate global with StoreUtil's canonical one). Callers include StoreUtil.h.
 // (percent-decode is -[NSString URLDecodedString] @ 0xfc218, in NSString+URLDecode.h)
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

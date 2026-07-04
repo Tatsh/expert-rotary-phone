@@ -190,7 +190,8 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 // 0x193a28), so they are homed here in the SDK's utilities grab-bag (see HANDOFF.md).
 
 // @ 0xfc1d0 — percent-escape `string` for a URL query (escapes "!*'();:@&=+$,/?%#[]"; UTF-8).
-NSString *urlEncodeString(NSString *string) {
+// file-static: identical to StoreUtil's canonical urlEncodeString; kept for faithfulness.
+static NSString *urlEncodeString(NSString *string) {
     return (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(
         kCFAllocatorDefault,
         (__bridge CFStringRef)string,

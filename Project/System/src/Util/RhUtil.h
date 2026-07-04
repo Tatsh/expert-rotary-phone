@@ -9,6 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+// These are C-linkage helpers defined in RhUtil.m; the extern "C" guard lets the
+// C++ (.mm/.cpp) callers resolve the unmangled symbols the .m file emits.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Parse a property-list blob (the decoded .orb / list payloads are plists, not
 // JSON). Returns the root only if it is a dictionary / array respectively.
 // The original branched on iOS < 4.0 (CFPropertyListCreateFromXMLData) vs newer
@@ -55,6 +61,10 @@ BOOL pointInCircle(int x, int y, int cx, int cy, int r);
 // Returns an autoreleased UIImage, or nil when no matching resource exists.
 // Ghidra: loadDeviceImage @ 0x5bd28.
 UIImage *loadDeviceImage(NSString *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

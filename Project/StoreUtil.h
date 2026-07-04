@@ -170,6 +170,10 @@
 @end
 
 // Percent-encode a string for use in a URL query. Ghidra: urlEncodeString @ 0x5c5ec.
+// C-linkage (defined in StoreUtil.m) so the C++ (.mm) callers resolve the unmangled symbol.
+#ifdef __cplusplus
+extern "C"
+#endif
 NSString *urlEncodeString(NSString *s);
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
