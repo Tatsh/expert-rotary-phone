@@ -97,7 +97,27 @@ static void drawCommand(const AepSpriteCommand &cmd) {
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-// Ghidra: FUN_000115d0 — draw the frame: buckets high priority first.
+// Ghidra: FUN_000115d0 (renderAepOrderingTable) — draw the frame, highest priority bucket first.
+//
+// The binary switches on cmd.type (the short @cmd+0x04; see AepSpriteCommand) and routes each
+// command to a dedicated per-type handler:
+//     0 sprite  -> drawAepOtSprite  (FUN_00010c90)   4 rect  -> drawAepOtRect  (FUN_0001113c)
+//     1 stretch -> drawAepOtSpriteStretch (0x10e18)   5 quad  -> drawAepOtQuad  (FUN_000111f8)
+//     2 line    -> drawAepOtLine    (FUN_00010f98)    6 text  -> drawAepOtText  (FUN_00011310)
+//     3 tri     -> drawAepOtTriangle (FUN_00011054)
+// In practice only types 0/1 (sprites), 4 (the transition overlay), and 6 (text) are ever queued;
+// 2/3/5 are live handlers with no push site in this title.
+//
+// This reconstruction renders every command as a single textured quad instead of dispatching. That
+// is a DELIBERATE, methodology-compliant best-effort: the sprite tail (drawAepOtSprite/Stretch ->
+// drawAepSpriteClipped @0x12020 -> neDrawTexturedQuad @0x15fb8) threads its transform through the
+// VFP register bank (renderScale in s0 and unused in the callee; scaledX/width/uSpan scrambled
+// across s/r regs by the AAPCS split), so the decompiler cannot recover the exact per-arg order.
+// Per the reconstruction rules we do not invent those VFP-spilled values; the all-quad path is the
+// faithful approximation of the sprite/stretch cases. Types 4/6 render acceptably as quads here too
+// (the overlay is a full-rect fill; text loses glyph shaping — the one visible simplification).
+// Wiring the true dispatch is gated on a disasm-verified re-derivation of the VFP sprite tail (see
+// NEON_ACCURACY.md #2 / HANDOFF.md), which is the remaining, methodology-bounded work.
 void AepOrderingTable::flush() {
     m_drawnCount = 0;
     for (int pri = m_maxPriority; pri >= 0; pri--) {
