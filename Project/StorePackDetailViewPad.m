@@ -11,6 +11,8 @@
 #import "StorePackMusicView.h"
 #import "StoreImageView.h"
 #import "StoreMusicInfo.h"
+#import "StoreAcMusicInfo.h"   // -acMusicId (arcade-music match in loadInfo)
+#import "UserSettingData.h"    // birthday / settings reads in the purchase flow
 #import "Downloader.h"
 #import "AudioManager.h"
 #import "MusicManager.h"
@@ -223,7 +225,7 @@
         m_StorePackInfoDownloader =
             [[StorePackInfoDownloader alloc] initWithStorePackInfo:m_PackInfo];
         [m_StorePackInfoDownloader setDelegate:(id)self];
-        [m_StorePackInfoDownloader downloadDetail];
+        [m_StorePackInfoDownloader downloadDetail:YES];   // @0x4f806 movs r2,#1 (user-open; pad passes YES)
     } else {
         self.backgroundColor = [UIColor colorWithWhite:0.863f alpha:1.0f];   // raw 0x3f5ced91
         [self showPackInfo];
