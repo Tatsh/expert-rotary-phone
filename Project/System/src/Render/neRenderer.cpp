@@ -422,6 +422,22 @@ void neDrawTexturedQuad(void *sprite, int x, int y, int width, int height,
         GLfloat pT[4] = {0.0f, -1.0f, 0.0f, bottom};
         GLfloat pR[4] = {-1.0f, 0.0f, 0.0f, right};
         GLfloat pB[4] = {0.0f, 1.0f, 0.0f, -top};
+        // Ghidra: when the sprite is rotated the binary rotates each plane's normal by
+        // +rotation (cos/sin of the positive angle) and re-derives the offset about the
+        // pivot: a' = c*a - s*b, b' = s*a + c*b, d' = d + pivotX*(a-a') + pivotY*(b-b').
+        // (The decompiler dropped this whole FloatVector* / _cos/_sin block.)
+        if (rotation != 0.0f) {
+            const float c = cosf(rotation), s = sinf(rotation);
+            const float px = static_cast<float>(pivotX), py = static_cast<float>(pivotY);
+            GLfloat *planes[4] = {pL, pT, pR, pB};
+            for (GLfloat *p : planes) {
+                const float a2 = c * p[0] - s * p[1];
+                const float b2 = s * p[0] + c * p[1];
+                p[3] = p[3] + px * (p[0] - a2) + py * (p[1] - b2);
+                p[0] = a2;
+                p[1] = b2;
+            }
+        }
         glClipPlanef(GL_CLIP_PLANE0, pL);
         glClipPlanef(GL_CLIP_PLANE1, pT);
         glClipPlanef(GL_CLIP_PLANE2, pR);
