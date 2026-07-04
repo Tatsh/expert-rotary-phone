@@ -76,8 +76,12 @@ void AcMainTask::update(int /*deltaMs*/) {
         if (t->valid != 0) {
             if (m_dragAnchorId < 0) {
                 m_dragAnchorId = t->id;
-                m_dragAnchorX = (int)((float)t->x / 65536.0f);   // Ghidra: FixedToFP
-                m_dragAnchorY = (int)((float)t->y / 65536.0f);
+                // Disasm 0x99e3e: the anchor is stored as a plain float (vcvt.f32.s32 of the
+                // touch coord, vstr.32) -- NOT divided by 65536. The consuming per-frame
+                // scroll-normalization lives in the not-yet-reconstructed arcade states 0x10 /
+                // 0x4d: delta = ((float)touch - anchor) / m_screenScale (NEON_ACCURACY.md #13).
+                m_dragAnchorX = (float)t->x;
+                m_dragAnchorY = (float)t->y;
             }
             m_frameDragging = true;
             break;

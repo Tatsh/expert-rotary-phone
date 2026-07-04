@@ -33,8 +33,8 @@ Status: ☐ todo  ◐ in progress  ☑ fixed & verified  ✓ already accurate (n
 
 | # | Function @ addr | Source | Defect | Effort | Status |
 |---|---|---|---|---|---|
-| 12 | `AcViewerTask::update` case 0xb/0xd @0x2174e | AcViewerTask.mm:611/634 | case 0xb seek-scrub SIMD + 2 pointInRect tests missing; case 0xd 3 inline Y-band pause-menu buttons + nav/SE/state routing missing; preamble drag-accumulator missing. (tap classifier + case 6 already fixed) | HIGH | ☐ |
-| 13 | `AcMainTask::update` scroll-norm @0x9a716/0x9cbb2 | AcMainTask.mm:62 | inlined per-frame scroll-normalization `vsub/vdiv` not reproduced 1:1 (de-inlined/approx across helpers). | HIGH | ☐ |
+| 12 | `AcViewerTask::update` case 0xb/0xd @0x2174e | AcViewerTask.mm:611/634 | case 0xd pause-menu 3-button y-band hit-test DONE; case 0xb inverted iPad-resume condition fixed + tap resume/pause-rect tests wired. Residual seam: the case-0xb seek-scrub (drag accumulator + gauge quantize v*24/1023 + live acNoteMng seek) needs a per-frame drag accumulator the preamble doesn't maintain. | HIGH | ◐ (menu+taps done; seek-scrub deferred) |
+| 13 | `AcMainTask::update` scroll-norm @0x9a716/0x9cbb2 | AcMainTask.mm:62 | m_dragAnchorX/Y retyped int->float + dropped the bogus /65536 (binary stores plain (float)touch, disasm 0x99e3e; fields are write-only so zero-risk). Residual: the consuming scroll-norm delta=((float)touch-anchor)/m_screenScale lives in the unreconstructed arcade states 0x10/0x4d of the 24KB update(). | HIGH | ◐ (anchor float fixed; consuming states deferred) |
 | 14 | `MainTask::update` @0x35b02 | MainTask.mm:222 | WidgetRect slot / hit-Y packed-word best-effort (rect scaling itself correct). | MED | ☐ |
 | 15 | `MainTask::updateList` @0x3508a | MainTask.mm:884 | sqrt-damped rubber-band 16.16 Q-format modeled as identity (magnitude/sign approximate). | MED | ☐ |
 | 16 | `charaSelectTaskInit`/setupScene @0x9fdbe | AcMainTask.mm:294 | char-panel row-count fixed-point round `(/6.0 + 0.5)` approximate, not proven byte-identical. | MED | ☐ |

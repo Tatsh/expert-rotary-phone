@@ -168,8 +168,8 @@ private:
     uint8_t          _rsvd_4f2[0x4f4 - 0x4f2] = {};   // +0x4f2
     Random           m_rng;                         // +0x4f4 embedded arcade RNG (ctor placement-constructs; dtor destroys)
     int             m_dragAnchorId = {};            // +0x508 touch drag anchor id (-1 == none)
-    int             m_dragAnchorX = {};             // +0x50c drag anchor x
-    int             m_dragAnchorY = {};             // +0x510 drag anchor y
+    float           m_dragAnchorX = {};             // +0x50c drag anchor x (float; disasm 0x99e3e)
+    float           m_dragAnchorY = {};             // +0x510 drag anchor y (float)
     float           m_scrollBaseX = {};             // +0x514 scroll base x (subtracted for screen space)
     float           m_scrollBaseY = {};             // +0x518 scroll base y
     uint8_t          _rsvd_51c[0x524 - 0x51c] = {};   // +0x51c
