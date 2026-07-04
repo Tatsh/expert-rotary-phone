@@ -24,18 +24,8 @@
 #import "neGraphics.h"
 
 // PlayTaskInit / PlayTaskGotoResult are declared in PlayTask.h (the play-scene
-// build + results-transition seams).
-
-namespace {
-inline char *pd(PlayTask *t) { return reinterpret_cast<char *>(t); }
-inline int &state(PlayTask *t) {   // play-data state @ +0x9fc
-    return *reinterpret_cast<int *>(pd(t) + 0x9fc);
-}
-inline int &score(PlayTask *t)        { return *reinterpret_cast<int *>(pd(t) + 0x9b0); }  // gauge/score readout
-inline bool &endStarted(PlayTask *t)  { return *reinterpret_cast<bool *>(pd(t) + 0x9c8); } // song has ended
-inline bool &endSePlayed(PlayTask *t) { return *reinterpret_cast<bool *>(pd(t) + 0x9c9); } // clear/rank SE fired
-inline int &endPos(PlayTask *t)       { return *reinterpret_cast<int *>(pd(t) + 0x9f8); }  // position at song end
-}
+// build + results-transition seams). The play-data work area is now a real named-member
+// layout (see PlayTask.h); the former pd()+reinterpret_cast accessors are gone.
 
 PlayTask::PlayTask() = default;
 
@@ -51,38 +41,36 @@ void PlayTask::resetState() {
     reloadChart(1);                  // FUN_0002fed8 calls playTaskLoadChart(this, 1)
 
     // Reset the two animated-layer banks (5 @ +0x84, 11 @ +0x98).
-    for (int i = 0; i < 5; i++) {
-        if (AepLyrCtrl *l = *reinterpret_cast<AepLyrCtrl **>(pd(this) + 0x84 + i * 4)) {
+    for (AepLyrCtrl *l : m_comboLayers) {
+        if (l) {
             l->reset();
         }
     }
-    for (int i = 0; i < 0xb; i++) {
-        if (AepLyrCtrl *l = *reinterpret_cast<AepLyrCtrl **>(pd(this) + 0x98 + i * 4)) {
+    for (AepLyrCtrl *l : m_sceneLayers) {
+        if (l) {
             l->reset();
         }
     }
 
-    *reinterpret_cast<int *>(pd(this) + 0x3a0) = -1;
-    *reinterpret_cast<int *>(pd(this) + 0x3a4) = -1;
+    m_timingSeInst[0] = -1;
+    m_timingSeInst[1] = -1;
 
-    // Zero the 0x3c-entry judge pool (@ +0x3c8, stride 0x18 == 6 words), then stamp each
-    // entry's index (word 0) and its -1 sentinel (word 1).
-    std::memset(pd(this) + 0x3c8, 0, 0x5a0);
-    int *entry = reinterpret_cast<int *>(pd(this) + 0x3c8);
+    // Zero the 0x3c-entry judge pool (@ +0x3c8, stride 0x18), then stamp each entry's slot
+    // index (word 0) and its -1 free sentinel (word 1 == NoteJudgeState::noteKey).
+    std::memset(m_judgePool, 0, sizeof(m_judgePool));
     for (int i = 0; i < 0x3c; i++) {
-        entry[0] = i;
-        entry[1] = -1;
-        entry += 6;              // 0x18 bytes
+        m_judgePool[i].layerId = i;
+        m_judgePool[i].noteKey = reinterpret_cast<const void *>(-1);
     }
 
     // Gauge / score scalars.
-    *reinterpret_cast<int *>(pd(this) + 0x9ec)      = -1;
-    *reinterpret_cast<int16_t *>(pd(this) + 0x9ac)  = (int16_t)g_wPlayDefaultGauge; // DAT_00178d00
-    *reinterpret_cast<int *>(pd(this) + 0x9b0)      = 0;
-    *reinterpret_cast<int16_t *>(pd(this) + 0x9c0)  = 0;   // gauge value
-    *reinterpret_cast<int16_t *>(pd(this) + 0x9c2)  = 0;
-    *reinterpret_cast<int *>(pd(this) + 0x9d8)      = 0;
-    *reinterpret_cast<unsigned char *>(pd(this) + 0x9dc) = 0;
+    m_backTouchId      = -1;
+    m_gaugeBase        = (int16_t)g_wPlayDefaultGauge;   // DAT_00178d00
+    m_score            = 0;
+    m_gaugeValue       = 0;
+    m_gaugeValueSub    = 0;
+    m_damageAccum      = 0;
+    m_damagedThisFrame = 0;
 }
 
 // @ 0x30720 — playTaskLoadChart. Reload the selected chart into the note manager:
@@ -96,11 +84,10 @@ void PlayTask::reloadChart(int restart) {
 
     MusicData *md;
     int difficulty;
-    if (*reinterpret_cast<unsigned char *>(pd(this) + 0x9c9) == 0) {
+    if (m_isDemoPlay == 0) {
         // Normal play: the picked {musicId, sheet} pair the event center carries (@ +0x968).
-        neAppEventCenter *evc = *reinterpret_cast<neAppEventCenter **>(pd(this) + 0x968);
-        const int musicId = evc->lastMusic();           // pair[0]
-        difficulty = (short)evc->lastSheet();           // (short)pair[1]
+        const int musicId = m_eventCenter->lastMusic();  // pair[0]
+        difficulty = (short)m_eventCenter->lastSheet();  // (short)pair[1]
         md = [[MusicManager getInstance] getMusicData:musicId];
     } else {
         // Tutorial / bundled-demo play (flag @ +0x9c9): the fixed bundled song, normal sheet.
@@ -117,7 +104,7 @@ void PlayTask::reloadChart(int restart) {
             NSData *bgm = [md music];
             [audio loadBgmData:bgm isLoop:NO];
             [audio setBgmVolume:1.0f];
-            *reinterpret_cast<unsigned char *>(pd(this) + 0x9c6) = 1;
+            m_bgmReady = 1;
         });
     }
 
@@ -136,23 +123,22 @@ void PlayTask::reloadChart(int restart) {
         const int kind = [UserSettingData touchSoundKind];
         NSString *name = (__bridge NSString *)neSceneManager::hitSoundName(kind);
         NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"m4a"];
-        *reinterpret_cast<int *>(pd(this) + 0x398) =
-            (int)[audio loadSe:path isLoop:NO callName:nil group:0];
-        [audio setSeVolume:*reinterpret_cast<short *>(pd(this) + 0x9b4) groupId:0];
+        m_hitSeId = (int)[audio loadSe:path isLoop:NO callName:nil group:0];
+        [audio setSeVolume:m_seVolume groupId:0];
     }
 }
 
 // @ 0x312cc — updateGaugeValue. Nudge the life gauge by the per-mode delta and clamp it.
 void PlayTask::updateGauge(int mode) {
-    int16_t &gauge = *reinterpret_cast<int16_t *>(pd(this) + 0x9c0);
+    int16_t &gauge = m_gaugeValue;
     const float *delta = nullptr;
     if ((unsigned)(mode - 2) < 2) {          // mode 2 or 3 (great / perfect)
-        delta = reinterpret_cast<float *>(pd(this) + 0x9cc);
+        delta = &m_gaugeGainGreat;
     } else if (mode == 0) {                   // miss / down
-        delta = reinterpret_cast<float *>(pd(this) + 0x9d4);
-        *reinterpret_cast<unsigned char *>(pd(this) + 0x9dc) = 1;   // damaged this frame
+        delta = &m_gaugeLossMiss;
+        m_damagedThisFrame = 1;               // damaged this frame
     } else if (mode == 1) {                   // good
-        delta = reinterpret_cast<float *>(pd(this) + 0x9d0);
+        delta = &m_gaugeGainGood;
     }
 
     if (delta != nullptr) {
@@ -197,27 +183,27 @@ void PlayTask::update(int /*deltaMs*/) {
         }
     }
 
-    switch (state(this)) {
+    switch (m_state) {
     case 0:
         PlayTaskInit(playData);   // FUN_0002e2d8: allocate the play scene
-        state(this) = 1;
+        m_state = 1;
         [[fallthrough]];
     case 1:   // NoteMng bring-up + fade in + start SEs
         nm.primePlay();   // Ghidra: FUN_0003396c — spawn the lead-in + position the notes
         aep.playTransition(1, 1, 0);
-        state(this) = 2;
+        m_state = 2;
         [[fallthrough]];
     case 2:   // ready: on the "go" flag, arm the play clock
         PlayJudge_update(playData, nullptr, nullptr, 0);   // draw the field
         return;
     case 3:   // retry: after the fade, rebuild the play and restart
         if (aep.isTransitionDone()) {
-            state(this) = 1;
+            m_state = 1;
         }
         break;
     case 4:   // wait for the start SE, then start NoteMng's clock -> playing
         nm.startClock();   // Ghidra: FUN_000344c4 — stamp the play clock, clear offsets/state
-        state(this) = 6;
+        m_state = 6;
         break;
     case 5:   // pause menu: hit-test resume / retry / quit; draw the pause layer
         nm.update();   // Ghidra: FUN_00033ae4 — keep the notes scrolling behind the menu
@@ -229,47 +215,49 @@ void PlayTask::update(int /*deltaMs*/) {
         PlayJudge_update(playData, touchXY, touchIds, touchCount);
 
         // Cache the current gauge/score for the end-of-song rank SEs. Ghidra: FUN_0002ff7c.
-        score(this) = PlayCurrentScore();
+        m_score = PlayCurrentScore();
 
         // Song-end: once NoteMng has emitted its last note, latch the end position and,
         // ~1s later, fire the clear + rank SEs exactly once. Ghidra: the FUN_0003181c
-        // guard + the +0x9c8/+0x9c9/+0x9f8 bookkeeping in state 6.
-        if (!endStarted(this) && nm.isFinished()) {
+        // guard + the +0x9c8/+0x9c9/+0x9f8 bookkeeping in state 6. Per the decompile the
+        // one-shot latch is m_endSeFired (@ +0x9c8, set here); the inner gate skips the SE
+        // in tutorial/demo mode (m_isDemoPlay @ +0x9c9, set once at init — never written here).
+        if (!m_endSeFired && nm.isFinished()) {
             int pos = nm.getCurrentPosition();
-            if (endPos(this) == 0) {
-                endPos(this) = pos;
+            if (m_endPos == 0) {
+                m_endPos = pos;
             }
-            if (!endSePlayed(this) && (unsigned)(pos - endPos(this)) > 999) {
-                endSePlayed(this) = true;
+            if (!m_isDemoPlay && (unsigned)(pos - m_endPos) > 999) {
+                m_endSeFired = true;
                 [audio playSe:nil resourceId:0];         // the song-clear SE
-                PlayEndResultSe(playData, score(this));  // rank jingles keyed on the score
+                PlayEndResultSe(playData, m_score);      // rank jingles keyed on the score
             }
         }
 
         if (backTap) {   // a held back tap freezes the play and opens the pause menu
             nm.onResignActivePushHook();
-            state(this) = 5;
+            m_state = 5;
             break;
         }
 
         // ~3s after the song ends, hand off to the fade-out.
-        if (endPos(this) != 0 &&
-            (unsigned)(nm.getCurrentPosition() - endPos(this)) >= 3000) {
-            state(this) = 8;
+        if (m_endPos != 0 &&
+            (unsigned)(nm.getCurrentPosition() - m_endPos) >= 3000) {
+            m_state = 8;
         }
         break;
     }
     case 7:   // quit: stop all audio and fall through to the fade-out
         [audio stopAll];
-        state(this) = 8;
+        m_state = 8;
         break;
     case 8:   // fade out
         aep.playTransition(2, 1, 0);
-        state(this) = 9;
+        m_state = 9;
         break;
     case 9:
         if (aep.isTransitionDone()) {
-            state(this) = 10;
+            m_state = 10;
         }
         break;
     case 10:   // hand off to the result screen
