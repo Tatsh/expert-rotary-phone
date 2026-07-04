@@ -28,6 +28,7 @@
 #import "AppFont.h"          // AppFontName() == getFontNameDFSoGei() -> @"DFSoGei-W5-WIN-RKSJ-H"
 #import "DownloadProgresView.h" // the shared modal dialog: layout: / labelMessage / progressView
 #import <StoreKit/StoreKit.h>   // SKProduct.price
+#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius / borderColor / borderWidth
 
 @interface StoreMainViewController ()
 // Inlined lazy-jacket loader used by tableView:cellForRowAtIndexPath: (see @ 0x4837c).
@@ -96,27 +97,291 @@
 // 0x2711) with a spinner, an empty-state label (tag 0x2712), the promotion banner
 // (StorePromotionView, tag 0x2775) + its dummy, and — on iPad — an inset table, a
 // dim cover view (handleTapCoverView:) and an embedded StorePackDetailViewPad; plus
-// the stretchable pack-cell backgrounds (store_pack_bg_0/1).
-//
-// RECONSTRUCTION DEFERRED (dep audit updated 2026-07-02). The original blocker was
-// stale: StorePromotionView (fully reconstructed) and StorePackDetailViewPad (a data-
-// holder) both exist now. The remaining work is a connected chunk, so it is done as
-// one dedicated pass rather than piecemeal (leaving dangling refs would break the
-// no-unimplemented-refs rule). It needs, all in one go:
-//   * 9 new ivars: m_PromotionView (StorePromotionView*), m_PromotionViewDummy
-//     (UIImageView*), m_PackTableLabel (UILabel*), m_ShowMoreButton (UIButton*),
-//     m_ShowMoreIndicator (UIActivityIndicatorView*), m_CoverViewPad (UIView*),
-//     m_PackDetailViewPad (StorePackDetailViewPad*), m_PackBgImage0/1 (UIImage*),
-//     plus m_IsLoadingMoreList (BOOL, used by selectShowMore).
-//   * action handlers selectShowMore (@0x494cc) + handleTapCoverView: (@0x45940),
-//     which in turn need closeDetailAnimStop:finished:context:, StorePackListController
-//     -startFetchingPack:, and StorePackDetailViewPad -cancelLoading/-stopSample.
-//   * geometry: most rects are self.view.bounds-derived (center = bounds.w*0.5,
-//     bounds.h*0.5 +/- an offset) and thus recoverable; the StorePromotionView /
-//     StorePackDetailViewPad initWithFrame: rects: iPad promo = 730×240
-//     (0x44368000/0x43700000), detail = 650×650 (0x44228000); phone promo frame
-//     verified per-call-site from the literal pool.
-// Full structure + decoded float constants are catalogued in HANDOFF.md.
+// the stretchable pack-cell backgrounds (store_pack_bg_0/1). Fixed float constants
+// are byte-decoded from the disassembly; bounds-relative rects are kept structural.
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    const CGRect bounds = self.view ? self.view.bounds : CGRectZero;
+
+    // Common autoresizing recipes used below (numeric masks from the binary).
+    const UIViewAutoresizing kBottomAnchored = UIViewAutoresizingFlexibleLeftMargin |
+                                               UIViewAutoresizingFlexibleRightMargin |
+                                               UIViewAutoresizingFlexibleBottomMargin; // 0x25
+    const UIViewAutoresizing kCentered = UIViewAutoresizingFlexibleLeftMargin |
+                                         UIViewAutoresizingFlexibleRightMargin |
+                                         UIViewAutoresizingFlexibleTopMargin |
+                                         UIViewAutoresizingFlexibleBottomMargin; // 0x2d
+    const UIViewAutoresizing kFill = UIViewAutoresizingFlexibleWidth |
+                                     UIViewAutoresizingFlexibleHeight |
+                                     UIViewAutoresizingFlexibleLeftMargin |
+                                     UIViewAutoresizingFlexibleRightMargin |
+                                     UIViewAutoresizingFlexibleTopMargin |
+                                     UIViewAutoresizingFlexibleBottomMargin; // setAutoresizingAll
+
+    if (!m_IsPad) {
+        // ---- Phone: the promotion banner + its dummy live inside a table cell (added
+        //      in tableView:cellForRowAtIndexPath:); here we only build + configure. ----
+        if (m_PromotionView == nil) {
+            StorePromotionView *promo = [[StorePromotionView alloc]
+                initWithFrame:CGRectMake(0.0f, 0.0f, 480.0f, 105.0f)]; // 0x43f00000 / 0x42d20000
+            promo.autoresizingMask = kBottomAnchored;
+            promo.tag = 0x2775;
+            promo.delegate = self;
+            [promo setImageViewSize:CGSizeMake(320.0f, 105.0f)]; // 0x43a00000 / 0x42d20000
+            m_PromotionView = promo;
+        }
+
+        m_PromotionViewDummy =
+            [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"p_store_pro"]];
+        [m_PromotionViewDummy setFrame:CGRectMake(0.0f, 0.0f, 365.0f, 105.0f)]; // 0x43b68000 / 0x42d20000
+        m_PromotionViewDummy.autoresizingMask = kBottomAnchored;
+        m_PromotionViewDummy.hidden = YES;
+
+        // Pack catalogue table (tag 10000) filling the view.
+        if ([self.view viewWithTag:10000] == nil) {
+            UITableView *table = [[UITableView alloc] initWithFrame:bounds
+                                                             style:UITableViewStylePlain];
+            table.opaque = YES;
+            table.tag = 10000;
+            table.autoresizingMask =
+                UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight; // setAutoresizingSize
+            table.backgroundColor = [UIColor colorWithRed:226.0f / 255.0f
+                                                    green:227.0f / 255.0f
+                                                     blue:228.0f / 255.0f
+                                                    alpha:1.0f];
+            table.separatorStyle = UITableViewCellSeparatorStyleNone;
+            table.dataSource = self;
+            table.delegate = self;
+            [self.view addSubview:table];
+        }
+    } else {
+        // ---- iPad: promo banner pinned at the top, a rounded translucent inset table,
+        //      a dim cover, and an embedded detail card. ----
+        if (m_PromotionView == nil) {
+            StorePromotionView *promo = [[StorePromotionView alloc]
+                initWithFrame:CGRectMake(0.0f, 0.0f, 730.0f, 240.0f)]; // 0x44368000 / 0x43700000
+            m_PromotionView = promo;
+            promo.center = CGPointMake(bounds.size.width * 0.5f,
+                                       promo.bounds.size.height * 0.5f + 20.0f); // 0x41a00000
+            promo.autoresizingMask = kBottomAnchored;
+            promo.delegate = self;
+        }
+        [self.view addSubview:m_PromotionView];
+
+        m_PromotionViewDummy =
+            [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"p_store_pro"]];
+        [m_PromotionViewDummy setFrame:CGRectMake(0.0f, 0.0f, 730.0f, 240.0f)];
+        m_PromotionViewDummy.layer.cornerRadius = 10.0f; // 0x41200000
+        m_PromotionViewDummy.clipsToBounds = YES;
+        m_PromotionViewDummy.center =
+            CGPointMake(bounds.size.width * 0.5f,
+                        m_PromotionView.bounds.size.height * 0.5f + 20.0f);
+        m_PromotionViewDummy.autoresizingMask = kBottomAnchored;
+        m_PromotionViewDummy.hidden = YES;
+        [self.view addSubview:m_PromotionViewDummy];
+
+        // "楽曲パック" ("Song pack") section label above the pack table. The binary seeds
+        // the initial origin from self.tabBarController.rotatingHeaderView.frame
+        // (x=27=0x41d80000, y=331=0x43a58000 minus the header height), but the
+        // -setBounds:/-setCenter: below fully redefine the frame, so the header term has
+        // no effect on the final layout.
+        UILabel *packLabel =
+            [[UILabel alloc] initWithFrame:CGRectMake(27.0f, 331.0f, 0.0f, 0.0f)];
+        m_PackTableLabel = packLabel;
+        packLabel.backgroundColor = [UIColor clearColor];
+        packLabel.textColor = [UIColor blackColor];
+        packLabel.shadowColor = [UIColor lightGrayColor];
+        packLabel.shadowOffset = CGSizeMake(1.0f, 1.0f);
+        packLabel.font = [UIFont fontWithName:AppFontName() size:18.0f]; // 0x41900000
+        packLabel.text = @"楽曲パック";
+        [packLabel sizeToFit];
+        packLabel.bounds = CGRectMake(0.0f, 0.0f, 720.0f, packLabel.bounds.size.height); // 0x44340000
+        packLabel.center = CGPointMake(bounds.size.width * 0.5f,
+                                       packLabel.bounds.size.height * 0.5f + 280.0f); // 0x438c0000
+        packLabel.autoresizingMask = kBottomAnchored;
+        [self.view addSubview:packLabel];
+
+        // "▼ SHOW MORE ▼" footer button, anchored 15pt above the bottom.
+        UIButton *showMore = [UIButton buttonWithType:UIButtonTypeCustom];
+        [showMore setTitle:@"▼ SHOW MORE ▼" forState:UIControlStateNormal];
+        [showMore setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        [showMore sizeToFit];
+        showMore.center =
+            CGPointMake(bounds.size.width * 0.5f,
+                        bounds.size.height - showMore.bounds.size.height * 0.5f - 15.0f); // 0xc1700000
+        showMore.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
+                                    UIViewAutoresizingFlexibleRightMargin |
+                                    UIViewAutoresizingFlexibleTopMargin; // 0xd
+        showMore.hidden = YES;
+        [showMore addTarget:self
+                     action:@selector(selectShowMore)
+           forControlEvents:UIControlEventTouchUpInside]; // 0x40
+        [self.view addSubview:showMore];
+        m_ShowMoreButton = showMore;
+
+        // Spinner riding just right of the show-more button title.
+        UIActivityIndicatorView *showMoreSpinner = [[UIActivityIndicatorView alloc]
+            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray]; // 2
+        showMoreSpinner.bounds = CGRectMake(0.0f, 0.0f, 24.0f, 24.0f); // 0x41c00000
+        showMoreSpinner.center =
+            CGPointMake(m_ShowMoreButton.bounds.size.width * 0.5f + showMoreSpinner.bounds.size.width,
+                        m_ShowMoreButton.bounds.size.height * 0.5f);
+        showMoreSpinner.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
+                                           UIViewAutoresizingFlexibleTopMargin |
+                                           UIViewAutoresizingFlexibleBottomMargin; // 0x29
+        [showMoreSpinner startAnimating];
+        showMoreSpinner.hidden = YES;
+        [m_ShowMoreButton addSubview:showMoreSpinner];
+        m_ShowMoreIndicator = showMoreSpinner;
+
+        // Rounded, translucent inset pack table (tag 10000).
+        if ([self.view viewWithTag:10000] == nil) {
+            CGFloat tableHeight = bounds.size.height - 316.0f -
+                                  (m_ShowMoreButton.bounds.size.height + 32.0f); // -0x439e0000 / 0x42000000
+            UITableView *table = [[UITableView alloc]
+                initWithFrame:CGRectMake(0.0f, 0.0f, 728.0f, tableHeight) // 0x44360000
+                        style:UITableViewStylePlain];
+            table.tag = 10000;
+            table.center = CGPointMake(bounds.size.width * 0.5f,
+                                       table.bounds.size.height * 0.5f + 316.0f); // 0x439e0000
+            table.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
+                                     UIViewAutoresizingFlexibleRightMargin |
+                                     UIViewAutoresizingFlexibleHeight; // 0x15
+            table.opaque = YES;
+            table.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.8f]; // 0x3f800000 / 0x3f4ccccd
+            table.layer.cornerRadius = 8.0f; // 0x41000000
+            table.layer.borderColor = [UIColor colorWithWhite:0.56f alpha:1.0f].CGColor; // 0x3f0f8f90
+            table.layer.borderWidth = 1.5f; // 0x3fc00000
+            table.scrollIndicatorInsets = UIEdgeInsetsMake(4.0f, 0.0f, 4.0f, 0.0f); // 0x40800000
+            table.separatorStyle = UITableViewCellSeparatorStyleNone;
+            table.dataSource = self;
+            table.delegate = self;
+            [self.view addSubview:table];
+        }
+
+        // Dim cover over the catalogue while the detail card is up.
+        UIView *cover = [[UIView alloc] initWithFrame:bounds];
+        m_CoverViewPad = cover;
+        cover.autoresizingMask = kFill;
+        cover.opaque = NO;
+        cover.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f]; // 0x3f000000
+        cover.userInteractionEnabled = YES;
+        cover.exclusiveTouch = YES;
+        UITapGestureRecognizer *tap =
+            [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                    action:@selector(handleTapCoverView:)];
+        [cover addGestureRecognizer:tap];
+        cover.hidden = YES;
+        [self.view addSubview:cover];
+
+        // Embedded detail card, centred over the cover (44pt above centre).
+        StorePackDetailViewPad *detail = [[StorePackDetailViewPad alloc]
+            initWithFrame:CGRectMake(0.0f, 0.0f, 650.0f, 650.0f)]; // 0x44228000
+        m_PackDetailViewPad = detail;
+        CGPoint coverCenter = m_CoverViewPad.center;
+        detail.center = CGPointMake(roundf(coverCenter.x),
+                                    roundf(coverCenter.y - 44.0f)); // 0xc2300000
+        detail.autoresizingMask = kCentered;
+        [detail setDelegate:self];
+        detail.hidden = YES;
+        [self.view addSubview:detail];
+    }
+
+    // ---- Shared: the table's "push up to show more" hint (tag 100000) + the pinned
+    //      store_fun banner (tag 0x186a1) live inside whichever table exists. ----
+    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    if (table != nil) {
+        if ([table viewWithTag:100000] == nil) {
+            UILabel *hint = [[UILabel alloc]
+                initWithFrame:CGRectMake(0.0f, 0.0f, bounds.size.width, 25.0f)]; // 0x41c80000
+            hint.tag = 100000;
+            hint.backgroundColor = [UIColor clearColor];
+            hint.text = [[NSBundle mainBundle] localizedStringForKey:@"Push up to show more"
+                                                               value:@""
+                                                               table:nil];
+            hint.font = [UIFont fontWithName:AppFontName() size:15.0f]; // 0x41700000
+            hint.textColor = [UIColor whiteColor];
+            hint.textAlignment = NSTextAlignmentCenter; // 1
+            hint.hidden = YES;
+            [table addSubview:hint];
+        }
+        if ([table viewWithTag:0x186a1] == nil) {
+            UIImageView *banner =
+                [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"store_fun.png"]];
+            banner.tag = 0x186a1;
+            banner.hidden = YES;
+            [table addSubview:banner];
+        }
+    }
+
+    // Loading placeholder (tag 0x2711): a light label carrying a centred spinner.
+    if ([self.view viewWithTag:0x2711] == nil) {
+        UILabel *loading = [[UILabel alloc] initWithFrame:bounds];
+        loading.tag = 0x2711;
+        loading.backgroundColor = [UIColor colorWithRed:226.0f / 255.0f
+                                                  green:227.0f / 255.0f
+                                                   blue:228.0f / 255.0f
+                                                  alpha:1.0f];
+        loading.font = [UIFont fontWithName:AppFontName() size:18.0f]; // 0x41900000
+        loading.textColor = [UIColor colorWithWhite:0.62f alpha:1.0f]; // 0x3f1e9e9f
+        loading.shadowColor = [UIColor colorWithWhite:1.0f alpha:0.3f]; // 0x3e99999a
+        loading.shadowOffset = CGSizeMake(0.0f, 1.0f);
+        loading.textAlignment = NSTextAlignmentCenter; // 1
+        loading.center = CGPointMake(bounds.size.width * 0.5f,
+                                     roundf(bounds.size.height * 0.5f));
+        loading.autoresizingMask =
+            UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight; // 0x12
+        loading.text = @"読み込み中..."; // "Loading..."
+        loading.hidden = NO;
+        [self.view addSubview:loading];
+
+        UIView *spinnerBox =
+            [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 40.0f, 40.0f)]; // 0x42200000
+        spinnerBox.backgroundColor = [UIColor clearColor];
+        spinnerBox.autoresizingMask = kCentered;
+        spinnerBox.center = CGPointMake(loading.bounds.size.width * 0.5f,
+                                        loading.bounds.size.height * 0.5f);
+        [loading addSubview:spinnerBox];
+
+        UIActivityIndicatorView *spinner =
+            [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 24.0f, 24.0f)];
+        spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhite; // 1
+        // The binary derives the spinner's centre from spinnerBox.bounds (square 40pt box).
+        spinner.center = CGPointMake(spinnerBox.bounds.size.width * 0.5f,
+                                     spinnerBox.bounds.size.height * 0.5f);
+        spinner.autoresizingMask = kBottomAnchored;
+        [spinner startAnimating];
+        [spinnerBox addSubview:spinner];
+    }
+
+    // Empty-state label (tag 0x2712): centred 20pt above the middle, wired later by -showError:.
+    if ([self.view viewWithTag:0x2712] == nil) {
+        UILabel *empty = [[UILabel alloc] initWithFrame:bounds];
+        empty.tag = 0x2712;
+        empty.backgroundColor = self.view.backgroundColor;
+        empty.font = [UIFont fontWithName:AppFontName()
+                                     size:(m_IsPad ? 18.0f : 16.0f)]; // 0x41900000 / 0x41800000
+        empty.textColor = [UIColor colorWithWhite:0.62f alpha:1.0f]; // 0x3f1e9e9f
+        empty.textAlignment = NSTextAlignmentCenter; // 1
+        empty.numberOfLines = 0;
+        empty.center = CGPointMake(bounds.size.width * 0.5f,
+                                   roundf(bounds.size.height * 0.5f) - 20.0f); // 0x14
+        empty.autoresizingMask = kFill;
+        empty.hidden = YES;
+        [self.view addSubview:empty];
+    }
+
+    // Alternating stretchable pack-cell backdrops (4pt caps).
+    if (m_PackBgImage0 == nil) {
+        m_PackBgImage0 = [[UIImage imageNamed:@"store_pack_bg_0.png"]
+            stretchableImageWithLeftCapWidth:4 topCapHeight:4];
+    }
+    if (m_PackBgImage1 == nil) {
+        m_PackBgImage1 = [[UIImage imageNamed:@"store_pack_bg_1.png"]
+            stretchableImageWithLeftCapWidth:4 topCapHeight:4];
+    }
+}
 
 // @ 0x4a2d8
 - (void)startStoreClose {
