@@ -56,9 +56,9 @@ static SystemHardware *s_instance = nil;
         return;
     }
     size_t size = 0;
-    sysctlbyname("hw.machine", nullptr, &size, nullptr, 0);
+    sysctlbyname("hw.machine", NULL, &size, NULL, 0);
     char *machine = (char *)malloc(size);
-    sysctlbyname("hw.machine", machine, &size, nullptr, 0);
+    sysctlbyname("hw.machine", machine, &size, NULL, 0);
 
     m_HardwareName = [[NSString alloc] initWithCString:machine encoding:NSUTF8StringEncoding];
 
