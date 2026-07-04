@@ -19,6 +19,13 @@
 #import "AcNoteMng.h"
 #import "../../System/src/Sound/AudioManager.h"   // BGM start / drift sync (triggerBgmStart, applyBgmSync)
 
+// Arcade-viewer judge result globals (Ghidra: DAT_0016ebe0..). Read by the AcViewer HUD.
+// The judge-side updates are a reconstruction gap (see AcNoteMng.h); defined here so the
+// symbols resolve.
+int  g_dwAcCoolCount = 0;
+int  g_dwAcGreatCount = 0;
+bool g_bAcNoteFinished = false;
+
 // Hi-speed multiplier per difficulty (Ghidra: the switch in InitPlayData).
 static const float kAcHiSpeed[kAcHiSpeedCount] = {
     1.2f, 1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f, 4.5f, 5.0f, 5.5f, 6.0f,

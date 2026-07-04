@@ -19,6 +19,7 @@
 
 #import "AcMusicData.h"
 #import "AcNoteMng.h"
+#import "AcViewerOptionViewController.h"
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
@@ -527,7 +528,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         break;
     case 5:
         // When the ready SE finishes, start note playback.
-        if ([AcvRootVC() isPlayingSe:m_readySeInst] == 0) {
+        if ([[AudioManager sharedManager] isPlayingSe:m_readySeInst] == 0) {
             note.startPlayback();
             m_state = 6;
         }
@@ -630,7 +631,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
             (void)(__bridge_transfer id)m_optionVC;
             m_optionVC = nullptr;
         }
-        id optVC = [[AcViewerOptionViewController alloc] initForAcMain:this];
+        AcViewerOptionViewController *optVC = [[AcViewerOptionViewController alloc] initForAcMain:this];
         m_optionVC = (__bridge_retained void *)optVC;
         [optVC startOpenAnimationForAcMain];
         [AcvRootVC() ResumeLoop];
@@ -660,7 +661,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // Draw tail: update+draw all Aep layers, then (once the HUD is up and armed) the
     // note field and life gauge.
     (void)audio;
-    updateAndDrawAepLayers(0);
+    AepLyrCtrlUpdateAll(0);   // Ghidra: updateAndDrawAepLayers (FUN_0002c924)
     if (m_hudArmed != 0 && m_hudReady != 0) {
         drawActiveNotes();
         drawLifeGauge();

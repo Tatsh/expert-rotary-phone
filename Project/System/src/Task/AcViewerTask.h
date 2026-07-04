@@ -74,7 +74,7 @@ private:
     // The HUD draw callback reaches these same members through `context`; let it in.
     friend void AcViewerHudDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
                                 int anchorX, int anchorY, int color, int alpha, int16_t rotation,
-                                int blend, int p13, int p14, void *context);
+                                int blend, int *p13, int p14, void *context);
 
     // The apply-settings bridge hook writes the option / seek fields below directly.
     friend void neEngine::acMainApplyGameplaySettings(AcViewerTask *task);

@@ -262,6 +262,14 @@ private:
     NearestNote m_nearest[9];
 };
 
+// Arcade-viewer judge result globals read by the HUD draw callback (Ghidra:
+// g_dwAcCoolCount / g_dwAcGreatCount / g_bAcNoteFinished @ DAT_0016ebe0..).
+// NOTE: the judge-side updates in AcNoteMng are a reconstruction gap; declared
+// here (init 0) so the HUD reads compile — the counters are not yet driven.
+extern int  g_dwAcCoolCount;
+extern int  g_dwAcGreatCount;
+extern bool g_bAcNoteFinished;
+
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4
