@@ -924,7 +924,10 @@ void PlayTaskDraw(int child, int /*frame*/, int x, int y, int scaleX, int scaleY
                     if (i > 2 && bg != nullptr && bg->isAnimating()) return;
                 } else {                                           // bundled demo
                     if (i > 2) return;
-                    if (i == 4) {
+                    // Ghidra: the beat-indicator/chara-window draws for chara index 1 only
+                    // (`iVar9 == 4` where iVar9 = i*4 is the byte-stride loop cursor). The
+                    // reconstruction had `i == 4`, which is unreachable after `i > 2` above.
+                    if (i == 1) {
                         PlayDrawCharaWindow(task, x - (anchorX * scaleX) / 100,
                                                 y - (scaleY * anchorY) / 100);
                     }

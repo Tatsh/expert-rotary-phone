@@ -22,7 +22,7 @@ Status: ☐ todo  ◐ in progress  ☑ fixed & verified  ✓ already accurate (n
 |---|---|---|---|---|---|
 | 4 | `drawAepSpriteClipped` @0x1211c | AepOrderingTable.mm:252 | rotation constant **sign flip**: binary `*(-π/180)` (DAT=-π); source `+M_PI/180`. | LOW | ☑ (0x12238=-π verified) |
 | 5 | `PlayResultDrawCallback` @0x3f5f0 | PlayResultTask.mm:925 | RESULT_CHARA portrait **w/h swapped** — binary w=0x38c h=0x75e; source passes 0x75e,0x38c. | LOW | ☑ (swapped) |
-| 6 | `PlayTaskDraw` @0x30944 | PlayScene.mm:927 | demo chara-window index `i==4` is dead code; binary is loop index `i==1`. | LOW | ◐ (verify byte-offset) |
+| 6 | `PlayTaskDraw` @0x30944 | PlayScene.mm:927 | demo chara-window index `i==4` is dead code; binary is loop index `i==1`. | LOW | ☑ (iVar9=i*4, ==4 -> i==1 verified) |
 | 7 | `Downloader.currentProgress` @0x62912 | Downloader.m:120 | dropped `min(ratio,1.0f)` saturation clamp after the divide. | LOW | ☑ (clamp added) |
 | 8 | `neDrawTexturedQuad` @0x16020 | neRenderer.cpp:407 | `rotation != 0` clip-plane rotation block (cos/sin SIMD) not reconstructed; always axis-aligned. | MED | ☐ |
 | 9 | `drawAepOtSprite` @0x10d86 | AepOrderingTable.mm:289 | dropped `/100` normalization of scaled transform args + tint 16-byte vector SIMD scale (raw ptr forwarded). | MED | ☐ |
