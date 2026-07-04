@@ -134,7 +134,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     nameView.userInteractionEnabled = YES;
     if (!isPad) {
         nameView.frame = CGRectMake(0, 10.0f, nameImg.size.width, nameImg.size.height);
-        nameView.center = CGPointMake(frame.size.width * 0.5f, nameView.center.y);  // NEON-spilled x centring
+        nameView.center = CGPointMake(frame.size.width * 0.5f, nameView.center.y);  // x = runtime-structural (vmul.f32 with 0.5)
     } else {
         nameView.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f - 80.0f);
     }
@@ -159,7 +159,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     passView.userInteractionEnabled = YES;
     if (!isPad) {
         passView.frame = CGRectMake(0, 120.0f, passImg.size.width, passImg.size.height);
-        passView.center = CGPointMake(frame.size.width * 0.5f, passView.center.y);  // NEON-spilled x centring
+        passView.center = CGPointMake(frame.size.width * 0.5f, passView.center.y);  // x = runtime-structural (vmul.f32 with 0.5)
     } else {
         passView.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f + 50.0f);
     }

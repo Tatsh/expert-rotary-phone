@@ -6,8 +6,7 @@
 //  (initWithStyle:reuseIdentifier: @ 0x7457c, setLink: @ 0x7501c, sampleStop @ 0x75094). The row
 //  shows the song jacket (shadowed) over a tappable sample overlay (spinner while buffering, a
 //  "play" glyph while playing), the name / artist / "LEVEL b/m/h" labels, an arcade badge, and an
-//  iTunes-link button. Some frame origins are content-view-relative and NEON-spilled in the binary;
-//  reconstructed with the byte-verified sizes and best-effort origins.
+//  iTunes-link button. All frame constants are byte-verified from the literal pool.
 //
 
 #import "StoreDetailMusicCell.h"
@@ -100,7 +99,9 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
     // Name (shrinks to fit), artist, and the level line — all to the right of the jacket.
     const CGFloat labelX = 110.0f;   // 0x42dc0000
-    const CGFloat labelW = content.frame.size.width - labelX - 30.0f;   // content-relative in the binary
+    // @ 0x749c0: vldr.32 s0,[pc,#0x3a4] → literal@0x74b84 = 0xc2f00000 = −120.0;
+    // vadd content.width + (−120) → labelW = content.width − 120.
+    const CGFloat labelW = content.frame.size.width - 120.0f;   // 0xc2f00000
     labelName = [[UILabel alloc] initWithFrame:CGRectMake(labelX, 8.0f, labelW, 18.0f)];
     labelName.backgroundColor = [UIColor clearColor];
     labelName.font = [UIFont fontWithName:kCellFont size:14.0f];   // size dropped by the decompiler

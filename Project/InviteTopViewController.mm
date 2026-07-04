@@ -5,8 +5,10 @@
 //  See InviteTopViewController.h. Reconstructed from Ghidra project rb420, program
 //  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons (system
 //  SE on decide/cancel, root-VC end callback). The open/close fades are byte-verified;
-//  initAtNavigationController's panel/button frames are laid out relative to the two
-//  sub-image views (their NEON-spilled origins are reproduced structurally).
+//  initAtNavigationController's panel/button frames are structural, computed from runtime image
+//  .size plus literal constants (player panel y=15.0; guest panel y=playerH+30.0; player btn
+//  y=panelH-btnH-20.0; guest btn y=panelH-btnH-15.0; scroll content +100.0), all centred by
+//  (frame.width - img.width)*0.5. Origins derive from runtime .size, not lost constants.
 //
 
 #import "InviteTopViewController.h"

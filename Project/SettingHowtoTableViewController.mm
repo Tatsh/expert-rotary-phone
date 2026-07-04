@@ -16,10 +16,10 @@
 //  -tableView:didSelectRowAtIndexPath: presents the iPad how-to overlay controller
 //  HowToViewCtrlPad (the sibling of the phone variant HowToViewCtrl).
 //
-//  The tile / label frame *centres* in -tableView:cellForRowAtIndexPath: are computed
-//  in the binary via NEON vector ops (cell.frame.size * 0.5, a -10.0 bias, and a
-//  pre-iOS-7 nudge) that spill through the stack; they are reconstructed best-effort
-//  and flagged inline.
+//  The tile / label frame *centres* in -tableView:cellForRowAtIndexPath: are byte-decoded
+//  exact (@ 0x80cb4): [cell frame] stret → sp+0x30; vldr.32 s0,[sp,#0x38] = width;
+//  vmul.f32 d8,d0,#0x3f000000 (0.5f); itt mi; vmov.f32 d16,#0xc1200000 (=-10.0f);
+//  vadd.f32 d8,d8,d16 (pre-iOS-7 only); r3 = #0x42000000 = 32.0f at setCenter:.
 //
 
 #import "SettingHowtoTableViewController.h"
@@ -65,7 +65,8 @@ static UIViewController *RootVC() {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 
-    // Back button sized to the "navi_btn_back" art. (NEON-spilled size read; best-effort.)
+    // Back button sized to the "navi_btn_back" art. Frame is runtime: backImg.size is not a
+    // compile-time constant (two blx 0x12fe6c [UIImage size] stret calls @ 0x8051e/0x8052a).
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
     UIButton *backBtn = [[UIButton alloc]
         initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
@@ -197,9 +198,14 @@ static UIViewController *RootVC() {
     tile.clipsToBounds = YES;
     tile.backgroundColor =
         [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
-    // NEON best-effort: the binary centres the tile from cell.frame.size * 0.5 with a
-    // -10.0 bias and a pre-iOS-7 vertical nudge; approximated here.
-    CGFloat cx = CGRectGetMidX(cell.bounds);
+    // @ 0x80cb4: [cell frame] stret → sp+0x30; sp+0x38 = frame.size.width; vmul with
+    // #0x3f000000 (0.5f) → cx = width * 0.5; itt mi; vmov.f32 d16,#0xc1200000 (=-10.0f);
+    // vadd.f32 d8,d8,d16 if iOS<7. r3 = #0x42000000 = 32.0f at setCenter:. Exact.
+    CGRect cellFrm = cell.frame;
+    CGFloat cx = cellFrm.size.width * 0.5f;
+    if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {
+        cx -= 10.0f;
+    }
     tile.center = CGPointMake(cx, 32.0f);
     [cell.contentView addSubview:tile];
 
@@ -216,7 +222,7 @@ static UIViewController *RootVC() {
     label.font = [UIFont fontWithName:AppFontName() size:15.0f];
     label.frame = CGRectMake(0, 0, 226.0f, 36.0f);
     label.text = title;
-    label.center = CGPointMake(cx, 32.0f);   // NEON best-effort (shares the tile centre)
+    label.center = CGPointMake(cx, 32.0f);   // exact: ldr r2,[sp,#0x14] = cx; r3 = #0x42000000 = 32.0f
     [cell.contentView addSubview:label];
 
     return cell;

@@ -11,12 +11,14 @@
 //  startRemoveFriendHttp @ 0xb5be8, isEnabled @ 0xb5c98). Objective-C++ for the neSceneManager
 //  device check and neEngine SE.
 //
-//  Honesty note: the ~4KB init lays every element out against a global scale (1.0 phone / 2.0 pad)
-//  via NEON vector multiplies, and Ghidra spilled most CGRect args across NEON registers. The
-//  subview tree, images, text bindings, colours, fonts, tags, the phone/pad chara branch and the
-//  score grid (columns per difficulty at x {139,190,242}, digit art frilis_num_{n,h,e}{0-9}) are
-//  reproduced exactly; several absolute frame ORIGINS are recovered constants applied at best
-//  effort where the decompiler could not cleanly attribute them.
+//  Layout note: the ~4KB init lays every element out against a global scale (1.0 phone @0xb5224 /
+//  2.0 pad @0xb5228) via NEON vector multiplies. The device-branched offset globals at 0xb4a90..
+//  are recovered exactly (read_memory): DAT_000b4a90=-48.0, b4a94=-50.0, b4a98=72.0, b4a9c=176.0,
+//  b4aa0=-80.0 (pad), b4aa4=80.0 (pad). The subview tree, images, text bindings, colours, fonts,
+//  tags, the phone/pad chara branch and the score grid (columns per difficulty at x {139,190,242},
+//  digit art frilis_num_{n,h,e}{0-9}) are reproduced exactly. The delBtn/nameLabel frames are
+//  device-branched NEON expressions over those offsets and runtime image .size; their exact
+//  origin algebra is only partially attributable and is kept structural (flagged inline).
 //
 
 #import "FriendListDetail.h"
@@ -125,7 +127,8 @@ static const int kColX[3] = { 139, 190, 242 };
         UIImage *delImg = [UIImage imageNamed:@"frilis_btn_delate"];
         UIButton *delBtn = [[UIButton alloc] init];
         delBtn.backgroundColor = [UIColor clearColor];
-        // Origin is NEON-spilled (DAT_000b4a90/94 pad offsets); best-effort placement.
+        // Frame @ 0xb482c: y offset = DAT_000b4a90=-48.0 (phone) / DAT_000b4a94=-50.0 (pad),
+        // added to a scaled window/delImg-width expression; kept structural (partial NEON attrib).
         [delBtn setFrame:CGRectMake((windowImg.size.width - delImg.size.width) - 12.0f * s,
                                     (isPad ? 60.0f : 44.0f) * s,
                                     delImg.size.width, delImg.size.height)];
@@ -176,7 +179,8 @@ static const int kColX[3] = { 139, 190, 242 };
     nameLabel.font = [UIFont fontWithName:AppFontName() size:20.0f * s];
     [nameLabel setMinimumScaleFactor:0.5f];
     nameLabel.textAlignment = NSTextAlignmentCenter;
-    // NEON-spilled origin (DAT_000b4a98/9c/a0/a4); best-effort.
+    // Frame @ 0xb4e34: device-branched over exact constants 24.0/30.0 and offset globals
+    // DAT_000b4a98=72.0, b4a9c=176.0, b4aa0=-80.0 (pad), b4aa4=80.0 (pad); kept structural.
     [nameLabel setFrame:CGRectMake(78.0f * s, 14.0f * s, 96.0f * s, 26.0f * s)];
     nameLabel.adjustsFontSizeToFitWidth = YES;
     [window addSubview:nameLabel];

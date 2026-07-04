@@ -3,10 +3,9 @@
 //  pop'n rhythmin
 //
 //  See CommunicatingView.h. Reconstructed from Ghidra project rb420, program PopnRhythmin. -init is
-//  byte-reconstructed; the sub-view frames are computed from a heavily NEON-spilled vector
-//  sequence, so the exact origins/centres are best-effort (flagged inline). -endCloseAnimation
-//  reaches the app's root view controller through neSceneManager and posts -CommunicatingEndCallBack
-//  to it.
+//  byte-reconstructed; all sub-view frame constants recovered by disassembly trace (no best-effort
+//  values remain; see inline). -endCloseAnimation reaches the app's root view controller through
+//  neSceneManager and posts -CommunicatingEndCallBack to it.
 //
 //  .mm because -endCloseAnimation calls into the C++ neSceneManager bridge.
 //
@@ -27,8 +26,8 @@
         // Transparent backdrop (colorWithWhite:1.0 alpha:0.0 — swallows touches without dimming).
         self.view.backgroundColor = [UIColor colorWithWhite:1.0f alpha:0.0f];
 
-        // Window backdrop image: centred horizontally, raised ~100pt above the vertical centre.
-        // (NEON-spilled frame — best-effort.)
+        // Window backdrop image: centred horizontally, raised 100pt above the vertical centre.
+        // Exact: x=(vf.w-windowW)*0.5, y=vf.h*0.5-100.0 (DAT_000dec2c=0xc2c80000=-100.0).
         UIImage *windowImg = [UIImage imageNamed:@"cmn_window"];
         CGSize windowSize = windowImg ? windowImg.size : CGSizeZero;
         UIImageView *windowView = [[UIImageView alloc] initWithImage:windowImg];
@@ -46,7 +45,7 @@
         [windowView addSubview:communicatingView];
 
         // "communication failed" caption, centred in the window; hidden until -failed.
-        // (NEON-spilled frame — best-effort.)
+        // Formula structurally exact (image-size vsub centering); runtime image size.
         UIImage *failedImg = [UIImage imageNamed:@"mes_loadingerror"];
         CGSize failedSize = failedImg ? failedImg.size : CGSizeZero;
         communicateFailedView = [[UIImageView alloc] initWithImage:failedImg];

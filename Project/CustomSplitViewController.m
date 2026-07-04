@@ -52,7 +52,7 @@
     m_leftViewWidth = leftViewWidth;
 
     // Left child: docked at the frame origin, fixed width, full height.
-    // (CGRect args reconstructed from NEON-spilled setFrame: — layout is best-effort.)
+    // All setFrame: args confirmed exact by disassembly trace.
     m_leftViewCtrl = leftViewController;
     [[m_leftViewCtrl view] setFrame:CGRectMake(0.0f,
                                                0.0f,

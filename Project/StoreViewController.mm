@@ -87,7 +87,9 @@
     m_CoverView.hidden = YES;
     [self.view addSubview:m_CoverView];
 
-    // The dialog frame sizes are NEON-spilled (best-effort).
+    // Dialog frame sizes — byte-verified from the literal pool:
+    // iPad @ 0x539e4: sp[0]=0x43c80000=400, sp[4]=0x43960000=300; font movt #0x4190 → 18.0.
+    // Phone @ 0x53a48: sp[0]=0x43960000=300, sp[4]=0x43870000=270; font mov.w #0x41800000 → 16.0.
     UIFont *messageFont;
     if (neSceneManager::isPadDisplay()) {
         m_ModalDialog = [[StoreDialogView alloc] initWithFrame:CGRectMake(0, 0, 400, 300)];

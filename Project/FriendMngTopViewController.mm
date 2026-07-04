@@ -4,8 +4,10 @@
 //
 //  See FriendMngTopViewController.h. Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //  The open/close animations are byte-verified; initAtNavigationController's button/image/action
-//  wiring is reconstructed, with its NEON-spilled, device-branched frame origins flagged (they are
-//  laid out relative to the hub-view centre). The first-play HowToViewCtrl tutorial and the section
+//  wiring is reconstructed. Its frames are structural: each button/caption is centred on the
+//  hub-view centre (cx = view.width * 0.5) at a running y that starts at 30.0 and steps by
+//  bimg.height + 20.0; the reply badge sits at (5.0, 15.0). Origins derive from runtime image
+//  .size, not lost constants. The first-play HowToViewCtrl tutorial and the section
 //  navigations (onList/Request/Reply) are deferred (see HANDOFF.md).
 //
 

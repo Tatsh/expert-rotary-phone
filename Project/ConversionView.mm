@@ -124,7 +124,7 @@
     cautionLabel.minimumScaleFactor = 10.0f;
     cautionLabel.frame = CGRectMake(0.0f, 10.0f, 272.0f, 50.0f);
     if (!isPad) {
-        // Phone origin nudge (+24,+24) from the NEON pair — best-effort.
+        // Phone origin nudge: +24.0 x and y (vmov.f32 d16,#0x41c00000 = 24.0). Byte-verified.
         CGRect f = cautionLabel.frame;
         f.origin.x += 24.0f;
         f.origin.y += 24.0f;
@@ -163,7 +163,7 @@
     howtoLabel.frame = CGRectMake(0.0f, 160.0f, 272.0f, 50.0f);
     howtoLabel.text = @"機種変更方法";
     if (!isPad) {
-        CGRect f = howtoLabel.frame;   // phone origin nudge (+24,+24) — best-effort
+        CGRect f = howtoLabel.frame;   // phone origin nudge: +24.0 x and y (0x41c00000). Byte-verified.
         f.origin.x += 24.0f;
         f.origin.y += 24.0f;
         howtoLabel.frame = f;

@@ -4,12 +4,13 @@
 //
 //  See AcceptPolicyViewController.h. Reconstructed from Ghidra project rb420, program
 //  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons (system SE,
-//  pad-vs-phone card size, root-VC overlay + end callback). The open/close fades and the
-//  button/animation actions are byte-verified; init's card / embedded-nav / button frames
-//  are heavily NEON-spilled in the binary, so their pixel origins are reconstructed
-//  structurally (card centred on screen, content nav inset ~3pt, buttons on the nav view)
-//  and flagged inline. The gradient colours, corner radii, images, actions and view
-//  hierarchy are exact.
+//  pad-vs-phone card size, root-VC overlay + end callback). All geometry constants are
+//  byte-verified from ARM32 Thumb2 disassembly / literal-pool reads: card 295×278 phone /
+//  425×292 pad (movw/movt pairs), nav-view 3pt inset (vmov.f32 d20,#3.0), textView x=10
+//  (movt #0x4120) / y=60 pad / 55 phone (movt), detailBtn y=163.0 (0xb02b4: 0x43230000),
+//  rejectBtn x=15.0 (movt #0x4170) / y-gap=17.0 (vmov.f32 0x41880000), accept x-addend
+//  84.0 iPad (0xb02b8: 0x42a80000) / 20.0 phone (vmov.f32 0x41a00000). Gradient colours,
+//  corner radii, images, actions and view hierarchy are exact.
 //
 
 #import "AcceptPolicyViewController.h"
@@ -45,7 +46,7 @@
     const CGRect frame = self.view.frame;
     const bool isPad = neSceneManager::isPadDisplay();
 
-    // Rounded, clipped card. Phone 295x278 / pad 425x292 (NEON-spilled w/h pairing),
+    // Rounded, clipped card. Phone 295×278 / pad 425×292 (byte-verified: movw/movt pairs),
     // centred on screen.
     UIView *card = [[UIView alloc] init];
     card.frame = isPad ? CGRectMake(0, 0, 425.0f, 292.0f) : CGRectMake(0, 0, 295.0f, 278.0f);
@@ -64,7 +65,8 @@
     [card.layer insertSublayer:gradient atIndex:0];
     [self.view addSubview:card];
 
-    // Embedded content navigation controller, inset ~3pt inside the card (NEON-spilled).
+    // Embedded content navigation controller, inset 3pt inside the card (byte-verified:
+    // vmov.f32 d20,#3.0; dims = card − 6 via vadd with −6.0).
     _naviCtrl = [[UINavigationController alloc] init];
     _naviCtrl.view.frame =
         CGRectMake(3.0f, 3.0f, card.frame.size.width - 6.0f, card.frame.size.height - 6.0f);
@@ -77,7 +79,7 @@
     [card addSubview:_naviCtrl.view];
 
     // Read-only terms summary text (empty by default; the real copy is set elsewhere).
-    // Frame inset within the content nav view (NEON-spilled; reconstructed structurally).
+    // x=10.0 (movt #0x4120 = 0x41200000), y=60.0 pad / 55.0 phone (movt — byte-verified).
     const CGRect navFrame = _naviCtrl.view.frame;
     CustomTextView *textView = [[CustomTextView alloc]
         initWithFrame:CGRectMake(10.0f, isPad ? 60.0f : 55.0f,
@@ -101,7 +103,8 @@
         forControlEvents:UIControlEventTouchUpInside];
     [_naviCtrl.view addSubview:detailBtn];
 
-    // Reject button (NEON-spilled origin).
+    // Reject button: x=15.0 (movt #0x4170 = 0x41700000), y-gap=17.0 (vmov.f32 0x41880000 —
+    // byte-verified).
     UIImage *rejectImg = [UIImage imageNamed:@"btn_reject"];
     UIButton *rejectBtn = [[UIButton alloc] init];
     [rejectBtn setBackgroundImage:rejectImg forState:UIControlStateNormal];
@@ -112,12 +115,13 @@
         forControlEvents:UIControlEventTouchUpInside];
     [_naviCtrl.view addSubview:rejectBtn];
 
-    // Accept button (NEON-spilled origin; sits to the right of / below reject).
+    // Accept button: x = rejectImg.size.width + 15.0 + (84.0 pad / 20.0 phone).
+    // Byte-verified: 15.0 = vmov.f32 0x41700000; 84.0 = 0xb02b8: 0x42a80000 (pad);
+    // 20.0 = vmov.f32 0x41a00000 (phone). Binary does NOT include rejectBtn.origin.x.
     UIImage *acceptImg = [UIImage imageNamed:@"btn_accept"];
     UIButton *acceptBtn = [[UIButton alloc] init];
     [acceptBtn setBackgroundImage:acceptImg forState:UIControlStateNormal];
-    acceptBtn.frame = CGRectMake(rejectBtn.frame.origin.x + rejectImg.size.width + 15.0f +
-                                 (isPad ? 0.0f : 20.0f),
+    acceptBtn.frame = CGRectMake(rejectImg.size.width + 15.0f + (isPad ? 84.0f : 20.0f),
                                  rejectBtn.frame.origin.y,
                                  acceptImg.size.width, acceptImg.size.height);
     acceptBtn.exclusiveTouch = YES;

@@ -5,9 +5,9 @@
 //  See StoreDetailHeaderView.h. Reconstructed from Ghidra project rb420, program PopnRhythmin
 //  (initWithFrame: @ 0x73a0c, loadPackInfo: @ 0x740d4, setArtwork: @ 0x74400, buttonPurchase @
 //  0x74564). The header hosts the pack jacket (+ a faded reflection), the pack name/comment, the
-//  buy button and a "NEW" marker. Some frame origins are bounds-relative and NEON-spilled in the
-//  binary; reconstructed with the byte-verified sizes and best-effort offsets (the header self-
-//  sizes in loadPackInfo:, so the initial origins are refined there).
+//  buy button and a "NEW" marker. All frame constants are byte-verified from the literal pool;
+//  width-relative fields read self.frame.size.width at runtime and adjust by a VFP literal
+//  (the header self-sizes in loadPackInfo:, so initial heights are refined there).
 //
 
 #import "StoreDetailHeaderView.h"
@@ -66,8 +66,11 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
     m_ReflectionArtworkView.alpha = 0.4f;   // 0x3ecccccd
     [self addSubview:m_ReflectionArtworkView];
 
-    // Pack name (2 lines, word-wrapped, DFSoGei 18). Origin is bounds-relative in the binary.
-    m_LabelName = [[UILabel alloc] initWithFrame:CGRectMake(96.0f, 8.0f, 214.0f, 40.0f)];
+    // Pack name (2 lines, word-wrapped, DFSoGei 18).
+    // @ 0x73c3c: x=0x42c00000=96, y=0x41000000=8, w=frame.width+literal@0x74024(0xc2d40000=−106),
+    // h=0x42200000=40.
+    m_LabelName = [[UILabel alloc] initWithFrame:CGRectMake(96.0f, 8.0f,
+                                                             self.frame.size.width - 106.0f, 40.0f)];
     m_LabelName.backgroundColor = [UIColor clearColor];
     m_LabelName.numberOfLines = 2;
     m_LabelName.lineBreakMode = NSLineBreakByWordWrapping;
@@ -75,7 +78,10 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
     [self addSubview:m_LabelName];
 
     // Pack comment (grows to fit, DFSoGei 12).
-    m_LabelComment = [[UILabel alloc] initWithFrame:CGRectMake(96.0f, 60.0f, 15.0f, 102.0f)];
+    // @ 0x73d04: x=0x41700000=15, y=0x42cc0000=102, w=frame.width+literal(0xc1f00000=−30),
+    // h=0x41200000=10.  (The decompiler spilled these as NEON lanes; all four are byte-exact.)
+    m_LabelComment = [[UILabel alloc] initWithFrame:CGRectMake(15.0f, 102.0f,
+                                                                self.frame.size.width - 30.0f, 10.0f)];
     m_LabelComment.backgroundColor = [UIColor clearColor];
     m_LabelComment.numberOfLines = 0;
     m_LabelComment.lineBreakMode = NSLineBreakByWordWrapping;
@@ -84,8 +90,10 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
     [self addSubview:m_LabelComment];
 
     // Buy button: three stretchable states, white shadowed title.
+    // @ 0x73ec0: x=frame.width+literal@0x740d0(0xc3020000=−130), y=0x427c0000=63,
+    // w=0x42f00000=120, h=0x41c80000=25.
     m_ButtonPurchase = [UIButton buttonWithType:UIButtonTypeCustom];
-    m_ButtonPurchase.frame = CGRectMake(96.0f, 63.0f, 120.0f, 25.0f);
+    m_ButtonPurchase.frame = CGRectMake(self.frame.size.width - 130.0f, 63.0f, 120.0f, 25.0f);
     m_ButtonPurchase.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;   // 1
     [m_ButtonPurchase setBackgroundImage:[[UIImage imageNamed:@"store_btn_normal_1"]
         stretchableImageWithLeftCapWidth:6 topCapHeight:6] forState:UIControlStateNormal];

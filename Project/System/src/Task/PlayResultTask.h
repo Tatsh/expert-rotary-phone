@@ -63,10 +63,15 @@ private:
     void resultGotoNext();
 
     // The case-2 Twitter share-button build (FUN_0003d690 @ ~0x3da3e): lay out the
-    // UIButton from the "bt_twitter" image size (device-branched, NEON-obscured frame),
-    // wrap a TwitterUtil(text,image) as its tweet target, add it over the GL view and
-    // fade it in. Isolated as its own piece (the frame math + the TwitterUtil class are
-    // its remaining work); updateResultPresent calls it once the backdrop is captured.
+    // UIButton, wrap a TwitterUtil(text,image) as its tweet target, add it over the GL
+    // view and fade it in. Frame breakdown (decompiled from FUN_0003d690):
+    //   x = 5.0f (0x40a00000) — exact constant.
+    //   y = device-branched exact constant: phone 435.0f (0x43d98000), +15.0f on Retina
+    //       (→ 450.0f), 527.0f (0x4403c000) for displayType 2 (+15.0f → 542.0f),
+    //       965.0f (0x44714000) on pad.
+    //   w, h = bt_twitter image .size at runtime — not fixed constants.
+    // The NEON register spills affect only the w/h path; x and y are plain constants.
+    // Remaining work: the TwitterUtil class body.
     void buildShareButton(int displayType);
 
     // The 10-lane x 12-array number-texture load (num_cool_/great_/good_/bad_/com_/

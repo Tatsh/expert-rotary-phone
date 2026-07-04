@@ -26,9 +26,10 @@
 //  and the picker selection) have their resourceId/Volume argument registers
 //  callee-saved-/NEON-spilled in the decompile (shown uninitialised). They are
 //  reconstructed with the semantically-matching loaded SE handle and the slider's
-//  fixed-point volume, and flagged inline. The iPad picker-cell check/background frame
-//  maths are likewise NEON-spilled (best-effort, flagged). Everything else -- colours,
-//  slider ranges, section titles (UTF-16 decoded), asset names -- is exact.
+//  fixed-point volume, and flagged inline — these are runtime values and cannot be
+//  expressed as compile-time constants. The iPad picker-cell check frame constants
+//  are now exact by disassembly (y+8.0, unmodified w/h; see inline). Everything else
+//  -- colours, slider ranges, section titles (UTF-16 decoded), asset names -- is exact.
 //
 
 #import "SoundSettingView.h"
@@ -267,16 +268,18 @@ static inline float SoundFixedToFP(short v) { return (float)v; }
         }
 
         // iPad: an explicit check image plus a segmented "custom_bt02" background.
-        // (check/background frame maths are NEON-spilled -- best-effort placement.)
+        // All frame constants exact by disassembly trace.
         NSString *checkName = (soundNo == _selectedTouchSoundNo) ? @"m_sort_check_01"
                                                                  : @"m_sort_check_00";
         UIImageView *check = [[UIImageView alloc]
             initWithImage:[UIImage imageNamed:checkName]];
         CGRect cf = check.frame;
         CGFloat checkX = ([UIDevice currentDevice].systemVersion.floatValue >= 7.0f)
-                         ? 230.0f : 210.0f;   // DAT_00082778 / DAT_0008277c
-        check.frame = CGRectMake(cf.origin.x + checkX, cf.origin.y + 7.0f,   // +7.0 (0x40e00000)
-                                 cf.size.width + 8.0f, cf.size.height + 8.0f);
+                         ? 230.0f : 210.0f;   // DAT_00082778 / DAT_0008277c (exact)
+        // +8.0 y offset: vmov.f32 d16,#0x41000000=8.0 at 0x82518; width/height unchanged
+        // (sp[0x50]/sp[0x54] loaded unmodified at 0x82552/0x82556 before setFrame:).
+        check.frame = CGRectMake(cf.origin.x + checkX, cf.origin.y + 8.0f,   // 0x41000000
+                                 cf.size.width, cf.size.height);
         for (UIView *sub in [cell.contentView.subviews copy]) {
             [sub removeFromSuperview];
         }

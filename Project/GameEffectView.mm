@@ -26,10 +26,9 @@
 //  meaningful on/off state is conveyed by the m_sort_check checkmark image. Reproduced
 //  verbatim rather than "corrected".
 //
-//  NEON note: the checkmark image frame origin in -tableView:cellForRowAtIndexPath: is
-//  computed with NEON vector adds that spill through the stack (imageView.frame origin
-//  starts at (0,0) after -initWithImage:, then constant offsets are added). The offsets
-//  are recovered exactly; reconstructed best-effort and flagged inline.
+//  Checkmark origin: imageView.frame starts at (0,0) after -initWithImage:; constant
+//  offsets are added via NEON vadd. All offsets confirmed exact by disassembly and
+//  DAT_ memory reads (DAT_00073514/0c/10); no best-effort values remain.
 //
 
 #import "GameEffectView.h"
@@ -142,9 +141,8 @@
     UIImage *checkImage = [UIImage imageNamed:(on ? @"m_sort_check_01" : @"m_sort_check_00")];
     UIImageView *checkView = [[UIImageView alloc] initWithImage:checkImage];
 
-    // NEON best-effort: origin starts at the image-sized (0,0,w,h) frame, then constant
-    // offsets are added (recovered from DAT_00073514/0c/10). Phone: (+245, +15). iPad:
-    // (+230, +8) on iOS 7+, (+210, +8) before iOS 7.
+    // Origin starts at (0,0,w,h); exact constant offsets from DAT_00073514/0c/10 +
+    // vmov.f32 immediates. Phone: (+245, +15). iPad: (+230, +8) iOS 7+, (+210, +8) pre-7.
     CGRect f = checkView ? checkView.frame : CGRectZero;
     if (!neSceneManager::isPadDisplay()) {
         f.origin.x += 245.0f;   // 0x43750000

@@ -27,8 +27,9 @@
 //     button 290x53, label 226x36, border 3 / corner 5 / label-corner 10, font 15pt)
 //     are exact float-hex decodes.
 //   - -[... cellForRowAtIndexPath:] centres the button/label from the *cell frame* via
-//     NEON-spilled math; the centre X (cell.frame.size.width * 0.5, shifted -10 pre-iOS 7)
-//     and centre Y (32) are best-effort reconstructions of that spill.
+//     NEON (exact @ 0xd3d08): vldr.32 s0,[sp,#0x38] = width; vmul.f32 d8,d0,#0x3f000000
+//     (0.5f); itt mi; vmov.f32 d16,#0xc1200000 (=-10.0f); vadd.f32 d8,d8,d16 (iOS<7);
+//     r3 = #0x42000000 = 32.0f. All byte-decoded constants; not best-effort.
 //   - row 2 shows a PolicyView terms-of-use overlay, wrapped in a UINavigationController.
 //
 
@@ -151,7 +152,7 @@ static UIViewController *RootVC() {
     plate.clipsToBounds = YES;
     plate.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
 
-    // Centre from the cell frame (NEON-spilled; best-effort). Pre-iOS 7 nudges X by -10.
+    // Centre from the cell frame (exact @ 0xd3d08). Pre-iOS 7 nudges X by -10.0f.
     CGRect cellFrame = cell.frame;
     CGFloat centerX = cellFrame.size.width * 0.5f;
     if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {

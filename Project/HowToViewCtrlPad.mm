@@ -103,7 +103,7 @@
     UIImage *dotImg = [UIImage imageNamed:@"howto_page_off"];
     CGFloat dotsWidth = dotImg.size.width * count + (count * 10 - 10);
     CGFloat dotsCenterY = _scrollView.frame.origin.y + _scrollView.frame.size.height
-                          + 20.0f + dotImg.size.height * 0.5f;   // NEON-spilled
+                          + 20.0f + dotImg.size.height * 0.5f;   // 20.0: vmov.f32 d16,#0x41a00000 @ 0x17038 (exact)
     _pageImgs = [[UIView alloc] initWithFrame:CGRectMake(0, 0, dotsWidth, dotImg.size.height)];
     _pageImgs.backgroundColor = [UIColor clearColor];
     _pageImgs.center = CGPointMake(vf.size.width * 0.5f, dotsCenterY);

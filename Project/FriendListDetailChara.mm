@@ -7,13 +7,13 @@
 //  start/endCloseAnimation @ 0xbbc30/0xbbd00). Objective-C++ for gCharaManager / GetSkillDataStruct
 //  and the neSceneManager device check.
 //
-//  Honesty note: initWithFrame:friendData: is laid out with a global scale factor (1.0 on phone,
-//  2.0 on iPad) applied to every dimension via NEON vector multiplies. Ghidra spilled most of the
-//  CGRect arguments across NEON registers, so the exact per-view frame ORIGINS are only partially
-//  recoverable; the recovered layout constants (positions/sizes) and, crucially, the parent-relative
-//  re-centring (each element is setCenter'd against its parent's frame) are reproduced faithfully,
-//  while a few absolute origins are best-effort. The subview tree, images, text bindings, colours,
-//  fonts, corner radius and border styling are exact.
+//  Layout note: initWithFrame:friendData: applies a global scale factor s (1.0 phone @0xbbb04 /
+//  2.0 iPad @0xbbb08, selected via adr 0xbbb04 + isPad?+4) to every dimension via NEON vector
+//  multiplies. All layout constants are recovered exactly from the literal pool at 0xbb0a4..
+//  (237.0, 29.5, 0.2, 137.0, 122.0, 323.0, 44.0, 107.0, 62.0) and 0xbbb14 (0.22). Frame ORIGINS
+//  for the portrait/sugo views come from each image's runtime .size (structural, not a lost
+//  constant); every other element is setCenter'd against its parent's frame. The subview tree,
+//  images, text bindings, colours, fonts, corner radius and border styling are exact.
 //
 
 #import "FriendListDetailChara.h"
@@ -67,7 +67,8 @@
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:portraitFile]];
     UIImageView *portrait = [[UIImageView alloc]
         initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:portraitURL]]];
-    // Frame scaled from the portrait's own size (constants 29.5, 0.2); NEON-spilled origin.
+    // x=29.5*s (@0xbb0a8=0x41ec0000), y=0.2*s*height (@0xbb0ac=0x3e4ccccd); w/h = runtime
+    // portrait .size * s. setFrame @ 0xbafd2.
     CGRect pf = portrait.frame;
     [portrait setFrame:CGRectMake(29.5f * s, 0.2f * s * pf.size.height,
                                   pf.size.width * s, pf.size.height * s)];
@@ -166,7 +167,7 @@
         initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:sugoURL]]];
     sugoView.backgroundColor = [UIColor clearColor];
     CGRect sf = sugoView.frame;
-    // Scaled by 0.22 (DAT_000bbb14) then the global scale; NEON-spilled origin.
+    // w/h = runtime sugo .size * 0.22 (@0xbbb14=0x3e6147ae) * s; origin (0,0). setFrame @ 0xbba76.
     [sugoView setFrame:CGRectMake(0, 0, sf.size.width * 0.22f * s, sf.size.height * 0.22f * s)];
     sugoView.center = CGPointMake(card.frame.size.width * 0.5f, sugoView.center.y);
     [card addSubview:sugoView];

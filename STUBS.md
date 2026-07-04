@@ -52,6 +52,8 @@
       FUN_00062b5c, getRandRangeInt FUN_00062be0 == GetRandRangeInt in the original
       Random.cpp). The ctor placement-constructs it.
 - StoreMainViewController::viewDidLoad (FUN_00042eec) — NEON-obscured CGRect geometry
+  (checked: decompile confirms heavy extraout_sN spills throughout; no constant recovery
+  without ARM Thumb-2 movt trace; remains open)
 - MenuMainTask::setup tail — news-text / RewardNetwork / event-unlock scan
 
 ## Declared real-ref units still needing a body
@@ -86,7 +88,12 @@
       wired as the @selector(tweet) target; and the two-stage bounce-in (0.2s scale->2.0,
       0.5s ->1.0, completion re-enables taps; options=UIViewAnimationOptionAllowUserInteraction
       =2). The innermost completion (FUN @ 0x3f2ac, unmarked-Thumb "bad data") was hand-
-      decoded from raw halfwords to [button setUserInteractionEnabled:YES]. TwitterUtil
+      decoded from raw halfwords to [button setUserInteractionEnabled:YES] — byte-verified:
+      48-byte Thumb body (MOVW r1→SEL("setUserInteractionEnabled:"), MOVS r2,#1 (YES),
+      LDR r0,[block+0x14]=self, LDR.W r0,[r0,#0x398]=m_shareButton, B tail-call to
+      objc_msgSend stub @ 0x100708); SEL confirmed from __objc_methnames @ 0x00117f7b.
+      Adjacent function at 0x3f2c4 (setAlpha:0.0f) is a separate block-invoke in the
+      same "bad data" region, unrelated to this completion. TwitterUtil
       class fully reconstructed (Social.framework SLComposeViewController). DONE:
       updateScoreCount (cases 3/5/6 count-up) —
       all 4 SE source ids traced by disassembly (v38 @+0x2fc line-in, se08_bonus_fai

@@ -629,10 +629,11 @@ void PlayResultTask::buildShareButton(int displayType) {
             b.transform = CGAffineTransformMake(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
         } completion:^(BOOL /*finished*/) {
             // Ghidra: ResultShareButtonBounceDone_block @ 0x3f2ac
-            // (block-invoke thunk for the spring-back completion; Ghidra reports bad
-            // instruction data / halt_baddata — control flow truncated at that address.
-            // Functionality recovered from call-site context: re-enable tap interaction
-            // on the share button once the bounce animation has settled.)
+            // Byte-verified Thumb-2: MOVW r1→SEL("setUserInteractionEnabled:"),
+            // MOVS r2,#1 (YES), LDR r0,[block+0x14]=self,
+            // LDR.W r0,[r0,#0x398]=m_shareButton, B (tail-call) objc_msgSend @ 0x100708.
+            // SEL confirmed from __objc_methnames @ 0x00117f7b. Ghidra reported
+            // halt_baddata at this address (ARM mode decode of Thumb-2 bytes).
             UIButton *b = (__bridge UIButton *)m_shareButton;
             b.userInteractionEnabled = YES;
         }];

@@ -307,13 +307,18 @@ static UIViewController *RootVC() {
     pill.layer.cornerRadius = 5.0f;                   // 0x40a00000
     pill.clipsToBounds = YES;
     pill.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
-    // Center the pill in the cell; -10pt vertical nudge pre-iOS 7 [NEON, best-effort].
+    // Center the pill: X = cell width/2 (nudged left 10pt pre-iOS 7), Y is a
+    // hard-coded 30.0f. Recovered from the disassembly @ 0xd50a6..0xd5136:
+    //   d8 = [sp+0x38 = cell.frame.width] * 0.5     (vmul d8,d0,#0.5)
+    //   itt mi; vmov.f32 d16,#0xc1200000 (=-10.0); vadd.f32 d8,d8,d16  (iOS<7 -> X-=10)
+    //   r3 = 0x41f00000 = 30.0f  -> the constant Y passed to setCenter:
+    // The nudge lands on X, and Y never derives from height*0.5.
     CGRect cellFrame = (cell != nil) ? cell.frame : CGRectZero;
-    CGFloat centerY = cellFrame.size.height * 0.5f;
+    CGFloat centerX = cellFrame.size.width * 0.5f;
     if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {
-        centerY -= 10.0f;
+        centerX -= 10.0f;
     }
-    pill.center = CGPointMake(cellFrame.size.width * 0.5f, centerY);
+    pill.center = CGPointMake(centerX, 30.0f);
     [cell.contentView addSubview:pill];
 
     // Title label centered over the pill.
@@ -329,7 +334,7 @@ static UIViewController *RootVC() {
     label.font = [UIFont fontWithName:AppFontName() size:15.0f];   // 0x41700000
     label.frame = CGRectMake(0, 0, 226.0f, 36.0f);    // 0x43620000 / 0x42100000
     label.text = title;
-    label.center = pill.center;   // [NEON: y term 30.0 best-effort]
+    label.center = pill.center;   // (width/2 [-10 iOS<7], 30.0f) — same as the pill (@ 0xd52f8)
     [cell.contentView addSubview:label];
 
     return cell;

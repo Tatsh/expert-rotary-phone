@@ -17,10 +17,8 @@
 @synthesize delegate = m_Delegate;   // delegate @ 0x52784 / setDelegate: @ 0x52794 (synthesized)
 @synthesize index = m_Index;         // index @ 0x527a4 (synthesized getter)
 
-// @ 0x51a44 — build the tile. Colours/offsets are the exact IEEE-754 constants
-// from the decompiled initialiser; a few label frames are approximate because the
-// original arithmetic was emitted as NEON vector ops the decompiler could not fully
-// recover (noted inline).
+// @ 0x51a44 — build the tile. All colour and geometry constants are byte-verified
+// from the literal pool and disassembly.
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         // Background image view fills the tile and owns the tap gesture.
@@ -47,10 +45,11 @@
         artLayer.shadowRadius = 2.0f;
         artLayer.shouldRasterize = YES;
 
-        // Name label — right of the jacket. Original x = frameWidth + (-145.0)
-        // (DAT_0005204c). Width 140, height ~20, auto-shrinking font @ 17pt white.
+        // Name label — right of the jacket.
+        // @ 0x51c18: x=0x430c0000=140 (constant), y=0x41400000=12,
+        // w=frame.width+literal@0x5204c(0xc3110000=−145), h=0x41a00000=20.
         m_NameLabel = [[UILabel alloc]
-            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 14, 140, 20)];
+            initWithFrame:CGRectMake(140.0f, 12.0f, CGRectGetWidth(frame) - 145.0f, 20.0f)];
         m_NameLabel.backgroundColor = [UIColor clearColor];
         m_NameLabel.font = [UIFont fontWithName:AppFontName() size:17.0f];
         m_NameLabel.textColor = [UIColor colorWithWhite:0.0f alpha:1.0f];
@@ -77,7 +76,17 @@
                            forState:UIControlStateDisabled];
         m_PurchasedButton.enabled = NO;
         [m_PurchasedButton sizeToFit];
-        // Positioned relative to the tile's bottom-right in the original (vector math).
+        // @ 0x51f98 — pad the post-sizeToFit size by (10, 4) then place the button
+        // at the tile's bottom-right corner with a 15pt right margin and 5pt bottom
+        // margin (0x41200000=10, 0x40800000=4, 0xc1700000=−15, 0xc0a00000=−5).
+        {
+            CGSize bs = m_PurchasedButton.frame.size;
+            CGFloat bw = bs.width  + 10.0f;
+            CGFloat bh = bs.height + 4.0f;
+            m_PurchasedButton.frame = CGRectMake(CGRectGetWidth(frame)  - bw - 15.0f,
+                                                  CGRectGetHeight(frame) - bh -  5.0f,
+                                                  bw, bh);
+        }
 
         // Comment label — one-line blurb under the name. (The initialiser adds it as a
         // subview; its construction was folded by the decompiler, so its frame mirrors

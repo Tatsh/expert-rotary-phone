@@ -7,9 +7,9 @@
 //  .mm because -initWithURL: / -pushCloseBtn reach the C++ "ne" engine bridge
 //  (neSceneManager::shared / rootViewController / isPadDisplay, neEngine::playSystemSe).
 //
-//  Sub-view frames in -initWithURL:, -webViewDidFinishLoad: and -observeValueForKeyPath:… are
-//  computed from a heavily NEON-spilled vector sequence in the binary, so the exact origins/sizes
-//  are best-effort and flagged inline (same convention as CommunicatingView.mm).
+//  Sub-view frames in -initWithURL:, -webViewDidFinishLoad: and -observeValueForKeyPath:… have
+//  been byte-verified from ARM32 Thumb2 disassembly / literal-pool reads (vmov.f32 / movt).
+//  The big-close-button horizontal centre is runtime-structural (depends on page contentSize).
 //
 
 #import "CustomWebView.h"
@@ -68,12 +68,14 @@
         UIImage *closeSmallImg = [UIImage imageNamed:@"inf_bt_close_s"];
         neSceneManager::shared();
         if (!neSceneManager::isPadDisplay()) {
-            // phone: place near the top-right of the root view. (NEON-spilled — best-effort.)
+            // phone: x = rf.width − sz.width + 16.0 (vmov.f32 0x41800000), y = 2.0
+            // (vmov.f32 0x40000000). Byte-verified.
             CGRect rf = rootVC.view ? rootVC.view.frame : CGRectZero;
             CGSize sz = closeSmallImg ? closeSmallImg.size : CGSizeZero;
             smallBtnFrm = CGRectMake(rf.size.width - sz.width + 16.0f, 2.0f, sz.width, sz.height);
         } else {
-            // pad: fixed placement (x = 570, y = 15). (NEON-spilled — best-effort.)
+            // pad: x=570.0 (movt #0x440e → 0x440e8000), y=15.0 (movt #0x4170 → 0x41700000).
+            // Byte-verified.
             CGSize sz = closeSmallImg ? closeSmallImg.size : CGSizeZero;
             smallBtnFrm = CGRectMake(570.0f, 15.0f, sz.width, sz.height);
         }
@@ -89,7 +91,7 @@
         _closeBtnBig = [[UIButton alloc] init];
         CGSize contentSize = _webView.scrollView ? _webView.scrollView.contentSize : CGSizeZero;
         CGSize bigSz = closeBigImg ? closeBigImg.size : CGSizeZero;
-        // horizontally centred on the scroll content, at the top. (NEON-spilled — best-effort.)
+        // x = (contentSize.width − sz.width) * 0.5 (runtime-structural), y = 0.
         [_closeBtnBig setFrame:CGRectMake((contentSize.width - bigSz.width) * 0.5f, 0.0f,
                                           bigSz.width, bigSz.height)];
         [_closeBtnBig setHidden:YES];
@@ -107,7 +109,8 @@
         // --- centred loading spinner ---
         _indicator = [[UIActivityIndicatorView alloc]
                         initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-        // 50x50, centred in the panel. (NEON-spilled — best-effort.)
+        // 50×50 (vmov.f32 0x42480000), centred: x = width*0.5−25 (0xc1c80000=−25.0),
+        // y = height*0.5−25. Byte-verified.
         _indicator.frame = CGRectMake(self.frame.size.width * 0.5f - 25.0f,
                                       self.frame.size.height * 0.5f - 25.0f, 50.0f, 50.0f);
         _indicator.backgroundColor = [UIColor blackColor];
@@ -130,7 +133,7 @@
                           delay:0.0
                         options:(UIViewAnimationOptions)2
                      animations:^{
-        // @ 0x5e78d — animation block (NEON-spilled; best-effort): fade the panel out.
+        // @ 0x5e78d — animation block: fade the panel out.
         self.alpha = 0.0f;
     }
                      completion:^(BOOL finished) {
@@ -162,7 +165,8 @@
         UIImage *followImg = [UIImage imageNamed:@"twitter_follow"];
         CGSize sz = followImg ? followImg.size : CGSizeZero;
         CGRect f = self.frame;
-        // Follow banner horizontally centred at the top of the panel. (NEON-spilled — best-effort.)
+        // Follow banner: x = (f.width − sz.width) * 0.5 (vmul.f32 with 0.5), y = 0.
+        // Byte-verified; x-centre is runtime-structural.
         UIButton *followBtn = [[UIButton alloc]
             initWithFrame:CGRectMake((f.size.width - sz.width) * 0.5f, 0.0f, sz.width, sz.height)];
         [followBtn setBackgroundImage:followImg forState:UIControlStateNormal];
@@ -170,7 +174,7 @@
             forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:followBtn];
 
-        // Push the web view and the small close button down by the banner height. (best-effort)
+        // Push the web view and the small close button down by the banner height (runtime-structural).
         [_webView setFrame:CGRectMake(webViewFrm.origin.x, webViewFrm.origin.y + sz.height,
                                       webViewFrm.size.width, webViewFrm.size.height - sz.height)];
         [_closeBtnSmall setFrame:CGRectMake(smallBtnFrm.origin.x, smallBtnFrm.origin.y + sz.height,
@@ -218,7 +222,8 @@
 
     CGRect bigFrame = _closeBtnBig ? _closeBtnBig.frame : CGRectZero;
     CGSize contentSize = _webView.scrollView ? _webView.scrollView.contentSize : CGSizeZero;
-    // y = contentSize.height - 45.0 (Ghidra DAT_0005ed78 == 0xc2340000 == -45.0). (best-effort)
+    // y = contentSize.height − 45.0 (DAT_0005ed78 = 0xc2340000 = −45.0; nil-path movt
+    // #0xc234 confirms same constant). Byte-verified.
     CGFloat y = contentSize.height + (-45.0f);
     [_closeBtnBig setFrame:CGRectMake(bigFrame.origin.x, y,
                                       bigFrame.size.width, bigFrame.size.height)];

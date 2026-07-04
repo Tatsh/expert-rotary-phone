@@ -22,9 +22,10 @@
 //  PopkunSizeViewCtrl -- each lazily built into _detailView[0/2/4] and hosted inside the
 //  coloured detail container. All three are reconstructed and wired below.
 //
-//  Honesty note: the panel/label centering in cellForRowAtIndexPath: and the row-container frames
-//  are NEON-spilled in the binary (best-effort here, flagged inline). Frame origins/sizes recovered
-//  from -[initWithStyle:]'s _dummyFrm writes are exact; colours are the exact float constants.
+//  Honesty note: panel/label centring in cellForRowAtIndexPath: is exact (byte-decoded @ 0x89748):
+//  cell.frame.size.width * 0.5 (vldr.32/vmul, #0x3f000000=0.5f); -10.0f bias (0xc1200000) only
+//  on pre-iOS-7 (itt mi; vadd.f32); Y = #0x42000000 = 32.0f. Row-container frames and colours are
+//  exact from the binary.
 //
 
 #import "SettingGameTableViewController.h"
@@ -310,7 +311,7 @@ static UIViewController *RootVC() {
     }
 
     // Category-header rows (0/2/4): a "back_bg_st" panelled, coloured-border box with a centred
-    // title label. The panel/label centring is NEON-spilled in the binary (best-effort here).
+    // title label. The panel/label centring is exact (byte-decoded @ 0x89748/0x899f8).
     NSString *title = nil;
     switch (indexPath.row) {
         case 0: title = @"サウンド"; break;                        // サウンド (Sound)
@@ -325,10 +326,15 @@ static UIViewController *RootVC() {
     panel.clipsToBounds = YES;
     panel.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
 
-    // best-effort: centre the panel horizontally in the cell (NEON-spilled frame maths).
+    // @ 0x89748: [cell frame] stret → sp+0x40; vldr.32 s0,[sp,#0x48] = width;
+    // vmul.f32 d8,d0,#0x3f000000 = width*0.5; itt mi; vmov.f32 d16,#0xc1200000=-10.0f;
+    // vadd.f32 d8,d8,d16 (iOS<7 only). r3 = #0x42000000 = 32.0f at setCenter:. Exact.
     CGRect cellFrame = cell.frame;
-    CGFloat centerX = cellFrame.size.width * 0.5f - 10.0f;
-    panel.center = CGPointMake(centerX, 32.0f);   // y 0x42000000 = 32
+    CGFloat centerX = cellFrame.size.width * 0.5f;
+    if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {
+        centerX -= 10.0f;
+    }
+    panel.center = CGPointMake(centerX, 32.0f);
     [cell.contentView addSubview:panel];
 
     UILabel *label = [[UILabel alloc] init];

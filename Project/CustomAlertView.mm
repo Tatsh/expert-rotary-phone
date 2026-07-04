@@ -30,12 +30,16 @@
 //  with both buttons the "yes"/other sits right (info 205 / gift 160) and the
 //  "no"/cancel shifts left (info 38 / gift 30).
 //
-//  NEON note: the background-art centre and the message CustomTextView frame are
-//  produced by NEON vector math that spills through the stack (image .size halved,
-//  added to the host-view half-extent, plus the type offset above). The scalar
-//  constants are recovered exactly; the geometry is reconstructed best-effort and
-//  flagged inline. The message text-view frame in particular arrives in spilled
-//  float registers that the decompiler could not attribute — see the TODO below.
+//  NEON note: the background-art centre position is runtime-computed from the loaded
+//  image .size (halved, added to the host-view half-extent, plus the type Y offset)
+//  and is not a recoverable constant; it is faithfully modeled above.
+//  The remaining two pieces are now exactly recovered:
+//  * Y offset table @0x274f4 = {0.0f (info), 4.0f (gift)}: confirmed by read_memory;
+//    the Thumb-2 sequence `add.eq r0,#0x4; vldr.32 s16,[r0]` selects the slot.
+//  * Message CustomTextView frame: gift {30.0f,34.0f,207.0f,79.0f} / info
+//    {35.0f,32.0f,250.0f,168.0f} — whole-number floats materialised as movt
+//    halfwords @0x26e10 (gift) / 0x26e64 (info) and decoded directly from the
+//    ARM Thumb-2 disassembly (not a decompiler best-effort).
 //
 
 #import "CustomAlertView.h"
@@ -129,8 +133,9 @@
     mBgImageView = [[UIImageView alloc] initWithImage:bgImage];
 
     // Size to the art; centre in the host view (gift art nudged down 4pt). When a
-    // non-zero centre is supplied, position there instead.
-    // NEON: origin = centre - size/2 with the type offset; recovered best-effort.
+    // non-zero centre is supplied, position there instead. The Y nudge is read from
+    // a 2-entry float table @ 0x274f4 = {0.0f, 4.0f} (info, gift), selected by
+    // `add.eq r0,#0x4; vldr.32 s16,[r0]` — exact, not a guess.
     CGSize bgSize = bgImage.size;
     CGFloat yOffset = (type == CustomAlertViewTypeGift) ? 4.0f : 0.0f;
     mBgImageView.frame = CGRectMake(0.0f, 0.0f, bgSize.width, bgSize.height);
@@ -168,12 +173,16 @@
 
     // --- Message ---
     if (message != nil) {
-        // TODO(NEON): the initWithFrame: rect arrives in spilled float registers
-        // the decompiler could not recover; sized to the art content area
-        // best-effort here.
+        // Frame recovered from the disassembly at @ 0x26e10 (gift) / 0x26e64 (info):
+        // the coordinates are whole-number floats materialized as `movs rN,#0;
+        // movt rN,#hi` immediates, then spilled to the stack and passed into
+        // initWithFrame: as {x=r6, y=r5, w=r8, h=r4}. The decompiler dropped them
+        // in the CGRect reassembly across those spills; read straight off the movt
+        // halfwords: gift {0x41f00000,0x42080000,0x434f0000,0x429e0000} and
+        // info {0x420c0000,0x42000000,0x437a0000,0x43280000}.
         CGRect messageFrame = (type == CustomAlertViewTypeGift)
-                                  ? CGRectMake(40.0f, 45.0f, 187.0f, 70.0f)
-                                  : CGRectMake(35.0f, 40.0f, 250.0f, 160.0f);
+                                  ? CGRectMake(30.0f, 34.0f, 207.0f, 79.0f)
+                                  : CGRectMake(35.0f, 32.0f, 250.0f, 168.0f);
         _text = [[CustomTextView alloc] initWithFrame:messageFrame];
         _text.backgroundColor = [UIColor clearColor];
         _text.textColor = textGray;

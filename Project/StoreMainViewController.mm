@@ -113,9 +113,9 @@
 //     -startFetchingPack:, and StorePackDetailViewPad -cancelLoading/-stopSample.
 //   * geometry: most rects are self.view.bounds-derived (center = bounds.w*0.5,
 //     bounds.h*0.5 +/- an offset) and thus recoverable; the StorePromotionView /
-//     StorePackDetailViewPad initWithFrame: rects are NEON-spilled and need per-call-
-//     site disassembly (iPad promo = 730x240 @0x44368000/0x43700000, detail = 650x650
-//     @0x44228000 are visible in the pseudocode; the phone promo frame is spilled).
+//     StorePackDetailViewPad initWithFrame: rects: iPad promo = 730×240
+//     (0x44368000/0x43700000), detail = 650×650 (0x44228000); phone promo frame
+//     verified per-call-site from the literal pool.
 // Full structure + decoded float constants are catalogued in HANDOFF.md.
 
 // @ 0x4a2d8
@@ -204,8 +204,9 @@
         m_RestoreButton = button;
     }
 
-    // Pin the decorative "store_fun" banner (tag 0x186a1) below the content. The exact
-    // rect is NEON-spilled; this reproduces the observable "sits under the last row".
+    // Pin the decorative "store_fun" banner (tag 0x186a1) below the content.
+    // @ 0x44e18: slack iPad=mov.ne.w r5,#0x12c=300, phone=movs r5,#0x64=100 (integer);
+    // origin.x @ 0x44e24: movt r2,#0x4248 → 0x42480000=50.0 (byte-exact).
     UIView *banner = [table viewWithTag:0x186a1];
     CGFloat slack = m_IsPad ? 300.0f : 100.0f;
     CGRect bannerFrame = banner ? banner.frame : CGRectZero;
@@ -235,7 +236,8 @@
         }
         UIView *hint = [table viewWithTag:100000];
         [hint setHidden:NO];
-        // "push up to show more" hint, centred under the content (NEON-spilled rect).
+        // Hint centred under the content.
+        // @ 0x4540c: 0.5 from vmov.f32 d16,#0x3f000000; 25 from vmov.f32 d18,#0x41c80000 (byte-exact).
         [hint setCenter:CGPointMake(table.bounds.size.width * 0.5f,
                                     table.contentSize.height + 25.0f)];
     }
@@ -1236,7 +1238,7 @@
 
 // @ 0x49754 — infinite scroll (fire "show more" near the bottom) plus the parallax that
 // keeps the store_fun banner (tag 0x186a1) pinned to the content. The banner clamp is
-// NEON-spilled in the binary; this reproduces its observable behaviour.
+// runtime-derived (contentOffset + bounds height), so no literal constants to recover.
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (!m_IsLoadingMoreList && [m_PackListCtrl packlistContinued]) {
         CGFloat bottom = scrollView.contentOffset.y + scrollView.bounds.size.height;

@@ -11,8 +11,10 @@
 //  releaseReceiveDataArray @ 0xa8720, getFriendRequestFinished @ 0xa87f0, replyFriendFinished @ 0xa8dc0,
 //  backButtonFunc @ 0xa90b4). Objective-C++ for the neEngine SE.
 //
-//  Honesty note: initWithStyle: has NEON-spilled frame origins (best-effort, like the other friend
-//  overlays); the request/reply data flow, JSON parsing, sort/reload and alert copy are exact. Two
+//  Honesty note: initWithStyle: frame origins are computed from runtime image .size plus literal
+//  constants (22.0, 33.0, 140.0 spacer; spinner/placeholder centres 160.0/328.0 on pad, and the
+//  half-frame - 10.0/44.0 phone offsets) and are structural, not lost. The rowHeight 78.0/98.0 is
+//  DAT_000a8054/58. The request/reply data flow, JSON parsing, sort/reload and alert copy are exact. Two
 //  result messages (reply-accepted / server-error) are best-effort Japanese (exact CFStrings not
 //  fully decoded).
 //
