@@ -538,15 +538,23 @@ int NoteMng::getElapsedTimeMs() const {
     return (int)((now.tv_sec - m_startSec) * 1000 + (now.tv_usec - m_startUsec) / 1000);
 }
 
-// Ghidra: getCurrentPosition @ 0x34164. The current scroll position: the elapsed
-// play time offset by the chart's lead-in / start fields, clamped at zero.
+// Ghidra: getCurrentPosition @ 0x34164. The current scroll/judge position in ms.
+//   pos = elapsed + [0x4e44] + m_scrollTarget(0x4e4c) - m_positionLeadIn(0x4e3c)
+// clamped at 0 with an *unsigned* compare (borrow -> 0). Field 0x4e44 is provably
+// always 0 (347k-instruction scan: its only writer is startClock, which zeroes it),
+// so it drops out. m_positionLeadIn accumulates total paused time (added by togglePause
+// as `elapsed - m_holdElapsed`) and is *subtracted* here. m_scrollTarget is the one-shot
+// BGM-drift alignment set once per song by updatePlaying/updateBgmSync and must be added
+// so the notes lock to the actual audio playhead. When the hold bit is set the live
+// elapsed cancels against m_holdElapsed, freezing the position at the pause instant.
 int NoteMng::getCurrentPosition() const {
-    // Ghidra: position = (elapsed + leadIn) clamped at 0. The original adds three
-    // per-play offset fields; their net effect is a constant lead-in on top of the
-    // elapsed play time (and a "hold" flag can freeze it, which cancels the elapsed
-    // term). Modelled here as elapsed plus the lead-in offset.
-    int pos = getElapsedTimeMs() + m_positionLeadIn;
-    return pos < 0 ? 0 : pos;
+    const int elapsed = getElapsedTimeMs();
+    uint32_t sub = (uint32_t)m_positionLeadIn;
+    if (m_holdFlag) {
+        sub += (uint32_t)elapsed - (uint32_t)m_holdElapsed;   // freeze while held
+    }
+    const uint32_t val = (uint32_t)elapsed + (uint32_t)m_scrollTarget;
+    return (val < sub) ? 0 : (int)(val - sub);
 }
 
 // Ghidra: getActiveNoteCount @ 0x34694. Count active notes still awaiting

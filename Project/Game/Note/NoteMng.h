@@ -340,7 +340,7 @@ private:
     // Play clock (gettimeofday at play start).
     long m_startSec = 0;
     long m_startUsec = 0;
-    int m_positionLeadIn = 0;   // constant offset added to elapsed by getCurrentPosition
+    int m_positionLeadIn = 0;   // +0x4e3c accumulated paused time; SUBTRACTED by getCurrentPosition
 
     // Timing windows, copied from g_noteJudgeWindows at initPlayData.
     int m_judgeWindows[6] = {};
