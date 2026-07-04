@@ -14,6 +14,7 @@
 #import "UserSettingData.h"
 #import "FriendListViewController.h"
 #import "FriendReplyViewController.h"
+#import "FriendRequestViewController.h"
 #import "DownloadMain.h"            // friendRequestedCnt (drives the reply badge)
 #import "neEngineBridge.h"          // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
@@ -179,14 +180,24 @@
     }
 }
 
-// @ 0xa69a8 — DEFERRED STUB (intentionally left for a later pass; see HANDOFF.md).
-// The real implementation plays the decide SE and, on iPhone, pushes a FriendRequestViewController
-// (init; nav bar art "fripre_navbar"); on iPad it forwards to m_Delegate. That controller (send a
-// request by player id, with a FriendRequestTable of recommendations and a FreeRequestListViewController
-// "free request" list) is a separate reconstruction unit, so this action is a no-op stub for now.
+// Plays the decide SE and, on iPhone, pushes the send-a-request screen
+// (FriendRequestViewController: request by player id + a FriendRequestTable of recommendations +
+// a FreeRequestListViewController "free request" list); on iPad it forwards to the split hub.
+// @ 0xa69a8 — push the send-a-request screen (iPhone); iPad forwards to the split hub.
 - (void)onRequestButtonTouched:(id)sender {
-    // TODO(friend-request): push FriendRequestViewController once it + FriendRequestTable +
-    // FreeRequestListViewController are reconstructed. Method/ivar map is recorded in HANDOFF.md.
+    neEngine::playSystemSe(1);
+    if (!neSceneManager::isPadDisplay()) {
+        FriendRequestViewController *vc = [[FriendRequestViewController alloc] init];
+        if (self.navigationController.topViewController != self) {
+            return;
+        }
+        [self.navigationController pushViewController:vc animated:YES];
+        [self.navigationController.navigationBar
+            setBackgroundImage:[UIImage imageNamed:@"fripre_navbar"]
+                 forBarMetrics:UIBarMetricsDefault];
+    } else {
+        [m_Delegate onRequestButtonTouched:sender];
+    }
 }
 
 // @ 0xa6ad4 — push the incoming-requests reply screen (iPhone); iPad forwards to the split hub.
