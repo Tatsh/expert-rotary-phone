@@ -111,7 +111,9 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     if (cmd == nullptr) {
         return;
     }
-    cmd->priority = 1;               // +0x04 (live command marker)
+    cmd->type = 1;                   // +0x04 type 1 = stretched sprite (AepOrderingTable::drawSprite
+                                     // FUN_00011468 writes *(short*)(entry+4)=1; the discriminator
+                                     // lives at +0x04, not the priority slot)
     cmd->textureId = 0;              // +0x08
     cmd->u = p.u;   cmd->v = p.v;    // +0x0c/+0x10
     cmd->x = p.x;   cmd->y = p.y;    // +0x14/+0x18

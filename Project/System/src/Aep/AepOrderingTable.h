@@ -26,9 +26,11 @@ constexpr int kOtPriMax = 50;        // OT_PRI_MAX
 // state carried to the flush.
 struct AepSpriteCommand {
     AepSpriteCommand *next;   // +0x00  priority-bucket link
-    int16_t priority;         // (stored at entry+0x12 by allocEntry)
-    int16_t type;             // +0x04  command type: 0 = textured sprite, 6 = text
-                              //        (the flush dispatches on it; see the drawAepOt* set)
+    int16_t type;             // +0x04  command type discriminator. renderAepOrderingTable
+                              //        (FUN_000115d0) switches on the short @+0x04:
+                              //        0 sprite, 1 stretch, 2 line, 3 tri, 4 rect, 5 quad, 6 text.
+    int16_t priority;         // +0x06  bucket priority (allocAepOtEntry writes short @entry+0x12,
+                              //        i.e. cmd+0x06; used only as bookkeeping, not for traversal)
     int32_t textureId;        // +0x08  layer/texture id (param17)
     int32_t u, v;             // +0x0c/+0x10  source origin
     int32_t x, y;             // +0x14/+0x18  screen position
@@ -47,8 +49,9 @@ struct AepSpriteCommand {
 // the slot that the sprite view uses for its source-rect/geometry words.
 struct AepTextCommand {
     AepSpriteCommand *next;   // +0x00
-    int16_t priority;         // +0x02
-    int16_t type;             // +0x04  == 6
+    int16_t type;             // +0x04  == 6 (discriminator short @+0x04, same slot as
+                              //        AepSpriteCommand::type)
+    int16_t priority;         // +0x06  bucket priority
     int32_t reserved8;        // +0x08
     char text[0x100];         // +0x0c..+0x10b  (force-terminated at text[0xff])
     // Six positional draw words (+0x10c..+0x123). The flush handler drawAepOtText assigns
