@@ -38,6 +38,7 @@ class AepLyrCtrl;
 class neTextureForiOS;
 struct SkillDataStruct;    // System/../SkillData.h (pointer member only)
 struct neTouchPoint;       // System/src/Render/neGraphics.h (touch pool record)
+class neGraphics;          // System/src/Render/neGraphics.h (applyDragScroll parameter)
 
 class AcMainTask : public C_TASK {
 public:
