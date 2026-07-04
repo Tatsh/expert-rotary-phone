@@ -187,26 +187,25 @@ public:
     // The play task fills these (recordPlayResult + direct stores of rank/combo);
     // the result screen (PlayResultTask::resultSetup, Ghidra FUN_0003dfe0) snapshots
     // them. Offsets are the DAT_00187bxx globals relative to this singleton base
-    // (DAT_00187bb8 == +0x00) and sit inside the transient state region above, so
-    // they are read raw at their exact byte offsets.
-    short coolCount()  const { return raw<short>(0x08); }         // DAT_00187bc0 low
-    short greatCount() const { return raw<short>(0x0a); }         // DAT_00187bc0 high
-    short goodCount()  const { return raw<short>(0x0c); }         // DAT_00187bc4 low
-    short badCount()   const { return raw<short>(0x0e); }         // DAT_00187bc4 high
-    int   playScore()  const { return raw<int>(0x10); }           // DAT_00187bc8
-    short playRank()   const { return raw<short>(0x14); }         // DAT_00187bcc
-    short maxCombo()   const { return raw<short>(0x18); }         // DAT_00187bd0
-    bool  isCleared()  const { return raw<unsigned char>(0x1c) != 0; } // DAT_00187bd4
-    bool  isNewRecord()const { return raw<unsigned char>(0x32) != 0; } // DAT_00187bea
+    // (DAT_00187bb8 == +0x00); modelled as the named m_result fields below.
+    short coolCount()  const { return m_result.coolCount; }        // DAT_00187bc0 low
+    short greatCount() const { return m_result.greatCount; }       // DAT_00187bc0 high
+    short goodCount()  const { return m_result.goodCount; }        // DAT_00187bc4 low
+    short badCount()   const { return m_result.badCount; }         // DAT_00187bc4 high
+    int   playScore()  const { return m_result.playScore; }        // DAT_00187bc8
+    short playRank()   const { return m_result.playRank; }         // DAT_00187bcc
+    short maxCombo()   const { return (short)m_result.maxCombo; }   // DAT_00187bd0 (low 16 bits)
+    bool  isCleared()  const { return m_result.cleared != 0; }     // DAT_00187bd4
+    bool  isNewRecord()const { return m_resultExt.newRecord != 0; }// DAT_00187bea
 
     // The bundled-demo / sugoroku play flag (+0x33). PlayTask_init copies this raw byte into
     // its own m_isDemoPlay to drive the tutorial / auto-demo play path.
-    unsigned char demoPlayFlag() const { return raw<unsigned char>(0x33); }
+    unsigned char demoPlayFlag() const { return m_resultExt.demoPlayFlag; }
 
     // The play task writes the finished play's rank (+0x14, 2-byte) and max combo (+0x18, 4-byte)
     // directly after recordPlayResult so the result screen can read them back.
-    void setPlayRank(short rank) { rawRef<short>(0x14) = rank; }        // DAT_00187bcc
-    void setMaxCombo(int combo)  { rawRef<int>(0x18)   = combo; }       // DAT_00187bd0
+    void setPlayRank(short rank) { m_result.playRank = rank; }         // DAT_00187bcc
+    void setMaxCombo(int combo)  { m_result.maxCombo = combo; }        // DAT_00187bd0
 
     // Read the player's stored local best for this play's music/sheet (out-params may be null).
     // Thin wrapper over the free fetchScoreDataForMusic (below) on this singleton.
@@ -218,19 +217,34 @@ public:
     void commitResultToScoreData();
 
 private:
-    template <typename T> T raw(int off) const {
-        return *reinterpret_cast<const T *>(reinterpret_cast<const char *>(this) + off);
-    }
-    template <typename T> T &rawRef(int off) {
-        return *reinterpret_cast<T *>(reinterpret_cast<char *>(this) + off);
-    }
+    // The just-finished play's result record. In the binary these are read at fixed
+    // byte offsets in the event-center's transient region (DAT_00187bc0..); modelled
+    // here as named fields so no raw offset access is needed. begin() zeroes them.
+    struct PlayResult {                // +0x08..0x20
+        short         coolCount = 0;   // +0x08
+        short         greatCount = 0;  // +0x0a
+        short         goodCount = 0;   // +0x0c
+        short         badCount = 0;    // +0x0e
+        int           playScore = 0;   // +0x10
+        short         playRank = 0;    // +0x14
+        short         _rsvd16 = 0;     // +0x16
+        int           maxCombo = 0;    // +0x18
+        unsigned char cleared = 0;     // +0x1c
+        unsigned char _rsvd1d[3] = {}; // +0x1d
+    };
+    struct PlayResultExt {                        // +0x28..0x40
+        unsigned char _rsvd28[0x32 - 0x28] = {};  // +0x28
+        unsigned char newRecord = 0;              // +0x32 DAT_00187bea
+        unsigned char demoPlayFlag = 0;           // +0x33
+        unsigned char _rsvd34[0x40 - 0x34] = {};  // +0x34
+    };
 
     int m_lastMusic = 0;      // +0x00
     int m_lastSheet = 0;      // +0x04
-    float m_state[6] = {};    // +0x08..0x20 transient event-center state (zeroed by begin)
+    PlayResult m_result;      // +0x08..0x20 (was float m_state[6])
     __strong id _startDate = nil; // +0x20 session start timestamp (NSDate); setStartDate @ 0x29274
     __strong id _endDate = nil; // +0x24 session end timestamp (NSDate); setEndDate @ 0x292c0
-    float m_state2[6] = {};   // +0x28..0x40 remaining transient state (zeroed by begin)
+    PlayResultExt m_resultExt; // +0x28..0x40 (was float m_state2[6])
     int m_flags[2] = {};      // +0x40..0x48
 };
 

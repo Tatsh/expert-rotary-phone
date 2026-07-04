@@ -46,10 +46,10 @@ neAppEventCenter &neAppEventCenter::shared() {
 
 // Ghidra: FUN_00028c70 — zero the transient event-center state.
 void neAppEventCenter::begin() {
-    std::memset(m_state, 0, sizeof(m_state));
+    m_result = PlayResult{};
     _startDate = nil;
     _endDate = nil;
-    std::memset(m_state2, 0, sizeof(m_state2));
+    m_resultExt = PlayResultExt{};
     m_flags[0] = 0;
     m_flags[1] = 0;
 }
