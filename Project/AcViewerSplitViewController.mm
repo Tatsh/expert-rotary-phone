@@ -20,6 +20,10 @@ static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
+// Self is the pushed AcViewerOptionViewController's delegate (opt.delegate = self).
+@interface AcViewerSplitViewController () <AcViewerViewControllerDelegate>
+@end
+
 @implementation AcViewerSplitViewController {
     UIViewController *_leftViewCtrl;         // left button column
     UINavigationController *_rightViewCtrl;  // right list pane
