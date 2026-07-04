@@ -141,7 +141,9 @@ private:
     int             m_triangle1Frame[6] = {};       // +0x3b8 TRIANGLE01_* back-arrow frames
     int             m_boardUserNo[26] = {};         // +0x3d0 26 getUserNo handles
     int             m_rouletteSe[15] = {};          // +0x438 15 roulette SE source ids
-    uint8_t         m_selScratch[60] = {};          // +0x474 selection-index scratch (memset 0xff)
+    uint8_t         m_selScratch[0x498 - 0x474] = {}; // +0x474 selection-index scratch (memset 0xff)
+    int             m_rouletteSeInst = {};          // +0x498 roulette-hit SE playing instance (-1 idle)
+    uint8_t         m_selScratch2[0x4b0 - 0x49c] = {}; // +0x49c remainder of the selection scratch
     TreasureMap *   m_map = {};                     // +0x4b0 loaded TreasureMap
     const TreasureMap::Node *m_nodes = {};          // +0x4b4 map node array
     int             m_edgesPtr = {};                // +0x4b8 edge (ConnectStruct) array pointer, held in an int slot (type-pun)
@@ -191,7 +193,9 @@ private:
     float           m_playerY = {};                 // +0x5d0 player board draw y
     int             m_boardMoveState = {};          // +0x5d4 board move / warp state
     uint8_t         m_boardBgmLoaded = {};          // +0x5d8 board BGM loaded flag
-    uint8_t          _rsvd_5d9[0x5e8 - 0x5d9] = {};   // +0x5d9
+    uint8_t          _rsvd_5d9[0x5e0 - 0x5d9] = {};   // +0x5d9
+    int             m_charaColRight = {};           // +0x5e0 chara-grid right column base index
+    int             m_charaColLeft = {};            // +0x5e4 chara-grid left column base index
     int             m_friendAnimFrame = {};         // +0x5e8 friend-meet animation frame
     uint8_t         m_flag5ec = {};                 // +0x5ec per-map flag
     uint8_t         m_flag5ed = {};                 // +0x5ed per-map flag
@@ -206,7 +210,12 @@ private:
     uint8_t         m_fadeDir = {};                 // +0x5fa transition fade direction
     uint8_t          _rsvd_5fb[0x5fc - 0x5fb] = {};   // +0x5fb
     int16_t         m_charaId = {};                 // +0x5fc active character id
-    uint8_t          _rsvd_5fe[0x614 - 0x5fe] = {};   // +0x5fe
+    int16_t         m_skillCharaId = {};            // +0x5fe skill-panel active character id
+    uint8_t          _rsvd_600[0x604 - 0x600] = {};   // +0x600
+    int             m_skillPanelX = {};             // +0x604 skill-panel origin x cache
+    int             m_skillPanelY = {};             // +0x608 skill-panel origin y cache
+    int             m_charaPanelX = {};             // +0x60c chara-panel origin x cache
+    int             m_charaPanelY = {};             // +0x610 chara-panel origin y cache
     int             m_layoutAnchorZ = {};           // +0x614 roulette layer anchor z (tall-phone seed)
     int             m_field618 = {};                // +0x618 tall-phone layout seed
     int             m_friendOpacity = {};           // +0x61c friend-meet fade opacity
@@ -221,7 +230,10 @@ private:
     int16_t         m_listBottom = {};              // +0x63c list content bottom
     uint8_t          _rsvd_63e[0x640 - 0x63e] = {};   // +0x63e
     void *          m_treasureMusicArray = {};      // +0x640 treasure music data array (retained)
-    uint8_t          _rsvd_644[0x6dc - 0x644] = {};   // +0x644
+    uint8_t          _rsvd_644[0x648 - 0x644] = {};   // +0x644
+    int             m_musicAnchor[18] = {};         // +0x648 9 music-panel (x,y) anchor positions
+    int             m_rouletteMapId = {};           // +0x690 current roulette map id
+    int             m_wallAnchor[18] = {};          // +0x694 9 wall-panel (x,y) anchor positions
     int             m_musicPieceTable[27] = {};     // +0x6dc 9x3 music-piece unlock grid
     int             m_wallPieceTable[27] = {};      // +0x748 9x3 wallpaper-piece unlock grid
     int             m_musicPieceTableDup[27] = {};  // +0x7b4 music grid duplicate
@@ -236,7 +248,8 @@ private:
     uint8_t          _rsvd_8ae[0x8b0 - 0x8ae] = {};   // +0x8ae
     uint8_t         m_rankBadgeType = {};           // +0x8b0 rank badge type (>=4 hidden)
     uint8_t         m_goalType = {};                // +0x8b1 goal reward type (1 chara / 2 sound)
-    uint8_t          _rsvd_8b2[0x8b8 - 0x8b2] = {};   // +0x8b2
+    int16_t         m_rouletteDigit = {};           // +0x8b2 roulette-result digit value
+    uint8_t          _rsvd_8b4[0x8b8 - 0x8b4] = {};   // +0x8b4
     char            m_field8b8 = {};                // +0x8b8 pending record raw0x52
     char            m_field8b9 = {};                // +0x8b9 pending record raw0x51
     uint8_t          _rsvd_8ba[0x8bc - 0x8ba] = {};   // +0x8ba
@@ -245,7 +258,7 @@ private:
     uint8_t          _rsvd_8c4[0x944 - 0x8c4] = {};   // +0x8c4
     void *          m_mapName = {};                 // +0x944 map display name (retained)
     void *          m_nextTask = {};                // +0x948 follow-on task activated on dispose
-    uint8_t          _rsvd_94c[0x950 - 0x94c] = {};   // +0x94c
+    int             m_badgePulse = {};              // +0x94c collection-complete badge pulse phase
     int             m_transitionAlpha = {};         // +0x950 background transition overlay alpha
     int             m_dlgLayout954 = {};            // +0x954 dialog layout constant (write-only)
     int             m_dlgLayoutA[12] = {};          // +0x958 device-branched dialog layout constants (write-only)

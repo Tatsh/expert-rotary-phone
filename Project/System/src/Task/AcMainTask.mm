@@ -17,6 +17,7 @@
 #include <cstring>
 #include <ctime>
 
+#import "AepFrameDraw.h"
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
@@ -2087,7 +2088,207 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
                         int anchorX, int anchorY, int color, int alpha, int rotation,
                         uint32_t blend, int *clipRect, uint32_t p17, void *context) {
-    (void)child; (void)frame; (void)x; (void)y; (void)scaleX; (void)scaleY;
-    (void)anchorX; (void)anchorY; (void)color; (void)alpha; (void)rotation;
-    (void)blend; (void)clipRect; (void)p17; (void)context;
+    (void)frame; (void)clipRect;
+    AcMainTask *self = static_cast<AcMainTask *>(context);
+    AepManager *aep = self->m_aep;
+
+    auto numDigits = [](int v) { int n = 1; while (v > 9) { n++; v /= 10; } return n; };
+    // A right-to-left digit run from a texture atlas (glyph w x h), stepping x by -step.
+    auto drawDigits = [&](neTextureForiOS **atlas, int value, int count, int px, int step,
+                          int gw, int gh) {
+        for (int k = 0; k < count; k++) {
+            neTextureForiOS_draw(aep, atlas[value % 10], 0, 0, gw, gh, px, y, scaleX, scaleY,
+                                 rotation, anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p17, 1);
+            px -= step;
+            value /= 10;
+        }
+    };
+
+    // ---- treasure-point / ticket / bonus digit readouts -----------------------------------
+    if (self->m_boardUserNo[0] == child) {                 // treasure point (4 digits)
+        int v = self->m_treasurePoint;
+        if (v > 9999) { v = 9999; }
+        drawDigits(self->m_pointsDigitTex, v, 4, x, self->m_dlgLayout954, 0x22, 0x26);
+        return;
+    }
+    if (self->m_boardUserNo[23] == child) {                // bonus count (ticket glyphs)
+        drawDigits(self->m_ticketDigitTex, self->m_bonusCount, 4, x - 0x60, 0x20, 0x20, 0x24);
+        return;
+    }
+    if (self->m_boardUserNo[21] == child) {                // owned chara tickets (<=99)
+        int v = self->m_charaTicket;
+        if (v > 99) { v = 99; }
+        drawDigits(self->m_ticketDigitTex, v, 3, x, 0x20, 0x20, 0x24);
+        return;
+    }
+    if (self->m_boardUserNo[22] == child) {                // roulette-result digit
+        const int val = self->m_rouletteDigit;
+        const int n = numDigits(val);
+        drawDigits(self->m_pointsDigitTex, val, n, x + n * 0x20 - 0x30, 0x20, 0x22, 0x26);
+        return;
+    }
+    if (self->m_boardUserNo[16] == child) {                // per-skill step value (roulette digits)
+        int val = self->m_stepValues[0];   // index is the current skill row (best-effort: slot 0)
+        const int n = numDigits(val);
+        if (n >= 1) {
+            drawDigits(self->m_roulDigitTex, val, n, x + (n == 2 ? 0x1c : -2), 0x3c, 0x3c, 0x48);
+        }
+        return;
+    }
+
+    // ---- chara-select thumbnail grid (left / right columns) -------------------------------
+    auto drawCharaColumn = [&](int base, bool leftCol) {
+        int cx = x;
+        for (int i = 0; i < 3; i++) {
+            const int idxBase = leftCol ? i : i + 3;
+            neTextureForiOS *tex;
+            if (self->m_charaColLeft < self->m_charaColRight) {
+                tex = (base == self->m_boardUserNo[2] || base == self->m_boardUserNo[4])
+                          ? self->m_charaPageCurrTex[idxBase]
+                          : self->m_charaPagePrevTex[idxBase];
+            } else {
+                tex = self->m_charaPagePrevTex[idxBase];
+            }
+            neTextureForiOS_draw(aep, tex, 0, 0, 0xc4, 0xc4, cx, y, scaleX, scaleY, rotation,
+                                 anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p17, 1);
+            // Highlight the currently-selected chara with the hit-flash layer.
+            const int listIdx = idxBase + self->m_charaColLeft * 6;
+            NSArray *avail = (__bridge NSArray *)self->m_availableInfos;
+            if ((unsigned)listIdx < [avail count]) {
+                CharaInfo *info = avail[listIdx];
+                if (info && (int)info.charaId == self->m_charaId) {
+                    AepLyrCtrl *hl = self->m_rouletteLayers[18];
+                    if (!hl->isAnimating() && !self->m_panelLayers[2]->isAnimating() &&
+                        !self->m_panelLayers[3]->isAnimating()) {
+                        hl->play();
+                    }
+                    hl->setPosition(cx + 8, y - 100);
+                }
+            }
+            if (i == 2) {
+                if (leftCol) { self->m_charaPanelX = x - (anchorX * scaleX) / 100;
+                               self->m_charaPanelY = y - (anchorY * scaleY) / 100; }
+                else         { self->m_skillPanelX = x - (scaleX * anchorX) / 100;
+                               self->m_skillPanelY = y - (scaleY * anchorY) / 100; }
+                return;
+            }
+            cx += (scaleX * 0xc4) / 100;
+        }
+    };
+    if (self->m_boardUserNo[2] == child || self->m_boardUserNo[4] == child) {
+        drawCharaColumn(child, true);
+        return;
+    }
+    if (self->m_boardUserNo[1] == child || self->m_boardUserNo[5] == child) {
+        drawCharaColumn(child, false);
+        return;
+    }
+
+    // ---- chara name / skill text ----------------------------------------------------------
+    if (self->m_boardUserNo[6] == child) {                 // selected chara name
+        if (self->m_skillCharaId < 0) { return; }
+        CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
+        drawAepManagerText(aep, info.charaName.UTF8String, 0x23, x, y - 0xf, 1, color, 0, p17);
+        return;
+    }
+    if (self->m_boardUserNo[7] == child) {                 // skill name / id / description
+        if (self->m_skillCharaId < 0) { return; }
+        CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
+        const SkillDataStruct *sd = GetSkillDataStruct((int)info.skillId);
+        drawAepManagerText(aep, "SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, p17);
+        drawAepManagerText(aep, info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, p17);
+        drawAepManagerText(aep, sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, p17);
+        drawAepTextMultiline(info.info.UTF8String, x, y + 0x1f, 1, 0x16, 0x1c, 0x59514f, p17, color);
+        return;
+    }
+
+    // ---- music / wall collection grids (treasure-map piece unlock state) -------------------
+    auto pieceCount = [](const int *table, int mapIdx, int col) {
+        int n = 0;
+        for (int b = 0; b < 3; b++) {
+            if (table[mapIdx * 3 + col] & (1 << b)) { n++; }
+        }
+        return n;
+    };
+    auto drawPieceGrid = [&](const int *pieceTable, neTextureForiOS **panelTex, int panelW,
+                             int *anchorOut) {
+        for (int i = 0; i < 9; i++) {
+            const int mapIdx = findTreasureMapIndexById(i);
+            int lit = 0;
+            for (int c = 0; c < 3; c++) { lit += pieceCount(pieceTable, mapIdx, c); }
+            const int cy = (i / 3) * 0xcc + y;
+            const int cx = (i % 3) * 200 + x;
+            const int frameNo = (lit == 0)   ? self->m_boardFrame[0]
+                              : (lit < 9)    ? self->m_boardFrame[1] : -1;
+            if (frameNo >= 0) {
+                drawAepFrameEx(aep, frameNo, cx, cy, scaleX, scaleY, rotation, anchorX, anchorY,
+                               color, alpha, blend, 0xffffff, clipRect, p17, 1);
+            }
+            neTextureForiOS_draw(aep, panelTex[i], 0, 0, panelW, panelW, cx - anchorX, cy - anchorY,
+                                 0x26, 0x26, rotation, 0, 0, color, alpha, blend, 0xffffff, 0, p17, 1);
+            if (anchorOut) { anchorOut[i * 2] = cx; anchorOut[i * 2 + 1] = cy; }
+        }
+    };
+    if (self->m_boardUserNo[8] == child) {                 // music-piece grid
+        drawPieceGrid(self->m_musicPieceTableDup, self->m_jacketTex, 0x168, nullptr);
+        return;
+    }
+    if (self->m_boardUserNo[12] == child) {                // wall-piece grid
+        drawPieceGrid(self->m_wallPieceTableDup, self->m_wallNailTex, 0x88, nullptr);
+        return;
+    }
+
+    // ---- single-texture panels (LAB_000a3d1a tail) ----------------------------------------
+    struct { int usr; int slot; int w; int h; } kPanels[] = {
+        { self->m_boardUserNo[3],  0x2, 0x228, 0x228 },   // m_reserveTex[2]-ish chara backing
+        { self->m_boardUserNo[10], 0x3, 0x168, 0x168 },   // small panel
+        { self->m_boardUserNo[15], 0x4, 0x280, 0x3c0 },   // full-board bg
+        { self->m_boardUserNo[18], 0x1, 0x228, 0x228 },   // list panel
+    };
+    for (auto &pnl : kPanels) {
+        if (pnl.usr == child) {
+            neTextureForiOS_draw(aep, self->m_reserveTex[pnl.slot], 0, 0, pnl.w, pnl.h, x, y,
+                                 scaleX, scaleY, rotation, anchorX, anchorY, color, alpha,
+                                 blend, 0xffffff, 0, p17, 1);
+            return;
+        }
+    }
+
+    // ---- scroll bar / collection-complete pulse badge -------------------------------------
+    if (self->m_boardUserNo[19] == child) {                // list scroll bar
+        if (self->m_charaColLeft > 0) {
+            drawAepFrameEx(aep, self->m_boardFrame[10], x, y, scaleX, scaleY, rotation, anchorX,
+                           anchorY, color, alpha, blend, 0xffffff, clipRect, p17, 1);
+        }
+        drawAepFrameEx(aep, self->m_boardFrame[11], self->m_dlgLayoutA[6] + x + 4, y, scaleX,
+                       scaleY, rotation, anchorX, anchorY, color, alpha, blend, 0xffffff,
+                       clipRect, p17, 1);
+        return;
+    }
+    if (self->m_boardUserNo[20] == child) {                // collection-complete badge (pulsing)
+        int phase = self->m_badgePulse;
+        const int a = phase < 0x32 ? 100 : phase < 100 ? phase * -2 + 200 : phase * 2 - 200;
+        self->m_badgePulse = (phase + 2) % 0x97;
+        if (self->m_charaTicket < 5) { return; }
+        if (countAvailableCharacters((__bridge NSArray *)self->m_gotCharaArray) != 0) { return; }
+        drawAepFrameEx(aep, self->m_boardFrame[12], x - 10, y + 10, scaleX, scaleY, rotation,
+                       anchorX, anchorY, a, 100 - a, blend, 0xffffff, 0, p17, 1);
+        return;
+    }
+
+    // ---- roulette result panel / caption --------------------------------------------------
+    auto inRange12 = [](int i) { return i >= 0 && i < 12; };
+    if (self->m_boardUserNo[24] == child) {                // roulette-result event icon
+        if (!inRange12(self->m_hudState)) { return; }
+        neTextureForiOS_draw(aep, self->m_eventTex[self->m_hudState], 0, 0, 0x280, 0xd0, x, y,
+                             scaleX, scaleY, rotation, anchorX, anchorY, color, alpha, blend,
+                             0xffffff, 0, p17, 1);
+        return;
+    }
+    if (self->m_boardUserNo[25] == child) {                // roulette-result caption text
+        if (!inRange12(self->m_hudState)) { return; }
+        const char *desc = getStringByIndex12((unsigned)self->m_hudState);
+        drawAepManagerText(aep, desc, 0x16, x, y - 10, 1, color, 0xffffff, p17);
+        return;
+    }
 }
