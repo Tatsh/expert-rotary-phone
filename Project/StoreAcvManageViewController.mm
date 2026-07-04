@@ -189,7 +189,7 @@
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedAcMusicDictionaris] objectAtIndex:indexPath.row];
     unsigned int acMusicId = [[item objectForKey:@"ID"] unsignedIntValue];
-    NSString *path = [MusicManager getAcPathFromPurchased:acMusicId];
+    NSString *path = [[MusicManager getInstance] getAcPathFromPurchased:acMusicId];
     BOOL exists = RhFileExists(path);
 
     UIButton *button = (UIButton *)[cell viewWithTag:0xe01f];
@@ -273,7 +273,7 @@
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedAcMusicDictionaris] objectAtIndex:m_WorkingIndex];
     unsigned int acMusicId = [[item objectForKey:@"ID"] unsignedIntValue];
-    NSString *path = [MusicManager getAcPathFromPurchased:acMusicId];
+    NSString *path = [[MusicManager getInstance] getAcPathFromPurchased:acMusicId];
 
     if (!RhFileExists(path)) {
         // File missing: re-download it, showing the store's shared modal progress dialog.
@@ -281,7 +281,7 @@
         [dialog performSelector:@selector(layout:) withObject:nil];
         UILabel *message = [dialog performSelector:@selector(labelMessage)];
         message.text = [NSString stringWithFormat:@"%@", [item objectForKey:@"Title"]];
-        [[dialog performSelector:@selector(progressView)] setProgress:0.0f];
+        [(UIProgressView *)[dialog performSelector:@selector(progressView)] setProgress:0.0f];
         if (![m_StoreViewCtrl showModalDialog:self]) {
             m_WorkingIndex = -1;
             return;
@@ -310,7 +310,7 @@
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedAcMusicDictionaris] objectAtIndex:m_WorkingIndex];
     unsigned int acMusicId = [[item objectForKey:@"ID"] unsignedIntValue];
-    NSString *path = [MusicManager getAcPathFromPurchased:acMusicId];
+    NSString *path = [[MusicManager getInstance] getAcPathFromPurchased:acMusicId];
 
     StoreDownloadTask *task = [[StoreDownloadTask alloc] initWithURL:[item objectForKey:@"ItemURL"]
                                                                path:path
@@ -432,7 +432,7 @@
 // @ 0x8e574 — file download progressed: push the overall progress into the dialog's bar.
 - (void)downloadManagerProceed:(StoreDownloadManager *)manager {
     id dialog = m_StoreViewCtrl.modalDialog;
-    [[dialog performSelector:@selector(progressView)] setProgress:m_DlManager.overallProgress];
+    [(UIProgressView *)[dialog performSelector:@selector(progressView)] setProgress:m_DlManager.overallProgress];
 }
 
 // @ 0x8e5e0 — all orientations supported.
