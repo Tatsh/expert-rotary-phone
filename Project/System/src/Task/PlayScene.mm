@@ -10,10 +10,11 @@
 //    - PlayTaskInit        Ghidra: FUN_0002e2d8 (PlayTask_init)
 //    - PlayTaskGotoResult  Ghidra: FUN_0003003c
 //
-//  The play data (`playData`) is the standard-mode MainTask, a large task struct not
-//  yet reconstructed as a whole (PlayJudge.h's forward-declared MainTaskPlayData);
-//  every field is reached by cited byte offset in the pd()/pdw() style PlayJudge.mm
-//  established. The original FUN_0002e2d8 is a ~400-line megafunction; as PlayJudge.mm
+//  The play data (`playData`) IS a PlayTask (the 0xa00-byte work area, PlayTask.h): each
+//  seam below casts it once to a `PlayTask *task` and reaches every field through its named
+//  members (the note-engine's opaque MainTaskPlayData view in PlayJudge.h/.mm is left as-is,
+//  since that pass genuinely operates on the struct blind). The original FUN_0002e2d8 is a
+//  ~400-line megafunction; as PlayJudge.mm
 //  does for the note-quad geometry, the asset-heavy repetitive units it calls into are
 //  delegated to their own reconstruction seams (declared below) rather than re-derived
 //  here: the song/BGM load (a separate binary function, FUN_00030720), the note-field
@@ -96,19 +97,10 @@ void PlayNoteMngDetach(NoteMng *nm);
 // its own; declared here as a real seam (its own reconstruction). Ghidra: FUN_000313b0.
 void PlayDrawCharaWindow(void *playData, int x, int y);
 
-// --- Play-data field access ------------------------------------------------------
-// Same convention as PlayJudge.mm / PlayScore.mm: the standard-mode MainTask is not
-// reconstructed as a whole, so its fields are reached by documented byte offset.
+// --- Play-scene helpers ----------------------------------------------------------
+// `playData` IS a PlayTask (the 0xa00-byte work area, PlayTask.h): each seam below casts
+// it once to a PlayTask* and then reaches every field through its named members.
 namespace {
-
-inline const char *pd(const void *p) { return reinterpret_cast<const char *>(p); }
-inline char       *pdw(void *p)      { return reinterpret_cast<char *>(p); }
-
-inline int           &pdInt(void *p, int off)   { return *reinterpret_cast<int *>(pdw(p) + off); }
-inline float         &pdFloat(void *p, int off) { return *reinterpret_cast<float *>(pdw(p) + off); }
-inline short         &pdShort(void *p, int off) { return *reinterpret_cast<short *>(pdw(p) + off); }
-inline unsigned char &pdByte(void *p, int off)  { return *reinterpret_cast<unsigned char *>(pdw(p) + off); }
-inline void          *&pdPtr(void *p, int off)  { return *reinterpret_cast<void **>(pdw(p) + off); }
 
 // Score -> rank index (0 best .. 6 worst). Ghidra: FUN_00028a40.
 int scoreToRank(int score) {
@@ -121,27 +113,17 @@ int scoreToRank(int score) {
     return 6;
 }
 
-// Destroy an array of scene textures held by pointer at `base`+i*4 (guards nulls,
-// nulls the slot). Ghidra: the (**(vtable+4))() deleting-dtor loops in FUN_0003003c.
-void destroyTextureArray(void *playData, int base, int count) {
-    for (int i = 0; i < count; ++i) {
-        void *&slot = pdPtr(playData, base + i * 4);
-        if (slot != nullptr) {
-            delete reinterpret_cast<neTextureForiOS *>(slot);
-            slot = nullptr;
-        }
-    }
-}
-
-// Destroy an array of AepLyrCtrl layers held by pointer at `base`+i*4. The binary
-// calls AepLyrCtrl_unlink (FUN_0002ca9c) then the deleting dtor; the reconstructed
-// ~AepLyrCtrl folds the draw-list unlink in, so delete alone matches.
-void destroyLayerArray(void *playData, int base, int count) {
-    for (int i = 0; i < count; ++i) {
-        AepLyrCtrl *&slot = *reinterpret_cast<AepLyrCtrl **>(pdw(playData) + base + i * 4);
-        if (slot != nullptr) {
-            delete slot;
-            slot = nullptr;
+// Delete every non-null element of a scene-owned pointer array and null the slot. The
+// binary frees the textures through their deleting dtor and the layers via
+// AepLyrCtrl_unlink (FUN_0002ca9c) + dtor; the reconstructed ~neTextureForiOS and
+// ~AepLyrCtrl (which folds the draw-list unlink in) make a plain `delete` match.
+// Ghidra: the dtor loops in FUN_0003003c.
+template <typename T, size_t N>
+void destroyAll(T *(&slots)[N]) {
+    for (size_t i = 0; i < N; ++i) {
+        if (slots[i] != nullptr) {
+            delete slots[i];
+            slots[i] = nullptr;
         }
     }
 }
@@ -150,79 +132,85 @@ void destroyLayerArray(void *playData, int base, int count) {
 
 // Ghidra: FUN_0002e2d8 (PlayTask_init) — allocate + initialise the note-play scene.
 void PlayTaskInit(void *playData) {
+    PlayTask *task = static_cast<PlayTask *>(playData);
+
     AepManager &aep = AepManager::shared();          // Ghidra: AepManager_shared
     neAppEventCenter &evc = neAppEventCenter::shared();  // NEAppEventCenter_shared
-    pdPtr(playData, 0x968) = &evc;                    // +0x968 = the event-center singleton
+    task->m_eventCenter = &evc;                       // +0x968 = the event-center singleton
     NoteMng &nm = NoteMng::shared();                  // force the note manager up
 
     AppDelegate *app = [AppDelegate appDelegate];     // AppDelegate_appDelegate
     [app setMainTask:playData];                       // register this task as the play task
 
     // Two cached screen-quad extents pulled out of the Aep transition region.
-    pdInt(playData, 0x96c) = aep.transitionOverlayWidth();   // FUN_0000f498 (aep + 0x7f3afc)
-    pdInt(playData, 0x970) = aep.transitionOverlayHeight();  // FUN_0000f4a4 (aep + 0x7f3b00)
+    task->m_screenWidth  = aep.transitionOverlayWidth();   // FUN_0000f498 (aep + 0x7f3afc)
+    task->m_screenHeight = aep.transitionOverlayHeight();  // FUN_0000f4a4 (aep + 0x7f3b00)
 
     neSceneManager::shared();
-    pdFloat(playData, 0x974) = neSceneManager::screenScale();  // +0x974 play scale (DAT_00187b80)
+    // +0x974 is g_dwUiScale: an int slot carrying float bits (PlayJudge reads it as float),
+    // so the screen scale is stored through a float reinterpret, matching the binary.
+    reinterpret_cast<float &>(task->m_uiScale) = neSceneManager::screenScale();  // DAT_00187b80
 
     // User settings driving the note field / judge.
-    pdShort(playData, 0x9b4) = [UserSettingData touchSoundVolume];         // +0x9b4
-    pdByte(playData, 0x9e4)  = [UserSettingData isSimpleMode] ? 1 : 0;     // +0x9e4
-    pdByte(playData, 0x9e5)  = [UserSettingData isEffectOn] ? 1 : 0;       // +0x9e5
-    pdByte(playData, 0x9e6)  = [UserSettingData isLongNotesEffectOn] ? 1 : 0;  // +0x9e6
+    task->m_seVolume          = [UserSettingData touchSoundVolume];             // +0x9b4
+    task->m_optSimpleMode     = [UserSettingData isSimpleMode] ? 1 : 0;         // +0x9e4
+    task->m_optEffectOn       = [UserSettingData isEffectOn] ? 1 : 0;           // +0x9e5
+    task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn] ? 1 : 0;  // +0x9e6
 
     // Note ("popkun") size -> 16.16 fixed. Ghidra: FPToFixed(popkunSize).
-    pdInt(playData, 0x9bc) = (int)([UserSettingData popkunSize] * 65536.0f);  // +0x9bc
+    task->m_popkunSize = (int)([UserSettingData popkunSize] * 65536.0f);        // +0x9bc
 
     // The bundled-demo / sugoroku play flag, copied out of the event center (+0x33).
-    pdByte(playData, 0x9c9) = (unsigned char)pd(&evc)[0x33];  // +0x9c9
+    task->m_isDemoPlay = evc.demoPlayFlag();                                    // +0x9c9
 
-    pdByte(playData, 0x9e7) = [app isOldHardware] ? 1 : 0;              // +0x9e7
-    pdByte(playData, 0x9ca) = neSceneManager::isPadDisplay() ? 1 : 0;   // +0x9ca (DAT_00187b84)
+    task->m_optOldHardware = [app isOldHardware] ? 1 : 0;                       // +0x9e7
+    task->m_isPadDisplay   = neSceneManager::isPadDisplay() ? 1 : 0;            // +0x9ca (DAT_00187b84)
 
     // Load the song's BGM + parse its chart into NoteMng + load the tap SE (+0x398).
     PlayLoadSong(playData, 0);   // Ghidra: FUN_00030720 (reload = 0: full first load)
 
-    // Gauge / score bookkeeping. +0x9cc is the per-note gauge weight: a fixed 3072-unit
-    // budget (DAT_0002e768 == 3072.0) spread across the chart's playable-note total.
-    pdShort(playData, 0x9ac) = 0;                                          // +0x9ac (DAT_00178d00)
-    pdFloat(playData, 0x9cc) = 3072.0f / (float)nm.totalNoteCount();       // +0x9cc
-    pdInt(playData, 0x9d0)   = 0x3f800000;                                 // +0x9d0 = 1.0f
-    pdInt(playData, 0x9d4)   = (int)0xc2088889;                            // +0x9d4 = -34.1333f
-    pdShort(playData, 0x9c0) = 0;                                          // +0x9c0
+    // Gauge / score bookkeeping. m_gaugeGainGreat is the per-note gauge weight: a fixed
+    // 3072-unit budget (DAT_0002e768 == 3072.0) spread across the chart's playable-note total.
+    task->m_gaugeBase      = 0;                                                 // +0x9ac (DAT_00178d00)
+    task->m_gaugeGainGreat = 3072.0f / (float)nm.totalNoteCount();             // +0x9cc
+    task->m_gaugeGainGood  = 1.0f;                                            // +0x9d0 (0x3f800000)
+    // +0x9d4 = -34.1333f: store the exact IEEE-754 bit pattern (0xc2088889) the binary uses,
+    // which a decimal float literal would not reproduce.
+    reinterpret_cast<int &>(task->m_gaugeLossMiss) = (int)0xc2088889;           // +0x9d4
+    task->m_gaugeValue = 0;                                                     // +0x9c0
 
     // Per-display note-field geometry + the common AEP layer group.
-    if (pdByte(playData, 0x9ca) == 0) {   // phone
-        pdInt(playData, 0x98c) = 0x24e;
-        pdInt(playData, 0x990) = 0x32;
-        pdInt(playData, 0x994) = 0x40;
-        pdInt(playData, 0x998) = 0x3fe;
-        pdInt(playData, 0x99c) = 0x4a;
-        pdInt(playData, 0x9a0) = 0x82;
-        pdInt(playData, 0x9a4) = -0x44;      // 0xffffffbc
-        pdInt(playData, 0x97c) = 0x194;
-        pdInt(playData, 0x980) = 0x248;
-        pdInt(playData, 0x984) = 0x306;
-        pdInt(playData, 0x988) = 0x5e;
-        pdInt(playData, 0x9b8) = 0x43080000; // +0x9b8 hit radius = 136.0f
-        pdInt(playData, 0x9a8) = 0xc4;
-        pdInt(playData, 0x9e0) = 500;
+    if (task->m_isPadDisplay == 0) {   // phone
+        task->m_pauseTapCenterX = 0x24e;    // +0x98c
+        task->m_pauseTapCenterY = 0x32;     // +0x990
+        task->m_pauseTapRadius  = 0x40;     // +0x994
+        task->m_noteFieldGeom0  = 0x3fe;    // +0x998
+        task->m_noteFieldGeom1  = 0x4a;     // +0x99c
+        task->m_noteFieldGeom2  = 0x82;     // +0x9a0
+        task->m_noteFieldGeom3  = -0x44;    // +0x9a4 (0xffffffbc)
+        task->m_pauseBtnResumeX = 0x194;    // +0x97c
+        task->m_pauseBtnRetryX  = 0x248;    // +0x980
+        task->m_pauseBtnQuitX   = 0x306;    // +0x984
+        task->m_pauseBtnWidth   = 0x5e;     // +0x988
+        task->m_hitRadius       = 136.0f;   // +0x9b8 (0x43080000)
+        task->m_charaDrawSize   = 0xc4;     // +0x9a8
+        task->m_startHoldMs     = 500;      // +0x9e0
         AepLoadGroup(&aep, 0, "game_cmn");
     } else {                              // pad
-        pdInt(playData, 0x98c) = 0x590;
-        pdInt(playData, 0x990) = 0x7e;
-        pdInt(playData, 0x994) = 0x40;
-        pdInt(playData, 0x998) = 0x666;
-        pdInt(playData, 0x99c) = 0x76;
-        pdInt(playData, 0x9a0) = 0xb2;
-        pdInt(playData, 0x9a4) = -0x74;      // 0xffffff8c
-        pdInt(playData, 0x97c) = 0x32e;
-        pdInt(playData, 0x980) = 0x434;
-        pdInt(playData, 0x984) = 0x53e;
-        pdInt(playData, 0x988) = 0xb0;
-        pdInt(playData, 0x9b8) = 0x43880000; // +0x9b8 hit radius = 272.0f
-        pdInt(playData, 0x9a8) = 0x228;
-        pdInt(playData, 0x9e0) = 1000;
+        task->m_pauseTapCenterX = 0x590;    // +0x98c
+        task->m_pauseTapCenterY = 0x7e;     // +0x990
+        task->m_pauseTapRadius  = 0x40;     // +0x994
+        task->m_noteFieldGeom0  = 0x666;    // +0x998
+        task->m_noteFieldGeom1  = 0x76;     // +0x99c
+        task->m_noteFieldGeom2  = 0xb2;     // +0x9a0
+        task->m_noteFieldGeom3  = -0x74;    // +0x9a4 (0xffffff8c)
+        task->m_pauseBtnResumeX = 0x32e;    // +0x97c
+        task->m_pauseBtnRetryX  = 0x434;    // +0x980
+        task->m_pauseBtnQuitX   = 0x53e;    // +0x984
+        task->m_pauseBtnWidth   = 0xb0;     // +0x988
+        task->m_hitRadius       = 272.0f;   // +0x9b8 (0x43880000)
+        task->m_charaDrawSize   = 0x228;    // +0x9a8
+        task->m_startHoldMs     = 1000;     // +0x9e0
         AepLoadGroup(&aep, 0, "game_cmn_ipad");
     }
 
@@ -231,15 +219,14 @@ void PlayTaskInit(void *playData) {
     PlayBuildFieldLayers(playData);
 
     // Three of the field layers draw additively: force their blend mode (+0x34) to 0x200.
-    pdInt(*reinterpret_cast<void **>(pdw(playData) + 0x98), 0x34) = 0x200;
-    pdInt(*reinterpret_cast<void **>(pdw(playData) + 0x9c), 0x34) = 0x200;
-    pdInt(*reinterpret_cast<void **>(pdw(playData) + 0xa0), 0x34) = 0x200;
+    task->m_sceneLayers[0]->blend() = 0x200;   // +0x98
+    task->m_sceneLayers[1]->blend() = 0x200;   // +0x9c
+    task->m_sceneLayers[2]->blend() = 0x200;   // +0xa0
 
     // Initialise the 60-entry judge-state pool: each slot's persistent layer id is its
     // index; the note-binding fields stay zero (free). Ghidra: the +0x3c8 stride-24 loop.
-    NoteJudgeState *judge = reinterpret_cast<NoteJudgeState *>(pdw(playData) + 0x3c8);
     for (int i = 0; i < 60; ++i) {
-        judge[i].layerId = i;
+        task->m_judgePool[i].layerId = i;
     }
 
     // Character-portrait / window / text-panel textures.
@@ -248,51 +235,53 @@ void PlayTaskInit(void *playData) {
     // Install the scene's per-frame draw pass on group 0.
     aep.setGroupDrawCallback(0, &PlayTaskDraw, playData);  // FUN_0000f9b0 / FUN_00030944
 
-    // Load the three play SEs into +0x3a8/+0x3ac/+0x3b0 (v12/v13/v14 .m4a). Ghidra: the
-    // loadSe:isLoop:callName:group: loop at the tail.
+    // Load the three play SEs into m_playSeIds (+0x3a8/+0x3ac/+0x3b0, v12/v13/v14 .m4a).
+    // Ghidra: the loadSe:isLoop:callName:group: loop at the tail.
     AudioManager *audio = [AudioManager sharedManager];
     static const char *const kPlaySeNames[3] = {"v12", "v13", "v14"};
     for (int i = 0; i < 3; ++i) {
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kPlaySeNames[i]) ofType:@"m4a"];
         RSND_SOURCE_ID src = [audio loadSe:path isLoop:NO callName:nil group:0];
-        pdInt(playData, 0x3a8 + i * 4) = (int)src;
+        task->m_playSeIds[i] = (int)src;
     }
 }
 
 // Ghidra: FUN_0003003c — tear down the play scene and hand off to the result screen.
 void PlayTaskGotoResult(void *playData) {
+    PlayTask *task = static_cast<PlayTask *>(playData);
+
     NoteMng &nm = NoteMng::shared();                  // Ghidra: NoteMng_shared
     AepManager &aep = AepManager::shared();           // AepManager_shared
     AudioManager *audio = [AudioManager sharedManager];
 
     // Free the scene's cached textures (window / chara portraits / text panels).
-    destroyTextureArray(playData, 0x28, 2);
-    destroyTextureArray(playData, 0x30, 8);
-    destroyTextureArray(playData, 0x50, 13);
+    destroyAll(task->m_windowTex);
+    destroyAll(task->m_charaTex);
+    destroyAll(task->m_textPanels);
 
     // Tear down the field layers (unlink from the draw list + delete).
-    destroyLayerArray(playData, 0x84, 5);
-    destroyLayerArray(playData, 0x98, 11);
+    destroyAll(task->m_comboLayers);
+    destroyAll(task->m_sceneLayers);
 
     aep.unloadGroup(0);   // Ghidra: FUN_0000f988 — drop the common AEP group
 
-    // Stop + release every SE this scene created: the three play SEs (+0x3a8..) and the
-    // two gauge/tap SEs (+0x398..), then release the BGM.
+    // Stop + release every SE this scene created: the three play SEs (m_playSeIds) and the
+    // two gauge/tap SEs (m_hitSeId / m_gaugeSeId), then release the BGM.
+    auto stopReleaseSe = [&](int rawSrc) {
+        RSND_SOURCE_ID src = (RSND_SOURCE_ID)rawSrc;
+        [audio stopSe:(RSND_INSTANCE_ID)src];
+        [audio releaseSe:nil resourceId:src];
+    };
     for (int i = 0; i < 3; ++i) {
-        RSND_SOURCE_ID src = (RSND_SOURCE_ID)pdInt(playData, 0x3a8 + i * 4);
-        [audio stopSe:(RSND_INSTANCE_ID)src];
-        [audio releaseSe:nil resourceId:src];
+        stopReleaseSe(task->m_playSeIds[i]);
     }
-    for (int i = 0; i < 2; ++i) {
-        RSND_SOURCE_ID src = (RSND_SOURCE_ID)pdInt(playData, 0x398 + i * 4);
-        [audio stopSe:(RSND_INSTANCE_ID)src];
-        [audio releaseSe:nil resourceId:src];
-    }
+    stopReleaseSe(task->m_hitSeId);     // +0x398
+    stopReleaseSe(task->m_gaugeSeId);   // +0x39c
     [audio releaseBgm];
 
     // Record the result into the event center for the result screen to read back —
-    // unless the play was aborted (+0x9e8 set, e.g. quit from the pause menu).
-    if (pdByte(playData, 0x9e8) == 0) {
+    // unless the play was aborted (m_stopped set, e.g. quit from the pause menu).
+    if (task->m_stopped == 0) {
         int cool = 0, great = 0, good = 0, bad = 0;
         for (int k = 0; k < kNoteKindCount; ++k) {
             cool  += nm.judgeCount(k, NOTE_JUDGE_COOL);   // DAT_00179014 columns
@@ -304,29 +293,29 @@ void PlayTaskGotoResult(void *playData) {
         const int  rank      = scoreToRank(score);    // Ghidra: FUN_00028a40
         const bool fullCombo = nm.maxCombo() >= nm.totalNoteCount();
 
-        neAppEventCenter *event = reinterpret_cast<neAppEventCenter *>(pdPtr(playData, 0x968));
+        neAppEventCenter *event = task->m_eventCenter;
         // Ghidra: FUN_0002930c (updateHighScore on the event center).
         event->recordPlayResult((unsigned)score, (short)cool, (short)great, (short)good,
                                 (short)bad, fullCombo);
-        pdInt(event, 0x18)   = nm.maxCombo();             // event +0x18 (DAT_00179004)
-        pdShort(event, 0x14) = (short)rank;               // event +0x14
+        event->setMaxCombo(nm.maxCombo());   // event +0x18 (DAT_00179004)
+        event->setPlayRank((short)rank);     // event +0x14
     }
 
     PlayNoteMngDetach(&nm);   // Ghidra: FUN_0003395c — clear the note-play active flag
 
     [[AppDelegate appDelegate] setMainTask:nullptr];   // deregister the play task
-    pdByte(playData, 0x24) = 1;   // +0x24 = C_TASK m_killed (reap on next scheduler pass)
+    task->kill();   // +0x24 = C_TASK m_killed (reap on next scheduler pass)
 
     // Spawn the next scene at priority 3: the result screen for a completed normal play,
     // else back to the music-select MainTask (aborted play, or the bundled/sugoroku path).
     C_TASK *next;
-    if (pdByte(playData, 0x9e8) == 0 && pdByte(playData, 0x9c9) == 0) {
+    if (task->m_stopped == 0 && task->m_isDemoPlay == 0) {
         next = PlayResultCreateTask();   // operator_new(0x3a0) + FUN_0003d5bc
     } else {
         next = MainTaskCreate();         // operator_new(0xaa8) + MainTask_ctor
     }
     next->setPriority(3);   // Ghidra: C_TASK_setPriority
-    pdByte(playData, 0x9c7) = 1;   // +0x9c7 = hand-off complete
+    task->m_suppressHud = 1;   // +0x9c7 = hand-off complete
 }
 
 // The per-tap feedback SE resource name for a touch-sound kind (clamped to 0..9).
@@ -342,14 +331,16 @@ static NSString *TouchSeResourceName(int kind) {
 // Ghidra: FUN_00030720 — resolve the picked song, kick off the async BGM + tap-SE
 // load on a first load, and parse the chosen difficulty's sheet into the note manager.
 void PlayLoadSong(void *playData, int reload) {
+    PlayTask *task = static_cast<PlayTask *>(playData);
+
     AudioManager *audio = [AudioManager sharedManager];
     NoteMng &nm = NoteMng::shared();
 
     MusicData *music;
     int sheetIndex;
-    if (pdByte(playData, 0x9c9) == 0) {
+    if (task->m_isDemoPlay == 0) {
         // Normal play: the event center carries the picked music id + difficulty.
-        neAppEventCenter *evc = reinterpret_cast<neAppEventCenter *>(pdPtr(playData, 0x968));
+        neAppEventCenter *evc = task->m_eventCenter;
         sheetIndex = evc->lastSheet();
         music = [[MusicManager getInstance] getMusicData:evc->lastMusic()];
     } else {
@@ -361,12 +352,12 @@ void PlayLoadSong(void *playData, int reload) {
     if (reload == 0) {
         [audio stopBgm:0.0f];
         // Decode + start the BGM off the main thread so the parse below is not blocked
-        // on the audio; flag it ready (@ +0x9c6) when done.
+        // on the audio; flag it ready (m_bgmReady @ +0x9c6) when done.
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
             NSData *bgm = [music music];
             [audio loadBgmData:bgm isLoop:NO];
             [audio setBgmVolume:1.0f];
-            pdByte(playData, 0x9c6) = 1;
+            task->m_bgmReady = 1;
         });
     }
 
@@ -385,8 +376,8 @@ void PlayLoadSong(void *playData, int reload) {
         const int kind = [UserSettingData touchSoundKind];
         NSString *path = [[NSBundle mainBundle] pathForResource:TouchSeResourceName(kind)
                                                          ofType:@"m4a"];
-        pdInt(playData, 0x398) = (int)[audio loadSe:path isLoop:NO callName:nil group:0];
-        [audio setSeVolume:pdShort(playData, 0x9b4) groupId:0];
+        task->m_hitSeId = (int)[audio loadSe:path isLoop:NO callName:nil group:0];
+        [audio setSeVolume:task->m_seVolume groupId:0];
     }
 }
 
@@ -418,11 +409,6 @@ void PlayNoteMngDetach(NoteMng *nm) {
 // ---------------------------------------------------------------------------------
 
 namespace {
-
-// A field layer by play-data offset (the +0x84.. / +0x98.. AepLyrCtrl slots).
-inline AepLyrCtrl *pdLayer(void *p, int off) {
-    return reinterpret_cast<AepLyrCtrl *>(pdPtr(p, off));
-}
 
 // Effect layers (+0x84..+0x94) — names @ PTR_s_EFF_COM_025CMB (0x131164), draw order
 // @ DAT_0012e600.
@@ -534,98 +520,100 @@ const char *const kCharaAnmUser[8] = {            // +0x378 (PTR_s_CHARA0_ANM)
 }  // namespace
 
 void PlayBuildFieldLayers(void *playData) {
+    PlayTask *task = static_cast<PlayTask *>(playData);
+
     AepManager &aep = AepManager::shared();       // Ghidra: AepManager_shared (uVar5)
     AppDelegate *app = [AppDelegate appDelegate];  // display-tier query below
 
-    // The five effect layers at +0x84..+0x94. Each is operator new(0x60) + AepLyrCtrl
-    // ctor, stored into its slot, then AepLyrCtrl::init(group 0, name, owner=playData,
-    // order). The order is the 5th init arg the pseudocode truncates (local_1c0 =
-    // DAT_0012e600[i], verified against the AepLyrCtrl::init(...,owner,order) form).
+    // The five effect layers in m_comboLayers (+0x84..+0x94). Each is operator new(0x60) +
+    // AepLyrCtrl ctor, stored into its slot, then AepLyrCtrl::init(group 0, name,
+    // owner=playData, order). The order is the 5th init arg the pseudocode truncates
+    // (local_1c0 = DAT_0012e600[i], verified against the AepLyrCtrl::init(...,owner,order) form).
     for (int i = 0; i < 5; ++i) {
         AepLyrCtrl *layer = new AepLyrCtrl();
-        pdPtr(playData, 0x84 + i * 4) = layer;
+        task->m_comboLayers[i] = layer;
         layer->init(0, kEffectLayerNames[i], playData, kEffectLayerOrder[i]);
     }
 
     // Per-display-tier repositioning of the effect banners + selection of the bg /
-    // score name tables and the field draw offset at +0x978. Layer anchor = clear the
-    // y slot (+0x18) and store a raw screen offset into the z slot (+0x1c) — the same
-    // +0x18/+0x1c store AepLyrCtrl::setRouletteAnchor performs.
-    const bool pad = pdByte(playData, 0x9ca) != 0;
+    // score name tables and the field draw offset at m_pauseOriginX (+0x978). Layer
+    // anchor = clear the y slot (+0x18) and store a raw screen offset into the z slot
+    // (+0x1c) — the same +0x18/+0x1c store AepLyrCtrl::setRouletteAnchor performs.
+    const bool pad = task->m_isPadDisplay != 0;
     const char *const *bgNames;
     const char *const *scoreNames;
     if (!pad) {
         if ([app displayType] == 2) {   // 1136 tall phone
-            pdLayer(playData, 0x90)->setRouletteAnchor(0x140);   // ARE_YOU_READY y=320
-            pdInt(playData, 0x978) = 0;
+            task->m_comboLayers[3]->setRouletteAnchor(0x140);   // ARE_YOU_READY y=320
+            task->m_pauseOriginX = 0;
             bgNames = kBgNames1136;
             scoreNames = kScoreNames1136;
         } else {                        // 960 phone
-            pdLayer(playData, 0x84)->setRouletteAnchor(-0x28);   // combo 25 -> y=-40
-            pdLayer(playData, 0x88)->setRouletteAnchor(-0x28);   // combo 50
-            pdLayer(playData, 0x8c)->setRouletteAnchor(-0x28);   // combo 100
-            pdLayer(playData, 0x90)->setRouletteAnchor(0x132);   // ARE_YOU_READY y=306
-            pdInt(playData, 0x978) = -0xb0;                       // field offset -176
+            task->m_comboLayers[0]->setRouletteAnchor(-0x28);   // combo 25 -> y=-40
+            task->m_comboLayers[1]->setRouletteAnchor(-0x28);   // combo 50
+            task->m_comboLayers[2]->setRouletteAnchor(-0x28);   // combo 100
+            task->m_comboLayers[3]->setRouletteAnchor(0x132);   // ARE_YOU_READY y=306
+            task->m_pauseOriginX = -0xb0;                        // field offset -176
             bgNames = kBgNames960;
             scoreNames = kScoreNames960;
         }
     } else {                            // pad
-        pdLayer(playData, 0x90)->setRouletteAnchor(0x300);       // ARE_YOU_READY y=768
-        pdInt(playData, 0x978) = 0;
+        task->m_comboLayers[3]->setRouletteAnchor(0x300);       // ARE_YOU_READY y=768
+        task->m_pauseOriginX = 0;
         bgNames = kBgNamesPad;
         scoreNames = kScoreNamesPad;
     }
 
-    // The eleven background layers at +0x98..+0xc0, same new + init + order pattern.
+    // The eleven background layers in m_sceneLayers (+0x98..+0xc0), same new + init + order.
     for (int i = 0; i < 11; ++i) {
         AepLyrCtrl *layer = new AepLyrCtrl();
-        pdPtr(playData, 0x98 + i * 4) = layer;
+        task->m_sceneLayers[i] = layer;
         layer->init(0, bgNames[i], playData, kBgLayerOrder[i]);
     }
 
-    // getLyrNo -> +lyrBase, layerFrameCount(handle) -> +frmBase.
-    auto fillLyr = [&](int lyrBase, int frmBase, const char *const *names, int n) {
+    // getLyrNo -> lyr table, layerFrameCount(handle) -> frame-count table.
+    auto fillLyr = [&](int *lyr, int *frm, const char *const *names, int n) {
         for (int i = 0; i < n; ++i) {
-            const int lyr = aep.getLyrNo(0, names[i]);
-            pdInt(playData, lyrBase + i * 4) = lyr;
-            pdInt(playData, frmBase + i * 4) = aep.layerFrameCount(lyr);
+            const int h = aep.getLyrNo(0, names[i]);
+            lyr[i] = h;
+            frm[i] = aep.layerFrameCount(h);
         }
     };
-    // getFrameNo -> +base (no frame count).
-    auto fillFrm = [&](int base, const char *const *names, int n) {
+    // getFrameNo -> table (no frame count).
+    auto fillFrm = [&](int *dst, const char *const *names, int n) {
         for (int i = 0; i < n; ++i) {
-            pdInt(playData, base + i * 4) = aep.getFrameNo(0, names[i]);
+            dst[i] = aep.getFrameNo(0, names[i]);
         }
     };
-    // getUserNo -> +base (no frame count).
-    auto fillUsr = [&](int base, const char *const *names, int n) {
+    // getUserNo -> table (no frame count).
+    auto fillUsr = [&](int *dst, const char *const *names, int n) {
         for (int i = 0; i < n; ++i) {
-            pdInt(playData, base + i * 4) = aep.getUserNo(0, names[i]);
+            dst[i] = aep.getUserNo(0, names[i]);
         }
     };
 
-    fillLyr(0x154, 0x168, scoreNames, 5);
-    fillLyr(0xc4, 0xd4, kToneJudgeNames, 4);
-    fillLyr(0xe4, 0x11c, kEffectStateNames, 14);
-    fillLyr(0x17c, 0x1dc, kCharaJumpNames, 8);
+    fillLyr(task->m_scoreBpmLyr,    task->m_scoreBpmFrames,    scoreNames,         5);
+    fillLyr(task->m_toneJudgeLyr,   task->m_toneJudgeFrames,   kToneJudgeNames,    4);
+    fillLyr(task->m_effectStateLyr, task->m_effectStateFrames, kEffectStateNames, 14);
+    fillLyr(task->m_charaJumpLyr,   task->m_charaJumpFrames,   kCharaJumpNames,    8);
 
-    fillFrm(0x1fc, kPauseEyeToneFrames, 9);
-    fillFrm(0x220, kScoreDigitFrames, 10);
-    fillFrm(0x248, kComboDigitFrames, 10);
-    fillFrm(0x270, kGaugeFlashFrames, 4);
+    fillFrm(task->m_pauseEyeToneFrm, kPauseEyeToneFrames, 9);
+    fillFrm(task->m_scoreDigitFrm,   kScoreDigitFrames,  10);
+    fillFrm(task->m_comboDigitFrm,   kComboDigitFrames,  10);
+    fillFrm(task->m_gaugeFlashFrm,   kGaugeFlashFrames,   4);
     // In the binary the +0x280/+0x294 fills interleave in one loop, as do +0x2a8/+0x2d0;
     // split here since each is an independent lookup with no ordering dependency.
-    fillFrm(0x280, kTone08Frames, 5);
-    fillFrm(0x294, kTone08NumFrames, 5);
-    fillFrm(0x2a8, kToneNumberFrames, 10);
-    fillFrm(0x2d0, kToneSameFrames, 10);
+    fillFrm(task->m_tone08Frm,     kTone08Frames,     5);
+    fillFrm(task->m_tone08NumFrm,  kTone08NumFrames,  5);
+    fillFrm(task->m_toneNumberFrm, kToneNumberFrames, 10);
+    fillFrm(task->m_toneSameFrm,   kToneSameFrames,   10);
 
-    fillUsr(0x2f8, kUserSpriteNames, 15);
-    fillUsr(0x334, kNumComboUser, 3);
-    fillUsr(0x340, kScoreNumUser, 6);
+    fillUsr(task->m_userSprite,   kUserSpriteNames, 15);
+    fillUsr(task->m_numComboUser, kNumComboUser,     3);
+    fillUsr(task->m_scoreNumUser, kScoreNumUser,     6);
     // +0x358 / +0x378 interleave in one binary loop; independent lookups, split here.
-    fillUsr(0x358, kCharaUser, 8);
-    fillUsr(0x378, kCharaAnmUser, 8);
+    fillUsr(task->m_charaUser,    kCharaUser,    8);
+    fillUsr(task->m_charaAnmUser, kCharaAnmUser, 8);
 }
 
 // ---------------------------------------------------------------------------------
@@ -663,9 +651,11 @@ NSString *const kTextPanelNames[13] = {
 }  // namespace
 
 void PlayLoadCharaTextures(void *playData) {
-    const bool pad = pdByte(playData, 0x9ca) != 0;   // isPadDisplay (drives sugo naming)
+    PlayTask *task = static_cast<PlayTask *>(playData);
 
-    if (pdByte(playData, 0x9c9) == 0) {
+    const bool pad = task->m_isPadDisplay != 0;   // isPadDisplay (drives sugo naming)
+
+    if (task->m_isDemoPlay == 0) {
         // Normal play: build the pool of other unlocked characters, then fill eight
         // portrait slots. Ghidra: _srand(_time(0)) then the CharaManager pick loop.
         srand((unsigned)time(nullptr));
@@ -704,7 +694,7 @@ void PlayLoadCharaTextures(void *playData) {
             }
 
             neTextureForiOS *tex = new neTextureForiOS();
-            pdPtr(playData, 0x30 + slot * 4) = tex;
+            task->m_charaTex[slot] = tex;
 
             NSString *path;
             if (chara < 0) {
@@ -733,7 +723,7 @@ void PlayLoadCharaTextures(void *playData) {
                 tex->load([path UTF8String]);
             } else {
                 delete tex;
-                pdPtr(playData, 0x30 + slot * 4) = nullptr;
+                task->m_charaTex[slot] = nullptr;
             }
         }
         return;
@@ -742,7 +732,7 @@ void PlayLoadCharaTextures(void *playData) {
     // Bundled demo / sugoroku: three portraits, the window frame, thirteen text panels.
     for (int i = 0; i < 3; ++i) {
         neTextureForiOS *tex = new neTextureForiOS();
-        pdPtr(playData, 0x30 + i * 4) = tex;
+        task->m_charaTex[i] = tex;
 
         NSString *path;
         if (!pad) {
@@ -757,13 +747,13 @@ void PlayLoadCharaTextures(void *playData) {
     }
 
     neTextureForiOS *window = new neTextureForiOS();
-    pdPtr(playData, 0x2c) = window;
+    task->m_windowTex[1] = window;   // +0x2c window frame
     NSString *windowPath = [[NSBundle mainBundle] pathForResource:@"t_window" ofType:@"png"];
     window->load([windowPath UTF8String]);
 
     for (int i = 0; i < 13; ++i) {
         neTextureForiOS *tex = new neTextureForiOS();
-        pdPtr(playData, 0x50 + i * 4) = tex;
+        task->m_textPanels[i] = tex;
         NSString *path = [[NSBundle mainBundle] pathForResource:kTextPanelNames[i] ofType:@"png"];
         tex->load([path UTF8String]);
     }
@@ -779,9 +769,10 @@ void PlayLoadCharaTextures(void *playData) {
 void PlayTaskDraw(int child, int /*frame*/, int x, int y, int scaleX, int scaleY,
                   int anchorX, int anchorY, int color, int alpha, int rotation,
                   uint32_t blend, int *clipRect, uint32_t p17, void *context) {
+    PlayTask *task = static_cast<PlayTask *>(context);   // the play data (param_15)
+
     AepManager &aep = AepManager::shared();          // Ghidra: AepManager_shared
     NoteMng &nm = NoteMng::shared();                 // binary forces the manager up
-    void *pData = context;                              // the play data (param_15)
 
     // Atlas-quad tail (Ghidra: LAB_00030cc6 -> FUN_0000fcd0). `handle`/`priority` vary.
     auto noteQuad = [&](int handle, int priority) {
@@ -798,45 +789,50 @@ void PlayTaskDraw(int child, int /*frame*/, int x, int y, int scaleX, int scaleY
                       0xffffff, lclip, reinterpret_cast<void *>((intptr_t)p17), 0, 1);
     };
 
-    // --- Combo-count digits (NUM_COMBO_*, +0x334): only once combo exceeds 4 ---
+    // In the note-sprite branches below, p17 is the judge slot index into m_judgePool; those
+    // branches read this slot's gauge index (slot.result @ +0x3d4) or tone note id
+    // (slot.noteKey @ +0x3cc), matching the binary's `p17*0x18 + 0x3c8` element access.
+
+    // --- Combo-count digits (NUM_COMBO_*, m_numComboUser): only once combo exceeds 4 ---
     // The binary reads DAT_00179000 (the combo mirror in the NoteMng region); the modelled
     // accessor NoteMng::combo() carries the same gameplay combo (documented best-effort).
     if (nm.combo() > 4) {
         int v = nm.combo();
         for (int i = 0; i < 3; ++i) {
-            if (pdInt(pData, 0x334 + i * 4) == child) {
-                noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);   // +0x248 EFF_C_NUM
+            if (task->m_numComboUser[i] == child) {
+                noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);   // EFF_C_NUM
                 return;
             }
             v /= 10;
         }
     }
-    // --- Score digits (SCO_0000NN user sprites, +0x340) ---
+    // --- Score digits (SCO_0000NN user sprites, m_scoreNumUser) ---
     {
-        int v = pdInt(pData, 0x9b0);                                     // running score
+        int v = task->m_score;                                       // running score
         for (int i = 0; i < 6; ++i) {
-            if (pdInt(pData, 0x340 + i * 4) == child) {
-                noteQuad(pdInt(pData, 0x220 + (v % 10) * 4), (int)p17);   // +0x220 SCO_N frames
+            if (task->m_scoreNumUser[i] == child) {
+                noteQuad(task->m_scoreDigitFrm[v % 10], (int)p17);   // SCO_N frames
                 return;
             }
             v /= 10;
         }
     }
-    // --- Gauge flash (GG_IFL, +0x2f8): this judge slot's gauge index @ +0x3d4 ---
-    if (pdInt(pData, 0x2f8) == child) {
-        const int gi = pdInt(pData, (int)p17 * 0x18 + 0x3d4);
+    // --- Gauge flash (GG_IFL, m_userSprite[0]): this judge slot's gauge index (slot.result) ---
+    if (task->m_userSprite[0] == child) {
+        const int gi = task->m_judgePool[(int)p17].result;                                 // +0x3d4 gauge index
         if (gi < 0) return;
-        noteQuad(pdInt(pData, 0x270 + gi * 4), 0xe);                     // +0x270 GG_IFL_* frames
+        noteQuad(task->m_gaugeFlashFrm[gi], 0xe);                   // GG_IFL_* frames
         return;
     }
-    // --- Pause command icon (CMD_PAUSE_1, +0x2fc) ---
-    if (pdInt(pData, 0x2fc) == child) {
-        noteQuad(pdInt(pData, 0x1fc), 9);                               // +0x1fc CMD_PAUSE_1_F
+    // --- Pause command icon (CMD_PAUSE_1, m_userSprite[1]) ---
+    if (task->m_userSprite[1] == child) {
+        noteQuad(task->m_pauseEyeToneFrm[0], 9);                    // CMD_PAUSE_1_F
         return;
     }
-    // --- Tone lane graphic (TONE_1, +0x300): pick a tone sprite from this note's state ---
-    if (pdInt(pData, 0x300) == child) {
-        const int id      = pdInt(pData, (int)p17 * 0x18 + 0x3cc);      // this slot's tone note id
+    // --- Tone lane graphic (TONE_1, m_userSprite[2]): pick a tone sprite from this note's state ---
+    if (task->m_userSprite[2] == child) {
+        // The slot's note identity (slot.noteKey @ +0x3cc) is read as the raw tone note id.
+        const int id      = reinterpret_cast<int &>(task->m_judgePool[(int)p17].noteKey);
         const int graphic = NoteToneGraphic(id);                    // FUN_00034bb4
         const int flags   = NoteToneFlags(id);                      // FUN_00034b98
         const int state   = NoteToneState(id);                      // FUN_00034b5c
@@ -844,105 +840,104 @@ void PlayTaskDraw(int child, int /*frame*/, int x, int y, int scaleX, int scaleY
         if ((flags & 2) == 0) {
             if (state == 1) {
                 const int def = NoteToneDefaultGraphic(graphic);    // FUN_00034a5c
-                handle = pdInt(pData, 0x280 + (def - 1) * 4);          // +0x280 TONE_08 table
+                handle = task->m_tone08Frm[def - 1];                // TONE_08 table
             } else {
-                handle = pdInt(pData, 0x2a8 + graphic * 4);            // +0x2a8 tone-number table
+                handle = task->m_toneNumberFrm[graphic];            // tone-number table
             }
         } else {
-            handle = pdInt(pData, 0x2d0 + graphic * 4);                // +0x2d0 tone-same table
+            handle = task->m_toneSameFrm[graphic];                  // tone-same table
         }
         noteQuad(handle, 0x13);
         return;
     }
-    // --- Tone number overlay (TONE_08_NUM, +0x304) ---
-    if (pdInt(pData, 0x304) == child) {
-        const int id = pdInt(pData, (int)p17 * 0x18 + 0x3cc);
+    // --- Tone number overlay (TONE_08_NUM, m_userSprite[3]) ---
+    if (task->m_userSprite[3] == child) {
+        const int id = reinterpret_cast<int &>(task->m_judgePool[(int)p17].noteKey);
         if (NoteToneState(id) != 1) return;
         const int n = NoteToneCount(id);                            // FUN_00034bd0
         if (n < 1) return;
-        noteQuad(pdInt(pData, 0x290 + n * 4), 0x11);                   // +0x290 TONE_08_NUM table
+        noteQuad(task->m_tone08NumFrm[n - 1], 0x11);                // TONE_08_NUM table
         return;
     }
-    // --- Pause-eye tone frames (ORB_EYES_*, +0x308..+0x318) ---
-    if (pdInt(pData, 0x308) == child) { noteQuad(pdInt(pData, 0x200), 0x12); return; }
-    if (pdInt(pData, 0x30c) == child) { noteQuad(pdInt(pData, 0x204), 0x12); return; }
-    if (pdInt(pData, 0x310) == child) { noteQuad(pdInt(pData, 0x208), 0x12); return; }
-    if (pdInt(pData, 0x314) == child) { noteQuad(pdInt(pData, 0x20c), 0x12); return; }
-    if (pdInt(pData, 0x318) == child) { noteQuad(pdInt(pData, 0x210), 0x12); return; }
+    // --- Pause-eye tone frames (ORB_EYES_*, m_userSprite[4..8]) ---
+    if (task->m_userSprite[4] == child) { noteQuad(task->m_pauseEyeToneFrm[1], 0x12); return; }
+    if (task->m_userSprite[5] == child) { noteQuad(task->m_pauseEyeToneFrm[2], 0x12); return; }
+    if (task->m_userSprite[6] == child) { noteQuad(task->m_pauseEyeToneFrm[3], 0x12); return; }
+    if (task->m_userSprite[7] == child) { noteQuad(task->m_pauseEyeToneFrm[4], 0x12); return; }
+    if (task->m_userSprite[8] == child) { noteQuad(task->m_pauseEyeToneFrm[5], 0x12); return; }
 
-    // --- Background colour layer (BG_CL_COLOR, +0x31c): effects-on, new hardware only ---
-    if (pdInt(pData, 0x31c) == child) {
-        if (pdByte(pData, 0x9e5) == 0) return;                         // effects off
-        if (pdByte(pData, 0x9e7) != 0) return;                         // old hardware
-        layerDraw(pdInt(pData, 0x110), pdInt(pData, 0x3bc), scaleY, clipRect, (int)p17);
+    // --- Background colour layer (BG_CL_COLOR, m_userSprite[9]): effects-on, new hardware only ---
+    if (task->m_userSprite[9] == child) {
+        if (task->m_optEffectOn == 0) return;                       // effects off
+        if (task->m_optOldHardware != 0) return;                    // old hardware
+        layerDraw(task->m_effectStateLyr[11], task->m_cdColorFrame, scaleY, clipRect, (int)p17);
         return;
     }
-    // --- On-field combo digits (EFF_C_NUM001/010/100, +0x328/+0x32c/+0x330) ---
-    if (pdInt(pData, 0x328) == child) {
-        const int v = (int)pdShort(pData, 0x9c4);
-        noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);
+    // --- On-field combo digits (EFF_C_NUM001/010/100, m_userSprite[12..14]) ---
+    if (task->m_userSprite[12] == child) {
+        const int v = (int)task->m_fieldCombo;
+        noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
         return;
     }
-    if (pdInt(pData, 0x32c) == child) {
-        const int v = (int)pdShort(pData, 0x9c4) / 10;
-        noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);
+    if (task->m_userSprite[13] == child) {
+        const int v = (int)task->m_fieldCombo / 10;
+        noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
         return;
     }
-    if (pdInt(pData, 0x330) == child) {
-        if ((int)pdShort(pData, 0x9c4) < 100) return;
-        const int v = (int)pdShort(pData, 0x9c4) / 100;
-        noteQuad(pdInt(pData, 0x248 + (v % 10) * 4), (int)p17);
+    if (task->m_userSprite[14] == child) {
+        if ((int)task->m_fieldCombo < 100) return;
+        const int v = (int)task->m_fieldCombo / 100;
+        noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
         return;
     }
-    // --- Score star badge (FRAME_STAR, +0x320 == decimal 800) ---
-    if (pdInt(pData, 0x320) == child) {
+    // --- Score star badge (FRAME_STAR, m_userSprite[10]) ---
+    if (task->m_userSprite[10] == child) {
         int lyr, lframe;
-        if (pdInt(pData, 0x9b0) < 70000) {                             // FRAME_SIDEMT_BARSTAR0
-            lyr = pdInt(pData, 0xfc);  lframe = 0;
+        if (task->m_score < 70000) {                                // FRAME_SIDEMT_BARSTAR0
+            lyr = task->m_effectStateLyr[6];  lframe = 0;
         } else {                                                    // FRAME_SIDEMT_BARSTAR1
-            lyr = pdInt(pData, 0x100); lframe = pdInt(pData, 0x3c0);
+            lyr = task->m_effectStateLyr[7];  lframe = task->m_barStarFrame;
         }
         layerDraw(lyr, lframe, 100, nullptr, 0x16);                 // scaleY forced to 100
         return;
     }
-    // --- Gauge side bar (FRAME_SIDEBAR, +0x324) ---
-    if (pdInt(pData, 0x324) == child) {
-        const int barCount = pdInt(pData, 0x13c);                     // FRAME_SIDEMT_BAR length
-        const int t = (int)pdShort(pData, 0x9c0) * (barCount - 1);    // gauge * (frames-1)
+    // --- Gauge side bar (FRAME_SIDEBAR, m_userSprite[11]) ---
+    if (task->m_userSprite[11] == child) {
+        const int barCount = task->m_effectStateFrames[8];          // FRAME_SIDEMT_BAR length
+        const int t = (int)task->m_gaugeValue * (barCount - 1);     // gauge * (frames-1)
         const int lframe = (t + (int)((unsigned)(t >> 31) >> 22)) >> 10;   // t / 1024 toward 0
-        layerDraw(pdInt(pData, 0x104), lframe, scaleY, nullptr, 0x16);
+        layerDraw(task->m_effectStateLyr[8], lframe, scaleY, nullptr, 0x16);
         return;
     }
 
-    // --- Character jump layers / portraits (CHARA[i] +0x358, CHARA[i]_ANM +0x378) ---
+    // --- Character jump layers / portraits (CHARA[i] m_charaUser, CHARA[i]_ANM m_charaAnmUser) ---
     // Skipped entirely when effects are off and this is not the bundled demo.
-    if (pdByte(pData, 0x9e5) != 0 || pdByte(pData, 0x9c9) != 0) {
+    if (task->m_optEffectOn != 0 || task->m_isDemoPlay != 0) {
         const int ivl = (int)NoteBeatIntervalMs();                 // beat interval, ms
         const int pos = (ivl != 0) ? (nm.getCurrentPosition() % ivl) : 0;
         int scoreGate = 0;                                         // i * 10000
         for (int i = 0; i < 8; ++i) {
-            if (pdInt(pData, 0x358 + i * 4) == child) {               // chara i jump layer
-                if (pdByte(pData, 0x9c9) == 0) {                      // normal play
-                    if (pdInt(pData, 0x9b0) < scoreGate) return;      // score below chara threshold
-                    AepLyrCtrl *bg = reinterpret_cast<AepLyrCtrl *>(pdPtr(pData, 0xc0));
+            if (task->m_charaUser[i] == child) {                      // chara i jump layer
+                if (task->m_isDemoPlay == 0) {                        // normal play
+                    if (task->m_score < scoreGate) return;            // score below chara threshold
+                    AepLyrCtrl *bg = task->m_sceneLayers[10];         // +0xc0
                     if (i > 2 && bg != nullptr && bg->isAnimating()) return;
                 } else {                                           // bundled demo
                     if (i > 2) return;
                     if (i == 4) {
-                        PlayDrawCharaWindow(pData, x - (anchorX * scaleX) / 100,
+                        PlayDrawCharaWindow(task, x - (anchorX * scaleX) / 100,
                                                 y - (scaleY * anchorY) / 100);
                     }
                 }
-                const int jumpCount = pdInt(pData, 0x1dc + i * 4);    // chara jump layer length
+                const int jumpCount = task->m_charaJumpFrames[i];    // chara jump layer length
                 const int lframe = (ivl != 0) ? (pos * (jumpCount - 1)) / ivl : 0;
-                layerDraw(pdInt(pData, 0x17c + i * 4), lframe, scaleY, clipRect, 0x1a);
+                layerDraw(task->m_charaJumpLyr[i], lframe, scaleY, clipRect, 0x1a);
                 return;
             }
-            if (pdInt(pData, 0x378 + i * 4) == child) {               // chara i portrait (anim)
-                neTextureForiOS *portrait =
-                    reinterpret_cast<neTextureForiOS *>(pdPtr(pData, 0x30 + i * 4));
+            if (task->m_charaAnmUser[i] == child) {                   // chara i portrait (anim)
+                neTextureForiOS *portrait = task->m_charaTex[i];
                 if (portrait == nullptr) return;
-                const int csize = pdInt(pData, 0x9a8);                // chara draw size
+                const int csize = task->m_charaDrawSize;              // chara draw size
                 neSpriteDrawParams p;
                 p.w = csize;  p.h = csize;
                 p.x = x;      p.y = y;

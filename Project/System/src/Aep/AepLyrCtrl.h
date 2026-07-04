@@ -58,6 +58,10 @@ public:
     int   &frameCount() { return m_frameCount; }  // +0x3c
     float &alpha()      { return m_alpha; }        // +0x44
 
+    // Mutable access to the blend mode (+0x34). The play scene forces its three additive
+    // field layers to 0x200 after building them (Ghidra: PlayTask_init stores into +0x34).
+    int   &blend()      { return m_blend; }        // +0x34
+
     // Stop this layer's animation without unlinking it. Ghidra: FUN_0002cb5c (clears
     // the play-state field at +0x58); the arcade map reload calls it on every scene
     // layer before rebuilding.

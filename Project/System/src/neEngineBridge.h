@@ -180,6 +180,15 @@ public:
     bool  isCleared()  const { return raw<unsigned char>(0x1c) != 0; } // DAT_00187bd4
     bool  isNewRecord()const { return raw<unsigned char>(0x32) != 0; } // DAT_00187bea
 
+    // The bundled-demo / sugoroku play flag (+0x33). PlayTask_init copies this raw byte into
+    // its own m_isDemoPlay to drive the tutorial / auto-demo play path.
+    unsigned char demoPlayFlag() const { return raw<unsigned char>(0x33); }
+
+    // The play task writes the finished play's rank (+0x14, 2-byte) and max combo (+0x18, 4-byte)
+    // directly after recordPlayResult so the result screen can read them back.
+    void setPlayRank(short rank) { rawRef<short>(0x14) = rank; }        // DAT_00187bcc
+    void setMaxCombo(int combo)  { rawRef<int>(0x18)   = combo; }       // DAT_00187bd0
+
     // Read the player's stored local best for this play's music/sheet (out-params may be null).
     // Thin wrapper over the free fetchScoreDataForMusic (below) on this singleton.
     void readStoredResult(int *outScore, short *outRank, int *outPlayCnt,
@@ -192,6 +201,9 @@ public:
 private:
     template <typename T> T raw(int off) const {
         return *reinterpret_cast<const T *>(reinterpret_cast<const char *>(this) + off);
+    }
+    template <typename T> T &rawRef(int off) {
+        return *reinterpret_cast<T *>(reinterpret_cast<char *>(this) + off);
     }
 
     int m_lastMusic = 0;      // +0x00
