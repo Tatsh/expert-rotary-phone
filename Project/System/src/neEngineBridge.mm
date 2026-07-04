@@ -357,7 +357,10 @@ void *neSceneManager::hitSoundName(int soundNo) {
 
 // The 5 shared "system" UI SE source ids (scene-manager global +0x14) and the once-per-scene
 // loaded flag (+0x3c). The playing-instance handles live in neEngine::g_systemSeHandles.
-static RSND_SOURCE_ID s_systemSeSource[5] = { -1, -1, -1, -1, -1 };
+static RSND_SOURCE_ID s_systemSeSource[5] = {
+    (RSND_SOURCE_ID)-1, (RSND_SOURCE_ID)-1, (RSND_SOURCE_ID)-1,
+    (RSND_SOURCE_ID)-1, (RSND_SOURCE_ID)-1,
+};   // -1 sentinel (RSND_SOURCE_ID is unsigned; the loaded flag gates use)
 static bool s_systemSeLoaded = false;
 
 // Ghidra: loadSoundEffects FUN_0002c5c8 — load the 5 shared UI SEs (decide / cancel / two
