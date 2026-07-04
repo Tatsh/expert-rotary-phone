@@ -106,6 +106,11 @@ struct MainTaskPlayData {
 
 // Binary-exact layout guards: the note engine reaches these fields by their absolute
 // offsets, so any drift must fail loudly rather than silently mis-read the play data.
+// These offsets are the 32-bit (armv7) binary's layout; milestoneSe (void*[3]) and the
+// judgePool entries widen on the 64-bit rebuild target, re-aligning every later field, so
+// the absolute offsets only hold on 32-bit. Access is by named member (layout-agnostic),
+// so assert the exact layout on 32-bit only — matching the ActiveNote guard in NoteMng.h.
+#if !defined(__LP64__) || !__LP64__
 static_assert(sizeof(MainTaskPlayData) == 0xa00, "MainTaskPlayData must be the 0xa00-byte play-data block");
 static_assert(offsetof(MainTaskPlayData, milestoneSe)      == 0x84,  "milestoneSe @ +0x84");
 static_assert(offsetof(MainTaskPlayData, judgePool)        == 0x3c8, "judgePool @ +0x3c8");
@@ -123,6 +128,7 @@ static_assert(offsetof(MainTaskPlayData, spatialTouchMode) == 0x9e4, "spatialTou
 static_assert(offsetof(MainTaskPlayData, optEffectOn)      == 0x9e5, "optEffectOn @ +0x9e5");
 static_assert(offsetof(MainTaskPlayData, optOldHardware)   == 0x9e7, "optOldHardware @ +0x9e7");
 static_assert(offsetof(MainTaskPlayData, state)            == 0x9fc, "state @ +0x9fc");
+#endif  // !__LP64__ (32-bit binary-exact layout guards)
 
 // Run one play/judge pass over the global NoteMng's active notes.
 //   playData  : the standard-mode MainTask play data.
