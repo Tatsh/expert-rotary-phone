@@ -26,39 +26,26 @@
 #import "neGraphics.h"
 
 // --- Play-data field access -------------------------------------------------
-// The play data is the standard-mode MainTask (not yet reconstructed as a whole).
-// The fields this pass reads are cited by byte offset here.
+// The play data is the standard-mode MainTask; the note engine reaches it through the
+// partial MainTaskPlayData overlay (PlayJudge.h), so field reads/writes below are plain
+// named-member access at their binary-exact offsets.
 namespace {
 
-inline const char *pd(const MainTaskPlayData *p) { return reinterpret_cast<const char *>(p); }
-inline char *pdw(MainTaskPlayData *p) { return reinterpret_cast<char *>(p); }
-
-inline float playScale(const MainTaskPlayData *p)   { return *reinterpret_cast<const float *>(pd(p) + 0x974); }
-inline float hitRadius(const MainTaskPlayData *p)    { return *reinterpret_cast<const float *>(pd(p) + 0x9b8); }
-inline bool  isSpatialTouch(const MainTaskPlayData *p) { return pd(p)[0x9e4] == 0; }   // 0 = distance test
-inline int   taskState(const MainTaskPlayData *p)    { return *reinterpret_cast<const int *>(pd(p) + 0x9fc); }
-
-// The three combo-milestone SE-instance handles the play data pre-creates:
-// +0x84 fires at 25 combo, +0x88 at 50, +0x8c at every 50 past 100. Each is a
-// pointer to an SE-instance/effect object owned elsewhere (Ghidra: the
-// FUN_0002cb24(*(playData+0x84/0x88/0x8c), 1) calls in the milestone tail).
-inline void *milestoneSe(const MainTaskPlayData *p, int off) {
-    return *reinterpret_cast<void *const *>(pd(p) + off);
-}
-
 // Milestone SEs only fire while the play is live (Ghidra: the milestone tail is
-// wrapped in pd[0x9c9]==0 && pd[0x9e5]!=0 && pd[0x9e7]==0 && pd[0x9ca]==0).
+// wrapped in playData+0x9c9==0 && +0x9e5!=0 && +0x9e7==0 && +0x9ca==0).
 inline bool milestoneSeEnabled(const MainTaskPlayData *p) {
-    return pd(p)[0x9c9] == 0 && pd(p)[0x9e5] != 0 &&
-           pd(p)[0x9e7] == 0 && pd(p)[0x9ca] == 0;
+    return p->isDemoPlay == 0 && p->optEffectOn != 0 &&
+           p->optOldHardware == 0 && p->isPadDisplay == 0;
 }
 
-// Issue the SE-instance "play" command (Ghidra: FUN_0002cb24 with mode 1). The
-// object's command byte (+0x58) is set to 3 (play) and its frame cursor (+0x40,
-// a float) is rewound to the head, or to the last frame when the playback rate
-// (+0x44) runs backwards; the per-frame SE-instance update consumes the command.
+// Issue the SE-instance "play" command (Ghidra: FUN_0002cb24 with mode 1). `inst` is one
+// of the milestone SE-instance handles (playData->milestoneSe[]) — an SE/effect object
+// whose layout is NOT reconstructed here, so this is a deliberate type-pun into it: the
+// command byte (+0x58) is set to 3 (play) and the frame cursor (+0x40, a float) is rewound
+// to the head, or to the last frame when the playback rate (+0x44) runs backwards; the
+// per-frame SE-instance update consumes the command.
 inline void seInstancePlay(void *inst) {
-    char *o = reinterpret_cast<char *>(inst);
+    char *o = reinterpret_cast<char *>(inst);   // type-pun: opaque SE-instance object
     *reinterpret_cast<int *>(o + 0x58) = 3;   // command = play
     if (*reinterpret_cast<const float *>(o + 0x44) <= 0.0f) {
         int frames = *reinterpret_cast<const int *>(o + 0x3c);
@@ -68,10 +55,6 @@ inline void seInstancePlay(void *inst) {
     }
 }
 
-// The 60-entry judge-state pool lives at +0x3c8, each entry 24 bytes.
-inline NoteJudgeState *judgeStatePool(MainTaskPlayData *p) {
-    return reinterpret_cast<NoteJudgeState *>(pdw(p) + 0x3c8);
-}
 constexpr int kJudgeStateCount = 60;   // Ghidra: FUN_0003126c loop bound 0x3c
 
 // Note flag bits (Ghidra: the (flags & mask) tests in the per-note body).
@@ -88,7 +71,7 @@ constexpr uint16_t kFlagHoldFail = 0x200;   // hold broken
 // Ghidra: FUN_0003126c — find the judge state for `noteKey`, or claim a free slot
 // (noteKey == nullptr) and initialise it. Returns nullptr if the pool is full.
 NoteJudgeState *judgeStateFor(MainTaskPlayData *playData, const void *noteKey) {
-    NoteJudgeState *pool = judgeStatePool(playData);
+    NoteJudgeState *pool = playData->judgePool;   // the +0x3c8 pool
     NoteJudgeState *freeSlot = nullptr;
     for (int i = 0; i < kJudgeStateCount; ++i) {
         NoteJudgeState *s = &pool[i];
@@ -134,9 +117,9 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
 
     const int currentPos = nm.getCurrentPosition();
     const int noteCount = nm.getActiveNoteCount();
-    const float scale = playScale(playData);
-    const float radius = hitRadius(playData);
-    const bool stopping = taskState(playData) == 5;
+    const float scale = playData->playScale;
+    const float radius = playData->hitRadius;
+    const bool stopping = playData->state == 5;
 
     bool judgedAny = false;   // Ghidra bVar2: a tap/auto hit fired this frame
     bool holdEnded = false;   // Ghidra bVar3: a hold resolved this frame
@@ -160,7 +143,7 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
         const bool onField = (note.flags & kFlagInactive) == 0;
         if (onField && (state->result < 0 || (note.kind == 1 && note.spawnKind > 0))) {
             if (!g_autoPlay) {
-                if (isSpatialTouch(playData)) {
+                if (playData->spatialTouchMode == 0) {   // 0 = spatial (distance) hit-test
                     // Distance test each live touch against the judge-line target.
                     for (int t = 0; t < touchCount; ++t) {
                         float tx = xy[t * 2];
@@ -233,34 +216,34 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
 
     // Combo-milestone jingles (Ghidra: DAT_00179000 = combo). Fire once at 25, 50,
     // then every 50 beyond 100, tracked by the last milestone in the play data
-    // (+0x9c2) so a milestone is not re-triggered every frame. Each tier owns a
-    // pre-created SE-instance handle in the play data and firing the jingle means
-    // issuing that instance's "play" command (Ghidra: FUN_0002cb24(handle, 1) on
-    // *(playData+0x84) at 25, *(playData+0x88) at 50, *(playData+0x8c) past 100).
+    // (lastMilestone @ +0x9c2) so a milestone is not re-triggered every frame. Each
+    // tier owns a pre-created SE-instance handle (playData->milestoneSe[]) and firing
+    // the jingle means issuing that instance's "play" command (Ghidra: FUN_0002cb24(
+    // handle, 1) on milestoneSe[0]/+0x84 at 25, milestoneSe[1]/+0x88 at 50,
+    // milestoneSe[2]/+0x8c past 100).
     g_combo = nm.combo();
-    short *lastMilestone = reinterpret_cast<short *>(pdw(playData) + 0x9c2);
     int milestone = 0;
-    int seHandleOffset = 0;
-    if (g_combo >= 25 && *lastMilestone < 25) {
+    int seHandleIndex = -1;   // index into playData->milestoneSe (25 -> 0, 50 -> 1, past 100 -> 2)
+    if (g_combo >= 25 && playData->lastMilestone < 25) {
         milestone = 25;
-        seHandleOffset = 0x84;
-    } else if (g_combo >= 50 && *lastMilestone < 50) {
+        seHandleIndex = 0;
+    } else if (g_combo >= 50 && playData->lastMilestone < 50) {
         milestone = 50;
-        seHandleOffset = 0x88;
+        seHandleIndex = 1;
     } else if (g_combo >= 100) {
         int step = (g_combo / 50) * 50;   // nearest 50 at or below the combo
-        if (*lastMilestone < step) {
+        if (playData->lastMilestone < step) {
             milestone = step;
-            seHandleOffset = 0x8c;
+            seHandleIndex = 2;
         }
     }
     if (milestone != 0) {
         // Fire the tier's jingle through its SE-instance handle, but only while
         // the play is live (Ghidra: the milestone tail's enable gate).
         if (milestoneSeEnabled(playData)) {
-            seInstancePlay(milestoneSe(playData, seHandleOffset));
+            seInstancePlay(playData->milestoneSe[seHandleIndex]);
         }
-        *lastMilestone = (short)milestone;
+        playData->lastMilestone = (short)milestone;
     }
 
     // If anything resolved this frame, play the per-tap feedback SE.
