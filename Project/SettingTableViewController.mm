@@ -39,7 +39,8 @@
 #import "ConversionView.h"       // "device change" (data transfer) panel
 
 // Private action / target methods (wired from the back button and the toggle controls).
-@interface SettingTableViewController ()
+// Also the ConversionView delegate (id<ViewCmnProtocol>); callbacks implemented below.
+@interface SettingTableViewController () <ViewCmnProtocol>
 - (void)settingClose;                 // @ 0x801dc
 - (void)onEffectOnChanged:(id)sender; // @ 0x801ec
 - (void)onSimpleModeChanged:(id)sender; // @ 0x8029c
