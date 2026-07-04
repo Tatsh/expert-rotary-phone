@@ -21,6 +21,9 @@
 @property (nonatomic, retain) UILabel *labelPrice;
 @property (nonatomic, retain) UILabel *labelPurchased;
 @property (nonatomic, retain) UIImageView *newMarker;
+// 'newMarker' begins with the ARC 'new' method family (would imply a +1 owned getter);
+// opt the getter out, matching the objc_method_family(none) convention in AVBus.h.
+- (UIImageView *)newMarker __attribute__((objc_method_family(none)));
 @property (nonatomic, retain) UIImageView *arcadeViewer;
 @property (nonatomic, retain) UIImageView *charaTicket;
 
