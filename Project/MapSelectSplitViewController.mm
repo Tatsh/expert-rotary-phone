@@ -77,6 +77,7 @@
 #import "neEngineBridge.h"              // neSceneManager::rootViewController, neEngine::playSystemSe
 
 @interface MapSelectSplitViewController () <DownloadMainDelegate> {
+    @public   // de-inlined static helpers reach these via self-> (binary by-offset access)
     BOOL              _isAnimationing;
     UIImageView      *_markView;               // friend-request badge (toggled in viewWillAppear:)
     NSIndexPath      *_selectIndexPath;        // pending area row the arrow points at

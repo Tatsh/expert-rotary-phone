@@ -22,6 +22,8 @@ static UIViewController *RootVC() {
 }
 
 @interface SettingTableSplitViewController () {
+    @public   // the de-inlined static helpers (settingTableSyncRightViewFrame etc.) reach these
+              // via self->, matching the binary's by-offset access from standalone functions.
     BOOL _isAnimationing;
     SettingTopViewController *_leftViewCtrl;     // the four-button left column
     UINavigationController *_rightViewCtrl;      // the detail pane (swapped per tab)

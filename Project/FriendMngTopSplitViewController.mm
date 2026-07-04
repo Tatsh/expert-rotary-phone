@@ -36,6 +36,8 @@ static void friendMngSetReplyFrame(FriendMngTopSplitViewController *);
 static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 
 @implementation FriendMngTopSplitViewController {
+    @public   // the file-static frame helpers (defined after @end) reach these via self->;
+              // @private ivars are visible but not *accessible* to C functions, so publish them.
     BOOL _isAnimationing;                     // guards a transition against re-entry
     UIImageView *_markView;                    // "new reply" warning badge (assigned by the left VC)
     FriendMngTopViewController *_leftViewCtrl; // left section-button column
