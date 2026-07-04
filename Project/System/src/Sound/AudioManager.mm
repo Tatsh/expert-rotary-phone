@@ -13,8 +13,9 @@
 #import "neAVSePlayer.h"
 
 // Fade thresholds: at or below these the BGM start/stop/pause happens instantly
-// rather than through a fade timer. Ghidra: DAT_0001fe08 / DAT_0001ff50 / DAT_0001fec0.
-static const float kBgmInstantFade = 0.0f;
+// rather than through a fade timer. Ghidra: DAT_0001fe08 / DAT_0001ff50 / DAT_0001fec0
+// == 0.05 (one fade tick; float 0.05 widened to double = 0x3fa99999a0000000).
+static const float kBgmInstantFade = 0.05f;
 
 static const int kSeGroupCount = 16;
 static const int kSeVoiceCount = 8;   // onStartPlayer starts each backend with 8 voices
@@ -432,8 +433,11 @@ struct SeVoiceSlot {
             if (rid != (RSND_SOURCE_ID)-1) {
                 [m_seRidList addObject:@((unsigned)rid)];
             }
-            m_seType[@(0)] = @((unsigned)rid | 0x10000000u);
-            return rid;
+            // The returned source id is the raw rid tagged with the group-0 backend bit;
+            // it is both the caller's handle and the m_seType key (value = group 0).
+            RSND_SOURCE_ID packed = (RSND_SOURCE_ID)((unsigned)rid | 0x10000000u);
+            m_seType[@((unsigned)packed)] = @(0);
+            return packed;
         }
         if (m_caPlayer->loadNamed(cpath, name.UTF8String, loop)) {
             [m_seNameList addObject:name];
@@ -447,8 +451,11 @@ struct SeVoiceSlot {
         if (rid != (RSND_SOURCE_ID)-1) {
             [m_seRidList addObject:@((unsigned)rid)];
         }
-        m_seType[@((unsigned)rid)] = @((unsigned)rid | 0x60000000u);
-        return rid;
+        // As above: return the AVFoundation-tagged packed id and key m_seType by it
+        // (value = group).
+        RSND_SOURCE_ID packed = (RSND_SOURCE_ID)((unsigned)rid | 0x60000000u);
+        m_seType[@((unsigned)packed)] = @(group);
+        return packed;
     }
     if (m_seAVPlayer->loadNamed(url, name, loop)) {
         [m_seNameList addObject:name];
@@ -942,7 +949,7 @@ struct SeVoiceSlot {
 // @ 0x1fa38 — ramp the BGM volume up to its target over `seconds`.
 - (void)createBgmFadeInTimer:(float)seconds {
     [self deleteFadeTimer];
-    const float kTick = 1.0f / 60.0f;   // Ghidra: DAT_0001fb20 (per-tick interval)
+    const float kTick = 0.05f;   // Ghidra: DAT_0001fb20 (per-tick interval, 0.05s)
     m_unitVolume = (m_bgmSettingVolume / seconds) * kTick;
     m_fadeTimer = [NSTimer timerWithTimeInterval:kTick target:self
                                         selector:@selector(onFadeInTimer:)
@@ -953,7 +960,7 @@ struct SeVoiceSlot {
 // @ 0x1fb28 — ramp the BGM volume down to zero over `seconds`.
 - (void)createBgmFadeOutTimer:(float)seconds {
     [self deleteFadeTimer];
-    const float kTick = 1.0f / 60.0f;   // Ghidra: DAT_0001fc18
+    const float kTick = 0.05f;   // Ghidra: DAT_0001fc18 (per-tick interval, 0.05s)
     m_unitVolume = (-m_bgmSettingVolume / seconds) * kTick;
     m_fadeTimer = [NSTimer timerWithTimeInterval:kTick target:self
                                         selector:@selector(onFadeOutTimer:)

@@ -198,7 +198,9 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     uint32_t pl = (uint32_t)(origLen + 7);
     bytes[out + 4] = pl >> 24; bytes[out + 5] = pl >> 16;
     bytes[out + 6] = pl >> 8; bytes[out + 7] = pl & 0xf8;
-    return (unsigned int)padded;
+    // Ghidra returns (origLen + 0xf) & ~7 == padded + 8: the full ciphertext
+    // length including the 8-byte trailer, not the padded body alone.
+    return (unsigned int)(padded + 8);
 }
 
 // @ 0x5af78 — validate trailer, CBC decrypt in place, truncate to origLen.

@@ -329,10 +329,13 @@ bool isIndexInRange12(unsigned int index) {
         cell = [[MapListCell alloc] initWithStyle:UITableViewCellStyleDefault
                                   reuseIdentifier:identifier];
     }
-    // Pad highlights the selected row (the binary reads indexPath.row only on pad, comparing
-    // it against the stored selection); phone never selects here.
-    BOOL isSelect = neSceneManager::isPadDisplay() && (indexPath.row == _selectedIndexRow);
-    [cell setMapData:[_mapDataArray objectAtIndex:indexPath.row] isSelect:isSelect];
+    // Faithful quirk: the binary fetches indexPath.row on pad but discards the result, and
+    // always passes NO for isSelect (movs r3,#0 @ 0xbfe2a) — the row highlight is never
+    // engaged from here.
+    if (neSceneManager::isPadDisplay()) {
+        (void)indexPath.row;
+    }
+    [cell setMapData:[_mapDataArray objectAtIndex:indexPath.row] isSelect:NO];
     return cell;
 }
 
@@ -431,8 +434,10 @@ bool isIndexInRange12(unsigned int index) {
         _dummyHeadView.backgroundColor = [UIColor clearColor];
     }
 
-    // Event banner header (first active event only). Exact origins approximated from the
-    // decompiler's inlined image-size math (see honesty note).
+    // Event banner header (first active event only). Origins recovered exactly from the
+    // decompiler's inlined image-size math: the banner sits at (10, 20) on pad / (0, 0) on
+    // phone, and the header height is bannerY + image height + a fixed 10pt bottom margin
+    // (i.e. img.height + 30 on pad, img.height + 10 on phone).
     if (_eventIds.count > 0) {
         NSNumber *first = [_eventIds objectAtIndex:0];
         NSString *imgName = [NSString stringWithFormat:@"event_0_%03d", [first intValue]];
@@ -440,14 +445,15 @@ bool isIndexInRange12(unsigned int index) {
         UIImageView *banner = [[UIImageView alloc] initWithImage:img];
 
         BOOL isPad = neSceneManager::isPadDisplay();
-        CGFloat inset  = isPad ? 30.0f : 10.0f;
-        CGFloat headerH = (isPad ? 20.0f : 0.0f) + img.size.height + inset;
+        CGFloat bannerX = isPad ? 10.0f : 0.0f;
+        CGFloat bannerY = isPad ? 20.0f : 0.0f;
+        CGFloat headerH = bannerY + img.size.height + 10.0f;
         if (_eventHeadView == nil) {
             _eventHeadView = [[UIView alloc] init];
             _eventHeadView.backgroundColor = [UIColor clearColor];
         }
         _eventHeadView.frame = CGRectMake(0, 0, viewFrame.size.width, headerH);
-        banner.frame = CGRectMake(inset, isPad ? 20.0f : 0.0f, img.size.width, img.size.height);
+        banner.frame = CGRectMake(bannerX, bannerY, img.size.width, img.size.height);
         [_eventHeadView addSubview:banner];
     }
 

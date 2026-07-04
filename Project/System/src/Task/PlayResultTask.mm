@@ -504,25 +504,58 @@ void PlayResultTask::loadNumberTextures() {
 
 // Ghidra: FUN_0003d690 case 2 — the results presentation. While the intro effect layer
 // (+0x214) is still animating, fire the score-tally count SE (se07_count @ +0x2e4[7]) on
-// its cue frames and the perfect jingle (v32 @ +0x2e4[1]) at frame 0x46; once it settles,
-// build the Twitter share button (once the GL backdrop has been captured) and wait for a
-// dismiss tap outside the button to advance to the count-up (state 3). All SE ids and the
-// frame cues traced from the disassembly.
+// its cue frames, and at frame 0x46 fire the rank-up jingle (v31..v36 @ +0x2e4[0..5])
+// selected by perfect/clear/rank; once it settles, build the Twitter share button (once
+// the GL backdrop has been captured) and wait for a dismiss tap outside the button to
+// advance to the count-up (state 3). All SE ids and frame cues traced from the disassembly.
+//
+// Frame cues (byte-verified @ 0x3d834..0x3dc7c / 0x3dfbc):
+//   0x18                        -> playSe(se07_count) into m_countSeInst; NO preceding stopSe.
+//   0x20,0x28,0x30,0x38,0x40    -> stopSe(m_countSeInst); playSe(se07_count) into m_countSeInst.
+//   0x46                        -> fire-and-forget rank jingle (result not tracked):
+//        perfectFC:   rank!=0 -> v32 (m_rankSe[1]),  rank==0 -> v31 (m_rankSe[0])
+//        !perfectFC:  cleared -> v33 (m_rankSe[2]),
+//                     else rank<=3 -> v34[3], rank>5 -> v36[5], else(4,5) -> v35[4].
 void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int displayType) {
     AudioManager *audio = [AudioManager sharedManager];
     SeInstance *intro = reinterpret_cast<SeInstance *>(m_layers[0]);
 
     if (SeInstanceIsPlaying(intro)) {
         const int frame = (int)intro->cursor;   // m_layers[0] play head (+0x40)
-        if (frame == 0x18 || frame == 0x28 || frame == 0x30 || frame == 0x38 || frame == 0x40) {
+        switch (frame) {
+        case 0x18:
+            // First count tick: nothing to stop yet.
+            m_countSeInst =
+                static_cast<int>([audio playSe:nil resourceId:m_rankSe[7]]);
+            break;
+        case 0x20:
+        case 0x28:
+        case 0x30:
+        case 0x38:
+        case 0x40:
             [audio stopSe:static_cast<RSND_INSTANCE_ID>(m_countSeInst)];
             m_countSeInst =
                 static_cast<int>([audio playSe:nil resourceId:m_rankSe[7]]);
-        } else if (frame == 0x46 && m_perfectFullCombo && m_rank != 0) {
-            // Perfect full-combo (non-zero rank): the celebratory jingle (v32 @ m_rankSe[1]).
-            [audio stopSe:static_cast<RSND_INSTANCE_ID>(m_countSeInst)];
-            m_countSeInst =
-                static_cast<int>([audio playSe:nil resourceId:m_rankSe[1]]);
+            break;
+        case 0x46: {
+            // Rank-up jingle (played without stopping/tracking m_countSeInst).
+            uint32_t jingle;
+            if (m_perfectFullCombo) {
+                jingle = (m_rank != 0) ? m_rankSe[1] : m_rankSe[0];
+            } else if (m_cleared) {
+                jingle = m_rankSe[2];
+            } else if (m_rank <= 3) {
+                jingle = m_rankSe[3];
+            } else if (m_rank > 5) {
+                jingle = m_rankSe[5];
+            } else {
+                jingle = m_rankSe[4];
+            }
+            [audio playSe:nil resourceId:jingle];
+            break;
+        }
+        default:
+            break;
         }
         return;
     }

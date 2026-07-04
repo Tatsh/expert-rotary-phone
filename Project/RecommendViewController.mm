@@ -170,7 +170,7 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
     CGRect frame = self.view.frame;
-    spinner.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f - 50.0f);
+    spinner.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f - 10.0f);
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];

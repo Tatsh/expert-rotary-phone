@@ -132,11 +132,11 @@
     [self updateIndicator:NO];
 
     // Ignore user-cancelled loads (NSURLErrorCancelled == -999) and the WebKit
-    // "frame load interrupted" (101) errors.
+    // "frame load interrupted" (102) errors.
     if ([error code] == -999) {
         return;
     }
-    if ([error code] == 101 && [[error domain] isEqual:@"WebKitErrorDomain"]) {
+    if ([error code] == 102 && [[error domain] isEqual:@"WebKitErrorDomain"]) {
         return;
     }
 

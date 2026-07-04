@@ -84,7 +84,8 @@
     if (!isPad) {
         spinner.center = CGPointMake(viewFrame.size.width * 0.5f, viewFrame.size.height * 0.5f - 10.0f);
     } else {
-        spinner.center = CGPointMake(160.0f, 328.0f);
+        // Pad: fixed x=214, y still tracks the view mid-height (0x43560000; not the lonely image's 160/328).
+        spinner.center = CGPointMake(214.0f, viewFrame.size.height * 0.5f - 10.0f);
     }
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
@@ -293,9 +294,15 @@
         [b getValue:&db];
         int va = best ? da.bestScore : da.totalScore;
         int vb = best ? db.bestScore : db.totalScore;
+        // On a score tie the self row (nil playerId) sorts first (matches the binary
+        // comparators FUN_000b1934 / FUN_000b18e8: return -1/1 for a/b playerId==0).
+        if (va == vb) {
+            if (da.playerId == nil) return NSOrderedAscending;
+            if (db.playerId == nil) return NSOrderedDescending;
+            return NSOrderedSame;
+        }
         if (va > vb) return NSOrderedAscending;    // higher score first
-        if (va < vb) return NSOrderedDescending;
-        return NSOrderedSame;
+        return NSOrderedDescending;
     }];
 }
 

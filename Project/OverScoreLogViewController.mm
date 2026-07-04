@@ -133,7 +133,10 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
     CGRect frame = self.view.frame;
-    spinner.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f - 50.0f);
+    // Ghidra: center.y truncates (height*0.5) to int, subtracts 10, then converts back to float
+    // (vcvt.s32.f32 / subs #0xa / vcvt.f32.s32 @ 0x29d86..0x29d9c). center.x stays a pure float.
+    spinner.center = CGPointMake(frame.size.width * 0.5f,
+                                 (float)((int)(frame.size.height * 0.5f) - 10));
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];
@@ -197,7 +200,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3];
+        [UIView setAnimationDuration:0.3f];   // DAT is (double)0.3f, not the double 0.3
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
         self.view.alpha = 1.0f;
@@ -211,14 +214,14 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         CGRect f = self.navigationController.view.frame;
         f.origin.y = root.view.frame.size.height;   // park below screen
         self.navigationController.view.frame = f;
-        [UIView animateWithDuration:(1.0 / 6.0)
+        [UIView animateWithDuration:(1.0f / 6.0f)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
                              setNavViewFrameD(self);   // Ghidra: setNavViewFrameD @ 0x2a458
                          }
                          completion:^(BOOL finished) {
-                             [UIView animateWithDuration:(1.0 / 6.0)
+                             [UIView animateWithDuration:(1.0f / 6.0f)
                                                    delay:0.0
                                                  options:UIViewAnimationOptionLayoutSubviews
                                               animations:^{
@@ -247,7 +250,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     neSceneManager::shared();
     if (!neSceneManager::isPadDisplay()) {
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3];
+        [UIView setAnimationDuration:0.3f];   // DAT is (double)0.3f, not the double 0.3
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
         self.view.alpha = 0.0f;
@@ -258,14 +261,14 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         // Phase 2 (~1/6 s): park below the root view (setNavViewFrameFromSubview2 @ 0x2a978),
         //   then call -endCloseAnimation.
         UIViewController *root = RootVC();
-        [UIView animateWithDuration:(1.0 / 6.0)
+        [UIView animateWithDuration:(1.0f / 6.0f)
                               delay:0.0
                             options:UIViewAnimationOptionLayoutSubviews
                          animations:^{
                              setNavViewFrameF(self);   // Ghidra: setNavViewFrameF @ 0x2a838
                          }
                          completion:^(BOOL finished) {
-                             [UIView animateWithDuration:(1.0 / 6.0)
+                             [UIView animateWithDuration:(1.0f / 6.0f)
                                                    delay:0.0
                                                  options:UIViewAnimationOptionLayoutSubviews
                                               animations:^{

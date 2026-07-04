@@ -72,15 +72,14 @@
 
         CGRect viewFrame = self.view ? self.view.frame : CGRectZero;
 
-        // Table frame: x = 4, y = (iPad & iOS7) ? 278 : 234 (DAT_000b76xx). Height derives from the
-        // host view height: phone = view.height - 239 (DAT_000b7610 -234, minus a 5pt bottom
-        // margin); iPad adds DAT_000b7618 (+140). (The iPad base is the murkiest part of the
-        // original; this reproduces its net effect: view.height - 99.)
+        // Table frame: x = 4, y = (iPad & iOS7) ? 278 : 234 (DAT_000b76xx). Height:
+        //   phone = view.height - 239 (DAT_000b7610 -234, minus a 5pt bottom margin);
+        //   iPad  = plate.height + 140 (DAT_000b7618). The iPad path never reads the host
+        //   view frame in the binary — d9 still holds the plate height there — so the base
+        //   is the plate height, not the view height.
         CGFloat tableY = (isPad && isOS7) ? 278.0f : 234.0f;
-        CGFloat tableH = viewFrame.size.height - 239.0f;
-        if (isPad) {
-            tableH += 140.0f;
-        }
+        CGFloat tableH = isPad ? (plateSize.height + 140.0f)
+                               : (viewFrame.size.height - 239.0f);
         self.tableView.frame = CGRectMake(4.0f, tableY, plateSize.width, tableH);
         self.tableView.rowHeight = 57.0f;   // 0x42640000
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;

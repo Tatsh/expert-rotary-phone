@@ -69,8 +69,9 @@
     }
     self.activeDownload = nil;
     self.imageConnection = nil;
-    if (self.downloadedImage != nil &&
-        [self.delegate respondsToSelector:@selector(imageDownloader:didLoad:)]) {
+    // The binary calls the delegate unconditionally once downloadedImage is set
+    // (no respondsToSelector: guard here, unlike -didFailWithError:).
+    if (self.downloadedImage != nil) {
         [self.delegate imageDownloader:self didLoad:self.indexPathInTableView];
     }
 }

@@ -172,13 +172,13 @@ void PlayTask::update(int /*deltaMs*/) {
         const neTouchPoint *t = gfx.touchAt(i);
         if (t->valid != 0) {              // a currently-down touch -> feed the judge
             if (touchCount < 8) {
-                touchXY[touchCount * 2] = (float)t->prevX / 65536.0f;
-                touchXY[touchCount * 2 + 1] = (float)t->prevY / 65536.0f;
+                touchXY[touchCount * 2] = (float)t->x / 65536.0f;
+                touchXY[touchCount * 2 + 1] = (float)t->y / 65536.0f;
                 touchIds[touchCount] = t->id;
                 touchCount++;
             }
         } else if (!backTap && t->released != 0) {   // a tap -> maybe the back button
-            int dx = t->x - t->prevX, dy = t->y - t->startY;
+            int dx = t->startX - t->x, dy = t->startY - t->y;
             backTap = (dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb;
         }
     }

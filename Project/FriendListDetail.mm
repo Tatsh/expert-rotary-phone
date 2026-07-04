@@ -286,8 +286,8 @@ static const int kColX[3] = { 139, 190, 242 };
 
 // @ 0xb5b70 — a tap that ends outside the portrait/card region closes the card (or the detail).
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    NSInteger tag = [[[touches anyObject] view] tag];
-    if (tag - 100 < 3) {   // 100/101/102 — inside the window/portrait/card: swallow
+    NSUInteger tag = [[[touches anyObject] view] tag];
+    if (tag - 100 < 3) {   // unsigned (BLO): only 100/101/102 swallow; other tags fall through
         return;
     }
     UIView *card = [[self viewWithTag:100] viewWithTag:0x66];

@@ -66,11 +66,10 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     bgView.image = image;
 }
 
-// The fixed content height of a song cell (heightForRow adds padding). Best-effort constant
-// matching the jacket area; Ghidra +cellHeight returns a fixed value.
-// @ 0x74574
+// The fixed content height of a song cell (heightForRow adds padding).
+// @ 0x74574 — returns the immediate 0x42a00000 (movt r0,#0x42a0; softfp float in r0).
 + (CGFloat)cellHeight {
-    return 88.0f;
+    return 80.0f;
 }
 
 // @ 0x7457c — build the row's subviews inside the content view.
@@ -123,7 +122,7 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     // Dimmed sample overlay covering the jacket: a spinner (buffering) + a play glyph (playing).
     sampleView = [[UIView alloc] initWithFrame:artworkView.frame];
     sampleView.opaque = NO;
-    sampleView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.8f];   // 0x3ecccccd
+    sampleView.backgroundColor = [UIColor colorWithWhite:0 alpha:0.4f];   // 0x3ecccccd
     CGPoint sampleCenter = CGPointMake(sampleView.frame.size.width * 0.5f,
                                        sampleView.frame.size.height * 0.5f);
     indicator = [[UIActivityIndicatorView alloc]

@@ -27,10 +27,10 @@
 
 // Initial map region: central Tokyo. Ghidra DAT_00085ac0 (lat) / DAT_00085ab8 (lon) and the
 // setRegion:animated: span literals.
-static const CLLocationDegrees kInitialLatitude  = 35.6839;
-static const CLLocationDegrees kInitialLongitude = 139.7744;
-static const CLLocationDegrees kInitialLatDelta  = 0.01003;
-static const CLLocationDegrees kInitialLonDelta  = 0.01158;
+static const CLLocationDegrees kInitialLatitude  = 35.681382;
+static const CLLocationDegrees kInitialLongitude = 139.766084;
+static const CLLocationDegrees kInitialLatDelta  = 0.01004;
+static const CLLocationDegrees kInitialLonDelta  = 0.01159;
 
 // The map must be zoomed in to at least this longitudeDelta before pins are shown; wider than
 // this and the "zoom in" prompt appears instead. Ghidra DAT_00086e78 = 0.26.

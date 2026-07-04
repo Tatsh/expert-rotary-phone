@@ -83,7 +83,7 @@ void TitleTask::setup() {
         imageFolder = "IMG_IPAD";
     }
     m_titleLayer = new AepLyrCtrl();
-    m_titleLayer->init(1, imageFolder);   // group 1, the device image folder
+    m_titleLayer->init(1, imageFolder, this, 10);   // group 1, device folder, owner=this task, order 10
 
     AudioManager *audio = [AudioManager sharedManager];
     NSString *sePath = [NSBundle.mainBundle pathForResource:@"v10" ofType:@"m4a"];
@@ -137,8 +137,10 @@ void TitleTask::buildConversionButton() {
     NSString *code = [UserSettingData convertCode];
     if (code != nil) {
         NSString *msg = [NSString stringWithFormat:@"%@\n%@", [UserSettingData playerId], code];
+        // Localized title + dismiss-button strings kept external (@"" placeholders);
+        // the alert reports back to the root VC (delegate).
         CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:nil message:msg delegate:nil cancelButtonTitle:nil otherButtonTitles:nil];
+            initWithTitle:@"" message:msg delegate:root cancelButtonTitle:nil otherButtonTitles:@""];
         alert.tag = 0;
         [alert show];
     }
@@ -155,7 +157,7 @@ void TitleTask::update(int /*deltaMs*/) {
     case 0:
         setup();
         [[AudioManager sharedManager] playBgm:0];
-        m_aep->playTransition(1, 0x19, 0);   // fade in
+        m_aep->playTransition(1, 0x1e, 0);   // fade in (setAepTransitionMode: 30 frames)
         m_titleLayer->play();                // start the title animation
         m_state = 1;
         break;
@@ -209,7 +211,7 @@ void TitleTask::update(int /*deltaMs*/) {
             m_needUpdate = true;
             if ([UserSettingData lastCompletedClientVer] < AppDelegate.appDelegate.appVersionNum) {
                 CommonAlertView *a = [[CommonAlertView alloc]
-                    initWithTitle:@"" message:nil delegate:nil
+                    initWithTitle:nil message:@"" delegate:nil
                     cancelButtonTitle:nil otherButtonTitles:@""];
                 [a show];
                 m_state = 3;
@@ -238,7 +240,7 @@ void TitleTask::update(int /*deltaMs*/) {
         }
         break;
     case 7:
-        m_aep->playTransition(2, 0x19, 0);   // fade out
+        m_aep->playTransition(2, 0x1e, 0);   // fade out (setAepTransitionMode: 30 frames)
         m_state = 8;
         break;
     case 8:

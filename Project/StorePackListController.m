@@ -197,7 +197,7 @@ static NSString *const kDownloadErrorMessage =
         } else {
             NSString *serverError = json[@"Error"];
             [m_Delegate packListDownloadError:self
-                                 errorMessage:serverError ? serverError : kDownloadErrorMessage];
+                                 errorMessage:serverError ? serverError : kParseErrorMessage];
         }
     }
 

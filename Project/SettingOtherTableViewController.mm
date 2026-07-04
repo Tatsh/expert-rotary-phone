@@ -257,10 +257,10 @@ static UIViewController *RootVC() {
         // Outer pill sized to the pre-computed panel frame; greenish border + light-green fill.
         UIView *pill = [[UIView alloc] initWithFrame:_convDummyFrm];
         pill.layer.borderWidth = 3.0f;
-        pill.layer.borderColor = [UIColor colorWithRed:0.580f green:0.961f blue:0.373f alpha:1.0f].CGColor;
+        pill.layer.borderColor = [UIColor colorWithRed:0.5803921818733215f green:0.9607843160629272f blue:0.37254902720451355f alpha:1.0f].CGColor;
         pill.layer.cornerRadius = 5.0f;
         pill.clipsToBounds = YES;
-        pill.backgroundColor = [UIColor colorWithRed:0.741f green:1.0f blue:0.600f alpha:1.0f];
+        pill.backgroundColor = [UIColor colorWithRed:0.7411764860153198f green:1.0f blue:0.6000000238418579f alpha:1.0f];
 
         // Inner clear container, inset by (10, 2) with a (-20, -4) size delta [NEON].
         UIView *inner = [[UIView alloc] init];
@@ -287,15 +287,15 @@ static UIViewController *RootVC() {
     NSString *title;
     if (indexPath.section == 0) {
         // News.
-        pillColor = [UIColor colorWithRed:1.0f green:0.647f blue:0.627f alpha:1.0f];
+        pillColor = [UIColor colorWithRed:1.0f green:0.6470588445663452f blue:0.6274510025978088f alpha:1.0f];
         title = (indexPath.row == 0) ? @"お知らせ" : @"";
     } else if (indexPath.section == 1) {
         // Treasure Mode -> Retire.
-        pillColor = [UIColor colorWithRed:1.0f green:0.733f blue:0.314f alpha:1.0f];
+        pillColor = [UIColor colorWithRed:1.0f green:0.7333333492279053f blue:0.3137255012989044f alpha:1.0f];
         title = (indexPath.row == 0) ? @"リタイア" : @"";
     } else {
         // Device change (section 2, row 0 toggle).
-        pillColor = [UIColor colorWithRed:0.580f green:0.961f blue:0.373f alpha:1.0f];
+        pillColor = [UIColor colorWithRed:0.5803921818733215f green:0.9607843160629272f blue:0.37254902720451355f alpha:1.0f];
         title = ((indexPath.section == 2) && (indexPath.row == 0)) ? @"機種変更" : @"";
     }
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -324,7 +324,7 @@ static UIViewController *RootVC() {
     // Title label centered over the pill.
     UILabel *label = [[UILabel alloc] init];
     label.backgroundColor = [UIColor clearColor];
-    label.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
+    label.textColor = [UIColor colorWithRed:0.1882352977991104f green:0.1882352977991104f blue:0.1882352977991104f alpha:1.0f];
     label.backgroundColor = [UIColor whiteColor];
     label.highlightedTextColor = [UIColor whiteColor];
     label.textAlignment = NSTextAlignmentCenter;

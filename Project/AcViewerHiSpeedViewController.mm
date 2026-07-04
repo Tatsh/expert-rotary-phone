@@ -46,7 +46,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // difficulty banner, title/genre and BPM labels) built from the AC-viewer's current
 // event-center selection.
 - (instancetype)init {
-    if (!(self = [super initWithStyle:UITableViewStylePlain])) {
+    if (!(self = [super initWithStyle:UITableViewStyleGrouped])) {
         return nil;
     }
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;

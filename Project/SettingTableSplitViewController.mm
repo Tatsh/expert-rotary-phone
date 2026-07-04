@@ -109,9 +109,10 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
         // Left column: the four-button custom menu, forwarding taps to us.
         _leftViewCtrl = [[SettingTopViewController alloc] init];
         // Offsets applied to the column's own frame are small engine constants
-        // (Ghidra DAT_000b660c / DAT_000b6610); the column is 354 wide, bg-tall.
-        _leftViewCtrl.view.frame = CGRectMake(_leftViewCtrl.view.frame.origin.x,
-                                              _leftViewCtrl.view.frame.origin.y,
+        // (Ghidra DAT_000b6610 = 65 added to x / DAT_000b660c = 100 added to y);
+        // the column is 354 wide, bg-tall.
+        _leftViewCtrl.view.frame = CGRectMake(_leftViewCtrl.view.frame.origin.x + 65,
+                                              _leftViewCtrl.view.frame.origin.y + 100,
                                               354, bgImg.size.height);
         [_leftViewCtrl setSettingTopDelegate:self];
         [bg addSubview:_leftViewCtrl.view];
@@ -249,19 +250,37 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
             return;
     }
     vc.navigationItem.hidesBackButton = YES;
+    UIBarButtonItem *savedRight = vc.navigationItem.rightBarButtonItem;
     vc.navigationItem.rightBarButtonItem = nil;
 
+    // Two-stage cross-dissolve. The outer transition collapses the pane to zero
+    // width (settingTableSyncRightViewFrame @ 0xb6d54); its completion swaps in the
+    // new table + navbar, then a nested transition expands the pane to the tapped
+    // tab's frame (settingTableSetRightViewFrame @ 0xb6f2c). Only the innermost
+    // completion restores the bar-button item and clears the animating flag.
     [UIView transitionWithView:_rightViewCtrl.view
                       duration:0.25
                        options:UIViewAnimationOptionCurveEaseIn
                     animations:^{
-                        self->_rightViewCtrl.view.frame = self->_viewFrm[index];
+                        CGRect fr = self->_rightViewCtrl.view.frame;
+                        fr.size.width = 0.0f;
+                        self->_rightViewCtrl.view.frame = fr;
                     }
                     completion:^(BOOL finished) {
                         [self->_rightViewCtrl setViewControllers:@[vc] animated:NO];
                         [self->_rightViewCtrl.navigationBar
                             setBackgroundImage:[UIImage imageNamed:navbar]
                                  forBarMetrics:UIBarMetricsDefault];
+                        [UIView transitionWithView:self->_rightViewCtrl.view
+                                          duration:0.25
+                                           options:UIViewAnimationOptionCurveEaseIn
+                                        animations:^{
+                                            self->_rightViewCtrl.view.frame = self->_viewFrm[index];
+                                        }
+                                        completion:^(BOOL finished2) {
+                                            vc.navigationItem.rightBarButtonItem = savedRight;
+                                            self->_isAnimationing = NO;
+                                        }];
                     }];
     [UIView animateWithDuration:0.5
                           delay:0

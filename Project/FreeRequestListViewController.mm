@@ -70,7 +70,7 @@
         CGRect viewFrame = self.view ? self.view.frame : CGRectZero;
 
         BOOL isPad = neSceneManager::isPadDisplay();
-        self.tableView.rowHeight = isPad ? 90.0f : 74.0f;   // DAT_000e5bac / DAT_000e5bb0
+        self.tableView.rowHeight = isPad ? 74.0f : 54.0f;   // pad DAT_000e5bb0=74, phone DAT_000e5bac=54
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         self.tableView.separatorColor = [UIColor clearColor];
         self.tableView.backgroundView = nil;
@@ -85,7 +85,7 @@
                 CGRectMake(x, 20.0f, headerImg.size.width, headerImg.size.height);
         } else {
             headerImgView.frame =
-                CGRectMake(448.0f, 20.0f, headerImg.size.width, headerImg.size.height);
+                CGRectMake(28.0f, 20.0f, headerImg.size.width, headerImg.size.height);  // 0x41e00000
         }
         UIView *headerView =
             [[UIView alloc] initWithFrame:CGRectMake(0, 0, viewFrame.size.width, 70.0f)];
@@ -110,7 +110,7 @@
 
         UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]
             initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
-        spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
+        spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;   // style 2
         spinner.center =
             CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
         spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);

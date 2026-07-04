@@ -628,7 +628,7 @@ static int QuizCountDigits(int value) {
     if (_presentSt == 2) {
         // Fade the present window out.
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3];   // DAT_000dce48
+        [UIView setAnimationDuration:0.3f];   // DAT_000dce48 == (double)0.3f
         _presentBaseView.alpha = 0.0f;
         [UIView commitAnimations];
         _presentSt = 0;

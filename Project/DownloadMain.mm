@@ -362,8 +362,8 @@ static DownloadMain *sInstance = nil;   // Ghidra: DAT_00188310
                     }
                     int fullCombo = [entry[[@"FullCombo" stringByAppendingString:kDiff[d]]] intValue];
                     int perfect = [entry[[@"Perfect" stringByAppendingString:kDiff[d]]] intValue];
-                    data.rank[d][5] = fullCombo;
-                    data.rank[d][6] = perfect;
+                    // The binary derives fullComboOnly/perfect from these but does not
+                    // store fullCombo/perfect back into rank[d][5]/rank[d][6].
                     data.fullComboOnly[d] = (fullCombo - perfect > 0) ? (fullCombo - perfect) : 0;
                     data.perfect[d] = perfect;
                 }

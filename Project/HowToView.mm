@@ -6,8 +6,8 @@
 //  (initWithImageList:frame:backGroundImg: @ 0xe9230, drawRect: @ 0xe9368, dealloc @ 0xe9304).
 //  Objective-C++ for the neSceneManager device check. On iPhone the images are drawn directly
 //  (with an optional per-page background); on iPad each image is added as a UIImageView. The
-//  iPhone per-page centring uses page-dimension constants (DAT_000e96e4/e8) that are flagged
-//  best-effort.
+//  iPhone per-page centring uses the baked page-dimension constants DAT_000e96e4 = 320.0 (width)
+//  and DAT_000e96e8 = -44.0 (vertical inset).
 //
 
 #import "HowToView.h"
@@ -45,11 +45,11 @@
             CGPoint pt = CGPointMake(x, 0);
             if (_bgImage != nil) {
                 [_bgImage drawAtPoint:CGPointMake(x, 0)];
-                // Centre the image within the page. Page dimensions are DAT_000e96e4/e8 in the
-                // binary; approximated here by the background image's size.
-                CGFloat pageW = _bgImage.size.width;
+                // Centre the image within the page using the baked page-dimension constants:
+                // DAT_000e96e4 = 320.0 (page width) and DAT_000e96e8 = -44.0 (vertical inset).
+                CGFloat pageW = 320.0f;   // DAT_000e96e4
                 pt.x = x + (pageW - img.size.width) * 0.5f;
-                pt.y = (self.bounds.size.height - img.size.height) * 0.5f;
+                pt.y = (self.bounds.size.height - 44.0f - img.size.height) * 0.5f;  // DAT_000e96e8 = -44.0
             }
             [img drawAtPoint:pt];
             x += img.size.width;

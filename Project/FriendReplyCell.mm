@@ -11,7 +11,6 @@
 
 #import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager::isPadDisplay
 #import "AppDelegate.h"        // +appAppSupportDirectory
-#import "AppFont.h"            // AppFontName()
 
 @implementation FriendReplyCell {
     BOOL _isOS7;
@@ -98,10 +97,10 @@
     _playerNameLabel = [[UILabel alloc]
         initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)];
     _playerNameLabel.backgroundColor = [UIColor clearColor];
-    _playerNameLabel.textColor = [UIColor colorWithRed:0.36458503f green:0.34506654f
-                                                  blue:0.32941106f alpha:1.0f];   // rgb(93,88,84)
+    _playerNameLabel.textColor = [UIColor colorWithRed:0.36470589f green:0.34509805f
+                                                  blue:0.32941177f alpha:1.0f];   // rgb(93,88,84)
     _playerNameLabel.highlightedTextColor = [UIColor whiteColor];
-    _playerNameLabel.font = [UIFont fontWithName:AppFontName() size:15.0f];
+    _playerNameLabel.font = [UIFont fontWithName:@"BullyBold" size:15.0f];  // getFontNameBullyBold() @ 0x5ef90
     _playerNameLabel.textAlignment = NSTextAlignmentLeft;
     _playerNameLabel.adjustsFontSizeToFitWidth = YES;
     [_playerNameLabel setMinimumScaleFactor:16.0f];   // verbatim (see FriendListCell note)
@@ -112,10 +111,10 @@
     _requestDateLabel = [[UILabel alloc]
         initWithFrame:CGRectMake((CGFloat)_dateX, 25.0f, 200.0f, 20.0f)];
     _requestDateLabel.backgroundColor = [UIColor clearColor];
-    _requestDateLabel.textColor = [UIColor colorWithRed:0.36458503f green:0.34506654f
-                                                   blue:0.32941106f alpha:1.0f];
+    _requestDateLabel.textColor = [UIColor colorWithRed:0.36470589f green:0.34509805f
+                                                   blue:0.32941177f alpha:1.0f];
     _requestDateLabel.highlightedTextColor = [UIColor whiteColor];
-    _requestDateLabel.font = [UIFont fontWithName:AppFontName() size:14.0f];
+    _requestDateLabel.font = [UIFont fontWithName:@"BullyBold" size:14.0f];  // getFontNameBullyBold() @ 0x5ef90
     _requestDateLabel.textAlignment = NSTextAlignmentLeft;
     _requestDateLabel.adjustsFontSizeToFitWidth = YES;
     [_requestDateLabel setMinimumScaleFactor:14.0f];

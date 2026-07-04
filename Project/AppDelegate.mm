@@ -168,7 +168,7 @@ BOOL gLaunchedFromPush = NO;
     // Fetch event info and schedule periodic refresh.
     [[DownloadMain getInstance] startGetEventInfoHttp];
     self.getEventInfoTimer =
-        [NSTimer scheduledTimerWithTimeInterval:/* interval @ DAT_00009560 */ 60.0
+        [NSTimer scheduledTimerWithTimeInterval:/* interval @ DAT_00009560 = 300.0 */ 300.0
                                          target:[DownloadMain getInstance]
                                        selector:@selector(startGetEventInfoHttp)
                                        userInfo:nil
@@ -187,6 +187,10 @@ BOOL gLaunchedFromPush = NO;
         NoteMng::shared().onResignActivePushHook();
     }
     AcNoteMng::shared();                        // Ghidra: AcNoteMng_shared (FUN_0000b35c)
+    if (/* DAT_00173e72 (AcNoteMng member gate) */ gLaunchedFromPush) {
+        // Ghidra: acNotePause (FUN_0007b638) on the global AcNoteMng — pause arcade play on resign.
+        AcNoteMng::shared().pause();
+    }
 
     [[AudioManager sharedManager] systemSuspend];
 
@@ -202,8 +206,10 @@ BOOL gLaunchedFromPush = NO;
     if (_mainTask)   neEngine::stopMainTask(_mainTask);      // Ghidra: FUN_00030710
     if (_acMainTask) neEngine::stopAcMainTask(_acMainTask);  // Ghidra: FUN_0002314c
 
-    // If a resume is expected, pump the loop once so the last frame is flushed.
+    // If a resume is expected, pump the loop so the last frames are flushed
+    // (the binary calls mainLoop three times here).
     if (_isNecessaryToResume) {
+        [self.viewController mainLoop];
         [self.viewController mainLoop];
         [self.viewController mainLoop];
     }

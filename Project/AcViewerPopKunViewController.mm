@@ -45,7 +45,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // difficulty banner, title/genre and BPM labels) built from the AC-viewer's current
 // event-center selection.
 - (instancetype)init {
-    if (!(self = [super initWithStyle:UITableViewStylePlain])) {
+    if (!(self = [super initWithStyle:UITableViewStyleGrouped])) {   // Ghidra: initWithStyle:1
         return nil;
     }
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
@@ -141,7 +141,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0x7d930 — one AcViewerDetailCell per value (reused by "Cell%ld_%ld"), bound to the
 // POP-KUN option kind (1) and the row's value label.
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
                             (long)indexPath.section, (long)indexPath.row];
     AcViewerDetailCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {

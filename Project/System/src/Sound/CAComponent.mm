@@ -4,7 +4,7 @@
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. An AUGraph
 //  (3D-mixer -> RemoteIO) whose mixer inputs each stream one CASound via a render
-//  callback. Output format: 44100 Hz, stereo, interleaved signed 16-bit.
+//  callback. Output format: 32000 Hz, stereo, interleaved signed 16-bit.
 //
 
 #include <cstdlib>
@@ -113,9 +113,9 @@ bool CAComponent::initGraph(int voices) {
     }
 
     AudioStreamBasicDescription out = {};
-    out.mSampleRate = 44100.0;
+    out.mSampleRate = 32000.0;
     out.mFormatID = kAudioFormatLinearPCM;
-    out.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;  // raw 0xc2c
+    out.mFormatFlags = 0xc2c;  // raw value from binary (signed|packed|alignedHigh + bits 0x400/0x800)
     out.mBytesPerPacket = 4;
     out.mFramesPerPacket = 1;
     out.mBytesPerFrame = 4;
@@ -225,8 +225,10 @@ bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
     if (voice >= m_voiceCount) {
         return false;
     }
+    // Binary sets the mixer output-scope element 0 (master) gain; `voice` is only
+    // used for the bounds check above, not as the element.
     if (AudioUnitSetParameter(m_mixerUnit, 3 /* gain */, kAudioUnitScope_Output,
-                              voice, caGainForLevel(volumeIndex), 0) != noErr) {
+                              0, caGainForLevel(volumeIndex), 0) != noErr) {
         NSLog(@"CAComponent setPlayerVolume: gain failed");
         return false;
     }

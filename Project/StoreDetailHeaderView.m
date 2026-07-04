@@ -130,8 +130,11 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
                               constrainedToSize:CGSizeMake(214.0f, 50.0f)
                                   lineBreakMode:m_LabelName.lineBreakMode]
                            : CGSizeZero;
+    // Width self-sizes off the header: self.bounds.width - 106 (Ghidra DAT_000743f8),
+    // which equals the 214 constraint only on a 320pt-wide phone header.
     CGRect nf = m_LabelName.frame;
-    m_LabelName.frame = CGRectMake(nf.origin.x, nf.origin.y, 214.0f, nameSize.height);
+    m_LabelName.frame = CGRectMake(nf.origin.x, nf.origin.y,
+                                   self.bounds.size.width - 106.0f, nameSize.height);
     m_LabelName.text = name;
 
     // Comment: hidden when empty, else grow to fit up to 290x120.
@@ -144,11 +147,14 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
         CGSize cSize = [comment sizeWithFont:m_LabelComment.font
                            constrainedToSize:CGSizeMake(290.0f, 120.0f)
                                lineBreakMode:m_LabelComment.lineBreakMode];
+        // Width self-sizes off the header: self.bounds.width - 30 (immediate -30.0),
+        // equal to the 290 constraint only on a 320pt-wide phone header.
         CGRect cf = m_LabelComment.frame;
-        m_LabelComment.frame = CGRectMake(cf.origin.x, cf.origin.y, 290.0f, cSize.height);
+        m_LabelComment.frame = CGRectMake(cf.origin.x, cf.origin.y,
+                                          self.bounds.size.width - 30.0f, cSize.height);
         m_LabelComment.text = comment;
         m_LabelComment.hidden = NO;
-        bottom = cf.origin.y + cSize.height;
+        bottom = 110.0f + cSize.height;   // Ghidra: DAT_000743fc = 110.0 (not origin.y=102)
     }
 
     // Resize the header to enclose its content.

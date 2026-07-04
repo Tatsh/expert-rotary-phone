@@ -574,7 +574,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (short)seVolume {
     int v = [self getInt:@"SeVolume"];
     short r = 0x7f;
-    if (v < 0x7f) r = (short)v;
+    if ((short)v < 0x7f) r = (short)v;
     if (r < 0)    r = 0;
     return r;
 }
@@ -589,7 +589,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (short)touchSoundVolume {
     int v = [self getInt:@"TouchSoundVolume"];
     short r = 0x7f;
-    if (v < 0x7f) r = (short)v;
+    if ((short)v < 0x7f) r = (short)v;
     if (r < 0)    r = 0;
     return r;
 }

@@ -1150,27 +1150,34 @@ int AcMainTask::sugorokuDrawSkillPanel() {
     drawAepFrame(mgr, m_skillBoardLyr[0],
                  iVar7 + 52, iVar10 - 300, 0x20, 0x22);
 
-    // Skill name label.
+    // Skill name label (from the active character's skill record).
     __unsafe_unretained id skillObj =
         (__bridge id)m_skillInfo;
     if (skillObj) {
         NSString *nameStr = [skillObj skillName];
         if (nameStr)
             drawAepManagerText(mgr, [nameStr UTF8String],
-                               0x12, iVar7 + 52, iVar10 - 272,
-                               1, 100, 0x615245, 0x1f);
+                               0x1e, iVar7 + 52, iVar10 - 0x11a,
+                               1, 100, 0x59514f, 0x13);
     }
 
-    // Skill points (short at m_skillData+4).
+    // Skill-data name string (skillData[0]) + skill points (short at skillData+4).
     const void *descPtr = m_skillData;
     if (descPtr) {
+        __unsafe_unretained id skillDataName =
+            *reinterpret_cast<__unsafe_unretained const id *>(descPtr);
+        if (skillDataName)
+            drawAepManagerText(mgr, [skillDataName UTF8String],
+                               0x14, iVar7 + 52, iVar10 - 0xed,
+                               1, 100, 0x59514f, 0x13);
+
         int pts = *reinterpret_cast<const short *>(
             reinterpret_cast<const char *>(descPtr) + 4);
         char ptsBuf[16];
-        snprintf(ptsBuf, sizeof(ptsBuf), "%d", pts);
+        snprintf(ptsBuf, sizeof(ptsBuf), "%d pt", pts);
         drawAepManagerText(mgr, ptsBuf,
-                           0x12, iVar7 + 52, iVar10 - 248,
-                           1, 100, 0x615245, 0x1f);
+                           0x12, iVar7 + 52, iVar10 - 0xca,
+                           1, 100, 0xe10000, 0x13);
     }
 
     // Touch hit-test.
@@ -1373,13 +1380,16 @@ void AcMainTask::sugorokuDrawSquareText() {
         pick = sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8)
                    ? kNone : kNodeText;
         break;
+    case 9:   // goal-lock: character-message live once the goal is cleared (HUD state 4)
+        pick = (m_hudState == 4) ? (storyReady ? kCharAsset : kNone) : kNodeText;
+        break;
     case 10: { // friend-meet: node label while the meet is pending and not yet consumed
         TreasureTmpData tmp = [UserSettingData treasureTmp];
         bool consumed = ((tmp.raw0x4d >> 24) & 0xff) != 0;   // field19_0x4d, byte 3
         pick = (m_goalCharaTex && !consumed) ? kNodeText : kNone;
         break;
     }
-    default:  // types 0/1/8/9/...: the node's own label if present
+    default:  // types 0/1/8/...: the node's own label if present
         pick = kNodeText;
         break;
     }
@@ -1647,24 +1657,31 @@ void AcMainTask::sugorokuDrawBoard() {
 
     sugorokuDrawPlayerAndUi();
 
-    // Overlay frame (FUN_000a303c: draw if fade-flag && bonus-count > 0).
+    // Overlay frame: pad-only roulette-move hint, drawn at the select-scene layout
+    // anchor (m_selSceneLayout[0], [1] + overlayH), size 0x20 x 0x1a.
     if (m_padDisplay && m_bonusCount > 0)
-        drawAepFrame(mgr, m_rouletteMoveFrame, halfW, halfH, 0x20, 0x20);
+        drawAepFrame(mgr, m_rouletteMoveFrame,
+                     m_selSceneLayout[0], m_selSceneLayout[1] + screenH,
+                     0x20, 0x1a);
 
-    // HUD (four possible frames; state selected by task[0x62c] / task[0x5f2]).
+    // HUD frame: a 4-way pick on (hudState < 2, unsigned) x (scrolledPastEnd),
+    // choosing boardFrame[4..7]; drawn unconditionally at the same layout anchor.
     {
-        uint8_t flag  = m_scrolledPastEnd;
-        int     state = m_hudState;
-        int     h;
-        if (flag)         h = m_boardFrame[7];
-        else if (state)   h = m_boardFrame[6];
-        else              h = m_boardFrame[4];
-        if (h) drawAepFrame(mgr, h, halfW, halfH, 0x20, 0x24);
+        int frame;
+        if ((uint32_t)m_hudState < 2)
+            frame = m_scrolledPastEnd ? m_boardFrame[6] : m_boardFrame[7];
+        else
+            frame = m_scrolledPastEnd ? m_boardFrame[4] : m_boardFrame[5];
+        drawAepFrame(mgr, frame,
+                     m_selSceneLayout[0], m_selSceneLayout[1] + screenH,
+                     0x20, 0x1a);
     }
 
-    // Notice layer.
+    // Notice layer: drawn at m_selSceneLayout[9], [13] + overlayH, size 0x20 x 0x1b.
     if (m_boardVisited[6])
-        drawAepFrame(mgr, m_boardFrame[21], halfW, halfH, 0x20, 0x24);
+        drawAepFrame(mgr, m_boardFrame[21],
+                     m_selSceneLayout[9], m_selSceneLayout[13] + screenH,
+                     0x20, 0x1b);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1716,7 +1733,7 @@ void AcMainTask::sugorokuDrawBackground() {
     AepLyrCtrl *bgLyr = m_rouletteLayers[28];
     if (bgLyr) {
         int bgState = m_boardMoveState;
-        if ((bgState - 1) < 2) {
+        if ((uint32_t)(bgState - 1) < 2) {   // unsigned: idle state 0 falls to the reset branch
             if (!bgLyr->isAnimating()) bgLyr->play();
         } else {
             if (bgLyr->isAnimating()) bgLyr->reset();
@@ -1823,16 +1840,22 @@ void AcMainTask::sugorokuDrawPath(const TreasureMap::ConnectStruct *edge) {
         : &m_triangle0Frame[0];
 
     if (!sameRow) {
-        // Vertical path (nodeA and nodeB are in different rows, Y changes).
-        int rot = (nodeA->y < nodeB->y) ? 0 : 0xb4;   // 0 = down, 180 = up
+        // Vertical path (nodeA and nodeB are in different rows, Y changes). The binary
+        // spaces the 6 arrows by a fixed ±24 px (0x41c00000) at multipliers 0..5 (the
+        // sign gives the direction), NOT an interpolated node-distance step.
+        int rot, startY, step;
         int startX = nodeA->x * 26 + 0x28 - scrollOffX + halfW;
-        int startY = (nodeA->y < nodeB->y)
-            ? nodeA->y * 26 + 0x60 - scrollOffY + halfH
-            : nodeA->y * 26 + 8    - scrollOffY + halfH;
-        int dy = (nodeB->y * 26 - nodeA->y * 26) / 7;  // 6 arrows, 7 gaps
-        if (dy < 0) dy = -dy;
+        if (nodeA->y < nodeB->y) {   // down
+            rot = 0;
+            startY = nodeA->y * 26 + 0x60 - scrollOffY + halfH;
+            step = 24;
+        } else {                     // up
+            rot = 0xb4;
+            startY = nodeA->y * 26 + 8 - scrollOffY + halfH;
+            step = -24;
+        }
         for (int j = 0; j < 6; j++) {
-            int ay = startY + dy * (j + 1);
+            int ay = startY + step * j;
             AepDrawSpriteHandle(mgr, arr[j],
                                 startX + 0xb, ay + 0xc,
                                 0x42c80000, 0x42c80000,
@@ -1841,17 +1864,23 @@ void AcMainTask::sugorokuDrawPath(const TreasureMap::ConnectStruct *edge) {
                                 nullptr, 0x23, 1);
         }
     } else {
-        // Horizontal path (nodeA and nodeB are in the same row, X changes).
-        int rot = (nodeA->x < nodeB->x) ? -0x5a : 0x5a;  // -90 = right, 90 = left
-        int startY = nodeA->y * 26 + 0x69 - scrollOffY + halfH;
-        int startX = (nodeA->x < nodeB->x)
-            ? nodeA->x * 26 + 0x5a - scrollOffX + halfW
-            : nodeA->x * 26 + 8    - scrollOffX + halfW;
-        int dx = (nodeB->x * 26 - nodeA->x * 26) / 5;    // 4 arrows, 5 gaps
-        if (dx < 0) dx = -dx;
+        // Horizontal path (nodeA and nodeB are in the same row, X changes). Fixed ±25 px
+        // (0x41c80000) spacing at multipliers 0..3; the 4 arrows come from sprite slots
+        // arr[1..4] (the binary indexes arr[j+1], not arr[j]).
+        int rot, startX, step;
+        int startY = nodeA->y * 26 + 0x34 - scrollOffY + halfH;
+        if (nodeA->x < nodeB->x) {   // right
+            rot = -0x5a;
+            startX = nodeA->x * 26 + 0x69 - scrollOffX + halfW;
+            step = 25;
+        } else {                     // left
+            rot = 0x5a;
+            startX = nodeA->x * 26 - 0x18 - scrollOffX + halfW;
+            step = -25;
+        }
         for (int j = 0; j < 4; j++) {
-            int ax = startX + dx * (j + 1);
-            AepDrawSpriteHandle(mgr, arr[j * 4],
+            int ax = startX + step * j;
+            AepDrawSpriteHandle(mgr, arr[j + 1],
                                 ax + 0xb, startY + 0xc,
                                 0x42c80000, 0x42c80000,
                                 rot, 0xc, 0xc,
@@ -1887,7 +1916,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         float  frame      = *reinterpret_cast<float *>(
                                reinterpret_cast<char *>(lyrPtr) + 0x40);
         double angle      = (frameTotal > 0)
-            ? (double)frame * 18.8496 / (double)frameTotal
+            ? (double)frame * (6.0 * M_PI) / (double)frameTotal   // DAT_000a5710 == 6*pi
             : 0.0;
         warpSX = (int)(cosf((float)angle) * 30.0f);
     }
@@ -1905,9 +1934,9 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
                    0x21);
     }
 
-    // Rank badge (types 0..3, stored at +0x8b0; hidden if type >= 4).
+    // Rank badge (types 0..3, stored at +0x8b0; hidden if type >= 4 or during warp flash).
     uint8_t badgeType = m_rankBadgeType;
-    if (badgeType < 4) {
+    if (badgeType < 4 && m_warpFlash == 0) {
         int badgeLyrHandle = m_iconMentalLyr[(int)badgeType];
         int badgeFrameCnt  = m_iconMentalFrames[(int)badgeType];
         int &frameCtr      = m_animFrameCtr;
@@ -1925,7 +1954,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
                             screenX + 0x43, screenY + 0x28,
                             0x42c80000, 0x42c80000,
                             0, 0, 0, 100, 0, 0x20, 0xffffff,
-                            nullptr, 0x21, 0);
+                            nullptr, 0x20, 1);
     }
 
     // Roulette result frame (+0x8ac, visible when player is idle).
@@ -1934,7 +1963,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         if (roulVal >= -1) {
             AepLyrCtrl *resultLyr = m_rouletteLayers[15];
             if (!resultLyr || !resultLyr->isAnimating()) {
-                int rHandle = 0;
+                int rHandle = -1;   // no match / not-found frame -> skip (binary: -1 < handle)
                 switch (roulVal) {
                 case 10: rHandle = m_boardFrame[14]; break;
                 case 11: rHandle = m_boardFrame[15]; break;
@@ -1948,9 +1977,12 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
                 case 23: rHandle = m_boardFrame[25]; break;
                 default: break;
                 }
-                if (rHandle)
-                    drawAepFrame(mgr, rHandle,
-                                 screenX, screenY, 0x20, 0x22);
+                if (rHandle >= 0)
+                    AepDrawSpriteHandle(mgr, rHandle,
+                                        screenX - 8, screenY + 0x28,
+                                        0x42c80000, 0x42c80000,
+                                        0, 0, 0, 100, 0, 0x20, 0xffffff,
+                                        nullptr, 0x20, 1);
             }
         }
     }

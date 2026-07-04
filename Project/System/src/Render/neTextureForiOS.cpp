@@ -31,11 +31,14 @@ int neTextureForiOS::load(const char *path) {
         return -1;
     }
 
-    // The cache key is the lowercased path (the original lower-cases in place).
+    // The binary builds a lowercased copy of the path (in-place tolower over a scratch
+    // std::string), but the cache acquire below is called with the ORIGINAL path
+    // (FUN_00011a2c: the lowercased buffer is left unused; r0 = param_2 at the bl).
     std::string key(path);
     for (char &c : key) {
         c = (char)std::tolower((unsigned char)c);
     }
+    (void)key;
 
     // One tile for the common (non-split) case; the split-texture path (loadFrames)
     // allocates more. Ghidra: the +0x08/+0x0c/+0x10/+0x14 heap arrays sized 1 here.
@@ -45,7 +48,7 @@ int neTextureForiOS::load(const char *path) {
     m_tileWidths = new int[1];
     m_tileHeights = new int[1];
 
-    m_tiles[0] = AepTextureCacheAcquire(key.c_str());  // FUN_0001bbf0
+    m_tiles[0] = AepTextureCacheAcquire(path);  // FUN_0001bbf0 (original path, not the lowercased key)
     if (m_tiles[0] == nullptr) {
         return -5;   // 0xfffffffb: the texture failed to load
     }

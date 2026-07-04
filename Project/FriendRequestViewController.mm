@@ -89,7 +89,7 @@
     // Request (submit) button.
     UIImage *requestImg = [UIImage imageNamed:@"fripre_btn_presenting"];
     UIButton *requestBtn = [[UIButton alloc] init];
-    requestBtn.frame = CGRectMake(ox, oy + 185, requestImg.size.width, requestImg.size.height);
+    requestBtn.frame = CGRectMake(ox + 176, oy + 185, requestImg.size.width, requestImg.size.height);
     [requestBtn setBackgroundImage:requestImg forState:UIControlStateNormal];
     [requestBtn addTarget:self action:@selector(touchedRequestButton:)
          forControlEvents:UIControlEventTouchUpInside];

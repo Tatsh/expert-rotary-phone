@@ -89,7 +89,7 @@
     _messageView.backgroundColor = [UIColor clearColor];
     _messageView.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
     _messageView.font = [UIFont fontWithName:AppMaruFontName()
-                                        size:(neSceneManager::isPadDisplay() ? 18.0 : 14.0)];
+                                        size:(neSceneManager::isPadDisplay() ? 18.0 : 12.0)];
     _messageView.textAlignment = NSTextAlignmentCenter;
     _messageView.editable = NO;
 

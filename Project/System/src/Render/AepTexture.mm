@@ -66,26 +66,28 @@ bool AepTexture::decodeAndUpload(const char *path) {
     NSString *base = [full substringToIndex:full.length - 1 - ext.length];
     NSBundle *bundle = NSBundle.mainBundle;
 
+    // Resolve base+ext in the bundle; if that misses, fall back to the raw path string and
+    // attempt to load THAT as the primary image. Only if this first load fails do we try the
+    // "@2x" variant, then a final bundle lookup of base+ext (faithful to the binary's order).
     NSString *resolved = [bundle pathForResource:base ofType:ext];
-    UIImage *image = resolved ? [[UIImage alloc] initWithContentsOfFile:resolved] : nil;
+    if (resolved == nil) {
+        resolved = full;   // raw path fallback
+    }
+    UIImage *image = [[UIImage alloc] initWithContentsOfFile:resolved];
     if (image != nil) {
         if ([image respondsToSelector:@selector(scale)]) {
             m_scale = (float)image.scale;
         }
     } else {
-        // @2x variant, then the raw path.
+        // @2x variant, then the plain base+ext lookup.
         NSString *at2x = [NSString stringWithFormat:@"%@@2x", base];
         resolved = [bundle pathForResource:at2x ofType:ext];
-        image = resolved ? [[UIImage alloc] initWithContentsOfFile:resolved] : nil;
+        image = [[UIImage alloc] initWithContentsOfFile:resolved];
         if (image != nil) {
             m_scale = 2.0f;
         } else {
             resolved = [bundle pathForResource:base ofType:ext];
-            image = resolved ? [[UIImage alloc] initWithContentsOfFile:resolved] : nil;
-            if (image == nil) {
-                resolved = full;
-                image = [[UIImage alloc] initWithContentsOfFile:full];
-            }
+            image = [[UIImage alloc] initWithContentsOfFile:resolved];
             if (image == nil) {
                 return false;
             }
@@ -102,6 +104,7 @@ bool AepTexture::decodeAndUpload(const char *path) {
     int tw = 1; while (tw < m_width) tw <<= 1;   // pad to power of two
     int th = 1; while (th < m_height) th <<= 1;
     m_bufferSize = tw * 4 * th;
+    g_dwTextureMemTotal += m_bufferSize;         // GPU memory accounting (FUN_00018218)
 
     void *pixels = calloc(1, m_bufferSize);
     CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
@@ -182,20 +185,17 @@ AepTexture *AepTextureCacheAcquire(const char *path) {
 // then retain and bind the new one. The 2nd argument is a real incoming AepTexture*
 // (verified in the disassembly) that the decompiler drops at the call site.
 void AepTextureUploadTiles(AepTile *tile, AepTexture *tex) {
-    AepTexture *old = tile->uploaded;
-    if (old != nullptr && old != tex) {
-        // Drop our reference; on the last one, free the GL name, unlink from the
-        // shared cache list, and destroy it.
-        if (--old->refCount <= 0) {
-            old->releaseGL();
-            old->prev->next = old->next;
-            old->next->prev = old->prev;
-            delete old;
-        }
+    // Release whatever texture the tile currently holds — unconditionally, the binary does
+    // NOT skip the release when the incoming texture is the same one — then retain and store
+    // the new one. The release routes through neTextureRelease (drops one reference; on the
+    // last one it frees the GL name, unlinks from the shared cache list and destroys it).
+    if (tile->uploaded != nullptr) {
+        neTextureRelease(tile->uploaded);
+        tile->uploaded = nullptr;
     }
-    tile->uploaded = tex;
     if (tex != nullptr) {
         ++tex->refCount;   // +0x04 retain
+        tile->uploaded = tex;
     }
 }
 
@@ -314,7 +314,7 @@ void neNotifyTexturesForeground(void) {
 // unlink from the cache list and destroy.
 void neTextureRelease(void *tex) {
     AepTexture *t = static_cast<AepTexture *>(tex);
-    if (--t->refCount > 0) {
+    if (--t->refCount != 0) {   // destroy only when the count hits exactly zero
         return;
     }
     t->releaseGL();

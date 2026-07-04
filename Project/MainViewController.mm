@@ -50,9 +50,10 @@
 // Scene input-mode set + AEP content-area height come from the engine bridge
 // (neEngine::setInputMode / neEngine::aepContentHeight). neEngineBridge.h imported below.
 
-// Minimum seconds between rendered frames (Ghidra: DAT_0000be7c). Rendering is
-// skipped when the accumulated render time has not yet reached this.
-static const float kRenderMinInterval = 1.0f / 60.0f;
+// Render-time gate threshold in seconds (Ghidra: DAT_0000be7c = 1000.0). -draw renders
+// only while the elapsed render time is below this, so in practice every frame draws (a
+// gap longer than this — e.g. after a long stall — skips that frame's render).
+static const float kRenderMinInterval = 1000.0f;
 
 // Fixed-point (16.16) seconds helper for the task update step.
 static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
@@ -635,9 +636,13 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
 - (void)task {
     float dt = m_taskTime.elapsedSeconds();
     m_taskTime.reset();
-    // updateAll walks the priority list, updating live tasks and reaping (deleting)
-    // any flagged for deletion in the same pass — no separate sweep needed.
     C_TASK::updateAll(SecondsToFixed(dt));
+    // NOTE (Ghidra @ 0xbb5c): the binary then runs per-frame neGraphics touch-pool
+    // upkeep inline here — for each active touch it clears the +0x2c frame marker,
+    // copies the current point (+0xc/+0x10) into +0x1c/+0x20, and swap-removes any
+    // touch whose released flag (+0x2d) is set, decrementing the pool count (+0x80).
+    // That mutates neGraphics' private m_touches/m_touchCount; it belongs behind an
+    // engine-layer maintenance method (neGraphics), not reached into from here.
 }
 
 // @ 0xbd30 — render the scene, frame-limited by the render timer.

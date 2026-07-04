@@ -252,12 +252,12 @@ static int scoreToRank(int score) {
         _playerNameLbl = [[UILabel alloc] initWithFrame:CGRectMake(nameX, nameY, 130.0f, 20.0f)];
         _playerNameLbl.backgroundColor = [UIColor clearColor];
         // Exact constants from the binary (0x3ebababb / 0x3eb0b0b1 / 0x3ea8a8a9) ~= rgb(93,88,84).
-        _playerNameLbl.textColor = [UIColor colorWithRed:0.36458503f
-                                                   green:0.34506654f
-                                                    blue:0.32941106f
+        _playerNameLbl.textColor = [UIColor colorWithRed:0.364705890417099f
+                                                   green:0.3450980484485626f
+                                                    blue:0.3294117748737335f
                                                    alpha:1.0f];
         _playerNameLbl.highlightedTextColor = [UIColor whiteColor];
-        _playerNameLbl.font = [UIFont fontWithName:AppFontName() size:14.0f];
+        _playerNameLbl.font = [UIFont fontWithName:AppFontName() size:15.0f];   // 0x41700000
         _playerNameLbl.textAlignment = NSTextAlignmentLeft;
         _playerNameLbl.adjustsFontSizeToFitWidth = YES;
         // As in the sibling FriendListCell, the binary passes the literal 14.0 to
@@ -287,9 +287,9 @@ static int scoreToRank(int score) {
         CGFloat scoreW = isPad ? 130.0f : 206.0f;
         _scoreLbl = [[UILabel alloc] initWithFrame:CGRectMake(scoreX, scoreY, scoreW, 20.0f)];
         _scoreLbl.backgroundColor = [UIColor clearColor];
-        _scoreLbl.textColor = [UIColor colorWithRed:0.36458503f
-                                              green:0.34506654f
-                                               blue:0.32941106f
+        _scoreLbl.textColor = [UIColor colorWithRed:0.364705890417099f
+                                              green:0.3450980484485626f
+                                               blue:0.3294117748737335f
                                               alpha:1.0f];
         _scoreLbl.highlightedTextColor = [UIColor whiteColor];
         _scoreLbl.font = [UIFont fontWithName:AppFontName() size:18.0f];

@@ -273,6 +273,9 @@ typedef struct SubMapData {
     memset(tmp.raw0x20, 0, sizeof(tmp.raw0x20));
     memset(tmp.raw0x28, 0, sizeof(tmp.raw0x28));
     tmp.raw0x48  = (uint8_t)rng.getRandRangeInt(100);
+    // Binary also clears bytes 0x4c..0x50 (raw0x49 high byte + all of raw0x4d)
+    // as one coalesced 5-byte zero store.
+    memset((uint8_t *)&tmp + 0x4c, 0, 5);
     [UserSettingData saveTreasureTmp:tmp];
     [UserSettingData saveConsumedTreasurePoint:0];
 

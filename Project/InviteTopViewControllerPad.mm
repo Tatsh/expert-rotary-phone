@@ -99,11 +99,11 @@
        forControlEvents:UIControlEventTouchUpInside];
     [_scrollView addSubview:tweetBtn];
 
-    // "guest" panel art (centred horizontally minus 6pt, y=749).
+    // "guest" panel art (centred horizontally minus 6pt, y=750).
     UIImage *guestImg = [UIImage imageNamed:@"invite_view_guest"];
     UIImageView *guestView = [[UIImageView alloc] initWithImage:guestImg];
     guestView.frame = CGRectMake(0, 0, guestImg.size.width, guestImg.size.height);
-    guestView.center = CGPointMake(frame.size.width * 0.5f - 6.0f, 749.0f);
+    guestView.center = CGPointMake(frame.size.width * 0.5f - 6.0f, 750.0f);   // 0x443b8000
     [_scrollView addSubview:guestView];
 
     const CGRect gf = guestView.frame;

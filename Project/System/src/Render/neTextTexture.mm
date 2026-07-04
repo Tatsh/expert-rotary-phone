@@ -393,10 +393,13 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
         alignOffset = 0;
     }
 
-    uint8_t rr = static_cast<uint8_t>(red);
-    uint8_t gg = static_cast<uint8_t>(green);
-    uint8_t bb = static_cast<uint8_t>(blue);
+    // Straight-alpha input, premultiplied for the (GL_ONE, GL_ONE_MINUS_SRC_ALPHA) blend:
+    // each colour channel is scaled by alpha/255 (DAT_00015db0 == 255.0); alpha is stored straight.
     uint8_t aa = static_cast<uint8_t>(alpha);
+    float premul = static_cast<float>(alpha) / 255.0f;
+    uint8_t rr = static_cast<uint8_t>(static_cast<float>(red) * premul);
+    uint8_t gg = static_cast<uint8_t>(static_cast<float>(green) * premul);
+    uint8_t bb = static_cast<uint8_t>(static_cast<float>(blue) * premul);
 
     for (int i = 0; i < count; ++i) {
         int atlasId = glyphAtlas[i];
@@ -420,16 +423,18 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
                 pen += (g->advance >> 1);   // still advance for glyphs on other atlases
                 continue;
             }
-            int w = g->advance;
+            int w = g->advance;   // cell width / horizontal advance
+            int h = g->height;    // cell height
             float u0 = static_cast<float>(g->cellX) / atlasW;
             float u1 = u0 + static_cast<float>(w) / atlasW;
             float v0 = static_cast<float>(g->cellY) / atlasH;
-            float v1 = v0 + static_cast<float>(w) / atlasH;
+            float v1 = v0 + static_cast<float>(h) / atlasH;
             neGlyphVertex *v = &quads[quadCount * 4];
-            int px = pen, py = 0, ph = w;
+            // Glyphs are rasterized at 2x and drawn at half size: the quad spans (w/2) x (h/2).
+            int px = pen, py = 0, halfW = w >> 1, halfH = h >> 1;
             for (int k = 0; k < 4; ++k) {
-                v[k].x = px + ((k & 1) ? ph : 0);
-                v[k].y = py + ((k & 2) ? ph : 0);
+                v[k].x = px + ((k & 1) ? halfW : 0);
+                v[k].y = py + ((k & 2) ? halfH : 0);
                 v[k].u = static_cast<int16_t>((((k & 1) ? u1 : u0)) * 32767.0f);
                 v[k].v = static_cast<int16_t>((((k & 2) ? v1 : v0)) * 32767.0f);
                 v[k].rgba[0] = rr; v[k].rgba[1] = gg; v[k].rgba[2] = bb; v[k].rgba[3] = aa;

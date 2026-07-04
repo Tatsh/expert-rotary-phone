@@ -26,7 +26,10 @@
         monthArr = months;   // strong ivar under ARC — retained on assignment
         for (int rep = 0; rep < 14; rep++) {
             for (int m = 1; m <= 12; m++) {
-                [months addObject:[NSString stringWithFormat:@" %d", m]];
+                // Single digits get one extra leading space so the numbers align in the
+                // wheel: "     %d月" (5 spaces) for 1..9, "    %d月" (4 spaces) for 10..12.
+                NSString *fmt = (m <= 9) ? @"     %d月" : @"    %d月";
+                [months addObject:[NSString stringWithFormat:fmt, m]];
             }
         }
     }
@@ -90,7 +93,9 @@
         label.text = monthArr[row];
         width = modern ? 85.0f : 75.0f;
     } else if (component == 0) {
-        label.text = [NSString stringWithFormat:@" %d", (int)row + 1900];
+        // Year label: "   %ld年" (3 spaces) on iOS 7+, "     %ld年" (5 spaces) before.
+        NSString *yfmt = modern ? @"   %ld年" : @"     %ld年";
+        label.text = [NSString stringWithFormat:yfmt, (long)((int)row + 1900)];
         width = modern ? 85.0f : 105.0f;
     } else {
         return label;

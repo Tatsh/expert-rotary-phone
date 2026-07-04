@@ -49,6 +49,11 @@ void BootLogoTask::setup() {
     m_aep = &AepManager::shared();
     m_scale = neSceneManager::screenScale();
 
+    // Boot logos render at native scale 1.0 (Ghidra: *(m_aep + 0x7c16e0) = 1.0f);
+    // the saved m_scale is restored in finish() via the same metrics setter.
+    neSceneManager::setScreenMetrics(neSceneManager::screenWidth(),
+                                     neSceneManager::screenHeight(), 1.0f);
+
     // Choose the branding image set + canvas size for this display. Each set is the
     // three logos [konami, bemani, eamusement] at one resolution (real resource
     // names extracted from the DAT_00130fd4.. tables; the canvas size doubles as the

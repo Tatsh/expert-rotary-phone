@@ -71,7 +71,8 @@ static UIViewController *RootVC() {
         // Left column of category buttons.
         _leftViewCtrl = [[UIViewController alloc] init];
         [self initForLeftView];
-        _leftViewCtrl.view.frame = CGRectMake(_leftViewCtrl.view.frame.origin.x, 182, 354, 716);
+        // Ghidra: the origin's x is nudged right by 65 (DAT_00032194) before the frame is set.
+        _leftViewCtrl.view.frame = CGRectMake(_leftViewCtrl.view.frame.origin.x + 65, 182, 354, 716);
         [bg addSubview:_leftViewCtrl.view];
 
         // Right navigation pane hosting the category list.

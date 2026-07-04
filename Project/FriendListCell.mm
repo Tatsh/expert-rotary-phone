@@ -189,7 +189,7 @@ static NSString *const kScoreBestImg[4] = {
                                                 blue:0.32941106f
                                                alpha:1.0f];
     _playerNameLbl.highlightedTextColor = [UIColor whiteColor];
-    _playerNameLbl.font = [UIFont fontWithName:AppFontName() size:14.0f];
+    _playerNameLbl.font = [UIFont fontWithName:@"BullyBold" size:14.0f];  // getFontNameBullyBold() @ 0x5ef90
     _playerNameLbl.textAlignment = NSTextAlignmentLeft;
     _playerNameLbl.adjustsFontSizeToFitWidth = YES;
     // Binary sends -setMinimumScaleFactor: the literal 14.0 (0x41600000). That is out of the
@@ -222,7 +222,7 @@ static NSString *const kScoreBestImg[4] = {
                                            blue:0.32941106f
                                           alpha:1.0f];
     _scoreLbl.highlightedTextColor = [UIColor whiteColor];
-    _scoreLbl.font = [UIFont fontWithName:AppFontName() size:18.0f];
+    _scoreLbl.font = [UIFont fontWithName:@"BullyBold" size:18.0f];  // getFontNameBullyBold() @ 0x5ef90
     _scoreLbl.textAlignment = NSTextAlignmentRight;
     _scoreLbl.text = [NSString stringWithFormat:@"%d", score];
     [parent addSubview:_scoreLbl];

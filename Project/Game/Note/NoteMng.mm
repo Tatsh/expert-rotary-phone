@@ -66,6 +66,7 @@ int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_
     m_minTempoValue = 0x7fff;
     m_maxTempoValue = 0;
     m_endValue = 0;
+    m_expectedTimeBase = 0;
     m_scrollCount = 0;
     m_combo = 0;
     m_maxCombo = 0;
@@ -86,11 +87,14 @@ int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_
                 m_totalNotes++;   // the chart's playable-note total (Ghidra: DAT_00178ccc)
                 break;
             case NOTE_TYPE_MARK:
-                m_endValue = m_records[i].tick;
+                m_expectedTimeBase = m_records[i].tick;   // +0x4e48 (BGM drift-sync base)
                 break;
             case NOTE_TYPE_TEMPO:
                 if (m_records[i].value > m_maxTempoValue) m_maxTempoValue = m_records[i].value;
                 if (m_records[i].value < m_minTempoValue) m_minTempoValue = m_records[i].value;
+                break;
+            case NOTE_TYPE_END:
+                m_endValue = m_records[i].tick;   // +0x4e2c (last end-marker tick)
                 break;
             default:
                 break;
@@ -332,7 +336,7 @@ void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
     }
     const int dt = (int)pos - (int)node->startTick;
     const int adt = (dt < 0) ? -dt : dt;
-    if (adt < 0x200 && dt >= 0 && dt <= m_nearestThreshold) {
+    if (adt < 0x200 && dt >= 0 && dt <= m_judgeWindows[5]) {   // DAT_00013ca8 == judge window[5]
         node->flags |= 4;
         node->spawnKind = 0;
         if (node->startTick < node->endTick) {
@@ -354,7 +358,7 @@ void NoteMng::autoGradeTail(ActiveNote *node, uint32_t pos) {
         return;
     }
     const int dt = (int)pos - (int)node->endTick;
-    if (dt < 0 || m_nearestThreshold < dt) {
+    if (dt < 0 || m_judgeWindows[5] < dt) {   // DAT_00013ca8 == judge window[5]
         return;
     }
     m_tally[node->kind][NOTE_JUDGE_COOL]++;
@@ -602,17 +606,24 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     unsigned k = (rec->value & 0xff) - 6;
     note->spawnKind = (!m_autoPlay && k < 4) ? (uint8_t)((0x05040302u >> (k * 8)) & 0xff) : 1;
 
-    // On-screen position (Ghidra math: screen metrics / scale, then per-record
-    // percentage offsets; constants 150 and 75 from MakeNote).
-    float scale = neSceneManager::screenScale();
-    int sx = (int)(neSceneManager::screenWidth() / scale);
-    int sy = (int)(neSceneManager::screenHeight() / scale) + 150;
-    note->x = (float)((sx * recByte(rec, 0xe)) / 100);
-    note->y = (float)((sy * recByte(rec, 0x10)) / 100 - 75);
-    note->x2 = (float)((sy * recByte(rec, 0x12)) / 100 - 75);
-    note->y2 = (float)(((recByte(rec, 0x13)) * (sx + 150)) / 100 - 75);
-    note->targetX = note->x;
-    note->targetY = note->y;
+    // On-screen position. MakeNote loads two drawable metrics from the scene manager
+    // and divides each by the UI scale: DAT_00187b78 = front-buffer WIDTH and
+    // DAT_00187b7c = front-buffer HEIGHT (LayoutedGLView @ 0xbb4c stamps them from
+    // GetFrontBufferWidth/Height). The x / x2 / targetX triplet scales off width; the
+    // y / y2 / targetY triplet off height. x and y are raw percentages of the base; the
+    // four end/target fields add 150 to the base before the percentage then subtract 75.
+    // Six record bytes (0xe..0x13) drive the six coordinates — the binary reads them as
+    // three 16-bit words (0xe/0x10/0x12) split into low/high byte lanes by the NEON pack,
+    // so the odd bytes (0xf/0x11/0x13) feed the y triplet. (constants 150/75; MakeNote @ 0x341a4.)
+    const float scale = neSceneManager::screenScale();
+    const int baseX = (int)(neSceneManager::screenWidth() / scale);   // DAT_00187b78 = width
+    const int baseY = (int)(neSceneManager::screenHeight() / scale);  // DAT_00187b7c = height
+    note->x = (float)((baseX * recByte(rec, 0xe)) / 100);
+    note->y = (float)((baseY * recByte(rec, 0xf)) / 100);
+    note->x2 = (float)(((baseX + 150) * recByte(rec, 0x10)) / 100 - 75);
+    note->y2 = (float)(((baseY + 150) * recByte(rec, 0x11)) / 100 - 75);
+    note->targetX = (float)(((baseX + 150) * recByte(rec, 0x12)) / 100 - 75);
+    note->targetY = (float)(((baseY + 150) * recByte(rec, 0x13)) / 100 - 75);
 
     moveToActive(note);
 }
@@ -776,35 +787,39 @@ int NoteMng::judgeNoteHit(unsigned index) {
 }
 
 // Ghidra: updateLongNote @ 0x34a78. Resolve a held note whose tail has passed.
-int NoteMng::updateLongNote(unsigned index) {
+// Addressed by raw note-pool slot id (like judgeHold / setLaneFlag), not by
+// active-list index; the same (noteId >> 3) < 0x7d gate bounds it to [0, 1000).
+int NoteMng::updateLongNote(unsigned noteId) {
     if (m_autoPlay) {
         return 0;
     }
-    ActiveNote *note = activeNoteAt(index);
-    if (note == nullptr) {
+    if (noteId >> 3 >= 0x7d) {   // noteId >= 1000
         return 0;
     }
-    if ((note->flags & 0x2f) == 0 || (note->flags & 0x300) != 0) {
-        return note ? note->flags : 0;
+    ActiveNote &note = m_notePool[noteId];
+    if ((note.flags & 0x2f) == 0 || (note.flags & 0x300) != 0) {
+        return note.flags;
     }
 
-    int delta = getCurrentPosition() - (int)note->startTick;
+    // Ghidra uses 0x523c (endTick), not startTick: a hold whose finger lifted more than
+    // 60 ticks BEFORE the tail is a fail. (Pre-existing reconstruction bug, decompile-confirmed.)
+    int delta = getCurrentPosition() - (int)note.endTick;
     int tier;
     if (delta < -60) {
-        note->flags |= 0x200;   // NOTE_FLAGS_LONG_FAILED
+        note.flags |= 0x200;   // NOTE_FLAGS_LONG_FAILED
         m_combo = 0;
         tier = 0;
         NSLog(@"NOTE_FLAGS_LONG_FAILED");
     } else {
-        note->flags |= 0x100;   // NOTE_FLAGS_LONG_SUCCESS
+        note.flags |= 0x100;   // NOTE_FLAGS_LONG_SUCCESS
         m_combo++;
         if (m_combo > m_maxCombo) m_maxCombo = m_combo;
-        int f = note->flags;
+        int f = note.flags;
         tier = (f & 1) ? 1 : (f & 2) ? 2 : (f & 4) ? 3 : 0;
         NSLog(@"NOTE_FLAGS_LONG_SUCCESS");
     }
-    m_tally[note->kind][tier]++;
-    return note->flags;
+    m_tally[note.kind][tier]++;
+    return note.flags;
 }
 
 // Ghidra: noteMngJudgeHold @ 0x34964. Per-frame long-note "still held" judge, addressed by pool

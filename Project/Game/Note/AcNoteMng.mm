@@ -59,11 +59,15 @@ int AcNoteMng::initPlayData(const void *data, int size, int difficulty) {
 
     const int count = (size / 8) - 2;
     assert(count >= 0 && (unsigned)count < 7999);   // AcNoteMng.mm:0x69
+    // Ghidra iVar15: the copy/tally loop runs over EVERY record (indices 0..lastIndex, i.e.
+    // count + 2 of them), then re-stamps the last one as the terminator.
+    const int lastIndex = (size / 8) - 1;
     const AcNoteRecord *src = reinterpret_cast<const AcNoteRecord *>(bytes);
 
-    m_records = new AcNoteRecord[count + 1];
-    for (int i = 0; i < count; i++) {
+    m_records = new AcNoteRecord[lastIndex + 1];
+    for (int i = 0; i <= lastIndex; i++) {
         m_records[i] = src[i];
+        m_records[i].type = bytes[i * 8 + 5];   // input record's type byte is at +5 (re-packed to +4)
         switch (m_records[i].type) {
             case AC_NOTE_TAP:
                 m_laneCounts[m_records[i].value & 0xf]++;
@@ -82,12 +86,15 @@ int AcNoteMng::initPlayData(const void *data, int size, int difficulty) {
                 break;
         }
     }
-    // Append the terminator, stamped type 6 (AC_NOTE_EVENT) — this is the note update() scans
-    // for to raise the end flag. Copied from the last record so its tick trails the chart.
-    m_records[count] = m_records[count > 0 ? count - 1 : 0];
-    m_records[count].type = AC_NOTE_EVENT;
-    m_records[count].value = 0;
-    m_recordCount = count;
+    // Re-stamp the last record (index lastIndex = count + 1) as the terminator, type 6
+    // (AC_NOTE_EVENT) — this is what update()/spawnNotes scan for to raise the end flag. Its tick
+    // is copied from record `count` (Ghidra: dest[iVar15] <- dest[uVar6]).
+    m_records[lastIndex] = m_records[count];
+    m_records[lastIndex].type = AC_NOTE_EVENT;
+    m_records[lastIndex].value = 0;
+    // registerTempoEvents() walks records until the type-6 terminator; bound the walk so it can
+    // reach record `count` (the one just before the terminator), matching the binary's pointer scan.
+    m_recordCount = lastIndex;
 
     // Prime the arcade play state the per-frame update() drives.
     m_spawnCursor = m_records;   // +0xfa0c: spawning starts at the first record

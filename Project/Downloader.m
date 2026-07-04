@@ -38,7 +38,7 @@ static const NSTimeInterval kTimeout = 15.0;
 - (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate {
     if ((self = [super init])) {
         m_Request = [[NSMutableURLRequest alloc]
-            initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+            initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
             timeoutInterval:kTimeout];
         [self applyCommonHeadersTo:m_Request];
         m_Delegate = delegate;
@@ -54,7 +54,7 @@ static const NSTimeInterval kTimeout = 15.0;
                        Post:(NSData *)body ContextType:(NSString *)contentType {
     if ((self = [super init])) {
         m_Request = [[NSMutableURLRequest alloc]
-            initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+            initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
             timeoutInterval:kTimeout];
         m_Request.HTTPMethod = @"POST";
         m_Request.HTTPBody = body;

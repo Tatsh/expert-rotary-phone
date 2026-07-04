@@ -363,7 +363,8 @@ private:
     // Per-frame update cluster state.
     bool m_endFlag = false;        // +0x13cb4 the end (type 3) note has scrolled past
     int16_t m_barCount = 0;        // +0x4e34 measure counter (type-4 bar events, judge pass)
-    int m_nearestThreshold = 0;    // +0x13ca8 max +dt still eligible for an auto-grade
+    // NB: the auto-grade "+dt eligible" bound the binary reads at +0x13ca8 is exactly
+    // m_judgeWindows[5] (the +280 upper window); autoGradeHead/autoGradeTail use it directly.
     int m_bgmStartPos = 0;         // +0x13cc8 chart position captured when the BGM started
     void (*m_missCallback)(void *) = nullptr; // +0x13cb8 fired on a miss (score/UI hook)
     void *m_missCallbackArg = nullptr;        // +0x13cbc

@@ -410,10 +410,12 @@ void neDrawTexturedQuad(void *sprite, int x, int y, int width, int height,
         r->setEnable(5, false);
         r->setEnable(6, false);
     } else {
-        // Plane equations bound the rect (left/top/right/bottom) in the pre-transform
-        // space; Ghidra rotates each equation by `rotation` before glClipPlanef.
-        float left = static_cast<float>(clipRect[0] - pivotX);
-        float top = static_cast<float>(clipRect[1] - pivotY);
+        // Plane equations bound the rect (left/top/right/bottom) in the quad's
+        // pre-transform (local) space: the screen-space clip rect is mapped back through
+        // the model's net translate (x - pivot), so left = clipRect[0] - (x - pivotX).
+        // Ghidra rotates each equation by `rotation` before glClipPlanef.
+        float left = static_cast<float>(clipRect[0] - (x - pivotX));
+        float top = static_cast<float>(clipRect[1] - (y - pivotY));
         float right = left + static_cast<float>(clipRect[2]);
         float bottom = top + static_cast<float>(clipRect[3]);
         GLfloat pL[4] = {1.0f, 0.0f, 0.0f, -left};

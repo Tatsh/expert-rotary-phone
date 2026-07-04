@@ -293,10 +293,11 @@ void drawAepOtSprite(AepOrderingTable *ot, const int16_t *spriteRec, int x, int 
     const int dstX = aepScale(x, s);
     const int dstY = aepScale(y, s);
 
-    // Visibility gate: cull an unscaled, unrotated, fully-flagged sprite (Ghidra's
-    // param_14==1 short-circuit); otherwise mask the alpha by the sign of (p12<<0x1a).
+    // Natural-scale flag (Ghidra's param_14==1 short-circuit): the binary clears it when the
+    // sprite is at its natural 100% scale in both axes — scaled sx/sy == 100.0 (DAT_00010e14)
+    // — with no blend bits set. Otherwise mask the alpha by the sign of (p12<<0x1a).
     bool visible = (p14 != 0);
-    if (p14 == 1 && sx == 0 && sy == 0 && (blend & 0xffff) == 0) {
+    if (p14 == 1 && aepScale(sx, s) == 100 && aepScale(sy, s) == 100 && (blend & 0xffff) == 0) {
         visible = false;
     }
     uint32_t maskedAlpha = alpha & (uint32_t)(((int)((uint32_t)p12 << 0x1a)) >> 0x1f);
@@ -321,8 +322,10 @@ void drawAepOtSpriteStretch(AepOrderingTable *ot, void *frameObj, int frameCol, 
                             int p18, int p19) {
     const float s = ot->renderScale();
 
+    // Natural-scale flag, same as drawAepOtSprite but keyed on the END position (ex, ey):
+    // the binary clears it when scaled ex/ey == 100.0 (DAT_00010f94) with no blend bits set.
     bool visible = (p18 != 0);
-    if (p18 == 1 && aepScale(sx, s) == 0 && aepScale(sy, s) == 0 && (blend & 0xffff) == 0) {
+    if (p18 == 1 && aepScale(ex, s) == 100 && aepScale(ey, s) == 100 && (blend & 0xffff) == 0) {
         visible = false;
     }
     uint32_t maskedAlpha = alpha & (uint32_t)(((int)((uint32_t)p16 << 0x1a)) >> 0x1f);

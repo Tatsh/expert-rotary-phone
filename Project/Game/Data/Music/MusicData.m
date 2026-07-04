@@ -133,9 +133,9 @@ static NSString *const kYomiLabels[10] = {
 
     BFCodec *codec = [[BFCodec alloc] init];
     [codec cipherInit:(const char *)digest keyLength:16];
-    NSMutableData *mutable = [data mutableCopy];
-    BOOL ok = [codec decipher:mutable];
-    return ok ? mutable : nil;
+    // Ghidra: deciphers the input data in place and returns it (no mutableCopy).
+    BOOL ok = [codec decipher:(NSMutableData *)data];
+    return ok ? data : nil;
 }
 
 // @ 0xc72c8
@@ -161,8 +161,9 @@ static NSString *const kYomiLabels[10] = {
     int h = [dict[@"Hyper"] intValue];
     int ex = [dict[@"Ex"] intValue];
 
-    // Validate difficulty ranges: Normal/Hyper 1..10, Ex 1..11.
-    if (!(n - 1 < 10 && h - 1 < 10 && ex - 1 < 11)) {
+    // Validate difficulty ranges: Normal/Hyper 1..10, Ex 1..11. Ghidra emits these
+    // as unsigned range checks ((unsigned)(x - 1) < N), so a 0/negative level fails.
+    if (!((unsigned)(n - 1) < 10 && (unsigned)(h - 1) < 10 && (unsigned)(ex - 1) < 11)) {
         return nil;
     }
 

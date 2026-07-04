@@ -103,7 +103,7 @@ NoteJudgeState *judgeStateFor(MainTaskPlayData *playData, const void *noteKey) {
 // Whether the play is in demo/auto-judge mode (Ghidra: DAT_00187b59).
 bool g_autoPlay = false;   // extern flag in the binary; false in normal play
 
-// Ghidra: FUN_00031290 — apply a resolved note's judge result to the life gauge
+// Ghidra: FUN_000312cc — apply a resolved note's judge result to the life gauge
 // (+0x9c0), clamped to [0, 0x400]. A GREAT/COOL (result 2/3) adds gaugeGainGreat, a GOOD
 // (result 1) adds gaugeGainGood, and a BAD/miss (result 0) adds gaugeLossMiss (a negative
 // delta) and raises the miss flag (+0x9dc). Any other result leaves the value unchanged
@@ -249,36 +249,33 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
     }
 
     // Combo-milestone jingles (Ghidra: DAT_00179000 = combo). Fire once at 25, 50,
-    // then every 50 beyond 100, tracked by the last milestone in the play data
-    // (lastMilestone @ +0x9c2) so a milestone is not re-triggered every frame. Each
-    // tier owns a pre-created SE-instance handle (playData->milestoneSe[]) and firing
-    // the jingle means issuing that instance's "play" command (Ghidra: FUN_0002cb24(
-    // handle, 1) on milestoneSe[0]/+0x84 at 25, milestoneSe[1]/+0x88 at 50,
-    // milestoneSe[2]/+0x8c past 100).
+    // then every 50 beyond 100, edge-detected against the previous frame's combo held
+    // in the play data (+0x9c2). That field is NOT a monotonic "highest milestone" —
+    // the binary re-stamps it to the current combo every frame (unconditionally, at the
+    // tail: LAB_0002fe62), so after a combo reset the same milestone can fire again on
+    // the way back up. Each tier owns a pre-created SE-instance handle
+    // (playData->milestoneSe[]) and firing the jingle means issuing that instance's
+    // "play" command (Ghidra: FUN_0002cb24(handle, 1) on milestoneSe[0]/+0x84 at 25,
+    // milestoneSe[1]/+0x88 at 50, milestoneSe[2]/+0x8c past 100). The whole detection is
+    // gated by the milestone-SE enable check (Ghidra: the 4-flag gate wraps the entire
+    // if/else-if chain, not just the SE dispatch); the binary also writes the reached
+    // milestone value to a HUD field (+0x9c4) that this judge pass never reads back.
     g_combo = nm.combo();
-    int milestone = 0;
-    int seHandleIndex = -1;   // index into playData->milestoneSe (25 -> 0, 50 -> 1, past 100 -> 2)
-    if (g_combo >= 25 && playData->lastMilestone < 25) {
-        milestone = 25;
-        seHandleIndex = 0;
-    } else if (g_combo >= 50 && playData->lastMilestone < 50) {
-        milestone = 50;
-        seHandleIndex = 1;
-    } else if (g_combo >= 100) {
-        int step = (g_combo / 50) * 50;   // nearest 50 at or below the combo
-        if (playData->lastMilestone < step) {
-            milestone = step;
-            seHandleIndex = 2;
+    const short prevCombo = playData->lastMilestone;   // +0x9c2: last frame's combo
+    if (milestoneSeEnabled(playData)) {
+        if (prevCombo < 25 && g_combo >= 25) {
+            seInstancePlay(playData->milestoneSe[0]);
+        } else if (prevCombo < 50 && g_combo >= 50) {
+            seInstancePlay(playData->milestoneSe[1]);
+        } else if (g_combo >= 100) {
+            int step = (g_combo / 50) * 50;   // nearest 50 at or below the combo
+            if (prevCombo < step) {
+                seInstancePlay(playData->milestoneSe[2]);
+            }
         }
     }
-    if (milestone != 0) {
-        // Fire the tier's jingle through its SE-instance handle, but only while
-        // the play is live (Ghidra: the milestone tail's enable gate).
-        if (milestoneSeEnabled(playData)) {
-            seInstancePlay(playData->milestoneSe[seHandleIndex]);
-        }
-        playData->lastMilestone = (short)milestone;
-    }
+    // Re-stamp +0x9c2 with the current combo every frame, regardless of the gate.
+    playData->lastMilestone = (short)g_combo;
 
     // If anything resolved this frame, play the per-tap feedback SE.
     if (judgedAny || holdEnded) {

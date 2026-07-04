@@ -39,7 +39,7 @@ inline AepLyrCtrl *lcNext(AepLyrCtrl *l) { return *reinterpret_cast<AepLyrCtrl *
 AepLyrCtrl::AepLyrCtrl()
     : m_prev(nullptr), m_next(nullptr), m_texId(-1), m_field10(0),
       m_x(0), m_y(0), m_z(0), m_width(100), m_height(100),
-      m_grpA{0, 0, 0}, m_blend(0), m_lyr(-1), m_frameCount(0), m_frame(0),
+      m_grpA{0, 0, 0}, m_blend(0), m_lyr(0), m_frameCount(0), m_frame(0),
       m_alpha(1.0f), m_grpC{0, 0, 0, 0}, m_flag55(false), m_playState(0),
       m_visible(false) {}
 
@@ -53,15 +53,18 @@ AepLyrCtrl::~AepLyrCtrl() {
 void AepLyrCtrl::draw() {}
 
 // Ghidra: AepLyrCtrl_init (FUN_0002c834) — resolve the layer by (group, name)
-// through the render manager and register in the active-layer list.
-void AepLyrCtrl::init(int group, const char *name) {
+// through the render manager and register in the active-layer list. The binary form
+// takes two extra args: `owner` stored at +0x10 and `order` (the ordering-priority word
+// threaded into drawLayer as p17) stored raw into the +0x14 slot.
+void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     assert(group >= 0);           // AepLyrCtrl.mm:0x42
     assert(name != nullptr);
     AepManager &mgr = AepManager::shared();
 
     m_texId = group;
-    m_field10 = 0;
-    m_x = 0; m_y = 0; m_z = 0;
+    m_field10 = static_cast<int>(reinterpret_cast<intptr_t>(owner));   // +0x10 owner
+    *reinterpret_cast<int *>(&m_x) = order;                            // +0x14 order word
+    m_y = 0; m_z = 0;
     m_width = 100; m_height = 100;
     m_grpA[0] = 0; m_grpA[1] = 0; m_grpA[2] = 0;
     m_blend = 0x20;
@@ -71,7 +74,9 @@ void AepLyrCtrl::init(int group, const char *name) {
     m_frameCount = mgr.layerFrameCount(m_lyr);   // Ghidra: AepManager_layerFrameCount
     m_frame = 0;
     m_alpha = 1.0f;
+    m_grpC[0] = 0; m_grpC[1] = 0; m_grpC[2] = 0; m_grpC[3] = 0;   // +0x48..0x54 cleared (vst1 q8,#0)
     m_flag55 = false;
+    m_playState = 0;
     m_visible = false;
 
     // Head-insert into the global layer list.
@@ -83,29 +88,42 @@ void AepLyrCtrl::init(int group, const char *name) {
     s_layerListHead = this;
 }
 
+// Convenience 2-arg form used by scenes that pass neither owner nor order.
+void AepLyrCtrl::init(int group, const char *name) {
+    init(group, name, nullptr, 0);
+}
+
 // Ghidra: AepLyrCtrl_play (FUN_0002caf8) — enter play state. A fully-faded layer
 // (alpha <= 0) jumps to its last frame; otherwise it restarts at frame 0.
 void AepLyrCtrl::play() {
     m_playState = 2;
     if (m_alpha <= 0.0f) {
-        m_frame = m_frameCount - 1;
+        // +0x40 is a float play head in the binary; seek to the last frame as float.
+        *reinterpret_cast<float *>(&m_frame) = static_cast<float>(m_frameCount - 1);
     } else {
         m_frame = 0;
     }
 }
 
-// Ghidra: aepLyrCtrlStop (FUN_0002cb24) — stop the layer's animation. `keepVisible`
-// leaves it drawn at its current frame (the preview freeze); clearing it hides the layer.
+// Ghidra: aepLyrCtrlStop (FUN_0002cb24) — enter the once-to-idle play state (3). Only when
+// `keepVisible == 1` does it seek the play head (to the last frame for a reverse rate,
+// otherwise to frame 0); any other value leaves the play head where it is.
 void AepLyrCtrl::stop(int keepVisible) {
-    m_playState = 0;
-    if (keepVisible == 0) {
-        m_visible = false;
+    m_playState = 3;
+    if (keepVisible != 1) {
+        return;
+    }
+    if (m_alpha <= 0.0f) {
+        *reinterpret_cast<float *>(&m_frame) = static_cast<float>(m_frameCount - 1);
+    } else {
+        m_frame = 0;
     }
 }
 
-// Ghidra: aepLyrCtrlReset (FUN_0002cb5c) — rewind the play head to frame 0.
+// Ghidra: aepLyrCtrlReset (FUN_0002cb5c) — clear the play state (+0x58 = 0), stopping the
+// layer's animation without unlinking it.
 void AepLyrCtrl::reset() {
-    m_frame = 0;
+    m_playState = 0;
 }
 
 // Ghidra: FUN_0002cb64 — still-animating predicate. `(playState | 4) == 4` is true for
@@ -150,7 +168,7 @@ void AepLyrCtrlUpdateAll(int drawOnly) {
         // (vcvt.s32.f32). Arg mapping verified against the disassembled bl @ 0x2c9ce (the
         // r0-r3 + sp+0x00..0x38 stores): the constants land as loopFlags=8, colour=100,
         // colourHi=0, p15=0xffffff, p19=1; the +0x2c/+0x30 words are p9/p10; +0x10/+0x14
-        // are p17/context; the +0x48 rect is the clip.
+        // are context/p17 (sp+0x30=+0x10, sp+0x34=+0x14); the +0x48 rect is the clip.
         const int frame = static_cast<int>(lcF(l, 0x40));
         mgr.drawLayer(lcI(l, 0x38),                          // lyr        r6+0x38
                       frame,                                 // frame      (int)r6+0x40
@@ -167,8 +185,8 @@ void AepLyrCtrlUpdateAll(int drawOnly) {
                       static_cast<uint32_t>(lcH(l, 0x34)),   // blendFlags (u16)r6+0x34
                       0x00ffffff,                            // p15        #0x00ffffff
                       root,                                  // clipRect   root or null
-                      lcPtr(l, 0x14),                        // context    r6+0x14
-                      static_cast<uint32_t>(lcI(l, 0x10)),   // p17        r6+0x10
+                      lcPtr(l, 0x10),                        // context    r6+0x10 (owner)
+                      static_cast<uint32_t>(lcI(l, 0x14)),   // p17        r6+0x14 (order)
                       1);                                    // p19        #1
 
         if (playState == 4 || drawOnly != 0) {

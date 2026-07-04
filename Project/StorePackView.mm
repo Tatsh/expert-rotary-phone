@@ -153,7 +153,7 @@
     } else {
         m_PurchasedButton.hidden = YES;
     }
-    m_TicketImageView.hidden = !purchased;
+    m_TicketImageView.hidden = purchased;   // @ 0x525.. setHidden:(cVar4 != 0): hidden once purchased
 
     m_Index = index;
 }

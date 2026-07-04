@@ -284,9 +284,9 @@ static int sRetryCount = 0;
         }
         [NSThread sleepForTimeInterval:(NSTimeInterval)(retry * 2 + 2)];  // back-off
         retry++;
-        if (!(retry < 2)) {
-            break;
-        }
+        // Ghidra's `while (iVar7 < 2)` never exits (iVar7 is the pre-increment count,
+        // always <= 1 here); the loop only leaves via the success break or the
+        // `retry > 1` early return above. Do NOT break out to the JSON parse here.
     }
 
     // Parse the body as JSON.

@@ -206,10 +206,10 @@ void AcViewerTask::loadChart() {
     const bool pad = (m_padDisplay != 0);
     if (name.length < 0x14) {
         m_titleXAdvance = pad ? 0x2a : 0x1c;
-        m_titleBaselineY = pad ? -22 : -20;
+        m_titleBaselineY = pad ? -34 : -20;   // 0xffffffde / 0xffffffec
     } else {
         m_titleXAdvance = pad ? 0x18 : 0x10;
-        m_titleBaselineY = pad ? -12 : -12;
+        m_titleBaselineY = pad ? -20 : -12;   // 0xffffffec / 0xfffffff4
     }
 
     [audio stopBgm];

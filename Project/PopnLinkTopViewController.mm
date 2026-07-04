@@ -62,11 +62,12 @@ static UIViewController *RootVC() {
         CGFloat bw = kidImg.size.width, bh = kidImg.size.height;
         CGFloat btnX = isPad ? 0 : 15;
 
-        // Button Y positions. Phone uses fixed offsets; on the pad the buttons stack from
-        // a higher origin (the pad split panel is taller), each below the previous.
+        // Button Y positions. Phone uses fixed offsets; on the pad the checker/quiz buttons
+        // keep their phone base Y (151 / 288) but are pushed down by one button height plus
+        // 72pt (engine DAT_000cd138). KID sits at a fixed 189 (pad) / 14 (phone) + yAdj.
         CGFloat kidY     = (isPad ? 189 : 14) + yAdj;
-        CGFloat checkerY = isPad ? (kidY + bh + 14) : (151 + yAdj);
-        CGFloat quizY    = isPad ? (checkerY + bh + 14) : (288 + yAdj);
+        CGFloat checkerY = 151 + yAdj + (isPad ? (bh + 72) : 0);
+        CGFloat quizY    = 288 + yAdj + (isPad ? (bh + 72) : 0);
 
         _btnId = [[UIButton alloc] initWithFrame:CGRectMake(btnX, kidY, bw, bh)];
         [_btnId setBackgroundImage:kidImg forState:UIControlStateNormal];
@@ -91,12 +92,12 @@ static UIViewController *RootVC() {
         _btnQuiz.exclusiveTouch = YES;
         [self.view addSubview:_btnQuiz];
 
-        // Caption images to the right of each button. Phone: fixed x=22; pad: offset from
-        // the owning button's frame (engine constants DAT_000cd2dc / +7pt).
+        // Caption images near each button. Phone: fixed x=22 with per-caption Y; pad: offset
+        // from the owning button's frame origin by (+7pt x, +92pt y = engine DAT_000cd2dc).
         UIImage *psKid  = [UIImage imageNamed:@"pl_ps_kidinfo"];
         UIImageView *ivKid = [[UIImageView alloc] initWithImage:psKid];
         ivKid.frame = isPad
-            ? CGRectMake(CGRectGetMaxX(_btnId.frame) + 7, _btnId.frame.origin.y,
+            ? CGRectMake(_btnId.frame.origin.x + 7, _btnId.frame.origin.y + 92,
                          psKid.size.width, psKid.size.height)
             : CGRectMake(22, 106 + yAdj, psKid.size.width, psKid.size.height);
         [self.view addSubview:ivKid];
@@ -104,7 +105,7 @@ static UIViewController *RootVC() {
         UIImage *psPlay = [UIImage imageNamed:@"pl_ps_playinfo"];
         UIImageView *ivPlay = [[UIImageView alloc] initWithImage:psPlay];
         ivPlay.frame = isPad
-            ? CGRectMake(CGRectGetMaxX(_btnChecker.frame) + 7, _btnChecker.frame.origin.y,
+            ? CGRectMake(_btnChecker.frame.origin.x + 7, _btnChecker.frame.origin.y + 92,
                          psPlay.size.width, psPlay.size.height)
             : CGRectMake(22, 243 + yAdj, psPlay.size.width, psPlay.size.height);
         [self.view addSubview:ivPlay];
@@ -112,7 +113,7 @@ static UIViewController *RootVC() {
         UIImage *psQuiz = [UIImage imageNamed:@"pl_ps_quize"];
         UIImageView *ivQuiz = [[UIImageView alloc] initWithImage:psQuiz];
         ivQuiz.frame = isPad
-            ? CGRectMake(CGRectGetMaxX(_btnQuiz.frame) + 7, _btnQuiz.frame.origin.y,
+            ? CGRectMake(_btnQuiz.frame.origin.x + 7, _btnQuiz.frame.origin.y + 92,
                          psQuiz.size.width, psQuiz.size.height)
             : CGRectMake(22, 380 + yAdj, psQuiz.size.width, psQuiz.size.height);
         [self.view addSubview:ivQuiz];
