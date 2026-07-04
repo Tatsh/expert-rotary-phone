@@ -18,30 +18,15 @@
 // Intrusive doubly-linked list of all live layers (Ghidra: head @ DAT_00188490).
 static AepLyrCtrl *s_layerListHead = nullptr;
 
-// Raw byte-offset field access for the frame-advance state machine below. The binary's
-// AepLyrCtrl object layout for the +0x14..+0x34 words does NOT match the member names in
-// AepLyrCtrl.h (verified against the drawLayer call @ 0x2c9ce): the geometry the draw
-// reads as x/y/scaleX/scaleY sits at +0x18/+0x1c/+0x20/+0x24 (the header labels those
-// m_y/m_z/m_width/m_height), +0x14 is the layer's order word (header m_x), +0x28 the
-// rotation, +0x2c/+0x30 two more words, +0x34 the blend, and +0x44 is the signed frame
-// RATE (header m_alpha). To stay faithful to the binary without disturbing the other
-// consumers of those member names, the free functions here reach the object by offset.
-namespace {
-inline int   &lcI(AepLyrCtrl *l, int off) { return *reinterpret_cast<int *>(reinterpret_cast<char *>(l) + off); }
-inline float &lcF(AepLyrCtrl *l, int off) { return *reinterpret_cast<float *>(reinterpret_cast<char *>(l) + off); }
-inline short  lcS(AepLyrCtrl *l, int off) { return *reinterpret_cast<short *>(reinterpret_cast<char *>(l) + off); }
-inline unsigned short lcH(AepLyrCtrl *l, int off) { return *reinterpret_cast<unsigned short *>(reinterpret_cast<char *>(l) + off); }
-inline void  *lcPtr(AepLyrCtrl *l, int off) { return *reinterpret_cast<void **>(reinterpret_cast<char *>(l) + off); }
-inline AepLyrCtrl *lcNext(AepLyrCtrl *l) { return *reinterpret_cast<AepLyrCtrl **>(reinterpret_cast<char *>(l) + 0x08); }
-}  // namespace
-
-// Ghidra: AepLyrCtrl_ctor (FUN_0002c7d8).
+// Ghidra: AepLyrCtrl_ctor (FUN_0002c7d8). The field types/offsets are byte-verified from the
+// updateAndDrawAepLayers (0x2c924) disassembly; see AepLyrCtrl.h. The whole struct is reached
+// through its named members now (the file-static lc* offset helpers are gone).
 AepLyrCtrl::AepLyrCtrl()
-    : m_prev(nullptr), m_next(nullptr), m_texId(-1), m_field10(0),
-      m_x(0), m_y(0), m_z(0), m_width(100), m_height(100),
-      m_grpA{0, 0, 0}, m_blend(0), m_lyr(0), m_frameCount(0), m_frame(0),
-      m_alpha(1.0f), m_grpC{0, 0, 0, 0}, m_flag55(false), m_playState(0),
-      m_visible(false) {}
+    : m_prev(nullptr), m_next(nullptr), m_texId(-1), m_owner(nullptr),
+      m_order(0), m_x(0), m_y(0), m_scaleX(100), m_scaleY(100),
+      m_rotation(0), m_pad2a(0), m_p9(0), m_p10(0), m_blend(0), m_lyr(0),
+      m_frameCount(0), m_frame(0), m_alpha(1.0f), m_clipRect{0, 0, 0, 0},
+      m_playState(0), m_visible(false), m_pad5a{0, 0}, m_finished(0), m_pad5d{0, 0, 0} {}
 
 AepLyrCtrl::~AepLyrCtrl() {
     if (m_prev) m_prev->m_next = m_next;
@@ -76,11 +61,11 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     AepManager &mgr = AepManager::shared();
 
     m_texId = group;
-    m_field10 = static_cast<int>(reinterpret_cast<intptr_t>(owner));   // +0x10 owner
-    *reinterpret_cast<int *>(&m_x) = order;                            // +0x14 order word
-    m_y = 0; m_z = 0;
-    m_width = 100; m_height = 100;
-    m_grpA[0] = 0; m_grpA[1] = 0; m_grpA[2] = 0;
+    m_owner = owner;                     // +0x10 owner/context
+    m_order = order;                     // +0x14 order word
+    m_x = 0; m_y = 0;
+    m_scaleX = 100; m_scaleY = 100;
+    m_rotation = 0; m_p9 = 0; m_p10 = 0;
     m_blend = 0x20;
 
     m_lyr = mgr.getLyrNo(group, name);   // Ghidra: AepManager_getLyrNo
@@ -88,8 +73,7 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     m_frameCount = mgr.layerFrameCount(m_lyr);   // Ghidra: AepManager_layerFrameCount
     m_frame = 0;
     m_alpha = 1.0f;
-    m_grpC[0] = 0; m_grpC[1] = 0; m_grpC[2] = 0; m_grpC[3] = 0;   // +0x48..0x54 cleared (vst1 q8,#0)
-    m_flag55 = false;
+    m_clipRect[0] = 0; m_clipRect[1] = 0; m_clipRect[2] = 0; m_clipRect[3] = 0;  // +0x48..0x54 (vst1 q8,#0)
     m_playState = 0;
     m_visible = false;
 
@@ -112,10 +96,9 @@ void AepLyrCtrl::init(int group, const char *name) {
 void AepLyrCtrl::play() {
     m_playState = 2;
     if (m_alpha <= 0.0f) {
-        // +0x40 is a float play head in the binary; seek to the last frame as float.
-        *reinterpret_cast<float *>(&m_frame) = static_cast<float>(m_frameCount - 1);
+        m_frame = static_cast<float>(m_frameCount - 1);   // seek to last frame
     } else {
-        m_frame = 0;
+        m_frame = 0.0f;
     }
 }
 
@@ -128,9 +111,9 @@ void AepLyrCtrl::stop(int keepVisible) {
         return;
     }
     if (m_alpha <= 0.0f) {
-        *reinterpret_cast<float *>(&m_frame) = static_cast<float>(m_frameCount - 1);
+        m_frame = static_cast<float>(m_frameCount - 1);
     } else {
-        m_frame = 0;
+        m_frame = 0.0f;
     }
 }
 
@@ -145,16 +128,14 @@ void AepLyrCtrl::reset() {
 // against its travel: a reverse rate (+0x44 <= 0) animates while the head is > 0, a
 // forward rate while the head is < the layer length (+0x3c).
 bool AepLyrCtrl::isAnimating() const {
-    AepLyrCtrl *self = const_cast<AepLyrCtrl *>(this);
-    const int playState = lcI(self, 0x58);
-    if ((static_cast<unsigned>(playState) | 4u) == 4u) {
+    if ((static_cast<unsigned>(m_playState) | 4u) == 4u) {   // idle (0) or held (4)
         return false;
     }
-    const int frame = static_cast<int>(lcF(self, 0x40));   // vcvt.s32.f32: truncate to int
-    if (lcF(self, 0x44) <= 0.0f) {
+    const int frame = static_cast<int>(m_frame);   // vcvt.s32.f32: truncate to int
+    if (m_alpha <= 0.0f) {                          // reverse rate
         return frame > 0;
     }
-    return frame < lcI(self, 0x3c);
+    return frame < m_frameCount;
 }
 
 // Ghidra: FUN_0002c924 (AepLyrCtrlUpdateAll). Walk the global live-layer list and, for
@@ -165,80 +146,73 @@ bool AepLyrCtrl::isAnimating() const {
 void AepLyrCtrlUpdateAll(int drawOnly) {
     AepManager &mgr = AepManager::shared();   // Ghidra: AepManager_shared (FUN_0000f1ec)
 
-    for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = lcNext(l)) {   // +0x08 next-link
-        const int playState = lcI(l, 0x58);
+    for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {
+        const int playState = l->m_playState;
         if (playState == 0) {
             continue;
         }
 
-        // Clip/root arg: the four-word clip rect at +0x48 is threaded only when both gate
-        // words +0x50 and +0x54 are positive, else no clip (the layer fills the screen).
+        // Clip/root arg: the four-word clip rect (m_clipRect) is threaded only when both
+        // gate words +0x50/+0x54 (m_clipRect[2]/[3]) are positive, else no clip.
         int *root = nullptr;
-        if (lcI(l, 0x50) >= 1 && lcI(l, 0x54) > 0) {
-            root = &lcI(l, 0x48);
+        if (l->m_clipRect[2] >= 1 && l->m_clipRect[3] > 0) {
+            root = l->m_clipRect;
         }
 
-        // Frame index handed to drawLayer: the float play head at +0x40 truncated to int
-        // (vcvt.s32.f32). Arg mapping verified against the disassembled bl @ 0x2c9ce (the
-        // r0-r3 + sp+0x00..0x38 stores): the constants land as loopFlags=8, colour=100,
-        // colourHi=0, p15=0xffffff, p19=1; the +0x2c/+0x30 words are p9/p10; +0x10/+0x14
-        // are context/p17 (sp+0x30=+0x10, sp+0x34=+0x14); the +0x48 rect is the clip.
-        const int frame = static_cast<int>(lcF(l, 0x40));
-        mgr.drawLayer(lcI(l, 0x38),                          // lyr        r6+0x38
-                      frame,                                 // frame      (int)r6+0x40
-                      lcI(l, 0x18),                          // x          r6+0x18
-                      lcI(l, 0x1c),                          // y          r6+0x1c
-                      lcI(l, 0x20),                          // scaleX     r6+0x20
-                      lcI(l, 0x24),                          // scaleY     r6+0x24
-                      static_cast<int>(lcS(l, 0x28)),        // rotation   (short)r6+0x28
-                      8,                                     // loopFlags  #8 (kDrawClampLast)
-                      lcI(l, 0x2c),                          // p9         r6+0x2c
-                      lcI(l, 0x30),                          // p10        r6+0x30
-                      100,                                   // color      #0x64
-                      0,                                     // colorHi    #0
-                      static_cast<uint32_t>(lcH(l, 0x34)),   // blendFlags (u16)r6+0x34
-                      0x00ffffff,                            // p15        #0x00ffffff
-                      root,                                  // clipRect   root or null
-                      lcPtr(l, 0x10),                        // context    r6+0x10 (owner)
-                      static_cast<uint32_t>(lcI(l, 0x14)),   // p17        r6+0x14 (order)
-                      1);                                    // p19        #1
+        // Frame index handed to drawLayer: the float play head truncated to int
+        // (vcvt.s32.f32). Constants (byte-verified from the bl @ 0x2c9ce): loopFlags=8,
+        // color=100, colorHi=0, p15=0xffffff, p19=1.
+        const int frame = static_cast<int>(l->m_frame);
+        mgr.drawLayer(l->m_lyr, frame,
+                      l->m_x, l->m_y,
+                      l->m_scaleX, l->m_scaleY,
+                      static_cast<int>(l->m_rotation),
+                      8,                                          // loopFlags (kDrawClampLast)
+                      l->m_p9, l->m_p10,
+                      100, 0,                                     // color / colorHi
+                      static_cast<uint32_t>(static_cast<unsigned short>(l->m_blend)),
+                      0x00ffffff,                                 // p15
+                      root,
+                      l->m_owner,                                 // context
+                      static_cast<uint32_t>(l->m_order),          // p17
+                      1);                                         // p19
 
         if (playState == 4 || drawOnly != 0) {
             continue;   // held frame, or draw-only pass: do not advance
         }
 
         // Advance the play head by the signed rate and apply the end handling per mode.
-        const float rate = lcF(l, 0x44);
-        const float newFrame = lcF(l, 0x40) + rate;
-        lcF(l, 0x40) = newFrame;
-        const int frameCount = lcI(l, 0x3c);
+        const float rate = l->m_alpha;
+        const float newFrame = l->m_frame + rate;
+        l->m_frame = newFrame;
+        const int frameCount = l->m_frameCount;
 
         if (rate > 0.0f) {                                   // forward
             if (static_cast<int>(newFrame) >= frameCount) {  // reached the end
                 if (playState == 3) {                        // once, stop to idle
-                    lcF(l, 0x40) = static_cast<float>(frameCount - 1);
-                    lcI(l, 0x58) = 0;
-                    *(reinterpret_cast<unsigned char *>(l) + 0x5c) = 1;
+                    l->m_frame = static_cast<float>(frameCount - 1);
+                    l->m_playState = 0;
+                    l->m_finished = 1;
                 } else if (playState == 2) {                 // loop, wrap to start
-                    lcF(l, 0x40) = 0.0f;
+                    l->m_frame = 0.0f;
                 } else if (playState == 1) {                 // once, hold at last frame
-                    lcF(l, 0x40) = static_cast<float>(frameCount - 1);
-                    lcI(l, 0x58) = 4;
-                    *(reinterpret_cast<unsigned char *>(l) + 0x5c) = 1;
+                    l->m_frame = static_cast<float>(frameCount - 1);
+                    l->m_playState = 4;
+                    l->m_finished = 1;
                 }
             }
         } else {                                             // reverse (rate <= 0)
             if (newFrame <= 0.0f) {                           // reached the start
                 if (playState == 3) {                        // once, stop to idle
-                    lcF(l, 0x40) = 0.0f;
-                    lcI(l, 0x58) = 0;
-                    *(reinterpret_cast<unsigned char *>(l) + 0x5c) = 1;
+                    l->m_frame = 0.0f;
+                    l->m_playState = 0;
+                    l->m_finished = 1;
                 } else if (playState == 2) {                 // loop, wrap to the end
-                    lcF(l, 0x40) = static_cast<float>(frameCount - 1);
+                    l->m_frame = static_cast<float>(frameCount - 1);
                 } else if (playState == 1) {                 // once, hold at frame 0
-                    lcF(l, 0x40) = 0.0f;
-                    lcI(l, 0x58) = 4;
-                    *(reinterpret_cast<unsigned char *>(l) + 0x5c) = 1;
+                    l->m_frame = 0.0f;
+                    l->m_playState = 4;
+                    l->m_finished = 1;
                 }
             }
         }

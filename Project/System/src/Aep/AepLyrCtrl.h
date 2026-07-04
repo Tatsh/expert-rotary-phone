@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 class AepTexture;
 
 class AepLyrCtrl {
@@ -41,7 +43,6 @@ public:
     // enters play state; a fully-faded layer seeks to its last frame, else frame 0.
     void play();
 
-    float z() const { return m_z; }
     bool isVisible() const { return m_visible; }
 
     // Whether this layer is still mid-animation: false when idle (play-state 0) or held
@@ -83,42 +84,53 @@ public:
     // aepLyrCtrlReset (FUN_0002cb5c) — used when backing out of a song preview.
     void reset();
 
-    // Sugoroku roulette-layer anchor: clear the y slot and store a raw integer into
-    // the z slot (the scene copies play data field<int>(0x614) in as raw 4 bytes, not
-    // a float). Ghidra: the +0x18 / +0x1c stores in FUN_0009fc90.
+    // Sugoroku roulette-layer anchor: clear the draw-x slot and store the raw integer
+    // into the draw-y slot. Ghidra: the +0x18 / +0x1c stores in FUN_0009fc90.
     void setRouletteAnchor(int value) {
-        m_y = 0.0f;
-        *reinterpret_cast<int *>(&m_z) = value;
+        m_x = 0;
+        m_y = value;
     }
 
-    // Position the layer's on-screen anchor: the +0x18/+0x1c slots that
-    // AepLyrCtrlUpdateAll reads as the integer draw x/y. The arcade hit-flash
-    // arrow layers re-anchor this every frame (Ghidra: FUN_0009fc90 stores the
-    // computed x/y as raw ints into these two words).
+    // Position the layer's on-screen anchor: the +0x18/+0x1c integer draw x/y that
+    // AepLyrCtrlUpdateAll reads. The arcade hit-flash arrows re-anchor this every frame
+    // (Ghidra: FUN_0009fc90 stores the computed x/y into these two words).
     void setPosition(int x, int y) {
-        *reinterpret_cast<int *>(&m_y) = x;
-        *reinterpret_cast<int *>(&m_z) = y;
+        m_x = x;
+        m_y = y;
     }
+
+    // Grant the free-function frame-advance loop access to the members below (it was the
+    // reason the file-static lc* offset helpers existed). Ghidra: FUN_0002c924.
+    friend void AepLyrCtrlUpdateAll(int drawOnly);
 
 protected:
-    // +0x04 / +0x08: intrusive links in the ordering table.
-    AepLyrCtrl *m_prev; // +0x04
-    AepLyrCtrl *m_next; // +0x08
-    int m_texId;        // +0x0c  (-1 = unassigned, sentinel)
-    int m_field10;      // +0x10
-    float m_x, m_y, m_z;// +0x14..0x1c  position
-    int m_width;        // +0x20  (default 100)
-    int m_height;       // +0x24  (default 100)
-    float m_grpA[3];    // +0x28..0x30  (color or uv)  [roles TBD]
-    int m_blend;        // +0x34  blend mode (default 0x20)
-    int m_lyr;          // +0x38  resolved layer handle (AepManager::getLyrNo)
-    int m_frameCount;   // +0x3c  layer length (AepManager::layerFrameCount)
-    int m_frame;        // +0x40  current animation frame
-    float m_alpha;      // +0x44  (default 1.0)
-    float m_grpC[4];    // +0x48..0x54
-    bool m_flag55;      // +0x55
-    int m_playState;    // +0x58  0 idle, 2 playing
-    bool m_visible;     // +0x59
+    // Field TYPES/offsets are byte-verified from the updateAndDrawAepLayers (0x2c924)
+    // disassembly (ldr/ldm = int, ldrsh = short, vldr/vcvt = float), which is authoritative
+    // over the NEON-mangled ctor decompile. +0x04..0x08 intrusive list links.
+    AepLyrCtrl *m_prev;   // +0x04
+    AepLyrCtrl *m_next;   // +0x08
+    int   m_texId;        // +0x0c  (-1 = unassigned, sentinel)
+    void *m_owner;        // +0x10  owning task/context (threaded to drawLayer)
+    int   m_order;        // +0x14  ordering-priority word (drawLayer p17)
+    int   m_x;            // +0x18  draw x  (int, not float)
+    int   m_y;            // +0x1c  draw y  (int, not float)
+    int   m_scaleX;       // +0x20  (default 100)
+    int   m_scaleY;       // +0x24  (default 100)
+    int16_t m_rotation;   // +0x28  packed rotation (read as signed short)
+    int16_t m_pad2a;      // +0x2a
+    int   m_p9;           // +0x2c  drawLayer p9
+    int   m_p10;          // +0x30  drawLayer p10
+    int   m_blend;        // +0x34  blend mode (default 0x20; low 16 bits read)
+    int   m_lyr;          // +0x38  resolved layer handle (AepManager::getLyrNo)
+    int   m_frameCount;   // +0x3c  layer length (AepManager::layerFrameCount)
+    float m_frame;        // +0x40  current play head (float)
+    float m_alpha;        // +0x44  signed frame rate / fade (default 1.0)
+    int   m_clipRect[4];  // +0x48..0x58  clip rect (0x50/0x54 double as >0 gate words)
+    int   m_playState;    // +0x58  0 idle / 1 once-hold / 2 loop / 3 once-idle / 4 held
+    bool  m_visible;      // +0x59
+    uint8_t m_pad5a[2];   // +0x5a
+    uint8_t m_finished;   // +0x5c  animation-completed flag (set at end of travel)
+    uint8_t m_pad5d[3];   // +0x5d  -> 0x60
 };
 
 // Advance and draw every active animation layer in the global list (the intrusive
