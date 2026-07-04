@@ -66,6 +66,13 @@ void neAppEventCenter::setEndDate() {
     _endDate = [NSDate date];
 }
 
+// Remote-push pending flag (event-center region global g_bRemoteNotifyPending). Set when a
+// push notification is received (AppDelegate application:didReceiveRemoteNotification:) and
+// cleared once the recommend list is refreshed.
+static bool g_bRemoteNotifyPending = false;
+bool neAppEventCenter::remoteNotifyPending() const { return g_bRemoteNotifyPending; }
+void neAppEventCenter::setRemoteNotifyPending(bool pending) { g_bRemoteNotifyPending = pending; }
+
 // AC-viewer selection state (event-center region): the current browsing pair and the
 // pending "Sel" pair carried into the play scene.
 static int g_dwAcViewerMusicId       = -1;  // g_dwAcViewerMusicId      @ 0x187bf0

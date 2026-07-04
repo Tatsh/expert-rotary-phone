@@ -46,15 +46,21 @@ static UIViewController *RootVC() {
 // findCharIndexForColumn (song-name truncation in rebuildList()) is declared in neGraphics.h
 // beside its sibling text helpers and defined in neEngineBridge.mm.
 
-// Recommend-list refresh throttle: the fetch is skipped when a fresh copy was pulled
-// recently and no push notification is pending (Ghidra: NSDate timeIntervalSinceDate vs
-// the last-fetch date DAT_00187bdc, divided by DAT_00035e9c, compared > 4, OR
-// g_bRemoteNotifyPending). The owning globals live in the app-event-center region.
+// Recommend-list refresh throttle: refetch when the list has never been pulled, when more than
+// 4 minutes have elapsed since the last fetch (DAT_00035e9c == 60.0 divisor -> seconds/60 > 4),
+// or when a push notification is pending. The last-fetch timestamp is the event-center's
+// _endDate (stamped by setEndDate at the end of the recommend download).
 static bool recommendListIsStale() {
-    neAppEventCenter::shared();   // force the event-center (and its throttle globals) live
-    // TODO(dep): the last-fetch NSDate (DAT_00187bdc) / remote-notify flag are owned by the
-    // app-event-center, which is not yet reconstructed; treat as stale until it is.
-    return true;
+    neAppEventCenter &ec = neAppEventCenter::shared();
+    NSDate *lastFetch = ec.recommendFetchDate();
+    if (lastFetch == nil) {
+        return true;   // never fetched
+    }
+    NSTimeInterval elapsedMinutes = [[NSDate date] timeIntervalSinceDate:lastFetch] / 60.0;
+    if ((int)elapsedMinutes > 4) {
+        return true;   // stale window elapsed
+    }
+    return ec.remoteNotifyPending();   // a push arrived -> force a refresh
 }
 
 // hitButton: read `button`'s stored rectangle (from the setup()-filled layout block
@@ -1311,7 +1317,9 @@ void MainTask::updateInfoPanel(int mode) {
             }
         }
     }
-    neAppEventCenter::shared();   // g_bRemoteNotifyPending := false lives here
+    // The recommend list has now been consumed into the panel — clear the pending-push flag so
+    // the throttle doesn't force another immediate refetch.
+    neAppEventCenter::shared().setRemoteNotifyPending(false);
 }
 
 // ---------------------------------------------------------------------------------------

@@ -168,8 +168,15 @@ public:
 
     // Stamp the session end time into the +0x24 ivar (_endDate). The binary lazily
     // released any prior date and retained a fresh [NSDate date]; under ARC the strong
-    // ivar assignment does that. Called at the end of the recommend-list download.
+    // ivar assignment does that. Called at the end of the recommend-list download, so it
+    // doubles as the recommend-list "last fetched" timestamp the refresh throttle reads.
     void setEndDate();                   // @ 0x292c0
+    id recommendFetchDate() const { return _endDate; }   // _endDate @ +0x24, last recommend fetch
+
+    // A remote push notification arrived and hasn't been consumed yet — the recommend-list
+    // refresh throttle treats a pending push as an immediate "stale" trigger.
+    bool remoteNotifyPending() const;
+    void setRemoteNotifyPending(bool pending);
 
     // --- Just-finished play's result record ---
     // The play task fills these (recordPlayResult + direct stores of rank/combo);

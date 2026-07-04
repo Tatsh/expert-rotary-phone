@@ -266,8 +266,9 @@ BOOL gLaunchedFromPush = NO;
     if (application.applicationState > UIApplicationStateInactive) {
         return;
     }
-    neAppEventCenter::shared();
-    gLaunchedFromPush = YES;
+    // Flag a pending push so the music-select recommend list refetches on the next visit
+    // (Ghidra: g_bRemoteNotifyPending = true — distinct from gLaunchedFromPush @ 0x187b5a).
+    neAppEventCenter::shared().setRemoteNotifyPending(true);
 }
 
 // -[AppDelegate application:didRegisterForRemoteNotificationsWithDeviceToken:]  @ 0xad90
