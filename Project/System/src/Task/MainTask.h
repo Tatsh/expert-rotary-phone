@@ -103,9 +103,11 @@ private:
     // one of the three per-column row latches, so a committed column change streams into it.
     int findFreeColumnRow() const;
 
-    // The music-select buttons hit-tested each frame. hitButton() maps each to its
-    // stored screen rectangle in the layout block and tests the current tap against
-    // it (via the engine point-in-rect primitive, Ghidra FUN_0002d974).
+    // The music-select buttons hit-tested each frame. hitButton() maps each to its stored
+    // screen rectangle in a layout widget cell (m_cells[0x17..0x1a]) and tests the current tap
+    // against it (via the engine point-in-rect primitive, Ghidra FUN_0002d974). The widget cell
+    // per button (widgetIndexForButton) is recovered from the 13 pointInRect blocks in
+    // FUN_00035914 — see that table in MainTask.mm.
     enum Button {
         kBtnSettings, kBtnSort, kBtnRecommend, kBtnOverScoreLog,   // state 2 top row
         kBtnBackToMenu, kBtnTutorial, kBtnDiffToggle,              // state 2 overlay
@@ -118,6 +120,12 @@ private:
     // transform feeding pointInRect (FUN_0002d974) — the ~13x-repeated inlined block
     // extracted here. `cellIndex` selects the rect for the per-cell buttons.
     bool hitButton(int tapX, int tapY, Button button, int cellIndex = -1) const;
+
+    // Map a Button to the layout widget cell (index into m_cells) whose detail holds its
+    // hit-rect. Recovered from the constant cell indices the 13 pointInRect blocks read in
+    // FUN_00035914. Returns -1 for a button whose rect is not a widget-cell slot
+    // (kBtnBackToMenu is built from fixed screen constants). See the table in MainTask.mm.
+    int widgetIndexForButton(Button button) const;
 
     // state 3/4 seams into the packed select state (documented in MainTask.mm).
     void initOverscoreRows();            // fill the 3 over-score display counters
@@ -158,9 +166,19 @@ private:
             uint8_t fullCombo[3];        // +0x1e FC medal
             uint8_t perfect[3];          // +0x21 PERFECT medal
         };
+        // For the UI/layout widget cells (indices 0x17..0x1a — the jacket array's trailing four)
+        // the detail region instead packs the on-screen hit-rects of the button(s) that cell owns.
+        // FUN_00035914's 13 inlined hit-tests read those rects (field26_0x2b0[i].field4_0x10 sub-
+        // offsets) and scale them by the shared UI scale in m_cells[0x1a] before pointInRect.
+        // WidgetRect is a clean {x,y,w,h} view of one such rect in the engine's pointInRect field
+        // order. NOTE: a single widget cell packs several of these (0x17 -> Settings+Sort;
+        // 0x18 -> OverScoreLog+Tutorial+DiffToggle) at finer, 16-bit-packed sub-offsets than the
+        // 0x10-byte view implies — the exact per-button slot within a shared cell is a residual seam.
+        struct WidgetRect { int x, y, w, h; };   // 0x10 bytes: {x, y, w, h}
         union {
-            uint8_t   detail[0x24];      // widget state (button/UI widgets)
-            ScoreRows scores;            // jacket-cell score rows
+            uint8_t    detail[0x24];     // widget state (button/UI widgets)
+            ScoreRows  scores;           // jacket-cell score rows
+            WidgetRect widget;           // UI cells: representative packed hit-rect (see note)
         };
     };
 

@@ -63,19 +63,91 @@ static bool recommendListIsStale() {
     return ec.remoteNotifyPending();   // a push arrived -> force a refresh
 }
 
-// hitButton: read `button`'s stored rectangle (from the setup()-filled layout block
-// m_layoutRects, or the per-cell widget detail), scale it by the work area's UI-scale
-// factor, and point-in-rect it against the tap. This is the ~13x-repeated inlined
-// FixedToFP/FloatVectorMult(...m_cells[..].scale...)/FPToFixed block from the binary,
-// extracted once. The exact rect-slot index per button is the documented layout seam;
-// the neGraphics::pointInRect call (FUN_0002d974) is exact.
+// widgetIndexForButton: which layout widget cell (m_cells[i]) holds a button's hit-rect.
+// Recovered from the 13 pointInRect blocks in FUN_00035914 (the constant cell indices each
+// block reads through field26_0x2b0[i].field4_0x10). The music-select scene reuses the four
+// trailing entries of the 27-cell jacket array (indices 0x17..0x1a, i.e. cells 23..26) as
+// packed UI/layout widgets; m_cells[0x1a] additionally holds the shared UI scale every test
+// multiplies by. Mapping (button -> cell, decompile pointInRect line, on-hit action):
+//
+//   kBtnSettings     0x17   @294   -> m_state = 5 (GotoSetting)
+//   kBtnSort         0x17   @327   -> allCellsReady -> m_state = 7 (GotoSortSelect)
+//   kBtnRecommend    0x18   @361   -> allCellsReady -> GotoRecommend   (w/h read from 0x17)
+//   kBtnOverScoreLog 0x18   @406   -> allCellsReady -> m_state = 9 (GotoOverScoreLog)
+//   kBtnBackToMenu   (none) @425   -> MenuTask, SE 2, m_state = 0xe    (fixed screen consts)
+//   kBtnTutorial     0x18   @472   -> tutorialOffered -> PlayTask, m_state = 0xe
+//   kBtnDiffToggle   0x18   @529   -> scrollLatchA/B = 1, scrollConfig = 0
+//   kBtnSongCell     0x19   @591   -> allCellsReady -> select cell, m_state = 3 (grid: base
+//                                     m_cells[0x19], column stride m_cells[0x17], per cellIndex)
+//   kBtnFavToggle    0x19   @631   -> favorite ^= 1                    (grid, per cellIndex)
+//   kBtnPlay         0x19   @972   -> popBgm, PlayTask, m_state = 0xc
+//   kBtnFriendScore  0x19   @1026  -> GotoFriendScore (a 2nd, over-score-only rect @1050 too)
+//   kBtnDifficulty   0x18   @1084  -> select difficulty (row base m_cells[0x18], per-row
+//                                     stride/offset m_cells[0x19], iterated by cellIndex d)
+int MainTask::widgetIndexForButton(Button button) const {
+    switch (button) {
+    case kBtnSettings:     return 0x17;
+    case kBtnSort:         return 0x17;
+    case kBtnRecommend:    return 0x18;   // rect origin from 0x18; w/h split from 0x17 (seam)
+    case kBtnOverScoreLog: return 0x18;
+    case kBtnTutorial:     return 0x18;
+    case kBtnDiffToggle:   return 0x18;
+    case kBtnSongCell:     return 0x19;   // grid rect: base 0x19 + column stride from 0x17
+    case kBtnFavToggle:    return 0x19;
+    case kBtnPlay:         return 0x19;
+    case kBtnFriendScore:  return 0x19;
+    case kBtnDifficulty:   return 0x18;   // difficulty-row base 0x18 + per-row stride from 0x19
+    case kBtnBackToMenu:   return -1;     // fixed constants (DAT_000368cc/d0), not a widget cell
+    }
+    return -1;
+}
+
+// hitButton: map `button` to its layout widget cell (widgetIndexForButton), read that cell's
+// stored rect from the detail region (WidgetRect view), scale it by the shared UI-scale factor
+// about the origin, and point-in-rect it against the tap. This is the ~13x-repeated inlined
+// FixedToFP/FloatVectorMult(...scale...)/FPToFixed block from FUN_00035914, extracted once
+// and modelled as ordinary float rounding (the 16.16 Q-format helpers are the pixel-math seam).
+// The neGraphics::pointInRect call (FUN_0002d974) is exact.
+//
+// Wired: the button -> widget-cell mapping above (all 12 buttons routed). Residual seams,
+// left as precise notes rather than fabricated: (a) the exact WidgetRect *slot* within a
+// shared cell (Settings vs Sort in 0x17; OverScoreLog/Tutorial/DiffToggle in 0x18) — the
+// binary packs several rects per cell at 16-bit sub-offsets, so only the representative
+// slot is read here; (b) the procedural grid math for kBtnSongCell/kBtnFavToggle/
+// kBtnDifficulty (base+stride+cellIndex); (c) kBtnBackToMenu's fixed screen constants.
 bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
-    int rx = 0, ry = 0, rw = 0, rh = 0;
-    // TODO(dep): the per-button screen rectangles live in the setup()-filled layout
-    // block (m_layoutRects) and, for the song grid / favourite / difficulty buttons, in
-    // the per-cell widget detail (m_cells[cellIndex].detail). Their exact slot indices
-    // are recovered structurally (setup() lays them out) but not wired per-button yet.
-    (void)button; (void)cellIndex; (void)m_layoutRects; (void)m_uiScale;
+    const int widget = widgetIndexForButton(button);
+    if (widget < 0) {
+        // kBtnBackToMenu: FUN_00035914 builds this rect from immediates (14.0f/11.0f) and the
+        // globals DAT_000368cc/DAT_000368d0, not a widget cell. Its constants are unresolved,
+        // so the button is left un-wired (no-hit) here rather than faked. Seam.
+        return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0);
+    }
+
+    // The shared UI scale every hit-test multiplies by. Ghidra sources it from the trailing
+    // layout cell (pMVar26 = &field26_0x2b0[0x1a].field4_0x10; scale = pMVar26->field0_0x0),
+    // which setup() mirrors from g_dwUiScale — the same value the work area caches in m_uiScale.
+    const float scale = reinterpret_cast<const float &>(m_uiScale);
+
+    // The button's stored rect: slot 0 of its widget cell's packed detail. The per-cell grid
+    // buttons (kBtnSongCell / kBtnFavToggle / kBtnDifficulty) additionally offset this rect by
+    // their column/row position (cellIndex); that grid arithmetic is a documented seam.
+    //
+    // Reconciliation seam: setup() (FUN_000370f0) fills a parallel per-platform coordinate
+    // table m_layoutRects (+0x988..+0xa64) with the real button x/w/y/h constants (e.g. Sort @
+    // m_layoutRects[34], DiffToggle @ [39]); FUN_00035914's hit-tests instead read the widget
+    // cells at +0x2d8 (field26_0x2b0[i]). setup() does not itself write those cells, so the copy
+    // of m_layoutRects into the widget-cell detail happens elsewhere (musicSelUpdate / draw) — the
+    // exact table->cell linkage, and thus the concrete per-button coordinates, is unresolved.
+    const MusicSelCell::WidgetRect &r = m_cells[widget].widget;
+    (void)cellIndex; (void)m_layoutRects;
+
+    // Scale the rect about the origin (the FixedToFP -> FloatVectorMult(scale) -> FPToFixed
+    // round block, ~13x-inlined in FUN_00035914; modelled here as float multiply + round).
+    const int rx = (int)lroundf((float)r.x * scale);
+    const int ry = (int)lroundf((float)r.y * scale);
+    const int rw = (int)lroundf((float)r.w * scale);
+    const int rh = (int)lroundf((float)r.h * scale);
     return neGraphics::pointInRect(tapX, tapY, rx, ry, rw, rh);
 }
 
