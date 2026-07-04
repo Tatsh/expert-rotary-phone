@@ -593,7 +593,14 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
     if (t == nullptr) {
         return false;
     }
-    return neGraphics::pointInRect(t->x, t->y, rect[0], rect[1], rect[2], rect[3]);
+    // Ghidra: MenuMainTask_update divides the tap by the UI scale (g_dwUiScale) before the
+    // rect test -- the mode-button rects are stored in logical (unscaled) space, so the raw
+    // physical-pixel touch must be scaled down to match (FPToFixed round-to-zero = trunc).
+    // Without this, buttons mis-hit on every scale != 1 device (Retina / iPad).
+    const int scale = g_dwUiScale > 0 ? g_dwUiScale : 1;
+    const int px = (int)((float)t->x / (float)scale);
+    const int py = (int)((float)t->y / (float)scale);
+    return neGraphics::pointInRect(px, py, rect[0], rect[1], rect[2], rect[3]);
 }
 
 // Height (points) of the AEP-rendered content area, used to place UIKit overlays below

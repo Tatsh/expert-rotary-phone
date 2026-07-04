@@ -13,8 +13,8 @@ Status: ☐ todo  ◐ in progress  ☑ fixed & verified  ✓ already accurate (n
 | # | Function @ addr | Source | Defect | Effort | Status |
 |---|---|---|---|---|---|
 | 1 | `neFrameTimer::elapsedSeconds` @0x280bc | neFrameTimer.h:30 | binary returns **milliseconds** (`sec*1000 + usec/1000`); source returned seconds (`/1000000`) — 1000× off. | LOW | ☑ (→elapsedMs; chain verified: draw threshold DAT_0000be7c=1000.0 & updateAll FPToFixed both already ms) |
-| 2 | `neDrawRect` @0x152f0 | neRenderer.cpp:213 | `x+w`/`y+h` done as **float** add (`vadd.f32`) in binary; source adds as `int`. Implies neDraw* positions are float, not 16.16. | MED | ☐ |
-| 3 | `menuButtonHit` (MenuMainTask_update) @0x6af58 | neEngineBridge.mm:596 | drops the `÷ g_dwUiScale` tap scale-divide before `pointInRect` → mode buttons mis-hit on Retina/iPad. | MED | ☐ |
+| 2 | `neDrawRect` @0x152f0 (+ whole neColorVertex path) | neRenderer.cpp:165/213 | **whole-chain float typing.** Disasm confirms positions are IEEE float (`vadd.f32` on x+w/y+h; verts stored via `vstr.32`). `neColorVertex{int32 x,y}`, `aepScale`→int, the 4 `neDraw*` `int` params, and the `glVertexPointer` type are all int-modeled but the binary uses GL_FLOAT. Fixing neDrawRect alone is inconsistent — needs an end-to-end int→float conversion of the untextured-primitive vertex path (neColorVertex, aepScale, neDrawLine/Triangle/Rect/Quad, vertexPointer GL type, callers). Dedicated pass. | MED-HIGH | ☐ (verified; deferred as a unit) |
+| 3 | `menuButtonHit` (MenuMainTask_update) @0x6af58 | neEngineBridge.mm:596 | drops the `÷ g_dwUiScale` tap scale-divide before `pointInRect` → mode buttons mis-hit on Retina/iPad. menuButtonHit is MenuMainTask-only (contained). | MED | ☑ (scaled tap; g_dwUiScale, trunc) |
 
 ## Tier 2 — PARTIAL (dropped NEON / wrong constant, clear fix)
 
