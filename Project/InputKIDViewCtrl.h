@@ -37,7 +37,7 @@
     NSString *oldPassword;             // last entered password, used to pre-fill _passField
     float _scrollOffset;               // keyboard scroll offset (90 on 3.5", 0 on 4")
     BOOL _isAninationing;              // animation guard (binary spelling kept)
-    id<PopnLinkTopSplitViewControllerDelegate> _delegate;  // owning split controller (assign)
+    id<PopnLinkTopSplitViewControllerDelegate> __unsafe_unretained _delegate;  // owning split controller (assign)
 }
 
 // The owning pop'n-link split controller (pad); notified to re-enter the score checker

@@ -32,7 +32,7 @@
     UIView *_subBorderView;        // the sliding inner panel (picker + buttons)
     UIView *_subView;              // content host inside the sub-border
     YearAndMonthPicker *_selectDate;  // the year/month wheel the birthday is read from
-    id<BirthDayViewControllerDelegate> _delegate;   // not retained
+    id<BirthDayViewControllerDelegate> __unsafe_unretained _delegate;   // not retained
 }
 
 @property (nonatomic, assign) id<BirthDayViewControllerDelegate> delegate;

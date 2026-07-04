@@ -76,7 +76,7 @@ typedef struct SubMapData {
     UIViewController *_dummyView;   // dim spinner overlay (visitor request in flight)
     NSArray *_subMapArray;          // NSValue-wrapped SubMapData rows
     BOOL _isDecide;                 // an area was chosen (guards re-entry)
-    id _delegate;                   // optional overlay owner (pad)
+    id __unsafe_unretained _delegate;   // optional overlay owner (pad); assign/non-retaining (binary)
 }
 
 @synthesize delegate = _delegate;
