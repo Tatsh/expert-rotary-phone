@@ -15,6 +15,14 @@
 #import "MainTask.h"          // MusicSelTask == MainTask: the real rebuildList() re-sort method
 #import "neEngineBridge.h"
 
+// Private methods, declared up here so the file-static block-invoke helpers below (which run
+// before @implementation) can send them to self.
+@interface RecommendViewController ()
+- (void)endOpenAnimation;
+- (void)endCloseAnimation;
+- (void)touchedBackButton:(id)sender;
+@end
+
 // The app's root navigation host (bridged UIViewController on the C++ scene manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
@@ -101,12 +109,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     f.origin.y = ref ? ref.frame.size.height : 0.0f;
     self.navigationController.view.frame = f;
 }
-
-@interface RecommendViewController ()
-- (void)endOpenAnimation;
-- (void)endCloseAnimation;
-- (void)touchedBackButton:(id)sender;
-@end
 
 @implementation RecommendViewController {
     UIViewController *_dummyView;         // dimmed spinner overlay (shown during a store re-sort)
