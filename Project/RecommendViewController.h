@@ -43,7 +43,7 @@ using MusicSelTask = MainTask;
 
 // Keep the C++ task pointer, (re)build the table, wrap self in a UINavigationController (with a
 // back button on phone) and return that navigation controller. Ghidra: @ 0xbc30c.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask;
+- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask __attribute__((objc_method_family(none)));
 
 // Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @ 0xbc5e0.
 - (void)startOpenAnimation;

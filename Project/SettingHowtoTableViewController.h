@@ -25,7 +25,7 @@
 
 // Wrap self in a fresh navigation controller and return it (the phone layout).
 // Also builds the nav-bar back button (targets -settingClose). Ghidra: @ 0x80488.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 - (void)startOpenAnimation;    // @ 0x806ec
 - (void)startCloseAnimation;   // @ 0x80830 — plays the cancel SE, fades out

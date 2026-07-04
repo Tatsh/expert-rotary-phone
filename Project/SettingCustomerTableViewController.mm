@@ -65,7 +65,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd3460 — wrap self (grouped) in a nav controller, add a back button + nav-bar art.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 

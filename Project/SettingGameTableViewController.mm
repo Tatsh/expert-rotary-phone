@@ -81,7 +81,7 @@ static UIViewController *RootVC() {
 
 // @ 0x88d7c -- wrap self (grouped style) in a navigation controller with a custom back button and
 // the "frirep_navbar" bar background.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [UINavigationController alloc];
     [self initWithStyle:UITableViewStyleGrouped];
     nav = [nav initWithRootViewController:self];

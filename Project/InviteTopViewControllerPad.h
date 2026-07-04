@@ -27,7 +27,7 @@
 
 // Build the combined invite screen + wrap it in a navigation controller, which is
 // returned. Ghidra: @ 0x5c638.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the view (and its nav view) in over 0.3 s. Ghidra: @ 0x5d350.
 - (void)startOpenAnimation;

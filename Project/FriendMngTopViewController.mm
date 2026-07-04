@@ -37,7 +37,7 @@
 }
 
 // @ 0xa59f0 — build the hub + wrap it in a navigation controller.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     [self init];
     m_Delegate = self;
 

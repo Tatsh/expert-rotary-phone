@@ -21,7 +21,7 @@
 @interface SettingGameTableViewController : UITableViewController
 
 // Wrap self in a fresh navigation controller and return it (the phone layout).
-- (UINavigationController *)initAtNavigationController;   // @ 0x88d7c
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));   // @ 0x88d7c
 
 - (void)startOpenAnimation;    // @ 0x89074
 - (void)startCloseAnimation;   // @ 0x891b8

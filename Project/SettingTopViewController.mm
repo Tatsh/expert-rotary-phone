@@ -85,7 +85,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x14464 — build self, wrap it in a nav controller, add a back button + settings nav-bar art.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     [self init];
     UINavigationController *nav =
         [[UINavigationController alloc] initWithRootViewController:self];

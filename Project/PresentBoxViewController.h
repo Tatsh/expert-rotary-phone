@@ -42,7 +42,7 @@
 
 // Build the controller, wrap it in a fresh UINavigationController (portrait style) and
 // return that host (the value the menu pushes into the scene). Ghidra: @ 0x24938.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Slide / fade the box in and out. The host (MainViewController) drives these when
 // showing / dismissing the present box and polls -isAnimationing to gate input while a

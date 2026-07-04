@@ -199,7 +199,7 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 }
 
 // @ 0x24938 — wrap a freshly (re)initialised controller in a portrait nav host.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [UINavigationController alloc];
     PresentBoxViewController *vc = [self initWithStyle:UITableViewStyleGrouped];   // style 1
     return [nav initWithRootViewController:vc];

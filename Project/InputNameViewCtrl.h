@@ -32,7 +32,7 @@
 // Wrap a freshly-built InputNameViewCtrl in a UINavigationController (back button
 // hidden, "inputname_navbar" bar background). Ghidra: initAtNavigationController
 // @ 0x90668.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the panel (and its nav view) in / out; guarded by m_IsAnimationing.
 // Ghidra: startOpenAnimation @ 0x90740 / startCloseAnimation @ 0x90890.

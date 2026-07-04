@@ -67,7 +67,7 @@
 // Build the controller, wrap it in a fresh UINavigationController with a custom back
 // button and return that host (the value the menu adds to the scene, phone only).
 // Ghidra: @ 0x91e84.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the panel (and, on phone, its embedded nav view) in over 0.3 s. Ghidra: @ 0x920e8.
 - (void)startOpenAnimation;

@@ -208,7 +208,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // @ 0x91e84 — phone entry point: wrap self in a nav controller with a custom back
 // button and the convert nav-bar art, and return that host.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     InputConversionPassViewController *content = [self init];
     if (content == nil) {
         return nil;

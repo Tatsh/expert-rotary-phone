@@ -100,7 +100,7 @@ static UIViewController *RootVC() {
 
 // @ 0x68d40 — initialize the receiver (grouped) and wrap it in a nav controller with
 // a custom back button in the left slot.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 

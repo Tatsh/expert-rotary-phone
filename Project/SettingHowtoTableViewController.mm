@@ -61,7 +61,7 @@ static UIViewController *RootVC() {
 // @ 0x80488 — wrap self in a navigation controller (the phone presentation), give it a
 // custom "navi_btn_back" back button wired to -settingClose, and set the nav-bar
 // background image.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 

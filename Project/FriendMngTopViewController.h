@@ -24,7 +24,7 @@
 
 // Build the hub view + its navigation controller (custom back button, section buttons) and return
 // the navigation controller. Ghidra: initAtNavigationController @ 0xa59f0.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the hub (and its nav view) in / out over 0.5 s. Ghidra: startOpenAnimation @ 0xa6590 /
 // startCloseAnimation.

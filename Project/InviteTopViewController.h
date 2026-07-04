@@ -20,7 +20,7 @@
 
 // Build the top view + its navigation controller (custom back button, nav-bar art,
 // the two panels) and return the navigation controller. Ghidra: @ 0xe6f88.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the view (and its nav view) in over 0.3 s. Ghidra: startOpenAnimation @ 0xe7a38.
 - (void)startOpenAnimation;

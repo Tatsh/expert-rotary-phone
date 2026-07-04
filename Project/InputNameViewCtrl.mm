@@ -186,7 +186,7 @@
 }
 
 // @ 0x90668 — wrap in a UINavigationController (back button hidden, custom bar image).
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     if ([self init] == nil) {
         return nil;
     }

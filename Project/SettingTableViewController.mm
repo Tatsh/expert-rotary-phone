@@ -84,7 +84,7 @@ static UIViewController *RootVC() {
 
 // @ 0x7ed98 — wrap self in a navigation controller (the phone presentation): install the
 // custom phone back button and the "frirep_navbar" nav-bar art. Caches the iPad flag first.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     _isPad = neSceneManager::isPadDisplay();
 
     UINavigationController *nav = [[UINavigationController alloc]

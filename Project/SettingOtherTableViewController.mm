@@ -77,7 +77,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd4398 — wrap in a nav controller, install the phone back button, set the nav-bar art.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 

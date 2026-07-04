@@ -30,7 +30,7 @@
 @implementation InviteTopViewController
 
 // @ 0xe6f88 — build the top view + wrap it in a navigation controller.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     self = [super init];
     if (self == nil) {
         return nil;

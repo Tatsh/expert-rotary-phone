@@ -212,7 +212,7 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xbf498 — wrap self in a nav controller; first run pushes a how-to overlay.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav =
         [[UINavigationController alloc] initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 

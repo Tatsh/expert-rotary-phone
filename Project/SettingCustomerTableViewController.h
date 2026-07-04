@@ -23,7 +23,7 @@
 
 // Wrap self in a fresh navigation controller (with a back button) and return it
 // (the phone layout). Ghidra: initAtNavigationController @ 0xd3460.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 - (void)startOpenAnimation;    // @ 0xd36ec
 - (void)startCloseAnimation;   // @ 0xd3830

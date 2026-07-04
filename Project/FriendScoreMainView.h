@@ -23,7 +23,7 @@
 // Build the whole friend-score screen for `musicId`, wrap self in a UINavigationController
 // (with the custom back button + nav-bar art) and return that navigation controller — the
 // phone nav host the root MainViewController adds over the GL view. Ghidra: @ 0xa9df0.
-- (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId;
+- (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId __attribute__((objc_method_family(none)));
 
 // The song whose friend scores are shown. Synthesized atomic accessors
 // (getter @ 0xae040 / setter @ 0xae054).

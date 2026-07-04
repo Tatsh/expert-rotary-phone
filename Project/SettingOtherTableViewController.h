@@ -49,7 +49,7 @@
 @property (nonatomic, assign) id<ViewCmnProtocol> viewCmnDelegate;
 
 // Wrap self in a fresh navigation controller (with the back button) and return it.
-- (UINavigationController *)initAtNavigationController;   // @ 0xd4398
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));   // @ 0xd4398
 
 - (void)startOpenAnimation;    // @ 0xd45ec
 - (void)startCloseAnimation;   // @ 0xd4730 (also plays the cancel SE)

@@ -60,7 +60,7 @@ typedef struct MainMapData {
 // Wrap self in a UINavigationController (with the custom back button); on first-ever entry
 // also push a two-page how-to overlay. Returns that navigation controller (the phone nav host).
 // Ghidra: @ 0xbf498.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Cross-fade the nav host in. Called by the root MainViewController after it adds the host.
 // Ghidra: @ 0xbfa38.

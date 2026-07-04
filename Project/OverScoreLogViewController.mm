@@ -145,7 +145,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 // @ 0x29e24 — keep the C++ task pointer, (re)build the table via initWithStyle:, wrap self in a
 // UINavigationController (with a back button on phone) and return that nav controller.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask {
+- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask __attribute__((objc_method_family(none))) {
     _musicSelTask = musicSelTask;
     UINavigationController *navigationController =
         [[UINavigationController alloc] initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];

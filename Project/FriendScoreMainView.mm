@@ -122,7 +122,7 @@ static int scoreToRank(int score) {
 @synthesize isAnimationing = _isAnimationing;
 
 // @ 0xa9df0
-- (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId {
+- (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId __attribute__((objc_method_family(none))) {
     self = [super init];
     if (self == nil) {
         return nil;

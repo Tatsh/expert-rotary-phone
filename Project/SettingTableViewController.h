@@ -43,7 +43,7 @@
 @interface SettingTableViewController : UITableViewController <CommonAlertViewDelegate>
 
 // Wrap self in a fresh navigation controller (with the phone back button) and return it.
-- (UINavigationController *)initAtNavigationController;   // @ 0x7ed98
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));   // @ 0x7ed98
 
 - (void)startOpenAnimation;    // @ 0x7efec
 - (void)startCloseAnimation;   // @ 0x7f130

@@ -41,7 +41,7 @@
 // Initialize the receiver (grouped style) and return it wrapped in a fresh
 // UINavigationController with a custom back button in the left nav slot (the phone
 // nav host). Ghidra: initAtNavigationController @ 0x68d40.
-- (UINavigationController *)initAtNavigationController;
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the screen + its nav view in (phone entry animation). Ghidra: @ 0x69068.
 - (void)startOpenAnimation;

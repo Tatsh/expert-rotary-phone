@@ -35,7 +35,7 @@
 @implementation InviteTopViewControllerPad
 
 // @ 0x5c638 — build the combined invite screen and wrap it in a navigation controller.
-- (UINavigationController *)initAtNavigationController {
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     self = [super init];
     if (self == nil) {
         return nil;
