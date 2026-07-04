@@ -194,10 +194,14 @@ private:
 
     // Layer-name -> index open-addressing hash table, one per group (Ghidra: the
     // 0x2ffc-byte-strided region @ this+0x68b19c). Ghidra: FUN_0000fa30 probes it.
+    // Public type (the file-static build/probe helpers in AepManager.mm name it);
+    // the per-group table instances below stay private.
+public:
     struct NameHashTable {
         uint16_t value[2048];    // +0x0000 layer index stored per bucket
         const char *key[2047];   // +0x1000 name per bucket (null = empty slot)
     };
+private:
     // Per-group name->index hash tables, filled by relocateAepData when a group loads and
     // probed by getLyrNo / getFrameNo / getUserNo. In the binary these are three separate
     // fixed-offset regions of the manager object (frame names @ +0x640200, layer names @
