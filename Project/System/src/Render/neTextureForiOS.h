@@ -81,6 +81,15 @@ public:
     // fails to load, aborts the load early. Ghidra: FUN_00011e18.
     void loadFrames(const char *dir, const char *name, const uint8_t *indexBase);
 
+#ifdef __OBJC__
+    // Decode a single PNG (bridged NSData) into one padded power-of-two RGBA GL texture and
+    // return the created texture (or nullptr if the image fails to decode). The source is drawn
+    // Y-flipped into a POT RGBA8 bitmap, then handed to neCreateTextureFromData (its AepTexture is
+    // the binary's C_TEXTURE). objc-dispatched class helper the in-memory image path uses. Ghidra:
+    // neTextureForiOS LoadTexture: @ 0x1acac. Defined in neEngineBridge.mm (needs UIKit/CoreGraphics).
+    static AepTexture *LoadTexture(NSData *data);
+#endif
+
     int width() const { return m_tileWidths ? m_tileWidths[0] : 0; }    // +0x08 tile-0 width
     int height() const { return m_tileHeights ? m_tileHeights[0] : 0; } // +0x0c tile-0 height
 

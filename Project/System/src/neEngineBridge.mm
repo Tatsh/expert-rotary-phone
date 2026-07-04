@@ -10,8 +10,10 @@
 #include <cstddef>
 #include <cstring>
 
+#import <UIKit/UIKit.h>       // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
 #import "AcNoteMng.h"         // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AepTexture.h"
+#import "neTextureForiOS.h"   // neTextureForiOS::LoadTexture (defined below)
 #import "AppDelegate.h"       // [AppDelegate appDelegate] / managedObjectContext (score store)
 #import "AudioManager.h"
 #import "AcViewerTask.h"      // AcViewerTask named work-area (apply-settings owner)
@@ -549,4 +551,42 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
         }
     }
     return -1;
+}
+
+// @ 0x1acac
+// neTextureForiOS LoadTexture: — decode one PNG (bridged NSData) into a padded power-of-two
+// RGBA8 GL texture. Rounds the CGImage's width/height up to the next power of two, renders the
+// image Y-flipped into a zeroed RGBA buffer, and hands it to neCreateTextureFromData (whose
+// AepTexture is the binary's C_TEXTURE); the unpadded source width/height pass through so the
+// sprite samples only the used sub-rect. Returns nullptr when the data isn't a decodable image.
+AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
+    UIImage *image = [[UIImage alloc] initWithData:data];
+    if (image == nil) {
+        return nullptr;
+    }
+    CGImageRef cgImage = image.CGImage;
+    const int srcW = (int)CGImageGetWidth(cgImage);
+    const int srcH = (int)CGImageGetHeight(cgImage);
+
+    int potW = 1;
+    while (potW < srcW) { potW <<= 1; }
+    int potH = 1;
+    while (potH < srcH) { potH <<= 1; }
+
+    unsigned char *pixels = new unsigned char[potW * potH * 4];
+    std::memset(pixels, 0, potW * potH * 4);
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef ctx = CGBitmapContextCreate(pixels, potW, potH, 8, potW * 4, colorSpace,
+                                             kCGImageAlphaPremultipliedLast);
+    // Draw the source Y-flipped (GL wants a top-down row order) into the padded buffer.
+    CGContextTranslateCTM(ctx, 0, (CGFloat)srcH);
+    CGContextScaleCTM(ctx, 1.0f, -1.0f);
+    CGContextDrawImage(ctx, CGRectMake(0, 0, srcW, srcH), cgImage);
+    CGContextRelease(ctx);
+    CGColorSpaceRelease(colorSpace);
+
+    AepTexture *texture = neCreateTextureFromData(potW, potH, 1, pixels, srcW, srcH);
+    delete[] pixels;
+    return texture;
 }
