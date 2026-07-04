@@ -138,6 +138,11 @@ private:
     // jacket cell's detail block (the inner fetchScoreDataForMusic loop @ 0x3835c).
     void loadCellScoreRows(MusicSelCell &cell, unsigned musicId);
 
+    // Background jacket loader — the dispatch_async body rebuildList kicks off once. Round-robins
+    // the 27 cells under m_cellSem, decoding artwork / score rows / truncated name for each queued
+    // cell. Runs until m_loaderCursor is set. Ghidra: resultTaskSetup @ 0x3d048 (mislabeled).
+    void backgroundCellLoader();
+
     // ---- one widget cell of the select scene (Ghidra field26_0x2b0[], stride 0x38) ----
     // Indices 0..0x13 are the song jacket cells (imageData/texture/loadState below);
     // the higher indices are UI/button/state widgets whose per-widget detail (rect +

@@ -39,38 +39,11 @@ static MainViewController *RootVC() {
     return (MainViewController *)neSceneManager::rootViewController();
 }
 
-// ---------------------------------------------------------------------------
-// Ghidra: resultTaskSetup @ 0x3d048 — background-thread score/artwork data loader.
-//
-// CLASS MISMATCH NOTE: this function does NOT belong to PlayResultTask (whose
-// operator_new allocates 0x3a0 bytes). The decompile accesses fields at offsets
-// up to 0xa90 (param_1 + 0xa8c stop-flag, +0xa90 dispatch_semaphore_t), and
-// walks a 27-entry × 0x38-byte item array whose first item's fields start at
-// param_1+0x2d8. This matches the companion function musicSelCleanup @ 0x3cfb0
-// (same 27×0x38 layout, same per-item ObjC fields at +0x2e0/+0x2e8). The owning
-// class is the music-select score-display task (address range 0x389fc–0x3d048);
-// it is placed here by binary proximity only.
-//
-// TODO(dep): identify the owning class and relocate when its .mm is reconstructed.
-//
-// Body (from Ghidra decompile):
-//   Background thread target (sleeps 0.3 s per cycle with a dispatch semaphore gate).
-//   Cycles through 27 work-item slots (stride 0x38 from param_1+0x2d8):
-//     item.musicIdx (+0x2d8), item.state (+0x2dc), item.artwork (+0x2e0),
-//     item.title   (+0x2e8); score fields (+0x2ec..+0x310 for 3 difficulties).
-//   When state == 1 (queued):
-//     1. Mark state = 2 (processing), release semaphore.
-//     2. Fetch artwork2xData for the music (NSArray at param_1+0x30), retain it.
-//     3. Call readScoreDataFields (@ 0x29438) to fill score/rank/playCnt/fc/perfect
-//        for each of 3 difficulty sheets (the inner iVar14/iVar11/iVar16 loop).
-//     4. Copy musicName, truncate at findCharIndexForColumn (@ 0x2da34) — 21 chars
-//        when param_1+0x925 != 0 (phone), 15 chars otherwise (iPad layout) — and
-//        append @"…" (cf____ = ellipsis string).
-//     5. Store artwork and truncated name, mark state = 3 (done).
-//   On outer-loop exit (param_1+0xa8c != 0): write sentinel 2 to param_1+0xa8c.
-// ---------------------------------------------------------------------------
-// (No source reconstruction body: the owning class is not yet identified.
-//  The decompile is preserved above as a complete comment record.)
+// NOTE: resultTaskSetup @ 0x3d048 was placed here by binary proximity only; it is NOT a
+// PlayResultTask method. It walks the 27×0x38 jacket-cell array @ +0x2d8 with the semaphore
+// @ +0xa90 and stop-flag @ +0xa8c — the music-select task's work area — so it is the MainTask
+// background jacket loader. It is now reconstructed as MainTask::backgroundCellLoader()
+// (Project/System/src/Task/MainTask.mm), the dispatch_async body rebuildList kicks off.
 
 // Ghidra: resultTask_ctor @ 0x3d5bc — C_TASK base ctor + vtable init + 0x378-byte
 // memset on the data block starting at +0x28. Corresponds to PlayResultTask::PlayResultTask()

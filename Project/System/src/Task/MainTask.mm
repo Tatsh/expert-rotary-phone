@@ -31,6 +31,7 @@
 #import "MusicManager.h"
 #import "OverScoreData.h"
 #import "ScoreData.h"
+#import "ScoreData+Store.h"   // +getScoreData:inManagedObjectContext: (background cell loader)
 #import "TaskFactory.h"
 #import "UserSettingData.h"
 #import "RhUtil.h"
@@ -1215,10 +1216,7 @@ void MainTask::rebuildList() {
         m_cellSem = dispatch_semaphore_create(1);
         MainTask *self = this;
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            // Background jacket loader (Ghidra: block invoke @ 0x3d040). Walks the column cells
-            // under m_cellSem and uploads each song's jacket art as it decodes. Best-effort:
-            // the block body is a documented seam.
-            (void)self;
+            self->backgroundCellLoader();   // Ghidra: block invoke @ 0x3d040 -> 0x3d048
         });
         m_cellLoaderStarted = 1;
     }
@@ -1250,6 +1248,74 @@ void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
         cell.scores.fullCombo[diff] = fullCombo ? 1 : 0;
         cell.scores.perfect[diff] = perfect ? 1 : 0;
     }
+}
+
+// @ 0x3d048  (Ghidra: resultTaskSetup — mislabeled by binary proximity; it is the music-select
+// background jacket loader, the dispatch_async body kicked off once by rebuildList). Runs on a
+// global-queue background thread: round-robins the 27 jacket cells under m_cellSem, and for each
+// cell still marked "queued" (loadState 1) decodes the song's artwork, reads its three difficulty
+// score rows (on the thread-safe SUB managed-object context), truncates the song name to the
+// platform column width, and marks the cell "ready" (loadState 3). Exits when m_loaderCursor is set.
+void MainTask::backgroundCellLoader() {
+    if (m_loaderCursor != 0) {
+        m_loaderCursor = 2;
+        return;
+    }
+    const int maxNameChars = m_isPadDisplay ? 15 : 21;   // phone 0x15 / iPad 0xf
+    unsigned i = 0;
+    do {
+        [NSThread sleepForTimeInterval:0.3];             // DAT_0003d368 == 0.3
+        dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
+        if (i > 26) {
+            i = 0;                                       // wrap the 27-cell ring
+        }
+        MusicSelCell &cell = m_cells[i];
+        if (cell.loadState == 1) {                       // queued for load
+            const int songIndex = cell.songIndex;
+            cell.loadState = 2;                          // processing
+            dispatch_semaphore_signal(m_cellSem);
+
+            id md = [m_musicList objectAtIndexedSubscript:songIndex];
+            const int musicId = (int)[md MusicID];
+            id artwork;
+            @autoreleasepool {
+                artwork = [md artwork2xData];            // decode off the shared array
+            }
+
+            dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
+            if (cell.loadState != 1) {                   // not re-queued while we worked
+                cell.imageData = artwork;
+                dispatch_semaphore_signal(m_cellSem);
+
+                // Score rows come off the background sub-context (thread-safe Core Data stack).
+                NSManagedObjectContext *moc = [[AppDelegate appDelegate] managedObjectContextSub];
+                for (int diff = 0; diff < 3; diff++) {
+                    ScoreData *rec = [ScoreData getScoreData:musicId inManagedObjectContext:moc];
+                    bool fullCombo = false, perfect = false;
+                    readScoreDataFields(rec, &cell.scores.score[diff], &cell.scores.rank[diff],
+                                        &cell.scores.playCnt[diff], &fullCombo, &perfect, rec, diff);
+                    cell.scores.fullCombo[diff] = fullCombo ? 1 : 0;
+                    cell.scores.perfect[diff] = perfect ? 1 : 0;
+                }
+
+                NSString *name = [[md musicName] copy];
+                const int cut = findCharIndexForColumn(name, maxNameChars);
+                if (cut > 0) {
+                    name = [[name substringToIndex:cut] stringByAppendingString:@"…"];
+                }
+                dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
+                if (cell.loadState == 2) {               // still ours -> publish the result
+                    cell.name = name;
+                    cell.loadState = 3;                  // ready
+                }
+            }
+            dispatch_semaphore_signal(m_cellSem);
+        } else {
+            dispatch_semaphore_signal(m_cellSem);
+        }
+        i++;
+    } while (m_loaderCursor == 0);
+    m_loaderCursor = 2;                                  // acknowledge shutdown
 }
 
 // Ghidra: musicSelAllCellsReady (FUN_00037f38) — true when every jacket cell has finished
