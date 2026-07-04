@@ -154,15 +154,22 @@ bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const
     return neGraphics::pointInRect(tapX, tapY, rx, ry, rw, rh);
 }
 
-// Fill the three over-score display counters. Algorithm (Ghidra, states 3/4): for each difficulty
-// i, overRowLen[i] = (i == selected ? rowConfig[1] : rowConfig[2]) - 1 — the selected difficulty's
-// row uses the primary row-length config, the other two the secondary.
-void MainTask::initOverscoreRows() {
+// Seed the three difficulty-star background-layer frame counters (@ +0x170+i*4) when the
+// over-score preview opens (update states 3/4). Ghidra: the loop in FUN_00035914 writes
+//   field15_0x148[i] = field13_0x130[(i == selected) ? 1 : 2] - 1
+// De-aliased: field13_0x130 is at absolute +0x158, which is exactly m_bgLyrFrames (both name
+// the same bytes — the "packed select-state seam"), and field15_0x148 is at +0x170, the star-
+// layer frame counters the BG draw advances (see musicSelBgDraw's +0x170+i*4 counter). So the
+// "rowConfig" values are just the star layers' own frame counts: the selected difficulty tracks
+// the OPEN layer (m_bgLyrFrames[1]), the other two the OUT layer (m_bgLyrFrames[2]); each counter
+// starts on that layer's LAST frame (count - 1) so the stars render fully open/out on entry.
+// (The binary reads the selected index from the difficulty-toggle widget cell m_cells[21];
+// m_sel.difficulty is the faithful reconstructed equivalent. Historical note: this was mislabeled
+// "initOverscoreRows / overRowLen" before the +0x158/+0x170 alias was resolved.)
+void MainTask::seedDiffStarLayerFrames() {
+    int *starFrame = reinterpret_cast<int *>(reinterpret_cast<char *>(this) + 0x170);
     for (int i = 0; i < 3; i++) {
-        // TODO(dep): the two rowConfig values (Ghidra field13_0x130[1]/[2]) live in the packed
-        // select-state region that does not decompile cleanly, so the counters stay 0 until that
-        // config is mapped. The selected-vs-other + "-1" shape above is exact.
-        m_sel.overRowLen[i] = 0;
+        starFrame[i] = (i == m_sel.difficulty ? m_bgLyrFrames[1] : m_bgLyrFrames[2]) - 1;
     }
 }
 
@@ -416,7 +423,7 @@ void MainTask::update(int /*deltaMs*/) {
             (void)info;
         });
 
-        initOverscoreRows();
+        seedDiffStarLayerFrames();
 
         // Flag the over-score "touched" state for this song and (if already tracked)
         // refresh its dictionary entry.

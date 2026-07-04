@@ -128,7 +128,7 @@ private:
     int widgetIndexForButton(Button button) const;
 
     // state 3/4 seams into the packed select state (documented in MainTask.mm).
-    void initOverscoreRows();            // fill the 3 over-score display counters
+    void seedDiffStarLayerFrames();      // seed the 3 difficulty-star bg-layer frame counters (@ +0x170)
     void refreshScoreRows();             // re-read the 3 difficulty score rows
 
     // Release the old list + clear the 27 jacket cells before a re-sort/rebuild.
@@ -207,7 +207,10 @@ private:
         int      selectSeId;             // select-SE source id
         int      selectSeInst;           // select-SE playing instance (for stop)
         int      scrollConfig;           // per-column scroll config (field14_0x13c[0])
-        int      overRowLen[3];          // over-score display row lengths
+        int      overRowLen[3];          // over-score display row lengths (binary struct field;
+                                         // the states-3/4 loop once thought to fill it actually
+                                         // seeds the +0x170 star-layer counters — see
+                                         // seedDiffStarLayerFrames — so nothing writes this here)
     };
 
     // ================= work-area layout (offsets are binary-exact) =================
