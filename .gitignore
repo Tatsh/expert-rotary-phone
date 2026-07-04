@@ -14,3 +14,8 @@ CMakeFiles/
 /obj/
 /.audit/
 .audit/scratch/
+
+# Generated sugoroku dialogue (copyrighted content, produced at configure time)
+sugoroku_chara_msg.generated.inc
+sugoroku_chara_msg.bin
+**/generated/

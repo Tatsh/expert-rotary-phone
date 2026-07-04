@@ -154,6 +154,52 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in" "${INFO_PLIST}" @ONLY
 add_executable(popnrhythmin MACOSX_BUNDLE)
 target_include_directories(popnrhythmin PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Project")
 
+# -------------------------------------------------------------------------
+# Sugoroku board character-message dialogue.
+# The ~330 board-dialogue strings are copyrighted game content and are NOT in this
+# source tree. At configure time we generate the six static `const char*` tables that
+# Project/Game/Data/TreasureMap/TreasureMap.mm #includes, by running the extractor
+# against an owned app binary. Point at your binary to embed the real text:
+#     cmake -DPOPNRHYTHMIN_BINARY=/path/to/Payload/PopnRhythmin.app/PopnRhythmin ...
+# With no binary set, empty tables are generated and the board messages render blank.
+# -------------------------------------------------------------------------
+find_program(PYTHON3_EXECUTABLE NAMES python3 python)
+set(POPNRHYTHMIN_BINARY "" CACHE FILEPATH
+    "Owned PopnRhythmin app binary; embeds the sugoroku board dialogue when set.")
+set(_sugo_gen_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(_sugo_gen_inc "${_sugo_gen_dir}/sugoroku_chara_msg.generated.inc")
+set(_sugo_script  "${CMAKE_CURRENT_SOURCE_DIR}/tools/extract_sugoroku_dialogue.py")
+file(MAKE_DIRECTORY "${_sugo_gen_dir}")
+if(PYTHON3_EXECUTABLE)
+    if(POPNRHYTHMIN_BINARY AND EXISTS "${POPNRHYTHMIN_BINARY}")
+        execute_process(
+            COMMAND "${PYTHON3_EXECUTABLE}" "${_sugo_script}"
+                    --format c "${POPNRHYTHMIN_BINARY}" "${_sugo_gen_inc}"
+            RESULT_VARIABLE _sugo_rc OUTPUT_VARIABLE _sugo_out ERROR_VARIABLE _sugo_out)
+        if(_sugo_rc EQUAL 0)
+            message(STATUS "PopnRhythmin: embedded sugoroku dialogue from ${POPNRHYTHMIN_BINARY}")
+        else()
+            message(WARNING "PopnRhythmin: dialogue extraction failed:\n${_sugo_out}\nUsing empty tables.")
+            execute_process(COMMAND "${PYTHON3_EXECUTABLE}" "${_sugo_script}" --emit-empty "${_sugo_gen_inc}")
+        endif()
+    else()
+        message(STATUS "PopnRhythmin: POPNRHYTHMIN_BINARY not set -> empty sugoroku dialogue "
+                       "(board character messages blank). Set it to embed the real text.")
+        execute_process(COMMAND "${PYTHON3_EXECUTABLE}" "${_sugo_script}" --emit-empty "${_sugo_gen_inc}")
+    endif()
+else()
+    message(WARNING "PopnRhythmin: python3 not found -> empty sugoroku dialogue tables.")
+    file(WRITE "${_sugo_gen_inc}" "// python3 unavailable at configure time; empty tables.\n")
+    foreach(_pair "kCharGroup6Slot0 41" "kCharGroup6Slot1 35" "kCharGroup6Slot2 47"
+                  "kCharGroup8Slot0 64" "kCharGroup8Slot1 72" "kCharGroup8Slot2 71")
+        separate_arguments(_pl UNIX_COMMAND "${_pair}")
+        list(GET _pl 0 _nm)
+        list(GET _pl 1 _ct)
+        file(APPEND "${_sugo_gen_inc}" "static const char *const ${_nm}[${_ct}] = {0};\n")
+    endforeach()
+endif()
+target_include_directories(popnrhythmin PRIVATE "${_sugo_gen_dir}")
+
 add_subdirectory(Project)
 
 target_compile_options(popnrhythmin PRIVATE

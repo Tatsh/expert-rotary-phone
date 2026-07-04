@@ -292,87 +292,18 @@ static const int32_t kAssetCountsGroup8[3] = { 64, 72, 71 };  // DAT_0012fb9c
 
 // ── Character message string pools (Ghidra pointer tables @ 0x1335c8 … 0x1339d4) ──
 //
-// Each pool is a char* table indexed by slot. In the binary these are static tables of
-// ~330 UTF-8 Japanese board-dialogue strings (~66 KB) — copyrighted game content that is
-// NOT baked into this source. Instead the pools are LOADED at runtime from an extracted
-// asset file, so the loader is fully functional while the dialogue itself stays an
-// external asset (like the songs / charts / art) that must be supplied from an owned copy
-// of the game.
-//
-// Asset: "sugoroku_chara_msg.bin" in the app bundle. Format (little-endian): for each of
-// the 6 pools in the fixed order below, an int32 entry-count followed by `count` records
-// of {int32 byteLen, byteLen UTF-8 bytes} (no trailing NUL). Each count is validated
-// against the pool's known size; a missing/short/malformed file simply leaves the affected
-// entries nullptr, and getCharacterAssetName then returns nullptr exactly as the prior
-// empty-pool fallback did. To build the asset, dump each pool's strings by following its
-// pointer table from an owned binary at the address noted beside it.
-//   kCharGroup6Slot0 — 41 entries  @ 0x1335c8
-//   kCharGroup6Slot1 — 35 entries  @ 0x13366c
-//   kCharGroup6Slot2 — 47 entries  @ 0x1336f8  (wac)
-//   kCharGroup8Slot0 — 64 entries  @ 0x1337b4
-//   kCharGroup8Slot1 — 72 entries  @ 0x1338b4  (TOMOSUKE)
-//   kCharGroup8Slot2 — 71 entries  @ 0x1339d4
-static const char *kCharGroup6Slot0[41];
-static const char *kCharGroup6Slot1[35];
-static const char *kCharGroup6Slot2[47];
-static const char *kCharGroup8Slot0[64];
-static const char *kCharGroup8Slot1[72];
-static const char *kCharGroup8Slot2[71];
-
-// Lazily populate the six pools from the extracted asset file (see above). Runs once; on
-// any I/O or format error the tables stay nullptr and callers fall back to no-text. The
-// strdup'd strings live for the process lifetime, matching the binary's static tables.
-static void ensureCharacterMessagePools(void) {
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        struct Pool { const char **table; int count; };
-        const struct Pool pools[6] = {
-            { kCharGroup6Slot0, 41 }, { kCharGroup6Slot1, 35 }, { kCharGroup6Slot2, 47 },
-            { kCharGroup8Slot0, 64 }, { kCharGroup8Slot1, 72 }, { kCharGroup8Slot2, 71 },
-        };
-        NSString *path = [[NSBundle mainBundle] pathForResource:@"sugoroku_chara_msg" ofType:@"bin"];
-        if (!path) {
-            return;
-        }
-        NSData *data = [NSData dataWithContentsOfFile:path];
-        if (!data) {
-            return;
-        }
-        const uint8_t *base = static_cast<const uint8_t *>(data.bytes);
-        const size_t   len  = data.length;
-        size_t off = 0;
-        for (int p = 0; p < 6; p++) {
-            if (off + 4 > len) {
-                return;                                   // truncated header
-            }
-            int32_t count;
-            std::memcpy(&count, base + off, 4);
-            off += 4;
-            if (count != pools[p].count) {
-                return;                                   // wrong/mismatched asset -> stop
-            }
-            for (int i = 0; i < count; i++) {
-                if (off + 4 > len) {
-                    return;
-                }
-                int32_t slen;
-                std::memcpy(&slen, base + off, 4);
-                off += 4;
-                if (slen < 0 || off + static_cast<size_t>(slen) > len) {
-                    return;                               // string overruns the file
-                }
-                char *s = static_cast<char *>(std::malloc(static_cast<size_t>(slen) + 1));
-                if (!s) {
-                    return;
-                }
-                std::memcpy(s, base + off, static_cast<size_t>(slen));
-                s[slen] = '\0';
-                off += static_cast<size_t>(slen);
-                pools[p].table[i] = s;
-            }
-        }
-    });
-}
+// In the binary these are six static `const char *` tables of ~330 UTF-8 Japanese
+// board-dialogue strings (~66 KB). That dialogue is copyrighted game content and is NOT
+// present in this source tree. Instead the CMake configure step runs
+// tools/extract_sugoroku_dialogue.py against an owned copy of the app binary (set
+// -DPOPNRHYTHMIN_BINARY=...) to generate the six tables into the build directory, and this
+// TU #includes them — reproducing the binary's exact static-table mechanism with the
+// content supplied from your own binary. When no binary is configured the generated header
+// defines empty tables and getCharacterAssetName returns nullptr (board messages blank).
+//   kCharGroup6Slot0 — 41 entries  @ 0x1335c8      kCharGroup8Slot0 — 64  @ 0x1337b4
+//   kCharGroup6Slot1 — 35 entries  @ 0x13366c      kCharGroup8Slot1 — 72  @ 0x1338b4 (TOMOSUKE)
+//   kCharGroup6Slot2 — 47 entries  @ 0x1336f8 (wac) kCharGroup8Slot2 — 71  @ 0x1339d4
+#include "sugoroku_chara_msg.generated.inc"
 
 // ── Function definitions ──────────────────────────────────────────────────────
 
@@ -468,7 +399,6 @@ int getCharacterAssetCount(int characterId) {
 
 // Ghidra: FUN_000ce200
 const char *getCharacterAssetName(int characterId, int slotIndex) {
-    ensureCharacterMessagePools();   // lazy-load the pools from the extracted asset file
     const int count = getCharacterAssetCount(characterId);
     if (slotIndex < 0) {
         return nullptr;
