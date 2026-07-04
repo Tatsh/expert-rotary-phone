@@ -339,6 +339,58 @@ void *neSceneManager::normalSoundName(int soundNo) {
     return (__bridge void *)kNames[kind];
 }
 
+// Ghidra: getHitSoundName @ ~0x2c7c0 sibling — the bundle resource base-name of the SE
+// previewed for a touch-sound kind (0..9), loaded as "<name>.m4a". The kind-order matches
+// normalSoundName's display names. Constant CFString table; kinds past the last fold to 0.
+void *neSceneManager::hitSoundName(int soundNo) {
+    // Ghidra: PTR_cf_hit001_001310ac[kind] — kind 7 ("shishamo") uses se06_nya, not hit008.
+    static NSString *const kNames[] = {
+        @"hit001", @"hit002", @"hit003", @"hit004", @"hit005",
+        @"hit006", @"hit007", @"se06_nya", @"hit008", @"hit009",
+    };
+    unsigned kind = static_cast<unsigned>(soundNo) & 0xffff;
+    if (kind > 9) {
+        kind = 0;
+    }
+    return (__bridge void *)kNames[kind];
+}
+
+// The 5 shared "system" UI SE source ids (scene-manager global +0x14) and the once-per-scene
+// loaded flag (+0x3c). The playing-instance handles live in neEngine::g_systemSeHandles.
+static RSND_SOURCE_ID s_systemSeSource[5] = { -1, -1, -1, -1, -1 };
+static bool s_systemSeLoaded = false;
+
+// Ghidra: loadSoundEffects FUN_0002c5c8 — load the 5 shared UI SEs (decide / cancel / two
+// slide sounds) into group 1 once per scene, then apply the saved SE volume.
+void neSceneManager::loadSystemSe() {
+    if (s_systemSeLoaded) {
+        return;
+    }
+    static NSString *const kNames[5] = {
+        @"v21", @"se02_kettei", @"se03_cancell", @"se05_slide2", @"se04_slide1"
+    };
+    AudioManager *audio = [AudioManager sharedManager];
+    for (int i = 0; i < 5; i++) {
+        NSString *path = [[NSBundle mainBundle] pathForResource:kNames[i] ofType:@"m4a"];
+        s_systemSeSource[i] = [audio loadSe:path isLoop:NO callName:nil group:1];
+    }
+    [audio setSeVolume:[UserSettingData seVolume] groupId:1];
+    s_systemSeLoaded = true;
+}
+
+// Ghidra: releaseSoundEffects FUN_0002c6bc — release the 5 UI SEs on scene teardown.
+void neSceneManager::releaseSystemSe() {
+    if (!s_systemSeLoaded) {
+        return;
+    }
+    AudioManager *audio = [AudioManager sharedManager];
+    for (int i = 0; i < 5; i++) {
+        [audio releaseSe:nil resourceId:s_systemSeSource[i]];
+        s_systemSeSource[i] = -1;
+    }
+    s_systemSeLoaded = false;
+}
+
 // Live drawable metrics (Ghidra globals DAT_00187b7c/78/80).
 static float s_screenWidth = 640.0f;
 static float s_screenHeight = 960.0f;
