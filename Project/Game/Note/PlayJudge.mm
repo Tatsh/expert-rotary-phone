@@ -25,6 +25,8 @@
 #import "PlayJudge.h"
 #import "neGraphics.h"
 
+#include <cmath>   // lroundf (gauge accumulation)
+
 // --- Play-data field access -------------------------------------------------
 // The play data is the standard-mode MainTask; the note engine reaches it through the
 // partial MainTaskPlayData overlay (PlayJudge.h), so field reads/writes below are plain
@@ -100,6 +102,31 @@ NoteJudgeState *judgeStateFor(MainTaskPlayData *playData, const void *noteKey) {
 
 // Whether the play is in demo/auto-judge mode (Ghidra: DAT_00187b59).
 bool g_autoPlay = false;   // extern flag in the binary; false in normal play
+
+// Ghidra: FUN_00031290 — apply a resolved note's judge result to the life gauge
+// (+0x9c0), clamped to [0, 0x400]. A GREAT/COOL (result 2/3) adds gaugeGainGreat, a GOOD
+// (result 1) adds gaugeGainGood, and a BAD/miss (result 0) adds gaugeLossMiss (a negative
+// delta) and raises the miss flag (+0x9dc). Any other result leaves the value unchanged
+// and only re-clamps. The binary accumulates in fixed->float->fixed; modelled here as a
+// float add + round.
+void updateGaugeValue(MainTaskPlayData *playData, int result) {
+    int gauge = playData->gaugeValue;
+    if (result == 2 || result == 3) {
+        gauge = (int)lroundf((float)gauge + playData->gaugeGainGreat);
+    } else if (result == 0) {
+        playData->gaugeMissed = 1;
+        gauge = (int)lroundf((float)gauge + playData->gaugeLossMiss);
+    } else if (result == 1) {
+        gauge = (int)lroundf((float)gauge + playData->gaugeGainGood);
+    }
+    if (gauge < 1) {
+        gauge = 0;
+    }
+    if (gauge > 0x400) {
+        gauge = 0x400;
+    }
+    playData->gaugeValue = (int16_t)gauge;
+}
 
 }  // namespace
 
@@ -205,10 +232,12 @@ void PlayJudge_update(MainTaskPlayData *playData, const float *touchXY,
         }
 
         // Visual phase state machine: a resolved note advances to a display phase
-        // (2 = hit / 3 = miss) and records the position it changed at.
+        // (2 = hit / 3 = miss), records the position it changed at, and feeds its result
+        // into the life gauge (Ghidra: the updateGaugeValue call inside this transition).
         if (state->result >= 0 && state->phase < 2) {
             state->phase = (state->result == 0) ? 2 : 3;
             state->timestamp = currentPos;
+            updateGaugeValue(playData, state->result);
             if (state->result > 0) {
                 holdEnded = true;
             }

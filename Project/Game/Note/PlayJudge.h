@@ -69,7 +69,9 @@ struct MainTaskPlayData {
 
     float   hitRadius;                   // +0x9b8 note hit-test radius (distance test)
 
-    uint8_t _rsvd_9bc[0x9c2 - 0x9bc];    // +0x9bc
+    uint8_t _rsvd_9bc[0x9c0 - 0x9bc];    // +0x9bc
+
+    int16_t gaugeValue;                  // +0x9c0 life gauge, clamped [0, 0x400] (updateGaugeValue)
 
     int16_t lastMilestone;               // +0x9c2 last combo milestone fired (re-trigger guard)
 
@@ -78,7 +80,17 @@ struct MainTaskPlayData {
     uint8_t isDemoPlay;                  // +0x9c9 tutorial / auto-demo (milestone-SE gate)
     uint8_t isPadDisplay;                // +0x9ca pad-class display (milestone-SE gate)
 
-    uint8_t _rsvd_9cb[0x9e4 - 0x9cb];    // +0x9cb
+    uint8_t _rsvd_9cb[0x9cc - 0x9cb];    // +0x9cb
+
+    float   gaugeGainGreat;              // +0x9cc gauge delta for a GREAT/COOL (result 2/3)
+    float   gaugeGainGood;               // +0x9d0 gauge delta for a GOOD (result 1)
+    float   gaugeLossMiss;               // +0x9d4 gauge delta for a BAD/miss (result 0, negative)
+
+    uint8_t _rsvd_9d8[0x9dc - 0x9d8];    // +0x9d8
+
+    uint8_t gaugeMissed;                 // +0x9dc set to 1 when a note is missed (result 0)
+
+    uint8_t _rsvd_9dd[0x9e4 - 0x9dd];    // +0x9dd
 
     uint8_t spatialTouchMode;            // +0x9e4 0 = spatial (distance) hit-test, else in-order
     uint8_t optEffectOn;                 // +0x9e5 hit-effect option (milestone-SE gate)
@@ -99,7 +111,12 @@ static_assert(offsetof(MainTaskPlayData, milestoneSe)      == 0x84,  "milestoneS
 static_assert(offsetof(MainTaskPlayData, judgePool)        == 0x3c8, "judgePool @ +0x3c8");
 static_assert(offsetof(MainTaskPlayData, playScale)        == 0x974, "playScale @ +0x974");
 static_assert(offsetof(MainTaskPlayData, hitRadius)        == 0x9b8, "hitRadius @ +0x9b8");
+static_assert(offsetof(MainTaskPlayData, gaugeValue)       == 0x9c0, "gaugeValue @ +0x9c0");
 static_assert(offsetof(MainTaskPlayData, lastMilestone)    == 0x9c2, "lastMilestone @ +0x9c2");
+static_assert(offsetof(MainTaskPlayData, gaugeGainGreat)   == 0x9cc, "gaugeGainGreat @ +0x9cc");
+static_assert(offsetof(MainTaskPlayData, gaugeGainGood)    == 0x9d0, "gaugeGainGood @ +0x9d0");
+static_assert(offsetof(MainTaskPlayData, gaugeLossMiss)    == 0x9d4, "gaugeLossMiss @ +0x9d4");
+static_assert(offsetof(MainTaskPlayData, gaugeMissed)      == 0x9dc, "gaugeMissed @ +0x9dc");
 static_assert(offsetof(MainTaskPlayData, isDemoPlay)       == 0x9c9, "isDemoPlay @ +0x9c9");
 static_assert(offsetof(MainTaskPlayData, isPadDisplay)     == 0x9ca, "isPadDisplay @ +0x9ca");
 static_assert(offsetof(MainTaskPlayData, spatialTouchMode) == 0x9e4, "spatialTouchMode @ +0x9e4");
