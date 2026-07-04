@@ -66,7 +66,8 @@ PopnRhythmin_CFLAGS  = -fobjc-arc -fobjc-exceptions -Wno-deprecated-declarations
 PopnRhythmin_CCFLAGS = -std=gnu++14 -stdlib=libc++
 
 PopnRhythmin_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore CoreText OpenGLES \
-                          AudioToolbox AVFoundation CoreData StoreKit Social
+                          AudioToolbox AVFoundation CoreData StoreKit Social \
+                          GameKit AdSupport CoreLocation MapKit
 PopnRhythmin_LDFLAGS    = -framework Security -framework SystemConfiguration \
                           -framework CFNetwork -lz
 

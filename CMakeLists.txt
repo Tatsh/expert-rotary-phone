@@ -76,7 +76,8 @@ set(SYS_FRAMEWORKS
     UIKit Foundation CoreGraphics QuartzCore CoreText
     OpenGLES AudioToolbox AVFoundation
     CoreData StoreKit Social
-    Security SystemConfiguration CFNetwork)
+    Security SystemConfiguration CFNetwork
+    GameKit AdSupport CoreLocation MapKit)
 
 # =========================================================================
 # NATIVE / Xcode — real .app target, fed by per-directory CMakeLists.
