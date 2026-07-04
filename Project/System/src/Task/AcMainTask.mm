@@ -1294,58 +1294,91 @@ bool AcMainTask::sugorokuEasePositionPairB() {
                              static_cast<unsigned>(!yDone && velY != 0.0f));
 }
 
+// A music/wallpaper "piece" square is unlocked when the per-character piece grid
+// (9 characters x 3 slots, indexed by the pending sub-map's character id) has the
+// node's field8 bit set. Ghidra address form: task + (charId/10)*-0x1c + charId*4 +
+// gridBase, i.e. grid[(charId/10)*3 + charId%10] tested against (1 << field8).
+static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
+    const int idx = charId - (charId / 10) * 7;   // == (charId/10)*3 + charId%10
+    return (grid[idx] & (1 << (bitIndex & 0xff))) != 0;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // 5.  sugorokuDrawSquareText — Ghidra: FUN_000a1bb4
 // ════════════════════════════════════════════════════════════════════════════
-// If the current node (+0x4bc) has a visible text label, draw it with
-// drawAepTextMultiline.  The text source depends on node->type.
+// Per square type, resolve one of three outcomes: draw the character-message asset
+// (readCount-gated), draw the node's own embedded label (node->text), or draw
+// nothing. The character-message text comes from getCharacterAssetName (a content
+// asset that returns null in this build, so that path draws nothing); node->text is
+// the runtime map-loaded label.
 void AcMainTask::sugorokuDrawSquareText() {
+    if (m_field5f3 != 0) return;             // suppressed while task+0x5f3 is set
     const TreasureMap::Node *node = m_curNode;
     if (!node) return;
 
-    int         iVar8 = m_squareFrameIdx;   // frame / slot index
-    int         type  = node->type;
-    const char *text  = nullptr;
-    unsigned    uVar7 = 0;
+    int      iVar8 = m_squareFrameIdx;       // text x / slot index (task+0x88c)
+    enum { kNone, kCharAsset, kNodeText } pick = kNone;
 
-    switch (type) {
-    case 2: {   // character message square
-        if (m_readCount > 0 &&
-            m_animFrameCtr > m_readNo) {
-            text  = getCharacterAssetName((int)m_subMapId, iVar8);
-            iVar8 -= 0xe6;
-        }
+    // A character message shows only once the board-story page counter (readCount)
+    // has advanced past the last-read page (readNo).
+    const bool storyReady = (m_readCount > 0) && (m_readCount > m_readNo);
+
+    switch (node->type) {
+    case 2:   // board-story square
+        pick = (m_readCount >= 1) ? (storyReady ? kCharAsset : kNone) : kNodeText;
+        break;
+    case 3:   // bonus: message live when roulette == 0x12 or HUD state 2
+        pick = (m_rouletteMode == 0x12 || m_hudState == 2)
+                   ? (storyReady ? kCharAsset : kNone) : kNodeText;
+        break;
+    case 4:   // treasure: message live when roulette == 0x12 or HUD state 3
+        pick = (m_rouletteMode == 0x12 || m_hudState == 3)
+                   ? (storyReady ? kCharAsset : kNone) : kNodeText;
+        break;
+    case 5: { // sub-map flag: message when the flag value matches the current state
+        int v  = getTreasureMapValue_fb54(0, node->field8);
+        int st = m_hudState;
+        bool matched = (st == 6 && v == 0) || (st == 7 && v == 1) ||
+                       (st == 8 && v == 2) || (st == 9 && v == 3) || (st == 5);
+        pick = matched ? (storyReady ? kCharAsset : kNone) : kNodeText;
         break;
     }
-    case 3:     // bonus / treasure (check mapType / game-state) — TODO: full logic
+    case 6:   // wallpaper-piece square (grid @ 0x748): label shown only while locked
+        pick = sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->field8)
+                   ? kNone : kNodeText;
         break;
-    case 5: {   // sub-map flag square
-        int flag = getTreasureMapValue_fb54(0, (int)m_subMapId);
-        // TODO: check against completion state; set text if locked.
-        (void)flag;
+    case 7:   // music-piece square (grid @ 0x6dc): label shown only while locked
+        pick = sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8)
+                   ? kNone : kNodeText;
         break;
-    }
-    case 6:     // music square — TODO: check unlock bit in task[...+0x748]
-        break;
-    case 7:     // wallpaper square — TODO: check unlock bit in task[...+0x6dc]
-        break;
-    case 10: {  // friend-meet square
+    case 10: { // friend-meet: node label while the meet is pending and not yet consumed
         TreasureTmpData tmp = [UserSettingData treasureTmp];
-        if (m_goalCharaTex &&
-            ((tmp.raw0x4d >> 24) & 0xFF)) {
-            // TODO: set text from task data
-        }
+        bool consumed = ((tmp.raw0x4d >> 24) & 0xff) != 0;   // field19_0x4d, byte 3
+        pick = (m_goalCharaTex && !consumed) ? kNodeText : kNone;
         break;
     }
-    default:
+    default:  // types 0/1/8/9/...: the node's own label if present
+        pick = kNodeText;
         break;
     }
 
-    if (text) {
-        drawAepTextMultiline(text, iVar8,
-                             (int)(m_squareTextY - 63.0f),
-                             uVar7, 0x1b, 0x2e, 0x615245, 0x18, 100);
+    const char *text = nullptr;
+    unsigned    style = 1;                    // uVar7: 1 for node text, 0 for character asset
+    if (pick == kCharAsset) {
+        text = getCharacterAssetName((int)m_subMapId, iVar8);
+        if (!text) return;                    // content asset absent in this build
+        iVar8 -= 0xe6;
+        style = 0;
+    } else if (pick == kNodeText) {
+        if (node->text[0] == '\0') return;    // empty label -> nothing to draw
+        text  = node->text;
+        style = 1;
+    } else {
+        return;
     }
+
+    drawAepTextMultiline(text, iVar8, (int)(m_squareTextY - 31.0f),
+                         style, 0x1b, 0x2e, 0x615245, 0x18, 100);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1681,8 +1714,9 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
     int         screenH    = m_overlayH;
     int         type       = node->type;
 
-    // "Active move" override: display the move-hint frame for walkable squares.
-    if (*reinterpret_cast<int *>(&m_boardVisited[14]) > 0 && type != 1 && type != 8) {
+    // "Active move" override: while a move is in progress (flag byte @ task+0x8a2 >
+    // 0), every walkable square (not player-start, not warp) shows the move-hint frame.
+    if ((int8_t)m_boardVisited[14] > 0 && type != 1 && type != 8) {
         drawAepFrame(mgr, m_base1Frame[2],
                      node->x * 26 - scrollOffX + screenW / 2,
                      node->y * 26 - 32 - scrollOffY + screenH / 2,
@@ -1690,33 +1724,51 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
         return;
     }
 
-    int frameHandle = 0;
+    int frameHandle = m_base1Frame[2];   // default (type 2 and any unmet condition -> 0x340)
     switch (type) {
     case 0:   frameHandle = m_base1Frame[0]; break;   // start
     case 1:   frameHandle = m_base1Frame[1]; break;   // player-start
-    case 3:                                                      // bonus (locked)
-    case 4:   frameHandle = m_base1Frame[3]; break;   // treasure — TODO: unlock check → 0x348
-    case 5: { // sub-map flag
-        int flag = getTreasureMapValue_fb54(0, node->id);
-        if (flag < 0) flag = 0;
-        frameHandle = m_base05Frame[flag];
+    case 3:   // bonus: locked frame unless the bonus is live (roulette 0x12 or HUD state 2)
+        if (m_rouletteMode != 0x12 && m_hudState != 2) frameHandle = m_base1Frame[3];
+        break;
+    case 4:   // treasure: locked frame unless the treasure is live (roulette 0x12 or state 3)
+        if (m_rouletteMode != 0x12 && m_hudState != 3) frameHandle = m_base1Frame[4];
+        break;
+    case 5: { // sub-map flag: flag sprite unless the flag value matches the current state
+        int v  = getTreasureMapValue_fb54(0, node->field8);
+        int st = m_hudState;
+        bool matched = (st == 6 && v == 0) || (st == 7 && v == 1) ||
+                       (st == 8 && v == 2) || (st == 9 && v == 3) || (st == 5);
+        if (!matched) {
+            if (v < 0) v = 0;
+            frameHandle = m_base05Frame[v];
+        }
         break;
     }
-    case 6:   frameHandle = m_base1Frame[5]; break;   // music — TODO: unlock → 0x350
-    case 7:   frameHandle = m_base1Frame[7]; break;   // wallpaper — TODO: unlock → 0x358
-    case 8: { // warp
-        int warpIdx = node->field8;
-        if (warpIdx < 0) warpIdx = 0;
-        if (warpIdx > 9) warpIdx = 9;
-        frameHandle = m_base08Frame[warpIdx];
+    case 6:   // wallpaper-piece square (grid @ 0x748): filled vs empty frame by unlock bit
+        frameHandle = sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->field8)
+                          ? m_base1Frame[6] : m_base1Frame[5];
         break;
-    }
-    case 9:   frameHandle = m_base1Frame[9]; break;   // bonus (active)
+    case 7:   // music-piece square (grid @ 0x6dc): filled vs empty frame by unlock bit
+        frameHandle = sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8)
+                          ? m_base1Frame[8] : m_base1Frame[7];
+        break;
+    case 8:   // warp: warp-index sprite, but only until the warp animation settles (<2)
+        if ((int8_t)m_boardVisited[10] < 2) {
+            int warpIdx = node->field8;
+            if (warpIdx < 0) warpIdx = 0;
+            if (warpIdx > 9) warpIdx = 9;
+            frameHandle = m_base08Frame[warpIdx];
+        }
+        break;
+    case 9:   // goal-lock: locked frame unless already cleared (HUD state 4)
+        if (m_hudState != 4) frameHandle = m_base1Frame[9];
+        break;
     case 10:  // friend-meet: draw the overlay, then the base frame
         sugorokuDrawFriendMeet();
         frameHandle = m_base1Frame[10];
         break;
-    default:  frameHandle = m_base1Frame[2]; break;
+    default:  break;   // type 2 etc.: keep the default frame m_base1Frame[2]
     }
 
     if (frameHandle)
