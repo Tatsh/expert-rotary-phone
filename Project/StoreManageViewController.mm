@@ -48,7 +48,9 @@
 - (void)loadView {
     [super loadView];
     self.view.autoresizesSubviews = YES;
-    [self.view setAutoresizingSize];  // UIView category: flexible width + height
+    // Binary: -[UIView setAutoresizingSize] category = flexible width + height (inlined, as
+    // StoreMainViewController does — the reconstruction inlines this helper rather than the category).
+    self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     CGRect frame = self.view.bounds;
 
@@ -74,7 +76,7 @@
     }
 
     m_TableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStylePlain];
-    [m_TableView setAutoresizingSize];
+    m_TableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     m_TableView.rowHeight = m_IsPad ? 70.0f : 50.0f;
     m_TableView.delegate = self;
     m_TableView.dataSource = self;
@@ -163,7 +165,7 @@
     NSDictionary *item = [[[MusicManager getInstance] getPurchasedMusicDictionaris]
                              objectAtIndex:indexPath.row];
     unsigned int musicId = [[item objectForKey:@"ID"] unsignedIntValue];
-    BOOL downloaded = RhFileExists([MusicManager getPathFromPurchased:musicId]);
+    BOOL downloaded = RhFileExists([[MusicManager getInstance] getPathFromPurchased:musicId]);
 
     UIButton *button = (UIButton *)[cell viewWithTag:0xE01F];
     if (downloaded) {
@@ -246,7 +248,7 @@
 
     // Ghidra checks getPathFromPurchased:/RhFileExists twice; both use the same id, so it
     // reduces to a single "is the audio file present?" test.
-    if (!RhFileExists([MusicManager getPathFromPurchased:musicId])) {
+    if (!RhFileExists([[MusicManager getInstance] getPathFromPurchased:musicId])) {
         // Missing -> refresh its info then re-download. Show the shared progress dialog.
         id dialog = [m_StoreViewCtrl modalDialog];
         [dialog layout:0];
@@ -280,7 +282,7 @@
     NSDictionary *item = [[[MusicManager getInstance] getPurchasedMusicDictionaris]
                              objectAtIndex:m_WorkingIndex];
     unsigned int musicId = [[item objectForKey:@"ID"] unsignedIntValue];
-    NSString *path = [MusicManager getPathFromPurchased:musicId];
+    NSString *path = [[MusicManager getInstance] getPathFromPurchased:musicId];
 
     StoreDownloadTask *task = [[StoreDownloadTask alloc]
         initWithURL:[item objectForKey:@"ItemURL"] path:path AddObject:nil];
