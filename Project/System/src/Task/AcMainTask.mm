@@ -2000,8 +2000,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         case 3: ly = screenY + 0x118; lx = iVar6;          break;
         default: lx = ly = 0; break;
         }
-        *reinterpret_cast<int *>(reinterpret_cast<char *>(lyr) + 0x18) = lx;
-        *reinterpret_cast<int *>(reinterpret_cast<char *>(lyr) + 0x1c) = ly;
+        lyr->setPosition(lx, ly);
     }
 }
 

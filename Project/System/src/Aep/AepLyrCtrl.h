@@ -91,6 +91,15 @@ public:
         *reinterpret_cast<int *>(&m_z) = value;
     }
 
+    // Position the layer's on-screen anchor: the +0x18/+0x1c slots that
+    // AepLyrCtrlUpdateAll reads as the integer draw x/y. The arcade hit-flash
+    // arrow layers re-anchor this every frame (Ghidra: FUN_0009fc90 stores the
+    // computed x/y as raw ints into these two words).
+    void setPosition(int x, int y) {
+        *reinterpret_cast<int *>(&m_y) = x;
+        *reinterpret_cast<int *>(&m_z) = y;
+    }
+
 protected:
     // +0x04 / +0x08: intrusive links in the ordering table.
     AepLyrCtrl *m_prev; // +0x04
