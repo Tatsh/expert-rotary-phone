@@ -51,7 +51,7 @@ namespace neEngine { void acMainApplyGameplaySettings(AcViewerTask *task); }
 // AcViewerTask. Ghidra: aepHudDrawCallback (registered id 0x23359). @ 0x23358
 void AcViewerHudDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
                      int anchorX, int anchorY, int color, int alpha, int16_t rotation,
-                     int blend, int p13, int p14, void *context);
+                     int blend, int *p13, int p14, void *context);
 
 class AcViewerTask : public C_TASK {
 public:
