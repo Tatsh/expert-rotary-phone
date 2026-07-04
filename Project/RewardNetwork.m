@@ -14,12 +14,6 @@
 #import "RewardNetworkWebAPI.h"
 #import "RewardNetworkUdid.h"   // +isAdvertisingTrackingEnabled (reconstructed in parallel)
 
-// ---------------------------------------------------------------------------
-// Unreconstructed RewardNetwork ("applilink") SDK collaborators. Minimal forward
-// interfaces only — reconstruct these classes separately.
-// ---------------------------------------------------------------------------
-
-
 // Serial queue guarding the shared-instance handoff in -init. Created in +allocWithZone:'s
 // dispatch_once body (g_pRewardNetworkDispatchQueue).
 static dispatch_queue_t g_pRewardNetworkDispatchQueue = NULL;
