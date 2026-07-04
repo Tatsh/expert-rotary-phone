@@ -22,6 +22,7 @@
 #import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
+#import "MainViewController.h"   // the concrete root VC: Goto*/Is*Enable/SetAlertViewCallback
 #import "MenuMainTask.h"
 #import "MusicManager.h"
 #import "TaskFactory.h"
@@ -30,9 +31,10 @@
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
 
-// The root nav host (MainViewController) the menu drives.
-static UIViewController *RootVC() {
-    return neSceneManager::rootViewController();
+// The root nav host is a MainViewController here — it declares the Goto*/Is*Enable/
+// SetAlertViewCallback selectors the menu sends; type RootVC() as such so they resolve.
+static MainViewController *RootVC() {
+    return (MainViewController *)neSceneManager::rootViewController();
 }
 
 // The menu's baseline Y (the screen height cached in the Aep manager @ +0x7f3b00);
@@ -54,7 +56,7 @@ MenuMainTask::MenuMainTask() = default;
 // (only if it is still us), then the C_TASK base dtor (caSourceNode_dtor) runs implicitly.
 MenuMainTask::~MenuMainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
-    if ([dl cppDelegateNews] == (id)this) {
+    if ([dl cppDelegateNews] == this) {   // both ModeSelTask* (C++ pointer compare, not id)
         [dl setCppDelegateNews:nil];
     }
 }
@@ -208,7 +210,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     DownloadMain *dl = [DownloadMain getInstance];
     AudioManager *audio = [AudioManager sharedManager];
-    UIViewController *root = RootVC();
+    MainViewController *root = RootVC();
 
     // A released touch that barely moved is a tap (its scaled position is logged).
     neGraphics &gfx = neGraphics::shared();
