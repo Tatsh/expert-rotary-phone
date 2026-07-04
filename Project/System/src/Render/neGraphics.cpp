@@ -141,6 +141,12 @@ const neTouchPoint *neGraphics::findTouchById(int id) const {
     return nullptr;
 }
 
+// Ghidra: pointInRect FUN_0002d974 — inclusive point-in-rect test: x in [rx, rx+rw]
+// and y in [ry, ry+rh]. The ~13 inlined menu hit-tests and menuButtonHit call this.
+bool neGraphics::pointInRect(int x, int y, int rx, int ry, int rw, int rh) {
+    return x >= rx && x <= rx + rw && y >= ry && y <= ry + rh;
+}
+
 // Ghidra: FUN_000124bc — returns the count at +0x80.
 extern "C" int NEGraphics_activeTouchCount(const neGraphics *g) {
     return g->m_touchCount;

@@ -49,6 +49,20 @@ AepLyrCtrl::~AepLyrCtrl() {
     if (s_layerListHead == this) s_layerListHead = m_next;
 }
 
+// Ghidra: AepLyrCtrl_unlink @ 0x2ca9c — splice this layer out of the global active
+// list without destroying it (the owner deletes it afterward). Standard doubly-linked
+// removal: patch the neighbours, and if this was the head (m_prev == null) advance it.
+void AepLyrCtrl::unlink() {
+    if (m_next) {
+        m_next->m_prev = m_prev;
+    }
+    if (m_prev == nullptr) {
+        s_layerListHead = m_next;
+    } else {
+        m_prev->m_next = m_next;
+    }
+}
+
 // Base layer draw: overridden by concrete sprite subclasses. vtable @ 0x2c82c.
 void AepLyrCtrl::draw() {}
 

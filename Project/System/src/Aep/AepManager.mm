@@ -192,6 +192,11 @@ int AepManager::getUserNo(int group, const char *name) const {
     return idx;
 }
 
+// Ghidra: FUN_0000f498 / FUN_0000f4a4 — the cached screen-quad extents at
+// +0x7f3afc / +0x7f3b00 (the same slots screenWidth()/screenHeight() read).
+int AepManager::transitionOverlayWidth() const { return m_transitionOverlay[2]; }
+int AepManager::transitionOverlayHeight() const { return m_transitionOverlay[3]; }
+
 // Ghidra: FUN_0000fb8c — the layer's frame count (same walk as drawLayer).
 int AepManager::layerFrameCount(int lyr) const {
     return layerLength(groupEntries(lyr), lyr & 0xffff);

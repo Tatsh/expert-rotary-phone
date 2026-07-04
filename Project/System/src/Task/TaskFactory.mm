@@ -54,3 +54,23 @@ C_TASK *PlayTaskCreate() {
 C_TASK *AcMainTaskCreate() {
     return new AcMainTask();
 }
+
+// MainTask/MenuMainTask (tutorial) -> a PlayTask running the tutorial chart.
+// Ghidra: FUN_0002db10 is PlayTask_ctor (PlayTask_update vtable, 0x9d4 play data).
+C_TASK *TutorialTaskCreate() {
+    return new PlayTask();
+}
+
+// MenuMainTask (sugoroku board) -> the arcade-main board task. Ghidra: FUN_000215a0
+// is AcMainTask_ctor (acMainTaskUpdate vtable). Sugoroku board == AcMainTask.
+C_TASK *SugorokuMainTaskCreate() {
+    return new AcMainTask();
+}
+
+// BootLogoTask_finish hands off to the title task. Ghidra: FUN_0002b678 is
+// TitleTask_ctor; the boot path is operator_new(0x54) + ctor + setPriority(3).
+C_TASK *BootCreateNextTask() {
+    auto *task = new TitleTask();
+    task->setPriority(3);
+    return task;
+}

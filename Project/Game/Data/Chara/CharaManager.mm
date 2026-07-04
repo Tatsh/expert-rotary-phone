@@ -26,6 +26,18 @@
 
 CharaManager gCharaManager;
 
+// Ghidra: getCharaManager FUN_0002980c — a ___cxa_guard-protected one-shot that
+// calls gCharaManager.reload() on first use, then returns the global. The C++
+// function-local static reproduces the same construct-once guard semantics.
+CharaManager &CharaManagerShared() {
+    static const bool once = [] {
+        gCharaManager.reload();
+        return true;
+    }();
+    (void)once;
+    return gCharaManager;
+}
+
 namespace {
 
 // The obfuscated 25-byte key at DAT_0012fa0c. Deobfuscated as key[i]+i it spells
