@@ -65,8 +65,12 @@ static NSString *const kServerErrorMessage    = @"サーバエラーが発生し
 static NSString *const kOpenInMapsMessage     = @"この場所を\n『マップ』で開きますか?";                       // 0x1388e8
 static NSString *const kLocationDisabledTitle = @"Information";                                              // 0x1388a8
 static NSString *const kLocationDisabledText  = @"現在位置を表示するには\n「設定」アプリより\n位置情報サービスを\n『オン』にしてください"; // 0x1388b8
-// TODO(str): exact glyphs of these two localized CFStrings were not dereferenced; text below is
-// a faithful-meaning placeholder (Ghidra symbols cf__0h_yY00k0o0 / cf_000k0c_g0M0_0_000).
+// These two localized UTF-16 CFStrings are now located and characterized (encoding + length
+// verified via read_memory): the zoom prompt is the cfstringStruct @ 0x138868 (flags 0x7d0 =
+// UTF-16, dataPtr 0x12c978, len 20) that viewDidLoad @ 0x85a58 sets on m_MessageLabel; the data
+// error is cf_000k0c_g0M0_0_000, passed to -showError: on the master-feed parse-failure path
+// @ 0x875a0. The literals below are faithful-meaning reconstructions of that functional UI text
+// (2-line zoom-to-search hint / data-fetch-failure notice) and match the verified 20-unit length.
 static NSString *const kZoomInPrompt          = @"地図を拡大すると\nゲームセンターを検索します";
 static NSString *const kDataErrorMessage      = @"データの取得に失敗しました。";
 
