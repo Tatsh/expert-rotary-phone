@@ -1361,13 +1361,16 @@ void MainTask::updateInfoPanel(int mode) {
     NSArray *recommend = [dl recommendDataArray];
     if ([recommend count] != 0) {
         // Show the "new recommend" badge unless the player has already viewed something at
-        // least as fresh as the newest entry. Ghidra: recommend[0] getValue: (the entry's
-        // timestamp) compared against lastRecommendViewTimeString.
+        // least as fresh as the newest entry. The rows are NSValue-boxed RecommendData
+        // (DownloadMain); recommend[0]'s updateDate is compared against the stored view time.
         NSString *lastViewed = [UserSettingData lastRecommendViewTimeString];
         m_recommendBadge = 1;
-        // TODO(dep): the recommend entry's stored timestamp extraction (getValue:) is a
-        // seam; when wired, clear the badge when lastViewed is not older than it.
-        (void)lastViewed;
+        RecommendData newest;
+        [(NSValue *)[recommend objectAtIndex:0] getValue:&newest];
+        if (lastViewed != nil && newest.updateDate != nil &&
+            [lastViewed compare:newest.updateDate] != NSOrderedAscending) {
+            m_recommendBadge = 0;   // already viewed something at least this fresh
+        }
     }
 
     NSManagedObjectContext *moc = [[AppDelegate appDelegate] managedObjectContext];
