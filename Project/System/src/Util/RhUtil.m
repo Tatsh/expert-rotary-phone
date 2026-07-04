@@ -53,6 +53,18 @@ int getFileSize(NSString *path) {
     return [[attrs objectForKey:NSFileSize] intValue];
 }
 
+// Ghidra: FUN_00028aa4 — treat an NSArray of NSNumber as a packed 32-bit-per-element
+// bitfield and return whether bit `bit` is set: element (bit >> 5)'s intValue masked by
+// 1 << (bit & 31). An out-of-range element index reads as 0 (NO).
+BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit) {
+    unsigned idx = bit >> 5;
+    if (idx >= [numberArray count]) {
+        return NO;
+    }
+    int word = [[numberArray objectAtIndex:idx] intValue];
+    return (word & (1 << (bit & 0x1f))) != 0;
+}
+
 // Ghidra: FUN_0005b4b8 — MD5 of a C string as NSData.
 NSData *RhMD5Data(const char *cString) {
     unsigned char digest[16];
