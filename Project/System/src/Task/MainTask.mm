@@ -33,6 +33,8 @@
 #import "MusicManager.h"
 #import "MusicData.h"            // MusicID/lvNormal/lvHyper/lvEx/musicNameImage2xData (m_musicList entries)
 #import "MainViewController.h"   // the concrete root VC: Goto*/settingViewing/isGotoTitle
+#import "AepFrameDraw.h"         // drawAepFrameEx (settings/sort/badge frame draws)
+#import "OverScoreData+Store.h"  // +updateOverScoreTouchedWithMusic:inManagedObjectContext:
 #import "OverScoreData.h"
 #import "ScoreData.h"
 #import "ScoreData+Store.h"   // +getScoreData:inManagedObjectContext: (background cell loader)
@@ -1515,8 +1517,8 @@ void MainTask::updateInfoPanel(int mode) {
     if ([overScores count] != 0) {
         m_overScoreBadge = 1;
         NSMutableDictionary *dict = m_overScoreDict;
-        for (id entry in overScores) {
-            NSString *key = [[[entry music] MusicID] stringValue];
+        for (OverScoreData *entry in overScores) {
+            NSString *key = [[entry music] stringValue];   // -music is the id NSNumber
             BOOL touched = [[entry isTouched] boolValue];
             BOOL known = [[dict allKeys] containsObject:key];
             if (touched) {

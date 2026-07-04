@@ -75,7 +75,10 @@ public:
     // The music sort rebuildList last applied (m_appliedSort @ +0x8fc), read by SortSelectViewController.
     int appliedSort() const { return m_appliedSort; }
 
-private:
+    // NB: the members below are public because the de-inlined file-static draw/cell helpers in
+    // MainTask.mm (static void fn(MainTask*self) — the binary's standalone draw functions) reach
+    // them via self->; C++ non-member functions can't touch protected/private members.
+public:
     // Shared body of the two column loaders (they differ only by the direction `delta` = +1
     // (next) / -1 (prev) and which latch byte gates them). Streams m_columnStride consecutive
     // cells from row `rowBase`.

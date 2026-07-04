@@ -14,6 +14,7 @@
 #include <string>
 
 #include "AepOrderingTable.h"
+#include "AepManager.h"        // aep->orderingTable() in neTextureForiOS_draw
 #include "AepTexture.h"
 #include "neTextureForiOS.h"
 
@@ -126,6 +127,36 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     // opaque tail; when no explicit clip is given the flush defaults it to the
     // screen bounds (Ghidra: reads *(param_1+4)/*(param_1+8) at iVar1+0x54/0x58).
     (void)p.clip;
+}
+
+// neTextureForiOS_draw (FUN_0000fbcc): the flat-argument wrapper the task draw passes call — it
+// null-checks the texture, packs the arguments into a neSpriteDrawParams and emits the sprite via
+// this texture's draw() into `aep`'s ordering table. Argument order verified against the call sites
+// (AcViewerTask digit blit / MainTask badges): u,v then source w,h, screen x,y, scale sx,sy,
+// rotation, anchor ex,ey, colour, alpha, blend, colour-multiplier, extra, priority; the trailing
+// `layer` (always 1) is the live-command marker draw() already stamps.
+void neTextureForiOS_draw(AepManager *aep, neTextureForiOS *tex,
+                          int u, int v, int w, int h, int x, int y, int sx, int sy,
+                          int rotation, int ex, int ey, int color, int alpha,
+                          int blend0, int colorMul, int extra, int priority, int layer) {
+    if (tex == nullptr) {
+        return;
+    }
+    neSpriteDrawParams p;
+    p.u = u;   p.v = v;
+    p.w = w;   p.h = h;
+    p.x = x;   p.y = y;
+    p.sx = sx; p.sy = sy;
+    p.rotation = rotation;
+    p.ex = ex; p.ey = ey;
+    p.color = color;
+    p.blend1 = (short)alpha;   // +0x42 alpha / blend sub-mode
+    p.blend0 = (short)blend0;
+    p.colorMul = colorMul;
+    p.extra = extra;
+    p.priority = priority;
+    (void)layer;
+    tex->draw(aep->orderingTable(), p);
 }
 
 // Release the cached tiles (the cache is ref-counted; drop our references) and the

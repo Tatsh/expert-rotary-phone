@@ -74,6 +74,18 @@ void AepDrawSpriteHandle(AepManager *mgr, int handle, int x, int y, int scaleX, 
                          uint32_t blend, uint32_t colorMul, int *clipRect, int priority,
                          uint32_t p19);
 
+// The name the task draw passes call the same sprite-handle draw by; the AEP group-draw
+// callback carries the clip-rect argument as a plain int (its 32-bit ABI slot), so accept it
+// as such and thread it through. Identical to AepDrawSpriteHandle otherwise.
+inline void drawAepFrameEx(AepManager *mgr, int handle, int x, int y, int scaleX, int scaleY,
+                           int rotation, int anchorX, int anchorY, int color, int alpha,
+                           uint32_t blend, uint32_t colorMul, int clipRect, int priority,
+                           uint32_t p19) {
+    AepDrawSpriteHandle(mgr, handle, x, y, scaleX, scaleY, rotation, anchorX, anchorY,
+                        color, alpha, blend, colorMul,
+                        reinterpret_cast<int *>(static_cast<intptr_t>(clipRect)), priority, p19);
+}
+
 // Draw a single sprite-atlas frame by its packed handle with a default (100%, opaque,
 // unrotated, un-clipped) transform straight into the ordering table. `id` encodes the
 // resource group in bits 16.. and the 8-byte sprite record in bits 0..15; `x`/`y` are the

@@ -15,6 +15,7 @@
 
 class AepTexture;
 class AepOrderingTable;
+class AepManager;
 
 // One GPU upload record per tile (0x18 bytes). A large image is split into several
 // GL-max-size tiles; each keeps the AepTexture it is currently bound to so a context
@@ -109,6 +110,13 @@ private:
     AepTexture **m_tiles = nullptr;      // +0x10 cached AepTexture per tile
     AepTile *m_tileRects = nullptr;      // +0x14 per-tile upload records (new AepTile[N])
 };
+
+// Flat-argument sprite-draw wrapper the task draw passes call (Ghidra: FUN_0000fbcc). Packs the
+// args into a neSpriteDrawParams and emits `tex` into aep's ordering table via tex->draw().
+void neTextureForiOS_draw(AepManager *aep, neTextureForiOS *tex,
+                          int u, int v, int w, int h, int x, int y, int sx, int sy,
+                          int rotation, int ex, int ey, int color, int alpha,
+                          int blend0, int colorMul, int extra, int priority, int layer);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
