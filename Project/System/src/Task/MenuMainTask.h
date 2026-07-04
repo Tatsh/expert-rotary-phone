@@ -95,7 +95,11 @@ private:
     // News-fetch callback (DownloadMain's NEWS delegate). When `hasNews`, rebuild the local
     // news-text array copy from DownloadMain if its lastGetNewsTime is newer than the cached
     // copy's timestamp, then reset the ticker to line 0. Ghidra: modeSelectRefreshNews @ 0x6d8cc.
+    // Public: called from the extern "C" modeSelectRefreshNews shim (DownloadMain reaches its
+    // NEWS delegate by the unmangled binary symbol, so the free function must reach this).
+public:
     void refreshNews(bool hasNews);
+private:
 
     // ---- packed top-row cluster (+0x94.. settings/gift rects, overlapping fields) ----
     struct TopCluster {
