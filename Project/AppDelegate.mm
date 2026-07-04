@@ -186,8 +186,9 @@ BOOL gLaunchedFromPush = NO;
         // Ghidra: NEEngine_onResignActivePushHook (FUN_00034510) on the global NoteMng.
         NoteMng::shared().onResignActivePushHook();
     }
-    AcNoteMng::shared();                        // Ghidra: AcNoteMng_shared (FUN_0000b35c)
-    if (/* DAT_00173e72 (AcNoteMng member gate) */ gLaunchedFromPush) {
+    // Ghidra @ 0x95d6: reads AcNoteMng+0x14cc2 (m_playFlag), NOT the launched-from-push global.
+    // Disassembly: base 0x15f1b0 (AcNoteMng singleton) + 0x14cc2 = 0x173e72.
+    if (AcNoteMng::shared().isPlaying()) {
         // Ghidra: acNotePause (FUN_0007b638) on the global AcNoteMng — pause arcade play on resign.
         AcNoteMng::shared().pause();
     }

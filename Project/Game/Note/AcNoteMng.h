@@ -146,6 +146,10 @@ public:
     // Ghidra: acNoteResetPlayFlag @ 0x7aea4.
     void resetPlayFlag();
 
+    // Read the per-play "playing" flag (m_playFlag @ +0x14cc2). Gates the on-resign arcade
+    // pause (AppDelegate applicationWillResignActive @ 0x95a8 reads AcNoteMng+0x14cc2).
+    bool isPlaying() const { return m_playFlag != 0; }
+
     // Build the logical-lane -> display-lane table for the selected lane option: 1/3 = random
     // (a time-seeded derangement of lanes 0..8, retried until no lane maps to itself), 2 = mirror
     // (lane i -> 8-i), anything else = identity. Ghidra: acNoteSetupLaneMapping @ 0x7ad14.
