@@ -123,7 +123,10 @@ private:
     neTextureForiOS *m_eventTex[12] = {};           // +0x1ec 12 event_0_%03d icons
     int             m_skillBoardLyr[5] = {};        // +0x21c SKILL_COM_BOARD/... layer numbers
     int             m_skillBoardFrames[5] = {};     // +0x230 their frame counts
-    uint8_t          _rsvd_244[0x258 - 0x244] = {};   // +0x244
+    uint8_t          _rsvd_244[0x24c - 0x244] = {};   // +0x244
+    int             m_musicResultFrame = {};        // +0x24c music collection-result overlay frame
+    int             m_wallResultFrame = {};         // +0x250 wall collection-result overlay frame
+    uint8_t          _rsvd_254[0x258 - 0x254] = {};   // +0x254
     int             m_iconMentalLyr[4] = {};        // +0x258 ICON_MENTAL00..03 layer numbers
     int             m_iconMentalFrames[4] = {};     // +0x268 their frame counts (rank badge)
     int             m_animFrameCtr = {};            // +0x278 shared per-frame animation counter
@@ -131,7 +134,7 @@ private:
     int             m_wallPeaceLyr[9] = {};         // +0x2a0 WALL_PEACE00..08 layers
     int             m_musicPeaceFrames = {};        // +0x2c4 MUSIC_PEACE frame count
     int             m_wallPeaceFrames = {};         // +0x2c8 WALL_PEACE frame count
-    uint8_t          _rsvd_2cc[0x2d0 - 0x2cc] = {};   // +0x2cc
+    int             m_pieceRevealFrame = {};        // +0x2cc frame for a newly-collected piece reveal
     int             m_boardFrame[26] = {};          // +0x2d0 26 board/roulette-result frame numbers
     int             m_base1Frame[11] = {};          // +0x338 11 BASE_* square frame numbers
     int             m_rouletteMoveFrame = {};       // +0x364 BT_ROULETTE_MOVE frame (pad only)
@@ -230,7 +233,7 @@ private:
     int16_t         m_listBottom = {};              // +0x63c list content bottom
     uint8_t          _rsvd_63e[0x640 - 0x63e] = {};   // +0x63e
     void *          m_treasureMusicArray = {};      // +0x640 treasure music data array (retained)
-    uint8_t          _rsvd_644[0x648 - 0x644] = {};   // +0x644
+    int             m_selMusicPanel = {};           // +0x644 selected music panel index (result popup)
     int             m_musicAnchor[18] = {};         // +0x648 9 music-panel (x,y) anchor positions
     int             m_rouletteMapId = {};           // +0x690 current roulette map id
     int             m_wallAnchor[18] = {};          // +0x694 9 wall-panel (x,y) anchor positions

@@ -2269,6 +2269,106 @@ void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scal
         return;
     }
 
+    // ---- music collection result popup (index 11, +0x3fc) ---------------------------------
+    // Ghidra +0x3fc: the selected music jacket + per-piece reveal layers, playing the reveal SE
+    // (m_rouletteSe[9] @+0x45c) once (while m_rouletteSeInst is idle/-1) when a newly-collected
+    // piece appears, then a final overlay. In each 3-slot piece word, bit b = collected, bit b+8
+    // = already revealed. iPad nudges positions; all scales are integer (scale*N)/100 (no NEON).
+    if (self->m_boardUserNo[11] == child) {
+        int px = x, py = y;
+        if (self->m_padDisplay != 0) { px = x + 1; py = y - 5; }
+        neTextureForiOS_draw(aep, self->m_jacketTex[self->m_selMusicPanel], 0, 0, 0x168, 0x168,
+                             px, py, scaleX, scaleY, rotation, anchorX, anchorY, color, alpha,
+                             blend, 0xffffff, 0, p17, 1);
+        const int yAdj = (scaleY * 0xe) / 100;
+        const int mapIdx = findTreasureMapIndexById(self->m_selMusicPanel);
+        const int rowY = y - 0x10;
+        bool anyMissing = false, anyNew = false;
+        for (int i = 0; i < 9; i++) {
+            const uint32_t bits = (uint32_t)self->m_musicPieceTableDup[mapIdx * 3 + i / 3];
+            int frameNo = 0;
+            bool draw = false;
+            if ((bits & (1u << (i % 3))) == 0) {              // not collected
+                anyMissing = true; draw = true;
+            } else if ((bits & (1u << (i % 3 + 8))) == 0) {   // collected, not yet revealed
+                frameNo = self->m_pieceRevealFrame;
+                if (self->m_rouletteSeInst < 0) {
+                    self->m_rouletteSeInst = (int)[[AudioManager sharedManager]
+                        playSe:0 resourceId:self->m_rouletteSe[9]];
+                }
+                anyNew = true;
+                draw = (frameNo >= 0);
+            }
+            if (draw) {
+                int lx, ly;
+                if (self->m_padDisplay == 0) {                // phone
+                    lx = x - 0xe; ly = rowY;
+                } else {                                      // pad
+                    ly = (i == 7 ? py - 2 : py) + yAdj;
+                    lx = px - (scaleX * 0xe) / 100;
+                }
+                self->m_aep->drawLayer(self->m_musicPeaceLyr[i], frameNo, lx, ly, scaleX, scaleY,
+                                       rotation, 1, anchorX, anchorY, color, alpha, blend, 0xffffff,
+                                       nullptr, nullptr, 9, 1);
+            }
+        }
+        if (!anyMissing && !anyNew) { return; }
+        self->m_aep->drawLayer(self->m_skillBoardLyr[2], anyMissing ? 0 : self->m_musicResultFrame,
+                               x - 0xc, rowY, scaleX, scaleY, rotation, 1, anchorX, anchorY, color,
+                               alpha, blend, 0xffffff, nullptr, nullptr, 8, 1);
+        return;
+    }
+
+    // ---- wall collection result popup (index 14, +0x408) ----------------------------------
+    // Ghidra +0x408: the full-board background, then per-piece reveal layers (m_wallPeaceLyr)
+    // with the same SE + reveal-bit logic, then a final overlay. The ONE float NEON in this set:
+    // on iPad the piece layers are scaled by 1.6949 (DAT_000a4a10 = 0x3FD8F27C, byte-verified) ->
+    // zoom = (int)(scale * 1.6949f) + 1.
+    if (self->m_boardUserNo[14] == child) {
+        neTextureForiOS_draw(aep, self->m_reserveTex[0], 0, 0, 0x280, 0x3c0, x, y, scaleX, scaleY,
+                             rotation, anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p17, 1);
+        const int zoomX = (int)((float)scaleX * 1.6949f) + 1;
+        const int zoomY = (int)((float)scaleY * 1.6949f) + 1;
+        const int baseX = x - (anchorX * scaleX) / 100;
+        const int baseY = y - (anchorY * scaleY) / 100;
+        const int mapIdx = findTreasureMapIndexById(self->m_rouletteMapId);
+        bool anyMissing = false, anyNew = false;
+        for (int i = 0; i < 9; i++) {
+            const uint32_t bits = (uint32_t)self->m_wallPieceTableDup[mapIdx * 3 + i / 3];
+            int frameNo = 0;
+            bool draw = false;
+            if ((bits & (1u << (i % 3))) == 0) {
+                anyMissing = true; draw = true;
+            } else if ((bits & (1u << (i % 3 + 8))) == 0) {
+                frameNo = self->m_pieceRevealFrame;
+                if (self->m_rouletteSeInst < 0) {
+                    self->m_rouletteSeInst = (int)[[AudioManager sharedManager]
+                        playSe:0 resourceId:self->m_rouletteSe[9]];
+                }
+                anyNew = true;
+                draw = (frameNo >= 0);
+            }
+            if (draw) {
+                int lx, ly, sx, sy, ax, ay;
+                if (self->m_padDisplay == 0) {                // phone
+                    lx = baseX - 7; ly = baseY - 7; sx = 100; sy = 100; ax = 0; ay = 0;
+                } else {                                      // pad
+                    lx = (i == 3) ? x + 2 : x;
+                    ly = (i == 3) ? y - 2 : y;
+                    sx = zoomX; sy = zoomY; ax = anchorX - 0x7e; ay = anchorY - 0xbc;
+                }
+                self->m_aep->drawLayer(self->m_wallPeaceLyr[i], frameNo, lx, ly, sx, sy, rotation,
+                                       1, ax, ay, color, alpha, blend, 0xffffff, nullptr, nullptr,
+                                       9, 1);
+            }
+        }
+        if (!anyMissing && !anyNew) { return; }
+        self->m_aep->drawLayer(self->m_skillBoardLyr[3], anyMissing ? 0 : self->m_wallResultFrame,
+                               baseX, baseY, 100, 100, rotation, 1, 0, 0, color, alpha, blend,
+                               0xffffff, nullptr, nullptr, 8, 1);
+        return;
+    }
+
     // ---- single-texture panels (LAB_000a3d1a tail) ----------------------------------------
     struct { int usr; int slot; int w; int h; } kPanels[] = {
         { self->m_boardUserNo[3],  0x2, 0x228, 0x228 },   // m_reserveTex[2]-ish chara backing
