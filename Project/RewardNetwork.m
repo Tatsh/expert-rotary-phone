@@ -317,7 +317,10 @@ static NSDate *g_pRewardBannerExpireDate = nil;
                                               return;
                                           }
                                           BOOL loginStatus = [[response objectForKey:@"login_status"] boolValue];
-                                          block((id)loginStatus, nil);
+                                          // Binary stuffs the raw BOOL (0/1) into the id `result`
+                                          // slot; the caller reads it back as a boolean. Pass the bits
+                                          // through void* so ARC doesn't treat it as a managed object.
+                                          block((__bridge id)(void *)(intptr_t)loginStatus, nil);
                                       }
                                         failedBlock:^(NSURLRequest *request, NSError *error) {
                                           // @ 0xeff6c — tiny failure block, inlined/merged by the compiler
