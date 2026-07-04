@@ -2112,13 +2112,15 @@ void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scal
         return;
     }
     if (self->m_boardUserNo[23] == child) {                // bonus count (ticket glyphs)
-        drawDigits(self->m_ticketDigitTex, self->m_bonusCount, 4, x - 0x60, 0x20, 0x20, 0x24);
+        // Disasm +0x42c (0xa3806): 2 digits from x-7, step 0x20 (loop init -7, exit at -0x47).
+        drawDigits(self->m_ticketDigitTex, self->m_bonusCount, 2, x - 7, 0x20, 0x20, 0x24);
         return;
     }
     if (self->m_boardUserNo[21] == child) {                // owned chara tickets (<=99)
         int v = self->m_charaTicket;
         if (v > 99) { v = 99; }
-        drawDigits(self->m_ticketDigitTex, v, 3, x, 0x20, 0x20, 0x24);
+        // Disasm +0x424 (0xa38a6): 2 digits (loop init 0, exit at -0x40), step 0x20.
+        drawDigits(self->m_ticketDigitTex, v, 2, x, 0x20, 0x20, 0x24);
         return;
     }
     if (self->m_boardUserNo[22] == child) {                // roulette-result digit
@@ -2211,7 +2213,7 @@ void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scal
         return n;
     };
     auto drawPieceGrid = [&](const int *pieceTable, neTextureForiOS **panelTex, int panelW,
-                             int *anchorOut) {
+                             int panelScale, int *anchorOut) {
         for (int i = 0; i < 9; i++) {
             const int mapIdx = findTreasureMapIndexById(i);
             int lit = 0;
@@ -2225,16 +2227,17 @@ void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scal
                                color, alpha, blend, 0xffffff, clipRect, p17, 1);
             }
             neTextureForiOS_draw(aep, panelTex[i], 0, 0, panelW, panelW, cx - anchorX, cy - anchorY,
-                                 0x26, 0x26, rotation, 0, 0, color, alpha, blend, 0xffffff, 0, p17, 1);
+                                 panelScale, panelScale, rotation, 0, 0, color, alpha, blend, 0xffffff, 0, p17, 1);
             if (anchorOut) { anchorOut[i * 2] = cx; anchorOut[i * 2 + 1] = cy; }
         }
     };
     if (self->m_boardUserNo[8] == child) {                 // music-piece grid
-        drawPieceGrid(self->m_musicPieceTableDup, self->m_jacketTex, 0x168, nullptr);
+        drawPieceGrid(self->m_musicPieceTableDup, self->m_jacketTex, 0x168, 0x26, nullptr);
         return;
     }
     if (self->m_boardUserNo[12] == child) {                // wall-piece grid
-        drawPieceGrid(self->m_wallPieceTableDup, self->m_wallNailTex, 0x88, nullptr);
+        // Disasm +0x400 (0xa45c4): the wall-piece panel scale is 0x64 (100), not 0x26 like music.
+        drawPieceGrid(self->m_wallPieceTableDup, self->m_wallNailTex, 0x88, 0x64, nullptr);
         return;
     }
 
