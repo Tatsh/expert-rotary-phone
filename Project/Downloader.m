@@ -9,6 +9,7 @@
 #import "Downloader.h"
 
 #import "AppDelegate.h"
+#import "NSDictionary_JSONExtensions.h"   // TouchJSON +dictionaryWithJSONData:error: fallback
 #import "StoreUtil.h"
 
 // Request timeout (Ghidra: 0x402e0000 = 15.0s); reload-ignoring-cache policy (4).

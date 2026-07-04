@@ -55,6 +55,7 @@ target_sources(popnrhythmin PRIVATE
     PurchaseStore.m
     NSBundle+RewardNetwork.m
     NSCharacterSet_Extensions.m
+    NSDictionary_JSONExtensions.m
     NSScanner_Extensions.m
     NSString+URLDecode.m
     RecommendAdId.m
@@ -254,6 +255,7 @@ target_sources(popnrhythmin PRIVATE
     AcViewerOptionViewController.h
     CDataScanner.h
     NSCharacterSet_Extensions.h
+    NSDictionary_JSONExtensions.h
     NSScanner_Extensions.h
     NSString+URLDecode.h
     ConversionView.h
