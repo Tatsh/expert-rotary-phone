@@ -59,7 +59,7 @@
 // Designated entry point used by MainViewController -GotoArcadeSearch: runs [super init],
 // wraps the receiver in a UINavigationController (styled nav bar + back / current-position
 // bar buttons) and returns that navigation controller. Ghidra: @ 0x85538.
-- (id)initAtNavigationController;
+- (id)initAtNavigationController __attribute__((objc_method_family(none)));   // returns a nav controller, not self
 
 // Fade the screen (and nav bar) in over the GL scene. Ghidra: @ 0x88838.
 - (void)startOpenAnimation;
