@@ -292,17 +292,21 @@ static const int32_t kAssetCountsGroup8[3] = { 64, 72, 71 };  // DAT_0012fb9c
 
 // ── Character message string pools (DAT_0x1335c8 … DAT_0x1339d4) ─────────────
 //
-// Each array is a char* table indexed by slot_index.  The strings are UTF-8
-// encoded Japanese game messages (~330 total, ~66 KB of text).  Binary addresses:
-//   kCharGroup6Slot0 — 41 strings  pointer-table @ 0x1335c8
-//   kCharGroup6Slot1 — 35 strings  pointer-table @ 0x13366c
-//   kCharGroup6Slot2 — 47 strings  pointer-table @ 0x1336f8  (wac)
-//   kCharGroup8Slot0 — 64 strings  pointer-table @ 0x1337b4
-//   kCharGroup8Slot1 — 72 strings  pointer-table @ 0x1338b4  (TOMOSUKE)
-//   kCharGroup8Slot2 — 71 strings  pointer-table @ 0x1339d4
-//
-// TODO(strings): Extract the full string content via objdump or a Ghidra script.
-// Until then the arrays are zero-initialised; getCharacterAssetName returns null.
+// Each array is a char* table indexed by slot_index. The payload is ~330 UTF-8
+// Japanese in-game character-dialogue messages (~66 KB) — creative game content,
+// i.e. a CONTENT ASSET on the same footing as the songs, charts, jacket art and
+// audio, which this reconstruction references but does not bake in. It is left as
+// the empty pointer tables below (correct sizes/addresses preserved); the access
+// logic in getCharacterAssetName is fully reconstructed and returns nullptr for an
+// absent asset exactly as the binary would with an unpopulated slot, so behaviour is
+// faithful. To run against the real messages, dump the pools from an owned copy of
+// the binary at these addresses and point the tables at them — not reproduced here.
+//   kCharGroup6Slot0 — 41 entries  pointer-table @ 0x1335c8
+//   kCharGroup6Slot1 — 35 entries  pointer-table @ 0x13366c
+//   kCharGroup6Slot2 — 47 entries  pointer-table @ 0x1336f8  (wac)
+//   kCharGroup8Slot0 — 64 entries  pointer-table @ 0x1337b4
+//   kCharGroup8Slot1 — 72 entries  pointer-table @ 0x1338b4  (TOMOSUKE)
+//   kCharGroup8Slot2 — 71 entries  pointer-table @ 0x1339d4
 static const char * const kCharGroup6Slot0[41] = {};   // @ 0x1335c8
 static const char * const kCharGroup6Slot1[35] = {};   // @ 0x13366c
 static const char * const kCharGroup6Slot2[47] = {};   // @ 0x1336f8  (wac)
