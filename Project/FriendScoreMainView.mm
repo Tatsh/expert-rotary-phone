@@ -41,12 +41,15 @@
 //     ScoreDataStruct display arrays (one per difficulty) with finishing place, score rank,
 //     full-combo / perfect flags and the "a rival beat you" notice flag (from OverScoreData).
 //     The Flag bitfield is: bit0/1/2 = full-combo N/H/Ex, bit3/4/5 = perfect N/H/Ex.
-//   - TODO(dep): for the local player's own row the binary additionally reconciles the server
-//     "Me" scores against the app-event-center in-memory score store (Ghidra free helpers
+//   - For the local player's own row the binary additionally reconciles the server "Me" scores
+//     against the app-event-center in-memory score store (Ghidra free helpers
 //     fetchScoreDataForMusic / updateHighScore / saveScoreData on the g_pNeAppEventCenter
-//     singleton, plus scoreToRank) and persists any new best. That score-store module is not
-//     yet reconstructed, so the local row here is populated from the server "Me" record only;
-//     the persist-back side effect is deferred (see MainTask::refreshScoreRows for the same seam).
+//     singleton, plus scoreToRank) and persists any new best back into the local ScoreData store,
+//     for each of the three difficulties. That write-back is reconstructed here: the singleton
+//     that the store helpers take (&g_pNeAppEventCenter) is the shared PlayScore struct, so its
+//     musicId / difficulty (g_wResultSheet) / rank (g_wResultClearRank) fields are modelled with a
+//     local PlayScore. The server per-difficulty medal bits drive updateHighScore's GOOD/BAD/
+//     full-combo tallies exactly as the binary derives them (see the downloaderFinished body).
 //   - Under ARC the ScoreDataStruct NSString field is __unsafe_unretained (mirroring
 //     FriendListData in DownloadMain.h). -dealloc is kept: it cancels the in-flight Downloader
 //     and detaches this controller from DownloadMain's friend-list delegate.
@@ -610,9 +613,18 @@ static int scoreToRank(int score) {
             myFullCombo[d] = fc ? YES : NO;
             myPerfect[d]   = pf ? YES : NO;
         }
-        // TODO(dep): the binary also persists a higher server "Me" score BACK into the local store
-        // here (updateHighScore / saveScoreData, gated on the g_wResultSheet / g_wResultClearRank
-        // result-screen globals that are not yet reconstructed); that write-back is left a seam.
+        // Reconcile the server "Me" record with the local store and, per difficulty, persist any
+        // new server best BACK into the local ScoreData store (updateHighScore + saveScoreData).
+        //
+        // In the binary the save path overlays the shared PlayScore struct on the app-event-center
+        // singleton (&g_pNeAppEventCenter) and drives the free store helpers on it; the three
+        // "result-screen" globals it pokes are just fields of that struct:
+        //   g_pNeAppEventCenter = self->_musicId   -> PlayScore.musicId    (+0x00)
+        //   g_wResultSheet      = <difficulty d>   -> PlayScore.difficulty (+0x04)
+        //   g_wResultClearRank  = scoreToRank(...) -> PlayScore.rank        (+0x14)
+        // We model that faithfully with a local PlayScore (neEngineBridge.h) carrying those exact
+        // fields; the binary's extra neAppEventCenter::shared() force-init before the overlay is a
+        // singleton side effect the local model does not need.
         if (me != nil) {
             NSNumber *mN  = [me objectForKey:@"ScoreN"];
             NSNumber *mH  = [me objectForKey:@"ScoreH"];
@@ -621,17 +633,50 @@ static int scoreToRank(int score) {
             if (mN && mH && mEx && mFlg) {
                 NSNumber *meScore[3] = { mN, mH, mEx };
                 int flag = [mFlg intValue];
+
+                PlayScore ps = {};
+                ps.musicId = _musicId;   // g_pNeAppEventCenter = self->_musicId
+
                 for (int d = 0; d < 3; d++) {
                     int srvScore = [meScore[d] intValue];
-                    if (srvScore > myScore[d]) {
+                    // Server medal bits for this difficulty (shared Flag layout, bit0/1/2 = the
+                    // full-combo group, bit3/4/5 = the perfect group):
+                    int fcMedal = (flag >> d) & 1;         // bit d      -> myFullCombo[d]
+                    int pfMedal = (flag >> (d + 3)) & 1;   // bit (d+3)  -> myPerfect[d]
+
+                    // Persist when the server beat the local score, OR when the server holds a medal
+                    // the local record lacks (the "even if not higher, save the new medal" branch).
+                    BOOL writeBack = (myScore[d] < srvScore) ||
+                                     (!myFullCombo[d] && fcMedal) ||
+                                     (!myPerfect[d]   && pfMedal);
+                    if (!writeBack) {
+                        continue;
+                    }
+
+                    // updateHighScore(ps, srvScore, cool=1, great=2, good, bad, fullCombo):
+                    //   fullCombo = fcMedal                       (the +0x04 full-combo bit)
+                    //   good      = pfMedal ? 0 : 3               (uVar33 in the decompile)
+                    //   bad       = fcMedal ? 0 : ((pfMedal<<2)^4)(uVar38: 0 if a cool/FC medal, else
+                    //                                              0 when the perfect bit is set, 4 otherwise)
+                    // The cool/great bases (1, 2) are the constants the binary passes verbatim.
+                    ps.difficulty = d;                                // g_wResultSheet
+                    updateHighScore(&ps, (unsigned)srvScore, 1, 2,
+                                    pfMedal ? 0 : 3,
+                                    fcMedal ? 0 : ((pfMedal << 2) ^ 4),
+                                    (char)fcMedal);
+                    ps.rank = (short)scoreToRank(srvScore);           // g_wResultClearRank
+                    saveScoreData(&ps);
+
+                    // Bump the local display best with the (now persisted) server values.
+                    if (myScore[d] < srvScore) {
                         myScore[d] = srvScore;   // display the better of local vs. server
                     }
                     short srvRank = (short)scoreToRank(srvScore);
                     if (srvRank < myRank[d]) {
                         myRank[d] = srvRank;
                     }
-                    if ((flag & (1 << d)) != 0)       { myFullCombo[d] = YES; }
-                    if ((flag & (1 << (d + 3))) != 0) { myPerfect[d]   = YES; }
+                    if (fcMedal) { myFullCombo[d] = YES; }
+                    if (pfMedal) { myPerfect[d]   = YES; }
                 }
             }
         }
