@@ -27,7 +27,7 @@ Status: ☐ todo  ◐ in progress  ☑ fixed & verified  ✓ already accurate (n
 | 8 | `neDrawTexturedQuad` @0x16020 | neRenderer.cpp:407 | `rotation != 0` clip-plane rotation block (cos/sin SIMD) not reconstructed; always axis-aligned. | MED | ☑ (disasm-verified 0x1639c-0x1646a: a'=c·a-s·b, b'=s·a+c·b, d'=d+px(a-a')+py(b-b')) |
 | 9 | `drawAepOtSprite` @0x10d86 | AepOrderingTable.mm:289 | dropped `/100` normalization of scaled transform args + tint 16-byte vector SIMD scale. **VERIFIED entangled:** the callee `drawAepSpriteClipped` currently `(void)sx;(void)sy;` (ignores scale) and discards `renderScale` — so a piecemeal `/100` would patch a value the callee throws away and could double-normalize once sprite-scale is reconstructed. Group with #10 as one **AepOrderingTable sprite-scale path** unit (drawAepOtSprite/Stretch → drawAepSpriteClipped → neDrawTexturedQuad w/h + sx/sy + tint), like #2. | MED-HIGH | ☐ (verified; deferred as a unit with #10) |
 | 10 | `drawAepOtSpriteStretch` @0x10f2c | AepOrderingTable.mm:319 | same dropped ops as #9; part of the same sprite-scale-path unit. | MED-HIGH | ☐ (with #9) |
-| 11 | `AcMainSugorokuDraw` @0xa3724 | AcMainTask.mm:2088 | NEON `FloatVectorMult` scale branch + 4 dispatch branches unreconstructed; wall-grid scale 0x26→should be 100; two digit-strip count/offset garbles. | MED | ☐ |
+| 11 | `AcMainSugorokuDraw` @0xa3724 | AcMainTask.mm:2088 | digit strips (2 not 4/3), wall-grid scale 100 not 0x26, + 5 missing dispatch branches (9/13 grids, 17 chara button, 11/14 result popups w/ the 1.6949f zoom + reveal SE). | MED | ☑ (all 5 branches in; disasm-verified, byte-exact fields) |
 
 ## Tier 3 — PARTIAL (best-effort seams / large, HIGH effort)
 
