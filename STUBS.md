@@ -33,6 +33,24 @@
   survive; company/type/offset/limit/parentView/delegate are register/stack spills) and it
   is a third-party offer-wall, not gameplay. Left as a precise deferral, not invented.
 
+## Verification passes (audited, result recorded)
+- AcViewerTask::update (acMainTaskUpdate FUN_00021678) — audited 2026-07-04 right after it
+  went live (TaskFactory now does new AcViewerTask(); before that AcViewerTask.o was
+  dead-stripped, hiding the AcViewerHudDraw link error since fixed in f64da6b). Result:
+  the 16-state machine (0 enter/GotoAcViewer -> 1 wait-song -> 2 setup -> 3 transition+play
+  -> 4 wait-transition+ready-SE -> 5 wait-SE+startPlayback -> 6 PLAYING -> 7 end-hold ->
+  8/9 teardown+Cleanup -> 10/0xb pause-for-song-select -> 0xc/0xd pause menu -> 0xe options
+  sheet -> 0x10 no-song exit + MenuMainTask handoff) is structurally 1:1, and every engine
+  call + field offset checks out (difficulty @0x1dc read in loadChartData FUN_0002316c;
+  end-hold counter @0x204 = the decompiler's field10_0x28.field77_0x1dc, i.e. 0x28+0x1dc,
+  NOT a collision with difficulty; pauseTime @0xfc; state @0x20c). NO behavioural bug found.
+  KNOWN best-effort (disclosed in-file, unchanged): the flick/touch POSITION dispatch in
+  states 6 / 0xb / 0xd. The binary routes a flick by hit-testing two rects (abs @0x1b4 ->
+  pause menu state 0xc; abs @0x1ec -> song-select state 10) built from NEON-spilled scaled
+  coordinates; the reconstruction approximates this with an acMusicSelViewing gate and a
+  single flick bool, so the on-phone pause-menu-via-timeline-tap path is not position-exact.
+  Left approximated rather than invented (the rect geometry is not cleanly recoverable).
+
 ## Explicitly-deferred large units (documented in-file, not disguised)
 - AcMainTask::update (FUN_00099d18) — 24KB arcade state machine, the binary's largest function.
   Being reconstructed IN PIECES from .decompile/AcMainTask_update.c:
