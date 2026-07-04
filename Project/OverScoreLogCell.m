@@ -9,12 +9,10 @@
 
 #import "AppFont.h"   // AppFontName() == getFontNameDFSoGei() -> @"DFSoGei-W5-WIN-RKSJ-H"
 
-// The log-data element (from OverScoreLogViewController's _overScoreLogDataArray) fills the
-// struct below via -getValue:. TODO(dep): the concrete element class is not yet reconstructed;
-// declaring the selector here lets the cell copy the row's values out of it.
-@interface NSObject (OverScoreLogDataValue)
-- (void)getValue:(void *)outValue;
-@end
+// Each row of OverScoreLogViewController's _overScoreLogDataArray is an NSValue boxing the
+// OverScoreLogData struct below (DownloadMain builds them with +[NSValue value:withObjCType:],
+// the same pattern it uses for the friend/download/information/recommend lists); the cell copies
+// the row out with -[NSValue getValue:].
 
 // Plain C struct the data element writes into (Ghidra ivar m_overScoreLogData, filled at
 // param_1 + m_overScoreLogData). Only the fields this cell reads are named; pointers are
@@ -55,7 +53,7 @@ typedef struct OverScoreLogData {
 // subviews, then rebuild the banner background + five labels + sheet-icon image view. All
 // frames/fonts recovered from the binary; the iOS 6 vs 7+ layout split keys off
 // -[UIDevice systemVersion].floatValue exactly as the original does.
-- (void)setOverScoreLogData:(id)overScoreLogData {
+- (void)setOverScoreLogData:(NSValue *)overScoreLogData {
     CGFloat sysVer = [[UIDevice currentDevice].systemVersion floatValue];
     BOOL legacy = sysVer < 7.0;   // pre-iOS 7 layout
 
