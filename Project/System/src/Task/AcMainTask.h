@@ -67,6 +67,7 @@ private:
     void buildMapPanelLayers();       // Ghidra: FUN_000a2650
     void refreshMapScroll(int mode);  // Ghidra: FUN_000a3550
     void unloadMapBgGroup();          // Ghidra: FUN_000a4e84
+    void sugorokuReleaseGoalLayer();  // Ghidra: sibling of FUN_000a4e84 (same teardown effect)
 
     // Sugoroku board draw / logic sub-passes (Ghidra 0xa14a0..0xa5740). These operate on
     // this task's work area, so they are real members (the "SugorokuMainTask" a prior

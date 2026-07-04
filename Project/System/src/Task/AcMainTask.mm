@@ -1032,6 +1032,16 @@ void AcMainTask::unloadMapBgGroup() {
     AepUnloadGroup(m_aep, 6);   // FUN_0000f988
 }
 
+// Ghidra: a sibling of FUN_000a4e84 called from sugorokuTaskDispose. It unlink+deletes
+// the board-background layer (+0xd0) and releases its AEP texture group via
+// releaseAepTexture(m_aep, 6) — which this reconstruction models as
+// AepManager::unloadGroup(6) (see MainTask.mm's releaseAepTexture note). That is exactly
+// unloadMapBgGroup's effect, so it delegates there rather than duplicate the body (both
+// are null-checked and idempotent, matching the binary running both on teardown).
+void AcMainTask::sugorokuReleaseGoalLayer() {
+    unloadMapBgGroup();
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Sugoroku board draw / logic helpers  (Ghidra 0xa14a0 – 0xa5740).
 // All are file-static (anonymous namespace = internal linkage).  They were
@@ -1086,15 +1096,27 @@ bool isWithinRange2D(float x0, float /*x1*/, float extX,
     return x0 < camR && extX > camL && y0 < camH && y1 > camT;
 }
 
-// Ghidra: FUN_??? — maps a sugoroku square id to the wall-nail texture index
-// in kTreasureMapTable.  Stub (identity) until the function is decompiled.
-short findTreasureMapIndexById(int id) { return static_cast<short>(id); }
+// Ghidra: FUN_000a2... — maps a sugoroku square id to its wall-nail texture index
+// via a fixed 9-entry lookup table (DAT_0012faa0 = {0,3,4,5,6,1,2,7,8}); returns the
+// matching index, or -1 when the id is not present. (Not identity — ids 1/2 and 3..6
+// are permuted, so the wall-nail sprite order differs from the raw id order.)
+short findTreasureMapIndexById(int id) {
+    static const int kWallNailIdTable[9] = { 0, 3, 4, 5, 6, 1, 2, 7, 8 };
+    for (int i = 0; i < 9; ++i) {
+        if (kWallNailIdTable[i] == id) return static_cast<short>(i);
+    }
+    return -1;
+}
 
-// Ghidra: FUN_??? — unlink + delete the "goal" AEP layer.  Stub.
-void sugorokuReleaseGoalLayer(AcMainTask */*task*/) {}
+// sugorokuReleaseGoalLayer is a real member (see above, next to unloadMapBgGroup) —
+// it needs the task's private layer/aep, so it is a method, not a file-static helper.
 
-// Ghidra: FUN_??? — reset global sugoroku progress data.  Stub.
-void resetTreasureMapData() {}
+// Ghidra: FUN_??? — the binary frees the TreasureMap's node/connect buffers (fields
+// +0x14/+0x16) and re-zeroes its header before disposeTreasureMap runs. In this
+// reconstruction that teardown is entirely owned by ~TreasureMap (reset(): it frees
+// m_nodes/m_field58), which `delete m_map` in sugorokuTaskDispose invokes. Re-freeing
+// them here would double-free, so this is intentionally folded into the destructor and
+// the call site relies on `delete m_map` alone.
 
 }  // anonymous namespace  (file-static sugoroku draw primitives)
 
@@ -1536,12 +1558,13 @@ void AcMainTask::sugorokuTaskDispose() {
     // 6. Unload AEP asset group 5.
     AepUnloadGroup(m_aep, 5);
 
-    // 7. Release the "goal" AEP layer.
-    sugorokuReleaseGoalLayer(this);
+    // 7. Release the board-background / "goal" AEP layer (group 6).
+    sugorokuReleaseGoalLayer();
 
-    // 8. Delete the TreasureMap.
+    // 8. Delete the TreasureMap. The binary calls a separate resetTreasureMapData that
+    //    frees the map's node/connect buffers before disposal; here ~TreasureMap (invoked
+    //    by delete) owns that teardown, so calling it again would double-free.
     if (m_map) {
-        resetTreasureMapData();
         delete m_map;
         m_map = nullptr;
     }
