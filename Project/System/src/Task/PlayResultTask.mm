@@ -922,7 +922,9 @@ void PlayResultDrawCallback(int child, int /*frame*/, int x, int y, int scaleX, 
             ax <<= 1;
         }
         const int boardScale = self->m_boardScale;
-        drawTexQuad(aep, self->m_charaTex, 0, 0, 0x75e, 0x38c,
+        // Ghidra: the portrait source rect is w=0x38c (908) by h=0x75e (1886) -- taller
+        // than wide. The decompiler/reconstruction had the w/h transposed (0x75e,0x38c).
+        drawTexQuad(aep, self->m_charaTex, 0, 0, 0x38c, 0x75e,
                     x, y, boardScale, boardScale, rotation, ax, ay, color, alpha, (int)blend, (int)p17);
         return;
     }

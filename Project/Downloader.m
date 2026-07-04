@@ -119,7 +119,10 @@ static const NSTimeInterval kTimeout = 15.0;
 // when the length is not (yet) known / non-positive.
 - (float)currentProgress {
     if (m_DownloadSize > 0) {
-        return (float)m_DownloadedData.length / (float)m_DownloadSize;
+        // Ghidra @ 0x62912: the ratio is saturated to 1.0 (vcmpe.f32 s0,#1.0 + conditional
+        // vmov.f32 s0,#0x3f800000) -- the decompiler dropped the clamp.
+        const float ratio = (float)m_DownloadedData.length / (float)m_DownloadSize;
+        return ratio > 1.0f ? 1.0f : ratio;
     }
     return 0.0f;
 }

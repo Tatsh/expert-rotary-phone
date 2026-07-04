@@ -249,7 +249,10 @@ void drawAepSpriteClipped(float renderScale, void *frameObj, int frameCol, int f
     // Rotation: reduce the angle to [0,360) (the binary's /360 reciprocal multiply) and
     // convert to radians for the renderer.
     int reduced = frameCol - (frameCol / 360) * 360;
-    const float rotation = (float)reduced * (float)(M_PI / 180.0);
+    // Ghidra: the radian conversion uses the NEGATIVE pi literal (DAT_00012238 = -pi,
+    // byte-verified) -> reduced * (-pi/180). With the downstream matrixSetRotateZ(-rotation)
+    // this gives the correct net direction; the decompiler dropped the pi literal's sign.
+    const float rotation = (float)reduced * (float)(-M_PI / 180.0);
 
     // Source rect: the sub-frame's stored width bounds the u extent; v uses its duration
     // slot as the height. The clamped-fraction ratios are what neDrawTexturedQuad wants.
