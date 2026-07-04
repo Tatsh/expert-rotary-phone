@@ -38,10 +38,9 @@
 //     DownloadMain.h); the original manually released each name (and the three arrays) in -dealloc,
 //     which is ARC-omitted. -dealloc is kept because it detaches this controller from DownloadMain's
 //     event-info delegate.
-//   - TODO(dep): loadAllTreasureMapHeaders() (Ghidra @ 0xcdee0, the sugoroku map-header loader)
-//     and isIndexInRange12() (Ghidra @ 0xe2c3c, an event-id 0..11 bounds check) are free helpers
-//     whose owning module (the sugoroku map layer) is not yet reconstructed; they are forward-
-//     declared below until it is recovered.
+//   - loadAllTreasureMapHeaders() (Ghidra @ 0xcdee0, the sugoroku map-header loader) and
+//     isIndexInRange12() (Ghidra @ 0xe2c3c, an event-id 0..11 bounds check) are the sugoroku map
+//     layer's free helpers, reconstructed below (declared in MapSelectViewController.h).
 //   - The dim spinner overlay (_dummyView) is created hidden and revealed in -viewDidLoad, matching
 //     the binary's setHidden: polarity.
 //   - Faithful quirk: -startCloseAnimation's guard tests _isAnimationing == 0 and then re-stores 0
