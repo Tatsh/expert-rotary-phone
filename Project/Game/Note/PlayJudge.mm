@@ -78,7 +78,12 @@ NoteJudgeState *judgeStateFor(MainTaskPlayData *playData, const void *noteKey) {
         if (s->noteKey == noteKey) {
             return s;
         }
-        if (freeSlot == nullptr && s->noteKey == nullptr) {
+        // A free slot is sentinelled with -1 (playTaskResetState @ 0x2fed8 stamps
+        // noteKey = 0xffffffff after the memset), NOT 0 — the binary tests the field
+        // as a signed int `< 0`. Testing == nullptr here would match nothing on a
+        // freshly-reset pool (every slot is -1) and report the pool exhausted on the
+        // first note.
+        if (freeSlot == nullptr && (intptr_t)s->noteKey < 0) {
             freeSlot = s;
         }
     }

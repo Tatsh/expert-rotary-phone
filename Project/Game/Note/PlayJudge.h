@@ -28,7 +28,8 @@
 // slot (id < 0) on first touch. Ghidra: FUN_0003126c.
 struct NoteJudgeState {
     int layerId;           // +0x00 the note's sprite/layer id (draw arg)
-    const void *noteKey;   // +0x04 owning note identity (nullptr when the slot is free)
+    const void *noteKey;   // +0x04 owning note identity (-1/0xffffffff when the slot is free;
+                           //        judgeStateFor claims a slot whose noteKey, as a signed int, is < 0)
     int phase;             // +0x08 visual phase: 0 pending, 1 active, 2/3 resolved
     int result;            // +0x0c judged tier: -1 unjudged, else NoteJudge 0..3
                            //        (0 = BAD/worst .. 3 = COOL/best)
