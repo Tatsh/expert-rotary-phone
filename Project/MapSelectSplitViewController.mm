@@ -551,15 +551,20 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
             return;
         }
         neEngine::playSystemSe(2);
-        // Shift the arrow off-panel (mapSelectAdvanceArrowFrameAlt @ 0x77a98;
-        // completion body LAB_00077b3c_1 not yet reconstructed → nil).
+        // Shift the arrow off-panel (mapSelectAdvanceArrowFrameAlt @ 0x77a98); on
+        // completion re-enable the left map-list table's scrolling and clear the
+        // animating guard (Ghidra block LAB_00077b3c_1: [_mapSelectViewCtrl.tableView
+        // setScrollEnabled:1]; _isAnimationing = 0 — the mirror of startOpenAnimation).
         [UIView transitionWithView:_arrowImageView
                           duration:0.1   // DAT_00077a90
                            options:UIViewAnimationOptionTransitionCrossDissolve
                         animations:^{
                             mapSelectAdvanceArrowFrameAlt(self); // Ghidra: @ 0x77a98
                         }
-                        completion:nil];
+                        completion:^(BOOL finished) {
+                            self->_mapSelectViewCtrl.tableView.scrollEnabled = YES;
+                            self->_isAnimationing = NO;
+                        }];
         // Collapse right clips, then restore widths (mapSelectSetRightDummyWidthAlt @ 0x77de8,
         // LAB_00077c8c_1).  animations body at LAB_00077b9c_1 is the same collapse logic as
         // mapSelectLayoutRightDummyViews (separate compiled instance in the binary).
