@@ -2241,6 +2241,34 @@ void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scal
         return;
     }
 
+    // ---- collection frame grids + anchor cache (index 9 music, 13 wall) -------------------
+    // Ghidra +0x3f4 / +0x404: a 3x3 grid of the collection frame m_boardFrame[1]; each cell's
+    // anchored position (cx-anchorX, cy-anchorY) is cached for the result-popup overlays. The
+    // FixedToFP/FPToFixed here are int<->float identity round-trips (no scaling).
+    if (self->m_boardUserNo[9] == child || self->m_boardUserNo[13] == child) {
+        int *anchorCache = (self->m_boardUserNo[9] == child) ? self->m_musicAnchor
+                                                             : self->m_wallAnchor;
+        for (int i = 0; i < 9; i++) {
+            const int cx = (i % 3) * 200 + x;
+            const int cy = (i / 3) * 0xcc + y;
+            drawAepFrameEx(aep, self->m_boardFrame[1], cx, cy, scaleX, scaleY, rotation, anchorX,
+                           anchorY, color, alpha, blend, 0xffffff, clipRect, p17, 1);
+            anchorCache[i * 2]     = cx - anchorX;
+            anchorCache[i * 2 + 1] = cy - anchorY;
+        }
+        return;
+    }
+
+    // ---- "new chara available" button (index 17): two-frame icon --------------------------
+    // Ghidra +0x414: m_boardFrame[8] when >=5 tickets AND all charas collected, else [9].
+    if (self->m_boardUserNo[17] == child) {
+        const bool available = self->m_charaTicket >= 5 &&
+            countAvailableCharacters((__bridge NSArray *)self->m_gotCharaArray) == 0;
+        drawAepFrameEx(aep, self->m_boardFrame[available ? 8 : 9], x, y, scaleX, scaleY, rotation,
+                       anchorX, anchorY, color, alpha, blend, 0xffffff, clipRect, p17, 1);
+        return;
+    }
+
     // ---- single-texture panels (LAB_000a3d1a tail) ----------------------------------------
     struct { int usr; int slot; int w; int h; } kPanels[] = {
         { self->m_boardUserNo[3],  0x2, 0x228, 0x228 },   // m_reserveTex[2]-ish chara backing
