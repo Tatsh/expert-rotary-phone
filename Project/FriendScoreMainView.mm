@@ -96,7 +96,7 @@ static int scoreToRank(int score) {
     return 6;
 }
 
-@interface FriendScoreMainView () <UITableViewDataSource, UITableViewDelegate>
+@interface FriendScoreMainView () <UITableViewDataSource, UITableViewDelegate, DownloadMainDelegate>
 - (void)endOpenAnimation;
 - (void)startCloseAnimation;
 - (void)endCloseAnimation;
@@ -539,7 +539,7 @@ static int scoreToRank(int score) {
         cancelButtonTitle:nil otherButtonTitles:@"OK"];
         [alert show];
     } else {
-        NSArray *friend = [json objectForKey:@"Friend"];
+        NSArray *friends = [json objectForKey:@"Friend"];   // `friend` is a C++ reserved word
         NSDictionary *me = [json objectForKey:@"Me"];
 
         NSMutableArray *playerIds = [[NSMutableArray alloc] init];
@@ -549,7 +549,7 @@ static int scoreToRank(int score) {
         NSMutableArray *flags     = [[NSMutableArray alloc] init];
         NSMutableArray *charaIds  = [[NSMutableArray alloc] init];
 
-        for (NSDictionary *f in friend) {
+        for (NSDictionary *f in friends) {
             NSNumber *pid = [f objectForKey:@"PlayerId"];
             NSNumber *sN  = [f objectForKey:@"ScoreN"];
             NSNumber *sH  = [f objectForKey:@"ScoreH"];
@@ -610,7 +610,7 @@ static int scoreToRank(int score) {
             int playCnt = 0;
             bool fc = false, pf = false;
             fetchScoreDataForMusic(&neAppEventCenter::shared(), &myScore[d], &myRank[d], &playCnt,
-                                   &fc, &pf, musicId, d);
+                                   &fc, &pf, _musicId, d);
             myFullCombo[d] = fc ? YES : NO;
             myPerfect[d]   = pf ? YES : NO;
         }
@@ -703,7 +703,7 @@ static int scoreToRank(int score) {
         NSArray *allOver = [OverScoreData getAllOverScoreData:[[AppDelegate appDelegate] managedObjectContext]];
         NSMutableArray *over = [[NSMutableArray alloc] init];
         for (OverScoreData *rec in allOver) {
-            if ([rec.music intValue] == (int)musicId) {
+            if ([rec.music intValue] == (int)_musicId) {
                 [over addObject:rec];
             }
         }
