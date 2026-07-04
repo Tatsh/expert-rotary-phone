@@ -1,0 +1,130 @@
+# .gitlab-ci.yml — build pop'n rhythmin (PopnRhythmin) for iOS with AD-HOC signing.
+#
+# iOS builds need a macOS runner with Xcode. The primary job drives the CMake/Xcode
+# backend (see BUILD.md), ad-hoc-signs the .app (codesign -s -, i.e. the "-" adhoc
+# identity — no Apple Developer account / provisioning profile required) and packages
+# a .ipa artifact. A second, opt-in job exercises the fixed Theos Makefile.
+#
+# Runner selection:
+#   * GitLab.com SaaS macOS runners: the `image:` + `saas-macos-*` tag below work as-is
+#     (macOS runners must be enabled for the project).
+#   * Self-managed runners: set MACOS_RUNNER_TAG to your runner's tag; `image:` is ignored
+#     by shell runners.
+#
+# NOTE: this source tree has never been compiled (no Obj-C toolchain in the reconstruction
+# environment). The first real run is expected to surface genuine compile errors — that is
+# the point of wiring up CI. Fix them as the compiler reports them; the build files
+# themselves are correct by construction.
+
+variables:
+  # Modern SaaS runners ship Xcode 12+, which cannot emit armv7/armv7s — build arm64 only
+  # here. To also produce the legacy 32-bit slices you need a self-managed runner with
+  # Xcode <= 11 and IOS_ARCHS="armv7 armv7s arm64".
+  IOS_ARCHS: "arm64"
+  DEPLOYMENT_TARGET: "9.0"          # arm64 floor; lower it only on an Xcode that supports it
+  IOS_CMAKE_REF: "4.5.0"            # leetal/ios-cmake tag (the toolchain is not vendored)
+  BUILD_CONFIG: "Release"
+  MACOS_RUNNER_TAG: "saas-macos-medium-m1"
+  # Optional: set POPNRHYTHMIN_BINARY (a CI variable pointing at an owned app binary, e.g.
+  # a mounted secure file) to embed the copyrighted sugoroku board dialogue. Unset -> blank.
+  # Optional: set RESOURCES_DIR to bundle the extracted game assets into the .app.
+
+# Run for merge requests, tags, and branch pushes — but never a branch pipeline that
+# duplicates an open MR pipeline.
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+default:
+  image: macos-14-xcode-15
+  tags:
+    - $MACOS_RUNNER_TAG
+  interruptible: true
+
+stages:
+  - build
+
+# ---------------------------------------------------------------------------
+# Primary: native CMake/Xcode build -> ad-hoc-signed .ipa
+# ---------------------------------------------------------------------------
+build:xcode:
+  stage: build
+  variables:
+    BUILD_DIR: "build"
+  script:
+    - xcodebuild -version
+    - sw_vers
+    # Fetch the ios-cmake toolchain (not vendored).
+    - git clone --depth 1 --branch "$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake
+    # Configure. PLATFORM=OS64 => arm64 device slice; ENABLE_BITCODE=NO to match the app.
+    - |
+      CMAKE_ARGS=(
+        -B "$BUILD_DIR" -G Xcode
+        -DCMAKE_TOOLCHAIN_FILE="$CI_PROJECT_DIR/.ios-cmake/ios.toolchain.cmake"
+        -DPLATFORM=OS64
+        -DDEPLOYMENT_TARGET="$DEPLOYMENT_TARGET"
+        -DIOS_ARCHS="$IOS_ARCHS"
+        -DENABLE_BITCODE=NO
+      )
+      [ -n "$POPNRHYTHMIN_BINARY" ] && CMAKE_ARGS+=( -DPOPNRHYTHMIN_BINARY="$POPNRHYTHMIN_BINARY" )
+      [ -n "$RESOURCES_DIR" ]       && CMAKE_ARGS+=( -DRESOURCES_DIR="$RESOURCES_DIR" )
+      cmake "${CMAKE_ARGS[@]}"
+    # Build with ad-hoc signing: identity "-", no provisioning profile required.
+    - |
+      cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" -- \
+        CODE_SIGN_IDENTITY="-" \
+        CODE_SIGNING_ALLOWED=YES \
+        CODE_SIGNING_REQUIRED=NO \
+        AD_HOC_CODE_SIGNING_ALLOWED=YES \
+        DEVELOPMENT_TEAM="" \
+        PROVISIONING_PROFILE_SPECIFIER=""
+    # Locate the built app, ad-hoc (re)sign it explicitly, verify, and package a .ipa.
+    - |
+      APP="$(find "$BUILD_DIR" -type d -name 'PopnRhythmin.app' -print -quit)"
+      test -n "$APP" || { echo "PopnRhythmin.app not found under $BUILD_DIR"; exit 1; }
+      echo "Built app: $APP"
+      codesign --force --sign - --timestamp=none "$APP"
+      codesign --verify --verbose=2 "$APP"
+      rm -rf Payload PopnRhythmin-adhoc.ipa
+      mkdir -p Payload
+      cp -R "$APP" Payload/
+      /usr/bin/zip -qry PopnRhythmin-adhoc.ipa Payload
+      echo "Packaged: PopnRhythmin-adhoc.ipa"
+  artifacts:
+    name: "PopnRhythmin-adhoc-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - PopnRhythmin-adhoc.ipa
+    expire_in: 2 weeks
+
+# ---------------------------------------------------------------------------
+# Opt-in: Theos build (fixed theos/Makefile). Theos fake-signs (ad-hoc) via ldid.
+# Manual + allow_failure because it bootstraps a full Theos install on the runner.
+# ---------------------------------------------------------------------------
+build:theos:
+  stage: build
+  when: manual
+  allow_failure: true
+  variables:
+    THEOS: "$CI_PROJECT_DIR/.theos-install"
+  script:
+    - xcodebuild -version
+    # Bootstrap Theos non-interactively into a project-local dir.
+    - git clone --recursive https://github.com/theos/theos.git "$THEOS"
+    - export THEOS="$THEOS"
+    # Ad-hoc / fake code signing: Theos uses ldid for on-device-less signing.
+    - brew list ldid >/dev/null 2>&1 || brew install ldid
+    - |
+      MAKE_ARGS=( -C theos ARCHS="$IOS_ARCHS" FINALPACKAGE=1 )
+      [ -n "$POPNRHYTHMIN_BINARY" ] && MAKE_ARGS+=( POPNRHYTHMIN_BINARY="$POPNRHYTHMIN_BINARY" )
+      make "${MAKE_ARGS[@]}"
+      make "${MAKE_ARGS[@]}" package
+  artifacts:
+    name: "PopnRhythmin-theos-$CI_COMMIT_SHORT_SHA"
+    paths:
+      # `make -C theos` runs with theos/ as the project dir, so Theos writes here.
+      - theos/packages/*.deb
+    expire_in: 2 weeks
