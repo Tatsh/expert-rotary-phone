@@ -50,7 +50,7 @@
 // Generic percent-encode / decode free helpers (a separate pair from +URLEncodedString:).
 // Reached only via a data function-pointer table in the binary; see the .m / HANDOFF.md.
 NSString *urlEncodeString(NSString *string);   // @ 0xfc1d0
-NSString *urlDecodeString(NSString *string);   // @ 0xfc218
+// (percent-decode is -[NSString URLDecodedString] @ 0xfc218, in NSString+URLDecode.h)
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

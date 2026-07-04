@@ -19,9 +19,8 @@
 // its owning C++ scene when the matching download finishes. Ghidra: modeSelectRefreshNews
 // @ 0x6d8cc, musicSelUpdateInfoPanel @ 0x37c88. Both scene classes are reconstructed:
 // ModeSelTask == MenuMainTask, MusicSelTask == MainTask (aliased in DownloadMain.h).
-// musicSelUpdateInfoPanel is defined in MainTask.mm (forwards to MainTask::updateInfoPanel);
-// TODO(dep): modeSelectRefreshNews (@ 0x6d8cc, MenuMainTask's news-panel refresh) is not yet
-// reconstructed, so it stays forward-declared here.
+// modeSelectRefreshNews is defined in MenuMainTask.mm (forwards to MenuMainTask::refreshNews);
+// musicSelUpdateInfoPanel is defined in MainTask.mm (forwards to MainTask::updateInfoPanel).
 extern "C" void modeSelectRefreshNews(ModeSelTask *task, bool hasNews);
 extern "C" void musicSelUpdateInfoPanel(MusicSelTask *task, bool hasList);
 

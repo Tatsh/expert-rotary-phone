@@ -56,6 +56,7 @@ target_sources(popnrhythmin PRIVATE
     NSBundle+RewardNetwork.m
     NSCharacterSet_Extensions.m
     NSScanner_Extensions.m
+    NSString+URLDecode.m
     RecommendAdId.m
     RecommendNetwork.m
     RecommendWebAPI.m
@@ -254,6 +255,7 @@ target_sources(popnrhythmin PRIVATE
     CDataScanner.h
     NSCharacterSet_Extensions.h
     NSScanner_Extensions.h
+    NSString+URLDecode.h
     ConversionView.h
     CustomWebView.h
     HowToViewCtrlPad.h

@@ -10,16 +10,7 @@
 #import "RewardNetworkIndicator.h"
 #import "RewardNetworkUtilities.h"
 #import "RewardNetworkMessage.h"
-
-// ---------------------------------------------------------------------------
-// Unreconstructed RewardNetwork ("applilink") SDK collaborators. Minimal forward
-// interfaces only — reconstruct these classes separately.
-// ---------------------------------------------------------------------------
-
-// TODO(dep): NSString URL-decode category shipped with the SDK.
-@interface NSString (RewardNetworkURLDecode)
-- (NSString *)URLDecodedString;
-@end
+#import "NSString+URLDecode.h"   // -URLDecodedString (SDK percent-decode category)
 
 @implementation RewardNetworkWebViewController
 

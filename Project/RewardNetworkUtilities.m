@@ -199,13 +199,5 @@ NSString *urlEncodeString(NSString *string) {
         kCFStringEncodingUTF8));
 }
 
-// @ 0xfc218 — percent-decode `string` (UTF-8). The binary passes a shared "%d/%02d/15
-// 12:00:00" CFString (@ 0x10869e) as charactersToLeaveEscaped — recovered verbatim; the
-// reused date-format literal is unusual but faithful to the binary.
-NSString *urlDecodeString(NSString *string) {
-    return (NSString *)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(
-        kCFAllocatorDefault,
-        (__bridge CFStringRef)string,
-        CFSTR("%d/%02d/15 12:00:00"),
-        kCFStringEncodingUTF8));
-}
+// The percent-DECODE counterpart (Ghidra urlDecodeString @ 0xfc218) is really the SDK's
+// -[NSString URLDecodedString] category method; it lives in NSString+URLDecode.m.

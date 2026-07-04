@@ -11,18 +11,13 @@
 #import "RecommendWebAPI.h"
 #import "RecommendWebViewController.h"   // also supplies the RewardNetworkWebViewDelegate protocol
 #import "RewardNetworkError.h"
+#import "NSString+URLDecode.h"           // -URLDecodedString (SDK percent-decode category)
 
 // The single shared core and the serial "RewardCore" queue its designated initialiser runs on.
 // Both are produced by the +allocWithZone: dispatch_once body (recommendCoreSharedAlloc @ 0xfc2c4).
 static RecommendCore *g_pRecommendCoreInstance = nil;   // @ g_pRecommendCoreInstance
 static dispatch_queue_t g_pRewardCoreQueue = NULL;       // @ DAT_0018836c ("RewardCore")
 
-// TODO(dep): -URLDecodedString lives on the RewardNetwork SDK's NSString (URLDecode) category
-// (see RewardNetworkWebViewController.m), which is not part of this pass. This local helper stands
-// in for it (percent-unescape) so RecommendCore introduces no cross-unit category seam.
-static NSString *RecommendURLDecode(NSString *s) {
-    return [s stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-}
 
 @interface RecommendCore () <RewardNetworkWebViewDelegate> {
     BOOL navigationBarHidden;   // hide the app-list navigation bar
@@ -372,7 +367,7 @@ static NSString *RecommendURLDecode(NSString *s) {
             }
             if ([token rangeOfString:@"default_scheme="].location != NSNotFound) {
                 NSString *value =
-                    RecommendURLDecode([token substringFromIndex:[@"default_scheme=" length]]);
+                    [[token substringFromIndex:[@"default_scheme=" length]] URLDecodedString];
                 NSURL *appURL =
                     [NSURL URLWithString:[NSString stringWithFormat:@"%@://", value]];
                 if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
@@ -381,13 +376,13 @@ static NSString *RecommendURLDecode(NSString *s) {
                 }
                 break;
             } else if ([token rangeOfString:@"ad_id_from="].location != NSNotFound) {
-                adIdFrom = RecommendURLDecode([token substringFromIndex:[@"ad_id_from=" length]]);
+                adIdFrom = [[token substringFromIndex:[@"ad_id_from=" length]] URLDecodedString];
             } else if ([token rangeOfString:@"country_code="].location != NSNotFound) {
-                country = RecommendURLDecode([token substringFromIndex:[@"country_code=" length]]);
+                country = [[token substringFromIndex:[@"country_code=" length]] URLDecodedString];
             } else if ([token rangeOfString:@"category_id="].location != NSNotFound) {
-                category = RecommendURLDecode([token substringFromIndex:[@"category_id=" length]]);
+                category = [[token substringFromIndex:[@"category_id=" length]] URLDecodedString];
             } else if ([token rangeOfString:@"ad_type="].location != NSNotFound) {
-                adType = RecommendURLDecode([token substringFromIndex:[@"ad_type=" length]]);
+                adType = [[token substringFromIndex:[@"ad_type=" length]] URLDecodedString];
             }
         }
         if (adIdFrom != nil && country != nil && category != nil) {
@@ -418,7 +413,7 @@ static NSString *RecommendURLDecode(NSString *s) {
     if ([remainder length] != 0) {
         NSArray *parts = [[remainder substringFromIndex:1] componentsSeparatedByString:@"&"];
         if ([parts count] != 0) {
-            NSString *value = RecommendURLDecode([parts objectAtIndex:0]);
+            NSString *value = [[parts objectAtIndex:0] URLDecodedString];
             NSURL *appURL = [NSURL URLWithString:value];
             if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
                 [[UIApplication sharedApplication] openURL:appURL];

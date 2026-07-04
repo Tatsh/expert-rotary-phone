@@ -525,3 +525,40 @@ draw:
                          m_newsPauseCounter, 0 /* &DAT_00181818 style seam */,
                          &m_newsTickerParams[0], drawCtx);
 }
+
+// @ 0x6d8cc
+// Ghidra: modeSelectRefreshNews. DownloadMain's NEWS delegate callback. Only acts when the
+// fetch actually returned news (`hasNews`) and the freshly fetched lastGetNewsTime is newer
+// than the timestamp of our cached copy (or we have none yet); then it snapshots the news-text
+// array and resets the ticker to line 0. The binary's manual retain/release around the array /
+// timestamp is ARC bookkeeping here.
+void MenuMainTask::refreshNews(bool hasNews) {
+    if (!hasNews) {
+        return;
+    }
+    DownloadMain *dl = [DownloadMain getInstance];
+    NSDate *newsTime = dl.lastGetNewsTime;
+    NSArray *newsArray = dl.newsTextArray;
+    if (newsTime == nil || newsArray == nil) {
+        return;
+    }
+    // Skip the rebuild when our cached copy is already same-or-newer than the fetched news.
+    if (m_newsTimestamp != nil &&
+        [m_newsTimestamp compare:newsTime] != NSOrderedAscending) {
+        return;
+    }
+
+    NSMutableArray *copy = [NSMutableArray array];
+    for (NSUInteger i = 0; i < [newsArray count]; i++) {
+        [copy addObject:[newsArray objectAtIndex:i]];
+    }
+    m_newsArray = copy;
+    m_newsTimestamp = [newsTime copy];
+    m_newsIndex = 0;   // restart the ticker at the first line
+}
+
+// C-linkage shim: DownloadMain reaches its NEWS delegate (a MenuMainTask, aka ModeSelTask) by
+// the unmangled binary symbol. Forwards to the real method.
+extern "C" void modeSelectRefreshNews(MenuMainTask *task, bool hasNews) {
+    task->refreshNews(hasNews);
+}

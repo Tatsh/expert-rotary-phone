@@ -92,6 +92,11 @@ private:
     // Ghidra: FUN_0006d6d4 @ 0x6d6d4.
     void updateNewsTicker(int handle, int drawCtx);
 
+    // News-fetch callback (DownloadMain's NEWS delegate). When `hasNews`, rebuild the local
+    // news-text array copy from DownloadMain if its lastGetNewsTime is newer than the cached
+    // copy's timestamp, then reset the ticker to line 0. Ghidra: modeSelectRefreshNews @ 0x6d8cc.
+    void refreshNews(bool hasNews);
+
     // ---- packed top-row cluster (+0x94.. settings/gift rects, overlapping fields) ----
     struct TopCluster {
         int rowY;         // +0x94 shared top-row Y (also the settings enable field)
@@ -130,7 +135,7 @@ private:
     uint8_t          _reserved_newsScan[0xc0 - 0xb9] = {};
     // ---- NEWS-ticker run state (used by updateNewsTicker, FUN_0006d6d4) ----
     id               m_newsArray = nil;       // +0xc0 the news-text array copy (retained)
-    uint8_t          _reserved_c4[0xc8 - 0xc4] = {};  // +0xc4
+    id               m_newsTimestamp = nil;   // +0xc4 lastGetNewsTime of the cached copy (NSDate)
     id               m_newsCurLine = nil;     // +0xc8 current news line (retained)
     int              m_newsIndex = 0;         // +0xcc index into m_newsArray
     int              m_newsFrame = 0;         // +0xd0 per-line frame counter
