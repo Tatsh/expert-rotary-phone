@@ -1,6 +1,6 @@
 //
 //  NSDictionary_JSONExtensions.h
-//  pop'n rhythmin (vendored TouchJSON)
+//  pop'n rhythmin (reconstructed TouchJSON category)
 //
 //  TouchJSON convenience category: build an NSDictionary from JSON data/string
 //  through CJSONDeserializer. The binary's Downloader::getDataInJSON (@ 0x62948)

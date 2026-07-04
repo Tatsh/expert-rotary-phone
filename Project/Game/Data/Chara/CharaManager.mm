@@ -237,26 +237,17 @@ NSArray *CharaManager::collectUnlockedCharaIds() {
 }
 
 // ---------------------------------------------------------------------------
-// Chara-select page-texture helpers.
-// Byte-offset accessor for AcMainTask's flat play-data block.  Mirrors the
-// private field<T>(off) template inside AcMainTask without requiring access
-// to its private members.  Offsets are binary-exact from Ghidra rb420.
+// Chara-select page-texture helpers. In the binary these are AcMainTask methods
+// (@ 0xa27f0 / 0xa2a40 / 0xa2b10); reconstructed as free functions and declared
+// friends of AcMainTask, they reach its private chara arrays/textures by name.
+// The two chara NSArray slots are stored as raw (non-owning) void* on the task,
+// so reads __bridge them without a retain.
 // ---------------------------------------------------------------------------
-namespace {
-
-template <typename T>
-static inline T &acField(AcMainTask *task, ptrdiff_t off) {
-    return *reinterpret_cast<T *>(reinterpret_cast<char *>(task) + off);
-}
-
-} // namespace
 
 // Ghidra: charaSelectLoadPageTextures @ 0xa27f0.
 void charaSelectLoadPageTextures(AcMainTask *task, int page) {
-    __unsafe_unretained NSArray *available =
-        acField<__unsafe_unretained NSArray *>(task, 0x634);
-    __unsafe_unretained NSArray *gotChara =
-        acField<__unsafe_unretained NSArray *>(task, 0x630);
+    __unsafe_unretained NSArray *available = (__bridge NSArray *)task->m_availableInfos;
+    __unsafe_unretained NSArray *gotChara = (__bridge NSArray *)task->m_gotCharaArray;
 
     const int start = page * 6;
     for (int i = 0; i < 6; i++) {
@@ -268,8 +259,8 @@ void charaSelectLoadPageTextures(AcMainTask *task, int page) {
         CharaInfo *info = available[idx];
         const int charaId = info.charaId;
 
-        // Release the occupant of the current-page texture slot (+0x18c[i]).
-        auto &slot = acField<neTextureForiOS *>(task, 0x18c + i * 4);
+        // Release the occupant of the current-page texture slot.
+        neTextureForiOS *&slot = task->m_charaPageCurrTex[i];
         if (slot) {
             delete slot;
             slot = nullptr;
@@ -297,8 +288,7 @@ void charaSelectLoadPageTextures(AcMainTask *task, int page) {
 
 // Ghidra: charaSelectFindCharaIndex @ 0xa2a40.
 int charaSelectFindCharaIndex(AcMainTask *task, int charaId) {
-    __unsafe_unretained NSArray *available =
-        acField<__unsafe_unretained NSArray *>(task, 0x634);
+    __unsafe_unretained NSArray *available = (__bridge NSArray *)task->m_availableInfos;
     int idx = 0;
     for (CharaInfo *info in available) {
         if (info.charaId == charaId) {
@@ -314,21 +304,19 @@ int charaSelectFindCharaIndex(AcMainTask *task, int charaId) {
 // Ghidra: charaSelectReleaseTextures @ 0xa2b10.
 void charaSelectReleaseTextures(AcMainTask *task) {
     for (int i = 0; i < 6; i++) {
-        // Prev-page texture array at +0x174 (6 × neTextureForiOS*).
-        auto &prev = acField<neTextureForiOS *>(task, 0x174 + i * 4);
+        neTextureForiOS *&prev = task->m_charaPagePrevTex[i];
         if (prev) {
             delete prev;
             prev = nullptr;
         }
-        // Current-page texture array at +0x18c (6 × neTextureForiOS*).
-        auto &curr = acField<neTextureForiOS *>(task, 0x18c + i * 4);
+        neTextureForiOS *&curr = task->m_charaPageCurrTex[i];
         if (curr) {
             delete curr;
             curr = nullptr;
         }
     }
-    // Highlight texture at +0xf0.
-    auto &highlight = acField<neTextureForiOS *>(task, 0xf0);
+    // Highlight texture (reserve slot 2 @ +0xf0).
+    neTextureForiOS *&highlight = task->m_reserveTex[2];
     if (highlight) {
         delete highlight;
         highlight = nullptr;

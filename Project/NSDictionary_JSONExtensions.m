@@ -1,6 +1,6 @@
 //
 //  NSDictionary_JSONExtensions.m
-//  pop'n rhythmin (vendored TouchJSON)
+//  pop'n rhythmin (reconstructed TouchJSON category)
 //
 
 #import "NSDictionary_JSONExtensions.h"

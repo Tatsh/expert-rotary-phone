@@ -45,6 +45,13 @@ public:
     ~AcMainTask() override;              // @ 0x99ba4 (acMainTaskDtor; destroys the RNG + base)
     void update(int deltaMs) override;   // Ghidra: AcMainTask_update (FUN_00099d18)
 
+    // Chara-select page-texture helpers (CharaManager.mm). In the binary these are
+    // AcMainTask methods (@ 0xa27f0 / 0xa2a40 / 0xa2b10); reconstructed as free
+    // functions, they read this task's private chara arrays/textures by name.
+    friend void charaSelectLoadPageTextures(AcMainTask *task, int page);
+    friend int  charaSelectFindCharaIndex(AcMainTask *task, int charaId);
+    friend void charaSelectReleaseTextures(AcMainTask *task);
+
 private:
     // Per-state handlers, lifted from AcMainTask_update's inlined switch cases.
     void stateInit();          // case 0  (setup, then BGM or the no-treasure path)
@@ -109,7 +116,8 @@ private:
     neTextureForiOS *m_pointsDigitTex[10] = {};     // +0xfc num_points0..9 glyphs
     neTextureForiOS *m_roulDigitTex[10] = {};       // +0x124 num_roulette_0..9 glyphs
     neTextureForiOS *m_ticketDigitTex[10] = {};     // +0x14c ticket_num0..9 glyphs
-    uint8_t          _rsvd_174[0x1a4 - 0x174] = {};   // +0x174
+    neTextureForiOS *m_charaPagePrevTex[6] = {};    // +0x174 prev-page chara textures
+    neTextureForiOS *m_charaPageCurrTex[6] = {};    // +0x18c current-page chara textures
     neTextureForiOS *m_jacketTex[9] = {};           // +0x1a4 9 music-panel jacket textures
     neTextureForiOS *m_wallNailTex[9] = {};         // +0x1c8 9 wall-nail textures
     neTextureForiOS *m_eventTex[12] = {};           // +0x1ec 12 event_0_%03d icons
