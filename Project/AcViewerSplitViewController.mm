@@ -195,7 +195,9 @@ static UIViewController *RootVC() {
         return;
     }
     _isAnimationing = YES;
-    neAppEventCenter::setLastMusic(-1);
+    // @0x32870: force event-center init, then reset the current AC-viewer browsing music id.
+    neAppEventCenter::shared();
+    neAppEventCenter::clearAcViewerCurrentMusic();   // g_dwAcViewerMusicId = -1
     if (!neSceneManager::isPadDisplay()) {
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationDuration:0.5];

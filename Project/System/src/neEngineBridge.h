@@ -83,9 +83,6 @@ BOOL updateHighScore(PlayScore *s, unsigned newScore, short cool, short great,
 class neAppEventCenter {
 public:
     static neAppEventCenter &shared();   // Ghidra: NEAppEventCenter_shared (FUN_0000b150)
-    // Record the last-played music id (drives the "continue from" / event state).
-    // Ghidra: neAppEventSetLastMusic (global DAT_00187bf0).
-    static void setLastMusic(int music);
     // Reset the AC-viewer's pending selection to the "none" sentinels (music id -1,
     // difficulty 0xffff) — done when the viewer is cancelled. Ghidra globals
     // g_dwAcViewerSelMusicId @ 0x187bf8 / g_wAcViewerSelDifficulty @ 0x187bfc (in the
@@ -160,6 +157,8 @@ public:
     // (the result-record difficulty) that PlayResultTask reads back.
     int  lastMusic() const;              // DAT_00187bb8 (== g_pNeAppEventCenter, result music id)
     int  lastSheet() const;              // DAT_00187bbc (== g_wResultSheet, result difficulty)
+    void setLastMusic(int music);        // writes g_pNeAppEventCenter (m_lastMusic @ +0x00)
+    void setLastSheet(int sheet);        // writes g_wResultSheet    (m_lastSheet @ +0x04)
 
     // Guest / no-save run flag (g_bGuestNoSaveMode). Set true when a guided first-play tutorial
     // starts, false on a normal music-select entry; gates whether stopAndSave persists a result.
