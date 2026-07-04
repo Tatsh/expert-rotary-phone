@@ -155,10 +155,16 @@ public:
                           bool fullCombo);
 
     // First two fields of the singleton (DAT_00187bb8 / DAT_00187bbc): the last
-    // played music id and sheet (difficulty), persisted via UserSettingData. (The
-    // setter is the static setLastMusic above, which writes the DAT_00187bf0 global.)
-    int  lastMusic() const;              // DAT_00187bb8
-    int  lastSheet() const;              // DAT_00187bbc
+    // played music id and sheet (difficulty), persisted via UserSettingData. m_lastMusic @ +0x00
+    // is g_pNeAppEventCenter (the result-record music id) and m_lastSheet @ +0x04 is g_wResultSheet
+    // (the result-record difficulty) that PlayResultTask reads back.
+    int  lastMusic() const;              // DAT_00187bb8 (== g_pNeAppEventCenter, result music id)
+    int  lastSheet() const;              // DAT_00187bbc (== g_wResultSheet, result difficulty)
+
+    // Guest / no-save run flag (g_bGuestNoSaveMode). Set true when a guided first-play tutorial
+    // starts, false on a normal music-select entry; gates whether stopAndSave persists a result.
+    bool guestNoSaveMode() const;
+    void setGuestNoSaveMode(bool guest);
 
     // Stamp the session start time into the +0x20 ivar (_startDate). Sibling of
     // setEndDate (same lazy-release-then-retain-[NSDate date] shape); called when the

@@ -319,7 +319,7 @@ void MainTask::update(int /*deltaMs*/) {
         if (hitButton(tapX, tapY, kBtnTutorial)) {
             if (m_sel.tutorialOffered) {
                 m_sel.selectSeInst = (int)[audio playSe:nil resourceId:m_sel.selectSeId];
-                neAppEventCenter::shared();   // g_bGuestNoSaveMode := true lives here
+                neAppEventCenter::shared().setGuestNoSaveMode(true);   // guided first play: don't save
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = PlayTaskCreate();   // first-play guided play
                 m_state = 0xe;
@@ -699,7 +699,7 @@ static const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya"};
 // animation handle, uploads the score / points / rank digit textures, loads the touch SEs +
 // preview BGM, and sets the tutorial / badge flags. @ 0x370f0
 void MainTask::setup() {
-    neAppEventCenter::shared();   // g_bGuestNoSaveMode := false lives in the event center
+    neAppEventCenter::shared().setGuestNoSaveMode(false);   // normal entry: results are saved
     AudioManager *audio = [AudioManager sharedManager];
 
     m_aep = &AepManager::shared();
@@ -1396,14 +1396,20 @@ void MainTask::stopAndSave() {
     }
     m_aep->unloadGroup(3);   // releaseAepTexture(aep, 3)
 
-    // Persist the finished play's music id + result sheet unless this was a guest/no-save run.
+    // Record the finished play's music id + result sheet for the result screen to read, unless
+    // this is a no-save teardown. When guest-mode is on the result record is zeroed instead of
+    // persisted (setLastMusic == g_pNeAppEventCenter result music id, setLastSheet == g_wResultSheet).
     if (!m_noSaveMode) {
-        neAppEventCenter::shared();
+        neAppEventCenter &ec = neAppEventCenter::shared();
         id info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
-        // TODO(dep): g_bGuestNoSaveMode / g_pNeAppEventCenter / g_wResultSheet writes live in
-        // the app-event-center region; the save call is UserSettingData saveSettingData.
-        neAppEventCenter::setLastMusic((int)[info MusicID]);
-        [UserSettingData saveSettingData];
+        if (!ec.guestNoSaveMode()) {
+            ec.setLastMusic((int)[info MusicID]);
+            ec.setLastSheet((int)m_resultSheet);
+            [UserSettingData saveSettingData];
+        } else {
+            ec.setLastMusic(0);
+            ec.setLastSheet(0);
+        }
     }
 
     m_cellSem = nullptr;                     // Ghidra: _dispatch_release (ARC releases it here)

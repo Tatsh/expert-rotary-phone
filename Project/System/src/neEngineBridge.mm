@@ -136,6 +136,11 @@ void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }
 int neAppEventCenter::lastSheet() const { return m_lastSheet; }
 void neAppEventCenter::setLastSheet(int sheet) { m_lastSheet = sheet; }
 
+// Guest / no-save run flag (event-center region global g_bGuestNoSaveMode).
+static bool g_bGuestNoSaveMode = false;
+bool neAppEventCenter::guestNoSaveMode() const { return g_bGuestNoSaveMode; }
+void neAppEventCenter::setGuestNoSaveMode(bool guest) { g_bGuestNoSaveMode = guest; }
+
 #pragma mark - Score store (Core Data ScoreData entity)
 
 // PlayScore is the named view of this singleton's result region; the reinterpret_casts in the
