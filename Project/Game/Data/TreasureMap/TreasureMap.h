@@ -4,7 +4,7 @@
 //
 //  The parsed sugoroku (board-game) map: a table of board squares ("nodes"/areas)
 //  plus a few header fields, loaded from a bundled "map_%03d.map" blob. The arcade
-//  task (AcMainTask::loadTreasureMap, Ghidra FUN_000a0b58) news one of these per
+//  task (AcMainTask::loadTreasureMap, Ghidra charaSelectReloadData @ 0xa0b58) news one of these per
 //  goal, loads it, then reads its node bounding box to place + clamp the scroll.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -148,7 +148,7 @@ int getTreasureMapTableEntry(int mainMapId, int subMapId);
 // Returns kParentMapTable[mapId] (DAT_0012fb30) — parent main-map id, -1 for roots.
 int getTreasureMapValue_fb30(int mapId);
 
-// Ghidra: FUN_000ce1c8
+// Ghidra: getCharacterAssetCount @ 0xce1a8 (address-sweep fix: 0xce1c8 was mid-body)
 // Returns the number of character message strings for the given character id.
 // characterId encodes: group = id/10 (valid: 6, 8), slot = id%10 (valid: 0..2).
 // Called by both getCharacterAssetName and charaSelectReloadData.

@@ -185,7 +185,7 @@ public:
 
     // --- Just-finished play's result record ---
     // The play task fills these (recordPlayResult + direct stores of rank/combo);
-    // the result screen (PlayResultTask::resultSetup, Ghidra FUN_0003dfe0) snapshots
+    // the result screen (PlayResultTask, Ghidra resultTaskDraw @ 0x3dfe0) snapshots
     // them. Offsets are the DAT_00187bxx globals relative to this singleton base
     // (DAT_00187bb8 == +0x00); modelled as the named m_result fields below.
     short coolCount()  const { return m_result.coolCount; }        // DAT_00187bc0 low

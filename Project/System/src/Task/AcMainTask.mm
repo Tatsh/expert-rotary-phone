@@ -2075,16 +2075,16 @@ void AcMainTask::sugorokuDrawFriendMeet() {
     m_friendOpacity = (v < 1) ? 0 : v;
 }
 
-// Ghidra: charaSelectDrawAndInput (FUN_000a3724) — the group-5 per-element draw callback
-// for the SUGOROKU board / chara-select screen: a large (~20-branch, NEON-heavy fixed-point)
-// routine that blits the chara-thumbnail grid, name/skill text, treasure-map cells, roulette
-// digits and result panels, and drives the hit-select SE. Sugoroku is the DEPRIORITIZED
-// subsystem in this reconstruction (the rhythm game is the focus), and the decompile itself
-// is marked best-effort. Provided here as a LINKABLE PARTIAL so the app builds; the full
-// per-element blits are a documented reconstruction gap (the helpers it needs --
-// getStringByIndex12 / findTreasureMapIndexById / CharaManager_availableInfoForCharaId /
-// countAvailableCharacters / aepManagerReset_a,b / drawAepTextMultiline -- are already present
-// above). `context` is the AcMainTask. TODO(sugoroku): rebuild the element branches.
+// Ghidra: charaSelectDrawAndInput (FUN_000a3724) — the group-5 per-element draw callback for
+// the sugoroku board / chara-select screen. A 26-branch routine dispatched on the resolved
+// user number (m_boardUserNo[]): the chara-thumbnail grid (with the hit-flash select layer),
+// chara name + skill name/description/info text, the music/wall collection-piece grids keyed
+// on the treasure-map unlock bitfields, single-texture panels, the list scroll bar, the pulsing
+// collection-complete badge, and the roulette-result icon/caption. `context` is the AcMainTask,
+// reached through its named members. A couple of NEON-obscured indices (the step-value slot and
+// the chara-column base) are best-effort; the fixed-point scale conversions the binary does via
+// FixedToFP are skipped here per the rebuild convention (the GL layer consumes the percentage
+// scale directly, as documented in AepFrameDraw.mm).
 void AcMainSugorokuDraw(int child, int frame, int x, int y, int scaleX, int scaleY,
                         int anchorX, int anchorY, int color, int alpha, int rotation,
                         uint32_t blend, int *clipRect, uint32_t p17, void *context) {
