@@ -76,7 +76,7 @@
 #import "AppFont.h"                     // AppFontName() == getFontNameDFSoGei()
 #import "neEngineBridge.h"              // neSceneManager::rootViewController, neEngine::playSystemSe
 
-@interface MapSelectSplitViewController () <DownloadMainDelegate> {
+@interface MapSelectSplitViewController () <DownloadMainDelegate, MapSelectViewControllerDelegate> {
     @public   // de-inlined static helpers reach these via self-> (binary by-offset access)
     BOOL              _isAnimationing;
     UIImageView      *_markView;               // friend-request badge (toggled in viewWillAppear:)
