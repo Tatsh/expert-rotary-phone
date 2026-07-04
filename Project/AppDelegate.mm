@@ -110,7 +110,7 @@ BOOL gLaunchedFromPush = NO;
     self.viewController = [[MainViewController alloc] init];
     self.viewController.view.tag = 1;
     [self.window addSubview:self.viewController.view];
-    neSceneManager::shared().attachRoot((__bridge void *)self.viewController); // Ghidra: FUN_0002c5b8
+    neSceneManager::shared().attachRoot(self.viewController); // Ghidra: FUN_0002c5b8
     [self.window makeKeyAndVisible];
 
     // Renderer setup at the screen's content scale, then engine bootstrap.
@@ -204,8 +204,8 @@ BOOL gLaunchedFromPush = NO;
     _isNecessaryToResume = resume;
     [self.viewController PauseLoop];
 
-    if (_mainTask)   neEngine::stopMainTask(_mainTask);      // Ghidra: FUN_00030710
-    if (_acMainTask) neEngine::stopAcMainTask(_acMainTask);  // Ghidra: FUN_0002314c
+    if (_mainTask)   neEngine::stopMainTask(static_cast<MainTask *>(_mainTask));      // Ghidra: FUN_00030710
+    if (_acMainTask) neEngine::stopAcMainTask(static_cast<AcMainTask *>(_acMainTask));  // Ghidra: FUN_0002314c
 
     // If a resume is expected, pump the loop so the last frames are flushed
     // (the binary calls mainLoop three times here).
