@@ -313,11 +313,18 @@ void MenuMainTask::update(int /*deltaMs*/) {
             [root GotoPopnLink];
             m_state = 0x11;
         } else if (hitButton(touchId, kBtnInvite)) {
-            neEngine::setInputMode([UserSettingData playerName] != nil ? 0 : 2);
-            [root GotoInviteCode];
-            m_state = 0x11;
+            // Ghidra: only enter the invite screen when a player record exists —
+            // play the confirm SE (slot 0) and navigate; otherwise play the deny SE
+            // (slot 2) and stay on the menu (no GotoInviteCode, no state change).
+            if ([UserSettingData playerId] != nil && [UserSettingData playerName] != nil) {
+                neEngine::playSystemSe(0);
+                [root GotoInviteCode];
+                m_state = 0x11;
+            } else {
+                neEngine::playSystemSe(2);
+            }
         } else if (hitButton(touchId, kBtnPresentBox)) {
-            neEngine::setInputMode(1);
+            neEngine::playSystemSe(1);
             [root GotoPresentBox];
             m_state = 0x11;
         } else if (hitButton(touchId, kBtnSugoroku)) {
@@ -329,7 +336,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         break;
     }
     case 0xd:   // settings screen
-        neEngine::setInputMode(1);
+        neEngine::playSystemSe(1);
         [root GotoSetting];
         m_state = 0xe;
         break;

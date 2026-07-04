@@ -353,10 +353,6 @@ namespace neEngine {
     // (FUN_0002c764), which probes the SE-handle table on the scene manager global.
     bool isSePlaying(int slot);
 
-    // Set the scene's touch input mode (0 = normal, non-zero = suspended while a
-    // modal/animation runs). Ghidra: neSceneSetInputMode.
-    void setInputMode(int mode);
-
     // Height (in points) of the AEP-rendered content area, used to place UIKit
     // overlays below the GL scene. Ghidra: neAepContentHeight.
     int aepContentHeight();

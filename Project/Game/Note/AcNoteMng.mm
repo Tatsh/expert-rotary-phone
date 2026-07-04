@@ -19,9 +19,11 @@
 #import "AcNoteMng.h"
 #import "../../System/src/Sound/AudioManager.h"   // BGM start / drift sync (triggerBgmStart, applyBgmSync)
 
-// Arcade-viewer judge result globals (Ghidra: DAT_0016ebe0..). Read by the AcViewer HUD.
-// The judge-side updates are a reconstruction gap (see AcNoteMng.h); defined here so the
-// symbols resolve.
+// Arcade-viewer judge-result globals (Ghidra: DAT_0016ebe0 / DAT_0016ebe4). Verified via
+// xref: the ONLY references in the binary are two READs from aepHudDrawCallback (@ 0x23514 /
+// 0x235c0); nothing ever writes them, and their baked initial value is 0. The arcade viewer is
+// a non-scored preview, so the COOL/GREAT HUD readouts are always 0 in the binary too -- this
+// init-0-and-read model is exact, not a gap.
 int  g_dwAcCoolCount = 0;
 int  g_dwAcGreatCount = 0;
 bool g_bAcNoteFinished = false;

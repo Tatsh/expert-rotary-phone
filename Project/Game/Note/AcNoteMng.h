@@ -262,10 +262,11 @@ private:
     NearestNote m_nearest[9];
 };
 
-// Arcade-viewer judge result globals read by the HUD draw callback (Ghidra:
-// g_dwAcCoolCount / g_dwAcGreatCount / g_bAcNoteFinished @ DAT_0016ebe0..).
-// NOTE: the judge-side updates in AcNoteMng are a reconstruction gap; declared
-// here (init 0) so the HUD reads compile — the counters are not yet driven.
+// Arcade-viewer judge-result globals read by the HUD draw callback (Ghidra:
+// g_dwAcCoolCount / g_dwAcGreatCount @ DAT_0016ebe0 / DAT_0016ebe4). Xref-verified:
+// the binary ONLY reads them (aepHudDrawCallback), never writes them, and their baked
+// value is 0 — the non-scored arcade preview shows 0 for COOL/GREAT. The init-0-and-read
+// model is exact. (g_bAcNoteFinished is the sibling finished flag, same treatment.)
 extern int  g_dwAcCoolCount;
 extern int  g_dwAcGreatCount;
 extern bool g_bAcNoteFinished;

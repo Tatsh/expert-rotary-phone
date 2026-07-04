@@ -49,7 +49,7 @@
 #import "TreasureData.h"
 
 // Scene input-mode set + AEP content-area height come from the engine bridge
-// (neEngine::setInputMode / neEngine::aepContentHeight). neEngineBridge.h imported below.
+// (neEngine::playSystemSe / neEngine::aepContentHeight). neEngineBridge.h imported below.
 
 // Render-time gate threshold in seconds (Ghidra: DAT_0000be7c = 1000.0). -draw renders
 // only while the elapsed render time is below this, so in practice every frame draws (a
@@ -257,7 +257,7 @@ static int SecondsToFixed(float s) { return (int)(s * 65536.0f); }
     if (_inputConvPassViewCtrl != nil) {
         return;
     }
-    neEngine::setInputMode(2);   // Ghidra: FUN_0002c724(&DAT_00187b74, 2) — scene input mode
+    neEngine::playSystemSe(2);   // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2) @ 0x2c724
     if (!neSceneManager::isPadDisplay()) {
         InputConversionPassViewController *content =
             [InputConversionPassViewController alloc];
