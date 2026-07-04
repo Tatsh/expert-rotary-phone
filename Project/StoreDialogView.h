@@ -37,7 +37,7 @@
     UILabel *m_LabelMessage;                    // centered status message
     UIProgressView *m_ProgressView;             // horizontal progress bar
     UIButton *m_ButtonAbort;                    // "中止" button (only when abortable)
-    id delegate;                                // informal delegate (assign)
+    id __unsafe_unretained delegate;            // informal delegate (assign)
 }
 
 // Convenience initializer: forwards to -initWithFrame:abortable: with abortable = YES

@@ -37,7 +37,7 @@
     UIImageView *m_ArcadeViewerImageView;  // "store_arcade_view_ic" badge
     UIImageView *m_TicketImageView;        // "store_chara_ic" badge
     unsigned int m_Index;                  // row index passed back on selection
-    id<StorePackViewDelegate> m_Delegate;  // weak (assign) — the list controller
+    id<StorePackViewDelegate> __unsafe_unretained m_Delegate;  // weak (assign) — the list controller
 }
 
 @property (nonatomic, assign) id<StorePackViewDelegate> delegate;
