@@ -732,7 +732,9 @@ int NoteMng::judgeNoteHit(unsigned index) {
                         m_earlyMiss[note->kind]++;
                         return NOTE_JUDGE_MISS;
                     }
-                    tier = NOTE_JUDGE_BAD; note->flags |= 8;
+                    // BAD: a long note also latches LONG_FAILED (0x200) here.
+                    tier = NOTE_JUDGE_BAD;
+                    note->flags |= (note->startTick < note->endTick) ? 0x208 : 8;
                     m_combo = 0;
                     countsCombo = false;
                 } else {
@@ -754,13 +756,21 @@ int NoteMng::judgeNoteHit(unsigned index) {
             if (m_combo > m_maxCombo) m_maxCombo = m_combo;
         }
     } else {
-        tier = NOTE_JUDGE_BAD; note->flags |= 8;
+        // BAD (late): a long note also latches LONG_FAILED (0x200) here.
+        tier = NOTE_JUDGE_BAD;
+        note->flags |= (note->startTick < note->endTick) ? 0x208 : 8;
         m_combo = 0;
         countsCombo = false;
     }
 
     if (!(note->startTick < note->endTick) && !special) {
         m_tally[note->kind][tier]++;
+    }
+    // Each graded hit counts down the note's remaining-taps counter (spawnKind,
+    // Ghidra: the DAT_00005266 = flags+2 decrement at the tail; misses return early
+    // and never reach it).
+    if ((int8_t)note->spawnKind > 0) {
+        note->spawnKind--;
     }
     return tier;
 }
