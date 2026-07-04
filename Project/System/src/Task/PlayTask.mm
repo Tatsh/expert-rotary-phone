@@ -23,6 +23,10 @@
 #import "neEngineBridge.h"   // neAppEventCenter / neSceneManager::hitSoundName
 #import "neGraphics.h"
 
+// DAT_00178d00 — the play default life-gauge base, read by PlayTask_init + playTaskResetState.
+// A data global that is only ever read (never written) and stays 0. Kept as the named global.
+static int16_t g_wPlayDefaultGauge = 0;
+
 // PlayTaskInit / PlayTaskGotoResult are declared in PlayTask.h (the play-scene
 // build + results-transition seams). The play-data work area is now a real named-member
 // layout (see PlayTask.h); the former pd()+reinterpret_cast accessors are gone.
@@ -92,7 +96,7 @@ void PlayTask::reloadChart(int restart) {
     } else {
         // Tutorial / bundled-demo play (flag @ +0x9c9): the fixed bundled song, normal sheet.
         difficulty = 0;
-        md = [MusicData dataWithPath:[MusicManager getPathFromBundle:0] ID:0];
+        md = [MusicData dataWithPath:[[MusicManager getInstance] getPathFromBundle:0] ID:0];
     }
 
     if (restart == 0) {
