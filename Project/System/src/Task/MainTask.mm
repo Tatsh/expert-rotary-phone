@@ -1617,7 +1617,7 @@ bool MainTask::launchPlayForMusicId(int musicId, int sheet) {
     id musicList = m_musicList;
     NSUInteger count = [musicList count];
     for (NSUInteger i = 0; i < count; i++) {
-        id info = [musicList objectAtIndexedSubscript:i];
+        MusicData *info = [musicList objectAtIndexedSubscript:i];
         if ([info MusicID] == musicId) {
             m_chosenIndex = (int)i;
             m_chosenMusicId = musicId;
@@ -1675,12 +1675,13 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
                 const int cellX = F(0x988) * (i % 3) + x + extraX + F(0x980);
                 if (cell[3] == 0) {                  // +0xc no texture yet -> placeholder
                     drawAepFrameEx(&AepManager::shared(), F(0x180), F(0x990) + cellX, cellY,
-                                   scaleX, scaleY, rotation, anchorX, anchorY, blend, p14,
-                                   0xffffff, 0, p14, 1);
+                                   scaleX, scaleY, rotation, anchorX, anchorY, color, alpha,
+                                   blend, 0xffffff, 0, p14, 1);
                 } else {
-                    neTextureForiOS_draw(&AepManager::shared(), *reinterpret_cast<void **>(cell + 3),
+                    neTextureForiOS_draw(&AepManager::shared(),
+                                         reinterpret_cast<neTextureForiOS *>(*reinterpret_cast<void **>(cell + 3)),
                                          0, 0, 0x168, 0x168, F(0x990) + cellX, cellY, scaleX, scaleY,
-                                         rotation, anchorX, anchorY, blend, p14, 0xffffff, 0, p14, 1);
+                                         rotation, anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p14, 1);
                 }
                 // Selection frame over the cell (@ +0x1a8, +0x994/+0x998 nudge).
                 drawAepFrameEx(&AepManager::shared(), F(0x1a8),
@@ -1726,7 +1727,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // blend/p14 exactly as the head's drawJacketGrid does).
     auto drawFrame = [&](int frameNo, int fx, int fy) {
         drawAepFrameEx(&AepManager::shared(), frameNo, fx, fy, scaleX, scaleY, rotation,
-                       anchorX, anchorY, blend, p14, 0xffffff, 0, p14, 1);
+                       anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p14, 1);
     };
     auto drawFrameAlpha = [&](int frameNo, int fx, int fy, int a) {   // explicit pulse alpha
         drawAepFrameEx(&AepManager::shared(), frameNo, fx, fy, scaleX, scaleY, rotation,
@@ -1736,9 +1737,9 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
         drawAepFrameEx(&AepManager::shared(), frameNo, fx, fy, 0x42c80000, 0x42c80000, 0,
                        ax, ay, 100, 0, blend, 0xffffff, 0, p14, 1);
     };
-    auto drawTex = [&](void *tex, int w, int h, int tx, int ty) {   // uv (0,0,w,h) at (tx,ty)
+    auto drawTex = [&](neTextureForiOS *tex, int w, int h, int tx, int ty) {   // uv (0,0,w,h) at (tx,ty)
         neTextureForiOS_draw(&AepManager::shared(), tex, 0, 0, w, h, tx, ty, scaleX, scaleY,
-                             rotation, anchorX, anchorY, blend, p14, 0xffffff, 0, p14, 1);
+                             rotation, anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p14, 1);
     };
 
     // Walk every visible cell of the current / next / prev columns, invoking
@@ -1774,7 +1775,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // Song-name text (per cell) — m_elemUsrNo[10]. Blits each cell's title string (@ cell+0x10).
     if (self->m_elemUsrNo[10] == (int)child) {
         forEachGridCell([&](char *cell, int, int cx0, int cy0, int) {
-            id name = *reinterpret_cast<__unsafe_unretained id *>(cell + 0x10);
+            id name = (__bridge id)*reinterpret_cast<void **>(cell + 0x10);
             if (name) {
                 drawAepManagerText(self->m_aep, [name UTF8String], F(0xa60),
                                    cx0 + F(0x990), cy0 + F(0x99c), 1, 100, 0, p14);
@@ -1830,7 +1831,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
             const int dx = ((adv >> 5) - (adv >> 31)) + cx + ((n << 4) >> 1) - 8;
             neTextureForiOS_draw(&AepManager::shared(), self->m_digitTex[20 + value % 10],
                                  0, 0, 0x10, 0x14, dx, cy, digitScale, digitScale, 0, 8, 10,
-                                 blend, p14, 0xffffff, 0, priority, 1);
+                                 color, alpha, blend, 0xffffff, 0, priority, 1);
             if (n <= k) {
                 break;
             }
@@ -1849,7 +1850,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
                     drawFrame(self->m_musicRankFrmNo[rank], cx0 + F(0x990), cy0);
                 }
             } else {
-                id info = [self->m_musicList objectAtIndexedSubscript:listIndex];
+                MusicData *info = [self->m_musicList objectAtIndexedSubscript:listIndex];
                 const int lvl = whichLevel == 0 ? (int)[info lvNormal]
                               : whichLevel == 1 ? (int)[info lvHyper] : (int)[info lvEx];
                 drawLevelDigits(lvl, cx0 + F(0x990), cy0, digitPriority);
@@ -1960,7 +1961,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
 
     // Selected-song jacket preview — m_elemUsrNo[1] blits the big jacket texture (@ selCell+0xc).
     if (self->m_elemUsrNo[1] == (int)child) {
-        drawTex(*reinterpret_cast<void **>(selBase + 0xc), 0x168, 0x168, x, y);
+        drawTex(reinterpret_cast<neTextureForiOS *>(*reinterpret_cast<void **>(selBase + 0xc)), 0x168, 0x168, x, y);
         return;
     }
 
@@ -2026,8 +2027,8 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // still downloading. m_overScoreDict (+0xa98) maps touched music-id strings to a state value
     // (the &cf_1 / &cf_0 binary CFString constants, "1"/"0"). Helpers factor the dict lookups.
     auto overScoreMatch = [&](int listIndex, NSString *wantValue) -> bool {
-        id info = [self->m_musicList objectAtIndexedSubscript:listIndex];
-        NSString *key = [[[[NSNumber alloc] initWithInt:(int)[info MusicID]] autorelease] stringValue];
+        MusicData *info = [self->m_musicList objectAtIndexedSubscript:listIndex];
+        NSString *key = [@((int)[info MusicID]) stringValue];
         id dict = self->m_overScoreDict;
         if (![[dict allKeys] containsObject:key]) {
             return false;
@@ -2035,7 +2036,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
         return [[dict objectForKeyedSubscript:key] isEqual:wantValue];
     };
     auto chosenTouched = [&]() -> bool {
-        NSString *key = [[[[NSNumber alloc] initWithInt:self->m_chosenMusicId] autorelease] stringValue];
+        NSString *key = [@(self->m_chosenMusicId) stringValue];
         return [[self->m_overScoreDict allKeys] containsObject:key] != NO;
     };
     auto jacketPresent = [&](char *cell) -> bool {
