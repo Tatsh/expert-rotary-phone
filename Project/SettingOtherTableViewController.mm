@@ -39,7 +39,7 @@ static UIViewController *RootVC() {
 @implementation SettingOtherTableViewController {
     CommonAlertView *_treasureRetireAlertView;   // @164 (0xa4)  in-flight retire confirm alert
     BOOL _isAnimationing;                         // @168 (0xa8)  open/close animation guard
-    id<ViewCmnProtocol> _viewCmnDelegate;         // @172 (0xac)  forwarded to ConversionView
+    id<ViewCmnProtocol> __unsafe_unretained _viewCmnDelegate;  // @172 (0xac) assign; forwarded to ConversionView
     NSIndexPath *_selectedIndexPath;              // @176 (0xb0)  expanded "機種変更" toggle row
     UIViewController *_convDetailView;            // @180 (0xb4)  the ConversionView (lazily made)
     CGRect _convDummyFrm;                         // @184 (0xb8)  frame of the expanded conv panel
