@@ -11,6 +11,8 @@
 #import "DownloadMain.h"     // login-bonus id/count (getInstance/loginBonusId/loginCnt)
 #import "MusicData.h"
 #import "MusicManager.h"
+#import "StoreMusicInfo.h"     // -musicID/name/artist/itemURL/itunesURL (addPurchasedMusic:)
+#import "StoreAcMusicInfo.h"   // -acMusicId/... (addPurchasedAcMusic:)
 #import "MusicPatch.h"
 #import "RhUtil.h"           // RhFileExists / RhParsePlistArray / RhMD5Data
 #import "TreasureData+Store.h"   // +isOpenMusic:inManagedObjectContext:
@@ -40,8 +42,8 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     BOOL m_MusicDataArrayDirty;
     NSMutableArray *m_AcMusicDataArray;
     BOOL m_AcMusicDataArrayDirty;
-    NSMutableDictionary *m_PurchasedMusicDictionaris;
-    NSMutableDictionary *m_PurchasedAcMusicDictionaris;
+    NSMutableArray *m_PurchasedMusicDictionaris;    // array OF plist dicts (name is a misnomer)
+    NSMutableArray *m_PurchasedAcMusicDictionaris;  // array OF plist dicts (name is a misnomer)
     NSArray *m_DefaultMusicIDs;
     NSArray *m_AcDefaultMusicIDs;
     NSArray *m_OpenTreasureMusicIDs;

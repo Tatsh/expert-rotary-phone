@@ -45,9 +45,14 @@ include $(THEOS)/makefiles/common.mk
 
 APPLICATION_NAME = PopnRhythmin
 
-# All sources, discovered the same way the CMake build does — anchored at the repo root.
+# All reconstructed sources (under Project/) plus the vendored ZipArchive/minizip (3rdparty/):
+# the UnZipArchive class the music-data loaders use for .zip chart extraction.
 PopnRhythmin_FILES = $(shell find $(PROJECT_ROOT)/Project \
-                         \( -name '*.m' -o -name '*.mm' -o -name '*.c' -o -name '*.cpp' \))
+                         \( -name '*.m' -o -name '*.mm' -o -name '*.c' -o -name '*.cpp' \)) \
+                     $(PROJECT_ROOT)/3rdparty/ziparchive/UnZipArchive.mm \
+                     $(PROJECT_ROOT)/3rdparty/ziparchive/minizip/ioapi.c \
+                     $(PROJECT_ROOT)/3rdparty/ziparchive/minizip/unzip.c \
+                     $(PROJECT_ROOT)/3rdparty/ziparchive/minizip/zip.c
 
 # ARC (the reconstructed sources use ARC — __bridge casts + ARC-synthesized dealloc —
 # exactly as the CMake/Xcode build does); every Project subdir on -I, plus the generated
@@ -55,7 +60,9 @@ PopnRhythmin_FILES = $(shell find $(PROJECT_ROOT)/Project \
 PopnRhythmin_CFLAGS  = -fobjc-arc -fobjc-exceptions -Wno-deprecated-declarations \
                        -I$(PROJECT_ROOT)/Project \
                        $(addprefix -I,$(shell find $(PROJECT_ROOT)/Project -type d)) \
-                       -I$(SUGO_GEN_DIR)
+                       -I$(SUGO_GEN_DIR) \
+                       -I$(PROJECT_ROOT)/3rdparty/ziparchive \
+                       -I$(PROJECT_ROOT)/3rdparty/ziparchive/minizip
 PopnRhythmin_CCFLAGS = -std=gnu++14 -stdlib=libc++
 
 PopnRhythmin_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore CoreText OpenGLES \

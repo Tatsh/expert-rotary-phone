@@ -143,6 +143,17 @@ target_include_directories(popnrhythmin PRIVATE "${_sugo_gen_dir}")
 
 add_subdirectory(Project)
 
+# --- Vendored ZipArchive / minizip (3rdparty/) --------------------------------------------
+# Provides the UnZipArchive class the music-data loaders use for .zip chart extraction (Google
+# Code "ziparchive" snapshot, ~2014). UnZipArchive.mm is ARC-converted; minizip is plain C.
+set(_zip "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ziparchive")
+target_sources(popnrhythmin PRIVATE
+    "${_zip}/UnZipArchive.mm"
+    "${_zip}/minizip/ioapi.c"
+    "${_zip}/minizip/unzip.c"
+    "${_zip}/minizip/zip.c")
+target_include_directories(popnrhythmin PRIVATE "${_zip}" "${_zip}/minizip")
+
 target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
     -fobjc-exceptions -Wno-deprecated-declarations)
