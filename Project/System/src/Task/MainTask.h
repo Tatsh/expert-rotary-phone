@@ -233,7 +233,9 @@ public:
     // are what MusicSelAepDraw's per-element dispatch keys on (@ +0x22c etc.).
     int              m_bgLyrNo[3] = {};               // +0x14c getLyrNo(BG_NEKO / DIFFICULTY_STAR_OPEN / _OUT)
     int              m_bgLyrFrames[3] = {};           // +0x158 layerFrameCount of each m_bgLyrNo
-    uint8_t          _rsvd_164[0x17c - 0x164] = {};   // +0x164 (6 ints) not written by setup()
+    int              m_diffIntroFrame = 0;            // +0x164 difficulty-intro sweep frame counter
+    uint8_t          _rsvd_168[0x170 - 0x168] = {};   // +0x168 (2 ints) not written by setup()
+    int              m_diffStarLayerFrame[3] = {};    // +0x170 difficulty-star bg-layer frame counters
     int              m_frmNo[24] = {};                // +0x17c getFrameNo(kFrmNames[24]) button/icon frames
     int              m_starFrmNo[3] = {};             // +0x1dc getFrameNo(DIFFICULTY_STAR_GREEN/YELLOW/RED)
     int              m_musicRankFrmNo[7] = {};        // +0x1e8 getFrameNo(MUSIC_RUNK_NUMBER_S/AAA/AA/A/B/C/D)
@@ -263,9 +265,13 @@ public:
     int              m_appliedSort = 0;               // +0x8fc music-sort rebuildList last applied
     int              m_chosenMusicId = 0;             // +0x900 chosen music id (launch save)
     int              m_resultSheet = 0;               // +0x904 saved result sheet (difficulty)
-    uint8_t          _rsvd_908[0x91b - 0x908] = {};   // +0x908
+    int              m_placeValue[3] = {};            // +0x908 ranking place values (green/yellow/pink)
+    uint8_t          m_clearMedal[3] = {};            // +0x914 per-sheet cleared flag
+    uint8_t          m_fullComboMedal[3] = {};        // +0x917 per-sheet full-combo flag
+    uint8_t          _rsvd_91a[0x91b - 0x91a] = {};   // +0x91a
     uint8_t          m_suppressDraw = 0;              // +0x91b hide the scene during teardown
-    uint8_t          _rsvd_91c[0x91e - 0x91c] = {};   // +0x91c
+    uint8_t          m_showLevelNumbers = 0;          // +0x91c show numeric level instead of rank frame
+    uint8_t          m_diffIntroActive = 0;           // +0x91d difficulty-intro sweep playing
     uint8_t          m_tutorialBadge = 0;             // +0x91e first-play tutorial badge visible
     uint8_t          m_recommendBadge = 0;            // +0x91f new-recommend badge visible
     uint8_t          _rsvd_920[0x922 - 0x920] = {};   // +0x920
@@ -304,7 +310,7 @@ public:
     dispatch_semaphore_t m_cellSem = nullptr;         // +0xa90 guards the jacket cell array
     int              m_highlightAnim = 0;             // +0xa94 highlight pulse phase (0..0x96)
     __unsafe_unretained id m_overScoreDict = nullptr;     // +0xa98 over-score "touched" set
-    uint8_t          _rsvd_a9c[0xaa0 - 0xa9c] = {};   // +0xa9c
+    int              m_overScorePulse = 0;            // +0xa9c over-score badge pulse phase (0..0x96)
     C_TASK          *m_spawnedTask = nullptr;         // +0xaa0 launched play / tutorial / menu sub-task
     int              m_state = 0;                     // +0xaa4 state-machine field
     MusicSelState    m_sel = {};                      // +0xaa8 packed per-song select state (seam)

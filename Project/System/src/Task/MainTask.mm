@@ -172,9 +172,8 @@ bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const
 // m_sel.difficulty is the faithful reconstructed equivalent. Historical note: this was mislabeled
 // "initOverscoreRows / overRowLen" before the +0x158/+0x170 alias was resolved.)
 void MainTask::seedDiffStarLayerFrames() {
-    int *starFrame = reinterpret_cast<int *>(reinterpret_cast<char *>(this) + 0x170);
     for (int i = 0; i < 3; i++) {
-        starFrame[i] = (i == m_sel.difficulty ? m_bgLyrFrames[1] : m_bgLyrFrames[2]) - 1;
+        m_diffStarLayerFrame[i] = (i == m_sel.difficulty ? m_bgLyrFrames[1] : m_bgLyrFrames[2]) - 1;
     }
 }
 
@@ -1651,59 +1650,55 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
                      int blend, int p13, int p14, void *context) {
     (void)frame; (void)p13;
     MainTask *self = static_cast<MainTask *>(context);
-    char *pd = reinterpret_cast<char *>(self);
-    auto F = [&](int off) -> int { return *reinterpret_cast<int *>(pd + off); };
 
     // Blit one 3-column jacket grid starting at widget row `rowBase`, offset by `colX`
     // screen columns. Each present cell draws its uploaded texture (or the placeholder
     // frame @ +0x180 while streaming) plus the selection frame @ +0x1a8.
     auto drawJacketGrid = [&](int rowBase, int columnIndex, int extraX) {
-        const int perRow = F(0xa74);
+        const int perRow = self->m_columnStride;
         if (rowBase < 0 || perRow <= 0) {
             return;
         }
-        int *cell = reinterpret_cast<int *>(pd + rowBase * 0x38 + 0x2d8);
-        const int songCount = F(0x8ec);
-        for (int i = 0; i < perRow; i++) {
+        MusicSelCell *cell = &self->m_cells[rowBase];
+        const int songCount = self->m_songCount;
+        for (int i = 0; i < perRow; i++, ++cell) {
             if (perRow * columnIndex + i >= songCount) {
                 break;
             }
-            const int idx = cell[0];                 // +0x0 song index
+            const int idx = cell->songIndex;
             const bool present = idx >= 0 ? (idx < songCount) : (idx != 0);
             if (present && idx >= 0 && idx <= songCount) {
-                const int cellY = F(0x98c) * (i / 3) + y;
-                const int cellX = F(0x988) * (i % 3) + x + extraX + F(0x980);
-                if (cell[3] == 0) {                  // +0xc no texture yet -> placeholder
-                    drawAepFrameEx(&AepManager::shared(), F(0x180), F(0x990) + cellX, cellY,
+                const int cellY = self->m_layoutRects[1] * (i / 3) + y;
+                const int cellX = self->m_layoutRects[0] * (i % 3) + x + extraX + self->m_scrollOffset;
+                if (cell->texture == nullptr) {      // no texture yet -> placeholder
+                    drawAepFrameEx(&AepManager::shared(), self->m_frmNo[1], self->m_layoutRects[2] + cellX, cellY,
                                    scaleX, scaleY, rotation, anchorX, anchorY, color, alpha,
                                    blend, 0xffffff, 0, p14, 1);
                 } else {
-                    neTextureForiOS_draw(&AepManager::shared(),
-                                         reinterpret_cast<neTextureForiOS *>(*reinterpret_cast<void **>(cell + 3)),
-                                         0, 0, 0x168, 0x168, F(0x990) + cellX, cellY, scaleX, scaleY,
+                    neTextureForiOS_draw(&AepManager::shared(), cell->texture,
+                                         0, 0, 0x168, 0x168, self->m_layoutRects[2] + cellX, cellY, scaleX, scaleY,
                                          rotation, anchorX, anchorY, color, alpha, blend, 0xffffff, 0, p14, 1);
                 }
                 // Selection frame over the cell (@ +0x1a8, +0x994/+0x998 nudge).
-                drawAepFrameEx(&AepManager::shared(), F(0x1a8),
-                               F(0x994) + (cellX - (anchorX * scaleX) / 100),
-                               F(0x998) + (cellY - (anchorY * scaleY) / 100),
+                drawAepFrameEx(&AepManager::shared(), self->m_frmNo[11],
+                               self->m_layoutRects[3] + (cellX - (anchorX * scaleX) / 100),
+                               self->m_layoutRects[4] + (cellY - (anchorY * scaleY) / 100),
                                0x42c80000, 0x42c80000, 0, 0, 0, 100, 0, blend, 0xffffff, 0, p14, 1);
             }
-            cell += 0xe;
         }
     };
 
-    if (F(0x22c) == (int)child) {
+    if (self->m_elemUsrNo[0] == (int)child) {
         // Current column grid. Cache the grid origin (@ +0xa40/+0xa44) for hit-testing.
-        *reinterpret_cast<int *>(pd + 0xa40) = x - (anchorX * scaleX) / 100;
-        *reinterpret_cast<int *>(pd + 0xa44) = y - (anchorY * scaleY) / 100;
+        self->m_layoutRects[46] = x - (anchorX * scaleX) / 100;
+        self->m_layoutRects[47] = y - (anchorY * scaleY) / 100;
         const int8_t curRow = (int8_t)self->m_curColLatch;
-        drawJacketGrid(curRow, F(0x8f0), 0);
+        drawJacketGrid(curRow, self->m_columnIndex, 0);
 
         // Incoming next column (m_nextColLatch), shifted one screen width right.
-        if (F(0x8f0) < F(0x8f4) - 1) {
+        if (self->m_columnIndex < self->m_columnCount - 1) {
             const int8_t nextRow = (int8_t)self->m_nextColLatch;
-            drawJacketGrid(nextRow, F(0x8f0) + 1, F(0xa64));
+            drawJacketGrid(nextRow, self->m_columnIndex + 1, self->m_screenWidth);
         }
     }
     // ===================== Tail dispatch: every element other than the current-column jacket
@@ -1712,10 +1707,10 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // repaint the same visible 3-column cell grid — current / incoming-next / outgoing-prev
     // columns, latched via m_curColLatch / m_nextColLatch / m_prevColLatch; (b) "selected song"
     // elements that draw the highlighted song's score / rank / place / banners. @ 0x389fc
-    const int perRow    = F(0xa74);   // m_columnStride  — cells per column
-    const int songCount = F(0x8ec);   // m_songCount
-    const int col       = F(0x8f0);   // m_columnIndex
-    const int colCount  = F(0x8f4);   // m_columnCount
+    const int perRow    = self->m_columnStride;   // m_columnStride  — cells per column
+    const int songCount = self->m_songCount;   // m_songCount
+    const int col       = self->m_columnIndex;   // m_columnIndex
+    const int colCount  = self->m_columnCount;   // m_columnCount
     auto s8 = [](uint8_t b) { return (int)(int8_t)b; };            // signed row-load latch
     auto numDigits = [](int v) { int n = 1; while (v > 9) { n++; v /= 10; } return n; };
     auto pulseAlpha = [](int phase) {                             // triangle-wave badge alpha
@@ -1744,41 +1739,41 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
 
     // Walk every visible cell of the current / next / prev columns, invoking
     // paint(cell, i, cx0, cy0, listIndex). cx0/cy0 are the cell's top-left BEFORE the per-element
-    // pixel nudge (F(0x990)/F(0x99c)); paint returns false to stop the column. The three per-branch
+    // pixel nudge (self->m_layoutRects[2]/self->m_layoutRects[5]); paint returns false to stop the column. The three per-branch
     // count styles in the decompile (absolute-index, div/mod partial, relative cap) all reduce to
     // "stop when the running list index reaches songCount" for the shown columns, so they unify.
-    auto forEachGridCell = [&](const std::function<bool(char *, int, int, int, int)> &paint) {
+    auto forEachGridCell = [&](const std::function<bool(MusicSelCell *, int, int, int, int)> &paint) {
         auto column = [&](int latch, int whichCol, int extraX) {
             if (latch < 0 || perRow <= 0) {
                 return;
             }
-            char *base = pd + latch * 0x38 + 0x2d8;
+            MusicSelCell *base = &self->m_cells[latch];
             for (int i = 0; i < perRow; i++) {
                 const int listIndex = whichCol * perRow + i;
                 if (listIndex >= songCount) {
                     break;
                 }
-                const int cy0 = F(0x98c) * (i / 3) + y;
-                const int cx0 = F(0x988) * (i % 3) + x + F(0x980) + extraX;
-                if (!paint(base + i * 0x38, i, cx0, cy0, listIndex)) {
+                const int cy0 = self->m_layoutRects[1] * (i / 3) + y;
+                const int cx0 = self->m_layoutRects[0] * (i % 3) + x + self->m_scrollOffset + extraX;
+                if (!paint(&base[i], i, cx0, cy0, listIndex)) {
                     break;
                 }
             }
         };
         column(s8(self->m_curColLatch),  col,     0);
-        if (col < colCount - 1) column(s8(self->m_nextColLatch), col + 1,  F(0xa64));
-        if (col >= 1)           column(s8(self->m_prevColLatch), col - 1, -F(0xa64));
+        if (col < colCount - 1) column(s8(self->m_nextColLatch), col + 1,  self->m_screenWidth);
+        if (col >= 1)           column(s8(self->m_prevColLatch), col - 1, -self->m_screenWidth);
     };
 
     // ------------------------------------------------------------------ grid list elements ----
 
     // Song-name text (per cell) — m_elemUsrNo[10]. Blits each cell's title string (@ cell+0x10).
     if (self->m_elemUsrNo[10] == (int)child) {
-        forEachGridCell([&](char *cell, int, int cx0, int cy0, int) {
-            id name = (__bridge id)*reinterpret_cast<void **>(cell + 0x10);
+        forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
+            id name = cell->name;
             if (name) {
-                drawAepManagerText(self->m_aep, [name UTF8String], F(0xa60),
-                                   cx0 + F(0x990), cy0 + F(0x99c), 1, 100, 0, p14);
+                drawAepManagerText(self->m_aep, [name UTF8String], self->m_layoutRects[54],
+                                   cx0 + self->m_layoutRects[2], cy0 + self->m_layoutRects[5], 1, 100, 0, p14);
             }
             return true;
         });
@@ -1786,40 +1781,40 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     }
 
     // Difficulty stars (per cell) — m_elemUsrNo[2..4] draw m_starFrmNo[0..2], gated by the cell's
-    // per-difficulty rank short (>= 0) OR the _rsvd_91c visibility override.
-    auto drawStarGrid = [&](int frameNo, int shortOff) {
-        forEachGridCell([&](char *cell, int, int cx0, int cy0, int) {
-            const short sv = *reinterpret_cast<short *>(cell + shortOff);
-            if (sv >= 0 || *reinterpret_cast<uint8_t *>(pd + 0x91c) != 0) {
-                drawFrame(frameNo, cx0 + F(0x990), cy0);
+    // per-difficulty rank short (>= 0) OR the m_showLevelNumbers visibility override.
+    auto drawStarGrid = [&](int frameNo, int diff) {
+        forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
+            const short sv = cell->scores.rank[diff];
+            if (sv >= 0 || self->m_showLevelNumbers != 0) {
+                drawFrame(frameNo, cx0 + self->m_layoutRects[2], cy0);
             }
             return true;
         });
     };
-    if (self->m_elemUsrNo[2] == (int)child) { drawStarGrid(self->m_starFrmNo[0], 0x2c); return; }
-    if (self->m_elemUsrNo[3] == (int)child) { drawStarGrid(self->m_starFrmNo[1], 0x2e); return; }
-    if (self->m_elemUsrNo[4] == (int)child) { drawStarGrid(self->m_starFrmNo[2], 0x30); return; }
+    if (self->m_elemUsrNo[2] == (int)child) { drawStarGrid(self->m_starFrmNo[0], 0); return; }
+    if (self->m_elemUsrNo[3] == (int)child) { drawStarGrid(self->m_starFrmNo[1], 1); return; }
+    if (self->m_elemUsrNo[4] == (int)child) { drawStarGrid(self->m_starFrmNo[2], 2); return; }
 
     // Streaming placeholder frame (per cell) — m_elemUsrNo[13] draws m_frmNo[2] over cells whose
-    // score/points slots (cell+0x20/+0x24/+0x28) are all zero, unless _rsvd_91c is set. Stops the
+    // score/points slots (cell+0x20/+0x24/+0x28) are all zero, unless m_showLevelNumbers is set. Stops the
     // column at the first cell with no jacket handle (cell+0xc == 0).
     if (self->m_elemUsrNo[13] == (int)child) {
-        forEachGridCell([&](char *cell, int, int cx0, int cy0, int) {
-            if (*reinterpret_cast<int *>(cell + 0xc) == 0) {
+        forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
+            if (cell->texture == nullptr) {
                 return false;
             }
-            const int sum = *reinterpret_cast<int *>(cell + 0x20)
-                          + *reinterpret_cast<int *>(cell + 0x24)
-                          + *reinterpret_cast<int *>(cell + 0x28);
-            if (sum == 0 && *reinterpret_cast<uint8_t *>(pd + 0x91c) == 0) {
-                drawFrame(self->m_frmNo[2], cx0 + F(0x990), cy0);
+            const int sum = cell->scores.playCnt[0]
+                          + cell->scores.playCnt[1]
+                          + cell->scores.playCnt[2];
+            if (sum == 0 && self->m_showLevelNumbers == 0) {
+                drawFrame(self->m_frmNo[2], cx0 + self->m_layoutRects[2], cy0);
             }
             return true;
         });
         return;
     }
 
-    // Difficulty level / music rank (per cell) — m_elemUsrNo[5..7]. When _rsvd_91c is clear the
+    // Difficulty level / music rank (per cell) — m_elemUsrNo[5..7]. When m_showLevelNumbers is clear the
     // cell shows its music-rank frame (m_musicRankFrmNo[rank]); when set it shows the numeric
     // difficulty level (lvNormal / lvHyper / lvEx) as a digit run from the m_digitTex atlas.
     const int digitScale = self->m_isPadDisplay ? 200 : 100;
@@ -1839,48 +1834,48 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
             value /= 10;
         }
     };
-    auto drawLevelGrid = [&](int shortOff, int whichLevel, int digitPriority) {
-        forEachGridCell([&](char *cell, int, int cx0, int cy0, int listIndex) {
-            if (*reinterpret_cast<int *>(cell + 0x10) == 0) {
+    auto drawLevelGrid = [&](int diff, int whichLevel, int digitPriority) {
+        forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
+            if (cell->name == nil) {
                 return true;                                          // empty cell -> skip
             }
-            if (*reinterpret_cast<uint8_t *>(pd + 0x91c) == 0) {
-                const int rank = *reinterpret_cast<short *>(cell + shortOff);
+            if (self->m_showLevelNumbers == 0) {
+                const int rank = cell->scores.rank[diff];
                 if (rank >= 0) {
-                    drawFrame(self->m_musicRankFrmNo[rank], cx0 + F(0x990), cy0);
+                    drawFrame(self->m_musicRankFrmNo[rank], cx0 + self->m_layoutRects[2], cy0);
                 }
             } else {
                 MusicData *info = [self->m_musicList objectAtIndexedSubscript:listIndex];
                 const int lvl = whichLevel == 0 ? (int)[info lvNormal]
                               : whichLevel == 1 ? (int)[info lvHyper] : (int)[info lvEx];
-                drawLevelDigits(lvl, cx0 + F(0x990), cy0, digitPriority);
+                drawLevelDigits(lvl, cx0 + self->m_layoutRects[2], cy0, digitPriority);
             }
             return true;
         });
     };
-    if (self->m_elemUsrNo[5] == (int)child) { drawLevelGrid(0x2c, 0, 0xb);  return; }  // Normal
-    if (self->m_elemUsrNo[6] == (int)child) { drawLevelGrid(0x2e, 1, 0xb);  return; }  // Hyper
-    if (self->m_elemUsrNo[7] == (int)child) { drawLevelGrid(0x30, 2, p14);  return; }  // Extra
+    if (self->m_elemUsrNo[5] == (int)child) { drawLevelGrid(0, 0, 0xb);  return; }  // Normal
+    if (self->m_elemUsrNo[6] == (int)child) { drawLevelGrid(1, 1, 0xb);  return; }  // Hyper
+    if (self->m_elemUsrNo[7] == (int)child) { drawLevelGrid(2, 2, p14);  return; }  // Extra
 
     // Jacket "tip" overlays (NEW / clear icons, per cell) — m_jacketTipUsrNo[0..2]. Each present
     // cell draws a state backing frame (m_frmNo[13..15], chosen from the cell's rank short + tip
     // flag byte) at a pad/phone-nudged offset, then the tip frame m_jacketTipFrmNo[tip] on top.
     auto drawTipGrid = [&](int tip) {
-        forEachGridCell([&](char *cell, int, int cx0, int cy0, int) {
-            if (*reinterpret_cast<int *>(cell + 0x10) == 0) {
+        forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
+            if (cell->name == nil) {
                 return true;                                          // empty cell -> skip
             }
-            const bool flagA = *reinterpret_cast<uint8_t *>(cell + 0x32 + tip) != 0;
-            const bool flagB = *reinterpret_cast<uint8_t *>(cell + 0x35 + tip) != 0;
+            const bool flagA = cell->scores.fullCombo[tip] != 0;
+            const bool flagB = cell->scores.perfect[tip] != 0;
             if (!flagA && !flagB) {
                 return true;
             }
-            const short rankShort = *reinterpret_cast<short *>(cell + 0x2c + tip * 2);
+            const short rankShort = cell->scores.rank[tip];
             int bgFrame = self->m_frmNo[15];
             if (rankShort != 0) {
                 bgFrame = flagB ? self->m_frmNo[14] : self->m_frmNo[13];
             }
-            const int fx = cx0 + F(0x990);
+            const int fx = cx0 + self->m_layoutRects[2];
             int bx = fx, by = cy0;
             if (self->m_isPadDisplay == 0) { bx = fx + 10; by = cy0 + 4; }   // phone nudge
             drawFrameFixed(bgFrame, bx, by, anchorX, anchorY);
@@ -1908,12 +1903,12 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // (m_chosenIndex % perRow) within the current column.
     const int resultSheet = self->m_resultSheet;
     const int selCell = (perRow ? self->m_chosenIndex % perRow : 0) + s8(self->m_curColLatch);
-    char *selBase = pd + selCell * 0x38 + 0x2d8;
+    MusicSelCell *selCellPtr = &self->m_cells[selCell];
 
     // Score digits — m_scoreDigitUsrNo[0..5]. Each element paints ONE decimal digit (LSB first)
     // of the selected song's score for the active difficulty sheet (@ selCell+resultSheet*4+0x14).
     {
-        int score = *reinterpret_cast<int *>(selBase + resultSheet * 4 + 0x14);
+        int score = selCellPtr->scores.score[resultSheet];
         if (score < 0) {
             score = 0;
         }
@@ -1928,7 +1923,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
 
     // Difficulty rank badge (selected song) — m_elemUsrNo[8] draws m_diffRankFrmNo[rank].
     if (self->m_elemUsrNo[8] == (int)child) {
-        const short rank = *reinterpret_cast<short *>(selBase + resultSheet * 2 + 0x2c);
+        const short rank = selCellPtr->scores.rank[resultSheet];
         if (rank < 0) {
             return;
         }
@@ -1948,7 +1943,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     for (int i = 0; i < 3; i++) {
         if (self->m_diffBlackUsrNo[i] == (int)child) {
             const int lyrSlot = (resultSheet == i) ? 1 : 2;
-            int &frm = *reinterpret_cast<int *>(pd + 0x170 + i * 4);
+            int &frm = self->m_diffStarLayerFrame[i];
             self->m_aep->drawLayer(self->m_bgLyrNo[lyrSlot], frm, x, y, scaleX, scaleY, rotation,
                                    anchorX, anchorY, color, alpha, 1, blend, 0xffffff, 0, 0, p14, 1);
             if (self->m_bgLyrFrames[lyrSlot] - 1 <= frm) {
@@ -1961,7 +1956,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
 
     // Selected-song jacket preview — m_elemUsrNo[1] blits the big jacket texture (@ selCell+0xc).
     if (self->m_elemUsrNo[1] == (int)child) {
-        drawTex(reinterpret_cast<neTextureForiOS *>(*reinterpret_cast<void **>(selBase + 0xc)), 0x168, 0x168, x, y);
+        drawTex(selCellPtr->texture, 0x168, 0x168, x, y);
         return;
     }
 
@@ -1985,7 +1980,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // to three digit slots, each a single digit of the group's place value (@ +0x908+grp*4) drawn
     // from that group's 10-digit atlas (m_digitTex[30 + grp*10 + digit]).
     for (int grp = 0; grp < 3; grp++) {
-        const int placeVal = F(0x908 + grp * 4);
+        const int placeVal = self->m_placeValue[grp];
         const int nd = numDigits(placeVal);
         for (int d = 0; d < 3; d++) {
             if (self->m_placeDigitUsrNo[grp * 3 + d] == (int)child) {
@@ -2010,11 +2005,11 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     // (byte@+0x917+sheet) -> m_frmNo[4]; else cleared (byte@+0x914+sheet) -> m_frmNo[3]; else none.
     if (self->m_elemUsrNo[14] == (int)child) {
         int frameNo;
-        if (*reinterpret_cast<short *>(selBase + resultSheet * 2 + 0x2c) == 0) {
+        if (selCellPtr->scores.rank[resultSheet] == 0) {
             frameNo = self->m_frmNo[5];
-        } else if (*reinterpret_cast<uint8_t *>(pd + resultSheet + 0x917) != 0) {
+        } else if (self->m_fullComboMedal[resultSheet] != 0) {
             frameNo = self->m_frmNo[4];
-        } else if (*reinterpret_cast<uint8_t *>(pd + resultSheet + 0x914) != 0) {
+        } else if (self->m_clearMedal[resultSheet] != 0) {
             frameNo = self->m_frmNo[3];
         } else {
             return;
@@ -2039,8 +2034,8 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
         NSString *key = [@(self->m_chosenMusicId) stringValue];
         return [[self->m_overScoreDict allKeys] containsObject:key] != NO;
     };
-    auto jacketPresent = [&](char *cell) -> bool {
-        const int idx = *reinterpret_cast<int *>(cell);
+    auto jacketPresent = [&](MusicSelCell *cell) -> bool {
+        const int idx = cell->songIndex;
         bool empty = (idx == 0);
         if (idx >= 0) {
             empty = (songCount == idx);
@@ -2051,8 +2046,8 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     if (![[DownloadMain getInstance] isGetRecommendListDownLoading]) {
         // Recommend badge (per cell) — m_elemUsrNo[20], m_frmNo[22], pulsing (phase @ +0xa9c).
         if (self->m_elemUsrNo[20] == (int)child) {
-            const int a = pulseAlpha(F(0xa9c));
-            forEachGridCell([&](char *cell, int, int cx0, int cy0, int listIndex) {
+            const int a = pulseAlpha(self->m_overScorePulse);
+            forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
                 if (jacketPresent(cell) && overScoreMatch(listIndex, @"1")) {
                     drawFrameAlpha(self->m_frmNo[22], cx0, cy0, a);
                 }
@@ -2062,9 +2057,9 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
         }
         // Over-score badge (per cell) — m_elemUsrNo[21], m_frmNo[23]. Advances the pulse phase.
         if (self->m_elemUsrNo[21] == (int)child) {
-            const int a = pulseAlpha(F(0xa9c));
-            *reinterpret_cast<int *>(pd + 0xa9c) = (F(0xa9c) + 2) % 0x97;
-            forEachGridCell([&](char *cell, int, int cx0, int cy0, int listIndex) {
+            const int a = pulseAlpha(self->m_overScorePulse);
+            self->m_overScorePulse = (self->m_overScorePulse + 2) % 0x97;
+            forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
                 if (jacketPresent(cell) && overScoreMatch(listIndex, @"0")) {
                     drawFrameAlpha(self->m_frmNo[23], cx0, cy0, a);
                 }
@@ -2096,8 +2091,8 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
     if (self->m_elemUsrNo[15] != (int)child) {
         return;
     }
-    if (*reinterpret_cast<uint8_t *>(pd + 0x91d) != 0) {
-        int &frm = *reinterpret_cast<int *>(pd + 0x164);
+    if (self->m_diffIntroActive != 0) {
+        int &frm = self->m_diffIntroFrame;
         self->m_aep->drawLayer(self->m_bgLyrNo[0], frm, x, y, scaleX, scaleY, rotation,
                                anchorX, anchorY, color, alpha, 1, blend, 0xffffff, 0, 0, p14, 1);
         frm++;
@@ -2105,7 +2100,7 @@ void MusicSelAepDraw(unsigned child, int frame, int x, int y, int scaleX, int sc
             return;
         }
         frm = 0;
-        *reinterpret_cast<uint8_t *>(pd + 0x91d) = 0;
+        self->m_diffIntroActive = 0;
         return;
     }
     drawFrame(self->m_frmNo[12], x, y);
