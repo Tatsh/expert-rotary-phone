@@ -11,6 +11,10 @@
 #import "AcViewerOptionViewController.h"
 
 #import "AcViewerOptionCell.h"
+#import "AcViewerHiSpeedViewController.h"   // option detail screens pushed from the option list
+#import "AcViewerPopKunViewController.h"
+#import "AcViewerHidSudViewController.h"
+#import "AcViewerRanMirViewController.h"
 #import "AcMusicData.h"
 #import "AppDelegate.h"
 #import "AppFont.h"
@@ -264,26 +268,24 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     if (self.navigationController.topViewController != self || _isAnimationing || indexPath.section != 0) {
         return;
     }
-    // TODO(dep): the four AC-viewer option detail screens (AcViewerHiSpeed / PopKun /
-    // HidSud / RanMirViewController) are separate, not-yet-reconstructed units — see
-    // MISSING.md; instantiated by name so this compiles until their headers land.
+    // Push the option detail screen for the tapped row.
     UIViewController *vc = nil;
     NSString *navbarName = nil;
     switch (indexPath.row) {
         case 0:
-            vc = [[NSClassFromString(@"AcViewerHiSpeedViewController") alloc] init];
+            vc = [[AcViewerHiSpeedViewController alloc] init];
             navbarName = @"acv_hispeed_navbar";
             break;
         case 1:
-            vc = [[NSClassFromString(@"AcViewerPopKunViewController") alloc] init];
+            vc = [[AcViewerPopKunViewController alloc] init];
             navbarName = @"acv_popkun_navbar";
             break;
         case 2:
-            vc = [[NSClassFromString(@"AcViewerHidSudViewController") alloc] init];
+            vc = [[AcViewerHidSudViewController alloc] init];
             navbarName = @"acv_hidsud_navbar";
             break;
         case 3:
-            vc = [[NSClassFromString(@"AcViewerRanMirViewController") alloc] init];
+            vc = [[AcViewerRanMirViewController alloc] init];
             navbarName = @"acv_ranmir_navbar";
             break;
         default:

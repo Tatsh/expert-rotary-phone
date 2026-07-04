@@ -9,14 +9,10 @@
 #import "AcViewerCategoryCell.h"
 
 #import "neEngineBridge.h"
+#import "AcMusicData.h"   // the row objects are AcMusicData; -category selects the banner
 
-// The array holds arcade song-summary records; only the first element's `category`
+// The array holds AcMusicData arcade song records; only the first element's `category`
 // (a small int, 0..23) is read to select the banner image.
-// TODO(dep): the concrete element class is not yet reconstructed; declaring the
-// selector here lets the cell read the category index off the row object.
-@interface NSObject (AcViewerCategoryElement)
-- (short)category;
-@end
 
 @implementation AcViewerCategoryCell
 
@@ -52,8 +48,8 @@
     if (dataList == nil) {
         baseName = @"ppc_cate_base_all";
     } else {
-        short category = [[dataList objectAtIndexedSubscript:0] category];
-        baseName = kCateBase[category];
+        AcMusicData *first = [dataList objectAtIndexedSubscript:0];
+        baseName = kCateBase[[first category]];
     }
     UIImage *image = [UIImage imageNamed:baseName];
     [baseImg setImage:image];

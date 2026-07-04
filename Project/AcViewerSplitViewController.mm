@@ -9,6 +9,8 @@
 #import "AcViewerSplitViewController.h"
 #import "AcViewerCategoryViewController.h"
 #import "AcViewerMusicViewController.h"
+#import "AcViewerOptionViewController.h"   // pushed option screen (delegate = self)
+#import "MainViewController.h"             // scene root -setAcMusicSelViewing:
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
@@ -253,13 +255,11 @@ static UIViewController *RootVC() {
 // (delegate = self) and flag the root VC that the AC music selection is no longer viewing.
 - (void)endHiddenAnimation {
     _isAnimationing = NO;
-    // TODO(dep): AcViewerOptionViewController is a separate, not-yet-reconstructed unit
-    // (see MISSING.md); instantiated by name so this compiles until its header lands.
-    UIViewController *opt = [[NSClassFromString(@"AcViewerOptionViewController") alloc] init];
-    [opt performSelector:@selector(setDelegate:) withObject:self];
+    AcViewerOptionViewController *opt = [[AcViewerOptionViewController alloc] init];
+    opt.delegate = self;
     [_rightViewCtrl popViewControllerAnimated:NO];
     [_rightViewCtrl pushViewController:opt animated:NO];
-    [RootVC() performSelector:@selector(setAcMusicSelViewing:) withObject:nil];
+    ((MainViewController *)RootVC()).acMusicSelViewing = NO;
 }
 
 #pragma mark - Handlers
