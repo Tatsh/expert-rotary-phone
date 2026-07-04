@@ -13,7 +13,8 @@
 #import <UIKit/UIKit.h>       // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
 #import "AcNoteMng.h"         // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AepTexture.h"
-#import "neTextureForiOS.h"   // neTextureForiOS::LoadTexture (defined below)
+#import "neTextureForiOS.h"   // neTextureForiOS::LoadTexture + neTextureForiOS_draw (defined below)
+#import "AepManager.h"        // AepManager::orderingTable() for neTextureForiOS_draw
 #import "AppDelegate.h"       // [AppDelegate appDelegate] / managedObjectContext (score store)
 #import "AudioManager.h"
 #import "AcViewerTask.h"      // AcViewerTask named work-area (apply-settings owner)
@@ -599,3 +600,34 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
 // UI scale (screenScale * 0.5) as float bits; published by MainViewController::loadView,
 // read by the task m_uiScale caches (neEngineBridge.h).
 int g_dwUiScale = 0;
+
+// neTextureForiOS_draw (FUN_0000fbcc): the flat-argument wrapper the task draw passes call — packs
+// the args into a neSpriteDrawParams and emits the sprite via this texture's draw() into aep's
+// ordering table. Lives here (ObjC++) rather than neTextureForiOS.cpp because AepManager's header
+// pulls Foundation. Argument order verified against FUN_00011468 (drawSprite) + the call sites
+// (AcViewer digit blit / MainTask badges): u,v, source w,h, screen x,y, scale sx,sy, rotation,
+// anchor ex,ey, colour, alpha, blend, colour-multiplier, extra, priority; trailing layer (1) is the
+// live-command marker draw() stamps.
+void neTextureForiOS_draw(AepManager *aep, neTextureForiOS *tex,
+                          int u, int v, int w, int h, int x, int y, int sx, int sy,
+                          int rotation, int ex, int ey, int color, int alpha,
+                          int blend0, int colorMul, int extra, int priority, int layer) {
+    if (tex == nullptr) {
+        return;
+    }
+    neSpriteDrawParams p;
+    p.u = u;   p.v = v;
+    p.w = w;   p.h = h;
+    p.x = x;   p.y = y;
+    p.sx = sx; p.sy = sy;
+    p.rotation = rotation;
+    p.ex = ex; p.ey = ey;
+    p.color = color;
+    p.blend1 = (short)alpha;   // +0x42 alpha / blend sub-mode
+    p.blend0 = (short)blend0;
+    p.colorMul = colorMul;
+    p.extra = extra;
+    p.priority = priority;
+    (void)layer;
+    tex->draw(aep->orderingTable(), p);
+}
