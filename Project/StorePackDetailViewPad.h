@@ -56,6 +56,7 @@
 // otherwise grey it, spin the loading indicator and start a StorePackInfoDownloader. Ghidra:
 // @ 0x4f680.
 - (void)loadInfo;
+- (void)removePackInfo;   // tear the bound pack down (iPad detail-close path); impl in .m
 
 // Populate the detail card from the bound pack (name, comment, copyright, jacket, buy button, the
 // up-to-4 song rows and their .acv/artwork state); runs once (guarded by isInfoLoaded). Ghidra:

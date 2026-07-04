@@ -37,6 +37,11 @@
 
 @property (nonatomic, weak) id<StorePromotionViewDelegate> delegate;
 
+// Recovered accessors/controls (impls in .mm; read by StoreMainViewController).
+- (int)getImageCount;        // @ 0x7a2c4
+- (void)stopAnimation;       // @ 0x7a6ac — stop the rotation timer
+- (int)getPackID;            // @ 0x79f84 — the currently-shown promo's pack id
+
 // Resize both banner image views.
 - (void)setImageViewSize:(CGSize)size;
 // Begin loading the promo images described by an array of { ID, ImageURL } dicts.

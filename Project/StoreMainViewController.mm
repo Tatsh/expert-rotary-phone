@@ -16,6 +16,7 @@
 #import "StorePackCell.h"
 #import "StoreTableCell.h"
 #import "StorePromotionTableCell.h"
+#import "StorePromotionView.h"   // getPackID / stopAnimation / getImageCount (promo banner)
 #import "StoreDownloadTask.h"
 #import "StoreUtil.h"
 #import "AppDelegate.h"
@@ -30,7 +31,10 @@
 #import <StoreKit/StoreKit.h>   // SKProduct.price
 #import <QuartzCore/QuartzCore.h> // CALayer cornerRadius / borderColor / borderWidth
 
-@interface StoreMainViewController ()
+// StoreMainViewController is the delegate for the pack views, the detail controllers and the
+// purchase manager (it implements their callbacks below); declare the conformances privately.
+@interface StoreMainViewController () <StorePackViewDelegate, StorePackDetailViewPadDelegate,
+                                       StoreDetailViewControllerDelegate, PurchaseManagerMusicDelegate>
 // Inlined lazy-jacket loader used by tableView:cellForRowAtIndexPath: (see @ 0x4837c).
 - (UIImage *)artworkForInfo:(StorePackInfo *)info atIndexPath:(NSIndexPath *)indexPath;
 @end
@@ -626,7 +630,7 @@
 // tapped index against whichever list is populated (recommend first) and hand the pack
 // info to the embedded detail card.
 - (void)openDetailAnimStop:(NSString *)animationID finished:(NSNumber *)finished context:(void *)ctx {
-    NSInteger index = [(id)ctx index];
+    NSInteger index = [(__bridge StorePackView *)ctx index];   // ctx = the tapped packView (set @0x45... beginAnimations context)
     StorePackListController *list = m_PackListCtrl;
     if (m_RecommendPackListCtrl && [[m_RecommendPackListCtrl packIDList] count] != 0) {
         list = m_RecommendPackListCtrl;
@@ -864,7 +868,7 @@
         }
     }
     for (StoreAcMusicInfo *info in acMusicInfos) {
-        NSString *path = [MusicManager getAcPathFromPurchased:[info acMusicId]];
+        NSString *path = [[MusicManager getInstance] getAcPathFromPurchased:[info acMusicId]];
         if (!RhFileExists(path)) {
             StoreDownloadTask *task =
                 [[StoreDownloadTask alloc] initWithURL:[info itemURL]
@@ -1143,7 +1147,7 @@
 // @ 0x47e60 — a missing pack's detail finished downloading during a restore: fold it in
 // and continue walking (or move on to the download-all prompt).
 - (void)storePackInfoDownloaderFinished:(StorePackInfoDownloader *)downloader {
-    [self addRestorePackInfo:[(id)downloader getPackInfo]];
+    [self addRestorePackInfo:downloader.packInfo];   // @0x57734 packInfo getter (no getPackInfo selector)
     if (m_StorePackInfoDownloader) {
         [m_StorePackInfoDownloader setDelegate:nil];
         m_StorePackInfoDownloader = nil;
@@ -1211,7 +1215,7 @@
 
 // @ 0x482c0 — a download progressed: push the overall progress into the modal's bar.
 - (void)downloadManagerProceed:(StoreDownloadManager *)manager {
-    id progressView = [[m_StoreViewCtrl modalDialog] progressView];
+    UIProgressView *progressView = [[m_StoreViewCtrl modalDialog] progressView];
     [progressView setProgress:[m_DownloadManager overallProgress]];
 }
 
