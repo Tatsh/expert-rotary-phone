@@ -25,7 +25,7 @@
 #import "MusicManager.h"
 #import "NoteMng.h"
 #import "PurchaseManager.h"
-#import "RewardNetwork.h"   // -> Stubs/RewardNetwork.h (no-op ad SDK; see below)
+#import "RewardNetwork.h"   // applilink reward SDK: +startWithAppliId:env:callback:
 #import "StoreUtil.h"
 #import "TreasureData+Store.h"
 #import "TreasureData.h"
@@ -134,10 +134,12 @@ BOOL gLaunchedFromPush = NO;
         [UserSettingData saveIsLongNotesEffectOn:NO];
     }
 
-    // --- Ad-reward SDK removed. Original:
-    //     self.rewardAppId = [NSString stringWithFormat:@"%d", 24];
-    //     [RewardNetwork startWithAppliId:self.rewardAppId env:... callback:...];
-    RewardNetwork_startDisabled();
+    // Start the applilink reward SDK (appli id 24, env "0").
+    _rewardAppId = [NSString stringWithFormat:@"%d", 24];
+    [RewardNetwork startWithAppliId:_rewardAppId env:@"0" callback:^(NSError *error) {
+        // The launch flow does not act on the applilink start result.
+        (void)error;
+    }];
 
     // Kick off the download-list fetch (-1 = full list).
     [[DownloadMain getInstance] startGetDlFileListHttp:-1];

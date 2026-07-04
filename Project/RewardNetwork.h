@@ -161,6 +161,10 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 // `block`; reports a parameter error if any default is missing. @ 0xef058
 + (void)startWithBlock:(void (^)(NSError *error))block;
 
+// Start the applilink SDK for `appliId` in environment `env`: persists them, ensures the reward
+// UDID exists, and posts the install record; `callback` receives nil / a localized error. @ 0xee8f0
++ (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(RewardNetworkErrorBlock)callback;
+
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

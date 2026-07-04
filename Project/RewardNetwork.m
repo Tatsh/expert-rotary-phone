@@ -19,12 +19,6 @@
 // interfaces only — reconstruct these classes separately.
 // ---------------------------------------------------------------------------
 
-// Private helpers owned by RewardNetwork.
-@interface RewardNetwork ()
-// TODO(dep): the real ad-SDK network entry point (@ startWithAppliId:env:callback:,
-// deliberately not reconstructed — the project ships the ad path neutralized).
-+ (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(void (^)(void))callback;
-@end
 
 // Serial queue guarding the shared-instance handoff in -init. Created in +allocWithZone:'s
 // dispatch_once body (g_pRewardNetworkDispatchQueue).
@@ -948,21 +942,74 @@ static NSDate *g_pRewardBannerExpireDate = nil;
         return;
     }
 
-    [RewardNetwork startWithAppliId:appliId env:env callback:^{
-        // TODO(dep): the start-completion block (@ 0xef239) forwards to `block`;
-        // exact body not reconstructed.
-        (void)block;
+    // @ 0xef239 — forward the start result to the caller's block.
+    [RewardNetwork startWithAppliId:appliId env:env callback:^(NSError *error) {
+        if (block) {
+            block(error);
+        }
     }];
 }
 
-// TODO(dep): real ad-SDK network entry — deliberately a no-op (neutralized ad path).
-// @ 0xee8f0 — full applilink implementation in the binary; reconstructed here as a neutralized no-op.
-// @ 0xeec84 — in the real (non-neutralized) body this is the completion block passed to
-//   +postApplicationInstallWithPriority:callback:: on success it sets the shared instance's
-//   initializeFlg (1 ok / 0 failure, logging via -debugLog on failure) and forwards `callback`.
-//   It is intentionally not wired here because the ad start path is neutralized.
-+ (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(void (^)(void))callback {
-    // Not reconstructed in this pass.
+// @ 0xee8f0 — the applilink (reward SDK) network start. Validates the appli id + SDK availability,
+// persists appliId/env, ensures the reward UDID exists, and (once) posts the install record.
+// `callback` receives nil on success or a localized error.
++ (void)startWithAppliId:(NSString *)appliId env:(NSString *)env callback:(RewardNetworkErrorBlock)callback {
+    if (appliId == nil) {
+        callback([RewardNetworkError localizedApplilinkErrorWithCode:0x3e9]);
+        return;
+    }
+    if (![RewardNetworkUtilities canUseRewardSdk]) {
+        callback([RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
+        return;
+    }
+
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:appliId forKey:@"ApplilinkReward.appliId"];
+    [defaults setObject:env forKey:@"ApplilinkReward.env"];
+
+    if (![RewardNetworkUdid isAdvertisingTrackingEnabled]) {
+        callback([RewardNetworkError localizedApplilinkErrorWithCode:0x404]);
+        return;
+    }
+
+    // A fresh install (no udid on file) resets the initialize flag so we re-post below.
+    if ([RewardNetwork udid] == nil && [RewardNetwork ad_udid] == nil) {
+        [[RewardNetwork sharedInstance] setInitializeFlg:0];
+    }
+    if ([[RewardNetwork sharedInstance] initializeFlg] == 1) {
+        callback(nil);   // already initialized
+        return;
+    }
+
+    NSError *udidError = nil;
+    BOOL created = [RewardNetwork createUdidWithError:&udidError];
+    if (!created || udidError != nil) {
+        [[RewardNetwork sharedInstance] setInitializeFlg:0];
+        [g_pRewardNetworkInstance debugLog];
+        callback(udidError);
+        return;
+    }
+
+    NSError *adUdidError = nil;
+    [RewardNetworkUdid createAdvertisingRewardUdidWithError:&adUdidError];
+    if (adUdidError != nil) {
+        [g_pRewardNetworkInstance debugLog];
+        callback(adUdidError);
+        return;
+    }
+
+    // Both UDIDs are in place — post the install record; the completion (@ 0xeec84) sets the
+    // initialize flag and forwards to `callback`.
+    [RewardNetwork postApplicationInstallWithPriority:0 callback:^(NSError *error) {
+        if (error == nil) {
+            [[RewardNetwork sharedInstance] setInitializeFlg:1];
+            callback(nil);
+        } else {
+            [[RewardNetwork sharedInstance] setInitializeFlg:0];
+            [g_pRewardNetworkInstance debugLog];
+            callback(error);
+        }
+    }];
 }
 
 @end

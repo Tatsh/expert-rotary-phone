@@ -17,6 +17,8 @@
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
+#import "RewardNetwork.h"     // +setSessionParameters:url:method: (state 4)
+#import "StoreUtil.h"         // +getRewardLoginTokenURL
 #import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
@@ -254,10 +256,18 @@ void MenuMainTask::update(int /*deltaMs*/) {
         [root GotoInPlayerName];
         m_state = 4;
         break;
-    case 4:   // hand the reward network its session parameters
-        // RewardNetwork setSessionParameters:url:method: (ad/reward SDK — neutralized).
+    case 4: {   // hand the reward network its session parameters
+        NSString *url = [[StoreUtil getRewardLoginTokenURL] absoluteString];
+        // The binary fetches the reward appli id + player id here (session identity); the
+        // decompiled dictionaryWithObjectsAndKeys cleanly recovers only the {"env":"0"} pair, so the
+        // appli-id / player-id dict key strings are a documented best-effort omission.
+        (void)[[AppDelegate appDelegate] rewardAppId];
+        (void)[UserSettingData playerId];
+        NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"env", nil];
+        [RewardNetwork setSessionParameters:params url:url method:@"GET"];
         m_state = 5;
         break;
+    }
     case 5:   // wait for the intro SE, then reveal the menu
         m_state = 8;
         break;
