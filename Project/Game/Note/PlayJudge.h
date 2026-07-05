@@ -65,7 +65,14 @@ struct MainTaskPlayData {
 
     float   playScale;                   // +0x974 judge-line coordinate scale (touch xy / scale)
 
-    uint8_t _rsvd_978[0x9b0 - 0x978];    // +0x978 HUD / judge-line geometry (coords @+0x98c/990/994)
+    uint8_t _rsvd_978[0x98c - 0x978];    // +0x978 HUD / judge-line geometry
+
+    int32_t pauseBtnCenterX;             // +0x98c pause/back-button hit-circle centre x (pre-scale;
+                                         //        touch tested via pointInCircle after *playScale). FUN_0002dc14.
+    int32_t pauseBtnRadius;              // +0x990 pause/back-button hit-circle radius (pre-scale)
+    int32_t pauseBtnCenterY;             // +0x994 pause/back-button hit-circle centre y (pre-scale)
+
+    uint8_t _rsvd_998[0x9b0 - 0x998];    // +0x998
 
     int32_t cachedFinalScore;            // +0x9b0 computeFinalScore() cached each frame; the <70000
                                          //        clear-line and rank-SE checks read it. FUN_0002dc14.
@@ -171,6 +178,9 @@ static_assert(offsetof(MainTaskPlayData, songFinishPos)      == 0x9f8, "songFini
 static_assert(offsetof(MainTaskPlayData, noteDrawScale)      == 0x9bc, "noteDrawScale @ +0x9bc");
 static_assert(offsetof(MainTaskPlayData, hudHidden)          == 0x9c7, "hudHidden @ +0x9c7");
 static_assert(offsetof(MainTaskPlayData, hitEffectScale)     == 0x9e0, "hitEffectScale @ +0x9e0");
+static_assert(offsetof(MainTaskPlayData, pauseBtnCenterX)    == 0x98c, "pauseBtnCenterX @ +0x98c");
+static_assert(offsetof(MainTaskPlayData, pauseBtnRadius)     == 0x990, "pauseBtnRadius @ +0x990");
+static_assert(offsetof(MainTaskPlayData, pauseBtnCenterY)    == 0x994, "pauseBtnCenterY @ +0x994");
 #endif  // !__LP64__ (32-bit binary-exact layout guards)
 
 // Run one play/judge pass over the global NoteMng's active notes.
