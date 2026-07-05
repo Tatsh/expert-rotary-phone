@@ -74,7 +74,8 @@ struct MainTaskPlayData {
 
     float   hitRadius;                   // +0x9b8 note hit-test radius (distance test)
 
-    uint8_t _rsvd_9bc[0x9c0 - 0x9bc];    // +0x9bc
+    int32_t noteDrawScale;               // +0x9bc note/lane draw scale the judge passes as the sx/sy
+                                         //        pair to AepManager::drawLayer for notes. FUN_0002f1f8.
 
     int16_t gaugeValue;                  // +0x9c0 life gauge, clamped [0, 0x400] (updateGaugeValue)
 
@@ -84,7 +85,10 @@ struct MainTaskPlayData {
                                          //        the judge fires the milestone layer @+0x84/88/8c
                                          //        and records the crossed value. Ghidra: FUN_0002f1f8.
 
-    uint8_t _rsvd_9c6[0x9c8 - 0x9c6];    // +0x9c6
+    uint8_t _rsvd_9c6[0x9c7 - 0x9c6];    // +0x9c6 (state-2 SE/transition gate; role not yet nailed)
+
+    uint8_t hudHidden;                   // +0x9c7 when set, the play update skips playTaskDrawHud
+                                         //        (the on-screen HUD is suppressed). Ghidra: FUN_0002dc14.
 
     uint8_t clearSeFired;                // +0x9c8 one-shot latch: the post-song clear/rank SE fired
                                          //        (~1s after every note is judged). FUN_0002dc14.
@@ -102,7 +106,10 @@ struct MainTaskPlayData {
 
     uint8_t gaugeMissed;                 // +0x9dc set to 1 when a note is missed (result 0)
 
-    uint8_t _rsvd_9dd[0x9e4 - 0x9dd];    // +0x9dd
+    uint8_t _rsvd_9dd[0x9e0 - 0x9dd];    // +0x9dd
+
+    int32_t hitEffectScale;              // +0x9e0 note hit-effect layer extent; the judge passes its
+                                         //        half (/2) as the effect anchor/scale. Ghidra: FUN_0002f1f8.
 
     uint8_t spatialTouchMode;            // +0x9e4 0 = spatial (distance) hit-test, else in-order
     uint8_t optEffectOn;                 // +0x9e5 hit-effect option (milestone-SE gate)
@@ -161,6 +168,9 @@ static_assert(offsetof(MainTaskPlayData, endAudioStopped)    == 0x9e8, "endAudio
 static_assert(offsetof(MainTaskPlayData, backBtnTouchId)     == 0x9ec, "backBtnTouchId @ +0x9ec");
 static_assert(offsetof(MainTaskPlayData, backBtnHoldStartMs) == 0x9f0, "backBtnHoldStartMs @ +0x9f0");
 static_assert(offsetof(MainTaskPlayData, songFinishPos)      == 0x9f8, "songFinishPos @ +0x9f8");
+static_assert(offsetof(MainTaskPlayData, noteDrawScale)      == 0x9bc, "noteDrawScale @ +0x9bc");
+static_assert(offsetof(MainTaskPlayData, hudHidden)          == 0x9c7, "hudHidden @ +0x9c7");
+static_assert(offsetof(MainTaskPlayData, hitEffectScale)     == 0x9e0, "hitEffectScale @ +0x9e0");
 #endif  // !__LP64__ (32-bit binary-exact layout guards)
 
 // Run one play/judge pass over the global NoteMng's active notes.
