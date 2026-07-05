@@ -739,11 +739,13 @@ static int FloatToFixed(float ms) { return (int)(ms * 65536.0f); }
     _glView.delegate = self;
     [self.view addSubview:_glView];
 
-    // Texture data root lives under the Documents directory; the engine also needs the
-    // main bundle path. Ghidra: NSSearchPathForDirectoriesInDomains(9, 1, 1).
-    NSString *docDir = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-                                                           NSUserDomainMask, YES)[0];
-    NSString *texDir = [NSString stringWithFormat:@"%@/data/tex/", docDir];
+    // AEP data root (baseDir): the binary reads "<baseDir>/<name>.idx" via fopen from
+    // <Documents>/data/tex/, which the original POPULATED by a first-launch server download
+    // (Ghidra NSSearchPathForDirectoriesInDomains(9,1,1) -> Documents/data/tex/). That server
+    // is gone and this build ships every .idx at the .app bundle root, so point baseDir at the
+    // bundle resource path -- the .idx files fopen straight from there, and the tile PNGs already
+    // resolve via [NSBundle pathForResource:] regardless of baseDir (AepTexture::decodeAndUpload).
+    NSString *texDir = NSBundle.mainBundle.resourcePath;
     NSString *bundlePath = NSBundle.mainBundle.bundlePath;
     AepManager &aep = AepManager::shared();
     CGFloat scale = UIScreen.mainScreen.scale;
