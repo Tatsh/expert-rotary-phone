@@ -99,8 +99,15 @@ static void drawCommand(const AepSpriteCommand &cmd) {
     if (textured) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, (GLuint)cmd.textureId);
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+        // The only untextured quads are the transition fade overlays (drawTransitionOverlay:
+        // textureId=0, color0 = alpha 0..100). They dip the screen to BLACK -- not a white opaque
+        // fill. Draw black at the command's alpha so fades look right instead of flashing white.
+        GLfloat a = (GLfloat)cmd.color0 / 100.0f;
+        a = a < 0.0f ? 0.0f : (a > 1.0f ? 1.0f : a);
+        glColor4f(0.0f, 0.0f, 0.0f, a);
     }
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, verts);

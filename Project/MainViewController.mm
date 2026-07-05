@@ -653,12 +653,20 @@ static int FloatToFixed(float ms) { return (int)(ms * 65536.0f); }
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
-        // Cover the whole drawable with the viewport so the AEP's content-resolution ortho scales
-        // to fill the physical screen (nothing else sets glViewport; the flush only sets the ortho).
+        // Viewport = the full drawable width, height set to preserve the CONTENT aspect
+        // (AepManager screen extents), CENTRED vertically. This keeps the 2D content's proportions
+        // (no vertical stretch) while still filling the width; when the physical screen is a
+        // different aspect than the iPhone content, the vertical overflow is cropped equally
+        // (or, if the content is shorter, it letterboxes) instead of anchoring at the top.
+        // (Nothing else sets glViewport; the flush only sets the ortho.)
         int fbw = [_glView GetFrontBufferWidth];
         int fbh = [_glView GetFrontBufferHeight];
-        if (fbw > 0 && fbh > 0) {
-            glViewport(0, 0, fbw, fbh);
+        int cw = m_AepManager ? m_AepManager->screenWidth() : 0;
+        int ch = m_AepManager ? m_AepManager->screenHeight() : 0;
+        if (fbw > 0 && fbh > 0 && cw > 0 && ch > 0) {
+            int vpH = (int)((long long)fbw * ch / cw);   // full-width, aspect-preserved height
+            int vpY = (fbh - vpH) / 2;                   // centre vertically (may be negative = crop)
+            glViewport(0, vpY, fbw, vpH);
         }
         glClear(GL_COLOR_BUFFER_BIT);
         m_AepManager->draw();
