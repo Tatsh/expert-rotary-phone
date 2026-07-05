@@ -41,10 +41,6 @@ void neDrawTexturedQuad(int stateSlot, int p2, int p3, int p4, int p5, float u0,
 void setRenderStateSlot(int slot, int index, int value);
 }
 
-// The engine 2D render-state setup (viewport + ortho projection via glLoadMatrixf + default caps).
-// C++ linkage to match neRenderer.h (Ghidra: neApplyDefaultRenderState FUN_00014ef4); declared here
-// rather than #import-ing neRenderer.h to avoid colliding with the local extern-"C" neDraw* decls.
-void neApplyDefaultRenderState(void);
 
 AepOrderingTable::AepOrderingTable() {
     reset();
@@ -138,15 +134,36 @@ static void drawCommand(const AepSpriteCommand &cmd) {
 // Wiring the true dispatch is gated on a disasm-verified re-derivation of the VFP sprite tail (see
 // NEON_ACCURACY.md #2 / HANDOFF.md), which is the remaining, methodology-bounded work.
 void AepOrderingTable::flush() {
-    // Establish the engine's 2D render state before rendering the OT -- the way the binary does it.
-    // The binary imports glLoadMatrixf / glMatrixMode / glViewport (NOT glOrthof): the ortho is a
-    // software-built matrix (Ghidra FUN_00012ba8) stored on the current neViewport (created in
-    // -LayoutedGLView:) and loaded via glLoadMatrixf. neApplyDefaultRenderState (FUN_00014ef4) ->
-    // neApplyViewport applies that viewport (glViewport + glLoadMatrixf projection) and the default
-    // 2D enable caps. drawCommand is a raw GL ES 1.1 path that otherwise bypasses this, which left
-    // the projection at identity and the pixel-space quads off-screen (the boot logos were invisible
-    // for exactly this reason).
-    neApplyDefaultRenderState();
+    // Establish the 2D render state using the binary's own GL mechanism. The binary imports
+    // glLoadMatrixf / glMatrixMode / glViewport (NOT glOrthof / glLoadIdentity): the ortho is a
+    // software-built top-left-origin matrix (Ghidra FUN_00012ba8) loaded via glLoadMatrixf, and the
+    // modelview identity is loaded the same way. We build them directly here rather than going
+    // through neApplyDefaultRenderState -> neGetCurrentRenderer (the renderer facade is not yet
+    // initialised on the first frame, so that path null-derefs). drawCommand is a raw GL ES 1.1 path
+    // that otherwise bypasses all projection setup, leaving it at identity and the pixel-space quads
+    // off-screen (why the boot was black). Screen extents come from setScreenParams (aepManagerInit).
+    if (m_screenW > 0 && m_screenH > 0) {
+        const GLfloat W = (GLfloat)m_screenW;
+        const GLfloat H = (GLfloat)m_screenH;
+        // glOrtho(0, W, H, 0, -1, 1) as a column-major matrix (top-left origin).
+        const GLfloat ortho[16] = {
+            2.0f / W, 0.0f,      0.0f, 0.0f,
+            0.0f,    -2.0f / H,  0.0f, 0.0f,
+            0.0f,     0.0f,     -1.0f, 0.0f,
+           -1.0f,     1.0f,      0.0f, 1.0f,
+        };
+        static const GLfloat identity[16] = {
+            1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1,
+        };
+        glViewport(0, 0, m_screenW, m_screenH);
+        glMatrixMode(GL_PROJECTION);
+        glLoadMatrixf(ortho);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(identity);
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
     m_drawnCount = 0;
     for (int pri = m_maxPriority; pri >= 0; pri--) {
