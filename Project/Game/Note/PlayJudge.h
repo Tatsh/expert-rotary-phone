@@ -65,7 +65,12 @@ struct MainTaskPlayData {
 
     float   playScale;                   // +0x974 judge-line coordinate scale (touch xy / scale)
 
-    uint8_t _rsvd_978[0x9b8 - 0x978];    // +0x978
+    uint8_t _rsvd_978[0x9b0 - 0x978];    // +0x978 HUD / judge-line geometry (coords @+0x98c/990/994)
+
+    int32_t cachedFinalScore;            // +0x9b0 computeFinalScore() cached each frame; the <70000
+                                         //        clear-line and rank-SE checks read it. FUN_0002dc14.
+
+    uint8_t _rsvd_9b4[0x9b8 - 0x9b4];    // +0x9b4
 
     float   hitRadius;                   // +0x9b8 note hit-test radius (distance test)
 
@@ -75,7 +80,14 @@ struct MainTaskPlayData {
 
     int16_t lastMilestone;               // +0x9c2 last combo milestone fired (re-trigger guard)
 
-    uint8_t _rsvd_9c4[0x9c9 - 0x9c4];    // +0x9c4
+    int16_t comboMilestoneShown;         // +0x9c4 last combo milestone celebrated (25 / 50 / 100+):
+                                         //        the judge fires the milestone layer @+0x84/88/8c
+                                         //        and records the crossed value. Ghidra: FUN_0002f1f8.
+
+    uint8_t _rsvd_9c6[0x9c8 - 0x9c6];    // +0x9c6
+
+    uint8_t clearSeFired;                // +0x9c8 one-shot latch: the post-song clear/rank SE fired
+                                         //        (~1s after every note is judged). FUN_0002dc14.
 
     uint8_t isDemoPlay;                  // +0x9c9 tutorial / auto-demo (milestone-SE gate)
     uint8_t isPadDisplay;                // +0x9ca pad-class display (milestone-SE gate)
@@ -99,7 +111,21 @@ struct MainTaskPlayData {
 
     uint8_t optOldHardware;              // +0x9e7 legacy device (milestone-SE gate)
 
-    uint8_t _rsvd_9e8[0x9fc - 0x9e8];    // +0x9e8
+    uint8_t endAudioStopped;             // +0x9e8 set once AudioManager::stopAll ran on entering the
+                                         //        end state (state 7 -> 8). Ghidra: FUN_0002dc14.
+
+    uint8_t _rsvd_9e9[0x9ec - 0x9e9];    // +0x9e9
+
+    int32_t backBtnTouchId;              // +0x9ec pause/back-button hold touch id (-1 = none): a touch
+                                         //        held inside the button circle. Ghidra: FUN_0002dc14.
+
+    int32_t backBtnHoldStartMs;          // +0x9f0 getTimeMillis() when the back-button hold began;
+                                         //        held > 500 ms -> pause (onResignActive, state = 5).
+
+    uint8_t _rsvd_9f4[0x9f8 - 0x9f4];    // +0x9f4
+
+    int32_t songFinishPos;               // +0x9f8 play position when the last note was judged (0 =
+                                         //        not yet); base for the 1s clear-SE and 3s auto-advance.
 
     int     state;                       // +0x9fc play state-machine field (5 = stopping)
 };
@@ -128,6 +154,13 @@ static_assert(offsetof(MainTaskPlayData, spatialTouchMode) == 0x9e4, "spatialTou
 static_assert(offsetof(MainTaskPlayData, optEffectOn)      == 0x9e5, "optEffectOn @ +0x9e5");
 static_assert(offsetof(MainTaskPlayData, optOldHardware)   == 0x9e7, "optOldHardware @ +0x9e7");
 static_assert(offsetof(MainTaskPlayData, state)            == 0x9fc, "state @ +0x9fc");
+static_assert(offsetof(MainTaskPlayData, cachedFinalScore)   == 0x9b0, "cachedFinalScore @ +0x9b0");
+static_assert(offsetof(MainTaskPlayData, comboMilestoneShown)== 0x9c4, "comboMilestoneShown @ +0x9c4");
+static_assert(offsetof(MainTaskPlayData, clearSeFired)       == 0x9c8, "clearSeFired @ +0x9c8");
+static_assert(offsetof(MainTaskPlayData, endAudioStopped)    == 0x9e8, "endAudioStopped @ +0x9e8");
+static_assert(offsetof(MainTaskPlayData, backBtnTouchId)     == 0x9ec, "backBtnTouchId @ +0x9ec");
+static_assert(offsetof(MainTaskPlayData, backBtnHoldStartMs) == 0x9f0, "backBtnHoldStartMs @ +0x9f0");
+static_assert(offsetof(MainTaskPlayData, songFinishPos)      == 0x9f8, "songFinishPos @ +0x9f8");
 #endif  // !__LP64__ (32-bit binary-exact layout guards)
 
 // Run one play/judge pass over the global NoteMng's active notes.
