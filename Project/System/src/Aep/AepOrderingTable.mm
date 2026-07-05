@@ -41,6 +41,11 @@ void neDrawTexturedQuad(int stateSlot, int p2, int p3, int p4, int p5, float u0,
 void setRenderStateSlot(int slot, int index, int value);
 }
 
+// The engine 2D render-state setup (viewport + ortho projection via glLoadMatrixf + default caps).
+// C++ linkage to match neRenderer.h (Ghidra: neApplyDefaultRenderState FUN_00014ef4); declared here
+// rather than #import-ing neRenderer.h to avoid colliding with the local extern-"C" neDraw* decls.
+void neApplyDefaultRenderState(void);
+
 AepOrderingTable::AepOrderingTable() {
     reset();
 }
@@ -133,21 +138,15 @@ static void drawCommand(const AepSpriteCommand &cmd) {
 // Wiring the true dispatch is gated on a disasm-verified re-derivation of the VFP sprite tail (see
 // NEON_ACCURACY.md #2 / HANDOFF.md), which is the remaining, methodology-bounded work.
 void AepOrderingTable::flush() {
-    // Bridge: drawCommand is a raw GL ES 1.1 path that does NOT go through neApplyDefaultRenderState,
-    // so nothing establishes the 2D projection/state for it. Set up a top-left-origin ortho over the
-    // device-pixel screen extents (setScreenParams) here, matching the pixel coordinates the sprite
-    // commands carry, plus alpha blending and no depth test. Without this the pixel-space quads land
-    // outside NDC and nothing is visible (the boot logos were invisible for exactly this reason).
-    if (m_screenW > 0 && m_screenH > 0) {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrthof(0.0f, (GLfloat)m_screenW, (GLfloat)m_screenH, 0.0f, -1.0f, 1.0f);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
+    // Establish the engine's 2D render state before rendering the OT -- the way the binary does it.
+    // The binary imports glLoadMatrixf / glMatrixMode / glViewport (NOT glOrthof): the ortho is a
+    // software-built matrix (Ghidra FUN_00012ba8) stored on the current neViewport (created in
+    // -LayoutedGLView:) and loaded via glLoadMatrixf. neApplyDefaultRenderState (FUN_00014ef4) ->
+    // neApplyViewport applies that viewport (glViewport + glLoadMatrixf projection) and the default
+    // 2D enable caps. drawCommand is a raw GL ES 1.1 path that otherwise bypasses this, which left
+    // the projection at identity and the pixel-space quads off-screen (the boot logos were invisible
+    // for exactly this reason).
+    neApplyDefaultRenderState();
 
     m_drawnCount = 0;
     for (int pri = m_maxPriority; pri >= 0; pri--) {
