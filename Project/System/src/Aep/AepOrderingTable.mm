@@ -159,7 +159,9 @@ void AepOrderingTable::flush() {
         static const GLfloat identity[16] = {
             1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1,
         };
-        glViewport(0, 0, m_screenW, m_screenH);
+        // NOTE: do NOT set glViewport here -- MainViewController -draw sets it to the full drawable
+        // so this content-resolution ortho stretches across the whole screen. Setting it to the
+        // content extents (m_screenW/H) would confine rendering to a sub-rectangle in the corner.
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(ortho);
         glMatrixMode(GL_MODELVIEW);

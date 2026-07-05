@@ -653,6 +653,13 @@ static int FloatToFixed(float ms) { return (int)(ms * 65536.0f); }
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
+        // Cover the whole drawable with the viewport so the AEP's content-resolution ortho scales
+        // to fill the physical screen (nothing else sets glViewport; the flush only sets the ortho).
+        int fbw = [_glView GetFrontBufferWidth];
+        int fbh = [_glView GetFrontBufferHeight];
+        if (fbw > 0 && fbh > 0) {
+            glViewport(0, 0, fbw, fbh);
+        }
         glClear(GL_COLOR_BUFFER_BIT);
         m_AepManager->draw();
 
@@ -734,8 +741,19 @@ static int FloatToFixed(float ms) { return (int)(ms * 65536.0f); }
     CGFloat scale = UIScreen.mainScreen.scale;
     // Engine boot against the data paths; the surface is passed in device pixels
     // (points * scale). Kept as a bridge call — the AEP internals are not reimplemented.
-    aepManagerInit(&aep, bundlePath.UTF8String, texDir.UTF8String,
-                   (int)(bounds.size.width * scale), (int)(bounds.size.height * scale), scale);
+    // The AEP renders at the CONTENT resolution the sprites are authored for (the same canvas
+    // BootLogoTask/the scenes use), NOT the raw device drawable: on devices the app predates
+    // (or in iPhone-compat on iPad) UIScreen.bounds*scale is larger than the 640-wide iPhone
+    // content, which left 2D content undersized in the top-left. The flush ortho uses these
+    // extents and the viewport stretches them across the whole drawable (MainViewController -draw).
+    int contentW, contentH;
+    if (neSceneManager::isPadDisplay()) {
+        contentW = 1536; contentH = 2048;                                   // iPad retina canvas
+    } else {
+        contentW = 640;
+        contentH = (AppDelegate.appDelegate.displayType == 2) ? 1136 : 960; // 4" vs 3.5" iPhone
+    }
+    aepManagerInit(&aep, bundlePath.UTF8String, texDir.UTF8String, contentW, contentH, scale);
     neSceneManager::shared();   // force scene-manager lazy init
     reinterpret_cast<float &>(g_dwUiScale) = scale * 0.5f; // publish UI scale as float bits (binary @0xb51c)
 
