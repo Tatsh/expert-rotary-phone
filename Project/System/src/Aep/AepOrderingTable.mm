@@ -86,7 +86,11 @@ static void drawCommand(const AepSpriteCommand &cmd) {
     // so a pow2-padded texture samples only its source region; 0 falls back to the full 0..1.
     const GLfloat uMax = cmd.u > 0 ? (GLfloat)cmd.u / 65536.0f : 1.0f;
     const GLfloat vMax = cmd.v > 0 ? (GLfloat)cmd.v / 65536.0f : 1.0f;
-    const GLfloat uvs[8] = { 0, 0, uMax, 0, 0, vMax, uMax, vMax };
+    // The texture loaders (AepTexture.mm) upload Y-flipped "to GL's bottom-left origin", so v=0 is
+    // the BOTTOM of the image, while this ortho is top-left origin (y down). Map the top vertices to
+    // v=vMax and the bottom vertices to v=0 so the sprite is upright (otherwise it renders upside
+    // down). verts order is TL, TR, BL, BR.
+    const GLfloat uvs[8] = { 0, vMax, uMax, vMax, 0, 0, uMax, 0 };
 
     // A real GL texture name (neTextureForiOS::draw bridge) enables texturing; without one
     // there is nothing to sample, so draw the untextured quad (neApplyDefaultRenderState left
