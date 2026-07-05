@@ -109,7 +109,14 @@ BOOL gLaunchedFromPush = NO;
     // Root view controller into the window.
     self.viewController = [[MainViewController alloc] init];
     self.viewController.view.tag = 1;
-    [self.window addSubview:self.viewController.view];
+    // MODERNIZATION (not in the 2.0.3 binary): the original does [window addSubview:vc.view]
+    // (Ghidra 0x8cf0, the pre-iOS-6 idiom) with no rootViewController. iOS 13+ requires the key
+    // window to have a rootViewController by the end of launch, else -[UIApplication
+    // _runWithMainScene:...] throws "Application windows are expected to have a root view
+    // controller at the end of application launch" -> uncaught NSException -> SIGABRT. Assigning
+    // rootViewController is the modern equivalent (it installs vc.view as the window's content),
+    // so it preserves the original intent while letting the reconstruction launch on iOS 13+.
+    self.window.rootViewController = self.viewController;
     neSceneManager::shared().attachRoot(self.viewController); // Ghidra: FUN_0002c5b8
     [self.window makeKeyAndVisible];
 
