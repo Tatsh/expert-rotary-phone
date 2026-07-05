@@ -27,7 +27,7 @@
 - (AcMusicData *)getAcMusicData:(int)acMusicId; // @ 0xcb154 (matches .acMusicId)
 
 // "%09d.orb" data-file names.
-- (NSString *)getMusicDataFilename:(int)musicId;   // @ 0xc7e20
++ (NSString *)getMusicDataFilename:(int)musicId;   // @ 0xc7e20 (class method: stateless "%09d.orb")
 - (NSString *)getAcMusicDataFilename:(int)acMusicId;
 
 // Rebuild the caches (clears the dirty flag).
@@ -83,7 +83,10 @@
 - (void)releaseChacheMusicData;      // @ 0xcb248 (no-op in this build)
 
 // Resolve a song id to its bundled / purchased (.orb) path.
-- (NSString *)getPathFromBundle:(int)musicId;
++ (NSString *)getPathFromBundle:(int)musicId;      // @ 0xc7e80 (class method: no instance state;
+                                                   // the original calls it on the class, so the
+                                                   // init-time open-song predicates do NOT re-enter
+                                                   // getInstance -- see the recursion fix in .m)
 - (NSString *)getPathFromPurchased:(int)musicId;   // @ 0xc7edc
 - (NSString *)getAcPathFromPurchased:(int)acMusicId;   // @ 0xc7f38 (arcade music variant)
 

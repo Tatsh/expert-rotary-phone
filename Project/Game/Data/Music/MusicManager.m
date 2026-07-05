@@ -169,7 +169,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
 // Open when the bundled collabo song (id 5) is present AND either the saved collabo flag is
 // set or all three companion BEMANI apps are installed (their URL schemes can be opened).
 + (BOOL)isOpenBemaniCollaboMusic {
-    NSString *path = [[MusicManager getInstance] getPathFromBundle:5];
+    NSString *path = [MusicManager getPathFromBundle:5];
     if (!RhFileExists(path)) {
         return NO;
     }
@@ -202,7 +202,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     // Only tier 0 (song id 6) exists in this build.
     static const int kLoginBonusMusicIds[] = { 6 };
     int musicId = kLoginBonusMusicIds[openedId];
-    NSString *path = [[MusicManager getInstance] getPathFromBundle:musicId];
+    NSString *path = [MusicManager getPathFromBundle:musicId];
     if (!RhFileExists(path)) {
         return NO;
     }
@@ -268,8 +268,8 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     return nil;
 }
 
-// @ 0xc7e20
-- (NSString *)getMusicDataFilename:(int)musicId {
+// @ 0xc7e20 — class method in the binary (stateless; no instance ivars).
++ (NSString *)getMusicDataFilename:(int)musicId {
     return [NSString stringWithFormat:@"%09d.orb", musicId];
 }
 
@@ -284,7 +284,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     NSMutableArray *array = [NSMutableArray array];
     for (int i = 0; i < 9; i++) {
         int musicId = kTreasureMusicIds[i];
-        NSString *path = [self getPathFromBundle:musicId];
+        NSString *path = [MusicManager getPathFromBundle:musicId];
         if (RhFileExists(path)) {
             MusicData *data = [MusicData dataWithPath:path ID:musicId];
             if (data != nil) {
@@ -306,7 +306,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     // 1) Default (always available) songs, bundled.
     for (NSNumber *idNum in m_DefaultMusicIDs) {
         int musicId = idNum.intValue;
-        NSString *path = [self getPathFromBundle:musicId];
+        NSString *path = [MusicManager getPathFromBundle:musicId];
         if (RhFileExists(path)) {
             MusicData *data = [MusicData dataWithPath:path ID:musicId];
             if (data != nil) {
@@ -334,7 +334,7 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
     for (NSUInteger s = 0; s < 4; s++) {
         for (NSNumber *idNum in bundledSources[s]) {
             int musicId = idNum.intValue;
-            NSString *path = [self getPathFromBundle:musicId];
+            NSString *path = [MusicManager getPathFromBundle:musicId];
             if (RhFileExists(path)) {
                 MusicData *data = [MusicData dataWithPath:path ID:musicId];
                 if (data != nil) {
@@ -478,15 +478,22 @@ static const int kAcDefaultMusicIds[4] = { 1, 2, 3, 300000000 };
 
 #pragma mark - Paths  [bodies inferred; confirm against getPathFromBundle_/Purchased_]
 
-// @ 0xc7e80
-- (NSString *)getPathFromBundle:(int)musicId {
-    return [NSBundle.mainBundle.resourcePath
-            stringByAppendingPathComponent:[self getMusicDataFilename:musicId]];
+// @ 0xc7e80 — class method in the binary. It uses no instance state, so the original calls it on
+// the MusicManager class object (never through getInstance). That is what keeps the init-time
+// open-song predicates (isOpenBemaniCollaboMusic / isOpenLoginBonusMusic, which run inside -init)
+// from re-entering getInstance before its singleton global is assigned. The prior reconstruction
+// made this an instance method, so those predicates called [[MusicManager getInstance] ...] and
+// recursed forever during init -> stack overflow (SIGSEGV). NOTE: the binary's base directory is
+// AppDelegate::appAppSupportDirectory (0xc7e80), not mainBundle.resourcePath -- corrected below to
+// match the binary (the .orb data files live under Application Support, not the app bundle).
++ (NSString *)getPathFromBundle:(int)musicId {
+    return [[AppDelegate appAppSupportDirectory]
+            stringByAppendingPathComponent:[MusicManager getMusicDataFilename:musicId]];
 }
 
 - (NSString *)getPathFromPurchased:(int)musicId {
     return [[AppDelegate appDocumentsDirectory]
-            stringByAppendingPathComponent:[self getMusicDataFilename:musicId]];
+            stringByAppendingPathComponent:[MusicManager getMusicDataFilename:musicId]];
 }
 
 - (NSString *)getAcPathFromPurchased:(int)acMusicId {

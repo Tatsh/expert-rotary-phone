@@ -96,7 +96,7 @@ void PlayTask::reloadChart(int restart) {
     } else {
         // Tutorial / bundled-demo play (flag @ +0x9c9): the fixed bundled song, normal sheet.
         difficulty = 0;
-        md = [MusicData dataWithPath:[[MusicManager getInstance] getPathFromBundle:0] ID:0];
+        md = [MusicData dataWithPath:[MusicManager getPathFromBundle:0] ID:0];
     }
 
     if (restart == 0) {

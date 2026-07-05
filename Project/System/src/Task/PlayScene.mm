@@ -346,7 +346,7 @@ void PlayLoadSong(void *playData, int reload) {
     } else {
         // Bundled demo / sugoroku: the fixed bundled song, always the normal sheet.
         sheetIndex = 0;
-        music = [MusicData dataWithPath:[[MusicManager getInstance] getPathFromBundle:0] ID:0];
+        music = [MusicData dataWithPath:[MusicManager getPathFromBundle:0] ID:0];
     }
 
     if (reload == 0) {
