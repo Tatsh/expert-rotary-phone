@@ -68,14 +68,5 @@
     <true/>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-
-    <!-- Placeholder launch screen. Without any launch screen, iOS 13+ runs this old app
-         (legacy launch-image era) in iPhone-compatibility scaling on iPad (the ~640x960
-         legacy surface seen at runtime). The iOS 14+ UILaunchScreen key opts the app out of
-         that so it renders at native iPad resolution; an empty dict is a blank (system
-         background-color) launch screen and needs no compiled storyboard file. Replace with a
-         real launch image later if desired. -->
-    <key>UILaunchScreen</key>
-    <dict/>
 </dict>
 </plist>
