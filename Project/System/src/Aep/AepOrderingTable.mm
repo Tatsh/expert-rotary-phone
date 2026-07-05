@@ -133,6 +133,22 @@ static void drawCommand(const AepSpriteCommand &cmd) {
 // Wiring the true dispatch is gated on a disasm-verified re-derivation of the VFP sprite tail (see
 // NEON_ACCURACY.md #2 / HANDOFF.md), which is the remaining, methodology-bounded work.
 void AepOrderingTable::flush() {
+    // Bridge: drawCommand is a raw GL ES 1.1 path that does NOT go through neApplyDefaultRenderState,
+    // so nothing establishes the 2D projection/state for it. Set up a top-left-origin ortho over the
+    // device-pixel screen extents (setScreenParams) here, matching the pixel coordinates the sprite
+    // commands carry, plus alpha blending and no depth test. Without this the pixel-space quads land
+    // outside NDC and nothing is visible (the boot logos were invisible for exactly this reason).
+    if (m_screenW > 0 && m_screenH > 0) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrthof(0.0f, (GLfloat)m_screenW, (GLfloat)m_screenH, 0.0f, -1.0f, 1.0f);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
     m_drawnCount = 0;
     for (int pri = m_maxPriority; pri >= 0; pri--) {
         for (AepSpriteCommand *cmd = m_buckets[pri]; cmd != nullptr; cmd = cmd->next) {
