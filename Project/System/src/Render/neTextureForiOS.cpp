@@ -114,8 +114,25 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     cmd->type = 1;                   // +0x04 type 1 = stretched sprite (AepOrderingTable::drawSprite
                                      // FUN_00011468 writes *(short*)(entry+4)=1; the discriminator
                                      // lives at +0x04, not the priority slot)
-    cmd->textureId = 0;              // +0x08
-    cmd->u = p.u;   cmd->v = p.v;    // +0x0c/+0x10
+
+    // --- Simplified-renderer bridge (until the full type dispatch, NEON_ACCURACY #2) ---
+    // The binary carries the sprite's texture through the render-state slot chain
+    // (drawAepOtSpriteStretch -> drawAepSpriteClipped -> neDrawTexturedQuad). That chain is
+    // not yet reconstructed, and the binary's own textureId slot is 0 here. Until the real
+    // dispatch lands, stash the resolved GL texture name in textureId and the used UV extent
+    // (source / pow2-padded, as 16.16) in u/v, so the placeholder flush (AepOrderingTable's
+    // drawCommand) can bind the texture and sample only the source region.
+    unsigned glName = 0;   // GL texture name (GLuint); kept as plain unsigned for the .cpp
+    float uSpan = 1.0f, vSpan = 1.0f;
+    if (m_tileCount > 0 && m_tiles != nullptr && m_tiles[0] != nullptr) {
+        AepTexture *t = m_tiles[0];
+        glName = t->name();
+        if (t->textureWidth() > 0)  { uSpan = (float)t->width()  / (float)t->textureWidth(); }
+        if (t->textureHeight() > 0) { vSpan = (float)t->height() / (float)t->textureHeight(); }
+    }
+    cmd->textureId = (int)glName;                  // +0x08 (bridge: real GL texture name)
+    cmd->u = (int)(uSpan * 65536.0f);              // +0x0c (bridge: UV span x, 16.16)
+    cmd->v = (int)(vSpan * 65536.0f);              // +0x10 (bridge: UV span y, 16.16)
     cmd->x = p.x;   cmd->y = p.y;    // +0x14/+0x18
     cmd->sx = p.sx; cmd->sy = p.sy;  // +0x1c/+0x20
     cmd->w = p.w;   cmd->h = p.h;    // +0x24/+0x28

@@ -81,19 +81,33 @@ static void drawCommand(const AepSpriteCommand &cmd) {
 
     // Interleaved quad (TRIANGLE_STRIP): top-left, top-right, bottom-left, bottom-right.
     const GLfloat verts[8] = { x, y, x + w, y, x, y + h, x + w, y + h };
-    // Source rect in normalised texture space (u/v are 16.16-ish source offsets;
-    // reconstructed as a 0..1 span across the sprite's own extent).
-    const GLfloat uvs[8] = { 0, 0, 1, 0, 0, 1, 1, 1 };
+    // Bridge: cmd.u/cmd.v carry the used UV extent (16.16) that neTextureForiOS::draw wrote,
+    // so a pow2-padded texture samples only its source region; 0 falls back to the full 0..1.
+    const GLfloat uMax = cmd.u > 0 ? (GLfloat)cmd.u / 65536.0f : 1.0f;
+    const GLfloat vMax = cmd.v > 0 ? (GLfloat)cmd.v / 65536.0f : 1.0f;
+    const GLfloat uvs[8] = { 0, 0, uMax, 0, 0, vMax, uMax, vMax };
 
-    glBindTexture(GL_TEXTURE_2D, (GLuint)cmd.textureId);
+    // A real GL texture name (neTextureForiOS::draw bridge) enables texturing; without one
+    // there is nothing to sample, so draw the untextured quad (neApplyDefaultRenderState left
+    // GL_TEXTURE_2D disabled).
+    const bool textured = (cmd.textureId != 0);
+    if (textured) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, (GLuint)cmd.textureId);
+    }
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, verts);
-    glTexCoordPointer(2, GL_FLOAT, 0, uvs);
+    if (textured) {
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 0, uvs);
+    }
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    if (textured) {
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisable(GL_TEXTURE_2D);
+    }
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 

@@ -91,11 +91,18 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     if (logo == nullptr) {
         return;
     }
+    // Ghidra BootLogoTask_drawLogo* (FUN_0002b4b4/b504) -> neTextureForiOS_draw with
+    // w = m_posX, h = m_posY, x = 0, y = 0, sx = sy = 100: the logo is a full-canvas quad
+    // at the origin (m_posX/m_posY are the device-pixel canvas size, NOT a centre). The
+    // prior reconstruction had position/size swapped (x=posX, y=posY, w=h=100), so even a
+    // bound texture would have drawn a 100x100 quad in the corner.
     neSpriteDrawParams p;
-    p.x = m_posX;
-    p.y = m_posY;
-    p.w = 100;
-    p.h = 100;
+    p.x = 0;
+    p.y = 0;
+    p.w = m_posX;
+    p.h = m_posY;
+    p.sx = 100;
+    p.sy = 100;
     p.color = 100;
     p.blend0 = 0x20;
     p.colorMul = 0xffffff;
