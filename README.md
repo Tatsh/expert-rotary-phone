@@ -1,10 +1,29 @@
 # pop'n rhythmin — source reconstruction
 
+<!-- WISWA-GENERATED-README:START -->
+
+[![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/expert-rotary-phone)](https://github.com/Tatsh/expert-rotary-phone/tags)
+[![License](https://img.shields.io/github/license/Tatsh/expert-rotary-phone)](https://github.com/Tatsh/expert-rotary-phone/blob/master/LICENSE.txt)
+[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/expert-rotary-phone/v2.0.3/master)](https://github.com/Tatsh/expert-rotary-phone/compare/v2.0.3...master)
+[![Dependabot](https://img.shields.io/badge/Dependabot-enabled-blue?logo=dependabot)](https://github.com/dependabot)
+[![pages-build-deployment](https://github.com/Tatsh/expert-rotary-phone/actions/workflows/pages/pages-build-deployment/badge.svg)](https://tatsh.github.io/expert-rotary-phone/)
+[![Stargazers](https://img.shields.io/github/stars/Tatsh/expert-rotary-phone?logo=github&style=flat)](https://github.com/Tatsh/expert-rotary-phone/stargazers)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![Prettier](https://img.shields.io/badge/Prettier-black?logo=prettier)](https://prettier.io/)
+
+[![@Tatsh](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fpublic.api.bsky.app%2Fxrpc%2Fapp.bsky.actor.getProfile%2F%3Factor=did%3Aplc%3Auq42idtvuccnmtl57nsucz72&query=%24.followersCount&label=Follow+%40Tatsh&logo=bluesky&style=social)](https://bsky.app/profile/Tatsh.bsky.social)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Tatsh-black?logo=buymeacoffee)](https://buymeacoffee.com/Tatsh)
+[![Libera.Chat](https://img.shields.io/badge/Libera.Chat-Tatsh-black?logo=liberadotchat)](irc://irc.libera.chat/Tatsh)
+[![Mastodon Follow](https://img.shields.io/mastodon/follow/109370961877277568?domain=hostux.social&style=social)](https://hostux.social/@Tatsh)
+[![Patreon](https://img.shields.io/badge/Patreon-Tatsh2-F96854?logo=patreon)](https://www.patreon.com/Tatsh2)
+
+<!-- WISWA-GENERATED-README:STOP -->
+
 Reconstructed Objective-C source for **pop'n rhythmin** (`jp.konami.popnmusic`),
 Konami's iOS companion/rhythm game. The shipping binary is **32-bit only**
 (`armv7`, `CFBundleShortVersionString` 2.0.3, built against the iOS 8.1 SDK), so
 it stopped running once iOS 11 dropped 32-bit support. The goal of this tree is a
-best-effort, modern-Objective-C reconstruction of the *original* application
+best-effort, modern-Objective-C reconstruction of the _original_ application
 source so it can be rebuilt for 64-bit / current iOS.
 
 ## Provenance
@@ -23,7 +42,7 @@ source so it can be rebuilt for 64-bit / current iOS.
 (view controllers, data models, managers, the `ne*` OpenGL engine glue) and the
 plain C helper functions that back them.
 
-**Out of scope** (deliberately *not* re-implemented, per the reconstruction goal):
+**Out of scope** (deliberately _not_ re-implemented, per the reconstruction goal):
 
 - Compiler/runtime-generated code: SjLj exception thunks, ARC/`objc_msgSend`
   stubs, `switchD_*` jump tables, Obj-C runtime metadata structs
@@ -32,11 +51,11 @@ plain C helper functions that back them.
   `CF*`/Foundation/UIKit internals, `libz`, `libstdc++`, `memcpy`/`__stack_chk`
   style helpers. These are referenced, never redefined.
 
-**Third-party SDKs bundled into the binary** are *not* reconstructed and *not*
+**Third-party SDKs bundled into the binary** are _not_ reconstructed and _not_
 stubbed. Original Konami code referenced them via their public headers, so this
 tree does the same: it `#import`s the real library headers and treats the
 libraries as external dependencies. See **Dependencies** below for the list and
-how each was identified. (The exception is where a class name merely *collides*
+how each was identified. (The exception is where a class name merely _collides_
 with an SDK — e.g. the Core Data entity `TreasureData` is the local sugoroku
 save record, unrelated to the TreasureData analytics SDK.)
 
@@ -70,7 +89,8 @@ save record, unrelated to the TreasureData analytics SDK.)
   - `.h` — all headers (C, C++, Obj-C, Obj-C++).
 
   Obj-C code calls the C++ engine through the `extern "C"` bridge in
-  `Engine/NEEngineBridge.h`, so files that only *call* the engine stay `.m`.
+  `Engine/NEEngineBridge.h`, so files that only _call_ the engine stay `.m`.
+
 - **Editor modelines on every Obj-C header:** each `.h` ends with Kate + vim
   modelines so editors treat it as Objective-C (or Objective-C++), since a bare
   `.h` is ambiguous:
@@ -81,10 +101,11 @@ save record, unrelated to the TreasureData analytics SDK.)
   // code: language=Objective-C
   ```
 
-  The `code:` line is for the VSCode *vscode-modelines* extension. Obj-C++
+  The `code:` line is for the VSCode _vscode-modelines_ extension. Obj-C++
   bridge headers use `hl Objective-C++;` / `ft=objcpp` / `language=Objective-C++`;
   C++ headers use the `C++` / `cpp` variants. All modelines also set 4-space,
   tabs-to-spaces indentation.
+
 - **Header guards:** `#pragma once` for C++ headers; `#ifndef UPPERCASE_NAME_H`
   (all-caps) for pure C headers; Obj-C headers rely on `#import` and use no guard.
 - **Ghidra DB kept in sync:** as `FUN_*` functions are identified they are
@@ -125,10 +146,10 @@ class list — the `/System/Library/Frameworks/...` and `/usr/lib/...` entries.)
 
 ### Bundled third-party libraries — functional (vendor the real source/headers)
 
-| Import as | Library | How identified |
-|---|---|---|
-| `CJSONDeserializer.h`, `CJSONSerializer.h`, `CDataScanner.h`, … | **TouchJSON** (Jonathan Wight) | `CJSON*` / `CDataScanner` / `CSerializedJSONData` class names are TouchJSON's exact public API. |
-| `ZipArchive.h` (a.k.a. `UnZipArchive`) | **ZipArchive / SSZipArchive** (minizip wrapper) | `UnZipArchive` class + `libz` linkage. |
+| Import as                                                       | Library                                         | How identified                                                                                  |
+| --------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `CJSONDeserializer.h`, `CJSONSerializer.h`, `CDataScanner.h`, … | **TouchJSON** (Jonathan Wight)                  | `CJSON*` / `CDataScanner` / `CSerializedJSONData` class names are TouchJSON's exact public API. |
+| `ZipArchive.h` (a.k.a. `UnZipArchive`)                          | **ZipArchive / SSZipArchive** (minizip wrapper) | `UnZipArchive` class + `libz` linkage.                                                          |
 
 If exact upstream versions matter, pin to releases from ~mid-2014 (build date of
 the bundle, 2014-07-18) to match the shipped behavior.
@@ -140,13 +161,13 @@ These dependencies are removed; where original code called into them, the call
 sites are backed by **no-op stubs** in `Stubs/` so the app still builds and runs
 with all tracking/advertising inert. Do not vendor the real SDKs.
 
-| Removed dependency | Kind | Handling |
-|---|---|---|
-| **TreasureData** analytics SDK (`TDClient` etc.) | analytics | no-op stub in `Stubs/` |
-| **RewardNetwork** SDK (`RewardNetwork*`, `RewardNetworkResources.bundle`) | ad reward | no-op stub in `Stubs/` |
-| `ASIdentifierManager` / `AdSupport` (IDFA) | ad tracking | eliminated; return zeroed/absent IDFA |
+| Removed dependency                                                        | Kind        | Handling                              |
+| ------------------------------------------------------------------------- | ----------- | ------------------------------------- |
+| **TreasureData** analytics SDK (`TDClient` etc.)                          | analytics   | no-op stub in `Stubs/`                |
+| **RewardNetwork** SDK (`RewardNetwork*`, `RewardNetworkResources.bundle`) | ad reward   | no-op stub in `Stubs/`                |
+| `ASIdentifierManager` / `AdSupport` (IDFA)                                | ad tracking | eliminated; return zeroed/absent IDFA |
 
-The app's *own* cross-promotion classes (`Recommend*`) are still reconstructed as
+The app's _own_ cross-promotion classes (`Recommend*`) are still reconstructed as
 original source, but their network/ad calls are neutralized to no-ops so they
 pull in no external ad services.
 

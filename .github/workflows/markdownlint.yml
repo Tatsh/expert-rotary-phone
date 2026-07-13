@@ -1,0 +1,35 @@
+jobs:
+  markdownlint:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0'
+        with:
+          persist-credentials: false
+      - name: 'Yarn cache'
+        uses: 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
+        with:
+          key: "${{ runner.os }}-yarn-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}"
+          path: '~/.yarn/berry'
+          restore-keys: '${{ runner.os }}-yarn'
+      - name: 'Install dependencies (Yarn)'
+        run: 'yarn'
+      - name: 'Check formatting (markdownlint)'
+        run: 'yarn markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2'
+name: 'markdownlint'
+'on':
+  pull_request:
+    branches:
+      - 'master'
+    paths:
+      - '**/*.md'
+      - '**/*.mdc'
+      - '.github/workflows/markdownlint.yml'
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '**/*.md'
+      - '**/*.mdc'
+      - '.github/workflows/markdownlint.yml'
+permissions:
+  contents: 'read'

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
   Info.plist template for pop'n rhythmin. Consumed by CMake (configure_file @ONLY),
   which substitutes the @...@ placeholders. The original bundle's own Info.plist is
@@ -6,7 +6,8 @@
   reproduces the keys the reconstructed code actually reads at runtime, chiefly
   CFBundleVersion (AppDelegate reads infoDictionary[@"CFBundleVersion"]).
 -->
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
@@ -28,7 +29,7 @@
     <key>CFBundleVersion</key>
     <string>@APP_BUILD@</string>
     <key>LSRequiresIPhoneOS</key>
-    <true/>
+    <true />
     <key>MinimumOSVersion</key>
     <string>@IOS_DEPLOYMENT_TARGET@</string>
 
@@ -65,8 +66,8 @@
     </array>
 
     <key>UIStatusBarHidden</key>
-    <true/>
+    <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
+    <false />
 </dict>
 </plist>

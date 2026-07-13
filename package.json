@@ -1,0 +1,121 @@
+{
+  "_wiswa": {
+    "commandLine": "wiswa -d",
+    "lastRun": "2026-07-13T18:17:52Z",
+    "version": "1c522a5-dirty"
+  },
+  "contributors": ["Andrew Udvare <audvare@gmail.com>"],
+  "cspell": {
+    "cache": {
+      "useCache": true
+    },
+    "dictionaryDefinitions": [
+      {
+        "name": "main",
+        "path": ".vscode/dictionary.txt"
+      }
+    ],
+    "enableFileTypes": {
+      "*": true
+    },
+    "enableGlobDot": true,
+    "files": ["**"],
+    "ignorePaths": [
+      "*.1",
+      "*.har",
+      "*.lock",
+      ".git/**",
+      ".yarn/**/*.cjs",
+      ".vscode/extensions.json",
+      "dist/**",
+      "man/**",
+      "*.pbxproj",
+      "*.xc*"
+    ],
+    "language": "en-GB",
+    "languageSettings": [
+      {
+        "dictionaries": ["main"],
+        "languageId": "*"
+      }
+    ],
+    "useGitignore": true
+  },
+  "description": "Expert Rotary Phone.",
+  "devDependencies": {
+    "@prettier/plugin-xml": "^3.4.2",
+    "cspell": "^10.0.1",
+    "markdownlint-cli2": "^0.23.0",
+    "prettier": "^3.9.4",
+    "prettier-plugin-ini": "^1.3.0",
+    "prettier-plugin-sort-json": "^4.2.0",
+    "prettier-plugin-toml": "^2.0.6"
+  },
+  "files": ["LICENSE.txt", "README.md"],
+  "homepage": "https://tatsh.github.io/expert-rotary-phone/",
+  "keywords": ["decompilation", "game", "ios", "reverse engineering", "rhythmin"],
+  "license": "MIT",
+  "markdownlint-cli2": {
+    "config": {
+      "MD024": {
+        "siblings_only": true
+      },
+      "MD033": {
+        "allowed_elements": ["kbd"]
+      },
+      "default": true,
+      "line-length": {
+        "code_blocks": false,
+        "line_length": 100,
+        "tables": false
+      }
+    },
+    "gitignore": true,
+    "globs": ["**/*.md", "**/*.mdc"],
+    "noBanner": true,
+    "showFound": true
+  },
+  "name": "expert-rotary-phone",
+  "packageManager": "yarn@4.17.1",
+  "prettier": {
+    "endOfLine": "lf",
+    "iniSpaceAroundEquals": true,
+    "jsonRecursiveSort": true,
+    "overrides": [
+      {
+        "files": ["*.json.dist", "package.json"],
+        "options": {
+          "parser": "json"
+        }
+      },
+      {
+        "files": ["*.plist", "*.plist.in"],
+        "options": {
+          "parser": "xml"
+        }
+      }
+    ],
+    "plugins": [
+      "@prettier/plugin-xml",
+      "prettier-plugin-ini",
+      "prettier-plugin-sort-json",
+      "prettier-plugin-toml"
+    ],
+    "printWidth": 100,
+    "reorderKeys": true,
+    "singleQuote": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tatsh/expert-rotary-phone.git"
+  },
+  "scripts": {
+    "build": "if ! [ -d .ios-cmake ]; then git clone --depth 1 --branch \"$IOS_CMAKE_REF\" https://github.com/leetal/ios-cmake.git .ios-cmake; fi && cmake -B build -G Xcode -DCMAKE_TOOLCHAIN_FILE=\"./.ios-cmake/ios.toolchain.cmake\" -DDEPLOYMENT_TARGET=12.0 -DENABLE_BITCODE=NO -DIOS_ARCHS=arm64 -DPLATFORM=OS64 && cmake --build build --config Release -- CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO AD_HOC_CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM=\"\" PROVISIONING_PROFILE_SPECIFIER=\"\" && app=$(find build -type d -name PopnRhythmn.app -print -quit) && test -n \"${app}\" && codesign --force --sign - --timestamp=none \"${app}\" && codesign --verify --verbose=2 \"${app}\" && mkdir -p build/ipa/Payload && cp -R \"${app}\" build/ipa/Payload/ && /usr/bin/zip -qry build/PopnRhythmin-latest.ipa build/ipa/Payload",
+    "check-formatting": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | grep -v /minizip/ > .to-format.txt && clang-format --dry-run --Werror --files=.to-format.txt && rm -f .to-format.txt && prettier --check . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2",
+    "check-spelling": "cspell --no-progress",
+    "dict:update": "rm -f .vscode/dictionary.txt && cspell lint --no-progress --no-summary --unique --words-only | tr '[:upper:]' '[:lower:]' | sort -u > .vscode/dictionary.txt",
+    "format": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | grep -v /minizip/ > .to-format.txt && clang-format -i --files=.to-format.txt && rm -f .to-format.txt && prettier -w . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2 --fix",
+    "qa": "yarn check-spelling && yarn check-formatting"
+  },
+  "version": "2.0.3"
+}

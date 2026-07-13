@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
   Info.plist for the Theos build of pop'n rhythmin (FIXED, hand-maintained). Kept in
   theos/Resources/ so application.mk copies it into PopnRhythmin.app. The original
@@ -7,7 +7,8 @@
   runtime, chiefly CFBundleVersion (AppDelegate reads infoDictionary[@"CFBundleVersion"]).
   Keep in sync with ../Info.plist.in (the CMake/Xcode template) when values change.
 -->
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
@@ -29,7 +30,7 @@
     <key>CFBundleVersion</key>
     <string>2.0.3</string>
     <key>LSRequiresIPhoneOS</key>
-    <true/>
+    <true />
     <key>MinimumOSVersion</key>
     <string>5.1.1</string>
 
@@ -66,8 +67,8 @@
     </array>
 
     <key>UIStatusBarHidden</key>
-    <true/>
+    <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
+    <false />
 </dict>
 </plist>

@@ -3,15 +3,15 @@
 The original game shipped **only as a 32-bit (armv7) binary**, which is why it will not
 run on iOS 11+ (64-bit only). This reconstruction rebuilds it from source and, by default,
 produces a fat binary spanning **armv7 armv7s arm64 arm64e** so it can run on both the
-original hardware *and* modern iOS.
+original hardware _and_ modern iOS.
 
 Your installed toolchain decides which slices you can actually produce:
 
-| Slice | Needs |
-|-------|-------|
-| `armv7` / `armv7s` | Xcode ≤ 11 (32-bit codegen dropped in Xcode 12) |
-| `arm64` | any modern Xcode |
-| `arm64e` | recent Xcode with arm64e *app* codegen + iOS ≥ 12.1 |
+| Slice              | Needs                                               |
+| ------------------ | --------------------------------------------------- |
+| `armv7` / `armv7s` | Xcode ≤ 11 (32-bit codegen dropped in Xcode 12)     |
+| `arm64`            | any modern Xcode                                    |
+| `arm64e`           | recent Xcode with arm64e _app_ codegen + iOS ≥ 12.1 |
 
 On a 2017 MacBook Pro the two practical routes are **Theos** (easiest for legacy targets)
 and **Xcode 10.1–11** (last versions that still emit armv7). Override the slice set with
@@ -19,9 +19,9 @@ and **Xcode 10.1–11** (last versions that still emit armv7). Override the slic
 
 There are two independent build systems:
 
-* **Theos** — a fixed, hand-maintained Theos application project at [`theos/Makefile`](theos/Makefile).
+- **Theos** — a fixed, hand-maintained Theos application project at [`theos/Makefile`](theos/Makefile).
   It does **not** go through CMake; edit its values in place. Build with `make -C theos`.
-* **CMake/Xcode** — a native `.app` target. Everything is configurable on the CMake command
+- **CMake/Xcode** — a native `.app` target. Everything is configurable on the CMake command
   line (all options are cache entries): `APP_BUNDLE_ID`, `APP_DISPLAY_NAME`, `APP_VERSION`,
   `APP_BUILD`, `IOS_ARCHS`, `IOS_DEPLOYMENT_TARGET`, `XCODE_PATH`, `RESOURCES_DIR`,
   `POPNRHYTHMIN_BINARY`.
@@ -29,7 +29,7 @@ There are two independent build systems:
 ## Assets
 
 None of the game's runtime assets (images, `rhythmin.lv`, `.acv/.orb/.idx` charts, fonts)
-are in this repo — only reconstructed *code*. Point the build at a directory holding the
+are in this repo — only reconstructed _code_. Point the build at a directory holding the
 original extracted `.app` payload with `-DRESOURCES_DIR=/path/to/PopnRhythmin.app`; the
 build copies everything except the old Mach-O / signature / Info.plist into the new bundle
 so each `imageNamed:` / `NSBundle` lookup resolves.
@@ -78,26 +78,26 @@ links the frameworks and copies resources.
 runner with Xcode** (`macos-14`) and uploads an **ad-hoc-signed** artifact (identity `-`,
 no Apple Developer account needed):
 
-* `xcode` (default) — configures the CMake/Xcode backend with the fetched leetal/ios-cmake
+- `xcode` (default) — configures the CMake/Xcode backend with the fetched leetal/ios-cmake
   toolchain, builds `Release`, ad-hoc-signs `PopnRhythmin.app` (`codesign -s -`) and uploads
   `PopnRhythmin-adhoc.ipa`.
-* `theos` (opt-in, `continue-on-error`) — runs only on a manual dispatch with
+- `theos` (opt-in, `continue-on-error`) — runs only on a manual dispatch with
   `run_theos=true`: bootstraps Theos and runs `make -C theos package` (Theos fake-signs via
   `ldid`), producing a `.deb`.
 
 Defaults build **arm64 only** (GitHub runners run Xcode 12+, which cannot emit armv7). The
 `workflow_dispatch` inputs `ios_archs` / `deployment_target` override the slice set and floor;
-optional repository *variables* `POPNRHYTHMIN_BINARY` (embed the board dialogue) and
+optional repository _variables_ `POPNRHYTHMIN_BINARY` (embed the board dialogue) and
 `RESOURCES_DIR` (bundle assets) are passed through when set. Since the tree has never been
 compiled, the first run is expected to surface real compile errors.
 
 ## Notes / caveats
 
-* The whole codebase is **ARC** (targeting iOS 5+; the original's manual retain/release
+- The whole codebase is **ARC** (targeting iOS 5+; the original's manual retain/release
   teardown is captured in `// @ 0xADDR` comments but synthesized by ARC), so both builds
   compile with `-fobjc-arc`.
-* A few files interoperate with C++ via `__bridge_*` casts (ARC spelling) — 15 translation
+- A few files interoperate with C++ via `__bridge_*` casts (ARC spelling) — 15 translation
   units; these require ARC and are why `-fno-objc-arc` would break the build.
-* No Objective-C toolchain is available in the reconstruction container, so none of this
+- No Objective-C toolchain is available in the reconstruction container, so none of this
   has been compile-verified here — the build files are written to be correct by
   construction and by inspection against the sources.

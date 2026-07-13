@@ -1,4 +1,48 @@
 {
-  "editor.indentSize": "tabSize",
-  "editor.tabSize": 4
+  "[c]": {
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 4
+  },
+  "[cpp]": {
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 4
+  },
+  "[jsonnet]": {
+    "editor.defaultFormatter": "Grafana.vscode-jsonnet"
+  },
+  "[objective-c]": {
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 4
+  },
+  "[objective-cpp]": {
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 4
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format",
+    "editor.tabSize": 4
+  },
+  "cSpell.enabled": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.insertSpaces": true,
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.wordWrapColumn": 100,
+  "files.associations": {
+    "*.json.dist": "json"
+  },
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "shellformat.flag": "i 2 -ci -sr",
+  "sortJSON.excludedFiles": [],
+  "sortJSON.excludedPaths": [],
+  "yaml.format.printWidth": 100
 }
