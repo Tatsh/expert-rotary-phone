@@ -339,9 +339,9 @@
                             [m_MusicDataDelegate purchaseFailed:cache.productID error:nil];
                         }
                     }
-                    [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-                    m_Transactioing = NO;
                 }
+                [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+                m_Transactioing = NO;
                 break;
             }
             case SKPaymentTransactionStateFailed: {       // 2
@@ -398,7 +398,8 @@
 // @ 0x55798
 - (void)paymentQueue:(SKPaymentQueue *)queue
     restoreCompletedTransactionsFailedWithError:(NSError *)error {
-    [m_PurchaseCheckedProducts removeAllObjects];
+    // Binary clears ONLY m_RestoredTransactions here (single -removeAllObjects @0x55798);
+    // m_PurchaseCheckedProducts is left intact.
     [m_RestoredTransactions removeAllObjects];
     if ([m_MusicDataDelegate respondsToSelector:@selector(restoreFailed:)]) {
         [m_MusicDataDelegate restoreFailed:error];

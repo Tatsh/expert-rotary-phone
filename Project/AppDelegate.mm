@@ -414,7 +414,7 @@ static const char *const kHardwareModels[40] = {
                     _displayType = 3; break;
                 default:
                     // Newer slots: retina tier 4, else highest tier 5.
-                    _displayType = ((i >= 25 && i <= 34) || i == 37 || i == 38) ? 4 : 5;
+                    _displayType = ((i >= 25 && i <= 33) || i == 37 || i == 38) ? 4 : 5;
                     break;
             }
             free(machine);
