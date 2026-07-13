@@ -178,7 +178,7 @@ strings embedded in the binary (assert macros). The real project root was
 `/Users/usr10013727/Documents/Project/Rhythmin/branches/v203/Project/`, so this
 tree reproduces that `Project/` structure:
 
-```
+```plain
 Project/
   AppDelegate.{h,mm}                 confirmed original path
   System/src/
