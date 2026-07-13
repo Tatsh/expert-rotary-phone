@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "cStandard": "c17",
+      "compilerPath": "/usr/lib/llvm/22/bin/clang",
+      "cppStandard": "c++17",
+      "defines": [],
+      "includePath": ["${workspaceFolder}/**"],
+      "intelliSenseMode": "linux-clang-x64",
+      "name": "Linux"
+    }
+  ],
+  "version": 4
+}

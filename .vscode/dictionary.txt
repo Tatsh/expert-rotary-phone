@@ -2,7 +2,6 @@ aabb
 aapcs
 accel
 accesped
-accum
 acmulist
 acquis
 acvdevdata
@@ -87,7 +86,6 @@ checck
 chksco
 cigam
 cjson
-classlist
 cleare
 cmdsize
 codegen
@@ -100,7 +98,6 @@ colors
 commitizen
 compr
 conn
-conv
 cooldown
 couse
 coveragerc
@@ -168,7 +165,6 @@ fiel
 fielda
 filemane
 fileoff
-finalpackage
 fobjc
 foff
 fogx
@@ -221,7 +217,6 @@ idfa
 ifndef
 igles
 imagefrom
-imgs
 immediates
 impls
 incl
@@ -302,13 +297,11 @@ miniunz
 minizip
 mislabeled
 mismodelled
-misprobe
 mktemp
 mng's
 mobileprovision
 modeled
 modelines
-modeling
 modelview
 modsi
 moffuffo
@@ -376,13 +369,10 @@ popn
 popnlink
 popnmusic
 popnrhythmin
-popups
 preapproved
 premul
 premult
-prereq
 printables
-prng
 prodlist
 progres
 pyinstaller
@@ -452,7 +442,6 @@ sizecentraldiritem
 sizecentralheader
 sizeziplocalheader
 sjis
-smmul
 snapcraft
 soff
 softfp
@@ -464,7 +453,6 @@ stdlib
 stevanovic
 stopandsave
 storei
-strage
 strb
 strcmp
 strcmpcasenosensitive
@@ -508,7 +496,6 @@ udivsi
 udvare
 uffdc
 ulonglong
-unaff
 unarchiver
 uncomplete
 uncompr
@@ -516,10 +503,7 @@ uncpsize
 undraft
 undrafted
 unichar
-unimpl
 unjudged
-unlocated
-unmodeled
 unmute
 unretained
 unrotated
@@ -537,7 +521,6 @@ vars
 vcmn
 vcmpe
 vcvt
-vdiv
 vendored
 venv
 vers
@@ -550,7 +533,6 @@ vmsize
 vmul
 vmxb
 vollant
-vsub
 vtable
 wana
 werror
