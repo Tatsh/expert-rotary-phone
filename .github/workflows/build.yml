@@ -115,9 +115,7 @@ jobs:
   # Runs only on a manual dispatch with run_theos=true; never blocks the pipeline.
   # -------------------------------------------------------------------------
   theos:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_theos == 'true' }}
     runs-on: macos-14
-    continue-on-error: true
     env:
       IOS_ARCHS: ${{ github.event.inputs.ios_archs || 'arm64' }}
       THEOS: ${{ github.workspace }}/.theos-install
