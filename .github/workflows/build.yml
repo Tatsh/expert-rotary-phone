@@ -26,7 +26,8 @@ jobs:
           xcodebuild -version
           sw_vers
       - name: Fetch ios-cmake toolchain
-        run: git clone --depth 1 --branch "$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake
+        run: |
+          git clone --revision="$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake
       - name: Configure
         run: |
           CMAKE_ARGS=(
