@@ -6,16 +6,17 @@
 //
 
 #import "StorePackCell.h"
+#import "AppFont.h"
+#import "PurchaseManager.h"
 #import "StorePackInfo.h"
 #import "StoreUtil.h"
-#import "PurchaseManager.h"
-#import "AppFont.h"
 
 @implementation StorePackCell
 
-// @ 0x6ed4c — disclosure cell with a shadowed jacket, name/price/purchased labels
-// (font auto-shrinks to fit), and new / arcade / chara marker icons.
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+// @ 0x6ed4c — disclosure cell with a shadowed jacket, name/price/purchased
+// labels (font auto-shrinks to fit), and new / arcade / chara marker icons.
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 
@@ -59,24 +60,30 @@
 
         // Marker icons.
         _newMarker = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"store_new"]];
-        _arcadeViewer = [[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:@"store_arcade_view_ic"]];
-        _charaTicket = [[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:@"store_chara_ic"]];
+        _arcadeViewer =
+            [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"store_arcade_view_ic"]];
+        _charaTicket = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"store_chara_ic"]];
 
         UIView *cv = self.contentView;
-        for (UIView *v in @[ _artworkView, _newMarker, _charaTicket, _arcadeViewer,
-                             _labelName, _labelPrice, _labelPurchased ]) {
+        for (UIView *v in @[
+                 _artworkView,
+                 _newMarker,
+                 _charaTicket,
+                 _arcadeViewer,
+                 _labelName,
+                 _labelPrice,
+                 _labelPurchased
+             ]) {
             [cv addSubview:v];
         }
     }
     return self;
 }
 
-// @ 0x6f604 — bind a pack model: name, price and "new" marker, then the live purchased
-// state. Purchased → show the "purchased" label and hide the chara-ticket & arcade
-// markers; not purchased → hide it, show the chara-ticket marker, and show the arcade
-// marker only when the pack has arcade content.
+// @ 0x6f604 — bind a pack model: name, price and "new" marker, then the live
+// purchased state. Purchased → show the "purchased" label and hide the
+// chara-ticket & arcade markers; not purchased → hide it, show the chara-ticket
+// marker, and show the arcade marker only when the pack has arcade content.
 - (void)loadPackInfo:(StorePackInfo *)packInfo {
     _labelName.text = [packInfo packName];
     _labelPrice.text = [packInfo priceString];

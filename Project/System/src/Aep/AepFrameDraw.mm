@@ -3,18 +3,21 @@
 //  pop'n rhythmin
 //
 //  TRUE 1:1 reconstruction of the Aep animated frame-tree renderer from Ghidra
-//  project rb420, program PopnRhythmin. The core is FUN_0000fe8c (AepDrawLayer):
-//  it walks a layer's frame-entry chain and, for every entry active on the current
-//  frame, interpolates each keyframe channel in the engine's integer fixed point,
-//  composes the parent transform + colour/alpha + rotation + blend flags, clips to
-//  the active clip rect and emits.
+//  project rb420, program PopnRhythmin. The core is FUN_0000fe8c
+//  (AepDrawLayer): it walks a layer's frame-entry chain and, for every entry
+//  active on the current frame, interpolates each keyframe channel in the
+//  engine's integer fixed point, composes the parent transform + colour/alpha +
+//  rotation + blend flags, clips to the active clip rect and emits.
 //
 //  Fixed-point notes (byte-verified):
-//    * `x * 0x51eb851f >> 0x20` (and the `>> 0x25` variant) is a /100 reciprocal
-//      multiply; reproduced here as C integer `/ 100` (both truncate toward zero).
-//    * rotation uses `x * 0x80008001 >> 47` (spelled `* -0x7fff7fff + (x<<32) >> 32`
-//      then `>>15`) which normalises by 0xffff, i.e. cos/sin are fixed with 1.0 ==
-//      0xffff. Reproduced faithfully in aepRotNorm().
+//    * `x * 0x51eb851f >> 0x20` (and the `>> 0x25` variant) is a /100
+//    reciprocal
+//      multiply; reproduced here as C integer `/ 100` (both truncate toward
+//      zero).
+//    * rotation uses `x * 0x80008001 >> 47` (spelled `* -0x7fff7fff + (x<<32)
+//    >> 32`
+//      then `>>15`) which normalises by 0xffff, i.e. cos/sin are fixed with 1.0
+//      == 0xffff. Reproduced faithfully in aepRotNorm().
 //
 
 #import "AepFrameDraw.h"
@@ -28,11 +31,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// Ghidra: FUN_0001234c (cos) / FUN_0001228c (sin). The originals reduce the angle to
-// [0,360) at 1/3-degree granularity (index = angle*3 mod 0x438) and fold a quarter-
-// wave lookup table @ DAT_0012ded2 whose entries are ~round(sin*0xffff) (byte-verified:
-// table[1] == 0x017d == round(sin(1/3 deg)*0xffff)). The LUT itself is a data seam;
-// the same value is produced here at the identical 1.0 == 0xffff fixed scale.
+// Ghidra: FUN_0001234c (cos) / FUN_0001228c (sin). The originals reduce the
+// angle to [0,360) at 1/3-degree granularity (index = angle*3 mod 0x438) and
+// fold a quarter- wave lookup table @ DAT_0012ded2 whose entries are
+// ~round(sin*0xffff) (byte-verified: table[1] == 0x017d == round(sin(1/3
+// deg)*0xffff)). The LUT itself is a data seam; the same value is produced here
+// at the identical 1.0 == 0xffff fixed scale.
 static int aepSin(int deg) {
     return (int)std::lround(std::sin((double)deg * (M_PI / 180.0)) * 65535.0);
 }
@@ -41,21 +45,24 @@ static int aepCos(int deg) {
 }
 
 // Normalise a fixed-point product back to pixels. Ghidra: the exact sequence is
-//   m  = (int)((long long)v * -0x7fff7fff + ((u64)(u32)v << 32) >> 32);   // v * 0x80008001 >> 32
-//   r  = (m >> 15) - (m >> 31);                                          // /0x8000, round toward zero
+//   m  = (int)((long long)v * -0x7fff7fff + ((u64)(u32)v << 32) >> 32);   // v
+//   * 0x80008001 >> 32 r  = (m >> 15) - (m >> 31); // /0x8000, round toward
+//   zero
 // whose net effect is v / 0xffff (matching cos/sin's 1.0 == 0xffff scale).
 static inline int aepRotNorm(int v) {
-    long long prod = (long long)v * (long long)(-0x7fff7fffLL) + ((unsigned long long)(unsigned)v << 32);
+    long long prod =
+        (long long)v * (long long)(-0x7fff7fffLL) + ((unsigned long long)(unsigned)v << 32);
     int m = (int)(prod >> 32);
     return (m >> 15) - (m >> 31);
 }
 
-// Walk a keyframe channel to the pair bracketing `frame`. Each keyframe is `stride`
-// int16s wide; the list is terminated by frame == -1. Returns prev (last keyframe
-// with frame <= target, or the first) and cur (the following keyframe / terminator),
-// reproducing FUN_0000fe8c's per-channel bracket search.
-static void aepBracket(const int16_t *keys, int stride, int frame,
-                       const int16_t **prev, const int16_t **cur) {
+// Walk a keyframe channel to the pair bracketing `frame`. Each keyframe is
+// `stride` int16s wide; the list is terminated by frame == -1. Returns prev
+// (last keyframe with frame <= target, or the first) and cur (the following
+// keyframe / terminator), reproducing FUN_0000fe8c's per-channel bracket
+// search.
+static void
+aepBracket(const int16_t *keys, int stride, int frame, const int16_t **prev, const int16_t **cur) {
     const int16_t *p = keys;
     const int16_t *c = keys;
     while (c[0] != -1 && c[0] <= frame) {
@@ -66,24 +73,35 @@ static void aepBracket(const int16_t *keys, int stride, int frame,
     *cur = c;
 }
 
-// Ghidra: FUN_00010850 — build the child's clip rectangle {x, y, w, h} (out[0..3])
-// from the group's screen extents (this+0x7f3afc / +0x7f3b00), the entry's anchor
-// (entry+0x10 / +0x12), the composed scale and the rotation. Axis-aligned when the
-// rotation is zero; otherwise the min/max of the four rotated corners.
-static void aepComputeChildClip(AepManager *mgr, const AepFrameEntry *e,
-                                int x, int y, int scaleX, int scaleY, int rotation, int *out) {
+// Ghidra: FUN_00010850 — build the child's clip rectangle {x, y, w, h}
+// (out[0..3]) from the group's screen extents (this+0x7f3afc / +0x7f3b00), the
+// entry's anchor (entry+0x10 / +0x12), the composed scale and the rotation.
+// Axis-aligned when the rotation is zero; otherwise the min/max of the four
+// rotated corners.
+static void aepComputeChildClip(AepManager *mgr,
+                                const AepFrameEntry *e,
+                                int x,
+                                int y,
+                                int scaleX,
+                                int scaleY,
+                                int rotation,
+                                int *out) {
     const int anchorX = e->anchorX;
     const int anchorY = e->anchorY;
-    int screenW = mgr->screenWidth();   // this+0x7f3afc
-    int screenH = mgr->screenHeight();  // this+0x7f3b00
+    int screenW = mgr->screenWidth();  // this+0x7f3afc
+    int screenH = mgr->screenHeight(); // this+0x7f3b00
 
     if ((rotation & 0xffff) == 0) {
         // Axis-aligned. The screen span grows when the (anchor-relative) origin is
         // negative; a negative scale mirrors the quad, shifting its origin left/up.
         int py = y - (anchorY * scaleY) / 100;
         int px = x - (anchorX * scaleX) / 100;
-        if (py < 0) screenH -= py;
-        if (px < 0) screenW -= px;
+        if (py < 0) {
+            screenH -= py;
+        }
+        if (px < 0) {
+            screenW -= px;
+        }
 
         int16_t clipX = (int16_t)px;
         if (scaleX < 0) {
@@ -106,32 +124,44 @@ static void aepComputeChildClip(AepManager *mgr, const AepFrameEntry *e,
         return;
     }
 
-    // Rotated: transform the four corners and take their bounding box. The two edge
-    // extents are the anchor-relative left/top and right/bottom, each grown for a
-    // negative-scale mirror exactly as the binary does.
+    // Rotated: transform the four corners and take their bounding box. The two
+    // edge extents are the anchor-relative left/top and right/bottom, each grown
+    // for a negative-scale mirror exactly as the binary does.
     int left = (-anchorX * scaleX) / 100;
     int right = screenW - anchorX;
-    if (-anchorX * scaleX < -99) right -= left;
+    if (-anchorX * scaleX < -99) {
+        right -= left;
+    }
     right = (right * scaleX) / 100;
 
     int top = (-anchorY * scaleY) / 100;
     int bottom = screenH - anchorY;
-    if (-anchorY * scaleY < -99) bottom -= top;
+    if (-anchorY * scaleY < -99) {
+        bottom -= top;
+    }
     bottom = (bottom * scaleY) / 100;
 
     const int C = aepCos(rotation);
     const int S = aepSin(rotation);
-    const int cornerX[4] = { left, left, right, right };
-    const int cornerY[4] = { top, bottom, top, bottom };
+    const int cornerX[4] = {left, left, right, right};
+    const int cornerY[4] = {top, bottom, top, bottom};
 
     int minX = 0, maxX = 0, minY = 0, maxY = 0;
     for (int i = 0; i < 4; i++) {
         int rx = aepRotNorm(cornerX[i] * C - cornerY[i] * S);
         int ry = aepRotNorm(cornerX[i] * S + cornerY[i] * C);
-        if (i == 0 || rx < minX) minX = rx;
-        if (i == 0 || rx > maxX) maxX = rx;
-        if (i == 0 || ry < minY) minY = ry;
-        if (i == 0 || ry > maxY) maxY = ry;
+        if (i == 0 || rx < minX) {
+            minX = rx;
+        }
+        if (i == 0 || rx > maxX) {
+            maxX = rx;
+        }
+        if (i == 0 || ry < minY) {
+            minY = ry;
+        }
+        if (i == 0 || ry > maxY) {
+            maxY = ry;
+        }
     }
     out[0] = x + minX;
     out[1] = y + minY;
@@ -140,41 +170,54 @@ static void aepComputeChildClip(AepManager *mgr, const AepFrameEntry *e,
 }
 
 // Ghidra: FUN_000113d0 (-> allocEntry FUN_00010be0) — reserve an ordering-table
-// command at `priority` and fill the textured-quad payload. Field offsets are the
-// binary's; the AepSpriteCommand slots at +0x2c..+0x3c carry colour/alpha, the
-// packed rotation/blend words and the two user words, so they are written by their
-// offset meaning (the struct's field names there are historical).
-static void aepEmitSprite(AepManager *mgr, int groupSlot, int child, int x, int y,
-                          int scaleX, int scaleY, int w, int h, int color, int alpha,
-                          int rotation, uint32_t blend, int *clipRect,
-                          uint32_t priority, uint32_t p15, uint32_t p19) {
-    AepOrderingTable *ot = mgr->orderingTable();               // this+0x727538
-    AepSpriteCommand *cmd = ot->allocEntry((int)priority);     // FUN_00010be0
+// command at `priority` and fill the textured-quad payload. Field offsets are
+// the binary's; the AepSpriteCommand slots at +0x2c..+0x3c carry colour/alpha,
+// the packed rotation/blend words and the two user words, so they are written
+// by their offset meaning (the struct's field names there are historical).
+static void aepEmitSprite(AepManager *mgr,
+                          int groupSlot,
+                          int child,
+                          int x,
+                          int y,
+                          int scaleX,
+                          int scaleY,
+                          int w,
+                          int h,
+                          int color,
+                          int alpha,
+                          int rotation,
+                          uint32_t blend,
+                          int *clipRect,
+                          uint32_t priority,
+                          uint32_t p15,
+                          uint32_t p19) {
+    AepOrderingTable *ot = mgr->orderingTable();           // this+0x727538
+    AepSpriteCommand *cmd = ot->allocEntry((int)priority); // FUN_00010be0
     if (cmd == nullptr) {
         return;
     }
-    const int16_t *rec = mgr->spriteRecord(groupSlot, child);  // this+slot*0x2000+child*8+0x7c1962
+    const int16_t *rec = mgr->spriteRecord(groupSlot, child); // this+slot*0x2000+child*8+0x7c1962
 
-    cmd->type = 0;                           // +0x04  type 0 = textured sprite
-    cmd->textureId = groupSlot;              // +0x08
+    cmd->type = 0;              // +0x04  type 0 = textured sprite
+    cmd->textureId = groupSlot; // +0x08
     // The binary copies the 8-byte sprite record verbatim as two 32-bit words
     // (packed {x|y<<16} and {span|h<<16}); the GL layer unpacks the source rect.
-    std::memcpy(&cmd->u, rec, 4);            // +0x0c
-    std::memcpy(&cmd->v, rec + 2, 4);        // +0x10
-    cmd->x = x;                              // +0x14
-    cmd->y = y;                              // +0x18
-    // The binary converts the integer scale to float (FixedToFP, 16.16) here; the GL
-    // layer consumes the percentage directly in this rebuild.
-    cmd->sx = scaleX;                        // +0x1c
-    cmd->sy = scaleY;                        // +0x20
-    cmd->w = w;                              // +0x24  (entry anchorX doubles as width)
-    cmd->h = h;                              // +0x28  (entry anchorY doubles as height)
-    cmd->ex = color;                         // +0x2c  colour (brightness) 0..100
-    cmd->ey = alpha;                         // +0x30  alpha 0..100 (see the >=100 split)
-    cmd->color0 = (int16_t)rotation;         // +0x34  packed rotation word
-    cmd->color1 = (int16_t)blend;            // +0x36  packed blend word
-    cmd->rotation = (int)p19;                // +0x38  user word (param_19)
-    cmd->blend = (int)p15;                   // +0x3c  user word (param_15)
+    std::memcpy(&cmd->u, rec, 4);     // +0x0c
+    std::memcpy(&cmd->v, rec + 2, 4); // +0x10
+    cmd->x = x;                       // +0x14
+    cmd->y = y;                       // +0x18
+    // The binary converts the integer scale to float (FixedToFP, 16.16) here; the
+    // GL layer consumes the percentage directly in this rebuild.
+    cmd->sx = scaleX;                // +0x1c
+    cmd->sy = scaleY;                // +0x20
+    cmd->w = w;                      // +0x24  (entry anchorX doubles as width)
+    cmd->h = h;                      // +0x28  (entry anchorY doubles as height)
+    cmd->ex = color;                 // +0x2c  colour (brightness) 0..100
+    cmd->ey = alpha;                 // +0x30  alpha 0..100 (see the >=100 split)
+    cmd->color0 = (int16_t)rotation; // +0x34  packed rotation word
+    cmd->color1 = (int16_t)blend;    // +0x36  packed blend word
+    cmd->rotation = (int)p19;        // +0x38  user word (param_19)
+    cmd->blend = (int)p15;           // +0x3c  user word (param_15)
     if (clipRect != nullptr) {
         cmd->clip[0] = (int16_t)clipRect[0];
         cmd->clip[1] = (int16_t)clipRect[1];
@@ -190,45 +233,89 @@ static void aepEmitSprite(AepManager *mgr, int groupSlot, int child, int x, int 
     }
 }
 
-// Ghidra: FUN_0000fcd0 — the note-quad wrapper. It resolves the sprite's group slot
-// from the handle's high 16 bits (the byte group table @ +0x7c1748) and its record from
-// the low 16 bits, then hands both to the sprite-command fill FUN_000113d0. Here the
-// record lookup is folded into aepEmitSprite(slot, child); `anchorX`/`anchorY` become the
-// quad width/height (the entry anchor doubles as size for a leaf), `colorMul` rides the
-// p15 user word. Exact float-vs-int arg positions in the original are VFP-ABI obscured;
-// the call-site value threading is reproduced.
-void AepDrawSpriteHandle(AepManager *mgr, int handle, int x, int y, int scaleX, int scaleY,
-                         int rotation, int anchorX, int anchorY, int color, int alpha,
-                         uint32_t blend, uint32_t colorMul, int *clipRect, int priority,
+// Ghidra: FUN_0000fcd0 — the note-quad wrapper. It resolves the sprite's group
+// slot from the handle's high 16 bits (the byte group table @ +0x7c1748) and
+// its record from the low 16 bits, then hands both to the sprite-command fill
+// FUN_000113d0. Here the record lookup is folded into aepEmitSprite(slot,
+// child); `anchorX`/`anchorY` become the quad width/height (the entry anchor
+// doubles as size for a leaf), `colorMul` rides the p15 user word. Exact
+// float-vs-int arg positions in the original are VFP-ABI obscured; the
+// call-site value threading is reproduced.
+void AepDrawSpriteHandle(AepManager *mgr,
+                         int handle,
+                         int x,
+                         int y,
+                         int scaleX,
+                         int scaleY,
+                         int rotation,
+                         int anchorX,
+                         int anchorY,
+                         int color,
+                         int alpha,
+                         uint32_t blend,
+                         uint32_t colorMul,
+                         int *clipRect,
+                         int priority,
                          uint32_t p19) {
-    const int groupSlot = mgr->groupSlotForHandle(handle);   // (handle >> 16) -> slot byte
-    const int child = handle & 0xffff;                       // low 16 bits = record index
-    aepEmitSprite(mgr, groupSlot, child, x, y, scaleX, scaleY, anchorX, anchorY, color, alpha,
-                  rotation, blend, clipRect, static_cast<uint32_t>(priority), colorMul, p19);
+    const int groupSlot = mgr->groupSlotForHandle(handle); // (handle >> 16) -> slot byte
+    const int child = handle & 0xffff;                     // low 16 bits = record index
+    aepEmitSprite(mgr,
+                  groupSlot,
+                  child,
+                  x,
+                  y,
+                  scaleX,
+                  scaleY,
+                  anchorX,
+                  anchorY,
+                  color,
+                  alpha,
+                  rotation,
+                  blend,
+                  clipRect,
+                  static_cast<uint32_t>(priority),
+                  colorMul,
+                  p19);
 }
 
 // Ghidra: FUN_0000fe8c. The 19-argument frame-tree fill.
-void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
-                  int x, int y, int scaleX, int scaleY, int p9, int p10,
-                  int color, int colorHi, uint32_t rotation, uint32_t blendFlags,
-                  uint32_t p15, int *clipRect, uint32_t p17, void *context, uint32_t p19) {
-    const AepFrameEntry *entries = mgr->frameEntries(groupSlot);  // this+slot*4+0x7f39c8
+void AepDrawLayer(AepManager *mgr,
+                  int groupSlot,
+                  int layerNo,
+                  int frame,
+                  int x,
+                  int y,
+                  int scaleX,
+                  int scaleY,
+                  int p9,
+                  int p10,
+                  int color,
+                  int colorHi,
+                  uint32_t rotation,
+                  uint32_t blendFlags,
+                  uint32_t p15,
+                  int *clipRect,
+                  uint32_t p17,
+                  void *context,
+                  uint32_t p19) {
+    const AepFrameEntry *entries = mgr->frameEntries(groupSlot); // this+slot*4+0x7f39c8
     if (entries == nullptr || entries[layerNo].type < 0) {
         return;
     }
-    const uint8_t *chBase = mgr->channelBase(groupSlot);          // this+slot*4+0x7274d4
+    const uint8_t *chBase = mgr->channelBase(groupSlot); // this+slot*4+0x7274d4
 
     // Anchor-relative base translation, pre-scaled (Ghidra: iVar6 / iVar5).
     const int baseX = -(scaleX * p9) / 100;
     const int baseY = -(scaleY * p10) / 100;
-    const int16_t combinedHi = (int16_t)(colorHi + color);       // sVar4
+    const int16_t combinedHi = (int16_t)(colorHi + color); // sVar4
 
     for (const AepFrameEntry *e = &entries[layerNo]; e->type >= 0; e++) {
         if (frame < e->frameStart || frame >= e->frameEnd) {
-            continue;   // entry not active on this frame
+            continue; // entry not active on this frame
         }
 
-        // --- Position channel (entry+0x14, keyframe stride 4 int16: frame,x,y,_) ---
+        // --- Position channel (entry+0x14, keyframe stride 4 int16: frame,x,y,_)
+        // ---
         int posX = baseX;
         int posY = baseY;
         if (e->posChannel != 0) {
@@ -236,10 +323,10 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
             const int16_t *prev, *cur;
             aepBracket(keys, 4, frame, &prev, &cur);
             if (prev[0] != -1) {
-                if (cur == prev || cur[0] == -1) {                // hold prev
+                if (cur == prev || cur[0] == -1) { // hold prev
                     posX = baseX + (scaleX * prev[1]) / 100;
                     posY = baseY + (scaleY * prev[2]) / 100;
-                } else {                                          // lerp prev..cur
+                } else { // lerp prev..cur
                     int denom = cur[0] - prev[0];
                     int dx = (frame - prev[0]) * (cur[1] - prev[1]) / denom;
                     int dy = (frame - prev[0]) * (cur[2] - prev[2]) / denom;
@@ -259,9 +346,9 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
             py = aepRotNorm(posX * S + posY * C);
         }
 
-        // --- Rotation channel (entry+0x20, DOUBLE-indirect; stride 2: frame,angle) ---
-        // childRotation accumulates the incoming rotation plus this entry's animated
-        // angle, sign-flipped once per mirrored (negative) scale axis.
+        // --- Rotation channel (entry+0x20, DOUBLE-indirect; stride 2: frame,angle)
+        // --- childRotation accumulates the incoming rotation plus this entry's
+        // animated angle, sign-flipped once per mirrored (negative) scale axis.
         uint32_t childRotation = rotation;
         if (e->rotChannel != 0) {
             int inner = *(const int32_t *)(chBase + e->rotChannel);
@@ -274,11 +361,15 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
                     if (cur == prev || cur[0] < 0) {
                         a = (uint16_t)prev[1];
                     } else {
-                        a = (int)(short)prev[1]
-                            + (frame - prev[0]) * (cur[1] - prev[1]) / (cur[0] - prev[0]);
+                        a = (int)(short)prev[1] +
+                            (frame - prev[0]) * (cur[1] - prev[1]) / (cur[0] - prev[0]);
                     }
-                    if ((unsigned)scaleX > 0x7fffffff) a = -(a & 0xffff);
-                    if ((unsigned)scaleY > 0x7fffffff) a = -(a & 0xffff);
+                    if ((unsigned)scaleX > 0x7fffffff) {
+                        a = -(a & 0xffff);
+                    }
+                    if ((unsigned)scaleY > 0x7fffffff) {
+                        a = -(a & 0xffff);
+                    }
                     childRotation = (rotation & 0xffff) + (a & 0xffff);
                 }
             }
@@ -298,10 +389,10 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
             } else if (cur == prev) {
                 sx = prev[1];
                 sy = prev[2];
-            } else if (cur[0] < 0) {                              // hold prev
+            } else if (cur[0] < 0) { // hold prev
                 sx = prev[1];
                 sy = prev[2];
-            } else {                                              // lerp
+            } else { // lerp
                 int denom = cur[0] - prev[0];
                 sx = (int16_t)(prev[1] + (frame - prev[0]) * (cur[1] - prev[1]) / denom);
                 sy = (int16_t)(prev[2] + (frame - prev[0]) * (cur[2] - prev[2]) / denom);
@@ -310,9 +401,10 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
             outSy = (scaleY * (int)sy) / 100;
         }
 
-        // --- Colour / alpha channel (entry+0x1c, stride 2: frame, packed[lo=colour, hi=alpha]) ---
-        int colorVal = color;                 // low channel (brightness)
-        int highVal = combinedHi;             // high channel (colour+alpha accumulator)
+        // --- Colour / alpha channel (entry+0x1c, stride 2: frame,
+        // packed[lo=colour, hi=alpha]) ---
+        int colorVal = color;     // low channel (brightness)
+        int highVal = combinedHi; // high channel (colour+alpha accumulator)
         if (e->colorChannel != 0) {
             const int16_t *keys = (const int16_t *)(chBase + e->colorChannel);
             const int16_t *prev, *cur;
@@ -320,7 +412,7 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
             if (prev[0] >= 0) {
                 int pLo = (int8_t)(prev[1] & 0xff);
                 int pHi = (int8_t)((prev[1] >> 8) & 0xff);
-                int v0, v1;                    // v0 = colour, v1 = colour+alpha
+                int v0, v1; // v0 = colour, v1 = colour+alpha
                 if (cur == prev || cur[0] < 0) {
                     v0 = pLo;
                     v1 = pLo + pHi;
@@ -348,13 +440,13 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
         int finalSy = (int16_t)outSy;
         int alpha = highVal - colorVal;
 
-        uint32_t entryBlend = (uint16_t)e->blendFlags;   // entry+0x04
+        uint32_t entryBlend = (uint16_t)e->blendFlags; // entry+0x04
         uint32_t bf = blendFlags;
         if (colorVal != 100 || highVal != 100) {
             bf = (entryBlend & 0x30) | blendFlags;
         }
         uint32_t blend = (bf | (entryBlend & 0x400)) ^ (entryBlend & 0xc0);
-        if (alpha >= 100) {                   // byte-verified: cmp #0x64, sub.ge, orr.ge #0x200
+        if (alpha >= 100) { // byte-verified: cmp #0x64, sub.ge, orr.ge #0x200
             alpha -= 100;
             blend |= 0x200;
         }
@@ -393,40 +485,97 @@ void AepDrawLayer(AepManager *mgr, int groupSlot, int layerNo, int frame,
                     childFrame = childFrame * 100 / e->frameSpeed;
                 }
                 if (e->type == 2) {
-                    AepDrawLayer(mgr, groupSlot, e->child, childFrame, drawX, drawY,
-                                 finalSx, finalSy, e->anchorX, e->anchorY, colorVal, alpha,
-                                 childRotation, blend, p15, childClip, p17, context, p19);
+                    AepDrawLayer(mgr,
+                                 groupSlot,
+                                 e->child,
+                                 childFrame,
+                                 drawX,
+                                 drawY,
+                                 finalSx,
+                                 finalSy,
+                                 e->anchorX,
+                                 e->anchorY,
+                                 colorVal,
+                                 alpha,
+                                 childRotation,
+                                 blend,
+                                 p15,
+                                 childClip,
+                                 p17,
+                                 context,
+                                 p19);
                 } else {
-                    AepGroupDrawFn cb = mgr->groupCallback(groupSlot);   // this+slot*4+0x7f3a2c
+                    AepGroupDrawFn cb = mgr->groupCallback(groupSlot); // this+slot*4+0x7f3a2c
                     if (cb != nullptr) {
                         void *ctx = context;
                         if (ctx == nullptr) {
-                            ctx = mgr->groupContext(groupSlot);          // this+slot*4+0x7f3a90
+                            ctx = mgr->groupContext(groupSlot); // this+slot*4+0x7f3a90
                         }
-                        cb(e->child, childFrame, drawX, drawY, finalSx, finalSy,
-                           e->anchorX, e->anchorY, colorVal, alpha, childRotArg, blend,
-                           childClip, p17, ctx);
+                        cb(e->child,
+                           childFrame,
+                           drawX,
+                           drawY,
+                           finalSx,
+                           finalSy,
+                           e->anchorX,
+                           e->anchorY,
+                           colorVal,
+                           alpha,
+                           childRotArg,
+                           blend,
+                           childClip,
+                           p17,
+                           ctx);
                     }
                 }
             }
         } else if (e->type == 0) {
             // Leaf sprite command.
-            aepEmitSprite(mgr, groupSlot, e->child, drawX, drawY, finalSx, finalSy,
-                          e->anchorX, e->anchorY, colorVal, alpha, childRotArg, blend,
-                          clipRect, p17, p15, p19);
+            aepEmitSprite(mgr,
+                          groupSlot,
+                          e->child,
+                          drawX,
+                          drawY,
+                          finalSx,
+                          finalSy,
+                          e->anchorX,
+                          e->anchorY,
+                          colorVal,
+                          alpha,
+                          childRotArg,
+                          blend,
+                          clipRect,
+                          p17,
+                          p15,
+                          p19);
         }
         // type 1 (and any other): no emission (matches FUN_0000fe8c).
     }
 }
 
-// Ghidra: drawAepFrame (FUN_0000fc58). Resolve the handle's group slot (the byte group
-// table @ +0x7c1748) and its sprite record (low 16 bits), then queue a full-scale, opaque
-// sprite command. The binary passes 100.0f scale, colour 100, alpha 0, no rotation and the
-// full-screen clip sentinel; those map onto aepEmitSprite's integer-percentage form.
+// Ghidra: drawAepFrame (FUN_0000fc58). Resolve the handle's group slot (the
+// byte group table @ +0x7c1748) and its sprite record (low 16 bits), then queue
+// a full-scale, opaque sprite command. The binary passes 100.0f scale, colour
+// 100, alpha 0, no rotation and the full-screen clip sentinel; those map onto
+// aepEmitSprite's integer-percentage form.
 void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_t priority) {
-    const int groupSlot = mgr->groupSlotForHandle(id);   // (id >> 16) -> slot byte
-    const int child = id & 0xffff;                       // low 16 bits = record index
-    aepEmitSprite(mgr, groupSlot, child, x, y, /*scaleX*/ 100, /*scaleY*/ 100, /*w*/ 0, /*h*/ 0,
-                  /*color*/ 100, /*alpha*/ 0, /*rotation*/ 0, blend, /*clipRect*/ nullptr,
-                  priority, /*p15*/ 0, /*p19*/ 0);
+    const int groupSlot = mgr->groupSlotForHandle(id); // (id >> 16) -> slot byte
+    const int child = id & 0xffff;                     // low 16 bits = record index
+    aepEmitSprite(mgr,
+                  groupSlot,
+                  child,
+                  x,
+                  y,
+                  /*scaleX*/ 100,
+                  /*scaleY*/ 100,
+                  /*w*/ 0,
+                  /*h*/ 0,
+                  /*color*/ 100,
+                  /*alpha*/ 0,
+                  /*rotation*/ 0,
+                  blend,
+                  /*clipRect*/ nullptr,
+                  priority,
+                  /*p15*/ 0,
+                  /*p19*/ 0);
 }

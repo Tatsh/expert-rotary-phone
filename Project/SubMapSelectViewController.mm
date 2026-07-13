@@ -2,8 +2,8 @@
 //  SubMapSelectViewController.mm
 //  pop'n rhythmin
 //
-//  See SubMapSelectViewController.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin:
+//  See SubMapSelectViewController.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin:
 //    initWithTreasureData:mapHeadArray:mainMapId: @ 0xc1ea0
 //    dealloc                                      @ 0xc2910
 //    viewDidLoad                                  @ 0xc2aa0
@@ -19,51 +19,62 @@
 //    downloadMainFinished:                        @ 0xc3204
 //    backButtonFunc                               @ 0xc3280
 //    delegate / setDelegate:                      @ 0xc3334 / 0xc3344
-//  Objective-C++ for the C++ neSceneManager singleton and the C++ Random generator. ARC.
+//  Objective-C++ for the C++ neSceneManager singleton and the C++ Random
+//  generator. ARC.
 //
 //  Honesty notes:
-//   - The row list is built by cross-referencing mapHeadArray (NSValue-wrapped map-head
-//     records) against treasureData (TreasureData save records): for every map-head whose
-//     mapId/10 == mainMapId that also has a matching TreasureData (mainMapId == mapId/10 &&
-//     subMapId == mapId%10), one NSValue-wrapped SubMapData ("{SubMapData=ss@@}") is emitted.
-//     The area *name* is a Shift-JIS string carried in the map-head record; the binary decodes
-//     it twice into two identical NSStrings (SubMapListCell reads the second). The exact byte
-//     offset of the name inside the map-head payload is obscured by the decompiler's inlined
-//     buffer copy, so it is read here as the record's trailing NUL-terminated Shift-JIS string.
-//   - Under ARC the two SubMapData NSString fields are __unsafe_unretained (mirroring
-//     FriendListData in DownloadMain.h); the original manually retained them and released them
-//     in -dealloc, which is ARC-omitted here.
-//   - -dealloc is kept because it detaches this controller from DownloadMain's visitor delegate.
-//   - Selecting an area snapshots a pending TreasureTmpData (subMapId := mapId, a random
-//     +0x48 field via the xorshift Random seeded with time()), zeroes the consumed-treasure
-//     point, then asks DownloadMain for the area's visiting friend (type 0).
-//   - The dim spinner overlay (_dummyView) is created hidden, revealed in -viewDidLoad and on
-//     selection, and hidden again when the visitor request finishes — matching the binary's
-//     setHidden: polarity exactly (init YES, viewDidLoad NO, didSelect NO, finished YES).
+//   - The row list is built by cross-referencing mapHeadArray (NSValue-wrapped
+//   map-head
+//     records) against treasureData (TreasureData save records): for every
+//     map-head whose mapId/10 == mainMapId that also has a matching
+//     TreasureData (mainMapId == mapId/10 && subMapId == mapId%10), one
+//     NSValue-wrapped SubMapData ("{SubMapData=ss@@}") is emitted. The area
+//     *name* is a Shift-JIS string carried in the map-head record; the binary
+//     decodes it twice into two identical NSStrings (SubMapListCell reads the
+//     second). The exact byte offset of the name inside the map-head payload is
+//     obscured by the decompiler's inlined buffer copy, so it is read here as
+//     the record's trailing NUL-terminated Shift-JIS string.
+//   - Under ARC the two SubMapData NSString fields are __unsafe_unretained
+//   (mirroring
+//     FriendListData in DownloadMain.h); the original manually retained them
+//     and released them in -dealloc, which is ARC-omitted here.
+//   - -dealloc is kept because it detaches this controller from DownloadMain's
+//   visitor delegate.
+//   - Selecting an area snapshots a pending TreasureTmpData (subMapId := mapId,
+//   a random
+//     +0x48 field via the xorshift Random seeded with time()), zeroes the
+//     consumed-treasure point, then asks DownloadMain for the area's visiting
+//     friend (type 0).
+//   - The dim spinner overlay (_dummyView) is created hidden, revealed in
+//   -viewDidLoad and on
+//     selection, and hidden again when the visitor request finishes — matching
+//     the binary's setHidden: polarity exactly (init YES, viewDidLoad NO,
+//     didSelect NO, finished YES).
 //
 
 #import "SubMapSelectViewController.h"
 
-#import "SubMapListCell.h"     // one row per area
+#import "AppDelegate.h"        // +appDelegate.displayType
 #import "DownloadMain.h"       // visitor request + DownloadMainDelegate
 #import "MainViewController.h" // MapSelectEndCallBack on the root VC
-#import "AppDelegate.h"        // +appDelegate.displayType
-#import "neEngineBridge.h"     // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
-#import "UserSettingData.h"    // treasure snapshot
-#import "TreasureData.h"        // sugoroku save records
-#import "TreasureTmpData.h"     // pending-treasure struct
 #import "Random.h"             // xorshift128 (Ghidra rngStateInit/rngSeed/GetRandRangeInt)
+#import "SubMapListCell.h"     // one row per area
+#import "TreasureData.h"       // sugoroku save records
+#import "TreasureTmpData.h"    // pending-treasure struct
+#import "UserSettingData.h"    // treasure snapshot
+#import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 #import <objc/message.h>
 #import <string.h>
 #import <time.h>
 
-// NSValue payload for one visible area row. Obj-C type-encoding "{SubMapData=ss@@}".
+// NSValue payload for one visible area row. Obj-C type-encoding
+// "{SubMapData=ss@@}".
 typedef struct SubMapData {
     short mainMapId;
     short subMapId;
-    NSString *__unsafe_unretained name;   // area name (Shift-JIS decoded)
-    NSString *__unsafe_unretained name2;  // identical copy the binary also allocates
+    NSString *__unsafe_unretained name;  // area name (Shift-JIS decoded)
+    NSString *__unsafe_unretained name2; // identical copy the binary also allocates
 } SubMapData;
 
 @interface SubMapSelectViewController () <DownloadMainDelegate>
@@ -73,10 +84,10 @@ typedef struct SubMapData {
 @end
 
 @implementation SubMapSelectViewController {
-    UIViewController *_dummyView;   // dim spinner overlay (visitor request in flight)
-    NSArray *_subMapArray;          // NSValue-wrapped SubMapData rows
-    BOOL _isDecide;                 // an area was chosen (guards re-entry)
-    id __unsafe_unretained _delegate;   // optional overlay owner (pad); assign/non-retaining (binary)
+    UIViewController *_dummyView;     // dim spinner overlay (visitor request in flight)
+    NSArray *_subMapArray;            // NSValue-wrapped SubMapData rows
+    BOOL _isDecide;                   // an area was chosen (guards re-entry)
+    id __unsafe_unretained _delegate; // optional overlay owner (pad); assign/non-retaining (binary)
 }
 
 @synthesize delegate = _delegate;
@@ -91,7 +102,7 @@ typedef struct SubMapData {
         _delegate = self;
 
         BOOL isPad = neSceneManager::isPadDisplay();
-        self.tableView.rowHeight = isPad ? 112.0f : 104.0f;   // DAT 0xc.../grouped
+        self.tableView.rowHeight = isPad ? 112.0f : 104.0f; // DAT 0xc.../grouped
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         self.tableView.separatorColor = [UIColor clearColor];
         self.tableView.backgroundView = nil;
@@ -116,17 +127,18 @@ typedef struct SubMapData {
                 if ([[td subMapId] shortValue] != mapId % 10) {
                     continue;
                 }
-                // Area name: trailing Shift-JIS bytes of the map-head record (see honesty note).
+                // Area name: trailing Shift-JIS bytes of the map-head record (see
+                // honesty note).
                 const char *sjis = (const char *)(head + 1);
                 NSData *nameData = [NSData dataWithBytes:sjis length:strlen(sjis)];
-                NSString *name  = [[NSString alloc] initWithData:nameData
-                                                        encoding:NSShiftJISStringEncoding];
+                NSString *name = [[NSString alloc] initWithData:nameData
+                                                       encoding:NSShiftJISStringEncoding];
                 NSString *name2 = [[NSString alloc] initWithData:nameData
                                                         encoding:NSShiftJISStringEncoding];
                 SubMapData d;
                 d.mainMapId = mapId / 10;
-                d.subMapId  = mapId % 10;
-                d.name  = name;
+                d.subMapId = mapId % 10;
+                d.name = name;
                 d.name2 = name2;
                 [rows addObject:[NSValue value:&d withObjCType:@encode(SubMapData)]];
                 break;
@@ -143,8 +155,8 @@ typedef struct SubMapData {
 
         // Phone: a scaled map backdrop behind the table.
         if (!isPad) {
-            NSString *bgName = ([[AppDelegate appDelegate] displayType] == 2) ? @"map_select_bg"
-                                                                             : @"map_select_bg960";
+            NSString *bgName = ([[AppDelegate appDelegate] displayType] == 2) ? @"map_select_bg" :
+                                                                                @"map_select_bg960";
             UIImage *bgImg = [UIImage imageNamed:bgName];
             UIImageView *bgView = [[UIImageView alloc] initWithImage:bgImg];
             bgView.frame = CGRectMake(0, 0, bgImg.size.width, bgImg.size.height);
@@ -163,8 +175,8 @@ typedef struct SubMapData {
             [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
         spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
         if (!isPad) {
-            spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
-                                         (int)(viewFrame.size.height * 0.5f) - 10);
+            spinner.center =
+                CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
         } else {
             spinner.center = CGPointMake(214.0f, (int)(viewFrame.size.height * 0.5f) - 10);
         }
@@ -178,8 +190,9 @@ typedef struct SubMapData {
             UIButton *backBtn = [[UIButton alloc]
                 initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
             [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-            [backBtn addTarget:self action:@selector(backButtonFunc)
-              forControlEvents:UIControlEventTouchUpInside];
+            [backBtn addTarget:self
+                          action:@selector(backButtonFunc)
+                forControlEvents:UIControlEventTouchUpInside];
             self.navigationItem.leftBarButtonItem =
                 [[UIBarButtonItem alloc] initWithCustomView:backBtn];
         }
@@ -187,7 +200,8 @@ typedef struct SubMapData {
     return self;
 }
 
-// @ 0xc2aa0 — add the left-swipe recogniser (phone) and reveal the overlay host.
+// @ 0xc2aa0 — add the left-swipe recogniser (phone) and reveal the overlay
+// host.
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (!neSceneManager::isPadDisplay()) {
@@ -200,8 +214,7 @@ typedef struct SubMapData {
 
 // @ 0xc2b80 — a rightward pan (translation.x > 80) pops the screen.
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer {
-    if (recognizer != nil &&
-        [recognizer translationInView:self.view].x > 80.0f) {   // DAT_000c2be8
+    if (recognizer != nil && [recognizer translationInView:self.view].x > 80.0f) { // DAT_000c2be8
         [self backButtonFunc];
     }
 }
@@ -223,8 +236,8 @@ typedef struct SubMapData {
 // @ 0xc2c44
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     SubMapListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[SubMapListCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -239,7 +252,8 @@ typedef struct SubMapData {
     return nil;
 }
 
-// @ 0xc2d54 — choose an area: snapshot the pending treasure, then request its visitor.
+// @ 0xc2d54 — choose an area: snapshot the pending treasure, then request its
+// visitor.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0 || _isDecide) {
         return;
@@ -253,7 +267,7 @@ typedef struct SubMapData {
         }
     }
 
-    neEngine::playSystemSe(1);   // decide SE
+    neEngine::playSystemSe(1); // decide SE
     _dummyView.view.hidden = NO;
     _isDecide = YES;
 
@@ -265,14 +279,14 @@ typedef struct SubMapData {
     rng.setSeed((uint32_t)time(NULL));
 
     TreasureTmpData tmp = [UserSettingData treasureTmp];
-    tmp.subMapId = mapId;          // combined map id (main*10 + sub)
-    tmp.raw0x06  = -1;
-    tmp.raw0x12  = 0;
-    tmp.raw0x14  = 0;
-    tmp.raw0x18  = 0;
+    tmp.subMapId = mapId; // combined map id (main*10 + sub)
+    tmp.raw0x06 = -1;
+    tmp.raw0x12 = 0;
+    tmp.raw0x14 = 0;
+    tmp.raw0x18 = 0;
     memset(tmp.raw0x20, 0, sizeof(tmp.raw0x20));
     memset(tmp.raw0x28, 0, sizeof(tmp.raw0x28));
-    tmp.raw0x48  = (uint8_t)rng.getRandRangeInt(100);
+    tmp.raw0x48 = (uint8_t)rng.getRandRangeInt(100);
     // Binary also clears bytes 0x4c..0x50 (raw0x49 high byte + all of raw0x4d)
     // as one coalesced 5-byte zero store.
     memset((uint8_t *)&tmp + 0x4c, 0, 5);
@@ -286,11 +300,12 @@ typedef struct SubMapData {
 
 #pragma mark - Close animation
 
-// @ 0xc3088 — animate the nav host out (unless a pad overlay owner will handle it).
+// @ 0xc3088 — animate the nav host out (unless a pad overlay owner will handle
+// it).
 - (void)startCloseAnimation {
     if (!neSceneManager::isPadDisplay() || _delegate == nil) {
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3];   // DAT_000c31a0
+        [UIView setAnimationDuration:0.3]; // DAT_000c31a0
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
         self.view.alpha = 0;
@@ -322,17 +337,17 @@ typedef struct SubMapData {
         return;
     }
     _isDecide = YES;
-    neEngine::playSystemSe(2);   // cancel SE
+    neEngine::playSystemSe(2); // cancel SE
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
              forBarMetrics:UIBarMetricsDefault];
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-// @ 0xc2910 — detach from DownloadMain's visitor delegate before teardown. Kept under ARC
-// because it clears a DownloadMain delegate; the _subMapArray string releases and the
-// _dummyView release are ARC-managed (the SubMapData strings are __unsafe_unretained — see
-// honesty note).
+// @ 0xc2910 — detach from DownloadMain's visitor delegate before teardown. Kept
+// under ARC because it clears a DownloadMain delegate; the _subMapArray string
+// releases and the _dummyView release are ARC-managed (the SubMapData strings
+// are __unsafe_unretained — see honesty note).
 - (void)dealloc {
     DownloadMain *dm = [DownloadMain getInstance];
     if ([dm delegateGetVisitor] == self) {

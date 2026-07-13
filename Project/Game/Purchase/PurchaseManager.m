@@ -5,11 +5,11 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
+#import "PurchaseManager.h"
 #import "AppDelegate.h"
 #import "BFCodec.h"
 #import "CommonAlertView.h"
 #import "Downloader.h"
-#import "PurchaseManager.h"
 #import "PurchaseTransactionCache.h"
 #import "RhUtil.h"
 #import "StoreUtil.h"
@@ -18,21 +18,21 @@
 @end
 
 @implementation PurchaseManager {
-    NSMutableArray *m_PurchasedProducts;          // owned product ids (persisted)
-    NSMutableArray *m_PurchaseCheckedProducts;    // ids validated in the current restore
-    NSMutableArray *m_PurchaseCheckTransactions;  // transactions queued for receipt check
-    NSMutableArray *m_RestoredTransactions;       // transactions gathered during a restore
+    NSMutableArray *m_PurchasedProducts;         // owned product ids (persisted)
+    NSMutableArray *m_PurchaseCheckedProducts;   // ids validated in the current restore
+    NSMutableArray *m_PurchaseCheckTransactions; // transactions queued for receipt check
+    NSMutableArray *m_RestoredTransactions;      // transactions gathered during a restore
     __weak id<PurchaseManagerDelegate> m_Delegate;
     __weak id<PurchaseManagerMusicDelegate> m_MusicDataDelegate;
-    BOOL m_Transactioing;   // a StoreKit transaction is in flight
-    BOOL m_IsRestored;      // the current flow is a restore
-    BOOL m_IsMusicData;     // the current purchase unlocks music data
-    Downloader *m_Downloader;   // in-flight receipt-check request
+    BOOL m_Transactioing;     // a StoreKit transaction is in flight
+    BOOL m_IsRestored;        // the current flow is a restore
+    BOOL m_IsMusicData;       // the current purchase unlocks music data
+    Downloader *m_Downloader; // in-flight receipt-check request
 }
 
 // Plain weak accessors, synthesized onto the m_* ivars.
-@synthesize delegate = m_Delegate;                    // getter @ 0x56128, setter @ 0x56138
-@synthesize musicDataDelegate = m_MusicDataDelegate;  // getter @ 0x56148, setter @ 0x56158
+@synthesize delegate = m_Delegate;                   // getter @ 0x56128, setter @ 0x56138
+@synthesize musicDataDelegate = m_MusicDataDelegate; // getter @ 0x56148, setter @ 0x56158
 
 // @ 0x54450 — lazy singleton.
 + (instancetype)sharedManager {
@@ -43,7 +43,8 @@
     return sInstance;
 }
 
-// @ 0x5459c — StoreKit availability gate: tail-call [SKPaymentQueue canMakePayments].
+// @ 0x5459c — StoreKit availability gate: tail-call [SKPaymentQueue
+// canMakePayments].
 + (BOOL)isPurchasable {
     return [SKPaymentQueue canMakePayments];
 }
@@ -66,13 +67,15 @@
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
 }
 
-// @ 0x546f8 — stop observing the payment queue (teardown counterpart of -start).
+// @ 0x546f8 — stop observing the payment queue (teardown counterpart of
+// -start).
 - (void)end {
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
 }
 
-// @ 0x545b8 — cancel the in-flight receipt-check download; the four backing arrays are
-// ARC-released. (Original also nils musicDataDelegate and releases the arrays by hand.)
+// @ 0x545b8 — cancel the in-flight receipt-check download; the four backing
+// arrays are ARC-released. (Original also nils musicDataDelegate and releases
+// the arrays by hand.)
 - (void)dealloc {
     [self setMusicDataDelegate:nil];
     [m_Downloader cancel];
@@ -84,8 +87,8 @@
 - (void)loadProductList {
     m_PurchasedProducts = nil;
 
-    NSString *path = [[AppDelegate appDocumentsDirectory]
-                      stringByAppendingPathComponent:@"prodlist"];
+    NSString *path =
+        [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"prodlist"];
     if (RhFileExists(path)) {
         NSString *uuId = [AppDelegate appDelegate].uuId;
         NSMutableData *data = [[NSMutableData alloc] initWithContentsOfFile:path];
@@ -108,15 +111,14 @@
     if (m_PurchasedProducts.count == 0) {
         return;
     }
-    NSString *path = [[AppDelegate appDocumentsDirectory]
-                      stringByAppendingPathComponent:@"prodlist"];
+    NSString *path =
+        [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"prodlist"];
     NSString *uuId = [AppDelegate appDelegate].uuId;
 
-    NSData *xml = [NSPropertyListSerialization
-        dataWithPropertyList:m_PurchasedProducts
-                      format:NSPropertyListXMLFormat_v1_0
-                     options:0
-                       error:NULL];
+    NSData *xml = [NSPropertyListSerialization dataWithPropertyList:m_PurchasedProducts
+                                                             format:NSPropertyListXMLFormat_v1_0
+                                                            options:0
+                                                              error:NULL];
 
     NSMutableData *data = [[NSMutableData alloc] initWithCapacity:0x80];
     uint32_t salt = arc4random();
@@ -129,7 +131,8 @@
     [data writeToFile:path atomically:YES];
 }
 
-// @ 0x54e28 — record a product as owned; optionally persist. YES if newly added.
+// @ 0x54e28 — record a product as owned; optionally persist. YES if newly
+// added.
 - (BOOL)addProductID:(NSString *)productID Save:(BOOL)save {
     if ([m_PurchasedProducts containsObject:productID]) {
         return NO;
@@ -269,11 +272,10 @@
     NSString *json = [StoreUtil createReceiptCheckJSON:base64];
     cache.digestString = [StoreUtil createReceiptChecckDigest:json];
 
-    m_Downloader = [[Downloader alloc]
-        initWithURL:[StoreUtil receiptURL]
-           delegate:self
-               Post:[json dataUsingEncoding:NSUTF8StringEncoding]
-        ContextType:@"application/json"];
+    m_Downloader = [[Downloader alloc] initWithURL:[StoreUtil receiptURL]
+                                          delegate:self
+                                              Post:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                       ContextType:@"application/json"];
     m_Downloader.addData = cache;
     [m_PurchaseCheckTransactions removeObject:cache];
     [m_Downloader startDownloading];
@@ -282,8 +284,7 @@
 
 // @ 0x55824 — base64-encode with '=' padding (the binary hand-rolls this).
 - (NSString *)encodedStringWithBase64:(NSData *)data {
-    static const char table[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    static const char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const unsigned char *bytes = data.bytes;
     NSUInteger length = data.length;
     NSMutableString *out = [NSMutableString stringWithCapacity:((length + 2) / 3) * 4];
@@ -303,18 +304,18 @@
 
 #pragma mark - SKProductsRequestDelegate
 
-// @ 0x55170 — query the store for a set of product identifiers (self is the delegate); the
-// response arrives in -productsRequest:didReceiveResponse:.
+// @ 0x55170 — query the store for a set of product identifiers (self is the
+// delegate); the response arrives in -productsRequest:didReceiveResponse:.
 - (SKProductsRequest *)startProductRequest:(NSSet<NSString *> *)productIdentifiers {
-    SKProductsRequest *request = [[SKProductsRequest alloc]
-        initWithProductIdentifiers:productIdentifiers];
+    SKProductsRequest *request =
+        [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
     request.delegate = self;
     [request start];
     return request;
 }
 
-// @ 0x55960 — the binary walks invalidProductIdentifiers without acting on them,
-// then forwards the valid products to the delegate.
+// @ 0x55960 — the binary walks invalidProductIdentifiers without acting on
+// them, then forwards the valid products to the delegate.
 - (void)productsRequest:(SKProductsRequest *)request
      didReceiveResponse:(SKProductsResponse *)response {
     [m_Delegate finishRequest:response.products];
@@ -327,45 +328,45 @@
     updatedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
     for (SKPaymentTransaction *transaction in transactions) {
         switch (transaction.transactionState) {
-            case SKPaymentTransactionStatePurchased: {   // 1
-                if (m_Transactioing) {
-                    if (!m_IsMusicData) {
-                        [m_Delegate purchaseSucceeded:transaction];
-                    } else {
-                        PurchaseTransactionCache *cache =
-                            [[PurchaseTransactionCache alloc] initWithTransaction:transaction];
-                        if (![self addPurchaseCheckTransaction:cache] &&
-                            [m_MusicDataDelegate respondsToSelector:@selector(purchaseFailed:error:)]) {
-                            [m_MusicDataDelegate purchaseFailed:cache.productID error:nil];
-                        }
-                    }
-                }
-                [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-                m_Transactioing = NO;
-                break;
-            }
-            case SKPaymentTransactionStateFailed: {       // 2
+        case SKPaymentTransactionStatePurchased: { // 1
+            if (m_Transactioing) {
                 if (!m_IsMusicData) {
-                    [m_Delegate purchaseFailed:transaction error:transaction.error];
-                } else if ([m_MusicDataDelegate respondsToSelector:@selector(purchaseFailed:error:)]) {
-                    [m_MusicDataDelegate purchaseFailed:transaction error:transaction.error];
-                }
-                [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-                m_Transactioing = NO;
-                break;
-            }
-            case SKPaymentTransactionStateRestored: {     // 3
-                if (m_IsMusicData && m_Transactioing && m_IsRestored &&
-                    ![self isPurchased:transaction.payment.productIdentifier]) {
+                    [m_Delegate purchaseSucceeded:transaction];
+                } else {
                     PurchaseTransactionCache *cache =
                         [[PurchaseTransactionCache alloc] initWithTransaction:transaction];
-                    [m_RestoredTransactions addObject:cache];
+                    if (![self addPurchaseCheckTransaction:cache] &&
+                        [m_MusicDataDelegate respondsToSelector:@selector(purchaseFailed:error:)]) {
+                        [m_MusicDataDelegate purchaseFailed:cache.productID error:nil];
+                    }
                 }
-                [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-                break;
             }
-            default:
-                break;   // Purchasing / Deferred: nothing to do
+            [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+            m_Transactioing = NO;
+            break;
+        }
+        case SKPaymentTransactionStateFailed: { // 2
+            if (!m_IsMusicData) {
+                [m_Delegate purchaseFailed:transaction error:transaction.error];
+            } else if ([m_MusicDataDelegate respondsToSelector:@selector(purchaseFailed:error:)]) {
+                [m_MusicDataDelegate purchaseFailed:transaction error:transaction.error];
+            }
+            [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+            m_Transactioing = NO;
+            break;
+        }
+        case SKPaymentTransactionStateRestored: { // 3
+            if (m_IsMusicData && m_Transactioing && m_IsRestored &&
+                ![self isPurchased:transaction.payment.productIdentifier]) {
+                PurchaseTransactionCache *cache =
+                    [[PurchaseTransactionCache alloc] initWithTransaction:transaction];
+                [m_RestoredTransactions addObject:cache];
+            }
+            [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+            break;
+        }
+        default:
+            break; // Purchasing / Deferred: nothing to do
         }
     }
 }
@@ -375,8 +376,8 @@
     removedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
 }
 
-// @ 0x555f4 — all restored transactions collected: pump receipt checks, or report
-// "nothing to restore" when the queue is empty.
+// @ 0x555f4 — all restored transactions collected: pump receipt checks, or
+// report "nothing to restore" when the queue is empty.
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
     while (YES) {
         if (m_RestoredTransactions.count == 0) {
@@ -390,7 +391,7 @@
         PurchaseTransactionCache *cache = [m_RestoredTransactions lastObject];
         [m_RestoredTransactions removeLastObject];
         if ([self addPurchaseCheckTransaction:cache]) {
-            break;   // a receipt check is now running; the rest continue on completion
+            break; // a receipt check is now running; the rest continue on completion
         }
     }
 }
@@ -398,8 +399,8 @@
 // @ 0x55798
 - (void)paymentQueue:(SKPaymentQueue *)queue
     restoreCompletedTransactionsFailedWithError:(NSError *)error {
-    // Binary clears ONLY m_RestoredTransactions here (single -removeAllObjects @0x55798);
-    // m_PurchaseCheckedProducts is left intact.
+    // Binary clears ONLY m_RestoredTransactions here (single -removeAllObjects
+    // @0x55798); m_PurchaseCheckedProducts is left intact.
     [m_RestoredTransactions removeAllObjects];
     if ([m_MusicDataDelegate respondsToSelector:@selector(restoreFailed:)]) {
         [m_MusicDataDelegate restoreFailed:error];
@@ -496,11 +497,10 @@
 }
 
 // The empty-domain, empty-description NSError the original builds on receipt
-// failure (Ghidra: errorWithDomain:@"" code:0 userInfo:{NSLocalizedDescription:@""}).
+// failure (Ghidra: errorWithDomain:@"" code:0
+// userInfo:{NSLocalizedDescription:@""}).
 - (NSError *)receiptError {
-    return [NSError errorWithDomain:@""
-                              code:0
-                          userInfo:@{ NSLocalizedDescriptionKey: @"" }];
+    return [NSError errorWithDomain:@"" code:0 userInfo:@{NSLocalizedDescriptionKey : @""}];
 }
 
 @end

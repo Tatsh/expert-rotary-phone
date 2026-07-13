@@ -16,10 +16,10 @@
 #import "AepManager.h"
 #import "neTextureForiOS.h"
 
-// Ghidra: FUN_0000fa30 — resolve `name` in a group's open-addressing hash table.
-// A rolling rotate-add hash (mod 2047) picks the start bucket, then linear-probe
-// (wrapping) until the key matches (return its stored value) or an empty/looped
-// slot is hit (return -1).
+// Ghidra: FUN_0000fa30 — resolve `name` in a group's open-addressing hash
+// table. A rolling rotate-add hash (mod 2047) picks the start bucket, then
+// linear-probe (wrapping) until the key matches (return its stored value) or an
+// empty/looped slot is hit (return -1).
 static int AepNameHashLookup(const char *name, const AepManager::NameHashTable *table) {
     unsigned c = (unsigned char)name[0];
     int bucket = 0;
@@ -31,7 +31,7 @@ static int AepNameHashLookup(const char *name, const AepManager::NameHashTable *
             h += c;
             unsigned r = (0x20 - (c & 0x1f)) & 0x1f;
             c = (unsigned char)*p;
-            h = (h >> r) | (h << (0x20 - r));   // rotate-right by r
+            h = (h >> r) | (h << (0x20 - r)); // rotate-right by r
         } while (c != 0);
         bucket = (int)(h % 2047);
     }
@@ -59,9 +59,10 @@ AepManager &AepManager::shared() {
     return instance;
 }
 
-// Ghidra: readIndexFile (FUN_0000f770). Read the whole .idx into m_idxData[group];
-// the index proper begins 4 bytes in (the binary reads at +0x200, index at +0x204)
-// and its first int16 is overwritten with the group id. Returns the index base.
+// Ghidra: readIndexFile (FUN_0000f770). Read the whole .idx into
+// m_idxData[group]; the index proper begins 4 bytes in (the binary reads at
+// +0x200, index at +0x204) and its first int16 is overwritten with the group
+// id. Returns the index base.
 const uint8_t *AepManager::readIndexFile(int group, NSString *path) {
     if (group < 0 || group >= kMaxAepGroups) {
         return nullptr;
@@ -73,25 +74,25 @@ const uint8_t *AepManager::readIndexFile(int group, NSString *path) {
     assert(data.length < 0x40000 && "fileSize < MAX_IDXBUFSIZE");
     m_idxData[group] = [data copy];
     uint8_t *bytes = (uint8_t *)m_idxData[group].bytes;
-    uint8_t *indexBase = bytes + 4;              // skip the 4-byte header
-    *reinterpret_cast<int16_t *>(indexBase) = (int16_t)group;  // stamp the group id
+    uint8_t *indexBase = bytes + 4;                           // skip the 4-byte header
+    *reinterpret_cast<int16_t *>(indexBase) = (int16_t)group; // stamp the group id
     return indexBase;
 }
 
-// Ghidra: loadAepData (FUN_0000f4b0, asserts n < MAX_FRAME_DATA at AepManager.mm:0x17a).
-// Reads the index, uploads the group's texture, records the frame-position table and
-// the frame-entry pointer. The .idx stores its internal tables as byte offsets from
-// the index base (they are pre-relocated in the binary's fixed-buffer scheme; here
-// they are resolved against m_idxData's bytes).
+// Ghidra: loadAepData (FUN_0000f4b0, asserts n < MAX_FRAME_DATA at
+// AepManager.mm:0x17a). Reads the index, uploads the group's texture, records
+// the frame-position table and the frame-entry pointer. The .idx stores its
+// internal tables as byte offsets from the index base (they are pre-relocated
+// in the binary's fixed-buffer scheme; here they are resolved against
+// m_idxData's bytes).
 bool AepManager::loadAepData(int group, const char *dir, const char *name, bool single) {
     assert(name != nullptr);
     if (group < 0 || group >= kMaxAepGroups) {
         return false;
     }
 
-    NSString *path = single
-        ? [NSString stringWithFormat:@"%s/%s.idx", dir, name]
-        : [NSString stringWithFormat:@"%s/%s/%s.idx", dir, name, name];
+    NSString *path = single ? [NSString stringWithFormat:@"%s/%s.idx", dir, name] :
+                              [NSString stringWithFormat:@"%s/%s/%s.idx", dir, name, name];
     const uint8_t *indexBase = readIndexFile(group, path);
     if (indexBase == nullptr) {
         return false;
@@ -102,8 +103,8 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     delete m_groupTexture[group];
     m_groupTexture[group] = new neTextureForiOS();
     NSString *texDir = single ? nil : [NSString stringWithFormat:@"%s/%s", dir, name];
-    // The tile loader reads "<texDir>/<name>_<i>.png" for each of the index's tiles
-    // (Ghidra FUN_00011e18); it fills the sprite's tile/handle arrays.
+    // The tile loader reads "<texDir>/<name>_<i>.png" for each of the index's
+    // tiles (Ghidra FUN_00011e18); it fills the sprite's tile/handle arrays.
     m_groupTexture[group]->loadFrames(texDir.UTF8String, name, indexBase);
 
     // group id -> slot maps (Ghidra: +0x7c1748 / +0x7c1948).
@@ -112,25 +113,26 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     // Copy the frame-position table (8-byte records, terminated by a zero span),
     // bounded by MAX_FRAME_DATA.
     uint32_t posOffset = *reinterpret_cast<const uint32_t *>(indexBase + 4);
-    const int16_t *pos = reinterpret_cast<const int16_t *>(m_idxData[group].bytes) +
-                         posOffset / 2;
+    const int16_t *pos = reinterpret_cast<const int16_t *>(m_idxData[group].bytes) + posOffset / 2;
     int n = 0;
     while (pos[2] != 0) {
         assert(n < kMaxFrameData && "n < MAX_FRAME_DATA");
-        m_framePos[group][n] = { pos[0], pos[1], pos[2], pos[3] };
+        m_framePos[group][n] = {pos[0], pos[1], pos[2], pos[3]};
         n++;
         pos += 4;
     }
     m_frameCount[group] = n;
 
-    // The AepFrameEntry array the layer draw walks (Ghidra: +0x7f39c8 = *(idx+8)).
+    // The AepFrameEntry array the layer draw walks (Ghidra: +0x7f39c8 =
+    // *(idx+8)).
     uint32_t entryOffset = *reinterpret_cast<const uint32_t *>(indexBase + 8);
     m_groupFrameData[group] = reinterpret_cast<const AepFrameEntry *>(
         reinterpret_cast<const uint8_t *>(m_idxData[group].bytes) + entryOffset);
     return true;
 }
 
-// Ghidra: FUN_0000f988 — drop the group's texture (its dtor releases the tiles).
+// Ghidra: FUN_0000f988 — drop the group's texture (its dtor releases the
+// tiles).
 void AepManager::unloadGroup(int group) {
     if (group < 0 || group >= kMaxAepGroups) {
         return;
@@ -139,7 +141,8 @@ void AepManager::unloadGroup(int group) {
     m_groupTexture[group] = nullptr;
 }
 
-// Ghidra: FUN_0000f758 — load a single-file group ("<baseDir>/<name>.idx") into slot.
+// Ghidra: FUN_0000f758 — load a single-file group ("<baseDir>/<name>.idx") into
+// slot.
 void AepLoadGroup(AepManager *aep, int slot, const char *name) {
     aep->loadAepData(slot, aep->baseDir(), name, true);
 }
@@ -157,45 +160,54 @@ const AepFrameEntry *AepManager::groupEntries(int lyr) const {
     return m_groupFrameData[slot];
 }
 
-// Walk `entries`[layerNo]'s chain to its last entry and return its frameEnd — the
-// layer's length. Ghidra: the shared loop in FUN_0000fd64 / FUN_0000fb8c (stride
-// 0x24; scan forward while the entry's first field is non-negative).
+// Walk `entries`[layerNo]'s chain to its last entry and return its frameEnd —
+// the layer's length. Ghidra: the shared loop in FUN_0000fd64 / FUN_0000fb8c
+// (stride 0x24; scan forward while the entry's first field is non-negative).
 int AepManager::layerLength(const AepFrameEntry *entries, int layerNo) {
     const AepFrameEntry *e = &entries[layerNo];
     while (e->type >= 0) {
         ++e;
     }
-    return e->frameEnd;   // Ghidra: psVar2[5]
+    return e->frameEnd; // Ghidra: psVar2[5]
 }
 
-// Ghidra: getLyrNo FUN_0000fac8 — hash-resolve `name` in `group`'s table, assert
-// it exists, and pack (group slot << 16) | layer index into the encoded lyr.
+// Ghidra: getLyrNo FUN_0000fac8 — hash-resolve `name` in `group`'s table,
+// assert it exists, and pack (group slot << 16) | layer index into the encoded
+// lyr.
 int AepManager::getLyrNo(int group, const char *name) const {
     int idx = AepNameHashLookup(name, &m_groupNames[group]);
-    assert(idx >= 0);   // AepManager.mm:0x1d0 "0" (getLyrNo)
+    assert(idx >= 0); // AepManager.mm:0x1d0 "0" (getLyrNo)
     return (m_groupSlot[group] << 16) | m_layerNumbers[group][idx];
 }
 
-// Ghidra: getFrmNo FUN_0000f9cc — hash-resolve `name` in `group`'s frame-name table
-// (@ +0x640200), assert, and pack (group slot << 16) | the looked-up frame number.
+// Ghidra: getFrmNo FUN_0000f9cc — hash-resolve `name` in `group`'s frame-name
+// table
+// (@ +0x640200), assert, and pack (group slot << 16) | the looked-up frame
+// number.
 int AepManager::getFrameNo(int group, const char *name) const {
     int idx = AepNameHashLookup(name, &m_frameNames[group]);
-    assert(idx >= 0);   // AepManager.mm:0x1bb "getFrmNo"
+    assert(idx >= 0); // AepManager.mm:0x1bb "getFrmNo"
     return idx | (m_groupSlot[group] << 16);
 }
 
-// Ghidra: getUsrNo FUN_0000fb40 — hash-resolve `name` in `group`'s user-name table
-// (@ +0x6d6138), assert, and return the looked-up user number (no slot packing).
+// Ghidra: getUsrNo FUN_0000fb40 — hash-resolve `name` in `group`'s user-name
+// table
+// (@ +0x6d6138), assert, and return the looked-up user number (no slot
+// packing).
 int AepManager::getUserNo(int group, const char *name) const {
     int idx = AepNameHashLookup(name, &m_userNames[group]);
-    assert(idx >= 0);   // AepManager.mm:0x1e4 "getUsrNo"
+    assert(idx >= 0); // AepManager.mm:0x1e4 "getUsrNo"
     return idx;
 }
 
 // Ghidra: FUN_0000f498 / FUN_0000f4a4 — the cached screen-quad extents at
 // +0x7f3afc / +0x7f3b00 (the same slots screenWidth()/screenHeight() read).
-int AepManager::transitionOverlayWidth() const { return m_transitionOverlay[2]; }
-int AepManager::transitionOverlayHeight() const { return m_transitionOverlay[3]; }
+int AepManager::transitionOverlayWidth() const {
+    return m_transitionOverlay[2];
+}
+int AepManager::transitionOverlayHeight() const {
+    return m_transitionOverlay[3];
+}
 
 // Ghidra: FUN_0000fb8c — the layer's frame count (same walk as drawLayer).
 int AepManager::layerFrameCount(int lyr) const {
@@ -203,18 +215,33 @@ int AepManager::layerFrameCount(int lyr) const {
 }
 
 // Ghidra: FUN_0000fd64 — resolve the layer's frame-entry array, clamp/loop the
-// requested frame to the layer's length, then fill it (AepDrawLayer / FUN_0000fe8c).
-// The full 19-parameter form: `loopFlags` is param_13 (bit0 = loop, bit4 = clampLast);
-// every other arg threads straight into the frame-tree fill. A null clipRect defaults
-// to the full-screen rect cached at this+0x7f3af4.
-void AepManager::drawLayer(int lyr, int frame, int x, int y, int scaleX, int scaleY, int rotation,
-                           uint32_t loopFlags, int p9, int p10, int color, int colorHi,
-                           uint32_t blendFlags, uint32_t p15, int *clipRect, void *context,
-                           uint32_t p17, uint32_t p19) {
-    assert(lyr >= 0);   // AepManager.mm:0x26a "0 <= lyr"
+// requested frame to the layer's length, then fill it (AepDrawLayer /
+// FUN_0000fe8c). The full 19-parameter form: `loopFlags` is param_13 (bit0 =
+// loop, bit4 = clampLast); every other arg threads straight into the frame-tree
+// fill. A null clipRect defaults to the full-screen rect cached at
+// this+0x7f3af4.
+void AepManager::drawLayer(int lyr,
+                           int frame,
+                           int x,
+                           int y,
+                           int scaleX,
+                           int scaleY,
+                           int rotation,
+                           uint32_t loopFlags,
+                           int p9,
+                           int p10,
+                           int color,
+                           int colorHi,
+                           uint32_t blendFlags,
+                           uint32_t p15,
+                           int *clipRect,
+                           void *context,
+                           uint32_t p17,
+                           uint32_t p19) {
+    assert(lyr >= 0); // AepManager.mm:0x26a "0 <= lyr"
 
-    const unsigned slot = m_groupIndex[(unsigned)lyr >> 16];   // this+0x7c1748
-    const AepFrameEntry *entries = m_groupFrameData[slot];     // this+slot*4+0x7f39c8
+    const unsigned slot = m_groupIndex[(unsigned)lyr >> 16]; // this+0x7c1748
+    const AepFrameEntry *entries = m_groupFrameData[slot];   // this+slot*4+0x7f39c8
     const int layerNo = lyr & 0xffff;
     const int length = layerLength(entries, layerNo);
     if (length == 0 || frame < 0) {
@@ -222,37 +249,71 @@ void AepManager::drawLayer(int lyr, int frame, int x, int y, int scaleX, int sca
     }
 
     if (loopFlags & kDrawLoop) {
-        frame %= length;                 // Ghidra: ___modsi3
+        frame %= length; // Ghidra: ___modsi3
     } else if (frame >= length) {
         if ((loopFlags & kDrawClampLast) == 0) {
-            return;                      // past the end and not clamping -> skip
+            return; // past the end and not clamping -> skip
         }
         frame = length - 1;
     }
 
-    // Default clip rect = the cached full-screen quad {x, y, w, h} at this+0x7f3af4.
+    // Default clip rect = the cached full-screen quad {x, y, w, h} at
+    // this+0x7f3af4.
     int *clip = clipRect ? clipRect : m_transitionOverlay;
 
-    AepDrawLayer(this, (int)slot, layerNo, frame, x, y, scaleX, scaleY, p9, p10,
-                 color, colorHi, (uint32_t)rotation, blendFlags, p15, clip, p17, context, p19);
+    AepDrawLayer(this,
+                 (int)slot,
+                 layerNo,
+                 frame,
+                 x,
+                 y,
+                 scaleX,
+                 scaleY,
+                 p9,
+                 p10,
+                 color,
+                 colorHi,
+                 (uint32_t)rotation,
+                 blendFlags,
+                 p15,
+                 clip,
+                 p17,
+                 context,
+                 p19);
 }
 
-// Compatibility overload for the transform-only callers (MenuMainTask / PlayTask /
-// AepLyrCtrl). Maps the transform into the full form: colour = 100 and colourHi = 100
-// give a fully-opaque, un-tinted quad (the >=100 alpha split turns alpha 100 into the
-// 0x200 "opaque" blend bit); pivots and user words default to 0, no clip override, and
-// the transform's priority becomes the ordering-table priority (param_18 / p17).
+// Compatibility overload for the transform-only callers (MenuMainTask /
+// PlayTask / AepLyrCtrl). Maps the transform into the full form: colour = 100
+// and colourHi = 100 give a fully-opaque, un-tinted quad (the >=100 alpha split
+// turns alpha 100 into the 0x200 "opaque" blend bit); pivots and user words
+// default to 0, no clip override, and the transform's priority becomes the
+// ordering-table priority (param_18 / p17).
 void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
-    drawLayer(lyr, frame, (int)root.x, (int)root.y, (int)root.sx, (int)root.sy,
-              (int)root.rotation, flags, /*p9*/ 0, /*p10*/ 0, /*color*/ 100, /*colorHi*/ 100,
-              /*blendFlags*/ 0, /*p15*/ 0, /*clipRect*/ nullptr, /*context*/ nullptr,
-              /*p17 = priority*/ (uint32_t)root.priority, /*p19*/ 0);
+    drawLayer(lyr,
+              frame,
+              (int)root.x,
+              (int)root.y,
+              (int)root.sx,
+              (int)root.sy,
+              (int)root.rotation,
+              flags,
+              /*p9*/ 0,
+              /*p10*/ 0,
+              /*color*/ 100,
+              /*colorHi*/ 100,
+              /*blendFlags*/ 0,
+              /*p15*/ 0,
+              /*clipRect*/ nullptr,
+              /*context*/ nullptr,
+              /*p17 = priority*/ (uint32_t)root.priority,
+              /*p19*/ 0);
 }
 
 // Ghidra: FUN_0000f9b0 — install a per-group frame-tree draw callback + context
-// (stored at this+slot*4+0x7f3a2c / +0x7f3a90). The callback is invoked by the type-3
-// dispatch in AepDrawLayer with the full per-frame draw args (AepGroupDrawFn); its
-// last argument receives this stored context (the owning scene/task).
+// (stored at this+slot*4+0x7f3a2c / +0x7f3a90). The callback is invoked by the
+// type-3 dispatch in AepDrawLayer with the full per-frame draw args
+// (AepGroupDrawFn); its last argument receives this stored context (the owning
+// scene/task).
 void AepManager::setGroupDrawCallback(int slot, AepGroupDrawFn callback, void *context) {
     if (slot < 0 || slot >= kMaxAepGroups) {
         return;
@@ -262,7 +323,8 @@ void AepManager::setGroupDrawCallback(int slot, AepGroupDrawFn callback, void *c
 }
 
 // Ghidra: FUN_000106dc — start a fade transition (mode 1 in / 2 out; 0 or >=3
-// cancels). Length + total are set to `frames`; the overlay is chosen by `flag`.
+// cancels). Length + total are set to `frames`; the overlay is chosen by
+// `flag`.
 void AepManager::playTransition(int mode, int frames, int flag) {
     if ((unsigned)mode < 3 && frames > 0) {
         m_transitionMode = mode;
@@ -275,8 +337,9 @@ void AepManager::playTransition(int mode, int frames, int flag) {
     }
 }
 
-// Ghidra: FUN_00010758 — clamp `frame` into [0, total] and store it as the current
-// transition frame counter (the value draw() counts down and derives alpha from).
+// Ghidra: FUN_00010758 — clamp `frame` into [0, total] and store it as the
+// current transition frame counter (the value draw() counts down and derives
+// alpha from).
 void AepManager::setTransitionFrame(int frame) {
     if (frame < 0) {
         frame = 0;
@@ -287,7 +350,8 @@ void AepManager::setTransitionFrame(int frame) {
     m_transitionFrames = frame;
 }
 
-// Ghidra: FUN_00010730 — done when no frames remain, or no transition is active.
+// Ghidra: FUN_00010730 — done when no frames remain, or no transition is
+// active.
 bool AepManager::isTransitionDone() const {
     if (m_transitionFrames > 0) {
         return m_transitionMode == 0;
@@ -295,9 +359,10 @@ bool AepManager::isTransitionDone() const {
     return true;
 }
 
-// Ghidra: FUN_0001058c — if a fade is active, draw its overlay quad at the current
-// alpha (100% * frames/total, offset per mode) over the ordering table and count
-// the frame down; then flush the OT and record the highest priority drawn.
+// Ghidra: FUN_0001058c — if a fade is active, draw its overlay quad at the
+// current alpha (100% * frames/total, offset per mode) over the ordering table
+// and count the frame down; then flush the OT and record the highest priority
+// drawn.
 void AepManager::draw() {
     if (m_transitionTotal > 0 && (m_transitionMode == 1 || m_transitionMode == 2)) {
         // Progress runs 100 -> 0 as the frames count down.
@@ -339,16 +404,18 @@ void AepManager::drawTransitionOverlay(int alpha) {
 }
 
 // ===========================================================================
-// Resource-load name tables, engine init and the text / transition free functions.
+// Resource-load name tables, engine init and the text / transition free
+// functions.
 // ===========================================================================
 
-// Ghidra: buildAepNameHashTable (FUN_0001077c). Build an open-addressed name->index
-// table (the same rotate-add hash, mod 2047, that AepNameHashLookup probes) from a
-// NUL-separated string block starting at *cursor. Each name's start pointer is stored in
-// its bucket's key slot and its ordinal in the value slot. On return *cursor is advanced
-// past the block (8-byte aligned) and the number of names is returned (-1 on overflow).
+// Ghidra: buildAepNameHashTable (FUN_0001077c). Build an open-addressed
+// name->index table (the same rotate-add hash, mod 2047, that AepNameHashLookup
+// probes) from a NUL-separated string block starting at *cursor. Each name's
+// start pointer is stored in its bucket's key slot and its ordinal in the value
+// slot. On return *cursor is advanced past the block (8-byte aligned) and the
+// number of names is returned (-1 on overflow).
 static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable *out) {
-    std::memset(out, 0, sizeof(*out));   // 0x2ffc bytes
+    std::memset(out, 0, sizeof(*out)); // 0x2ffc bytes
     const char *p = *cursor;
     int count = 0;
     while (*p != '\0') {
@@ -359,7 +426,7 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
         do {
             ++q;
             unsigned r = (0x20 - (c & 0x1f)) & 0x1f;
-            h = ((h + c) >> r) | ((h + c) << (0x20 - r));   // rotate-right by r
+            h = ((h + c) >> r) | ((h + c) << (0x20 - r)); // rotate-right by r
             c = (unsigned char)*q;
         } while (c != 0);
 
@@ -368,13 +435,13 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
         while (out->key[bucket] != nullptr) {
             bucket = (bucket + 1) % 2047;
             if (bucket == start) {
-                return -1;   // table full
+                return -1; // table full
             }
         }
         out->key[bucket] = p;
         out->value[bucket] = (uint16_t)count;
 
-        while (*p != '\0') {   // skip to this name's terminator
+        while (*p != '\0') { // skip to this name's terminator
             ++p;
         }
         ++p;
@@ -390,40 +457,50 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
     return count;
 }
 
-// Ghidra: aepManagerInit (FUN_0000f33c). `basePath` is the bundle path (this+0), copied
-// alongside `dataPath` (the texture root at this+0x100 = baseDir). The binary memsets the
-// per-group frame/sprite tables and seeds the transform-matrix stacks — here those are the
-// members' zero-initialised state. It then hands the screen extents + render scale to the
-// ordering table and seeds the transition defaults (total = 30 frames).
-void aepManagerInit(AepManager *mgr, const char *basePath, const char *dataPath, int screenW,
-                    int screenH, float scale) {
-    (void)basePath;   // the bundle-path buffer at this+0 is not separately modelled
+// Ghidra: aepManagerInit (FUN_0000f33c). `basePath` is the bundle path
+// (this+0), copied alongside `dataPath` (the texture root at this+0x100 =
+// baseDir). The binary memsets the per-group frame/sprite tables and seeds the
+// transform-matrix stacks — here those are the members' zero-initialised state.
+// It then hands the screen extents + render scale to the ordering table and
+// seeds the transition defaults (total = 30 frames).
+void aepManagerInit(AepManager *mgr,
+                    const char *basePath,
+                    const char *dataPath,
+                    int screenW,
+                    int screenH,
+                    float scale) {
+    (void)basePath; // the bundle-path buffer at this+0 is not separately modelled
     if (dataPath != nullptr) {
         std::strncpy(mgr->m_baseDir, dataPath, sizeof(mgr->m_baseDir) - 1);
         mgr->m_baseDir[sizeof(mgr->m_baseDir) - 1] = '\0';
     }
 
-    // Screen extents + render scale -> ordering table; the per-slot texture handle table is
-    // the group texture pointers (this+0x7c16e4 in the binary).
-    aepOtSetScreenParams(mgr->orderingTable(), reinterpret_cast<void **>(mgr->m_groupTexture),
-                         screenW, screenH, scale);
+    // Screen extents + render scale -> ordering table; the per-slot texture
+    // handle table is the group texture pointers (this+0x7c16e4 in the binary).
+    aepOtSetScreenParams(mgr->orderingTable(),
+                         reinterpret_cast<void **>(mgr->m_groupTexture),
+                         screenW,
+                         screenH,
+                         scale);
 
-    // Cache the screen extents (the fade-quad w/h slots) and seed the transition defaults.
+    // Cache the screen extents (the fade-quad w/h slots) and seed the transition
+    // defaults.
     mgr->m_transitionOverlay[0] = 0;
     mgr->m_transitionOverlay[1] = 0;
-    mgr->m_transitionOverlay[2] = screenW;   // screenWidth()  (+0x7f3afc)
-    mgr->m_transitionOverlay[3] = screenH;   // screenHeight() (+0x7f3b00)
+    mgr->m_transitionOverlay[2] = screenW; // screenWidth()  (+0x7f3afc)
+    mgr->m_transitionOverlay[3] = screenH; // screenHeight() (+0x7f3b00)
     mgr->m_transitionMode = 0;
     mgr->m_transitionFrames = 0;
-    mgr->m_transitionTotal = 30;             // 0x1e
+    mgr->m_transitionTotal = 30; // 0x1e
     mgr->m_transitionFlag = 0;
     mgr->m_maxPriority = 0;
 }
 
-// Ghidra: relocateAepData (FUN_0000f824). Build the group's frame / layer / user name
-// hash tables from the index header's string-block offsets, rewriting each offset in place
-// to the post-block cursor. For the layer block the `n` int16 layer ordinals that follow
-// the names are copied into the per-group layer-number table (feeding getLyrNo).
+// Ghidra: relocateAepData (FUN_0000f824). Build the group's frame / layer /
+// user name hash tables from the index header's string-block offsets, rewriting
+// each offset in place to the post-block cursor. For the layer block the `n`
+// int16 layer ordinals that follow the names are copied into the per-group
+// layer-number table (feeding getLyrNo).
 void relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uint8_t *idxBase) {
     if (group < 0 || group >= AepManager::kMaxAepGroups) {
         return;
@@ -432,7 +509,7 @@ void relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uin
     if (indexHeader[1] != 0) {
         const char *cursor = reinterpret_cast<const char *>(idxBase + indexHeader[1]);
         buildAepNameHashTable(&cursor, &mgr->m_frameNames[group]);
-        indexHeader[1] = (int32_t)(intptr_t)cursor;   // relocate offset -> pointer in place
+        indexHeader[1] = (int32_t)(intptr_t)cursor; // relocate offset -> pointer in place
     }
     // Layer-name block (index header +0x10), followed by the layer-ordinal array.
     if (indexHeader[4] != 0) {
@@ -446,7 +523,7 @@ void relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uin
             ordinals += n;
         }
         if (n % 4 != 0) {
-            ordinals += (4 - n % 4);   // align to 4 int16s (8 bytes)
+            ordinals += (4 - n % 4); // align to 4 int16s (8 bytes)
         }
         indexHeader[4] = (int32_t)(intptr_t)ordinals;
     }
@@ -463,31 +540,50 @@ int getAepTransitionMode(const AepManager *mgr) {
     return mgr->transitionMode();
 }
 
-// Ghidra: drawAepTransitionOverlay (FUN_00010530) — free-function entry that forwards to
-// the ordering table's overlay push (FUN_0001151c, modelled as the private method).
+// Ghidra: drawAepTransitionOverlay (FUN_00010530) — free-function entry that
+// forwards to the ordering table's overlay push (FUN_0001151c, modelled as the
+// private method).
 void drawAepTransitionOverlay(AepManager *mgr, int alpha) {
     mgr->drawTransitionOverlay(alpha);
 }
 
-// Ghidra: FUN_00010540 (audit label "aepManagerReset_a" — a misnomer). Manager-level text
-// draw: forward the string + six positional words to the ordering table's text command,
-// with the default (null) colour vector and `priority` as the OT priority.
-void drawAepManagerText(AepManager *mgr, const char *text, int a0, int a1, int a2, int a3, int a4,
-                        int a5, int priority) {
+// Ghidra: FUN_00010540 (audit label "aepManagerReset_a" — a misnomer).
+// Manager-level text draw: forward the string + six positional words to the
+// ordering table's text command, with the default (null) colour vector and
+// `priority` as the OT priority.
+void drawAepManagerText(AepManager *mgr,
+                        const char *text,
+                        int a0,
+                        int a1,
+                        int a2,
+                        int a3,
+                        int a4,
+                        int a5,
+                        int priority) {
     pushAepOtTextCmd(mgr->orderingTable(), text, a0, a1, a2, a3, a4, a5, nullptr, priority);
 }
 
-// Ghidra: FUN_0001057c — the full pass-through variant (threads an explicit colour vector).
-void drawAepManagerTextEx(AepManager *mgr, const char *text, int a0, int a1, int a2, int a3,
-                          int a4, int a5, const void *colorVec, int priority) {
+// Ghidra: FUN_0001057c — the full pass-through variant (threads an explicit
+// colour vector).
+void drawAepManagerTextEx(AepManager *mgr,
+                          const char *text,
+                          int a0,
+                          int a1,
+                          int a2,
+                          int a3,
+                          int a4,
+                          int a5,
+                          const void *colorVec,
+                          int priority) {
     pushAepOtTextCmd(mgr->orderingTable(), text, a0, a1, a2, a3, a4, a5, colorVec, priority);
 }
 
-// Ghidra: drawAepTextMultiline (FUN_0002d8b0). Split `text` on '\n' and draw each line as a
-// separate text command, vertically centred about `y` with `lineHeight` spacing. The per-
-// line call forwards through drawAepManagerText (the audit's aepManagerReset_a).
-void drawAepTextMultiline(const char *text, int a0, int y, int a3, int a4, int lineHeight, int a6,
-                          int a7, int a8) {
+// Ghidra: drawAepTextMultiline (FUN_0002d8b0). Split `text` on '\n' and draw
+// each line as a separate text command, vertically centred about `y` with
+// `lineHeight` spacing. The per- line call forwards through drawAepManagerText
+// (the audit's aepManagerReset_a).
+void drawAepTextMultiline(
+    const char *text, int a0, int y, int a3, int a4, int lineHeight, int a6, int a7, int a8) {
     // Count lines ('\n'-separated; a non-empty tail counts as a line).
     int lines = 0;
     for (const char *p = text; *p != '\0'; ++p) {
@@ -496,7 +592,7 @@ void drawAepTextMultiline(const char *text, int a0, int y, int a3, int a4, int l
         }
     }
     if (*text != '\0') {
-        ++lines;   // the final (unterminated) line
+        ++lines; // the final (unterminated) line
     }
     if (lines <= 0) {
         return;
@@ -510,7 +606,7 @@ void drawAepTextMultiline(const char *text, int a0, int y, int a3, int a4, int l
     for (int i = 0; i < lines; i++) {
         const char *nl = std::strchr(cursor, '\n');
         if (nl == nullptr) {
-            nl = text + std::strlen(text);   // last line runs to the end (Ghidra quirk: from `text`)
+            nl = text + std::strlen(text); // last line runs to the end (Ghidra quirk: from `text`)
         }
         size_t len = (size_t)(nl - cursor);
         if (len > 0xfe) {
@@ -520,7 +616,8 @@ void drawAepTextMultiline(const char *text, int a0, int y, int a3, int a4, int l
         std::strncpy(line, cursor, len);
         line[len] = '\0';
 
-        // Ghidra arg order: aepManagerReset_a(mgr, line, a4, a0, lineY, a3, a8, a6, a7).
+        // Ghidra arg order: aepManagerReset_a(mgr, line, a4, a0, lineY, a3, a8, a6,
+        // a7).
         drawAepManagerText(&mgr, line, a4, a0, lineY, a3, a8, a6, a7);
 
         cursor = nl + 1;

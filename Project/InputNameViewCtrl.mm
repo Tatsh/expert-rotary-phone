@@ -3,23 +3,24 @@
 //  pop'n rhythmin
 //
 //  See InputNameViewCtrl.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons (the
-//  decide SE and the scene-manager root view controller -InPlayerNameEndCallBack
-//  callback). Image / alert-string literals are the exact values recovered from the
+//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons
+//  (the decide SE and the scene-manager root view controller
+//  -InPlayerNameEndCallBack callback). Image / alert-string literals are the
+//  exact values recovered from the
 //  __cfstring table; the pad layout builds a floating gradient nav-card panel.
 //
 
 #import "InputNameViewCtrl.h"
 
-#import <QuartzCore/QuartzCore.h>  // CAGradientLayer / CALayer (pad card decoration)
+#import <QuartzCore/QuartzCore.h> // CAGradientLayer / CALayer (pad card decoration)
 
 #import "AppDelegate.h"        // +appDelegate / -appVersionNum / -uuId (request fields)
-#import "MainViewController.h"  // scene root -InPlayerNameEndCallBack
 #import "AppFont.h"            // AppFontName() == getFontNameDFSoGei() (pad caption labels)
 #import "CommonAlertView.h"    // error alerts
+#import "MainViewController.h" // scene root -InPlayerNameEndCallBack
 #import "StoreUtil.h"          // +playerNewURL, urlEncodeString()
 #import "UserSettingData.h"    // +savePlayerName: / +savePlayerId:
-#import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
 
 // Own privates (button target + the name-registration POST wired up by -init).
 @interface InputNameViewCtrl ()
@@ -30,9 +31,9 @@
 
 @implementation InputNameViewCtrl
 
-// @ 0x8f438 — build the player-name form. Phone: full-screen "friman_bg" backdrop
-// with caption images. Pad: a floating rounded UINavigationController card over a
-// dimmed cover, with the caption drawn as DFSoGei labels.
+// @ 0x8f438 — build the player-name form. Phone: full-screen "friman_bg"
+// backdrop with caption images. Pad: a floating rounded UINavigationController
+// card over a dimmed cover, with the caption drawn as DFSoGei labels.
 - (instancetype)init {
     self = [super init];
     neSceneManager::shared();
@@ -70,23 +71,30 @@
             // Gradient "frame" card, 3pt larger than the nav card, sitting behind it.
             CGRect navFrame = navc.view.frame;
             UIView *gradientCard = [[UIView alloc] init];
-            gradientCard.frame = CGRectMake(navFrame.origin.x - 3.0f, navFrame.origin.y - 3.0f,
-                                            navFrame.size.width + 6.0f, navFrame.size.height + 6.0f);
+            gradientCard.frame = CGRectMake(navFrame.origin.x - 3.0f,
+                                            navFrame.origin.y - 3.0f,
+                                            navFrame.size.width + 6.0f,
+                                            navFrame.size.height + 6.0f);
             gradientCard.clipsToBounds = YES;
             gradientCard.layer.cornerRadius = 5.0f;
             CAGradientLayer *grad = [CAGradientLayer layer];
-            grad.frame = CGRectMake(0.0f, 0.0f,
-                                    gradientCard.frame.size.width, gradientCard.frame.size.height);
+            grad.frame = CGRectMake(
+                0.0f, 0.0f, gradientCard.frame.size.width, gradientCard.frame.size.height);
             grad.colors = @[
                 (id)[UIColor colorWithRed:0.5059f green:1.0000f blue:0.9255f alpha:1.0f].CGColor,
                 (id)[UIColor colorWithRed:1.0000f green:0.9098f blue:0.4079f alpha:1.0f].CGColor,
-                (id)[UIColor colorWithRed:0.9961f green:0.6353f blue:0.6824f alpha:1.0f].CGColor];
+                (id)[UIColor colorWithRed:0.9961f green:0.6353f blue:0.6824f alpha:1.0f].CGColor
+            ];
             [gradientCard.layer insertSublayer:grad atIndex:0];
             [self.view addSubview:gradientCard];
 
             // Inner rounded box inside the nav card.
-            UIView *innerBox = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 55.0f, 301.0f, 120.0f)];
-            innerBox.backgroundColor = [UIColor colorWithRed:1.0f green:0.7098f blue:0.8275f alpha:1.0f];
+            UIView *innerBox =
+                [[UIView alloc] initWithFrame:CGRectMake(0.0f, 55.0f, 301.0f, 120.0f)];
+            innerBox.backgroundColor = [UIColor colorWithRed:1.0f
+                                                       green:0.7098f
+                                                        blue:0.8275f
+                                                       alpha:1.0f];
             innerBox.layer.cornerRadius = 5.0f;
             innerBox.layer.borderColor =
                 [UIColor colorWithRed:0.7490f green:0.6941f blue:0.6667f alpha:1.0f].CGColor;
@@ -104,15 +112,16 @@
         UIImage *decideImg = [UIImage imageNamed:@"inputname_btn_deside"];
         UIButton *decideBtn = [[UIButton alloc] init];
         if (!isPad) {
-            decideBtn.frame = CGRectMake(baseX + 184.0f, baseY + 135.0f,
-                                         decideImg.size.width, decideImg.size.height);
+            decideBtn.frame = CGRectMake(
+                baseX + 184.0f, baseY + 135.0f, decideImg.size.width, decideImg.size.height);
         } else {
             decideBtn.frame = CGRectMake(0.0f, 0.0f, decideImg.size.width, decideImg.size.height);
             decideBtn.center = CGPointMake(self.view.frame.size.width * 0.5f,
                                            self.view.frame.size.height * 0.5f + 60.0f + 30.0f);
         }
         [decideBtn setBackgroundImage:decideImg forState:UIControlStateNormal];
-        [decideBtn addTarget:self action:@selector(touchedDecideButton:)
+        [decideBtn addTarget:self
+                      action:@selector(touchedDecideButton:)
             forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:decideBtn];
 
@@ -120,19 +129,22 @@
         if (!isPad) {
             UIImage *mainImg = [UIImage imageNamed:@"inputname_text_main"];
             UIImageView *mainView = [[UIImageView alloc] initWithImage:mainImg];
-            mainView.frame = CGRectMake(baseX + 48.0f, baseY + 25.0f,
-                                        mainImg.size.width, mainImg.size.height);
+            mainView.frame =
+                CGRectMake(baseX + 48.0f, baseY + 25.0f, mainImg.size.width, mainImg.size.height);
             [self.view addSubview:mainView];
 
             UIImage *psImg = [UIImage imageNamed:@"inputname_text_ps"];
             UIImageView *psView = [[UIImageView alloc] initWithImage:psImg];
-            psView.frame = CGRectMake(baseX + 57.0f, baseY + 54.0f,
-                                      psImg.size.width, psImg.size.height);
+            psView.frame =
+                CGRectMake(baseX + 57.0f, baseY + 54.0f, psImg.size.width, psImg.size.height);
             [self.view addSubview:psView];
         } else {
             UILabel *mainLabel = [[UILabel alloc] init];
             mainLabel.backgroundColor = [UIColor clearColor];
-            mainLabel.textColor = [UIColor colorWithRed:0.1882f green:0.1882f blue:0.1882f alpha:1.0f];
+            mainLabel.textColor = [UIColor colorWithRed:0.1882f
+                                                  green:0.1882f
+                                                   blue:0.1882f
+                                                  alpha:1.0f];
             mainLabel.highlightedTextColor = [UIColor whiteColor];
             mainLabel.font = [UIFont fontWithName:AppFontName() size:17.0f];
             mainLabel.textAlignment = NSTextAlignmentCenter;
@@ -143,7 +155,10 @@
 
             UILabel *psLabel = [[UILabel alloc] init];
             psLabel.backgroundColor = [UIColor clearColor];
-            psLabel.textColor = [UIColor colorWithRed:0.1882f green:0.1882f blue:0.1882f alpha:1.0f];
+            psLabel.textColor = [UIColor colorWithRed:0.1882f
+                                                green:0.1882f
+                                                 blue:0.1882f
+                                                alpha:1.0f];
             psLabel.highlightedTextColor = [UIColor whiteColor];
             psLabel.font = [UIFont fontWithName:AppFontName() size:12.0f];
             psLabel.textAlignment = NSTextAlignmentCenter;
@@ -154,8 +169,8 @@
         }
 
         // Name field.
-        _nameField = [[UITextField alloc] initWithFrame:
-                      CGRectMake(baseX + 57.0f, baseY + 80.0f, 206.0f, 38.0f)];
+        _nameField = [[UITextField alloc]
+            initWithFrame:CGRectMake(baseX + 57.0f, baseY + 80.0f, 206.0f, 38.0f)];
         [_nameField setEnabled:YES];
         [_nameField setReturnKeyType:UIReturnKeyDone];
         [_nameField setDelegate:self];
@@ -171,10 +186,10 @@
         }
         [self.view addSubview:_nameField];
 
-        // In-flight spinner (configured + stored, but — matching the binary — not added
-        // to any view here).
+        // In-flight spinner (configured + stored, but — matching the binary — not
+        // added to any view here).
         _indicator = [[UIActivityIndicatorView alloc]
-                      initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
         _indicator.frame = CGRectMake(frame.size.width - 36.0f, 4.0f, 32.0f, 32.0f);
         _indicator.autoresizingMask =
             UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;
@@ -185,13 +200,13 @@
     return self;
 }
 
-// @ 0x90668 — wrap in a UINavigationController (back button hidden, custom bar image).
+// @ 0x90668 — wrap in a UINavigationController (back button hidden, custom bar
+// image).
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     if ([self init] == nil) {
         return nil;
     }
-    UINavigationController *navc =
-        [[UINavigationController alloc] initWithRootViewController:self];
+    UINavigationController *navc = [[UINavigationController alloc] initWithRootViewController:self];
     [self.navigationItem setHidesBackButton:YES];
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"inputname_navbar"]
@@ -238,8 +253,9 @@
     [UIView commitAnimations];
 }
 
-// @ 0x90998 — tear down the panel and notify the scene root the name flow ended.
-// (The binary also releases _nameField / _indicator here; automatic under ARC.)
+// @ 0x90998 — tear down the panel and notify the scene root the name flow
+// ended. (The binary also releases _nameField / _indicator here; automatic
+// under ARC.)
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();
@@ -266,8 +282,7 @@
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
-    if (textField == _nameField &&
-        range.location + range.length + string.length < 13) {
+    if (textField == _nameField && range.location + range.length + string.length < 13) {
         return YES;
     }
     return NO;
@@ -284,7 +299,7 @@
     }
     [self startPlayerNewHttp:name];
     neSceneManager::shared();
-    neEngine::playSystemSe(1);  // decide SE
+    neEngine::playSystemSe(1); // decide SE
 }
 
 #pragma mark - Networking
@@ -295,20 +310,20 @@
         return;
     }
     if (![self checkUsableCharacter:name]) {
-        CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:@"プレーヤーネーム"
-                  message:@"使用できない文字が含まれています。"
-                 delegate:nil
-        cancelButtonTitle:nil
-        otherButtonTitles:@"OK"];
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:@"プレーヤーネーム"
+                                           message:@"使用できない文字が含まれています。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
         [alert show];
         return;
     }
     int version = [AppDelegate.appDelegate appVersionNum];
     NSString *encodedName = urlEncodeString(name);
     NSString *encodedUuid = urlEncodeString(AppDelegate.appDelegate.uuId);
-    NSString *body = [NSString stringWithFormat:@"uuid=%@&name=%@&client_ver=%d",
-                      encodedUuid, encodedName, version];
+    NSString *body = [NSString
+        stringWithFormat:@"uuid=%@&name=%@&client_ver=%d", encodedUuid, encodedName, version];
     _downloader = [[Downloader alloc] initWithURL:[StoreUtil playerNewURL]
                                          delegate:self
                                              Post:[body dataUsingEncoding:NSUTF8StringEncoding]
@@ -317,8 +332,9 @@
     [_indicator startAnimating];
 }
 
-// @ 0x90c4c — new-player POST finished. A JSON body with a string "PlayerId" means
-// success (save the id + name and fade out); anything else is a failure alert.
+// @ 0x90c4c — new-player POST finished. A JSON body with a string "PlayerId"
+// means success (save the id + name and fade out); anything else is a failure
+// alert.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     id playerId = nil;
@@ -332,7 +348,8 @@
             success = YES;
         } else {
             // The binary also probes ErrorCode (isKindOfClass:[NSNumber class]) here
-            // but discards the result — the message is the generic failure regardless.
+            // but discards the result — the message is the generic failure
+            // regardless.
             [json objectForKey:@"ErrorCode"];
             message = @"通信に失敗しました。";
         }
@@ -346,12 +363,11 @@
         [UserSettingData savePlayerId:playerId];
         [self startCloseAnimation];
     } else {
-        CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:@"プレーヤーネーム"
-                  message:message
-                 delegate:nil
-        cancelButtonTitle:nil
-        otherButtonTitles:@"OK"];
+        CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"プレーヤーネーム"
+                                                                message:message
+                                                               delegate:nil
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
     }
 }
@@ -360,12 +376,13 @@
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_indicator stopAnimating];
-    CommonAlertView *alert = [[CommonAlertView alloc]
-        initWithTitle:@"プレーヤーネーム"
-              message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-             delegate:nil
-    cancelButtonTitle:nil
-    otherButtonTitles:@"OK"];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"プレーヤーネーム"
+                                       message:@"通信に失敗しました。\n電波状態の"
+                                               @"良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
@@ -380,11 +397,13 @@
     return [name stringByTrimmingCharactersInSet:set].length == 0;
 }
 
-// Super-only overrides (Ghidra: each only chains to UIViewController) — omitted:
+// Super-only overrides (Ghidra: each only chains to UIViewController) —
+// omitted:
 //   didReceiveMemoryWarning @ 0x90a28, viewDidLoad @ 0x90a54,
-//   viewDidUnload @ 0x90a80, viewWillAppear: @ 0x90aac, viewDidAppear: @ 0x90ad8,
-//   viewWillDisappear: @ 0x90b04, viewDidDisappear: @ 0x90b30.
-// shouldAutorotateToInterfaceOrientation: @ 0x90b5c returns portrait-only (kept below).
+//   viewDidUnload @ 0x90a80, viewWillAppear: @ 0x90aac, viewDidAppear: @
+//   0x90ad8, viewWillDisappear: @ 0x90b04, viewDidDisappear: @ 0x90b30.
+// shouldAutorotateToInterfaceOrientation: @ 0x90b5c returns portrait-only (kept
+// below).
 
 // @ 0x90b5c
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {

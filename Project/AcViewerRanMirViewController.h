@@ -3,12 +3,12 @@
 //  pop'n rhythmin
 //
 //  The arcade (AC) viewer's RAN-MIR option list: a UITableView of four values
-//  (OFF, RANDOM, MIRROR, S-RAN). Pushed by AcViewerOptionViewController when the
-//  RAN-MIR row is tapped; selecting a value stores it into UserSettingData
+//  (OFF, RANDOM, MIRROR, S-RAN). Pushed by AcViewerOptionViewController when
+//  the RAN-MIR row is tapped; selecting a value stores it into UserSettingData
 //  (saveAcvRanMir:) and pops back to the option list.
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0xa6c20,
-//  viewDidLoad @ 0xa74f4, the table data source / delegate, and
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
+//  0xa6c20, viewDidLoad @ 0xa74f4, the table data source / delegate, and
 //  touchedBackButton: @ 0xa7738).
 //
 

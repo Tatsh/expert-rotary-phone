@@ -13,9 +13,9 @@
 //  (initWithStyle: @ 0x68804, initAtNavigationController @ 0x68d40, the table
 //  data source / delegate, the open/close animations and the back action).
 //
-//  .mm because init / viewDidLoad / the animations and the row actions reach the
-//  C++ "ne" engine singletons via neEngineBridge (scene-manager pad flag, the
-//  AC-viewer event-center selection, the system-SE hooks and the root view
+//  .mm because init / viewDidLoad / the animations and the row actions reach
+//  the C++ "ne" engine singletons via neEngineBridge (scene-manager pad flag,
+//  the AC-viewer event-center selection, the system-SE hooks and the root view
 //  controller's AcViewerEndCallBack).
 //
 
@@ -32,15 +32,15 @@
 // (assign — the binary stores the pointer raw, with no retain).
 // @ 0x69740
 // @ 0x69750
-@property (nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
+@property(nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
-// Build the transparent grouped table, bucketing every MusicManager AC song into
-// one of 24 genre categories. Ghidra: initWithStyle: @ 0x68804.
+// Build the transparent grouped table, bucketing every MusicManager AC song
+// into one of 24 genre categories. Ghidra: initWithStyle: @ 0x68804.
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 // Initialize the receiver (grouped style) and return it wrapped in a fresh
-// UINavigationController with a custom back button in the left nav slot (the phone
-// nav host). Ghidra: initAtNavigationController @ 0x68d40.
+// UINavigationController with a custom back button in the left nav slot (the
+// phone nav host). Ghidra: initAtNavigationController @ 0x68d40.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 // Fade the screen + its nav view in (phone entry animation). Ghidra: @ 0x69068.

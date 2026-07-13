@@ -9,27 +9,28 @@
 
 #import "CheckerMusicViewController.h"
 
-#import "CheckerMusicCell.h"    // in-project row cell (setData:)
-#import "CheckerDetail.h"       // pushed on row select
-#import "DownloadMain.h"        // dealloc clears itself as the get-visitor delegate
+#import "CheckerDetail.h"    // pushed on row select
+#import "CheckerMusicCell.h" // in-project row cell (setData:)
+#import "DownloadMain.h"     // dealloc clears itself as the get-visitor delegate
 #import "neEngineBridge.h"
 
-// Category list-header banner images, indexed by category (0..23); >=24 uses "near".
+// Category list-header banner images, indexed by category (0..23); >=24 uses
+// "near".
 static NSString *const kMlistHeader[24] = {
-    @"ppc_mlist_header_etc", @"ppc_mlist_header_tv",
-    @"ppc_mlist_header_p01", @"ppc_mlist_header_p02", @"ppc_mlist_header_p03", @"ppc_mlist_header_p04",
-    @"ppc_mlist_header_p05", @"ppc_mlist_header_p06", @"ppc_mlist_header_p07", @"ppc_mlist_header_p08",
-    @"ppc_mlist_header_p09", @"ppc_mlist_header_p10", @"ppc_mlist_header_p11", @"ppc_mlist_header_p12",
-    @"ppc_mlist_header_p13", @"ppc_mlist_header_p14", @"ppc_mlist_header_p15", @"ppc_mlist_header_p16",
-    @"ppc_mlist_header_p17", @"ppc_mlist_header_p18", @"ppc_mlist_header_p19", @"ppc_mlist_header_p20",
-    @"ppc_mlist_header_p21", @"ppc_mlist_header_p22"
-};
+    @"ppc_mlist_header_etc", @"ppc_mlist_header_tv",  @"ppc_mlist_header_p01",
+    @"ppc_mlist_header_p02", @"ppc_mlist_header_p03", @"ppc_mlist_header_p04",
+    @"ppc_mlist_header_p05", @"ppc_mlist_header_p06", @"ppc_mlist_header_p07",
+    @"ppc_mlist_header_p08", @"ppc_mlist_header_p09", @"ppc_mlist_header_p10",
+    @"ppc_mlist_header_p11", @"ppc_mlist_header_p12", @"ppc_mlist_header_p13",
+    @"ppc_mlist_header_p14", @"ppc_mlist_header_p15", @"ppc_mlist_header_p16",
+    @"ppc_mlist_header_p17", @"ppc_mlist_header_p18", @"ppc_mlist_header_p19",
+    @"ppc_mlist_header_p20", @"ppc_mlist_header_p21", @"ppc_mlist_header_p22"};
 
 // Ghidra: setNavControllerViewFrameShort @ 0xd31e0
 // Block invoke — resizes the navigation controller view to the "short" split
-// pane layout used when CheckerDetail is pushed: CGRectMake(385, 250, 320, 530).
-// Confirmed caller: tableView:didSelectRowAtIndexPath: (animations block, 0xd3030,
-// block invoke ptr = 0xd31e1 = ARM Thumb address of this function).
+// pane layout used when CheckerDetail is pushed: CGRectMake(385, 250, 320,
+// 530). Confirmed caller: tableView:didSelectRowAtIndexPath: (animations block,
+// 0xd3030, block invoke ptr = 0xd31e1 = ARM Thumb address of this function).
 static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     self.navigationController.view.frame = CGRectMake(385.0f, 250.0f, 320.0f, 530.0f);
 }
@@ -39,7 +40,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 @end
 
 @implementation CheckerMusicViewController {
-    NSArray *_scoreDataArray;    // the category's ArcadeScoreData rows
+    NSArray *_scoreDataArray; // the category's ArcadeScoreData rows
 }
 
 // @ 0xd27b8
@@ -57,13 +58,16 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     self.tableView.backgroundView = nil;
     if (!isPad) {
         // Phone: pale mint list background.
-        self.tableView.backgroundColor = [UIColor colorWithRed:0.615686f green:1.0f
-                                                          blue:0.913725f alpha:1.0f];
+        self.tableView.backgroundColor = [UIColor colorWithRed:0.615686f
+                                                         green:1.0f
+                                                          blue:0.913725f
+                                                         alpha:1.0f];
     } else {
         self.tableView.backgroundColor = [UIColor clearColor];
     }
 
-    // Category list-header banner, hosted in a container tall enough to pad it below.
+    // Category list-header banner, hosted in a container tall enough to pad it
+    // below.
     NSString *headerName = (category < 24) ? kMlistHeader[category] : @"ppc_mlist_header_near";
     UIImage *headerImg = [UIImage imageNamed:headerName];
     UIImageView *headerImgView = [[UIImageView alloc] initWithImage:headerImg];
@@ -91,11 +95,11 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     // Custom back button in the left nav slot.
     NSString *backName = isPad ? @"pl_checker_return" : @"navi_btn_back";
     UIImage *backImg = [UIImage imageNamed:backName];
-    UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(0.0f, 0.0f,
-                                                                      backImg.size.width,
-                                                                      backImg.size.height)];
+    UIButton *backButton = [[UIButton alloc]
+        initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
     [backButton setBackgroundImage:backImg forState:UIControlStateNormal];
-    [backButton addTarget:self action:@selector(touchedBackButton:)
+    [backButton addTarget:self
+                   action:@selector(touchedBackButton:)
          forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
     if (neSceneManager::isPadDisplay()) {
@@ -104,7 +108,8 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     return self;
 }
 
-// @ 0xd2e20 — clear the shared DownloadMain's get-visitor delegate if it points here.
+// @ 0xd2e20 — clear the shared DownloadMain's get-visitor delegate if it points
+// here.
 - (void)dealloc {
     DownloadMain *dm = [DownloadMain getInstance];
     if ([dm delegateGetVisitor] == self) {
@@ -114,7 +119,8 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 // viewDidLoad @ 0xd2e98 — super-only override, ARC/omit (no added behavior).
-// didReceiveMemoryWarning @ 0xd2ec4 — super-only override, ARC/omit (no added behavior).
+// didReceiveMemoryWarning @ 0xd2ec4 — super-only override, ARC/omit (no added
+// behavior).
 
 // @ 0xd2ef0
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -130,9 +136,10 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 // @ 0xd2f1c
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
     CheckerMusicCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[CheckerMusicCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -147,18 +154,22 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     return nil;
 }
 
-// @ 0xd3030 — push the per-song CheckerDetail; on iPad first grow the split nav pane.
+// @ 0xd3030 — push the per-song CheckerDetail; on iPad first grow the split nav
+// pane.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController == self && indexPath.section == 0) {
-        neEngine::playSystemSe(1);   // decide SE
+        neEngine::playSystemSe(1); // decide SE
         CheckerDetail *detail =
             [[CheckerDetail alloc] initWithScoreData:_scoreDataArray[indexPath.row]];
         BOOL notPad = !neSceneManager::isPadDisplay();
         if (!notPad) {
-            [UIView animateWithDuration:0.6f delay:0.0f
+            [UIView animateWithDuration:0.6f
+                                  delay:0.0f
                                 options:UIViewAnimationOptionAllowUserInteraction
                              animations:^{
-                                 setNavControllerViewFrameShort(self); // Ghidra: setNavControllerViewFrameShort @ 0xd31e0
+                               setNavControllerViewFrameShort(
+                                   self); // Ghidra: setNavControllerViewFrameShort @
+                                          // 0xd31e0
                              }
                              completion:nil];
         }
@@ -171,7 +182,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     if (self.navigationController.topViewController != self) {
         return;
     }
-    neEngine::playSystemSe(2);   // cancel SE
+    neEngine::playSystemSe(2); // cancel SE
     [self.navigationController popViewControllerAnimated:YES];
 }
 

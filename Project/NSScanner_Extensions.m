@@ -88,8 +88,7 @@ scanEnd:
         NSString *theComment = nil;
         [self scanUpToCharactersFromSet:[NSCharacterSet linebreaksCharacterSet]
                              intoString:&theComment];
-        [self scanCharactersFromSet:[NSCharacterSet linebreaksCharacterSet]
-                         intoString:NULL];
+        [self scanCharactersFromSet:[NSCharacterSet linebreaksCharacterSet] intoString:NULL];
         if (outComment != NULL) {
             *outComment = theComment;
         }

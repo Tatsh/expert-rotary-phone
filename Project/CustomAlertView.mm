@@ -7,10 +7,11 @@
 //  0x268cc, setTitleFontSize: @ 0x268ec, setTextFontSize: @ 0x26940,
 //  setOpenAnimeType: @ 0x26994, setCloseAnimeType: @ 0x269ac,
 //  initWithType:... @ 0x269c4, initWithView:type:... @ 0x26a60,
-//  initWithView:center:type:... @ 0x26abc, show @ 0x274fc, removeView @ 0x277b8,
-//  endCloseAnimation @ 0x27ad0, clickedYesButton: @ 0x27ae0, clickedNoButton: @
-//  0x27b34, customAlertView:clickedButtonAtIndex: @ 0x27b88).
-//  Objective-C++ for the C++ engine bridge (neSceneManager:: / neEngine::).  ARC.
+//  initWithView:center:type:... @ 0x26abc, show @ 0x274fc, removeView @
+//  0x277b8, endCloseAnimation @ 0x27ad0, clickedYesButton: @ 0x27ae0,
+//  clickedNoButton: @ 0x27b34, customAlertView:clickedButtonAtIndex: @
+//  0x27b88). Objective-C++ for the C++ engine bridge (neSceneManager:: /
+//  neEngine::).  ARC.
 //
 //  Byte-decoded constants (float hex -> decimal):
 //    * gradient/scale transforms: 0.75 (0x3f400000), 1.25 (0x3fa00000), 1.0.
@@ -22,19 +23,21 @@
 //      minimumScaleFactor 0.5 (0x3f000000).
 //    * background-art vertical nudge: info 0.0 (DAT_000274f4), gift 4.0
 //      (DAT_000274f8 = 0x40800000).
-//    * UIViewAnimationOptionAllowUserInteraction = 2, UIControlEventTouchUpInside
+//    * UIViewAnimationOptionAllowUserInteraction = 2,
+//    UIControlEventTouchUpInside
 //      = 0x40, UITextAlignmentCenter = 1.
 //  Title-label frames (x, y, w, 40): info (35, -2, 250), gift (40, 3, 187).
 //  Button frames use the "info_icon" image's own size for w/h; button Y = 208
-//  (info) / 121 (gift). X positions: single button centred (info 123 / gift 95);
-//  with both buttons the "yes"/other sits right (info 205 / gift 160) and the
-//  "no"/cancel shifts left (info 38 / gift 30).
+//  (info) / 121 (gift). X positions: single button centred (info 123 / gift
+//  95); with both buttons the "yes"/other sits right (info 205 / gift 160) and
+//  the "no"/cancel shifts left (info 38 / gift 30).
 //
-//  NEON note: the background-art centre position is runtime-computed from the loaded
-//  image .size (halved, added to the host-view half-extent, plus the type Y offset)
-//  and is not a recoverable constant; it is faithfully modeled above.
-//  The remaining two pieces are now exactly recovered:
-//  * Y offset table @0x274f4 = {0.0f (info), 4.0f (gift)}: confirmed by read_memory;
+//  NEON note: the background-art centre position is runtime-computed from the
+//  loaded image .size (halved, added to the host-view half-extent, plus the
+//  type Y offset) and is not a recoverable constant; it is faithfully modeled
+//  above. The remaining two pieces are now exactly recovered:
+//  * Y offset table @0x274f4 = {0.0f (info), 4.0f (gift)}: confirmed by
+//  read_memory;
 //    the Thumb-2 sequence `add.eq r0,#0x4; vldr.32 s16,[r0]` selects the slot.
 //  * Message CustomTextView frame: gift {30.0f,34.0f,207.0f,79.0f} / info
 //    {35.0f,32.0f,250.0f,168.0f} — whole-number floats materialised as movt
@@ -44,19 +47,19 @@
 
 #import "CustomAlertView.h"
 
-#import "CustomTextView.h"      // display-only message text view
-#import "AppFont.h"             // AppMaruFontName (title/message), AppFontName (buttons)
-#import "neEngineBridge.h"      // neSceneManager::rootViewController, neEngine::playSystemSe
+#import "AppFont.h"        // AppMaruFontName (title/message), AppFontName (buttons)
+#import "CustomTextView.h" // display-only message text view
+#import "neEngineBridge.h" // neSceneManager::rootViewController, neEngine::playSystemSe
 
 @implementation CustomAlertView {
-    UIImageView   *mBgImageView;    // +0x3c  background art; parents title/message/buttons
-    UILabel       *_title;          // +0x40
-    CustomTextView *_text;          // +0x44
-    int            m_OpenAnimeType;  // +0x48
-    int            m_CloseAnimeType; // +0x4c
+    UIImageView *mBgImageView; // +0x3c  background art; parents title/message/buttons
+    UILabel *_title;           // +0x40
+    CustomTextView *_text;     // +0x44
+    int m_OpenAnimeType;       // +0x48
+    int m_CloseAnimeType;      // +0x4c
 }
 
-@synthesize delegate = mDelegate;   // +0x38 (weak)
+@synthesize delegate = mDelegate; // +0x38 (weak)
 
 #pragma mark - Init
 
@@ -65,7 +68,7 @@
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
-             otherButtonTitle:(NSString *)otherButtonTitle {
+            otherButtonTitle:(NSString *)otherButtonTitle {
     UIViewController *rootVC = neSceneManager::rootViewController();
     UIView *view = rootVC.view;
     CGPoint center = view ? view.center : CGPointZero;
@@ -75,23 +78,24 @@
                         title:title
                       message:message
             cancelButtonTitle:cancelButtonTitle
-              otherButtonTitle:otherButtonTitle];
+             otherButtonTitle:otherButtonTitle];
 }
 
-// @ 0x26a60 — install into `view`, defaulting the centre (CGPointZero -> view centre).
+// @ 0x26a60 — install into `view`, defaulting the centre (CGPointZero -> view
+// centre).
 - (instancetype)initWithView:(UIView *)view
                         type:(CustomAlertViewType)type
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
-             otherButtonTitle:(NSString *)otherButtonTitle {
+            otherButtonTitle:(NSString *)otherButtonTitle {
     return [self initWithView:view
                        center:CGPointZero
                          type:type
                         title:title
                       message:message
             cancelButtonTitle:cancelButtonTitle
-              otherButtonTitle:otherButtonTitle];
+             otherButtonTitle:otherButtonTitle];
 }
 
 // @ 0x26abc — designated initializer.
@@ -101,7 +105,7 @@
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
-             otherButtonTitle:(NSString *)otherButtonTitle {
+            otherButtonTitle:(NSString *)otherButtonTitle {
     // Full-host-view frame; this view is a transparent, interaction-enabled
     // overlay that hosts the background art. UIImageView disables interaction by
     // default, so it is re-enabled explicitly.
@@ -127,21 +131,21 @@
     } else if (type == CustomAlertViewTypeGift) {
         bgName = @"gift_bg";
     } else {
-        return self;   // unknown type: nothing to build.
+        return self; // unknown type: nothing to build.
     }
     UIImage *bgImage = [UIImage imageNamed:bgName];
     mBgImageView = [[UIImageView alloc] initWithImage:bgImage];
 
     // Size to the art; centre in the host view (gift art nudged down 4pt). When a
-    // non-zero centre is supplied, position there instead. The Y nudge is read from
-    // a 2-entry float table @ 0x274f4 = {0.0f, 4.0f} (info, gift), selected by
-    // `add.eq r0,#0x4; vldr.32 s16,[r0]` — exact, not a guess.
+    // non-zero centre is supplied, position there instead. The Y nudge is read
+    // from a 2-entry float table @ 0x274f4 = {0.0f, 4.0f} (info, gift), selected
+    // by `add.eq r0,#0x4; vldr.32 s16,[r0]` — exact, not a guess.
     CGSize bgSize = bgImage.size;
     CGFloat yOffset = (type == CustomAlertViewTypeGift) ? 4.0f : 0.0f;
     mBgImageView.frame = CGRectMake(0.0f, 0.0f, bgSize.width, bgSize.height);
     if (CGPointEqualToPoint(center, CGPointZero)) {
-        mBgImageView.center = CGPointMake(CGRectGetWidth(vframe) * 0.5f,
-                                          CGRectGetHeight(vframe) * 0.5f + yOffset);
+        mBgImageView.center =
+            CGPointMake(CGRectGetWidth(vframe) * 0.5f, CGRectGetHeight(vframe) * 0.5f + yOffset);
     } else {
         mBgImageView.center = CGPointMake(center.x, center.y + yOffset);
     }
@@ -150,9 +154,8 @@
     mBgImageView.hidden = YES;
 
     // Type-dependent title-label frame.
-    CGRect titleFrame = (type == CustomAlertViewTypeGift)
-                            ? CGRectMake(40.0f, 3.0f, 187.0f, 40.0f)
-                            : CGRectMake(35.0f, -2.0f, 250.0f, 40.0f);
+    CGRect titleFrame = (type == CustomAlertViewTypeGift) ? CGRectMake(40.0f, 3.0f, 187.0f, 40.0f) :
+                                                            CGRectMake(35.0f, -2.0f, 250.0f, 40.0f);
 
     UIColor *textGray = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
 
@@ -173,16 +176,16 @@
 
     // --- Message ---
     if (message != nil) {
-        // Frame recovered from the disassembly at @ 0x26e10 (gift) / 0x26e64 (info):
-        // the coordinates are whole-number floats materialized as `movs rN,#0;
-        // movt rN,#hi` immediates, then spilled to the stack and passed into
+        // Frame recovered from the disassembly at @ 0x26e10 (gift) / 0x26e64
+        // (info): the coordinates are whole-number floats materialized as `movs
+        // rN,#0; movt rN,#hi` immediates, then spilled to the stack and passed into
         // initWithFrame: as {x=r6, y=r5, w=r8, h=r4}. The decompiler dropped them
         // in the CGRect reassembly across those spills; read straight off the movt
         // halfwords: gift {0x41f00000,0x42080000,0x434f0000,0x429e0000} and
         // info {0x420c0000,0x42000000,0x437a0000,0x43280000}.
-        CGRect messageFrame = (type == CustomAlertViewTypeGift)
-                                  ? CGRectMake(30.0f, 34.0f, 207.0f, 79.0f)
-                                  : CGRectMake(35.0f, 32.0f, 250.0f, 168.0f);
+        CGRect messageFrame = (type == CustomAlertViewTypeGift) ?
+                                  CGRectMake(30.0f, 34.0f, 207.0f, 79.0f) :
+                                  CGRectMake(35.0f, 32.0f, 250.0f, 168.0f);
         _text = [[CustomTextView alloc] initWithFrame:messageFrame];
         _text.backgroundColor = [UIColor clearColor];
         _text.textColor = textGray;
@@ -194,16 +197,16 @@
 
     // --- Buttons (both share the "info_icon" background art) ---
     UIImage *yesImage = [UIImage imageNamed:@"info_icon"];
-    UIImage *noImage  = [UIImage imageNamed:@"info_icon"];
+    UIImage *noImage = [UIImage imageNamed:@"info_icon"];
     CGSize yesSize = yesImage.size;
-    CGSize noSize  = noImage.size;
+    CGSize noSize = noImage.size;
 
     // Positions per type (see header comment for the decode).
-    CGFloat buttonY  = (type == CustomAlertViewTypeGift) ? 121.0f : 208.0f;
-    CGFloat yesX     = (type == CustomAlertViewTypeGift) ? 160.0f : 205.0f;   // both-buttons "yes"
-    CGFloat centredX = (type == CustomAlertViewTypeGift) ?  95.0f : 123.0f;   // single-button centre
-    CGFloat noLeftX  = (type == CustomAlertViewTypeGift) ?  30.0f :  38.0f;   // both-buttons "no"
-    CGFloat noX      = centredX;
+    CGFloat buttonY = (type == CustomAlertViewTypeGift) ? 121.0f : 208.0f;
+    CGFloat yesX = (type == CustomAlertViewTypeGift) ? 160.0f : 205.0f;    // both-buttons "yes"
+    CGFloat centredX = (type == CustomAlertViewTypeGift) ? 95.0f : 123.0f; // single-button centre
+    CGFloat noLeftX = (type == CustomAlertViewTypeGift) ? 30.0f : 38.0f;   // both-buttons "no"
+    CGFloat noX = centredX;
 
     if (otherButtonTitle != nil) {
         // With no cancel button, the "yes" button is centred instead.
@@ -233,8 +236,8 @@
         [noButton setBackgroundImage:noImage forState:UIControlStateNormal];
         [mBgImageView addSubview:noButton];
         [noButton addTarget:self
-                     action:@selector(clickedNoButton:)
-           forControlEvents:UIControlEventTouchUpInside];
+                      action:@selector(clickedNoButton:)
+            forControlEvents:UIControlEventTouchUpInside];
     }
 
     return self;
@@ -291,20 +294,21 @@
         // Pop-open bounce: 0.75 -> 1.25 (0.25s) -> 1.0 (0.25s).
         mBgImageView.transform = CGAffineTransformMakeScale(0.75f, 0.75f);
         [UIView animateWithDuration:0.25
-                              delay:0.0
-                            options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{    // @ 0x27674 — overshoot to 1.25
-            self->mBgImageView.transform = CGAffineTransformMakeScale(1.25f, 1.25f);
-        }
-                         completion:^(BOOL finished) {
-            [UIView animateWithDuration:0.25
-                                  delay:0.0
-                                options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{    // @ 0x27748 — settle back to 1.0
-                self->mBgImageView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
+            delay:0.0
+            options:UIViewAnimationOptionAllowUserInteraction
+            animations:^{ // @ 0x27674 — overshoot to 1.25
+              self->mBgImageView.transform = CGAffineTransformMakeScale(1.25f, 1.25f);
             }
-                             completion:nil];
-        }];
+            completion:^(BOOL finished) {
+              [UIView animateWithDuration:0.25
+                                    delay:0.0
+                                  options:UIViewAnimationOptionAllowUserInteraction
+                               animations:^{ // @ 0x27748 — settle back to 1.0
+                                 self->mBgImageView.transform =
+                                     CGAffineTransformMakeScale(1.0f, 1.0f);
+                               }
+                               completion:nil];
+            }];
     } else {
         // Fade in over 0.75s.
         mBgImageView.alpha = 0.0f;
@@ -318,25 +322,27 @@
 // @ 0x277b8
 - (void)removeView {
     if (m_CloseAnimeType == CustomAlertViewAnimeTypeScale) {
-        // Reverse bounce: 1.0 -> 1.25 (0.25s) -> collapse to 0 (0.25s), then remove.
+        // Reverse bounce: 1.0 -> 1.25 (0.25s) -> collapse to 0 (0.25s), then
+        // remove.
         mBgImageView.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
         [UIView animateWithDuration:0.25
-                              delay:0.0
-                            options:UIViewAnimationOptionAllowUserInteraction
-                         animations:^{    // @ 0x27958 — overshoot to 1.25
-            self->mBgImageView.transform = CGAffineTransformMakeScale(1.25f, 1.25f);
-        }
-                         completion:^(BOOL finished) {
-            [UIView animateWithDuration:0.25
-                                  delay:0.0
-                                options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{    // @ 0x27a48 — collapse to zero (setTransform: all-zero matrix)
-                self->mBgImageView.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
+            delay:0.0
+            options:UIViewAnimationOptionAllowUserInteraction
+            animations:^{ // @ 0x27958 — overshoot to 1.25
+              self->mBgImageView.transform = CGAffineTransformMakeScale(1.25f, 1.25f);
             }
-                             completion:^(BOOL done) {
-                [self endCloseAnimation];
+            completion:^(BOOL finished) {
+              [UIView animateWithDuration:0.25
+                  delay:0.0
+                  options:UIViewAnimationOptionAllowUserInteraction
+                  animations:^{ // @ 0x27a48 — collapse to zero (setTransform:
+                                // all-zero matrix)
+                    self->mBgImageView.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
+                  }
+                  completion:^(BOOL done) {
+                    [self endCloseAnimation];
+                  }];
             }];
-        }];
     } else {
         // Fade out over 0.1s, then remove on stop.
         mBgImageView.alpha = 1.0f;

@@ -27,13 +27,23 @@
     return self;
 }
 
-// Trivial ivar getters. Ghidra: acMusicId @ 0x854e4, title @ 0x854f4, genre @ 0x85504,
-// itemURL @ 0x85514, sampleURL @ 0x85524.
-- (int)acMusicId        { return m_AcMusicId; }
-- (NSString *)title      { return m_Title; }
-- (NSString *)genre      { return m_Genre; }
-- (NSString *)itemURL    { return m_ItemURL; }
-- (NSString *)sampleURL  { return m_SampleURL; }
+// Trivial ivar getters. Ghidra: acMusicId @ 0x854e4, title @ 0x854f4, genre @
+// 0x85504, itemURL @ 0x85514, sampleURL @ 0x85524.
+- (int)acMusicId {
+    return m_AcMusicId;
+}
+- (NSString *)title {
+    return m_Title;
+}
+- (NSString *)genre {
+    return m_Genre;
+}
+- (NSString *)itemURL {
+    return m_ItemURL;
+}
+- (NSString *)sampleURL {
+    return m_SampleURL;
+}
 
 // @ 0x85418 — the purchased arcade-music file exists on disk.
 - (BOOL)fileExist {

@@ -42,16 +42,16 @@ static const unsigned char kBFInitBytes[] = {
 
 // Read a big-endian uint32 from a 4-byte buffer.
 static inline uint32_t BF_ReadU32BE(const unsigned char *p) {
-    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
-           ((uint32_t)p[2] << 8) | (uint32_t)p[3];
+    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | (uint32_t)p[3];
 }
 
 // Fixed CBC IV (Ghidra: DAT_0012e6c0). Confirmed constant, matches bfcodec's
 // kDefaultIv.
-static const uint8_t kInitialIV[8] = { 0xE3, 0x66, 0x31, 0xDA, 0x2C, 0x85, 0xA0, 0x64 };
+static const uint8_t kInitialIV[8] = {0xE3, 0x66, 0x31, 0xDA, 0x2C, 0x85, 0xA0, 0x64};
 
 // NON-STANDARD F: the ONLY deviation from textbook Blowfish. It combines the
-// S-box outputs as (S0[a] + S1[b]) ^ (S2[c] + S3[d]); standard Blowfish would be
+// S-box outputs as (S0[a] + S1[b]) ^ (S2[c] + S3[d]); standard Blowfish would
+// be
 // ((S0[a] + S1[b]) ^ S2[c]) + S3[d]. Confirmed against the RB-derived reference
 // (~/dev-paused/bfcodec/src/bfcodec.c: bf_f) and Ghidra FUN_0005b40c.
 static inline uint32_t BF_F(const BlowfishCtx *c, uint32_t x) {
@@ -93,21 +93,22 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 }
 
 @implementation BFCodec {
-    BlowfishCtx *_blf;   // Ghidra ivar _blf
-    uint8_t _iv[8];      // Ghidra ivar _iv
+    BlowfishCtx *_blf; // Ghidra ivar _blf
+    uint8_t _iv[8];    // Ghidra ivar _iv
 }
 
 // @ 0x5ac14
 - (instancetype)init {
     if ((self = [super init])) {
-        memset(_iv, 0, sizeof(_iv));                     // Ghidra: _iv zeroed
+        memset(_iv, 0, sizeof(_iv));                       // Ghidra: _iv zeroed
         _blf = (BlowfishCtx *)malloc(sizeof(BlowfishCtx)); // operator new(0x1048)
-        blowfishCtxClear(_blf);                          // @ 0x5b244
+        blowfishCtxClear(_blf);                            // @ 0x5b244
     }
     return self;
 }
 
-// @ 0x5b154 — KEEP: frees the malloc'd Blowfish context (wipes key material first).
+// @ 0x5b154 — KEEP: frees the malloc'd Blowfish context (wipes key material
+// first).
 - (void)dealloc {
     if (_blf) {
         blowfishCtxClear(_blf); // @ 0x5b258 — zeroize key material before releasing
@@ -175,29 +176,51 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     data.length = padded + 8;
     uint8_t *bytes = (uint8_t *)data.mutableBytes;
 
-    uint32_t cl = ((uint32_t)_iv[0] << 24) | ((uint32_t)_iv[1] << 16) |
-                  ((uint32_t)_iv[2] << 8) | _iv[3];
-    uint32_t cr = ((uint32_t)_iv[4] << 24) | ((uint32_t)_iv[5] << 16) |
-                  ((uint32_t)_iv[6] << 8) | _iv[7];
+    uint32_t cl =
+        ((uint32_t)_iv[0] << 24) | ((uint32_t)_iv[1] << 16) | ((uint32_t)_iv[2] << 8) | _iv[3];
+    uint32_t cr =
+        ((uint32_t)_iv[4] << 24) | ((uint32_t)_iv[5] << 16) | ((uint32_t)_iv[6] << 8) | _iv[7];
 
     NSUInteger in = 0, out = 0;
     while (in < origLen) {
         uint32_t l = 0, r = 0;
-        for (int k = 0; k < 4; k++) { l <<= 8; if (in < origLen) l |= bytes[in++]; }
-        for (int k = 0; k < 4; k++) { r <<= 8; if (in < origLen) r |= bytes[in++]; }
-        l ^= cl; r ^= cr;                 // CBC chain
+        for (int k = 0; k < 4; k++) {
+            l <<= 8;
+            if (in < origLen) {
+                l |= bytes[in++];
+            }
+        }
+        for (int k = 0; k < 4; k++) {
+            r <<= 8;
+            if (in < origLen) {
+                r |= bytes[in++];
+            }
+        }
+        l ^= cl;
+        r ^= cr; // CBC chain
         BF_EncryptBlock(_blf, &l, &r);
-        bytes[out] = l >> 24; bytes[out + 1] = l >> 16; bytes[out + 2] = l >> 8; bytes[out + 3] = l;
-        bytes[out + 4] = r >> 24; bytes[out + 5] = r >> 16; bytes[out + 6] = r >> 8; bytes[out + 7] = r;
-        cl = l; cr = r;
+        bytes[out] = l >> 24;
+        bytes[out + 1] = l >> 16;
+        bytes[out + 2] = l >> 8;
+        bytes[out + 3] = l;
+        bytes[out + 4] = r >> 24;
+        bytes[out + 5] = r >> 16;
+        bytes[out + 6] = r >> 8;
+        bytes[out + 7] = r;
+        cl = l;
+        cr = r;
         out += 8;
     }
     // Trailer: original length, then padded length (low 3 bits cleared).
-    bytes[out] = origLen >> 24; bytes[out + 1] = origLen >> 16;
-    bytes[out + 2] = origLen >> 8; bytes[out + 3] = origLen;
+    bytes[out] = origLen >> 24;
+    bytes[out + 1] = origLen >> 16;
+    bytes[out + 2] = origLen >> 8;
+    bytes[out + 3] = origLen;
     uint32_t pl = (uint32_t)(origLen + 7);
-    bytes[out + 4] = pl >> 24; bytes[out + 5] = pl >> 16;
-    bytes[out + 6] = pl >> 8; bytes[out + 7] = pl & 0xf8;
+    bytes[out + 4] = pl >> 24;
+    bytes[out + 5] = pl >> 16;
+    bytes[out + 6] = pl >> 8;
+    bytes[out + 7] = pl & 0xf8;
     // Ghidra returns (origLen + 0xf) & ~7 == padded + 8: the full ciphertext
     // length including the 8-byte trailer, not the padded body alone.
     return (unsigned int)(padded + 8);
@@ -221,22 +244,40 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     }
 
     uint8_t *bytes = (uint8_t *)data.mutableBytes;
-    uint32_t cl = ((uint32_t)_iv[0] << 24) | ((uint32_t)_iv[1] << 16) |
-                  ((uint32_t)_iv[2] << 8) | _iv[3];
-    uint32_t cr = ((uint32_t)_iv[4] << 24) | ((uint32_t)_iv[5] << 16) |
-                  ((uint32_t)_iv[6] << 8) | _iv[7];
+    uint32_t cl =
+        ((uint32_t)_iv[0] << 24) | ((uint32_t)_iv[1] << 16) | ((uint32_t)_iv[2] << 8) | _iv[3];
+    uint32_t cr =
+        ((uint32_t)_iv[4] << 24) | ((uint32_t)_iv[5] << 16) | ((uint32_t)_iv[6] << 8) | _iv[7];
 
     NSUInteger in = 0, out = 0;
     while (in < body) {
         uint32_t l = 0, r = 0;
-        for (int k = 0; k < 4; k++) { l <<= 8; if (in < body) l |= bytes[in++]; }
-        for (int k = 0; k < 4; k++) { r <<= 8; if (in < body) r |= bytes[in++]; }
+        for (int k = 0; k < 4; k++) {
+            l <<= 8;
+            if (in < body) {
+                l |= bytes[in++];
+            }
+        }
+        for (int k = 0; k < 4; k++) {
+            r <<= 8;
+            if (in < body) {
+                r |= bytes[in++];
+            }
+        }
         uint32_t cipherL = l, cipherR = r;
         BF_DecryptBlock(_blf, &l, &r);
-        l ^= cl; r ^= cr;                 // CBC chain (previous ciphertext)
-        bytes[out] = l >> 24; bytes[out + 1] = l >> 16; bytes[out + 2] = l >> 8; bytes[out + 3] = l;
-        bytes[out + 4] = r >> 24; bytes[out + 5] = r >> 16; bytes[out + 6] = r >> 8; bytes[out + 7] = r;
-        cl = cipherL; cr = cipherR;
+        l ^= cl;
+        r ^= cr; // CBC chain (previous ciphertext)
+        bytes[out] = l >> 24;
+        bytes[out + 1] = l >> 16;
+        bytes[out + 2] = l >> 8;
+        bytes[out + 3] = l;
+        bytes[out + 4] = r >> 24;
+        bytes[out + 5] = r >> 16;
+        bytes[out + 6] = r >> 8;
+        bytes[out + 7] = r;
+        cl = cipherL;
+        cr = cipherR;
         out += 8;
     }
     data.length = origLen;

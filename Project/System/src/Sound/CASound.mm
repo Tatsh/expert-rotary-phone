@@ -28,9 +28,9 @@ void CASound::freeBuffer() {
     m_bufferSize = 0;
 }
 
-// Ghidra: caSourceRead @ 0x27e10 — the mixer render read. Copies from the current byte cursor,
-// clamping each copy to the buffer end; a looped source wraps (and clears the pass total), a
-// one-shot stops at the end.
+// Ghidra: caSourceRead @ 0x27e10 — the mixer render read. Copies from the
+// current byte cursor, clamping each copy to the buffer end; a looped source
+// wraps (and clears the pass total), a one-shot stops at the end.
 size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const {
     if (bytes == 0) {
         return 0;
@@ -99,31 +99,33 @@ bool CASound::loadURL(CFURLRef url) {
 bool CASound::configureFormat(ExtAudioFileRef file) {
     AudioStreamBasicDescription fileFormat = {};
     UInt32 size = sizeof(fileFormat);
-    if (ExtAudioFileGetProperty(file, kExtAudioFileProperty_FileDataFormat, &size, &fileFormat) != noErr) {
+    if (ExtAudioFileGetProperty(file, kExtAudioFileProperty_FileDataFormat, &size, &fileFormat) !=
+        noErr) {
         NSLog(@"ExtFileDecoder init failed: kExtAudioFileProperty_FileDataFormat");
         return false;
     }
 
     SInt64 lengthFrames = 0;
     size = sizeof(lengthFrames);
-    if (ExtAudioFileGetProperty(file, kExtAudioFileProperty_FileLengthFrames, &size, &lengthFrames) != noErr) {
+    if (ExtAudioFileGetProperty(
+            file, kExtAudioFileProperty_FileLengthFrames, &size, &lengthFrames) != noErr) {
         NSLog(@"ExtFileDecoder init failed: kExtAudioFileProperty_FileLengthFrames");
         return false;
     }
 
     UInt32 channels = fileFormat.mChannelsPerFrame;
-    UInt32 bytesPerFrame = channels * 2;   // signed 16-bit, interleaved
+    UInt32 bytesPerFrame = channels * 2; // signed 16-bit, interleaved
 
-    m_format = fileFormat;                 // keep the sample rate
+    m_format = fileFormat; // keep the sample rate
     m_format.mFormatID = kAudioFormatLinearPCM;
-    m_format.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;  // 0xc
+    m_format.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked; // 0xc
     m_format.mBitsPerChannel = 16;
     m_format.mFramesPerPacket = 1;
     m_format.mBytesPerFrame = bytesPerFrame;
     m_format.mBytesPerPacket = bytesPerFrame;
     m_format.mChannelsPerFrame = channels;
 
-    m_frameCount = channels;               // (matches the decompiled +0x8 store)
+    m_frameCount = channels; // (matches the decompiled +0x8 store)
     m_bufferSize = (UInt32)(lengthFrames * bytesPerFrame);
     return true;
 }
@@ -137,9 +139,10 @@ bool CASound::readFrames(ExtAudioFileRef file) {
     free(m_buffer);
     m_buffer = calloc(1, m_bufferSize);
 
-    if (ExtAudioFileSetProperty(file, kExtAudioFileProperty_ClientDataFormat,
-                                sizeof(m_format), &m_format) != noErr) {
-        NSLog(@"ExtFileDecoder init memory decoder failed: kExtAudioFileProperty_ClientDataFormat");
+    if (ExtAudioFileSetProperty(
+            file, kExtAudioFileProperty_ClientDataFormat, sizeof(m_format), &m_format) != noErr) {
+        NSLog(@"ExtFileDecoder init memory decoder failed: "
+              @"kExtAudioFileProperty_ClientDataFormat");
         return false;
     }
 
@@ -159,7 +162,7 @@ bool CASound::readFrames(ExtAudioFileRef file) {
             return false;
         }
         if (frames == 0) {
-            break;   // end of file
+            break; // end of file
         }
         UInt32 consumed = frames * bytesPerFrame;
         remaining -= consumed;

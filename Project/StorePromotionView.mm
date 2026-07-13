@@ -25,19 +25,20 @@
     return self;
 }
 
-// @ 0x79c2c — a centered spinner, a front + next image view (next starts hidden via
-// alpha 0), a whole-view tap gesture, and on iPad a rounded, bordered, clipped frame.
+// @ 0x79c2c — a centered spinner, a front + next image view (next starts hidden
+// via alpha 0), a whole-view tap gesture, and on iPad a rounded, bordered,
+// clipped frame.
 - (void)SetupView {
-    m_Indicator =
-        [[UIActivityIndicatorView alloc]
-            initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-    m_Indicator.center = CGPointMake(CGRectGetWidth(self.bounds) / 2.0f,
-                                     CGRectGetHeight(self.bounds) / 2.0f);
+    m_Indicator = [[UIActivityIndicatorView alloc]
+        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    m_Indicator.center =
+        CGPointMake(CGRectGetWidth(self.bounds) / 2.0f, CGRectGetHeight(self.bounds) / 2.0f);
     [m_Indicator startAnimating];
     [self addSubview:m_Indicator];
 
     // Front/next image views are owned by the view hierarchy; the ivars are
-    // unretained aliases (matching the binary — autorelease + addSubview, no retain).
+    // unretained aliases (matching the binary — autorelease + addSubview, no
+    // retain).
     m_FrontImageView = [[UIImageView alloc] initWithFrame:self.bounds];
     [self addSubview:m_FrontImageView];
     m_FrontImageView.hidden = YES;
@@ -94,18 +95,23 @@
     [m_ImageDownloader removeObject:downloader];
 }
 
-// @ 0x7a2a4 — download failed: just drop the downloader (no slot gets an image).
+// @ 0x7a2a4 — download failed: just drop the downloader (no slot gets an
+// image).
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     [m_ImageDownloader removeObject:downloader];
 }
 
-// @ 0x7a4b4 — record the image; if this is the first, show it and start rotating.
+// @ 0x7a4b4 — record the image; if this is the first, show it and start
+// rotating.
 - (void)setImage:(UIImage *)image Index:(int)index {
     NSDictionary *entry = m_PromotionDataArray[index];
-    NSDictionary *updated = [NSDictionary dictionaryWithObjectsAndKeys:
-                             entry[@"ID"], @"ID",
-                             entry[@"ImageURL"], @"ImageURL",
-                             image, @"image", nil];
+    NSDictionary *updated = [NSDictionary dictionaryWithObjectsAndKeys:entry[@"ID"],
+                                                                       @"ID",
+                                                                       entry[@"ImageURL"],
+                                                                       @"ImageURL",
+                                                                       image,
+                                                                       @"image",
+                                                                       nil];
     [m_PromotionDataArray replaceObjectAtIndex:index withObject:updated];
 
     if (m_Index < 0) {
@@ -122,7 +128,8 @@
     return (int)m_PromotionDataArray.count;
 }
 
-// @ 0x7a2e4 — advance to the next promo that has a loaded image, cross-fading it in.
+// @ 0x7a2e4 — advance to the next promo that has a loaded image, cross-fading
+// it in.
 - (void)setNext {
     int count = [self getImageCount];
     if (count <= 0) {
@@ -152,7 +159,8 @@
     } while (candidate != m_Index);
 }
 
-// @ 0x7a454 — the fade finished: promote next -> front, reset next to invisible.
+// @ 0x7a454 — the fade finished: promote next -> front, reset next to
+// invisible.
 - (void)nextShowEnd {
     m_FrontImageView.image = m_NextImageView.image;
     m_NextImageView.alpha = 0.0f;

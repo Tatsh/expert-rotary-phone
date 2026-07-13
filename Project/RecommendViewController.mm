@@ -2,36 +2,39 @@
 //  RecommendViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The "friend recommend" list.
-//  Objective-C++ (.mm) because it drives the C++ "ne" engine singletons via neEngineBridge (scene
-//  manager, root view controller, system SEs) and the C++ MusicSelTask re-sort routine.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The "friend
+//  recommend" list. Objective-C++ (.mm) because it drives the C++ "ne" engine
+//  singletons via neEngineBridge (scene manager, root view controller, system
+//  SEs) and the C++ MusicSelTask re-sort routine.
 //
 
 #import "RecommendViewController.h"
 
 #import "DownloadMain.h"
+#import "MainTask.h" // MusicSelTask == MainTask: the real rebuildList() re-sort method
 #import "RecommendListCell.h"
 #import "StoreViewController.h"
-#import "MainTask.h"          // MusicSelTask == MainTask: the real rebuildList() re-sort method
 #import "neEngineBridge.h"
 
-// Private methods, declared up here so the file-static block-invoke helpers below (which run
-// before @implementation) can send them to self.
+// Private methods, declared up here so the file-static block-invoke helpers
+// below (which run before @implementation) can send them to self.
 @interface RecommendViewController ()
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
 - (void)touchedBackButton:(id)sender;
 @end
 
-// The app's root navigation host (bridged UIViewController on the C++ scene manager).
+// The app's root navigation host (bridged UIViewController on the C++ scene
+// manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
-// @ 0xbc2cc — the recommend list's sort comparator (binary symbol "compareByLocalizedName", used
-// via -sortedArrayUsingFunction:context:). It boxes/reads both RecommendData records and orders by
-// the record's date string (offset +0xc) with -localizedCaseInsensitiveCompare:, receiver = the
-// second element, so the list ends up newest-first. Best-effort.
+// @ 0xbc2cc — the recommend list's sort comparator (binary symbol
+// "compareByLocalizedName", used via -sortedArrayUsingFunction:context:). It
+// boxes/reads both RecommendData records and orders by the record's date string
+// (offset +0xc) with -localizedCaseInsensitiveCompare:, receiver = the second
+// element, so the list ends up newest-first. Best-effort.
 static NSInteger RecommendCompareByDate(id obj1, id obj2, void *context) {
     RecommendData a;
     RecommendData b;
@@ -76,14 +79,14 @@ static void settingNavSetFrameB(RecommendViewController *self) {
 // and an unnamed completion that calls [self endOpenAnimation] (@ ~0xbca58).
 static void settingNavAnimateShow(RecommendViewController *self) {
     [UIView animateWithDuration:0.25
-                          delay:0.0
-                        options:UIViewAnimationOptionAllowUserInteraction
-                     animations:^{
-                         settingNavSetFrameB(self);   // Ghidra: settingNavSetFrameB @ 0xbc9c0
-                     }
-                     completion:^(BOOL finished) {
-                         [self endOpenAnimation];      // completion block @ ~0xbca58
-                     }];
+        delay:0.0
+        options:UIViewAnimationOptionAllowUserInteraction
+        animations:^{
+          settingNavSetFrameB(self); // Ghidra: settingNavSetFrameB @ 0xbc9c0
+        }
+        completion:^(BOOL finished) {
+          [self endOpenAnimation]; // completion block @ ~0xbca58
+        }];
 }
 
 // Ghidra: settingNavSetFrameC @ 0xbccb8
@@ -111,19 +114,20 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 }
 
 @implementation RecommendViewController {
-    UIViewController *_dummyView;         // dimmed spinner overlay (shown during a store re-sort)
-    StoreViewController *_storeView;      // the store opened on a tapped recommendation
-    NSArray *_recommendDataArray;         // boxed RecommendData rows (date-sorted)
-    BOOL _isAnimationing;                 // an open/close animation is in flight
-    BOOL _isBack;                         // the back transition has begun (latches taps out)
+    UIViewController *_dummyView;    // dimmed spinner overlay (shown during a store re-sort)
+    StoreViewController *_storeView; // the store opened on a tapped recommendation
+    NSArray *_recommendDataArray;    // boxed RecommendData rows (date-sorted)
+    BOOL _isAnimationing;            // an open/close animation is in flight
+    BOOL _isBack;                    // the back transition has begun (latches taps out)
 }
 
 @synthesize musicSelTask = _pMusicSelTask;
 @synthesize animationing = _isAnimationing;
 
-// @ 0xbbd68 — build the transparent, separator-less table (a clear 20-pt spacer header, the
-// "friman" backdrop on phone / clear on iPad, and a hidden dimmed loading overlay with a large
-// spinner) and load + date-sort the recommend list.
+// @ 0xbbd68 — build the transparent, separator-less table (a clear 20-pt spacer
+// header, the "friman" backdrop on phone / clear on iPad, and a hidden dimmed
+// loading overlay with a large spinner) and load + date-sort the recommend
+// list.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if (!(self = [super initWithStyle:style])) {
         return nil;
@@ -133,12 +137,13 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.tableView.separatorColor = [UIColor clearColor];
 
-    _recommendDataArray =
-        [[[DownloadMain getInstance] recommendDataArray] sortedArrayUsingFunction:RecommendCompareByDate
-                                                                          context:NULL];
+    _recommendDataArray = [[[DownloadMain getInstance] recommendDataArray]
+        sortedArrayUsingFunction:RecommendCompareByDate
+                         context:NULL];
 
     // Clear 20-pt spacer header.
-    UIView *header = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, viewFrame.size.width, 20.0f)];
+    UIView *header =
+        [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, viewFrame.size.width, 20.0f)];
     header.backgroundColor = [UIColor clearColor];
     self.tableView.tableHeaderView = header;
 
@@ -146,7 +151,8 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     neSceneManager::shared();
     if (neSceneManager::isPadDisplay()) {
         float osVersion = UIDevice.currentDevice.systemVersion.floatValue;
-        self.tableView.contentInset = UIEdgeInsetsMake(osVersion < 7.0f ? -20.0f : -10.0f, 0.0f, 0.0f, 0.0f);
+        self.tableView.contentInset =
+            UIEdgeInsetsMake(osVersion < 7.0f ? -20.0f : -10.0f, 0.0f, 0.0f, 0.0f);
     }
 
     // Backdrop: "friman_bg" image (phone) / clear (iPad).
@@ -161,7 +167,8 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
         self.tableView.backgroundView = nil;
     }
 
-    // Dimmed "loading" overlay (transparent white) + large spinner, hidden until a store re-sort.
+    // Dimmed "loading" overlay (transparent white) + large spinner, hidden until
+    // a store re-sort.
     _dummyView = [[UIViewController alloc] init];
     _dummyView.view.frame = self.view.frame;
     _dummyView.view.backgroundColor = [UIColor colorWithWhite:0.5f alpha:0.0f];
@@ -179,24 +186,31 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     return self;
 }
 
-// @ 0xbc30c — keep the C++ task pointer, (re)build the table via initWithStyle:, wrap self in a
-// UINavigationController (with a back button on phone) and return that nav controller.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask __attribute__((objc_method_family(none))) {
+// @ 0xbc30c — keep the C++ task pointer, (re)build the table via
+// initWithStyle:, wrap self in a UINavigationController (with a back button on
+// phone) and return that nav controller.
+- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+    __attribute__((objc_method_family(none))) {
     _pMusicSelTask = musicSelTask;
-    UINavigationController *navigationController =
-        [[UINavigationController alloc] initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
+    UINavigationController *navigationController = [[UINavigationController alloc]
+        initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
     neSceneManager::shared();
     if (!neSceneManager::isPadDisplay()) {
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backBtn = [[UIButton alloc] initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
+        UIButton *backBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-        [backBtn addTarget:self action:@selector(touchedBackButton:) forControlEvents:UIControlEventTouchUpInside];
-        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
+        [backBtn addTarget:self
+                      action:@selector(touchedBackButton:)
+            forControlEvents:UIControlEventTouchUpInside];
+        self.navigationItem.leftBarButtonItem =
+            [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     }
     return navigationController;
 }
 
-// dealloc @ 0xbc4c0 — object-only (releases _dummyView / _storeView, then super); omitted under ARC.
+// dealloc @ 0xbc4c0 — object-only (releases _dummyView / _storeView, then
+// super); omitted under ARC.
 
 // @ 0xbc524 — reveal the (transparent) overlay after load.
 - (void)viewDidLoad {
@@ -212,7 +226,8 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 
 #pragma mark - Open / close animation (shared modal-VC lifecycle)
 
-// @ 0xbc5e0 — fade the view + nav view in (phone) or slide the nav view up into place (iPad).
+// @ 0xbc5e0 — fade the view + nav view in (phone) or slide the nav view up into
+// place (iPad).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -229,24 +244,25 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
         self.view.alpha = 1.0f;
         self.navigationController.view.alpha = 1.0f;
     } else {
-        // iPad: park the nav view just below the root scene, then two-phase slide it into place.
-        // Phase 1 (~1/6 s): slide up to y = 420 (settingNavSetFrameA @ 0xbc888).
-        // Phase 2 (0.25 s, UIViewAnimationOptionAllowUserInteraction): settle to y = 470
+        // iPad: park the nav view just below the root scene, then two-phase slide
+        // it into place. Phase 1 (~1/6 s): slide up to y = 420 (settingNavSetFrameA
+        // @ 0xbc888). Phase 2 (0.25 s, UIViewAnimationOptionAllowUserInteraction):
+        // settle to y = 470
         //   (settingNavAnimateShow @ 0xbc920 → settingNavSetFrameB @ 0xbc9c0), then
         //   call -endOpenAnimation (completion block @ ~0xbca58).
         UIViewController *root = RootVC();
         CGRect f = self.navigationController.view.frame;
-        f.origin.y = root.view.frame.size.height;   // park below screen
+        f.origin.y = root.view.frame.size.height; // park below screen
         self.navigationController.view.frame = f;
         [UIView animateWithDuration:(1.0 / 6.0)
-                              delay:0.0
-                            options:UIViewAnimationOptionLayoutSubviews
-                         animations:^{
-                             settingNavSetFrameA(self);    // Ghidra: settingNavSetFrameA @ 0xbc888
-                         }
-                         completion:^(BOOL finished) {
-                             settingNavAnimateShow(self);  // Ghidra: settingNavAnimateShow @ 0xbc920
-                         }];
+            delay:0.0
+            options:UIViewAnimationOptionLayoutSubviews
+            animations:^{
+              settingNavSetFrameA(self); // Ghidra: settingNavSetFrameA @ 0xbc888
+            }
+            completion:^(BOOL finished) {
+              settingNavAnimateShow(self); // Ghidra: settingNavAnimateShow @ 0xbc920
+            }];
     }
     [UIView commitAnimations];
 }
@@ -256,8 +272,9 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     _isAnimationing = NO;
 }
 
-// @ 0xbcaa8 — if a store was opened on a tapped recommendation, re-sort the task's list (and hide
-// the overlay), then fade (phone) / slide (iPad) the panel out.
+// @ 0xbcaa8 — if a store was opened on a tapped recommendation, re-sort the
+// task's list (and hide the overlay), then fade (phone) / slide (iPad) the
+// panel out.
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -277,33 +294,35 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
         self.navigationController.view.alpha = 0.0f;
     } else {
         // iPad: two-phase slide out.
-        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (settingNavSetFrameC @ 0xbccb8).
-        // Phase 2 (~1/6 s): park below the root view (settingNavSetFrameFromView @ 0xbcdf8),
+        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (settingNavSetFrameC
+        // @ 0xbccb8). Phase 2 (~1/6 s): park below the root view
+        // (settingNavSetFrameFromView @ 0xbcdf8),
         //   then call -endCloseAnimation.
         UIViewController *root = RootVC();
         [UIView animateWithDuration:(1.0 / 6.0)
-                              delay:0.0
-                            options:UIViewAnimationOptionLayoutSubviews
-                         animations:^{
-                             settingNavSetFrameC(self);   // Ghidra: settingNavSetFrameC @ 0xbccb8
-                         }
-                         completion:^(BOOL finished) {
-                             [UIView animateWithDuration:(1.0 / 6.0)
-                                                   delay:0.0
-                                                 options:UIViewAnimationOptionLayoutSubviews
-                                              animations:^{
-                                                  // Ghidra: settingNavSetFrameFromView @ 0xbcdf8
-                                                  settingNavSetFrameFromView(self, root);
-                                              }
-                                              completion:^(BOOL finished2) {
-                                                  [self endCloseAnimation];
-                                              }];
-                         }];
+            delay:0.0
+            options:UIViewAnimationOptionLayoutSubviews
+            animations:^{
+              settingNavSetFrameC(self); // Ghidra: settingNavSetFrameC @ 0xbccb8
+            }
+            completion:^(BOOL finished) {
+              [UIView animateWithDuration:(1.0 / 6.0)
+                  delay:0.0
+                  options:UIViewAnimationOptionLayoutSubviews
+                  animations:^{
+                    // Ghidra: settingNavSetFrameFromView @ 0xbcdf8
+                    settingNavSetFrameFromView(self, root);
+                  }
+                  completion:^(BOOL finished2) {
+                    [self endCloseAnimation];
+                  }];
+            }];
     }
     [UIView commitAnimations];
 }
 
-// @ 0xbcf54 — remove the nav view and notify the root host that the recommend screen closed.
+// @ 0xbcf54 — remove the nav view and notify the root host that the recommend
+// screen closed.
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(RecommendEndCallBack)];
@@ -322,13 +341,16 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     return (_recommendDataArray != nil) ? (NSInteger)_recommendDataArray.count : 0;
 }
 
-// @ 0xbcfec — one RecommendListCell per pack (reused by "Cell%ld_%ld"), bound to its boxed record.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+// @ 0xbcfec — one RecommendListCell per pack (reused by "Cell%ld_%ld"), bound
+// to its boxed record.
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
     RecommendListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
-        cell = [[RecommendListCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+        cell = [[RecommendListCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                        reuseIdentifier:identifier];
     }
     [cell setRecommendData:[_recommendDataArray objectAtIndex:indexPath.row]];
     return cell;
@@ -339,10 +361,10 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     return nil;
 }
 
-// @ 0xbd0fc — a recommendation was tapped: open the in-app store on that pack (unless the back
-// transition has begun, or that store is already presented). Releases any previous store, builds
-// StoreViewController for the pack id, adds it over the nav view (phone) / root view (iPad) and
-// runs its show animation.
+// @ 0xbd0fc — a recommendation was tapped: open the in-app store on that pack
+// (unless the back transition has begun, or that store is already presented).
+// Releases any previous store, builds StoreViewController for the pack id, adds
+// it over the nav view (phone) / root view (iPad) and runs its show animation.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (_isBack) {
         return;
@@ -376,8 +398,9 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 
 #pragma mark - Actions
 
-// @ 0xbd2c4 — the back button: unless already backing out or the store is presented, latch the
-// back state, play the cancel SE, reveal the overlay and (after 0.1 s) fade the panel closed.
+// @ 0xbd2c4 — the back button: unless already backing out or the store is
+// presented, latch the back state, play the cancel SE, reveal the overlay and
+// (after 0.1 s) fade the panel closed.
 - (void)touchedBackButton:(id)sender {
     if (_isBack) {
         return;

@@ -16,8 +16,8 @@
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
                                  inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"musicId==%d and refId==%@",
-                         (int)musicId, refId];
+    request.predicate =
+        [NSPredicate predicateWithFormat:@"musicId==%d and refId==%@", (int)musicId, refId];
     NSArray *results = [context executeFetchRequest:request error:nil];
     return results.count ? results.lastObject : nil;
 }
@@ -32,8 +32,8 @@
     request.predicate = [NSPredicate predicateWithFormat:@"refId==%@", refId];
     request.fetchLimit = (NSUInteger)limit;
     // Newest first.
-    request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"updateDate"
-                                                             ascending:NO]];
+    request.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"updateDate"
+                                                               ascending:NO] ];
     return [context executeFetchRequest:request error:nil];
 }
 
@@ -44,10 +44,9 @@
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
                                  inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"category==%d and refId==%@",
-                         (int)category, refId];
-    request.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"title"
-                                                             ascending:YES]];
+    request.predicate =
+        [NSPredicate predicateWithFormat:@"category==%d and refId==%@", (int)category, refId];
+    request.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"title" ascending:YES] ];
     return [context executeFetchRequest:request error:nil];
 }
 
@@ -56,8 +55,9 @@
                                     refId:(NSString *)refId
                    inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
-    ArcadeScoreData *record = [NSEntityDescription insertNewObjectForEntityForName:@"ArcadeScoreData"
-                                                           inManagedObjectContext:context];
+    ArcadeScoreData *record =
+        [NSEntityDescription insertNewObjectForEntityForName:@"ArcadeScoreData"
+                                      inManagedObjectContext:context];
     record.musicId = [NSNumber numberWithShort:musicId];
     record.refId = refId;
     [record reset];

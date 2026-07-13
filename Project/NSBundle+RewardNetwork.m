@@ -13,18 +13,19 @@ static NSBundle *g_pRewardBundle = nil;
 
 @implementation NSBundle (RewardNetwork)
 
-// @ 0xfc0cc — dispatch_once lazy accessor for the RewardNetworkResources.bundle.
+// @ 0xfc0cc — dispatch_once lazy accessor for the
+// RewardNetworkResources.bundle.
 + (NSBundle *)rewardBundle {
     static dispatch_once_t onceToken;
-    // @ 0xfc100 — dispatch_once body: resolve RewardNetworkResources.bundle from the main
-    // bundle's resources and cache it (logging when it cannot be found).
+    // @ 0xfc100 — dispatch_once body: resolve RewardNetworkResources.bundle from
+    // the main bundle's resources and cache it (logging when it cannot be found).
     dispatch_once(&onceToken, ^{
-        NSString *path = [[NSBundle mainBundle] pathForResource:@"RewardNetworkResources"
-                                                         ofType:@"bundle"];
-        g_pRewardBundle = [NSBundle bundleWithPath:path];
-        if (g_pRewardBundle == nil) {
-            NSLog(@"RewardNetworkResources could not be found.");
-        }
+      NSString *path = [[NSBundle mainBundle] pathForResource:@"RewardNetworkResources"
+                                                       ofType:@"bundle"];
+      g_pRewardBundle = [NSBundle bundleWithPath:path];
+      if (g_pRewardBundle == nil) {
+          NSLog(@"RewardNetworkResources could not be found.");
+      }
     });
     return g_pRewardBundle;
 }

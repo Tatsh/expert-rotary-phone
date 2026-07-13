@@ -6,9 +6,9 @@
 //
 
 #import "StoreMusicInfo.h"
-#import "StoreUtil.h"
 #import "MusicManager.h"
 #import "RhUtil.h"
+#import "StoreUtil.h"
 
 // Clamp a level into [lo, hi]; sub-range values pass through.
 static int ClampLevel(int value, int lo, int hi) {
@@ -62,18 +62,39 @@ static int ClampLevel(int value, int lo, int hi) {
     return self;
 }
 
-- (int)musicID       { return m_MusicID; }       // @ 0x5676c
-- (NSString *)name       { return m_Name; }       // @ 0x5677c
-- (NSString *)artist     { return m_Artist; }     // @ 0x5678c
-- (NSString *)itemURL    { return m_ItemURL; }    // @ 0x5679c
-- (NSString *)artworkURL { return m_ArtworkURL; } // @ 0x567ac
-- (NSString *)sampleURL  { return m_SampleURL; }  // @ 0x567bc
-- (NSString *)iTunesURL  { return m_iTunesURL; }  // @ 0x567cc
-- (int)lvBasic  { return m_LvBasic; }  // @ 0x567dc
-- (int)lvMedium { return m_LvMedium; } // @ 0x567ec
-- (int)lvHard   { return m_LvHard; }   // @ 0x567fc
+- (int)musicID {
+    return m_MusicID;
+} // @ 0x5676c
+- (NSString *)name {
+    return m_Name;
+} // @ 0x5677c
+- (NSString *)artist {
+    return m_Artist;
+} // @ 0x5678c
+- (NSString *)itemURL {
+    return m_ItemURL;
+} // @ 0x5679c
+- (NSString *)artworkURL {
+    return m_ArtworkURL;
+} // @ 0x567ac
+- (NSString *)sampleURL {
+    return m_SampleURL;
+} // @ 0x567bc
+- (NSString *)iTunesURL {
+    return m_iTunesURL;
+} // @ 0x567cc
+- (int)lvBasic {
+    return m_LvBasic;
+} // @ 0x567dc
+- (int)lvMedium {
+    return m_LvMedium;
+} // @ 0x567ec
+- (int)lvHard {
+    return m_LvHard;
+} // @ 0x567fc
 
-// @ 0x56678 — the purchased song file exists on disk (path resolved by MusicManager).
+// @ 0x56678 — the purchased song file exists on disk (path resolved by
+// MusicManager).
 - (BOOL)fileExist {
     return RhFileExists([[MusicManager getInstance] getPathFromPurchased:m_MusicID]);
 }

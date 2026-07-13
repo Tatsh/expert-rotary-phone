@@ -4,7 +4,8 @@
 //
 //  One playable song listed inside a store pack: id, title/artist, purchase +
 //  sample + artwork + iTunes links, and the three difficulty levels (Basic /
-//  Medium / Hard, each clamped to a valid range). Built from a server dictionary.
+//  Medium / Hard, each clamped to a valid range). Built from a server
+//  dictionary.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin
 //  (initWithDictionary: @ 0x56398).
@@ -16,28 +17,28 @@
     int m_MusicID;
     NSString *m_Name;
     NSString *m_Artist;
-    NSString *m_ItemURL;      // pack/product link
-    NSString *m_SampleURL;    // preview clip (only kept if a valid http(s) URL)
-    NSString *m_ArtworkURL;   // jacket (only kept if valid)
-    NSString *m_iTunesURL;    // iTunes link (only kept if valid)
-    int m_LvBasic;            // 1..10
-    int m_LvMedium;           // 1..10
-    int m_LvHard;             // 1..11
+    NSString *m_ItemURL;    // pack/product link
+    NSString *m_SampleURL;  // preview clip (only kept if a valid http(s) URL)
+    NSString *m_ArtworkURL; // jacket (only kept if valid)
+    NSString *m_iTunesURL;  // iTunes link (only kept if valid)
+    int m_LvBasic;          // 1..10
+    int m_LvMedium;         // 1..10
+    int m_LvHard;           // 1..11
 }
 
 // Returns nil if the dictionary has no positive "ID".
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary;
 
-@property (nonatomic, readonly) int musicID;
-@property (nonatomic, readonly) NSString *name;
-@property (nonatomic, readonly) NSString *artist;
-@property (nonatomic, readonly) NSString *itemURL;
-@property (nonatomic, readonly) NSString *sampleURL;
-@property (nonatomic, readonly) NSString *artworkURL;
-@property (nonatomic, readonly) NSString *iTunesURL;
-@property (nonatomic, readonly) int lvBasic;
-@property (nonatomic, readonly) int lvMedium;
-@property (nonatomic, readonly) int lvHard;
+@property(nonatomic, readonly) int musicID;
+@property(nonatomic, readonly) NSString *name;
+@property(nonatomic, readonly) NSString *artist;
+@property(nonatomic, readonly) NSString *itemURL;
+@property(nonatomic, readonly) NSString *sampleURL;
+@property(nonatomic, readonly) NSString *artworkURL;
+@property(nonatomic, readonly) NSString *iTunesURL;
+@property(nonatomic, readonly) int lvBasic;
+@property(nonatomic, readonly) int lvMedium;
+@property(nonatomic, readonly) int lvHard;
 
 // YES if this song's purchased file is already on disk. Ghidra: @ 0x56678.
 - (BOOL)fileExist;

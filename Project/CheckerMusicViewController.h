@@ -2,9 +2,9 @@
 //  CheckerMusicViewController.h
 //  pop'n rhythmin
 //
-//  Music-checker song list: a grouped table of one arcade category's songs, each
-//  row a CheckerMusicCell; selecting a row pushes a CheckerDetail score graph.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  Music-checker song list: a grouped table of one arcade category's songs,
+//  each row a CheckerMusicCell; selecting a row pushes a CheckerDetail score
+//  graph. Reconstructed from Ghidra project rb420, program PopnRhythmin
 //  (initWithScoreData:category: @ 0xd27b8).
 //
 
@@ -12,8 +12,9 @@
 
 @interface CheckerMusicViewController : UITableViewController
 
-// Build the list for one music-checker category: `scoreDataArray` is the array of
-// ArcadeScoreData records to show; `category` (0 = etc, 1 = TV, 2..23 = p01..p22,
+// Build the list for one music-checker category: `scoreDataArray` is the array
+// of ArcadeScoreData records to show; `category` (0 = etc, 1 = TV, 2..23 =
+// p01..p22,
 // >=24 = "near") picks the list-header banner image.
 - (instancetype)initWithScoreData:(NSArray *)scoreDataArray category:(short)category;
 

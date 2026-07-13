@@ -6,9 +6,10 @@
 //  from Ghidra project rb420, program PopnRhythmin.
 //
 //  Table @ 0x133478 — 30 x 8 bytes: { NSString *description; int weight; }.
-//  Each description is a constant NSString (isa = ___CFConstantStringClassReference
-//  at the load-bound 0x1a7800; UTF-16 payload). GetSkillDataStruct (FUN_000cb9d0)
-//  returns &table[index] and asserts index < 30.
+//  Each description is a constant NSString (isa =
+//  ___CFConstantStringClassReference at the load-bound 0x1a7800; UTF-16
+//  payload). GetSkillDataStruct (FUN_000cb9d0) returns &table[index] and
+//  asserts index < 30.
 //
 
 #pragma once
@@ -17,8 +18,8 @@
 
 // One built-in skill: its description and its random-selection weight.
 struct SkillDataStruct {
-    NSString *description;   // +0x0  (constant NSString, Japanese)
-    int weight;              // +0x4  (100/80/70/60/50/30/20)
+    NSString *description; // +0x0  (constant NSString, Japanese)
+    int weight;            // +0x4  (100/80/70/60/50/30/20)
 };
 
 // Number of built-in skills (Ghidra: bound checked as index < 0x1e).

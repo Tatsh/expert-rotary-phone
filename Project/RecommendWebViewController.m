@@ -7,8 +7,8 @@
 
 #import "RecommendWebViewController.h"
 
-// RecommendCore — the Recommend SDK core (redirect handling / SSL base URL). It supplies
-// +sharedInstance and -redirectWithRequest:.
+// RecommendCore — the Recommend SDK core (redirect handling / SSL base URL). It
+// supplies +sharedInstance and -redirectWithRequest:.
 #import "RecommendCore.h"
 
 @implementation RecommendWebViewController
@@ -23,7 +23,8 @@
     [super didReceiveMemoryWarning];
 }
 
-// @ 0xe9804 — drop the delegate, pull the view out of its superview, then chain up.
+// @ 0xe9804 — drop the delegate, pull the view out of its superview, then chain
+// up.
 - (void)viewDidUnload {
     [self setDelegate:nil];
     [[self view] removeFromSuperview];
@@ -35,17 +36,20 @@
     [self setDelegate:nil];
 }
 
-// @ 0xe988c — pull the view out of its superview, then chain up to the base close handler.
+// @ 0xe988c — pull the view out of its superview, then chain up to the base
+// close handler.
 - (void)appliListClosed {
     [[self view] removeFromSuperview];
     [super appliListClosed];
 }
 
-// @ 0xe98ec — let RecommendCore intercept applilink redirects. When the request is not a
-// redirect and the navigation bar is visible, treat the tap as leaving the applist and close.
-// Returns whether the core consumed the request as a redirect.
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request
- navigationType:(UIWebViewNavigationType)navigationType {
+// @ 0xe98ec — let RecommendCore intercept applilink redirects. When the request
+// is not a redirect and the navigation bar is visible, treat the tap as leaving
+// the applist and close. Returns whether the core consumed the request as a
+// redirect.
+- (BOOL)webView:(UIWebView *)webView
+    shouldStartLoadWithRequest:(NSURLRequest *)request
+                navigationType:(UIWebViewNavigationType)navigationType {
     BOOL redirected = [[RecommendCore sharedInstance] redirectWithRequest:request];
     if (![self isNavigationBarHidden] && !redirected) {
         [self appliListClosed];

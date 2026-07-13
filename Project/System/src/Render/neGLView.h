@@ -19,22 +19,24 @@
 
 @interface neGLView : UIView
 
-// The live view instance (raw global set on init, cleared on dealloc). Ghidra: @ 0x280d4
+// The live view instance (raw global set on init, cleared on dealloc). Ghidra:
+// @ 0x280d4
 + (neGLView *)GetInstance;
 
-// Ghidra: -delegate/-setDelegate: are atomic accessors (DataMemoryBarrier around
-// a plain pointer store — assign, not ARC weak). Addresses annotated in the .mm.
-@property (atomic, assign) id<neGLViewDelegate> delegate;
+// Ghidra: -delegate/-setDelegate: are atomic accessors (DataMemoryBarrier
+// around a plain pointer store — assign, not ARC weak). Addresses annotated in
+// the .mm.
+@property(atomic, assign) id<neGLViewDelegate> delegate;
 
 // The GL drawable size, updated by -layoutSubviews from the renderbuffer.
-- (int)GetFrontBufferWidth;   // Ghidra: @ 0x28524
-- (int)GetFrontBufferHeight;  // Ghidra: @ 0x28534
+- (int)GetFrontBufferWidth;  // Ghidra: @ 0x28524
+- (int)GetFrontBufferHeight; // Ghidra: @ 0x28534
 
 // Render surface control, called each frame by MainViewController -draw.
-- (BOOL)BeginRender;            // make the GL context current. Ghidra: @ 0x28544
-- (void)SetDefaultFrameBuffer;  // bind the default framebuffer.  Ghidra: @ 0x28570
-- (void)SetDefaultColorBuffer;  // bind the colour renderbuffer.  Ghidra: @ 0x28594
-- (BOOL)Present;                // present the renderbuffer (swap). Ghidra: @ 0x285b8
+- (BOOL)BeginRender;           // make the GL context current. Ghidra: @ 0x28544
+- (void)SetDefaultFrameBuffer; // bind the default framebuffer.  Ghidra: @ 0x28570
+- (void)SetDefaultColorBuffer; // bind the colour renderbuffer.  Ghidra: @ 0x28594
+- (BOOL)Present;               // present the renderbuffer (swap). Ghidra: @ 0x285b8
 
 @end
 

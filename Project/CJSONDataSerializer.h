@@ -14,7 +14,7 @@
 
 @interface CJSONDataSerializer : NSObject
 
-+ (CJSONDataSerializer *)serializer;   // @ 0x66dc8 (convenience constructor)
++ (CJSONDataSerializer *)serializer; // @ 0x66dc8 (convenience constructor)
 
 - (NSData *)serializeObject:(id)inObject;
 - (NSData *)serializeNull:(NSNull *)inNull;

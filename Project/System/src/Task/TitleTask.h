@@ -2,15 +2,17 @@
 //  TitleTask.h
 //  pop'n rhythmin
 //
-//  The title screen + first-run flow task, spawned by BootLogoTask after the logo
-//  splash. Plays the title BGM, shows the version, and drives the first-run gate
-//  (policy acceptance -> conversion code -> DL file-list check -> default download
-//  -> version-update check) before handing off to the main-menu task. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (ctor TitleTask_ctor FUN_0002b678,
-//  update FUN_0002b838, setup FUN_0002c084, finish FUN_0002c3d0).
+//  The title screen + first-run flow task, spawned by BootLogoTask after the
+//  logo splash. Plays the title BGM, shows the version, and drives the
+//  first-run gate (policy acceptance -> conversion code -> DL file-list check
+//  -> default download
+//  -> version-update check) before handing off to the main-menu task.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor
+//  TitleTask_ctor FUN_0002b678, update FUN_0002b838, setup FUN_0002c084, finish
+//  FUN_0002c3d0).
 //
-//  Objective-C++ (ARC-off, matching the engine): drives UIKit through the bridged
-//  root view controller. Compiled only via TitleTask.mm.
+//  Objective-C++ (ARC-off, matching the engine): drives UIKit through the
+//  bridged root view controller. Compiled only via TitleTask.mm.
 //
 
 #pragma once
@@ -21,30 +23,31 @@
 
 @class CustomButton;
 class AepManager;
-class AepLyrCtrl;   // the title screen's animated sprite layer (Ghidra ctor FUN_0002c7d8)
+class AepLyrCtrl; // the title screen's animated sprite layer (Ghidra ctor
+                  // FUN_0002c7d8)
 
 class TitleTask : public C_TASK {
 public:
-    TitleTask();                        // Ghidra: TitleTask_ctor (FUN_0002b678)
-    ~TitleTask() override;              // Ghidra: TitleTask dtor (FUN_0002b6b0)
-    void update(int deltaMs) override;  // Ghidra: TitleTask_update (FUN_0002b838)
+    TitleTask();                       // Ghidra: TitleTask_ctor (FUN_0002b678)
+    ~TitleTask() override;             // Ghidra: TitleTask dtor (FUN_0002b6b0)
+    void update(int deltaMs) override; // Ghidra: TitleTask_update (FUN_0002b838)
 
 private:
-    void setup();               // Ghidra: TitleTask_setup (FUN_0002c084)
-    void finish();              // Ghidra: TitleTask_finish (FUN_0002c3d0)
-    bool tapReleased() const;   // a touch released with < 11 px travel = a tap
-    void buildConversionButton();  // state-3 UI: the "conversion" button + code alert
+    void setup();                 // Ghidra: TitleTask_setup (FUN_0002c084)
+    void finish();                // Ghidra: TitleTask_finish (FUN_0002c3d0)
+    bool tapReleased() const;     // a touch released with < 11 px travel = a tap
+    void buildConversionButton(); // state-3 UI: the "conversion" button + code alert
 
-    AepManager *m_aep = nullptr;         // +0x28 render manager
-    AepLyrCtrl *m_titleLayer = nullptr;  // +0x30 title animated sprite layer
-    NSArray *m_dlFileList = nil;         // +0x34 DownloadMain's file-list result
-    NSString *m_versionLabel = nil;      // +0x38 retained "Ver <n>"
-    int m_titleSe = 0;                   // +0x3c title SE handle
-    int m_titleFrames = 0;               // +0x40 title animation length (0x19 / 0x24)
-    bool m_needUpdate = false;           // +0x44 an app update is required
-    bool m_state3Built = false;          // +0x4c the title UI has been built
-    CustomButton *m_conversionButton = nil;  // +0x50 the code-conversion button
-    int m_state = 0;                     // +0x48 state machine (0..9)
+    AepManager *m_aep = nullptr;            // +0x28 render manager
+    AepLyrCtrl *m_titleLayer = nullptr;     // +0x30 title animated sprite layer
+    NSArray *m_dlFileList = nil;            // +0x34 DownloadMain's file-list result
+    NSString *m_versionLabel = nil;         // +0x38 retained "Ver <n>"
+    int m_titleSe = 0;                      // +0x3c title SE handle
+    int m_titleFrames = 0;                  // +0x40 title animation length (0x19 / 0x24)
+    bool m_needUpdate = false;              // +0x44 an app update is required
+    bool m_state3Built = false;             // +0x4c the title UI has been built
+    CustomButton *m_conversionButton = nil; // +0x50 the code-conversion button
+    int m_state = 0;                        // +0x48 state machine (0..9)
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

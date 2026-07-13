@@ -19,9 +19,20 @@ static const int kHardwareUnknown = 14;
 // Known hw.machine identifiers, in the order that defines the hardware type.
 // Ghidra: DAT_001306ec (14 entries).
 static const char *const kSystemHardwareModels[14] = {
-    "iPhone1,1", "iPhone1,2", "iPhone2,1", "iPhone3,1", "iPhone3,2",
-    "iPod1,1", "iPod2,1", "iPod3,1", "iPod4,1",
-    "iPad1,1", "iPad2,1", "iPad2,2", "iPad2,3", "i386",
+    "iPhone1,1",
+    "iPhone1,2",
+    "iPhone2,1",
+    "iPhone3,1",
+    "iPhone3,2",
+    "iPod1,1",
+    "iPod2,1",
+    "iPod3,1",
+    "iPod4,1",
+    "iPad1,1",
+    "iPad2,1",
+    "iPad2,2",
+    "iPad2,3",
+    "i386",
 };
 
 // Lazily-created shared instance (Ghidra global g_pSystemHardwareInstance).

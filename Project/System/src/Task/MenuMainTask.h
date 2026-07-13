@@ -2,26 +2,26 @@
 //  MenuMainTask.h
 //  pop'n rhythmin
 //
-//  The central mode-select hub task, spawned by TitleTask after the title screen.
-//  It fetches news + player data, runs the daily/login-bonus/unlock gates, then
-//  drives the interactive main menu: hit-testing the mode buttons to spawn the
-//  play / tutorial / arcade tasks or navigate to Store / Friend / PopnLink / Invite
-//  / PresentBox / ArcadeSearch / Settings. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (ctor MenuMainTask_ctor FUN_0006aba0, update
-//  MenuMainTask_update FUN_0006ad88, ~0x1b0-byte task).
+//  The central mode-select hub task, spawned by TitleTask after the title
+//  screen. It fetches news + player data, runs the daily/login-bonus/unlock
+//  gates, then drives the interactive main menu: hit-testing the mode buttons
+//  to spawn the play / tutorial / arcade tasks or navigate to Store / Friend /
+//  PopnLink / Invite / PresentBox / ArcadeSearch / Settings. Reconstructed from
+//  Ghidra project rb420, program PopnRhythmin (ctor MenuMainTask_ctor
+//  FUN_0006aba0, update MenuMainTask_update FUN_0006ad88, ~0x1b0-byte task).
 //
-//  This is the single largest, most-connected task in the app; the verified state
-//  machine + button dispatch are reconstructed here, with the per-button screen
-//  rectangles recovered as real members (below).
+//  This is the single largest, most-connected task in the app; the verified
+//  state machine + button dispatch are reconstructed here, with the per-button
+//  screen rectangles recovered as real members (below).
 //
 //  ---- work area (this class IS the 0x1b0-byte MenuMainTask struct) ----
 //  C_TASK's base is exactly 0x28 bytes, and MenuMainTask_ctor does
 //  memset(this + 0x28, 0, 0x185) — i.e. every field from +0x28..+0x1ad is
-//  zero-initialised — so the members below (default-initialised to 0) land at their
-//  true binary offsets. Offsets that setup()/update()/drawOverlay() reach in the
-//  binary are named; the two write-only sub-blocks that do not decompile into
-//  distinct scalars (the news-cache copy and the NEWS-ticker draw params) are kept
-//  as documented named blocks.
+//  zero-initialised — so the members below (default-initialised to 0) land at
+//  their true binary offsets. Offsets that setup()/update()/drawOverlay() reach
+//  in the binary are named; the two write-only sub-blocks that do not decompile
+//  into distinct scalars (the news-cache copy and the NEWS-ticker draw params)
+//  are kept as documented named blocks.
 //
 
 #pragma once
@@ -36,32 +36,37 @@ class neTextureForiOS;
 
 class MenuMainTask : public C_TASK {
 public:
-    MenuMainTask();                     // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
-    ~MenuMainTask() override;           // @ 0x6abcc (modeSelTaskDtor; clears news delegate + base)
-    void update(int deltaMs) override;  // Ghidra: MenuMainTask_update (FUN_0006ad88)
+    MenuMainTask();                    // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
+    ~MenuMainTask() override;          // @ 0x6abcc (modeSelTaskDtor; clears news delegate + base)
+    void update(int deltaMs) override; // Ghidra: MenuMainTask_update (FUN_0006ad88)
 
     // Set the "info screen already shown" flag (TitleTask passes 1). Ghidra:
     // MenuMainTask_setInfoFlag (FUN_0006d194) @ +0x1ac.
     void setInfoFlag(bool shown);
 
     // One menu button's on-screen rectangle, in the engine hit-test's field order
-    // (x, y, w, h). pointInRect (FUN_0002d974) tests x in [x, x+w], y in [y, y+h].
-    struct ButtonRect {   // 0x10 bytes
+    // (x, y, w, h). pointInRect (FUN_0002d974) tests x in [x, x+w], y in [y,
+    // y+h].
+    struct ButtonRect { // 0x10 bytes
         int x;
         int y;
         int w;
         int h;
     };
 
-    // The eight array-laid-out mode buttons hit-tested in state 0xc (+0x128..+0x1a4).
-    // Roles are the binary's FUN_0006ad88 dispatch by offset (present box / settings /
-    // reward live in the separate packed top cluster @ +0x94..+0xa0, not this array).
+    // The eight array-laid-out mode buttons hit-tested in state 0xc
+    // (+0x128..+0x1a4). Roles are the binary's FUN_0006ad88 dispatch by offset
+    // (present box / settings / reward live in the separate packed top cluster @
+    // +0x94..+0xa0, not this array).
     enum Button {
-        kBtnPlay,         // +0x128 standard play (tutorial on first play) -> PlayTask/MainTask
+        kBtnPlay,         // +0x128 standard play (tutorial on first play) ->
+                          // PlayTask/MainTask
         kBtnStore,        // +0x138 store
         kBtnFriend,       // +0x148 friend management
-        kBtnArcade,       // +0x158 arcade select+play -> AcMainTask (treasure/sugoroku board)
-        kBtnAcViewer,     // +0x168 arcade viewer -> AcViewerTask (iPad seeds a default sel)
+        kBtnArcade,       // +0x158 arcade select+play -> AcMainTask (treasure/sugoroku
+                          // board)
+        kBtnAcViewer,     // +0x168 arcade viewer -> AcViewerTask (iPad seeds a default
+                          // sel)
         kBtnPopnLink,     // +0x178 pop'n link
         kBtnInvite,       // +0x188 invite code (only when a player record exists)
         kBtnArcadeSearch, // +0x198 arcade search
@@ -69,105 +74,114 @@ public:
     };
 
 private:
-    void setup();                       // Ghidra: FUN_0006c6a4 (state 0)
-    // The per-frame menu overlay pass (warning badge, event badges, button labels),
-    // pulsed by the triangle-wave phase at +0xec. Ghidra: modeSelectTaskDraw
-    // (FUN_0006d428).
+    void setup(); // Ghidra: FUN_0006c6a4 (state 0)
+    // The per-frame menu overlay pass (warning badge, event badges, button
+    // labels), pulsed by the triangle-wave phase at +0xec. Ghidra:
+    // modeSelectTaskDraw (FUN_0006d428).
     void drawOverlay();
 
-    // Hit-test one of the eight array buttons against the current tap. Delegates to
-    // the engine hit-test (Ghidra FUN_0002d974). Returns true on a tap inside the rect.
+    // Hit-test one of the eight array buttons against the current tap. Delegates
+    // to the engine hit-test (Ghidra FUN_0002d974). Returns true on a tap inside
+    // the rect.
     bool hitButton(int touchId, Button button) const;
-    // The settings button is a packed rect in the top cluster (rect x @ +0x98, y @
-    // +0x94), so it is tested separately.
+    // The settings button is a packed rect in the top cluster (rect x @ +0x98, y
+    // @ +0x94), so it is tested separately.
     bool hitSettingsButton(int touchId) const;
-    // The present-box button shares the same overlapping top cluster (rect x @ +0x9c,
-    // enable/y @ +0x94). Ghidra: the +0x9c pointInRect in FUN_0006ad88 case 0xc.
+    // The present-box button shares the same overlapping top cluster (rect x @
+    // +0x9c, enable/y @ +0x94). Ghidra: the +0x9c pointInRect in FUN_0006ad88
+    // case 0xc.
     bool hitPresentBoxButton(int touchId) const;
 
-    // Alert-dismissed callback for the mode-select confirm dialogs: clears the root VC's
-    // alert callback then advances the state machine (7 & 11 -> 6, 9 -> 10, else -> 12).
-    // Ghidra: FUN_0006d1a4 @ 0x6d1a4.
+    // Alert-dismissed callback for the mode-select confirm dialogs: clears the
+    // root VC's alert callback then advances the state machine (7 & 11 -> 6, 9 ->
+    // 10, else -> 12). Ghidra: FUN_0006d1a4 @ 0x6d1a4.
     void onAlertClosed();
 
-    // Per-frame NEWS-ticker draw callback registered on the news AEP layer. `handle` is the
-    // layer being drawn (only our resolved news handle acts); `drawCtx` is the AEP draw
-    // context. The binary passes `this` as the trailing callback argument. It scrolls the
-    // current news line and pages through the news array with a pause/reset ramp.
-    // Ghidra: FUN_0006d6d4 @ 0x6d6d4.
+    // Per-frame NEWS-ticker draw callback registered on the news AEP layer.
+    // `handle` is the layer being drawn (only our resolved news handle acts);
+    // `drawCtx` is the AEP draw context. The binary passes `this` as the trailing
+    // callback argument. It scrolls the current news line and pages through the
+    // news array with a pause/reset ramp. Ghidra: FUN_0006d6d4 @ 0x6d6d4.
     void updateNewsTicker(int handle, int drawCtx);
 
-    // News-fetch callback (DownloadMain's NEWS delegate). When `hasNews`, rebuild the local
-    // news-text array copy from DownloadMain if its lastGetNewsTime is newer than the cached
-    // copy's timestamp, then reset the ticker to line 0. Ghidra: modeSelectRefreshNews @ 0x6d8cc.
-    // Public: called from the extern "C" modeSelectRefreshNews shim (DownloadMain reaches its
-    // NEWS delegate by the unmangled binary symbol, so the free function must reach this).
+    // News-fetch callback (DownloadMain's NEWS delegate). When `hasNews`, rebuild
+    // the local news-text array copy from DownloadMain if its lastGetNewsTime is
+    // newer than the cached copy's timestamp, then reset the ticker to line 0.
+    // Ghidra: modeSelectRefreshNews @ 0x6d8cc. Public: called from the extern "C"
+    // modeSelectRefreshNews shim (DownloadMain reaches its NEWS delegate by the
+    // unmangled binary symbol, so the free function must reach this).
 public:
     void refreshNews(bool hasNews);
-private:
 
-    // ---- packed top-row cluster (+0x94.. settings/gift rects, overlapping fields) ----
+private:
+    // ---- packed top-row cluster (+0x94.. settings/gift rects, overlapping
+    // fields) ----
     struct TopCluster {
-        int rowY;         // +0x94 shared top-row Y (also the settings enable field)
-        int settingsX;    // +0x98 settings rect x
-        int field9c;      // +0x9c
-        int fielda0;      // +0xa0
-        int fielda4;      // +0xa4
-        int fielda8;      // +0xa8
+        int rowY;      // +0x94 shared top-row Y (also the settings enable field)
+        int settingsX; // +0x98 settings rect x
+        int field9c;   // +0x9c
+        int fielda0;   // +0xa0
+        int fielda4;   // +0xa4
+        int fielda8;   // +0xa8
     };
 
     // ---- one badge / sprite screen position ----
-    struct SpritePos { int x, y; };   // 0x8 bytes
+    struct SpritePos {
+        int x, y;
+    }; // 0x8 bytes
 
-    // ================= work-area layout (offsets are binary-exact) =================
-    AepLyrCtrl      *m_layers[3] = {};        // +0x28 open / loop-bg / prompt transports
-    int              m_newsHandle = 0;        // +0x34 resolved NEWS ticker Aep handle
-    int              m_badgeHandles[5] = {};  // +0x38 NEWS/BT_SETTING/NEW_STORE/BT_GIFT/BT_FEATU
+    // ================= work-area layout (offsets are binary-exact)
+    // =================
+    AepLyrCtrl *m_layers[3] = {};             // +0x28 open / loop-bg / prompt transports
+    int m_newsHandle = 0;                     // +0x34 resolved NEWS ticker Aep handle
+    int m_badgeHandles[5] = {};               // +0x38 NEWS/BT_SETTING/NEW_STORE/BT_GIFT/BT_FEATU
     neTextureForiOS *m_warnTexture = nullptr; // +0x4c friend-request warning texture
-    int              m_seId[6] = {};          // +0x50 six UI SE source ids
-    int              m_seInst[6] = {};        // +0x68 their playing-instance handles (-1 idle)
-    void            *m_spawnedTask = nullptr;  // +0x80 the sub-task being launched into
-    int              m_labelRowY = 0;         // +0x84 button-label row Y
-    int              m_settingsLabelX = 0;    // +0x88 settings label X
-    int              m_storeLabelX = 0;       // +0x8c store label X
-    int              m_giftLabelX = 0;        // +0x90 gift label X
-    TopCluster       m_top = {};              // +0x94 settings/gift packed rects
-    int              m_warnScaleX = 0;        // +0xac warning-badge scale X
-    int              m_warnScaleY = 0;        // +0xb0 warning-badge scale Y
-    uint8_t          m_suppressOverlay = 0;   // +0xb4 overlay suppressed while tearing down
-    uint8_t          m_tutorialSkip = 0;      // +0xb5 tutorial already played
-    uint8_t          m_giftEnabled = 0;       // +0xb6 gift button/label enabled
-    uint8_t          m_treasureEvent = 0;     // +0xb7 treasure-event badge visible
-    uint8_t          m_gameEvent = 0;         // +0xb8 game-event badge visible
+    int m_seId[6] = {};                       // +0x50 six UI SE source ids
+    int m_seInst[6] = {};                     // +0x68 their playing-instance handles (-1 idle)
+    void *m_spawnedTask = nullptr;            // +0x80 the sub-task being launched into
+    int m_labelRowY = 0;                      // +0x84 button-label row Y
+    int m_settingsLabelX = 0;                 // +0x88 settings label X
+    int m_storeLabelX = 0;                    // +0x8c store label X
+    int m_giftLabelX = 0;                     // +0x90 gift label X
+    TopCluster m_top = {};                    // +0x94 settings/gift packed rects
+    int m_warnScaleX = 0;                     // +0xac warning-badge scale X
+    int m_warnScaleY = 0;                     // +0xb0 warning-badge scale Y
+    uint8_t m_suppressOverlay = 0;            // +0xb4 overlay suppressed while tearing down
+    uint8_t m_tutorialSkip = 0;               // +0xb5 tutorial already played
+    uint8_t m_giftEnabled = 0;                // +0xb6 gift button/label enabled
+    uint8_t m_treasureEvent = 0;              // +0xb7 treasure-event badge visible
+    uint8_t m_gameEvent = 0;                  // +0xb8 game-event badge visible
     // +0xb9..+0xc0 reward/event scan state (news seam; populated by the tail of
-    // FUN_0006c6a4, outside this reconstruction's scope). Kept as a documented block.
-    uint8_t          _reserved_newsScan[0xc0 - 0xb9] = {};
+    // FUN_0006c6a4, outside this reconstruction's scope). Kept as a documented
+    // block.
+    uint8_t _reserved_newsScan[0xc0 - 0xb9] = {};
     // ---- NEWS-ticker run state (used by updateNewsTicker, FUN_0006d6d4) ----
-    id               m_newsArray = nil;       // +0xc0 the news-text array copy (retained)
-    id               m_newsTimestamp = nil;   // +0xc4 lastGetNewsTime of the cached copy (NSDate)
-    id               m_newsCurLine = nil;     // +0xc8 current news line (retained)
-    int              m_newsIndex = 0;         // +0xcc index into m_newsArray
-    int              m_newsFrame = 0;         // +0xd0 per-line frame counter
-    int              m_newsScrollX = 0;       // +0xd4 current scroll x
-    int              m_newsSegment = 0;       // +0xd8 line-segment counter
-    int              m_newsPauseCounter = 0;  // +0xdc pause/fade ramp value (0..100)
-    int              m_newsPauseStep = 0;     // +0xe0 pause ramp step (-2 out, +2 in; 0 = uninit)
-    uint8_t          m_newsPaused = 0;        // +0xe4 true while ramping the pause
-    uint8_t          _reserved_e5[0xe8 - 0xe5] = {};  // +0xe5..+0xe8 pad
-    int              m_layoutYOffset = 0;     // +0xe8 tall-screen vertical shift
-    int              m_pulsePhase = 0;        // +0xec attention-pulse phase counter
-    int              m_unlockStep = 0;        // +0xf0 invite-present unlock step (case-6 seam)
-    // +0xf4..+0x108 the NEWS ticker draw params (position/scale); write-only in this
-    // scope (consumed by the news draw seam). Kept as a documented named block.
-    int              m_newsTickerParams[5] = {};   // +0xf4
-    SpritePos        m_newPackBadgePos = {};  // +0x108 "new music pack" badge
-    SpritePos        m_treasureBadgePos = {}; // +0x110 treasure-event badge
-    SpritePos        m_gameBadgePos = {};     // +0x118 game-event badge
-    SpritePos        m_warnBadgePos = {};     // +0x120 friend-request warning badge
-    ButtonRect       m_buttons[kBtnCount] = {};    // +0x128 the eight mode-button rects
-    int              m_state = 0;             // +0x1a8 state-machine state
-    bool             m_infoFlag = false;      // +0x1ac daily-info screen already shown
-    uint8_t          m_pad_tail[3] = {};      // +0x1ad..+0x1b0 tail padding
+    id m_newsArray = nil;                   // +0xc0 the news-text array copy (retained)
+    id m_newsTimestamp = nil;               // +0xc4 lastGetNewsTime of the cached copy (NSDate)
+    id m_newsCurLine = nil;                 // +0xc8 current news line (retained)
+    int m_newsIndex = 0;                    // +0xcc index into m_newsArray
+    int m_newsFrame = 0;                    // +0xd0 per-line frame counter
+    int m_newsScrollX = 0;                  // +0xd4 current scroll x
+    int m_newsSegment = 0;                  // +0xd8 line-segment counter
+    int m_newsPauseCounter = 0;             // +0xdc pause/fade ramp value (0..100)
+    int m_newsPauseStep = 0;                // +0xe0 pause ramp step (-2 out, +2 in; 0 = uninit)
+    uint8_t m_newsPaused = 0;               // +0xe4 true while ramping the pause
+    uint8_t _reserved_e5[0xe8 - 0xe5] = {}; // +0xe5..+0xe8 pad
+    int m_layoutYOffset = 0;                // +0xe8 tall-screen vertical shift
+    int m_pulsePhase = 0;                   // +0xec attention-pulse phase counter
+    int m_unlockStep = 0;                   // +0xf0 invite-present unlock step (case-6 seam)
+    // +0xf4..+0x108 the NEWS ticker draw params (position/scale); write-only in
+    // this scope (consumed by the news draw seam). Kept as a documented named
+    // block.
+    int m_newsTickerParams[5] = {};       // +0xf4
+    SpritePos m_newPackBadgePos = {};     // +0x108 "new music pack" badge
+    SpritePos m_treasureBadgePos = {};    // +0x110 treasure-event badge
+    SpritePos m_gameBadgePos = {};        // +0x118 game-event badge
+    SpritePos m_warnBadgePos = {};        // +0x120 friend-request warning badge
+    ButtonRect m_buttons[kBtnCount] = {}; // +0x128 the eight mode-button rects
+    int m_state = 0;                      // +0x1a8 state-machine state
+    bool m_infoFlag = false;              // +0x1ac daily-info screen already shown
+    uint8_t m_pad_tail[3] = {};           // +0x1ad..+0x1b0 tail padding
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

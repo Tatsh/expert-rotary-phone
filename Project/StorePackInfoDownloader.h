@@ -13,8 +13,8 @@
 //    dealloc @ 0x57488
 //
 
-#import <Foundation/Foundation.h>
 #import "Downloader.h"
+#import <Foundation/Foundation.h>
 
 @class StorePackInfo;
 @class StorePackInfoDownloader;
@@ -27,14 +27,14 @@
 @end
 
 @interface StorePackInfoDownloader : NSObject <DownloaderDelegate> {
-    StorePackInfo *m_PackInfo;   // the pack whose detail this fetches (retained)
-    Downloader *m_Downloader;    // in-flight request (retained)
+    StorePackInfo *m_PackInfo; // the pack whose detail this fetches (retained)
+    Downloader *m_Downloader;  // in-flight request (retained)
     __weak id<StorePackInfoDownloaderDelegate> m_Delegate;
 }
 
-@property (nonatomic, retain) StorePackInfo *packInfo;
-@property (nonatomic, retain) Downloader *downloader;
-@property (nonatomic, weak) id<StorePackInfoDownloaderDelegate> delegate;
+@property(nonatomic, retain) StorePackInfo *packInfo;
+@property(nonatomic, retain) Downloader *downloader;
+@property(nonatomic, weak) id<StorePackInfoDownloaderDelegate> delegate;
 
 // Wrap the pack whose detail will be fetched.
 - (instancetype)initWithStorePackInfo:(StorePackInfo *)packInfo;

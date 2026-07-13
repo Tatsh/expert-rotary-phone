@@ -3,7 +3,8 @@
 //  pop'n rhythmin
 //
 //  A store list row that shows two song packs side by side. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x527b4).
+//  Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+//  0x527b4).
 //
 
 #import <UIKit/UIKit.h>
@@ -12,8 +13,8 @@
 
 @interface StoreTableCell : UITableViewCell
 
-@property (nonatomic, retain) StorePackView *leftPackView;   // synthesized getter @ 0x529e4
-@property (nonatomic, retain) StorePackView *rightPackView;  // synthesized getter @ 0x529f4
+@property(nonatomic, retain) StorePackView *leftPackView;  // synthesized getter @ 0x529e4
+@property(nonatomic, retain) StorePackView *rightPackView; // synthesized getter @ 0x529f4
 
 @end
 

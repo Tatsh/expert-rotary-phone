@@ -9,8 +9,8 @@
 
 @implementation ImageDownloader
 
-// @ 0x5a63c — open a connection for the stored imageURL; incoming bytes accumulate
-// in activeDownload.
+// @ 0x5a63c — open a connection for the stored imageURL; incoming bytes
+// accumulate in activeDownload.
 - (void)startDownload {
     self.activeDownload = [NSMutableData data];
     NSURL *url = [NSURL URLWithString:self.imageURL];
@@ -33,8 +33,8 @@
 
 #pragma mark - NSURLConnection delegate
 
-// @ 0x5a79c — treat a 404 response as a failure: cancel the connection, drop the
-// buffer, and tell the delegate the row's image could not be loaded.
+// @ 0x5a79c — treat a 404 response as a failure: cancel the connection, drop
+// the buffer, and tell the delegate the row's image could not be loaded.
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     if ([response respondsToSelector:@selector(statusCode)] &&
         [(NSHTTPURLResponse *)response statusCode] == 404) {
@@ -50,8 +50,8 @@
     [self.activeDownload appendData:data];
 }
 
-// @ 0x5a8e0 — decode the image (matching the main screen's scale for Retina), then
-// notify the delegate with the row's index path.
+// @ 0x5a8e0 — decode the image (matching the main screen's scale for Retina),
+// then notify the delegate with the row's index path.
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     self.downloadedImage = nil;
     UIImage *image = [[UIImage alloc] initWithData:self.activeDownload];
@@ -61,8 +61,8 @@
             CGFloat scale = UIScreen.mainScreen.scale;
             if (scale != 1.0f) {
                 result = [UIImage imageWithCGImage:image.CGImage
-                                            scale:scale
-                                      orientation:UIImageOrientationUp];
+                                             scale:scale
+                                       orientation:UIImageOrientationUp];
             }
         }
         self.downloadedImage = result;

@@ -3,13 +3,14 @@
 //  pop'n rhythmin
 //
 //  The "present box" (gift inbox) modal: a UITableViewController that lists the
-//  player's pending server presents (one PresentBoxCell per row), plus an "acquire
-//  all" button and an empty-state banner. It is raised over the main menu inside its
-//  own UINavigationController (see -initAtNavigationController) and slides itself in
-//  and out with a fade (phone) / frame-slide (pad) open/close animation. Presents are
-//  fetched and claimed through the DownloadMain singleton (this controller registers
-//  itself as its present-list / present-claim delegate), and each claim is confirmed
-//  through a CustomAlertView.
+//  player's pending server presents (one PresentBoxCell per row), plus an
+//  "acquire all" button and an empty-state banner. It is raised over the main
+//  menu inside its own UINavigationController (see -initAtNavigationController)
+//  and slides itself in and out with a fade (phone) / frame-slide (pad)
+//  open/close animation. Presents are fetched and claimed through the
+//  DownloadMain singleton (this controller registers itself as its present-list
+//  / present-claim delegate), and each claim is confirmed through a
+//  CustomAlertView.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin:
 //    initWithStyle:                       @ 0x24098
@@ -36,21 +37,23 @@
 
 #import <UIKit/UIKit.h>
 
-#import "CustomAlertView.h"   // CustomAlertViewDelegate
+#import "CustomAlertView.h" // CustomAlertViewDelegate
 
 @interface PresentBoxViewController : UITableViewController <CustomAlertViewDelegate>
 
-// Build the controller, wrap it in a fresh UINavigationController (portrait style) and
-// return that host (the value the menu pushes into the scene). Ghidra: @ 0x24938.
+// Build the controller, wrap it in a fresh UINavigationController (portrait
+// style) and return that host (the value the menu pushes into the scene).
+// Ghidra: @ 0x24938.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Slide / fade the box in and out. The host (MainViewController) drives these when
-// showing / dismissing the present box and polls -isAnimationing to gate input while a
-// transition is running. Ghidra: @ 0x24c98 / @ 0x25160.
+// Slide / fade the box in and out. The host (MainViewController) drives these
+// when showing / dismissing the present box and polls -isAnimationing to gate
+// input while a transition is running. Ghidra: @ 0x24c98 / @ 0x25160.
 - (void)startOpenAnimation;
 - (void)startCloseAnimation;
 
-// YES while an open/close animation is in flight (atomic read). Ghidra: @ 0x26144.
+// YES while an open/close animation is in flight (atomic read). Ghidra: @
+// 0x26144.
 - (BOOL)isAnimationing;
 
 @end

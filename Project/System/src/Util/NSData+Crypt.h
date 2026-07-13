@@ -5,10 +5,11 @@
 //  AES-128-CBC helpers used to protect the user's save data.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. Both public
-//  wrappers are thin: they forward to the shared core -mainOperation:key:initVector:
-//  with kCCEncrypt / kCCDecrypt. Key/IV are 16-char NSStrings copied to C via
-//  -getCString:maxLength:encoding: (key "4ZMw025eJIOTx26f", IV "13U4RnAI73EdVMXB")
-//  and the cipher is AES-128-CBC with PKCS#7 padding (kCCOptionPKCS7Padding).
+//  wrappers are thin: they forward to the shared core
+//  -mainOperation:key:initVector: with kCCEncrypt / kCCDecrypt. Key/IV are
+//  16-char NSStrings copied to C via -getCString:maxLength:encoding: (key
+//  "4ZMw025eJIOTx26f", IV "13U4RnAI73EdVMXB") and the cipher is AES-128-CBC
+//  with PKCS#7 padding (kCCOptionPKCS7Padding).
 //
 
 #import <CommonCrypto/CommonCryptor.h> // CCOperation

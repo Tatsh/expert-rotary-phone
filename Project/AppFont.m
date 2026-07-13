@@ -7,7 +7,8 @@
 
 #import "AppFont.h"
 
-// @ 0x5ef9c — returns the constant font name (CFString cf_DFSoGei_W5_WIN_RKSJ_H).
+// @ 0x5ef9c — returns the constant font name (CFString
+// cf_DFSoGei_W5_WIN_RKSJ_H).
 NSString *AppFontName(void) {
     return @"DFSoGei-W5-WIN-RKSJ-H";
 }

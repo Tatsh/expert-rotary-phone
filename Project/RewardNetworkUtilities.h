@@ -3,16 +3,17 @@
 //  pop'n rhythmin
 //
 //  Konami "RewardNetwork" (Applilink) ad-SDK grab-bag of stateless helpers.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. No instance state
-//  (instanceSize 4 == isa only, no ivars, no instance methods); the 11 helpers below
-//  all live on the metaclass.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. No instance
+//  state (instanceSize 4 == isa only, no ivars, no instance methods); the 11
+//  helpers below all live on the metaclass.
 //
 
 #import <UIKit/UIKit.h>
 
 @interface RewardNetworkUtilities : NSObject
 
-// @ 0xf9874 — merge two dictionaries (values in `b` win) into a new mutable one.
+// @ 0xf9874 — merge two dictionaries (values in `b` win) into a new mutable
+// one.
 + (NSMutableDictionary *)joinDictionary:(NSDictionary *)a withDictionary:(NSDictionary *)b;
 
 // @ 0xf9910 — build the SDK User-Agent string.
@@ -47,12 +48,14 @@
 
 @end
 
-// Generic percent-encode / decode free helpers (a separate pair from +URLEncodedString:).
-// Reached only via a data function-pointer table in the binary; see the .m / HANDOFF.md.
-// NOTE: this reward-side urlEncodeString (@ 0xfc1d0) is functionally identical to StoreUtil's
-// (@ 0x5c5ec) and unused outside RewardNetworkUtilities.m, so it is file-static there (avoids a
-// duplicate global with StoreUtil's canonical one). Callers include StoreUtil.h.
-// (percent-decode is -[NSString URLDecodedString] @ 0xfc218, in NSString+URLDecode.h)
+// Generic percent-encode / decode free helpers (a separate pair from
+// +URLEncodedString:). Reached only via a data function-pointer table in the
+// binary; see the .m / HANDOFF.md. NOTE: this reward-side urlEncodeString (@
+// 0xfc1d0) is functionally identical to StoreUtil's
+// (@ 0x5c5ec) and unused outside RewardNetworkUtilities.m, so it is file-static
+// there (avoids a duplicate global with StoreUtil's canonical one). Callers
+// include StoreUtil.h. (percent-decode is -[NSString URLDecodedString] @
+// 0xfc218, in NSString+URLDecode.h)
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

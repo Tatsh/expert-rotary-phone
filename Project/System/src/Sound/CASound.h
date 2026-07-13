@@ -19,31 +19,44 @@ public:
     ~CASound();
 
     // Decode `path` into the PCM buffer; `loop` marks it for looped playback.
-    // Returns false on any ExtAudioFile error. Ghidra: FUN_00027bf8 -> FUN_00027c58.
+    // Returns false on any ExtAudioFile error. Ghidra: FUN_00027bf8 ->
+    // FUN_00027c58.
     bool load(const char *path, bool loop);
 
-    const void *buffer() const { return m_buffer; }
-    UInt32 bufferSize() const { return m_bufferSize; }
-    UInt32 frameCount() const { return m_frameCount; }
-    const AudioStreamBasicDescription &format() const { return m_format; }
-    bool isLoop() const { return m_loop; }
+    const void *buffer() const {
+        return m_buffer;
+    }
+    UInt32 bufferSize() const {
+        return m_bufferSize;
+    }
+    UInt32 frameCount() const {
+        return m_frameCount;
+    }
+    const AudioStreamBasicDescription &format() const {
+        return m_format;
+    }
+    bool isLoop() const {
+        return m_loop;
+    }
 
-    // Copy `bytes` of PCM from the play cursor `*pos` (byte offset) into `dst`, wrapping to the
-    // start when a non-looped source runs out (looped sources restart and reset `*total`).
-    // `*total` accumulates the bytes played for the current pass; `*pos` is advanced. Returns
-    // the number of bytes actually copied. Ghidra: caSourceRead @ 0x27e10 (the mixer render read).
+    // Copy `bytes` of PCM from the play cursor `*pos` (byte offset) into `dst`,
+    // wrapping to the start when a non-looped source runs out (looped sources
+    // restart and reset `*total`).
+    // `*total` accumulates the bytes played for the current pass; `*pos` is
+    // advanced. Returns the number of bytes actually copied. Ghidra: caSourceRead
+    // @ 0x27e10 (the mixer render read).
     size_t read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const;
 
-    // Free the decoded PCM buffer (and null it), leaving the object reusable. Ghidra:
-    // caSourceFreeBuffer @ 0x27bc0.
+    // Free the decoded PCM buffer (and null it), leaving the object reusable.
+    // Ghidra: caSourceFreeBuffer @ 0x27bc0.
     void freeBuffer();
 
 private:
-    bool loadURL(CFURLRef url);                     // FUN_00027c58
-    bool configureFormat(ExtAudioFileRef file);     // FUN_00027cb8
-    bool readFrames(ExtAudioFileRef file);          // FUN_00027d50
+    bool loadURL(CFURLRef url);                 // FUN_00027c58
+    bool configureFormat(ExtAudioFileRef file); // FUN_00027cb8
+    bool readFrames(ExtAudioFileRef file);      // FUN_00027d50
 
-    AudioStreamBasicDescription m_format = {};  // client (LPCM) format
+    AudioStreamBasicDescription m_format = {}; // client (LPCM) format
     UInt32 m_frameCount = 0;
     bool m_loop = false;
     void *m_buffer = nullptr;

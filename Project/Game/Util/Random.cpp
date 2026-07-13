@@ -11,18 +11,21 @@
 #include <cassert>
 
 namespace {
-// Marsaglia's canonical xorshift128 seeds (the exact constants the ctor writes).
-constexpr uint32_t kSeedX = 123456789;  // 0x075bcd15
-constexpr uint32_t kSeedY = 362436069;  // 0x159a55e5
-constexpr uint32_t kSeedZ = 521288629;  // 0x1f123bb5
-constexpr uint32_t kSeedW = 88675123;   // 0x05491333
-}  // namespace
+// Marsaglia's canonical xorshift128 seeds (the exact constants the ctor
+// writes).
+constexpr uint32_t kSeedX = 123456789; // 0x075bcd15
+constexpr uint32_t kSeedY = 362436069; // 0x159a55e5
+constexpr uint32_t kSeedZ = 521288629; // 0x1f123bb5
+constexpr uint32_t kSeedW = 88675123;  // 0x05491333
+} // namespace
 
 // Ghidra: FUN_00062b20.
-Random::Random() : m_x(kSeedX), m_y(kSeedY), m_z(kSeedZ), m_w(kSeedW) {}
+Random::Random() : m_x(kSeedX), m_y(kSeedY), m_z(kSeedZ), m_w(kSeedW) {
+}
 
 // Ghidra: FUN_00062b54 (empty).
-Random::~Random() {}
+Random::~Random() {
+}
 
 // Ghidra: FUN_00062b5c — x/y/z back to canonical, w = seed.
 void Random::setSeed(uint32_t seed) {

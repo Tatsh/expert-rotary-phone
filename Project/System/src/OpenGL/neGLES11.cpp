@@ -19,14 +19,14 @@
 
 namespace ne {
 
-// Ghidra: RenderKindToGLRenderKind @ FUN_00012f64 (table @ DAT_0012e110): the GL
-// ES OES framebuffer attachment points.
+// Ghidra: RenderKindToGLRenderKind @ FUN_00012f64 (table @ DAT_0012e110): the
+// GL ES OES framebuffer attachment points.
 static GLenum RenderKindToGL(int kind) {
     assert(kind >= 0 && kind < neIGLES::RENDER_KIND_MAX);
     static const GLenum kTable[neIGLES::RENDER_KIND_MAX] = {
-        GL_COLOR_ATTACHMENT0_OES,   // 0x8ce0
-        GL_DEPTH_ATTACHMENT_OES,    // 0x8d00
-        GL_STENCIL_ATTACHMENT_OES,  // 0x8d20
+        GL_COLOR_ATTACHMENT0_OES,  // 0x8ce0
+        GL_DEPTH_ATTACHMENT_OES,   // 0x8d00
+        GL_STENCIL_ATTACHMENT_OES, // 0x8d20
     };
     return kTable[kind];
 }
@@ -36,7 +36,9 @@ static GLenum RenderKindToGL(int kind) {
 static GLenum RenderTypeToGLFormat(int type) {
     assert(type >= 0 && type < neIGLES::RENDER_TYPE_MAX);
     static const GLenum kTable[neIGLES::RENDER_TYPE_MAX] = {
-        GL_RGBA8_OES, GL_DEPTH_COMPONENT16_OES, GL_STENCIL_INDEX8_OES,
+        GL_RGBA8_OES,
+        GL_DEPTH_COMPONENT16_OES,
+        GL_STENCIL_INDEX8_OES,
     };
     return kTable[type];
 }
@@ -53,7 +55,7 @@ static GLenum MatrixModeToGL(int mode) {
         };
         return kTable[mode - 1];
     }
-    return GL_MODELVIEW;           // 0x1700
+    return GL_MODELVIEW; // 0x1700
 }
 
 // glHint targets. Ghidra: table @ DAT_0012e290 (5 entries).
@@ -205,10 +207,10 @@ static GLenum BlendDestToGL(int dest) {
 static GLenum TexParamTypeToGL(int type) {
     assert(type >= 0 && type < neIGLES::TEX_PARAM_TYPE_MAX);
     static const GLenum kTable[neIGLES::TEX_PARAM_TYPE_MAX] = {
-        GL_TEXTURE_MAG_FILTER,  // 0x2800
-        GL_TEXTURE_MIN_FILTER,  // 0x2801
-        GL_TEXTURE_WRAP_S,      // 0x2802
-        GL_TEXTURE_WRAP_T,      // 0x2803
+        GL_TEXTURE_MAG_FILTER, // 0x2800
+        GL_TEXTURE_MIN_FILTER, // 0x2801
+        GL_TEXTURE_WRAP_S,     // 0x2802
+        GL_TEXTURE_WRAP_T,     // 0x2803
     };
     return kTable[type];
 }
@@ -229,17 +231,26 @@ static GLint TexParamValueToGL(int value) {
     return kTable[value];
 }
 
-// Ghidra: GLValueToTexParamValue @ FUN_000138cc (reverse of glGetTexParameteriv).
+// Ghidra: GLValueToTexParamValue @ FUN_000138cc (reverse of
+// glGetTexParameteriv).
 static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
     switch (v) {
-        case GL_NEAREST:                return neIGLES::TEX_PARAM_VALUE_NEAREST;
-        case GL_LINEAR:                 return neIGLES::TEX_PARAM_VALUE_LINEAR;
-        case GL_NEAREST_MIPMAP_NEAREST: return neIGLES::TEX_PARAM_VALUE_NEAREST_MIPMAP_NEAREST;
-        case GL_LINEAR_MIPMAP_NEAREST:  return neIGLES::TEX_PARAM_VALUE_LINEAR_MIPMAP_NEAREST;
-        case GL_NEAREST_MIPMAP_LINEAR:  return neIGLES::TEX_PARAM_VALUE_NEAREST_MIPMAP_LINEAR;
-        case GL_LINEAR_MIPMAP_LINEAR:   return neIGLES::TEX_PARAM_VALUE_LINEAR_MIPMAP_LINEAR;
-        case GL_CLAMP_TO_EDGE:          return neIGLES::TEX_PARAM_VALUE_CLAMP_TO_EDGE;
-        case GL_REPEAT:                 return neIGLES::TEX_PARAM_VALUE_REPEAT;
+    case GL_NEAREST:
+        return neIGLES::TEX_PARAM_VALUE_NEAREST;
+    case GL_LINEAR:
+        return neIGLES::TEX_PARAM_VALUE_LINEAR;
+    case GL_NEAREST_MIPMAP_NEAREST:
+        return neIGLES::TEX_PARAM_VALUE_NEAREST_MIPMAP_NEAREST;
+    case GL_LINEAR_MIPMAP_NEAREST:
+        return neIGLES::TEX_PARAM_VALUE_LINEAR_MIPMAP_NEAREST;
+    case GL_NEAREST_MIPMAP_LINEAR:
+        return neIGLES::TEX_PARAM_VALUE_NEAREST_MIPMAP_LINEAR;
+    case GL_LINEAR_MIPMAP_LINEAR:
+        return neIGLES::TEX_PARAM_VALUE_LINEAR_MIPMAP_LINEAR;
+    case GL_CLAMP_TO_EDGE:
+        return neIGLES::TEX_PARAM_VALUE_CLAMP_TO_EDGE;
+    case GL_REPEAT:
+        return neIGLES::TEX_PARAM_VALUE_REPEAT;
     }
     assert(0);
     return neIGLES::TEX_PARAM_VALUE_NEAREST;
@@ -248,16 +259,19 @@ static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
 // Texture upload format. Ghidra: TextureFormatToGLFormat @ FUN_00013970.
 static GLenum TextureFormatToGL(int format) {
     switch (format) {
-        case neIGLES::TEX_FORMAT_ALPHA: return GL_ALPHA;
-        case neIGLES::TEX_FORMAT_RGB:   return GL_RGB;
-        case neIGLES::TEX_FORMAT_RGBA:  return GL_RGBA;
+    case neIGLES::TEX_FORMAT_ALPHA:
+        return GL_ALPHA;
+    case neIGLES::TEX_FORMAT_RGB:
+        return GL_RGB;
+    case neIGLES::TEX_FORMAT_RGBA:
+        return GL_RGBA;
     }
     assert(0);
     return 0;
 }
 
-// Engine primitive ordinal -> GL mode. Ghidra: table @ DAT_0012e2b0 (7 entries),
-// indexed by drawArrays/drawElements.
+// Engine primitive ordinal -> GL mode. Ghidra: table @ DAT_0012e2b0 (7
+// entries), indexed by drawArrays/drawElements.
 static GLenum PrimitiveToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::PRIM_MAX);
     static const GLenum kTable[neIGLES::PRIM_MAX] = {
@@ -273,17 +287,18 @@ static GLenum PrimitiveToGL(int mode) {
 }
 
 // @ 0x12c78
-// Ghidra: neGLESRenderer_ctor — installs the vtable and primes the cached GL state to
-// the backend's power-on defaults: identity/zero matrices and colour vectors, the eight
-// per-texture-unit filter/wrap slots ({mag,min,wrapS,wrapT} ordinals {4,1,7,7}, bound
-// name -1), a straight-alpha add-equation blend, and every redundant-bind cache cleared.
-// Those zero/-1/identity defaults are carried by the in-class member initializers; the
-// three blend-state fields whose non-zero GL power-on values the ctor writes (ivars
-// 0x19c/0x1a0/0x1a4) are set explicitly here.
+// Ghidra: neGLESRenderer_ctor — installs the vtable and primes the cached GL
+// state to the backend's power-on defaults: identity/zero matrices and colour
+// vectors, the eight per-texture-unit filter/wrap slots ({mag,min,wrapS,wrapT}
+// ordinals {4,1,7,7}, bound name -1), a straight-alpha add-equation blend, and
+// every redundant-bind cache cleared. Those zero/-1/identity defaults are
+// carried by the in-class member initializers; the three blend-state fields
+// whose non-zero GL power-on values the ctor writes (ivars 0x19c/0x1a0/0x1a4)
+// are set explicitly here.
 neGLES_11::neGLES_11()
-    : _blendEquation(GL_FUNC_ADD_OES),   // ivar 0x19c  (&DAT_00008006)
-      _blendSrc(BLEND_SRC_ONE),          // ivar 0x1a0  (GL_ONE ordinal)
-      _blendDest(BLEND_DEST_ZERO) {      // ivar 0x1a4  (GL_ZERO ordinal)
+    : _blendEquation(GL_FUNC_ADD_OES), // ivar 0x19c  (&DAT_00008006)
+      _blendSrc(BLEND_SRC_ONE),        // ivar 0x1a0  (GL_ONE ordinal)
+      _blendDest(BLEND_DEST_ZERO) {    // ivar 0x1a4  (GL_ZERO ordinal)
 }
 
 neGLES_11::~neGLES_11() = default;
@@ -334,8 +349,7 @@ void neGLES_11::setFrontFace(FrontFace face) {
 // Ghidra: FUN_00013a34 — caches (equation 0x19c, src 0x1a0, dest 0x1a4), skips
 // redundant calls, then glBlendEquationOES(equation); glBlendFunc(src, dest).
 void neGLES_11::setBlendFunc(BlendSrcValue src, BlendDestValue dest, unsigned equation) {
-    if (_blendSrc == static_cast<unsigned>(src) &&
-        _blendDest == static_cast<unsigned>(dest) &&
+    if (_blendSrc == static_cast<unsigned>(src) && _blendDest == static_cast<unsigned>(dest) &&
         _blendEquation == equation) {
         return;
     }
@@ -355,11 +369,11 @@ void neGLES_11::setAlphaFunc(AlphaTestFunc func, float ref) {
     glAlphaFunc(CompareFuncToGL(func), ref);
 }
 
-// Ghidra: FUN_00013970 — upload a 2D texture (GL_TEXTURE_2D, level 0, UNSIGNED_BYTE).
+// Ghidra: FUN_00013970 — upload a 2D texture (GL_TEXTURE_2D, level 0,
+// UNSIGNED_BYTE).
 void neGLES_11::texImage2D(TexFormat format, int width, int height, const void *pixels) {
     GLenum glFormat = TextureFormatToGL(format);
-    glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0,
-                 glFormat, GL_UNSIGNED_BYTE, pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pixels);
 }
 
 void neGLES_11::setTexParameter(TexParamType type, TexParamValue value) {
@@ -374,12 +388,21 @@ neIGLES::TexParamValue neGLES_11::getTexParameter(TexParamType type) {
 }
 
 // Ghidra: FUN_00013290 — invalidate any cached binding referring to this buffer
-// (ivars 0x44/0x50/0x5c/0x6c and the 8-slot texture array at 0xb4), then delete.
+// (ivars 0x44/0x50/0x5c/0x6c and the 8-slot texture array at 0xb4), then
+// delete.
 void neGLES_11::deleteBuffer(unsigned buffer) {
-    if (_boundArrayBuffer == buffer) _boundArrayBuffer = 0;
-    if (_boundElementBuffer == buffer) _boundElementBuffer = 0;
-    if (_boundBuffer2 == buffer) _boundBuffer2 = 0;
-    if (_boundBuffer3 == buffer) _boundBuffer3 = 0;
+    if (_boundArrayBuffer == buffer) {
+        _boundArrayBuffer = 0;
+    }
+    if (_boundElementBuffer == buffer) {
+        _boundElementBuffer = 0;
+    }
+    if (_boundBuffer2 == buffer) {
+        _boundBuffer2 = 0;
+    }
+    if (_boundBuffer3 == buffer) {
+        _boundBuffer3 = 0;
+    }
     for (auto &tex : _boundTextures) {
         if (tex == buffer) {
             tex = 0;
@@ -393,8 +416,8 @@ void neGLES_11::deleteBuffer(unsigned buffer) {
 void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned renderbuffer) {
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
     glRenderbufferStorageOES(GL_RENDERBUFFER_OES, RenderTypeToGLFormat(type), 0, 0);
-    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
-                                 GL_RENDERBUFFER_OES, renderbuffer);
+    glFramebufferRenderbufferOES(
+        GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_RENDERBUFFER_OES, renderbuffer);
 }
 
 // ---------------------------------------------------------------------------
@@ -414,16 +437,16 @@ void neGLES_11::deleteRenderbuffer(unsigned renderbuffer) {
     glDeleteRenderbuffersOES(1, &name);
 }
 
-// Ghidra: FUN_00012f3c — attach a 2D texture's level 0 at attachment point `kind`.
+// Ghidra: FUN_00012f3c — attach a 2D texture's level 0 at attachment point
+// `kind`.
 void neGLES_11::framebufferTexture2D(RenderKind kind, unsigned texture) {
-    glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
-                              GL_TEXTURE_2D, texture, 0);
+    glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_TEXTURE_2D, texture, 0);
 }
 
 // Ghidra: FUN_00012fcc — attach a renderbuffer at attachment point `kind`.
 void neGLES_11::framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer) {
-    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind),
-                                 GL_RENDERBUFFER_OES, renderbuffer);
+    glFramebufferRenderbufferOES(
+        GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_RENDERBUFFER_OES, renderbuffer);
 }
 
 // Ghidra: FUN_00012fec — free helper (no `this`).
@@ -433,14 +456,17 @@ bool isFramebufferComplete() {
 
 // ---------------------------------------------------------------------------
 // neRenderer drawing slots (dispatched through by the neDraw* primitives). The
-// integer arguments carry the engine's own ordinals, mapped to GL via the tables
-// above / the enum-typed wrappers.
+// integer arguments carry the engine's own ordinals, mapped to GL via the
+// tables above / the enum-typed wrappers.
 // ---------------------------------------------------------------------------
 
-// Backend lifecycle. The shipped bodies (renderer vtbl +0x04/+0x08) are outside the
-// reconstructed subset; they unbind on replace / activate the default GL state.
-void neGLES_11::shutdown() {}
-void neGLES_11::initialize() {}
+// Backend lifecycle. The shipped bodies (renderer vtbl +0x04/+0x08) are outside
+// the reconstructed subset; they unbind on replace / activate the default GL
+// state.
+void neGLES_11::shutdown() {
+}
+void neGLES_11::initialize() {
+}
 
 void neGLES_11::setViewport(int x, int y, int w, int h) {
     glViewport(x, y, w, h);
@@ -466,11 +492,11 @@ void neGLES_11::colorPointer(const void *ptr, int stride) {
 }
 
 void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
-    glVertexPointer(size, GL_FIXED, stride, ptr);   // 16.16 fixed-point positions
+    glVertexPointer(size, GL_FIXED, stride, ptr); // 16.16 fixed-point positions
 }
 
 void neGLES_11::texCoordPointer(const void *ptr, int stride) {
-    glTexCoordPointer(2, GL_SHORT, stride, ptr);    // normalized GL_SHORT UVs
+    glTexCoordPointer(2, GL_SHORT, stride, ptr); // normalized GL_SHORT UVs
 }
 
 void neGLES_11::bindElementBuffer(unsigned name) {
@@ -478,8 +504,8 @@ void neGLES_11::bindElementBuffer(unsigned name) {
 }
 
 void neGLES_11::bufferData(const void *data, int size, int usage) {
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data,
-                 usage == 0 ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, size, data, usage == 0 ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 }
 
 void neGLES_11::bindTexture(unsigned name) {
@@ -496,8 +522,8 @@ void neGLES_11::uploadTexture(int format, int w, int h, const void *pixels) {
 
 // The 2-argument primitive-blend slot uses the default add equation.
 void neGLES_11::setBlendFunc(int src, int dst) {
-    setBlendFunc(static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst),
-                 GL_FUNC_ADD_OES);
+    setBlendFunc(
+        static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst), GL_FUNC_ADD_OES);
 }
 
 void neGLES_11::setBlendFuncSeparate(int src, int dst, unsigned equation) {
@@ -525,8 +551,10 @@ void neGLES_11::drawArrays(int mode, int count) {
 }
 
 void neGLES_11::drawElements(int mode, int count, int offset) {
-    glDrawElements(PrimitiveToGL(mode), count, GL_UNSIGNED_SHORT,
+    glDrawElements(PrimitiveToGL(mode),
+                   count,
+                   GL_UNSIGNED_SHORT,
                    reinterpret_cast<const void *>(static_cast<intptr_t>(offset)));
 }
 
-}  // namespace ne
+} // namespace ne

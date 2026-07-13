@@ -3,17 +3,18 @@
 //  pop'n rhythmin
 //
 //  See InputOTPViewCtrl.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons (the
-//  decide / cancel system SE and the root view controller PopnLink callback). The
-//  image resource names are the exact literals recovered from the __cfstring table.
+//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons
+//  (the decide / cancel system SE and the root view controller PopnLink
+//  callback). The image resource names are the exact literals recovered from
+//  the __cfstring table.
 //
 
 #import "InputOTPViewCtrl.h"
 
-#import "CheckerCategoryViewController.h"  // owner type + -startGetArcadeScoreHttpWithOtp:
-#import "TouchableScrollView.h"            // the tap-through form host
-#import "neEngineBridge.h"                 // neEngine::playSystemSe, neSceneManager::rootViewController
-#import "MainViewController.h"             // scene root -PopnLinkEndCallBack
+#import "CheckerCategoryViewController.h" // owner type + -startGetArcadeScoreHttpWithOtp:
+#import "MainViewController.h"            // scene root -PopnLinkEndCallBack
+#import "TouchableScrollView.h"           // the tap-through form host
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController
 
 // Own privates (button targets wired up by -initWithCategoryView:).
 @interface InputOTPViewCtrl ()
@@ -54,8 +55,8 @@
 
         // Custom back button in the navigation item's left slot.
         UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backButton = [[UIButton alloc] initWithFrame:
-                                CGRectMake(0.0f, 0.0f, backImage.size.width, backImage.size.height)];
+        UIButton *backButton = [[UIButton alloc]
+            initWithFrame:CGRectMake(0.0f, 0.0f, backImage.size.width, backImage.size.height)];
         [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
         [backButton addTarget:self
                        action:@selector(touchedBackButton:)
@@ -67,8 +68,8 @@
         UIButton *decideButton = [[UIButton alloc] init];
         UIImage *decideImage = [UIImage imageNamed:@"vcmn_btn_deside"];
         [decideButton setBackgroundImage:decideImage forState:UIControlStateNormal];
-        [decideButton setFrame:
-            CGRectMake(185.0f, 125.0f, decideImage.size.width, decideImage.size.height)];
+        [decideButton
+            setFrame:CGRectMake(185.0f, 125.0f, decideImage.size.width, decideImage.size.height)];
         [decideButton addTarget:self
                          action:@selector(touchedDecideButton:)
                forControlEvents:UIControlEventTouchUpInside];
@@ -123,9 +124,10 @@
     return self;
 }
 
-// @ 0x79544 — the binary releases _dummyView (automatic under ARC) and chains to
-// super; the observers registered in -initWithCategoryView: are torn down here so
-// they never dangle after this controller is gone (KEEP — real cleanup work).
+// @ 0x79544 — the binary releases _dummyView (automatic under ARC) and chains
+// to super; the observers registered in -initWithCategoryView: are torn down
+// here so they never dangle after this controller is gone (KEEP — real cleanup
+// work).
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
@@ -154,8 +156,7 @@
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
-    if (textField == _otpField &&
-        range.location + range.length + string.length < 17) {
+    if (textField == _otpField && range.location + range.length + string.length < 17) {
         return YES;
     }
     return NO;
@@ -163,7 +164,8 @@
 
 #pragma mark - Actions
 
-// @ 0x796d4 — submit a non-empty code to the owner, then pop; always plays the SE.
+// @ 0x796d4 — submit a non-empty code to the owner, then pop; always plays the
+// SE.
 - (void)touchedDecideButton:(id)sender {
     NSString *code = _otpField.text;
     if (code.length != 0) {
@@ -174,16 +176,15 @@
         [self.navigationController popViewControllerAnimated:YES];
     }
     neSceneManager::shared();
-    neEngine::playSystemSe(1);  // decide SE
+    neEngine::playSystemSe(1); // decide SE
 }
 
 // @ 0x797c4
 - (void)touchedBackButton:(id)sender {
     neSceneManager::shared();
-    neEngine::playSystemSe(2);  // cancel SE
-    [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+    neEngine::playSystemSe(2); // cancel SE
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
+                                                  forBarMetrics:UIBarMetricsDefault];
     [self.navigationController popViewControllerAnimated:YES];
 }
 
@@ -192,7 +193,8 @@
 - (void)endDirectCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
-    // The scene root is the app's MainViewController; notify it the applilink flow ended.
+    // The scene root is the app's MainViewController; notify it the applilink
+    // flow ended.
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
     [root PopnLinkEndCallBack];
 }
@@ -207,10 +209,11 @@
 - (void)keyboardWillBeHidden:(NSNotification *)notification {
 }
 
-// Super-only overrides (Ghidra: each only chains to UIViewController) — omitted:
+// Super-only overrides (Ghidra: each only chains to UIViewController) —
+// omitted:
 //   didReceiveMemoryWarning @ 0x79518, viewDidLoad @ 0x79590,
-//   viewDidUnload @ 0x795bc, viewWillAppear: @ 0x795e8, viewDidAppear: @ 0x79614,
-//   viewWillDisappear: @ 0x79640, viewDidDisappear: @ 0x7966c.
+//   viewDidUnload @ 0x795bc, viewWillAppear: @ 0x795e8, viewDidAppear: @
+//   0x79614, viewWillDisappear: @ 0x79640, viewDidDisappear: @ 0x7966c.
 
 @end
 

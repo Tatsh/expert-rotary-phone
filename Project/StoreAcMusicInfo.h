@@ -22,13 +22,14 @@
 // Returns nil if the dictionary has no positive "ID".
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary;
 
-@property (nonatomic, readonly) int acMusicId;
-@property (nonatomic, readonly) NSString *title;
-@property (nonatomic, readonly) NSString *genre;
-@property (nonatomic, readonly) NSString *itemURL;
-@property (nonatomic, readonly) NSString *sampleURL;
+@property(nonatomic, readonly) int acMusicId;
+@property(nonatomic, readonly) NSString *title;
+@property(nonatomic, readonly) NSString *genre;
+@property(nonatomic, readonly) NSString *itemURL;
+@property(nonatomic, readonly) NSString *sampleURL;
 
-// YES if this arcade song's purchased file is already on disk. Ghidra: @ 0x85418.
+// YES if this arcade song's purchased file is already on disk. Ghidra: @
+// 0x85418.
 - (BOOL)fileExist;
 
 @end

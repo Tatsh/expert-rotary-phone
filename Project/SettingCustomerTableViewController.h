@@ -2,19 +2,23 @@
 //  SettingCustomerTableViewController.h
 //  pop'n rhythmin
 //
-//  The "customer support" sub-settings screen (pushed by SettingTableViewController's
-//  row 2). A three-row grouped table of rounded, colour-bordered buttons:
+//  The "customer support" sub-settings screen (pushed by
+//  SettingTableViewController's row 2). A three-row grouped table of rounded,
+//  colour-bordered buttons:
 //    row 0  お問い合わせ                 -> opens the FAQ page in Safari
-//    row 1  特定商取引法に基づく表示     -> opens the KONAMI TOKUSHO (SCTA) page in Safari
-//    row 2  利用規約                     -> shows the in-app Terms-of-Use (PolicyView) overlay
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:
-//  @ 0xd32b8 and 13 more methods). Built in SettingCustomerTableViewController.mm
-//  (Objective-C++: drives the C++ neSceneManager / neEngine singletons).
+//    row 1  特定商取引法に基づく表示     -> opens the KONAMI TOKUSHO (SCTA)
+//    page in Safari row 2  利用規約                     -> shows the in-app
+//    Terms-of-Use (PolicyView) overlay
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  (initWithStyle:
+//  @ 0xd32b8 and 13 more methods). Built in
+//  SettingCustomerTableViewController.mm (Objective-C++: drives the C++
+//  neSceneManager / neEngine singletons).
 //
 //  Follows the app-wide modal-VC lifecycle (see SettingTableViewController.h):
-//  initAtNavigationController wraps self in a UINavigationController; startOpen/
-//  startCloseAnimation fade the view + nav view; endCloseAnimation notifies the
-//  host via -[MainViewController SettingEndCallBack].
+//  initAtNavigationController wraps self in a UINavigationController;
+//  startOpen/ startCloseAnimation fade the view + nav view; endCloseAnimation
+//  notifies the host via -[MainViewController SettingEndCallBack].
 //
 
 #import <UIKit/UIKit.h>
@@ -25,11 +29,12 @@
 // (the phone layout). Ghidra: initAtNavigationController @ 0xd3460.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;    // @ 0xd36ec
-- (void)startCloseAnimation;   // @ 0xd3830
+- (void)startOpenAnimation;  // @ 0xd36ec
+- (void)startCloseAnimation; // @ 0xd3830
 
-// Back-button action wired up by initAtNavigationController (-> startCloseAnimation).
-- (void)settingClose;          // @ 0xd4170
+// Back-button action wired up by initAtNavigationController (->
+// startCloseAnimation).
+- (void)settingClose; // @ 0xd4170
 
 @end
 

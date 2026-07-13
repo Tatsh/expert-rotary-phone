@@ -2,21 +2,22 @@
 //  OverScoreLogViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The "friend over-score" log
-//  screen. Objective-C++ (.mm) because it drives the C++ "ne" engine singletons via
-//  neEngineBridge (scene manager, root view controller, system SEs) and, on close, the C++
-//  MusicSelTask / PlayTask launch path.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The "friend
+//  over-score" log screen. Objective-C++ (.mm) because it drives the C++ "ne"
+//  engine singletons via neEngineBridge (scene manager, root view controller,
+//  system SEs) and, on close, the C++ MusicSelTask / PlayTask launch path.
 //
 
 #import "OverScoreLogViewController.h"
 
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
+#import "MainTask.h" // MusicSelTask == MainTask: the real launchPlayForMusicId() method
 #import "OverScoreLogCell.h"
-#import "MainTask.h"          // MusicSelTask == MainTask: the real launchPlayForMusicId() method
 #import "neEngineBridge.h"
 
-// The app's root navigation host (bridged UIViewController on the C++ scene manager).
+// The app's root navigation host (bridged UIViewController on the C++ scene
+// manager).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
@@ -77,18 +78,18 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 @end
 
 @implementation OverScoreLogViewController {
-    UIViewController *_dummyView;              // dimmed spinner overlay shown while downloading
-    BOOL _isAnimationing;                      // an open/close animation is in flight
-    NSMutableArray *_overScoreLogDataArray;    // boxed OverScoreLogData rows (from DownloadMain)
-    int m_musicId;                             // song picked to play (-1 = none)
-    int m_sheet;                               // difficulty picked to play (-1 = none)
+    UIViewController *_dummyView;           // dimmed spinner overlay shown while downloading
+    BOOL _isAnimationing;                   // an open/close animation is in flight
+    NSMutableArray *_overScoreLogDataArray; // boxed OverScoreLogData rows (from DownloadMain)
+    int m_musicId;                          // song picked to play (-1 = none)
+    int m_sheet;                            // difficulty picked to play (-1 = none)
 }
 
 @synthesize musicSelTask = _musicSelTask;
 
-// @ 0x29928 — build the transparent, separator-less table: a clear 20-pt spacer header, the
-// "friman" backdrop (phone) / clear (iPad), and a hidden dimmed loading overlay with a large
-// spinner.
+// @ 0x29928 — build the transparent, separator-less table: a clear 20-pt spacer
+// header, the "friman" backdrop (phone) / clear (iPad), and a hidden dimmed
+// loading overlay with a large spinner.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if (!(self = [super initWithStyle:style])) {
         return nil;
@@ -99,7 +100,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     self.tableView.separatorColor = [UIColor clearColor];
 
     // Clear 20-pt spacer header.
-    UIView *header = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, viewFrame.size.width, 20.0f)];
+    UIView *header =
+        [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, viewFrame.size.width, 20.0f)];
     header.backgroundColor = [UIColor clearColor];
     self.tableView.tableHeaderView = header;
 
@@ -107,7 +109,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     neSceneManager::shared();
     if (neSceneManager::isPadDisplay()) {
         float osVersion = UIDevice.currentDevice.systemVersion.floatValue;
-        self.tableView.contentInset = UIEdgeInsetsMake(osVersion < 7.0f ? -20.0f : -10.0f, 0.0f, 0.0f, 0.0f);
+        self.tableView.contentInset =
+            UIEdgeInsetsMake(osVersion < 7.0f ? -20.0f : -10.0f, 0.0f, 0.0f, 0.0f);
     }
 
     // Backdrop: "friman_bg" image (phone) / clear (iPad).
@@ -122,7 +125,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         self.tableView.backgroundView = nil;
     }
 
-    // Dimmed "loading" overlay (transparent white, hidden until viewDidLoad) + large spinner.
+    // Dimmed "loading" overlay (transparent white, hidden until viewDidLoad) +
+    // large spinner.
     _dummyView = [[UIViewController alloc] init];
     _dummyView.view.frame = self.view.frame;
     _dummyView.view.backgroundColor = [UIColor colorWithWhite:0.5f alpha:0.0f];
@@ -133,35 +137,43 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
     CGRect frame = self.view.frame;
-    // Ghidra: center.y truncates (height*0.5) to int, subtracts 10, then converts back to float
-    // (vcvt.s32.f32 / subs #0xa / vcvt.f32.s32 @ 0x29d86..0x29d9c). center.x stays a pure float.
-    spinner.center = CGPointMake(frame.size.width * 0.5f,
-                                 (float)((int)(frame.size.height * 0.5f) - 10));
+    // Ghidra: center.y truncates (height*0.5) to int, subtracts 10, then converts
+    // back to float (vcvt.s32.f32 / subs #0xa / vcvt.f32.s32 @ 0x29d86..0x29d9c).
+    // center.x stays a pure float.
+    spinner.center =
+        CGPointMake(frame.size.width * 0.5f, (float)((int)(frame.size.height * 0.5f) - 10));
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];
     return self;
 }
 
-// @ 0x29e24 — keep the C++ task pointer, (re)build the table via initWithStyle:, wrap self in a
-// UINavigationController (with a back button on phone) and return that nav controller.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask __attribute__((objc_method_family(none))) {
+// @ 0x29e24 — keep the C++ task pointer, (re)build the table via
+// initWithStyle:, wrap self in a UINavigationController (with a back button on
+// phone) and return that nav controller.
+- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+    __attribute__((objc_method_family(none))) {
     _musicSelTask = musicSelTask;
-    UINavigationController *navigationController =
-        [[UINavigationController alloc] initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
+    UINavigationController *navigationController = [[UINavigationController alloc]
+        initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
     neSceneManager::shared();
     if (!neSceneManager::isPadDisplay()) {
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backBtn = [[UIButton alloc] initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
+        UIButton *backBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-        [backBtn addTarget:self action:@selector(backButtonFunc) forControlEvents:UIControlEventTouchUpInside];
-        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
+        [backBtn addTarget:self
+                      action:@selector(backButtonFunc)
+            forControlEvents:UIControlEventTouchUpInside];
+        self.navigationItem.leftBarButtonItem =
+            [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     }
     return navigationController;
 }
 
-// dealloc @ 0x29fd8 — ARC omits the -release of _overScoreLogDataArray / _dummyView; kept only to
-// detach self as DownloadMain's over-score-log delegate (a non-object side effect ARC can't do).
+// dealloc @ 0x29fd8 — ARC omits the -release of _overScoreLogDataArray /
+// _dummyView; kept only to detach self as DownloadMain's over-score-log
+// delegate (a non-object side effect ARC can't do).
 - (void)dealloc {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl delegateGetOverScoreLog] == self) {
@@ -169,8 +181,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     }
 }
 
-// @ 0x2a08c — reveal the spinner overlay, reset the pending selection, register as DownloadMain's
-// over-score-log delegate and kick off the download.
+// @ 0x2a08c — reveal the spinner overlay, reset the pending selection, register
+// as DownloadMain's over-score-log delegate and kick off the download.
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -189,7 +201,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 #pragma mark - Open / close animation (shared modal-VC lifecycle)
 
-// @ 0x2a1b0 — fade the view + nav view in (phone) or slide the nav view up into place (iPad).
+// @ 0x2a1b0 — fade the view + nav view in (phone) or slide the nav view up into
+// place (iPad).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -200,37 +213,37 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3f];   // DAT is (double)0.3f, not the double 0.3
+        [UIView setAnimationDuration:0.3f]; // DAT is (double)0.3f, not the double 0.3
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
         self.view.alpha = 1.0f;
         self.navigationController.view.alpha = 1.0f;
     } else {
-        // iPad: park the nav view below the root scene, then two-phase slide into place.
-        // Phase 1 (~1/6 s): slide to y = 420 (setNavViewFrameD @ 0x2a458).
+        // iPad: park the nav view below the root scene, then two-phase slide into
+        // place. Phase 1 (~1/6 s): slide to y = 420 (setNavViewFrameD @ 0x2a458).
         // Phase 2 (~1/6 s): settle to y = 470 (setNavViewFrameE @ 0x2a590), then
         //   call -endOpenAnimation.
         UIViewController *root = RootVC();
         CGRect f = self.navigationController.view.frame;
-        f.origin.y = root.view.frame.size.height;   // park below screen
+        f.origin.y = root.view.frame.size.height; // park below screen
         self.navigationController.view.frame = f;
         [UIView animateWithDuration:(1.0f / 6.0f)
-                              delay:0.0
-                            options:UIViewAnimationOptionLayoutSubviews
-                         animations:^{
-                             setNavViewFrameD(self);   // Ghidra: setNavViewFrameD @ 0x2a458
-                         }
-                         completion:^(BOOL finished) {
-                             [UIView animateWithDuration:(1.0f / 6.0f)
-                                                   delay:0.0
-                                                 options:UIViewAnimationOptionLayoutSubviews
-                                              animations:^{
-                                                  setNavViewFrameE(self); // Ghidra: setNavViewFrameE @ 0x2a590
-                                              }
-                                              completion:^(BOOL f2) {
-                                                  [self endOpenAnimation];
-                                              }];
-                         }];
+            delay:0.0
+            options:UIViewAnimationOptionLayoutSubviews
+            animations:^{
+              setNavViewFrameD(self); // Ghidra: setNavViewFrameD @ 0x2a458
+            }
+            completion:^(BOOL finished) {
+              [UIView animateWithDuration:(1.0f / 6.0f)
+                  delay:0.0
+                  options:UIViewAnimationOptionLayoutSubviews
+                  animations:^{
+                    setNavViewFrameE(self); // Ghidra: setNavViewFrameE @ 0x2a590
+                  }
+                  completion:^(BOOL f2) {
+                    [self endOpenAnimation];
+                  }];
+            }];
     }
     [UIView commitAnimations];
 }
@@ -240,8 +253,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     _isAnimationing = NO;
 }
 
-// @ 0x2a678 — fade (phone) / slide (iPad) the panel out; the completion (endCloseAnimation)
-// launches the selected play.
+// @ 0x2a678 — fade (phone) / slide (iPad) the panel out; the completion
+// (endCloseAnimation) launches the selected play.
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -250,43 +263,45 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     neSceneManager::shared();
     if (!neSceneManager::isPadDisplay()) {
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3f];   // DAT is (double)0.3f, not the double 0.3
+        [UIView setAnimationDuration:0.3f]; // DAT is (double)0.3f, not the double 0.3
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
         self.view.alpha = 0.0f;
         self.navigationController.view.alpha = 0.0f;
     } else {
         // iPad: two-phase slide out.
-        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (setNavViewFrameF @ 0x2a838).
-        // Phase 2 (~1/6 s): park below the root view (setNavViewFrameFromSubview2 @ 0x2a978),
+        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (setNavViewFrameF @
+        // 0x2a838). Phase 2 (~1/6 s): park below the root view
+        // (setNavViewFrameFromSubview2 @ 0x2a978),
         //   then call -endCloseAnimation.
         UIViewController *root = RootVC();
         [UIView animateWithDuration:(1.0f / 6.0f)
-                              delay:0.0
-                            options:UIViewAnimationOptionLayoutSubviews
-                         animations:^{
-                             setNavViewFrameF(self);   // Ghidra: setNavViewFrameF @ 0x2a838
-                         }
-                         completion:^(BOOL finished) {
-                             [UIView animateWithDuration:(1.0f / 6.0f)
-                                                   delay:0.0
-                                                 options:UIViewAnimationOptionLayoutSubviews
-                                              animations:^{
-                                                  // Ghidra: setNavViewFrameFromSubview2 @ 0x2a978
-                                                  setNavViewFrameFromSubview2(self, root);
-                                              }
-                                              completion:^(BOOL f2) {
-                                                  [self endCloseAnimation];
-                                              }];
-                         }];
+            delay:0.0
+            options:UIViewAnimationOptionLayoutSubviews
+            animations:^{
+              setNavViewFrameF(self); // Ghidra: setNavViewFrameF @ 0x2a838
+            }
+            completion:^(BOOL finished) {
+              [UIView animateWithDuration:(1.0f / 6.0f)
+                  delay:0.0
+                  options:UIViewAnimationOptionLayoutSubviews
+                  animations:^{
+                    // Ghidra: setNavViewFrameFromSubview2 @ 0x2a978
+                    setNavViewFrameFromSubview2(self, root);
+                  }
+                  completion:^(BOOL f2) {
+                    [self endCloseAnimation];
+                  }];
+            }];
     }
     [UIView commitAnimations];
 }
 
-// @ 0x2aad4 — remove the nav view, notify the root host, and (if a row was picked) drive the
-// owning MusicSelTask into a play of the chosen song: find it in the task's song list, stash the
-// selection, pop the menu BGM, fire the decide SE, spawn a PlayTask and hand it to the app
-// delegate (state -> 0xc). If the song is not installed, alert instead (state -> 2).
+// @ 0x2aad4 — remove the nav view, notify the root host, and (if a row was
+// picked) drive the owning MusicSelTask into a play of the chosen song: find it
+// in the task's song list, stash the selection, pop the menu BGM, fire the
+// decide SE, spawn a PlayTask and hand it to the app delegate (state -> 0xc).
+// If the song is not installed, alert instead (state -> 2).
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(OverScoreLogEndCallBack)];
@@ -295,15 +310,17 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     if (m_musicId == -1 || m_sheet == -1) {
         return;
     }
-    // Drive the owning task into a play of the chosen song. On a not-found song the method has
-    // already set the task's not-found state (2); we only surface the alert.
+    // Drive the owning task into a play of the chosen song. On a not-found song
+    // the method has already set the task's not-found state (2); we only surface
+    // the alert.
     if (!_musicSelTask->launchPlayForMusicId(m_musicId, m_sheet)) {
-        CommonAlertView *alert =
-            [[CommonAlertView alloc] initWithTitle:nil
-                                           message:@"楽曲が見つかりませんでした。\nストアで楽曲をインストールしてください。"
-                                          delegate:nil
-                                 cancelButtonTitle:nil
-                                 otherButtonTitles:@"OK"];
+        CommonAlertView *alert = [[CommonAlertView alloc]
+                initWithTitle:nil
+                      message:@"楽曲が見つかりませんでした。\nストアで楽曲をインス"
+                              @"トールしてください。"
+                     delegate:nil
+            cancelButtonTitle:nil
+            otherButtonTitles:@"OK"];
         [alert show];
     }
 }
@@ -326,20 +343,23 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     return (_overScoreLogDataArray != nil) ? (NSInteger)_overScoreLogDataArray.count : 0;
 }
 
-// @ 0x2ac1c — one OverScoreLogCell per entry (reused by "Cell%ld_%ld"), bound to its boxed data.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+// @ 0x2ac1c — one OverScoreLogCell per entry (reused by "Cell%ld_%ld"), bound
+// to its boxed data.
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
     OverScoreLogCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
-        cell = [[OverScoreLogCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+        cell = [[OverScoreLogCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                       reuseIdentifier:identifier];
     }
     [cell setOverScoreLogData:[_overScoreLogDataArray objectAtIndex:indexPath.row]];
     return cell;
 }
 
-// @ 0x2ad28 — a row was picked: remember its music id / sheet and fade the panel closed (the
-// close completion launches the play).
+// @ 0x2ad28 — a row was picked: remember its music id / sheet and fade the
+// panel closed (the close completion launches the play).
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     OverScoreLogData data;
     [(NSValue *)[_overScoreLogDataArray objectAtIndex:indexPath.row] getValue:&data];
@@ -350,15 +370,16 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 #pragma mark - DownloadMainDelegate
 
-// @ 0x2adac — the over-score-log download finished: hide the spinner, then either alert on
-// failure or swap in the parsed list and reload.
+// @ 0x2adac — the over-score-log download finished: hide the spinner, then
+// either alert on failure or swap in the parsed list and reload.
 - (void)downloadMainFinished:(NSNumber *)success {
     _dummyView.view.hidden = YES;
     DownloadMain *dl = [DownloadMain getInstance];
     if (![success boolValue]) {
         CommonAlertView *alert =
             [[CommonAlertView alloc] initWithTitle:nil
-                                           message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
+                                           message:@"通信に失敗しました。\n電波状態"
+                                                   @"の良い場所でやり直して下さい。"
                                           delegate:nil
                                  cancelButtonTitle:nil
                                  otherButtonTitles:@"OK"];

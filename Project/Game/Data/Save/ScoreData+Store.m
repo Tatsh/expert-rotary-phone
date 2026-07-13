@@ -11,8 +11,7 @@
 @implementation ScoreData (Store)
 
 // Ghidra: +[ScoreData getScoreData:inManagedObjectContext:] @ 0x6da30
-+ (ScoreData *)getScoreData:(int)musicId
-       inManagedObjectContext:(NSManagedObjectContext *)context {
++ (ScoreData *)getScoreData:(int)musicId inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
 
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
@@ -46,7 +45,7 @@
     [context reset];
 
     ScoreData *record = [NSEntityDescription insertNewObjectForEntityForName:@"ScoreData"
-                                                     inManagedObjectContext:context];
+                                                      inManagedObjectContext:context];
     record.musicId = [NSNumber numberWithInt:musicId];
     [self reset:record];
     [context save:nil];

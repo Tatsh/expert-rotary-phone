@@ -6,9 +6,9 @@
 //
 
 #import "StorePackInfo.h"
-#import "StoreUtil.h"
-#import "StoreMusicInfo.h"
 #import "StoreAcMusicInfo.h"
+#import "StoreMusicInfo.h"
+#import "StoreUtil.h"
 #import <StoreKit/StoreKit.h>
 
 @implementation StorePackInfo
@@ -21,7 +21,8 @@
     return self;
 }
 
-// @ 0x5680c — build straight from a resolved product; derive the pack id from it.
+// @ 0x5680c — build straight from a resolved product; derive the pack id from
+// it.
 - (instancetype)initWithProduct:(SKProduct *)product {
     if ((self = [super init]) && product != nil) {
         [self setProduct:product];
@@ -127,7 +128,7 @@
         if (info != nil) {
             [infos addObject:info];
             if (infos.count > 3) {
-                break;   // at most 4 songs shown per pack
+                break; // at most 4 songs shown per pack
             }
         }
     }
@@ -165,7 +166,8 @@
     return m_PackName;
 }
 
-// @ 0x573d0 (the accessor for m_Comment; the decompiler mis-typed its signature).
+// @ 0x573d0 (the accessor for m_Comment; the decompiler mis-typed its
+// signature).
 - (NSString *)comment {
     return m_Comment;
 }
@@ -215,14 +217,15 @@
     return m_AcvMusicInfos;
 }
 
-// @ 0x571e4 — YES while the pack still needs its detail fetched: the song lists aren't
-// built yet (setDictionary: hasn't run), so the detail screen should request them.
+// @ 0x571e4 — YES while the pack still needs its detail fetched: the song lists
+// aren't built yet (setDictionary: hasn't run), so the detail screen should
+// request them.
 - (BOOL)downloadDetailInfo {
     return m_MusicInfos == nil;
 }
 
-// @ 0x571fc — YES once every song in the pack (both the standard and arcade lists) has
-// its purchased file on disk.
+// @ 0x571fc — YES once every song in the pack (both the standard and arcade
+// lists) has its purchased file on disk.
 - (BOOL)allDownloaded {
     for (StoreMusicInfo *info in m_MusicInfos) {
         if (![info fileExist]) {

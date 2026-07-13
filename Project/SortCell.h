@@ -2,8 +2,8 @@
 //  SortCell.h
 //  pop'n rhythmin
 //
-//  A sort-option row. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xc5418).
+//  A sort-option row. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xc5418).
 //
 
 #import <UIKit/UIKit.h>

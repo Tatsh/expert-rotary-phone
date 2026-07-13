@@ -22,12 +22,13 @@
 BootLogoTask::BootLogoTask() = default;
 
 // @ 0x2af8c — taskNode_deleteA is the compiler's deleting-destructor thunk
-// (caSourceNode_dtor then operator delete). BootLogoTask frees its three sprites in
-// finish(), so the real destructor only chains to the C_TASK base — nothing to do here.
+// (caSourceNode_dtor then operator delete). BootLogoTask frees its three
+// sprites in finish(), so the real destructor only chains to the C_TASK base —
+// nothing to do here.
 BootLogoTask::~BootLogoTask() = default;
 
-// A touch that has been released this frame skips the current screen (Ghidra: the
-// scan of NEGraphics's touch pool at the top of the update).
+// A touch that has been released this frame skips the current screen (Ghidra:
+// the scan of NEGraphics's touch pool at the top of the update).
 bool BootLogoTask::skipRequested() const {
     neGraphics &gfx = neGraphics::shared();
     int count = gfx.activeTouchCount();
@@ -42,39 +43,43 @@ bool BootLogoTask::skipRequested() const {
 
 // Ghidra: BootLogoTask_setup (FUN_0002b1f4) — cache the render manager + screen
 // scale, then load three device-sized branding PNGs into the sprites. The image
-// set + on-screen size are chosen per display (iPad/Retina/phone); one confirmed
-// resource stem is "eamusement_1024_2x" (the full per-device name tables live at
-// the DAT_00130fd4.. constants).
+// set + on-screen size are chosen per display (iPad/Retina/phone); one
+// confirmed resource stem is "eamusement_1024_2x" (the full per-device name
+// tables live at the DAT_00130fd4.. constants).
 void BootLogoTask::setup() {
     m_aep = &AepManager::shared();
     m_scale = neSceneManager::screenScale();
 
     // Boot logos render at native scale 1.0 (Ghidra: *(m_aep + 0x7c16e0) = 1.0f);
     // the saved m_scale is restored in finish() via the same metrics setter.
-    neSceneManager::setScreenMetrics(neSceneManager::screenWidth(),
-                                     neSceneManager::screenHeight(), 1.0f);
+    neSceneManager::setScreenMetrics(
+        neSceneManager::screenWidth(), neSceneManager::screenHeight(), 1.0f);
 
-    // Choose the branding image set + canvas size for this display. Each set is the
-    // three logos [konami, bemani, eamusement] at one resolution (real resource
-    // names extracted from the DAT_00130fd4.. tables; the canvas size doubles as the
-    // logo centre). The branch conditions mirror BootLogoTask_setup exactly: a
-    // scene-manager device flag (DAT_00187b84) splits phone/pad, then displayType
-    // (phone) or the screen scale (pad).
+    // Choose the branding image set + canvas size for this display. Each set is
+    // the three logos [konami, bemani, eamusement] at one resolution (real
+    // resource names extracted from the DAT_00130fd4.. tables; the canvas size
+    // doubles as the logo centre). The branch conditions mirror
+    // BootLogoTask_setup exactly: a scene-manager device flag (DAT_00187b84)
+    // splits phone/pad, then displayType (phone) or the screen scale (pad).
     NSArray<NSString *> *imageSet;
-    const bool isPad = neSceneManager::isPadDisplay();   // DAT_00187b84 != 0
+    const bool isPad = neSceneManager::isPadDisplay(); // DAT_00187b84 != 0
     if (!isPad) {
         if (AppDelegate.appDelegate.displayType == 2) {
-            m_posX = 0x280; m_posY = 0x470;   // 640x1136 (4" retina)
+            m_posX = 0x280;
+            m_posY = 0x470; // 640x1136 (4" retina)
             imageSet = @[ @"konami-568@2x", @"bemani640X1136@2x", @"eamusement-568@2x" ];
         } else {
-            m_posX = 0x280; m_posY = 0x3c0;   // 640x960 (3.5" retina)
+            m_posX = 0x280;
+            m_posY = 0x3c0; // 640x960 (3.5" retina)
             imageSet = @[ @"konami@2x", @"bemani640X960@2x", @"eamusement@2x" ];
         }
     } else if (m_scale == 1.0f) {
-        m_posX = 0x600; m_posY = 0x800;       // 1536x2048 (iPad retina)
+        m_posX = 0x600;
+        m_posY = 0x800; // 1536x2048 (iPad retina)
         imageSet = @[ @"konami-1024@2x", @"bemani768X1024@2x", @"eamusement-1024@2x" ];
     } else {
-        m_posX = 0x300; m_posY = 0x400;       // 768x1024 (iPad non-retina)
+        m_posX = 0x300;
+        m_posY = 0x400; // 768x1024 (iPad non-retina)
         imageSet = @[ @"konami-1024", @"bemani768X1024", @"eamusement-1024" ];
     }
 
@@ -85,17 +90,19 @@ void BootLogoTask::setup() {
     }
 }
 
-// Draw one branding sprite centred at (m_posX, m_posY), full size/opacity, priority
-// 5 (Ghidra: neTextureForiOS_draw FUN_0000fbcc as called from FUN_0002b4b4/b504).
+// Draw one branding sprite centred at (m_posX, m_posY), full size/opacity,
+// priority 5 (Ghidra: neTextureForiOS_draw FUN_0000fbcc as called from
+// FUN_0002b4b4/b504).
 void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     if (logo == nullptr) {
         return;
     }
-    // Ghidra BootLogoTask_drawLogo* (FUN_0002b4b4/b504) -> neTextureForiOS_draw with
-    // w = m_posX, h = m_posY, x = 0, y = 0, sx = sy = 100: the logo is a full-canvas quad
-    // at the origin (m_posX/m_posY are the device-pixel canvas size, NOT a centre). The
-    // prior reconstruction had position/size swapped (x=posX, y=posY, w=h=100), so even a
-    // bound texture would have drawn a 100x100 quad in the corner.
+    // Ghidra BootLogoTask_drawLogo* (FUN_0002b4b4/b504) -> neTextureForiOS_draw
+    // with w = m_posX, h = m_posY, x = 0, y = 0, sx = sy = 100: the logo is a
+    // full-canvas quad at the origin (m_posX/m_posY are the device-pixel canvas
+    // size, NOT a centre). The prior reconstruction had position/size swapped
+    // (x=posX, y=posY, w=h=100), so even a bound texture would have drawn a
+    // 100x100 quad in the corner.
     neSpriteDrawParams p;
     p.x = 0;
     p.y = 0;
@@ -110,33 +117,34 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     logo->draw(m_aep->orderingTable(), p);
 }
 
-// @ 0x2b504 — BootLogoTask_drawLogo1. The concrete per-screen draw wrapper the state
-// machine calls to blit the second branding sprite (m_logo[1], @ +0x30); it is just
-// drawLogo() bound to that sprite.
+// @ 0x2b504 — BootLogoTask_drawLogo1. The concrete per-screen draw wrapper the
+// state machine calls to blit the second branding sprite (m_logo[1], @ +0x30);
+// it is just drawLogo() bound to that sprite.
 void BootLogoTask::drawLogo1() {
     drawLogo(m_logo[1]);
 }
 
-// Ghidra: BootLogoTask_finish (FUN_0002b554) — log into Game Center, restore the
-// screen scale, release the three sprites, kill this task, and spawn the next one.
+// Ghidra: BootLogoTask_finish (FUN_0002b554) — log into Game Center, restore
+// the screen scale, release the three sprites, kill this task, and spawn the
+// next one.
 void BootLogoTask::finish() {
     [AppDelegate.appDelegate loginGameCenter];
-    neSceneManager::setScreenMetrics(neSceneManager::screenWidth(),
-                                     neSceneManager::screenHeight(), m_scale);
+    neSceneManager::setScreenMetrics(
+        neSceneManager::screenWidth(), neSceneManager::screenHeight(), m_scale);
     for (int i = 0; i < 3; i++) {
         delete m_logo[i];
         m_logo[i] = nullptr;
     }
-    kill();   // +0x24 = 1: reaped on the next scheduler pass
+    kill(); // +0x24 = 1: reaped on the next scheduler pass
 
     if (C_TASK *next = BootCreateNextTask()) {
         next->setPriority(3);
     }
 }
 
-// Ghidra: BootLogoTask_update (FUN_0002b02c) — the 10-state splash machine. Each
-// screen fades in, holds ~kHoldFrames (or until a tap), then fades out; the three
-// logos are shown in the order 0, 2, 1.
+// Ghidra: BootLogoTask_update (FUN_0002b02c) — the 10-state splash machine.
+// Each screen fades in, holds ~kHoldFrames (or until a tap), then fades out;
+// the three logos are shown in the order 0, 2, 1.
 void BootLogoTask::update(int /*deltaMs*/) {
     const bool skip = skipRequested();
 
@@ -146,24 +154,24 @@ void BootLogoTask::update(int /*deltaMs*/) {
         m_state = 1;
         break;
     case 1:
-        m_aep->playTransition(1, kFirstFadeFrames, 0);   // fade in
+        m_aep->playTransition(1, kFirstFadeFrames, 0); // fade in
         m_counter = 0;
         m_state = 2;
         break;
-    case 2:   // hold logo 0
+    case 2: // hold logo 0
         if (skip) {
             m_counter = kHoldFrames;
         }
         if (m_aep->isTransitionDone()) {
             if (m_counter > 0x77) {
-                m_aep->playTransition(2, kFadeFrames, 0);   // fade out
+                m_aep->playTransition(2, kFadeFrames, 0); // fade out
                 m_state = 3;
             }
             m_counter++;
         }
         drawLogo(m_logo[0]);
         return;
-    case 3:   // fade logo 0 out -> fade logo 2 in
+    case 3: // fade logo 0 out -> fade logo 2 in
         if (!m_aep->isTransitionDone()) {
             drawLogo(m_logo[0]);
             return;
@@ -172,7 +180,7 @@ void BootLogoTask::update(int /*deltaMs*/) {
         m_counter = 0;
         m_state = 4;
         break;
-    case 4:   // hold logo 2
+    case 4: // hold logo 2
         if (skip) {
             m_counter = kHoldFrames;
         }
@@ -185,7 +193,7 @@ void BootLogoTask::update(int /*deltaMs*/) {
         }
         drawLogo(m_logo[2]);
         return;
-    case 5:   // fade logo 2 out -> fade logo 1 in
+    case 5: // fade logo 2 out -> fade logo 1 in
         if (!m_aep->isTransitionDone()) {
             drawLogo(m_logo[2]);
             return;
@@ -194,7 +202,7 @@ void BootLogoTask::update(int /*deltaMs*/) {
         m_counter = 0;
         m_state = 6;
         break;
-    case 6:   // hold logo 1
+    case 6: // hold logo 1
         if (skip) {
             m_counter = kHoldFrames;
         }
@@ -206,7 +214,7 @@ void BootLogoTask::update(int /*deltaMs*/) {
         }
         drawLogo(m_logo[1]);
         return;
-    case 7:   // fade logo 1 out
+    case 7: // fade logo 1 out
         m_aep->playTransition(2, kFadeFrames, 0);
         drawLogo(m_logo[1]);
         m_state = 8;

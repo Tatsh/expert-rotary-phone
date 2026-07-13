@@ -9,12 +9,16 @@
 
 #include "neGraphics.h"
 
-#include <cstring>   // strchr
+#include <cstring> // strchr
 
 // 16.16 fixed-point <-> float. UIKit hands neGLView point coordinates already
 // converted to fixed; the manager scales them to pixels with the content scale.
-static inline float FixedToFloat(int v) { return (float)v / 65536.0f; }
-static inline int FloatToFixed(float v) { return (int)(v * 65536.0f); }
+static inline float FixedToFloat(int v) {
+    return (float)v / 65536.0f;
+}
+static inline int FloatToFixed(float v) {
+    return (int)(v * 65536.0f);
+}
 
 // Sentinel coordinate a free slot is initialised to (Ghidra: 0x80000000).
 static const int kUnsetCoord = (int)0x80000000;
@@ -28,10 +32,10 @@ static const int kUnsetSize = 0x7fffffff;
 neGraphics::neGraphics() {
     m_touchCount = 0;
     m_nextTouchId = 0;
-    m_contentScale = 1.0f;   // 0x3f800000
+    m_contentScale = 1.0f; // 0x3f800000
     for (int i = 0; i < kMaxTouches; ++i) {
         auto *rec = new neTouchPoint;
-        rec->id = -1;                                   // 0xffffffff
+        rec->id = -1; // 0xffffffff
         rec->startX = rec->startY = kUnsetCoord;
         rec->x = rec->y = kUnsetCoord;
         rec->prevX = rec->prevY = kUnsetCoord;
@@ -71,14 +75,18 @@ void neGraphics::touchBegan(int x, int y, int width, int height) {
     int py = FloatToFixed(FixedToFloat(y) * m_contentScale);
     rec->id = m_nextTouchId;
     // All four coordinate pairs start at the down point.
-    rec->startX = px;  rec->startY = py;   // pair A (+0x04)
-    rec->x = px;       rec->y = py;        // pair B (+0x0c) current / match key
-    rec->prevX = px;   rec->prevY = py;    // pair C (+0x14)
-    rec->downX = px;   rec->downY = py;    // pair D (+0x1c)
-    rec->width = width;                    // +0x24 (unscaled)
-    rec->height = height;                  // +0x28
-    rec->valid = 1;                        // +0x2c
-    rec->released = 0;                     // +0x2d
+    rec->startX = px;
+    rec->startY = py; // pair A (+0x04)
+    rec->x = px;
+    rec->y = py; // pair B (+0x0c) current / match key
+    rec->prevX = px;
+    rec->prevY = py; // pair C (+0x14)
+    rec->downX = px;
+    rec->downY = py;      // pair D (+0x1c)
+    rec->width = width;   // +0x24 (unscaled)
+    rec->height = height; // +0x28
+    rec->valid = 1;       // +0x2c
+    rec->released = 0;    // +0x2d
     m_nextTouchId = (m_nextTouchId == 0x7fffffff) ? 0 : m_nextTouchId + 1;
     m_touchCount = slot + 1;
 }
@@ -96,8 +104,10 @@ void neGraphics::touchMoved(int x, int y, int prevX, int prevY) {
     for (int i = 0; i < m_touchCount; ++i) {
         auto *rec = m_touches[i];
         if (rec->x == ox && rec->y == oy) {
-            rec->x = nx;   rec->y = ny;        // pair B (+0x0c)
-            rec->prevX = ox; rec->prevY = oy;  // pair C (+0x14)
+            rec->x = nx;
+            rec->y = ny; // pair B (+0x0c)
+            rec->prevX = ox;
+            rec->prevY = oy; // pair C (+0x14)
             return;
         }
     }
@@ -116,9 +126,11 @@ void neGraphics::touchEnded(int x, int y, int prevX, int prevY) {
     for (int i = 0; i < m_touchCount; ++i) {
         auto *rec = m_touches[i];
         if (rec->released == 0 && rec->x == ox && rec->y == oy) {
-            rec->x = nx;   rec->y = ny;
-            rec->prevX = ox; rec->prevY = oy;
-            rec->released = 1;             // +0x2d
+            rec->x = nx;
+            rec->y = ny;
+            rec->prevX = ox;
+            rec->prevY = oy;
+            rec->released = 1; // +0x2d
             return;
         }
     }
@@ -141,8 +153,9 @@ const neTouchPoint *neGraphics::findTouchById(int id) const {
     return nullptr;
 }
 
-// Ghidra: pointInRect FUN_0002d974 — inclusive point-in-rect test: x in [rx, rx+rw]
-// and y in [ry, ry+rh]. The ~13 inlined menu hit-tests and menuButtonHit call this.
+// Ghidra: pointInRect FUN_0002d974 — inclusive point-in-rect test: x in [rx,
+// rx+rw] and y in [ry, ry+rh]. The ~13 inlined menu hit-tests and menuButtonHit
+// call this.
 bool neGraphics::pointInRect(int x, int y, int rx, int ry, int rw, int rh) {
     return x >= rx && x <= rx + rw && y >= ry && y <= ry + rh;
 }
@@ -159,8 +172,9 @@ extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i) {
 
 #pragma mark - Free text / geometry helpers
 
-// @ 0x2d858 — count '\n'-separated lines. The loop advances past each newline and, when
-// the newline was the last character, stops without counting a trailing empty line.
+// @ 0x2d858 — count '\n'-separated lines. The loop advances past each newline
+// and, when the newline was the last character, stops without counting a
+// trailing empty line.
 int countLines(const char *text) {
     if (*text == '\0') {
         return 0;
@@ -169,20 +183,21 @@ int countLines(const char *text) {
     for (;;) {
         const char *nl = strchr(text, '\n');
         if (nl == nullptr) {
-            return count;             // no more newlines: current line is the last
+            return count; // no more newlines: current line is the last
         }
         text = nl + 1;
         if (*text == '\0') {
-            return count;             // trailing newline: no extra empty line
+            return count; // trailing newline: no extra empty line
         }
         ++count;
     }
 }
 
-// @ 0x2d9dc — returns true iff x1<=xMax1 && x2<=xMax2 && y1>=yMin1 && y2>=yMin2. The
-// binary encodes the two `<=` comparisons with the usual NaN-aware two-stage compare.
-bool isWithinRange2D(float x1, float y1, float x2, float y2,
-                     float yMin1, float xMax1, float yMin2, float xMax2) {
+// @ 0x2d9dc — returns true iff x1<=xMax1 && x2<=xMax2 && y1>=yMin1 &&
+// y2>=yMin2. The binary encodes the two `<=` comparisons with the usual
+// NaN-aware two-stage compare.
+bool isWithinRange2D(
+    float x1, float y1, float x2, float y2, float yMin1, float xMax1, float yMin2, float xMax2) {
     if (x1 <= xMax1 && x2 <= xMax2) {
         if (y1 < yMin1) {
             return false;

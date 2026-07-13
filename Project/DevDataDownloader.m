@@ -13,12 +13,13 @@ static DevDataDownloader *s_instance = nil;
 
 @implementation DevDataDownloader
 
-// delegate / setDelegate: @ 0x8ee00 / 0x8ee10, isOld / setIsOld: @ 0x8ee20 / 0x8ee38.
+// delegate / setDelegate: @ 0x8ee00 / 0x8ee10, isOld / setIsOld: @ 0x8ee20 /
+// 0x8ee38.
 @synthesize delegate = m_Delegate;
 @synthesize isOld = m_IsOld;
 
-// +[DevDataDownloader getInstance]  @ 0x8e894 — shared instance; resets isOld to NO on every
-// access (as in the binary).
+// +[DevDataDownloader getInstance]  @ 0x8e894 — shared instance; resets isOld
+// to NO on every access (as in the binary).
 + (instancetype)getInstance {
     if (s_instance == nil) {
         s_instance = [[DevDataDownloader alloc] init];
@@ -33,9 +34,10 @@ static DevDataDownloader *s_instance = nil;
     if (m_Downloader != nil) {
         return NO;
     }
-    NSString *path = [NSString stringWithFormat:(m_IsOld ? @"/apr/dev_data_old/%@/%@"
-                                                         : @"/apr/dev_data/%@/%@"),
-                                                title, fileName];
+    NSString *path =
+        [NSString stringWithFormat:(m_IsOld ? @"/apr/dev_data_old/%@/%@" : @"/apr/dev_data/%@/%@"),
+                                   title,
+                                   fileName];
     NSURL *url = [[NSURL alloc] initWithScheme:@"http" host:@"dev.apr.konaminet.jp" path:path];
     m_Downloader = [[Downloader alloc] initWithURL:url delegate:self];
     m_Title = title;
@@ -44,7 +46,8 @@ static DevDataDownloader *s_instance = nil;
     return YES;
 }
 
-// @ 0x8eb1c — write the fetched bytes into Caches/<devdata|acvdevdata>/<title>/<file>.
+// @ 0x8eb1c — write the fetched bytes into
+// Caches/<devdata|acvdevdata>/<title>/<file>.
 - (void)downloaderFinished:(Downloader *)downloader {
     // drop the in-flight request
     m_Downloader = nil;
@@ -57,8 +60,10 @@ static DevDataDownloader *s_instance = nil;
 
     if (![fm fileExistsAtPath:dir]) {
         error = nil;
-        if (![fm createDirectoryAtPath:dir withIntermediateDirectories:YES
-                            attributes:nil error:&error]) {
+        if (![fm createDirectoryAtPath:dir
+                withIntermediateDirectories:YES
+                                 attributes:nil
+                                      error:&error]) {
             [m_Delegate devDownloadFailed:[NSString stringWithFormat:@"createDirError:%@", error]];
             return;
         }
@@ -67,8 +72,10 @@ static DevDataDownloader *s_instance = nil;
     NSString *titleDir = [NSString stringWithFormat:@"%@/%@", dir, m_Title];
     if (![fm fileExistsAtPath:titleDir]) {
         error = nil;
-        if (![fm createDirectoryAtPath:titleDir withIntermediateDirectories:YES
-                            attributes:nil error:&error]) {
+        if (![fm createDirectoryAtPath:titleDir
+                withIntermediateDirectories:YES
+                                 attributes:nil
+                                      error:&error]) {
             [m_Delegate devDownloadFailed:[NSString stringWithFormat:@"createDirError:%@", error]];
             return;
         }

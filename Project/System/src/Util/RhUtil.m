@@ -5,8 +5,8 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
-#import "RhCrypto.h"
 #import "RhUtil.h"
+#import "RhCrypto.h"
 
 #import <CommonCrypto/CommonDigest.h>
 #import <sys/time.h>
@@ -23,7 +23,8 @@ NSDictionary *RhParsePlistDict(NSData *data) {
     return [root isKindOfClass:NSDictionary.class] ? root : nil;
 }
 
-// Ghidra: FUN_0005c330 — plist -> mutable NSArray copy (nil unless root is array).
+// Ghidra: FUN_0005c330 — plist -> mutable NSArray copy (nil unless root is
+// array).
 NSMutableArray *RhParsePlistArray(NSData *data) {
     if (data == nil) {
         return nil;
@@ -53,9 +54,10 @@ int getFileSize(NSString *path) {
     return [[attrs objectForKey:NSFileSize] intValue];
 }
 
-// Ghidra: FUN_00028aa4 — treat an NSArray of NSNumber as a packed 32-bit-per-element
-// bitfield and return whether bit `bit` is set: element (bit >> 5)'s intValue masked by
-// 1 << (bit & 31). An out-of-range element index reads as 0 (NO).
+// Ghidra: FUN_00028aa4 — treat an NSArray of NSNumber as a packed
+// 32-bit-per-element bitfield and return whether bit `bit` is set: element (bit
+// >> 5)'s intValue masked by 1 << (bit & 31). An out-of-range element index
+// reads as 0 (NO).
 BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit) {
     unsigned idx = bit >> 5;
     if (idx >= [numberArray count]) {
@@ -83,7 +85,8 @@ NSString *ComputeMD5HexString(const char *cString) {
     return [NSString stringWithString:hex];
 }
 
-// Ghidra: FUN_0005bc04 — SHA-256 of a C string as a 64-char lowercase hex string.
+// Ghidra: FUN_0005bc04 — SHA-256 of a C string as a 64-char lowercase hex
+// string.
 NSString *ComputeSHA256HexString(const char *cString) {
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
     CC_SHA256(cString, (CC_LONG)strlen(cString), digest);
@@ -170,7 +173,9 @@ UIImage *loadDeviceImage(NSString *name) {
 
     UIImage *image = [[UIImage alloc] initWithContentsOfFile:path];
     if (image != nil && rebuildAtScale2) {
-        image = [UIImage imageWithCGImage:image.CGImage scale:2.0f orientation:UIImageOrientationUp];
+        image = [UIImage imageWithCGImage:image.CGImage
+                                    scale:2.0f
+                              orientation:UIImageOrientationUp];
     }
     return image;
 }

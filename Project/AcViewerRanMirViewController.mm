@@ -2,18 +2,19 @@
 //  AcViewerRanMirViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. One of the four
-//  arcade (AC) viewer per-option detail screens pushed by AcViewerOptionViewController.
-//  This one edits RAN-MIR (four values: OFF, RANDOM, MIRROR, S-RAN). Objective-C++
-//  (.mm) because it drives the C++ "ne" engine singletons via neEngineBridge (the scene
-//  manager pad-display flag, the AC-viewer event-center selection that seeds the header,
-//  and the system-SE hooks).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. One of the
+//  four arcade (AC) viewer per-option detail screens pushed by
+//  AcViewerOptionViewController. This one edits RAN-MIR (four values: OFF,
+//  RANDOM, MIRROR, S-RAN). Objective-C++
+//  (.mm) because it drives the C++ "ne" engine singletons via neEngineBridge
+//  (the scene manager pad-display flag, the AC-viewer event-center selection
+//  that seeds the header, and the system-SE hooks).
 //
 
 #import "AcViewerRanMirViewController.h"
 
-#import "AcViewerDetailCell.h"
 #import "AcMusicData.h"
+#import "AcViewerDetailCell.h"
 #import "AppFont.h"
 #import "MusicManager.h"
 #import "UserSettingData.h"
@@ -23,27 +24,32 @@
 - (void)touchedBackButton:(id)sender;
 @end
 
-// One header caption label (song title / BPM); the binary builds both inline with an
-// identical style (48/255 grey text, white when highlighted, DFSoGei font, auto-shrink).
+// One header caption label (song title / BPM); the binary builds both inline
+// with an identical style (48/255 grey text, white when highlighted, DFSoGei
+// font, auto-shrink).
 static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, CGRect frame) {
     UILabel *lbl = [[UILabel alloc] init];
     lbl.backgroundColor = [UIColor clearColor];
-    lbl.textColor = [UIColor colorWithRed:48.0f / 255.0f green:48.0f / 255.0f blue:48.0f / 255.0f alpha:1.0f];
+    lbl.textColor = [UIColor colorWithRed:48.0f / 255.0f
+                                    green:48.0f / 255.0f
+                                     blue:48.0f / 255.0f
+                                    alpha:1.0f];
     lbl.highlightedTextColor = [UIColor whiteColor];
     lbl.font = [UIFont fontWithName:AppFontName() size:fontSize];
     lbl.textAlignment = alignment;
     lbl.adjustsFontSizeToFitWidth = YES;
-    [lbl setMinimumScaleFactor:10.0f];  // raw 0x41200000 (legacy minimum-font-size value)
+    [lbl setMinimumScaleFactor:10.0f]; // raw 0x41200000 (legacy minimum-font-size
+                                       // value)
     lbl.frame = frame;
     return lbl;
 }
 
 @implementation AcViewerRanMirViewController
 
-// @ 0xa6c20 — build the list: a transparent, separator-less UITableView; a back button;
-// the "friman" backdrop (phone only); and the shared custom header (song banner,
-// difficulty banner, title/genre and BPM labels) built from the AC-viewer's current
-// event-center selection.
+// @ 0xa6c20 — build the list: a transparent, separator-less UITableView; a back
+// button; the "friman" backdrop (phone only); and the shared custom header
+// (song banner, difficulty banner, title/genre and BPM labels) built from the
+// AC-viewer's current event-center selection.
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStylePlain])) {
         return nil;
@@ -56,9 +62,12 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     // Back button.
     NSString *backName = neSceneManager::isPadDisplay() ? @"pl_checker_return" : @"navi_btn_back";
     UIImage *backImg = [UIImage imageNamed:backName];
-    UIButton *backBtn = [[UIButton alloc] initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
+    UIButton *backBtn = [[UIButton alloc]
+        initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-    [backBtn addTarget:self action:@selector(touchedBackButton:) forControlEvents:UIControlEventTouchUpInside];
+    [backBtn addTarget:self
+                  action:@selector(touchedBackButton:)
+        forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     if (neSceneManager::isPadDisplay()) {
         self.navigationItem.hidesBackButton = YES;
@@ -73,7 +82,8 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     }
 
     // --- Custom table header: song banner, difficulty banner, title and BPM ---
-    neAppEventCenter::shared();  // force the event center to init before the AC globals
+    neAppEventCenter::shared(); // force the event center to init before the AC
+                                // globals
     int musicId = neAppEventCenter::acViewerMusicId();
     int difficulty = neAppEventCenter::acViewerDifficulty();
     AcMusicData *data = [[MusicManager getInstance] getAcMusicData:musicId];
@@ -85,30 +95,41 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     // Difficulty banner (index 0..3). NB: the binary's asset name for "hyper" is
     // misspelled "heper".
     static NSString *const kDiffBanner[] = {
-        @"acv_custom_easy", @"acv_custom_normal", @"acv_custom_heper", @"acv_custom_ex"
-    };
+        @"acv_custom_easy", @"acv_custom_normal", @"acv_custom_heper", @"acv_custom_ex"};
     UIImage *diffImg = [UIImage imageNamed:kDiffBanner[difficulty]];
     UIImageView *diffView = [[UIImageView alloc] initWithImage:diffImg];
     diffView.frame = CGRectMake(22.0f, 46.0f, diffImg.size.width, diffImg.size.height);
 
-    UILabel *titleLbl = AcvMakeHeaderLabel(15.0f, NSTextAlignmentCenter, CGRectMake(20.0f, 26.0f, 280.0f, 18.0f));
+    UILabel *titleLbl =
+        AcvMakeHeaderLabel(15.0f, NSTextAlignmentCenter, CGRectMake(20.0f, 26.0f, 280.0f, 18.0f));
     titleLbl.text = [UserSettingData isAcvGenreName] ? [data genreName] : [data musicName];
 
     NSString *bpm = nil;
     switch (difficulty) {
-        case 0: bpm = [data bpmEasy];   break;
-        case 1: bpm = [data bpmNormal]; break;
-        case 2: bpm = [data bpmHyper];  break;
-        case 3: bpm = [data bpmEx];     break;
-        default: break;
+    case 0:
+        bpm = [data bpmEasy];
+        break;
+    case 1:
+        bpm = [data bpmNormal];
+        break;
+    case 2:
+        bpm = [data bpmHyper];
+        break;
+    case 3:
+        bpm = [data bpmEx];
+        break;
+    default:
+        break;
     }
-    UILabel *bpmLbl = AcvMakeHeaderLabel(14.0f, NSTextAlignmentRight, CGRectMake(195.0f, 46.0f, 100.0f, 18.0f));
+    UILabel *bpmLbl =
+        AcvMakeHeaderLabel(14.0f, NSTextAlignmentRight, CGRectMake(195.0f, 46.0f, 100.0f, 18.0f));
     if (bpm != nil) {
         bpmLbl.text = [NSString stringWithFormat:@"BPM:%@", bpm];
     }
 
-    // Header container: the banner plus a 17 pt gap above and below it (banner-height + 34;
-    // the binary derives it from the banner/difficulty image sizes via vector adds).
+    // Header container: the banner plus a 17 pt gap above and below it
+    // (banner-height + 34; the binary derives it from the banner/difficulty image
+    // sizes via vector adds).
     UIView *headerView = [[UIView alloc] init];
     headerView.frame = CGRectMake(0.0f, 0.0f, bannerImg.size.width, bannerImg.size.height + 34.0f);
     [headerView addSubview:bannerView];
@@ -120,8 +141,8 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     return self;
 }
 
-// @ 0xa74f4 — super only (unlike the sibling detail screens, this one does not poke the
-// scene manager here).
+// @ 0xa74f4 — super only (unlike the sibling detail screens, this one does not
+// poke the scene manager here).
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
@@ -138,17 +159,19 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     return (section == 0) ? 4 : 0;
 }
 
-// @ 0xa7530 — one AcViewerDetailCell per value (reused by "Cell%ld_%ld"), bound to the
-// RAN-MIR option kind (3) and the row's value label.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+// @ 0xa7530 — one AcViewerDetailCell per value (reused by "Cell%ld_%ld"), bound
+// to the RAN-MIR option kind (3) and the row's value label.
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
     AcViewerDetailCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
-        cell = [[AcViewerDetailCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+        cell = [[AcViewerDetailCell alloc] initWithStyle:UITableViewCellStyleDefault
+                                         reuseIdentifier:identifier];
     }
     if (indexPath.section == 0) {
-        static NSString *const kRanMir[] = { @"OFF", @"RANDOM", @"MIRROR", @"S-RAN" };
+        static NSString *const kRanMir[] = {@"OFF", @"RANDOM", @"MIRROR", @"S-RAN"};
         cell.optionName = kRanMir[indexPath.row];
         cell.optionKind = 3;
         [cell setData:(int)indexPath.row];
@@ -162,12 +185,13 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 }
 
 // @ 0xa7664 — no accessory (private UITableView delegate hook).
-- (NSInteger)tableView:(UITableView *)tableView accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
+- (NSInteger)tableView:(UITableView *)tableView
+    accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     return UITableViewCellAccessoryNone;
 }
 
-// @ 0xa7668 — a new value: store it, refresh, play the decide SE and pop back to the
-// option list. Re-selecting the current value does nothing.
+// @ 0xa7668 — a new value: store it, refresh, play the decide SE and pop back
+// to the option list. Re-selecting the current value does nothing.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
@@ -183,9 +207,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 #pragma mark - Actions
 
-// @ 0xa7738 — BACK: (on a real tap) play the cancel SE, refresh the option list behind
-// this screen, restore the option-list nav-bar background and pop. A nil sender (the
-// post-select auto-pop) skips the cancel SE.
+// @ 0xa7738 — BACK: (on a real tap) play the cancel SE, refresh the option list
+// behind this screen, restore the option-list nav-bar background and pop. A nil
+// sender (the post-select auto-pop) skips the cancel SE.
 - (void)touchedBackButton:(id)sender {
     if (sender != nil) {
         neEngine::playSystemSe(2);
@@ -193,8 +217,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     NSArray *vcs = self.navigationController.viewControllers;
     UITableViewController *prev = (UITableViewController *)[vcs objectAtIndex:vcs.count - 2];
     [prev.tableView reloadData];
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_option_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar
+        setBackgroundImage:[UIImage imageNamed:@"acv_option_navbar"]
+             forBarMetrics:UIBarMetricsDefault];
     [self.navigationController popViewControllerAnimated:!neSceneManager::isPadDisplay()];
 }
 

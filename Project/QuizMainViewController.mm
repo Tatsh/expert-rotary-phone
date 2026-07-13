@@ -2,50 +2,61 @@
 //  QuizMainViewController.mm
 //  pop'n rhythmin
 //
-//  See QuizMainViewController.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the C++ neSceneManager / neEngine singletons. ARC.
+//  See QuizMainViewController.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin. Objective-C++ for the C++ neSceneManager / neEngine
+//  singletons. ARC.
 //
 //  Honesty notes:
-//   - Networking: -startGetQuizHttp GETs +[StoreUtil getQuizURL]; -startReplyQuizHttp
-//     POSTs body "uuid=<urlEncoded uuId>&id=<quizId>&is_correct=<0|1>" (Content-Type
-//     "application/json", exact CFString) to +[StoreUtil replyQuizURL]. Both run through
-//     Downloader with self as delegate; the shared -downloaderFinished: dispatches to
-//     -getQuizFinished / -replyQuizFinished by matching the finished Downloader.
-//   - -getQuizFinished parses {QuizId, Question, RightAns, AnsList:[{Text}]}. A question
-//     newer than UserSettingData.lastAnswerQuizId is shown (with <br>/<BR> -> newline);
-//     an already-answered one jumps straight to -drawResult. ErrorCode 1 also draws the
-//     result; ErrorCode 0/99 (and a nil/short payload) raise the network-failure alert.
-//   - -replyQuizFinished persists the returned TotalCorrect/TotalIncorrect/Consecutive
-//     via UserSettingData, stamps the picked row with pq_answer_ok / pq_answer_ng, shows
-//     the matching board (○/✕) + speech-bubble and plays se24_quiz_o (correct) or
-//     se25_quiz_x (wrong). Every 5th correct answer grants a character ticket and arms
-//     the present popup (_presentSt = 1).
-//   - -touchesBegan:withEvent: (after the result board is up) reveals the present window
-//     on the first tap (_presentSt 1 -> 2, plays se08_bonus_fai) and fades it out on the
-//     next (_presentSt 2 -> 0). The network-failure message is the exact UTF-16LE decode
+//   - Networking: -startGetQuizHttp GETs +[StoreUtil getQuizURL];
+//   -startReplyQuizHttp
+//     POSTs body "uuid=<urlEncoded uuId>&id=<quizId>&is_correct=<0|1>"
+//     (Content-Type "application/json", exact CFString) to +[StoreUtil
+//     replyQuizURL]. Both run through Downloader with self as delegate; the
+//     shared -downloaderFinished: dispatches to -getQuizFinished /
+//     -replyQuizFinished by matching the finished Downloader.
+//   - -getQuizFinished parses {QuizId, Question, RightAns, AnsList:[{Text}]}. A
+//   question
+//     newer than UserSettingData.lastAnswerQuizId is shown (with <br>/<BR> ->
+//     newline); an already-answered one jumps straight to -drawResult.
+//     ErrorCode 1 also draws the result; ErrorCode 0/99 (and a nil/short
+//     payload) raise the network-failure alert.
+//   - -replyQuizFinished persists the returned
+//   TotalCorrect/TotalIncorrect/Consecutive
+//     via UserSettingData, stamps the picked row with pq_answer_ok /
+//     pq_answer_ng, shows the matching board (○/✕) + speech-bubble and plays
+//     se24_quiz_o (correct) or se25_quiz_x (wrong). Every 5th correct answer
+//     grants a character ticket and arms the present popup (_presentSt = 1).
+//   - -touchesBegan:withEvent: (after the result board is up) reveals the
+//   present window
+//     on the first tap (_presentSt 1 -> 2, plays se08_bonus_fai) and fades it
+//     out on the next (_presentSt 2 -> 0). The network-failure message is the
+//     exact UTF-16LE decode
 //     "通信に失敗しました。\n電波状態の良い場所でやり直して下さい。".
-//   - The three quiz SEs are loaded into _sdRscId in -initWithStyle: and released in
+//   - The three quiz SEs are loaded into _sdRscId in -initWithStyle: and
+//   released in
 //     -dealloc (kept, since dealloc also cancels the in-flight Downloaders).
-//   - APPROXIMATION: the table-header ("blackboard") container and its child image/label
-//     frames are rebuilt from the binary's vectorised CGRect math; the literal offsets
-//     (17 / 55 / 117 / 197 / 222 …) are exact, but a few centring / container-size
-//     computations are reconstructed rather than byte-verified.
+//   - APPROXIMATION: the table-header ("blackboard") container and its child
+//   image/label
+//     frames are rebuilt from the binary's vectorised CGRect math; the literal
+//     offsets (17 / 55 / 117 / 197 / 222 …) are exact, but a few centring /
+//     container-size computations are reconstructed rather than byte-verified.
 //
 
 #import "QuizMainViewController.h"
 
-#import "QuizCell.h"          // one row per answer choice
+#import "AppDelegate.h"        // +appDelegate.uuId
+#import "AppFont.h"            // AppFontName()
+#import "AudioManager.h"       // quiz SE load/play/release
+#import "CommonAlertView.h"    // network-failure alert
+#import "Downloader.h"         // Downloader + DownloaderDelegate
+#import "QuizCell.h"           // one row per answer choice
+#import "StoreUtil.h"          // +getQuizURL / +replyQuizURL / urlEncodeString()
 #import "TouchableTableView.h" // pass-through table used for the header/board taps
-#import "CommonAlertView.h"   // network-failure alert
-#import "Downloader.h"        // Downloader + DownloaderDelegate
-#import "StoreUtil.h"         // +getQuizURL / +replyQuizURL / urlEncodeString()
-#import "AppDelegate.h"       // +appDelegate.uuId
-#import "UserSettingData.h"   // quiz totals + charaTicket
-#import "AudioManager.h"      // quiz SE load/play/release
-#import "AppFont.h"           // AppFontName()
-#import "neEngineBridge.h"    // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
+#import "UserSettingData.h"    // quiz totals + charaTicket
+#import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
-// Number of decimal digits of `value` (min 1, so 0 -> 1). Ghidra: countDigits @ 0x2d884.
+// Number of decimal digits of `value` (min 1, so 0 -> 1). Ghidra: countDigits @
+// 0x2d884.
 static int QuizCountDigits(int value) {
     int digits = 1;
     while (value > 9) {
@@ -65,37 +76,38 @@ static int QuizCountDigits(int value) {
 @end
 
 @implementation QuizMainViewController {
-    UIViewController *_dummyView;             // dimmed overlay hosting the download spinner
-    UILabel *_questionLbl;                    // question text on the blackboard header
-    UIImageView *_rightView;                  // "○" board (shown on a correct answer)
-    UIImageView *_wrongView;                  // "✕" board (shown on a wrong answer)
-    UIImageView *_blackBoardView;             // question blackboard
-    UIImageView *_blackBoardResultView;       // result blackboard (totals)
-    UIImageView *_hanamaruView;               // ○/✕ stamp over the picked row
-    UIImageView *_defSsmView;                 // default speech bubble
-    UIImageView *_rightSsmView;               // correct speech bubble
-    UIImageView *_wrongSsmView;               // wrong speech bubble
-    UIView *_presentBaseView;                 // dimmed present-reward popup host
-    Downloader *_dlQuiz;                      // in-flight get-quiz request
-    Downloader *_dlAnswer;                    // in-flight reply-quiz request
-    NSString *_question;                      // current question text
-    NSArray *_quizAnswerArray;                // answer choice strings
-    int _quizId;                              // current quiz id
-    int _rightAnswer;                         // index of the correct answer
-    int _totalCorrect;                        // running correct total
-    int _totalIncorrect;                      // running incorrect total
-    int _consecutive;                         // running correct streak
-    int _finaleAnswer;                        // the answer the result screen renders (-1 = none)
-    int _selectAnswer;                        // the row the player picked (-1 = none)
-    UITableViewCell *_selectCell;             // the picked cell (for stamp placement)
-    BOOL _isAnswerable;                       // YES while a row tap is accepted
-    int _presentSt;                           // present popup state (0 none, 1 armed, 2 shown)
-    int _sdRscId[3];                          // quiz SE source ids (correct / wrong / bonus)
+    UIViewController *_dummyView;       // dimmed overlay hosting the download spinner
+    UILabel *_questionLbl;              // question text on the blackboard header
+    UIImageView *_rightView;            // "○" board (shown on a correct answer)
+    UIImageView *_wrongView;            // "✕" board (shown on a wrong answer)
+    UIImageView *_blackBoardView;       // question blackboard
+    UIImageView *_blackBoardResultView; // result blackboard (totals)
+    UIImageView *_hanamaruView;         // ○/✕ stamp over the picked row
+    UIImageView *_defSsmView;           // default speech bubble
+    UIImageView *_rightSsmView;         // correct speech bubble
+    UIImageView *_wrongSsmView;         // wrong speech bubble
+    UIView *_presentBaseView;           // dimmed present-reward popup host
+    Downloader *_dlQuiz;                // in-flight get-quiz request
+    Downloader *_dlAnswer;              // in-flight reply-quiz request
+    NSString *_question;                // current question text
+    NSArray *_quizAnswerArray;          // answer choice strings
+    int _quizId;                        // current quiz id
+    int _rightAnswer;                   // index of the correct answer
+    int _totalCorrect;                  // running correct total
+    int _totalIncorrect;                // running incorrect total
+    int _consecutive;                   // running correct streak
+    int _finaleAnswer;                  // the answer the result screen renders (-1 = none)
+    int _selectAnswer;                  // the row the player picked (-1 = none)
+    UITableViewCell *_selectCell;       // the picked cell (for stamp placement)
+    BOOL _isAnswerable;                 // YES while a row tap is accepted
+    int _presentSt;                     // present popup state (0 none, 1 armed, 2 shown)
+    int _sdRscId[3];                    // quiz SE source ids (correct / wrong / bonus)
 }
 
-// @ 0xda198 — build the blackboard header (question board + result board + ○/✕ boards +
-// speech bubbles + question label), the phone backdrop / back button, the dimmed spinner
-// overlay, kick off the first quiz fetch, and load the three quiz SEs.
+// @ 0xda198 — build the blackboard header (question board + result board + ○/✕
+// boards + speech bubbles + question label), the phone backdrop / back button,
+// the dimmed spinner overlay, kick off the first quiz fetch, and load the three
+// quiz SEs.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     _finaleAnswer = -1;
@@ -104,14 +116,14 @@ static int QuizCountDigits(int value) {
         BOOL isPad = neSceneManager::isPadDisplay();
         int displayType = [[AppDelegate appDelegate] displayType];
 
-        // Swap in a TouchableTableView (forwards touches to the controller) and disable scroll.
-        TouchableTableView *table =
-            [[TouchableTableView alloc] initWithFrame:self.tableView.frame];
+        // Swap in a TouchableTableView (forwards touches to the controller) and
+        // disable scroll.
+        TouchableTableView *table = [[TouchableTableView alloc] initWithFrame:self.tableView.frame];
         self.tableView = table;
         self.tableView.scrollEnabled = NO;
 
         CGRect viewFrame = self.view ? self.view.frame : CGRectZero;
-        self.tableView.rowHeight = 56.0f;   // 0x42600000
+        self.tableView.rowHeight = 56.0f; // 0x42600000
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         self.tableView.separatorColor = [UIColor clearColor];
 
@@ -126,36 +138,45 @@ static int QuizCountDigits(int value) {
         _blackBoardView = [[UIImageView alloc] initWithImage:boardImg];
         if (!isPad) {
             _blackBoardView.frame = CGRectMake((viewFrame.size.width - boardImg.size.width) * 0.5f,
-                                               17.0f, boardImg.size.width, boardImg.size.height);
+                                               17.0f,
+                                               boardImg.size.width,
+                                               boardImg.size.height);
         } else {
             _blackBoardView.frame =
                 CGRectMake(16.0f, 17.0f, boardImg.size.width, boardImg.size.height);
         }
 
-        // Result blackboard ("pq_question_result"), hidden until the answer is graded.
+        // Result blackboard ("pq_question_result"), hidden until the answer is
+        // graded.
         UIImage *resultImg = [UIImage imageNamed:@"pq_question_result"];
         _blackBoardResultView = [[UIImageView alloc] initWithImage:resultImg];
         if (!isPad) {
             _blackBoardResultView.frame =
-                CGRectMake((viewFrame.size.width - resultImg.size.width) * 0.5f, 17.0f,
-                           resultImg.size.width, resultImg.size.height);
+                CGRectMake((viewFrame.size.width - resultImg.size.width) * 0.5f,
+                           17.0f,
+                           resultImg.size.width,
+                           resultImg.size.height);
         } else {
             _blackBoardResultView.frame =
                 CGRectMake(16.0f, 17.0f, resultImg.size.width, resultImg.size.height);
         }
         _blackBoardResultView.hidden = YES;
 
-        // Header container carrying the boards, ○/✕ marks, bubbles and the question label.
-        // (Full-width; height accommodates the child frames — see APPROXIMATION note.)
-        UIView *headerView =
-            [[UIView alloc] initWithFrame:CGRectMake(0, (CGFloat)yNudge, viewFrame.size.width, 200.0f)];
+        // Header container carrying the boards, ○/✕ marks, bubbles and the question
+        // label. (Full-width; height accommodates the child frames — see
+        // APPROXIMATION note.)
+        UIView *headerView = [[UIView alloc]
+            initWithFrame:CGRectMake(0, (CGFloat)yNudge, viewFrame.size.width, 200.0f)];
 
-        // Correct ("pq_question_ok") / wrong ("pq_question_ng") boards, hidden by default.
+        // Correct ("pq_question_ok") / wrong ("pq_question_ng") boards, hidden by
+        // default.
         UIImage *okImg = [UIImage imageNamed:@"pq_question_ok"];
         _rightView = [[UIImageView alloc] initWithImage:okImg];
         if (!isPad) {
             _rightView.frame = CGRectMake((headerView.frame.size.width - okImg.size.width) * 0.5f,
-                                          55.0f, okImg.size.width, okImg.size.height);
+                                          55.0f,
+                                          okImg.size.width,
+                                          okImg.size.height);
         } else {
             _rightView.frame = CGRectMake(26.0f, 55.0f, okImg.size.width, okImg.size.height);
         }
@@ -165,7 +186,9 @@ static int QuizCountDigits(int value) {
         _wrongView = [[UIImageView alloc] initWithImage:ngImg];
         if (!isPad) {
             _wrongView.frame = CGRectMake((headerView.frame.size.width - ngImg.size.width) * 0.5f,
-                                          55.0f, ngImg.size.width, ngImg.size.height);
+                                          55.0f,
+                                          ngImg.size.width,
+                                          ngImg.size.height);
         } else {
             _wrongView.frame = CGRectMake(26.0f, 55.0f, ngImg.size.width, ngImg.size.height);
         }
@@ -173,13 +196,12 @@ static int QuizCountDigits(int value) {
 
         // Speech bubbles (default / correct / wrong), stacked at the same spot.
         UIImage *ssmDefImg = [UIImage imageNamed:@"pq_ssm_default"];
-        UIImage *ssmOkImg  = [UIImage imageNamed:@"pq_ssm_ok"];
-        UIImage *ssmNgImg  = [UIImage imageNamed:@"pq_ssm_ng"];
-        _defSsmView   = [[UIImageView alloc] initWithImage:ssmDefImg];
+        UIImage *ssmOkImg = [UIImage imageNamed:@"pq_ssm_ok"];
+        UIImage *ssmNgImg = [UIImage imageNamed:@"pq_ssm_ng"];
+        _defSsmView = [[UIImageView alloc] initWithImage:ssmDefImg];
         _rightSsmView = [[UIImageView alloc] initWithImage:ssmOkImg];
         _wrongSsmView = [[UIImageView alloc] initWithImage:ssmNgImg];
-        CGRect ssmFrame =
-            CGRectMake(222.0f, 117.0f, ssmDefImg.size.width, ssmDefImg.size.height);
+        CGRect ssmFrame = CGRectMake(222.0f, 117.0f, ssmDefImg.size.width, ssmDefImg.size.height);
         _defSsmView.frame = ssmFrame;
         _rightSsmView.frame = ssmFrame;
         _wrongSsmView.frame = ssmFrame;
@@ -189,14 +211,18 @@ static int QuizCountDigits(int value) {
         // Question label (chalk text, up to 4 auto-shrinking centred lines).
         _questionLbl = [[UILabel alloc] init];
         _questionLbl.backgroundColor = [UIColor clearColor];
-        // Ghidra colorWithRed:green:blue:alpha: (0x3f78f8f9, 0x3f78f8f9, 0x423eeaeb, 1.0);
-        // the blue channel decodes out of [0,1] (clamps to 1) — reconstructed as chalk grey.
-        _questionLbl.textColor = [UIColor colorWithRed:0.9725f green:0.9725f blue:0.9725f alpha:1.0f];
+        // Ghidra colorWithRed:green:blue:alpha: (0x3f78f8f9, 0x3f78f8f9,
+        // 0x423eeaeb, 1.0); the blue channel decodes out of [0,1] (clamps to 1) —
+        // reconstructed as chalk grey.
+        _questionLbl.textColor = [UIColor colorWithRed:0.9725f
+                                                 green:0.9725f
+                                                  blue:0.9725f
+                                                 alpha:1.0f];
         _questionLbl.highlightedTextColor = [UIColor whiteColor];
         _questionLbl.font = [UIFont fontWithName:AppFontName() size:17.0f];
         _questionLbl.textAlignment = NSTextAlignmentCenter;
         _questionLbl.adjustsFontSizeToFitWidth = YES;
-        _questionLbl.minimumScaleFactor = 10.0f;   // matches the binary literal (0x41200000)
+        _questionLbl.minimumScaleFactor = 10.0f; // matches the binary literal (0x41200000)
         _questionLbl.numberOfLines = 4;
         _questionLbl.text = @"";
         _questionLbl.frame = CGRectMake(26.0f, 30.0f, 285.0f, 150.0f);
@@ -233,10 +259,10 @@ static int QuizCountDigits(int value) {
             [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
         spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
         if (!isPad) {
-            spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
-                                         (int)(viewFrame.size.height * 0.5f) - 10);
+            spinner.center =
+                CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
         } else {
-            spinner.center = CGPointMake(160.0f, 265.0f);   // 0x43200000 / 0x43848000
+            spinner.center = CGPointMake(160.0f, 265.0f); // 0x43200000 / 0x43848000
         }
         spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
         [spinner startAnimating];
@@ -248,8 +274,9 @@ static int QuizCountDigits(int value) {
             UIButton *backBtn = [[UIButton alloc]
                 initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
             [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-            [backBtn addTarget:self action:@selector(touchedBackButton:)
-              forControlEvents:UIControlEventTouchUpInside];
+            [backBtn addTarget:self
+                          action:@selector(touchedBackButton:)
+                forControlEvents:UIControlEventTouchUpInside];
             self.navigationItem.leftBarButtonItem =
                 [[UIBarButtonItem alloc] initWithCustomView:backBtn];
         }
@@ -257,9 +284,10 @@ static int QuizCountDigits(int value) {
         [self startGetQuizHttp];
     }
 
-    // Load the three quiz SEs (correct / wrong / bonus) regardless of the init result.
+    // Load the three quiz SEs (correct / wrong / bonus) regardless of the init
+    // result.
     AudioManager *audio = [AudioManager sharedManager];
-    static NSString *const kSeNames[3] = { @"se24_quiz_o", @"se25_quiz_x", @"se08_bonus_fai" };
+    static NSString *const kSeNames[3] = {@"se24_quiz_o", @"se25_quiz_x", @"se08_bonus_fai"};
     for (int i = 0; i < 3; i++) {
         NSString *path = [[NSBundle mainBundle] pathForResource:kSeNames[i] ofType:@"m4a"];
         _sdRscId[i] = (int)[audio loadSe:path isLoop:NO callName:nil group:1];
@@ -267,8 +295,8 @@ static int QuizCountDigits(int value) {
     return self;
 }
 
-// @ 0xdb2a4 — cancel any in-flight requests and release the loaded SEs (kept under ARC
-// because it cancels the Downloaders and releases the SEs).
+// @ 0xdb2a4 — cancel any in-flight requests and release the loaded SEs (kept
+// under ARC because it cancels the Downloaders and releases the SEs).
 - (void)dealloc {
     AudioManager *audio = [AudioManager sharedManager];
     if (_dlQuiz != nil) {
@@ -284,7 +312,8 @@ static int QuizCountDigits(int value) {
     }
 }
 
-// @ 0xdb3d4 — reveal the spinner overlay (the fetch was started in -initWithStyle:).
+// @ 0xdb3d4 — reveal the spinner overlay (the fetch was started in
+// -initWithStyle:).
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -313,8 +342,8 @@ static int QuizCountDigits(int value) {
 // @ 0xdb538 — one QuizCell per answer choice.
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     QuizCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[QuizCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -360,7 +389,8 @@ static int QuizCountDigits(int value) {
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
-// @ 0xdb7b0 — drop the failed request, hide the spinner, show the failure alert.
+// @ 0xdb7b0 — drop the failed request, hide the spinner, show the failure
+// alert.
 - (void)downloaderError:(Downloader *)downloader {
     if (_dlQuiz == downloader) {
         _dlQuiz = nil;
@@ -371,12 +401,13 @@ static int QuizCountDigits(int value) {
     }
     _dummyView.view.hidden = YES;
 
-    CommonAlertView *alert = [[CommonAlertView alloc]
-        initWithTitle:nil
-              message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-             delegate:nil
-    cancelButtonTitle:nil
-    otherButtonTitles:@"OK"];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:nil
+                                       message:@"通信に失敗しました。\n電波状態の"
+                                               @"良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
@@ -399,14 +430,13 @@ static int QuizCountDigits(int value) {
     }
     _dummyView.view.hidden = NO;
     NSString *body = [NSString stringWithFormat:@"uuid=%@&id=%d&is_correct=%d",
-                      urlEncodeString([[AppDelegate appDelegate] uuId]),
-                      _quizId,
-                      (_selectAnswer == _rightAnswer) ? 1 : 0];
-    _dlAnswer = [[Downloader alloc]
-        initWithURL:[StoreUtil replyQuizURL]
-           delegate:self
-               Post:[body dataUsingEncoding:NSUTF8StringEncoding]
-        ContextType:@"application/json"];
+                                                urlEncodeString([[AppDelegate appDelegate] uuId]),
+                                                _quizId,
+                                                (_selectAnswer == _rightAnswer) ? 1 : 0];
+    _dlAnswer = [[Downloader alloc] initWithURL:[StoreUtil replyQuizURL]
+                                       delegate:self
+                                           Post:[body dataUsingEncoding:NSUTF8StringEncoding]
+                                    ContextType:@"application/json"];
     [_dlAnswer startDownloading];
 }
 
@@ -437,8 +467,10 @@ static int QuizCountDigits(int value) {
                     // A newer, still-unanswered quiz: show it.
                     _question = nil;
                     _quizAnswerArray = nil;
-                    _question = [[question stringByReplacingOccurrencesOfString:@"<br>" withString:@"\n"]
-                                          stringByReplacingOccurrencesOfString:@"<BR>" withString:@"\n"];
+                    _question = [[question stringByReplacingOccurrencesOfString:@"<br>"
+                                                                     withString:@"\n"]
+                        stringByReplacingOccurrencesOfString:@"<BR>"
+                                                  withString:@"\n"];
                     _rightAnswer = [rightAns intValue];
                     _quizAnswerArray = [[NSArray alloc] initWithArray:answers];
                     _questionLbl.text = _question;
@@ -458,7 +490,7 @@ static int QuizCountDigits(int value) {
                 [self drawResult];
                 showError = NO;
             } else if (code != 0) {
-                showError = NO;   // an unhandled non-error code: no action
+                showError = NO; // an unhandled non-error code: no action
             }
             // code == 0 falls through to showError = YES
         }
@@ -467,17 +499,19 @@ static int QuizCountDigits(int value) {
     _dlQuiz = nil;
 
     if (showError) {
-        CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:nil
-                  message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                 delegate:nil
-            cancelButtonTitle:nil
-            otherButtonTitles:@"OK"];
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:nil
+                                           message:@"通信に失敗しました。\n電波状態"
+                                                   @"の良い場所でやり直して下さい。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
         [alert show];
     }
 }
 
-// @ 0xdbda4 — the reply-quiz response arrived: persist the totals, then grade the pick.
+// @ 0xdbda4 — the reply-quiz response arrived: persist the totals, then grade
+// the pick.
 - (void)replyQuizFinished {
     AudioManager *audio = [AudioManager sharedManager];
     NSDictionary *json = [_dlAnswer getDataInJSON];
@@ -503,12 +537,13 @@ static int QuizCountDigits(int value) {
     if (showError) {
         _selectAnswer = -1;
         _isAnswerable = YES;
-        CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:nil
-                  message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                 delegate:nil
-            cancelButtonTitle:nil
-            otherButtonTitles:@"OK"];
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:nil
+                                           message:@"通信に失敗しました。\n電波状態"
+                                                   @"の良い場所でやり直して下さい。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
         [alert show];
     } else {
         [UserSettingData saveLastAnswerQuizId:_quizId];
@@ -546,9 +581,9 @@ static int QuizCountDigits(int value) {
     [self.tableView reloadData];
 }
 
-// @ 0xdc4ec — swap the question board for the result board and lay out the running
-// correct total (pq_total%d over pq_totalbase) and the streak (b_invite_num%d over
-// pq_ans_base).
+// @ 0xdc4ec — swap the question board for the result board and lay out the
+// running correct total (pq_total%d over pq_totalbase) and the streak
+// (b_invite_num%d over pq_ans_base).
 - (void)drawResult {
     _totalCorrect = [UserSettingData totalCorrectQuiz];
     _totalIncorrect = [UserSettingData totalInCorrectQuiz];
@@ -574,9 +609,11 @@ static int QuizCountDigits(int value) {
     if (digits > 0) {
         int x = digits * 10 + 0x6b;
         do {
-            UIImage *digitImg = [UIImage imageNamed:[NSString stringWithFormat:@"pq_total%d", value % 10]];
+            UIImage *digitImg =
+                [UIImage imageNamed:[NSString stringWithFormat:@"pq_total%d", value % 10]];
             UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
-            digitView.frame = CGRectMake((CGFloat)x, 58.0f, digitImg.size.width, digitImg.size.height);
+            digitView.frame =
+                CGRectMake((CGFloat)x, 58.0f, digitImg.size.width, digitImg.size.height);
             [totalBase addSubview:digitView];
             x -= 0x14;
             value /= 10;
@@ -600,7 +637,8 @@ static int QuizCountDigits(int value) {
     if (digits > 0) {
         int x = digits * 12 + 0xbe;
         do {
-            UIImage *digitImg = [UIImage imageNamed:[NSString stringWithFormat:@"b_invite_num%d", value % 10]];
+            UIImage *digitImg =
+                [UIImage imageNamed:[NSString stringWithFormat:@"b_invite_num%d", value % 10]];
             UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
             digitView.frame = CGRectMake((CGFloat)x, 33.0f, 24.0f, 24.0f);
             [ansBase addSubview:digitView];
@@ -612,8 +650,8 @@ static int QuizCountDigits(int value) {
     [self.tableView reloadData];
 }
 
-// @ 0xdca68 — a tap on the graded board: draw the result (first time), then toggle the
-// present-reward popup in (state 1) / out (state 2).
+// @ 0xdca68 — a tap on the graded board: draw the result (first time), then
+// toggle the present-reward popup in (state 1) / out (state 2).
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     if (_finaleAnswer < 0) {
         return;
@@ -628,21 +666,21 @@ static int QuizCountDigits(int value) {
     if (_presentSt == 2) {
         // Fade the present window out.
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3f];   // DAT_000dce48 == (double)0.3f
+        [UIView setAnimationDuration:0.3f]; // DAT_000dce48 == (double)0.3f
         _presentBaseView.alpha = 0.0f;
         [UIView commitAnimations];
         _presentSt = 0;
     } else if (_presentSt == 1) {
         AudioManager *audio = [AudioManager sharedManager];
-        [audio playSe:nil resourceId:_sdRscId[2]];   // bonus SE
+        [audio playSe:nil resourceId:_sdRscId[2]]; // bonus SE
 
         _presentBaseView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320.0f, 568.0f)];
         _presentBaseView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.5f];
 
         UIImage *winImg = [UIImage imageNamed:@"pq_window_present"];
         UIImageView *winView = [[UIImageView alloc] initWithImage:winImg];
-        winView.frame = CGRectMake((320.0f - winImg.size.width) * 0.5f, 100.0f,
-                                   winImg.size.width, winImg.size.height);
+        winView.frame = CGRectMake(
+            (320.0f - winImg.size.width) * 0.5f, 100.0f, winImg.size.width, winImg.size.height);
 
         // Total-correct digits (2x assets, drawn at half size) across the window.
         int value = _totalCorrect;
@@ -650,11 +688,11 @@ static int QuizCountDigits(int value) {
         if (digits > 0) {
             int x = digits * 9 + 0x96;
             do {
-                UIImage *digitImg =
-                    [UIImage imageNamed:[NSString stringWithFormat:@"pq_present_num%d_2x", value % 10]];
+                UIImage *digitImg = [UIImage
+                    imageNamed:[NSString stringWithFormat:@"pq_present_num%d_2x", value % 10]];
                 UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
-                digitView.frame = CGRectMake((CGFloat)x, 95.0f,
-                                             digitImg.size.width * 0.5f, digitImg.size.height * 0.5f);
+                digitView.frame = CGRectMake(
+                    (CGFloat)x, 95.0f, digitImg.size.width * 0.5f, digitImg.size.height * 0.5f);
                 [winView addSubview:digitView];
                 x -= 0x12;
                 value /= 10;
@@ -677,10 +715,9 @@ static int QuizCountDigits(int value) {
 
 // @ 0xdb8cc — back button: restore the menu navbar art and pop.
 - (void)touchedBackButton:(id)sender {
-    neEngine::playSystemSe(2);   // cancel/back SE
-    [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+    neEngine::playSystemSe(2); // cancel/back SE
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
+                                                  forBarMetrics:UIBarMetricsDefault];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

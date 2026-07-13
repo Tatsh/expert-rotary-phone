@@ -16,8 +16,8 @@
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
                                  inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"mainMapId==%d and subMapId==%d",
-                         (int)mainMapId, (int)subMapId];
+    request.predicate = [NSPredicate
+        predicateWithFormat:@"mainMapId==%d and subMapId==%d", (int)mainMapId, (int)subMapId];
     NSArray *results = [context executeFetchRequest:request error:nil];
     return results.count ? results.lastObject : nil;
 }
@@ -28,7 +28,7 @@
                   inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
     TreasureData *record = [NSEntityDescription insertNewObjectForEntityForName:@"TreasureData"
-                                                        inManagedObjectContext:context];
+                                                         inManagedObjectContext:context];
     record.mainMapId = [NSNumber numberWithShort:mainMapId];
     record.subMapId = [NSNumber numberWithShort:subMapId];
     [record reset];
@@ -37,8 +37,7 @@
 }
 
 // Ghidra: @ 0xc0d90
-+ (BOOL)isOpenMusic:(short)mainMapId
-    inManagedObjectContext:(NSManagedObjectContext *)context {
++ (BOOL)isOpenMusic:(short)mainMapId inManagedObjectContext:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
                                  inManagedObjectContext:context];

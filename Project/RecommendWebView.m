@@ -45,7 +45,8 @@
     return self;
 }
 
-// @ 0xfe8a4 — blank the page, drop the overlay and detach the delegate on teardown.
+// @ 0xfe8a4 — blank the page, drop the overlay and detach the delegate on
+// teardown.
 - (void)removeFromSuperview {
     [super removeFromSuperview];
     [self loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"about:blank"]]];
@@ -53,72 +54,74 @@
     [self setDelegate:nil];
 }
 
-// @ 0xfe970 — main-queue app-list fetch (recommendWebViewLoadAppliList @ 0xfe9ec, whose inner
-// completion is recommendWebViewAppliListCallback @ 0xfead8).
+// @ 0xfe970 — main-queue app-list fetch (recommendWebViewLoadAppliList @
+// 0xfe9ec, whose inner completion is recommendWebViewAppliListCallback @
+// 0xfead8).
 - (void)loadRequestWithCallback:(RecommendWebViewOpenAppliListCallback)callback {
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.backgroundColor = [UIColor clearColor];
-        [self setOpaque:NO];
-        [[RecommendCore sharedInstance] appliListWithCallBack:^(NSArray *appliList, NSError *error) {
-            if (error != nil) {
-                if (callback) {
-                    callback(error);
+      self.backgroundColor = [UIColor clearColor];
+      [self setOpaque:NO];
+      [[RecommendCore sharedInstance] appliListWithCallBack:^(NSArray *appliList, NSError *error) {
+        if (error != nil) {
+            if (callback) {
+                callback(error);
+            }
+            return;
+        }
+        // Keep only the ad ids whose companion app is actually installed on this
+        // device.
+        NSMutableArray *installedAdIds = [[NSMutableArray alloc] init];
+        for (id item in appliList) {
+            if ([item isKindOfClass:[NSDictionary class]]) {
+                NSString *scheme = [item objectForKey:@"default_scheme"];
+                NSString *adId = [item objectForKey:@"ad_id"];
+                if ([scheme isKindOfClass:[NSString class]] &&
+                    [[RecommendCore sharedInstance] isInstalledAppliWithScheme:scheme] && adId) {
+                    [installedAdIds addObject:adId];
                 }
-                return;
             }
-            // Keep only the ad ids whose companion app is actually installed on this device.
-            NSMutableArray *installedAdIds = [[NSMutableArray alloc] init];
-            for (id item in appliList) {
-                if ([item isKindOfClass:[NSDictionary class]]) {
-                    NSString *scheme = [item objectForKey:@"default_scheme"];
-                    NSString *adId = [item objectForKey:@"ad_id"];
-                    if ([scheme isKindOfClass:[NSString class]] &&
-                        [[RecommendCore sharedInstance] isInstalledAppliWithScheme:scheme] && adId) {
-                        [installedAdIds addObject:adId];
-                    }
-                }
-            }
-            NSMutableDictionary *params = [NSMutableDictionary dictionaryWithCapacity:4];
-            [params setValue:[[RecommendCore sharedInstance] getCountryCode] forKey:@"country_code"];
-            [params setValue:[[RecommendCore sharedInstance] getCategoryId] forKey:@"category_id"];
-            [params setValue:@"1" forKey:@"is_sdk"];
-            if ([installedAdIds count] != 0) {
-                [params setObject:installedAdIds forKey:@"install_ad_id_list"];
-            }
-            NSString *adType;
-            switch (_viewType) {
-                case 1:
-                case 2:
-                    adType = @"2";
-                    break;
-                case 3:
-                    adType = @"3";
-                    break;
-                case 0:
-                default:
-                    adType = @"1";
-                    break;
-            }
-            [params setValue:adType forKey:@"ad_type"];
-            [params setValue:(_viewType == 2 ? @"1" : @"0") forKey:@"is_banner_wide"];
-            [self setCallbackForOpenAppliList:callback];
-            [self setLastErrorForOpenAppliList:nil];
-            NSString *url =
-                [[RecommendCore baseUrlSsl] stringByAppendingString:@"/ad/external/index.php"];
-            [self loadRequestWithURL:url parameters:params delegate:nil];
-        }];
+        }
+        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithCapacity:4];
+        [params setValue:[[RecommendCore sharedInstance] getCountryCode] forKey:@"country_code"];
+        [params setValue:[[RecommendCore sharedInstance] getCategoryId] forKey:@"category_id"];
+        [params setValue:@"1" forKey:@"is_sdk"];
+        if ([installedAdIds count] != 0) {
+            [params setObject:installedAdIds forKey:@"install_ad_id_list"];
+        }
+        NSString *adType;
+        switch (_viewType) {
+        case 1:
+        case 2:
+            adType = @"2";
+            break;
+        case 3:
+            adType = @"3";
+            break;
+        case 0:
+        default:
+            adType = @"1";
+            break;
+        }
+        [params setValue:adType forKey:@"ad_type"];
+        [params setValue:(_viewType == 2 ? @"1" : @"0") forKey:@"is_banner_wide"];
+        [self setCallbackForOpenAppliList:callback];
+        [self setLastErrorForOpenAppliList:nil];
+        NSString *url =
+            [[RecommendCore baseUrlSsl] stringByAppendingString:@"/ad/external/index.php"];
+        [self loadRequestWithURL:url parameters:params delegate:nil];
+      }];
     });
 }
 
-// @ 0xff354 — merge parameters into the URL, set a 30s reloading request, become the delegate,
-// show the overlay and load. `delegate` is accepted for API symmetry but overridden with self.
+// @ 0xff354 — merge parameters into the URL, set a 30s reloading request,
+// become the delegate, show the overlay and load. `delegate` is accepted for
+// API symmetry but overridden with self.
 - (void)loadRequestWithURL:(NSString *)url
                 parameters:(NSDictionary *)parameters
                   delegate:(id)delegate {
     parentView = self;
     NSString *full = [RewardNetworkUtilities appendParametersToURL:url parameters:parameters];
-    NSMutableURLRequest *request =
-        [NSMutableURLRequest requestWithURL:[NSURL URLWithString:full]];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:full]];
     [request setTimeoutInterval:30.0];
     [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
     [self setDelegate:self];
@@ -148,7 +151,8 @@
     _viewType = viewType;
 }
 
-// @ 0xff100 — walk the hosted subviews and apply scrolling/bouncing to any UIScrollView.
+// @ 0xff100 — walk the hosted subviews and apply scrolling/bouncing to any
+// UIScrollView.
 - (void)setScrollEnabled:(BOOL)enabled {
     for (UIView *sub in self.subviews) {
         if ([sub isKindOfClass:[UIScrollView class]]) {
@@ -190,23 +194,25 @@
     [self updateIndicator:YES];
 }
 
-// @ 0xff574 — a "command=close" query closes the panel; otherwise hide the indicator and do the
-// app-specific main-queue follow-up.
+// @ 0xff574 — a "command=close" query closes the panel; otherwise hide the
+// indicator and do the app-specific main-queue follow-up.
 - (void)webViewDidFinishLoad:(UIWebView *)webView {
     NSString *query = [[[webView request] URL] query];
     if (query == nil || [query rangeOfString:@"command=close"].location == NSNotFound) {
         [self updateIndicator:NO];
         dispatch_async(dispatch_get_main_queue(), ^{
-            // @ 0xff68c — app-specific post-load follow-up on the main queue (a nested message
-            // send on self; exact body not fully recovered). Best-effort: re-assert scrolling.
-            [self setScrollEnabled:YES];
+          // @ 0xff68c — app-specific post-load follow-up on the main queue (a
+          // nested message send on self; exact body not fully recovered).
+          // Best-effort: re-assert scrolling.
+          [self setScrollEnabled:YES];
         });
     } else {
         [self appliListClosed];
     }
 }
 
-// @ 0xff494 — when dismissed, fire the stored open-app-list callback with the last error.
+// @ 0xff494 — when dismissed, fire the stored open-app-list callback with the
+// last error.
 - (void)viewDidDisappear:(BOOL)animated {
     if ([self delegate] != nil &&
         [[self delegate] respondsToSelector:@selector(appListDidDisappear)]) {
@@ -223,8 +229,8 @@
     nowHidden = hidden;
 }
 
-// @ 0xff6fc — ignore cancellations and WebKit "frame load interrupted"; otherwise report the
-// failure through the delegate and close the panel.
+// @ 0xff6fc — ignore cancellations and WebKit "frame load interrupted";
+// otherwise report the failure through the delegate and close the panel.
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
     [self updateIndicator:NO];
     if ([error code] == -999) {
@@ -247,18 +253,22 @@
     [self setDelegate:nil];
 }
 
-// @ 0xff8a8 — hand every navigation to RecommendCore's Applilink redirect handler.
+// @ 0xff8a8 — hand every navigation to RecommendCore's Applilink redirect
+// handler.
 - (BOOL)webView:(UIWebView *)webView
     shouldStartLoadWithRequest:(NSURLRequest *)request
                 navigationType:(UIWebViewNavigationType)navigationType {
     return [[RecommendCore sharedInstance] redirectWithRequest:request];
 }
 
-// callbackForOpenAppliList / setCallbackForOpenAppliList: @ 0xff904 / 0xff918 — synthesized
+// callbackForOpenAppliList / setCallbackForOpenAppliList: @ 0xff904 / 0xff918 —
+// synthesized
 //   (copy) accessors for the _callbackForOpenAppliList block ivar.
-// lastErrorForOpenAppliList / setLastErrorForOpenAppliList: @ 0xff93c / 0xff94c — synthesized
+// lastErrorForOpenAppliList / setLastErrorForOpenAppliList: @ 0xff93c / 0xff94c
+// — synthesized
 //   (strong) accessors for the _lastErrorForOpenAppliList ivar.
-// .cxx_destruct @ 0xff974 — compiler-emitted ARC teardown for the object ivars; not hand-written.
+// .cxx_destruct @ 0xff974 — compiler-emitted ARC teardown for the object ivars;
+// not hand-written.
 
 @end
 

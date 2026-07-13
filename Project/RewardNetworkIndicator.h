@@ -2,9 +2,10 @@
 //  RewardNetworkIndicator.h
 //  pop'n rhythmin
 //
-//  Konami "RewardNetwork" (Applilink) ad-SDK modal busy indicator: a translucent
-//  black UIView hosting a centered UIActivityIndicatorView. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (UIView superclass; single
+//  Konami "RewardNetwork" (Applilink) ad-SDK modal busy indicator: a
+//  translucent black UIView hosting a centered UIActivityIndicatorView.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin (UIView
+//  superclass; single
 //  `_indicator` object ivar).
 //
 
@@ -13,7 +14,7 @@
 @interface RewardNetworkIndicator : UIView
 
 // _indicator ivar / accessors @ 0xf3eb4 (getter) / 0xf3ec4 (setter).
-@property (nonatomic, strong) UIActivityIndicatorView *indicator;
+@property(nonatomic, strong) UIActivityIndicatorView *indicator;
 
 // @ 0xf3e14 — unhide and start the spinner.
 - (void)show;

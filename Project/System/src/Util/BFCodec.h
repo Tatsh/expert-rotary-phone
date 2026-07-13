@@ -7,8 +7,10 @@
 //  PopnRhythmin.
 //
 //  Wire format (produced by -encipher:, consumed by -decipher:):
-//    [ ciphertext (paddedLen bytes) ][ origLen : uint32 BE ][ paddedLen : uint32 BE ]
-//  where paddedLen == (origLen + 7) & ~7. The CBC IV is a fixed 8-byte constant.
+//    [ ciphertext (paddedLen bytes) ][ origLen : uint32 BE ][ paddedLen :
+//    uint32 BE ]
+//  where paddedLen == (origLen + 7) & ~7. The CBC IV is a fixed 8-byte
+//  constant.
 //
 
 #import <Foundation/Foundation.h>
@@ -19,7 +21,8 @@
 // Ghidra: -[BFCodec cipherInit:] @ 0x5ad64
 - (void)cipherInit:(NSData *)key;
 
-// Initialize from a raw key buffer. Ghidra: -[BFCodec cipherInit:keyLength:] @ 0x5ad0c
+// Initialize from a raw key buffer. Ghidra: -[BFCodec cipherInit:keyLength:] @
+// 0x5ad0c
 - (void)cipherInit:(const char *)key keyLength:(int)length;
 
 // Encrypt `data` in place (CBC), appending the 8-byte length trailer.

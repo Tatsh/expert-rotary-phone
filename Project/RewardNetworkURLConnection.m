@@ -3,14 +3,14 @@
 //  pop'n rhythmin
 //
 //  See RewardNetworkURLConnection.h. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin. A single async NSURLConnection request for the applilink
-//  SDK, with a 10s watchdog timer and a two-attempt retry/back-off.
+//  program PopnRhythmin. A single async NSURLConnection request for the
+//  applilink SDK, with a 10s watchdog timer and a two-attempt retry/back-off.
 //
 
 #import "RewardNetworkURLConnection.h"
 
-#import "RewardNetworkWebAPI.h"   // +responseFromContentsServer:request:data:finishedBlock:failedBlock:
-#import "RewardNetworkError.h"    // +localizedApplilinkErrorWithCode:
+#import "RewardNetworkError.h" // +localizedApplilinkErrorWithCode:
+#import "RewardNetworkWebAPI.h" // +responseFromContentsServer:request:data:finishedBlock:failedBlock:
 
 // Own privates (the watchdog callback and the retry driver).
 @interface RewardNetworkURLConnection ()
@@ -63,7 +63,7 @@
 
     // @ 0xffcbc — the block body just starts the connection.
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.connection start];
+      [self.connection start];
     });
     self.isConnection = YES;
 }
@@ -102,17 +102,17 @@
     }
 
     NSData *data = [RewardNetworkWebAPI responseFromContentsServer:self.url
-                                                          request:self.request
-                                                             data:self.receiveData
-                                                    finishedBlock:self.ApplilinkFinishedBlock
-                                                      failedBlock:self.ApplilinkFailedBlock];
+                                                           request:self.request
+                                                              data:self.receiveData
+                                                     finishedBlock:self.ApplilinkFinishedBlock
+                                                       failedBlock:self.ApplilinkFailedBlock];
     self.isConnection = NO;
 
     if (NSClassFromString(@"NSJSONSerialization") == nil) {
         // iOS < 5: no JSON parser available.
         if (self.ApplilinkFailedBlock != nil) {
             self.ApplilinkFailedBlock(self.request,
-                [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
+                                      [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
         }
         return;
     }
@@ -132,7 +132,7 @@
     } else {
         if (self.ApplilinkFailedBlock != nil) {
             self.ApplilinkFailedBlock(self.request,
-                [RewardNetworkError localizedApplilinkErrorWithCode:0x3ee]);
+                                      [RewardNetworkError localizedApplilinkErrorWithCode:0x3ee]);
         }
     }
 }
@@ -144,7 +144,8 @@
 
 #pragma mark - Retry
 
-// @ 0x1001dc — up to two retries with a back-off, then fail with a timeout error.
+// @ 0x1001dc — up to two retries with a back-off, then fail with a timeout
+// error.
 - (void)retryConnection {
     if (self.timer != nil) {
         [self.timer invalidate];
@@ -152,7 +153,7 @@
     }
 
     if (retryCount < 2) {
-        [NSThread sleepForTimeInterval:(NSTimeInterval)(retryCount * 2 + 2)];  // back-off
+        [NSThread sleepForTimeInterval:(NSTimeInterval)(retryCount * 2 + 2)]; // back-off
         [self requestAsynchronousWithURL:self.url
                                  request:self.request
                            finishedBlock:nil
@@ -172,7 +173,7 @@
         [userInfo setValue:description forKey:NSLocalizedDescriptionKey];
     }
     NSError *timeoutError = [NSError errorWithDomain:NSURLErrorDomain
-                                                code:-1001  // NSURLErrorTimedOut (Ghidra 0xfffffc17)
+                                                code:-1001 // NSURLErrorTimedOut (Ghidra 0xfffffc17)
                                             userInfo:userInfo];
     if (self.ApplilinkFailedBlock != nil) {
         self.ApplilinkFailedBlock(self.request, timeoutError);

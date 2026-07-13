@@ -2,85 +2,97 @@
 //  SettingGameTableViewController.mm
 //  pop'n rhythmin
 //
-//  See SettingGameTableViewController.h. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0x88b08, initAtNavigationController @ 0x88d7c, dealloc @ 0x88f5c,
-//  viewDidLoad @ 0x88ff0, didReceiveMemoryWarning @ 0x8901c, viewDidAppear: @ 0x89048,
-//  startOpenAnimation @ 0x89074, endOpenAnimation @ 0x891a0, startCloseAnimation @ 0x891b8,
-//  endCloseAnimation @ 0x892d8, numberOfSectionsInTableView: @ 0x89344,
-//  tableView:numberOfRowsInSection: @ 0x89348, tableView:heightForRowAtIndexPath: @ 0x8934c,
-//  tableView:cellForRowAtIndexPath: @ 0x894d8, tableView:didSelectRowAtIndexPath: @ 0x8a27c,
-//  settingClose @ 0x8a34c, .cxx_construct @ 0x8a35c -- the last is a compiler artifact and is
-//  not reproduced). Objective-C++ for the neEngine SE + scene bridge.
+//  See SettingGameTableViewController.h. Reconstructed from Ghidra project
+//  rb420, program PopnRhythmin (initWithStyle: @ 0x88b08,
+//  initAtNavigationController @ 0x88d7c, dealloc @ 0x88f5c, viewDidLoad @
+//  0x88ff0, didReceiveMemoryWarning @ 0x8901c, viewDidAppear: @ 0x89048,
+//  startOpenAnimation @ 0x89074, endOpenAnimation @ 0x891a0,
+//  startCloseAnimation @ 0x891b8, endCloseAnimation @ 0x892d8,
+//  numberOfSectionsInTableView: @ 0x89344, tableView:numberOfRowsInSection: @
+//  0x89348, tableView:heightForRowAtIndexPath: @ 0x8934c,
+//  tableView:cellForRowAtIndexPath: @ 0x894d8,
+//  tableView:didSelectRowAtIndexPath: @ 0x8a27c, settingClose @ 0x8a34c,
+//  .cxx_construct @ 0x8a35c -- the last is a compiler artifact and is not
+//  reproduced). Objective-C++ for the neEngine SE + scene bridge.
 //
-//  The screen is a 6-row single section: rows 0/2/4 are the "back_bg_st" panelled category
-//  headers (Sound / Game-effect / Pop-kun size), rows 1/3/5 are the collapsible in-line detail
-//  rows. Tapping a header (didSelectRow) toggles _selectedIndexPath; heightForRow then expands
-//  the matching detail row (row+1) from 0 to its dummy-frame height and cellForRow lazily builds
-//  a rounded, coloured container that embeds the detail sub-controller's view.
+//  The screen is a 6-row single section: rows 0/2/4 are the "back_bg_st"
+//  panelled category headers (Sound / Game-effect / Pop-kun size), rows 1/3/5
+//  are the collapsible in-line detail rows. Tapping a header (didSelectRow)
+//  toggles _selectedIndexPath; heightForRow then expands the matching detail
+//  row (row+1) from 0 to its dummy-frame height and cellForRow lazily builds a
+//  rounded, coloured container that embeds the detail sub-controller's view.
 //
-//  Rows 1/3/5 embed three sub-controllers -- SoundSettingView, GameEffectView and
-//  PopkunSizeViewCtrl -- each lazily built into _detailView[0/2/4] and hosted inside the
-//  coloured detail container. All three are reconstructed and wired below.
+//  Rows 1/3/5 embed three sub-controllers -- SoundSettingView, GameEffectView
+//  and PopkunSizeViewCtrl -- each lazily built into _detailView[0/2/4] and
+//  hosted inside the coloured detail container. All three are reconstructed and
+//  wired below.
 //
-//  Honesty note: panel/label centring in cellForRowAtIndexPath: is exact (byte-decoded @ 0x89748):
-//  cell.frame.size.width * 0.5 (vldr.32/vmul, #0x3f000000=0.5f); -10.0f bias (0xc1200000) only
-//  on pre-iOS-7 (itt mi; vadd.f32); Y = #0x42000000 = 32.0f. Row-container frames and colours are
+//  Honesty note: panel/label centring in cellForRowAtIndexPath: is exact
+//  (byte-decoded @ 0x89748): cell.frame.size.width * 0.5 (vldr.32/vmul,
+//  #0x3f000000=0.5f); -10.0f bias (0xc1200000) only on pre-iOS-7 (itt mi;
+//  vadd.f32); Y = #0x42000000 = 32.0f. Row-container frames and colours are
 //  exact from the binary.
 //
 
 #import "SettingGameTableViewController.h"
 
-#import "neEngineBridge.h"   // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
-#import "AppFont.h"          // AppFontName (label typeface)
+#import "AppFont.h"        // AppFontName (label typeface)
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
 
-#import "SoundSettingView.h"    // row 1 detail sub-controller (@ PTR_SoundSettingView_0015c0a0)
-#import "GameEffectView.h"      // row 3 detail sub-controller (@ PTR_GameEffectView_0015c0a8)
-#import "PopkunSizeViewCtrl.h"  // row 5 detail sub-controller (@ PTR_PopkunSizeViewCtrl_0015c0a4)
+#import "GameEffectView.h"     // row 3 detail sub-controller (@ PTR_GameEffectView_0015c0a8)
+#import "PopkunSizeViewCtrl.h" // row 5 detail sub-controller (@ PTR_PopkunSizeViewCtrl_0015c0a4)
+#import "SoundSettingView.h"   // row 1 detail sub-controller (@ PTR_SoundSettingView_0015c0a0)
 
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
 @implementation SettingGameTableViewController {
-    BOOL _isAnimationing;               // @162 (0xa2)  open/close animation guard
-    NSIndexPath *_selectedIndexPath;    // @164 (0xa4)  currently expanded header row (retained)
-    UIViewController *_detailView[6];   // @168 (0xa8)  lazily-built detail controllers (indices 0/2/4)
-    CGRect _dummyFrm[6];                // @192 (0xc0)  per-detail-row content frames (indices 0/2/4)
+    BOOL _isAnimationing;             // @162 (0xa2)  open/close animation guard
+    NSIndexPath *_selectedIndexPath;  // @164 (0xa4)  currently expanded header row
+                                      // (retained)
+    UIViewController *_detailView[6]; // @168 (0xa8)  lazily-built detail
+                                      // controllers (indices 0/2/4)
+    CGRect _dummyFrm[6];              // @192 (0xc0)  per-detail-row content frames (indices
+                                      // 0/2/4)
 }
 
-// @ 0x88b08 -- grouped-table styling; iPad content inset tweak; seeds the three detail-row frames.
+// @ 0x88b08 -- grouped-table styling; iPad content inset tweak; seeds the three
+// detail-row frames.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
         return self;
     }
 
-    self.tableView.rowHeight = 65.0f;                                   // 0x42820000
+    self.tableView.rowHeight = 65.0f; // 0x42820000
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.tableView.separatorColor = [UIColor clearColor];
     self.tableView.backgroundView = nil;
     self.tableView.backgroundColor = [UIColor clearColor];
 
     if (neSceneManager::isPadDisplay()) {
-        // The binary writes the top inset twice; the first (-100) is immediately overwritten by
-        // the version-based value below, so the net inset top is 20 (pre-iOS 7) or 0.
-        self.tableView.contentInset = UIEdgeInsetsMake(-100.0f, 0, 0, 0);   // 0xc2c80000, overwritten
+        // The binary writes the top inset twice; the first (-100) is immediately
+        // overwritten by the version-based value below, so the net inset top is 20
+        // (pre-iOS 7) or 0.
+        self.tableView.contentInset = UIEdgeInsetsMake(-100.0f, 0, 0, 0); // 0xc2c80000, overwritten
         CGFloat topInset = (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) ? 20.0f : 0.0f;
-        self.tableView.contentInset = UIEdgeInsetsMake(topInset, 0, 0, 0);  // 0x41a00000 / 0
+        self.tableView.contentInset = UIEdgeInsetsMake(topInset, 0, 0, 0); // 0x41a00000 / 0
     }
 
-    // Detail-row content frames. x = 15 (iOS 7+) or 5 (pre-iOS 7); width 290. Heights differ per
-    // section: Sound 320, Game-effect 137, Pop-kun size 430. Only indices 0/2/4 are populated.
+    // Detail-row content frames. x = 15 (iOS 7+) or 5 (pre-iOS 7); width 290.
+    // Heights differ per section: Sound 320, Game-effect 137, Pop-kun size 430.
+    // Only indices 0/2/4 are populated.
     const CGFloat x = (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) ? 5.0f : 15.0f;
-    _dummyFrm[0] = CGRectMake(x, 0.0f, 290.0f, 320.0f);   // 0x43910000 / 0x43a00000
-    _dummyFrm[2] = CGRectMake(x, 0.0f, 290.0f, 137.0f);   // 0x43910000 / 0x43090000
-    _dummyFrm[4] = CGRectMake(x, 0.0f, 290.0f, 430.0f);   // 0x43910000 / 0x43d70000
+    _dummyFrm[0] = CGRectMake(x, 0.0f, 290.0f, 320.0f); // 0x43910000 / 0x43a00000
+    _dummyFrm[2] = CGRectMake(x, 0.0f, 290.0f, 137.0f); // 0x43910000 / 0x43090000
+    _dummyFrm[4] = CGRectMake(x, 0.0f, 290.0f, 430.0f); // 0x43910000 / 0x43d70000
 
     return self;
 }
 
-// @ 0x88d7c -- wrap self (grouped style) in a navigation controller with a custom back button and
-// the "frirep_navbar" bar background.
+// @ 0x88d7c -- wrap self (grouped style) in a navigation controller with a
+// custom back button and the "frirep_navbar" bar background.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [UINavigationController alloc];
     [self initWithStyle:UITableViewStyleGrouped];
@@ -88,18 +100,18 @@ static UIViewController *RootVC() {
 
     UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
     CGSize backSize = backImage ? backImage.size : CGSizeZero;
-    UIButton *backButton = [[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backSize.width, backSize.height)];
+    UIButton *backButton =
+        [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backSize.width, backSize.height)];
     [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
-    [backButton addTarget:self action:@selector(settingClose)
+    [backButton addTarget:self
+                   action:@selector(settingClose)
          forControlEvents:UIControlEventTouchUpInside];
 
-    self.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithCustomView:backButton];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
 
     UIImage *barImage = [UIImage imageNamed:@"frirep_navbar"];
     [self.navigationController.navigationBar setBackgroundImage:barImage
-                                                 forBarMetrics:UIBarMetricsDefault];
+                                                  forBarMetrics:UIBarMetricsDefault];
     return nav;
 }
 
@@ -144,15 +156,16 @@ static UIViewController *RootVC() {
     _isAnimationing = NO;
 }
 
-// @ 0x891b8 -- play the "back/cancel" system SE, then fade the view + nav view out over 0.3s.
+// @ 0x891b8 -- play the "back/cancel" system SE, then fade the view + nav view
+// out over 0.3s.
 - (void)startCloseAnimation {
-    neEngine::playSystemSe(2);   // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
+    neEngine::playSystemSe(2); // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
     if (_isAnimationing) {
         return;
     }
     _isAnimationing = YES;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.3];   // DAT_000892d0
+    [UIView setAnimationDuration:0.3]; // DAT_000892d0
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
     self.view.alpha = 0;
@@ -176,40 +189,43 @@ static UIViewController *RootVC() {
 
 // @ 0x89348
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 6;   // 3 header rows (0/2/4) each followed by a collapsible detail row (1/3/5)
+    return 6; // 3 header rows (0/2/4) each followed by a collapsible detail row
+              // (1/3/5)
 }
 
-// @ 0x8934c -- detail rows (1/3/5) are 0-height unless the header above them is the selected row,
-// in which case they expand to their _dummyFrm height. Header rows use the default 65pt.
+// @ 0x8934c -- detail rows (1/3/5) are 0-height unless the header above them is
+// the selected row, in which case they expand to their _dummyFrm height. Header
+// rows use the default 65pt.
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == 5) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:4 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
-            return _dummyFrm[4].size.height;   // 430
+            return _dummyFrm[4].size.height; // 430
         }
         return 0.0f;
     } else if (indexPath.row == 3) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:2 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
-            return _dummyFrm[2].size.height;   // 137
+            return _dummyFrm[2].size.height; // 137
         }
         return 0.0f;
     } else if (indexPath.row == 1) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:0 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
-            return _dummyFrm[0].size.height;   // 320
+            return _dummyFrm[0].size.height; // 320
         }
         return 0.0f;
     }
-    return 65.0f;   // DAT_000894d4, header rows 0/2/4
+    return 65.0f; // DAT_000894d4, header rows 0/2/4
 }
 
-// @ 0x894d8 -- builds either a category-header cell (rows 0/2/4) or a detail-container cell
-// (rows 1/3/5) that embeds the section's sub-controller view.
+// @ 0x894d8 -- builds either a category-header cell (rows 0/2/4) or a
+// detail-container cell (rows 1/3/5) that embeds the section's sub-controller
+// view.
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *cellId = [NSString stringWithFormat:@"Cell%ld-%ld",
-                        (long)indexPath.section, (long)indexPath.row];
+    NSString *cellId =
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
     if (cell != nil) {
         return cell;
@@ -221,102 +237,128 @@ static UIViewController *RootVC() {
     cell.backgroundColor = [UIColor clearColor];
     cell.clipsToBounds = YES;
 
-    // Per-row header colour (used both as the header panel border and as the detail container's
-    // border/background tint). Exact float constants from the binary.
+    // Per-row header colour (used both as the header panel border and as the
+    // detail container's border/background tint). Exact float constants from the
+    // binary.
     UIColor *headerColor = nil;
 
     switch (indexPath.row) {
-        case 1: {
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            CGRect frm = _dummyFrm[0];
-            UIView *box = [[UIView alloc] initWithFrame:frm];
-            box.layer.borderWidth = 3.0f;
-            box.layer.borderColor = [UIColor colorWithRed:1.0f green:0.647059f blue:0.627451f
-                                                    alpha:1.0f].CGColor;   // 0x3f25a5a6 / 0x3f20a0a1
-            box.layer.cornerRadius = 5.0f;
-            box.clipsToBounds = YES;
-            box.backgroundColor = [UIColor colorWithRed:0.996109f green:0.831373f blue:0.823529f
-                                                  alpha:1.0f];             // 0x3f7efeff / 0x3f54d4d5 / 0x3f52d2d3
-            UIView *inner = [[UIView alloc] init];
-            inner.backgroundColor = [UIColor clearColor];
-            inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
-            [box addSubview:inner];
-            if (_detailView[0] == nil) {
-                _detailView[0] = [[SoundSettingView alloc] initWithStyle:UITableViewStyleGrouped];
-            }
-            _detailView[0].view.frame = CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
-            [inner addSubview:_detailView[0].view];
-            [cell.contentView addSubview:box];
-            return cell;
+    case 1: {
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        CGRect frm = _dummyFrm[0];
+        UIView *box = [[UIView alloc] initWithFrame:frm];
+        box.layer.borderWidth = 3.0f;
+        box.layer.borderColor = [UIColor colorWithRed:1.0f
+                                                green:0.647059f
+                                                 blue:0.627451f
+                                                alpha:1.0f]
+                                    .CGColor; // 0x3f25a5a6 / 0x3f20a0a1
+        box.layer.cornerRadius = 5.0f;
+        box.clipsToBounds = YES;
+        box.backgroundColor = [UIColor colorWithRed:0.996109f
+                                              green:0.831373f
+                                               blue:0.823529f
+                                              alpha:1.0f]; // 0x3f7efeff / 0x3f54d4d5 / 0x3f52d2d3
+        UIView *inner = [[UIView alloc] init];
+        inner.backgroundColor = [UIColor clearColor];
+        inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
+        [box addSubview:inner];
+        if (_detailView[0] == nil) {
+            _detailView[0] = [[SoundSettingView alloc] initWithStyle:UITableViewStyleGrouped];
         }
-        case 3: {
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            CGRect frm = _dummyFrm[2];
-            UIView *box = [[UIView alloc] initWithFrame:frm];
-            box.layer.borderWidth = 3.0f;
-            box.layer.borderColor = [UIColor colorWithRed:1.0f green:0.733333f blue:0.313726f
-                                                    alpha:1.0f].CGColor;   // 0x3f3bbbbc / 0x3ea0a0a1
-            box.layer.cornerRadius = 5.0f;
-            box.clipsToBounds = YES;
-            box.backgroundColor = [UIColor colorWithRed:1.0f green:0.831373f blue:0.564706f
-                                                  alpha:1.0f];             // 0x3f54d4d5 / 0x3f109091
-            UIView *inner = [[UIView alloc] init];
-            inner.backgroundColor = [UIColor clearColor];
-            inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
-            [box addSubview:inner];
-            if (_detailView[2] == nil) {
-                _detailView[2] = [[GameEffectView alloc] initWithStyle:UITableViewStyleGrouped];
-            }
-            _detailView[2].view.frame = CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
-            [inner addSubview:_detailView[2].view];
-            [cell.contentView addSubview:box];
-            return cell;
+        _detailView[0].view.frame =
+            CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+        [inner addSubview:_detailView[0].view];
+        [cell.contentView addSubview:box];
+        return cell;
+    }
+    case 3: {
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        CGRect frm = _dummyFrm[2];
+        UIView *box = [[UIView alloc] initWithFrame:frm];
+        box.layer.borderWidth = 3.0f;
+        box.layer.borderColor = [UIColor colorWithRed:1.0f
+                                                green:0.733333f
+                                                 blue:0.313726f
+                                                alpha:1.0f]
+                                    .CGColor; // 0x3f3bbbbc / 0x3ea0a0a1
+        box.layer.cornerRadius = 5.0f;
+        box.clipsToBounds = YES;
+        box.backgroundColor = [UIColor colorWithRed:1.0f
+                                              green:0.831373f
+                                               blue:0.564706f
+                                              alpha:1.0f]; // 0x3f54d4d5 / 0x3f109091
+        UIView *inner = [[UIView alloc] init];
+        inner.backgroundColor = [UIColor clearColor];
+        inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
+        [box addSubview:inner];
+        if (_detailView[2] == nil) {
+            _detailView[2] = [[GameEffectView alloc] initWithStyle:UITableViewStyleGrouped];
         }
-        case 5: {
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            CGRect frm = _dummyFrm[4];
-            UIView *box = [[UIView alloc] initWithFrame:frm];
-            box.layer.borderWidth = 3.0f;
-            box.layer.borderColor = [UIColor colorWithRed:0.580392f green:0.960784f blue:0.372549f
-                                                    alpha:1.0f].CGColor;   // 0x3f149495 / 0x3f75f5f6 / 0x3ebebebf
-            box.layer.cornerRadius = 5.0f;
-            box.clipsToBounds = YES;
-            box.backgroundColor = [UIColor colorWithRed:0.741176f green:1.0f blue:0.6f
-                                                  alpha:1.0f];             // 0x3f3dbdbe / 0x3f19999a
-            UIView *inner = [[UIView alloc] init];
-            inner.backgroundColor = [UIColor clearColor];
-            // Row 5 trims 20 from the height (rows 1/3 trim 4).
-            inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 20.0f);
-            [box addSubview:inner];
-            if (_detailView[4] == nil) {
-                _detailView[4] = [[PopkunSizeViewCtrl alloc] init];
-            }
-            _detailView[4].view.frame = CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 20.0f);
-            [inner addSubview:_detailView[4].view];
-            [cell.contentView addSubview:box];
-            return cell;
+        _detailView[2].view.frame =
+            CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+        [inner addSubview:_detailView[2].view];
+        [cell.contentView addSubview:box];
+        return cell;
+    }
+    case 5: {
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        CGRect frm = _dummyFrm[4];
+        UIView *box = [[UIView alloc] initWithFrame:frm];
+        box.layer.borderWidth = 3.0f;
+        box.layer.borderColor = [UIColor colorWithRed:0.580392f
+                                                green:0.960784f
+                                                 blue:0.372549f
+                                                alpha:1.0f]
+                                    .CGColor; // 0x3f149495 / 0x3f75f5f6 / 0x3ebebebf
+        box.layer.cornerRadius = 5.0f;
+        box.clipsToBounds = YES;
+        box.backgroundColor = [UIColor colorWithRed:0.741176f
+                                              green:1.0f
+                                               blue:0.6f
+                                              alpha:1.0f]; // 0x3f3dbdbe / 0x3f19999a
+        UIView *inner = [[UIView alloc] init];
+        inner.backgroundColor = [UIColor clearColor];
+        // Row 5 trims 20 from the height (rows 1/3 trim 4).
+        inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 20.0f);
+        [box addSubview:inner];
+        if (_detailView[4] == nil) {
+            _detailView[4] = [[PopkunSizeViewCtrl alloc] init];
         }
-        case 0:
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            headerColor = [UIColor colorWithRed:1.0f green:0.647059f blue:0.627451f alpha:1.0f];
-            break;
-        case 2:
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            headerColor = [UIColor colorWithRed:1.0f green:0.733333f blue:0.313726f alpha:1.0f];
-            break;
-        case 4:
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            headerColor = [UIColor colorWithRed:0.580392f green:0.960784f blue:0.372549f alpha:1.0f];
-            break;
+        _detailView[4].view.frame =
+            CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 20.0f);
+        [inner addSubview:_detailView[4].view];
+        [cell.contentView addSubview:box];
+        return cell;
+    }
+    case 0:
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        headerColor = [UIColor colorWithRed:1.0f green:0.647059f blue:0.627451f alpha:1.0f];
+        break;
+    case 2:
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        headerColor = [UIColor colorWithRed:1.0f green:0.733333f blue:0.313726f alpha:1.0f];
+        break;
+    case 4:
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        headerColor = [UIColor colorWithRed:0.580392f green:0.960784f blue:0.372549f alpha:1.0f];
+        break;
     }
 
-    // Category-header rows (0/2/4): a "back_bg_st" panelled, coloured-border box with a centred
-    // title label. The panel/label centring is exact (byte-decoded @ 0x89748/0x899f8).
+    // Category-header rows (0/2/4): a "back_bg_st" panelled, coloured-border box
+    // with a centred title label. The panel/label centring is exact (byte-decoded
+    // @ 0x89748/0x899f8).
     NSString *title = nil;
     switch (indexPath.row) {
-        case 0: title = @"サウンド"; break;                        // サウンド (Sound)
-        case 2: title = @"ゲーム演出"; break;                  // ゲーム演出 (Game effect)
-        case 4: title = @"ポップ君サイズ"; break;      // ポップ君サイズ (Pop-kun size)
+    case 0:
+        title = @"サウンド";
+        break; // サウンド (Sound)
+    case 2:
+        title = @"ゲーム演出";
+        break; // ゲーム演出 (Game effect)
+    case 4:
+        title = @"ポップ君サイズ";
+        break; // ポップ君サイズ (Pop-kun size)
     }
 
     UIView *panel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 290.0f, 53.0f)];
@@ -327,8 +369,9 @@ static UIViewController *RootVC() {
     panel.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
 
     // @ 0x89748: [cell frame] stret → sp+0x40; vldr.32 s0,[sp,#0x48] = width;
-    // vmul.f32 d8,d0,#0x3f000000 = width*0.5; itt mi; vmov.f32 d16,#0xc1200000=-10.0f;
-    // vadd.f32 d8,d8,d16 (iOS<7 only). r3 = #0x42000000 = 32.0f at setCenter:. Exact.
+    // vmul.f32 d8,d0,#0x3f000000 = width*0.5; itt mi; vmov.f32
+    // d16,#0xc1200000=-10.0f; vadd.f32 d8,d8,d16 (iOS<7 only). r3 = #0x42000000
+    // = 32.0f at setCenter:. Exact.
     CGRect cellFrame = cell.frame;
     CGFloat centerX = cellFrame.size.width * 0.5f;
     if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {
@@ -338,8 +381,11 @@ static UIViewController *RootVC() {
     [cell.contentView addSubview:panel];
 
     UILabel *label = [[UILabel alloc] init];
-    label.backgroundColor = [UIColor clearColor];                 // overwritten by whiteColor below
-    label.textColor = [UIColor colorWithRed:0.188235f green:0.188235f blue:0.188235f alpha:1.0f]; // 0x3e40c0c1
+    label.backgroundColor = [UIColor clearColor]; // overwritten by whiteColor below
+    label.textColor = [UIColor colorWithRed:0.188235f
+                                      green:0.188235f
+                                       blue:0.188235f
+                                      alpha:1.0f]; // 0x3e40c0c1
     label.backgroundColor = [UIColor whiteColor];
     label.highlightedTextColor = [UIColor whiteColor];
     label.textAlignment = NSTextAlignmentCenter;
@@ -347,15 +393,16 @@ static UIViewController *RootVC() {
     label.minimumScaleFactor = 0.5f;
     label.layer.cornerRadius = 10.0f;
     label.font = [UIFont fontWithName:AppFontName() size:15.0f];
-    label.frame = CGRectMake(0, 0, 226.0f, 36.0f);               // 0x43620000 / 0x42100000
+    label.frame = CGRectMake(0, 0, 226.0f, 36.0f); // 0x43620000 / 0x42100000
     label.text = title;
     label.center = CGPointMake(centerX, 32.0f);
     [cell.contentView addSubview:label];
     return cell;
 }
 
-// @ 0x8a27c -- only header rows (0/2/4) are selectable: toggle the expanded section, then reload
-// the tapped row to animate the detail row above/below open or closed.
+// @ 0x8a27c -- only header rows (0/2/4) are selectable: toggle the expanded
+// section, then reload the tapped row to animate the detail row above/below
+// open or closed.
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == 1 || indexPath.row == 3 || indexPath.row == 5) {
         return;
@@ -367,7 +414,7 @@ static UIViewController *RootVC() {
         _selectedIndexPath = indexPath;
     }
     [tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath]
-                     withRowAnimation:UITableViewRowAnimationNone];   // animation 5
+                     withRowAnimation:UITableViewRowAnimationNone]; // animation 5
 }
 
 // @ 0x8a34c -- back button action.

@@ -7,10 +7,10 @@
 //
 
 #import "RewardNetworkWebViewController.h"
+#import "NSString+URLDecode.h" // -URLDecodedString (SDK percent-decode category)
 #import "RewardNetworkIndicator.h"
-#import "RewardNetworkUtilities.h"
 #import "RewardNetworkMessage.h"
-#import "NSString+URLDecode.h"   // -URLDecodedString (SDK percent-decode category)
+#import "RewardNetworkUtilities.h"
 
 @implementation RewardNetworkWebViewController
 
@@ -30,23 +30,23 @@
         screenBounds = [screen bounds];
     }
 
-    // Web view fills the screen below a 45pt navigation bar (Ghidra y-origin 0x42340000 == 45.0f).
-    _webView = [[UIWebView alloc] initWithFrame:CGRectMake(0.0f, 45.0f,
-                                                           screenBounds.size.width,
-                                                           screenBounds.size.height)];
+    // Web view fills the screen below a 45pt navigation bar (Ghidra y-origin
+    // 0x42340000 == 45.0f).
+    _webView = [[UIWebView alloc]
+        initWithFrame:CGRectMake(0.0f, 45.0f, screenBounds.size.width, screenBounds.size.height)];
     [_webView setDelegate:self];
     [self.view addSubview:_webView];
 
     // Top navigation bar with a single "close" button on the left.
-    _navigationBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0.0f, 0.0f,
-                                                                       screenBounds.size.width, 45.0f)];
-    UINavigationItem *item =
-        [[UINavigationItem alloc] initWithTitle:[RewardNetworkMessage localizedMessage:@"RewardNetworkAppListTitle"]];
-    UIBarButtonItem *closeItem =
-        [[UIBarButtonItem alloc] initWithTitle:[RewardNetworkMessage localizedMessage:@"RewardNetworkAppListCloseButton"]
-                                         style:UIBarButtonItemStylePlain
-                                        target:self
-                                        action:@selector(btnCloseClicked:)];
+    _navigationBar = [[UINavigationBar alloc]
+        initWithFrame:CGRectMake(0.0f, 0.0f, screenBounds.size.width, 45.0f)];
+    UINavigationItem *item = [[UINavigationItem alloc]
+        initWithTitle:[RewardNetworkMessage localizedMessage:@"RewardNetworkAppListTitle"]];
+    UIBarButtonItem *closeItem = [[UIBarButtonItem alloc]
+        initWithTitle:[RewardNetworkMessage localizedMessage:@"RewardNetworkAppListCloseButton"]
+                style:UIBarButtonItemStylePlain
+               target:self
+               action:@selector(btnCloseClicked:)];
     [item setLeftBarButtonItem:closeItem];
     [_navigationBar pushNavigationItem:item animated:NO];
     [self.view addSubview:_navigationBar];
@@ -85,10 +85,12 @@
         [[self parentView] addSubview:self.view];
     }
 
-    NSString *fullURL = [RewardNetworkUtilities appendParametersToURL:(NSString *)url parameters:parameters];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:fullURL]];
-    [request setTimeoutInterval:30.0];                                  // Ghidra 0x403e0000 == 30.0
-    [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];  // 1
+    NSString *fullURL = [RewardNetworkUtilities appendParametersToURL:(NSString *)url
+                                                           parameters:parameters];
+    NSMutableURLRequest *request =
+        [NSMutableURLRequest requestWithURL:[NSURL URLWithString:fullURL]];
+    [request setTimeoutInterval:30.0];                                 // Ghidra 0x403e0000 == 30.0
+    [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData]; // 1
 
     [self setDelegate:delegate];
 
@@ -180,8 +182,8 @@
 
 // @ 0xecf8c
 - (BOOL)webView:(UIWebView *)webView
-        shouldStartLoadWithRequest:(NSURLRequest *)request
-        navigationType:(UIWebViewNavigationType)navigationType {
+    shouldStartLoadWithRequest:(NSURLRequest *)request
+                navigationType:(UIWebViewNavigationType)navigationType {
     NSURL *url = [request URL];
     NSString *scheme = [url scheme];
     NSString *host = [url host];
@@ -223,8 +225,8 @@
         }
     }
 
-    // (2) Otherwise treat the tail of the path (after "applilink://ext-app:80") as the
-    // scheme URL, stripping a trailing "&<query>" if present.
+    // (2) Otherwise treat the tail of the path (after "applilink://ext-app:80")
+    // as the scheme URL, stripping a trailing "&<query>" if present.
     NSString *prefix = [NSString stringWithString:@"applilink://ext-app:80"];
     NSString *launch = path;
     if ([[url absoluteString] hasPrefix:prefix]) {
@@ -239,7 +241,8 @@
     }
 
     if ([launch length] != 0) {
-        // Drop the leading separator, take the first "&"-delimited token as the URL.
+        // Drop the leading separator, take the first "&"-delimited token as the
+        // URL.
         NSArray *parts = [[launch substringFromIndex:1] componentsSeparatedByString:@"&"];
         if ([parts count] != 0) {
             NSURL *appURL = [NSURL URLWithString:[[parts objectAtIndex:0] URLDecodedString]];
@@ -263,11 +266,20 @@
     }
     NSUInteger mask;
     switch (interfaceOrientation) {
-        case UIInterfaceOrientationPortrait:            mask = UIInterfaceOrientationMaskPortrait; break;            // 2
-        case UIInterfaceOrientationPortraitUpsideDown:  mask = UIInterfaceOrientationMaskPortraitUpsideDown; break;  // 4
-        case UIInterfaceOrientationLandscapeLeft:       mask = UIInterfaceOrientationMaskLandscapeLeft; break;       // 8
-        case UIInterfaceOrientationLandscapeRight:      mask = UIInterfaceOrientationMaskLandscapeRight; break;      // 0x10
-        default:                                        return NO;
+    case UIInterfaceOrientationPortrait:
+        mask = UIInterfaceOrientationMaskPortrait;
+        break; // 2
+    case UIInterfaceOrientationPortraitUpsideDown:
+        mask = UIInterfaceOrientationMaskPortraitUpsideDown;
+        break; // 4
+    case UIInterfaceOrientationLandscapeLeft:
+        mask = UIInterfaceOrientationMaskLandscapeLeft;
+        break; // 8
+    case UIInterfaceOrientationLandscapeRight:
+        mask = UIInterfaceOrientationMaskLandscapeRight;
+        break; // 0x10
+    default:
+        return NO;
     }
     return ([self supportedInterfaceOrientations] & mask) != 0;
 }
@@ -288,14 +300,15 @@
 // @ 0xed6cc
 - (void)rotateWebViewWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                      duration:(NSTimeInterval)duration {
-    // NOTE: this mirrors the (large, register-level) frame arithmetic from the binary
-    // in behavioural form. The panel is placed manually (not inside a UIViewController's
-    // managed view), so it rotates itself with a CGAffineTransform and recomputes frames.
+    // NOTE: this mirrors the (large, register-level) frame arithmetic from the
+    // binary in behavioural form. The panel is placed manually (not inside a
+    // UIViewController's managed view), so it rotates itself with a
+    // CGAffineTransform and recomputes frames.
 
-    // Are we hosted inside a real view-controller/view hierarchy (vs. straight on a window)?
+    // Are we hosted inside a real view-controller/view hierarchy (vs. straight on
+    // a window)?
     BOOL hostedInViewController = NO;
-    if ([self parentView] != nil &&
-        ![[self parentView] isKindOfClass:[UIWindow class]] &&
+    if ([self parentView] != nil && ![[self parentView] isKindOfClass:[UIWindow class]] &&
         [RewardNetworkUtilities hasParentViewController:[self parentView]]) {
         hostedInViewController = YES;
     }
@@ -318,32 +331,33 @@
     CGAffineTransform xf;
     CGRect newBounds;
     switch (orientation) {
-        case UIInterfaceOrientationPortraitUpsideDown:  // 2
-            xf = CGAffineTransformMakeRotation((CGFloat)M_PI);
-            newBounds = CGRectMake(0.0f, 0.0f, shortSide, longSide);
-            break;
-        case UIInterfaceOrientationLandscapeLeft:       // 3
-            xf = CGAffineTransformMakeRotation((CGFloat)M_PI_2);
-            newBounds = CGRectMake(0.0f, 0.0f, longSide, shortSide);
-            break;
-        case UIInterfaceOrientationLandscapeRight:      // 4
-            xf = CGAffineTransformMakeRotation((CGFloat)(-M_PI_2));
-            newBounds = CGRectMake(0.0f, 0.0f, longSide, shortSide);
-            break;
-        default:                                        // portrait (1)
-            xf = CGAffineTransformMakeRotation(0.0f);
-            newBounds = CGRectMake(0.0f, 0.0f, shortSide, longSide);
-            break;
+    case UIInterfaceOrientationPortraitUpsideDown: // 2
+        xf = CGAffineTransformMakeRotation((CGFloat)M_PI);
+        newBounds = CGRectMake(0.0f, 0.0f, shortSide, longSide);
+        break;
+    case UIInterfaceOrientationLandscapeLeft: // 3
+        xf = CGAffineTransformMakeRotation((CGFloat)M_PI_2);
+        newBounds = CGRectMake(0.0f, 0.0f, longSide, shortSide);
+        break;
+    case UIInterfaceOrientationLandscapeRight: // 4
+        xf = CGAffineTransformMakeRotation((CGFloat)(-M_PI_2));
+        newBounds = CGRectMake(0.0f, 0.0f, longSide, shortSide);
+        break;
+    default: // portrait (1)
+        xf = CGAffineTransformMakeRotation(0.0f);
+        newBounds = CGRectMake(0.0f, 0.0f, shortSide, longSide);
+        break;
     }
 
     if (hostedInViewController) {
         // A hosting view controller owns rotation; just adopt the new bounds.
         [self.view setBounds:newBounds];
     } else {
-        [UIView animateWithDuration:duration animations:^{   // @ 0xedef8 — animate transform + bounds
-            self.view.transform = xf;
-            self.view.bounds = newBounds;
-        }];
+        [UIView animateWithDuration:duration
+                         animations:^{ // @ 0xedef8 — animate transform + bounds
+                           self.view.transform = xf;
+                           self.view.bounds = newBounds;
+                         }];
     }
 
     // Reposition the view for the current status-bar orientation.

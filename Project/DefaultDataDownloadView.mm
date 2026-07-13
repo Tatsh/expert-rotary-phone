@@ -2,23 +2,24 @@
 //  DefaultDataDownloadView.mm
 //  pop'n rhythmin
 //
-//  See DefaultDataDownloadView.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the neSceneManager singleton (root-VC end callback).
-//  The one-file-at-a-time download loop, retry-up-to-3 policy and progress arithmetic
-//  are byte-verified; the alert copy is the exact Japanese literal from the __cfstring
-//  table (shared with the invite-code screens).
+//  See DefaultDataDownloadView.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin. Objective-C++ for the neSceneManager singleton
+//  (root-VC end callback). The one-file-at-a-time download loop, retry-up-to-3
+//  policy and progress arithmetic are byte-verified; the alert copy is the
+//  exact Japanese literal from the __cfstring table (shared with the
+//  invite-code screens).
 //
 
 #import "DefaultDataDownloadView.h"
 
-#import "AppDelegate.h"            // +appAppSupportDirectory (non-.orb destination dir)
-#import "CommonAlertView.h"        // failure alert
-#import "DownloadMain.h"           // DlFileListData (NSValue payload)
-#import "DownloadProgresView.h"    // the progress dialog view
-#import "Downloader.h"             // the HTTP fetch + DownloaderDelegate
-#import "MusicManager.h"           // -getPathFromPurchased: (.orb destination path)
-#import "RhUtil.h"                 // getFileSize()
-#import "neEngineBridge.h"         // neSceneManager::rootViewController
+#import "AppDelegate.h"         // +appAppSupportDirectory (non-.orb destination dir)
+#import "CommonAlertView.h"     // failure alert
+#import "DownloadMain.h"        // DlFileListData (NSValue payload)
+#import "DownloadProgresView.h" // the progress dialog view
+#import "Downloader.h"          // the HTTP fetch + DownloaderDelegate
+#import "MusicManager.h"        // -getPathFromPurchased: (.orb destination path)
+#import "RhUtil.h"              // getFileSize()
+#import "neEngineBridge.h"      // neSceneManager::rootViewController
 
 // Own privates + adopted delegate.
 @interface DefaultDataDownloadView () <DownloaderDelegate>
@@ -34,10 +35,11 @@
 
 @synthesize isFailed = _isFailed;
 
-// @ 0xdd158 — take the file list, sum the total size, build the progress dialog.
+// @ 0xdd158 — take the file list, sum the total size, build the progress
+// dialog.
 - (instancetype)initWithFileDataArray:(NSArray *)fileDataArray {
     self = [super init];
-    _dlFileListDataArray = fileDataArray;   // @ retained
+    _dlFileListDataArray = fileDataArray; // @ retained
     if (self != nil) {
         for (NSValue *value in _dlFileListDataArray) {
             DlFileListData data;
@@ -58,22 +60,23 @@
 // viewDidLoad @ 0xdd3d4 — super-only override, omitted.
 // didReceiveMemoryWarning @ 0xdd400 — super-only override, omitted.
 
-// @ 0xdd42c — cancel any in-flight fetch on teardown (kept under ARC; the array / path
-// are released by ARC).
+// @ 0xdd42c — cancel any in-flight fetch on teardown (kept under ARC; the array
+// / path are released by ARC).
 - (void)dealloc {
     if (_downloader != nil) {
         [_downloader cancel];
     }
 }
 
-// @ 0xdd4c0 — start fetching the file at `idx`, unless it is already present at the
-// right size. Returns YES when a download was actually started. Sets _isFailed and
-// returns NO on a hard error (bad music id, or a fetch already running).
+// @ 0xdd4c0 — start fetching the file at `idx`, unless it is already present at
+// the right size. Returns YES when a download was actually started. Sets
+// _isFailed and returns NO on a hard error (bad music id, or a fetch already
+// running).
 - (BOOL)downloadWithIdx:(int)idx {
     if ((int)_dlFileListDataArray.count <= idx) {
         return NO;
     }
-    _filePath = nil;   // @ release
+    _filePath = nil; // @ release
 
     DlFileListData data;
     [_dlFileListDataArray[idx] getValue:&data];
@@ -82,8 +85,7 @@
     NSString *path;
     if (![[lastComponent pathExtension] isEqualToString:@"orb"]) {
         // Non-song data -> Application Support directory, keeping the file name.
-        path = [[AppDelegate appAppSupportDirectory]
-            stringByAppendingPathComponent:lastComponent];
+        path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:lastComponent];
     } else {
         // A song .orb -> the purchased-music path keyed by its numeric id.
         NSString *base = [lastComponent stringByDeletingPathExtension];
@@ -101,10 +103,9 @@
 
     if (_downloader == nil) {
         _tryCnt = 0;
-        _downloader = [[Downloader alloc] initWithURL:[NSURL URLWithString:data.url]
-                                             delegate:self];
+        _downloader = [[Downloader alloc] initWithURL:[NSURL URLWithString:data.url] delegate:self];
         [_downloader startDownloading];
-        _filePath = path;   // @ retain
+        _filePath = path; // @ retain
         _fileSize = data.size;
         return YES;
     }
@@ -113,15 +114,17 @@
     return NO;
 }
 
-// @ 0xdd6fc — a file finished: verify its size, write it, then advance to the next
-// file that still needs fetching (or close when the list is exhausted / failed).
+// @ 0xdd6fc — a file finished: verify its size, write it, then advance to the
+// next file that still needs fetching (or close when the list is exhausted /
+// failed).
 - (void)downloaderFinished:(Downloader *)downloader {
     NSData *data = [_downloader getData];
-    _downloader = nil;   // @ release
+    _downloader = nil; // @ release
 
     NSError *error = nil;
-    if (data.length == (NSUInteger)_fileSize &&
-        [data writeToFile:_filePath options:NSDataWritingAtomic error:&error]) {
+    if (data.length == (NSUInteger)_fileSize && [data writeToFile:_filePath
+                                                          options:NSDataWritingAtomic
+                                                            error:&error]) {
         // The just-finished entry is re-read here in the binary (result unused).
         DlFileListData finished;
         [_dlFileListDataArray[_downloadingIdx] getValue:&finished];
@@ -141,19 +144,19 @@
     }
 
     if (_isFailed) {
-        CommonAlertView *alert = [[CommonAlertView alloc]
-             initWithTitle:nil
-                   message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                  delegate:nil
-         cancelButtonTitle:nil
-         otherButtonTitles:@"OK"];
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:nil
+                                           message:@"通信に失敗しました。\n電波状態"
+                                                   @"の良い場所でやり直して下さい。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
         [alert show];
     }
 
     if ((NSUInteger)_downloadingIdx < _dlFileListDataArray.count && !_isFailed) {
         [self setJustDownloadedSize];
-        [_downloadView.progressView
-            setProgress:(float)_downloadedFileSize / (float)_totalFileSize];
+        [_downloadView.progressView setProgress:(float)_downloadedFileSize / (float)_totalFileSize];
     } else {
         [_downloadView.indicatorView stopAnimating];
         [self startCloseAnimation];
@@ -182,13 +185,14 @@
         [_downloader startDownloading];
     } else {
         _isFailed = YES;
-        _downloader = nil;   // @ release
-        CommonAlertView *alert = [[CommonAlertView alloc]
-             initWithTitle:nil
-                   message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                  delegate:nil
-         cancelButtonTitle:nil
-         otherButtonTitles:@"OK"];
+        _downloader = nil; // @ release
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:nil
+                                           message:@"通信に失敗しました。\n電波状態"
+                                                   @"の良い場所でやり直して下さい。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
         [alert show];
         [self startCloseAnimation];
     }
@@ -210,8 +214,8 @@
     [UIView commitAnimations];
 }
 
-// @ 0xddcd8 — open finished: reset the guard + index, then start the first file that
-// needs downloading. If none do (or one fails), close immediately.
+// @ 0xddcd8 — open finished: reset the guard + index, then start the first file
+// that needs downloading. If none do (or one fails), close immediately.
 - (void)endOpenAnimation {
     _isAnimationing = NO;
     _downloadingIdx = 0;
@@ -219,17 +223,17 @@
     if (_dlFileListDataArray.count != 0) {
         do {
             if ([self downloadWithIdx:_downloadingIdx]) {
-                [_downloadView.labelMessage
-                    setText:[NSString stringWithFormat:@"Downloading 0%%"]];
+                [_downloadView.labelMessage setText:[NSString stringWithFormat:@"Downloading 0%%"]];
                 break;
             }
             if (_isFailed) {
                 CommonAlertView *alert = [[CommonAlertView alloc]
-                     initWithTitle:nil
-                           message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                          delegate:nil
-                 cancelButtonTitle:nil
-                 otherButtonTitles:@"OK"];
+                        initWithTitle:nil
+                              message:@"通信に失敗しました。\n電波状態の良い場所でやり"
+                                      @"直して下さい。"
+                             delegate:nil
+                    cancelButtonTitle:nil
+                    otherButtonTitles:@"OK"];
                 [alert show];
             }
             _downloadingIdx++;
@@ -238,8 +242,7 @@
 
     if ((NSUInteger)_downloadingIdx < _dlFileListDataArray.count && !_isFailed) {
         [self setJustDownloadedSize];
-        [_downloadView.progressView
-            setProgress:(float)_downloadedFileSize / (float)_totalFileSize];
+        [_downloadView.progressView setProgress:(float)_downloadedFileSize / (float)_totalFileSize];
         [_downloadView.indicatorView startAnimating];
     } else {
         [self startCloseAnimation];
@@ -262,7 +265,8 @@
     [UIView commitAnimations];
 }
 
-// @ 0xde028 — pull the view and notify the root scene the default download closed.
+// @ 0xde028 — pull the view and notify the root scene the default download
+// closed.
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();
@@ -270,8 +274,8 @@
     _isAnimationing = NO;
 }
 
-// @ 0xde084 — YES if `string` is all decimal digits (used to validate an .orb's numeric
-// base name before treating it as a music id).
+// @ 0xde084 — YES if `string` is all decimal digits (used to validate an .orb's
+// numeric base name before treating it as a music id).
 - (BOOL)isDigit:(NSString *)string {
     NSCharacterSet *digits = [NSCharacterSet characterSetWithCharactersInString:@"0123456789"];
     NSScanner *scanner = [NSScanner localizedScannerWithString:string];
@@ -280,8 +284,8 @@
     return scanner.isAtEnd;
 }
 
-// @ 0xde114 — recompute the committed-bytes baseline as the sum of every already-
-// completed file's size (files before _downloadingIdx).
+// @ 0xde114 — recompute the committed-bytes baseline as the sum of every
+// already- completed file's size (files before _downloadingIdx).
 - (void)setJustDownloadedSize {
     _downloadedFileSize = 0;
     for (int i = 0; i < _downloadingIdx; i++) {
@@ -291,7 +295,8 @@
     }
 }
 
-// isFailed @ 0xde1a0 / setIsFailed: @ 0xde1b8 — atomic synthesized accessors (@synthesize above).
+// isFailed @ 0xde1a0 / setIsFailed: @ 0xde1b8 — atomic synthesized accessors
+// (@synthesize above).
 
 @end
 

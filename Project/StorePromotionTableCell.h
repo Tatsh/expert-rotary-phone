@@ -2,8 +2,9 @@
 //  StorePromotionTableCell.h
 //  pop'n rhythmin
 //
-//  A store promotion banner row. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x738c4 — a plain super passthrough).
+//  A store promotion banner row. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x738c4 — a plain
+//  super passthrough).
 //
 
 #import <UIKit/UIKit.h>

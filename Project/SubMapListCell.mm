@@ -7,11 +7,11 @@
 
 #import "SubMapListCell.h"
 
-#import "AppFont.h"
-#import "neEngineBridge.h"
 #import "AppDelegate.h"
+#import "AppFont.h"
 #import "TreasureData.h"
 #import "TreasureMap.h"
+#import "neEngineBridge.h"
 
 // The NSValue payload getValue: fills for a sub-map (area) row.
 typedef struct {
@@ -25,7 +25,10 @@ typedef struct {
 static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     UILabel *lbl = [[UILabel alloc] init];
     lbl.backgroundColor = [UIColor clearColor];
-    lbl.textColor = [UIColor colorWithRed:69.0f / 255.0f green:64.0f / 255.0f blue:59.0f / 255.0f alpha:1.0f];
+    lbl.textColor = [UIColor colorWithRed:69.0f / 255.0f
+                                    green:64.0f / 255.0f
+                                     blue:59.0f / 255.0f
+                                    alpha:1.0f];
     lbl.highlightedTextColor = [UIColor whiteColor];
     lbl.font = [UIFont fontWithName:AppFontName() size:16.0f];
     lbl.textAlignment = NSTextAlignmentLeft;
@@ -35,11 +38,13 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
 }
 
 @implementation SubMapListCell {
-    NSValue *_mapVal;   // the bound row value
+    NSValue *_mapVal; // the bound row value
 }
 
-// @ 0xc0f8c — plain non-selectable cell; its content is bound by the VC on reuse.
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+// @ 0xc0f8c — plain non-selectable cell; its content is bound by the VC on
+// reuse.
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
     }
@@ -55,13 +60,15 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     _mapVal = mapValue;
 
     NSManagedObjectContext *moc = [[AppDelegate appDelegate] managedObjectContext];
-    TreasureData *td = [TreasureData getTreasureData:v.mainMapId subMapId:v.subMapId inManagedObjectContext:moc];
+    TreasureData *td = [TreasureData getTreasureData:v.mainMapId
+                                            subMapId:v.subMapId
+                              inManagedObjectContext:moc];
 
     float osVersion = UIDevice.currentDevice.systemVersion.floatValue;
     BOOL isPad = neSceneManager::isPadDisplay();
 
-    // Two left-margin columns: `col` (icons/labels tied to the difficulty side) and
-    // `col2` (item side, which drops by 5pt on pre-iOS 7 phones).
+    // Two left-margin columns: `col` (icons/labels tied to the difficulty side)
+    // and `col2` (item side, which drops by 5pt on pre-iOS 7 phones).
     int col = isPad ? 20 : 10;
     int col2 = isPad ? 20 : (osVersion < 7.0f ? 5 : 10);
 
@@ -77,13 +84,17 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     }
     self.backgroundColor = [UIColor clearColor];
 
-    // On phone, decorations live in the content view; on pad they hang off the banner.
+    // On phone, decorations live in the content view; on pad they hang off the
+    // banner.
     UIView *host = isPad ? (UIView *)banner : self.contentView;
 
     // Area name.
     UILabel *nameLbl = [[UILabel alloc] init];
     nameLbl.backgroundColor = [UIColor clearColor];
-    nameLbl.textColor = [UIColor colorWithRed:69.0f / 255.0f green:64.0f / 255.0f blue:59.0f / 255.0f alpha:1.0f];
+    nameLbl.textColor = [UIColor colorWithRed:69.0f / 255.0f
+                                        green:64.0f / 255.0f
+                                         blue:59.0f / 255.0f
+                                        alpha:1.0f];
     nameLbl.highlightedTextColor = [UIColor whiteColor];
     nameLbl.font = [UIFont fontWithName:AppFontName() size:17.0f];
     nameLbl.textAlignment = NSTextAlignmentLeft;
@@ -93,7 +104,8 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     nameLbl.frame = CGRectMake(col + 27, 20.0f, 260.0f, 20.0f);
     [host addSubview:nameLbl];
 
-    // Collected "kakera" (fragment) count = set low-3-bits of musicPiece + wallPaperPiece.
+    // Collected "kakera" (fragment) count = set low-3-bits of musicPiece +
+    // wallPaperPiece.
     int musicPiece = [[td musicPiece] intValue];
     int wallPaperPiece = [[td wallPaperPiece] intValue];
     int pieceCount = 0;
@@ -109,9 +121,8 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     }
 
     UIImage *kakeraImg = [UIImage imageNamed:@"area_icon_kakera"];
-    UIImageView *kakeraView = [[UIImageView alloc] initWithFrame:CGRectMake(col2 + 105, 77.0f,
-                                                                            kakeraImg.size.width,
-                                                                            kakeraImg.size.height)];
+    UIImageView *kakeraView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(col2 + 105, 77.0f, kakeraImg.size.width, kakeraImg.size.height)];
     [kakeraView setImage:kakeraImg];
     [host addSubview:kakeraView];
     [host addSubview:SubMapCountLabel([NSString stringWithFormat:@"%d", pieceCount],
@@ -120,9 +131,8 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     // Collected chara-ticket count.
     int ticketCount = [[td goalCharaTicket] intValue];
     UIImage *ticketImg = [UIImage imageNamed:@"area_icon_ticket"];
-    UIImageView *ticketView = [[UIImageView alloc] initWithFrame:CGRectMake(col2 + 184, 77.0f,
-                                                                            ticketImg.size.width,
-                                                                            ticketImg.size.height)];
+    UIImageView *ticketView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(col2 + 184, 77.0f, ticketImg.size.width, ticketImg.size.height)];
     [ticketView setImage:ticketImg];
     [host addSubview:ticketView];
     [host addSubview:SubMapCountLabel([NSString stringWithFormat:@"%d", ticketCount],
@@ -133,25 +143,22 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
         int touchSound = [[td goalTouchSound] intValue];
         NSString *daonName = (touchSound == 0) ? @"area_icon_daon_dff" : @"area_icon_daon_on";
         UIImage *daonImg = [UIImage imageNamed:daonName];
-        UIImageView *daonView = [[UIImageView alloc] initWithFrame:CGRectMake(col2 + 260, 80.0f,
-                                                                              daonImg.size.width,
-                                                                              daonImg.size.height)];
+        UIImageView *daonView = [[UIImageView alloc]
+            initWithFrame:CGRectMake(col2 + 260, 80.0f, daonImg.size.width, daonImg.size.height)];
         [daonView setImage:daonImg];
         [host addSubview:daonView];
     }
 
     // Section header art.
     UIImage *diffImg = [UIImage imageNamed:@"area_diff_text"];
-    UIImageView *diffView = [[UIImageView alloc] initWithFrame:CGRectMake(col + 25, 50.0f,
-                                                                          diffImg.size.width,
-                                                                          diffImg.size.height)];
+    UIImageView *diffView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(col + 25, 50.0f, diffImg.size.width, diffImg.size.height)];
     [diffView setImage:diffImg];
     [host addSubview:diffView];
 
     UIImage *itemImg = [UIImage imageNamed:@"area_item_text"];
-    UIImageView *itemView = [[UIImageView alloc] initWithFrame:CGRectMake(col2 + 25, 83.0f,
-                                                                          itemImg.size.width,
-                                                                          itemImg.size.height)];
+    UIImageView *itemView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(col2 + 25, 83.0f, itemImg.size.width, itemImg.size.height)];
     [itemView setImage:itemImg];
     [host addSubview:itemView];
 
@@ -160,9 +167,8 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     UIImage *starImg = [UIImage imageNamed:@"area_icon_star_dff"];
     for (int i = 0; i < starCount; i++) {
         CGFloat starX = roundf((float)col + i * starImg.size.width + 102.0f);
-        UIImageView *starView = [[UIImageView alloc] initWithFrame:CGRectMake(starX, 50.0f,
-                                                                              starImg.size.width,
-                                                                              starImg.size.height)];
+        UIImageView *starView = [[UIImageView alloc]
+            initWithFrame:CGRectMake(starX, 50.0f, starImg.size.width, starImg.size.height)];
         [starView setImage:starImg];
         [host addSubview:starView];
     }
@@ -170,9 +176,8 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     // "Cleared" badge.
     if ([[td clearCnt] intValue] > 0) {
         UIImage *clearImg = [UIImage imageNamed:@"map_select_cleartxt_bg"];
-        UIImageView *clearView = [[UIImageView alloc] initWithFrame:CGRectMake(253.0f, 3.0f,
-                                                                               clearImg.size.width,
-                                                                               clearImg.size.height)];
+        UIImageView *clearView = [[UIImageView alloc]
+            initWithFrame:CGRectMake(253.0f, 3.0f, clearImg.size.width, clearImg.size.height)];
         [clearView setImage:clearImg];
         if (!neSceneManager::isPadDisplay()) {
             if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {

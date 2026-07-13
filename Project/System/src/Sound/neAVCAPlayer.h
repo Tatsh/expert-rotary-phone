@@ -3,10 +3,11 @@
 //  pop'n rhythmin
 //
 //  Low-latency sound-effect backend built on CoreAudio (the caplayer / lib_rsnd
-//  layer described in the bundle's readme.txt). It owns a pool of CASound slots;
-//  a play handle packs the slot index and a generation counter so a stale handle
-//  can't restart a recycled slot. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (Project/System/src/Sound region, FUN_00026xxx).
+//  layer described in the bundle's readme.txt). It owns a pool of CASound
+//  slots; a play handle packs the slot index and a generation counter so a
+//  stale handle can't restart a recycled slot. Reconstructed from Ghidra
+//  project rb420, program PopnRhythmin (Project/System/src/Sound region,
+//  FUN_00026xxx).
 //
 
 #pragma once
@@ -24,15 +25,17 @@ constexpr uint32_t kCAPlayerHandleFlag = 0x20000000;
 
 class neAVCAPlayer {
 public:
-    // Tear down the CoreAudio SE engine: terminate + delete the mixer, free every loaded
-    // CASound, drop the source array and the name map. Ghidra: caPlayerMgr_dtor @ 0x261f8.
+    // Tear down the CoreAudio SE engine: terminate + delete the mixer, free every
+    // loaded CASound, drop the source array and the name map. Ghidra:
+    // caPlayerMgr_dtor @ 0x261f8.
     ~neAVCAPlayer();
 
     // Load a file into a new CASound slot; returns a source id, or 0xffffffff on
     // failure. Ghidra: FUN_00026320.
     uint32_t load(const char *path, bool loop);
 
-    // As load(), but also register a call-name for later lookup. Ghidra: FUN_0002648c.
+    // As load(), but also register a call-name for later lookup. Ghidra:
+    // FUN_0002648c.
     uint32_t loadNamed(const char *path, const char *callName, bool loop);
 
     // Start CoreAudio with `voices` concurrent channels. Ghidra: FUN_0002615c.
@@ -58,11 +61,13 @@ public:
     // Stop the voice named by `handle`. Ghidra: FUN_0002679c.
     bool stop(uint32_t handle);
 
-    // Pause the voice named by `handle` (resume via play()). Ghidra: caHandlePause.
+    // Pause the voice named by `handle` (resume via play()). Ghidra:
+    // caHandlePause.
     bool pause(uint32_t handle);
 
-    // Stop the voice named by `handle` and drop its source so the mixer can recycle it
-    // immediately (used when reaping a finished SetGroup voice). Ghidra: caHandleStopAndClear.
+    // Stop the voice named by `handle` and drop its source so the mixer can
+    // recycle it immediately (used when reaping a finished SetGroup voice).
+    // Ghidra: caHandleStopAndClear.
     void stopAndClear(uint32_t handle);
 
     // The voice's state (-1 free / 1 playing / 4 finished). Ghidra: FUN_000267cc.
@@ -82,12 +87,12 @@ public:
     void resume();
 
 private:
-    uint32_t addSource(CASound *source);   // first free slot, growing the array
+    uint32_t addSource(CASound *source); // first free slot, growing the array
 
-    CAComponent *m_component = nullptr;     // +0x00  the AUGraph mixer
-    NSMutableDictionary *m_nameMap = nil;   // +0x04  call name -> source id
-    CASound **m_sources = nullptr;          // +0x08  loaded sources
-    int m_capacity = 0;                     // +0x0c
+    CAComponent *m_component = nullptr;   // +0x00  the AUGraph mixer
+    NSMutableDictionary *m_nameMap = nil; // +0x04  call name -> source id
+    CASound **m_sources = nullptr;        // +0x08  loaded sources
+    int m_capacity = 0;                   // +0x0c
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

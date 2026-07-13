@@ -26,13 +26,14 @@
 @dynamic lastPlayDate;
 @dynamic chksco;
 
-
-// Delete every persisted ScoreData row (called by -[UserSettingData initForConvert]).
+// Delete every persisted ScoreData row (called by -[UserSettingData
+// initForConvert]).
 // @ 0x6dd44
 + (void)deleteAll:(NSManagedObjectContext *)context {
     [context reset];
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    request.entity = [NSEntityDescription entityForName:@"ScoreData" inManagedObjectContext:context];
+    request.entity = [NSEntityDescription entityForName:@"ScoreData"
+                                 inManagedObjectContext:context];
     NSArray *all = [context executeFetchRequest:request error:NULL];
     if (all.count != 0) {
         for (NSManagedObject *object in all) {
@@ -43,11 +44,11 @@
     }
 }
 
-
 // Fetch all ScoreData rows (parallel to TreasureData/CharaTicketData getAll*).
 + (NSArray *)getAllScoreData:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    request.entity = [NSEntityDescription entityForName:@"ScoreData" inManagedObjectContext:context];
+    request.entity = [NSEntityDescription entityForName:@"ScoreData"
+                                 inManagedObjectContext:context];
     return [context executeFetchRequest:request error:NULL];
 }
 

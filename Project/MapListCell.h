@@ -2,18 +2,18 @@
 //  MapListCell.h
 //  pop'n rhythmin
 //
-//  A sugoroku map-list row. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xbe270).
+//  A sugoroku map-list row. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xbe270).
 //
 
 #import <UIKit/UIKit.h>
 
 @interface MapListCell : UITableViewCell
 
-// Bind the row to a sugoroku main-map entry. `mapValue` is an NSValue wrapping the
-// row struct { short mapId; short; NSString *name; }; `isSelect` picks the highlighted
-// banner. Draws the banner, the map icon, the name label, and — when all three
-// sub-maps are cleared — a "cleared" badge.
+// Bind the row to a sugoroku main-map entry. `mapValue` is an NSValue wrapping
+// the row struct { short mapId; short; NSString *name; }; `isSelect` picks the
+// highlighted banner. Draws the banner, the map icon, the name label, and —
+// when all three sub-maps are cleared — a "cleared" badge.
 - (void)setMapData:(NSValue *)mapValue isSelect:(BOOL)isSelect;
 
 @end

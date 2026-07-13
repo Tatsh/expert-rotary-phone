@@ -3,33 +3,38 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. Manual
-//  retain/release is kept where the original manages the connection/data lifetime.
+//  retain/release is kept where the original manages the connection/data
+//  lifetime.
 //
 
 #import "Downloader.h"
 
 #import "AppDelegate.h"
-#import "NSDictionary_JSONExtensions.h"   // TouchJSON +dictionaryWithJSONData:error: fallback
+#import "NSDictionary_JSONExtensions.h" // TouchJSON +dictionaryWithJSONData:error: fallback
 #import "StoreUtil.h"
 
-// Request timeout (Ghidra: 0x402e0000 = 15.0s); reload-ignoring-cache policy (4).
+// Request timeout (Ghidra: 0x402e0000 = 15.0s); reload-ignoring-cache policy
+// (4).
 static const NSTimeInterval kTimeout = 15.0;
 
 @implementation Downloader {
     NSMutableURLRequest *m_Request;
-    __weak id<DownloaderDelegate> m_Delegate;   // not retained (ARC weak; matches original assign)
+    __weak id<DownloaderDelegate> m_Delegate; // not retained (ARC weak; matches original assign)
     NSURLConnection *m_Connection;
     NSMutableData *m_DownloadedData;
     id m_AdditionalData;
     NSDate *m_StartTime;
-    long long m_DownloadSize;   // expected content length from the response (0 until known)
+    long long m_DownloadSize; // expected content length from the response (0
+                              // until known)
 }
 
-// addData / setAddData: are synthesized from the @addData property — the binary emits
-// objc_getProperty @ 0x62afc / objc_setProperty @ 0x62b10 (atomic retain), so they are
-// annotated on the @property in Downloader.h rather than hand-written here.
+// addData / setAddData: are synthesized from the @addData property — the binary
+// emits objc_getProperty @ 0x62afc / objc_setProperty @ 0x62b10 (atomic
+// retain), so they are annotated on the @property in Downloader.h rather than
+// hand-written here.
 
-// Apply the request headers every request carries (Ghidra: shared by both inits).
+// Apply the request headers every request carries (Ghidra: shared by both
+// inits).
 - (void)applyCommonHeadersTo:(NSMutableURLRequest *)request {
     [request setValue:AppDelegate.appDelegate.userAgent forHTTPHeaderField:@"User-Agent"];
     [request setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
@@ -39,7 +44,8 @@ static const NSTimeInterval kTimeout = 15.0;
 - (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate {
     if ((self = [super init])) {
         m_Request = [[NSMutableURLRequest alloc]
-            initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
+                initWithURL:url
+                cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
             timeoutInterval:kTimeout];
         [self applyCommonHeadersTo:m_Request];
         m_Delegate = delegate;
@@ -51,11 +57,14 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x6224c — a POST request with a body + Content-Type.
-- (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate
-                       Post:(NSData *)body ContextType:(NSString *)contentType {
+- (instancetype)initWithURL:(NSURL *)url
+                   delegate:(id<DownloaderDelegate>)delegate
+                       Post:(NSData *)body
+                ContextType:(NSString *)contentType {
     if ((self = [super init])) {
         m_Request = [[NSMutableURLRequest alloc]
-            initWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
+                initWithURL:url
+                cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
             timeoutInterval:kTimeout];
         m_Request.HTTPMethod = @"POST";
         m_Request.HTTPBody = body;
@@ -80,8 +89,9 @@ static const NSTimeInterval kTimeout = 15.0;
     m_StartTime = [NSDate date];
 }
 
-// @ 0x6249c — abort in flight. Clears the (unretained) delegate first so a callback
-// already queued on the run loop is ignored, then tears down the connection + buffer.
+// @ 0x6249c — abort in flight. Clears the (unretained) delegate first so a
+// callback already queued on the run loop is ignored, then tears down the
+// connection + buffer.
 - (void)cancel {
     m_Delegate = nil;
     if (m_Connection != nil) {
@@ -98,16 +108,18 @@ static const NSTimeInterval kTimeout = 15.0;
     return m_DownloadedData;
 }
 
-// @ 0x62948 — decode the buffered body as JSON (system serializer, TouchJSON fallback).
+// @ 0x62948 — decode the buffered body as JSON (system serializer, TouchJSON
+// fallback).
 - (NSDictionary *)getDataInJSON {
     if (m_DownloadedData == nil) {
         return nil;
     }
     if (NSClassFromString(@"NSJSONSerialization") != nil) {
         return [NSJSONSerialization JSONObjectWithData:m_DownloadedData
-                                               options:NSJSONReadingMutableContainers error:NULL];
+                                               options:NSJSONReadingMutableContainers
+                                                 error:NULL];
     }
-    return [NSDictionary dictionaryWithJSONData:m_DownloadedData error:NULL];   // TouchJSON
+    return [NSDictionary dictionaryWithJSONData:m_DownloadedData error:NULL]; // TouchJSON
 }
 
 // @ 0x62888 — bytes buffered so far (the live length of the response buffer).
@@ -115,12 +127,12 @@ static const NSTimeInterval kTimeout = 15.0;
     return m_DownloadedData.length;
 }
 
-// @ 0x628a8 — fractional progress: buffered bytes over the expected content length, or 0
-// when the length is not (yet) known / non-positive.
+// @ 0x628a8 — fractional progress: buffered bytes over the expected content
+// length, or 0 when the length is not (yet) known / non-positive.
 - (float)currentProgress {
     if (m_DownloadSize > 0) {
-        // Ghidra @ 0x62912: the ratio is saturated to 1.0 (vcmpe.f32 s0,#1.0 + conditional
-        // vmov.f32 s0,#0x3f800000) -- the decompiler dropped the clamp.
+        // Ghidra @ 0x62912: the ratio is saturated to 1.0 (vcmpe.f32 s0,#1.0 +
+        // conditional vmov.f32 s0,#0x3f800000) -- the decompiler dropped the clamp.
         const float ratio = (float)m_DownloadedData.length / (float)m_DownloadSize;
         return ratio > 1.0f ? 1.0f : ratio;
     }
@@ -128,7 +140,8 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x629bc — time interval relative to the download's start (as-decompiled:
-// -timeIntervalSinceNow, negative and growing while in flight); 0 before startDownloading.
+// -timeIntervalSinceNow, negative and growing while in flight); 0 before
+// startDownloading.
 - (NSTimeInterval)getProgressSec {
     if (m_StartTime != nil) {
         return [m_StartTime timeIntervalSinceNow];
@@ -138,8 +151,9 @@ static const NSTimeInterval kTimeout = 15.0;
 
 #pragma mark - NSURLConnection delegate
 
-// @ 0x62514 — capture the expected length and pre-size the buffer. A 404 is treated as a
-// hard error: cancel the connection and notify the delegate instead of buffering.
+// @ 0x62514 — capture the expected length and pre-size the buffer. A 404 is
+// treated as a hard error: cancel the connection and notify the delegate
+// instead of buffering.
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     if ([response respondsToSelector:@selector(statusCode)] &&
         [(NSHTTPURLResponse *)response statusCode] == 404) {
@@ -159,8 +173,8 @@ static const NSTimeInterval kTimeout = 15.0;
     }
 }
 
-// @ 0x6267c — buffer each chunk (lazily creating a 64 KB-seeded NSMutableData) and
-// notify the delegate of progress.
+// @ 0x6267c — buffer each chunk (lazily creating a 64 KB-seeded NSMutableData)
+// and notify the delegate of progress.
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     if (m_DownloadedData == nil) {
         m_DownloadedData = [[NSMutableData alloc] initWithCapacity:0x10000];
@@ -194,9 +208,10 @@ static const NSTimeInterval kTimeout = 15.0;
     }
 }
 
-// @ 0x629f8 — KEEP under ARC: the object-ivar releases are ARC-omitted, but dealloc still
-// does real work — drop the (unretained) delegate and cancel the connection so a callback
-// already queued on the run loop can't fire after the object is gone.
+// @ 0x629f8 — KEEP under ARC: the object-ivar releases are ARC-omitted, but
+// dealloc still does real work — drop the (unretained) delegate and cancel the
+// connection so a callback already queued on the run loop can't fire after the
+// object is gone.
 - (void)dealloc {
     m_Delegate = nil;
     [m_Connection cancel];

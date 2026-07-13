@@ -2,41 +2,52 @@
 //  FriendReplyCell.mm
 //  pop'n rhythmin
 //
-//  See FriendReplyCell.h. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xa9150, setReplyData: @ 0xa92ac, onTouchedOkButton @ 0xa9cf0,
-//  onTouchedNgButton @ 0xa9d58). Objective-C++ for the neEngine SE + device check.
+//  See FriendReplyCell.h. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xa9150, setReplyData: @
+//  0xa92ac, onTouchedOkButton @ 0xa9cf0, onTouchedNgButton @ 0xa9d58).
+//  Objective-C++ for the neEngine SE + device check.
 //
 
 #import "FriendReplyCell.h"
 
-#import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager::isPadDisplay
-#import "AppDelegate.h"        // +appAppSupportDirectory
+#import "AppDelegate.h"    // +appAppSupportDirectory
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation FriendReplyCell {
     BOOL _isOS7;
     int _imgCharaX, _imgPlayerNameX, _dateX, _btnYesX, _btnNoX;
 
-    NSValue *_replyData;          // current row (assign; owned by the controller's array)
+    NSValue *_replyData; // current row (assign; owned by the controller's array)
     UIImageView *_bgImgView;
     UIImageView *_charaBgView;
     UIImageView *_charaView;
     UILabel *_playerNameLabel;
     UILabel *_requestDateLabel;
-    UIButton *_okButton;          // accept
-    UIButton *_ngButton;          // reject
+    UIButton *_okButton; // accept
+    UIButton *_ngButton; // reject
 }
 @synthesize delegate = _delegate;
 
-// @ 0xa9150 — record the chara / name / date / yes / no subview x offsets (they shift on iOS 7).
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+// @ 0xa9150 — record the chara / name / date / yes / no subview x offsets (they
+// shift on iOS 7).
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
     }
     _isOS7 = UIDevice.currentDevice.systemVersion.floatValue >= 7.0f;
     if (!_isOS7) {
-        _imgCharaX = 0x17; _imgPlayerNameX = 0x46; _dateX = 0x46; _btnYesX = 0xd0; _btnNoX = 0x85;
+        _imgCharaX = 0x17;
+        _imgPlayerNameX = 0x46;
+        _dateX = 0x46;
+        _btnYesX = 0xd0;
+        _btnNoX = 0x85;
     } else {
-        _imgCharaX = 0x19; _imgPlayerNameX = 0x48; _dateX = 0x48; _btnYesX = 0xe1; _btnNoX = 0x96;
+        _imgCharaX = 0x19;
+        _imgPlayerNameX = 0x48;
+        _dateX = 0x48;
+        _btnYesX = 0xe1;
+        _btnNoX = 0x96;
     }
     return self;
 }
@@ -49,16 +60,38 @@
 
     const BOOL isPad = neSceneManager::isPadDisplay();
     // Pre-iOS7 iPad metrics nudge the whole row 10pt left.
-    const int padOffset = (isPad && UIDevice.currentDevice.systemVersion.floatValue < 7.0f) ? -10 : 0;
+    const int padOffset =
+        (isPad && UIDevice.currentDevice.systemVersion.floatValue < 7.0f) ? -10 : 0;
 
     // Reuse teardown.
-    if (_bgImgView)        { [_bgImgView removeFromSuperview];        _bgImgView = nil; }
-    if (_charaBgView)      { [_charaBgView removeFromSuperview];      _charaBgView = nil; }
-    if (_charaView)        { [_charaView removeFromSuperview];        _charaView = nil; }
-    if (_playerNameLabel)  { [_playerNameLabel removeFromSuperview];  _playerNameLabel = nil; }
-    if (_requestDateLabel) { [_requestDateLabel removeFromSuperview]; _requestDateLabel = nil; }
-    if (_okButton)         { [_okButton removeFromSuperview];         _okButton = nil; }
-    if (_ngButton)         { [_ngButton removeFromSuperview];         _ngButton = nil; }
+    if (_bgImgView) {
+        [_bgImgView removeFromSuperview];
+        _bgImgView = nil;
+    }
+    if (_charaBgView) {
+        [_charaBgView removeFromSuperview];
+        _charaBgView = nil;
+    }
+    if (_charaView) {
+        [_charaView removeFromSuperview];
+        _charaView = nil;
+    }
+    if (_playerNameLabel) {
+        [_playerNameLabel removeFromSuperview];
+        _playerNameLabel = nil;
+    }
+    if (_requestDateLabel) {
+        [_requestDateLabel removeFromSuperview];
+        _requestDateLabel = nil;
+    }
+    if (_okButton) {
+        [_okButton removeFromSuperview];
+        _okButton = nil;
+    }
+    if (_ngButton) {
+        [_ngButton removeFromSuperview];
+        _ngButton = nil;
+    }
 
     // Row background: cell backgroundView on phone; content-view subview on iPad.
     _bgImgView = [[UIImageView alloc] initWithFrame:self.bounds];
@@ -72,11 +105,13 @@
     }
     self.backgroundColor = [UIColor clearColor];
 
-    // Chara icon plate + icon (built-in charas from the bundle, downloaded from disk).
+    // Chara icon plate + icon (built-in charas from the bundle, downloaded from
+    // disk).
     _charaBgView = [[UIImageView alloc] init];
     UIImage *plate = [UIImage imageNamed:@"frisco_icon_cmn"];
     [_charaBgView setImage:plate];
-    [_charaBgView setFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, plate.size.width, plate.size.height)];
+    [_charaBgView
+        setFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, plate.size.width, plate.size.height)];
     [_bgImgView addSubview:_charaBgView];
 
     _charaView = [[UIImageView alloc] init];
@@ -85,36 +120,43 @@
         charaId = 0;
     }
     NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
-    UIImage *icon = (charaId < 0x1e)
-        ? [UIImage imageNamed:iconFile]
-        : [UIImage imageWithContentsOfFile:
-              [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:iconFile]];
+    UIImage *icon =
+        (charaId < 0x1e) ?
+            [UIImage imageNamed:iconFile] :
+            [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
+                                                 stringByAppendingPathComponent:iconFile]];
     [_charaView setImage:icon];
     [_charaView setFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, 43.0f, 43.0f)];
     [_bgImgView addSubview:_charaView];
 
     // Requester name.
-    _playerNameLabel = [[UILabel alloc]
-        initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)];
+    _playerNameLabel =
+        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)];
     _playerNameLabel.backgroundColor = [UIColor clearColor];
-    _playerNameLabel.textColor = [UIColor colorWithRed:0.36470589f green:0.34509805f
-                                                  blue:0.32941177f alpha:1.0f];   // rgb(93,88,84)
+    _playerNameLabel.textColor = [UIColor colorWithRed:0.36470589f
+                                                 green:0.34509805f
+                                                  blue:0.32941177f
+                                                 alpha:1.0f]; // rgb(93,88,84)
     _playerNameLabel.highlightedTextColor = [UIColor whiteColor];
-    _playerNameLabel.font = [UIFont fontWithName:@"BullyBold" size:15.0f];  // getFontNameBullyBold() @ 0x5ef90
+    _playerNameLabel.font = [UIFont fontWithName:@"BullyBold"
+                                            size:15.0f]; // getFontNameBullyBold() @ 0x5ef90
     _playerNameLabel.textAlignment = NSTextAlignmentLeft;
     _playerNameLabel.adjustsFontSizeToFitWidth = YES;
-    [_playerNameLabel setMinimumScaleFactor:16.0f];   // verbatim (see FriendListCell note)
+    [_playerNameLabel setMinimumScaleFactor:16.0f]; // verbatim (see FriendListCell note)
     _playerNameLabel.text = data.name;
     [_bgImgView addSubview:_playerNameLabel];
 
     // Request date.
-    _requestDateLabel = [[UILabel alloc]
-        initWithFrame:CGRectMake((CGFloat)_dateX, 25.0f, 200.0f, 20.0f)];
+    _requestDateLabel =
+        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_dateX, 25.0f, 200.0f, 20.0f)];
     _requestDateLabel.backgroundColor = [UIColor clearColor];
-    _requestDateLabel.textColor = [UIColor colorWithRed:0.36470589f green:0.34509805f
-                                                   blue:0.32941177f alpha:1.0f];
+    _requestDateLabel.textColor = [UIColor colorWithRed:0.36470589f
+                                                  green:0.34509805f
+                                                   blue:0.32941177f
+                                                  alpha:1.0f];
     _requestDateLabel.highlightedTextColor = [UIColor whiteColor];
-    _requestDateLabel.font = [UIFont fontWithName:@"BullyBold" size:14.0f];  // getFontNameBullyBold() @ 0x5ef90
+    _requestDateLabel.font = [UIFont fontWithName:@"BullyBold"
+                                             size:14.0f]; // getFontNameBullyBold() @ 0x5ef90
     _requestDateLabel.textAlignment = NSTextAlignmentLeft;
     _requestDateLabel.adjustsFontSizeToFitWidth = YES;
     [_requestDateLabel setMinimumScaleFactor:14.0f];
@@ -125,9 +167,11 @@
     _ngButton = [[UIButton alloc] init];
     UIImage *ngImg = [UIImage imageNamed:@"frirep_btn_no"];
     [_ngButton setBackgroundImage:ngImg forState:UIControlStateNormal];
-    [_ngButton setFrame:CGRectMake((CGFloat)(_btnNoX + padOffset), 43.0f,
-                                   ngImg.size.width, ngImg.size.height)];
-    [_ngButton addTarget:self action:@selector(onTouchedNgButton)
+    [_ngButton
+        setFrame:CGRectMake(
+                     (CGFloat)(_btnNoX + padOffset), 43.0f, ngImg.size.width, ngImg.size.height)];
+    [_ngButton addTarget:self
+                  action:@selector(onTouchedNgButton)
         forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:_ngButton];
 
@@ -135,10 +179,12 @@
     _okButton = [[UIButton alloc] init];
     UIImage *okImg = [UIImage imageNamed:@"frirep_btn_ok"];
     [_okButton setBackgroundImage:okImg forState:UIControlStateNormal];
-    [_okButton setFrame:CGRectMake((CGFloat)(_btnYesX + padOffset), 43.0f,
-                                   okImg.size.width, okImg.size.height)];
+    [_okButton
+        setFrame:CGRectMake(
+                     (CGFloat)(_btnYesX + padOffset), 43.0f, okImg.size.width, okImg.size.height)];
     [_okButton setUserInteractionEnabled:YES];
-    [_okButton addTarget:self action:@selector(onTouchedOkButton)
+    [_okButton addTarget:self
+                  action:@selector(onTouchedOkButton)
         forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:_okButton];
 }
@@ -163,7 +209,8 @@
     }
 }
 
-// dealloc @ 0xa9280 — super-only override, omitted (chains to super only; every subview is owned
-// by its superview and _replyData/_delegate are assign, so nothing is released here).
+// dealloc @ 0xa9280 — super-only override, omitted (chains to super only; every
+// subview is owned by its superview and _replyData/_delegate are assign, so
+// nothing is released here).
 
 @end

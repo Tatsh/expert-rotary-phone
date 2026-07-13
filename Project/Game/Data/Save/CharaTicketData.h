@@ -3,18 +3,19 @@
 //  pop'n rhythmin
 //
 //  Core Data managed object.
-//  Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "CharaTicketData").
+//  Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity
+//  "CharaTicketData").
 //
 //  Records character-unlock "tickets" tied to a StoreKit in-app-purchase
 //  productId. One row per owned/consumed character ticket product.
 //
 
-#import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import <Foundation/Foundation.h>
 
 @interface CharaTicketData : NSManagedObject
 
-@property (nonatomic, retain) NSString *productId;
+@property(nonatomic, retain) NSString *productId;
 
 #pragma mark Recovered selectors
 // Recovered from call sites (previously declared as local category seams).
@@ -22,13 +23,15 @@
 // YES if a row for `productID` already exists in the store.
 + (BOOL)isExistData:(NSString *)productID inManagedObjectContext:(NSManagedObjectContext *)context;
 // Insert a new character-ticket row for `productID`.
-+ (void)addRecordWithProductId:(NSString *)productID inManagedObjectContext:(NSManagedObjectContext *)context;
++ (void)addRecordWithProductId:(NSString *)productID
+        inManagedObjectContext:(NSManagedObjectContext *)context;
 
-
-// Delete every persisted CharaTicketData record (device-change / initForConvert reset).
+// Delete every persisted CharaTicketData record (device-change / initForConvert
+// reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
-// Fetch every persisted CharaTicketData record (device-change conversion payload).
+// Fetch every persisted CharaTicketData record (device-change conversion
+// payload).
 + (id)getAllData:(NSManagedObjectContext *)context;
 
 @end

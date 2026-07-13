@@ -10,8 +10,7 @@
 @implementation CharaTicketData (Store)
 
 // Ghidra: @ 0xe2c6c
-+ (BOOL)isExistData:(NSString *)productId
-    inManagedObjectContext:(NSManagedObjectContext *)context {
++ (BOOL)isExistData:(NSString *)productId inManagedObjectContext:(NSManagedObjectContext *)context {
     return [self getDataFromProductId:productId inManagedObjectContext:context] != nil;
 }
 
@@ -33,8 +32,9 @@
         return;
     }
     [context reset];
-    CharaTicketData *record = [NSEntityDescription insertNewObjectForEntityForName:@"CharaTicketData"
-                                                           inManagedObjectContext:context];
+    CharaTicketData *record =
+        [NSEntityDescription insertNewObjectForEntityForName:@"CharaTicketData"
+                                      inManagedObjectContext:context];
     record.productId = productId;
     [context save:nil];
 }

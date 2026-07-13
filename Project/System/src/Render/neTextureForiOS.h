@@ -4,8 +4,8 @@
 //
 //  A drawable sprite backed by a cached AepTexture. A bundled PNG is loaded
 //  through the shared texture cache (large images may be split into GL-max-size
-//  tiles), and the sprite is drawn straight into the ordering table as a textured
-//  quad. Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  tiles), and the sprite is drawn straight into the ordering table as a
+//  textured quad. Reconstructed from Ghidra project rb420, program PopnRhythmin
 //  (ctor FUN_00011818, load FUN_00011a2c, draw FUN_00011468).
 //
 
@@ -17,51 +17,54 @@ class AepTexture;
 class AepOrderingTable;
 class AepManager;
 
-// One GPU upload record per tile (0x18 bytes). A large image is split into several
-// GL-max-size tiles; each keeps the AepTexture it is currently bound to so a context
-// loss can re-upload it. Ghidra: ctor FUN_00015eb4 sets the defaults below; the
-// vtable pointer sits at +0x00 (the type is polymorphic).
+// One GPU upload record per tile (0x18 bytes). A large image is split into
+// several GL-max-size tiles; each keeps the AepTexture it is currently bound to
+// so a context loss can re-upload it. Ghidra: ctor FUN_00015eb4 sets the
+// defaults below; the vtable pointer sits at +0x00 (the type is polymorphic).
 struct AepTile {
-    AepTile();                       // Ghidra: FUN_00015eb4
-    virtual ~AepTile();              // +0x00 vtable slot
-    AepTexture *uploaded = nullptr;  // +0x04 currently-bound texture (refcounted)
-    int reserved0 = 0;               // +0x08 (ctor: 0)
-    int reserved1 = 0;               // +0x0c (ctor: 0)
-    int tileX = 7;                   // +0x10 (ctor: 7)
-    int tileY = 7;                   // +0x14 (ctor: 7)
+    AepTile();                      // Ghidra: FUN_00015eb4
+    virtual ~AepTile();             // +0x00 vtable slot
+    AepTexture *uploaded = nullptr; // +0x04 currently-bound texture (refcounted)
+    int reserved0 = 0;              // +0x08 (ctor: 0)
+    int reserved1 = 0;              // +0x0c (ctor: 0)
+    int tileX = 7;                  // +0x10 (ctor: 7)
+    int tileY = 7;                  // +0x14 (ctor: 7)
 };
 
-// Acquire (ref-counted) the cached AepTexture for a bundled image path, loading +
-// uploading it on first use; returns null on load failure. Ghidra: FUN_0001bbf0 (the
-// shared texture cache, head list DAT_00188464). Implemented in AepTexture.mm.
+// Acquire (ref-counted) the cached AepTexture for a bundled image path, loading
+// + uploading it on first use; returns null on load failure. Ghidra:
+// FUN_0001bbf0 (the shared texture cache, head list DAT_00188464). Implemented
+// in AepTexture.mm.
 AepTexture *AepTextureCacheAcquire(const char *path);
 
-// Rebind a tile to a texture: release the tile's previously-bound texture and retain
-// the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at the call
-// site, but it is a real incoming AepTexture* — verified in disassembly).
+// Rebind a tile to a texture: release the tile's previously-bound texture and
+// retain the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at
+// the call site, but it is a real incoming AepTexture* — verified in
+// disassembly).
 void AepTextureUploadTiles(AepTile *tile, AepTexture *tex);
 
-// Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468 fills
-// into an AepSpriteCommand (offsets in comments). Zero-defaulted like a fresh quad.
+// Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468
+// fills into an AepSpriteCommand (offsets in comments). Zero-defaulted like a
+// fresh quad.
 struct neSpriteDrawParams {
-    int u = 0, v = 0;         // +0x0c/+0x10 source origin
-    int x = 0, y = 0;         // +0x14/+0x18 screen position
-    int sx = 0, sy = 0;       // +0x1c/+0x20 scale
-    int w = 100, h = 100;     // +0x24/+0x28 size (percent)
-    int ex = 0, ey = 0;       // +0x2c/+0x30 extra / end position
-    int color = 100;          // +0x34 colour/alpha
-    int rotation = 0;         // +0x38 rotation
-    short blend0 = 0x20;      // +0x40 blend mode
-    short blend1 = 0;         // +0x42
-    int colorMul = 0xffffff;  // +0x44 colour multiplier
-    int extra = 0;            // +0x48
+    int u = 0, v = 0;          // +0x0c/+0x10 source origin
+    int x = 0, y = 0;          // +0x14/+0x18 screen position
+    int sx = 0, sy = 0;        // +0x1c/+0x20 scale
+    int w = 100, h = 100;      // +0x24/+0x28 size (percent)
+    int ex = 0, ey = 0;        // +0x2c/+0x30 extra / end position
+    int color = 100;           // +0x34 colour/alpha
+    int rotation = 0;          // +0x38 rotation
+    short blend0 = 0x20;       // +0x40 blend mode
+    short blend1 = 0;          // +0x42
+    int colorMul = 0xffffff;   // +0x44 colour multiplier
+    int extra = 0;             // +0x48
     const int *clip = nullptr; // +0x4c/+0x54 optional clip rect (else screen bounds)
-    int priority = 0;         // allocEntry bucket
+    int priority = 0;          // allocEntry bucket
 };
 
 class neTextureForiOS {
 public:
-    neTextureForiOS();          // Ghidra: FUN_00011818
+    neTextureForiOS(); // Ghidra: FUN_00011818
     ~neTextureForiOS();
 
     // Load `path` (lowercased) through the shared texture cache. Returns 0 on
@@ -71,52 +74,77 @@ public:
 
     // Upload an already-decoded, in-memory image (a bridged NSData* of PNG bytes)
     // as a single-tile texture. Used for artwork / name images the song record
-    // carries in memory rather than as a bundled file. Returns 0 on success, -1 for
-    // null data, -5 on upload failure. Ghidra: FUN_00011cbc (-> FUN_0001bb0c).
+    // carries in memory rather than as a bundled file. Returns 0 on success, -1
+    // for null data, -5 on upload failure. Ghidra: FUN_00011cbc (->
+    // FUN_0001bb0c).
     int loadFromImageData(const void *imageData);
 
     // Load an index-driven set of tiles. `indexBase` is a bundled .idx blob whose
     // tile count is a uint16 at +2; each tile i loads "<dir>/<name>_<i>.png" (or
-    // "<name>_<i>.png" when `dir` is null) through the shared texture cache, records
-    // its size and binds it for upload. A null `name`/`indexBase`, or a tile that
-    // fails to load, aborts the load early. Ghidra: FUN_00011e18.
+    // "<name>_<i>.png" when `dir` is null) through the shared texture cache,
+    // records its size and binds it for upload. A null `name`/`indexBase`, or a
+    // tile that fails to load, aborts the load early. Ghidra: FUN_00011e18.
     void loadFrames(const char *dir, const char *name, const uint8_t *indexBase);
 
 #ifdef __OBJC__
-    // Decode a single PNG (bridged NSData) into one padded power-of-two RGBA GL texture and
-    // return the created texture (or nullptr if the image fails to decode). The source is drawn
-    // Y-flipped into a POT RGBA8 bitmap, then handed to neCreateTextureFromData (its AepTexture is
-    // the binary's C_TEXTURE). objc-dispatched class helper the in-memory image path uses. Ghidra:
-    // neTextureForiOS LoadTexture: @ 0x1acac. Defined in neEngineBridge.mm (needs UIKit/CoreGraphics).
+    // Decode a single PNG (bridged NSData) into one padded power-of-two RGBA GL
+    // texture and return the created texture (or nullptr if the image fails to
+    // decode). The source is drawn Y-flipped into a POT RGBA8 bitmap, then handed
+    // to neCreateTextureFromData (its AepTexture is the binary's C_TEXTURE).
+    // objc-dispatched class helper the in-memory image path uses. Ghidra:
+    // neTextureForiOS LoadTexture: @ 0x1acac. Defined in neEngineBridge.mm (needs
+    // UIKit/CoreGraphics).
     static AepTexture *LoadTexture(NSData *data);
 #endif
 
-    int width() const { return m_tileWidths ? m_tileWidths[0] : 0; }    // +0x08 tile-0 width
-    int height() const { return m_tileHeights ? m_tileHeights[0] : 0; } // +0x0c tile-0 height
+    int width() const {
+        return m_tileWidths ? m_tileWidths[0] : 0;
+    } // +0x08 tile-0 width
+    int height() const {
+        return m_tileHeights ? m_tileHeights[0] : 0;
+    } // +0x0c tile-0 height
 
-    // Emit one textured-quad command for this sprite into `ot`. Ghidra: the wrapper
-    // neTextureForiOS_draw (FUN_0000fbcc) -> AepOrderingTable_drawSprite (FUN_00011468).
+    // Emit one textured-quad command for this sprite into `ot`. Ghidra: the
+    // wrapper neTextureForiOS_draw (FUN_0000fbcc) -> AepOrderingTable_drawSprite
+    // (FUN_00011468).
     void draw(AepOrderingTable *ot, const neSpriteDrawParams &p);
 
 private:
     // Split-texture storage: an image wider/taller than the GL max is loaded as
-    // several tiles. These parallel heap arrays are all m_tileCount long. The width
-    // and height arrays hold the padded GL texture size of each tile, read from the
-    // resolved AepTexture (+0x1c / +0x20). Ghidra: operator new[] results stored at
-    // +0x08 / +0x0c / +0x10 / +0x14.
-    int m_tileCount = 0;                 // +0x04 number of tiles
-    int *m_tileWidths = nullptr;         // +0x08 per-tile texture width  (AepTexture +0x1c)
-    int *m_tileHeights = nullptr;        // +0x0c per-tile texture height (AepTexture +0x20)
-    AepTexture **m_tiles = nullptr;      // +0x10 cached AepTexture per tile
-    AepTile *m_tileRects = nullptr;      // +0x14 per-tile upload records (new AepTile[N])
+    // several tiles. These parallel heap arrays are all m_tileCount long. The
+    // width and height arrays hold the padded GL texture size of each tile, read
+    // from the resolved AepTexture (+0x1c / +0x20). Ghidra: operator new[]
+    // results stored at +0x08 / +0x0c / +0x10 / +0x14.
+    int m_tileCount = 0;            // +0x04 number of tiles
+    int *m_tileWidths = nullptr;    // +0x08 per-tile texture width  (AepTexture +0x1c)
+    int *m_tileHeights = nullptr;   // +0x0c per-tile texture height (AepTexture +0x20)
+    AepTexture **m_tiles = nullptr; // +0x10 cached AepTexture per tile
+    AepTile *m_tileRects = nullptr; // +0x14 per-tile upload records (new AepTile[N])
 };
 
-// Flat-argument sprite-draw wrapper the task draw passes call (Ghidra: FUN_0000fbcc). Packs the
-// args into a neSpriteDrawParams and emits `tex` into aep's ordering table via tex->draw().
-void neTextureForiOS_draw(AepManager *aep, neTextureForiOS *tex,
-                          int u, int v, int w, int h, int x, int y, int sx, int sy,
-                          int rotation, int ex, int ey, int color, int alpha,
-                          int blend0, int colorMul, int extra, int priority, int layer);
+// Flat-argument sprite-draw wrapper the task draw passes call (Ghidra:
+// FUN_0000fbcc). Packs the args into a neSpriteDrawParams and emits `tex` into
+// aep's ordering table via tex->draw().
+void neTextureForiOS_draw(AepManager *aep,
+                          neTextureForiOS *tex,
+                          int u,
+                          int v,
+                          int w,
+                          int h,
+                          int x,
+                          int y,
+                          int sx,
+                          int sy,
+                          int rotation,
+                          int ex,
+                          int ey,
+                          int color,
+                          int alpha,
+                          int blend0,
+                          int colorMul,
+                          int extra,
+                          int priority,
+                          int layer);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

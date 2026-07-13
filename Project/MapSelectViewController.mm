@@ -2,7 +2,8 @@
 //  MapSelectViewController.mm
 //  pop'n rhythmin
 //
-//  See MapSelectViewController.h. Reconstructed from Ghidra project rb420, program PopnRhythmin:
+//  See MapSelectViewController.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin:
 //    initWithStyle:                       @ 0xbec60
 //    initAtNavigationController           @ 0xbf498
 //    dealloc                              @ 0xbf7a8
@@ -23,72 +24,89 @@
 //    backButtonFunc                       @ 0xc00fc
 //    updateEventInfo                      @ 0xc0190
 //    mapSelectDelegate / setMapSelectDelegate: @ 0xc0768 / 0xc0778
-//    treasureDataArray / mapHeadArray / mapDataArray @ 0xc0788 / 0xc079c / 0xc07b0
+//    treasureDataArray / mapHeadArray / mapDataArray @ 0xc0788 / 0xc079c /
+//    0xc07b0
 //  Objective-C++ for the C++ neSceneManager singleton. ARC.
 //
 //  Honesty notes:
-//   - The visible rows are built by cross-referencing every bundled map-head record (from the
-//     free helper loadAllTreasureMapHeaders, Ghidra @ 0xcdee0) against the TreasureData save
-//     table: each main-map head (mapId % 10 == 0) that has a matching TreasureData record emits
-//     one NSValue-wrapped MainMapData ("{MainMapData=s@}") of { mainMapId, name }. The map name
-//     is a Shift-JIS string embedded in the head record; the binary copies it out of an inlined
-//     buffer whose exact field offset the decompiler obscured, so it is read here as the record's
-//     NUL-terminated Shift-JIS string at the recovered offset (0x14), mirroring the SubMap screen.
-//   - Under ARC the MainMapData NSString field is __unsafe_unretained (mirroring FriendListData in
-//     DownloadMain.h); the original manually released each name (and the three arrays) in -dealloc,
-//     which is ARC-omitted. -dealloc is kept because it detaches this controller from DownloadMain's
-//     event-info delegate.
-//   - loadAllTreasureMapHeaders() (Ghidra @ 0xcdee0, the sugoroku map-header loader) and
-//     isIndexInRange12() (Ghidra @ 0xe2c3c, an event-id 0..11 bounds check) are the sugoroku map
-//     layer's free helpers, reconstructed below (declared in MapSelectViewController.h).
-//   - The dim spinner overlay (_dummyView) is created hidden and revealed in -viewDidLoad, matching
+//   - The visible rows are built by cross-referencing every bundled map-head
+//   record (from the
+//     free helper loadAllTreasureMapHeaders, Ghidra @ 0xcdee0) against the
+//     TreasureData save table: each main-map head (mapId % 10 == 0) that has a
+//     matching TreasureData record emits one NSValue-wrapped MainMapData
+//     ("{MainMapData=s@}") of { mainMapId, name }. The map name is a Shift-JIS
+//     string embedded in the head record; the binary copies it out of an
+//     inlined buffer whose exact field offset the decompiler obscured, so it is
+//     read here as the record's NUL-terminated Shift-JIS string at the
+//     recovered offset (0x14), mirroring the SubMap screen.
+//   - Under ARC the MainMapData NSString field is __unsafe_unretained
+//   (mirroring FriendListData in
+//     DownloadMain.h); the original manually released each name (and the three
+//     arrays) in -dealloc, which is ARC-omitted. -dealloc is kept because it
+//     detaches this controller from DownloadMain's event-info delegate.
+//   - loadAllTreasureMapHeaders() (Ghidra @ 0xcdee0, the sugoroku map-header
+//   loader) and
+//     isIndexInRange12() (Ghidra @ 0xe2c3c, an event-id 0..11 bounds check) are
+//     the sugoroku map layer's free helpers, reconstructed below (declared in
+//     MapSelectViewController.h).
+//   - The dim spinner overlay (_dummyView) is created hidden and revealed in
+//   -viewDidLoad, matching
 //     the binary's setHidden: polarity.
-//   - Faithful quirk: -startCloseAnimation's guard tests _isAnimationing == 0 and then re-stores 0
-//     (never 1), so it does not actually latch — reproduced verbatim from Ghidra @ 0xbfb88.
+//   - Faithful quirk: -startCloseAnimation's guard tests _isAnimationing == 0
+//   and then re-stores 0
+//     (never 1), so it does not actually latch — reproduced verbatim from
+//     Ghidra @ 0xbfb88.
 //
 
 #import "MapSelectViewController.h"
 
-#import "MapListCell.h"                  // one row per main map
-#import "DownloadMain.h"                 // event-info push + DownloadMainDelegate
-#import "MainViewController.h"           // MapSelectEndCallBack on the root VC
-#import "SubMapSelectViewController.h"   // pushed area list (phone)
-#import "HowToViewCtrl.h"                // first-run how-to overlay
-#import "AppDelegate.h"                  // +appDelegate.displayType / managedObjectContext
-#import "TreasureData.h"                 // sugoroku save records
-#import "TreasureTmpData.h"              // pending-treasure struct (cleared on back)
-#import "UserSettingData.h"              // first-run flag + selected-map persistence
-#import "neEngineBridge.h"               // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
+#import "AppDelegate.h"                // +appDelegate.displayType / managedObjectContext
+#import "DownloadMain.h"               // event-info push + DownloadMainDelegate
+#import "HowToViewCtrl.h"              // first-run how-to overlay
+#import "MainViewController.h"         // MapSelectEndCallBack on the root VC
+#import "MapListCell.h"                // one row per main map
+#import "SubMapSelectViewController.h" // pushed area list (phone)
+#import "TreasureData.h"               // sugoroku save records
+#import "TreasureTmpData.h"            // pending-treasure struct (cleared on back)
+#import "UserSettingData.h"            // first-run flag + selected-map persistence
+#import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 #import <string.h>
 
-// @ 0xcdee0 — sugoroku map-header loader. For each of the 9 maps in display order, resolve its
-// bundle file number through the order table {0,3,4,5,6,1,2,7,8} (i.e. file number = position of
-// the display index in that table), then read the header of each of its up-to-3 variants
-// ("map_%02d_%d.map"). A missing/short file aborts the whole load (returns nil, matching the
-// binary). Each valid 0x50-byte header is boxed as an NSValue.
+// @ 0xcdee0 — sugoroku map-header loader. For each of the 9 maps in display
+// order, resolve its bundle file number through the order table
+// {0,3,4,5,6,1,2,7,8} (i.e. file number = position of the display index in that
+// table), then read the header of each of its up-to-3 variants
+// ("map_%02d_%d.map"). A missing/short file aborts the whole load (returns nil,
+// matching the binary). Each valid 0x50-byte header is boxed as an NSValue.
 NSArray *loadAllTreasureMapHeaders(void) {
-    // Display-order -> file-number order table (DAT_0012faa0). The binary finds the file number by
-    // scanning for the display index; this is that inverse lookup.
+    // Display-order -> file-number order table (DAT_0012faa0). The binary finds
+    // the file number by scanning for the display index; this is that inverse
+    // lookup.
     static const int kMapOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
     NSMutableArray *heads = [NSMutableArray array];
     for (int display = 0; display < 9; display++) {
         int fileNo = -1;
         for (int i = 0; i < 9; i++) {
-            if (kMapOrder[i] == display) { fileNo = i; break; }
+            if (kMapOrder[i] == display) {
+                fileNo = i;
+                break;
+            }
         }
         for (int variant = 0; variant < 3; variant++) {
             NSString *name = [NSString stringWithFormat:@"map_%02d_%d", fileNo, variant];
             NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"map"];
             FILE *fp = fopen([path UTF8String], "rb");
             if (fp == NULL) {
-                return nil;   // any missing variant aborts the load (faithful to the binary)
+                return nil; // any missing variant aborts the load (faithful to the
+                            // binary)
             }
             fseek(fp, 0, SEEK_END);
             long size = ftell(fp);
             fseek(fp, 0, SEEK_SET);
             MapFileHead head;
-            if (size >= (long)sizeof(MapFileHead) && fread(&head, sizeof(MapFileHead), 1, fp) == 1) {
+            if (size >= (long)sizeof(MapFileHead) &&
+                fread(&head, sizeof(MapFileHead), 1, fp) == 1) {
                 [heads addObject:[NSValue value:&head withObjCType:@encode(MapFileHead)]];
             }
             fclose(fp);
@@ -102,7 +120,8 @@ bool isIndexInRange12(unsigned int index) {
     return index < 12;
 }
 
-// MainMapData (the NSValue payload of -mapDataArray) is declared in MapSelectViewController.h.
+// MainMapData (the NSValue payload of -mapDataArray) is declared in
+// MapSelectViewController.h.
 
 @interface MapSelectViewController () <DownloadMainDelegate>
 - (void)backButtonFunc;
@@ -113,12 +132,12 @@ bool isIndexInRange12(unsigned int index) {
 @end
 
 @implementation MapSelectViewController {
-    UIView            *_dummyHeadView;   // clear table-header spacer (no active event)
-    UIView            *_eventHeadView;   // event banner table-header (active event)
-    UIViewController  *_dummyView;       // dim spinner overlay
-    BOOL               _isAnimationing;
-    NSMutableArray    *_eventIds;        // active treasure-event ids (NSNumber, 0..11)
-    int                _selectedIndexRow; // pad: highlighted row
+    UIView *_dummyHeadView;       // clear table-header spacer (no active event)
+    UIView *_eventHeadView;       // event banner table-header (active event)
+    UIViewController *_dummyView; // dim spinner overlay
+    BOOL _isAnimationing;
+    NSMutableArray *_eventIds; // active treasure-event ids (NSNumber, 0..11)
+    int _selectedIndexRow;     // pad: highlighted row
 }
 
 @synthesize mapSelectDelegate = _mapSelectDelegate;
@@ -142,7 +161,8 @@ bool isIndexInRange12(unsigned int index) {
     self.tableView.separatorColor = [UIColor clearColor];
 
     // Snapshot the save table + every bundled map head.
-    _treasureDataArray = [TreasureData getAllTreasureData:[[AppDelegate appDelegate] managedObjectContext]];
+    _treasureDataArray =
+        [TreasureData getAllTreasureData:[[AppDelegate appDelegate] managedObjectContext]];
     _mapHeadArray = loadAllTreasureMapHeaders();
 
     // One row per main map (mapId % 10 == 0) that has a save record.
@@ -158,8 +178,8 @@ bool isIndexInRange12(unsigned int index) {
             if ([[td mainMapId] shortValue] != mapId / 10) {
                 continue;
             }
-            // Map name: NUL-terminated Shift-JIS string embedded at record offset 0x14
-            // (see honesty note).
+            // Map name: NUL-terminated Shift-JIS string embedded at record offset
+            // 0x14 (see honesty note).
             const char *sjis = (const char *)head + 0x14;
             NSData *nameData = [NSData dataWithBytes:sjis length:strlen(sjis)];
             NSString *name = [[NSString alloc] initWithData:nameData
@@ -181,8 +201,8 @@ bool isIndexInRange12(unsigned int index) {
 
     // Backdrop: phone paints a full map image behind the table; pad stays clear.
     if (!neSceneManager::isPadDisplay()) {
-        NSString *bgName = ([[AppDelegate appDelegate] displayType] == 2) ? @"map_select_bg"
-                                                                          : @"map_select_bg960";
+        NSString *bgName =
+            ([[AppDelegate appDelegate] displayType] == 2) ? @"map_select_bg" : @"map_select_bg960";
         UIImage *bgImg = [UIImage imageNamed:bgName];
         UIImageView *bgView = [[UIImageView alloc] initWithImage:bgImg];
         bgView.frame = CGRectMake(0, 0, bgImg.size.width, bgImg.size.height);
@@ -202,8 +222,8 @@ bool isIndexInRange12(unsigned int index) {
     UIActivityIndicatorView *spinner =
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
-    spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
-                                 (int)(viewFrame.size.height * 0.5f) - 10);
+    spinner.center =
+        CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];
@@ -213,8 +233,8 @@ bool isIndexInRange12(unsigned int index) {
 
 // @ 0xbf498 — wrap self in a nav controller; first run pushes a how-to overlay.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
-    UINavigationController *nav =
-        [[UINavigationController alloc] initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
+    UINavigationController *nav = [[UINavigationController alloc]
+        initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 
     if (neSceneManager::isPadDisplay()) {
         [self.navigationController.navigationBar
@@ -234,19 +254,21 @@ bool isIndexInRange12(unsigned int index) {
 
     // Custom back button.
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
+    UIButton *backBtn =
+        [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-    [backBtn addTarget:self action:@selector(backButtonFunc)
-      forControlEvents:UIControlEventTouchUpInside];
+    [backBtn addTarget:self
+                  action:@selector(backButtonFunc)
+        forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     return nav;
 }
 
-// @ 0xbf7a8 — detach from DownloadMain's event-info delegate before teardown. Kept under ARC
-// for that side effect; the map-name string releases and the array/overlay releases are
-// ARC-managed (the MainMapData strings are __unsafe_unretained — see honesty note).
+// @ 0xbf7a8 — detach from DownloadMain's event-info delegate before teardown.
+// Kept under ARC for that side effect; the map-name string releases and the
+// array/overlay releases are ARC-managed (the MainMapData strings are
+// __unsafe_unretained — see honesty note).
 - (void)dealloc {
     if (!neSceneManager::isPadDisplay()) {
         [[DownloadMain getInstance] setDelegateGetEventInfo:nil];
@@ -273,7 +295,7 @@ bool isIndexInRange12(unsigned int index) {
     self.view.alpha = 0;
     self.navigationController.view.alpha = 0;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.3];   // DAT_000bfb68
+    [UIView setAnimationDuration:0.3]; // DAT_000bfb68
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
     self.view.alpha = 1.0f;
@@ -286,12 +308,13 @@ bool isIndexInRange12(unsigned int index) {
     _isAnimationing = NO;
 }
 
-// @ 0xbfb88 — cross-fade the nav host out. (See honesty note: the guard stores 0, not 1.)
+// @ 0xbfb88 — cross-fade the nav host out. (See honesty note: the guard stores
+// 0, not 1.)
 - (void)startCloseAnimation {
     if (!_isAnimationing) {
         _isAnimationing = NO;
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.3];   // DAT_000bfc88
+        [UIView setAnimationDuration:0.3]; // DAT_000bfc88
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
         self.view.alpha = 0;
@@ -319,19 +342,20 @@ bool isIndexInRange12(unsigned int index) {
     return _mapDataArray ? (NSInteger)_mapDataArray.count : 0;
 }
 
-// @ 0xbfd18 — one MapListCell per main map. On pad the highlighted row draws its selected art.
+// @ 0xbfd18 — one MapListCell per main map. On pad the highlighted row draws
+// its selected art.
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     MapListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[MapListCell alloc] initWithStyle:UITableViewCellStyleDefault
                                   reuseIdentifier:identifier];
     }
-    // Faithful quirk: the binary fetches indexPath.row on pad but discards the result, and
-    // always passes NO for isSelect (movs r3,#0 @ 0xbfe2a) — the row highlight is never
-    // engaged from here.
+    // Faithful quirk: the binary fetches indexPath.row on pad but discards the
+    // result, and always passes NO for isSelect (movs r3,#0 @ 0xbfe2a) — the row
+    // highlight is never engaged from here.
     if (neSceneManager::isPadDisplay()) {
         (void)indexPath.row;
     }
@@ -344,17 +368,17 @@ bool isIndexInRange12(unsigned int index) {
     return nil;
 }
 
-// @ 0xbfe44 — choose a main map: push the area list (phone) or forward to the overlay (pad).
+// @ 0xbfe44 — choose a main map: push the area list (phone) or forward to the
+// overlay (pad).
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
     }
-    if (!neSceneManager::isPadDisplay() &&
-        self.navigationController.topViewController != self) {
+    if (!neSceneManager::isPadDisplay() && self.navigationController.topViewController != self) {
         return;
     }
 
-    neEngine::playSystemSe(1);   // decide SE
+    neEngine::playSystemSe(1); // decide SE
 
     MainMapData selected;
     [[_mapDataArray objectAtIndex:indexPath.row] getValue:&selected];
@@ -365,10 +389,10 @@ bool isIndexInRange12(unsigned int index) {
         [self.navigationController.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"area_selec_navbar"]
                  forBarMetrics:UIBarMetricsDefault];
-        SubMapSelectViewController *sub = [[SubMapSelectViewController alloc]
-            initWithTreasureData:_treasureDataArray
-                    mapHeadArray:_mapHeadArray
-                       mainMapId:mainMapId];
+        SubMapSelectViewController *sub =
+            [[SubMapSelectViewController alloc] initWithTreasureData:_treasureDataArray
+                                                        mapHeadArray:_mapHeadArray
+                                                           mainMapId:mainMapId];
         [self.navigationController pushViewController:sub animated:YES];
     } else {
         // Pad: forward the selection to the split-view overlay owner.
@@ -408,7 +432,7 @@ bool isIndexInRange12(unsigned int index) {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     tmp.subMapId = -1;
     [UserSettingData saveTreasureTmp:tmp];
-    neEngine::playSystemSe(2);   // cancel SE
+    neEngine::playSystemSe(2); // cancel SE
     [self startCloseAnimation];
 }
 
@@ -429,15 +453,16 @@ bool isIndexInRange12(unsigned int index) {
     // Clear spacer header (used when no event is active).
     if (_dummyHeadView == nil) {
         CGFloat spacerH = isOS7 ? 20.0f : 10.0f;
-        _dummyHeadView = [[UIView alloc]
-            initWithFrame:CGRectMake(0, 0, viewFrame.size.width, spacerH)];
+        _dummyHeadView =
+            [[UIView alloc] initWithFrame:CGRectMake(0, 0, viewFrame.size.width, spacerH)];
         _dummyHeadView.backgroundColor = [UIColor clearColor];
     }
 
-    // Event banner header (first active event only). Origins recovered exactly from the
-    // decompiler's inlined image-size math: the banner sits at (10, 20) on pad / (0, 0) on
-    // phone, and the header height is bannerY + image height + a fixed 10pt bottom margin
-    // (i.e. img.height + 30 on pad, img.height + 10 on phone).
+    // Event banner header (first active event only). Origins recovered exactly
+    // from the decompiler's inlined image-size math: the banner sits at (10, 20)
+    // on pad / (0, 0) on phone, and the header height is bannerY + image height +
+    // a fixed 10pt bottom margin (i.e. img.height + 30 on pad, img.height + 10 on
+    // phone).
     if (_eventIds.count > 0) {
         NSNumber *first = [_eventIds objectAtIndex:0];
         NSString *imgName = [NSString stringWithFormat:@"event_0_%03d", [first intValue]];

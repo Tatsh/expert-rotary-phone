@@ -2,26 +2,27 @@
 //  AcViewerCategoryViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The arcade (AC)
-//  viewer's genre-category list. Objective-C++ (.mm) because it drives the C++
-//  "ne" engine singletons via neEngineBridge (scene-manager pad flag, the AC-viewer
-//  event-center selection, the system-SE hooks and the root view controller's
-//  AcViewerEndCallBack).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The arcade
+//  (AC) viewer's genre-category list. Objective-C++ (.mm) because it drives the
+//  C++ "ne" engine singletons via neEngineBridge (scene-manager pad flag, the
+//  AC-viewer event-center selection, the system-SE hooks and the root view
+//  controller's AcViewerEndCallBack).
 //
 
 #import "AcViewerCategoryViewController.h"
 
+#import "AcMusicData.h"                 // -category (bucket key)
 #import "AcViewerCategoryCell.h"        // in-project row cell (setData:)
 #import "AcViewerMusicViewController.h" // pushed on row select
-#import "AcMusicData.h"                 // -category (bucket key)
 #import "AppDelegate.h"                 // +appAppSupportDirectory (mode-select BGM)
 #import "AudioManager.h"                // shared BGM player
 #import "MusicManager.h"                // +getInstance / -getAcMusicDataArray
 #import "UserSettingData.h"             // +bgmVolume
 #import "neEngineBridge.h"
 
-// The scene manager owns the app's root nav host; the close animation notifies it
-// that the AC viewer finished (mirrors AcViewerSplitViewController's RootVC()).
+// The scene manager owns the app's root nav host; the close animation notifies
+// it that the AC viewer finished (mirrors AcViewerSplitViewController's
+// RootVC()).
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
@@ -49,8 +50,8 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x68804 — build the transparent, separator-less grouped table; bucket every
-// MusicManager AC song by genre category; install the "all category" header banner
-// and (phone only) the "friman" backdrop.
+// MusicManager AC song by genre category; install the "all category" header
+// banner and (phone only) the "friman" backdrop.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -98,29 +99,30 @@ static UIViewController *RootVC() {
     return self;
 }
 
-// @ 0x68d40 — initialize the receiver (grouped) and wrap it in a nav controller with
-// a custom back button in the left slot.
+// @ 0x68d40 — initialize the receiver (grouped) and wrap it in a nav controller
+// with a custom back button in the left slot.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(0.0f, 0.0f,
-                                                                      backImg.size.width,
-                                                                      backImg.size.height)];
+    UIButton *backButton = [[UIButton alloc]
+        initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
     [backButton setBackgroundImage:backImg forState:UIControlStateNormal];
-    [backButton addTarget:self action:@selector(touchedBackButton:)
+    [backButton addTarget:self
+                   action:@selector(touchedBackButton:)
          forControlEvents:UIControlEventTouchUpInside];
-    [self.navigationItem setLeftBarButtonItem:[[UIBarButtonItem alloc]
-                                                  initWithCustomView:backButton]];
+    [self.navigationItem
+        setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithCustomView:backButton]];
     return nav;
 }
 
-// @ 0x68ec8 — dealloc: ARC-omitted. The binary releases the 24 category arrays and
-// calls [super dealloc]; the arrays are __strong C-array ivars freed automatically
-// under ARC (no Downloader / C memory to clean up).
+// @ 0x68ec8 — dealloc: ARC-omitted. The binary releases the 24 category arrays
+// and calls [super dealloc]; the arrays are __strong C-array ivars freed
+// automatically under ARC (no Downloader / C memory to clean up).
 
-// @ 0x68f30 — on phone, start the mode-select BGM if nothing is already playing.
+// @ 0x68f30 — on phone, start the mode-select BGM if nothing is already
+// playing.
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -128,7 +130,7 @@ static UIViewController *RootVC() {
         AudioManager *audio = [AudioManager sharedManager];
         if (![audio isPlayingBgm]) {
             NSString *path = [[AppDelegate appAppSupportDirectory]
-                                 stringByAppendingPathComponent:@"bgm01_modesel.m4a"];
+                stringByAppendingPathComponent:@"bgm01_modesel.m4a"];
             [audio loadBgm:path isLoop:YES];
             [audio setBgmVolume:[UserSettingData bgmVolume]];
             [audio playBgm:0.0f];
@@ -143,7 +145,8 @@ static UIViewController *RootVC() {
 
 #pragma mark - Open / close animations
 
-// @ 0x69068 — fade the view + nav view in over 0.3 s (didStop -> endOpenAnimation).
+// @ 0x69068 — fade the view + nav view in over 0.3 s (didStop ->
+// endOpenAnimation).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -165,7 +168,8 @@ static UIViewController *RootVC() {
     _isAnimationing = NO;
 }
 
-// @ 0x691b8 — fade the view + nav view out over 0.3 s (didStop -> endCloseAnimation).
+// @ 0x691b8 — fade the view + nav view out over 0.3 s (didStop ->
+// endCloseAnimation).
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -208,9 +212,10 @@ static UIViewController *RootVC() {
 
 // @ 0x69378 — row 0 -> the "all" banner (nil data); row N -> the N-th non-empty
 // category, scanned high (23) to low.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
     AcViewerCategoryCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerCategoryCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -248,7 +253,7 @@ static UIViewController *RootVC() {
         return;
     }
     neSceneManager::shared();
-    neEngine::playSystemSe(1);   // decide SE
+    neEngine::playSystemSe(1); // decide SE
 
     NSArray *data = nil;
     if (indexPath.row != 0) {
@@ -266,8 +271,7 @@ static UIViewController *RootVC() {
         data = _acMusicDataArray[idx];
     }
 
-    AcViewerMusicViewController *music =
-        [[AcViewerMusicViewController alloc] initWithData:data];
+    AcViewerMusicViewController *music = [[AcViewerMusicViewController alloc] initWithData:data];
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"acv_friman_navbar"]
              forBarMetrics:UIBarMetricsDefault];
@@ -281,16 +285,17 @@ static UIViewController *RootVC() {
 
 #pragma mark - Actions
 
-// @ 0x696c4 — BACK: only when this screen is the nav top VC; clear the AC-viewer's
-// current music selection, play the cancel SE and (phone) fade the screen out.
+// @ 0x696c4 — BACK: only when this screen is the nav top VC; clear the
+// AC-viewer's current music selection, play the cancel SE and (phone) fade the
+// screen out.
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
     }
     neAppEventCenter::shared();
-    neAppEventCenter::clearAcViewerCurrentMusic();   // g_dwAcViewerMusicId = -1
+    neAppEventCenter::clearAcViewerCurrentMusic(); // g_dwAcViewerMusicId = -1
     neSceneManager::shared();
-    neEngine::playSystemSe(2);   // cancel SE
+    neEngine::playSystemSe(2); // cancel SE
     neSceneManager::shared();
     if (!neSceneManager::isPadDisplay()) {
         [self startCloseAnimation];

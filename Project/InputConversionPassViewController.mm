@@ -2,73 +2,98 @@
 //  InputConversionPassViewController.mm
 //  pop'n rhythmin
 //
-//  See InputConversionPassViewController.h. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons
-//  (system SE, pad-vs-phone layout, root-VC overlay + end callback). ARC.
+//  See InputConversionPassViewController.h. Reconstructed from Ghidra project
+//  rb420, program PopnRhythmin. Objective-C++ for the neEngine / neSceneManager
+//  singletons (system SE, pad-vs-phone layout, root-VC overlay + end callback).
+//  ARC.
 //
 //  Honesty notes:
 //   - -init builds a lot of sub-view frames from a heavily NEON-spilled vector
 //     sequence. The image names, text-field configuration, view hierarchy, the
-//     tap-to-dismiss cover view (pad) and the button/indicator styling are byte-exact;
-//     the per-device centre offsets (phone id/pass board y = 10 / 120, decide y = 260;
-//     pad y-nudges -80 / +50 / +145 around the screen centre) are exact float decodes,
-//     but the exact origin of each board is reconstructed structurally (horizontally
-//     centred on the screen, fields centred on their board image) and flagged inline.
-//   - Faithful oddity: -init never adds _indicator as a subview (it is fully configured
-//     then left detached); -startConversionHttpWithId:pass: still sends it -startAnimating.
-//     Preserved exactly (cf. ConversionView, whose spinner is likewise container-driven).
-//   - All CommonAlertView strings are exact UTF-16 CFString decodes; the ASCII CFStrings
+//     tap-to-dismiss cover view (pad) and the button/indicator styling are
+//     byte-exact; the per-device centre offsets (phone id/pass board y = 10 /
+//     120, decide y = 260; pad y-nudges -80 / +50 / +145 around the screen
+//     centre) are exact float decodes, but the exact origin of each board is
+//     reconstructed structurally (horizontally centred on the screen, fields
+//     centred on their board image) and flagged inline.
+//   - Faithful oddity: -init never adds _indicator as a subview (it is fully
+//   configured
+//     then left detached); -startConversionHttpWithId:pass: still sends it
+//     -startAnimating. Preserved exactly (cf. ConversionView, whose spinner is
+//     likewise container-driven).
+//   - All CommonAlertView strings are exact UTF-16 CFString decodes; the ASCII
+//   CFStrings
 //     ("friman_bg", "conv_board*", "inputname_*", "%d", the POST body template
-//     "uuid=%@&player_id=%@&convert_code=%@", "application/json", "yyyy-MM-dd HH:mm:ss",
-//     and every JSON dictionary key) are exact.
-//   - The success/error CommonAlertViews are alloc/init/show/release in the binary (they
-//     retain themselves by adding to the root scene view in -show); ARC keeps the alloc,
-//     drops the manual release. On success the success alert's delegate is self, so its
-//     OK tap drives -startCloseAnimation; -downloaderFinished: does NOT clear _downloader
-//     on success (only the ErrorCode branch does) — preserved faithfully.
-//   - dealloc @ 0x92064 only releases _downloader (no -cancel, no observer removal); under
+//     "uuid=%@&player_id=%@&convert_code=%@", "application/json", "yyyy-MM-dd
+//     HH:mm:ss", and every JSON dictionary key) are exact.
+//   - The success/error CommonAlertViews are alloc/init/show/release in the
+//   binary (they
+//     retain themselves by adding to the root scene view in -show); ARC keeps
+//     the alloc, drops the manual release. On success the success alert's
+//     delegate is self, so its OK tap drives -startCloseAnimation;
+//     -downloaderFinished: does NOT clear _downloader on success (only the
+//     ErrorCode branch does) — preserved faithfully.
+//   - dealloc @ 0x92064 only releases _downloader (no -cancel, no observer
+//   removal); under
 //     ARC that release is automatic, so dealloc is ARC-omitted.
-//   - -endCloseAnimation manually -releases _idField / _passField / _indicator in the
-//     binary; under ARC those ivars are owned by the (about-to-be-released) controller,
-//     so the manual releases are stripped (no added behaviour to preserve).
-//   - scoreToRank() and neSugorokuTouchSoundBit() are file-local statics in the binary
+//   - -endCloseAnimation manually -releases _idField / _passField / _indicator
+//   in the
+//     binary; under ARC those ivars are owned by the (about-to-be-released)
+//     controller, so the manual releases are stripped (no added behaviour to
+//     preserve).
+//   - scoreToRank() and neSugorokuTouchSoundBit() are file-local statics in the
+//   binary
 //     (each its own FUN_*, inlined per translation unit — cf. PlayScene.mm /
-//     FriendScoreTableCell.mm / UserSettingData.mm); mirrored here as file-local statics.
+//     FriendScoreTableCell.mm / UserSettingData.mm); mirrored here as
+//     file-local statics.
 //
 
 #import "InputConversionPassViewController.h"
 
+#import "CharaTicketData.h" // +addRecordWithProductId:inManagedObjectContext:
+#import "MusicManager.h"    // +getInstance -> open*Music
+#import "ScoreData+Store.h" // +getScoreData:inManagedObjectContext: / +hashScore:
 #import "ScoreData.h"
-#import "ScoreData+Store.h"       // +getScoreData:inManagedObjectContext: / +hashScore:
-#import "TreasureData.h"          // +init:
-#import "TreasureData+Store.h"    // +addRecordWithMainMapId:subMapId:inManagedObjectContext:
-#import "CharaTicketData.h"       // +addRecordWithProductId:inManagedObjectContext:
-#import "MusicManager.h"          // +getInstance -> open*Music
+#import "TreasureData+Store.h" // +addRecordWithMainMapId:subMapId:inManagedObjectContext:
+#import "TreasureData.h"       // +init:
 
-#import "AppDelegate.h"           // +appDelegate -> uuId / managedObjectContext
-#import "DownloadMain.h"          // Downloader-based download manager (shared helper)
-#import "StoreUtil.h"             // +convertURL
-#import "UserSettingData.h"       // player-save accessors + initForConvert
-#import "MainViewController.h"    // -InConversionPassEndCallBack (root callback)
+#import "AppDelegate.h"        // +appDelegate -> uuId / managedObjectContext
+#import "DownloadMain.h"       // Downloader-based download manager (shared helper)
+#import "MainViewController.h" // -InConversionPassEndCallBack (root callback)
+#import "StoreUtil.h"          // +convertURL
+#import "UserSettingData.h"    // player-save accessors + initForConvert
 
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController / isPadDisplay
 #import <QuartzCore/QuartzCore.h> // CALayer cornerRadius on the indicator
-#import "neEngineBridge.h"        // neEngine::playSystemSe, neSceneManager::rootViewController / isPadDisplay
 
 // Score -> rank index (0 best .. 6 worst). Ghidra: FUN_00028a40 (scoreToRank).
 static int scoreToRank(int score) {
-    if (score >= 100000) return 0;
-    if (score >= 98000)  return 1;
-    if (score >= 95000)  return 2;
-    if (score >= 90000)  return 3;
-    if (score >= 80000)  return 4;
-    if (score >= 70000)  return 5;
+    if (score >= 100000) {
+        return 0;
+    }
+    if (score >= 98000) {
+        return 1;
+    }
+    if (score >= 95000) {
+        return 2;
+    }
+    if (score >= 90000) {
+        return 3;
+    }
+    if (score >= 80000) {
+        return 4;
+    }
+    if (score >= 70000) {
+        return 5;
+    }
     return 6;
 }
 
-// Sugoroku (treasure-map) main-map id -> touch-sound bit index (0 for out-of-range).
-// Ghidra: neSugorokuTouchSoundBit (matches UserSettingData.mm's file-local copy).
+// Sugoroku (treasure-map) main-map id -> touch-sound bit index (0 for
+// out-of-range). Ghidra: neSugorokuTouchSoundBit (matches UserSettingData.mm's
+// file-local copy).
 static int neSugorokuTouchSoundBit(int mainMapId) {
-    static const int kBits[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    static const int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     unsigned id = (unsigned)mainMapId & 0xffff;
     return id < 9 ? kBits[id] : 0;
 }
@@ -88,9 +113,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 @implementation InputConversionPassViewController
 
-// @ 0x911d0 — build the input panel: (pad) a tap-to-dismiss dimmed cover, the board
-// backdrop, the id / pass boards each holding a centred text field, the decide button,
-// and the (detached) activity indicator.
+// @ 0x911d0 — build the input panel: (pad) a tap-to-dismiss dimmed cover, the
+// board backdrop, the id / pass boards each holding a centred text field, the
+// decide button, and the (detached) activity indicator.
 - (instancetype)init {
     self = [super init];
     if (self == nil) {
@@ -108,20 +133,22 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         _coverView.userInteractionEnabled = YES;
         _coverView.exclusiveTouch = YES;
         UITapGestureRecognizer *tap =
-            [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapCoverView)];
+            [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                    action:@selector(handleTapCoverView)];
         [_coverView addGestureRecognizer:tap];
         [self.view addSubview:_coverView];
     }
 
-    // --- Backdrop: phone uses the full-window art; pad uses a centred board + dim ---
+    // --- Backdrop: phone uses the full-window art; pad uses a centred board +
+    // dim ---
     if (!isPad) {
         UIImageView *bg = [[UIImageView alloc] initWithFrame:frame];
         bg.image = [UIImage imageNamed:@"friman_bg"];
         [self.view addSubview:bg];
     } else {
         UIImage *boardImg = [UIImage imageNamed:@"conv_board"];
-        UIImageView *board =
-            [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, boardImg.size.width, boardImg.size.height)];
+        UIImageView *board = [[UIImageView alloc]
+            initWithFrame:CGRectMake(0, 0, boardImg.size.width, boardImg.size.height)];
         board.image = boardImg;
         board.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f);
         self.view.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
@@ -134,7 +161,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     nameView.userInteractionEnabled = YES;
     if (!isPad) {
         nameView.frame = CGRectMake(0, 10.0f, nameImg.size.width, nameImg.size.height);
-        nameView.center = CGPointMake(frame.size.width * 0.5f, nameView.center.y);  // x = runtime-structural (vmul.f32 with 0.5)
+        nameView.center =
+            CGPointMake(frame.size.width * 0.5f,
+                        nameView.center.y); // x = runtime-structural (vmul.f32 with 0.5)
     } else {
         nameView.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f - 80.0f);
     }
@@ -142,14 +171,14 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
     _idField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 206.0f, 38.0f)];
     _idField.enabled = YES;
-    _idField.returnKeyType = UIReturnKeyDone;                                  // 9
+    _idField.returnKeyType = UIReturnKeyDone; // 9
     _idField.delegate = self;
-    _idField.keyboardType = UIKeyboardTypeASCIICapable;                        // 1
-    _idField.autocapitalizationType = UITextAutocapitalizationTypeNone;        // 0
-    _idField.autocorrectionType = UITextAutocorrectionTypeNo;                  // 1
+    _idField.keyboardType = UIKeyboardTypeASCIICapable;                          // 1
+    _idField.autocapitalizationType = UITextAutocapitalizationTypeNone;          // 0
+    _idField.autocorrectionType = UITextAutocorrectionTypeNo;                    // 1
     _idField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter; // 0
     [_idField setBackground:[UIImage imageNamed:@"inputname_area_name"]];
-    _idField.textAlignment = NSTextAlignmentCenter;                            // 1
+    _idField.textAlignment = NSTextAlignmentCenter; // 1
     _idField.center = CGPointMake(nameImg.size.width * 0.5f, 75.0f);
     [nameView addSubview:_idField];
 
@@ -159,7 +188,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     passView.userInteractionEnabled = YES;
     if (!isPad) {
         passView.frame = CGRectMake(0, 120.0f, passImg.size.width, passImg.size.height);
-        passView.center = CGPointMake(frame.size.width * 0.5f, passView.center.y);  // x = runtime-structural (vmul.f32 with 0.5)
+        passView.center =
+            CGPointMake(frame.size.width * 0.5f,
+                        passView.center.y); // x = runtime-structural (vmul.f32 with 0.5)
     } else {
         passView.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f + 50.0f);
     }
@@ -167,14 +198,14 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
     _passField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 206.0f, 38.0f)];
     _passField.enabled = YES;
-    _passField.returnKeyType = UIReturnKeyDone;                                // 9
+    _passField.returnKeyType = UIReturnKeyDone; // 9
     _passField.delegate = self;
-    _passField.keyboardType = UIKeyboardTypeASCIICapable;                      // 1
-    _passField.autocapitalizationType = UITextAutocapitalizationTypeNone;      // 0
-    _passField.autocorrectionType = UITextAutocorrectionTypeNo;                // 1
+    _passField.keyboardType = UIKeyboardTypeASCIICapable;                          // 1
+    _passField.autocapitalizationType = UITextAutocapitalizationTypeNone;          // 0
+    _passField.autocorrectionType = UITextAutocorrectionTypeNo;                    // 1
     _passField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter; // 0
     [_passField setBackground:[UIImage imageNamed:@"conv_inputarea_pass"]];
-    _passField.textAlignment = NSTextAlignmentCenter;                          // 1
+    _passField.textAlignment = NSTextAlignmentCenter; // 1
     _passField.center = CGPointMake(passImg.size.width * 0.5f, 75.0f);
     [passView addSubview:_passField];
 
@@ -188,17 +219,19 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     } else {
         decideBtn.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f + 145.0f);
     }
-    [decideBtn addTarget:self action:@selector(touchedDecideButton:)
+    [decideBtn addTarget:self
+                  action:@selector(touchedDecideButton:)
         forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:decideBtn];
 
-    // --- Activity indicator (configured but, faithfully, left detached; see notes) ---
+    // --- Activity indicator (configured but, faithfully, left detached; see
+    // notes) ---
     _indicator = [[UIActivityIndicatorView alloc]
-        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];     // 1
+        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite]; // 1
     _indicator.frame = CGRectMake(0, 0, 32.0f, 32.0f);
     _indicator.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f);
     _indicator.autoresizingMask =
-        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin;  // 0x21
+        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin; // 0x21
     _indicator.hidesWhenStopped = YES;
     _indicator.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
     _indicator.layer.cornerRadius = 4.0f;
@@ -206,24 +239,25 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return self;
 }
 
-// @ 0x91e84 — phone entry point: wrap self in a nav controller with a custom back
-// button and the convert nav-bar art, and return that host.
+// @ 0x91e84 — phone entry point: wrap self in a nav controller with a custom
+// back button and the convert nav-bar art, and return that host.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     InputConversionPassViewController *content = [self init];
     if (content == nil) {
         return nil;
     }
 
-    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:content];
+    UINavigationController *nav =
+        [[UINavigationController alloc] initWithRootViewController:content];
 
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
     UIButton *backBtn =
         [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-    [backBtn addTarget:content action:@selector(onBackBtn)
-      forControlEvents:UIControlEventTouchUpInside];
-    content.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
+    [backBtn addTarget:content
+                  action:@selector(onBackBtn)
+        forControlEvents:UIControlEventTouchUpInside];
+    content.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [content.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"conv_navbar"]
@@ -232,7 +266,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return nav;
 }
 
-// dealloc @ 0x92064 — releases _downloader only (no -cancel / no observers); ARC-omitted.
+// dealloc @ 0x92064 — releases _downloader only (no -cancel / no observers);
+// ARC-omitted.
 
 // @ 0x920b4 — nav-bar back button: play the cancel SE and run the close fade.
 - (void)onBackBtn {
@@ -263,7 +298,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     m_IsAnimationing = NO;
 }
 
-// @ 0x92238 — fade the panel out over 0.3 s (suspending root input for the transition).
+// @ 0x92238 — fade the panel out over 0.3 s (suspending root input for the
+// transition).
 - (void)startCloseAnimation {
     if (m_IsAnimationing) {
         return;
@@ -280,8 +316,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [UIView commitAnimations];
 }
 
-// @ 0x92368 — close fade finished: tear down and notify the root view controller.
-// (The binary also -releases _idField / _passField / _indicator here; ARC-stripped.)
+// @ 0x92368 — close fade finished: tear down and notify the root view
+// controller. (The binary also -releases _idField / _passField / _indicator
+// here; ARC-stripped.)
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
@@ -318,8 +355,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return YES;
 }
 
-// @ 0x925a4 — decide tapped: if both fields are non-empty, dismiss the keyboards, POST
-// the convert request, and play the decide SE.
+// @ 0x925a4 — decide tapped: if both fields are non-empty, dismiss the
+// keyboards, POST the convert request, and play the decide SE.
 - (void)touchedDecideButton:(id)sender {
     NSString *playerId = _idField.text;
     NSString *pass = _passField.text;
@@ -342,9 +379,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return NO;
 }
 
-// @ 0x926e0 — POST succeeded: on no ErrorCode, restore the entire server-side save into
-// UserSettingData + the Core Data stores and show the "done" alert; otherwise show the
-// id/pass-mismatch alert and drop the request.
+// @ 0x926e0 — POST succeeded: on no ErrorCode, restore the entire server-side
+// save into UserSettingData + the Core Data stores and show the "done" alert;
+// otherwise show the id/pass-mismatch alert and drop the request.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_downloader getDataInJSON];
     id errorCode = [json objectForKey:@"ErrorCode"];
@@ -400,10 +437,15 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
         // Invite-present tier from the invite count.
         int invitePresent;
-        if (inviteCnt < 3)      invitePresent = 0;
-        else if (inviteCnt < 5) invitePresent = 3;
-        else if (inviteCnt < 7) invitePresent = 5;
-        else                    invitePresent = 7;
+        if (inviteCnt < 3) {
+            invitePresent = 0;
+        } else if (inviteCnt < 5) {
+            invitePresent = 3;
+        } else if (inviteCnt < 7) {
+            invitePresent = 5;
+        } else {
+            invitePresent = 7;
+        }
 
         // Reset the local save, then write the restored player state.
         [UserSettingData initForConvert];
@@ -445,9 +487,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
         NSManagedObjectContext *context = [[AppDelegate appDelegate] managedObjectContext];
 
-        // Per-music scores: match each Music entry to its PlayCnt row (by Id) and write
-        // the ScoreData record (full-combo / perfect flags, rank+score per difficulty,
-        // hashed checksum, last-play date, play counts).
+        // Per-music scores: match each Music entry to its PlayCnt row (by Id) and
+        // write the ScoreData record (full-combo / perfect flags, rank+score per
+        // difficulty, hashed checksum, last-play date, play counts).
         for (id m in music) {
             int mid = [[m objectForKey:@"Id"] intValue];
             int scoreN = [[m objectForKey:@"ScoreN"] intValue];
@@ -462,12 +504,24 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
                     int cntEx = [[pc objectForKey:@"CntEx"] intValue];
 
                     ScoreData *sd = [ScoreData getScoreData:mid inManagedObjectContext:context];
-                    if (flag & 0x01) sd.fullComboN = [NSNumber numberWithBool:YES];
-                    if (flag & 0x02) sd.fullComboH = [NSNumber numberWithBool:YES];
-                    if (flag & 0x04) sd.fullComboEx = [NSNumber numberWithBool:YES];
-                    if (flag & 0x08) sd.perfectN = [NSNumber numberWithBool:YES];
-                    if (flag & 0x10) sd.perfectH = [NSNumber numberWithBool:YES];
-                    if (flag & 0x20) sd.perfectEx = [NSNumber numberWithBool:YES];
+                    if (flag & 0x01) {
+                        sd.fullComboN = [NSNumber numberWithBool:YES];
+                    }
+                    if (flag & 0x02) {
+                        sd.fullComboH = [NSNumber numberWithBool:YES];
+                    }
+                    if (flag & 0x04) {
+                        sd.fullComboEx = [NSNumber numberWithBool:YES];
+                    }
+                    if (flag & 0x08) {
+                        sd.perfectN = [NSNumber numberWithBool:YES];
+                    }
+                    if (flag & 0x10) {
+                        sd.perfectH = [NSNumber numberWithBool:YES];
+                    }
+                    if (flag & 0x20) {
+                        sd.perfectEx = [NSNumber numberWithBool:YES];
+                    }
                     if (scoreN >= 0) {
                         sd.rankN = [NSNumber numberWithInt:scoreToRank(scoreN)];
                         sd.scoreN = [NSNumber numberWithInt:scoreN];
@@ -505,8 +559,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
             int touchSound = [[t objectForKey:@"TouchSound"] intValue];
 
             TreasureData *td = [TreasureData addRecordWithMainMapId:(short)mainMapId
-                                                          subMapId:(short)subMapId
-                                            inManagedObjectContext:context];
+                                                           subMapId:(short)subMapId
+                                             inManagedObjectContext:context];
             td.musicPiece = [NSNumber numberWithInt:musicPiece];
             td.wallPaperPiece = [NSNumber numberWithInt:wallPiece];
             td.goalCharaTicket = [NSNumber numberWithInt:charaTicket];
@@ -524,26 +578,28 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
             [context save:nil];
         }
 
-        // Re-open the event / login-bonus / treasure music and rebuild treasure roots.
+        // Re-open the event / login-bonus / treasure music and rebuild treasure
+        // roots.
         [[MusicManager getInstance] openInviteMusic];
         [[MusicManager getInstance] openLoginBonusMusic];
         [[MusicManager getInstance] openTreasureMusic];
         [TreasureData init:[[AppDelegate appDelegate] managedObjectContext]];
 
         CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"機種変更"
-                                                               message:@"処理が完了しました。"
-                                                              delegate:self
-                                                     cancelButtonTitle:nil
-                                                     otherButtonTitles:@"OK"];
+                                                                message:@"処理が完了しました。"
+                                                               delegate:self
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
         // _downloader is intentionally left set on success (see notes).
     } else {
         CommonAlertView *alert = [[CommonAlertView alloc]
-                  initWithTitle:@"機種変更"
-                        message:@"通信に失敗しました。\nプレーヤーIDと機種変更パスを確認してください。"
-                       delegate:nil
-              cancelButtonTitle:nil
-              otherButtonTitles:@"OK"];
+                initWithTitle:@"機種変更"
+                      message:@"通信に失敗しました。\nプレーヤーIDと機種変更パスを"
+                              @"確認してください。"
+                     delegate:nil
+            cancelButtonTitle:nil
+            otherButtonTitles:@"OK"];
         [alert show];
         _downloader = nil;
     }
@@ -554,17 +610,19 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [_indicator stopAnimating];
     _downloader = nil;
 
-    CommonAlertView *alert = [[CommonAlertView alloc]
-              initWithTitle:@"プレーヤーネーム"
-                    message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                   delegate:nil
-          cancelButtonTitle:nil
-          otherButtonTitles:@"OK"];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"プレーヤーネーム"
+                                       message:@"通信に失敗しました。\n電波状態の"
+                                               @"良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
-// @ 0x93a00 — build and POST {uuid, player_id, convert_code} to the convert endpoint.
-// No-op while a request is already in flight; validates the two fields first.
+// @ 0x93a00 — build and POST {uuid, player_id, convert_code} to the convert
+// endpoint. No-op while a request is already in flight; validates the two
+// fields first.
 - (void)startConversionHttpWithId:(NSString *)playerId pass:(NSString *)pass {
     if (_downloader != nil) {
         return;
@@ -576,25 +634,26 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     if (!idOk || !passOk) {
         // Name whichever field holds the bad character (pass is checked first).
         NSString *title = passOk ? @"プレーヤーID" : @"機種変更パス";
-        CommonAlertView *alert = [[CommonAlertView alloc]
-                  initWithTitle:title
-                        message:@"使用できない文字が含まれています。"
-                       delegate:nil
-              cancelButtonTitle:nil
-              otherButtonTitles:@"OK"];
+        CommonAlertView *alert =
+            [[CommonAlertView alloc] initWithTitle:title
+                                           message:@"使用できない文字が含まれています。"
+                                          delegate:nil
+                                 cancelButtonTitle:nil
+                                 otherButtonTitles:@"OK"];
         [alert show];
         return;
     }
 
     NSString *code = [NSString stringWithFormat:@"%d", [pass intValue]];
     NSString *body = [NSString stringWithFormat:@"uuid=%@&player_id=%@&convert_code=%@",
-                      [[AppDelegate appDelegate] uuId], playerId, code];
+                                                [[AppDelegate appDelegate] uuId],
+                                                playerId,
+                                                code];
 
-    _downloader = [[Downloader alloc]
-                      initWithURL:[StoreUtil convertURL]
-                         delegate:self
-                             Post:[body dataUsingEncoding:NSUTF8StringEncoding]
-                      ContextType:@"application/json"];
+    _downloader = [[Downloader alloc] initWithURL:[StoreUtil convertURL]
+                                         delegate:self
+                                             Post:[body dataUsingEncoding:NSUTF8StringEncoding]
+                                      ContextType:@"application/json"];
     [_downloader startDownloading];
     [_indicator startAnimating];
 }
@@ -620,8 +679,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self startCloseAnimation];
 }
 
-// @ 0x93d90 — pad cover tap: play the cancel SE and run the close fade (unless a fade
-// is already running).
+// @ 0x93d90 — pad cover tap: play the cancel SE and run the close fade (unless
+// a fade is already running).
 - (void)handleTapCoverView {
     if (m_IsAnimationing) {
         return;

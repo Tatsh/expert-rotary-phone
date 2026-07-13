@@ -9,7 +9,8 @@
 
 @implementation OverScoreData (Store)
 
-// Helper: a fetch request for the OverScoreData entity with an optional predicate.
+// Helper: a fetch request for the OverScoreData entity with an optional
+// predicate.
 static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredicate *predicate) {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"OverScoreData"
@@ -23,8 +24,10 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
                                        sheet:(short)sheet
                                     playerId:(NSString *)playerId
                       inManagedObjectContext:(NSManagedObjectContext *)context {
-    NSPredicate *p = [NSPredicate predicateWithFormat:
-                      @"music==%d and sheet==%d and playerId==%@", music, (int)sheet, playerId];
+    NSPredicate *p = [NSPredicate predicateWithFormat:@"music==%d and sheet==%d and playerId==%@",
+                                                      music,
+                                                      (int)sheet,
+                                                      playerId];
     NSArray *results = [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
     return results.count ? results.lastObject : nil;
 }
@@ -33,8 +36,8 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 + (NSArray *)getOverScoreDataWithMusic:(int)music
                                  sheet:(short)sheet
                 inManagedObjectContext:(NSManagedObjectContext *)context {
-    NSPredicate *p = [NSPredicate predicateWithFormat:@"music==%d and sheet==%d",
-                      music, (int)sheet];
+    NSPredicate *p =
+        [NSPredicate predicateWithFormat:@"music==%d and sheet==%d", music, (int)sheet];
     return [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
 }
 
@@ -85,7 +88,7 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
                inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
     OverScoreData *record = [NSEntityDescription insertNewObjectForEntityForName:@"OverScoreData"
-                                                         inManagedObjectContext:context];
+                                                          inManagedObjectContext:context];
     record.music = [NSNumber numberWithInt:music];
     record.sheet = [NSNumber numberWithShort:sheet];
     record.playerId = playerId;
@@ -116,8 +119,8 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
                               sheet:(short)sheet
              inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
-    NSPredicate *p = [NSPredicate predicateWithFormat:@"music==%d and sheet==%d",
-                      music, (int)sheet];
+    NSPredicate *p =
+        [NSPredicate predicateWithFormat:@"music==%d and sheet==%d", music, (int)sheet];
     NSArray *results = [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
     if (results == nil || results.count == 0) {
         return 0;

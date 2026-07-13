@@ -12,13 +12,13 @@
 @interface MusicPatch : NSObject
 
 // Synthesized: musicId @ 0x78820, setMusicId: @ 0x78834.
-@property (atomic) int musicId;
+@property(atomic) int musicId;
 // Synthesized: lvN @ 0x7884c, setLvN: @ 0x78860.
-@property (atomic) int lvN;
+@property(atomic) int lvN;
 // Synthesized: lvH @ 0x78878, setLvH: @ 0x7888c.
-@property (atomic) int lvH;
+@property(atomic) int lvH;
 // Synthesized: lvEx @ 0x788a4, setLvEx: @ 0x788b8.
-@property (atomic) int lvEx;
+@property(atomic) int lvEx;
 
 @end
 

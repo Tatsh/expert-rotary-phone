@@ -3,17 +3,17 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (FUN at 0x207a4..0x20d0c). One AVAudioPlayer voice with a tiny playback state
-//  machine; the bus is the player's delegate.
+//  (FUN at 0x207a4..0x20d0c). One AVAudioPlayer voice with a tiny playback
+//  state machine; the bus is the player's delegate.
 //
 
 #import "AVBus.h"
 
 @implementation AVBus {
-    AVAudioPlayer *mPlayer;  // the wrapped voice (strong)
-    int mStatus;             // AVBusStatus
-    AVSource *mSource;       // non-owning pointer to the current source descriptor
-    uint16_t mCurrentID;     // generation, bumped on removeSource
+    AVAudioPlayer *mPlayer; // the wrapped voice (strong)
+    int mStatus;            // AVBusStatus
+    AVSource *mSource;      // non-owning pointer to the current source descriptor
+    uint16_t mCurrentID;    // generation, bumped on removeSource
 }
 
 // @ 0x207a4
@@ -28,7 +28,7 @@
 // @ 0x207e4
 - (BOOL)initWithContentsOfURL:(NSURL *)url isLoop:(BOOL)loop {
     if (mPlayer != nil) {
-        mPlayer = nil;  // Ghidra: release old player before reloading
+        mPlayer = nil; // Ghidra: release old player before reloading
     }
     NSError *error = nil;
     // Ghidra: +new then re-init on the same object (double init, faithful).
@@ -41,24 +41,24 @@
         mStatus = AVBusStatusNone;
         return YES;
     }
-    return NO;  // ARC releases the failed player as it leaves scope
+    return NO; // ARC releases the failed player as it leaves scope
 }
 
 // @ 0x208b0
 - (BOOL)initWithContentsOfData:(NSData *)data isLoop:(BOOL)loop {
     if (mPlayer != nil) {
-        mPlayer = nil;  // Ghidra: release old player before reloading
+        mPlayer = nil; // Ghidra: release old player before reloading
     }
     NSError *error = nil;
     AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithData:data error:&error];
     if (error == nil) {
-        mPlayer = player;  // Ghidra retains here; the strong ivar handles it under ARC
+        mPlayer = player; // Ghidra retains here; the strong ivar handles it under ARC
         player.numberOfLoops = loop ? -1 : 0;
         mPlayer.delegate = self;
         mStatus = AVBusStatusNone;
         return YES;
     }
-    return NO;  // ARC releases the failed player as it leaves scope
+    return NO; // ARC releases the failed player as it leaves scope
 }
 
 // @ 0x2098c
@@ -78,7 +78,7 @@
     mCurrentID = (uint16_t)(mCurrentID + 1);
     BOOL had = (mPlayer != nil);
     if (had) {
-        mPlayer = nil;  // Ghidra: release + clear
+        mPlayer = nil; // Ghidra: release + clear
     }
     return had;
 }
@@ -182,9 +182,9 @@
 }
 
 // @ 0x20ca0 dealloc -- ARC-omitted. The original dealloc only did
-// [mPlayer release] then [super dealloc]; both are automatic under ARC (mPlayer is
-// a strong ivar). It performed no real teardown (it did not stop the player), so
-// no explicit dealloc is required.
+// [mPlayer release] then [super dealloc]; both are automatic under ARC (mPlayer
+// is a strong ivar). It performed no real teardown (it did not stop the
+// player), so no explicit dealloc is required.
 
 // @ 0x20cf4
 - (BOOL)isSameSource:(AVSource *)source {

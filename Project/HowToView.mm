@@ -2,20 +2,21 @@
 //  HowToView.mm
 //  pop'n rhythmin
 //
-//  See HowToView.h. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithImageList:frame:backGroundImg: @ 0xe9230, drawRect: @ 0xe9368, dealloc @ 0xe9304).
-//  Objective-C++ for the neSceneManager device check. On iPhone the images are drawn directly
-//  (with an optional per-page background); on iPad each image is added as a UIImageView. The
-//  iPhone per-page centring uses the baked page-dimension constants DAT_000e96e4 = 320.0 (width)
-//  and DAT_000e96e8 = -44.0 (vertical inset).
+//  See HowToView.h. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin (initWithImageList:frame:backGroundImg: @ 0xe9230, drawRect: @
+//  0xe9368, dealloc @ 0xe9304). Objective-C++ for the neSceneManager device
+//  check. On iPhone the images are drawn directly (with an optional per-page
+//  background); on iPad each image is added as a UIImageView. The iPhone
+//  per-page centring uses the baked page-dimension constants DAT_000e96e4 =
+//  320.0 (width) and DAT_000e96e8 = -44.0 (vertical inset).
 //
 
 #import "HowToView.h"
-#import "System/src/neEngineBridge.h"   // neSceneManager::isPadDisplay
+#import "System/src/neEngineBridge.h" // neSceneManager::isPadDisplay
 
 @implementation HowToView {
-    NSArray *_imageList;   // the how-to page images
-    UIImage *_bgImage;     // optional per-page background
+    NSArray *_imageList; // the how-to page images
+    UIImage *_bgImage;   // optional per-page background
 }
 
 // @ 0xe9230 — retain the image list (+ background); clear the backdrop on iPad.
@@ -35,21 +36,24 @@
     return self;
 }
 
-// @ 0xe9368 — lay the pages out horizontally: iPhone draws them (+ background) into the context;
-// iPad adds an image view per page.
+// @ 0xe9368 — lay the pages out horizontally: iPhone draws them (+ background)
+// into the context; iPad adds an image view per page.
 - (void)drawRect:(CGRect)rect {
     CGFloat x = 0;
     if (!neSceneManager::isPadDisplay()) {
-        // iPhone: draw each image (centred over its page background if there is one).
+        // iPhone: draw each image (centred over its page background if there is
+        // one).
         for (UIImage *img in _imageList) {
             CGPoint pt = CGPointMake(x, 0);
             if (_bgImage != nil) {
                 [_bgImage drawAtPoint:CGPointMake(x, 0)];
-                // Centre the image within the page using the baked page-dimension constants:
-                // DAT_000e96e4 = 320.0 (page width) and DAT_000e96e8 = -44.0 (vertical inset).
-                CGFloat pageW = 320.0f;   // DAT_000e96e4
+                // Centre the image within the page using the baked page-dimension
+                // constants: DAT_000e96e4 = 320.0 (page width) and DAT_000e96e8 = -44.0
+                // (vertical inset).
+                CGFloat pageW = 320.0f; // DAT_000e96e4
                 pt.x = x + (pageW - img.size.width) * 0.5f;
-                pt.y = (self.bounds.size.height - 44.0f - img.size.height) * 0.5f;  // DAT_000e96e8 = -44.0
+                pt.y = (self.bounds.size.height - 44.0f - img.size.height) *
+                       0.5f; // DAT_000e96e8 = -44.0
             }
             [img drawAtPoint:pt];
             x += img.size.width;

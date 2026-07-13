@@ -6,11 +6,11 @@
 //
 
 #import "StoreViewController.h"
+#import "AppFont.h"
+#import "AudioManager.h"
+#import "StoreAcvManageViewController.h"
 #import "StoreMainViewController.h"
 #import "StoreManageViewController.h"
-#import "StoreAcvManageViewController.h"
-#import "AudioManager.h"
-#import "AppFont.h"
 #import "neEngineBridge.h"
 
 @implementation StoreViewController
@@ -20,37 +20,34 @@
 // Wrap a tab's root controller in a navigation controller with the app's custom
 // back button and navbar background image.
 - (UINavigationController *)wrapController:(UIViewController *)root
-                              navbarImage:(NSString *)navbarImageName {
+                               navbarImage:(NSString *)navbarImageName {
     UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backButton =
-        [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImage.size.width,
-                                                    backImage.size.height)];
+    UIButton *backButton = [[UIButton alloc]
+        initWithFrame:CGRectMake(0, 0, backImage.size.width, backImage.size.height)];
     [backButton setBackgroundImage:backImage forState:UIControlStateNormal];
     [backButton addTarget:self
                    action:@selector(pushBarBtnBack:)
          forControlEvents:UIControlEventTouchUpInside];
-    root.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithCustomView:backButton];
+    root.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
 
-    UINavigationController *nav =
-        [[UINavigationController alloc] initWithRootViewController:root];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
     [nav.navigationBar setBackgroundImage:[UIImage imageNamed:navbarImageName]
                             forBarMetrics:UIBarMetricsDefault];
     return nav;
 }
 
-// @ 0x53140 — build the three tabs; each is a nav controller with a custom navbar.
+// @ 0x53140 — build the three tabs; each is a nav controller with a custom
+// navbar.
 - (instancetype)initWithRecommendPackId:(int)recommendPackId {
     _recommendPackId = recommendPackId;
     if ((self = [super init])) {
-        // 8pt tab-bar item titles in the app font (UITextAttributeFont — iOS 5/6 era).
+        // 8pt tab-bar item titles in the app font (UITextAttributeFont — iOS 5/6
+        // era).
         UIFont *tabFont = [UIFont fontWithName:AppFontName() size:8.0f];
-        [[UITabBarItem appearance]
-            setTitleTextAttributes:@{ UITextAttributeFont: tabFont }
-                          forState:UIControlStateNormal];
+        [[UITabBarItem appearance] setTitleTextAttributes:@{UITextAttributeFont : tabFont}
+                                                 forState:UIControlStateNormal];
 
-        StoreMainViewController *mainVC =
-            [[StoreMainViewController alloc] initWithParent:self];
+        StoreMainViewController *mainVC = [[StoreMainViewController alloc] initWithParent:self];
         m_MainNavCtrl = [self wrapController:mainVC navbarImage:@"p_store_navbar"];
 
         StoreManageViewController *manageVC =
@@ -66,8 +63,9 @@
     return self;
 }
 
-// @ 0x537d8 — build the dimming cover and the centred modal (please-wait / abort) dialog over the
-// tab bar's view; on retina match the GL scene's native contentScaleFactor.
+// @ 0x537d8 — build the dimming cover and the centred modal (please-wait /
+// abort) dialog over the tab bar's view; on retina match the GL scene's native
+// contentScaleFactor.
 - (void)loadView {
     [super loadView];
 
@@ -78,7 +76,8 @@
 
     CGRect bounds = self.view.bounds;
 
-    // 40%-black dimming backdrop, resized with the view and hidden until a dialog is shown.
+    // 40%-black dimming backdrop, resized with the view and hidden until a dialog
+    // is shown.
     m_CoverView = [[UIView alloc] initWithFrame:bounds];
     m_CoverView.opaque = NO;
     m_CoverView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.4f];
@@ -88,8 +87,9 @@
     [self.view addSubview:m_CoverView];
 
     // Dialog frame sizes — byte-verified from the literal pool:
-    // iPad @ 0x539e4: sp[0]=0x43c80000=400, sp[4]=0x43960000=300; font movt #0x4190 → 18.0.
-    // Phone @ 0x53a48: sp[0]=0x43960000=300, sp[4]=0x43870000=270; font mov.w #0x41800000 → 16.0.
+    // iPad @ 0x539e4: sp[0]=0x43c80000=400, sp[4]=0x43960000=300; font movt
+    // #0x4190 → 18.0. Phone @ 0x53a48: sp[0]=0x43960000=300,
+    // sp[4]=0x43870000=270; font mov.w #0x41800000 → 16.0.
     UIFont *messageFont;
     if (neSceneManager::isPadDisplay()) {
         m_ModalDialog = [[StoreDialogView alloc] initWithFrame:CGRectMake(0, 0, 400, 300)];
@@ -118,8 +118,8 @@
         return;
     }
     // Pre-iOS 5 does not auto-forward appearance callbacks under a tab bar.
-    if ([UIDevice.currentDevice.systemVersion compare:@"5.0" options:NSNumericSearch]
-            == NSOrderedAscending) {
+    if ([UIDevice.currentDevice.systemVersion compare:@"5.0"
+                                              options:NSNumericSearch] == NSOrderedAscending) {
         [self viewWillAppear:YES];
     }
     m_Animation = YES;
@@ -139,8 +139,8 @@
 // @ 0x54030
 - (void)showAnimationEnd {
     m_Animation = NO;
-    if ([UIDevice.currentDevice.systemVersion compare:@"5.0" options:NSNumericSearch]
-            == NSOrderedAscending) {
+    if ([UIDevice.currentDevice.systemVersion compare:@"5.0"
+                                              options:NSNumericSearch] == NSOrderedAscending) {
         [self viewDidAppear:YES];
     }
 }
@@ -156,7 +156,8 @@
     [UIView commitAnimations];
 }
 
-// @ 0x54178 — remove the view; hand back to the root VC unless opened for a pack.
+// @ 0x54178 — remove the view; hand back to the root VC unless opened for a
+// pack.
 - (void)hideAnimationEnd {
     [self.view removeFromSuperview];
     if (_recommendPackId > 0) {
@@ -195,8 +196,9 @@
     [self hideAnimation];
 }
 
-// @ 0x53b10 — fade the dimming cover in and reveal the modal dialog (spinner running, abort button
-// disabled) with the given animation delegate. No-op (returns NO) while a fade is already running.
+// @ 0x53b10 — fade the dimming cover in and reveal the modal dialog (spinner
+// running, abort button disabled) with the given animation delegate. No-op
+// (returns NO) while a fade is already running.
 - (BOOL)showModalDialog:(id)delegate {
     if (m_IsModalDialogAnimation) {
         return NO;
@@ -217,15 +219,17 @@
     return YES;
 }
 
-// @ 0x53c88 — open animation finished: clear the busy flag and re-enable the abort button.
+// @ 0x53c88 — open animation finished: clear the busy flag and re-enable the
+// abort button.
 - (void)openDialogAnimStop:(NSString *)animationID
-                   finished:(NSNumber *)finished
-                    context:(void *)context {
+                  finished:(NSNumber *)finished
+                   context:(void *)context {
     m_IsModalDialogAnimation = NO;
     [m_ModalDialog.buttonAbort setEnabled:YES];
 }
 
-// @ 0x53cd8 — fade the dimming cover out; disables the abort button and drops the dialog delegate.
+// @ 0x53cd8 — fade the dimming cover out; disables the abort button and drops
+// the dialog delegate.
 - (BOOL)hideModalDialog {
     m_IsModalDialogAnimation = YES;
     [m_ModalDialog.buttonAbort setEnabled:NO];
@@ -240,10 +244,11 @@
     return YES;
 }
 
-// @ 0x53df0 — close animation finished: clear the busy flag, stop the spinner and hide the cover.
+// @ 0x53df0 — close animation finished: clear the busy flag, stop the spinner
+// and hide the cover.
 - (void)closeDialogAnimStop:(NSString *)animationID
-                    finished:(NSNumber *)finished
-                     context:(void *)context {
+                   finished:(NSNumber *)finished
+                    context:(void *)context {
     m_IsModalDialogAnimation = NO;
     [m_ModalDialog.indicatorView stopAnimating];
     m_CoverView.hidden = YES;
@@ -269,8 +274,8 @@
 // viewWillDisappear: @ 0x543bc — super-only override, omitted.
 // viewDidDisappear: @ 0x543e8 — super-only override, omitted.
 
-// @ 0x53708 — reset the app-wide tab-bar item title appearance installed in -init; the
-// nav-controller / dialog / cover ivars are released by ARC.
+// @ 0x53708 — reset the app-wide tab-bar item title appearance installed in
+// -init; the nav-controller / dialog / cover ivars are released by ARC.
 - (void)dealloc {
     [[UITabBarItem appearance] setTitleTextAttributes:nil forState:UIControlStateNormal];
 }

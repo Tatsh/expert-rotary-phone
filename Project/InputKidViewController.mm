@@ -2,21 +2,22 @@
 //  InputKidViewController.mm
 //  pop'n rhythmin
 //
-//  See InputKidViewController.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager singletons (system
-//  SE on decide/cancel, pad-vs-phone branch). The alert message strings are the exact
-//  Japanese literals recovered from the __cfstring table. The invite request is a
-//  POST of "uuid=<uuid>&player_id=<code>" to StoreUtil +invitedURL.
+//  See InputKidViewController.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin. Objective-C++ for the neEngine / neSceneManager
+//  singletons (system SE on decide/cancel, pad-vs-phone branch). The alert
+//  message strings are the exact Japanese literals recovered from the
+//  __cfstring table. The invite request is a POST of
+//  "uuid=<uuid>&player_id=<code>" to StoreUtil +invitedURL.
 //
 
 #import "InputKidViewController.h"
 
-#import <QuartzCore/QuartzCore.h>   // CALayer cornerRadius (spinner backdrop)
+#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius (spinner backdrop)
 
-#import "AppDelegate.h"          // +appDelegate / -uuId (device uuid for the request)
-#import "StoreUtil.h"            // +invitedURL, urlEncodeString()
-#import "UserSettingData.h"      // +playerId, +isInputInviteCode / +saveIsInputInviteCode:, tickets
-#import "neEngineBridge.h"       // neEngine::playSystemSe, neSceneManager::isPadDisplay
+#import "AppDelegate.h"     // +appDelegate / -uuId (device uuid for the request)
+#import "StoreUtil.h"       // +invitedURL, urlEncodeString()
+#import "UserSettingData.h" // +playerId, +isInputInviteCode / +saveIsInputInviteCode:, tickets
+#import "neEngineBridge.h"  // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 // Own privates (selectors wired up by init).
 @interface InputKidViewController ()
@@ -27,9 +28,9 @@
 
 @implementation InputKidViewController
 
-// @ 0xe7cec — build the code-entry screen. Two layouts: the entry form (code field +
-// decide button) when the code has not yet been redeemed, or a single "already used"
-// banner when it has.
+// @ 0xe7cec — build the code-entry screen. Two layouts: the entry form (code
+// field + decide button) when the code has not yet been redeemed, or a single
+// "already used" banner when it has.
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -45,8 +46,9 @@
         UIButton *backBtn = [[UIButton alloc]
             initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-        [backBtn addTarget:self action:@selector(touchedBackButton)
-          forControlEvents:UIControlEventTouchUpInside];
+        [backBtn addTarget:self
+                      action:@selector(touchedBackButton)
+            forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem =
             [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
@@ -56,8 +58,10 @@
             UIImage *decideImg = [UIImage imageNamed:@"vcmn_btn_deside"];
             UIButton *decideBtn = [[UIButton alloc] init];
             [decideBtn setBackgroundImage:decideImg forState:UIControlStateNormal];
-            decideBtn.frame = CGRectMake(184.0f, 166.0f, decideImg.size.width, decideImg.size.height);
-            [decideBtn addTarget:self action:@selector(touchedDecideButton:)
+            decideBtn.frame =
+                CGRectMake(184.0f, 166.0f, decideImg.size.width, decideImg.size.height);
+            [decideBtn addTarget:self
+                          action:@selector(touchedDecideButton:)
                 forControlEvents:UIControlEventTouchUpInside];
             [self.view addSubview:decideBtn];
 
@@ -71,7 +75,8 @@
             psView.frame = CGRectMake(26.0f, 77.0f, psImg.size.width, psImg.size.height);
             [self.view addSubview:psView];
 
-            _codeField = [[UITextField alloc] initWithFrame:CGRectMake(57.0f, 104.0f, 206.0f, 38.0f)];
+            _codeField =
+                [[UITextField alloc] initWithFrame:CGRectMake(57.0f, 104.0f, 206.0f, 38.0f)];
             _codeField.enabled = YES;
             _codeField.returnKeyType = UIReturnKeyDone;
             _codeField.delegate = self;
@@ -87,8 +92,10 @@
             // --- "already redeemed" banner (centred horizontally, y=50) ---
             UIImage *bannerImg = [UIImage imageNamed:@"invite_text_2"];
             UIImageView *bannerView = [[UIImageView alloc] initWithImage:bannerImg];
-            bannerView.frame = CGRectMake((frame.size.width - bannerImg.size.width) * 0.5f, 50.0f,
-                                          bannerImg.size.width, bannerImg.size.height);
+            bannerView.frame = CGRectMake((frame.size.width - bannerImg.size.width) * 0.5f,
+                                          50.0f,
+                                          bannerImg.size.width,
+                                          bannerImg.size.height);
             lastView = bannerView;
         }
         [self.view addSubview:lastView];
@@ -129,7 +136,8 @@
     return s.length < 8;
 }
 
-// @ 0xe85d8 — decide button: validate the entered code, then POST it (or show why not).
+// @ 0xe85d8 — decide button: validate the entered code, then POST it (or show
+// why not).
 - (void)touchedDecideButton:(id)sender {
     NSString *code = [_codeField.text uppercaseString];
     if (code.length == 0) {
@@ -140,11 +148,13 @@
     NSString *playerId = [UserSettingData playerId];
     CommonAlertView *alert;
     if (playerId == nil || playerId.length == 0) {
-        alert = [[CommonAlertView alloc] initWithTitle:@"招待コード"
-                                              message:@"プレーヤーネームの登録が完了していません。\n登録後に、再度入力して下さい。"
-                                             delegate:nil
-                                    cancelButtonTitle:nil
-                                    otherButtonTitles:@"OK"];
+        alert = [[CommonAlertView alloc]
+                initWithTitle:@"招待コード"
+                      message:@"プレーヤーネームの登録が完了していません。\n登録後"
+                              @"に、再度入力して下さい。"
+                     delegate:nil
+            cancelButtonTitle:nil
+            otherButtonTitles:@"OK"];
     } else if (![UserSettingData isInputInviteCode]) {
         if (![[playerId uppercaseString] isEqualToString:code]) {
             [self startInviteHttp:code];
@@ -152,16 +162,16 @@
             return;
         }
         alert = [[CommonAlertView alloc] initWithTitle:@"招待コード"
-                                              message:@"自分の招待コードです。"
-                                             delegate:nil
-                                    cancelButtonTitle:nil
-                                    otherButtonTitles:@"OK"];
+                                               message:@"自分の招待コードです。"
+                                              delegate:nil
+                                     cancelButtonTitle:nil
+                                     otherButtonTitles:@"OK"];
     } else {
         alert = [[CommonAlertView alloc] initWithTitle:@"招待コード"
-                                              message:@"招待コードは１回しか入力できません。"
-                                             delegate:nil
-                                    cancelButtonTitle:nil
-                                    otherButtonTitles:@"OK"];
+                                               message:@"招待コードは１回しか入力できません。"
+                                              delegate:nil
+                                     cancelButtonTitle:nil
+                                     otherButtonTitles:@"OK"];
     }
     [alert show];
 }
@@ -172,8 +182,9 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-// @ 0xe8840 — invite POST finished. An empty (non-JSON) body means success -> grant 5
-// tickets and mark the code redeemed; a JSON body carries an ErrorCode to report.
+// @ 0xe8840 — invite POST finished. An empty (non-JSON) body means success ->
+// grant 5 tickets and mark the code redeemed; a JSON body carries an ErrorCode
+// to report.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     BOOL success;
@@ -204,19 +215,19 @@
 
     if (success) {
         CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"招待コード"
-                                                               message:message
-                                                              delegate:self
-                                                     cancelButtonTitle:nil
-                                                     otherButtonTitles:@"OK"];
+                                                                message:message
+                                                               delegate:self
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
         [UserSettingData saveCharaTicket:[UserSettingData charaTicket] + 5];
         [UserSettingData saveIsInputInviteCode:YES];
     } else {
         CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"招待コード"
-                                                               message:message
-                                                              delegate:nil
-                                                     cancelButtonTitle:nil
-                                                     otherButtonTitles:@"OK"];
+                                                                message:message
+                                                               delegate:nil
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
     }
 }
@@ -225,15 +236,18 @@
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_indicator stopAnimating];
-    CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"招待コード"
-                                                           message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                                                          delegate:nil
-                                                 cancelButtonTitle:nil
-                                                 otherButtonTitles:@"OK"];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"招待コード"
+                                       message:@"通信に失敗しました。\n電波状態の"
+                                               @"良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
-// @ 0xe8b28 — dismissing the success alert (iPhone only) pops back to the invite top.
+// @ 0xe8b28 — dismissing the success alert (iPhone only) pops back to the
+// invite top.
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (neSceneManager::isPadDisplay()) {
         return;
@@ -241,7 +255,8 @@
     [self touchedBackButton];
 }
 
-// @ 0xe8b5c — start the invite HTTP POST ("uuid=<uuid>&player_id=<code>") and spin.
+// @ 0xe8b5c — start the invite HTTP POST ("uuid=<uuid>&player_id=<code>") and
+// spin.
 - (void)startInviteHttp:(NSString *)code {
     if (_downloader != nil) {
         return;

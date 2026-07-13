@@ -2,11 +2,11 @@
 //  CheckerDetail.h
 //  pop'n rhythmin
 //
-//  Music-checker score "detail" screen: a per-song graph plotting the venue top,
-//  venue mean and personal-best scores across the four arcade sheets (EX / Hyper /
-//  Normal / Easy). Buttons switch the active sheet; tapping the top-score plate
-//  toggles between showing the top score and the top holder's name.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  Music-checker score "detail" screen: a per-song graph plotting the venue
+//  top, venue mean and personal-best scores across the four arcade sheets (EX /
+//  Hyper / Normal / Easy). Buttons switch the active sheet; tapping the
+//  top-score plate toggles between showing the top score and the top holder's
+//  name. Reconstructed from Ghidra project rb420, program PopnRhythmin
 //  (initWithScoreData: @ 0xd752c).
 //
 

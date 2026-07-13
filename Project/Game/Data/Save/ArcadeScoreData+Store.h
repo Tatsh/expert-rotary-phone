@@ -3,7 +3,8 @@
 //  pop'n rhythmin
 //
 //  Fetch / insert / reset methods on the ArcadeScoreData entity (arcade-machine
-//  score mirror). Reconstructed from Ghidra project rb420, program PopnRhythmin.
+//  score mirror). Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin.
 //
 
 #import "ArcadeScoreData.h"
@@ -27,7 +28,8 @@
                            refId:(NSString *)refId
           inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// Insert a fresh (reset) record for musicId + refId and save.  Ghidra: @ 0xcf164
+// Insert a fresh (reset) record for musicId + refId and save.  Ghidra: @
+// 0xcf164
 + (ArcadeScoreData *)addRecordWithMusicId:(short)musicId
                                     refId:(NSString *)refId
                    inManagedObjectContext:(NSManagedObjectContext *)context;

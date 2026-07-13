@@ -18,32 +18,39 @@
 
 // Engine touch coordinates are 16.16 fixed point; the render/input manager
 // (neGraphics) scales them to pixels and records them for the play-judge loop.
-static inline int ToFixed(CGFloat v) { return (int)(v * 65536.0f); }
+static inline int ToFixed(CGFloat v) {
+    return (int)(v * 65536.0f);
+}
 
-// The most-recently-created view, published for GetInstance. The binary keeps a raw
-// (non-owning) pointer here: initWithFrame: stores self, dealloc clears it. @ 0x1882e4
+// The most-recently-created view, published for GetInstance. The binary keeps a
+// raw (non-owning) pointer here: initWithFrame: stores self, dealloc clears it.
+// @ 0x1882e4
 static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 
 @implementation neGLView {
     // The binary routes the framebuffer/renderbuffer binds through m_GLInterface
     // (neGLES_11); those virtuals wrap exactly these GL ES 1.1 / OES FBO calls,
     // issued directly here.
-    EAGLContext *m_GLContext;         // m_GLContext
-    GLuint m_DefaultFramebuffer;      // m_DefaultFramebuffer
-    GLuint m_ColorRenderbuffer;       // m_ColorRenderbuffer / m_RenderBufferID
-    int m_FrontBufferWidth;           // m_FrontBufferWidth
-    int m_FrontBufferHeight;          // m_FrontBufferHeight
+    EAGLContext *m_GLContext;    // m_GLContext
+    GLuint m_DefaultFramebuffer; // m_DefaultFramebuffer
+    GLuint m_ColorRenderbuffer;  // m_ColorRenderbuffer / m_RenderBufferID
+    int m_FrontBufferWidth;      // m_FrontBufferWidth
+    int m_FrontBufferHeight;     // m_FrontBufferHeight
 }
 
 // Ghidra shows -delegate/-setDelegate: as atomic accessors (DataMemoryBarrier
 // around a plain pointer store — no objc_storeWeak, so this is assign, not ARC
 // weak). Let the compiler emit them; the addresses are annotated here.
-@synthesize delegate = _delegate;  // -delegate @ 0x289d4 / -setDelegate: @ 0x289e8
+@synthesize delegate = _delegate; // -delegate @ 0x289d4 / -setDelegate: @ 0x289e8
 
 // @ 0x28524
-- (int)GetFrontBufferWidth { return m_FrontBufferWidth; }
+- (int)GetFrontBufferWidth {
+    return m_FrontBufferWidth;
+}
 // @ 0x28534
-- (int)GetFrontBufferHeight { return m_FrontBufferHeight; }
+- (int)GetFrontBufferHeight {
+    return m_FrontBufferHeight;
+}
 
 // GL ES views are backed by a CAEAGLLayer. @ 0x280e4
 + (Class)layerClass {
@@ -63,8 +70,10 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
     neGraphics &gfx = neGraphics::shared();
     for (UITouch *touch in touches) {
         CGPoint p = [touch locationInView:self];
-        gfx.touchBegan(ToFixed(p.x), ToFixed(p.y),
-                       ToFixed(CGRectGetWidth(frame)), ToFixed(CGRectGetHeight(frame)));
+        gfx.touchBegan(ToFixed(p.x),
+                       ToFixed(p.y),
+                       ToFixed(CGRectGetWidth(frame)),
+                       ToFixed(CGRectGetHeight(frame)));
     }
 }
 
@@ -117,7 +126,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
         self.backgroundColor = [UIColor clearColor];
         self.multipleTouchEnabled = YES;
         [self createFramebuffer];
-        g_pGLViewInstance = self;   // @ 0x28312 — publish for GetInstance.
+        g_pGLViewInstance = self; // @ 0x28312 — publish for GetInstance.
     }
     return self;
 }
@@ -130,14 +139,15 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
     glBindFramebufferOES(GL_FRAMEBUFFER_OES, m_DefaultFramebuffer);
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
     [m_GLContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer *)self.layer];
-    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES,
-                                 GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
+    glFramebufferRenderbufferOES(
+        GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
 }
 
 // @ 0x28334 — tear down the GL buffers and unbind the context. KEPT under ARC:
 // the framebuffer/renderbuffer names and the EAGLContext current-binding are GL
-// state, not object graph, so ARC will not free them. The original also released
-// m_GLContext (ARC handles that) and called [super dealloc] (never call it here).
+// state, not object graph, so ARC will not free them. The original also
+// released m_GLContext (ARC handles that) and called [super dealloc] (never
+// call it here).
 - (void)dealloc {
     if (m_DefaultFramebuffer) {
         glDeleteFramebuffersOES(1, &m_DefaultFramebuffer);
@@ -150,7 +160,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
     if ([EAGLContext currentContext] == m_GLContext) {
         [EAGLContext setCurrentContext:nil];
     }
-    g_pGLViewInstance = nil;   // @ 0x2841c
+    g_pGLViewInstance = nil; // @ 0x2841c
 }
 
 // @ 0x28544 — make the GL context current.
@@ -179,12 +189,14 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 - (void)layoutSubviews {
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
     [m_GLContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer *)self.layer];
-    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &m_FrontBufferWidth);
-    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &m_FrontBufferHeight);
+    glGetRenderbufferParameterivOES(
+        GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &m_FrontBufferWidth);
+    glGetRenderbufferParameterivOES(
+        GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &m_FrontBufferHeight);
     // Publish the live drawable metrics to the scene manager so the note/sprite
     // layout code places geometry against the current surface (points + scale).
-    neSceneManager::setScreenMetrics(CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds),
-                                     (float)self.contentScaleFactor);
+    neSceneManager::setScreenMetrics(
+        CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds), (float)self.contentScaleFactor);
     if ([self.delegate respondsToSelector:@selector(LayoutedGLView:)]) {
         [self.delegate LayoutedGLView:self];
     }

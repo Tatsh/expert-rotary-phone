@@ -2,9 +2,9 @@
 //  TaskFactory.h
 //  pop'n rhythmin
 //
-//  The boot-chain task constructors: the seams the launch/menu flow spawns tasks
-//  through. Each is an operator_new(<size>) + ctor + setPriority(3) in the binary.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
+//  The boot-chain task constructors: the seams the launch/menu flow spawns
+//  tasks through. Each is an operator_new(<size>) + ctor + setPriority(3) in
+//  the binary. Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
 #ifndef TASKFACTORY_H
@@ -19,9 +19,12 @@ C_TASK *MainTaskCreate();       // standard music-select
 C_TASK *PlayTaskCreate();       // note-play
 C_TASK *AcMainTaskCreate();     // arcade main
 C_TASK *TutorialTaskCreate();   // tutorial (FUN_0002db10)
-C_TASK *AcViewerTaskCreate();   // arcade-viewer note-play (AcViewerTask ctor FUN_000215a0)
-C_TASK *BootCreateNextTask();   // the title task the boot logo hands off to (FUN_0002b678)
-C_TASK *PlayResultCreateTask(); // note-play result screen (operator_new(0x3a0) + FUN_0003d5bc)
+C_TASK *AcViewerTaskCreate();   // arcade-viewer note-play (AcViewerTask ctor
+                                // FUN_000215a0)
+C_TASK *BootCreateNextTask();   // the title task the boot logo hands off to
+                                // (FUN_0002b678)
+C_TASK *PlayResultCreateTask(); // note-play result screen (operator_new(0x3a0)
+                                // + FUN_0003d5bc)
 
 #endif /* TASKFACTORY_H */
 

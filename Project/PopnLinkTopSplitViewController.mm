@@ -2,61 +2,63 @@
 //  PopnLinkTopSplitViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The iPad pop'n-link
-//  split hub. Objective-C++ (drives the C++ "ne" engine singletons for the link-enabled
-//  flag, SE and scene-root bridge).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The iPad
+//  pop'n-link split hub. Objective-C++ (drives the C++ "ne" engine singletons
+//  for the link-enabled flag, SE and scene-root bridge).
 //
 
 #import "PopnLinkTopSplitViewController.h"
-#import "PopnLinkTopViewController.h"       // left pane + PopnLinkTopViewControllerDelegate
-#import "CheckerCategoryViewController.h"   // score-checker section
-#import "MainViewController.h"              // scene root -PopnLinkEndCallBack
-#import "QuizMainViewController.h"          // quiz section
-#import "HowToViewCtrlPad.h"                // first-play how-to overlay
-#import "InputKIDViewCtrl.h"                // KONAMI-ID input controller (routed to while unlinked)
-#import "UserSettingData.h"                 // isPopnLinkSelected / saveIsPopnLinkSelected:
-#import "neEngineBridge.h"                  // neAppEventCenter::linkButtonsEnabled, neEngine::playSystemSe,
-                                            //   neSceneManager::rootViewController
+#import "CheckerCategoryViewController.h" // score-checker section
+#import "HowToViewCtrlPad.h"              // first-play how-to overlay
+#import "InputKIDViewCtrl.h"              // KONAMI-ID input controller (routed to while unlinked)
+#import "MainViewController.h"            // scene root -PopnLinkEndCallBack
+#import "PopnLinkTopViewController.h"     // left pane + PopnLinkTopViewControllerDelegate
+#import "QuizMainViewController.h"        // quiz section
+#import "UserSettingData.h"               // isPopnLinkSelected / saveIsPopnLinkSelected:
+#import "neEngineBridge.h" // neAppEventCenter::linkButtonsEnabled, neEngine::playSystemSe,
+                           //   neSceneManager::rootViewController
 
-@interface PopnLinkTopSplitViewController ()
-    <PopnLinkTopViewControllerDelegate, PopnLinkTopSplitViewControllerDelegate>
+@interface PopnLinkTopSplitViewController () <PopnLinkTopViewControllerDelegate,
+                                              PopnLinkTopSplitViewControllerDelegate>
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
 - (void)handleTapCoverView;
 @end
 
 @implementation PopnLinkTopSplitViewController {
-    BOOL _isAnimationing;                          // guards a transition against re-entry
-    PopnLinkTopViewController *_leftViewCtrl;      // left section-button column
-    UINavigationController *_rightViewCtrl;         // right detail pane (swapped by the section buttons)
-    UIImageView *_konamiIdArrowImageView;          // selection arrow
-    int _selectedIndex;                            // -1 uninitialised, 0 KONAMI-ID, 1 checker, 2 quiz
-    CGRect _konamiIdFrm;                           // right-pane frame per section
+    BOOL _isAnimationing;                     // guards a transition against re-entry
+    PopnLinkTopViewController *_leftViewCtrl; // left section-button column
+    UINavigationController *_rightViewCtrl;   // right detail pane (swapped by the section buttons)
+    UIImageView *_konamiIdArrowImageView;     // selection arrow
+    int _selectedIndex;                       // -1 uninitialised, 0 KONAMI-ID, 1 checker, 2 quiz
+    CGRect _konamiIdFrm;                      // right-pane frame per section
     CGRect _checkerFrm;
     CGRect _quizFrm;
-    CGRect _konamiIdArrowFrm;                      // arrow frame per section row
+    CGRect _konamiIdArrowFrm; // arrow frame per section row
     CGRect _checkerArrowFrm;
     CGRect _quizArrowFrm;
-    HowToViewCtrlPad *_howToView;                  // first-play how-to overlay
+    HowToViewCtrlPad *_howToView; // first-play how-to overlay
 }
 
-// .cxx_construct @ 0xe2c38 — compiler-emitted C++ ivar constructor; not hand-written.
+// .cxx_construct @ 0xe2c38 — compiler-emitted C++ ivar constructor; not
+// hand-written.
 
-// @ 0xe0b40 — build the dimmed backdrop (tap to close), the artwork panel, the left
-// section column (PopnLinkTopViewController), the right navigation pane, the selection
-// arrow (positioned per link state), and a top cover strip; then populate the initial
-// section (checker, which routes to the KONAMI-ID input while unlinked).
+// @ 0xe0b40 — build the dimmed backdrop (tap to close), the artwork panel, the
+// left section column (PopnLinkTopViewController), the right navigation pane,
+// the selection arrow (positioned per link state), and a top cover strip; then
+// populate the initial section (checker, which routes to the KONAMI-ID input
+// while unlinked).
 - (instancetype)init {
     if ((self = [super init])) {
         _konamiIdFrm = CGRectMake(385, 220, 320, 600);
-        _checkerFrm  = CGRectMake(385, 182, 320, 716);
-        _quizFrm     = CGRectMake(385, 250, 320, 530);
+        _checkerFrm = CGRectMake(385, 182, 320, 716);
+        _quizFrm = CGRectMake(385, 250, 320, 530);
 
         UIImage *arrow = [UIImage imageNamed:@"pl_konamiid_arrow"];
         _konamiIdArrowImageView = [[UIImageView alloc] initWithImage:arrow];
         _konamiIdArrowFrm = CGRectMake(365, 307, arrow.size.width, arrow.size.height);
-        _checkerArrowFrm  = CGRectMake(365, 452, arrow.size.width, arrow.size.height);
-        _quizArrowFrm     = CGRectMake(365, 592, arrow.size.width, arrow.size.height);
+        _checkerArrowFrm = CGRectMake(365, 452, arrow.size.width, arrow.size.height);
+        _quizArrowFrm = CGRectMake(365, 592, arrow.size.width, arrow.size.height);
 
         // Arrow starts on the KONAMI-ID row until the player has linked pop'n-link.
         neAppEventCenter::shared();
@@ -64,29 +66,33 @@
             neAppEventCenter::linkButtonsEnabled() ? _checkerArrowFrm : _konamiIdArrowFrm;
 
         // Dimmed, tappable backdrop.
-        UIView *cover = [[UIView alloc] initWithFrame:
-            CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+        UIView *cover = [[UIView alloc]
+            initWithFrame:CGRectMake(
+                              0, 0, self.view.frame.size.width, self.view.frame.size.height)];
         cover.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5f];
         cover.userInteractionEnabled = YES;
         [self.view addSubview:cover];
         [cover addGestureRecognizer:[[UITapGestureRecognizer alloc]
-            initWithTarget:self action:@selector(handleTapCoverView)]];
+                                        initWithTarget:self
+                                                action:@selector(handleTapCoverView)]];
 
         // Artwork panel holding the split view, centred on screen.
         UIImage *bgImg = [UIImage imageNamed:@"pl_bg"];
         UIImageView *bg = [[UIImageView alloc] initWithImage:bgImg];
         bg.userInteractionEnabled = YES;
         bg.frame = CGRectMake(0, 0, bgImg.size.width, bgImg.size.height);
-        bg.center = CGPointMake(self.view.frame.size.width * 0.5f,
-                                self.view.frame.size.height * 0.5f);
+        bg.center =
+            CGPointMake(self.view.frame.size.width * 0.5f, self.view.frame.size.height * 0.5f);
         [self.view addSubview:bg];
 
-        // Left section column (the pop'n-link top VC; its own view is embedded here).
+        // Left section column (the pop'n-link top VC; its own view is embedded
+        // here).
         _leftViewCtrl = [[PopnLinkTopViewController alloc] init];
         _leftViewCtrl.view.clipsToBounds = YES;
         _leftViewCtrl.view.frame = CGRectMake(_leftViewCtrl.view.frame.origin.x + 65,
                                               _leftViewCtrl.view.frame.origin.y + 100,
-                                              354, bgImg.size.height);
+                                              354,
+                                              bgImg.size.height);
         _leftViewCtrl.delegate = self;
         [bg addSubview:_leftViewCtrl.view];
 
@@ -99,19 +105,23 @@
         _rightViewCtrl.view.layer.borderColor =
             [UIColor colorWithRed:0 green:0.835f blue:0.679f alpha:1].CGColor;
         _rightViewCtrl.view.layer.borderWidth = 3;
-        _rightViewCtrl.view.backgroundColor =
-            [UIColor colorWithRed:0.953f green:0.953f blue:0.953f alpha:1];
+        _rightViewCtrl.view.backgroundColor = [UIColor colorWithRed:0.953f
+                                                              green:0.953f
+                                                               blue:0.953f
+                                                              alpha:1];
         _rightViewCtrl.view.layer.cornerRadius = 6;
         [bg addSubview:_rightViewCtrl.view];
 
         // Top cover strip (swallows taps over the nav-bar band).
-        UIView *topCover = [[UIView alloc] initWithFrame:
-            CGRectMake(0, 0, self.view.frame.size.width, 140)];
+        UIView *topCover =
+            [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 140)];
         [self.view addSubview:topCover];
         [topCover addGestureRecognizer:[[UITapGestureRecognizer alloc]
-            initWithTarget:self action:@selector(handleTapCoverView)]];
+                                           initWithTarget:self
+                                                   action:@selector(handleTapCoverView)]];
 
-        // Populate the initial section (checker; falls back to KONAMI-ID input while unlinked).
+        // Populate the initial section (checker; falls back to KONAMI-ID input
+        // while unlinked).
         _selectedIndex = -1;
         [self onScoreCheckerButtonTouched:nil];
         [bg addSubview:_konamiIdArrowImageView];
@@ -121,8 +131,8 @@
 
 #pragma mark - Lifecycle
 
-// @ 0xe1430 — detach the selection arrow on teardown (real work kept under ARC; the
-// _leftViewCtrl / _rightViewCtrl / _howToView releases are ARC-automatic).
+// @ 0xe1430 — detach the selection arrow on teardown (real work kept under ARC;
+// the _leftViewCtrl / _rightViewCtrl / _howToView releases are ARC-automatic).
 - (void)dealloc {
     [_konamiIdArrowImageView removeFromSuperview];
 }
@@ -132,8 +142,9 @@
 
 #pragma mark - Open/close animation
 
-// @ 0xe1538 — while unlinked, force the KONAMI-ID input onto the host nav stack (and show
-// the first-play how-to once), then fade the view + nav view in over 0.5s.
+// @ 0xe1538 — while unlinked, force the KONAMI-ID input onto the host nav stack
+// (and show the first-play how-to once), then fade the view + nav view in over
+// 0.5s.
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -145,7 +156,8 @@
         InputKIDViewCtrl *inKid = [[InputKIDViewCtrl alloc] init];
         [self.navigationController pushViewController:inKid animated:NO];
         if (![UserSettingData isPopnLinkSelected]) {
-            _howToView = [[HowToViewCtrlPad alloc] initWithFileNameArray:@[@"firstplay_popnlink"]];
+            _howToView =
+                [[HowToViewCtrlPad alloc] initWithFileNameArray:@[ @"firstplay_popnlink" ]];
             [self.view addSubview:_howToView.view];
             [self.view bringSubviewToFront:_howToView.view];
             [_howToView startOpenAnimation];
@@ -173,8 +185,8 @@
     _isAnimationing = NO;
 }
 
-// @ 0xe1858 — fade the view + nav view out over 0.3s. (The binary re-clears the guard
-// here rather than setting it; reproduced faithfully.)
+// @ 0xe1858 — fade the view + nav view out over 0.3s. (The binary re-clears the
+// guard here rather than setting it; reproduced faithfully.)
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -199,9 +211,9 @@
 
 #pragma mark - Section handlers
 
-// @ 0xe19c0 — switch the right pane to the KONAMI-ID input section. Ghidra flip block
-// helper showKonamiIdView @ 0xe1d18 (modeled as a single flip whose completion clears the
-// guard).
+// @ 0xe19c0 — switch the right pane to the KONAMI-ID input section. Ghidra flip
+// block helper showKonamiIdView @ 0xe1d18 (modeled as a single flip whose
+// completion clears the guard).
 - (void)onInKidButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -220,42 +232,47 @@
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
         _isAnimationing = YES;
-        // Two-stage flip: collapse the pane's width to 0, swap its top controller, then
-        // expand it back to the KONAMI-ID frame. The selection arrow slides concurrently.
+        // Two-stage flip: collapse the pane's width to 0, swap its top controller,
+        // then expand it back to the KONAMI-ID frame. The selection arrow slides
+        // concurrently.
         [UIView transitionWithView:_rightViewCtrl.view
-                          duration:0.3   // DAT_000e1c78 (0.3)
-                           options:UIViewAnimationOptionCurveEaseIn   // 0x10000
-                        animations:^{   // @ 0xe1c88 — collapse rightViewCtrl.view width to 0
-            CGRect f = _rightViewCtrl.view.frame;
-            f.size.width = 0.0f;
-            _rightViewCtrl.view.frame = f;
-        } completion:^(BOOL finished) {
-            // showKonamiIdView @ 0xe1d18 — set the navbar art, swap in the KID input, then
-            // expand the pane to its section frame.
-            [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                               forBarMetrics:UIBarMetricsDefault];
-            [_rightViewCtrl popToRootViewControllerAnimated:NO];
-            [_rightViewCtrl pushViewController:vc animated:NO];
-            [UIView transitionWithView:_rightViewCtrl.view
-                              duration:0.3   // DAT_000e1e60 (0.3)
-                               options:UIViewAnimationOptionCurveEaseIn
-                            animations:^{   // @ 0xe1e68 — expand to _konamiIdFrm
-                _rightViewCtrl.view.frame = _konamiIdFrm;
-            } completion:^(BOOL done) {
-                self->_isAnimationing = NO;
+            duration:0.3                             // DAT_000e1c78 (0.3)
+            options:UIViewAnimationOptionCurveEaseIn // 0x10000
+            animations:^{ // @ 0xe1c88 — collapse rightViewCtrl.view width to 0
+              CGRect f = _rightViewCtrl.view.frame;
+              f.size.width = 0.0f;
+              _rightViewCtrl.view.frame = f;
+            }
+            completion:^(BOOL finished) {
+              // showKonamiIdView @ 0xe1d18 — set the navbar art, swap in the KID
+              // input, then expand the pane to its section frame.
+              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
+                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl popToRootViewControllerAnimated:NO];
+              [_rightViewCtrl pushViewController:vc animated:NO];
+              [UIView transitionWithView:_rightViewCtrl.view
+                  duration:0.3 // DAT_000e1e60 (0.3)
+                  options:UIViewAnimationOptionCurveEaseIn
+                  animations:^{ // @ 0xe1e68 — expand to _konamiIdFrm
+                    _rightViewCtrl.view.frame = _konamiIdFrm;
+                  }
+                  completion:^(BOOL done) {
+                    self->_isAnimationing = NO;
+                  }];
             }];
-        }];
-        // @ 0xe1f48 — slide the selection arrow to the KONAMI-ID row (runs concurrently).
-        [UIView animateWithDuration:0.6   // DAT_000e1c80 (0.6)
+        // @ 0xe1f48 — slide the selection arrow to the KONAMI-ID row (runs
+        // concurrently).
+        [UIView animateWithDuration:0.6 // DAT_000e1c80 (0.6)
                          animations:^{
-            _konamiIdArrowImageView.frame = _konamiIdArrowFrm;
-        }];
+                           _konamiIdArrowImageView.frame = _konamiIdArrowFrm;
+                         }];
     }
     _selectedIndex = 0;
 }
 
-// @ 0xe1fa8 — switch the right pane to the score-checker section, or route to the
-// KONAMI-ID input while unlinked. Ghidra flip block helper showCheckerView @ 0xe2320.
+// @ 0xe1fa8 — switch the right pane to the score-checker section, or route to
+// the KONAMI-ID input while unlinked. Ghidra flip block helper showCheckerView
+// @ 0xe2320.
 - (void)onScoreCheckerButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -280,38 +297,42 @@
     } else {
         _isAnimationing = YES;
         [UIView transitionWithView:_rightViewCtrl.view
-                          duration:0.3
-                           options:UIViewAnimationOptionCurveEaseIn   // 0x10000
-                        animations:^{   // @ 0xe2290 — collapse rightViewCtrl.view width to 0
-            CGRect f = _rightViewCtrl.view.frame;
-            f.size.width = 0.0f;
-            _rightViewCtrl.view.frame = f;
-        } completion:^(BOOL finished) {
-            // showCheckerView @ 0xe2320 — set the navbar art, swap in the checker, then expand.
-            [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-                                               forBarMetrics:UIBarMetricsDefault];
-            [_rightViewCtrl popToRootViewControllerAnimated:NO];
-            [_rightViewCtrl pushViewController:vc animated:NO];
-            [UIView transitionWithView:_rightViewCtrl.view
-                              duration:0.3
-                               options:UIViewAnimationOptionCurveEaseIn
-                            animations:^{   // @ 0xe2470 — expand to _checkerFrm
-                _rightViewCtrl.view.frame = _checkerFrm;
-            } completion:^(BOOL done) {
-                self->_isAnimationing = NO;
+            duration:0.3
+            options:UIViewAnimationOptionCurveEaseIn // 0x10000
+            animations:^{ // @ 0xe2290 — collapse rightViewCtrl.view width to 0
+              CGRect f = _rightViewCtrl.view.frame;
+              f.size.width = 0.0f;
+              _rightViewCtrl.view.frame = f;
+            }
+            completion:^(BOOL finished) {
+              // showCheckerView @ 0xe2320 — set the navbar art, swap in the
+              // checker, then expand.
+              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
+                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl popToRootViewControllerAnimated:NO];
+              [_rightViewCtrl pushViewController:vc animated:NO];
+              [UIView transitionWithView:_rightViewCtrl.view
+                  duration:0.3
+                  options:UIViewAnimationOptionCurveEaseIn
+                  animations:^{ // @ 0xe2470 — expand to _checkerFrm
+                    _rightViewCtrl.view.frame = _checkerFrm;
+                  }
+                  completion:^(BOOL done) {
+                    self->_isAnimationing = NO;
+                  }];
             }];
-        }];
-        // @ 0xe2550 — slide the selection arrow to the checker row (runs concurrently).
+        // @ 0xe2550 — slide the selection arrow to the checker row (runs
+        // concurrently).
         [UIView animateWithDuration:0.6
                          animations:^{
-            _konamiIdArrowImageView.frame = _checkerArrowFrm;
-        }];
+                           _konamiIdArrowImageView.frame = _checkerArrowFrm;
+                         }];
     }
     _selectedIndex = 1;
 }
 
-// @ 0xe25b0 — switch the right pane to the quiz section, or route to the KONAMI-ID input
-// while unlinked. Ghidra flip block helper @ 0xe2928.
+// @ 0xe25b0 — switch the right pane to the quiz section, or route to the
+// KONAMI-ID input while unlinked. Ghidra flip block helper @ 0xe2928.
 - (void)onQuizButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -336,43 +357,50 @@
     } else {
         _isAnimationing = YES;
         [UIView transitionWithView:_rightViewCtrl.view
-                          duration:0.3
-                           options:UIViewAnimationOptionCurveEaseIn   // 0x10000
-                        animations:^{   // @ 0xe2898 — collapse rightViewCtrl.view width to 10
-            CGRect f = _rightViewCtrl.view.frame;
-            f.size.width = 10.0f;   // 0x41200000
-            _rightViewCtrl.view.frame = f;
-        } completion:^(BOOL finished) {
-            // showQuizView @ 0xe2928 — set the navbar art, swap in the quiz, then expand.
-            [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_konamiid_navbar"]
-                                               forBarMetrics:UIBarMetricsDefault];
-            [_rightViewCtrl popToRootViewControllerAnimated:NO];
-            [_rightViewCtrl pushViewController:vc animated:NO];
-            [UIView transitionWithView:_rightViewCtrl.view
-                              duration:0.3
-                               options:UIViewAnimationOptionCurveEaseIn
-                            animations:^{   // @ 0xe2a78 — expand to _quizFrm
-                _rightViewCtrl.view.frame = _quizFrm;
-            } completion:^(BOOL done) {
-                self->_isAnimationing = NO;
+            duration:0.3
+            options:UIViewAnimationOptionCurveEaseIn // 0x10000
+            animations:^{ // @ 0xe2898 — collapse rightViewCtrl.view width to 10
+              CGRect f = _rightViewCtrl.view.frame;
+              f.size.width = 10.0f; // 0x41200000
+              _rightViewCtrl.view.frame = f;
+            }
+            completion:^(BOOL finished) {
+              // showQuizView @ 0xe2928 — set the navbar art, swap in the quiz, then
+              // expand.
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImage:[UIImage imageNamed:@"pl_konamiid_navbar"]
+                       forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl popToRootViewControllerAnimated:NO];
+              [_rightViewCtrl pushViewController:vc animated:NO];
+              [UIView transitionWithView:_rightViewCtrl.view
+                  duration:0.3
+                  options:UIViewAnimationOptionCurveEaseIn
+                  animations:^{ // @ 0xe2a78 — expand to _quizFrm
+                    _rightViewCtrl.view.frame = _quizFrm;
+                  }
+                  completion:^(BOOL done) {
+                    self->_isAnimationing = NO;
+                  }];
             }];
-        }];
-        // @ 0xe2b58 — slide the selection arrow to the quiz row (runs concurrently).
+        // @ 0xe2b58 — slide the selection arrow to the quiz row (runs
+        // concurrently).
         [UIView animateWithDuration:0.6
                          animations:^{
-            _konamiIdArrowImageView.frame = _quizArrowFrm;
-        }];
+                           _konamiIdArrowImageView.frame = _quizArrowFrm;
+                         }];
     }
     _selectedIndex = 2;
 }
 
-// @ 0xe2bb8 — rebuild the left column's inputs and re-evaluate its button-enabled state.
+// @ 0xe2bb8 — rebuild the left column's inputs and re-evaluate its
+// button-enabled state.
 - (void)reloadLeftView {
     [_leftViewCtrl reloadInputViews];
     [_leftViewCtrl updateButtonEnable];
 }
 
-// @ 0xe2bf4 — a backdrop / top-cover tap: play the cancel SE and fade the panel out.
+// @ 0xe2bf4 — a backdrop / top-cover tap: play the cancel SE and fade the panel
+// out.
 - (void)handleTapCoverView {
     if (_isAnimationing) {
         return;

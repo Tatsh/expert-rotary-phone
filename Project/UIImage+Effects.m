@@ -2,10 +2,11 @@
 //  UIImage+Effects.m
 //  pop'n rhythmin
 //
-//  See UIImage+Effects.h. Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//  Float words decoded from the decompile: 0xbf800000 = -1.0, 0x3f800000 = 1.0.
-//  ARC: the CGImage/CGContext handles are C objects and are released with the CG*Release
-//  C calls (not ARC-managed); the returned UIImage is ARC-owned.
+//  See UIImage+Effects.h. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin. Float words decoded from the decompile: 0xbf800000 = -1.0,
+//  0x3f800000 = 1.0. ARC: the CGImage/CGContext handles are C objects and are
+//  released with the CG*Release C calls (not ARC-managed); the returned UIImage
+//  is ARC-owned.
 //
 
 #import "UIImage+Effects.h"
@@ -23,7 +24,7 @@
     // The binary applies the flip when the argument is *false* (param_3 == 0).
     if (!flip) {
         CGContextTranslateCTM(ctx, size.width, size.height);
-        CGContextScaleCTM(ctx, -1.0f, -1.0f);   // 0xbf800000, 0xbf800000
+        CGContextScaleCTM(ctx, -1.0f, -1.0f); // 0xbf800000, 0xbf800000
     }
 
     CGContextDrawImage(ctx, CGRectMake(0, 0, size.width, size.height), cg);
@@ -47,8 +48,8 @@
     CGColorSpaceRef space = CGImageGetColorSpace(cg);
     CGBitmapInfo bitmapInfo = CGImageGetBitmapInfo(cg);
 
-    CGContextRef ctx = CGBitmapContextCreate(NULL, width, height, bitsPerComponent,
-                                             bytesPerRow, space, bitmapInfo);
+    CGContextRef ctx = CGBitmapContextCreate(
+        NULL, width, height, bitsPerComponent, bytesPerRow, space, bitmapInfo);
     if (ctx == NULL) {
         return nil;
     }
@@ -66,9 +67,9 @@
         unsigned char *row = data + y * bytesPerRow;
         for (size_t x = 0; x < width; x++) {
             unsigned char *px = row + x * 4;
-            px[0] = px[0] >> 1;   // R
-            px[1] = px[1] >> 1;   // G
-            px[2] = px[2] >> 1;   // B
+            px[0] = px[0] >> 1; // R
+            px[1] = px[1] >> 1; // G
+            px[2] = px[2] >> 1; // B
         }
     }
 
@@ -95,12 +96,11 @@
     CGAffineTransform flip = CGAffineTransformScale(CGAffineTransformIdentity, 1.0f, -1.0f);
     CGContextConcatCTM(ctx, flip);
 
-    // Draw the whole image shifted by -rect.origin so `rect` lands at the context origin.
-    // (The exact CTM translation is partially obscured in the decompile; modeled by the
-    // -origin offset on the draw rect.)  best-effort
-    CGContextDrawImage(ctx,
-                       CGRectMake(-rect.origin.x, -rect.origin.y, self.size.width, self.size.height),
-                       cg);
+    // Draw the whole image shifted by -rect.origin so `rect` lands at the context
+    // origin. (The exact CTM translation is partially obscured in the decompile;
+    // modeled by the -origin offset on the draw rect.)  best-effort
+    CGContextDrawImage(
+        ctx, CGRectMake(-rect.origin.x, -rect.origin.y, self.size.width, self.size.height), cg);
 
     UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();

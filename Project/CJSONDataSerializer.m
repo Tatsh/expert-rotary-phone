@@ -8,7 +8,8 @@
 #import "CJSONDataSerializer.h"
 #import "CSerializedJSONData.h"
 
-// Cached constant JSON tokens (g_pJsonNullData / g_pJsonTrueData / g_pJsonFalseData).
+// Cached constant JSON tokens (g_pJsonNullData / g_pJsonTrueData /
+// g_pJsonFalseData).
 static NSData *g_pJsonNullData = nil;
 static NSData *g_pJsonTrueData = nil;
 static NSData *g_pJsonFalseData = nil;
@@ -24,7 +25,8 @@ static NSData *g_pJsonFalseData = nil;
     }
 }
 
-// +[CJSONDataSerializer serializer]  @ 0x66dc8 — autoreleased convenience instance.
+// +[CJSONDataSerializer serializer]  @ 0x66dc8 — autoreleased convenience
+// instance.
 + (CJSONDataSerializer *)serializer {
     return [[self alloc] init];
 }
@@ -43,17 +45,18 @@ static NSData *g_pJsonFalseData = nil;
     } else if ([inObject isKindOfClass:[NSDictionary class]]) {
         theResult = [self serializeDictionary:inObject];
     } else if ([inObject isKindOfClass:[NSData class]]) {
-        NSString *theString = [[NSString alloc] initWithData:inObject encoding:NSUTF8StringEncoding];
+        NSString *theString = [[NSString alloc] initWithData:inObject
+                                                    encoding:NSUTF8StringEncoding];
         theResult = [self serializeString:theString];
     } else if ([inObject isKindOfClass:[CSerializedJSONData class]]) {
         theResult = [inObject data];
     } else {
-        [NSException raise:NSGenericException
-                    format:@"Cannot serialize data of type '%@'", NSStringFromClass([inObject class])];
+        [NSException
+             raise:NSGenericException
+            format:@"Cannot serialize data of type '%@'", NSStringFromClass([inObject class])];
     }
     if (theResult == NULL) {
-        [NSException raise:NSGenericException
-                    format:@"Could not serialize object '%@'", inObject];
+        [NSException raise:NSGenericException format:@"Could not serialize object '%@'", inObject];
     }
     return theResult;
 }
@@ -82,22 +85,38 @@ static NSData *g_pJsonFalseData = nil;
 // @ 0x670cc
 - (NSData *)serializeString:(NSString *)inString {
     NSMutableString *theString = [inString mutableCopy];
-    [theString replaceOccurrencesOfString:@"\\" withString:@"\\\\"
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"\"" withString:@"\\\""
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"/" withString:@"\\/"
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"\b" withString:@"\\b"
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"\f" withString:@"\\f"
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"\n" withString:@"\\n"
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"\r" withString:@"\\r"
-                                  options:0 range:NSMakeRange(0, [theString length])];
-    [theString replaceOccurrencesOfString:@"\t" withString:@"\\t"
-                                  options:0 range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\\"
+                               withString:@"\\\\"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\""
+                               withString:@"\\\""
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"/"
+                               withString:@"\\/"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\b"
+                               withString:@"\\b"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\f"
+                               withString:@"\\f"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\n"
+                               withString:@"\\n"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\r"
+                               withString:@"\\r"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
+    [theString replaceOccurrencesOfString:@"\t"
+                               withString:@"\\t"
+                                  options:0
+                                    range:NSMakeRange(0, [theString length])];
     NSString *theQuotedString = [NSString stringWithFormat:@"\"%@\"", theString];
     return [theQuotedString dataUsingEncoding:NSUTF8StringEncoding];
 }

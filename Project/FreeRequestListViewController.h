@@ -2,21 +2,24 @@
 //  FreeRequestListViewController.h
 //  pop'n rhythmin
 //
-//  The "free request" recommended-friend list. A grouped-style UITableViewController showing
-//  a header plate ("fpl_text"), a spinning activity indicator over a dimmed dummy overlay while
-//  the recommend-friend list downloads, and one FreeRequestListCell per returned player. Tapping
-//  a row raises a FreeRequestDetail overlay (the friend-request confirm screen). Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xe5430 and 13 more methods).
-//  Built in FreeRequestListViewController.mm (Objective-C++: drives the C++ neSceneManager /
-//  neEngine singletons).
+//  The "free request" recommended-friend list. A grouped-style
+//  UITableViewController showing a header plate ("fpl_text"), a spinning
+//  activity indicator over a dimmed dummy overlay while the recommend-friend
+//  list downloads, and one FreeRequestListCell per returned player. Tapping a
+//  row raises a FreeRequestDetail overlay (the friend-request confirm screen).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  (initWithStyle: @ 0xe5430 and 13 more methods). Built in
+//  FreeRequestListViewController.mm (Objective-C++: drives the C++
+//  neSceneManager / neEngine singletons).
 //
 
 #import <UIKit/UIKit.h>
 
 @interface FreeRequestListViewController : UITableViewController
 
-// Grouped-style table: a "fpl_text" header plate, a dimmed dummy overlay carrying a centred
-// activity indicator, and a custom back button in the nav item. Ghidra: @ 0xe5430.
+// Grouped-style table: a "fpl_text" header plate, a dimmed dummy overlay
+// carrying a centred activity indicator, and a custom back button in the nav
+// item. Ghidra: @ 0xe5430.
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 @end

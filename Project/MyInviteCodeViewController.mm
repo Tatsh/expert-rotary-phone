@@ -2,14 +2,15 @@
 //  MyInviteCodeViewController.mm
 //  pop'n rhythmin
 //
-//  See MyInviteCodeViewController.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the neEngine::playSystemSe bridge (cancel SE on back).
+//  See MyInviteCodeViewController.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin. Objective-C++ for the neEngine::playSystemSe bridge
+//  (cancel SE on back).
 //
 
 #import "MyInviteCodeViewController.h"
 
-#import "neEngineBridge.h"     // neEngine::playSystemSe (cancel SE)
-#import "UserSettingData.h"    // +playerId (the local invite code)
+#import "UserSettingData.h" // +playerId (the local invite code)
+#import "neEngineBridge.h"  // neEngine::playSystemSe (cancel SE)
 
 @implementation MyInviteCodeViewController
 
@@ -29,16 +30,19 @@
         UIButton *backBtn = [[UIButton alloc]
             initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-        [backBtn addTarget:self action:@selector(touchedBackButton)
-          forControlEvents:UIControlEventTouchUpInside];
+        [backBtn addTarget:self
+                      action:@selector(touchedBackButton)
+            forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem =
             [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
         // "invite" title image (centered horizontally, y=25).
         UIImage *inviteImg = [UIImage imageNamed:@"invite_text_1"];
         UIImageView *inviteView = [[UIImageView alloc] initWithImage:inviteImg];
-        inviteView.frame = CGRectMake((frame.size.width - inviteImg.size.width) * 0.5f, 25.0f,
-                                      inviteImg.size.width, inviteImg.size.height);
+        inviteView.frame = CGRectMake((frame.size.width - inviteImg.size.width) * 0.5f,
+                                      25.0f,
+                                      inviteImg.size.width,
+                                      inviteImg.size.height);
         [self.view addSubview:inviteView];
 
         // "player" title image (centered horizontally, y=100).
@@ -48,8 +52,8 @@
         playerView.frame = CGRectMake(plateX, 100.0f, playerImg.size.width, playerImg.size.height);
         [self.view addSubview:playerView];
 
-        // Player id, drawn inside the patterned ID-area plate (same x / width as the "player"
-        // image), black text, centered (y=125, height=33).
+        // Player id, drawn inside the patterned ID-area plate (same x / width as
+        // the "player" image), black text, centered (y=125, height=33).
         UILabel *idLabel = [[UILabel alloc] init];
         idLabel.frame = CGRectMake(plateX, 125.0f, playerImg.size.width, 33.0f);
         idLabel.textAlignment = NSTextAlignmentCenter;
@@ -74,7 +78,8 @@
 
 // @ 0xe91ec — back button: play the cancel SE and pop.
 - (void)touchedBackButton {
-    // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) — cancel SE.
+    // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
+    // cancel SE.
     neEngine::playSystemSe(2);
     [self.navigationController popViewControllerAnimated:YES];
 }

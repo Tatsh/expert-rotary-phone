@@ -2,10 +2,10 @@
 //  ViewUtility.h
 //  pop'n rhythmin
 //
-//  A stateless NSObject-derived helper. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin. The instance class_ro (@ 0x1477fc) has instanceStart 4,
-//  instanceSize 4 (just the isa, an NSObject subclass), NULL ivars, and a NULL
-//  instance method_list — so there are ZERO instance methods.
+//  A stateless NSObject-derived helper. Reconstructed from Ghidra project
+//  rb420, program PopnRhythmin. The instance class_ro (@ 0x1477fc) has
+//  instanceStart 4, instanceSize 4 (just the isa, an NSObject subclass), NULL
+//  ivars, and a NULL instance method_list — so there are ZERO instance methods.
 //
 //  However the METACLASS class_ro (@ 0x1477d4) carries a baseMethods list
 //  (@ 0x1477c0, count 1), i.e. the class exposes one CLASS method:
@@ -17,8 +17,8 @@
 
 @interface ViewUtility : NSObject
 
-// @ 0x64f2c — build the shared rounded gradient "banner" background view sized to
-// `frame`, with a 3pt-inset inner tiled-pattern panel added as a subview.
+// @ 0x64f2c — build the shared rounded gradient "banner" background view sized
+// to `frame`, with a 3pt-inset inner tiled-pattern panel added as a subview.
 + (UIView *)getCommonBannerBg:(CGRect)frame;
 
 @end

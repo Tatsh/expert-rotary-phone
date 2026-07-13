@@ -16,42 +16,42 @@
 //  NSNumber * type otherwise erases.
 //
 
-#import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import <Foundation/Foundation.h>
 
 @interface ScoreData : NSManagedObject
 
-@property (nonatomic, retain) NSNumber *musicId;      // Integer32
+@property(nonatomic, retain) NSNumber *musicId; // Integer32
 
-@property (nonatomic, retain) NSNumber *scoreN;       // Integer32
-@property (nonatomic, retain) NSNumber *scoreH;       // Integer32
-@property (nonatomic, retain) NSNumber *scoreEx;      // Integer32
+@property(nonatomic, retain) NSNumber *scoreN;  // Integer32
+@property(nonatomic, retain) NSNumber *scoreH;  // Integer32
+@property(nonatomic, retain) NSNumber *scoreEx; // Integer32
 
-@property (nonatomic, retain) NSNumber *rankN;        // Integer16
-@property (nonatomic, retain) NSNumber *rankH;        // Integer16
-@property (nonatomic, retain) NSNumber *rankEx;       // Integer16
+@property(nonatomic, retain) NSNumber *rankN;  // Integer16
+@property(nonatomic, retain) NSNumber *rankH;  // Integer16
+@property(nonatomic, retain) NSNumber *rankEx; // Integer16
 
-@property (nonatomic, retain) NSNumber *fullComboN;   // Boolean
-@property (nonatomic, retain) NSNumber *fullComboH;   // Boolean
-@property (nonatomic, retain) NSNumber *fullComboEx;  // Boolean
+@property(nonatomic, retain) NSNumber *fullComboN;  // Boolean
+@property(nonatomic, retain) NSNumber *fullComboH;  // Boolean
+@property(nonatomic, retain) NSNumber *fullComboEx; // Boolean
 
-@property (nonatomic, retain) NSNumber *perfectN;     // Boolean
-@property (nonatomic, retain) NSNumber *perfectH;     // Boolean
-@property (nonatomic, retain) NSNumber *perfectEx;    // Boolean
+@property(nonatomic, retain) NSNumber *perfectN;  // Boolean
+@property(nonatomic, retain) NSNumber *perfectH;  // Boolean
+@property(nonatomic, retain) NSNumber *perfectEx; // Boolean
 
-@property (nonatomic, retain) NSNumber *playCntN;     // Integer64
-@property (nonatomic, retain) NSNumber *playCntH;     // Integer64
-@property (nonatomic, retain) NSNumber *playCntEx;    // Integer64
+@property(nonatomic, retain) NSNumber *playCntN;  // Integer64
+@property(nonatomic, retain) NSNumber *playCntH;  // Integer64
+@property(nonatomic, retain) NSNumber *playCntEx; // Integer64
 
-@property (nonatomic, retain) NSDate *lastPlayDate;
-@property (nonatomic, retain) NSData *chksco;
+@property(nonatomic, retain) NSDate *lastPlayDate;
+@property(nonatomic, retain) NSData *chksco;
 
-
-// Delete every persisted ScoreData record (device-change / initForConvert reset).
+// Delete every persisted ScoreData record (device-change / initForConvert
+// reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
-
-// Fetch every persisted ScoreData row (device-change export). Ghidra: getAllScoreData:.
+// Fetch every persisted ScoreData row (device-change export). Ghidra:
+// getAllScoreData:.
 + (NSArray *)getAllScoreData:(NSManagedObjectContext *)context;
 
 @end

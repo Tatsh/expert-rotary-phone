@@ -5,7 +5,7 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
-#import "UnZipArchive.h"   // ZipArchive library
+#import "UnZipArchive.h" // ZipArchive library
 
 #import "AcMusicData.h"
 #import "BFCodec.h"
@@ -15,35 +15,43 @@
 // The .orb is a ZIP; encrypted payload lives in its "info" entry (Ghidra:
 // entry-name string @ 0x137a78). Same key/scheme as MusicData.
 static NSString *const kOrbInfoEntry = @"info";
-static const char kOrbKeyObfuscated[25] = {
-    0x50, 0x6e, 0x6e, 0x6b, 0x1c, 0x4a, 0x6c, 0x5b, 0x61, 0x6b, 0x16, 0x43, 0x63,
-    0x67, 0x57, 0x1f, 0x10, 0x67, 0x58, 0x5f, 0x1d, 0x1e, 0x1a, 0x19, 0x16
-};
+static const char kOrbKeyObfuscated[25] = {0x50, 0x6e, 0x6e, 0x6b, 0x1c, 0x4a, 0x6c, 0x5b, 0x61,
+                                           0x6b, 0x16, 0x43, 0x63, 0x67, 0x57, 0x1f, 0x10, 0x67,
+                                           0x58, 0x5f, 0x1d, 0x1e, 0x1a, 0x19, 0x16};
 
 // The ten gojuon rows as katakana membership sets and their hiragana labels
 // (Ghidra: DAT_00131d64 / PTR_cf_B0_00131d8c — the same constant strings the
 // standard-mode MusicData yomi index uses).
 static NSString *const kGyoRows[10] = {
-    @"ァアィイゥウェエォオ",              // a-row
-    @"カガキギクグケゲコゴ",              // ka-row
-    @"サザシジスズセゼソゾ",              // sa-row
-    @"タダチヂッツヅテデトド",            // ta-row (incl. small tsu)
-    @"ナニヌネノ",                        // na-row
-    @"ハバパヒビピフブプヘベペホボポ",    // ha-row (dakuten + handakuten)
-    @"マミムメモ",                        // ma-row
-    @"ャヤュユョヨ",                      // ya-row (incl. small)
-    @"ラリルレロ",                        // ra-row
-    @"ヮワヰヱヲンヴヵヶ",                // wa-row / other
+    @"ァアィイゥウェエォオ",           // a-row
+    @"カガキギクグケゲコゴ",           // ka-row
+    @"サザシジスズセゼソゾ",           // sa-row
+    @"タダチヂッツヅテデトド",         // ta-row (incl. small tsu)
+    @"ナニヌネノ",                     // na-row
+    @"ハバパヒビピフブプヘベペホボポ", // ha-row (dakuten + handakuten)
+    @"マミムメモ",                     // ma-row
+    @"ャヤュユョヨ",                   // ya-row (incl. small)
+    @"ラリルレロ",                     // ra-row
+    @"ヮワヰヱヲンヴヵヶ",             // wa-row / other
 };
 
 static NSString *const kGyoLabels[10] = {
-    @"あ", @"か", @"さ", @"た", @"な", @"は", @"ま", @"や", @"ら", @"わ",
+    @"あ",
+    @"か",
+    @"さ",
+    @"た",
+    @"な",
+    @"は",
+    @"ま",
+    @"や",
+    @"ら",
+    @"わ",
 };
 
 @implementation AcMusicData
 
-// @ 0x65bbc — map a reading's first character to its gojuon row 0..9 (9 = other,
-// -1 for nil/empty), scanning each row's katakana membership set.
+// @ 0x65bbc — map a reading's first character to its gojuon row 0..9 (9 =
+// other, -1 for nil/empty), scanning each row's katakana membership set.
 + (int)GetGyoIndex:(NSString *)ch {
     if (ch == nil || ch.length == 0) {
         return -1;
@@ -176,8 +184,8 @@ static NSString *const kGyoLabels[10] = {
 // @ 0x665a4 — literal comparison of the genre-name reading; defers to the music
 // name on a tie.
 - (NSComparisonResult)compareGenreNameCustom:(AcMusicData *)other {
-    NSComparisonResult result =
-        [[self genreNameKana] compare:[other genreNameKana] options:NSLiteralSearch];
+    NSComparisonResult result = [[self genreNameKana] compare:[other genreNameKana]
+                                                      options:NSLiteralSearch];
     if (result == NSOrderedSame) {
         return [self compareMusicNameCustom:other];
     }
@@ -228,7 +236,8 @@ static NSString *const kGyoLabels[10] = {
 // genreName, genreNameKana, filePath, musicNameInitial, genreNameInitial) then
 // calls [super dealloc]; ARC synthesizes this, so no body is written here.
 
-// @ 0x65c6c — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in place.
+// @ 0x65c6c — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in
+// place.
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);
     for (int i = 0; i < keyLen; i++) {
@@ -251,7 +260,7 @@ static NSString *const kGyoLabels[10] = {
     if (raw == nil) {
         return nil;
     }
-    NSDictionary *dict = RhParsePlistDict(raw);   // .orb payload is a property list
+    NSDictionary *dict = RhParsePlistDict(raw); // .orb payload is a property list
     if (dict == nil) {
         return nil;
     }

@@ -9,9 +9,10 @@
 
 @implementation StoreDetailCopyrightCell
 
-// @ 0x75324 — a word-wrapping grey label at (5, 5, 310, 0), sized by the VC, on a
-// clear background.
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+// @ 0x75324 — a word-wrapping grey label at (5, 5, 310, 0), sized by the VC, on
+// a clear background.
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
         _labelCopyright = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, 310, 0)];
@@ -24,7 +25,8 @@
     return self;
 }
 
-// labelCopyright @ 0x754c8 — synthesized getter (returns the labelCopyright ivar).
-// dealloc @ 0x7547c — ARC-omitted (releases the labelCopyright ivar only).
+// labelCopyright @ 0x754c8 — synthesized getter (returns the labelCopyright
+// ivar). dealloc @ 0x7547c — ARC-omitted (releases the labelCopyright ivar
+// only).
 
 @end

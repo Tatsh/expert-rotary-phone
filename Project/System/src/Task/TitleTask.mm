@@ -2,7 +2,8 @@
 //  TitleTask.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The title screen
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The title
+//  screen
 //  + first-run flow, handed off from BootLogoTask.
 //
 
@@ -14,9 +15,9 @@
 #import "AudioManager.h"
 #import "CharaManager.h"
 #import "CommonAlertView.h"
-#import "MainViewController.h"   // the concrete root VC the title flow drives (Goto*/Communicating)
 #import "CustomButton.h"
 #import "DownloadMain.h"
+#import "MainViewController.h" // the concrete root VC the title flow drives (Goto*/Communicating)
 #import "TaskFactory.h"
 #import "TitleTask.h"
 #import "UserSettingData.h"
@@ -30,9 +31,10 @@
 TitleTask::TitleTask() = default;
 
 // Ghidra: TitleTask dtor (FUN_0002b6b0) — detach the conversion button from its
-// superview before the base source-node teardown; ARC releases the other members. The
-// compiler-implicit dtor would drop m_conversionButton without removing it from the
-// view hierarchy, so this behaviour is reproduced explicitly. @ 0x2b6b0
+// superview before the base source-node teardown; ARC releases the other
+// members. The compiler-implicit dtor would drop m_conversionButton without
+// removing it from the view hierarchy, so this behaviour is reproduced
+// explicitly. @ 0x2b6b0
 TitleTask::~TitleTask() {
     if (m_conversionButton != nil) {
         [m_conversionButton removeFromSuperview];
@@ -40,15 +42,16 @@ TitleTask::~TitleTask() {
     }
 }
 
-// The root navigation view controller the flow drives (bridged from the engine). During the
-// title flow the engine's root is the MainViewController (the binary dispatches Goto*/
-// InsertCommunicating/etc. to it dynamically); type it as such so those calls resolve.
+// The root navigation view controller the flow drives (bridged from the
+// engine). During the title flow the engine's root is the MainViewController
+// (the binary dispatches Goto*/ InsertCommunicating/etc. to it dynamically);
+// type it as such so those calls resolve.
 static MainViewController *RootVC() {
     return (MainViewController *)neSceneManager::rootViewController();
 }
 
-// A touch released this frame that barely moved (< 11 px in x and y) counts as a
-// tap (Ghidra: the touch-pool scan at the top of TitleTask_update).
+// A touch released this frame that barely moved (< 11 px in x and y) counts as
+// a tap (Ghidra: the touch-pool scan at the top of TitleTask_update).
 bool TitleTask::tapReleased() const {
     neGraphics &gfx = neGraphics::shared();
     int count = gfx.activeTouchCount();
@@ -57,10 +60,14 @@ bool TitleTask::tapReleased() const {
         if (t == nullptr || t->released == 0) {
             continue;
         }
-        int dx = t->startX - t->x;   // +0x04 down vs +0x0c current
+        int dx = t->startX - t->x; // +0x04 down vs +0x0c current
         int dy = t->startY - t->y;
-        if (dx < 0) { dx = -dx; }
-        if (dy < 0) { dy = -dy; }
+        if (dx < 0) {
+            dx = -dx;
+        }
+        if (dy < 0) {
+            dy = -dy;
+        }
         if (dx < 0xb && dy < 0xb) {
             return true;
         }
@@ -86,7 +93,10 @@ void TitleTask::setup() {
         imageFolder = "IMG_IPAD";
     }
     m_titleLayer = new AepLyrCtrl();
-    m_titleLayer->init(1, imageFolder, this, 10);   // group 1, device folder, owner=this task, order 10
+    m_titleLayer->init(1,
+                       imageFolder,
+                       this,
+                       10); // group 1, device folder, owner=this task, order 10
 
     AudioManager *audio = [AudioManager sharedManager];
     NSString *sePath = [NSBundle.mainBundle pathForResource:@"v10" ofType:@"m4a"];
@@ -102,15 +112,15 @@ void TitleTask::setup() {
 void TitleTask::finish() {
     [[AudioManager sharedManager] releaseSe:0 resourceId:0];
     if (m_titleLayer != nullptr) {
-        delete m_titleLayer;   // its dtor unlinks from the active-layer list
+        delete m_titleLayer; // its dtor unlinks from the active-layer list
         m_titleLayer = nullptr;
     }
     AepUnloadGroup(m_aep, 1);
     if (m_versionLabel != nil) {
         m_versionLabel = nil;
     }
-    gCharaManager.reload();   // CharaManager_reload
-    kill();                   // +0x24 = 1
+    gCharaManager.reload(); // CharaManager_reload
+    kill();                 // +0x24 = 1
 
     if (C_TASK *menu = MenuCreateTask()) {
         menu->setPriority(3);
@@ -129,29 +139,39 @@ void TitleTask::buildConversionButton() {
     [m_conversionButton setTappableInsets:UIEdgeInsetsMake(-20, -20, -20, -20)];
     m_conversionButton.exclusiveTouch = YES;
     [m_conversionButton setBackgroundImage:img forState:UIControlStateNormal];
-    [m_conversionButton addTarget:root action:@selector(GotoInConversionPass)
+    [m_conversionButton addTarget:root
+                           action:@selector(GotoInConversionPass)
                  forControlEvents:UIControlEventTouchUpInside];
     [root.view addSubview:m_conversionButton];
     m_conversionButton.alpha = 0;
-    [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionAllowUserInteraction
-                     animations:^{ this->m_conversionButton.alpha = 1; }
+    [UIView animateWithDuration:0.25
+                          delay:0
+                        options:UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                       this->m_conversionButton.alpha = 1;
+                     }
                      completion:nil];
 
     NSString *code = [UserSettingData convertCode];
     if (code != nil) {
         NSString *msg = [NSString stringWithFormat:@"%@\n%@", [UserSettingData playerId], code];
-        // Localized title + dismiss-button strings kept external (@"" placeholders);
-        // the alert reports back to the root VC (delegate).
+        // Localized title + dismiss-button strings kept external (@""
+        // placeholders); the alert reports back to the root VC (delegate).
         CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:@"" message:msg delegate:(id<CommonAlertViewDelegate>)root
-            cancelButtonTitle:nil otherButtonTitles:@""];   // root (MainViewController) conforms privately (its .mm extension)
+                initWithTitle:@""
+                      message:msg
+                     delegate:(id<CommonAlertViewDelegate>)root
+            cancelButtonTitle:nil
+            otherButtonTitles:@""]; // root (MainViewController) conforms privately
+                                    // (its .mm extension)
         alert.tag = 0;
         [alert show];
     }
     m_state3Built = true;
 }
 
-// Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run machine.
+// Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run
+// machine.
 void TitleTask::update(int /*deltaMs*/) {
     const bool tap = tapReleased();
     MainViewController *root = RootVC();
@@ -161,18 +181,19 @@ void TitleTask::update(int /*deltaMs*/) {
     case 0:
         setup();
         [[AudioManager sharedManager] playBgm:0];
-        m_aep->playTransition(1, 0x1e, 0);   // fade in (setAepTransitionMode: 30 frames)
-        m_titleLayer->play();                // start the title animation
+        m_aep->playTransition(1, 0x1e,
+                              0); // fade in (setAepTransitionMode: 30 frames)
+        m_titleLayer->play();     // start the title animation
         m_state = 1;
         break;
     case 1:
         if (![UserSettingData isPolicyAccepted]) {
-            m_state = 2;   // must accept the policy first
+            m_state = 2; // must accept the policy first
             break;
         }
-        m_state = 3;       // straight to the title
+        m_state = 3; // straight to the title
         break;
-    case 2:   // wait for a tap, then go to the accept-policy screen
+    case 2: // wait for a tap, then go to the accept-policy screen
         if (tap) {
             [root GotoAcceptPolicy];
             m_state = 1;
@@ -198,14 +219,17 @@ void TitleTask::update(int /*deltaMs*/) {
             [root InsertCommunicating];
         }
         if (m_conversionButton != nil) {
-            [UIView animateWithDuration:0.25 delay:0
+            [UIView animateWithDuration:0.25
+                                  delay:0
                                 options:UIViewAnimationOptionAllowUserInteraction
-                             animations:^{ this->m_conversionButton.alpha = 0; }
+                             animations:^{
+                               this->m_conversionButton.alpha = 0;
+                             }
                              completion:nil];
         }
         m_state = 4;
         break;
-    case 4:   // await the DL file list, then decide download vs skip
+    case 4: // await the DL file list, then decide download vs skip
         if ([dl isGetDlFileListDownLoading]) {
             break;
         }
@@ -214,9 +238,11 @@ void TitleTask::update(int /*deltaMs*/) {
         if (m_dlFileList == nil) {
             m_needUpdate = true;
             if ([UserSettingData lastCompletedClientVer] < AppDelegate.appDelegate.appVersionNum) {
-                CommonAlertView *a = [[CommonAlertView alloc]
-                    initWithTitle:nil message:@"" delegate:nil
-                    cancelButtonTitle:nil otherButtonTitles:@""];
+                CommonAlertView *a = [[CommonAlertView alloc] initWithTitle:nil
+                                                                    message:@""
+                                                                   delegate:nil
+                                                          cancelButtonTitle:nil
+                                                          otherButtonTitles:@""];
                 [a show];
                 m_state = 3;
                 break;
@@ -230,11 +256,11 @@ void TitleTask::update(int /*deltaMs*/) {
         }
         m_state = 7;
         break;
-    case 5:   // there are files to fetch: go to the default-download screen
+    case 5: // there are files to fetch: go to the default-download screen
         [root GotoDefaultDownload];
         m_state = 6;
         break;
-    case 6:   // default download finished
+    case 6: // default download finished
         if ([root isDefaultDlFailed] == 1) {
             m_needUpdate = true;
             m_state = 3;
@@ -244,7 +270,8 @@ void TitleTask::update(int /*deltaMs*/) {
         }
         break;
     case 7:
-        m_aep->playTransition(2, 0x1e, 0);   // fade out (setAepTransitionMode: 30 frames)
+        m_aep->playTransition(2, 0x1e,
+                              0); // fade out (setAepTransitionMode: 30 frames)
         m_state = 8;
         break;
     case 8:
@@ -259,7 +286,7 @@ void TitleTask::update(int /*deltaMs*/) {
         break;
     }
 
-    // Per-frame title UI update + draw (Ghidra tail, run every state: FUN_0002c924
-    // updates the version label / touch buttons; FUN_0002c52c draws the title
-    // elements through the Aep layer list).
+    // Per-frame title UI update + draw (Ghidra tail, run every state:
+    // FUN_0002c924 updates the version label / touch buttons; FUN_0002c52c draws
+    // the title elements through the Aep layer list).
 }

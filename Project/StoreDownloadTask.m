@@ -9,13 +9,15 @@
 
 @implementation StoreDownloadTask
 
-// Synthesized getters: fileURL @ 0x42854, filePath @ 0x42864, addObject @ 0x42874.
+// Synthesized getters: fileURL @ 0x42854, filePath @ 0x42864, addObject @
+// 0x42874.
 @synthesize fileURL = m_FileURL;
 @synthesize filePath = m_FilePath;
 @synthesize addObject = m_AddObject;
 
-// @ 0x42700 — copy the source URL and local path (NSString -initWithString:), and
-// retain the completion object (nil-safe: stored as nil when none is given).
+// @ 0x42700 — copy the source URL and local path (NSString -initWithString:),
+// and retain the completion object (nil-safe: stored as nil when none is
+// given).
 - (instancetype)initWithURL:(NSString *)url path:(NSString *)path AddObject:(id)object {
     if ((self = [super init])) {
         m_FileURL = [[NSString alloc] initWithString:url];

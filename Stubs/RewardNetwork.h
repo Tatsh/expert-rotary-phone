@@ -20,9 +20,11 @@
 #import <Foundation/Foundation.h>
 
 // Called at launch instead of the original
-//   +[RewardNetwork startWithAppliId:env:callback:]  (Ghidra @ 0x8cf0 call site).
+//   +[RewardNetwork startWithAppliId:env:callback:]  (Ghidra @ 0x8cf0 call
+//   site).
 // Intentionally does nothing.
-static inline void RewardNetwork_startDisabled(void) { /* ad SDK removed */ }
+static inline void RewardNetwork_startDisabled(void) { /* ad SDK removed */
+}
 
 @interface RewardNetwork : NSObject
 + (void)startWithAppliId:(NSString *)appId env:(NSInteger)env callback:(id)callback; // no-op

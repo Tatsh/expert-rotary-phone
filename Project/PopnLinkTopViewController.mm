@@ -2,33 +2,35 @@
 //  PopnLinkTopViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The pop'n-link top
-//  menu. Objective-C++ (drives the C++ scene manager / event center for the pad flag,
-//  the link-enabled flag, SE playback and the root-VC close callback).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The
+//  pop'n-link top menu. Objective-C++ (drives the C++ scene manager / event
+//  center for the pad flag, the link-enabled flag, SE playback and the root-VC
+//  close callback).
 //
 
 #import "PopnLinkTopViewController.h"
 
-#import "InputKidViewController.h"
-#import "CheckerCategoryViewController.h"
-#import "MainViewController.h"   // scene root -PopnLinkEndCallBack
-#import "QuizMainViewController.h"
-#import "HowToViewCtrl.h"
 #import "AppDelegate.h"
+#import "CheckerCategoryViewController.h"
+#import "HowToViewCtrl.h"
+#import "InputKidViewController.h"
+#import "MainViewController.h" // scene root -PopnLinkEndCallBack
+#import "QuizMainViewController.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
-// Root nav host (Ghidra: NESceneManager_rootViewController); the close callback is sent to
-// whatever VC the scene manager stored, mirroring the sibling top screens.
+// Root nav host (Ghidra: NESceneManager_rootViewController); the close callback
+// is sent to whatever VC the scene manager stored, mirroring the sibling top
+// screens.
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
 @interface PopnLinkTopViewController () {
     BOOL _isAnimationing;
-    UIButton *_btnId;        // KID info
-    UIButton *_btnChecker;   // score checker (link-gated)
-    UIButton *_btnQuiz;      // quiz (link-gated)
+    UIButton *_btnId;      // KID info
+    UIButton *_btnChecker; // score checker (link-gated)
+    UIButton *_btnQuiz;    // quiz (link-gated)
 }
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
@@ -42,12 +44,13 @@ static UIViewController *RootVC() {
 @synthesize delegate = _delegate;
 @synthesize scrollView = _scrollView;
 
-// @ 0xccacc — lay out the backdrop, the three buttons (KID / checker / quiz) and their
-// caption images, then seed the checker / quiz enabled state from the link flag.
+// @ 0xccacc — lay out the backdrop, the three buttons (KID / checker / quiz)
+// and their caption images, then seed the checker / quiz enabled state from the
+// link flag.
 - (instancetype)init {
     if ((self = [super init])) {
         int displayType = [AppDelegate appDelegate].displayType;
-        CGFloat yAdj = (displayType == 2) ? 0 : -20;   // 4-inch vs 3.5-inch vertical nudge
+        CGFloat yAdj = (displayType == 2) ? 0 : -20; // 4-inch vs 3.5-inch vertical nudge
         BOOL isPad = neSceneManager::isPadDisplay();
 
         if (!isPad) {
@@ -62,24 +65,27 @@ static UIViewController *RootVC() {
         CGFloat bw = kidImg.size.width, bh = kidImg.size.height;
         CGFloat btnX = isPad ? 0 : 15;
 
-        // Button Y positions. Phone uses fixed offsets; on the pad the checker/quiz buttons
-        // keep their phone base Y (151 / 288) but are pushed down by one button height plus
-        // 72pt (engine DAT_000cd138). KID sits at a fixed 189 (pad) / 14 (phone) + yAdj.
-        CGFloat kidY     = (isPad ? 189 : 14) + yAdj;
+        // Button Y positions. Phone uses fixed offsets; on the pad the checker/quiz
+        // buttons keep their phone base Y (151 / 288) but are pushed down by one
+        // button height plus 72pt (engine DAT_000cd138). KID sits at a fixed 189
+        // (pad) / 14 (phone) + yAdj.
+        CGFloat kidY = (isPad ? 189 : 14) + yAdj;
         CGFloat checkerY = 151 + yAdj + (isPad ? (bh + 72) : 0);
-        CGFloat quizY    = 288 + yAdj + (isPad ? (bh + 72) : 0);
+        CGFloat quizY = 288 + yAdj + (isPad ? (bh + 72) : 0);
 
         _btnId = [[UIButton alloc] initWithFrame:CGRectMake(btnX, kidY, bw, bh)];
         [_btnId setBackgroundImage:kidImg forState:UIControlStateNormal];
-        [_btnId addTarget:self action:@selector(onInKidButtonTouched:)
-         forControlEvents:UIControlEventTouchUpInside];
+        [_btnId addTarget:self
+                      action:@selector(onInKidButtonTouched:)
+            forControlEvents:UIControlEventTouchUpInside];
         _btnId.exclusiveTouch = YES;
         [self.view addSubview:_btnId];
 
         _btnChecker = [[UIButton alloc] initWithFrame:CGRectMake(btnX, checkerY, bw, bh)];
         [_btnChecker setBackgroundImage:[UIImage imageNamed:@"pl_btn_playinfo"]
                                forState:UIControlStateNormal];
-        [_btnChecker addTarget:self action:@selector(onScoreCheckerButtonTouched:)
+        [_btnChecker addTarget:self
+                        action:@selector(onScoreCheckerButtonTouched:)
               forControlEvents:UIControlEventTouchUpInside];
         _btnChecker.exclusiveTouch = YES;
         [self.view addSubview:_btnChecker];
@@ -87,35 +93,40 @@ static UIViewController *RootVC() {
         _btnQuiz = [[UIButton alloc] initWithFrame:CGRectMake(btnX, quizY, bw, bh)];
         [_btnQuiz setBackgroundImage:[UIImage imageNamed:@"pl_btn_quize"]
                             forState:UIControlStateNormal];
-        [_btnQuiz addTarget:self action:@selector(onQuizButtonTouched:)
-           forControlEvents:UIControlEventTouchUpInside];
+        [_btnQuiz addTarget:self
+                      action:@selector(onQuizButtonTouched:)
+            forControlEvents:UIControlEventTouchUpInside];
         _btnQuiz.exclusiveTouch = YES;
         [self.view addSubview:_btnQuiz];
 
-        // Caption images near each button. Phone: fixed x=22 with per-caption Y; pad: offset
-        // from the owning button's frame origin by (+7pt x, +92pt y = engine DAT_000cd2dc).
-        UIImage *psKid  = [UIImage imageNamed:@"pl_ps_kidinfo"];
+        // Caption images near each button. Phone: fixed x=22 with per-caption Y;
+        // pad: offset from the owning button's frame origin by (+7pt x, +92pt y =
+        // engine DAT_000cd2dc).
+        UIImage *psKid = [UIImage imageNamed:@"pl_ps_kidinfo"];
         UIImageView *ivKid = [[UIImageView alloc] initWithImage:psKid];
-        ivKid.frame = isPad
-            ? CGRectMake(_btnId.frame.origin.x + 7, _btnId.frame.origin.y + 92,
-                         psKid.size.width, psKid.size.height)
-            : CGRectMake(22, 106 + yAdj, psKid.size.width, psKid.size.height);
+        ivKid.frame = isPad ? CGRectMake(_btnId.frame.origin.x + 7,
+                                         _btnId.frame.origin.y + 92,
+                                         psKid.size.width,
+                                         psKid.size.height) :
+                              CGRectMake(22, 106 + yAdj, psKid.size.width, psKid.size.height);
         [self.view addSubview:ivKid];
 
         UIImage *psPlay = [UIImage imageNamed:@"pl_ps_playinfo"];
         UIImageView *ivPlay = [[UIImageView alloc] initWithImage:psPlay];
-        ivPlay.frame = isPad
-            ? CGRectMake(_btnChecker.frame.origin.x + 7, _btnChecker.frame.origin.y + 92,
-                         psPlay.size.width, psPlay.size.height)
-            : CGRectMake(22, 243 + yAdj, psPlay.size.width, psPlay.size.height);
+        ivPlay.frame = isPad ? CGRectMake(_btnChecker.frame.origin.x + 7,
+                                          _btnChecker.frame.origin.y + 92,
+                                          psPlay.size.width,
+                                          psPlay.size.height) :
+                               CGRectMake(22, 243 + yAdj, psPlay.size.width, psPlay.size.height);
         [self.view addSubview:ivPlay];
 
         UIImage *psQuiz = [UIImage imageNamed:@"pl_ps_quize"];
         UIImageView *ivQuiz = [[UIImageView alloc] initWithImage:psQuiz];
-        ivQuiz.frame = isPad
-            ? CGRectMake(_btnQuiz.frame.origin.x + 7, _btnQuiz.frame.origin.y + 92,
-                         psQuiz.size.width, psQuiz.size.height)
-            : CGRectMake(22, 380 + yAdj, psQuiz.size.width, psQuiz.size.height);
+        ivQuiz.frame = isPad ? CGRectMake(_btnQuiz.frame.origin.x + 7,
+                                          _btnQuiz.frame.origin.y + 92,
+                                          psQuiz.size.width,
+                                          psQuiz.size.height) :
+                               CGRectMake(22, 380 + yAdj, psQuiz.size.width, psQuiz.size.height);
         [self.view addSubview:ivQuiz];
 
         // Link-gated buttons follow the pop'n-link availability flag.
@@ -125,29 +136,30 @@ static UIViewController *RootVC() {
     return self;
 }
 
-// @ 0xcd2e0 — build self, wrap it in a navigation controller with a back button and the
-// pop'n-link nav-bar art, and return that controller.
+// @ 0xcd2e0 — build self, wrap it in a navigation controller with a back button
+// and the pop'n-link nav-bar art, and return that controller.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     [self init];
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:self];
 
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *back = [[UIButton alloc] initWithFrame:
-        CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
+    UIButton *back =
+        [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [back setBackgroundImage:backImg forState:UIControlStateNormal];
-    [back addTarget:self action:@selector(startCloseAnimation)
-          forControlEvents:UIControlEventTouchUpInside];
-    self.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithCustomView:back];
+    [back addTarget:self
+                  action:@selector(startCloseAnimation)
+        forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:back];
 
     [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+                                                  forBarMetrics:UIBarMetricsDefault];
     return nav;
 }
 
 // viewDidLoad @ 0xcd4b8 — super-only override, omitted.
 
-// @ 0xcd4e4 — re-apply the checker / quiz enabled state when the screen reappears.
+// @ 0xcd4e4 — re-apply the checker / quiz enabled state when the screen
+// reappears.
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     if (_btnChecker) {
@@ -173,8 +185,9 @@ static UIViewController *RootVC() {
 
 #pragma mark - Open/close animation (shared modal-VC lifecycle)
 
-// @ 0xcd5a8 — on the very first, not-yet-linked entry, push the KID-input screen (and, the
-// first time ever, the "firstplay_popnlink" how-to); then fade the view + nav view in.
+// @ 0xcd5a8 — on the very first, not-yet-linked entry, push the KID-input
+// screen (and, the first time ever, the "firstplay_popnlink" how-to); then fade
+// the view + nav view in.
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -190,8 +203,8 @@ static UIViewController *RootVC() {
             [bar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
                       forBarMetrics:UIBarMetricsDefault];
 
-            HowToViewCtrl *howto = [[HowToViewCtrl alloc] initWithFileNameArray:
-                [NSArray arrayWithObjects:@"firstplay_popnlink", nil]];
+            HowToViewCtrl *howto = [[HowToViewCtrl alloc]
+                initWithFileNameArray:[NSArray arrayWithObjects:@"firstplay_popnlink", nil]];
             howto.fromNaviBarImage = [UIImage imageNamed:@"input_kid_navbar"];
             howto.isCloseButtonEnable = YES;
             howto.backGroundImage = [UIImage imageNamed:@"friman_bg"];
@@ -220,15 +233,15 @@ static UIViewController *RootVC() {
     _isAnimationing = NO;
 }
 
-// @ 0xcd908 — cancel SE, then fade out (phone, only when we are the top VC) or forward the
-// close to the pad split delegate.
+// @ 0xcd908 — cancel SE, then fade out (phone, only when we are the top VC) or
+// forward the close to the pad split delegate.
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2);
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {
             return;
         }
-        _isAnimationing = NO;   // faithful to the binary (no re-entrancy latch here)
+        _isAnimationing = NO; // faithful to the binary (no re-entrancy latch here)
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationDuration:0.5];
         [UIView setAnimationDelegate:self];
@@ -250,7 +263,8 @@ static UIViewController *RootVC() {
 
 #pragma mark - Button handlers
 
-// @ 0xcdad4 — KID info: phone pushes the KID-input screen; pad forwards to the delegate.
+// @ 0xcdad4 — KID info: phone pushes the KID-input screen; pad forwards to the
+// delegate.
 - (void)onInKidButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {
@@ -267,7 +281,8 @@ static UIViewController *RootVC() {
     neEngine::playSystemSe(1);
 }
 
-// @ 0xcdc18 — score checker: phone pushes the checker category list; pad forwards.
+// @ 0xcdc18 — score checker: phone pushes the checker category list; pad
+// forwards.
 - (void)onScoreCheckerButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {

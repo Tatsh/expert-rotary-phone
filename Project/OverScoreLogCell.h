@@ -2,17 +2,18 @@
 //  OverScoreLogCell.h
 //  pop'n rhythmin
 //
-//  An over-score (friend score) log row. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0x69760).
+//  An over-score (friend score) log row. Reconstructed from Ghidra project
+//  rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x69760).
 //
 
 #import <UIKit/UIKit.h>
 
 @interface OverScoreLogCell : UITableViewCell
 
-// Rebuild the row's labels/banner from one element of the owning view controller's
-// log-data array (an NSValue boxing the OverScoreLogData struct; -getValue: unboxes it).
-// Ghidra: -[OverScoreLogCell setOverScoreLogData:] @ 0x69804.
+// Rebuild the row's labels/banner from one element of the owning view
+// controller's log-data array (an NSValue boxing the OverScoreLogData struct;
+// -getValue: unboxes it). Ghidra: -[OverScoreLogCell setOverScoreLogData:] @
+// 0x69804.
 - (void)setOverScoreLogData:(NSValue *)overScoreLogData;
 
 @end

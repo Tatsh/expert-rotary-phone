@@ -11,12 +11,14 @@
 
 @implementation StorePackInfoDownloader
 
-// Synthesized: delegate @ 0x57764 (getter) / setDelegate: @ 0x57774 (weak, plain assign).
+// Synthesized: delegate @ 0x57764 (getter) / setDelegate: @ 0x57774 (weak,
+// plain assign).
 @synthesize delegate = m_Delegate;
 // packInfo / downloader use the manual retaining accessors below.
 
-// @ 0x57754 / 0x577a0 — retaining setters for packInfo / downloader (objc_setProperty).
-// Sibling accessor stubs read the same ivars: setDownloader: also @ 0x57794.
+// @ 0x57754 / 0x577a0 — retaining setters for packInfo / downloader
+// (objc_setProperty). Sibling accessor stubs read the same ivars:
+// setDownloader: also @ 0x57794.
 - (void)setPackInfo:(StorePackInfo *)packInfo {
     if (m_PackInfo != packInfo) {
         m_PackInfo = packInfo;
@@ -30,8 +32,12 @@
     }
 }
 
-- (StorePackInfo *)packInfo   { return m_PackInfo; }   // @ 0x57744
-- (Downloader *)downloader    { return m_Downloader; } // @ 0x57784
+- (StorePackInfo *)packInfo {
+    return m_PackInfo;
+} // @ 0x57744
+- (Downloader *)downloader {
+    return m_Downloader;
+} // @ 0x57784
 
 // @ 0x57440
 - (instancetype)initWithStorePackInfo:(StorePackInfo *)packInfo {
@@ -49,9 +55,10 @@
     [downloader startDownloading];
 }
 
-// @ 0x575b8 — abort an in-flight fetch. Cancels the wrapped Downloader, then drops it
-// with -autorelease (the binary uses autorelease here, not the setter's -release, so a
-// cancel issued from inside a delegate callback still survives the current cycle).
+// @ 0x575b8 — abort an in-flight fetch. Cancels the wrapped Downloader, then
+// drops it with -autorelease (the binary uses autorelease here, not the
+// setter's -release, so a cancel issued from inside a delegate callback still
+// survives the current cycle).
 - (void)cancel {
     if (m_Downloader == nil) {
         return;

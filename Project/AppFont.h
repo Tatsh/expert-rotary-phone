@@ -3,12 +3,14 @@
 //  pop'n rhythmin
 //
 //  The app's shared UI typeface name.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (FUN_0005ef9c).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  (FUN_0005ef9c).
 //
 
 #import <Foundation/Foundation.h>
 
-// C-linkage (defined in AppFont.m) so the C++ (.mm) callers resolve the unmangled symbols.
+// C-linkage (defined in AppFont.m) so the C++ (.mm) callers resolve the
+// unmangled symbols.
 #ifdef __cplusplus
 extern "C" {
 #endif

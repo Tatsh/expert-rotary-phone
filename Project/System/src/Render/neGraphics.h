@@ -37,34 +37,42 @@ struct neTouchPoint {
 };
 
 // C-ABI accessors the play-judge loop uses on the raw manager pointer. Ghidra:
-// FUN_000124bc reads +0x80 (touch count); FUN_000124c4 reads the +0x00 pool array
-// (i-th touch pointer). Thin wrappers over the class members; declared here (ahead of
-// the class) so the friend declarations below bind to these C-linkage functions.
+// FUN_000124bc reads +0x80 (touch count); FUN_000124c4 reads the +0x00 pool
+// array (i-th touch pointer). Thin wrappers over the class members; declared
+// here (ahead of the class) so the friend declarations below bind to these
+// C-linkage functions.
 class neGraphics;
-extern "C" int NEGraphics_activeTouchCount(const neGraphics *g);      // Ghidra: FUN_000124bc
-extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i); // Ghidra: FUN_000124c4
+extern "C" int NEGraphics_activeTouchCount(const neGraphics *g); // Ghidra: FUN_000124bc
+extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g,
+                                                  int i); // Ghidra: FUN_000124c4
 
 // Render/input manager. Singleton created lazily by configure() at launch.
 class neGraphics {
 public:
-    static neGraphics &shared();                // Ghidra: FUN_00012358 (returns DAT_00188384)
-    static void configure(float contentScale);  // Ghidra: NEGraphics_configure (FUN_00012368)
+    static neGraphics &shared();               // Ghidra: FUN_00012358 (returns DAT_00188384)
+    static void configure(float contentScale); // Ghidra: NEGraphics_configure (FUN_00012368)
 
     // Touch plumbing. neGLView forwards UIKit touches here as 16.16 fixed-point
     // point coordinates; this scales them to pixels and records them. The
     // play-judge loop (FUN_0002f1f8) reads the pool back via shared().
-    void touchBegan(int x, int y, int width, int height);  // Ghidra: FUN_000124f8
-    void touchMoved(int x, int y, int prevX, int prevY);   // Ghidra: FUN_00012588
-    void touchEnded(int x, int y, int prevX, int prevY);   // Ghidra: FUN_000125ec
-    void clearTouches();                                   // Ghidra: FUN_00012698
+    void touchBegan(int x, int y, int width, int height); // Ghidra: FUN_000124f8
+    void touchMoved(int x, int y, int prevX, int prevY);  // Ghidra: FUN_00012588
+    void touchEnded(int x, int y, int prevX, int prevY);  // Ghidra: FUN_000125ec
+    void clearTouches();                                  // Ghidra: FUN_00012698
 
-    int activeTouchCount() const { return m_touchCount; }  // +0x80
-    const neTouchPoint *touchAt(int i) const { return m_touches[i]; }
-    float contentScale() const { return m_contentScale; }  // +0x88
+    int activeTouchCount() const {
+        return m_touchCount;
+    } // +0x80
+    const neTouchPoint *touchAt(int i) const {
+        return m_touches[i];
+    }
+    float contentScale() const {
+        return m_contentScale;
+    } // +0x88
 
     // Find a recorded touch by its rolling id, or nullptr. The play-judge loop
     // uses this to tell whether the finger that started a hold is still down.
-    const neTouchPoint *findTouchById(int id) const;      // Ghidra: FUN_000124cc
+    const neTouchPoint *findTouchById(int id) const; // Ghidra: FUN_000124cc
 
     // Point-in-rect test primitive: true when (x,y) lies inside the rect
     // (rx,ry,rw,rh). Ghidra: FUN_0002d974 — the same primitive the bridge's
@@ -73,11 +81,11 @@ public:
     static bool pointInRect(int x, int y, int rx, int ry, int rw, int rh);
 
 private:
-    neGraphics();                    // Ghidra: FUN_0001243c (allocates the pool)
+    neGraphics(); // Ghidra: FUN_0001243c (allocates the pool)
     neGraphics(const neGraphics &) = delete;
     neGraphics &operator=(const neGraphics &) = delete;
 
-    static const int kMaxTouches = 32;    // pool size (loop count 0x20 in FUN_0001243c)
+    static const int kMaxTouches = 32; // pool size (loop count 0x20 in FUN_0001243c)
 
     neTouchPoint *m_touches[kMaxTouches]; // +0x00..+0x7c pool pointers
     int m_touchCount = 0;                 // +0x80 touches recorded this frame
@@ -89,25 +97,28 @@ private:
 };
 
 // ---- free text / geometry helpers (siblings of neGraphics::pointInRect) ----
-// These are plain C-linkage-shaped free functions in the binary (no `this`); they live
-// beside the pointInRect primitive as the engine's small layout helpers.
+// These are plain C-linkage-shaped free functions in the binary (no `this`);
+// they live beside the pointInRect primitive as the engine's small layout
+// helpers.
 
-// Count the '\n'-separated lines in a C string. Empty string -> 0; a trailing newline is
-// NOT counted as an extra empty line. Ghidra: FUN_0002d858.
+// Count the '\n'-separated lines in a C string. Empty string -> 0; a trailing
+// newline is NOT counted as an extra empty line. Ghidra: FUN_0002d858.
 int countLines(const char *text);
 
-// 2D range containment over eight floats. Recovered predicate (FUN_0002d9dc): true when
-// the pair (x1,x2) is at/under the upper bounds (xMax1,xMax2) AND the pair (y1,y2) is
-// at/above the lower bounds (yMin1,yMin2) — i.e. two corners inside a half-open box.
-bool isWithinRange2D(float x1, float y1, float x2, float y2,
-                     float yMin1, float xMax1, float yMin2, float xMax2);
+// 2D range containment over eight floats. Recovered predicate (FUN_0002d9dc):
+// true when the pair (x1,x2) is at/under the upper bounds (xMax1,xMax2) AND the
+// pair (y1,y2) is at/above the lower bounds (yMin1,yMin2) — i.e. two corners
+// inside a half-open box.
+bool isWithinRange2D(
+    float x1, float y1, float x2, float y2, float yMin1, float xMax1, float yMin2, float xMax2);
 
 #ifdef __OBJC__
-// Character index at which `text` first fills `columnWidth` display columns, counting a
-// full-width (CJK / non-halfwidth) glyph as 2 columns and a halfwidth glyph as 1 — used to
-// ellipsis-truncate song/artist names to a fixed banner width. Returns -1 (0xffffffff) when
-// the whole string fits. Sibling engine text helper; defined in neEngineBridge.mm because it
-// needs Foundation (NSString). Ghidra: findCharIndexForColumn @ 0x2da34.
+// Character index at which `text` first fills `columnWidth` display columns,
+// counting a full-width (CJK / non-halfwidth) glyph as 2 columns and a
+// halfwidth glyph as 1 — used to ellipsis-truncate song/artist names to a fixed
+// banner width. Returns -1 (0xffffffff) when the whole string fits. Sibling
+// engine text helper; defined in neEngineBridge.mm because it needs Foundation
+// (NSString). Ghidra: findCharIndexForColumn @ 0x2da34.
 int findCharIndexForColumn(NSString *text, int columnWidth);
 #endif
 

@@ -8,8 +8,8 @@
 //  In the binary this is a global 12-byte struct at DAT_00187d98 (three ObjC
 //  array pointers) operated on by free functions that take its address; modeled
 //  here as a C++ class with a single global instance (gCharaManager). The three
-//  members are, in order: preferred sets, limited sets, and the filtered list of
-//  characters currently available to the player.
+//  members are, in order: preferred sets, limited sets, and the filtered list
+//  of characters currently available to the player.
 //    * reload()                      = FUN_000b85bc
 //    * isCharaAvailable()            = FUN_000b9048 (private helper)
 //    * availableInfos()              = FUN_000b9304
@@ -30,7 +30,9 @@ public:
     void reload();
 
     // The characters currently available to the player (member +0x8).
-    NSArray *availableInfos() const { return _available; }
+    NSArray *availableInfos() const {
+        return _available;
+    }
 
     // The available CharaInfo whose charaId matches, or nil.
     CharaInfo *availableInfoForCharaId(short charaId) const;
@@ -44,9 +46,9 @@ private:
     // (i.e. it is not owned and none of its associated music has been purchased).
     bool isCharaAvailable(unsigned short charaId) const;
 
-    NSArray *_preferred = nil;   // +0x0  PreferredCharaInfo objects
-    NSArray *_limited = nil;     // +0x4  LimitedCharaInfo objects
-    NSArray *_available = nil;   // +0x8  CharaInfo objects (player-available)
+    NSArray *_preferred = nil; // +0x0  PreferredCharaInfo objects
+    NSArray *_limited = nil;   // +0x4  LimitedCharaInfo objects
+    NSArray *_available = nil; // +0x8  CharaInfo objects (player-available)
 };
 
 // The single global instance (Ghidra: DAT_00187d98).
@@ -64,7 +66,8 @@ CharaManager &CharaManagerShared();
 // CharaManager.mm, so these must be declared in this shared header.
 // ---------------------------------------------------------------------------
 
-// Forward-declare the arcade scene type; its full definition is in AcMainTask.h.
+// Forward-declare the arcade scene type; its full definition is in
+// AcMainTask.h.
 class AcMainTask;
 
 // Load (or reload) the 6 character thumbnail textures for page `page` into

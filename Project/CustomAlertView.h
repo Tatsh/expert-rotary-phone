@@ -2,20 +2,22 @@
 //  CustomAlertView.h
 //  pop'n rhythmin
 //
-//  A second custom modal alert (sibling of CommonAlertView) built around a fixed
-//  piece of background art ("info_bg" / "gift_bg") rather than a drawn gradient
-//  card. It hangs a title UILabel, a display-only CustomTextView message and up to
-//  two image-backed buttons (yes / no) off that background image view, then shows
-//  and hides itself with a selectable open/close animation (fade or scale bounce).
-//  The host installs it into a passed view (or the root scene view) and receives
-//  the button result through a weak delegate.
+//  A second custom modal alert (sibling of CommonAlertView) built around a
+//  fixed piece of background art ("info_bg" / "gift_bg") rather than a drawn
+//  gradient card. It hangs a title UILabel, a display-only CustomTextView
+//  message and up to two image-backed buttons (yes / no) off that background
+//  image view, then shows and hides itself with a selectable open/close
+//  animation (fade or scale bounce). The host installs it into a passed view
+//  (or the root scene view) and receives the button result through a weak
+//  delegate.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
-//  NOTE ON SUPERCLASS: the binary builds `self` with -[UIImageView initWithFrame:],
-//  tears it down with -[UIImageView dealloc] and explicitly re-enables
-//  userInteraction (which UIImageView disables by default), so the recovered
-//  superclass is UIImageView (itself a UIView subclass). Reconstructed as such.
+//  NOTE ON SUPERCLASS: the binary builds `self` with -[UIImageView
+//  initWithFrame:], tears it down with -[UIImageView dealloc] and explicitly
+//  re-enables userInteraction (which UIImageView disables by default), so the
+//  recovered superclass is UIImageView (itself a UIView subclass).
+//  Reconstructed as such.
 //
 
 #import <UIKit/UIKit.h>
@@ -24,14 +26,15 @@
 
 // Background-art style (drives which image + label/button layout is used).
 typedef NS_ENUM(NSInteger, CustomAlertViewType) {
-    CustomAlertViewTypeInfo = 0,   // "info_bg" background
-    CustomAlertViewTypeGift = 1,   // "gift_bg" background
+    CustomAlertViewTypeInfo = 0, // "info_bg" background
+    CustomAlertViewTypeGift = 1, // "gift_bg" background
 };
 
-// Open / close animation style (set via -setOpenAnimeType: / -setCloseAnimeType:).
+// Open / close animation style (set via -setOpenAnimeType: /
+// -setCloseAnimeType:).
 typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
-    CustomAlertViewAnimeTypeFade  = 0,   // alpha fade
-    CustomAlertViewAnimeTypeScale = 1,   // scale bounce
+    CustomAlertViewAnimeTypeFade = 0,  // alpha fade
+    CustomAlertViewAnimeTypeScale = 1, // scale bounce
 };
 
 @protocol CustomAlertViewDelegate <NSObject>
@@ -42,15 +45,15 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
 @interface CustomAlertView : UIImageView
 
 // Synthesized accessors: delegate @ 0x27b8c, setDelegate: @ 0x27b9c.
-@property (nonatomic, weak) id<CustomAlertViewDelegate> delegate;
+@property(nonatomic, weak) id<CustomAlertViewDelegate> delegate;
 
-// Installs into the root scene view (neSceneManager::rootViewController().view),
-// centred on it. Ghidra: @ 0x269c4
+// Installs into the root scene view
+// (neSceneManager::rootViewController().view), centred on it. Ghidra: @ 0x269c4
 - (instancetype)initWithType:(CustomAlertViewType)type
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
-             otherButtonTitle:(NSString *)otherButtonTitle;
+            otherButtonTitle:(NSString *)otherButtonTitle;
 
 // Installs into `view`, centred on it (CGPointZero center -> use view centre).
 // Ghidra: @ 0x26a60
@@ -59,7 +62,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
-             otherButtonTitle:(NSString *)otherButtonTitle;
+            otherButtonTitle:(NSString *)otherButtonTitle;
 
 // Designated initializer. Ghidra: @ 0x26abc
 - (instancetype)initWithView:(UIView *)view
@@ -68,18 +71,19 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
-             otherButtonTitle:(NSString *)otherButtonTitle;
+            otherButtonTitle:(NSString *)otherButtonTitle;
 
-- (void)show;         // reveal + open animation.   Ghidra: @ 0x274fc
-- (void)removeView;   // dismiss + close animation.  Ghidra: @ 0x277b8
+- (void)show;       // reveal + open animation.   Ghidra: @ 0x274fc
+- (void)removeView; // dismiss + close animation.  Ghidra: @ 0x277b8
 
 // Runtime restyling of the (already-built) title / message widgets.
-- (void)setTitleColor:(UIColor *)color;      // Ghidra: @ 0x268ac
-- (void)setTextColor:(UIColor *)color;       // Ghidra: @ 0x268cc
-- (void)setTitleFontSize:(CGFloat)size;      // Ghidra: @ 0x268ec
-- (void)setTextFontSize:(CGFloat)size;       // Ghidra: @ 0x26940
+- (void)setTitleColor:(UIColor *)color; // Ghidra: @ 0x268ac
+- (void)setTextColor:(UIColor *)color;  // Ghidra: @ 0x268cc
+- (void)setTitleFontSize:(CGFloat)size; // Ghidra: @ 0x268ec
+- (void)setTextFontSize:(CGFloat)size;  // Ghidra: @ 0x26940
 
-// Select the open / close animation (clamped to 0..1). Ghidra: @ 0x26994 / @ 0x269ac
+// Select the open / close animation (clamped to 0..1). Ghidra: @ 0x26994 / @
+// 0x269ac
 - (void)setOpenAnimeType:(CustomAlertViewAnimeType)type;
 - (void)setCloseAnimeType:(CustomAlertViewAnimeType)type;
 

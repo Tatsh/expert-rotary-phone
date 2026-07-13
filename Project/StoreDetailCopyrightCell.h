@@ -11,7 +11,7 @@
 
 @interface StoreDetailCopyrightCell : UITableViewCell
 
-@property (nonatomic, retain) UILabel *labelCopyright;   // word-wrapped, grey
+@property(nonatomic, retain) UILabel *labelCopyright; // word-wrapped, grey
 
 @end
 

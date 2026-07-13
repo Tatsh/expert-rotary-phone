@@ -2,10 +2,10 @@
 //  neAVCAPlayer.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (FUN_00026xxx).
-//  The game's low-latency SE backend: a pool of loaded CASound sources played
-//  through a CAComponent (AUGraph mixer). Both are reconstructed classes (the
-//  lib_rsnd static library is not available), not imported.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  (FUN_00026xxx). The game's low-latency SE backend: a pool of loaded CASound
+//  sources played through a CAComponent (AUGraph mixer). Both are reconstructed
+//  classes (the lib_rsnd static library is not available), not imported.
 //
 
 #include <cstdlib>
@@ -136,17 +136,18 @@ void neAVCAPlayer::setAllVoiceVolume(int level) {
 }
 
 namespace {
-// A caplayer play handle packs (voice << 16 | generation) in its low 28 bits and is tagged
-// 0x20000000; decode the voice index / generation, treating a non-caplayer handle as invalid.
+// A caplayer play handle packs (voice << 16 | generation) in its low 28 bits
+// and is tagged 0x20000000; decode the voice index / generation, treating a
+// non-caplayer handle as invalid.
 inline uint32_t caHandleBits(uint32_t handle) {
     return (handle & kCAPlayerHandleFlag) ? (handle & 0x0fffffff) : 0xffffffffu;
 }
-}  // namespace
+} // namespace
 
 // Ghidra: caPlayerMgr_dtor @ 0x261f8.
 neAVCAPlayer::~neAVCAPlayer() {
     if (m_component != nullptr) {
-        m_component->terminate();   // auGraphTerminate
+        m_component->terminate(); // auGraphTerminate
         delete m_component;
         m_component = nullptr;
     }
@@ -154,18 +155,19 @@ neAVCAPlayer::~neAVCAPlayer() {
         for (int i = 0; i < m_capacity; i++) {
             CASound *source = m_sources[i];
             if (source != nullptr) {
-                source->freeBuffer();   // caSourceFreeBuffer
-                delete source;          // caSource_dtor + operator_delete
+                source->freeBuffer(); // caSourceFreeBuffer
+                delete source;        // caSource_dtor + operator_delete
                 m_sources[i] = nullptr;
             }
         }
         std::free(m_sources);
         m_sources = nullptr;
     }
-    m_nameMap = nil;   // ARC releases the name map
+    m_nameMap = nil; // ARC releases the name map
 }
 
-// Ghidra: caHandlePause @ 0x267b4 — pause the voice named by `handle` (generation-checked).
+// Ghidra: caHandlePause @ 0x267b4 — pause the voice named by `handle`
+// (generation-checked).
 bool neAVCAPlayer::pause(uint32_t handle) {
     const uint32_t bits = caHandleBits(handle);
     return m_component->pauseVoice((int)(bits >> 16), (uint16_t)(bits & 0xffff));
@@ -177,7 +179,8 @@ void neAVCAPlayer::stopAndClear(uint32_t handle) {
     m_component->stopAndClearVoice((int)(bits >> 16), (uint16_t)(bits & 0xffff));
 }
 
-// Ghidra: caUnregisterSource @ 0x26610 — detach a loaded source from any voice and free its PCM.
+// Ghidra: caUnregisterSource @ 0x26610 — detach a loaded source from any voice
+// and free its PCM.
 void neAVCAPlayer::unregisterSource(uint32_t sourceId) {
     if ((int)sourceId >= m_capacity || (int)sourceId < 0) {
         return;
@@ -186,12 +189,12 @@ void neAVCAPlayer::unregisterSource(uint32_t sourceId) {
     if (source == nullptr) {
         return;
     }
-    m_component->clearSourceRef(source);   // auClearSourceRef
-    source->freeBuffer();                  // caSourceFreeBuffer
+    m_component->clearSourceRef(source); // auClearSourceRef
+    source->freeBuffer();                // caSourceFreeBuffer
 }
 
-// Ghidra: caUnregisterSourceNamed @ 0x26644 — unregister a source by call name, then drop the
-// name from the lookup map.
+// Ghidra: caUnregisterSourceNamed @ 0x26644 — unregister a source by call name,
+// then drop the name from the lookup map.
 void neAVCAPlayer::unregisterSourceNamed(NSString *callName) {
     NSNumber *rid = m_nameMap[callName];
     if (rid == nil) {
@@ -201,7 +204,8 @@ void neAVCAPlayer::unregisterSourceNamed(NSString *callName) {
     [m_nameMap removeObjectForKey:callName];
 }
 
-// Ghidra: caPrepareSourceByIndex @ 0x266c0 — reserve a *fixed* mixer voice for a loaded source id.
+// Ghidra: caPrepareSourceByIndex @ 0x266c0 — reserve a *fixed* mixer voice for
+// a loaded source id.
 uint32_t neAVCAPlayer::prepareAtVoice(uint32_t sourceId, int voiceIndex) {
     if ((int)sourceId >= m_capacity || (int)sourceId < 0) {
         return (uint32_t)-1;
@@ -209,8 +213,8 @@ uint32_t neAVCAPlayer::prepareAtVoice(uint32_t sourceId, int voiceIndex) {
     if (m_sources[sourceId] == nullptr) {
         return (uint32_t)-1;
     }
-    // The original also carries a volume-level argument; the SetGroup caller leaves it at the
-    // default full level (0x7f).
+    // The original also carries a volume-level argument; the SetGroup caller
+    // leaves it at the default full level (0x7f).
     int handle = m_component->preparePlayer(m_sources[sourceId], voiceIndex, 0x7f);
     if (handle < 0) {
         return (uint32_t)-1;

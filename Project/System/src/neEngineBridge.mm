@@ -2,31 +2,32 @@
 //  neEngineBridge.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The C++ engine
-//  singletons and lifecycle hooks the Objective-C layer drives. C++11 function-
-//  local statics reproduce the binary's __cxa_guard'd lazy singletons.
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The C++
+//  engine singletons and lifecycle hooks the Objective-C layer drives. C++11
+//  function- local statics reproduce the binary's __cxa_guard'd lazy
+//  singletons.
 //
 
 #include <cstddef>
 #include <cstring>
 
-#import <UIKit/UIKit.h>       // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
-#import "AcNoteMng.h"         // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
+#import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
+#import "AcViewerTask.h" // AcViewerTask named work-area (apply-settings owner)
+#import "AepManager.h"   // AepManager::orderingTable() for neTextureForiOS_draw
 #import "AepTexture.h"
-#import "neTextureForiOS.h"   // neTextureForiOS::LoadTexture + neTextureForiOS_draw (defined below)
-#import "AepManager.h"        // AepManager::orderingTable() for neTextureForiOS_draw
-#import "AppDelegate.h"       // [AppDelegate appDelegate] / managedObjectContext (score store)
+#import "AppDelegate.h" // [AppDelegate appDelegate] / managedObjectContext (score store)
 #import "AudioManager.h"
-#import "AcViewerTask.h"      // AcViewerTask named work-area (apply-settings owner)
-#import "UserSettingData.h"   // +acvHiSpeed/+acvPopKun/+acvHidSud/+acvRanMir option accessors
-#import "ScoreData+Store.h"  // +[ScoreData getScoreData:inManagedObjectContext:] / hashScore:
-#import "ScoreData.h"        // ScoreData entity score/rank/playCnt/fullCombo/perfect properties
+#import "ScoreData+Store.h" // +[ScoreData getScoreData:inManagedObjectContext:] / hashScore:
+#import "ScoreData.h"       // ScoreData entity score/rank/playCnt/fullCombo/perfect properties
+#import "UserSettingData.h" // +acvHiSpeed/+acvPopKun/+acvHidSud/+acvRanMir option accessors
 #import "neEngineBridge.h"
-#import "neGraphics.h"       // findCharIndexForColumn declaration (defined below)
+#import "neGraphics.h"      // findCharIndexForColumn declaration (defined below)
+#import "neTextureForiOS.h" // neTextureForiOS::LoadTexture + neTextureForiOS_draw (defined below)
+#import <UIKit/UIKit.h>     // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
 
 // Create + register the boot logo splash task (Task/TaskFactory.mm).
 class C_TASK;
-C_TASK *BootCreateTask();   // operator_new(0x4c) + BootLogoTask_ctor + setPriority(3)
+C_TASK *BootCreateTask(); // operator_new(0x4c) + BootLogoTask_ctor + setPriority(3)
 
 // Head of the shared-texture cache list (Ghidra: DAT_00188464). Registered/
 // unlinked by AepTexture as cached textures are acquired/released.
@@ -40,7 +41,7 @@ static const int kTaskStateOffsetAc = 0x20c;
 #pragma mark - neAppEventCenter (guarded singleton @ DAT_00187bb8)
 
 neAppEventCenter &neAppEventCenter::shared() {
-    static neAppEventCenter instance;   // Ghidra: NEAppEventCenter_shared (FUN_0000b150)
+    static neAppEventCenter instance; // Ghidra: NEAppEventCenter_shared (FUN_0000b150)
     return instance;
 }
 
@@ -55,49 +56,65 @@ void neAppEventCenter::begin() {
 }
 
 // Ghidra: FUN_00028c9c — a no-op in this build.
-void neAppEventCenter::flush() {}
+void neAppEventCenter::flush() {
+}
 
-// @ 0x29274 — record the session start time (_startDate @ +0x20). The binary released
-// the previous NSDate and retained [NSDate date]; the ARC strong-ivar store does both.
+// @ 0x29274 — record the session start time (_startDate @ +0x20). The binary
+// released the previous NSDate and retained [NSDate date]; the ARC strong-ivar
+// store does both.
 void neAppEventCenter::setStartDate() {
     _startDate = [NSDate date];
 }
 
-// @ 0x292c0 — record the session end time (_endDate @ +0x24). The binary released the
-// previous NSDate and retained [NSDate date]; the ARC strong-ivar store does both.
+// @ 0x292c0 — record the session end time (_endDate @ +0x24). The binary
+// released the previous NSDate and retained [NSDate date]; the ARC strong-ivar
+// store does both.
 void neAppEventCenter::setEndDate() {
     _endDate = [NSDate date];
 }
 
-// Remote-push pending flag (event-center region global g_bRemoteNotifyPending). Set when a
-// push notification is received (AppDelegate application:didReceiveRemoteNotification:) and
-// cleared once the recommend list is refreshed.
+// Remote-push pending flag (event-center region global g_bRemoteNotifyPending).
+// Set when a push notification is received (AppDelegate
+// application:didReceiveRemoteNotification:) and cleared once the recommend
+// list is refreshed.
 static bool g_bRemoteNotifyPending = false;
-bool neAppEventCenter::remoteNotifyPending() const { return g_bRemoteNotifyPending; }
-void neAppEventCenter::setRemoteNotifyPending(bool pending) { g_bRemoteNotifyPending = pending; }
+bool neAppEventCenter::remoteNotifyPending() const {
+    return g_bRemoteNotifyPending;
+}
+void neAppEventCenter::setRemoteNotifyPending(bool pending) {
+    g_bRemoteNotifyPending = pending;
+}
 
-// AC-viewer selection state (event-center region): the current browsing pair and the
-// pending "Sel" pair carried into the play scene.
-static int g_dwAcViewerMusicId       = -1;  // g_dwAcViewerMusicId      @ 0x187bf0
-static int g_wAcViewerDifficulty    = 0;   // g_wAcViewerDifficulty    @ 0x187bf4
-static int g_dwAcViewerSelMusicId    = -1;  // g_dwAcViewerSelMusicId   @ 0x187bf8
-static int g_wAcViewerSelDifficulty = 0;   // g_wAcViewerSelDifficulty @ 0x187bfc
+// AC-viewer selection state (event-center region): the current browsing pair
+// and the pending "Sel" pair carried into the play scene.
+static int g_dwAcViewerMusicId = -1;     // g_dwAcViewerMusicId      @ 0x187bf0
+static int g_wAcViewerDifficulty = 0;    // g_wAcViewerDifficulty    @ 0x187bf4
+static int g_dwAcViewerSelMusicId = -1;  // g_dwAcViewerSelMusicId   @ 0x187bf8
+static int g_wAcViewerSelDifficulty = 0; // g_wAcViewerSelDifficulty @ 0x187bfc
 
-// Reset the pending selection to the "none" sentinels (music id -1, difficulty 0xffff)
-// — done when the viewer is cancelled.
+// Reset the pending selection to the "none" sentinels (music id -1, difficulty
+// 0xffff) — done when the viewer is cancelled.
 void neAppEventCenter::clearAcViewerSelection() {
     g_dwAcViewerSelMusicId = -1;
     g_wAcViewerSelDifficulty = 0xffff;
 }
 
-int  neAppEventCenter::acViewerMusicId() { return g_dwAcViewerMusicId; }
-int  neAppEventCenter::acViewerDifficulty() { return g_wAcViewerDifficulty; }
+int neAppEventCenter::acViewerMusicId() {
+    return g_dwAcViewerMusicId;
+}
+int neAppEventCenter::acViewerDifficulty() {
+    return g_wAcViewerDifficulty;
+}
 void neAppEventCenter::setAcViewerSelection(int musicId, int difficulty) {
     g_dwAcViewerMusicId = musicId;
     g_wAcViewerDifficulty = difficulty;
 }
-int  neAppEventCenter::acViewerSelMusicId() { return g_dwAcViewerSelMusicId; }
-int  neAppEventCenter::acViewerSelDifficulty() { return g_wAcViewerSelDifficulty; }
+int neAppEventCenter::acViewerSelMusicId() {
+    return g_dwAcViewerSelMusicId;
+}
+int neAppEventCenter::acViewerSelDifficulty() {
+    return g_wAcViewerSelDifficulty;
+}
 void neAppEventCenter::commitAcViewerSelection() {
     g_dwAcViewerSelMusicId = g_dwAcViewerMusicId;
     g_wAcViewerSelDifficulty = g_wAcViewerDifficulty;
@@ -108,55 +125,92 @@ void neAppEventCenter::clearAcViewerCurrentMusic() {
     g_dwAcViewerMusicId = -1;
 }
 
-// e-AMUSEMENT login context (event-center region). The login flow populates these;
-// the music-checker score sync reads them. Modelled as file-static globals, matching
-// the AC-viewer selection state above.
-static id        g_pLinkRefId      = nil;    // g_pLinkRefId       @ 0x187be0 (+0x28)
-static NSString *g_pInputPassword  = nil;    // g_pInputPassword   @ 0x187be4 (+0x2c)
-static bool      g_bRequireOtpInput = false; // g_bRequireOtpInput @ 0x187be9 (+0x31)
+// e-AMUSEMENT login context (event-center region). The login flow populates
+// these; the music-checker score sync reads them. Modelled as file-static
+// globals, matching the AC-viewer selection state above.
+static id g_pLinkRefId = nil;            // g_pLinkRefId       @ 0x187be0 (+0x28)
+static NSString *g_pInputPassword = nil; // g_pInputPassword   @ 0x187be4 (+0x2c)
+static bool g_bRequireOtpInput = false;  // g_bRequireOtpInput @ 0x187be9 (+0x31)
 
-id        neAppEventCenter::linkRefId()      { return g_pLinkRefId; }
-NSString *neAppEventCenter::inputPassword()  { return g_pInputPassword; }
-bool      neAppEventCenter::requireOtpInput() { return g_bRequireOtpInput; }
+id neAppEventCenter::linkRefId() {
+    return g_pLinkRefId;
+}
+NSString *neAppEventCenter::inputPassword() {
+    return g_pInputPassword;
+}
+bool neAppEventCenter::requireOtpInput() {
+    return g_bRequireOtpInput;
+}
 
-// Writers for the login context, driven by the KID-input screen. Under ARC the strong
-// static ivars take care of the retain/release the binary did by hand.
-void neAppEventCenter::setInputPassword(NSString *password) { g_pInputPassword = password; }
-void neAppEventCenter::setLinkRefId(id refId)               { g_pLinkRefId = refId; }
-void neAppEventCenter::setRequireOtpInput(bool require)     { g_bRequireOtpInput = require; }
+// Writers for the login context, driven by the KID-input screen. Under ARC the
+// strong static ivars take care of the retain/release the binary did by hand.
+void neAppEventCenter::setInputPassword(NSString *password) {
+    g_pInputPassword = password;
+}
+void neAppEventCenter::setLinkRefId(id refId) {
+    g_pLinkRefId = refId;
+}
+void neAppEventCenter::setRequireOtpInput(bool require) {
+    g_bRequireOtpInput = require;
+}
 
-// pop'n-link availability (event-center region global @ g_bLinkButtonsEnabled). Populated
-// by the (not-yet-reconstructed) pop'n-link login flow; false until the KID is linked, so
-// the score-checker / quiz buttons stay disabled and the top screen forces KID input.
+// pop'n-link availability (event-center region global @ g_bLinkButtonsEnabled).
+// Populated by the (not-yet-reconstructed) pop'n-link login flow; false until
+// the KID is linked, so the score-checker / quiz buttons stay disabled and the
+// top screen forces KID input.
 static bool g_bLinkButtonsEnabled = false;
-bool      neAppEventCenter::linkButtonsEnabled() { return g_bLinkButtonsEnabled; }
-void      neAppEventCenter::setLinkButtonsEnabled(bool enabled) { g_bLinkButtonsEnabled = enabled; }
+bool neAppEventCenter::linkButtonsEnabled() {
+    return g_bLinkButtonsEnabled;
+}
+void neAppEventCenter::setLinkButtonsEnabled(bool enabled) {
+    g_bLinkButtonsEnabled = enabled;
+}
 
-int neAppEventCenter::lastMusic() const { return m_lastMusic; }
-void neAppEventCenter::setLastMusic(int music) { m_lastMusic = music; }
-int neAppEventCenter::lastSheet() const { return m_lastSheet; }
-void neAppEventCenter::setLastSheet(int sheet) { m_lastSheet = sheet; }
+int neAppEventCenter::lastMusic() const {
+    return m_lastMusic;
+}
+void neAppEventCenter::setLastMusic(int music) {
+    m_lastMusic = music;
+}
+int neAppEventCenter::lastSheet() const {
+    return m_lastSheet;
+}
+void neAppEventCenter::setLastSheet(int sheet) {
+    m_lastSheet = sheet;
+}
 
 // Guest / no-save run flag (event-center region global g_bGuestNoSaveMode).
 static bool g_bGuestNoSaveMode = false;
-bool neAppEventCenter::guestNoSaveMode() const { return g_bGuestNoSaveMode; }
-void neAppEventCenter::setGuestNoSaveMode(bool guest) { g_bGuestNoSaveMode = guest; }
+bool neAppEventCenter::guestNoSaveMode() const {
+    return g_bGuestNoSaveMode;
+}
+void neAppEventCenter::setGuestNoSaveMode(bool guest) {
+    g_bGuestNoSaveMode = guest;
+}
 
 #pragma mark - Score store (Core Data ScoreData entity)
 
-// PlayScore is the named view of this singleton's result region; the reinterpret_casts in the
-// three member wrappers below rely on it overlaying the singleton exactly.
+// PlayScore is the named view of this singleton's result region; the
+// reinterpret_casts in the three member wrappers below rely on it overlaying
+// the singleton exactly.
 static_assert(sizeof(PlayScore) == 0x48, "PlayScore must overlay the neAppEventCenter singleton");
 static_assert(offsetof(PlayScore, coolCount) == 0x08, "PlayScore.coolCount @ +0x08");
 static_assert(offsetof(PlayScore, score) == 0x10, "PlayScore.score @ +0x10");
 static_assert(offsetof(PlayScore, fullCombo) == 0x1c, "PlayScore.fullCombo @ +0x1c");
 static_assert(offsetof(PlayScore, isNewHighScore) == 0x32, "PlayScore.isNewHighScore @ +0x32");
 
-// @ 0x29438 — read one difficulty's columns out of a fetched ScoreData record. `rec` is unused
-// (the binary reads everything from `recDup`, the same object); the null guard mirrors the
-// binary (only the score/rank/playCnt out-params are checked).
-void readScoreDataFields(ScoreData *rec, int *outScore, short *outRank, int *outPlayCnt,
-                         bool *outFullCombo, bool *outPerfect, ScoreData *recDup, int difficulty) {
+// @ 0x29438 — read one difficulty's columns out of a fetched ScoreData record.
+// `rec` is unused (the binary reads everything from `recDup`, the same object);
+// the null guard mirrors the binary (only the score/rank/playCnt out-params are
+// checked).
+void readScoreDataFields(ScoreData *rec,
+                         int *outScore,
+                         short *outRank,
+                         int *outPlayCnt,
+                         bool *outFullCombo,
+                         bool *outPerfect,
+                         ScoreData *recDup,
+                         int difficulty) {
     (void)rec;
     if (outScore == nullptr || outRank == nullptr || outPlayCnt == nullptr) {
         return;
@@ -165,76 +219,130 @@ void readScoreDataFields(ScoreData *rec, int *outScore, short *outRank, int *out
     NSNumber *score, *rank, *playCnt, *fullCombo, *perfect;
     switch (difficulty) {
     case 0:
-        score = recDup.scoreN;  rank = recDup.rankN;  playCnt = recDup.playCntN;
-        fullCombo = recDup.fullComboN;  perfect = recDup.perfectN;
+        score = recDup.scoreN;
+        rank = recDup.rankN;
+        playCnt = recDup.playCntN;
+        fullCombo = recDup.fullComboN;
+        perfect = recDup.perfectN;
         break;
     case 1:
-        score = recDup.scoreH;  rank = recDup.rankH;  playCnt = recDup.playCntH;
-        fullCombo = recDup.fullComboH;  perfect = recDup.perfectH;
+        score = recDup.scoreH;
+        rank = recDup.rankH;
+        playCnt = recDup.playCntH;
+        fullCombo = recDup.fullComboH;
+        perfect = recDup.perfectH;
         break;
     case 2:
-        score = recDup.scoreEx; rank = recDup.rankEx; playCnt = recDup.playCntEx;
-        fullCombo = recDup.fullComboEx; perfect = recDup.perfectEx;
+        score = recDup.scoreEx;
+        rank = recDup.rankEx;
+        playCnt = recDup.playCntEx;
+        fullCombo = recDup.fullComboEx;
+        perfect = recDup.perfectEx;
         break;
     default:
-        return;   // unknown difficulty: leave *outScore == 0, others untouched
+        return; // unknown difficulty: leave *outScore == 0, others untouched
     }
-    *outScore     = [score intValue];
-    *outRank      = (short)[rank intValue];
-    *outPlayCnt   = [playCnt intValue];
+    *outScore = [score intValue];
+    *outRank = (short)[rank intValue];
+    *outPlayCnt = [playCnt intValue];
     *outFullCombo = [fullCombo boolValue];
-    *outPerfect   = [perfect boolValue];
+    *outPerfect = [perfect boolValue];
 }
 
-// @ 0x293c4 — fetch the ScoreData record for `musicId` and hand it to readScoreDataFields.
-// `center` is the app-event-center pointer the binary passes as arg 0; it is vestigial (unused).
-void fetchScoreDataForMusic(void *center, int *outScore, short *outRank, int *outPlayCnt,
-                            bool *outFullCombo, bool *outPerfect,
-                            unsigned musicId, int difficulty) {
+// @ 0x293c4 — fetch the ScoreData record for `musicId` and hand it to
+// readScoreDataFields. `center` is the app-event-center pointer the binary
+// passes as arg 0; it is vestigial (unused).
+void fetchScoreDataForMusic(void *center,
+                            int *outScore,
+                            short *outRank,
+                            int *outPlayCnt,
+                            bool *outFullCombo,
+                            bool *outPerfect,
+                            unsigned musicId,
+                            int difficulty) {
     (void)center;
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
     ScoreData *rec = [ScoreData getScoreData:(int)musicId inManagedObjectContext:ctx];
-    readScoreDataFields(rec, outScore, outRank, outPlayCnt, outFullCombo, outPerfect, rec, difficulty);
+    readScoreDataFields(
+        rec, outScore, outRank, outPlayCnt, outFullCombo, outPerfect, rec, difficulty);
 }
 
-// @ 0x28ca0 — persist a finished play into the ScoreData store for its difficulty.
+// @ 0x28ca0 — persist a finished play into the ScoreData store for its
+// difficulty.
 void saveScoreData(PlayScore *s) {
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
     [ctx reset];
     ScoreData *rec = [ScoreData getScoreData:(int)s->musicId inManagedObjectContext:ctx];
     const int diff = s->difficulty;
 
-    // Full combo -> set this difficulty's FC medal; a spotless sheet (no GOOD and no BAD) also
-    // sets the PERFECT medal.
+    // Full combo -> set this difficulty's FC medal; a spotless sheet (no GOOD and
+    // no BAD) also sets the PERFECT medal.
     if (s->fullCombo) {
         switch (diff) {
-        case 0: rec.fullComboN = @YES; break;
-        case 1: rec.fullComboH = @YES; break;
-        case 2: rec.fullComboEx = @YES; break;
+        case 0:
+            rec.fullComboN = @YES;
+            break;
+        case 1:
+            rec.fullComboH = @YES;
+            break;
+        case 2:
+            rec.fullComboEx = @YES;
+            break;
         }
         if (s->badCount == 0 && s->goodCount == 0) {
             switch (diff) {
-            case 0: rec.perfectN = @YES; break;
-            case 1: rec.perfectH = @YES; break;
-            case 2: rec.perfectEx = @YES; break;
+            case 0:
+                rec.perfectN = @YES;
+                break;
+            case 1:
+                rec.perfectH = @YES;
+                break;
+            case 2:
+                rec.perfectEx = @YES;
+                break;
             }
         }
     }
 
-    // Better rank (lower is better) -> store it. A stored rank of -1 means "unset".
+    // Better rank (lower is better) -> store it. A stored rank of -1 means
+    // "unset".
     const int newRank = s->rank;
     switch (diff) {
-    case 0: { int ex = [rec.rankN intValue];  if (ex == -1 || newRank < ex) rec.rankN = @(newRank); break; }
-    case 1: { int ex = [rec.rankH intValue];  if (ex == -1 || newRank < ex) rec.rankH = @(newRank); break; }
-    case 2: { int ex = [rec.rankEx intValue]; if (ex == -1 || newRank < ex) rec.rankEx = @(newRank); break; }
+    case 0: {
+        int ex = [rec.rankN intValue];
+        if (ex == -1 || newRank < ex) {
+            rec.rankN = @(newRank);
+        }
+        break;
+    }
+    case 1: {
+        int ex = [rec.rankH intValue];
+        if (ex == -1 || newRank < ex) {
+            rec.rankH = @(newRank);
+        }
+        break;
+    }
+    case 2: {
+        int ex = [rec.rankEx intValue];
+        if (ex == -1 || newRank < ex) {
+            rec.rankEx = @(newRank);
+        }
+        break;
+    }
     }
 
     // New high score -> store it and re-hash the tamper checksum.
     if (s->isNewHighScore) {
         switch (diff) {
-        case 0: rec.scoreN = @(s->score); break;
-        case 1: rec.scoreH = @(s->score); break;
-        case 2: rec.scoreEx = @(s->score); break;
+        case 0:
+            rec.scoreN = @(s->score);
+            break;
+        case 1:
+            rec.scoreH = @(s->score);
+            break;
+        case 2:
+            rec.scoreEx = @(s->score);
+            break;
         }
         rec.chksco = [ScoreData hashScore:rec];
     }
@@ -243,16 +351,23 @@ void saveScoreData(PlayScore *s) {
 
     // Bump this difficulty's play count.
     switch (diff) {
-    case 0: rec.playCntN = @([rec.playCntN intValue] + 1); break;
-    case 1: rec.playCntH = @([rec.playCntH intValue] + 1); break;
-    case 2: rec.playCntEx = @([rec.playCntEx intValue] + 1); break;
+    case 0:
+        rec.playCntN = @([rec.playCntN intValue] + 1);
+        break;
+    case 1:
+        rec.playCntH = @([rec.playCntH intValue] + 1);
+        break;
+    case 2:
+        rec.playCntEx = @([rec.playCntEx intValue] + 1);
+        break;
     }
 
     NSError *err = nil;
     if (![ctx save:&err]) {
-        // On failure the binary walks the validation sub-errors (NSDetailedErrorsKey). No
-        // user-visible handling beyond the enumeration; the enumeration-mutation / stack-guard
-        // scaffolding around it is compiler glue and is omitted.
+        // On failure the binary walks the validation sub-errors
+        // (NSDetailedErrorsKey). No user-visible handling beyond the enumeration;
+        // the enumeration-mutation / stack-guard scaffolding around it is compiler
+        // glue and is omitted.
         NSArray *detailed = [[err userInfo] objectForKey:NSDetailedErrorsKey];
         for (NSError *sub in detailed) {
             (void)sub;
@@ -260,56 +375,76 @@ void saveScoreData(PlayScore *s) {
     }
 }
 
-// @ 0x2930c — pre-save "beat the record" check: read the current stored best, flag a new high
-// score, then write the passed play tallies / score / full-combo into the record `s`.
-BOOL updateHighScore(PlayScore *s, unsigned newScore, short cool, short great,
-                     short good, short bad, char fullCombo) {
+// @ 0x2930c — pre-save "beat the record" check: read the current stored best,
+// flag a new high score, then write the passed play tallies / score /
+// full-combo into the record `s`.
+BOOL updateHighScore(PlayScore *s,
+                     unsigned newScore,
+                     short cool,
+                     short great,
+                     short good,
+                     short bad,
+                     char fullCombo) {
     s->isNewHighScore = 0;
 
-    int   curScore = 0;  short curRank = 0;  int curPlayCnt = 0;
-    bool  curFullCombo = false, curPerfect = false;
+    int curScore = 0;
+    short curRank = 0;
+    int curPlayCnt = 0;
+    bool curFullCombo = false, curPerfect = false;
     ScoreData *rec = [ScoreData getScoreData:(int)s->musicId
                       inManagedObjectContext:[[AppDelegate appDelegate] managedObjectContext]];
-    readScoreDataFields(rec, &curScore, &curRank, &curPlayCnt, &curFullCombo, &curPerfect,
-                        rec, s->difficulty);
+    readScoreDataFields(
+        rec, &curScore, &curRank, &curPlayCnt, &curFullCombo, &curPerfect, rec, s->difficulty);
 
     const BOOL isNew = (curScore < (int)newScore);
     s->isNewHighScore = isNew ? 1 : 0;
 
-    s->coolCount  = cool;
+    s->coolCount = cool;
     s->greatCount = great;
-    s->goodCount  = good;
-    s->badCount   = bad;
-    s->score      = (int)newScore;
-    s->fullCombo  = (unsigned char)fullCombo;
+    s->goodCount = good;
+    s->badCount = bad;
+    s->score = (int)newScore;
+    s->fullCombo = (unsigned char)fullCombo;
     return isNew;
 }
 
 #pragma mark - neAppEventCenter score-store wrappers
 
-// The three OO faces the ObjC layer calls; each reinterprets the singleton as a PlayScore (they
-// share a layout — see the static_asserts above) and forwards to the free store functions.
+// The three OO faces the ObjC layer calls; each reinterprets the singleton as a
+// PlayScore (they share a layout — see the static_asserts above) and forwards
+// to the free store functions.
 
-void neAppEventCenter::readStoredResult(int *outScore, short *outRank, int *outPlayCnt,
-                                        bool *outFullCombo, bool *outPerfect) {
-    fetchScoreDataForMusic(this, outScore, outRank, outPlayCnt, outFullCombo, outPerfect,
-                           (unsigned)m_lastMusic, m_lastSheet);
+void neAppEventCenter::readStoredResult(
+    int *outScore, short *outRank, int *outPlayCnt, bool *outFullCombo, bool *outPerfect) {
+    fetchScoreDataForMusic(this,
+                           outScore,
+                           outRank,
+                           outPlayCnt,
+                           outFullCombo,
+                           outPerfect,
+                           (unsigned)m_lastMusic,
+                           m_lastSheet);
 }
 
 void neAppEventCenter::commitResultToScoreData() {
     saveScoreData(reinterpret_cast<PlayScore *>(this));
 }
 
-bool neAppEventCenter::recordPlayResult(unsigned score, short cool, short great, short good,
-                                        short bad, bool fullCombo) {
-    return updateHighScore(reinterpret_cast<PlayScore *>(this), score, cool, great, good, bad,
+bool neAppEventCenter::recordPlayResult(
+    unsigned score, short cool, short great, short good, short bad, bool fullCombo) {
+    return updateHighScore(reinterpret_cast<PlayScore *>(this),
+                           score,
+                           cool,
+                           great,
+                           good,
+                           bad,
                            fullCombo ? 1 : 0) != NO;
 }
 
 #pragma mark - neSceneManager (guarded singleton @ DAT_00187b74)
 
 neSceneManager &neSceneManager::shared() {
-    static neSceneManager instance;   // Ghidra: NESceneManager_shared (FUN_0000b194)
+    static neSceneManager instance; // Ghidra: NESceneManager_shared (FUN_0000b194)
     return instance;
 }
 
@@ -323,14 +458,23 @@ UIViewController *neSceneManager::rootViewController() {
     return shared().m_root;
 }
 
-// Ghidra: getNormalSoundName @ 0x2c7c0 — the display name for a touch-sound kind, indexed by kind
-// (low 16 bits; anything past the last entry folds to 0). The binary returns one of ten constant
-// CFStrings from PTR_cf_normal_001310d4; the picker rows show it. Returned as a __bridge void* to
-// match the header's opaque type (mirroring rootViewController()'s ObjC-on-the-far-side handoff).
+// Ghidra: getNormalSoundName @ 0x2c7c0 — the display name for a touch-sound
+// kind, indexed by kind (low 16 bits; anything past the last entry folds to 0).
+// The binary returns one of ten constant CFStrings from PTR_cf_normal_001310d4;
+// the picker rows show it. Returned as a __bridge void* to match the header's
+// opaque type (mirroring rootViewController()'s ObjC-on-the-far-side handoff).
 void *neSceneManager::normalSoundName(int soundNo) {
     static NSString *const kNames[] = {
-        @"normal", @"water", @"crack",    @"shooting", @"tambourine",
-        @"sword",  @"cheer", @"shishamo", @"bag",      @"bat",
+        @"normal",
+        @"water",
+        @"crack",
+        @"shooting",
+        @"tambourine",
+        @"sword",
+        @"cheer",
+        @"shishamo",
+        @"bag",
+        @"bat",
     };
     unsigned kind = static_cast<unsigned>(soundNo) & 0xffff;
     if (kind > 9) {
@@ -339,14 +483,24 @@ void *neSceneManager::normalSoundName(int soundNo) {
     return (__bridge void *)kNames[kind];
 }
 
-// Ghidra: getHitSoundName @ ~0x2c7c0 sibling — the bundle resource base-name of the SE
-// previewed for a touch-sound kind (0..9), loaded as "<name>.m4a". The kind-order matches
-// normalSoundName's display names. Constant CFString table; kinds past the last fold to 0.
+// Ghidra: getHitSoundName @ ~0x2c7c0 sibling — the bundle resource base-name of
+// the SE previewed for a touch-sound kind (0..9), loaded as "<name>.m4a". The
+// kind-order matches normalSoundName's display names. Constant CFString table;
+// kinds past the last fold to 0.
 void *neSceneManager::hitSoundName(int soundNo) {
-    // Ghidra: PTR_cf_hit001_001310ac[kind] — kind 7 ("shishamo") uses se06_nya, not hit008.
+    // Ghidra: PTR_cf_hit001_001310ac[kind] — kind 7 ("shishamo") uses se06_nya,
+    // not hit008.
     static NSString *const kNames[] = {
-        @"hit001", @"hit002", @"hit003", @"hit004", @"hit005",
-        @"hit006", @"hit007", @"se06_nya", @"hit008", @"hit009",
+        @"hit001",
+        @"hit002",
+        @"hit003",
+        @"hit004",
+        @"hit005",
+        @"hit006",
+        @"hit007",
+        @"se06_nya",
+        @"hit008",
+        @"hit009",
     };
     unsigned kind = static_cast<unsigned>(soundNo) & 0xffff;
     if (kind > 9) {
@@ -355,23 +509,27 @@ void *neSceneManager::hitSoundName(int soundNo) {
     return (__bridge void *)kNames[kind];
 }
 
-// The 5 shared "system" UI SE source ids (scene-manager global +0x14) and the once-per-scene
-// loaded flag (+0x3c). The playing-instance handles live in neEngine::g_systemSeHandles.
+// The 5 shared "system" UI SE source ids (scene-manager global +0x14) and the
+// once-per-scene loaded flag (+0x3c). The playing-instance handles live in
+// neEngine::g_systemSeHandles.
 static RSND_SOURCE_ID s_systemSeSource[5] = {
-    (RSND_SOURCE_ID)-1, (RSND_SOURCE_ID)-1, (RSND_SOURCE_ID)-1,
-    (RSND_SOURCE_ID)-1, (RSND_SOURCE_ID)-1,
-};   // -1 sentinel (RSND_SOURCE_ID is unsigned; the loaded flag gates use)
+    (RSND_SOURCE_ID)-1,
+    (RSND_SOURCE_ID)-1,
+    (RSND_SOURCE_ID)-1,
+    (RSND_SOURCE_ID)-1,
+    (RSND_SOURCE_ID)-1,
+}; // -1 sentinel (RSND_SOURCE_ID is unsigned; the loaded flag gates use)
 static bool s_systemSeLoaded = false;
 
-// Ghidra: loadSoundEffects FUN_0002c5c8 — load the 5 shared UI SEs (decide / cancel / two
-// slide sounds) into group 1 once per scene, then apply the saved SE volume.
+// Ghidra: loadSoundEffects FUN_0002c5c8 — load the 5 shared UI SEs (decide /
+// cancel / two slide sounds) into group 1 once per scene, then apply the saved
+// SE volume.
 void neSceneManager::loadSystemSe() {
     if (s_systemSeLoaded) {
         return;
     }
     static NSString *const kNames[5] = {
-        @"v21", @"se02_kettei", @"se03_cancell", @"se05_slide2", @"se04_slide1"
-    };
+        @"v21", @"se02_kettei", @"se03_cancell", @"se05_slide2", @"se04_slide1"};
     AudioManager *audio = [AudioManager sharedManager];
     for (int i = 0; i < 5; i++) {
         NSString *path = [[NSBundle mainBundle] pathForResource:kNames[i] ofType:@"m4a"];
@@ -381,7 +539,8 @@ void neSceneManager::loadSystemSe() {
     s_systemSeLoaded = true;
 }
 
-// Ghidra: releaseSoundEffects FUN_0002c6bc — release the 5 UI SEs on scene teardown.
+// Ghidra: releaseSoundEffects FUN_0002c6bc — release the 5 UI SEs on scene
+// teardown.
 void neSceneManager::releaseSystemSe() {
     if (!s_systemSeLoaded) {
         return;
@@ -399,9 +558,15 @@ static float s_screenWidth = 640.0f;
 static float s_screenHeight = 960.0f;
 static float s_screenScale = 1.0f;
 
-float neSceneManager::screenWidth() { return s_screenWidth; }
-float neSceneManager::screenHeight() { return s_screenHeight; }
-float neSceneManager::screenScale() { return s_screenScale; }
+float neSceneManager::screenWidth() {
+    return s_screenWidth;
+}
+float neSceneManager::screenHeight() {
+    return s_screenHeight;
+}
+float neSceneManager::screenScale() {
+    return s_screenScale;
+}
 
 void neSceneManager::setScreenMetrics(float width, float height, float scale) {
     s_screenWidth = width;
@@ -411,25 +576,35 @@ void neSceneManager::setScreenMetrics(float width, float height, float scale) {
 
 // Device-class flag (Ghidra global DAT_00187b84).
 static bool s_isPadDisplay = false;
-bool neSceneManager::isPadDisplay() { return s_isPadDisplay; }
-void neSceneManager::setPadDisplay(bool isPad) { s_isPadDisplay = isPad; }
+bool neSceneManager::isPadDisplay() {
+    return s_isPadDisplay;
+}
+void neSceneManager::setPadDisplay(bool isPad) {
+    s_isPadDisplay = isPad;
+}
 
-// neGraphics (the DAT_00188384 render/input manager) lives in Render/neGraphics.cpp.
+// neGraphics (the DAT_00188384 render/input manager) lives in
+// Render/neGraphics.cpp.
 
 #pragma mark - Lifecycle hooks
 
 namespace neEngine {
 
-// Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) / NEEngine_bootstrapC (FUN_0001796c) —
-// engine bring-up steps run once at launch (guarded singletons in the binary).
+// Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) / NEEngine_bootstrapC
+// (FUN_0001796c) — engine bring-up steps run once at launch (guarded singletons
+// in the binary).
 void bootstrapB() {
     static bool once = false;
-    if (!once) { once = true; }
+    if (!once) {
+        once = true;
+    }
 }
 
 void bootstrapC(int /*flag*/) {
     static bool once = false;
-    if (!once) { once = true; }
+    if (!once) {
+        once = true;
+    }
 }
 
 // Ghidra: FUN_0001bdf8 — walk the reloadable-texture list (circular, via +0x8)
@@ -440,11 +615,12 @@ void onDidEnterBackground() {
         return;
     }
     for (AepTexture *tex = head->next; tex != head; tex = tex->next) {
-        tex->releaseGL();   // FUN_00018884
+        tex->releaseGL(); // FUN_00018884
     }
 }
 
-// Ghidra: FUN_00030710 — nudge the passed MainTask toward its stop state (6->5).
+// Ghidra: FUN_00030710 — nudge the passed MainTask toward its stop state
+// (6->5).
 void stopMainTask(MainTask *mainTask) {
     if (mainTask == nullptr) {
         return;
@@ -455,7 +631,8 @@ void stopMainTask(MainTask *mainTask) {
     }
 }
 
-// Ghidra: FUN_0002314c — nudge the passed AcMainTask toward its stop state (6->0xc).
+// Ghidra: FUN_0002314c — nudge the passed AcMainTask toward its stop state
+// (6->0xc).
 void stopAcMainTask(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
@@ -466,8 +643,9 @@ void stopAcMainTask(AcMainTask *acMainTask) {
     }
 }
 
-// Ghidra: requestGameExit (FUN_0002315c) — flag the running AcMainTask to leave the
-// arcade-viewer play (exit state @ +0x20c := 8, exit-request flag @ +0x1d9 := 1).
+// Ghidra: requestGameExit (FUN_0002315c) — flag the running AcMainTask to leave
+// the arcade-viewer play (exit state @ +0x20c := 8, exit-request flag @ +0x1d9
+// := 1).
 void acMainRequestGameExit(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
@@ -477,9 +655,10 @@ void acMainRequestGameExit(AcMainTask *acMainTask) {
     *(t + 0x1d9) = 1;
 }
 
-// Ghidra: applyGameplaySettings (FUN_00023850) — push the arcade-viewer option selections into
-// the live AcViewerTask, re-seek its note stream, and resume the render loop. Called from the
-// options sheet's CONTINUE / BACK buttons (AcViewerOptionViewController). @ 0x23850
+// Ghidra: applyGameplaySettings (FUN_00023850) — push the arcade-viewer option
+// selections into the live AcViewerTask, re-seek its note stream, and resume
+// the render loop. Called from the options sheet's CONTINUE / BACK buttons
+// (AcViewerOptionViewController). @ 0x23850
 void acMainApplyGameplaySettings(AcViewerTask *task) {
     if (task == nullptr) {
         return;
@@ -499,32 +678,36 @@ void acMainApplyGameplaySettings(AcViewerTask *task) {
         nm.setupLaneMapping(ranMir);
     }
 
-    // Re-init the play data and re-seek only when hi-speed or ran/mir actually changed vs the
-    // stored values (decompile bVar5 logic: bVar5 = hiSpeed==m_hiSpeed; if bVar5 it then compares
-    // ran/mir — i.e. proceed iff hiSpeed changed OR ran/mir changed).
+    // Re-init the play data and re-seek only when hi-speed or ran/mir actually
+    // changed vs the stored values (decompile bVar5 logic: bVar5 =
+    // hiSpeed==m_hiSpeed; if bVar5 it then compares ran/mir — i.e. proceed iff
+    // hiSpeed changed OR ran/mir changed).
     const bool hiSpeedChanged = (hiSpeed != task->m_hiSpeed);
     const bool ranMirChanged = (ranMir != task->m_ranMir);
     if (hiSpeedChanged || ranMirChanged) {
-        // Snapshot the seek-math inputs (the decompile captures +0xf4/+0xfc/+0x118 here, before
-        // the re-init) then commit the new selections.
-        const float seekCoef = task->m_seekCoef;    // +0xf4
-        const int   pauseTime = task->m_pauseTime;  // +0xfc  (position snapshot at pause)
-        const int   seekScale = task->m_seekScale;  // +0x118
+        // Snapshot the seek-math inputs (the decompile captures +0xf4/+0xfc/+0x118
+        // here, before the re-init) then commit the new selections.
+        const float seekCoef = task->m_seekCoef; // +0xf4
+        const int pauseTime = task->m_pauseTime; // +0xfc  (position snapshot at pause)
+        const int seekScale = task->m_seekScale; // +0x118
 
         task->m_hiSpeed = hiSpeed;
         task->m_ranMir = ranMir;
 
-        // Re-parse the chart with the new hi-speed (arg shape matches acNoteMngInitPlayData
-        // @ 0x7a774 — the sheet NSData @ +0x1e0 and the hi-speed step). m_sheet is the bridged,
-        // task-owned chart data, so a non-owning __bridge cast is correct here.
+        // Re-parse the chart with the new hi-speed (arg shape matches
+        // acNoteMngInitPlayData
+        // @ 0x7a774 — the sheet NSData @ +0x1e0 and the hi-speed step). m_sheet is
+        // the bridged, task-owned chart data, so a non-owning __bridge cast is
+        // correct here.
         nm.initPlayDataWithData((__bridge NSData *)task->m_sheet, hiSpeed);
 
         // Resume-seek target: the binary computes
         //   FPToFixed( FixedToFP(pauseTime) + seekCoef * FixedToFP(seekScale) )
-        // via the FixedToFP/FPToFixed 16.16 pixel-math helpers (a documented conversion seam).
-        // With a common Q16.16 scale that round-trip reduces to the plain linear combine below;
-        // the exact fractional-bit width of each helper call is opaque (see the disclosure note),
-        // so this models the arithmetic rather than the NEON intrinsics. Clamp >= 0 as the binary.
+        // via the FixedToFP/FPToFixed 16.16 pixel-math helpers (a documented
+        // conversion seam). With a common Q16.16 scale that round-trip reduces to
+        // the plain linear combine below; the exact fractional-bit width of each
+        // helper call is opaque (see the disclosure note), so this models the
+        // arithmetic rather than the NEON intrinsics. Clamp >= 0 as the binary.
         long seekPos = (long)pauseTime + (long)(seekCoef * (float)seekScale);
         if (seekPos < 0) {
             seekPos = 0;
@@ -532,10 +715,11 @@ void acMainApplyGameplaySettings(AcViewerTask *task) {
         nm.seekTo((uint32_t)seekPos);
     }
 
-    // Resume the render loop; on phone advance the play-state machine into its resume state.
+    // Resume the render loop; on phone advance the play-state machine into its
+    // resume state.
     [neSceneManager::rootViewController() performSelector:@selector(ResumeLoop)];
     if (!neSceneManager::isPadDisplay()) {
-        task->m_state = 0xd;   // +0x20c
+        task->m_state = 0xd; // +0x20c
     }
 }
 
@@ -544,36 +728,38 @@ void startBootTask() {
     BootCreateTask();
 }
 
-// Walk the same reloadable-texture list on foreground, re-decoding + re-uploading
-// each texture (its per-texture reload is Ghidra FUN_000188ac).
+// Walk the same reloadable-texture list on foreground, re-decoding +
+// re-uploading each texture (its per-texture reload is Ghidra FUN_000188ac).
 void notifyEnterForeground() {
     AepTexture *head = g_textureCacheList;
     if (head == nullptr) {
         return;
     }
     for (AepTexture *tex = head->next; tex != head; tex = tex->next) {
-        tex->reload();      // FUN_000188ac
+        tex->reload(); // FUN_000188ac
     }
 }
 
 // SE-instance handles for short UI sounds, indexed by slot (Ghidra: the scene
-// manager global DAT_00187b74 + 0x28). Kept here as the engine's SE-handle table.
+// manager global DAT_00187b74 + 0x28). Kept here as the engine's SE-handle
+// table.
 static RSND_INSTANCE_ID g_systemSeHandles[8] = {0};
 
-// @ 0x2c724 — play a UI SE and remember its instance handle in `slot`. The binary
-// passes the SE resource id in registers (not recoverable from the decompile), so
-// the slot doubles as the resource selector here.
+// @ 0x2c724 — play a UI SE and remember its instance handle in `slot`. The
+// binary passes the SE resource id in registers (not recoverable from the
+// decompile), so the slot doubles as the resource selector here.
 void playSystemSe(int slot) {
-    RSND_INSTANCE_ID handle =
-        [[AudioManager sharedManager] playSe:nil resourceId:(RSND_SOURCE_ID)slot];
+    RSND_INSTANCE_ID handle = [[AudioManager sharedManager] playSe:nil
+                                                        resourceId:(RSND_SOURCE_ID)slot];
     if (slot >= 0 && slot < (int)(sizeof(g_systemSeHandles) / sizeof(g_systemSeHandles[0]))) {
         g_systemSeHandles[slot] = handle;
     }
 }
 
-// @ 0x2c764 (isSePlaying) — true while the SE instance cached in `slot` is still
-// audible. The binary probes AudioManager isPlayingSe: on the handle stored at the
-// scene-manager global + 0x28; here that handle table is g_systemSeHandles.
+// @ 0x2c764 (isSePlaying) — true while the SE instance cached in `slot` is
+// still audible. The binary probes AudioManager isPlayingSe: on the handle
+// stored at the scene-manager global + 0x28; here that handle table is
+// g_systemSeHandles.
 bool isSePlaying(int slot) {
     if (slot < 0 || slot >= (int)(sizeof(g_systemSeHandles) / sizeof(g_systemSeHandles[0]))) {
         return false;
@@ -581,10 +767,11 @@ bool isSePlaying(int slot) {
     return [[AudioManager sharedManager] isPlayingSe:g_systemSeHandles[slot]] != NO;
 }
 
-// Menu button hit-test (the abstraction the ~13 inlined pointInRect hit-tests share):
-// true when the active touch `touchId` in render manager `gfx` lies inside `rect`
-// (x,y,w,h) and the button is enabled (enable[0] != 0). Ghidra: the inlined
-// findTouchById + neGraphics::pointInRect blocks in MainTask/MenuMainTask/AcMain update.
+// Menu button hit-test (the abstraction the ~13 inlined pointInRect hit-tests
+// share): true when the active touch `touchId` in render manager `gfx` lies
+// inside `rect` (x,y,w,h) and the button is enabled (enable[0] != 0). Ghidra:
+// the inlined findTouchById + neGraphics::pointInRect blocks in
+// MainTask/MenuMainTask/AcMain update.
 bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
     if (enable == nullptr || enable[0] == 0) {
         return false;
@@ -593,34 +780,39 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
     if (t == nullptr) {
         return false;
     }
-    // Ghidra: MenuMainTask_update divides the tap by the UI scale (g_dwUiScale) before the
-    // rect test -- the mode-button rects are stored in logical (unscaled) space, so the raw
-    // physical-pixel touch must be scaled down to match (FPToFixed round-to-zero = trunc).
-    // Without this, buttons mis-hit on every scale != 1 device (Retina / iPad).
+    // Ghidra: MenuMainTask_update divides the tap by the UI scale (g_dwUiScale)
+    // before the rect test -- the mode-button rects are stored in logical
+    // (unscaled) space, so the raw physical-pixel touch must be scaled down to
+    // match (FPToFixed round-to-zero = trunc). Without this, buttons mis-hit on
+    // every scale != 1 device (Retina / iPad).
     const int scale = g_dwUiScale > 0 ? g_dwUiScale : 1;
     const int px = (int)((float)t->x / (float)scale);
     const int py = (int)((float)t->y / (float)scale);
     return neGraphics::pointInRect(px, py, rect[0], rect[1], rect[2], rect[3]);
 }
 
-// Height (points) of the AEP-rendered content area, used to place UIKit overlays below
-// the GL scene (iPad panel layout). Ghidra: neAepContentHeight — the AEP screen-quad
-// height (AepManager +0x7f3b00), which screenHeight() also reads. (Exact FUN not
-// isolated; the content height is the AEP quad height.)
-int aepContentHeight() { return AepManager::shared().screenHeight(); }
+// Height (points) of the AEP-rendered content area, used to place UIKit
+// overlays below the GL scene (iPad panel layout). Ghidra: neAepContentHeight —
+// the AEP screen-quad height (AepManager +0x7f3b00), which screenHeight() also
+// reads. (Exact FUN not isolated; the content height is the AEP quad height.)
+int aepContentHeight() {
+    return AepManager::shared().screenHeight();
+}
 
-}  // namespace neEngine
+} // namespace neEngine
 
 // @ 0x2da34
-// Ghidra: findCharIndexForColumn. Sibling engine text helper declared in neGraphics.h (defined
-// here because it needs Foundation). Walks `text` one character at a time accumulating a display
-// width — a halfwidth glyph is 1 column, a full-width (CJK) glyph is 2 — and returns the index of
-// the character at which the running width first reaches `columnWidth`; returns -1 when the whole
-// string fits. Full-width is detected by NON-membership in a halfwidth matcher: the binary tests
-// each glyph with `-rangeOfString:options:NSRegularExpressionSearch` (options 0x400) against a
-// regex constant, and a glyph that does NOT match counts as 2 columns. kHalfWidthPattern is a
-// best-effort recovery of that regex constant (the binary's cf__ string): printable ASCII plus the
-// halfwidth-katakana range.
+// Ghidra: findCharIndexForColumn. Sibling engine text helper declared in
+// neGraphics.h (defined here because it needs Foundation). Walks `text` one
+// character at a time accumulating a display width — a halfwidth glyph is 1
+// column, a full-width (CJK) glyph is 2 — and returns the index of the
+// character at which the running width first reaches `columnWidth`; returns -1
+// when the whole string fits. Full-width is detected by NON-membership in a
+// halfwidth matcher: the binary tests each glyph with
+// `-rangeOfString:options:NSRegularExpressionSearch` (options 0x400) against a
+// regex constant, and a glyph that does NOT match counts as 2 columns.
+// kHalfWidthPattern is a best-effort recovery of that regex constant (the
+// binary's cf__ string): printable ASCII plus the halfwidth-katakana range.
 int findCharIndexForColumn(NSString *text, int columnWidth) {
     static NSString *const kHalfWidthPattern = @"[\\x01-\\x7e\\uff61-\\uffdc\\uffe8-\\uffee]";
     NSUInteger length = [text length];
@@ -631,7 +823,7 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
         if (ch) {
             NSRange match = [ch rangeOfString:kHalfWidthPattern options:NSRegularExpressionSearch];
             if (match.location == NSNotFound) {
-                columns = 2;   // not a halfwidth glyph -> counts as two display columns
+                columns = 2; // not a halfwidth glyph -> counts as two display columns
             }
         }
         width += columns;
@@ -643,11 +835,13 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
 }
 
 // @ 0x1acac
-// neTextureForiOS LoadTexture: — decode one PNG (bridged NSData) into a padded power-of-two
-// RGBA8 GL texture. Rounds the CGImage's width/height up to the next power of two, renders the
-// image Y-flipped into a zeroed RGBA buffer, and hands it to neCreateTextureFromData (whose
-// AepTexture is the binary's C_TEXTURE); the unpadded source width/height pass through so the
-// sprite samples only the used sub-rect. Returns nullptr when the data isn't a decodable image.
+// neTextureForiOS LoadTexture: — decode one PNG (bridged NSData) into a padded
+// power-of-two RGBA8 GL texture. Rounds the CGImage's width/height up to the
+// next power of two, renders the image Y-flipped into a zeroed RGBA buffer, and
+// hands it to neCreateTextureFromData (whose AepTexture is the binary's
+// C_TEXTURE); the unpadded source width/height pass through so the sprite
+// samples only the used sub-rect. Returns nullptr when the data isn't a
+// decodable image.
 AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     UIImage *image = [[UIImage alloc] initWithData:data];
     if (image == nil) {
@@ -658,17 +852,22 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     const int srcH = (int)CGImageGetHeight(cgImage);
 
     int potW = 1;
-    while (potW < srcW) { potW <<= 1; }
+    while (potW < srcW) {
+        potW <<= 1;
+    }
     int potH = 1;
-    while (potH < srcH) { potH <<= 1; }
+    while (potH < srcH) {
+        potH <<= 1;
+    }
 
     unsigned char *pixels = new unsigned char[potW * potH * 4];
     std::memset(pixels, 0, potW * potH * 4);
 
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef ctx = CGBitmapContextCreate(pixels, potW, potH, 8, potW * 4, colorSpace,
-                                             kCGImageAlphaPremultipliedLast);
-    // Draw the source Y-flipped (GL wants a top-down row order) into the padded buffer.
+    CGContextRef ctx = CGBitmapContextCreate(
+        pixels, potW, potH, 8, potW * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+    // Draw the source Y-flipped (GL wants a top-down row order) into the padded
+    // buffer.
     CGContextTranslateCTM(ctx, 0, (CGFloat)srcH);
     CGContextScaleCTM(ctx, 1.0f, -1.0f);
     CGContextDrawImage(ctx, CGRectMake(0, 0, srcW, srcH), cgImage);
@@ -680,11 +879,12 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     return texture;
 }
 
-// Ghidra: FUN_00011cbc (neTextureLoadSingle) — upload an in-memory PNG (a bridged NSData*
-// of image bytes) as a single-tile texture. Same one-tile setup as load(), but the tile
-// comes from LoadTexture (the in-memory decoder above) instead of the file cache. Defined
-// here rather than neTextureForiOS.cpp because LoadTexture needs NSData/CoreGraphics.
-// Returns 0 on success, -1 for null data, -5 on decode/upload failure.
+// Ghidra: FUN_00011cbc (neTextureLoadSingle) — upload an in-memory PNG (a
+// bridged NSData* of image bytes) as a single-tile texture. Same one-tile setup
+// as load(), but the tile comes from LoadTexture (the in-memory decoder above)
+// instead of the file cache. Defined here rather than neTextureForiOS.cpp
+// because LoadTexture needs NSData/CoreGraphics. Returns 0 on success, -1 for
+// null data, -5 on decode/upload failure.
 int neTextureForiOS::loadFromImageData(const void *imageData) {
     if (imageData == nullptr) {
         return -1;
@@ -705,33 +905,56 @@ int neTextureForiOS::loadFromImageData(const void *imageData) {
     return 0;
 }
 
-// UI scale (screenScale * 0.5) as float bits; published by MainViewController::loadView,
-// read by the task m_uiScale caches (neEngineBridge.h).
+// UI scale (screenScale * 0.5) as float bits; published by
+// MainViewController::loadView, read by the task m_uiScale caches
+// (neEngineBridge.h).
 int g_dwUiScale = 0;
 
-// neTextureForiOS_draw (FUN_0000fbcc): the flat-argument wrapper the task draw passes call — packs
-// the args into a neSpriteDrawParams and emits the sprite via this texture's draw() into aep's
-// ordering table. Lives here (ObjC++) rather than neTextureForiOS.cpp because AepManager's header
-// pulls Foundation. Argument order verified against FUN_00011468 (drawSprite) + the call sites
-// (AcViewer digit blit / MainTask badges): u,v, source w,h, screen x,y, scale sx,sy, rotation,
-// anchor ex,ey, colour, alpha, blend, colour-multiplier, extra, priority; trailing layer (1) is the
-// live-command marker draw() stamps.
-void neTextureForiOS_draw(AepManager *aep, neTextureForiOS *tex,
-                          int u, int v, int w, int h, int x, int y, int sx, int sy,
-                          int rotation, int ex, int ey, int color, int alpha,
-                          int blend0, int colorMul, int extra, int priority, int layer) {
+// neTextureForiOS_draw (FUN_0000fbcc): the flat-argument wrapper the task draw
+// passes call — packs the args into a neSpriteDrawParams and emits the sprite
+// via this texture's draw() into aep's ordering table. Lives here (ObjC++)
+// rather than neTextureForiOS.cpp because AepManager's header pulls Foundation.
+// Argument order verified against FUN_00011468 (drawSprite) + the call sites
+// (AcViewer digit blit / MainTask badges): u,v, source w,h, screen x,y, scale
+// sx,sy, rotation, anchor ex,ey, colour, alpha, blend, colour-multiplier,
+// extra, priority; trailing layer (1) is the live-command marker draw() stamps.
+void neTextureForiOS_draw(AepManager *aep,
+                          neTextureForiOS *tex,
+                          int u,
+                          int v,
+                          int w,
+                          int h,
+                          int x,
+                          int y,
+                          int sx,
+                          int sy,
+                          int rotation,
+                          int ex,
+                          int ey,
+                          int color,
+                          int alpha,
+                          int blend0,
+                          int colorMul,
+                          int extra,
+                          int priority,
+                          int layer) {
     if (tex == nullptr) {
         return;
     }
     neSpriteDrawParams p;
-    p.u = u;   p.v = v;
-    p.w = w;   p.h = h;
-    p.x = x;   p.y = y;
-    p.sx = sx; p.sy = sy;
+    p.u = u;
+    p.v = v;
+    p.w = w;
+    p.h = h;
+    p.x = x;
+    p.y = y;
+    p.sx = sx;
+    p.sy = sy;
     p.rotation = rotation;
-    p.ex = ex; p.ey = ey;
+    p.ex = ex;
+    p.ey = ey;
     p.color = color;
-    p.blend1 = (short)alpha;   // +0x42 alpha / blend sub-mode
+    p.blend1 = (short)alpha; // +0x42 alpha / blend sub-mode
     p.blend0 = (short)blend0;
     p.colorMul = colorMul;
     p.extra = extra;

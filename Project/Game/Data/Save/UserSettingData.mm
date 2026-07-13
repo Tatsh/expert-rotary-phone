@@ -21,22 +21,22 @@
 
 // AES-128-CBC key/IV protecting the save blobs (Ghidra string literals).
 static NSString *const kAESKey = @"4ZMw025eJIOTx26f";
-static NSString *const kAESIV  = @"13U4RnAI73EdVMXB";
+static NSString *const kAESIV = @"13U4RnAI73EdVMXB";
 
 // NSUserDefaults keys.
-static NSString *const kKeyCrypt109     = @"c";           // encrypted 36-byte blob
-static NSString *const kKeyGotCharaData = @"d";           // encrypted archived array
-static NSString *const kKeyGotChara     = @"GotChara";    // plain int bitmask
-static NSString *const kKeyLastMusic    = @"LastMusic";
-static NSString *const kKeyLastSheet    = @"LastSheet";
-static NSString *const kKeyIsEffectOn   = @"IsEffectOn";
+static NSString *const kKeyCrypt109 = @"c";        // encrypted 36-byte blob
+static NSString *const kKeyGotCharaData = @"d";    // encrypted archived array
+static NSString *const kKeyGotChara = @"GotChara"; // plain int bitmask
+static NSString *const kKeyLastMusic = @"LastMusic";
+static NSString *const kKeyLastSheet = @"LastSheet";
+static NSString *const kKeyIsEffectOn = @"IsEffectOn";
 static NSString *const kKeyIsLongNotesEffectOn = @"IsLongNotesEffectOn";
 
 // Maps a sugoroku main-map id (0..8) to its touch-sound bit index. Ghidra:
-// FUN_000a218c — a 9-entry table (DAT_0012f958 = {1,2,...,9}), i.e. id + 1 for a
-// valid id, else 0.
+// FUN_000a218c — a 9-entry table (DAT_0012f958 = {1,2,...,9}), i.e. id + 1 for
+// a valid id, else 0.
 static int neSugorokuTouchSoundBit(int mainMapId) {
-    static const int kBits[9] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    static const int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     unsigned id = (unsigned)mainMapId & 0xffff;
     return id < 9 ? kBits[id] : 0;
 }
@@ -75,7 +75,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:canceled Key:@"BirthDayCancel"];
 }
 
-// @ 0x5ffc8 / 0x5fff0 — remembers whether the friend how-to has been shown (key best-effort).
+// @ 0x5ffc8 / 0x5fff0 — remembers whether the friend how-to has been shown (key
+// best-effort).
 + (BOOL)isFriendSelected {
     return [self getBOOL:@"FriendSelected"];
 }
@@ -84,7 +85,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:selected Key:@"FriendSelected"];
 }
 
-// @ 0x6209c / 0x620cc — the main-map id whose sugoroku map-select screen is shown (key best-effort).
+// @ 0x6209c / 0x620cc — the main-map id whose sugoroku map-select screen is
+// shown (key best-effort).
 + (short)treasureSelectedMapId {
     return (short)[self getInt:@"SelectedMapId"];
 }
@@ -93,7 +95,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveInt:mapId Key:@"SelectedMapId"];
 }
 
-// @ 0x60018 / 0x60040 — remembers whether the treasure how-to has been shown (key best-effort).
+// @ 0x60018 / 0x60040 — remembers whether the treasure how-to has been shown
+// (key best-effort).
 + (BOOL)isTreasureSelected {
     return [self getBOOL:@"IsTreasureSelected"];
 }
@@ -102,7 +105,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:selected Key:@"IsTreasureSelected"];
 }
 
-// @ 0x5ff78 / 0x5ffa0 — remembers whether the pop'n-link first-run how-to has been shown (key best-effort).
+// @ 0x5ff78 / 0x5ffa0 — remembers whether the pop'n-link first-run how-to has
+// been shown (key best-effort).
 + (BOOL)isPopnLinkSelected {
     return [self getBOOL:@"PopnLinkSelected"];
 }
@@ -111,7 +115,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveBOOL:selected Key:@"PopnLinkSelected"];
 }
 
-// @ 0x607fc — the user's stored birthday (nil until they enter it in the age gate).
+// @ 0x607fc — the user's stored birthday (nil until they enter it in the age
+// gate).
 + (NSDate *)birthDay {
     return [self getDate:@"BirthDay"];
 }
@@ -121,7 +126,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return [self getDate:@"LastUpdateSumPurchase"];
 }
 
-// @ 0x608ec — yen spent this month (clamped at 0), for the youth spending limit.
+// @ 0x608ec — yen spent this month (clamped at 0), for the youth spending
+// limit.
 + (int)sumPurchase {
     int value = [self getInt:@"SumPurchase"];
     return value < 0 ? 0 : value;
@@ -204,7 +210,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return [NSUserDefaults.standardUserDefaults arrayForKey:key];
 }
 
-// @ 0x5fb4c — unconditional write + synchronize (no unchanged-check, unlike saveData:).
+// @ 0x5fb4c — unconditional write + synchronize (no unchanged-check, unlike
+// saveData:).
 + (void)saveArray:(NSArray *)value Key:(NSString *)key {
     NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;
     [ud setObject:value forKey:key];
@@ -240,125 +247,194 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 #pragma mark - Identity (plaintext)
 
 // @ 0x60260 — the player's server-assigned id string.
-+ (NSString *)playerId               { return [self getString:@"PlayerId"]; }
++ (NSString *)playerId {
+    return [self getString:@"PlayerId"];
+}
 // @ 0x60210 — the player's display name.
-+ (NSString *)playerName             { return [self getString:@"PlayerName"]; }
++ (NSString *)playerName {
+    return [self getString:@"PlayerName"];
+}
 // @ 0x602b0 — the player's e-AMUSEMENT / KONAMI id (music-checker score sync).
-+ (NSString *)konamiId               { return [self getString:@"KonamiId"]; }
++ (NSString *)konamiId {
+    return [self getString:@"KonamiId"];
+}
 
 #pragma mark - Friend list (plaintext)
 
 // @ 0x607ac / 0x607d4 — friend ranking sort mode (best-score vs. total-score).
-+ (BOOL)isBestScoreSort              { return [self getBOOL:@"IsBestScoreSort"]; }
-+ (void)saveIsBestScoreSort:(BOOL)best { [self saveBOOL:best Key:@"IsBestScoreSort"]; }
++ (BOOL)isBestScoreSort {
+    return [self getBOOL:@"IsBestScoreSort"];
+}
++ (void)saveIsBestScoreSort:(BOOL)best {
+    [self saveBOOL:best Key:@"IsBestScoreSort"];
+}
 
 #pragma mark - Effects (plaintext)
 
-+ (BOOL)isEffectOn                   { return [self getBOOL:kKeyIsEffectOn]; }          // @ 0x606bc
-+ (void)saveIsEffectOn:(BOOL)on      { [self saveBOOL:on Key:kKeyIsEffectOn]; }          // @ 0x606e4
-+ (BOOL)isLongNotesEffectOn          { return [self getBOOL:kKeyIsLongNotesEffectOn]; }  // @ 0x6070c
-+ (void)saveIsLongNotesEffectOn:(BOOL)on { [self saveBOOL:on Key:kKeyIsLongNotesEffectOn]; } // @ 0x60734
++ (BOOL)isEffectOn {
+    return [self getBOOL:kKeyIsEffectOn];
+} // @ 0x606bc
++ (void)saveIsEffectOn:(BOOL)on {
+    [self saveBOOL:on Key:kKeyIsEffectOn];
+} // @ 0x606e4
++ (BOOL)isLongNotesEffectOn {
+    return [self getBOOL:kKeyIsLongNotesEffectOn];
+} // @ 0x6070c
++ (void)saveIsLongNotesEffectOn:(BOOL)on {
+    [self saveBOOL:on Key:kKeyIsLongNotesEffectOn];
+} // @ 0x60734
 
 #pragma mark - Crypt109 field accessors
 // Getters read the decrypted blob and clamp; setters read-modify-write it.
 
-+ (int)inviteCnt {                    // @ 0x60950 (verified)
-    Crypt109Data d; [self crypt109Data:&d];
++ (int)inviteCnt { // @ 0x60950 (verified)
+    Crypt109Data d;
+    [self crypt109Data:&d];
     return d.inviteCnt < 0 ? 0 : d.inviteCnt;
 }
 // @ 0x60980
 + (void)saveInviteCnt:(int)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.inviteCnt = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.inviteCnt = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x609c8
 + (int)invitePresent {
-    Crypt109Data d; [self crypt109Data:&d]; return d.invitePresent;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.invitePresent;
 }
 // @ 0x609f8
 + (void)saveInvitePresent:(int)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.invitePresent = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.invitePresent = v;
+    [self saveCrypt109Data:&d];
 }
 
-+ (short)charaTicket {                // @ 0x61238 (verified)
-    Crypt109Data d; [self crypt109Data:&d];
++ (short)charaTicket { // @ 0x61238 (verified)
+    Crypt109Data d;
+    [self crypt109Data:&d];
     return d.charaTicket < 1 ? 0 : d.charaTicket;
 }
 // @ 0x6126c
 + (void)saveCharaTicket:(short)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.charaTicket = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.charaTicket = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x612f4
 + (short)treasurePoint {
-    Crypt109Data d; [self crypt109Data:&d]; return d.treasurePoint;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.treasurePoint;
 }
 // @ 0x61328
 + (void)saveTreasurePoint:(short)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.treasurePoint = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.treasurePoint = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x60130
 + (int)getOpenedLoginBonusId {
-    Crypt109Data d; [self crypt109Data:&d]; return d.openedLoginBonusId;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.openedLoginBonusId;
 }
 // @ 0x6015c
 + (void)saveOpenedLoginBonusId:(int)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.openedLoginBonusId = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.openedLoginBonusId = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x601a0
 + (int)getLoginBonusCnt {
-    Crypt109Data d; [self crypt109Data:&d]; return d.loginBonusCnt;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.loginBonusCnt;
 }
 // @ 0x601cc
 + (void)saveLoginBonusCnt:(int)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.loginBonusCnt = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.loginBonusCnt = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x60e44
 + (short)charaId {
-    Crypt109Data d; [self crypt109Data:&d]; return d.charaId;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.charaId;
 }
 // @ 0x60e70
 + (void)saveCharaId:(short)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.charaId = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.charaId = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x60eb4
 + (short)charaIdServer {
-    Crypt109Data d; [self crypt109Data:&d]; return d.charaIdServer;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.charaIdServer;
 }
 // @ 0x60ee0
 + (void)saveCharaIdServer:(short)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.charaIdServer = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.charaIdServer = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x604ac
 + (int)touchSoundKind {
-    Crypt109Data d; [self crypt109Data:&d]; return d.touchSoundKind;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.touchSoundKind;
 }
 // @ 0x604e8
 + (void)saveTouchSoundKind:(int)v {
-    Crypt109Data d; [self crypt109Data:&d]; d.touchSoundKind = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.touchSoundKind = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x6052c
-+ (int)haveTouchSoundFlg {           // getter verified (used in loadSettingData)
-    Crypt109Data d; [self crypt109Data:&d]; return d.haveTouchSoundFlg;
++ (int)haveTouchSoundFlg { // getter verified (used in loadSettingData)
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.haveTouchSoundFlg;
 }
 // @ 0x6055c
 + (void)saveHaveTouchSoundFlg:(int)v { // @ setter verified (saveHaveTouchSoundFlg_)
-    Crypt109Data d; [self crypt109Data:&d]; d.haveTouchSoundFlg = v; [self saveCrypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    d.haveTouchSoundFlg = v;
+    [self saveCrypt109Data:&d];
 }
 
 // @ 0x600b8
 + (BOOL)isBemaniCollaboOpened {
-    Crypt109Data d; [self crypt109Data:&d]; return d.isBemaniCollaboOpened != 0;
+    Crypt109Data d;
+    [self crypt109Data:&d];
+    return d.isBemaniCollaboOpened != 0;
 }
 // @ 0x600e4
 + (void)saveIsBemaniCollaboOpened:(BOOL)v {
-    Crypt109Data d; [self crypt109Data:&d];
+    Crypt109Data d;
+    [self crypt109Data:&d];
     d.isBemaniCollaboOpened = v ? 1 : 0;
     [self saveCrypt109Data:&d];
 }
@@ -386,7 +462,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     return [NSKeyedUnarchiver unarchiveObjectWithData:plain];
 }
 
-// @ 0x610a0 — set the bit for charaIndex, archive, encrypt, store under key "d".
+// @ 0x610a0 — set the bit for charaIndex, archive, encrypt, store under key
+// "d".
 + (void)saveGotCharaArray:(short)charaIndex {
     NSMutableArray *arr = [[self gotCharaArray] mutableCopy];
     int word = charaIndex >> 5;
@@ -407,20 +484,43 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 #pragma mark - Legacy v108 readers (plaintext PascalCase keys)
 
-+ (int)inviteCnt108 {                 // @ 0x5fc5c (verified: key "InviteCnt", clamp >=0)
++ (int)inviteCnt108 { // @ 0x5fc5c (verified: key "InviteCnt", clamp >=0)
     int v = [self getInt:@"InviteCnt"];
     return v < 0 ? 0 : v;
 }
-+ (int)invitePresent108        { int v = [self getInt:@"InvitePresent"]; return v < 0 ? 0 : v; }
-+ (short)charaTicket108        { int v = [self getInt:@"CharaTicket"]; return (short)(v < 0 ? 0 : v); }
-+ (short)treasurePoint108      { int v = [self getInt:@"TreasurePoint"]; return (short)(v < 0 ? 0 : v); }
-+ (int)getOpenedLoginBonusId108{ return [self getInt:@"OpenedLoginBonusId"]; }
-+ (int)getLoginBonusCnt108     { return [self getInt:@"LoginBonusCnt"]; }
-+ (short)charaId108            { return (short)[self getInt:@"CharaId"]; }
-+ (short)charaIdServer108      { return (short)[self getInt:@"CharaIdServer"]; }
-+ (int)touchSoundKind108       { return [self getInt:@"TouchSoundKind"]; }
-+ (int)haveTouchSoundFlg108    { return [self getInt:@"HaveTouchSoundFlg"]; } // @ 0x5fe2c
-+ (BOOL)isBemaniCollaboOpened108 { return [self getBOOL:@"IsBemaniCollaboOpened"]; }
++ (int)invitePresent108 {
+    int v = [self getInt:@"InvitePresent"];
+    return v < 0 ? 0 : v;
+}
++ (short)charaTicket108 {
+    int v = [self getInt:@"CharaTicket"];
+    return (short)(v < 0 ? 0 : v);
+}
++ (short)treasurePoint108 {
+    int v = [self getInt:@"TreasurePoint"];
+    return (short)(v < 0 ? 0 : v);
+}
++ (int)getOpenedLoginBonusId108 {
+    return [self getInt:@"OpenedLoginBonusId"];
+}
++ (int)getLoginBonusCnt108 {
+    return [self getInt:@"LoginBonusCnt"];
+}
++ (short)charaId108 {
+    return (short)[self getInt:@"CharaId"];
+}
++ (short)charaIdServer108 {
+    return (short)[self getInt:@"CharaIdServer"];
+}
++ (int)touchSoundKind108 {
+    return [self getInt:@"TouchSoundKind"];
+}
++ (int)haveTouchSoundFlg108 {
+    return [self getInt:@"HaveTouchSoundFlg"];
+} // @ 0x5fe2c
++ (BOOL)isBemaniCollaboOpened108 {
+    return [self getBOOL:@"IsBemaniCollaboOpened"];
+}
 
 #pragma mark - Lifecycle
 
@@ -434,23 +534,23 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     if (defaults) {
         [ud registerDefaults:defaults];
     }
-    [ud registerDefaults:@{ kKeyIsLongNotesEffectOn: @"YES" }];
+    [ud registerDefaults:@{kKeyIsLongNotesEffectOn : @"YES"}];
 
     // v108 -> v109 one-time migration.
     int ver = [[AppDelegate appDelegate] getUsersettingVer].intValue;
     if (ver < 109) {
         Crypt109Data d;
         memset(&d, 0, sizeof(d));
-        d.inviteCnt            = [self inviteCnt108];
-        d.invitePresent        = [self invitePresent108];
-        d.charaTicket          = [self charaTicket108];
-        d.treasurePoint        = [self treasurePoint108];
-        d.openedLoginBonusId   = [self getOpenedLoginBonusId108] + 1;
-        d.loginBonusCnt        = [self getLoginBonusCnt108];
-        d.charaId              = [self charaId108];
-        d.charaIdServer        = [self charaIdServer108];
-        d.touchSoundKind       = [self touchSoundKind108];
-        d.haveTouchSoundFlg    = [self haveTouchSoundFlg108];
+        d.inviteCnt = [self inviteCnt108];
+        d.invitePresent = [self invitePresent108];
+        d.charaTicket = [self charaTicket108];
+        d.treasurePoint = [self treasurePoint108];
+        d.openedLoginBonusId = [self getOpenedLoginBonusId108] + 1;
+        d.loginBonusCnt = [self getLoginBonusCnt108];
+        d.charaId = [self charaId108];
+        d.charaIdServer = [self charaIdServer108];
+        d.touchSoundKind = [self touchSoundKind108];
+        d.haveTouchSoundFlg = [self haveTouchSoundFlg108];
         d.isBemaniCollaboOpened = [self isBemaniCollaboOpened108] ? 1 : 0;
         [self saveCrypt109Data:&d];
 
@@ -461,7 +561,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
                 [self saveGotCharaArray:(short)i];
             }
         }
-        [[AppDelegate appDelegate] setUsersettingVer:@"109"];   // @0x137548 CFString "109"
+        [[AppDelegate appDelegate] setUsersettingVer:@"109"]; // @0x137548 CFString "109"
     }
 
     // Merge any legacy touch-sound bits that the current record is missing.
@@ -480,27 +580,33 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         }
     }
 
-    // Restore last played music / sheet into the engine (sheet default 2, <2 kept, >=0).
+    // Restore last played music / sheet into the engine (sheet default 2, <2
+    // kept, >=0).
     {
         int lastMusic = (int)[ud integerForKey:kKeyLastMusic];
         int lastSheet = (int)[ud integerForKey:kKeyLastSheet];
         auto &ec = neAppEventCenter::shared();
         int sheet = 2;
-        if (lastSheet < 2) sheet = lastSheet;
-        if (sheet < 0) sheet = 0;
+        if (lastSheet < 2) {
+            sheet = lastSheet;
+        }
+        if (sheet < 0) {
+            sheet = 0;
+        }
         ec.setLastSheet(sheet);
         ec.setLastMusic(lastMusic);
     }
 
-    // Reconcile touch-sound flags with sugoroku goal-touch progress (maps 0..8, sub-map 2).
+    // Reconcile touch-sound flags with sugoroku goal-touch progress (maps 0..8,
+    // sub-map 2).
     {
         int flg = [self haveTouchSoundFlg];
         int flg2 = flg;
         NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
         for (short mainMapId = 0; mainMapId < 9; mainMapId++) {
             TreasureData *td = [TreasureData getTreasureData:mainMapId
-                                                   subMapId:2
-                                     inManagedObjectContext:ctx];
+                                                    subMapId:2
+                                      inManagedObjectContext:ctx];
             if (td != nil && td.goalTouchSound.intValue != 0) {
                 flg2 |= 1 << neSugorokuTouchSoundBit(mainMapId);
             }
@@ -511,12 +617,13 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     }
 }
 
-// @ 0x61448 — the "pending treasure" snapshot. If a blob is stored under the key
-// "TreasureTmpData" copy it straight back (capped at the record size); otherwise
-// hand back an empty record whose id fields are the -1 "nothing pending" sentinels.
-// (The binary's empty-record branch also writes uninitialised NEON lanes into the
-// unused fields — undefined values, not real state — so the faithful equivalent is a
-// zeroed record with the three sentinels set.)
+// @ 0x61448 — the "pending treasure" snapshot. If a blob is stored under the
+// key "TreasureTmpData" copy it straight back (capped at the record size);
+// otherwise hand back an empty record whose id fields are the -1 "nothing
+// pending" sentinels. (The binary's empty-record branch also writes
+// uninitialised NEON lanes into the unused fields — undefined values, not real
+// state — so the faithful equivalent is a zeroed record with the three
+// sentinels set.)
 + (TreasureTmpData)treasureTmp {
     TreasureTmpData out;
     NSData *data = [self getData:@"TreasureTmpData"];
@@ -536,9 +643,9 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x614f0 — persist the "pending treasure" snapshot back under the key
-// "TreasureTmpData". Serialises 0x54 bytes (the record + its trailing pad, as the
-// binary does) and hands them to saveData:Key:. The map loader and the sugoroku task
-// write the chosen bonus square / board state through here.
+// "TreasureTmpData". Serialises 0x54 bytes (the record + its trailing pad, as
+// the binary does) and hands them to saveData:Key:. The map loader and the
+// sugoroku task write the chosen bonus square / board state through here.
 + (void)saveTreasureTmp:(TreasureTmpData)data {
     NSData *blob = [NSData dataWithBytes:&data length:0x54];
     [self saveData:blob Key:@"TreasureTmpData"];
@@ -558,30 +665,45 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x60300 — BGM master volume, clamped to [0.0, 1.0].
 + (float)bgmVolume {
     float v = [self getFloat:@"BgmVolume"];
-    if (v >= 1.0f) v = 1.0f;
-    if (v < 0.0f)  v = 0.0f;
+    if (v >= 1.0f) {
+        v = 1.0f;
+    }
+    if (v < 0.0f) {
+        v = 0.0f;
+    }
     return v;
 }
 
 // @ 0x60364 — clamp to [0.0, 1.0] then persist.
 + (void)saveBgmVolume:(float)volume {
-    if (volume >= 1.0f) volume = 1.0f;
-    if (volume < 0.0f)  volume = 0.0f;
+    if (volume >= 1.0f) {
+        volume = 1.0f;
+    }
+    if (volume < 0.0f) {
+        volume = 0.0f;
+    }
     [self saveFloat:volume Key:@"BgmVolume"];
 }
 
-// @ 0x603c4 — SE master volume (0..127); values >= 127 cap at 127, negatives clamp to 0.
+// @ 0x603c4 — SE master volume (0..127); values >= 127 cap at 127, negatives
+// clamp to 0.
 + (short)seVolume {
     int v = [self getInt:@"SeVolume"];
     short r = 0x7f;
-    if ((short)v < 0x7f) r = (short)v;
-    if (r < 0)    r = 0;
+    if ((short)v < 0x7f) {
+        r = (short)v;
+    }
+    if (r < 0) {
+        r = 0;
+    }
     return r;
 }
 
 // @ 0x60404 — cap at 127 (no lower clamp in the original) and persist.
 + (void)saveSeVolume:(short)volume {
-    if (volume > 0x7e) volume = 0x7f;
+    if (volume > 0x7e) {
+        volume = 0x7f;
+    }
     [self saveInt:volume Key:@"SeVolume"];
 }
 
@@ -589,35 +711,61 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (short)touchSoundVolume {
     int v = [self getInt:@"TouchSoundVolume"];
     short r = 0x7f;
-    if ((short)v < 0x7f) r = (short)v;
-    if (r < 0)    r = 0;
+    if ((short)v < 0x7f) {
+        r = (short)v;
+    }
+    if (r < 0) {
+        r = 0;
+    }
     return r;
 }
 
 // @ 0x60478 — cap at 127 and persist.
 + (void)saveTouchSoundVolume:(short)volume {
-    if (volume > 0x7e) volume = 0x7f;
+    if (volume > 0x7e) {
+        volume = 0x7f;
+    }
     [self saveInt:volume Key:@"TouchSoundVolume"];
 }
 
 #pragma mark - AC-viewer play options (plaintext)
 
-+ (void)saveAcvHiSpeed:(int)v { [self saveInt:v Key:@"AcViewerHiSpeed"]; }   // @ 0x618cc
-+ (void)saveAcvPopKun:(int)v  { [self saveInt:v Key:@"AcViewerPopKun"]; }    // @ 0x6191c
-+ (void)saveAcvHidSud:(int)v  { [self saveInt:v Key:@"AcViewerHidSud"]; }    // @ 0x6196c
-+ (void)saveAcvRanMir:(int)v  { [self saveInt:v Key:@"AcViewerRanMir"]; }    // @ 0x619bc
++ (void)saveAcvHiSpeed:(int)v {
+    [self saveInt:v Key:@"AcViewerHiSpeed"];
+} // @ 0x618cc
++ (void)saveAcvPopKun:(int)v {
+    [self saveInt:v Key:@"AcViewerPopKun"];
+} // @ 0x6191c
++ (void)saveAcvHidSud:(int)v {
+    [self saveInt:v Key:@"AcViewerHidSud"];
+} // @ 0x6196c
++ (void)saveAcvRanMir:(int)v {
+    [self saveInt:v Key:@"AcViewerRanMir"];
+} // @ 0x619bc
 // @ 0x618a4
-+ (int)acvHiSpeed { return [self getInt:@"AcViewerHiSpeed"]; }
++ (int)acvHiSpeed {
+    return [self getInt:@"AcViewerHiSpeed"];
+}
 // @ 0x618f4
-+ (int)acvPopKun  { return [self getInt:@"AcViewerPopKun"]; }
++ (int)acvPopKun {
+    return [self getInt:@"AcViewerPopKun"];
+}
 // @ 0x61944
-+ (int)acvHidSud  { return [self getInt:@"AcViewerHidSud"]; }
++ (int)acvHidSud {
+    return [self getInt:@"AcViewerHidSud"];
+}
 // @ 0x61994
-+ (int)acvRanMir  { return [self getInt:@"AcViewerRanMir"]; }
++ (int)acvRanMir {
+    return [self getInt:@"AcViewerRanMir"];
+}
 // @ 0x619e4
-+ (BOOL)isAcvGenreName { return [self getBOOL:@"AcViewerIsGenreName"]; }
++ (BOOL)isAcvGenreName {
+    return [self getBOOL:@"AcViewerIsGenreName"];
+}
 // @ 0x61a0c
-+ (void)saveIsAcvGenreName:(BOOL)genreName { [self saveBOOL:genreName Key:@"AcViewerIsGenreName"]; }
++ (void)saveIsAcvGenreName:(BOOL)genreName {
+    [self saveBOOL:genreName Key:@"AcViewerIsGenreName"];
+}
 
 #pragma mark - Music-list sort (plaintext)
 
@@ -642,12 +790,16 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 #pragma mark - Simple mode / popkun
 
 // @ 0x6075c
-+ (BOOL)isSimpleMode { return [self getBOOL:@"SimpleMode"]; }
++ (BOOL)isSimpleMode {
+    return [self getBOOL:@"SimpleMode"];
+}
 // @ 0x60784
-+ (void)saveIsSimpleMode:(BOOL)on { [self saveBOOL:on Key:@"SimpleMode"]; }
++ (void)saveIsSimpleMode:(BOOL)on {
+    [self saveBOOL:on Key:@"SimpleMode"];
+}
 
-// @ 0x60600 — note ("popkun") size, key "b". Valid range [50, 100]; anything outside
-// (including an unset 0) falls back to the default 100.
+// @ 0x60600 — note ("popkun") size, key "b". Valid range [50, 100]; anything
+// outside (including an unset 0) falls back to the default 100.
 + (float)popkunSize {
     float v = [self getFloat:@"b"];
     if (v > 100.0f || v < 50.0f) {
@@ -679,21 +831,38 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x61c44
-+ (BOOL)isFollowBonusGet { return [self getBOOL:@"IsFollowBonusGet"]; }
++ (BOOL)isFollowBonusGet {
+    return [self getBOOL:@"IsFollowBonusGet"];
+}
 // @ 0x61c6c
-+ (void)saveIsFollowBonusGet:(BOOL)got { [self saveBOOL:got Key:@"IsFollowBonusGet"]; }
++ (void)saveIsFollowBonusGet:(BOOL)got {
+    [self saveBOOL:got Key:@"IsFollowBonusGet"];
+}
 
-// @ 0x61804 — the client version that last completed the device-change flow (key "LastCompletedClientVer").
-+ (int)lastCompletedClientVer { return [self getInt:@"LastCompletedClientVer"]; }
+// @ 0x61804 — the client version that last completed the device-change flow
+// (key "LastCompletedClientVer").
++ (int)lastCompletedClientVer {
+    return [self getInt:@"LastCompletedClientVer"];
+}
 // @ 0x6182c
-+ (void)saveLastCompletedClientVer:(int)ver { [self saveInt:ver Key:@"LastCompletedClientVer"]; }
-// @ 0x60090 — record acceptance of the privacy policy / terms (key "IsPolicyAccepted").
-+ (void)saveIsPolicyAccepted:(BOOL)accepted { [self saveBOOL:accepted Key:@"IsPolicyAccepted"]; }
++ (void)saveLastCompletedClientVer:(int)ver {
+    [self saveInt:ver Key:@"LastCompletedClientVer"];
+}
+// @ 0x60090 — record acceptance of the privacy policy / terms (key
+// "IsPolicyAccepted").
++ (void)saveIsPolicyAccepted:(BOOL)accepted {
+    [self saveBOOL:accepted Key:@"IsPolicyAccepted"];
+}
 
-// @ 0x60a40 — whether the player has already redeemed an invite code (key "IsInputInviteCode").
-+ (BOOL)isInputInviteCode { return [self getBOOL:@"IsInputInviteCode"]; }
+// @ 0x60a40 — whether the player has already redeemed an invite code (key
+// "IsInputInviteCode").
++ (BOOL)isInputInviteCode {
+    return [self getBOOL:@"IsInputInviteCode"];
+}
 // @ 0x60a68
-+ (void)saveIsInputInviteCode:(BOOL)v { [self saveBOOL:v Key:@"IsInputInviteCode"]; }
++ (void)saveIsInputInviteCode:(BOOL)v {
+    [self saveBOOL:v Key:@"IsInputInviteCode"];
+}
 
 // @ 0x5f418 — device-change reset: wipe the persistent domain, then re-seed the
 // factory defaults and clear all local Core Data progress records.
@@ -726,19 +895,19 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 #pragma mark - Treasure
 
-// @ 0x61540 — reset the pending-treasure snapshot to the empty/"nothing pending"
-// record (the same default treasureTmp hands back) and persist it.
+// @ 0x61540 — reset the pending-treasure snapshot to the empty/"nothing
+// pending" record (the same default treasureTmp hands back) and persist it.
 + (void)initTreasureTmp {
     TreasureTmpData data;
     memset(&data, 0, sizeof(data));
     data.subMapId = -1;
-    data.raw0x04  = -1;
-    data.raw0x44  = -1;
+    data.raw0x04 = -1;
+    data.raw0x44 = -1;
     [self saveTreasureTmp:data];
 }
 
-// @ 0x61c94 — scan the "e" array of {mapid, readno} dictionaries for subMapId and
-// return its readno, or 0 when the sub-map has no stored entry.
+// @ 0x61c94 — scan the "e" array of {mapid, readno} dictionaries for subMapId
+// and return its readno, or 0 when the sub-map has no stored entry.
 + (int)treasureReadNo:(short)subMapId {
     NSArray *array = [self getArray:@"e"];
     for (NSDictionary *entry in array) {
@@ -764,9 +933,13 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 #pragma mark - Uncomplete score-save queue
 
 // @ 0x60a90
-+ (NSArray *)uncompleteSaveMusic { return [self getArray:@"UncompleteSaveMusic"]; }
++ (NSArray *)uncompleteSaveMusic {
+    return [self getArray:@"UncompleteSaveMusic"];
+}
 // @ 0x60ab8
-+ (NSArray *)uncompleteSaveSheet { return [self getArray:@"UncompleteSaveSheet"]; }
++ (NSArray *)uncompleteSaveSheet {
+    return [self getArray:@"UncompleteSaveSheet"];
+}
 
 // @ 0x60ae0 — append music/sheet to the two parallel queues.
 + (void)addUncompleteSaveMusic:(int)music sheet:(short)sheet {
@@ -797,19 +970,30 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 #pragma mark - Identity setters (plaintext)
 
 // @ 0x60288
-+ (void)savePlayerId:(NSString *)playerId { [self saveString:playerId Key:@"PlayerId"]; }
++ (void)savePlayerId:(NSString *)playerId {
+    [self saveString:playerId Key:@"PlayerId"];
+}
 // @ 0x60238
-+ (void)savePlayerName:(NSString *)name   { [self saveString:name Key:@"PlayerName"]; }
++ (void)savePlayerName:(NSString *)name {
+    [self saveString:name Key:@"PlayerName"];
+}
 // @ 0x602d8
-+ (void)saveKonamiId:(NSString *)konamiId { [self saveString:konamiId Key:@"KonamiId"]; }
++ (void)saveKonamiId:(NSString *)konamiId {
+    [self saveString:konamiId Key:@"KonamiId"];
+}
 
 #pragma mark - Store / news / spending
 
-// @ 0x61854 — last-seen store information banner id (note the original key's typo).
-+ (int)lastInformationId { return [self getInt:@"LastInfomationId"]; }
+// @ 0x61854 — last-seen store information banner id (note the original key's
+// typo).
++ (int)lastInformationId {
+    return [self getInt:@"LastInfomationId"];
+}
 
 // @ 0x5fe88 — timestamp string of the last store view.
-+ (NSString *)lastStoreViewTimeString { return [self getString:@"LastUpdateTime"]; }
++ (NSString *)lastStoreViewTimeString {
+    return [self getString:@"LastUpdateTime"];
+}
 
 // @ 0x608c4 — when the monthly purchase total was last reset.
 + (void)saveLastUpdateSumPurchase:(NSDate *)date {
@@ -826,19 +1010,36 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // --- Quiz progress counters (plaintext ints) ---
 // @ 0x616c4 / 0x616ec
-+ (int)lastAnswerQuizId          { return [self getInt:@"LastAnswerQuizId"]; }
-+ (void)saveLastAnswerQuizId:(int)v { [self saveInt:v Key:@"LastAnswerQuizId"]; }
++ (int)lastAnswerQuizId {
+    return [self getInt:@"LastAnswerQuizId"];
+}
++ (void)saveLastAnswerQuizId:(int)v {
+    [self saveInt:v Key:@"LastAnswerQuizId"];
+}
 // @ 0x61714 / 0x6173c
-+ (int)totalCorrectQuiz          { return [self getInt:@"TotalCorrectQuiz"]; }
-+ (void)saveTotalCorrectQuiz:(int)v { [self saveInt:v Key:@"TotalCorrectQuiz"]; }
++ (int)totalCorrectQuiz {
+    return [self getInt:@"TotalCorrectQuiz"];
+}
++ (void)saveTotalCorrectQuiz:(int)v {
+    [self saveInt:v Key:@"TotalCorrectQuiz"];
+}
 // @ 0x61764 / 0x6178c
-+ (int)totalInCorrectQuiz        { return [self getInt:@"TotalInCorrectQuiz"]; }
-+ (void)saveTotalInCorrectQuiz:(int)v { [self saveInt:v Key:@"TotalInCorrectQuiz"]; }
++ (int)totalInCorrectQuiz {
+    return [self getInt:@"TotalInCorrectQuiz"];
+}
++ (void)saveTotalInCorrectQuiz:(int)v {
+    [self saveInt:v Key:@"TotalInCorrectQuiz"];
+}
 // @ 0x617b4 / 0x617dc
-+ (int)consecutiveCorrectQuiz    { return [self getInt:@"ConsecutiveCorrectQuiz"]; }
-+ (void)saveConsecutiveQuiz:(int)v { [self saveInt:v Key:@"ConsecutiveCorrectQuiz"]; }
++ (int)consecutiveCorrectQuiz {
+    return [self getInt:@"ConsecutiveCorrectQuiz"];
+}
++ (void)saveConsecutiveQuiz:(int)v {
+    [self saveInt:v Key:@"ConsecutiveCorrectQuiz"];
+}
 
-// @ 0x612b0 — grant character tickets (Crypt109 charaTicket += count); no-op for 0.
+// @ 0x612b0 — grant character tickets (Crypt109 charaTicket += count); no-op
+// for 0.
 + (void)addCharaTicket:(int)count {
     if (count == 0) {
         return;
@@ -849,7 +1050,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 #pragma mark - Store / recommend view timestamps
 
-// @ 0x5feb0 — paired setter for +lastStoreViewTimeString (same key "LastUpdateTime").
+// @ 0x5feb0 — paired setter for +lastStoreViewTimeString (same key
+// "LastUpdateTime").
 + (void)saveLastStoreViewTimeString:(NSString *)time {
     [self saveString:time Key:@"LastUpdateTime"];
 }
@@ -866,31 +1068,40 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 #pragma mark - Tutorial / policy
 
-// @ 0x5ff28 / 0x5ff50 — first-run tutorial played flag (key "IsTutorialPlayed").
-+ (BOOL)isTutorialPlayed { return [self getBOOL:@"IsTutorialPlayed"]; }
-+ (void)saveIsTutorialPlayed:(BOOL)played { [self saveBOOL:played Key:@"IsTutorialPlayed"]; }
+// @ 0x5ff28 / 0x5ff50 — first-run tutorial played flag (key
+// "IsTutorialPlayed").
++ (BOOL)isTutorialPlayed {
+    return [self getBOOL:@"IsTutorialPlayed"];
+}
++ (void)saveIsTutorialPlayed:(BOOL)played {
+    [self saveBOOL:played Key:@"IsTutorialPlayed"];
+}
 
-// @ 0x60068 — getter paired with +saveIsPolicyAccepted:. The binary's shared CFString
-// literal is the misspelled "IsPolicyAccesped"; the key is kept in sync with the
-// existing setter's "IsPolicyAccepted" here.
-+ (BOOL)isPolicyAccepted { return [self getBOOL:@"IsPolicyAccepted"]; }
+// @ 0x60068 — getter paired with +saveIsPolicyAccepted:. The binary's shared
+// CFString literal is the misspelled "IsPolicyAccesped"; the key is kept in
+// sync with the existing setter's "IsPolicyAccepted" here.
++ (BOOL)isPolicyAccepted {
+    return [self getBOOL:@"IsPolicyAccepted"];
+}
 
 #pragma mark - Touch radius / popkun setter
 
-// @ 0x605a4 — the note touch radius. In the binary this getter returns a hardcoded
-// constant (0x42880000 == 68.0), ignoring the stored value.
+// @ 0x605a4 — the note touch radius. In the binary this getter returns a
+// hardcoded constant (0x42880000 == 68.0), ignoring the stored value.
 + (float)touchRadius {
     return 68.0f;
 }
 
-// @ 0x605ac — clamp to [40.0, 148.0] (min against 148, then max against 40) and persist.
+// @ 0x605ac — clamp to [40.0, 148.0] (min against 148, then max against 40) and
+// persist.
 + (void)saveTouchRadius:(float)radius {
     float v = radius < 148.0f ? radius : 148.0f;
     v = v > 40.0f ? v : 40.0f;
     [self saveFloat:v Key:@"TouchRadius"];
 }
 
-// @ 0x60668 — clamp to [50.0, 100.0] (min against 100, then max against 50) and persist (key "b").
+// @ 0x60668 — clamp to [50.0, 100.0] (min against 100, then max against 50) and
+// persist (key "b").
 + (void)savePopkunSize:(float)size {
     float v = size < 100.0f ? size : 100.0f;
     v = v > 50.0f ? v : 50.0f;
@@ -899,17 +1110,23 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 #pragma mark - Store information banner / info-view day
 
-// @ 0x6187c — setter paired with +lastInformationId (note the original key's typo).
+// @ 0x6187c — setter paired with +lastInformationId (note the original key's
+// typo).
 + (void)saveLastInformationId:(int)informationId {
     [self saveInt:informationId Key:@"LastInfomationId"];
 }
 
-// @ 0x61b44 / 0x61b6c — the day the store information banner was last viewed (key "InfoViewDay").
-+ (NSDate *)getInfoViewDay { return [self getDate:@"InfoViewDay"]; }
-+ (void)saveInfoViewDay:(NSDate *)day { [self saveDate:day Key:@"InfoViewDay"]; }
+// @ 0x61b44 / 0x61b6c — the day the store information banner was last viewed
+// (key "InfoViewDay").
++ (NSDate *)getInfoViewDay {
+    return [self getDate:@"InfoViewDay"];
+}
++ (void)saveInfoViewDay:(NSDate *)day {
+    [self saveDate:day Key:@"InfoViewDay"];
+}
 
-// @ 0x61b94 — YES if `day` and the stored InfoViewDay fall on the same calendar day,
-// compared as "yyyy/MM/dd"-formatted strings.
+// @ 0x61b94 — YES if `day` and the stored InfoViewDay fall on the same calendar
+// day, compared as "yyyy/MM/dd"-formatted strings.
 + (BOOL)isEqualToInfoViewDay:(NSDate *)day {
     NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
     [fmt setDateFormat:@"yyyy/MM/dd"];
@@ -925,7 +1142,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (void)addConsumedTreasurePoint:(short)value {
     short cur = [self consumedTreasurePoint];
     int total = (short)(cur + value);
-    if (total > 9998) {   // Ghidra: 0x270e < total
+    if (total > 9998) { // Ghidra: 0x270e < total
         total = 9999;
     }
     if (total < 0) {
@@ -934,9 +1151,10 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     [self saveInt:total Key:@"ConsumedTreasurePoint"];
 }
 
-// @ 0x61dc0 — persist the "treasure read" progress index for a sugoroku sub-map into the
-// "e" array of {mapid, readno} dictionaries: update the matching entry's readno, or append
-// a new {mapid, readno} entry when the sub-map has none yet.
+// @ 0x61dc0 — persist the "treasure read" progress index for a sugoroku sub-map
+// into the "e" array of {mapid, readno} dictionaries: update the matching
+// entry's readno, or append a new {mapid, readno} entry when the sub-map has
+// none yet.
 + (void)saveTreasureReadNo:(short)subMapId no:(int)no {
     NSMutableArray *array = [[self getArray:@"e"] mutableCopy];
     BOOL matched = NO;
@@ -945,7 +1163,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         if ([[entry objectForKey:@"mapid"] shortValue] == subMapId) {
             NSMutableDictionary *updated = [entry mutableCopy];
             if (updated == nil) {
-                break;   // Ghidra: falls through to the append branch
+                break; // Ghidra: falls through to the append branch
             }
             [updated setObject:[NSNumber numberWithInt:no] forKey:@"readno"];
             [array replaceObjectAtIndex:index withObject:[updated copy]];

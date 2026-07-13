@@ -24,13 +24,15 @@
 // @ 0x647ac
 - (id)init {
     if ((self = [super init]) != nil) {
-        [self setDoubleCharacters:[NSCharacterSet characterSetWithCharactersInString:@"0123456789eE-."]];
+        [self setDoubleCharacters:[NSCharacterSet
+                                      characterSetWithCharactersInString:@"0123456789eE-."]];
     }
     return self;
 }
 
-// dealloc @ 0x64818 — ARC-omitted (object-only: setData:nil / setDoubleCharacters:nil
-// then chains to super; ARC releases the owned ivars automatically).
+// dealloc @ 0x64818 — ARC-omitted (object-only: setData:nil /
+// setDoubleCharacters:nil then chains to super; ARC releases the owned ivars
+// automatically).
 
 // @ 0x64870
 - (NSUInteger)scanLocation {
@@ -89,8 +91,7 @@
 // @ 0x64a14
 - (BOOL)scanUTF8String:(const char *)inString intoString:(NSString **)outString {
     size_t theLength = strlen(inString);
-    if ((unsigned)(end - current) < theLength ||
-        strncmp(current, inString, theLength) != 0) {
+    if ((unsigned)(end - current) < theLength || strncmp(current, inString, theLength) != 0) {
         return NO;
     }
     current += theLength;
@@ -237,8 +238,7 @@ scanEnd:
         NSString *theComment = nil;
         [self scanUpToCharactersFromSet:[NSCharacterSet linebreaksCharacterSet]
                              intoString:&theComment];
-        [self scanCharactersFromSet:[NSCharacterSet linebreaksCharacterSet]
-                         intoString:NULL];
+        [self scanCharactersFromSet:[NSCharacterSet linebreaksCharacterSet] intoString:NULL];
         if (outComment != NULL) {
             *outComment = theComment;
         }

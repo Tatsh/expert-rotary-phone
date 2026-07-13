@@ -3,12 +3,13 @@
 //  pop'n rhythmin
 //
 //  The daily-quiz screen: a UITableViewController that shows one question on a
-//  "blackboard" table header with a row per answer choice (QuizCell). The player taps a
-//  row to answer; the reply is posted to the server, the pick is graded (○/✕ stamp +
-//  SE), and a tap on the graded board reveals the running correct/incorrect/streak
-//  totals. Every 5th correct answer grants a character ticket and pops a present window.
-//  Questions and replies go through the Downloader (this controller is its delegate);
-//  the running totals are persisted through UserSettingData.
+//  "blackboard" table header with a row per answer choice (QuizCell). The
+//  player taps a row to answer; the reply is posted to the server, the pick is
+//  graded (○/✕ stamp + SE), and a tap on the graded board reveals the running
+//  correct/incorrect/streak totals. Every 5th correct answer grants a character
+//  ticket and pops a present window. Questions and replies go through the
+//  Downloader (this controller is its delegate); the running totals are
+//  persisted through UserSettingData.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin:
 //    initWithStyle:                       @ 0xda198
@@ -34,7 +35,7 @@
 
 #import <UIKit/UIKit.h>
 
-#import "Downloader.h"   // DownloaderDelegate
+#import "Downloader.h" // DownloaderDelegate
 
 @interface QuizMainViewController : UITableViewController <DownloaderDelegate>
 

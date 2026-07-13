@@ -12,9 +12,9 @@
 
 @interface AcViewerCategoryCell : UITableViewCell
 
-// Bind the row to a category: the first element of `dataList` supplies the category
-// index (0 = etc, 1 = TV, 2..23 = p01..p22) that picks the banner image; a nil list
-// falls back to the "all" banner.
+// Bind the row to a category: the first element of `dataList` supplies the
+// category index (0 = etc, 1 = TV, 2..23 = p01..p22) that picks the banner
+// image; a nil list falls back to the "all" banner.
 - (void)setData:(NSArray *)dataList;
 
 @end

@@ -18,39 +18,41 @@
 //  ScoreData.h for the confirming call site). All attributes are Integer16.
 //
 
-#import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import <Foundation/Foundation.h>
 
 @interface TreasureData : NSManagedObject
 
-@property (nonatomic, retain) NSNumber *mainMapId;        // Integer16
-@property (nonatomic, retain) NSNumber *subMapId;         // Integer16
-@property (nonatomic, retain) NSNumber *clearCnt;         // Integer16
-@property (nonatomic, retain) NSNumber *friendMeetCnt;    // Integer16
-@property (nonatomic, retain) NSNumber *musicPiece;       // Integer16
-@property (nonatomic, retain) NSNumber *wallPaperPiece;   // Integer16
-@property (nonatomic, retain) NSNumber *goalCharaTicket;  // Integer16
-@property (nonatomic, retain) NSNumber *goalTouchSound;   // Integer16
-@property (nonatomic, retain) NSNumber *fastRecord;       // Integer16
+@property(nonatomic, retain) NSNumber *mainMapId;       // Integer16
+@property(nonatomic, retain) NSNumber *subMapId;        // Integer16
+@property(nonatomic, retain) NSNumber *clearCnt;        // Integer16
+@property(nonatomic, retain) NSNumber *friendMeetCnt;   // Integer16
+@property(nonatomic, retain) NSNumber *musicPiece;      // Integer16
+@property(nonatomic, retain) NSNumber *wallPaperPiece;  // Integer16
+@property(nonatomic, retain) NSNumber *goalCharaTicket; // Integer16
+@property(nonatomic, retain) NSNumber *goalTouchSound;  // Integer16
+@property(nonatomic, retain) NSNumber *fastRecord;      // Integer16
 
 // Fetch the record for a given main/sub map (nil if none). Ghidra:
 // getTreasureData:subMapId:inManagedObjectContext: @ 0xc088c.
 + (TreasureData *)getTreasureData:(short)mainMapId
                          subMapId:(short)subMapId
-             inManagedObjectContext:(NSManagedObjectContext *)context;
+           inManagedObjectContext:(NSManagedObjectContext *)context;
 
 // Fetch every persisted TreasureData record on the given context (the whole
 // sugoroku save table). Ghidra: getAllTreasureData: @ 0xc09a4.
 + (NSArray<TreasureData *> *)getAllTreasureData:(NSManagedObjectContext *)context;
 
-
-// YES if `mainMapId` is one of the two root ("default") maps (0 or 6). Ghidra: @ 0xc0f64.
+// YES if `mainMapId` is one of the two root ("default") maps (0 or 6). Ghidra:
+// @ 0xc0f64.
 + (BOOL)isDefaultMap:(short)mainMapId;
 
-// Delete every persisted TreasureData record (device-change / initForConvert reset).
+// Delete every persisted TreasureData record (device-change / initForConvert
+// reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
-// Seed the default treasure-map rows into the store (device-change reset); impl in .m @0x...
+// Seed the default treasure-map rows into the store (device-change reset); impl
+// in .m @0x...
 + (id)init:(NSManagedObjectContext *)context;
 
 @end

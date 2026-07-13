@@ -15,11 +15,9 @@
 
 // @ 0x65404
 + (NSCharacterSet *)linebreaksCharacterSet {
-    static const unichar theCharacters[] = {
-        0x000A, 0x000C, 0x000D, 0x0085, 0x2028, 0x2029
-    };
-    return [NSCharacterSet characterSetWithCharactersInString:
-            [NSString stringWithCharacters:theCharacters length:6]];
+    static const unichar theCharacters[] = {0x000A, 0x000C, 0x000D, 0x0085, 0x2028, 0x2029};
+    return [NSCharacterSet
+        characterSetWithCharactersInString:[NSString stringWithCharacters:theCharacters length:6]];
 }
 
 @end

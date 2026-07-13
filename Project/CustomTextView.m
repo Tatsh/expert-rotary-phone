@@ -9,8 +9,9 @@
 
 @implementation CustomTextView
 
-// initWithFrame: @ 0x27fd0 — super-only override (just chains to UITextView), omitted.
-// dealloc @ 0x28008 — ARC-omitted (no custom teardown; only [super dealloc]).
+// initWithFrame: @ 0x27fd0 — super-only override (just chains to UITextView),
+// omitted. dealloc @ 0x28008 — ARC-omitted (no custom teardown; only [super
+// dealloc]).
 
 // @ 0x28080 — never editable/selectable.
 - (BOOL)canBecomeFirstResponder {

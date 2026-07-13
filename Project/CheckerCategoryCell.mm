@@ -14,13 +14,14 @@
     BOOL _isPad;
     int _offsetXForPad;
     int _imgMusicCntX;
-    UIImageView *_bgView;              // pad-only: category banner held as a plain subview
-    UIImageView *_musicCntBaseView;    // "played" badge background
-    UIImageView *_musicCntNumView[3];  // up to 3 played-count digit glyphs
+    UIImageView *_bgView;             // pad-only: category banner held as a plain subview
+    UIImageView *_musicCntBaseView;   // "played" badge background
+    UIImageView *_musicCntNumView[3]; // up to 3 played-count digit glyphs
 }
 
 // @ 0xcf49c — the music-count label x offset varies by device + OS.
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
     }
@@ -30,9 +31,11 @@
     if (!_isPad) {
         _imgMusicCntX = _isOS7 ? 0xf5 : 0xf0;
     } else if (!_isOS7) {
-        _offsetXForPad = 6;   _imgMusicCntX = 0xec;
+        _offsetXForPad = 6;
+        _imgMusicCntX = 0xec;
     } else {
-        _offsetXForPad = 0xe; _imgMusicCntX = 0xf4;
+        _offsetXForPad = 0xe;
+        _imgMusicCntX = 0xf4;
     }
     return self;
 }
@@ -43,21 +46,26 @@
 // placement depends on device/OS, over a "played" badge showing how many musics
 // in this category the player has already played.
 - (void)setData:(NSArray *)playedList category:(short)category {
-    // Base category banner images, indexed by `category` (0..23); >=24 uses "near".
+    // Base category banner images, indexed by `category` (0..23); >=24 uses
+    // "near".
     static NSString *const kCateBase[24] = {
-        @"ppc_cate_base_etc", @"ppc_cate_base_tv",
-        @"ppc_cate_base_p01", @"ppc_cate_base_p02", @"ppc_cate_base_p03", @"ppc_cate_base_p04",
-        @"ppc_cate_base_p05", @"ppc_cate_base_p06", @"ppc_cate_base_p07", @"ppc_cate_base_p08",
-        @"ppc_cate_base_p09", @"ppc_cate_base_p10", @"ppc_cate_base_p11", @"ppc_cate_base_p12",
-        @"ppc_cate_base_p13", @"ppc_cate_base_p14", @"ppc_cate_base_p15", @"ppc_cate_base_p16",
-        @"ppc_cate_base_p17", @"ppc_cate_base_p18", @"ppc_cate_base_p19", @"ppc_cate_base_p20",
-        @"ppc_cate_base_p21", @"ppc_cate_base_p22"
-    };
+        @"ppc_cate_base_etc", @"ppc_cate_base_tv",  @"ppc_cate_base_p01", @"ppc_cate_base_p02",
+        @"ppc_cate_base_p03", @"ppc_cate_base_p04", @"ppc_cate_base_p05", @"ppc_cate_base_p06",
+        @"ppc_cate_base_p07", @"ppc_cate_base_p08", @"ppc_cate_base_p09", @"ppc_cate_base_p10",
+        @"ppc_cate_base_p11", @"ppc_cate_base_p12", @"ppc_cate_base_p13", @"ppc_cate_base_p14",
+        @"ppc_cate_base_p15", @"ppc_cate_base_p16", @"ppc_cate_base_p17", @"ppc_cate_base_p18",
+        @"ppc_cate_base_p19", @"ppc_cate_base_p20", @"ppc_cate_base_p21", @"ppc_cate_base_p22"};
     // Digit glyphs for the played count.
-    static NSString *const kPlayNum[10] = {
-        @"ppc_pl_num_0", @"ppc_pl_num_1", @"ppc_pl_num_2", @"ppc_pl_num_3", @"ppc_pl_num_4",
-        @"ppc_pl_num_5", @"ppc_pl_num_6", @"ppc_pl_num_7", @"ppc_pl_num_8", @"ppc_pl_num_9"
-    };
+    static NSString *const kPlayNum[10] = {@"ppc_pl_num_0",
+                                           @"ppc_pl_num_1",
+                                           @"ppc_pl_num_2",
+                                           @"ppc_pl_num_3",
+                                           @"ppc_pl_num_4",
+                                           @"ppc_pl_num_5",
+                                           @"ppc_pl_num_6",
+                                           @"ppc_pl_num_7",
+                                           @"ppc_pl_num_8",
+                                           @"ppc_pl_num_9"};
 
     // Tear down any previously bound subviews (cell reuse).
     if (_musicCntBaseView) {
@@ -80,7 +88,8 @@
     NSString *baseName = (category < 24) ? kCateBase[category] : @"ppc_cate_base_near";
     UIImage *baseImage = [UIImage imageNamed:baseName];
     [baseImg setImage:baseImage];
-    [baseImg setFrame:CGRectMake(_offsetXForPad, 0.0f, baseImage.size.width, baseImage.size.height)];
+    [baseImg
+        setFrame:CGRectMake(_offsetXForPad, 0.0f, baseImage.size.width, baseImage.size.height)];
 
     if (!_isPad) {
         float osVersion = UIDevice.currentDevice.systemVersion.floatValue;
@@ -103,7 +112,8 @@
     // Played-count badge (only for real categories).
     if (category < 24) {
         UIImage *playedImage = [UIImage imageNamed:@"ppc_cate_played"];
-        _musicCntBaseView = [[UIImageView alloc] initWithFrame:CGRectMake(_imgMusicCntX, 21.0f,
+        _musicCntBaseView = [[UIImageView alloc] initWithFrame:CGRectMake(_imgMusicCntX,
+                                                                          21.0f,
                                                                           playedImage.size.width,
                                                                           playedImage.size.height)];
         [_musicCntBaseView setImage:playedImage];
@@ -115,11 +125,13 @@
             digitCount++;
         }
         int shown = MIN(digitCount, 3);
-        // Rightmost (units) digit sits furthest right; earlier digits step left by 10.
+        // Rightmost (units) digit sits furthest right; earlier digits step left
+        // by 10.
         CGFloat x = (CGFloat)_imgMusicCntX + 15.0f + (CGFloat)(shown * 5 - 5);
         int remaining = count;
         for (int i = 0; i < shown; i++) {
-            UIImageView *numView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:kPlayNum[remaining % 10]]];
+            UIImageView *numView =
+                [[UIImageView alloc] initWithImage:[UIImage imageNamed:kPlayNum[remaining % 10]]];
             _musicCntNumView[i] = numView;
             [numView setFrame:CGRectMake(x, 26.0f, 12.0f, 15.0f)];
             [self.contentView addSubview:numView];

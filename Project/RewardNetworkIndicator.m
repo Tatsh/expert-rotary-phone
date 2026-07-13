@@ -26,8 +26,8 @@
 // @ 0xf3d58 — keep the spinner centered in the overlay.
 - (void)layoutSubviews {
     [super layoutSubviews];
-    self.indicator.center = CGPointMake(CGRectGetWidth(self.bounds) * 0.5f,
-                                        CGRectGetHeight(self.bounds) * 0.5f);
+    self.indicator.center =
+        CGPointMake(CGRectGetWidth(self.bounds) * 0.5f, CGRectGetHeight(self.bounds) * 0.5f);
 }
 
 // @ 0xf3e14

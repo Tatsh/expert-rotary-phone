@@ -6,50 +6,53 @@
 //
 
 #import "RewardNetworkUdid.h"
-#import "RewardNetworkPasteBoard.h"
+#import "RewardNetwork.h" // +ad_udid / +udid / +old_udid
 #import "RewardNetworkError.h"
-#import "RewardNetwork.h"          // +ad_udid / +udid / +old_udid
+#import "RewardNetworkPasteBoard.h"
 
+#import <AdSupport/AdSupport.h>       // ASIdentifierManager
+#import <CommonCrypto/CommonDigest.h> // CC_MD5
 #import <Security/Security.h>
-#import <UIKit/UIKit.h>            // UIDevice
-#import <AdSupport/AdSupport.h>    // ASIdentifierManager
-#import <CommonCrypto/CommonDigest.h>   // CC_MD5
+#import <UIKit/UIKit.h> // UIDevice
 
 // The process-wide singleton backing +allocWithZone: / +sharedInstance
 // (g_pRewardNetworkUdidInstance in the binary).
 static RewardNetworkUdid *g_sharedInstance = nil;
 
-// The shared "ApplilinkUdid" serial queue (DAT_00188350), created in +allocWithZone:'s
-// dispatch_once body and used by -init to serialize the SDK's UDID/keychain work.
+// The shared "ApplilinkUdid" serial queue (DAT_00188350), created in
+// +allocWithZone:'s dispatch_once body and used by -init to serialize the SDK's
+// UDID/keychain work.
 static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 @implementation RewardNetworkUdid
 
-// @ 0xf70c0 — the recovered -init dispatches its super initialization synchronously onto
-// the shared "ApplilinkUdid" serial queue created by +allocWithZone: (block body @ 0xf7188
-// does just `self = [super init]`).
+// @ 0xf70c0 — the recovered -init dispatches its super initialization
+// synchronously onto the shared "ApplilinkUdid" serial queue created by
+// +allocWithZone: (block body @ 0xf7188 does just `self = [super init]`).
 - (instancetype)init {
     __block RewardNetworkUdid *result = nil;
     dispatch_sync(g_pApplilinkUdidQueue, ^{
-        result = [super init];
+      result = [super init];
     });
     return result;
 }
 
-// setPasteBoard: @ 0xf9838 / pasteBoard @ 0xf9828 — synthesized accessors for the
+// setPasteBoard: @ 0xf9838 / pasteBoard @ 0xf9828 — synthesized accessors for
+// the
 //   _pasteBoard ivar.
-// .cxx_construct/.cxx_destruct @ 0xf9860 — compiler-emitted ARC ivar teardown for
+// .cxx_construct/.cxx_destruct @ 0xf9860 — compiler-emitted ARC ivar teardown
+// for
 //   _pasteBoard; not hand-written.
 
-// @ 0xf956c — look up (creating if absent) a generic-password keychain item named
-// "bundleSeedID" and read the leading component of its access group, which is the
-// app's Apple seed (team) id.
+// @ 0xf956c — look up (creating if absent) a generic-password keychain item
+// named "bundleSeedID" and read the leading component of its access group,
+// which is the app's Apple seed (team) id.
 - (NSString *)bundleSeedID {
     NSDictionary *query = @{
-        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrAccount:      @"bundleSeedID",
-        (__bridge id)kSecAttrService:      @"",
-        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount : @"bundleSeedID",
+        (__bridge id)kSecAttrService : @"",
+        (__bridge id)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
     };
 
     CFTypeRef resultRef = NULL;
@@ -71,16 +74,17 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 #pragma mark - Singleton (metaclass)
 
-// @ 0xf6ff0 — allocate the shared instance once, then always hand back that instance.
+// @ 0xf6ff0 — allocate the shared instance once, then always hand back that
+// instance.
 + (instancetype)allocWithZone:(NSZone *)zone {
     static dispatch_once_t onceToken;
-    // @ 0xf705c — dispatch_once body: create the shared "ApplilinkUdid" serial queue and,
-    // if absent, alloc the singleton via [super allocWithZone:].
+    // @ 0xf705c — dispatch_once body: create the shared "ApplilinkUdid" serial
+    // queue and, if absent, alloc the singleton via [super allocWithZone:].
     dispatch_once(&onceToken, ^{
-        g_pApplilinkUdidQueue = dispatch_queue_create("ApplilinkUdid", NULL);
-        if (g_sharedInstance == nil) {
-            g_sharedInstance = [super allocWithZone:zone];
-        }
+      g_pApplilinkUdidQueue = dispatch_queue_create("ApplilinkUdid", NULL);
+      if (g_sharedInstance == nil) {
+          g_sharedInstance = [super allocWithZone:zone];
+      }
     });
     return g_sharedInstance;
 }
@@ -90,15 +94,15 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 + (instancetype)sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        g_sharedInstance = [[RewardNetworkUdid alloc] init];
+      g_sharedInstance = [[RewardNetworkUdid alloc] init];
     });
     return g_sharedInstance;
 }
 
 #pragma mark - Pasteboard-backed UDID storage
 
-// @ 0xf72d4 — reuse the existing pasteboard "Value", otherwise mint a fresh UUID,
-// then write it into the first empty pasteboard slot.
+// @ 0xf72d4 — reuse the existing pasteboard "Value", otherwise mint a fresh
+// UUID, then write it into the first empty pasteboard slot.
 + (NSDictionary *)writeUDIDForFirstEmptyLocationWithError:(NSError **)error {
     RewardNetworkUdid *instance = [self sharedInstance];
     NSDictionary *storage = [[instance pasteBoard] storageData];
@@ -164,8 +168,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 #pragma mark - Advertising reward UDID (keychain)
 
-// @ 0xf76cc — read the current advertising-reward UDID, falling back to the freshly
-// hashed advertising id when the keychain read fails.
+// @ 0xf76cc — read the current advertising-reward UDID, falling back to the
+// freshly hashed advertising id when the keychain read fails.
 + (NSString *)getAdvertisingRewardUdidWithError:(NSError **)error {
     if (![self isAdvertisingTrackingOSVersion]) {
         return nil;
@@ -182,9 +186,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
     NSError *udidError = nil;
     NSString *udid = [RewardNetworkUdid getUdidWithService:service
-                                             storageIndex:serviceIndex
-                                    rewardNetworkUDIDType:1
-                                                    error:&udidError];
+                                              storageIndex:serviceIndex
+                                     rewardNetworkUDIDType:1
+                                                     error:&udidError];
     if (udidError == nil && udid != nil) {
         return udid;
     }
@@ -193,8 +197,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return [RewardNetworkUdid getAdvertisingUdid];
 }
 
-// @ 0xf786c — (re)create the advertising-reward UDID: store the current ad id as the
-// new UDID (and rotate the previous one into the old UDID slot when it differs).
+// @ 0xf786c — (re)create the advertising-reward UDID: store the current ad id
+// as the new UDID (and rotate the previous one into the old UDID slot when it
+// differs).
 + (NSString *)createAdvertisingRewardUdidWithError:(NSError **)error {
     if (![self isAdvertisingTrackingOSVersion]) {
         return nil;
@@ -211,9 +216,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
     NSError *readError = nil;
     NSString *storedUdid = [RewardNetworkUdid getUdidWithService:service
-                                                   storageIndex:serviceIndex
-                                          rewardNetworkUDIDType:1
-                                                          error:&readError];
+                                                    storageIndex:serviceIndex
+                                           rewardNetworkUDIDType:1
+                                                           error:&readError];
     NSString *advertisingUdid = [RewardNetworkUdid getAdvertisingUdid];
 
     if (storedUdid == nil) {
@@ -239,7 +244,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return storedUdid;
 }
 
-// @ 0xf7b68 — delete the advertising-reward UDID keychain entry `<service>-<index>`.
+// @ 0xf7b68 — delete the advertising-reward UDID keychain entry
+// `<service>-<index>`.
 + (BOOL)deleteAdvertisingRewardUdidIndex:(NSInteger)index error:(NSError **)error {
     if (index >= 519) {
         if (error != NULL) {
@@ -314,8 +320,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return deleteError == nil;
 }
 
-// @ 0xf80e0 — persist `udid` as the "new" advertising UDID, and remember the storage
-// index used so it can be found again.
+// @ 0xf80e0 — persist `udid` as the "new" advertising UDID, and remember the
+// storage index used so it can be found again.
 + (BOOL)setNewUdid:(NSString *)udid error:(NSError **)error {
     NSString *serviceIndex = [RewardNetworkUdid getServiceIndex:@"adStorageIndex"];
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
@@ -341,8 +347,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 #pragma mark - Keychain primitives
 
-// @ 0xf82ac — add a generic-password keychain item recording `udid` under `service`,
-// replacing any previous item first.
+// @ 0xf82ac — add a generic-password keychain item recording `udid` under
+// `service`, replacing any previous item first.
 + (BOOL)setUdidWithService:(NSString *)service withUDID:(NSString *)udid {
     NSDate *now = [NSDate date];
     NSNumber *version = [NSNumber numberWithInteger:1];
@@ -357,19 +363,20 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     }
 
     NSDictionary *attributes = @{
-        (__bridge id)kSecClass:                (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrAccount:          udid,
-        (__bridge id)kSecAttrService:          service,
-        (__bridge id)kSecAttrCreationDate:     now,
-        (__bridge id)kSecAttrModificationDate: now,
-        (__bridge id)kSecAttrGeneric:          version,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount : udid,
+        (__bridge id)kSecAttrService : service,
+        (__bridge id)kSecAttrCreationDate : now,
+        (__bridge id)kSecAttrModificationDate : now,
+        (__bridge id)kSecAttrGeneric : version,
     };
     SecItemAdd((__bridge CFDictionaryRef)attributes, NULL);
     return YES;
 }
 
-// @ 0xf846c — read the UDID (kSecAttrAccount) for `service`/`storageIndex`, validate
-// the record, and touch its modification date. `rewardNetworkUDIDType` is unused.
+// @ 0xf846c — read the UDID (kSecAttrAccount) for `service`/`storageIndex`,
+// validate the record, and touch its modification date. `rewardNetworkUDIDType`
+// is unused.
 + (NSString *)getUdidWithService:(NSString *)service
                     storageIndex:(NSString *)storageIndex
            rewardNetworkUDIDType:(NSInteger)rewardNetworkUDIDType
@@ -403,11 +410,11 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     }
 
     NSDictionary *query = @{
-        (__bridge id)kSecClass:       (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrService: fullService,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrService : fullService,
     };
     NSDictionary *update = @{
-        (__bridge id)kSecAttrModificationDate: now,
+        (__bridge id)kSecAttrModificationDate : now,
     };
     CFTypeRef matchResult = NULL;
     OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &matchResult);
@@ -419,8 +426,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf876c — copy the generic-password attributes stored for `service`.
 //
-// NOTE: reproduced 1:1 with the binary, which pairs the match-limit constants the
-// "wrong" way round (kSecMatchLimitOne is used as the dictionary key and
+// NOTE: reproduced 1:1 with the binary, which pairs the match-limit constants
+// the "wrong" way round (kSecMatchLimitOne is used as the dictionary key and
 // kSecMatchLimit as its value); this is an SDK quirk, not a transcription slip.
 + (NSDictionary *)searchWithService:(NSString *)service {
     if (service == nil) {
@@ -428,10 +435,10 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     }
 
     NSDictionary *query = @{
-        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecMatchLimitOne:    (__bridge id)kSecMatchLimit,
-        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
-        (__bridge id)kSecAttrService:      service,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecMatchLimitOne : (__bridge id)kSecMatchLimit,
+        (__bridge id)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
+        (__bridge id)kSecAttrService : service,
     };
     CFTypeRef resultRef = NULL;
     OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &resultRef);
@@ -441,8 +448,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return (__bridge_transfer NSDictionary *)resultRef;
 }
 
-// @ 0xf8860 — delete the generic-password keychain item for `service` (no-op when
-// nothing is stored).
+// @ 0xf8860 — delete the generic-password keychain item for `service` (no-op
+// when nothing is stored).
 + (BOOL)deleteKeyChainService:(NSString *)service error:(NSError **)error {
     NSDictionary *found = [RewardNetworkUdid searchWithService:service];
     if (found == nil) {
@@ -450,9 +457,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     }
 
     NSDictionary *query = @{
-        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
-        (__bridge id)kSecAttrService:      service,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
+        (__bridge id)kSecAttrService : service,
     };
     OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
     if (status == errSecSuccess) {
@@ -506,13 +513,14 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return YES;
 }
 
-// @ 0xf8c30 — read the stored storage-index string (account) for `service`, or "0".
+// @ 0xf8c30 — read the stored storage-index string (account) for `service`, or
+// "0".
 + (NSString *)getServiceIndex:(NSString *)service {
     NSDictionary *query = @{
-        (__bridge id)kSecClass:            (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecMatchLimitOne:    (__bridge id)kSecMatchLimit,
-        (__bridge id)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
-        (__bridge id)kSecAttrService:      service,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecMatchLimitOne : (__bridge id)kSecMatchLimit,
+        (__bridge id)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
+        (__bridge id)kSecAttrService : service,
     };
     CFTypeRef resultRef = NULL;
     OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &resultRef);
@@ -528,23 +536,24 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return @"0";
 }
 
-// @ 0xf8dc0 — record `storageIndex` (as the account) under `service` in the keychain.
+// @ 0xf8dc0 — record `storageIndex` (as the account) under `service` in the
+// keychain.
 + (void)setService:(NSString *)service withStorageIndex:(NSString *)storageIndex {
     NSError *deleteError = nil;
     [RewardNetworkUdid deleteKeyChainService:service error:&deleteError];
 
     NSDictionary *attributes = @{
-        (__bridge id)kSecClass:       (__bridge id)kSecClassGenericPassword,
-        (__bridge id)kSecAttrAccount: storageIndex,
-        (__bridge id)kSecAttrService: service,
+        (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrAccount : storageIndex,
+        (__bridge id)kSecAttrService : service,
     };
     SecItemAdd((__bridge CFDictionaryRef)attributes, NULL);
 }
 
 #pragma mark - Advertising identifier
 
-// @ 0xf8ebc — MD5 of the current advertising identifier's UUID string, or nil when
-// tracking is off / the id is the all-zero placeholder.
+// @ 0xf8ebc — MD5 of the current advertising identifier's UUID string, or nil
+// when tracking is off / the id is the all-zero placeholder.
 + (NSString *)getAdvertisingUdid {
     if (![self isAdvertisingTrackingOSVersion]) {
         return nil;
@@ -558,8 +567,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return [RewardNetworkUdid md5WithString:uuid];
 }
 
-// @ 0xf8fa4 — whether ad tracking is enabled; on unsupported OS versions it reports
-// YES.
+// @ 0xf8fa4 — whether ad tracking is enabled; on unsupported OS versions it
+// reports YES.
 + (BOOL)isAdvertisingTrackingEnabled {
     if (![self isAdvertisingTrackingOSVersion]) {
         return YES;
@@ -567,7 +576,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return [[ASIdentifierManager sharedManager] isAdvertisingTrackingEnabled];
 }
 
-// @ 0xf9010 — whether the running OS is new enough (>= 6.1) to use the ad identifier.
+// @ 0xf9010 — whether the running OS is new enough (>= 6.1) to use the ad
+// identifier.
 + (BOOL)isAdvertisingTrackingOSVersion {
     return [[[UIDevice currentDevice] systemVersion] doubleValue] >= 6.1;
 }
@@ -587,10 +597,11 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return result;
 }
 
-// @ 0xf9168 — populate `parameters` with the "udid"/"old_udid" request fields chosen
-// from the ad id / udid / old udid, gated on the OS version and priority flag.
+// @ 0xf9168 — populate `parameters` with the "udid"/"old_udid" request fields
+// chosen from the ad id / udid / old udid, gated on the OS version and priority
+// flag.
 + (BOOL)setUdidParameters:(NSMutableDictionary *)parameters
-        isUDIDPriorityType:(BOOL)isUDIDPriorityType {
+       isUDIDPriorityType:(BOOL)isUDIDPriorityType {
     NSString *adUdid = [RewardNetwork ad_udid];
     NSString *udid = [RewardNetwork udid];
     NSString *oldUdid = [RewardNetwork old_udid];
@@ -602,7 +613,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
     if ([RewardNetworkUdid isAdvertisingTrackingOSVersion]) {
         if (adUdid == nil) {
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"ApplilinkReward.campaignFlg"];
+            [[NSUserDefaults standardUserDefaults]
+                removeObjectForKey:@"ApplilinkReward.campaignFlg"];
             return NO;
         }
         [parameters setValue:adUdid forKey:@"udid"];
@@ -656,8 +668,8 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return YES;
 }
 
-// @ 0xf947c — seed the keychain "old" UDID from the pasteboard record identified by
-// the persisted storage index.
+// @ 0xf947c — seed the keychain "old" UDID from the pasteboard record
+// identified by the persisted storage index.
 + (void)setUdidKeychainFromPasteBoard {
     NSString *storageIndex =
         [[NSUserDefaults standardUserDefaults] stringForKey:@"ApplilinkReward.storageIndex"];
@@ -673,8 +685,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     }
 }
 
-// @ 0xf96e8 — debug dump of the pasteboard plus the udid / ad-id state (the NSLog
-// calls are compiled out in release, leaving only the accessor side effects).
+// @ 0xf96e8 — debug dump of the pasteboard plus the udid / ad-id state (the
+// NSLog calls are compiled out in release, leaving only the accessor side
+// effects).
 + (void)debugLog {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (env == nil) {

@@ -2,11 +2,12 @@
 //  BootLogoTask.h
 //  pop'n rhythmin
 //
-//  The boot "logo / warning" splash task, created by startBootTask at priority 3.
-//  It shows three branding screens (each faded in, held ~2s or until tapped, then
-//  faded out), logs into Game Center, and hands off to the next task. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (ctor BootLogoTask_ctor
-//  FUN_0002af58, update FUN_0002b02c, setup FUN_0002b1f4, finish FUN_0002b554).
+//  The boot "logo / warning" splash task, created by startBootTask at
+//  priority 3. It shows three branding screens (each faded in, held ~2s or
+//  until tapped, then faded out), logs into Game Center, and hands off to the
+//  next task. Reconstructed from Ghidra project rb420, program PopnRhythmin
+//  (ctor BootLogoTask_ctor FUN_0002af58, update FUN_0002b02c, setup
+//  FUN_0002b1f4, finish FUN_0002b554).
 //
 
 #pragma once
@@ -18,9 +19,9 @@ class neTextureForiOS;
 
 class BootLogoTask : public C_TASK {
 public:
-    BootLogoTask();                       // Ghidra: BootLogoTask_ctor (FUN_0002af58)
-    ~BootLogoTask() override;             // @ 0x2af8c (taskNode_deleteA deleting-dtor: base + delete)
-    void update(int deltaMs) override;    // Ghidra: BootLogoTask_update (FUN_0002b02c)
+    BootLogoTask();                    // Ghidra: BootLogoTask_ctor (FUN_0002af58)
+    ~BootLogoTask() override;          // @ 0x2af8c (taskNode_deleteA deleting-dtor: base + delete)
+    void update(int deltaMs) override; // Ghidra: BootLogoTask_update (FUN_0002b02c)
 
 private:
     void setup();                         // Ghidra: BootLogoTask_setup (FUN_0002b1f4)
@@ -34,13 +35,13 @@ private:
     static const int kFirstFadeFrames = 0x3c; // 60:  the very first fade-in
 
     // Concrete fields, appended from +0x28 (see BootLogoTask_ctor).
-    AepManager *m_aep = nullptr;          // +0x28 render manager
-    neTextureForiOS *m_logo[3] = {};      // +0x2c/+0x30/+0x34 the 3 branding sprites
-    float m_scale = 0.0f;                 // +0x38 saved screen scale (restored on exit)
-    int m_counter = 0;                    // +0x3c per-screen frame counter
-    int m_posX = 0;                       // +0x40 logo centre x
-    int m_posY = 0;                       // +0x44 logo centre y
-    int m_state = 0;                      // +0x48 state machine (0..9)
+    AepManager *m_aep = nullptr;     // +0x28 render manager
+    neTextureForiOS *m_logo[3] = {}; // +0x2c/+0x30/+0x34 the 3 branding sprites
+    float m_scale = 0.0f;            // +0x38 saved screen scale (restored on exit)
+    int m_counter = 0;               // +0x3c per-screen frame counter
+    int m_posX = 0;                  // +0x40 logo centre x
+    int m_posY = 0;                  // +0x44 logo centre y
+    int m_state = 0;                 // +0x48 state machine (0..9)
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -7,53 +7,56 @@
 
 #import "RecommendNetwork.h"
 
-// Module globals owned by RecommendNetwork's shared-instance machinery. The serial
-// "RewardNetwork" queue is created in +allocWithZone:'s dispatch_once body (Ghidra
-// recommendNetworkSharedAlloc @ 0xebcac), which also allocates the singleton via
-// [super allocWithZone:] and zeroes its initializeFlg. -init below dispatches onto the
-// queue that path produces.
-static dispatch_queue_t g_pRewardNetworkQueue = NULL;        // @ g_pRewardNetworkQueue
-static RecommendNetwork *g_pRecommendNetworkInstance = nil;  // @ g_pRecommendNetworkInstance
+// Module globals owned by RecommendNetwork's shared-instance machinery. The
+// serial "RewardNetwork" queue is created in +allocWithZone:'s dispatch_once
+// body (Ghidra recommendNetworkSharedAlloc @ 0xebcac), which also allocates the
+// singleton via [super allocWithZone:] and zeroes its initializeFlg. -init
+// below dispatches onto the queue that path produces.
+static dispatch_queue_t g_pRewardNetworkQueue = NULL;       // @ g_pRewardNetworkQueue
+static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNetworkInstance
 
 @implementation RecommendNetwork {
     int _initializeFlg;
 }
 
-// @ 0xebbb4 — return the process-wide shared instance, creating it once via [[self alloc] init]
-// (the dispatch_once body @ 0xebbe8 stores the result into g_pRecommendNetworkInstance).
+// @ 0xebbb4 — return the process-wide shared instance, creating it once via
+// [[self alloc] init] (the dispatch_once body @ 0xebbe8 stores the result into
+// g_pRecommendNetworkInstance).
 + (instancetype)sharedInstance {
-    static dispatch_once_t onceToken;   // @ g_dwRecommendNetworkOnceToken
+    static dispatch_once_t onceToken; // @ g_dwRecommendNetworkOnceToken
     dispatch_once(&onceToken, ^{
-        g_pRecommendNetworkInstance = [[self alloc] init];
+      g_pRecommendNetworkInstance = [[self alloc] init];
     });
     return g_pRecommendNetworkInstance;
 }
 
-// @ 0xebc44 — singleton allocator. Its dispatch_once body (recommendNetworkSharedAlloc @ 0xebcac)
-// creates the shared "RewardNetwork" serial queue and, if the instance has not yet been made,
-// allocates it through [super allocWithZone:] and clears its initializeFlg. Always returns the
-// one shared instance.
+// @ 0xebc44 — singleton allocator. Its dispatch_once body
+// (recommendNetworkSharedAlloc @ 0xebcac) creates the shared "RewardNetwork"
+// serial queue and, if the instance has not yet been made, allocates it through
+// [super allocWithZone:] and clears its initializeFlg. Always returns the one
+// shared instance.
 + (id)allocWithZone:(NSZone *)zone {
-    static dispatch_once_t onceToken;   // @ DAT_0018832c
+    static dispatch_once_t onceToken; // @ DAT_0018832c
     dispatch_once(&onceToken, ^{
-        g_pRewardNetworkQueue = dispatch_queue_create("RewardNetwork", NULL);
-        if (g_pRecommendNetworkInstance == nil) {
-            g_pRecommendNetworkInstance = [super allocWithZone:zone];
-            [g_pRecommendNetworkInstance setInitializeFlg:0];
-        }
+      g_pRewardNetworkQueue = dispatch_queue_create("RewardNetwork", NULL);
+      if (g_pRecommendNetworkInstance == nil) {
+          g_pRecommendNetworkInstance = [super allocWithZone:zone];
+          [g_pRecommendNetworkInstance setInitializeFlg:0];
+      }
     });
     return g_pRecommendNetworkInstance;
 }
 
-// @ 0xeba74 — perform [super init] on the shared RewardNetwork serial queue and return the
-// resulting instance. The captured self is retained for the block and released afterwards
-// (handled automatically under ARC); the block stores its [super init] result into the
+// @ 0xeba74 — perform [super init] on the shared RewardNetwork serial queue and
+// return the resulting instance. The captured self is retained for the block
+// and released afterwards (handled automatically under ARC); the block stores
+// its [super init] result into the
 // __block variable that is then handed back.
 - (instancetype)init {
     __block RecommendNetwork *result = nil;
     dispatch_sync(g_pRewardNetworkQueue, ^{
-        // @ 0xebb3c — the block body just performs [super init].
-        result = [super init];
+      // @ 0xebb3c — the block body just performs [super init].
+      result = [super init];
     });
     return result;
 }
@@ -85,15 +88,16 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil;  // @ g_pRecommendNe
     [[RecommendCore sharedInstance] openAppliListWithCallback:callback];
 }
 
-// @ 0xebe4c — embed the app list in parentView (hiding the nav bar when a parent is supplied).
+// @ 0xebe4c — embed the app list in parentView (hiding the nav bar when a
+// parent is supplied).
 - (void)openAppliListWithParentView:(UIView *)parentView delegate:(id)delegate {
     [[RecommendCore sharedInstance] setNavigationBarHidden:(parentView != nil)];
     [[RecommendCore sharedInstance] setParentView:parentView delegate:delegate];
     [[RecommendCore sharedInstance] openAppliListWithCallback:nil];
 }
 
-// @ 0xebf24 — embed the app list in parentView (hiding the nav bar when a parent is supplied),
-// firing callback on completion.
+// @ 0xebf24 — embed the app list in parentView (hiding the nav bar when a
+// parent is supplied), firing callback on completion.
 - (void)openAppliListWithParentView:(UIView *)parentView
                            callback:(RecommendOpenAppliListCallback)callback {
     if (parentView == nil) {
@@ -126,7 +130,8 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil;  // @ g_pRecommendNe
     [webView loadRequestWithCallback:callback];
 }
 
-// @ 0xec170 — remove every RecommendWebView hosted under parentView (or the key window).
+// @ 0xec170 — remove every RecommendWebView hosted under parentView (or the key
+// window).
 - (void)closeRecommendPageWithParentView:(UIView *)parentView {
     UIView *host = parentView;
     if (host == nil) {
@@ -139,7 +144,8 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil;  // @ g_pRecommendNe
     }
 }
 
-// @ 0xec2dc — hide/show every RecommendWebView hosted under parentView (or the key window).
+// @ 0xec2dc — hide/show every RecommendWebView hosted under parentView (or the
+// key window).
 - (void)setRecommendPageVisibleWithParentView:(UIView *)parentView flag:(BOOL)flag {
     UIView *host = parentView;
     if (host == nil) {
@@ -156,7 +162,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil;  // @ g_pRecommendNe
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
     [[RecommendCore sharedInstance] rotateAppliListWithInterfaceOrientation:orientation
-                                                                  duration:duration];
+                                                                   duration:duration];
 }
 
 @end

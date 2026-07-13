@@ -2,10 +2,10 @@
 //  neTextTexture.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The dynamic text
-//  subsystem: a singleton manager that renders glyphs on demand, packs them into
-//  256x256 alpha atlases, and lays out + batches strings into textured quads drawn
-//  through the current renderer. Original tree:
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The dynamic
+//  text subsystem: a singleton manager that renders glyphs on demand, packs
+//  them into 256x256 alpha atlases, and lays out + batches strings into
+//  textured quads drawn through the current renderer. Original tree:
 //  .../Project/System/src/Render/neTextTexture.mm.
 //
 
@@ -13,50 +13,70 @@
 #include <cstring>
 
 #import <OpenGLES/ES1/gl.h>
-#import <QuartzCore/QuartzCore.h>   // CALayer renderInContext:
-#import <UIKit/UIKit.h>             // UILabel / UIFont / UIColor / UIGraphics + CoreGraphics
+#import <QuartzCore/QuartzCore.h> // CALayer renderInContext:
+#import <UIKit/UIKit.h>           // UILabel / UIFont / UIColor / UIGraphics + CoreGraphics
 
-#import "AepTexture.h"        // neCreateTextureFromData / neTextureRelease (texture cache)
+#import "AepTexture.h" // neCreateTextureFromData / neTextureRelease (texture cache)
 #import "neRenderer.h"
 #import "neTextTexture.h"
 
-// The manager singleton (Ghidra: DAT_0018845c), created lazily by the engine bootstrap.
+// The manager singleton (Ghidra: DAT_0018845c), created lazily by the engine
+// bootstrap.
 static neTextTextureMgr *g_pTextTextureMgr = nullptr;
 
-// Shared index buffer for the glyph quad batches (Ghidra: g_pTextQuadIndexBuffer). Built
-// once, on the first neDrawText, for 256 quads (0x400 vertices / 0x600 indices).
+// Shared index buffer for the glyph quad batches (Ghidra:
+// g_pTextQuadIndexBuffer). Built once, on the first neDrawText, for 256 quads
+// (0x400 vertices / 0x600 indices).
 static unsigned g_pTextQuadIndexBuffer = 0;
 
-// One cached glyph record (Ghidra: the 0x20-byte node allocated by createTextGlyphEntry
-// and filled by renderGlyphToAtlas). Keyed by its UTF-8 bytes + scaled point size.
+// One cached glyph record (Ghidra: the 0x20-byte node allocated by
+// createTextGlyphEntry and filled by renderGlyphToAtlas). Keyed by its UTF-8
+// bytes + scaled point size.
 struct neGlyph {
-    char *key = nullptr;       // +0x00 UTF-8 bytes of the glyph (nul-terminated) — cache key
-    int32_t pointSize = 0;     // +0x04 scaled point size — second half of the cache key
-    neGlyph *next = nullptr;   // +0x08 cache list link
-    int32_t atlasId = 0;       // +0x0c atlas index the glyph packed into
-    int32_t advance = 0;       // +0x10 glyph cell width / horizontal advance
-    int32_t height = 0;        // +0x14 glyph cell height
-    int32_t cellX = 0;         // +0x18 cell origin in the atlas
-    int32_t cellY = 0;         // +0x1c
+    char *key = nullptr;     // +0x00 UTF-8 bytes of the glyph (nul-terminated) — cache key
+    int32_t pointSize = 0;   // +0x04 scaled point size — second half of the cache key
+    neGlyph *next = nullptr; // +0x08 cache list link
+    int32_t atlasId = 0;     // +0x0c atlas index the glyph packed into
+    int32_t advance = 0;     // +0x10 glyph cell width / horizontal advance
+    int32_t height = 0;      // +0x14 glyph cell height
+    int32_t cellX = 0;       // +0x18 cell origin in the atlas
+    int32_t cellY = 0;       // +0x1c
 };
 
 // Ghidra: FUN_00017998.
-neTextTextureMgr *neGetTextTextureMgr(void) { return g_pTextTextureMgr; }
+neTextTextureMgr *neGetTextTextureMgr(void) {
+    return g_pTextTextureMgr;
+}
 
 // Ghidra: FUN_00017a84 — UTF-8 lead-byte length classifier.
 int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
     unsigned c = static_cast<unsigned char>(*s);
-    if ((c & 0x80) == 0) return 1;
-    if ((c & 0x40) == 0) return 0;          // stray continuation byte
-    if ((c & 0x20) == 0) return 2;
-    if ((c & 0x10) == 0) return 3;
-    if ((c & 0x08) == 0) return 4;
-    if ((c & 0x04) == 0) return 5;
-    if ((c & 0x02) == 0) return 6;
-    return -1;                              // invalid
+    if ((c & 0x80) == 0) {
+        return 1;
+    }
+    if ((c & 0x40) == 0) {
+        return 0; // stray continuation byte
+    }
+    if ((c & 0x20) == 0) {
+        return 2;
+    }
+    if ((c & 0x10) == 0) {
+        return 3;
+    }
+    if ((c & 0x08) == 0) {
+        return 4;
+    }
+    if ((c & 0x04) == 0) {
+        return 5;
+    }
+    if ((c & 0x02) == 0) {
+        return 6;
+    }
+    return -1; // invalid
 }
 
-// Ghidra: FUN_000180a4 — release the atlas's AepTexture reference and free its pixels.
+// Ghidra: FUN_000180a4 — release the atlas's AepTexture reference and free its
+// pixels.
 neTextTexture::~neTextTexture() {
     delete[] pixels;
     if (texture != nullptr) {
@@ -67,7 +87,11 @@ neTextTexture::~neTextTexture() {
 // Ghidra: FUN_000179a8 — free the whole glyph cache and destroy every atlas.
 void neTextTextureMgr_dtor(neTextTextureMgr *mgr) {
     // Glyph cache: singly-linked (data at +0x00, next at +0x08).
-    struct GlyphNode { uint8_t *data; void *_rsv; GlyphNode *next; };
+    struct GlyphNode {
+        uint8_t *data;
+        void *_rsv;
+        GlyphNode *next;
+    };
     GlyphNode *g = static_cast<GlyphNode *>(mgr->glyphList);
     while (g != nullptr) {
         GlyphNode *next = g->next;
@@ -88,9 +112,10 @@ void neTextTextureMgr_dtor(neTextTextureMgr *mgr) {
     mgr->atlasCount = 0;
 }
 
-// Ghidra: FUN_00017b28 — allocate a fresh 256x256 GL_ALPHA atlas and link it in.
+// Ghidra: FUN_00017b28 — allocate a fresh 256x256 GL_ALPHA atlas and link it
+// in.
 static void CreateNewTextTexture(neTextTextureMgr *mgr) {
-    uint8_t *pixels = new uint8_t[0x20000]();   // 256x256 zero-cleared cell buffer
+    uint8_t *pixels = new uint8_t[0x20000](); // 256x256 zero-cleared cell buffer
     void *tex = neCreateTextureFromData(0x100, 0x100, /*GL_ALPHA*/ 2, pixels, 0x100, 0x100);
     // assert(tex) — neTextTexture.mm:0xeb in the shipped binary.
     neTextTexture *atlas = new neTextTexture();
@@ -112,8 +137,8 @@ struct neGlyphVertex {
 };
 
 // @ 0x17ad4
-// Ghidra: FUN_00017ad4 — linear search of the glyph cache for a record matching the
-// first UTF-8 char of `utf8` at `pointSize`; returns null when not cached.
+// Ghidra: FUN_00017ad4 — linear search of the glyph cache for a record matching
+// the first UTF-8 char of `utf8` at `pointSize`; returns null when not cached.
 static neGlyph *findCachedGlyph(neTextTextureMgr *mgr, const char *utf8, int pointSize) {
     size_t len = utf8CharLen(mgr, utf8);
     for (neGlyph *g = static_cast<neGlyph *>(mgr->glyphList); g != nullptr; g = g->next) {
@@ -125,7 +150,8 @@ static neGlyph *findCachedGlyph(neTextTextureMgr *mgr, const char *utf8, int poi
 }
 
 // @ 0x17b10
-// Ghidra: FUN_00017b10 — find the atlas with index `atlasId` in the manager's list.
+// Ghidra: FUN_00017b10 — find the atlas with index `atlasId` in the manager's
+// list.
 static neTextTexture *findTextTextureById(neTextTextureMgr *mgr, int atlasId) {
     for (neTextTexture *a = mgr->atlases; a != nullptr; a = a->next) {
         if (a->index == atlasId) {
@@ -136,10 +162,11 @@ static neTextTexture *findTextTextureById(neTextTextureMgr *mgr, int atlasId) {
 }
 
 // @ 0x17bb4
-// Ghidra: FUN_00017bb4 — reserve a `w`x`h` cell in the current (head) atlas, packing
-// along a row and wrapping/opening a new atlas (bounded to two spills) when full. Writes
-// the cell origin to *outX/*outY. Returns false only when the glyph is larger than an
-// atlas (in which case *outX/*outY are left as the caller set them).
+// Ghidra: FUN_00017bb4 — reserve a `w`x`h` cell in the current (head) atlas,
+// packing along a row and wrapping/opening a new atlas (bounded to two spills)
+// when full. Writes the cell origin to *outX/*outY. Returns false only when the
+// glyph is larger than an atlas (in which case *outX/*outY are left as the
+// caller set them).
 static bool allocGlyphAtlasSlot(neTextTextureMgr *mgr, int w, int h, int *outX, int *outY) {
     int retries = 0;
     for (;;) {
@@ -149,28 +176,28 @@ static bool allocGlyphAtlasSlot(neTextTextureMgr *mgr, int w, int h, int *outX, 
             atlas = mgr->atlases;
         }
         AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
-        int atlasW = tex->textureWidth();    // AepTexture +0x1c
-        int atlasH = tex->textureHeight();   // AepTexture +0x20
+        int atlasW = tex->textureWidth();  // AepTexture +0x1c
+        int atlasH = tex->textureHeight(); // AepTexture +0x20
 
         // A glyph that is as wide/tall as an atlas can never be packed.
         if (w >= atlasW || h >= atlasH) {
             return false;
         }
 
-        int col = atlas->rowHeight;   // +0x10 horizontal pack cursor
+        int col = atlas->rowHeight; // +0x10 horizontal pack cursor
         *outX = col;
         int colEnd = col + w;
-        int row = atlas->penX;        // +0x08 vertical cursor for the current row
+        int row = atlas->penX; // +0x08 vertical cursor for the current row
         *outY = row;
-        if (atlasW <= colEnd) {       // current row exhausted -> wrap to the next
+        if (atlasW <= colEnd) { // current row exhausted -> wrap to the next
             *outX = 0;
-            row = atlas->penY;        // +0x0c next-row baseline
+            row = atlas->penY; // +0x0c next-row baseline
             *outY = row;
             colEnd = w;
         }
 
         int rowEnd = row + h;
-        if (rowEnd < atlasH) {        // fits vertically -> commit the cursors
+        if (rowEnd < atlasH) { // fits vertically -> commit the cursors
             atlas->penX = row;
             atlas->rowHeight = colEnd;
             if (rowEnd >= atlas->penY) {
@@ -189,13 +216,14 @@ static bool allocGlyphAtlasSlot(neTextTextureMgr *mgr, int w, int h, int *outX, 
 }
 
 // @ 0x17c44
-// Ghidra: FUN_00017c44 — render one glyph string into a device-gray CGBitmapContext via
-// the label's CALayer, then copy it into the reserved atlas cell (two bytes per texel,
-// the gray value duplicated into both luminance and alpha). Fills the glyph record's
-// atlas placement. (ARC: the NSString and CGContexts are managed here; the CF color
-// space / bitmap context are CoreFoundation and released explicitly.)
-static int renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *label,
-                              neGlyph *glyph) {
+// Ghidra: FUN_00017c44 — render one glyph string into a device-gray
+// CGBitmapContext via the label's CALayer, then copy it into the reserved atlas
+// cell (two bytes per texel, the gray value duplicated into both luminance and
+// alpha). Fills the glyph record's atlas placement. (ARC: the NSString and
+// CGContexts are managed here; the CF color space / bitmap context are
+// CoreFoundation and released explicitly.)
+static int
+renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *label, neGlyph *glyph) {
     NSString *str = [[NSString alloc] initWithUTF8String:utf8];
     UIFont *font = [label font];
 
@@ -222,14 +250,15 @@ static int renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *
     CGContextRef ctx = CGBitmapContextCreate(gray, w, h, 8, w, cs, kCGImageAlphaNone);
     CGContextClearRect(ctx, CGRectMake(0, 0, size.width, size.height));
     UIGraphicsPushContext(ctx);
-    CGContextTranslateCTM(ctx, 0, size.height);   // flip to UIKit's top-left origin
+    CGContextTranslateCTM(ctx, 0, size.height); // flip to UIKit's top-left origin
     CGContextScaleCTM(ctx, 1.0f, -1.0f);
     [[label layer] renderInContext:ctx];
     UIGraphicsPopContext();
     CGColorSpaceRelease(cs);
     CGContextRelease(ctx);
 
-    // Blit the gray bitmap into the atlas cell (LA, gray copied into both channels).
+    // Blit the gray bitmap into the atlas cell (LA, gray copied into both
+    // channels).
     AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
     int atlasW = tex->textureWidth();
     for (int rrow = 0; rrow < h; ++rrow) {
@@ -252,12 +281,12 @@ static int renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *
 }
 
 // @ 0x17ecc
-// Ghidra: FUN_00017ecc — allocate a glyph record for the first UTF-8 char of `utf8` at
-// `pointSize`, rasterize it into an atlas, re-upload that atlas, and push the record onto
-// the manager's cache. `fontName` null => the bold system font. Returns null on an
-// invalid lead byte or an unresolvable font.
-static neGlyph *createTextGlyphEntry(neTextTextureMgr *mgr, const char *utf8,
-                                     const char *fontName, int pointSize) {
+// Ghidra: FUN_00017ecc — allocate a glyph record for the first UTF-8 char of
+// `utf8` at `pointSize`, rasterize it into an atlas, re-upload that atlas, and
+// push the record onto the manager's cache. `fontName` null => the bold system
+// font. Returns null on an invalid lead byte or an unresolvable font.
+static neGlyph *
+createTextGlyphEntry(neTextTextureMgr *mgr, const char *utf8, const char *fontName, int pointSize) {
     int len = utf8CharLen(mgr, utf8);
     if (len < 1) {
         return nullptr;
@@ -307,17 +336,26 @@ static neGlyph *createTextGlyphEntry(neTextTextureMgr *mgr, const char *utf8,
 }
 
 // Ghidra: FUN_0001551c — measure, lay out and batch-draw a string.
-void neDrawText(const char *text, void *font, int size, int x, int y, int align,
-                int alpha, int red, int green, int blue,
+void neDrawText(const char *text,
+                void *font,
+                int size,
+                int x,
+                int y,
+                int align,
+                int alpha,
+                int red,
+                int green,
+                int blue,
                 const int *clipRect) {
     neTextTextureMgr *mgr = neGetTextTextureMgr();
     int shift = mgr->scaleShift;
     int len = static_cast<int>(std::strlen(text));
 
-    // --- Measure: resolve each char to a cached glyph, accumulate total advance. ---
+    // --- Measure: resolve each char to a cached glyph, accumulate total advance.
+    // ---
     static const int kMaxChars = 256;
-    int glyphAtlas[kMaxChars];   // per-char atlas id (-1 => skip)
-    neGlyph *glyphs[kMaxChars];  // per-char glyph record (0 => skip)
+    int glyphAtlas[kMaxChars];  // per-char atlas id (-1 => skip)
+    neGlyph *glyphs[kMaxChars]; // per-char glyph record (0 => skip)
     int totalWidth = 0;
     int count = len < kMaxChars ? len : kMaxChars;
     for (int i = 0; i < count; ++i) {
@@ -328,8 +366,7 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
         }
         neGlyph *g = findCachedGlyph(mgr, text + i, size << shift);
         if (g == nullptr) {
-            g = createTextGlyphEntry(mgr, text + i, static_cast<const char *>(font),
-                                     size << shift);
+            g = createTextGlyphEntry(mgr, text + i, static_cast<const char *>(font), size << shift);
         }
         glyphAtlas[i] = g->atlasId;
         glyphs[i] = g;
@@ -345,20 +382,26 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
         int16_t indices[0x600];
         for (int q = 0, base = 0; q < 256; ++q, base += 4) {
             int16_t *o = &indices[q * 6];
-            o[0] = base;     o[1] = base + 1; o[2] = base + 2;
-            o[3] = base + 2; o[4] = base + 1; o[5] = base + 3;
+            o[0] = base;
+            o[1] = base + 1;
+            o[2] = base + 2;
+            o[3] = base + 2;
+            o[4] = base + 1;
+            o[5] = base + 3;
         }
         r->bufferData(indices, sizeof(indices), 0);
     } else {
         r->bindElementBuffer(g_pTextQuadIndexBuffer);
     }
 
-    // --- Base draw state: current viewport, model = translate(x,y), identity pivot. ---
+    // --- Base draw state: current viewport, model = translate(x,y), identity
+    // pivot. ---
     neApplyViewport(r, neGetCurrentViewport());
     neMatrix4 model;
     matrixSetTranslate(model, static_cast<float>(x), static_cast<float>(y), 0.0f);
     neMatrix4 pivot;
-    matrixSetTranslate(pivot, 0.0f, 0.0f, 0.0f);   // Ghidra: translate(0x80000000,...) == -0
+    matrixSetTranslate(pivot, 0.0f, 0.0f,
+                       0.0f); // Ghidra: translate(0x80000000,...) == -0
     matrix4Multiply(model, pivot);
     r->loadMatrix(0, model);
 
@@ -371,13 +414,14 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
     r->setClientArray(0, true);
     r->colorPointer(&quads[0].rgba, sizeof(neGlyphVertex));
 
-    // Straight-alpha blend + clear the remaining caps (same tail as the primitives).
+    // Straight-alpha blend + clear the remaining caps (same tail as the
+    // primitives).
     r->setEnable(0, false);
     r->setEnable(1, true);
     r->setBlendFunc(1, 5);
     static const int kCaps[] = {
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-        24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 0x23,
+        2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,   18,
+        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 0x23,
     };
     for (int cap : kCaps) {
         r->setEnable(cap, false);
@@ -393,8 +437,9 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
         alignOffset = 0;
     }
 
-    // Straight-alpha input, premultiplied for the (GL_ONE, GL_ONE_MINUS_SRC_ALPHA) blend:
-    // each colour channel is scaled by alpha/255 (DAT_00015db0 == 255.0); alpha is stored straight.
+    // Straight-alpha input, premultiplied for the (GL_ONE,
+    // GL_ONE_MINUS_SRC_ALPHA) blend: each colour channel is scaled by alpha/255
+    // (DAT_00015db0 == 255.0); alpha is stored straight.
     uint8_t aa = static_cast<uint8_t>(alpha);
     float premul = static_cast<float>(alpha) / 255.0f;
     uint8_t rr = static_cast<uint8_t>(static_cast<float>(red) * premul);
@@ -408,10 +453,11 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
         }
         neTextTexture *atlas = findTextTextureById(mgr, atlasId);
         AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
-        float atlasW = static_cast<float>(tex->textureWidth());    // AepTexture +0x1c
-        float atlasH = static_cast<float>(tex->textureHeight());   // AepTexture +0x20
+        float atlasW = static_cast<float>(tex->textureWidth());  // AepTexture +0x1c
+        float atlasH = static_cast<float>(tex->textureHeight()); // AepTexture +0x20
 
-        // Emit every glyph that belongs to this atlas into `quads`, advancing the pen.
+        // Emit every glyph that belongs to this atlas into `quads`, advancing the
+        // pen.
         int pen = alignOffset;
         int quadCount = 0;
         for (int j = 0; j < count; ++j) {
@@ -420,36 +466,40 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
                 continue;
             }
             if (g->atlasId != atlasId) {
-                pen += (g->advance >> 1);   // still advance for glyphs on other atlases
+                pen += (g->advance >> 1); // still advance for glyphs on other atlases
                 continue;
             }
-            int w = g->advance;   // cell width / horizontal advance
-            int h = g->height;    // cell height
+            int w = g->advance; // cell width / horizontal advance
+            int h = g->height;  // cell height
             float u0 = static_cast<float>(g->cellX) / atlasW;
             float u1 = u0 + static_cast<float>(w) / atlasW;
             float v0 = static_cast<float>(g->cellY) / atlasH;
             float v1 = v0 + static_cast<float>(h) / atlasH;
             neGlyphVertex *v = &quads[quadCount * 4];
-            // Glyphs are rasterized at 2x and drawn at half size: the quad spans (w/2) x (h/2).
+            // Glyphs are rasterized at 2x and drawn at half size: the quad spans
+            // (w/2) x (h/2).
             int px = pen, py = 0, halfW = w >> 1, halfH = h >> 1;
             for (int k = 0; k < 4; ++k) {
                 v[k].x = px + ((k & 1) ? halfW : 0);
                 v[k].y = py + ((k & 2) ? halfH : 0);
                 v[k].u = static_cast<int16_t>((((k & 1) ? u1 : u0)) * 32767.0f);
                 v[k].v = static_cast<int16_t>((((k & 2) ? v1 : v0)) * 32767.0f);
-                v[k].rgba[0] = rr; v[k].rgba[1] = gg; v[k].rgba[2] = bb; v[k].rgba[3] = aa;
+                v[k].rgba[0] = rr;
+                v[k].rgba[1] = gg;
+                v[k].rgba[2] = bb;
+                v[k].rgba[3] = aa;
             }
             pen += (w >> 1);
             ++quadCount;
-            glyphs[j] = nullptr;   // consumed
+            glyphs[j] = nullptr; // consumed
         }
 
-        r->setEnable(0x22, true);                              // GL_TEXTURE_2D
-        r->bindTexture(tex->name());                           // AepTexture +0x18
-        setTexParamCached(tex, r, 2, 7);   // wrap S = REPEAT
-        setTexParamCached(tex, r, 3, 7);   // wrap T = REPEAT
-        setTexParamCached(tex, r, 0, 0);   // mag = NEAREST
-        setTexParamCached(tex, r, 1, 0);   // min = NEAREST
+        r->setEnable(0x22, true);        // GL_TEXTURE_2D
+        r->bindTexture(tex->name());     // AepTexture +0x18
+        setTexParamCached(tex, r, 2, 7); // wrap S = REPEAT
+        setTexParamCached(tex, r, 3, 7); // wrap T = REPEAT
+        setTexParamCached(tex, r, 0, 0); // mag = NEAREST
+        setTexParamCached(tex, r, 1, 0); // min = NEAREST
 
         if (clipRect == nullptr) {
             r->setEnable(3, false);
@@ -476,7 +526,7 @@ void neDrawText(const char *text, void *font, int size, int x, int y, int align,
         }
         r->setEnable(7, false);
         r->setEnable(8, false);
-        r->drawElements(6, quadCount * 6, 0);   // GL_TRIANGLES, indexed
+        r->drawElements(6, quadCount * 6, 0); // GL_TRIANGLES, indexed
     }
 
     // Evict the atlas cache when it has grown past 4 textures (Ghidra: > 4).

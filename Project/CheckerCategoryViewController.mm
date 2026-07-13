@@ -2,31 +2,32 @@
 //  CheckerCategoryViewController.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The music-checker
-//  genre-category list and its arcade-score HTTP sync. Objective-C++ (.mm) because it
-//  drives the C++ "ne" engine singletons via neEngineBridge (scene-manager pad flag,
-//  the system-SE hooks and the e-AMUSEMENT login context).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The
+//  music-checker genre-category list and its arcade-score HTTP sync.
+//  Objective-C++ (.mm) because it drives the C++ "ne" engine singletons via
+//  neEngineBridge (scene-manager pad flag, the system-SE hooks and the
+//  e-AMUSEMENT login context).
 //
 
 #import "CheckerCategoryViewController.h"
 
-#import "CheckerCategoryCell.h"          // in-project row cell (setData:category:)
-#import "CheckerMusicViewController.h"   // pushed on row select
-#import "ArcadeScoreData.h"              // Core Data arcade-score records
-#import "Downloader.h"                   // the score-sync HTTP request
-#import "CommonAlertView.h"              // sync result / error alerts
-#import "StoreUtil.h"                    // +getArcadeScoreURL
-#import "AppDelegate.h"                  // +appDelegate.managedObjectContext
-#import "UserSettingData.h"              // +konamiId
-#import "InputOTPViewCtrl.h"             // OTP-input screen (initWithCategoryView:)
+#import "AppDelegate.h"                // +appDelegate.managedObjectContext
+#import "ArcadeScoreData.h"            // Core Data arcade-score records
+#import "CheckerCategoryCell.h"        // in-project row cell (setData:category:)
+#import "CheckerMusicViewController.h" // pushed on row select
+#import "CommonAlertView.h"            // sync result / error alerts
+#import "Downloader.h"                 // the score-sync HTTP request
+#import "InputOTPViewCtrl.h"           // OTP-input screen (initWithCategoryView:)
+#import "StoreUtil.h"                  // +getArcadeScoreURL
+#import "UserSettingData.h"            // +konamiId
 #import "neEngineBridge.h"
 
 // Alert messages (Ghidra CFStrings cf_Ok01YWeW0_0W0_00 @ 0x134a78 and
 // cf_s_W00000k0j0c0f0D00 @ 0x13afe8).
-static NSString *const kMsgCommFailed =
-    @"通信に失敗しました。\n電波の良い場所でやり直して下さい。";
+static NSString *const kMsgCommFailed = @"通信に失敗しました。\n電波の良い場所でやり直して下さい。";
 static NSString *const kMsgNoPlayData =
-    @"現在アクティブになっている\ne-AMUSEMENT PASS で、\npop'n music のプレーデータは\n見つかりませんでした。";
+    @"現在アクティブになっている\ne-AMUSEMENT PASS で、\npop'n music "
+    @"のプレーデータは\n見つかりませんでした。";
 
 @interface CheckerCategoryViewController () <DownloaderDelegate>
 - (void)touchedBackButton:(id)sender;
@@ -37,12 +38,14 @@ static NSString *const kMsgNoPlayData =
 
 @implementation CheckerCategoryViewController {
     UIViewController *_dummyView;      // dimmed cover hosting the sync spinner
-    NSArray *_scoreDataArray[25];      // [0..23] per-category records, [24] the latest-10 bucket
+    NSArray *_scoreDataArray[25];      // [0..23] per-category records, [24] the
+                                       // latest-10 bucket
     Downloader *_dlGetArcadeScoreData; // in-flight score-sync request (nil when idle)
 }
 
-// @ 0xcfb88 — build the transparent grouped table, the header "get data" button +
-// spinner cover, and load the locally-cached arcade scores into the 25 buckets.
+// @ 0xcfb88 — build the transparent grouped table, the header "get data" button
+// + spinner cover, and load the locally-cached arcade scores into the 25
+// buckets.
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -61,27 +64,33 @@ static NSString *const kMsgNoPlayData =
     self.tableView.backgroundView = nil;
     self.tableView.backgroundColor = [UIColor clearColor];
 
-    // Load the locally-cached records: 24 per-category buckets + a "latest 10" bucket.
+    // Load the locally-cached records: 24 per-category buckets + a "latest 10"
+    // bucket.
     NSManagedObjectContext *moc = [AppDelegate appDelegate].managedObjectContext;
-    _scoreDataArray[24] = [ArcadeScoreData getLatestDataLimit:10 refId:refId
+    _scoreDataArray[24] = [ArcadeScoreData getLatestDataLimit:10
+                                                        refId:refId
                                        inManagedObjectContext:moc];
     for (short i = 0; i < 24; i++) {
-        _scoreDataArray[i] = [ArcadeScoreData getDataFromCategory:i refId:refId
-                                          inManagedObjectContext:moc];
+        _scoreDataArray[i] = [ArcadeScoreData getDataFromCategory:i
+                                                            refId:refId
+                                           inManagedObjectContext:moc];
     }
 
-    // Header: the category banner + a "get data" button, hosted in a container padded
-    // below (banner height + 12, plus 20 more on iPad).
+    // Header: the category banner + a "get data" button, hosted in a container
+    // padded below (banner height + 12, plus 20 more on iPad).
     UIImage *headerImg = [UIImage imageNamed:@"ppc_cate_header"];
     UIImageView *headerImgView = [[UIImageView alloc] initWithImage:headerImg];
     [headerImgView setFrame:CGRectMake(0.0f, 12.0f, headerImg.size.width, headerImg.size.height)];
 
     UIButton *getButton = [[UIButton alloc] init];
     UIImage *getImg = [UIImage imageNamed:@"ppc_cate_btn_getdata"];
-    [getButton setFrame:CGRectMake(170.0f, headerImgView.frame.origin.y + 10.0f,
-                                   getImg.size.width, getImg.size.height)];
+    [getButton setFrame:CGRectMake(170.0f,
+                                   headerImgView.frame.origin.y + 10.0f,
+                                   getImg.size.width,
+                                   getImg.size.height)];
     [getButton setBackgroundImage:getImg forState:UIControlStateNormal];
-    [getButton addTarget:self action:@selector(touchedGetDataButton:)
+    [getButton addTarget:self
+                  action:@selector(touchedGetDataButton:)
         forControlEvents:UIControlEventTouchUpInside];
 
     UIView *headerView = [[UIView alloc] init];
@@ -117,8 +126,8 @@ static NSString *const kMsgNoPlayData =
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
     if (!isPad) {
-        spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
-                                     viewFrame.size.height * 0.5f - 10.0f);
+        spinner.center =
+            CGPointMake(viewFrame.size.width * 0.5f, viewFrame.size.height * 0.5f - 10.0f);
     } else {
         spinner.center = CGPointMake(160.0f, 358.0f);
     }
@@ -129,11 +138,11 @@ static NSString *const kMsgNoPlayData =
     // Custom back button in the left nav slot (phone only).
     if (!isPad) {
         UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-        UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(0.0f, 0.0f,
-                                                                          backImg.size.width,
-                                                                          backImg.size.height)];
+        UIButton *backButton = [[UIButton alloc]
+            initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
         [backButton setBackgroundImage:backImg forState:UIControlStateNormal];
-        [backButton addTarget:self action:@selector(touchedBackButton:)
+        [backButton addTarget:self
+                       action:@selector(touchedBackButton:)
              forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem =
             [[UIBarButtonItem alloc] initWithCustomView:backButton];
@@ -156,11 +165,11 @@ static NSString *const kMsgNoPlayData =
     _dummyView.view.hidden = NO;
 }
 
-// @ 0xd05c4 — re-center the spinner cover on the controller view (no super call in
-// the binary).
+// @ 0xd05c4 — re-center the spinner cover on the controller view (no super call
+// in the binary).
 - (void)viewWillAppear:(BOOL)animated {
-    _dummyView.view.center = CGPointMake(self.view.frame.size.width * 0.5f,
-                                         self.view.frame.size.height * 0.5f);
+    _dummyView.view.center =
+        CGPointMake(self.view.frame.size.width * 0.5f, self.view.frame.size.height * 0.5f);
 }
 
 // @ 0xd0688 — super only.
@@ -170,8 +179,8 @@ static NSString *const kMsgNoPlayData =
 
 #pragma mark - Score sync
 
-// @ 0xd06b4 — POST konami-id / password / otp to the arcade-score endpoint (guards
-// against a second concurrent request) and show the spinner cover.
+// @ 0xd06b4 — POST konami-id / password / otp to the arcade-score endpoint
+// (guards against a second concurrent request) and show the spinner cover.
 - (void)startGetArcadeScoreHttpWithOtp:(NSString *)otp {
     if (_dlGetArcadeScoreData != nil) {
         return;
@@ -179,8 +188,9 @@ static NSString *const kMsgNoPlayData =
     NSString *konamiId = [UserSettingData konamiId];
     neAppEventCenter::shared();
     NSString *body = [NSString stringWithFormat:@"konami_id=%@&password=%@&otp=%@",
-                      konamiId, neAppEventCenter::inputPassword(),
-                      (otp != nil ? otp : @"")];
+                                                konamiId,
+                                                neAppEventCenter::inputPassword(),
+                                                (otp != nil ? otp : @"")];
     _dlGetArcadeScoreData =
         [[Downloader alloc] initWithURL:[StoreUtil getArcadeScoreURL]
                                delegate:self
@@ -208,11 +218,12 @@ static NSString *const kMsgNoPlayData =
     return rows;
 }
 
-// @ 0xd085c — bind the N-th non-empty bucket (scanned high (24) to low) to the row,
-// passing its bucket index as the category.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
-                            (long)indexPath.section, (long)indexPath.row];
+// @ 0xd085c — bind the N-th non-empty bucket (scanned high (24) to low) to the
+// row, passing its bucket index as the category.
+- (UITableViewCell *)tableView:(UITableView *)tableView
+         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *identifier =
+        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
     CheckerCategoryCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[CheckerCategoryCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -245,7 +256,7 @@ static NSString *const kMsgNoPlayData =
         return;
     }
     neSceneManager::shared();
-    neEngine::playSystemSe(1);   // decide SE
+    neEngine::playSystemSe(1); // decide SE
 
     int found = 0;
     int idx = 0;
@@ -262,14 +273,14 @@ static NSString *const kMsgNoPlayData =
         [[CheckerMusicViewController alloc] initWithScoreData:_scoreDataArray[idx]
                                                      category:(short)idx];
     neSceneManager::shared();
-    [self.navigationController pushViewController:music
-                                        animated:!neSceneManager::isPadDisplay()];
+    [self.navigationController pushViewController:music animated:!neSceneManager::isPadDisplay()];
 }
 
 #pragma mark - DownloaderDelegate
 
-// @ 0xd0ad8 — parse the JSON response: on error show the matching alert; on success
-// merge every record into the local Core Data store, rebuild the buckets and reload.
+// @ 0xd0ad8 — parse the JSON response: on error show the matching alert; on
+// success merge every record into the local Core Data store, rebuild the
+// buckets and reload.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_dlGetArcadeScoreData getDataInJSON];
     NSString *message;
@@ -282,7 +293,8 @@ static NSString *const kMsgNoPlayData =
         if (list == nil || list.count == 0) {
             message = kMsgCommFailed;
         } else {
-            // Parallel columns, filled per record (row kept only when MusicNo is set).
+            // Parallel columns, filled per record (row kept only when MusicNo is
+            // set).
             NSMutableArray *musicNo = [NSMutableArray array];
             NSMutableArray *title = [NSMutableArray array];
             NSMutableArray *genre = [NSMutableArray array];
@@ -354,11 +366,13 @@ static NSString *const kMsgNoPlayData =
             NSManagedObjectContext *moc = [AppDelegate appDelegate].managedObjectContext;
             for (NSUInteger i = 0; i < musicNo.count; i++) {
                 short mid = [musicNo[i] shortValue];
-                ArcadeScoreData *rec =
-                    [ArcadeScoreData getDataFromMusicId:mid refId:refId inManagedObjectContext:moc];
+                ArcadeScoreData *rec = [ArcadeScoreData getDataFromMusicId:mid
+                                                                     refId:refId
+                                                    inManagedObjectContext:moc];
                 if (rec == nil) {
-                    rec = [ArcadeScoreData addRecordWithMusicId:mid refId:refId
-                                        inManagedObjectContext:moc];
+                    rec = [ArcadeScoreData addRecordWithMusicId:mid
+                                                          refId:refId
+                                         inManagedObjectContext:moc];
                 }
                 [rec setTitle:title[i]];
                 [rec setGenre:genre[i]];
@@ -392,11 +406,13 @@ static NSString *const kMsgNoPlayData =
             }
 
             // Rebuild the buckets from the freshly-merged store and reload.
-            _scoreDataArray[24] = [ArcadeScoreData getLatestDataLimit:10 refId:refId
+            _scoreDataArray[24] = [ArcadeScoreData getLatestDataLimit:10
+                                                                refId:refId
                                                inManagedObjectContext:moc];
             for (short i = 0; i < 24; i++) {
-                _scoreDataArray[i] = [ArcadeScoreData getDataFromCategory:i refId:refId
-                                                  inManagedObjectContext:moc];
+                _scoreDataArray[i] = [ArcadeScoreData getDataFromCategory:i
+                                                                    refId:refId
+                                                   inManagedObjectContext:moc];
             }
             [self.tableView reloadData];
             message = nil;
@@ -405,9 +421,11 @@ static NSString *const kMsgNoPlayData =
 
     _dlGetArcadeScoreData = nil;
     if (message != nil) {
-        CommonAlertView *alert =
-            [[CommonAlertView alloc] initWithTitle:nil message:message delegate:nil
-                                 cancelButtonTitle:nil otherButtonTitles:@"OK"];
+        CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:nil
+                                                                message:message
+                                                               delegate:nil
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
     }
     _dummyView.view.hidden = YES;
@@ -421,36 +439,38 @@ static NSString *const kMsgNoPlayData =
 - (void)downloaderError:(Downloader *)downloader {
     _dlGetArcadeScoreData = nil;
     _dummyView.view.hidden = YES;
-    CommonAlertView *alert =
-        [[CommonAlertView alloc] initWithTitle:nil message:kMsgCommFailed delegate:nil
-                             cancelButtonTitle:nil otherButtonTitles:@"OK"];
+    CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:nil
+                                                            message:kMsgCommFailed
+                                                           delegate:nil
+                                                  cancelButtonTitle:nil
+                                                  otherButtonTitles:@"OK"];
     [alert show];
 }
 
 #pragma mark - Actions
 
-// @ 0xd1960 — BACK: only as the nav top VC; play the cancel SE, restore the nav-bar
-// art and pop.
+// @ 0xd1960 — BACK: only as the nav top VC; play the cancel SE, restore the
+// nav-bar art and pop.
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
     }
     neSceneManager::shared();
-    neEngine::playSystemSe(2);   // cancel SE
-    [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+    neEngine::playSystemSe(2); // cancel SE
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
+                                                  forBarMetrics:UIBarMetricsDefault];
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-// @ 0xd1a18 — GET DATA: only as the nav top VC; play the decide SE, then either sync
-// straight away or (when an OTP is required) push the OTP-input screen first.
+// @ 0xd1a18 — GET DATA: only as the nav top VC; play the decide SE, then either
+// sync straight away or (when an OTP is required) push the OTP-input screen
+// first.
 - (void)touchedGetDataButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
     }
     neSceneManager::shared();
-    neEngine::playSystemSe(1);   // decide SE
+    neEngine::playSystemSe(1); // decide SE
     neAppEventCenter::shared();
     if (!neAppEventCenter::requireOtpInput()) {
         [self startGetArcadeScoreHttpWithOtp:nil];
@@ -465,12 +485,13 @@ static NSString *const kMsgNoPlayData =
 
 #pragma mark - Title / category normalization
 
-// @ 0xd1b40 — normalize a server-supplied title/name: fix two CP932 mojibake glyphs
-// and expand the HTML entities the arcade score API emits for accented characters.
+// @ 0xd1b40 — normalize a server-supplied title/name: fix two CP932 mojibake
+// glyphs and expand the HTML entities the arcade score API emits for accented
+// characters.
 - (NSString *)convertReplaceChara:(NSString *)string {
     NSString *s = string;
-    s = [s stringByReplacingOccurrencesOfString:@"＜" withString:@"〜"];   // U+FF3C -> U+301C
-    s = [s stringByReplacingOccurrencesOfString:@"→" withString:@"ー"];   // U+2192 -> U+30FC
+    s = [s stringByReplacingOccurrencesOfString:@"＜" withString:@"〜"]; // U+FF3C -> U+301C
+    s = [s stringByReplacingOccurrencesOfString:@"→" withString:@"ー"];  // U+2192 -> U+30FC
     s = [s stringByReplacingOccurrencesOfString:@"&hearts;" withString:@"♡"];
     s = [s stringByReplacingOccurrencesOfString:@"&agrave;" withString:@"à"];
     s = [s stringByReplacingOccurrencesOfString:@"&auml;" withString:@"ä"];

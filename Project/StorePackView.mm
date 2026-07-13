@@ -6,19 +6,19 @@
 //
 
 #import "StorePackView.h"
+#import "AppFont.h"
+#import "PurchaseManager.h"
 #import "StorePackInfo.h"
 #import "StoreUtil.h"
-#import "PurchaseManager.h"
-#import "AppFont.h"
 #import "neEngineBridge.h"
 
 @implementation StorePackView
 
-@synthesize delegate = m_Delegate;   // delegate @ 0x52784 / setDelegate: @ 0x52794 (synthesized)
-@synthesize index = m_Index;         // index @ 0x527a4 (synthesized getter)
+@synthesize delegate = m_Delegate; // delegate @ 0x52784 / setDelegate: @ 0x52794 (synthesized)
+@synthesize index = m_Index;       // index @ 0x527a4 (synthesized getter)
 
-// @ 0x51a44 — build the tile. All colour and geometry constants are byte-verified
-// from the literal pool and disassembly.
+// @ 0x51a44 — build the tile. All colour and geometry constants are
+// byte-verified from the literal pool and disassembly.
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         // Background image view fills the tile and owns the tap gesture.
@@ -31,8 +31,7 @@
 
         // Jacket artwork: (15,15,110,110), aspect-fit, faint white fill, 1pt white
         // border, soft black drop shadow, rasterized.
-        m_ArtworkImageView =
-            [[UIImageView alloc] initWithFrame:CGRectMake(15, 15, 110, 110)];
+        m_ArtworkImageView = [[UIImageView alloc] initWithFrame:CGRectMake(15, 15, 110, 110)];
         m_ArtworkImageView.contentMode = UIViewContentModeScaleAspectFit;
         m_ArtworkImageView.opaque = NO;
         m_ArtworkImageView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.3f];
@@ -57,11 +56,13 @@
         m_NameLabel.minimumScaleFactor = 0.6f;
 
         // "Purchased" pill — a custom button that is always disabled; it only shows
-        // a disabled-state background ("store_btn_disabled.png", 6pt stretchable caps)
-        // and the title "購入済み" ("Purchased") — Ghidra CFString @ 0x136bd8.
+        // a disabled-state background ("store_btn_disabled.png", 6pt stretchable
+        // caps) and the title "購入済み" ("Purchased") — Ghidra CFString @
+        // 0x136bd8.
         m_PurchasedButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        UIImage *disabledBg = [[UIImage imageNamed:@"store_btn_disabled.png"]
-            stretchableImageWithLeftCapWidth:6 topCapHeight:6];
+        UIImage *disabledBg =
+            [[UIImage imageNamed:@"store_btn_disabled.png"] stretchableImageWithLeftCapWidth:6
+                                                                                topCapHeight:6];
         [m_PurchasedButton setBackgroundImage:disabledBg forState:UIControlStateDisabled];
         m_PurchasedButton.exclusiveTouch = YES;
         m_PurchasedButton.adjustsImageWhenDisabled = NO;
@@ -72,7 +73,7 @@
                                 forState:UIControlStateDisabled];
         [m_PurchasedButton setTitleShadowColor:[UIColor colorWithWhite:1.0f alpha:0.6f]
                                       forState:UIControlStateDisabled];
-        [m_PurchasedButton setTitle:@"購入済み"    // "Purchased"
+        [m_PurchasedButton setTitle:@"購入済み" // "Purchased"
                            forState:UIControlStateDisabled];
         m_PurchasedButton.enabled = NO;
         [m_PurchasedButton sizeToFit];
@@ -81,18 +82,17 @@
         // margin (0x41200000=10, 0x40800000=4, 0xc1700000=−15, 0xc0a00000=−5).
         {
             CGSize bs = m_PurchasedButton.frame.size;
-            CGFloat bw = bs.width  + 10.0f;
+            CGFloat bw = bs.width + 10.0f;
             CGFloat bh = bs.height + 4.0f;
-            m_PurchasedButton.frame = CGRectMake(CGRectGetWidth(frame)  - bw - 15.0f,
-                                                  CGRectGetHeight(frame) - bh -  5.0f,
-                                                  bw, bh);
+            m_PurchasedButton.frame = CGRectMake(
+                CGRectGetWidth(frame) - bw - 15.0f, CGRectGetHeight(frame) - bh - 5.0f, bw, bh);
         }
 
-        // Comment label — one-line blurb under the name. (The initialiser adds it as a
-        // subview; its construction was folded by the decompiler, so its frame mirrors
-        // the name label's column.)
-        m_CommentLabel = [[UILabel alloc]
-            initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 40, 140, 18)];
+        // Comment label — one-line blurb under the name. (The initialiser adds it
+        // as a subview; its construction was folded by the decompiler, so its frame
+        // mirrors the name label's column.)
+        m_CommentLabel =
+            [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetWidth(frame) - 145.0f, 40, 140, 18)];
         m_CommentLabel.backgroundColor = [UIColor clearColor];
         m_CommentLabel.font = [UIFont fontWithName:AppFontName() size:13.0f];
         m_CommentLabel.textColor = [UIColor colorWithWhite:0.0f alpha:1.0f];
@@ -105,8 +105,7 @@
         m_PriceLabel.textColor = [UIColor colorWithWhite:0.196f alpha:1.0f];
 
         // "New" badge.
-        m_NewMarker = [[UIImageView alloc]
-            initWithImage:[UIImage imageNamed:@"store_new.png"]];
+        m_NewMarker = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"store_new.png"]];
 
         // Arcade-viewer badge at (140,77), hidden until a pack has arcade content.
         UIImage *acvImg = [UIImage imageNamed:@"store_arcade_view_ic"];
@@ -136,8 +135,8 @@
     return self;
 }
 
-// @ 0x5258c — bind a pack model: labels, "new" marker, arcade-viewer marker, and
-// the purchased / ticket state (derived live from PurchaseManager).
+// @ 0x5258c — bind a pack model: labels, "new" marker, arcade-viewer marker,
+// and the purchased / ticket state (derived live from PurchaseManager).
 - (void)loadPackInfo:(StorePackInfo *)packInfo index:(unsigned int)index {
     m_NameLabel.text = [packInfo packName];
     m_CommentLabel.text = [packInfo s_comment];
@@ -149,11 +148,11 @@
     BOOL purchased = [[PurchaseManager sharedManager] isPurchased:productID];
     if (purchased) {
         m_PurchasedButton.hidden = NO;
-        m_ArcadeViewerImageView.hidden = YES;   // hide arcade marker once purchased
+        m_ArcadeViewerImageView.hidden = YES; // hide arcade marker once purchased
     } else {
         m_PurchasedButton.hidden = YES;
     }
-    m_TicketImageView.hidden = purchased;   // @ 0x525.. setHidden:(cVar4 != 0): hidden once purchased
+    m_TicketImageView.hidden = purchased; // @ 0x525.. setHidden:(cVar4 != 0): hidden once purchased
 
     m_Index = index;
 }
@@ -168,7 +167,8 @@
     m_BackGroundImageView.image = image;
 }
 
-// @ 0x52530 — the button's visibility is the source of truth for the purchased flag.
+// @ 0x52530 — the button's visibility is the source of truth for the purchased
+// flag.
 - (BOOL)isPurchased {
     return !m_PurchasedButton.hidden;
 }
@@ -178,7 +178,8 @@
     m_PurchasedButton.hidden = !purchased;
 }
 
-// @ 0x524c8 — whole-tile tap: play the decide SE, then hand off to the delegate.
+// @ 0x524c8 — whole-tile tap: play the decide SE, then hand off to the
+// delegate.
 - (void)handleTap:(UITapGestureRecognizer *)recognizer {
     if (![m_Delegate respondsToSelector:@selector(packViewSelected:)]) {
         return;
@@ -188,7 +189,7 @@
     [m_Delegate performSelector:@selector(packViewSelected:) withObject:self];
 }
 
-// dealloc @ 0x52448 — ARC-omitted (object ivars only; the original also nils the assign
-// delegate, which ARC does not require).
+// dealloc @ 0x52448 — ARC-omitted (object ivars only; the original also nils
+// the assign delegate, which ARC does not require).
 
 @end

@@ -36,8 +36,8 @@
                                            date:(NSString *)date
                          inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// Mark every record for `music` as touched (isTouched = 1). Returns match count.
-// Ghidra: @ 0xba3d4
+// Mark every record for `music` as touched (isTouched = 1). Returns match
+// count. Ghidra: @ 0xba3d4
 + (NSUInteger)updateOverScoreTouchedWithMusic:(int)music
                        inManagedObjectContext:(NSManagedObjectContext *)context;
 

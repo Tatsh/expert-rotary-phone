@@ -5,7 +5,8 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //  Builds and queries the player's character lists. The hard-coded 30 come from
 //  GetHardCodeCharaDataStruct; the rest are downloaded as chara_%03d.chr files
-//  (BFCodec-encrypted JSON, same "Popn Orbit Note." key scheme as the .orb data).
+//  (BFCodec-encrypted JSON, same "Popn Orbit Note." key scheme as the .orb
+//  data).
 //
 
 #include <cstdint>
@@ -40,8 +41,9 @@ CharaManager &CharaManagerShared() {
 
 namespace {
 
-// The obfuscated 25-byte key at DAT_0012fa0c. Deobfuscated as key[i]+i it spells
-// "Popn Orbit Note. xjr1300."; its MD5 is the BFCodec key (see charaDecodeChr).
+// The obfuscated 25-byte key at DAT_0012fa0c. Deobfuscated as key[i]+i it
+// spells "Popn Orbit Note. xjr1300."; its MD5 is the BFCodec key (see
+// charaDecodeChr).
 const uint8_t kCharaKeyObfuscated[25] = {
     0x50, 0x6E, 0x6E, 0x6B, 0x1C, 0x4A, 0x6C, 0x5B, 0x61, 0x6B, 0x16, 0x43, 0x63,
     0x67, 0x57, 0x1F, 0x10, 0x67, 0x58, 0x5F, 0x1D, 0x1E, 0x1A, 0x19, 0x16,
@@ -87,7 +89,7 @@ NSArray *collectIds(NSArray *entries) {
     return ids;
 }
 
-}  // namespace
+} // namespace
 
 // Ghidra: FUN_000b85bc.
 void CharaManager::reload() {
@@ -126,8 +128,8 @@ void CharaManager::reload() {
         NSMutableData *buffer = [NSMutableData dataWithData:raw];
         NSData *decoded = charaDecodeChr(buffer);
         NSDictionary *json = [NSJSONSerialization JSONObjectWithData:decoded
-                                                            options:NSJSONReadingMutableContainers
-                                                              error:nil];
+                                                             options:NSJSONReadingMutableContainers
+                                                               error:nil];
 
         // "Preferred": music<->chara pairings that unlock preferred characters.
         for (NSDictionary *entry in json[@"Preferred"]) {
@@ -282,17 +284,17 @@ void charaSelectLoadPageTextures(AcMainTask *task, int page) {
         // Characters 0-29 are bundled resources; 30+ are downloaded to
         // the app-support directory.  Owned chars use the "open" art;
         // locked chars use the "lock" placeholder.
-        BOOL owned = RhTestBitInNumberArray(gotChara, static_cast<unsigned>(static_cast<short>(charaId)));
-        NSString *imageName = [NSString stringWithFormat:
-            (owned ? @"open_chara_%03d.png" : @"lock_chara_%03d.png"),
-            (int)charaId];
+        BOOL owned =
+            RhTestBitInNumberArray(gotChara, static_cast<unsigned>(static_cast<short>(charaId)));
+        NSString *imageName =
+            [NSString stringWithFormat:(owned ? @"open_chara_%03d.png" : @"lock_chara_%03d.png"),
+                                       (int)charaId];
 
         NSString *path;
         if (charaId < 30) {
             path = [[NSBundle mainBundle] pathForResource:imageName ofType:nil];
         } else {
-            path = [[AppDelegate appAppSupportDirectory]
-                    stringByAppendingPathComponent:imageName];
+            path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:imageName];
         }
         slot->load([path UTF8String]);
     }
@@ -343,8 +345,8 @@ int countAvailableCharacters(NSArray *gotCharaArray) {
     // bitfield, where each NSNumber element holds 32 bits).
     unsigned totalOwned = 0;
     for (NSNumber *word in gotCharaArray) {
-        totalOwned += static_cast<unsigned>(
-            __builtin_popcount(static_cast<unsigned>([word intValue])));
+        totalOwned +=
+            static_cast<unsigned>(__builtin_popcount(static_cast<unsigned>([word intValue])));
     }
     // Lazy-init gCharaManager if needed (binary calls getCharaManager() here).
     CharaManagerShared();

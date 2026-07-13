@@ -5,8 +5,8 @@
 //  A UIButton whose hit-test area is grown (or shrunk) by `tappableInsets`:
 //  negative insets enlarge the tappable region beyond the button's bounds, so a
 //  small on-screen button can still be comfortably tapped. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (pointInside:withEvent: @ 0xdcfc0,
-//  tappableInsets / setTappableInsets: @ 0xdd0f8 / 0xdd11c).
+//  Ghidra project rb420, program PopnRhythmin (pointInside:withEvent: @
+//  0xdcfc0, tappableInsets / setTappableInsets: @ 0xdd0f8 / 0xdd11c).
 //
 
 #import <UIKit/UIKit.h>
@@ -16,7 +16,7 @@
 // Applied to the bounds before hit-testing (UIEdgeInsetsInsetRect); negative
 // values expand the tappable area. Synthesized atomic property — the recovered
 // setter uses an atomic objc_copyStruct (@ 0xdd0f8 getter / 0xdd11c setter).
-@property (atomic) UIEdgeInsets tappableInsets;
+@property(atomic) UIEdgeInsets tappableInsets;
 
 @end
 

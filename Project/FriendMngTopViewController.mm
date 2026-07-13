@@ -2,35 +2,38 @@
 //  FriendMngTopViewController.m
 //  pop'n rhythmin
 //
-//  See FriendMngTopViewController.h. Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//  The open/close animations are byte-verified; initAtNavigationController's button/image/action
-//  wiring is reconstructed. Its frames are structural: each button/caption is centred on the
-//  hub-view centre (cx = view.width * 0.5) at a running y that starts at 30.0 and steps by
-//  bimg.height + 20.0; the reply badge sits at (5.0, 15.0). Origins derive from runtime image
-//  .size, not lost constants. The first-play HowToViewCtrl tutorial and the section
-//  navigations (onList/Request/Reply) are deferred (see HANDOFF.md).
+//  See FriendMngTopViewController.h. Reconstructed from Ghidra project rb420,
+//  program PopnRhythmin. The open/close animations are byte-verified;
+//  initAtNavigationController's button/image/action wiring is reconstructed.
+//  Its frames are structural: each button/caption is centred on the hub-view
+//  centre (cx = view.width * 0.5) at a running y that starts at 30.0 and steps
+//  by bimg.height + 20.0; the reply badge sits at (5.0, 15.0). Origins derive
+//  from runtime image .size, not lost constants. The first-play HowToViewCtrl
+//  tutorial and the section navigations (onList/Request/Reply) are deferred
+//  (see HANDOFF.md).
 //
 
 #import "FriendMngTopViewController.h"
-#import "HowToViewCtrl.h"
-#import "UserSettingData.h"
+#import "DownloadMain.h" // friendRequestedCnt (drives the reply badge)
 #import "FriendListViewController.h"
 #import "FriendReplyViewController.h"
 #import "FriendRequestViewController.h"
-#import "DownloadMain.h"            // friendRequestedCnt (drives the reply badge)
-#import "neEngineBridge.h"          // neEngine::playSystemSe, neSceneManager::isPadDisplay
+#import "HowToViewCtrl.h"
+#import "UserSettingData.h"
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation FriendMngTopViewController
 
-// delegate @ 0xa6c00 / setDelegate: @ 0xa6c10 — synthesized assign accessors over m_Delegate.
+// delegate @ 0xa6c00 / setDelegate: @ 0xa6c10 — synthesized assign accessors
+// over m_Delegate.
 @synthesize delegate = m_Delegate;
 
-// dealloc @ 0xa6488 — ARC-omitted (super-only; _markView released automatically).
-// viewDidLoad @ 0xa64b4 — super-only override, omitted.
+// dealloc @ 0xa6488 — ARC-omitted (super-only; _markView released
+// automatically). viewDidLoad @ 0xa64b4 — super-only override, omitted.
 // didReceiveMemoryWarning @ 0xa64e0 — super-only override, omitted.
 
-// @ 0xa650c — refresh the "new reply" badge on appear: shown only when at least one
-// friend request is pending (DownloadMain friendRequestedCnt).
+// @ 0xa650c — refresh the "new reply" badge on appear: shown only when at least
+// one friend request is pending (DownloadMain friendRequestedCnt).
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     _markView.hidden = ([[DownloadMain getInstance] friendRequestedCnt] < 1);
@@ -42,37 +45,43 @@
     m_Delegate = self;
 
     // Backdrop.
-    UIImageView *bg = [[UIImageView alloc]
-        initWithImage:[UIImage imageNamed:@"friman_bg"]];
+    UIImageView *bg = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"friman_bg"]];
     [self.view addSubview:bg];
 
-    // Wrap self in its own navigation controller with a custom back button + nav-bar art.
-    UINavigationController *nav =
-        [[UINavigationController alloc] initWithRootViewController:self];
+    // Wrap self in its own navigation controller with a custom back button +
+    // nav-bar art.
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:self];
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];
-    UIButton *backBtn = [[UIButton alloc]
-        initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
+    UIButton *backBtn =
+        [[UIButton alloc] initWithFrame:CGRectMake(0, 0, backImg.size.width, backImg.size.height)];
     [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-    [backBtn addTarget:self action:@selector(startCloseAnimation)
-      forControlEvents:UIControlEventTouchUpInside];
-    self.navigationItem.leftBarButtonItem =
-        [[UIBarButtonItem alloc] initWithCustomView:backBtn];
+    [backBtn addTarget:self
+                  action:@selector(startCloseAnimation)
+        forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"friman_navbar"] forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImage:[UIImage imageNamed:@"friman_navbar"]
+             forBarMetrics:UIBarMetricsDefault];
 
-    // Three section buttons (list / presenting / reply) with their caption images. Frames are
-    // centre-relative and NEON-spilled in the binary; best-effort vertical stack here.
+    // Three section buttons (list / presenting / reply) with their caption
+    // images. Frames are centre-relative and NEON-spilled in the binary;
+    // best-effort vertical stack here.
     const CGFloat cx = self.view.frame.size.width * 0.5f;
     CGFloat y = 30.0f;
-    struct { NSString *btn; NSString *text; SEL action; } sections[3] = {
-        { @"friman_btn_list",       @"friman_text_list",       @selector(onListButtonTouched:) },
-        { @"friman_btn_presenting", @"friman_text_presenting", @selector(onRequestButtonTouched:) },
-        { @"friman_btn_receipt",    @"friman_text_receipt",    @selector(onReplyButtonTouched:) },
+    struct {
+        NSString *btn;
+        NSString *text;
+        SEL action;
+    } sections[3] = {
+        {@"friman_btn_list", @"friman_text_list", @selector(onListButtonTouched:)},
+        {@"friman_btn_presenting", @"friman_text_presenting", @selector(onRequestButtonTouched:)},
+        {@"friman_btn_receipt", @"friman_text_receipt", @selector(onReplyButtonTouched:)},
     };
     for (int i = 0; i < 3; i++) {
         UIImage *bimg = [UIImage imageNamed:sections[i].btn];
         UIButton *b = [[UIButton alloc]
-            initWithFrame:CGRectMake(cx - bimg.size.width * 0.5f, y, bimg.size.width, bimg.size.height)];
+            initWithFrame:CGRectMake(
+                              cx - bimg.size.width * 0.5f, y, bimg.size.width, bimg.size.height)];
         b.exclusiveTouch = YES;
         [b setBackgroundImage:bimg forState:UIControlStateNormal];
         [b addTarget:self action:sections[i].action forControlEvents:UIControlEventTouchUpInside];
@@ -85,19 +94,19 @@
 
         // The reply button carries a "new reply" warning badge.
         if (i == 2) {
-            _markView = [[UIImageView alloc]
-                initWithImage:[UIImage imageNamed:@"vie_cmn_warning"]];
-            _markView.frame = CGRectMake(5.0f, 15.0f,
-                                         _markView.image.size.width, _markView.image.size.height);
+            _markView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"vie_cmn_warning"]];
+            _markView.frame =
+                CGRectMake(5.0f, 15.0f, _markView.image.size.width, _markView.image.size.height);
             [b addSubview:_markView];
         }
         y += bimg.size.height + 20.0f;
     }
 
-    // On first entry (this is the iPhone hub) push the friend how-to tutorial, then mark it seen.
+    // On first entry (this is the iPhone hub) push the friend how-to tutorial,
+    // then mark it seen.
     if (![UserSettingData isFriendSelected]) {
-        HowToViewCtrl *howto = [[HowToViewCtrl alloc]
-            initWithFileNameArray:@[@"firstplay_friend"]];
+        HowToViewCtrl *howto =
+            [[HowToViewCtrl alloc] initWithFileNameArray:@[ @"firstplay_friend" ]];
         howto.isCloseButtonEnable = YES;
         howto.backGroundImage = [UIImage imageNamed:@"friman_bg"];
         [self.navigationController pushViewController:howto animated:NO];
@@ -107,8 +116,8 @@
     return nav;
 }
 
-// @ 0xa6590 — fade the hub view + its nav view up to opaque over 0.5 s; endOpenAnimation clears
-// the guard.
+// @ 0xa6590 — fade the hub view + its nav view up to opaque over 0.5 s;
+// endOpenAnimation clears the guard.
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -131,10 +140,11 @@
     _isAnimationing = NO;
 }
 
-// @ 0xa66d0 — play the cancel SE, then (iPhone) fade the hub + its nav view out over
-// 0.3 s with endCloseAnimation as the didStop; on iPad forward the close to the split-hub
-// delegate. NB: the binary *clears* _isAnimationing here (strb #0 @ 0xa6742) instead of
-// raising the guard — reproduced exactly as decompiled.
+// @ 0xa66d0 — play the cancel SE, then (iPhone) fade the hub + its nav view out
+// over 0.3 s with endCloseAnimation as the didStop; on iPad forward the close
+// to the split-hub delegate. NB: the binary *clears* _isAnimationing here (strb
+// #0 @ 0xa6742) instead of raising the guard — reproduced exactly as
+// decompiled.
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2);
     if (!neSceneManager::isPadDisplay()) {
@@ -163,13 +173,14 @@
     _isAnimationing = NO;
 }
 
-// @ 0xa687c — push the friend ranking list (iPhone); on iPad forward to the split hub delegate.
-// The nav-bar art is swapped to the list's on the way in (backButtonFunc restores friman_navbar).
+// @ 0xa687c — push the friend ranking list (iPhone); on iPad forward to the
+// split hub delegate. The nav-bar art is swapped to the list's on the way in
+// (backButtonFunc restores friman_navbar).
 - (void)onListButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
-        FriendListViewController *vc = [[FriendListViewController alloc]
-            initWithStyle:UITableViewStyleGrouped];
+        FriendListViewController *vc =
+            [[FriendListViewController alloc] initWithStyle:UITableViewStyleGrouped];
         if (self.navigationController.topViewController != self) {
             return;
         }
@@ -183,9 +194,11 @@
 }
 
 // Plays the decide SE and, on iPhone, pushes the send-a-request screen
-// (FriendRequestViewController: request by player id + a FriendRequestTable of recommendations +
-// a FreeRequestListViewController "free request" list); on iPad it forwards to the split hub.
-// @ 0xa69a8 — push the send-a-request screen (iPhone); iPad forwards to the split hub.
+// (FriendRequestViewController: request by player id + a FriendRequestTable of
+// recommendations + a FreeRequestListViewController "free request" list); on
+// iPad it forwards to the split hub.
+// @ 0xa69a8 — push the send-a-request screen (iPhone); iPad forwards to the
+// split hub.
 - (void)onRequestButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
@@ -202,12 +215,13 @@
     }
 }
 
-// @ 0xa6ad4 — push the incoming-requests reply screen (iPhone); iPad forwards to the split hub.
+// @ 0xa6ad4 — push the incoming-requests reply screen (iPhone); iPad forwards
+// to the split hub.
 - (void)onReplyButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
-        FriendReplyViewController *vc = [[FriendReplyViewController alloc]
-            initWithStyle:UITableViewStyleGrouped];
+        FriendReplyViewController *vc =
+            [[FriendReplyViewController alloc] initWithStyle:UITableViewStyleGrouped];
         if (self.navigationController.topViewController != self) {
             return;
         }

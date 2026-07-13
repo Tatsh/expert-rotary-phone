@@ -3,16 +3,17 @@
 //  pop'n rhythmin
 //
 //  See TouchRangeView.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. ARC; pure UIKit (no neEngine / neSceneManager bridge), so this is a
-//  plain .m.
+//  PopnRhythmin. ARC; pure UIKit (no neEngine / neSceneManager bridge), so this
+//  is a plain .m.
 //
 //  Honesty / recovery notes:
 //   * -dealloc @ 0x8b2c0 in the binary is release-only ([super dealloc] plus
-//     -release on the two UIImage ivars). Under ARC that is a no-op, so it is omitted
-//     rather than reproduced.
-//   * -isTouched @ 0x8b3e4 / -setIsTouched: @ 0x8b3fc are the compiler-synthesized
-//     atomic accessors (each wrapped in DataMemoryBarrier(0x1b)); they are represented
-//     by the @property in the header and not hand-written here.
+//     -release on the two UIImage ivars). Under ARC that is a no-op, so it is
+//     omitted rather than reproduced.
+//   * -isTouched @ 0x8b3e4 / -setIsTouched: @ 0x8b3fc are the
+//   compiler-synthesized
+//     atomic accessors (each wrapped in DataMemoryBarrier(0x1b)); they are
+//     represented by the @property in the header and not hand-written here.
 //   * -drawRect: paints at CGPointZero (origin (0,0) in the binary).
 //   * The two image names are the ASCII CFString arguments passed by
 //     TouchRangeViewCtrl -viewDidLoad: "ta_popkun_before" (untouched) and
@@ -22,9 +23,11 @@
 #import "TouchRangeView.h"
 
 @implementation TouchRangeView {
-    UIImage *_untouchedPopkun;   // @0x34  pop-kun shown when not touched ("ta_popkun_before")
-    UIImage *_touchedPopkun;     // @0x38  pop-kun shown while touched   ("ta_popkun_after")
-    // BOOL _isTouched;          // @0x3c  backing ivar for the atomic `isTouched` property
+    UIImage *_untouchedPopkun; // @0x34  pop-kun shown when not touched
+                               // ("ta_popkun_before")
+    UIImage *_touchedPopkun;   // @0x38  pop-kun shown while touched ("ta_popkun_after")
+    // BOOL _isTouched;          // @0x3c  backing ivar for the atomic `isTouched`
+    // property
 }
 
 // @ 0x8b20c
@@ -62,7 +65,8 @@
     return _untouchedPopkun.size.height;
 }
 
-// isTouched @ 0x8b3e4, setIsTouched: @ 0x8b3fc — synthesized atomic accessors for the
-// `isTouched` property (backing ivar _isTouched @0x3c); not hand-written.
+// isTouched @ 0x8b3e4, setIsTouched: @ 0x8b3fc — synthesized atomic accessors
+// for the `isTouched` property (backing ivar _isTouched @0x3c); not
+// hand-written.
 
 @end

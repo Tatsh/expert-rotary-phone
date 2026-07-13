@@ -5,7 +5,7 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
-#import "UnZipArchive.h"   // ZipArchive library
+#import "UnZipArchive.h" // ZipArchive library
 
 #import "BFCodec.h"
 #import "MusicData.h"
@@ -19,41 +19,50 @@ static NSString *const kOrbInfoEntry = @"info";
 // Obfuscated 25-byte key for the "info" entry (Ghidra: literal in
 // +getZipData:Path:DecodeType: @ 0xc71ec). decodeBF: deobfuscates it as
 // (byte + index) -> "Popn Orbit Note. xjr1300." -> MD5 -> Blowfish key.
-static const char kOrbKeyObfuscated[25] = {
-    0x50, 0x6e, 0x6e, 0x6b, 0x1c, 0x4a, 0x6c, 0x5b, 0x61, 0x6b, 0x16, 0x43, 0x63,
-    0x67, 0x57, 0x1f, 0x10, 0x67, 0x58, 0x5f, 0x1d, 0x1e, 0x1a, 0x19, 0x16
-};
+static const char kOrbKeyObfuscated[25] = {0x50, 0x6e, 0x6e, 0x6b, 0x1c, 0x4a, 0x6c, 0x5b, 0x61,
+                                           0x6b, 0x16, 0x43, 0x63, 0x67, 0x57, 0x1f, 0x10, 0x67,
+                                           0x58, 0x5f, 0x1d, 0x1e, 0x1a, 0x19, 0x16};
 
-// Initial shown for anything that is not a kana reading (numbers, latin, empty):
-// index >= 10 falls through to this. Ghidra: DAT_0018829c = "#".
+// Initial shown for anything that is not a kana reading (numbers, latin,
+// empty): index >= 10 falls through to this. Ghidra: DAT_0018829c = "#".
 static NSString *const kDefaultInitial = @"#";
 
 // The ten gojuon rows, as katakana membership sets (song "yomi" readings are
-// katakana). A reading's first character is matched against these to pick its row.
-// Ghidra: the DAT_0018824c[0..9] constant strings scanned by GetYomiIndex.
+// katakana). A reading's first character is matched against these to pick its
+// row. Ghidra: the DAT_0018824c[0..9] constant strings scanned by GetYomiIndex.
 static NSString *const kYomiRows[10] = {
-    @"ァアィイゥウェエォオ",              // a-row
-    @"カガキギクグケゲコゴ",              // ka-row
-    @"サザシジスズセゼソゾ",              // sa-row
-    @"タダチヂッツヅテデトド",            // ta-row (incl. small tsu)
-    @"ナニヌネノ",                        // na-row
-    @"ハバパヒビピフブプヘベペホボポ",    // ha-row (dakuten + handakuten)
-    @"マミムメモ",                        // ma-row
-    @"ャヤュユョヨ",                      // ya-row (incl. small)
-    @"ラリルレロ",                        // ra-row
-    @"ヮワヰヱヲンヴヵヶ",                // wa-row / other
+    @"ァアィイゥウェエォオ",           // a-row
+    @"カガキギクグケゲコゴ",           // ka-row
+    @"サザシジスズセゼソゾ",           // sa-row
+    @"タダチヂッツヅテデトド",         // ta-row (incl. small tsu)
+    @"ナニヌネノ",                     // na-row
+    @"ハバパヒビピフブプヘベペホボポ", // ha-row (dakuten + handakuten)
+    @"マミムメモ",                     // ma-row
+    @"ャヤュユョヨ",                   // ya-row (incl. small)
+    @"ラリルレロ",                     // ra-row
+    @"ヮワヰヱヲンヴヵヶ",             // wa-row / other
 };
 
-// The row labels shown in the sort index, as hiragana. Ghidra: PTR_cf_B0_00188274[0..9].
+// The row labels shown in the sort index, as hiragana. Ghidra:
+// PTR_cf_B0_00188274[0..9].
 static NSString *const kYomiLabels[10] = {
-    @"あ", @"か", @"さ", @"た", @"な", @"は", @"ま", @"や", @"ら", @"わ",
+    @"あ",
+    @"か",
+    @"さ",
+    @"た",
+    @"な",
+    @"は",
+    @"ま",
+    @"や",
+    @"ら",
+    @"わ",
 };
 
 @implementation MusicData
 
-// @ 0xc7054 — map a reading's first character to its gojuon row 0..9. Scans each
-// row's katakana membership set for the character; returns 9 (wa/other) if none
-// match, or -1 for a nil/empty input.
+// @ 0xc7054 — map a reading's first character to its gojuon row 0..9. Scans
+// each row's katakana membership set for the character; returns 9 (wa/other) if
+// none match, or -1 for a nil/empty input.
 + (int)GetYomiIndex:(NSString *)ch {
     if (ch == nil || ch.length == 0) {
         return -1;
@@ -102,26 +111,43 @@ static NSString *const kYomiLabels[10] = {
     return [MusicData getZipData:entry Path:self.filePath DecodeType:self.decodeType];
 }
 
-// The audio + chart payloads packed alongside "Info" in the .orb zip, each pulled
-// out (and BF-decoded) on demand. Ghidra: one-line getZipData: wrappers at
-// music @ 0xc78d8, musicPre @ 0xc78f4, sheetNormal @ 0xc7910, sheetHyper @ 0xc792c,
-// sheetEx @ 0xc7948 (the play scene loads "bgm" as the BGM and the difficulty's
-// sheet as the note chart).
-- (NSData *)music      { return [self getZipData:@"bgm"]; }
-- (NSData *)musicPre   { return [self getZipData:@"pre"]; }
-- (NSData *)sheetNormal { return [self getZipData:@"sheet_n"]; }
-- (NSData *)sheetHyper { return [self getZipData:@"sheet_h"]; }
-- (NSData *)sheetEx    { return [self getZipData:@"sheet_ex"]; }
+// The audio + chart payloads packed alongside "Info" in the .orb zip, each
+// pulled out (and BF-decoded) on demand. Ghidra: one-line getZipData: wrappers
+// at music @ 0xc78d8, musicPre @ 0xc78f4, sheetNormal @ 0xc7910, sheetHyper @
+// 0xc792c, sheetEx @ 0xc7948 (the play scene loads "bgm" as the BGM and the
+// difficulty's sheet as the note chart).
+- (NSData *)music {
+    return [self getZipData:@"bgm"];
+}
+- (NSData *)musicPre {
+    return [self getZipData:@"pre"];
+}
+- (NSData *)sheetNormal {
+    return [self getZipData:@"sheet_n"];
+}
+- (NSData *)sheetHyper {
+    return [self getZipData:@"sheet_h"];
+}
+- (NSData *)sheetEx {
+    return [self getZipData:@"sheet_ex"];
+}
 
-// The @2x artwork / name-image PNGs packed in the .orb zip, each pulled out (and
-// BF-decoded) on demand — plain getZipData: wrappers, no scaling. Ghidra:
+// The @2x artwork / name-image PNGs packed in the .orb zip, each pulled out
+// (and BF-decoded) on demand — plain getZipData: wrappers, no scaling. Ghidra:
 // artwork2xData @ 0xc7964 (entry "artwork2x"), musicNameImage2xData @ 0xc7980
 // (entry "title_2x"), artistNameImage2xData @ 0xc799c (entry "artist_2x").
-- (NSData *)artwork2xData         { return [self getZipData:@"artwork2x"]; }
-- (NSData *)musicNameImage2xData  { return [self getZipData:@"title_2x"]; }
-- (NSData *)artistNameImage2xData { return [self getZipData:@"artist_2x"]; }
+- (NSData *)artwork2xData {
+    return [self getZipData:@"artwork2x"];
+}
+- (NSData *)musicNameImage2xData {
+    return [self getZipData:@"title_2x"];
+}
+- (NSData *)artistNameImage2xData {
+    return [self getZipData:@"artist_2x"];
+}
 
-// @ 0xc7104 — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in place.
+// @ 0xc7104 — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in
+// place.
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);
     for (int i = 0; i < keyLen; i++) {
@@ -144,7 +170,7 @@ static NSString *const kYomiLabels[10] = {
     if (raw == nil) {
         return nil;
     }
-    NSDictionary *dict = RhParsePlistDict(raw);   // .orb payload is a property list
+    NSDictionary *dict = RhParsePlistDict(raw); // .orb payload is a property list
     if (dict == nil) {
         return nil;
     }
@@ -161,8 +187,9 @@ static NSString *const kYomiLabels[10] = {
     int h = [dict[@"Hyper"] intValue];
     int ex = [dict[@"Ex"] intValue];
 
-    // Validate difficulty ranges: Normal/Hyper 1..10, Ex 1..11. Ghidra emits these
-    // as unsigned range checks ((unsigned)(x - 1) < N), so a 0/negative level fails.
+    // Validate difficulty ranges: Normal/Hyper 1..10, Ex 1..11. Ghidra emits
+    // these as unsigned range checks ((unsigned)(x - 1) < N), so a 0/negative
+    // level fails.
     if (!((unsigned)(n - 1) < 10 && (unsigned)(h - 1) < 10 && (unsigned)(ex - 1) < 11)) {
         return nil;
     }
@@ -204,8 +231,8 @@ static NSString *const kYomiLabels[10] = {
     self.lvEx = ex;
 }
 
-// @ 0xc79b8 — default sort: by the music reading (plain compare:); ties broken so
-// the shorter reading sorts first (ascending by length).
+// @ 0xc79b8 — default sort: by the music reading (plain compare:); ties broken
+// so the shorter reading sorts first (ascending by length).
 - (NSComparisonResult)compare:(MusicData *)other {
     NSString *a = self.musicNameHira;
     NSString *b = other.musicNameHira;
@@ -229,7 +256,8 @@ static NSString *const kYomiLabels[10] = {
     return NSOrderedAscending;
 }
 
-// @ 0xc7a60 — by the music sort key (literal compare); ties broken by shorter first.
+// @ 0xc7a60 — by the music sort key (literal compare); ties broken by shorter
+// first.
 - (NSComparisonResult)compareMusicNameCustom:(MusicData *)other {
     NSString *a = self.musicSortName;
     NSString *b = other.musicSortName;
@@ -244,18 +272,19 @@ static NSString *const kYomiLabels[10] = {
     return NSOrderedAscending;
 }
 
-// @ 0xc7ad4 — by the artist sort key (literal compare); on a tie fall back to the
-// music-name-custom order.
+// @ 0xc7ad4 — by the artist sort key (literal compare); on a tie fall back to
+// the music-name-custom order.
 - (NSComparisonResult)compareArtistNameCustom:(MusicData *)other {
-    NSComparisonResult r =
-        [self.artistSortName compare:other.artistSortName options:NSLiteralSearch];
+    NSComparisonResult r = [self.artistSortName compare:other.artistSortName
+                                                options:NSLiteralSearch];
     if (r == NSOrderedSame) {
         return [self compareMusicNameCustom:other];
     }
     return r;
 }
 
-// @ 0xc7b3c — by the music reading (literal compare); ties broken by shorter first.
+// @ 0xc7b3c — by the music reading (literal compare); ties broken by shorter
+// first.
 - (NSComparisonResult)compareMusicNameHira:(MusicData *)other {
     NSString *a = self.musicNameHira;
     NSString *b = other.musicNameHira;
@@ -270,11 +299,11 @@ static NSString *const kYomiLabels[10] = {
     return NSOrderedAscending;
 }
 
-// @ 0xc7bb0 — by the artist reading (literal compare); on a tie fall back to the
-// music-name-hira order.
+// @ 0xc7bb0 — by the artist reading (literal compare); on a tie fall back to
+// the music-name-hira order.
 - (NSComparisonResult)compareArtistNameHira:(MusicData *)other {
-    NSComparisonResult r =
-        [self.artistNameHira compare:other.artistNameHira options:NSLiteralSearch];
+    NSComparisonResult r = [self.artistNameHira compare:other.artistNameHira
+                                                options:NSLiteralSearch];
     if (r == NSOrderedSame) {
         return [self compareMusicNameHira:other];
     }

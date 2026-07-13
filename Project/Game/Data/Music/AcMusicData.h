@@ -14,23 +14,23 @@
 
 @interface AcMusicData : NSObject
 
-@property (nonatomic) int acMusicId;            // Ghidra: acMusicId @ 0x666ec
-@property (nonatomic, copy) NSString *musicName;        // Ghidra: musicName @ 0x667b4
-@property (nonatomic, copy) NSString *musicNameKana;    // Ghidra: musicNameKana @ 0x667c8
-@property (nonatomic, copy) NSString *genreName;        // Ghidra: genreName @ 0x667dc
-@property (nonatomic, copy) NSString *genreNameKana;    // Ghidra: genreNameKana @ 0x667f0
-@property (nonatomic) int lvEasy;               // Ghidra: lvEasy @ 0x66700
-@property (nonatomic) int lvNormal;             // Ghidra: lvNormal @ 0x66714
-@property (nonatomic) int lvHyper;              // Ghidra: lvHyper @ 0x66728
-@property (nonatomic) int lvEx;                 // Ghidra: lvEx @ 0x6673c
-@property (nonatomic, copy) NSString *bpmEasy;         // Ghidra: bpmEasy @ 0x66750
-@property (nonatomic, copy) NSString *bpmNormal;       // Ghidra: bpmNormal @ 0x66764
-@property (nonatomic, copy) NSString *bpmHyper;        // Ghidra: bpmHyper @ 0x66778
-@property (nonatomic, copy) NSString *bpmEx;           // Ghidra: bpmEx @ 0x6678c
-@property (nonatomic) int category;             // clamped to 0..23; Ghidra: category @ 0x667a0
-@property (nonatomic, copy) NSString *filePath;
-@property (nonatomic, copy) NSString *musicNameInitial;   // Ghidra: musicNameInitial @ 0x66804
-@property (nonatomic, copy) NSString *genreNameInitial;   // Ghidra: genreNameInitial @ 0x66818
+@property(nonatomic) int acMusicId;                 // Ghidra: acMusicId @ 0x666ec
+@property(nonatomic, copy) NSString *musicName;     // Ghidra: musicName @ 0x667b4
+@property(nonatomic, copy) NSString *musicNameKana; // Ghidra: musicNameKana @ 0x667c8
+@property(nonatomic, copy) NSString *genreName;     // Ghidra: genreName @ 0x667dc
+@property(nonatomic, copy) NSString *genreNameKana; // Ghidra: genreNameKana @ 0x667f0
+@property(nonatomic) int lvEasy;                    // Ghidra: lvEasy @ 0x66700
+@property(nonatomic) int lvNormal;                  // Ghidra: lvNormal @ 0x66714
+@property(nonatomic) int lvHyper;                   // Ghidra: lvHyper @ 0x66728
+@property(nonatomic) int lvEx;                      // Ghidra: lvEx @ 0x6673c
+@property(nonatomic, copy) NSString *bpmEasy;       // Ghidra: bpmEasy @ 0x66750
+@property(nonatomic, copy) NSString *bpmNormal;     // Ghidra: bpmNormal @ 0x66764
+@property(nonatomic, copy) NSString *bpmHyper;      // Ghidra: bpmHyper @ 0x66778
+@property(nonatomic, copy) NSString *bpmEx;         // Ghidra: bpmEx @ 0x6678c
+@property(nonatomic) int category;                  // clamped to 0..23; Ghidra: category @ 0x667a0
+@property(nonatomic, copy) NSString *filePath;
+@property(nonatomic, copy) NSString *musicNameInitial; // Ghidra: musicNameInitial @ 0x66804
+@property(nonatomic, copy) NSString *genreNameInitial; // Ghidra: genreNameInitial @ 0x66818
 
 // Decode a record from its .orb path (nil on id mismatch).
 // Ghidra: +[AcMusicData dataWithPath:ID:] @ 0x65e2c
@@ -38,10 +38,9 @@
 
 // The decoded note chart for each difficulty tier — the ZIP entries "sheet_es"/
 // "sheet_n"/"sheet_h"/"sheet_ex" of the .acv, BF-decrypted (4-byte header +
-// 20-byte note records; see NoteMng). The play loader picks one by difficulty and
-// hands it to -[NoteMng initPlayDataWithData:].
-// Ghidra: sheetEasy @ 0x66418 / sheetNormal @ 0x66434 / sheetHyper @ 0x66450 /
-// sheetEx @ 0x6646c.
+// 20-byte note records; see NoteMng). The play loader picks one by difficulty
+// and hands it to -[NoteMng initPlayDataWithData:]. Ghidra: sheetEasy @ 0x66418
+// / sheetNormal @ 0x66434 / sheetHyper @ 0x66450 / sheetEx @ 0x6646c.
 - (NSData *)sheetEasy;
 - (NSData *)sheetNormal;
 - (NSData *)sheetHyper;
@@ -55,8 +54,8 @@
 
 // Sort comparators (NSComparisonResult), used with sortUsingSelector:. The kana
 // name variants tie-break a shorter reading before a longer one; the "Custom"
-// variants compare with NSLiteralSearch and genre defers to music name on a tie.
-// Ghidra: compare: @ 0x66488 / compareAcMusicId: @ 0x664f8 /
+// variants compare with NSLiteralSearch and genre defers to music name on a
+// tie. Ghidra: compare: @ 0x66488 / compareAcMusicId: @ 0x664f8 /
 // compareMusicNameCustom: @ 0x66530 / compareGenreNameCustom: @ 0x665a4 /
 // compareLvEasy: @ 0x6660c / compareLvNormal: @ 0x66644 /
 // compareLvHyper: @ 0x6667c / compareLvEx: @ 0x666b4.

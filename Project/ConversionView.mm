@@ -2,10 +2,11 @@
 //  ConversionView.mm
 //  pop'n rhythmin
 //
-//  See ConversionView.h. Reconstructed from Ghidra project rb420, program PopnRhythmin:
+//  See ConversionView.h. Reconstructed from Ghidra project rb420, program
+//  PopnRhythmin:
 //    init                                    @ 0x1be48
-//    dealloc                                 @ 0x1be84  (chains to super only -> ARC-omitted)
-//    viewDidLoad                             @ 0x1beb0
+//    dealloc                                 @ 0x1be84  (chains to super only
+//    -> ARC-omitted) viewDidLoad                             @ 0x1beb0
 //    didReceiveMemoryWarning                 @ 0x1ca9c  (super-only)
 //    viewDidUnload                           @ 0x1cac8  (super-only)
 //    viewWillAppear:                         @ 0x1caf4  (super-only)
@@ -26,27 +27,32 @@
 //  Objective-C++ for the C++ neEngine / neSceneManager singletons. ARC.
 //
 //  Honesty notes:
-//   - The caution / how-to bodies are NOT embedded: -viewDidLoad loads them from
-//     the bundle via -[NSBundle pathForResource:@"caution"/@"howto" ofType:@"txt"]
-//     + -[NSData dataWithContentsOfFile:] + UTF-8 -[NSString initWithData:encoding:].
-//     The two section captions and every alert string are exact UTF-16 CFString
-//     decodes; the ASCII CFStrings ("friman_bg", "conv_bt_yes", "navi_btn_back",
-//     "settings_navbar", "yyyy-MM-dd HH:mm:ss", "param=%@", "json=%@", "%06d",
-//     "application/json", and the JSON dictionary keys) are exact.
+//   - The caution / how-to bodies are NOT embedded: -viewDidLoad loads them
+//   from
+//     the bundle via -[NSBundle pathForResource:@"caution"/@"howto"
+//     ofType:@"txt"]
+//     + -[NSData dataWithContentsOfFile:] + UTF-8 -[NSString
+//     initWithData:encoding:]. The two section captions and every alert string
+//     are exact UTF-16 CFString decodes; the ASCII CFStrings ("friman_bg",
+//     "conv_bt_yes", "navi_btn_back", "settings_navbar", "yyyy-MM-dd HH:mm:ss",
+//     "param=%@", "json=%@", "%06d", "application/json", and the JSON
+//     dictionary keys) are exact.
 //   - -viewDidLoad's sub-view frames come from a heavily NEON-spilled vector
-//     sequence; the two text-view y offsets (+50, +150) and the label frames are
-//     exact float decodes, but the per-device label origin nudge and the OK-button
-//     centring are best-effort (flagged inline).
+//     sequence; the two text-view y offsets (+50, +150) and the label frames
+//     are exact float decodes, but the per-device label origin nudge and the
+//     OK-button centring are best-effort (flagged inline).
 //   - -init stores self into the delegate ivar (a plain pointer store); the
 //     container immediately overrides it via -setDelegate:. Kept faithfully.
-//   - The success/error CommonAlertViews are alloc/init/show/release in the binary
-//     (they retain themselves by adding to the root scene view in -show); ARC keeps
-//     the alloc, drops the manual release.
+//   - The success/error CommonAlertViews are alloc/init/show/release in the
+//   binary
+//     (they retain themselves by adding to the root scene view in -show); ARC
+//     keeps the alloc, drops the manual release.
 //   - -dealloc only chains to [super dealloc]; it does NOT cancel an in-flight
 //     _downloader, so it is ARC-omitted (no added behaviour to preserve).
-//   - _indicator is never assigned in the reconstructed methods (only -stopAnimating
-//     is sent to it, a no-op while nil); its spinner is presumably driven by the
-//     container. Declared for faithfulness.
+//   - _indicator is never assigned in the reconstructed methods (only
+//   -stopAnimating
+//     is sent to it, a no-op while nil); its spinner is presumably driven by
+//     the container. Declared for faithfulness.
 //   - -commonAlertView:...: the "mail" action sends -GotoMailWithText: to the
 //     MainViewController *class* object (exact from the decomp: the classref is
 //     loaded into the receiver and never replaced); cast through id so the
@@ -54,26 +60,26 @@
 //
 
 #import "ConversionView.h"
-#import "ScoreData.h"
-#import "TreasureData.h"
 #import "CharaTicketData.h"
 #import "MusicManager.h"
+#import "ScoreData.h"
+#import "TreasureData.h"
 
-#import "AppDelegate.h"        // +appDelegate -> uuId / managedObjectContext
-#import "AppFont.h"            // AppFontName() == getFontNameDFSoGei(), AppMaruFontName() == getFontNameDFMaruGothic()
+#import "AppDelegate.h" // +appDelegate -> uuId / managedObjectContext
+#import "AppFont.h" // AppFontName() == getFontNameDFSoGei(), AppMaruFontName() == getFontNameDFMaruGothic()
 #import "CommonAlertView.h"
 #import "Downloader.h"
 #import "MainViewController.h" // -GotoMailWithText: / isGotoTitle / -AcceptPolicyEndCallBack (root)
 #import "StoreUtil.h"          // +getConvertCodeURL
 #import "UserSettingData.h"    // player save accessors
 
-#import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
 
 @implementation ConversionView {
-    BOOL isAnimationing;                  // +? close-fade guard
-    UIActivityIndicatorView *_indicator;  // spinner (driven by the container; see notes)
-    Downloader *_downloader;              // in-flight convert-code POST (nil when idle)
-    NSString *_convertCodeStr;            // "%06d" formatted issued pass
+    BOOL isAnimationing;                 // +? close-fade guard
+    UIActivityIndicatorView *_indicator; // spinner (driven by the container; see notes)
+    Downloader *_downloader;             // in-flight convert-code POST (nil when idle)
+    NSString *_convertCodeStr;           // "%06d" formatted issued pass
 }
 
 @synthesize delegate = _delegate;
@@ -89,11 +95,11 @@
     return self;
 }
 
-// dealloc @ 0x1be84 — ARC-omitted (chains to [super dealloc] only; does not cancel
-// the in-flight downloader).
+// dealloc @ 0x1be84 — ARC-omitted (chains to [super dealloc] only; does not
+// cancel the in-flight downloader).
 
-// @ 0x1beb0 — build the backdrop, the two captioned text sections (caution / how-to),
-// the OK ("issue pass") button, and the nav-bar back button.
+// @ 0x1beb0 — build the backdrop, the two captioned text sections (caution /
+// how-to), the OK ("issue pass") button, and the nav-bar back button.
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -111,7 +117,7 @@
     }
 
     UIColor *labelColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
-    UIColor *bodyColor  = [UIColor colorWithRed:0.3f green:0.3f blue:0.3f alpha:1.0f];
+    UIColor *bodyColor = [UIColor colorWithRed:0.3f green:0.3f blue:0.3f alpha:1.0f];
 
     // --- Section 1 caption: 注意 ("Caution") ---
     UILabel *cautionLabel = [[UILabel alloc] init];
@@ -124,7 +130,8 @@
     cautionLabel.minimumScaleFactor = 10.0f;
     cautionLabel.frame = CGRectMake(0.0f, 10.0f, 272.0f, 50.0f);
     if (!isPad) {
-        // Phone origin nudge: +24.0 x and y (vmov.f32 d16,#0x41c00000 = 24.0). Byte-verified.
+        // Phone origin nudge: +24.0 x and y (vmov.f32 d16,#0x41c00000 = 24.0).
+        // Byte-verified.
         CGRect f = cautionLabel.frame;
         f.origin.x += 24.0f;
         f.origin.y += 24.0f;
@@ -134,12 +141,12 @@
     [self.view addSubview:cautionLabel];
 
     // --- Section 1 body: bundled caution.txt (UTF-8), read-only ---
-    UITextView *cautionText =
-        [[UITextView alloc] initWithFrame:CGRectMake(vf.origin.x, vf.origin.y + 50.0f,
-                                                     vf.size.width, vf.size.height)];
+    UITextView *cautionText = [[UITextView alloc]
+        initWithFrame:CGRectMake(vf.origin.x, vf.origin.y + 50.0f, vf.size.width, vf.size.height)];
     NSString *cautionPath = [[NSBundle mainBundle] pathForResource:@"caution" ofType:@"txt"];
-    NSString *cautionBody = [[NSString alloc]
-        initWithData:[NSData dataWithContentsOfFile:cautionPath] encoding:NSUTF8StringEncoding];
+    NSString *cautionBody =
+        [[NSString alloc] initWithData:[NSData dataWithContentsOfFile:cautionPath]
+                              encoding:NSUTF8StringEncoding];
     cautionText.backgroundColor = [UIColor clearColor];
     cautionText.editable = NO;
     cautionText.text = cautionBody;
@@ -163,7 +170,8 @@
     howtoLabel.frame = CGRectMake(0.0f, 160.0f, 272.0f, 50.0f);
     howtoLabel.text = @"機種変更方法";
     if (!isPad) {
-        CGRect f = howtoLabel.frame;   // phone origin nudge: +24.0 x and y (0x41c00000). Byte-verified.
+        CGRect f = howtoLabel.frame; // phone origin nudge: +24.0 x and y
+                                     // (0x41c00000). Byte-verified.
         f.origin.x += 24.0f;
         f.origin.y += 24.0f;
         howtoLabel.frame = f;
@@ -171,12 +179,11 @@
     [self.view addSubview:howtoLabel];
 
     // --- Section 2 body: bundled howto.txt (UTF-8), read-only ---
-    UITextView *howtoText =
-        [[UITextView alloc] initWithFrame:CGRectMake(vf.origin.x, vf.origin.y + 200.0f,
-                                                     vf.size.width, vf.size.height)];
+    UITextView *howtoText = [[UITextView alloc]
+        initWithFrame:CGRectMake(vf.origin.x, vf.origin.y + 200.0f, vf.size.width, vf.size.height)];
     NSString *howtoPath = [[NSBundle mainBundle] pathForResource:@"howto" ofType:@"txt"];
-    NSString *howtoBody = [[NSString alloc]
-        initWithData:[NSData dataWithContentsOfFile:howtoPath] encoding:NSUTF8StringEncoding];
+    NSString *howtoBody = [[NSString alloc] initWithData:[NSData dataWithContentsOfFile:howtoPath]
+                                                encoding:NSUTF8StringEncoding];
     howtoText.backgroundColor = [UIColor clearColor];
     howtoText.editable = NO;
     howtoText.text = howtoBody;
@@ -193,12 +200,14 @@
     UIButton *okButton = [[UIButton alloc] init];
     okButton.frame = CGRectMake(0.0f, 0.0f, okImg.size.width, okImg.size.height);
     [okButton setBackgroundImage:okImg forState:UIControlStateNormal];
-    [okButton addTarget:self action:@selector(okButtonFunc)
-       forControlEvents:UIControlEventTouchUpInside];
+    [okButton addTarget:self
+                  action:@selector(okButtonFunc)
+        forControlEvents:UIControlEventTouchUpInside];
 
     const float sysVer = [UIDevice currentDevice].systemVersion.floatValue;
     if (isPad) {
-        // Pad: fixed centre (y differs slightly pre/post iOS 7). Best-effort geometry.
+        // Pad: fixed centre (y differs slightly pre/post iOS 7). Best-effort
+        // geometry.
         okButton.center = CGPointMake(136.0f, (sysVer >= 7.0f) ? 180.0f : 190.0f);
     } else if (sysVer >= 7.0f) {
         // Phone iOS 7+: centred on the how-to content, near y = 200. Best-effort.
@@ -216,8 +225,9 @@
         UIButton *backBtn = [[UIButton alloc]
             initWithFrame:CGRectMake(-10.0f, 0.0f, backImg.size.width, backImg.size.height)];
         [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-        [backBtn addTarget:self action:@selector(backButtonFunc)
-          forControlEvents:UIControlEventTouchUpInside];
+        [backBtn addTarget:self
+                      action:@selector(backButtonFunc)
+            forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem =
             [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     } else {
@@ -239,7 +249,7 @@
 
 // @ 0x1cbb0 — back button: cancel SE, restore the settings nav-bar art, pop.
 - (void)backButtonFunc {
-    neEngine::playSystemSe(2);   // cancel/back SE
+    neEngine::playSystemSe(2); // cancel/back SE
 
     [self.navigationController.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
@@ -249,14 +259,15 @@
 
 // @ 0x1cc4c — OK ("issue pass") tapped: decide SE, confirm dialog (tag 0).
 - (void)okButtonFunc {
-    neEngine::playSystemSe(1);   // decide/confirm SE
+    neEngine::playSystemSe(1); // decide/confirm SE
 
     CommonAlertView *alert = [[CommonAlertView alloc]
-              initWithTitle:@"機種変更"
-                    message:@"注意事項に同意の上、機種変更パスの発行を行いますか？\n（パス発行後は本端末のプレイデータは初期化されます）"
-                   delegate:self
-          cancelButtonTitle:@"キャンセル"
-          otherButtonTitles:@"パス発行"];
+            initWithTitle:@"機種変更"
+                  message:@"注意事項に同意の上、機種変更パスの発行を行いますか？\n（"
+                          @"パス発行後は本端末のプレイデータは初期化されます）"
+                 delegate:self
+        cancelButtonTitle:@"キャンセル"
+        otherButtonTitles:@"パス発行"];
     [alert setTag:0];
     [alert show];
 }
@@ -281,9 +292,11 @@
     if (index == 0) {
         // "Send mail": compose a body with the player id + issued pass and hand it
         // to MainViewController (sent to the class object — faithful, see notes).
-        NSString *body = [NSString stringWithFormat:
-            @"プレーヤーID:%@\n機種変更パス:%@\n\n機種変更先で必要となりますので、必ずメモをとってください。",
-            [UserSettingData playerId], [UserSettingData convertCode]];
+        NSString *body = [NSString
+            stringWithFormat:@"プレーヤーID:%@\n機種変更パス:%@"
+                             @"\n\n機種変更先で必要となりますので、必ずメモをとってください。",
+                             [UserSettingData playerId],
+                             [UserSettingData convertCode]];
         body = [body stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
         [(id)[MainViewController class] GotoMailWithText:body];
     } else if (index == 1) {
@@ -329,12 +342,17 @@
         [params setObject:[fmt stringFromDate:lastUpdate] forKey:@"last_update_sum_purchase"];
     }
     [params setObject:[[AppDelegate appDelegate] uuId] forKey:@"uuid"];
-    [params setObject:[NSNumber numberWithInt:[UserSettingData sumPurchase]] forKey:@"sum_purchase"];
-    [params setObject:[NSNumber numberWithInt:[UserSettingData charaTicket]] forKey:@"chara_ticket_cnt"];
-    [params setObject:[NSNumber numberWithInt:[UserSettingData treasurePoint]] forKey:@"treasure_point"];
+    [params setObject:[NSNumber numberWithInt:[UserSettingData sumPurchase]]
+               forKey:@"sum_purchase"];
+    [params setObject:[NSNumber numberWithInt:[UserSettingData charaTicket]]
+               forKey:@"chara_ticket_cnt"];
+    [params setObject:[NSNumber numberWithInt:[UserSettingData treasurePoint]]
+               forKey:@"treasure_point"];
     [params setObject:[NSNumber numberWithInt:spPresentFlag] forKey:@"sp_present_flag"];
-    [params setObject:[NSNumber numberWithInt:[UserSettingData getOpenedLoginBonusId]] forKey:@"opened_login_bonus_id"];
-    [params setObject:[NSNumber numberWithInt:[UserSettingData getLoginBonusCnt]] forKey:@"local_login_bonus_cnt"];
+    [params setObject:[NSNumber numberWithInt:[UserSettingData getOpenedLoginBonusId]]
+               forKey:@"opened_login_bonus_id"];
+    [params setObject:[NSNumber numberWithInt:[UserSettingData getLoginBonusCnt]]
+               forKey:@"local_login_bonus_cnt"];
 
     // Owned characters: [{ idx, data }, ...]
     NSMutableArray *gotChara = [NSMutableArray array];
@@ -372,7 +390,8 @@
 
     // Treasure (map) progress.
     NSMutableArray *treasureArray = [NSMutableArray array];
-    NSArray *treasures = [TreasureData getAllTreasureData:[[AppDelegate appDelegate] managedObjectContext]];
+    NSArray *treasures =
+        [TreasureData getAllTreasureData:[[AppDelegate appDelegate] managedObjectContext]];
     for (NSUInteger i = 0; i < treasures.count; i++) {
         TreasureData *t = [treasures objectAtIndex:i];
         NSMutableDictionary *entry = [NSMutableDictionary dictionary];
@@ -391,7 +410,8 @@
 
     // Purchased chara tickets.
     NSMutableArray *ticketArray = [NSMutableArray array];
-    NSArray *tickets = [CharaTicketData getAllData:[[AppDelegate appDelegate] managedObjectContext]];
+    NSArray *tickets =
+        [CharaTicketData getAllData:[[AppDelegate appDelegate] managedObjectContext]];
     for (NSUInteger i = 0; i < tickets.count; i++) {
         CharaTicketData *c = [tickets objectAtIndex:i];
         NSMutableDictionary *entry = [NSMutableDictionary dictionary];
@@ -402,25 +422,25 @@
 
     NSError *jsonError = nil;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:params
-                                                      options:NSJSONWritingPrettyPrinted
-                                                        error:&jsonError];
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:&jsonError];
     NSString *jsonStr = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     NSString *body = [NSString stringWithFormat:@"param=%@", jsonStr];
 
     if (jsonError == nil) {
         NSLog(@"json=%@", [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
-        _downloader = [[Downloader alloc]
-                          initWithURL:[StoreUtil getConvertCodeURL]
-                             delegate:self
-                                 Post:[body dataUsingEncoding:NSUTF8StringEncoding]
-                          ContextType:@"application/json"];
+        _downloader = [[Downloader alloc] initWithURL:[StoreUtil getConvertCodeURL]
+                                             delegate:self
+                                                 Post:[body dataUsingEncoding:NSUTF8StringEncoding]
+                                          ContextType:@"application/json"];
         [_downloader startDownloading];
     } else {
         NSLog(@"%@", jsonError);
     }
 }
 
-// @ 0x1da60 — POST succeeded: parse the JSON, show the issued pass (or an error).
+// @ 0x1da60 — POST succeeded: parse the JSON, show the issued pass (or an
+// error).
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     id errorCode = [json objectForKey:@"ErrorCode"];
@@ -433,9 +453,11 @@
         _convertCodeStr = codeStr;
         [UserSettingData saveConvertCode:codeStr];
 
-        NSString *message = [NSString stringWithFormat:
-            @"プレーヤーID:%@\n機種変更パス:%@\n\n機種変更先で必要となりますので、必ずメモをとってください。",
-            [UserSettingData playerId], _convertCodeStr];
+        NSString *message = [NSString
+            stringWithFormat:@"プレーヤーID:%@\n機種変更パス:%@"
+                             @"\n\n機種変更先で必要となりますので、必ずメモをとってください。",
+                             [UserSettingData playerId],
+                             _convertCodeStr];
         alert = [[CommonAlertView alloc] initWithTitle:@"機種変更"
                                                message:message
                                               delegate:self
@@ -444,7 +466,8 @@
         [alert setTag:1];
     } else {
         alert = [[CommonAlertView alloc] initWithTitle:@"機種変更"
-                                               message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
+                                               message:@"通信に失敗しました。\n電波状態"
+                                                       @"の良い場所でやり直して下さい。"
                                               delegate:nil
                                      cancelButtonTitle:nil
                                      otherButtonTitles:@"OK"];
@@ -459,16 +482,18 @@
     _downloader = nil;
     [_indicator stopAnimating];
 
-    CommonAlertView *alert = [[CommonAlertView alloc]
-              initWithTitle:@"機種変更"
-                    message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-                   delegate:nil
-          cancelButtonTitle:nil
-          otherButtonTitles:@"OK"];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"機種変更"
+                                       message:@"通信に失敗しました。\n電波状態の"
+                                               @"良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
-// @ 0x1dd50 — fade the panel out over 0.3s; endCloseAnimation fires when it stops.
+// @ 0x1dd50 — fade the panel out over 0.3s; endCloseAnimation fires when it
+// stops.
 - (void)startCloseAnimation {
     if (isAnimationing) {
         return;
@@ -482,7 +507,8 @@
     [UIView commitAnimations];
 }
 
-// @ 0x1de20 — close fade finished: tear down and notify the root view controller.
+// @ 0x1de20 — close fade finished: tear down and notify the root view
+// controller.
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();

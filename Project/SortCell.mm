@@ -17,13 +17,14 @@ typedef struct {
 
 // @ 0xc5418 — plain non-selectable cell; content bound by the VC on reuse.
 @implementation SortCell {
-    NSValue *_sortVal;              // the bound row value
-    UIImageView *_bgImgView;        // base plate
-    UIImageView *_titleImageView;   // sort-key title art
-    UIImageView *_checkImageView;   // check-mark
+    NSValue *_sortVal;            // the bound row value
+    UIImageView *_bgImgView;      // base plate
+    UIImageView *_titleImageView; // sort-key title art
+    UIImageView *_checkImageView; // check-mark
 }
 
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
     }
@@ -35,10 +36,12 @@ typedef struct {
 // @ 0xc548c — rebuild the row from an NSValue-wrapped sort-option record.
 - (void)setSortData:(NSValue *)sortValue {
     // Sort-key title images, indexed by sortType (0..5).
-    static NSString *const kSortTitle[6] = {
-        @"m_sort_text_title", @"m_sort_text_art", @"m_sort_text_lvn",
-        @"m_sort_text_lvh", @"m_sort_text_lvex", @"m_sort_text_nodata"
-    };
+    static NSString *const kSortTitle[6] = {@"m_sort_text_title",
+                                            @"m_sort_text_art",
+                                            @"m_sort_text_lvn",
+                                            @"m_sort_text_lvh",
+                                            @"m_sort_text_lvex",
+                                            @"m_sort_text_nodata"};
 
     SortRowValue v;
     [sortValue getValue:&v];
@@ -80,9 +83,8 @@ typedef struct {
 
     // Sort-key title art.
     UIImage *titleImage = [UIImage imageNamed:kSortTitle[v.sortType]];
-    _titleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(27.0f, 18.0f,
-                                                                    titleImage.size.width,
-                                                                    titleImage.size.height)];
+    _titleImageView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(27.0f, 18.0f, titleImage.size.width, titleImage.size.height)];
     [_titleImageView setImage:titleImage];
     if (!isPad) {
         [self.contentView addSubview:_titleImageView];
@@ -91,10 +93,10 @@ typedef struct {
     }
 
     // Check-mark.
-    UIImage *checkImage = [UIImage imageNamed:(v.isChecked ? @"m_sort_check_01" : @"m_sort_check_00")];
-    _checkImageView = [[UIImageView alloc] initWithFrame:CGRectMake(253.0f, 15.0f,
-                                                                    checkImage.size.width,
-                                                                    checkImage.size.height)];
+    UIImage *checkImage =
+        [UIImage imageNamed:(v.isChecked ? @"m_sort_check_01" : @"m_sort_check_00")];
+    _checkImageView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(253.0f, 15.0f, checkImage.size.width, checkImage.size.height)];
     [_checkImageView setImage:checkImage];
     if (!isPad) {
         [self.contentView addSubview:_checkImageView];

@@ -12,8 +12,7 @@
 @interface CharaTicketData (Store)
 
 // YES if a ticket row exists for `productId`.  Ghidra: @ 0xe2c6c
-+ (BOOL)isExistData:(NSString *)productId
-    inManagedObjectContext:(NSManagedObjectContext *)context;
++ (BOOL)isExistData:(NSString *)productId inManagedObjectContext:(NSManagedObjectContext *)context;
 
 // Ticket row for `productId` (last match, or nil).  Ghidra: @ 0xe2c98
 + (CharaTicketData *)getDataFromProductId:(NSString *)productId

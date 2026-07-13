@@ -42,10 +42,13 @@
     CCCryptorStatus status = CCCrypt(op,
                                      kCCAlgorithmAES128,
                                      kCCOptionPKCS7Padding,
-                                     keyBytes, kCCKeySizeAES128,
+                                     keyBytes,
+                                     kCCKeySizeAES128,
                                      ivBytes,
-                                     self.bytes, dataLength,
-                                     dataOut, bufferSize,
+                                     self.bytes,
+                                     dataLength,
+                                     dataOut,
+                                     bufferSize,
                                      &outMoved);
     if (status == kCCSuccess) {
         // Hand the malloc'd buffer to NSData (freed with free() on dealloc).

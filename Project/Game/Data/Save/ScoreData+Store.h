@@ -18,8 +18,7 @@
 // Fetch the record for `musicId`, creating a fresh (reset) one if absent.
 // If an existing record fails its integrity check it is reset in place.
 // Ghidra: +[ScoreData getScoreData:inManagedObjectContext:] @ 0x6da30
-+ (ScoreData *)getScoreData:(int)musicId
-       inManagedObjectContext:(NSManagedObjectContext *)context;
++ (ScoreData *)getScoreData:(int)musicId inManagedObjectContext:(NSManagedObjectContext *)context;
 
 // Insert a new record for `musicId`, reset it to defaults, and save.
 // Ghidra: +[ScoreData recordWithMusicId:inManagedObjectContext:] @ 0x6ded0

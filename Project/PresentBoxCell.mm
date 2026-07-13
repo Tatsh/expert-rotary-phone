@@ -6,16 +6,17 @@
 //
 
 #import "PresentBoxCell.h"
-#import "AppFont.h"          // AppFontName / AppMaruFontName
-#import "neEngineBridge.h"   // neSceneManager::isPadDisplay
+#import "AppFont.h"        // AppFontName / AppMaruFontName
+#import "neEngineBridge.h" // neSceneManager::isPadDisplay
 
-// The NSValue payload getValue: fills for a present row. The leading id is unused by the
-// cell; the type selects the icon/format, num is the quantity and info is the blurb.
+// The NSValue payload getValue: fills for a present row. The leading id is
+// unused by the cell; the type selects the icon/format, num is the quantity and
+// info is the blurb.
 typedef struct {
-    int presentId;                       // +0  server present id (unused by the cell)
-    int type;                            // +4  0 = treasure point, 1 = character ticket
-    int num;                             // +8  quantity
-    NSString *__unsafe_unretained info;  // +0xc one-line description shown in _lblInfo
+    int presentId;                      // +0  server present id (unused by the cell)
+    int type;                           // +4  0 = treasure point, 1 = character ticket
+    int num;                            // +8  quantity
+    NSString *__unsafe_unretained info; // +0xc one-line description shown in _lblInfo
 } PresentData;
 
 @implementation PresentBoxCell {
@@ -27,11 +28,13 @@ typedef struct {
 
 @synthesize getBtn = _getBtn;
 
-// .cxx_construct @ 0x6ed48 — compiler-emitted C++ ivar constructor; not hand-written.
+// .cxx_construct @ 0x6ed48 — compiler-emitted C++ ivar constructor; not
+// hand-written.
 
-// @ 0x6e3ac — non-selectable, clear background, no background view (the gift artwork
-// is added by the VC).
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+// @ 0x6e3ac — non-selectable, clear background, no background view (the gift
+// artwork is added by the VC).
+- (instancetype)initWithStyle:(UITableViewCellStyle)style
+              reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
         self.selectionStyle = UITableViewCellSelectionStyleNone;
         self.backgroundColor = [UIColor clearColor];
@@ -43,21 +46,34 @@ typedef struct {
 // dealloc @ 0x6e438 — ARC-omitted (object ivars only; super-only teardown).
 // setSelected:animated: @ 0x6e464 — super-only override, omitted.
 
-// @ 0x6e494 — rebuild the row from an NSValue-wrapped present record: a banner sized to
-// its artwork, a treasure/character icon, an amount label, a one-line info label and an
-// "acquire" button. Every element is torn down and recreated on each call. On iPad the
-// banner is centred in the content view (with a pre-iOS 7 nudge) instead of becoming the
-// cell's backgroundView; the "acquire" button also shifts left pre-iOS 7.
+// @ 0x6e494 — rebuild the row from an NSValue-wrapped present record: a banner
+// sized to its artwork, a treasure/character icon, an amount label, a one-line
+// info label and an "acquire" button. Every element is torn down and recreated
+// on each call. On iPad the banner is centred in the content view (with a
+// pre-iOS 7 nudge) instead of becoming the cell's backgroundView; the "acquire"
+// button also shifts left pre-iOS 7.
 - (void)setPresentData:(NSValue *)presentData {
     BOOL isPad = neSceneManager::isPadDisplay();
     CGFloat sysVer = UIDevice.currentDevice.systemVersion.floatValue;
 
     [presentData getValue:&_presentData];
 
-    if (_imageViewIcon != nil) { [_imageViewIcon removeFromSuperview]; _imageViewIcon = nil; }
-    if (_lbl != nil)          { [_lbl removeFromSuperview];          _lbl = nil; }
-    if (_lblInfo != nil)      { [_lblInfo removeFromSuperview];      _lblInfo = nil; }
-    if (_getBtn != nil)       { [_getBtn removeFromSuperview];       _getBtn = nil; }
+    if (_imageViewIcon != nil) {
+        [_imageViewIcon removeFromSuperview];
+        _imageViewIcon = nil;
+    }
+    if (_lbl != nil) {
+        [_lbl removeFromSuperview];
+        _lbl = nil;
+    }
+    if (_lblInfo != nil) {
+        [_lblInfo removeFromSuperview];
+        _lblInfo = nil;
+    }
+    if (_getBtn != nil) {
+        [_getBtn removeFromSuperview];
+        _getBtn = nil;
+    }
 
     // Banner background, sized to its artwork.
     UIImageView *banner = [[UIImageView alloc] initWithFrame:self.bounds];
@@ -70,7 +86,8 @@ typedef struct {
     } else {
         [self.contentView addSubview:banner];
         banner.center = CGPointMake(170.0f, bannerImg.size.height * 0.5f);
-        // Pre-iOS 7 nudged the banner 10pt left (original: recovered vector frame math).
+        // Pre-iOS 7 nudged the banner 10pt left (original: recovered vector frame
+        // math).
         if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {
             CGRect f = banner.frame;
             f.origin.x -= 10.0f;
@@ -97,7 +114,7 @@ typedef struct {
     _lbl.highlightedTextColor = [UIColor whiteColor];
     _lbl.font = [UIFont fontWithName:AppFontName() size:12.0f];
     _lbl.adjustsFontSizeToFitWidth = YES;
-    _lbl.minimumScaleFactor = 8.0f;   // matches the binary literal (0x41000000)
+    _lbl.minimumScaleFactor = 8.0f; // matches the binary literal (0x41000000)
     if (_presentData.type == 1) {
         _lbl.text = [NSString stringWithFormat:@"キャラチケ %d枚", _presentData.num];
     } else if (_presentData.type == 0) {
@@ -112,7 +129,7 @@ typedef struct {
     _lblInfo.highlightedTextColor = [UIColor whiteColor];
     _lblInfo.font = [UIFont fontWithName:AppMaruFontName() size:8.0f];
     _lblInfo.adjustsFontSizeToFitWidth = YES;
-    _lblInfo.minimumScaleFactor = 8.0f;   // matches the binary literal (0x41000000)
+    _lblInfo.minimumScaleFactor = 8.0f; // matches the binary literal (0x41000000)
     _lblInfo.text = _presentData.info;
     [self.contentView addSubview:_lblInfo];
 

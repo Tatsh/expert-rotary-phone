@@ -3,22 +3,22 @@
 //  pop'n rhythmin
 //
 //  See InputKIDViewCtrl.h. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager / neAppEventCenter
-//  singletons (decide / cancel SE, pad-vs-phone branch, and the login-context writes
-//  the link flow performs). Image / alert-string literals are the exact values
-//  recovered from the __cfstring table.
+//  PopnRhythmin. Objective-C++ for the neEngine / neSceneManager /
+//  neAppEventCenter singletons (decide / cancel SE, pad-vs-phone branch, and
+//  the login-context writes the link flow performs). Image / alert-string
+//  literals are the exact values recovered from the __cfstring table.
 //
 
 #import "InputKIDViewCtrl.h"
 
-#import <QuartzCore/QuartzCore.h>  // CALayer cornerRadius (spinner backdrop)
+#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius (spinner backdrop)
 
-#import "AppDelegate.h"        // +appDelegate / -uuId (device uuid for the request)
-#import "StoreUtil.h"          // +linkKidURL, urlEncodeString()
-#import "TouchableScrollView.h"  // the tap-through form host
-#import "UserSettingData.h"    // +konamiId / +saveKonamiId:
-#import "neEngineBridge.h"     // neEngine::playSystemSe, neSceneManager / neAppEventCenter
+#import "AppDelegate.h"         // +appDelegate / -uuId (device uuid for the request)
 #import "MainViewController.h"  // scene root -PopnLinkEndCallBack
+#import "StoreUtil.h"           // +linkKidURL, urlEncodeString()
+#import "TouchableScrollView.h" // the tap-through form host
+#import "UserSettingData.h"     // +konamiId / +saveKonamiId:
+#import "neEngineBridge.h"      // neEngine::playSystemSe, neSceneManager / neAppEventCenter
 
 // Own privates (button targets + the link POST wired up by -init).
 @interface InputKIDViewCtrl ()
@@ -32,11 +32,11 @@
 
 @implementation InputKIDViewCtrl
 
-@synthesize delegate = _delegate;  // getter @ 0xd73f4 / setter @ 0xd7404 (plain assign)
+@synthesize delegate = _delegate; // getter @ 0xd73f4 / setter @ 0xd7404 (plain assign)
 
-// @ 0xd5888 — build the link form. On pad the fields sit 70pt lower (padOffset) and the
-// backdrop is clear (the split-controller card provides it); on phone it is a full
-// "friman_bg" screen with a nav-bar back button.
+// @ 0xd5888 — build the link form. On pad the fields sit 70pt lower (padOffset)
+// and the backdrop is clear (the split-controller card provides it); on phone
+// it is a full "friman_bg" screen with a nav-bar back button.
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -75,8 +75,9 @@
             UIButton *backBtn = [[UIButton alloc]
                 initWithFrame:CGRectMake(0.0f, 0.0f, backImg.size.width, backImg.size.height)];
             [backBtn setBackgroundImage:backImg forState:UIControlStateNormal];
-            [backBtn addTarget:self action:@selector(touchedBackButton:)
-              forControlEvents:UIControlEventTouchUpInside];
+            [backBtn addTarget:self
+                          action:@selector(touchedBackButton:)
+                forControlEvents:UIControlEventTouchUpInside];
             self.navigationItem.leftBarButtonItem =
                 [[UIBarButtonItem alloc] initWithCustomView:backBtn];
         }
@@ -85,49 +86,52 @@
         UIButton *decideBtn = [[UIButton alloc] init];
         UIImage *decideImg = [UIImage imageNamed:@"vcmn_btn_deside"];
         [decideBtn setBackgroundImage:decideImg forState:UIControlStateNormal];
-        decideBtn.frame = CGRectMake(185.0f, padOffset + 325.0f,
-                                     decideImg.size.width, decideImg.size.height);
-        [decideBtn addTarget:self action:@selector(touchedDecideButton:)
+        decideBtn.frame =
+            CGRectMake(185.0f, padOffset + 325.0f, decideImg.size.width, decideImg.size.height);
+        [decideBtn addTarget:self
+                      action:@selector(touchedDecideButton:)
             forControlEvents:UIControlEventTouchUpInside];
         [_scrollView addSubview:decideBtn];
 
         // Caption images.
         UIImage *titleImg = [UIImage imageNamed:@"input_kid_text"];
         UIImageView *titleView = [[UIImageView alloc] initWithImage:titleImg];
-        titleView.frame = isPad ? CGRectMake(40.0f, 35.0f, titleImg.size.width, titleImg.size.height)
-                                : CGRectMake(25.0f, 25.0f, titleImg.size.width, titleImg.size.height);
+        titleView.frame = isPad ?
+                              CGRectMake(40.0f, 35.0f, titleImg.size.width, titleImg.size.height) :
+                              CGRectMake(25.0f, 25.0f, titleImg.size.width, titleImg.size.height);
         [_scrollView addSubview:titleView];
 
         UIImage *kidTextImg = [UIImage imageNamed:@"input_kid_text_kid"];
         UIImageView *kidTextView = [[UIImageView alloc] initWithImage:kidTextImg];
-        kidTextView.frame = CGRectMake(50.0f, padOffset + 104.0f,
-                                       kidTextImg.size.width, kidTextImg.size.height);
+        kidTextView.frame =
+            CGRectMake(50.0f, padOffset + 104.0f, kidTextImg.size.width, kidTextImg.size.height);
         [_scrollView addSubview:kidTextView];
 
         UIImage *pasTextImg = [UIImage imageNamed:@"input_kid_text_pas"];
         UIImageView *pasTextView = [[UIImageView alloc] initWithImage:pasTextImg];
-        pasTextView.frame = CGRectMake(50.0f, padOffset + 172.0f,
-                                       pasTextImg.size.width, pasTextImg.size.height);
+        pasTextView.frame =
+            CGRectMake(50.0f, padOffset + 172.0f, pasTextImg.size.width, pasTextImg.size.height);
         [_scrollView addSubview:pasTextView];
 
         UIImage *otpTextImg = [UIImage imageNamed:@"input_kid_text_pas1time"];
         UIImageView *otpTextView = [[UIImageView alloc] initWithImage:otpTextImg];
-        otpTextView.frame = CGRectMake(50.0f, padOffset + 240.0f,
-                                       otpTextImg.size.width, otpTextImg.size.height);
+        otpTextView.frame =
+            CGRectMake(50.0f, padOffset + 240.0f, otpTextImg.size.width, otpTextImg.size.height);
         [_scrollView addSubview:otpTextView];
 
-        // Tappable "link help" banner (tag 300 -> opens the quick-entry page in -touchesBegan:).
+        // Tappable "link help" banner (tag 300 -> opens the quick-entry page in
+        // -touchesBegan:).
         UIImage *linkImg = [UIImage imageNamed:@"input_kid_link"];
         UIImageView *linkView = [[UIImageView alloc] initWithImage:linkImg];
-        linkView.frame = CGRectMake(31.0f, isPad ? 480.0f : 380.0f,
-                                    linkImg.size.width, linkImg.size.height);
+        linkView.frame =
+            CGRectMake(31.0f, isPad ? 480.0f : 380.0f, linkImg.size.width, linkImg.size.height);
         [linkView setUserInteractionEnabled:YES];
         [linkView setTag:300];
         [_scrollView addSubview:linkView];
 
         // KONAMI ID field (pre-filled from the last saved id).
-        _kidField = [[UITextField alloc] initWithFrame:
-                     CGRectMake(64.0f, padOffset + 125.0f, 206.0f, 38.0f)];
+        _kidField = [[UITextField alloc]
+            initWithFrame:CGRectMake(64.0f, padOffset + 125.0f, 206.0f, 38.0f)];
         [_kidField setEnabled:YES];
         [_kidField setReturnKeyType:UIReturnKeyDone];
         [_kidField setDelegate:self];
@@ -143,8 +147,8 @@
         [_scrollView addSubview:_kidField];
 
         // Secure PASSWORD field (pre-filled from the last entered password).
-        _passField = [[UITextField alloc] initWithFrame:
-                      CGRectMake(64.0f, padOffset + 192.0f, 206.0f, 38.0f)];
+        _passField = [[UITextField alloc]
+            initWithFrame:CGRectMake(64.0f, padOffset + 192.0f, 206.0f, 38.0f)];
         [_passField setEnabled:YES];
         [_passField setSecureTextEntry:YES];
         [_passField setReturnKeyType:UIReturnKeyDone];
@@ -161,8 +165,8 @@
         [_scrollView addSubview:_passField];
 
         // Secure OTP field.
-        _otpField = [[UITextField alloc] initWithFrame:
-                     CGRectMake(64.0f, padOffset + 269.0f, 206.0f, 38.0f)];
+        _otpField = [[UITextField alloc]
+            initWithFrame:CGRectMake(64.0f, padOffset + 269.0f, 206.0f, 38.0f)];
         [_otpField setEnabled:YES];
         [_otpField setSecureTextEntry:YES];
         [_otpField setReturnKeyType:UIReturnKeyDone];
@@ -208,8 +212,8 @@
     return self;
 }
 
-// @ 0xd6714 — resign the fields and cancel any in-flight link POST (KEEP — real cleanup;
-// the binary also releases _dummyView, automatic under ARC).
+// @ 0xd6714 — resign the fields and cancel any in-flight link POST (KEEP — real
+// cleanup; the binary also releases _dummyView, automatic under ARC).
 - (void)dealloc {
     if (_kidField != nil) {
         [_kidField resignFirstResponder];
@@ -237,7 +241,8 @@
     [_scrollView setContentOffset:CGPointZero animated:YES];
 }
 
-// @ 0xd6948 — Return advances KID -> PASSWORD; on the other fields it dismisses.
+// @ 0xd6948 — Return advances KID -> PASSWORD; on the other fields it
+// dismisses.
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     if (textField == _kidField) {
         [_passField becomeFirstResponder];
@@ -268,8 +273,8 @@
 
 #pragma mark - Actions
 
-// @ 0xd69b0 — submit a non-empty KID + password: save them, disable the link buttons
-// while the POST runs, then always play the decide SE.
+// @ 0xd69b0 — submit a non-empty KID + password: save them, disable the link
+// buttons while the POST runs, then always play the decide SE.
 - (void)touchedDecideButton:(id)sender {
     if (_kidField != nil) {
         [_kidField resignFirstResponder];
@@ -291,14 +296,14 @@
         [self startLinkKidHttp];
     }
     neSceneManager::shared();
-    neEngine::playSystemSe(1);  // decide SE
+    neEngine::playSystemSe(1); // decide SE
 }
 
-// @ 0xd6af8 — back button: play the cancel SE, then fade out directly (when the link is
-// still not enabled) or restore the pop'n-link bar and pop.
+// @ 0xd6af8 — back button: play the cancel SE, then fade out directly (when the
+// link is still not enabled) or restore the pop'n-link bar and pop.
 - (void)touchedBackButton:(id)sender {
     neSceneManager::shared();
-    neEngine::playSystemSe(2);  // cancel SE
+    neEngine::playSystemSe(2); // cancel SE
     neAppEventCenter::shared();
     if (!neAppEventCenter::linkButtonsEnabled()) {
         [UIView beginAnimations:nil context:NULL];
@@ -316,19 +321,22 @@
     }
 }
 
-// @ 0xd6c90 — tear down the pushed nav view and notify the scene root the flow ended.
+// @ 0xd6c90 — tear down the pushed nav view and notify the scene root the flow
+// ended.
 - (void)endDirectCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
-    // The scene root is the app's MainViewController; notify it the pop'n-link flow ended.
+    // The scene root is the app's MainViewController; notify it the pop'n-link
+    // flow ended.
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
     [root PopnLinkEndCallBack];
 }
 
 #pragma mark - Networking
 
-// @ 0xd7088 — POST "uuid&konami_id&password&otp" to the link endpoint; the OTP is
-// omitted (empty) unless one has been entered, and the require-OTP flag is set to match.
+// @ 0xd7088 — POST "uuid&konami_id&password&otp" to the link endpoint; the OTP
+// is omitted (empty) unless one has been entered, and the require-OTP flag is
+// set to match.
 - (void)startLinkKidHttp {
     if (_downloader != nil) {
         return;
@@ -349,7 +357,10 @@
     }
 
     NSString *body = [NSString stringWithFormat:@"uuid=%@&konami_id=%@&password=%@&otp=%@",
-                      encodedUuid, encodedKid, encodedPass, encodedOtp];
+                                                encodedUuid,
+                                                encodedKid,
+                                                encodedPass,
+                                                encodedOtp];
     _downloader = [[Downloader alloc] initWithURL:[StoreUtil linkKidURL]
                                          delegate:self
                                              Post:[body dataUsingEncoding:NSUTF8StringEncoding]
@@ -358,8 +369,9 @@
     [_dummyView.view setHidden:NO];
 }
 
-// @ 0xd6d90 — link POST finished. A JSON body with a non-empty "RefId" is success (store
-// it, enable the link buttons); otherwise report the appropriate failure message.
+// @ 0xd6d90 — link POST finished. A JSON body with a non-empty "RefId" is
+// success (store it, enable the link buttons); otherwise report the appropriate
+// failure message.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     NSString *message = @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。";
@@ -387,20 +399,18 @@
     if (success) {
         neAppEventCenter::shared();
         neAppEventCenter::setLinkButtonsEnabled(true);
-        CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:@"KONAMI ID"
-                  message:message
-                 delegate:self
-        cancelButtonTitle:nil
-        otherButtonTitles:@"OK"];
+        CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"KONAMI ID"
+                                                                message:message
+                                                               delegate:self
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
     } else {
-        CommonAlertView *alert = [[CommonAlertView alloc]
-            initWithTitle:@"KONAMI ID"
-                  message:message
-                 delegate:nil
-        cancelButtonTitle:nil
-        otherButtonTitles:@"OK"];
+        CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"KONAMI ID"
+                                                                message:message
+                                                               delegate:nil
+                                                      cancelButtonTitle:nil
+                                                      otherButtonTitles:@"OK"];
         [alert show];
     }
 }
@@ -409,19 +419,21 @@
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_dummyView.view setHidden:YES];
-    CommonAlertView *alert = [[CommonAlertView alloc]
-        initWithTitle:@"KONAMI ID"
-              message:@"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
-             delegate:nil
-    cancelButtonTitle:nil
-    otherButtonTitles:@"OK"];
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:@"KONAMI ID"
+                                       message:@"通信に失敗しました。\n電波状態の"
+                                               @"良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
     [alert show];
 }
 
 #pragma mark - CommonAlertViewDelegate
 
-// @ 0xd7284 — dismissing the alert: on pad, tell the split controller to rebuild its
-// left column and re-enter the score checker; on phone, just pop back.
+// @ 0xd7284 — dismissing the alert: on pad, tell the split controller to
+// rebuild its left column and re-enter the score checker; on phone, just pop
+// back.
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     neSceneManager::shared();
     if (neSceneManager::isPadDisplay()) {
@@ -446,7 +458,8 @@
 
 #pragma mark - Touches
 
-// @ 0xd7358 — tapping the "link help" banner (tag 300) opens the quick-entry web page.
+// @ 0xd7358 — tapping the "link help" banner (tag 300) opens the quick-entry
+// web page.
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     if (touch.view.tag == 300) {
@@ -455,10 +468,11 @@
     }
 }
 
-// Super-only overrides (Ghidra: each only chains to UIViewController) — omitted:
-//   didReceiveMemoryWarning @ 0xd66e8, viewDidLoad @ 0xd67ec, viewDidUnload @ 0xd6818,
-//   viewWillAppear: @ 0xd6844, viewDidAppear: @ 0xd6870, viewWillDisappear: @ 0xd689c,
-//   viewDidDisappear: @ 0xd68c8.
+// Super-only overrides (Ghidra: each only chains to UIViewController) —
+// omitted:
+//   didReceiveMemoryWarning @ 0xd66e8, viewDidLoad @ 0xd67ec, viewDidUnload @
+//   0xd6818, viewWillAppear: @ 0xd6844, viewDidAppear: @ 0xd6870,
+//   viewWillDisappear: @ 0xd689c, viewDidDisappear: @ 0xd68c8.
 
 // @ 0xd68f4
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {

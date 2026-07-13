@@ -13,7 +13,7 @@
 - (instancetype)initWithTransaction:(SKPaymentTransaction *)transaction {
     if ((self = [super init])) {
         _productID = transaction.payment.productIdentifier;
-        _receiptData = transaction.transactionReceipt;      // deprecated post-iOS7, faithful to 2014
+        _receiptData = transaction.transactionReceipt; // deprecated post-iOS7, faithful to 2014
         _transactionID = transaction.transactionIdentifier;
         _transactionDate = transaction.transactionDate;
     }

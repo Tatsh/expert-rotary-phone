@@ -12,11 +12,11 @@
 
 // One built-in character record (Ghidra: 16-byte struct, table @ 0x133298).
 struct CharaDataStruct {
-    NSString *name;       // +0x00
-    NSString *info;       // +0x04
-    NSString *skillName;  // +0x08
-    short skillId;        // +0x0c
-    short rarity;         // +0x0e
+    NSString *name;      // +0x00
+    NSString *info;      // +0x04
+    NSString *skillName; // +0x08
+    short skillId;       // +0x0c
+    short rarity;        // +0x0e
 };
 
 // Bounds-checked accessor for the 30 built-in characters (asserts index < 30).

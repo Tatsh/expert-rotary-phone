@@ -8,8 +8,8 @@
 #import "RewardNetworkPasteBoard.h"
 #import "RewardNetworkError.h"
 
-#import <UIKit/UIKit.h>
 #import <CommonCrypto/CommonCrypto.h>
+#import <UIKit/UIKit.h>
 
 // Slots are named "<service>-<index>" for index in 0..518 (< 0x207).
 static const NSInteger kRewardStorageIndexLimit = 0x207;
@@ -22,7 +22,8 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 // @ 0xf69a8 — SHA-1 of a data blob (used to derive the per-record AES key).
 + (NSData *)createHash:(NSData *)data;
 
-// @ 0xf6a54 — AES-128/PKCS7 encrypt (kCCEncrypt) or decrypt (kCCDecrypt) `value`.
+// @ 0xf6a54 — AES-128/PKCS7 encrypt (kCCEncrypt) or decrypt (kCCDecrypt)
+// `value`.
 + (NSData *)cryptorToData:(CCOperation)operation value:(NSData *)value key:(NSData *)key;
 
 // @ 0xf6718 — ensure a decoded record dictionary carries the required keys.
@@ -42,7 +43,8 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     return self;
 }
 
-// setData/.cxx_destruct @ 0xf6fbc — compiler-emitted ARC teardown for _serviceName /
+// setData/.cxx_destruct @ 0xf6fbc — compiler-emitted ARC teardown for
+// _serviceName /
 //   _dataType; not hand-written.
 
 // @ 0xf6d64
@@ -115,13 +117,13 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     NSMutableDictionary *updated = [NSMutableDictionary dictionaryWithDictionary:record];
     updated[@"LastAccess"] = [NSDate date];
     [pasteboard setData:[NSKeyedArchiver archivedDataWithRootObject:updated]
-      forPasteboardType:_dataType];
+        forPasteboardType:_dataType];
 
     return [self convertToData:record storageIndex:storageIndex];
 }
 
-// @ 0xf604c — scan for the first free slot (no existing pasteboard) and write there;
-// on a failed write the slot is deleted and scanning continues.
+// @ 0xf604c — scan for the first free slot (no existing pasteboard) and write
+// there; on a failed write the slot is deleted and scanning continues.
 - (NSDictionary *)writeStorageData:(NSString *)data error:(NSError **)error {
     NSString *service = [self getServiceName];
     NSError *deleteError = nil;
@@ -169,16 +171,20 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     NSString *name = [NSString stringWithFormat:@"%@-%d", [self getServiceName], (int)storageIndex];
     NSData *nameData = [name dataUsingEncoding:NSUTF8StringEncoding];
     NSData *key = [RewardNetworkPasteBoard createHash:nameData];
-    NSData *encrypted = [RewardNetworkPasteBoard cryptorToData:kCCEncrypt
-                                                         value:[data dataUsingEncoding:NSUTF8StringEncoding]
-                                                           key:key];
+    NSData *encrypted =
+        [RewardNetworkPasteBoard cryptorToData:kCCEncrypt
+                                         value:[data dataUsingEncoding:NSUTF8StringEncoding]
+                                           key:key];
     NSDate *now = [NSDate date];
-    NSDictionary *record = [NSDictionary dictionaryWithObjectsAndKeys:
-                            encrypted,               @"Value",
-                            now,                     @"EntryDate",
-                            now,                     @"LastAccess",
-                            @(1),                    @"Version",
-                            nil];
+    NSDictionary *record = [NSDictionary dictionaryWithObjectsAndKeys:encrypted,
+                                                                      @"Value",
+                                                                      now,
+                                                                      @"EntryDate",
+                                                                      now,
+                                                                      @"LastAccess",
+                                                                      @(1),
+                                                                      @"Version",
+                                                                      nil];
 
     UIPasteboard *pasteboard = [UIPasteboard pasteboardWithName:name create:YES];
     if (pasteboard == nil) {
@@ -190,7 +196,7 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 
     pasteboard.persistent = YES;
     [pasteboard setData:[NSKeyedArchiver archivedDataWithRootObject:record]
-      forPasteboardType:_dataType];
+        forPasteboardType:_dataType];
 
     return [self convertToData:record storageIndex:storageIndex];
 }
@@ -232,7 +238,8 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     converted[@"StorageIndex"] = @(storageIndex);
 
     NSString *name = [NSString stringWithFormat:@"%@-%d", [self getServiceName], (int)storageIndex];
-    NSData *key = [RewardNetworkPasteBoard createHash:[name dataUsingEncoding:NSUTF8StringEncoding]];
+    NSData *key =
+        [RewardNetworkPasteBoard createHash:[name dataUsingEncoding:NSUTF8StringEncoding]];
     NSData *decrypted = [RewardNetworkPasteBoard cryptorToData:kCCDecrypt
                                                          value:[data objectForKey:@"Value"]
                                                            key:key];
@@ -273,10 +280,13 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     CCCryptorStatus status = CCCrypt(operation,
                                      kCCAlgorithmAES128,
                                      kCCOptionPKCS7Padding,
-                                     key.bytes, kCCKeySizeAES128,
+                                     key.bytes,
+                                     kCCKeySizeAES128,
                                      NULL,
-                                     value.bytes, value.length,
-                                     output.mutableBytes, output.length,
+                                     value.bytes,
+                                     value.length,
+                                     output.mutableBytes,
+                                     output.length,
                                      &moved);
     if (status == kCCSuccess) {
         return [NSData dataWithBytes:output.bytes length:moved];

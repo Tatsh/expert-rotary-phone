@@ -16,26 +16,30 @@ static NSString *s_storeCountry = nil;
 // Server / version-mismatch copy (Ghidra CFStrings, byte-verified UTF-16).
 // The store name substituted into the version message (@ 0x136dd8).
 static NSString *const kStoreName = @"POP'N STORE";
-// "%1$@ に接続するにはバージョン %2$@ 以上が必要です。\n\n最新バージョンにアップデートして下さい。"
+// "%1$@ に接続するにはバージョン %2$@
+// 以上が必要です。\n\n最新バージョンにアップデートして下さい。"
 // ("To connect to %1$@ you need version %2$@ or higher.\n\nPlease update to the
 //  latest version.") — @ 0x136dc8.
 static NSString *const kVersionMismatchFormat =
-    @"%1$@ に接続するにはバージョン %2$@ 以上が必要です。\n\n最新バージョンにアップデートして下さい。";
+    @"%1$@ に接続するにはバージョン %2$@ "
+    @"以上が必要です。\n\n最新バージョンにアップデートして下さい。";
 // "サーバエラーが発生しました。\n後ほど再接続して下さい。"
 // ("A server error occurred.\nPlease reconnect later.") — @ 0x136828.
 static NSString *const kParseErrorMessage =
     @"サーバエラーが発生しました。\n後ほど再接続して下さい。";
 // "サーバに接続できません。\nネットワーク接続をご確認下さい。"
-// ("Cannot connect to the server.\nPlease check your network connection.") — @ 0x136808.
+// ("Cannot connect to the server.\nPlease check your network connection.") — @
+// 0x136808.
 static NSString *const kDownloadErrorMessage =
     @"サーバに接続できません。\nネットワーク接続をご確認下さい。";
 
 @implementation StorePackListController
 
-@synthesize delegate = m_Delegate;   // delegate @ 0x58800 / setDelegate: @ 0x58810 (synthesized)
+@synthesize delegate = m_Delegate; // delegate @ 0x58800 / setDelegate: @ 0x58810 (synthesized)
 
-// +[StorePackListController storeCountry]  @ 0x577a4 — the store country code cached from the
-// last resolved product's priceLocale (nil until a products request has succeeded).
+// +[StorePackListController storeCountry]  @ 0x577a4 — the store country code
+// cached from the last resolved product's priceLocale (nil until a products
+// request has succeeded).
 + (NSString *)storeCountry {
     if (s_storeCountry != nil) {
         return [NSString stringWithString:s_storeCountry];
@@ -73,7 +77,8 @@ static NSString *const kDownloadErrorMessage =
     }
 }
 
-// @ 0x57888 — GET the next page (8 packs from m_FetchedPackNum+1, optional seed id).
+// @ 0x57888 — GET the next page (8 packs from m_FetchedPackNum+1, optional seed
+// id).
 - (BOOL)startFetchingPack:(int)packId {
     if ([self isFetching]) {
         return NO;
@@ -147,20 +152,20 @@ static NSString *const kDownloadErrorMessage =
     return hasAny;
 }
 
-// @ 0x57f48 — parse the pack-list JSON: version-gate, then either fire a StoreKit
-// products request for the new packs or (nothing new) finish directly.
+// @ 0x57f48 — parse the pack-list JSON: version-gate, then either fire a
+// StoreKit products request for the new packs or (nothing new) finish directly.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     NSString *version = json[@"Version"];
     NSString *appVersion = [NSBundle.mainBundle.infoDictionary objectForKey:@"CFBundleVersion"];
 
     BOOL tooOld = (appVersion == nil) ||
-        (version != nil &&
-         [appVersion compare:version options:NSNumericSearch] == NSOrderedAscending);
+                  (version != nil && [appVersion compare:version
+                                                 options:NSNumericSearch] == NSOrderedAscending);
 
     if (tooOld) {
-        NSString *message = [NSString stringWithFormat:kVersionMismatchFormat,
-                             kStoreName, version ? version : @""];
+        NSString *message =
+            [NSString stringWithFormat:kVersionMismatchFormat, kStoreName, version ? version : @""];
         [m_Delegate packListDownloadError:self errorMessage:message];
     } else {
         NSArray *packList = json[@"PackList"];
@@ -210,7 +215,8 @@ static NSString *const kDownloadErrorMessage =
     m_PacklistDownloader = nil;
 }
 
-// @ 0x58540 — progress callback; the pack-list controller ignores intermediate progress.
+// @ 0x58540 — progress callback; the pack-list controller ignores intermediate
+// progress.
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
@@ -233,17 +239,18 @@ static NSString *const kDownloadErrorMessage =
     m_TmpPackList = nil;
 }
 
-// @ 0x58698 — StoreKit lookup failed: drop the in-flight request and buffered JSON, then
-// report a network error to the delegate.
+// @ 0x58698 — StoreKit lookup failed: drop the in-flight request and buffered
+// JSON, then report a network error to the delegate.
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
     m_ProductsRequest = nil;
     m_TmpPackList = nil;
     [m_Delegate packListDownloadError:self errorMessage:kDownloadErrorMessage];
 }
 
-// @ 0x57bac — create StorePackInfo for each new product, apply the buffered pack
-// dictionaries, advance the page, and notify success / nothing.
-- (void)updatePackInfo:(NSDictionary *)packListJSON SKProductsResponse:(SKProductsResponse *)response {
+// @ 0x57bac — create StorePackInfo for each new product, apply the buffered
+// pack dictionaries, advance the page, and notify success / nothing.
+- (void)updatePackInfo:(NSDictionary *)packListJSON
+    SKProductsResponse:(SKProductsResponse *)response {
     if (response != nil) {
         for (SKProduct *product in response.products) {
             int packId = [StoreUtil packIDForProductID:product.productIdentifier];
@@ -275,8 +282,9 @@ static NSString *const kDownloadErrorMessage =
     }
 }
 
-// dealloc @ 0x58714 — real work kept: cancel any in-flight downloader / StoreKit request
-// (and clear the request's delegate) before ARC releases the remaining object ivars.
+// dealloc @ 0x58714 — real work kept: cancel any in-flight downloader /
+// StoreKit request (and clear the request's delegate) before ARC releases the
+// remaining object ivars.
 - (void)dealloc {
     [self cancelFetching];
 }

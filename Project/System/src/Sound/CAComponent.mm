@@ -3,8 +3,8 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. An AUGraph
-//  (3D-mixer -> RemoteIO) whose mixer inputs each stream one CASound via a render
-//  callback. Output format: 32000 Hz, stereo, interleaved signed 16-bit.
+//  (3D-mixer -> RemoteIO) whose mixer inputs each stream one CASound via a
+//  render callback. Output format: 32000 Hz, stereo, interleaved signed 16-bit.
 //
 
 #include <cstdlib>
@@ -19,16 +19,21 @@ namespace {
 // DAT_0012e3c8 (a float gain table). Modelled as a normalised 0..1 ramp; the
 // exact table values live at that address if a byte-accurate copy is needed.
 float caGainForLevel(int level) {
-    if (level < 0) level = 0;
-    if (level > 100) level = 100;
+    if (level < 0) {
+        level = 0;
+    }
+    if (level > 100) {
+        level = 100;
+    }
     return (float)level / 100.0f;
 }
 
-}  // namespace
+} // namespace
 
-// Ghidra: auGraphSetup @ 0x23a4c — build the AUGraph (auGraphCreate = prepareGraph) and, only if
-// that succeeds, size and initialise the mixer (auGraphInitMixer = initGraph). The caplayer manager
-// ctor (caPlayerMgr_ctor @ 0x26172) runs this on a freshly-allocated CAComponent.
+// Ghidra: auGraphSetup @ 0x23a4c — build the AUGraph (auGraphCreate =
+// prepareGraph) and, only if that succeeds, size and initialise the mixer
+// (auGraphInitMixer = initGraph). The caplayer manager ctor (caPlayerMgr_ctor @
+// 0x26172) runs this on a freshly-allocated CAComponent.
 CAComponent::CAComponent(int voices) {
     if (prepareGraph()) {
         initGraph(voices);
@@ -39,11 +44,12 @@ CAComponent::~CAComponent() {
     terminate();
 }
 
-// Ghidra: auGraphTerminate @ 0x23d40 — stop the graph, dispose it, and free the voice pool.
-// Idempotent: safe to call from both the caplayer dtor (caPlayerMgr_dtor) and ~CAComponent.
+// Ghidra: auGraphTerminate @ 0x23d40 — stop the graph, dispose it, and free the
+// voice pool. Idempotent: safe to call from both the caplayer dtor
+// (caPlayerMgr_dtor) and ~CAComponent.
 void CAComponent::terminate() {
     if (m_graph != nullptr) {
-        stop();                       // auGraphStop (only if still running)
+        stop(); // auGraphStop (only if still running)
         AUGraphUninitialize(m_graph);
         AUGraphClose(m_graph);
         if (DisposeAUGraph(m_graph) != noErr) {
@@ -63,32 +69,40 @@ void CAComponent::terminate() {
 // Ghidra: FUN_00023a6c — build the AUGraph: a 3D-mixer feeding RemoteIO output.
 bool CAComponent::prepareGraph() {
     AudioComponentDescription outDesc = {
-        kAudioUnitType_Output, kAudioUnitSubType_RemoteIO, kAudioUnitManufacturer_Apple, 0, 0
-    };
-    AudioComponentDescription mixDesc = {
-        kAudioUnitType_Mixer, kAudioUnitSubType_AU3DMixerEmbedded, kAudioUnitManufacturer_Apple, 0, 0
-    };
+        kAudioUnitType_Output, kAudioUnitSubType_RemoteIO, kAudioUnitManufacturer_Apple, 0, 0};
+    AudioComponentDescription mixDesc = {kAudioUnitType_Mixer,
+                                         kAudioUnitSubType_AU3DMixerEmbedded,
+                                         kAudioUnitManufacturer_Apple,
+                                         0,
+                                         0};
 
     if (NewAUGraph(&m_graph) != noErr) {
-        NSLog(@"CAComponent prepareGraph: NewAUGraph failed"); return false;
+        NSLog(@"CAComponent prepareGraph: NewAUGraph failed");
+        return false;
     }
     if (AUGraphAddNode(m_graph, &outDesc, &m_ioNode) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphAddNode remoteIO failed"); return false;
+        NSLog(@"CAComponent prepareGraph: AUGraphAddNode remoteIO failed");
+        return false;
     }
     if (AUGraphAddNode(m_graph, &mixDesc, &m_mixerNode) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphAddNode mixer failed"); return false;
+        NSLog(@"CAComponent prepareGraph: AUGraphAddNode mixer failed");
+        return false;
     }
     if (AUGraphConnectNodeInput(m_graph, m_mixerNode, 0, m_ioNode, 0) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphConnectNodeInput failed"); return false;
+        NSLog(@"CAComponent prepareGraph: AUGraphConnectNodeInput failed");
+        return false;
     }
     if (AUGraphOpen(m_graph) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphOpen failed"); return false;
+        NSLog(@"CAComponent prepareGraph: AUGraphOpen failed");
+        return false;
     }
     if (AUGraphNodeInfo(m_graph, m_ioNode, nullptr, &m_ioUnit) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo remoteIO failed"); return false;
+        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo remoteIO failed");
+        return false;
     }
     if (AUGraphNodeInfo(m_graph, m_mixerNode, nullptr, &m_mixerUnit) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo mixer failed"); return false;
+        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo mixer failed");
+        return false;
     }
     return true;
 }
@@ -100,8 +114,12 @@ bool CAComponent::initGraph(int voices) {
         return false;
     }
     UInt32 count = (UInt32)voices;
-    if (AudioUnitSetProperty(m_mixerUnit, kAudioUnitProperty_ElementCount,
-                             kAudioUnitScope_Input, 0, &count, sizeof(count)) != noErr) {
+    if (AudioUnitSetProperty(m_mixerUnit,
+                             kAudioUnitProperty_ElementCount,
+                             kAudioUnitScope_Input,
+                             0,
+                             &count,
+                             sizeof(count)) != noErr) {
         NSLog(@"CAComponent initGraph: ElementCount failed");
         m_voiceCount = 0;
         return false;
@@ -109,20 +127,25 @@ bool CAComponent::initGraph(int voices) {
     m_voiceCount = (int)count;
     m_voices = static_cast<CAVoice **>(std::calloc(count, sizeof(CAVoice *)));
     for (int i = 0; i < m_voiceCount; i++) {
-        m_voices[i] = new CAVoice();   // state -1 (free), generation 0
+        m_voices[i] = new CAVoice(); // state -1 (free), generation 0
     }
 
     AudioStreamBasicDescription out = {};
     out.mSampleRate = 32000.0;
     out.mFormatID = kAudioFormatLinearPCM;
-    out.mFormatFlags = 0xc2c;  // raw value from binary (signed|packed|alignedHigh + bits 0x400/0x800)
+    out.mFormatFlags = 0xc2c; // raw value from binary (signed|packed|alignedHigh
+                              // + bits 0x400/0x800)
     out.mBytesPerPacket = 4;
     out.mFramesPerPacket = 1;
     out.mBytesPerFrame = 4;
     out.mChannelsPerFrame = 2;
     out.mBitsPerChannel = 16;
-    if (AudioUnitSetProperty(m_ioUnit, kAudioUnitProperty_StreamFormat,
-                             kAudioUnitScope_Input, 0, &out, sizeof(out)) != noErr) {
+    if (AudioUnitSetProperty(m_ioUnit,
+                             kAudioUnitProperty_StreamFormat,
+                             kAudioUnitScope_Input,
+                             0,
+                             &out,
+                             sizeof(out)) != noErr) {
         NSLog(@"CAComponent initGraph: RemoteIO stream format failed");
         return false;
     }
@@ -149,7 +172,8 @@ void CAComponent::start() {
     setPlayerVolume(0x7f, 0);
 }
 
-// Ghidra: auGraphStop @ 0x23d0c (also reached via the caplayer's FUN_000261e0 suspend).
+// Ghidra: auGraphStop @ 0x23d0c (also reached via the caplayer's FUN_000261e0
+// suspend).
 void CAComponent::stop() {
     if (m_running) {
         if (AUGraphStop(m_graph) != noErr) {
@@ -172,8 +196,9 @@ uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
     return 0xffffffff;
 }
 
-// Ghidra: auMixerPreparePlayer (FUN_00023dac) — bind `source` to voice `voice`: set the input
-// stream format, install the render callback, set volume, reset the cursors, mark it playing.
+// Ghidra: auMixerPreparePlayer (FUN_00023dac) — bind `source` to voice `voice`:
+// set the input stream format, install the render callback, set volume, reset
+// the cursors, mark it playing.
 int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     CAVoice *v = m_voices[voice];
     if (v->state != -1 && v->state != 4) {
@@ -190,8 +215,12 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     in.mFramesPerPacket = 1;
     in.mBytesPerFrame = in.mChannelsPerFrame * 2;
     in.mBytesPerPacket = in.mBytesPerFrame;
-    if (AudioUnitSetProperty(m_mixerUnit, kAudioUnitProperty_StreamFormat,
-                             kAudioUnitScope_Input, voice, &in, sizeof(in)) != noErr) {
+    if (AudioUnitSetProperty(m_mixerUnit,
+                             kAudioUnitProperty_StreamFormat,
+                             kAudioUnitScope_Input,
+                             voice,
+                             &in,
+                             sizeof(in)) != noErr) {
         NSLog(@"CAComponent preparePlayer: input stream format failed");
         return -1;
     }
@@ -200,7 +229,7 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     setPlayerVolume(volumeIndex, voice);
     v->playPos = 0;
     v->total = 0;
-    v->state = 1;   // playing
+    v->state = 1; // playing
     return (int)(generation | (voice << 16));
 }
 
@@ -212,8 +241,12 @@ void CAComponent::setRenderCallback(int voice) {
     AURenderCallbackStruct cb;
     cb.inputProc = &CAComponent::renderProc;
     cb.inputProcRefCon = m_voices[voice];
-    if (AudioUnitSetProperty(m_mixerUnit, kAudioUnitProperty_SetRenderCallback,
-                             kAudioUnitScope_Input, voice, &cb, sizeof(cb)) == noErr) {
+    if (AudioUnitSetProperty(m_mixerUnit,
+                             kAudioUnitProperty_SetRenderCallback,
+                             kAudioUnitScope_Input,
+                             voice,
+                             &cb,
+                             sizeof(cb)) == noErr) {
         m_voices[voice]->callbackSet = true;
     } else {
         NSLog(@"CAComponent setRenderCallback: SetRenderCallback failed");
@@ -227,8 +260,9 @@ bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
     }
     // Binary sets the mixer output-scope element 0 (master) gain; `voice` is only
     // used for the bounds check above, not as the element.
-    if (AudioUnitSetParameter(m_mixerUnit, 3 /* gain */, kAudioUnitScope_Output,
-                              0, caGainForLevel(volumeIndex), 0) != noErr) {
+    if (AudioUnitSetParameter(
+            m_mixerUnit, 3 /* gain */, kAudioUnitScope_Output, 0, caGainForLevel(volumeIndex), 0) !=
+        noErr) {
         NSLog(@"CAComponent setPlayerVolume: gain failed");
         return false;
     }
@@ -240,7 +274,7 @@ bool CAComponent::stopVoice(int voice) {
     if (voice < 0 || voice >= m_voiceCount) {
         return false;
     }
-    m_voices[voice]->state = 4;   // finished
+    m_voices[voice]->state = 4; // finished
     return true;
 }
 
@@ -258,7 +292,8 @@ void CAComponent::setAllVolume(int volumeIndex) {
     }
 }
 
-// Ghidra: auClearSourceRef @ 0x24014 — drop `source` from any voice still pointing at it.
+// Ghidra: auClearSourceRef @ 0x24014 — drop `source` from any voice still
+// pointing at it.
 void CAComponent::clearSourceRef(CASound *source) {
     for (int i = 0; i < m_voiceCount; i++) {
         if (m_voices[i]->source == source) {
@@ -267,7 +302,8 @@ void CAComponent::clearSourceRef(CASound *source) {
     }
 }
 
-// Ghidra: caHandlePause @ 0x267b4 — pause voice `voice` if its generation matches.
+// Ghidra: caHandlePause @ 0x267b4 — pause voice `voice` if its generation
+// matches.
 bool CAComponent::pauseVoice(int voice, uint16_t generation) {
     if (voice < 0 || voice >= m_voiceCount) {
         return false;
@@ -276,43 +312,50 @@ bool CAComponent::pauseVoice(int voice, uint16_t generation) {
     if (v->generation != generation) {
         return false;
     }
-    v->state = 3;   // paused
+    v->state = 3; // paused
     return true;
 }
 
-// Ghidra: caHandleStopAndClear @ 0x26864 — free voice `voice` (state 4 + drop its source) if its
-// generation matches, so reserveVoice can recycle it immediately.
+// Ghidra: caHandleStopAndClear @ 0x26864 — free voice `voice` (state 4 + drop
+// its source) if its generation matches, so reserveVoice can recycle it
+// immediately.
 void CAComponent::stopAndClearVoice(int voice, uint16_t generation) {
     if (voice < 0 || voice >= m_voiceCount) {
         return;
     }
     CAVoice *v = m_voices[voice];
     if (v->generation == generation) {
-        v->state = 4;         // finished
+        v->state = 4; // finished
         v->source = nullptr;
     }
 }
 
-// Ghidra: auMixerStartIfReady @ 0x23a20 — the per-voice render body. Only an actively-playing voice
-// (state 2) contributes sound; a merely-prepared (1), paused (3), finished (4) or free (-1) voice is
-// left as the silence the callback pre-cleared. The prepare -> play (1 -> 2) transition is issued by
-// the caplayer play path. When the source runs dry, the voice is marked finished so reserveVoice can
-// recycle it. The actual copy + loop/finish lives in CASound::read (Ghidra: caSourceRead).
+// Ghidra: auMixerStartIfReady @ 0x23a20 — the per-voice render body. Only an
+// actively-playing voice (state 2) contributes sound; a merely-prepared (1),
+// paused (3), finished (4) or free (-1) voice is left as the silence the
+// callback pre-cleared. The prepare -> play (1 -> 2) transition is issued by
+// the caplayer play path. When the source runs dry, the voice is marked
+// finished so reserveVoice can recycle it. The actual copy + loop/finish lives
+// in CASound::read (Ghidra: caSourceRead).
 size_t CAComponent::CAVoice::readInto(void *dst, size_t size) {
     if (source != nullptr && state == 2) {
         const size_t got = source->read(dst, size, &total, &playPos);
         if (got != 0) {
             return got;
         }
-        state = 4;   // source exhausted -> finished (voice becomes reusable)
+        state = 4; // source exhausted -> finished (voice becomes reusable)
     }
     return 0;
 }
 
-// Ghidra: auRenderCallback @ 0x24044 — the AURenderCallback. Clear the output buffer, then let the
-// voice (passed as refCon) mix its next PCM span in via readInto (auMixerStartIfReady).
-OSStatus CAComponent::renderProc(void *refCon, AudioUnitRenderActionFlags * /*flags*/,
-                                 const AudioTimeStamp *, UInt32, UInt32 /*frames*/,
+// Ghidra: auRenderCallback @ 0x24044 — the AURenderCallback. Clear the output
+// buffer, then let the voice (passed as refCon) mix its next PCM span in via
+// readInto (auMixerStartIfReady).
+OSStatus CAComponent::renderProc(void *refCon,
+                                 AudioUnitRenderActionFlags * /*flags*/,
+                                 const AudioTimeStamp *,
+                                 UInt32,
+                                 UInt32 /*frames*/,
                                  AudioBufferList *data) {
     CAVoice *v = static_cast<CAVoice *>(refCon);
     AudioBuffer &out = data->mBuffers[0];
