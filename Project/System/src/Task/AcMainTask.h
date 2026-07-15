@@ -187,12 +187,12 @@ private:
     float m_scrollBoxOriginX = {};           // +0x4c8 scroll bounding box origin x
     float m_scrollBoxOriginY = {};           // +0x4cc scroll bounding box origin y
     float m_scrollBoxW = {};                 // +0x4d0 scroll bounding box width
-    uint8_t _rsvd_4d4[0x4d8 - 0x4d4] = {};   // +0x4d4
-    float m_scrollX = {};                    // +0x4d8 scroll position x
-    float m_scrollY = {};                    // +0x4dc scroll position y
-    float m_clampCentreX = {};               // +0x4e0 scroll clamp centre x
+    float m_scrollBoxH = {};                 // +0x4d4 scroll bounding box height
+    float m_scrollX = {};                    // +0x4d8 scroll position x (clamped)
+    float m_scrollY = {};                    // +0x4dc scroll position y (clamped)
+    float m_clampCentreX = {};               // +0x4e0 scroll clamp min centre x
     float m_clampMinY = {};                  // +0x4e4 scroll clamp min y
-    float m_clampCentreX2 = {};              // +0x4e8 scroll clamp centre x (dup)
+    float m_clampCentreX2 = {};              // +0x4e8 scroll clamp max centre x
     float m_clampMaxY = {};                  // +0x4ec scroll clamp max y
     int16_t m_treasureRaw06 = {};            // +0x4f0 pending record raw0x06
     uint8_t _rsvd_4f2[0x4f4 - 0x4f2] = {};   // +0x4f2

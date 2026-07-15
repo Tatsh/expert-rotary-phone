@@ -14,6 +14,7 @@
 
 #import "AcMainTask.h"
 
+#include <algorithm>
 #include <cstring>
 #include <ctime>
 #include <new>
@@ -438,10 +439,10 @@ void AcMainTask::setupScene() {
     m_charaId = [UserSettingData charaId];
 
     // Character-panel scroll extent: the available list is laid out 6 per row.
-    // The binary derives this through a paired FixedToFP/FPToFixed (a 6.0 lane +
-    // a 0.5 bias, @0x9fde..) whose exact fixed-point packing is
-    // decompiler-obscured; the recovered result is the rounded row count.
-    // (Best-effort per rule 7.)
+    // The binary computes this at 0x9fd94..0x9fdca: (float)count (vcvt.f32.u32),
+    // divided by 6.0f (vmov #0x40c00000 / vdiv.f32), plus 0.5f (vmov #0x3f000000
+    // / vadd.f32), then truncated back with vcvt.s32.f32 — i.e. the count rounded
+    // to the nearest whole number of rows, stored at +0x638.
     NSArray *available = gCharaManager.availableInfos();
     m_availableInfos = (__bridge void *)available; // cached raw (unretained), as the binary does
     const int availableCount = (int)available.count;
@@ -923,13 +924,14 @@ void AcMainTask::loadTreasureMap() {
     std::memcpy(&m_boardVisited[0], tmp.raw0x35,
                 15); // board-visited bitmap (0x894..0x8a2)
 
-    // --- Scroll bounding box + clamp. The node bounding box drives the scroll
-    // rect; the exact NEON lane composition of the origin/size/centre/clamp
-    // vectors (Ghidra: the FloatVectorAdd/Sub chain @ 0xa0d..0xa1050) is
-    // decompiler-obscured, so the geometry below is a documented best-effort
-    // (tile size 26, the +104/0x34/0x40 paddings, the half-viewport from
-    // +0x524/+0x528, and the byte-verified ±268 and device-margin constants).
-    // FUN_000a4e84 applies the final clamp.
+    // --- Scroll bounding box + rubber-band clamp (Ghidra: the NEON block at
+    // 0xa0f88..0xa10d2). The node bounding box gives the board content rect;
+    // the camera scroll position is then clamped into a rect inset by half the
+    // transition-overlay viewport (+0x524/+0x528) and padded by fixed margins.
+    // The four box lanes {originX, originY, contentW, contentH} are converted
+    // together (vcvt.f32.s32 q1, q8) and stored at +0x4c8. Tile size 26; content
+    // padding +104 (x) / +128 (y); the ±268 X pan margin is DAT_000a1290
+    // (-268 / +268); the device Y margins are DAT_000a148c..0xa1498.
     const TreasureMap::Node *nodes = map->nodes();
     int minX = 0, maxX = 0, minY = 0, maxY = 0;
     if (nodes && nodeCount > 0) {
@@ -951,24 +953,39 @@ void AcMainTask::loadTreasureMap() {
             }
         }
     }
-    const float xOrigin = (float)(minX * 0x1a);
-    const float yOrigin = (float)(minY * 0x1a);
+    const float originX = (float)(minX * 0x1a);
+    const float originY = (float)(minY * 0x1a);
     const float contentW = (float)((maxX - minX) * 0x1a + 0x68); // +104
+    const float contentH = (float)((maxY - minY) * 0x1a + 0x80); // +128
+    m_scrollBoxOriginX = originX;
+    m_scrollBoxOriginY = originY;
+    m_scrollBoxW = contentW;
+    m_scrollBoxH = contentH;
+
     const float halfW = (float)(m_overlayW / 2);
     const float halfH = (float)(m_overlayH / 2);
     const bool pad = (m_padDisplay != 0);
-    const float marginTop = pad ? 380.0f : 480.0f;  // DAT_000a148c / DAT_000a1490
-    const float marginBot = pad ? 480.0f : 300.0f;  // DAT_000a1494 / DAT_000a1498
-    const float centreX = xOrigin + halfW + 268.0f; // DAT_000a1294
-    m_scrollBoxOriginX = xOrigin;
-    m_scrollBoxOriginY = yOrigin;
-    m_scrollBoxW = contentW;
-    m_clampCentreX = centreX;
-    m_clampMinY = yOrigin + halfH - marginTop;
-    m_clampCentreX2 = centreX;
-    m_clampMaxY = yOrigin + halfH + marginBot;
-    m_scrollX = xOrigin + (float)((cur ? cur->x * 0x1a : 0) + 0x34);
-    m_scrollY = yOrigin + (float)((cur ? cur->y * 0x1a : 0) + 0x40);
+    const float marginTop = pad ? 380.0f : 480.0f; // DAT_000a148c / DAT_000a1490
+    const float marginBot = pad ? 480.0f : 300.0f; // DAT_000a1494 / DAT_000a1498
+
+    // Clamp centres/edges. The max centre and max Y are floored at the min
+    // centre / min Y (the vcmpe/vmov.mi rubber-band that keeps the range valid
+    // when the content is narrower or shorter than the viewport).
+    const float minCentreX = originX + halfW - 268.0f;
+    const float maxCentreX = originX + contentW - halfW + 268.0f;
+    const float clampMinY = originY + halfH - marginTop;
+    const float clampMaxY = std::max(originY + contentH - halfH + marginBot, clampMinY);
+    m_clampCentreX = minCentreX;
+    m_clampCentreX2 = std::max(maxCentreX, minCentreX);
+    m_clampMinY = clampMinY;
+    m_clampMaxY = clampMaxY;
+
+    // Scroll position: the current node's pixel position (tile 26, +52 x / +64 y
+    // biases), clamped into [minCentreX, maxCentreX] x [clampMinY, clampMaxY].
+    const float scrollXRaw = (float)((cur ? cur->x : 0) * 0x1a + 0x34); // +52
+    const float scrollYRaw = (float)((cur ? cur->y : 0) * 0x1a + 0x40); // +64
+    m_scrollX = std::min(std::max(scrollXRaw, minCentreX), m_clampCentreX2);
+    m_scrollY = std::min(std::max(scrollYRaw, clampMinY), clampMaxY);
     unloadMapBgGroup(); // FUN_000a4e84 — drop the previous board bg before
                         // loading the new one
 
