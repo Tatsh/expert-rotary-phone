@@ -65,22 +65,35 @@ def _doc_block_matches(lines: list[str], def_line: int, pattern: re.Pattern) -> 
     return False
 
 
+def _opens_body(lines: list[str], i: int) -> bool:
+    """True if a body-opening ``{`` follows the signature at line ``i`` before a ``;``.
+
+    Handles multi-line signatures (e.g. one parameter per line) by scanning
+    forward until the first ``{`` (a definition) or ``;`` (a declaration).
+    """
+    for j in range(i, min(i + 20, len(lines))):
+        seg = lines[j].split('//', 1)[0]
+        if '{' in seg:
+            return True
+        if ';' in seg:
+            return False
+    return False
+
+
 def _is_definition(lines: list[str], i: int, is_impl: bool) -> bool:
     line = lines[i]
     if _INLINE.search(line):
+        return False
+    stripped = line.strip()
+    if stripped.startswith(_COMMENT_PREFIXES):
         return False
     if is_impl and _OBJC_DEF.match(line):
         return True
     if _CXX_MEMBER.match(line) and not line.rstrip().endswith(';'):
         return True
-    if not is_impl:
-        stripped = line.strip()
-        if stripped.startswith(_COMMENT_PREFIXES):
-            return False
-        match = _FREE_DEF.match(line)
-        has_body = '{' in line or (i + 1 < len(lines) and lines[i + 1].strip().startswith('{'))
-        if match and match.group(1) not in _KEYWORDS and has_body and not stripped.endswith(';'):
-            return True
+    match = _FREE_DEF.match(line)
+    if match and match.group(1) not in _KEYWORDS and not stripped.endswith(';') and _opens_body(lines, i):
+        return True
     return False
 
 
