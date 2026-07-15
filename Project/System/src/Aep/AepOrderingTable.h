@@ -16,59 +16,89 @@
 
 #include <cstdint>
 
+class neTextureForiOS; // the sprite/frame-atlas object a sprite command references
+
 // Fixed capacities (Ghidra: AepOrderingTable.mm:0x3d / 0x3e).
 constexpr int kOtRegistMax = 2047; // OT_REGIST_MAX
 constexpr int kOtPriMax = 50;      // OT_PRI_MAX
 
-// One queued sprite draw command (Ghidra: OT entry, 0x134 bytes; the payload
-// the fill writes starts at +0x4 after the intrusive bucket link at +0x0). Only
-// the fields recovered from FUN_000113d0 are named; the tail is opaque
-// per-command state carried to the flush.
-struct AepSpriteCommand {
-    AepSpriteCommand *next;       // +0x00  priority-bucket link
-    int16_t type;                 // +0x04  command type discriminator. renderAepOrderingTable
-                                  //        (FUN_000115d0) switches on the short @+0x04:
-                                  //        0 sprite, 1 stretch, 2 line, 3 tri, 4 rect, 5 quad, 6
-                                  //        text.
-    int16_t priority;             // +0x06  bucket priority (allocAepOtEntry writes short
-                                  // @entry+0x12,
-                                  //        i.e. cmd+0x06; used only as bookkeeping, not for
-                                  //        traversal)
-    int32_t textureId;            // +0x08  layer/texture id (param17)
-    int32_t u, v;                 // +0x0c/+0x10  source origin
-    int32_t x, y;                 // +0x14/+0x18  screen position
-    int32_t sx, sy;               // +0x1c/+0x20  scale
-    int32_t w, h;                 // +0x24/+0x28  size
-    int32_t ex, ey;               // +0x2c/+0x30  extra (end pos for stretched sprites)
-    int16_t color0, color1;       // +0x34/+0x36
-    int32_t rotation;             // +0x38
-    int32_t blend;                // +0x3c
-    int16_t clip[4];              // +0x40..0x46  clip rect (defaults to screen bounds)
-    uint8_t opaque[0x134 - 0x48]; // remaining per-command state
+// The clip rectangle carried by a sprite command (Ghidra: AepClipRect, 16 bytes,
+// four ints). Defaults to the screen bounds when the fill supplies no explicit
+// rect.
+struct AepClipRect {
+    int32_t nLeft;   // +0x00
+    int32_t nTop;    // +0x04
+    int32_t nRight;  // +0x08
+    int32_t nBottom; // +0x0c
 };
 
-// A queued text draw command (Ghidra: the type-6 entry pushAepOtTextCmd fills,
-// same 0x134-byte pool slot as AepSpriteCommand, reinterpreted by type). The
-// string sits in the slot that the sprite view uses for its
-// source-rect/geometry words.
-struct AepTextCommand {
-    AepSpriteCommand *next; // +0x00
-    int16_t type;           // +0x04  == 6 (discriminator short @+0x04, same slot as
-                            //        AepSpriteCommand::type)
-    int16_t priority;       // +0x06  bucket priority
-    int32_t reserved8;      // +0x08
-    char text[0x100];       // +0x0c..+0x10b  (force-terminated at text[0xff])
-    // Six positional draw words (+0x10c..+0x123). The flush handler drawAepOtText
-    // assigns their meaning (position / size / colour); they are copied through
-    // verbatim by the push, so they are named positionally here to avoid
-    // asserting the wrong roles.
-    int32_t arg0;   // +0x10c
-    int32_t arg1;   // +0x110
-    int32_t arg2;   // +0x114
-    int32_t arg3;   // +0x118
-    int32_t arg4;   // +0x11c
-    int32_t arg5;   // +0x120
-    int32_t vec[4]; // +0x124..+0x133  colour vector, or {0,0,screenW,screenH}
+// One queued ordering-table draw command (Ghidra: AepOtSpriteCmd — the command
+// block of a 0x134-byte pool entry). The first 0x50 bytes are the named payload
+// the fills (drawSprite FUN_00011468, drawTransitionOverlay FUN_0001151c,
+// aepEmitSprite FUN_000113d0) write; the tail is per-command scratch, and the
+// fills spill an 8-byte source-rect word into the *next* entry, so the whole
+// entry stride (0x134) is reserved here. wFlags @+0x04 is the type discriminator
+// renderAepOrderingTable (FUN_000115d0) switches on: 0 sprite, 1 stretched
+// sprite, 2 line, 3 triangle, 4 rect (the transition-fade overlay), 5 quad, 6
+// text. Field names are Ghidra's; where a slot's role varies by command type the
+// per-fill comment gives the concrete meaning.
+struct AepOtSpriteCmd {
+    AepOtSpriteCmd *pListNext; // +0x00  priority-bucket link
+    uint16_t wFlags;           // +0x04  command type discriminator
+    int16_t nPriority;         // +0x06  bucket priority (bookkeeping, not traversal)
+    int32_t nBank;             // +0x08  texture bank / layer slot
+    // +0x0c/+0x10  Source origin. Line/rect/quad/text commands use nTexU/nTexV as
+    // plain ints; a type-0 sprite instead packs its u/v/w/h source rect into the
+    // same 8 bytes as four shorts (srcRect), and a type-1 sprite uses nTexV as the
+    // frame column (its texture lives in pTexObj). srcRect is exactly the two int
+    // slots, so the union adds no size and shifts no offset.
+    union {
+        struct {
+            int32_t nTexU;
+            int32_t nTexV;
+        };
+        int16_t srcRect[4]; // type-0 sprite: packed {u, v, w, h}
+    };
+    int32_t nPosX, nPosY;       // +0x14/+0x18  screen position
+    float flPosXf, flPosYf;     // +0x1c/+0x20  sub-pixel float position / scale
+    int32_t nOfsX, nOfsY;       // +0x24/+0x28  offset (end pos for stretched sprites)
+    int32_t nColorA, nColorMul; // +0x2c/+0x30  colour + colour-multiply
+    int16_t nUKey, nVKey;       // +0x34/+0x36  UV keys
+    int32_t nBlendFlags;        // +0x38
+    int32_t nColorRGB;          // +0x3c
+    AepClipRect clipRect;       // +0x40..0x4f  clip rect (defaults to screen bounds)
+    // The clip-spill (drawSprite) writes clipRect.nBottom plus the following 12
+    // bytes into +0x4c..+0x5b of this tail.
+    uint8_t scratch0[0x60 - 0x50]; // +0x50..+0x5f  per-command / clip-spill tail
+    // Rebuild-only field (NOT present in the 32-bit binary's layout): the sprite's
+    // source texture object. The binary packs this pointer into the 32-bit nTexU
+    // slot; storing it as a real typed pointer here avoids truncating a 64-bit
+    // pointer into an int. Only sprite commands (wFlags 0/1) use it — it is the
+    // neTextureFrames* the flush walks (drawAepOtSpriteStretch ->
+    // drawAepSpriteClipped). The concrete stored type is neTextureForiOS.
+    neTextureForiOS *pTexObj;                        // +0x60 (rebuild-only)
+    uint8_t scratch1[0x134 - 0x60 - sizeof(void *)]; // remaining per-command state
+};
+
+// A queued text draw command (Ghidra: AepTextCmd — the type-6 entry
+// PushAepOtTextCmd fills, the same 0x134-byte pool slot as AepOtSpriteCmd
+// reinterpreted by nType). The string occupies the slot the sprite view uses for
+// its texture/source-rect words (+0x0c), and the glyph parameters follow it at
+// +0x10c — which the flush reaches as the 4th 80-byte AepOtSpriteCmd-sized block
+// (pCmd[3]) of the entry.
+struct AepTextCmd {
+    AepOtSpriteCmd *pNext; // +0x00
+    int16_t nType;         // +0x04  == 6 (same discriminator slot as AepOtSpriteCmd::wFlags)
+    int16_t nPriority;     // +0x06  bucket priority
+    int32_t nReserved8;    // +0x08
+    char pText[256];       // +0x0c..+0x10b  (force-terminated at pText[255])
+    float flPosXf;         // +0x10c  pen position x
+    float flPosYf;         // +0x110  pen position y
+    int32_t nColorTL;      // +0x114  per-corner colours (top-left / top-right /
+    int32_t nColorTR;      // +0x118  bottom-left / bottom-right)
+    int32_t nColorBL;      // +0x11c
+    int32_t nColorBR;      // +0x120
+    int32_t pAClipVec[4];  // +0x124..+0x133  clip vector, or {0,0,screenW,screenH}
 };
 
 class AepOrderingTable {
@@ -80,10 +110,36 @@ public:
 
     // Reserve a command entry at `priority` and link it into that bucket; returns
     // the command to fill. Ghidra: get_aepOt/allocEntry FUN_00010be0.
-    AepSpriteCommand *allocEntry(int priority);
+    AepOtSpriteCmd *allocEntry(int priority);
 
-    // Flush: walk the buckets from the highest used priority down, emitting a GL
-    // quad per command via neGLES_11. Ghidra: FUN_000115d0.
+    // Fill a stretched-sprite command (wFlags=1) for the sprite `pTexture` at
+    // priority `nPriority`, forwarding position, scale, colour, blend and clip.
+    // This is the fill neTextureForiOS::draw drives; the flush later dispatches the
+    // command through drawAepOtSpriteStretch. Ghidra: AepOrderingTable::drawSprite
+    // (FUN_00011468).
+    AepOtSpriteCmd *drawSprite(neTextureForiOS *pTexture,
+                               int nTexV,
+                               int nPosX,
+                               int nPosY,
+                               float flPosXf,
+                               float flPosYf,
+                               int nOfsX,
+                               int nOfsY,
+                               int nColorA,
+                               int nColorMul,
+                               int nKeys,
+                               int nBlendFlags,
+                               int nColorRGB,
+                               int16_t clipLeftLo,
+                               int16_t clipLeftHi,
+                               int clipTop,
+                               int clipRight,
+                               const void *clipSpill,
+                               int nPriority);
+
+    // Flush: walk the priority buckets high-to-low and dispatch each command by
+    // wFlags to its per-type draw handler. Ghidra: renderAepOrderingTable
+    // (FUN_000115d0).
     void flush();
 
     int drawnCount() const {
@@ -108,14 +164,77 @@ public:
     float renderScale() const {
         return m_renderScale;
     } // +0x9a1a8
+    // Ghidra: orderingTable.flScreenHalfScale (+0x9a1a8, i.e. AepManager + 0x7c16e0).
+    // BootLogoTask setup/finish write it directly to switch to native scale (1.0) for
+    // the branding logos and restore the saved UI half-scale on exit.
+    void setRenderScale(float scale) {
+        m_renderScale = scale;
+    }
 
 private:
-    int m_screenW = 0;                        // +0x04
-    int m_screenH = 0;                        // +0x08
-    AepSpriteCommand m_entries[kOtRegistMax]; // the frame's command pool
-    AepSpriteCommand *m_buckets[kOtPriMax];   // per-priority list heads (+0x9a0dc)
-    int m_count = 0;                          // m_OtCount (+0x9a00c)
-    int m_maxPriority = 0;                    // highest used priority (+0x9a010)
+    // Per-type draw handlers the flush dispatches each command to. In Ghidra these
+    // are AepOrderingTable methods (AepOrderingTable::drawAepOt*(AepOrderingTable
+    // *this, ...)); only renderAepOrderingTable (flush) calls them in this title,
+    // so they are private. Ghidra: FUN_00010c90 / _10e18 / _10f98 / _11054 /
+    // _1113c / _111f8 / _11310. Each transforms its coordinates by renderScale()
+    // and issues the matching neGraphics primitive.
+    void drawAepOtSprite(const int16_t *spriteRec,
+                         int x,
+                         int y,
+                         int sx,
+                         int sy,
+                         int p7,
+                         int p8,
+                         int p9,
+                         uint32_t alpha,
+                         uint32_t blend,
+                         int p12,
+                         const void *clip,
+                         int p14,
+                         int p15,
+                         int slot);
+    void drawAepOtSpriteStretch(void *frameObj,
+                                int frameCol,
+                                int frameTime,
+                                int x,
+                                int y,
+                                int sx,
+                                int sy,
+                                int ex,
+                                int ey,
+                                int p11,
+                                int p12,
+                                int p13,
+                                uint32_t alpha,
+                                uint32_t blend,
+                                int p16,
+                                const void *clip,
+                                int p18,
+                                int p19);
+    void drawAepOtLine(int x0, int y0, int x1, int y1, int alpha, uint32_t color);
+    void
+    drawAepOtTriangle(int x0, int y0, int x1, int y1, int x2, int y2, int alpha, uint32_t color);
+    void drawAepOtRect(int x0, int y0, int x1, int y1, int alpha, uint32_t color);
+    void drawAepOtQuad(
+        int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int alpha, uint32_t color);
+    void drawAepOtText(const char *text,
+                       int p3,
+                       int x,
+                       int y,
+                       int size,
+                       int p7,
+                       int alpha,
+                       const void *colorVec,
+                       uint32_t color);
+
+    int m_screenW = 0;                      // +0x04
+    int m_screenH = 0;                      // +0x08
+    AepOtSpriteCmd m_entries[kOtRegistMax]; // the frame's command pool
+    AepOtSpriteCmd *m_buckets[kOtPriMax];   // per-priority list heads (pCurrentByPri /
+                                            // pHeadByPri, +0x9a014 / +0x9a0dc — both track the
+                                            // newest entry per bucket)
+    int m_count = 0;                        // m_OtCount (+0x9a00c)
+    int m_maxPriority = 0;                  // highest used priority (+0x9a010)
     int m_drawnCount = 0;
     void **m_textureTable = nullptr; // +0x9a1a4  per-slot GL texture handles
     float m_renderScale = 1.0f;      // +0x9a1a8  device-pixel scale
@@ -150,79 +269,10 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
                       const void *colorVec,
                       int priority);
 
-// Immediate-mode primitive draws (Ghidra: FUN_00010f98 / _11054 / _1113c /
-// _111f8 / _11310).
-void drawAepOtLine(AepOrderingTable *ot, int x0, int y0, int x1, int y1, int alpha, uint32_t color);
-void drawAepOtTriangle(AepOrderingTable *ot,
-                       int x0,
-                       int y0,
-                       int x1,
-                       int y1,
-                       int x2,
-                       int y2,
-                       int alpha,
-                       uint32_t color);
-void drawAepOtRect(AepOrderingTable *ot, int x0, int y0, int x1, int y1, int alpha, uint32_t color);
-void drawAepOtQuad(AepOrderingTable *ot,
-                   int x0,
-                   int y0,
-                   int x1,
-                   int y1,
-                   int x2,
-                   int y2,
-                   int x3,
-                   int y3,
-                   int alpha,
-                   uint32_t color);
-void drawAepOtText(AepOrderingTable *ot,
-                   const char *text,
-                   int p3,
-                   int x,
-                   int y,
-                   int size,
-                   int p7,
-                   int alpha,
-                   const void *colorVec,
-                   uint32_t color);
-
-// Textured sprite draws (Ghidra: FUN_00010c90 / FUN_00010e18 ->
-// drawAepSpriteClipped FUN_00012020). `spriteRec` points at the sprite's 8-byte
-// source-rect record.
-void drawAepOtSprite(AepOrderingTable *ot,
-                     const int16_t *spriteRec,
-                     int x,
-                     int y,
-                     int sx,
-                     int sy,
-                     int p7,
-                     int p8,
-                     int p9,
-                     uint32_t alpha,
-                     uint32_t blend,
-                     int p12,
-                     const void *clip,
-                     int p14,
-                     int p15,
-                     int slot);
-void drawAepOtSpriteStretch(AepOrderingTable *ot,
-                            void *frameObj,
-                            int frameCol,
-                            int frameTime,
-                            int x,
-                            int y,
-                            int sx,
-                            int sy,
-                            int ex,
-                            int ey,
-                            int p11,
-                            int p12,
-                            int p13,
-                            uint32_t alpha,
-                            uint32_t blend,
-                            int p16,
-                            const void *clip,
-                            int p18,
-                            int p19);
+// The seven per-type draw handlers (drawAepOtSprite / …Stretch / …Line /
+// …Triangle / …Rect / …Quad / …Text) are AepOrderingTable member functions
+// declared in the class above — in Ghidra they take the OT as `this`, and only
+// the flush dispatches to them.
 
 // The clipped textured-quad immediate draw (Ghidra: FUN_00012020). `frameObj`
 // is the animated texture object: it holds the sub-frame count (+0x04), the

@@ -85,171 +85,257 @@ void AepOrderingTable::reset() {
 
 // Ghidra: FUN_00010be0 (get_aepOt/allocEntry). Grab the next pool entry, tag it
 // with `priority`, and head-insert it into that priority's bucket.
-AepSpriteCommand *AepOrderingTable::allocEntry(int priority) {
+AepOtSpriteCmd *AepOrderingTable::allocEntry(int priority) {
     assert(m_count < kOtRegistMax); // AepOrderingTable.mm:0x3d "m_OtCount < OT_REGIST_MAX"
     assert(priority < kOtPriMax);   // AepOrderingTable.mm:0x3e "pri < OT_PRI_MAX"
 
-    AepSpriteCommand *cmd = &m_entries[m_count++];
-    cmd->priority = (int16_t)priority;
+    AepOtSpriteCmd *cmd = &m_entries[m_count++];
+    cmd->nPriority = (int16_t)priority;
     if (priority > m_maxPriority) {
         m_maxPriority = priority;
     }
-    cmd->next = m_buckets[priority];
+    // get_aepOt head-inserts into the bucket and updates both pCurrentByPri and
+    // pHeadByPri to the newest entry; m_buckets models the (identical) head.
+    cmd->pListNext = m_buckets[priority];
     m_buckets[priority] = cmd;
     return cmd;
 }
 
-// Emit one command as a textured quad (GL ES 1.1). Position/size/uv/colour come
-// from the command the fill (FUN_000113d0) wrote.
-static void drawCommand(const AepSpriteCommand &cmd) {
-    const float x = (float)cmd.x;
-    const float y = (float)cmd.y;
-    const float w = (float)cmd.w;
-    const float h = (float)cmd.h;
-
-    // Interleaved quad (TRIANGLE_STRIP): top-left, top-right, bottom-left,
-    // bottom-right.
-    const GLfloat verts[8] = {x, y, x + w, y, x, y + h, x + w, y + h};
-    // Bridge: cmd.u/cmd.v carry the used UV extent (16.16) that
-    // neTextureForiOS::draw wrote, so a pow2-padded texture samples only its
-    // source region; 0 falls back to the full 0..1.
-    const GLfloat uMax = cmd.u > 0 ? (GLfloat)cmd.u / 65536.0f : 1.0f;
-    const GLfloat vMax = cmd.v > 0 ? (GLfloat)cmd.v / 65536.0f : 1.0f;
-    // The texture loaders (AepTexture.mm) upload Y-flipped "to GL's bottom-left
-    // origin", so v=0 is the BOTTOM of the image, while this ortho is top-left
-    // origin (y down). Map the top vertices to v=vMax and the bottom vertices to
-    // v=0 so the sprite is upright (otherwise it renders upside down). verts
-    // order is TL, TR, BL, BR.
-    const GLfloat uvs[8] = {0, vMax, uMax, vMax, 0, 0, uMax, 0};
-
-    // A real GL texture name (neTextureForiOS::draw bridge) enables texturing;
-    // without one there is nothing to sample, so draw the untextured quad
-    // (neApplyDefaultRenderState left GL_TEXTURE_2D disabled).
-    const bool textured = (cmd.textureId != 0);
-    if (textured) {
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, (GLuint)cmd.textureId);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+// Ghidra: AepOrderingTable::drawSprite (FUN_00011468) — fill a stretched-sprite
+// command (wFlags=1) and link it at `nPriority`. `pTexture` is the source
+// neTextureForiOS*; it is stored verbatim in nTexU and the flush later
+// reinterprets it as the neTextureFrames* drawAepOtSpriteStretch walks (the two
+// are the same object: tile count @+0x04, width/height tables @+0x08/+0x0c, and
+// the per-tile render-state records @+0x14, stride 0x18). The trailing clip words
+// spill into the next pool entry exactly as the binary does.
+AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
+                                             int nTexV,
+                                             int nPosX,
+                                             int nPosY,
+                                             float flPosXf,
+                                             float flPosYf,
+                                             int nOfsX,
+                                             int nOfsY,
+                                             int nColorA,
+                                             int nColorMul,
+                                             int nKeys,
+                                             int nBlendFlags,
+                                             int nColorRGB,
+                                             int16_t clipLeftLo,
+                                             int16_t clipLeftHi,
+                                             int clipTop,
+                                             int clipRight,
+                                             const void *clipSpill,
+                                             int nPriority) {
+    AepOtSpriteCmd *cmd = allocEntry(nPriority);
+    if (cmd == nullptr) {
+        return nullptr;
+    }
+    cmd->wFlags = 1; // type 1 = stretched sprite
+    cmd->nBank = 0;
+    cmd->pTexObj = pTexture; // sprite texture object (the binary packs it into nTexU)
+    cmd->nTexU = 0;          // unused for sprites here; the texture lives in pTexObj
+    cmd->nTexV = nTexV;      // frame column
+    cmd->nPosX = nPosX;
+    cmd->nPosY = nPosY;
+    cmd->flPosXf = flPosXf;
+    cmd->flPosYf = flPosYf;
+    cmd->nOfsX = nOfsX;
+    cmd->nOfsY = nOfsY;
+    cmd->nColorA = nColorA;
+    cmd->nColorMul = nColorMul;
+    cmd->nUKey = (int16_t)nKeys;
+    cmd->nVKey = (int16_t)(nKeys >> 16);
+    cmd->nBlendFlags = nBlendFlags;
+    cmd->nColorRGB = nColorRGB;
+    // clipRect.nLeft carries two packed shorts; nTop / nRight follow.
+    cmd->clipRect.nLeft = (int)((uint16_t)clipLeftLo | ((uint32_t)(uint16_t)clipLeftHi << 16));
+    cmd->clipRect.nTop = clipTop;
+    cmd->clipRect.nRight = clipRight;
+    // The binary spills a 16-byte clip block starting at clipRect.nBottom (+0x4c),
+    // flowing into the entry's scratch tail. Ghidra addresses the trailing 8 bytes
+    // as pAVar1[1].wFlags/.nBank because it models the pool entry as the 80-byte
+    // AepOtSpriteCmd; that is the SAME 0x134 slot's scratch, not a second entry, so
+    // write it in place (advancing a whole AepOtSpriteCmd here would clobber the
+    // next pooled command).
+    if (clipSpill != nullptr) {
+        std::memcpy(&cmd->clipRect.nBottom, clipSpill, 16);
     } else {
-        // The only untextured quads are the transition fade overlays
-        // (drawTransitionOverlay: textureId=0, color0 = alpha 0..100). They dip the
-        // screen to BLACK -- not a white opaque fill. Draw black at the command's
-        // alpha so fades look right instead of flashing white.
-        GLfloat a = (GLfloat)cmd.color0 / 100.0f;
-        a = a < 0.0f ? 0.0f : (a > 1.0f ? 1.0f : a);
-        glColor4f(0.0f, 0.0f, 0.0f, a);
+        std::memset(&cmd->clipRect.nBottom, 0, 16);
     }
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, verts);
-    if (textured) {
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(2, GL_FLOAT, 0, uvs);
-    }
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    if (textured) {
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        glDisable(GL_TEXTURE_2D);
-    }
-    glDisableClientState(GL_VERTEX_ARRAY);
+    return cmd;
 }
 
-// Ghidra: FUN_000115d0 (renderAepOrderingTable) — draw the frame, highest
-// priority bucket first.
-//
-// The binary switches on cmd.type (the short @cmd+0x04; see AepSpriteCommand)
-// and routes each command to a dedicated per-type handler:
-//     0 sprite  -> drawAepOtSprite  (FUN_00010c90)   4 rect  -> drawAepOtRect
-//     (FUN_0001113c) 1 stretch -> drawAepOtSpriteStretch (0x10e18)   5 quad  ->
-//     drawAepOtQuad  (FUN_000111f8) 2 line    -> drawAepOtLine (FUN_00010f98)
-//     6 text  -> drawAepOtText  (FUN_00011310) 3 tri     -> drawAepOtTriangle
-//     (FUN_00011054)
-// In practice only types 0/1 (sprites), 4 (the transition overlay), and 6
-// (text) are ever queued; 2/3/5 are live handlers with no push site in this
-// title.
-//
-// This reconstruction renders every command as a single textured quad instead
-// of dispatching. That is a DELIBERATE, methodology-compliant best-effort: the
-// sprite tail (drawAepOtSprite/Stretch -> drawAepSpriteClipped @0x12020 ->
-// neDrawTexturedQuad @0x15fb8) threads its transform through the VFP register
-// bank (renderScale in s0 and unused in the callee; scaledX/width/uSpan
-// scrambled across s/r regs by the AAPCS split), so the decompiler cannot
-// recover the exact per-arg order. Per the reconstruction rules we do not
-// invent those VFP-spilled values; the all-quad path is the faithful
-// approximation of the sprite/stretch cases. Types 4/6 render acceptably as
-// quads here too (the overlay is a full-rect fill; text loses glyph shaping —
-// the one visible simplification). Wiring the true dispatch is gated on a
-// disasm-verified re-derivation of the VFP sprite tail (see NEON_ACCURACY.md #2
-// / HANDOFF.md), which is the remaining, methodology-bounded work.
-void AepOrderingTable::flush() {
-    // Establish the 2D render state using the binary's own GL mechanism. The
-    // binary imports glLoadMatrixf / glMatrixMode / glViewport (NOT glOrthof /
-    // glLoadIdentity): the ortho is a software-built top-left-origin matrix
-    // (Ghidra FUN_00012ba8) loaded via glLoadMatrixf, and the modelview identity
-    // is loaded the same way. We build them directly here rather than going
-    // through neApplyDefaultRenderState -> neGetCurrentRenderer (the renderer
-    // facade is not yet initialised on the first frame, so that path
-    // null-derefs). drawCommand is a raw GL ES 1.1 path that otherwise bypasses
-    // all projection setup, leaving it at identity and the pixel-space quads
-    // off-screen (why the boot was black). Screen extents come from
-    // setScreenParams (aepManagerInit).
-    if (m_screenW > 0 && m_screenH > 0) {
-        const GLfloat W = (GLfloat)m_screenW;
-        const GLfloat H = (GLfloat)m_screenH;
-        // glOrtho(0, W, H, 0, -1, 1) as a column-major matrix (top-left origin).
-        const GLfloat ortho[16] = {
-            2.0f / W,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            -2.0f / H,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            -1.0f,
-            0.0f,
-            -1.0f,
-            1.0f,
-            0.0f,
-            1.0f,
-        };
-        static const GLfloat identity[16] = {
-            1,
-            0,
-            0,
-            0,
-            0,
-            1,
-            0,
-            0,
-            0,
-            0,
-            1,
-            0,
-            0,
-            0,
-            0,
-            1,
-        };
-        // NOTE: do NOT set glViewport here -- MainViewController -draw sets it to
-        // the full drawable so this content-resolution ortho stretches across the
-        // whole screen. Setting it to the content extents (m_screenW/H) would
-        // confine rendering to a sub-rectangle in the corner.
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(ortho);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(identity);
-        glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+// Establish the per-frame 2D render state. This is NOT part of
+// renderAepOrderingTable (which is pure dispatch): in the binary the renderer
+// facade / GL view sets the projection and default render state at frame begin,
+// outside the OT flush. The reconstruction has not yet routed that frame-begin
+// setup through the facade, so this stand-in loads the top-left-origin ortho and
+// the default 2D blend state here, guarded by the cached screen extents
+// (setScreenParams). Once the facade's frame-begin path is wired this can be
+// dropped. Kept separate from the dispatch loop so the loop stays bit-exact.
+static void establishFrame2DState(int screenW, int screenH) {
+    if (screenW <= 0 || screenH <= 0) {
+        return;
     }
+    const GLfloat W = (GLfloat)screenW;
+    const GLfloat H = (GLfloat)screenH;
+    // glOrtho(0, W, H, 0, -1, 1) as a column-major matrix (top-left origin).
+    const GLfloat ortho[16] = {
+        2.0f / W,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        -2.0f / H,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        -1.0f,
+        0.0f,
+        -1.0f,
+        1.0f,
+        0.0f,
+        1.0f,
+    };
+    static const GLfloat identity[16] = {
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+    };
+    // Do NOT set glViewport here -- MainViewController -draw sets it to the full
+    // drawable so this content-resolution ortho stretches across the whole screen.
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(ortho);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(identity);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+// Ghidra: renderAepOrderingTable (FUN_000115d0) — walk the priority buckets from
+// OT_PRI_MAX-1 (0x31) down to 0 (high priority drawn first = back-to-front) and
+// dispatch each queued command by its wFlags tag to the matching per-type draw
+// handler. Each handler receives the raw command fields in the exact order the
+// binary passes them (the field slots are reinterpreted per type; the handler
+// bodies follow their own FUN_* decompiles). Priority 0 draws last = frontmost.
+void AepOrderingTable::flush() {
+    establishFrame2DState(m_screenW, m_screenH); // frame-begin bridge (see above)
 
     m_drawnCount = 0;
-    for (int pri = m_maxPriority; pri >= 0; pri--) {
-        for (AepSpriteCommand *cmd = m_buckets[pri]; cmd != nullptr; cmd = cmd->next) {
-            drawCommand(*cmd);
+    for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
+        for (AepOtSpriteCmd *cmd = m_buckets[pri]; cmd != nullptr; cmd = cmd->pListNext) {
+            switch (cmd->wFlags) {
+            case 0:                           // textured sprite -> drawAepOtSprite (FUN_00010c90)
+                drawAepOtSprite(cmd->srcRect, // packed {u, v, w, h} source rect
+                                cmd->nPosX,
+                                cmd->nPosY,
+                                (int)cmd->flPosXf,
+                                (int)cmd->flPosYf,
+                                cmd->nOfsX,
+                                cmd->nOfsY,
+                                cmd->nColorA,
+                                (uint32_t)cmd->nColorMul,
+                                (int)cmd->nUKey,
+                                (uint32_t)(uint16_t)cmd->nVKey,
+                                &cmd->clipRect.nLeft,
+                                cmd->nBlendFlags,
+                                cmd->nColorRGB,
+                                cmd->nBank);
+                break;
+            case 1: { // stretched sprite -> drawAepOtSpriteStretch (FUN_00010e18)
+                const int nKeys = (uint16_t)cmd->nUKey | (cmd->nVKey << 16);
+                drawAepOtSpriteStretch(cmd->pTexObj, // the sprite texture object (typed)
+                                       cmd->nTexV,
+                                       cmd->nPosX,
+                                       cmd->nPosY,
+                                       (int)cmd->flPosXf,
+                                       (int)cmd->flPosYf,
+                                       cmd->nOfsX,
+                                       cmd->nOfsY,
+                                       cmd->nColorA,
+                                       cmd->nColorMul,
+                                       nKeys,
+                                       cmd->nBlendFlags,
+                                       (uint32_t)cmd->nColorRGB,
+                                       (int)(int16_t)cmd->clipRect.nLeft,
+                                       (int)(uint16_t)((uint32_t)cmd->clipRect.nLeft >> 16),
+                                       &cmd->clipRect.nBottom,
+                                       cmd->clipRect.nTop,
+                                       cmd->clipRect.nRight);
+                break;
+            }
+            case 2: // line -> drawAepOtLine (FUN_00010f98)
+                drawAepOtLine(cmd->nTexU,
+                              cmd->nTexV,
+                              cmd->nPosX,
+                              cmd->nPosY,
+                              (int)cmd->flPosXf,
+                              (uint32_t)cmd->flPosYf);
+                break;
+            case 3: // triangle -> drawAepOtTriangle (FUN_00011054)
+                drawAepOtTriangle(cmd->nTexU,
+                                  cmd->nTexV,
+                                  cmd->nPosX,
+                                  cmd->nPosY,
+                                  (int)cmd->flPosXf,
+                                  (int)cmd->flPosYf,
+                                  cmd->nOfsX,
+                                  cmd->nOfsY);
+                break;
+            case 4: // rect (transition fade overlay) -> drawAepOtRect (FUN_0001113c)
+                drawAepOtRect(cmd->nTexU,
+                              cmd->nTexV,
+                              cmd->nPosX,
+                              cmd->nPosY,
+                              (int)cmd->flPosXf,
+                              (uint32_t)cmd->flPosYf);
+                break;
+            case 5: // quad -> drawAepOtQuad (FUN_000111f8)
+                drawAepOtQuad(cmd->nTexU,
+                              cmd->nTexV,
+                              cmd->nPosX,
+                              cmd->nPosY,
+                              (int)cmd->flPosXf,
+                              (int)cmd->flPosYf,
+                              cmd->nOfsX,
+                              cmd->nOfsY);
+                break;
+            case 6: { // text -> drawAepOtText (FUN_00011310)
+                // The type-6 entry is an AepTextCmd overlaid on the same pool slot:
+                // the string lives at +0x0c (the nTexU slot) and the glyph
+                // parameters at +0x10c. (The binary reaches them as pCmd[3].* using
+                // the 80-byte AepOtSpriteCmd view; the named overlay is equivalent.)
+                const AepTextCmd *t = reinterpret_cast<const AepTextCmd *>(cmd);
+                drawAepOtText(t->pText,
+                              0x1020bd,
+                              (int)t->flPosXf,
+                              (int)t->flPosYf,
+                              t->nColorTL,
+                              t->nColorTR,
+                              t->nColorBL,
+                              t->pAClipVec,
+                              (uint32_t)t->nColorBR);
+                break;
+            }
+            default:
+                break;
+            }
             m_drawnCount++;
         }
     }
@@ -309,34 +395,35 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
                       int a5,
                       const void *colorVec,
                       int priority) {
-    AepTextCommand *cmd = reinterpret_cast<AepTextCommand *>(ot->allocEntry(priority));
+    AepTextCmd *cmd = reinterpret_cast<AepTextCmd *>(ot->allocEntry(priority));
     if (cmd == nullptr) {
         return;
     }
-    cmd->type = 6;                        // +0x04
-    cmd->reserved8 = 0;                   // +0x08
-    std::strncpy(cmd->text, text, 0x100); // +0x0c
-    cmd->text[0xff] = '\0';               // +0x10b force-terminate
-    cmd->arg0 = a0;                       // +0x10c
-    cmd->arg1 = a1;                       // +0x110
-    cmd->arg2 = a2;                       // +0x114
-    cmd->arg3 = a3;                       // +0x118
-    cmd->arg4 = a4;                       // +0x11c
-    cmd->arg5 = a5;                       // +0x120
+    cmd->nType = 6;                      // +0x04
+    cmd->nReserved8 = 0;                 // +0x08
+    std::strncpy(cmd->pText, text, 256); // +0x0c
+    cmd->pText[255] = '\0';              // +0x10b force-terminate
+    // The manager forwarders pass the pen position (a0/a1) and the four per-corner
+    // colours (a2..a5); PushAepOtTextCmd stores the position in the float slots.
+    cmd->flPosXf = (float)a0; // +0x10c
+    cmd->flPosYf = (float)a1; // +0x110
+    cmd->nColorTL = a2;       // +0x114
+    cmd->nColorTR = a3;       // +0x118
+    cmd->nColorBL = a4;       // +0x11c
+    cmd->nColorBR = a5;       // +0x120
     if (colorVec != nullptr) {
-        std::memcpy(cmd->vec, colorVec, 16); // +0x124 copy the 16-byte vector
+        std::memcpy(cmd->pAClipVec, colorVec, 16); // +0x124 copy the 16-byte clip vector
     } else {
-        cmd->vec[0] = 0;                           // default colour vector =
-        cmd->vec[1] = 0;                           //   {0, 0, screenW, screenH}
-        cmd->vec[2] = (int)(int16_t)ot->screenW(); // +0x12c (read as a short in the binary)
-        cmd->vec[3] = (int)(int16_t)ot->screenH(); // +0x130
+        cmd->pAClipVec[0] = 0;                           // default clip vector =
+        cmd->pAClipVec[1] = 0;                           //   {0, 0, screenW, screenH}
+        cmd->pAClipVec[2] = (int)(int16_t)ot->screenW(); // +0x12c (read as a short in the binary)
+        cmd->pAClipVec[3] = (int)(int16_t)ot->screenH(); // +0x130
     }
 }
 
-// Ghidra: drawAepOtLine (FUN_00010f98).
-void drawAepOtLine(
-    AepOrderingTable *ot, int x0, int y0, int x1, int y1, int alpha, uint32_t color) {
-    const float s = ot->renderScale();
+// Ghidra: AepOrderingTable::drawAepOtLine (FUN_00010f98).
+void AepOrderingTable::drawAepOtLine(int x0, int y0, int x1, int y1, int alpha, uint32_t color) {
+    const float s = renderScale();
     neDrawLine(aepScale(x0, s),
                aepScale(y0, s),
                aepScale(x1, s),
@@ -347,10 +434,9 @@ void drawAepOtLine(
                aepColB(color));
 }
 
-// Ghidra: drawAepOtRect (FUN_0001113c).
-void drawAepOtRect(
-    AepOrderingTable *ot, int x0, int y0, int x1, int y1, int alpha, uint32_t color) {
-    const float s = ot->renderScale();
+// Ghidra: AepOrderingTable::drawAepOtRect (FUN_0001113c).
+void AepOrderingTable::drawAepOtRect(int x0, int y0, int x1, int y1, int alpha, uint32_t color) {
+    const float s = renderScale();
     neDrawRect(aepScale(x0, s),
                aepScale(y0, s),
                aepScale(x1, s),
@@ -367,16 +453,9 @@ void drawAepOtRect(
 // reconstruction appended a fabricated fourth x that the real, extern-"C"
 // primitive silently discarded; removed for 1:1. (The exact VFP vertex
 // permutation is register-allocator obscured.)
-void drawAepOtTriangle(AepOrderingTable *ot,
-                       int x0,
-                       int y0,
-                       int x1,
-                       int y1,
-                       int x2,
-                       int y2,
-                       int alpha,
-                       uint32_t color) {
-    const float s = ot->renderScale();
+void AepOrderingTable::drawAepOtTriangle(
+    int x0, int y0, int x1, int y1, int x2, int y2, int alpha, uint32_t color) {
+    const float s = renderScale();
     neDrawTriangle(aepScale(x0, s),
                    aepScale(y0, s),
                    aepScale(x1, s),
@@ -392,18 +471,9 @@ void drawAepOtTriangle(AepOrderingTable *ot,
 // Ghidra: drawAepOtQuad (FUN_000111f8). Four scaled corner vertices. neDrawQuad
 // (FUN_000153e8) consumes exactly those four; the earlier reconstruction
 // appended a fabricated fifth x (a discarded extern-"C" arg) — removed for 1:1.
-void drawAepOtQuad(AepOrderingTable *ot,
-                   int x0,
-                   int y0,
-                   int x1,
-                   int y1,
-                   int x2,
-                   int y2,
-                   int x3,
-                   int y3,
-                   int alpha,
-                   uint32_t color) {
-    const float s = ot->renderScale();
+void AepOrderingTable::drawAepOtQuad(
+    int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int alpha, uint32_t color) {
+    const float s = renderScale();
     neDrawQuad(aepScale(x0, s),
                aepScale(y0, s),
                aepScale(x1, s),
@@ -421,17 +491,16 @@ void drawAepOtQuad(AepOrderingTable *ot,
 // Ghidra: drawAepOtText (FUN_00011310). Position and glyph size are scaled by
 // the render scale; the colour vector is likewise scaled (VectorMultiply by
 // scale) and forwarded.
-void drawAepOtText(AepOrderingTable *ot,
-                   const char *text,
-                   int p3,
-                   int x,
-                   int y,
-                   int size,
-                   int p7,
-                   int alpha,
-                   const void *colorVec,
-                   uint32_t color) {
-    const float s = ot->renderScale();
+void AepOrderingTable::drawAepOtText(const char *text,
+                                     int p3,
+                                     int x,
+                                     int y,
+                                     int size,
+                                     int p7,
+                                     int alpha,
+                                     const void *colorVec,
+                                     uint32_t color) {
+    const float s = renderScale();
     const int scaledSize = aepScale(size, s);
     neDrawText(scaledSize,
                text,
@@ -560,23 +629,22 @@ void drawAepSpriteClipped(float renderScale,
 // visibility (a fully-transparent, unrotated, unscaled sprite is culled) and
 // forward to drawAepSpriteClipped with the sprite record's source rect and the
 // scaled transform.
-void drawAepOtSprite(AepOrderingTable *ot,
-                     const int16_t *spriteRec,
-                     int x,
-                     int y,
-                     int sx,
-                     int sy,
-                     int p7,
-                     int p8,
-                     int p9,
-                     uint32_t alpha,
-                     uint32_t blend,
-                     int p12,
-                     const void *clip,
-                     int p14,
-                     int p15,
-                     int slot) {
-    const float s = ot->renderScale();
+void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
+                                       int x,
+                                       int y,
+                                       int sx,
+                                       int sy,
+                                       int p7,
+                                       int p8,
+                                       int p9,
+                                       uint32_t alpha,
+                                       uint32_t blend,
+                                       int p12,
+                                       const void *clip,
+                                       int p14,
+                                       int p15,
+                                       int slot) {
+    const float s = renderScale();
     const int dstX = aepScale(x, s);
     const int dstY = aepScale(y, s);
 
@@ -593,7 +661,7 @@ void drawAepOtSprite(AepOrderingTable *ot,
         return; // fully-opaque untinted no-op: nothing to composite
     }
 
-    void *tex = ot->textureTable() ? ot->textureTable()[slot] : nullptr;
+    void *tex = textureTable() ? textureTable()[slot] : nullptr;
     // spriteRec: +0 u, +2 v, +4 width, +6 height.
     // Disasm (drawAepOtSprite tail, four vdiv by DAT_00010e14=100.0): the
     // forwarded quad width/height are the TRIPLE product base * renderScale *
@@ -624,26 +692,25 @@ void drawAepOtSprite(AepOrderingTable *ot,
 // Ghidra: drawAepOtSpriteStretch (FUN_00010e18) — the stretched-sprite variant.
 // Same gate and scaling as drawAepOtSprite but with an explicit end position
 // (ex,ey), forwarded to drawAepSpriteClipped.
-void drawAepOtSpriteStretch(AepOrderingTable *ot,
-                            void *frameObj,
-                            int frameCol,
-                            int frameTime,
-                            int x,
-                            int y,
-                            int sx,
-                            int sy,
-                            int ex,
-                            int ey,
-                            int p11,
-                            int p12,
-                            int p13,
-                            uint32_t alpha,
-                            uint32_t blend,
-                            int p16,
-                            const void *clip,
-                            int p18,
-                            int p19) {
-    const float s = ot->renderScale();
+void AepOrderingTable::drawAepOtSpriteStretch(void *frameObj,
+                                              int frameCol,
+                                              int frameTime,
+                                              int x,
+                                              int y,
+                                              int sx,
+                                              int sy,
+                                              int ex,
+                                              int ey,
+                                              int p11,
+                                              int p12,
+                                              int p13,
+                                              uint32_t alpha,
+                                              uint32_t blend,
+                                              int p16,
+                                              const void *clip,
+                                              int p18,
+                                              int p19) {
+    const float s = renderScale();
 
     // Natural-scale flag, same as drawAepOtSprite but keyed on the END position
     // (ex, ey): the binary clears it when scaled ex/ey == 100.0 (DAT_00010f94)

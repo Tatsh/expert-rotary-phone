@@ -171,9 +171,9 @@ static void aepComputeChildClip(AepManager *mgr,
 
 // Ghidra: FUN_000113d0 (-> allocEntry FUN_00010be0) — reserve an ordering-table
 // command at `priority` and fill the textured-quad payload. Field offsets are
-// the binary's; the AepSpriteCommand slots at +0x2c..+0x3c carry colour/alpha,
+// the binary's; the AepOtSpriteCmd slots at +0x2c..+0x3c carry colour/alpha,
 // the packed rotation/blend words and the two user words, so they are written
-// by their offset meaning (the struct's field names there are historical).
+// by their offset meaning (the field names carry the sprite-command roles).
 static void aepEmitSprite(AepManager *mgr,
                           int groupSlot,
                           int child,
@@ -191,45 +191,44 @@ static void aepEmitSprite(AepManager *mgr,
                           uint32_t priority,
                           uint32_t p15,
                           uint32_t p19) {
-    AepOrderingTable *ot = mgr->orderingTable();           // this+0x727538
-    AepSpriteCommand *cmd = ot->allocEntry((int)priority); // FUN_00010be0
+    AepOrderingTable *ot = mgr->orderingTable();         // this+0x727538
+    AepOtSpriteCmd *cmd = ot->allocEntry((int)priority); // FUN_00010be0
     if (cmd == nullptr) {
         return;
     }
     const int16_t *rec = mgr->spriteRecord(groupSlot, child); // this+slot*0x2000+child*8+0x7c1962
 
-    cmd->type = 0;              // +0x04  type 0 = textured sprite
-    cmd->textureId = groupSlot; // +0x08
-    // The binary copies the 8-byte sprite record verbatim as two 32-bit words
-    // (packed {x|y<<16} and {span|h<<16}); the GL layer unpacks the source rect.
-    std::memcpy(&cmd->u, rec, 4);     // +0x0c
-    std::memcpy(&cmd->v, rec + 2, 4); // +0x10
-    cmd->x = x;                       // +0x14
-    cmd->y = y;                       // +0x18
+    cmd->wFlags = 0;        // +0x04  type 0 = textured sprite
+    cmd->nBank = groupSlot; // +0x08  (flush case 0 forwards this as the texture slot)
+    // The binary copies the 8-byte sprite record verbatim into the nTexU/nTexV
+    // slots; the flush reads them back as the u/v/w/h source-rect shorts (srcRect).
+    std::memcpy(cmd->srcRect, rec, 8); // +0x0c..+0x13
+    cmd->nPosX = x;                    // +0x14
+    cmd->nPosY = y;                    // +0x18
     // The binary converts the integer scale to float (FixedToFP, 16.16) here; the
-    // GL layer consumes the percentage directly in this rebuild.
-    cmd->sx = scaleX;                // +0x1c
-    cmd->sy = scaleY;                // +0x20
-    cmd->w = w;                      // +0x24  (entry anchorX doubles as width)
-    cmd->h = h;                      // +0x28  (entry anchorY doubles as height)
-    cmd->ex = color;                 // +0x2c  colour (brightness) 0..100
-    cmd->ey = alpha;                 // +0x30  alpha 0..100 (see the >=100 split)
-    cmd->color0 = (int16_t)rotation; // +0x34  packed rotation word
-    cmd->color1 = (int16_t)blend;    // +0x36  packed blend word
-    cmd->rotation = (int)p19;        // +0x38  user word (param_19)
-    cmd->blend = (int)p15;           // +0x3c  user word (param_15)
+    // flush reads (int)flPosXf back out as the percentage scale.
+    cmd->flPosXf = (float)scaleX;   // +0x1c
+    cmd->flPosYf = (float)scaleY;   // +0x20
+    cmd->nOfsX = w;                 // +0x24  (entry anchorX doubles as width)
+    cmd->nOfsY = h;                 // +0x28  (entry anchorY doubles as height)
+    cmd->nColorA = color;           // +0x2c  colour (brightness) 0..100
+    cmd->nColorMul = alpha;         // +0x30  alpha 0..100 (see the >=100 split)
+    cmd->nUKey = (int16_t)rotation; // +0x34  packed rotation word
+    cmd->nVKey = (int16_t)blend;    // +0x36  packed blend word
+    cmd->nBlendFlags = (int)p19;    // +0x38  user word (param_19)
+    cmd->nColorRGB = (int)p15;      // +0x3c  user word (param_15)
     if (clipRect != nullptr) {
-        cmd->clip[0] = (int16_t)clipRect[0];
-        cmd->clip[1] = (int16_t)clipRect[1];
-        cmd->clip[2] = (int16_t)clipRect[2];
-        cmd->clip[3] = (int16_t)clipRect[3];
+        cmd->clipRect.nLeft = clipRect[0];
+        cmd->clipRect.nTop = clipRect[1];
+        cmd->clipRect.nRight = clipRect[2];
+        cmd->clipRect.nBottom = clipRect[3];
     } else {
         // Default: the full screen quad (the binary reads the OT's cached bounds at
         // its +0x4/+0x8; here the manager's screen extents give the same rect).
-        cmd->clip[0] = 0;
-        cmd->clip[1] = 0;
-        cmd->clip[2] = (int16_t)mgr->screenWidth();
-        cmd->clip[3] = (int16_t)mgr->screenHeight();
+        cmd->clipRect.nLeft = 0;
+        cmd->clipRect.nTop = 0;
+        cmd->clipRect.nRight = mgr->screenWidth();
+        cmd->clipRect.nBottom = mgr->screenHeight();
     }
 }
 

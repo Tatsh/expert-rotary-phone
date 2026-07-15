@@ -323,14 +323,14 @@ void AepManager::setGroupDrawCallback(int slot, AepGroupDrawFn callback, void *c
 }
 
 // Ghidra: FUN_000106dc — start a fade transition (mode 1 in / 2 out; 0 or >=3
-// cancels). Length + total are set to `frames`; the overlay is chosen by
-// `flag`.
-void AepManager::playTransition(int mode, int frames, int flag) {
+// cancels). Length + total are set to `frames`; `color` is the fade colour
+// (0x00RRGGBB) the overlay dips to (0 = black, as every boot-logo call passes).
+void AepManager::playTransition(int mode, int frames, int color) {
     if ((unsigned)mode < 3 && frames > 0) {
         m_transitionMode = mode;
         m_transitionFrames = frames;
         m_transitionTotal = frames;
-        m_transitionFlag = flag;
+        m_transitionColor = color;
     } else {
         m_transitionMode = 0;
         m_transitionFrames = 0;
@@ -387,20 +387,28 @@ void AepManager::draw() {
     m_maxPriority = m_ot.drawnCount();
 }
 
-// Ghidra: FUN_0001151c — queue the full-screen fade quad as a top-priority OT
-// command: geometry from m_transitionOverlay, opacity `alpha` (0..100), overlay
-// selector m_transitionFlag. (The exact colour packing is that unit's detail.)
+// Ghidra: FUN_0001151c — queue the full-screen fade quad (geometry from
+// m_transitionOverlay, opacity `alpha` 0..100, colour m_transitionColor). The
+// fill writes the rect into nTexU/nTexV/nPosX/nPosY, the alpha into flPosXf and
+// the colour into flPosYf; renderAepOrderingTable case 4 then hands those to
+// drawAepOtRect(x, y, w, h, alpha, colour). AepManager::draw @0x1058c passes a
+// constant priority 1 (disasm: mov r11,#1 -> strd at [sp,#0xc], the nPriority
+// stack arg). The flush walks bucket 0x31 first down to 0 last, so bucket 1 draws
+// after the scene (logos are 5+) and on top. The old kOtPriMax-1 (49) put the
+// fade behind everything, so nothing saw it.
 void AepManager::drawTransitionOverlay(int alpha) {
-    AepSpriteCommand *cmd = m_ot.allocEntry(kOtPriMax - 1);
+    AepOtSpriteCmd *cmd = m_ot.allocEntry(1);
     if (cmd == nullptr) {
         return;
     }
-    cmd->x = m_transitionOverlay[0];
-    cmd->y = m_transitionOverlay[1];
-    cmd->w = m_transitionOverlay[2];
-    cmd->h = m_transitionOverlay[3];
-    cmd->color0 = (int16_t)alpha;
-    cmd->textureId = m_transitionFlag;
+    cmd->wFlags = 4; // -> renderAepOrderingTable case 4 = drawAepOtRect
+    cmd->nBank = 0;
+    cmd->nTexU = m_transitionOverlay[0];     // x
+    cmd->nTexV = m_transitionOverlay[1];     // y
+    cmd->nPosX = m_transitionOverlay[2];     // w
+    cmd->nPosY = m_transitionOverlay[3];     // h
+    cmd->flPosXf = (float)alpha;             // drawAepOtRect nAlpha (0..100)
+    cmd->flPosYf = (float)m_transitionColor; // drawAepOtRect nColor (0x00RRGGBB; 0 = black)
 }
 
 // ===========================================================================
@@ -492,7 +500,7 @@ void aepManagerInit(AepManager *mgr,
     mgr->m_transitionMode = 0;
     mgr->m_transitionFrames = 0;
     mgr->m_transitionTotal = 30; // 0x1e
-    mgr->m_transitionFlag = 0;
+    mgr->m_transitionColor = 0;
     mgr->m_maxPriority = 0;
 }
 

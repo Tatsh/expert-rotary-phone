@@ -113,54 +113,38 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
 // allocEntry FUN_00010be0 + the field fill inlined below). A null clip defaults
 // to screen bounds.
 void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
-    AepSpriteCommand *cmd = ot->allocEntry(p.priority);
-    if (cmd == nullptr) {
-        return;
-    }
-    cmd->type = 1; // +0x04 type 1 = stretched sprite (AepOrderingTable::drawSprite
-                   // FUN_00011468 writes *(short*)(entry+4)=1; the discriminator
-                   // lives at +0x04, not the priority slot)
-
-    // --- Simplified-renderer bridge (until the full type dispatch, NEON_ACCURACY
-    // #2) --- The binary carries the sprite's texture through the render-state
-    // slot chain (drawAepOtSpriteStretch -> drawAepSpriteClipped ->
-    // neDrawTexturedQuad). That chain is not yet reconstructed, and the binary's
-    // own textureId slot is 0 here. Until the real dispatch lands, stash the
-    // resolved GL texture name in textureId and the used UV extent (source /
-    // pow2-padded, as 16.16) in u/v, so the placeholder flush (AepOrderingTable's
-    // drawCommand) can bind the texture and sample only the source region.
-    unsigned glName = 0; // GL texture name (GLuint); kept as plain unsigned for the .cpp
-    float uSpan = 1.0f, vSpan = 1.0f;
-    if (m_tileCount > 0 && m_tiles != nullptr && m_tiles[0] != nullptr) {
-        AepTexture *t = m_tiles[0];
-        glName = t->name();
-        if (t->textureWidth() > 0) {
-            uSpan = (float)t->width() / (float)t->textureWidth();
-        }
-        if (t->textureHeight() > 0) {
-            vSpan = (float)t->height() / (float)t->textureHeight();
-        }
-    }
-    cmd->textureId = (int)glName;     // +0x08 (bridge: real GL texture name)
-    cmd->u = (int)(uSpan * 65536.0f); // +0x0c (bridge: UV span x, 16.16)
-    cmd->v = (int)(vSpan * 65536.0f); // +0x10 (bridge: UV span y, 16.16)
-    cmd->x = p.x;
-    cmd->y = p.y; // +0x14/+0x18
-    cmd->sx = p.sx;
-    cmd->sy = p.sy; // +0x1c/+0x20
-    cmd->w = p.w;
-    cmd->h = p.h; // +0x24/+0x28
-    cmd->ex = p.ex;
-    cmd->ey = p.ey;               // +0x2c/+0x30
-    cmd->color0 = (short)p.color; // +0x34
-    cmd->rotation = p.rotation;   // +0x38
-    cmd->blend = p.blend0;        // +0x3c
-    cmd->clip[0] = p.blend1;      // +0x40 (blend sub-mode)
-    // +0x44 colour-mul, +0x48 extra, +0x4c.. clip rect are carried in the
-    // command's opaque tail; when no explicit clip is given the flush defaults it
-    // to the screen bounds (Ghidra: reads *(param_1+4)/*(param_1+8) at
-    // iVar1+0x54/0x58).
-    (void)p.clip;
+    // Fill a stretched-sprite command (wFlags=1) through the real fill
+    // AepOrderingTable::drawSprite (FUN_00011468). The sprite's texture is THIS
+    // object: it is stored verbatim in the command's nTexU slot and the flush's
+    // case-1 dispatch reinterprets it as the neTextureFrames* that
+    // drawAepOtSpriteStretch -> drawAepSpriteClipped -> neDrawTexturedQuad walk
+    // (this class carries the frame tables the chain reads: tile count @+0x04,
+    // width/height tables @+0x08/+0x0c, per-tile render-state records @+0x14). No
+    // GL-name bridge is needed any more.
+    //
+    // The neSpriteDrawParams fields map onto the command slots by the offsets the
+    // binary's neTextureForiOS::draw (FUN_0000fbcc) forwards them into; the two
+    // fixed-point positions become the flPosXf/flPosYf floats. A null clip leaves
+    // the flush to default it to the screen bounds.
+    ot->drawSprite(this,              // nTexU: the source neTextureForiOS*
+                   p.v,               // nTexV
+                   p.x,               // nPosX
+                   p.y,               // nPosY
+                   (float)p.sx,       // flPosXf
+                   (float)p.sy,       // flPosYf
+                   p.w,               // nOfsX
+                   p.h,               // nOfsY
+                   p.ex,              // nColorA
+                   p.ey,              // nColorMul
+                   p.color,           // nUKey | nVKey<<16
+                   p.rotation,        // nBlendFlags
+                   p.blend0,          // nColorRGB
+                   (int16_t)p.blend1, // clipRect.nLeft low half
+                   0,                 // clipRect.nLeft high half
+                   0,                 // clipRect.nTop
+                   0,                 // clipRect.nRight
+                   nullptr,           // no explicit clip spill
+                   p.priority);
 }
 
 // neTextureForiOS_draw (FUN_0000fbcc), the flat-argument sprite-draw wrapper,

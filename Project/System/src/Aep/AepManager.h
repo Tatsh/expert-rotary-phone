@@ -69,9 +69,9 @@ public:
     int getUserNo(int group, const char *name) const;
 
     // Start a screen transition (fade). `mode` 1 = fade in, 2 = fade out (0 or
-    // >=3 clears it); `frames` is its length in frames; `flag` selects the
-    // overlay. Ghidra: FUN_000106dc.
-    void playTransition(int mode, int frames, int flag);
+    // >=3 clears it); `frames` is its length in frames; `color` is the fade colour
+    // (0x00RRGGBB; 0 = black) the overlay dips to. Ghidra: FUN_000106dc.
+    void playTransition(int mode, int frames, int color);
 
     // Scrub the *current* transition frame counter to `frame`, clamped to
     // [0, total]. This does not change the mode or total set by playTransition;
@@ -269,7 +269,7 @@ private:
     int m_transitionMode = 0;        // +0x7f3b04  0 none, 1 fade in, 2 fade out
     int m_transitionFrames = 0;      // +0x7f3b08  frames remaining (counts down)
     int m_transitionTotal = 0;       // +0x7f3b0c  total frames of the transition
-    int m_transitionFlag = 0;        // +0x7f3b10  overlay selector
+    int m_transitionColor = 0;       // +0x7f3b10  fade colour (0x00RRGGBB; 0 = black)
     int m_maxPriority = 0;           // +0x7f3b14  highest OT priority drawn last flush
 
     // Free-function initialisers that populate the private storage above.
@@ -323,7 +323,7 @@ void drawAepTransitionOverlay(AepManager *mgr, int alpha);
 // Queue a single-line text draw through the manager's ordering table (type-6
 // command). `drawAepManagerText` uses the default colour vector; `...Ex`
 // threads an explicit one. The six numeric words are positional (see
-// AepTextCommand). Ghidra: FUN_00010540 (audit label "aepManagerReset_a" — a
+// AepTextCmd). Ghidra: FUN_00010540 (audit label "aepManagerReset_a" — a
 // misnomer; it is the manager-level text draw) / FUN_0001057c.
 void drawAepManagerText(AepManager *mgr,
                         const char *text,
