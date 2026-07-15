@@ -1997,18 +1997,28 @@ bool MainTask::launchPlayForMusicId(int musicId, int sheet) {
     return false;
 }
 
-// @ 0x389fc — musicSelAepDrawCallback. The music-select scene draw callback.
-// This is a ~98 KB routine that dispatches on the drawn layer's resolved user
-// number and blits the matching scene element. The head (recovered below) draws
-// the three visible song-jacket grids — current column (user no @ +0x22c), and
-// the incoming next / previous columns (latched via +0x8c1 / +0x8c2) — each a
-// 3-wide grid of cells whose uploaded jacket texture (@ cell+0xc) is blitted
-// (or a placeholder frame @ +0x180 when not yet ready), with the selection
-// frame @ +0x1a8 over the highlighted cell. The long tail of the function
-// (score / difficulty-level / song-name / rank-digit / badge branches, keyed on
-// the other resolved user numbers) follows the same per-user-number dispatch
-// and is a documented seam here per rule 7 (best-effort: the geometry constants
-// and the remaining element blits are not fully transcribed).
+/**
+ * musicSelAepDrawCallback. The music-select scene draw callback: invoked once
+ * per visible layer with that element's resolved user-tag `child`, it dispatches
+ * on which resolved user number matches and blits the corresponding scene
+ * element. The head draws the three visible song-jacket grids — current column
+ * (user no @ +0x22c) plus the incoming next / previous columns (latched via
+ * +0x8c1 / +0x8c2) — each a 3-wide cell grid whose uploaded jacket texture
+ * (@ cell+0xc) is blitted (or a placeholder frame @ +0x180 while streaming),
+ * with the selection frame @ +0x1a8 over the highlighted cell. The tail keys on
+ * the other resolved user numbers for the score / difficulty-level / song-name /
+ * rank-digit / badge elements.
+ *
+ * @ghidraAddress 0x389fc
+ * @complete Dispatch order verified branch-for-branch against the decompile
+ * (elemUsrNo 0,10,2,3,4,13,5,6,7,16,8,9,1,11,12,14,20,21,17,18,19,15 with the
+ * jacket-tip / score-digit arrays interleaved); the draw-primitive counts match
+ * (45 drawAepFrameEx, 14 neTextureForiOS::draw, the 3 inlined per-column name
+ * DrawText calls de-inlined into one paint lambda run per column). The per-sprite
+ * VFP transform args are __stdcall_softfp lanes the decompiler cannot bind, so
+ * they are sourced from the Setup()-filled layout/element data — the maximum
+ * fidelity the decompile permits.
+ */
 void AepDrawCallback(unsigned child,
                      int frame,
                      int x,
