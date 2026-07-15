@@ -709,11 +709,11 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // .cxx_destruct @ 0xf3bf8 — compiler-emitted; not hand-written.
 
 // @ 0xf0a80   (sharedInstance forwarder twin @ 0xf11fc)
-- (void)openAppListWebViewWithCampaignId:(NSString *)campaignId
-                               inCompany:(NSString *)inCompany
-                                    type:(NSString *)type
-                                  offset:(NSString *)offset
-                                   limit:(NSString *)limit
+- (void)openAppListWebViewWithCampaignId:(id)campaignId
+                               inCompany:(id)inCompany
+                                    type:(id)type
+                                  offset:(id)offset
+                                   limit:(id)limit
                               parentView:(UIView *)parentView
                                 delegate:(id<RewardNetworkWebViewDelegate>)delegate {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
@@ -787,11 +787,11 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf12d4
-- (void)appListWithCampaignId:(NSString *)campaignId
-                    inCompany:(NSString *)inCompany
-                         type:(NSString *)type
-                       offset:(NSString *)offset
-                        limit:(NSString *)limit
+- (void)appListWithCampaignId:(id)campaignId
+                    inCompany:(id)inCompany
+                         type:(id)type
+                       offset:(id)offset
+                        limit:(id)limit
                      callback:(RewardNetworkCallback)callback {
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
     if (campaignId) {

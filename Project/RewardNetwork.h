@@ -124,20 +124,23 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 
 // Open the reward app-list web panel (requires the SDK be usable + ad-tracking
 // enabled; otherwise reports the failure to `delegate`). @ 0xf0a80
-- (void)openAppListWebViewWithCampaignId:(NSString *)campaignId
-                               inCompany:(NSString *)inCompany
-                                    type:(NSString *)type
-                                  offset:(NSString *)offset
-                                   limit:(NSString *)limit
+// The query-value parameters are `id`: they are only stored as URL query values
+// (setValue:forKey:), and callers pass NSNumbers (the menu passes numberWithInt:0
+// / :2 for the campaign id and type).
+- (void)openAppListWebViewWithCampaignId:(id)campaignId
+                               inCompany:(id)inCompany
+                                    type:(id)type
+                                  offset:(id)offset
+                                   limit:(id)limit
                               parentView:(UIView *)parentView
                                 delegate:(id<RewardNetworkWebViewDelegate>)delegate;
 
 // Fetch the reward app index (GET /reward/app/index.php). @ 0xf12d4
-- (void)appListWithCampaignId:(NSString *)campaignId
-                    inCompany:(NSString *)inCompany
-                         type:(NSString *)type
-                       offset:(NSString *)offset
-                        limit:(NSString *)limit
+- (void)appListWithCampaignId:(id)campaignId
+                    inCompany:(id)inCompany
+                         type:(id)type
+                       offset:(id)offset
+                        limit:(id)limit
                      callback:(RewardNetworkCallback)callback;
 
 // Forward a rotation to the open app-list panel. @ 0xf1ff8

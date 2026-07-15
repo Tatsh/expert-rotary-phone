@@ -673,22 +673,22 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
         break;
     }
-    case 0xf: { // the reward offer-wall web panel (RewardNetwork; a no-op stub here)
+    case 0xf: { // the reward offer-wall web panel (RewardNetwork)
         neEngine::playSystemSe(1);
         MainViewController *root = RootVC();
         [root setRewardListViweing:YES];
-        // Only the campaign id (0) and type (2) survive the decompile; the
-        // remaining __stdcall_softfp string args are lost. The binary reuses
-        // NSNumber objects for these NSString parameters (RewardNetwork stringifies
-        // them); the dependency is stubbed, so the call is inert either way.
-        [[RewardNetwork sharedInstance]
-            openAppListWebViewWithCampaignId:(NSString *)[NSNumber numberWithInt:0]
-                                   inCompany:nil
-                                        type:(NSString *)[NSNumber numberWithInt:2]
-                                      offset:nil
-                                       limit:nil
-                                  parentView:[root view]
-                                    delegate:(id)root];
+        // The binary builds the campaign id and type as NSNumbers (numberWithInt:0
+        // / numberWithInt:2); RewardNetwork's query-value parameters are `id`, so
+        // they pass straight through. The offset/limit/delegate args are
+        // __stdcall_softfp-lost; only campaignId, type, and parentView are
+        // recovered.
+        [[RewardNetwork sharedInstance] openAppListWebViewWithCampaignId:@0
+                                                               inCompany:nil
+                                                                    type:@2
+                                                                  offset:nil
+                                                                   limit:nil
+                                                              parentView:[root view]
+                                                                delegate:(id)root];
         m_state = 0x10;
         break;
     }
