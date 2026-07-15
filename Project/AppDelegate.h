@@ -12,7 +12,7 @@
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
-@property(nonatomic, strong) neWindow *window;
+@property(nonatomic, strong) neWindow *mainWindow;
 @property(nonatomic, strong) MainViewController *viewController;
 @property(nonatomic, strong) NSString *userAgent; // getter @ 0xa3a8
 @property(nonatomic, strong) NSString *hardwareName;

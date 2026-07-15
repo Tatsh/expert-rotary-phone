@@ -56,8 +56,8 @@ BOOL gLaunchedFromPush = NO;
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 
     CGRect bounds = UIScreen.mainScreen ? UIScreen.mainScreen.bounds : CGRectZero;
-    self.window = [[neWindow alloc] initWithFrame:bounds];
-    self.window.backgroundColor = UIColor.blackColor;
+    self.mainWindow = [[neWindow alloc] initWithFrame:bounds];
+    self.mainWindow.backgroundColor = UIColor.blackColor;
 
     srand((unsigned)time(nullptr));
 
@@ -96,12 +96,12 @@ BOOL gLaunchedFromPush = NO;
 #if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
     // iOS 13+ SDKs require the key window to own a root view controller by the end
     // of launch; the binary's addSubview: path aborts at runtime under them.
-    self.window.rootViewController = self.viewController;
+    self.mainWindow.rootViewController = self.viewController;
 #else
-    [self.window addSubview:self.viewController.view]; // Ghidra @ 0x8cf0
+    [self.mainWindow addSubview:self.viewController.view]; // Ghidra @ 0x8cf0
 #endif
     neSceneManager::shared().attachRoot(self.viewController);
-    [self.window makeKeyAndVisible];
+    [self.mainWindow makeKeyAndVisible];
 
     neGraphics::configure((float)UIScreen.mainScreen.scale);
     neEngine::bootstrapB();
