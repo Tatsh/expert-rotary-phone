@@ -413,6 +413,33 @@ void PlayJudge_update(MainTaskPlayData *playData,
                               nullptr,
                               st->layerId,
                               0);
+
+                // CD-jacket overlay at the note head (pt 0) when enabled and the
+                // note is on the field but not yet spanning its hold: layer
+                // effectStateLyr[12] (+0x114), frame cdFrame (+0x3c4), at the note's
+                // interp position. Args traced at 0x2fa8c (blend 0x200, context 16).
+                if (pt == 0 && playData->optJacket != 0 && (noteFlags & 0x2f) != 0 &&
+                    (noteFlags & kFlagHold) == 0) {
+                    const int effScale = playData->hitEffectScale / 2;
+                    aep.drawLayer(playData->effectStateLyr[12],
+                                  playData->cdFrame,
+                                  screenX,
+                                  screenY,
+                                  drawScale,
+                                  drawScale,
+                                  0,
+                                  effScale,
+                                  effScale,
+                                  100,
+                                  0,
+                                  1,
+                                  0x200,
+                                  0xffffffff,
+                                  nullptr,
+                                  nullptr,
+                                  16,
+                                  0);
+                }
             }
         }
 

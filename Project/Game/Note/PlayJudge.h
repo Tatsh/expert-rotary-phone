@@ -180,8 +180,9 @@ struct MainTaskPlayData {
 
     uint8_t spatialTouchMode; // +0x9e4 0 = spatial (distance) hit-test, else in-order
     uint8_t optEffectOn;      // +0x9e5 hit-effect option (milestone-SE gate)
-
-    uint8_t _rsvd_9e6[0x9e7 - 0x9e6]; // +0x9e6
+    uint8_t optJacket;        // +0x9e6 CD-jacket overlay option: when set, the note draw
+                              //        flashes the jacket sprite at the head. Ghidra:
+                              //        the byte at playData+0x9e6 gating the +0x114 draw.
 
     uint8_t optOldHardware; // +0x9e7 legacy device (milestone-SE gate)
 
@@ -240,6 +241,7 @@ static_assert(offsetof(MainTaskPlayData, isDemoPlay) == 0x9c9, "isDemoPlay @ +0x
 static_assert(offsetof(MainTaskPlayData, isPadDisplay) == 0x9ca, "isPadDisplay @ +0x9ca");
 static_assert(offsetof(MainTaskPlayData, spatialTouchMode) == 0x9e4, "spatialTouchMode @ +0x9e4");
 static_assert(offsetof(MainTaskPlayData, optEffectOn) == 0x9e5, "optEffectOn @ +0x9e5");
+static_assert(offsetof(MainTaskPlayData, optJacket) == 0x9e6, "optJacket @ +0x9e6");
 static_assert(offsetof(MainTaskPlayData, optOldHardware) == 0x9e7, "optOldHardware @ +0x9e7");
 static_assert(offsetof(MainTaskPlayData, state) == 0x9fc, "state @ +0x9fc");
 static_assert(offsetof(MainTaskPlayData, cachedFinalScore) == 0x9b0, "cachedFinalScore @ +0x9b0");
