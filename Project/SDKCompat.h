@@ -2,45 +2,42 @@
 //  SDKCompat.h
 //  pop'n rhythmin
 //
-//  Compatibility shims that let the reconstruction keep the original 2014-era
-//  Objective-C API names — so the source stays faithful to the binary and can
-//  still target the very old SDK it was written against — while building
-//  cleanly against a modern SDK.
+//  Compatibility shims that let the reconstruction use the modern Objective-C
+//  API names uniformly while still being buildable against the very old SDK the
+//  app originally targeted.
 //
-//  Import this AFTER the system framework headers in any file that needs it (the
-//  aliases below deliberately do not touch the SDK's own declarations, only the
-//  reconstruction's later uses).
+//  Import this in any file that uses one of the aliased constants.
 //
 //  Two facilities:
-//    * Guarded constant aliases: on a new-enough SDK a removed/renamed constant
-//      is redirected to its modern equivalent; on the old SDK the macro is
-//      absent and the original name resolves to the SDK constant directly.
+//    * Guarded constant aliases: the source always spells the MODERN constant
+//      name; for an SDK too old to declare it, the modern name is defined back
+//      to the original constant that old SDK ships. On a new-enough SDK the
+//      macro is absent and the modern constant resolves directly.
 //    * RB_DEPRECATED_BEGIN / RB_DEPRECATED_END: bracket a block that uses an API
-//      Apple deprecated with no in-place replacement, silencing
-//      -Wdeprecated-declarations for that block only.
+//      Apple deprecated with no in-place replacement (only OpenGL ES is expected
+//      to need this in practice), silencing -Wdeprecated-declarations there.
 //
 
 #pragma once
 
 #import <Availability.h>
 
-// --- Simple constant/enum renames (keep the original name in the source) -----
+// --- Modern constant names aliased back to the originals on old SDKs ----------
 
-#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
-#define UITextAttributeFont NSFontAttributeName
-#define UITextAttributeTextColor NSForegroundColorAttributeName
-#define UITextAttributeTextShadowColor NSShadowAttributeName
+#if !defined(__IPHONE_7_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_7_0
+#define NSFontAttributeName UITextAttributeFont
+#define NSForegroundColorAttributeName UITextAttributeTextColor
+#define NSShadowAttributeName UITextAttributeTextShadowColor
 #endif
 
-#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
-#define NSGregorianCalendar NSCalendarIdentifierGregorian
-#define kCLAuthorizationStatusAuthorized kCLAuthorizationStatusAuthorizedAlways
+#if !defined(__IPHONE_8_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_8_0
+#define NSCalendarIdentifierGregorian NSGregorianCalendar
+#define kCLAuthorizationStatusAuthorizedAlways kCLAuthorizationStatusAuthorized
 #endif
 
 // --- No-replacement deprecations: silence only the wrapped block --------------
-// Use around calls into APIs Apple deprecated wholesale with no in-place
-// modern equivalent (UIWebView, NSURLConnection, UILocalNotification, the
-// pasteboard-persistence property, etc.) that the reconstruction keeps as-is.
+// Use around calls into APIs Apple deprecated wholesale with no in-place modern
+// equivalent (the OpenGL ES renderer) that the reconstruction keeps as-is.
 
 #define RB_DEPRECATED_BEGIN                                                                        \
     _Pragma("clang diagnostic push")                                                               \

@@ -857,7 +857,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
         return NO;
     }
     if ([CLLocationManager respondsToSelector:@selector(authorizationStatus)]) {
-        return [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorized;
+        return [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedAlways;
     }
     return YES;
 }

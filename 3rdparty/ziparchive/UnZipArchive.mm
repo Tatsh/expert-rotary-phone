@@ -334,7 +334,8 @@
     [comps setDay:1];
     [comps setMonth:1];
     [comps setYear:1980];
-    NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+    NSCalendar *gregorian =
+        [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDate *date = [gregorian dateFromComponents:comps];
 
     return date; // ARC: comps / gregorian released automatically

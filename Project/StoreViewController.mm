@@ -43,10 +43,11 @@
 - (instancetype)initWithRecommendPackId:(int)recommendPackId {
     _recommendPackId = recommendPackId;
     if ((self = [super init])) {
-        // 8pt tab-bar item titles in the app font (UITextAttributeFont — iOS 5/6
-        // era).
+        // 8pt tab-bar item titles in the app font (the binary used the iOS 5/6
+        // UITextAttributeFont; SDKCompat maps NSFontAttributeName back to it on
+        // old SDKs).
         UIFont *tabFont = [UIFont fontWithName:AppFontName() size:8.0f];
-        [[UITabBarItem appearance] setTitleTextAttributes:@{UITextAttributeFont : tabFont}
+        [[UITabBarItem appearance] setTitleTextAttributes:@{NSFontAttributeName : tabFont}
                                                  forState:UIControlStateNormal];
 
         StoreMainViewController *mainVC = [[StoreMainViewController alloc] initWithParent:self];
