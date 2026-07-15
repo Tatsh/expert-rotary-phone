@@ -479,7 +479,8 @@ static const char *const kHardwareModels[40] = {
     free(machine);
 }
 
-// -[AppDelegate uuId]  @ 0x9890
+// -[AppDelegate uuId] — read (or mint + Keychain-store) the persistent device UUID.
+/** @ghidraAddress 0x9890 @complete */
 - (NSString *)uuId {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
 
@@ -536,7 +537,7 @@ static const char *const kHardwareModels[40] = {
     return result;
 }
 
-// -[AppDelegate deleteUuid]  @ 0x9c20
+/** -[AppDelegate deleteUuid] — remove the stored device UUID. @ghidraAddress 0x9c20 @complete */
 - (void)deleteUuid {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
     NSDictionary *query = @{
@@ -558,7 +559,8 @@ static const char *const kHardwareModels[40] = {
 
 #pragma mark - Settings-version keychain record
 
-// -[AppDelegate setUsersettingVer:]  @ 0x9d58
+// -[AppDelegate setUsersettingVer:] — Keychain add-or-update the setting version.
+/** @ghidraAddress 0x9d58 @complete */
 - (void)setUsersettingVer:(NSString *)ver {
     NSData *data = [ver dataUsingEncoding:NSUTF8StringEncoding];
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
@@ -600,7 +602,8 @@ static const char *const kHardwareModels[40] = {
     }
 }
 
-// -[AppDelegate getUsersettingVer]  @ 0xa044
+// -[AppDelegate getUsersettingVer] — read the setting version ("0" if absent).
+/** @ghidraAddress 0xa044 @complete */
 - (NSString *)getUsersettingVer {
     NSDictionary *query = @{
         (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
@@ -629,7 +632,8 @@ static const char *const kHardwareModels[40] = {
     return [NSString stringWithFormat:@"0"];
 }
 
-// -[AppDelegate deleteUsersettingVer]  @ 0xa270
+// -[AppDelegate deleteUsersettingVer] — remove the setting-version Keychain item.
+/** @ghidraAddress 0xa270 @complete */
 - (void)deleteUsersettingVer {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
     NSDictionary *query = @{
@@ -651,38 +655,38 @@ static const char *const kHardwareModels[40] = {
 
 #pragma mark - Environment strings
 
-// -[AppDelegate userAgent]  @ 0xa3a8
+/** -[AppDelegate userAgent] — copy of the cached UA string. @ghidraAddress 0xa3a8 @complete */
 - (NSString *)userAgent {
     return [NSString stringWithString:_userAgent];
 }
 
-// -[AppDelegate appVersion]  @ 0xa408
+/** -[AppDelegate appVersion] — Info.plist CFBundleVersion. @ghidraAddress 0xa408 @complete */
 - (NSString *)appVersion {
     return NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"];
 }
 
-// -[AppDelegate appVersionNum]  @ 0xa458
+/** -[AppDelegate appVersionNum] — version with dots stripped. @ghidraAddress 0xa458 @complete */
 - (int)appVersionNum {
     NSString *stripped = [self.appVersion stringByReplacingOccurrencesOfString:@"." withString:@""];
     return [stripped intValue];
 }
 
-// -[AppDelegate osVersion]  @ 0xa3d4
+/** -[AppDelegate osVersion] — UIDevice systemVersion. @ghidraAddress 0xa3d4 @complete */
 - (NSString *)osVersion {
     return UIDevice.currentDevice.systemVersion;
 }
 
-// -[AppDelegate localeLanguage]  @ 0xa548
+/** -[AppDelegate localeLanguage] — NSLocaleLanguageCode. @ghidraAddress 0xa548 @complete */
 - (NSString *)localeLanguage {
     return [NSLocale.currentLocale objectForKey:NSLocaleLanguageCode];
 }
 
-// -[AppDelegate localeCountry]  @ 0xa504
+/** -[AppDelegate localeCountry] — NSLocaleCountryCode. @ghidraAddress 0xa504 @complete */
 - (NSString *)localeCountry {
     return [NSLocale.currentLocale objectForKey:NSLocaleCountryCode];
 }
 
-// -[AppDelegate localeString]  @ 0xa4a4
+/** -[AppDelegate localeString] — "language_country". @ghidraAddress 0xa4a4 @complete */
 - (NSString *)localeString {
     return [NSString stringWithFormat:@"%@_%@", self.localeLanguage, self.localeCountry];
 }
