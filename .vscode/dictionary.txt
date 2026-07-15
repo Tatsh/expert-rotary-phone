@@ -352,6 +352,7 @@ peaceopen
 pfex
 pkware
 planef
+plumesign
 pointb
 popkun
 popn
