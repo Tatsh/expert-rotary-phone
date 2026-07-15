@@ -724,12 +724,15 @@ static const char *const kArrowNames[2] = {"circle", "vie_cmn_warning@2x"};
 // "<name>.m4a".
 static const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya"};
 
-// Ghidra: musicSelTaskSetup (0x370f0) — state-0 scene build. Resolves the
-// screen metrics, lays out the per-platform button rects, loads the
-// music-select Aep group and constructs its scene + intro AepLyrCtrl layers,
-// resolves every layer / frame / user animation handle, uploads the score /
-// points / rank digit textures, loads the touch SEs + preview BGM, and sets the
-// tutorial / badge flags. @ 0x370f0
+/**
+ * Ghidra: musicSelTaskSetup (0x370f0) — state-0 scene build. Resolves the
+ * screen metrics, lays out the per-platform button rects, loads the
+ * music-select Aep group and constructs its scene + intro AepLyrCtrl layers,
+ * resolves every layer / frame / user animation handle, uploads the score /
+ * points / rank digit textures, loads the touch SEs + preview BGM, and sets the
+ * tutorial / badge flags. @ 0x370f0
+ * @complete
+ */
 void MainTask::Setup() {
     neAppEventCenter::shared().setGuestNoSaveMode(false); // normal entry: results are saved
     AudioManager *audio = [AudioManager sharedManager];
@@ -1464,11 +1467,14 @@ bool MainTask::AllCellsReady() {
     return ready;
 }
 
-// Ghidra: musicSelUpdateHighlight (0x355fc) — per-frame highlight/badge
-// draw. Skipped once the scene is being torn down (m_suppressDraw). Pulses the
-// recommend / over-score badges, redraws the four difficulty frames + the
-// tutorial badge, and (for a multi-column list) draws the "current/total"
-// column counter.
+/**
+ * Ghidra: musicSelUpdateHighlight (0x355fc) — per-frame highlight/badge
+ * draw. Skipped once the scene is being torn down (m_suppressDraw). Pulses the
+ * recommend / over-score badges, redraws the four difficulty frames + the
+ * tutorial badge, and (for a multi-column list) draws the "current/total"
+ * column counter.
+ * @complete
+ */
 void MainTask::UpdateHighlight() {
     if (m_suppressDraw) {
         return;
