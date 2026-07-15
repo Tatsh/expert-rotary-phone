@@ -510,10 +510,14 @@ void MenuMainTask::dispose() {
     m_suppressOverlay = 1; // +0xb4: stop drawing this task after the handoff
 }
 
-// Ghidra: modeSelectTaskDraw (FUN_0006d428): the per-frame menu overlay pass —
-// the friend-request warning badge, the "new music pack" / event badges, and
-// the always-on mode-button labels, each pulsed by a triangle-wave phase
-// counter at +0xec.
+/**
+ * modeSelectTaskDraw: the per-frame menu overlay pass — the friend-request
+ * warning badge, the "new music pack" / event badges (gated on the event flags
+ * and m_tutorialSkip), and the always-on mode-button labels (plus the conditional
+ * gift label), each pulsed by a triangle-wave phase counter at +0xec.
+ * @ghidraAddress 0x6d428
+ * @complete
+ */
 void MenuMainTask::drawOverlay() {
     if (m_suppressOverlay) { // +0xb4: overlay suppressed while the task is
                              // tearing down
