@@ -290,22 +290,30 @@ void AcViewerTask::drawActiveNotes() {
         note.getNoteObject(&n, i);
         const int laneFrame = m_laneFrm[n.lane];
 
+        // The note's on-screen Y is a linear function of its scroll position
+        // (Ghidra 0x22d94..0x22e0e / 0x22eda..0x22f3c): base m_noteFieldX, plus
+        // m_noteFieldY * drawY scaled by DAT_00022ff8 = -1/1024, minus half the
+        // effect-note height to centre the sprite.
+        const int noteY =
+            (int)((float)m_noteFieldX + (float)m_noteFieldY * n.drawY * (-1.0f / 1024.0f) -
+                  (float)(m_effectNoteHeight / 2));
+
         if (n.tick < now) {
             // Note has passed the spawn point: scroll it toward the judge line. The
-            // exact fixed-point scroll math (DAT_00022ffc scale + 0.5 bias) is
-            // decompiler- obscured; modelled best-effort. When it is still above the
-            // layer's frame count it is drawn as the EFFECT_COOL layer.
-            const int frame = (int)((float)(now - n.tick) * 1.0f + 0.5f);
+            // frame steps at DAT_00022ffc = 1/16 of the elapsed ticks, +0.5 bias
+            // (Ghidra 0x22d70..0x22d8a). While still within the layer's frame count
+            // it is drawn as the EFFECT_COOL layer.
+            const int frame = (int)((float)(now - n.tick) * 0.0625f + 0.5f);
             if (frame < m_effectCoolFrames) {
-                // FUN_00022cac drawLayer args: x = per-lane note frame (@+0x158[lane]);
-                // y is the NEON-computed lane position (best-effort here). Constants
-                // are binary-exact: scale 100/100, loopFlags/p9 = m_coolLayerArg{A,B},
-                // p10=100, color=0, colorHi=1, blend=0x200, p15=0xffffff,
-                // clip={0,top,w,h}, ctx=null, p17=0xb, p19=1.
+                // drawLayer args (0xfd64 callee map): x = per-lane note frame
+                // (@+0x158[lane]), y = the scroll-derived noteY; scale 100/100,
+                // anchors m_coolLayerArg{A,B}, p10=100, color=0, colorHi=1,
+                // blend=0x200, p15=0xffffff, clip={0,top,w,h}, ctx=null, p17=0xb,
+                // p19=1.
                 aep.drawLayer(m_effectCoolLyrNo,
                               frame,
                               m_laneFrm[n.lane],
-                              m_noteFieldY,
+                              noteY,
                               100,
                               100,
                               0,
@@ -336,29 +344,30 @@ void AcViewerTask::drawActiveNotes() {
                 }
             }
         } else {
-            // Note still approaching: pick the POPN white/blue sprite (or the pop-kun
-            // sprite when the POPKUN option is on) and blit it via drawAepFrameEx at
-            // its computed lane x (best-effort on the NEON transform). HID/SUD gating
-            // on +0x1fc hides notes outside the visible band.
-            const bool visible =
-                (((uint32_t)m_hidSud | 2) != 3) || (((uint32_t)m_hidSud & ~1u) != 2);
-            if (visible) {
-                int frm;
-                if (m_popKun == 0) {
-                    frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm; // blue / white
-                } else {
-                    frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm; // pop-kun variant
-                }
-                // FUN_00022cac note-sprite draw: x = per-lane frame (@+0x158[lane]); y
-                // + anchors are NEON-computed (best-effort here). Constants are
-                // binary-exact: scale 100.0/100.0f, rotation 0, color 100, alpha 0,
-                // blend 0x20, colorMul 0xffffff, clip, prio 0xb, p19 1.
+            // Note still approaching: pick the POPN white/blue sprite and blit it at
+            // its scroll-derived (lane x, noteY). The HID/SUD option hides notes
+            // outside the visible band by scroll position: HID (m_hidSud bit 0) hides
+            // notes whose drawY is below 192, SUD (m_hidSud bit 1) above 337 (Ghidra
+            // 0x22e70..0x22e9e; DAT_00022ff0/ff4 = 192.0/337.0).
+            bool hidden = false;
+            if (((m_hidSud | 2) == 3) && n.drawY < 192.0f) {
+                hidden = true;
+            }
+            if (((m_hidSud & ~1) == 2) && n.drawY > 337.0f) {
+                hidden = true;
+            }
+            if (!hidden) {
+                const int frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm; // blue / white
+                // drawAepFrameEx (AepDrawSpriteHandle takes an int percentage scale,
+                // so 100, not the 0x42c80000 float bits the binary pushes): x =
+                // per-lane frame, y = noteY, scale 100/100, color 100, blend 0x20,
+                // colorMul 0xffffff, clip, prio 0xb, p19 1. Ghidra 0x22f46.
                 drawAepFrameEx(&aep,
                                frm,
                                m_laneFrm[n.lane],
-                               m_noteFieldY,
-                               0x42c80000,
-                               0x42c80000,
+                               noteY,
+                               100,
+                               100,
                                0,
                                0,
                                0,
@@ -386,8 +395,8 @@ void AcViewerTask::drawActiveNotes() {
                    m_timeLineFrm,
                    m_timeLineX,
                    m_timeLineY,
-                   0x42c80000,
-                   0x42c80000,
+                   100,
+                   100,
                    0,
                    0,
                    0,

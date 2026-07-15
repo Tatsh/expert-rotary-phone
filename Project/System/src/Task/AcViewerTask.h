@@ -168,9 +168,11 @@ private:
     int m_noteFieldY = 0;      // +0x128 note-field y
     int m_seekGaugeSplitY = 0; // +0x12c drag start-Y split: >= gauge scrub, < seek scrub
     int m_scrubZoneTopY = 0;   // +0x130 top Y of the scrub zone (drag start-Y >= this)
-    uint8_t _rsvd_134[0x148 - 0x134] = {}; // +0x134
-    int m_coolLayerArgA = 0;               // +0x148 EFFECT_COOL drawLayer arg (role best-effort)
-    int m_coolLayerArgB = 0;               // +0x14c EFFECT_COOL drawLayer arg (role best-effort)
+    uint8_t _rsvd_134[0x13c - 0x134] = {}; // +0x134
+    int m_effectNoteHeight = 0; // +0x13c effect-note height (halved to centre the sprite)
+    uint8_t _rsvd_140[0x148 - 0x140] = {}; // +0x140
+    int m_coolLayerArgA = 0;               // +0x148 EFFECT_COOL drawLayer anchorX
+    int m_coolLayerArgB = 0;               // +0x14c EFFECT_COOL drawLayer anchorY
     int m_playTouchW = 0;                  // +0x150 in-play song-select touch rect width
     int m_playTouchH = 0;                  // +0x154 in-play song-select touch rect height
     int m_laneFrm[9] = {};                 // +0x158 per-lane note frame table
