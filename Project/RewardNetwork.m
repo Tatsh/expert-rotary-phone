@@ -14,8 +14,6 @@
 #import "RewardNetworkUdid.h" // +isAdvertisingTrackingEnabled (reconstructed in parallel)
 #import "RewardNetworkWebAPI.h"
 
-#import "SDKCompat.h"
-
 // Serial queue guarding the shared-instance handoff in -init. Created in
 // +allocWithZone:'s dispatch_once body (g_pRewardNetworkDispatchQueue).
 static dispatch_queue_t g_pRewardNetworkDispatchQueue = NULL;
@@ -846,9 +844,17 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // @ 0xf1ff8   (sharedInstance forwarder twin @ 0xf1fa4)
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
-    RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    // -willAnimateRotationToInterfaceOrientation:duration: was deprecated in
+    // iOS 8; it only forwarded to the controller's shared layout method using the
+    // current status-bar orientation, so drive that method directly here.
+    UIInterfaceOrientation currentOrientation =
+        [[UIApplication sharedApplication] statusBarOrientation];
+    [_webViewController rotateWebViewWithInterfaceOrientation:currentOrientation
+                                                     duration:duration];
+#else
     [_webViewController willAnimateRotationToInterfaceOrientation:orientation duration:duration];
-    RB_DEPRECATED_END
+#endif
 }
 
 // @ 0xf2030

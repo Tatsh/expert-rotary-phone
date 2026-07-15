@@ -11,8 +11,6 @@
 #import <CommonCrypto/CommonCrypto.h>
 #import <UIKit/UIKit.h>
 
-#import "SDKCompat.h"
-
 // Slots are named "<service>-<index>" for index in 0..518 (< 0x207).
 static const NSInteger kRewardStorageIndexLimit = 0x207;
 
@@ -214,9 +212,12 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
         return nil;
     }
 
-    RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    // Persistence is set automatically on named pasteboards from iOS 10, so the
+    // explicit assignment is omitted here.
+#else
     pasteboard.persistent = YES;
-    RB_DEPRECATED_END
+#endif
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
     NSData *recordArchived = [NSKeyedArchiver archivedDataWithRootObject:record
                                                   requiringSecureCoding:NO

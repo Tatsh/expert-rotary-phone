@@ -13,6 +13,9 @@
 #import <Security/Security.h>
 #import <StoreKit/StoreKit.h>
 #import <sys/sysctl.h>
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+#import <UserNotifications/UserNotifications.h>
+#endif
 
 #import "AcNoteMng.h"
 #import "AppDelegate.h"
@@ -31,8 +34,6 @@
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neWindow.h"
-
-#import "SDKCompat.h"
 
 // Ghidra: DAT_00187b5a (read in applicationWillResignActive:).
 BOOL gLaunchedFromPush = NO;
@@ -240,11 +241,22 @@ BOOL gLaunchedFromPush = NO;
 #pragma mark - Notifications
 
 // -[AppDelegate application:didReceiveLocalNotification:]  @ 0x9858 (empty)
-RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+// UILocalNotification and -application:didReceiveLocalNotification: were
+// deprecated in iOS 10; the UNUserNotificationCenterDelegate tap callback is the
+// modern equivalent. The original handler was empty, so this replica extracts
+// the notification's user info and immediately calls the completion handler.
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+    didReceiveNotificationResponse:(UNNotificationResponse *)response
+             withCompletionHandler:(void (^)(void))completionHandler {
+    (void)response.notification.request.content.userInfo;
+    completionHandler();
+}
+#else
 - (void)application:(UIApplication *)application
     didReceiveLocalNotification:(UILocalNotification *)notification {
 }
-RB_DEPRECATED_END
+#endif
 
 // -[AppDelegate application:didReceiveRemoteNotification:]  @ 0xafb8
 - (void)application:(UIApplication *)application

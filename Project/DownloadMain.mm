@@ -9,6 +9,10 @@
 
 #import "DownloadMain.h"
 
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+#import <UserNotifications/UserNotifications.h>
+#endif
+
 #import "AppDelegate.h"
 #import "OverScoreData+Store.h"
 #import "OverScoreData.h"
@@ -17,8 +21,6 @@
 #import "TreasureData.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter::shared().setStartDate() / setEndDate()
-
-#import "SDKCompat.h"
 
 // C++ bridge helpers the scenes expose (unmangled -> declared extern "C"). Each
 // pokes its owning C++ scene when the matching download finishes. Ghidra:
@@ -683,12 +685,22 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
             neAppEventCenter::shared().setStartDate();
             _errorGetPlayer = -1;
             if (!sRegisteredForRemote) {
-                RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+                // The original UIRemoteNotificationTypeBadge/Sound/Alert flags map
+                // to the corresponding UNAuthorizationOption flags.
+                [[UNUserNotificationCenter currentNotificationCenter]
+                    requestAuthorizationWithOptions:(UNAuthorizationOptionAlert |
+                                                     UNAuthorizationOptionBadge |
+                                                     UNAuthorizationOptionSound)
+                                  completionHandler:^(BOOL granted, NSError *error){
+                                  }];
+                [[UIApplication sharedApplication] registerForRemoteNotifications];
+#else
                 [[UIApplication sharedApplication]
                     registerForRemoteNotificationTypes:(UIRemoteNotificationTypeBadge |
                                                         UIRemoteNotificationTypeSound |
                                                         UIRemoteNotificationTypeAlert)];
-                RB_DEPRECATED_END
+#endif
                 sRegisteredForRemote = YES;
             }
             _dlGetPlayer = nil;

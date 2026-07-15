@@ -13,8 +13,6 @@
 #import "RecommendWebViewController.h" // also supplies the RewardNetworkWebViewDelegate protocol
 #import "RewardNetworkError.h"
 
-#import "SDKCompat.h"
-
 // The single shared core and the serial "RewardCore" queue its designated
 // initialiser runs on. Both are produced by the +allocWithZone: dispatch_once
 // body (recommendCoreSharedAlloc @ 0xfc2c4).
@@ -439,10 +437,18 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
     if (self.webViewController != nil) {
-        RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+        // -willAnimateRotationToInterfaceOrientation:duration: was deprecated in
+        // iOS 8; it only forwarded to the controller's shared layout method using
+        // the current status-bar orientation, so drive that method directly here.
+        UIInterfaceOrientation currentOrientation =
+            [[UIApplication sharedApplication] statusBarOrientation];
+        [self.webViewController rotateWebViewWithInterfaceOrientation:currentOrientation
+                                                             duration:duration];
+#else
         [self.webViewController willAnimateRotationToInterfaceOrientation:orientation
                                                                  duration:duration];
-        RB_DEPRECATED_END
+#endif
     }
 }
 

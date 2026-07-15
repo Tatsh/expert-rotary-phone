@@ -7,10 +7,17 @@
 
 #import <CoreData/CoreData.h>
 #import <UIKit/UIKit.h>
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+#import <UserNotifications/UserNotifications.h>
+#endif
 
 @class MainViewController, neWindow, CommonAlertView, SKProduct;
 
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+@interface AppDelegate : UIResponder <UIApplicationDelegate, UNUserNotificationCenterDelegate>
+#else
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
+#endif
 
 @property(nonatomic, strong) neWindow *mainWindow;
 @property(nonatomic, strong) MainViewController *viewController;

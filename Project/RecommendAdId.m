@@ -20,8 +20,6 @@
 // base used by the external-pasteboard web calls.
 #import "RecommendCore.h"
 
-#import "SDKCompat.h"
-
 @interface RecommendAdId () {
     NSString *_serviceName;
 }
@@ -194,9 +192,12 @@
             }
             return nil;
         }
-        RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        // Persistence is set automatically on named pasteboards from iOS 10, so
+        // the explicit call is omitted here.
+#else
         [pasteboard setPersistent:YES];
-        RB_DEPRECATED_END
+#endif
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
         NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:record
                                                 requiringSecureCoding:NO
