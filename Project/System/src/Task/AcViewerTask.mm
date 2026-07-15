@@ -106,21 +106,25 @@ void AcViewerTask::setup() {
     m_totalNoteCount = (int16_t)note.getTotalNoteCount();
     m_gaugeValue = 0x100;
 
-    // Per-lane scroll-speed table (@ +0x1cc[4]) derived from
-    // DAT_0012e350/0012e354 and the note count. The exact fixed-point packing
-    // (___udivsi3 of value<<10) is decompiler-obscured; reproduced best-effort
-    // per the two-branch shape of the loop.
+    // Per-lane scroll-speed table (@ +0x1cc[4]). Each entry is a packed
+    // (numerator, denominator) pair; the numerator is taken to 1024x fixed point
+    // (<< 10) and divided by a per-lane denominator. The two low lanes use a
+    // fixed negative rate; the two high lanes scale inversely with the chart's
+    // note count and are floored at 1. Table @ DAT_0012e350.
+    static const int kScrollSpeedTable[4][2] = {{3, 2}, {1, 2}, {9, 6}, {18, 6}};
     for (int i = 0; i < 4; i++) {
-        // i<2: a negative constant rate; i>=2: scaled by the note count, floored
-        // at 1.
-        int16_t v;
+        const int numerator = kScrollSpeedTable[i][0] << 10;
+        const int denominator = kScrollSpeedTable[i][1];
+        int16_t speed;
         if (i < 2) {
-            v = 0; // best-effort: the DAT_0012e350/54 constants are not recoverable
-                   // here
+            // Fixed rate: numerator / (denominator * 30), negated.
+            speed = (int16_t)(-(numerator / (denominator * 30)));
         } else {
-            v = 1;
+            // Inversely proportional to the note count, floored at 1.
+            const int16_t scaled = (int16_t)(numerator / (denominator * m_totalNoteCount));
+            speed = scaled <= 1 ? 1 : scaled;
         }
-        m_scrollSpeed[i] = v;
+        m_scrollSpeed[i] = speed;
     }
 
     // Load the "TIMING" arcade SE and the group-7 viewer Aep data.
