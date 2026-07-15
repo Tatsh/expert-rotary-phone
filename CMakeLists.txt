@@ -169,6 +169,11 @@ set_source_files_properties(
 target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-exceptions>)
+# The reconstruction faithfully uses the OpenGL ES 1.1 API, which Apple
+# deprecated wholesale on iOS 12 with no in-place replacement (Metal is a
+# separate stack). Silence the blanket ES deprecation warnings rather than
+# rewrite the renderer.
+target_compile_definitions(popnrhythmin PRIVATE GLES_SILENCE_DEPRECATION)
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"

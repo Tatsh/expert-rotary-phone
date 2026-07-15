@@ -57,7 +57,7 @@ PopnRhythmin_FILES = $(shell find $(PROJECT_ROOT)/Project \
 # ARC (the reconstructed sources use ARC — __bridge casts + ARC-synthesized dealloc —
 # exactly as the CMake/Xcode build does); every Project subdir on -I, plus the generated
 # sugoroku dialogue include dir (see tools/extract_sugoroku_dialogue.py).
-PopnRhythmin_CFLAGS  = -fobjc-arc -fobjc-exceptions \
+PopnRhythmin_CFLAGS  = -fobjc-arc -fobjc-exceptions -DGLES_SILENCE_DEPRECATION \
                        -I$(PROJECT_ROOT)/Project \
                        $(addprefix -I,$(shell find $(PROJECT_ROOT)/Project -type d)) \
                        -I$(SUGO_GEN_DIR) \
