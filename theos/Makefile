@@ -72,7 +72,7 @@ $(PROJECT_ROOT)/3rdparty/ziparchive/minizip/zip.c_CFLAGS = -Wno-parentheses-equa
 
 PopnRhythmin_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore CoreText OpenGLES \
                           AudioToolbox AVFoundation CoreData StoreKit Social \
-                          GameKit AdSupport CoreLocation MapKit
+                          GameKit AdSupport CoreLocation MapKit WebKit UserNotifications
 PopnRhythmin_LDFLAGS    = -framework Security -framework SystemConfiguration \
                           -framework CFNetwork -lz
 

@@ -77,7 +77,8 @@ set(SYS_FRAMEWORKS
     OpenGLES AudioToolbox AVFoundation
     CoreData StoreKit Social
     Security SystemConfiguration CFNetwork
-    GameKit AdSupport CoreLocation MapKit)
+    GameKit AdSupport CoreLocation MapKit
+    WebKit UserNotifications)
 
 # =========================================================================
 # NATIVE / Xcode — real .app target, fed by per-directory CMakeLists.
