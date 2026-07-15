@@ -79,7 +79,12 @@ enum NoteRenderKind : uint8_t {
 struct ActiveNote {
     ActiveNote *next;      // +0x00  free/active list link
     const NoteRecord *rec; // +0x04  source chart record
-    uint32_t reserved08;   // +0x08
+    uint32_t poolId;       // +0x08  this slot's permanent pool index (0..999),
+                           //        stamped once at initPlayData. The judge pass
+                           //        reads it out (copyNoteRenderData) and passes it
+                           //        back to judgeNoteHit / judgeHold / updateLongNote
+                           //        / setLaneFlag, all of which index m_notePool by
+                           //        it. Ghidra: Note+0x8 (pReserved8).
     uint32_t startTick;    // +0x0c
     uint32_t endTick;      // +0x10  == startTick for taps, later for holds
     float scaleX;          // +0x14  (default 1024.0)
@@ -129,7 +134,10 @@ constexpr int kNoteKindCount = 10;
 // ticks, kind, scale and positions copied out of the ActiveNote plus a
 // freshly-computed NoteRenderKind. Ghidra: copyNoteRenderData @ 0x34758.
 struct NoteRenderData {
-    const NoteRecord *rec;
+    uint32_t noteId; // +0x00 the note's pool id (copied from ActiveNote::poolId);
+                     //       the judge pass keys its judge slot on this and passes
+                     //       it to judgeNoteHit / judgeHold / updateLongNote /
+                     //       setLaneFlag. Ghidra: nField0 = *(int *)Note+0x8.
     uint32_t startTick;
     uint32_t endTick;
     uint8_t kind;
@@ -230,15 +238,17 @@ public:
     int getActiveNoteCount() const;
 
     // --- Judgement ---------------------------------------------------------
-    // Grade a tap against the note `index`: delta = noteTick - getCurrentPosition
-    // is bucketed against the six timing windows (Ghidra: g_noteJudgeWindows @
+    // Grade a tap against the pool note `noteId` (a raw pool slot id, 0..999 —
+    // NOT an active-list index; the binary indexes m_notePool by it directly,
+    // bounded by (noteId >> 3) < 0x7d): delta = noteTick - getCurrentPosition is
+    // bucketed against the six timing windows (Ghidra: g_noteJudgeWindows @
     // 0x12e64c = {-280,-280,-120,+120,+280,+280} ms, copied into the play data at
     // InitPlayData). The tightest central band (|delta| within ~50 ms of the
     // -120..+120 window) is the best tier; then the ±120 and ±280 bands; a delta
     // outside ±280 misses (returns -1). Returns a tier 0..3 that also indexes the
     // per-note-kind hit tally, sets the note's judged flags, and updates the
     // current/max combo. Ghidra: judgeNoteHit @ 0x347e8.
-    int judgeNoteHit(unsigned index);
+    int judgeNoteHit(unsigned noteId);
 
     // Resolve a long/hold note once its tail passes: if released too late
     // (delta < -60 ms) the hold fails (flag 0x200, "NOTE_FLAGS_LONG_FAILED"),

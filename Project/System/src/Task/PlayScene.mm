@@ -1217,9 +1217,8 @@ void PlayTaskDraw(int child,
     // --- Tone lane graphic (TONE_1, m_userSprite[2]): pick a tone sprite from
     // this note's state ---
     if (task->m_userSprite[2] == child) {
-        // The slot's note identity (slot.noteKey @ +0x3cc) is read as the raw tone
-        // note id.
-        const int id = reinterpret_cast<int &>(task->m_judgePool[(int)p17].noteKey);
+        // The slot's note identity (slot.noteId @ +0x3cc) is the raw tone note id.
+        const int id = (int)task->m_judgePool[(int)p17].noteId;
         const int graphic = NoteToneGraphic(id); // FUN_00034bb4
         const int flags = NoteToneFlags(id);     // FUN_00034b98
         const int state = NoteToneState(id);     // FUN_00034b5c
@@ -1239,7 +1238,7 @@ void PlayTaskDraw(int child,
     }
     // --- Tone number overlay (TONE_08_NUM, m_userSprite[3]) ---
     if (task->m_userSprite[3] == child) {
-        const int id = reinterpret_cast<int &>(task->m_judgePool[(int)p17].noteKey);
+        const int id = (int)task->m_judgePool[(int)p17].noteId;
         if (NoteToneState(id) != 1) {
             return;
         }

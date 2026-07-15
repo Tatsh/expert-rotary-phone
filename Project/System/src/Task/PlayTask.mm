@@ -70,11 +70,11 @@ void PlayTask::resetState() {
 
     // Zero the 0x3c-entry judge pool (@ +0x3c8, stride 0x18), then stamp each
     // entry's slot index (word 0) and its -1 free sentinel (word 1 ==
-    // NoteJudgeState::noteKey).
+    // NoteJudgeState::noteId).
     std::memset(m_judgePool, 0, sizeof(m_judgePool));
     for (int i = 0; i < 0x3c; i++) {
         m_judgePool[i].layerId = i;
-        m_judgePool[i].noteKey = reinterpret_cast<const void *>(-1);
+        m_judgePool[i].noteId = 0xffffffffu;
     }
 
     // Gauge / score scalars.

@@ -116,10 +116,14 @@ int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_
     m_endFlag = false;
     m_barCount = 0;
 
-    // Build the free list over the whole note pool.
+    // Build the free list over the whole note pool. Each slot's permanent pool
+    // id (its own array index) is stamped once here: the judge pass reads it back
+    // out of the render descriptor and uses it to re-address the slot (Ghidra:
+    // the Note+0x8 write at pool-build time).
     m_freeList = nullptr;
     m_activeList = nullptr;
     for (int i = 0; i < kMaxActiveNotes; i++) {
+        m_notePool[i].poolId = (uint32_t)i;
         m_notePool[i].next = m_freeList;
         m_freeList = &m_notePool[i];
     }
@@ -731,7 +735,7 @@ void NoteMng::getNoteObject(NoteRenderData *out, int index) {
     ActiveNote *note = activeNoteAt((unsigned)index);
     assert(note != nullptr); // NoteMng.mm GetNoteObject:0x32b/0x344
 
-    out->rec = note->rec;
+    out->noteId = note->poolId; // Ghidra: nField0 = *(int *)pNote->pReserved8
     out->startTick = note->startTick;
     out->endTick = note->endTick;
     out->kind = note->kind;
@@ -758,15 +762,21 @@ void NoteMng::getNoteObject(NoteRenderData *out, int index) {
     }
 }
 
-// Ghidra: judgeNoteHit @ 0x347e8. Grade a tap against note `index`.
-int NoteMng::judgeNoteHit(unsigned index) {
-    ActiveNote *note = activeNoteAt(index);
-    if (note == nullptr || (note->flags & 0x2f) != 0) {
+// Ghidra: judgeNoteHit @ 0x347e8. Grade a tap against pool note `noteId`.
+// Addressed by raw pool slot id (like judgeHold / updateLongNote / setLaneFlag),
+// not by active-list index: the binary indexes m_notePool[noteId] directly and
+// bounds it with the same (noteId >> 3) < 0x7d gate.
+int NoteMng::judgeNoteHit(unsigned noteId) {
+    if (noteId >> 3 >= 0x7d) { // noteId >= 1000
         return NOTE_JUDGE_MISS;
     }
+    ActiveNote &note = m_notePool[noteId];
+    if ((note.flags & 0x2f) != 0) {
+        return NOTE_JUDGE_MISS; // already judged
+    }
 
-    bool special = !m_autoPlay && (uint8_t)(note->kind - 6) < 4;
-    int delta = (int)note->startTick - getCurrentPosition(); // + = early, - = late
+    bool special = !m_autoPlay && (uint8_t)(note.kind - 6) < 4;
+    int delta = (int)note.startTick - getCurrentPosition(); // + = early, - = late
     if (delta <= m_judgeWindows[0]) {
         return NOTE_JUDGE_MISS; // already past the note
     }
@@ -779,33 +789,33 @@ int NoteMng::judgeNoteHit(unsigned index) {
                 if (m_judgeWindows[4] < delta) {
                     if (m_judgeWindows[5] < delta) {
                         // Too early: bump the early-miss counter, no judgement.
-                        m_earlyMiss[note->kind]++;
+                        m_earlyMiss[note.kind]++;
                         return NOTE_JUDGE_MISS;
                     }
                     // BAD: a long note also latches LONG_FAILED (0x200) here.
                     tier = NOTE_JUDGE_BAD;
-                    note->flags |= (note->startTick < note->endTick) ? 0x208 : 8;
+                    note.flags |= (note.startTick < note.endTick) ? 0x208 : 8;
                     m_combo = 0;
                     countsCombo = false;
                 } else {
                     tier = NOTE_JUDGE_GOOD;
-                    note->flags |= 1;
+                    note.flags |= 1;
                 }
             } else {
                 // Central band: within ~50 ms is the tightest tier.
                 if ((unsigned)(delta + 50) < 101) {
                     tier = NOTE_JUDGE_COOL;
-                    note->flags |= 4;
+                    note.flags |= 4;
                 } else {
                     tier = NOTE_JUDGE_GREAT;
-                    note->flags |= 2;
+                    note.flags |= 2;
                 }
             }
         } else {
             tier = NOTE_JUDGE_GOOD;
-            note->flags |= 1;
+            note.flags |= 1;
         }
-        if (countsCombo && !(note->startTick < note->endTick) && !special) {
+        if (countsCombo && !(note.startTick < note.endTick) && !special) {
             m_combo++;
             if (m_combo > m_maxCombo) {
                 m_maxCombo = m_combo;
@@ -814,19 +824,19 @@ int NoteMng::judgeNoteHit(unsigned index) {
     } else {
         // BAD (late): a long note also latches LONG_FAILED (0x200) here.
         tier = NOTE_JUDGE_BAD;
-        note->flags |= (note->startTick < note->endTick) ? 0x208 : 8;
+        note.flags |= (note.startTick < note.endTick) ? 0x208 : 8;
         m_combo = 0;
         countsCombo = false;
     }
 
-    if (!(note->startTick < note->endTick) && !special) {
-        m_tally[note->kind][tier]++;
+    if (!(note.startTick < note.endTick) && !special) {
+        m_tally[note.kind][tier]++;
     }
     // Each graded hit counts down the note's remaining-taps counter (spawnKind,
     // Ghidra: the DAT_00005266 = flags+2 decrement at the tail; misses return
     // early and never reach it).
-    if ((int8_t)note->spawnKind > 0) {
-        note->spawnKind--;
+    if ((int8_t)note.spawnKind > 0) {
+        note.spawnKind--;
     }
     return tier;
 }

@@ -26,20 +26,26 @@
 #include <cstddef> // offsetof
 #include <cstdint>
 
+// The play data holds AepLyrCtrl animation-layer transports for the combo
+// effects; the judge pass only stores/uses them by pointer, so a forward
+// declaration suffices here (PlayJudge.mm includes the real header).
+class AepLyrCtrl;
+
 // Per-note judge state. The play data owns a fixed pool of 60 of these at
 // +0x3c8 (each 24 bytes); FUN_0003126c looks one up by note id, allocating a
 // free slot (id < 0) on first touch. Ghidra: FUN_0003126c.
 struct NoteJudgeState {
-    int layerId;         // +0x00 the note's sprite/layer id (draw arg)
-    const void *noteKey; // +0x04 owning note identity (-1/0xffffffff when the
-                         // slot is free;
-                         //        judgeStateFor claims a slot whose noteKey, as a
-                         //        signed int, is < 0)
-    int phase;           // +0x08 visual phase: 0 pending, 1 active, 2/3 resolved
-    int result;          // +0x0c judged tier: -1 unjudged, else NoteJudge 0..3
-                         //        (0 = BAD/worst .. 3 = COOL/best)
-    int timestamp;       // +0x10 position when the phase/result last changed
-    int touchId;         // +0x14 bound neGraphics touch id (-1 = none)
+    int layerId;     // +0x00 the note's sprite/layer id (draw arg)
+    uint32_t noteId; // +0x04 owning note's pool id (0xffffffff when the slot is
+                     //       free; judgeStateFor claims a slot whose noteId, as a
+                     //       signed int, is < 0). The judge pass feeds this back
+                     //       to NoteMng::setLaneFlag on retire, and the play draw
+                     //       reads it as the raw tone note id. Ghidra: nNoteId @ +4.
+    int phase;       // +0x08 visual phase: 0 pending, 1 active, 2/3 resolved
+    int result;      // +0x0c judged tier: -1 unjudged, else NoteJudge 0..3
+                     //       (0 = BAD/worst .. 3 = COOL/best)
+    int timestamp;   // +0x10 position when the phase/result last changed
+    int touchId;     // +0x14 bound neGraphics touch id (-1 = none)
 };
 
 // The standard-mode MainTask play-data block, as the NOTE ENGINE sees it. This
@@ -56,14 +62,27 @@ struct NoteJudgeState {
 struct MainTaskPlayData {
     uint8_t _rsvd_00[0x84]; // +0x000 task base + HUD/layer tables (task-layer owned)
 
-    // The three combo-milestone SE-instance handles the play data pre-creates:
-    // [0] fires at 25 combo, [1] at 50, [2] at every 50 past 100. Each is a
-    // pointer to an SE-instance / effect object owned elsewhere (see
-    // seInstancePlay in PlayJudge.mm). Ghidra: the handles at playData +0x84 /
-    // +0x88 / +0x8c.
-    void *milestoneSe[3]; // +0x084 combo-milestone SE-instance handles
+    // The combo-effect animation layers (AepLyrCtrl transports), owned by the task
+    // layer (PlayTask::m_comboLayers). The judge pass restarts the burst layer for
+    // each combo milestone as it is first crossed: [0] at 25, [1] at 50, [2] at
+    // every 50 past 100. Ghidra: the AepLyrCtrl handles at playData +0x84/88/8c.
+    AepLyrCtrl *comboLayers[5]; // +0x084 combo-effect layers ([0..2] = 25/50/100 burst)
 
-    uint8_t _rsvd_90[0x3c8 - 0x90]; // +0x090 HUD / layout tables (task-layer owned)
+    // The sustained combo-effect layers (PlayTask::m_sceneLayers). Past a 5 / 10 /
+    // 100 combo the judge holds the matching tier layer ([0]/[1]/[2]) paused at its
+    // frame and resets the others. Ghidra: the AepLyrCtrl handles at +0x98/9c/a0.
+    AepLyrCtrl *sceneLayers[3]; // +0x098 sustained combo-effect layers
+
+    uint8_t _rsvd_a4[0xd4 - 0xa4]; // +0x0a4 HUD / layout tables (task-layer owned)
+
+    // Per-visual-phase note-sprite frame length, indexed by the judge phase
+    // (0..3). When a resolved note's elapsed animation frame reaches its phase's
+    // length the judge retires the note (setLaneFlag + frees the judge slot).
+    // Owned by the task layer (PlayTask::m_toneJudgeFrames); named here because the
+    // judge pass reads it as the retire threshold. Ghidra: playData+0xd4[phase].
+    int32_t toneJudgeFrames[4]; // +0x0d4 retire threshold per phase
+
+    uint8_t _rsvd_e4[0x3c8 - 0xe4]; // +0x0e4 HUD / layout tables (task-layer owned)
 
     // The per-note judge-state pool: FUN_0003126c looks one up by note identity,
     // claiming a free slot on first touch. 60 entries, stride 0x18.
@@ -174,14 +193,16 @@ struct MainTaskPlayData {
 // Binary-exact layout guards: the note engine reaches these fields by their
 // absolute offsets, so any drift must fail loudly rather than silently mis-read
 // the play data. These offsets are the 32-bit (armv7) binary's layout;
-// milestoneSe (void*[3]) and the judgePool entries widen on the 64-bit rebuild
+// the combo-layer pointers and the judgePool entries widen on the 64-bit rebuild
 // target, re-aligning every later field, so the absolute offsets only hold on
 // 32-bit. Access is by named member (layout-agnostic), so assert the exact
 // layout on 32-bit only — matching the ActiveNote guard in NoteMng.h.
 #if !defined(__LP64__) || !__LP64__
 static_assert(sizeof(MainTaskPlayData) == 0xa00,
               "MainTaskPlayData must be the 0xa00-byte play-data block");
-static_assert(offsetof(MainTaskPlayData, milestoneSe) == 0x84, "milestoneSe @ +0x84");
+static_assert(offsetof(MainTaskPlayData, comboLayers) == 0x84, "comboLayers @ +0x84");
+static_assert(offsetof(MainTaskPlayData, sceneLayers) == 0x98, "sceneLayers @ +0x98");
+static_assert(offsetof(MainTaskPlayData, toneJudgeFrames) == 0xd4, "toneJudgeFrames @ +0xd4");
 static_assert(offsetof(MainTaskPlayData, judgePool) == 0x3c8, "judgePool @ +0x3c8");
 static_assert(offsetof(MainTaskPlayData, playScale) == 0x974, "playScale @ +0x974");
 static_assert(offsetof(MainTaskPlayData, hitRadius) == 0x9b8, "hitRadius @ +0x9b8");
