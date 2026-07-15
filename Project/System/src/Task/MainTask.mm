@@ -1293,13 +1293,18 @@ void MainTask::Cleanup() {
     m_columnIndex = 0;
 }
 
-// Ghidra: musicSelUpdate (0x3835c) — re-sort / rebuild the music-select
-// list. Distinct from Update() (per-frame scroll physics, 0x34f4c):
-// this runs once after the sort order changes (SortSelect / Recommend close).
-// It re-reads UserSettingData musicSort, re-sorts the MusicManager song array
-// into m_musicList, recomputes the column geometry, streams the current
-// column's jacket cells + score rows, (re)kicks the background jacket loader,
-// and primes the adjacent columns. @ 0x3835c
+/**
+ * musicSelUpdate — re-sort / rebuild the music-select list. Distinct from
+ * Update() (per-frame scroll physics, 0x34f4c): this runs once after the sort
+ * order changes (SortSelect / Recommend close). It re-reads UserSettingData
+ * musicSort, re-sorts the MusicManager song array into m_musicList (the six sort
+ * comparators; sort 5 partitions un-scored songs first), recomputes the column
+ * geometry, lands the column on the current song, streams the current column's
+ * jacket cells + 3-difficulty score rows, one-shot-kicks the background jacket
+ * loader, and primes the adjacent columns.
+ * @ghidraAddress 0x3835c
+ * @complete
+ */
 void MainTask::rebuildList() {
     neAppEventCenter::shared(); // force the event center (current-song id) live
     Cleanup();                  // release the old list + clear the 27 cells (@ 0x3cfb0)
@@ -1416,7 +1421,8 @@ void MainTask::rebuildList() {
             cell.name = name;
             int cut = findCharIndexForColumn(name, nameWidth);
             if (cut > 0) {
-                cell.name = [[name substringToIndex:cut] stringByAppendingString:@"…"];
+                // Ghidra: stringByAppendingString:@"..." (three ASCII dots, cf____).
+                cell.name = [[name substringToIndex:cut] stringByAppendingString:@"..."];
             }
 
             loadCellScoreRows(cell,
@@ -1478,20 +1484,24 @@ inline void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
     }
 }
 
-// @ 0x3d048  (Ghidra: resultTaskSetup — mislabeled by binary proximity; it is
-// the music-select background jacket loader, the dispatch_async body kicked off
-// once by rebuildList). Runs on a global-queue background thread: round-robins
-// the 27 jacket cells under m_cellSem, and for each cell still marked "queued"
-// (loadState 1) decodes the song's artwork, reads its three difficulty score
-// rows (on the thread-safe SUB managed-object context), truncates the song name
-// to the platform column width, and marks the cell "ready" (loadState 3). Exits
-// when m_loaderCursor is set.
+/**
+ * The music-select background jacket loader (Ghidra: named resultTaskSetup by
+ * binary proximity, but it is the dispatch_async body kicked off once by
+ * rebuildList). Runs on a global-queue background thread: round-robins the 27
+ * jacket cells under m_cellSem, and for each cell still marked "queued"
+ * (loadState 1) decodes the song's artwork, reads its three difficulty score rows
+ * (on the thread-safe SUB managed-object context), truncates the song name to the
+ * platform column width (21 iPad / 15 phone), and marks the cell "ready"
+ * (loadState 3). Exits when m_loaderCursor is set.
+ * @ghidraAddress 0x3d048
+ * @complete
+ */
 void MainTask::backgroundCellLoader() {
     if (m_loaderCursor != 0) {
         m_loaderCursor = 2;
         return;
     }
-    const int maxNameChars = m_isPadDisplay ? 15 : 21; // phone 0x15 / iPad 0xf
+    const int maxNameChars = m_isPadDisplay ? 21 : 15; // Ghidra: 0x15 default, 0xf when !isPad
     unsigned i = 0;
     do {
         [NSThread sleepForTimeInterval:0.3]; // 0x3d368 == 0.3
@@ -1538,7 +1548,8 @@ void MainTask::backgroundCellLoader() {
                 NSString *name = [[md musicName] copy];
                 const int cut = findCharIndexForColumn(name, maxNameChars);
                 if (cut > 0) {
-                    name = [[name substringToIndex:cut] stringByAppendingString:@"…"];
+                    // Ghidra: stringByAppendingString:@"..." (three ASCII dots, cf____).
+                    name = [[name substringToIndex:cut] stringByAppendingString:@"..."];
                 }
                 dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
                 if (cell.loadState == 2) { // still ours -> publish the result
