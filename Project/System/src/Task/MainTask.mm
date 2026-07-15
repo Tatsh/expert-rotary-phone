@@ -1510,9 +1510,10 @@ void MainTask::UpdateHighlight() {
         kLR_ScreenW = 52,
         kLR_ScreenH = 53, // badge blit screen bounds (+0xa58/+0xa5c)
     };
-    // 0x42c80000 == 100.0f scale, 0xffffff == white, 0x20 == blend mode, 10 == OT
-    // priority.
-    const int kScale100 = 0x42c80000;
+    // 100 == natural (100%) scale (the Aep draw path divides sx/sy by 100; the
+    // binary pushes the 100.0f bits 0x42c80000 only because its draw reinterprets
+    // them), 0xffffff == white, 0x20 == blend mode, 10 == OT priority.
+    const int kScale100 = 100;
 
     // Pulsing new-recommend badge (m_arrowTex[1]) over the recommend button.
     if (m_recommendBadge) {
@@ -1998,8 +1999,8 @@ void AepDrawCallback(unsigned child,
                                self->m_frmNo[11],
                                self->m_layoutRects[3] + (cellX - (anchorX * scaleX) / 100),
                                self->m_layoutRects[4] + (cellY - (anchorY * scaleY) / 100),
-                               0x42c80000,
-                               0x42c80000,
+                               100,
+                               100,
                                0,
                                0,
                                0,
@@ -2106,8 +2107,8 @@ void AepDrawCallback(unsigned child,
                        frameNo,
                        fx,
                        fy,
-                       0x42c80000,
-                       0x42c80000,
+                       100,
+                       100,
                        0,
                        ax,
                        ay,

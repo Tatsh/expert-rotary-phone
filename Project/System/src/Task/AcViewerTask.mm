@@ -440,22 +440,8 @@ void AcViewerTask::drawLifeGauge() {
         const int emptyFrm = lower ? m_gaugeEmpty02Frm : m_gaugeEmpty01Frm; // GAUGE_OUT_01/02
         const int x = m_gaugeStrideX * cell + m_gaugeBaseX;
         const int y = lower ? m_gaugeLowerY : m_gaugeUpperY;
-        drawAepFrameEx(&aep,
-                       emptyFrm,
-                       x,
-                       y,
-                       0x42c80000,
-                       0x42c80000,
-                       0,
-                       0,
-                       0,
-                       100,
-                       0,
-                       0x20,
-                       0xffffff,
-                       nullptr,
-                       0xd,
-                       1);
+        drawAepFrameEx(
+            &aep, emptyFrm, x, y, 100, 100, 0, 0, 0, 100, 0, 0x20, 0xffffff, nullptr, 0xd, 1);
 
         if (cell < lit) {
             const int litFrm = lower ? m_gaugeLit02Frm : m_gaugeLit01Frm; // GAUGE_02/01 lit
@@ -463,8 +449,8 @@ void AcViewerTask::drawLifeGauge() {
                            litFrm,
                            x + nudge,
                            y + nudge,
-                           0x42c80000,
-                           0x42c80000,
+                           100,
+                           100,
                            0,
                            0,
                            0,
