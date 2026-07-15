@@ -154,10 +154,22 @@ target_sources(popnrhythmin PRIVATE
     "${_zip}/minizip/unzip.c"
     "${_zip}/minizip/zip.c")
 target_include_directories(popnrhythmin PRIVATE "${_zip}" "${_zip}/minizip")
+# minizip is vendored upstream C we do not patch; silence its extraneous
+# parentheses-equality warnings (e.g. zip.c's `if ((level==2))`) without
+# touching the third-party source.
+set_source_files_properties(
+    "${_zip}/minizip/ioapi.c"
+    "${_zip}/minizip/unzip.c"
+    "${_zip}/minizip/zip.c"
+    PROPERTIES COMPILE_OPTIONS "-Wno-parentheses-equality")
 
+# -fobjc-arc / -fobjc-exceptions are Objective-C(++)-only; passing them to the
+# plain C minizip sources triggers an unused-argument warning, so scope them to
+# the Objective-C languages.
 target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
-    -fobjc-exceptions -Wno-deprecated-declarations)
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-exceptions>
+    -Wno-deprecated-declarations)
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"
@@ -165,6 +177,7 @@ set_target_properties(popnrhythmin PROPERTIES
     XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "${IOS_DEPLOYMENT_TARGET}"
     XCODE_ATTRIBUTE_ARCHS "${IOS_ARCHS}"
     XCODE_ATTRIBUTE_VALID_ARCHS "${IOS_ARCHS}"
+    XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
     XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO"
     XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
     XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
