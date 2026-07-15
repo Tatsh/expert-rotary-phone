@@ -107,8 +107,12 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     // tiles (Ghidra FUN_00011e18); it fills the sprite's tile/handle arrays.
     m_groupTexture[group]->loadFrames(texDir.UTF8String, name, indexBase);
 
-    // group id -> slot maps (Ghidra: +0x7c1748 / +0x7c1948).
+    // group id -> slot maps (Ghidra: pAGroupBankTable[groupId] = nSlot @ +0x7c1748,
+    // pABankGroupTable[nSlot] = groupId @ +0x7c1948). Both stores are needed:
+    // getLyrNo packs m_groupSlot[group] into the lyr handle, and groupEntries reads
+    // it back through m_groupIndex to reach this group's frame data.
     m_groupIndex[groupId] = (uint8_t)group;
+    m_groupSlot[group] = (uint8_t)groupId;
 
     // Copy the frame-position table (8-byte records, terminated by a zero span),
     // bounded by MAX_FRAME_DATA.
