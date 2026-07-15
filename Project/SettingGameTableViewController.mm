@@ -95,8 +95,10 @@ static UIViewController *RootVC() {
 // custom back button and the "frirep_navbar" bar background.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [UINavigationController alloc];
-    [self initWithStyle:UITableViewStyleGrouped];
-    nav = [nav initWithRootViewController:self];
+    // The binary (0x88dbe) passes the -initWithStyle: result straight into
+    // -initWithRootViewController: without reassigning self; -initWithStyle:
+    // initialises the receiver in place and returns it, so self stays valid.
+    nav = [nav initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
 
     UIImage *backImage = [UIImage imageNamed:@"navi_btn_back"];
     CGSize backSize = backImage ? backImage.size : CGSizeZero;

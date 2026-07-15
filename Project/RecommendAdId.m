@@ -223,7 +223,10 @@
             }
             return NO;
         }
-        [pasteboard setData:nil forPasteboardType:@"applilink.adid"];
+        // The binary passes nil here (Ghidra: setData:0x0); the pasteboard is
+        // removed on the next line, so pass empty data to satisfy UIPasteboard's
+        // non-nil data requirement without changing behaviour.
+        [pasteboard setData:[NSData data] forPasteboardType:@"applilink.adid"];
         [UIPasteboard removePasteboardWithName:_serviceName];
         return YES;
     }

@@ -139,7 +139,10 @@ static UIViewController *RootVC() {
 // @ 0xcd2e0 — build self, wrap it in a navigation controller with a back button
 // and the pop'n-link nav-bar art, and return that controller.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
-    [self init];
+    // The binary calls -init only for its side effects and keeps the original
+    // self; the result is intentionally discarded, so this is not
+    // self = [self init].
+    (void)[self init];
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:self];
 
     UIImage *backImg = [UIImage imageNamed:@"navi_btn_back"];

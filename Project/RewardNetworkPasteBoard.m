@@ -107,7 +107,10 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     NSDictionary *record = [NSKeyedUnarchiver unarchiveObjectWithData:archived];
     NSError *validateError = nil;
     if (![RewardNetworkPasteBoard validate:record error:&validateError]) {
-        [pasteboard setData:nil forPasteboardType:_dataType];
+        // The binary passes nil here (Ghidra: setData:0x0); UIPasteboard's data
+        // parameter must be non-nil, so pass empty data to clear the type
+        // without tripping the null-argument warning (behaviourally identical to nil).
+        [pasteboard setData:[NSData data] forPasteboardType:_dataType];
         if (error != NULL) {
             *error = [RewardNetworkError localizedApplilinkErrorWithCode:0x3f8];
         }
@@ -227,7 +230,10 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
         return NO;
     }
 
-    [pasteboard setData:nil forPasteboardType:_dataType];
+    // The binary passes nil here (Ghidra: setData:0x0); the pasteboard is
+    // removed on the next line, so pass empty data to satisfy UIPasteboard's
+    // non-nil data requirement without changing behaviour.
+    [pasteboard setData:[NSData data] forPasteboardType:_dataType];
     [UIPasteboard removePasteboardWithName:name];
     return YES;
 }

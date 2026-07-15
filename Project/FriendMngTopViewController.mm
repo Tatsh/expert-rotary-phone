@@ -41,7 +41,10 @@
 
 // @ 0xa59f0 — build the hub + wrap it in a navigation controller.
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
-    [self init];
+    // The binary (0xa5a18) calls -init only for its side effects and keeps the
+    // original self; the result is intentionally discarded, so this is not
+    // self = [self init].
+    (void)[self init];
     m_Delegate = self;
 
     // Backdrop.
