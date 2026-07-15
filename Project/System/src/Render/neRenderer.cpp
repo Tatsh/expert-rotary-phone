@@ -207,10 +207,12 @@ void neApplyViewport(neRenderer *r, neViewport *vp) {
 
 // One interleaved vertex: 16.16 fixed-point position + premultiplied RGBA8.
 // Stride 12, position size 2 (glVertexPointer), colour at +8 (glColorPointer).
-// Ghidra: built inline on the stack by each neDraw* primitive.
+// Ghidra: built inline on the stack by each neDraw* primitive. Positions are
+// GL_FLOAT (the backend's glVertexPointer uses type 0x1406); each primitive
+// receives already-scaled float coordinates and stores them verbatim.
 struct neColorVertex {
-    int32_t x;
-    int32_t y;
+    float x;
+    float y;
     uint32_t rgba;
 };
 
@@ -241,22 +243,24 @@ static void neDrawColorArray(const neColorVertex *verts, int mode, int count) {
 }
 
 // Ghidra: FUN_00014de4 — primitive 3 (GL_LINES), 2 vertices.
-void neDrawLine(int x0, int y0, int x1, int y1, int a, int r, int g, int b) {
+void neDrawLine(float x0, float y0, float x1, float y1, int a, int r, int g, int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
     neColorVertex v[2] = {{x0, y0, c}, {x1, y1, c}};
     neDrawColorArray(v, 3, 2);
 }
 
 // Ghidra: FUN_00015188 — primitive 6 (GL_TRIANGLES), 3 vertices.
-void neDrawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, int a, int r, int g, int b) {
+void neDrawTriangle(
+    float x0, float y0, float x1, float y1, float x2, float y2, int a, int r, int g, int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
     neColorVertex v[3] = {{x0, y0, c}, {x1, y1, c}, {x2, y2, c}};
     neDrawColorArray(v, 6, 3);
 }
 
 // Ghidra: FUN_000152ac — primitive 4 (GL_TRIANGLE_STRIP) rectangle from (x,y)
-// size (w,h): (x,y),(x+w,y),(x,y+h),(x+w,y+h).
-void neDrawRect(int x, int y, int w, int h, int a, int r, int g, int b) {
+// size (w,h): (x,y),(x+w,y),(x,y+h),(x+w,y+h). The binary adds w/h with
+// vadd.f32, so the corner arithmetic is in floating point.
+void neDrawRect(float x, float y, float w, float h, int a, int r, int g, int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
     neColorVertex v[4] = {
         {x, y, c},
@@ -269,8 +273,18 @@ void neDrawRect(int x, int y, int w, int h, int a, int r, int g, int b) {
 
 // Ghidra: FUN_000153e8 — primitive 4 (GL_TRIANGLE_STRIP), four explicit
 // corners.
-void neDrawQuad(
-    int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int a, int r, int g, int b) {
+void neDrawQuad(float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3,
+                int a,
+                int r,
+                int g,
+                int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
     neColorVertex v[4] = {{x0, y0, c}, {x1, y1, c}, {x2, y2, c}, {x3, y3, c}};
     neDrawColorArray(v, 4, 4);

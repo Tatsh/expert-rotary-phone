@@ -147,36 +147,37 @@ neViewport *neGetCurrentViewport(void);
 void neReleaseRef(neViewport *vp);
 
 // ---------------------------------------------------------------------------
-// Render-state + immediate-mode primitives. Coordinates are 16.16 fixed-point
-// pixels; colours are 0..255 (a,r,g,b) and are stored premultiplied.
+// Render-state + immediate-mode primitives. Coordinates are GL_FLOAT pixels
+// (already scaled by the caller); colours are 0..255 (a,r,g,b) and are stored
+// premultiplied.
 // ---------------------------------------------------------------------------
 
 // Reset to the default 2D draw state: apply the current viewport, load an
 // identity model matrix and disable every extra cap. Ghidra: FUN_00014ef4.
 void neApplyDefaultRenderState(void);
 
-void neDrawLine(int x0, int y0, int x1, int y1, int a, int r, int g,
+void neDrawLine(float x0, float y0, float x1, float y1, int a, int r, int g,
                 int b); // FUN_00014de4
-void neDrawTriangle(int x0,
-                    int y0,
-                    int x1,
-                    int y1,
-                    int x2,
-                    int y2, // FUN_00015188
+void neDrawTriangle(float x0,
+                    float y0,
+                    float x1,
+                    float y1,
+                    float x2,
+                    float y2, // FUN_00015188
                     int a,
                     int r,
                     int g,
                     int b);
-void neDrawRect(int x, int y, int w, int h, int a, int r, int g,
+void neDrawRect(float x, float y, float w, float h, int a, int r, int g,
                 int b); // FUN_000152ac
-void neDrawQuad(int x0,
-                int y0,
-                int x1,
-                int y1,
-                int x2,
-                int y2,
-                int x3,
-                int y3, // FUN_000153e8
+void neDrawQuad(float x0,
+                float y0,
+                float x1,
+                float y1,
+                float x2,
+                float y2,
+                float x3,
+                float y3, // FUN_000153e8
                 int a,
                 int r,
                 int g,

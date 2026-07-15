@@ -492,7 +492,7 @@ void neGLES_11::colorPointer(const void *ptr, int stride) {
 }
 
 void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
-    glVertexPointer(size, GL_FIXED, stride, ptr); // 16.16 fixed-point positions
+    glVertexPointer(size, GL_FLOAT, stride, ptr); // Ghidra: type constant 0x1406 (GL_FLOAT)
 }
 
 void neGLES_11::texCoordPointer(const void *ptr, int stride) {
