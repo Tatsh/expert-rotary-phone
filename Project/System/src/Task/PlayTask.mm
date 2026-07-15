@@ -126,13 +126,13 @@ void PlayTask::reloadChart(int restart) {
     }
 
     // Pick the chosen difficulty's sheet (0 normal / 1 hyper / 2 ex) and parse it
-    // into the global note manager. Ghidra threads a per-note spawn callback (@
-    // 0x3122c) and this play data as the two context args; only the play-data
-    // context is forwarded here.
+    // into the global note manager, registering the miss callback (@ 0x3122c,
+    // PlayApplyMissGauge) with this play data — detectMiss fires it to drain the
+    // gauge when a note scrolls past un-tapped.
     NSData *sheet = (difficulty == 2) ? [md sheetEx] :
                     (difficulty == 1) ? [md sheetHyper] :
                                         [md sheetNormal];
-    nm.initPlayDataWithData(sheet, 0, (uint32_t)(uintptr_t)this);
+    nm.initPlayDataWithData(sheet, PlayApplyMissGauge, this);
 
     if (restart == 0) {
         // The per-tap feedback SE: the user's touch-sound kind (@ UserSettingData)

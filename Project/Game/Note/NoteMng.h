@@ -160,14 +160,19 @@ struct NoteRenderData {
 class NoteMng {
 public:
     // Parse a decoded chart into the play-data timeline. `data` points at the
-    // 4-byte header; `size` is the whole payload length. Ghidra: InitPlayData
-    // @ 0x335a4 (asserts size validity at NoteMng.mm:0x45/0x59).
-    int initPlayData(const void *data, int size, uint32_t arg4, uint32_t arg5);
+    // 4-byte header; `size` is the whole payload length. `missCallback` (with
+    // `missCallbackArg`, the owning play data) is stored as the miss hook that
+    // detectMiss fires when a note scrolls past un-tapped — the play scene passes
+    // its gauge-penalty function here. Ghidra: InitPlayData @ 0x335a4 (asserts
+    // size validity at NoteMng.mm:0x45/0x59; arg4/arg5 -> +0x104/+0x108).
+    int
+    initPlayData(const void *data, int size, void (*missCallback)(void *), void *missCallbackArg);
 
 #ifdef __OBJC__
     // Parse a chart straight from an NSData (bytes + length -> initPlayData); the
-    // sheet the play loader selected for the difficulty. Ghidra: @ 0x33550.
-    int initPlayDataWithData(NSData *data, uint32_t arg3, uint32_t arg4);
+    // sheet the play loader selected for the difficulty, plus the miss callback +
+    // its owning play data. Ghidra: @ 0x33550.
+    int initPlayDataWithData(NSData *data, void (*missCallback)(void *), void *missCallbackArg);
 #endif
 
     // Walk the parsed records and register every tempo (type 2) event into the

@@ -57,9 +57,17 @@ inline uint8_t recByte(const NoteRecord *r, int off) {
 
 // Ghidra: InitPlayData @ 0x335a4. Parse the decoded payload (4-byte header then
 // 20-byte records) into the timeline.
-int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_t /*arg5*/) {
+int NoteMng::initPlayData(const void *data,
+                          int size,
+                          void (*missCallback)(void *),
+                          void *missCallbackArg) {
     assert(data != nullptr && size > 0);
     assert(size >= 4 && (size - 4) % 20 == 0); // NoteMng.mm:0x45/0x59
+
+    // The miss hook detectMiss fires when a note scrolls past un-tapped (Ghidra:
+    // stored at +0x104/+0x108 after the reset).
+    m_missCallback = missCallback;
+    m_missCallbackArg = missCallbackArg;
 
     // Reset play state.
     m_recordCount = 0;
@@ -138,8 +146,10 @@ int NoteMng::initPlayData(const void *data, int size, uint32_t /*arg4*/, uint32_
 }
 
 // Ghidra: initPlayDataWithData @ 0x33550.
-int NoteMng::initPlayDataWithData(NSData *data, uint32_t arg3, uint32_t arg4) {
-    return initPlayData(data.bytes, (int)data.length, arg3, arg4);
+int NoteMng::initPlayDataWithData(NSData *data,
+                                  void (*missCallback)(void *),
+                                  void *missCallbackArg) {
+    return initPlayData(data.bytes, (int)data.length, missCallback, missCallbackArg);
 }
 
 // Ghidra: registerTempoEvents @ 0x337e0. Register every tempo (type 2) event

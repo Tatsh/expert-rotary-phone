@@ -409,14 +409,14 @@ void PlayLoadSong(void *playData, int reload) {
         });
     }
 
-    // Parse the chosen difficulty's sheet into the global note manager. The
-    // binary also threads a per-note spawn callback and this play data as the two
-    // context args; NoteMng::initPlayData does not consume them in this
-    // reconstruction, so only the play-data context is forwarded.
+    // Parse the chosen difficulty's sheet into the global note manager,
+    // registering the miss callback (@ 0x3122c, PlayApplyMissGauge) with this play
+    // data — detectMiss fires it to drain the gauge on a note missed by scrolling
+    // past un-tapped.
     NSData *sheet = (sheetIndex == 2) ? [music sheetEx] :
                     (sheetIndex == 1) ? [music sheetHyper] :
                                         [music sheetNormal];
-    nm.initPlayDataWithData(sheet, 0, (uint32_t)(uintptr_t)playData);
+    nm.initPlayDataWithData(sheet, PlayApplyMissGauge, playData);
 
     if (reload == 0) {
         // The per-tap feedback SE, named by the user's touch-sound kind, at their

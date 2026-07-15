@@ -420,3 +420,12 @@ void PlayJudge_update(MainTaskPlayData *playData,
         PlayScoreGaugeUpdate(playData); // Ghidra: FUN_00031338 (per-tap feedback SE)
     }
 }
+
+// Ghidra: FUN_0003122c. The note engine's miss callback, registered at chart load
+// and fired by detectMiss when a note scrolls past un-tapped. It is exactly the
+// BAD/miss branch of the gauge update (raise the missed flag, subtract
+// gaugeLossMiss, clamp [0, 0x400]), so it drains the life gauge on a miss just as
+// a tapped BAD does.
+void PlayApplyMissGauge(void *playData) {
+    updateGaugeValue(reinterpret_cast<MainTaskPlayData *>(playData), NOTE_JUDGE_BAD);
+}

@@ -257,6 +257,14 @@ void PlayJudge_update(MainTaskPlayData *playData,
 // PlayCurrentScore.) Ghidra: FUN_00031338.
 void PlayScoreGaugeUpdate(MainTaskPlayData *playData);
 
+// The note engine's miss callback: apply the BAD/miss gauge penalty to the play
+// data (raise the missed flag, subtract gaugeLossMiss, clamp [0, 0x400]). The
+// play scene registers this into NoteMng at chart load (initPlayDataWithData);
+// detectMiss fires it when a note scrolls past un-tapped, so the life gauge
+// drains on missed notes just as it does on a tapped BAD. `playData` is the
+// owning MainTaskPlayData (passed as the callback arg). Ghidra: FUN_0003122c.
+void PlayApplyMissGauge(void *playData);
+
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4
