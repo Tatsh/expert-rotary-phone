@@ -24,11 +24,12 @@
 //  `*(T*)(this+off)` in the binary is named and placed at its exact offset
 //  (with a `// +0xNN` comment); genuine gaps are `_rsvd_NN[]` fillers. The
 //  device-branched HUD layout block
-//  (+0x110..+0x1c4 — ~80 pure-constant coordinate stores from DAT_0012e370
-//  phone / DAT_0012e394 pad) is only partly reached by name (the note-field /
-//  gauge / time-line / digit geometry accessors); its un-accessed interior is
-//  kept as documented reserved fillers (the ROLES and control flow that read
-//  the named members are exact). The whole object is wiped +0x28..+0x20c by
+//  (+0x110..+0x1c4 — pure-constant coordinate stores from DAT_0012e370 phone /
+//  DAT_0012e394 pad) is fully reconstructed by setup() for all three form
+//  factors; a handful of interior slots (+0x110/+0x134/+0x138/+0x140/+0x144)
+//  are written but never read by any object in the image, so they carry
+//  provisional names and a write-only note. The whole object is wiped
+//  +0x28..+0x20c by
 //  cleanup() (memset of 0x1e4 bytes); the play state
 //  @ +0x20c survives.
 //
@@ -157,35 +158,41 @@ private:
     int m_uiScale = 0;                    // +0x10c UI scale (g_dwUiScale; read as float in update)
     // ---- device-branched HUD layout constants (+0x110..+0x1c4, documented seam)
     // ----
-    uint8_t _rsvd_110[0x114 - 0x110] = {}; // +0x110
-    int m_pauseBtnHeight = 0;  // +0x114 pause-menu button full height (halved in the y-band test)
-    int m_seekScale = 0;       // +0x118 resume-seek scale constant (setup
-                               //        writes 5 phone / 3 ipad); read as a
-                               //        fixed-point value by the seek math
-    int m_xScrubScale = 0;     // +0x11c x-scrub scale (drag dx -> gauge base)
-    int m_noteClipTop = 0;     // +0x120 note-field clip top / y
-    int m_noteFieldX = 0;      // +0x124 note-field x (= m_noteClipTop + m_noteFieldY)
-    int m_noteFieldY = 0;      // +0x128 note-field y
-    int m_seekGaugeSplitY = 0; // +0x12c drag start-Y split: >= gauge scrub, < seek scrub
-    int m_scrubZoneTopY = 0;   // +0x130 top Y of the scrub zone (drag start-Y >= this)
-    uint8_t _rsvd_134[0x13c - 0x134] = {}; // +0x134
-    int m_effectNoteHeight = 0; // +0x13c effect-note height (halved to centre the sprite)
-    uint8_t _rsvd_140[0x148 - 0x140] = {}; // +0x140
-    int m_coolLayerArgA = 0;               // +0x148 EFFECT_COOL drawLayer anchorX
-    int m_coolLayerArgB = 0;               // +0x14c EFFECT_COOL drawLayer anchorY
-    int m_playTouchW = 0;                  // +0x150 in-play song-select touch rect width
-    int m_playTouchH = 0;                  // +0x154 in-play song-select touch rect height
-    int m_laneFrm[9] = {};                 // +0x158 per-lane note frame table
-    int m_gaugeLowerY = 0;                 // +0x17c gauge lower-cell y
-    int m_gaugeUpperY = 0;                 // +0x180 gauge upper-cell y
-    int m_gaugeBaseX = 0;                  // +0x184 gauge first-cell x
-    int m_gaugeStrideX = 0;                // +0x188 gauge per-cell x stride
-    int m_timeLineX = 0;                   // +0x18c time-line marker x
-    int m_timeLineY = 0;                   // +0x190 time-line marker y
-    int m_barWidth = 0;                    // +0x194 time-line bar width (sweep denominator)
-    int m_digitScaleX = 0;                 // +0x198 HUD digit blit scale x
-    int m_digitScaleY = 0;                 // +0x19c HUD digit blit scale y
-    int m_digitAdvance = 0;                // +0x1a0 HUD digit right-to-left x advance
+    // +0x110/+0x134/+0x138/+0x140/+0x144 are written by setup() as part of the
+    // contiguous layout block but are never read back by any object in the
+    // shipped image (verified by a whole-image field-access scan); they are kept
+    // as real fields so the stores stay faithful, with provisional names.
+    int m_pauseBtnTopY = 0;      // +0x110 pause-button top y (write-only)
+    int m_pauseBtnHeight = 0;    // +0x114 pause-menu button full height (halved in the y-band test)
+    int m_seekScale = 0;         // +0x118 resume-seek scale constant (setup
+                                 //        writes 5 phone / 3 ipad); read as a
+                                 //        fixed-point value by the seek math
+    int m_xScrubScale = 0;       // +0x11c x-scrub scale (drag dx -> gauge base)
+    int m_noteClipTop = 0;       // +0x120 note-field clip top / y
+    int m_noteFieldX = 0;        // +0x124 note-field x (= m_noteClipTop + m_noteFieldY)
+    int m_noteFieldY = 0;        // +0x128 note-field y
+    int m_seekGaugeSplitY = 0;   // +0x12c drag start-Y split: >= gauge scrub, < seek scrub
+    int m_scrubZoneTopY = 0;     // +0x130 top Y of the scrub zone (drag start-Y >= this)
+    int m_effectNoteWidth = 0;   // +0x134 effect-note width (write-only)
+    int m_effectNoteInsetY = 0;  // +0x138 effect-note inset y (write-only)
+    int m_effectNoteHeight = 0;  // +0x13c effect-note height (halved to centre the sprite)
+    int m_effectSpriteWidth = 0; // +0x140 effect-sprite width (write-only)
+    int m_effectSpriteInsetX = 0; // +0x144 effect-sprite inset x (write-only)
+    int m_coolLayerArgA = 0;      // +0x148 EFFECT_COOL drawLayer anchorX
+    int m_coolLayerArgB = 0;      // +0x14c EFFECT_COOL drawLayer anchorY
+    int m_playTouchW = 0;         // +0x150 in-play song-select touch rect width
+    int m_playTouchH = 0;         // +0x154 in-play song-select touch rect height
+    int m_laneFrm[9] = {};        // +0x158 per-lane note frame table
+    int m_gaugeLowerY = 0;        // +0x17c gauge lower-cell y
+    int m_gaugeUpperY = 0;        // +0x180 gauge upper-cell y
+    int m_gaugeBaseX = 0;         // +0x184 gauge first-cell x
+    int m_gaugeStrideX = 0;       // +0x188 gauge per-cell x stride
+    int m_timeLineX = 0;          // +0x18c time-line marker x
+    int m_timeLineY = 0;          // +0x190 time-line marker y
+    int m_barWidth = 0;           // +0x194 time-line bar width (sweep denominator)
+    int m_digitScaleX = 0;        // +0x198 HUD digit blit scale x
+    int m_digitScaleY = 0;        // +0x19c HUD digit blit scale y
+    int m_digitAdvance = 0;       // +0x1a0 HUD digit right-to-left x advance
     // The pause-menu buttons (case 0xd, x-agnostic y-band hit-test): [0] options
     // @0x1a4, [1] resume @0x1a8, [2] quit @0x1ac; each band is [anchor+height/2,
     // +height/2+rowHeight].

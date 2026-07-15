@@ -149,13 +149,94 @@ void AcViewerTask::setup() {
         topName = "TOP_1136";
     }
 
-    // Device-branched HUD layout constants (@ +0x110..+0x1c0 and the per-lane
-    // note-frame table @ +0x158[9]). These are ~80 pure-constant stores from
-    // DAT_0012e370 (phone) / DAT_0012e394 (pad); reconstructed as a documented
-    // seam per rule 7 (the values are fixed layout coordinates, not behaviour).
-    // setup() writes them here before the top layer is built. m_noteFieldX
-    // (+0x124) = m_noteClipTop (+0x120) + m_noteFieldY (+0x128). (best-effort:
-    // full constant tables omitted — see the DAT_0012e3xx blocks.)
+    // Device-branched HUD layout constants (@ +0x110..+0x1c0) plus the per-lane
+    // note-frame x table (@ +0x158[9]), written before the top layer is built.
+    // There are three form factors: iPad (pad), tall iPhone (displayType == 2,
+    // the 1136 screen), and the normal 960 iPhone. The per-lane note-frame
+    // tables are DAT_0012e370 (phone) / DAT_0012e394 (pad).
+    static const int kLaneFrmPhone[9] = {78, 138, 199, 260, 320, 381, 441, 502, 561};
+    static const int kLaneFrmPad[9] = {284, 405, 526, 647, 768, 889, 1010, 1132, 1250};
+    if (pad) {
+        m_pauseBtnTopY = 0;
+        m_pauseBtnHeight = -176;
+        m_seekScale = 3;
+        m_xScrubScale = 1;
+        m_noteClipTop = 456;
+        m_noteFieldY = 1154;
+        m_seekGaugeSplitY = 1760;
+        m_scrubZoneTopY = 336;
+        m_effectNoteWidth = 128;
+        m_effectNoteInsetY = 96;
+        m_effectNoteHeight = 32;
+        m_effectSpriteWidth = 124;
+        m_effectSpriteInsetX = 16;
+        m_coolLayerArgA = 132;
+        m_coolLayerArgB = 116;
+        m_playTouchW = 210;
+        m_playTouchH = 230;
+        m_gaugeLowerY = 1866;
+        m_gaugeUpperY = 1842;
+        m_gaugeBaseX = 192;
+        m_gaugeStrideX = 48;
+        m_timeLineX = 228;
+        m_timeLineY = 1784;
+        m_barWidth = 1078;
+        m_digitScaleX = 60;
+        m_digitScaleY = 72;
+        m_digitAdvance = 48;
+        m_pauseBtnY[0] = 806;
+        m_pauseBtnY[1] = 1398;
+        m_pauseBtnY[2] = 1096;
+        m_pauseBtnRowH = 188;
+        m_exitTouchX = 1028;
+        m_exitTouchY = 160;
+        m_exitTouchW = 340;
+        m_exitTouchH = 136;
+        for (int i = 0; i < 9; i++) {
+            m_laneFrm[i] = kLaneFrmPad[i];
+        }
+    } else {
+        const bool tall = ([app displayType] == 2); // 1136 screen vs 960
+        m_pauseBtnTopY = tall ? 88 : 0;
+        m_pauseBtnHeight = tall ? 0 : -176;
+        m_seekScale = 5;
+        m_xScrubScale = 2;
+        m_noteClipTop = tall ? 286 : 198;
+        m_noteFieldY = 574;
+        m_seekGaugeSplitY = tall ? 912 : 822;
+        m_scrubZoneTopY = tall ? 134 : 132;
+        m_effectNoteWidth = 64;
+        m_effectNoteInsetY = 48;
+        m_effectNoteHeight = 16;
+        m_effectSpriteWidth = 62;
+        m_effectSpriteInsetX = 8;
+        m_coolLayerArgA = 66;
+        m_coolLayerArgB = 58;
+        m_playTouchW = 105;
+        m_playTouchH = 115;
+        m_gaugeLowerY = tall ? 899 : 897;
+        m_gaugeUpperY = tall ? 887 : 885;
+        m_gaugeBaseX = 31;
+        m_gaugeStrideX = 24;
+        m_timeLineX = 50;
+        m_timeLineY = tall ? 861 : 859;
+        m_barWidth = 539;
+        m_digitScaleX = 32;
+        m_digitScaleY = 36;
+        m_digitAdvance = 22;
+        m_pauseBtnY[0] = 404;
+        m_pauseBtnY[1] = 774;
+        m_pauseBtnY[2] = 584;
+        m_pauseBtnRowH = 94;
+        m_exitTouchX = 425;
+        m_exitTouchY = tall ? 18 : 16;
+        m_exitTouchW = tall ? 134 : 132;
+        m_exitTouchH = 115;
+        for (int i = 0; i < 9; i++) {
+            m_laneFrm[i] = kLaneFrmPhone[i];
+        }
+    }
+    // m_noteFieldX (+0x124) = m_noteClipTop (+0x120) + m_noteFieldY (+0x128).
     m_noteFieldX = m_noteClipTop + m_noteFieldY;
 
     AepLyrCtrl *topLayer = new AepLyrCtrl();
