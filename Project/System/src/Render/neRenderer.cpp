@@ -488,10 +488,16 @@ void neDrawTexturedQuad(void *sprite,
         float top = static_cast<float>(clipRect[1] - (y - pivotY));
         float right = left + static_cast<float>(clipRect[2]);
         float bottom = top + static_cast<float>(clipRect[3]);
-        GLfloat pL[4] = {1.0f, 0.0f, 0.0f, -left};
-        GLfloat pT[4] = {0.0f, -1.0f, 0.0f, bottom};
-        GLfloat pR[4] = {-1.0f, 0.0f, 0.0f, right};
-        GLfloat pB[4] = {0.0f, 1.0f, 0.0f, -top};
+        // Plane-to-slot assignment matches the binary exactly (each equation is
+        // built on the stack and passed to glClipPlanef in this order): PLANE0 is
+        // the top edge (y >= top), PLANE1 the bottom (y <= bottom), PLANE2 the
+        // left (x >= left), and PLANE3 the right (x <= right). All four are
+        // enabled together, so the clip region is their intersection irrespective
+        // of slot, but the slot order is kept faithful to Ghidra.
+        GLfloat pTop[4] = {0.0f, 1.0f, 0.0f, -top};
+        GLfloat pBottom[4] = {0.0f, -1.0f, 0.0f, bottom};
+        GLfloat pLeft[4] = {1.0f, 0.0f, 0.0f, -left};
+        GLfloat pRight[4] = {-1.0f, 0.0f, 0.0f, right};
         // Ghidra: when the sprite is rotated the binary rotates each plane's normal
         // by +rotation (cos/sin of the positive angle) and re-derives the offset
         // about the pivot: a' = c*a - s*b, b' = s*a + c*b, d' = d + pivotX*(a-a') +
@@ -500,7 +506,7 @@ void neDrawTexturedQuad(void *sprite,
         if (rotation != 0.0f) {
             const float c = cosf(rotation), s = sinf(rotation);
             const float px = static_cast<float>(pivotX), py = static_cast<float>(pivotY);
-            GLfloat *planes[4] = {pL, pT, pR, pB};
+            GLfloat *planes[4] = {pTop, pBottom, pLeft, pRight};
             for (GLfloat *p : planes) {
                 const float a2 = c * p[0] - s * p[1];
                 const float b2 = s * p[0] + c * p[1];
@@ -509,10 +515,10 @@ void neDrawTexturedQuad(void *sprite,
                 p[1] = b2;
             }
         }
-        glClipPlanef(GL_CLIP_PLANE0, pL);
-        glClipPlanef(GL_CLIP_PLANE1, pT);
-        glClipPlanef(GL_CLIP_PLANE2, pR);
-        glClipPlanef(GL_CLIP_PLANE3, pB);
+        glClipPlanef(GL_CLIP_PLANE0, pTop);
+        glClipPlanef(GL_CLIP_PLANE1, pBottom);
+        glClipPlanef(GL_CLIP_PLANE2, pLeft);
+        glClipPlanef(GL_CLIP_PLANE3, pRight);
         r->setEnable(3, true);
         r->setEnable(4, true);
         r->setEnable(5, true);
