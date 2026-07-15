@@ -43,9 +43,13 @@ static MainViewController *RootVC() {
     return (MainViewController *)neSceneManager::rootViewController();
 }
 
-// The menu's baseline Y (the screen height cached in the Aep manager @
-// +0x7f3b00); the top-row button rects are placed relative to it. Ghidra:
-// FUN_0000f4a4.
+/**
+ * The menu's baseline Y: the screen height cached in the Aep manager
+ * (nScreenHeight @ +0x7f3b00); the top-row button rects are placed relative to
+ * it.
+ * @ghidraAddress 0xf4a4
+ * @complete
+ */
 static int AepBaselineY(AepManager &aep) {
     return *reinterpret_cast<int *>(reinterpret_cast<char *>(&aep) + 0x7f3b00);
 }
