@@ -301,32 +301,19 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     [UIView commitAnimations];
 }
 
-// @ 0x2aad4 — remove the nav view, notify the root host, and (if a row was
-// picked) drive the owning MainTask into a play of the chosen song: find it
-// in the task's song list, stash the selection, pop the menu BGM, fire the
-// decide SE, spawn a PlayTask and hand it to the app delegate (state -> 0xc).
-// If the song is not installed, alert instead (state -> 2).
+// Remove the nav view, notify the root host, and clear the animating flag.
+//
+// NOTE: the Ghidra citation 0x2aad4 for this method is in doubt (that address is
+// the entry of a mis-bounded ~76 KB region, not a clean -endCloseAnimation). The
+// on-close play-launch of the picked song was previously routed through a
+// fabricated MainTask helper (launchPlayForMusicId) that is not a real binary
+// function; that helper has been removed. The play-launch + not-found alert are
+// dropped here pending re-verification of this method's true identity and of
+// where the picked-song hand-off to MainTask actually lives.
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(OverScoreLogEndCallBack)];
     _isAnimationing = NO;
-
-    if (m_musicId == -1 || m_sheet == -1) {
-        return;
-    }
-    // Drive the owning task into a play of the chosen song. On a not-found song
-    // the method has already set the task's not-found state (2); we only surface
-    // the alert.
-    if (!_musicSelTask->launchPlayForMusicId(m_musicId, m_sheet)) {
-        CommonAlertView *alert = [[CommonAlertView alloc]
-                initWithTitle:nil
-                      message:@"楽曲が見つかりませんでした。\nストアで楽曲をインス"
-                              @"トールしてください。"
-                     delegate:nil
-            cancelButtonTitle:nil
-            otherButtonTitles:@"OK"];
-        [alert show];
-    }
 }
 
 #pragma mark - UITableViewDataSource / UITableViewDelegate

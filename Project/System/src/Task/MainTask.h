@@ -72,15 +72,6 @@ public:
      */
     void MusicSelLoadColumnPrev(int column);
 
-    /**
-     * @brief Launch a play of a chosen song for a list view controller.
-     * @param musicId Song id to launch.
-     * @param sheet Difficulty sheet to play.
-     * @returns true on launch; false (state 2) if the song is not installed.
-     * @note Ghidra: inlined at OverScoreLogViewController -endCloseAnimation @ 0x2aad4.
-     */
-    bool launchPlayForMusicId(int musicId, int sheet);
-
     /// @brief The music sort rebuildList last applied.
     /// @returns The applied sort id (m_appliedSort @ +0x8fc).
     int appliedSort() const {
