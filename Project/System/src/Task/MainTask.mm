@@ -47,13 +47,13 @@
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
 
-static MainViewController *RootVC() {
+static inline MainViewController *RootVC() {
     return (MainViewController *)neSceneManager::rootViewController();
 }
 
 // Recommend-list refresh throttle: stale if never fetched, > 4 min old, or a
 // push is pending. Last-fetch timestamp is the event-center's _endDate.
-static bool recommendListIsStale() {
+static inline bool recommendListIsStale() {
     neAppEventCenter &ec = neAppEventCenter::shared();
     NSDate *lastFetch = ec.recommendFetchDate();
     if (lastFetch == nil) {
@@ -68,7 +68,7 @@ static bool recommendListIsStale() {
 
 // Which widget cell (m_cells[i]) holds a button's hit-rect; recovered from the
 // 13 pointInRect blocks in 0x35914.
-int MainTask::widgetIndexForButton(Button button) const {
+inline int MainTask::widgetIndexForButton(Button button) const {
     switch (button) {
     case kBtnSettings:
         return 0x17;
@@ -103,7 +103,7 @@ int MainTask::widgetIndexForButton(Button button) const {
 // (0x2d974). The FixedToFP/FloatVectorMult/FPToFixed block is modelled as
 // float rounding. Seams: the per-button slot within a shared cell, the grid
 // math, and kBtnBackToMenu's fixed constants are unresolved.
-bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
+inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
     const int widget = widgetIndexForButton(button);
     if (widget < 0) {
         return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0); // kBtnBackToMenu: unresolved consts
@@ -127,7 +127,7 @@ bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const
 // its layer's last frame (frameCount - 1) so the stars render fully open/out on
 // entry: the selected difficulty tracks the OPEN layer (m_bgLyrFrames[1]), the
 // other two the OUT layer (m_bgLyrFrames[2]).
-void MainTask::seedDiffStarLayerFrames() {
+inline void MainTask::seedDiffStarLayerFrames() {
     for (int i = 0; i < 3; i++) {
         m_diffStarLayerFrame[i] = (i == m_sel.difficulty ? m_bgLyrFrames[1] : m_bgLyrFrames[2]) - 1;
     }
@@ -142,7 +142,7 @@ void MainTask::seedDiffStarLayerFrames() {
 // (___modsi3 of the packed per-cell select-state seam) does not decompile
 // cleanly, so the chosen cell is taken as m_selectedCell (the cell tapped to
 // enter the preview).
-void MainTask::refreshScoreRows() {
+inline void MainTask::refreshScoreRows() {
     if (m_selectedCell < 0 || m_selectedCell >= 27) {
         return; // no cell in preview
     }
@@ -1127,7 +1127,7 @@ void MainTask::Update() {
 // scan the three candidate jacket rows (0, m_columnStride, 2*m_columnStride)
 // and return the first one not held by a per-column row latch, so the committed
 // column change streams into a free row. @ 0x34f4c
-int MainTask::findFreeColumnRow() const {
+inline int MainTask::findFreeColumnRow() const {
     const int stride = m_columnStride; // +0xa74
     int row = 0;
     if (stride >= 1) {
@@ -1351,7 +1351,7 @@ void MainTask::rebuildList() {
 // iteration calls fetchScoreDataForMusic with the (musicId, difficulty) pair
 // and writes the resulting score / medal bytes into the cell's detail region
 // (+0x14.. from the cell base).
-void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
+inline void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
     for (int diff = 0; diff < 3; diff++) {
         // Ghidra musicSelUpdate @ 0x3835c writes each difficulty's
         // fetchScoreDataForMusic result straight into the cell's score-row block
@@ -1820,7 +1820,7 @@ extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
 // Free one streamed cell's GPU/ObjC resources before it is re-pointed (Ghidra:
 // the vtable[1] delete on the texture @ +0xc, then release on the ObjC ids @
 // +0x8/+0x10).
-static void releaseCell(MainTask::MusicSelCell &cell) {
+static inline void releaseCell(MainTask::MusicSelCell &cell) {
     if (cell.texture) {
         delete cell.texture;
         cell.texture = nullptr;
@@ -1835,7 +1835,7 @@ static void releaseCell(MainTask::MusicSelCell &cell) {
 // the list ends. Guarded by `latch` and the cell semaphore. Ghidra:
 // musicSelLoadColumnNext / musicSelLoadColumnPrev (identical but for the latch
 // byte + column bound).
-void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
+inline void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
     const int col = m_columnIndex;
     dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
     const int perRow = m_columnStride;

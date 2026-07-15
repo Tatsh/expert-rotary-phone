@@ -94,7 +94,7 @@ public:
      * @param delta Direction: +1 next / -1 prev.
      * @param latch Per-direction load latch byte gating the stream.
      */
-    void loadColumn(int rowBase, int delta, uint8_t &latch);
+    inline void loadColumn(int rowBase, int delta, uint8_t &latch);
 
     /// @brief List-scroll settle states (m_scrollState @ +0x984).
     enum ScrollState {
@@ -115,7 +115,7 @@ public:
 
     /// @brief Pick the free jacket row not held by one of the three column-row latches.
     /// @returns The free row base index.
-    int findFreeColumnRow() const;
+    inline int findFreeColumnRow() const;
 
     /// @brief Music-select buttons hit-tested each frame.
     enum Button {
@@ -142,19 +142,19 @@ public:
      * @returns true if the tap falls inside the button.
      * @note Ghidra: pointInRect @ 0x2d974, inlined in MainTask::update @ 0x35914.
      */
-    bool hitButton(int tapX, int tapY, Button button, int cellIndex = -1) const;
+    inline bool hitButton(int tapX, int tapY, Button button, int cellIndex = -1) const;
 
     /**
      * @brief Map a Button to its widget cell (index into m_cells).
      * @param button Button to map.
      * @returns The widget-cell index, or -1 for kBtnBackToMenu.
      */
-    int widgetIndexForButton(Button button) const;
+    inline int widgetIndexForButton(Button button) const;
 
     /// @brief Seed the three difficulty-star bg-layer frame counters (@ +0x170). State 3/4 seam.
-    void seedDiffStarLayerFrames();
+    inline void seedDiffStarLayerFrames();
     /// @brief Re-read the three difficulty score rows for the current song.
-    void refreshScoreRows();
+    inline void refreshScoreRows();
 
     /// @brief Release the old list and clear the 27 jacket cells. Ghidra: MainTask::Cleanup @ 0x3cfb0.
     void Cleanup();
@@ -166,7 +166,7 @@ public:
      * @param musicId Song id to fetch.
      * @note De-inlined from MainTask::rebuildList @ 0x3835c.
      */
-    void loadCellScoreRows(MusicSelCell &cell, unsigned musicId);
+    inline void loadCellScoreRows(MusicSelCell &cell, unsigned musicId);
 
     /// @brief Background jacket loader (the dispatch_async body rebuildList starts).
     /// Ghidra: resultTaskSetup @ 0x3d048 (mislabeled by binary proximity).
