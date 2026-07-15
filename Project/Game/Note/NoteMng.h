@@ -408,8 +408,11 @@ private:
     bool m_playActive = false; // Ghidra flag @ +0x13cb6 (a play session is running)
 
     // Per-frame update cluster state.
-    bool m_endFlag = false; // +0x13cb4 the end (type 3) note has scrolled past
-    int16_t m_barCount = 0; // +0x4e34 measure counter (type-4 bar events, judge pass)
+    bool m_endFlag = false;      // +0x13cb4 the end (type 3) note has scrolled past
+    int16_t m_barCount = 0;      // +0x4e34 measures elapsed during play (type-4 events,
+                                 //         judge pass: ProcessEventNote increments as bars pass)
+    int16_t m_chartBarCount = 0; // +0x4e36 total type-4 (bar/section) events in the chart,
+                                 //         counted once at parse (registerTempoEvents)
     // NB: the auto-grade "+dt eligible" bound the binary reads at +0x13ca8 is
     // exactly m_judgeWindows[5] (the +280 upper window);
     // autoGradeHead/autoGradeTail use it directly.

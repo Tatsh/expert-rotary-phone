@@ -151,7 +151,7 @@ void NoteMng::registerTempoEvents() {
             return;
         }
         if (r.type == NOTE_TYPE_BAR) {
-            // bar count lives with the play stats; tracked as a tempo-map marker.
+            m_chartBarCount++; // Ghidra: registerTempoEvents increments +0x4e36 per type-4
             continue;
         }
         if (r.type == NOTE_TYPE_TEMPO) {
