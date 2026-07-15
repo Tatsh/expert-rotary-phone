@@ -70,5 +70,38 @@
     <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false />
+
+    <!-- App icon. This bundle predates asset catalogs, so the home-screen icon
+         comes from the loose AppIcon*.png files (shipped with the game assets)
+         referenced here by CFBundleIcons using their base names; iOS resolves the
+         @2x and ~ipad variants. Without this the built app installs with a blank
+         icon even though the PNGs are present in the bundle. -->
+    <key>CFBundleIcons</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon29x29</string>
+                <string>AppIcon57x57</string>
+                <string>AppIcon60x60</string>
+            </array>
+        </dict>
+    </dict>
+    <key>CFBundleIcons~ipad</key>
+    <dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon29x29</string>
+                <string>AppIcon40x40</string>
+                <string>AppIcon50x50</string>
+                <string>AppIcon57x57</string>
+                <string>AppIcon72x72</string>
+                <string>AppIcon76x76</string>
+            </array>
+        </dict>
+    </dict>
 </dict>
 </plist>
