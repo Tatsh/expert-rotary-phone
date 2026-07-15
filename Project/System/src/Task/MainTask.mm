@@ -138,6 +138,12 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
     case kBtnTutorial:
         base = 26;
         break; // +0x9f0
+    case kBtnPlay:
+        base = 38;
+        break; // +0xa20 (state-4 PLAY)
+    case kBtnFriendScore:
+        base = 42;
+        break; // +0xa30 (state-4 over-score)
     default:
         break;
     }
@@ -148,7 +154,18 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
                    m_layoutRects[base + 3]);
     }
 
-    // Per-cell grid buttons / back-to-menu: the computed-cell rect (seam).
+    // Song grid (state 2): each cell's rect is the base origin (+0xa40/+0xa44)
+    // plus the per-column/row stride (+0x988/+0x98c) laid out three-wide, sized
+    // +0xa48/+0xa4c. Ghidra: the inlined grid loop in update() state 2.
+    if (button == kBtnSongCell) {
+        const int col = cellIndex % 3;
+        const int row = cellIndex / 3;
+        const int gx = m_layoutRects[46] + m_layoutRects[0] * col; // +0xa40 + cellW*(i%3)
+        const int gy = m_layoutRects[47] + m_layoutRects[1] * row; // +0xa44 + cellH*(i/3)
+        return hit(gx, gy, m_layoutRects[48], m_layoutRects[49]);  // +0xa48/+0xa4c
+    }
+
+    // Per-cell fav toggle / difficulty rows / back-to-menu: computed-rect seam.
     const int widget = widgetIndexForButton(button);
     if (widget < 0) {
         return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0); // kBtnBackToMenu: unresolved consts
@@ -433,7 +450,9 @@ void MainTask::update(int /*deltaMs*/) {
         NSString *idStr = [@(musicId) stringValue];
         NSMutableDictionary *overDict = m_overScoreDict;
         if ([[overDict allKeys] containsObject:idStr]) {
-            overDict[idStr] = idStr; // re-touch (Ghidra: setObject:forKeyedSubscript: &cf_1)
+            // Ghidra: setObject:@"1" forKeyedSubscript:idStr — the value is the
+            // literal "1", not the id string.
+            overDict[idStr] = @"1";
         }
 
         m_sel.difficulty = 0; // default to NORMAL
