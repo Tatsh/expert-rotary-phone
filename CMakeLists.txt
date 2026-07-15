@@ -168,8 +168,7 @@ set_source_files_properties(
 # the Objective-C languages.
 target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-exceptions>
-    -Wno-deprecated-declarations)
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-exceptions>)
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"
