@@ -605,9 +605,13 @@ bool MenuMainTask::hitPresentBoxButton(int touchId) const {
     return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.field9c, &m_top.rowY);
 }
 
-// @ 0x6d1a4 — the mode-select confirm dialogs' alert-dismissed callback. Detach
-// the root VC's alert callback, then step the state machine: 7 & 11 -> 6, 9 ->
-// 10, anything else (incl. the default) -> 12.
+/**
+ * The mode-select confirm dialogs' alert-dismissed callback. Detach the root VC's
+ * alert callback, then step the state machine: 7 & 11 -> 6, 9 -> 10, anything
+ * else (incl. the default) -> 12.
+ * @ghidraAddress 0x6d1a4
+ * @complete
+ */
 void MenuMainTask::onAlertClosed() {
     [RootVC() SetAlertViewCallback:NULL param:NULL];
     switch (m_state) {
@@ -702,13 +706,16 @@ draw:
                         drawCtx);
 }
 
-// @ 0x6d8cc
-// Ghidra: modeSelectRefreshNews. DownloadMain's NEWS delegate callback. Only
-// acts when the fetch actually returned news (`hasNews`) and the freshly
-// fetched lastGetNewsTime is newer than the timestamp of our cached copy (or we
-// have none yet); then it snapshots the news-text array and resets the ticker
-// to line 0. The binary's manual retain/release around the array / timestamp is
-// ARC bookkeeping here.
+/**
+ * modeSelectRefreshNews. DownloadMain's NEWS delegate callback. Only acts when
+ * the fetch actually returned news (`hasNews`) and the freshly fetched
+ * lastGetNewsTime is newer than the timestamp of our cached copy (or we have
+ * none yet); then it snapshots the news-text array and resets the ticker to line
+ * 0. The binary's manual retain/release around the array / timestamp is ARC
+ * bookkeeping here.
+ * @ghidraAddress 0x6d8cc
+ * @complete
+ */
 void MenuMainTask::refreshNews(bool hasNews) {
     if (!hasNews) {
         return;
