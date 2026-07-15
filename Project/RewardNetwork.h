@@ -124,10 +124,10 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 
 // Open the reward app-list web panel (requires the SDK be usable + ad-tracking
 // enabled; otherwise reports the failure to `delegate`). @ 0xf0a80
-// The query-value parameters are `id`: they are only stored as URL query values
-// (setValue:forKey:), and callers pass NSNumbers (the menu passes numberWithInt:0
-// / :2 for the campaign id and type).
-- (void)openAppListWebViewWithCampaignId:(id)campaignId
+// campaignId is an NSNumber (the menu passes numberWithInt:0); the other
+// query-value parameters are `id` because they are only stored as URL query
+// values (setValue:forKey:) and their concrete types are not recovered.
+- (void)openAppListWebViewWithCampaignId:(NSNumber *)campaignId
                                inCompany:(id)inCompany
                                     type:(id)type
                                   offset:(id)offset
@@ -136,7 +136,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                                 delegate:(id<RewardNetworkWebViewDelegate>)delegate;
 
 // Fetch the reward app index (GET /reward/app/index.php). @ 0xf12d4
-- (void)appListWithCampaignId:(id)campaignId
+- (void)appListWithCampaignId:(NSNumber *)campaignId
                     inCompany:(id)inCompany
                          type:(id)type
                        offset:(id)offset

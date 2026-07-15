@@ -709,7 +709,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // .cxx_destruct @ 0xf3bf8 — compiler-emitted; not hand-written.
 
 // @ 0xf0a80   (sharedInstance forwarder twin @ 0xf11fc)
-- (void)openAppListWebViewWithCampaignId:(id)campaignId
+- (void)openAppListWebViewWithCampaignId:(NSNumber *)campaignId
                                inCompany:(id)inCompany
                                     type:(id)type
                                   offset:(id)offset
@@ -787,7 +787,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf12d4
-- (void)appListWithCampaignId:(id)campaignId
+- (void)appListWithCampaignId:(NSNumber *)campaignId
                     inCompany:(id)inCompany
                          type:(id)type
                        offset:(id)offset
