@@ -5,7 +5,7 @@
 //  The music-list sort-select screen: a transparent, separator-less UITableView
 //  of six SortCells (Title / Artist / Lv N / Lv H / Lv EX / best-score), the
 //  current sort marked with a check. Picking a new sort saves it, shows a
-//  dimmed "loading" overlay, re-sorts the owning C++ MusicSelTask's song list
+//  dimmed "loading" overlay, re-sorts the owning C++ MainTask's song list
 //  and fades the panel closed. Wrapped in its own UINavigationController (with
 //  a back button on phone) and driven by the shared fade/slide open/close
 //  lifecycle. Pushed by MainViewController.GotoSortSelect:.
@@ -19,11 +19,10 @@
 #import <UIKit/UIKit.h>
 
 // The C++ music-select task (System/src/Task/MainTask.h) whose song list this
-// screen re-sorts. "MusicSelTask" is the binary's name for MainTask, so it is
+// screen re-sorts. MainTask is the music-select task, so it is
 // an alias here. Held as a real forward-declared pointer (never void*); this
 // header is ObjC++ (every includer is .mm).
 class MainTask;
-using MusicSelTask = MainTask;
 
 @interface SortSelectViewController : UITableViewController
 
@@ -31,7 +30,7 @@ using MusicSelTask = MainTask;
 // both the getter
 // (@ 0xc7028) and setter (@ 0xc703c) with a DataMemoryBarrier and stores the
 // pointer without retaining it (assign).
-@property(atomic, assign) MusicSelTask *musicSelTask;
+@property(atomic, assign) MainTask *musicSelTask;
 
 // Build the sort list (six SortData rows, the current sort checked) as a
 // transparent table with a "loading" overlay. `style` is forwarded to
@@ -43,7 +42,7 @@ using MusicSelTask = MainTask;
 // navigation controller. Ghidra: @ 0xc6018. Factory named with an 'init' prefix
 // but returns a *nav controller*, not self; opt out of the ARC init method
 // family (AVBus.h convention) so the unrelated return type is allowed.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+- (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none)));
 
 // Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @

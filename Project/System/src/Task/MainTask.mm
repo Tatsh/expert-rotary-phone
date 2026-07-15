@@ -3,18 +3,18 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor
-//  MainTask_ctor FUN_00034d48, dtor mainTask_dtor FUN_00034d90, update
-//  MainTask_update FUN_00035914, plus the six per-frame helpers that all take
-//  `this` — now real MainTask methods: setup FUN_000370f0, updateList
-//  FUN_00034f4c, allCellsReady FUN_00037f38, updateHighlight FUN_000355fc,
-//  stopAndSave FUN_00038008, updateInfoPanel FUN_00037c88). The standard-mode
+//  MainTask_ctor 0x34d48, dtor mainTask_dtor 0x34d90, update
+//  MainTask_update 0x35914, plus the six per-frame helpers that all take
+//  `this` — now real MainTask methods: Setup 0x370f0, Update
+//  0x34f4c, AllCellsReady 0x37f38, UpdateHighlight 0x355fc,
+//  StopAndSave 0x38008, UpdateInfoPanel 0x37c88). The standard-mode
 //  music-select state machine. Objective-C++ (ARC): it drives the UIKit nav
 //  host through the scene manager and the ObjC managers, and calls the C++
 //  engine (Aep / neGraphics / neTextureForiOS) directly.
 //
 //  All work-area access is through the named members on MainTask (MainTask.h);
 //  there are no raw byte-offset casts and no extern "C" engine seams.
-//  "MusicSelTask" is a typedef of MainTask (the binary's own name for this
+//  "MainTask" is a typedef of MainTask (the binary's own name for this
 //  task), so the DownloadMain delegate / MainViewController Goto* calls take
 //  `this` with no identity cast.
 //
@@ -47,22 +47,12 @@
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
 
-// The root nav host is a MainViewController — it declares the
-// Goto*/settingViewing/isGotoTitle selectors the select screen drives; type
-// RootVC() as such so they resolve.
 static MainViewController *RootVC() {
     return (MainViewController *)neSceneManager::rootViewController();
 }
 
-// findCharIndexForColumn (song-name truncation in rebuildList()) is declared in
-// neGraphics.h beside its sibling text helpers and defined in
-// neEngineBridge.mm.
-
-// Recommend-list refresh throttle: refetch when the list has never been pulled,
-// when more than 4 minutes have elapsed since the last fetch (DAT_00035e9c
-// == 60.0 divisor -> seconds/60 > 4), or when a push notification is pending.
-// The last-fetch timestamp is the event-center's _endDate (stamped by
-// setEndDate at the end of the recommend download).
+// Recommend-list refresh throttle: stale if never fetched, > 4 min old, or a
+// push is pending. Last-fetch timestamp is the event-center's _endDate.
 static bool recommendListIsStale() {
     neAppEventCenter &ec = neAppEventCenter::shared();
     NSDate *lastFetch = ec.recommendFetchDate();
@@ -76,33 +66,8 @@ static bool recommendListIsStale() {
     return ec.remoteNotifyPending(); // a push arrived -> force a refresh
 }
 
-// widgetIndexForButton: which layout widget cell (m_cells[i]) holds a button's
-// hit-rect. Recovered from the 13 pointInRect blocks in FUN_00035914 (the
-// constant cell indices each block reads through field26_0x2b0[i].field4_0x10).
-// The music-select scene reuses the four trailing entries of the 27-cell jacket
-// array (indices 0x17..0x1a, i.e. cells 23..26) as packed UI/layout widgets;
-// m_cells[0x1a] additionally holds the shared UI scale every test multiplies
-// by. Mapping (button -> cell, decompile pointInRect line, on-hit action):
-//
-//   kBtnSettings     0x17   @294   -> m_state = 5 (GotoSetting)
-//   kBtnSort         0x17   @327   -> allCellsReady -> m_state = 7
-//   (GotoSortSelect) kBtnRecommend    0x18   @361   -> allCellsReady ->
-//   GotoRecommend   (w/h read from 0x17) kBtnOverScoreLog 0x18   @406   ->
-//   allCellsReady -> m_state = 9 (GotoOverScoreLog) kBtnBackToMenu   (none)
-//   @425   -> MenuTask, SE 2, m_state = 0xe    (fixed screen consts)
-//   kBtnTutorial     0x18   @472   -> tutorialOffered -> PlayTask, m_state =
-//   0xe kBtnDiffToggle   0x18   @529   -> scrollLatchA/B = 1, scrollConfig = 0
-//   kBtnSongCell     0x19   @591   -> allCellsReady -> select cell, m_state = 3
-//   (grid: base
-//                                     m_cells[0x19], column stride
-//                                     m_cells[0x17], per cellIndex)
-//   kBtnFavToggle    0x19   @631   -> favorite ^= 1                    (grid,
-//   per cellIndex) kBtnPlay         0x19   @972   -> popBgm, PlayTask, m_state
-//   = 0xc kBtnFriendScore  0x19   @1026  -> GotoFriendScore (a 2nd,
-//   over-score-only rect @1050 too) kBtnDifficulty   0x18   @1084  -> select
-//   difficulty (row base m_cells[0x18], per-row
-//                                     stride/offset m_cells[0x19], iterated by
-//                                     cellIndex d)
+// Which widget cell (m_cells[i]) holds a button's hit-rect; recovered from the
+// 13 pointInRect blocks in 0x35914.
 int MainTask::widgetIndexForButton(Button button) const {
     switch (button) {
     case kBtnSettings:
@@ -128,64 +93,28 @@ int MainTask::widgetIndexForButton(Button button) const {
     case kBtnDifficulty:
         return 0x18; // difficulty-row base 0x18 + per-row stride from 0x19
     case kBtnBackToMenu:
-        return -1; // fixed constants (DAT_000368cc/d0), not a widget cell
+        return -1; // fixed constants, not a widget cell
     }
     return -1;
 }
 
-// hitButton: map `button` to its layout widget cell (widgetIndexForButton),
-// read that cell's stored rect from the detail region (WidgetRect view), scale
-// it by the shared UI-scale factor about the origin, and point-in-rect it
-// against the tap. This is the ~13x-repeated inlined
-// FixedToFP/FloatVectorMult(...scale...)/FPToFixed block from FUN_00035914,
-// extracted once and modelled as ordinary float rounding (the 16.16 Q-format
-// helpers are the pixel-math seam). The neGraphics::pointInRect call
-// (FUN_0002d974) is exact.
-//
-// Wired: the button -> widget-cell mapping above (all 12 buttons routed).
-// Residual seams, left as precise notes rather than fabricated: (a) the exact
-// WidgetRect *slot* within a shared cell (Settings vs Sort in 0x17;
-// OverScoreLog/Tutorial/DiffToggle in 0x18) — the binary packs several rects
-// per cell at 16-bit sub-offsets, so only the representative slot is read here;
-// (b) the procedural grid math for kBtnSongCell/kBtnFavToggle/ kBtnDifficulty
-// (base+stride+cellIndex); (c) kBtnBackToMenu's fixed screen constants.
+// hitButton: map `button` to its widget cell, read the stored rect, scale by the
+// UI-scale factor about the origin, and point-in-rect against the tap
+// (0x2d974). The FixedToFP/FloatVectorMult/FPToFixed block is modelled as
+// float rounding. Seams: the per-button slot within a shared cell, the grid
+// math, and kBtnBackToMenu's fixed constants are unresolved.
 bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
     const int widget = widgetIndexForButton(button);
     if (widget < 0) {
-        // kBtnBackToMenu: FUN_00035914 builds this rect from immediates
-        // (14.0f/11.0f) and the globals DAT_000368cc/DAT_000368d0, not a widget
-        // cell. Its constants are unresolved, so the button is left un-wired
-        // (no-hit) here rather than faked. Seam.
-        return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0);
+        return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0); // kBtnBackToMenu: unresolved consts
     }
 
-    // The shared UI scale every hit-test multiplies by. Ghidra sources it from
-    // the trailing layout cell (pMVar26 = &field26_0x2b0[0x1a].field4_0x10; scale
-    // = pMVar26->field0_0x0), which setup() mirrors from g_dwUiScale — the same
-    // value the work area caches in m_uiScale.
     const float scale = reinterpret_cast<const float &>(m_uiScale);
-
-    // The button's stored rect: slot 0 of its widget cell's packed detail. The
-    // per-cell grid buttons (kBtnSongCell / kBtnFavToggle / kBtnDifficulty)
-    // additionally offset this rect by their column/row position (cellIndex);
-    // that grid arithmetic is a documented seam.
-    //
-    // Reconciliation seam: setup() (FUN_000370f0) fills a parallel per-platform
-    // coordinate table m_layoutRects (+0x988..+0xa64) with the real button
-    // x/w/y/h constants (e.g. Sort @ m_layoutRects[34], DiffToggle @ [39]);
-    // FUN_00035914's hit-tests instead read the widget cells at +0x2d8
-    // (field26_0x2b0[i]). setup() does not itself write those cells, so the copy
-    // of m_layoutRects into the widget-cell detail happens elsewhere
-    // (musicSelUpdate / draw) — the exact table->cell linkage, and thus the
-    // concrete per-button coordinates, is unresolved.
     const MusicSelCell::WidgetRect &r = m_cells[widget].widget;
     (void)cellIndex;
     (void)m_layoutRects;
 
-    // Scale the rect about the origin (the FixedToFP -> FloatVectorMult(scale) ->
-    // FPToFixed block, ~13x-inlined in FUN_00035914). Disasm: the FPToFixed
-    // vcvt.s32.f32 has no #fbits and rounds toward zero, i.e. a plain (int)
-    // truncation -- NOT round-to-nearest.
+    // FPToFixed vcvt rounds toward zero -> plain (int) truncation.
     const int rx = (int)((float)r.x * scale);
     const int ry = (int)((float)r.y * scale);
     const int rw = (int)((float)r.w * scale);
@@ -194,21 +123,10 @@ bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const
 }
 
 // Seed the three difficulty-star background-layer frame counters (@ +0x170+i*4)
-// when the over-score preview opens (update states 3/4). Ghidra: the loop in
-// FUN_00035914 writes
-//   field15_0x148[i] = field13_0x130[(i == selected) ? 1 : 2] - 1
-// De-aliased: field13_0x130 is at absolute +0x158, which is exactly
-// m_bgLyrFrames (both name the same bytes — the "packed select-state seam"),
-// and field15_0x148 is at +0x170, the star- layer frame counters the BG draw
-// advances (see musicSelBgDraw's +0x170+i*4 counter). So the "rowConfig" values
-// are just the star layers' own frame counts: the selected difficulty tracks
-// the OPEN layer (m_bgLyrFrames[1]), the other two the OUT layer
-// (m_bgLyrFrames[2]); each counter starts on that layer's LAST frame (count -
-// 1) so the stars render fully open/out on entry. (The binary reads the
-// selected index from the difficulty-toggle widget cell m_cells[21];
-// m_sel.difficulty is the faithful reconstructed equivalent. Historical note:
-// this was mislabeled "initOverscoreRows / overRowLen" before the +0x158/+0x170
-// alias was resolved.)
+// when the over-score preview opens (update states 3/4). Each counter starts on
+// its layer's last frame (frameCount - 1) so the stars render fully open/out on
+// entry: the selected difficulty tracks the OPEN layer (m_bgLyrFrames[1]), the
+// other two the OUT layer (m_bgLyrFrames[2]).
 void MainTask::seedDiffStarLayerFrames() {
     for (int i = 0; i < 3; i++) {
         m_diffStarLayerFrame[i] = (i == m_sel.difficulty ? m_bgLyrFrames[1] : m_bgLyrFrames[2]) - 1;
@@ -233,34 +151,20 @@ void MainTask::refreshScoreRows() {
     loadCellScoreRows(m_cells[m_selectedCell], m_sel.musicId);
 }
 
-// Ghidra: MainTask_ctor (FUN_00034d48) — C_TASK base ctor, install the MainTask
-// vtable, zero the play-data region (task +0x28..+0xaa4), then set the
-// sentinels the binary sets: selected cell = -1 (+0x928), the packed column-row
-// latches idle (0xffff @ +0x8c0 covers the prev/current latch bytes, 0xff @
-// +0x8c2 the next latch), and state = 0 (+0xaa4). The named members carry those
-// initial values directly.
+// Ghidra: MainTask_ctor (0x34d48) — base ctor + zero-fill; the sentinels
+// (selected cell -1, column latches 0xff, state 0) are member initializers.
 MainTask::MainTask() {
-    // C_TASK() already ran (base subobject); all members are default-initialised
-    // above (m_selectedCell = -1, m_prevColLatch = m_curColLatch = m_nextColLatch
-    // = 0xff, m_state = 0), matching the memset + sentinel stores in the binary
-    // ctor.
 }
 
-// Ghidra: mainTask_dtor (FUN_00034d90) — re-install the vtable, de-register
-// this task as DownloadMain's recommend-list delegate (only if it is still us),
-// then the C_TASK base dtor runs. MusicSelTask == MainTask, so the delegate
-// compares directly against `this`. The compiler's deleting-destructor thunk
-// mainTask_delete (@ 0x34eac: this dtor + operator delete) is glue over this
-// body. @ 0x34eac
+// Ghidra: mainTask_dtor (0x34d90) @ 0x34d90 (delete thunk @ 0x34eac).
 MainTask::~MainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl cppDelegateRecommendList] == this) {
         [dl setCppDelegateRecommendList:nil];
     }
-    // ~C_TASK() (caSourceNode_dtor) runs implicitly after this body.
 }
 
-// Ghidra: MainTask_update (FUN_00035914). Each frame: detect a "tap" (a
+// Ghidra: MainTask_update (0x35914). Each frame: detect a "tap" (a
 // released touch that barely moved), then step the state machine. Interactive
 // select is state 2; the chosen-song preview is states 3/4.
 void MainTask::update(int /*deltaMs*/) {
@@ -294,14 +198,14 @@ void MainTask::update(int /*deltaMs*/) {
     switch (m_state) {
     case 0: { // build the scene, start BGM, kick off (or reuse) the recommend
               // list
-        setup();
+        Setup();
         [audio setBgmVolume:[UserSettingData bgmVolume]];
         [audio playBgm:0];
         if (recommendListIsStale()) {
             [dl setCppDelegateRecommendList:this];
             [dl startGetRecommendListHttp];
         } else {
-            updateInfoPanel(1); // reuse the cached recommend panel
+            UpdateInfoPanel(1); // reuse the cached recommend panel
         }
         m_state = 1;
         break;
@@ -322,7 +226,7 @@ void MainTask::update(int /*deltaMs*/) {
             [dl setCppDelegateRecommendList:this];
             [dl startGetRecommendListHttp];
         }
-        updateList(); // per-frame list scroll / cell animation
+        Update(); // per-frame list scroll / cell animation
 
         // While the song list is still being built, stream one pending jacket
         // texture per frame (upload the first cell that has image data but no
@@ -353,13 +257,13 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
         if (hitButton(tapX, tapY, kBtnSort)) {
-            if (allCellsReady()) {
+            if (AllCellsReady()) {
                 m_state = 7; // -> GotoSortSelect
             }
             break;
         }
         if (hitButton(tapX, tapY, kBtnRecommend)) {
-            if (allCellsReady()) {
+            if (AllCellsReady()) {
                 neEngine::playSystemSe(1);
                 [RootVC() GotoRecommend:this];
                 m_sel.favorite = 0;
@@ -367,7 +271,7 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
         if (hitButton(tapX, tapY, kBtnOverScoreLog)) {
-            if (allCellsReady()) {
+            if (AllCellsReady()) {
                 m_state = 9; // -> GotoOverScoreLog
             }
             break;
@@ -393,7 +297,7 @@ void MainTask::update(int /*deltaMs*/) {
         }
         if (hitButton(tapX, tapY, kBtnDiffToggle)) {
             [audio playSe:nil resourceId:m_sel.selectSeId];
-            m_sel.scrollLatchA = 1; // list-scroll latch pair (field15_0x148)
+            m_sel.scrollLatchA = 1; // list-scroll latch pair
             m_sel.scrollLatchB = 1;
             m_sel.scrollConfig = 0;
             break;
@@ -402,7 +306,7 @@ void MainTask::update(int /*deltaMs*/) {
         // -- song grid: first the whole cell, then its favourite toggle --
         for (int c = 0; c < 27; c++) {
             if (hitButton(tapX, tapY, kBtnSongCell, c)) {
-                if (allCellsReady()) {
+                if (AllCellsReady()) {
                     m_selectedCell = c;
                     neEngine::playSystemSe(1);
                     m_state = 3; // preview the chosen song
@@ -631,7 +535,7 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 0xe: // fade out into the spawned task / title
         aep.playTransition(2, 1, 0);
-        m_sel.transitionLatch = 1; // transition-out latch (element[0x1a].field3_0x1c+2)
+        m_sel.transitionLatch = 1; // transition-out latch
         m_state = 0xf;
         break;
 
@@ -647,7 +551,7 @@ void MainTask::update(int /*deltaMs*/) {
             if (m_sel.selectSeInst >= 0 && [audio isPlayingSe:0]) {
                 break; // a select SE is still sounding
             }
-            stopAndSave();
+            StopAndSave();
         }
         break;
 
@@ -658,20 +562,20 @@ void MainTask::update(int /*deltaMs*/) {
 tail:
     // Per-frame select-screen highlight update + Aep layer advance/draw (Ghidra
     // tail).
-    updateHighlight();
+    UpdateHighlight();
     AepLyrCtrlUpdateAll(0);
 }
 
-// ===== byte-verified const tables setup() resolves against (Ghidra project
+// ===== byte-verified const tables Setup() resolves against (Ghidra project
 // rb420) ===== All of the strings/coordinates below were read from the binary's
 // .const_data; see the per-table Ghidra address annotations.
 
 // Per-platform button-rect layout table (m_layoutRects[55], +0x988..+0xa64).
-// These are the immediate stores FUN_000370f0 makes in its !isPad / isPad
+// These are the immediate stores 0x370f0 makes in its !isPad / isPad
 // branches. Slots that the binary computes at runtime from the screen metrics /
-// layout base are 0 here and patched in setup() below (phone:
+// layout base are 0 here and patched in Setup() below (phone:
 // 7/11/15/19/23/27/31/34/39/43; pad: 31; slots 46/47 are the draw-time grid-
-// origin cache, never written by setup). Button roles:
+// origin cache, never written by Setup). Button roles:
 // settings/sort/recommend/over-score-log row, back/tutorial/diff-toggle
 // overlay, song-cell/fav grid, play/friend-score/difficulty.
 static const int kPhoneLayoutRects[55] = {
@@ -693,20 +597,20 @@ static const int kPadLayoutRects[55] = {
     0x132, 400,   0x132, 0x55,  0x56,  0x56,  0x1b          // 48..54
 };
 
-// getLyrNo layer names -> m_bgLyrNo[3] (@ DAT_001315c8).
+// getLyrNo layer names -> m_bgLyrNo[3] @ 0x1315c8.
 static const char *const kBgLyrNames[3] = {
     "BG_NEKO", "DIFFICULTY_STAR_OPEN", "DIFFICULTY_STAR_OUT"};
-// The 4 scene-layer names + ordering-table priorities (@ DAT_001315d4 /
-// DAT_0012e670).
+// The 4 scene-layer names + ordering-table priorities (@ 0x1315d4 /
+// 0x12e670).
 static const char *const kLayerNames[4] = {
     "BG_640X1136", "DIFFICULTY_OPEN", "DIFFICULTY_CLOSE", "DIFFICULTY_ROOP"};
 static const int kLayerOrder[4] = {13, 9, 9, 9};
-// The 2 intro-layer names + priorities, device-branched (@ DAT_001315e8/f0 /
-// DAT_0012e680).
+// The 2 intro-layer names + priorities, device-branched (@ 0x1315e8/f0 /
+// 0x12e680).
 static const char *const kIntroNamesTall[2] = {"1024IMG", "BG_IMG_1136"}; // displayType == 2
 static const char *const kIntroNamesShort[2] = {"640IMG", "BG_IMG_640"};
 static const int kIntroOrder[2] = {15, 14};
-// getFrameNo names -> m_frmNo[24] (@ DAT_001315f8).
+// getFrameNo names -> m_frmNo[24] @ 0x1315f8.
 static const char *const kFrmNames[24] = {"DIFFICULTY_BT00",
                                           "JACKET10_LOAD",
                                           "NEW_BOARD",
@@ -731,10 +635,10 @@ static const char *const kFrmNames[24] = {"DIFFICULTY_BT00",
                                           "FRIEND_UPDEF_FONTBAR",
                                           "FRIEND_UP_ICON",
                                           "FRIEND_UP_FIRST_ICON"};
-// getFrameNo -> m_starFrmNo[3] (@ DAT_00131658).
+// getFrameNo -> m_starFrmNo[3] @ 0x131658.
 static const char *const kStarFrmNames[3] = {
     "DIFFICULTY_STAR_GREEN", "DIFFICULTY_STAR_YELLOW", "DIFFICULTY_STAR_RED"};
-// getFrameNo -> m_musicRankFrmNo[7] (@ DAT_00131664).
+// getFrameNo -> m_musicRankFrmNo[7] @ 0x131664.
 static const char *const kMusicRankFrmNames[7] = {"MUSIC_RUNK_NUMBER_S",
                                                   "MUSIC_RUNK_NUMBER_AAA",
                                                   "MUSIC_RUNK_NUMBER_AA",
@@ -742,7 +646,7 @@ static const char *const kMusicRankFrmNames[7] = {"MUSIC_RUNK_NUMBER_S",
                                                   "MUSIC_RUNK_NUMBER_B",
                                                   "MUSIC_RUNK_NUMBER_C",
                                                   "MUSIC_RUNK_NUMBER_D"};
-// getFrameNo -> m_diffRankFrmNo[7] (@ DAT_00131680).
+// getFrameNo -> m_diffRankFrmNo[7] @ 0x131680.
 static const char *const kDiffRankFrmNames[7] = {"DIFFICULTY_RUNK_NUMBER_S",
                                                  "DIFFICULTY_RUNK_NUMBER_AAA",
                                                  "DIFFICULTY_RUNK_NUMBER_AA",
@@ -752,9 +656,9 @@ static const char *const kDiffRankFrmNames[7] = {"DIFFICULTY_RUNK_NUMBER_S",
                                                  "DIFFICULTY_RUNK_NUMBER_D"};
 // JACKET_TIP names, resolved BOTH as frames (m_jacketTipFrmNo) and users
 // (m_jacketTipUsrNo)
-// (@ PTR_s_JACKET_TIP00_0013173c).
+// (@ 0x13173c).
 static const char *const kJacketTipNames[3] = {"JACKET_TIP00", "JACKET_TIP01", "JACKET_TIP02"};
-// getUserNo -> m_elemUsrNo[22] (@ DAT_0013169c) — MusicSelAepDraw per-element
+// getUserNo -> m_elemUsrNo[22] @ 0x13169c — AepDrawCallback per-element
 // dispatch keys.
 static const char *const kElemUsrNames[22] = {"JACKET00",
                                               "JACKET09",
@@ -778,13 +682,13 @@ static const char *const kElemUsrNames[22] = {"JACKET00",
                                               "FRIEND_UPDEF_FONTBAR",
                                               "FRIEND_UP_ICON",
                                               "FRIEND_UP_FIRST_ICON"};
-// getUserNo -> m_scoreDigitUsrNo[6] (@ DAT_001316f4).
+// getUserNo -> m_scoreDigitUsrNo[6] @ 0x1316f4.
 static const char *const kScoreDigitUsrNames[6] = {
     "SCORE0", "SCORE00", "SCORE000", "SCORE0000", "SCORE00000", "SCORE000000"};
-// getUserNo -> m_diffBlackUsrNo[3] (@ DAT_0013170c).
+// getUserNo -> m_diffBlackUsrNo[3] @ 0x13170c.
 static const char *const kDiffBlackUsrNames[3] = {
     "DIFFICULTY_BLACK", "DIFFICULTY_BLACK2", "DIFFICULTY_BLACK3"};
-// getUserNo -> m_placeDigitUsrNo[9] (@ DAT_00131718): the 3 colours x 3 digit
+// getUserNo -> m_placeDigitUsrNo[9] @ 0x131718: the 3 colours x 3 digit
 // places.
 static const char *const kPlaceDigitUsrNames[9] = {"GREEN_0",
                                                    "GREEN_0_0",
@@ -813,20 +717,20 @@ static const char *const kDigitAtlasNames[60] = {
     "num_yellow_5", "num_yellow_6", "num_yellow_7", "num_yellow_8", "num_yellow_9", // [40..49]
     "num_pink_0",   "num_pink_1",   "num_pink_2",   "num_pink_3",   "num_pink_4",
     "num_pink_5",   "num_pink_6",   "num_pink_7",   "num_pink_8",   "num_pink_9"}; // [50..59]
-// The 2 badge/arrow atlases -> m_arrowTex[2] (@ DAT_00131838), loaded as
+// The 2 badge/arrow atlases -> m_arrowTex[2] @ 0x131838, loaded as
 // "<name>.png".
 static const char *const kArrowNames[2] = {"circle", "vie_cmn_warning@2x"};
-// The 5 touch/select SE names -> m_seId[5] (@ PTR_cf_v18_00131840), loaded as
+// The 5 touch/select SE names -> m_seId[5] (@ 0x131840), loaded as
 // "<name>.m4a".
 static const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya"};
 
-// Ghidra: musicSelTaskSetup (FUN_000370f0) — state-0 scene build. Resolves the
+// Ghidra: musicSelTaskSetup (0x370f0) — state-0 scene build. Resolves the
 // screen metrics, lays out the per-platform button rects, loads the
 // music-select Aep group and constructs its scene + intro AepLyrCtrl layers,
 // resolves every layer / frame / user animation handle, uploads the score /
 // points / rank digit textures, loads the touch SEs + preview BGM, and sets the
 // tutorial / badge flags. @ 0x370f0
-void MainTask::setup() {
+void MainTask::Setup() {
     neAppEventCenter::shared().setGuestNoSaveMode(false); // normal entry: results are saved
     AudioManager *audio = [AudioManager sharedManager];
 
@@ -840,7 +744,7 @@ void MainTask::setup() {
     // ---- per-platform button-rect layout table (m_layoutRects + base) ----
     const int displayType = (int)[[AppDelegate appDelegate] displayType];
     if (!m_isPadDisplay) {
-        int baseY, rectSort, rectDiff; // iVar16 / iVar13 (+0xa10) / iVar14 (+0xa24)
+        int baseY, rectSort, rectDiff; // rectSort @ +0xa10, rectDiff @ +0xa24
         if (displayType == 2) {        // tall (notch/1136) phone
             baseY = 0xaa;
             rectSort = 0x311;
@@ -955,7 +859,7 @@ void MainTask::setup() {
 
     // Install the per-frame scene draw callback for group 3 (Ghidra:
     // setAepCallbacks).
-    m_aep->setGroupDrawCallback(3, reinterpret_cast<AepGroupDrawFn>(&MusicSelAepDraw), this);
+    m_aep->setGroupDrawCallback(3, reinterpret_cast<AepGroupDrawFn>(&AepDrawCallback), this);
 
     // ---- load the 5 touch/select SEs (group 1) + the preview BGM ----
     for (int i = 0; i < 5; i++) {
@@ -974,12 +878,12 @@ void MainTask::setup() {
     m_overScoreDict = nil; // +0xa98
 }
 
-// Ghidra: mainTaskUpdate (FUN_00034f4c) — per-frame list scroll physics. Reads
+// Ghidra: mainTaskUpdate (0x34f4c) — per-frame list scroll physics. Reads
 // the render manager's active touch, drives the horizontal list drag/fling, and
 // on a column change streams the newly-visible jacket column
 // (musicSelLoadColumnPrev/Next). This is NOT the re-sort routine: that is
-// rebuildList() (musicSelUpdate FUN_0003835c), a separate function.
-void MainTask::updateList() {
+// rebuildList() (musicSelUpdate 0x3835c), a separate function.
+void MainTask::Update() {
     // @ 0x34f4c
     neSceneManager::shared();               // NESceneManager_shared — force the singleton
     neGraphics &gfx = neGraphics::shared(); // NEGraphics_shared
@@ -1144,7 +1048,7 @@ void MainTask::updateList() {
             m_prevColLatch = 0xff;
             const int row = findFreeColumnRow();
             if (m_columnIndex > 0) {
-                loadColumnPrev(row);
+                MusicSelLoadColumnPrev(row);
                 return;
             }
         }
@@ -1178,7 +1082,7 @@ void MainTask::updateList() {
             m_nextColLatch = 0xff;
             const int row = findFreeColumnRow();
             if (m_columnIndex < m_columnCount - 1) {
-                loadColumnNext(row);
+                MusicSelLoadColumnNext(row);
                 return;
             }
         }
@@ -1219,7 +1123,7 @@ void MainTask::updateList() {
     }
 }
 
-// De-inlined from updateList (the identical block in both column-commit paths):
+// De-inlined from Update (the identical block in both column-commit paths):
 // scan the three candidate jacket rows (0, m_columnStride, 2*m_columnStride)
 // and return the first one not held by a per-column row latch, so the committed
 // column change streams into a free row. @ 0x34f4c
@@ -1248,14 +1152,14 @@ int MainTask::findFreeColumnRow() const {
     return row;
 }
 
-// Ghidra: musicSelCleanup (FUN_0003cfb0) — release the previous sorted list and
+// Ghidra: musicSelCleanup (0x3cfb0) — release the previous sorted list and
 // clear all 27 jacket cells before a re-sort. Frees each cell's uploaded
 // texture (+0xc), bundled image data (+0x8) and truncated-name string (+0x10),
 // then resets the three per-column row latches
 // (+0x8c0/+0x8c1/+0x8c2) and the current column back to 0. Called at the top of
 // rebuildList().
 // @ 0x3cfb0
-void MainTask::cleanup() {
+void MainTask::Cleanup() {
     if (m_musicList != nil) {
         CFBridgingRelease((__bridge CFTypeRef)m_musicList); // Ghidra: [m_musicList release]
         m_musicList = nil;
@@ -1281,8 +1185,8 @@ void MainTask::cleanup() {
     m_columnIndex = 0;
 }
 
-// Ghidra: musicSelUpdate (FUN_0003835c) — re-sort / rebuild the music-select
-// list. Distinct from updateList() (per-frame scroll physics, FUN_00034f4c):
+// Ghidra: musicSelUpdate (0x3835c) — re-sort / rebuild the music-select
+// list. Distinct from Update() (per-frame scroll physics, 0x34f4c):
 // this runs once after the sort order changes (SortSelect / Recommend close).
 // It re-reads UserSettingData musicSort, re-sorts the MusicManager song array
 // into m_musicList, recomputes the column geometry, streams the current
@@ -1290,7 +1194,7 @@ void MainTask::cleanup() {
 // and primes the adjacent columns. @ 0x3835c
 void MainTask::rebuildList() {
     neAppEventCenter::shared(); // force the event center (current-song id) live
-    cleanup();                  // release the old list + clear the 27 cells (@ 0x3cfb0)
+    Cleanup();                  // release the old list + clear the 27 cells (@ 0x3cfb0)
 
     NSArray *music = [[MusicManager getInstance] getMusicDataArray];
     short sort = [UserSettingData musicSort];
@@ -1318,7 +1222,7 @@ void MainTask::rebuildList() {
     case 5: {
         // "Played" sort: order by music id, then partition into songs that have NO
         // score record vs. songs that do, and concatenate un-scored-first then
-        // scored (Ghidra: the local_140 ++ local_13c order). A song counts as
+        // scored (un-scored songs first). A song counts as
         // scored if any of its three difficulties has a stored score.
         NSMutableArray *byId =
             [[music sortedArrayUsingSelector:@selector(compareMusicID:)] mutableCopy];
@@ -1434,11 +1338,11 @@ void MainTask::rebuildList() {
     // ---- 6. prime the adjacent columns' jacket rows ----
     int row = stride; // next column fills widget rows [stride, 2*stride)
     if (m_columnIndex + 1 < m_columnCount) {
-        loadColumnNext(row);
+        MusicSelLoadColumnNext(row);
         row += stride; // prev column fills widget rows [2*stride, 3*stride)
     }
     if (m_columnIndex - 1 >= 0) {
-        loadColumnPrev(row);
+        MusicSelLoadColumnPrev(row);
     }
 }
 
@@ -1482,7 +1386,7 @@ void MainTask::backgroundCellLoader() {
     const int maxNameChars = m_isPadDisplay ? 15 : 21; // phone 0x15 / iPad 0xf
     unsigned i = 0;
     do {
-        [NSThread sleepForTimeInterval:0.3]; // DAT_0003d368 == 0.3
+        [NSThread sleepForTimeInterval:0.3]; // 0x3d368 == 0.3
         dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
         if (i > 26) {
             i = 0; // wrap the 27-cell ring
@@ -1543,10 +1447,10 @@ void MainTask::backgroundCellLoader() {
     m_loaderCursor = 2; // acknowledge shutdown
 }
 
-// Ghidra: musicSelAllCellsReady (FUN_00037f38) — true when every jacket cell
+// Ghidra: musicSelAllCellsReady (0x37f38) — true when every jacket cell
 // has finished loading (state 0 empty or 3 ready). Guarded by the cell-array
 // semaphore.
-bool MainTask::allCellsReady() {
+bool MainTask::AllCellsReady() {
     dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
     bool ready = true;
     for (int i = 0; i < 27; i++) {
@@ -1560,12 +1464,12 @@ bool MainTask::allCellsReady() {
     return ready;
 }
 
-// Ghidra: musicSelUpdateHighlight (FUN_000355fc) — per-frame highlight/badge
+// Ghidra: musicSelUpdateHighlight (0x355fc) — per-frame highlight/badge
 // draw. Skipped once the scene is being torn down (m_suppressDraw). Pulses the
 // recommend / over-score badges, redraws the four difficulty frames + the
 // tutorial badge, and (for a multi-column list) draws the "current/total"
 // column counter.
-void MainTask::updateHighlight() {
+void MainTask::UpdateHighlight() {
     if (m_suppressDraw) {
         return;
     }
@@ -1579,14 +1483,14 @@ void MainTask::updateHighlight() {
         return phase < 100 ? phase * -2 + 200 : phase * 2 + -200;
     };
     // The Aep frame handles and the badge/frame screen positions the draw reads
-    // are ALREADY named members: the frames are slots of the setup()-filled
+    // are ALREADY named members: the frames are slots of the Setup()-filled
     // getFrameNo table m_frmNo[24] (m_frmNo[6]=BT_SETTING, [8]=BT_SORT,
     // [9]=BT_OSSUME/recommend, [10]=BT_EMULATE/over-score, [16]=BT_TUTORIAL), and
     // the x/y positions are slots of the per-platform layout table
-    // m_layoutRects[55] (+0x988), which setup() populates via the
+    // m_layoutRects[55] (+0x988), which Setup() populates via the
     // kPhone/kPadLayoutRects memcpy plus the runtime score-baseline / counter-y
     // patches. Named-index constants below give the draw roles instead of magic
-    // indices; the raw pixel constants are setup()'s layout seam. (The
+    // indices; the raw pixel constants are Setup()'s layout seam. (The
     // decompile's "difficulty frames" are really the four state-2 top-row
     // buttons.)
     enum { // m_layoutRects slots this draw samples
@@ -1757,16 +1661,16 @@ void MainTask::updateHighlight() {
                            m_layoutRects[kLR_CounterY],
                            2,
                            100,
-                           0 /* &DAT_00181818 default text-style seam */,
+                           0 /* default text-style seam */,
                            0xc);
     }
 }
 
-// Ghidra: musicSelStopAndSave (FUN_00038008) — state-0x10 teardown. Releases
+// Ghidra: musicSelStopAndSave (0x38008) — state-0x10 teardown. Releases
 // the SEs and every layer / texture, saves the finished-play music id + result
 // sheet (unless in guest no-save mode), tears down the scene, and kills this
 // task (spawning the menu hub if no sub-task was queued).
-void MainTask::stopAndSave() {
+void MainTask::StopAndSave() {
     AudioManager *audio = [AudioManager sharedManager];
 
     for (int i = 0; i < 5; i++) {
@@ -1842,11 +1746,11 @@ void MainTask::stopAndSave() {
     m_overScoreDict = nil; // ARC releases the over-score dictionary
 }
 
-// Ghidra: musicSelUpdateInfoPanel (FUN_00037c88) — build the cached recommend +
+// Ghidra: musicSelUpdateInfoPanel (0x37c88) — build the cached recommend +
 // over-score "touched" state (mode 1 only). Sets the new-recommend badge if a
 // fresher recommend exists than the last viewed one, and populates the
 // over-score touched dictionary (m_overScoreDict).
-void MainTask::updateInfoPanel(int mode) {
+void MainTask::UpdateInfoPanel(int mode) {
     if (mode != 1) {
         return;
     }
@@ -1900,11 +1804,11 @@ void MainTask::updateInfoPanel(int mode) {
 // directly; these exist only so those units keep linking until they are
 // converted.
 extern "C" void musicSelUpdate(MainTask *task) {
-    task->rebuildList(); // musicSelUpdate (FUN_0003835c) is the re-sort, not the
+    task->rebuildList(); // musicSelUpdate (0x3835c) is the re-sort, not the
                          // scroll step
 }
 extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
-    task->updateInfoPanel(mode);
+    task->UpdateInfoPanel(mode);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1954,7 +1858,7 @@ void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
 }
 
 // @ 0x35448 — stream the column after the current one into row `column`.
-void MainTask::loadColumnNext(int column) {
+void MainTask::MusicSelLoadColumnNext(int column) {
     if (m_nextColLatch == 0xff && m_columnIndex != -2) { // next-column latch idle
         loadColumn(column, +1, m_nextColLatch);
     }
@@ -1963,7 +1867,7 @@ void MainTask::loadColumnNext(int column) {
 // @ 0x35520 — stream the column before the current one into row `column`. Gated
 // by its own latch byte (m_prevColLatch @ +0x8c0), independent of the
 // current-column latch @ +0x8c1 that rebuildList clears.
-void MainTask::loadColumnPrev(int column) {
+void MainTask::MusicSelLoadColumnPrev(int column) {
     if (m_prevColLatch == 0xff && m_columnIndex != 0) {
         loadColumn(column, -1, m_prevColLatch);
     }
@@ -2010,7 +1914,7 @@ bool MainTask::launchPlayForMusicId(int musicId, int sheet) {
 // the other resolved user numbers) follows the same per-user-number dispatch
 // and is a documented seam here per rule 7 (best-effort: the geometry constants
 // and the remaining element blits are not fully transcribed).
-void MusicSelAepDraw(unsigned child,
+void AepDrawCallback(unsigned child,
                      int frame,
                      int x,
                      int y,

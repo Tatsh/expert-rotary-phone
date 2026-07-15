@@ -94,7 +94,6 @@ class MenuMainTask;               // System/src/Task/MenuMainTask.h (: C_TASK); 
                                   // scene
 using ModeSelTask = MenuMainTask; // "ModeSelTask" is the binary's name for the mode-select hub
 class MainTask;                   // System/src/Task/MainTask.h (: C_TASK); music-select scene
-using MusicSelTask = MainTask;    // "MusicSelTask" is the binary's name for MainTask
 #endif
 
 @protocol DownloadMainDelegate <NSObject>
@@ -258,7 +257,7 @@ using MusicSelTask = MainTask;    // "MusicSelTask" is the binary's name for Mai
 // finishes.
 // @ 0x995d8 / 0x995ec.
 #ifdef __cplusplus
-@property(nonatomic, assign) MusicSelTask *cppDelegateRecommendList;
+@property(nonatomic, assign) MainTask *cppDelegateRecommendList;
 #endif
 
 // --- Sugoroku visitor ---

@@ -6,7 +6,7 @@
 //  UITableViewController of RecommendListCells, one per recommended music pack
 //  (from DownloadMain.recommendDataArray, sorted by update date, newest first).
 //  Tapping a row opens the in-app StoreViewController on that recommended pack;
-//  the back button re-sorts the owning C++ MusicSelTask's song list (when a
+//  the back button re-sorts the owning C++ MainTask's song list (when a
 //  store was opened) and fades the panel closed. Wrapped in its own
 //  UINavigationController (with a back button on phone) and driven by the
 //  shared fade/slide open/close lifecycle. Pushed by
@@ -23,11 +23,10 @@
 @class StoreViewController;
 
 // The C++ music-select task (System/src/Task/MainTask.h) whose song list this
-// screen re-sorts. "MusicSelTask" is the binary's name for MainTask, so it is
+// screen re-sorts. MainTask is the music-select task, so it is
 // an alias here. Held as a real forward-declared pointer (never void*); this
 // header is ObjC++ (every includer is .mm).
 class MainTask;
-using MusicSelTask = MainTask;
 
 @interface RecommendViewController : UITableViewController
 
@@ -35,7 +34,7 @@ using MusicSelTask = MainTask;
 // both the getter
 // (@ 0xbd3d4) and setter (@ 0xbd3e8) with a DataMemoryBarrier and stores the
 // pointer without retaining it (assign).
-@property(atomic, assign) MusicSelTask *musicSelTask;
+@property(atomic, assign) MainTask *musicSelTask;
 
 // YES while an open/close animation is in flight. Atomic
 // (DataMemoryBarrier-bracketed) getter. Ghidra: isAnimationing @ 0xbd400.
@@ -50,7 +49,7 @@ using MusicSelTask = MainTask;
 // Keep the C++ task pointer, (re)build the table, wrap self in a
 // UINavigationController (with a back button on phone) and return that
 // navigation controller. Ghidra: @ 0xbc30c.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+- (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none)));
 
 // Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @

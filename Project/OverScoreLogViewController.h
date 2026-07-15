@@ -6,7 +6,7 @@
 //  that downloads the list of songs on which a friend has beaten your score
 //  (via DownloadMain) and shows one OverScoreLogCell per entry over a dimmed
 //  spinner overlay. Picking a row closes the panel and, in the close-animation
-//  completion, drives the owning C++ MusicSelTask straight into a play of that
+//  completion, drives the owning C++ MainTask straight into a play of that
 //  song (or raises a "song not installed" alert). Wrapped in its own
 //  UINavigationController (with a back button on phone) and driven by the
 //  shared fade/slide open/close lifecycle. Pushed by
@@ -23,11 +23,10 @@
 #import "DownloadMain.h" // DownloadMainDelegate (the over-score-log download callback)
 
 // The C++ music-select task (System/src/Task/MainTask.h) whose song list this
-// screen plays from. "MusicSelTask" is the binary's name for MainTask, so it is
+// screen plays from. MainTask is the music-select task, so it is
 // an alias here. Held as a real forward-declared pointer (never void*); this
 // header is ObjC++ (every includer is .mm).
 class MainTask;
-using MusicSelTask = MainTask;
 
 @interface OverScoreLogViewController : UITableViewController <DownloadMainDelegate>
 
@@ -35,7 +34,7 @@ using MusicSelTask = MainTask;
 // both the getter
 // (@ 0x2af2c) and setter (@ 0x2af40) with a DataMemoryBarrier and stores the
 // pointer without retaining it (assign).
-@property(atomic, assign) MusicSelTask *musicSelTask;
+@property(atomic, assign) MainTask *musicSelTask;
 
 // Build the transparent, separator-less table (a clear spacer header, the
 // "friman" backdrop on phone, and a hidden dimmed spinner overlay). `style` is
@@ -45,7 +44,7 @@ using MusicSelTask = MainTask;
 // Keep the C++ task pointer, (re)build the table, wrap self in a
 // UINavigationController (with a back button on phone) and return that
 // navigation controller. Ghidra: @ 0x29e24.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+- (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none)));
 
 // Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @

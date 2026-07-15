@@ -491,8 +491,7 @@ static int FloatToFixed(float ms) {
 // @ 0xc374 — the friend/recommend screen (param = context); a boxed iPad panel.
 - (void)GotoRecommend:(void *)context {
     _recommendViewCtrl = [[RecommendViewController alloc] init];
-    [(RecommendViewController *)_recommendViewCtrl
-        initAtNavigationController:(MusicSelTask *)context];
+    [(RecommendViewController *)_recommendViewCtrl initAtNavigationController:(MainTask *)context];
     _recommendNaviCtrl = [[UINavigationController alloc] init];
     _recommendNaviCtrl.view.clipsToBounds = YES;
     if (neSceneManager::isPadDisplay()) {
@@ -518,7 +517,7 @@ static int FloatToFixed(float ms) {
 - (void)GotoSortSelect:(void *)context {
     _sortSelectViewCtrl = [[SortSelectViewController alloc] init];
     [(SortSelectViewController *)_sortSelectViewCtrl
-        initAtNavigationController:(MusicSelTask *)context];
+        initAtNavigationController:(MainTask *)context];
     _sortSelectNaviCtrl = [[UINavigationController alloc] init];
     _sortSelectNaviCtrl.view.clipsToBounds = YES;
     if (neSceneManager::isPadDisplay()) {
@@ -542,7 +541,7 @@ static int FloatToFixed(float ms) {
 - (void)GotoOverScoreLog:(void *)context {
     _overScoreLogViewCtrl = [[OverScoreLogViewController alloc] init];
     [(OverScoreLogViewController *)_overScoreLogViewCtrl
-        initAtNavigationController:(MusicSelTask *)context];
+        initAtNavigationController:(MainTask *)context];
     _overScoreLogNaviCtrl = [[UINavigationController alloc] init];
     _overScoreLogNaviCtrl.view.clipsToBounds = YES;
     if (neSceneManager::isPadDisplay()) {

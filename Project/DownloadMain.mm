@@ -20,12 +20,12 @@
 // pokes its owning C++ scene when the matching download finishes. Ghidra:
 // modeSelectRefreshNews
 // @ 0x6d8cc, musicSelUpdateInfoPanel @ 0x37c88. Both scene classes are
-// reconstructed: ModeSelTask == MenuMainTask, MusicSelTask == MainTask (aliased
+// reconstructed: ModeSelTask == MenuMainTask (aliased
 // in DownloadMain.h). modeSelectRefreshNews is defined in MenuMainTask.mm
 // (forwards to MenuMainTask::refreshNews); musicSelUpdateInfoPanel is defined
-// in MainTask.mm (forwards to MainTask::updateInfoPanel).
+// in MainTask.mm (forwards to MainTask::UpdateInfoPanel).
 extern "C" void modeSelectRefreshNews(ModeSelTask *task, bool hasNews);
-extern "C" void musicSelUpdateInfoPanel(MusicSelTask *task, bool hasList);
+extern "C" void musicSelUpdateInfoPanel(MainTask *task, bool hasList);
 
 // HTML-entity unescaping applied to news text / titles / bodies (mirrors the
 // inline replaceOccurrencesOfString: chains in newsGetFinished).

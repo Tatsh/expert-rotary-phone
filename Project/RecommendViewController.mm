@@ -5,13 +5,13 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. The "friend
 //  recommend" list. Objective-C++ (.mm) because it drives the C++ "ne" engine
 //  singletons via neEngineBridge (scene manager, root view controller, system
-//  SEs) and the C++ MusicSelTask re-sort routine.
+//  SEs) and the C++ MainTask re-sort routine.
 //
 
 #import "RecommendViewController.h"
 
 #import "DownloadMain.h"
-#import "MainTask.h" // MusicSelTask == MainTask: the real rebuildList() re-sort method
+#import "MainTask.h"
 #import "RecommendListCell.h"
 #import "StoreViewController.h"
 #import "neEngineBridge.h"
@@ -189,7 +189,7 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // @ 0xbc30c — keep the C++ task pointer, (re)build the table via
 // initWithStyle:, wrap self in a UINavigationController (with a back button on
 // phone) and return that nav controller.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+- (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none))) {
     _pMusicSelTask = musicSelTask;
     UINavigationController *navigationController = [[UINavigationController alloc]

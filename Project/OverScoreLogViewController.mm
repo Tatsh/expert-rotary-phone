@@ -5,14 +5,14 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. The "friend
 //  over-score" log screen. Objective-C++ (.mm) because it drives the C++ "ne"
 //  engine singletons via neEngineBridge (scene manager, root view controller,
-//  system SEs) and, on close, the C++ MusicSelTask / PlayTask launch path.
+//  system SEs) and, on close, the C++ MainTask / PlayTask launch path.
 //
 
 #import "OverScoreLogViewController.h"
 
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
-#import "MainTask.h" // MusicSelTask == MainTask: the real launchPlayForMusicId() method
+#import "MainTask.h"
 #import "OverScoreLogCell.h"
 #import "neEngineBridge.h"
 
@@ -151,7 +151,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 // @ 0x29e24 — keep the C++ task pointer, (re)build the table via
 // initWithStyle:, wrap self in a UINavigationController (with a back button on
 // phone) and return that nav controller.
-- (UINavigationController *)initAtNavigationController:(MusicSelTask *)musicSelTask
+- (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none))) {
     _musicSelTask = musicSelTask;
     UINavigationController *navigationController = [[UINavigationController alloc]
@@ -298,7 +298,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 }
 
 // @ 0x2aad4 — remove the nav view, notify the root host, and (if a row was
-// picked) drive the owning MusicSelTask into a play of the chosen song: find it
+// picked) drive the owning MainTask into a play of the chosen song: find it
 // in the task's song list, stash the selection, pop the menu BGM, fire the
 // decide SE, spawn a PlayTask and hand it to the app delegate (state -> 0xc).
 // If the song is not installed, alert instead (state -> 2).
