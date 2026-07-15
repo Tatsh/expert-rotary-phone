@@ -130,6 +130,7 @@ deob
 depedent
 deside
 devdata
+dgles
 dialog
 dialogs
 dictionaris
