@@ -299,6 +299,5 @@ void TitleTask::drawSoundTestLabel() {
     if (m_soundTestHidden) {
         return;
     }
-    drawAepManagerText(
-        m_aep, m_versionLabel.UTF8String, m_soundTestLabelX, 20, 20, 0, 100, 0x181818, 9);
+    m_aep->DrawText(m_versionLabel.UTF8String, m_soundTestLabelX, 20, 20, 0, 100, 0x181818, 9);
 }

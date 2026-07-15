@@ -566,40 +566,31 @@ void drawAepTransitionOverlay(AepManager *mgr, int alpha) {
     mgr->drawTransitionOverlay(alpha);
 }
 
-// Ghidra: FUN_00010540 (audit label "aepManagerReset_a" — a misnomer).
-// Manager-level text draw: forward the string + six positional words to the
-// ordering table's text command, with the default (null) colour vector and
-// `priority` as the OT priority.
-void drawAepManagerText(AepManager *mgr,
-                        const char *text,
-                        int a0,
-                        int a1,
-                        int a2,
-                        int a3,
-                        int a4,
-                        int a5,
-                        int priority) {
-    pushAepOtTextCmd(mgr->orderingTable(), text, a0, a1, a2, a3, a4, a5, nullptr, priority);
+// Ghidra: AepManager::DrawText (FUN_00010540; audit label "aepManagerReset_a" —
+// a misnomer). Forward the string + the six positional / per-corner-colour words
+// to the ordering table's text command with no clip rect.
+void AepManager::DrawText(
+    const char *text, int x, int y, int cTL, int cTR, int cBL, int cBR, int priority) {
+    pushAepOtTextCmd(orderingTable(), text, x, y, cTL, cTR, cBL, cBR, nullptr, priority);
 }
 
-// Ghidra: FUN_0001057c — the full pass-through variant (threads an explicit
-// colour vector).
-void drawAepManagerTextEx(AepManager *mgr,
-                          const char *text,
-                          int a0,
-                          int a1,
-                          int a2,
-                          int a3,
-                          int a4,
-                          int a5,
-                          const void *colorVec,
-                          int priority) {
-    pushAepOtTextCmd(mgr->orderingTable(), text, a0, a1, a2, a3, a4, a5, colorVec, priority);
+// Ghidra: AepManager::DrawTextClipped (FUN_0001057c) — as DrawText but threads
+// the caller-supplied clip rect straight through.
+void AepManager::DrawTextClipped(const char *text,
+                                 int x,
+                                 int y,
+                                 int cTL,
+                                 int cTR,
+                                 int cBL,
+                                 int cBR,
+                                 const void *clip,
+                                 int priority) {
+    pushAepOtTextCmd(orderingTable(), text, x, y, cTL, cTR, cBL, cBR, clip, priority);
 }
 
 // Ghidra: drawAepTextMultiline (FUN_0002d8b0). Split `text` on '\n' and draw
 // each line as a separate text command, vertically centred about `y` with
-// `lineHeight` spacing. The per- line call forwards through drawAepManagerText
+// `lineHeight` spacing. The per-line call forwards through AepManager::DrawText
 // (the audit's aepManagerReset_a).
 void drawAepTextMultiline(
     const char *text, int a0, int y, int a3, int a4, int lineHeight, int a6, int a7, int a8) {
@@ -635,9 +626,8 @@ void drawAepTextMultiline(
         std::strncpy(line, cursor, len);
         line[len] = '\0';
 
-        // Ghidra arg order: aepManagerReset_a(mgr, line, a4, a0, lineY, a3, a8, a6,
-        // a7).
-        drawAepManagerText(&mgr, line, a4, a0, lineY, a3, a8, a6, a7);
+        // Ghidra arg order: DrawText(mgr, line, a4, a0, lineY, a3, a8, a6, a7).
+        mgr.DrawText(line, a4, a0, lineY, a3, a8, a6, a7);
 
         cursor = nl + 1;
         lineY += lineHeight;

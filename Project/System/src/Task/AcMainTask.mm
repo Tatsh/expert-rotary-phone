@@ -1505,15 +1505,8 @@ int AcMainTask::sugorokuDrawSkillPanel() {
     if (skillObj) {
         NSString *nameStr = [skillObj skillName];
         if (nameStr) {
-            drawAepManagerText(mgr,
-                               [nameStr UTF8String],
-                               0x1e,
-                               iVar7 + 52,
-                               iVar10 - 0x11a,
-                               1,
-                               100,
-                               0x59514f,
-                               0x13);
+            mgr->DrawText(
+                [nameStr UTF8String], 0x1e, iVar7 + 52, iVar10 - 0x11a, 1, 100, 0x59514f, 0x13);
         }
     }
 
@@ -1524,21 +1517,20 @@ int AcMainTask::sugorokuDrawSkillPanel() {
         __unsafe_unretained id skillDataName =
             *reinterpret_cast<__unsafe_unretained const id *>(descPtr);
         if (skillDataName) {
-            drawAepManagerText(mgr,
-                               [skillDataName UTF8String],
-                               0x14,
-                               iVar7 + 52,
-                               iVar10 - 0xed,
-                               1,
-                               100,
-                               0x59514f,
-                               0x13);
+            mgr->DrawText([skillDataName UTF8String],
+                          0x14,
+                          iVar7 + 52,
+                          iVar10 - 0xed,
+                          1,
+                          100,
+                          0x59514f,
+                          0x13);
         }
 
         int pts = *reinterpret_cast<const short *>(reinterpret_cast<const char *>(descPtr) + 4);
         char ptsBuf[16];
         snprintf(ptsBuf, sizeof(ptsBuf), "%d pt", pts);
-        drawAepManagerText(mgr, ptsBuf, 0x12, iVar7 + 52, iVar10 - 0xca, 1, 100, 0xe10000, 0x13);
+        mgr->DrawText(ptsBuf, 0x12, iVar7 + 52, iVar10 - 0xca, 1, 100, 0xe10000, 0x13);
     }
 
     // Touch hit-test.
@@ -2701,7 +2693,7 @@ void AcMainTask::sugorokuDrawFriendMeet() {
             buf[5] = '.';
             buf[6] = '\0';
         }
-        drawAepManagerText(mgr, buf, 0x12, iVar7, iVar6 + 0x4e, 1, 100, 0x615245, 0x1f);
+        mgr->DrawText(buf, 0x12, iVar7, iVar6 + 0x4e, 1, 100, 0x615245, 0x1f);
     }
 
     // Fade out.
@@ -2898,7 +2890,7 @@ void AcMainSugorokuDraw(int child,
             return;
         }
         CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
-        drawAepManagerText(aep, info.charaName.UTF8String, 0x23, x, y - 0xf, 1, color, 0, p17);
+        aep->DrawText(info.charaName.UTF8String, 0x23, x, y - 0xf, 1, color, 0, p17);
         return;
     }
     if (self->m_boardUserNo[7] == child) { // skill name / id / description
@@ -2907,11 +2899,9 @@ void AcMainSugorokuDraw(int child,
         }
         CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
         const SkillDataStruct *sd = GetSkillDataStruct((int)info.skillId);
-        drawAepManagerText(aep, "SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, p17);
-        drawAepManagerText(
-            aep, info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, p17);
-        drawAepManagerText(
-            aep, sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, p17);
+        aep->DrawText("SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, p17);
+        aep->DrawText(info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, p17);
+        aep->DrawText(sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, p17);
         drawAepTextMultiline(
             info.info.UTF8String, x, y + 0x1f, 1, 0x16, 0x1c, 0x59514f, p17, color);
         return;
@@ -3417,7 +3407,7 @@ void AcMainSugorokuDraw(int child,
             return;
         }
         const char *desc = getStringByIndex12((unsigned)self->m_hudState);
-        drawAepManagerText(aep, desc, 0x16, x, y - 10, 1, color, 0xffffff, p17);
+        aep->DrawText(desc, 0x16, x, y - 10, 1, color, 0xffffff, p17);
         return;
     }
 }

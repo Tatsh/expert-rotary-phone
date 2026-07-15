@@ -607,21 +607,20 @@ void MenuMainTask::updateNewsTicker(int handle, int drawCtx) {
     }
 
 draw:
-    // Ghidra: aepManagerReset_b — the drawAepManagerTextEx text-draw seam
-    // (FUN_0001057c). The a5 slot carried &DAT_00181818 (the manager's opaque
+    // Ghidra: AepManager::DrawTextClipped (FUN_0001057c; audit label
+    // aepManagerReset_b). The a5 slot carried &DAT_00181818 (the manager's opaque
     // default news-text style blob) and the colour-vector slot carried
     // &m_newsTickerParams[0]; `drawCtx` is the OT priority the callback was
     // handed.
-    drawAepManagerTextEx(&aep,
-                         [m_newsCurLine UTF8String],
-                         0x1b,
-                         m_newsScrollX,
-                         m_newsTickerParams[1],
-                         0,
-                         m_newsPauseCounter,
-                         0 /* &DAT_00181818 style seam */,
-                         &m_newsTickerParams[0],
-                         drawCtx);
+    aep.DrawTextClipped([m_newsCurLine UTF8String],
+                        0x1b,
+                        m_newsScrollX,
+                        m_newsTickerParams[1],
+                        0,
+                        m_newsPauseCounter,
+                        0 /* &DAT_00181818 style seam */,
+                        &m_newsTickerParams[0],
+                        drawCtx);
 }
 
 // @ 0x6d8cc

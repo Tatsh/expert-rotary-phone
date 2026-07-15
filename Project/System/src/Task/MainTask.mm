@@ -1654,15 +1654,14 @@ void MainTask::UpdateHighlight() {
     if (m_columnCount > 1) {
         char buf[64];
         std::snprintf(buf, sizeof(buf), "%d/%d", m_columnIndex + 1, m_columnCount);
-        drawAepManagerText(m_aep,
-                           buf,
-                           m_layoutRects[kLR_CounterStyle],
-                           m_layoutRects[kLR_CounterX],
-                           m_layoutRects[kLR_CounterY],
-                           2,
-                           100,
-                           0 /* default text-style seam */,
-                           0xc);
+        m_aep->DrawText(buf,
+                        m_layoutRects[kLR_CounterStyle],
+                        m_layoutRects[kLR_CounterX],
+                        m_layoutRects[kLR_CounterY],
+                        2,
+                        100,
+                        0 /* default text-style seam */,
+                        0xc);
     }
 }
 
@@ -2193,15 +2192,14 @@ void AepDrawCallback(unsigned child,
         forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
             id name = cell->name;
             if (name) {
-                drawAepManagerText(self->m_aep,
-                                   [name UTF8String],
-                                   self->m_layoutRects[54],
-                                   cx0 + self->m_layoutRects[2],
-                                   cy0 + self->m_layoutRects[5],
-                                   1,
-                                   100,
-                                   0,
-                                   p14);
+                self->m_aep->DrawText([name UTF8String],
+                                      self->m_layoutRects[54],
+                                      cx0 + self->m_layoutRects[2],
+                                      cy0 + self->m_layoutRects[5],
+                                      1,
+                                      100,
+                                      0,
+                                      p14);
             }
             return true;
         });

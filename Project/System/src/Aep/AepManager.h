@@ -140,6 +140,45 @@ public:
     // (colour/alpha = fully opaque, no clip override) and forwards.
     void drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags);
 
+    /// @brief Queue a single-line text draw through the manager's ordering table.
+    /// @details Forwards the string and the six positional / per-corner-colour
+    ///          words to the OT text command (type 6) with no clip rect. x/y are
+    ///          integer positions (Ghidra's `float` typing is a soft-float
+    ///          artifact — the callers pass integer pen coordinates).
+    /// @param text Null-terminated string to draw.
+    /// @param x Pen x position.
+    /// @param y Pen y position.
+    /// @param cTL Top-left corner colour word.
+    /// @param cTR Top-right corner colour word.
+    /// @param cBL Bottom-left corner colour word.
+    /// @param cBR Bottom-right corner colour word.
+    /// @param priority Ordering-table draw priority.
+    /// @note Ghidra: AepManager::DrawText (FUN_00010540).
+    void DrawText(const char *text, int x, int y, int cTL, int cTR, int cBL, int cBR, int priority);
+
+    /// @brief Queue a single-line text draw with an explicit clip rectangle.
+    /// @details As DrawText, but threads the caller-supplied clip rect straight
+    ///          through to the ordering-table text command.
+    /// @param text Null-terminated string to draw.
+    /// @param x Pen x position.
+    /// @param y Pen y position.
+    /// @param cTL Top-left corner colour word.
+    /// @param cTR Top-right corner colour word.
+    /// @param cBL Bottom-left corner colour word.
+    /// @param cBR Bottom-right corner colour word.
+    /// @param clip Clip rectangle (16-byte vector), or null for none.
+    /// @param priority Ordering-table draw priority.
+    /// @note Ghidra: AepManager::DrawTextClipped (FUN_0001057c).
+    void DrawTextClipped(const char *text,
+                         int x,
+                         int y,
+                         int cTL,
+                         int cTR,
+                         int cBL,
+                         int cBR,
+                         const void *clip,
+                         int priority);
+
     AepOrderingTable *orderingTable() {
         return &m_ot;
     } // Ghidra: get_aepOt
@@ -332,31 +371,6 @@ int getAepTransitionMode(const AepManager *mgr);
 // entry that forwards to the ordering table's overlay push. Ghidra:
 // drawAepTransitionOverlay (FUN_00010530 -> FUN_0001151c).
 void drawAepTransitionOverlay(AepManager *mgr, int alpha);
-
-// Queue a single-line text draw through the manager's ordering table (type-6
-// command). `drawAepManagerText` uses the default colour vector; `...Ex`
-// threads an explicit one. The six numeric words are positional (see
-// AepTextCmd). Ghidra: FUN_00010540 (audit label "aepManagerReset_a" — a
-// misnomer; it is the manager-level text draw) / FUN_0001057c.
-void drawAepManagerText(AepManager *mgr,
-                        const char *text,
-                        int a0,
-                        int a1,
-                        int a2,
-                        int a3,
-                        int a4,
-                        int a5,
-                        int priority);
-void drawAepManagerTextEx(AepManager *mgr,
-                          const char *text,
-                          int a0,
-                          int a1,
-                          int a2,
-                          int a3,
-                          int a4,
-                          int a5,
-                          const void *colorVec,
-                          int priority);
 
 // Draw a multi-line ('\n'-separated) string vertically centred about `y`, one
 // text command per line spaced `lineHeight` apart. Ghidra: drawAepTextMultiline

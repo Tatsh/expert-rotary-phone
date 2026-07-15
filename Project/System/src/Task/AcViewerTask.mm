@@ -1063,15 +1063,14 @@ void AcViewerHudDraw(int child,
         // HUD baseline (Ghidra: aepManagerReset_a text blit with size @ +0x1e8, y
         // bias @ +0x1c4).
         NSString *title = (__bridge NSString *)self->m_songTitle;
-        drawAepManagerText(&aep,
-                           title.UTF8String,
-                           self->m_titleXAdvance,
-                           x,
-                           y + self->m_titleBaselineY,
-                           1,
-                           100,
-                           0xffffff,
-                           0xe);
+        aep.DrawText(title.UTF8String,
+                     self->m_titleXAdvance,
+                     x,
+                     y + self->m_titleBaselineY,
+                     1,
+                     100,
+                     0xffffff,
+                     0xe);
     } else if (self->m_usrNo[5] == child) {
         // COOL count layer -> 3 digits from the engine's COOL counter
         // (DAT_0016ebe0).
