@@ -34,15 +34,19 @@ NoteMng &NoteMng::shared() {
     return instance;
 }
 
-// Ghidra: NEEngine_onResignActivePushHook (FUN_00034510). Runs once on resign:
-// stop the BGM and stash the current play position; a flag guards re-entry.
+// Ghidra: NEEngine_onResignActivePushHook (FUN_00034510). Fired when the app is
+// about to resign active (push notification / home button / interruption)
+// mid-play: freeze the note timeline exactly as a pause does — stop the BGM,
+// anchor the current play position, and set the hold/freeze flag — so
+// togglePause folds the frozen span back on the return to active. No-op if the
+// engine is already frozen (a menu pause, etc.).
 void NoteMng::onResignActivePushHook() {
-    if (m_suspendedForResign) {
+    if (m_holdFlag) {
         return;
     }
     [[AudioManager sharedManager] stopBgm:0.0f]; // 0s fade = stop now
-    m_resignPositionMs = getElapsedTimeMs();
-    m_suspendedForResign = true;
+    m_holdElapsed = getElapsedTimeMs();          // anchor the play position (+0x4e40)
+    m_holdFlag = true;                           // freeze the timeline (+0x4e51 bit0)
 }
 
 namespace {

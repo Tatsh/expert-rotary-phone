@@ -433,14 +433,11 @@ private:
     int m_scrollTarget = 0;     // +0x4e4c scroll base target (nudged to the BGM playhead)
     int m_expectedTimeBase = 0; // +0x4e48 expected time used by the BGM drift sync
     bool m_bgmSynced = false;   // +0x4e50 the one-shot BGM drift sync has run
-    bool m_holdFlag = false;    // +0x4e51 bit0: play is held/paused (freezes the update)
-    int m_holdElapsed = 0;      // elapsed time stamped when play was paused (folded
-                                // back by togglePause)
-
-    // Resign/suspend bookkeeping (Ghidra: within the play-data region, near
-    // +0x05; the recorded position field is written by FUN_00034510).
-    bool m_suspendedForResign = false;
-    int m_resignPositionMs = 0;
+    bool m_holdFlag = false;    // +0x4e51 bit0: play is held/paused (freezes the update).
+                                // Both a menu pause and onResignActivePushHook (app
+                                // backgrounded) set this; togglePause clears it.
+    int m_holdElapsed = 0;      // +0x4e40 elapsed time stamped when play was frozen
+                                // (a pause or a resign); folded back by togglePause.
 };
 
 // --- Per-note tone-graphic state accessors
