@@ -308,19 +308,30 @@ BOOL gLaunchedFromPush = NO;
 
 #pragma mark - App identity & hardware
 
-/** -[AppDelegate appDelegate] — shared app delegate. @ghidraAddress 0x89a0 @complete */
+/**
+ * -[AppDelegate appDelegate] — shared app delegate.
+ * @ghidraAddress 0x89a0
+ * @complete
+ */
 + (instancetype)appDelegate {
     return (AppDelegate *)UIApplication.sharedApplication.delegate;
 }
 
-/** -[AppDelegate appDocumentsDirectory]. @ghidraAddress 0x89d4 @complete */
+/**
+ * -[AppDelegate appDocumentsDirectory].
+ * @ghidraAddress 0x89d4
+ * @complete
+ */
 + (NSString *)appDocumentsDirectory {
     return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)
         .lastObject;
 }
 
-// -[AppDelegate appAppSupportDirectory] — lazily creates the dir + marks it excluded from backup.
-/** @ghidraAddress 0x8a1c @complete */
+/**
+ * -[AppDelegate appAppSupportDirectory] — lazily creates the dir + marks it excluded from backup.
+ * @ghidraAddress 0x8a1c
+ * @complete
+ */
 + (NSString *)appAppSupportDirectory {
     NSString *path =
         NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES)
@@ -342,8 +353,11 @@ BOOL gLaunchedFromPush = NO;
     return path;
 }
 
-// +[AppDelegate addSkipBackupAttributeToItemAtURL:] — mark a URL excluded from backup.
-/** @ghidraAddress 0x8af8 @complete */
+/**
+ * +[AppDelegate addSkipBackupAttributeToItemAtURL:] — mark a URL excluded from backup.
+ * @ghidraAddress 0x8af8
+ * @complete
+ */
 + (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL {
     NSAssert([NSFileManager.defaultManager fileExistsAtPath:URL.path],
              @"[[NSFileManager defaultManager] fileExistsAtPath:[URL path]]");
@@ -355,12 +369,20 @@ BOOL gLaunchedFromPush = NO;
     return success;
 }
 
-/** -[AppDelegate appCachesDirectory]. @ghidraAddress 0x89f8 @complete */
+/**
+ * -[AppDelegate appCachesDirectory].
+ * @ghidraAddress 0x89f8
+ * @complete
+ */
 + (NSString *)appCachesDirectory {
     return NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).lastObject;
 }
 
-/** -[AppDelegate freeFileSystemSize]. @ghidraAddress 0x8be8 @complete */
+/**
+ * -[AppDelegate freeFileSystemSize].
+ * @ghidraAddress 0x8be8
+ * @complete
+ */
 + (unsigned long long)freeFileSystemSize {
     NSDictionary *attrs =
         [NSFileManager.defaultManager attributesOfFileSystemForPath:[self appDocumentsDirectory]
@@ -368,13 +390,21 @@ BOOL gLaunchedFromPush = NO;
     return [[attrs valueForKey:NSFileSystemFreeSize] longLongValue];
 }
 
-/** -[AppDelegate hardwareType] — cached device-model enum. @ghidraAddress 0xb13c @complete */
+/**
+ * -[AppDelegate hardwareType] — cached device-model enum.
+ * @ghidraAddress 0xb13c
+ * @complete
+ */
 - (int)hardwareType {
     return _hardwareType;
 }
 // displayType is a synthesized atomic getter @ 0xb0a8.
 
-/** -[AppDelegate isOldHardware] — low-spec device test. @ghidraAddress 0xad5c @complete */
+/**
+ * -[AppDelegate isOldHardware] — low-spec device test.
+ * @ghidraAddress 0xad5c
+ * @complete
+ */
 - (BOOL)isOldHardware {
     unsigned type = (unsigned)_hardwareType;
     if (type < 28 && ((1u << type) & 0x0ff7803f) != 0) {
@@ -393,8 +423,11 @@ static const char *const kHardwareModels[40] = {
     "iPad2,6",   "iPad2,7",   "iPad4,4",   "iPad4,5",   "i386",
 };
 
-// -[AppDelegate initHardware] — sysctl hw.machine -> _hardwareType / _displayType tiers.
-/** @ghidraAddress 0xa58c @complete */
+/**
+ * -[AppDelegate initHardware] — sysctl hw.machine -> _hardwareType / _displayType tiers.
+ * @ghidraAddress 0xa58c
+ * @complete
+ */
 - (void)initHardware {
     size_t size = 0;
     sysctlbyname("hw.machine", nullptr, &size, nullptr, 0);
@@ -479,8 +512,11 @@ static const char *const kHardwareModels[40] = {
     free(machine);
 }
 
-// -[AppDelegate uuId] — read (or mint + Keychain-store) the persistent device UUID.
-/** @ghidraAddress 0x9890 @complete */
+/**
+ * -[AppDelegate uuId] — read (or mint + Keychain-store) the persistent device UUID.
+ * @ghidraAddress 0x9890
+ * @complete
+ */
 - (NSString *)uuId {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
 
@@ -537,7 +573,11 @@ static const char *const kHardwareModels[40] = {
     return result;
 }
 
-/** -[AppDelegate deleteUuid] — remove the stored device UUID. @ghidraAddress 0x9c20 @complete */
+/**
+ * -[AppDelegate deleteUuid] — remove the stored device UUID.
+ * @ghidraAddress 0x9c20
+ * @complete
+ */
 - (void)deleteUuid {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
     NSDictionary *query = @{
@@ -559,8 +599,11 @@ static const char *const kHardwareModels[40] = {
 
 #pragma mark - Settings-version keychain record
 
-// -[AppDelegate setUsersettingVer:] — Keychain add-or-update the setting version.
-/** @ghidraAddress 0x9d58 @complete */
+/**
+ * -[AppDelegate setUsersettingVer:] — Keychain add-or-update the setting version.
+ * @ghidraAddress 0x9d58
+ * @complete
+ */
 - (void)setUsersettingVer:(NSString *)ver {
     NSData *data = [ver dataUsingEncoding:NSUTF8StringEncoding];
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
@@ -602,8 +645,11 @@ static const char *const kHardwareModels[40] = {
     }
 }
 
-// -[AppDelegate getUsersettingVer] — read the setting version ("0" if absent).
-/** @ghidraAddress 0xa044 @complete */
+/**
+ * -[AppDelegate getUsersettingVer] — read the setting version ("0" if absent).
+ * @ghidraAddress 0xa044
+ * @complete
+ */
 - (NSString *)getUsersettingVer {
     NSDictionary *query = @{
         (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
@@ -632,8 +678,11 @@ static const char *const kHardwareModels[40] = {
     return [NSString stringWithFormat:@"0"];
 }
 
-// -[AppDelegate deleteUsersettingVer] — remove the setting-version Keychain item.
-/** @ghidraAddress 0xa270 @complete */
+/**
+ * -[AppDelegate deleteUsersettingVer] — remove the setting-version Keychain item.
+ * @ghidraAddress 0xa270
+ * @complete
+ */
 - (void)deleteUsersettingVer {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
     NSDictionary *query = @{
@@ -655,45 +704,78 @@ static const char *const kHardwareModels[40] = {
 
 #pragma mark - Environment strings
 
-/** -[AppDelegate userAgent] — copy of the cached UA string. @ghidraAddress 0xa3a8 @complete */
+/**
+ * -[AppDelegate userAgent] — copy of the cached UA string.
+ * @ghidraAddress 0xa3a8
+ * @complete
+ */
 - (NSString *)userAgent {
     return [NSString stringWithString:_userAgent];
 }
 
-/** -[AppDelegate appVersion] — Info.plist CFBundleVersion. @ghidraAddress 0xa408 @complete */
+/**
+ * -[AppDelegate appVersion] — Info.plist CFBundleVersion.
+ * @ghidraAddress 0xa408
+ * @complete
+ */
 - (NSString *)appVersion {
     return NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"];
 }
 
-/** -[AppDelegate appVersionNum] — version with dots stripped. @ghidraAddress 0xa458 @complete */
+/**
+ * -[AppDelegate appVersionNum] — version with dots stripped.
+ * @ghidraAddress 0xa458
+ * @complete
+ */
 - (int)appVersionNum {
     NSString *stripped = [self.appVersion stringByReplacingOccurrencesOfString:@"." withString:@""];
     return [stripped intValue];
 }
 
-/** -[AppDelegate osVersion] — UIDevice systemVersion. @ghidraAddress 0xa3d4 @complete */
+/**
+ * -[AppDelegate osVersion] — UIDevice systemVersion.
+ * @ghidraAddress 0xa3d4
+ * @complete
+ */
 - (NSString *)osVersion {
     return UIDevice.currentDevice.systemVersion;
 }
 
-/** -[AppDelegate localeLanguage] — NSLocaleLanguageCode. @ghidraAddress 0xa548 @complete */
+/**
+ * -[AppDelegate localeLanguage] — NSLocaleLanguageCode.
+ * @ghidraAddress 0xa548
+ * @complete
+ */
 - (NSString *)localeLanguage {
     return [NSLocale.currentLocale objectForKey:NSLocaleLanguageCode];
 }
 
-/** -[AppDelegate localeCountry] — NSLocaleCountryCode. @ghidraAddress 0xa504 @complete */
+/**
+ * -[AppDelegate localeCountry] — NSLocaleCountryCode.
+ * @ghidraAddress 0xa504
+ * @complete
+ */
 - (NSString *)localeCountry {
     return [NSLocale.currentLocale objectForKey:NSLocaleCountryCode];
 }
 
-/** -[AppDelegate localeString] — "language_country". @ghidraAddress 0xa4a4 @complete */
+/**
+ * -[AppDelegate localeString] — "language_country".
+ * @ghidraAddress 0xa4a4
+ * @complete
+ */
 - (NSString *)localeString {
     return [NSString stringWithFormat:@"%@_%@", self.localeLanguage, self.localeCountry];
 }
 
 #pragma mark - StoreKit / purchases
 
-// -[AppDelegate finishRequest:]  @ 0xab44
+/**
+ * -[AppDelegate finishRequest:] — retain the received StoreKit products array
+ * (the vestigial objectAtIndex:0 whose result is discarded matches the binary).
+ * @ghidraAddress 0xab44
+ * @complete
+ */
 - (void)finishRequest:(NSArray *)products {
     _products = products;
     if (_products.count == 0) {
@@ -702,7 +784,12 @@ static const char *const kHardwareModels[40] = {
     (void)[_products objectAtIndex:0];
 }
 
-// -[AppDelegate purchaseSucceeded:]  @ 0xab9c
+/**
+ * -[AppDelegate purchaseSucceeded:] — global "purchase completed" confirm alert
+ * (title "Succeeded", the store view controllers do the actual unlock).
+ * @ghidraAddress 0xab9c
+ * @complete
+ */
 - (void)purchaseSucceeded:(id)transaction {
     CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"Succeeded"
                                                             message:@"購入処理が完了しました。"
@@ -712,7 +799,12 @@ static const char *const kHardwareModels[40] = {
     [alert show];
 }
 
-// -[AppDelegate purchaseFailed:error:]  @ 0xac24
+/**
+ * -[AppDelegate purchaseFailed:error:] — global "purchase failed" alert (title
+ * "Failed"); the store view controller does the real cleanup.
+ * @ghidraAddress 0xac24
+ * @complete
+ */
 - (void)purchaseFailed:(id)transaction error:(NSError *)error {
     CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"Failed"
                                                             message:@"購入処理が失敗しました。"
@@ -722,7 +814,12 @@ static const char *const kHardwareModels[40] = {
     [alert show];
 }
 
-// -[AppDelegate getProduct:]  @ 0xacac
+/**
+ * -[AppDelegate getProduct:] — linear-search the cached StoreKit products for a
+ * matching product identifier.
+ * @ghidraAddress 0xacac
+ * @complete
+ */
 - (SKProduct *)getProduct:(NSString *)productId {
     if (self.products != nil) {
         for (NSUInteger i = 0; i < self.products.count; i++) {
@@ -737,7 +834,12 @@ static const char *const kHardwareModels[40] = {
 
 #pragma mark - Game Center
 
-// -[AppDelegate loginGameCenter]  @ 0xb00c
+/**
+ * -[AppDelegate loginGameCenter] — install the local player's authenticate
+ * handler, which presents the Game Center login VC when one is provided.
+ * @ghidraAddress 0xb00c
+ * @complete
+ */
 - (void)loginGameCenter {
     GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
     localPlayer.authenticateHandler = ^(UIViewController *viewController, NSError *error) {
@@ -750,7 +852,13 @@ static const char *const kHardwareModels[40] = {
 
 #pragma mark - Core Data stack
 
-// -[AppDelegate managedObjectContext]  @ 0xa810
+/**
+ * -[AppDelegate managedObjectContext] — lazily build the main Core Data context
+ * wired to the shared store coordinator. The binary uses plain -init; the
+ * concurrency-type init is a guarded modernization for current iOS.
+ * @ghidraAddress 0xa810
+ * @complete
+ */
 - (NSManagedObjectContext *)managedObjectContext {
     if (_managedObjectContext == nil) {
         NSPersistentStoreCoordinator *coordinator = self.persistentStoreCoordinator;
@@ -767,7 +875,13 @@ static const char *const kHardwareModels[40] = {
     return _managedObjectContext;
 }
 
-// -[AppDelegate managedObjectContextSub]  @ 0xa890
+/**
+ * -[AppDelegate managedObjectContextSub] — lazily build the secondary Core Data
+ * context sharing the same store coordinator (same shape as
+ * managedObjectContext).
+ * @ghidraAddress 0xa890
+ * @complete
+ */
 - (NSManagedObjectContext *)managedObjectContextSub {
     if (_managedObjectContextSub == nil) {
         NSPersistentStoreCoordinator *coordinator = self.persistentStoreCoordinator;
@@ -784,7 +898,12 @@ static const char *const kHardwareModels[40] = {
     return _managedObjectContextSub;
 }
 
-// -[AppDelegate managedObjectModel]  @ 0xa910
+/**
+ * -[AppDelegate managedObjectModel] — lazily load the compiled model
+ * ScoreData.momd from the app bundle.
+ * @ghidraAddress 0xa910
+ * @complete
+ */
 - (NSManagedObjectModel *)managedObjectModel {
     if (_managedObjectModel == nil) {
         NSString *path = [NSBundle.mainBundle pathForResource:@"ScoreData" ofType:@"momd"];
@@ -794,7 +913,13 @@ static const char *const kHardwareModels[40] = {
     return _managedObjectModel;
 }
 
-// -[AppDelegate persistentStoreCoordinator]  @ 0xa9cc
+/**
+ * -[AppDelegate persistentStoreCoordinator] — lazily build the auto-migrating
+ * SQLite store coordinator (Documents/ScoreData.sqlite); aborts if the store
+ * cannot be added.
+ * @ghidraAddress 0xa9cc
+ * @complete
+ */
 - (NSPersistentStoreCoordinator *)persistentStoreCoordinator {
     if (_persistentStoreCoordinator == nil) {
         NSString *storePath = [[AppDelegate appDocumentsDirectory]
