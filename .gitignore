@@ -52,3 +52,6 @@ CMakeCache.txt
 node_modules/
 sugoroku_chara_msg.bin
 sugoroku_chara_msg.generated.inc
+
+# Local arm64 crash-triage scratch (downloaded build artifact + venv)
+.arm64-dbg/
