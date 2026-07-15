@@ -45,6 +45,11 @@
     <!-- iPhone + iPad (device family) is set via the TARGETED_DEVICE_FAMILY build
          setting in CMakeLists.txt; Xcode overwrites any UIDeviceFamily key here. -->
 
+    <!-- The game runs full-screen only (no multitasking / Slide Over). Declaring
+         this is also what lets us ship without a launch storyboard or xib. -->
+    <key>UIRequiresFullScreen</key>
+    <true />
+
     <!-- Rhythm gameplay runs full-screen; allow both portrait and landscape and let the
          controllers drive it. Adjust if the shipped app was orientation-locked. -->
     <key>UISupportedInterfaceOrientations</key>

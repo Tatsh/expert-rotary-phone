@@ -50,6 +50,11 @@
         <integer>2</integer>
     </array>
 
+    <!-- The game runs full-screen only (no multitasking / Slide Over); this also
+         lets us ship without a launch storyboard or xib. -->
+    <key>UIRequiresFullScreen</key>
+    <true />
+
     <!-- Rhythm gameplay runs full-screen; allow both portrait and landscape and let the
          controllers drive it. Adjust if the shipped app was orientation-locked. -->
     <key>UISupportedInterfaceOrientations</key>
