@@ -341,23 +341,13 @@ void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
     slot = value;
 }
 
-// Ghidra: FUN_0001342c — glBindTexture with the backend's redundant-bind cache.
-void neBindTexture(neRenderer *r, int target, int unit, int name) {
-    auto &cache = static_cast<ne::neGLES_11 *>(r)->texBindCache;
-    if (!cache.selectUnitPending) {
-        if (cache.target == target && cache.name == name && cache.unit == unit) {
-            return;
-        }
-    } else {
-        r->selectTextureUnit(0);
-    }
-    cache.target = target;
-    cache.name = name;
-    cache.unit = unit;
-    // The binary tail-calls an internal binder (args unit, GL_FLOAT, name,
-    // target); its net effect is the texture bind below.
-    glBindTexture(static_cast<GLenum>(target), static_cast<GLuint>(name));
-}
+// FUN_0001342c was previously reconstructed here as a redundant-caching
+// `neBindTexture`, but it is not a texture bind at all: it tail-calls
+// glVertexPointer(size, 0x1406 = GL_FLOAT, stride, ptr) after a redundant
+// (ptr, size, stride) cache, i.e. it is a caching variant of the vertex-array
+// setter (see neGLES_11::vertexPointer). It has no callers in the binary, and
+// the real texture bind is neGLES_11::bindTexture (glBindTexture, vtable +0xc0),
+// so the mislabelled helper is dropped rather than kept as dead code.
 
 // Ghidra: FUN_00013778 — clear the 8-slot bound-texture cache of this name,
 // then delete.

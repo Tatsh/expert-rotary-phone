@@ -492,7 +492,12 @@ void neGLES_11::colorPointer(const void *ptr, int stride) {
 }
 
 void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
-    glVertexPointer(size, GL_FLOAT, stride, ptr); // Ghidra: type constant 0x1406 (GL_FLOAT)
+    // The type is GL_FLOAT: the caching variant FUN_0001342c tail-calls
+    // glVertexPointer(size, 0x1406, stride, ptr), and 0x1406 is GL_FLOAT. That
+    // variant additionally skips the call when the last (ptr, size, stride)
+    // triple is unchanged and no array buffer is bound; it is uncalled in the
+    // binary, so only the plain specification is reproduced here.
+    glVertexPointer(size, GL_FLOAT, stride, ptr);
 }
 
 void neGLES_11::texCoordPointer(const void *ptr, int stride) {

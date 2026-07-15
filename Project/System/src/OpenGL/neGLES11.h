@@ -329,17 +329,11 @@ public:
     void drawArrays(int mode, int count) override;
     void drawElements(int mode, int count, int offset) override;
 
-    // Redundant texture-bind + delete caches driven by the engine helpers
-    // neBindTexture (FUN_0001342c) / neDeleteTexture (FUN_00013778). Public
-    // because those helpers live in neRenderer.cpp and operate on this backend's
-    // state (renderer ivars +0x44/+0x60/ +0x64/+0x68 and the 8-slot bound-name
-    // cache at +0xfc).
+    // The 8-slot bound-texture-name cache (renderer ivars at +0xfc) that
+    // neDeleteTexture (FUN_00013778, in neRenderer.cpp) clears when a name is
+    // deleted. Public because that helper operates on this backend's state.
     struct TexBindCache {
-        bool selectUnitPending = false; // +0x44
-        int target = 0;                 // +0x60
-        int name = -1;                  // +0x64
-        int unit = 0;                   // +0x68
-        unsigned names[8] = {};         // +0xfc
+        unsigned names[8] = {}; // +0xfc
     };
     TexBindCache texBindCache;
 

@@ -218,9 +218,6 @@ void neDrawTexturedQuad(void *sprite,
 // texture's per-type cache. Ghidra: FUN_0001885c.
 void setTexParamCached(void *tex, neRenderer *r, int type, int value);
 
-// glBindTexture with the backend's redundant-bind cache. Ghidra: FUN_0001342c.
-void neBindTexture(neRenderer *r, int target, int unit, int name);
-
 // glDeleteTextures(1,&name) after clearing the backend's 8-slot bound-texture
 // cache of that name. Ghidra: FUN_00013778.
 void neDeleteTexture(neRenderer *r, int name);
