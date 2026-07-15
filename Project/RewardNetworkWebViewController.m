@@ -11,9 +11,7 @@
 #import "RewardNetworkIndicator.h"
 #import "RewardNetworkMessage.h"
 #import "RewardNetworkUtilities.h"
-#import "SDKCompat.h"
 
-RB_DEPRECATED_BEGIN
 @implementation RewardNetworkWebViewController
 
 // @ 0xec4d8
@@ -34,9 +32,16 @@ RB_DEPRECATED_BEGIN
 
     // Web view fills the screen below a 45pt navigation bar (Ghidra y-origin
     // 0x42340000 == 45.0f).
-    _webView = [[UIWebView alloc]
-        initWithFrame:CGRectMake(0.0f, 45.0f, screenBounds.size.width, screenBounds.size.height)];
+    CGRect webFrame =
+        CGRectMake(0.0f, 45.0f, screenBounds.size.width, screenBounds.size.height);
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    _webView = [[WKWebView alloc] initWithFrame:webFrame
+                                  configuration:[[WKWebViewConfiguration alloc] init]];
+    _webView.navigationDelegate = self;
+#else
+    _webView = [[UIWebView alloc] initWithFrame:webFrame];
     [_webView setDelegate:self];
+#endif
     [self.view addSubview:_webView];
 
     // Top navigation bar with a single "close" button on the left.
@@ -59,9 +64,16 @@ RB_DEPRECATED_BEGIN
 }
 
 // @ 0xec868
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+- (void)webView:(WKWebView *)webView
+    didStartProvisionalNavigation:(WKNavigation *)navigation {
+    [self updateIndicator:YES];
+}
+#else
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     [self updateIndicator:YES];
 }
+#endif
 
 // @ 0xec87c
 - (void)didReceiveMemoryWarning {
@@ -115,9 +127,9 @@ RB_DEPRECATED_BEGIN
     }
 }
 
-// @ 0xecbd8
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    NSString *query = [[[webView request] URL] query];
+// @ 0xecbd8 — a "command=close" query closes the panel; otherwise hide the
+// indicator and notify the delegate.
+- (void)handleNavigationFinishedForQuery:(NSString *)query {
     if (query != nil && [query rangeOfString:@"command=close"].location != NSNotFound) {
         // The page signalled a close.
         [self appliListClosed];
@@ -131,12 +143,24 @@ RB_DEPRECATED_BEGIN
     }
 }
 
-// @ 0xecd24
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    // WKWebView exposes no synchronous current request, so the query is read
+    // from the current URL.
+    [self handleNavigationFinishedForQuery:[webView.URL query]];
+}
+#else
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    [self handleNavigationFinishedForQuery:[[[webView request] URL] query]];
+}
+#endif
+
+// @ 0xecd24 — ignore user-cancelled loads (NSURLErrorCancelled == -999) and the
+// WebKit "frame load interrupted" (102) errors; otherwise notify the delegate
+// and close.
+- (void)handleNavigationFailWithError:(NSError *)error {
     [self updateIndicator:NO];
 
-    // Ignore user-cancelled loads (NSURLErrorCancelled == -999) and the WebKit
-    // "frame load interrupted" (102) errors.
     if ([error code] == -999) {
         return;
     }
@@ -150,6 +174,24 @@ RB_DEPRECATED_BEGIN
         [self appliListClosed];
     }
 }
+
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+- (void)webView:(WKWebView *)webView
+    didFailNavigation:(WKNavigation *)navigation
+            withError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+
+- (void)webView:(WKWebView *)webView
+    didFailProvisionalNavigation:(WKNavigation *)navigation
+                       withError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+#else
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+#endif
 
 // @ 0xece64
 - (void)btnCloseClicked:(id)sender {
@@ -165,7 +207,11 @@ RB_DEPRECATED_BEGIN
 
     _indicator = nil;
     _navigationBar = nil;
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    _webView.navigationDelegate = nil;
+#else
     [_webView setDelegate:nil];
+#endif
     _webView = nil;
 
     [self setParentView:nil];
@@ -182,10 +228,9 @@ RB_DEPRECATED_BEGIN
     }
 }
 
-// @ 0xecf8c
-- (BOOL)webView:(UIWebView *)webView
-    shouldStartLoadWithRequest:(NSURLRequest *)request
-                navigationType:(UIWebViewNavigationType)navigationType {
+// @ 0xecf8c — decide whether to allow a navigation, intercepting applilink://
+// scheme launches. Shared by both web-view backends; returns YES to proceed.
+- (BOOL)shouldStartLoadWithRequest:(NSURLRequest *)request {
     NSURL *url = [request URL];
     NSString *scheme = [url scheme];
     NSString *host = [url host];
@@ -260,6 +305,24 @@ RB_DEPRECATED_BEGIN
 
     return YES;
 }
+
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+- (void)webView:(WKWebView *)webView
+    decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                    decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    if ([self shouldStartLoadWithRequest:navigationAction.request]) {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    } else {
+        decisionHandler(WKNavigationActionPolicyCancel);
+    }
+}
+#else
+- (BOOL)webView:(UIWebView *)webView
+    shouldStartLoadWithRequest:(NSURLRequest *)request
+                navigationType:(UIWebViewNavigationType)navigationType {
+    return [self shouldStartLoadWithRequest:request];
+}
+#endif
 
 // @ 0xed62c
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -453,7 +516,6 @@ RB_DEPRECATED_BEGIN
 // .cxx_destruct @ 0xee178 — compiler-emitted ARC teardown; not hand-written.
 
 @end
-RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

@@ -9,7 +9,7 @@
 //  (neSceneManager::shared / rootViewController / isPadDisplay,
 //  neEngine::playSystemSe).
 //
-//  Sub-view frames in -initWithURL:, -webViewDidFinishLoad: and
+//  Sub-view frames in -initWithURL:, the load-finished handler and
 //  -observeValueForKeyPath:… have been byte-verified from ARM32 Thumb2
 //  disassembly / literal-pool reads (vmov.f32 / movt). The big-close-button
 //  horizontal centre is runtime-structural (depends on page contentSize).
@@ -21,8 +21,6 @@
 #import "StoreUtil.h"       // +getOfficialPath / +getOfficialTwitterURL
 #import "UserSettingData.h" // +isFollowBonusGet / +treasurePoint / +saveTreasurePoint: / +saveIsFollowBonusGet:
 #import "neEngineBridge.h" // neSceneManager::shared / rootViewController / isPadDisplay, neEngine::playSystemSe
-
-#import "SDKCompat.h"
 
 @implementation CustomWebView
 
@@ -40,9 +38,7 @@
 - (void)dealloc {
     // KVO teardown is kept (see -observeValueForKeyPath:… / the addObserver: in
     // -initWithURL:).
-    RB_DEPRECATED_BEGIN
     [_webView.scrollView removeObserver:self forKeyPath:@"contentSize"];
-    RB_DEPRECATED_END
     // [super dealloc] is ARC-omitted; object ivars are released automatically.
 }
 
@@ -54,7 +50,6 @@
 
 // @ 0x5dfec — build the panel over the root scene view and start loading `url`.
 - (instancetype)initWithURL:(NSURL *)url {
-    RB_DEPRECATED_BEGIN
     neSceneManager::shared();
     UIViewController *rootVC = neSceneManager::rootViewController();
     CGRect rootFrame = rootVC.view ? rootVC.view.frame : CGRectZero;
@@ -67,9 +62,17 @@
         // Panel-sized web-view frame (self.frame with the origin zeroed).
         webViewFrm = CGRectMake(0.0f, 0.0f, self.frame.size.width, self.frame.size.height);
 
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+        _webView = [[WKWebView alloc] initWithFrame:webViewFrm
+                                      configuration:[[WKWebViewConfiguration alloc] init]];
+        // WKWebView scales the page to fit by default; there is no
+        // -setScalesPageToFit: equivalent.
+        _webView.navigationDelegate = self;
+#else
         _webView = [[UIWebView alloc] initWithFrame:webViewFrm];
         [_webView setScalesPageToFit:YES];
         _webView.delegate = self;
+#endif
         [self addSubview:_webView];
 
         // Attach the panel over the root scene view and raise it to the front.
@@ -136,7 +139,6 @@
         _indicator.alpha = 0.5f;
         [self addSubview:_indicator];
     }
-    RB_DEPRECATED_END
     return self;
 }
 
@@ -168,10 +170,97 @@
         }];
 }
 
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+
+#pragma mark - WKNavigationDelegate
+
+// @ 0x5e808 — clear the URL cache and start the spinner when a load begins.
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
+    NSURLCache *cache = [NSURLCache sharedURLCache];
+    [cache setMemoryCapacity:0];
+    [cache removeAllCachedResponses];
+    [_indicator startAnimating];
+}
+
+// @ 0x5e874 — stop the spinner; on first successful load add the Twitter-follow
+// button (unless the bonus was already claimed); reveal the small close button.
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    [_indicator stopAnimating];
+
+    if (![UserSettingData isFollowBonusGet]) {
+        UIImage *followImg = [UIImage imageNamed:@"twitter_follow"];
+        CGSize sz = followImg ? followImg.size : CGSizeZero;
+        CGRect f = self.frame;
+        // Follow banner: x = (f.width − sz.width) * 0.5 (vmul.f32 with 0.5), y = 0.
+        // Byte-verified; x-centre is runtime-structural.
+        UIButton *followBtn = [[UIButton alloc]
+            initWithFrame:CGRectMake((f.size.width - sz.width) * 0.5f, 0.0f, sz.width, sz.height)];
+        [followBtn setBackgroundImage:followImg forState:UIControlStateNormal];
+        [followBtn addTarget:self
+                      action:@selector(touchedFollowButton)
+            forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:followBtn];
+
+        // Push the web view and the small close button down by the banner height
+        // (runtime-structural).
+        [_webView setFrame:CGRectMake(webViewFrm.origin.x,
+                                      webViewFrm.origin.y + sz.height,
+                                      webViewFrm.size.width,
+                                      webViewFrm.size.height - sz.height)];
+        [_closeBtnSmall setFrame:CGRectMake(smallBtnFrm.origin.x,
+                                            smallBtnFrm.origin.y + sz.height,
+                                            smallBtnFrm.size.width,
+                                            smallBtnFrm.size.height)];
+    }
+
+    [_closeBtnSmall setHidden:NO];
+}
+
+// @ 0x5eb04 — on a real load failure (anything other than NSURLErrorCancelled)
+// close the panel and schedule the error alert. WKWebView reports failures
+// through two callbacks (committed and provisional); both route here.
+- (void)handleNavigationFailWithError:(NSError *)error {
+    [_indicator stopAnimating];
+    if ([error code] != -999) { // -999 == NSURLErrorCancelled (0xfffffc19)
+        [self close];
+        [self performSelector:@selector(showErrorAlert) withObject:nil afterDelay:0];
+        [_closeBtnSmall setHidden:NO];
+    }
+}
+
+- (void)webView:(WKWebView *)webView
+    didFailNavigation:(WKNavigation *)navigation
+            withError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+
+- (void)webView:(WKWebView *)webView
+    didFailProvisionalNavigation:(WKNavigation *)navigation
+                       withError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+
+// @ 0x5ebb4 — keep in-app navigation only within the official path; open other
+// tapped links externally in Safari.
+- (void)webView:(WKWebView *)webView
+    decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                    decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    if (navigationAction.navigationType == WKNavigationTypeLinkActivated) {
+        NSString *urlStr = navigationAction.request.URL.absoluteString;
+        if (![urlStr hasPrefix:[StoreUtil getOfficialPath]]) {
+            [[UIApplication sharedApplication] openURL:navigationAction.request.URL];
+            decisionHandler(WKNavigationActionPolicyCancel);
+            return;
+        }
+    }
+    decisionHandler(WKNavigationActionPolicyAllow);
+}
+
+#else
+
 #pragma mark - UIWebViewDelegate
 
 // @ 0x5e808 — clear the URL cache and start the spinner when a load begins.
-RB_DEPRECATED_BEGIN
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     NSURLCache *cache = [NSURLCache sharedURLCache];
     [cache setMemoryCapacity:0];
@@ -238,7 +327,8 @@ RB_DEPRECATED_BEGIN
     }
     return YES;
 }
-RB_DEPRECATED_END
+
+#endif
 
 #pragma mark - KVO
 
@@ -251,9 +341,7 @@ RB_DEPRECATED_END
     [_closeBtnBig setHidden:NO];
 
     CGRect bigFrame = _closeBtnBig ? _closeBtnBig.frame : CGRectZero;
-    RB_DEPRECATED_BEGIN
     CGSize contentSize = _webView.scrollView ? _webView.scrollView.contentSize : CGSizeZero;
-    RB_DEPRECATED_END
     // y = contentSize.height − 45.0 (DAT_0005ed78 = 0xc2340000 = −45.0; nil-path
     // movt #0xc234 confirms same constant). Byte-verified.
     CGFloat y = contentSize.height + (-45.0f);

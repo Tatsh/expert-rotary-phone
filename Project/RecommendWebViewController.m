@@ -11,7 +11,9 @@
 // supplies +sharedInstance and -redirectWithRequest:.
 #import "RecommendCore.h"
 
-#import "SDKCompat.h"
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+#import <WebKit/WebKit.h>
+#endif
 
 @implementation RecommendWebViewController
 
@@ -48,18 +50,32 @@
 // @ 0xe98ec — let RecommendCore intercept applilink redirects. When the request
 // is not a redirect and the navigation bar is visible, treat the tap as leaving
 // the applist and close. Returns whether the core consumed the request as a
-// redirect.
-RB_DEPRECATED_BEGIN
-- (BOOL)webView:(UIWebView *)webView
-    shouldStartLoadWithRequest:(NSURLRequest *)request
-                navigationType:(UIWebViewNavigationType)navigationType {
+// redirect. Shared by both web-view backends.
+- (BOOL)shouldStartLoadWithRequest:(NSURLRequest *)request {
     BOOL redirected = [[RecommendCore sharedInstance] redirectWithRequest:request];
     if (![self isNavigationBarHidden] && !redirected) {
         [self appliListClosed];
     }
     return redirected;
 }
-RB_DEPRECATED_END
+
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+- (void)webView:(WKWebView *)webView
+    decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                    decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    if ([self shouldStartLoadWithRequest:navigationAction.request]) {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    } else {
+        decisionHandler(WKNavigationActionPolicyCancel);
+    }
+}
+#else
+- (BOOL)webView:(UIWebView *)webView
+    shouldStartLoadWithRequest:(NSURLRequest *)request
+                navigationType:(UIWebViewNavigationType)navigationType {
+    return [self shouldStartLoadWithRequest:request];
+}
+#endif
 
 @end
 

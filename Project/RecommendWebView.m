@@ -11,8 +11,6 @@
 #import "RewardNetworkIndicator.h"
 #import "RewardNetworkUtilities.h"
 
-#import "SDKCompat.h"
-
 @interface RecommendWebView () {
     UIView *parentView;                 // host view for the indicator overlay (retained)
     RewardNetworkIndicator *_indicator; // busy-spinner overlay
@@ -29,15 +27,22 @@
 - (void)updateIndicator:(BOOL)show;
 // @ 0xff828 — unload the overlay, remove from superview, drop the delegate.
 - (void)appliListClosed;
+// @ 0xff6fc — shared load-failure handler for both web-view backends.
+- (void)handleNavigationFailWithError:(NSError *)error;
 
 @end
 
-RB_DEPRECATED_BEGIN
 @implementation RecommendWebView
 
 // @ 0xfe808 — start hidden with no parent/overlay and the overlay disabled.
 - (instancetype)init {
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    // WKWebView has no usable -init; it must be created with a frame and a
+    // configuration.
+    self = [super initWithFrame:CGRectZero configuration:[[WKWebViewConfiguration alloc] init]];
+#else
     self = [super init];
+#endif
     if (self) {
         parentView = nil;
         _indicator = nil;
@@ -54,7 +59,11 @@ RB_DEPRECATED_BEGIN
     [super removeFromSuperview];
     [self loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"about:blank"]]];
     [self unloadRecommendView];
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    self.navigationDelegate = nil;
+#else
     [self setDelegate:nil];
+#endif
 }
 
 // @ 0xfe970 — main-queue app-list fetch (recommendWebViewLoadAppliList @
@@ -127,7 +136,11 @@ RB_DEPRECATED_BEGIN
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:full]];
     [request setTimeoutInterval:30.0];
     [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    self.navigationDelegate = self;
+#else
     [self setDelegate:self];
+#endif
     [self loadRecommendView];
     [self loadRequest:request];
 }
@@ -192,6 +205,34 @@ RB_DEPRECATED_BEGIN
     }
 }
 
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+
+// @ 0xff340
+- (void)webView:(WKWebView *)webView
+    didStartProvisionalNavigation:(WKNavigation *)navigation {
+    [self updateIndicator:YES];
+}
+
+// @ 0xff574 — a "command=close" query closes the panel; otherwise hide the
+// indicator and do the app-specific main-queue follow-up. WKWebView exposes no
+// synchronous current request, so the query is read from the current URL.
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    NSString *query = [webView.URL query];
+    if (query == nil || [query rangeOfString:@"command=close"].location == NSNotFound) {
+        [self updateIndicator:NO];
+        dispatch_async(dispatch_get_main_queue(), ^{
+          // @ 0xff68c — app-specific post-load follow-up on the main queue (a
+          // nested message send on self; exact body not fully recovered).
+          // Best-effort: re-assert scrolling.
+          [self setScrollEnabled:YES];
+        });
+    } else {
+        [self appliListClosed];
+    }
+}
+
+#else
+
 // @ 0xff340
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     [self updateIndicator:YES];
@@ -214,11 +255,19 @@ RB_DEPRECATED_BEGIN
     }
 }
 
+#endif
+
 // @ 0xff494 — when dismissed, fire the stored open-app-list callback with the
-// last error.
+// last error. The delegate probed here is the web view's own delegate (the view
+// makes itself the delegate in -loadRequestWithURL:parameters:delegate:).
 - (void)viewDidDisappear:(BOOL)animated {
-    if ([self delegate] != nil &&
-        [[self delegate] respondsToSelector:@selector(appListDidDisappear)]) {
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    id navigationDelegate = self.navigationDelegate;
+#else
+    id navigationDelegate = [self delegate];
+#endif
+    if (navigationDelegate != nil &&
+        [navigationDelegate respondsToSelector:@selector(appListDidDisappear)]) {
         RecommendWebViewOpenAppliListCallback callback = [self callbackForOpenAppliList];
         if (callback != nil) {
             callback([self lastErrorForOpenAppliList]);
@@ -233,8 +282,10 @@ RB_DEPRECATED_BEGIN
 }
 
 // @ 0xff6fc — ignore cancellations and WebKit "frame load interrupted";
-// otherwise report the failure through the delegate and close the panel.
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+// otherwise report the failure through the delegate and close the panel. This
+// body is shared by both WKWebView failure callbacks (committed and
+// provisional).
+- (void)handleNavigationFailWithError:(NSError *)error {
     [self updateIndicator:NO];
     if ([error code] == -999) {
         return;
@@ -242,19 +293,66 @@ RB_DEPRECATED_BEGIN
     if ([error code] == 102 && [[error domain] isEqual:@"WebKitErrorDomain"]) {
         return;
     }
-    if ([self delegate] != nil &&
-        [[self delegate] respondsToSelector:@selector(appListFailLoadWithError:)]) {
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    id navigationDelegate = self.navigationDelegate;
+#else
+    id navigationDelegate = [self delegate];
+#endif
+    if (navigationDelegate != nil &&
+        [navigationDelegate respondsToSelector:@selector(appListFailLoadWithError:)]) {
         [self setLastErrorForOpenAppliList:error];
         [self appliListClosed];
     }
 }
 
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+
+- (void)webView:(WKWebView *)webView
+    didFailNavigation:(WKNavigation *)navigation
+            withError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+
+- (void)webView:(WKWebView *)webView
+    didFailProvisionalNavigation:(WKNavigation *)navigation
+                       withError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+
+#else
+
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+    [self handleNavigationFailWithError:error];
+}
+
+#endif
+
 // @ 0xff828
 - (void)appliListClosed {
     [self unloadRecommendView];
     [self removeFromSuperview];
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    self.navigationDelegate = nil;
+#else
     [self setDelegate:nil];
+#endif
 }
+
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+
+// @ 0xff8a8 — hand every navigation to RecommendCore's Applilink redirect
+// handler. The core returns whether the navigation should proceed.
+- (void)webView:(WKWebView *)webView
+    decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+                    decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    if ([[RecommendCore sharedInstance] redirectWithRequest:navigationAction.request]) {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    } else {
+        decisionHandler(WKNavigationActionPolicyCancel);
+    }
+}
+
+#else
 
 // @ 0xff8a8 — hand every navigation to RecommendCore's Applilink redirect
 // handler.
@@ -263,6 +361,8 @@ RB_DEPRECATED_BEGIN
                 navigationType:(UIWebViewNavigationType)navigationType {
     return [[RecommendCore sharedInstance] redirectWithRequest:request];
 }
+
+#endif
 
 // callbackForOpenAppliList / setCallbackForOpenAppliList: @ 0xff904 / 0xff918 —
 // synthesized
@@ -274,7 +374,6 @@ RB_DEPRECATED_BEGIN
 // not hand-written.
 
 @end
-RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

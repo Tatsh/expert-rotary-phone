@@ -3,8 +3,8 @@
 //  pop'n rhythmin
 //
 //  Konami "Applilink" Recommend ad SDK — the raw web view that renders the
-//  recommend/app-list content. It is a UIWebView subclass that acts as its own
-//  UIWebViewDelegate: it hides itself until content is ready, optionally
+//  recommend/app-list content. It is a web-view subclass that acts as its own
+//  navigation delegate: it hides itself until content is ready, optionally
 //  overlays a RewardNetworkIndicator busy spinner on its parent view, fetches
 //  the app list through RecommendCore, then loads /ad/external/index.php.
 //  Applilink redirects (applilink://ext-app:80/...) are handed to
@@ -30,14 +30,19 @@
 
 #import <UIKit/UIKit.h>
 
-#import "SDKCompat.h"
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+#import <WebKit/WebKit.h>
+#endif
 
 // Completion for a hosted recommend/app-list load: invoked with the load error
 // (or nil).
 typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
 
-RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+@interface RecommendWebView : WKWebView <WKNavigationDelegate>
+#else
 @interface RecommendWebView : UIWebView <UIWebViewDelegate>
+#endif
 
 // _callbackForOpenAppliList ivar (block, copied) — accessors @ 0xff904 /
 // 0xff918.
@@ -75,7 +80,6 @@ RB_DEPRECATED_BEGIN
 - (void)setScrollEnabled:(BOOL)enabled;
 
 @end
-RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

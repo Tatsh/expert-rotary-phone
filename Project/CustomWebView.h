@@ -2,7 +2,7 @@
 //  CustomWebView.h
 //  pop'n rhythmin
 //
-//  An in-app web panel (a UIView, not a view controller) that hosts a UIWebView
+//  An in-app web panel (a UIView, not a view controller) that hosts a web view
 //  over the app's root scene view. Used by the Setting screens (SettingOther /
 //  SettingTable) to show the official "app info / お知らせ" page: -initWithURL:
 //  builds the panel, attaches itself over the root view, starts loading the URL
@@ -24,7 +24,9 @@
 
 #import <UIKit/UIKit.h>
 
-#import "SDKCompat.h"
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+#import <WebKit/WebKit.h>
+#endif
 
 // C close-callback: invoked (with its opaque param) from the close animation's
 // completion block. Modelled as a non-object C function pointer to match the
@@ -32,14 +34,21 @@
 // ARC-managed).
 typedef void (*CustomWebViewCloseCallback)(void *param);
 
-RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+@interface CustomWebView : UIView <WKNavigationDelegate> {
+#else
 @interface CustomWebView : UIView <UIWebViewDelegate> {
+#endif
     // C close callback + its opaque param (raw pointers, not ARC-managed
     // objects).
     CustomWebViewCloseCallback m_AlertViewCallback;
     void *m_AlertViewCallbackParam;
 
-    UIWebView *_webView;                 // hosted web view (delegate == self)
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+    WKWebView *_webView; // hosted web view (navigation delegate == self)
+#else
+    UIWebView *_webView; // hosted web view (delegate == self)
+#endif
     UIButton *_closeBtnSmall;            // top-right close button (hidden until first load done)
     UIButton *_closeBtnBig;              // bottom-of-content close button (revealed via KVO)
     UIActivityIndicatorView *_indicator; // centred loading spinner
@@ -62,7 +71,6 @@ RB_DEPRECATED_BEGIN
 - (void)SetCloseCallback:(CustomWebViewCloseCallback)callback param:(void *)param;
 
 @end
-RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

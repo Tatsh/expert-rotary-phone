@@ -4,10 +4,10 @@
 //
 //  Full-screen web panel used by the bundled Konami **RewardNetwork**
 //  ("applilink") ad/reward SDK to present the reward app-list. A
-//  UIViewController that manually hosts a UIWebView, a UINavigationBar (with a
+//  UIViewController that manually hosts a web view, a UINavigationBar (with a
 //  single "close" button) and a loading indicator, and re-lays them out for
 //  interface-orientation changes. It intercepts `applilink://` navigations
-//  (scheme launches / close commands) in the UIWebViewDelegate callbacks.
+//  (scheme launches / close commands) in the navigation-delegate callbacks.
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin
 //  (RewardNetworkWebViewController methods @ 0xec4d8..0xee150). Superclass is
@@ -16,16 +16,18 @@
 //  UIViewController).
 //
 //  Six instance variables (types recovered from the decompiled ivar accesses):
-//    _webView (UIWebView*), _navigationBar (UINavigationBar*),
+//    _webView (web view), _navigationBar (UINavigationBar*),
 //    _indicator (RewardNetworkIndicator*, an app-provided spinner view),
 //    _delegate (assigned, not retained), _isNavigationBarHidden (BOOL),
 //    _parentView (UIView*, retained).
 //
 
 #import <UIKit/UIKit.h>
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+#import <WebKit/WebKit.h>
+#endif
 
 #import "RewardNetworkIndicator.h" // app-provided loading-indicator view (the _indicator ivar)
-#import "SDKCompat.h"
 
 // Notifications the panel sends back to whoever opened it. All optional; each
 // call site guards with -respondsToSelector: (Ghidra @ 0xecb28 / 0xecbd8 /
@@ -37,9 +39,13 @@
 - (void)appListFailLoadWithError:(NSError *)error; // load failed
 @end
 
-RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
+@interface RewardNetworkWebViewController : UIViewController <WKNavigationDelegate> {
+    WKWebView *_webView; // hosted web view (navigation delegate == self)
+#else
 @interface RewardNetworkWebViewController : UIViewController <UIWebViewDelegate> {
-    UIWebView *_webView;                // hosted web view (delegate == self)
+    UIWebView *_webView; // hosted web view (delegate == self)
+#endif
     UINavigationBar *_navigationBar;    // top bar with the close button
     RewardNetworkIndicator *_indicator; // centred loading spinner
     __unsafe_unretained id<RewardNetworkWebViewDelegate>
@@ -87,7 +93,6 @@ RB_DEPRECATED_BEGIN
 - (BOOL)hasParentViewController:(id)responder;
 
 @end
-RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :
