@@ -206,7 +206,7 @@ void neDrawTexturedQuad(void *sprite,
                         int green,
                         int blue,
                         int blendMode,
-                        const int *clipRect);
+                        const float *clipRect);
 
 // ---------------------------------------------------------------------------
 // Texture cache helpers used by the renderer (defined alongside the

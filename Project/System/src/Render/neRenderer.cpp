@@ -404,7 +404,7 @@ void neDrawTexturedQuad(void *sprite,
                         int green,
                         int blue,
                         int blendMode,
-                        const int *clipRect) {
+                        const float *clipRect) {
     neSpriteView *s = static_cast<neSpriteView *>(sprite);
     uint32_t c = nePremultRGBA(alpha, red, green, blue);
 

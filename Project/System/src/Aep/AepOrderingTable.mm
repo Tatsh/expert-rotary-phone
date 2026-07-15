@@ -17,57 +17,13 @@
 #import <OpenGLES/ES1/gl.h>
 
 #import "AepOrderingTable.h"
+#import "neRenderer.h"    // neDrawLine/Triangle/Rect/Quad/TexturedQuad
+#import "neTextTexture.h" // neDrawText (FUN_0001551c)
+#import "neTextureRef.h"  // neTextureRef::setRenderStateSlot (FUN_00016710)
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
-// The neGraphics primitive-draw entry points. These are reconstructed in
-// parallel in the neGraphics unit; forward-declared here so the Aep primitive
-// helpers can call them without pulling in (or reimplementing) the renderer.
-// Signatures follow the call sites recovered from FUN_00010f98 / _11054 /
-// _1113c / _111f8 / _11310 / _12020.
-extern "C" {
-void neDrawLine(int x0, int y0, int x1, int y1, int alpha, int r, int g, int b);
-void neDrawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, int alpha, int r, int g, int b);
-void neDrawRect(int x0, int y0, int x1, int y1, int alpha, int r, int g, int b);
-void neDrawQuad(
-    int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int alpha, int r, int g, int b);
-void neDrawText(int size,
-                const char *text,
-                int p3,
-                int x,
-                int y,
-                int size2,
-                int p7,
-                int alpha,
-                int r,
-                int g,
-                int b,
-                const void *colorVec);
-void neDrawTexturedQuad(int stateSlot,
-                        int p2,
-                        int p3,
-                        int p4,
-                        int p5,
-                        float u0,
-                        float v0,
-                        float u1,
-                        float v1,
-                        float rotation,
-                        int p11,
-                        int p12,
-                        int alpha,
-                        int r,
-                        int g,
-                        int b,
-                        uint32_t blend,
-                        void *clip,
-                        int flag);
-// Render-state slot setup for a textured draw (Ghidra: FUN referenced from
-// _12020).
-void setRenderStateSlot(int slot, int index, int value);
-}
 
 AepOrderingTable::AepOrderingTable() {
     reset();
@@ -504,18 +460,20 @@ void AepOrderingTable::drawAepOtText(const char *text,
                                      uint32_t color) {
     const float s = renderScale();
     const int scaledSize = aepScale(size, s);
-    neDrawText(scaledSize,
-               text,
-               p3,
+    // Real signature: neDrawText(text, font, size, x, y, align, alpha, r, g, b,
+    // clipRect). The binary passes p3 as the font arg (an int handle in the
+    // pointer slot) and colorVec as the clip rect.
+    neDrawText(text,
+               reinterpret_cast<void *>(static_cast<uintptr_t>(static_cast<uint32_t>(p3))),
+               scaledSize,
                aepScale(x, s),
                aepScale(y, s),
-               scaledSize,
                p7,
                aepAlpha(alpha),
                aepColR(color),
                aepColG(color),
                aepColB(color),
-               colorVec);
+               reinterpret_cast<const int *>(colorVec));
 }
 
 // Ghidra: drawAepSpriteClipped (FUN_00012020) — the clipped textured-quad
@@ -596,12 +554,18 @@ void drawAepSpriteClipped(float renderScale,
         }
     }
 
-    // Render-state slot for this sub-frame (+0x14 base, stride 0x18).
-    const int stateSlot = *reinterpret_cast<const int *>(obj + 0x14) + frame * 0x18;
-    setRenderStateSlot(stateSlot, 0, useClip != 0 ? 1 : 0);
-    setRenderStateSlot(stateSlot, 1, useClip != 0 ? 1 : 0);
+    // Render-state slot for this sub-frame: the neTextureRef record at
+    // [frameObj + 0x14] + frame*0x18 (Ghidra 0x12154). Set slot 0/1 to the clip
+    // flag (Ghidra 0x1215e/0x12180 -> neTextureRef::setRenderStateSlot).
+    neTextureRef *slot = reinterpret_cast<neTextureRef *>(
+        *reinterpret_cast<char *const *>(obj + 0x14) + frame * 0x18);
+    slot->setRenderStateSlot(0, useClip != 0 ? 1 : 0);
+    slot->setRenderStateSlot(1, useClip != 0 ? 1 : 0);
 
-    neDrawTexturedQuad(stateSlot,
+    // The slot record is the sprite object neDrawTexturedQuad blits (Ghidra
+    // 0x121f8 -> FUN_00015fb8). The argument values line up positionally with the
+    // real signature; p16 is a trailing flag the real entry point does not take.
+    neDrawTexturedQuad(slot,
                        u0,
                        v0,
                        x,
@@ -617,12 +581,12 @@ void drawAepSpriteClipped(float renderScale,
                        aepColR(p19),
                        aepColG(p19),
                        aepColB(p19),
-                       (uint32_t)mode,
-                       clipRect,
-                       p16);
+                       (int)mode,
+                       clipRect);
     (void)sx;
     (void)sy;
     (void)p13;
+    (void)p16;
 
     delete[] clipRect;
 }
