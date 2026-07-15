@@ -73,7 +73,13 @@ struct MainTaskPlayData {
     // frame and resets the others. Ghidra: the AepLyrCtrl handles at +0x98/9c/a0.
     AepLyrCtrl *sceneLayers[3]; // +0x098 sustained combo-effect layers
 
-    uint8_t _rsvd_a4[0xd4 - 0xa4]; // +0x0a4 HUD / layout tables (task-layer owned)
+    uint8_t _rsvd_a4[0xc4 - 0xa4]; // +0x0a4 HUD / layout tables (task-layer owned)
+
+    // Per-visual-phase note-sprite layer id (TONE_DEFAULT/NEAR/OUT_0/OUT_1),
+    // indexed by the judge phase (0..3). The draw region passes toneJudgeLyr[phase]
+    // as the layer to AepManager::drawLayer for the note sprite. Owned by the task
+    // layer (PlayTask::m_toneJudgeLyr). Ghidra: playData+0xc4[phase].
+    int32_t toneJudgeLyr[4]; // +0x0c4 note-sprite layer id per phase
 
     // Per-visual-phase note-sprite frame length, indexed by the judge phase
     // (0..3). When a resolved note's elapsed animation frame reaches its phase's
@@ -202,6 +208,7 @@ static_assert(sizeof(MainTaskPlayData) == 0xa00,
               "MainTaskPlayData must be the 0xa00-byte play-data block");
 static_assert(offsetof(MainTaskPlayData, comboLayers) == 0x84, "comboLayers @ +0x84");
 static_assert(offsetof(MainTaskPlayData, sceneLayers) == 0x98, "sceneLayers @ +0x98");
+static_assert(offsetof(MainTaskPlayData, toneJudgeLyr) == 0xc4, "toneJudgeLyr @ +0xc4");
 static_assert(offsetof(MainTaskPlayData, toneJudgeFrames) == 0xd4, "toneJudgeFrames @ +0xd4");
 static_assert(offsetof(MainTaskPlayData, judgePool) == 0x3c8, "judgePool @ +0x3c8");
 static_assert(offsetof(MainTaskPlayData, playScale) == 0x974, "playScale @ +0x974");

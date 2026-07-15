@@ -16,21 +16,26 @@
 //  (setLaneFlag + slot free), and drives the combo-milestone burst + sustained
 //  combo-effect AepLyrCtrl layers.
 //
-//  One area is delegated rather than re-derived from the original's NEON/16.16
-//  fixed-point math, to avoid inventing pixel geometry: the note quad /
-//  hit-effect sprite draw (Ghidra FUN_0000fd64 / FUN_0000fcd0 — the note-sprite
-//  draw unit), a separate reconstruction unit. Its frame number is reproduced
-//  here because the retire path keys on it. See HANDOFF.md.
+//  The note-sprite draw geometry is reconstructed from the armv7 disassembly of
+//  FUN_0002f1f8's draw region (the decompiler garbles the NEON): the note's
+//  scroll-progress interpolation from spawn position to the judge-line target, the phase
+//  frame, and the head/tail AepManager::drawLayer calls. The exact non-position
+//  drawLayer arguments (colour/blend/loop words) and the secondary overlays — the
+//  long-note connecting bar (drawAepFrameEx with an atan2 rotation + time fade),
+//  the CD-jacket, and the judge-result sprites — remain best-effort/deferred and
+//  are flagged inline rather than invented. See HANDOFF.md.
 //
 
 #import <Foundation/Foundation.h>
 
 #import "AepLyrCtrl.h"
+#import "AepManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "neGraphics.h"
 
-#include <cmath> // lroundf (gauge accumulation)
+#include <cmath>   // lroundf (gauge accumulation)
+#include <cstdint> // intptr_t (packing the layer id into the draw context)
 
 // --- Play-data field access -------------------------------------------------
 // The play data is the standard-mode MainTask; the note engine reaches it
@@ -146,6 +151,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
                       int touchCount) {
     NoteMng &nm = NoteMng::shared();
     neGraphics &gfx = neGraphics::shared();
+    AepManager &aep = AepManager::shared(); // note-sprite draws go through the ordering table
 
     // Snapshot the touch points (a fixed 8-pair / 0x40-byte block); a negative
     // coordinate marks an empty/consumed slot. The original memsets 0xff (a NaN,
@@ -328,13 +334,78 @@ void PlayJudge_update(MainTaskPlayData *playData,
             }
         }
 
-        // The note quad + hit effect are drawn here at the current animation frame
-        // (Ghidra FUN_0000fd64 / FUN_0000fcd0 — the note-sprite draw unit, whose
-        // 16.16/NEON geometry is reconstructed there). This pass still reproduces
-        // the frame number the note retires on.
+        // --- Draw the note sprite --------------------------------------------
+        // Reconstructed from the armv7 disassembly of FUN_0002f1f8's draw region
+        // (the decompiler garbles the NEON; this is derived from the register ops
+        // and the float pool at DAT_0002f67c..0x2f690 = {16.6, 1024.0, 1/1024,
+        // 100.0, 3000.0, 180.0}). AepManager::drawLayer takes INTEGER positions
+        // (soft-float ABI — Ghidra's `float` typing is an artifact).
+        //
+        // The note's animation frame: for a resolved note (phase 2/3) it is the
+        // time elapsed since the phase started over the ~16.6 ms frame step (this
+        // is also the value the retire path keys on). The approach/active phases
+        // (0/1) use a beat-synced frame the original derives with fmod over the
+        // beat interval; that per-phase easing is modelled here by the same
+        // elapsed-frame value (best-effort for phases 0/1).
         int frameNo = (int)((float)(curTime - st->timestamp) / kFrameStepMs);
         if (frameNo < 0) {
             frameNo = 0;
+        }
+
+        // The note travels from its spawn position to the judge-line target as it
+        // scrolls in: `progress` runs 0 -> 1 as flScrollStart falls 1024 -> 0
+        // (Ghidra: DAT_0002f680 = 1024.0, DAT_0002f684 = 1/1024). Each note draws
+        // two points — its head (x/y) and tail (x2/y2) — both interpolated to the same
+        // judge target by that progress, so a tap (head == tail) draws one sprite
+        // and a long note stretches head-to-tail. Ghidra gates the draw on the
+        // note frame being within the phase layer's length.
+        if (frameNo < playData->toneJudgeFrames[st->phase]) {
+            const float progress = (1024.0f - note.scrollStart) / 1024.0f;
+            const int noteLayer = playData->toneJudgeLyr[st->phase]; // +0xc4[phase]
+            const int drawScale = playData->noteDrawScale;           // +0x9bc
+            for (int pt = 0; pt < 2; ++pt) {
+                const float nx = (pt == 0) ? note.x : note.x2;
+                const float ny = (pt == 0) ? note.y : note.y2;
+                const int screenX = (int)(nx + progress * (note.targetX - nx));
+                const int screenY = (int)(ny + progress * (note.targetY - ny));
+                // VERIFIED from the disassembly: the layer (toneJudgeLyr[phase]),
+                // the frame (frameNo), the integer screen position (the interpolation above),
+                // and the per-axis scale (noteDrawScale). The remaining draw-call
+                // arguments are the stack immediates the original pushes (0 / 150 /
+                // 150 / 100 / 1 / 0x20 / -1 / layerId), but their exact mapping onto
+                // drawLayer's parameter list is NOT verified — the soft-float/NEON
+                // arg passing does not line up cleanly with the reconstructed
+                // signature (e.g. 150 sits where loopFlags would be), so treat every
+                // argument past the scale pair as best-effort, not authoritative.
+                aep.drawLayer(
+                    noteLayer,
+                    frameNo,
+                    screenX,
+                    screenY,
+                    drawScale,
+                    drawScale,
+                    /*rotation=*/0,
+                    /*loopFlags=*/1,
+                    /*p9=*/150,
+                    /*p10=*/150,
+                    /*color=*/100,
+                    /*colorHi=*/0,
+                    /*blendFlags=*/0x20,
+                    /*p15=*/0xffffffff,
+                    /*clipRect=*/nullptr,
+                    /*context=*/reinterpret_cast<void *>(static_cast<intptr_t>(st->layerId)),
+                    /*p17=*/0,
+                    /*p19=*/0);
+            }
+
+            // The long-note connecting bar and the combo-burst / hit-effect overlays
+            // (Ghidra: two drawAepFrameEx calls with an atan2 angle * 180/pi rotation
+            // and a time-based fade — min(endTick - now, endTick - startTick) / 3000
+            // clamped to [0,1] — plus the +0x114 CD-jacket and +0xe4/e8/ec/f0/f4
+            // judge-result sprites) are a further best-effort layer of this draw
+            // region, not yet reconstructed here: their sprite transforms need the
+            // same disassembly-level NEON tracing and are deferred to keep this pass
+            // honest rather than inventing the exact per-corner geometry.
         }
 
         // --- Retire / auto-lapse ---------------------------------------------
