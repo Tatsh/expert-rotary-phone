@@ -1773,15 +1773,23 @@ void MainTask::UpdateHighlight() {
     }
 }
 
-// Ghidra: musicSelStopAndSave (0x38008) — state-0x10 teardown. Releases
-// the SEs and every layer / texture, saves the finished-play music id + result
-// sheet (unless in guest no-save mode), tears down the scene, and kills this
-// task (spawning the menu hub if no sub-task was queued).
+/**
+ * musicSelStopAndSave — state-0x10 teardown. Releases the SEs (by their source
+ * ids) and every layer / texture, saves the finished-play music id + result
+ * sheet (unless in guest no-save mode), runs Cleanup() to release the song list
+ * and jacket cells, then kills this task (spawning the menu hub if no sub-task
+ * was queued).
+ * @ghidraAddress 0x38008
+ * @complete
+ */
 void MainTask::StopAndSave() {
     AudioManager *audio = [AudioManager sharedManager];
 
     for (int i = 0; i < 5; i++) {
-        [audio releaseSe:nil resourceId:0]; // release the 5 loaded select SEs
+        // Ghidra: releaseSe:nil resourceId:m_seId[i] — the binary frees each of
+        // the five loaded select SEs by its source id (aColumnColorHistory+4+i*4),
+        // not resourceId 0.
+        [audio releaseSe:nil resourceId:m_seId[i]];
     }
     neSceneManager::shared().releaseSystemSe();
     [audio cleanupSe];
@@ -1842,6 +1850,8 @@ void MainTask::StopAndSave() {
             ec.setLastSheet(0);
         }
     }
+
+    Cleanup(); // Ghidra: MainTask__Cleanup — release m_musicList + the 27 cells
 
     m_cellSem = nullptr; // Ghidra: _dispatch_release (ARC releases it here)
     m_killed = true;     // reap this task on the next scheduler pass
