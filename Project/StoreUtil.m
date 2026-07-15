@@ -38,17 +38,41 @@ static NSString *ApiPath(NSString *name) {
 
 // @ 0x589f4
 + (NSURL *)createURL:(NSString *)path {
+#if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+    NSURLComponents *components = [[NSURLComponents alloc] init];
+    components.scheme = @"http";
+    components.host = @"apr.konaminet.jp";
+    components.path = path;
+    return components.URL;
+#else
     return [[NSURL alloc] initWithScheme:@"http" host:@"apr.konaminet.jp" path:path];
+#endif
 }
 
 // @ 0x58a58
 + (NSURL *)createHttpsURL:(NSString *)path {
+#if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+    NSURLComponents *components = [[NSURLComponents alloc] init];
+    components.scheme = @"https";
+    components.host = @"apr-s.konaminet.jp";
+    components.path = path;
+    return components.URL;
+#else
     return [[NSURL alloc] initWithScheme:@"https" host:@"apr-s.konaminet.jp" path:path];
+#endif
 }
 
 // @ 0x59f24
 + (NSURL *)createOfficialURL:(NSString *)path {
+#if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+    NSURLComponents *components = [[NSURLComponents alloc] init];
+    components.scheme = @"http";
+    components.host = @"p.eagate.573.jp";
+    components.path = path;
+    return components.URL;
+#else
     return [[NSURL alloc] initWithScheme:@"http" host:@"p.eagate.573.jp" path:path];
+#endif
 }
 
 // --- Game API endpoints (verified names) ---

@@ -165,7 +165,11 @@ static int FloatToFixed(float ms) {
     m_renderTime.reset();
     if (m_DisplayLink == nil) {
         m_DisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(mainLoop)];
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        m_DisplayLink.preferredFramesPerSecond = 60 / m_LoopInterval;
+#else
         m_DisplayLink.frameInterval = m_LoopInterval;
+#endif
         [m_DisplayLink addToRunLoop:NSRunLoop.currentRunLoop forMode:NSDefaultRunLoopMode];
     }
 }

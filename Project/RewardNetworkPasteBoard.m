@@ -11,6 +11,8 @@
 #import <CommonCrypto/CommonCrypto.h>
 #import <UIKit/UIKit.h>
 
+#import "SDKCompat.h"
+
 // Slots are named "<service>-<index>" for index in 0..518 (< 0x207).
 static const NSInteger kRewardStorageIndexLimit = 0x207;
 
@@ -104,7 +106,16 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
         return nil;
     }
 
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:archived
+                                                                                error:nil];
+    unarchiver.requiresSecureCoding = NO;
+    NSDictionary *record =
+        [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+    [unarchiver finishDecoding];
+#else
     NSDictionary *record = [NSKeyedUnarchiver unarchiveObjectWithData:archived];
+#endif
     NSError *validateError = nil;
     if (![RewardNetworkPasteBoard validate:record error:&validateError]) {
         // The binary passes nil here (Ghidra: setData:0x0); UIPasteboard's data
@@ -119,8 +130,14 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 
     NSMutableDictionary *updated = [NSMutableDictionary dictionaryWithDictionary:record];
     updated[@"LastAccess"] = [NSDate date];
-    [pasteboard setData:[NSKeyedArchiver archivedDataWithRootObject:updated]
-        forPasteboardType:_dataType];
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSData *updatedArchived = [NSKeyedArchiver archivedDataWithRootObject:updated
+                                                   requiringSecureCoding:NO
+                                                                   error:nil];
+#else
+    NSData *updatedArchived = [NSKeyedArchiver archivedDataWithRootObject:updated];
+#endif
+    [pasteboard setData:updatedArchived forPasteboardType:_dataType];
 
     return [self convertToData:record storageIndex:storageIndex];
 }
@@ -197,9 +214,17 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
         return nil;
     }
 
+    RB_DEPRECATED_BEGIN
     pasteboard.persistent = YES;
-    [pasteboard setData:[NSKeyedArchiver archivedDataWithRootObject:record]
-        forPasteboardType:_dataType];
+    RB_DEPRECATED_END
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSData *recordArchived = [NSKeyedArchiver archivedDataWithRootObject:record
+                                                  requiringSecureCoding:NO
+                                                                  error:nil];
+#else
+    NSData *recordArchived = [NSKeyedArchiver archivedDataWithRootObject:record];
+#endif
+    [pasteboard setData:recordArchived forPasteboardType:_dataType];
 
     return [self convertToData:record storageIndex:storageIndex];
 }

@@ -11,6 +11,8 @@
 // supplies +sharedInstance and -redirectWithRequest:.
 #import "RecommendCore.h"
 
+#import "SDKCompat.h"
+
 @implementation RecommendWebViewController
 
 // @ 0xe97ac
@@ -47,6 +49,7 @@
 // is not a redirect and the navigation bar is visible, treat the tap as leaving
 // the applist and close. Returns whether the core consumed the request as a
 // redirect.
+RB_DEPRECATED_BEGIN
 - (BOOL)webView:(UIWebView *)webView
     shouldStartLoadWithRequest:(NSURLRequest *)request
                 navigationType:(UIWebViewNavigationType)navigationType {
@@ -56,6 +59,7 @@
     }
     return redirected;
 }
+RB_DEPRECATED_END
 
 @end
 

@@ -18,6 +18,8 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter::shared().setStartDate() / setEndDate()
 
+#import "SDKCompat.h"
+
 // C++ bridge helpers the scenes expose (unmangled -> declared extern "C"). Each
 // pokes its owning C++ scene when the matching download finishes. Ghidra:
 // modeSelectRefreshNews
@@ -681,10 +683,12 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
             neAppEventCenter::shared().setStartDate();
             _errorGetPlayer = -1;
             if (!sRegisteredForRemote) {
+                RB_DEPRECATED_BEGIN
                 [[UIApplication sharedApplication]
                     registerForRemoteNotificationTypes:(UIRemoteNotificationTypeBadge |
                                                         UIRemoteNotificationTypeSound |
                                                         UIRemoteNotificationTypeAlert)];
+                RB_DEPRECATED_END
                 sRegisteredForRemote = YES;
             }
             _dlGetPlayer = nil;

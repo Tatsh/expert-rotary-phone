@@ -24,12 +24,15 @@
 
 #import <UIKit/UIKit.h>
 
+#import "SDKCompat.h"
+
 // C close-callback: invoked (with its opaque param) from the close animation's
 // completion block. Modelled as a non-object C function pointer to match the
 // binary (the two ivars below are stored as raw pointers and are NOT
 // ARC-managed).
 typedef void (*CustomWebViewCloseCallback)(void *param);
 
+RB_DEPRECATED_BEGIN
 @interface CustomWebView : UIView <UIWebViewDelegate> {
     // C close callback + its opaque param (raw pointers, not ARC-managed
     // objects).
@@ -59,6 +62,7 @@ typedef void (*CustomWebViewCloseCallback)(void *param);
 - (void)SetCloseCallback:(CustomWebViewCloseCallback)callback param:(void *)param;
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

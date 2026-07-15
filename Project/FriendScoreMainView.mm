@@ -298,7 +298,12 @@ static int scoreToRank(int score) {
                 off = [off imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
             }
             UITabBarItem *item = _tabCtrl.tabBar.items[i];
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+            item.image = [off imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+            item.selectedImage = [on imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+#else
             [item setFinishedSelectedImage:on withFinishedUnselectedImage:off];
+#endif
             [item setImageInsets:imgInsets];
         }
         [self.view addSubview:_tabCtrl.view];

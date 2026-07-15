@@ -13,6 +13,8 @@
 #import "RecommendWebViewController.h" // also supplies the RewardNetworkWebViewDelegate protocol
 #import "RewardNetworkError.h"
 
+#import "SDKCompat.h"
+
 // The single shared core and the serial "RewardCore" queue its designated
 // initialiser runs on. Both are produced by the +allocWithZone: dispatch_once
 // body (recommendCoreSharedAlloc @ 0xfc2c4).
@@ -437,8 +439,10 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
     if (self.webViewController != nil) {
+        RB_DEPRECATED_BEGIN
         [self.webViewController willAnimateRotationToInterfaceOrientation:orientation
                                                                  duration:duration];
+        RB_DEPRECATED_END
     }
 }
 

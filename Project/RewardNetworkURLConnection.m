@@ -12,12 +12,15 @@
 #import "RewardNetworkError.h" // +localizedApplilinkErrorWithCode:
 #import "RewardNetworkWebAPI.h" // +responseFromContentsServer:request:data:finishedBlock:failedBlock:
 
+#import "SDKCompat.h"
+
 // Own privates (the watchdog callback and the retry driver).
 @interface RewardNetworkURLConnection ()
 - (void)connectionTimeout:(NSTimer *)timer;
 - (void)retryConnection;
 @end
 
+RB_DEPRECATED_BEGIN
 @implementation RewardNetworkURLConnection
 
 // @ 0xff9d0
@@ -184,6 +187,7 @@
 // .cxx_destruct @ 0x100664 — compiler-emitted ARC teardown; not hand-written.
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

@@ -11,7 +11,9 @@
 #import "RewardNetworkIndicator.h"
 #import "RewardNetworkMessage.h"
 #import "RewardNetworkUtilities.h"
+#import "SDKCompat.h"
 
+RB_DEPRECATED_BEGIN
 @implementation RewardNetworkWebViewController
 
 // @ 0xec4d8
@@ -451,6 +453,7 @@
 // .cxx_destruct @ 0xee178 — compiler-emitted ARC teardown; not hand-written.
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

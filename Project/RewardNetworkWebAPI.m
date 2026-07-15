@@ -12,6 +12,8 @@
 #import "RewardNetworkError.h"     // localized NSError by code
 #import "RewardNetworkUtilities.h" // parameter dictionary / URL helpers
 
+#import "SDKCompat.h"
+
 // Retry counter. The binary keeps this at `self+retryCount` where `self` is the
 // RewardNetworkWebAPI class object (a single shared slot); modelled here as a
 // static.
@@ -152,6 +154,7 @@ static int sRetryCount = 0;
     // 4xx/5xx (and transport errors other than a timeout) as failures, otherwise
     // post-process the body and JSON-parse it before dispatching to the finished
     // / failed block.
+    RB_DEPRECATED_BEGIN
     [NSURLConnection
         sendAsynchronousRequest:request
                           queue:[NSOperationQueue mainQueue]
@@ -204,6 +207,7 @@ static int sRetryCount = 0;
                     }
                 }
               }];
+    RB_DEPRECATED_END
 }
 
 // @ 0xfb58c  (line-enumeration accumulator block @ 0xfba3c; class entry
@@ -278,9 +282,11 @@ static int sRetryCount = 0;
     while (1) {
         NSHTTPURLResponse *response = nil;
         NSError *connectionError = nil;
+        RB_DEPRECATED_BEGIN
         responseData = [NSURLConnection sendSynchronousRequest:request
                                              returningResponse:&response
                                                          error:&connectionError];
+        RB_DEPRECATED_END
         NSInteger status = [response statusCode];
 
         BOOL httpError = (status >= 400 && status < 500) || (status >= 500 && status < 600);

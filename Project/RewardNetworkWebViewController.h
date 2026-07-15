@@ -25,6 +25,7 @@
 #import <UIKit/UIKit.h>
 
 #import "RewardNetworkIndicator.h" // app-provided loading-indicator view (the _indicator ivar)
+#import "SDKCompat.h"
 
 // Notifications the panel sends back to whoever opened it. All optional; each
 // call site guards with -respondsToSelector: (Ghidra @ 0xecb28 / 0xecbd8 /
@@ -36,6 +37,7 @@
 - (void)appListFailLoadWithError:(NSError *)error; // load failed
 @end
 
+RB_DEPRECATED_BEGIN
 @interface RewardNetworkWebViewController : UIViewController <UIWebViewDelegate> {
     UIWebView *_webView;                // hosted web view (delegate == self)
     UINavigationBar *_navigationBar;    // top bar with the close button
@@ -85,6 +87,7 @@
 - (BOOL)hasParentViewController:(id)responder;
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

@@ -38,7 +38,15 @@ static DevDataDownloader *s_instance = nil;
         [NSString stringWithFormat:(m_IsOld ? @"/apr/dev_data_old/%@/%@" : @"/apr/dev_data/%@/%@"),
                                    title,
                                    fileName];
+#if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+    NSURLComponents *components = [[NSURLComponents alloc] init];
+    components.scheme = @"http";
+    components.host = @"dev.apr.konaminet.jp";
+    components.path = path;
+    NSURL *url = components.URL;
+#else
     NSURL *url = [[NSURL alloc] initWithScheme:@"http" host:@"dev.apr.konaminet.jp" path:path];
+#endif
     m_Downloader = [[Downloader alloc] initWithURL:url delegate:self];
     m_Title = title;
     m_FileName = fileName;

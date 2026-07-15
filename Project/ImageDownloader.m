@@ -7,6 +7,9 @@
 
 #import "ImageDownloader.h"
 
+#import "SDKCompat.h"
+
+RB_DEPRECATED_BEGIN
 @implementation ImageDownloader
 
 // @ 0x5a63c — open a connection for the stored imageURL; incoming bytes
@@ -94,3 +97,4 @@
 }
 
 @end
+RB_DEPRECATED_END

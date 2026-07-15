@@ -32,6 +32,8 @@
 #import "neGraphics.h"
 #import "neWindow.h"
 
+#import "SDKCompat.h"
+
 // Ghidra: DAT_00187b5a (read in applicationWillResignActive:).
 BOOL gLaunchedFromPush = NO;
 
@@ -238,9 +240,11 @@ BOOL gLaunchedFromPush = NO;
 #pragma mark - Notifications
 
 // -[AppDelegate application:didReceiveLocalNotification:]  @ 0x9858 (empty)
+RB_DEPRECATED_BEGIN
 - (void)application:(UIApplication *)application
     didReceiveLocalNotification:(UILocalNotification *)notification {
 }
+RB_DEPRECATED_END
 
 // -[AppDelegate application:didReceiveRemoteNotification:]  @ 0xafb8
 - (void)application:(UIApplication *)application
@@ -270,7 +274,8 @@ BOOL gLaunchedFromPush = NO;
     [req setHTTPBody:[body dataUsingEncoding:NSUTF8StringEncoding]];
     [req setValue:[[AppDelegate appDelegate] userAgent] forHTTPHeaderField:@"User-Agent"];
     [req setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
-    (void)[[NSURLConnection alloc] initWithRequest:req delegate:nil];
+    RB_DEPRECATED_BEGIN(void)[[NSURLConnection alloc] initWithRequest:req delegate:nil];
+    RB_DEPRECATED_END
 }
 
 // -[AppDelegate application:didFailToRegisterForRemoteNotificationsWithError:]  @ 0xafb4 (empty)
@@ -720,7 +725,12 @@ static const char *const kHardwareModels[40] = {
     if (_managedObjectContext == nil) {
         NSPersistentStoreCoordinator *coordinator = self.persistentStoreCoordinator;
         if (coordinator != nil) {
+#if defined(__IPHONE_5_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_5_0
+            _managedObjectContext =
+                [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+#else
             _managedObjectContext = [[NSManagedObjectContext alloc] init];
+#endif
             [_managedObjectContext setPersistentStoreCoordinator:coordinator];
         }
     }
@@ -732,7 +742,12 @@ static const char *const kHardwareModels[40] = {
     if (_managedObjectContextSub == nil) {
         NSPersistentStoreCoordinator *coordinator = self.persistentStoreCoordinator;
         if (coordinator != nil) {
+#if defined(__IPHONE_5_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_5_0
+            _managedObjectContextSub =
+                [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+#else
             _managedObjectContextSub = [[NSManagedObjectContext alloc] init];
+#endif
             [_managedObjectContextSub setPersistentStoreCoordinator:coordinator];
         }
     }

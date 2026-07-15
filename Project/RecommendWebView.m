@@ -11,6 +11,8 @@
 #import "RewardNetworkIndicator.h"
 #import "RewardNetworkUtilities.h"
 
+#import "SDKCompat.h"
+
 @interface RecommendWebView () {
     UIView *parentView;                 // host view for the indicator overlay (retained)
     RewardNetworkIndicator *_indicator; // busy-spinner overlay
@@ -30,6 +32,7 @@
 
 @end
 
+RB_DEPRECATED_BEGIN
 @implementation RecommendWebView
 
 // @ 0xfe808 — start hidden with no parent/overlay and the overlay disabled.
@@ -271,6 +274,7 @@
 // not hand-written.
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

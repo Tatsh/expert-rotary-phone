@@ -28,8 +28,15 @@
         // Tab item: "アーケードビューアー" ("Arcade Viewer") — Ghidra CFString @
         // 0x138a88.
         self.tabBarItem.title = @"アーケードビューアー";
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        self.tabBarItem.image = [[UIImage imageNamed:@"store_icon_manage2"]
+            imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        self.tabBarItem.selectedImage = [[UIImage imageNamed:@"store_icon_manage2"]
+            imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+#else
         [self.tabBarItem setFinishedSelectedImage:[UIImage imageNamed:@"store_icon_manage2"]
                       withFinishedUnselectedImage:[UIImage imageNamed:@"store_icon_manage2"]];
+#endif
 
         m_ImgDelete = [UIImage imageNamed:@"manage_delete"];
         m_ImgDownload = [UIImage imageNamed:@"manage_download"];

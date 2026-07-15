@@ -7,6 +7,9 @@
 
 #import "HttpConn.h"
 
+#import "SDKCompat.h"
+
+RB_DEPRECATED_BEGIN
 @implementation HttpConn
 
 // receivedString @ 0x6ab60, status / setStatus: @ 0x6ab74 / 0x6ab88 (atomic).
@@ -113,6 +116,7 @@
 }
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

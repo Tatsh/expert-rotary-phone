@@ -54,8 +54,15 @@
 
         // Tab item: "購入" ("Purchase") — Ghidra CFString @ 0x136728.
         self.tabBarItem.title = @"購入";
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        self.tabBarItem.image = [[UIImage imageNamed:@"store_icon_store"]
+            imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        self.tabBarItem.selectedImage = [[UIImage imageNamed:@"store_icon_store"]
+            imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+#else
         [self.tabBarItem setFinishedSelectedImage:[UIImage imageNamed:@"store_icon_store"]
                       withFinishedUnselectedImage:[UIImage imageNamed:@"store_icon_store"]];
+#endif
 
         m_PackListCtrl = [[StorePackListController alloc] init];
         m_PackListCtrl.delegate = self;

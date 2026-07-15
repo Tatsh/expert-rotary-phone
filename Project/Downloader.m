@@ -13,10 +13,13 @@
 #import "NSDictionary_JSONExtensions.h" // TouchJSON +dictionaryWithJSONData:error: fallback
 #import "StoreUtil.h"
 
+#import "SDKCompat.h"
+
 // Request timeout (Ghidra: 0x402e0000 = 15.0s); reload-ignoring-cache policy
 // (4).
 static const NSTimeInterval kTimeout = 15.0;
 
+RB_DEPRECATED_BEGIN
 @implementation Downloader {
     NSMutableURLRequest *m_Request;
     __weak id<DownloaderDelegate> m_Delegate; // not retained (ARC weak; matches original assign)
@@ -219,3 +222,4 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 @end
+RB_DEPRECATED_END

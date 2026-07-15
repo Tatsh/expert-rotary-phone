@@ -298,7 +298,13 @@
                              @"\n\n機種変更先で必要となりますので、必ずメモをとってください。",
                              [UserSettingData playerId],
                              [UserSettingData convertCode]];
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        body = [body
+            stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet
+                                                                   .URLQueryAllowedCharacterSet];
+#else
         body = [body stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+#endif
         [(id)[MainViewController class] GotoMailWithText:body];
     } else if (index == 1) {
         // "Initialize and go to title": wipe the local save for a fresh device and

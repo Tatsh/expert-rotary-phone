@@ -24,6 +24,8 @@
 
 #import <CoreLocation/CoreLocation.h>
 
+#import "SDKCompat.h"
+
 // --- Recovered constants (little-endian doubles read straight out of the
 // binary) ---
 

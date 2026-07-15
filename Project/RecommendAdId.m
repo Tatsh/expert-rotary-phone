@@ -20,6 +20,8 @@
 // base used by the external-pasteboard web calls.
 #import "RecommendCore.h"
 
+#import "SDKCompat.h"
+
 @interface RecommendAdId () {
     NSString *_serviceName;
 }
@@ -102,7 +104,16 @@
             }
             return nil;
         }
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:stored
+                                                                                    error:nil];
+        unarchiver.requiresSecureCoding = NO;
+        NSDictionary *archived =
+            [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+        [unarchiver finishDecoding];
+#else
         NSDictionary *archived = [NSKeyedUnarchiver unarchiveObjectWithData:stored];
+#endif
         return [self convertToData:archived];
     }
 }
@@ -183,8 +194,16 @@
             }
             return nil;
         }
+        RB_DEPRECATED_BEGIN
         [pasteboard setPersistent:YES];
+        RB_DEPRECATED_END
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+        NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:record
+                                                requiringSecureCoding:NO
+                                                                error:nil];
+#else
         NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:record];
+#endif
         [pasteboard setData:archived forPasteboardType:@"applilink.adid"];
         return [self convertToData:record];
     }

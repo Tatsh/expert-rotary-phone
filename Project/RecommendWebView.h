@@ -30,10 +30,13 @@
 
 #import <UIKit/UIKit.h>
 
+#import "SDKCompat.h"
+
 // Completion for a hosted recommend/app-list load: invoked with the load error
 // (or nil).
 typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
 
+RB_DEPRECATED_BEGIN
 @interface RecommendWebView : UIWebView <UIWebViewDelegate>
 
 // _callbackForOpenAppliList ivar (block, copied) — accessors @ 0xff904 /
@@ -72,6 +75,7 @@ typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
 - (void)setScrollEnabled:(BOOL)enabled;
 
 @end
+RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

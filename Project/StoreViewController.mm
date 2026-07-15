@@ -13,6 +13,8 @@
 #import "StoreManageViewController.h"
 #import "neEngineBridge.h"
 
+#import "SDKCompat.h"
+
 @implementation StoreViewController
 
 @synthesize recommendPackId = _recommendPackId;

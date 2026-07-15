@@ -22,6 +22,8 @@
 #import "UserSettingData.h" // +isFollowBonusGet / +treasurePoint / +saveTreasurePoint: / +saveIsFollowBonusGet:
 #import "neEngineBridge.h" // neSceneManager::shared / rootViewController / isPadDisplay, neEngine::playSystemSe
 
+#import "SDKCompat.h"
+
 @implementation CustomWebView
 
 // .cxx_construct @ 0x5ef8c — compiler-emitted C++ ivar constructor; not
@@ -38,7 +40,9 @@
 - (void)dealloc {
     // KVO teardown is kept (see -observeValueForKeyPath:… / the addObserver: in
     // -initWithURL:).
+    RB_DEPRECATED_BEGIN
     [_webView.scrollView removeObserver:self forKeyPath:@"contentSize"];
+    RB_DEPRECATED_END
     // [super dealloc] is ARC-omitted; object ivars are released automatically.
 }
 
@@ -50,6 +54,7 @@
 
 // @ 0x5dfec — build the panel over the root scene view and start loading `url`.
 - (instancetype)initWithURL:(NSURL *)url {
+    RB_DEPRECATED_BEGIN
     neSceneManager::shared();
     UIViewController *rootVC = neSceneManager::rootViewController();
     CGRect rootFrame = rootVC.view ? rootVC.view.frame : CGRectZero;
@@ -131,6 +136,7 @@
         _indicator.alpha = 0.5f;
         [self addSubview:_indicator];
     }
+    RB_DEPRECATED_END
     return self;
 }
 
@@ -165,6 +171,7 @@
 #pragma mark - UIWebViewDelegate
 
 // @ 0x5e808 — clear the URL cache and start the spinner when a load begins.
+RB_DEPRECATED_BEGIN
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     NSURLCache *cache = [NSURLCache sharedURLCache];
     [cache setMemoryCapacity:0];
@@ -231,6 +238,7 @@
     }
     return YES;
 }
+RB_DEPRECATED_END
 
 #pragma mark - KVO
 
@@ -243,7 +251,9 @@
     [_closeBtnBig setHidden:NO];
 
     CGRect bigFrame = _closeBtnBig ? _closeBtnBig.frame : CGRectZero;
+    RB_DEPRECATED_BEGIN
     CGSize contentSize = _webView.scrollView ? _webView.scrollView.contentSize : CGSizeZero;
+    RB_DEPRECATED_END
     // y = contentSize.height − 45.0 (DAT_0005ed78 = 0xc2340000 = −45.0; nil-path
     // movt #0xc234 confirms same constant). Byte-verified.
     CGFloat y = contentSize.height + (-45.0f);

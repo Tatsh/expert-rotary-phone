@@ -24,6 +24,8 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
+#import "SDKCompat.h"
+
 // The C++ arcade note-play task the AC-main flow owns (the one AppDelegate
 // holds in its acMainTask property); opaque on the ObjC side (a raw pointer,
 // non-ARC), passed straight through to the engine hooks. Ghidra: struct
@@ -424,8 +426,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     [request setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
+    RB_DEPRECATED_BEGIN
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:nil];
-    (void)connection;
+    RB_DEPRECATED_END(void) connection;
 }
 
 #pragma mark - Open / close animations

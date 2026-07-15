@@ -14,6 +14,8 @@
 #import "RewardNetworkUdid.h" // +isAdvertisingTrackingEnabled (reconstructed in parallel)
 #import "RewardNetworkWebAPI.h"
 
+#import "SDKCompat.h"
+
 // Serial queue guarding the shared-instance handoff in -init. Created in
 // +allocWithZone:'s dispatch_once body (g_pRewardNetworkDispatchQueue).
 static dispatch_queue_t g_pRewardNetworkDispatchQueue = NULL;
@@ -844,7 +846,9 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // @ 0xf1ff8   (sharedInstance forwarder twin @ 0xf1fa4)
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
+    RB_DEPRECATED_BEGIN
     [_webViewController willAnimateRotationToInterfaceOrientation:orientation duration:duration];
+    RB_DEPRECATED_END
 }
 
 // @ 0xf2030
@@ -854,7 +858,13 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     NSDictionary *entry =
         [NSDictionary dictionaryWithObjectsAndKeys:value, @"Value", expire, @"Expire", nil];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:entry
+                                            requiringSecureCoding:NO
+                                                            error:nil];
+#else
     NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:entry];
+#endif
     [defaults setObject:archived forKey:key];
 }
 
@@ -864,7 +874,16 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     if (data == nil) {
         return nil;
     }
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data
+                                                                                error:nil];
+    unarchiver.requiresSecureCoding = NO;
+    NSDictionary *entry =
+        [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+    [unarchiver finishDecoding];
+#else
     NSDictionary *entry = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+#endif
     if (entry == nil) {
         return nil;
     }
