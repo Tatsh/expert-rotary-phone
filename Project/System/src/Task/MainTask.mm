@@ -226,12 +226,21 @@ inline void MainTask::refreshScoreRows() {
     loadCellScoreRows(m_cells[m_selectedCell], m_sel.musicId);
 }
 
-// Ghidra: MainTask_ctor (0x34d48) — base ctor + zero-fill; the sentinels
-// (selected cell -1, column latches 0xff, state 0) are member initializers.
+/**
+ * MainTask_ctor — base ctor + zero-fill; the sentinels (selected cell -1,
+ * column latches 0xff, state 0) are member initializers.
+ * @ghidraAddress 0x34d48
+ * @complete
+ */
 MainTask::MainTask() {
 }
 
-// Ghidra: mainTask_dtor (0x34d90) @ 0x34d90 (delete thunk @ 0x34eac).
+/**
+ * mainTask_dtor — detach from DownloadMain's recommend-list delegate so the
+ * singleton stops calling back into a freed task (delete thunk @ 0x34eac).
+ * @ghidraAddress 0x34d90
+ * @complete
+ */
 MainTask::~MainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl cppDelegateRecommendList] == this) {
@@ -1539,9 +1548,12 @@ void MainTask::backgroundCellLoader() {
     m_loaderCursor = 2; // acknowledge shutdown
 }
 
-// Ghidra: musicSelAllCellsReady (0x37f38) — true when every jacket cell
-// has finished loading (state 0 empty or 3 ready). Guarded by the cell-array
-// semaphore.
+/**
+ * musicSelAllCellsReady — true when every jacket cell has finished loading
+ * (state 0 empty or 3 ready). Guarded by the cell-array semaphore.
+ * @ghidraAddress 0x37f38
+ * @complete
+ */
 bool MainTask::AllCellsReady() {
     dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
     bool ready = true;
@@ -1952,16 +1964,27 @@ inline void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
     dispatch_semaphore_signal(m_cellSem);
 }
 
-// @ 0x35448 — stream the column after the current one into row `column`.
+/**
+ * musicSelLoadColumnNext — stream the column after the current one into row
+ * `column`, gated by the next-column latch (+0x8c2) and the no-next sentinel
+ * (m_columnIndex == -2). Shared grid fill via loadColumn(delta = +1).
+ * @ghidraAddress 0x35448
+ * @complete
+ */
 void MainTask::MusicSelLoadColumnNext(int column) {
     if (m_nextColLatch == 0xff && m_columnIndex != -2) { // next-column latch idle
         loadColumn(column, +1, m_nextColLatch);
     }
 }
 
-// @ 0x35520 — stream the column before the current one into row `column`. Gated
-// by its own latch byte (m_prevColLatch @ +0x8c0), independent of the
-// current-column latch @ +0x8c1 that rebuildList clears.
+/**
+ * musicSelLoadColumnPrev — stream the column before the current one into row
+ * `column`, gated by its own latch byte (m_prevColLatch @ +0x8c0) and the
+ * no-previous sentinel (m_columnIndex == 0). Shared grid fill via
+ * loadColumn(delta = -1). Mirror of MusicSelLoadColumnNext.
+ * @ghidraAddress 0x35520
+ * @complete
+ */
 void MainTask::MusicSelLoadColumnPrev(int column) {
     if (m_prevColLatch == 0xff && m_columnIndex != 0) {
         loadColumn(column, -1, m_prevColLatch);
