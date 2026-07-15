@@ -308,18 +308,19 @@ BOOL gLaunchedFromPush = NO;
 
 #pragma mark - App identity & hardware
 
-// -[AppDelegate appDelegate]  @ 0x89a0
+/** -[AppDelegate appDelegate] — shared app delegate. @ghidraAddress 0x89a0 @complete */
 + (instancetype)appDelegate {
     return (AppDelegate *)UIApplication.sharedApplication.delegate;
 }
 
-// -[AppDelegate appDocumentsDirectory]  @ 0x89d4
+/** -[AppDelegate appDocumentsDirectory]. @ghidraAddress 0x89d4 @complete */
 + (NSString *)appDocumentsDirectory {
     return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)
         .lastObject;
 }
 
-// -[AppDelegate appAppSupportDirectory]  @ 0x8a1c
+// -[AppDelegate appAppSupportDirectory] — lazily creates the dir + marks it excluded from backup.
+/** @ghidraAddress 0x8a1c @complete */
 + (NSString *)appAppSupportDirectory {
     NSString *path =
         NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES)
@@ -341,7 +342,8 @@ BOOL gLaunchedFromPush = NO;
     return path;
 }
 
-// +[AppDelegate addSkipBackupAttributeToItemAtURL:]  @ 0x8af8
+// +[AppDelegate addSkipBackupAttributeToItemAtURL:] — mark a URL excluded from backup.
+/** @ghidraAddress 0x8af8 @complete */
 + (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL {
     NSAssert([NSFileManager.defaultManager fileExistsAtPath:URL.path],
              @"[[NSFileManager defaultManager] fileExistsAtPath:[URL path]]");
@@ -353,12 +355,12 @@ BOOL gLaunchedFromPush = NO;
     return success;
 }
 
-// -[AppDelegate appCachesDirectory]  @ 0x89f8
+/** -[AppDelegate appCachesDirectory]. @ghidraAddress 0x89f8 @complete */
 + (NSString *)appCachesDirectory {
     return NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).lastObject;
 }
 
-// -[AppDelegate freeFileSystemSize]  @ 0x8be8
+/** -[AppDelegate freeFileSystemSize]. @ghidraAddress 0x8be8 @complete */
 + (unsigned long long)freeFileSystemSize {
     NSDictionary *attrs =
         [NSFileManager.defaultManager attributesOfFileSystemForPath:[self appDocumentsDirectory]
@@ -366,13 +368,13 @@ BOOL gLaunchedFromPush = NO;
     return [[attrs valueForKey:NSFileSystemFreeSize] longLongValue];
 }
 
-// -[AppDelegate hardwareType]  @ 0xb13c
+/** -[AppDelegate hardwareType] — cached device-model enum. @ghidraAddress 0xb13c @complete */
 - (int)hardwareType {
     return _hardwareType;
 }
 // displayType is a synthesized atomic getter @ 0xb0a8.
 
-// -[AppDelegate isOldHardware]  @ 0xad5c
+/** -[AppDelegate isOldHardware] — low-spec device test. @ghidraAddress 0xad5c @complete */
 - (BOOL)isOldHardware {
     unsigned type = (unsigned)_hardwareType;
     if (type < 28 && ((1u << type) & 0x0ff7803f) != 0) {
@@ -391,7 +393,8 @@ static const char *const kHardwareModels[40] = {
     "iPad2,6",   "iPad2,7",   "iPad4,4",   "iPad4,5",   "i386",
 };
 
-// -[AppDelegate initHardware]  @ 0xa58c
+// -[AppDelegate initHardware] — sysctl hw.machine -> _hardwareType / _displayType tiers.
+/** @ghidraAddress 0xa58c @complete */
 - (void)initHardware {
     size_t size = 0;
     sysctlbyname("hw.machine", nullptr, &size, nullptr, 0);
