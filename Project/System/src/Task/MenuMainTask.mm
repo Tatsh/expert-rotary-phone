@@ -21,7 +21,8 @@
 #import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
-#import "MainViewController.h" // the concrete root VC: Goto*/Is*Enable/SetAlertViewCallback
+#import "MainViewController.h"      // the concrete root VC: Goto*/Is*Enable/SetAlertViewCallback
+#import "MapSelectViewController.h" // the isIndexInRange12 event-id bounds helper
 #import "MenuMainTask.h"
 #import "MusicManager.h"
 #import "RewardNetwork.h" // +setSessionParameters:url:method: (state 4)
@@ -85,9 +86,15 @@ void MenuMainTask::setInfoFlag(bool shown) {
     }
 }
 
-// Ghidra: FUN_0006c6a4 — build the menu scene: pick the device layout, fill
-// every per-button screen rect + SE id, then load the mode-select Aep group and
-// its three animated layers, the warning texture and the menu BGM.
+/**
+ * modeSelectTaskInit — build the menu scene: pick the device layout, fill every
+ * per-button screen rect + SE id, load the mode-select Aep group and its three
+ * animated layers, resolve the ticker + badge handles, install the ticker draw
+ * callback, load the warning texture, the menu BGM and the six UI SEs, snapshot
+ * the news array, query the reward banner, and scan the treasure/game events.
+ * @ghidraAddress 0x6c6a4
+ * @complete
+ */
 void MenuMainTask::setup() {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
@@ -186,21 +193,28 @@ void MenuMainTask::setup() {
         m_layers[i] = layer;
     }
 
-    // Overlay handles the draw pass reads: the NEWS ticker (+0x34) plus five
-    // badge / button-label frame sprites (+0x38..+0x48). (Ghidra resolves these
-    // via getUsrNo / getFrmNo; getLyrNo yields the same group<<16|index handle
-    // drawLayer consumes.)
+    // Overlay handles the draw pass reads: the NEWS ticker user-frame (+0x34)
+    // plus five badge / button-label frame sprites (+0x38..+0x48). The binary
+    // resolves the ticker with getUsrNo and the five frames with getFrmNo, in
+    // this exact order (Ghidra: DAT_00131df8 name table).
     static const char *const kBadgeNames[5] = {
-        "NEWS",
-        "BT_SETTING",
         "NEW_STORE",
+        "BT_SETTING",
         "BT_GIFT",
         "BT_FEATU",
+        "EVENT_TXT",
     };
-    m_newsHandle = aep.getLyrNo(2, "NEWS");
+    m_newsHandle = aep.getUserNo(2, "NEWS");
     for (int i = 0; i < 5; i++) {
-        m_badgeHandles[i] = aep.getLyrNo(2, kBadgeNames[i]);
+        m_badgeHandles[i] = aep.getFrameNo(2, kBadgeNames[i]);
     }
+
+    // Install the per-layer NEWS-ticker draw callback on group 2 (the engine
+    // hands this task back as the trailing context). Its natural ABI carries the
+    // full composed transform, so it is reinterpret-cast to the generic
+    // AepGroupDrawFn at registration (the same pattern as AcViewer's HUD draw).
+    // Ghidra: setAepCallbacks(aep, 2, &NewsTickerUpdate, this).
+    aep.setGroupDrawCallback(2, reinterpret_cast<AepGroupDrawFn>(&NewsTickerUpdate), this);
 
     // The friend-request warning texture (a bundled PNG drawn straight into the
     // OT).
@@ -226,10 +240,46 @@ void MenuMainTask::setup() {
         m_seInst[i] = static_cast<int>(RSND_INSTANCE_ID_ERROR);
     }
 
-    // The news-text array copy, reward-banner query, and treasure/game-event
-    // unlock scan follow in FUN_0006c6a4; they belong to the news / reward seam
-    // and populate the +0xc0.. news cache and the +0xb7/+0xb8 event flags the
-    // draw pass reads.
+    // Snapshot the news-text array (+0xc0, retained) if DownloadMain already has
+    // a fetched batch, keep a copy of its timestamp (+0xc4), and reset the ticker
+    // to line 0 (+0xcc). Mirrors the copy in refreshNews; the binary's manual
+    // retain is ARC bookkeeping here.
+    DownloadMain *dl = [DownloadMain getInstance];
+    NSDate *newsTime = dl.lastGetNewsTime;
+    NSArray *newsArray = dl.newsTextArray;
+    if (newsTime != nil && newsArray != nil) {
+        NSMutableArray *copy = [NSMutableArray array];
+        for (NSUInteger i = 0; i < [newsArray count]; i++) {
+            [copy addObject:[newsArray objectAtIndex:i]];
+        }
+        m_newsArray = copy;
+        m_newsTimestamp = [newsTime copy];
+        m_newsIndex = 0;
+    }
+
+    // Reward-banner availability: enable the gift label (+0xb6) when the async
+    // query reports flag 1. The block captures this task (its +0x14 capture in
+    // the binary).
+    [RewardNetwork isEnabledBannerWithBlock:^(NSInteger flg, NSError *error) { // @ 0x6d8bc
+      (void)error;
+      m_giftEnabled = static_cast<uint8_t>(flg == 1);
+    }];
+
+    // Event badges: light the treasure badge (+0xb7) if any active treasure-event
+    // id is in range (< 12; app helper isIndexInRange12), and the game badge
+    // (+0xb8) if any game-event id is 0 (the binary's folded isZeroInt predicate).
+    for (NSNumber *eventId in dl.treasureEventIdArray) {
+        if (isIndexInRange12((unsigned int)[eventId intValue])) {
+            m_treasureEvent = 1;
+            break;
+        }
+    }
+    for (NSNumber *eventId in dl.gameEventIdArray) {
+        if ([eventId intValue] == 0) {
+            m_gameEvent = 1;
+            break;
+        }
+    }
 }
 
 // Ghidra: MenuMainTask_update (FUN_0006ad88). Each frame: find a tapped touch,
@@ -633,84 +683,101 @@ void MenuMainTask::onAlertClosed() {
 }
 
 /**
- * NEWS-ticker per-frame draw callback (the binary hands `this` in as the trailing
- * callback argument; `handle` is the AEP layer being drawn). Only acts on our
- * resolved news handle. Scrolls the current news line right-to-left through the
- * ticker params, paging to the next line (cycling the news array) with a
- * 100->0->100 fade ramp at each end.
+ * NewsTickerUpdate — the group-2 per-layer NEWS-ticker draw callback. The AEP
+ * engine hands the owning task in as the trailing `context` argument (so it acts
+ * as the method receiver) and the drawn layer handle as `child`; only the
+ * resolved news handle acts. Scrolls the current news line right-to-left through
+ * the ticker params, paging to the next line (cycling the news array) with a
+ * 100->0->100 fade ramp at each end. The dozen transform args are ignored (the
+ * ticker positions itself from its own params), matching the decompile.
  * @ghidraAddress 0x6d6d4
  * @complete
  */
-void MenuMainTask::updateNewsTicker(int handle, int drawCtx) {
+void NewsTickerUpdate(int child,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int16_t,
+                      int,
+                      int *,
+                      int priority,
+                      void *context) {
     AepManager &aep = AepManager::shared();
-    if (m_newsHandle != handle) {
+    auto *self = static_cast<MenuMainTask *>(context);
+    if (self->m_newsHandle != child) {
         return;
     }
-    if (m_newsArray == nil || [m_newsArray count] == 0) {
+    if (self->m_newsArray == nil || [self->m_newsArray count] == 0) {
         return;
     }
 
     // First tick (pause step still 0): prime the scroll x / pause ramp and grab
     // line 0.
-    if (m_newsPauseStep == 0) {
-        m_newsScrollX = m_newsTickerParams[0]; // base x
-        m_newsPauseCounter = 100;
-        m_newsPauseStep = -2;
-        m_newsCurLine = [m_newsArray objectAtIndex:0];
+    if (self->m_newsPauseStep == 0) {
+        self->m_newsScrollX = self->m_newsTickerParams[0]; // base x
+        self->m_newsPauseCounter = 100;
+        self->m_newsPauseStep = -2;
+        self->m_newsCurLine = [self->m_newsArray objectAtIndex:0];
     }
 
-    int elapsed = m_newsFrame++;
+    int elapsed = self->m_newsFrame++;
     if (elapsed > 0x3b) { // ~60 frames of hold elapsed
-        if (!m_newsPaused) {
-            unsigned segment = (unsigned)m_newsSegment;
-            unsigned lineSegments =
-                (unsigned)[m_newsCurLine length] / (unsigned)(m_newsTickerParams[4] + 1);
+        if (!self->m_newsPaused) {
+            unsigned segment = (unsigned)self->m_newsSegment;
+            unsigned lineSegments = (unsigned)[self->m_newsCurLine length] /
+                                    (unsigned)(self->m_newsTickerParams[4] + 1);
             if (segment < lineSegments) {
-                m_newsScrollX -= 2; // scroll left
-                int nextSegment = m_newsSegment + 1;
-                int slotX = m_newsTickerParams[0] - nextSegment * m_newsTickerParams[2];
-                if (m_newsScrollX <= slotX) { // snapped to the next segment slot
-                    m_newsFrame = 0;
-                    m_newsScrollX = slotX;
-                    m_newsSegment = nextSegment;
+                self->m_newsScrollX -= 2; // scroll left
+                int nextSegment = self->m_newsSegment + 1;
+                int slotX = self->m_newsTickerParams[0] - nextSegment * self->m_newsTickerParams[2];
+                if (self->m_newsScrollX <= slotX) { // snapped to the next segment slot
+                    self->m_newsFrame = 0;
+                    self->m_newsScrollX = slotX;
+                    self->m_newsSegment = nextSegment;
                 }
                 goto draw;
             }
         }
         // Line finished scrolling: run the pause/fade ramp.
-        m_newsPaused = 1;
-        m_newsPauseCounter += m_newsPauseStep;
-        if (m_newsPauseStep < 0) {
-            if (m_newsPauseCounter < 1) { // faded out: advance to the next line
-                m_newsScrollX = m_newsTickerParams[0];
-                m_newsSegment = 0;
-                m_newsPauseCounter = 0;
-                m_newsPauseStep = 2;
-                m_newsIndex = (m_newsIndex + 1) % (int)[m_newsArray count];
-                m_newsCurLine = [m_newsArray objectAtIndex:m_newsIndex];
+        self->m_newsPaused = 1;
+        self->m_newsPauseCounter += self->m_newsPauseStep;
+        if (self->m_newsPauseStep < 0) {
+            if (self->m_newsPauseCounter < 1) { // faded out: advance to the next line
+                self->m_newsScrollX = self->m_newsTickerParams[0];
+                self->m_newsSegment = 0;
+                self->m_newsPauseCounter = 0;
+                self->m_newsPauseStep = 2;
+                self->m_newsIndex = (self->m_newsIndex + 1) % (int)[self->m_newsArray count];
+                self->m_newsCurLine = [self->m_newsArray objectAtIndex:self->m_newsIndex];
             }
-        } else if (m_newsPauseCounter > 99) { // faded back in: resume scrolling
-            m_newsPauseCounter = 100;
-            m_newsPauseStep = -2;
-            m_newsFrame = 0;
-            m_newsPaused = 0;
+        } else if (self->m_newsPauseCounter > 99) { // faded back in: resume scrolling
+            self->m_newsPauseCounter = 100;
+            self->m_newsPauseStep = -2;
+            self->m_newsFrame = 0;
+            self->m_newsPaused = 0;
         }
     }
 
 draw:
     // Ghidra: AepManager::DrawTextClipped (FUN_0001057c). The corner colours carry
     // the dark-grey news-text colour 0x181818 (the same value the plain DrawText
-    // calls pass), the clip slot carries &m_newsTickerParams[0], and `drawCtx` is
-    // the OT priority the callback was handed.
-    aep.DrawTextClipped([m_newsCurLine UTF8String],
+    // calls pass), the clip slot carries &m_newsTickerParams[0], and `priority` is
+    // the OT slot the callback was handed.
+    aep.DrawTextClipped([self->m_newsCurLine UTF8String],
                         0x1b,
-                        m_newsScrollX,
-                        m_newsTickerParams[1],
+                        self->m_newsScrollX,
+                        self->m_newsTickerParams[1],
                         0,
-                        m_newsPauseCounter,
+                        self->m_newsPauseCounter,
                         0x181818,
-                        &m_newsTickerParams[0],
-                        drawCtx);
+                        &self->m_newsTickerParams[0],
+                        priority);
 }
 
 /**

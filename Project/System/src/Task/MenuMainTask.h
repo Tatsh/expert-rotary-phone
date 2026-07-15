@@ -34,6 +34,30 @@ class AepManager;
 class AepLyrCtrl;
 class neTextureForiOS;
 
+// The group-2 per-layer NEWS-ticker draw callback, installed by setup() via
+// setGroupDrawCallback(2, &NewsTickerUpdate, this). The AEP engine invokes it
+// once per drawn layer: `child` is the layer being drawn (only the resolved news
+// handle acts), `priority` is the order-table slot handed to the clipped-text
+// draw, and the trailing `context` is the owning MenuMainTask (the binary passes
+// the task pointer there, i.e. the method receiver). It scrolls the current news
+// line and pages through the news array with a pause/reset fade ramp. Ghidra:
+// NewsTickerUpdate (FUN_0006d6d4) @ 0x6d6d4.
+void NewsTickerUpdate(int child,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int,
+                      int16_t,
+                      int,
+                      int *,
+                      int priority,
+                      void *context);
+
 class MenuMainTask : public C_TASK {
 public:
     MenuMainTask();                    // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
@@ -104,12 +128,23 @@ private:
     // (FUN_0006d1f0) @ 0x6d1f0.
     void dispose();
 
-    // Per-frame NEWS-ticker draw callback registered on the news AEP layer.
-    // `handle` is the layer being drawn (only our resolved news handle acts);
-    // `drawCtx` is the AEP draw context. The binary passes `this` as the trailing
-    // callback argument. It scrolls the current news line and pages through the
-    // news array with a pause/reset ramp. Ghidra: FUN_0006d6d4 @ 0x6d6d4.
-    void updateNewsTicker(int handle, int drawCtx);
+    // The registered NEWS-ticker draw callback reaches these private news fields
+    // through its `context` argument; let it in.
+    friend void NewsTickerUpdate(int child,
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 int,
+                                 int16_t,
+                                 int,
+                                 int *,
+                                 int priority,
+                                 void *context);
 
     // News-fetch callback (DownloadMain's NEWS delegate). When `hasNews`, rebuild
     // the local news-text array copy from DownloadMain if its lastGetNewsTime is
