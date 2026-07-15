@@ -13,6 +13,10 @@
 
 #include <cstdint>
 
+#ifdef __OBJC__
+@class NSData; // the in-memory image path (LoadTexture:) takes a bridged NSData*
+#endif
+
 class AepTexture;
 class AepOrderingTable;
 class AepManager;
@@ -113,16 +117,21 @@ public:
     // these members rather than raw byte offsets, so the field positions and the
     // AepTile element stride stay correct on the 64-bit rebuild. The per-tile
     // records double as the render-state slots (AepTile is the same 0x18-byte
-    // record as neTextureRef).
+    // record as neTextureRef). These accessors have no binary counterpart (the
+    // binary inlines the field reads); they exist only to avoid the offset math.
+    /** @newCode */
     int tileCount() const {
         return m_tileCount;
     }
+    /** @newCode */
     const int *tileWidths() const {
         return m_tileWidths;
     }
+    /** @newCode */
     const int *tileHeights() const {
         return m_tileHeights;
     }
+    /** @newCode */
     AepTile *tileRects() const {
         return m_tileRects;
     }
@@ -164,6 +173,6 @@ void neTextureForiOS_draw(AepManager *aep,
                           int priority,
                           int layer);
 
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4
