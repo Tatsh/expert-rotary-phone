@@ -22,6 +22,8 @@ import re
 ROOT = 'Project'
 EXTS = ('*.mm', '*.cpp', '*.m', '*.h', '*.c')
 IMPL_EXTS = ('.mm', '.cpp', '.m', '.c')
+# Reconstructed third-party sources that are also tracked for verification.
+EXTRA_GLOBS = ('3rdparty/ziparchive/UnZipArchive.*',)
 
 _OBJC_DEF = re.compile(r'^[-+]\s*\(')
 _CXX_MEMBER = re.compile(r'^[A-Za-z_][\w\s:<>\*&,]*::~?[\w]+\s*\(')
@@ -57,7 +59,10 @@ def scan(path: str) -> tuple[int, int]:
 
 
 def main() -> None:
-    files = sorted({p for ext in EXTS for p in glob.glob(os.path.join(ROOT, '**', ext), recursive=True)})
+    files = {p for ext in EXTS for p in glob.glob(os.path.join(ROOT, '**', ext), recursive=True)}
+    for pattern in EXTRA_GLOBS:
+        files.update(glob.glob(pattern, recursive=True))
+    files = sorted(files)
     rows = []
     total_defs = total_complete = 0
     for path in files:
