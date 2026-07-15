@@ -211,6 +211,9 @@ public:
     id recommendFetchDate() const {
         return _endDate;
     } // _endDate @ +0x24, last recommend fetch
+    id sessionStartDate() const {
+        return _startDate;
+    } // _startDate @ +0x20 (DAT_00187bd8); the menu's news-refresh throttle reads it
 
     // A remote push notification arrived and hasn't been consumed yet — the
     // recommend-list refresh throttle treats a pending push as an immediate

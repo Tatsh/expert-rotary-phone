@@ -58,6 +58,12 @@ void NewsTickerUpdate(int child,
                       int priority,
                       void *context);
 
+// The mode-select confirm-dialog dismiss callback, installed as the root VC's
+// SetAlertViewCallback and as the daily-info CustomWebView close callback with
+// the task as `context`. It detaches the callback then steps the state machine
+// (7 & 11 -> 6, 9 -> 10, else -> 0xc). Ghidra: FUN_0006d1a4 @ 0x6d1a4.
+void modeSelectAlertClosed(void *context);
+
 class MenuMainTask : public C_TASK {
 public:
     MenuMainTask();                    // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
@@ -104,29 +110,15 @@ private:
     // modeSelectTaskDraw (FUN_0006d428).
     void drawOverlay();
 
-    // Hit-test one of the eight array buttons against the current tap. Delegates
-    // to the engine hit-test (Ghidra FUN_0002d974). Returns true on a tap inside
-    // the rect.
-    bool hitButton(int touchId, Button button) const;
-    // The settings button is a packed rect in the top cluster (rect x @ +0x98, y
-    // @ +0x94), so it is tested separately.
-    bool hitSettingsButton(int touchId) const;
-    // The present-box button shares the same overlapping top cluster (rect x @
-    // +0x9c, enable/y @ +0x94). Ghidra: the +0x9c pointInRect in FUN_0006ad88
-    // case 0xc.
-    bool hitPresentBoxButton(int touchId) const;
-
-    // Alert-dismissed callback for the mode-select confirm dialogs: clears the
-    // root VC's alert callback then advances the state machine (7 & 11 -> 6, 9 ->
-    // 10, else -> 12). Ghidra: FUN_0006d1a4 @ 0x6d1a4.
-    void onAlertClosed();
-
     // State-0x14 handoff: release the menu SEs + cycle the shared system-SE pool,
     // tear down the three AEP layers and textures, clear the news cache and the
     // root VC alert callback, kill this task, then give the spawned sub-task
     // priority 3 so the scheduler runs it. Ghidra: modeSelectTaskDispose
     // (FUN_0006d1f0) @ 0x6d1f0.
     void dispose();
+
+    // The alert-dismiss callback reaches m_state through its `context`; let it in.
+    friend void modeSelectAlertClosed(void *context);
 
     // The registered NEWS-ticker draw callback reaches these private news fields
     // through its `context` argument; let it in.

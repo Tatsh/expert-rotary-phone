@@ -20,11 +20,14 @@
 #import "AppDelegate.h"
 #import "AudioManager.h"
 #import "CommonAlertView.h"
+#import "CustomWebView.h" // the daily official-info web panel (state 8)
 #import "DownloadMain.h"
+#import "LoginBonusView.h"
 #import "MainViewController.h"      // the concrete root VC: Goto*/Is*Enable/SetAlertViewCallback
 #import "MapSelectViewController.h" // the isIndexInRange12 event-id bounds helper
 #import "MenuMainTask.h"
 #import "MusicManager.h"
+#import "RandomLoginBonusView.h"
 #import "RewardNetwork.h" // +setSessionParameters:url:method: (state 4)
 #import "StoreUtil.h"     // +getRewardLoginTokenURL
 #import "TaskFactory.h"
@@ -282,66 +285,103 @@ void MenuMainTask::setup() {
     }
 }
 
-// Ghidra: MenuMainTask_update (FUN_0006ad88). Each frame: find a tapped touch,
-// then step the state machine. The interactive menu lives in state 0xc.
+/**
+ * MenuMainTask_update — the mode-select hub's ~20-state machine. Each frame:
+ * detect a tap, step the current state, then advance every live AEP layer and
+ * emit the menu overlay. State 0 setup + news fetch; 1 fade-in + player-get; 2
+ * await the player record + name check; 3 name entry; 4 reward session; 5 intro
+ * hand-off; 6 unlock gates; 8 daily info; 10 login bonus; 0xc INTERACTIVE menu;
+ * 0xd..0x14 the sub-task spawn + fade-out + teardown.
+ * @ghidraAddress 0x6ad88
+ * @complete
+ */
 void MenuMainTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     DownloadMain *dl = [DownloadMain getInstance];
     AudioManager *audio = [AudioManager sharedManager];
-    MainViewController *root = RootVC();
 
-    // A released touch that barely moved is a tap (its scaled position is
-    // logged).
+    // Tap detection: the first released touch whose start/end differ by < 11px in
+    // both axes. Its down point is logged in the (screen-scale-divided) layout
+    // coordinate space the button rects live in.
     neGraphics &gfx = neGraphics::shared();
-    int touchId = -1;
+    const float uiScale = neSceneManager::screenScale();
+    int tapX = -1, tapY = -1;
+    bool haveTap = false;
     for (int i = 0, n = gfx.activeTouchCount(); i < n; i++) {
         const neTouchPoint *t = gfx.touchAt(i);
-        if (t == nullptr || t->released == 0) {
+        if (t->released == 0) {
             continue;
         }
-        int dx = t->startX - t->x, dy = t->startY - t->y;
+        int dx = t->x - t->startX, dy = t->y - t->startY;
         if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
-            touchId = t->id;
+            tapX = (int)((float)t->startX / uiScale);
+            tapY = (int)((float)t->startY / uiScale);
+            NSLog(@"%d %d", tapX, tapY);
+            haveTap = true;
             break;
         }
     }
 
     switch (m_state) {
-    case 0: // build the scene, start BGM, fetch news if it is stale
+    case 0: // build the scene, start the BGM, refresh the news if it is stale
         setup();
         [audio playBgm:0];
-        if (/* NEAppEventCenter last news date */ true) {
-            [dl setCppDelegateNews:this];
-            [dl startNewsHttp];
+        {
+            // Fetch news when there is no session start stamp yet, or more than an
+            // hour (3600s) has elapsed since it.
+            id startDate = neAppEventCenter::shared().sessionStartDate();
+            bool stale = startDate == nil;
+            if (!stale) {
+                NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startDate];
+                stale = (int)((float)elapsed / 3600.0f) > 0;
+            }
+            if (stale) {
+                [dl setCppDelegateNews:this];
+                [dl startNewsHttp];
+            }
         }
         m_state = 1;
         break;
-    case 1:                          // fade in, request the player record, play the menu layer
+    case 1:                          // fade in, request the player record, start the intro layers
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         [dl startPlayerGetHttp];
+        m_layers[0]->play(); // the open animation (+0x28)
         if (!m_tutorialSkip) {
-            // AepLyrCtrl at +0x30 plays here (menu intro).
+            m_layers[2]->play(); // the prompt / "TRY" layer (+0x30)
         }
         m_state = 2;
         break;
-    case 2: // await the player record, then branch on whether a name is set
+    case 2: { // await the player record, then branch on whether a name is set
+        MainViewController *root = RootVC();
         if (![dl isPlayerGetDownLoading]) {
             [root DeleteCommunicating];
             BOOL needName = [UserSettingData playerId] == nil ||
                             [UserSettingData playerName] == nil || [dl errorGetPlayer] == 1;
             m_state = needName ? 3 : 4;
+            // Once the daily-info flag is enabled, re-derive it from the
+            // player-get result (error 99 = not-yet-known disables it).
+            if (m_infoFlag) {
+                bool enabled = [dl errorGetPlayer] != 99;
+                if (m_infoFlag != enabled) {
+                    m_infoFlag = enabled;
+                }
+            }
+        } else if (![root IsCommunicatingEnable] && [dl getPlayerGetProgressSec] > 1.0) {
+            // Still downloading past a second: show the communicating spinner.
+            [root InsertCommunicating];
         }
         break;
+    }
     case 3: // no player name yet -> the name-entry screen
-        [root GotoInPlayerName];
+        [RootVC() GotoInPlayerName];
         m_state = 4;
         break;
     case 4: { // hand the reward network its session parameters
         NSString *url = [[StoreUtil getRewardLoginTokenURL] absoluteString];
-        // The binary fetches the reward appli id + player id here (session
-        // identity); the decompiled dictionaryWithObjectsAndKeys cleanly recovers
-        // only the {"env":"0"} pair, so the appli-id / player-id dict key strings
-        // are a documented best-effort omission.
+        // The binary also folds the reward appli id + player id into the session
+        // dictionary, but those __stdcall_softfp string args are lost in the
+        // decompile; only the {"env": "0"} pair is recoverable. RewardNetwork is a
+        // no-op stub here, so the exact dictionary is inert.
         (void)[[AppDelegate appDelegate] rewardAppId];
         (void)[UserSettingData playerId];
         NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"env", nil];
@@ -349,121 +389,318 @@ void MenuMainTask::update(int /*deltaMs*/) {
         m_state = 5;
         break;
     }
-    case 5: // wait for the intro SE, then reveal the menu
-        m_state = 8;
+    case 5: // wait for the open layer to finish, then start the looping background
+        if (!m_layers[0]->isAnimating()) {
+            m_layers[0]->reset();
+            m_layers[1]->play(); // the looping background (+0x2c)
+            m_state = 8;
+        }
         break;
-    case 6: // unlock gates: invite present, bemani-collabo music, etc.
-        // (Grants chara tickets / opens collabo + invite music per UserSettingData
-        // counters, shows a CommonAlertView, then falls through to state 7.)
-        m_state = 7;
-        break;
-    case 8: // once-a-day official-info web view, then login-bonus check
-        m_state = m_infoFlag ? 10 : 6;
-        break;
-    case 10: // login bonus (LoginBonusView / RandomLoginBonusView), then
-             // interactive
-        m_state = 6;
-        break;
-    case 0xc: { // *** interactive main menu — hit-test the mode buttons ***
-        if (touchId < 0) {
+    case 6: { // unlock gates, one per frame via m_unlockStep, then the interactive menu
+        const int invitePresent = [UserSettingData invitePresent];
+        const int inviteCnt = [UserSettingData inviteCnt];
+        // The shared "you unlocked something" confirm dialog: wire its dismiss to
+        // modeSelectAlertClosed, then show a tagged OK alert.
+        auto showUnlockAlert = [&](NSString *title, NSString *message) {
+            MainViewController *root = RootVC();
+            [root SetAlertViewCallback:&modeSelectAlertClosed param:this];
+            CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:title
+                                                                    message:message
+                                                                   delegate:root
+                                                          cancelButtonTitle:nil
+                                                          otherButtonTitles:@"OK", nil];
+            [alert setTag:1];
+            [alert show];
+        };
+        switch (m_unlockStep) {
+        case 0: // 3 invites -> 5 character tickets
+            if (invitePresent <= 2 && inviteCnt >= 3) {
+                [UserSettingData saveCharaTicket:(short)([UserSettingData charaTicket] + 5)];
+                [UserSettingData saveInvitePresent:3];
+                m_state = 7;
+                showUnlockAlert(@"招待コード",
+                                @"招待数 3人 達成！\nキャラチケットを５枚手に入れました！");
+            }
+            break;
+        case 1: // 5 invites -> the N/H special charts
+            if (invitePresent < 5 && inviteCnt >= 5) {
+                [UserSettingData saveInvitePresent:5];
+                [[MusicManager getInstance] openInviteMusic];
+                m_state = 7;
+                showUnlockAlert(@"招待コード",
+                                @"招待数 5人 達成！\nスペシャル楽曲 [N/H譜面] が解禁されました！");
+            }
+            break;
+        case 2: // 7 invites -> the Ex special chart
+            if (invitePresent < 7 && inviteCnt >= 7) {
+                [UserSettingData saveInvitePresent:7];
+                [[MusicManager getInstance] openInviteMusic];
+                m_state = 7;
+                showUnlockAlert(@"招待コード",
+                                @"招待数 7人 達成！\nスペシャル楽曲 [Ex譜面] が解禁されました！");
+            }
+            break;
+        case 3: // the "start BEMANI on the app" collabo music
+            if (![UserSettingData isBemaniCollaboOpened] &&
+                [MusicManager isOpenBemaniCollaboMusic]) {
+                [UserSettingData saveIsBemaniCollaboOpened:YES];
+                [[MusicManager getInstance] openCollaboMusic];
+                m_state = 7;
+                showUnlockAlert(
+                    nil, @"アプリでビーマニはじめようキャンペーン！\n限定楽曲が解禁されました！");
+            }
+            break;
+        default:
             break;
         }
-        // Each mode button plays its own UI SE (resource id m_seId[k] @ +0x50,
-        // handle cached in m_seInst[k] @ +0x68) then either spawns a sub-task (->
-        // state 0x12) or pushes a UIKit screen (-> state 0x11). The binary also
-        // gates every branch on the prompt layer (+0x30) no longer animating; that
-        // intro-guard is elided here as it is throughout this reconstruction.
-        if (hitButton(touchId, kBtnPlay)) { // +0x128 play (tutorial first time)
+        // No unlock fired this frame: advance the step, and after the last gate
+        // (collabo, step 3) drop into the interactive menu.
+        if (m_state == 6) {
+            if (m_unlockStep++ >= 3) {
+                m_state = 0xc;
+            }
+        }
+        break;
+    }
+    case 8: { // the once-a-day official-info web view, then the login bonus
+        if (!m_tutorialSkip) {
+            m_state = 6;
+            break;
+        }
+        NSDate *today = [NSDate date];
+        if (m_infoFlag && ![UserSettingData isEqualToInfoViewDay:today]) {
+            CustomWebView *web =
+                [[CustomWebView alloc] initWithURL:[StoreUtil getOfficialAppInfoURL]];
+            [web SetCloseCallback:&modeSelectAlertClosed param:this];
+            [web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
+            [UserSettingData saveInfoViewDay:today];
+            m_state = 9;
+        } else {
+            m_state = 10;
+        }
+        break;
+    }
+    case 10: { // the login bonus (random or regular), then the interactive menu
+        m_state = 6;
+        if ([dl loginCnt] < 1) {
+            break;
+        }
+        const bool cntUpdated = [dl isLoginCntUpdate];
+        if ([dl loginBonusId] != 0) { // a random login bonus is pending
+            if (!cntUpdated) {
+                break;
+            }
+            [RootVC() SetAlertViewCallback:&modeSelectAlertClosed param:this];
+            RandomLoginBonusView *view = [[RandomLoginBonusView alloc] init];
+            [view show];
+            m_state = 0xb;
+            [dl setIsLoginCntUpdate:NO];
+            break;
+        }
+        // A regular login bonus: settle the stored count toward the server's.
+        if ([UserSettingData getLoginBonusCnt] == 0) {
+            int settled = [dl loginCnt];
+            if (cntUpdated) {
+                settled -= 1;
+            } else if ([LoginBonusView getRewardMaxCnt] == [dl loginCnt] &&
+                       [UserSettingData getOpenedLoginBonusId] < [dl loginBonusId]) {
+                settled -= 1;
+            }
+            [UserSettingData saveLoginBonusCnt:settled];
+        }
+        if ([UserSettingData getLoginBonusCnt] != [dl loginCnt]) {
+            [RootVC() SetAlertViewCallback:&modeSelectAlertClosed param:this];
+            LoginBonusView *view = [[LoginBonusView alloc] init];
+            [view show];
+            m_state = 0xb;
+        }
+        break;
+    }
+    case 0xc: { // *** interactive main menu — hit-test every mode button ***
+        // Re-scan the treasure / game event ids whenever DownloadMain reports a
+        // refresh, so the overlay badges reflect the latest active events.
+        if ([dl isTreasureEventInfoUpdated]) {
+            m_treasureEvent = 0;
+            for (NSNumber *eventId in dl.treasureEventIdArray) {
+                if (isIndexInRange12((unsigned int)[eventId intValue])) {
+                    m_treasureEvent = 1;
+                    break;
+                }
+            }
+            [dl setIsTreasureEventInfoUpdated:NO];
+        }
+        if ([dl isGameEventInfoUpdated]) {
+            m_gameEvent = 0;
+            for (NSNumber *eventId in dl.gameEventIdArray) {
+                if ([eventId intValue] == 0) {
+                    m_gameEvent = 1;
+                    break;
+                }
+            }
+            [dl setIsGameEventInfoUpdated:NO];
+        }
+        if (!haveTap) {
+            break;
+        }
+
+        MainViewController *root = RootVC();
+        // The tap must land while the prompt layer (+0x30) is no longer animating
+        // for every button except Play and Friend (which are always live).
+        auto introQuiet = [&] { return !m_layers[2]->isAnimating(); };
+        auto hit = [&](const ButtonRect &r) {
+            return neGraphics::pointInRect(tapX, tapY, r.x, r.y, r.w, r.h);
+        };
+        // The three top-cluster rects share the row Y, width, and height, and
+        // differ only in their X origin.
+        auto hitTop = [&](int rectX) {
+            return neGraphics::pointInRect(
+                tapX, tapY, rectX, m_top.rowY, m_top.fielda4, m_top.fielda8);
+        };
+
+        if (hitTop(m_top.settingsX)) { // settings (+0x98)
+            if (introQuiet()) {
+                m_state = 0xd;
+            }
+        } else if (hitTop(m_top.fielda0)) { // featured / reward offer wall (+0xa0)
+            if (introQuiet() && m_giftEnabled) {
+                m_state = 0xf;
+            }
+        } else if (hitTop(m_top.field9c)) { // present box (+0x9c)
+            if (introQuiet()) {
+                neEngine::playSystemSe(1);
+                [root GotoPresentBox];
+                m_state = 0x11;
+            }
+        } else if (hit(m_buttons[kBtnFriend])) { // +0x148 friend management
+            if (introQuiet()) {
+                m_seInst[2] = static_cast<int>([audio playSe:0 resourceId:m_seId[2]]);
+                [root GotoFriendManage];
+                m_state = 0x11;
+            }
+        } else if (hit(m_buttons[kBtnPlay])) { // +0x128 play (tutorial on first play)
             m_seInst[0] = static_cast<int>([audio playSe:0 resourceId:m_seId[0]]);
             if (!m_tutorialSkip) {
+                neAppEventCenter::shared().setGuestNoSaveMode(true);
                 [UserSettingData saveIsTutorialPlayed:YES];
-                m_spawnedTask = TutorialTaskCreate();
+                m_spawnedTask = TutorialTaskCreate(); // the guest-mode tutorial PlayTask
             } else {
                 m_spawnedTask = MainTaskCreate();
             }
             m_state = 0x12;
-        } else if (hitButton(touchId,
-                             kBtnArcade)) { // +0x158 AcMainTask (treasure board)
-            m_seInst[1] = static_cast<int>([audio playSe:0 resourceId:m_seId[1]]);
-            m_spawnedTask = AcMainTaskCreate();
-            m_state = 0x12;
-        } else if (hitButton(touchId, kBtnAcViewer)) { // +0x168 AcViewerTask
-            // iPad primes a default browsing selection (music 1 / diff 0) if none is
-            // set, then clears the pending "Sel" pair. Ghidra: the g_bIsPadDisplay
-            // block seeding g_dwAcViewerMusicId / g_dwAcViewerSelMusicId.
-            if (neSceneManager::isPadDisplay()) {
-                if (neAppEventCenter::acViewerMusicId() < 1) {
-                    neAppEventCenter::setAcViewerSelection(1, 0);
-                }
-                neAppEventCenter::clearAcViewerSelection();
-            }
-            m_seInst[5] = static_cast<int>([audio playSe:0 resourceId:m_seId[5]]);
-            m_spawnedTask = AcViewerTaskCreate();
-            m_state = 0x12;
-        } else if (hitButton(touchId, kBtnFriend)) { // +0x148 friend management
-            m_seInst[2] = static_cast<int>([audio playSe:0 resourceId:m_seId[2]]);
-            [root GotoFriendManage];
-            m_state = 0x11;
-        } else if (hitButton(touchId, kBtnStore)) { // +0x138 store
-            m_seInst[3] = static_cast<int>([audio playSe:0 resourceId:m_seId[3]]);
-            [[DownloadMain getInstance] setIsNewMusicPackReleased:NO];
-            [root GotoStoreButton];
-            m_state = 0x11;
-        } else if (hitButton(touchId, kBtnPopnLink)) { // +0x178 pop'n link
-            m_seInst[4] = static_cast<int>([audio playSe:0 resourceId:m_seId[4]]);
-            [root GotoPopnLink];
-            m_state = 0x11;
-        } else if (hitButton(touchId, kBtnInvite)) { // +0x188 invite code
-            // Ghidra: only enter the invite screen when a player record exists —
-            // play the confirm SE (slot 0) and navigate; otherwise play the deny SE
-            // (slot 2) and stay on the menu (no GotoInviteCode, no state change).
-            if ([UserSettingData playerId] != nil && [UserSettingData playerName] != nil) {
-                neEngine::playSystemSe(0);
-                [root GotoInviteCode];
+        } else if (hit(m_buttons[kBtnStore])) { // +0x138 store
+            if (introQuiet()) {
+                m_seInst[3] = static_cast<int>([audio playSe:0 resourceId:m_seId[3]]);
+                [[DownloadMain getInstance] setIsNewMusicPackReleased:NO];
+                [root GotoStoreButton];
                 m_state = 0x11;
-            } else {
-                neEngine::playSystemSe(2);
             }
-        } else if (hitButton(touchId, kBtnArcadeSearch)) { // +0x198 arcade search
-            neEngine::playSystemSe(0);
-            [root GotoArcadeSearch];
-            m_state = 0x11;
-        } else if (hitPresentBoxButton(touchId)) { // +0x9c present box (top cluster)
-            neEngine::playSystemSe(1);
-            [root GotoPresentBox];
-            m_state = 0x11;
-        } else if (hitSettingsButton(touchId)) { // +0x98 settings (top cluster)
-            m_state = 0xd;
+        } else if (hit(m_buttons[kBtnArcade])) { // +0x158 AcMainTask (treasure board)
+            if (introQuiet()) {
+                m_seInst[1] = static_cast<int>([audio playSe:0 resourceId:m_seId[1]]);
+                m_spawnedTask = AcMainTaskCreate();
+                m_state = 0x12;
+            }
+        } else if (hit(m_buttons[kBtnAcViewer])) { // +0x168 AcViewerTask
+            if (introQuiet()) {
+                // iPad seeds a default browsing selection (music 1 / difficulty 0)
+                // when none is set, then clears the pending "Sel" pair.
+                if (neSceneManager::isPadDisplay()) {
+                    if (neAppEventCenter::acViewerMusicId() < 1) {
+                        neAppEventCenter::setAcViewerSelection(1, 0);
+                    }
+                    neAppEventCenter::clearAcViewerSelection();
+                }
+                m_seInst[5] = static_cast<int>([audio playSe:0 resourceId:m_seId[5]]);
+                m_spawnedTask = AcViewerTaskCreate();
+                m_state = 0x12;
+            }
+        } else if (hit(m_buttons[kBtnPopnLink])) { // +0x178 pop'n link
+            if (introQuiet()) {
+                m_seInst[4] = static_cast<int>([audio playSe:0 resourceId:m_seId[4]]);
+                [root GotoPopnLink];
+                m_state = 0x11;
+            }
+        } else if (hit(m_buttons[kBtnInvite])) { // +0x188 invite code
+            // Only enter the invite screen when a player record exists: play the
+            // confirm SE (slot 0) and navigate; otherwise play the deny SE (slot 2)
+            // and stay on the menu.
+            if (introQuiet()) {
+                if ([UserSettingData playerId] != nil && [UserSettingData playerName] != nil) {
+                    neEngine::playSystemSe(0);
+                    [root GotoInviteCode];
+                    m_state = 0x11;
+                } else {
+                    neEngine::playSystemSe(2);
+                }
+            }
+        } else if (hit(m_buttons[kBtnArcadeSearch])) { // +0x198 arcade search
+            if (introQuiet()) {
+                neEngine::playSystemSe(0);
+                [root GotoArcadeSearch];
+                m_state = 0x11;
+            }
+        } else if (tapY < 0x33 && introQuiet()) {
+            // A tap in the top news-ticker band opens the current news line's URL.
+            NSArray *urls = dl.newsUrlArray;
+            if (urls != nil && (NSUInteger)m_newsIndex < [urls count]) {
+                NSString *url = [urls objectAtIndex:m_newsIndex];
+                if ([url length] != 0) {
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+                }
+            }
         }
-        // NOTE (documented gap): the +0xa0 "featured/reward" top button -> states
-        // 0xf/0x10 (RewardNetwork openAppListWebViewWithCampaignId offer-wall) is
-        // not wired here; its 7-arg web-view call is not cleanly recoverable from
-        // the decompile and it is a third-party offer-wall, not gameplay. Tracked
-        // in STUBS.md.
         break;
     }
     case 0xd: // settings screen
         neEngine::playSystemSe(1);
-        [root GotoSetting];
+        [RootVC() GotoSetting];
         m_state = 0xe;
         break;
-    case 0xe: // wait for settings to close; relaunch the title on request
+    case 0xe: { // wait for settings to close; relaunch the title on request
+        MainViewController *root = RootVC();
         if (![root settingViewing]) {
             if ([root isGotoTitle] == 1) {
                 m_spawnedTask = TitleTaskCreate(); // spawn a fresh TitleTask
                 m_state = 0x12;
+                [root setIsGotoTitle:NO];
             } else {
                 m_state = 0xc;
             }
         }
         break;
-    case 0x11: // wait for the pushed screen to close, then re-enter the menu
+    }
+    case 0xf: { // the reward offer-wall web panel (RewardNetwork; a no-op stub here)
+        neEngine::playSystemSe(1);
+        MainViewController *root = RootVC();
+        [root setRewardListViweing:YES];
+        // Only the campaign id (0) and type (2) survive the decompile; the
+        // remaining __stdcall_softfp string args are lost. The binary reuses
+        // NSNumber objects for these NSString parameters (RewardNetwork stringifies
+        // them); the dependency is stubbed, so the call is inert either way.
+        [RewardNetwork openAppListWebViewWithCampaignId:(NSString *)[NSNumber numberWithInt:0]
+                                              inCompany:nil
+                                                   type:(NSString *)[NSNumber numberWithInt:2]
+                                                 offset:nil
+                                                  limit:nil
+                                             parentView:[root view]
+                                               delegate:(id)root];
+        m_state = 0x10;
+        break;
+    }
+    case 0x10: // wait for the offer-wall to close, then re-enter the menu
+        if (![RootVC() rewardListViweing]) {
+            m_state = 0xc;
+        }
+        break;
+    case 0x11: { // wait for the pushed screen to close, then re-enter the menu
+        MainViewController *root = RootVC();
         if (![root IsPresentBoxEnable] && ![root IsInviteCodeEnable] &&
             ![root IsArcadeSearchEnable] && ![root IsStoreEnable] && ![root IsPopnLinkEnable] &&
             ![root IsFriendManageEnable]) {
             m_state = 0xc;
         }
         break;
+    }
     case 0x12:                       // fade out into the launched sub-task
         aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
         m_state = 0x13;
@@ -475,8 +712,6 @@ void MenuMainTask::update(int /*deltaMs*/) {
         break;
     case 0x14: { // hand off: once every menu SE and the shared system SE have
                  // finished sounding, dispose (teardown + schedule the sub-task).
-        // Ghidra 0x6b83e: scan the six menu SE instances, then gate on the
-        // scene manager's system-SE slot 0; dispose only when neither is playing.
         bool sePlaying = false;
         for (int i = 0; i < 6; i++) {
             if (m_seInst[i] >= 0 && [audio isPlayingSe:m_seInst[i]]) {
@@ -492,18 +727,11 @@ void MenuMainTask::update(int /*deltaMs*/) {
         break;
     }
 
-    // Per-frame menu UI update + draw, run after every state (Ghidra tail:
-    // FUN_0002c924 then FUN_0006d428). First advance + enqueue every live Aep
-    // layer — the three menu layers this task linked into the global list via
-    // AepLyrCtrl::init — then emit the menu's own overlay sprites through the
-    // AepManager.
-    for (int i = 0; i < 3; i++) { // +0x28 intro / +0x2c loop bg / +0x30 prompt
-        AepLyrCtrl *layer = m_layers[i];
-        if (layer != nullptr && layer->isVisible()) {
-            layer->draw(); // Ghidra: FUN_0002c924 per-layer advance + enqueue
-        }
-    }
-    drawOverlay(); // Ghidra: FUN_0006d428
+    // Per-frame tail (Ghidra: updateAndDrawAepLayers then ModeSelectTask::Draw):
+    // advance + enqueue every live AEP layer globally, then emit this menu's own
+    // overlay sprites.
+    updateAndDrawAepLayers(0);
+    drawOverlay();
 }
 
 /**
@@ -637,47 +865,28 @@ void MenuMainTask::drawOverlay() {
     }
 }
 
-// Ghidra: FUN_0002d974 — hit-test one of the eight array mode buttons: its
-// screen rectangle (x @ rectField, y @ rectField+4, w, h) is tested against the
-// current tap.
-bool MenuMainTask::hitButton(int touchId, Button button) const {
-    const ButtonRect &r = m_buttons[button];
-    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &r.x, &r.y);
-}
-
-// The settings button lives in the packed top cluster (rect x @ +0x98, enable/y
-// @ +0x94), so its two field pointers are taken separately. Ghidra:
-// FUN_0002d974.
-bool MenuMainTask::hitSettingsButton(int touchId) const {
-    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.settingsX, &m_top.rowY);
-}
-
-// The present-box button overlaps the same top cluster, its rect starting one
-// field later (x @ +0x9c), sharing the row-Y enable field (+0x94). Ghidra:
-// FUN_0002d974.
-bool MenuMainTask::hitPresentBoxButton(int touchId) const {
-    return neEngine::menuButtonHit(&neGraphics::shared(), touchId, &m_top.field9c, &m_top.rowY);
-}
-
 /**
- * The mode-select confirm dialogs' alert-dismissed callback. Detach the root VC's
- * alert callback, then step the state machine: 7 & 11 -> 6, 9 -> 10, anything
- * else (incl. the default) -> 12.
+ * modeSelectAlertClosed — the confirm-dialog dismiss callback the binary installs
+ * directly (SetAlertViewCallback / CustomWebView SetCloseCallback) with the task
+ * as `context`. Detach the root VC's alert callback, then step the state machine:
+ * 7 & 11 -> 6 (re-check the next unlock gate), 9 -> 10 (login bonus after the
+ * daily-info web view), anything else -> 0xc (the interactive menu).
  * @ghidraAddress 0x6d1a4
  * @complete
  */
-void MenuMainTask::onAlertClosed() {
-    [RootVC() SetAlertViewCallback:NULL param:NULL];
-    switch (m_state) {
+void modeSelectAlertClosed(void *context) {
+    auto *self = static_cast<MenuMainTask *>(context);
+    [RootVC() SetAlertViewCallback:nullptr param:nullptr];
+    switch (self->m_state) {
     case 7:
     case 11:
-        m_state = 6;
+        self->m_state = 6;
         break;
     case 9:
-        m_state = 10;
+        self->m_state = 10;
         break;
     default:
-        m_state = 12;
+        self->m_state = 0xc;
         break;
     }
 }
