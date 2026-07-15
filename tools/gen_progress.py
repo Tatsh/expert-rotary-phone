@@ -29,6 +29,10 @@ _OBJC_DEF = re.compile(r'^[-+]\s*\(')
 _CXX_MEMBER = re.compile(r'^[A-Za-z_][\w\s:<>\*&,]*::~?[\w]+\s*\(')
 _FREE_DEF = re.compile(r'^(?:static\s+|inline\s+|virtual\s+)*[A-Za-z_][\w:<>\*&\s]*\s[\*&]?\b([A-Za-z_]\w*)\s*\(')
 _KEYWORDS = {'if', 'for', 'while', 'switch', 'return', 'else', 'catch', 'do', 'case'}
+# Explicitly-inlined helpers are de-inlined reconstruction conveniences, not real
+# binary functions, so they are excluded from the coverage denominator. In-class
+# header definitions (implicitly inline, no keyword) are still counted.
+_INLINE = re.compile(r'\b(?:inline|always_inline)\b')
 
 
 def scan(path: str) -> tuple[int, int]:
@@ -41,6 +45,8 @@ def scan(path: str) -> tuple[int, int]:
     defs = 0
     is_impl = path.endswith(IMPL_EXTS)
     for i, line in enumerate(lines):
+        if _INLINE.search(line):
+            continue
         if is_impl and _OBJC_DEF.match(line):
             defs += 1
             continue
@@ -49,7 +55,7 @@ def scan(path: str) -> tuple[int, int]:
     if not is_impl:
         for i, line in enumerate(lines):
             stripped = line.strip()
-            if stripped.startswith(('//', '*', '/*')):
+            if stripped.startswith(('//', '*', '/*')) or _INLINE.search(line):
                 continue
             match = _FREE_DEF.match(line)
             has_body = '{' in line or (i + 1 < len(lines) and lines[i + 1].strip().startswith('{'))

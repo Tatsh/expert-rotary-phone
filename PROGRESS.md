@@ -4,13 +4,13 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 8/2974 (0%) definitions verified `@complete`.**
+**Overall: 8/2962 (0%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |   % |
 | -------------------------------------------------- | ---: | --------: | --: |
 | `Project/System/src/Task/BootLogoTask.mm`          |    7 |         2 | 29% |
 | `Project/System/src/Task/TitleTask.mm`             |    7 |         2 | 29% |
-| `Project/System/src/Task/MainTask.mm`              |   22 |         2 |  9% |
+| `Project/System/src/Task/MainTask.mm`              |   15 |         2 | 13% |
 | `Project/System/src/Task/MenuMainTask.mm`          |   12 |         1 |  8% |
 | `Project/AppDelegate.mm`                           |   42 |         1 |  2% |
 | `3rdparty/ziparchive/UnZipArchive.mm`              |   19 |         0 |  0% |
@@ -201,7 +201,6 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/Sound/AudioManager.mm`         |   71 |         0 |  0% |
 | `Project/System/src/Sound/CAComponent.mm`          |   19 |         0 |  0% |
 | `Project/System/src/Sound/CASound.mm`              |    7 |         0 |  0% |
-| `Project/System/src/Sound/SeInstance.h`            |    5 |         0 |  0% |
 | `Project/System/src/Sound/neAVCAPlayer.mm`         |   19 |         0 |  0% |
 | `Project/System/src/Sound/neAVSePlayer.mm`         |   21 |         0 |  0% |
 | `Project/System/src/SystemHardware.m`              |    5 |         0 |  0% |
