@@ -279,6 +279,7 @@ void PlayTask::update(int /*deltaMs*/) {
     }
     int touchCount = 0;
     bool backTap = false;
+    int backTapStartY = 0; // the back-tap's nStartY (Ghidra local_8c), used by the pause menu
     for (int i = 0, n = gfx.activeTouchCount(); i < n; i++) {
         const neTouchPoint *t = gfx.touchAt(i);
         if (t->valid != 0) { // a currently-down touch -> feed the judge
@@ -293,6 +294,9 @@ void PlayTask::update(int /*deltaMs*/) {
         } else if (!backTap && t->released != 0) { // a tap -> maybe the back button
             int dx = t->startX - t->x, dy = t->startY - t->y;
             backTap = (dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb;
+            if (backTap) {
+                backTapStartY = t->startY;
+            }
         }
     }
 
@@ -333,15 +337,39 @@ void PlayTask::update(int /*deltaMs*/) {
             PlayJudge_update(playData, nullptr, nullptr, 0);
         }
         break;
-    case 5: // pause menu: draw the pause layer + field behind it, then the tail
-        // TODO(gameplay): the resume/retry/quit button hit-tests (fixed-point
-        // pointInRect against the +0x97c..+0x988 pause geometry, scaled by the
-        // +0x974 UI scale) still need a disassembly-level reconstruction; the draw
-        // + fall-through to the tail below match the decompile's structure.
-        aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0);
+    case 5: { // pause menu: hit-test resume / retry / quit, then draw the menu + field
+        if (backTap) {
+            const float scale = reinterpret_cast<const float &>(m_uiScale);
+            const int half = (int)scale / 2; // Ghidra: (int)flRefScale / 2
+            const float tapY = (float)backTapStartY / 65536.0f;
+            // Each stacked button spans [pos + half, pos + half + width], scaled by
+            // the UI scale, and is hit-tested against the tap's start Y (Ghidra:
+            // FixedToFP(pos + half) * scale <= FixedToFP(local_8c)).
+            const auto inBand = [&](int pos) -> bool {
+                const float lo = (float)(pos + half) / 65536.0f * scale;
+                const float hi = (float)(pos + half + m_pauseBtnWidth) / 65536.0f * scale;
+                return lo <= tapY && tapY <= hi;
+            };
+            if (inBand(m_pauseBtnResumeX)) { // resume: unpause and resume play
+                nm.togglePause();            // Ghidra: NoteMng::TogglePause
+                m_state = 6;                 // the decompile re-enters state 6 at once
+                break;
+            }
+            if (inBand(m_pauseBtnRetryX)) { // retry: fade out and rebuild the play
+                aep.setAepTransitionMode(2);
+                m_state = 3;
+                break;
+            }
+            if (inBand(m_pauseBtnQuitX)) { // quit: stop audio and go to results
+                m_state = 7;
+                break;
+            }
+        }
+        aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0); // the pause-menu layer
         nm.update(); // Ghidra: NoteMng::Update — keep the notes scrolling behind
         PlayJudge_update(playData, nullptr, nullptr, 0);
         break;
+    }
     case 6: {               // *** PLAYING ***: drive the note engine, then judge/render, gauge,
                             // song-end
         nm.updatePlaying(); // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
