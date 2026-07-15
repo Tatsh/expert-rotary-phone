@@ -36,6 +36,14 @@ public:
     // in. Ghidra: loadAepData (FUN_0000f4b0). Returns true on success.
     bool loadAepData(int group, const char *dir, const char *name, bool single);
 
+    /// @brief Load an .aep resource group from the manager's base directory.
+    /// @details Convenience form of loadAepData using baseDir() and the single-file
+    ///          "<baseDir>/<name>.idx" layout.
+    /// @param group Destination group slot.
+    /// @param name Resource base name (e.g. "title").
+    /// @note Ghidra: AepManager::loadAepDataDefaultPath (FUN_0000f758).
+    void loadAepDataDefaultPath(int group, const char *name);
+
     // Per-frame render: advances the active screen transition (fade in/out over
     // a timer) then draws the ordering table. Ghidra: FUN_0001058c.
     void draw();
@@ -174,8 +182,10 @@ public:
         return m_baseDir;
     }
 
-    // Drop a group's loaded texture (Ghidra: FUN_0000f988).
-    void unloadGroup(int group);
+    /// @brief Release a group's loaded texture (its destructor drops the tiles).
+    /// @param group Group slot to free.
+    /// @note Ghidra: AepManager::releaseAepTexture (FUN_0000f988).
+    void releaseAepTexture(int group);
 
     // The two screen-quad extents cached from the transition-overlay region (the
     // fade quad's width/height at this+0x7f3afc / +0x7f3b00). The play scene
@@ -291,12 +301,6 @@ private:
     friend void
     relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uint8_t *idxBase);
 };
-
-// Load / unload a named Aep resource group into a manager slot (the
-// title/menu/play scenes swap their layer groups this way). Ghidra:
-// FUN_0000f758 / FUN_0000f988.
-void AepLoadGroup(AepManager *aep, int slot, const char *name);
-void AepUnloadGroup(AepManager *aep, int slot);
 
 // Initialise the scene manager against its resource paths and screen surface.
 // Copies `basePath` (the bundle path) to this+0, `dataPath` (the on-disk

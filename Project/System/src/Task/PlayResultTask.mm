@@ -397,7 +397,7 @@ void PlayResultTask::resultSetup() {
 
     // --- Load the result asset group + build the animation layers ---
     const bool pad = (m_padDisplay != 0);
-    AepLoadGroup(&aep, 4, pad ? "result_ipad" : "result"); // FUN_0000f758
+    aep.loadAepDataDefaultPath(4, pad ? "result_ipad" : "result"); // FUN_0000f758
 
     // 4 effect layers resolved to raw layer handles + their frame counts.
     static const char *const kEffLayers[4] = {
@@ -909,8 +909,8 @@ void PlayResultTask::resultGotoNext() {
     }
 
     // Drop the result asset group and mark this task dead.
-    AepUnloadGroup(&aep, 4); // FUN_0000f988
-    kill();                  // +0x24 = 1
+    aep.releaseAepTexture(4); // FUN_0000f988
+    kill();                   // +0x24 = 1
 
     // Spawn (once) the standard music-select task and (re)prioritise it.
     if (m_nextTask == nullptr) {

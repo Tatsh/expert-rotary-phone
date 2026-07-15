@@ -165,7 +165,7 @@ void MenuMainTask::setup() {
     // Load the mode-select Aep group into slot 2 and bring up its three animated
     // layers: [0] intro (+0x28), [1] looping background (+0x2c), [2] prompt
     // (+0x30).
-    AepLoadGroup(&aep, 2, sceneGroup);
+    aep.loadAepDataDefaultPath(2, sceneGroup);
     for (int i = 0; i < 3; i++) {
         AepLyrCtrl *layer = new AepLyrCtrl();
         layer->init(2, layerNames[i]);

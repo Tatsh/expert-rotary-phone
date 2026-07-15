@@ -1717,7 +1717,7 @@ void MainTask::StopAndSave() {
             layer = nullptr;
         }
     }
-    m_aep->unloadGroup(3); // releaseAepTexture(aep, 3)
+    m_aep->releaseAepTexture(3); // Ghidra: FUN_0000f988
 
     // Record the finished play's music id + result sheet for the result screen to
     // read, unless this is a no-save teardown. When guest-mode is on the result

@@ -607,7 +607,7 @@ void AcMainTask::setupScene() {
     buildSelectListLayout(); // FUN_000a21a8
 
     // Load the sugoroku asset group into slot 5 (Ghidra: FUN_0000f758).
-    AepLoadGroup(&aep, 5, pad ? "sugoroku_ipad" : "sugoroku");
+    aep.loadAepDataDefaultPath(5, pad ? "sugoroku_ipad" : "sugoroku");
 
     setupResolveHandles();
     setupBuildOverlays();
@@ -988,7 +988,7 @@ void AcMainTask::loadTreasureMap() {
             bgLoopName = @"BG_LOOP";
         }
         AepManager &aep = *m_aep;
-        AepLoadGroup(&aep, 6, [bgGroupName UTF8String]); // FUN_0000f758 slot 6
+        aep.loadAepDataDefaultPath(6, [bgGroupName UTF8String]); // FUN_0000f758 slot 6
         AepLyrCtrl *bgLayer = new AepLyrCtrl();
         m_boardBgLayer = bgLayer;
         bgLayer->init(6, [bgLoopName UTF8String], this, 0x24);
@@ -1350,14 +1350,13 @@ void AcMainTask::unloadMapBgGroup() {
         delete bg;
         m_boardBgLayer = nullptr;
     }
-    AepUnloadGroup(m_aep, 6); // FUN_0000f988
+    m_aep->releaseAepTexture(6); // FUN_0000f988
 }
 
 // Ghidra: a sibling of FUN_000a4e84 called from sugorokuTaskDispose. It
 // unlink+deletes the board-background layer (+0xd0) and releases its AEP
-// texture group via releaseAepTexture(m_aep, 6) — which this reconstruction
-// models as AepManager::unloadGroup(6) (see MainTask.mm's releaseAepTexture
-// note). That is exactly unloadMapBgGroup's effect, so it delegates there
+// texture group via AepManager::releaseAepTexture(6). That is exactly
+// unloadMapBgGroup's effect, so it delegates there
 // rather than duplicate the body (both are null-checked and idempotent,
 // matching the binary running both on teardown).
 void AcMainTask::sugorokuReleaseGoalLayer() {
@@ -2025,7 +2024,7 @@ void AcMainTask::sugorokuTaskDispose() {
     }
 
     // 6. Unload AEP asset group 5.
-    AepUnloadGroup(m_aep, 5);
+    m_aep->releaseAepTexture(5);
 
     // 7. Release the board-background / "goal" AEP layer (group 6).
     sugorokuReleaseGoalLayer();

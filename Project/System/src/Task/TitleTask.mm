@@ -24,8 +24,7 @@
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 
-// AepLoadGroup / AepUnloadGroup are declared in AepManager.h; MenuCreateTask in
-// TaskFactory.h.
+// MenuCreateTask is declared in TaskFactory.h.
 
 // Ghidra: TitleTask_ctor (FUN_0002b678) — base C_TASK ctor + zeroed fields.
 TitleTask::TitleTask() = default;
@@ -84,11 +83,11 @@ void TitleTask::setup() {
 
     const char *imageFolder;
     if (!neSceneManager::isPadDisplay()) {
-        AepLoadGroup(m_aep, 1, "title");
+        m_aep->loadAepDataDefaultPath(1, "title");
         m_soundTestLabelX = 0x19;
         imageFolder = (AppDelegate.appDelegate.displayType == 2) ? "1136IMG" : "640IMG";
     } else {
-        AepLoadGroup(m_aep, 1, "title_ipad");
+        m_aep->loadAepDataDefaultPath(1, "title_ipad");
         m_soundTestLabelX = 0x24;
         imageFolder = "IMG_IPAD";
     }
@@ -115,7 +114,7 @@ void TitleTask::finish() {
         delete m_titleLayer; // AepLyrCtrl_unlink + the deleting destructor
         m_titleLayer = nullptr;
     }
-    AepUnloadGroup(m_aep, 1); // AepManager::releaseAepTexture(m_aep, 1)
+    m_aep->releaseAepTexture(1);
     if (m_versionLabel != nil) {
         m_versionLabel = nil;
     }

@@ -133,7 +133,7 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
 
 // Ghidra: FUN_0000f988 — drop the group's texture (its dtor releases the
 // tiles).
-void AepManager::unloadGroup(int group) {
+void AepManager::releaseAepTexture(int group) {
     if (group < 0 || group >= kMaxAepGroups) {
         return;
     }
@@ -141,15 +141,10 @@ void AepManager::unloadGroup(int group) {
     m_groupTexture[group] = nullptr;
 }
 
-// Ghidra: FUN_0000f758 — load a single-file group ("<baseDir>/<name>.idx") into
-// slot.
-void AepLoadGroup(AepManager *aep, int slot, const char *name) {
-    aep->loadAepData(slot, aep->baseDir(), name, true);
-}
-
-// Ghidra: FUN_0000f988.
-void AepUnloadGroup(AepManager *aep, int slot) {
-    aep->unloadGroup(slot);
+// Ghidra: FUN_0000f758 — load a single-file group ("<baseDir>/<name>.idx") from
+// the manager's base directory into `group`.
+void AepManager::loadAepDataDefaultPath(int group, const char *name) {
+    loadAepData(group, baseDir(), name, true);
 }
 
 // Resolve the frame-entry array for the group encoded in `lyr`'s high 16 bits.

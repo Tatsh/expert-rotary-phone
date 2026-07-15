@@ -129,7 +129,7 @@ void AcViewerTask::setup() {
     m_readySeId = (int)[audio loadSe:sePath isLoop:NO callName:nil group:1];
 
     const bool pad = (m_padDisplay != 0);
-    AepLoadGroup(&aep, kAcvGroup, pad ? "arcade_viewer_ipad" : "arcade_viewer");
+    aep.loadAepDataDefaultPath(kAcvGroup, pad ? "arcade_viewer_ipad" : "arcade_viewer");
 
     // Two AepLyrCtrl overlays: the PAUSE_LOOP layer (+0x54) and the top banner
     // (+0x58, device-picked "TOP_960" / "TOP_1136" / "TOP_IPAD").
@@ -518,7 +518,7 @@ void AcViewerTask::cleanup() {
 
     // Free the group-7 arcade_viewer Aep textures. Ghidra: releaseAepTexture(aep,
     // 7).
-    aep.unloadGroup(kAcvGroup);
+    aep.releaseAepTexture(kAcvGroup);
 
     // Release the cached sheet + song-title strong refs (ARC: __bridge_transfer
     // balances the +1 retains loadChart() took at +0x1e0 / +0x1e4, then nil the

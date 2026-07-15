@@ -234,7 +234,7 @@ void PlayTaskInit(void *playData) {
         task->m_hitRadius = 136.0f;      // +0x9b8 (0x43080000)
         task->m_charaDrawSize = 0xc4;    // +0x9a8
         task->m_startHoldMs = 500;       // +0x9e0
-        AepLoadGroup(&aep, 0, "game_cmn");
+        aep.loadAepDataDefaultPath(0, "game_cmn");
     } else {                             // pad
         task->m_pauseTapCenterX = 0x590; // +0x98c
         task->m_pauseTapCenterY = 0x7e;  // +0x990
@@ -250,7 +250,7 @@ void PlayTaskInit(void *playData) {
         task->m_hitRadius = 272.0f;      // +0x9b8 (0x43880000)
         task->m_charaDrawSize = 0x228;   // +0x9a8
         task->m_startHoldMs = 1000;      // +0x9e0
-        AepLoadGroup(&aep, 0, "game_cmn_ipad");
+        aep.loadAepDataDefaultPath(0, "game_cmn_ipad");
     }
 
     // Build every field layer (combo/ready/pause effects + note lanes) and
@@ -307,7 +307,7 @@ void PlayTaskGotoResult(void *playData) {
     destroyAll(task->m_comboLayers);
     destroyAll(task->m_sceneLayers);
 
-    aep.unloadGroup(0); // Ghidra: FUN_0000f988 — drop the common AEP group
+    aep.releaseAepTexture(0); // Ghidra: FUN_0000f988 — drop the common AEP group
 
     // Stop + release every SE this scene created: the three play SEs
     // (m_playSeIds) and the two gauge/tap SEs (m_hitSeId / m_gaugeSeId), then
