@@ -138,10 +138,7 @@ void BootLogoTask::drawLogo2() {
  * Ghidra: BootLogoTask_finish (FUN_0002b554) — log into Game Center, restore
  * the screen scale, release the three sprites, kill this task, and spawn the
  * next one (TitleTask).
- * @note __COMPLETE__ boot-path trace 2026-07-15: matches 0x2b554 — loginGameCenter,
- * flScreenHalfScale = m_scale, delete m_logo[0..2], bKilled = 1, then
- * operator_new(0x54) + TitleTask::TitleTask + C_TASK::setPriority(3) (single call,
- * via BootCreateNextTask()).
+ * @complete
  */
 void BootLogoTask::finish() {
     [AppDelegate.appDelegate loginGameCenter];
@@ -162,9 +159,7 @@ void BootLogoTask::finish() {
  * Ghidra: BootLogoTask_update (FUN_0002b02c) — the 10-state splash machine.
  * Each screen fades in, holds ~kHoldFrames (or until a tap), then fades out;
  * the three logos are shown in the order 0, 2, 1.
- * @note __COMPLETE__ boot-path trace 2026-07-15: state graph 0..9, the tap-skip
- * touch scan, every playTransition(1/2, 0x3c|0x1e, 0), the 0x77 hold threshold,
- * and the draw order (logo0, then drawLogo2, then drawLogo1) match 0x2b02c.
+ * @complete
  */
 void BootLogoTask::update(int /*deltaMs*/) {
     const bool skip = skipRequested();

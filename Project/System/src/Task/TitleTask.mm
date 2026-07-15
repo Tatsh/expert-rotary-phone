@@ -105,9 +105,12 @@ void TitleTask::setup() {
     [audio setBgmVolume:[UserSettingData bgmVolume]];
 }
 
-// Ghidra: TitleTask_finish (FUN_0002c3d0) — release SE/BGM/label + title view,
-// unload the title scene, reload character data, kill this task, and spawn the
-// main-menu task.
+/**
+ * Ghidra: TitleTask_finish (FUN_0002c3d0) — release SE/BGM/label + title view,
+ * unload the title scene, reload character data, kill this task, and spawn the
+ * main-menu task.
+ * @complete
+ */
 void TitleTask::finish() {
     [[AudioManager sharedManager] releaseSe:0 resourceId:m_titleSe];
     if (m_titleLayer != nullptr) {
@@ -170,8 +173,11 @@ void TitleTask::buildConversionButton() {
     m_state3Built = true;
 }
 
-// Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run
-// machine.
+/**
+ * Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run
+ * machine.
+ * @complete
+ */
 void TitleTask::update(int /*deltaMs*/) {
     const bool tap = tapReleased();
     MainViewController *root = RootVC();
