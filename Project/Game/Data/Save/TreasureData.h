@@ -33,12 +33,6 @@
 @property(nonatomic, retain) NSNumber *goalTouchSound;  // Integer16
 @property(nonatomic, retain) NSNumber *fastRecord;      // Integer16
 
-// Fetch the record for a given main/sub map (nil if none). Ghidra:
-// getTreasureData:subMapId:inManagedObjectContext: @ 0xc088c.
-+ (TreasureData *)getTreasureData:(short)mainMapId
-                         subMapId:(short)subMapId
-           inManagedObjectContext:(NSManagedObjectContext *)context;
-
 // Fetch every persisted TreasureData record on the given context (the whole
 // sugoroku save table). Ghidra: getAllTreasureData: @ 0xc09a4.
 + (NSArray<TreasureData *> *)getAllTreasureData:(NSManagedObjectContext *)context;

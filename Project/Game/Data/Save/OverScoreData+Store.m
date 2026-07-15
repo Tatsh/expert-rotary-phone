@@ -24,10 +24,11 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
                                        sheet:(short)sheet
                                     playerId:(NSString *)playerId
                       inManagedObjectContext:(NSManagedObjectContext *)context {
-    NSPredicate *p = [NSPredicate predicateWithFormat:@"music==%d and sheet==%d and playerId==%@",
-                                                      music,
-                                                      (int)sheet,
-                                                      playerId];
+    NSPredicate *p =
+        [NSPredicate predicateWithFormat:@"music = %d and sheet = %d and playerId = %@",
+                                         music,
+                                         (int)sheet,
+                                         playerId];
     NSArray *results = [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
     return results.count ? results.lastObject : nil;
 }
@@ -37,7 +38,7 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
                                  sheet:(short)sheet
                 inManagedObjectContext:(NSManagedObjectContext *)context {
     NSPredicate *p =
-        [NSPredicate predicateWithFormat:@"music==%d and sheet==%d", music, (int)sheet];
+        [NSPredicate predicateWithFormat:@"music = %d and sheet = %d", music, (int)sheet];
     return [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
 }
 
@@ -68,7 +69,7 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 + (NSUInteger)updateOverScoreTouchedWithMusic:(int)music
                        inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
-    NSPredicate *p = [NSPredicate predicateWithFormat:@"music==%d", music];
+    NSPredicate *p = [NSPredicate predicateWithFormat:@"music = %d", music];
     NSArray *results = [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
     if (results == nil || results.count == 0) {
         return 0;
@@ -102,7 +103,7 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 + (NSUInteger)deleteRecordWithMusic:(int)music
              inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
-    NSPredicate *p = [NSPredicate predicateWithFormat:@"music==%d", music];
+    NSPredicate *p = [NSPredicate predicateWithFormat:@"music = %d", music];
     NSArray *results = [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
     if (results == nil || results.count == 0) {
         return 0;
@@ -120,7 +121,7 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
              inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
     NSPredicate *p =
-        [NSPredicate predicateWithFormat:@"music==%d and sheet==%d", music, (int)sheet];
+        [NSPredicate predicateWithFormat:@"music = %d and sheet = %d", music, (int)sheet];
     NSArray *results = [context executeFetchRequest:OverScoreFetch(context, p) error:nil];
     if (results == nil || results.count == 0) {
         return 0;

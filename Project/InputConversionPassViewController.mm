@@ -50,7 +50,8 @@
 
 #import "InputConversionPassViewController.h"
 
-#import "CharaTicketData.h" // +addRecordWithProductId:inManagedObjectContext:
+#import "CharaTicketData+Store.h" // +addRecordWithProductId:inManagedObjectContext:
+#import "CharaTicketData.h"
 #import "MusicManager.h"    // +getInstance -> open*Music
 #import "ScoreData+Store.h" // +getScoreData:inManagedObjectContext: / +hashScore:
 #import "ScoreData.h"

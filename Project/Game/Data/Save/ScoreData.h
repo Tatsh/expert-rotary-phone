@@ -50,10 +50,6 @@
 // reset).
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
-// Fetch every persisted ScoreData row (device-change export). Ghidra:
-// getAllScoreData:.
-+ (NSArray *)getAllScoreData:(NSManagedObjectContext *)context;
-
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

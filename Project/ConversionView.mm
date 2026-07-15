@@ -62,6 +62,7 @@
 #import "ConversionView.h"
 #import "CharaTicketData.h"
 #import "MusicManager.h"
+#import "ScoreData+Store.h"
 #import "ScoreData.h"
 #import "TreasureData.h"
 

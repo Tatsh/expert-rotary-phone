@@ -17,7 +17,7 @@
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
                                  inManagedObjectContext:context];
     request.predicate = [NSPredicate
-        predicateWithFormat:@"mainMapId==%d and subMapId==%d", (int)mainMapId, (int)subMapId];
+        predicateWithFormat:@"mainMapId = %d and subMapId = %d", (int)mainMapId, (int)subMapId];
     NSArray *results = [context executeFetchRequest:request error:nil];
     return results.count ? results.lastObject : nil;
 }
@@ -41,7 +41,7 @@
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
                                  inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"mainMapId==%d", (int)mainMapId];
+    request.predicate = [NSPredicate predicateWithFormat:@"mainMapId = %d", (int)mainMapId];
     NSArray *results = [context executeFetchRequest:request error:nil];
 
     // Each row contributes its low 3 music-piece bits; the map's music unlocks

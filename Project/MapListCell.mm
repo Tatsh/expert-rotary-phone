@@ -8,6 +8,7 @@
 #import "MapListCell.h"
 
 #import "AppDelegate.h"
+#import "TreasureData+Store.h"
 #import "TreasureData.h"
 #import "neEngineBridge.h"
 

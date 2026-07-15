@@ -76,10 +76,11 @@
 #import "FriendScoreTableCell.h" // one ranking row
 #import "MainViewController.h"   // PauseLoop / ResumeLoop / FriendScoreEndCallBack on the root VC
 #import "MusicData.h"
-#import "MusicManager.h"    // song jacket / title art
-#import "OverScoreData.h"   // "a rival beat you" markers
-#import "StoreUtil.h"       // friend-score URL
-#import "UserSettingData.h" // local player id / chara
+#import "MusicManager.h"        // song jacket / title art
+#import "OverScoreData+Store.h" // getAllOverScoreData: / deleteRecordWithMusic:...
+#import "OverScoreData.h"       // "a rival beat you" markers
+#import "StoreUtil.h"           // friend-score URL
+#import "UserSettingData.h"     // local player id / chara
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 #import <objc/message.h>

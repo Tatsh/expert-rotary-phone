@@ -26,6 +26,7 @@
 #import "MusicData.h"
 #import "MusicManager.h"
 #import "NoteMng.h"
+#import "OverScoreData+Store.h"
 #import "OverScoreData.h"
 #import "SeInstance.h"
 #import "TaskFactory.h"

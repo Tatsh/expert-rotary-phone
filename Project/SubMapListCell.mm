@@ -9,6 +9,7 @@
 
 #import "AppDelegate.h"
 #import "AppFont.h"
+#import "TreasureData+Store.h"
 #import "TreasureData.h"
 #import "TreasureMap.h"
 #import "neEngineBridge.h"

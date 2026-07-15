@@ -20,7 +20,7 @@
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"CharaTicketData"
                                  inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"productId==%@", productId];
+    request.predicate = [NSPredicate predicateWithFormat:@"productId = %@", productId];
     NSArray *results = [context executeFetchRequest:request error:nil];
     return results.count ? results.lastObject : nil;
 }

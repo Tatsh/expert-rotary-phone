@@ -10,8 +10,10 @@
 #import "DownloadMain.h"
 
 #import "AppDelegate.h"
+#import "OverScoreData+Store.h"
 #import "OverScoreData.h"
 #import "StoreUtil.h"
+#import "TreasureData+Store.h"
 #import "TreasureData.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter::shared().setStartDate() / setEndDate()
