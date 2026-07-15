@@ -1,8 +1,8 @@
 {
   "_wiswa": {
     "commandLine": "wiswa -d",
-    "lastRun": "2026-07-13T18:17:52Z",
-    "version": "1c522a5-dirty"
+    "lastRun": "2026-07-15T17:58:38Z",
+    "version": "d793b2a"
   },
   "contributors": ["Andrew Udvare <audvare@gmail.com>"],
   "cspell": {
@@ -111,10 +111,10 @@
   },
   "scripts": {
     "build": "if ! [ -d .ios-cmake ]; then git clone --depth 1 --branch \"$IOS_CMAKE_REF\" https://github.com/leetal/ios-cmake.git .ios-cmake; fi && cmake -B build -G Xcode -DCMAKE_TOOLCHAIN_FILE=\"./.ios-cmake/ios.toolchain.cmake\" -DDEPLOYMENT_TARGET=12.0 -DENABLE_BITCODE=NO -DIOS_ARCHS=arm64 -DPLATFORM=OS64 && cmake --build build --config Release -- CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO AD_HOC_CODE_SIGNING_ALLOWED=YES DEVELOPMENT_TEAM=\"\" PROVISIONING_PROFILE_SPECIFIER=\"\" && app=$(find build -type d -name PopnRhythmn.app -print -quit) && test -n \"${app}\" && codesign --force --sign - --timestamp=none \"${app}\" && codesign --verify --verbose=2 \"${app}\" && mkdir -p build/ipa/Payload && cp -R \"${app}\" build/ipa/Payload/ && /usr/bin/zip -qry build/PopnRhythmin-latest.ipa build/ipa/Payload",
-    "check-formatting": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | grep -v /minizip/ > .to-format.txt && clang-format --dry-run --Werror --files=.to-format.txt && rm -f .to-format.txt && prettier --check . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2",
+    "check-formatting": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' > .to-format.txt && clang-format --dry-run --Werror --files=.to-format.txt && rm -f .to-format.txt && prettier --check . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2",
     "check-spelling": "cspell --no-progress",
     "dict:update": "rm -f .vscode/dictionary.txt && cspell lint --no-progress --no-summary --unique --words-only | tr '[:upper:]' '[:lower:]' | sort -u > .vscode/dictionary.txt",
-    "format": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | grep -v /minizip/ > .to-format.txt && clang-format -i --files=.to-format.txt && rm -f .to-format.txt && prettier -w . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2 --fix",
+    "format": "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' > .to-format.txt && clang-format -i --files=.to-format.txt && rm -f .to-format.txt && prettier -w . && markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2 --fix",
     "qa": "yarn check-spelling && yarn check-formatting"
   },
   "version": "2.0.3"

@@ -88,14 +88,14 @@
       'cmake %s' % std.join(' ', cmake_build_args),
     ] + cmake_package_ipa_commands,
     local check_formatting_commands = [
-      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | grep -v /minizip/ > .to-format.txt",
+      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' > .to-format.txt",
       'clang-format --dry-run --Werror --files=.to-format.txt',
       'rm -f .to-format.txt',
       'prettier --check .',
       'markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2',
     ],
     local format_commands = [
-      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' | grep -v /minizip/ > .to-format.txt",
+      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' > .to-format.txt",
       'clang-format -i --files=.to-format.txt',
       'rm -f .to-format.txt',
       'prettier -w .',

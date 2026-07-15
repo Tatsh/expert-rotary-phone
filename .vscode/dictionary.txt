@@ -1,5 +1,4 @@
 aabb
-aapcs
 accel
 accesped
 acmulist
@@ -11,7 +10,6 @@ adid
 aesiv
 aish
 alignement
-allcellsready
 Ångström
 anim
 animationing
@@ -136,7 +134,6 @@ dialogs
 dictionaris
 dios
 disasm
-divsi
 docstrings
 dplatform
 dpopnrhythmin
@@ -156,9 +153,7 @@ errno
 esbenp
 etop
 extern
-externed
 extrafield
-extraout
 eyou
 favorite
 featu
@@ -224,14 +219,11 @@ incl
 includecryptingcode
 includer
 indicatorwith
-infopanel
 infozip
 initilize
 instancetype
-insts
 interntal
 intptr
-ints
 inzip
 ioapi
 iphoneos
@@ -279,7 +271,6 @@ lotte
 lpcm
 lumion
 lvex
-maintask
 malloc
 malloc'd
 maneuvering
@@ -297,7 +288,6 @@ minitts
 miniunz
 minizip
 mislabeled
-mismodelled
 mktemp
 mng's
 mobileprovision
@@ -313,7 +303,6 @@ movs
 movt
 movw
 mulist
-mult
 multisample
 musicinfo
 mypy
@@ -349,7 +338,6 @@ objcxx
 oneline
 opengles
 orignal
-orthof
 ossume
 outpath
 overscroll
@@ -388,11 +376,8 @@ rdparty
 recenter
 recenters
 recolored
-recon
 recpack
 rect
-rects
-refetches
 reflec
 reflow
 regen
@@ -448,11 +433,9 @@ soff
 softfp
 somes
 spaning
-sprintf
 statusline
 stdlib
 stevanovic
-stopandsave
 storei
 strb
 strcmp
@@ -494,10 +477,8 @@ trunc
 tssort
 udid
 udids
-udivsi
 udvare
 uffdc
-ulonglong
 unarchiver
 uncomplete
 uncompr
@@ -514,7 +495,6 @@ unzeof
 unzlocal
 unztell
 unztst
-updatelist
 usanuko
 usec
 usersetting
@@ -535,7 +515,6 @@ vmsize
 vmul
 vmxb
 vollant
-vtable
 wana
 warc
 werror
@@ -545,7 +524,6 @@ wiswa
 wiswa's
 worktree
 writting
-xfffffff
 xform
 xorshift
 xrefs
