@@ -11,7 +11,6 @@
 //
 
 #include <cassert>
-#include <cmath>
 #include <cstring>
 
 #import <OpenGLES/ES1/gl.h>
@@ -333,11 +332,13 @@ static inline int aepColG(uint32_t c) {
 static inline int aepColB(uint32_t c) {
     return (int)(c & 0xff);
 }
-// Transform a coordinate by the OT render scale. The binary threads it through
-// FixedToFP -> FloatVectorMult(scale) -> FPToFixed(round) -> int; net = round(c
-// * scale).
+// Transform a coordinate by the OT render scale. The binary converts the int to
+// float, multiplies by the scale, and snaps back with vcvt.s32.f32 — the NEON
+// float-to-int conversion, which always rounds toward zero — i.e. a plain (int)
+// cast, not round-to-nearest. Verified in drawAepOtLine (0x10f98) and
+// drawAepOtRect (0x1113c): vmul.f32 by the scale, then vcvt.s32.f32 with no bias.
 static inline int aepScale(int c, float s) {
-    return (int)lroundf((float)c * s);
+    return (int)((float)c * s);
 }
 
 // Ghidra: pushAepOtTextCmd (FUN_0001154c) — queue a type-6 text command. The
