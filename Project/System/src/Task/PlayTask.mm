@@ -204,10 +204,10 @@ void PlayTask::update(int /*deltaMs*/) {
         PlayTaskInit(playData); // FUN_0002e2d8: allocate the play scene
         m_state = 1;
         [[fallthrough]];
-    case 1:             // NoteMng bring-up + fade in + start SEs
-        nm.primePlay(); // Ghidra: FUN_0003396c — spawn the lead-in + position the
-                        // notes
-        aep.playTransition(1, 1, 0);
+    case 1:                          // NoteMng bring-up + fade in + start SEs
+        nm.primePlay();              // Ghidra: FUN_0003396c — spawn the lead-in + position the
+                                     // notes
+        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         m_state = 2;
         [[fallthrough]];
     case 2: // ready: on the "go" flag, arm the play clock
@@ -215,6 +215,8 @@ void PlayTask::update(int /*deltaMs*/) {
         return;
     case 3: // retry: after the fade, rebuild the play and restart
         if (aep.isTransitionDone()) {
+            aep.setAepTransitionMode(1); // fade back in
+            resetState();                // Ghidra: playTaskResetState (FUN_0002fed8)
             m_state = 1;
         }
         break;
@@ -273,8 +275,8 @@ void PlayTask::update(int /*deltaMs*/) {
         [audio stopAll];
         m_state = 8;
         break;
-    case 8: // fade out
-        aep.playTransition(2, 1, 0);
+    case 8:                          // fade out
+        aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
         m_state = 9;
         break;
     case 9:
