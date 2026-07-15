@@ -29,11 +29,14 @@
 // Ghidra: TitleTask_ctor (FUN_0002b678) — base C_TASK ctor + zeroed fields.
 TitleTask::TitleTask() = default;
 
-// Ghidra: TitleTask dtor (FUN_0002b6b0) — detach the conversion button from its
-// superview before the base source-node teardown; ARC releases the other
-// members. The compiler-implicit dtor would drop m_conversionButton without
-// removing it from the view hierarchy, so this behaviour is reproduced
-// explicitly. @ 0x2b6b0
+/**
+ * TitleTask dtor — detach the conversion button from its superview before the
+ * base source-node teardown; ARC releases the other members. The
+ * compiler-implicit dtor would drop m_conversionButton without removing it from
+ * the view hierarchy, so this behaviour is reproduced explicitly.
+ * @ghidraAddress 0x2b6b0
+ * @complete
+ */
 TitleTask::~TitleTask() {
     if (m_conversionButton != nil) {
         [m_conversionButton removeFromSuperview];
@@ -74,9 +77,13 @@ bool TitleTask::tapReleased() const {
     return false;
 }
 
-// Ghidra: TitleTask_setup (FUN_0002c084) — cache the render manager, build the
-// "Ver <n>" label, load the device-specific title scene + its image folder, and
-// load + start the title SE and looping BGM.
+/**
+ * TitleTask_setup — cache the render manager, build the "Ver%@" label, load the
+ * device-specific title scene + its image folder, and load + start the title SE
+ * and looping BGM.
+ * @ghidraAddress 0x2c084
+ * @complete
+ */
 void TitleTask::setup() {
     m_aep = &AepManager::shared();
     m_versionLabel = [NSString stringWithFormat:@"Ver%@", AppDelegate.appDelegate.appVersion];
@@ -297,10 +304,14 @@ void TitleTask::update(int /*deltaMs*/) {
     drawSoundTestLabel();      // Ghidra: FUN_0002c52c
 }
 
-// Ghidra: TitleTask::drawSoundTestLabel (FUN_0002c52c) — draw the version /
-// sound-test label as an AEP text command at (m_soundTestLabelX, 20), unless the
-// label is suppressed. The four numeric words are the per-corner gradient colour
-// (20, 0, 100, 0x181818) and the draw priority is 9.
+/**
+ * TitleTask::drawSoundTestLabel — draw the version / sound-test label as an AEP
+ * text command at (m_soundTestLabelX, 20), unless the label is suppressed. The
+ * four numeric words are the per-corner gradient colour (20, 0, 100, 0x181818)
+ * and the draw priority is 9.
+ * @ghidraAddress 0x2c52c
+ * @complete
+ */
 void TitleTask::drawSoundTestLabel() {
     if (m_soundTestHidden) {
         return;
