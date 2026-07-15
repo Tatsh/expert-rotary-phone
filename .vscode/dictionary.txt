@@ -537,6 +537,7 @@ vmxb
 vollant
 vtable
 wana
+warc
 werror
 winget
 winzip
