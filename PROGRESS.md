@@ -4,15 +4,15 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 67/2716 (2%) definitions verified `@complete`.**
+**Overall: 77/2717 (3%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |    % |
 | -------------------------------------------------- | ---: | --------: | ---: |
+| `Project/AppDelegate.mm`                           |   41 |        41 | 100% |
 | `Project/System/src/Task/BootLogoTask.mm`          |    6 |         6 | 100% |
 | `Project/System/src/Task/MainTask.mm`              |   15 |        15 | 100% |
 | `Project/System/src/Task/MenuMainTask.mm`          |   10 |        10 | 100% |
 | `Project/System/src/Task/TitleTask.mm`             |    5 |         5 | 100% |
-| `Project/AppDelegate.mm`                           |   40 |        31 |  78% |
 | `Project/AcViewerCategoryCell.mm`                  |    2 |         0 |   0% |
 | `Project/AcViewerCategoryViewController.mm`        |   15 |         0 |   0% |
 | `Project/AcViewerDetailCell.m`                     |    2 |         0 |   0% |
