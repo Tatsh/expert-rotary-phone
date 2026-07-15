@@ -68,6 +68,13 @@ private:
     // data as `this`).
     void reloadChart(int restart); // @ 0x30720
 
+    // Draw the per-frame note-play HUD (score/best/combo gauges, the fever gauge,
+    // the gauge-overflow band and the eased scrub/gauge bar), keyed off the
+    // NoteMng beat phase and the running score/combo. Called from update()'s tail
+    // while the task is not finishing (m_suppressHud == 0). Ghidra:
+    // PlayTask::DrawHud (FUN_000303fc).
+    void DrawHud(); // @ 0x303fc
+
 public:
     // ================= work-area layout (offsets are binary-exact)
     // ================= This is a flat engine work area the whole play scene
@@ -126,8 +133,9 @@ public:
     int m_timingSeInst[2] = {}; // +0x3a0 timing-SE playing instances (-1 idle,
                                 //        reaped each frame in update)
     int m_playSeIds[3] = {};    // +0x3a8 v12/v13/v14 play-SE source ids
-    uint8_t _rsvd_3b4[0x3bc - 0x3b4] = {}; // +0x3b4
-    int m_cdColorFrame = 0;                // +0x3bc BGMT_CD_COLOR anim frame
+    uint8_t _rsvd_3b4[0x3b8 - 0x3b4] = {}; // +0x3b4
+    int m_scrubBarFrame = 0;               // +0x3b8 gauge/scrub-bar eased frame (DrawHud)
+    int m_cdColorFrame = 0;                // +0x3bc BGMT_CD_COLOR anim frame / HUD fever-loop frame
     int m_barStarFrame = 0;                // +0x3c0 FRAME_SIDEMT_BARSTAR1 anim frame (update wraps)
     int m_cdFrame = 0;                     // +0x3c4 BGMT_CD anim frame (update wraps)
     NoteJudgeState m_judgePool[60] = {};   // +0x3c8 per-note judge slots (stride 0x18)

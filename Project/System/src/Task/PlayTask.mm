@@ -167,6 +167,95 @@ void PlayTask::updateGauge(int mode) {
     }
 }
 
+// Ghidra: PlayTask::DrawHud (FUN_000303fc) — the per-frame note-play HUD:
+// score/best/combo gauges keyed to the beat phase, the fever gauge, the
+// gauge-overflow band and the eased scrub/gauge bar. A literal translation of
+// the decompile's arithmetic + gate order; each HUD layer is drawn at its
+// current frame through AepManager::drawLayer with the default transform. Field
+// offsets (verified against 0x303fc): +0x9c9 m_isDemoPlay, +0x9e5 m_optEffectOn,
+// +0x9e7 m_optOldHardware, +0x9ca m_isPadDisplay gate the HUD tiers; the layer
+// ids/frame counts live in the +0x154/+0x168 (m_scoreBpm*) and +0xe4/+0x11c
+// (m_effectState*) tables.
+void PlayTask::DrawHud() {
+    NoteMng &nm = NoteMng::shared();
+    AepManager &aep = AepManager::shared();
+
+    // Beat phase: the current play position modulo the 16.16-fixed beat interval.
+    const int beat = (int)(NoteBeatIntervalMs() * 65536.0f); // FPToFixed
+    const unsigned beatMod = (unsigned)beat;
+    const int phase = (beat != 0) ? (int)((unsigned)nm.getCurrentPosition() % beatMod) : 0;
+    const auto beatFrame = [&](int frmCount) -> int {
+        return (beat != 0) ? (int)((unsigned)((frmCount - 1) * phase) / beatMod) : 0;
+    };
+
+    // Score gauge (skipped in the auto-demo), best gauge (effect-on only), combo gauge.
+    if (!m_isDemoPlay) { // +0x9c9
+        aep.drawLayer(m_scoreBpmLyr[0], beatFrame(m_scoreBpmFrames[0]), AepTransform(), 0);
+    }
+    if (m_optEffectOn) { // +0x9e5
+        aep.drawLayer(m_scoreBpmLyr[1], beatFrame(m_scoreBpmFrames[1]), AepTransform(), 0);
+    }
+    aep.drawLayer(m_scoreBpmLyr[2], beatFrame(m_scoreBpmFrames[2]), AepTransform(), 0);
+
+    if (!m_optEffectOn) {
+        return;
+    }
+    if (m_optOldHardware) { // +0x9e7
+        return;
+    }
+
+    // Fever gauge: below 70000 the lo layer's frame tracks the score; above it the
+    // hi layer's frame tracks the beat phase.
+    if (m_score < 70000) {
+        aep.drawLayer(
+            m_scoreBpmLyr[3], ((m_scoreBpmFrames[3] - 1) * m_score) / 70000, AepTransform(), 0);
+    } else {
+        aep.drawLayer(m_scoreBpmLyr[4], beatFrame(m_scoreBpmFrames[4]), AepTransform(), 0);
+    }
+
+    if (!m_optEffectOn) {
+        return;
+    }
+    if (m_optOldHardware) {
+        return;
+    }
+
+    // Gauge-overflow band once the score passes 10000, clamped to the last frame.
+    if (m_score >= 10000) {
+        const int last = m_effectStateFrames[9] - 1;
+        int f = (last * (m_score - 10000)) / 60000;
+        if (last < f) {
+            f = last;
+        }
+        aep.drawLayer(m_effectStateLyr[9], f, AepTransform(), 0);
+        if (!m_optEffectOn) {
+            return;
+        }
+    }
+    if (m_optOldHardware) {
+        return;
+    }
+    if (m_isPadDisplay) { // +0x9ca — the scrub bar is phone-only
+        return;
+    }
+
+    // Scrub / gauge bar: step m_scrubBarFrame one frame toward the gauge-derived
+    // target (22.10 fixed), clamped to [0, last].
+    const int last = m_effectStateFrames[10] - 1;
+    const int target = (last * m_gaugeValue) >> 10;
+    if (m_scrubBarFrame < target) {
+        const int c = m_scrubBarFrame + 1;
+        m_scrubBarFrame = (c < last) ? c : last;
+    } else if (target < m_scrubBarFrame) {
+        const int c = m_scrubBarFrame - 1;
+        m_scrubBarFrame = (c < 0) ? 0 : c;
+    }
+    aep.drawLayer(m_effectStateLyr[10], m_scrubBarFrame, AepTransform(), 0);
+
+    // Advance the fever-loop frame counter.
+    m_cdColorFrame = (m_cdColorFrame + 1) % (m_effectStateFrames[11] - 1);
+}
+
 // Ghidra: PlayTask_update (FUN_0002dc14).
 void PlayTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
@@ -293,5 +382,11 @@ void PlayTask::update(int /*deltaMs*/) {
         break;
     }
 
-    // Per-frame input + draw tail (Ghidra: FUN_0002c924 / FUN_000303fc).
+    // Per-frame tail (Ghidra 0x2dc14): advance + draw the AEP layers (draw-only
+    // while the pause menu is up, state 5), then draw the HUD unless the task is
+    // already tearing down (m_suppressHud, +0x9c7).
+    updateAndDrawAepLayers(m_state == 5 ? 1 : 0); // Ghidra: FUN_0002c924
+    if (!m_suppressHud) {
+        DrawHud();
+    }
 }
