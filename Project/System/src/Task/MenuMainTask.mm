@@ -407,11 +407,12 @@ void MenuMainTask::update(int /*deltaMs*/) {
         auto showUnlockAlert = [&](NSString *title, NSString *message) {
             MainViewController *root = RootVC();
             [root SetAlertViewCallback:&modeSelectAlertClosed param:this];
-            CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:title
-                                                                    message:message
-                                                                   delegate:root
-                                                          cancelButtonTitle:nil
-                                                          otherButtonTitles:@"OK", nil];
+            CommonAlertView *alert =
+                [[CommonAlertView alloc] initWithTitle:title
+                                               message:message
+                                              delegate:(id<CommonAlertViewDelegate>)root
+                                     cancelButtonTitle:nil
+                                     otherButtonTitles:@"OK"];
             [alert setTag:1];
             [alert show];
         };
@@ -680,13 +681,14 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // remaining __stdcall_softfp string args are lost. The binary reuses
         // NSNumber objects for these NSString parameters (RewardNetwork stringifies
         // them); the dependency is stubbed, so the call is inert either way.
-        [RewardNetwork openAppListWebViewWithCampaignId:(NSString *)[NSNumber numberWithInt:0]
-                                              inCompany:nil
-                                                   type:(NSString *)[NSNumber numberWithInt:2]
-                                                 offset:nil
-                                                  limit:nil
-                                             parentView:[root view]
-                                               delegate:(id)root];
+        [[RewardNetwork sharedInstance]
+            openAppListWebViewWithCampaignId:(NSString *)[NSNumber numberWithInt:0]
+                                   inCompany:nil
+                                        type:(NSString *)[NSNumber numberWithInt:2]
+                                      offset:nil
+                                       limit:nil
+                                  parentView:[root view]
+                                    delegate:(id)root];
         m_state = 0x10;
         break;
     }
