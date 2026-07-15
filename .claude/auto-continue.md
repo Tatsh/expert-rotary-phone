@@ -17,12 +17,16 @@ No Xcode/compiler here — write best-effort code, verified against the decompil
    dependency closure (cells, sub-overlays, helper classes) before the thing that uses it, so no
    dangling references or `extern`s for unimplemented symbols are introduced.
 3. Verify every method against `decompile_function` / disassembly. Byte-decode strings (CFString:
-   flags@4 0x7c8=ASCII / 0x7d0=UTF16, dataPtr@8, len@0xc). Flag NEON-spilled CGRect frames as
-   best-effort in comments rather than inventing exact values.
+   flags@4 0x7c8=ASCII / 0x7d0=UTF16, dataPtr@8, len@0xc). NEVER flag, defer, or delegate NEON /
+   SIMD / fixed-point geometry — DERIVE it from the DISASSEMBLY (vldr/vstr field offsets,
+   literal-pool constants via `read_memory`, vmul/vadd/vsub lane operands, vcvt round mode) and
+   write the complete reconstruction, citing the instruction addresses. "Best-effort" and "deferred"
+   are not acceptable outcomes for geometry — trace the registers until it is fully recovered.
 4. After each completed, dangle-free unit: update `HANDOFF.md`, annotate the Ghidra program with a
    plate comment + `save_program`, and `git commit` (two-scope style: recon vs. build).
 5. Do NOT create a second auto-continue schedule (one already exists). Do NOT modify tests / scoring /
-   verifier / CI to manufacture success. Keep an honest trace of best-effort and deferred pieces.
+   verifier / CI to manufacture success. Keep an honest trace of the commands run and the disassembly
+   evidence behind each reconstruction; do not leave geometry deferred.
 
 ## Known deferred (per user, do later)
 - Friend **request** sub-screen (`FriendRequestViewController` + `FriendRequestTable` +

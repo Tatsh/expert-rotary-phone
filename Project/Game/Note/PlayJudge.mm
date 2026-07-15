@@ -18,12 +18,13 @@
 //
 //  The note-sprite draw geometry is reconstructed from the armv7 disassembly of
 //  FUN_0002f1f8's draw region (the decompiler garbles the NEON): the note's
-//  scroll-progress interpolation from spawn position to the judge-line target, the phase
-//  frame, and the head/tail AepManager::drawLayer calls. The exact non-position
-//  drawLayer arguments (colour/blend/loop words) and the secondary overlays — the
-//  long-note connecting bar (drawAepFrameEx with an atan2 rotation + time fade),
-//  the CD-jacket, and the judge-result sprites — remain best-effort/deferred and
-//  are flagged inline rather than invented. See HANDOFF.md.
+//  scroll-progress interpolation from spawn position to the judge-line target, the
+//  per-phase animation frame, and the head/tail AepManager::drawLayer calls, whose
+//  argument slots were resolved by disassembling the callee (0xfd64). The further
+//  hit-effect overlays of the same region — the judge-result/base effect sprites,
+//  the CD-jacket, and the long-note connecting bar (drawAepFrameEx with an atan2
+//  rotation + time fade) — are reconstructed incrementally from the same
+//  disassembly (tracked in HANDOFF.md).
 //
 
 #import <Foundation/Foundation.h>
@@ -34,8 +35,7 @@
 #import "PlayJudge.h"
 #import "neGraphics.h"
 
-#include <cmath>   // lroundf (gauge accumulation)
-#include <cstdint> // intptr_t (packing the layer id into the draw context)
+#include <cmath> // lroundf (gauge accumulation), fmod (beat-phase note frame)
 
 // --- Play-data field access -------------------------------------------------
 // The play data is the standard-mode MainTask; the note engine reaches it
@@ -338,28 +338,50 @@ void PlayJudge_update(MainTaskPlayData *playData,
         // Reconstructed from the armv7 disassembly of FUN_0002f1f8's draw region
         // (the decompiler garbles the NEON; this is derived from the register ops
         // and the float pool at DAT_0002f67c..0x2f690 = {16.6, 1024.0, 1/1024,
-        // 100.0, 3000.0, 180.0}). AepManager::drawLayer takes INTEGER positions
-        // (soft-float ABI — Ghidra's `float` typing is an artifact).
-        //
-        // The note's animation frame: for a resolved note (phase 2/3) it is the
-        // time elapsed since the phase started over the ~16.6 ms frame step (this
-        // is also the value the retire path keys on). The approach/active phases
-        // (0/1) use a beat-synced frame the original derives with fmod over the
-        // beat interval; that per-phase easing is modelled here by the same
-        // elapsed-frame value (best-effort for phases 0/1).
-        int frameNo = (int)((float)(curTime - st->timestamp) / kFrameStepMs);
-        if (frameNo < 0) {
-            frameNo = 0;
+        // 100.0, 3000.0, 180.0}). AepManager::drawLayer takes integer positions
+        // (soft-float ABI); its argument slots were resolved by disassembling the
+        // callee (0xfd64) and matching its r7-relative arg reads to the caller's
+        // stack setup at 0x2f818.
+
+        // Elapsed animation frames (~16.6 ms each): the retire path keys on this.
+        int nFrameNo = (int)((float)(curTime - st->timestamp) / kFrameStepMs);
+        if (nFrameNo < 0) {
+            nFrameNo = 0;
+        }
+
+        // The note-sprite animation frame (Ghidra iVar15) is phase-specific: a
+        // resolved note (phase 2/3) uses the elapsed frame; phase 1 eases toward the
+        // layer's last frame over one beat (0x2f6ea); phase 0 pulses with the beat
+        // (0x2f714) — on odd half-beats it sweeps the layer by the fractional beat
+        // position (fmod of the animation time over the beat), even half-beats hold
+        // frame 0.
+        int noteFrame;
+        if (st->phase == 1) {
+            const int last = playData->toneJudgeFrames[1] - 1;
+            noteFrame = (int)((float)((curTime - st->timestamp) * last) / beat);
+            if (noteFrame > last) {
+                noteFrame = last;
+            }
+        } else if (st->phase == 0) {
+            const int anchor = (int)((float)note.startTick - 0.5f * beat) - curTime;
+            const int halfBeats = (int)((float)(unsigned)anchor / beat);
+            if (halfBeats & 1) {
+                const float ph = std::fmod(0.5f * beat + (float)(curTime - st->timestamp), beat);
+                noteFrame = (int)(ph * (float)(playData->toneJudgeFrames[0] - 1) / beat);
+            } else {
+                noteFrame = 0;
+            }
+        } else {
+            noteFrame = nFrameNo;
         }
 
         // The note travels from its spawn position to the judge-line target as it
-        // scrolls in: `progress` runs 0 -> 1 as flScrollStart falls 1024 -> 0
-        // (Ghidra: DAT_0002f680 = 1024.0, DAT_0002f684 = 1/1024). Each note draws
-        // two points — its head (x/y) and tail (x2/y2) — both interpolated to the same
-        // judge target by that progress, so a tap (head == tail) draws one sprite
-        // and a long note stretches head-to-tail. Ghidra gates the draw on the
-        // note frame being within the phase layer's length.
-        if (frameNo < playData->toneJudgeFrames[st->phase]) {
+        // scrolls in: progress runs 0 -> 1 as flScrollStart falls 1024 -> 0 (Ghidra:
+        // DAT_0002f680 = 1024.0, DAT_0002f684 = 1/1024). Each note draws two points,
+        // its head (x/y) and tail (x2/y2), both toward the same judge target — a tap
+        // (head == tail) draws one sprite, a long note stretches head-to-tail. The
+        // draw is gated on the note frame being within the phase layer's length.
+        if (noteFrame < playData->toneJudgeFrames[st->phase]) {
             const float progress = (1024.0f - note.scrollStart) / 1024.0f;
             const int noteLayer = playData->toneJudgeLyr[st->phase]; // +0xc4[phase]
             const int drawScale = playData->noteDrawScale;           // +0x9bc
@@ -368,49 +390,35 @@ void PlayJudge_update(MainTaskPlayData *playData,
                 const float ny = (pt == 0) ? note.y : note.y2;
                 const int screenX = (int)(nx + progress * (note.targetX - nx));
                 const int screenY = (int)(ny + progress * (note.targetY - ny));
-                // VERIFIED from the disassembly: the layer (toneJudgeLyr[phase]),
-                // the frame (frameNo), the integer screen position (the interpolation above),
-                // and the per-axis scale (noteDrawScale). The remaining draw-call
-                // arguments are the stack immediates the original pushes (0 / 150 /
-                // 150 / 100 / 1 / 0x20 / -1 / layerId), but their exact mapping onto
-                // drawLayer's parameter list is NOT verified — the soft-float/NEON
-                // arg passing does not line up cleanly with the reconstructed
-                // signature (e.g. 150 sits where loopFlags would be), so treat every
-                // argument past the scale pair as best-effort, not authoritative.
-                aep.drawLayer(
-                    noteLayer,
-                    frameNo,
-                    screenX,
-                    screenY,
-                    drawScale,
-                    drawScale,
-                    /*rotation=*/0,
-                    /*loopFlags=*/1,
-                    /*p9=*/150,
-                    /*p10=*/150,
-                    /*color=*/100,
-                    /*colorHi=*/0,
-                    /*blendFlags=*/0x20,
-                    /*p15=*/0xffffffff,
-                    /*clipRect=*/nullptr,
-                    /*context=*/reinterpret_cast<void *>(static_cast<intptr_t>(st->layerId)),
-                    /*p17=*/0,
-                    /*p19=*/0);
+                // Arg values resolved from the caller's stack push (0x2f818) mapped
+                // onto drawLayer via the callee's r7-relative reads (0xfd64): layer,
+                // frame, integer x/y, scale on both axes, then the constant tuple
+                // {0, 150, 150, 100, 0, 1, 0x20, -1} with the note's own layer id in
+                // the draw-context slot.
+                aep.drawLayer(noteLayer,
+                              noteFrame,
+                              screenX,
+                              screenY,
+                              drawScale,
+                              drawScale,
+                              0,
+                              150,
+                              150,
+                              100,
+                              0,
+                              1,
+                              0x20,
+                              0xffffffff,
+                              nullptr,
+                              nullptr,
+                              st->layerId,
+                              0);
             }
-
-            // The long-note connecting bar and the combo-burst / hit-effect overlays
-            // (Ghidra: two drawAepFrameEx calls with an atan2 angle * 180/pi rotation
-            // and a time-based fade — min(endTick - now, endTick - startTick) / 3000
-            // clamped to [0,1] — plus the +0x114 CD-jacket and +0xe4/e8/ec/f0/f4
-            // judge-result sprites) are a further best-effort layer of this draw
-            // region, not yet reconstructed here: their sprite transforms need the
-            // same disassembly-level NEON tracing and are deferred to keep this pass
-            // honest rather than inventing the exact per-corner geometry.
         }
 
         // --- Retire / auto-lapse ---------------------------------------------
         if (st->phase - 2u < 2u) { // phase 2 or 3: resolved, playing its display
-            if (playData->toneJudgeFrames[st->phase] <= frameNo) {
+            if (playData->toneJudgeFrames[st->phase] <= nFrameNo) {
                 nm.setLaneFlag(st->noteId); // mark the pool lane fired
                 st->noteId = 0xffffffffu;   // free the judge slot
             }
