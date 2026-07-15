@@ -218,7 +218,7 @@ private:
     void drawAepOtQuad(
         int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int alpha, uint32_t color);
     void drawAepOtText(const char *text,
-                       int p3,
+                       const char *font,
                        int x,
                        int y,
                        int size,

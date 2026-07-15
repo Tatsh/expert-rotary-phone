@@ -280,8 +280,13 @@ void AepOrderingTable::flush() {
                 // parameters at +0x10c. (The binary reaches them as pCmd[3].* using
                 // the 80-byte AepOtSpriteCmd view; the named overlay is equivalent.)
                 const AepTextCmd *t = reinterpret_cast<const AepTextCmd *>(cmd);
+                // The binary hard-codes the font-name pointer 0x1020bd, which in the
+                // armv7 image is the C-string "DFMaruGothic-Bd-WIN-RKSJ-H" (Ghidra:
+                // renderAepOrderingTable @0x117be references it as the font param).
+                // That raw address is dead memory on the 64-bit rebuild, so pass the
+                // real string it pointed at.
                 drawAepOtText(t->pText,
-                              0x1020bd,
+                              "DFMaruGothic-Bd-WIN-RKSJ-H",
                               (int)t->flPosXf,
                               (int)t->flPosYf,
                               t->nColorTL,
@@ -452,25 +457,27 @@ void AepOrderingTable::drawAepOtQuad(
 // the render scale; the colour vector is likewise scaled (VectorMultiply by
 // scale) and forwarded.
 void AepOrderingTable::drawAepOtText(const char *text,
-                                     int p3,
+                                     const char *font,
                                      int x,
                                      int y,
                                      int size,
-                                     int p7,
+                                     int align,
                                      int alpha,
                                      const void *colorVec,
                                      uint32_t color) {
     const float s = renderScale();
     const int scaledSize = aepScale(size, s);
     // Real signature: neDrawText(text, font, size, x, y, align, alpha, r, g, b,
-    // clipRect). The binary passes p3 as the font arg (an int handle in the
-    // pointer slot) and colorVec as the clip rect.
+    // clipRect). The font is a C-string font name and colorVec is the clip rect.
+    // (The binary carries the font name as a pointer; it must stay a real 64-bit
+    // pointer here — the old int handle truncated it on arm64, producing a dead
+    // low address that crashed strlen in neDrawText's font lookup.)
     neDrawText(text,
-               reinterpret_cast<void *>(static_cast<uintptr_t>(static_cast<uint32_t>(p3))),
+               const_cast<char *>(font),
                scaledSize,
                aepScale(x, s),
                aepScale(y, s),
-               p7,
+               align,
                aepAlpha(alpha),
                aepColR(color),
                aepColG(color),
