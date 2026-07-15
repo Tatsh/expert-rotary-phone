@@ -139,8 +139,8 @@ public:
     // --- Pause / resume (input-driven, mirrors NoteMng::togglePause) -------
     // Pause play: stop the BGM and stamp the pause time, then set the freeze bit
     // so the play clock stops advancing. No-op if already held. Ghidra:
-    // acNotePause @ 0x7b638.
-    void pause();
+    // AcNoteMng::Pause @ 0x7b638.
+    void Pause();
     // Resume play: fold the paused span into the start threshold, clear the
     // freeze bit, re-seek + restart the BGM at the current position and arm a
     // drift-sync adjust event. No-op unless currently held. Ghidra: acNoteResume

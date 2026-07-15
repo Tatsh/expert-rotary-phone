@@ -194,7 +194,7 @@ void AcViewerTask::setup() {
     // 0x23359, this) — 0x23359 is &AcViewerHudDraw in Thumb). The callback's
     // natural signature carries a packed-short rotation (param 11), so it is
     // reinterpret-cast to the generic AepGroupDrawFn at registration (same
-    // pattern as MainTask's MusicSelAepDraw); the ABI is compatible (short passed
+    // pattern as MainTask's AepDrawCallback); the ABI is compatible (short passed
     // in a 32-bit register slot).
     aep.setGroupDrawCallback(kAcvGroup, reinterpret_cast<AepGroupDrawFn>(&AcViewerHudDraw), this);
     m_hudReady = 1; // HUD ready
@@ -730,7 +730,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // state.
         int t = m_endHoldCounter;
         if (t > 0x1e) {
-            note.pause();
+            note.Pause();
             m_pauseTime = note.getCurrentPosition();
             m_paused = 1;
             m_state = 0xc;
@@ -755,7 +755,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         break;
     case 10:
         // Song-select viewing: pause + snapshot, then wait to resume.
-        note.pause();
+        note.Pause();
         m_pauseTime = note.getCurrentPosition();
         m_paused = 1;
         next = 0xb;
@@ -841,7 +841,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // Pause menu: freeze play (if not already), play the pause overlay (phone)
         // or the black board (pad), and wait for the resume/quit tap.
         if (m_paused == 0) {
-            note.pause();
+            note.Pause();
             m_pauseTime = note.getCurrentPosition();
         }
         m_pauseMenuOpen = 1;

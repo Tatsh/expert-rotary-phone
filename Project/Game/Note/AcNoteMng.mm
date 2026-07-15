@@ -725,10 +725,10 @@ void AcNoteMng::startPlayback() {
     m_state = 1;
 }
 
-// Ghidra: acNotePause @ 0x7b638 — freeze the clock and stop the BGM,
+// Ghidra: AcNoteMng::Pause @ 0x7b638 — freeze the clock and stop the BGM,
 // remembering the elapsed time at the pause so resume() can fold the paused
 // span back in. No-op if held.
-void AcNoteMng::pause() {
+void AcNoteMng::Pause() {
     if (m_holdFlags & 1) {
         return;
     }
