@@ -54,7 +54,13 @@ BOOL gLaunchedFromPush = NO;
 
 #pragma mark - Launch
 
-// -[AppDelegate application:didFinishLaunchingWithOptions:]  @ 0x8cf0
+/**
+ * -[AppDelegate application:didFinishLaunchingWithOptions:]  @ 0x8cf0
+ * @note __COMPLETE__ boot-path trace 2026-07-15: call order and arguments match
+ * the 0x8cf0 decompile one-for-one, including the inline BootLogoTask creation
+ * (operator_new(0x4c) + ctor + C_TASK::setPriority(_, 3), wrapped here as
+ * neEngine::startBootTask()) between startGetDlFileListHttp and StartLoop.
+ */
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 

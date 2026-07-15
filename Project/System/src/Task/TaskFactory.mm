@@ -79,8 +79,9 @@ C_TASK *AcViewerTaskCreate() {
 
 // BootLogoTask_finish hands off to the title task. Ghidra: FUN_0002b678 is
 // TitleTask_ctor; the boot path is operator_new(0x54) + ctor + setPriority(3).
+// This factory models only the operator_new + ctor; the single setPriority(3)
+// is issued by the caller (BootLogoTask::finish), matching the binary which
+// calls C_TASK::setPriority exactly once.
 C_TASK *BootCreateNextTask() {
-    auto *task = new TitleTask();
-    task->setPriority(3);
-    return task;
+    return new TitleTask();
 }
