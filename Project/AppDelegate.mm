@@ -274,8 +274,16 @@ RB_DEPRECATED_END
     [req setHTTPBody:[body dataUsingEncoding:NSUTF8StringEncoding]];
     [req setValue:[[AppDelegate appDelegate] userAgent] forHTTPHeaderField:@"User-Agent"];
     [req setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
-    RB_DEPRECATED_BEGIN(void)[[NSURLConnection alloc] initWithRequest:req delegate:nil];
-    RB_DEPRECATED_END
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    // Fire-and-forget POST of the APNs token; the original used a delegate-less
+    // NSURLConnection that started immediately and ignored the result.
+    [[[NSURLSession sharedSession]
+        dataTaskWithRequest:req
+          completionHandler:^(NSData *data, NSURLResponse *response, NSError *error){
+          }] resume];
+#else
+    (void)[[NSURLConnection alloc] initWithRequest:req delegate:nil];
+#endif
 }
 
 // -[AppDelegate application:didFailToRegisterForRemoteNotificationsWithError:]  @ 0xafb4 (empty)

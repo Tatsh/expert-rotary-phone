@@ -13,17 +13,15 @@
 #import "NSDictionary_JSONExtensions.h" // TouchJSON +dictionaryWithJSONData:error: fallback
 #import "StoreUtil.h"
 
-#import "SDKCompat.h"
-
 // Request timeout (Ghidra: 0x402e0000 = 15.0s); reload-ignoring-cache policy
 // (4).
 static const NSTimeInterval kTimeout = 15.0;
 
-RB_DEPRECATED_BEGIN
 @implementation Downloader {
     NSMutableURLRequest *m_Request;
     __weak id<DownloaderDelegate> m_Delegate; // not retained (ARC weak; matches original assign)
     NSURLConnection *m_Connection;
+    NSURLSessionDataTask *m_Task; // modern-SDK replacement for m_Connection
     NSMutableData *m_DownloadedData;
     id m_AdditionalData;
     NSDate *m_StartTime;
@@ -85,11 +83,43 @@ RB_DEPRECATED_BEGIN
 
 // @ 0x623f0 — start the connection (once) and stamp the start time.
 - (void)startDownloading {
-    if (m_Connection != nil) {
+    if (m_Connection != nil || m_Task != nil) {
         return;
     }
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    // NSURLSession buffers the whole body itself and delivers a single
+    // completion, so the response, accumulated data, and finish/fail are
+    // funnelled into the same handlers the delegate used. A per-chunk progress
+    // callback (downloaderProceed:) is no longer possible with the completion-
+    // handler form, so progress is reported once when the body arrives. The
+    // completion is delivered on a background queue and re-dispatched onto the
+    // main queue to preserve the original delegate threading.
+    m_Task = [[NSURLSession sharedSession]
+        dataTaskWithRequest:m_Request
+          completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              m_Task = nil;
+              if (error != nil) {
+                  [self handleFailWithError:error];
+                  return;
+              }
+              if ([self handleResponse:response]) {
+                  // Treated as a hard error (for example a 404); the handler has
+                  // already notified the delegate.
+                  return;
+              }
+              if (data != nil) {
+                  [self handleData:data];
+              }
+              [self handleFinish];
+            });
+          }];
+    m_StartTime = [NSDate date];
+    [m_Task resume];
+#else
     m_Connection = [[NSURLConnection alloc] initWithRequest:m_Request delegate:self];
     m_StartTime = [NSDate date];
+#endif
 }
 
 // @ 0x6249c — abort in flight. Clears the (unretained) delegate first so a
@@ -97,10 +127,17 @@ RB_DEPRECATED_BEGIN
 // connection + buffer.
 - (void)cancel {
     m_Delegate = nil;
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    if (m_Task != nil) {
+        [m_Task cancel];
+        m_Task = nil;
+    }
+#else
     if (m_Connection != nil) {
         [m_Connection cancel];
         m_Connection = nil;
     }
+#endif
     if (m_DownloadedData != nil) {
         m_DownloadedData = nil;
     }
@@ -151,6 +188,60 @@ RB_DEPRECATED_BEGIN
     }
     return 0.0;
 }
+
+#pragma mark - Response handling
+
+// @ 0x62514 — capture the expected length and pre-size the buffer. A 404 is
+// treated as a hard error: notify the delegate instead of buffering. Returns YES
+// when the response was treated as a hard error and buffering should be skipped.
+// Funnelled into by both the NSURLConnection delegate (old SDK) and the
+// NSURLSession completion handler (modern SDK).
+- (BOOL)handleResponse:(NSURLResponse *)response {
+    if ([response respondsToSelector:@selector(statusCode)] &&
+        [(NSHTTPURLResponse *)response statusCode] == 404) {
+        if ([m_Delegate respondsToSelector:@selector(downloaderError:)]) {
+            [m_Delegate performSelector:@selector(downloaderError:) withObject:self];
+        }
+        return YES;
+    }
+
+    m_DownloadSize = response.expectedContentLength;
+    if (m_DownloadSize > 0) {
+        m_DownloadedData = [[NSMutableData alloc] initWithCapacity:(NSUInteger)m_DownloadSize];
+    }
+    return NO;
+}
+
+// @ 0x6267c — buffer the body (lazily creating a 64 KB-seeded NSMutableData) and
+// notify the delegate of progress.
+- (void)handleData:(NSData *)data {
+    if (m_DownloadedData == nil) {
+        m_DownloadedData = [[NSMutableData alloc] initWithCapacity:0x10000];
+    }
+    [m_DownloadedData appendData:data];
+    if ([m_Delegate respondsToSelector:@selector(downloaderProceed:)]) {
+        [m_Delegate performSelector:@selector(downloaderProceed:) withObject:self];
+    }
+}
+
+// @ 0x627f4 — notify success.
+- (void)handleFinish {
+    if ([m_Delegate respondsToSelector:@selector(downloaderFinished:)]) {
+        [m_Delegate performSelector:@selector(downloaderFinished:) withObject:self];
+    }
+}
+
+// @ 0x6273c — release the buffered data and notify failure.
+- (void)handleFailWithError:(NSError *)error {
+    if (m_DownloadedData != nil) {
+        m_DownloadedData = nil;
+    }
+    if ([m_Delegate respondsToSelector:@selector(downloaderError:)]) {
+        [m_Delegate performSelector:@selector(downloaderError:) withObject:self];
+    }
+}
+
+#if !(defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0)
 
 #pragma mark - NSURLConnection delegate
 
@@ -211,15 +302,21 @@ RB_DEPRECATED_BEGIN
     }
 }
 
+#endif
+
 // @ 0x629f8 — KEEP under ARC: the object-ivar releases are ARC-omitted, but
 // dealloc still does real work — drop the (unretained) delegate and cancel the
 // connection so a callback already queued on the run loop can't fire after the
 // object is gone.
 - (void)dealloc {
     m_Delegate = nil;
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    [m_Task cancel];
+    m_Task = nil;
+#else
     [m_Connection cancel];
     m_Connection = nil;
+#endif
 }
 
 @end
-RB_DEPRECATED_END

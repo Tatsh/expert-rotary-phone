@@ -24,8 +24,6 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
-#import "SDKCompat.h"
-
 // The C++ arcade note-play task the AC-main flow owns (the one AppDelegate
 // holds in its acMainTask property); opaque on the ObjC side (a raw pointer,
 // non-ARC), passed straight through to the engine hooks. Ghidra: struct
@@ -426,9 +424,17 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     [request setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
     [request setHTTPBody:body];
     [request setHTTPMethod:@"POST"];
-    RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    // Fire-and-forget analytics POST; the original used a delegate-less
+    // NSURLConnection that started immediately and ignored the result.
+    [[[NSURLSession sharedSession]
+        dataTaskWithRequest:request
+          completionHandler:^(NSData *data, NSURLResponse *response, NSError *error){
+          }] resume];
+#else
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:nil];
-    RB_DEPRECATED_END(void) connection;
+    (void)connection;
+#endif
 }
 
 #pragma mark - Open / close animations

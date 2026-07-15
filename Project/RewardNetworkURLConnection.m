@@ -12,15 +12,16 @@
 #import "RewardNetworkError.h" // +localizedApplilinkErrorWithCode:
 #import "RewardNetworkWebAPI.h" // +responseFromContentsServer:request:data:finishedBlock:failedBlock:
 
-#import "SDKCompat.h"
-
 // Own privates (the watchdog callback and the retry driver).
-@interface RewardNetworkURLConnection ()
+@interface RewardNetworkURLConnection () {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    NSURLSessionDataTask *_task; // modern-SDK replacement for the connection
+#endif
+}
 - (void)connectionTimeout:(NSTimer *)timer;
 - (void)retryConnection;
 @end
 
-RB_DEPRECATED_BEGIN
 @implementation RewardNetworkURLConnection
 
 // @ 0xff9d0
@@ -54,6 +55,50 @@ RB_DEPRECATED_BEGIN
     self.url = url;
     self.request = request;
 
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    // NSURLSession buffers the whole body and delivers a single completion, so
+    // the response-status retry (HTTP 4xx/5xx) and the finish-parse are funnelled
+    // through the same internal handling the delegate methods used. The 10s
+    // watchdog timer and the two-attempt retry/back-off are unchanged; a timeout
+    // cancels the task instead of the connection. The completion is delivered on
+    // a background queue and re-dispatched onto the main queue to match the
+    // original main-queue delegate threading.
+    _task = [[NSURLSession sharedSession]
+        dataTaskWithRequest:request
+          completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              if (error != nil) {
+                  // @ 0x1001cc — transport error: retry.
+                  [self retryConnection];
+                  return;
+              }
+              NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
+              if (statusCode >= 400 && statusCode <= 599) {
+                  // @ 0xffd58 — HTTP 4xx/5xx are treated as failures (retry).
+                  [_task cancel];
+                  [self retryConnection];
+                  return;
+              }
+              self.receiveData = [NSMutableData data];
+              if (data != nil) {
+                  [self.receiveData appendData:data];
+              }
+              [self finishLoading];
+            });
+          }];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:10.0
+                                                  target:self
+                                                selector:@selector(connectionTimeout:)
+                                                userInfo:nil
+                                                 repeats:NO];
+    self.receiveData = [NSMutableData data];
+
+    // @ 0xffcbc — the block body just starts the request.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [_task resume];
+    });
+    self.isConnection = YES;
+#else
     self.connection = [[NSURLConnection alloc] initWithRequest:request
                                                       delegate:self
                                               startImmediately:NO];
@@ -69,13 +114,20 @@ RB_DEPRECATED_BEGIN
       [self.connection start];
     });
     self.isConnection = YES;
+#endif
 }
 
 // @ 0xffd08 — watchdog fired: cancel and retry.
 - (void)connectionTimeout:(NSTimer *)timer {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    [_task cancel];
+#else
     [self.connection cancel];
+#endif
     [self retryConnection];
 }
+
+#if !(defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0)
 
 #pragma mark - NSURLConnectionDataDelegate
 
@@ -99,6 +151,22 @@ RB_DEPRECATED_BEGIN
 // @ 0xffe50 — post-process the body, then parse it as JSON and dispatch to the
 // finished / failed block.
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    [self finishLoading];
+}
+
+// @ 0x1001cc — transport error: retry.
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+    [self retryConnection];
+}
+
+#endif
+
+#pragma mark - Finish handling
+
+// @ 0xffe50 — post-process the body, then parse it as JSON and dispatch to the
+// finished / failed block. Funnelled into by both the NSURLConnection finish
+// delegate (old SDK) and the NSURLSession completion handler (modern SDK).
+- (void)finishLoading {
     if (self.timer != nil) {
         [self.timer invalidate];
         self.timer = nil;
@@ -138,11 +206,6 @@ RB_DEPRECATED_BEGIN
                                       [RewardNetworkError localizedApplilinkErrorWithCode:0x3ee]);
         }
     }
-}
-
-// @ 0x1001cc — transport error: retry.
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    [self retryConnection];
 }
 
 #pragma mark - Retry
@@ -187,7 +250,6 @@ RB_DEPRECATED_BEGIN
 // .cxx_destruct @ 0x100664 — compiler-emitted ARC teardown; not hand-written.
 
 @end
-RB_DEPRECATED_END
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :

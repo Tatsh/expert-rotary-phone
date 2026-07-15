@@ -12,8 +12,6 @@
 #import "RewardNetworkError.h"     // localized NSError by code
 #import "RewardNetworkUtilities.h" // parameter dictionary / URL helpers
 
-#import "SDKCompat.h"
-
 // Retry counter. The binary keeps this at `self+retryCount` where `self` is the
 // RewardNetworkWebAPI class object (a single shared slot); modelled here as a
 // static.
@@ -154,7 +152,65 @@ static int sRetryCount = 0;
     // 4xx/5xx (and transport errors other than a timeout) as failures, otherwise
     // post-process the body and JSON-parse it before dispatching to the finished
     // / failed block.
-    RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    // NSURLSession delivers its completion on a background queue, so the body is
+    // re-dispatched onto the main queue to preserve the original threading (the
+    // NSURLConnection form completed on [NSOperationQueue mainQueue]). Note the
+    // block argument order differs from NSURLConnection (data, response, error).
+    [[[NSURLSession sharedSession]
+        dataTaskWithRequest:request
+          completionHandler:^(NSData *data, NSURLResponse *response, NSError *connectionError) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              finished = YES; // stop the watchdog (the binary suspends the
+                              // private queue here)
+              if (sRetryCount > 1) {
+                  return;
+              }
+              NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
+              BOOL httpError = (statusCode >= 400 && statusCode <= 599);
+              if (connectionError != nil || httpError) {
+                  // Transport/HTTP failure. A genuine timeout is left for the
+                  // watchdog to retry.
+                  if ([connectionError code] != -1001 &&
+                      failedBlock) { // 0xfffffc17 == NSURLErrorTimedOut
+                      failedBlock(request, connectionError);
+                  }
+                  return;
+              }
+              NSData *processed = [self responseFromContentsServer:url
+                                                           request:request
+                                                              data:data
+                                                     finishedBlock:finishedBlock
+                                                       failedBlock:failedBlock];
+              Class jsonClass = NSClassFromString(@"NSJSONSerialization");
+              if (jsonClass == nil) {
+                  if (failedBlock) {
+                      failedBlock(request,
+                                  [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
+                  }
+                  return;
+              }
+              NSError *jsonError = nil;
+              id object = [jsonClass JSONObjectWithData:processed
+                                                options:NSJSONReadingAllowFragments // 4
+                                                  error:&jsonError];
+              if (jsonError != nil) {
+                  if (failedBlock) {
+                      failedBlock(request, jsonError);
+                  }
+              } else if ([object isKindOfClass:[NSDictionary class]]) {
+                  if (finishedBlock) {
+                      finishedBlock(object, userInfo);
+                  }
+              } else {
+                  if (failedBlock) {
+                      failedBlock(request,
+                                  [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee]);
+                  }
+              }
+            });
+          }] resume];
+#else
     [NSURLConnection
         sendAsynchronousRequest:request
                           queue:[NSOperationQueue mainQueue]
@@ -207,7 +263,7 @@ static int sRetryCount = 0;
                     }
                 }
               }];
-    RB_DEPRECATED_END
+#endif
 }
 
 // @ 0xfb58c  (line-enumeration accumulator block @ 0xfba3c; class entry
@@ -282,11 +338,31 @@ static int sRetryCount = 0;
     while (1) {
         NSHTTPURLResponse *response = nil;
         NSError *connectionError = nil;
-        RB_DEPRECATED_BEGIN
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        // Synchronous NSURLSession data task via a semaphore, preserving the
+        // returned data and the out-parameters of the original synchronous call.
+        NSData *__block _d = nil;
+        NSURLResponse *__block _r = nil;
+        NSError *__block _e = nil;
+        dispatch_semaphore_t _sem = dispatch_semaphore_create(0);
+        [[[NSURLSession sharedSession] dataTaskWithRequest:request
+                                         completionHandler:^(NSData *data,
+                                                             NSURLResponse *taskResponse,
+                                                             NSError *taskError) {
+                                           _d = data;
+                                           _r = taskResponse;
+                                           _e = taskError;
+                                           dispatch_semaphore_signal(_sem);
+                                         }] resume];
+        dispatch_semaphore_wait(_sem, DISPATCH_TIME_FOREVER);
+        responseData = _d;
+        response = (NSHTTPURLResponse *)_r;
+        connectionError = _e;
+#else
         responseData = [NSURLConnection sendSynchronousRequest:request
                                              returningResponse:&response
                                                          error:&connectionError];
-        RB_DEPRECATED_END
+#endif
         NSInteger status = [response statusCode];
 
         BOOL httpError = (status >= 400 && status < 500) || (status >= 500 && status < 600);
