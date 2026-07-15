@@ -41,7 +41,11 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 // handleLink:.
 - (void)handleLink:(id)sender {
     if (linkURL != nil) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        [[UIApplication sharedApplication] openURL:linkURL options:@{} completionHandler:nil];
+#else
         [[UIApplication sharedApplication] openURL:linkURL];
+#endif
     }
 }
 

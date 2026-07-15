@@ -138,10 +138,20 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
 - (void)loadPackInfo:(StorePackInfo *)packInfo {
     // Name: grow the label to fit up to 214x50, keep its origin.
     NSString *name = [packInfo packName];
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    CGSize nameSize = name ? [name boundingRectWithSize:CGSizeMake(214.0f, 50.0f)
+                                                options:(NSStringDrawingUsesLineFragmentOrigin |
+                                                         NSStringDrawingUsesFontLeading)
+                                             attributes:@{NSFontAttributeName : m_LabelName.font}
+                                                context:nil]
+                                 .size :
+                             CGSizeZero;
+#else
     CGSize nameSize = name ? [name sizeWithFont:m_LabelName.font
                                  constrainedToSize:CGSizeMake(214.0f, 50.0f)
                                      lineBreakMode:m_LabelName.lineBreakMode] :
                              CGSizeZero;
+#endif
     // Width self-sizes off the header: self.bounds.width - 106 (Ghidra
     // DAT_000743f8), which equals the 214 constraint only on a 320pt-wide phone
     // header.
@@ -157,9 +167,18 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
         m_LabelComment.hidden = YES;
         bottom = 110.0f; // 0x42dc0000
     } else {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        CGSize cSize = [comment boundingRectWithSize:CGSizeMake(290.0f, 120.0f)
+                                             options:(NSStringDrawingUsesLineFragmentOrigin |
+                                                      NSStringDrawingUsesFontLeading)
+                                          attributes:@{NSFontAttributeName : m_LabelComment.font}
+                                             context:nil]
+                           .size;
+#else
         CGSize cSize = [comment sizeWithFont:m_LabelComment.font
                            constrainedToSize:CGSizeMake(290.0f, 120.0f)
                                lineBreakMode:m_LabelComment.lineBreakMode];
+#endif
         // Width self-sizes off the header: self.bounds.width - 30 (immediate
         // -30.0), equal to the 290 constraint only on a 320pt-wide phone header.
         CGRect cf = m_LabelComment.frame;

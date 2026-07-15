@@ -14,6 +14,7 @@
 #import "MusicManager.h"        // getInstance / getPathFromPurchased: / addPurchasedMusic: ...
 #import "PurchaseManager.h"     // sharedManager / beginPurchase: / beginRestore ...
 #import "RhUtil.h"              // RhFileExists()
+#import "SDKCompat.h"
 #import "StoreAcMusicInfo.h"
 #import "StoreDetailViewController.h"
 #import "StoreDownloadTask.h"
@@ -1020,8 +1021,9 @@
     NSDate *now = [NSDate date];
     int prevSum = 0;
     if (lastUpdate != nil) {
-        NSCalendar *cal = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
-        NSUInteger units = NSYearCalendarUnit | NSMonthCalendarUnit; // 0xc
+        NSCalendar *cal =
+            [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSUInteger units = NSCalendarUnitYear | NSCalendarUnitMonth; // 0xc
         NSDateComponents *lastC = [cal components:units fromDate:lastUpdate];
         NSDateComponents *nowC = [cal components:units fromDate:now];
         if ([lastC year] == [nowC year] && [lastC month] == [nowC month]) {

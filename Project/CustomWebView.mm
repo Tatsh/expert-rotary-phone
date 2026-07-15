@@ -248,7 +248,13 @@
     if (navigationAction.navigationType == WKNavigationTypeLinkActivated) {
         NSString *urlStr = navigationAction.request.URL.absoluteString;
         if (![urlStr hasPrefix:[StoreUtil getOfficialPath]]) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+            [[UIApplication sharedApplication] openURL:navigationAction.request.URL
+                                               options:@{}
+                                     completionHandler:nil];
+#else
             [[UIApplication sharedApplication] openURL:navigationAction.request.URL];
+#endif
             decisionHandler(WKNavigationActionPolicyCancel);
             return;
         }
@@ -321,7 +327,13 @@
     if (navigationType == UIWebViewNavigationTypeLinkClicked) { // 0
         NSString *urlStr = request.URL.absoluteString;
         if (![urlStr hasPrefix:[StoreUtil getOfficialPath]]) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+            [[UIApplication sharedApplication] openURL:request.URL
+                                               options:@{}
+                                     completionHandler:nil];
+#else
             [[UIApplication sharedApplication] openURL:request.URL];
+#endif
             return NO;
         }
     }
@@ -375,7 +387,13 @@
 // bonus (+3000 treasure points), show a reward alert, and mark the bonus as
 // claimed.
 - (void)touchedFollowButton {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    [[UIApplication sharedApplication] openURL:[StoreUtil getOfficialTwitterURL]
+                                       options:@{}
+                             completionHandler:nil];
+#else
     [[UIApplication sharedApplication] openURL:[StoreUtil getOfficialTwitterURL]];
+#endif
 
     if (![UserSettingData isFollowBonusGet]) {
         short pts = [UserSettingData treasurePoint];

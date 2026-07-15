@@ -453,7 +453,11 @@
         }
         NSString *url = [[[m_PackInfo musicInfos] objectAtIndex:i] iTunesURL];
         if (url != nil) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url] options:@{} completionHandler:nil];
+#else
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+#endif
         }
         return;
     }
@@ -465,7 +469,11 @@
     if (url == nil) {
         return;
     }
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url] options:@{} completionHandler:nil];
+#else
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+#endif
 }
 
 // @ 0x4fca4 — the actual "buy" entry point: forward to the delegate, which owns

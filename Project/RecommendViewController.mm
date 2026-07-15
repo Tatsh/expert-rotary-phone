@@ -217,7 +217,11 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
     [super viewDidLoad];
     neSceneManager::shared();
     if (neSceneManager::isPadDisplay()) {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        self.preferredContentSize = CGSizeMake(320.0f, 524.0f);
+#else
         [self setContentSizeForViewInPopover:CGSizeMake(320.0f, 524.0f)];
+#endif
     }
     _dummyView.view.hidden = NO;
 }

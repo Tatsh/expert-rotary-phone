@@ -554,7 +554,13 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
         return;
     }
     if (m_Map) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:m_GoogleMapURL]
+                                           options:@{}
+                                 completionHandler:nil];
+#else
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:m_GoogleMapURL]];
+#endif
     }
 }
 

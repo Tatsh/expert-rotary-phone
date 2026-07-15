@@ -723,9 +723,18 @@
             cell.labelCopyright.text = @"";
         } else {
             UIFont *f = [UIFont fontWithName:@"DFSoGei-W5-WIN-RKSJ-H" size:10.0f];
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+            CGSize sz = [copyright boundingRectWithSize:CGSizeMake(300.0f, 9000.0f)
+                                                options:(NSStringDrawingUsesLineFragmentOrigin |
+                                                         NSStringDrawingUsesFontLeading)
+                                             attributes:@{NSFontAttributeName : f}
+                                                context:nil]
+                            .size;
+#else
             CGSize sz = [copyright sizeWithFont:f
                               constrainedToSize:CGSizeMake(300.0f, 9000.0f)
                                   lineBreakMode:NSLineBreakByWordWrapping];
+#endif
             cell.labelCopyright.frame = CGRectMake(10.0f, 10.0f, sz.width, sz.height);
             cell.labelCopyright.text = copyright;
         }
@@ -808,9 +817,18 @@
         return 10.0f;
     }
     UIFont *f = [UIFont fontWithName:@"DFSoGei-W5-WIN-RKSJ-H" size:10.0f];
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    CGSize sz = [copyright boundingRectWithSize:CGSizeMake(300.0f, 9000.0f)
+                                        options:(NSStringDrawingUsesLineFragmentOrigin |
+                                                 NSStringDrawingUsesFontLeading)
+                                     attributes:@{NSFontAttributeName : f}
+                                        context:nil]
+                    .size;
+#else
     CGSize sz = [copyright sizeWithFont:f
                       constrainedToSize:CGSizeMake(300.0f, 9000.0f)
                           lineBreakMode:NSLineBreakByWordWrapping];
+#endif
     return sz.height + 20.0f;
 }
 

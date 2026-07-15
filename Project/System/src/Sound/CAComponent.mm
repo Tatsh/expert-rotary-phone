@@ -12,6 +12,7 @@
 
 #import "CAComponent.h"
 #import "CASound.h"
+#import "SDKCompat.h"
 
 namespace {
 
@@ -70,11 +71,8 @@ void CAComponent::terminate() {
 bool CAComponent::prepareGraph() {
     AudioComponentDescription outDesc = {
         kAudioUnitType_Output, kAudioUnitSubType_RemoteIO, kAudioUnitManufacturer_Apple, 0, 0};
-    AudioComponentDescription mixDesc = {kAudioUnitType_Mixer,
-                                         kAudioUnitSubType_AU3DMixerEmbedded,
-                                         kAudioUnitManufacturer_Apple,
-                                         0,
-                                         0};
+    AudioComponentDescription mixDesc = {
+        kAudioUnitType_Mixer, kAudioUnitSubType_SpatialMixer, kAudioUnitManufacturer_Apple, 0, 0};
 
     if (NewAUGraph(&m_graph) != noErr) {
         NSLog(@"CAComponent prepareGraph: NewAUGraph failed");

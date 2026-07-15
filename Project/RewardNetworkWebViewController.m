@@ -262,7 +262,11 @@
                 NSString *encoded = [component substringFromIndex:prefixLen];
                 NSURL *appURL = [NSURL URLWithString:[encoded URLDecodedString]];
                 if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+                    [[UIApplication sharedApplication] openURL:appURL options:@{} completionHandler:nil];
+#else
                     [[UIApplication sharedApplication] openURL:appURL];
+#endif
                     if (![self isNavigationBarHidden]) {
                         [self appliListClosed];
                     }
@@ -294,7 +298,11 @@
         if ([parts count] != 0) {
             NSURL *appURL = [NSURL URLWithString:[[parts objectAtIndex:0] URLDecodedString]];
             if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+                [[UIApplication sharedApplication] openURL:appURL options:@{} completionHandler:nil];
+#else
                 [[UIApplication sharedApplication] openURL:appURL];
+#endif
                 if (![self isNavigationBarHidden]) {
                     [self appliListClosed];
                 }
@@ -381,7 +389,11 @@
     UIScreen *screen = [UIScreen mainScreen];
     CGRect base = CGRectZero;
     if (screen) {
+#if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+        base = [screen bounds];
+#else
         base = hostedInViewController ? [screen bounds] : [screen applicationFrame];
+#endif
     }
 
     // Portrait-normalised size (shorter side == width).

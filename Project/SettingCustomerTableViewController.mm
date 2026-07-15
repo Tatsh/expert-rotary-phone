@@ -206,14 +206,29 @@ static UIViewController *RootVC() {
         break;
     }
     case 1: { // 特定商取引法に基づく表示 -> KONAMI TOKUSHO page
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        [[UIApplication sharedApplication]
+                      openURL:[NSURL URLWithString:@"http://license.konami.com/TOKUSHO/"
+                                                   @"license/index.html"]
+                      options:@{}
+            completionHandler:nil];
+#else
         [[UIApplication sharedApplication]
             openURL:[NSURL URLWithString:@"http://license.konami.com/TOKUSHO/"
                                          @"license/index.html"]];
+#endif
         break;
     }
     case 0: { // お問い合わせ -> FAQ page
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        [[UIApplication sharedApplication]
+                      openURL:[NSURL URLWithString:@"https://www.faq.konami.jp/app/confirm"]
+                      options:@{}
+            completionHandler:nil];
+#else
         [[UIApplication sharedApplication]
             openURL:[NSURL URLWithString:@"https://www.faq.konami.jp/app/confirm"]];
+#endif
         break;
     }
     default:

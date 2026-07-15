@@ -446,12 +446,27 @@ static UIViewController *RootVC() {
                      forBarMetrics:UIBarMetricsDefault];
             [self.navigationController pushViewController:policy animated:YES];
         } else if (indexPath.row == 1) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+            [[UIApplication sharedApplication]
+                          openURL:[NSURL URLWithString:@"http://license.konami.com/TOKUSHO/"
+                                                       @"license/index.html"]
+                          options:@{}
+                completionHandler:nil];
+#else
             [[UIApplication sharedApplication]
                 openURL:[NSURL URLWithString:@"http://license.konami.com/TOKUSHO/"
                                              @"license/index.html"]];
+#endif
         } else if (indexPath.row == 0) {
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+            [[UIApplication sharedApplication]
+                          openURL:[NSURL URLWithString:@"https://www.faq.konami.jp/app/confirm"]
+                          options:@{}
+                completionHandler:nil];
+#else
             [[UIApplication sharedApplication]
                 openURL:[NSURL URLWithString:@"https://www.faq.konami.jp/app/confirm"]];
+#endif
         } else {
             return;
         }

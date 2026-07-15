@@ -428,7 +428,11 @@ static int FloatToFixed(float ms) {
                                       @"viewContentsUserReviews?id=626574779&onlyLatestVersion="
                                       @"true&pageNumber=0&"
                                       @"sortOrdering=1&type=Purple+Software"];
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    [UIApplication.sharedApplication openURL:url options:@{} completionHandler:nil];
+#else
     [UIApplication.sharedApplication openURL:url];
+#endif
 }
 
 // @ 0xd1b8
@@ -622,7 +626,13 @@ static int FloatToFixed(float ms) {
 // @ 0xe890 — open the Mail composer via a mailto: URL carrying `body`.
 - (void)GotoMailWithText:(NSString *)body {
     NSString *urlStr = [NSString stringWithFormat:@"mailto:?body=%@", body];
+#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+    [UIApplication.sharedApplication openURL:[NSURL URLWithString:urlStr]
+                                     options:@{}
+                           completionHandler:nil];
+#else
     [UIApplication.sharedApplication openURL:[NSURL URLWithString:urlStr]];
+#endif
 }
 
 // @ 0xc754

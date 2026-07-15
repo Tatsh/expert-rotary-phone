@@ -33,6 +33,13 @@
 #if !defined(__IPHONE_8_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_8_0
 #define NSCalendarIdentifierGregorian NSGregorianCalendar
 #define kCLAuthorizationStatusAuthorizedAlways kCLAuthorizationStatusAuthorized
+#define NSCalendarUnitYear NSYearCalendarUnit
+#define NSCalendarUnitMonth NSMonthCalendarUnit
+#define NSCalendarUnitDay NSDayCalendarUnit
+#endif
+
+#if !defined(__IPHONE_9_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_9_0
+#define kAudioUnitSubType_SpatialMixer kAudioUnitSubType_AU3DMixerEmbedded
 #endif
 
 // --- No-replacement deprecations: silence only the wrapped block --------------
