@@ -165,7 +165,13 @@ BOOL gLaunchedFromPush = NO;
 
 #pragma mark - Lifecycle
 
-// -[AppDelegate applicationWillResignActive:]  @ 0x95a8
+/**
+ * -[AppDelegate applicationWillResignActive:] — pause the note engines and audio,
+ * remember whether a resume is needed, tear down the running task, and pump the
+ * main loop three times when a resume is expected.
+ * @ghidraAddress 0x95a8
+ * @complete
+ */
 - (void)applicationWillResignActive:(UIApplication *)application {
     NoteMng::shared();
     if (gLaunchedFromPush) {
@@ -199,12 +205,23 @@ BOOL gLaunchedFromPush = NO;
     }
 }
 
-// -[AppDelegate applicationWillEnterForeground:]  @ 0x9728
+/**
+ * -[AppDelegate applicationWillEnterForeground:] — reload every cached texture
+ * (the binary inlines the texture-list walk; de-inlined here into
+ * neEngine::notifyEnterForeground).
+ * @ghidraAddress 0x9728
+ * @complete
+ */
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     neEngine::notifyEnterForeground();
 }
 
-// -[AppDelegate applicationDidBecomeActive:]  @ 0x972c
+/**
+ * -[AppDelegate applicationDidBecomeActive:] — resume audio + the render loop,
+ * then show the low-storage alert once free space drops to 24 MB or below.
+ * @ghidraAddress 0x972c
+ * @complete
+ */
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [[AudioManager sharedManager] systemResume];
     if (_isNecessaryToResume) {
@@ -223,32 +240,50 @@ BOOL gLaunchedFromPush = NO;
     [self.strageAlert show];
 }
 
-// -[AppDelegate applicationDidEnterBackground:]  @ 0x96dc
+/**
+ * -[AppDelegate applicationDidEnterBackground:] — flush the event center, notify
+ * the engine, and clear the app icon badge.
+ * @ghidraAddress 0x96dc
+ * @complete
+ */
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     neAppEventCenter::shared().flush();
     neEngine::onDidEnterBackground();
     [UIApplication.sharedApplication setApplicationIconBadgeNumber:0];
 }
 
-// -[AppDelegate applicationWillTerminate:]  @ 0x9810
+/**
+ * -[AppDelegate applicationWillTerminate:] — flush the event center and clear the
+ * app icon badge.
+ * @ghidraAddress 0x9810
+ * @complete
+ */
 - (void)applicationWillTerminate:(UIApplication *)application {
     neAppEventCenter::shared().flush();
     [UIApplication.sharedApplication setApplicationIconBadgeNumber:0];
 }
 
-// -[AppDelegate applicationDidReceiveMemoryWarning:]  @ 0x985c
+/**
+ * -[AppDelegate applicationDidReceiveMemoryWarning:] — release MusicManager's
+ * cached music data.
+ * @ghidraAddress 0x985c
+ * @complete
+ */
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
     [[MusicManager getInstance] releaseChacheMusicData];
 }
 
 #pragma mark - Notifications
 
-// -[AppDelegate application:didReceiveLocalNotification:]  @ 0x9858 (empty)
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-// UILocalNotification and -application:didReceiveLocalNotification: were
-// deprecated in iOS 10; the UNUserNotificationCenterDelegate tap callback is the
-// modern equivalent. The original handler was empty, so this replica extracts
-// the notification's user info and immediately calls the completion handler.
+/**
+ * -[AppDelegate userNotificationCenter:didReceiveNotificationResponse:
+ * withCompletionHandler:] — the modern UNUserNotificationCenterDelegate tap
+ * callback replacing the iOS 10-deprecated
+ * -application:didReceiveLocalNotification: (empty in the binary). Reads the
+ * notification's user info and immediately calls the completion handler.
+ * @newCode
+ */
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
     didReceiveNotificationResponse:(UNNotificationResponse *)response
              withCompletionHandler:(void (^)(void))completionHandler {
@@ -256,12 +291,22 @@ BOOL gLaunchedFromPush = NO;
     completionHandler();
 }
 #else
+/**
+ * -[AppDelegate application:didReceiveLocalNotification:] — empty in the binary.
+ * @ghidraAddress 0x9858
+ * @complete
+ */
 - (void)application:(UIApplication *)application
     didReceiveLocalNotification:(UILocalNotification *)notification {
 }
 #endif
 
-// -[AppDelegate application:didReceiveRemoteNotification:]  @ 0xafb8
+/**
+ * -[AppDelegate application:didReceiveRemoteNotification:] — when the app is
+ * backgrounded/inactive, mark a pending remote-notify on the event center.
+ * @ghidraAddress 0xafb8
+ * @complete
+ */
 - (void)application:(UIApplication *)application
     didReceiveRemoteNotification:(NSDictionary *)userInfo {
     (void)userInfo[@"body"];
@@ -271,7 +316,13 @@ BOOL gLaunchedFromPush = NO;
     neAppEventCenter::shared().setRemoteNotifyPending(true);
 }
 
-// -[AppDelegate application:didRegisterForRemoteNotificationsWithDeviceToken:]  @ 0xad90
+/**
+ * -[AppDelegate application:didRegisterForRemoteNotificationsWithDeviceToken:] —
+ * strip the device-token description to hex, then fire-and-forget POST it (with
+ * the uuid, user agent, and target store) to the save-APNs-token endpoint.
+ * @ghidraAddress 0xad90
+ * @complete
+ */
 - (void)application:(UIApplication *)application
     didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     NSString *token = [deviceToken description];
@@ -281,7 +332,7 @@ BOOL gLaunchedFromPush = NO;
 
     NSMutableURLRequest *req =
         [[NSMutableURLRequest alloc] initWithURL:[StoreUtil saveApnsTokenURL]
-                                     cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+                                     cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
                                  timeoutInterval:15.0];
     NSString *body =
         [NSString stringWithFormat:@"uuid=%@&token=%@", [[AppDelegate appDelegate] uuId], token];
@@ -301,7 +352,12 @@ BOOL gLaunchedFromPush = NO;
 #endif
 }
 
-// -[AppDelegate application:didFailToRegisterForRemoteNotificationsWithError:]  @ 0xafb4 (empty)
+/**
+ * -[AppDelegate application:didFailToRegisterForRemoteNotificationsWithError:] —
+ * empty in the binary.
+ * @ghidraAddress 0xafb4
+ * @complete
+ */
 - (void)application:(UIApplication *)application
     didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
 }
