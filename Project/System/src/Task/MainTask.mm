@@ -1253,13 +1253,15 @@ inline int MainTask::findFreeColumnRow() const {
     return row;
 }
 
-// Ghidra: musicSelCleanup (0x3cfb0) — release the previous sorted list and
-// clear all 27 jacket cells before a re-sort. Frees each cell's uploaded
-// texture (+0xc), bundled image data (+0x8) and truncated-name string (+0x10),
-// then resets the three per-column row latches
-// (+0x8c0/+0x8c1/+0x8c2) and the current column back to 0. Called at the top of
-// rebuildList().
-// @ 0x3cfb0
+/**
+ * musicSelCleanup — release the previous sorted list and clear all 27 jacket
+ * cells before a re-sort. Frees each cell's uploaded texture (+0xc), bundled
+ * image data (+0x8) and truncated-name string (+0x10), then resets the three
+ * per-column row latches (+0x8c0/+0x8c1/+0x8c2) and the current column back to 0.
+ * Called at the top of rebuildList() and from StopAndSave().
+ * @ghidraAddress 0x3cfb0
+ * @complete
+ */
 void MainTask::Cleanup() {
     if (m_musicList != nil) {
         CFBridgingRelease((__bridge CFTypeRef)m_musicList); // Ghidra: [m_musicList release]
