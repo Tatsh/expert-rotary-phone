@@ -20,6 +20,7 @@
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "PlayTask.h"
+#import "RhUtil.h" // pointInCircle / getTimeMillis (the pause hit-circle)
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager::hitSoundName
 #import "neGraphics.h"
@@ -28,6 +29,11 @@
 // playTaskResetState. A data global that is only ever read (never written) and
 // stays 0. Kept as the named global.
 static int16_t g_wPlayDefaultGauge = 0;
+
+// The global attract-mode flag the title's demo playback sets; PlayTask_update
+// state 6 branches on it (auto-advance in demo mode vs the pause hit-circle in
+// normal play). Defined here as the shared global (defaults false = normal play).
+bool g_bDemoPlayMode = false;
 
 // PlayTaskInit / PlayTaskGotoResult are declared in PlayTask.h (the play-scene
 // build + results-transition seams). The play-data work area is now a real
@@ -277,8 +283,10 @@ void PlayTask::update(int /*deltaMs*/) {
         const neTouchPoint *t = gfx.touchAt(i);
         if (t->valid != 0) { // a currently-down touch -> feed the judge
             if (touchCount < 8) {
-                touchXY[touchCount * 2] = (float)t->x / 65536.0f;
-                touchXY[touchCount * 2 + 1] = (float)t->y / 65536.0f;
+                // The judge is fed each touch's START position (Ghidra: FixedToFP of
+                // nStartX/nStartY), not its current position.
+                touchXY[touchCount * 2] = (float)t->startX / 65536.0f;
+                touchXY[touchCount * 2 + 1] = (float)t->startY / 65536.0f;
                 touchIds[touchCount] = t->id;
                 touchCount++;
             }
@@ -344,12 +352,14 @@ void PlayTask::update(int /*deltaMs*/) {
         // FUN_0002ff7c.
         m_score = PlayCurrentScore();
 
-        // Song-end: once NoteMng has emitted its last note, latch the end position
-        // and, ~1s later, fire the clear + rank SEs exactly once. Ghidra: the
-        // FUN_0003181c guard + the +0x9c8/+0x9c9/+0x9f8 bookkeeping in state 6. Per
-        // the decompile the one-shot latch is m_endSeFired (@ +0x9c8, set here);
-        // the inner gate skips the SE in tutorial/demo mode (m_isDemoPlay @ +0x9c9,
-        // set once at init — never written here).
+        // Advance the fever-hi HUD frame (wraps at its length, +0x138).
+        if (m_effectStateFrames[7] != 0) {
+            m_barStarFrame = (m_barStarFrame + 1) % m_effectStateFrames[7];
+        }
+
+        // Song-end: once every note has been judged (isFinished), latch the end
+        // position and, ~1s later, fire the score-tier voice SE + the rank cascade
+        // exactly once (m_endSeFired latch, +0x9c8; skipped in the auto-demo).
         if (!m_endSeFired && nm.isFinished()) {
             int pos = nm.getCurrentPosition();
             if (m_endPos == 0) {
@@ -357,18 +367,49 @@ void PlayTask::update(int /*deltaMs*/) {
             }
             if (!m_isDemoPlay && (unsigned)(pos - m_endPos) > 999) {
                 m_endSeFired = true;
-                [audio playSe:nil resourceId:0];    // the song-clear SE
-                PlayEndResultSe(playData, m_score); // rank jingles keyed on the score
+                // The score-tier voice: below 70000 the low voice (+0x3b0), else the
+                // high voice (+0x3ac).
+                const int voice = (m_score < 70000) ? m_playSeIds[2] : m_playSeIds[1];
+                [audio playSe:nil resourceId:voice];
+                PlayEndResultSe(playData, m_score); // the rank / clear jingle cascade
             }
         }
 
-        if (backTap) { // a held back tap freezes the play and opens the pause menu
-            nm.onResignActivePushHook();
-            m_state = 5;
+        // Advance the CD-jacket HUD frame by two (wraps at its length, +0x14c).
+        {
+            int f = m_cdFrame + 2;
+            if (m_effectStateFrames[12] <= f) {
+                f = 0;
+            }
+            m_cdFrame = f;
+        }
+
+        if (!g_bDemoPlayMode) {
+            // Normal play: pause by pressing the pause hit-circle and holding ~500ms.
+            if (m_backTouchId == -1) {
+                if (touchCount > 0) {
+                    const float scale = reinterpret_cast<const float &>(m_uiScale);
+                    const int cx = (int)((float)m_pauseTapCenterX * scale);
+                    const int cy = (int)((float)m_pauseTapCenterY * scale);
+                    const int r = (int)((float)m_pauseTapRadius * scale);
+                    const int tx = (int)(touchXY[0] * 65536.0f);
+                    const int ty = (int)(touchXY[1] * 65536.0f);
+                    if (pointInCircle(tx, ty, cx, cy, r)) {
+                        m_backTouchId = touchIds[0];
+                        m_backTouchTime = (int)getTimeMillis();
+                    }
+                }
+            } else if (gfx.findTouchById(m_backTouchId) == nullptr) {
+                m_backTouchId = -1; // the finger lifted before the hold completed
+            } else if ((unsigned)((int)getTimeMillis() - m_backTouchTime) > 500) {
+                m_backTouchId = -1;
+                nm.onResignActivePushHook(); // freeze the notes
+                m_state = 5;                 // open the pause menu
+            }
             break;
         }
 
-        // ~3s after the song ends, hand off to the fade-out.
+        // Auto-demo (title attract): hand off to the fade-out ~3s after the song ends.
         if (m_endPos != 0 && (unsigned)(nm.getCurrentPosition() - m_endPos) >= 3000) {
             m_state = 8;
         }
