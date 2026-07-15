@@ -165,14 +165,36 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
         return hit(gx, gy, m_layoutRects[48], m_layoutRects[49]);  // +0xa48/+0xa4c
     }
 
-    // Per-cell fav toggle / difficulty rows / back-to-menu: computed-rect seam.
-    const int widget = widgetIndexForButton(button);
-    if (widget < 0) {
-        return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0); // kBtnBackToMenu: unresolved consts
+    // Fav toggle (state 2): a small rect anchored to the cell origin, sitting
+    // +0xa54 above it (cellY - +0xa54), sized +0xa50 wide by +0xa54 tall.
+    // Ghidra: the sub-rect check after each grid cell in update() state 2.
+    if (button == kBtnFavToggle) {
+        const int col = cellIndex % 3;
+        const int row = cellIndex / 3;
+        const int cellX = m_layoutRects[46] + m_layoutRects[0] * col;
+        const int cellY = m_layoutRects[47] + m_layoutRects[1] * row;
+        const int favH = m_layoutRects[51]; // +0xa54
+        return hit(cellX, cellY - favH, m_layoutRects[50], favH);
     }
-    (void)cellIndex;
-    const MusicSelCell::WidgetRect &r = m_cells[widget].widget;
-    return hit(r.x, r.y, r.w, r.h);
+
+    // Difficulty selector (state 4): three buttons laid out horizontally at
+    // x = +0xa0c + +0xa1c*d, y = +0xa10, sized +0xa14 by +0xa18. Ghidra: the
+    // state-4 difficulty loop.
+    if (button == kBtnDifficulty) {
+        return hit(m_layoutRects[33] + m_layoutRects[37] * cellIndex,
+                   m_layoutRects[34],
+                   m_layoutRects[35],
+                   m_layoutRects[36]);
+    }
+
+    // Back to menu (state 2): a fixed top-corner rect (14, 11, 116, 64) scaled by
+    // the UI scale. Ghidra: the FloatVectorMult 14.0/11.0 + DAT_368cc (64.0) /
+    // DAT_368d0 (116.0) constants.
+    if (button == kBtnBackToMenu) {
+        return hit(14, 11, 116, 64);
+    }
+
+    return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0); // unmapped button
 }
 
 // Seed the three difficulty-star background-layer frame counters (@ +0x170+i*4)
@@ -217,9 +239,14 @@ MainTask::~MainTask() {
     }
 }
 
-// Ghidra: MainTask_update (0x35914). Each frame: detect a "tap" (a
-// released touch that barely moved), then step the state machine. Interactive
-// select is state 2; the chosen-song preview is states 3/4.
+/**
+ * MainTask_update. Each frame: detect a "tap" (a released touch that barely
+ * moved), then step the state machine. Interactive select is state 2; the
+ * chosen-song preview is states 3/4; 5-0xa are the settings/sort/score-log nav;
+ * 0xc-0x10 fade out and hand off to the spawned play/menu/title task.
+ * @ghidraAddress 0x35914
+ * @complete
+ */
 void MainTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
