@@ -979,13 +979,18 @@ void MainTask::Setup() {
     m_overScoreDict = nil; // +0xa98
 }
 
-// Ghidra: mainTaskUpdate (0x34f4c) — per-frame list scroll physics. Reads
-// the render manager's active touch, drives the horizontal list drag/fling, and
-// on a column change streams the newly-visible jacket column
-// (musicSelLoadColumnPrev/Next). This is NOT the re-sort routine: that is
-// rebuildList() (musicSelUpdate 0x3835c), a separate function.
+/**
+ * mainTaskUpdate — per-frame list scroll physics. Reads the render manager's
+ * active touch, drives the horizontal list drag/fling, and on a column change
+ * streams the newly-visible jacket column (musicSelLoadColumnPrev/Next). This is
+ * NOT the re-sort routine: that is rebuildList() (musicSelUpdate 0x3835c). The
+ * scroll direction matches the binary exactly: offset = startX - curX, drag left
+ * commits nColumnIndex-- (previous column), drag right commits nColumnIndex++
+ * (next), with the end rubber-band damped to (int)(0.5 - sqrt(|off|)).
+ * @ghidraAddress 0x34f4c
+ * @complete
+ */
 void MainTask::Update() {
-    // @ 0x34f4c
     neSceneManager::shared();               // NESceneManager_shared — force the singleton
     neGraphics &gfx = neGraphics::shared(); // NEGraphics_shared
 
@@ -1023,61 +1028,61 @@ void MainTask::Update() {
         m_dragSampleTime[0] = now;
         m_dragSampleX[0] = curX;
 
-        // Live drag: the offset tracks the finger delta, sqrt-damped at the list
-        // ends.
-        const int delta = curX - startX;
-        const bool atRightEnd = (delta > 0 && m_columnIndex < 1);                 // first column
-        const bool atLeftEnd = (delta < 0 && m_columnIndex >= m_columnCount - 1); // last column
-        if (atRightEnd || atLeftEnd) {
-            const int a = (delta < 0) ? -delta : delta; // |delta|
-            // Rubber-band resistance at the ends (disasm 0x34fe6..0x35018): the sqrt
-            // carries the SIGN of delta and 0.5 is ADDED, not subtracted -- damped =
-            // copysign(sqrt|delta|, delta) + 0.5. Both vcvt lack #fbits (plain
-            // int<->float, no 16.16), and the final vcvt.s32.f32 truncates. The old
-            // `0.5 - sqrt` matched only the delta<0 end.
-            const float damped = std::copysign(std::sqrt((float)a), (float)delta) + 0.5f;
-            m_scrollOffset = (int)damped;
+        // Live drag: the offset is the finger delta from the anchor, measured as
+        // (startX - curX) exactly as the binary (Ghidra: uScroll = nStartX - nCurX),
+        // so a rightward drag yields a negative offset. Rubber-band resistance at
+        // the ends: dragging left past the first column, or right past the last,
+        // damps to (int)(0.5 - sqrt(|off|)) (Ghidra 0x34fe6: FloatVectorNeg(sqrt) +
+        // 0.5, then a truncating vcvt.s32.f32).
+        const int off = startX - curX;
+        const bool atFirst = (off > 0 && m_columnIndex < 1);                 // drag left, first col
+        const bool atLast = (off < 0 && m_columnIndex >= m_columnCount - 1); // drag right, last col
+        if (atFirst || atLast) {
+            const int a = (off < 0) ? -off : off; // |off|
+            m_scrollOffset = (int)(0.5f - std::sqrt((float)a));
         } else {
-            m_scrollOffset = delta;
+            m_scrollOffset = off;
         }
 
-        // Fling velocity (px/ms) from the oldest still-populated sample.
+        // Fling velocity (px/ms) from the oldest still-populated sample, measured
+        // in the same offset-space as m_scrollOffset (Ghidra: numerator is
+        // nStartX - aSampleX[i]) so a leftward drag yields a positive velocity.
         float velocity = 0.0f;
         {
             float dTime = 0.0f;
             for (int i = 9; i >= 0; i--) {
                 if (m_dragSampleTime[i] != 0) {
                     dTime = (float)(now - m_dragSampleTime[i]);
-                    velocity = (float)(curX - m_dragSampleX[i]);
+                    velocity = (float)(m_dragSampleX[i] - curX);
                     break;
                 }
             }
-            velocity = velocity / dTime; // dPos / dTime (dTime == 0 only on the seed frame)
+            velocity = velocity / dTime; // dOff / dTime (dTime == 0 only on the seed frame)
         }
         m_scrollVelocity = velocity;
 
         if (t->released) {       // +0x2d finger lifted this frame
             m_touchReleased = 1; // +0xa80
             if (curX < startX) {
-                // Dragged left -> advance toward the NEXT column, if a fast-enough
-                // fling and not last.
-                if (m_columnIndex < m_columnCount - 1 && velocity < -kFlingThreshold) {
+                // Dragged left -> return toward the PREVIOUS column (Ghidra: drag
+                // left commits nColumnIndex--), if a fast-enough fling and not first.
+                if (m_columnIndex > 0 && velocity > kFlingThreshold) {
                     neEngine::playSystemSe(
                         4); // SysSePlayIntoSlot(...,4) — confirm SE on a real fling
-                    m_scrollState = kScrollFlingNext;
-                } else {
-                    m_scrollVelocity = 0.0f;
-                    m_scrollState = kScrollSnapLeft;
-                }
-            } else if (startX < curX) {
-                // Dragged right -> return toward the PREVIOUS column, if a fast-enough
-                // fling and not first.
-                if (m_columnIndex > 0 && velocity > kFlingThreshold) {
-                    neEngine::playSystemSe(4); // confirm SE on a real fling
                     m_scrollState = kScrollFlingPrev;
                 } else {
                     m_scrollVelocity = 0.0f;
                     m_scrollState = kScrollSnapRight;
+                }
+            } else if (startX < curX) {
+                // Dragged right -> advance toward the NEXT column (Ghidra: drag right
+                // commits nColumnIndex++), if a fast-enough fling and not last.
+                if (m_columnIndex < m_columnCount - 1 && velocity < -kFlingThreshold) {
+                    neEngine::playSystemSe(4); // confirm SE on a real fling
+                    m_scrollState = kScrollFlingNext;
+                } else {
+                    m_scrollVelocity = 0.0f;
+                    m_scrollState = kScrollSnapLeft;
                 }
             } else {
                 // Released with no net movement: snap straight back to the current
