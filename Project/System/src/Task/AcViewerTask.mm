@@ -139,8 +139,7 @@ void AcViewerTask::setup() {
     // (+0x58, device-picked "TOP_960" / "TOP_1136" / "TOP_IPAD").
     AepLyrCtrl *pauseLayer = new AepLyrCtrl();
     m_pauseLayer = pauseLayer;
-    pauseLayer->init(kAcvGroup, "PAUSE_LOOP", this,
-                     0); // order best-effort (overlay)
+    pauseLayer->init(kAcvGroup, "PAUSE_LOOP", this, 9); // draw order 9
 
     const char *topName = "TOP_960";
     if (pad) {
@@ -241,7 +240,7 @@ void AcViewerTask::setup() {
 
     AepLyrCtrl *topLayer = new AepLyrCtrl();
     m_topLayer = topLayer;
-    topLayer->init(kAcvGroup, topName, this, 0); // order best-effort (overlay)
+    topLayer->init(kAcvGroup, topName, this, 15); // draw order 15
 
     // Resolve the HUD handles.
     m_effectCoolLyrNo = aep.getLyrNo(kAcvGroup, "EFFECT_COOL");
@@ -885,9 +884,10 @@ void AcViewerTask::update(int /*deltaMs*/) {
                     m_gaugeBase = (int16_t)(int)(m_dragAccumX * (float)m_xScrubScale); // x-scrub
                 } else {
                     // live seek: re-init the chart then seek to base + accumulated
-                    // dy*scale. (Ghidra initPlayData args = m_sheet + m_hiSpeed
-                    // @0x1e0/0x1f4; the 2nd arg's exact role -- difficulty vs hi-speed --
-                    // is best-effort.)
+                    // dy*scale. The 2nd arg is the hi-speed setting index (+0x1f4),
+                    // used by initPlayData as kAcHiSpeed[index]; verified from the
+                    // r2 <- [this + 0x1f4] load at this call site (Update 0x220ce)
+                    // and the matching one in loadChart (0x2333e).
                     note.initPlayDataWithData((__bridge NSData *)m_sheet, m_hiSpeed);
                     int seek =
                         (int)((float)(uint32_t)m_pauseTime + m_seekCoef * (float)m_seekScale);
