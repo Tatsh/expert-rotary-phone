@@ -41,11 +41,14 @@ bool BootLogoTask::skipRequested() const {
     return false;
 }
 
-// Ghidra: BootLogoTask_setup (FUN_0002b1f4) — cache the render manager + screen
-// scale, then load three device-sized branding PNGs into the sprites. The image
-// set + on-screen size are chosen per display (iPad/Retina/phone); one
-// confirmed resource stem is "eamusement_1024_2x" (the full per-device name
-// tables live at the DAT_00130fd4.. constants).
+/**
+ * BootLogoTask_setup — cache the render manager + screen scale, then load three
+ * device-sized branding PNGs into the sprites. The image set + on-screen size are
+ * chosen per display (iPad/Retina/phone); all twelve resource names were read
+ * from the DAT_00130fd4.. CFString tables (pool @ 0x103779) and match exactly.
+ * @ghidraAddress 0x2b1f4
+ * @complete
+ */
 void BootLogoTask::setup() {
     m_aep = &AepManager::shared();
     // Ghidra: m_scale (+0x38) = g_dwUiScale — the saved half-scale (screenScale*0.5),
@@ -94,9 +97,16 @@ void BootLogoTask::setup() {
     }
 }
 
-// Draw one branding sprite centred at (m_posX, m_posY), full size/opacity,
-// priority 5 (Ghidra: neTextureForiOS_draw FUN_0000fbcc as called from
-// FUN_0002b4b4/b504).
+/**
+ * Draw one branding sprite as a full-canvas quad at (0, 0) sized (m_posX,
+ * m_posY), scale/colour 100, blend 0x20, colour-multiply 0x00ffffff, priority 5.
+ * This is the shared body de-inlined from the two per-sprite wrappers; every
+ * argument is bit-exact against their disassembly (the neTextureForiOS_draw call
+ * at FUN_0000fbcc).
+ * @ghidraAddress 0x2b4b4
+ * @ghidraAddress 0x2b504
+ * @complete
+ */
 void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     if (logo == nullptr) {
         return;
@@ -121,15 +131,23 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     logo->draw(m_aep->orderingTable(), p);
 }
 
-// @ 0x2b504 — BootLogoTask_drawLogo1. The concrete per-screen draw wrapper the
-// state machine calls to blit the second branding sprite (m_logo[1], @ +0x30);
-// it is just drawLogo() bound to that sprite.
+/**
+ * BootLogoTask_drawLogo1 — the per-screen draw wrapper the state machine calls to
+ * blit the second branding sprite (m_logo[1], @ +0x30); just drawLogo() bound to
+ * that sprite.
+ * @ghidraAddress 0x2b504
+ * @complete
+ */
 void BootLogoTask::drawLogo1() {
     drawLogo(m_logo[1]);
 }
 
-// @ 0x2b4b4 — BootLogoTask_drawLogo2. The per-screen draw wrapper for the third
-// branding sprite (m_logo[2], @ +0x34); drawLogo() bound to that sprite.
+/**
+ * BootLogoTask_drawLogo2 — the per-screen draw wrapper for the third branding
+ * sprite (m_logo[2], @ +0x34); drawLogo() bound to that sprite.
+ * @ghidraAddress 0x2b4b4
+ * @complete
+ */
 void BootLogoTask::drawLogo2() {
     drawLogo(m_logo[2]);
 }
