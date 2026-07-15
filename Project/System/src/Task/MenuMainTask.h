@@ -52,10 +52,10 @@ void NewsTickerUpdate(int child,
                       int,
                       int,
                       int,
-                      int16_t,
                       int,
+                      uint32_t,
                       int *,
-                      int priority,
+                      uint32_t priority,
                       void *context);
 
 // The mode-select confirm-dialog dismiss callback, installed as the root VC's
@@ -132,10 +132,10 @@ private:
                                  int,
                                  int,
                                  int,
-                                 int16_t,
                                  int,
+                                 uint32_t,
                                  int *,
-                                 int priority,
+                                 uint32_t priority,
                                  void *context);
 
     // News-fetch callback (DownloadMain's NEWS delegate). When `hasNews`, rebuild

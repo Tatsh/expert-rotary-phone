@@ -44,14 +44,14 @@ static MainViewController *RootVC() {
 }
 
 /**
- * The menu's baseline Y: the screen height cached in the Aep manager
- * (nScreenHeight @ +0x7f3b00); the top-row button rects are placed relative to
- * it.
+ * The menu's baseline Y: the AEP manager's cached canvas height (+0x7f3b00),
+ * relative to which the top-row button rects are placed. Reads it through the
+ * manager's screenHeight() accessor rather than a raw offset.
  * @ghidraAddress 0xf4a4
  * @complete
  */
 static int AepBaselineY(AepManager &aep) {
-    return *reinterpret_cast<int *>(reinterpret_cast<char *>(&aep) + 0x7f3b00);
+    return aep.screenHeight();
 }
 
 // The play / tutorial / arcade / sugoroku sub-tasks the menu launches come from
@@ -217,11 +217,10 @@ void MenuMainTask::setup() {
     }
 
     // Install the per-layer NEWS-ticker draw callback on group 2 (the engine
-    // hands this task back as the trailing context). Its natural ABI carries the
-    // full composed transform, so it is reinterpret-cast to the generic
-    // AepGroupDrawFn at registration (the same pattern as AcViewer's HUD draw).
+    // hands this task back as the trailing context). NewsTickerUpdate has the
+    // AepGroupDrawFn signature exactly, so it registers without a cast.
     // Ghidra: setAepCallbacks(aep, 2, &NewsTickerUpdate, this).
-    aep.setGroupDrawCallback(2, reinterpret_cast<AepGroupDrawFn>(&NewsTickerUpdate), this);
+    aep.setGroupDrawCallback(2, &NewsTickerUpdate, this);
 
     // The friend-request warning texture (a bundled PNG drawn straight into the
     // OT).
@@ -916,10 +915,10 @@ void NewsTickerUpdate(int child,
                       int,
                       int,
                       int,
-                      int16_t,
                       int,
+                      uint32_t,
                       int *,
-                      int priority,
+                      uint32_t priority,
                       void *context) {
     AepManager &aep = AepManager::shared();
     auto *self = static_cast<MenuMainTask *>(context);
@@ -990,7 +989,7 @@ draw:
                         self->m_newsPauseCounter,
                         0x181818,
                         &self->m_newsTickerParams[0],
-                        priority);
+                        static_cast<int>(priority));
 }
 
 /**
