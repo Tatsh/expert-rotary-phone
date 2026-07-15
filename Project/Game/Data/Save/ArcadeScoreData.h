@@ -47,29 +47,6 @@
 @property(nonatomic, retain) NSString *topNameH;
 @property(nonatomic, retain) NSString *topNameEx;
 
-// Fetch the single stored record for `musicId` under `refId` (nil when none).
-// Ghidra: @ 0xcea60.
-+ (ArcadeScoreData *)getDataFromMusicId:(short)musicId
-                                  refId:(NSString *)refId
-                 inManagedObjectContext:(NSManagedObjectContext *)context;
-
-// Fetch up to `limit` records for `refId`, newest first (updateDate
-// descending). Ghidra: @ 0xceb78.
-+ (NSArray *)getLatestDataLimit:(short)limit
-                          refId:(NSString *)refId
-         inManagedObjectContext:(NSManagedObjectContext *)context;
-
-// Fetch the records for one `category` under `refId`, sorted by title
-// ascending. Ghidra: @ 0xcece8.
-+ (NSArray *)getDataFromCategory:(short)category
-                           refId:(NSString *)refId
-          inManagedObjectContext:(NSManagedObjectContext *)context;
-
-// Insert a fresh record for `musicId` / `refId` and save it. Ghidra: @ 0xcf164.
-+ (ArcadeScoreData *)addRecordWithMusicId:(short)musicId
-                                    refId:(NSString *)refId
-                   inManagedObjectContext:(NSManagedObjectContext *)context;
-
 // Every stored record for `refId`, sorted by category (descending) then title
 // (ascending). Ghidra: @ 0xcee4c.
 + (NSArray *)getAllData:(NSString *)refId context:(NSManagedObjectContext *)context;

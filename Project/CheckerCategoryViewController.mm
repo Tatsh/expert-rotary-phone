@@ -12,6 +12,7 @@
 #import "CheckerCategoryViewController.h"
 
 #import "AppDelegate.h"                // +appDelegate.managedObjectContext
+#import "ArcadeScoreData+Store.h"      // fetch / insert query methods
 #import "ArcadeScoreData.h"            // Core Data arcade-score records
 #import "CheckerCategoryCell.h"        // in-project row cell (setData:category:)
 #import "CheckerMusicViewController.h" // pushed on row select
