@@ -29,7 +29,7 @@ int g_dwAcCoolCount = 0;
 int g_dwAcGreatCount = 0;
 bool g_bAcNoteFinished = false;
 
-// Hi-speed multiplier per difficulty (Ghidra: the switch in InitPlayData).
+// Hi-speed multiplier per hi-speed level (Ghidra: the switch in InitPlayData).
 static const float kAcHiSpeed[kAcHiSpeedCount] = {
     1.2f,
     1.5f,
@@ -54,7 +54,7 @@ AcNoteMng &AcNoteMng::shared() {
 }
 
 // Ghidra: FUN_0007a774. `data` points at the 8-byte header (magic 'E' at +4).
-int AcNoteMng::initPlayData(const void *data, int size, int difficulty) {
+int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
     assert(data != nullptr && size > 0); // AcNoteMng.mm:0x59
 
     m_recordCount = 0;
@@ -67,8 +67,8 @@ int AcNoteMng::initPlayData(const void *data, int size, int difficulty) {
     m_maxCombo = 0;
     std::memset(m_laneCounts, 0, sizeof(m_laneCounts));
 
-    if (difficulty >= 0 && difficulty < kAcHiSpeedCount) {
-        m_hiSpeed = kAcHiSpeed[difficulty];
+    if (hiSpeedLevel >= 0 && hiSpeedLevel < kAcHiSpeedCount) {
+        m_hiSpeed = kAcHiSpeed[hiSpeedLevel];
     }
 
     const uint8_t *bytes = static_cast<const uint8_t *>(data);
@@ -169,8 +169,8 @@ void AcNoteMng::initNodePool() {
     }
 }
 
-int AcNoteMng::initPlayDataWithData(NSData *data, int difficulty) {
-    return initPlayData(data.bytes, (int)data.length, difficulty);
+int AcNoteMng::initPlayDataWithData(NSData *data, int hiSpeedLevel) {
+    return initPlayData(data.bytes, (int)data.length, hiSpeedLevel);
 }
 
 // Ghidra: FUN_0007aa90 — walk the chart from the first record; register a

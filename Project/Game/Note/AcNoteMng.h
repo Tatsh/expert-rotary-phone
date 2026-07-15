@@ -89,12 +89,13 @@ constexpr int kAcHiSpeedCount = 11;
 class AcNoteMng {
 public:
     // Parse a decoded arcade chart into the play timeline, selecting the hi-speed
-    // multiplier for `difficulty` (0..10 -> 1.2x .. 6.0x). Returns 0 on success,
-    // -3 if the magic byte is not 'E'. Ghidra: InitPlayData FUN_0007a774.
-    int initPlayData(const void *data, int size, int difficulty);
+    // multiplier for `hiSpeedLevel` (the acvHiSpeed setting, 0..10 -> 1.2x ..
+    // 6.0x). Returns 0 on success, -3 if the magic byte is not 'E'. Ghidra:
+    // InitPlayData FUN_0007a774.
+    int initPlayData(const void *data, int size, int hiSpeedLevel);
 
 #ifdef __OBJC__
-    int initPlayDataWithData(NSData *data, int difficulty);
+    int initPlayDataWithData(NSData *data, int hiSpeedLevel);
 #endif
 
     // Register tempo events / convert ticks to ms (arcade tempo map). Ghidra:
