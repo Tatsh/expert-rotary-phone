@@ -416,6 +416,99 @@ void PlayJudge_update(MainTaskPlayData *playData,
             }
         }
 
+        // --- Hit-effect flashes at the judge line ----------------------------
+        // These overlay sprites flash at the judge-line target: EFF_HIT while the
+        // note is active (phase 1), the GOOD/GREAT/COOL result burst, and the
+        // GG_HANTEI base underlay. Layers / frame lengths come from
+        // effectStateLyr/effectStateFrames; positions are the integer judge target;
+        // effScale = hitEffectScale/2. Arg tuples and gates traced from the
+        // drawLayer callee (0xfd64) against the caller pushes at 0x2fb16 (hit),
+        // 0x2fbe2 (burst), 0x2fce0 (base), and the branch tangle 0x2fb84..0x2fce8.
+        const int hx = (int)note.targetX;
+        const int hy = (int)note.targetY;
+        const int effScale = playData->hitEffectScale / 2; // +0x9e0
+
+        if (st->phase == 1 && noteFrame < playData->effectStateFrames[1]) {
+            aep.drawLayer(playData->effectStateLyr[1],
+                          noteFrame,
+                          hx,
+                          hy,
+                          100,
+                          100,
+                          0,
+                          effScale,
+                          effScale,
+                          100,
+                          0,
+                          1,
+                          0x20,
+                          0xffffffff,
+                          nullptr,
+                          nullptr,
+                          20,
+                          0);
+        }
+
+        if (st->result >= 0) {
+            const int hitScale = playData->noteDrawScale; // +0x9bc
+            // Whether the GOOD/GREAT/COOL burst shows for this render kind (0x2fb84):
+            // a SPECIAL note only once its hold-tap count is exhausted, a LONG note
+            // only with its hold-completed bit set.
+            const bool showBurst =
+                note.renderKind == NOTE_RENDER_NORMAL ||
+                (note.renderKind == NOTE_RENDER_SPECIAL && (holdJudge & 0xff) == 0) ||
+                (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHoldOK) != 0);
+            if (showBurst && st->result >= 1 && st->result <= 3 &&
+                nFrameNo < playData->effectStateFrames[st->result + 1]) {
+                aep.drawLayer(playData->effectStateLyr[st->result + 1],
+                              nFrameNo,
+                              hx,
+                              hy,
+                              hitScale,
+                              hitScale,
+                              0,
+                              effScale,
+                              effScale,
+                              100,
+                              0,
+                              1,
+                              0x20,
+                              0xffffffff,
+                              nullptr,
+                              nullptr,
+                              15,
+                              0);
+            }
+
+            // The GG_HANTEI base underlay (0x2fc54): a SPECIAL BAD fully consumed by
+            // its hold, or a LONG note without span bits, drops straight to retire.
+            const bool showBase =
+                note.renderKind == NOTE_RENDER_NORMAL ||
+                (note.renderKind == NOTE_RENDER_SPECIAL &&
+                 ((holdJudge & 0xff) == 0 || st->result != 0)) ||
+                (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHold) != 0);
+            if (showBase && nFrameNo < playData->effectStateFrames[0]) {
+                aep.drawLayer(playData->effectStateLyr[0],
+                              nFrameNo,
+                              hx,
+                              hy,
+                              hitScale,
+                              hitScale,
+                              0,
+                              0,
+                              0,
+                              100,
+                              0,
+                              1,
+                              0x20,
+                              0xffffffff,
+                              nullptr,
+                              nullptr,
+                              st->layerId,
+                              0);
+            }
+        }
+
         // --- Retire / auto-lapse ---------------------------------------------
         if (st->phase - 2u < 2u) { // phase 2 or 3: resolved, playing its display
             if (playData->toneJudgeFrames[st->phase] <= nFrameNo) {

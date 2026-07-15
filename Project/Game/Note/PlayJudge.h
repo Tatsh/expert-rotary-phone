@@ -88,7 +88,21 @@ struct MainTaskPlayData {
     // judge pass reads it as the retire threshold. Ghidra: playData+0xd4[phase].
     int32_t toneJudgeFrames[4]; // +0x0d4 retire threshold per phase
 
-    uint8_t _rsvd_e4[0x3c8 - 0xe4]; // +0x0e4 HUD / layout tables (task-layer owned)
+    // Hit-effect layer ids the judge draw flashes at the judge line when a note
+    // resolves (PlayTask::m_effectStateLyr). [0] = base GG_HANTEI underlay, [1] =
+    // EFF_HIT (phase-1 hit sprite), [2]/[3]/[4] = the GOOD/GREAT/COOL result
+    // bursts, [12] (+0x114) = the CD jacket. Ghidra: playData+0xe4[i].
+    int32_t effectStateLyr[14]; // +0x0e4 hit-effect layer ids
+
+    // ...and their per-layer frame lengths (PlayTask::m_effectStateFrames): the
+    // draw gates each effect sprite on its frame being below its length ([0] =
+    // +0x11c base, [1] = +0x120 hit, [2..4] = +0x124/128/12c result bursts).
+    // Ghidra: playData+0x11c[i].
+    int32_t effectStateFrames[14]; // +0x11c hit-effect frame lengths
+
+    uint8_t _rsvd_154[0x3c4 - 0x154]; // +0x154 HUD / layout tables (task-layer owned)
+
+    int32_t cdFrame; // +0x3c4 CD-jacket animation frame (PlayTask::m_cdFrame)
 
     // The per-note judge-state pool: FUN_0003126c looks one up by note identity,
     // claiming a free slot on first touch. 60 entries, stride 0x18.
@@ -210,6 +224,9 @@ static_assert(offsetof(MainTaskPlayData, comboLayers) == 0x84, "comboLayers @ +0
 static_assert(offsetof(MainTaskPlayData, sceneLayers) == 0x98, "sceneLayers @ +0x98");
 static_assert(offsetof(MainTaskPlayData, toneJudgeLyr) == 0xc4, "toneJudgeLyr @ +0xc4");
 static_assert(offsetof(MainTaskPlayData, toneJudgeFrames) == 0xd4, "toneJudgeFrames @ +0xd4");
+static_assert(offsetof(MainTaskPlayData, effectStateLyr) == 0xe4, "effectStateLyr @ +0xe4");
+static_assert(offsetof(MainTaskPlayData, effectStateFrames) == 0x11c, "effectStateFrames @ +0x11c");
+static_assert(offsetof(MainTaskPlayData, cdFrame) == 0x3c4, "cdFrame @ +0x3c4");
 static_assert(offsetof(MainTaskPlayData, judgePool) == 0x3c8, "judgePool @ +0x3c8");
 static_assert(offsetof(MainTaskPlayData, playScale) == 0x974, "playScale @ +0x974");
 static_assert(offsetof(MainTaskPlayData, hitRadius) == 0x9b8, "hitRadius @ +0x9b8");
