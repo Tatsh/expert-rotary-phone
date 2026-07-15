@@ -173,12 +173,18 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 // @ 0xfa6fc — percent-escape for a URL query, escaping the reserved set
 // "!*'();:@&=+$,/?%#[]" (CFString @ 0x102c29) as UTF-8.
 + (NSString *)URLEncodedString:(NSString *)string {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    NSMutableCharacterSet *allowed = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
+    [allowed addCharactersInString:@"-_.~"];
+    return [string stringByAddingPercentEncodingWithAllowedCharacters:allowed];
+#else
     return (NSString *)CFBridgingRelease(
         CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
                                                 (__bridge CFStringRef)string,
                                                 NULL,
                                                 CFSTR("!*'();:@&=+$,/?%#[]"),
                                                 kCFStringEncodingUTF8));
+#endif
 }
 
 @end
@@ -195,12 +201,18 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 // "!*'();:@&=+$,/?%#[]"; UTF-8). file-static: identical to StoreUtil's
 // canonical urlEncodeString; kept for faithfulness.
 static NSString *urlEncodeString(NSString *string) {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    NSMutableCharacterSet *allowed = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
+    [allowed addCharactersInString:@"-_.~"];
+    return [string stringByAddingPercentEncodingWithAllowedCharacters:allowed];
+#else
     return (NSString *)CFBridgingRelease(
         CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
                                                 (__bridge CFStringRef)string,
                                                 NULL,
                                                 CFSTR("!*'();:@&=+$,/?%#[]"),
                                                 kCFStringEncodingUTF8));
+#endif
 }
 
 // The percent-DECODE counterpart (Ghidra urlDecodeString @ 0xfc218) is really

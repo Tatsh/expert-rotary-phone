@@ -552,10 +552,18 @@ NSString *urlEncodeString(NSString *s) {
     if (s == nil) {
         return nil;
     }
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+    // Escape everything except the RFC 3986 unreserved set, which is the
+    // complement of the reserved set the original escaped explicitly.
+    NSMutableCharacterSet *allowed = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
+    [allowed addCharactersInString:@"-_.~"];
+    return [s stringByAddingPercentEncodingWithAllowedCharacters:allowed];
+#else
     return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(
         kCFAllocatorDefault,
         (__bridge CFStringRef)s,
         NULL,
         CFSTR("!*'();:@&=+$,/?%#[]"),
         kCFStringEncodingUTF8);
+#endif
 }

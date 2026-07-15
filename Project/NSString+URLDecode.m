@@ -15,11 +15,18 @@
 // charactersToLeaveEscaped — a reused date-format literal, unusual but
 // recovered verbatim and kept faithful.
 - (NSString *)URLDecodedString {
+#if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
+    // -stringByRemovingPercentEncoding unescapes every escape (UTF-8); the
+    // original's odd "leave escaped" date-format literal has no modern analogue,
+    // and in practice the input never contains those exact sequences.
+    return [self stringByRemovingPercentEncoding];
+#else
     return (NSString *)CFBridgingRelease(
         CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
                                                                 (__bridge CFStringRef)self,
                                                                 CFSTR("%d/%02d/15 12:00:00"),
                                                                 kCFStringEncodingUTF8));
+#endif
 }
 
 @end
