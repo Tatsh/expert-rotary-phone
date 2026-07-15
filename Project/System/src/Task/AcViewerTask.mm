@@ -319,8 +319,8 @@ void AcViewerTask::loadChart() {
     // Ghidra: the async BGM load is a dispatch_async(^{...}) block (@ 0x237bc)
     // posted to the global queue; it streams the song's BGM in the background
     // while play sets up. The block (disasm 0x237bc): getBackTrack:m_difficulty
-    // -> loadBgmData:isLoop:NO -> playBgm:1.0f, then sets the bgm-ready flag
-    // (+0x1d5). playBgm: fade value best-effort (1.0f imm arg).
+    // (r2 <- [self + 0x1dc]) -> loadBgmData:isLoop:NO (r3 == 0) -> playBgm:1.0f
+    // (r2 == 0x3f800000 at 0x237f6), then sets the bgm-ready flag (+0x1d5).
     const int difficulty = m_difficulty;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
       NSData *track = [acMusic getBackTrack:difficulty];
