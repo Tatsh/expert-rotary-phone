@@ -405,28 +405,28 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
     const uint32_t endTick = node->endTick;
 
     if ((flags & 0x10) == 0 && node->kind < 10) {
-        node->scaleX = computeScrollY(startTick, pos); // +0x14 head scroll position
+        node->scrollStart = computeScrollY(startTick, pos); // +0x14 head scroll position
     }
     if (endTick > startTick && pos <= endTick && node->kind < 10) {
-        node->scaleY = computeScrollY(endTick, pos); // +0x18 tail scroll position
+        node->scrollEnd = computeScrollY(endTick, pos); // +0x18 tail scroll position
     }
 
     if (startTick < pos) {
         if ((flags & 0x10) == 0) {
             node->flags = (uint16_t)(flags | 0x10);
         }
-        node->scaleX = node->scaleX + m_scrollMap[0].speed * -16.0f;
-    } else if (node->scaleX < 0.0f) {
-        node->scaleX = 0.0f;
+        node->scrollStart = node->scrollStart + m_scrollMap[0].speed * -16.0f;
+    } else if (node->scrollStart < 0.0f) {
+        node->scrollStart = 0.0f;
     }
 
     if (startTick < endTick) {
         if (pos <= endTick) {
-            if (node->scaleY < 0.0f) {
-                node->scaleY = 0.0f;
+            if (node->scrollEnd < 0.0f) {
+                node->scrollEnd = 0.0f;
             }
         } else {
-            node->scaleY = node->scaleY + m_scrollMap[0].speed * -16.0f;
+            node->scrollEnd = node->scrollEnd + m_scrollMap[0].speed * -16.0f;
         }
     }
 }
@@ -639,8 +639,8 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     note->kind = (uint8_t)(rec->value & 0xff);
     note->kindHi = (uint8_t)(rec->value >> 8);
     note->flags = 0;
-    note->scaleX = 1024.0f;
-    note->scaleY = 1024.0f;
+    note->scrollStart = 1024.0f;
+    note->scrollEnd = 1024.0f;
 
     // Render/spawn kind: chart kinds 6..9 map to 2..5 (unless auto-play), else 1.
     unsigned k = (rec->value & 0xff) - 6;
@@ -677,8 +677,8 @@ void NoteMng::makeEvent(const NoteRecord *rec) {
     note->endTick = rec->tick;
     note->kind = 10;
     note->flags = 0;
-    note->scaleX = 1024.0f;
-    note->scaleY = 1024.0f;
+    note->scrollStart = 1024.0f;
+    note->scrollEnd = 1024.0f;
     moveToActive(note);
 }
 
@@ -741,8 +741,8 @@ void NoteMng::getNoteObject(NoteRenderData *out, int index) {
     out->kind = note->kind;
     out->kindHi = note->kindHi;
     out->flags = note->flags;
-    out->scaleX = note->scaleX;
-    out->scaleY = note->scaleY;
+    out->scrollStart = note->scrollStart;
+    out->scrollEnd = note->scrollEnd;
     out->spawnKind = note->spawnKind;
     out->x = note->x;
     out->y = note->y;

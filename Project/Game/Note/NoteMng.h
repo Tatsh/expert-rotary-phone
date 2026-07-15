@@ -87,8 +87,10 @@ struct ActiveNote {
                            //        it. Ghidra: Note+0x8 (pReserved8).
     uint32_t startTick;    // +0x0c
     uint32_t endTick;      // +0x10  == startTick for taps, later for holds
-    float scaleX;          // +0x14  (default 1024.0)
-    float scaleY;          // +0x18  (default 1024.0)
+    float scrollStart;     // +0x14  head scroll position (Ghidra flScrollStart;
+                           //         default 1024.0, updated by updateDrawPos)
+    float scrollEnd;       // +0x18  tail scroll position (Ghidra flScrollEnd;
+                           //         default 1024.0)
     uint8_t kind;          // +0x1c  note kind (>= 10 marks an event)
     uint8_t kindHi;        // +0x1d
     uint8_t reserved1e[2]; // +0x1e
@@ -144,8 +146,8 @@ struct NoteRenderData {
     uint8_t kindHi;
     uint16_t flags;
     NoteRenderKind renderKind;
-    float scaleX;
-    float scaleY;
+    float scrollStart; // Ghidra flScrollStart (head scroll position)
+    float scrollEnd;   // Ghidra flScrollEnd (tail scroll position)
     uint8_t spawnKind;
     float x;
     float y;
