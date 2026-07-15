@@ -100,7 +100,11 @@ struct MainTaskPlayData {
     // Ghidra: playData+0x11c[i].
     int32_t effectStateFrames[14]; // +0x11c hit-effect frame lengths
 
-    uint8_t _rsvd_154[0x3c4 - 0x154]; // +0x154 HUD / layout tables (task-layer owned)
+    uint8_t _rsvd_154[0x21c - 0x154]; // +0x154 HUD / layout tables (task-layer owned)
+
+    int32_t barSegLyr0; // +0x21c first bar-segment layer id (long-note connecting bar)
+
+    uint8_t _rsvd_220[0x3c4 - 0x220]; // +0x220 HUD / layout tables (task-layer owned)
 
     int32_t cdFrame; // +0x3c4 CD-jacket animation frame (PlayTask::m_cdFrame)
 
@@ -122,7 +126,16 @@ struct MainTaskPlayData {
     int32_t pauseBtnCenterY; // +0x994 pause/back-button hit-circle centre y
                              // (pre-scale)
 
-    uint8_t _rsvd_998[0x9b0 - 0x998]; // +0x998
+    // Long-note connecting-bar parameters (Ghidra: FUN_0002f1f8 0x2f958..0x2fa6a).
+    // The bar length grows with the fade: len = fade*barLenScale + barLenBase; the
+    // bar sprite (barSegLyr1) is drawn along the head->target angle. barPriority is
+    // halved into the draw's anchor slot.
+    int32_t barLenScale; // +0x998 bar length gain per fade
+    int32_t barSegLyr1;  // +0x99c second bar-segment layer id
+    int32_t barPriority; // +0x9a0 bar draw priority (halved)
+    int32_t barLenBase;  // +0x9a4 bar length base
+
+    uint8_t _rsvd_9a8[0x9b0 - 0x9a8]; // +0x9a8
 
     int32_t cachedFinalScore; // +0x9b0 computeFinalScore() cached each frame; the
                               // <70000
@@ -227,7 +240,12 @@ static_assert(offsetof(MainTaskPlayData, toneJudgeLyr) == 0xc4, "toneJudgeLyr @ 
 static_assert(offsetof(MainTaskPlayData, toneJudgeFrames) == 0xd4, "toneJudgeFrames @ +0xd4");
 static_assert(offsetof(MainTaskPlayData, effectStateLyr) == 0xe4, "effectStateLyr @ +0xe4");
 static_assert(offsetof(MainTaskPlayData, effectStateFrames) == 0x11c, "effectStateFrames @ +0x11c");
+static_assert(offsetof(MainTaskPlayData, barSegLyr0) == 0x21c, "barSegLyr0 @ +0x21c");
 static_assert(offsetof(MainTaskPlayData, cdFrame) == 0x3c4, "cdFrame @ +0x3c4");
+static_assert(offsetof(MainTaskPlayData, barLenScale) == 0x998, "barLenScale @ +0x998");
+static_assert(offsetof(MainTaskPlayData, barSegLyr1) == 0x99c, "barSegLyr1 @ +0x99c");
+static_assert(offsetof(MainTaskPlayData, barPriority) == 0x9a0, "barPriority @ +0x9a0");
+static_assert(offsetof(MainTaskPlayData, barLenBase) == 0x9a4, "barLenBase @ +0x9a4");
 static_assert(offsetof(MainTaskPlayData, judgePool) == 0x3c8, "judgePool @ +0x3c8");
 static_assert(offsetof(MainTaskPlayData, playScale) == 0x974, "playScale @ +0x974");
 static_assert(offsetof(MainTaskPlayData, hitRadius) == 0x9b8, "hitRadius @ +0x9b8");

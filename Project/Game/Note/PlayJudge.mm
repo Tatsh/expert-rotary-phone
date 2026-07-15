@@ -16,26 +16,27 @@
 //  (setLaneFlag + slot free), and drives the combo-milestone burst + sustained
 //  combo-effect AepLyrCtrl layers.
 //
-//  The note-sprite draw geometry is reconstructed from the armv7 disassembly of
-//  FUN_0002f1f8's draw region (the decompiler garbles the NEON): the note's
-//  scroll-progress interpolation from spawn position to the judge-line target, the
-//  per-phase animation frame, and the head/tail AepManager::drawLayer calls, whose
-//  argument slots were resolved by disassembling the callee (0xfd64). The further
-//  hit-effect overlays of the same region — the judge-result/base effect sprites,
-//  the CD-jacket, and the long-note connecting bar (drawAepFrameEx with an atan2
-//  rotation + time fade) — are reconstructed incrementally from the same
-//  disassembly (tracked in HANDOFF.md).
+//  The full draw region is reconstructed from the armv7 disassembly of
+//  FUN_0002f1f8 (the decompiler garbles the NEON): the note's scroll-progress
+//  interpolation from spawn position to the judge-line target, the per-phase
+//  animation frame, the head/tail note sprite, the judge-result/base/EFF_HIT
+//  effect sprites, the CD-jacket, and the long-note connecting bar (drawAepFrameEx
+//  with an atan2 rotation + a fade over 3000 ms whose length is
+//  fade*barLenScale + barLenBase). Every drawLayer/drawAepFrameEx argument tuple
+//  was resolved by disassembling the callee (0xfd64 / AepDrawSpriteHandle) and
+//  matching its arg reads to the caller's stack pushes.
 //
 
 #import <Foundation/Foundation.h>
 
+#import "AepFrameDraw.h"
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "neGraphics.h"
 
-#include <cmath> // lroundf (gauge accumulation), fmod (beat-phase note frame)
+#include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
 
 // --- Play-data field access -------------------------------------------------
 // The play data is the standard-mode MainTask; the note engine reaches it
@@ -413,6 +414,70 @@ void PlayJudge_update(MainTaskPlayData *playData,
                               nullptr,
                               st->layerId,
                               0);
+
+                // Long-note connecting bar: for a LONG note whose span is still
+                // open, draw the bar sprite along the note->judge-line direction,
+                // its length growing with the fade over 3000 ms. Ghidra:
+                // 0x2f888..0x2fa6e (drawAepFrameEx segments 0x2fa16 / 0x2fa6a; the
+                // (cos,sin) offset uses len = fade*barLenScale + barLenBase, and the
+                // angle is atan2(dy,dx) with the +/-90 table for the vertical case).
+                if (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHold) == 0) {
+                    int span = (int)note.endTick - curTime;
+                    const int full = (int)note.endTick - (int)note.startTick;
+                    if (full < span) {
+                        span = full;
+                    }
+                    const float fade =
+                        span < 1 ? 0.0f : (span > 2999 ? 1.0f : (float)span / 3000.0f);
+
+                    const int dx = (int)(nx - note.targetX);
+                    const int dy = (int)(ny - note.targetY);
+                    const double angleRad = (dx == 0) ? (dy < 0 ? -M_PI_2 : M_PI_2) :
+                                                        std::atan2((double)dy, (double)dx);
+                    const int angleDeg = (int)(angleRad * 180.0 / M_PI);
+                    const float len =
+                        fade * (float)playData->barLenScale + (float)playData->barLenBase;
+                    const int prio = playData->barPriority / 2;
+
+                    if (fade > 0.0f) {
+                        const int bx = screenX + (int)(len * (float)std::cos(angleRad));
+                        const int by = screenY + (int)(len * (float)std::sin(angleRad));
+                        drawAepFrameEx(&aep,
+                                       playData->barSegLyr0,
+                                       bx,
+                                       by,
+                                       100,
+                                       100,
+                                       angleDeg,
+                                       0,
+                                       prio,
+                                       100,
+                                       0,
+                                       0x200,
+                                       0xffffffff,
+                                       nullptr,
+                                       21,
+                                       2);
+                    }
+                    // The second segment sits at the note, scaled by fade*len.
+                    const int seg2Scale = (int)(fade * len);
+                    drawAepFrameEx(&aep,
+                                   playData->barSegLyr1,
+                                   screenX,
+                                   screenY,
+                                   seg2Scale,
+                                   seg2Scale,
+                                   angleDeg,
+                                   0,
+                                   prio,
+                                   100,
+                                   0,
+                                   0x200,
+                                   0xffffffff,
+                                   nullptr,
+                                   21,
+                                   2);
+                }
 
                 // CD-jacket overlay at the note head (pt 0) when enabled and the
                 // note is on the field but not yet spanning its hold: layer
