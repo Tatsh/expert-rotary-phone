@@ -110,21 +110,22 @@ void TitleTask::setup() {
 // unload the title scene, reload character data, kill this task, and spawn the
 // main-menu task.
 void TitleTask::finish() {
-    [[AudioManager sharedManager] releaseSe:0 resourceId:0];
+    [[AudioManager sharedManager] releaseSe:0 resourceId:m_titleSe];
     if (m_titleLayer != nullptr) {
-        delete m_titleLayer; // its dtor unlinks from the active-layer list
+        delete m_titleLayer; // AepLyrCtrl_unlink + the deleting destructor
         m_titleLayer = nullptr;
     }
-    AepUnloadGroup(m_aep, 1);
+    AepUnloadGroup(m_aep, 1); // AepManager::releaseAepTexture(m_aep, 1)
     if (m_versionLabel != nil) {
         m_versionLabel = nil;
     }
-    gCharaManager.reload(); // CharaManager_reload
+    gCharaManager.reload(); // CharaManager::reload
     kill();                 // +0x24 = 1
 
     if (C_TASK *menu = MenuCreateTask()) {
         menu->setPriority(3);
     }
+    m_soundTestHidden = true; // +0x45 = 1: stop drawing the label after the handoff
 }
 
 // State-3 UI: a "conversion" button faded in over the title, plus (if a convert
