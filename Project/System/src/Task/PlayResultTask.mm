@@ -929,9 +929,10 @@ namespace {
 // Ghidra: neTextureForiOS_draw (FUN_0000fbcc) -> AepOrderingTable_drawSprite
 // (FUN_00011468). Emit one standalone-texture quad. Field mapping per
 // FUN_00011468: u/v, x/y, sx/sy, w/h, ex=anchorX, ey=anchorY, colour @ +0x34,
-// rotation @ +0x38, blend @ +0x3c; the wrapper's separate alpha word rides the
-// +0x42 sub-blend slot (its exact home in this path is not fully pinned —
-// best-effort so the fade survives).
+// rotation @ +0x38, blend @ +0x40 (blend0); the wrapper's separate alpha word
+// is the +0x42 sub-blend slot (blend1). FUN_0000fbcc forwards caller arg +0x38
+// (alpha) and +0x3c (blend0) to the drawSprite stack, exactly as the canonical
+// neTextureForiOS_draw bridge in neEngineBridge.mm sets blend1 / blend0.
 void drawTexQuad(AepManager &aep,
                  neTextureForiOS *tex,
                  int u,
