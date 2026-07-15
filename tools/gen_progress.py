@@ -33,34 +33,78 @@ _KEYWORDS = {'if', 'for', 'while', 'switch', 'return', 'else', 'catch', 'do', 'c
 # binary functions, so they are excluded from the coverage denominator. In-class
 # header definitions (implicitly inline, no keyword) are still counted.
 _INLINE = re.compile(r'\b(?:inline|always_inline)\b')
+# A counted function must map to a real binary function, i.e. carry a Ghidra
+# address citation in its doc-comment block: the `@ghidraAddress 0x...` tag
+# (preferred going forward) or any legacy `0x...` address in the comment.
+_ADDR = re.compile(r'@ghidraAddress\s+0x[0-9a-fA-F]+|0x[0-9a-fA-F]{3,}|\bFUN_[0-9a-fA-F]{6,}')
+_COMMENT_PREFIXES = ('//', '*', '/*', '*/')
+
+
+_COMPLETE = re.compile(r'@complete\b')
+
+
+def _doc_block_matches(lines: list[str], def_line: int, pattern: re.Pattern) -> bool:
+    """True if ``pattern`` appears on the definition line or its doc-comment block."""
+    if pattern.search(lines[def_line]):
+        return True
+    i = def_line - 1
+    scanned = 0
+    while i >= 0 and scanned < 25:
+        stripped = lines[i].strip()
+        if stripped == '':
+            i -= 1
+            scanned += 1
+            continue
+        if stripped.startswith(_COMMENT_PREFIXES):
+            if pattern.search(lines[i]):
+                return True
+            i -= 1
+            scanned += 1
+            continue
+        break  # hit code (previous def's body / a declaration): stop
+    return False
+
+
+def _is_definition(lines: list[str], i: int, is_impl: bool) -> bool:
+    line = lines[i]
+    if _INLINE.search(line):
+        return False
+    if is_impl and _OBJC_DEF.match(line):
+        return True
+    if _CXX_MEMBER.match(line) and not line.rstrip().endswith(';'):
+        return True
+    if not is_impl:
+        stripped = line.strip()
+        if stripped.startswith(_COMMENT_PREFIXES):
+            return False
+        match = _FREE_DEF.match(line)
+        has_body = '{' in line or (i + 1 < len(lines) and lines[i + 1].strip().startswith('{'))
+        if match and match.group(1) not in _KEYWORDS and has_body and not stripped.endswith(';'):
+            return True
+    return False
 
 
 def scan(path: str) -> tuple[int, int]:
-    """Return (definition_count, complete_count) for one source file."""
+    """Return (addressed_definition_count, complete_count) for one source file.
+
+    Only non-inline definitions carrying a Ghidra address citation are counted:
+    every real reconstructed function maps to a binary address, so the address is
+    the invariant that qualifies a function for the coverage denominator.
+    """
     try:
         lines = open(path, encoding='utf-8', errors='replace').read().splitlines()
     except OSError:
         return (0, 0)
-    complete = sum(1 for line in lines if '@complete' in line)
-    defs = 0
     is_impl = path.endswith(IMPL_EXTS)
-    for i, line in enumerate(lines):
-        if _INLINE.search(line):
+    defs = complete = 0
+    for i in range(len(lines)):
+        if not _is_definition(lines, i, is_impl):
             continue
-        if is_impl and _OBJC_DEF.match(line):
-            defs += 1
-            continue
-        if _CXX_MEMBER.match(line) and not line.rstrip().endswith(';'):
-            defs += 1
-    if not is_impl:
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            if stripped.startswith(('//', '*', '/*')) or _INLINE.search(line):
-                continue
-            match = _FREE_DEF.match(line)
-            has_body = '{' in line or (i + 1 < len(lines) and lines[i + 1].strip().startswith('{'))
-            if match and match.group(1) not in _KEYWORDS and has_body and not stripped.endswith(';'):
-                defs += 1
+        if not _doc_block_matches(lines, i, _ADDR):
+            continue  # no Ghidra address -> not a counted binary function
+        defs += 1
+        if _doc_block_matches(lines, i, _COMPLETE):
+            complete += 1
     return (defs, complete)
 
 
