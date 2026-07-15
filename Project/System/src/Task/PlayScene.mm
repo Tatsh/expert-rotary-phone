@@ -1175,9 +1175,11 @@ void PlayTaskDraw(int child,
     // `p17*0x18 + 0x3c8` element access.
 
     // --- Combo-count digits (NUM_COMBO_*, m_numComboUser): only once combo
-    // exceeds 4 --- The binary reads DAT_00179000 (the combo mirror in the
-    // NoteMng region); the modelled accessor NoteMng::combo() carries the same
-    // gameplay combo (documented best-effort).
+    // exceeds 4 --- The binary reads DAT_00179000, which is the NoteMng combo
+    // field (singleton base + 0x515c): judgeNoteHit resets it to 0 on a miss
+    // (0x348dc) and increments it on a hit (0x34928), with the max-combo mirror
+    // at +0x5160. The reconstruction maintains that field as m_combo, so
+    // NoteMng::combo() returns the same gameplay combo the binary displays.
     if (nm.combo() > 4) {
         int v = nm.combo();
         for (int i = 0; i < 3; ++i) {

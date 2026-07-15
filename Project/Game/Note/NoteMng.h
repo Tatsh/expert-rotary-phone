@@ -406,11 +406,11 @@ private:
     ActiveNote *m_activeList = nullptr;
 
     // Scoring.
-    int m_combo = 0;
-    int m_maxCombo = 0;
-    int m_tally[kNoteKindCount][NOTE_JUDGE_TIER_COUNT] = {}; // per-kind hit counts
+    int m_combo = 0;    // +0x515c live combo (judgeNoteHit: reset 0x348dc, inc 0x34928)
+    int m_maxCombo = 0; // +0x5160 best combo this play
+    int m_tally[kNoteKindCount][NOTE_JUDGE_TIER_COUNT] = {}; // +0x5164 per-kind hit counts
     int m_totalNotes = 0;                 // chart playable-note total (Ghidra: DAT_00178ccc)
-    int m_earlyMiss[kNoteKindCount] = {}; // too-early presses
+    int m_earlyMiss[kNoteKindCount] = {}; // +0x5204 too-early presses
 
     bool m_autoPlay = false;   // Ghidra flag @ +0x13cb5 (auto-play: engine grades
                                // the notes itself)
