@@ -1863,10 +1863,15 @@ void MainTask::StopAndSave() {
     m_overScoreDict = nil; // ARC releases the over-score dictionary
 }
 
-// Ghidra: musicSelUpdateInfoPanel (0x37c88) — build the cached recommend +
-// over-score "touched" state (mode 1 only). Sets the new-recommend badge if a
-// fresher recommend exists than the last viewed one, and populates the
-// over-score touched dictionary (m_overScoreDict).
+/**
+ * musicSelUpdateInfoPanel — build the cached recommend + over-score "touched"
+ * state (mode 1 only). Sets the new-recommend badge if a fresher recommend
+ * exists than the last viewed one, populates the over-score touched dictionary
+ * (m_overScoreDict) — touched -> "1", untouched -> "0" unless already "1" — and
+ * clears the pending-push flag.
+ * @ghidraAddress 0x37c88
+ * @complete
+ */
 void MainTask::UpdateInfoPanel(int mode) {
     if (mode != 1) {
         return;
