@@ -98,28 +98,64 @@ inline int MainTask::widgetIndexForButton(Button button) const {
     return -1;
 }
 
-// hitButton: map `button` to its widget cell, read the stored rect, scale by the
-// UI-scale factor about the origin, and point-in-rect against the tap
-// (0x2d974). The FixedToFP/FloatVectorMult/FPToFixed block is modelled as
-// float rounding. Seams: the per-button slot within a shared cell, the grid
-// math, and kBtnBackToMenu's fixed constants are unresolved.
+// hitButton: point-in-rect the tap against `button`'s on-screen rectangle, each
+// coordinate scaled by the UI-scale factor about the origin. Ghidra: the inlined
+// pointInRect (0x2d974) blocks in update() state 2. The fixed top-row / overlay
+// buttons read a rect quad (x, y, w, h) from the Setup()-filled layout table
+// m_layoutRects[base..base+3] — settings +0x9a0, sort +0x9b0, recommend +0x9c0,
+// over-score +0x9d0, diff-toggle +0x9e0, tutorial +0x9f0 (index = (off-0x988)/4).
+// The FixedToFP/FloatVectorMult/FPToFixed block is a float scale then a
+// round-toward-zero (int) truncation. The per-cell grid buttons + kBtnBackToMenu
+// remain a computed-rect seam.
 inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
+    const float scale = reinterpret_cast<const float &>(m_uiScale);
+    auto hit = [&](int x, int y, int w, int h) {
+        return neGraphics::pointInRect(tapX,
+                                       tapY,
+                                       (int)((float)x * scale),
+                                       (int)((float)y * scale),
+                                       (int)((float)w * scale),
+                                       (int)((float)h * scale));
+    };
+
+    int base = -1;
+    switch (button) {
+    case kBtnSettings:
+        base = 6;
+        break; // m_layoutRects +0x9a0
+    case kBtnSort:
+        base = 10;
+        break; // +0x9b0
+    case kBtnRecommend:
+        base = 14;
+        break; // +0x9c0
+    case kBtnOverScoreLog:
+        base = 18;
+        break; // +0x9d0
+    case kBtnDiffToggle:
+        base = 22;
+        break; // +0x9e0
+    case kBtnTutorial:
+        base = 26;
+        break; // +0x9f0
+    default:
+        break;
+    }
+    if (base >= 0) {
+        return hit(m_layoutRects[base + 0],
+                   m_layoutRects[base + 1],
+                   m_layoutRects[base + 2],
+                   m_layoutRects[base + 3]);
+    }
+
+    // Per-cell grid buttons / back-to-menu: the computed-cell rect (seam).
     const int widget = widgetIndexForButton(button);
     if (widget < 0) {
         return neGraphics::pointInRect(tapX, tapY, 0, 0, 0, 0); // kBtnBackToMenu: unresolved consts
     }
-
-    const float scale = reinterpret_cast<const float &>(m_uiScale);
-    const MusicSelCell::WidgetRect &r = m_cells[widget].widget;
     (void)cellIndex;
-    (void)m_layoutRects;
-
-    // FPToFixed vcvt rounds toward zero -> plain (int) truncation.
-    const int rx = (int)((float)r.x * scale);
-    const int ry = (int)((float)r.y * scale);
-    const int rw = (int)((float)r.w * scale);
-    const int rh = (int)((float)r.h * scale);
-    return neGraphics::pointInRect(tapX, tapY, rx, ry, rw, rh);
+    const MusicSelCell::WidgetRect &r = m_cells[widget].widget;
+    return hit(r.x, r.y, r.w, r.h);
 }
 
 // Seed the three difficulty-star background-layer frame counters (@ +0x170+i*4)
@@ -245,8 +281,15 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
 
-        // The list is ready: only dispatch buttons on a small tap (a drag scrolls
-        // the list).
+        // Ghidra 0x35a?? : suppress taps while the list is still flinging — the
+        // binary bails when |m_scrollOffset| (as float) >= 10.0 before any
+        // hit-test, so a fast drag never lands on a button.
+        if ((m_scrollOffset < 0 ? -m_scrollOffset : m_scrollOffset) >= 10) {
+            break;
+        }
+
+        // The list is ready and settled: only dispatch buttons on a small tap (a
+        // drag scrolls the list).
         if (!haveTap) {
             break;
         }
