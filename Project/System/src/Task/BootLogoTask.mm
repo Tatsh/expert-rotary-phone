@@ -57,7 +57,7 @@ void BootLogoTask::setup() {
     m_aep->orderingTable()->setRenderScale(1.0f);
 
     // Load the shared UI sound effects (Ghidra: neSeTable::loadSoundEffects @ 0x2c5c8).
-    neSceneManager::loadSystemSe();
+    neSceneManager::shared().loadSystemSe();
 
     // Choose the branding image set + canvas size for this display. Each set is
     // the three logos [konami, bemani, eamusement] at one resolution (real
