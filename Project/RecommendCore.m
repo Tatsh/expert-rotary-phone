@@ -380,7 +380,9 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
                 NSURL *appURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@://", value]];
                 if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-                    [[UIApplication sharedApplication] openURL:appURL options:@{} completionHandler:nil];
+                    [[UIApplication sharedApplication] openURL:appURL
+                                                       options:@{}
+                                             completionHandler:nil];
 #else
                     [[UIApplication sharedApplication] openURL:appURL];
 #endif
@@ -430,7 +432,9 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
             NSURL *appURL = [NSURL URLWithString:value];
             if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-                [[UIApplication sharedApplication] openURL:appURL options:@{} completionHandler:nil];
+                [[UIApplication sharedApplication] openURL:appURL
+                                                   options:@{}
+                                         completionHandler:nil];
 #else
                 [[UIApplication sharedApplication] openURL:appURL];
 #endif

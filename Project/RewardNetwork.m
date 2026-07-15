@@ -850,8 +850,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     // current status-bar orientation, so drive that method directly here.
     UIInterfaceOrientation currentOrientation =
         [[UIApplication sharedApplication] statusBarOrientation];
-    [_webViewController rotateWebViewWithInterfaceOrientation:currentOrientation
-                                                     duration:duration];
+    [_webViewController rotateWebViewWithInterfaceOrientation:currentOrientation duration:duration];
 #else
     [_webViewController willAnimateRotationToInterfaceOrientation:orientation duration:duration];
 #endif
@@ -866,8 +865,8 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
     NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:entry
-                                            requiringSecureCoding:NO
-                                                            error:nil];
+                                             requiringSecureCoding:NO
+                                                             error:nil];
 #else
     NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:entry];
 #endif
@@ -884,8 +883,8 @@ static NSDate *g_pRewardBannerExpireDate = nil;
     NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:data
                                                                                 error:nil];
     unarchiver.requiresSecureCoding = NO;
-    NSDictionary *entry =
-        [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+    NSDictionary *entry = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey
+                                                           error:nil];
     [unarchiver finishDecoding];
 #else
     NSDictionary *entry = [NSKeyedUnarchiver unarchiveObjectWithData:data];

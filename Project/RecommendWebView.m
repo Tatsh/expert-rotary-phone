@@ -208,8 +208,7 @@
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 
 // @ 0xff340
-- (void)webView:(WKWebView *)webView
-    didStartProvisionalNavigation:(WKNavigation *)navigation {
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [self updateIndicator:YES];
 }
 

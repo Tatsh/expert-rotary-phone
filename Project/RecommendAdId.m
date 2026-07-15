@@ -106,8 +106,8 @@
         NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:stored
                                                                                     error:nil];
         unarchiver.requiresSecureCoding = NO;
-        NSDictionary *archived =
-            [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+        NSDictionary *archived = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey
+                                                                  error:nil];
         [unarchiver finishDecoding];
 #else
         NSDictionary *archived = [NSKeyedUnarchiver unarchiveObjectWithData:stored];
@@ -200,8 +200,8 @@
 #endif
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
         NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:record
-                                                requiringSecureCoding:NO
-                                                                error:nil];
+                                                 requiringSecureCoding:NO
+                                                                 error:nil];
 #else
         NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:record];
 #endif

@@ -108,8 +108,8 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:archived
                                                                                 error:nil];
     unarchiver.requiresSecureCoding = NO;
-    NSDictionary *record =
-        [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+    NSDictionary *record = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey
+                                                            error:nil];
     [unarchiver finishDecoding];
 #else
     NSDictionary *record = [NSKeyedUnarchiver unarchiveObjectWithData:archived];
@@ -130,8 +130,8 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     updated[@"LastAccess"] = [NSDate date];
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
     NSData *updatedArchived = [NSKeyedArchiver archivedDataWithRootObject:updated
-                                                   requiringSecureCoding:NO
-                                                                   error:nil];
+                                                    requiringSecureCoding:NO
+                                                                    error:nil];
 #else
     NSData *updatedArchived = [NSKeyedArchiver archivedDataWithRootObject:updated];
 #endif
@@ -220,8 +220,8 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 #endif
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
     NSData *recordArchived = [NSKeyedArchiver archivedDataWithRootObject:record
-                                                  requiringSecureCoding:NO
-                                                                  error:nil];
+                                                   requiringSecureCoding:NO
+                                                                   error:nil];
 #else
     NSData *recordArchived = [NSKeyedArchiver archivedDataWithRootObject:record];
 #endif

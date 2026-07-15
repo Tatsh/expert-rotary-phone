@@ -345,15 +345,14 @@ static int sRetryCount = 0;
         NSURLResponse *__block _r = nil;
         NSError *__block _e = nil;
         dispatch_semaphore_t _sem = dispatch_semaphore_create(0);
-        [[[NSURLSession sharedSession] dataTaskWithRequest:request
-                                         completionHandler:^(NSData *data,
-                                                             NSURLResponse *taskResponse,
-                                                             NSError *taskError) {
-                                           _d = data;
-                                           _r = taskResponse;
-                                           _e = taskError;
-                                           dispatch_semaphore_signal(_sem);
-                                         }] resume];
+        [[[NSURLSession sharedSession]
+            dataTaskWithRequest:request
+              completionHandler:^(NSData *data, NSURLResponse *taskResponse, NSError *taskError) {
+                _d = data;
+                _r = taskResponse;
+                _e = taskError;
+                dispatch_semaphore_signal(_sem);
+              }] resume];
         dispatch_semaphore_wait(_sem, DISPATCH_TIME_FOREVER);
         responseData = _d;
         response = (NSHTTPURLResponse *)_r;

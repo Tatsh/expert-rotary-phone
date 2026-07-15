@@ -32,8 +32,7 @@
 
     // Web view fills the screen below a 45pt navigation bar (Ghidra y-origin
     // 0x42340000 == 45.0f).
-    CGRect webFrame =
-        CGRectMake(0.0f, 45.0f, screenBounds.size.width, screenBounds.size.height);
+    CGRect webFrame = CGRectMake(0.0f, 45.0f, screenBounds.size.width, screenBounds.size.height);
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
     _webView = [[WKWebView alloc] initWithFrame:webFrame
                                   configuration:[[WKWebViewConfiguration alloc] init]];
@@ -65,8 +64,7 @@
 
 // @ 0xec868
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
-- (void)webView:(WKWebView *)webView
-    didStartProvisionalNavigation:(WKNavigation *)navigation {
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [self updateIndicator:YES];
 }
 #else
@@ -263,7 +261,9 @@
                 NSURL *appURL = [NSURL URLWithString:[encoded URLDecodedString]];
                 if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-                    [[UIApplication sharedApplication] openURL:appURL options:@{} completionHandler:nil];
+                    [[UIApplication sharedApplication] openURL:appURL
+                                                       options:@{}
+                                             completionHandler:nil];
 #else
                     [[UIApplication sharedApplication] openURL:appURL];
 #endif
@@ -299,7 +299,9 @@
             NSURL *appURL = [NSURL URLWithString:[[parts objectAtIndex:0] URLDecodedString]];
             if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-                [[UIApplication sharedApplication] openURL:appURL options:@{} completionHandler:nil];
+                [[UIApplication sharedApplication] openURL:appURL
+                                                   options:@{}
+                                         completionHandler:nil];
 #else
                 [[UIApplication sharedApplication] openURL:appURL];
 #endif
