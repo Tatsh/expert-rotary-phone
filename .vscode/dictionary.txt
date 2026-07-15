@@ -130,7 +130,6 @@ deside
 devdata
 dgles
 dialog
-dialogs
 dictionaris
 dios
 disasm

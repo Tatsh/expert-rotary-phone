@@ -10,6 +10,7 @@
   project_type: 'other',
   shared_ignore+: [
     '*.ipa',
+    '*.ips',
     '.decompile/',
     '/.audit/',
     '/.ios-cmake/',
