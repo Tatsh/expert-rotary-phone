@@ -105,7 +105,12 @@
         }
     }
     if ([_delegate respondsToSelector:notify]) {
+        // The selector is one of the void delegate callbacks resolved above, so
+        // it returns nothing to leak; silence the unknown-selector ARC warning.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         [_delegate performSelector:notify withObject:self];
+#pragma clang diagnostic pop
     }
 }
 
