@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <cstring>
 
+#import <CoreText/CoreText.h> // CTFontManagerRegisterFontsForURL (bundled DynaFont)
 #import <OpenGLES/ES1/gl.h>
 #import <QuartzCore/QuartzCore.h> // CALayer renderInContext:
 #import <UIKit/UIKit.h>           // UILabel / UIFont / UIColor / UIGraphics + CoreGraphics
@@ -48,6 +49,23 @@ neTextTextureMgr *neGetTextTextureMgr(void) {
     return g_pTextTextureMgr;
 }
 
+// @newCode
+// The glyph path builds fonts with [UIFont fontWithName:@"DFMaruGothic-Bd-WIN-RKSJ-H"]
+// (the DynaFont rounded gothic). The original binary neither bundled a registration
+// call nor listed the font in UIAppFonts — it relied on that face being an
+// OS-provided font on the iOS 8 Japanese SDK. Modern iOS no longer ships it, so
+// fontWithName: would return nil and createTextGlyphEntry would return null (then
+// neDrawText dereferences the null glyph). The app *does* bundle the face as the
+// TrueType collection "prf02w07", so register it here, once, before any text draws.
+static void registerBundledFonts() {
+    NSString *path = [NSBundle.mainBundle pathForResource:@"prf02w07" ofType:nil];
+    if (path == nil) {
+        return;
+    }
+    NSURL *url = [NSURL fileURLWithPath:path];
+    CTFontManagerRegisterFontsForURL((__bridge CFURLRef)url, kCTFontManagerScopeProcess, nullptr);
+}
+
 namespace neEngine {
 // Ghidra: neEngine::bootstrapC (FUN_0001796c) — lazily create the singleton
 // glyph/text-texture manager. Idempotent: a second call is a no-op. `fixedShift`
@@ -60,6 +78,7 @@ void bootstrapC(int fixedShift) {
     if (g_pTextTextureMgr != nullptr) {
         return;
     }
+    registerBundledFonts(); // @newCode — make the bundled DynaFont resolvable
     g_pTextTextureMgr = new neTextTextureMgr();
     g_pTextTextureMgr->scaleShift = static_cast<int8_t>(fixedShift);
     g_pTextTextureMgr->glyphList = nullptr;
