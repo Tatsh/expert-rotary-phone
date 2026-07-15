@@ -73,6 +73,15 @@ public:
     // (0x00RRGGBB; 0 = black) the overlay dips to. Ghidra: FUN_000106dc.
     void playTransition(int mode, int frames, int color);
 
+    /// @brief Arm a screen transition with the standard fixed 30-frame duration.
+    /// @details A fixed-length counterpart to playTransition used by most scenes:
+    ///          a valid mode (0..2) sets the mode, resets both frame counters to 30,
+    ///          and clears the fade colour to black; an invalid mode (>=3) disables
+    ///          the transition (mode and frames set to 0).
+    /// @param mode 0 = none, 1 = fade in, 2 = fade out; >=3 disables.
+    /// @note Ghidra: AepManager::setAepTransitionMode (FUN_00010698).
+    void setAepTransitionMode(int mode);
+
     // Scrub the *current* transition frame counter to `frame`, clamped to
     // [0, total]. This does not change the mode or total set by playTransition;
     // it just moves the fade to a given point (e.g. frame 0 == fully-faded for a

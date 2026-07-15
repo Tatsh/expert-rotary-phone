@@ -337,6 +337,22 @@ void AepManager::playTransition(int mode, int frames, int color) {
     }
 }
 
+// Ghidra: FUN_00010698 — arm a transition with the fixed 30-frame duration (a
+// fade to black). A valid mode (0..2) sets the mode, both frame counters to 30,
+// and clears the colour; an invalid mode disables the transition. Distinct from
+// playTransition, which takes an explicit frame count and colour.
+void AepManager::setAepTransitionMode(int mode) {
+    if ((unsigned)mode < 3) {
+        m_transitionMode = mode;
+        m_transitionFrames = 0x1e;
+        m_transitionTotal = 0x1e;
+        m_transitionColor = 0;
+        return;
+    }
+    m_transitionMode = 0;
+    m_transitionFrames = 0;
+}
+
 // Ghidra: FUN_00010758 — clamp `frame` into [0, total] and store it as the
 // current transition frame counter (the value draw() counts down and derives
 // alpha from).
