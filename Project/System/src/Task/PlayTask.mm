@@ -293,15 +293,22 @@ void PlayTask::update(int /*deltaMs*/) {
         PlayTaskInit(playData); // FUN_0002e2d8: allocate the play scene
         m_state = 1;
         [[fallthrough]];
-    case 1:                          // NoteMng bring-up + fade in + start SEs
-        nm.primePlay();              // Ghidra: FUN_0003396c — spawn the lead-in + position the
-                                     // notes
+    case 1:                          // NoteMng bring-up + fade in + pause the intro layers
+        nm.primePlay();              // Ghidra: NoteMng::ResetPlayback (FUN_0003396c)
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
+        m_comboLayers[4]->pause();   // Ghidra: AepLyrCtrl::Pause(pAepLyrMain[4])
+        m_sceneLayers[3]->pause();   // Ghidra: AepLyrCtrl::Pause(pAepLyrSub[3])
         m_state = 2;
         [[fallthrough]];
-    case 2: // ready: on the "go" flag, arm the play clock
+    case 2:               // ready: reset playback + draw the field; on BGM-ready, cue the start
+        if (m_bgmReady) { // +0x9c6 async BGM decode done
+            [audio playSe:nil resourceId:m_playSeIds[0]]; // the "go" voice SE
+            m_comboLayers[3]->stop(1); // Ghidra: AepLyrCtrl::Stop(pAepLyrMain[3])
+            m_state = 4;
+        }
+        nm.primePlay();                                  // Ghidra: NoteMng::ResetPlayback
         PlayJudge_update(playData, nullptr, nullptr, 0); // draw the field
-        return;
+        break;
     case 3: // retry: after the fade, rebuild the play and restart
         if (aep.isTransitionDone()) {
             aep.setAepTransitionMode(1); // fade back in
@@ -309,17 +316,24 @@ void PlayTask::update(int /*deltaMs*/) {
             m_state = 1;
         }
         break;
-    case 4:              // wait for the start SE, then start NoteMng's clock -> playing
-        nm.startClock(); // Ghidra: FUN_000344c4 — stamp the play clock, clear
-                         // offsets/state
-        m_state = 6;
+    case 4: // wait for the intro layer to finish, then start the clock -> playing
+        if (!m_comboLayers[3]->isAnimating()) { // Ghidra: !AepLyrCtrl::IsPlaying(pAepLyrMain[3])
+            nm.startClock();                    // Ghidra: NoteMng::ResetTiming (FUN_000344c4)
+            m_state = 6;
+        } else {
+            nm.primePlay(); // Ghidra: NoteMng::ResetPlayback
+            PlayJudge_update(playData, nullptr, nullptr, 0);
+        }
         break;
-    case 5:          // pause menu: hit-test resume / retry / quit; draw the pause layer
-        nm.update(); // Ghidra: FUN_00033ae4 — keep the notes scrolling behind the
-                     // menu
+    case 5: // pause menu: draw the pause layer + field behind it, then the tail
+        // TODO(gameplay): the resume/retry/quit button hit-tests (fixed-point
+        // pointInRect against the +0x97c..+0x988 pause geometry, scaled by the
+        // +0x974 UI scale) still need a disassembly-level reconstruction; the draw
+        // + fall-through to the tail below match the decompile's structure.
         aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0);
+        nm.update(); // Ghidra: NoteMng::Update — keep the notes scrolling behind
         PlayJudge_update(playData, nullptr, nullptr, 0);
-        return;
+        break;
     case 6: {               // *** PLAYING ***: drive the note engine, then judge/render, gauge,
                             // song-end
         nm.updatePlaying(); // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
