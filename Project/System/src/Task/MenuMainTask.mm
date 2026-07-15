@@ -50,15 +50,22 @@ static int AepBaselineY(AepManager &aep) {
 // the task factory; the menu button hit-test and input-mode set come from the
 // engine bridge. (TaskFactory.h / neEngineBridge.h imported above.)
 
-// Ghidra: MenuMainTask_ctor (FUN_0006aba0) — base C_TASK ctor +
-// memset(this+0x28, 0, 0x185) (every field zero-initialised, matching the
-// members' default inits).
+/**
+ * MenuMainTask_ctor — base C_TASK ctor + memset(this+0x28, 0, 0x185) (every
+ * field zero-initialised, matching the members' default inits).
+ * @ghidraAddress 0x6aba0
+ * @complete
+ */
 MenuMainTask::MenuMainTask() = default;
 
-// @ 0x6abcc — modeSelTaskDtor. This is the mode-select task's destructor (its
-// vtable is the MenuMainTask update vtable). De-register this task as
-// DownloadMain's NEWS delegate (only if it is still us), then the C_TASK base
-// dtor (caSourceNode_dtor) runs implicitly.
+/**
+ * modeSelTaskDtor — the mode-select task's destructor (its vtable is the
+ * MenuMainTask update vtable). De-register this task as DownloadMain's NEWS
+ * delegate (only if it is still us), then the C_TASK base dtor
+ * (caSourceNode_dtor) runs implicitly.
+ * @ghidraAddress 0x6abcc
+ * @complete
+ */
 MenuMainTask::~MenuMainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl cppDelegateNews] == this) { // both ModeSelTask* (C++ pointer compare, not id)
@@ -66,9 +73,16 @@ MenuMainTask::~MenuMainTask() {
     }
 }
 
-// Ghidra: MenuMainTask_setInfoFlag (FUN_0006d194) @ +0x1ac.
+/**
+ * MenuMainTask_setInfoFlag — set the menu's info/notification flag (+0x1ac),
+ * guarded against a redundant write (the binary only stores on a change).
+ * @ghidraAddress 0x6d194
+ * @complete
+ */
 void MenuMainTask::setInfoFlag(bool shown) {
-    m_infoFlag = shown;
+    if (m_infoFlag != shown) {
+        m_infoFlag = shown;
+    }
 }
 
 // Ghidra: FUN_0006c6a4 — build the menu scene: pick the device layout, fill
