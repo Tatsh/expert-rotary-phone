@@ -722,7 +722,7 @@ void AcMainTask::setupBuildOverlays() {
     const int roul1Frames = roul1->frameCount();
     roul1->frameCount() = roul1Frames - 1;
     roul3->frameCount() = roul1Frames - 2;
-    roul3->alpha() = 0.8f; // 0x3f4ccccd
+    roul3->playSpeed() = 0.8f; // 0x3f4ccccd
 
     // Anchor eight specific roulette layers to the layout base (y cleared, z =
     // raw m_layoutAnchorZ); indices derived from the +0x18/+0x1c store offsets.

@@ -260,9 +260,9 @@ void PlayTaskInit(void *playData) {
 
     // Three of the field layers draw additively: force their blend mode (+0x34)
     // to 0x200.
-    task->m_sceneLayers[0]->blend() = 0x200; // +0x98
-    task->m_sceneLayers[1]->blend() = 0x200; // +0x9c
-    task->m_sceneLayers[2]->blend() = 0x200; // +0xa0
+    task->m_sceneLayers[0]->renderMode() = 0x200; // +0x98
+    task->m_sceneLayers[1]->renderMode() = 0x200; // +0x9c
+    task->m_sceneLayers[2]->renderMode() = 0x200; // +0xa0
 
     // Initialise the 60-entry judge-state pool: each slot's persistent layer id
     // is its index; the note-binding fields stay zero (free). Ghidra: the +0x3c8

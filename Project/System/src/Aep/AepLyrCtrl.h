@@ -55,31 +55,32 @@ public:
     // reverse rate). The play
     // + result draw passes gate their layer draws on this. Ghidra: FUN_0002cb64.
     // NOTE: the play head at +0x40 is a float in the binary, so it is read as
-    // such here even though the reconstructed m_frame models it as int.
+    // such here even though the reconstructed m_curFrame models it as int.
     bool isAnimating() const;
 
-    // Mutable access to the resolved layer length / alpha. The sugoroku scene
-    // builder trims two of its roulette layers by hand after resolving them
-    // (Ghidra: FUN_0009fc90 pokes +0x3c / +0x44).
+    // Mutable access to the resolved layer length (+0x3c nFrameCount) and the play
+    // speed / frame-advance rate (+0x44 flPlaySpeed). The sugoroku scene builder
+    // trims two of its roulette layers by hand after resolving them (Ghidra:
+    // FUN_0009fc90 pokes +0x3c / +0x44).
     int &frameCount() {
         return m_frameCount;
     } // +0x3c
-    float &alpha() {
-        return m_alpha;
+    float &playSpeed() {
+        return m_playSpeed;
     } // +0x44
 
-    // Mutable access to the blend mode (+0x34). The play scene forces its three
-    // additive field layers to 0x200 after building them (Ghidra: PlayTask_init
-    // stores into +0x34).
-    int &blend() {
-        return m_blend;
+    // Mutable access to the render mode (+0x34 nRenderMode; encodes the blend). The
+    // play scene forces its three additive field layers to 0x200 after building
+    // them (Ghidra: PlayTask_init stores into +0x34).
+    int &renderMode() {
+        return m_renderMode;
     } // +0x34
 
     // Stop this layer's animation without unlinking it. Ghidra: FUN_0002cb5c
     // (clears the play-state field at +0x58); the arcade map reload calls it on
     // every scene layer before rebuilding.
     void stopPlay() {
-        m_playState = 0;
+        m_state = 0;
     }
 
     // Freeze this layer on its current frame without unlinking or hiding it:
@@ -89,7 +90,7 @@ public:
     // FUN_0002cb54 (stores 4 at +0x58). The music-select preview pauses its layer
     // this way between songs.
     void pause() {
-        m_playState = 4;
+        m_state = 4;
     } // @ 0x2cb54
 
     // Stop this layer, optionally leaving it drawn at its current frame. Ghidra:
@@ -105,8 +106,8 @@ public:
     // integer into the draw-y slot. Ghidra: the +0x18 / +0x1c stores in
     // FUN_0009fc90.
     void setRouletteAnchor(int value) {
-        m_x = 0;
-        m_y = value;
+        m_originX = 0;
+        m_originY = value;
     }
 
     // Position the layer's on-screen anchor: the +0x18/+0x1c integer draw x/y
@@ -114,8 +115,8 @@ public:
     // every frame (Ghidra: FUN_0009fc90 stores the computed x/y into these two
     // words).
     void setPosition(int x, int y) {
-        m_x = x;
-        m_y = y;
+        m_originX = x;
+        m_originY = y;
     }
 
     // Grant the free-function frame-advance loop access to the members below (it
@@ -128,31 +129,29 @@ protected:
     // (0x2c924) disassembly (ldr/ldm = int, ldrsh = short, vldr/vcvt = float),
     // which is authoritative over the NEON-mangled ctor decompile. +0x04..0x08
     // intrusive list links.
-    AepLyrCtrl *m_prev; // +0x04
-    AepLyrCtrl *m_next; // +0x08
-    int m_texId;        // +0x0c  (-1 = unassigned, sentinel)
-    void *m_owner;      // +0x10  owning task/context (threaded to drawLayer)
-    int m_order;        // +0x14  ordering-priority word (drawLayer p17)
-    int m_x;            // +0x18  draw x  (int, not float)
-    int m_y;            // +0x1c  draw y  (int, not float)
-    int m_scaleX;       // +0x20  (default 100)
-    int m_scaleY;       // +0x24  (default 100)
-    int16_t m_rotation; // +0x28  packed rotation (read as signed short)
+    AepLyrCtrl *m_prev; // +0x04  pPrev
+    AepLyrCtrl *m_next; // +0x08  pNext
+    int m_group;        // +0x0c  nGroup (-1 = unassigned, sentinel)
+    void *m_owner;      // +0x10  nArg4: owning task/context (threaded to drawLayer)
+    int m_order;        // +0x14  nArg5: ordering-priority word (drawLayer p17)
+    int m_originX;      // +0x18  nOriginX (int draw x, not float)
+    int m_originY;      // +0x1c  nOriginY (int draw y, not float)
+    int m_posX;         // +0x20  nPosX: scale x (default 100)
+    int m_posY;         // +0x24  nPosY: scale y (default 100)
+    int16_t m_rotation; // +0x28  packed rotation (read as signed short; pReserved28)
     int16_t m_pad2a;    // +0x2a
-    int m_p9;           // +0x2c  drawLayer p9
-    int m_p10;          // +0x30  drawLayer p10
-    int m_blend;        // +0x34  blend mode (default 0x20; low 16 bits read)
-    int m_lyr;          // +0x38  resolved layer handle (AepManager::getLyrNo)
-    int m_frameCount;   // +0x3c  layer length (AepManager::layerFrameCount)
-    float m_frame;      // +0x40  current play head (float)
-    float m_alpha;      // +0x44  signed frame rate / fade (default 1.0)
-    int m_clipRect[4];  // +0x48..0x58  clip rect (0x50/0x54 double as >0 gate
-                        // words)
-    int m_playState;    // +0x58  0 idle / 1 once-hold / 2 loop / 3 once-idle / 4
-                        // held
+    int m_p9;           // +0x2c  drawLayer p9 (pReserved28)
+    int m_p10;          // +0x30  drawLayer p10 (pReserved28)
+    int m_renderMode;   // +0x34  nRenderMode (blend mode; default 0x20, low 16 bits read)
+    int m_lyr;          // +0x38  nLyr: resolved layer handle (AepManager::getLyrNo)
+    int m_frameCount;   // +0x3c  nFrameCount: layer length (AepManager::layerFrameCount)
+    float m_curFrame;   // +0x40  flCurFrame: current play head
+    float m_playSpeed;  // +0x44  flPlaySpeed: signed frame-advance rate (default 1.0)
+    int m_clipRect[4];  // +0x48  pReserved48 (0x50/0x54 double as >0 gate words)
+    int m_state;        // +0x58  nState (0 idle / 1 once-hold / 2 loop / 3 once-idle / 4 held)
     bool m_visible;     // +0x59
     uint8_t m_pad5a[2]; // +0x5a
-    uint8_t m_finished; // +0x5c  animation-completed flag (set at end of travel)
+    uint8_t m_finished; // +0x5c  bFlag59: animation-completed flag (set at end of travel)
     uint8_t m_pad5d[3]; // +0x5d  -> 0x60
 };
 

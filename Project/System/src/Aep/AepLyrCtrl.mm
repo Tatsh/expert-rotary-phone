@@ -24,10 +24,11 @@ static AepLyrCtrl *s_layerListHead = nullptr;
 // AepLyrCtrl.h. The whole struct is reached through its named members now (the
 // file-static lc* offset helpers are gone).
 AepLyrCtrl::AepLyrCtrl()
-    : m_prev(nullptr), m_next(nullptr), m_texId(-1), m_owner(nullptr), m_order(0), m_x(0), m_y(0),
-      m_scaleX(100), m_scaleY(100), m_rotation(0), m_pad2a(0), m_p9(0), m_p10(0), m_blend(0),
-      m_lyr(0), m_frameCount(0), m_frame(0), m_alpha(1.0f), m_clipRect{0, 0, 0, 0}, m_playState(0),
-      m_visible(false), m_pad5a{0, 0}, m_finished(0), m_pad5d{0, 0, 0} {
+    : m_prev(nullptr), m_next(nullptr), m_group(-1), m_owner(nullptr), m_order(0), m_originX(0),
+      m_originY(0), m_posX(100), m_posY(100), m_rotation(0), m_pad2a(0), m_p9(0), m_p10(0),
+      m_renderMode(0), m_lyr(0), m_frameCount(0), m_curFrame(0), m_playSpeed(1.0f),
+      m_clipRect{0, 0, 0, 0}, m_state(0), m_visible(false), m_pad5a{0, 0}, m_finished(0),
+      m_pad5d{0, 0, 0} {
 }
 
 AepLyrCtrl::~AepLyrCtrl() {
@@ -71,28 +72,28 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     assert(name != nullptr);
     AepManager &mgr = AepManager::shared();
 
-    m_texId = group;
+    m_group = group;
     m_owner = owner; // +0x10 owner/context
     m_order = order; // +0x14 order word
-    m_x = 0;
-    m_y = 0;
-    m_scaleX = 100;
-    m_scaleY = 100;
+    m_originX = 0;
+    m_originY = 0;
+    m_posX = 100;
+    m_posY = 100;
     m_rotation = 0;
     m_p9 = 0;
     m_p10 = 0;
-    m_blend = 0x20;
+    m_renderMode = 0x20;
 
     m_lyr = mgr.getLyrNo(group, name);         // Ghidra: AepManager_getLyrNo
     assert(m_lyr >= 0);                        // AepLyrCtrl.mm:0x56
     m_frameCount = mgr.layerFrameCount(m_lyr); // Ghidra: AepManager_layerFrameCount
-    m_frame = 0;
-    m_alpha = 1.0f;
+    m_curFrame = 0;
+    m_playSpeed = 1.0f;
     m_clipRect[0] = 0;
     m_clipRect[1] = 0;
     m_clipRect[2] = 0;
     m_clipRect[3] = 0; // +0x48..0x54 (vst1 q8,#0)
-    m_playState = 0;
+    m_state = 0;
     m_visible = false;
 
     // Head-insert into the global layer list.
@@ -112,11 +113,11 @@ void AepLyrCtrl::init(int group, const char *name) {
 // Ghidra: AepLyrCtrl_play (FUN_0002caf8) — enter play state. A fully-faded
 // layer (alpha <= 0) jumps to its last frame; otherwise it restarts at frame 0.
 void AepLyrCtrl::play() {
-    m_playState = 2;
-    if (m_alpha <= 0.0f) {
-        m_frame = static_cast<float>(m_frameCount - 1); // seek to last frame
+    m_state = 2;
+    if (m_playSpeed <= 0.0f) {
+        m_curFrame = static_cast<float>(m_frameCount - 1); // seek to last frame
     } else {
-        m_frame = 0.0f;
+        m_curFrame = 0.0f;
     }
 }
 
@@ -125,21 +126,21 @@ void AepLyrCtrl::play() {
 // frame for a reverse rate, otherwise to frame 0); any other value leaves the
 // play head where it is.
 void AepLyrCtrl::stop(int keepVisible) {
-    m_playState = 3;
+    m_state = 3;
     if (keepVisible != 1) {
         return;
     }
-    if (m_alpha <= 0.0f) {
-        m_frame = static_cast<float>(m_frameCount - 1);
+    if (m_playSpeed <= 0.0f) {
+        m_curFrame = static_cast<float>(m_frameCount - 1);
     } else {
-        m_frame = 0.0f;
+        m_curFrame = 0.0f;
     }
 }
 
 // Ghidra: aepLyrCtrlReset (FUN_0002cb5c) — clear the play state (+0x58 = 0),
 // stopping the layer's animation without unlinking it.
 void AepLyrCtrl::reset() {
-    m_playState = 0;
+    m_state = 0;
 }
 
 // Ghidra: FUN_0002cb64 — still-animating predicate. `(playState | 4) == 4` is
@@ -148,11 +149,11 @@ void AepLyrCtrl::reset() {
 // while the head is > 0, a forward rate while the head is < the layer length
 // (+0x3c).
 bool AepLyrCtrl::isAnimating() const {
-    if ((static_cast<unsigned>(m_playState) | 4u) == 4u) { // idle (0) or held (4)
+    if ((static_cast<unsigned>(m_state) | 4u) == 4u) { // idle (0) or held (4)
         return false;
     }
-    const int frame = static_cast<int>(m_frame); // vcvt.s32.f32: truncate to int
-    if (m_alpha <= 0.0f) {                       // reverse rate
+    const int frame = static_cast<int>(m_curFrame); // vcvt.s32.f32: truncate to int
+    if (m_playSpeed <= 0.0f) {                      // reverse rate
         return frame > 0;
     }
     return frame < m_frameCount;
@@ -168,7 +169,7 @@ void updateAndDrawAepLayers(int drawOnly) {
     AepManager &mgr = AepManager::shared(); // Ghidra: AepManager_shared (FUN_0000f1ec)
 
     for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {
-        const int playState = l->m_playState;
+        const int playState = l->m_state;
         if (playState == 0) {
             continue;
         }
@@ -184,20 +185,20 @@ void updateAndDrawAepLayers(int drawOnly) {
         // Frame index handed to drawLayer: the float play head truncated to int
         // (vcvt.s32.f32). Constants (byte-verified from the bl @ 0x2c9ce):
         // loopFlags=8, color=100, colorHi=0, p15=0xffffff, p19=1.
-        const int frame = static_cast<int>(l->m_frame);
+        const int frame = static_cast<int>(l->m_curFrame);
         mgr.drawLayer(l->m_lyr,
                       frame,
-                      l->m_x,
-                      l->m_y,
-                      l->m_scaleX,
-                      l->m_scaleY,
+                      l->m_originX,
+                      l->m_originY,
+                      l->m_posX,
+                      l->m_posY,
                       static_cast<int>(l->m_rotation),
                       8, // loopFlags (kDrawClampLast)
                       l->m_p9,
                       l->m_p10,
                       100,
                       0, // color / colorHi
-                      static_cast<uint32_t>(static_cast<unsigned short>(l->m_blend)),
+                      static_cast<uint32_t>(static_cast<unsigned short>(l->m_renderMode)),
                       0x00ffffff, // p15
                       root,
                       l->m_owner,                        // context
@@ -210,36 +211,36 @@ void updateAndDrawAepLayers(int drawOnly) {
 
         // Advance the play head by the signed rate and apply the end handling per
         // mode.
-        const float rate = l->m_alpha;
-        const float newFrame = l->m_frame + rate;
-        l->m_frame = newFrame;
+        const float rate = l->m_playSpeed;
+        const float newFrame = l->m_curFrame + rate;
+        l->m_curFrame = newFrame;
         const int frameCount = l->m_frameCount;
 
         if (rate > 0.0f) {                                  // forward
             if (static_cast<int>(newFrame) >= frameCount) { // reached the end
                 if (playState == 3) {                       // once, stop to idle
-                    l->m_frame = static_cast<float>(frameCount - 1);
-                    l->m_playState = 0;
+                    l->m_curFrame = static_cast<float>(frameCount - 1);
+                    l->m_state = 0;
                     l->m_finished = 1;
                 } else if (playState == 2) { // loop, wrap to start
-                    l->m_frame = 0.0f;
+                    l->m_curFrame = 0.0f;
                 } else if (playState == 1) { // once, hold at last frame
-                    l->m_frame = static_cast<float>(frameCount - 1);
-                    l->m_playState = 4;
+                    l->m_curFrame = static_cast<float>(frameCount - 1);
+                    l->m_state = 4;
                     l->m_finished = 1;
                 }
             }
         } else {                      // reverse (rate <= 0)
             if (newFrame <= 0.0f) {   // reached the start
                 if (playState == 3) { // once, stop to idle
-                    l->m_frame = 0.0f;
-                    l->m_playState = 0;
+                    l->m_curFrame = 0.0f;
+                    l->m_state = 0;
                     l->m_finished = 1;
                 } else if (playState == 2) { // loop, wrap to the end
-                    l->m_frame = static_cast<float>(frameCount - 1);
+                    l->m_curFrame = static_cast<float>(frameCount - 1);
                 } else if (playState == 1) { // once, hold at frame 0
-                    l->m_frame = 0.0f;
-                    l->m_playState = 4;
+                    l->m_curFrame = 0.0f;
+                    l->m_state = 4;
                     l->m_finished = 1;
                 }
             }
