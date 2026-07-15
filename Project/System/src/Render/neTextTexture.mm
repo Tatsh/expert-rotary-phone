@@ -48,6 +48,26 @@ neTextTextureMgr *neGetTextTextureMgr(void) {
     return g_pTextTextureMgr;
 }
 
+namespace neEngine {
+// Ghidra: neEngine::bootstrapC (FUN_0001796c) — lazily create the singleton
+// glyph/text-texture manager. Idempotent: a second call is a no-op. `fixedShift`
+// becomes the content-scale shift applied to point sizes. This lives in the same
+// translation unit as `g_pTextTextureMgr` (as it does in the original), so the
+// store actually reaches the static the whole text path reads through
+// neGetTextTextureMgr; a stub in another unit would leave the manager null and
+// every neDrawText would dereference it.
+void bootstrapC(int fixedShift) {
+    if (g_pTextTextureMgr != nullptr) {
+        return;
+    }
+    g_pTextTextureMgr = new neTextTextureMgr();
+    g_pTextTextureMgr->scaleShift = static_cast<int8_t>(fixedShift);
+    g_pTextTextureMgr->glyphList = nullptr;
+    g_pTextTextureMgr->atlasCount = 0;
+    g_pTextTextureMgr->atlases = nullptr;
+}
+} // namespace neEngine
+
 // Ghidra: FUN_00017a84 — UTF-8 lead-byte length classifier.
 int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
     unsigned c = static_cast<unsigned char>(*s);

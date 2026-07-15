@@ -590,9 +590,10 @@ void neSceneManager::setPadDisplay(bool isPad) {
 
 namespace neEngine {
 
-// Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) / NEEngine_bootstrapC
-// (FUN_0001796c) — engine bring-up steps run once at launch (guarded singletons
-// in the binary).
+// Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) — lazily create the shared
+// texture-cache list (a circular sentinel neTexture). The reconstructed cache
+// (AepTexture.mm) builds that sentinel lazily on first use via
+// AepTextureCacheSentinel(), so this bring-up step needs no eager work here.
 void bootstrapB() {
     static bool once = false;
     if (!once) {
@@ -600,12 +601,10 @@ void bootstrapB() {
     }
 }
 
-void bootstrapC(int /*flag*/) {
-    static bool once = false;
-    if (!once) {
-        once = true;
-    }
-}
+// Ghidra: NEEngine_bootstrapC (FUN_0001796c) — create the glyph/text-texture
+// manager. Defined in Render/neTextTexture.mm, the same translation unit as the
+// g_pTextTextureMgr static it must store into (a stub here could not reach that
+// static, which left the whole text path dereferencing a null manager).
 
 // Ghidra: FUN_0001bdf8 — walk the reloadable-texture list (circular, via +0x8)
 // and free every texture's GL name (invalidated by the GL context going away).
