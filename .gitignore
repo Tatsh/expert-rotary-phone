@@ -39,6 +39,7 @@
 /.zprofile
 /.zshrc
 /HANDOFF.md
+/Project/.audit/
 /build/
 /dist/
 /theos/.theos/

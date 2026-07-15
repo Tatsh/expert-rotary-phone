@@ -15,6 +15,7 @@
     '/.ios-cmake/',
     '/.theos-install/',
     '/.to-format.txt',
+    '/Project/.audit/',
     '/build/',
     '/theos/.theos/',
     '/theos/obj/',
