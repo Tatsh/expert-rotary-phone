@@ -628,11 +628,15 @@ void MenuMainTask::onAlertClosed() {
     }
 }
 
-// @ 0x6d6d4 — NEWS-ticker per-frame draw callback (the binary hands `this` in
-// as the trailing callback argument; `handle` is the AEP layer being drawn).
-// Only acts on our resolved news handle. Scrolls the current news line
-// right-to-left through the ticker params, paging to the next line (cycling the
-// news array) with a 100->0->100 fade ramp at each end.
+/**
+ * NEWS-ticker per-frame draw callback (the binary hands `this` in as the trailing
+ * callback argument; `handle` is the AEP layer being drawn). Only acts on our
+ * resolved news handle. Scrolls the current news line right-to-left through the
+ * ticker params, paging to the next line (cycling the news array) with a
+ * 100->0->100 fade ramp at each end.
+ * @ghidraAddress 0x6d6d4
+ * @complete
+ */
 void MenuMainTask::updateNewsTicker(int handle, int drawCtx) {
     AepManager &aep = AepManager::shared();
     if (m_newsHandle != handle) {
@@ -690,18 +694,17 @@ void MenuMainTask::updateNewsTicker(int handle, int drawCtx) {
     }
 
 draw:
-    // Ghidra: AepManager::DrawTextClipped (FUN_0001057c; audit label
-    // aepManagerReset_b). The a5 slot carried &DAT_00181818 (the manager's opaque
-    // default news-text style blob) and the colour-vector slot carried
-    // &m_newsTickerParams[0]; `drawCtx` is the OT priority the callback was
-    // handed.
+    // Ghidra: AepManager::DrawTextClipped (FUN_0001057c). The corner colours carry
+    // the dark-grey news-text colour 0x181818 (the same value the plain DrawText
+    // calls pass), the clip slot carries &m_newsTickerParams[0], and `drawCtx` is
+    // the OT priority the callback was handed.
     aep.DrawTextClipped([m_newsCurLine UTF8String],
                         0x1b,
                         m_newsScrollX,
                         m_newsTickerParams[1],
                         0,
                         m_newsPauseCounter,
-                        0 /* &DAT_00181818 style seam */,
+                        0x181818,
                         &m_newsTickerParams[0],
                         drawCtx);
 }
