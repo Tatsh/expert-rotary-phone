@@ -158,13 +158,13 @@ bool AepLyrCtrl::isAnimating() const {
     return frame < m_frameCount;
 }
 
-// Ghidra: FUN_0002c924 (AepLyrCtrlUpdateAll). Walk the global live-layer list
+// Ghidra: FUN_0002c924 (updateAndDrawAepLayers). Walk the global live-layer list
 // and, for every layer whose play state (+0x58) is non-zero, draw it at its
 // current frame through AepManager::drawLayer, then (unless drawOnly) step the
 // frame by its signed rate (+0x44) and apply the per-play-mode end handling.
 // The drawLayer argument threading and the state machine below are
 // byte-verified from the disassembly at 0x2c958..0x2ca82.
-void AepLyrCtrlUpdateAll(int drawOnly) {
+void updateAndDrawAepLayers(int drawOnly) {
     AepManager &mgr = AepManager::shared(); // Ghidra: AepManager_shared (FUN_0000f1ec)
 
     for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {

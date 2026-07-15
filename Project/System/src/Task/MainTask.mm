@@ -563,7 +563,7 @@ tail:
     // Per-frame select-screen highlight update + Aep layer advance/draw (Ghidra
     // tail).
     UpdateHighlight();
-    AepLyrCtrlUpdateAll(0);
+    updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
 }
 
 // ===== byte-verified const tables Setup() resolves against (Ghidra project

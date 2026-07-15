@@ -84,7 +84,7 @@ public:
 
     // Freeze this layer on its current frame without unlinking or hiding it:
     // enters the "held" play-state (4). AepLyrCtrl::isAnimating() treats state 4
-    // as done, and AepLyrCtrlUpdateAll keeps drawing the held frame but stops
+    // as done, and updateAndDrawAepLayers keeps drawing the held frame but stops
     // advancing it (the `playState == 4` early-continue). Ghidra: aepLyrCtrlPause
     // FUN_0002cb54 (stores 4 at +0x58). The music-select preview pauses its layer
     // this way between songs.
@@ -110,7 +110,7 @@ public:
     }
 
     // Position the layer's on-screen anchor: the +0x18/+0x1c integer draw x/y
-    // that AepLyrCtrlUpdateAll reads. The arcade hit-flash arrows re-anchor this
+    // that updateAndDrawAepLayers reads. The arcade hit-flash arrows re-anchor this
     // every frame (Ghidra: FUN_0009fc90 stores the computed x/y into these two
     // words).
     void setPosition(int x, int y) {
@@ -121,7 +121,7 @@ public:
     // Grant the free-function frame-advance loop access to the members below (it
     // was the reason the file-static lc* offset helpers existed). Ghidra:
     // FUN_0002c924.
-    friend void AepLyrCtrlUpdateAll(int drawOnly);
+    friend void updateAndDrawAepLayers(int drawOnly);
 
 protected:
     // Field TYPES/offsets are byte-verified from the updateAndDrawAepLayers
@@ -162,7 +162,7 @@ protected:
 // then (when drawOnly == 0) its frame is stepped by its play mode (1 once, 2
 // loop, 3 once-reverse) and finished layers are marked done. The result screen
 // calls this each update. Ghidra: FUN_0002c924.
-void AepLyrCtrlUpdateAll(int drawOnly);
+void updateAndDrawAepLayers(int drawOnly);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :
