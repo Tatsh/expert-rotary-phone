@@ -207,8 +207,12 @@ public:
     // Ghidra: @ 0x34164 (used pervasively: 12 call sites).
     int getCurrentPosition() const;
 
-    // YES once the chart has emitted its last note and no notes remain live (the
-    // play-loop watches this to end the song). Ghidra: FUN_0003181c.
+    // The number of playable notes still awaiting judgement (note total minus
+    // every hit tally, clamped to >= 0). Ghidra: FUN_0003181c.
+    int remainingNoteCount() const;
+
+    // YES once no playable notes remain to be judged (remainingNoteCount() == 0);
+    // the play-loop watches this to end the song. Ghidra: FUN_0003181c tested == 0.
     bool isFinished() const;
 
     // Standard-mode per-frame update: read the position, spawn due records, judge

@@ -600,20 +600,27 @@ int NoteMng::getActiveNoteCount() const {
     return n;
 }
 
-// Ghidra: FUN_0003181c. The chart is finished once every playable note has been
-// graded: the manager sums all per-kind/per-tier hit tallies (the 10x4 int grid
-// @ +0x5164) and reports done when that reaches the chart's playable-note total
-// (short @ +0x4e28). (The decompiler renders the closing `cmp/it ls` as a
-// subtract-and-clamp; the armv7 disassembly @ 0x318a0 is a plain `totalNotes <=
-// judged` comparison returning 0/1.)
-bool NoteMng::isFinished() const {
+// Ghidra: FUN_0003181c. The number of playable notes still awaiting judgement:
+// the chart's note total (nJudgeThreshold @ +0x4e28, incremented per type-0
+// record at InitPlayData — the same value as the score's total) minus the sum of
+// every per-kind/per-tier hit tally (the 10x4 int grid @ +0x5164), clamped to
+// >= 0. The armv7 tail at 0x3185e subtracts, sign-extends to 16-bit, and clamps
+// only the negative case to zero — it returns this remaining count, NOT a 0/1
+// flag. PlayTask::update tests it == 0 for the song-end latch (isFinished).
+int NoteMng::remainingNoteCount() const {
     int judged = 0;
     for (int kind = 0; kind < kNoteKindCount; kind++) {
         for (int tier = 0; tier < NOTE_JUDGE_TIER_COUNT; tier++) {
             judged += m_tally[kind][tier];
         }
     }
-    return m_totalNotes <= judged;
+    const int remaining = m_totalNotes - judged;
+    return remaining < 1 ? 0 : remaining;
+}
+
+// The chart is finished once no playable notes remain to be judged.
+bool NoteMng::isFinished() const {
+    return remainingNoteCount() == 0;
 }
 
 ActiveNote *NoteMng::allocNote() {
