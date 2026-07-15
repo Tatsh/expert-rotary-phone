@@ -16,6 +16,11 @@
 #import "neGLView.h"
 #import "neGraphics.h"
 
+// The render facade lives in the neRenderer unit; forward-declared here so
+// initWithFrame: can create it (as the binary does) without pulling the renderer
+// header's GL includes. Ghidra: neEnsureRenderer FUN_00012c4c.
+void neEnsureRenderer(void);
+
 // Engine touch coordinates are 16.16 fixed point; the render/input manager
 // (neGraphics) scales them to pixels and records them for the play-judge loop.
 static inline int ToFixed(CGFloat v) {
@@ -123,6 +128,15 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
         if (!m_GLContext || ![EAGLContext setCurrentContext:m_GLContext]) {
             return nil;
         }
+        // @ 0x28246 — with the context current, create the render facade
+        // (neEnsureRenderer -> new ne::neGLES_11; initialize) and make it current.
+        // The binary then caches neGetCurrentRenderer() in the view's m_GLInterface
+        // and drives the framebuffer setup through its virtuals; this reconstruction
+        // issues those same GL ES calls directly in createFramebuffer (see the
+        // m_GLInterface note above), but the facade MUST exist first or the sprite
+        // flush's neGetCurrentRenderer() (drawAepSpriteClipped -> neDrawTexturedQuad)
+        // null-derefs on the first frame.
+        neEnsureRenderer();
         self.backgroundColor = [UIColor clearColor];
         self.multipleTouchEnabled = YES;
         [self createFramebuffer];
