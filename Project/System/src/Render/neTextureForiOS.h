@@ -109,6 +109,24 @@ public:
     // (FUN_00011468).
     void draw(AepOrderingTable *ot, const neSpriteDrawParams &p);
 
+    // Tile-table accessors for the ordering-table flush. drawAepSpriteClipped walks
+    // these members rather than raw byte offsets, so the field positions and the
+    // AepTile element stride stay correct on the 64-bit rebuild. The per-tile
+    // records double as the render-state slots (AepTile is the same 0x18-byte
+    // record as neTextureRef).
+    int tileCount() const {
+        return m_tileCount;
+    }
+    const int *tileWidths() const {
+        return m_tileWidths;
+    }
+    const int *tileHeights() const {
+        return m_tileHeights;
+    }
+    AepTile *tileRects() const {
+        return m_tileRects;
+    }
+
 private:
     // Split-texture storage: an image wider/taller than the GL max is loaded as
     // several tiles. These parallel heap arrays are all m_tileCount long. The

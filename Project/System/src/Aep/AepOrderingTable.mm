@@ -16,9 +16,10 @@
 #import <OpenGLES/ES1/gl.h>
 
 #import "AepOrderingTable.h"
-#import "neRenderer.h"    // neDrawLine/Triangle/Rect/Quad/TexturedQuad
-#import "neTextTexture.h" // neDrawText (FUN_0001551c)
-#import "neTextureRef.h"  // neTextureRef::setRenderStateSlot (FUN_00016710)
+#import "neRenderer.h"      // neDrawLine/Triangle/Rect/Quad/TexturedQuad
+#import "neTextTexture.h"   // neDrawText (FUN_0001551c)
+#import "neTextureForiOS.h" // the sprite/frame-atlas object the flush walks
+#import "neTextureRef.h"    // neTextureRef::setRenderStateSlot (FUN_00016710)
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -508,7 +509,11 @@ void drawAepSpriteClipped(float renderScale,
                           int useClip,
                           int p19) {
     (void)renderScale;
-    char *obj = reinterpret_cast<char *>(frameObj);
+    // The renderer's sprite object is a neTextureForiOS; access it through its real
+    // members (not raw byte offsets) so the field positions and the AepTile element
+    // stride stay correct on the 64-bit rebuild, where the wider pointers shift
+    // everything past the armv7 layout the offsets assumed.
+    neTextureForiOS *frameData = static_cast<neTextureForiOS *>(frameObj);
 
     // Blend mode: bit 0x400 forces mode 2, else (blend & 0x3ff) >> 9.
     const uint32_t mode = (blend & 0x400) ? 2u : ((blend & 0x3ff) >> 9);
@@ -516,9 +521,9 @@ void drawAepSpriteClipped(float renderScale,
     // Sub-frame selection: subtract each frame's duration until the remaining
     // time fits.
     int frame = 0;
-    const int frameCount = *reinterpret_cast<const int *>(obj + 4);
-    const int *widths = *reinterpret_cast<const int *const *>(obj + 8);
-    const int *durations = *reinterpret_cast<const int *const *>(obj + 0xc);
+    const int frameCount = frameData->tileCount();
+    const int *widths = frameData->tileWidths();
+    const int *durations = frameData->tileHeights();
     for (; frame < frameCount; frame++) {
         int d = durations[frame];
         if (frameTime <= d) {
@@ -555,11 +560,12 @@ void drawAepSpriteClipped(float renderScale,
         }
     }
 
-    // Render-state slot for this sub-frame: the neTextureRef record at
-    // [frameObj + 0x14] + frame*0x18 (Ghidra 0x12154). Set slot 0/1 to the clip
+    // Render-state slot for this sub-frame: the frame-th per-tile record (Ghidra
+    // [frameObj + 0x14] + frame*0x18; here the compiler applies the real
+    // sizeof(AepTile) stride). AepTile is the same 0x18-byte record as
+    // neTextureRef, so it is set through that interface. Set slot 0/1 to the clip
     // flag (Ghidra 0x1215e/0x12180 -> neTextureRef::setRenderStateSlot).
-    neTextureRef *slot = reinterpret_cast<neTextureRef *>(
-        *reinterpret_cast<char *const *>(obj + 0x14) + frame * 0x18);
+    neTextureRef *slot = reinterpret_cast<neTextureRef *>(&frameData->tileRects()[frame]);
     slot->setRenderStateSlot(0, useClip != 0 ? 1 : 0);
     slot->setRenderStateSlot(1, useClip != 0 ? 1 : 0);
 
