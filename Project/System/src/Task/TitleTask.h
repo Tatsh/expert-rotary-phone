@@ -28,13 +28,25 @@ class AepLyrCtrl; // the title screen's animated sprite layer (Ghidra ctor
 
 class TitleTask : public C_TASK {
 public:
-    TitleTask();                       // Ghidra: TitleTask_ctor (FUN_0002b678)
-    ~TitleTask() override;             // Ghidra: TitleTask dtor (FUN_0002b6b0)
-    void update(int deltaMs) override; // Ghidra: TitleTask_update (FUN_0002b838)
+    /// @brief Construct the title / first-run task (spawned by BootLogoTask::finish).
+    /// @note Ghidra: TitleTask::TitleTask (FUN_0002b678).
+    TitleTask();
+
+    /// @brief Detach the conversion button from its superview, then run the base
+    ///        task teardown.
+    /// @note Ghidra: TitleTask::~TitleTask (FUN_0002b6b0).
+    ~TitleTask() override;
+
+    /// @brief Per-frame tick: drive the 10-state title / first-run machine, then
+    ///        advance and draw the title AEP layers and the version label.
+    /// @param deltaMs Frame delta (unused by this task; passed by the base scheduler).
+    /// @note Ghidra: TitleTask::update (FUN_0002b838).
+    void update(int deltaMs) override;
 
 private:
-    void setup();                 // Ghidra: TitleTask_setup (FUN_0002c084)
-    void finish();                // Ghidra: TitleTask_finish (FUN_0002c3d0)
+    void setup();                 // Ghidra: TitleTask::setup (FUN_0002c084)
+    void finish();                // Ghidra: TitleTask::finish (FUN_0002c3d0)
+    void drawSoundTestLabel();    // Ghidra: TitleTask::drawSoundTestLabel (FUN_0002c52c)
     bool tapReleased() const;     // a touch released with < 11 px travel = a tap
     void buildConversionButton(); // state-3 UI: the "conversion" button + code alert
 
@@ -43,11 +55,12 @@ private:
     NSArray *m_dlFileList = nil;            // +0x34 DownloadMain's file-list result
     NSString *m_versionLabel = nil;         // +0x38 retained "Ver <n>"
     int m_titleSe = 0;                      // +0x3c title SE handle
-    int m_titleFrames = 0;                  // +0x40 title animation length (0x19 / 0x24)
+    int m_soundTestLabelX = 0;              // +0x40 version-label draw x (0x19 phone / 0x24 iPad)
     bool m_needUpdate = false;              // +0x44 an app update is required
+    bool m_soundTestHidden = false;         // +0x45 suppress the version / sound-test label
+    int m_state = 0;                        // +0x48 state machine (0..9)
     bool m_state3Built = false;             // +0x4c the title UI has been built
     CustomButton *m_conversionButton = nil; // +0x50 the code-conversion button
-    int m_state = 0;                        // +0x48 state machine (0..9)
 };
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

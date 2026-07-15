@@ -80,16 +80,16 @@ bool TitleTask::tapReleased() const {
 // load + start the title SE and looping BGM.
 void TitleTask::setup() {
     m_aep = &AepManager::shared();
-    m_versionLabel = [NSString stringWithFormat:@"Ver %@", AppDelegate.appDelegate.appVersion];
+    m_versionLabel = [NSString stringWithFormat:@"Ver%@", AppDelegate.appDelegate.appVersion];
 
     const char *imageFolder;
     if (!neSceneManager::isPadDisplay()) {
         AepLoadGroup(m_aep, 1, "title");
-        m_titleFrames = 0x19;
+        m_soundTestLabelX = 0x19;
         imageFolder = (AppDelegate.appDelegate.displayType == 2) ? "1136IMG" : "640IMG";
     } else {
         AepLoadGroup(m_aep, 1, "title_ipad");
-        m_titleFrames = 0x24;
+        m_soundTestLabelX = 0x24;
         imageFolder = "IMG_IPAD";
     }
     m_titleLayer = new AepLyrCtrl();
@@ -180,10 +180,9 @@ void TitleTask::update(int /*deltaMs*/) {
     switch (m_state) {
     case 0:
         setup();
-        [[AudioManager sharedManager] playBgm:0];
-        m_aep->playTransition(1, 0x1e,
-                              0); // fade in (setAepTransitionMode: 30 frames)
-        m_titleLayer->play();     // start the title animation
+        [[AudioManager sharedManager] playBgm:0.0f];
+        m_aep->setAepTransitionMode(1); // fade in (fixed 30 frames)
+        m_titleLayer->play();           // start the title animation
         m_state = 1;
         break;
     case 1:
@@ -195,6 +194,7 @@ void TitleTask::update(int /*deltaMs*/) {
         break;
     case 2: // wait for a tap, then go to the accept-policy screen
         if (tap) {
+            neEngine::playSystemSe(1); // Ghidra: SysSePlayIntoSlot(sceneManager, 1)
             [root GotoAcceptPolicy];
             m_state = 1;
         }
@@ -209,7 +209,7 @@ void TitleTask::update(int /*deltaMs*/) {
         }
         // Tapped through the title: start the DL file-list fetch (unless running),
         // show the "communicating" indicator, and advance.
-        [[AudioManager sharedManager] playSe:0 resourceId:0];
+        [[AudioManager sharedManager] playSe:0 resourceId:m_titleSe];
         if (![dl isGetDlFileListDownLoading]) {
             if (m_needUpdate) {
                 [[DownloadMain getInstance] startGetDlFileListHttp:-1];
@@ -270,8 +270,7 @@ void TitleTask::update(int /*deltaMs*/) {
         }
         break;
     case 7:
-        m_aep->playTransition(2, 0x1e,
-                              0); // fade out (setAepTransitionMode: 30 frames)
+        m_aep->setAepTransitionMode(2); // fade out (fixed 30 frames)
         m_state = 8;
         break;
     case 8:
@@ -281,12 +280,25 @@ void TitleTask::update(int /*deltaMs*/) {
         break;
     case 9:
         finish();
-        return;
+        break;
     default:
         break;
     }
 
-    // Per-frame title UI update + draw (Ghidra tail, run every state:
-    // FUN_0002c924 updates the version label / touch buttons; FUN_0002c52c draws
-    // the title elements through the Aep layer list).
+    // Per-frame tail (Ghidra 0x2b838, run after every state including 9): advance
+    // and draw the active AEP layers, then draw the version / sound-test label.
+    updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
+    drawSoundTestLabel();      // Ghidra: FUN_0002c52c
+}
+
+// Ghidra: TitleTask::drawSoundTestLabel (FUN_0002c52c) — draw the version /
+// sound-test label as an AEP text command at (m_soundTestLabelX, 20), unless the
+// label is suppressed. The four numeric words are the per-corner gradient colour
+// (20, 0, 100, 0x181818) and the draw priority is 9.
+void TitleTask::drawSoundTestLabel() {
+    if (m_soundTestHidden) {
+        return;
+    }
+    drawAepManagerText(
+        m_aep, m_versionLabel.UTF8String, m_soundTestLabelX, 20, 20, 0, 100, 0x181818, 9);
 }
