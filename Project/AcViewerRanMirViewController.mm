@@ -185,8 +185,8 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 }
 
 // @ 0xa7664 — no accessory (private UITableView delegate hook).
-- (NSInteger)tableView:(UITableView *)tableView
-    accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
+         accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     return UITableViewCellAccessoryNone;
 }
 

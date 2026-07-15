@@ -453,13 +453,28 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         // Seed with word 0 = 3 (first two characters unlocked).
         NSMutableArray *arr = [NSMutableArray array];
         [arr addObject:@3];
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+        NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:arr
+                                                 requiringSecureCoding:NO
+                                                                 error:nil];
+#else
         NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:arr];
+#endif
         NSData *enc = [archived encryptWith128Key:kAESKey initVector:kAESIV];
         [self saveData:enc Key:kKeyGotCharaData];
         return [arr copy];
     }
     NSData *plain = [data decryptWith128Key:kAESKey initVector:kAESIV];
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:plain
+                                                                                error:nil];
+    unarchiver.requiresSecureCoding = NO;
+    id result = [unarchiver decodeTopLevelObjectForKey:NSKeyedArchiveRootObjectKey error:nil];
+    [unarchiver finishDecoding];
+    return result;
+#else
     return [NSKeyedUnarchiver unarchiveObjectWithData:plain];
+#endif
 }
 
 // @ 0x610a0 — set the bit for charaIndex, archive, encrypt, store under key
@@ -477,7 +492,13 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
             arr[word] = [NSNumber numberWithInt:(cur | bit)];
         }
     }
+#if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
+    NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:arr
+                                             requiringSecureCoding:NO
+                                                             error:nil];
+#else
     NSData *archived = [NSKeyedArchiver archivedDataWithRootObject:arr];
+#endif
     NSData *enc = [archived encryptWith128Key:kAESKey initVector:kAESIV];
     [self saveData:enc Key:kKeyGotCharaData];
 }

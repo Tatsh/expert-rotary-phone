@@ -229,7 +229,11 @@ renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *label, neGl
 
     CGSize size = CGSizeZero;
     if (str != nil) {
+#if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
+        size = [str sizeWithAttributes:@{NSFontAttributeName : font}];
+#else
         size = [str sizeWithFont:font];
+#endif
     }
     // The binary rounds the measured size to integer texels (FPToFixed, mode 3).
     int w = static_cast<int>(size.width);

@@ -17,6 +17,7 @@
 // app's root view controller. Shared by -tweet and +tweetWithText:image: (the
 // binary inlines the same body in both). Ghidra: FUN_00078a4c / FUN_00078bb8.
 static void PresentTweet(NSString *text, UIImage *image) {
+#if !defined(__IPHONE_11_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_11_0
     UIViewController *root = neSceneManager::rootViewController();
     SLComposeViewController *compose =
         [SLComposeViewController composeViewControllerForServiceType:SLServiceTypeTwitter];
@@ -42,6 +43,13 @@ static void PresentTweet(NSString *text, UIImage *image) {
         [compose addImage:image];
     }
     [root presentViewController:compose animated:YES completion:nil];
+#else
+    // The Social-framework Twitter composer (SLServiceTypeTwitter) was removed
+    // in iOS 11, so this is a no-op when built against a modern SDK.
+    (void)text;
+    (void)image;
+    return;
+#endif
 }
 
 @implementation TwitterUtil
