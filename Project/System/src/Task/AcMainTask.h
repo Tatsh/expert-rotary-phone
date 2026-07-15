@@ -211,10 +211,11 @@ private:
     int m_bgTileW = {};         // +0x530 background tile width
     int m_bgTileH = {};         // +0x534 background tile height
     int m_selSceneLayout[16] =
-        {};                   // +0x538 device-branched select-scene layout constants (write-only;
-                              // consumed by unreconstructed draw)
-    int m_stepValues[7] = {}; // +0x578 7 per-skill roulette step values
-    uint8_t _rsvd_594[0x5a0 - 0x594] = {}; // +0x594
+        {};                    // +0x538 device-branched select-scene layout constants (write-only;
+                               // consumed by unreconstructed draw)
+    int m_stepValues[7] = {};  // +0x578 7 per-skill roulette step values
+    int m_stepValueIndex = {}; // +0x594 roulette step-value index (cycles 0..6 mod 7 each frame)
+    uint8_t _rsvd_598[0x5a0 - 0x598] = {}; // +0x598
     int m_initFlag5a0 = {};                // +0x5a0 ctor writes 3; role opaque (write-only)
     float m_scrollTargetX = {};            // +0x5a4 scroll ease target x
     float m_scrollTargetY = {};            // +0x5a8 scroll ease target y

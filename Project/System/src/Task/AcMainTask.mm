@@ -2726,10 +2726,12 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 // the treasure-map unlock bitfields, single-texture panels, the list scroll
 // bar, the pulsing collection-complete badge, and the roulette-result
 // icon/caption. `context` is the AcMainTask, reached through its named members.
-// A couple of NEON-obscured indices (the step-value slot and the chara-column
-// base) are best-effort; the fixed-point scale conversions the binary does via
-// FixedToFP are skipped here per the rebuild convention (the GL layer consumes
-// the percentage scale directly, as documented in AepFrameDraw.mm).
+// The step-value slot is m_stepValues[m_stepValueIndex] (+0x594, verified at
+// 0xa48e4), and the chara-thumbnail texture index is idxBase (0..5, verified at
+// 0xa3bb6 / 0xa3bbe with the curr/prev selection gate at 0xa3b9e); the
+// highlight uses the same 6-per-page list layout as the verified row-count
+// (count / 6). The FixedToFP scale conversions the binary does are folded into
+// the int-percentage scale the GL layer consumes directly (see AepFrameDraw.mm).
 void AcMainSugorokuDraw(int child,
                         int frame,
                         int x,
@@ -2821,8 +2823,9 @@ void AcMainSugorokuDraw(int child,
         return;
     }
     if (self->m_boardUserNo[16] == child) { // per-skill step value (roulette digits)
-        int val = self->m_stepValues[0];    // index is the current skill row
-                                            // (best-effort: slot 0)
+        // Ghidra 0xa48e4: the slot is m_stepValues[m_stepValueIndex], where the
+        // index (+0x594) cycles 0..6 each frame — the spinning roulette readout.
+        int val = self->m_stepValues[self->m_stepValueIndex];
         const int n = numDigits(val);
         if (n >= 1) {
             drawDigits(self->m_roulDigitTex, val, n, x + (n == 2 ? 0x1c : -2), 0x3c, 0x3c, 0x48);
