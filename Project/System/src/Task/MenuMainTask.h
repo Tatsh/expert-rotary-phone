@@ -97,6 +97,13 @@ private:
     // 10, else -> 12). Ghidra: FUN_0006d1a4 @ 0x6d1a4.
     void onAlertClosed();
 
+    // State-0x14 handoff: release the menu SEs + cycle the shared system-SE pool,
+    // tear down the three AEP layers and textures, clear the news cache and the
+    // root VC alert callback, kill this task, then give the spawned sub-task
+    // priority 3 so the scheduler runs it. Ghidra: modeSelectTaskDispose
+    // (FUN_0006d1f0) @ 0x6d1f0.
+    void dispose();
+
     // Per-frame NEWS-ticker draw callback registered on the news AEP layer.
     // `handle` is the layer being drawn (only our resolved news handle acts);
     // `drawCtx` is the AEP draw context. The binary passes `this` as the trailing

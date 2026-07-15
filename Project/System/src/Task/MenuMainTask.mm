@@ -409,10 +409,21 @@ void MenuMainTask::update(int /*deltaMs*/) {
             m_state = 0x14;
         }
         break;
-    case 0x14: // hand off: kill this task once its SEs finish and the sub-task
-               // runs
-        // (When no menu SE is still playing, tear down via FUN_0006d1f0.)
+    case 0x14: { // hand off: once every menu SE and the shared system SE have
+                 // finished sounding, dispose (teardown + schedule the sub-task).
+        // Ghidra 0x6b83e: scan the six menu SE instances, then gate on the
+        // scene manager's system-SE slot 0; dispose only when neither is playing.
+        bool sePlaying = false;
+        for (int i = 0; i < 6; i++) {
+            if (m_seInst[i] >= 0 && [audio isPlayingSe:m_seInst[i]]) {
+                sePlaying = true;
+            }
+        }
+        if (!neEngine::isSePlaying(0) && !sePlaying) {
+            dispose();
+        }
         break;
+    }
     default:
         break;
     }
@@ -429,6 +440,60 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
     }
     drawOverlay(); // Ghidra: FUN_0006d428
+}
+
+/**
+ * Ghidra: modeSelectTaskDispose (FUN_0006d1f0) — the state-0x14 handoff into the
+ * launched sub-task. Field map: m_seId[6] @+0x50 (pAepLyrCtrl[10..15]), m_layers
+ * @+0x28, m_warnTexture @+0x4c (pIconTexture), m_spawnedTask @+0x80 (pMainTask),
+ * m_suppressOverlay @+0xb4 (bHidden). The spawned task only starts once it is
+ * given a priority here, so an unimplemented state 0x14 would strand it.
+ * @complete
+ */
+void MenuMainTask::dispose() {
+    AepManager &aep = AepManager::shared();
+    AudioManager *audio = [AudioManager sharedManager];
+    MainViewController *root = RootVC();
+
+    // Release the six menu SEs, then release + reload the shared system-SE pool.
+    for (int i = 0; i < 6; i++) {
+        [audio releaseSe:nil resourceId:m_seId[i]];
+    }
+    neSceneManager::shared().releaseSystemSe();
+    [audio cleanupSe];
+    neSceneManager::shared().loadSystemSe();
+
+    // Unlink + delete the three menu AEP layers (the binary unlinks explicitly
+    // before the deleting destructor, which also splices the node out).
+    for (int i = 0; i < 3; i++) {
+        if (m_layers[i] != nullptr) {
+            m_layers[i]->unlink();
+            delete m_layers[i];
+            m_layers[i] = nullptr;
+        }
+    }
+
+    aep.releaseAepTexture(2);
+    if (m_warnTexture != nullptr) {
+        delete m_warnTexture;
+        m_warnTexture = nullptr;
+    }
+
+    // ARC: clear the retained news-cache fields.
+    m_newsArray = nil;
+    m_newsTimestamp = nil;
+    m_newsCurLine = nil;
+
+    [root SetAlertViewCallback:nullptr param:nullptr];
+    kill(); // +0x24 = 1
+
+    // Give the sub-task spawned in state 0xc its scheduler priority (creating the
+    // music-select MainTask now if, defensively, it was not spawned yet).
+    if (m_spawnedTask == nullptr) {
+        m_spawnedTask = MainTaskCreate(); // operator_new(0xaa8) + MainTask_ctor
+    }
+    static_cast<C_TASK *>(m_spawnedTask)->setPriority(3);
+    m_suppressOverlay = 1; // +0xb4: stop drawing this task after the handoff
 }
 
 // Ghidra: modeSelectTaskDraw (FUN_0006d428): the per-frame menu overlay pass —
