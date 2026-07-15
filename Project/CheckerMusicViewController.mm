@@ -112,7 +112,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 // here.
 - (void)dealloc {
     DownloadMain *dm = [DownloadMain getInstance];
-    if ([dm delegateGetVisitor] == self) {
+    if ((id)[dm delegateGetVisitor] == self) {
         [dm setDelegateGetVisitor:nil];
     }
     // ARC synthesizes [super dealloc].

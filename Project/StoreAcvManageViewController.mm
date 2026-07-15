@@ -287,7 +287,7 @@
     if (indexPath == nil) {
         return;
     }
-    m_WorkingIndex = indexPath.row;
+    m_WorkingIndex = static_cast<int>(indexPath.row);
 
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedAcMusicDictionaris] objectAtIndex:m_WorkingIndex];
@@ -442,7 +442,7 @@
 - (void)downloadManagerFailed:(StoreDownloadManager *)manager {
     m_DlManager = nil;
 
-    NSString *message = [[NSString alloc] initWithString:@"ダウンロードに失敗しました。"];
+    NSString *message = @"ダウンロードに失敗しました。";
     CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"Error"
                                                             message:message
                                                            delegate:nil

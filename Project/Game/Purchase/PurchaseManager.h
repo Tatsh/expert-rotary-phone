@@ -17,7 +17,12 @@
 
 // The products-request + direct-purchase delegate (a store view controller).
 @protocol PurchaseManagerDelegate <NSObject>
+// Only the products-request delegate (AppDelegate) implements this; the
+// direct-purchase delegate (PurchaseStore) faithfully omits it, so it is
+// optional. PurchaseManager only ever sends it to the request delegate.
+@optional
 - (void)finishRequest:(NSArray<SKProduct *> *)products;
+@required
 - (void)purchaseSucceeded:(SKPaymentTransaction *)transaction;
 - (void)purchaseFailed:(id)transactionOrProductId error:(NSError *)error;
 @end

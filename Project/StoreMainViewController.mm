@@ -7,8 +7,9 @@
 
 #import "StoreMainViewController.h"
 #import "AppDelegate.h"
-#import "AppFont.h"             // AppFontName() == getFontNameDFSoGei() -> @"DFSoGei-W5-WIN-RKSJ-H"
-#import "CharaTicketData.h"     // isExistData:inManagedObjectContext: ...
+#import "AppFont.h" // AppFontName() == getFontNameDFSoGei() -> @"DFSoGei-W5-WIN-RKSJ-H"
+#import "CharaTicketData+Store.h" // isExistData:... / addRecordWithProductId:...
+#import "CharaTicketData.h"
 #import "DownloadProgresView.h" // the shared modal dialog: layout: / labelMessage / progressView
 #import "MusicManager.h"        // getInstance / getPathFromPurchased: / addPurchasedMusic: ...
 #import "PurchaseManager.h"     // sharedManager / beginPurchase: / beginRestore ...
@@ -468,7 +469,7 @@
                 } else {
                     StorePackInfo *info = [m_RecommendPackListCtrl getPackInfo:recommendPackId];
                     StorePackView *packView = [[StorePackView alloc] init];
-                    [packView loadPackInfo:info index:i];
+                    [packView loadPackInfo:info index:static_cast<unsigned int>(i)];
                     [self packViewSelected:packView];
                 }
                 break;
@@ -1253,8 +1254,7 @@
 - (void)downloadManagerFailed:(StoreDownloadManager *)manager {
     m_DownloadManager = nil;
     [m_StoreViewCtrl hideModalDialog];
-    NSString *message = [[NSString alloc]
-        initWithString:@"ダウンロードに失敗しました。\nネットワーク接続をご確認下さい。"];
+    NSString *message = @"ダウンロードに失敗しました。\nネットワーク接続をご確認下さい。";
     CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"Error"
                                                             message:message
                                                            delegate:nil
@@ -1460,7 +1460,8 @@
             NSInteger leftIndex = indexPath.row * 2;
             int leftPackID = [[ids objectAtIndex:leftIndex] intValue];
             StorePackInfo *leftInfo = [m_PackListCtrl getPackInfo:leftPackID];
-            [[tableCell leftPackView] loadPackInfo:leftInfo index:leftIndex];
+            [[tableCell leftPackView] loadPackInfo:leftInfo
+                                             index:static_cast<unsigned int>(leftIndex)];
             NSIndexPath *leftIP = [NSIndexPath indexPathForRow:leftIndex
                                                      inSection:indexPath.section];
             UIImage *leftArt = [self artworkForInfo:leftInfo atIndexPath:leftIP];
@@ -1471,7 +1472,8 @@
                 [[tableCell rightPackView] setHidden:NO];
                 int rightPackID = [[ids objectAtIndex:rightIndex] intValue];
                 StorePackInfo *rightInfo = [m_PackListCtrl getPackInfo:rightPackID];
-                [[tableCell rightPackView] loadPackInfo:rightInfo index:rightIndex];
+                [[tableCell rightPackView] loadPackInfo:rightInfo
+                                                  index:static_cast<unsigned int>(rightIndex)];
                 NSIndexPath *rightIP = [NSIndexPath indexPathForRow:rightIndex
                                                           inSection:indexPath.section];
                 UIImage *rightArt = [self artworkForInfo:rightInfo atIndexPath:rightIP];

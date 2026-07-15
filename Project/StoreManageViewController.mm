@@ -252,7 +252,7 @@
     if (indexPath == nil) {
         return;
     }
-    m_WorkingIndex = indexPath.row;
+    m_WorkingIndex = static_cast<int>(indexPath.row);
 
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedMusicDictionaris] objectAtIndex:m_WorkingIndex];

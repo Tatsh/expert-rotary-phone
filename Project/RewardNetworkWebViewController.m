@@ -227,7 +227,7 @@
 
     // (2) Otherwise treat the tail of the path (after "applilink://ext-app:80")
     // as the scheme URL, stripping a trailing "&<query>" if present.
-    NSString *prefix = [NSString stringWithString:@"applilink://ext-app:80"];
+    NSString *prefix = @"applilink://ext-app:80";
     NSString *launch = path;
     if ([[url absoluteString] hasPrefix:prefix]) {
         NSString *tail = [[url absoluteString] substringFromIndex:[prefix length]];

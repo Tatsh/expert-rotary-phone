@@ -310,7 +310,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // gates every branch on the prompt layer (+0x30) no longer animating; that
         // intro-guard is elided here as it is throughout this reconstruction.
         if (hitButton(touchId, kBtnPlay)) { // +0x128 play (tutorial first time)
-            m_seInst[0] = [audio playSe:0 resourceId:m_seId[0]];
+            m_seInst[0] = static_cast<int>([audio playSe:0 resourceId:m_seId[0]]);
             if (!m_tutorialSkip) {
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = TutorialTaskCreate();
@@ -320,7 +320,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             m_state = 0x12;
         } else if (hitButton(touchId,
                              kBtnArcade)) { // +0x158 AcMainTask (treasure board)
-            m_seInst[1] = [audio playSe:0 resourceId:m_seId[1]];
+            m_seInst[1] = static_cast<int>([audio playSe:0 resourceId:m_seId[1]]);
             m_spawnedTask = AcMainTaskCreate();
             m_state = 0x12;
         } else if (hitButton(touchId, kBtnAcViewer)) { // +0x168 AcViewerTask
@@ -333,20 +333,20 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 }
                 neAppEventCenter::clearAcViewerSelection();
             }
-            m_seInst[5] = [audio playSe:0 resourceId:m_seId[5]];
+            m_seInst[5] = static_cast<int>([audio playSe:0 resourceId:m_seId[5]]);
             m_spawnedTask = AcViewerTaskCreate();
             m_state = 0x12;
         } else if (hitButton(touchId, kBtnFriend)) { // +0x148 friend management
-            m_seInst[2] = [audio playSe:0 resourceId:m_seId[2]];
+            m_seInst[2] = static_cast<int>([audio playSe:0 resourceId:m_seId[2]]);
             [root GotoFriendManage];
             m_state = 0x11;
         } else if (hitButton(touchId, kBtnStore)) { // +0x138 store
-            m_seInst[3] = [audio playSe:0 resourceId:m_seId[3]];
+            m_seInst[3] = static_cast<int>([audio playSe:0 resourceId:m_seId[3]]);
             [[DownloadMain getInstance] setIsNewMusicPackReleased:NO];
             [root GotoStoreButton];
             m_state = 0x11;
         } else if (hitButton(touchId, kBtnPopnLink)) { // +0x178 pop'n link
-            m_seInst[4] = [audio playSe:0 resourceId:m_seId[4]];
+            m_seInst[4] = static_cast<int>([audio playSe:0 resourceId:m_seId[4]]);
             [root GotoPopnLink];
             m_state = 0x11;
         } else if (hitButton(touchId, kBtnInvite)) { // +0x188 invite code

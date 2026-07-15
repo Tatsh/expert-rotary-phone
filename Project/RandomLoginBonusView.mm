@@ -31,6 +31,7 @@
 - (UIImageView *)makeDigitReelForValue:(int)digit
                        animationImages:(NSArray *)images
                                 hidden:(BOOL)hiddenLeadingZero;
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 @end
 
 @implementation RandomLoginBonusView
@@ -93,13 +94,13 @@ static const struct {
         AudioManager *audio = [AudioManager sharedManager];
 
         NSString *rollPath = [bundle pathForResource:@"se26_roll" ofType:@"m4a"];
-        _seRscId[0] = [audio loadSe:rollPath isLoop:YES callName:nil group:1];
+        _seRscId[0] = static_cast<int>([audio loadSe:rollPath isLoop:YES callName:nil group:1]);
 
         NSString *failPath = [bundle pathForResource:@"se08_bonus_fai" ofType:@"m4a"];
-        _seRscId[1] = [audio loadSe:failPath isLoop:NO callName:nil group:1];
+        _seRscId[1] = static_cast<int>([audio loadSe:failPath isLoop:NO callName:nil group:1]);
 
         NSString *closePath = [bundle pathForResource:@"se09_bonus_cl" ofType:@"m4a"];
-        _seRscId[2] = [audio loadSe:closePath isLoop:NO callName:nil group:1];
+        _seRscId[2] = static_cast<int>([audio loadSe:closePath isLoop:NO callName:nil group:1]);
 
         // Modal dimmer.
         self.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
@@ -285,8 +286,9 @@ static const struct {
         completion:^(BOOL finished) {
           // Ghidra completion @ 0x19b1c — start the looping roll SE for the
           // reels.
-          self->_seInstId[0] = [[AudioManager sharedManager] playSe:nil
-                                                         resourceId:self->_seRscId[0]];
+          self->_seInstId[0] =
+              static_cast<int>([[AudioManager sharedManager] playSe:nil
+                                                         resourceId:self->_seRscId[0]]);
         }];
 }
 
@@ -302,7 +304,8 @@ static const struct {
 
         // Swap the looping roll SE for the reveal SE.
         [[AudioManager sharedManager] stopSe:_seInstId[0]];
-        _seInstId[1] = [[AudioManager sharedManager] playSe:nil resourceId:_seRscId[1]];
+        _seInstId[1] = static_cast<int>([[AudioManager sharedManager] playSe:nil
+                                                                  resourceId:_seRscId[1]]);
 
         // Lock each reel with a staggered scale bounce. Ghidra runs four
         // animateWithDuration:0.5 passes (loginBonusScaleDigit* blocks); the final

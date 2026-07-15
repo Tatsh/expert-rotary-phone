@@ -868,7 +868,7 @@
     }
     StoreDetailMusicCell *cell =
         (StoreDetailMusicCell *)[tableView cellForRowAtIndexPath:indexPath];
-    rowSamplePlayed = row;
+    rowSamplePlayed = static_cast<int>(row);
     isDownloadingSample = YES;
     [cell sampleDownloading];
     sampleDownloader = [[Downloader alloc] initWithURL:[NSURL URLWithString:music.sampleURL]

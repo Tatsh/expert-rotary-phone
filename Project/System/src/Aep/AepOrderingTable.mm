@@ -315,8 +315,8 @@ void AepOrderingTable::flush() {
                               (int)cmd->flPosYf,
                               cmd->nOfsX,
                               cmd->nOfsY,
-                              cmd->nColorA,              // alpha (+0x2c)
-                              (uint32_t)cmd->nColorMul); // colour (+0x30)
+                              cmd->nColorA,                           // alpha (+0x2c)
+                              static_cast<uint32_t>(cmd->nColorMul)); // colour (+0x30)
                 break;
             case 6: { // text -> drawAepOtText (FUN_00011310)
                 // The type-6 entry is an AepTextCmd overlaid on the same pool slot:

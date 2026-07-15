@@ -301,7 +301,7 @@
             self.tableView.tableHeaderView = _headView;
         }
         self.tableView.scrollEnabled = (count != 0);
-        [[DownloadMain getInstance] setFriendRequestedCnt:count];
+        [[DownloadMain getInstance] setFriendRequestedCnt:static_cast<int>(count)];
     } else {
         errorMessage = @"エラーが発生しました。"; // best-effort: cf_Ok01YWeW0_0W0_00
     }
@@ -340,7 +340,7 @@
                     self.tableView.tableHeaderView = _headView;
                 }
                 self.tableView.scrollEnabled = (count != 0);
-                [[DownloadMain getInstance] setFriendRequestedCnt:count];
+                [[DownloadMain getInstance] setFriendRequestedCnt:static_cast<int>(count)];
                 break;
             }
         }
