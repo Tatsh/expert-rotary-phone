@@ -48,12 +48,16 @@ bool BootLogoTask::skipRequested() const {
 // tables live at the DAT_00130fd4.. constants).
 void BootLogoTask::setup() {
     m_aep = &AepManager::shared();
-    m_scale = neSceneManager::screenScale();
+    // Ghidra: m_scale (+0x38) = g_dwUiScale — the saved half-scale (screenScale*0.5),
+    // copied as raw bits; finish() restores it into orderingTable.flScreenHalfScale.
+    m_scale = reinterpret_cast<const float &>(g_dwUiScale);
 
-    // Boot logos render at native scale 1.0 (Ghidra: *(m_aep + 0x7c16e0) = 1.0f);
-    // the saved m_scale is restored in finish() via the same metrics setter.
-    neSceneManager::setScreenMetrics(
-        neSceneManager::screenWidth(), neSceneManager::screenHeight(), 1.0f);
+    // Boot logos render at native scale 1.0 (Ghidra: *(m_aep + 0x7c16e0) = 1.0f,
+    // i.e. orderingTable.flScreenHalfScale); the saved m_scale is restored in finish().
+    m_aep->orderingTable()->setRenderScale(1.0f);
+
+    // Load the shared UI sound effects (Ghidra: neSeTable::loadSoundEffects @ 0x2c5c8).
+    neSceneManager::loadSystemSe();
 
     // Choose the branding image set + canvas size for this display. Each set is
     // the three logos [konami, bemani, eamusement] at one resolution (real
@@ -97,12 +101,12 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     if (logo == nullptr) {
         return;
     }
-    // Ghidra BootLogoTask_drawLogo* (FUN_0002b4b4/b504) -> neTextureForiOS_draw
-    // with w = m_posX, h = m_posY, x = 0, y = 0, sx = sy = 100: the logo is a
-    // full-canvas quad at the origin (m_posX/m_posY are the device-pixel canvas
-    // size, NOT a centre). The prior reconstruction had position/size swapped
-    // (x=posX, y=posY, w=h=100), so even a bound texture would have drawn a
-    // 100x100 quad in the corner.
+    // Bit-exact args from the drawLogo disasm (@ 0x2b504 / 0x2b4b4): the sprite
+    // draw is neTextureForiOS::draw(pAep, tex, u=0, v=0, nDrawX, nDrawY, 0, 0, 100,
+    // 100, 0, 0, 0, 100, 0, 0x20, 0x00ffffff, 0, 5, 0). Mapped onto the sprite
+    // params: full-canvas quad at the origin (w/h = m_posX/m_posY = device canvas),
+    // scale 100, colour 100, blend 0x20, colour-mul 0x00ffffff, priority 5. Zero
+    // args map to the fields that default to 0 (offset / uv-key).
     neSpriteDrawParams p;
     p.x = 0;
     p.y = 0;
@@ -113,7 +117,7 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     p.color = 100;
     p.blend0 = 0x20;
     p.colorMul = 0xffffff;
-    p.priority = 5;
+    p.priority = 5; // logos in bucket 5; the fade overlay sits in bucket 1 -> on top
     logo->draw(m_aep->orderingTable(), p);
 }
 
@@ -124,13 +128,19 @@ void BootLogoTask::drawLogo1() {
     drawLogo(m_logo[1]);
 }
 
+// @ 0x2b4b4 — BootLogoTask_drawLogo2. The per-screen draw wrapper for the third
+// branding sprite (m_logo[2], @ +0x34); drawLogo() bound to that sprite.
+void BootLogoTask::drawLogo2() {
+    drawLogo(m_logo[2]);
+}
+
 // Ghidra: BootLogoTask_finish (FUN_0002b554) — log into Game Center, restore
 // the screen scale, release the three sprites, kill this task, and spawn the
 // next one.
 void BootLogoTask::finish() {
     [AppDelegate.appDelegate loginGameCenter];
-    neSceneManager::setScreenMetrics(
-        neSceneManager::screenWidth(), neSceneManager::screenHeight(), m_scale);
+    // Ghidra: orderingTable.flScreenHalfScale = m_scale — restore the saved UI half-scale.
+    m_aep->orderingTable()->setRenderScale(m_scale);
     for (int i = 0; i < 3; i++) {
         delete m_logo[i];
         m_logo[i] = nullptr;
@@ -191,11 +201,11 @@ void BootLogoTask::update(int /*deltaMs*/) {
             }
             m_counter++;
         }
-        drawLogo(m_logo[2]);
+        drawLogo2();
         return;
     case 5: // fade logo 2 out -> fade logo 1 in
         if (!m_aep->isTransitionDone()) {
-            drawLogo(m_logo[2]);
+            drawLogo2();
             return;
         }
         m_aep->playTransition(1, kFadeFrames, 0);
@@ -212,16 +222,16 @@ void BootLogoTask::update(int /*deltaMs*/) {
             }
             m_counter++;
         }
-        drawLogo(m_logo[1]);
+        drawLogo1();
         return;
     case 7: // fade logo 1 out
         m_aep->playTransition(2, kFadeFrames, 0);
-        drawLogo(m_logo[1]);
+        drawLogo1();
         m_state = 8;
         break;
     case 8:
         if (!m_aep->isTransitionDone()) {
-            drawLogo(m_logo[1]);
+            drawLogo1();
             return;
         }
         m_state = 9;

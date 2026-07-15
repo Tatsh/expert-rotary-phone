@@ -26,8 +26,9 @@ public:
 private:
     void setup();                         // Ghidra: BootLogoTask_setup (FUN_0002b1f4)
     void finish();                        // Ghidra: BootLogoTask_finish (FUN_0002b554)
-    void drawLogo(neTextureForiOS *logo); // Ghidra: neTextureForiOS_draw (FUN_0000fbcc)
+    void drawLogo(neTextureForiOS *logo); // the inlined per-sprite draw (neTextureForiOS::draw)
     void drawLogo1();                     // @ 0x2b504 (draws m_logo[1] via drawLogo)
+    void drawLogo2();                     // @ 0x2b4b4 (draws m_logo[2] via drawLogo)
     bool skipRequested() const;           // a touch was released this frame
 
     static const int kHoldFrames = 0x78;      // 120: hold length; advances past 0x77
