@@ -252,8 +252,8 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
         m_state = 1;
         break;
-    case 1: // fade in, request the player record, play the menu layer
-        aep.playTransition(1, 1, 0);
+    case 1:                          // fade in, request the player record, play the menu layer
+        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         [dl startPlayerGetHttp];
         if (!m_tutorialSkip) {
             // AepLyrCtrl at +0x30 plays here (menu intro).
@@ -400,8 +400,8 @@ void MenuMainTask::update(int /*deltaMs*/) {
             m_state = 0xc;
         }
         break;
-    case 0x12: // fade out into the launched sub-task
-        aep.playTransition(2, 1, 0);
+    case 0x12:                       // fade out into the launched sub-task
+        aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
         m_state = 0x13;
         break;
     case 0x13:

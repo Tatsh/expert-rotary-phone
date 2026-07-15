@@ -211,8 +211,8 @@ void MainTask::update(int /*deltaMs*/) {
         break;
     }
 
-    case 1: // fade the select scene in and start its intro layers
-        aep.playTransition(1, 1, 0);
+    case 1:                          // fade the select scene in and start its intro layers
+        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         m_layers[0]->play();
         m_introLayers[0]->play();
         m_introLayers[1]->play();
@@ -533,9 +533,9 @@ void MainTask::update(int /*deltaMs*/) {
         m_state = 0xe;
         break;
 
-    case 0xe: // fade out into the spawned task / title
-        aep.playTransition(2, 1, 0);
-        m_sel.transitionLatch = 1; // transition-out latch
+    case 0xe:                        // fade out into the spawned task / title
+        aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
+        m_sel.transitionLatch = 1;   // transition-out latch
         m_state = 0xf;
         break;
 

@@ -214,12 +214,12 @@ void AcMainTask::stateInit() {
 
 // case 1 — set a 30-frame fade-out and jump it to fully-faded, restore the menu
 // BGM stack, push the sugoroku map-select screen, then advance to the treasure
-// check. Ghidra: case 1 (FUN_00010698(scene,2) == playTransition(2,30,0),
-// FUN_00010758(scene,0)).
+// check. Ghidra: case 1 (setAepTransitionMode(scene, 2) = FUN_00010698,
+// setTransitionFrame(scene, 0) = FUN_00010758).
 void AcMainTask::stateFadeIn() {
     AepManager &aep = AepManager::shared();
-    aep.playTransition(2, 30, 0); // FUN_00010698(scene, 2): fade-out, 30 frames
-    aep.setTransitionFrame(0);    // FUN_00010758(scene, 0): jump to fully-faded
+    aep.setAepTransitionMode(2); // FUN_00010698(scene, 2): fade-out, 30 frames
+    aep.setTransitionFrame(0);   // FUN_00010758(scene, 0): jump to fully-faded
 
     AudioManager *audio = [AudioManager sharedManager];
     if ([audio isPushBgm]) {

@@ -673,7 +673,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         [[fallthrough]];
     case 3:
         // Fade the HUD in and play the top banner.
-        aep.playTransition(1, 0, 0); // setAepTransitionMode(aep, 1)
+        aep.setAepTransitionMode(1); // Ghidra: setAepTransitionMode(aep, 1)
         m_topLayer->play();
         m_state = 4;
         [[fallthrough]];
@@ -742,7 +742,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     case 8:
         // Teardown transition out.
         note.resetPlayFlag();
-        aep.playTransition(2, 0, 0); // setAepTransitionMode(aep, 2)
+        aep.setAepTransitionMode(2); // Ghidra: setAepTransitionMode(aep, 2)
         next = 9;
         break;
     case 9:

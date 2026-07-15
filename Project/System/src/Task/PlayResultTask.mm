@@ -112,7 +112,7 @@ void PlayResultTask::update(int /*deltaMs*/) {
     case 1:
         // Fade the screen in and start the intro animation layers; drop the play
         // scene's captured backdrop now that this scene owns the display.
-        aep.playTransition(1, 30, 0);
+        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         SeInstancePlay(m_layers[0]);
         if (m_eventBonus) {
             m_layers[5]->play();
@@ -166,7 +166,7 @@ void PlayResultTask::update(int /*deltaMs*/) {
         }
         break;
     case 10:
-        aep.playTransition(2, 30, 0); // fade out
+        aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
         m_state = 0xb;
         break;
     case 0xb:
