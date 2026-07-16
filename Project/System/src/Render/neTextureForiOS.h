@@ -56,12 +56,14 @@ struct neSpriteDrawParams {
     int sx = 0, sy = 0;        // +0x1c/+0x20 scale
     int w = 100, h = 100;      // +0x24/+0x28 size (percent)
     int ex = 0, ey = 0;        // +0x2c/+0x30 extra / end position
-    int color = 100;           // +0x34 colour/alpha
+    int color = 100;           // +0x34 colour percentage (-> quad alpha)
+    int alpha = 0;             // secondary colour-flags word (the draw's 15th arg)
     int rotation = 0;          // +0x38 rotation
     short blend0 = 0x20;       // +0x40 blend mode
     short blend1 = 0;          // +0x42
-    int colorMul = 0xffffff;   // +0x44 colour multiplier
+    int colorMul = 0xffffff;   // +0x44 colour multiplier (-> quad RGB)
     int extra = 0;             // +0x48
+    int layer = 0;             // draw layer (the draw's 20th arg)
     const int *clip = nullptr; // +0x4c/+0x54 optional clip rect (else screen bounds)
     int priority = 0;          // allocEntry bucket
 };

@@ -135,24 +135,31 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     // binary's neTextureForiOS::draw (FUN_0000fbcc) forwards them into; the two
     // fixed-point positions become the flPosXf/flPosYf floats. A null clip leaves
     // the flush to default it to the screen bounds.
-    ot->drawSprite(this,              // nTexU: the source neTextureForiOS*
-                   p.v,               // nTexV
-                   p.x,               // nPosX
-                   p.y,               // nPosY
-                   (float)p.sx,       // flPosXf
-                   (float)p.sy,       // flPosYf
-                   p.w,               // nOfsX
-                   p.h,               // nOfsY
-                   p.ex,              // nColorA
-                   p.ey,              // nColorMul
-                   p.color,           // nUKey | nVKey<<16
-                   p.rotation,        // nBlendFlags
-                   p.blend0,          // nColorRGB
-                   (int16_t)p.blend1, // clipRect.nLeft low half
-                   0,                 // clipRect.nLeft high half
-                   0,                 // clipRect.nTop
-                   0,                 // clipRect.nRight
-                   nullptr,           // no explicit clip spill
+    // Field mapping is exact per Ghidra FUN_0000fbcc (the wrapper's stores into
+    // drawSprite's params): the source origin (u) goes to nTexV; the base size
+    // (w,h) into nPosY/flPosXf; the position (x,y) into flPosYf/nOfsX; the scale
+    // (sx,sy) into nOfsY/nColorA; and the colour percentage / secondary colour word
+    // / rotation / blend / layer / colour-multiply into the remaining slots. The
+    // flush's case-1 dispatch (renderAepOrderingTable) reads them back in this
+    // order and the stretch/clipped handlers fold in the half-screen scale.
+    ot->drawSprite(this,                    // pTexObj: the source neTextureForiOS*
+                   p.u,                     // nTexV
+                   p.v,                     // nPosX
+                   p.w,                     // nPosY (base width)
+                   static_cast<float>(p.h), // flPosXf (base height; flush reads (int))
+                   static_cast<float>(p.x), // flPosYf (screen X; flush reads (int))
+                   p.y,                     // nOfsX   (screen Y)
+                   p.sx,                    // nOfsY   (X scale %, read as float downstream)
+                   p.sy,                    // nColorA (Y scale %, read as float downstream)
+                   p.ex,                    // nColorMul
+                   p.ey,                    // nUKey | nVKey<<16
+                   p.color,                 // nBlendFlags (colour % -> quad alpha)
+                   p.alpha,                 // nColorRGB (secondary colour-flags word)
+                   static_cast<int16_t>(p.rotation), // clipRect.nLeft low half
+                   static_cast<int16_t>(p.blend0),   // clipRect.nLeft high half (blend mode)
+                   p.layer,                          // clipRect.nTop
+                   p.colorMul,                       // clipRect.nRight (RGB -> quad colour)
+                   nullptr,                          // extra / no explicit clip spill
                    p.priority);
 }
 

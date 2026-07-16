@@ -238,25 +238,31 @@ void AepOrderingTable::flush() {
                                 cmd->nBank);
                 break;
             case 1: { // stretched sprite -> drawAepOtSpriteStretch (FUN_00010e18)
-                const int nKeys = (uint16_t)cmd->nUKey | (cmd->nVKey << 16);
-                drawAepOtSpriteStretch(cmd->pTexObj, // the sprite texture object (typed)
-                                       cmd->nTexV,
-                                       cmd->nPosX,
-                                       cmd->nPosY,
-                                       (int)cmd->flPosXf,
-                                       (int)cmd->flPosYf,
-                                       cmd->nOfsX,
-                                       cmd->nOfsY,
-                                       cmd->nColorA,
-                                       cmd->nColorMul,
-                                       nKeys,
-                                       cmd->nBlendFlags,
-                                       (uint32_t)cmd->nColorRGB,
-                                       (int)(int16_t)cmd->clipRect.nLeft,
-                                       (int)(uint16_t)((uint32_t)cmd->clipRect.nLeft >> 16),
-                                       &cmd->clipRect.nBottom,
-                                       cmd->clipRect.nTop,
-                                       cmd->clipRect.nRight);
+                // Exact command->handler field mapping per Ghidra FUN_000115d0
+                // case-1. The scale percentages (nOfsY/nColorA slots) are read as
+                // floats; the base size lives in nPosY/flPosXf, the position in
+                // flPosYf/nOfsX.
+                const int nColorA =
+                    static_cast<uint16_t>(cmd->nUKey) | (static_cast<int>(cmd->nVKey) << 16);
+                const uint32_t clipLeft = static_cast<uint32_t>(cmd->clipRect.nLeft);
+                drawAepOtSpriteStretch(cmd->pTexObj,                     // pFrames
+                                       cmd->nTexV,                       // nU
+                                       cmd->nPosX,                       // nV
+                                       cmd->nPosY,                       // nPosX (width)
+                                       static_cast<int>(cmd->flPosXf),   // nPosY (height)
+                                       static_cast<int>(cmd->flPosYf),   // nScaleX (screen X)
+                                       cmd->nOfsX,                       // nScaleY (screen Y)
+                                       static_cast<float>(cmd->nOfsY),   // nOfsX (X scale %)
+                                       static_cast<float>(cmd->nColorA), // nOfsY (Y scale %)
+                                       cmd->nColorMul,                   // nColorMul
+                                       nColorA,                          // nColorA
+                                       cmd->nBlendFlags,                 // nAlpha (colour %)
+                                       cmd->nColorRGB,                   // nColorFlags
+                                       clipLeft & 0xffff,                // nColorA2
+                                       clipLeft >> 16,                   // nBlendMask
+                                       &cmd->clipRect.nBottom,           // pClipRect
+                                       cmd->clipRect.nTop,               // nBlendFlag
+                                       static_cast<uint32_t>(cmd->clipRect.nRight)); // nColorRGB
                 break;
             }
             case 2: // line -> drawAepOtLine (FUN_00010f98)
@@ -508,123 +514,107 @@ void AepOrderingTable::drawAepOtText(const char *text,
                reinterpret_cast<const int *>(colorVec));
 }
 
-// Ghidra: drawAepSpriteClipped (FUN_00012020) — the clipped textured-quad
-// immediate draw. Picks the active sub-frame from `frameTime` by walking the
-// frame object's per-frame duration table, reduces the rotation to radians,
-// sets the render-state slot for the sub-frame, and issues neDrawTexturedQuad
-// through an optional (heap) clip rect. NOTE: `frameObj` is the renderer's
-// animated-texture object; its sub-frame tables live at fixed offsets (+0x04
-// count, +0x08 width table, +0x0c duration table, +0x14 the render-state slot
-// array, stride 0x18), accessed by offset here as they are owned by the
-// neGraphics reconstruction. The float/int split of the transform args is
-// VFP-obscured; the recoverable control flow and the neDrawTexturedQuad call
-// are reproduced faithfully.
-void drawAepSpriteClipped(float renderScale,
-                          void *frameObj,
-                          int frameCol,
-                          int frameTime,
-                          int x,
-                          int y,
-                          int u0,
-                          int v0,
-                          float sx,
-                          float sy,
-                          uint32_t blend,
-                          float w,
-                          float h,
-                          int p13,
-                          uint32_t alpha,
-                          int p16,
-                          const void *clip,
-                          int useClip,
-                          int p19) {
-    (void)renderScale;
-    // The renderer's sprite object is a neTextureForiOS; access it through its real
-    // members (not raw byte offsets) so the field positions and the AepTile element
-    // stride stay correct on the 64-bit rebuild, where the wider pointers shift
-    // everything past the armv7 layout the offsets assumed.
-    neTextureForiOS *frameData = static_cast<neTextureForiOS *>(frameObj);
-
-    // Blend mode: bit 0x400 forces mode 2, else (blend & 0x3ff) >> 9.
-    const uint32_t mode = (blend & 0x400) ? 2u : ((blend & 0x3ff) >> 9);
-
-    // Sub-frame selection: subtract each frame's duration until the remaining
-    // time fits.
-    int frame = 0;
-    const int frameCount = frameData->tileCount();
-    const int *widths = frameData->tileWidths();
-    const int *durations = frameData->tileHeights();
-    for (; frame < frameCount; frame++) {
-        int d = durations[frame];
-        if (frameTime <= d) {
+// Ghidra: drawAepSpriteClipped (FUN_00012020) — pick the active sub-frame, set
+// its render state, and issue the clipped textured quad. The quad GEOMETRY is the
+// destination rect (flDstX/Y/W/H); the colour comes from nColor (0x00RRGGBB) and
+// the alpha from nAlpha (a 0..100 percentage); the UV is derived from the source
+// rect (nSrcU/nSrcV/nWidth) against the sub-frame's width/height tables. The whole
+// bl 0x15fb8 argument mapping was traced register-by-register from the
+// disassembly (r0=&pTexRefArray[frameIdx], r1=flDstX->x, r2=flDstY->y,
+// r3=flDstW->width, [sp]=flDstH->height, colour from nColor, alpha=nAlpha*255/100).
+void drawAepSpriteClipped(neTextureForiOS *pFrames,
+                          int nWidth,
+                          int nFrameIn,
+                          int nSrcV,
+                          int nSrcU,
+                          float flDstX,
+                          float flDstY,
+                          float flDstW,
+                          float flDstH,
+                          int nRawAngle,
+                          float flScaleX,
+                          float flScaleY,
+                          int nAlpha,
+                          float /*flParam14*/,
+                          uint32_t nFlags,
+                          const int *pClipRect,
+                          int nUseClip,
+                          uint32_t nColor) {
+    // Sub-frame selection: walk the per-frame duration table (tileHeights),
+    // subtracting each duration from the remaining time until it fits.
+    int frameIdx = 0;
+    int t = nFrameIn;
+    const int frameCount = pFrames->tileCount();
+    const int *durations = pFrames->tileHeights();
+    const int *widths = pFrames->tileWidths();
+    while (frameIdx < frameCount) {
+        int d = durations[frameIdx];
+        if (t <= d) {
             break;
         }
-        frameTime -= d;
+        t -= d;
+        ++frameIdx;
     }
 
-    // Rotation: reduce the angle to [0,360) (the binary's /360 reciprocal
-    // multiply) and convert to radians for the renderer.
-    int reduced = frameCol - (frameCol / 360) * 360;
-    // Ghidra: the radian conversion uses the NEGATIVE pi literal (DAT_00012238 =
-    // -pi, byte-verified) -> reduced * (-pi/180). With the downstream
-    // matrixSetRotateZ(-rotation) this gives the correct net direction; the
-    // decompiler dropped the pi literal's sign.
-    const float rotation = (float)reduced * (float)(-M_PI / 180.0);
+    // Rotation: reduce mod 360 and convert to radians with the negative-pi literal
+    // (Ghidra: DAT_00012238 = -pi, /180). matrixSetRotateZ(-rotation) downstream
+    // recovers the net direction.
+    const int reduced = nRawAngle - (nRawAngle / 360) * 360;
+    const float rotation = static_cast<float>(reduced) * static_cast<float>(-M_PI / 180.0);
 
-    // Source rect: the sub-frame's stored width bounds the u extent; v uses its
-    // duration slot as the height. The clamped-fraction ratios are what
-    // neDrawTexturedQuad wants.
-    const int frameW = widths[frame];
-    const int clampedU = (frameCol < frameW) ? frameCol : frameW;
-    const float u1 = frameW ? ((float)clampedU / (float)frameW) : 0.0f;
-    const float v1 = (float)frameTime;
+    // Source rect -> normalized UV against the sub-frame's padded width/height. The
+    // source origin is (nWidth, nFrameIn) and the span is (nSrcV x nSrcU); for a
+    // full-image sprite these give u0=v0=0 and the span the fraction of the padded
+    // atlas the image occupies (e.g. a 1536-wide image in a 2048 atlas -> 0.75).
+    const int frameW = widths[frameIdx];
+    const int frameH = durations[frameIdx];
+    const float u0 = frameW ? static_cast<float>(nWidth) / static_cast<float>(frameW) : 0.0f;
+    const float v0 = frameH ? static_cast<float>(nFrameIn) / static_cast<float>(frameH) : 0.0f;
+    const float uSpan = frameW ? static_cast<float>(nSrcV) / static_cast<float>(frameW) : 1.0f;
+    const float vSpan = frameH ? static_cast<float>(nSrcU) / static_cast<float>(frameH) : 1.0f;
 
-    // Optional heap clip rect (the binary operator_new(0x10)s a scaled copy of
-    // param_16).
+    // Optional heap clip rect (Ghidra: operator new(0x10) of the fixed->float copy).
     float *clipRect = nullptr;
-    if (clip != nullptr) {
+    if (pClipRect != nullptr) {
         clipRect = new float[4];
-        const int16_t *src = reinterpret_cast<const int16_t *>(clip);
-        for (int i = 0; i < 4; i++) {
-            clipRect[i] = (float)src[i];
+        for (int i = 0; i < 4; ++i) {
+            clipRect[i] = static_cast<float>(pClipRect[i]);
         }
     }
 
-    // Render-state slot for this sub-frame: the frame-th per-tile record (Ghidra
-    // [frameObj + 0x14] + frame*0x18; here the compiler applies the real
-    // sizeof(AepTile) stride). AepTile is the same 0x18-byte record as
-    // neTextureRef, so it is set through that interface. Set slot 0/1 to the clip
-    // flag (Ghidra 0x1215e/0x12180 -> neTextureRef::setRenderStateSlot).
-    neTextureRef *slot = reinterpret_cast<neTextureRef *>(&frameData->tileRects()[frame]);
-    slot->setRenderStateSlot(0, useClip != 0 ? 1 : 0);
-    slot->setRenderStateSlot(1, useClip != 0 ? 1 : 0);
+    // Render-state slot for this sub-frame (AepTile is the same 0x18-byte record as
+    // neTextureRef; the compiler applies the real stride). Slot 0/1 = clip enable.
+    neTextureRef *slot = reinterpret_cast<neTextureRef *>(&pFrames->tileRects()[frameIdx]);
+    slot->setRenderStateSlot(0, nUseClip != 0 ? 1 : 0);
+    slot->setRenderStateSlot(1, nUseClip != 0 ? 1 : 0);
 
-    // The slot record is the sprite object neDrawTexturedQuad blits (Ghidra
-    // 0x121f8 -> FUN_00015fb8). The argument values line up positionally with the
-    // real signature; p16 is a trailing flag the real entry point does not take.
+    // Blend mode: bit 0x400 forces 2, else (nFlags & 0x3ff) >> 9.
+    const int mode = (nFlags & 0x400) ? 2 : static_cast<int>((nFlags & 0x3ff) >> 9);
+
+    // Colour: nColor is 0x00RRGGBB; alpha is the nAlpha percentage scaled to 0..255.
+    const int red = static_cast<int>((nColor >> 16) & 0xff);
+    const int green = static_cast<int>((nColor >> 8) & 0xff);
+    const int blue = static_cast<int>(nColor & 0xff);
+    const int alpha = nAlpha * 255 / 100;
+
     neDrawTexturedQuad(slot,
+                       static_cast<int>(flDstX),
+                       static_cast<int>(flDstY),
+                       static_cast<int>(flDstW),
+                       static_cast<int>(flDstH),
                        u0,
                        v0,
-                       x,
-                       y,
-                       (float)u0 / (frameW ? frameW : 1),
-                       (float)v0,
-                       u1,
-                       v1,
+                       uSpan,
+                       vSpan,
                        rotation,
-                       (int)w,
-                       (int)h,
-                       aepAlpha((int)alpha),
-                       aepColR(p19),
-                       aepColG(p19),
-                       aepColB(p19),
-                       (int)mode,
+                       static_cast<int>(flScaleX),
+                       static_cast<int>(flScaleY),
+                       alpha,
+                       red,
+                       green,
+                       blue,
+                       mode,
                        clipRect);
-    (void)sx;
-    (void)sy;
-    (void)p13;
-    (void)p16;
-
     delete[] clipRect;
 }
 
@@ -692,62 +682,70 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                          p15);
 }
 
-// Ghidra: drawAepOtSpriteStretch (FUN_00010e18) — the stretched-sprite variant.
-// Same gate and scaling as drawAepOtSprite but with an explicit end position
-// (ex,ey), forwarded to drawAepSpriteClipped.
-void AepOrderingTable::drawAepOtSpriteStretch(void *frameObj,
-                                              int frameCol,
-                                              int frameTime,
-                                              int x,
-                                              int y,
-                                              int sx,
-                                              int sy,
-                                              int ex,
-                                              int ey,
-                                              int p11,
-                                              int p12,
-                                              int p13,
-                                              uint32_t alpha,
-                                              uint32_t blend,
-                                              int p16,
-                                              const void *clip,
-                                              int p18,
-                                              int p19) {
-    const float s = renderScale();
+// Ghidra: drawAepOtSpriteStretch (FUN_00010e18) — the stretched-sprite handler.
+// Converts the fixed-point transform to float, scales by the half-screen device
+// factor (hs = renderScale), computes the destination rect, and forwards to
+// drawAepSpriteClipped. The parameter order matches the binary exactly: nScaleX/Y
+// are the (int) screen position, nOfsX/Y the (float) scale percentages, nPosX/Y
+// the base size, nAlpha the colour percentage and nColorRGB the 0x00RRGGBB colour.
+void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
+                                              int nU,
+                                              int nV,
+                                              int nPosX,
+                                              int nPosY,
+                                              int nScaleX,
+                                              int nScaleY,
+                                              float nOfsX,
+                                              float nOfsY,
+                                              int nColorMul,
+                                              int nColorA,
+                                              int nAlpha,
+                                              int nColorFlags,
+                                              uint32_t nColorA2,
+                                              uint32_t nBlendMask,
+                                              const int *pClipRect,
+                                              int nBlendFlag,
+                                              uint32_t nColorRGB) {
+    (void)nColorA;
+    const float hs = renderScale();
+    const float ox = nOfsX * hs;
+    const float oy = nOfsY * hs;
 
-    // Natural-scale flag, same as drawAepOtSprite but keyed on the END position
-    // (ex, ey): the binary clears it when scaled ex/ey == 100.0 (DAT_00010f94)
-    // with no blend bits set.
-    bool visible = (p18 != 0);
-    if (p18 == 1 && aepScale(ex, s) == 100 && aepScale(ey, s) == 100 && (blend & 0xffff) == 0) {
-        visible = false;
+    // Visibility / clip gate: a plain (nBlendFlag==1) copy with zero scaled offsets
+    // and an empty colour mask draws unclipped.
+    int useClip = (nBlendFlag != 0) ? 1 : 0;
+    if (nBlendFlag == 1 && ox == 0.0f && oy == 0.0f && (nColorA2 & 0xffff) == 0) {
+        useClip = 0;
     }
-    uint32_t maskedAlpha = alpha & (uint32_t)(((int)((uint32_t)p16 << 0x1a)) >> 0x1f);
-    if (p13 == 0 && maskedAlpha == 100) {
+
+    // bit5 of nBlendMask gates the colour-flags passthrough (100 = full multiply).
+    const int colorFlags = (nBlendMask & 0x20) ? nColorFlags : 0;
+    if (nAlpha == 0 && colorFlags == 100) {
         return;
     }
 
-    // Disasm (drawAepOtSpriteStretch tail, vdiv by DAT_00010f94=100.0): quad
-    // width/height are base * renderScale * (ex|ey)/100 -- the stretch variant
-    // folds the END position ex/ey (not sx/sy) into the size. Same dropped */100
-    // percentage factor as drawAepOtSprite.
-    drawAepSpriteClipped(s,
-                         frameObj,
-                         frameCol,
-                         frameTime,
-                         aepScale(x, s),
-                         aepScale(y, s),
-                         ex,
-                         ey,
-                         (float)aepScale(sx, s),
-                         (float)aepScale(sy, s),
-                         blend,
-                         (float)p11 * s * (float)ex / 100.0f,
-                         (float)p12 * s * (float)ey / 100.0f,
-                         p13,
-                         maskedAlpha,
-                         p16,
-                         clip,
-                         visible ? 1 : 0,
-                         p19);
+    // Destination rect: position scaled by hs; size = base * (scale%/100) * hs.
+    const float flDstX = static_cast<float>(nScaleX) * hs;
+    const float flDstY = static_cast<float>(nScaleY) * hs;
+    const float flDstW = static_cast<float>(nPosX) * ox / 100.0f;
+    const float flDstH = static_cast<float>(nPosY) * oy / 100.0f;
+
+    drawAepSpriteClipped(pFrames,
+                         nU,
+                         nV,
+                         nPosX,
+                         nPosY,
+                         flDstX,
+                         flDstY,
+                         flDstW,
+                         flDstH,
+                         static_cast<int>(nColorA2),
+                         flDstX,
+                         flDstY,
+                         nAlpha,
+                         static_cast<float>(nColorMul),
+                         nBlendMask,
+                         pClipRect,
+                         useClip,
+                         nColorRGB);
 }
