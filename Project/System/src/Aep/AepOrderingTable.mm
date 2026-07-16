@@ -48,7 +48,7 @@ AepOtSpriteCmd *AepOrderingTable::allocEntry(int priority) {
     assert(priority < kOtPriMax);   // AepOrderingTable.mm:0x3e "pri < OT_PRI_MAX"
 
     AepOtSpriteCmd *cmd = &m_entries[m_count++];
-    cmd->nPriority = (int16_t)priority;
+    cmd->nPriority = static_cast<int16_t>(priority);
     if (priority > m_maxPriority) {
         m_maxPriority = priority;
     }
@@ -111,12 +111,14 @@ AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
     cmd->nOfsYF = nOfsY;     // +0x28 float view (binary vstr): stretched-sprite X scale
     cmd->nColorAF = nColorA; // +0x2c float view (binary vstr): stretched-sprite Y scale
     cmd->nColorMul = nColorMul;
-    cmd->nUKey = (int16_t)nKeys;
-    cmd->nVKey = (int16_t)(nKeys >> 16);
+    cmd->nUKey = static_cast<int16_t>(nKeys);
+    cmd->nVKey = static_cast<int16_t>(nKeys >> 16);
     cmd->nBlendFlags = nBlendFlags;
     cmd->nColorRGB = nColorRGB;
     // clipRect.nLeft carries two packed shorts; nTop / nRight follow.
-    cmd->clipRect.nLeft = (int)((uint16_t)clipLeftLo | ((uint32_t)(uint16_t)clipLeftHi << 16));
+    cmd->clipRect.nLeft =
+        static_cast<int>(static_cast<uint16_t>(clipLeftLo) |
+                         (static_cast<uint32_t>(static_cast<uint16_t>(clipLeftHi)) << 16));
     cmd->clipRect.nTop = clipTop;
     cmd->clipRect.nRight = clipRight;
     // The binary spills a 16-byte clip block starting at clipRect.nBottom (+0x4c),
@@ -244,14 +246,14 @@ void AepOrderingTable::flush() {
                 drawAepOtSprite(cmd->srcRect, // packed {u, v, w, h} source rect
                                 cmd->nPosX,
                                 cmd->nPosY,
-                                (int)cmd->flPosXfF, // +0x1c float view (vldr): X scale
-                                (int)cmd->flPosYfF, // +0x20 float view (vldr): Y scale
+                                static_cast<int>(cmd->flPosXfF), // +0x1c float view (vldr)
+                                static_cast<int>(cmd->flPosYfF), // +0x20 float view (vldr)
                                 cmd->nOfsX,
                                 cmd->nOfsY,   // +0x28 int view (ldr): width/height
                                 cmd->nColorA, // +0x2c int view (ldr): colour
-                                (uint32_t)cmd->nColorMul,
-                                (int)cmd->nUKey,
-                                (uint32_t)(uint16_t)cmd->nVKey,
+                                static_cast<uint32_t>(cmd->nColorMul),
+                                static_cast<int>(cmd->nUKey),
+                                static_cast<uint32_t>(static_cast<uint16_t>(cmd->nVKey)),
                                 &cmd->clipRect.nLeft,
                                 cmd->nBlendFlags,
                                 cmd->nColorRGB,
@@ -290,16 +292,16 @@ void AepOrderingTable::flush() {
                               cmd->nTexV,
                               cmd->nPosX,
                               cmd->nPosY,
-                              (int)cmd->flPosXf,
-                              (uint32_t)cmd->flPosYf);
+                              static_cast<int>(cmd->flPosXf),
+                              static_cast<uint32_t>(cmd->flPosYf));
                 break;
             case 3: // triangle -> drawAepOtTriangle (FUN_00011054)
                 drawAepOtTriangle(cmd->nTexU,
                                   cmd->nTexV,
                                   cmd->nPosX,
                                   cmd->nPosY,
-                                  (int)cmd->flPosXf,
-                                  (int)cmd->flPosYf,
+                                  static_cast<int>(cmd->flPosXf),
+                                  static_cast<int>(cmd->flPosYf),
                                   cmd->nOfsX,
                                   cmd->nOfsY); // +0x28 int view
                 break;
@@ -308,16 +310,16 @@ void AepOrderingTable::flush() {
                               cmd->nTexV,
                               cmd->nPosX,
                               cmd->nPosY,
-                              (int)cmd->flPosXf,
-                              (uint32_t)cmd->flPosYf);
+                              static_cast<int>(cmd->flPosXf),
+                              static_cast<uint32_t>(cmd->flPosYf));
                 break;
             case 5: // quad -> drawAepOtQuad (FUN_000111f8)
                 drawAepOtQuad(cmd->nTexU,
                               cmd->nTexV,
                               cmd->nPosX,
                               cmd->nPosY,
-                              (int)cmd->flPosXf,
-                              (int)cmd->flPosYf,
+                              static_cast<int>(cmd->flPosXf),
+                              static_cast<int>(cmd->flPosYf),
                               cmd->nOfsX,
                               cmd->nOfsY,                             // +0x28 int view
                               cmd->nColorA,                           // alpha (+0x2c int view)
@@ -336,13 +338,13 @@ void AepOrderingTable::flush() {
                 // real string it pointed at.
                 drawAepOtText(t->pText,
                               "DFMaruGothic-Bd-WIN-RKSJ-H",
-                              (int)t->flPosXf,
-                              (int)t->flPosYf,
+                              static_cast<int>(t->flPosXf),
+                              static_cast<int>(t->flPosYf),
                               t->nColorTL,
                               t->nColorTR,
                               t->nColorBL,
                               t->pAClipVec,
-                              (uint32_t)t->nColorBR);
+                              static_cast<uint32_t>(t->nColorBR));
                 break;
             }
             default:
@@ -379,13 +381,13 @@ static inline int aepAlpha(int pct) {
     return ((pct * 0xff) / 100) & 0xff;
 }
 static inline int aepColR(uint32_t c) {
-    return (int)((c & 0xffffff) >> 0x10);
+    return static_cast<int>((c & 0xffffff) >> 0x10);
 }
 static inline int aepColG(uint32_t c) {
-    return (int)((c & 0xffff) >> 8);
+    return static_cast<int>((c & 0xffff) >> 8);
 }
 static inline int aepColB(uint32_t c) {
-    return (int)(c & 0xff);
+    return static_cast<int>(c & 0xff);
 }
 // Transform a coordinate by the OT render scale. The binary converts the int to
 // float, multiplies by the scale, and snaps back with vcvt.s32.f32 — the NEON
@@ -393,7 +395,7 @@ static inline int aepColB(uint32_t c) {
 // cast, not round-to-nearest. Verified in drawAepOtLine (0x10f98) and
 // drawAepOtRect (0x1113c): vmul.f32 by the scale, then vcvt.s32.f32 with no bias.
 static inline int aepScale(int c, float s) {
-    return (int)((float)c * s);
+    return static_cast<int>(static_cast<float>(c) * s);
 }
 
 // Ghidra: pushAepOtTextCmd (FUN_0001154c) — queue a type-6 text command. The
@@ -419,19 +421,20 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
     cmd->pText[255] = '\0';              // +0x10b force-terminate
     // The manager forwarders pass the pen position (a0/a1) and the four per-corner
     // colours (a2..a5); PushAepOtTextCmd stores the position in the float slots.
-    cmd->flPosXf = (float)a0; // +0x10c
-    cmd->flPosYf = (float)a1; // +0x110
-    cmd->nColorTL = a2;       // +0x114
-    cmd->nColorTR = a3;       // +0x118
-    cmd->nColorBL = a4;       // +0x11c
-    cmd->nColorBR = a5;       // +0x120
+    cmd->flPosXf = static_cast<float>(a0); // +0x10c
+    cmd->flPosYf = static_cast<float>(a1); // +0x110
+    cmd->nColorTL = a2;                    // +0x114
+    cmd->nColorTR = a3;                    // +0x118
+    cmd->nColorBL = a4;                    // +0x11c
+    cmd->nColorBR = a5;                    // +0x120
     if (colorVec != nullptr) {
         std::memcpy(cmd->pAClipVec, colorVec, 16); // +0x124 copy the 16-byte clip vector
     } else {
-        cmd->pAClipVec[0] = 0;                           // default clip vector =
-        cmd->pAClipVec[1] = 0;                           //   {0, 0, screenW, screenH}
-        cmd->pAClipVec[2] = (int)(int16_t)ot->screenW(); // +0x12c (read as a short in the binary)
-        cmd->pAClipVec[3] = (int)(int16_t)ot->screenH(); // +0x130
+        cmd->pAClipVec[0] = 0; // default clip vector =
+        cmd->pAClipVec[1] = 0; //   {0, 0, screenW, screenH}
+        cmd->pAClipVec[2] =
+            static_cast<int>(static_cast<int16_t>(ot->screenW())); // +0x12c (short in the binary)
+        cmd->pAClipVec[3] = static_cast<int>(static_cast<int16_t>(ot->screenH())); // +0x130
     }
 }
 
@@ -680,7 +683,9 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
     if (p14 == 1 && aepScale(sx, s) == 100 && aepScale(sy, s) == 100 && (blend & 0xffff) == 0) {
         visible = false;
     }
-    uint32_t maskedAlpha = alpha & (uint32_t)(((int)((uint32_t)p12 << 0x1a)) >> 0x1f);
+    uint32_t maskedAlpha =
+        alpha &
+        static_cast<uint32_t>((static_cast<int>(static_cast<uint32_t>(p12) << 0x1a)) >> 0x1f);
     if (p9 == 0 && maskedAlpha == 100) {
         return; // fully-opaque untinted no-op: nothing to composite
     }

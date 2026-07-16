@@ -191,8 +191,8 @@ static void aepEmitSprite(AepManager *mgr,
                           uint32_t priority,
                           uint32_t p15,
                           uint32_t p19) {
-    AepOrderingTable *ot = mgr->orderingTable();         // this+0x727538
-    AepOtSpriteCmd *cmd = ot->allocEntry((int)priority); // FUN_00010be0
+    AepOrderingTable *ot = mgr->orderingTable();                      // this+0x727538
+    AepOtSpriteCmd *cmd = ot->allocEntry(static_cast<int>(priority)); // FUN_00010be0
     if (cmd == nullptr) {
         return;
     }
@@ -207,16 +207,16 @@ static void aepEmitSprite(AepManager *mgr,
     cmd->nPosY = y;                    // +0x18
     // The binary converts the integer scale to float (FixedToFP, 16.16) here; the
     // flush reads (int)flPosXf back out as the percentage scale.
-    cmd->flPosXfF = (float)scaleX;  // +0x1c float view (case-0 vldr)
-    cmd->flPosYfF = (float)scaleY;  // +0x20 float view (case-0 vldr)
-    cmd->nOfsX = w;                 // +0x24  (entry anchorX doubles as width)
-    cmd->nOfsY = h;                 // +0x28  int view (entry anchorY doubles as height)
-    cmd->nColorA = color;           // +0x2c  int view: colour (brightness) 0..100
-    cmd->nColorMul = alpha;         // +0x30  alpha 0..100 (see the >=100 split)
-    cmd->nUKey = (int16_t)rotation; // +0x34  packed rotation word
-    cmd->nVKey = (int16_t)blend;    // +0x36  packed blend word
-    cmd->nBlendFlags = (int)p19;    // +0x38  user word (param_19)
-    cmd->nColorRGB = (int)p15;      // +0x3c  user word (param_15)
+    cmd->flPosXfF = static_cast<float>(scaleX); // +0x1c float view (case-0 vldr)
+    cmd->flPosYfF = static_cast<float>(scaleY); // +0x20 float view (case-0 vldr)
+    cmd->nOfsX = w;                             // +0x24  (entry anchorX doubles as width)
+    cmd->nOfsY = h;                             // +0x28  int view (entry anchorY doubles as height)
+    cmd->nColorA = color;                       // +0x2c  int view: colour (brightness) 0..100
+    cmd->nColorMul = alpha;                     // +0x30  alpha 0..100 (see the >=100 split)
+    cmd->nUKey = static_cast<int16_t>(rotation); // +0x34  packed rotation word
+    cmd->nVKey = static_cast<int16_t>(blend);    // +0x36  packed blend word
+    cmd->nBlendFlags = static_cast<int>(p19);    // +0x38  user word (param_19)
+    cmd->nColorRGB = static_cast<int>(p15);      // +0x3c  user word (param_15)
     if (clipRect != nullptr) {
         cmd->clipRect.nLeft = clipRect[0];
         cmd->clipRect.nTop = clipRect[1];
