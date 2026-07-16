@@ -31,22 +31,55 @@ public:
     neTextTexture *next = nullptr; // +0x18 manager list link
 };
 
-// The text-texture manager singleton (Ghidra: DAT_0018845c). Owns the glyph
-// cache list
-// (+0x04) and the atlas list (+0x0c); +0x00 is the content-scale shift applied
-// to point sizes, +0x08 the atlas count.
-struct neTextTextureMgr {
+// One cached glyph record (defined in neTextTexture.mm).
+struct neGlyph;
+
+#ifdef __OBJC__
+@class UILabel; // renderGlyphToAtlas rasterizes a glyph through a UILabel
+#endif
+
+// The text-texture manager (Ghidra: the singleton at DAT_0018845c). Owns the
+// glyph cache list (+0x04) and the atlas node list (+0x0c); +0x00 is the
+// content-scale shift applied to point sizes, +0x08 the atlas count. The members
+// below are the class methods Ghidra records — each was a free function taking
+// this manager as its receiver.
+class neTextTextureMgr {
+public:
     // Free every cached glyph and destroy every atlas texture. Ghidra:
-    // FUN_000179a8 (neTextTextureMgr::~neTextTextureMgr). The binary also invokes
-    // it explicitly to evict the atlas cache once it grows past 4 textures, after
-    // which the (now-empty) manager keeps being used.
+    // FUN_000179a8. The binary also invokes it explicitly to evict the atlas cache
+    // once it grows past 4 textures, after which the emptied manager keeps being
+    // used.
     ~neTextTextureMgr();
 
-    int8_t scaleShift;      // +0x00 log2 content scale (glyph sizes are << by this)
-    int8_t _pad[3];         // +0x01
-    void *glyphList;        // +0x04 rendered-glyph cache (each: data +0x00, next +0x08)
-    int32_t atlasCount;     // +0x08
-    neTextTexture *atlases; // +0x0c atlas list (linked via neTextTexture::next)
+    // Linear search of the glyph cache for the first UTF-8 char of `utf8` at
+    // `pointSize`; null when not cached. Ghidra: FUN_00017ad4.
+    neGlyph *findCachedGlyph(const char *utf8, int pointSize);
+
+    // Find the atlas whose index is `atlasId`. Ghidra: FUN_00017b10.
+    neTextTexture *findTextTextureById(int atlasId);
+
+    // Allocate a fresh 256x256 GL_ALPHA atlas and link it in. Ghidra: FUN_00017b28.
+    void createNewTextTexture();
+
+    // Reserve a `w`x`h` cell in the current atlas, wrapping/opening a new atlas
+    // when full. Ghidra: FUN_00017bb4.
+    bool allocGlyphAtlasSlot(int w, int h, int *outX, int *outY);
+
+    // Allocate a glyph record for the first UTF-8 char of `utf8`, rasterize it into
+    // an atlas, and cache it. Ghidra: FUN_00017ecc.
+    neGlyph *createTextGlyphEntry(const char *utf8, const char *fontName, int pointSize);
+
+#ifdef __OBJC__
+    // Rasterize `utf8` through `label` into the reserved atlas cell and fill the
+    // glyph's placement. Ghidra: FUN_00017c44.
+    int renderGlyphToAtlas(const char *utf8, UILabel *label, neGlyph *glyph);
+#endif
+
+    int8_t scaleShift = 0;            // +0x00 log2 content scale (glyph sizes << by this)
+    int8_t _pad[3] = {0, 0, 0};       // +0x01
+    void *glyphList = nullptr;        // +0x04 rendered-glyph cache (data +0x00, next +0x08)
+    int32_t atlasCount = 0;           // +0x08
+    neTextTexture *atlases = nullptr; // +0x0c atlas list (linked via neTextTexture::next)
 };
 
 // The manager singleton. Ghidra: FUN_00017998 returns DAT_0018845c.
@@ -73,6 +106,6 @@ void neDrawText(const char *text,
                 int blue,
                 const int *clipRect);
 
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
+// vim: set ft=objcpp sw=4 ts=4 et :
+// code: language=Objective-C++ insertSpaces=true tabSize=4

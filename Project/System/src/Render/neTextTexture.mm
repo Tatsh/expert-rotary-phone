@@ -153,17 +153,17 @@ neTextTextureMgr::~neTextTextureMgr() {
 
 // Ghidra: FUN_00017b28 — allocate a fresh 256x256 GL_ALPHA atlas and link it
 // in.
-static void CreateNewTextTexture(neTextTextureMgr *mgr) {
+void neTextTextureMgr::createNewTextTexture() {
     uint8_t *pixels = new uint8_t[0x20000](); // 256x256 zero-cleared cell buffer
     void *tex = neCreateTextureFromData(0x100, 0x100, /*GL_ALPHA*/ 2, pixels, 0x100, 0x100);
     // assert(tex) — neTextTexture.mm:0xeb in the shipped binary.
     neTextTexture *atlas = new neTextTexture();
-    atlas->index = mgr->atlasCount;
+    atlas->index = atlasCount;
     atlas->texture = tex;
     atlas->pixels = pixels;
-    ++mgr->atlasCount;
-    atlas->next = mgr->atlases;
-    mgr->atlases = atlas;
+    ++atlasCount;
+    atlas->next = atlases;
+    atlases = atlas;
 }
 
 // One textured glyph vertex (16 bytes): GL_FLOAT position, GL_SHORT UV, premult
@@ -181,9 +181,9 @@ struct neGlyphVertex {
 // @ 0x17ad4
 // Ghidra: FUN_00017ad4 — linear search of the glyph cache for a record matching
 // the first UTF-8 char of `utf8` at `pointSize`; returns null when not cached.
-static neGlyph *findCachedGlyph(neTextTextureMgr *mgr, const char *utf8, int pointSize) {
-    size_t len = utf8CharLen(mgr, utf8);
-    for (neGlyph *g = static_cast<neGlyph *>(mgr->glyphList); g != nullptr; g = g->next) {
+neGlyph *neTextTextureMgr::findCachedGlyph(const char *utf8, int pointSize) {
+    size_t len = utf8CharLen(this, utf8);
+    for (neGlyph *g = static_cast<neGlyph *>(glyphList); g != nullptr; g = g->next) {
         if (g->pointSize == pointSize && std::strncmp(g->key, utf8, len) == 0) {
             return g;
         }
@@ -194,8 +194,8 @@ static neGlyph *findCachedGlyph(neTextTextureMgr *mgr, const char *utf8, int poi
 // @ 0x17b10
 // Ghidra: FUN_00017b10 — find the atlas with index `atlasId` in the manager's
 // list.
-static neTextTexture *findTextTextureById(neTextTextureMgr *mgr, int atlasId) {
-    for (neTextTexture *a = mgr->atlases; a != nullptr; a = a->next) {
+neTextTexture *neTextTextureMgr::findTextTextureById(int atlasId) {
+    for (neTextTexture *a = atlases; a != nullptr; a = a->next) {
         if (a->index == atlasId) {
             return a;
         }
@@ -209,13 +209,13 @@ static neTextTexture *findTextTextureById(neTextTextureMgr *mgr, int atlasId) {
 // when full. Writes the cell origin to *outX/*outY. Returns false only when the
 // glyph is larger than an atlas (in which case *outX/*outY are left as the
 // caller set them).
-static bool allocGlyphAtlasSlot(neTextTextureMgr *mgr, int w, int h, int *outX, int *outY) {
+bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
     int retries = 0;
     for (;;) {
-        neTextTexture *atlas = mgr->atlases;
+        neTextTexture *atlas = atlases;
         if (atlas == nullptr) {
-            CreateNewTextTexture(mgr);
-            atlas = mgr->atlases;
+            createNewTextTexture();
+            atlas = atlases;
         }
         AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
         int atlasW = tex->textureWidth();  // AepTexture +0x1c
@@ -250,7 +250,7 @@ static bool allocGlyphAtlasSlot(neTextTextureMgr *mgr, int w, int h, int *outX, 
 
         // Atlas full: flush its CPU pixels to GL and open a fresh one.
         neTextureRebind(tex, atlas->pixels);
-        CreateNewTextTexture(mgr);
+        createNewTextTexture();
         if (++retries > 1) {
             return true;
         }
@@ -264,8 +264,7 @@ static bool allocGlyphAtlasSlot(neTextTextureMgr *mgr, int w, int h, int *outX, 
 // alpha). Fills the glyph record's atlas placement. (ARC: the NSString and
 // CGContexts are managed here; the CF color space / bitmap context are
 // CoreFoundation and released explicitly.)
-static int
-renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *label, neGlyph *glyph) {
+int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGlyph *glyph) {
     NSString *str = [[NSString alloc] initWithUTF8String:utf8];
     UIFont *font = [label font];
 
@@ -283,9 +282,9 @@ renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *label, neGl
 
     int cellX = -1;
     int cellY = -1;
-    allocGlyphAtlasSlot(mgr, w, h, &cellX, &cellY);
+    allocGlyphAtlasSlot(w, h, &cellX, &cellY);
 
-    neTextTexture *atlas = mgr->atlases;
+    neTextTexture *atlas = atlases;
 
     // Rasterize the glyph into a w*h, 1-byte/pixel device-gray bitmap.
     uint8_t *gray = new uint8_t[static_cast<size_t>(w) * static_cast<size_t>(h)];
@@ -331,9 +330,9 @@ renderGlyphToAtlas(neTextTextureMgr *mgr, const char *utf8, UILabel *label, neGl
 // `utf8` at `pointSize`, rasterize it into an atlas, re-upload that atlas, and
 // push the record onto the manager's cache. `fontName` null => the bold system
 // font. Returns null on an invalid lead byte or an unresolvable font.
-static neGlyph *
-createTextGlyphEntry(neTextTextureMgr *mgr, const char *utf8, const char *fontName, int pointSize) {
-    int len = utf8CharLen(mgr, utf8);
+neGlyph *
+neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, int pointSize) {
+    int len = utf8CharLen(this, utf8);
     if (len < 1) {
         return nullptr;
     }
@@ -366,17 +365,17 @@ createTextGlyphEntry(neTextTextureMgr *mgr, const char *utf8, const char *fontNa
     [label setBackgroundColor:[UIColor clearColor]];
     [label setNumberOfLines:0];
 
-    renderGlyphToAtlas(mgr, glyph->key, label, glyph);
+    renderGlyphToAtlas(glyph->key, label, glyph);
 
     // Re-upload the atlas the glyph landed in so the new pixels reach GL.
-    neTextTexture *atlas = mgr->atlases;
+    neTextTexture *atlas = atlases;
     if (atlas != nullptr) {
         neTextureRebind(static_cast<AepTexture *>(atlas->texture), atlas->pixels);
     }
 
     // Head-insert onto the glyph cache.
-    glyph->next = static_cast<neGlyph *>(mgr->glyphList);
-    mgr->glyphList = glyph;
+    glyph->next = static_cast<neGlyph *>(glyphList);
+    glyphList = glyph;
     // (ARC releases `label`.)
     return glyph;
 }
@@ -410,9 +409,9 @@ void neDrawText(const char *text,
             glyphs[i] = nullptr;
             continue;
         }
-        neGlyph *g = findCachedGlyph(mgr, text + i, size << shift);
+        neGlyph *g = mgr->findCachedGlyph(text + i, size << shift);
         if (g == nullptr) {
-            g = createTextGlyphEntry(mgr, text + i, static_cast<const char *>(font), size << shift);
+            g = mgr->createTextGlyphEntry(text + i, static_cast<const char *>(font), size << shift);
         }
         glyphAtlas[i] = g->atlasId;
         glyphs[i] = g;
@@ -497,7 +496,7 @@ void neDrawText(const char *text,
         if (atlasId < 0) {
             continue;
         }
-        neTextTexture *atlas = findTextTextureById(mgr, atlasId);
+        neTextTexture *atlas = mgr->findTextTextureById(atlasId);
         AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
         float atlasW = static_cast<float>(tex->textureWidth());  // AepTexture +0x1c
         float atlasH = static_cast<float>(tex->textureHeight()); // AepTexture +0x20
