@@ -23,6 +23,7 @@
 #import "AepFrameDraw.h"
 #import "AepManager.h"
 #import "AepOrderingTable.h"
+#import "neDebugLog.h"
 
 #include <cmath>
 #include <cstring>
@@ -204,6 +205,23 @@ static void aepEmitSprite(AepManager *mgr,
     }
     const int16_t *rec = mgr->spriteRecord(groupSlot, child); // this+slot*0x2000+child*8+0x7c1962
 
+    NE_DBG(neDebugLog("aepEmit slot=%d child=%d scale=(%d,%d) wh=(%d,%d) pos=(%d,%d) "
+                      "color=%d alpha=%d rec=(%d,%d,%d,%d)",
+                      groupSlot,
+                      child,
+                      scaleX,
+                      scaleY,
+                      w,
+                      h,
+                      x,
+                      y,
+                      color,
+                      alpha,
+                      rec[0],
+                      rec[1],
+                      rec[2],
+                      rec[3]));
+
     cmd->wFlags = 0;        // +0x04  type 0 = textured sprite
     cmd->nBank = groupSlot; // +0x08  (flush case 0 forwards this as the texture slot)
     // The binary copies the 8-byte sprite record verbatim into the nTexU/nTexV
@@ -309,6 +327,17 @@ void AepDrawLayer(AepManager *mgr,
     if (entries == nullptr || entries[layerNo].type < 0) {
         return;
     }
+    NE_DBG(neDebugLog("aepLayer slot=%d layerNo=%d frame=%d scale=(%d,%d) pos=(%d,%d) "
+                      "type0=%d scaleCh=%d",
+                      groupSlot,
+                      layerNo,
+                      frame,
+                      scaleX,
+                      scaleY,
+                      x,
+                      y,
+                      entries[layerNo].type,
+                      entries[layerNo].scaleChannel));
     const uint8_t *chBase = mgr->channelBase(groupSlot); // this+slot*4+0x7274d4
 
     // Anchor-relative base translation, pre-scaled (Ghidra: iVar6 / iVar5).
