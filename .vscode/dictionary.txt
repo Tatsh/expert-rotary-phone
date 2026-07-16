@@ -488,6 +488,7 @@ unarchiver
 uncomplete
 uncompr
 uncpsize
+undisassembled
 undraft
 undrafted
 unichar
