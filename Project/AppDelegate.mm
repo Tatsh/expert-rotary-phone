@@ -127,7 +127,21 @@ BOOL gLaunchedFromPush = NO;
 
     neGraphics::configure((float)UIScreen.mainScreen.scale);
     neEngine::bootstrapB();
-    neEngine::bootstrapC(0);
+#ifdef ENABLE_PATCHES
+    // Engine-text enlargement. The binary calls bootstrapC(0) (@ 0x91b0), which
+    // sets the glyph manager's fixed shift to 0: neDrawText then rasterises each
+    // glyph at its raw point size and emits the quad at 0.5x (@ 0x15b70), so a
+    // "20"-point label lands ~10px tall on the 1536x2048 framebuffer — verified
+    // faithful to the original, but tiny on a modern high-density iPad. The 0.5x
+    // emit is designed to pair with a non-zero shift: a shift of 1 rasterises at
+    // 2x point size and still emits at 0.5x, so all engine text doubles in size
+    // and gains supersampled sharpness while the alignment/advance math (which
+    // divides the accumulated width by the same shift) stays correct. Raise the
+    // shift for a larger enlargement (2 => 4x); 1 is the retina-faithful factor.
+    neEngine::bootstrapC(1);
+#else
+    neEngine::bootstrapC(0); // Ghidra @ 0x91b0
+#endif
 
     [UserSettingData loadSettingData];
     [TreasureData init:self.managedObjectContext];
