@@ -4,15 +4,18 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 77/2717 (3%) definitions verified `@complete`.**
+**Overall: 113/2720 (4%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |    % |
 | -------------------------------------------------- | ---: | --------: | ---: |
 | `Project/AppDelegate.mm`                           |   41 |        41 | 100% |
+| `Project/System/src/Render/neRenderer.cpp`         |   24 |        24 | 100% |
 | `Project/System/src/Task/BootLogoTask.mm`          |    6 |         6 | 100% |
 | `Project/System/src/Task/MainTask.mm`              |   15 |        15 | 100% |
 | `Project/System/src/Task/MenuMainTask.mm`          |   10 |        10 | 100% |
 | `Project/System/src/Task/TitleTask.mm`             |    5 |         5 | 100% |
+| `Project/System/src/Aep/AepOrderingTable.mm`       |   13 |        11 |  85% |
+| `Project/System/src/OpenGL/neGLES11.cpp`           |   19 |         1 |   5% |
 | `Project/AcViewerCategoryCell.mm`                  |    2 |         0 |   0% |
 | `Project/AcViewerCategoryViewController.mm`        |   15 |         0 |   0% |
 | `Project/AcViewerDetailCell.m`                     |    2 |         0 |   0% |
@@ -189,13 +192,10 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/Aep/AepFrameDraw.mm`           |    6 |         0 |   0% |
 | `Project/System/src/Aep/AepLyrCtrl.mm`             |    9 |         0 |   0% |
 | `Project/System/src/Aep/AepManager.mm`             |   30 |         0 |   0% |
-| `Project/System/src/Aep/AepOrderingTable.mm`       |   13 |         0 |   0% |
-| `Project/System/src/OpenGL/neGLES11.cpp`           |   18 |         0 |   0% |
 | `Project/System/src/Render/AepTexture.mm`          |   14 |         0 |   0% |
 | `Project/System/src/Render/neGLView.mm`            |   15 |         0 |   0% |
 | `Project/System/src/Render/neGraphics.cpp`         |   11 |         0 |   0% |
-| `Project/System/src/Render/neRenderer.cpp`         |   24 |         0 |   0% |
-| `Project/System/src/Render/neTextTexture.mm`       |    9 |         0 |   0% |
+| `Project/System/src/Render/neTextTexture.mm`       |   11 |         0 |   0% |
 | `Project/System/src/Render/neTextureForiOS.cpp`    |    4 |         0 |   0% |
 | `Project/System/src/Render/neTextureRef.cpp`       |    3 |         0 |   0% |
 | `Project/System/src/Sound/AVBus.mm`                |   18 |         0 |   0% |
