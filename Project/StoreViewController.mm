@@ -53,8 +53,16 @@
         // UITextAttributeFont; SDKCompat maps NSFontAttributeName back to it on
         // old SDKs).
         UIFont *tabFont = [UIFont fontWithName:AppFontName() size:8.0f];
-        [[UITabBarItem appearance] setTitleTextAttributes:@{NSFontAttributeName : tabFont}
-                                                 forState:UIControlStateNormal];
+        // The binary set this unconditionally because its bundled font always
+        // resolved; if AppFontName() does not resolve via UIKit here, fontWithName
+        // returns nil and @{NSFontAttributeName : nil} throws
+        // NSInvalidArgumentException (dictionaryWithObjects:forKeys:count:),
+        // aborting before the Store can appear. Skip the tab-title styling when the
+        // font is unavailable so the Store still shows.
+        if (tabFont != nil) {
+            [[UITabBarItem appearance] setTitleTextAttributes:@{NSFontAttributeName : tabFont}
+                                                     forState:UIControlStateNormal];
+        }
 
         StoreMainViewController *mainVC = [[StoreMainViewController alloc] initWithParent:self];
         m_MainNavCtrl = [self wrapController:mainVC navbarImage:@"p_store_navbar"];
