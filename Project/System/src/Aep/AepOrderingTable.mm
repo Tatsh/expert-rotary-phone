@@ -718,6 +718,25 @@ void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
     const float flDstW = static_cast<float>(nPosX) * ox / 100.0f;
     const float flDstH = static_cast<float>(nPosY) * oy / 100.0f;
 
+    NE_DBG(neDebugLog(
+        "otStretch base=(%d,%d) scale=(%.2f,%.2f) hs=%.3f pos=(%d,%d) dst=(%.1f,%.1f,%.1f,%.1f) "
+        "src=(u=%d v=%d) alpha=%d blendFlag=%d",
+        nPosX,
+        nPosY,
+        static_cast<double>(nOfsX),
+        static_cast<double>(nOfsY),
+        static_cast<double>(hs),
+        nScaleX,
+        nScaleY,
+        static_cast<double>(flDstX),
+        static_cast<double>(flDstY),
+        static_cast<double>(flDstW),
+        static_cast<double>(flDstH),
+        nU,
+        nV,
+        nAlpha,
+        nBlendFlag));
+
     drawAepSpriteClipped(pFrames,
                          nU,
                          nV,

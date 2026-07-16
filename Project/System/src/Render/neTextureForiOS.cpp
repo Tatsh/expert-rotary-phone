@@ -138,6 +138,28 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
 // to screen bounds.
 // @complete
 void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
+    NE_DBG(neDebugLog("neTexDraw tex=%p tiles=%d uv=(%d,%d) wh=(%d,%d) xy=(%d,%d) "
+                      "scale=(%d,%d) ex=(%d,%d) color=%d alpha=%d blend=%d colorMul=%d "
+                      "layer=%d prio=%d clip=%p",
+                      static_cast<void *>(this),
+                      tileCount(),
+                      p.u,
+                      p.v,
+                      p.w,
+                      p.h,
+                      p.x,
+                      p.y,
+                      p.sx,
+                      p.sy,
+                      p.ex,
+                      p.ey,
+                      p.color,
+                      p.alpha,
+                      p.blend0,
+                      p.colorMul,
+                      p.layer,
+                      p.priority,
+                      static_cast<const void *>(p.clip)));
     // Fill a stretched-sprite command (wFlags=1) through the real fill
     // AepOrderingTable::drawSprite (FUN_00011468). The sprite's texture is THIS
     // object: it is stored verbatim in the command's nTexU slot and the flush's
