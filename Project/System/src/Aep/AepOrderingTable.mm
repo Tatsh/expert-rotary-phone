@@ -203,16 +203,16 @@ static void establishFrame2DState(int screenW, int screenH) {
 void AepOrderingTable::flush() {
     establishFrame2DState(m_screenW, m_screenH); // frame-begin bridge (see above)
 
-    int dbgTotal = 0, dbgType[8] = {0};
-    for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
-        for (AepOtSpriteCmd *c = m_buckets[pri]; c != nullptr; c = c->pListNext) {
-            ++dbgTotal;
-            if ((unsigned)c->wFlags < 8) {
-                ++dbgType[c->wFlags];
+    if (NE_DBG_FIRST(240)) {
+        int dbgTotal = 0, dbgType[8] = {0};
+        for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
+            for (AepOtSpriteCmd *c = m_buckets[pri]; c != nullptr; c = c->pListNext) {
+                ++dbgTotal;
+                if ((unsigned)c->wFlags < 8) {
+                    ++dbgType[c->wFlags];
+                }
             }
         }
-    }
-    if (NE_DBG_FIRST(240)) {
         neDebugLog(
             "flush m_count=%d queued=%d byType[sprite=%d stretch=%d t2=%d t6=%d] screen=%dx%d",
             m_count,

@@ -426,7 +426,7 @@ void neDrawTexturedQuad(void *sprite,
                         int blendMode,
                         const float *clipRect) {
     neSpriteView *s = static_cast<neSpriteView *>(sprite);
-    (void)glGetError(); // RHYDBG: clear accumulated error so quadGL isolates this draw
+    NE_DBG((void)glGetError()); // clear accumulated error so the quadGL probe isolates this draw
     uint32_t c = nePremultRGBA(alpha, red, green, blue);
 
     // UV sub-rect (V flipped for GL's bottom-left origin), normalized to

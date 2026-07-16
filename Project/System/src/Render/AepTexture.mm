@@ -253,15 +253,15 @@ static void neTextureUpload(AepTexture *tex, int texW, int texH, int format, con
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     GLenum gl = TexDataFormatToGL(format);
     glTexImage2D(GL_TEXTURE_2D, 0, gl, texW, texH, 0, gl, GL_UNSIGNED_BYTE, pixels);
-    GLenum glErr = glGetError();
-    neDebugLog("neTextureUpload glName=%u %dx%d fmt=%d(gl=0x%x) pixels=%p glErr=0x%x",
-               name,
-               texW,
-               texH,
-               format,
-               (unsigned)gl,
-               pixels,
-               (unsigned)glErr);
+    NE_DBG(GLenum glErr = glGetError();
+           neDebugLog("neTextureUpload glName=%u %dx%d fmt=%d(gl=0x%x) pixels=%p glErr=0x%x",
+                      name,
+                      texW,
+                      texH,
+                      format,
+                      (unsigned)gl,
+                      pixels,
+                      (unsigned)glErr));
     // Publish the name + padded size back onto the texture (AepTexture
     // +0x18/+0x1c/+0x20).
     tex->adoptGLName(name, texW, texH);

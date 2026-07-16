@@ -52,6 +52,13 @@ set(RESOURCES_DIR    "" CACHE PATH "Directory of the ORIGINAL extracted .app who
                                    "(images, rhythmin.lv, .acv/.orb/.idx, fonts, ...) are copied "
                                    "verbatim into the built bundle. Leave empty to build code only.")
 
+# RHYDBG compiles in the optional render-pipeline os_log diagnostics (tagged
+# "RHYDBG"; see Project/System/src/Render/neDebugLog.h). It is NOT part of the
+# original binary, so it defaults OFF and the shipped build matches the binary.
+# It is a plain cache option, so it can be enabled in ANY build configuration
+# with -DRHYDBG=ON.
+option(RHYDBG "Compile in the RHYDBG render-pipeline diagnostics (os_log)" OFF)
+
 # ---------------------------------------------------------------------------
 # Toolchain discovery (informational)
 # ---------------------------------------------------------------------------
@@ -175,6 +182,11 @@ target_compile_options(popnrhythmin PRIVATE
 # separate stack). Silence the blanket ES deprecation warnings rather than
 # rewrite the renderer.
 target_compile_definitions(popnrhythmin PRIVATE GLES_SILENCE_DEPRECATION)
+
+# When RHYDBG is enabled, define it for every translation unit; the generator
+# expression is config-agnostic, so it applies in Debug, Release, and any other
+# configuration alike.
+target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${RHYDBG}>:RHYDBG=1>)
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"
