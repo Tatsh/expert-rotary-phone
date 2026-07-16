@@ -156,14 +156,31 @@
                                             background:@"btn_no_frame"
                                                 action:@selector(onNoButton)];
 
-    UIView *buttonRow = [[UIView alloc] init];
+    // Button row across the space below the content area, spanning the panel
+    // width (panel = container inset by 3). The binary derives these frames from
+    // runtime .frame/.size/.center calls; reproduced here so the buttons sit
+    // bottom-centre instead of collapsing to the panel origin (an un-framed row).
+    const CGFloat panelW = cardW - 6.0f;
+    const CGFloat panelH = cardH - 6.0f;
+    const CGFloat rowTop = contentX + contentH; // just below the content area
+    UIView *buttonRow =
+        [[UIView alloc] initWithFrame:CGRectMake(0, rowTop, panelW, panelH - rowTop)];
     buttonRow.backgroundColor = [UIColor clearColor];
+    const CGFloat rowMidY = (panelH - rowTop) * 0.5f;
     if (cancelButtonTitle == nil) {
-        [buttonRow addSubview:otherButton]; // one centered button
+        otherButton.center = CGPointMake(panelW * 0.5f, rowMidY); // one centred button
+        [buttonRow addSubview:otherButton];
     } else if (otherButtonTitles == nil) {
+        cancelButton.center = CGPointMake(panelW * 0.5f, rowMidY);
         [buttonRow addSubview:cancelButton];
     } else {
-        [buttonRow addSubview:otherButton]; // both, side by side
+        // Two buttons side by side about the centre: "other" (yes) left, cancel right.
+        const CGFloat gap = panelW * 0.02f;
+        otherButton.center =
+            CGPointMake(panelW * 0.5f - otherButton.bounds.size.width * 0.5f - gap, rowMidY);
+        cancelButton.center =
+            CGPointMake(panelW * 0.5f + cancelButton.bounds.size.width * 0.5f + gap, rowMidY);
+        [buttonRow addSubview:otherButton];
         [buttonRow addSubview:cancelButton];
     }
     [panel addSubview:buttonRow];
@@ -189,6 +206,9 @@
     label.adjustsFontSizeToFitWidth = YES;
     label.minimumScaleFactor = 0.5;
     label.text = title;
+    // The binary tints the label (light blue) before positioning it; without a
+    // colour it defaults to black on the dark button frame and reads as "no text".
+    label.textColor = [UIColor colorWithRed:0.345f green:0.482f blue:1.0f alpha:1.0f];
     [label sizeToFit];
     label.center = CGPointMake(bg.size.width * 0.5f, neSceneManager::isPadDisplay() ? 24.0 : 12.0);
     [button addSubview:label];
