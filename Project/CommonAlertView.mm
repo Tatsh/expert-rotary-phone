@@ -31,6 +31,7 @@
 
 // @ 0x4a308 — designated UIView initializer: chain to super and clear the
 // animation guard.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self != nil) {
@@ -44,6 +45,15 @@
 // [super dealloc]; nothing to cancel.
 
 // @ 0x4a350
+//
+// NOTE: unverified/approximate against 0x4a350. The gradient-border colours and
+// the tint/text colours match the binary exactly (e.g. 0.506/1.0/0.9255 @
+// 0x4a58c, content tint 0.9177/0.8824 @ 0x4a7d0), and the build order matches,
+// but the card size and the content/message/button-row sub-frames are computed
+// by the binary from NEON-scaled constant tables (DAT_0004a7ac..a7b8: 325.0,
+// 350.0, 190.0, 40.0, 50.0, 0.5/1.0) rather than the fixed 384x260 / 256x176
+// and superview-sized frames used here. Left unmarked pending a table-faithful
+// geometry pass.
 - (instancetype)initWithTitle:(NSString *)title
                       message:(NSString *)message
                      delegate:(id<CommonAlertViewDelegate>)delegate
@@ -163,6 +173,7 @@
 }
 
 // @ 0x4b4cc
+// @complete
 - (void)show {
     _titleView.text = self.title;
     _messageView.text = self.message;
@@ -183,6 +194,7 @@
 }
 
 // @ 0x4bb9c
+// @complete
 - (BOOL)isVisible {
     return !self.isHidden;
 }
@@ -191,6 +203,7 @@
 
 // @ 0x4b970 — "other"/yes button: play the decide SE, then route through the
 // click handler.
+// @complete
 - (void)onYesButton {
     neEngine::playSystemSe(1); // Ghidra: NESceneManager_shared();
                                // SysSePlayIntoSlot(&g_pNeSceneManager, 1)
@@ -199,6 +212,7 @@
 
 // @ 0x4b9a4 — "cancel"/no button: play the cancel SE, then route through the
 // click handler.
+// @complete
 - (void)onNoButton {
     neEngine::playSystemSe(2); // Ghidra: NESceneManager_shared();
                                // SysSePlayIntoSlot(&g_pNeSceneManager, 2)
@@ -209,6 +223,7 @@
 // animation, then (once) notify the real delegate with the button index and
 // tear the alert down. Guarded by _isAnimationing so a second tap during the
 // close is ignored.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (_isAnimationing) {
         return;
@@ -232,6 +247,7 @@
 
 // @ 0x4b718 — the "pop open" bounce: snap to 75%, overshoot to 125% over 0.2s,
 // then settle back to 100% over 0.2s. Guarded so it only runs once at a time.
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;

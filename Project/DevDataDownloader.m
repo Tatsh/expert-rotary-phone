@@ -20,6 +20,7 @@ static DevDataDownloader *s_instance = nil;
 
 // +[DevDataDownloader getInstance]  @ 0x8e894 — shared instance; resets isOld
 // to NO on every access (as in the binary).
+// @complete
 + (instancetype)getInstance {
     if (s_instance == nil) {
         s_instance = [[DevDataDownloader alloc] init];
@@ -29,23 +30,25 @@ static DevDataDownloader *s_instance = nil;
 }
 
 // @ 0x8e984 — build the Downloader for a dev-data file and kick it off.
+// @complete
 - (BOOL)startDownload:(NSString *)title file:(NSString *)fileName {
     isAcv = [title hasPrefix:@"acv_"];
     if (m_Downloader != nil) {
         return NO;
     }
-    NSString *path =
-        [NSString stringWithFormat:(m_IsOld ? @"/apr/dev_data_old/%@/%@" : @"/apr/dev_data/%@/%@"),
-                                   title,
-                                   fileName];
+    // Ghidra: literal-pool strings @ 0x108997 / 0x1089af (byte-verified).
+    NSString *path = [NSString
+        stringWithFormat:(m_IsOld ? @"/apr/dev/data/old/%@/%@" : @"/apr/dev/data/%@/%@"),
+                         title,
+                         fileName];
 #if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
     NSURLComponents *components = [[NSURLComponents alloc] init];
     components.scheme = @"http";
-    components.host = @"dev.apr.konaminet.jp";
+    components.host = @"dev-apr.konaminet.jp";
     components.path = path;
     NSURL *url = components.URL;
 #else
-    NSURL *url = [[NSURL alloc] initWithScheme:@"http" host:@"dev.apr.konaminet.jp" path:path];
+    NSURL *url = [[NSURL alloc] initWithScheme:@"http" host:@"dev-apr.konaminet.jp" path:path];
 #endif
     m_Downloader = [[Downloader alloc] initWithURL:url delegate:self];
     m_Title = title;
@@ -56,6 +59,7 @@ static DevDataDownloader *s_instance = nil;
 
 // @ 0x8eb1c — write the fetched bytes into
 // Caches/<devdata|acvdevdata>/<title>/<file>.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     // drop the in-flight request
     m_Downloader = nil;
@@ -98,16 +102,19 @@ static DevDataDownloader *s_instance = nil;
 }
 
 // @ 0x8ed78 — progress; nothing to do.
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0x8ed7c — drop the request and report the failure.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     m_Downloader = nil;
     [m_Delegate devDownloadFailed:[NSString stringWithFormat:@"downloaderError:%@", m_FileName]];
 }
 
 // @ 0x8e8ec — abort any in-flight request on teardown.
+// @complete
 - (void)dealloc {
     [m_Downloader cancel];
     m_Downloader = nil;

@@ -20,6 +20,7 @@ static int sRetryCount = 0;
 @implementation RewardNetworkWebAPI
 
 // @ 0xfa744
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self) {
@@ -29,11 +30,13 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfa790
+// @complete
 + (NSDictionary *)commonParameters {
     return [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"cr", @"json", @"format", nil];
 }
 
 // @ 0xfa7e8
+// @complete
 + (NSMutableURLRequest *)requestWithURL:(NSString *)url
                                  method:(NSString *)method
                              parameters:(NSDictionary *)parameters
@@ -56,6 +59,7 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfa948
+// @complete
 + (NSMutableURLRequest *)requestForGetWithURL:(NSString *)url
                                    parameters:(NSDictionary *)parameters {
     NSString *fullURL = [RewardNetworkUtilities appendParametersToURL:url parameters:parameters];
@@ -63,6 +67,7 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfa9f0
+// @complete
 + (NSMutableURLRequest *)requestForPostWithURL:(NSString *)url
                                     parameters:(NSDictionary *)parameters {
     NSMutableArray *pairs = [NSMutableArray array];
@@ -89,6 +94,16 @@ static int sRetryCount = 0;
 
 // @ 0xfad84  (with retry/watchdog block @ 0xfb0a9 and completion handler @
 // 0xfb30c; class entry allocs+forwards @ 0xfbe04)
+// DEVIATION (unverified as written): the watchdog block (@ 0xfb0a8) has NO
+// `if (finished) return;` guard at its head; its first act is
+// [self canUseNetworkRetry] (selref @ 0x125856, referenced @ 0xfb0c2). The
+// binary suppresses a stale watchdog purely via the shared retry counter (the
+// completion handler gates on `sRetryCount > 1` @ 0xfb344 and the private queue
+// is suspended), not via the modelled __block bool. The counter increments,
+// back-off (retryCount * 2 + 2), 0x403/0xfffffc17 timeout error, and the JSON
+// dispatch are otherwise byte-faithful. Left unmarked because of the added
+// finished-guard; the 0x3ee fallback selector fix (Applilink, not RewardNetwork)
+// is applied above.
 + (void)requestAsynchronousWithURL:(NSString *)url
                             method:(NSString *)method
                         parameters:(NSDictionary *)parameters
@@ -204,8 +219,12 @@ static int sRetryCount = 0;
                   }
               } else {
                   if (failedBlock) {
+                      // The binary's non-dictionary fallback sends the
+                      // single-argument localizedApplilinkErrorWithCode: (selref
+                      // @ 0x1247a5, referenced @ 0xfb4f2), not the
+                      // RewardNetwork:userInfo: variant.
                       failedBlock(request,
-                                  [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee]);
+                                  [RewardNetworkError localizedApplilinkErrorWithCode:0x3ee]);
                   }
               }
             });
@@ -258,8 +277,12 @@ static int sRetryCount = 0;
                     }
                 } else {
                     if (failedBlock) {
+                        // The binary's non-dictionary fallback sends the
+                        // single-argument localizedApplilinkErrorWithCode:
+                        // (selref @ 0x1247a5, referenced @ 0xfb4f2), not the
+                        // RewardNetwork:userInfo: variant.
                         failedBlock(request,
-                                    [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee]);
+                                    [RewardNetworkError localizedApplilinkErrorWithCode:0x3ee]);
                     }
                 }
               }];
@@ -268,6 +291,15 @@ static int sRetryCount = 0;
 
 // @ 0xfb58c  (line-enumeration accumulator block @ 0xfba3c; class entry
 // allocs+forwards @ 0xfbf8c)
+// DEVIATION (unverified as written): for the status "2" (@ 0xfb8c8) and status-
+// "otherwise" (@ 0xfb91e) branches the binary does NOT discard the
+// {@"response": text} dictionary. It builds it and passes it as the userInfo
+// argument to the two-parameter selector
+// localizedRewardNetworkErrorWithCode:userInfo: (selref @ 0x1249cb), i.e.
+// [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee/0x3ef
+// userInfo:@{@"response": text}]. The reconstruction below models a discarded
+// dictionary plus a single-argument call, which is behaviourally different (the
+// error loses its userInfo). Left unmarked pending a header/signature fix.
 + (NSData *)responseFromContentsServer:(NSString *)contentsServer
                                request:(NSURLRequest *)request
                                   data:(NSData *)data
@@ -322,6 +354,7 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfbb34   (class entry allocs+forwards @ 0xfbee0)
+// @complete
 + (id)requestSynchronousWithURL:(NSString *)url
                          method:(NSString *)method
                      parameters:(NSDictionary *)parameters
@@ -420,6 +453,7 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfc048
+// @complete
 + (BOOL)canUseNetworkRetry {
     return [[[UIDevice currentDevice] systemVersion] doubleValue] >= 6.0;
 }

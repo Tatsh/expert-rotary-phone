@@ -31,6 +31,7 @@ static NSString *const kMlistHeader[24] = {
 // pane layout used when CheckerDetail is pushed: CGRectMake(385, 250, 320,
 // 530). Confirmed caller: tableView:didSelectRowAtIndexPath: (animations block,
 // 0xd3030, block invoke ptr = 0xd31e1 = ARM Thumb address of this function).
+// @complete
 static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     self.navigationController.view.frame = CGRectMake(385.0f, 250.0f, 320.0f, 530.0f);
 }
@@ -44,6 +45,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 // @ 0xd27b8
+// @complete
 - (instancetype)initWithScoreData:(NSArray *)scoreDataArray category:(short)category {
     self = [super initWithStyle:UITableViewStyleGrouped];
     _scoreDataArray = scoreDataArray;
@@ -110,6 +112,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 
 // @ 0xd2e20 — clear the shared DownloadMain's get-visitor delegate if it points
 // here.
+// @complete
 - (void)dealloc {
     DownloadMain *dm = [DownloadMain getInstance];
     if ((id)[dm delegateGetVisitor] == self) {
@@ -123,11 +126,13 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 // behavior).
 
 // @ 0xd2ef0
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xd2ef4
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (_scoreDataArray != nil) {
         return (NSInteger)_scoreDataArray.count;
@@ -136,10 +141,12 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 // @ 0xd2f1c
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Binary's reuse identifier is "Cell%ld-%ld" (hyphen), string @ 0x1029ae.
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     CheckerMusicCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[CheckerMusicCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -150,12 +157,14 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 // @ 0xd3028
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xd3030 — push the per-song CheckerDetail; on iPad first grow the split nav
 // pane.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController == self && indexPath.section == 0) {
         neEngine::playSystemSe(1); // decide SE
@@ -178,6 +187,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 // @ 0xd3254
+// @complete
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;

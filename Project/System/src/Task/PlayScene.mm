@@ -124,6 +124,11 @@ void PlayDrawCharaWindow(void *playData, int x, int y);
 namespace {
 
 // Score -> rank index (0 best .. 6 worst). Ghidra: FUN_00028a40.
+// Verified: the binary compares against 0x1869f, 0x17ecf, 0x17317, 0x15f8f,
+// 0x1387f, and 0x1116f (i.e. 99999, 97999, 94999, 89999, 79999, and 69999),
+// returning 0..6 — the same >= 100000 / 98000 / 95000 / 90000 / 80000 / 70000
+// thresholds.
+// @complete
 int scoreToRank(int score) {
     if (score >= 100000) {
         return 0;
@@ -165,6 +170,20 @@ void destroyAll(T *(&slots)[N]) {
 
 // Ghidra: FUN_0002e2d8 (PlayTask_init) — allocate + initialise the note-play
 // scene.
+// Verified against the disassembly for the whole cited lifecycle / field-init
+// block: the +0x968 event centre, +0x96c/+0x970 screen extents, +0x974 UI
+// scale, every user-setting ivar (+0x9b4/+0x9e4/+0x9e5/+0x9e6), the popkun
+// 16.16 conversion (vcvt.s32.f32 #16 at 0x2e418), +0x9c9 demo flag from
+// eventCentre+0x33, +0x9e7 old-hardware, +0x9ca pad-display, the gauge
+// constants (m_gaugeBase read from DAT_00178d00 which is 0 at rest,
+// 3072.0 / totalNoteCount at +0x9cc, 0x3f800000 at +0x9d0, and the exact
+// 0xc2088889 bit pattern at +0x9d4), the phone / pad geometry constants
+// (0x2e554 phone, 0x2e4e4 pad — every value byte-checked, e.g. +0x9b8
+// 0x43080000/0x43880000, +0x9e0 500/1000), the additive-blend 0x200 stores at
+// +0x98/+0x9c/+0xa0, the 60-entry judge-pool loop (+0x3c8, stride 0x18), and the
+// three tail play-SE loads into +0x3a8. The asset-heavy sub-blocks are
+// delegated to the seams below.
+// @complete
 void PlayTaskInit(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -291,6 +310,19 @@ void PlayTaskInit(void *playData) {
 
 // Ghidra: FUN_0003003c — tear down the play scene and hand off to the result
 // screen.
+// Verified against the disassembly: the five destroyAll loops in the binary's
+// order and counts (+0x28 x2 window, +0x30 x8 chara, +0x50 x13 panels, +0x84 x5
+// combo layers via AepLyrCtrl_unlink (FUN_0002ca9c) + dtor, +0x98 x11 scene
+// layers), releaseAepTexture(0) (FUN_0000f988), the stop/release loops for the
+// three +0x3a8 play SEs and the two +0x398/+0x39c SEs plus releaseBgm, the
+// m_stopped (+0x9e8) abort guard, the four judge-count column sums (DAT_00179014
+// COOL down to +0x5164 BAD, stride 0x10 x10), score (FUN_0002ff7c), rank
+// (FUN_00028a40), the fullCombo compare (fixed above to read +0x515c),
+// recordPlayResult (FUN_0002930c) arg order cool/great/good/bad/fullCombo,
+// setMaxCombo from +0x5160 into event+0x18, setPlayRank into event+0x14, the
+// +0x24 kill store, the (stopped || demo) -> MainTask(0xaa8) else result(0x3a0)
+// branch, setPriority(3) (FUN_00027f08), and the +0x9c7 hand-off flag.
+// @complete
 void PlayTaskGotoResult(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -337,7 +369,10 @@ void PlayTaskGotoResult(void *playData) {
         }
         const int score = PlayCurrentScore(); // Ghidra: FUN_0002ff7c
         const int rank = scoreToRank(score);  // Ghidra: FUN_00028a40
-        const bool fullCombo = nm.maxCombo() >= nm.totalNoteCount();
+        // Full-combo test: the binary compares totalNoteCount (NoteMng + 0x4e28)
+        // against the live combo field (NoteMng + 0x515c) at 0x302be/0x302c6, not
+        // the max-combo mirror (+0x5160) that setMaxCombo reads below.
+        const bool fullCombo = nm.combo() >= nm.totalNoteCount();
 
         neAppEventCenter *event = task->m_eventCenter;
         // Ghidra: FUN_0002930c (updateHighScore on the event center).
@@ -368,6 +403,10 @@ void PlayTaskGotoResult(void *playData) {
 // The per-tap feedback SE resource name for a touch-sound kind (clamped to
 // 0..9). Ghidra: FUN_0002c7a8 — a fixed "hit001".."hit010" table (the
 // scene-manager argument the binary threads in is unused).
+// Verified: the binary does `uxth; cmp #9; if hi kind = 0` then returns the
+// kind'th entry of a constant CFString table; rendering that table as
+// "hit%03d" (kind + 1) is behaviourally identical.
+// @complete
 static NSString *TouchSeResourceName(int kind) {
     if ((unsigned)kind > 9) {
         kind = 0;
@@ -378,6 +417,15 @@ static NSString *TouchSeResourceName(int kind) {
 // Ghidra: FUN_00030720 — resolve the picked song, kick off the async BGM +
 // tap-SE load on a first load, and parse the chosen difficulty's sheet into the
 // note manager.
+// Verified: the +0x9c9 demo branch picks the bundled song (getPathFromBundle:0,
+// dataWithPath:ID:0, sheet 0) while the normal branch reads lastSheet
+// (eventCentre+0x4) and lastMusic (eventCentre+0x0); on reload == 0 it
+// stopBgm:0.0 and dispatch_asyncs the BGM load, and always selects the sheet by
+// index (2 -> sheetEx, 1 -> sheetHyper, else sheetNormal) into
+// initPlayDataWithData (FUN_00033550) with the PlayApplyMissGauge callback and
+// playData; the reload == 0 tail loads the touch-kind SE (TouchSeResourceName ->
+// pathForResource:ofType:m4a) into +0x398 and setSeVolume from +0x9b4.
+// @complete
 void PlayLoadSong(void *playData, int reload) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -432,6 +480,8 @@ void PlayLoadSong(void *playData, int reload) {
 // Ghidra: FUN_0003395c — the play scene releasing the note manager: clear its
 // "play session active" flag (@ +0x13cb6) so a later app-resign does not try to
 // pause a scene that is already tearing down.
+// Verified: the whole function is `strb #0, [r0 + 0x13cb6]; bx lr`.
+// @complete
 void PlayNoteMngDetach(NoteMng *nm) {
     nm->setPlayActive(false);
 }
@@ -457,6 +507,16 @@ void PlayNoteMngDetach(NoteMng *nm) {
 //   * the +0x2d0 same-tone table repeats + reorders its 5 real graphics across
 //   10
 //     slots: 00,01,02,03,04,04,04,02,03,01 (PTR_s_TONE_SAME_00 @ 0x131374).
+//
+// Verified against FUN_0002e2d8: the 5-entry effect-layer new(0x60)+init loop at
+// 0x2e6be, the per-tier reposition + bg/score table selection (0x2e712 pad,
+// 0x2e746 displayType == 2, 0x2e76c 960), the 11-entry bg-layer loop at 0x2e7b2,
+// and every getLyrNo/getFrameNo/getUserNo fill loop with its exact count and
+// destination offset: +0x154/+0x168 x5, +0xc4/+0xd4 x4, +0xe4/+0x11c x14,
+// +0x17c/+0x1dc x8, +0x1fc x9, +0x220 x10, +0x248 x10, +0x270 x4, +0x280 x5,
+// +0x294 x5, +0x2a8 x10, +0x2d0 x10, +0x2f8 x15, +0x334 x3, +0x340 x6,
+// +0x358 x8, +0x378 x8. Name-table contents are byte-checked in the header
+// commentary.
 // ---------------------------------------------------------------------------------
 
 namespace {
@@ -727,6 +787,7 @@ const char *const kCharaAnmUser[8] = {
 
 } // namespace
 
+// @complete
 void PlayBuildFieldLayers(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -845,6 +906,15 @@ void PlayBuildFieldLayers(void *playData) {
 // Names byte-verified from the CFString tables @ 0x13143c / 0x131448 / 0x131454
 // and the single CFStrings (targets in the string blob @ 0x1042ad). "%03d"
 // format strings are @ 0x1043a8 (open) / 0x104395 (sugo).
+//
+// Verified against FUN_0002e2d8: the +0x9c9 split, the normal path's
+// srand(time(0)) (0x2ed4e/0x2ed54), the pool build loop testing
+// RhTestBitInNumberArray (FUN_00028aa4) and skipping the player's own chara,
+// the eight-slot fill with rand() % pool.count draws, the chara < 30
+// bundle-versus-app-support split (cmp #0x1d / bgt at 0x2f014), the
+// "open_chara%03d.png" / "sugo_chara%03d.png" formats, and the RhFileExists
+// (FUN_0005c434) guard that deletes and nulls the slot on a miss; the demo path
+// loads three portraits, the +0x2c window frame, and thirteen +0x50 text panels.
 // ---------------------------------------------------------------------------------
 
 namespace {
@@ -880,6 +950,7 @@ NSString *const kTextPanelNames[13] = {
 
 } // namespace
 
+// @complete
 void PlayLoadCharaTextures(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -999,6 +1070,11 @@ void PlayLoadCharaTextures(void *playData) {
 // at colour=pulse / alpha=100-pulse. The position windows are a fixed table
 // baked for the bundled demo song; the tick thresholds are transcribed
 // verbatim.
+// NOT YET VERIFIED against the disassembly: the function is confirmed to exist
+// and is renamed drawBeatIndicator (FUN_000313b0, body 0x313b0..0x31819) in the
+// Ghidra DB, but the 30-entry beat-window table, the +/-4 pulse ramp, and the
+// two neTextureForiOS_draw calls have not been byte-checked here, so this seam
+// is left unmarked.
 void PlayDrawCharaWindow(void *playData, int x, int y) {
     PlayTask *task = static_cast<PlayTask *>(playData);
     AepManager &aep = AepManager::shared();
@@ -1103,6 +1179,11 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
 // (neTextureForiOS). The dispatch structure and per-branch priority / handle
 // selection are reproduced from the binary; leaf per-sprite geometry is
 // delegated to those draw units.
+// NOT YET VERIFIED against the disassembly: the function is confirmed to exist
+// and is renamed aepDrawCallback (FUN_00030944, body 0x30944..0x3119b) in the
+// Ghidra DB, with the __stdcall arg order matching this signature, but the many
+// child-id dispatch branches and per-sprite handle / priority selections have
+// not been byte-checked here, so this seam is left unmarked.
 void PlayTaskDraw(int child,
                   int /*frame*/,
                   int x,

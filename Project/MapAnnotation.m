@@ -20,6 +20,7 @@
 
 // @ 0x850e4 — store the coordinate by value and immutable copies of the three
 // strings.
+// @complete
 - (id)initWithCoordinate:(CLLocationCoordinate2D)coordinate
                    Title:(NSString *)title
                 SubTitle:(NSString *)subtitle
@@ -35,28 +36,33 @@
 }
 
 // @ 0x85264 — MKAnnotation coordinate setter.
+// @complete
 - (void)setCoordinate:(CLLocationCoordinate2D)coordinate {
     m_Coordinate = coordinate;
 }
 
 // @ 0x85298 — MKAnnotation coordinate getter.
+// @complete
 - (CLLocationCoordinate2D)coordinate {
     return m_Coordinate;
 }
 
 // @ 0x852b0 — MKAnnotation title (synthesized nonatomic-copy getter over
 // m_Title).
+// @complete
 - (NSString *)title {
     return m_Title;
 }
 
 // @ 0x852c4 — MKAnnotation subtitle (synthesized nonatomic-copy getter over
 // m_SubTitle).
+// @complete
 - (NSString *)subtitle {
     return m_SubTitle;
 }
 
 // @ 0x85288 — the arcade's model name.
+// @complete
 - (NSString *)modelName {
     return m_ModelName;
 }

@@ -30,21 +30,25 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
 }
 
 // @ 0x74564 — the buy button (the controller titles it + wires its tap).
+// @complete
 - (UIButton *)buttonPurchase {
     return m_ButtonPurchase;
 }
 
 // @ 0x74544 — the pack name label.
+// @complete
 - (UILabel *)labelName {
     return m_LabelName;
 }
 
 // @ 0x74554 — the pack description label.
+// @complete
 - (UILabel *)labelComment {
     return m_LabelComment;
 }
 
 // @ 0x73a0c — build the header subviews.
+// @complete
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self == nil) {
@@ -135,6 +139,7 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // @ 0x740d4 — fill the header from the pack and self-size the name/comment
 // labels + the header.
+// @complete
 - (void)loadPackInfo:(StorePackInfo *)packInfo {
     // Name: grow the label to fit up to 214x50, keep its origin.
     NSString *name = [packInfo packName];

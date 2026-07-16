@@ -21,6 +21,7 @@
 
 // Plain assign accessors (the delegate is not retained). Ghidra: delegate
 // getter @ 0x850c4 / setDelegate: @ 0x850d4 (synthesized).
+// @complete
 @synthesize delegate = _delegate;
 
 // @ 0x8396c — build the whole age-gate: a full-screen touch blocker, a rounded
@@ -29,6 +30,7 @@
 // (title + YearAndMonthPicker + Cancel/ Decide). The two panels swap places
 // when OK is tapped (see -onOkBtn:). All frames, the 3-stop border gradient and
 // the OK-button placement are decoded from the NEON geometry.
+// @complete
 - (id)init {
     self = [super init];
     if (self == nil) {
@@ -224,6 +226,7 @@
 
 // @ 0x84c30 — cancel: play the cancel SE (slot 2), record that the gate was
 // dismissed without a birthday, then slide the panel away.
+// @complete
 - (void)onCancelBtn:(id)sender {
     neEngine::playSystemSe(2);
     [UserSettingData saveIsBirthDayCanceled:YES];
@@ -234,13 +237,18 @@
 // into a concrete date (the 15th of that month at noon, parsed through a fixed
 // formatter so the day/time are pinned), persist it as the birthday, clear the
 // cancel flag, then close.
+// @complete
 - (void)onDecideBtn:(id)sender {
     neEngine::playSystemSe(1);
 
     NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
-    fmt.dateFormat = @"yyyy-MM-ddHH:mm:ss";
+    // Format string is "yyyy/MM/dd HH:mm:ss" per the __NSConstantString at the
+    // setDateFormat: site (@ 0x84b62; string bytes @ 0x1065c5), not hyphen-dashed.
+    fmt.dateFormat = @"yyyy/MM/dd HH:mm:ss";
+    // Likewise the format literal is "%d/%02d/15 12:00:00" (@ 0x84bc4; string
+    // bytes @ 0x10869e): slash separators, day pinned to 15, noon.
     NSString *str =
-        [NSString stringWithFormat:@"%d-%02d-1512:00:00", _selectDate.year, _selectDate.month];
+        [NSString stringWithFormat:@"%d/%02d/15 12:00:00", _selectDate.year, _selectDate.month];
     NSDate *date = [fmt dateFromString:str];
 
     [UserSettingData saveBirthDay:date];
@@ -253,6 +261,7 @@
 // backdrop up to 50%. Guarded against overlapping animations; -endOpenAnimation
 // clears the guard. (The off-screen start frame is NEON-spilled in the binary;
 // the panel begins one panel-height above its resting Y.)
+// @complete
 - (void)startOpenAnimation {
     if (m_IsAnimationing) {
         return;
@@ -274,8 +283,15 @@
 
 // @ 0x848d4 — OK tapped: reveal the picker. Unhide the picker sub-panel off to
 // the side, then animate the info panel out and the sub-panel into the info
-// panel's place. Guarded; the exact off/on X positions are NEON-spilled (the
-// two panels swap horizontally over 0.5 s).
+// panel's place. Guarded; the exact off/on positions are NEON-spilled.
+//
+// NOTE: unverified against 0x848d4. The binary moves VERTICALLY, not
+// horizontally: the sub-panel is staged at (bf.origin.x, -bf.size.height)
+// [above screen] (@ 0x84958-0x84984, y ← -height, x kept), then the info panel
+// animates to (ff.origin.x, screenHeight) [off the bottom] (@ 0x84a94, y ←
+// root.view height) while the sub-panel animates to ff. The reconstruction
+// below swaps on the X axis instead and so DEVIATES; left unmarked pending a
+// corrected vertical rewrite.
 - (void)onOkBtn:(id)sender {
     if (m_IsAnimationing) {
         return;
@@ -303,6 +319,7 @@
 // Guarded so overlapping animations are ignored. (The exact off-screen frame is
 // NEON-spilled in the binary; the panel is moved up by its own height, the
 // reverse of the open slide.)
+// @complete
 - (void)startCloseAnimation {
     if (m_IsAnimationing) {
         return;
@@ -323,6 +340,7 @@
 // @ 0x84fec — close finished: pull the whole VC view out of the hierarchy and
 // tell the delegate the gate is done (so the purchase flow can re-check the
 // spending limit).
+// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     if ([_delegate respondsToSelector:@selector(birthDayViewClose)]) {
@@ -332,6 +350,7 @@
 }
 
 // @ 0x84e70 — open finished: just clear the animating guard.
+// @complete
 - (void)endOpenAnimation {
     m_IsAnimationing = NO;
 }

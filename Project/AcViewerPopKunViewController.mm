@@ -49,6 +49,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // button; the "friman" backdrop (phone only); and the shared custom header
 // (song banner, difficulty banner, title/genre and BPM labels) built from the
 // AC-viewer's current event-center selection.
+// @complete
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleGrouped])) { // Ghidra:
                                                                    // initWithStyle:1
@@ -124,7 +125,8 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     UILabel *bpmLbl =
         AcvMakeHeaderLabel(14.0f, NSTextAlignmentRight, CGRectMake(195.0f, 46.0f, 100.0f, 18.0f));
     if (bpm != nil) {
-        bpmLbl.text = [NSString stringWithFormat:@"BPM:%@", bpm];
+        // Format CFString @ 0x1029a7 = "BPM %@" (a space after "BPM", not a colon).
+        bpmLbl.text = [NSString stringWithFormat:@"BPM %@", bpm];
     }
 
     // Header container: the banner plus a 17 pt gap above and below it
@@ -143,6 +145,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0x7d8f0 — after loading, poke the scene manager (populates the pad-display
 // flag).
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -151,17 +154,20 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0x7d920
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x7d924 — two POP-KUN values in section 0.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (section == 0) ? 2 : 0;
 }
 
 // @ 0x7d930 — one AcViewerDetailCell per value (reused by "Cell%ld_%ld"), bound
 // to the POP-KUN option kind (1) and the row's value label.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -181,11 +187,13 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 }
 
 // @ 0x7da60 — no section headers.
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0x7da64 — no accessory (private UITableView delegate hook).
+// @complete
 - (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
          accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     return UITableViewCellAccessoryNone;
@@ -193,6 +201,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0x7da68 — a new value: store it, refresh, play the decide SE and pop back
 // to the option list. Re-selecting the current value does nothing.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
@@ -211,6 +220,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0x7db38 — BACK: (on a real tap) play the cancel SE, refresh the option list
 // behind this screen, restore the option-list nav-bar background and pop. A nil
 // sender (the post-select auto-pop) skips the cancel SE.
+// @complete
 - (void)touchedBackButton:(id)sender {
     if (sender != nil) {
         neEngine::playSystemSe(2);

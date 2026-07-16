@@ -20,6 +20,11 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba0a4
+// Verified: alloc/init NSFetchRequest, setEntity (entityForName:@"OverScoreData"),
+// predicateWithFormat:@"music = %d and sheet = %d and playerId = %@" with the
+// music/sheet/playerId arguments, executeFetchRequest:error:nil, then
+// count ? lastObject : nil.
+// @complete
 + (OverScoreData *)getOverScoreDataWithMusic:(int)music
                                        sheet:(short)sheet
                                     playerId:(NSString *)playerId
@@ -34,6 +39,9 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba1c0
+// Verified: identical fetch shape to 0xba0a4 with predicate
+// @"music = %d and sheet = %d", returning the raw executeFetchRequest result.
+// @complete
 + (NSArray *)getOverScoreDataWithMusic:(int)music
                                  sheet:(short)sheet
                 inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -43,11 +51,17 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba2b0
+// Verified: alloc/init/setEntity fetch with NO predicate set, executeFetchRequest
+// returned directly.
+// @complete
 + (NSArray *)getAllOverScoreData:(NSManagedObjectContext *)context {
     return [context executeFetchRequest:OverScoreFetch(context, nil) error:nil];
 }
 
 // Ghidra: @ 0xba350
+// Verified: reset, getOverScoreDataWithMusic:sheet:playerId:inManagedObjectContext:,
+// then on a non-nil record setUpdateDate: and save:nil; returns the record.
+// @complete
 + (OverScoreData *)updateOverScoreDateWithMusic:(int)music
                                           sheet:(short)sheet
                                        playerId:(NSString *)playerId
@@ -66,6 +80,10 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba3d4
+// Verified: reset, fetch with predicate @"music = %d"; on nil / count == 0 return
+// 0, else fast-enumerate setting each record's setIsTouched:@1
+// (numberWithInt:1), save:nil, return count.
+// @complete
 + (NSUInteger)updateOverScoreTouchedWithMusic:(int)music
                        inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
@@ -82,6 +100,10 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba5e4
+// Verified: reset, insertNewObjectForEntityForName:@"OverScoreData", then in
+// order setMusic:(numberWithInt:), setSheet:(numberWithShort:), setPlayerId:,
+// setUpdateDate:, setIsTouched:nil, save:nil; returns the record.
+// @complete
 + (OverScoreData *)addRecordWithMusic:(int)music
                                 sheet:(short)sheet
                              playerId:(NSString *)playerId
@@ -100,6 +122,9 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba6e8
+// Verified: reset, fetch with predicate @"music = %d"; on nil / count == 0 return
+// 0, else fast-enumerate deleteObject: each record, save:nil, return count.
+// @complete
 + (NSUInteger)deleteRecordWithMusic:(int)music
              inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
@@ -116,6 +141,10 @@ static NSFetchRequest *OverScoreFetch(NSManagedObjectContext *context, NSPredica
 }
 
 // Ghidra: @ 0xba8d8
+// Verified: reset, fetch with predicate @"music = %d and sheet = %d"; on nil /
+// count == 0 return 0, else fast-enumerate deleteObject: each record, save:nil,
+// return count.
+// @complete
 + (NSUInteger)deleteRecordWithMusic:(int)music
                               sheet:(short)sheet
              inManagedObjectContext:(NSManagedObjectContext *)context {

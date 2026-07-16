@@ -31,6 +31,7 @@
 // @ 0xe7cec — build the code-entry screen. Two layouts: the entry form (code
 // field + decide button) when the code has not yet been redeemed, or a single
 // "already used" banner when it has.
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -117,17 +118,20 @@
 // didReceiveMemoryWarning @ 0xe8518 — super-only override, omitted.
 
 // @ 0xe8544
+// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     return YES;
 }
 
 // @ 0xe8548
+// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [_codeField resignFirstResponder];
     return YES;
 }
 
 // @ 0xe8570 — cap the code at 8 characters.
+// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -138,6 +142,7 @@
 
 // @ 0xe85d8 — decide button: validate the entered code, then POST it (or show
 // why not).
+// @complete
 - (void)touchedDecideButton:(id)sender {
     NSString *code = [_codeField.text uppercaseString];
     if (code.length == 0) {
@@ -177,6 +182,7 @@
 }
 
 // @ 0xe87fc — back button: play the cancel SE and pop.
+// @complete
 - (void)touchedBackButton {
     neEngine::playSystemSe(2);
     [self.navigationController popViewControllerAnimated:YES];
@@ -185,6 +191,7 @@
 // @ 0xe8840 — invite POST finished. An empty (non-JSON) body means success ->
 // grant 5 tickets and mark the code redeemed; a JSON body carries an ErrorCode
 // to report.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     BOOL success;
@@ -233,6 +240,7 @@
 }
 
 // @ 0xe8a5c — invite POST failed (network/transport error).
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_indicator stopAnimating];
@@ -248,6 +256,7 @@
 
 // @ 0xe8b28 — dismissing the success alert (iPhone only) pops back to the
 // invite top.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (neSceneManager::isPadDisplay()) {
         return;
@@ -257,6 +266,7 @@
 
 // @ 0xe8b5c — start the invite HTTP POST ("uuid=<uuid>&player_id=<code>") and
 // spin.
+// @complete
 - (void)startInviteHttp:(NSString *)code {
     if (_downloader != nil) {
         return;

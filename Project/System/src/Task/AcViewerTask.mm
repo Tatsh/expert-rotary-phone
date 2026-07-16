@@ -58,6 +58,7 @@ AcViewerTask::AcViewerTask() = default;
 // chains to the C_TASK base: this task frees its HUD/textures/layers +
 // AcNoteMng in cleanup() (state 9), so there is no per-member teardown here.
 // ~C_TASK() (caSourceNode_dtor) runs implicitly after this.
+// @complete
 AcViewerTask::~AcViewerTask() = default;
 
 // ===========================================================================
@@ -65,6 +66,12 @@ AcViewerTask::~AcViewerTask() = default;
 // the chart + BGM/SE, build the two AepLyrCtrl overlays, load the digit
 // textures and register the per-layer HUD draw callback. Runs once (state 2 ->
 // 3).
+//
+// DEVIATION (not @complete): right after building the top layer (Ghidra
+// 0x228a6..0x228bc), the binary also writes two fields on the PAUSE_LOOP layer
+// object -- pauseLayer[+0x18] = 0 and pauseLayer[+0x1c] = m_pauseBtnHeight / 2 --
+// which this reconstruction does not model, because those are internal AepLyrCtrl
+// fields the class abstracts. Everything else here is instruction-faithful.
 // ===========================================================================
 
 // getUserNo layer-name table (Ghidra: DAT_00130bc4, 7 names) -> +0xb8. These
@@ -288,6 +295,7 @@ void AcViewerTask::setup() {
 // loadChart — Ghidra loadChartData (FUN_0002316c). Fetch the AcMusicData for
 // the selected song, async-load its BGM, pick the sheet by difficulty and hand
 // it to AcNoteMng::initPlayData.
+// @complete
 // ===========================================================================
 void AcViewerTask::loadChart() {
     AudioManager *audio = [AudioManager sharedManager];
@@ -359,6 +367,18 @@ void AcViewerTask::loadChart() {
 // drawActiveNotes — Ghidra drawActiveNotes (FUN_00022cac). Blit each in-flight
 // note at its lane/scroll position, count the ones that reached the judge line
 // into the combo/gauge, then blit the moving time-line marker.
+//
+// DEVIATION (not @complete): two mismatches against the binary remain.
+//   1. Approaching-note sprite: the binary branches on the POP-KUN option
+//      (m_popKun @ +0x1f8, Ghidra 0x22ea0..0x22eca) and blits a different
+//      sprite/frame table when POP-KUN is on; this reconstruction always uses the
+//      BEAT_POPN_WHITE/BLUE frames regardless, so the POP-KUN draw path is not
+//      reconstructed.
+//   2. Time-line denominator: the binary reads the runtime global at 0x16ebd8
+//      (ldr [.., #0xfa28], Ghidra 0x22f80) for `total`; the reconstruction instead
+//      uses the literal 0x16ebd8 (the address, not its contents), which is wrong --
+//      `total` should be the value of that global (a zero-initialised engine
+//      variable set during play).
 // ===========================================================================
 void AcViewerTask::drawActiveNotes() {
     AepManager &aep = AepManager::shared();
@@ -498,6 +518,7 @@ void AcViewerTask::drawActiveNotes() {
 // gauge: each cell shows its empty frame, and cells below the current fill
 // level show the lit frame nudged in by 2px (phone) / 4px (pad). The fill level
 // is (base+combo)*0x18/0x400.
+// @complete
 // ===========================================================================
 void AcViewerTask::drawLifeGauge() {
     AepManager &aep = AepManager::shared();
@@ -560,6 +581,7 @@ void AcViewerTask::drawLifeGauge() {
 // The only field that survives the wipe is the pad "board up" byte (@ +0x1d9):
 // it is saved before the memset and restored afterwards, but only on the pad
 // display.
+// @complete
 // ===========================================================================
 void AcViewerTask::cleanup() {
     AepManager &aep = AepManager::shared();
@@ -650,6 +672,13 @@ void AcViewerTask::cleanup() {
 //   open +0x1d8 pad display +0x1d9 pad board up +0xd4 ready-SE id +0xd8
 //   ready-SE instance +0xfc pause-time snapshot +0x204 end-hold frame counter
 //   +0x10c screen scale.
+//
+// DEVIATION (not @complete): in state 9, when the transition is not yet done, the
+// binary branches to the shared draw tail (Ghidra: bne 0x22276) so
+// updateAndDrawAepLayers + the note/gauge draw passes still run that frame (only the
+// state-advance store at 0x22272 is skipped). This reconstruction instead returns
+// early, skipping the per-frame AEP draw during the teardown transition. Every other
+// state and the touch preamble are instruction-faithful.
 //
 void AcViewerTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
@@ -1045,6 +1074,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
 // user-draw callback: dispatch on the layer's user number (resolved into
 // +0xb8..+0xd0) and blit that HUD element (music title, combo/score/gauge digit
 // runs, COOL/GREAT).
+// @complete
 // ===========================================================================
 void AcViewerHudDraw(int child,
                      int frame,

@@ -10,10 +10,12 @@
 @implementation HttpConn
 
 // receivedString @ 0x6ab60, status / setStatus: @ 0x6ab74 / 0x6ab88 (atomic).
+// @complete
 @synthesize receivedString = receivedString;
 @synthesize status = status;
 
 // @ 0x6a550
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         status = HttpConnStatusReady;
@@ -22,6 +24,7 @@
 }
 
 // @ 0x6a58c
+// @complete
 - (void)get:(NSString *)urlString {
     if (status != HttpConnStatusReady) {
         NSLog(@"Http Util is not READY.");
@@ -46,6 +49,7 @@
 }
 
 // @ 0x6a6c4
+// @complete
 - (void)post:(NSString *)urlString paramString:(NSString *)paramString {
     if (status != HttpConnStatusReady) {
         NSLog(@"Http Util is not READY.");
@@ -151,21 +155,25 @@
 #else
 
 // @ 0x6a8c0
+// @complete
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     [self handleResponse:response];
 }
 
 // @ 0x6a978
+// @complete
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     [self handleData:data];
 }
 
 // @ 0x6a9c8
+// @complete
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     [self handleFailWithError:error];
 }
 
 // @ 0x6aa38
+// @complete
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [self handleFinish];
 }

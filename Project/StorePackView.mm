@@ -16,9 +16,11 @@
 
 @synthesize delegate = m_Delegate; // delegate @ 0x52784 / setDelegate: @ 0x52794 (synthesized)
 @synthesize index = m_Index;       // index @ 0x527a4 (synthesized getter)
+// @complete
 
 // @ 0x51a44 — build the tile. All colour and geometry constants are
 // byte-verified from the literal pool and disassembly.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         // Background image view fills the tile and owns the tap gesture.
@@ -137,6 +139,7 @@
 
 // @ 0x5258c — bind a pack model: labels, "new" marker, arcade-viewer marker,
 // and the purchased / ticket state (derived live from PurchaseManager).
+// @complete
 - (void)loadPackInfo:(StorePackInfo *)packInfo index:(unsigned int)index {
     m_NameLabel.text = [packInfo packName];
     m_CommentLabel.text = [packInfo s_comment];
@@ -158,28 +161,33 @@
 }
 
 // @ 0x524a8
+// @complete
 - (void)setArtwork:(UIImage *)artwork {
     m_ArtworkImageView.image = artwork;
 }
 
 // @ 0x52488 — swap the tile's background image.
+// @complete
 - (void)setBgImage:(UIImage *)image {
     m_BackGroundImageView.image = image;
 }
 
 // @ 0x52530 — the button's visibility is the source of truth for the purchased
 // flag.
+// @complete
 - (BOOL)isPurchased {
     return !m_PurchasedButton.hidden;
 }
 
 // @ 0x52560 — show/hide the "purchased" button.
+// @complete
 - (void)setIsPurchased:(BOOL)purchased {
     m_PurchasedButton.hidden = !purchased;
 }
 
 // @ 0x524c8 — whole-tile tap: play the decide SE, then hand off to the
 // delegate.
+// @complete
 - (void)handleTap:(UITapGestureRecognizer *)recognizer {
     if (![m_Delegate respondsToSelector:@selector(packViewSelected:)]) {
         return;

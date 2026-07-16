@@ -78,6 +78,7 @@ static const NSInteger kNamePlateTag[4] = {204, 205, 206, 207};
 // pane layout used when popping back to CheckerMusicViewController:
 // CGRectMake(385, 182, 320, 716).
 // Owner: CheckerDetail.touchedBackButton: (animations block @ ~0xd9678).
+// @complete
 static void setNavControllerViewFrameTall(CheckerDetail *self) {
     self.navigationController.view.frame = CGRectMake(385.0f, 182.0f, 320.0f, 716.0f);
 }
@@ -108,6 +109,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 
 // @ 0xd7418 — redraw `image` through a device-gray bitmap context to grayscale
 // it.
+// @complete
 - (UIImage *)convertGrayScaleImage:(UIImage *)image {
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
     CGContextRef context;
@@ -133,6 +135,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 }
 
 // @ 0xd752c
+// @complete
 - (instancetype)initWithScoreData:(ArcadeScoreData *)scoreData {
     self = [super init];
     _arcadeScoreData = scoreData;
@@ -490,7 +493,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
                 int value = topValue;
                 for (int d = 0; d < topDigits; d++) {
                     UIImage *digitImg = [UIImage
-                        imageNamed:[NSString stringWithFormat:@"ppc_ps_num_top_%d", value % 10]];
+                        imageNamed:[NSString stringWithFormat:@"ppc_ps_num_top%d", value % 10]];
                     UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
                     [digitView
                         setFrame:CGRectMake(
@@ -553,7 +556,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
                 int value = aveValue;
                 for (int d = 0; d < aveDigits; d++) {
                     UIImage *digitImg = [UIImage
-                        imageNamed:[NSString stringWithFormat:@"ppc_ps_num_ave_%d", value % 10]];
+                        imageNamed:[NSString stringWithFormat:@"ppc_ps_num_ave%d", value % 10]];
                     UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
                     [digitView
                         setFrame:CGRectMake(
@@ -575,7 +578,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
                 int value = youValue;
                 for (int d = 0; d < youDigits; d++) {
                     UIImage *digitImg = [UIImage
-                        imageNamed:[NSString stringWithFormat:@"ppc_ps_num_you_%d", value % 10]];
+                        imageNamed:[NSString stringWithFormat:@"ppc_ps_num_you%d", value % 10]];
                     UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
                     [digitView
                         setFrame:CGRectMake(
@@ -608,6 +611,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 // viewDidLoad @ 0xd964c — super-only override, ARC/omit (no added behavior).
 
 // @ 0xd9678 — back to the song list; on iPad first shrink the split nav pane.
+// @complete
 - (void)touchedBackButton:(id)sender {
     neEngine::playSystemSe(2); // cancel SE
     if (neSceneManager::isPadDisplay()) {
@@ -625,6 +629,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 
 // @ 0xd97c4 — switch the active sheet (button tag 200..203), lighting its
 // column and dimming the previously selected one.
+// @complete
 - (void)touchedSheetButton:(id)sender {
     NSInteger tag = [sender tag];
     if ((NSUInteger)(tag - 200) >= 4) {
@@ -678,6 +683,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 
 // @ 0xd9aac — tapping the selected column's score plate (tag 204..207) flips
 // between showing the top score and the top holder's name.
+// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     NSInteger tag = [[[touches anyObject] view] tag];
     if ((NSUInteger)(tag - 204) >= 4) {

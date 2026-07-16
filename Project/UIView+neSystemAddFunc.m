@@ -20,6 +20,7 @@
 @implementation UIView (neSystemAddFunc)
 
 // @ 0x7dc90
+// @complete
 - (void)setHarfSize {
     CGRect b = self.bounds;
     b.size.width *= 0.5f; // 0x3f000000
@@ -28,6 +29,7 @@
 }
 
 // @ 0x7dd08
+// @complete
 - (void)setHarfOrigin {
     CGRect f = self.frame;
     f.origin.x *= 0.5f;
@@ -36,6 +38,7 @@
 }
 
 // @ 0x7dd88
+// @complete
 - (void)setHarfSizeAndOrigin {
     CGRect f = self.frame;
     f.origin.x *= 0.5f;
@@ -46,6 +49,7 @@
 }
 
 // @ 0x7de20
+// @complete
 - (void)SetFlashEffectDuration:(float)duration Start:(float)startOpacity End:(float)endOpacity {
     [self RemoveFlashEffect];
 
@@ -61,12 +65,14 @@
 }
 
 // @ 0x7dfd0
+// @complete
 - (void)SetFlashEffectFast {
     // 0x3eaaaaab (~1/3 s), 0x3f800000 (1.0), 0x3e4ccccd (0.2)
     [self SetFlashEffectDuration:0.33333334f Start:1.0f End:0.2f];
 }
 
 // @ 0x7e160
+// @complete
 - (void)SetJumpEffectBaseX:(float)baseX BaseY:(float)baseY {
     CGMutablePathRef path = CGPathCreateMutable();
     CGPathMoveToPoint(path, NULL, baseX, baseY);
@@ -95,6 +101,7 @@
 }
 
 // @ 0x7e3c4
+// @complete
 - (void)setPopupEffect {
     [self removePopupEffect];
 
@@ -125,11 +132,13 @@
 }
 
 // @ 0x7df9c
+// @complete
 - (void)RemoveFlashEffect {
     [self.layer removeAnimationForKey:@"FLUSH_ANIM"];
 }
 
 // @ 0x7eac0
+// @complete
 - (void)removePopupEffect {
     [self.layer removeAnimationForKey:@"transAnimation"];
 }

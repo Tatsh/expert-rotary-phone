@@ -21,6 +21,7 @@
 }
 
 // @ 0x62be8 — empty image view for `urlString`.
+// @complete
 - (id)initWithURLString:(NSString *)urlString {
     self = [super init];
     if (self != nil) {
@@ -34,6 +35,7 @@
 
 // @ 0x62c5c — image view for `urlString` showing `image` until the download
 // completes.
+// @complete
 - (id)initWithURLString:(NSString *)urlString withImage:(UIImage *)image {
     self = [super initWithImage:image];
     if (self != nil) {
@@ -44,6 +46,7 @@
 }
 
 // @ 0x62d30 — build the centered progress spinner and add it as a subview.
+// @complete
 - (void)SetupView {
     CGRect bounds = self.bounds;
     UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc]
@@ -60,6 +63,7 @@
 
 // @ 0x62e24 — start the fetch once: spin, create the downloader, hand it the
 // URL and self as delegate, and kick it off after a 1s delay.
+// @complete
 - (void)startDownload {
     if (m_ImageDownLoader == nil) {
         [m_IndicatorView startAnimating];
@@ -72,6 +76,7 @@
 
 // @ 0x62ef0 — ImageDownloaderDelegate: swap in the decoded image, stop the
 // spinner, drop the downloader.
+// @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     UIImage *image = [downloader getImage];
     if (image != nil) {
@@ -83,6 +88,7 @@
 
 // @ 0x62f60 — ImageDownloaderDelegate: on failure just stop the spinner and
 // drop the downloader.
+// @complete
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     [m_IndicatorView stopAnimating];
     m_ImageDownLoader = nil;
@@ -91,6 +97,7 @@
 // @ 0x62cd0 — dealloc: cancel any in-flight download (kept, not a plain
 // object-only teardown). ARC supplies the ivar release and the [super dealloc]
 // chain.
+// @complete
 - (void)dealloc {
     if (m_ImageDownLoader != nil) {
         [m_ImageDownLoader cancelDownload];

@@ -18,17 +18,20 @@
 @implementation RecommendWebViewController
 
 // @ 0xe97ac
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 // @ 0xe97d8
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xe9804 — drop the delegate, pull the view out of its superview, then chain
 // up.
+// @complete
 - (void)viewDidUnload {
     [self setDelegate:nil];
     [[self view] removeFromSuperview];
@@ -36,12 +39,14 @@
 }
 
 // @ 0xe9878 — detach the web view delegate.
+// @complete
 - (void)removeFromSuperview {
     [self setDelegate:nil];
 }
 
 // @ 0xe988c — pull the view out of its superview, then chain up to the base
 // close handler.
+// @complete
 - (void)appliListClosed {
     [[self view] removeFromSuperview];
     [super appliListClosed];
@@ -50,7 +55,10 @@
 // @ 0xe98ec — let RecommendCore intercept applilink redirects. When the request
 // is not a redirect and the navigation bar is visible, treat the tap as leaving
 // the applist and close. Returns whether the core consumed the request as a
-// redirect. Shared by both web-view backends.
+// redirect. Shared by both web-view backends. (Extracted from the binary's
+// UIWebView delegate webView:shouldStartLoadWithRequest:navigationType: @
+// 0xe98ec, whose body is this helper.)
+// @complete
 - (BOOL)shouldStartLoadWithRequest:(NSURLRequest *)request {
     BOOL redirected = [[RecommendCore sharedInstance] redirectWithRequest:request];
     if (![self isNavigationBarHidden] && !redirected) {

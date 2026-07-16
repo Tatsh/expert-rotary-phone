@@ -27,6 +27,7 @@ static int HexToInt(unichar inCharacter) {
 @implementation CJSONScanner
 
 // @ 0x67760
+// @complete
 - (id)init {
     if ((self = [super init]) != nil) {
         strictEscapeCodes = NO;
@@ -37,6 +38,7 @@ static int HexToInt(unichar inCharacter) {
 // dealloc @ 0x677a0 — ARC-omitted (chains to super only; no owned ivars).
 
 // @ 0x677cc
+// @complete
 - (void)setData:(NSData *)inData {
     if (inData != NULL && [inData length] >= 4) {
         const char *theBytes = (const char *)[inData bytes];
@@ -68,6 +70,7 @@ static int HexToInt(unichar inCharacter) {
 }
 
 // @ 0x678d0
+// @complete
 - (BOOL)scanJSONObject:(id *)outObject error:(NSError **)outError {
     [self skipWhitespace];
     id theObject = NULL;
@@ -122,6 +125,7 @@ static int HexToInt(unichar inCharacter) {
 }
 
 // @ 0x67a74
+// @complete
 - (BOOL)scanJSONDictionary:(NSDictionary **)outDictionary error:(NSError **)outError {
     NSUInteger theScanLocation = [self scanLocation];
     if ([self scanCharacter:'{'] == NO) {
@@ -236,13 +240,17 @@ static int HexToInt(unichar inCharacter) {
 }
 
 // @ 0x67f48
+// @complete
 - (BOOL)scanJSONArray:(NSArray **)outArray error:(NSError **)outError {
     NSUInteger theScanLocation = [self scanLocation];
     if ([self scanCharacter:'['] == NO) {
         if (outError != NULL) {
             NSDictionary *theUserInfo =
+                // The binary's literal reads '{' here, matching an upstream
+                // TouchJSON copy-and-paste bug (string @ 0x1079db, referenced
+                // @ 0x680f2); reproduced verbatim.
                 [NSDictionary dictionaryWithObjectsAndKeys:
-                                  @"Could not scan array. Array not started by a '[' character.",
+                                  @"Could not scan array. Array not started by a '{' character.",
                                   NSLocalizedDescriptionKey,
                                   NULL];
             *outError = [NSError errorWithDomain:kJSONScannerErrorDomain
@@ -314,6 +322,7 @@ finish:
 }
 
 // @ 0x682c8
+// @complete
 - (BOOL)scanJSONStringConstant:(NSString **)outStringConstant error:(NSError **)outError {
     NSUInteger theScanLocation = [self scanLocation];
     [self skipWhitespace];
@@ -414,6 +423,7 @@ finish:
 }
 
 // @ 0x68690
+// @complete
 - (BOOL)scanJSONNumberConstant:(NSNumber **)outNumber error:(NSError **)outError {
     NSNumber *theNumber = NULL;
     if ([self scanNumber:&theNumber]) {
@@ -433,6 +443,7 @@ finish:
 }
 
 // @ 0x68734
+// @complete
 - (BOOL)scanNotQuoteCharactersIntoString:(NSString **)outString {
     // `current` and `end` are @protected byte-cursor ivars inherited from
     // CDataScanner.
@@ -453,6 +464,7 @@ finish:
 }
 
 // @ 0x687e0
+// @complete
 - (BOOL)strictEscapeCodes {
     return strictEscapeCodes;
 }

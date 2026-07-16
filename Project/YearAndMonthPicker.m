@@ -17,6 +17,7 @@
 // month list (12 months repeated 14 times = 168 rows so the wheel scrolls
 // endlessly), and default the selection to January 2000 (year row 100 -> 1900 +
 // 100; month row 84 -> the middle band).
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -45,6 +46,7 @@
 
 // @ 0x8f410 / 0x8f424 — the selected values (kept up to date by
 // -pickerView:didSelectRow:).
+// @complete
 - (int)year {
     return _year;
 } // @ 0x8f410
@@ -53,12 +55,14 @@
 } // @ 0x8f424
 
 // @ 0x8f030 — a year wheel and a month wheel.
+// @complete
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
     return 2;
 }
 
 // @ 0x8f034 — 200 years on the first wheel; the pre-repeated month list on the
 // second.
+// @complete
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
     if (component == 0) {
         return 200;
@@ -71,6 +75,7 @@
 
 // @ 0x8f064 — column widths (narrower pre-iOS 7, where the year column is
 // widened).
+// @complete
 - (CGFloat)pickerView:(UIPickerView *)pickerView widthForComponent:(NSInteger)component {
     if (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) {
         return (component == 0) ? 105.0f : 75.0f;
@@ -81,6 +86,7 @@
 // @ 0x8f0e4 — recenter the wrapping month wheel to its middle band (so it
 // scrolls endlessly), then latch the selected year (row + 1900) and month
 // (1..12).
+// @complete
 - (void)pickerView:(UIPickerView *)pickerView
       didSelectRow:(NSInteger)row
        inComponent:(NSInteger)component {
@@ -93,6 +99,7 @@
 // @ 0x8f180 — a per-row label: " YYYY" for the year wheel, the month title for
 // the month wheel; black HelveticaNeue-Bold 18, white background on iOS 7+
 // (clear before).
+// @complete
 - (UIView *)pickerView:(UIPickerView *)pickerView
             viewForRow:(NSInteger)row
           forComponent:(NSInteger)component

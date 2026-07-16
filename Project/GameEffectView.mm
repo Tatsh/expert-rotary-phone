@@ -21,15 +21,14 @@
 //  phone (+245, +15); pad iOS>=7 (+230, +8) / pre-iOS7
 //  (+210, +8) — recovered from DAT_00073514/0c/10; see NEON note below.
 //
-//  HONESTY NOTE — verbatim label texts. The cell/ header UILabel text is set
-//  from deduplicated CFString constants that, when byte-decoded, read as
-//  strings unrelated to this screen: row-0 cell text is the UTF-16LE
-//  "フレンドを解除します" (@ 0x12ce90, flags 0x7d0, len 10), row-1 cell text is
-//  the ASCII "custom_bg" (@ 0x10b242), and the section-header label text is the
-//  ASCII "Sheet" (@ 0x108f25). These are byte-exact from the binary and appear
-//  to be leftover / linker-merged placeholder literals — the meaningful on/off
-//  state is conveyed by the m_sort_check checkmark image. Reproduced verbatim
-//  rather than "corrected".
+//  Label texts. The cell and header UILabel texts are the meaningful,
+//  screen-appropriate Japanese captions, decoded byte-exact from their UTF-16LE
+//  (flags 0x7d0) CFString constants: row-0 cell text is "背景演出" (background
+//  effect, @ 0x12c61a, len 4), row-1 cell text is "ロングノート演出" (long-note
+//  effect, @ 0x12c624, len 8), and the section-header label text is "ゲーム演出"
+//  (game effect, @ 0x12c636, len 5). All three verified against read_memory of
+//  the CFString data pointers; the row captions line up with the isEffectOn and
+//  isLongNotesEffectOn toggles respectively.
 //
 //  Checkmark origin: imageView.frame starts at (0,0) after -initWithImage:;
 //  constant offsets are added via NEON vadd. All offsets confirmed exact by
@@ -49,6 +48,7 @@
 // @ 0x72d4c — grouped-table styling. On phone the whole table gets a
 // "back_bg_st" patterned background and 61 px rows; on iPad the table is made
 // borderless and clear.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self != nil) {
@@ -72,6 +72,7 @@
 // @ 0x72edc — phone: tile the table with "popkun_size_bg" and install a custom
 // "navi_btn_back" back button (targets -backButtonFunc). iPad: just hide the
 // back button.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -97,6 +98,7 @@
 }
 
 // @ 0x730f4
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -104,18 +106,21 @@
 #pragma mark - Table
 
 // @ 0x73120
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x73124
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return 2; // row 0 = isEffectOn, row 1 = isLongNotesEffectOn
 }
 
-// @ 0x73128 — one toggle row: a text label (see HONESTY NOTE), an on/off
-// checkmark, and (iPad only) a "custom_bt02" row background. Reuse id is
-// "Cell<section>-<row>".
+// @ 0x73128 — one toggle row: a text label (row 0 "背景演出", row 1 "ロングノート
+// 演出"), an on/off checkmark, and (iPad only) a "custom_bt02" row background.
+// Reuse id is "Cell<section>-<row>".
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *cellId =
@@ -131,12 +136,10 @@
     cell.textLabel.backgroundColor = [UIColor clearColor];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
-    // Verbatim leftover/placeholder label texts (see HONESTY NOTE in the file
-    // header).
     if (indexPath.row == 0) {
-        cell.textLabel.text = @"フレンドを解除します"; // UTF-16LE @ 0x12ce90
+        cell.textLabel.text = @"背景演出"; // UTF-16LE @ 0x12c61a (background effect)
     } else {
-        cell.textLabel.text = @"custom_bg"; // ASCII @ 0x10b242
+        cell.textLabel.text = @"ロングノート演出"; // UTF-16LE @ 0x12c624 (long-note effect)
     }
 
     // iPad only: a per-row background art (top row vs. under row).
@@ -172,6 +175,7 @@
 
 // @ 0x73518 — play the decide SE, flip the tapped row's stored flag, then
 // reload the row so its checkmark updates.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     neEngine::playSystemSe(1); // decide SE (Ghidra: SysSePlayIntoSlot(1))
 
@@ -186,9 +190,9 @@
 }
 
 // @ 0x735dc — section header: a clear container UIView holding a centred label.
-// The label text is the verbatim "Sheet" leftover constant (see HONESTY NOTE).
-// Phone uses a 320x61 container at x=15 with a 16 pt font; iPad a 320x32
-// container at x=5 with 14 pt.
+// The label text is the "ゲーム演出" (game effect) caption. Phone uses a 320x61
+// container at x=15 with a 16 pt font; iPad a 320x32 container at x=5 with 14 pt.
+// @complete
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     CGRect frame;
     CGFloat fontSize;
@@ -207,7 +211,7 @@
 
     UILabel *label = [[UILabel alloc] initWithFrame:frame];
     label.font = [UIFont fontWithName:AppFontName() size:fontSize];
-    label.text = @"Sheet"; // ASCII @ 0x108f25 (verbatim leftover constant)
+    label.text = @"ゲーム演出"; // UTF-16LE @ 0x12c636 (game effect)
     label.backgroundColor = [UIColor clearColor];
     [header addSubview:label];
 
@@ -215,6 +219,7 @@
 }
 
 // @ 0x737b0 — 61 pt header on phone, 32 pt on iPad.
+// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return neSceneManager::isPadDisplay() ? 32.0f : 61.0f; // 0x42000000 / 0x42740000
 }
@@ -222,6 +227,7 @@
 // @ 0x737d8 — back-button action: play the cancel SE, restore the
 // "settings_navbar" bar background, pop self, then re-apply the stored SE
 // volume.
+// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // cancel SE (Ghidra: SysSePlayIntoSlot(2))
 

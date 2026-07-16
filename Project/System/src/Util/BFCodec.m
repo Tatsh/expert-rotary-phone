@@ -29,6 +29,9 @@ typedef struct {
 // by the compiler as three separate entry points, one per call site
 // (-init, -cipherInit:keyLength:, -dealloc); they are one logical clear.
 // @ 0x5b234 / 0x5b244 / 0x5b258
+// All three verified: `movs r1,#0; movw r2,#0x1048; blx memset` — a zero-fill
+// of the whole 0x1048-byte context.
+// @complete
 static inline void blowfishCtxClear(BlowfishCtx *ctx) {
     memset(ctx, 0, sizeof(BlowfishCtx)); // 0x1048 bytes
 }
@@ -46,7 +49,8 @@ static inline uint32_t BF_ReadU32BE(const unsigned char *p) {
 }
 
 // Fixed CBC IV (Ghidra: DAT_0012e6c0). Confirmed constant, matches bfcodec's
-// kDefaultIv.
+// kDefaultIv. Byte-verified via read_memory @ 0x12e6c0: e3 66 31 da 2c 85 a0 64.
+// @complete
 static const uint8_t kInitialIV[8] = {0xE3, 0x66, 0x31, 0xDA, 0x2C, 0x85, 0xA0, 0x64};
 
 // NON-STANDARD F: the ONLY deviation from textbook Blowfish. It combines the
@@ -54,6 +58,9 @@ static const uint8_t kInitialIV[8] = {0xE3, 0x66, 0x31, 0xDA, 0x2C, 0x85, 0xA0, 
 // be
 // ((S0[a] + S1[b]) ^ S2[c]) + S3[d]. Confirmed against the RB-derived reference
 // (~/dev-paused/bfcodec/src/bfcodec.c: bf_f) and Ghidra FUN_0005b40c.
+// Verified against the S-box loads inside FUN_0005b390: S0 at ctx+0x48+0,
+// S1 at +0x400, S2 at +0x800, S3 at +0xc00; the two sums are XORed.
+// @complete
 static inline uint32_t BF_F(const BlowfishCtx *c, uint32_t x) {
     uint32_t a = (x >> 24) & 0xff;
     uint32_t b = (x >> 16) & 0xff;
@@ -63,6 +70,10 @@ static inline uint32_t BF_F(const BlowfishCtx *c, uint32_t x) {
 }
 
 // Ghidra: FUN_0005b390 (block encrypt). Note the halves are swapped on output.
+// Verified: the binary runs 16 single-round iterations (this unrolls 8 by two);
+// the tail xors P[16]/P[17] and writes *xl = (right ^ P[17]), *xr = (left ^
+// P[16]).
+// @complete
 static void BF_EncryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     uint32_t l = *xl, r = *xr;
     for (int i = 0; i < 16; i += 2) {
@@ -78,6 +89,9 @@ static void BF_EncryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 }
 
 // Ghidra: FUN_0005b40c (block decrypt).
+// Verified: the binary loops the P index from 17 down to 2, then xors P[1]/P[0]
+// and writes *xl = (right ^ P[0]), *xr = (left ^ P[1]).
+// @complete
 static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     uint32_t l = *xl, r = *xr;
     for (int i = 16; i >= 2; i -= 2) {
@@ -98,6 +112,9 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 }
 
 // @ 0x5ac14
+// Verified: [super init]; zero the 8-byte _iv ivar; malloc(0x1048) into _blf;
+// then the 0x5b244 clear entry.
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         memset(_iv, 0, sizeof(_iv));                       // Ghidra: _iv zeroed
@@ -109,6 +126,8 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 
 // @ 0x5b154 — KEEP: frees the malloc'd Blowfish context (wipes key material
 // first).
+// Verified: if _blf non-null, 0x5b258 clear then free; then [super dealloc].
+// @complete
 - (void)dealloc {
     if (_blf) {
         blowfishCtxClear(_blf); // @ 0x5b258 — zeroize key material before releasing
@@ -117,6 +136,9 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 }
 
 // @ 0x5ad64
+// Verified: nil-guard, then tail-calls -cipherInit:keyLength: with key.bytes /
+// key.length.
+// @complete
 - (void)cipherInit:(NSData *)key {
     if (key == nil) {
         return;
@@ -124,7 +146,18 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
     [self cipherInit:(const char *)key.bytes keyLength:(int)key.length];
 }
 
-// @ 0x5ad0c — standard Blowfish key schedule.
+// @ 0x5ad0c — standard Blowfish key schedule (the body is the tail-call target
+// FUN_0005b26c; 0x5ad0c is the clear + IV-copy prologue that jumps into it).
+// Verified: clear (0x5b234); copy the 8-byte IV; load ORIG_S (0x12e6c8) into the
+// S-boxes; load ORIG_P (0x12f6c8) fused with the XOR of the cycled key into the
+// P-array; diffuse P, then the S-boxes, by repeatedly encrypting a running
+// zero block. The P/S load and key-XOR are three loops here versus the binary's
+// two (S-load, then a fused P-load + key-XOR); the per-index writes are
+// independent, so the resulting state is identical. Constant tables byte-checked
+// via read_memory: P[0]=0x243f6a88, S[0][0]=0xd1310ba6 (canonical, stored
+// little-endian words; the .inc vendors them big-endian and BF_ReadU32BE reads
+// them back to the same words).
+// @complete
 - (void)cipherInit:(const char *)key keyLength:(int)length {
     blowfishCtxClear(_blf); // @ 0x5b234 — wipe the context before loading the schedule
     memcpy(_iv, kInitialIV, 8);
@@ -170,6 +203,12 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 }
 
 // @ 0x5adb4 — CBC encrypt in place + append [origLen BE][paddedLen BE] trailer.
+// Verified: setLength to (origLen + 0xf) & ~7 (== padded + 8); IV -> cl/cr;
+// per-block read 4+4 bytes (zero-padding the final partial block via the
+// in<origLen guard), XOR the chain, encrypt, store big-endian, chain forward;
+// trailer = origLen BE then (origLen + 7) BE with the low byte masked & 0xf8;
+// return (origLen + 0xf) & ~7.
+// @complete
 - (unsigned int)encipher:(NSMutableData *)data {
     NSUInteger origLen = data.length;
     NSUInteger padded = (origLen + 7) & ~7u;
@@ -227,6 +266,12 @@ static void BF_DecryptBlock(const BlowfishCtx *c, uint32_t *xl, uint32_t *xr) {
 }
 
 // @ 0x5af78 — validate trailer, CBC decrypt in place, truncate to origLen.
+// Verified: reject len < 8; read origLen BE at [body] and paddedLen BE at
+// [len-4]; reject unless paddedLen == body and body == (origLen + 7) & ~7;
+// IV -> cl/cr; per-block read the ciphertext, decrypt, XOR the previous
+// ciphertext (IV first), store, chain from the saved ciphertext; setLength to
+// origLen; return YES.
+// @complete
 - (BOOL)decipher:(NSMutableData *)data {
     NSUInteger len = data.length;
     if (len < 8) {
