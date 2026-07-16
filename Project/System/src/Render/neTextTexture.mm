@@ -45,6 +45,7 @@ struct neGlyph {
 };
 
 // Ghidra: FUN_00017998.
+// @complete
 neTextTextureMgr *neGetTextTextureMgr(void) {
     return g_pTextTextureMgr;
 }
@@ -74,6 +75,7 @@ namespace neEngine {
 // store actually reaches the static the whole text path reads through
 // neGetTextTextureMgr; a stub in another unit would leave the manager null and
 // every neDrawText would dereference it.
+// @complete
 void bootstrapC(int fixedShift) {
     if (g_pTextTextureMgr != nullptr) {
         return;
@@ -88,6 +90,7 @@ void bootstrapC(int fixedShift) {
 } // namespace neEngine
 
 // Ghidra: FUN_00017a84 — UTF-8 lead-byte length classifier.
+// @complete
 int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
     unsigned c = static_cast<unsigned char>(*s);
     if ((c & 0x80) == 0) {
@@ -116,6 +119,7 @@ int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
 
 // Ghidra: FUN_000180a4 — release the atlas's AepTexture reference and free its
 // pixels.
+// @complete
 neTextTexture::~neTextTexture() {
     delete[] pixels;
     if (texture != nullptr) {
@@ -124,6 +128,7 @@ neTextTexture::~neTextTexture() {
 }
 
 // Ghidra: FUN_000179a8 — free the whole glyph cache and destroy every atlas.
+// @complete
 neTextTextureMgr::~neTextTextureMgr() {
     // Glyph cache: singly-linked (data at +0x00, next at +0x08).
     struct GlyphNode {
@@ -153,6 +158,7 @@ neTextTextureMgr::~neTextTextureMgr() {
 
 // Ghidra: FUN_00017b28 — allocate a fresh 256x256 GL_ALPHA atlas and link it
 // in.
+// @complete
 void neTextTextureMgr::createNewTextTexture() {
     uint8_t *pixels = new uint8_t[0x20000](); // 256x256 zero-cleared cell buffer
     void *tex = neCreateTextureFromData(0x100, 0x100, /*GL_ALPHA*/ 2, pixels, 0x100, 0x100);
@@ -181,6 +187,7 @@ struct neGlyphVertex {
 // @ 0x17ad4
 // Ghidra: FUN_00017ad4 — linear search of the glyph cache for a record matching
 // the first UTF-8 char of `utf8` at `pointSize`; returns null when not cached.
+// @complete
 neGlyph *neTextTextureMgr::findCachedGlyph(const char *utf8, int pointSize) {
     size_t len = utf8CharLen(this, utf8);
     for (neGlyph *g = static_cast<neGlyph *>(glyphList); g != nullptr; g = g->next) {
@@ -194,6 +201,7 @@ neGlyph *neTextTextureMgr::findCachedGlyph(const char *utf8, int pointSize) {
 // @ 0x17b10
 // Ghidra: FUN_00017b10 — find the atlas with index `atlasId` in the manager's
 // list.
+// @complete
 neTextTexture *neTextTextureMgr::findTextTextureById(int atlasId) {
     for (neTextTexture *a = atlases; a != nullptr; a = a->next) {
         if (a->index == atlasId) {
@@ -209,6 +217,7 @@ neTextTexture *neTextTextureMgr::findTextTextureById(int atlasId) {
 // when full. Writes the cell origin to *outX/*outY. Returns false only when the
 // glyph is larger than an atlas (in which case *outX/*outY are left as the
 // caller set them).
+// @complete
 bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
     int retries = 0;
     for (;;) {
@@ -381,6 +390,7 @@ neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, i
 }
 
 // Ghidra: FUN_0001551c — measure, lay out and batch-draw a string.
+// @complete
 void neDrawText(const char *text,
                 void *font,
                 int size,
