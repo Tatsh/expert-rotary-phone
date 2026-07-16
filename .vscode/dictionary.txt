@@ -479,6 +479,8 @@ subviews
 sucessfully
 sugo
 sugoroku
+supersampled
+supersampling
 superview
 superview's
 supportedi
