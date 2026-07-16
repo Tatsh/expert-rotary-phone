@@ -29,6 +29,7 @@ static neRenderer *g_pCurrentRenderer = nullptr; // Ghidra: g_pCurrentRenderer
 static neViewport *g_pCurrentViewport = nullptr; // Ghidra: g_pCurrentViewport (app-side)
 static neViewport *g_pAppliedViewport = nullptr; // Ghidra: DAT_00188454 (renderer-side)
 
+// @complete
 neViewport *neGetCurrentViewport(void) {
     return g_pCurrentViewport;
 }
@@ -38,6 +39,7 @@ neViewport *neGetCurrentViewport(void) {
 // ---------------------------------------------------------------------------
 
 // Ghidra: FUN_00012af4.
+// @complete
 void matrixSetTranslate(neMatrix4 &out, float tx, float ty, float tz) {
     out.m[0] = 1.0f;
     out.m[1] = 0.0f;
@@ -58,6 +60,7 @@ void matrixSetTranslate(neMatrix4 &out, float tx, float ty, float tz) {
 }
 
 // Ghidra: FUN_00012b2c — cos/sin fill the upper-left 2x2 (column-major).
+// @complete
 void matrixSetRotateZ(neMatrix4 &out, float radians) {
     float c = std::cos(radians);
     float s = std::sin(radians);
@@ -81,6 +84,7 @@ void matrixSetRotateZ(neMatrix4 &out, float radians) {
 
 // Ghidra: FUN_00012ba8 — top-left-origin ortho. (The decompiler drops the 2.0f
 // numerator on m[0]; m[5] keeps its -2.0f, confirming the standard form.)
+// @complete
 void matrixSetOrtho(neMatrix4 &out, float width, float height, float near, float far) {
     float depth = far - near;
     out.m[0] = 2.0f / width;
@@ -103,6 +107,7 @@ void matrixSetOrtho(neMatrix4 &out, float width, float height, float near, float
 
 // Ghidra: FUN_000129ac — out = a * b (column-major). The binary uses NEON; the
 // math is the plain 4x4 product.
+// @complete
 void matrix4MultiplyInto(neMatrix4 &out, const neMatrix4 &a, const neMatrix4 &b) {
     for (int col = 0; col < 4; ++col) {
         for (int row = 0; row < 4; ++row) {
@@ -114,6 +119,7 @@ void matrix4MultiplyInto(neMatrix4 &out, const neMatrix4 &a, const neMatrix4 &b)
 }
 
 // Ghidra: FUN_00012958 — inout = inout * rhs (copies inout to a temp first).
+// @complete
 void matrix4Multiply(neMatrix4 &inout, const neMatrix4 &rhs) {
     neMatrix4 tmp = inout;
     matrix4MultiplyInto(inout, tmp, rhs);
@@ -124,11 +130,13 @@ void matrix4Multiply(neMatrix4 &inout, const neMatrix4 &rhs) {
 // ---------------------------------------------------------------------------
 
 // Ghidra: FUN_00012c14.
+// @complete
 neRenderer *neGetCurrentRenderer(void) {
     return g_pCurrentRenderer;
 }
 
 // Ghidra: FUN_00012c24 — swap the current renderer, unbinding the previous one.
+// @complete
 void neSetCurrentRenderer(neRenderer *r) {
     if (g_pCurrentRenderer != nullptr && g_pCurrentRenderer != r) {
         g_pCurrentRenderer->shutdown();
@@ -140,6 +148,7 @@ void neSetCurrentRenderer(neRenderer *r) {
 // its GL state. (Ghidra: operator new(0x224) + neGLESRenderer_ctor
 // FUN_00012c78; the ctor's cache/state seeding is now the neGLES_11
 // constructor's job.)
+// @complete
 void neEnsureRenderer(void) {
     if (neGetCurrentRenderer() != nullptr) {
         return;
@@ -150,6 +159,7 @@ void neEnsureRenderer(void) {
 
 // Ghidra: FUN_00014ba0 — refcount at +0x00; on the last reference the viewport
 // is freed.
+// @complete
 void neReleaseRef(neViewport *vp) {
     if (--vp->refCount == 0) {
         delete vp;
@@ -163,6 +173,7 @@ void neReleaseRef(neViewport *vp) {
 // Ghidra: FUN_00014bb4 — refcount starts at 1 (the caller's
 // neSetCurrentViewport retains a second reference, then releases this creation
 // reference).
+// @complete
 neViewport *neCreateOrthoViewport(float width, float height, int x, int y, int w, int h) {
     neViewport *vp = new neViewport();
     vp->refCount = 1;
@@ -177,6 +188,7 @@ neViewport *neCreateOrthoViewport(float width, float height, int x, int y, int w
 }
 
 // Ghidra: FUN_00014db8.
+// @complete
 void neSetCurrentViewport(neViewport *vp) {
     if (g_pCurrentViewport == vp) {
         return;
@@ -189,6 +201,7 @@ void neSetCurrentViewport(neViewport *vp) {
 }
 
 // Ghidra: FUN_00015e78.
+// @complete
 void neApplyViewport(neRenderer *r, neViewport *vp) {
     if (g_pAppliedViewport == vp) {
         return;
@@ -232,6 +245,7 @@ struct neColorVertex {
 // Ghidra: colours arrive as 0..255 (a,r,g,b); rgb is premultiplied by alpha/255
 // (DAT = 255.0f) and stored [R,G,B,A]. FixedToFP/FPToFixed here are int<->float
 // conversions.
+// @complete
 static uint32_t nePremultRGBA(int a, int r, int g, int b) {
     float f = static_cast<float>(a) / 255.0f;
     uint8_t rr = static_cast<uint8_t>(static_cast<int>(static_cast<float>(r) * f));
@@ -244,6 +258,7 @@ static uint32_t nePremultRGBA(int a, int r, int g, int b) {
 // Shared tail of the untextured primitives: bind the colour vertex arrays,
 // reset to the default 2D state, and draw. Ghidra: the identical block ending
 // each of FUN_00014de4 / FUN_00015188 / FUN_000152ac / FUN_000153e8.
+// @complete
 static void neDrawColorArray(const neColorVertex *verts, int mode, int count) {
     neRenderer *r = neGetCurrentRenderer();
     r->setClientArray(5, true); // texcoord array on
@@ -256,6 +271,7 @@ static void neDrawColorArray(const neColorVertex *verts, int mode, int count) {
 }
 
 // Ghidra: FUN_00014de4 — primitive 3 (GL_LINES), 2 vertices.
+// @complete
 void neDrawLine(float x0, float y0, float x1, float y1, int a, int r, int g, int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
     neColorVertex v[2] = {{x0, y0, c}, {x1, y1, c}};
@@ -263,6 +279,7 @@ void neDrawLine(float x0, float y0, float x1, float y1, int a, int r, int g, int
 }
 
 // Ghidra: FUN_00015188 — primitive 6 (GL_TRIANGLES), 3 vertices.
+// @complete
 void neDrawTriangle(
     float x0, float y0, float x1, float y1, float x2, float y2, int a, int r, int g, int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
@@ -273,6 +290,7 @@ void neDrawTriangle(
 // Ghidra: FUN_000152ac — primitive 4 (GL_TRIANGLE_STRIP) rectangle from (x,y)
 // size (w,h): (x,y),(x+w,y),(x,y+h),(x+w,y+h). The binary adds w/h with
 // vadd.f32, so the corner arithmetic is in floating point.
+// @complete
 void neDrawRect(float x, float y, float w, float h, int a, int r, int g, int b) {
     uint32_t c = nePremultRGBA(a, r, g, b);
     neColorVertex v[4] = {
@@ -286,6 +304,7 @@ void neDrawRect(float x, float y, float w, float h, int a, int r, int g, int b) 
 
 // Ghidra: FUN_000153e8 — primitive 4 (GL_TRIANGLE_STRIP), four explicit
 // corners.
+// @complete
 void neDrawQuad(float x0,
                 float y0,
                 float x1,
@@ -305,6 +324,7 @@ void neDrawQuad(float x0,
 
 // Ghidra: FUN_00014ef4 — apply the current viewport, load an identity model
 // matrix and force every enable-cap to its 2D default (only BLEND stays on).
+// @complete
 void neApplyDefaultRenderState(void) {
     neRenderer *r = neGetCurrentRenderer();
     neApplyViewport(r, g_pCurrentViewport);
@@ -345,6 +365,7 @@ struct neTexParamCacheView {
 
 // Ghidra: FUN_0001885c — skip glTexParameteri when the value is already cached
 // on the texture; the setter itself is dispatched on the renderer (+0xc4).
+// @complete
 void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
     int32_t &slot = reinterpret_cast<neTexParamCacheView *>(tex)->value[type];
     if (slot == value) {
@@ -364,6 +385,7 @@ void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
 
 // Ghidra: FUN_00013778 — clear the 8-slot bound-texture cache of this name,
 // then delete.
+// @complete
 void neDeleteTexture(neRenderer *r, int name) {
     auto &cache = static_cast<ne::neGLES_11 *>(r)->texBindCache;
     for (unsigned &slot : cache.names) {
@@ -402,11 +424,13 @@ struct neSpriteView {
     int32_t texParams[4]; // +0x08 mag/min/wrapS/wrapT
 };
 
+// @complete
 static int16_t neNormUV(float t) {
     return static_cast<int16_t>(t * 32767.0f); // DAT_0001630c
 }
 
 // Ghidra: FUN_00015fb8.
+// @complete
 void neDrawTexturedQuad(void *sprite,
                         int x,
                         int y,
@@ -648,6 +672,7 @@ void neDrawTexturedQuad(void *sprite,
 
 // Ghidra: FUN_00014c5c — a fresh node: empty owner list, no parent, identity
 // matrices, visible.
+// @complete
 neRenderNode::neRenderNode() {
     matrixSetTranslate(localMatrix, 0.0f, 0.0f,
                        0.0f); // Ghidra: identity via FUN_00012acc
@@ -655,6 +680,7 @@ neRenderNode::neRenderNode() {
 }
 
 // Ghidra: FUN_00014d40 — detach a node from its parent's child ring.
+// @complete
 void neRenderNode::unlink() {
     if (parent == nullptr) {
         return;
@@ -673,6 +699,7 @@ void neRenderNode::unlink() {
 // Ghidra: FUN_00014cf4 — unlink from the owner list and from the parent,
 // recursively detach all children, then drop the colour buffer. (The
 // compiler-emitted deleting destructor FUN_00014d70 is just `delete node;`.)
+// @complete
 neRenderNode::~neRenderNode() {
     listPrev->listNext = listNext;
     listNext->listPrev = listPrev;
