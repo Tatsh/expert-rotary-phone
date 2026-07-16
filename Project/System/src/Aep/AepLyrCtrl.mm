@@ -183,7 +183,10 @@ void updateAndDrawAepLayers(int drawOnly) {
         }
 
         // Frame index handed to drawLayer: the float play head truncated to int
-        // (vcvt.s32.f32). Constants (byte-verified from the bl @ 0x2c9ce):
+        // (vcvt.s32.f32). Argument order matches the binary's drawLayer stack layout
+        // (bl @ 0x2c9ce): m_p9/m_p10/100/0 at positions 8-11 and the loopFlags
+        // constant 8 at position 12 (str r4=#8 -> [sp+0x20] -> callee [r7+0x28], the
+        // slot drawLayer bit-tests for loop/clamp), AFTER colorHi. Constants:
         // loopFlags=8, color=100, colorHi=0, p15=0xffffff, p19=1.
         const int frame = static_cast<int>(l->m_curFrame);
         mgr.drawLayer(l->m_lyr,
@@ -193,11 +196,11 @@ void updateAndDrawAepLayers(int drawOnly) {
                       l->m_posX,
                       l->m_posY,
                       static_cast<int>(l->m_rotation),
-                      8, // loopFlags (kDrawClampLast)
                       l->m_p9,
                       l->m_p10,
                       100,
                       0, // color / colorHi
+                      8, // loopFlags (kDrawClampLast), binary position 13
                       static_cast<uint32_t>(static_cast<unsigned short>(l->m_renderMode)),
                       0x00ffffff, // p15
                       root,

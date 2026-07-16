@@ -227,11 +227,11 @@ void AepManager::drawLayer(int lyr,
                            int scaleX,
                            int scaleY,
                            int rotation,
-                           uint32_t loopFlags,
                            int p9,
                            int p10,
                            int color,
                            int colorHi,
+                           uint32_t loopFlags,
                            uint32_t blendFlags,
                            uint32_t p15,
                            int *clipRect,
@@ -291,21 +291,21 @@ void AepManager::drawLayer(int lyr,
 void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
     drawLayer(lyr,
               frame,
-              (int)root.x,
-              (int)root.y,
-              (int)root.sx,
-              (int)root.sy,
-              (int)root.rotation,
-              flags,
+              static_cast<int>(root.x),
+              static_cast<int>(root.y),
+              static_cast<int>(root.sx),
+              static_cast<int>(root.sy),
+              static_cast<int>(root.rotation),
               /*p9*/ 0,
               /*p10*/ 0,
               /*color*/ 100,
               /*colorHi*/ 100,
+              flags, // loopFlags (binary position 13, after colorHi)
               /*blendFlags*/ 0,
               /*p15*/ 0,
               /*clipRect*/ nullptr,
               /*context*/ nullptr,
-              /*p17 = priority*/ (uint32_t)root.priority,
+              /*p17 = priority*/ static_cast<uint32_t>(root.priority),
               /*p19*/ 0);
 }
 
@@ -392,8 +392,11 @@ void AepManager::draw() {
                    m_ot.renderScale());
     }
     if (m_transitionTotal > 0 && (m_transitionMode == 1 || m_transitionMode == 2)) {
-        // Progress runs 100 -> 0 as the frames count down.
-        float progress = (float)(m_transitionFrames * 100) / (float)m_transitionTotal;
+        // Progress runs 100 -> 0 as the frames count down. The binary computes this
+        // as INTEGER division ((frames*100)/total via ___divsi3 @ 0x105c6) and only
+        // then converts to float (vcvt.f32.s32 @ 0x105d0), so a non-exact ratio
+        // truncates toward zero before the fade math -- not a float divide.
+        float progress = static_cast<float>((m_transitionFrames * 100) / m_transitionTotal);
         // Fade out rises 0 -> 100 opaque; fade in is the complement (mode-1 base is
         // ambiguous in the decompile, modelled as the mirror of fade out).
         float alpha = (m_transitionMode == 2) ? (100.0f - progress) : progress;

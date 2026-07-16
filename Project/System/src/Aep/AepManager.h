@@ -115,6 +115,9 @@ public:
     // colour / alpha / rotation / blend / clip threaded into the frame-tree fill.
     // Ghidra: FUN_0000fd64
     // -> AepDrawLayer (FUN_0000fe8c).
+    // Argument order matches the binary's drawLayer (FUN_0000fd64) stack layout
+    // exactly: loopFlags is at position 13 (read from [r7+0x28] for the loop/clamp
+    // bit test), AFTER colorHi -- not right after rotation.
     void drawLayer(int lyr,
                    int frame,
                    int x,
@@ -122,11 +125,11 @@ public:
                    int scaleX,
                    int scaleY,
                    int rotation,
-                   uint32_t loopFlags,
                    int p9,
                    int p10,
                    int color,
                    int colorHi,
+                   uint32_t loopFlags,
                    uint32_t blendFlags,
                    uint32_t p15,
                    int *clipRect,
