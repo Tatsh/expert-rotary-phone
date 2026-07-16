@@ -20,8 +20,11 @@
 //  centres 160.0/328.0 on pad, and the half-frame - 10.0/44.0 phone offsets)
 //  and are structural, not lost. The rowHeight 78.0/98.0 is DAT_000a8054/58.
 //  The request/reply data flow, JSON parsing, sort/reload and alert copy are
-//  exact. Two result messages (reply-accepted / server-error) are best-effort
-//  Japanese (exact CFStrings not fully decoded).
+//  exact. The two result messages are now decoded byte-exact from the CFString
+//  table: reply-success "通信に成功しました。" (@ 0x139748) and the shared
+//  network-error "通信に失敗しました。\n電波状態の良い場所でやり直して下さい。"
+//  (@ 0x134a78). The two POSTs use ContextType "application/json" (@ 0x1351a8),
+//  and the cell identifier format is "Cell%ld-%ld" (@ 0x134e38).
 //
 
 #import "FriendReplyViewController.h"
@@ -45,7 +48,10 @@
 }
 
 // @ 0xa7854 — grouped table styling, message header, loading overlay, back
-// button, placeholder.
+// button, placeholder. Verified: rowHeight 98/78 (DAT_000a8054/58), messager at
+// (22, 33) in a 140-tall header, spinner scale 2x centred (160, 328) pad / half -
+// 10 phone, placeholder centred (160, 328) pad / half - 44 phone.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -88,7 +94,8 @@
 
     UIActivityIndicatorView *spinner =
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
-    [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    // Binary passes raw style 2 (0xa7d1c), i.e. Gray, not WhiteLarge (0).
+    [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
     if (!isPad) {
         spinner.center =
             CGPointMake(viewFrame.size.width * 0.5f, viewFrame.size.height * 0.5f - 10.0f);
@@ -127,27 +134,32 @@
 }
 
 // @ 0xa8060 — kick off the request-list fetch (uuid-only POST) once.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (dlGetFriendRequest == nil) {
         NSString *body = [NSString stringWithFormat:@"uuid=%@", AppDelegate.appDelegate.uuId];
+        // ContextType is "application/json" in the binary (0xa815c: __cfstring at
+        // 0x1351a8 -> "application/json"), not form-urlencoded.
         dlGetFriendRequest =
             [[Downloader alloc] initWithURL:[StoreUtil getFriendRequestURL]
                                    delegate:self
                                        Post:[body dataUsingEncoding:NSUTF8StringEncoding]
-                                ContextType:@"application/x-www-form-urlencoded"];
+                                ContextType:@"application/json"];
         [dlGetFriendRequest startDownloading];
         _dummyView.view.hidden = NO;
     }
 }
 
 // @ 0xa81c0
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xa82d8 — accept (reply == 1) / reject (reply == 0) a request: POST and
 // show the loading cover.
+// @complete
 - (void)startReplyFriendHttp:(NSString *)playerId reply:(int)reply {
     if (dlReplyFriend != nil) {
         return;
@@ -157,29 +169,36 @@
                                                 AppDelegate.appDelegate.uuId,
                                                 playerId,
                                                 reply];
+    // ContextType is "application/json" in the binary (0xa83ce: same __cfstring at
+    // 0x1351a8 -> "application/json"), not form-urlencoded.
     dlReplyFriend = [[Downloader alloc] initWithURL:[StoreUtil replyFriendURL]
                                            delegate:self
                                                Post:[body dataUsingEncoding:NSUTF8StringEncoding]
-                                        ContextType:@"application/x-www-form-urlencoded"];
+                                        ContextType:@"application/json"];
     [dlReplyFriend startDownloading];
     _dummyView.view.hidden = NO;
 }
 
 // @ 0xa8434
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xa8438
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _receiveDataArray ? (NSInteger)[_receiveDataArray count] : 0;
 }
 
 // @ 0xa8460
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Binary format is "Cell%ld-%ld" (0xa84b4: __cfstring at 0x134e38 -> chars at
+    // 0x1029ae = "Cell%ld-%ld"), not "Cell_%ld_%ld".
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell_%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     FriendReplyCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendReplyCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -191,16 +210,23 @@
 }
 
 // @ 0xa8580
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xa8584 — no navigation on row tap (the OK/NG buttons drive everything).
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     (void)indexPath.section;
 }
 
 // @ 0xa8720 — release each row's retained string fields, then the array itself.
+// The binary (MRC) getValue-copies each ReplyDataStruct and -releases its three
+// @ string fields (playerId, name, message) before releasing the array; under
+// ARC those manual releases fold into the array release, so only the getValue
+// loop and the array nil-out remain (behaviour equivalent).
+// @complete
 - (void)releaseReceiveDataArray {
     if (_receiveDataArray != nil) {
         for (NSUInteger i = 0; i < [_receiveDataArray count]; i++) {
@@ -213,6 +239,7 @@
 
 // @ 0xa8598 — dispatch a completed download to the right handler, then hide the
 // loading cover.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (dlGetFriendRequest == downloader) {
         [self getFriendRequestFinished];
@@ -224,11 +251,13 @@
 }
 
 // @ 0xa861c
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xa8620 — transport-level failure on either request: clear it, hide cover,
 // generic alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (dlGetFriendRequest == downloader) {
         dlGetFriendRequest = nil;
@@ -249,6 +278,7 @@
 
 // @ 0xa87f0 — parse the "Receive" request list into ReplyDataStruct rows; swap
 // headers/placeholder and update the badge count.
+// @complete
 - (void)getFriendRequestFinished {
     NSDictionary *json = [dlGetFriendRequest getDataInJSON];
     NSString *errorMessage = nil;
@@ -303,7 +333,8 @@
         self.tableView.scrollEnabled = (count != 0);
         [[DownloadMain getInstance] setFriendRequestedCnt:static_cast<int>(count)];
     } else {
-        errorMessage = @"エラーが発生しました。"; // best-effort: cf_Ok01YWeW0_0W0_00
+        // Exact CFString @ 0x134a78 -> chars at 0x12b90e (byte-verified UTF-16).
+        errorMessage = @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。";
     }
 
     dlGetFriendRequest = nil;
@@ -320,12 +351,14 @@
 
 // @ 0xa8dc0 — reply POST done: on success drop the replied row + update
 // headers/badge; alert either way.
+// @complete
 - (void)replyFriendFinished {
     NSDictionary *json = [dlReplyFriend getDataInJSON];
     NSString *message;
 
     if (json == nil) {
-        message = @"返信しました。"; // best-effort: cf_Ok0bRW0_0W0_00 (replied)
+        // Exact CFString @ 0x139748 -> chars at 0x12cc1c (byte-verified UTF-16).
+        message = @"通信に成功しました。";
         for (NSUInteger i = 0; i < [_receiveDataArray count]; i++) {
             ReplyDataStruct data;
             [_receiveDataArray[i] getValue:&data];
@@ -346,7 +379,8 @@
         }
     } else {
         (void)[[json objectForKey:@"ErrorCode"] isKindOfClass:[NSNumber class]];
-        message = @"エラーが発生しました。"; // best-effort: cf_Ok01YWeW0_0W0_00
+        // Exact CFString @ 0x134a78 -> chars at 0x12b90e (byte-verified UTF-16).
+        message = @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。";
     }
 
     dlReplyFriend = nil;
@@ -360,6 +394,7 @@
 }
 
 // @ 0xa90b4 — cancel SE, restore the hub nav bar art, pop.
+// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2);
     [self.navigationController.navigationBar
@@ -368,7 +403,10 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-// @ 0xa81ec
+// @ 0xa81ec — the binary (MRC) additionally releases _dummyView / _lonelyImageView
+// / _headView / _lonelyHeadView (ARC-automatic here); the cancels and
+// releaseReceiveDataArray are the load-bearing cleanup.
+// @complete
 - (void)dealloc {
     if (dlGetFriendRequest != nil) {
         [dlGetFriendRequest cancel];

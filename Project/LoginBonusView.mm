@@ -263,6 +263,9 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
         completion:^(BOOL finished) {
           // @ 0x7c870 resetViewTransform — belt-and-suspenders identity restore
           // (setTransform: with the identity matrix; 0x3f800000 on the diagonal).
+          // Verified against disassembly: setTransform: with (a, b, c, d) =
+          // (0x3f800000, 0, 0, 0x3f800000) and tx = ty = 0, i.e. scale (1, 1).
+          // @complete
           self.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
         }];
 }
@@ -303,6 +306,10 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
           // @ 0x7cbd8 resetViewTransformDup — identity restore on the stamp
           // (duplicate of resetViewTransform; setTransform: with the identity
           // matrix).
+          // Verified against disassembly: identical body to 0x7c870 — setTransform:
+          // with (0x3f800000, 0, 0, 0x3f800000, 0, 0), i.e. scale (1, 1) on the
+          // stamp view.
+          // @complete
           stamp.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
         }];
 
@@ -367,6 +374,9 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
             animations:^{
               // @ 0x7cf58 zeroViewTransform — collapse to a zero matrix
               // (setTransform: with all six components 0, i.e. scale (0, 0)).
+              // Verified against disassembly: all six matrix words stored from
+              // r2 = 0 (a, b, c, d, tx, ty all 0), i.e. scale (0, 0).
+              // @complete
               self.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
             }
             completion:^(BOOL finished) {

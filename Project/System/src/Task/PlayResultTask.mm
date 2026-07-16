@@ -979,6 +979,12 @@ namespace {
 // is the +0x42 sub-blend slot (blend1). FUN_0000fbcc forwards caller arg +0x38
 // (alpha) and +0x3c (blend0) to the drawSprite stack, exactly as the canonical
 // neTextureForiOS_draw bridge in neEngineBridge.mm sets blend1 / blend0.
+// Verified against disassembly: FUN_0000fbcc forwards its args to FUN_00011468,
+// which writes the command via allocEntry (FUN_00010be0): +0x40 = blend0
+// (strh r3 from stack +0x30), +0x42 = blend1 (strh r5 from stack +0x34),
+// colour @ +0x34, rotation @ +0x38, colour-multiply @ +0x44 (0xffffff here);
+// this helper delegates to the already-verified neTextureForiOS::draw.
+// @complete
 void drawTexQuad(AepManager &aep,
                  neTextureForiOS *tex,
                  int u,

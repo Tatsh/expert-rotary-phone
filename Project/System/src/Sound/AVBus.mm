@@ -17,6 +17,7 @@
 }
 
 // @ 0x207a4
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -26,6 +27,7 @@
 }
 
 // @ 0x207e4
+// @complete
 - (BOOL)initWithContentsOfURL:(NSURL *)url isLoop:(BOOL)loop {
     if (mPlayer != nil) {
         mPlayer = nil; // Ghidra: release old player before reloading
@@ -45,6 +47,7 @@
 }
 
 // @ 0x208b0
+// @complete
 - (BOOL)initWithContentsOfData:(NSData *)data isLoop:(BOOL)loop {
     if (mPlayer != nil) {
         mPlayer = nil; // Ghidra: release old player before reloading
@@ -62,6 +65,7 @@
 }
 
 // @ 0x2098c
+// @complete
 - (uint16_t)setSource:(AVSource *)source {
     mSource = source;
     if (source->url == nil) {
@@ -73,6 +77,7 @@
 }
 
 // @ 0x209e0
+// @complete
 - (BOOL)removeSource {
     mSource = NULL;
     mCurrentID = (uint16_t)(mCurrentID + 1);
@@ -84,6 +89,7 @@
 }
 
 // @ 0x20a30
+// @complete
 - (BOOL)prepare {
     if (mPlayer != nil && !mPlayer.isPlaying) {
         [mPlayer prepareToPlay];
@@ -94,6 +100,7 @@
 }
 
 // @ 0x20a84
+// @complete
 - (BOOL)play {
     // Ghidra: (mStatus | 2) == 3, i.e. Prepared(1) or Paused(3).
     if (((mStatus | 2) == 3) && mPlayer != nil) {
@@ -105,6 +112,7 @@
 }
 
 // @ 0x20acc
+// @complete
 - (BOOL)stop {
     if (mPlayer != nil) {
         [mPlayer stop];
@@ -115,6 +123,7 @@
 }
 
 // @ 0x20b0c
+// @complete
 - (BOOL)pause {
     if (mPlayer != nil) {
         if (mPlayer.isPlaying) {
@@ -129,6 +138,7 @@
 }
 
 // @ 0x20b74
+// @complete
 - (BOOL)offPause {
     if (mPlayer != nil && mStatus == AVBusStatusPaused) {
         [mPlayer play];
@@ -139,6 +149,7 @@
 }
 
 // @ 0x20bb8
+// @complete
 - (BOOL)setVolume:(float)volume {
     if (mPlayer != nil) {
         mPlayer.volume = volume;
@@ -147,25 +158,30 @@
     return NO;
 }
 
-// @ 0x20bf0
+// @ 0x20bf0 -- when no player is loaded the binary returns 1.0f (full volume),
+// not 0.0f: the nil path is `mov.eq.w r0,#0x3f800000` at 0x20c02.
+// @complete
 - (float)volume {
     if (mPlayer != nil) {
         return mPlayer.volume;
     }
-    return 0.0f;
+    return 1.0f; // 0x3f800000
 }
 
 // @ 0x20c18
+// @complete
 - (int)status {
     return mStatus;
 }
 
 // @ 0x20c28
+// @complete
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
     mStatus = AVBusStatusStopped;
 }
 
 // @ 0x20c3c
+// @complete
 - (void)audioPlayerBeginInterruption:(AVAudioPlayer *)player {
     if (mStatus != AVBusStatusPlaying) {
         return;
@@ -174,6 +190,7 @@
 }
 
 // @ 0x20c78
+// @complete
 - (void)audioPlayerEndInterruption:(AVAudioPlayer *)player {
     if (mStatus != AVBusStatusPlaying) {
         return;
@@ -187,11 +204,13 @@
 // player), so no explicit dealloc is required.
 
 // @ 0x20cf4
+// @complete
 - (BOOL)isSameSource:(AVSource *)source {
     return mSource == source;
 }
 
 // @ 0x20d0c
+// @complete
 - (uint16_t)currentID {
     return mCurrentID;
 }

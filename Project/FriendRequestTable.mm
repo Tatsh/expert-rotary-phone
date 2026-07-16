@@ -74,6 +74,7 @@
 
 // @ 0xb7148 — build the background plate, dimmed dummy overlay + spinner, and
 // the back button.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
         UIImage *plateImg = [UIImage imageNamed:@"fripre_table"];
@@ -155,6 +156,7 @@
 }
 
 // @ 0xb79e8 — kick off the initial sent-request-list download.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self reDownloadGetFriendRequest];
@@ -164,6 +166,7 @@
 
 // @ 0xb7a54 — POST the sent-request-list request (once), revealing the spinner
 // overlay.
+// @complete
 - (void)reDownloadGetFriendRequest {
     if (dlGetFriendRequest != nil) {
         return;
@@ -181,20 +184,24 @@
 #pragma mark - Table
 
 // @ 0xb7b98
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xb7b9c
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _sendDataArray ? [_sendDataArray count] : 0;
 }
 
 // @ 0xb7bc4
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Byte-verified format literal @ 0x1029ae: "Cell%ld-%ld" (section then row).
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell_%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     FriendRequestCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendRequestCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -205,12 +212,14 @@
 }
 
 // @ 0xb7cd0
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xb7cd4 — rows are not selectable (the per-row Cancel button drives the
 // action).
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 }
 
@@ -218,6 +227,7 @@
 
 // @ 0xb7cd8 — unbox each record (its __unsafe_unretained NSString fields), then
 // drop the array.
+// @complete
 - (void)releaseSendDataArray {
     if (_sendDataArray == nil) {
         return;
@@ -234,6 +244,7 @@
 // @ 0xb7e38 — sent-request list arrived. On an "ErrorCode" show the failure
 // alert; otherwise parse the "Send" array into rows, swap in / remove the empty
 // placeholder, and reload. Always drops the downloader and hides the spinner.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [dlGetFriendRequest getDataInJSON];
     id errorCode = json[@"ErrorCode"];
@@ -307,11 +318,13 @@
 }
 
 // @ 0xb84dc — per-chunk progress: nothing to do.
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xb84e0 — download failed: drop the downloader, hide the spinner, show the
 // failure alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     dlGetFriendRequest = nil;
     _dummyView.view.hidden = YES;
@@ -329,6 +342,7 @@
 #pragma mark - Nav
 
 // @ 0xb7d9c — back button: restore the friend-hub nav bar art and pop.
+// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // cancel/back SE
     [self.navigationController.navigationBar
@@ -340,6 +354,7 @@
 // @ 0xb794c — unbox the retained row strings and cancel any in-flight download
 // (so no late callback fires into a dead controller). Kept under ARC because it
 // cancels a Downloader; the object-ivar releases are ARC-managed.
+// @complete
 - (void)dealloc {
     [self releaseSendDataArray];
     if (dlGetFriendRequest != nil) {

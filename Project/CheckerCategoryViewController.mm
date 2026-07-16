@@ -47,6 +47,7 @@ static NSString *const kMsgNoPlayData =
 // @ 0xcfb88 — build the transparent grouped table, the header "get data" button
 // + spinner cover, and load the locally-cached arcade scores into the 25
 // buckets.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -153,6 +154,7 @@ static NSString *const kMsgNoPlayData =
 
 // @ 0xd04bc — cancel the in-flight sync so no late callback fires into a dead
 // controller; the bucket arrays and the cover view are released under ARC.
+// @complete
 - (void)dealloc {
     if (_dlGetArcadeScoreData != nil) {
         [_dlGetArcadeScoreData cancel];
@@ -161,6 +163,7 @@ static NSString *const kMsgNoPlayData =
 }
 
 // @ 0xd0564 — unhide the cover view after loading (matches the binary).
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -168,12 +171,14 @@ static NSString *const kMsgNoPlayData =
 
 // @ 0xd05c4 — re-center the spinner cover on the controller view (no super call
 // in the binary).
+// @complete
 - (void)viewWillAppear:(BOOL)animated {
     _dummyView.view.center =
         CGPointMake(self.view.frame.size.width * 0.5f, self.view.frame.size.height * 0.5f);
 }
 
 // @ 0xd0688 — super only.
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -182,6 +187,7 @@ static NSString *const kMsgNoPlayData =
 
 // @ 0xd06b4 — POST konami-id / password / otp to the arcade-score endpoint
 // (guards against a second concurrent request) and show the spinner cover.
+// @complete
 - (void)startGetArcadeScoreHttpWithOtp:(NSString *)otp {
     if (_dlGetArcadeScoreData != nil) {
         return;
@@ -204,11 +210,13 @@ static NSString *const kMsgNoPlayData =
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0xd0810
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xd0814 — one row per non-empty bucket (of the 25).
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     NSInteger rows = 0;
     for (int i = 0; i < 25; i++) {
@@ -221,6 +229,7 @@ static NSString *const kMsgNoPlayData =
 
 // @ 0xd085c — bind the N-th non-empty bucket (scanned high (24) to low) to the
 // row, passing its bucket index as the category.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -247,11 +256,13 @@ static NSString *const kMsgNoPlayData =
 }
 
 // @ 0xd0988
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xd098c — push the CheckerMusicViewController for the selected bucket.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController != self || indexPath.section != 0) {
         return;
@@ -282,6 +293,7 @@ static NSString *const kMsgNoPlayData =
 // @ 0xd0ad8 — parse the JSON response: on error show the matching alert; on
 // success merge every record into the local Core Data store, rebuild the
 // buckets and reload.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_dlGetArcadeScoreData getDataInJSON];
     NSString *message;
@@ -433,10 +445,12 @@ static NSString *const kMsgNoPlayData =
 }
 
 // @ 0xd1884 — progress callback: unused.
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xd1888 — the sync failed: drop the request, hide the spinner and alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _dlGetArcadeScoreData = nil;
     _dummyView.view.hidden = YES;
@@ -452,6 +466,7 @@ static NSString *const kMsgNoPlayData =
 
 // @ 0xd1960 — BACK: only as the nav top VC; play the cancel SE, restore the
 // nav-bar art and pop.
+// @complete
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -466,6 +481,7 @@ static NSString *const kMsgNoPlayData =
 // @ 0xd1a18 — GET DATA: only as the nav top VC; play the decide SE, then either
 // sync straight away or (when an OTP is required) push the OTP-input screen
 // first.
+// @complete
 - (void)touchedGetDataButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -489,6 +505,7 @@ static NSString *const kMsgNoPlayData =
 // @ 0xd1b40 — normalize a server-supplied title/name: fix two CP932 mojibake
 // glyphs and expand the HTML entities the arcade score API emits for accented
 // characters.
+// @complete
 - (NSString *)convertReplaceChara:(NSString *)string {
     NSString *s = string;
     s = [s stringByReplacingOccurrencesOfString:@"＜" withString:@"〜"]; // U+FF3C -> U+301C
@@ -509,6 +526,7 @@ static NSString *const kMsgNoPlayData =
 
 // @ 0xd1cac — remap the server's category code to the app's category index:
 // 50 -> 1 (TV), 60 -> 0 (etc), otherwise +2.
+// @complete
 - (NSNumber *)convertCategoryId:(NSNumber *)categoryId {
     int value = [categoryId intValue];
     int result;

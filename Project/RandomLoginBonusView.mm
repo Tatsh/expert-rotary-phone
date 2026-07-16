@@ -40,6 +40,8 @@
 // Recovered verbatim from the const-data blob (Ghidra &UNK_0012e318 values /
 // &DAT_0012e31c weights, interleaved 8 bytes per row). The weights sum to 1000,
 // which matches the arc4random() % 1000 + 1 roll below.
+//
+// @complete (table bytes verified @ 0x12e318: value at +0, weight at +4).
 static const struct {
     int value;
     int weight;
@@ -58,6 +60,8 @@ static const struct {
 // arc4random() % 1000 + 1 is walked down the 7-row {value, weight} table
 // (weights sum to 1000); the first row whose running weight covers the roll
 // supplies the value.
+//
+// @complete
 - (void)getBonus {
     _bonus = 0;
     int roll = (int)(arc4random() % 1000) + 1;
@@ -71,16 +75,28 @@ static const struct {
 }
 
 // @ 0x18a90 — nib path funnels into -init.
+//
+// @complete
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     return [self init];
 }
 
 // @ 0x18aa0 — frame path funnels into -init.
+//
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     return [self init];
 }
 
 // @ 0x18ab0 — designated setup: dimmer + panel + four spinning digit reels.
+//
+// @complete
+// Verified: SE load order (se26_roll loop / se08_bonus_fai / se09_bonus_cl, all
+// group 1); dimmer white alpha 0.5; login_board_02; -getBonus after the board;
+// iPad reel X = 183/288/398/503 at y = 523 (0x4337c000/0x43900000/0x43c70000/
+// 0x43fb8000/0x4402c000); phone base X delta 24.0 (0x41c00000), X step 54.0
+// (0x42580000), Y delta 133.0 (0x43050000); reel animationDuration 0.5;
+// full-screen touchEvent: catcher; self.hidden = YES.
 - (instancetype)init {
     UIView *rootView = neSceneManager::rootViewController().view;
     CGRect frame = rootView ? rootView.frame : CGRectZero;
@@ -250,6 +266,10 @@ static const struct {
 }
 
 // @ 0x19884 — stop and release the SE, then up-chain.
+//
+// @complete
+// Verified: -stopSe:_seInstId[0], -stopSe:_seInstId[1], -releaseSe:nil
+// resourceId:_seRscId[0], -releaseSe:nil resourceId:_seRscId[1], [super dealloc].
 - (void)dealloc {
     AudioManager *audio = [AudioManager sharedManager];
     [audio stopSe:_seInstId[0]];
@@ -262,6 +282,12 @@ static const struct {
 }
 
 // @ 0x19960 — install over the root scene view, credit the bonus, pop open.
+//
+// @complete
+// Verified: addSubview:self, bringSubviewToFront:self, credit
+// (treasurePoint + _bonus only when treasurePoint >= 0, stored as short),
+// scale 2.0, hidden = NO, animateWithDuration:0.3 options
+// AllowUserInteraction (2); reset block @ 0x19ad8 captures self at +0x14.
 - (void)show {
     UIViewController *root = neSceneManager::rootViewController();
     UIView *rootView = root.view;
@@ -294,6 +320,16 @@ static const struct {
 
 // @ 0x19b9c — board tap: first lock the reels (state 0), then close (state !=
 // 0).
+//
+// NOTE(verified structure): the top-level control flow is confirmed against the
+// disassembly — guard on _isAnimationing; when _state == 0, set
+// _isAnimationing, -stopSe:_seInstId[0], _seInstId[1] = -playSe:_seRscId[1],
+// then four reels each -stopAnimating + -animateWithDuration:0.5 options
+// AllowUserInteraction (2); when _state != 0, neEngine::playSystemSe(1) then
+// -startCloseAnimation. The individual Up/Down block bodies and the terminal
+// completion address are best-effort (see per-block citations); block 0x19ec4
+// is confirmed to send -setTransform:scale(2,2) on _numImgView1000 (self at
+// +0x14). Left unmarked pending byte-level verification of every nested block.
 - (void)touchEvent:(id)sender {
     if (_isAnimationing) {
         return;
@@ -413,6 +449,8 @@ static const struct {
 }
 
 // @ 0x1a448 — fade the overlay out; -endCloseAnimation runs when it stops.
+//
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -427,17 +465,25 @@ static const struct {
 }
 
 // @ 0x1a508 — remove self and notify the root scene it was dismissed.
+//
+// @complete
+// The binary sends -customAlertView:clickedButtonAtIndex: unconditionally
+// (no -respondsToSelector: guard is emitted @ 0x1a508); the root scene is
+// always the outer delegate.
 - (void)endCloseAnimation {
     [self removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();
     // The root scene acts as the outer delegate (index 0 = dismissed).
-    if ([root respondsToSelector:@selector(customAlertView:clickedButtonAtIndex:)]) {
-        [(id)root customAlertView:nil clickedButtonAtIndex:0];
-    }
+    [(id)root customAlertView:nil clickedButtonAtIndex:0];
     _isAnimationing = NO;
 }
 
 // @ 0x1a558 — report the rolled bonus in a gift-styled CustomAlertView.
+//
+// @complete
+// Title/message CFStrings verified: "ログインボーナス" @ 0x12b94c and
+// "トレジャーポイントをGET！\n[%dP]" @ 0x12b95e; type 1 (Gift), otherButton
+// "OK", -setOpenAnimeType:1 (Scale).
 - (void)showAlertView {
     // UTF-16 CFStrings recovered from the binary:
     //   title   @ 0x00134c18 -> data 0x0012b94c : "ログインボーナス"
@@ -458,6 +504,11 @@ static const struct {
 }
 
 // @ 0x1a650 — CustomAlertViewDelegate: fade the dimmer away, then remove.
+//
+// @complete
+// Verified: background white alpha 0, animateWithDuration:0.3 options
+// AllowUserInteraction (2); collapse block @ 0x1a740 sends
+// -setTransform:(0,0,0,0,0,0) on self (captured at +0x14); completion removes.
 - (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     self.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.0f];
     [UIView animateWithDuration:0.3

@@ -38,6 +38,7 @@
 
 // @ 0x5c638 — build the combined invite screen and wrap it in a navigation
 // controller.
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // family(none) factory: returns the nav, not self, so it cannot assign self;
     // super init returns the receiver in place -> self stays valid (matches the
@@ -159,6 +160,7 @@
 
 // @ 0x5d128 — decide button: validate the entered guest code, then POST it (or
 // explain why not).
+// @complete
 - (void)touchedDecideButton:(id)sender {
     [_codeField resignFirstResponder];
     NSString *code = [_codeField.text uppercaseString];
@@ -198,6 +200,7 @@
 }
 
 // @ 0x5d350 — fade the view + its nav view up to opaque over 0.3 s.
+// @complete
 - (void)startOpenAnimation {
     if (isAnimationing) {
         return;
@@ -216,12 +219,14 @@
 }
 
 // @ 0x5d488
+// @complete
 - (void)endOpenAnimation {
     isAnimationing = NO;
 }
 
 // @ 0x5d4a0 — back button: play the cancel SE, then fade the view + its nav
 // view out.
+// @complete
 - (void)startCloseAnimation {
     if (isAnimationing) {
         return;
@@ -240,6 +245,7 @@
 
 // @ 0x5d5c0 — pull the view, notify the root VC the invite flow closed, clear
 // the guard.
+// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();
@@ -248,23 +254,27 @@
 }
 
 // @ 0x5d61c — scroll the panels up so the keyboard does not cover the field.
+// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     [_scrollView setContentOffset:CGPointMake(0, 200.0f) animated:YES];
     return YES;
 }
 
 // @ 0x5d654 — scroll back to the top once editing ends.
+// @complete
 - (void)textFieldDidEndEditing:(UITextField *)textField {
     [_scrollView setContentOffset:CGPointZero animated:YES];
 }
 
 // @ 0x5d698
+// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [_codeField resignFirstResponder];
     return YES;
 }
 
 // @ 0x5d6c0 — cap the code at 8 characters.
+// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -276,6 +286,7 @@
 // @ 0x5d728 — invite POST finished. An empty (non-JSON) body means success ->
 // grant 5 tickets and mark the code redeemed; a JSON body carries an ErrorCode
 // to report.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     BOOL success;
@@ -324,6 +335,7 @@
 }
 
 // @ 0x5d944 — invite POST failed (network/transport error).
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil; // @ release
     [_indicator stopAnimating];
@@ -339,11 +351,13 @@
 
 // @ 0x5da10 — alert dismissal callback (empty in the binary; the pad screen
 // stays put).
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
 }
 
 // @ 0x5da14 — start the invite HTTP POST ("uuid=<uuid>&player_id=<code>") and
 // spin.
+// @complete
 - (void)startInviteHttp:(NSString *)code {
     if (_downloader != nil) {
         return;
@@ -360,6 +374,7 @@
 }
 
 // @ 0x5db50 — "tweet my invite code" button: open the Twitter share sheet.
+// @complete
 - (void)onTweetButton {
     NSString *text =
         [NSString stringWithFormat:@"いっしょにポップン "

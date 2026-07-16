@@ -29,12 +29,14 @@
 
 // @ 0x5df50 — stash the failure-alert title/message (plain assigns;
 // ARC-strong).
+// @complete
 - (void)setErrorMsg:(NSString *)errorMsg text:(NSString *)text {
     _errorTitle = errorMsg;
     _errorText = text;
 }
 
 // @ 0x5df80 — remove the contentSize KVO observer, then tear down.
+// @complete
 - (void)dealloc {
     // KVO teardown is kept (see -observeValueForKeyPath:… / the addObserver: in
     // -initWithURL:).
@@ -44,11 +46,16 @@
 
 // @ 0x5dfe8 — direct frame construction is disabled; callers must use
 // -initWithURL:.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     return nil;
 }
 
 // @ 0x5dfec — build the panel over the root scene view and start loading `url`.
+// The shipping binary is the UIWebView (pre-iOS-8) build; this reconstruction's
+// WKWebView branch is the modern-SDK equivalent, and the #else UIWebView branch
+// matches the disassembly.
+// @complete
 - (instancetype)initWithURL:(NSURL *)url {
     neSceneManager::shared();
     UIViewController *rootVC = neSceneManager::rootViewController();
@@ -143,6 +150,7 @@
 }
 
 // @ 0x5e6b8 — small/big close button tapped: play the decide SE, then close.
+// @complete
 - (void)pushCloseBtn {
     neSceneManager::shared();
     neEngine::playSystemSe(1); // Ghidra: NESceneManager_shared();
@@ -152,6 +160,7 @@
 
 // @ 0x5e6e8 — fade the panel out (0.5s), then fire the close callback and
 // remove it.
+// @complete
 - (void)close {
     [UIView animateWithDuration:0.5
         delay:0.0
@@ -175,6 +184,7 @@
 #pragma mark - WKNavigationDelegate
 
 // @ 0x5e808 — clear the URL cache and start the spinner when a load begins.
+// @complete
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     NSURLCache *cache = [NSURLCache sharedURLCache];
     [cache setMemoryCapacity:0];
@@ -184,6 +194,7 @@
 
 // @ 0x5e874 — stop the spinner; on first successful load add the Twitter-follow
 // button (unless the bonus was already claimed); reveal the small close button.
+// @complete
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     [_indicator stopAnimating];
 
@@ -219,11 +230,14 @@
 // @ 0x5eb04 — on a real load failure (anything other than NSURLErrorCancelled)
 // close the panel and schedule the error alert. WKWebView reports failures
 // through two callbacks (committed and provisional); both route here.
+// afterDelay is 0.5s, not 0: the delay double is assembled as
+// {lo = 0x00000000, hi = 0x3fe00000} = 0.5 (stm sp,{r0,r3} at 0x5eb80).
+// @complete
 - (void)handleNavigationFailWithError:(NSError *)error {
     [_indicator stopAnimating];
     if ([error code] != -999) { // -999 == NSURLErrorCancelled (0xfffffc19)
         [self close];
-        [self performSelector:@selector(showErrorAlert) withObject:nil afterDelay:0];
+        [self performSelector:@selector(showErrorAlert) withObject:nil afterDelay:0.5];
         [_closeBtnSmall setHidden:NO];
     }
 }
@@ -242,6 +256,7 @@
 
 // @ 0x5ebb4 — keep in-app navigation only within the official path; open other
 // tapped links externally in Safari.
+// @complete
 - (void)webView:(WKWebView *)webView
     decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
                     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
@@ -267,6 +282,7 @@
 #pragma mark - UIWebViewDelegate
 
 // @ 0x5e808 — clear the URL cache and start the spinner when a load begins.
+// @complete
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     NSURLCache *cache = [NSURLCache sharedURLCache];
     [cache setMemoryCapacity:0];
@@ -276,6 +292,7 @@
 
 // @ 0x5e874 — stop the spinner; on first successful load add the Twitter-follow
 // button (unless the bonus was already claimed); reveal the small close button.
+// @complete
 - (void)webViewDidFinishLoad:(UIWebView *)webView {
     [_indicator stopAnimating];
 
@@ -309,18 +326,21 @@
 }
 
 // @ 0x5eb04 — on a real load failure (anything other than NSURLErrorCancelled)
-// close the panel and schedule the error alert.
+// close the panel and schedule the error alert. afterDelay is 0.5s (see
+// -handleNavigationFailWithError: — same binary function at 0x5eb04).
+// @complete
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
     [_indicator stopAnimating];
     if ([error code] != -999) { // -999 == NSURLErrorCancelled (0xfffffc19)
         [self close];
-        [self performSelector:@selector(showErrorAlert) withObject:nil afterDelay:0];
+        [self performSelector:@selector(showErrorAlert) withObject:nil afterDelay:0.5];
         [_closeBtnSmall setHidden:NO];
     }
 }
 
 // @ 0x5ebb4 — keep in-app navigation only within the official path; open other
 // tapped links externally in Safari.
+// @complete
 - (BOOL)webView:(UIWebView *)webView
     shouldStartLoadWithRequest:(NSURLRequest *)request
                 navigationType:(UIWebViewNavigationType)navigationType {
@@ -346,6 +366,7 @@
 
 // @ 0x5ec5c — the scroll view laid out: reveal the big close button and pin it
 // to the bottom of the scrolled content.
+// @complete
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary *)change
@@ -365,12 +386,16 @@
 
 // @ 0x5ed7c — register the C close callback and its opaque param (raw stores;
 // not ARC-managed).
+// @complete
 - (void)SetCloseCallback:(CustomWebViewCloseCallback)callback param:(void *)param {
     m_AlertViewCallback = callback;
     m_AlertViewCallbackParam = param;
 }
 
-// @ 0x5ed9c — show the failure alert (only if a message was set).
+// @ 0x5ed9c — show the failure alert (only if a message was set). The binary's
+// nil-guard tests _errorTitle (offset 0xdc60), not _errorText; both are set
+// together by -setErrorMsg:text:, so the effect is identical.
+// @complete
 - (void)showErrorAlert {
     if (_errorText != nil) {
         CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:_errorTitle
@@ -386,6 +411,7 @@
 // @ 0x5ee38 — open the official Twitter page; first time only, grant the follow
 // bonus (+3000 treasure points), show a reward alert, and mark the bonus as
 // claimed.
+// @complete
 - (void)touchedFollowButton {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     [[UIApplication sharedApplication] openURL:[StoreUtil getOfficialTwitterURL]

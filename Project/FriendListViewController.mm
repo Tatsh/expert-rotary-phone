@@ -15,13 +15,74 @@
 
 #import "FriendListViewController.h"
 
+#import "AppDelegate.h"                    // managedObjectContext (score aggregation)
 #import "AppFont.h"                        // (shared)
 #import "CommonAlertView.h"                // error alert
 #import "DownloadMain.h"                   // FriendListData, DownloadMain, friendListArray
 #import "FriendListCell.h"                 // row renderer
 #import "FriendListDetail.h"               // tap-row overlay
+#import "Game/Data/Save/ScoreData+Store.h" // +getAllScoreData:
 #import "Game/Data/Save/UserSettingData.h" // isBestScoreSort / playerName / charaId
-#import "neEngineBridge.h"                 // neSceneManager::rootViewController / isPadDisplay
+#import "neEngineBridge.h"                 // neSceneManager / readScoreDataFields
+
+// Aggregated tallies over every saved ScoreData row, in the exact layout
+// FUN_00029644 fills (0x74 bytes). The trailing three arrays mirror the tail of
+// FriendListData ([3[7i]][3i][3i]), so downloadMainFinished: can copy them
+// across.
+typedef struct {
+    int totalScore;   // +0x00 sum of every positive difficulty score
+    int bestScore;    // +0x04 highest single difficulty score
+    int rank[3][7];   // +0x08 per-difficulty rank tally, indexed by rank 0..6
+    int fullCombo[3]; // +0x5c per-difficulty full-combo count
+    int perfect[3];   // +0x68 per-difficulty perfect count
+} ScoreStats;
+
+// Ghidra: aggregateScoreStats (FUN_00029644) @ 0x29644 — walk every saved
+// ScoreData row (all three difficulties each) and accumulate the local player's
+// own totals into `out`. The binary's first argument is the neAppEventCenter
+// singleton pointer, which the function never touches (vestigial); it is dropped
+// here.
+// Verified against disassembly: memset(out, 0, 0x74) (NEON zero-splat +0..+0x70);
+// fast-enumerate [ScoreData getAllScoreData:managedObjectContext]; per row loop
+// difficulty 0..2 calling readScoreDataFields (FUN_00029438) with the row in the
+// recDup slot; totalScore += score when score > 0; bestScore = max; rank tally at
+// +8 + difficulty*0x1c + rank*4 incremented when (unsigned)rank < 7; fullCombo[d]
+// (+0x5c) and perfect[d] (+0x68) incremented on their flags.
+static void aggregateScoreStats(ScoreStats *out) {
+    if (out == nullptr) {
+        return;
+    }
+    memset(out, 0, sizeof(*out));
+
+    NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
+    NSArray *allScores = [ScoreData getAllScoreData:ctx];
+    for (ScoreData *row in allScores) {
+        for (int difficulty = 0; difficulty < 3; difficulty++) {
+            int score = 0;
+            short rank = 0;
+            int playCnt = 0;
+            bool fullCombo = false, perfect = false;
+            readScoreDataFields(
+                row, &score, &rank, &playCnt, &fullCombo, &perfect, row, difficulty);
+
+            if (score > 0) {
+                out->totalScore += score;
+            }
+            if (score > out->bestScore) {
+                out->bestScore = score;
+            }
+            if (static_cast<unsigned>(rank) < 7) {
+                out->rank[difficulty][rank] += 1;
+            }
+            if (fullCombo) {
+                out->fullCombo[difficulty] += 1;
+            }
+            if (perfect) {
+                out->perfect[difficulty] += 1;
+            }
+        }
+    }
+}
 
 @implementation FriendListViewController {
     UIViewController *_dummyView;  // loading overlay VC, @164
@@ -272,15 +333,19 @@
 // @ 0xb15ec — friend list arrived: on failure alert; on success prepend the
 // local player as the self row, sort, reload, and show/hide the placeholder +
 // scrolling.
-// NOT @complete: verified faithful except for one disclosed gap. After building
-// the self row the binary calls neAppEventCenter::shared() then FUN_00029644
-// (@ 0xb16b2/0xb16c4) to aggregate the local player's own clear counts into the
-// row's rank / perfect / fullComboOnly arrays; that aggregation is not
-// reconstructed here, so those tallies are left zero (identity/name/charaId are
-// faithful, and the row still sorts and renders correctly). The failure alert,
-// mutableCopy of friendListArray, NSValue boxing, sortedArrayUsingFunction
-// (total/best per _isBestScoreSort), reload, and placeholder/scroll toggles all
-// match the disassembly.
+// Verified against disassembly: on failure show a CommonAlertView and return; on
+// success release the previous _frinedDataArray, mutableCopy friendListArray, then
+// build the self row. neAppEventCenter::shared() (@ 0xb16b2) is called only for
+// its (discarded) side effect and its result is unused, so it is omitted here;
+// aggregateScoreStats (FUN_00029644 @ 0xb16c4) fills the local player's own
+// tallies. The self-row copy loop (@ 0xb1708..0xb173e) sets totalScore/bestScore,
+// copies the first 4 rank slots of each difficulty (a 16-byte NEON move per row,
+// with the trailing 3 slots left zero exactly as the binary does), stores
+// perfect[d] verbatim, and stores fullComboOnly[d] = max(fullCombo[d] -
+// perfect[d], 0). The NSValue boxing (objCType
+// "{FriendListData=@@siii[3[7i]][3i][3i]}"), sortedArrayUsingFunction (total/best
+// per _isBestScoreSort), reload, and placeholder/scroll toggles all match.
+// @complete
 - (void)downloadMainFinished:(NSNumber *)result {
     _dummyView.view.hidden = YES;
 
@@ -300,17 +365,28 @@
 
     NSMutableArray *rows = [[[DownloadMain getInstance] friendListArray] mutableCopy];
 
-    // Prepend the local player as the self row (nil playerId marks "you").
-    // NB: the binary aggregates the player's own clear counts here via
-    // NEAppEventCenter + FUN_00029644 into the rank/perfect/fullComboOnly arrays;
-    // that aggregation is not yet reconstructed, so those tallies are left zero
-    // (best-effort) while identity/name/charaId are faithful. The row still sorts
-    // and renders correctly.
+    // Aggregate the local player's own clear stats across every saved chart, then
+    // prepend them as the self row (nil playerId marks "you").
+    ScoreStats stats;
+    aggregateScoreStats(&stats);
+
     FriendListData me;
     memset(&me, 0, sizeof(me));
     me.playerId = nil;
     me.name = [UserSettingData playerName];
     me.charaId = [UserSettingData charaId];
+    me.totalScore = stats.totalScore;
+    me.bestScore = stats.bestScore;
+    for (int d = 0; d < 3; d++) {
+        // The binary copies only the first four rank slots of each difficulty (a
+        // single 16-byte move per row); the trailing three stay zero.
+        for (int r = 0; r < 4; r++) {
+            me.rank[d][r] = stats.rank[d][r];
+        }
+        const int fullComboOnly = stats.fullCombo[d] - stats.perfect[d];
+        me.fullComboOnly[d] = (fullComboOnly > 0) ? fullComboOnly : 0;
+        me.perfect[d] = stats.perfect[d];
+    }
     [rows addObject:[NSValue value:&me withObjCType:"{FriendListData=@@siii[3[7i]][3i][3i]}"]];
 
     _frinedDataArray = [self sortedRows:rows best:_isBestScoreSort];

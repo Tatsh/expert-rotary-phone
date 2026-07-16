@@ -45,6 +45,7 @@ static UIViewController *RootVC() {
 @synthesize delegate = _delegate;
 
 // @ 0x687f0 — the songs bucketed under category `index`.
+// @complete
 - (NSArray *)getAcMusicData:(int)index {
     return _acMusicDataArray[index];
 }
@@ -52,6 +53,7 @@ static UIViewController *RootVC() {
 // @ 0x68804 — build the transparent, separator-less grouped table; bucket every
 // MusicManager AC song by genre category; install the "all category" header
 // banner and (phone only) the "friman" backdrop.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -101,6 +103,7 @@ static UIViewController *RootVC() {
 
 // @ 0x68d40 — initialize the receiver (grouped) and wrap it in a nav controller
 // with a custom back button in the left slot.
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
@@ -123,6 +126,7 @@ static UIViewController *RootVC() {
 
 // @ 0x68f30 — on phone, start the mode-select BGM if nothing is already
 // playing.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -139,6 +143,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x6903c — super only.
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -147,6 +152,7 @@ static UIViewController *RootVC() {
 
 // @ 0x69068 — fade the view + nav view in over 0.3 s (didStop ->
 // endOpenAnimation).
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -164,12 +170,14 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x691a0 — animation finished.
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x691b8 — fade the view + nav view out over 0.3 s (didStop ->
 // endCloseAnimation).
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -185,6 +193,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x692c0 — remove the nav view and notify the root VC the viewer closed.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
@@ -195,11 +204,13 @@ static UIViewController *RootVC() {
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0x6932c
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x69330 — row 0 is the "all" banner, plus one row per non-empty category.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     NSInteger rows = 1;
     for (int i = 0; i < 24; i++) {
@@ -212,10 +223,12 @@ static UIViewController *RootVC() {
 
 // @ 0x69378 — row 0 -> the "all" banner (nil data); row N -> the N-th non-empty
 // category, scanned high (23) to low.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Format string @ 0x1029ae is "Cell%ld-%ld" (hyphen, not underscore).
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     AcViewerCategoryCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerCategoryCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -242,12 +255,14 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x694c4
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0x694c8 — push the category's song list (row 0 -> the full list); on iPad
 // forward this screen's delegate to the pushed list.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController != self || indexPath.section != 0) {
         return;
@@ -288,6 +303,7 @@ static UIViewController *RootVC() {
 // @ 0x696c4 — BACK: only when this screen is the nav top VC; clear the
 // AC-viewer's current music selection, play the cancel SE and (phone) fade the
 // screen out.
+// @complete
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;

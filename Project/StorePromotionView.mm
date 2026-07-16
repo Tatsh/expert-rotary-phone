@@ -12,11 +12,13 @@
 @implementation StorePromotionView
 
 // delegate @ 0x7a724 / setDelegate: @ 0x7a734 — synthesized weak accessors.
+// @complete
 @synthesize delegate = m_Delegate;
 
 // layoutSubviews @ 0x79c00 — super-only override, omitted.
 
 // @ 0x79900
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         [self SetupView];
@@ -28,9 +30,11 @@
 // @ 0x79c2c — a centered spinner, a front + next image view (next starts hidden
 // via alpha 0), a whole-view tap gesture, and on iPad a rounded, bordered,
 // clipped frame.
+// @complete
 - (void)SetupView {
+    // Binary passes raw style 2 (0x79c60), i.e. Gray, not WhiteLarge (0).
     m_Indicator = [[UIActivityIndicatorView alloc]
-        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     m_Indicator.center =
         CGPointMake(CGRectGetWidth(self.bounds) / 2.0f, CGRectGetHeight(self.bounds) / 2.0f);
     [m_Indicator startAnimating];
@@ -62,12 +66,14 @@
 }
 
 // @ 0x79f28
+// @complete
 - (void)setImageViewSize:(CGSize)size {
     m_FrontImageView.frame = CGRectMake(0, 0, size.width, size.height);
     m_NextImageView.frame = CGRectMake(0, 0, size.width, size.height);
 }
 
 // @ 0x7a008 — kick off a download per promo entry (once).
+// @complete
 - (void)setImageURLs:(NSArray *)promotionData {
     if (m_PromotionDataArray != nil || promotionData == nil) {
         return;
@@ -88,6 +94,7 @@
 }
 
 // @ 0x7a230 — stash a loaded image into its promo slot, drop the downloader.
+// @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     UIImage *image = [downloader getImage];
     NSUInteger index = [indexPath indexAtPosition:0];
@@ -97,12 +104,14 @@
 
 // @ 0x7a2a4 — download failed: just drop the downloader (no slot gets an
 // image).
+// @complete
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     [m_ImageDownloader removeObject:downloader];
 }
 
 // @ 0x7a4b4 — record the image; if this is the first, show it and start
 // rotating.
+// @complete
 - (void)setImage:(UIImage *)image Index:(int)index {
     NSDictionary *entry = m_PromotionDataArray[index];
     NSDictionary *updated = [NSDictionary dictionaryWithObjectsAndKeys:entry[@"ID"],
@@ -124,12 +133,14 @@
 }
 
 // @ 0x7a2c4
+// @complete
 - (int)getImageCount {
     return (int)m_PromotionDataArray.count;
 }
 
 // @ 0x7a2e4 — advance to the next promo that has a loaded image, cross-fading
 // it in.
+// @complete
 - (void)setNext {
     int count = [self getImageCount];
     if (count <= 0) {
@@ -161,12 +172,14 @@
 
 // @ 0x7a454 — the fade finished: promote next -> front, reset next to
 // invisible.
+// @complete
 - (void)nextShowEnd {
     m_FrontImageView.image = m_NextImageView.image;
     m_NextImageView.alpha = 0.0f;
 }
 
 // @ 0x7a628 — (re)arm the 2.5s rotation timer if there is a current image.
+// @complete
 - (void)startAnimation {
     [self stopAnimation];
     if (m_Index >= 0) {
@@ -179,6 +192,7 @@
 }
 
 // @ 0x7a6ac
+// @complete
 - (void)stopAnimation {
     if (m_Timer != nil) {
         [m_Timer invalidate];
@@ -187,6 +201,7 @@
 }
 
 // @ 0x79f84 — the current promo's pack id (or -1 when nothing is shown).
+// @complete
 - (int)getPackID {
     int count = [self getImageCount];
     if (m_Index >= 0 && m_Index < count) {
@@ -199,6 +214,7 @@
 }
 
 // @ 0x7a6dc
+// @complete
 - (void)handleTapPromotionView:(UITapGestureRecognizer *)recognizer {
     if (m_Delegate == nil) {
         return;
@@ -207,6 +223,7 @@
 }
 
 // @ 0x79af8 — drop all in-flight downloads and stop rotating.
+// @complete
 - (void)cancel {
     for (ImageDownloader *downloader in m_ImageDownloader) {
         downloader.delegate = nil;
@@ -216,7 +233,11 @@
     [self stopAnimation];
 }
 
-// @ 0x79994
+// @ 0x79994 — the binary is a full MRC dealloc (releases m_Indicator, then the
+// same setDelegate:nil + cancelDownload loop over m_ImageDownloader, then
+// releases m_ImageDownloader / m_PromotionDataArray, then [super dealloc]); the
+// ivar releases are ARC-automatic, so only the cancel loop is load-bearing.
+// @complete
 - (void)dealloc {
     for (ImageDownloader *downloader in m_ImageDownloader) {
         downloader.delegate = nil;

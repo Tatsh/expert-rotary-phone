@@ -64,6 +64,7 @@
 #pragma mark - Init
 
 // @ 0x269c4 — install into the root scene view, centred on it.
+// @complete
 - (instancetype)initWithType:(CustomAlertViewType)type
                        title:(NSString *)title
                      message:(NSString *)message
@@ -83,6 +84,7 @@
 
 // @ 0x26a60 — install into `view`, defaulting the centre (CGPointZero -> view
 // centre).
+// @complete
 - (instancetype)initWithView:(UIView *)view
                         type:(CustomAlertViewType)type
                        title:(NSString *)title
@@ -99,6 +101,7 @@
 }
 
 // @ 0x26abc — designated initializer.
+// @complete
 - (instancetype)initWithView:(UIView *)view
                       center:(CGPoint)center
                         type:(CustomAlertViewType)type
@@ -246,26 +249,31 @@
 #pragma mark - Restyling
 
 // @ 0x268ac
+// @complete
 - (void)setTitleColor:(UIColor *)color {
     _title.textColor = color;
 }
 
 // @ 0x268cc
+// @complete
 - (void)setTextColor:(UIColor *)color {
     _text.textColor = color;
 }
 
 // @ 0x268ec
+// @complete
 - (void)setTitleFontSize:(CGFloat)size {
     _title.font = [UIFont fontWithName:AppMaruFontName() size:size];
 }
 
 // @ 0x26940
+// @complete
 - (void)setTextFontSize:(CGFloat)size {
     _text.font = [UIFont fontWithName:AppMaruFontName() size:size];
 }
 
 // @ 0x26994 — clamp to a known animation kind (0..1).
+// @complete
 - (void)setOpenAnimeType:(CustomAlertViewAnimeType)type {
     if (type > CustomAlertViewAnimeTypeScale) {
         return;
@@ -274,6 +282,7 @@
 }
 
 // @ 0x269ac
+// @complete
 - (void)setCloseAnimeType:(CustomAlertViewAnimeType)type {
     if (type > CustomAlertViewAnimeTypeScale) {
         return;
@@ -284,6 +293,7 @@
 #pragma mark - Show / dismiss
 
 // @ 0x274fc
+// @complete
 - (void)show {
     if (mBgImageView == nil) {
         return;
@@ -320,6 +330,7 @@
 }
 
 // @ 0x277b8
+// @complete
 - (void)removeView {
     if (m_CloseAnimeType == CustomAlertViewAnimeTypeScale) {
         // Reverse bounce: 1.0 -> 1.25 (0.25s) -> collapse to 0 (0.25s), then
@@ -356,6 +367,7 @@
 }
 
 // @ 0x27ad0 — animationDidStop / bounce-completion teardown.
+// @complete
 - (void)endCloseAnimation {
     [self removeFromSuperview];
 }
@@ -363,6 +375,7 @@
 #pragma mark - Buttons
 
 // @ 0x27ae0 — "yes" / other button (index 1).
+// @complete
 - (void)clickedYesButton:(id)sender {
     neEngine::playSystemSe(1);
     [self removeView];
@@ -370,6 +383,7 @@
 }
 
 // @ 0x27b34 — "no" / cancel button (index 0).
+// @complete
 - (void)clickedNoButton:(id)sender {
     neEngine::playSystemSe(2);
     [self removeView];
@@ -377,6 +391,7 @@
 }
 
 // @ 0x27b88 — empty default implementation of the delegate callback (no-op).
+// @complete
 - (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
 }
 

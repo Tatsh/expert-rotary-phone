@@ -44,7 +44,8 @@
 //   code->message
 //     mapping was verified from the tbb jump table (codes 0/1/2/7 -> the
 //     generic retry message, 3/4/5/6/8/9 -> specific messages, a nil JSON body
-//     -> the success message).
+//     -> the success message). Re-read this pass @ 0xe4586: entries 0/1/2/7
+//     share one target; 3/4/5/6/8/9 are distinct.
 //   - The friend request POSTs "uuid=%@&player_id=%@&message=%@" (message
 //   empty) to
 //     +[StoreUtil requestFriendURL], Content-Type "application/json", body
@@ -79,6 +80,16 @@
 }
 
 // @ 0xe3170 — build the confirm card from the tapped row's FriendListData.
+//
+// Verified against the disassembly: backgroundColor black alpha 0.3
+// (0x3e99999a); _scaleForPad 2.0 (pad) / 1.0 (phone); "frilis_window" tag 400
+// (0x190); request/cancel buttons only when fd.playerId is non-nil, at
+// (151, 368) and (36, 368) scaled, wired to -startRequestFriendHttp /
+// -touchedCancel; charaId clamped to >= 0 and the > 29 bundled/downloaded split
+// (phone "sgc_icon_%03d.png", pad "sugo_chara_%03d.png"); the count sheet runs
+// grade 0..3 x diff 0..2 at y = 0x95 + grade*0x23, then Perfect at y = 0x121 and
+// FullCombo at y = 0x143. The per-label sub-view frame arithmetic remains
+// best-effort (see the honesty note above); left unmarked accordingly.
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData {
     if ((self = [super initWithFrame:frame])) {
         _friendData = friendData;
@@ -247,6 +258,13 @@
 // @ 0xe40ac — draw `count` as up to 3 right-aligned digit images
 // (frilis_num_<n|h|e><digit>) for difficulty row `sheet` (0=N,1=H,2=Ex) at
 // vertical position `y`, into `view`. All frames are scaled by _scaleForPad.
+//
+// @complete
+// kBaseX = {139, 190, 242} verified @ 0x12fbe0. The binary indexes a static
+// [sheet][digit] table of pre-built "frilis_num_XY" image-name constants where
+// this reconstruction rebuilds the same names via -stringWithFormat:; the X
+// step (base - i*15) * scale, the Y * scale, the image size * scale, and the
+// three right-aligned digits (count /= 10) all match.
 - (void)addCntNum:(int)count sheet:(int)sheet y:(int)y view:(UIView *)view {
     static NSString *const kSet[3] = {@"n", @"h", @"e"};
     static const int kBaseX[3] = {139, 190, 242}; // DAT_0012fbe0
@@ -268,6 +286,8 @@
 #pragma mark - Open / close animation
 
 // @ 0xe42f8 — fade in (alpha 0 -> 1 over 0.3s); marks enabled + animating.
+//
+// @complete (both _isAnimationing and _isEnabled set; duration 0.3 @ 0xe43c8).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -284,11 +304,16 @@
 }
 
 // @ 0xe43d0 — open animation finished.
+//
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xe43e8 — fade out (alpha -> 0 over 0.3s), then remove on stop.
+//
+// @complete (the binary clears _isAnimationing to 0 here; duration 0.3 @
+// 0xe44a0).
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -303,6 +328,8 @@
 }
 
 // @ 0xe44a8 — close animation finished: drop off screen and disable.
+//
+// @complete
 - (void)endCloseAnimation {
     [self removeFromSuperview];
     _isAnimationing = NO;
@@ -314,6 +341,8 @@
 // @ 0xe44e0 — friend-request response: nil JSON body -> success; else map the
 // "ErrorCode" number to a result message. Always drops the downloader + hides
 // the spinner, then alerts.
+//
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSString *message;
     NSDictionary *json = [downloader getDataInJSON];
@@ -367,11 +396,15 @@
 }
 
 // @ 0xe46a0 — per-chunk progress: no-op.
+//
+// @complete (bx lr).
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xe46a4 — request failed: drop the downloader, hide the spinner, show the
 // network alert.
+//
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     _dummyView.hidden = YES;
@@ -389,6 +422,8 @@
 #pragma mark - CommonAlertView delegate
 
 // @ 0xe476c — dismissing a result alert closes the overlay.
+//
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     [self startCloseAnimation];
 }
@@ -397,6 +432,12 @@
 
 // @ 0xe477c — POST the friend request (once) for this row's player id,
 // revealing the spinner.
+//
+// @complete
+// Verified: guarded on _downloader == nil && fd.playerId != nil; plays SE 1 on
+// send / SE 2 otherwise; POST body "uuid=%@&player_id=%@&message=%@" (message
+// empty), UTF-8, Content-Type "application/json" to +[StoreUtil
+// requestFriendURL]; reveals _dummyView.
 - (void)startRequestFriendHttp {
     FriendListData fd;
     [_friendData getValue:&fd];
@@ -420,6 +461,8 @@
 }
 
 // @ 0xe490c — cancel button: play the back SE and close.
+//
+// @complete
 - (void)touchedCancel {
     neEngine::playSystemSe(2);
     [self startCloseAnimation];
@@ -427,6 +470,8 @@
 
 // @ 0xe493c — a touch that ends outside the card (tag != 400) dismisses the
 // overlay.
+//
+// @complete
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     if ([[touches anyObject] view].tag == 400) {
         return;
@@ -437,11 +482,15 @@
 #pragma mark - State
 
 // @ 0xe4994
+//
+// @complete (atomic BOOL getter; dmb barrier).
 - (BOOL)isAnimationing {
     return _isAnimationing;
 }
 
 // @ 0xe49ac
+//
+// @complete (atomic BOOL getter; dmb barrier).
 - (BOOL)isEnabled {
     return _isEnabled;
 }
@@ -449,6 +498,9 @@
 // @ 0xe4278 (Ghidra "deallc") — cancel the in-flight request so no late
 // callback fires into a dead overlay. Kept under ARC because it cancels a
 // Downloader; the _dummyView / _downloader object releases are ARC-managed.
+//
+// @complete (binary releases _dummyView, then cancels + releases _downloader,
+// then [super dealloc]; the cancel is the load-bearing part kept under ARC).
 - (void)dealloc {
     if (_downloader != nil) {
         [_downloader cancel];

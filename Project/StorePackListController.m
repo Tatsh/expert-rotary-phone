@@ -35,11 +35,14 @@ static NSString *const kDownloadErrorMessage =
 
 @implementation StorePackListController
 
-@synthesize delegate = m_Delegate; // delegate @ 0x58800 / setDelegate: @ 0x58810 (synthesized)
+// delegate @ 0x58800 / setDelegate: @ 0x58810 (synthesized ivar accessors)
+// @complete
+@synthesize delegate = m_Delegate;
 
 // +[StorePackListController storeCountry]  @ 0x577a4 — the store country code
 // cached from the last resolved product's priceLocale (nil until a products
 // request has succeeded).
+// @complete
 + (NSString *)storeCountry {
     if (s_storeCountry != nil) {
         return [NSString stringWithString:s_storeCountry];
@@ -48,6 +51,7 @@ static NSString *const kDownloadErrorMessage =
 }
 
 // @ 0x577dc — start "continued", with a 50-slot pack cache and id list.
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         m_PacklistContinued = YES;
@@ -60,11 +64,13 @@ static NSString *const kDownloadErrorMessage =
 #pragma mark - Fetch control
 
 // @ 0x579f8
+// @complete
 - (BOOL)isFetching {
     return m_PacklistDownloader != nil || m_ProductsRequest != nil;
 }
 
 // @ 0x5796c
+// @complete
 - (void)cancelFetching {
     if (m_PacklistDownloader != nil) {
         [m_PacklistDownloader cancel];
@@ -79,6 +85,7 @@ static NSString *const kDownloadErrorMessage =
 
 // @ 0x57888 — GET the next page (8 packs from m_FetchedPackNum+1, optional seed
 // id).
+// @complete
 - (BOOL)startFetchingPack:(int)packId {
     if ([self isFetching]) {
         return NO;
@@ -96,6 +103,7 @@ static NSString *const kDownloadErrorMessage =
 #pragma mark - Pack cache
 
 // @ 0x57a54 — linear scan of the cache by pack id.
+// @complete
 - (StorePackInfo *)getPackInfo:(int)packId {
     for (StorePackInfo *info in m_ArrayPackInfo) {
         if (info.packID == packId) {
@@ -106,6 +114,7 @@ static NSString *const kDownloadErrorMessage =
 }
 
 // @ 0x57b28 — lazy-create an empty StorePackInfo for a pack id.
+// @complete
 - (StorePackInfo *)addPackInfoFromID:(int)packId {
     StorePackInfo *info = [self getPackInfo:packId];
     if (info == nil) {
@@ -116,11 +125,13 @@ static NSString *const kDownloadErrorMessage =
 }
 
 // @ 0x57a24
+// @complete
 - (NSArray *)packInfos {
     return m_ArrayPackInfo;
 }
 
 // @ 0x57a34 / 0x57a44 / 0x58820
+// @complete
 - (NSArray *)packIDList {
     return m_ListPackID;
 }
@@ -154,6 +165,7 @@ static NSString *const kDownloadErrorMessage =
 
 // @ 0x57f48 — parse the pack-list JSON: version-gate, then either fire a
 // StoreKit products request for the new packs or (nothing new) finish directly.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     NSString *version = json[@"Version"];
@@ -210,6 +222,7 @@ static NSString *const kDownloadErrorMessage =
 }
 
 // @ 0x584ec
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     [m_Delegate packListDownloadError:self errorMessage:kDownloadErrorMessage];
     m_PacklistDownloader = nil;
@@ -217,12 +230,14 @@ static NSString *const kDownloadErrorMessage =
 
 // @ 0x58540 — progress callback; the pack-list controller ignores intermediate
 // progress.
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 #pragma mark - SKProductsRequestDelegate
 
 // @ 0x58544 — cache the store country, bind products, then finish.
+// @complete
 - (void)productsRequest:(SKProductsRequest *)request
      didReceiveResponse:(SKProductsResponse *)response {
     if (response.products.count != 0) {
@@ -241,6 +256,7 @@ static NSString *const kDownloadErrorMessage =
 
 // @ 0x58698 — StoreKit lookup failed: drop the in-flight request and buffered
 // JSON, then report a network error to the delegate.
+// @complete
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
     m_ProductsRequest = nil;
     m_TmpPackList = nil;
@@ -249,6 +265,7 @@ static NSString *const kDownloadErrorMessage =
 
 // @ 0x57bac — create StorePackInfo for each new product, apply the buffered
 // pack dictionaries, advance the page, and notify success / nothing.
+// @complete
 - (void)updatePackInfo:(NSDictionary *)packListJSON
     SKProductsResponse:(SKProductsResponse *)response {
     if (response != nil) {
@@ -284,7 +301,11 @@ static NSString *const kDownloadErrorMessage =
 
 // dealloc @ 0x58714 — real work kept: cancel any in-flight downloader /
 // StoreKit request (and clear the request's delegate) before ARC releases the
-// remaining object ivars.
+// remaining object ivars. The binary inlines the same cancels (PacklistDownloader
+// cancel+release; ProductsRequest cancel+setDelegate:nil+release) then releases
+// m_TmpPackList / m_ArrayPackInfo / m_ListPackID / m_PromotionList (ARC-automatic
+// here); [self cancelFetching] captures the load-bearing work.
+// @complete
 - (void)dealloc {
     [self cancelFetching];
 }

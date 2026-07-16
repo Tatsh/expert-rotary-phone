@@ -54,6 +54,7 @@
 @implementation RecommendAdId
 
 // @ 0xe997c
+// @complete
 - (instancetype)initWithCountryCode:(NSString *)countryCode categoryId:(NSString *)categoryId {
     if ((self = [super init])) {
         _serviceName = [NSString
@@ -63,6 +64,7 @@
 }
 
 // @ 0xe9a34
+// @complete
 - (id)getWithCountryCode:(NSString *)countryCode
               categoryId:(NSString *)categoryId
                    error:(NSError **)error {
@@ -117,6 +119,7 @@
 }
 
 // @ 0xe9eb8
+// @complete
 - (id)setWithAdIdFrom:(NSString *)adIdFrom
           countryCode:(NSString *)countryCode
            categoryId:(NSString *)categoryId
@@ -211,6 +214,7 @@
 }
 
 // @ 0xea49c
+// @complete
 - (BOOL)deleteWithCountryCode:(NSString *)countryCode
                    categoryId:(NSString *)categoryId
                         error:(NSError **)error {
@@ -255,6 +259,7 @@
 // @ 0xea914 — decrypt (op 1 = decrypt) the archived local-pasteboard record's
 // data fields back into UTF-8 strings. AdType is optional and only present when
 // it was supplied at store time.
+// @complete
 - (NSDictionary *)convertToData:(NSDictionary *)dict {
     NSMutableDictionary *out = [NSMutableDictionary dictionaryWithDictionary:dict];
     NSData *key = [RecommendAdId createHash:[_serviceName dataUsingEncoding:NSUTF8StringEncoding]];
@@ -281,8 +286,12 @@
             forKey:@"CategoryId"];
 
     NSData *adType = [out objectForKey:@"AdType"];
-    if (adType != nil) { // decompiler aliases this test onto AdIdFrom's register;
-                         // it guards AdType
+    // The binary's guard here reloads the AdIdFrom object slot ([sp+0x24] @
+    // 0xeab56), not the AdType result; in a well-formed record AdIdFrom is always
+    // present, so this reduces to "decrypt AdType only when it exists". The
+    // semantically correct guard (adType != nil) is used to stay crash-free while
+    // preserving behaviour on every real record.
+    if (adType != nil) {
         [out setObject:[[NSString alloc] initWithData:[RecommendAdId cryptorToData:1
                                                                              value:adType
                                                                                key:key]
@@ -295,6 +304,7 @@
 #pragma mark - Applilink external-pasteboard transport (iOS 7+)
 
 // @ 0xead3c
+// @complete
 - (id)getPasteboardWithUdid:(NSString *)udid
                 countryCode:(NSString *)countryCode
                  categoryId:(NSString *)categoryId
@@ -377,6 +387,7 @@
 }
 
 // @ 0xeb23c
+// @complete
 - (void)setPasteboardWithUdid:(NSString *)udid
                   countryCode:(NSString *)countryCode
                    categoryId:(NSString *)categoryId
@@ -454,6 +465,7 @@
 }
 
 // @ 0xeb678
+// @complete
 - (void)deletePasteboardWithUdid:(NSString *)udid
                      countryCode:(NSString *)countryCode
                       categoryId:(NSString *)categoryId
@@ -528,6 +540,7 @@
 
 // @ 0xeac08 — lowercase hex SHA-1 of the UTF-8 bytes of a string (40-char
 // digest string).
+// @complete
 + (NSString *)sha1:(NSString *)string {
     NSData *data = [NSData dataWithBytes:[string cStringUsingEncoding:NSUTF8StringEncoding]
                                   length:[string length]];
@@ -542,6 +555,7 @@
 
 // @ 0xea72c — raw 20-byte SHA-1 digest of arbitrary data (used as the AES key
 // material).
+// @complete
 + (NSData *)createHash:(NSData *)data {
     unsigned char digest[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1([data bytes], (CC_LONG)[data length], digest);
@@ -551,6 +565,7 @@
 // @ 0xea7d8 — AES-128 (PKCS7-padded) transform. operation is kCCEncrypt (0) or
 // kCCDecrypt (1); key is used as a 16-byte AES key with a zero IV. Returns the
 // transformed data, or nil on error.
+// @complete
 + (NSData *)cryptorToData:(uint)operation value:(NSData *)value key:(NSData *)key {
     NSMutableData *output = [NSMutableData dataWithLength:[value length] + kCCBlockSizeAES128];
     size_t moved = 0;

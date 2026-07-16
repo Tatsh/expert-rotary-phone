@@ -22,6 +22,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 // @ 0xebbb4 — return the process-wide shared instance, creating it once via
 // [[self alloc] init] (the dispatch_once body @ 0xebbe8 stores the result into
 // g_pRecommendNetworkInstance).
+// @complete
 + (instancetype)sharedInstance {
     static dispatch_once_t onceToken; // @ g_dwRecommendNetworkOnceToken
     dispatch_once(&onceToken, ^{
@@ -35,6 +36,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 // serial queue and, if the instance has not yet been made, allocates it through
 // [super allocWithZone:] and clears its initializeFlg. Always returns the one
 // shared instance.
+// @complete
 + (id)allocWithZone:(NSZone *)zone {
     static dispatch_once_t onceToken; // @ DAT_0018832c
     dispatch_once(&onceToken, ^{
@@ -52,6 +54,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 // and released afterwards (handled automatically under ARC); the block stores
 // its [super init] result into the
 // __block variable that is then handed back.
+// @complete
 - (instancetype)init {
     __block RecommendNetwork *result = nil;
     dispatch_sync(g_pRewardNetworkQueue, ^{
@@ -62,16 +65,19 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 }
 
 // @ 0xec4b4
+// @complete
 - (int)initializeFlg {
     return _initializeFlg;
 }
 
 // @ 0xec4c4
+// @complete
 - (void)setInitializeFlg:(int)initializeFlg {
     _initializeFlg = initializeFlg;
 }
 
 // @ 0xebd24
+// @complete
 - (void)startWithCountryCode:(NSString *)countryCode
                   categoryId:(NSString *)categoryId
                          env:(NSString *)env
@@ -83,6 +89,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 }
 
 // @ 0xebdbc — show the navigation bar, then present the modal app list.
+// @complete
 - (void)openAppliListWithCallback:(RecommendOpenAppliListCallback)callback {
     [[RecommendCore sharedInstance] setNavigationBarHidden:NO];
     [[RecommendCore sharedInstance] openAppliListWithCallback:callback];
@@ -90,6 +97,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 
 // @ 0xebe4c — embed the app list in parentView (hiding the nav bar when a
 // parent is supplied).
+// @complete
 - (void)openAppliListWithParentView:(UIView *)parentView delegate:(id)delegate {
     [[RecommendCore sharedInstance] setNavigationBarHidden:(parentView != nil)];
     [[RecommendCore sharedInstance] setParentView:parentView delegate:delegate];
@@ -98,6 +106,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 
 // @ 0xebf24 — embed the app list in parentView (hiding the nav bar when a
 // parent is supplied), firing callback on completion.
+// @complete
 - (void)openAppliListWithParentView:(UIView *)parentView
                            callback:(RecommendOpenAppliListCallback)callback {
     if (parentView == nil) {
@@ -110,11 +119,13 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 }
 
 // @ 0xec000
+// @complete
 - (void)closeAppliList {
     [[RecommendCore sharedInstance] closeAppliList];
 }
 
 // @ 0xec044
+// @complete
 - (void)openRecommendPageWithCreateWebViewRect:(CGRect)rect
                                         parent:(UIView *)parent
                                       viewType:(int)viewType
@@ -132,6 +143,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 
 // @ 0xec170 — remove every RecommendWebView hosted under parentView (or the key
 // window).
+// @complete
 - (void)closeRecommendPageWithParentView:(UIView *)parentView {
     UIView *host = parentView;
     if (host == nil) {
@@ -146,6 +158,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 
 // @ 0xec2dc — hide/show every RecommendWebView hosted under parentView (or the
 // key window).
+// @complete
 - (void)setRecommendPageVisibleWithParentView:(UIView *)parentView flag:(BOOL)flag {
     UIView *host = parentView;
     if (host == nil) {
@@ -159,6 +172,7 @@ static RecommendNetwork *g_pRecommendNetworkInstance = nil; // @ g_pRecommendNet
 }
 
 // @ 0xec460
+// @complete
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
     [[RecommendCore sharedInstance] rotateAppliListWithInterfaceOrientation:orientation

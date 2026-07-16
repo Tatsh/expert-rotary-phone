@@ -12,11 +12,14 @@
 #import "StoreMusicInfo.h"
 
 // The app's Japanese UI font (Ghidra: FUN_0005ef9c returns
-// cf_DFSoGei_W5_WIN_RKSJ_H).
+// cf_DFSoGei_W5_WIN_RKSJ_H; byte-verified string @ 0x106d6d =
+// "DFSoGei-W5-WIN-RKSJ-H").
+// @complete
 static NSString *const kStoreFontName = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // Ghidra: FUN_00051370 — the row's little factory for a transparent, non-opaque
 // label.
+// @complete
 static UILabel *MakeClearLabel(CGRect frame) {
     UILabel *label = [[UILabel alloc] initWithFrame:frame];
     label.opaque = NO;
@@ -27,9 +30,10 @@ static UILabel *MakeClearLabel(CGRect frame) {
 @implementation StorePackMusicView
 
 // Ghidra: initWithFrame: @ 0x50b88 — build the row's subview tree. All frames
-// are byte- verified from the decompile; the buttons are laid out but NOT wired
-// here (the parent pack-detail view handles their taps), so there are no action
-// targets to install.
+// are byte- verified from the disassembly; the buttons are laid out but NOT
+// wired here (the parent pack-detail view handles their taps), so there are no
+// action targets to install.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self == nil) {
@@ -110,6 +114,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
 }
 
 // Ghidra: setInfo: @ 0x51408 — bind or clear the row from a StoreMusicInfo.
+// @complete
 - (void)setInfo:(StoreMusicInfo *)info {
     if (info == nil) {
         labelName.text = nil;
@@ -125,9 +130,8 @@ static UILabel *MakeClearLabel(CGRect frame) {
     labelName.text = info.name;
     labelArtist.text = info.artist;
 
-    // Hard level 11 displays as "10+" (Ghidra cf_10_; the exact glyph is obscured
-    // by the decompiler, "10+" is the conventional bonus-level label — best
-    // effort).
+    // Hard level 11 displays as "10+" (byte-verified: CFString @ 0x136ba8 -> cstr
+    // @ 0x105aa7 = "10+", length 3).
     NSString *hard = (info.lvHard == 11) ? @"10+" : [NSString stringWithFormat:@"%d", info.lvHard];
     labelLevels.text =
         [NSString stringWithFormat:@"LEVEL:  %d / %d / %@", info.lvBasic, info.lvMedium, hard];
@@ -140,6 +144,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
 }
 
 // Ghidra: sampleStop @ 0x51748 — return the sample button to idle.
+// @complete
 - (void)sampleStop {
     [indicatorSample stopAnimating];
     [buttonSample setImage:[UIImage imageNamed:@"store_sample_1.png"]
@@ -148,6 +153,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
 
 // Ghidra: sampleDownloading @ 0x517bc — buffering: spinner on, button stays the
 // idle glyph.
+// @complete
 - (void)sampleDownloading {
     [indicatorSample startAnimating];
     [buttonSample setImage:[UIImage imageNamed:@"store_sample_1.png"]
@@ -156,6 +162,7 @@ static UILabel *MakeClearLabel(CGRect frame) {
 
 // Ghidra: samplePlaying @ 0x51830 — playback started: spinner off, button shows
 // the "stop" glyph (store_sample_2).
+// @complete
 - (void)samplePlaying {
     [indicatorSample stopAnimating];
     [buttonSample setImage:[UIImage imageNamed:@"store_sample_2.png"]
@@ -166,33 +173,40 @@ static UILabel *MakeClearLabel(CGRect frame) {
 // badge is shown iff the song is playable in the arcade (arcadeViewer.hidden =
 // NO when isExistAcv is YES). Byte-verified: [arcadeViewer
 // setHidden:(isExistAcv == 0)].
+// @complete
 - (void)setIsExistAcv:(BOOL)isExistAcv {
     arcadeViewer.hidden = (isExistAcv == NO);
 }
 
 // Ghidra: buttonSample @ 0x51a24 — the sample button accessor.
+// @complete
 - (UIButton *)buttonSample {
     return buttonSample;
 }
 
 // Plain ivar accessors (parent reads these to configure the row).
+// @complete
 - (StoreImageView *)artworkView { // @ 0x519e4
     return artworkView;
 }
 
+// @complete
 - (UILabel *)labelName { // @ 0x519f4
     return labelName;
 }
 
+// @complete
 - (UILabel *)labelArtist { // @ 0x51a04
     return labelArtist;
 }
 
+// @complete
 - (UILabel *)labelLevels { // @ 0x51a14
     return labelLevels;
 }
 
 // The iTunes-link button accessor (parent wires its tap). Ghidra: @ 0x51a34.
+// @complete
 - (UIButton *)buttonLink {
     return buttonLink;
 }
@@ -200,7 +214,9 @@ static UILabel *MakeClearLabel(CGRect frame) {
 // Ghidra: setBG: @ 0x518a4 — choose the stretchable row-background image (index
 // clamped to 0/1). The table is inverted in the binary: index 0 ->
 // store_pack_bg_1, index 1 -> store_pack_bg_0 (byte-verified via the
-// DAT_00131cb8 pointer table).
+// DAT_00131cb8 pointer table: [0x1367b8, 0x1367a8] -> "store_pack_bg_1.png",
+// "store_pack_bg_0.png").
+// @complete
 - (void)setBG:(int)index {
     if (index < 0) {
         index = 0;

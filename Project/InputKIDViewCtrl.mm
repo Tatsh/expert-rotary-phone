@@ -32,11 +32,18 @@
 
 @implementation InputKIDViewCtrl
 
-@synthesize delegate = _delegate; // getter @ 0xd73f4 / setter @ 0xd7404 (plain assign)
+// getter @ 0xd73f4 / setter @ 0xd7404 (plain assign, synthesized ivar accessors)
+// @complete
+@synthesize delegate = _delegate;
 
 // @ 0xd5888 — build the link form. On pad the fields sit 70pt lower (padOffset)
 // and the backdrop is clear (the split-controller card provides it); on phone
 // it is a full "friman_bg" screen with a nav-bar back button.
+// Verified: _scrollOffset 90/0 at height < 568; padOffset 70/0; field frames
+// (KID 64, padOffset+125, 206, 38; PASS +192; OTP +269); decide (185, padOffset+
+// 325); caption images at padOffset+104/172/240; link banner x 31 y 480/380 tag
+// 300; spinner Gray, pad centre (148, 300); keyboard observers wired.
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -214,6 +221,7 @@
 
 // @ 0xd6714 — resign the fields and cancel any in-flight link POST (KEEP — real
 // cleanup; the binary also releases _dummyView, automatic under ARC).
+// @complete
 - (void)dealloc {
     if (_kidField != nil) {
         [_kidField resignFirstResponder];
@@ -232,17 +240,20 @@
 #pragma mark - UITextFieldDelegate
 
 // @ 0xd6900
+// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     return YES;
 }
 
 // @ 0xd6904 — scroll the form back to the top when editing ends.
+// @complete
 - (void)textFieldDidEndEditing:(UITextField *)textField {
     [_scrollView setContentOffset:CGPointZero animated:YES];
 }
 
 // @ 0xd6948 — Return advances KID -> PASSWORD; on the other fields it
 // dismisses.
+// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     if (textField == _kidField) {
         [_passField becomeFirstResponder];
@@ -255,6 +266,7 @@
 }
 
 // @ 0xd6cec — per-field length caps: KID <= 256, PASSWORD <= 32, OTP <= 16.
+// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -275,6 +287,7 @@
 
 // @ 0xd69b0 — submit a non-empty KID + password: save them, disable the link
 // buttons while the POST runs, then always play the decide SE.
+// @complete
 - (void)touchedDecideButton:(id)sender {
     if (_kidField != nil) {
         [_kidField resignFirstResponder];
@@ -301,6 +314,7 @@
 
 // @ 0xd6af8 — back button: play the cancel SE, then fade out directly (when the
 // link is still not enabled) or restore the pop'n-link bar and pop.
+// @complete
 - (void)touchedBackButton:(id)sender {
     neSceneManager::shared();
     neEngine::playSystemSe(2); // cancel SE
@@ -323,6 +337,7 @@
 
 // @ 0xd6c90 — tear down the pushed nav view and notify the scene root the flow
 // ended.
+// @complete
 - (void)endDirectCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
@@ -337,6 +352,7 @@
 // @ 0xd7088 — POST "uuid&konami_id&password&otp" to the link endpoint; the OTP
 // is omitted (empty) unless one has been entered, and the require-OTP flag is
 // set to match.
+// @complete
 - (void)startLinkKidHttp {
     if (_downloader != nil) {
         return;
@@ -372,6 +388,7 @@
 // @ 0xd6d90 — link POST finished. A JSON body with a non-empty "RefId" is
 // success (store it, enable the link buttons); otherwise report the appropriate
 // failure message.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     NSString *message = @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。";
@@ -416,6 +433,7 @@
 }
 
 // @ 0xd6fa8 — link POST failed (network/transport error).
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_dummyView.view setHidden:YES];
@@ -434,6 +452,7 @@
 // @ 0xd7284 — dismissing the alert: on pad, tell the split controller to
 // rebuild its left column and re-enter the score checker; on phone, just pop
 // back.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     neSceneManager::shared();
     if (neSceneManager::isPadDisplay()) {
@@ -447,11 +466,13 @@
 #pragma mark - Keyboard notifications
 
 // @ 0xd72e4 — scroll the form up so the active field clears the keyboard.
+// @complete
 - (void)keyboardWasShown:(NSNotification *)notification {
     [_scrollView setContentOffset:CGPointMake(0.0f, _scrollOffset) animated:YES];
 }
 
 // @ 0xd7328 — scroll the form back down.
+// @complete
 - (void)keyboardWillBeHidden:(NSNotification *)notification {
     [_scrollView setContentOffset:CGPointZero animated:YES];
 }
@@ -460,6 +481,7 @@
 
 // @ 0xd7358 — tapping the "link help" banner (tag 300) opens the quick-entry
 // web page.
+// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     if (touch.view.tag == 300) {
@@ -482,6 +504,7 @@
 //   viewWillDisappear: @ 0xd689c, viewDidDisappear: @ 0xd68c8.
 
 // @ 0xd68f4
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation == UIInterfaceOrientationPortrait;
 }
