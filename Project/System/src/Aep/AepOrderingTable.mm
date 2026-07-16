@@ -189,14 +189,6 @@ static void establishFrame2DState(int screenW, int screenH) {
     glLoadMatrixf(ortho);
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(identity);
-    // Texcoords are emitted as GL_SHORT in 0..32767 (u * 32767). GL ES 1.1 does NOT
-    // normalize integer texcoord arrays, so scale them back to 0..1 through the
-    // texture matrix; otherwise (with GL_REPEAT) every texel samples the (0,0)
-    // corner and the sprite renders as a single, usually transparent, texel (black).
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glScalef(1.0f / 32767.0f, 1.0f / 32767.0f, 1.0f);
-    glMatrixMode(GL_MODELVIEW);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

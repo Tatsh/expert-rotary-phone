@@ -348,6 +348,10 @@ private:
     unsigned _blendSrc = 0;           // ivar 0x1a0
     unsigned _blendDest = 0;          // ivar 0x1a4
     unsigned _boundTextures[8] = {};  // ivar 0xb4[8] (cleared by deleteBuffer)
+    // GL caps probed by initialize() (Ghidra: QueryCaps FUN_00012da0).
+    int _maxTextureSize = 0;        // ivar 0x84  (GL_MAX_TEXTURE_SIZE)
+    bool _hasMatrixPalette = false; // ivar 0x87  (GL_OES_matrix_palette present)
+    int _maxPaletteMatrices = 0;    // ivar 0x88
 };
 
 // Free helper (no `this`): is the currently-bound OES framebuffer complete?

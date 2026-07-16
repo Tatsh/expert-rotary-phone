@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
@@ -463,7 +464,44 @@ bool isFramebufferComplete() {
 // state.
 void neGLES_11::shutdown() {
 }
+// Ghidra: QueryCaps (FUN_00012da0), the renderer's pInit virtual. Probes the GL
+// extension string for GL_OES_matrix_palette, reads GL_MAX_TEXTURE_SIZE, loads the
+// texcoord-normalizing texture matrix, and sets the default line width.
 void neGLES_11::initialize() {
+    // Scan the space-delimited extension list for matrix-palette support.
+    const char *cursor = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
+    if (cursor != nullptr) {
+        char token[256];
+        for (const char *space = std::strchr(cursor, ' '); space != nullptr;
+             space = std::strchr(cursor, ' ')) {
+            size_t len = static_cast<size_t>(space - cursor);
+            if (len >= sizeof(token)) {
+                len = sizeof(token) - 1;
+            }
+            std::strncpy(token, cursor, len);
+            token[len] = '\0';
+            if (std::strncmp(token, "GL_OES_matrix_palette", len) == 0) {
+                _hasMatrixPalette = true;
+                _maxPaletteMatrices = 9;
+            }
+            cursor = space + 1;
+        }
+    }
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &_maxTextureSize);
+
+    // The sprite/glyph texcoords are emitted as GL_SHORT in 0..32767 (uv * 32767).
+    // GL ES 1.1 does not normalize integer texcoord arrays, so load a texture matrix
+    // whose diagonal is (1/32767, 1/32767, 1, 1) to scale them back to 0..1. Ghidra:
+    // QueryCaps builds this matrix (0x38000100 == 1/32767) and loadMatrix
+    // (MATRIX_MODE_TEXTURE).
+    neMatrix4 texScale = {};
+    texScale.m[0] = 1.0f / 32767.0f;
+    texScale.m[5] = 1.0f / 32767.0f;
+    texScale.m[10] = 1.0f;
+    texScale.m[15] = 1.0f;
+    loadMatrix(neIGLES::MATRIX_MODE_TEXTURE, texScale);
+
+    glLineWidth(1.0f);
 }
 
 void neGLES_11::setViewport(int x, int y, int w, int h) {
