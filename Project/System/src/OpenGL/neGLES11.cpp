@@ -467,18 +467,18 @@ void neGLES_11::shutdown() {
 // Ghidra: QueryCaps (FUN_00012da0), the renderer's pInit virtual. Probes the GL
 // extension string for GL_OES_matrix_palette, reads GL_MAX_TEXTURE_SIZE, loads the
 // texcoord-normalizing texture matrix, and sets the default line width.
+// @complete
 void neGLES_11::initialize() {
-    // Scan the space-delimited extension list for matrix-palette support.
+    // Scan the space-delimited extension list for matrix-palette support. The
+    // binary copies each token with memcpy (0x12de2) and a single nul terminator,
+    // with no length clamp, then strncmp's it against the palette extension name.
     const char *cursor = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
     if (cursor != nullptr) {
         char token[256];
         for (const char *space = std::strchr(cursor, ' '); space != nullptr;
              space = std::strchr(cursor, ' ')) {
             size_t len = static_cast<size_t>(space - cursor);
-            if (len >= sizeof(token)) {
-                len = sizeof(token) - 1;
-            }
-            std::strncpy(token, cursor, len);
+            std::memcpy(token, cursor, len);
             token[len] = '\0';
             if (std::strncmp(token, "GL_OES_matrix_palette", len) == 0) {
                 _hasMatrixPalette = true;
