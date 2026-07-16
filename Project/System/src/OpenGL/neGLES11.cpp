@@ -318,24 +318,29 @@ neGLES_11::neGLES_11()
 
 neGLES_11::~neGLES_11() = default;
 
+// @complete
 void neGLES_11::enable(EnableState state) {
     glEnable(EnableStateToGL(state));
 }
 
+// @complete
 void neGLES_11::disable(EnableState state) {
     glDisable(EnableStateToGL(state));
 }
 
+// @complete
 void neGLES_11::enableClientState(ClientState state) {
     glEnableClientState(ClientStateToGL(state));
 }
 
+// @complete
 void neGLES_11::disableClientState(ClientState state) {
     glDisableClientState(ClientStateToGL(state));
 }
 
 // Ghidra: FUN_00013110 — caches the mode (ivar 0x2c) and only re-issues
 // glMatrixMode on change.
+// @complete
 void neGLES_11::setMatrixMode(MatrixMode mode) {
     if (_matrixMode == static_cast<unsigned>(mode)) {
         return;
@@ -344,18 +349,22 @@ void neGLES_11::setMatrixMode(MatrixMode mode) {
     glMatrixMode(MatrixModeToGL(mode));
 }
 
+// @complete
 void neGLES_11::setHint(Hint target, int mode) {
     glHint(HintTargetToGL(target), static_cast<GLenum>(mode));
 }
 
+// @complete
 void neGLES_11::setFogMode(FogMode mode) {
     glFogx(GL_FOG_MODE, static_cast<GLfixed>(FogModeToGL(mode)));
 }
 
+// @complete
 void neGLES_11::setCullFace(CullFace face) {
     glCullFace(CullFaceToGL(face));
 }
 
+// @complete
 void neGLES_11::setFrontFace(FrontFace face) {
     assert(face >= 0 && face < FRONT_FACE_MAX);
     glFrontFace(face == FRONT_FACE_CW ? GL_CW : GL_CCW);
@@ -363,6 +372,7 @@ void neGLES_11::setFrontFace(FrontFace face) {
 
 // Ghidra: FUN_00013a34 — caches (equation 0x19c, src 0x1a0, dest 0x1a4), skips
 // redundant calls, then glBlendEquationOES(equation); glBlendFunc(src, dest).
+// @complete
 void neGLES_11::setBlendFunc(BlendSrcValue src, BlendDestValue dest, unsigned equation) {
     if (_blendSrc == static_cast<unsigned>(src) && _blendDest == static_cast<unsigned>(dest) &&
         _blendEquation == equation) {
@@ -376,26 +386,31 @@ void neGLES_11::setBlendFunc(BlendSrcValue src, BlendDestValue dest, unsigned eq
     glBlendFunc(glSrc, BlendDestToGL(dest));
 }
 
+// @complete
 void neGLES_11::setDepthFunc(DepthTestFunc func) {
     glDepthFunc(CompareFuncToGL(func));
 }
 
+// @complete
 void neGLES_11::setAlphaFunc(AlphaTestFunc func, float ref) {
     glAlphaFunc(CompareFuncToGL(func), ref);
 }
 
 // Ghidra: FUN_00013970 — upload a 2D texture (GL_TEXTURE_2D, level 0,
 // UNSIGNED_BYTE).
+// @complete
 void neGLES_11::texImage2D(TexFormat format, int width, int height, const void *pixels) {
     GLenum glFormat = TextureFormatToGL(format);
     glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pixels);
 }
 
+// @complete
 void neGLES_11::setTexParameter(TexParamType type, TexParamValue value) {
     glTexParameteri(GL_TEXTURE_2D, TexParamTypeToGL(type), TexParamValueToGL(value));
 }
 
 // Ghidra: FUN_000138cc — read a texture parameter back as our enum.
+// @complete
 neIGLES::TexParamValue neGLES_11::getTexParameter(TexParamType type) {
     GLint value = 0;
     glGetTexParameteriv(GL_TEXTURE_2D, TexParamTypeToGL(type), &value);
@@ -405,6 +420,7 @@ neIGLES::TexParamValue neGLES_11::getTexParameter(TexParamType type) {
 // Ghidra: FUN_00013290 — invalidate any cached binding referring to this buffer
 // (ivars 0x44/0x50/0x5c/0x6c and the 8-slot texture array at 0xb4), then
 // delete.
+// @complete
 void neGLES_11::deleteBuffer(unsigned buffer) {
     if (_boundArrayBuffer == buffer) {
         _boundArrayBuffer = 0;
@@ -428,6 +444,7 @@ void neGLES_11::deleteBuffer(unsigned buffer) {
 }
 
 // Attach a renderbuffer at the given attachment point (GL ES OES FBO).
+// @complete
 void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned renderbuffer) {
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
     glRenderbufferStorageOES(GL_RENDERBUFFER_OES, RenderTypeToGLFormat(type), 0, 0);
@@ -441,12 +458,14 @@ void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned re
 // ---------------------------------------------------------------------------
 
 // Ghidra: FUN_00012e94.
+// @complete
 void neGLES_11::deleteFramebuffer(unsigned framebuffer) {
     GLuint name = framebuffer;
     glDeleteFramebuffersOES(1, &name);
 }
 
 // Ghidra: FUN_00012eb8.
+// @complete
 void neGLES_11::deleteRenderbuffer(unsigned renderbuffer) {
     GLuint name = renderbuffer;
     glDeleteRenderbuffersOES(1, &name);
@@ -454,17 +473,20 @@ void neGLES_11::deleteRenderbuffer(unsigned renderbuffer) {
 
 // Ghidra: FUN_00012f3c — attach a 2D texture's level 0 at attachment point
 // `kind`.
+// @complete
 void neGLES_11::framebufferTexture2D(RenderKind kind, unsigned texture) {
     glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_TEXTURE_2D, texture, 0);
 }
 
 // Ghidra: FUN_00012fcc — attach a renderbuffer at attachment point `kind`.
+// @complete
 void neGLES_11::framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer) {
     glFramebufferRenderbufferOES(
         GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_RENDERBUFFER_OES, renderbuffer);
 }
 
 // Ghidra: FUN_00012fec — free helper (no `this`).
+// @complete
 bool isFramebufferComplete() {
     return glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) == GL_FRAMEBUFFER_COMPLETE_OES;
 }
@@ -520,29 +542,35 @@ void neGLES_11::initialize() {
     glLineWidth(1.0f);
 }
 
+// @complete
 void neGLES_11::setViewport(int x, int y, int w, int h) {
     glViewport(x, y, w, h);
 }
 
+// @complete
 void neGLES_11::loadMatrix(int mode, const neMatrix4 &m) {
     setMatrixMode(static_cast<MatrixMode>(mode));
     glLoadMatrixf(m.m);
 }
 
+// @complete
 void neGLES_11::genBuffer(unsigned &outName) {
     GLuint name = 0;
     glGenBuffers(1, &name);
     outName = name;
 }
 
+// @complete
 void neGLES_11::selectTextureUnit(int unit) {
     glActiveTexture(GL_TEXTURE0 + unit);
 }
 
+// @complete
 void neGLES_11::colorPointer(const void *ptr, int stride) {
     glColorPointer(4, GL_UNSIGNED_BYTE, stride, ptr);
 }
 
+// @complete
 void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
     // The type is GL_FLOAT: the caching variant FUN_0001342c tail-calls
     // glVertexPointer(size, 0x1406, stride, ptr), and 0x1406 is GL_FLOAT. That
@@ -552,41 +580,50 @@ void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
     glVertexPointer(size, GL_FLOAT, stride, ptr);
 }
 
+// @complete
 void neGLES_11::texCoordPointer(const void *ptr, int stride) {
     glTexCoordPointer(2, GL_SHORT, stride, ptr); // normalized GL_SHORT UVs
 }
 
+// @complete
 void neGLES_11::bindElementBuffer(unsigned name) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, name);
 }
 
+// @complete
 void neGLES_11::bufferData(const void *data, int size, int usage) {
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, size, data, usage == 0 ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 }
 
+// @complete
 void neGLES_11::bindTexture(unsigned name) {
     glBindTexture(GL_TEXTURE_2D, name);
 }
 
+// @complete
 void neGLES_11::applyTexParameter(int type, int value) {
     setTexParameter(static_cast<TexParamType>(type), static_cast<TexParamValue>(value));
 }
 
+// @complete
 void neGLES_11::uploadTexture(int format, int w, int h, const void *pixels) {
     texImage2D(static_cast<TexFormat>(format), w, h, pixels);
 }
 
 // The 2-argument primitive-blend slot uses the default add equation.
+// @complete
 void neGLES_11::setBlendFunc(int src, int dst) {
     setBlendFunc(
         static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst), GL_FUNC_ADD_OES);
 }
 
+// @complete
 void neGLES_11::setBlendFuncSeparate(int src, int dst, unsigned equation) {
     setBlendFunc(static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst), equation);
 }
 
+// @complete
 void neGLES_11::setEnable(int cap, bool on) {
     if (on) {
         enable(static_cast<EnableState>(cap));
@@ -595,6 +632,7 @@ void neGLES_11::setEnable(int cap, bool on) {
     }
 }
 
+// @complete
 void neGLES_11::setClientArray(int array, bool on) {
     if (on) {
         enableClientState(static_cast<ClientState>(array));
