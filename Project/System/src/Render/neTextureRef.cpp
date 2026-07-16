@@ -12,6 +12,7 @@
 #import "AepTexture.h" // neTextureRelease (shared cache release)
 
 // Ghidra: FUN_00015edc — drop this handle's shared-cache reference.
+// @complete
 neTextureRef::~neTextureRef() {
     if (texture != nullptr) {
         neTextureRelease(texture);
@@ -22,6 +23,7 @@ neTextureRef::~neTextureRef() {
 // @ 0x16710
 // Ghidra: FUN_00016710 — write one per-frame render-state slot (meta[slot] =
 // value).
+// @complete
 void neTextureRef::setRenderStateSlot(int slot, int value) {
     meta[slot] = value;
 }
@@ -30,6 +32,7 @@ void neTextureRef::setRenderStateSlot(int slot, int value) {
 // with them, each neTextureRef record's own cache reference) are freed by their
 // unique_ptrs in reverse declaration order, matching the shipped last-to-first
 // teardown.
+// @complete
 neTextureFrames::~neTextureFrames() {
     for (int i = 0; i < frameCount; ++i) {
         if (handles && handles[i] != nullptr) {
