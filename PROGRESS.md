@@ -4,13 +4,14 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 175/2721 (6%) definitions verified `@complete`.**
+**Overall: 205/2721 (8%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |    % |
 | -------------------------------------------------- | ---: | --------: | ---: |
 | `Project/AppDelegate.mm`                           |   41 |        41 | 100% |
 | `Project/System/src/Aep/AepFrameDraw.mm`           |    6 |         6 | 100% |
 | `Project/System/src/Aep/AepLyrCtrl.mm`             |    9 |         9 | 100% |
+| `Project/System/src/Aep/AepManager.mm`             |   30 |        30 | 100% |
 | `Project/System/src/Render/neGraphics.cpp`         |   11 |        11 | 100% |
 | `Project/System/src/Render/neRenderer.cpp`         |   24 |        24 | 100% |
 | `Project/System/src/Render/neTextTexture.mm`       |   11 |        11 | 100% |
@@ -195,7 +196,6 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/StoreViewController.mm`                   |   15 |         0 |   0% |
 | `Project/SubMapListCell.mm`                        |    2 |         0 |   0% |
 | `Project/SubMapSelectViewController.mm`            |   13 |         0 |   0% |
-| `Project/System/src/Aep/AepManager.mm`             |   30 |         0 |   0% |
 | `Project/System/src/Render/AepTexture.mm`          |   14 |         0 |   0% |
 | `Project/System/src/Render/neGLView.mm`            |   15 |         0 |   0% |
 | `Project/System/src/Sound/AVBus.mm`                |   18 |         0 |   0% |
