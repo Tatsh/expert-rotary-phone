@@ -955,7 +955,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         }
         m_pauseMenuOpen = 1;
         if (!neSceneManager::isPadDisplay()) {
-            m_pauseLayer->play();
+            m_pauseLayer->playOnce(); // +0x54 once (Ghidra AepLyrCtrl::Play @ 0x21f5e)
         } else {
             [AcvRootVC() GotoAcViewer];
         }
