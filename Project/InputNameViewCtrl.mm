@@ -164,7 +164,16 @@
             psLabel.highlightedTextColor = [UIColor whiteColor];
             psLabel.font = [UIFont fontWithName:AppFontName() size:12.0f];
             psLabel.textAlignment = NSTextAlignmentCenter;
-            psLabel.frame = CGRectMake(0.0f, baseY + 54.0f, 300.0f, 12.0f);
+#ifdef ENABLE_PATCHES
+            // Compat fix: the binary sizes this label exactly 12pt tall for a 12pt
+            // font (@ 0x8f438: frame (0, baseY+54, 300, 12)), so the full-width
+            // parentheses of the subtitle clip top and bottom on modern iOS text
+            // metrics. Give it vertical headroom, keeping the same visual centre
+            // (origin.y + height / 2 stays baseY + 60).
+            psLabel.frame = CGRectMake(0.0f, baseY + 51.0f, 300.0f, 18.0f);
+#else
+            psLabel.frame = CGRectMake(0.0f, baseY + 54.0f, 300.0f, 12.0f); // @ 0x8f438
+#endif
             psLabel.text = @"(半角英数字12文字まで)";
             psLabel.center = CGPointMake(self.view.frame.size.width * 0.5f, psLabel.center.y);
             [self.view addSubview:psLabel];
@@ -331,6 +340,23 @@
         [alert show];
         return;
     }
+#ifdef ENABLE_OFFLINE_PATCHES
+    // Offline stand-in: the player-registration server is retired and can no
+    // longer hand out a PlayerId, so the real POST below would always end in the
+    // generic failure alert. Instead, save the chosen name locally with a stable
+    // synthesised id and proceed exactly as the success path (-downloaderFinished:)
+    // would. The id mimics the server's short numeric player ids: a 7-digit value
+    // derived from the device uuid, so it is stable across launches and remains
+    // meaningful where the game treats it as a number (e.g. LoginBonusView seeds
+    // srand(playerId.intValue) with it).
+    NSString *uuid = AppDelegate.appDelegate.uuId;
+    NSUInteger digits = uuid.hash % 9000000u + 1000000u;
+    NSString *offlineId = [NSString stringWithFormat:@"%lu", static_cast<unsigned long>(digits)];
+    [UserSettingData savePlayerName:name];
+    [UserSettingData savePlayerId:offlineId];
+    [self startCloseAnimation];
+    return;
+#else
     int version = [AppDelegate.appDelegate appVersionNum];
     NSString *encodedName = urlEncodeString(name);
     NSString *encodedUuid = urlEncodeString(AppDelegate.appDelegate.uuId);
@@ -342,6 +368,7 @@
                                       ContextType:@"application/json"];
     [_downloader startDownloading];
     [_indicator startAnimating];
+#endif
 }
 
 // @ 0x90c4c — new-player POST finished. A JSON body with a string "PlayerId"
