@@ -184,6 +184,7 @@ fritop
 fsize
 fukidasi
 fullcombo
+fullwidth
 gacha
 gailly
 gamecenter
