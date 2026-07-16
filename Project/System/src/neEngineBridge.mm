@@ -928,6 +928,10 @@ int g_dwUiScale = 0;
 // (AcViewer digit blit / MainTask badges): u,v, source w,h, screen x,y, scale
 // sx,sy, rotation, anchor ex,ey, colour, alpha, blend, colour-multiplier,
 // extra, priority; trailing layer (1) is the live-command marker draw() stamps.
+// Disassembly-verified: r0 = aep + 0x727538 (the ordering table), r1 preserved as
+// pTexture, args 9/10 (sx/sy) taken through vcvt.f32.s32 to float, and the
+// extra->clip / colorMul / alpha / layer routing matches FUN_0000fbcc store-for-store.
+// @complete
 void neTextureForiOS_draw(AepManager *aep,
                           neTextureForiOS *tex,
                           int u,
