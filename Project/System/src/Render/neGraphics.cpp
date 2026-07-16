@@ -29,6 +29,7 @@ static const int kUnsetSize = 0x7fffffff;
 
 // Ghidra: FUN_0001243c — allocate the 32-slot touch pool (operator_new(0x30)
 // each) and sentinel-initialise every record; content scale defaults to 1.0.
+// @complete
 neGraphics::neGraphics() {
     m_touchCount = 0;
     m_nextTouchId = 0;
@@ -52,6 +53,7 @@ neGraphics::neGraphics() {
 // Ghidra: FUN_00012358 returns the DAT_00188384 global. The object is created
 // lazily by configure() at launch (FUN_00012368: operator_new(0x8c) + init);
 // modelled here as a function-local static that mirrors that lazy singleton.
+// @complete
 neGraphics &neGraphics::shared() {
     static neGraphics instance;
     return instance;
@@ -59,6 +61,7 @@ neGraphics &neGraphics::shared() {
 
 // Ghidra: FUN_00012368 — store the device content scale (from
 // [UIScreen mainScreen].scale), lazily creating the singleton.
+// @complete
 void neGraphics::configure(float contentScale) {
     shared().m_contentScale = contentScale;
 }
@@ -68,6 +71,7 @@ void neGraphics::configure(float contentScale) {
 // Ghidra: FUN_000124f8 — append a fresh touch at the next pool slot. The point
 // is scaled to pixels; width/height are stored raw. The rolling id wraps at
 // INT_MAX back to 0.
+// @complete
 void neGraphics::touchBegan(int x, int y, int width, int height) {
     int slot = m_touchCount;
     auto *rec = m_touches[slot];
@@ -93,6 +97,7 @@ void neGraphics::touchBegan(int x, int y, int width, int height) {
 
 // Ghidra: FUN_00012588 — find the live touch whose current point equals the
 // reported previous point and slide it: current <- new, previous <- old point.
+// @complete
 void neGraphics::touchMoved(int x, int y, int prevX, int prevY) {
     if (m_touchCount < 1) {
         return;
@@ -137,6 +142,7 @@ void neGraphics::touchEnded(int x, int y, int prevX, int prevY) {
 }
 
 // Ghidra: FUN_00012698 — mark every recorded touch released (all fingers up).
+// @complete
 void neGraphics::clearTouches() {
     for (int i = 0; i < m_touchCount; ++i) {
         m_touches[i]->released = 1;
@@ -144,6 +150,7 @@ void neGraphics::clearTouches() {
 }
 
 // Ghidra: FUN_000124cc — linear scan of the recorded touches for a matching id.
+// @complete
 const neTouchPoint *neGraphics::findTouchById(int id) const {
     for (int i = 0; i < m_touchCount; ++i) {
         if (m_touches[i]->id == id) {
@@ -156,16 +163,19 @@ const neTouchPoint *neGraphics::findTouchById(int id) const {
 // Ghidra: pointInRect FUN_0002d974 — inclusive point-in-rect test: x in [rx,
 // rx+rw] and y in [ry, ry+rh]. The ~13 inlined menu hit-tests and menuButtonHit
 // call this.
+// @complete
 bool neGraphics::pointInRect(int x, int y, int rx, int ry, int rw, int rh) {
     return x >= rx && x <= rx + rw && y >= ry && y <= ry + rh;
 }
 
 // Ghidra: FUN_000124bc — returns the count at +0x80.
+// @complete
 extern "C" int NEGraphics_activeTouchCount(const neGraphics *g) {
     return g->m_touchCount;
 }
 
 // Ghidra: FUN_000124c4 — returns the i-th pointer from the pool array at +0x00.
+// @complete
 extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i) {
     return g->m_touches[i];
 }
@@ -175,6 +185,7 @@ extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i) {
 // @ 0x2d858 — count '\n'-separated lines. The loop advances past each newline
 // and, when the newline was the last character, stops without counting a
 // trailing empty line.
+// @complete
 int countLines(const char *text) {
     if (*text == '\0') {
         return 0;
@@ -196,6 +207,7 @@ int countLines(const char *text) {
 // @ 0x2d9dc — returns true iff x1<=xMax1 && x2<=xMax2 && y1>=yMin1 &&
 // y2>=yMin2. The binary encodes the two `<=` comparisons with the usual
 // NaN-aware two-stage compare.
+// @complete
 bool isWithinRange2D(
     float x1, float y1, float x2, float y2, float yMin1, float xMax1, float yMin2, float xMax2) {
     if (x1 <= xMax1 && x2 <= xMax2) {
