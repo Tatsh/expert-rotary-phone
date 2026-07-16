@@ -589,6 +589,56 @@ void neDrawTexturedQuad(void *sprite,
     }
 
     r->drawArrays(4, 4); // GL_TRIANGLE_STRIP
+
+    if (NE_DBG_FIRST(40)) {
+        GLenum err = glGetError();
+        GLboolean texEnabled = glIsEnabled(GL_TEXTURE_2D);
+        GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+        GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
+        GLint boundTex = 0, arrBuf = -1, elemBuf = -1;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &boundTex);
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &arrBuf);
+        glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &elemBuf);
+        GLint viewport[4] = {0, 0, 0, 0};
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        GLfloat proj[16] = {0}, modelview[16] = {0};
+        glGetFloatv(GL_PROJECTION_MATRIX, proj);
+        glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+        GLint blendSrc = 0, blendDst = 0;
+        glGetIntegerv(GL_BLEND_SRC, &blendSrc);
+        glGetIntegerv(GL_BLEND_DST, &blendDst);
+        neDebugLog("quadGL glErr=0x%x texEnabled=%d blend=%d(src=0x%x dst=0x%x) depth=%d "
+                   "boundTex=%d arrBuf=%d elemBuf=%d vp=[%d,%d,%d,%d] "
+                   "verts=[(%.1f,%.1f)(%.1f,%.1f)(%.1f,%.1f)(%.1f,%.1f)] "
+                   "proj[0,5,12,13]=%.4f,%.4f,%.2f,%.2f mv[12,13]=%.2f,%.2f",
+                   (unsigned)err,
+                   (int)texEnabled,
+                   (int)blendEnabled,
+                   (unsigned)blendSrc,
+                   (unsigned)blendDst,
+                   (int)depthEnabled,
+                   boundTex,
+                   arrBuf,
+                   elemBuf,
+                   viewport[0],
+                   viewport[1],
+                   viewport[2],
+                   viewport[3],
+                   verts[0].x,
+                   verts[0].y,
+                   verts[1].x,
+                   verts[1].y,
+                   verts[2].x,
+                   verts[2].y,
+                   verts[3].x,
+                   verts[3].y,
+                   proj[0],
+                   proj[5],
+                   proj[12],
+                   proj[13],
+                   modelview[12],
+                   modelview[13]);
+    }
 }
 
 // ---------------------------------------------------------------------------
