@@ -44,6 +44,7 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
 
 // @ 0xc0f8c — plain non-selectable cell; its content is bound by the VC on
 // reuse.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -55,6 +56,7 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
 // dealloc @ 0xc0fd4 — ARC-omitted (releases ivars only; synthesized by ARC).
 
 // @ 0xc1000 — rebuild the area row from an NSValue-wrapped sub-map record.
+// @complete
 - (void)setMapData:(NSValue *)mapValue {
     SubMapListRowValue v;
     [mapValue getValue:&v];
@@ -78,11 +80,10 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     UIImage *bannerImg = [UIImage imageNamed:@"area_select_banner"];
     [banner setImage:bannerImg];
     [banner setFrame:CGRectMake(0.0f, 0.0f, bannerImg.size.width, bannerImg.size.height)];
-    if (!isPad) {
-        self.backgroundView = banner;
-    } else {
-        [self addSubview:banner];
-    }
+    // The binary installs the banner as the cell's backgroundView unconditionally
+    // (0xc129a setBackgroundView:, no device guard); on iPad it doubles as the
+    // parent for the row's decorations (see `host` below).
+    self.backgroundView = banner;
     self.backgroundColor = [UIColor clearColor];
 
     // On phone, decorations live in the content view; on pad they hang off the

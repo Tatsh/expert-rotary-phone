@@ -20,6 +20,7 @@
 
 // @ 0xc09a4 — fetch every persisted "TreasureData" row (the whole sugoroku save
 // table; no predicate).
+// @complete
 + (id)getAllTreasureData:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
@@ -33,6 +34,7 @@
 // already present, insert its (still-missing) row. The parent-map ids come from
 // the getTreasureMapValue table @ 0x12fb30 (−1 means "no parent"). Callers
 // ignore the result (the original IMP returns void).
+// @complete
 + (id)init:(NSManagedObjectContext *)context {
     static const short kRootMapIds[2] = {0, 6}; // DAT_0012fa28
     for (int i = 0; i < 2; i++) {
@@ -60,6 +62,7 @@
 
 // @ 0xc0f64 — YES if `mainMapId` is one of the two root ("default") maps (0 or
 // 6).
+// @complete
 + (BOOL)isDefaultMap:(short)mainMapId {
     static const short kRootMapIds[2] = {0, 6}; // DAT_0012fa28
     for (int i = 0; i < 2; i++) {
@@ -73,13 +76,22 @@
 // Delete every persisted TreasureData row (called by -[UserSettingData
 // initForConvert]).
 // @ 0xc0a44
+// @complete
 + (void)deleteAll:(NSManagedObjectContext *)context {
+    // The binary discards any pending edits first (0xc0a6e: [context reset]).
+    [context reset];
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
                                  inManagedObjectContext:context];
     NSArray *all = [context executeFetchRequest:request error:NULL];
-    for (NSManagedObject *object in all) {
-        [context deleteObject:object];
+    // The delete/save is gated on a non-empty result set (0xc0b06 / 0xc0b1e both
+    // branch past to the return when the fetch is nil or empty).
+    if (all.count != 0) {
+        for (NSManagedObject *object in all) {
+            [context deleteObject:object];
+        }
+        // Commit the deletions (0xc0bb4: [context save:nil]).
+        [context save:nil];
     }
 }
 

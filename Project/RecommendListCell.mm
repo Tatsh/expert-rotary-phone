@@ -36,6 +36,7 @@ typedef struct {
 
 // @ 0xbd418 — record the pack-image / date / player-name x offsets (0 on iOS
 // 6).
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -56,6 +57,7 @@ typedef struct {
 
 // @ 0xbd518 — cancel the in-flight thumbnail download (real work: kept). ARC
 // releases the object ivars.
+// @complete
 - (void)dealloc {
     if (_downloader != nil) {
         [_downloader cancelDownload];
@@ -65,6 +67,7 @@ typedef struct {
 // @ 0xbd578 — build the row's subviews (once each) from an NSValue-wrapped
 // record and start the pack-thumbnail download. On iPad the base x-offset
 // shifts (14 pre-iOS 7, 20 on iOS 7+); on iPhone it is 0.
+// @complete
 - (void)setRecommendData:(NSValue *)recommendValue {
     RecommendRowValue v;
     [recommendValue getValue:&v];
@@ -185,6 +188,7 @@ typedef struct {
 
 // @ 0xbe1d0 — thumbnail arrived: show it in the pack image view, drop the
 // downloader.
+// @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     UIImage *image = [downloader getImage];
     if (image != nil) {
@@ -196,6 +200,7 @@ typedef struct {
 
 // @ 0xbe244 — thumbnail failed: just drop the downloader (image view stays
 // hidden).
+// @complete
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     _downloader = nil;
 }

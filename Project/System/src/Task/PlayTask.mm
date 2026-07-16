@@ -46,9 +46,11 @@ PlayTask::PlayTask() = default;
 // (caSourceNode_dtor then operator delete). PlayTask's own destructor only
 // chains to the C_TASK base (the scene/notes are torn down through
 // PlayTaskGotoResult / the scheduler), so there is no per-member teardown here.
+// @complete
 PlayTask::~PlayTask() = default;
 
 // @ 0x2fed8 — playTaskResetState. Reset the play scene for a fresh attempt.
+// @complete
 void PlayTask::resetState() {
     NoteMng::shared(); // ensure the note manager singleton exists
     reloadChart(1);    // FUN_0002fed8 calls playTaskLoadChart(this, 1)
@@ -92,6 +94,7 @@ void PlayTask::resetState() {
 // == 0) restart the BGM decode on a background queue, parse the chosen sheet
 // into NoteMng, and load the per-tap hit SE. `restart` != 0 reparses the chart
 // only (the mid-play reset path calls reloadChart(1)), skipping the audio work.
+// @complete
 void PlayTask::reloadChart(int restart) {
     AudioManager *audio = [AudioManager sharedManager];
     NoteMng &nm = NoteMng::shared();
@@ -149,6 +152,7 @@ void PlayTask::reloadChart(int restart) {
 
 // @ 0x312cc — updateGaugeValue. Nudge the life gauge by the per-mode delta and
 // clamp it.
+// @complete
 void PlayTask::updateGauge(int mode) {
     int16_t &gauge = m_gaugeValue;
     const float *delta = nullptr;
@@ -182,12 +186,14 @@ void PlayTask::updateGauge(int mode) {
 // +0x9e7 m_optOldHardware, +0x9ca m_isPadDisplay gate the HUD tiers; the layer
 // ids/frame counts live in the +0x154/+0x168 (m_scoreBpm*) and +0xe4/+0x11c
 // (m_effectState*) tables.
+// @complete
 void PlayTask::DrawHud() {
     NoteMng &nm = NoteMng::shared();
     AepManager &aep = AepManager::shared();
 
-    // Beat phase: the current play position modulo the 16.16-fixed beat interval.
-    const int beat = (int)(NoteBeatIntervalMs() * 65536.0f); // FPToFixed
+    // Beat phase: the current play position modulo the beat interval (both in ms).
+    // 0x30428 casts NoteBeatIntervalMs() straight to int (vcvt.s32.f32, no scale).
+    const int beat = (int)NoteBeatIntervalMs();
     const unsigned beatMod = (unsigned)beat;
     const int phase = (beat != 0) ? (int)((unsigned)nm.getCurrentPosition() % beatMod) : 0;
     const auto beatFrame = [&](int frmCount) -> int {
@@ -211,7 +217,8 @@ void PlayTask::DrawHud() {
     }
 
     // Fever gauge: below 70000 the lo layer's frame tracks the score; above it the
-    // hi layer's frame tracks the beat phase.
+    // hi layer's frame tracks the beat phase. 0x30562 compares against 69999 with a
+    // signed bgt (hi when score > 69999, i.e. score >= 70000).
     if (m_score < 70000) {
         aep.drawLayer(
             m_scoreBpmLyr[3], ((m_scoreBpmFrames[3] - 1) * m_score) / 70000, AepTransform(), 0);
@@ -263,6 +270,7 @@ void PlayTask::DrawHud() {
 }
 
 // Ghidra: PlayTask_update (FUN_0002dc14).
+// @complete
 void PlayTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
@@ -270,13 +278,13 @@ void PlayTask::update(int /*deltaMs*/) {
     neGraphics &gfx = neGraphics::shared();
     auto *playData = reinterpret_cast<MainTaskPlayData *>(this);
 
-    // Snapshot up to 8 live touches (scaled x/y + their ids) for the judge pass,
-    // and detect a "back" tap (a released touch that barely moved).
+    // Snapshot up to 8 live touches (their x/y + ids) for the judge pass, and
+    // detect a "back" tap (a released touch that barely moved).
     float touchXY[16];
     int touchIds[8];
-    for (int i = 0; i < 16; i++) {
-        touchXY[i] = -1.0f;
-    }
+    // 0x2dc70 memsets the 0x40-byte touchXY block to 0xff (each float becomes the
+    // 0xffffffff sentinel), so unfilled lanes carry that pattern into the judge.
+    std::memset(touchXY, 0xff, sizeof(touchXY));
     int touchCount = 0;
     bool backTap = false;
     int backTapStartY = 0; // the back-tap's nStartY (Ghidra local_8c), used by the pause menu
@@ -284,10 +292,12 @@ void PlayTask::update(int /*deltaMs*/) {
         const neTouchPoint *t = gfx.touchAt(i);
         if (t->valid != 0) { // a currently-down touch -> feed the judge
             if (touchCount < 8) {
-                // The judge is fed each touch's START position (Ghidra: FixedToFP of
-                // nStartX/nStartY), not its current position.
-                touchXY[touchCount * 2] = (float)t->startX / 65536.0f;
-                touchXY[touchCount * 2 + 1] = (float)t->startY / 65536.0f;
+                // The judge is fed each touch's current point (the +0x0c/+0x10 match
+                // key). 0x2dc98/0x2dca0 load [+0xc]/[+0x10] and 0x2dca4/0x2dca8
+                // convert them straight to float (vcvt.f32.s32, no fixed-point scale),
+                // so the raw coordinates are stored as floats.
+                touchXY[touchCount * 2] = (float)t->x;
+                touchXY[touchCount * 2 + 1] = (float)t->y;
                 touchIds[touchCount] = t->id;
                 touchCount++;
             }
@@ -295,7 +305,8 @@ void PlayTask::update(int /*deltaMs*/) {
             int dx = t->startX - t->x, dy = t->startY - t->y;
             backTap = (dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb;
             if (backTap) {
-                backTapStartY = t->startY;
+                // 0x2dcee stores [+0x10] (t->y, the current point), not nStartY.
+                backTapStartY = t->y;
             }
         }
     }
@@ -340,7 +351,8 @@ void PlayTask::update(int /*deltaMs*/) {
     case 5: { // pause menu: hit-test resume / retry / quit, then draw the menu + field
         if (backTap) {
             const float scale = reinterpret_cast<const float &>(m_uiScale);
-            const int half = (int)scale / 2; // Ghidra: (int)flRefScale / 2
+            // 0x2de40 halves the pause-menu x origin (+0x978), not the UI scale.
+            const int half = m_pauseOriginX / 2;
             const float tapY = (float)backTapStartY / 65536.0f;
             // Each stacked button spans [pos + half, pos + half + width], scaled by
             // the UI scale, and is hit-tested against the tap's start Y (Ghidra:
@@ -420,8 +432,11 @@ void PlayTask::update(int /*deltaMs*/) {
                     const int cx = (int)((float)m_pauseTapCenterX * scale);
                     const int cy = (int)((float)m_pauseTapCenterY * scale);
                     const int r = (int)((float)m_pauseTapRadius * scale);
-                    const int tx = (int)(touchXY[0] * 65536.0f);
-                    const int ty = (int)(touchXY[1] * 65536.0f);
+                    // 0x2e278/0x2e264 convert touchXY[0]/[1] straight back to int
+                    // (vcvt.s32.f32, no fixed-point scale) to match the raw floats
+                    // stored in the snapshot above.
+                    const int tx = (int)touchXY[0];
+                    const int ty = (int)touchXY[1];
                     if (pointInCircle(tx, ty, cx, cy, r)) {
                         m_backTouchId = touchIds[0];
                         m_backTouchTime = (int)getTimeMillis();
@@ -443,8 +458,10 @@ void PlayTask::update(int /*deltaMs*/) {
         }
         break;
     }
-    case 7: // quit: stop all audio and fall through to the fade-out
+    case 7: // quit: stop all audio, latch the stopped flag, and fall through to the
+        // fade-out. 0x2df7a stores 1 to m_stopped (+0x9e8) after stopAll.
         [audio stopAll];
+        m_stopped = 1;
         m_state = 8;
         break;
     case 8:                          // fade out

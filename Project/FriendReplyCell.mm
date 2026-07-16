@@ -30,6 +30,7 @@
 
 // @ 0xa9150 — record the chara / name / date / yes / no subview x offsets (they
 // shift on iOS 7).
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -53,6 +54,7 @@
 }
 
 // @ 0xa92ac — build the row from a ReplyDataStruct. Rebuilt on every reuse.
+// @complete
 - (void)setReplyData:(NSValue *)replyData {
     _replyData = replyData;
     ReplyDataStruct data;
@@ -190,6 +192,7 @@
 }
 
 // @ 0xa9cf0 — accept: reply == 1.
+// @complete
 - (void)onTouchedOkButton {
     neEngine::playSystemSe(1);
     if (_delegate != nil) {
@@ -200,6 +203,7 @@
 }
 
 // @ 0xa9d58 — reject: reply == 0.
+// @complete
 - (void)onTouchedNgButton {
     neEngine::playSystemSe(1);
     if (_delegate != nil) {

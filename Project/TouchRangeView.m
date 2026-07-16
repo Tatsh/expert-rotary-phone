@@ -30,7 +30,9 @@
     // property
 }
 
-// @ 0x8b20c
+// @ 0x8b20c — verified: [super init]; setBackgroundColor:clearColor;
+// _untouchedPopkun = imageNamed:filename; _touchedPopkun = imageNamed:touched.
+// @complete
 - (instancetype)initWithFilename:(NSString *)filename touched:(NSString *)touched {
     self = [super init];
     if (self) {
@@ -44,12 +46,17 @@
 // dealloc @ 0x8b2c0 — ARC: release-only dealloc omitted (no added behavior).
 
 // @ 0x8b324 — paint the touched or untouched pop-kun at the view origin.
+// Verified: ldrb isTouched; select _touchedPopkun/_untouchedPopkun; tail-call
+// drawAtPoint: with CGPointZero (r2=r3=0).
+// @complete
 - (void)drawRect:(CGRect)rect {
     UIImage *img = self.isTouched ? _touchedPopkun : _untouchedPopkun;
     [img drawAtPoint:CGPointZero];
 }
 
-// @ 0x8b364
+// @ 0x8b364 — verified: nil _untouchedPopkun returns 0; else returns size.width
+// (vldr s0,[sp+0]).
+// @complete
 - (CGFloat)getImageWidth {
     if (_untouchedPopkun == nil) {
         return 0.0f;
@@ -57,7 +64,9 @@
     return _untouchedPopkun.size.width;
 }
 
-// @ 0x8b3a4
+// @ 0x8b3a4 — verified: nil _untouchedPopkun returns 0; else returns
+// size.height (vldr s0,[sp+4]).
+// @complete
 - (CGFloat)getImageHeight {
     if (_untouchedPopkun == nil) {
         return 0.0f;

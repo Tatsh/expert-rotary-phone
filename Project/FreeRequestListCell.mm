@@ -31,6 +31,7 @@
 
 // @ 0xe49c4 — record the layout x offsets for the chara icon / player name /
 // score plate / score, which shift between iOS 6/7 and phone/pad.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -63,6 +64,7 @@
 // reuse. Every subview is added to the background plate (_bgImgView); on phone
 // the plate is installed as the cell's backgroundView, on pad it is added to
 // the content view (shifted -10px on iOS 6).
+// @complete
 - (void)setFriendData:(NSValue *)friendData rank:(int)rank {
     FreeRequestDataStruct data;
     [friendData getValue:&data];

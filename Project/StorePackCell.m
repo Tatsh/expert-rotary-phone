@@ -15,6 +15,7 @@
 
 // @ 0x6ed4c — disclosure cell with a shadowed jacket, name/price/purchased
 // labels (font auto-shrinks to fit), and new / arcade / chara marker icons.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -38,7 +39,8 @@
         _labelName.backgroundColor = [UIColor clearColor];
         _labelName.highlightedTextColor = [UIColor whiteColor];
         _labelName.font = [UIFont fontWithName:AppFontName() size:16];
-        _labelName.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
+        // 0x6f07a passes 0x2 to setAutoresizingMask: (UIViewAutoresizingFlexibleWidth).
+        _labelName.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         _labelName.adjustsFontSizeToFitWidth = YES;
         _labelName.minimumScaleFactor = 0.8f;
 
@@ -51,7 +53,9 @@
 
         // "Purchased" — right-aligned, dim, size 13.
         _labelPurchased = [[UILabel alloc] initWithFrame:CGRectMake(110, 78, 100, 18)];
-        _labelPurchased.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        // 0x6f248 passes 0x1 to setAutoresizingMask: (UIViewAutoresizingFlexibleLeftMargin),
+        // keeping the right-aligned "purchased" label pinned to the right edge.
+        _labelPurchased.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
         _labelPurchased.backgroundColor = [UIColor clearColor];
         _labelPurchased.textColor = [UIColor colorWithWhite:0.4f alpha:1.0f];
         _labelPurchased.highlightedTextColor = [UIColor whiteColor];
@@ -84,6 +88,7 @@
 // purchased state. Purchased → show the "purchased" label and hide the
 // chara-ticket & arcade markers; not purchased → hide it, show the chara-ticket
 // marker, and show the arcade marker only when the pack has arcade content.
+// @complete
 - (void)loadPackInfo:(StorePackInfo *)packInfo {
     _labelName.text = [packInfo packName];
     _labelPrice.text = [packInfo priceString];
@@ -103,16 +108,19 @@
 }
 
 // @ 0x6f7b4 — swap the row's background image.
+// @complete
 - (void)setBgImage:(UIImage *)image {
     [_bgView setImage:image];
 }
 
 // @ 0x6f5a8 — purchased iff the "purchased" label is visible.
+// @complete
 - (BOOL)isPurchased {
     return !_labelPurchased.hidden;
 }
 
 // @ 0x6f5d8 — toggle the "purchased" label's visibility.
+// @complete
 - (void)setIsPurchased:(BOOL)isPurchased {
     _labelPurchased.hidden = !isPurchased;
 }

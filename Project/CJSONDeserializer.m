@@ -14,11 +14,13 @@ NSString *const kJSONDeserializerErrorDomain = @"CJSONDeserializerErrorDomain";
 
 // +[CJSONDeserializer deserializer]  @ 0x67550 — autoreleased convenience
 // instance.
+// @complete
 + (CJSONDeserializer *)deserializer {
     return [[self alloc] init];
 }
 
 // @ 0x67588
+// @complete
 - (id)deserialize:(NSData *)inData error:(NSError **)outError {
     if (inData != NULL && [inData length] != 0) {
         CJSONScanner *theScanner = [CJSONScanner scannerWithData:inData];
@@ -35,6 +37,7 @@ NSString *const kJSONDeserializerErrorDomain = @"CJSONDeserializerErrorDomain";
 }
 
 // @ 0x67628
+// @complete
 - (NSDictionary *)deserializeAsDictionary:(NSData *)inData error:(NSError **)outError {
     id theResult = NULL;
     if (inData == NULL || [inData length] == 0) {
@@ -54,6 +57,7 @@ NSString *const kJSONDeserializerErrorDomain = @"CJSONDeserializerErrorDomain";
 }
 
 // @ 0x676c4
+// @complete
 - (NSArray *)deserializeAsArray:(NSData *)inData error:(NSError **)outError {
     id theResult = NULL;
     if (inData == NULL || [inData length] == 0) {

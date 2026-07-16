@@ -10,26 +10,30 @@
 @implementation ArcadeScoreData (Store)
 
 // Ghidra: @ 0xcea60
+// @complete
 + (ArcadeScoreData *)getDataFromMusicId:(short)musicId
                                   refId:(NSString *)refId
                  inManagedObjectContext:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
                                  inManagedObjectContext:context];
+    // Exact format string @ 0x114803 (the binary uses single `=`, not `==`).
     request.predicate =
-        [NSPredicate predicateWithFormat:@"musicId==%d and refId==%@", (int)musicId, refId];
+        [NSPredicate predicateWithFormat:@"musicId = %d and refId = %@", (int)musicId, refId];
     NSArray *results = [context executeFetchRequest:request error:nil];
     return results.count ? results.lastObject : nil;
 }
 
 // Ghidra: @ 0xceb78
+// @complete
 + (NSArray *)getLatestDataLimit:(short)limit
                           refId:(NSString *)refId
          inManagedObjectContext:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
                                  inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"refId==%@", refId];
+    // Exact format string @ 0x11481f (single `=`).
+    request.predicate = [NSPredicate predicateWithFormat:@"refId = %@", refId];
     request.fetchLimit = (NSUInteger)limit;
     // Newest first.
     request.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"updateDate"
@@ -38,19 +42,24 @@
 }
 
 // Ghidra: @ 0xcece8
+// @complete
 + (NSArray *)getDataFromCategory:(short)category
                            refId:(NSString *)refId
           inManagedObjectContext:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
                                  inManagedObjectContext:context];
+    // Exact format string @ 0x11482a: single `=`, and note the irregular
+    // spacing in the original (space before the first `=`, none around the
+    // second).
     request.predicate =
-        [NSPredicate predicateWithFormat:@"category==%d and refId==%@", (int)category, refId];
+        [NSPredicate predicateWithFormat:@"category = %d and refId=%@", (int)category, refId];
     request.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"title" ascending:YES] ];
     return [context executeFetchRequest:request error:nil];
 }
 
 // Ghidra: @ 0xcf164
+// @complete
 + (ArcadeScoreData *)addRecordWithMusicId:(short)musicId
                                     refId:(NSString *)refId
                    inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -65,7 +74,10 @@
     return record;
 }
 
-// Ghidra: -[ArcadeScoreData reset] @ 0xcf220
+// Ghidra: -[ArcadeScoreData reset] @ 0xcf220 — verified: setter order and
+// values match exactly (title/genre "", category @0, updateDate [NSDate date],
+// topName×4 "", topScore×4 @0, meanScore×4 @0, myScore×4 @0).
+// @complete
 - (void)reset {
     self.title = @"";
     self.genre = @"";

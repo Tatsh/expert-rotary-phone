@@ -68,6 +68,7 @@ constexpr uint16_t kFlagHoldFail = 0x200; // hold broken
 
 // Ghidra: FUN_0003126c — find the judge state for pool note `noteId`, or claim a
 // free slot and initialise it. Returns nullptr if the pool is full.
+// @complete
 NoteJudgeState *judgeStateFor(MainTaskPlayData *playData, unsigned noteId) {
     NoteJudgeState *pool = playData->judgePool; // the +0x3c8 pool
     NoteJudgeState *freeSlot = nullptr;
@@ -104,6 +105,7 @@ bool g_autoPlay = false; // extern flag in the binary; false in normal play
 // 0) adds gaugeLossMiss (a negative delta) and raises the miss flag (+0x9dc).
 // Any other result leaves the value unchanged and only re-clamps. The binary
 // accumulates in fixed->float->fixed; modelled here as a float add + round.
+// @complete
 void updateGaugeValue(MainTaskPlayData *playData, int result) {
     int gauge = playData->gaugeValue;
     if (result == 2 || result == 3) {
@@ -146,6 +148,7 @@ inline int specialLapseOffset(int graphic, unsigned holdJudge) {
 } // namespace
 
 // Ghidra: FUN_0002f1f8.
+// @complete
 void PlayJudge_update(MainTaskPlayData *playData,
                       const float *touchXY,
                       const int *touchIds,
@@ -690,6 +693,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
 // BAD/miss branch of the gauge update (raise the missed flag, subtract
 // gaugeLossMiss, clamp [0, 0x400]), so it drains the life gauge on a miss just as
 // a tapped BAD does.
+// @complete
 void PlayApplyMissGauge(void *playData) {
     updateGaugeValue(reinterpret_cast<MainTaskPlayData *>(playData), NOTE_JUDGE_BAD);
 }

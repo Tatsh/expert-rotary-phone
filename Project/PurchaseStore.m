@@ -22,12 +22,14 @@
 // the transaction's product identifier against "popn_jewel_1" (the jewel
 // product) and clears the in-flight flag. The comparison result is not
 // otherwise consumed in this method.
+// @complete
 - (void)purchaseSucceeded:(SKPaymentTransaction *)transaction {
     [transaction.payment.productIdentifier isEqualToString:@"popn_jewel_1"];
     nowPurchasing = NO;
 }
 
 // @ 0x83928 — direct-purchase failure callback: just clear the in-flight flag.
+// @complete
 - (void)purchaseFailed:(id)transactionOrProductId error:(NSError *)error {
     nowPurchasing = NO;
 }

@@ -32,6 +32,7 @@
 
 // @ 0xb9740 — record the layout x offsets for the chara icon / player name /
 // date / cancel button, which shift by ~2 px on iOS 7 vs 6.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -157,6 +158,7 @@
 }
 
 // @ 0xba048 — cancel this outgoing friend request.
+// @complete
 - (void)onTouchedCancelButton {
     // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
     // cancel SE.

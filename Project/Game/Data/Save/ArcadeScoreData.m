@@ -32,6 +32,7 @@
 
 // @ 0xcee4c — every ArcadeScoreData record for `refId`, sorted by category
 // (descending) then title (ascending).
+// @complete
 + (NSArray *)getAllData:(NSString *)refId context:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
@@ -44,16 +45,26 @@
 }
 
 // Delete every persisted ArcadeScoreData row (called by -[UserSettingData
-// initForConvert]).
+// initForConvert]). Resets the context first, then (only when the fetch returns
+// rows) deletes them and saves.
 // @ 0xcefd8
+// @complete
 + (void)deleteAll:(NSManagedObjectContext *)context {
+    // Binary resets the context, guards on a non-nil/non-empty fetch result, and
+    // saves after deleting (0xcf002 reset, 0xcf09e/0xcf0b4 count guard, 0xcf148
+    // save) — matching OverScoreData's deleteAll.
+    [context reset];
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ArcadeScoreData"
                                  inManagedObjectContext:context];
     NSArray *all = [context executeFetchRequest:request error:NULL];
+    if (all.count == 0) {
+        return;
+    }
     for (NSManagedObject *object in all) {
         [context deleteObject:object];
     }
+    [context save:NULL];
 }
 
 @end

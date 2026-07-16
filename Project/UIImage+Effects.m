@@ -14,6 +14,7 @@
 @implementation UIImage (Effects)
 
 // @ 0x7bba0
+// @complete
 - (UIImage *)createReverseImage:(BOOL)flip {
     CGImageRef cg = self.CGImage;
     CGSize size = self.size;
@@ -35,6 +36,7 @@
 }
 
 // @ 0x7bcc4
+// @complete
 - (UIImage *)createImageHarfBlightness {
     CGImageRef cg = self.CGImage;
     if (cg == NULL) {
@@ -86,19 +88,25 @@
 }
 
 // @ 0x7be1c
+// @complete
 - (UIImage *)createImagefromRect:(CGRect)rect {
     CGImageRef cg = self.CGImage;
 
     UIGraphicsBeginImageContextWithOptions(rect.size, NO, self.scale);
     CGContextRef ctx = UIGraphicsGetCurrentContext();
 
-    // Identity scaled (1, -1): flip vertically so the sub-rect draws upright.
+    // Vertical flip about the sub-rect: start from scale(1, -1) and fold a vertical
+    // translation into the transform's ty so the flip pivots about `rect` rather than
+    // the context origin. Verified: 0x7bed0 vadd d16 = 2 * rect.origin.y, 0x7bed4 adds
+    // self.size.height ([self size].height), 0x7bed8 stores the sum into the
+    // transform's ty (sp+0x4c) before CGContextConcatCTM at 0x7bef2.
     CGAffineTransform flip = CGAffineTransformScale(CGAffineTransformIdentity, 1.0f, -1.0f);
+    flip.ty = 2.0f * rect.origin.y + self.size.height;
     CGContextConcatCTM(ctx, flip);
 
     // Draw the whole image shifted by -rect.origin so `rect` lands at the context
-    // origin. (The exact CTM translation is partially obscured in the decompile;
-    // modeled by the -origin offset on the draw rect.)  best-effort
+    // origin (draw rect at 0x7bf3a..0x7bf4c is
+    // (-rect.origin.x, -rect.origin.y, self.size.width, self.size.height)).
     CGContextDrawImage(
         ctx, CGRectMake(-rect.origin.x, -rect.origin.y, self.size.width, self.size.height), cg);
 

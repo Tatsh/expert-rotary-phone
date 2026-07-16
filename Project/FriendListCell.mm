@@ -83,6 +83,7 @@ static NSString *const kScoreBestImg[4] = {
 }
 
 // @ 0xb3234 — three layouts: iPad, or phone by iOS version.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -130,6 +131,7 @@ static NSString *const kScoreBestImg[4] = {
 // score/plaque to show. The self row (the local player) has a nil playerId and
 // gets the "you" marker. Called on every reuse, so it first strips any subviews
 // it built last time.
+// @complete
 - (void)setFriendData:(NSValue *)friendData rank:(int)rank isBestScoreSort:(BOOL)isBestScoreSort {
     FriendListData data;
     [friendData getValue:&data];

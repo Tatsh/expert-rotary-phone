@@ -126,6 +126,16 @@ inline void firePlay(void *playData, int off) {
 } // namespace
 
 // Ghidra: FUN_0002ff7c.
+// Verified against the disassembly at 0x2ff96..0x3002c: three stride-0x10
+// accumulation loops sum the COOL (+0x5170), GREAT (+0x516c), and GOOD (+0x5168)
+// tally columns; the note total is the sign-extended halfword at +0x4e28. The
+// VFP tail computes (cool + great * 0.7 + good * 0.4) * 100000 / total and
+// truncates it with vcvt.s32.f32 (COOL/GOOD converted unsigned, the total
+// signed). The literal-pool words 0x3f333333, 0x3ecccccd, and 0x47c35000 give
+// 0.7, 0.4, and 100000.0. The binary has no divisor guard; the noteTotal <= 0
+// early return here is a disclosed defensive addition for the no-chart case, and
+// the scored path is byte-faithful otherwise.
+// @complete
 int PlayCurrentScore() {
     NoteMng &nm = NoteMng::shared(); // Ghidra: NoteMng_shared() at entry
     const TallyTotals t = collectTally(nm);
@@ -142,6 +152,12 @@ int PlayCurrentScore() {
 }
 
 // Ghidra: FUN_00031338.
+// Verified against the disassembly at 0x3133e..0x313aa: the guard is
+// `ldrsh +0x9b4; cmp #1; blt` (return when the touch-sound volume is <= 0) then
+// `ldr +0x9fc; cmp #5` (return on the pause-menu state); the still-playing
+// instance at +0x3a0 is stopped and reset to -1 before the +0x398 source is
+// retriggered and its new instance id stored back into +0x3a0.
+// @complete
 void PlayScoreGaugeUpdate(MainTaskPlayData *playData) {
     // Play the per-tap feedback SE only when the user's touch-sound volume is on,
     // and never while the pause menu is up (state 5).
@@ -167,8 +183,15 @@ void PlayScoreGaugeUpdate(MainTaskPlayData *playData) {
 }
 
 // Ghidra: the SE-instance rank cascade in PlayTask_update (FUN_0002dc14) state
-// 6, ~0x2e0d0..0x2e190. `score` is the value PlayCurrentScore produced (play
-// data +0x9b0).
+// 6, ~0x2e0aa..0x2e17c. `score` is the value PlayCurrentScore produced (play
+// data +0x9b0). Verified against the disassembly: the clear line is `cmp` with
+// 0x11170 (70000); full combo is `cmp total(+0x4e28), combo(+0x515c); bls`;
+// spotless is FUN_00031868 returning 1 when (COOL + GREAT) >= total. The fired
+// handle offsets match the binary's branches exactly — fail: +0xbc (full) /
+// +0xb8 (broken); cleared-with-good: +0xac (full) / +0xa8 (broken); spotless:
+// +0xb4 (all COOL) / +0xb0 (any GREAT) — and every cleared path layers the
+// +0xc0 fanfare via FUN_0002cb24(handle, 1).
+// @complete
 void PlayEndResultSe(void *playData, int score) {
     NoteMng &nm = NoteMng::shared();
     const TallyTotals t = collectTally(nm);

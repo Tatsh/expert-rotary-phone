@@ -25,7 +25,11 @@ static void PresentTweet(NSString *text, UIImage *image) {
     // inlines into -tweet and +tweetWithText:image: (de-inlined here into the
     // shared PresentTweet). On a non-cancel/non-done result (> 1) it surfaces a
     // "tweet post failed" alert, then always dismisses the compose sheet (which
-    // SLComposeViewController would otherwise leave up).
+    // SLComposeViewController would otherwise leave up). Verified against the block
+    // body @ 0x78b10: `cmp result,#2; bcc` skips the alert for result < 2 (so it
+    // fires for result > Done); then it always re-fetches the root VC and
+    // dismisses. The binary re-fetches rather than capturing `root`; equivalent
+    // since it is a stable singleton accessor.
     compose.completionHandler = ^(SLComposeViewControllerResult result) {
       if (result > SLComposeViewControllerResultDone) { // Ghidra: 1 < result
           CommonAlertView *alert =
@@ -61,12 +65,15 @@ static void PresentTweet(NSString *text, UIImage *image) {
 // annotated on
 //   the @property declarations in TwitterUtil.h.
 
-// Ghidra: @ 0x78934.
+// Ghidra: @ 0x78934 — verified: tail-call initWithText:nil image:nil.
+// @complete
 - (instancetype)init {
     return [self initWithText:nil image:nil];
 }
 
-// Ghidra: @ 0x78948.
+// Ghidra: @ 0x78948 — verified: [super init]; on non-nil, self.text = text;
+// self.image = image (property setters).
+// @complete
 - (instancetype)initWithText:(NSString *)text image:(UIImage *)image {
     self = [super init];
     if (self != nil) {
@@ -76,12 +83,17 @@ static void PresentTweet(NSString *text, UIImage *image) {
     return self;
 }
 
-// Ghidra: @ 0x78a4c.
+// Ghidra: @ 0x78a4c — verified: rootViewController; compose for Twitter;
+// setCompletionHandler: (block @ 0x78b10); setInitialText:self.text; addImage:
+// only if self.image != nil; presentViewController animated:1 completion:nil.
+// @complete
 - (void)tweet {
     PresentTweet(self.text, self.image);
 }
 
-// Ghidra: @ 0x78bb8.
+// Ghidra: @ 0x78bb8 — verified: identical body to -tweet with text/image args
+// (distinct block instance @ 0x78c70, same body).
+// @complete
 + (void)tweetWithText:(NSString *)text image:(UIImage *)image {
     PresentTweet(text, image);
 }

@@ -122,6 +122,7 @@ static int scoreToRank(int score) {
 }
 
 // @ 0xae06c — record the full row layout x offsets (iOS 6 vs 7).
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -161,6 +162,7 @@ static int scoreToRank(int score) {
 // built last time. Phone uses the iOS6/7 x-offset ivars above; iPad uses its
 // own fixed metrics (only the pre-iOS7 -10pt shift, folded into `padX0`,
 // carries over). The self row (nil name) shows the "you" marker.
+// @complete
 - (void)setScoreData:(NSValue *)scoreData {
     ScoreDataStruct data;
     [scoreData getValue:&data];

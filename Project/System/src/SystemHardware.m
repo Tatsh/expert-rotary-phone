@@ -44,6 +44,7 @@ static SystemHardware *s_instance = nil;
 }
 
 // +[SystemHardware getInstance]  @ 0x127ac — lazily-created shared instance.
+// @complete
 + (instancetype)getInstance {
     if (s_instance == nil) {
         s_instance = [[SystemHardware alloc] init];
@@ -52,6 +53,7 @@ static SystemHardware *s_instance = nil;
 }
 
 // @ 0x12718
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         m_HardwareType = kHardwareUndetected;
@@ -62,6 +64,7 @@ static SystemHardware *s_instance = nil;
 // dealloc @ 0x12758 — ARC-omitted (releases ivars only: m_HardwareName).
 
 // @ 0x127f4
+// @complete
 - (void)initHardware {
     if (m_HardwareType != kHardwareUndetected) {
         return;
@@ -85,6 +88,7 @@ static SystemHardware *s_instance = nil;
 }
 
 // @ 0x128e8
+// @complete
 - (int)getHardwareType {
     if (m_HardwareType == kHardwareUndetected) {
         [self initHardware];
@@ -93,6 +97,7 @@ static SystemHardware *s_instance = nil;
 }
 
 // @ 0x1291c
+// @complete
 - (NSString *)getHardwareName {
     if (m_HardwareType == kHardwareUndetected) {
         [self initHardware];

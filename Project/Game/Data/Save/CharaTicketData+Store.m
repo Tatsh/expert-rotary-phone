@@ -10,11 +10,13 @@
 @implementation CharaTicketData (Store)
 
 // Ghidra: @ 0xe2c6c
+// @complete
 + (BOOL)isExistData:(NSString *)productId inManagedObjectContext:(NSManagedObjectContext *)context {
     return [self getDataFromProductId:productId inManagedObjectContext:context] != nil;
 }
 
 // Ghidra: @ 0xe2c98
+// @complete
 + (CharaTicketData *)getDataFromProductId:(NSString *)productId
                    inManagedObjectContext:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
@@ -26,6 +28,7 @@
 }
 
 // Ghidra: @ 0xe3048
+// @complete
 + (void)addRecordWithProductId:(NSString *)productId
         inManagedObjectContext:(NSManagedObjectContext *)context {
     if ([self isExistData:productId inManagedObjectContext:context]) {

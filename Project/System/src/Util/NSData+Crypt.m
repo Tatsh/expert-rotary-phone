@@ -16,16 +16,24 @@
 @implementation NSData (Crypt)
 
 // @ 0xbec18 — forward to the core with kCCEncrypt.
+// @complete
 - (NSData *)encryptWith128Key:(NSString *)key initVector:(NSString *)iv {
     return [self mainOperation:kCCEncrypt key:key initVector:iv];
 }
 
 // @ 0xbec3c — forward to the core with kCCDecrypt.
+// @complete
 - (NSData *)decryptWith128Key:(NSString *)key initVector:(NSString *)iv {
     return [self mainOperation:kCCDecrypt key:key initVector:iv];
 }
 
 // @ 0xbeaf8 — AES-128-CBC (PKCS#7) core shared by encrypt/decrypt.
+// CCCrypt args verified from the disassembly at 0xbebaa..0xbebc4: r1 = 0
+// (kCCAlgorithmAES128), r2 = 1 (kCCOptionPKCS7Padding), keyLength = 0x10
+// (kCCKeySizeAES128), buffer = len + 0x10; on kCCSuccess the malloc'd output is
+// wrapped with -dataWithBytesNoCopy:length:outMoved, otherwise it is freed and
+// nil is returned.
+// @complete
 - (NSData *)mainOperation:(CCOperation)op key:(NSString *)key initVector:(NSString *)iv {
     // Copy the key/IV NSStrings into fixed 17-byte C buffers (16 chars + NUL);
     // Ghidra: -getCString:maxLength:0x11 encoding:4 (NSUTF8StringEncoding).

@@ -13,6 +13,7 @@
 @implementation StoreAcMusicInfo
 
 // @ 0x852dc
+// @complete
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary {
     if ([dictionary[@"ID"] intValue] <= 0) {
         return nil;
@@ -46,6 +47,7 @@
 }
 
 // @ 0x85418 — the purchased arcade-music file exists on disk.
+// @complete
 - (BOOL)fileExist {
     return RhFileExists([[MusicManager getInstance] getAcPathFromPurchased:m_AcMusicId]);
 }

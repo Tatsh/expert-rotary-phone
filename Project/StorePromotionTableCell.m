@@ -13,6 +13,7 @@
 
 // @ 0x738c4 — a plain UITableViewCell (the promotion content is set by the
 // store VC on the reused cell); the initializer just chains to super.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     return [super initWithStyle:style reuseIdentifier:reuseIdentifier];
@@ -24,6 +25,7 @@
 // under tag 0x2775 by the store VC) filling the content view as the cell
 // resizes, and tell it to resize its cross-fading image views to the cell's
 // bounds.
+// @complete
 - (void)layoutSubviews {
     [super layoutSubviews];
     StorePromotionView *promoView = (StorePromotionView *)[self.contentView viewWithTag:0x2775];

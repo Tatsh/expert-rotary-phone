@@ -19,6 +19,8 @@
 @synthesize backGroundImage = _backGroundImage;
 
 // @ 0x82e5c — retain the ordered image-name list.
+// Verified: [super init]; on non-nil, _fileNameArray = fileNameArray (retain).
+// @complete
 - (instancetype)initWithFileNameArray:(NSArray *)fileNameArray {
     self = [super init];
     if (self != nil) {
@@ -28,6 +30,16 @@
 }
 
 // @ 0x82eb0 — build the paging strip, page control and nav-bar buttons.
+// Verified end-to-end: super; images loop (imageNamed: per name); strip width =
+// view.width * count (vcvt.u32/vmul); HowToView init; scroll view (contentSize
+// = strip.bounds.size, paging on, bounces off, delegate self); addSubviews;
+// page control frame (0,0,view.width,30.0 = 0x41f00000), numberOfPages = count,
+// currentPage 0, hidden; addTarget pageControlDidChanged: for
+// ValueChanged (0x1000); back button (navi_btn_back) addTarget backButtonFunc
+// for TouchUpInside (0x40) as leftBarButtonItem; close-button branch guarded by
+// _isCloseButtonEnable: hide back, close button (howto_btn_close) as
+// rightBarButtonItem, and hide it when count >= 2.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -95,6 +107,10 @@
 
 // @ 0x837bc — back / close button: play the cancel SE, restore the previous
 // navbar background image (if this overlay had overridden it) and pop.
+// Verified: NESceneManager_shared; SysSePlayIntoSlot slot 2; if _fromNaviBarImage
+// non-nil setBackgroundImage:forBarMetrics:0 (Default), release + nil; tail-call
+// popViewControllerAnimated:1.
+// @complete
 - (void)backButtonFunc {
     // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
     // cancel SE.
@@ -109,6 +125,9 @@
 
 // @ 0x835d8 — page control tapped: scroll the strip so the selected page is
 // visible.
+// Verified: frame = _scrollView.frame; origin.x = frame.width *
+// sender.currentPage (vmul); origin.y = 0; scrollRectToVisible:animated:1.
+// @complete
 - (void)pageControlDidChanged:(UIPageControl *)sender {
     CGRect frame = _scrollView.frame;
     frame.origin.x = frame.size.width * sender.currentPage;
@@ -119,6 +138,11 @@
 // @ 0x83670 — track the current page as the user swipes; on a page change play
 // the page SE and, in close-button mode, reveal the close button only once the
 // last page is reached.
+// Verified: oldPage = _pageCtrl.currentPage; page = (int)(contentOffset.x /
+// frame.width + 0.5) (vdiv, vadd 0.5, vcvt truncate); set currentPage; on
+// change (re-read getter) SysSePlayIntoSlot slot 4 and, if _isCloseButtonEnable,
+// _closeBtn.hidden = (currentPage != count - 1).
+// @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     NSInteger oldPage = _pageCtrl.currentPage;
     NSInteger page = (NSInteger)(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);

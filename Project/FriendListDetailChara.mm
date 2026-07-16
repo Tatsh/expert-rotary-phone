@@ -34,7 +34,15 @@
     BOOL _isAnimationing; // open/close guard, @0x3c
 }
 
-// @ 0xbac58
+// @ 0xbac58 — verified against the disassembly: _friendData stored before the
+// nil-check; scale s selected via NESceneManager_shared+0x10 (isPadDisplay),
+// s = 1.0 (@0xbbb04) / 2.0 (@0xbbb08); every layout constant matches the
+// literal pool @ 0xbb0a4 (237.0, 29.5, 0.2, 137.0, 122.0, 323.0, 44.0, 107.0,
+// 62.0), the sugo factor 0.22 (@0xbbb14), corner radius 5.0, border width 2.5,
+// border colour (1.0, 0.690430, 0.690430, 1.0), fukidasi offset 7.0, and the
+// charaId > 0x1d bundle/disk icon branch. The two %03d filename formats are the
+// exact binary strings (fixed above).
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData {
     // NB: the binary calls -[UIImageView initWithFrame:] with a zero rect (the
     // popup is then sized by its window image + re-centred), ignoring the passed
@@ -68,7 +76,9 @@
     [self addSubview:closeButton];
 
     // Friend's chara portrait (downloaded 2x art from Application Support).
-    NSString *portraitFile = [NSString stringWithFormat:@"result_chara_%03d_2x.png", (int)charaId];
+    // Exact format string @ 0x1053f0 (no underscore after "chara", "@2x" not
+    // "_2x").
+    NSString *portraitFile = [NSString stringWithFormat:@"result_chara%03d@2x.png", (int)charaId];
     NSURL *portraitURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
                                                     stringByAppendingPathComponent:portraitFile]];
     UIImageView *portrait = [[UIImageView alloc]
@@ -176,7 +186,8 @@
     [fukidasi addSubview:skillDescLabel];
 
     // Sugoroku chara art, centred in the card.
-    NSString *sugoFile = [NSString stringWithFormat:@"sugo_chara_%03d.png", (int)charaId];
+    // Exact format string @ 0x104395 (no underscore after "chara").
+    NSString *sugoFile = [NSString stringWithFormat:@"sugo_chara%03d.png", (int)charaId];
     NSURL *sugoURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
                                                 stringByAppendingPathComponent:sugoFile]];
     UIImageView *sugoView = [[UIImageView alloc]
@@ -194,7 +205,10 @@
 
 // dealloc @ 0xbbb18 — ARC-omitted (super-only override; no ivar releases).
 
-// @ 0xbbb48 — fade in over 0.3s (DAT_000bbc10).
+// @ 0xbbb48 — fade in over 0.3s (DAT_000bbc10 = 0x3fd3333340000000). Verified:
+// guard returns if _isAnimationing; set flag; setAlpha:0; begin/duration
+// 0.3/delegate self/didStop endOpenAnimation; setAlpha:1.0; commit.
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -209,13 +223,18 @@
     [UIView commitAnimations];
 }
 
-// @ 0xbbc18
+// @ 0xbbc18 — verified: _isAnimationing = NO (strb 0).
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
-// @ 0xbbc30 — decide SE, then fade out over 0.3s (DAT_000bbcf8). Note the
+// @ 0xbbc30 — decide SE, then fade out over 0.3s (DAT_000bbcf8 = 0.3). Note the
 // binary clears the guard here (rather than setting it), matching the source.
+// Verified: guard returns if _isAnimationing; _isAnimationing = NO;
+// NESceneManager_shared + SysSePlayIntoSlot slot 2; begin/duration
+// 0.3/delegate self/didStop endCloseAnimation; setAlpha:0; commit.
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -230,7 +249,8 @@
     [UIView commitAnimations];
 }
 
-// @ 0xbbd00
+// @ 0xbbd00 — verified: removeFromSuperview; _isAnimationing = NO.
+// @complete
 - (void)endCloseAnimation {
     [self removeFromSuperview];
     _isAnimationing = NO;

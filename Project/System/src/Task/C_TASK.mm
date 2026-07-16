@@ -31,6 +31,12 @@ C_TASK &C_TASK::scheduler() {
 // detached (its own prev/next) until setPriority inserts it into the scheduler
 // list. (The scene-tree links are left for the owner/subclass to populate;
 // modelled as null here.)
+//
+// Verified @ 0x27ea8: str vtable[+0]; movs #9/str [+0xc] (priority); movs #0/str
+// [+0x20] (name), strb [+0x24] (killed); str r0,[+0x4]; str r0,[+0x8]
+// (self-linked prev/next). The binary leaves m_parent..m_link3 (+0x10..+0x1c)
+// uninitialised; modelling them as null is the documented convention.
+// @complete
 C_TASK::C_TASK()
     : m_prev(this), m_next(this), m_priority(9), m_parent(nullptr), m_link1(nullptr),
       m_link2(nullptr), m_link3(nullptr), m_name(nullptr), m_killed(false) {
@@ -42,6 +48,12 @@ C_TASK::C_TASK()
 // ("caSourceNode_delete") is this destructor followed by operator delete (the
 // vtable delete slot) and is not written by hand. The reaped-task path in
 // FUN_00027f40 saves ->next before invoking this.
+//
+// Verified @ 0x27ec8: reinstall base vtable [+0]; ldrd m_prev/m_next [+4/+8];
+// m_next->m_prev = m_prev (str [r_next+4]); m_prev->m_next = m_next
+// (str [r_prev+8]); then cbz-guarded operator delete on m_name [+0x20] and
+// zero it.
+// @complete
 C_TASK::~C_TASK() {
     m_next->m_prev = m_prev;
     m_prev->m_next = m_next;
@@ -60,6 +72,12 @@ void C_TASK::draw() {
 // Ghidra: FUN_00027f08 — unlink, then insert before the first node whose
 // priority is >= `priority` (walking from the sentinel), keeping the list
 // sorted.
+//
+// Verified @ 0x27f08: unlink (m_next->m_prev = m_prev; m_prev->m_next =
+// m_next); walk `at = head->m_next` advancing `before = at` while
+// at->m_priority (+0xc) < priority; splice this between before/at; store
+// priority last.
+// @complete
 void C_TASK::setPriority(int priority) {
     // Unlink from the current slot.
     m_next->m_prev = m_prev;
@@ -81,6 +99,13 @@ void C_TASK::setPriority(int priority) {
 
 // Ghidra: FUN_00027f40 — the scheduler tick. Walk the list in priority order:
 // update() each live task; destroy (reap) any that has been killed.
+//
+// Verified @ 0x27f40: task = head->m_next; loop until task == &head; read
+// m_killed [+0x24]. Live path calls vtable[+0] (update) with deltaMs, then
+// task = task->m_next. Killed path saves task->m_next (+0x8) first, then calls
+// the deleting-destructor vtable slot [+0x8] (== `delete task`), then continues
+// from the saved next.
+// @complete
 void C_TASK::updateAll(int deltaMs) {
     C_TASK &sentinel = scheduler();
     C_TASK *task = sentinel.m_next;
