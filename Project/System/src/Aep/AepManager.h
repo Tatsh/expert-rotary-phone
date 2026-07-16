@@ -22,6 +22,24 @@
 class neTextureForiOS; // Render/neTextureForiOS.h; only pointers held here (see
                        // m_groupTexture)
 
+// The .idx index-file header, stamped and relocated by readIndexFile /
+// relocateAepData (Ghidra: the header the loader walks from the index base). The
+// name-block words are byte offsets from the index base on disk; relocateAepData
+// resolves each to a live pointer (advanced past its name table + the layer-ordinal
+// array). Modelled as real fields rather than raw `base + N` casts. All slots are the
+// on-disk 4-byte offset width; the resolved pointers live in AepManager members
+// (m_framePosData / m_groupFrameData) because a 64-bit pointer cannot be written back
+// into a 4-byte slot.
+struct AepIndexHeader {
+    int16_t groupId;       // +0x00 stamped by readIndexFile
+    int16_t reserved02;    // +0x02
+    int32_t frameNamesOff; // +0x04 frame-name block -> (relocated) frame-position table
+    int32_t reserved08;    // +0x08
+    int32_t reserved0c;    // +0x0c
+    int32_t layerNamesOff; // +0x10 layer-name block + ordinals -> (relocated) frame entries
+    int32_t userNamesOff;  // +0x14 user-name block
+};
+
 class AepManager {
 public:
     // The engine keeps one global scene manager (Ghidra: DAT @ PTR_DAT_00130484,
@@ -276,6 +294,11 @@ private:
     // slot's frame-entry array. Populated by loadAepData as resources load.
     uint8_t m_groupIndex[256] = {};                            // +0x7c1748 (group id -> slot)
     const AepFrameEntry *m_groupFrameData[kMaxAepGroups] = {}; // +0x7f39c8
+    // Rebuild-only: the relocated frame-position table pointer per group. The 32-bit
+    // binary rewrites the .idx header's 4-byte offset slot in place with the pointer;
+    // on the 64-bit rebuild an 8-byte pointer cannot fit that slot, so relocateAepData
+    // stores it here instead (see AepIndexHeader below).
+    const int16_t *m_framePosData[kMaxAepGroups] = {};
 
     // Raw .idx file bytes per group (holds the frame tables the pointers above
     // reference). Ghidra: this + group*0x40000 + 0x200 (readIndexFile @
@@ -341,7 +364,7 @@ private:
                                int screenH,
                                float scale);
     friend void
-    relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uint8_t *idxBase);
+    relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const uint8_t *idxBase);
 };
 
 // Initialise the scene manager against its resource paths and screen surface.
@@ -362,9 +385,11 @@ void aepManagerInit(AepManager *mgr,
 // the NUL-separated string blocks the index header points at, rewriting each
 // header offset in place to the post-block cursor and copying the resolved
 // layer ordinals into the layer-number table. Ghidra: relocateAepData
-// (FUN_0000f824). `indexHeader` is the loaded index header (its name-block
-// offsets at +0x04 / +0x10 / +0x14); `idxBase` is the group's idx buffer base.
-void relocateAepData(AepManager *mgr, int group, int32_t *indexHeader, const uint8_t *idxBase);
+// (FUN_0000f824). `header` is the loaded index header (its name-block offsets at
+// +0x04 / +0x10 / +0x14); `idxBase` is the group's idx buffer base. Builds the
+// frame/layer/user name hash tables and stores the relocated frame-position and
+// frame-entry pointers into m_framePosData / m_groupFrameData.
+void relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const uint8_t *idxBase);
 
 // The active transition mode (free-function form of
 // AepManager::transitionMode()). Ghidra: getAepTransitionMode (FUN_00010724).
