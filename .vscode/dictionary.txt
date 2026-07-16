@@ -448,6 +448,7 @@ strcmpcasenosensitive
 strcmpcasenosentivefunction
 strcmpi
 strd
+strh
 strictunzip
 strictzip
 strictzipunzip
