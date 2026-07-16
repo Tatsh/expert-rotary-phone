@@ -308,7 +308,6 @@ public:
 
     // --- drawing slots (::neRenderer) dispatched through by the neDraw*
     // primitives ---
-    void shutdown() override;
     void initialize() override;
     void setViewport(int x, int y, int w, int h) override;
     void loadMatrix(int mode, const neMatrix4 &m) override;

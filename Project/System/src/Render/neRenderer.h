@@ -68,9 +68,10 @@ class neRenderer {
 public:
     virtual ~neRenderer() = default;
 
-    // Lifecycle. Ghidra: shutdown = vtbl +0x04 (unbind on replace),
-    // initialize = vtbl +0x08 (activate default GL state).
-    virtual void shutdown() = 0;
+    // Lifecycle. Ghidra: initialize = vtbl +0x08 (QueryCaps, activate default GL
+    // state). Slot +0x04 is the compiler-emitted deleting destructor (invoked by
+    // neSetCurrentRenderer's `delete`), not a distinct shutdown method -- the virtual
+    // destructor above supplies both dtor slots, so initialize lands at +0x08.
     virtual void initialize() = 0;
 
     virtual void setViewport(int x, int y, int w, int h) = 0; // +0x50 glViewport

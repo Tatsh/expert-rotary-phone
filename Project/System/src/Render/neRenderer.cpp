@@ -135,11 +135,15 @@ neRenderer *neGetCurrentRenderer(void) {
     return g_pCurrentRenderer;
 }
 
-// Ghidra: FUN_00012c24 — swap the current renderer, unbinding the previous one.
+// Ghidra: FUN_00012c24 — swap the current renderer, destroying the previous one.
+// The binary invokes the old renderer's vtable slot +0x04, which is the compiler-
+// emitted deleting destructor (b.w -> operator delete @ 0x12feb8) -- i.e. `delete cur`;
+// there is no distinct "shutdown" virtual. The engine builds one renderer and never
+// replaces it, so this branch is not exercised in practice.
 // @complete
 void neSetCurrentRenderer(neRenderer *r) {
     if (g_pCurrentRenderer != nullptr && g_pCurrentRenderer != r) {
-        g_pCurrentRenderer->shutdown();
+        delete g_pCurrentRenderer;
     }
     g_pCurrentRenderer = r;
 }

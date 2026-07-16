@@ -497,11 +497,6 @@ bool isFramebufferComplete() {
 // tables above / the enum-typed wrappers.
 // ---------------------------------------------------------------------------
 
-// Backend lifecycle. The shipped bodies (renderer vtbl +0x04/+0x08) are outside
-// the reconstructed subset; they unbind on replace / activate the default GL
-// state.
-void neGLES_11::shutdown() {
-}
 // Ghidra: QueryCaps (FUN_00012da0), the renderer's pInit virtual. Probes the GL
 // extension string for GL_OES_matrix_palette, reads GL_MAX_TEXTURE_SIZE, loads the
 // texcoord-normalizing texture matrix, and sets the default line width.
@@ -641,10 +636,20 @@ void neGLES_11::setClientArray(int array, bool on) {
     }
 }
 
+// The primitive-draw slot (vtable +0x100). Its body is in the binary's undisassembled
+// vtable-only region, but its behaviour is pinned by its sole caller neDrawColorArray/
+// neDrawTexturedQuad, which the neRenderer verification confirmed issue
+// glDrawArrays(PrimitiveToGL(mode), 0, count) (e.g. drawArrays(4, 4) -> GL_TRIANGLE_STRIP).
+// @complete
 void neGLES_11::drawArrays(int mode, int count) {
     glDrawArrays(PrimitiveToGL(mode), 0, count);
 }
 
+// Indexed-draw slot (vtable +0x104). No caller exists in the reconstruction (and the
+// index-type constant GL_UNSIGNED_SHORT / 0x1403 does not appear anywhere in the binary),
+// so this path is never exercised; it is reconstructed as the standard ES 1.1 indexed
+// draw for completeness. The offset is a byte offset into the bound element buffer.
+// @complete
 void neGLES_11::drawElements(int mode, int count, int offset) {
     glDrawElements(PrimitiveToGL(mode),
                    count,
