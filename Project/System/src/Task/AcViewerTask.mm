@@ -31,6 +31,7 @@
 #import "MenuMainTask.h"
 #import "MusicManager.h"
 #import "UserSettingData.h"
+#import "neDebugLog.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
@@ -758,6 +759,26 @@ void AcViewerTask::update(int /*deltaMs*/) {
             }
         }
     }
+
+#if RHYDBG
+    // Arcade Viewer goes black on iPad. State 4 (WAIT_TRANSITION) waits on
+    // m_hudArmed (Ghidra isVisible, +0x1d5), which is only set at the tail of the
+    // async BGM-load block in setup(); if that never lands, the black board (case
+    // 0) never fades. Log the state + gates on change to see where it stalls.
+    {
+        static int s_acvLastState = -1;
+        if ((int)m_state != s_acvLastState) {
+            neDebugLog("AcViewer state=%d hudReady=%d hudArmed=%d pad=%d transDone=%d padBoard=%d",
+                       (int)m_state,
+                       (int)m_hudReady,
+                       (int)m_hudArmed,
+                       neSceneManager::isPadDisplay() ? 1 : 0,
+                       aep.isTransitionDone(),
+                       (int)m_padBoardUp);
+            s_acvLastState = (int)m_state;
+        }
+    }
+#endif
 
     int next;
     switch (m_state) {
