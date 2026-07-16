@@ -1066,7 +1066,7 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
                                  100 - pulse,
                                  0x20,
                                  0xffffff,
-                                 0,
+                                 nullptr,
                                  0xd,
                                  1);
         }
@@ -1089,7 +1089,7 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
                          100 - pulse,
                          0x20,
                          0xffffff,
-                         0,
+                         nullptr,
                          0xd,
                          1);
 }

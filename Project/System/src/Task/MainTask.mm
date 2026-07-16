@@ -1660,7 +1660,7 @@ void MainTask::UpdateHighlight() {
                              100 - a,
                              0x20,
                              0xffffff,
-                             0,
+                             nullptr,
                              10,
                              1);
     }
@@ -1684,7 +1684,7 @@ void MainTask::UpdateHighlight() {
                              100 - a,
                              0x20,
                              0xffffff,
-                             0,
+                             nullptr,
                              10,
                              1);
     }
@@ -2122,7 +2122,7 @@ void AepDrawCallback(unsigned child,
                                          alpha,
                                          blend,
                                          0xffffff,
-                                         0,
+                                         nullptr,
                                          p14,
                                          1);
                 }
@@ -2274,7 +2274,7 @@ void AepDrawCallback(unsigned child,
                              alpha,
                              blend,
                              0xffffff,
-                             0,
+                             nullptr,
                              p14,
                              1);
     };
@@ -2411,7 +2411,7 @@ void AepDrawCallback(unsigned child,
                                  alpha,
                                  blend,
                                  0xffffff,
-                                 0,
+                                 nullptr,
                                  priority,
                                  1);
             if (n <= k) {

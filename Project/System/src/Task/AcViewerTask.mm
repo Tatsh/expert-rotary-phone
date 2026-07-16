@@ -1088,7 +1088,7 @@ void AcViewerHudDraw(int child,
                                  alpha,
                                  blend,
                                  0xffffff,
-                                 0,
+                                 nullptr,
                                  p14,
                                  1);
             cx -= self->m_digitAdvance;

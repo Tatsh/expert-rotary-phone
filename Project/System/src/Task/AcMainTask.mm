@@ -2782,7 +2782,7 @@ void AcMainSugorokuDraw(int child,
                                      alpha,
                                      blend,
                                      0xffffff,
-                                     0,
+                                     nullptr,
                                      p17,
                                      1);
                 px -= step;
@@ -2864,7 +2864,7 @@ void AcMainSugorokuDraw(int child,
                                  alpha,
                                  blend,
                                  0xffffff,
-                                 0,
+                                 nullptr,
                                  p17,
                                  1);
             // Highlight the currently-selected chara with the hit-flash layer.
@@ -2989,7 +2989,7 @@ void AcMainSugorokuDraw(int child,
                                  alpha,
                                  blend,
                                  0xffffff,
-                                 0,
+                                 nullptr,
                                  p17,
                                  1);
             if (anchorOut) {
@@ -3098,7 +3098,7 @@ void AcMainSugorokuDraw(int child,
                              alpha,
                              blend,
                              0xffffff,
-                             0,
+                             nullptr,
                              p17,
                              1);
         const int yAdj = (scaleY * 0xe) / 100;
@@ -3199,7 +3199,7 @@ void AcMainSugorokuDraw(int child,
                              alpha,
                              blend,
                              0xffffff,
-                             0,
+                             nullptr,
                              p17,
                              1);
         const int zoomX = (int)((float)scaleX * 1.6949f) + 1;
@@ -3318,7 +3318,7 @@ void AcMainSugorokuDraw(int child,
                                  alpha,
                                  blend,
                                  0xffffff,
-                                 0,
+                                 nullptr,
                                  p17,
                                  1);
             return;
@@ -3417,7 +3417,7 @@ void AcMainSugorokuDraw(int child,
                              alpha,
                              blend,
                              0xffffff,
-                             0,
+                             nullptr,
                              p17,
                              1);
         return;
