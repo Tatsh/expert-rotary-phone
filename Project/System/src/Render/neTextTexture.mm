@@ -327,12 +327,13 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     // vertex colour reproduces the original LA result.
     AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
     int atlasW = tex->textureWidth();
-    // The binary packs the cell transposed: cellX is the row stride multiplicand and
-    // cellY the column addend (mla outX, atlasW, outY @ 0x17e40), so a glyph row
-    // advances by atlasW along the cellX axis.
+    // The packer advances cellX by the glyph WIDTH, so cellX is the COLUMN and cellY
+    // (the shelf base, advanced by the height) is the ROW: byte = (cellY + rrow) *
+    // atlasW + (cellX + col) (binary: mla shelf, atlasW, pen @ 0x17e40). Indexing
+    // the row by cellX instead overlapped consecutive glyph cells and garbled text.
     for (int rrow = 0; rrow < h; ++rrow) {
         const uint8_t *src = gray + rrow * w;
-        uint8_t *dst = atlas->pixels + ((cellX + rrow) * atlasW + cellY) * 4;
+        uint8_t *dst = atlas->pixels + ((cellY + rrow) * atlasW + cellX) * 4;
         for (int col = 0; col < w; ++col) {
             uint8_t g = src[col];
             dst[col * 4 + 0] = g;
@@ -372,11 +373,11 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     glyph->atlasId = atlas->index;
     glyph->advance = w;
     glyph->height = h;
-    // The binary stores outY at glyph+0x18 and outX at glyph+0x1c (str r10=[sp+0x24]
-    // @ 0x17eb0, str r4=[sp+0x20] @ 0x17eb4) -- the transpose of the field names. Kept
-    // exact so neDrawText's +0x18->u / +0x1c->v read samples the cell the binary wrote.
-    glyph->cellX = cellY; // +0x18 = outY
-    glyph->cellY = cellX; // +0x1c = outX
+    // cellX is the column (its u source) and cellY the row (its v source), matching
+    // the blit above and the binary (glyph+0x18 = the pen @ 0x17eb0 -> neDrawText u,
+    // glyph+0x1c = shelf @ 0x17eb4 -> v).
+    glyph->cellX = cellX; // +0x18 -> u (column)
+    glyph->cellY = cellY; // +0x1c -> v (row)
     return 1;
 }
 
