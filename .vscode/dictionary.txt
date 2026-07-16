@@ -387,6 +387,7 @@ renderbuffer's
 renderbuffers
 rhcrypto
 rhdvru
+rhydbg
 rhythmin
 rhythmn
 riccardo
