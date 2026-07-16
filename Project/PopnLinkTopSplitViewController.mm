@@ -41,13 +41,23 @@
 }
 
 // .cxx_construct @ 0xe2c38 — compiler-emitted C++ ivar constructor; not
-// hand-written.
+// hand-written. (Verified: 0xe2c38 is a bare `bx lr`.)
+// @complete
 
 // @ 0xe0b40 — build the dimmed backdrop (tap to close), the artwork panel, the
 // left section column (PopnLinkTopViewController), the right navigation pane,
 // the selection arrow (positioned per link state), and a top cover strip; then
 // populate the initial section (checker, which routes to the KONAMI-ID input
 // while unlinked).
+//
+// Verified against the disassembly at 0xe0b40: the three right-pane frames
+// (385,220,320,600 / 385,182,320,716 / 385,250,320,530), the three arrow frames
+// (365,307 / 365,452 / 365,592), the left-column origin offsets (+65 / +100) and
+// width 354, the cover alpha 0.5, the border colour (0,0.835,0.679,1) and width
+// 3, the background colour (0.953,0.953,0.953,1), the corner radius 6, and the
+// initial _selectedIndex = -1 followed by -onScoreCheckerButtonTouched:nil all
+// match.
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         _konamiIdFrm = CGRectMake(385, 220, 320, 600);
@@ -133,6 +143,10 @@
 
 // @ 0xe1430 — detach the selection arrow on teardown (real work kept under ARC;
 // the _leftViewCtrl / _rightViewCtrl / _howToView releases are ARC-automatic).
+// Verified: the binary releases _leftViewCtrl, _rightViewCtrl,
+// _konamiIdArrowImageView (via -removeFromSuperview) and _howToView before
+// [super dealloc]; only the arrow detach is real work under ARC.
+// @complete
 - (void)dealloc {
     [_konamiIdArrowImageView removeFromSuperview];
 }
@@ -145,6 +159,13 @@
 // @ 0xe1538 — while unlinked, force the KONAMI-ID input onto the host nav stack
 // (and show the first-play how-to once), then fade the view + nav view in over
 // 0.5s.
+//
+// Verified against 0xe1538: guard set to YES, the unlinked branch pushes
+// InputKIDViewCtrl animated:NO, the !isPopnLinkSelected branch builds the how-to
+// overlay from @[@"firstplay_popnlink"] and saves the flag (else it swaps in the
+// "input_kid_navbar" art), and the fade uses the 0.5 duration double at 0xe1958,
+// setAnimationDidStopSelector:endOpenAnimation, and alpha 0 -> 1.
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -180,13 +201,18 @@
     [UIView commitAnimations];
 }
 
-// @ 0xe1840 — clear the guard.
+// @ 0xe1840 — clear the guard. (Verified: 0xe1840 stores 0 into the guard ivar.)
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xe1858 — fade the view + nav view out over 0.3s. (The binary re-clears the
 // guard here rather than setting it; reproduced faithfully.)
+// Verified against 0xe1858: after the guard check it stores 0 (not 1) into the
+// guard, the duration is the 0.3 double at 0xe1958,
+// setAnimationDidStopSelector:endCloseAnimation, and alpha 0/0.
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -202,6 +228,9 @@
 }
 
 // @ 0xe1960 — remove the panel and notify the nav host it closed.
+// Verified against 0xe1960: -removeFromSuperview, fetch the scene-root VC,
+// -PopnLinkEndCallBack, then clear the guard.
+// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
@@ -214,6 +243,15 @@
 // @ 0xe19c0 — switch the right pane to the KONAMI-ID input section. Ghidra flip
 // block helper showKonamiIdView @ 0xe1d18 (modeled as a single flip whose
 // completion clears the guard).
+//
+// Verified against 0xe19c0 and its blocks: the bar-button items are cleared, an
+// InputKIDViewCtrl is built with hidesBackButton = YES and delegate = self, the
+// _selectedIndex < 0 branch pushes directly (navbar "pl_navbar"), and the flip
+// path sets the guard, collapses the pane width to 0 (block 0xe1c88), swaps in
+// the KID input and expands to _konamiIdFrm (blocks 0xe1d18/0xe1e68), and slides
+// the arrow to _konamiIdArrowFrm (block 0xe1f48). Durations are the 0.3 doubles
+// at 0xe1c78/0xe1d18 and the 0.6 double at 0xe1c80; options 0x10000.
+// @complete
 - (void)onInKidButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -273,6 +311,15 @@
 // @ 0xe1fa8 — switch the right pane to the score-checker section, or route to
 // the KONAMI-ID input while unlinked. Ghidra flip block helper showCheckerView
 // @ 0xe2320.
+//
+// Verified against 0xe1fa8 and its blocks: while unlinked it tail-calls
+// -onInKidButtonTouched: and returns; otherwise it clears the bar-button items,
+// builds a grouped CheckerCategoryViewController with hidesBackButton = YES, and
+// on the _selectedIndex < 0 path pushes directly (navbar "ppc_navbar"). The flip
+// collapses the pane width to 0 (block 0xe2290), swaps in the checker and expands
+// to _checkerFrm (blocks 0xe2470), and slides the arrow to _checkerArrowFrm
+// (block 0xe2550); navbar art is "ppc_navbar" and _selectedIndex ends at 1.
+// @complete
 - (void)onScoreCheckerButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -333,6 +380,16 @@
 
 // @ 0xe25b0 — switch the right pane to the quiz section, or route to the
 // KONAMI-ID input while unlinked. Ghidra flip block helper @ 0xe2928.
+//
+// Verified against 0xe25b0 and its blocks: while unlinked it tail-calls
+// -onInKidButtonTouched: and returns; otherwise it builds a grouped
+// QuizMainViewController with hidesBackButton = YES. The _selectedIndex < 0 path
+// pushes directly with navbar "pl_konamiid_navbar" (CFString at 0xe2824). The
+// flip collapses the pane width to 10 (0x41200000, block 0xe2898), swaps in the
+// quiz and expands to _quizFrm (blocks 0xe2a78), and slides the arrow to
+// _quizArrowFrm (block 0xe2b58). The animated showQuizView path uses "pq_navbar"
+// (CFString at 0xe2928) — corrected here — and _selectedIndex ends at 2.
+// @complete
 - (void)onQuizButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -366,10 +423,11 @@
             }
             completion:^(BOOL finished) {
               // showQuizView @ 0xe2928 — set the navbar art, swap in the quiz, then
-              // expand.
-              [_rightViewCtrl.navigationBar
-                  setBackgroundImage:[UIImage imageNamed:@"pl_konamiid_navbar"]
-                       forBarMetrics:UIBarMetricsDefault];
+              // expand. The animated-flip path uses "pq_navbar" (verified against
+              // the imageNamed: CFString at 0xe2928), unlike the initial-populate
+              // path above, which uses "pl_konamiid_navbar".
+              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pq_navbar"]
+                                                 forBarMetrics:UIBarMetricsDefault];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view
@@ -394,6 +452,9 @@
 
 // @ 0xe2bb8 — rebuild the left column's inputs and re-evaluate its
 // button-enabled state.
+// Verified: 0xe2bb8 calls -reloadInputViews then tail-calls -updateButtonEnable
+// on _leftViewCtrl.
+// @complete
 - (void)reloadLeftView {
     [_leftViewCtrl reloadInputViews];
     [_leftViewCtrl updateButtonEnable];
@@ -401,6 +462,9 @@
 
 // @ 0xe2bf4 — a backdrop / top-cover tap: play the cancel SE and fade the panel
 // out.
+// Verified against 0xe2bf4: guard check, playSystemSe(2) (r1 = 2 into the SE
+// call at 0xe2c1e), then tail-calls -startCloseAnimation.
+// @complete
 - (void)handleTapCoverView {
     if (_isAnimationing) {
         return;

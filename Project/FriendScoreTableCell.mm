@@ -79,6 +79,10 @@ static NSString *const kScoreRankImg[7] = {
 
 // Score -> rank index (0 best .. 6 worst). The binary shares one routine
 // (Ghidra FUN_00028a40, also reconstructed file-local in PlayScene.mm).
+// Verified: FUN_00028a40 compares against 0x1869f/0x17ecf/0x17317/0x15f8f/
+// 0x1387f/0x1116f (99999/97999/94999/89999/79999/69999), the same >= 100000 /
+// 98000 / 95000 / 90000 / 80000 / 70000 thresholds.
+// @complete
 static int scoreToRank(int score) {
     if (score >= 100000) {
         return 0;

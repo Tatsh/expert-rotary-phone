@@ -22,6 +22,7 @@
 @synthesize pageCtrl = _pageCtrl;
 
 // @ 0x16718 — retain the ordered image-name list.
+// @complete
 - (instancetype)initWithFileNameArray:(NSArray *)fileNameArray {
     self = [super init];
     if (self != nil) {
@@ -32,6 +33,7 @@
 
 // @ 0x16808 — install the dimmed, tappable cover view and the (hidden) page
 // control. The paging strip itself is built later, in -viewDidAppear:.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -61,6 +63,7 @@
 }
 
 // @ 0x16adc — reveal the cover fully opaque when the controller appears.
+// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     m_CoverView.alpha = 1.0f;
@@ -69,7 +72,10 @@
 
 // @ 0x16b40 — build the centred paging strip, the scroll view, the (hidden)
 // multi-page page control and the custom page-dot strip once the view is on
-// screen.
+// screen. (Strip width vf.width*count; dots width dotImg.width*count +
+// (count*10-10); dot-strip centre-Y = scrollView.origin.y + height + 20.0
+// (0x41a00000) + dotImg.height*0.5 — all NEON-verified.)
+// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
 
@@ -121,11 +127,12 @@
     [self.view addSubview:_pageImgs];
 }
 
-// didReceiveMemoryWarning @ 0x1718c — super-only override, omitted.
-// viewWillDisappear: @ 0x171b8 — super-only override, omitted.
+// didReceiveMemoryWarning @ 0x1718c — super-only override, omitted. @complete
+// viewWillDisappear: @ 0x171b8 — super-only override, omitted. @complete
 
 // @ 0x171e4 — page control changed: scroll the strip so the selected page is
 // visible.
+// @complete
 - (void)pageControlDidChanged:(UIPageControl *)sender {
     CGRect frame = _scrollView.frame;
     frame.origin.x = frame.size.width * sender.currentPage;
@@ -135,6 +142,7 @@
 
 // @ 0x1727c — track the current page while swiping, refresh the dot strip, and
 // on a page change play the page SE.
+// @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     NSInteger oldPage = _pageCtrl.currentPage;
     NSInteger page = (NSInteger)(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);
@@ -148,6 +156,7 @@
 }
 
 // @ 0x17378 — fade the overlay and its navigation controller view in.
+// @complete
 - (void)startOpenAnimation {
     if (!_isAnimationing) {
         _isAnimationing = YES;
@@ -164,12 +173,15 @@
 }
 
 // @ 0x174a4 — open animation finished.
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x174b8 — play the cancel SE and fade the overlay (and its navigation
-// controller view) out.
+// controller view) out. (The binary faithfully sets _isAnimationing = NO inside
+// the not-animating branch, as reproduced below.)
+// @complete
 - (void)startCloseAnimation {
     // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
     // cancel SE.
@@ -188,6 +200,7 @@
 
 // @ 0x175d8 — close animation finished: tear the overlay views out of the
 // hierarchy.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [self.view removeFromSuperview];
@@ -197,6 +210,7 @@
 // @ 0x17634 — rebuild the custom page-dot strip: one image view per page, the
 // current page's dot using howto_page_on and the rest howto_page_off, laid out
 // left-to-right.
+// @complete
 - (void)setPageImages {
     if (_pageImgs != nil) {
         for (UIView *v in _pageImgs.subviews) {
@@ -220,6 +234,7 @@
 
 // @ 0x178f8 — tap on the cover view closes the overlay (unless an animation is
 // in flight).
+// @complete
 - (void)handleTapCoverView:(UITapGestureRecognizer *)sender {
     if (_isAnimationing) {
         return;
@@ -230,6 +245,7 @@
 // @ 0x1676c — detach the cover view before teardown. ARC: released object ivars
 // (_fileNameArray, _scrollView, _pageCtrl) are collected automatically; only
 // the removeFromSuperview logic remains.
+// @complete
 - (void)dealloc {
     if (m_CoverView != nil) {
         [m_CoverView removeFromSuperview];

@@ -63,10 +63,19 @@ static MainViewController *RootVC() {
 // Ghidra: FUN_0003d5bc — base C_TASK ctor, set the vtable, and zero the
 // 0x378-byte result-data block (already done by the members' in-class
 // initialisers and the base ctor).
+// Verified against disassembly: bl 0x27ea8 (C_TASK base ctor), str [r0],#0x28
+// (vtable at +0, advance to data block), _memset(+0x28, 0, 0x378).
+// @complete
 PlayResultTask::PlayResultTask() {
 }
 
 // Ghidra: FUN_0003d690 — the result-screen state machine.
+// Verified against disassembly: tap detection uses < 11 on both axes (dx =
+// startX-x @ +4/+c, dy = startY-y @ +8/+10); state ivar @ +0x394; case 1 plays
+// m_layers[5] (eventBonus @ +0x356, via 0x2caf8) then m_layers[4] (isNewRecord
+// @ +0x352); case 4 checks +0x218 not playing then rank != 6 (+0x35c); every
+// case store/order matches.
+// @complete
 void PlayResultTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     DownloadMain *dl = [DownloadMain getInstance];
@@ -191,6 +200,15 @@ void PlayResultTask::update(int /*deltaMs*/) {
 // DAT_00187bxx), commit + upload the score, delete stale over-score records,
 // compute the treasure bonuses, build the 6 animation layers + the ~130
 // number/artwork/chara textures, load the 11 rank SEs and the result BGM.
+// Verified against disassembly: field offsets (m_score +0x344, m_maxCombo
+// +0x350, cool/great +0x348/+0x34a, good/bad +0x34c/+0x34e, m_isNewRecord
+// +0x352, m_cleared +0x354, m_perfectFullCombo +0x353, m_sheet +0x358, m_rank
+// +0x35c, treasure +0x360/+0x364, m_music +0x38c); base treasure award by play
+// count (100/70/50/30/20 at <5/<7/<9/<11/else), +100 event bonus, clear bonus
+// +0x36c (20, 0 on rank 6), FC bonus +0x370 by note count, rank bonus +0x374,
+// perfect bonus +0x378 (10), m_bonusSubtotal +0x380, m_baseBonus +0x368, 9999
+// cap, m_boardScale +0x384 (pad 100 / phone 50 via +0x355).
+// @complete
 void PlayResultTask::resultSetup() {
     AepManager &aep = AepManager::shared();
     neAppEventCenter &evt = neAppEventCenter::shared();
@@ -554,6 +572,10 @@ void PlayResultTask::resultSetup() {
 // Ghidra: FUN_0003dfe0 inner double loop @ 0x3ea84..0x3ef9e — load the 10 digit
 // glyphs (0..9) of each of the 12 number groups into the per-lane texture
 // arrays.
+// Verified against disassembly: outer lane loop 0..9 (sp+0x34), inner group
+// loop 0..0xb; per-cell operator_new(0x18) + FUN_00011818 + load; store bases
+// step +0x28 per group (+0x34, +0x5c, ... +0x1ec), matching resultGotoNext.
+// @complete
 void PlayResultTask::loadNumberTextures() {
     // {digit-texture row, resource-name prefix}. The digit 0..9 is appended to
     // the prefix; note the underscore is present/absent exactly as in the binary
@@ -607,6 +629,11 @@ void PlayResultTask::loadNumberTextures() {
 //        (m_rankSe[0]) !perfectFC:  cleared -> v33 (m_rankSe[2]),
 //                     else rank<=3 -> v34[3], rank>5 -> v36[5], else(4,5) ->
 //                     v35[4].
+// Verified against disassembly: intro play head @ +0x40 (vcvt.s32.f32); frame
+// switch 0x18 / 0x20..0x40 / 0x46; jingle select via +0x353 (pfc), +0x354
+// (cleared), +0x35c (rank) into m_rankSe[+0x2e4..]; dismiss edge 0x370 (pad,
+// displayType 2) / 0x30c, tapX > 0xdc or tapY < edge -> state 3.
+// @complete
 void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int displayType) {
     AudioManager *audio = [AudioManager sharedManager];
     SeInstance *intro = reinterpret_cast<SeInstance *>(m_layers[0]);
@@ -685,6 +712,12 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
 // +0x344) and rank letter (rankLetter[@ +0x35c]); it embeds the bit.ly short
 // link + #リズミン hashtag literally. English: "I played <title>! Score:<n>
 // Rank:<R> <link> #Rhythmin".
+// Verified against disassembly: x = 5.0 (0x40a00000); phone y = 435.0
+// (0x43d98000) or 527.0 (0x4403c000) when displayType == 2; pad y = 965.0
+// (0x44714000); Retina half-scale (0.5) + y += 15.0 when overlayW > 0x27f &&
+// overlayH > 0x3bf; rank-letter table @ 0xf3d64 indexed by m_rank; tweet
+// UTF-16 format @ 0x12bde0 (byte-verified); bounce options literal 2.
+// @complete
 void PlayResultTask::buildShareButton(int displayType) {
     UIImage *btImage = [UIImage imageNamed:@"bt_twitter"];
 
@@ -781,6 +814,11 @@ void PlayResultTask::buildShareButton(int displayType) {
 //   +0x304 = +0x2e4[8] "se08_bonus_fai" (case 5 tally start)
 //   +0x300 = +0x2e4[7] "se07_count"     (case 6 per-step tick)
 //   +0x308 = +0x2e4[9] "se09_bonus_cl"  (case 6 finish)
+// Verified against disassembly: case 6 total = m_baseBonus (+0x368) +
+// m_bonusSubtotal (+0x380) compared against m_pointsCountUp (+0x37c); tick % 5
+// via umull 0xcccccccd; every fifth step stops m_countSeInst (+0x32c) then
+// replays se07_count; tap snaps m_pointsCountUp to total; finish -> state 7.
+// @complete
 void PlayResultTask::updateScoreCount(bool tapped) {
     AudioManager *audio = [AudioManager sharedManager];
     switch (m_state) {
@@ -836,6 +874,13 @@ void PlayResultTask::updateScoreCount(bool tapped) {
 
 // Ghidra: FUN_0003f2e0 — tear the result screen down (freeing exactly what
 // resultSetup created) and hand off to the music-select task.
+// Verified against disassembly: 11 SEs (+0x2e4) stopSe+releaseSe; releaseSystemSe
+// (0x2c6bc), cleanupSe, loadSystemSe (0x2c5c8); portraits +0x28/+0x2c/+0x30 (loop
+// 0..2); 10x12 num textures (+0x34..+0x1ec, +0x28 stride); 6 layers +0x214
+// unlink (0x2ca9c) + delete; shareButton +0x398, tweeter +0x39c;
+// releaseAepTexture(4); kill (+0x24 = 1); new MainTask(0xaa8) @ +0x390 if nil;
+// setPriority(3).
+// @complete
 void PlayResultTask::resultGotoNext() {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
@@ -986,6 +1031,14 @@ void drawTexQuad(AepManager &aep,
 // frame). The dispatch structure and per-branch geometry are reproduced from
 // the binary; leaf per- sprite geometry is delegated to the draw units above /
 // AepDrawSpriteHandle / drawLayer.
+// Verified against disassembly: dispatch by m_usr[N] (base +0x264, so
+// +0x278..+0x2b0); chara portrait source rect w=0x38c h=0x75e (transpose fixed);
+// jacket 0x168x0x168, name 0x126x0x20; digit strips use smmul-based %10 and the
+// scaleX*dxStep/100 shift (score -0x22/6, judge -0x1c/3, bonus -0x21/4, big
+// -0x3f/4); S_POINT strip 4 digits at step -= 0x20 until -0x80, x+0x12 base;
+// rank-effect cross-fade idx from effFrame[2] (+0x2dc) vs effLyrFrames[2]
+// (+0x2cc) with one-shot screenshot.
+// @complete
 void PlayResultDrawCallback(int child,
                             int /*frame*/,
                             int x,
@@ -1354,6 +1407,7 @@ void PlayResultDrawCallback(int child,
 }
 
 // Ghidra: FUN_0003d5bc call site in PlayTaskGotoResult (operator_new(0x3a0)).
+// @complete
 C_TASK *PlayResultCreateTask() {
     return new PlayResultTask();
 }

@@ -1070,11 +1070,19 @@ void PlayLoadCharaTextures(void *playData) {
 // at colour=pulse / alpha=100-pulse. The position windows are a fixed table
 // baked for the bundled demo song; the tick thresholds are transcribed
 // verbatim.
-// NOT YET VERIFIED against the disassembly: the function is confirmed to exist
-// and is renamed drawBeatIndicator (FUN_000313b0, body 0x313b0..0x31819) in the
-// Ghidra DB, but the 30-entry beat-window table, the +/-4 pulse ramp, and the
-// two neTextureForiOS_draw calls have not been byte-checked here, so this seam
-// is left unmarked.
+// Verified byte-for-byte against the disassembly (0x313b0..0x31819): the
+// `pos <= tick` threshold ladder (0x1d4b/0x2f2f/0x337b/0x431b/0x4703/0x5239/
+// 0x529d/0x79ad/0x88c1/0x8961/0x9519/0x9d07/0xc3b3/0xcf57/0xd2ef/0xdabf/0xea5f/
+// 0x10e1d/0x11d8b/0x11e53/0x12d2b/0x13497/0x15c51/0x16449/0x167f5/0x16f57/
+// 0x17f33/0x1f0f3/0x1f48b/0x1f503; the `< tick+1` form below is equivalent), the
+// per-window panel offset (+0x50..+0x7c = m_textPanels[0..11], with +0x80 ->
+// panel 12 for the tail past 0x1f503), the +4/-4 pulse ramp clamped to [0,100]
+// and the `bls 0x31758` rest windows (panel < 0) that reset the pulse to 0, the
+// beat-flash draw (m_textPanels[panel], w=0x1ea h=0x6e, x+0x46 y-0x3c,
+// colour=pulse alpha=100-pulse, blend 0x20, 0xffffff, priority 0xd, loop 1), and
+// the always-drawn window frame (m_windowTex[1] @ +0x2c, w=0x21e h=0xcc, x+0x32
+// y-0x50, same colour/alpha).
+// @complete
 void PlayDrawCharaWindow(void *playData, int x, int y) {
     PlayTask *task = static_cast<PlayTask *>(playData);
     AepManager &aep = AepManager::shared();
@@ -1179,11 +1187,23 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
 // (neTextureForiOS). The dispatch structure and per-branch priority / handle
 // selection are reproduced from the binary; leaf per-sprite geometry is
 // delegated to those draw units.
-// NOT YET VERIFIED against the disassembly: the function is confirmed to exist
-// and is renamed aepDrawCallback (FUN_00030944, body 0x30944..0x3119b) in the
-// Ghidra DB, with the __stdcall arg order matching this signature, but the many
-// child-id dispatch branches and per-sprite handle / priority selections have
-// not been byte-checked here, so this seam is left unmarked.
+// Verified against the disassembly (0x30944..0x3119b): the dispatch order and
+// every handle-table offset match — combo digits (+0x334 m_numComboUser, only
+// when combo >= 5 @ 0x30982), score digits (+0x340 m_scoreNumUser), gauge flash
+// (+0x2f8, reads +0x3d4 result, +0x270 frames, priority 0xe), pause
+// (+0x2fc, +0x1fc[0], priority 9), tone (+0x300, +0x3cc noteId via
+// FUN_00034bb4/34b98/34b5c, flags&2 -> +0x2d0 else state==1 -> +0x280 /
+// otherwise +0x2a8, priority 0x13), orb-eye tones (+0x308/+0x30c/+0x310/+0x314/
+// +0x318 -> +0x200..+0x210, priority 0x12), tone number (+0x304, state==1 +
+// count via FUN_00034bd0, +0x290, priority 0x11), bg colour (+0x31c, gated on
+// +0x9e5 effectOn / +0x9e7 oldHardware, layer +0x110 frame +0x3bc), field-combo
+// digits (+0x328/+0x32c/+0x330 -> +0x9c4 fieldCombo, +0x248), score star
+// (+0x320, `score > 69999` -> BARSTAR1 +0x100/+0x3c0 else BARSTAR0 +0xfc frame 0,
+// priority 0x16), gauge side bar (+0x324, layer +0x104 frameCount +0x13c,
+// `(gaugeValue*(count-1))>>10` with the +0x16 lsr rounding), and the chara loop
+// (+0x358 m_charaUser jump / +0x378 m_charaAnmUser portrait, gated on +0x9e5 ||
+// +0x9c9, PlayDrawCharaWindow fired only when the i*4 cursor == 4, i.e. i == 1).
+// @complete
 void PlayTaskDraw(int child,
                   int /*frame*/,
                   int x,

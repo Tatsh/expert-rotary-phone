@@ -94,16 +94,17 @@ static int sRetryCount = 0;
 
 // @ 0xfad84  (with retry/watchdog block @ 0xfb0a9 and completion handler @
 // 0xfb30c; class entry allocs+forwards @ 0xfbe04)
-// DEVIATION (unverified as written): the watchdog block (@ 0xfb0a8) has NO
+// Verified against the disassembly: the watchdog block (@ 0xfb0a8) has NO
 // `if (finished) return;` guard at its head; its first act is
-// [self canUseNetworkRetry] (selref @ 0x125856, referenced @ 0xfb0c2). The
-// binary suppresses a stale watchdog purely via the shared retry counter (the
-// completion handler gates on `sRetryCount > 1` @ 0xfb344 and the private queue
-// is suspended), not via the modelled __block bool. The counter increments,
-// back-off (retryCount * 2 + 2), 0x403/0xfffffc17 timeout error, and the JSON
-// dispatch are otherwise byte-faithful. Left unmarked because of the added
-// finished-guard; the 0x3ee fallback selector fix (Applilink, not RewardNetwork)
-// is applied above.
+// [self canUseNetworkRetry] (@ 0xfb0c2). The binary suppresses a stale watchdog
+// purely via the shared retry counter — the completion handler gates on
+// `sRetryCount > 1` and suspends the private serial queue (dispatch_suspend @
+// 0xfb244 / blx 0x1009e4), rather than a __block flag. The counter increments,
+// the back-off (sRetryCount * 2 + 2), the 0x403 timeout error carrying the URL /
+// failing-URL / localized-description userInfo, the -1001 (0xfffffc17) code, and
+// the JSON dispatch are all reproduced. The 0x3ee non-dictionary fallback is the
+// one-arg Applilink selector (@ 0xfb4f2), not the RewardNetwork variant.
+// @complete
 + (void)requestAsynchronousWithURL:(NSString *)url
                             method:(NSString *)method
                         parameters:(NSDictionary *)parameters
@@ -117,15 +118,11 @@ static int sRetryCount = 0;
                                              parameters:parameters
                                             cachePolicy:cachePolicy];
 
-    __block BOOL finished = NO; // guard flag shared with the watchdog (Ghidra __block int)
-
     // 10-second watchdog on a private serial queue (Ghidra: retry block @
-    // 0xfb0a9).
+    // 0xfb0a9). A stale watchdog is suppressed by suspending this queue from the
+    // completion handler and by the shared retry counter, not by a guard flag.
     dispatch_queue_t queue = dispatch_queue_create("requestAsynchronousWithURL", NULL);
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 10000000000LL), queue, ^{
-      if (finished) {
-          return;
-      }
       // Network retry is only allowed on iOS >= 6.
       if (![self canUseNetworkRetry]) {
           sRetryCount = 2;
@@ -176,8 +173,8 @@ static int sRetryCount = 0;
         dataTaskWithRequest:request
           completionHandler:^(NSData *data, NSURLResponse *response, NSError *connectionError) {
             dispatch_async(dispatch_get_main_queue(), ^{
-              finished = YES; // stop the watchdog (the binary suspends the
-                              // private queue here)
+              dispatch_suspend(queue); // stop the watchdog (Ghidra: private queue
+                                       // suspended here)
               if (sRetryCount > 1) {
                   return;
               }
@@ -234,8 +231,8 @@ static int sRetryCount = 0;
         sendAsynchronousRequest:request
                           queue:[NSOperationQueue mainQueue]
               completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-                finished = YES; // stop the watchdog (the binary suspends the
-                                // private queue here)
+                dispatch_suspend(queue); // stop the watchdog (Ghidra: private
+                                         // queue suspended here)
                 if (sRetryCount > 1) {
                     return;
                 }
@@ -291,15 +288,14 @@ static int sRetryCount = 0;
 
 // @ 0xfb58c  (line-enumeration accumulator block @ 0xfba3c; class entry
 // allocs+forwards @ 0xfbf8c)
-// DEVIATION (unverified as written): for the status "2" (@ 0xfb8c8) and status-
-// "otherwise" (@ 0xfb91e) branches the binary does NOT discard the
-// {@"response": text} dictionary. It builds it and passes it as the userInfo
-// argument to the two-parameter selector
-// localizedRewardNetworkErrorWithCode:userInfo: (selref @ 0x1249cb), i.e.
-// [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee/0x3ef
-// userInfo:@{@"response": text}]. The reconstruction below models a discarded
-// dictionary plus a single-argument call, which is behaviourally different (the
-// error loses its userInfo). Left unmarked pending a header/signature fix.
+// Verified against the disassembly: for the status "2" branch (@ 0xfb894) and
+// the status-"otherwise" branch (@ 0xfb8ea) the binary builds
+// dictionaryWithObjectsAndKeys:(text, @"response", nil) into r3 (@ 0xfb8ae /
+// 0xfb904) and passes it as the userInfo argument of the two-parameter
+// localizedRewardNetworkErrorWithCode:userInfo: selector (@ 0xfb8b2 / 0xfb908),
+// with code 0x3ee (status 2) and 0x3ef (otherwise). The empty-body path (@
+// 0xfb800) uses the one-arg localizedApplilinkErrorWithCode:0x3eb.
+// @complete
 + (NSData *)responseFromContentsServer:(NSString *)contentsServer
                                request:(NSURLRequest *)request
                                   data:(NSData *)data
@@ -339,14 +335,16 @@ static int sRetryCount = 0;
     if ([status isEqualToString:@"1"]) {
         result = [bodyText dataUsingEncoding:NSUTF8StringEncoding];
     } else if ([status isEqualToString:@"2"]) {
-        (void)[NSDictionary dictionaryWithObjectsAndKeys:text, @"response", nil];
+        NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:text, @"response", nil];
         if (failedBlock) {
-            failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee]);
+            failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee
+                                                                                userInfo:info]);
         }
     } else {
-        (void)[NSDictionary dictionaryWithObjectsAndKeys:text, @"response", nil];
+        NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:text, @"response", nil];
         if (failedBlock) {
-            failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ef]);
+            failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ef
+                                                                                userInfo:info]);
         }
     }
 

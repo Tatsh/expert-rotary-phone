@@ -281,36 +281,41 @@
     [UIView commitAnimations];
 }
 
-// @ 0x848d4 — OK tapped: reveal the picker. Unhide the picker sub-panel off to
-// the side, then animate the info panel out and the sub-panel into the info
-// panel's place. Guarded; the exact off/on positions are NEON-spilled.
-//
-// NOTE: unverified against 0x848d4. The binary moves VERTICALLY, not
-// horizontally: the sub-panel is staged at (bf.origin.x, -bf.size.height)
-// [above screen] (@ 0x84958-0x84984, y ← -height, x kept), then the info panel
-// animates to (ff.origin.x, screenHeight) [off the bottom] (@ 0x84a94, y ←
-// root.view height) while the sub-panel animates to ff. The reconstruction
-// below swaps on the X axis instead and so DEVIATES; left unmarked pending a
-// corrected vertical rewrite.
+// @ 0x848d4 — OK tapped: reveal the picker. Stage the picker sub-panel above the
+// screen, unhide it, then animate the info panel down off the bottom while the
+// sub-panel slides down into its resting place. Guarded.
+// Verified against the disassembly: the axis is VERTICAL. The sub-panel is
+// staged at (sub.x, -sub.height) (@ 0x84958-0x84984: y <- -sub.height (vneg),
+// x/w/h kept), the info panel animates to (border.x, root.view.height)
+// (@ 0x84a94: y <- root.view.frame.size.height, so it drops off the bottom), and
+// the sub-panel animates back to its own captured resting frame (@ 0x84aac: y <-
+// its original origin.y in s16). Duration 0.5 (0x3fe0000000000000).
+// @complete
 - (void)onOkBtn:(id)sender {
     if (m_IsAnimationing) {
         return;
     }
     m_IsAnimationing = YES;
 
-    CGRect bf = (_subBorderView != nil) ? _subBorderView.frame : CGRectZero;
-    CGRect ff = (_borderView != nil) ? _borderView.frame : CGRectZero;
+    CGRect subRest = (_subBorderView != nil) ? _subBorderView.frame : CGRectZero;
+    CGRect borderRest = (_borderView != nil) ? _borderView.frame : CGRectZero;
 
-    // Stage the sub-panel just off the right edge, then show it.
-    _subBorderView.frame = CGRectMake(-bf.size.width, bf.origin.y, bf.size.width, bf.size.height);
+    UIViewController *root = neSceneManager::rootViewController();
+    const CGFloat screenH = root.view ? root.view.frame.size.height : 0.0f;
+
+    // Stage the sub-panel one panel-height above the screen, then show it.
+    _subBorderView.frame =
+        CGRectMake(subRest.origin.x, -subRest.size.height, subRest.size.width, subRest.size.height);
     _subBorderView.hidden = NO;
 
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.5];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
-    _borderView.frame = CGRectMake(-ff.size.width, ff.origin.y, ff.size.width, ff.size.height);
-    _subBorderView.frame = ff;
+    // Info panel drops off the bottom; sub-panel slides down into place.
+    _borderView.frame =
+        CGRectMake(borderRest.origin.x, screenH, borderRest.size.width, borderRest.size.height);
+    _subBorderView.frame = subRest;
     [UIView commitAnimations];
 }
 

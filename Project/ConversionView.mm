@@ -86,6 +86,7 @@
 @synthesize delegate = _delegate;
 
 // @ 0x1be48
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -101,6 +102,7 @@
 
 // @ 0x1beb0 — build the backdrop, the two captioned text sections (caution /
 // how-to), the OK ("issue pass") button, and the nav-bar back button.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -244,11 +246,13 @@
 // viewDidDisappear: @ 0x1cb78 — super-only override, omitted.
 
 // @ 0x1cba4 — portrait only.
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
 // @ 0x1cbb0 — back button: cancel SE, restore the settings nav-bar art, pop.
+// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // cancel/back SE
 
@@ -259,6 +263,7 @@
 }
 
 // @ 0x1cc4c — OK ("issue pass") tapped: decide SE, confirm dialog (tag 0).
+// @complete
 - (void)okButtonFunc {
     neEngine::playSystemSe(1); // decide/confirm SE
 
@@ -275,6 +280,7 @@
 
 // @ 0x1cd00 — dialog callback for both the confirm dialog (tag 0) and the
 // issued-pass dialog (tag 1).
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (alertView.tag == 0) {
         // Confirm dialog: index 0 = cancel (ignore), index 1 = issue the pass.
@@ -326,6 +332,7 @@
 
 // @ 0x1cf0c — build and POST the full local save to the convert-code endpoint.
 // No-op while a request is already in flight.
+// @complete
 - (void)startConversionHttp {
     if (_downloader != nil) {
         return;
@@ -448,6 +455,7 @@
 
 // @ 0x1da60 — POST succeeded: parse the JSON, show the issued pass (or an
 // error).
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     id errorCode = [json objectForKey:@"ErrorCode"];
@@ -485,6 +493,7 @@
 }
 
 // @ 0x1dc84 — POST failed: drop the request and show the network-error alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_indicator stopAnimating];
@@ -501,6 +510,7 @@
 
 // @ 0x1dd50 — fade the panel out over 0.3s; endCloseAnimation fires when it
 // stops.
+// @complete
 - (void)startCloseAnimation {
     if (isAnimationing) {
         return;
@@ -516,6 +526,7 @@
 
 // @ 0x1de20 — close fade finished: tear down and notify the root view
 // controller.
+// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();

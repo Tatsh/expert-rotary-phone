@@ -44,6 +44,7 @@ static UIViewController *RootVC() {
 // @ 0x802e0 — 65 px rows; always a borderless, clear-backgrounded table (the
 // tiles are drawn per-cell). On an iPad running pre-iOS 7, add a 20 px top
 // content inset.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
         self.tableView.rowHeight = 65.0f;
@@ -65,6 +66,7 @@ static UIViewController *RootVC() {
 // @ 0x80488 — wrap self in a navigation controller (the phone presentation),
 // give it a custom "navi_btn_back" back button wired to -settingClose, and set
 // the nav-bar background image.
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
@@ -90,14 +92,16 @@ static UIViewController *RootVC() {
 }
 
 // dealloc @ 0x80668 — ARC-omitted (chained to super only; _howtoViewCtrlPad
-// released by ARC).
+// released by ARC). @complete
 
 // @ 0x80694
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 // @ 0x806c0
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -105,6 +109,7 @@ static UIViewController *RootVC() {
 #pragma mark - Modal open/close animation (shared lifecycle)
 
 // @ 0x806ec — fade the view + nav view in over 0.5s.
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -122,12 +127,14 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x80818
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x80830 — play the cancel/back SE, then fade the view + nav view out over
 // ~0.3s.
+// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2); // cancel SE (Ghidra: SysSePlayIntoSlot(2))
     if (_isAnimationing) {
@@ -144,6 +151,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x80950 — remove and hand control back to MainViewController.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(SettingEndCallBack)];
@@ -151,6 +159,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x811b8 — back-button action.
+// @complete
 - (void)settingClose {
     [self startCloseAnimation];
 }
@@ -158,17 +167,20 @@ static UIViewController *RootVC() {
 #pragma mark - Table (the two how-to topics)
 
 // @ 0x809bc
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x809c0
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return 2; // ゲームプレー / トレジャーモード
 }
 
 // @ 0x809c4 — build a rounded, patterned tile with a per-row coloured border
 // and a centred DFSoGei label. Reuse id is "Cell<section>-<row>".
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -237,6 +249,7 @@ static UIViewController *RootVC() {
 
 // @ 0x80f1c — play the decide SE, then present the how-to tutorial for the
 // tapped row.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     neEngine::playSystemSe(1); // decide SE (Ghidra: SysSePlayIntoSlot(1))
 

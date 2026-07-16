@@ -74,6 +74,7 @@
 
 // @ 0xe5430 — build the header plate, dimmed dummy overlay + spinner, and the
 // back button.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
         CGRect viewFrame = self.view ? self.view.frame : CGRectZero;
@@ -148,6 +149,7 @@
 }
 
 // @ 0xe5c5c — reveal the dummy overlay and kick off the download.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -159,16 +161,19 @@
 #pragma mark - Table
 
 // @ 0xe5cf8
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xe5cfc
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _frinedDataArray ? [_frinedDataArray count] : 0;
 }
 
 // @ 0xe5d24
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -183,12 +188,14 @@
 }
 
 // @ 0xe5e3c
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xe5e40 — raise the FreeRequestDetail confirm overlay for the tapped row
 // (section 0 only).
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
@@ -224,6 +231,7 @@
 // @ 0xe60cc — unbox each FriendListData row (its two __unsafe_unretained
 // NSString fields), then drop the array. Mirrors -[DownloadMain
 // releaseFriendList].
+// @complete
 - (void)releaseFriendList {
     if (_frinedDataArray == nil) {
         return;
@@ -240,6 +248,7 @@
 // @ 0xe61e0 — recommend-friend list arrived: alert on a nil response, else
 // parse the "List" array into FriendListData rows and reload. Always drops the
 // downloader + hides the spinner.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     static NSString *const kDiff[3] = {@"N", @"H", @"Ex"};
     static NSString *const kRankSuffix[5] = {@"S", @"AAA", @"AA", @"A", @"B"};
@@ -298,6 +307,7 @@
 
 // @ 0xe6c80 — download failed: drop the downloader, hide the spinner, show the
 // failure alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     _dummyView.view.hidden = YES;
@@ -316,6 +326,7 @@
 
 // @ 0xe6d60 — POST the recommend-friend request (once), revealing the spinner
 // overlay.
+// @complete
 - (void)startGetRecommendFriendHttp {
     if (_downloader != nil) {
         return;
@@ -331,6 +342,7 @@
 
 // @ 0xe6ea4 — back button: pop this list (blocked while a confirm overlay is
 // open).
+// @complete
 - (void)backButtonFunc {
     if (_freeRequestDetail != nil && [_freeRequestDetail isEnabled]) {
         return;
@@ -346,6 +358,7 @@
 // dead controller) and unbox the retained row strings before teardown. Kept
 // under ARC because it cancels a Downloader; the object-ivar releases are
 // ARC-managed.
+// @complete
 - (void)dealloc {
     if (_downloader != nil) {
         [_downloader cancel];

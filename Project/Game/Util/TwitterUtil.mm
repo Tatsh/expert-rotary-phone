@@ -16,6 +16,11 @@
 // Present the Twitter compose sheet with `text` + optional `image` over the
 // app's root view controller. Shared by -tweet and +tweetWithText:image: (the
 // binary inlines the same body in both). Ghidra: FUN_00078a4c / FUN_00078bb8.
+// Verified against the completion block @ 0x78b10: `cmp result,#2; bcc` skips
+// the alert for result < 2 (fires it for result > Done), building the CommonAlert
+// with title nil / cancel nil / other "OK", then always re-fetches the root VC
+// (bl 0xb194) and tail-calls dismissViewControllerAnimated:1 completion:nil.
+// @complete
 static void PresentTweet(NSString *text, UIImage *image) {
 #if !defined(__IPHONE_11_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_11_0
     UIViewController *root = neSceneManager::rootViewController();

@@ -27,6 +27,7 @@
 @implementation InputOTPViewCtrl
 
 // @ 0x78d18
+// @complete
 - (instancetype)initWithCategoryView:(CheckerCategoryViewController *)categoryView {
     self = [super init];
     if (self != nil) {
@@ -124,15 +125,16 @@
     return self;
 }
 
-// @ 0x79544 — the binary releases _dummyView (automatic under ARC) and chains
-// to super; the observers registered in -initWithCategoryView: are torn down
-// here so they never dangle after this controller is gone (KEEP — real cleanup
-// work).
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
+// dealloc @ 0x79544 — the binary only releases _dummyView (both the -release and
+// the [super dealloc] tail are ARC-implicit) and does NOT unregister the two
+// NSNotificationCenter observers added in -initWithCategoryView:; there is no
+// -removeObserver: call in the disassembly (verified: it loads the _dummyView
+// ivar + "release", sends it, then chains "dealloc" to super — nothing else).
+// Nothing to preserve under ARC, so -dealloc is omitted.
+// @complete
 
 // @ 0x79698
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation == UIInterfaceOrientationPortrait;
 }
@@ -140,11 +142,13 @@
 #pragma mark - UITextFieldDelegate
 
 // @ 0x796a4
+// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     return YES;
 }
 
 // @ 0x796a8
+// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     if (textField == _otpField) {
         [textField resignFirstResponder];
@@ -153,6 +157,7 @@
 }
 
 // @ 0x798bc — cap the field at 16 characters.
+// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -166,6 +171,7 @@
 
 // @ 0x796d4 — submit a non-empty code to the owner, then pop; always plays the
 // SE.
+// @complete
 - (void)touchedDecideButton:(id)sender {
     NSString *code = _otpField.text;
     if (code.length != 0) {
@@ -180,6 +186,7 @@
 }
 
 // @ 0x797c4
+// @complete
 - (void)touchedBackButton:(id)sender {
     neSceneManager::shared();
     neEngine::playSystemSe(2); // cancel SE
@@ -190,6 +197,7 @@
 
 // @ 0x79860 — tear down the pushed nav view and notify the app root that the
 // applilink flow has ended.
+// @complete
 - (void)endDirectCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
@@ -202,10 +210,12 @@
 #pragma mark - Keyboard notifications
 
 // @ 0x798f8 — registered in -initWithCategoryView:; no-op in the binary.
+// @complete
 - (void)keyboardWasShown:(NSNotification *)notification {
 }
 
 // @ 0x798fc — registered in -initWithCategoryView:; no-op in the binary.
+// @complete
 - (void)keyboardWillBeHidden:(NSNotification *)notification {
 }
 

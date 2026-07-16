@@ -93,6 +93,7 @@ typedef struct SubMapData {
 @synthesize delegate = _delegate;
 
 // @ 0xc1ea0 — build the area list for `mainMapId`.
+// @complete
 - (instancetype)initWithTreasureData:(NSArray *)treasureData
                         mapHeadArray:(NSArray *)mapHeadArray
                            mainMapId:(short)mainMapId {
@@ -202,6 +203,7 @@ typedef struct SubMapData {
 
 // @ 0xc2aa0 — add the left-swipe recogniser (phone) and reveal the overlay
 // host.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (!neSceneManager::isPadDisplay()) {
@@ -213,27 +215,31 @@ typedef struct SubMapData {
 }
 
 // @ 0xc2b80 — a rightward pan (translation.x > 80) pops the screen.
+// @complete
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer {
     if (recognizer != nil && [recognizer translationInView:self.view].x > 80.0f) { // DAT_000c2be8
         [self backButtonFunc];
     }
 }
 
-// didReceiveMemoryWarning @ 0xc2bec — super-only override, ARC/omit.
+// didReceiveMemoryWarning @ 0xc2bec — super-only override, ARC/omit. @complete
 
 #pragma mark - Table
 
 // @ 0xc2c18
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xc2c1c
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _subMapArray ? [_subMapArray count] : 0;
 }
 
 // @ 0xc2c44
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -248,12 +254,15 @@ typedef struct SubMapData {
 }
 
 // @ 0xc2d50
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xc2d54 — choose an area: snapshot the pending treasure, then request its
-// visitor.
+// visitor. (mapId = mainMapId*10 + subMapId; rng.setSeed(time(NULL));
+// raw0x48 = getRandRangeInt(100); coalesced 5-byte clear at tmp+0x4c — verified.)
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0 || _isDecide) {
         return;
@@ -301,7 +310,9 @@ typedef struct SubMapData {
 #pragma mark - Close animation
 
 // @ 0xc3088 — animate the nav host out (unless a pad overlay owner will handle
-// it).
+// it). (The binary's pad+delegate branch falls through to a bare commitAnimations
+// no-op, equivalent to skipping the block as reconstructed.)
+// @complete
 - (void)startCloseAnimation {
     if (!neSceneManager::isPadDisplay() || _delegate == nil) {
         [UIView beginAnimations:nil context:NULL];
@@ -315,6 +326,7 @@ typedef struct SubMapData {
 }
 
 // @ 0xc31a8 — remove the nav host and notify the root map controller.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [(MainViewController *)neSceneManager::rootViewController() MapSelectEndCallBack];
@@ -323,6 +335,7 @@ typedef struct SubMapData {
 #pragma mark - DownloadMain delegate
 
 // @ 0xc3204 — visitor request finished: hide the spinner, detach, and close.
+// @complete
 - (void)downloadMainFinished:(NSNumber *)success {
     _dummyView.view.hidden = YES;
     [[DownloadMain getInstance] setDelegateGetVisitor:nil];
@@ -332,6 +345,7 @@ typedef struct SubMapData {
 #pragma mark - Navigation
 
 // @ 0xc3280 — back button / swipe: restore the map-select nav bar art and pop.
+// @complete
 - (void)backButtonFunc {
     if (_isDecide) {
         return;
@@ -347,7 +361,9 @@ typedef struct SubMapData {
 // @ 0xc2910 — detach from DownloadMain's visitor delegate before teardown. Kept
 // under ARC because it clears a DownloadMain delegate; the _subMapArray string
 // releases and the _dummyView release are ARC-managed (the SubMapData strings
-// are __unsafe_unretained — see honesty note).
+// are __unsafe_unretained — see honesty note; the binary manually releases them
+// at 0xc29fe/0xc2a0a, deliberately ARC-omitted here).
+// @complete
 - (void)dealloc {
     DownloadMain *dm = [DownloadMain getInstance];
     if ([dm delegateGetVisitor] == self) {

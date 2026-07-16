@@ -42,12 +42,14 @@
 }
 
 // @ 0xa59f0 — build the hub + wrap it in a navigation controller.
-// DEVIATION (unverified as written): the button/caption frames are best-effort
-// (NEON-spilled in the binary, as noted above) and the first-play tutorial push
-// is gated in the binary on BOTH ![UserSettingData isFriendSelected] AND
-// !neSceneManager::isPadDisplay() (the pad-flag read @ 0xa638a); the
-// reconstruction below omits the isPad guard. Left unmarked. The image names,
-// selectors, and the discarded-init/self-retention (@ 0xa5a18) are byte-verified.
+// Verified against the disassembly: the discarded-init/self-retention (@ 0xa5a18),
+// the image names and selectors, and the first-play tutorial gate. The tutorial
+// push at 0xa6390 is reached only when BOTH ![UserSettingData isFriendSelected]
+// (@ 0xa636e, `tst; bne skip`) AND !neSceneManager::isPadDisplay() (the pad flag
+// read via bl 0xb194 / `ldrb [r0,#0x10]` @ 0xa638a, `cmp #0; bne skip`) hold.
+// The button/caption frames remain the centre-relative vertical stack noted in
+// the file header (the exact origins are NEON-spilled from runtime .size).
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // The binary (0xa5a18) calls -init only for its side effects and keeps the
     // original self; the result is intentionally discarded, so this is not
@@ -113,9 +115,9 @@
         y += bimg.size.height + 20.0f;
     }
 
-    // On first entry (this is the iPhone hub) push the friend how-to tutorial,
-    // then mark it seen.
-    if (![UserSettingData isFriendSelected]) {
+    // On first entry (this is the iPhone hub only) push the friend how-to
+    // tutorial, then mark it seen.
+    if (![UserSettingData isFriendSelected] && !neSceneManager::isPadDisplay()) {
         HowToViewCtrl *howto =
             [[HowToViewCtrl alloc] initWithFileNameArray:@[ @"firstplay_friend" ]];
         howto.isCloseButtonEnable = YES;

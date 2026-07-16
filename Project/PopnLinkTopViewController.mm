@@ -47,6 +47,14 @@ static UIViewController *RootVC() {
 // @ 0xccacc — lay out the backdrop, the three buttons (KID / checker / quiz)
 // and their caption images, then seed the checker / quiz enabled state from the
 // link flag.
+// Verified against disassembly: yAdj -20 (mvn #0x13) / 0 for displayType 2;
+// btnX 15.0f (0x41700000) / 0 pad; kidY 189 (0xbd) / 14 (0xe) + yAdj; checkerY
+// 151 (0x97) + yAdj + (pad ? bh + 72.0f (DAT_000cd138 = 0x42900000) : 0); quizY
+// 288 (0x120) + yAdj + same; caption pad offset +7.0f x (0x40e00000) / +92.0f y
+// (DAT_000cd2dc = 0x42b80000); phone captions x = 22.0f (0x41b00000), y 106
+// (0x6a) / 243 (0xf3) / 380 (0x17c) + yAdj; both link buttons seeded from
+// neAppEventCenter::linkButtonsEnabled (ldrsb [center + 0x30]).
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         int displayType = [AppDelegate appDelegate].displayType;
@@ -138,6 +146,10 @@ static UIViewController *RootVC() {
 
 // @ 0xcd2e0 — build self, wrap it in a navigation controller with a back button
 // and the pop'n-link nav-bar art, and return that controller.
+// Verified against disassembly: -init is invoked on the original self (r10) and
+// its result is discarded (r10 kept), the nav controller is built from that same
+// self, and the returned value is the nav controller ([sp,#0xc]).
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // The binary calls -init only for its side effects and keeps the original
     // self; the result is intentionally discarded, so this is not
@@ -163,6 +175,7 @@ static UIViewController *RootVC() {
 
 // @ 0xcd4e4 — re-apply the checker / quiz enabled state when the screen
 // reappears.
+// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     if (_btnChecker) {
@@ -176,6 +189,9 @@ static UIViewController *RootVC() {
 // didReceiveMemoryWarning @ 0xcd57c — super-only override, omitted.
 
 // @ 0xcca48 — external nudge to re-sync the link-gated buttons.
+// Verified against disassembly: both buttons re-seeded from linkButtonsEnabled,
+// then a tail-call to reloadInputViews.
+// @complete
 - (void)updateButtonEnable {
     if (_btnChecker) {
         _btnChecker.enabled = neAppEventCenter::linkButtonsEnabled();
@@ -191,6 +207,11 @@ static UIViewController *RootVC() {
 // @ 0xcd5a8 — on the very first, not-yet-linked entry, push the KID-input
 // screen (and, the first time ever, the "firstplay_popnlink" how-to); then fade
 // the view + nav view in.
+// Verified against disassembly: the gate is if (!linkButtonsEnabled()); the
+// first-time branch keys on !isPopnLinkSelected (tst; beq) and does pl_navbar +
+// how-to + saveIsPopnLinkSelected:YES, the else does input_kid_navbar; the fade
+// duration is the exact double 0.5 (vmov.f64 0x3fe0000000000000).
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -232,12 +253,18 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xcd8f4
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xcd908 — cancel SE, then fade out (phone, only when we are the top VC) or
 // forward the close to the pad split delegate.
+// Verified against disassembly: playSystemSe(2); the pad branch tail-forwards to
+// [_delegate startCloseAnimation]; the phone fade duration is the single 0.3f
+// promoted to double (vldr.64 0x3fd3333340000000 at DAT_000cda60), unlike the
+// 0.5 open fade.
+// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2);
     if (!neSceneManager::isPadDisplay()) {
@@ -246,7 +273,8 @@ static UIViewController *RootVC() {
         }
         _isAnimationing = NO; // faithful to the binary (no re-entrancy latch here)
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.5];
+        // 0.3f promoted to double, not 0.5 (DAT_000cda60 = 0x3fd3333340000000).
+        [UIView setAnimationDuration:0.3];
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
         self.view.alpha = 0;
@@ -258,6 +286,9 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xcda68 — remove the nav view and notify the host that pop'n-link closed.
+// Verified against disassembly: removeFromSuperview, then RootVC()
+// PopnLinkEndCallBack, then _isAnimationing cleared to 0, in that order.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [(MainViewController *)RootVC() PopnLinkEndCallBack];
@@ -268,6 +299,10 @@ static UIViewController *RootVC() {
 
 // @ 0xcdad4 — KID info: phone pushes the KID-input screen; pad forwards to the
 // delegate.
+// Verified against disassembly: pad branch forwards to the delegate; phone
+// pushes InputKID animated:YES with input_kid_navbar; playSystemSe(1) runs on
+// both paths as a tail-call.
+// @complete
 - (void)onInKidButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {
@@ -286,6 +321,9 @@ static UIViewController *RootVC() {
 
 // @ 0xcdc18 — score checker: phone pushes the checker category list; pad
 // forwards.
+// Verified against disassembly: phone pushes CheckerCategoryViewController
+// initWithStyle:1 animated:YES with ppc_navbar; playSystemSe(1) tail-call.
+// @complete
 - (void)onScoreCheckerButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {
@@ -304,6 +342,9 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xcdd5c — quiz: phone pushes the quiz screen; pad forwards.
+// Verified against disassembly: phone pushes QuizMainViewController
+// initWithStyle:1 animated:YES with pq_navbar; playSystemSe(1) tail-call.
+// @complete
 - (void)onQuizButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {

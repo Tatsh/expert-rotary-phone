@@ -56,6 +56,7 @@ static UIViewController *RootVC() {
 
 // @ 0xd32b8 — 65px rows, no separators, clear background; a top inset on
 // pre-iOS 7 iPad.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
         self.tableView.rowHeight = 65.0f; // 0x42820000
@@ -73,6 +74,7 @@ static UIViewController *RootVC() {
 
 // @ 0xd3460 — wrap self (grouped) in a nav controller, add a back button +
 // nav-bar art.
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
@@ -93,11 +95,13 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd3694
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 // @ 0xd36c0
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -105,17 +109,20 @@ static UIViewController *RootVC() {
 #pragma mark - Table
 
 // @ 0xd39bc
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xd39c0
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return 3; // お問い合わせ / 特定商取引法に基づく表示 / 利用規約
 }
 
 // @ 0xd39c4 — each row is a rounded, colour-bordered "back_bg_st" button with a
 // centred label.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -191,6 +198,9 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd3f70 — dispatch the tapped support action, then play the decide SE.
+// (The binary uses single-arg -openURL:; the modern -openURL:options: path is a
+// current-SDK accommodation, faithful in the #else branch.)
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     switch (indexPath.row) {
     case 2: { // 利用規約 -> in-app Terms-of-Use overlay
@@ -240,6 +250,7 @@ static UIViewController *RootVC() {
 #pragma mark - Modal open/close animation (shared lifecycle)
 
 // @ 0xd36ec — fade the view + nav view in over 0.5s.
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -257,11 +268,13 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd3818
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
-// @ 0xd3830 — cancel SE, then fade out; on stop notify the host.
+// @ 0xd3830 — cancel SE, then fade out over 0.3s; on stop notify the host.
+// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2); // cancel/back SE
     if (_isAnimationing) {
@@ -269,7 +282,8 @@ static UIViewController *RootVC() {
     }
     _isAnimationing = YES;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
+    // 0.3: double 0x3fd3333340000000 @ 0xd3948 (close fade; open uses 0.5).
+    [UIView setAnimationDuration:0.3];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
     self.view.alpha = 0;
@@ -278,6 +292,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd3950 — remove the nav view and hand control back to MainViewController.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(SettingEndCallBack)];
@@ -285,10 +300,12 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xd4170 — back-button action.
+// @complete
 - (void)settingClose {
     [self startCloseAnimation];
 }
 
-// dealloc @ 0xd3640 — ARC-omitted (released object ivars only).
+// dealloc @ 0xd3640 — ARC-omitted (the binary explicitly releases _policyView;
+// ARC synthesises that). @complete
 
 @end

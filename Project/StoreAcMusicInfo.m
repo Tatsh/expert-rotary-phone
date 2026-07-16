@@ -30,6 +30,9 @@
 
 // Trivial ivar getters. Ghidra: acMusicId @ 0x854e4, title @ 0x854f4, genre @
 // 0x85504, itemURL @ 0x85514, sampleURL @ 0x85524.
+// Verified: each is a single `ldr r0,[r0,ivarOffset]; bx lr` load of its
+// backing ivar.
+// @complete
 - (int)acMusicId {
     return m_AcMusicId;
 }

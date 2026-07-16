@@ -54,6 +54,7 @@ static NSString *const kCategoryBanner[] = {
 // category header banner; the "friman" backdrop (phone only); a back button;
 // and the right-hand order-toggle button. The rows are sorted per
 // UserSettingData.isAcvGenreName.
+// @complete
 - (instancetype)initWithData:(NSArray *)acMusicDataArray {
     if (!(self = [super initWithStyle:UITableViewStyleGrouped])) {
         return nil;
@@ -141,6 +142,7 @@ static NSString *const kCategoryBanner[] = {
 // @ 0xcc218 — drop this screen as DownloadMain's visitor delegate if it still
 // holds it; the UIImage / UIButton / NSArray ivars are released automatically
 // under ARC.
+// @complete
 - (void)dealloc {
     DownloadMain *dl = [DownloadMain getInstance];
     if ((id)dl.delegateGetVisitor == self) {
@@ -150,6 +152,7 @@ static NSString *const kCategoryBanner[] = {
 
 // @ 0xcc2ec — after loading, poke the scene manager (populates the pad-display
 // flag).
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -157,6 +160,7 @@ static NSString *const kCategoryBanner[] = {
 
 // @ 0xcc31c — treat a rightward pan (translation.x > 80) as a back-button
 // press.
+// @complete
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer {
     if (recognizer == nil) {
         return;
@@ -168,6 +172,7 @@ static NSString *const kCategoryBanner[] = {
 }
 
 // @ 0xcc388 — super only.
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -175,22 +180,27 @@ static NSString *const kCategoryBanner[] = {
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0xcc3b4
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xcc3b8 — one row per listed song.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (_acMusicDataArray != nil) ? (NSInteger)_acMusicDataArray.count : 0;
 }
 
-// @ 0xcc3e0 — one AcViewerMusicCell per song (reused by "Cell%ld_%ld"); on
+// @ 0xcc3e0 — one AcViewerMusicCell per song (reused by "Cell%ld-%ld"); on
 // first build wire the four difficulty buttons to touchedSheetButton:event:,
 // then bind the row's song.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // The reuse identifier uses a hyphen separator (CFString @ 0x1029ae:
+    // "Cell%ld-%ld"), not an underscore.
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     AcViewerMusicCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerMusicCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -213,6 +223,7 @@ static NSString *const kCategoryBanner[] = {
 }
 
 // @ 0xcc588 — no section headers.
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
@@ -221,6 +232,7 @@ static NSString *const kCategoryBanner[] = {
 
 // @ 0xcc58c — BACK: only when this screen is the nav top VC; play the cancel
 // SE, restore the category nav-bar art and pop (animated on phone).
+// @complete
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -235,6 +247,7 @@ static NSString *const kCategoryBanner[] = {
 
 // @ 0xcc664 — toggle genre/song-name ordering: play the cancel SE, flip the
 // stored mode, re-sort the rows, swap the toggle button art and reload.
+// @complete
 - (void)touchedChangeButton:(id)sender {
     neEngine::playSystemSe(2);
     BOOL wasGenreName = [UserSettingData isAcvGenreName];
@@ -251,6 +264,7 @@ static NSString *const kCategoryBanner[] = {
 }
 
 // @ 0xcc7ac — the table index path under the touch that raised `event`.
+// @complete
 - (NSIndexPath *)indexPathForControlEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
     UITableView *tableView = self.tableView;
@@ -263,6 +277,7 @@ static NSString *const kCategoryBanner[] = {
 // AC-viewer's current selection (music id / difficulty), swap the nav-bar to
 // the option art, push the option screen (forwarding the delegate on iPad) and
 // play the decide SE.
+// @complete
 - (void)touchedSheetButton:(id)sender event:(UIEvent *)event {
     if (self.navigationController.topViewController != self) {
         return;

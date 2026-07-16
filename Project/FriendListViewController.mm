@@ -35,6 +35,7 @@
 
 // @ 0xb0774 — grouped table styling, header spacer, loading overlay, back +
 // sort bar buttons, and the "no friends" placeholder image.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     _isBestScoreSort = [UserSettingData isBestScoreSort];
@@ -84,12 +85,16 @@
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
     [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
     if (!isPad) {
+        // Ghidra @ 0xb0c48: the y coordinate truncates height*0.5 to an int
+        // (vcvt.s32.f32) before subtracting 10; the x coordinate is not
+        // truncated.
         spinner.center =
-            CGPointMake(viewFrame.size.width * 0.5f, viewFrame.size.height * 0.5f - 10.0f);
+            CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
     } else {
-        // Pad: fixed x=214, y still tracks the view mid-height (0x43560000; not the
-        // lonely image's 160/328).
-        spinner.center = CGPointMake(214.0f, viewFrame.size.height * 0.5f - 10.0f);
+        // Pad: fixed x=214, y still tracks the (truncated) view mid-height minus
+        // 10 (0x43560000 = 214; not the lonely image's 160/328). Ghidra @
+        // 0xb0c12 truncates the same way as the phone path.
+        spinner.center = CGPointMake(214.0f, (int)(viewFrame.size.height * 0.5f) - 10);
     }
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
@@ -135,6 +140,7 @@
 }
 
 // @ 0xb1144
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -144,16 +150,19 @@
 }
 
 // @ 0xb11e8
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xb1214
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xb1218 — rows only once there is more than the self row.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (_frinedDataArray != nil) {
         NSUInteger count = [_frinedDataArray count];
@@ -165,10 +174,13 @@
 }
 
 // @ 0xb1254
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // The reuse identifier uses hyphen separators (CFString @ 0x10af18:
+    // "Cell%d-%d"), not underscores.
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell_%d_%d", (int)indexPath.section, (int)indexPath.row];
+        [NSString stringWithFormat:@"Cell%d-%d", (int)indexPath.section, (int)indexPath.row];
     FriendListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendListCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -182,12 +194,14 @@
 }
 
 // @ 0xb13b0
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xb13b4 — raise the friend detail overlay for the tapped row (guarded
 // against re-entry while one is already up).
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UIViewController *root = neSceneManager::rootViewController();
     if (indexPath.section != 0) {
@@ -217,6 +231,7 @@
 
 // @ 0xb1980 — restore the hub nav bar art and pop (blocked while a detail
 // overlay is up).
+// @complete
 - (void)backButtonFunc {
     if (_detailView != nil && [_detailView isEnabled]) {
         return;
@@ -230,6 +245,7 @@
 
 // @ 0xb1a44 — flip the sort mode, persist it, re-sort + reload, and swap the
 // button art.
+// @complete
 - (void)sortButtonFunc {
     if (_frinedDataArray == nil) {
         return;
@@ -256,6 +272,15 @@
 // @ 0xb15ec — friend list arrived: on failure alert; on success prepend the
 // local player as the self row, sort, reload, and show/hide the placeholder +
 // scrolling.
+// NOT @complete: verified faithful except for one disclosed gap. After building
+// the self row the binary calls neAppEventCenter::shared() then FUN_00029644
+// (@ 0xb16b2/0xb16c4) to aggregate the local player's own clear counts into the
+// row's rank / perfect / fullComboOnly arrays; that aggregation is not
+// reconstructed here, so those tallies are left zero (identity/name/charaId are
+// faithful, and the row still sorts and renders correctly). The failure alert,
+// mutableCopy of friendListArray, NSValue boxing, sortedArrayUsingFunction
+// (total/best per _isBestScoreSort), reload, and placeholder/scroll toggles all
+// match the disassembly.
 - (void)downloadMainFinished:(NSNumber *)result {
     _dummyView.view.hidden = YES;
 
@@ -311,7 +336,9 @@
       int vb = best ? db.bestScore : db.totalScore;
       // On a score tie the self row (nil playerId) sorts first (matches the
       // binary comparators FUN_000b1934 / FUN_000b18e8: return -1/1 for a/b
-      // playerId==0).
+      // playerId==0). Verified against both: they getValue a/b, compare the
+      // total- or best-score field (b-a, so higher score sorts first), and on a
+      // tie return -1 when a.playerId==0 or 1 when b.playerId==0.
       if (va == vb) {
           if (da.playerId == nil) {
               return NSOrderedAscending;
@@ -329,6 +356,7 @@
 }
 
 // @ 0xb1064
+// @complete
 - (void)dealloc {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl delegateGetFriendList] == self) {

@@ -49,6 +49,8 @@ static UIViewController *RootVC() {
 // Ghidra: settingTableSyncRightViewFrame @ 0xb6d54
 // Zeroes the right navigation controller view's width while preserving its
 // x-origin and height (collapses the pane horizontally).
+// The nil-view branch (0xb6d96) uses CGRectZero, matching the ternary here.
+// @complete
 static void settingTableSyncRightViewFrame(SettingTableSplitViewController *self) {
     UIView *v = self->_rightViewCtrl.view;
     CGRect fr = v ? v.frame : CGRectZero;
@@ -58,12 +60,15 @@ static void settingTableSyncRightViewFrame(SettingTableSplitViewController *self
 
 // Ghidra: settingTableSetRightViewFrame @ 0xb6f2c
 // Applies the tab-indexed entry of _viewFrm to the right nav controller view.
+// The binary indexes with index*16 (CGRect stride) off the ivar base (0xb6f70).
+// @complete
 static void settingTableSetRightViewFrame(SettingTableSplitViewController *self, NSInteger index) {
     self->_rightViewCtrl.view.frame = self->_viewFrm[index];
 }
 
 // Ghidra: settingTableSetArrowFrame @ 0xb709c
 // Applies the tab-indexed entry of _arrowFrm to the selection arrow image view.
+// @complete
 static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSInteger index) {
     self->_arrowImageView.frame = self->_arrowFrm[index];
 }
@@ -77,6 +82,13 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 // left SettingTopViewController column (self is its split delegate), the right
 // rounded nav pane pre-loaded with the ゲーム table, the selection arrow, and a
 // top cover strip.
+// Verified against disassembly: the four _viewFrm ((388,182,320,716),
+// (388,332,320,266), (388,332,320,316), (388,182,320,716)), the four _arrowFrm
+// (368 x; 317/417/517/617 y; arrow size), the +65 x / +100 y column offsets
+// (literals at 0xb6610 / 0xb660c), cover alpha 0.5, border colour 0/0.835/0.679,
+// background 0.953, border width 3, corner radius 6, and the "pl_konamiid_arrow"
+// / "custom_bg" / "set_game_navbar" image names all match.
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         // Right-pane frame per tab (the shorter panes leave room for the arrow
@@ -169,6 +181,8 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 #pragma mark - Open/close animation (shared modal-VC lifecycle)
 
 // @ 0xb66dc — fade the view + nav view in over 0.5 s.
+// The open duration is inline vmov 0x3fe0000000000000 (0.5 s exactly).
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -186,18 +200,22 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 }
 
 // @ 0xb6808
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
-// @ 0xb6820 — fade the view + nav view out over 0.5 s.
+// @ 0xb6820 — fade the view + nav view out over 0.3 s.
+// The close duration literal at 0xb6920 decodes to 0x3fd3333340000000 (the
+// double widening of 0.3f), i.e. 0.3 s, unlike the 0.5 s open fade.
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
     }
     _isAnimationing = YES;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
+    [UIView setAnimationDuration:0.3];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
     self.view.alpha = 0;
@@ -206,6 +224,8 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 }
 
 // @ 0xb6928 — remove the panel and notify the settings host it closed.
+// Order matches the binary: removeFromSuperview, performSelector, flag = NO.
+// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     [RootVC() performSelector:@selector(SettingEndCallBack)];
@@ -215,7 +235,8 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 #pragma mark - SettingTopViewControllerDalegate (left-column button taps)
 
 // @ 0xb6984 / 0xb6998 / 0xb69ac / 0xb69c0 — each button switches the right pane
-// to its tab.
+// to its tab. Each is a tail call to startViewAnimation: with 0/1/2/3.
+// @complete
 - (void)onGameButtonTouched:(id)sender {
     [self startViewAnimation:0];
 }
@@ -233,6 +254,14 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 
 // @ 0xb69d4 — cross-dissolve the right pane to the tapped tab's table (resizing
 // the pane to that tab's frame) and slide the selection arrow to its row.
+// Verified: guard on _isAnimationing then _selectedIndex == index; the switch
+// (tbb at 0xb6a8c) maps 0/1/2/3 to Game/Howto/Customer/Other with navbar names
+// set_game_navbar / set_howto_navbar / set_inquiry_navbar / set_other_navbar;
+// case 3 also sends setViewCmnDelegate:self (0xb6bc8); the default (index > 3)
+// returns; outer transition duration 0.25 with CurveEaseIn (options 0x10000),
+// arrow animateWithDuration 0.5 with AllowUserInteraction (options 0x2); the
+// saved right bar button item is restored in the innermost completion.
+// @complete
 - (void)startViewAnimation:(int)index {
     if (_isAnimationing || _selectedIndex == index) {
         return;
@@ -316,7 +345,9 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 #pragma mark - Handlers
 
 // @ 0xb7100 — a backdrop / top-cover tap: play the cancel SE and fade the panel
-// out.
+// out. Verified: guard on _isAnimationing, playSystemSe(2) (0xb712a, r1 = 2),
+// then tail call to startCloseAnimation.
+// @complete
 - (void)handleTapCoverView {
     if (_isAnimationing) {
         return;

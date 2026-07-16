@@ -62,7 +62,7 @@ enum {
 - (void)touchEvent:(id)sender; // @ 0x7c8e0
 - (void)showAlertView;         // @ 0x7cc68
 + (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:
-    (int)loginBonusId; // @ 0x7c05c (opaque blob; see note)
+    (int)loginBonusId; // inlined at every call site; see note
 @end
 
 // loginBonusId 0 — the default row used when no server campaign is active —
@@ -93,13 +93,16 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 
 @implementation LoginBonusView
 
-// @ 0x7c05c — the reward table for `loginBonusId`. The original computed
-// &blob[id * 0x600] into a 128-record-per-row baked table. id 0 (the default
-// row, no active campaign) is reproduced concretely above from the verified
-// extraction; server-campaign rows (id > 0) are additional baked-asset rows in
-// the original — dumpable the same way — and fall back to the original's
-// pointer arithmetic here (faithful, though those rows' data is not mapped into
-// this build).
+// The reward table for `loginBonusId`. The original inlined &blob[id * 0x600]
+// at every call site (base 0x1320d0, verified: getRewardMaxCnt @ 0x7bfa0 does
+// `id*3 << 9` == id*0x600; init @ 0x7c05c and getReward @ 0x7c632 repeat it), so
+// there is no standalone function here — this method reproduces that arithmetic.
+// id 0 (the default row, no active campaign) is reproduced concretely above from
+// the verified blob extraction; server-campaign rows (id > 0) are additional
+// baked-asset rows in the original — dumpable the same way — and fall back to the
+// original's pointer arithmetic here (faithful, though those rows' data is not
+// mapped into this build).
+// @complete
 + (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId {
     if (loginBonusId == 0) {
         return kLoginBonusRow0;
@@ -109,7 +112,9 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 }
 
 // @ 0x7bf70 — count reward rows until the terminator (type == 2), capped at
-// 128.
+// 128. (Binary computes base+id*0x600 inline, then +4 to the type field, 12-byte
+// stride — verified.)
+// @complete
 + (int)getRewardMaxCnt {
     int loginBonusId = [DownloadMain getInstance].loginBonusId;
     const LoginBonusRewardEntry *table = [self rewardTableForLoginBonusId:loginBonusId];
@@ -124,16 +129,21 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 }
 
 // @ 0x7bfc8 — nib path funnels into -init.
+// @complete
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     return [self init];
 }
 
 // @ 0x7bfd8 — frame path funnels into -init.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     return [self init];
 }
 
 // @ 0x7bfe8 — designated setup: size to the root scene view, build the board.
+// (Stamp grid x = (w+3)*col + 43, y = h*row + 113; loop guard loginCnt-1 <= i;
+// srand(playerId.intValue) — all verified.)
+// @complete
 - (instancetype)init {
     UIView *rootView = neSceneManager::rootViewController().view;
     CGRect frame = rootView ? rootView.frame : CGRectZero;
@@ -199,6 +209,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 }
 
 // @ 0x7c540 — drop the board background, then up-chain.
+// @complete
 - (void)dealloc {
     if (m_BgImgView != nil) {
         [m_BgImgView removeFromSuperview];
@@ -209,6 +220,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 
 // @ 0x7c594 — grant every reward whose unlock threshold was crossed since the
 // board was last acknowledged (m_OldLoginCnt < threshold <= current loginCnt).
+// @complete
 - (void)getReward {
     DownloadMain *dl = [DownloadMain getInstance];
     int loginBonusId = dl.loginBonusId;
@@ -233,6 +245,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 
 // @ 0x7c728 — grant rewards, remember today's count, reveal with a shrink-in
 // pop.
+// @complete
 - (void)show {
     [self getReward];
 
@@ -256,6 +269,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 
 // @ 0x7c8e0 — first board tap: stamp today's login_popn icon with a pop-in,
 // once.
+// @complete
 - (void)touchEvent:(id)sender {
     DownloadMain *dl = [DownloadMain getInstance];
     if (m_IsTouch) {
@@ -297,6 +311,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 
 // @ 0x7cc68 — advance to the next acknowledged day and describe its reward in a
 // gift-styled CustomAlertView (self is its delegate).
+// @complete
 - (void)showAlertView {
     DownloadMain *dl = [DownloadMain getInstance];
     int loginBonusId = dl.loginBonusId;
@@ -339,6 +354,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 }
 
 // @ 0x7ce50 — CustomAlertViewDelegate. Chain to the next reward day, or close.
+// @complete
 - (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     DownloadMain *dl = [DownloadMain getInstance];
     if (m_OldLoginCnt < dl.loginCnt) {

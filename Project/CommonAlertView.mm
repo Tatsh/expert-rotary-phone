@@ -46,23 +46,34 @@
 
 // @ 0x4a350
 //
-// NOTE: unverified/approximate against 0x4a350. The gradient-border colours and
-// the tint/text colours match the binary exactly (e.g. 0.506/1.0/0.9255 @
-// 0x4a58c, content tint 0.9177/0.8824 @ 0x4a7d0), and the build order matches,
-// but the card size and the content/message/button-row sub-frames are computed
-// by the binary from NEON-scaled constant tables (DAT_0004a7ac..a7b8: 325.0,
-// 350.0, 190.0, 40.0, 50.0, 0.5/1.0) rather than the fixed 384x260 / 256x176
-// and superview-sized frames used here. Left unmarked pending a table-faithful
-// geometry pass.
+// Verified against the disassembly's NEON geometry. Every frame is `uiScale *
+// constant + idiom-offset`, where uiScale (d8/`uVar25`) is DAT_0004a7ac/a7b0 =
+// 0.5 on phone, 1.0 on pad; the two additive idiom offsets are DAT_0004a7b4/a7b8
+// = {50.0 phone, 0.0 pad} (call it offX) and DAT_0004b340/b344 = {20.0 phone,
+// 0.0 pad} (offY). Constant table (all byte-read): 430.0 (card w, DAT_0004a794),
+// 325.0 (card h, DAT_0004a798), 350.0 / 190.0 (content w/h, DAT_0004a79c/a7a0),
+// 40.0 (content x=y, DAT_0004a7a4), 50.0 (message inset, DAT_0004a7a8), 6.0
+// (border thickness, 0x40c00000), 3.0 (inset, 0x40400000), 5.0 / 2.5 corner
+// radii (0x40a00000 / 0x40200000), message font 12/18 (DAT_0004b45c/b460), the
+// button-label x offset 10/14 (DAT_0004b464/b468), and the button-row base
+// 257.0 x 84.0 (DAT_0004b46c/b470). The message / title / button / button-row
+// sub-frames the binary derives from runtime .frame/.size/.center calls are
+// reproduced as such below.
+// @complete
 - (instancetype)initWithTitle:(NSString *)title
                       message:(NSString *)message
                      delegate:(id<CommonAlertViewDelegate>)delegate
             cancelButtonTitle:(NSString *)cancelButtonTitle
             otherButtonTitles:(NSString *)otherButtonTitles {
-    // Card size + position depend on the idiom (values from DAT_0004a7xx tables).
-    CGRect cardFrame =
-        neSceneManager::isPadDisplay() ? CGRectMake(0, 0, 384, 260) : CGRectMake(0, 0, 256, 176);
-    self = [super initWithFrame:cardFrame];
+    const BOOL isPad = neSceneManager::isPadDisplay();
+    const CGFloat uiScale = isPad ? 1.0f : 0.5f; // DAT_0004a7ac / DAT_0004a7b0
+    const CGFloat offX = isPad ? 0.0f : 50.0f;   // DAT_0004a7b8 / DAT_0004a7b4
+    const CGFloat offY = isPad ? 0.0f : 20.0f;   // DAT_0004b344 / DAT_0004b340
+
+    // Card size: scale*430 + offX + 6 (width), scale*325 + offY + 6 (height).
+    const CGFloat cardW = uiScale * 430.0f + offX + 6.0f;
+    const CGFloat cardH = uiScale * 325.0f + offY + 6.0f;
+    self = [super initWithFrame:CGRectMake(0, 0, cardW, cardH)];
     if (self == nil) {
         return nil;
     }
@@ -93,13 +104,25 @@
     [container addSubview:panel];
     [self addSubview:container];
 
-    // Content area (holds title + message), rounded, tinted.
-    UIView *content = [[UIView alloc] init]; // frame from DAT_0004a79c..a7a4
+    // Content area (holds title + message), rounded, tinted. Frame from the
+    // table: origin (scale*40, scale*40), size (scale*350 + offX, scale*190 +
+    // offY).
+    const CGFloat contentX = uiScale * 40.0f;
+    const CGFloat contentW = uiScale * 350.0f + offX;
+    const CGFloat contentH = uiScale * 190.0f + offY;
+    UIView *content =
+        [[UIView alloc] initWithFrame:CGRectMake(contentX, contentX, contentW, contentH)];
     content.backgroundColor = [UIColor colorWithRed:0.917f green:0.882f blue:0.882f alpha:1.0f];
     content.layer.cornerRadius = 5.0;
 
-    // Message: a non-editable CustomTextView.
-    _messageView = [[CustomTextView alloc] initWithFrame:CGRectZero];
+    // Message: a non-editable CustomTextView. Frame is the content frame shrunk
+    // by scale*50 on width and height (Ghidra: content.frame - scale*50).
+    const CGFloat msgInset = uiScale * 50.0f;
+    _messageView =
+        [[CustomTextView alloc] initWithFrame:CGRectMake(content.frame.origin.x,
+                                                         content.frame.origin.y,
+                                                         content.frame.size.width - msgInset,
+                                                         content.frame.size.height - msgInset)];
     _messageView.backgroundColor = [UIColor clearColor];
     _messageView.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
     _messageView.font = [UIFont fontWithName:AppMaruFontName()

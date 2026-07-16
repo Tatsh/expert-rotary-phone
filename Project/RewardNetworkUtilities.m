@@ -16,6 +16,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 @implementation RewardNetworkUtilities
 
 // @ 0xf9874
+// @complete
 + (NSMutableDictionary *)joinDictionary:(NSDictionary *)a withDictionary:(NSDictionary *)b {
     NSMutableDictionary *merged =
         [NSMutableDictionary dictionaryWithCapacity:[a count] + [b count]];
@@ -25,6 +26,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xf9910
+// @complete
 + (NSString *)userAgent {
     UIDevice *device = [UIDevice currentDevice];
     NSString *bundleVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
@@ -43,6 +45,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xf9af8
+// @complete
 + (NSMutableDictionary *)userAgentParameters {
     UIDevice *device = [UIDevice currentDevice];
     NSString *bundleVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
@@ -78,6 +81,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xf9e58 — read "hw.machine" once via sysctl and cache it.
+// @complete
 + (NSString *)deviceName {
     static NSString *cached = nil;
     if (cached == nil) {
@@ -100,6 +104,10 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xfa100
+// Verified against disassembly: array values use the "%@[]=%@" format (fixed
+// below); scalar values use "%@=%@"; the "?" vs "&" separator is chosen by
+// rangeOfString:@"?" == NSNotFound only when result is non-nil.
+// @complete
 + (NSString *)appendParametersToURL:(NSString *)url parameters:(NSDictionary *)parameters {
     NSString *result = url;
     for (id key in parameters) {
@@ -109,9 +117,11 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
             [pairs
                 addObject:[NSString stringWithFormat:@"%@=%@", key, [parameters objectForKey:key]]];
         } else {
+            // Array values use the bracketed "key[]=value" form (format literal @
+            // 0x116640, byte-verified) so repeated keys survive the join.
             for (NSUInteger i = 0; i < [value count]; i++) {
                 [pairs
-                    addObject:[NSString stringWithFormat:@"%@=%@", key, [value objectAtIndex:i]]];
+                    addObject:[NSString stringWithFormat:@"%@[]=%@", key, [value objectAtIndex:i]]];
             }
         }
         NSString *joined = [pairs componentsJoinedByString:@"&"];
@@ -125,6 +135,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xfa464
+// @complete
 + (NSString *)localeString {
     NSString *language = [[NSLocale preferredLanguages] objectAtIndex:0];
     if (language == nil) {
@@ -134,6 +145,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xfa4dc
+// @complete
 + (NSString *)countryCodeString {
     NSString *country = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
     if (country == nil) {
@@ -144,6 +156,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 
 // @ 0xfa560 — walk `responder` up: a window/application/view-controller counts
 // as a parent; a view recurses on its nextResponder.
+// @complete
 + (BOOL)hasParentViewController:(id)responder {
     if ([responder isKindOfClass:[UIWindow class]]) {
         return NO;
@@ -161,17 +174,24 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 }
 
 // @ 0xfa660
+// @complete
 + (BOOL)canUseRewardSdk {
     return [[UIDevice currentDevice].systemVersion doubleValue] >= 5.0;
 }
 
 // @ 0xfa6e4
+// @complete
 + (NSString *)getSdkVersion {
     return kRewardSdkVersion;
 }
 
 // @ 0xfa6fc — percent-escape for a URL query, escaping the reserved set
 // "!*'();:@&=+$,/?%#[]" (CFString @ 0x102c29) as UTF-8.
+// Verified against disassembly: the binary uses the pre-iOS-7
+// CFURLCreateStringByAddingPercentEscapes path with kCFStringEncodingUTF8
+// (0x08000100); the __IPHONE_7_0 branch is the modernised equivalent for the
+// rebuild.
+// @complete
 + (NSString *)URLEncodedString:(NSString *)string {
 #if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
     NSMutableCharacterSet *allowed = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
@@ -200,6 +220,10 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
 // @ 0xfc1d0 — percent-escape `string` for a URL query (escapes
 // "!*'();:@&=+$,/?%#[]"; UTF-8). file-static: identical to StoreUtil's
 // canonical urlEncodeString; kept for faithfulness.
+// Verified against disassembly: identical CFURLCreateStringByAddingPercentEscapes
+// call with kCFStringEncodingUTF8 (0x08000100) and the same escape set as
+// +URLEncodedString:; the __IPHONE_7_0 branch is the rebuild modernisation.
+// @complete
 static NSString *urlEncodeString(NSString *string) {
 #if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
     NSMutableCharacterSet *allowed = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];

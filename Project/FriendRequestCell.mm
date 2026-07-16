@@ -56,6 +56,12 @@
 // @ 0xb987c — build the row from a FriendRequestDataStruct. Rebuilt on every
 // reuse. Everything is added to the content view; the background art is
 // installed as the cell's backgroundView.
+// Verified against the disassembly: the charaId `sxth; cmp #0x1d; bgt` split
+// (bundle for <= 0x1d, app-support otherwise), the negative-charaId clamp
+// (`cmp #0; it lt; mov.lt #0`), the rgb(93,88,84) label colours
+// (0x3ebababb/0x3eb0b0b1/0x3ea8a8a9), the name font 0x41600000 (14.0) / date
+// font 0x41700000 (15.0), and setMinimumScaleFactor:0x41700000 (15.0).
+// @complete
 - (void)setFriendData:(NSValue *)friendData {
     FriendRequestDataStruct data;
     [friendData getValue:&data];

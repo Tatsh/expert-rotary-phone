@@ -12,12 +12,48 @@
 //  refined there).
 //
 
+#import <CoreGraphics/CoreGraphics.h>
+
 #import "StoreDetailHeaderView.h"
 #import "StorePackInfo.h"
 
 // The stretchable button-background font helper the binary uses (FUN_0005ef9c)
 // resolves to the pack font "DFSoGei-W5-WIN-RKSJ-H".
 static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
+
+// Ghidra: FUN_0005bf5c — build a vertically-flipped copy of `image`, cropped to
+// `reflectionHeight` points tall (used to draw a faded jacket reflection). The
+// binary allocates a bitmap context sized image.width x reflectionHeight (both
+// multiplied by the screen scale when the image responds to -scale and its
+// scale is not 1.0), draws the source into it, then applies a vertical flip
+// (CGContextScaleCTM y = -1) and re-draws to produce the mirrored image, finally
+// wrapping the CGImage back into a UIImage at the source scale. Reconstructed
+// here with UIGraphics image contexts, which handle the screen-scale bookkeeping
+// the binary does by hand (the CGBitmapContext width/height scale-multiply @
+// 0x5bfe6-0x5c052, the CGContextDrawImage @ 0x5c0f6, the flip transform table
+// load @ 0x5c134 / re-draw @ 0x5c170, and the imageWithCGImage:scale: /
+// imageWithCGImage: return @ 0x5c1fc / 0x5c216).
+// @complete
+static UIImage *StoreMakeReflection(UIImage *image, unsigned reflectionHeight) {
+    if (image == nil || reflectionHeight == 0) {
+        return nil;
+    }
+    const CGFloat width = image.size.width;
+    const CGFloat height = (CGFloat)reflectionHeight;
+    const CGRect fullRect = CGRectMake(0, 0, width, image.size.height);
+
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(width, height), NO, image.scale);
+    CGContextRef ctx = UIGraphicsGetCurrentContext();
+    // Flip vertically so the jacket is mirrored, then draw it clipped to the
+    // reflection height.
+    CGContextTranslateCTM(ctx, 0, height);
+    CGContextScaleCTM(ctx, 1.0f, -1.0f);
+    CGContextTranslateCTM(ctx, 0, height - image.size.height);
+    [image drawInRect:fullRect];
+    UIImage *reflection = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return reflection;
+}
 
 @implementation StoreDetailHeaderView {
     UIImageView *m_BgView;                // stretchable panel background
@@ -202,14 +238,19 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
 }
 
 // @ 0x74400 — set the jacket, and build a faded reflection beneath it.
+// Verified against the disassembly: sets m_ArtworkView's image, then computes
+// the reflection height as (unsigned)(image.size.height * 0.2) (literal
+// 0x3e4ccccd @ 0x74478, vcvt.u32.f32), builds the flipped reflection via
+// FUN_0005bf5c, and installs it on m_ReflectionArtworkView.
+// @complete
 - (void)setArtwork:(UIImage *)image {
     if (image == nil) {
         return;
     }
     [m_ArtworkView setImage:image];
-    // The binary builds a scaled, vertically-flipped reflection (FUN_0005bf5c);
-    // best-effort here: reuse the jacket in the low-alpha reflection view.
-    [m_ReflectionArtworkView setImage:image];
+    // Reflection is 20% of the jacket height (Ghidra: height * 0.2, 0x3e4ccccd).
+    const unsigned reflectionHeight = (unsigned)(image.size.height * 0.2f);
+    [m_ReflectionArtworkView setImage:StoreMakeReflection(image, reflectionHeight)];
 }
 
 // dealloc @ 0x7447c — ARC-omitted (released object ivars only).
