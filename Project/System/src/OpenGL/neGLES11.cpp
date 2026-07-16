@@ -724,12 +724,22 @@ void neGLES_11::setEnable(int cap, bool on) {
     }
 }
 
+// The drawing-slot client-array selector (vtable +0xe4). Unlike setEnable (+0xe0,
+// which indexes the full EnableState table @ DAT_0012e1d0 directly), this slot
+// indexes a client-array enum table starting ONE entry past MATRIX_PALETTE
+// (binary table @ 0x12e260 = the ClientState table DAT_0012e25c + 4). So the
+// drawing ordinal N is the ClientState enum value N+1: ordinal 0 -> COLOR_ARRAY,
+// 4 -> TEXTURE_COORD_ARRAY, 5 -> VERTEX_ARRAY, 2 -> NORMAL_ARRAY. Without the +1
+// the sprite path enabled GL_MATRIX_PALETTE_OES (a matrix mode, invalid for
+// glEnableClientState -> GL_INVALID_ENUM) and never enabled GL_VERTEX_ARRAY, so
+// glDrawArrays drew nothing (black screen).
 // @complete
 void neGLES_11::setClientArray(int array, bool on) {
+    ClientState state = static_cast<ClientState>(array + 1);
     if (on) {
-        enableClientState(static_cast<ClientState>(array));
+        enableClientState(state);
     } else {
-        disableClientState(static_cast<ClientState>(array));
+        disableClientState(state);
     }
 }
 

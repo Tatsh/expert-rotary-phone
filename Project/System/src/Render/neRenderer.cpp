@@ -265,7 +265,7 @@ static uint32_t nePremultRGBA(int a, int r, int g, int b) {
 // @complete
 static void neDrawColorArray(const neColorVertex *verts, int mode, int count) {
     neRenderer *r = neGetCurrentRenderer();
-    r->setClientArray(5, true); // texcoord array on
+    r->setClientArray(5, true); // vertex array on (drawing-slot ordinal 5 -> GL_VERTEX_ARRAY)
     r->vertexPointer(&verts[0].x, 2, sizeof(neColorVertex));
     r->setClientArray(2, false);
     r->setClientArray(0, true);
