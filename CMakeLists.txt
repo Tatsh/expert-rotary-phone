@@ -59,6 +59,24 @@ set(RESOURCES_DIR    "" CACHE PATH "Directory of the ORIGINAL extracted .app who
 # with -DRHYDBG=ON.
 option(RHYDBG "Compile in the RHYDBG render-pipeline diagnostics (os_log)" OFF)
 
+# ENABLE_PATCHES compiles in preservation patches that bypass flows depending on
+# Konami's now-defunct online services (the first-run Terms-of-Service acceptance
+# and the download file-list fetch). It is NOT part of the original binary, so it
+# defaults OFF and the shipped build matches the binary. It is a plain cache
+# option, enable-able in ANY build configuration with -DENABLE_PATCHES=ON. Guard
+# ONLY dead-server behaviour with it; genuine modern-iOS layout corrections (e.g.
+# safe-area insets) belong in the always-on code path, not behind this flag.
+option(ENABLE_PATCHES "Compile in offline-preservation patches (skip dead service flows)" OFF)
+
+# Server hosts the game contacts. The defaults are the original (now-defunct)
+# Konami hosts, so a faithful build is byte-for-byte unchanged. Override them to
+# point a rebuild at a private/revival server, e.g. -D APR_SECURE_HOST=my.host.
+# When ENABLE_PATCHES is on these are only the DEFAULTS; a value stored in the
+# app's preferences .plist (keys AprHost / AprSecureHost / OfficialHost) wins.
+set(APR_HOST "apr.konaminet.jp" CACHE STRING "Game-API host (http)")
+set(APR_SECURE_HOST "apr.s.konaminet.jp" CACHE STRING "Game-API host (https)")
+set(OFFICIAL_HOST "p.eagate.573.jp" CACHE STRING "Official / eagate host (http)")
+
 # ---------------------------------------------------------------------------
 # Toolchain discovery (informational)
 # ---------------------------------------------------------------------------
@@ -90,6 +108,46 @@ set(SYS_FRAMEWORKS
 # =========================================================================
 # NATIVE / Xcode — real .app target, fed by per-directory CMakeLists.
 # =========================================================================
+# Build the App Transport Security block substituted into Info.plist. Modern iOS
+# blocks cleartext and weak TLS by default, so declare a per-host exception for
+# each configured server (a revival server may present an imperfect cert). Hosts
+# are deduplicated: pointing every host at one server emits a single domain entry
+# (duplicate keys would be invalid plist). Under ENABLE_PATCHES the host can also
+# be overridden at runtime to something not known here, so arbitrary loads are
+# additionally allowed in that build.
+set(_ats_hosts "${APR_HOST}" "${APR_SECURE_HOST}" "${OFFICIAL_HOST}")
+list(REMOVE_DUPLICATES _ats_hosts)
+set(_ats_domains "")
+foreach(_h IN LISTS _ats_hosts)
+  string(APPEND _ats_domains
+"            <key>${_h}</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.0</string>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+")
+endforeach()
+if(ENABLE_PATCHES)
+  set(_ats_arbitrary "        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+")
+else()
+  set(_ats_arbitrary "")
+endif()
+set(APP_TRANSPORT_SECURITY
+"    <key>NSAppTransportSecurity</key>
+    <dict>
+${_ats_arbitrary}        <key>NSExceptionDomains</key>
+        <dict>
+${_ats_domains}        </dict>
+    </dict>")
+
 set(INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in" "${INFO_PLIST}" @ONLY)
 
@@ -187,6 +245,15 @@ target_compile_definitions(popnrhythmin PRIVATE GLES_SILENCE_DEPRECATION)
 # expression is config-agnostic, so it applies in Debug, Release, and any other
 # configuration alike.
 target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${RHYDBG}>:RHYDBG=1>)
+target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${ENABLE_PATCHES}>:ENABLE_PATCHES=1>)
+
+# Configurable server hosts (see the APR_HOST / APR_SECURE_HOST / OFFICIAL_HOST
+# cache variables above). Passed as quoted C string literals; StoreUtil.m falls
+# back to the same defaults when these are not defined.
+target_compile_definitions(popnrhythmin PRIVATE
+                           APR_HOST="${APR_HOST}"
+                           APR_SECURE_HOST="${APR_SECURE_HOST}"
+                           OFFICIAL_HOST="${OFFICIAL_HOST}")
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"

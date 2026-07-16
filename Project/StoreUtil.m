@@ -33,6 +33,36 @@ static NSString *ApiPath(NSString *name) {
     return [NSString stringWithFormat:@"/apr/main/cgi/%@/index.jsp", name];
 }
 
+// Server hosts. The compile-time defaults come from CMake (APR_HOST /
+// APR_SECURE_HOST / OFFICIAL_HOST); they fall back to the original binary's hosts
+// when not defined, so a faithful build is unchanged.
+#ifndef APR_HOST
+#define APR_HOST "apr.konaminet.jp"
+#endif
+#ifndef APR_SECURE_HOST
+#define APR_SECURE_HOST "apr.s.konaminet.jp"
+#endif
+#ifndef OFFICIAL_HOST
+#define OFFICIAL_HOST "p.eagate.573.jp"
+#endif
+
+// Resolve the effective host: the CMake/compile-time default, unless a preferences
+// override is present. The override is honoured only in ENABLE_PATCHES builds so
+// the faithful build never reads an out-of-band host; it lets a preservation build
+// point at a private/revival server by adding the key to the app's .plist without
+// rebuilding.
+static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
+#ifdef ENABLE_PATCHES
+    NSString *override = [NSUserDefaults.standardUserDefaults stringForKey:prefsKey];
+    if (override.length > 0) {
+        return override;
+    }
+#else
+    (void)prefsKey;
+#endif
+    return compileDefault;
+}
+
 @implementation StoreUtil
 
 // @ 0x58904 — returns the constant "JP" CFString @ 0x136e28 (char* 0x1063ca,
@@ -45,45 +75,52 @@ static NSString *ApiPath(NSString *name) {
 // @ 0x589f4
 // @complete
 + (NSURL *)createURL:(NSString *)path {
+    NSString *host = ResolveHost(@APR_HOST, @"AprHost");
+    // The binary used http here, but App Transport Security blocks cleartext on
+    // the modern iOS this rebuild targets, so all endpoints use https (the hosts
+    // are declared for ATS in Info.plist). Not an ENABLE_PATCHES change.
 #if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
     NSURLComponents *components = [[NSURLComponents alloc] init];
-    components.scheme = @"http";
-    components.host = @"apr.konaminet.jp";
+    components.scheme = @"https";
+    components.host = host;
     components.path = path;
     return components.URL;
 #else
-    return [[NSURL alloc] initWithScheme:@"http" host:@"apr.konaminet.jp" path:path];
+    return [[NSURL alloc] initWithScheme:@"https" host:host path:path];
 #endif
 }
 
 // @ 0x58a58
 // @complete
 + (NSURL *)createHttpsURL:(NSString *)path {
+    // Ghidra: host CFString char* @ 0x106a3f is literally "apr.s.konaminet.jp"
+    // (dots, not a hyphen); verified via read_memory of the CFString struct at
+    // 0x1372c8 (length 18). Now the APR_SECURE_HOST default (overridable).
+    NSString *host = ResolveHost(@APR_SECURE_HOST, @"AprSecureHost");
 #if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
     NSURLComponents *components = [[NSURLComponents alloc] init];
     components.scheme = @"https";
-    components.host = @"apr.s.konaminet.jp";
+    components.host = host;
     components.path = path;
     return components.URL;
 #else
-    // Ghidra: host CFString char* @ 0x106a3f is literally "apr.s.konaminet.jp"
-    // (dots, not a hyphen); verified via read_memory of the CFString struct at
-    // 0x1372c8 (length 18).
-    return [[NSURL alloc] initWithScheme:@"https" host:@"apr.s.konaminet.jp" path:path];
+    return [[NSURL alloc] initWithScheme:@"https" host:host path:path];
 #endif
 }
 
 // @ 0x59f24
 // @complete
 + (NSURL *)createOfficialURL:(NSString *)path {
+    NSString *host = ResolveHost(@OFFICIAL_HOST, @"OfficialHost");
+    // https for modern-iOS ATS (see createURL); host declared in Info.plist.
 #if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
     NSURLComponents *components = [[NSURLComponents alloc] init];
-    components.scheme = @"http";
-    components.host = @"p.eagate.573.jp";
+    components.scheme = @"https";
+    components.host = host;
     components.path = path;
     return components.URL;
 #else
-    return [[NSURL alloc] initWithScheme:@"http" host:@"p.eagate.573.jp" path:path];
+    return [[NSURL alloc] initWithScheme:@"https" host:host path:path];
 #endif
 }
 

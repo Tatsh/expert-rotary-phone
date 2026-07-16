@@ -144,7 +144,20 @@ void TitleTask::buildConversionButton() {
     UIImage *img = [UIImage imageNamed:@"bt_conversion"];
     CGRect vf = root.view.frame;
     CGSize sz = img.size;
-    CGRect frame = CGRectMake(vf.size.width - sz.width - 10.0f, -10.0f, sz.width, sz.height);
+    // The original binary anchors the button at y = -10 (its rounded top tucked
+    // just off the frame's top edge). On iOS 11+ the view extends under the status
+    // bar / notch, so that origin is clipped; offset it down by the safe-area top
+    // inset, and never let the top clip off-screen (the status bar is hidden, so a
+    // non-notched iPad reports a zero inset). This is a modern-iOS layout
+    // correction, not an ENABLE_PATCHES behaviour change.
+    CGFloat topY = -10.0f;
+    if (@available(iOS 11.0, *)) {
+        topY += root.view.safeAreaInsets.top;
+    }
+    if (topY < 0.0f) {
+        topY = 0.0f;
+    }
+    CGRect frame = CGRectMake(vf.size.width - sz.width - 10.0f, topY, sz.width, sz.height);
     m_conversionButton = [[CustomButton alloc] initWithFrame:frame];
     [m_conversionButton setTappableInsets:UIEdgeInsetsMake(-20, -20, -20, -20)];
     m_conversionButton.exclusiveTouch = YES;
@@ -199,11 +212,19 @@ void TitleTask::update(int /*deltaMs*/) {
         m_state = 1;
         break;
     case 1:
+#ifdef ENABLE_PATCHES
+        // Konami's Terms-of-Service acceptance server is defunct, so the policy
+        // dialog (state 2 -> GotoAcceptPolicy) can never complete. Skip the
+        // first-run policy gate and go straight to the title. The faithful build
+        // (no patches) still honours the original isPolicyAccepted gate below.
+        m_state = 3;
+#else
         if (![UserSettingData isPolicyAccepted]) {
             m_state = 2; // must accept the policy first
             break;
         }
         m_state = 3; // straight to the title
+#endif
         break;
     case 2: // wait for a tap, then go to the accept-policy screen
         if (tap) {
