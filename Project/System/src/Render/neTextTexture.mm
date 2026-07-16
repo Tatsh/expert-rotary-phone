@@ -331,7 +331,7 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
             dst[col * 2 + 1] = g;
         }
     }
-    NE_DBG({
+    if (NE_DBG_FIRST(60)) {
         int nz = 0;
         int maxGray = 0;
         for (int p = 0; p < w * h; ++p) {
@@ -356,7 +356,7 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
                    nz,
                    w * h,
                    maxGray);
-    });
+    }
     delete[] gray;
 
     glyph->atlasId = atlas->index;
