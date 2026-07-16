@@ -780,7 +780,13 @@ void AcViewerTask::update(int /*deltaMs*/) {
     }
 #endif
 
-    int next;
+    // Default to the current state: the shared `m_state = next` at the bottom
+    // commits for every path that breaks, and the wait states (e.g. case 4 while
+    // the transition runs) break WITHOUT assigning next. Leaving `next`
+    // uninitialised corrupted m_state to garbage (RHYDBG showed state=3260),
+    // resetting the task every frame. In the binary those wait paths goto the draw
+    // tail and skip the state commit; initialising next = m_state is equivalent.
+    int next = m_state;
     switch (m_state) {
     case 0:
         // Enter the arcade viewer nav screen (and, on pad, insert the black board),
@@ -798,13 +804,13 @@ void AcViewerTask::update(int /*deltaMs*/) {
         break;
     case 2:
         setup();
-        m_state = 3;
+        next = 3;
         [[fallthrough]];
     case 3:
         // Fade the HUD in and play the top banner.
         aep.setAepTransitionMode(1); // Ghidra: setAepTransitionMode(aep, 1)
         m_topLayer->play();
-        m_state = 4;
+        next = 4;
         [[fallthrough]];
     case 4:
         if (m_hudArmed == 0 || !aep.isTransitionDone()) {
@@ -820,7 +826,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // When the ready SE finishes, start note playback.
         if ([[AudioManager sharedManager] isPlayingSe:m_readySeInst] == 0) {
             note.startPlayback();
-            m_state = 6;
+            next = 6;
         }
         if (neSceneManager::isPadDisplay()) {
             [AcvRootVC() FadeOutBlackBoard];
@@ -862,7 +868,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
             note.Pause();
             m_pauseTime = note.getCurrentPosition();
             m_paused = 1;
-            m_state = 0xc;
+            next = 0xc;
             t = m_endHoldCounter;
         }
         m_endHoldCounter = t + 1;
