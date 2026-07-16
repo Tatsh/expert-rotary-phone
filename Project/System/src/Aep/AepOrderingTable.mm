@@ -654,32 +654,32 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
         return; // fully-opaque untinted no-op: nothing to composite
     }
 
-    void *tex = textureTable() ? textureTable()[slot] : nullptr;
-    // spriteRec: +0 u, +2 v, +4 width, +6 height.
-    // Disasm (drawAepOtSprite tail, four vdiv by DAT_00010e14=100.0): the
-    // forwarded quad width/height are the TRIPLE product base * renderScale *
-    // (sx|sy)/100 -- the /100 turns the sx/sy PERCENTAGE (100 = natural) into a
-    // fraction. The reconstruction dropped the *sx/100 and *sy/100 factors, so
-    // every non-100% sprite rendered at a fixed 100% size.
-    drawAepSpriteClipped(s,
-                         tex,
+    neTextureForiOS *frames =
+        static_cast<neTextureForiOS *>(textureTable() ? textureTable()[slot] : nullptr);
+    // spriteRec: +0 srcX, +2 srcY, +4 srcW, +6 srcH (the atlas source rect). The
+    // quad geometry is the scaled destination rect; colour comes from nColorRGB
+    // (p15) and alpha from nColorA (p9). Same drawAepSpriteClipped call shape as the
+    // stretch handler (Ghidra: FUN_00010c90 tail, four vdiv by DAT_00010e14=100.0).
+    const float flDstW = static_cast<float>(p7) * s * static_cast<float>(sx) / 100.0f;
+    const float flDstH = static_cast<float>(p8) * s * static_cast<float>(sy) / 100.0f;
+    drawAepSpriteClipped(frames,
                          spriteRec[0],
                          spriteRec[1],
-                         dstX,
-                         dstY,
                          spriteRec[2],
                          spriteRec[3],
-                         (float)aepScale(sx, s),
-                         (float)aepScale(sy, s),
-                         blend,
-                         (float)p7 * s * (float)sx / 100.0f,
-                         (float)p8 * s * (float)sy / 100.0f,
+                         static_cast<float>(dstX),
+                         static_cast<float>(dstY),
+                         flDstW,
+                         flDstH,
+                         0,
+                         static_cast<float>(aepScale(sx, s)),
+                         static_cast<float>(aepScale(sy, s)),
                          p9,
-                         maskedAlpha,
-                         p12,
-                         clip,
+                         static_cast<float>(maskedAlpha),
+                         blend,
+                         static_cast<const int *>(clip),
                          visible ? 1 : 0,
-                         p15);
+                         static_cast<uint32_t>(p15));
 }
 
 // Ghidra: drawAepOtSpriteStretch (FUN_00010e18) — the stretched-sprite handler.
