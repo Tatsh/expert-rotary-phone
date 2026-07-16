@@ -960,7 +960,7 @@ void MainTask::Setup() {
 
     // Install the per-frame scene draw callback for group 3 (Ghidra:
     // setAepCallbacks).
-    m_aep->setGroupDrawCallback(3, reinterpret_cast<AepGroupDrawFn>(&AepDrawCallback), this);
+    m_aep->setGroupDrawCallback(3, &AepDrawCallback, this);
 
     // ---- load the 5 touch/select SEs (group 1) + the preview BGM ----
     for (int i = 0; i < 5; i++) {
@@ -2046,7 +2046,7 @@ void MainTask::MusicSelLoadColumnPrev(int column) {
  * they are sourced from the Setup()-filled layout/element data — the maximum
  * fidelity the decompile permits.
  */
-void AepDrawCallback(unsigned child,
+void AepDrawCallback(int child,
                      int frame,
                      int x,
                      int y,
@@ -2056,10 +2056,10 @@ void AepDrawCallback(unsigned child,
                      int anchorY,
                      int color,
                      int alpha,
-                     short rotation,
-                     int blend,
-                     int p13,
-                     int p14,
+                     int rotation,
+                     uint32_t blend,
+                     int *p13,
+                     uint32_t p14,
                      void *context) {
     (void)frame;
     (void)p13;

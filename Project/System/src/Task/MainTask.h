@@ -309,8 +309,14 @@ public:
  *       the jacket-grid dispatch is recovered, the long per-element tail is a seam.
  *       The remaining params are the standard Aep blit args (frame, position, scale,
  *       anchor, colour, alpha, rotation, blend).
+ * @note The parameter types MUST match AepGroupDrawFn exactly: the engine invokes
+ *       this through that function-pointer type, and on arm64 the size-critical
+ *       stack args (rotation as int, and p13/clipRect as an int* pointer) shift
+ *       every following slot when mistyped — corrupting `context` and faulting on
+ *       a garbage `self`. rotation was short and p13 was int here, which is why
+ *       music select crashed in AepDrawCallback.
  */
-void AepDrawCallback(unsigned child,
+void AepDrawCallback(int child,
                      int frame,
                      int x,
                      int y,
@@ -320,10 +326,10 @@ void AepDrawCallback(unsigned child,
                      int anchorY,
                      int color,
                      int alpha,
-                     short rotation,
-                     int blend,
-                     int p13,
-                     int p14,
+                     int rotation,
+                     uint32_t blend,
+                     int *p13,
+                     uint32_t p14,
                      void *context);
 
 /// @brief `MainTask` was a Ghidra type-conflict artifact of MainTask (the same
