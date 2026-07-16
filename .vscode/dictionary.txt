@@ -59,6 +59,7 @@ blit
 blits
 blitted
 blitter
+blitting
 bsky
 bssort
 btnnowpoint
