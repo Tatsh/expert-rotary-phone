@@ -79,10 +79,9 @@ public:
     AepTexture *prev = nullptr;
 
 private:
-    // Decode `path` into a power-of-two RGBA buffer and hand it to uploadGL.
+    // Decode `path` into a power-of-two RGBA buffer and upload it as a GL texture
+    // through neTextureUpload (Ghidra: FUN_000185a0).
     bool decodeAndUpload(const char *path);
-    void uploadGL(int texWidth, int texHeight,
-                  const void *pixels); // FUN_000185a0
 
     char *m_path = nullptr;     // +0x10 original path (cache key)
     char *m_filePath = nullptr; // +0x14 resolved bundle path (for reload)
@@ -93,7 +92,12 @@ private:
     int m_height = 0;           // +0x28 source height
     int m_bufferSize = 0;       // +0x2c
 public:
-    int m_format = 0; // +0x40 upload format (0=RGBA, 2=ALPHA); read by neTextureRebind
+    // Per-texture tex-param cache (Ghidra: tex+0x30): the last value applied for
+    // each of the 4 tex-param types {MAG,MIN,WRAP_S,WRAP_T}. neTextureUpload seeds
+    // it to the values it applies; setTexParamCached (neRenderer.cpp) consults it
+    // to skip redundant glTexParameteri calls.
+    int m_texParamCache[4] = {}; // +0x30
+    int m_format = 0;            // +0x40 upload format (0=RGBA, 2=ALPHA); read by neTextureRebind
     int format() const {
         return m_format;
     }

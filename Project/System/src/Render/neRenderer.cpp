@@ -357,21 +357,13 @@ void neApplyDefaultRenderState(void) {
 // Renderer texture helpers.
 // ---------------------------------------------------------------------------
 
-// Per-texture GL parameter cache: the texture object carries the last value
-// applied for each of the 4 tex-param types at +0x30. Ghidra: FUN_0001885c
-// indexes tex+0x30. This is a view onto the AepTexture's own bytes (which owns
-// that region but exposes no named member for it), so the reinterpret is
-// faithful to the shipped layout.
-struct neTexParamCacheView {
-    uint8_t _pad[0x30];
-    int32_t value[4];
-};
-
 // Ghidra: FUN_0001885c — skip glTexParameteri when the value is already cached
-// on the texture; the setter itself is dispatched on the renderer (+0xc4).
+// on the texture; the setter itself is dispatched on the renderer (+0xc4). The
+// cache is the AepTexture's own 4-entry tex-param array (Ghidra: tex+0x30),
+// seeded by neTextureUpload to the values it applies at upload time.
 // @complete
 void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
-    int32_t &slot = reinterpret_cast<neTexParamCacheView *>(tex)->value[type];
+    int &slot = static_cast<AepTexture *>(tex)->m_texParamCache[type];
     if (slot == value) {
         return;
     }
@@ -386,20 +378,6 @@ void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
 // setter (see neGLES_11::vertexPointer). It has no callers in the binary, and
 // the real texture bind is neGLES_11::bindTexture (glBindTexture, vtable +0xc0),
 // so the mislabelled helper is dropped rather than kept as dead code.
-
-// Ghidra: FUN_00013778 — clear the 8-slot bound-texture cache of this name,
-// then delete.
-// @complete
-void neDeleteTexture(neRenderer *r, int name) {
-    auto &cache = static_cast<ne::neGLES_11 *>(r)->texBindCache;
-    for (unsigned &slot : cache.names) {
-        if (static_cast<int>(slot) == name) {
-            slot = 0;
-        }
-    }
-    GLuint n = static_cast<GLuint>(name);
-    glDeleteTextures(1, &n);
-}
 
 // ---------------------------------------------------------------------------
 // Textured sprite blit.

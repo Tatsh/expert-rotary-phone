@@ -87,8 +87,10 @@ public:
                                  int stride) = 0;      // +0x94 glTexCoordPointer
     virtual void bindElementBuffer(unsigned name) = 0; // +0xac glBindBuffer(ELEMENT)
     virtual void bufferData(const void *data, int size,
-                            int usage) = 0;      // +0xb0 glBufferData
-    virtual void bindTexture(unsigned name) = 0; // +0xc0 glBindTexture
+                            int usage) = 0;         // +0xb0 glBufferData
+    virtual void genTexture(unsigned &outName) = 0; // +0xb4 glGenTextures
+    virtual void deleteTexture(unsigned name) = 0;  // +0xb8 glDeleteTextures + clear bind cache
+    virtual void bindTexture(unsigned name) = 0;    // +0xc0 glBindTexture (per-unit bind cache)
     virtual void applyTexParameter(int type,
                                    int value) = 0; // +0xc4 glTexParameteri
     virtual void uploadTexture(int format,
@@ -218,10 +220,6 @@ void neDrawTexturedQuad(void *sprite,
 // Cache-aware glTexParameteri: skips the call when `value` already matches the
 // texture's per-type cache. Ghidra: FUN_0001885c.
 void setTexParamCached(void *tex, neRenderer *r, int type, int value);
-
-// glDeleteTextures(1,&name) after clearing the backend's 8-slot bound-texture
-// cache of that name. Ghidra: FUN_00013778.
-void neDeleteTexture(neRenderer *r, int name);
 
 // ---------------------------------------------------------------------------
 // Scene-graph transform node (a child/sibling tree with per-node matrices).

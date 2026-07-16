@@ -318,6 +318,8 @@ public:
     void texCoordPointer(const void *ptr, int stride) override;
     void bindElementBuffer(unsigned name) override;
     void bufferData(const void *data, int size, int usage) override;
+    void genTexture(unsigned &outName) override;
+    void deleteTexture(unsigned name) override;
     void bindTexture(unsigned name) override;
     void applyTexParameter(int type, int value) override;
     void uploadTexture(int format, int w, int h, const void *pixels) override;
@@ -338,6 +340,7 @@ public:
 
 private:
     // Cached GL state, at the ivar offsets observed in the decompiled backend.
+    unsigned _activeTexUnit = 0;      // ivar 0xf8  (index into texBindCache, set on unit select)
     unsigned _matrixMode = 0;         // ivar 0x2c  (setMatrixMode cache)
     unsigned _boundArrayBuffer = 0;   // ivar 0x44 (cleared by deleteBuffer)
     unsigned _boundElementBuffer = 0; // ivar 0x50

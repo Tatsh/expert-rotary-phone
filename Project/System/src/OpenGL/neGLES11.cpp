@@ -602,8 +602,43 @@ void neGLES_11::bufferData(const void *data, int size, int usage) {
         GL_ELEMENT_ARRAY_BUFFER, size, data, usage == 0 ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 }
 
+// Ghidra: vtable +0xb4 (0x13770) — thin glGenTextures wrapper (movs r0,#1;
+// b.w glGenTextures veneer). The renderer `this` is discarded; the caller's
+// &outName is already in r1, so this is exactly glGenTextures(1, &outName).
+// @complete
+void neGLES_11::genTexture(unsigned &outName) {
+    GLuint name = 0;
+    glGenTextures(1, &name);
+    outName = name;
+}
+
+// Ghidra: FUN_00013778 (vtable +0xb8) — clear every bound-texture-cache slot
+// holding this name (so a later reused name is not treated as still bound),
+// then glDeleteTextures. This is the slot the AepTexture teardown path dispatches
+// through (deleteTexture), which is why the raw glDeleteTextures would leave a
+// stale cache entry.
+// @complete
+void neGLES_11::deleteTexture(unsigned name) {
+    for (unsigned &slot : texBindCache.names) {
+        if (slot == name) {
+            slot = 0;
+        }
+    }
+    GLuint n = name;
+    glDeleteTextures(1, &n);
+}
+
+// Ghidra: FUN_000137c0 (vtable +0xc0) — per-unit redundant-bind cache: index
+// texBindCache by the active texture unit (ivar 0xf8), skip when the cached name
+// already matches, else update the slot and glBindTexture. Keeping the cache
+// coherent is why deleteTexture (+0xb8) must clear it on a delete.
 // @complete
 void neGLES_11::bindTexture(unsigned name) {
+    unsigned &slot = texBindCache.names[_activeTexUnit];
+    if (slot == name) {
+        return;
+    }
+    slot = name;
     glBindTexture(GL_TEXTURE_2D, name);
 }
 
