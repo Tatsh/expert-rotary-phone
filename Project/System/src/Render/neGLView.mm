@@ -12,14 +12,10 @@
 #import <OpenGLES/ES1/glext.h>
 #import <QuartzCore/QuartzCore.h>
 
-#import "neEngineBridge.h"
+#import "neGLES11.h" // ne::neGLES_11 backend — the view's m_GLInterface
 #import "neGLView.h"
 #import "neGraphics.h"
-
-// The render facade lives in the neRenderer unit; forward-declared here so
-// initWithFrame: can create it (as the binary does) without pulling the renderer
-// header's GL includes. Ghidra: neEnsureRenderer FUN_00012c4c.
-void neEnsureRenderer(void);
+#import "neRenderer.h" // neEnsureRenderer / neGetCurrentRenderer
 
 // Engine touch coordinates are 16.16 fixed point; the render/input manager
 // (neGraphics) scales them to pixels and records them for the play-judge loop.
@@ -33,14 +29,17 @@ static inline int ToFixed(CGFloat v) {
 static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 
 @implementation neGLView {
-    // The binary routes the framebuffer/renderbuffer binds through m_GLInterface
-    // (neGLES_11); those virtuals wrap exactly these GL ES 1.1 / OES FBO calls,
-    // issued directly here.
-    EAGLContext *m_GLContext;    // m_GLContext
-    GLuint m_DefaultFramebuffer; // m_DefaultFramebuffer
-    GLuint m_ColorRenderbuffer;  // m_ColorRenderbuffer / m_RenderBufferID
-    int m_FrontBufferWidth;      // m_FrontBufferWidth
-    int m_FrontBufferHeight;     // m_FrontBufferHeight
+    // The binary routes every framebuffer/renderbuffer operation through
+    // m_GLInterface (the current ne::neGLES_11), whose vtable slots are thin GL ES
+    // 1.1 / OES FBO wrappers. The reconstruction holds and drives that same
+    // interface rather than issuing raw gl*OES calls.
+    EAGLContext *m_GLContext;     // ivar 0x34
+    int m_FrontBufferWidth;       // ivar 0x38
+    int m_FrontBufferHeight;      // ivar 0x3c
+    GLuint m_DefaultFramebuffer;  // ivar 0x40
+    GLuint m_ColorRenderbuffer;   // ivar 0x44
+    GLenum m_PresentTarget;       // ivar 0x48 (cached presentTarget() = GL_RENDERBUFFER_OES)
+    ne::neGLES_11 *m_GLInterface; // ivar 0x4c (the current renderer; not owned)
 }
 
 // Ghidra shows -delegate/-setDelegate: as atomic accessors (DataMemoryBarrier
@@ -49,20 +48,24 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 @synthesize delegate = _delegate; // -delegate @ 0x289d4 / -setDelegate: @ 0x289e8
 
 // @ 0x28524
+// @complete
 - (int)GetFrontBufferWidth {
     return m_FrontBufferWidth;
 }
 // @ 0x28534
+// @complete
 - (int)GetFrontBufferHeight {
     return m_FrontBufferHeight;
 }
 
 // GL ES views are backed by a CAEAGLLayer. @ 0x280e4
+// @complete
 + (Class)layerClass {
     return [CAEAGLLayer class];
 }
 
 // @ 0x280d4 — the live view instance (raw global set in initWithFrame:).
+// @complete
 + (neGLView *)GetInstance {
     return g_pGLViewInstance;
 }
@@ -70,6 +73,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 #pragma mark - Touch -> engine input
 
 // @ 0x285e8 — report each touch's location (+ the view size for mapping).
+// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     CGRect frame = self.frame;
     neGraphics &gfx = neGraphics::shared();
@@ -83,6 +87,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 }
 
 // @ 0x28718 — report each touch's new + previous location (drag tracking).
+// @complete
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     neGraphics &gfx = neGraphics::shared();
     for (UITouch *touch in touches) {
@@ -93,6 +98,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 }
 
 // @ 0x28850 — if every touch ended, clear all; otherwise report each end.
+// @complete
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     neGraphics &gfx = neGraphics::shared();
     if (touches.count == [event touchesForView:self].count) {
@@ -108,6 +114,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 
 // @ 0x289c4 — a cancelled touch is handled exactly like an ended one
 // (the binary tail-calls -touchesEnded:withEvent:).
+// @complete
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [self touchesEnded:touches withEvent:event];
 }
@@ -115,6 +122,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 #pragma mark - Render surface
 
 // @ 0x28100 — create the EAGL context + FBO once the view exists.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         // The CAEAGLLayer drawable: opaque, non-retained backing, RGB565.
@@ -129,32 +137,27 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
             return nil;
         }
         // @ 0x28246 — with the context current, create the render facade
-        // (neEnsureRenderer -> new ne::neGLES_11; initialize) and make it current.
-        // The binary then caches neGetCurrentRenderer() in the view's m_GLInterface
-        // and drives the framebuffer setup through its virtuals; this reconstruction
-        // issues those same GL ES calls directly in createFramebuffer (see the
-        // m_GLInterface note above), but the facade MUST exist first or the sprite
-        // flush's neGetCurrentRenderer() (drawAepSpriteClipped -> neDrawTexturedQuad)
-        // null-derefs on the first frame.
+        // (neEnsureRenderer -> new ne::neGLES_11; initialize), cache it as
+        // m_GLInterface and remember the renderbuffer target it presents to.
         neEnsureRenderer();
+        m_GLInterface = static_cast<ne::neGLES_11 *>(neGetCurrentRenderer());
+        m_PresentTarget = m_GLInterface->presentTarget(); // +0x0c -> GL_RENDERBUFFER_OES
         self.backgroundColor = [UIColor clearColor];
         self.multipleTouchEnabled = YES;
-        [self createFramebuffer];
+        // @ 0x282b4 — the binary inlines the FBO setup here through m_GLInterface's
+        // vtable slots (there is no separate -createFramebuffer, and no
+        // renderbufferStorage:fromDrawable: during init — that happens in
+        // -layoutSubviews). Order: gen framebuffer, gen renderbuffer, bind each,
+        // attach the colour renderbuffer to COLOR_ATTACHMENT0.
+        m_GLInterface->genFramebuffer(m_DefaultFramebuffer);  // +0x10
+        m_GLInterface->genRenderbuffer(m_ColorRenderbuffer);  // +0x1c
+        m_GLInterface->bindFramebuffer(m_DefaultFramebuffer); // +0x18
+        m_GLInterface->bindRenderbuffer(m_ColorRenderbuffer); // +0x24
+        m_GLInterface->framebufferRenderbuffer(ne::neIGLES::RENDER_KIND_COLOR,
+                                               m_ColorRenderbuffer); // +0x30
         g_pGLViewInstance = self; // @ 0x28312 — publish for GetInstance.
     }
     return self;
-}
-
-// A colour renderbuffer backed by the CAEAGLLayer drawable, attached to a
-// framebuffer (the standard GL ES 1.1 CAEAGLLayer setup).
-- (void)createFramebuffer {
-    glGenFramebuffersOES(1, &m_DefaultFramebuffer);
-    glGenRenderbuffersOES(1, &m_ColorRenderbuffer);
-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, m_DefaultFramebuffer);
-    glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
-    [m_GLContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer *)self.layer];
-    glFramebufferRenderbufferOES(
-        GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
 }
 
 // @ 0x28334 — tear down the GL buffers and unbind the context. KEPT under ARC:
@@ -162,13 +165,16 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 // state, not object graph, so ARC will not free them. The original also
 // released m_GLContext (ARC handles that) and called [super dealloc] (never
 // call it here).
+// @complete
 - (void)dealloc {
+    // Buffer deletes route through m_GLInterface (vtable +0x14 / +0x20), each gated
+    // on a live name, matching the binary.
     if (m_DefaultFramebuffer) {
-        glDeleteFramebuffersOES(1, &m_DefaultFramebuffer);
+        m_GLInterface->deleteFramebuffer(m_DefaultFramebuffer); // +0x14
         m_DefaultFramebuffer = 0;
     }
     if (m_ColorRenderbuffer) {
-        glDeleteRenderbuffersOES(1, &m_ColorRenderbuffer);
+        m_GLInterface->deleteRenderbuffer(m_ColorRenderbuffer); // +0x20
         m_ColorRenderbuffer = 0;
     }
     if ([EAGLContext currentContext] == m_GLContext) {
@@ -178,39 +184,43 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 }
 
 // @ 0x28544 — make the GL context current.
+// @complete
 - (BOOL)BeginRender {
     return [EAGLContext setCurrentContext:m_GLContext];
 }
 
-// @ 0x28570 — bind the default framebuffer (m_GLInterface vtbl +0x18).
+// @ 0x28570 — bind the default framebuffer through m_GLInterface (vtable +0x18).
+// @complete
 - (void)SetDefaultFrameBuffer {
-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, m_DefaultFramebuffer);
+    m_GLInterface->bindFramebuffer(m_DefaultFramebuffer);
 }
 
-// @ 0x28594 — bind the colour renderbuffer (m_GLInterface vtbl +0x24).
+// @ 0x28594 — bind the colour renderbuffer through m_GLInterface (vtable +0x24).
+// @complete
 - (void)SetDefaultColorBuffer {
-    glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
+    m_GLInterface->bindRenderbuffer(m_ColorRenderbuffer);
 }
 
-// @ 0x285b8 — present the colour renderbuffer to the screen.
+// @ 0x285b8 — present the cached renderbuffer target to the screen. The binary
+// does NOT bind the colour renderbuffer first; it hands -presentRenderbuffer: the
+// m_PresentTarget ivar (GL_RENDERBUFFER_OES, cached from presentTarget() at init).
+// @complete
 - (BOOL)Present {
-    [self SetDefaultColorBuffer];
-    return [m_GLContext presentRenderbuffer:GL_RENDERBUFFER_OES];
+    return [m_GLContext presentRenderbuffer:m_PresentTarget];
 }
 
-// @ 0x28428 — the drawable resized: refresh the renderbuffer storage + size,
-// then notify the delegate so it can update the projection.
+// @ 0x28428 — the drawable resized: rebind and refresh the renderbuffer storage
+// from the layer, read back its pixel size through m_GLInterface, probe framebuffer
+// completeness, then notify the delegate so it can update the projection. The
+// binary does NOT publish scene metrics here (no neSceneManager::setScreenMetrics);
+// that stand-in has been removed.
+// @complete
 - (void)layoutSubviews {
-    glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_ColorRenderbuffer);
+    m_GLInterface->bindRenderbuffer(m_ColorRenderbuffer); // +0x24
     [m_GLContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer *)self.layer];
-    glGetRenderbufferParameterivOES(
-        GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &m_FrontBufferWidth);
-    glGetRenderbufferParameterivOES(
-        GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &m_FrontBufferHeight);
-    // Publish the live drawable metrics to the scene manager so the note/sprite
-    // layout code places geometry against the current surface (points + scale).
-    neSceneManager::setScreenMetrics(
-        CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds), (float)self.contentScaleFactor);
+    m_GLInterface->getRenderbufferWidth(m_FrontBufferWidth);   // +0x38
+    m_GLInterface->getRenderbufferHeight(m_FrontBufferHeight); // +0x3c
+    m_GLInterface->isFramebufferComplete();                    // +0x34 (result discarded)
     if ([self.delegate respondsToSelector:@selector(LayoutedGLView:)]) {
         [self.delegate LayoutedGLView:self];
     }

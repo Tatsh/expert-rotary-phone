@@ -496,10 +496,61 @@ void neGLES_11::framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer) 
         GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_RENDERBUFFER_OES, renderbuffer);
 }
 
-// Ghidra: FUN_00012fec — free helper (no `this`).
+// Ghidra: FUN_00012fec (vtable +0x34) — is the currently-bound OES framebuffer
+// complete? (result discarded by the sole caller, neGLView -layoutSubviews).
 // @complete
-bool isFramebufferComplete() {
+bool neGLES_11::isFramebufferComplete() {
     return glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) == GL_FRAMEBUFFER_COMPLETE_OES;
+}
+
+// Ghidra: 0x12e84 (vtable +0x0c) — returns the GL_RENDERBUFFER_OES constant the
+// view caches in its m_PresentTarget ivar and later hands to -presentRenderbuffer:
+// (movw r0, #0x8d41; bx lr — no GL call).
+// @complete
+unsigned neGLES_11::presentTarget() const {
+    return GL_RENDERBUFFER_OES;
+}
+
+// Ghidra: 0x12e8c (vtable +0x10) — thin glGenFramebuffersOES(1, &out) wrapper.
+// @complete
+void neGLES_11::genFramebuffer(unsigned &outName) {
+    GLuint name = 0;
+    glGenFramebuffersOES(1, &name);
+    outName = name;
+}
+
+// Ghidra: 0x12ea8 (vtable +0x18) — glBindFramebufferOES(GL_FRAMEBUFFER_OES, fb)
+// (movw r0, #0x8d40 = GL_FRAMEBUFFER_OES; tailcall).
+// @complete
+void neGLES_11::bindFramebuffer(unsigned framebuffer) {
+    glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
+}
+
+// Ghidra: 0x12eb0 (vtable +0x1c) — thin glGenRenderbuffersOES(1, &out) wrapper.
+// @complete
+void neGLES_11::genRenderbuffer(unsigned &outName) {
+    GLuint name = 0;
+    glGenRenderbuffersOES(1, &name);
+    outName = name;
+}
+
+// Ghidra: 0x12ecc (vtable +0x24) — glBindRenderbufferOES(GL_RENDERBUFFER_OES, rb)
+// (movw r0, #0x8d41 = GL_RENDERBUFFER_OES; tailcall).
+// @complete
+void neGLES_11::bindRenderbuffer(unsigned renderbuffer) {
+    glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
+}
+
+// Ghidra: 0x13008 (vtable +0x38) — read the bound renderbuffer's pixel width.
+// @complete
+void neGLES_11::getRenderbufferWidth(int &outWidth) {
+    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &outWidth);
+}
+
+// Ghidra: 0x13018 (vtable +0x3c) — read the bound renderbuffer's pixel height.
+// @complete
+void neGLES_11::getRenderbufferHeight(int &outHeight) {
+    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &outHeight);
 }
 
 // ---------------------------------------------------------------------------
