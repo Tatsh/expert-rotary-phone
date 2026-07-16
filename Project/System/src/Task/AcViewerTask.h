@@ -68,10 +68,10 @@ void AcViewerHudDraw(int child,
                      int anchorY,
                      int color,
                      int alpha,
-                     int16_t rotation,
-                     int blend,
+                     int rotation,
+                     uint32_t blend,
                      int *p13,
-                     int p14,
+                     uint32_t p14,
                      void *context);
 
 class AcViewerTask : public C_TASK {
@@ -106,10 +106,10 @@ private:
                                 int anchorY,
                                 int color,
                                 int alpha,
-                                int16_t rotation,
-                                int blend,
+                                int rotation,
+                                uint32_t blend,
                                 int *p13,
-                                int p14,
+                                uint32_t p14,
                                 void *context);
 
     // The apply-settings bridge hook writes the option / seek fields below

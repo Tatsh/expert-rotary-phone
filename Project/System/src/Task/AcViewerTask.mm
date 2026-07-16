@@ -282,12 +282,12 @@ void AcViewerTask::setup() {
     }
 
     // Register the per-layer HUD draw callback (Ghidra: setAepCallbacks(aep, 7,
-    // 0x23359, this) — 0x23359 is &AcViewerHudDraw in Thumb). The callback's
-    // natural signature carries a packed-short rotation (param 11), so it is
-    // reinterpret-cast to the generic AepGroupDrawFn at registration (same
-    // pattern as MainTask's AepDrawCallback); the ABI is compatible (short passed
-    // in a 32-bit register slot).
-    aep.setGroupDrawCallback(kAcvGroup, reinterpret_cast<AepGroupDrawFn>(&AcViewerHudDraw), this);
+    // 0x23359, this) — 0x23359 is &AcViewerHudDraw in Thumb). Its signature
+    // matches AepGroupDrawFn exactly so no reinterpret_cast is needed. A previous
+    // int16_t rotation (param 11) was NOT ABI-compatible: params 9+ are passed on
+    // the stack on arm64, so a 2-byte rotation shifted every following slot and
+    // corrupted `context`, crashing the callback on a garbage `this`.
+    aep.setGroupDrawCallback(kAcvGroup, &AcViewerHudDraw, this);
     m_hudReady = 1; // HUD ready
 }
 
@@ -1086,10 +1086,10 @@ void AcViewerHudDraw(int child,
                      int anchorY,
                      int color,
                      int alpha,
-                     int16_t rotation,
-                     int blend,
+                     int rotation,
+                     uint32_t blend,
                      int *p13,
-                     int p14,
+                     uint32_t p14,
                      void *context) {
     (void)frame;
     AepManager &aep = AepManager::shared();
