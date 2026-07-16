@@ -40,6 +40,7 @@ jobs:
             -DPLATFORM=OS64
             -DRHYDBG=ON
             -DENABLE_PATCHES=ON
+            -DENABLE_OFFLINE_PATCHES=ON
           )
           [ -n "$POPNRHYTHMIN_BINARY" ] && CMAKE_ARGS+=( -DPOPNRHYTHMIN_BINARY="$POPNRHYTHMIN_BINARY" )
           [ -n "$RESOURCES_DIR" ] && CMAKE_ARGS+=( -DRESOURCES_DIR="$RESOURCES_DIR" )

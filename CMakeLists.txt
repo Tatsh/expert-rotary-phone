@@ -68,6 +68,15 @@ option(RHYDBG "Compile in the RHYDBG render-pipeline diagnostics (os_log)" OFF)
 # safe-area insets) belong in the always-on code path, not behind this flag.
 option(ENABLE_PATCHES "Compile in offline-preservation patches (skip dead service flows)" OFF)
 
+# ENABLE_OFFLINE_PATCHES is a heavier, separate category. Where ENABLE_PATCHES
+# only skips or repairs dead-server UI flows (and otherwise lets network calls
+# fail naturally), ENABLE_OFFLINE_PATCHES makes a normally-online step actually
+# complete offline by faking its success locally — currently the player-name
+# registration, which the retired server can no longer acknowledge. It is opt-in
+# independently of ENABLE_PATCHES, defaults OFF, and is enable-able in any build
+# configuration with -DENABLE_OFFLINE_PATCHES=ON.
+option(ENABLE_OFFLINE_PATCHES "Compile in offline stand-ins for retired online steps (local name registration)" OFF)
+
 # Server hosts the game contacts. The defaults are the original (now-defunct)
 # Konami hosts, so a faithful build is byte-for-byte unchanged. Override them to
 # point a rebuild at a private/revival server, e.g. -D APR_SECURE_HOST=my.host.
@@ -247,6 +256,8 @@ target_compile_definitions(popnrhythmin PRIVATE GLES_SILENCE_DEPRECATION)
 # configuration alike.
 target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${RHYDBG}>:RHYDBG=1>)
 target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${ENABLE_PATCHES}>:ENABLE_PATCHES=1>)
+target_compile_definitions(popnrhythmin
+                           PRIVATE $<$<BOOL:${ENABLE_OFFLINE_PATCHES}>:ENABLE_OFFLINE_PATCHES=1>)
 
 # Configurable server hosts (see the APR_HOST / APR_SECURE_HOST / OFFICIAL_HOST
 # cache variables above). Passed as quoted C string literals; StoreUtil.m falls
