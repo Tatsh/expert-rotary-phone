@@ -350,6 +350,7 @@ objcxx
 oneline
 opengles
 orignal
+orrs
 ossume
 outpath
 overscroll
@@ -434,6 +435,7 @@ selref
 senisivity
 smmul
 sxtb
+unbiases
 unclamped
 ＳＥＸＹ
 shellcheck
@@ -501,6 +503,7 @@ udids
 udvare
 uffdc
 unarchiver
+unbiasing
 uncomplete
 uncompr
 uncpsize
@@ -520,6 +523,7 @@ unztst
 usanuko
 usec
 usersetting
+uxtb
 uxth
 vadd
 vars
