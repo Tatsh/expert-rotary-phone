@@ -422,6 +422,7 @@ scototal
 scta
 segs
 selec
+selref
 senisivity
 ＳＥＸＹ
 shellcheck
@@ -507,6 +508,7 @@ unztst
 usanuko
 usec
 usersetting
+uxth
 vadd
 vars
 vcmn
@@ -534,6 +536,7 @@ wiswa's
 worktree
 writting
 xform
+xors
 xorshift
 xrefs
 yarnrc
