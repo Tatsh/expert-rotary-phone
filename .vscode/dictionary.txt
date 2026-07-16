@@ -160,6 +160,7 @@ fiel
 fielda
 filemane
 fileoff
+floatv
 fobjc
 foff
 fogx
@@ -221,6 +222,7 @@ indicatorwith
 infozip
 initilize
 instancetype
+integerv
 interntal
 intptr
 inzip
