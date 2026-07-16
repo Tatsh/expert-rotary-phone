@@ -536,7 +536,13 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
         }
         m_spawnCursor = rec + 1;
         rec = m_spawnCursor;
-    } while (rec->tick <= spawnUntil);
+        // Bound the scan to the record array. m_records[m_recordCount] is the
+        // type-6 terminator (the last element of new AcNoteRecord[m_recordCount +
+        // 1]); once the cursor advances past it, stop before dereferencing rec.
+        // The binary relies on allocation slack + the terminator's tick to halt
+        // here, which faults on a short chart (spawn window >= chart length, e.g.
+        // an Arcade Viewer preview) with an exactly-sized allocation.
+    } while (rec <= &m_records[m_recordCount] && rec->tick <= spawnUntil);
 }
 
 // Ghidra: FUN_0007b028 — first per-note pass: once a note's time has arrived,
