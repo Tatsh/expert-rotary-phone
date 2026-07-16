@@ -735,22 +735,14 @@ static int FloatToFixed(float ms) {
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
-        // Viewport = the full drawable width, height set to preserve the CONTENT
-        // aspect (AepManager screen extents), CENTRED vertically. This keeps the 2D
-        // content's proportions (no vertical stretch) while still filling the
-        // width; when the physical screen is a different aspect than the iPhone
-        // content, the vertical overflow is cropped equally (or, if the content is
-        // shorter, it letterboxes) instead of anchoring at the top. (Nothing else
-        // sets glViewport; the flush only sets the ortho.)
-        int fbw = [_glView GetFrontBufferWidth];
-        int fbh = [_glView GetFrontBufferHeight];
-        int cw = m_AepManager ? m_AepManager->screenWidth() : 0;
-        int ch = m_AepManager ? m_AepManager->screenHeight() : 0;
-        if (fbw > 0 && fbh > 0 && cw > 0 && ch > 0) {
-            int vpH = (int)((long long)fbw * ch / cw); // full-width, aspect-preserved height
-            int vpY = (fbh - vpH) / 2;                 // centre vertically (may be negative = crop)
-            glViewport(0, vpY, fbw, vpH);
-        }
+        // The binary sets no glViewport here (Ghidra: MainViewController::draw
+        // @0xbd30 is BeginRender -> SetDefaultFrameBuffer -> clear -> AepManager
+        // draw -> Present, nothing more). The GL viewport is owned by the engine's
+        // orthographic viewport: LayoutedGLView: builds it over the whole front
+        // buffer and neApplyViewport installs it during the flush. Setting a
+        // separate aspect-scaled glViewport here fought that viewport (neApplyViewport
+        // early-outs when its viewport is unchanged, so the stray rect stuck) and
+        // clipped the scene.
         glClear(GL_COLOR_BUFFER_BIT);
         m_AepManager->draw();
 
