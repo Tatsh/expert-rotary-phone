@@ -210,7 +210,13 @@ public:
         return m_groupFrameData[slot];
     } // +0x7f39c8
     const uint8_t *channelBase(int slot) const {
-        return (const uint8_t *)m_idxData[slot].bytes;
+        // The keyframe-channel offsets stored in each AepFrameEntry are relative to
+        // idxBase, i.e. the index proper at file + 4 (readIndexFile FUN_0000f770 skips
+        // the 4-byte header: it returns bytes + 0x204 from a buffer based at +0x200).
+        // The binary stores that idxBase pointer at +0x7274d4 and adds the channel
+        // offsets to it; returning the bare file start (bytes + 0) shifts every
+        // keyframe read by two int16s, so a static "sx = 100" scale reads back as 0.
+        return (const uint8_t *)m_idxData[slot].bytes + 4;
     } // +0x7274d4
     const int16_t *spriteRecord(int slot, int idx) const {
         return &m_framePos[slot][idx].x;
