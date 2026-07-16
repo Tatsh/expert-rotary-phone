@@ -259,12 +259,10 @@ static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
 // Texture upload format. Ghidra: TextureFormatToGLFormat @ FUN_00013970.
 static GLenum TextureFormatToGL(int format) {
     switch (format) {
-    case neIGLES::TEX_FORMAT_ALPHA:
-        return GL_ALPHA;
-    case neIGLES::TEX_FORMAT_RGB:
-        return GL_RGB;
     case neIGLES::TEX_FORMAT_RGBA:
         return GL_RGBA;
+    case neIGLES::TEX_FORMAT_LUMINANCE_ALPHA:
+        return GL_LUMINANCE_ALPHA;
     }
     assert(0);
     return 0;

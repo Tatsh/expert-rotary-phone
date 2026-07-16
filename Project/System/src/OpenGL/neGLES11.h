@@ -180,11 +180,11 @@ public:
         BLEND_DEST_VALUE_MAX
     };
 
-    // Texture upload formats (TextureFormatToGLFormat, FUN_00013970).
+    // Texture upload formats (TextureFormatToGLFormat, FUN_00013970 — recognizes
+    // exactly these two, asserting on anything else).
     enum TexFormat {
-        TEX_FORMAT_ALPHA = 0, // GL_ALPHA (format 0)
-        TEX_FORMAT_RGB,       // GL_RGB   (0x1907)
-        TEX_FORMAT_RGBA,      // GL_RGBA  (0x1908)
+        TEX_FORMAT_RGBA = 1,            // GL_RGBA            (0x1908, 4 bytes/pixel)
+        TEX_FORMAT_LUMINANCE_ALPHA = 2, // GL_LUMINANCE_ALPHA (0x190a, 2 bytes/pixel)
         TEX_FORMAT_MAX
     };
 

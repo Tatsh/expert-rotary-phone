@@ -224,13 +224,18 @@ void AepTextureUploadTiles(AepTile *tile, AepTexture *tex) {
 // Map the engine texture-format ordinal to its GL enum. The atlas path uses a
 // 2-byte LUMINANCE_ALPHA format; artwork uses RGBA.
 static GLenum TexDataFormatToGL(int format) {
+    // Ghidra: TextureFormatToGLFormat (FUN_00013970) recognizes exactly two engine
+    // formats — TEX_FORMAT_RGBA (1) -> GL_RGBA (4 bytes/pixel) and
+    // TEX_FORMAT_LUMINANCE_ALPHA (2) -> GL_LUMINANCE_ALPHA (2 bytes/pixel). Mapping
+    // format 2 to GL_RGBA (as before) made glTexImage2D read 4 bytes/pixel from the
+    // 2-byte glyph-atlas buffer and overran it (driver buffer-validation abort).
     switch (format) {
-    case 0:
-        return GL_ALPHA;
-    case 1:
+    case 1: // TEX_FORMAT_RGBA
+        return GL_RGBA;
+    case 2: // TEX_FORMAT_LUMINANCE_ALPHA
         return GL_LUMINANCE_ALPHA;
     default:
-        return GL_RGBA; // 2
+        return GL_RGBA;
     }
 }
 
@@ -311,7 +316,7 @@ int neTextureLoadFromData(AepTexture *tex, const void *nsData) {
     CGContextRelease(ctx);
     CGColorSpaceRelease(space);
 
-    neTextureUpload(tex, tw, th, /*RGBA*/ 2, pixels);
+    neTextureUpload(tex, tw, th, /*TEX_FORMAT_RGBA*/ 1, pixels);
     free(pixels);
     return 1;
 }
