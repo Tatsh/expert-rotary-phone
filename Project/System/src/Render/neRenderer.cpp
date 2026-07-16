@@ -379,12 +379,15 @@ void neDeleteTexture(neRenderer *r, int name) {
 // Textured sprite blit.
 // ---------------------------------------------------------------------------
 
-// One textured vertex: 16.16 fixed-point position, GL_SHORT-normalized UV,
-// premult RGBA8. Stride 16; position size 2 (+0x00), UV (+0x08), colour
-// (+0x0c). Ghidra: built on the stack (local_a4 block) by FUN_00015fb8.
+// One textured vertex: GL_FLOAT position, GL_SHORT-normalized UV, premult RGBA8.
+// Stride 16; position size 2 (+0x00), UV (+0x08), colour (+0x0c). Ghidra: built
+// on the stack (local_a4 block) by FUN_00015fb8; the backend specifies the
+// position array as GL_FLOAT (0x1406), so the corners must be stored as floats —
+// storing ints here would be reinterpreted as near-zero denormals and collapse
+// every quad to the origin.
 struct neTexVertex {
-    int32_t x;
-    int32_t y;
+    float x;
+    float y;
     int16_t u;
     int16_t v;
     uint32_t rgba;

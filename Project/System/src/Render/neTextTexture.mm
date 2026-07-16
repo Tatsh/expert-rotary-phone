@@ -166,10 +166,13 @@ static void CreateNewTextTexture(neTextTextureMgr *mgr) {
     mgr->atlases = atlas;
 }
 
-// One textured glyph vertex (16 bytes): position, GL_SHORT UV, premult RGBA8.
+// One textured glyph vertex (16 bytes): GL_FLOAT position, GL_SHORT UV, premult
+// RGBA8. The backend specifies the position array as GL_FLOAT (0x1406, verified
+// in FUN_0001342c), so the positions must be stored as floats — integer bytes
+// would be reinterpreted as near-zero denormals and collapse every glyph quad.
 struct neGlyphVertex {
-    int32_t x;
-    int32_t y;
+    float x;
+    float y;
     int16_t u;
     int16_t v;
     uint8_t rgba[4];
