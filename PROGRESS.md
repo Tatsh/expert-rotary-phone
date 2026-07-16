@@ -4,12 +4,13 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 113/2720 (4%) definitions verified `@complete`.**
+**Overall: 118/2721 (4%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |    % |
 | -------------------------------------------------- | ---: | --------: | ---: |
 | `Project/AppDelegate.mm`                           |   41 |        41 | 100% |
 | `Project/System/src/Render/neRenderer.cpp`         |   24 |        24 | 100% |
+| `Project/System/src/Render/neTextureForiOS.cpp`    |    5 |         5 | 100% |
 | `Project/System/src/Task/BootLogoTask.mm`          |    6 |         6 | 100% |
 | `Project/System/src/Task/MainTask.mm`              |   15 |        15 | 100% |
 | `Project/System/src/Task/MenuMainTask.mm`          |   10 |        10 | 100% |
@@ -196,7 +197,6 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/Render/neGLView.mm`            |   15 |         0 |   0% |
 | `Project/System/src/Render/neGraphics.cpp`         |   11 |         0 |   0% |
 | `Project/System/src/Render/neTextTexture.mm`       |   11 |         0 |   0% |
-| `Project/System/src/Render/neTextureForiOS.cpp`    |    4 |         0 |   0% |
 | `Project/System/src/Render/neTextureRef.cpp`       |    3 |         0 |   0% |
 | `Project/System/src/Sound/AVBus.mm`                |   18 |         0 |   0% |
 | `Project/System/src/Sound/AudioManager.mm`         |   69 |         0 |   0% |
