@@ -133,6 +133,7 @@ dialog
 dictionaris
 dios
 disasm
+divsi
 docstrings
 dplatform
 dpopnrhythmin
