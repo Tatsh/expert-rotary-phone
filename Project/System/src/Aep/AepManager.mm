@@ -430,12 +430,12 @@ void AepManager::drawTransitionOverlay(int alpha) {
     }
     cmd->wFlags = 4; // -> renderAepOrderingTable case 4 = drawAepOtRect
     cmd->nBank = 0;
-    cmd->nTexU = m_transitionOverlay[0];     // x
-    cmd->nTexV = m_transitionOverlay[1];     // y
-    cmd->nPosX = m_transitionOverlay[2];     // w
-    cmd->nPosY = m_transitionOverlay[3];     // h
-    cmd->flPosXf = (float)alpha;             // drawAepOtRect nAlpha (0..100)
-    cmd->flPosYf = (float)m_transitionColor; // drawAepOtRect nColor (0x00RRGGBB; 0 = black)
+    cmd->nTexU = m_transitionOverlay[0]; // x
+    cmd->nTexV = m_transitionOverlay[1]; // y
+    cmd->nPosX = m_transitionOverlay[2]; // w
+    cmd->nPosY = m_transitionOverlay[3]; // h
+    cmd->flPosXf = alpha;                // drawAepOtRect nAlpha (0..100); +0x1c int slot
+    cmd->flPosYf = m_transitionColor;    // drawAepOtRect nColor (0x00RRGGBB; 0 = black); +0x20 int
 }
 
 // ===========================================================================

@@ -67,26 +67,23 @@ AepOtSpriteCmd *AepOrderingTable::allocEntry(int priority) {
 // the per-tile render-state records @+0x14, stride 0x18). The trailing clip words
 // spill into the next pool entry exactly as the binary does.
 //
-// NOT yet @complete: the binary's only float stores in this command are cmd+0x28
-// and cmd+0x2c (the sole vstr pair; every other slot is a plain int str). The
-// wrapper neTextureForiOS::draw (FUN_0000fbcc) vcvt's the two args landing there
-// (the scale values) to float first. The struct instead types flPosXf/flPosYf
-// (+0x1c/+0x20) as float and nOfsY/nColorA (+0x28/+0x2c) as int, so drawSprite
-// stores ints where the binary stores floats. This is numerically transparent
-// (all reads use C++ value conversion, no bit-casts, so the chain renders
-// identically -- confirmed by the RHYDBG quad probe), but to match the binary's
-// exact operations the float typing must move to +0x28/+0x2c across the struct,
-// this signature, and the wrapper's casts, coherently with every command-type
-// handler that reuses those slots. Deferred until it can be verified end-to-end.
+// The command's only float stores are cmd+0x28 and cmd+0x2c (the sole vstr pair in
+// FUN_00011468; every other slot is a plain int str), which hold the stretched
+// sprite's X/Y scale. They are the nOfsYF/nColorAF float views of the AepOtSpriteCmd
+// union; flPosXf/flPosYf (+0x1c/+0x20) are the int views (str). The wrapper
+// neTextureForiOS::draw (FUN_0000fbcc) already vcvt-converts exactly those two scale
+// args to float and passes the positions as ints, so this fill mirrors the binary
+// store-for-store.
+// @complete
 AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
                                              int nTexV,
                                              int nPosX,
                                              int nPosY,
-                                             float flPosXf,
-                                             float flPosYf,
+                                             int flPosXf,
+                                             int flPosYf,
                                              int nOfsX,
-                                             int nOfsY,
-                                             int nColorA,
+                                             float nOfsY,
+                                             float nColorA,
                                              int nColorMul,
                                              int nKeys,
                                              int nBlendFlags,
@@ -111,8 +108,8 @@ AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
     cmd->flPosXf = flPosXf;
     cmd->flPosYf = flPosYf;
     cmd->nOfsX = nOfsX;
-    cmd->nOfsY = nOfsY;
-    cmd->nColorA = nColorA;
+    cmd->nOfsYF = nOfsY;     // +0x28 float view (binary vstr): stretched-sprite X scale
+    cmd->nColorAF = nColorA; // +0x2c float view (binary vstr): stretched-sprite Y scale
     cmd->nColorMul = nColorMul;
     cmd->nUKey = (int16_t)nKeys;
     cmd->nVKey = (int16_t)(nKeys >> 16);
@@ -247,11 +244,11 @@ void AepOrderingTable::flush() {
                 drawAepOtSprite(cmd->srcRect, // packed {u, v, w, h} source rect
                                 cmd->nPosX,
                                 cmd->nPosY,
-                                (int)cmd->flPosXf,
-                                (int)cmd->flPosYf,
+                                (int)cmd->flPosXfF, // +0x1c float view (vldr): X scale
+                                (int)cmd->flPosYfF, // +0x20 float view (vldr): Y scale
                                 cmd->nOfsX,
-                                cmd->nOfsY,
-                                cmd->nColorA,
+                                cmd->nOfsY,   // +0x28 int view (ldr): width/height
+                                cmd->nColorA, // +0x2c int view (ldr): colour
                                 (uint32_t)cmd->nColorMul,
                                 (int)cmd->nUKey,
                                 (uint32_t)(uint16_t)cmd->nVKey,
@@ -268,23 +265,23 @@ void AepOrderingTable::flush() {
                 const int nColorA =
                     static_cast<uint16_t>(cmd->nUKey) | (static_cast<int>(cmd->nVKey) << 16);
                 const uint32_t clipLeft = static_cast<uint32_t>(cmd->clipRect.nLeft);
-                drawAepOtSpriteStretch(cmd->pTexObj,                     // pFrames
-                                       cmd->nTexV,                       // nU
-                                       cmd->nPosX,                       // nV
-                                       cmd->nPosY,                       // nPosX (width)
-                                       static_cast<int>(cmd->flPosXf),   // nPosY (height)
-                                       static_cast<int>(cmd->flPosYf),   // nScaleX (screen X)
-                                       cmd->nOfsX,                       // nScaleY (screen Y)
-                                       static_cast<float>(cmd->nOfsY),   // nOfsX (X scale %)
-                                       static_cast<float>(cmd->nColorA), // nOfsY (Y scale %)
-                                       cmd->nColorMul,                   // nColorMul
-                                       nColorA,                          // nColorA
-                                       cmd->nBlendFlags,                 // nAlpha (colour %)
-                                       cmd->nColorRGB,                   // nColorFlags
-                                       clipLeft & 0xffff,                // nColorA2
-                                       clipLeft >> 16,                   // nBlendMask
-                                       &cmd->clipRect.nBottom,           // pClipRect
-                                       cmd->clipRect.nTop,               // nBlendFlag
+                drawAepOtSpriteStretch(cmd->pTexObj,   // pFrames
+                                       cmd->nTexV,     // nU
+                                       cmd->nPosX,     // nV
+                                       cmd->nPosY,     // nPosX (width)
+                                       cmd->flPosXf,   // nPosY (height) +0x1c int view (ldr)
+                                       cmd->flPosYf,   // nScaleX (screen X) +0x20 int view (ldr)
+                                       cmd->nOfsX,     // nScaleY (screen Y)
+                                       cmd->nOfsYF,    // nOfsX (X scale %) +0x28 float view (vldr)
+                                       cmd->nColorAF,  // nOfsY (Y scale %) +0x2c float view (vldr)
+                                       cmd->nColorMul, // nColorMul
+                                       nColorA,        // nColorA
+                                       cmd->nBlendFlags,       // nAlpha (colour %)
+                                       cmd->nColorRGB,         // nColorFlags
+                                       clipLeft & 0xffff,      // nColorA2
+                                       clipLeft >> 16,         // nBlendMask
+                                       &cmd->clipRect.nBottom, // pClipRect
+                                       cmd->clipRect.nTop,     // nBlendFlag
                                        static_cast<uint32_t>(cmd->clipRect.nRight)); // nColorRGB
                 break;
             }
@@ -304,7 +301,7 @@ void AepOrderingTable::flush() {
                                   (int)cmd->flPosXf,
                                   (int)cmd->flPosYf,
                                   cmd->nOfsX,
-                                  cmd->nOfsY);
+                                  cmd->nOfsY); // +0x28 int view
                 break;
             case 4: // rect (transition fade overlay) -> drawAepOtRect (FUN_0001113c)
                 drawAepOtRect(cmd->nTexU,
@@ -322,8 +319,8 @@ void AepOrderingTable::flush() {
                               (int)cmd->flPosXf,
                               (int)cmd->flPosYf,
                               cmd->nOfsX,
-                              cmd->nOfsY,
-                              cmd->nColorA,                           // alpha (+0x2c)
+                              cmd->nOfsY,                             // +0x28 int view
+                              cmd->nColorA,                           // alpha (+0x2c int view)
                               static_cast<uint32_t>(cmd->nColorMul)); // colour (+0x30)
                 break;
             case 6: { // text -> drawAepOtText (FUN_00011310)

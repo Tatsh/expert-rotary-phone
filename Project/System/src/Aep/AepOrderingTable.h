@@ -59,14 +59,38 @@ struct AepOtSpriteCmd {
         };
         int16_t srcRect[4]; // type-0 sprite: packed {u, v, w, h}
     };
-    int32_t nPosX, nPosY;       // +0x14/+0x18  screen position
-    float flPosXf, flPosYf;     // +0x1c/+0x20  sub-pixel float position / scale
-    int32_t nOfsX, nOfsY;       // +0x24/+0x28  offset (end pos for stretched sprites)
-    int32_t nColorA, nColorMul; // +0x2c/+0x30  colour + colour-multiply
-    int16_t nUKey, nVKey;       // +0x34/+0x36  UV keys
-    int32_t nBlendFlags;        // +0x38
-    int32_t nColorRGB;          // +0x3c
-    AepClipRect clipRect;       // +0x40..0x4f  clip rect (defaults to screen bounds)
+    int32_t nPosX, nPosY; // +0x14/+0x18  screen position
+    // +0x1c/+0x20 and +0x28/+0x2c are reused per command type with DIFFERENT
+    // encodings, verified from the flush's per-case loads (renderAepOrderingTable
+    // FUN_000115d0): the type-0 sprite (case 0) reads +0x1c/+0x20 as float (vldr @
+    // 0x11622/0x11626) and +0x28/+0x2c as int (ldr); the type-1 stretched sprite
+    // (case 1) reads +0x1c/+0x20 as int (ldr @ 0x11694/0x11698) and +0x28/+0x2c as
+    // float (vldr @ 0x116a0/0x116a4); cases 2-5 read all four as int. A single 32-bit
+    // pool slot is thus float for one command and int for another, so each is a union
+    // of both views. Every command consistently writes and reads the SAME member (no
+    // inactive-member punning), matching the binary's per-type str/vstr exactly.
+    union {
+        int32_t flPosXf; // +0x1c int view (cases 1-5: base size / position / alpha)
+        float flPosXfF;  // +0x1c float view (case 0: sprite X scale)
+    };
+    union {
+        int32_t flPosYf; // +0x20 int view (cases 1-5: position / colour)
+        float flPosYfF;  // +0x20 float view (case 0: sprite Y scale)
+    };
+    int32_t nOfsX; // +0x24  int slot (str)
+    union {
+        int32_t nOfsY; // +0x28 int view (cases 0, 3, 5: height / offset)
+        float nOfsYF;  // +0x28 float view (case 1: stretched-sprite X scale)
+    };
+    union {
+        int32_t nColorA; // +0x2c int view (cases 0, 5: colour / alpha)
+        float nColorAF;  // +0x2c float view (case 1: stretched-sprite Y scale)
+    };
+    int32_t nColorMul;    // +0x30  int slot (str)
+    int16_t nUKey, nVKey; // +0x34/+0x36  UV keys
+    int32_t nBlendFlags;  // +0x38
+    int32_t nColorRGB;    // +0x3c
+    AepClipRect clipRect; // +0x40..0x4f  clip rect (defaults to screen bounds)
     // The clip-spill (drawSprite) writes clipRect.nBottom plus the following 12
     // bytes into +0x4c..+0x5b of this tail.
     uint8_t scratch0[0x60 - 0x50]; // +0x50..+0x5f  per-command / clip-spill tail
@@ -121,11 +145,11 @@ public:
                                int nTexV,
                                int nPosX,
                                int nPosY,
-                               float flPosXf,
-                               float flPosYf,
+                               int flPosXf,
+                               int flPosYf,
                                int nOfsX,
-                               int nOfsY,
-                               int nColorA,
+                               float nOfsY,
+                               float nColorA,
                                int nColorMul,
                                int nKeys,
                                int nBlendFlags,

@@ -207,11 +207,11 @@ static void aepEmitSprite(AepManager *mgr,
     cmd->nPosY = y;                    // +0x18
     // The binary converts the integer scale to float (FixedToFP, 16.16) here; the
     // flush reads (int)flPosXf back out as the percentage scale.
-    cmd->flPosXf = (float)scaleX;   // +0x1c
-    cmd->flPosYf = (float)scaleY;   // +0x20
+    cmd->flPosXfF = (float)scaleX;  // +0x1c float view (case-0 vldr)
+    cmd->flPosYfF = (float)scaleY;  // +0x20 float view (case-0 vldr)
     cmd->nOfsX = w;                 // +0x24  (entry anchorX doubles as width)
-    cmd->nOfsY = h;                 // +0x28  (entry anchorY doubles as height)
-    cmd->nColorA = color;           // +0x2c  colour (brightness) 0..100
+    cmd->nOfsY = h;                 // +0x28  int view (entry anchorY doubles as height)
+    cmd->nColorA = color;           // +0x2c  int view: colour (brightness) 0..100
     cmd->nColorMul = alpha;         // +0x30  alpha 0..100 (see the >=100 split)
     cmd->nUKey = (int16_t)rotation; // +0x34  packed rotation word
     cmd->nVKey = (int16_t)blend;    // +0x36  packed blend word

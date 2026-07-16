@@ -132,29 +132,31 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     // GL-name bridge is needed any more.
     //
     // The neSpriteDrawParams fields map onto the command slots by the offsets the
-    // binary's neTextureForiOS::draw (FUN_0000fbcc) forwards them into; the two
-    // fixed-point positions become the flPosXf/flPosYf floats. A null clip leaves
-    // the flush to default it to the screen bounds.
-    // Field mapping is exact per Ghidra FUN_0000fbcc (the wrapper's stores into
-    // drawSprite's params): the source origin (u) goes to nTexV; the base size
-    // (w,h) into nPosY/flPosXf; the position (x,y) into flPosYf/nOfsX; the scale
-    // (sx,sy) into nOfsY/nColorA; and the colour percentage / secondary colour word
-    // / rotation / blend / layer / colour-multiply into the remaining slots. The
-    // flush's case-1 dispatch (renderAepOrderingTable) reads them back in this
-    // order and the stretch/clipped handlers fold in the half-screen scale.
-    ot->drawSprite(this,                    // pTexObj: the source neTextureForiOS*
-                   p.u,                     // nTexV
-                   p.v,                     // nPosX
-                   p.w,                     // nPosY (base width)
-                   static_cast<float>(p.h), // flPosXf (base height; flush reads (int))
-                   static_cast<float>(p.x), // flPosYf (screen X; flush reads (int))
-                   p.y,                     // nOfsX   (screen Y)
-                   p.sx,                    // nOfsY   (X scale %, read as float downstream)
-                   p.sy,                    // nColorA (Y scale %, read as float downstream)
-                   p.ex,                    // nColorMul
-                   p.ey,                    // nUKey | nVKey<<16
-                   p.color,                 // nBlendFlags (colour % -> quad alpha)
-                   p.alpha,                 // nColorRGB (secondary colour-flags word)
+    // binary's neTextureForiOS::draw (FUN_0000fbcc) forwards them into. That wrapper
+    // vcvt.f32.s32-converts exactly its 9th and 10th args (the scale values) to float
+    // (0x0fbf4/0x0fc0c) and passes every other arg as a plain int, so the base size /
+    // position go to the int slots +0x1c/+0x20 (flPosXf/flPosYf) and the scale % go to
+    // the FLOAT slots +0x28/+0x2c (nOfsYF/nColorAF). A null clip leaves the flush to
+    // default it to the screen bounds.
+    // Field mapping is exact per Ghidra FUN_0000fbcc: the source origin (u) goes to
+    // nTexV; the base size (w,h) into nPosY/flPosXf; the position (x,y) into
+    // flPosYf/nOfsX; the scale (sx,sy) into the float nOfsY/nColorA slots; and the
+    // colour percentage / secondary colour word / rotation / blend / layer /
+    // colour-multiply into the remaining slots. The flush's case-1 dispatch
+    // (renderAepOrderingTable) reads them back in this order.
+    ot->drawSprite(this,                             // pTexObj: the source neTextureForiOS*
+                   p.u,                              // nTexV
+                   p.v,                              // nPosX
+                   p.w,                              // nPosY (base width)
+                   p.h,                              // flPosXf (base height; int slot +0x1c)
+                   p.x,                              // flPosYf (screen X; int slot +0x20)
+                   p.y,                              // nOfsX   (screen Y)
+                   static_cast<float>(p.sx),         // nOfsY   (X scale %; float slot +0x28)
+                   static_cast<float>(p.sy),         // nColorA (Y scale %; float slot +0x2c)
+                   p.ex,                             // nColorMul
+                   p.ey,                             // nUKey | nVKey<<16
+                   p.color,                          // nBlendFlags (colour % -> quad alpha)
+                   p.alpha,                          // nColorRGB (secondary colour-flags word)
                    static_cast<int16_t>(p.rotation), // clipRect.nLeft low half
                    static_cast<int16_t>(p.blend0),   // clipRect.nLeft high half (blend mode)
                    p.layer,                          // clipRect.nTop
