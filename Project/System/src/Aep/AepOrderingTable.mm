@@ -574,8 +574,13 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
     const float vSpan = frameH ? static_cast<float>(nSrcU) / static_cast<float>(frameH) : 1.0f;
 
     // Optional heap clip rect (Ghidra: operator new(0x10) of the fixed->float copy).
+    // Only build/forward it when clipping is actually enabled: the binary defaults
+    // an unclipped sprite's spill to the full screen bounds, but the reconstruction
+    // zero-fills that spill, so an unclipped sprite would otherwise reach
+    // neDrawTexturedQuad with a degenerate {0,0,0,0} rect and get its clip planes
+    // enabled around a zero-area region -- clipping the whole quad away (black).
     float *clipRect = nullptr;
-    if (pClipRect != nullptr) {
+    if (nUseClip != 0 && pClipRect != nullptr) {
         clipRect = new float[4];
         for (int i = 0; i < 4; ++i) {
             clipRect[i] = static_cast<float>(pClipRect[i]);
