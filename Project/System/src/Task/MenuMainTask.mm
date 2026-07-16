@@ -318,8 +318,13 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
         int dx = t->x - t->startX, dy = t->y - t->startY;
         if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
-            tapX = (int)((float)t->startX / uiScale);
-            tapY = (int)((float)t->startY / uiScale);
+            // startX/startY are 16.16 fixed device pixels (touchBegan stores
+            // FloatToFixed). The binary converts them to float via FixedToFP
+            // (i.e. / 65536) before dividing by the UI scale; a plain (float)
+            // cast skips that and yields ~pixel * 65536, so the tap misses every
+            // button rect. Ghidra: FixedToFP(nStartX) / g_dwUiScale @ ~0x6aec0.
+            tapX = (int)(t->startX / 65536.0f / uiScale);
+            tapY = (int)(t->startY / 65536.0f / uiScale);
             neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);
             NSLog(@"%d %d", tapX, tapY);
             haveTap = true;
