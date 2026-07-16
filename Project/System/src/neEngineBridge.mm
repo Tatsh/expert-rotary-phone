@@ -953,11 +953,15 @@ void neTextureForiOS_draw(AepManager *aep,
     p.ex = ex;
     p.ey = ey;
     p.color = color;
-    p.blend1 = (short)alpha; // +0x42 alpha / blend sub-mode
-    p.blend0 = (short)blend0;
+    // FUN_0000fbcc routes `alpha` to command +0x3c (str r4=[r7+0x30] @ 0x0fc1a), which
+    // draw() fills from p.alpha -> nColorRGB; storing it in the unread p.blend1 dropped
+    // it (every wrapped sprite got +0x3c = 0). `layer` is command +0x44 (str r4=[r7+0x44]
+    // @ 0x0fc02), which draw() fills from p.layer -> clipTop.
+    p.alpha = alpha;
+    p.blend0 = static_cast<short>(blend0);
     p.colorMul = colorMul;
     p.extra = extra;
+    p.layer = layer;
     p.priority = priority;
-    (void)layer;
     tex->draw(aep->orderingTable(), p);
 }
