@@ -298,7 +298,7 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
 
     int cellX = -1;
     int cellY = -1;
-    allocGlyphAtlasSlot(w, h, &cellX, &cellY);
+    const bool slotOk = allocGlyphAtlasSlot(w, h, &cellX, &cellY);
 
     neTextTexture *atlas = atlases;
 
@@ -327,20 +327,37 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     // vertex colour reproduces the original LA result.
     AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
     int atlasW = tex->textureWidth();
-    // The packer advances cellX by the glyph WIDTH, so cellX is the COLUMN and cellY
-    // (the shelf base, advanced by the height) is the ROW: byte = (cellY + rrow) *
-    // atlasW + (cellX + col) (binary: mla shelf, atlasW, pen @ 0x17e40). Indexing
-    // the row by cellX instead overlapped consecutive glyph cells and garbled text.
-    for (int rrow = 0; rrow < h; ++rrow) {
-        const uint8_t *src = gray + rrow * w;
-        uint8_t *dst = atlas->pixels + ((cellY + rrow) * atlasW + cellX) * 4;
-        for (int col = 0; col < w; ++col) {
-            uint8_t g = src[col];
-            dst[col * 4 + 0] = g;
-            dst[col * 4 + 1] = g;
-            dst[col * 4 + 2] = g;
-            dst[col * 4 + 3] = g;
+    const int atlasH = tex->textureHeight();
+    // allocGlyphAtlasSlot returns true even on its give-up path (2 failed
+    // new-texture retries, matching the binary), leaving cellX/cellY at the
+    // overflow cursor near or past the atlas edge. Blitting there writes past the
+    // 256x256 atlas buffer and crashes on a wild address -- seen while rasterising
+    // song titles, which produce far more new glyphs than the menu did. Only blit
+    // when the reserved cell is fully in bounds; otherwise leave the glyph blank
+    // (it still advances). The draw-time UV read is GL-clamped, so only the write
+    // is unsafe.
+    const bool cellInBounds =
+        slotOk && cellX >= 0 && cellY >= 0 && cellX + w <= atlasW && cellY + h <= atlasH;
+    if (cellInBounds) {
+        // The packer advances cellX by the glyph WIDTH, so cellX is the COLUMN and
+        // cellY (the shelf base, advanced by the height) is the ROW: byte =
+        // (cellY + rrow) * atlasW + (cellX + col) (binary: mla shelf, atlasW, pen @
+        // 0x17e40). Indexing the row by cellX instead overlapped consecutive glyph
+        // cells and garbled text.
+        for (int rrow = 0; rrow < h; ++rrow) {
+            const uint8_t *src = gray + rrow * w;
+            uint8_t *dst = atlas->pixels + ((cellY + rrow) * atlasW + cellX) * 4;
+            for (int col = 0; col < w; ++col) {
+                uint8_t g = src[col];
+                dst[col * 4 + 0] = g;
+                dst[col * 4 + 1] = g;
+                dst[col * 4 + 2] = g;
+                dst[col * 4 + 3] = g;
+            }
         }
+    } else {
+        cellX = 0;
+        cellY = 0; // keep the glyph's UV valid (samples the cleared top-left)
     }
     if (NE_DBG_FIRST(60)) {
         int nz = 0;
