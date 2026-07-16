@@ -137,6 +137,7 @@ docstrings
 dplatform
 dpopnrhythmin
 dresources
+drhydbg
 dumpable
 dyna
 eagate
