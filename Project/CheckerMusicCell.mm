@@ -27,6 +27,7 @@
 }
 
 // @ 0xd1d28 — cache the OS flag and resolve the per-device/OS x offsets once.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -60,6 +61,7 @@
 // @ 0xd1ecc — tear down recycled subviews, install the banner background
 // (device/OS dependent), then rebuild the date / title / genre labels from the
 // score record.
+// @complete
 - (void)setData:(ArcadeScoreData *)scoreData {
     _scoreData = scoreData;
 

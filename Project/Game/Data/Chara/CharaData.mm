@@ -285,6 +285,7 @@ static const CharaDataStruct kCharaData[30] = {
 
 // Ghidra: GetHardCodeCharaDataStruct @ FUN_000cb958 (asserts (index & 0xffff) <
 // 30 at CharaData.mm:0x107).
+// @complete
 const CharaDataStruct *GetHardCodeCharaDataStruct(int index) {
     assert((index & 0xffff) < 30);
     return &kCharaData[index];

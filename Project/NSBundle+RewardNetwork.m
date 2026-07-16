@@ -15,6 +15,7 @@ static NSBundle *g_pRewardBundle = nil;
 
 // @ 0xfc0cc — dispatch_once lazy accessor for the
 // RewardNetworkResources.bundle.
+// @complete
 + (NSBundle *)rewardBundle {
     static dispatch_once_t onceToken;
     // @ 0xfc100 — dispatch_once body: resolve RewardNetworkResources.bundle from

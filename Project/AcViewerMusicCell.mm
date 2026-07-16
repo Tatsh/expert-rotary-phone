@@ -43,8 +43,10 @@ static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {
 
 // @ 0x40430 — build the four difficulty buttons in a row at y = 51. The first
 // button starts at x = 22 (pre-iOS 7) or 32, plus 50 more on iPad; each
-// subsequent button sits just right of the previous. Tags 100..103 identify the
-// chosen difficulty.
+// subsequent button steps a fixed 70 points right of the previous button's
+// origin x (0x428c0000, verified at 0x406d8). Tags 100..103 identify the chosen
+// difficulty.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     _isPad = neSceneManager::isPadDisplay();
@@ -70,7 +72,9 @@ static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {
         for (NSUInteger i = 0; i < 4; i++) {
             UIButton *btn = [[UIButton alloc] init];
             UIImage *img = [UIImage imageNamed:images[i]];
-            CGFloat x = (prev == nil) ? firstX : CGRectGetMaxX(prev.frame);
+            // The binary steps by a constant 70pt from the previous button's
+            // origin x, not by its measured width (0x406d8).
+            CGFloat x = (prev == nil) ? firstX : prev.frame.origin.x + 70.0f;
             [btn setBackgroundImage:img forState:UIControlStateNormal];
             btn.frame = CGRectMake(x, 51, img.size.width, img.size.height);
             btn.tag = 100 + (NSInteger)i;
@@ -102,6 +106,7 @@ static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {
 // level number for each available difficulty drawn inside its matching
 // difficulty button. A difficulty whose level is < 1 has no chart, so its
 // button is pulled from the view.
+// @complete
 - (void)setData:(AcMusicData *)data {
     [_bgImgView removeFromSuperview];
     [_titleLbl removeFromSuperview];

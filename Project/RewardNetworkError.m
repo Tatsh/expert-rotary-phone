@@ -18,6 +18,7 @@ static NSMutableDictionary *g_pRewardErrorMessageDict = nil;
 @implementation RewardNetworkError
 
 // @ 0xf58e4
+// @complete
 + (NSError *)localizedApplilinkErrorWithCode:(NSInteger)code {
     return [self localizedRewardNetworkErrorWithCode:code userInfo:nil];
 }
@@ -32,6 +33,7 @@ static NSMutableDictionary *g_pRewardErrorMessageDict = nil;
 // to a hard-coded English default when the bundle/string is unavailable. The
 // message for the requested code (or 1000, the "unexpected" bucket) is
 // installed under NSLocalizedDescriptionKey.
+// @complete
 + (NSError *)localizedRewardNetworkErrorWithCode:(NSInteger)code userInfo:(NSDictionary *)userInfo {
     // The localized "Error" strings come from RewardNetworkResources.bundle.
     NSBundle * (^rewardBundle)(void) = ^NSBundle * {

@@ -11,6 +11,7 @@
 @implementation RewardNetworkMessage
 
 // @ 0xf5904
+// @complete
 + (NSString *)localizedMessage:(NSString *)key {
     NSBundle *bundle = [NSBundle rewardBundle];
     return [bundle localizedStringForKey:key value:@"" table:@"Message"];

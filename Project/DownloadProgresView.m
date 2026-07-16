@@ -45,6 +45,7 @@
 
 // @ 0xde1d0 — build the dialog: center a "cmn_window" image, then add a
 // spinner, a message label and a progress bar as subviews of that image view.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self != nil) {
@@ -100,6 +101,7 @@
 // @ 0xde65c — toggle the progress bar and recenter the message label. When the
 // progress bar is shown the label sits 5pt below the dialog center; when
 // hidden, 10pt below (taking the freed space).
+// @complete
 - (void)layout:(BOOL)hidden {
     CGFloat width = _dialogFrame.size.width;
     CGFloat height = _dialogFrame.size.height;

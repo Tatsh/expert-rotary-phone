@@ -15,6 +15,7 @@
 // behind/containing the scroller) first, then let UIScrollView handle it. The
 // recovered code calls [[self nextResponder] touchesBegan:withEvent:] followed
 // by [super touchesBegan:withEvent:].
+// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     [self.nextResponder touchesBegan:touches withEvent:event];
     [super touchesBegan:touches withEvent:event];

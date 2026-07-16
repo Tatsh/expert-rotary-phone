@@ -20,6 +20,7 @@
 @implementation ViewUtility
 
 // @ 0x64f2c
+// @complete
 + (UIView *)getCommonBannerBg:(CGRect)frame {
     UIView *bg = [[UIView alloc] init];
     UIView *inner = [[UIView alloc] init];

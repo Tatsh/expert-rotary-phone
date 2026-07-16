@@ -29,6 +29,7 @@
 @synthesize rightViewCtrl = m_rightViewCtrl;
 
 // @ 0x5dbc0
+// @complete
 - (id)initWithFrame:(CGRect)frame
          leftViewWidth:(int)leftViewWidth
     leftViewController:(UIViewController *)leftViewController
@@ -52,11 +53,14 @@
 
     m_leftViewWidth = leftViewWidth;
 
-    // Left child: docked at the frame origin, fixed width, full height.
-    // All setFrame: args confirmed exact by disassembly trace.
+    // Left child: docked at the frame origin, fixed width, full height. The x/y
+    // args are frame.origin.x / frame.origin.y (r2 = s16, r3 = s22 at 0x5dce4),
+    // not zero.
     m_leftViewCtrl = leftViewController;
-    [[m_leftViewCtrl view]
-        setFrame:CGRectMake(0.0f, 0.0f, (float)m_leftViewWidth, frame.size.height)];
+    [[m_leftViewCtrl view] setFrame:CGRectMake(frame.origin.x,
+                                               frame.origin.y,
+                                               (float)m_leftViewWidth,
+                                               frame.size.height)];
     [m_leftViewCtrl reloadInputViews];
 
     // Right child: offset past the left column, filling the remaining width.
@@ -74,6 +78,7 @@
 }
 
 // @ 0x5dde0
+// @complete
 - (id)initWithLeftViewWidth:(int)leftViewWidth
          leftViewController:(UIViewController *)leftViewController
                   rightView:(UIViewController *)rightView {

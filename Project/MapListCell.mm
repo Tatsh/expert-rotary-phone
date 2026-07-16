@@ -29,6 +29,7 @@ typedef struct {
     UIImageView *_bgImgView; // banner (background view on phone, subview host on pad)
 }
 
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -40,6 +41,7 @@ typedef struct {
 // dealloc @ 0xbe2b8 — ARC-omitted (releases ivars only; synthesized by ARC).
 
 // @ 0xbe2e4 — rebuild the row from an NSValue-wrapped main-map record.
+// @complete
 - (void)setMapData:(NSValue *)mapValue isSelect:(BOOL)isSelect {
     MapListRowValue v;
     [mapValue getValue:&v];

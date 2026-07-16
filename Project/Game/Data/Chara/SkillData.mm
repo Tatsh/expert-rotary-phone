@@ -55,6 +55,7 @@ static const SkillDataStruct kSkillData[kSkillCount] = {
 };
 
 // Ghidra: FUN_000cb9d0 (asserts index < 30 at SkillData.mm:199).
+// @complete
 const SkillDataStruct *GetSkillDataStruct(int index) {
     assert(index >= 0 && index < kSkillCount);
     return &kSkillData[index];

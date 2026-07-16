@@ -42,6 +42,7 @@ typedef struct OverScoreLogData {
 
 // @ 0x69760 — plain non-selectable cell; its content is bound by the VC on
 // reuse.
+// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -60,6 +61,7 @@ typedef struct OverScoreLogData {
 // sheet-icon image view. All frames/fonts recovered from the binary; the iOS 6
 // vs 7+ layout split keys off
 // -[UIDevice systemVersion].floatValue exactly as the original does.
+// @complete
 - (void)setOverScoreLogData:(NSValue *)overScoreLogData {
     CGFloat sysVer = [[UIDevice currentDevice].systemVersion floatValue];
     BOOL legacy = sysVer < 7.0; // pre-iOS 7 layout

@@ -16,6 +16,7 @@
 @implementation neWindow
 
 // @ 0x28a00 — [super initWithFrame:frame]; return the result unchanged.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     return [super initWithFrame:frame];
 }
