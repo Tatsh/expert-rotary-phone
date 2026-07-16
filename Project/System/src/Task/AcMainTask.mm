@@ -43,6 +43,7 @@
 // constructed in place at +0x4f4, then the work area (already zeroed by the
 // members' default initialisers) and three sentinels (@ +0x508 = -1,
 // +0x62c = -0x63, +0x5a0 = 3).
+// @complete
 AcMainTask::AcMainTask() {
     new (&m_rng) Random(); // FUN_00062b20: construct the arcade RNG
     m_dragAnchorId = -1;   // no drag anchor yet
@@ -55,6 +56,7 @@ AcMainTask::AcMainTask() {
 // placement-constructed in the play-data blob (@ +0x4f4, Ghidra:
 // rngStateDtorStub) and then chains to the C_TASK base (caSourceNode_dtor),
 // which runs implicitly after this body.
+// @complete
 AcMainTask::~AcMainTask() {
     m_rng.~Random();
 }
@@ -62,6 +64,7 @@ AcMainTask::~AcMainTask() {
 // Ghidra: AcMainTask_update (FUN_00099d18). Snapshot the touches (recording a
 // drag anchor and classifying a tap), refresh the "scrolled past the end" flag,
 // then dispatch on the play-data state (@ +0x9f8).
+// @complete
 void AcMainTask::update(int /*deltaMs*/) {
     neGraphics &gfx = neGraphics::shared();
 
@@ -148,6 +151,7 @@ void AcMainTask::update(int /*deltaMs*/) {
 // the accumulated scroll, the result is clamped to the map's scroll box, and
 // any overshoot past the clamp is banked into a rubber-band accumulator
 // (m_scrollRubberX/Y) so the view springs back.
+// @complete
 void AcMainTask::applyDragScroll(neGraphics &gfx) {
     if (m_dragAnchorId < 0) {
         return;
@@ -203,6 +207,7 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
 // is present (subMapId @ +0x620 >= 0); otherwise take the no-treasure path.
 // Ghidra: the case 0 body at 0x99e92 (FUN_0009fc90 then playBgm:0.5 /
 // LAB_0009aa74).
+// @complete
 void AcMainTask::stateInit() {
     setupScene(); // FUN_0009fc90
     if (m_subMapId >= 0) {
@@ -217,6 +222,7 @@ void AcMainTask::stateInit() {
 // BGM stack, push the sugoroku map-select screen, then advance to the treasure
 // check. Ghidra: case 1 (setAepTransitionMode(scene, 2) = FUN_00010698,
 // setTransitionFrame(scene, 0) = FUN_00010758).
+// @complete
 void AcMainTask::stateFadeIn() {
     AepManager &aep = AepManager::shared();
     aep.setAepTransitionMode(2); // FUN_00010698(scene, 2): fade-out, 30 frames
@@ -237,6 +243,7 @@ void AcMainTask::stateFadeIn() {
 // 0), cache it (@ +0x620), load the map, and start play, else keep waiting.
 // Ghidra: case 2 (UserSettingData treasureTmp; FUN_000a0b58; playBgm at
 // LAB_0009a026).
+// @complete
 void AcMainTask::stateTreasureCheck() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     m_subMapId = tmp.subMapId;
@@ -799,6 +806,7 @@ void AcMainTask::setupLoadTextures() {
 // Ghidra: FUN_000ce1a8 — the "read count" (number of board-story pages) for a
 // sugoroku sub-map. Only boards 6x and 8x (sub 0..2) have pages; everything
 // else is 0. Tables byte-verified at DAT_0012fb90 / DAT_0012fb9c.
+// @complete
 static int TreasureReadCount(short subMapId) {
     static const int kBoard6[3] = {41, 35, 47}; // DAT_0012fb90
     static const int kBoard8[3] = {64, 72, 71}; // DAT_0012fb9c
@@ -1063,6 +1071,7 @@ void AcMainTask::loadTreasureMap() {
 static const int kStepBoardA[7] = {1, 2, 1, 3, 1, 2, 3};
 static const int kStepBoardB[7] = {4, 5, 4, 6, 4, 5, 6};
 
+// @complete
 void AcMainTask::computeStepValues() {
     for (int i = 0; i < 7; i++) {
         // Board-derived base (computed for every index, though modes 0..6 discard
@@ -1117,6 +1126,7 @@ void AcMainTask::computeStepValues() {
 // loads the 15 roulette / board sound effects into the SE-handle table at
 // +0x438 (one loadSe per name). Only se12_roulturn (index 1) is looped;
 // callName is nil and the SE group is 1.
+// @complete
 // ===========================================================================
 
 // Byte-verified SE resource names (Ghidra: PTR_cf_se11_roulapp_00132ae0, an
@@ -1143,6 +1153,7 @@ static const char *const kRouletteSeNames[15] = {"se11_roulapp",
 // The sugoroku roulette-result draw (AcMainSugorokuDraw, FUN_000a3724) looks
 // the hit item's description up here. Byte-verified from the 12-entry const
 // table PTR_s__00133fac (its UTF-8 string pointers @ 0x115434..0x1156b4).
+// @complete
 static const char *getStringByIndex12(unsigned index) {
     static const char *const kItemDescriptions[12] = {
         u8"ルーレットが超ゆっくりになるよ♪ 狙った目を出すチャンス！",
@@ -1185,6 +1196,7 @@ void AcMainTask::buildSelectListLayout() {
 // subMapId*4 (mainMapId is the board 0..8, subMapId the 0..2 sub-index). The
 // binary writes the music and wallpaper values into BOTH their primary and
 // duplicate tables each iteration.
+// @complete
 // ===========================================================================
 void AcMainTask::buildMapCharaLayers() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
@@ -1225,6 +1237,7 @@ void AcMainTask::buildMapCharaLayers() {
 // no-op. Otherwise it frees any previous texture and, if a goal character is
 // present (raw0x20[0] != 0), loads "sugo_chara%03d.png" for chara id raw0x12
 // from the app-support directory.
+// @complete
 // ===========================================================================
 void AcMainTask::buildMapPanelLayers() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
@@ -1279,6 +1292,7 @@ static const int kBonusPrereqSongsB[4] = {
     200000211 // 0x0bebc2d0..0x0bebc2d3
 };
 
+// @complete
 void AcMainUnlockBonusTreasure() {
     NSManagedObjectContext *context = [[AppDelegate appDelegate] managedObjectContext];
 
@@ -1318,6 +1332,7 @@ void AcMainUnlockBonusTreasure() {
 // maps a panel's display slot to its index in the treasure-music array. Ghidra:
 // FUN_000ce0c8 (linear search of DAT_0012faa0, byte-verified
 // {0,3,4,5,6,1,2,7,8}).
+// @complete
 static int MapPanelOrder(int displaySlot) {
     static const int kOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
     for (int i = 0; i < 9; i++) {
@@ -1334,6 +1349,7 @@ static int MapPanelOrder(int displaySlot) {
 // (+0x640), re-fetch the treasure-music list, then load each visible panel's
 // artwork (the panels are drawn in the MapPanelOrder permutation). `mode` pages
 // the list (only page 0 fits the 9 panels, matching the < 9 guard).
+// @complete
 void AcMainTask::refreshMapScroll(int mode) {
     for (int i = 0; i < 9; i++) {
         if (neTextureForiOS *tex = m_jacketTex[i]) {
@@ -1361,6 +1377,7 @@ void AcMainTask::refreshMapScroll(int mode) {
 // Ghidra: FUN_000a4e84 — unlink + delete the board background layer (+0xd0) and
 // unload its asset group (6). loadTreasureMap calls this before loading the
 // next board's bg.
+// @complete
 void AcMainTask::unloadMapBgGroup() {
     if (AepLyrCtrl *bg = m_boardBgLayer) {
         bg->unlink(); // FUN_0002ca9c
@@ -1463,6 +1480,7 @@ bool isWithinRange2D(float x0,
 // returns the matching index, or -1 when the id is not present. (Not identity —
 // ids 1/2 and 3..6 are permuted, so the wall-nail sprite order differs from the
 // raw id order.)
+// @complete
 short findTreasureMapIndexById(int id) {
     static const int kWallNailIdTable[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
     for (int i = 0; i < 9; ++i) {
@@ -1501,6 +1519,16 @@ short findTreasureMapIndexById(int id) {
 // Draw the skill-selection overlay centred on the player sprite and return
 // which button was tapped this frame: 0 = left button, 1 = right button,
 // -1 = no hit.
+//
+// NOT @complete — touch handling deviates from the disassembly. Ghidra
+// FUN_000a14a0 takes the touch point as its second parameter (r1, stored @
+// sp+0x44) and performs a single tap-distance test on raw coordinates (0xa1674:
+// x@+0xc, startX@+0x4; `subs; abs; cmp #0xa; bgt` reject when > 10 px), not the
+// internal `activeTouchCount()`/`touchAt(i)` loop below. The binary's coords are
+// raw pixels, so the `tp->x >> 16` shifts and the `11 << 16` thresholds here are
+// wrong for this routine (the 16.16 handling was carried over from elsewhere).
+// The AEP draw, DrawText labels, button geometry (iVar7-0xbb/iVar10-0xbc and
+// iVar7+0x3f) and the 0/1/-1 returns were all verified faithful.
 int AcMainTask::sugorokuDrawSkillPanel() {
     AepManager *mgr = m_aep;
     const neGraphics &gfx = neGraphics::shared();
@@ -1599,6 +1627,15 @@ int AcMainTask::sugorokuDrawSkillPanel() {
 // ════════════════════════════════════════════════════════════════════════════
 // Draw a generic two-button dialog panel (layerId @ +0x220, layout data @
 // +0x990..+0x9b4) and return: 1 = button 1 hit, -1 = button 2 hit, 0 = miss.
+//
+// NOT @complete — touch handling deviates from the disassembly, as with
+// sugorokuDrawSkillPanel. Ghidra FUN_000a178c takes the touch point as its
+// second parameter (r1, tested @ 0xa1810 on raw coords: `subs; abs; cmp #0xa;
+// bgt` reject when > 10 px, returning -1) rather than looping over
+// `activeTouchCount()`/`touchAt(i)`. The binary's coords are raw pixels, so the
+// `tp->x >> 16` shifts here are wrong. The panel draw (drawLayer at
+// overlayW/2, overlayH/2 - panelH/2, frame = panelW/2) and both button
+// hit-rects (m_dlgBtn1*/m_dlgBtn2* @ +0x998..+0x9b4) were verified faithful.
 int AcMainTask::sugorokuDrawButtonHitTest() {
     AepManager *mgr = m_aep;
     const neGraphics &gfx = neGraphics::shared();
@@ -1665,12 +1702,20 @@ int AcMainTask::sugorokuDrawButtonHitTest() {
 // ════════════════════════════════════════════════════════════════════════════
 // Ease the scroll position (+0x4d8/+0x4dc) toward the target (+0x5a4/+0x5a8)
 // using stored velocities (+0x5ac/+0x5b0).  Returns true while still moving.
+// @complete
+// Disasm 0xa19dc: the move/snap test compares the MAGNITUDE of the velocity
+// against the MAGNITUDE of the remaining distance -- both operands pass through
+// a conditional `vneg` (abs), so it is `|vel| < |target - pos|` (0xa19f0 vneg s0
+// side, 0xa1a14 vneg d4 = target-pos side, then `vcmpe s2,s8` / `bpl` snap). The
+// decompiler folds both abs into a single `-vel < pos-target`, which is a
+// mis-sign; the abs form below is the faithful one. Under the arm-time invariant
+// sign(vel) == sign(target-pos) the two forms disagree, so this matters.
 bool AcMainTask::sugorokuEasePositionPairA() {
     // X axis.
     float velX = m_scrollVelX;
     float posX = m_scrollX;
     float targetX = m_scrollTargetX;
-    if (-velX < posX - targetX) {
+    if (std::fabs(velX) < std::fabs(targetX - posX)) {
         m_scrollX = posX + velX;
     } else {
         m_scrollX = targetX;
@@ -1682,7 +1727,7 @@ bool AcMainTask::sugorokuEasePositionPairA() {
     float posY = m_scrollY;
     float targetY = m_scrollTargetY;
     bool yDone;
-    if (-velY < posY - targetY) {
+    if (std::fabs(velY) < std::fabs(targetY - posY)) {
         m_scrollY = posY + velY;
         yDone = false;
     } else {
@@ -1700,12 +1745,17 @@ bool AcMainTask::sugorokuEasePositionPairA() {
 // Ease the player board position (+0x5cc/+0x5d0) toward its target
 // (+0x5bc/+0x5c0) using stored velocities (+0x5c4/+0x5c8).
 // Returns true while still moving.
+// @complete
+// Disasm 0xa1ac8: byte-identical to sugorokuEasePositionPairA on the shifted
+// offsets; the move/snap test is `|vel| < |target - pos|` (both operands abs via
+// conditional `vneg` at 0xa1ae6 / 0xa1b00, then `vcmpe s2,s8` / `bpl`). Fixed
+// from the decompiler's mis-signed `-vel < pos-target`.
 bool AcMainTask::sugorokuEasePositionPairB() {
     // X axis.
     float velX = m_playerVelX;
     float posX = m_playerX;
     float targetX = m_playerTargetX;
-    if (-velX < posX - targetX) {
+    if (std::fabs(velX) < std::fabs(targetX - posX)) {
         m_playerX = posX + velX;
     } else {
         m_playerX = targetX;
@@ -1717,7 +1767,7 @@ bool AcMainTask::sugorokuEasePositionPairB() {
     float posY = m_playerY;
     float targetY = m_playerTargetY;
     bool yDone;
-    if (-velY < posY - targetY) {
+    if (std::fabs(velY) < std::fabs(targetY - posY)) {
         m_playerY = posY + velY;
         yDone = false;
     } else {
@@ -1746,6 +1796,19 @@ static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
 // draw nothing. The character-message text comes from getCharacterAssetName (a
 // content asset that returns null in this build, so that path draws nothing);
 // node->text is the runtime map-loaded label.
+//
+// NOT @complete — one localised read deviates. Disasm 0xa1bd4 loads the text-x /
+// slot index at +0x88c as a FLOAT (`vldr.32 s0` then `vcvt.s32.f32` truncates to
+// int at 0xa1be2); the code below reads m_squareFrameIdx as a plain int. If the
+// field genuinely holds a float bit-pattern the int read is wrong; if the stored
+// value is always integral the result matches. The header types +0x88c as int,
+// so this needs the field's writer resolved before marking. Everything else --
+// all nine node-type branches, the tbb table (verified: types 6/7 map to the
+// wall/music tables @ +0x748/+0x6dc), the story-ready gate (readCount @ +0x8c0 /
+// readNo @ +0x8bc), and the text draw (m_squareTextY - 31.0f, constants 0x1b /
+// 0x2e / 0x615245 / 0x18 / 100) -- was verified faithful. The
+// getTreasureMapValue_fb54(0, ...) call is fine: the binary passes m_map (@
+// +0x4b0) but FUN_000cea50 ignores that argument.
 void AcMainTask::sugorokuDrawSquareText() {
     if (m_field5f3 != 0) {
         return; // suppressed while task+0x5f3 is set
@@ -1836,6 +1899,15 @@ void AcMainTask::sugorokuDrawSquareText() {
 // ════════════════════════════════════════════════════════════════════════════
 // Flush the in-flight TreasureTmpData to Core-Data (TreasureData) for the
 // square that was just visited.  Called when the board-walk animation ends.
+//
+// NOT @complete — two deviations. (1) fastRecord source: disasm 0xa2044 reads
+// the new fast value at sp+0xc0 == treasureTmp struct offset +0x4c, but the code
+// below reads tmp.raw0x49 (struct +0x49); +0x4c straddles the tail of raw0x49
+// and raw0x4d, so the field/offset needs reconciling. (2) The save-failure
+// re-fetch/enumeration block (disasm 0xa20d2..0xa2172, entered only when
+// `[ctx save:]` returns NO) is omitted here. The min-keep logic, goal-type
+// branch (m_goalType @ +0x8b1), clear/friend-meet increments, and the +0x08 /
+// +0x0c OR-in masks were verified faithful.
 void AcMainTask::sugorokuSaveTreasureProgress() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     short subId = static_cast<short>(tmp.subMapId);
@@ -1887,6 +1959,7 @@ void AcMainTask::sugorokuSaveTreasureProgress() {
 // Snap the player draw position (+0x5cc/+0x5d0) to the node tile centre,
 // compute a clamped scroll target (+0x5a4/+0x5a8) and arm the ease velocities
 // (+0x5ac/+0x5b0) so the viewport glides there.
+// @complete
 void AcMainTask::sugorokuSetupScrollBounds() {
     const TreasureMap::Node *node = m_curNode;
     if (!node) {
@@ -1938,6 +2011,10 @@ void AcMainTask::sugorokuSetupScrollBounds() {
 // ════════════════════════════════════════════════════════════════════════════
 // Replace the 9 wall-nail textures (+0x1c8) for the given wallpaper page.
 // Old textures are deleted before loading the new set.
+// Disasm 0xa2caa: the binary calls neTextureForiOS::load unconditionally with
+// the resolved path; the `if (path)` guard below is a benign defensive addition
+// (path is nil only when the resource is missing).
+// @complete
 void AcMainTask::sugorokuLoadWallTextures(int page) {
     // Delete existing wall textures.
     for (int i = 0; i < 9; i++) {
@@ -1966,6 +2043,16 @@ void AcMainTask::sugorokuLoadWallTextures(int page) {
 // Full teardown of the sugoroku board scene: delete all textures and layers,
 // unload assets, release sound effects, then kill this task and activate the
 // next one (+0x948).
+//
+// NOT @complete — one edge-case deviation in the tail. Disasm 0xa2fe2 gates BOTH
+// the kill flag (`strb #1,[+0x24]`) and next->setPriority(3) inside the
+// `if (m_nextTask != null)` check; the code below calls kill() unconditionally
+// and only guards the setPriority. When m_nextTask is null the binary does not
+// set +0x24, so this over-kills. All delete/unlink loops, slot ranges
+// (0x35..0x3e, digits 0xfc/0x124/0x14c, 0x69..0x86, layers roulette/arrows/
+// panels), the group-5/6 releases, the 15 SE releases, and the map disposal were
+// verified faithful (the FUN_000ce2e4 pre-step is folded into ~TreasureMap as
+// documented).
 void AcMainTask::sugorokuTaskDispose() {
     AudioManager *audioMgr = [AudioManager sharedManager];
 
@@ -2079,6 +2166,7 @@ void AcMainTask::sugorokuTaskDispose() {
 // ════════════════════════════════════════════════════════════════════════════
 // Cull and draw all board squares, edges, the player sprite and the HUD for
 // the current frame.
+// @complete
 void AcMainTask::sugorokuDrawBoard() {
     AepManager *mgr = m_aep;
 
@@ -2161,6 +2249,7 @@ void AcMainTask::sugorokuDrawBoard() {
 // ════════════════════════════════════════════════════════════════════════════
 // Draw the scrolling background tile for the current scroll position, apply
 // the transition fade overlay, and drive the background animation layer.
+// @complete
 void AcMainTask::sugorokuDrawBackground() {
     AepManager *mgr = m_aep;
     neTextureForiOS *bgTex = m_boardBgTex;
@@ -2225,6 +2314,7 @@ void AcMainTask::sugorokuDrawBackground() {
 // ════════════════════════════════════════════════════════════════════════════
 // Select the AEP frame sprite for node type, then draw it at the node's
 // board-pixel position adjusted for the current scroll.
+// @complete
 void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
     AepManager *mgr = m_aep;
     int scrollOffX = (int)(m_scrollX - m_scrollBaseX);
@@ -2333,6 +2423,7 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
 // ════════════════════════════════════════════════════════════════════════════
 // Draw the arrow chain connecting edge->a to edge->b.  Vertical edges use 6
 // arrows; horizontal edges use 4 arrows.  Back-links use a separate sprite set.
+// @complete
 void AcMainTask::sugorokuDrawPath(const TreasureMap::ConnectStruct *edge) {
     AepManager *mgr = m_aep;
     int scrollOffX = (int)(m_scrollX - m_scrollBaseX);
@@ -2424,6 +2515,7 @@ void AcMainTask::sugorokuDrawPath(const TreasureMap::ConnectStruct *edge) {
 // ════════════════════════════════════════════════════════════════════════════
 // Draw the player sprite (with warp-spin or board-enter bounce), the rank
 // badge, the event badge, the roulette result frame and the 4 hit-flash layers.
+// @complete
 void AcMainTask::sugorokuDrawPlayerAndUi() {
     AepManager *mgr = m_aep;
 
@@ -2628,6 +2720,16 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 // If a friend sprite is loaded (+0xe0), draw it at the current node's screen
 // position with a cos/sin scale bounce, then fade it out.  Also overlay the
 // friend's name label.
+//
+// NOT @complete — node source deviates. Ghidra FUN_000a5740 takes the node as
+// its second parameter (r1); its only caller, sugorokuDrawSquare's type-10 case
+// (0xa50bc, `mov r0,r8; bl 0xa5740`), leaves r1 holding the friend-meet square
+// being drawn. The code below instead reads m_curNode (the player's node) and
+// adds a null-node fallback the binary lacks (0xa579c dereferences r1
+// unconditionally). For a friend square != the player node these differ. The
+// cos/sin bounce (frame @ +0x5e8, cos<15 / sin>=15, x30.0), the name truncation
+// (4 chars + ".."), and the fade-out (opacity-5 floored at 0) were verified
+// faithful.
 void AcMainTask::sugorokuDrawFriendMeet() {
     void *friendTex = m_goalCharaTex;
     if (!friendTex) {

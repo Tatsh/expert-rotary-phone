@@ -35,6 +35,7 @@
 @implementation RecommendWebView
 
 // @ 0xfe808 — start hidden with no parent/overlay and the overlay disabled.
+// @complete
 - (instancetype)init {
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
     // WKWebView has no usable -init; it must be created with a frame and a
@@ -55,6 +56,7 @@
 
 // @ 0xfe8a4 — blank the page, drop the overlay and detach the delegate on
 // teardown.
+// @complete
 - (void)removeFromSuperview {
     [super removeFromSuperview];
     [self loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"about:blank"]]];
@@ -69,6 +71,7 @@
 // @ 0xfe970 — main-queue app-list fetch (recommendWebViewLoadAppliList @
 // 0xfe9ec, whose inner completion is recommendWebViewAppliListCallback @
 // 0xfead8).
+// @complete
 - (void)loadRequestWithCallback:(RecommendWebViewOpenAppliListCallback)callback {
     dispatch_async(dispatch_get_main_queue(), ^{
       self.backgroundColor = [UIColor clearColor];
@@ -128,6 +131,7 @@
 // @ 0xff354 — merge parameters into the URL, set a 30s reloading request,
 // become the delegate, show the overlay and load. `delegate` is accepted for
 // API symmetry but overridden with self.
+// @complete
 - (void)loadRequestWithURL:(NSString *)url
                 parameters:(NSDictionary *)parameters
                   delegate:(id)delegate {
@@ -146,6 +150,7 @@
 }
 
 // @ 0xff0a8
+// @complete
 - (void)cancelRequest {
     if ([self isLoading]) {
         [self stopLoading];
@@ -153,22 +158,26 @@
 }
 
 // @ 0xff098
+// @complete
 - (void)closeList {
     [self appliListClosed];
 }
 
 // @ 0xff0e0
+// @complete
 - (void)setIndicatorwithEnable:(BOOL)enable {
     isIndicator = enable;
 }
 
 // @ 0xff0f0
+// @complete
 - (void)setViewType:(int)viewType {
     _viewType = viewType;
 }
 
 // @ 0xff100 — walk the hosted subviews and apply scrolling/bouncing to any
 // UIScrollView.
+// @complete
 - (void)setScrollEnabled:(BOOL)enabled {
     for (UIView *sub in self.subviews) {
         if ([sub isKindOfClass:[UIScrollView class]]) {
@@ -179,6 +188,7 @@
 }
 
 // @ 0xff268
+// @complete
 - (void)loadRecommendView {
     if (isIndicator) {
         _indicator = [[RewardNetworkIndicator alloc] initWithFrame:self.bounds];
@@ -187,6 +197,7 @@
 }
 
 // @ 0xff30c
+// @complete
 - (void)unloadRecommendView {
     if (_indicator != nil) {
         [_indicator removeFromSuperview];
@@ -195,6 +206,7 @@
 }
 
 // @ 0xff86c
+// @complete
 - (void)updateIndicator:(BOOL)show {
     if (_indicator != nil) {
         if (show) {
@@ -208,6 +220,7 @@
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 
 // @ 0xff340
+// @complete
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [self updateIndicator:YES];
 }
@@ -215,13 +228,19 @@
 // @ 0xff574 — a "command=close" query closes the panel; otherwise hide the
 // indicator and do the app-specific main-queue follow-up. WKWebView exposes no
 // synchronous current request, so the query is read from the current URL.
+// NOTE: not marked @complete — the outer control flow (query extraction,
+// command=close -> appliListClosed, else updateIndicator:NO + dispatch_async on
+// the main queue) is verified against the disassembly, but the dispatched
+// block body at 0xff68c is not (Ghidra has not disassembled it as Thumb, so its
+// contents could not be recovered). The setScrollEnabled: call below is a
+// best-effort guess, not a confirmed match.
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     NSString *query = [webView.URL query];
     if (query == nil || [query rangeOfString:@"command=close"].location == NSNotFound) {
         [self updateIndicator:NO];
         dispatch_async(dispatch_get_main_queue(), ^{
           // @ 0xff68c — app-specific post-load follow-up on the main queue (a
-          // nested message send on self; exact body not fully recovered).
+          // nested message send on self; exact body not recovered).
           // Best-effort: re-assert scrolling.
           [self setScrollEnabled:YES];
         });
@@ -233,12 +252,15 @@
 #else
 
 // @ 0xff340
+// @complete
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     [self updateIndicator:YES];
 }
 
 // @ 0xff574 — a "command=close" query closes the panel; otherwise hide the
 // indicator and do the app-specific main-queue follow-up.
+// NOTE: not marked @complete — see the WKWebView variant above; the dispatched
+// block body at 0xff68c is not recovered.
 - (void)webViewDidFinishLoad:(UIWebView *)webView {
     NSString *query = [[[webView request] URL] query];
     if (query == nil || [query rangeOfString:@"command=close"].location == NSNotFound) {
@@ -259,6 +281,7 @@
 // @ 0xff494 — when dismissed, fire the stored open-app-list callback with the
 // last error. The delegate probed here is the web view's own delegate (the view
 // makes itself the delegate in -loadRequestWithURL:parameters:delegate:).
+// @complete
 - (void)viewDidDisappear:(BOOL)animated {
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
     id navigationDelegate = self.navigationDelegate;
@@ -275,6 +298,7 @@
 }
 
 // @ 0xff6bc
+// @complete
 - (void)setHidden:(BOOL)hidden {
     [super setHidden:hidden];
     nowHidden = hidden;
@@ -284,6 +308,7 @@
 // otherwise report the failure through the delegate and close the panel. This
 // body is shared by both WKWebView failure callbacks (committed and
 // provisional).
+// @complete
 - (void)handleNavigationFailWithError:(NSError *)error {
     [self updateIndicator:NO];
     if ([error code] == -999) {
@@ -327,6 +352,7 @@
 #endif
 
 // @ 0xff828
+// @complete
 - (void)appliListClosed {
     [self unloadRecommendView];
     [self removeFromSuperview];
@@ -341,6 +367,7 @@
 
 // @ 0xff8a8 — hand every navigation to RecommendCore's Applilink redirect
 // handler. The core returns whether the navigation should proceed.
+// @complete
 - (void)webView:(WKWebView *)webView
     decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
                     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
@@ -355,6 +382,7 @@
 
 // @ 0xff8a8 — hand every navigation to RecommendCore's Applilink redirect
 // handler.
+// @complete
 - (BOOL)webView:(UIWebView *)webView
     shouldStartLoadWithRequest:(NSURLRequest *)request
                 navigationType:(UIWebViewNavigationType)navigationType {

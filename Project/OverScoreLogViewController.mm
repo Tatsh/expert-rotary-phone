@@ -10,10 +10,15 @@
 
 #import "OverScoreLogViewController.h"
 
+#import "AppDelegate.h"
+#import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"
 #import "MainTask.h"
+#import "MainViewController.h"
+#import "MusicData.h"
 #import "OverScoreLogCell.h"
+#import "PlayTask.h"
 #import "neEngineBridge.h"
 
 // The app's root navigation host (bridged UIViewController on the C++ scene
@@ -312,19 +317,60 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     [UIView commitAnimations];
 }
 
-// Remove the nav view, notify the root host, and clear the animating flag.
+// @ 0x2aad4 — the close-animation completion. Remove the nav view, notify the
+// root host, clear the animating flag, and — if a valid (m_musicId, m_sheet) was
+// picked — hand the owning music-select task straight into a play of that song
+// (or raise a "song not installed" alert).
 //
-// NOTE: the Ghidra citation 0x2aad4 for this method is in doubt (that address is
-// the entry of a mis-bounded ~76 KB region, not a clean -endCloseAnimation). The
-// on-close play-launch of the picked song was previously routed through a
-// fabricated MainTask helper (launchPlayForMusicId) that is not a real binary
-// function; that helper has been removed. The play-launch + not-found alert are
-// dropped here pending re-verification of this method's true identity and of
-// where the picked-song hand-off to MainTask actually lives.
+// The Ghidra function region for this method is mis-bounded (its body spans a
+// ~76 KB range starting at 0x2aad4), but the decompile of the real prologue at
+// 0x2aad4 is coherent and complete; this reconstruction follows it. The
+// play-launch writes the picked song into the task's save fields
+// (m_chosenIndex @ +0x8f8, m_chosenMusicId @ +0x900, m_resultSheet @ +0x904),
+// pops the BGM, fires the decide SE (m_seInst[3] @ +0x8e4 from m_seId[3] @
+// +0x8d0), spawns a PlayTask (+0xaa0), installs it as the main task, and sets
+// the task state to 0xc (the play-launch handoff) — mirroring the MainTask PLAY
+// button path. A song no longer installed falls through to the alert and state
+// 2.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
-    [RootVC() performSelector:@selector(OverScoreLogEndCallBack)];
+    [(MainViewController *)RootVC() OverScoreLogEndCallBack];
     _isAnimationing = NO;
+
+    if ((unsigned)m_musicId == 0xffffffff || m_sheet == -1) {
+        return;
+    }
+
+    MainTask *task = self.musicSelTask;
+    NSArray<MusicData *> *songs = task->m_musicList;
+    for (NSUInteger i = 0; i < songs.count; i++) {
+        if ((int)[songs[i] MusicID] == m_musicId) {
+            task->m_chosenIndex = (int)i;
+            task->m_chosenMusicId = m_musicId;
+            task->m_resultSheet = m_sheet;
+
+            AudioManager *audio = [AudioManager sharedManager];
+            [audio popBgm];
+            task->m_seInst[3] = (int)[audio playSe:nil resourceId:task->m_seId[3]];
+
+            task->m_spawnedTask = new PlayTask();
+            [[AppDelegate appDelegate] setMainTask:(MainTask *)task->m_spawnedTask];
+            task->m_state = 0xc; // -> play-launch handoff
+            return;
+        }
+    }
+
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:nil
+                                       message:@"楽曲が見つかりませんでした。\n"
+                                               @"ストアで楽曲をインストール"
+                                               @"してください。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
+    [alert show];
+    task->m_state = 2;
 }
 
 #pragma mark - UITableViewDataSource / UITableViewDelegate

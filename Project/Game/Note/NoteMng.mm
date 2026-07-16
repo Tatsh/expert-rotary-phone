@@ -29,6 +29,7 @@
 // function- local static below reproduces that construct-once-on-first-use
 // semantics. NoteMng_init (FUN_00033514) zeroes the object and sets the
 // defaults captured by the member initialisers.
+// @complete
 NoteMng &NoteMng::shared() {
     static NoteMng instance;
     return instance;
@@ -40,6 +41,7 @@ NoteMng &NoteMng::shared() {
 // anchor the current play position, and set the hold/freeze flag — so
 // togglePause folds the frozen span back on the return to active. No-op if the
 // engine is already frozen (a menu pause, etc.).
+// @complete
 void NoteMng::onResignActivePushHook() {
     if (m_holdFlag) {
         return;
@@ -61,15 +63,18 @@ inline uint8_t recByte(const NoteRecord *r, int off) {
 
 // Ghidra: InitPlayData @ 0x335a4. Parse the decoded payload (4-byte header then
 // 20-byte records) into the timeline.
+// @complete
 int NoteMng::initPlayData(const void *data,
                           int size,
                           void (*missCallback)(void *),
                           void *missCallbackArg) {
-    assert(data != nullptr && size > 0);
-    assert(size >= 4 && (size - 4) % 20 == 0); // NoteMng.mm:0x45/0x59
+    assert(data != nullptr && size > 0);      // NoteMng.mm:0x45 (0x335b4/0x335ba)
+    assert((unsigned)(size - 24) <= 0x4e0bu); // NoteMng.mm:0x59 (0x3360c/0x33618): the
+                                              // record span must fit the note pool
 
     // The miss hook detectMiss fires when a note scrolls past un-tapped (Ghidra:
-    // stored at +0x104/+0x108 after the reset).
+    // the callback stored at +0x13cbc and its argument at +0x13cb8, both read back
+    // by detectMiss @ 0x33e16/0x33e24).
     m_missCallback = missCallback;
     m_missCallbackArg = missCallbackArg;
 
@@ -122,9 +127,13 @@ int NoteMng::initPlayData(const void *data,
     m_records[count].type = NOTE_TYPE_END;
     m_recordCount = count;
 
-    // Spawning starts at the first record; play state begins "playing".
+    // Spawning starts at the first record; play state is armed to the
+    // "end-spawned" sentinel (1) so primePlay's spawnNotes does not emit the end
+    // record before the clock is running — startClock later resets it to 0
+    // (Ghidra: InitPlayData 0x336c6 stores 1 to +0x5158, startClock 0x3450c
+    // stores 0).
     m_spawnCursor = m_records;
-    m_state = 0;
+    m_state = 1;
     m_endFlag = false;
     m_barCount = 0;
 
@@ -150,6 +159,7 @@ int NoteMng::initPlayData(const void *data,
 }
 
 // Ghidra: initPlayDataWithData @ 0x33550.
+// @complete
 int NoteMng::initPlayDataWithData(NSData *data,
                                   void (*missCallback)(void *),
                                   void *missCallbackArg) {
@@ -158,6 +168,7 @@ int NoteMng::initPlayDataWithData(NSData *data,
 
 // Ghidra: registerTempoEvents @ 0x337e0. Register every tempo (type 2) event
 // and count bar lines (type 4); stop at the end marker (type 3).
+// @complete
 void NoteMng::registerTempoEvents() {
     for (int i = 0; i < m_recordCount; i++) {
         const NoteRecord &r = m_records[i];
@@ -181,6 +192,7 @@ void NoteMng::registerTempoEvents() {
 // sorted by startTick (scroll speed = bpm * 1024 / 480000, DAT_00034cd0).
 // Returns non-zero if the segment table is full (max 63). Also refreshes the
 // spawn look-ahead.
+// @complete
 int NoteMng::advanceRegisterEvent(int bpm, uint32_t tick) {
     if (m_scrollCount >= 0x3f) {
         return 1; // overflow -> assert at the call site
@@ -204,6 +216,7 @@ int NoteMng::advanceRegisterEvent(int bpm, uint32_t tick) {
 // front segments summing 60000/BPM (ms), advancing when the next segment's
 // startTick is reached. The sentinel startTick (-1) on unregistered segments
 // blocks over-advance.
+// @complete
 void NoteMng::recomputeSpawnLookahead(uint32_t pos) {
     int seg = 0;
     int accum = 0;
@@ -220,6 +233,7 @@ void NoteMng::recomputeSpawnLookahead(uint32_t pos) {
 // scroll segments from `pos` up to `targetTick`, scale by the hi-speed
 // multiplier, clamp +-8192. Each segment's speed applies until the NEXT
 // segment's startTick (a -1 sentinel on the last leaves the rest at it).
+// @complete
 float NoteMng::computeScrollY(uint32_t targetTick, uint32_t pos) const {
     float accum = 0.0f;
     if (pos < targetTick) {
@@ -255,6 +269,7 @@ float NoteMng::computeScrollY(uint32_t targetTick, uint32_t pos) const {
 
 // Ghidra: FUN_00034468 — the kind-1 (mark) event: start the BGM once and
 // remember the position.
+// @complete
 void NoteMng::triggerBgmStart() {
     if (m_endFlag) {
         return;
@@ -265,6 +280,7 @@ void NoteMng::triggerBgmStart() {
 
 // Unlink `node` from the active list and push it onto the free-list head
 // (33ca8's recycle tail).
+// @complete
 void NoteMng::retireNode(ActiveNote *node) {
     if (m_activeList == node) {
         m_activeList = node->next;
@@ -283,6 +299,7 @@ void NoteMng::retireNode(ActiveNote *node) {
 // Ghidra: FUN_00033c5c — first per-note pass: once a note's time arrives, fire
 // its event side effect (kind 1 starts the BGM, kind 4 counts a measure) and
 // mark it handled (bit 0x80).
+// @complete
 void NoteMng::judgeActiveNote(ActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
     if ((flags & 0x80) != 0 || node->startTick > pos) {
@@ -303,6 +320,7 @@ void NoteMng::judgeActiveNote(ActiveNote *node, uint32_t pos) {
 // fully past
 // (> 10 s old, excluding the end marker) or that were already resolved (flags
 // 0x40/0x80), then advance the caller's cursor to the next node.
+// @complete
 void NoteMng::retireActiveNote(ActiveNote **pnode, uint32_t pos) {
     ActiveNote *node = *pnode;
     ActiveNote *next = node->next;
@@ -318,6 +336,7 @@ void NoteMng::retireActiveNote(ActiveNote **pnode, uint32_t pos) {
 // scrolled more than ~280 ms past its window without being hit is a miss —
 // reset the combo, tally a BAD, fire the miss callback. The special-note window
 // widens with the spawn-kind gap.
+// @complete
 void NoteMng::detectMiss(ActiveNote *node, uint32_t pos) {
     const unsigned kind = node->kind;
     const unsigned k = kind - 6;
@@ -347,6 +366,7 @@ void NoteMng::detectMiss(ActiveNote *node, uint32_t pos) {
 // Ghidra: FUN_00033e40 — long-note tail completion: when the hold's end tick
 // passes and its head was graded, credit the tail at the head's tier (combo +
 // tally).
+// @complete
 void NoteMng::completeLongNoteTail(ActiveNote *node, uint32_t pos) {
     if (node->startTick >= node->endTick) {
         return; // not a long note
@@ -368,6 +388,7 @@ void NoteMng::completeLongNoteTail(ActiveNote *node, uint32_t pos) {
 // Ghidra: FUN_00033edc — auto-play head grade: an un-judged note inside the
 // window is auto-hit as a COOL (long notes credit only the head here; the tail
 // is handled by autoGradeTail).
+// @complete
 void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
     if ((node->flags & 0x2f) != 0 || node->kind >= 10) {
         return;
@@ -391,6 +412,7 @@ void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
 
 // Ghidra: FUN_00033f58 — auto-play long-note tail grade: once the hold's end
 // passes (within the window) auto-credit the tail as a COOL.
+// @complete
 void NoteMng::autoGradeTail(ActiveNote *node, uint32_t pos) {
     if (node->startTick >= node->endTick || node->kind >= 10 || (node->flags & 0x300) != 0) {
         return;
@@ -413,6 +435,7 @@ void NoteMng::autoGradeTail(ActiveNote *node, uint32_t pos) {
 // +0x14 / tail at +0x18, from computeScrollY), mark the head scrolled once it
 // passes the judge line, and let a passed head/tail slide off (speed * -16),
 // clamping un-passed positions at 0.
+// @complete
 void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
     const uint32_t startTick = node->startTick;
@@ -446,6 +469,7 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
 }
 
 // Ghidra: FUN_00033ae4 — the standard note engine's per-frame update.
+// @complete
 void NoteMng::update() {
     const uint32_t pos = (uint32_t)getCurrentPosition();
 
@@ -481,6 +505,7 @@ void NoteMng::update() {
 // Ghidra: FUN_0003396c — bring-up: spawn the lead-in records, settle the tempo,
 // and position every note, all at position 0 (state 1, before the clock is
 // armed).
+// @complete
 void NoteMng::primePlay() {
     spawnNotes(0);
     changeTempo(0);
@@ -492,12 +517,18 @@ void NoteMng::primePlay() {
 // Ghidra: FUN_000344c4 — arm the play clock: stamp the start time and clear the
 // per-play offset, scroll target, hold/sync flags and state so
 // getCurrentPosition starts from 0.
+// @complete
 void NoteMng::startClock() {
     timeval tv;
     gettimeofday(&tv, nullptr);
     m_startSec = tv.tv_sec;
     m_startUsec = tv.tv_usec;
-    m_positionLeadIn = 0; // the binary zeroes the three +0x4e3c/40/44 offset fields
+    // The binary also stamps getElapsedTimeMs() into +0x4e38 (0x344de) and zeroes
+    // +0x4e44 (0x344f0); both are write-only dead fields never read back, so they
+    // are dropped. It does zero m_positionLeadIn (+0x4e3c) and m_holdElapsed
+    // (+0x4e40), which getCurrentPosition consumes.
+    m_positionLeadIn = 0;
+    m_holdElapsed = 0;
     m_scrollTarget = 0;
     m_bgmSynced = false;
     m_holdFlag = false;
@@ -507,6 +538,7 @@ void NoteMng::startClock() {
 // Ghidra: FUN_00033fc0 — the playing-state per-frame update. Identical to
 // update() except it freezes while held and, once, nudges the scroll target to
 // the BGM playhead (drift correction).
+// @complete
 void NoteMng::updatePlaying() {
     if (m_holdFlag) {
         return;
@@ -556,6 +588,7 @@ void NoteMng::updatePlaying() {
 // Ghidra: ChangeTempo @ 0x33864. Once play passes the current segment (the next
 // segment's startTick has arrived), retire the front segment (shift the array
 // down); always refresh the spawn look-ahead.
+// @complete
 void NoteMng::changeTempo(uint32_t tick) {
     if (m_scrollMap[1].startTick <= tick) {
         for (int j = 0; j < m_scrollCount; j++) {
@@ -571,6 +604,7 @@ void NoteMng::changeTempo(uint32_t tick) {
 }
 
 // Ghidra: getElapsedTimeMs @ 0x33c04.
+// @complete
 int NoteMng::getElapsedTimeMs() const {
     if (m_startSec == 0 && m_startUsec == 0) {
         return 0;
@@ -592,6 +626,7 @@ int NoteMng::getElapsedTimeMs() const {
 // updatePlaying/updateBgmSync and must be added so the notes lock to the actual
 // audio playhead. When the hold bit is set the live elapsed cancels against
 // m_holdElapsed, freezing the position at the pause instant.
+// @complete
 int NoteMng::getCurrentPosition() const {
     const int elapsed = getElapsedTimeMs();
     uint32_t sub = (uint32_t)m_positionLeadIn;
@@ -604,6 +639,7 @@ int NoteMng::getCurrentPosition() const {
 
 // Ghidra: getActiveNoteCount @ 0x34694. Count active notes still awaiting
 // judgement (kind < 10, judged flag 0x80 clear).
+// @complete
 int NoteMng::getActiveNoteCount() const {
     int n = 0;
     for (ActiveNote *note = m_activeList; note != nullptr; note = note->next) {
@@ -621,6 +657,7 @@ int NoteMng::getActiveNoteCount() const {
 // >= 0. The armv7 tail at 0x3185e subtracts, sign-extends to 16-bit, and clamps
 // only the negative case to zero — it returns this remaining count, NOT a 0/1
 // flag. PlayTask::update tests it == 0 for the song-end latch (isFinished).
+// @complete
 int NoteMng::remainingNoteCount() const {
     int judged = 0;
     for (int kind = 0; kind < kNoteKindCount; kind++) {
@@ -652,6 +689,7 @@ void NoteMng::moveToActive(ActiveNote *note) {
 // Ghidra: MakeNote @ 0x341a4. Spawn a playable note from a chart record and
 // compute its on-screen position from the record's lane/position bytes scaled
 // by the live screen size.
+// @complete
 void NoteMng::makeNote(const NoteRecord *rec) {
     ActiveNote *note = allocNote();
     note->rec = rec;
@@ -691,6 +729,7 @@ void NoteMng::makeNote(const NoteRecord *rec) {
 }
 
 // Ghidra: MakeEvent @ 0x343c8. Spawn a non-note event (kind 10).
+// @complete
 void NoteMng::makeEvent(const NoteRecord *rec) {
     ActiveNote *note = allocNote();
     note->rec = rec;
@@ -707,6 +746,7 @@ void NoteMng::makeEvent(const NoteRecord *rec) {
 // spawn look-ahead of the current position. Note records (type 0) become live
 // notes; mark/bar (types 1/4) become events; the end record (type 3) is spawned
 // once and advances the play state.
+// @complete
 void NoteMng::spawnNotes(uint32_t pos) {
     NoteRecord *rec = m_spawnCursor;
     const uint32_t spawnUntil = (uint32_t)(m_spawnLookahead + (int)pos);
@@ -752,6 +792,7 @@ ActiveNote *NoteMng::activeNoteAt(unsigned index) {
 
 // Ghidra: GetNoteObject @ 0x346c0 + copyNoteRenderData @ 0x34758. Copy the
 // index-th judgeable note into a render descriptor.
+// @complete
 void NoteMng::getNoteObject(NoteRenderData *out, int index) {
     ActiveNote *note = activeNoteAt((unsigned)index);
     assert(note != nullptr); // NoteMng.mm GetNoteObject:0x32b/0x344
@@ -787,6 +828,7 @@ void NoteMng::getNoteObject(NoteRenderData *out, int index) {
 // Addressed by raw pool slot id (like judgeHold / updateLongNote / setLaneFlag),
 // not by active-list index: the binary indexes m_notePool[noteId] directly and
 // bounds it with the same (noteId >> 3) < 0x7d gate.
+// @complete
 int NoteMng::judgeNoteHit(unsigned noteId) {
     if (noteId >> 3 >= 0x7d) { // noteId >= 1000
         return NOTE_JUDGE_MISS;
@@ -865,6 +907,7 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
 // Ghidra: updateLongNote @ 0x34a78. Resolve a held note whose tail has passed.
 // Addressed by raw note-pool slot id (like judgeHold / setLaneFlag), not by
 // active-list index; the same (noteId >> 3) < 0x7d gate bounds it to [0, 1000).
+// @complete
 int NoteMng::updateLongNote(unsigned noteId) {
     if (m_autoPlay) {
         return 0;
@@ -909,6 +952,7 @@ int NoteMng::updateLongNote(unsigned noteId) {
 // the combo resets; when the countdown reaches zero the hold completes,
 // advancing the combo and the per-kind/tier tally. `tier` (< 4) selects the
 // tally column. Returns the remaining count.
+// @complete
 int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
     if (noteId >> 3 >= 0x7d) { // noteId >= 1000
         return 0;
@@ -955,6 +999,7 @@ int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
 
 // Ghidra: noteMngSetLaneFlag @ 0x347c8 — set the "lane held" flag (0x40) on
 // note pool slot noteId.
+// @complete
 void NoteMng::setLaneFlag(unsigned noteId) {
     if (noteId >> 3 >= 0x7d) { // noteId >= 1000
         return;
@@ -967,6 +1012,7 @@ void NoteMng::setLaneFlag(unsigned noteId) {
 // paused span into the lead-in, clear the freeze bit, then (when the BGM start
 // position is known and the chart has not ended) re-seek the BGM to the current
 // position and restart it.
+// @complete
 void NoteMng::togglePause() {
     if (!m_holdFlag) {
         return;
@@ -993,6 +1039,7 @@ void NoteMng::togglePause() {
 // in [0, 1000).
 
 // Ghidra: FUN_00034bb4 — the slot's chart kind (drives the tone graphic).
+// @complete
 int NoteToneGraphic(int noteId) {
     if ((unsigned)noteId >> 3 < 0x7d) {
         return NoteMng::shared().toneSlot(noteId).kind;
@@ -1001,6 +1048,7 @@ int NoteToneGraphic(int noteId) {
 }
 
 // Ghidra: FUN_00034b98 — the slot's high kind byte.
+// @complete
 int NoteToneFlags(int noteId) {
     if ((unsigned)noteId >> 3 < 0x7d) {
         return NoteMng::shared().toneSlot(noteId).kindHi;
@@ -1011,6 +1059,7 @@ int NoteToneFlags(int noteId) {
 // Ghidra: FUN_00034b5c — 1 for a special chart kind (6..9), else 2 for a
 // long/hold note (start tick before end tick), else 0. This mirrors
 // NoteRenderKind.
+// @complete
 int NoteToneState(int noteId) {
     if ((unsigned)noteId >> 3 < 0x7d) {
         const ActiveNote &slot = NoteMng::shared().toneSlot(noteId);
@@ -1025,6 +1074,7 @@ int NoteToneState(int noteId) {
 // Ghidra: FUN_00034a5c — the spawn graphic for a chart type: 6->2, 7->3, 8->4,
 // 9->5, anything else 1. (Same packed table makeNote uses to fill a slot's
 // spawnKind.)
+// @complete
 int NoteToneDefaultGraphic(int type) {
     if ((unsigned)(type - 6) < 4) {
         return (int)(char)(0x5040302 >> (((type - 6) & 0x1f) << 3));
@@ -1033,6 +1083,7 @@ int NoteToneDefaultGraphic(int type) {
 }
 
 // Ghidra: FUN_00034bd0 — the slot's spawn graphic (read back as a signed byte).
+// @complete
 int NoteToneCount(int noteId) {
     if ((unsigned)noteId >> 3 < 0x7d) {
         return (int)(int8_t)NoteMng::shared().toneSlot(noteId).spawnKind;
@@ -1042,6 +1093,7 @@ int NoteToneCount(int noteId) {
 
 // Ghidra: FUN_00034664 — 60000 / the armed beat tempo, in ms; 0 while it is not
 // positive.
+// @complete
 float NoteBeatIntervalMs() {
     int16_t tempo = (int16_t)NoteMng::shared().beatTempoValue();
     if (tempo < 1) {

@@ -7,7 +7,6 @@
 //  render callback. Output format: 32000 Hz, stereo, interleaved signed 16-bit.
 //
 
-#include <cstdlib>
 #include <cstring>
 
 #import "CAComponent.h"
@@ -29,6 +28,15 @@ float caGainForLevel(int level) {
     return (float)level / 100.0f;
 }
 
+// Voice states, as stored at CAVoice::state (offset 0x14).
+enum : int {
+    kVoiceFree = -1,
+    kVoicePrepared = 1,
+    kVoicePlaying = 2,
+    kVoicePaused = 3,
+    kVoiceFinished = 4,
+};
+
 } // namespace
 
 // Ghidra: auGraphSetup @ 0x23a4c — build the AUGraph (auGraphCreate =
@@ -48,36 +56,31 @@ CAComponent::~CAComponent() {
 
 // Ghidra: auGraphTerminate @ 0x23d40 — stop the graph, dispose it, and free the
 // voice pool. Idempotent: safe to call from both the caplayer dtor
-// (caPlayerMgr_dtor) and ~CAComponent.
-//
-// DEVIATION (not marked @complete): the binary does NOT match this body.
+// (caPlayerMgr_dtor) and ~CAComponent. Verified against the disassembly:
 //   * 0x23d46: stop() is guarded on m_running (offset 0x14), not on m_graph.
-//   * 0x23d52: it then calls DisposeAUGraph(m_graph) UNCONDITIONALLY — there is
-//     no AUGraphUninitialize / AUGraphClose call, and no `m_graph != nullptr`
-//     guard around the dispose. Only DisposeAUGraph is invoked (0x12fc60).
-//   * The binary never writes m_graph = nullptr after disposing.
-//   * The voice free-loop is guarded on m_voices (offset 0x1c): each voice has
-//     its source (offset 0) zeroed then `operator delete`d (0x12feb8), and the
-//     pool itself is released with `operator delete[]` (0x12feb4, not free),
-//     after which m_voices is set to null.
-// A faithful rewrite would drop AUGraphUninitialize/AUGraphClose and the
-// m_graph null-out; left as-is pending a decision on whether to model the exact
-// dispose sequence.
+//   * 0x23d52: DisposeAUGraph(m_graph) is called UNCONDITIONALLY (offset 0);
+//     there is no AUGraphUninitialize / AUGraphClose. On a non-zero (failure)
+//     status the binary logs and returns early, so the voice pool is only freed
+//     when the dispose succeeds; m_graph is never nulled.
+//   * The voice free-loop is guarded on m_voices (offset 0x1c): each voice's
+//     source (offset 0) is zeroed then the voice is `operator delete`d
+//     (0x12feb8), and the pool itself is released with `operator delete[]`
+//     (0x12feb4), after which m_voices is set to nullptr.
+// @complete
 void CAComponent::terminate() {
-    if (m_graph != nullptr) {
+    if (m_running) {
         stop(); // auGraphStop (only if still running)
-        AUGraphUninitialize(m_graph);
-        AUGraphClose(m_graph);
-        if (DisposeAUGraph(m_graph) != noErr) {
-            NSLog(@"CAComponent terminate: DisposeAUGraph failed");
-        }
-        m_graph = nullptr;
+    }
+    if (DisposeAUGraph(m_graph) != noErr) {
+        NSLog(@"CAComponent terminate: DisposeAUGraph failed.");
+        return;
     }
     if (m_voices != nullptr) {
         for (int i = 0; i < m_voiceCount; i++) {
+            m_voices[i]->source = nullptr;
             delete m_voices[i];
         }
-        free(m_voices);
+        delete[] m_voices;
         m_voices = nullptr;
     }
 }
@@ -128,8 +131,7 @@ bool CAComponent::prepareGraph() {
 // Ghidra: FUN_00023b74 — size the mixer, allocate the voices, set the output
 // format, then initialise the graph.
 // The voice pool is `operator new[]` (0x12febc) and each voice `operator new`
-// (0x12fec0, 24 bytes) in the binary rather than calloc/new-expression; since
-// the loop writes every slot the zero-init is equivalent. All ASBD fields
+// (0x12fec0, 24 bytes) in the binary; the loop writes every slot. All ASBD fields
 // (32000.0 sample rate, 'lpcm', flags 0xc2c, 4/1/4/2/16) verified byte-exact.
 // @complete
 bool CAComponent::initGraph(int voices) {
@@ -148,9 +150,9 @@ bool CAComponent::initGraph(int voices) {
         return false;
     }
     m_voiceCount = (int)count;
-    m_voices = static_cast<CAVoice **>(std::calloc(count, sizeof(CAVoice *)));
+    m_voices = new CAVoice *[count]; // operator new[]; paired with delete[] in terminate
     for (int i = 0; i < m_voiceCount; i++) {
-        m_voices[i] = new CAVoice(); // state -1 (free), generation 0
+        m_voices[i] = new CAVoice(); // operator new; state -1 (free), generation 0
     }
 
     AudioStreamBasicDescription out = {};
@@ -304,36 +306,72 @@ bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
     return true;
 }
 
-// Stop a voice: mark it finished so reserveVoice can recycle it.
-bool CAComponent::stopVoice(int voice) {
-    if (voice < 0 || voice >= m_voiceCount) {
+// Ghidra: caCAMixer play body @ 0x23f5c (forwarded from caHandlePlay) — resume a
+// prepared or paused voice. Split the packed handle into voice = handle >> 16
+// (a signed bounds check against m_voiceCount rejects the 0xffffffff a bad handle
+// decodes to) and generation = handle & 0xffff; only when the generation matches
+// and the voice is prepared (state 1) or paused (state 3) does it move to playing
+// (state 2). The binary spells "state == 1 || state == 3" as the bit-trick
+// (state | 2) == 3.
+// @complete
+bool CAComponent::startVoice(int handle) {
+    const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
+    if (voice >= m_voiceCount) {
         return false;
     }
-    m_voices[voice]->state = 4; // finished
+    CAVoice *v = m_voices[voice];
+    if (v->generation != (handle & 0xffff)) {
+        return false;
+    }
+    if ((v->state | kVoicePlaying) != kVoicePaused) {
+        return false; // only states 1 (prepared) and 3 (paused) satisfy (x | 2) == 3
+    }
+    v->state = kVoicePlaying;
     return true;
 }
 
-int CAComponent::voiceState(int voice) const {
-    if (voice < 0 || voice >= m_voiceCount) {
-        return -1;
+// Ghidra: caCAMixer stop body @ 0x23f90 (forwarded from caHandleStop) — mark the
+// voice finished so reserveVoice can recycle it. Same handle split and generation
+// check as startVoice.
+// @complete
+bool CAComponent::stopVoice(int handle) {
+    const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
+    if (voice >= m_voiceCount) {
+        return false;
     }
-    return m_voices[voice]->state;
+    CAVoice *v = m_voices[voice];
+    if (v->generation != (handle & 0xffff)) {
+        return false;
+    }
+    v->state = kVoiceFinished;
+    return true;
 }
 
-// Ghidra: caHandleSetVolume @ 0x267e4 (body at 0x23d04).
-//
-// DEVIATION (not marked @complete): the binary is NOT a loop over the mixer
-// inputs. caHandleSetVolume is a two-instruction caPlayerMgr forwarder — it
-// loads its CAComponent (offset 0) and tail-calls setPlayerVolume(nVolume, 0)
-// exactly once (0x23d04: `movs r2,#0`; `b setPlayerVolume`). Because
-// setPlayerVolume always writes the master output-scope element 0 gain, one call
-// sets the overall volume; the per-voice loop modelled here is a behavioural
-// re-imagining, not the compiled body. Left as-is pending a decision on whether
-// to model the caPlayerMgr forwarder instead.
-void CAComponent::setAllVolume(int volumeIndex) {
-    for (int i = 0; i < m_voiceCount; i++) {
-        setPlayerVolume(volumeIndex, i);
+// Ghidra: caCAMixer state body @ 0x23fe8 (forwarded from caHandleGetState) —
+// return the voice's state, or -1 for an out-of-range or stale handle. Same
+// handle split and generation check as startVoice.
+// @complete
+int CAComponent::voiceState(int handle) const {
+    const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
+    if (voice >= m_voiceCount) {
+        return -1;
     }
+    CAVoice *v = m_voices[voice];
+    if (v->generation != (handle & 0xffff)) {
+        return -1;
+    }
+    return v->state;
+}
+
+// Ghidra: caHandleSetVolume @ 0x267e4 (body at 0x23d04) — set the mixer's master
+// gain. The caPlayerMgr forwarder loads its CAComponent (offset 0) and
+// tail-calls setPlayerVolume(nVolume, 0) exactly once (0x23d04: `movs r2, #0`;
+// `b setPlayerVolume`). setPlayerVolume always writes the master output-scope
+// element 0 gain, so this single call sets the overall volume; `voice = 0` is
+// only the bounds argument.
+// @complete
+void CAComponent::setAllVolume(int volumeIndex) {
+    setPlayerVolume(volumeIndex, 0);
 }
 
 // Ghidra: auClearSourceRef @ 0x24014 — drop `source` from any voice still
@@ -347,50 +385,44 @@ void CAComponent::clearSourceRef(CASound *source) {
     }
 }
 
-// Ghidra: caHandlePause @ 0x267b4 (body at 0x23fbc) — pause voice `voice` if its
-// generation matches.
-//
-// DEVIATION (not marked @complete): the compiled entry takes a single packed
-// `handle`, not split (voice, generation) args. The 0x267b4 stub validates the
-// handle (`tst handle, #0x20000000`; if clear, forces generation to 0xffff so
-// the match fails) then jumps to the body. The body (0x23fbc) unpacks
-// voice = handle >> 16, generation = handle & 0xffff, bounds-checks voice
-// against m_voiceCount (offset 0x18), reads the voice pool (offset 0x1c),
-// compares generation at voice+0x10, and on a match writes state = 3 at
-// voice+0x14 and returns 1 (else 0). The inner generation-check / state=3 /
-// bool-return behaviour matches this reconstruction exactly; what is dropped is
-// the packed-handle decode and the 0x20000000 validity bit.
-bool CAComponent::pauseVoice(int voice, uint16_t generation) {
-    if (voice < 0 || voice >= m_voiceCount) {
+// Ghidra: caCAMixer pause body @ 0x23fbc (forwarded from caHandlePause @
+// 0x267b4) — pause the voice named by a raw packed handle. Split it into
+// voice = handle >> 16 (the signed bounds check against m_voiceCount rejects the
+// 0xffffffff a bad handle decodes to) and generation = handle & 0xffff; on a
+// generation match, write state = 3 and return true. The 0x267b4 caplayer stub
+// has already validated the 0x20000000 tag and stripped the top four bits before
+// this body runs.
+// @complete
+bool CAComponent::pauseVoice(int handle) {
+    const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
+    if (voice >= m_voiceCount) {
         return false;
     }
     CAVoice *v = m_voices[voice];
-    if (v->generation != generation) {
+    if (v->generation != (handle & 0xffff)) {
         return false;
     }
-    v->state = 3; // paused
+    v->state = kVoicePaused;
     return true;
 }
 
-// Ghidra: caHandleStopAndClear @ 0x26864 (body at 0x2406c) — free voice `voice`
-// (state 4 + drop its source) if its generation matches, so reserveVoice can
-// recycle it immediately.
-//
-// DEVIATION (not marked @complete): as with caHandlePause, the compiled entry
-// takes a single packed `handle` and validates it (`tst handle, #0x20000000`)
-// before the body. The body (0x2406c) unpacks voice = handle >> 16 and
-// generation = handle & 0xffff, bounds-checks voice against m_voiceCount, and on
-// a generation match at voice+0x10 writes state = 4 (voice+0x14) and source = 0
-// (voice+0) — returning 1 (the binary returns bool; this reconstruction returns
-// void). The state=4 / source-clear / generation-check behaviour is exact; the
-// packed-handle decode and validity bit are the omissions.
-void CAComponent::stopAndClearVoice(int voice, uint16_t generation) {
-    if (voice < 0 || voice >= m_voiceCount) {
+// Ghidra: caCAMixer stop-and-clear body @ 0x2406c (forwarded from
+// caHandleStopAndClear @ 0x26864) — free the voice named by a raw packed handle
+// (state 4 + drop its source) so reserveVoice can recycle it immediately. Split
+// the handle into voice = handle >> 16 (the signed bounds check against
+// m_voiceCount rejects the 0xffffffff a bad handle decodes to) and
+// generation = handle & 0xffff; on a generation match, write state = 4 and clear
+// the source. The binary always returns 1; this returns void. The 0x26864
+// caplayer stub has already validated the 0x20000000 tag before this body runs.
+// @complete
+void CAComponent::stopAndClearVoice(int handle) {
+    const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
+    if (voice >= m_voiceCount) {
         return;
     }
     CAVoice *v = m_voices[voice];
-    if (v->generation == generation) {
-        v->state = 4; // finished
+    if (v->generation == (handle & 0xffff)) {
+        v->state = kVoiceFinished;
         v->source = nullptr;
     }
 }

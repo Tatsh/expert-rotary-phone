@@ -135,6 +135,7 @@
 // displaced (origin.x != _arrowFrm.origin.x) AND the target row falls inside
 // the guard band [130, 520] — 0.5 s cross-dissolve slides the arrow back to
 // home x.
+// @complete
 static void mapSelectResetArrowFrame(MapSelectSplitViewController *self) {
     CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
     f.origin.x = self->_arrowFrm.origin.x;
@@ -147,6 +148,7 @@ static void mapSelectResetArrowFrame(MapSelectSplitViewController *self) {
 // -touchWithTreasureData:… as the animations block when the arrow is at rest
 // (origin.x == _arrowFrm.origin.x) AND the target row falls OUTSIDE the guard
 // band — quick 0.1 s cross-dissolve.
+// @complete
 static void mapSelectAdvanceArrowFrame(MapSelectSplitViewController *self) {
     CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
     f.origin.x += f.size.width;
@@ -158,6 +160,7 @@ static void mapSelectAdvanceArrowFrame(MapSelectSplitViewController *self) {
 // width 10.0 (0x41200000); origin and height are preserved from the views'
 // current frames. Used as the animations block of the right-panel
 // cross-dissolve in both -touchWithTreasureData:… and -scrollViewDidScroll:.
+// @complete
 static void mapSelectLayoutRightDummyViews(MapSelectSplitViewController *self) {
     if (self->_rightDummyView) {
         CGRect f = self->_rightDummyView.frame;
@@ -178,6 +181,7 @@ static void mapSelectLayoutRightDummyViews(MapSelectSplitViewController *self) {
 // In the ObjC++ reconstruction the widths are captured directly as CGFloat.
 // Used as the (nested) completion block in -touchWithTreasureData:…'s
 // right-panel cross-dissolve (LAB_000772f8_1 → nested block invoke).
+// @complete
 static void mapSelectSetRightDummyWidth(MapSelectSplitViewController *self,
                                         CGFloat rightDummyWidth,
                                         CGFloat rightHeaderDummyWidth) {
@@ -198,6 +202,7 @@ static void mapSelectSetRightDummyWidth(MapSelectSplitViewController *self,
 // compiled block literal at the -scrollViewDidScroll: call site.
 // Used when the map list is scrolled and the arrow is at home x — the arrow is
 // displaced off-panel (0.1 s cross-dissolve, duration DAT_00077a90).
+// @complete
 static void mapSelectAdvanceArrowFrameAlt(MapSelectSplitViewController *self) {
     CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
     f.origin.x += f.size.width;
@@ -209,6 +214,7 @@ static void mapSelectAdvanceArrowFrameAlt(MapSelectSplitViewController *self) {
 // compiled instance for -scrollViewDidScroll:'s right-panel cross-dissolve
 // completion block (LAB_00077c8c_1 captures self + int32_t widths at
 // +0x18/+0x1c).
+// @complete
 static void mapSelectSetRightDummyWidthAlt(MapSelectSplitViewController *self,
                                            CGFloat rightDummyWidth,
                                            CGFloat rightHeaderDummyWidth) {
@@ -228,6 +234,7 @@ static void mapSelectSetRightDummyWidthAlt(MapSelectSplitViewController *self,
 // Block invoke body: set _scrollView.contentOffset.x = frame.size.width *
 // _pageCtrl.currentPage, preserving the current contentOffset.y.
 // Used as the animations block in -autoScroll's cross-dissolve page transition.
+// @complete
 static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     CGFloat pageWidth = self->_scrollView ? self->_scrollView.frame.size.width : 0.0f;
     NSInteger page = [self->_pageCtrl currentPage];
@@ -246,6 +253,17 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 // @ 0x754d8 — build the whole split hub (backdrop, left map list, arrow, right
 // area panel, header banner, event carousel, back button) then arm the
 // auto-scroll carousel.
+//
+// DEVIATION (unverified/omitted, left unmarked): the binary differs from this
+// reconstruction in two mainMapId-dependent details that are not modelled here:
+//   1. Negative-clamp of mainMapId: at 0x754e8 the binary clamps
+//      [UserSettingData treasureSelectedMapId] to >= 0 (cmp/it le/mov.le 0)
+//      before every later use; this reconstruction stores the raw short.
+//   2. Initial arrow displacement: at 0x75ae6-0x75b16 the binary sets
+//      _arrowImageView.frame.origin.x to _arrowFrm.origin.x + _arrowFrm.size.width
+//      when mainMapId != 0 (a map is already selected), starting the arrow
+//      displaced off-panel; this reconstruction sets the frame to _arrowFrm
+//      unconditionally (no displacement).
 - (instancetype)init {
     if ((self = [super init])) {
         [[DownloadMain getInstance] setDelegateGetEventInfo:self];
@@ -418,6 +436,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 
 // @ 0x764dc — detach from DownloadMain's event-info delegate and tear down the
 // how-to overlay.
+// @complete
 - (void)dealloc {
     [[DownloadMain getInstance] setDelegateGetEventInfo:nil];
     // _mapSelectViewCtrl / _subMapSelectViewCtrl / _selectIndexPath -release
@@ -431,6 +450,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 // overrides — omitted.
 
 // @ 0x76634 — refresh the friend-request badge on every appearance.
+// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     int requested = [[DownloadMain getInstance] friendRequestedCnt];
@@ -438,11 +458,13 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x766b8
+// @complete
 - (void)setSelectIndexPath:(NSIndexPath *)selectIndexPath {
     _selectIndexPath = selectIndexPath;
 }
 
 // @ 0x766e0 — cross-fade the hub (and the navigation host) in.
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -460,6 +482,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x7680c — on open finish, present the first-run treasure how-to once.
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
     if (![UserSettingData isTreasureSelected]) {
@@ -480,6 +503,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x769c8 — cross-fade the hub (and the navigation host) out.
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -496,6 +520,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 
 // @ 0x76ad0 — on close finish, drop the navigation host and hand control back
 // to the app root.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [(MainViewController *)neSceneManager::rootViewController() MapSelectEndCallBack];
@@ -504,6 +529,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 
 // @ 0x76b40 — slide the arrow to the selected row and cross-fade the right
 // panel to the new area.
+// @complete
 - (void)touchWithTreasureData:(NSArray *)treasureData
                  mapHeadArray:(NSArray *)mapHeadArray
                     mainMapId:(int)mainMapId {
@@ -598,6 +624,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 
 // @ 0x77768 — drive the event carousel's page control, or (for the map list)
 // snap the arrow home.
+// @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (_scrollView != scrollView) {
         // The left map list moved: if the arrow is at home x and nothing is
@@ -658,6 +685,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x77f00
+// @complete
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     if (_scrollView != scrollView) {
         return;
@@ -666,11 +694,13 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x77f28
+// @complete
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     [self restartAutoScrollAfterDelay];
 }
 
 // @ 0x77f38
+// @complete
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (decelerate) {
         return;
@@ -681,17 +711,20 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 #pragma mark - Auto-scroll carousel
 
 // @ 0x77f50
+// @complete
 - (void)restartAutoScroll {
     _autoScroll = YES;
     [self autoScroll];
 }
 
 // @ 0x77f70
+// @complete
 - (void)restartAutoScrollAfterDelay {
     [self performSelector:@selector(restartAutoScroll) withObject:nil afterDelay:3.0];
 }
 
 // @ 0x77fa4 — advance the event carousel by one page, then re-arm after 5s.
+// @complete
 - (void)autoScroll {
     if (!_autoScroll) {
         return;
@@ -716,12 +749,14 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 #pragma mark - Event info
 
 // @ 0x7819c — DownloadMainDelegate: the event list finished downloading.
+// @complete
 - (void)downloadMainFinished:(NSNumber *)success {
     [self updateEventInfo];
 }
 
 // @ 0x781ac — (re)build the bottom event-banner carousel from DownloadMain's
 // live event ids.
+// @complete
 - (void)updateEventInfo {
     // Keep only in-range event ids (< 12; app helper isIndexInRange12 @ 0xe2c3c).
     NSArray *eventIds = [[DownloadMain getInstance] treasureEventIdArray];
@@ -771,6 +806,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x786fc — scroll the carousel to the page the page control now shows.
+// @complete
 - (void)pageControlDidChanged:(UIPageControl *)pageControl {
     CGFloat width = _scrollView.frame.size.width;
     CGFloat height = _scrollView.frame.size.height;
@@ -781,6 +817,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 #pragma mark - Back button
 
 // @ 0x78794
+// @complete
 - (void)backButtonFunc {
     if (_isAnimationing) {
         return;
@@ -790,6 +827,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 }
 
 // @ 0x787d8
+// @complete
 - (BOOL)isAnimationing {
     return _isAnimationing;
 }

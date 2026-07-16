@@ -17,7 +17,17 @@
 
 namespace {
 constexpr int kSourceGrow = 20;
+
+// A caplayer play handle packs (voice << 16 | generation) in its low 28 bits and
+// is tagged 0x20000000; decode the low 28 bits, treating a non-caplayer handle as
+// invalid (0xffffffff, which every CAComponent method's voice bounds check then
+// rejects). Ghidra: the `bic r2, r1, #0xf0000000; tst r1, #0x20000000` prologue
+// shared by the caplayer handle forwarders (caHandlePlay/Stop/GetState/Pause/
+// StopAndClear).
+inline uint32_t caHandleBits(uint32_t handle) {
+    return (handle & kCAPlayerHandleFlag) ? (handle & 0x0fffffff) : 0xffffffffu;
 }
+} // namespace
 
 // Ghidra: FUN_0002615c. The binary mallocs 0x50 bytes and NEON-zeroes them (five
 // 16-byte vst1 stores); calloc(20, sizeof) is the behavioural equivalent.
@@ -123,54 +133,30 @@ uint32_t neAVCAPlayer::prepareNamed(const char *callName, float volume) {
     return (uint32_t)-1;
 }
 
-// Ghidra: FUN_00026784.
-// DEVIATION (not @complete): the binary does NOT bounds-check against
-// m_capacity/m_sources. It decodes the handle to caHandleBits(handle) (the low
-// 28 bits, or 0xffffffff for a non-caplayer handle) and tail-calls a CAComponent
-// method @ 0x23f5c with that whole value; the component internally extracts
-// voice = bits >> 16 and generation = bits & 0xffff, bounds-checks the voice,
-// verifies the generation, and — only if the voice is prepared (state 1) or
-// paused (state 3) — sets it playing (state 2), returning that success bool. The
-// reconstruction instead performs a local slot bounds/null check and never calls
-// the component, so it neither starts the voice nor honours the state machine.
-// Faithful form would be `return m_component->startVoice(caHandleBits(handle));`,
-// but CAComponent.h declares no such method (its stopVoice/voiceState/pauseVoice
-// signatures likewise take a pre-split voice index rather than the raw handle the
-// binary passes), so fixing it correctly is a CAComponent.h change out of scope
-// for this file.
+// Ghidra: FUN_00026784 (caHandlePlay) — decode the handle to its low 28 bits
+// (caHandleBits: 0xffffffff for a non-caplayer handle) and forward the whole
+// value to the CAComponent play body @ 0x23f5c, which splits voice = bits >> 16
+// and generation = bits & 0xffff, bounds-checks the voice, verifies the
+// generation, and only moves a prepared/paused voice to playing.
+// @complete
 bool neAVCAPlayer::play(uint32_t handle) {
-    if ((handle & kCAPlayerHandleFlag) == 0) {
-        return false;
-    }
-    uint32_t voice = (handle & 0x0fffffff) >> 16;
-    if ((int)voice >= m_capacity || m_sources[voice] == nullptr) {
-        return false;
-    }
-    return true;
+    return m_component->startVoice((int)caHandleBits(handle));
 }
 
-// Ghidra: FUN_0002679c.
-// DEVIATION (not @complete): the binary passes the *whole* decoded handle
-// (caHandleBits(handle) = the low 28 bits, or 0xffffffff for a non-caplayer
-// handle) to the CAComponent method @ 0x23f90, which itself does voice =
-// bits >> 16 AND a generation check (bits & 0xffff vs the slot's stored
-// generation). The reconstruction pre-shifts to a voice index and drops the
-// generation, so a stale handle would not be rejected. Faithful form passes the
-// unshifted handle bits; CAComponent.h's stopVoice(int voice) signature would
-// need to become stopVoice(uint32_t handle) to match (out of scope here).
+// Ghidra: FUN_0002679c (caHandleStop) — forward the decoded handle bits to the
+// CAComponent stop body @ 0x23f90 (voice = bits >> 16 plus the generation check),
+// which marks the voice finished.
+// @complete
 bool neAVCAPlayer::stop(uint32_t handle) {
-    return m_component->stopVoice((int)((handle & 0x0fffffff) >> 16));
+    return m_component->stopVoice((int)caHandleBits(handle));
 }
 
-// Ghidra: FUN_000267cc.
-// DEVIATION (not @complete): as with stop(), the binary passes the whole decoded
-// handle (caHandleBits(handle)) to the CAComponent method @ 0x23fe8, which does
-// voice = bits >> 16 plus a generation check (bits & 0xffff). The reconstruction
-// pre-shifts to a voice index and drops the generation, so a stale handle is not
-// rejected. Faithful form passes the unshifted handle bits (CAComponent.h's
-// voiceState(int voice) signature would need widening — out of scope here).
+// Ghidra: FUN_000267cc (caHandleGetState) — forward the decoded handle bits to
+// the CAComponent state body @ 0x23fe8 (voice = bits >> 16 plus the generation
+// check), which returns the voice state or -1.
+// @complete
 int neAVCAPlayer::voiceState(uint32_t handle) {
-    return m_component->voiceState((int)((handle & 0x0fffffff) >> 16));
+    return m_component->voiceState((int)caHandleBits(handle));
 }
 
 // Ghidra: FUN_000267e4 (applied to all voices by setSeVolume:groupId:).
@@ -178,15 +164,6 @@ int neAVCAPlayer::voiceState(uint32_t handle) {
 void neAVCAPlayer::setAllVoiceVolume(int level) {
     m_component->setAllVolume(level);
 }
-
-namespace {
-// A caplayer play handle packs (voice << 16 | generation) in its low 28 bits
-// and is tagged 0x20000000; decode the voice index / generation, treating a
-// non-caplayer handle as invalid.
-inline uint32_t caHandleBits(uint32_t handle) {
-    return (handle & kCAPlayerHandleFlag) ? (handle & 0x0fffffff) : 0xffffffffu;
-}
-} // namespace
 
 // Ghidra: caPlayerMgr_dtor @ 0x261f8.
 // @complete
@@ -213,23 +190,19 @@ neAVCAPlayer::~neAVCAPlayer() {
 
 // Ghidra: caHandlePause @ 0x267b4 — pause the voice named by `handle`
 // (generation-checked). The binary passes the whole decoded handle to the
-// CAComponent method @ 0x23fbc, which splits it into voice = bits >> 16 and
-// generation = bits & 0xffff; the two-argument pauseVoice(voice, generation)
-// here carries exactly that decoded pair.
+// CAComponent pause body @ 0x23fbc, which splits it into voice = bits >> 16 and
+// generation = bits & 0xffff.
 // @complete
 bool neAVCAPlayer::pause(uint32_t handle) {
-    const uint32_t bits = caHandleBits(handle);
-    return m_component->pauseVoice((int)(bits >> 16), (uint16_t)(bits & 0xffff));
+    return m_component->pauseVoice((int)caHandleBits(handle));
 }
 
 // Ghidra: caHandleStopAndClear @ 0x26864. The binary passes the whole decoded
-// handle to the CAComponent method @ 0x2406c, which splits it into voice =
-// bits >> 16 and generation = bits & 0xffff; the two-argument
-// stopAndClearVoice(voice, generation) here carries exactly that decoded pair.
+// handle to the CAComponent stop-and-clear body @ 0x2406c, which splits it into
+// voice = bits >> 16 and generation = bits & 0xffff.
 // @complete
 void neAVCAPlayer::stopAndClear(uint32_t handle) {
-    const uint32_t bits = caHandleBits(handle);
-    m_component->stopAndClearVoice((int)(bits >> 16), (uint16_t)(bits & 0xffff));
+    m_component->stopAndClearVoice((int)caHandleBits(handle));
 }
 
 // Ghidra: caUnregisterSource @ 0x26610 — detach a loaded source from any voice

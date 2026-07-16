@@ -116,6 +116,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x85538 — wrap self in a styled UINavigationController and return it (see
 // header).
+// @complete
 - (id)initAtNavigationController __attribute__((objc_method_family(none))) {
     // Binary @0x85538: IVar4 = [super init]; return nil on failure. This is a
     // factory (returns a nav controller, not self), so it's family(none) and
@@ -165,6 +166,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 // @ 0x85888 — KEPT under ARC because it actively tears down live work: detaches
 // the map delegate and cancels every in-flight download. ARC releases the
 // ivars, so the object-only release lines and [super dealloc] are omitted.
+// @complete
 - (void)dealloc {
     [m_Map setDelegate:nil];
     m_Map = nil;
@@ -188,6 +190,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x85a58 — build the map, spinner and the two rounded overlay labels, then
 // kick off the master download and try to centre on the user.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -247,13 +250,14 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
     [self.view addSubview:m_MessageLabel];
 
     // Error banner (hidden; fades in via -showError:). The binary picks a
-    // device-dependent frame (phone vs pad) from the layout; reconstructed here
-    // as a centred banner.
+    // device-dependent frame (phone vs pad) from the layout: width 350 on pad
+    // (movt 0x43af) and 300 on phone (movt 0x4396), height 60 (movt 0x4270),
+    // decoded from the initWithFrame: immediates @0x85f6c/0x85f92.
     if (!m_ErrorLabel) {
         neSceneManager::shared();
         const BOOL isPad = neSceneManager::isPadDisplay();
-        const CGFloat errWidth = isPad ? 460.0f : 300.0f;
-        const CGFloat errHeight = 40.0f;
+        const CGFloat errWidth = isPad ? 350.0f : 300.0f;
+        const CGFloat errHeight = 60.0f;
         m_ErrorLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, errWidth, errHeight)];
         [m_ErrorLabel setBounds:CGRectMake(0, 0, errWidth, errHeight)];
         m_ErrorLabel.center = CGPointMake(CGRectGetWidth(bounds) * 0.5f, errHeight * 0.5f + 40.0f);
@@ -282,6 +286,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x863a0 — set the error banner text and fade it in the first time it is
 // shown.
+// @complete
 - (void)showError:(NSString *)message {
     [m_ErrorLabel setText:message];
     if (m_ErrorLabel.isHidden) {
@@ -295,6 +300,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x864b8 — follow the user's location if location services are available.
+// @complete
 - (BOOL)gotoCurrentPosition {
     if ([SearchView currentLocationEnabled]) {
         [m_Map setUserTrackingMode:MKUserTrackingModeFollow animated:YES];
@@ -304,6 +310,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x8650c — (re)start the master feed download.
+// @complete
 - (void)startSearchMaster {
     m_LoadedMaster = NO;
     m_LoadedImages = NO;
@@ -318,6 +325,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x865ec — POST the current region (lat/long/range) to fetch the arcades in
 // view.
+// @complete
 - (void)startGameCenter:(MKCoordinateRegion)region {
     if (!m_LoadedImages) {
         return;
@@ -340,6 +348,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x867a4 — ref-counted spinner show.
+// @complete
 - (void)addIndicator {
     int prev = m_IndicatorCount;
     m_IndicatorCount = prev + 1;
@@ -349,7 +358,10 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
     [m_Indicator startAnimating];
 }
 
-// @ 0x867dc — ref-counted spinner hide.
+// @ 0x867dc — ref-counted spinner hide. The de-obfuscated guard
+// `count != 0 && prev > 0` is equivalent to the binary's `(prev - 1) > 0` test
+// @0x867ee (prev = count, so prev > 0 == newCount >= 0).
+// @complete
 - (void)subIndicator {
     int prev = m_IndicatorCount;
     m_IndicatorCount = prev - 1;
@@ -362,6 +374,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 // @ 0x86810 — download the next per-model marker image that has not been
 // fetched yet. Returns YES if a download was started (so the caller can wait
 // for the callback).
+// @complete
 - (BOOL)downloadMarkImage {
     for (NSMutableDictionary *model in m_Models) {
         if (![model objectForKey:@"IMAGE_OBJECT"]) {
@@ -377,6 +390,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x86990 — current-position bar button.
+// @complete
 - (void)onCurrentPosButton {
     neEngine::playSystemSe(3);
     if (![self gotoCurrentPosition]) {
@@ -392,24 +406,29 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 #pragma mark - MKMapViewDelegate
 
 // @ 0x86a48 — super/no-op.
+// @complete
 - (void)mapViewWillStartLoadingMap:(MKMapView *)mapView {
 }
 
 // @ 0x86a4c — super/no-op.
+// @complete
 - (void)mapViewDidFinishLoadingMap:(MKMapView *)mapView {
 }
 
 // @ 0x86a50 — super/no-op.
+// @complete
 - (void)mapViewDidFailLoadingMap:(MKMapView *)mapView withError:(NSError *)error {
 }
 
 // @ 0x86a54 — super/no-op.
+// @complete
 - (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated {
 }
 
 // @ 0x86a58 — the heart of the screen: as the region settles, prune off-screen
 // pins, add the spots that came into view, and re-query the server when the map
 // has panned far enough.
+// @complete
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
     if (!m_LoadedImages) {
         return;
@@ -479,6 +498,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x870b0 — supply the pin view (custom marker image + detail-disclosure
 // callout button).
+// @complete
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation {
     if ([annotation isKindOfClass:[MKUserLocation class]]) {
         return nil; // let the map draw the user dot
@@ -520,6 +540,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x87318 — callout accessory tapped: build the Maps URL and confirm before
 // opening.
+// @complete
 - (void)mapView:(MKMapView *)mapView
                    annotationView:(MKAnnotationView *)view
     calloutAccessoryControlTapped:(UIControl *)control {
@@ -549,6 +570,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x87520 — the "open in Maps?" confirm: index 1 (other/OK) opens the stored
 // URL.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (index != 1) {
         return;
@@ -567,6 +589,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 #pragma mark - DownloaderDelegate
 
 // @ 0x875a0 — completion for both the arcade-list and the master feeds.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (m_ListDownloader == downloader) {
         // --- Per-region arcade list ---
@@ -731,6 +754,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x8830c — download failure for either feed.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (m_ListDownloader == downloader) {
         m_ListDownloader = nil;
@@ -746,6 +770,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 // @ 0x88398 — a marker image finished: store it, then fetch the next pending
 // one, or, when everything is loaded, flip m_LoadedImages and do the first
 // region query.
+// @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     UIImage *image = [downloader getImage];
     NSString *url = [downloader imageURL];
@@ -789,6 +814,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x88740 — a marker image failed.
+// @complete
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     m_ImageDownloader = nil;
     [self showError:kNetworkErrorMessage];
@@ -798,6 +824,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 #pragma mark - Navigation / animation
 
 // @ 0x8879c — restore the settings nav bar and pop back.
+// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2);
     [self.navigationController.navigationBar
@@ -807,6 +834,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x88838 — fade the screen + nav bar in.
+// @complete
 - (void)startOpenAnimation {
     if (m_IsAnimationing) {
         return;
@@ -824,12 +852,14 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x88964 — open animation done.
+// @complete
 - (void)endOpenAnimation {
     m_IsAnimationing = NO;
 }
 
 // @ 0x88978 — fade the screen + nav bar out. (The binary clears
 // m_IsAnimationing here.)
+// @complete
 - (void)startCloseAnimation {
     if (m_IsAnimationing) {
         return;
@@ -846,6 +876,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 }
 
 // @ 0x88a98 — close animation done: detach and notify the nav host.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     neSceneManager::shared();
@@ -858,6 +889,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x86330 — YES when location services are on and this app is authorised (or
 // the OS predates +authorizationStatus).
+// @complete
 + (BOOL)currentLocationEnabled {
     if (![CLLocationManager locationServicesEnabled]) {
         return NO;
@@ -870,6 +902,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // @ 0x86250 — MKMapRect enclosing `region`, expanded to ± span * 0.6 around the
 // centre.
+// @complete
 + (MKMapRect)mapRectForCoordinateRegion:(MKCoordinateRegion)region {
     CLLocationCoordinate2D topLeft = CLLocationCoordinate2DMake(
         region.center.latitude + region.span.latitudeDelta * kRegionCornerFactor,

@@ -48,12 +48,18 @@ static const float kAcHiSpeed[kAcHiSpeedCount] = {
 // (FUN_0000b35c) is a ___cxa_guard'd lazy accessor; the function-local static
 // reproduces its construct-once semantics. AcNoteMng_init (FUN_0007a744) zeroes
 // the object and defaults the hi-speed to 1.2 (captured by the member init).
+// @complete
 AcNoteMng &AcNoteMng::shared() {
     static AcNoteMng instance;
     return instance;
 }
 
 // Ghidra: FUN_0007a774. `data` points at the 8-byte header (magic 'E' at +4).
+// The binary keeps the chart records in an inline buffer at the object base
+// (pChartCursor = this, @ 0x7a98a); this reconstruction models that buffer as a
+// heap array (m_records / m_spawnCursor) for readability. Behaviour, field
+// offsets, and control flow are otherwise disassembly-faithful.
+// @complete
 int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
     assert(data != nullptr && size > 0); // AcNoteMng.mm:0x59
 
@@ -72,13 +78,17 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
     }
 
     const uint8_t *bytes = static_cast<const uint8_t *>(data);
+    // The record-count bound is checked BEFORE the magic byte: the binary runs
+    // the 7999 assert (@ 0x7a86e-0x7a87c, bcs -> ___assert_rtn 0x69) first, and
+    // only then compares bytes[4] to 'E' (@ 0x7a880-0x7a886). An oversized chart
+    // therefore asserts even when the magic is wrong.
+    const int count = (size / 8) - 2;
+    assert(count >= 0 && (unsigned)count < 7999); // AcNoteMng.mm:0x69
+
     // Magic: byte at +4 must be 'E' (arcade chart tag), else reject.
     if (bytes[4] != 'E') {
         return -3;
     }
-
-    const int count = (size / 8) - 2;
-    assert(count >= 0 && (unsigned)count < 7999); // AcNoteMng.mm:0x69
     // Ghidra iVar15: the copy/tally loop runs over EVERY record (indices
     // 0..lastIndex, i.e. count + 2 of them), then re-stamps the last one as the
     // terminator.
@@ -151,6 +161,7 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
 // Ghidra: the tail of InitPlayData (FUN_0007a774) — append every pooled node to
 // the free list (the same O(n^2) tail walk the binary does; run once at play
 // setup).
+// @complete
 void AcNoteMng::initNodePool() {
     m_freeHead = nullptr;
     m_activeHead = nullptr;
@@ -176,6 +187,7 @@ int AcNoteMng::initPlayDataWithData(NSData *data, int hiSpeedLevel) {
 // Ghidra: FUN_0007aa90 — walk the chart from the first record; register a
 // scroll segment for each tempo (type 4) event and count measure lines (type
 // 10); stop at the end marker (type 6).
+// @complete
 void AcNoteMng::registerTempoEvents() {
     for (int i = 0; i < m_recordCount; i++) {
         const AcNoteRecord &r = m_records[i];
@@ -196,6 +208,7 @@ void AcNoteMng::registerTempoEvents() {
 // startTick. The scroll speed is bpm * 1024 / 480000 (DAT_0007bb28 /
 // DAT_0007bb24). Returns non-zero if the table is full (max 63). Also refreshes
 // the spawn look-ahead.
+// @complete
 int AcNoteMng::registerScrollSegment(int16_t bpm, uint32_t tick) {
     if (m_scrollCount >= 0x3f) {
         return 1;
@@ -219,6 +232,7 @@ int AcNoteMng::registerScrollSegment(int16_t bpm, uint32_t tick) {
 // segments summing 60000/BPM (ms), advancing when the next segment's startTick
 // is reached; the total is the spawn look-ahead. The sentinel startTick (-1) on
 // unregistered segments blocks over-advance.
+// @complete
 void AcNoteMng::recomputeSpawnLookahead(uint32_t pos) {
     int seg = 0;
     int accum = 0;
@@ -235,6 +249,7 @@ void AcNoteMng::recomputeSpawnLookahead(uint32_t pos) {
 // segment's startTick has arrived), retire the front segment (shift the array
 // down) and report it; always refresh the spawn look-ahead. Returns non-zero
 // while a segment was retired (seekTo loops on it).
+// @complete
 int AcNoteMng::changeTempo(uint32_t tick) {
     int ret = 0;
     if (m_scrollMap[1].startTick <= tick) {
@@ -258,6 +273,7 @@ int AcNoteMng::changeTempo(uint32_t tick) {
 // re-anchors the clock and rebuilds the active notes at the seek target. The
 // arcade engine uses one operation for both the initial start (seek from 0) and
 // the mid-play re-seek after an option change. // @ 0x7b86c (acNoteSeekTo)
+// @complete
 void AcNoteMng::seekTo(uint32_t pos) {
     const uint32_t endValue = m_endValue;
     bool proceed;
@@ -290,6 +306,7 @@ void AcNoteMng::seekTo(uint32_t pos) {
 
 // Ghidra: FUN_0007b5e0 — wall-clock ms since the play clock was armed (0 until
 // then).
+// @complete
 int AcNoteMng::getElapsedTimeMs() const {
     if (m_startSec == 0 && m_startUsec == 0) {
         return 0;
@@ -303,6 +320,7 @@ int AcNoteMng::getElapsedTimeMs() const {
 // unless the hold bit is set (then the last cached elapsed), applies the
 // per-play offset, and adds the excess past the start threshold onto the
 // smoothed scroll base.
+// @complete
 int AcNoteMng::getCurrentPosition() {
     int elapsed;
     if ((m_holdFlags & 1) == 0) {
@@ -330,6 +348,7 @@ int AcNoteMng::getCurrentPosition() {
 // Detach `node` from the free list and append it to the active-list tail.
 // Shared tail of makeNoteEvent / makeEvent / makeAdjustEvent (each first pops
 // m_freeHead into `node`).
+// @complete
 void AcNoteMng::moveNodeFreeToActive(AcActiveNote *node) {
     if (m_freeHead == node) {
         m_freeHead = node->next;
@@ -355,6 +374,7 @@ void AcNoteMng::moveNodeFreeToActive(AcActiveNote *node) {
 
 // Unlink `node` from the active list and append it to the free-list tail
 // (retirement).
+// @complete
 void AcNoteMng::retireNode(AcActiveNote *node) {
     if (m_activeHead == node) {
         m_activeHead = node->next;
@@ -380,6 +400,7 @@ void AcNoteMng::retireNode(AcActiveNote *node) {
 
 // Ghidra: FUN_0007b2f4 — spawn a playable note onto the active list (lane from
 // the chart, optionally rotated in lane-mode 3), draw position primed at 1024.
+// @complete
 void AcNoteMng::makeNoteEvent(const AcNoteRecord *rec) {
     int lane = rec->value & 0xf;
     if (m_laneMode == 3) {
@@ -396,6 +417,7 @@ void AcNoteMng::makeNoteEvent(const AcNoteRecord *rec) {
 }
 
 // Ghidra: FUN_0007b3dc — spawn a non-playable chart event (lane 9).
+// @complete
 void AcNoteMng::makeEvent(const AcNoteRecord *rec) {
     AcActiveNote *node = m_freeHead;
     assert(node != nullptr); // "MakeEvent" AcNoteMng.mm:0x4c9
@@ -410,6 +432,7 @@ void AcNoteMng::makeEvent(const AcNoteRecord *rec) {
 // Ghidra: FUN_0007b790 — inject the BGM re-sync ("adjust") event once. Resets
 // the scroll base and arms a type-0xf event whose judgement (applyBgmSync)
 // corrects the scroll for BGM drift.
+// @complete
 void AcNoteMng::makeAdjustEvent(uint32_t tick) {
     AcActiveNote *node = m_freeHead;
     assert(node != nullptr);         // "MakeAdjustEvent" AcNoteMng.mm:0x4a7
@@ -430,6 +453,7 @@ void AcNoteMng::makeAdjustEvent(uint32_t tick) {
 }
 
 // Ghidra: FUN_0007b484 — the type-3 chart event: start the BGM exactly once.
+// @complete
 void AcNoteMng::triggerBgmStart() {
     if (m_endFlag) {
         return;
@@ -444,6 +468,7 @@ void AcNoteMng::triggerBgmStart() {
 // Ghidra: FUN_0007b4f0 — the type-0xf adjust event: clear the in-flight flag
 // and, if the BGM is playing, nudge the scroll target by the measured drift
 // (BGM playhead vs expected time); otherwise re-arm the adjust a little later.
+// @complete
 void AcNoteMng::applyBgmSync(const AcNoteRecord *rec) {
     AudioManager *am = [AudioManager sharedManager];
     m_adjustRecord.value = 0;
@@ -461,6 +486,7 @@ void AcNoteMng::applyBgmSync(const AcNoteRecord *rec) {
 // Ghidra: FUN_0007aef8 — spawn every chart record that has come due (within the
 // look-ahead). Off-window taps in auto-play are counted immediately; chart
 // events fire their side effects.
+// @complete
 void AcNoteMng::spawnNotes(uint32_t pos) {
     if ((unsigned)(m_state - 3) <= 1) { // state 3 or 4: nothing left to spawn
         return;
@@ -514,6 +540,7 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
 // Ghidra: FUN_0007b028 — first per-note pass: once a note's time has arrived,
 // fire its event side effect (BGM start, bar/beat counters, adjust sync) and
 // mark it handled (bit 5).
+// @complete
 void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
     if (flags & 0x20) {
@@ -558,6 +585,7 @@ void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
 // fully past
 // (>4 s old; auto-miss-counted in auto-play) or that were already resolved
 // (bits 4/5), then advance the caller's cursor to the next node.
+// @complete
 void AcNoteMng::retireActiveNote(AcActiveNote **pnode, uint32_t pos) {
     AcActiveNote *node = *pnode;
     AcActiveNote *next = node->next;
@@ -576,6 +604,7 @@ void AcNoteMng::retireActiveNote(AcActiveNote **pnode, uint32_t pos) {
 // Ghidra: FUN_0007b1bc — refresh the per-lane "nearest note" candidate for
 // input, and (in auto-play) auto-hit notes at/after their time, feeding the
 // combo counter.
+// @complete
 void AcNoteMng::updateNearest(AcActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
     if ((flags & 0xb) != 0) {
@@ -609,7 +638,10 @@ void AcNoteMng::updateNearest(AcActiveNote *node, uint32_t pos) {
 
 // Ghidra: FUN_0007b268 — refresh a note's on-screen scroll position; once past
 // the judge line mark it judged (bit 2) and, when not auto-playing, let it
-// slide off; clamp non-past notes at 0.
+// slide off; clamp non-past notes at 0.  The `m_playSpeed` used in the manual
+// non-auto slide (@ 0x7b2c0, vldr from +0xfa4c) is the front scroll segment's
+// speed, i.e. m_scrollMap[0].speed.
+// @complete
 void AcNoteMng::updateDrawPos(AcActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
     if ((flags & 4) == 0 && node->lane < 9) {
@@ -630,6 +662,7 @@ void AcNoteMng::updateDrawPos(AcActiveNote *node, uint32_t pos) {
 // Ghidra: FUN_0007bb30 — integrate scroll speed x elapsed span across the
 // scroll-speed segments from `pos` up to the note's tick, scale by the hi-speed
 // multiplier, clamp +-8192.
+// @complete
 float AcNoteMng::computeScrollY(const AcActiveNote *node, uint32_t pos) const {
     const uint32_t tick = node->tick;
     float accum = 0.0f;
@@ -660,6 +693,7 @@ float AcNoteMng::computeScrollY(const AcActiveNote *node, uint32_t pos) const {
 }
 
 // Ghidra: FUN_0007ac00 — the arcade note engine's per-frame update.
+// @complete
 void AcNoteMng::update() {
     // Smooth the scroll base one step toward its target (+-1 per frame).
     if (m_scrollTarget != m_scrollBase) {
@@ -713,6 +747,7 @@ void AcNoteMng::update() {
 // Ghidra: acNoteStartPlayback @ 0x7b5a0 — stamp the wall-clock baseline and
 // clear the pause/offset state so the play clock runs from now; state = 1
 // (playing).
+// @complete
 void AcNoteMng::startPlayback() {
     timeval tv;
     gettimeofday(&tv, nullptr); // -> m_startSec/m_startUsec (@ +0x14cb8)
@@ -728,6 +763,7 @@ void AcNoteMng::startPlayback() {
 // Ghidra: AcNoteMng::Pause @ 0x7b638 — freeze the clock and stop the BGM,
 // remembering the elapsed time at the pause so resume() can fold the paused
 // span back in. No-op if held.
+// @complete
 void AcNoteMng::Pause() {
     if (m_holdFlags & 1) {
         return;
@@ -742,6 +778,7 @@ void AcNoteMng::Pause() {
 // is far enough in and the chart has not ended) re-seek the BGM to the current
 // position, restart it, and arm a drift-sync adjust event. No-op unless
 // currently held.
+// @complete
 void AcNoteMng::resume() {
     if ((m_holdFlags & 1) == 0) {
         return;
@@ -764,14 +801,28 @@ void AcNoteMng::resume() {
 }
 
 // Ghidra: acNoteResetPlayFlag @ 0x7aea4.
+// @complete
 void AcNoteMng::resetPlayFlag() {
     m_playFlag = 0;
 }
 
 // Ghidra: acNoteSetupLaneMapping @ 0x7ad14 — build the lane-remap table for the
-// option. The random modes (1/3) shuffle lanes 0..8 with a time-seeded
-// generator and retry until the result is a derangement (no lane maps to
-// itself), capped at 100000 attempts as the binary does.
+// option. mode 2 (mirror, m_laneRemap[i]=8-i) and the identity default are
+// disassembly-faithful; the random shuffle for modes 1/3 is NOT yet an exact
+// match and is left unmarked. The binary (@ 0x7ad9a..0x7ae4c) differs from the
+// model below in three ways: (a) the identity seed (m_laneRemap[i]=i) runs ONCE
+// before the attempt loop, not per attempt, so each retry keeps shuffling the
+// already-permuted array; (b) after every single swap it inspects the array —
+// while it is still full identity it just advances to the next position, and
+// only once it is non-identity does it run a second scan checking whether the
+// array equals the mirror permutation (aLaneRemap[i] == 8-i, @ 0x7ae14); a
+// mirror mismatch bumps the attempt counter; (c) there is no early success
+// exit — every path (including completing all 9 positions) routes through the
+// attempt counter, so the loop always runs until nAttempt > 99999 (@ 0x7ae3a)
+// and takes whatever permutation the array holds then. The version below (reset
+// identity each attempt, one Fisher-Yates pass, break on first derangement) is
+// an approximation of the intended "randomised, non-trivial lane map" but does
+// not reproduce this exact iteration/validation.
 void AcNoteMng::setupLaneMapping(int mode) {
     m_laneMode = mode;
     if (mode == 1 || mode == 3) {
@@ -820,6 +871,7 @@ void AcNoteMng::setupLaneMapping(int mode) {
 // ---------------------------------------------------------------------------
 
 // Ghidra: acNoteGetTotalNoteCount @ 0x7b8ec — sum the 9 per-lane tap counters.
+// @complete
 int AcNoteMng::getTotalNoteCount() const {
     int total = 0;
     for (int lane = 0; lane < 9; lane++) {
@@ -829,7 +881,11 @@ int AcNoteMng::getTotalNoteCount() const {
 }
 
 // Ghidra: acNoteGetJudgeTotal @ 0x7b908 — sum the whole 9x4 per-lane
-// score/judge table (m_laneResult, stride 0x10) and return the low 16 bits.
+// score/judge table (m_laneResult, stride 0x10) and return the low 16 bits. The
+// table base is +0xfd5c; the .hits counter (written elsewhere @ +0xfd68) is the
+// fourth int of each 0x10-byte lane record, so summing all four fields covers
+// it. Order within the sum is irrelevant.
+// @complete
 int AcNoteMng::getJudgeTotal() const {
     int total = 0;
     for (int lane = 0; lane < 9; lane++) {
@@ -843,6 +899,7 @@ int AcNoteMng::getJudgeTotal() const {
 
 // Ghidra: acNoteCountActiveNotes @ 0x7b93c — count on-screen notes (lane < 9)
 // whose "handled" bit (0x20) is still clear.
+// @complete
 int AcNoteMng::countActiveNotes() const {
     int count = 0;
     for (const AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
@@ -855,6 +912,7 @@ int AcNoteMng::countActiveNotes() const {
 
 // Ghidra: acNoteGetNoteObject @ 0x7b968 — copy the `index`-th still-unresolved
 // note into `out`.
+// @complete
 void AcNoteMng::getNoteObject(AcNoteObject *out, int index) const {
     assert(out != nullptr); // "GetNoteObject" AcNoteMng.mm:0x37c
     int seen = 0;
@@ -875,6 +933,7 @@ void AcNoteMng::getNoteObject(AcNoteObject *out, int index) const {
 
 // Ghidra: acNoteSetNoteFlag @ 0x7b9fc — OR `flags` into the `index`-th
 // still-unresolved note.
+// @complete
 void AcNoteMng::setNoteFlag(int index, uint16_t flags) {
     int seen = 0;
     for (AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {

@@ -29,6 +29,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // @ 0xf70c0 — the recovered -init dispatches its super initialization
 // synchronously onto the shared "ApplilinkUdid" serial queue created by
 // +allocWithZone: (block body @ 0xf7188 does just `self = [super init]`).
+// @complete
 - (instancetype)init {
     __block RewardNetworkUdid *result = nil;
     dispatch_sync(g_pApplilinkUdidQueue, ^{
@@ -47,6 +48,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // @ 0xf956c — look up (creating if absent) a generic-password keychain item
 // named "bundleSeedID" and read the leading component of its access group,
 // which is the app's Apple seed (team) id.
+// @complete
 - (NSString *)bundleSeedID {
     NSDictionary *query = @{
         (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
@@ -76,6 +78,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf6ff0 — allocate the shared instance once, then always hand back that
 // instance.
+// @complete
 + (instancetype)allocWithZone:(NSZone *)zone {
     static dispatch_once_t onceToken;
     // @ 0xf705c — dispatch_once body: create the shared "ApplilinkUdid" serial
@@ -91,6 +94,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf7200 — the shared instance, created once (block @ 0x134508 does
 // `[[RewardNetworkUdid alloc] init]`).
+// @complete
 + (instancetype)sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -103,6 +107,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf72d4 — reuse the existing pasteboard "Value", otherwise mint a fresh
 // UUID, then write it into the first empty pasteboard slot.
+// @complete
 + (NSDictionary *)writeUDIDForFirstEmptyLocationWithError:(NSError **)error {
     RewardNetworkUdid *instance = [self sharedInstance];
     NSDictionary *storage = [[instance pasteBoard] storageData];
@@ -125,6 +130,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 }
 
 // @ 0xf742c — the decoded UDID record at `storageIndex`.
+// @complete
 + (NSDictionary *)udidWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error {
     RewardNetworkUdid *instance = [self sharedInstance];
     NSError *readError = nil;
@@ -137,6 +143,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 }
 
 // @ 0xf74fc — the first decoded UDID record found across all slots.
+// @complete
 + (NSDictionary *)udidForFirstInvalidDataWithError:(NSError **)error {
     RewardNetworkUdid *instance = [self sharedInstance];
     NSDictionary *result = [[instance pasteBoard] storageData];
@@ -148,6 +155,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf75b0 — delete the pasteboard record at `storageIndex`, but only when a
 // non-"0" reward environment is configured.
+// @complete
 + (BOOL)deleteUDIDWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (env == nil) {
@@ -170,6 +178,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf76cc — read the current advertising-reward UDID, falling back to the
 // freshly hashed advertising id when the keychain read fails.
+// @complete
 + (NSString *)getAdvertisingRewardUdidWithError:(NSError **)error {
     if (![self isAdvertisingTrackingOSVersion]) {
         return nil;
@@ -200,6 +209,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // @ 0xf786c — (re)create the advertising-reward UDID: store the current ad id
 // as the new UDID (and rotate the previous one into the old UDID slot when it
 // differs).
+// @complete
 + (NSString *)createAdvertisingRewardUdidWithError:(NSError **)error {
     if (![self isAdvertisingTrackingOSVersion]) {
         return nil;
@@ -246,6 +256,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf7b68 — delete the advertising-reward UDID keychain entry
 // `<service>-<index>`.
+// @complete
 + (BOOL)deleteAdvertisingRewardUdidIndex:(NSInteger)index error:(NSError **)error {
     if (index >= 519) {
         if (error != NULL) {
@@ -274,6 +285,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 #pragma mark - Old UDID (keychain)
 
 // @ 0xf7d14 — persist `udid` under the "old" UDID service.
+// @complete
 + (BOOL)setOldUdid:(NSString *)udid error:(NSError **)error {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     NSString *base;
@@ -282,11 +294,14 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     } else {
         base = @"ApplilinkUdid";
     }
-    NSString *service = [NSString stringWithFormat:@"%@_%@", base, @"0"];
+    // The base/index join uses a hyphen, not an underscore (stringWithFormat @0xf7e12
+    // loads the "%@-%@" literal).
+    NSString *service = [NSString stringWithFormat:@"%@-%@", base, @"0"];
     return [RewardNetworkUdid setUdidWithService:service withUDID:udid];
 }
 
 // @ 0xf7e64 — read the "old" UDID.
+// @complete
 + (NSString *)getOldUdidWithError:(NSError **)error {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     NSString *service;
@@ -302,6 +317,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 }
 
 // @ 0xf7f78 — delete the "old" UDID keychain entry.
+// @complete
 + (BOOL)deleteOldUdidWithError:(NSError **)error {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     NSString *base;
@@ -310,7 +326,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     } else {
         base = @"ApplilinkUdid";
     }
-    NSString *service = [NSString stringWithFormat:@"%@_%@", base, @"0"];
+    // The base/index join uses a hyphen, not an underscore (stringWithFormat @0xf806a
+    // loads the "%@-%@" literal).
+    NSString *service = [NSString stringWithFormat:@"%@-%@", base, @"0"];
 
     NSError *deleteError = nil;
     [RewardNetworkUdid deleteKeyChainService:service error:&deleteError];
@@ -322,6 +340,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf80e0 — persist `udid` as the "new" advertising UDID, and remember the
 // storage index used so it can be found again.
+// @complete
 + (BOOL)setNewUdid:(NSString *)udid error:(NSError **)error {
     NSString *serviceIndex = [RewardNetworkUdid getServiceIndex:@"adStorageIndex"];
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
@@ -337,7 +356,10 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
         index = @"0";
     }
 
-    NSString *service = [NSString stringWithFormat:@"%@_%@", base, index];
+    // The base/index join uses a hyphen, not an underscore (stringWithFormat @0xf823a
+    // loads the "%@-%@" literal; the earlier "%@_%@" join @0xf81da is the env/base
+    // join above).
+    NSString *service = [NSString stringWithFormat:@"%@-%@", base, index];
     BOOL result = [RewardNetworkUdid setUdidWithService:service withUDID:udid];
     if (result) {
         [RewardNetworkUdid setService:@"adStorageIndex" withStorageIndex:index];
@@ -349,6 +371,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf82ac — add a generic-password keychain item recording `udid` under
 // `service`, replacing any previous item first.
+// @complete
 + (BOOL)setUdidWithService:(NSString *)service withUDID:(NSString *)udid {
     NSDate *now = [NSDate date];
     NSNumber *version = [NSNumber numberWithInteger:1];
@@ -377,6 +400,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // @ 0xf846c — read the UDID (kSecAttrAccount) for `service`/`storageIndex`,
 // validate the record, and touch its modification date. `rewardNetworkUDIDType`
 // is unused.
+// @complete
 + (NSString *)getUdidWithService:(NSString *)service
                     storageIndex:(NSString *)storageIndex
            rewardNetworkUDIDType:(NSInteger)rewardNetworkUDIDType
@@ -387,7 +411,9 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     if (storageIndex == nil || [storageIndex length] == 0) {
         index = @"0";
     }
-    NSString *fullService = [NSString stringWithFormat:@"%@_%@", service, index];
+    // The service/index join uses a hyphen, not an underscore (stringWithFormat
+    // @0xf850a loads the "%@-%@" literal).
+    NSString *fullService = [NSString stringWithFormat:@"%@-%@", service, index];
 
     NSDictionary *found = [RewardNetworkUdid searchWithService:fullService];
     if (found == nil) {
@@ -429,6 +455,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // NOTE: reproduced 1:1 with the binary, which pairs the match-limit constants
 // the "wrong" way round (kSecMatchLimitOne is used as the dictionary key and
 // kSecMatchLimit as its value); this is an SDK quirk, not a transcription slip.
+// @complete
 + (NSDictionary *)searchWithService:(NSString *)service {
     if (service == nil) {
         return nil;
@@ -450,6 +477,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf8860 — delete the generic-password keychain item for `service` (no-op
 // when nothing is stored).
+// @complete
 + (BOOL)deleteKeyChainService:(NSString *)service error:(NSError **)error {
     NSDictionary *found = [RewardNetworkUdid searchWithService:service];
     if (found == nil) {
@@ -472,6 +500,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 }
 
 // @ 0xf89a0 — validate the shape of a decoded keychain attributes dictionary.
+// @complete
 + (BOOL)validate:(NSDictionary *)data error:(NSError **)error {
     if (![data isKindOfClass:[NSDictionary class]]) {
         if (error != NULL) {
@@ -515,6 +544,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf8c30 — read the stored storage-index string (account) for `service`, or
 // "0".
+// @complete
 + (NSString *)getServiceIndex:(NSString *)service {
     NSDictionary *query = @{
         (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
@@ -538,6 +568,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf8dc0 — record `storageIndex` (as the account) under `service` in the
 // keychain.
+// @complete
 + (void)setService:(NSString *)service withStorageIndex:(NSString *)storageIndex {
     NSError *deleteError = nil;
     [RewardNetworkUdid deleteKeyChainService:service error:&deleteError];
@@ -554,6 +585,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf8ebc — MD5 of the current advertising identifier's UUID string, or nil
 // when tracking is off / the id is the all-zero placeholder.
+// @complete
 + (NSString *)getAdvertisingUdid {
     if (![self isAdvertisingTrackingOSVersion]) {
         return nil;
@@ -569,6 +601,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf8fa4 — whether ad tracking is enabled; on unsupported OS versions it
 // reports YES.
+// @complete
 + (BOOL)isAdvertisingTrackingEnabled {
     if (![self isAdvertisingTrackingOSVersion]) {
         return YES;
@@ -578,6 +611,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf9010 — whether the running OS is new enough (>= 6.1) to use the ad
 // identifier.
+// @complete
 + (BOOL)isAdvertisingTrackingOSVersion {
     return [[[UIDevice currentDevice] systemVersion] doubleValue] >= 6.1;
 }
@@ -585,6 +619,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 #pragma mark - Helpers
 
 // @ 0xf90a0 — lowercase hex MD5 of `string`.
+// @complete
 + (NSString *)md5WithString:(NSString *)string {
     const char *data = [string UTF8String];
     unsigned char digest[CC_MD5_DIGEST_LENGTH];
@@ -600,6 +635,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // @ 0xf9168 — populate `parameters` with the "udid"/"old_udid" request fields
 // chosen from the ad id / udid / old udid, gated on the OS version and priority
 // flag.
+// @complete
 + (BOOL)setUdidParameters:(NSMutableDictionary *)parameters
        isUDIDPriorityType:(BOOL)isUDIDPriorityType {
     NSString *adUdid = [RewardNetwork ad_udid];
@@ -648,6 +684,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf93ac — YES when ad_udid, udid and old_udid are all present and pairwise
 // distinct.
+// @complete
 + (BOOL)isUdidThreeKinds {
     NSString *adUdid = [RewardNetwork ad_udid];
     NSString *udid = [RewardNetwork udid];
@@ -670,6 +707,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 
 // @ 0xf947c — seed the keychain "old" UDID from the pasteboard record
 // identified by the persisted storage index.
+// @complete
 + (void)setUdidKeychainFromPasteBoard {
     NSString *storageIndex =
         [[NSUserDefaults standardUserDefaults] stringForKey:@"ApplilinkReward.storageIndex"];
@@ -688,6 +726,7 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
 // @ 0xf96e8 — debug dump of the pasteboard plus the udid / ad-id state (the
 // NSLog calls are compiled out in release, leaving only the accessor side
 // effects).
+// @complete
 + (void)debugLog {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (env == nil) {

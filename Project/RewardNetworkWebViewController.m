@@ -15,12 +15,14 @@
 @implementation RewardNetworkWebViewController
 
 // @ 0xec4d8
+// @complete
 - (instancetype)init {
     self = [super init];
     return self;
 }
 
 // @ 0xec514
+// @complete
 - (void)loadView {
     [super loadView];
 
@@ -63,6 +65,7 @@
 }
 
 // @ 0xec868
+// @complete
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [self updateIndicator:YES];
@@ -74,16 +77,19 @@
 #endif
 
 // @ 0xec87c
+// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xec8a8
+// @complete
 - (void)setNavigationBarHidden:(BOOL)hidden {
     [self setIsNavigationBarHidden:hidden];
 }
 
 // @ 0xec8b8
+// @complete
 - (void)loadRequestWithURL:(NSURL *)url
                 parameters:(NSDictionary *)parameters
                   delegate:(id<RewardNetworkWebViewDelegate>)delegate {
@@ -117,6 +123,7 @@
 }
 
 // @ 0xecb28
+// @complete
 - (void)viewDidDisappear:(BOOL)animated {
     [self appliListClosed];
     if ([self delegate] != nil &&
@@ -127,6 +134,7 @@
 
 // @ 0xecbd8 — a "command=close" query closes the panel; otherwise hide the
 // indicator and notify the delegate.
+// @complete
 - (void)handleNavigationFinishedForQuery:(NSString *)query {
     if (query != nil && [query rangeOfString:@"command=close"].location != NSNotFound) {
         // The page signalled a close.
@@ -156,6 +164,7 @@
 // @ 0xecd24 — ignore user-cancelled loads (NSURLErrorCancelled == -999) and the
 // WebKit "frame load interrupted" (102) errors; otherwise notify the delegate
 // and close.
+// @complete
 - (void)handleNavigationFailWithError:(NSError *)error {
     [self updateIndicator:NO];
 
@@ -192,11 +201,13 @@
 #endif
 
 // @ 0xece64
+// @complete
 - (void)btnCloseClicked:(id)sender {
     [self appliListClosed];
 }
 
 // @ 0xece74
+// @complete
 - (void)appliListClosed {
     [_indicator removeFromSuperview];
     [_navigationBar removeFromSuperview];
@@ -216,6 +227,7 @@
 }
 
 // @ 0xecf50
+// @complete
 - (void)updateIndicator:(BOOL)show {
     if (_indicator != nil) {
         if (show) {
@@ -228,6 +240,7 @@
 
 // @ 0xecf8c — decide whether to allow a navigation, intercepting applilink://
 // scheme launches. Shared by both web-view backends; returns YES to proceed.
+// @complete
 - (BOOL)shouldStartLoadWithRequest:(NSURLRequest *)request {
     NSURL *url = [request URL];
     NSString *scheme = [url scheme];
@@ -283,7 +296,9 @@
     if ([[url absoluteString] hasPrefix:prefix]) {
         NSString *tail = [[url absoluteString] substringFromIndex:[prefix length]];
         if ([query length] != 0) {
-            NSString *suffix = [NSString stringWithFormat:@"&%@", query];
+            // The suffix stripped is "?<query>", not "&<query>" (0xed3fc:
+            // stringWithFormat with the literal "?%@").
+            NSString *suffix = [NSString stringWithFormat:@"?%@", query];
             if ([tail hasSuffix:suffix]) {
                 tail = [tail substringToIndex:[tail length] - [suffix length]];
             }
@@ -292,9 +307,9 @@
     }
 
     if ([launch length] != 0) {
-        // Drop the leading separator, take the first "&"-delimited token as the
-        // URL.
-        NSArray *parts = [[launch substringFromIndex:1] componentsSeparatedByString:@"&"];
+        // Drop the leading separator, take the first "/"-delimited token as the
+        // URL (0xed4a4: componentsSeparatedByString with the literal "/").
+        NSArray *parts = [[launch substringFromIndex:1] componentsSeparatedByString:@"/"];
         if ([parts count] != 0) {
             NSURL *appURL = [NSURL URLWithString:[[parts objectAtIndex:0] URLDecodedString]];
             if (appURL != nil && [[UIApplication sharedApplication] canOpenURL:appURL]) {
@@ -335,6 +350,7 @@
 #endif
 
 // @ 0xed62c
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     if (![self shouldAutorotate]) {
         return NO;
@@ -360,11 +376,13 @@
 }
 
 // @ 0xed684
+// @complete
 - (BOOL)shouldAutorotate {
     return YES;
 }
 
 // @ 0xed688
+// @complete
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     // Reads (and discards) the device idiom, then returns all orientations
     // (UIInterfaceOrientationMaskAll == 0x1e).
@@ -373,6 +391,7 @@
 }
 
 // @ 0xed6cc
+// @complete
 - (void)rotateWebViewWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                      duration:(NSTimeInterval)duration {
     // NOTE: this mirrors the (large, register-level) frame arithmetic from the
@@ -472,6 +491,7 @@
 }
 
 // @ 0xedf98
+// @complete
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
                                          duration:(NSTimeInterval)duration {
     UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
@@ -479,6 +499,7 @@
 }
 
 // @ 0xee000
+// @complete
 - (BOOL)hasParentViewController:(id)responder {
     if ([responder isKindOfClass:[UIWindow class]]) {
         return NO;
@@ -498,31 +519,37 @@
 // --- manual accessors (mirror 0xee100..0xee150) ---
 
 // @ 0xee100
+// @complete
 - (BOOL)isNavigationBarHidden {
     return _isNavigationBarHidden;
 }
 
 // @ 0xee110
+// @complete
 - (void)setIsNavigationBarHidden:(BOOL)hidden {
     _isNavigationBarHidden = hidden;
 }
 
 // @ 0xee120
+// @complete
 - (id<RewardNetworkWebViewDelegate>)delegate {
     return _delegate;
 }
 
 // @ 0xee130 — assigned, not retained.
+// @complete
 - (void)setDelegate:(id<RewardNetworkWebViewDelegate>)delegate {
     _delegate = delegate;
 }
 
 // @ 0xee140
+// @complete
 - (UIView *)parentView {
     return _parentView;
 }
 
 // @ 0xee150 — retained (strong under ARC).
+// @complete
 - (void)setParentView:(UIView *)parentView {
     _parentView = parentView;
 }
