@@ -22,6 +22,7 @@ namespace ne {
 
 // Ghidra: RenderKindToGLRenderKind @ FUN_00012f64 (table @ DAT_0012e110): the
 // GL ES OES framebuffer attachment points.
+// @complete
 static GLenum RenderKindToGL(int kind) {
     assert(kind >= 0 && kind < neIGLES::RENDER_KIND_MAX);
     static const GLenum kTable[neIGLES::RENDER_KIND_MAX] = {
@@ -34,6 +35,7 @@ static GLenum RenderKindToGL(int kind) {
 
 // Renderbuffer storage format per RenderType (pairs 1:1 with RenderKind; no
 // separate DAT table — the attach path is inlined).
+// @complete
 static GLenum RenderTypeToGLFormat(int type) {
     assert(type >= 0 && type < neIGLES::RENDER_TYPE_MAX);
     static const GLenum kTable[neIGLES::RENDER_TYPE_MAX] = {
@@ -46,6 +48,7 @@ static GLenum RenderTypeToGLFormat(int type) {
 
 // Ghidra: setMatrixMode @ FUN_00013110 (table @ DAT_0012e11c). Index 0 is the
 // GL_MODELVIEW out-of-range default; 1..3 index the table.
+// @complete
 static GLenum MatrixModeToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::MATRIX_MODE_MAX);
     if (mode - 1U < 3U) {
@@ -60,6 +63,7 @@ static GLenum MatrixModeToGL(int mode) {
 }
 
 // glHint targets. Ghidra: table @ DAT_0012e290 (5 entries).
+// @complete
 static GLenum HintTargetToGL(int target) {
     assert(target >= 0 && target < neIGLES::HINT_MAX);
     static const GLenum kTable[neIGLES::HINT_MAX] = {
@@ -73,6 +77,7 @@ static GLenum HintTargetToGL(int target) {
 }
 
 // glFog(GL_FOG_MODE) modes. Ghidra: table @ DAT_0012e27c (3 entries).
+// @complete
 static GLenum FogModeToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::FOG_MODE_MAX);
     static const GLenum kTable[neIGLES::FOG_MODE_MAX] = {
@@ -84,6 +89,7 @@ static GLenum FogModeToGL(int mode) {
 }
 
 // glEnableClientState array targets. Ghidra: table @ DAT_0012e25c (8 entries).
+// @complete
 static GLenum ClientStateToGL(int state) {
     assert(state >= 0 && state < neIGLES::CS_MAX);
     static const GLenum kTable[neIGLES::CS_MAX] = {
@@ -100,6 +106,7 @@ static GLenum ClientStateToGL(int state) {
 }
 
 // glEnable / glDisable capabilities. Ghidra: table @ DAT_0012e1d0 (35 entries).
+// @complete
 static GLenum EnableStateToGL(int state) {
     assert(state >= 0 && state < neIGLES::ES_MAX);
     static const GLenum kTable[neIGLES::ES_MAX] = {
@@ -143,6 +150,7 @@ static GLenum EnableStateToGL(int state) {
 }
 
 // glCullFace. Ghidra: table @ DAT_0012e1c0 (3 entries).
+// @complete
 static GLenum CullFaceToGL(int face) {
     assert(face >= 0 && face < neIGLES::CULL_FACE_MAX);
     static const GLenum kTable[neIGLES::CULL_FACE_MAX] = {
@@ -154,6 +162,7 @@ static GLenum CullFaceToGL(int face) {
 }
 
 // Depth/alpha compare functions. Ghidra: table @ DAT_0012e130 (8 entries).
+// @complete
 static GLenum CompareFuncToGL(int func) {
     assert(func >= 0 && func < neIGLES::COMPARE_FUNC_MAX);
     static const GLenum kTable[neIGLES::COMPARE_FUNC_MAX] = {
@@ -171,6 +180,7 @@ static GLenum CompareFuncToGL(int func) {
 
 // GL src blend factors. Ghidra: table @ DAT_0012e170 (9 entries; setBlendFunc
 // FUN_00013a34 asserts src < BLEND_SRC_VALUE_MAX at neGLES11.cpp:0xa8-0xa9).
+// @complete
 static GLenum BlendSrcToGL(int src) {
     assert(src >= 0 && src < neIGLES::BLEND_SRC_VALUE_MAX);
     static const GLenum kTable[neIGLES::BLEND_SRC_VALUE_MAX] = {
@@ -189,6 +199,7 @@ static GLenum BlendSrcToGL(int src) {
 
 // GL dest blend factors. Ghidra: table @ DAT_0012e1a0 (8 entries; setBlendFunc
 // FUN_00013a34 asserts dest < BLEND_DEST_VALUE_MAX at neGLES11.cpp:0xbd-0xbe).
+// @complete
 static GLenum BlendDestToGL(int dest) {
     assert(dest >= 0 && dest < neIGLES::BLEND_DEST_VALUE_MAX);
     static const GLenum kTable[neIGLES::BLEND_DEST_VALUE_MAX] = {
@@ -205,6 +216,7 @@ static GLenum BlendDestToGL(int dest) {
 }
 
 // Ghidra: TexParamTypeFuncToGLType @ FUN_00013864 (table @ DAT_0012e2d0).
+// @complete
 static GLenum TexParamTypeToGL(int type) {
     assert(type >= 0 && type < neIGLES::TEX_PARAM_TYPE_MAX);
     static const GLenum kTable[neIGLES::TEX_PARAM_TYPE_MAX] = {
@@ -217,6 +229,7 @@ static GLenum TexParamTypeToGL(int type) {
 }
 
 // glTexParameter value forward map. Ghidra: table @ DAT_0012e150 (8 entries).
+// @complete
 static GLint TexParamValueToGL(int value) {
     assert(value >= 0 && value < neIGLES::TEX_PARAM_VALUE_MAX);
     static const GLint kTable[neIGLES::TEX_PARAM_VALUE_MAX] = {
@@ -234,6 +247,7 @@ static GLint TexParamValueToGL(int value) {
 
 // Ghidra: GLValueToTexParamValue @ FUN_000138cc (reverse of
 // glGetTexParameteriv).
+// @complete
 static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
     switch (v) {
     case GL_NEAREST:
@@ -258,6 +272,7 @@ static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
 }
 
 // Texture upload format. Ghidra: TextureFormatToGLFormat @ FUN_00013970.
+// @complete
 static GLenum TextureFormatToGL(int format) {
     switch (format) {
     case neIGLES::TEX_FORMAT_RGBA:
@@ -271,6 +286,7 @@ static GLenum TextureFormatToGL(int format) {
 
 // Engine primitive ordinal -> GL mode. Ghidra: table @ DAT_0012e2b0 (7
 // entries), indexed by drawArrays/drawElements.
+// @complete
 static GLenum PrimitiveToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::PRIM_MAX);
     static const GLenum kTable[neIGLES::PRIM_MAX] = {
