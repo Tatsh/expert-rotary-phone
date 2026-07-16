@@ -25,7 +25,10 @@ applist
 archs
 areaselect
 armv
+asbd
 attrb
+aumx
+auou
 autocapitalization
 autocorrection
 autorelease
@@ -105,6 +108,7 @@ crcerror
 crypthead
 crypting
 cryptor
+cstr
 cstring
 ctype
 ctypting
@@ -314,6 +318,7 @@ musicinfo
 mypy
 mztools
 nakaji
+navbars
 navc
 navi
 ncmds
@@ -397,6 +402,7 @@ rhdvru
 rhydbg
 rhythmin
 riccardo
+rioc
 ripgreprc
 rksj
 rokka
