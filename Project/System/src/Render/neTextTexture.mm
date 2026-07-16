@@ -331,6 +331,32 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
             dst[col * 2 + 1] = g;
         }
     }
+    NE_DBG({
+        int nz = 0;
+        int maxGray = 0;
+        for (int p = 0; p < w * h; ++p) {
+            if (gray[p]) {
+                ++nz;
+            }
+            if (gray[p] > maxGray) {
+                maxGray = gray[p];
+            }
+        }
+        neDebugLog("glyphRaster '%s' font=%s size=(%.2f,%.2f) wh=(%d,%d) cell=(%d,%d) "
+                   "atlasW=%d nonzero=%d/%d maxGray=%d",
+                   utf8,
+                   [[[label font] fontName] UTF8String],
+                   size.width,
+                   size.height,
+                   w,
+                   h,
+                   cellX,
+                   cellY,
+                   atlasW,
+                   nz,
+                   w * h,
+                   maxGray);
+    });
     delete[] gray;
 
     glyph->atlasId = atlas->index;
