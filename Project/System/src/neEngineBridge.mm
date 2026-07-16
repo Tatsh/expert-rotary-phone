@@ -620,8 +620,11 @@ void bootstrapB() {
 // g_pTextTextureMgr static it must store into (a stub here could not reach that
 // static, which left the whole text path dereferencing a null manager).
 
-// Ghidra: FUN_0001bdf8 — walk the reloadable-texture list (circular, via +0x8)
+// Ghidra: FUN_0001bdf8 — walk the shared texture cache list (circular, via +0x8)
 // and free every texture's GL name (invalidated by the GL context going away).
+// Reads the same g_textureCacheList head the acquire path links into; null before
+// the first texture is cached (the lazy sentinel), so the guard is a no-op then.
+// @complete
 void onDidEnterBackground() {
     AepTexture *head = g_textureCacheList;
     if (head == nullptr) {
@@ -741,8 +744,11 @@ void startBootTask() {
     BootCreateTask();
 }
 
-// Walk the same reloadable-texture list on foreground, re-decoding +
-// re-uploading each texture (its per-texture reload is Ghidra FUN_000188ac).
+// Ghidra: FUN_0001be20 — walk the same shared texture cache list on foreground,
+// re-decoding + re-uploading each texture (its per-texture reload is FUN_000188ac).
+// This is the single reconstruction of the foreground-reload walk (the former
+// AepTexture.mm duplicate was dead and has been removed).
+// @complete
 void notifyEnterForeground() {
     AepTexture *head = g_textureCacheList;
     if (head == nullptr) {

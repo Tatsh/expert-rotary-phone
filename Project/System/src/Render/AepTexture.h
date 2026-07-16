@@ -110,6 +110,13 @@ private:
 // g_dwTextureMemTotal.
 extern int g_dwTextureMemTotal;
 
+// The single head of the shared, refcounted, path-keyed texture cache (Ghidra:
+// the one global list head that AepTextureCacheAcquire links into and both the
+// background (onDidEnterBackground) and foreground (notifyEnterForeground) GL
+// handlers walk). Defined in neEngineBridge.mm; the sentinel node is created
+// lazily by AepTextureCacheSentinel(). null until the first texture is cached.
+extern AepTexture *g_textureCacheList;
+
 // Drop one shared-cache reference of `tex` (an AepTexture); on the last
 // reference it frees the GL name, unlinks from the cache list and destroys it.
 // Ghidra: FUN_00018200.
@@ -135,11 +142,6 @@ void neTextureRebind(AepTexture *tex, const void *pixels);
 // Ghidra: FUN_0001bcfc.
 AepTexture *
 neCreateTextureFromData(int width, int height, int format, const void *pixels, int texW, int texH);
-
-// Notify every cached texture that the app returned to the foreground so it
-// re-uploads its GL name (the context was dropped on background). Ghidra:
-// FUN_0001be20.
-void neNotifyTexturesForeground(void);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

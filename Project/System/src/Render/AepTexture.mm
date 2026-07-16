@@ -202,22 +202,24 @@ bool AepTexture::decodeAndUpload(const char *path) {
     return true;
 }
 
-// Head of the shared texture cache. Ghidra: DAT_00188464 points at a circular,
+// Head of the shared texture cache. Ghidra: DAT_00188464 is a circular,
 // sentinel-terminated doubly-linked list of AepTexture nodes (links at
 // next/+0x08, prev/+0x0c; refcount at +0x04). NEEngine_bootstrapB
 // (FUN_0001ba60) builds the sentinel — an empty AepTexture whose next/prev
-// point back at itself. It is created lazily here so the cache works regardless
-// of which unit reaches it first. The self-linked empty-node structure is
-// confirmed by the list walk/splice in AepTextureCacheAcquire (FUN_0001bbf0).
+// point back at itself. It is created lazily into the shared g_textureCacheList
+// head so the acquire path and the background/foreground GL handlers
+// (onDidEnterBackground / notifyEnterForeground, which read the very same global)
+// all walk ONE list. The self-linked empty-node structure is confirmed by the
+// list walk/splice in AepTextureCacheAcquire (FUN_0001bbf0).
 // @complete
 static AepTexture *AepTextureCacheSentinel() {
-    static AepTexture *sentinel = [] {
+    if (g_textureCacheList == nullptr) {
         AepTexture *s = new AepTexture(); // operator new(0x48) + ctor FUN_000180c4
         s->next = s;
         s->prev = s;
-        return s;
-    }();
-    return sentinel;
+        g_textureCacheList = s;
+    }
+    return g_textureCacheList;
 }
 
 // Ghidra: FUN_0001bbf0 — resolve a bundled image path through the shared cache.
@@ -411,15 +413,10 @@ neCreateTextureFromData(int width, int height, int format, const void *pixels, i
     return tex;
 }
 
-// Ghidra: FUN_0001be20 — walk the cache list and re-upload each texture's GL
-// name after a foreground return (NEEngine_notifyForegroundObserver per node).
-// @complete
-void neNotifyTexturesForeground(void) {
-    AepTexture *sentinel = AepTextureCacheSentinel();
-    for (AepTexture *node = sentinel->next; node != sentinel; node = node->next) {
-        node->reload();
-    }
-}
+// The foreground-reload walk (Ghidra FUN_0001be20) is reconstructed once, as
+// neEngineBridge's notifyEnterForeground (the function AppDelegate actually wires
+// on applicationDidBecomeActive), walking this same g_textureCacheList. The
+// earlier duplicate here was dead (no caller) and has been removed.
 
 // Ghidra: FUN_00018200 — drop one shared-cache reference; on the last one, hand
 // the node to `delete` (its deleting-destructor vtable slot +0x04). The unlink,
