@@ -512,8 +512,8 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
                           float flDstW,
                           float flDstH,
                           int nRawAngle,
-                          float flScaleX,
-                          float flScaleY,
+                          float flPivotX,
+                          float flPivotY,
                           int nAlpha,
                           float /*flParam14*/,
                           uint32_t nFlags,
@@ -591,8 +591,8 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
                        uSpan,
                        vSpan,
                        rotation,
-                       static_cast<int>(flScaleX),
-                       static_cast<int>(flScaleY),
+                       static_cast<int>(flPivotX),
+                       static_cast<int>(flPivotY),
                        alpha,
                        red,
                        green,
@@ -645,10 +645,21 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
         static_cast<neTextureForiOS *>(textureTable() ? textureTable()[slot] : nullptr);
     // spriteRec: +0 srcX, +2 srcY, +4 srcW, +6 srcH (the atlas source rect). The
     // quad geometry is the scaled destination rect; colour comes from nColorRGB
-    // (p15) and alpha from nColorA (p9). Same drawAepSpriteClipped call shape as the
-    // stretch handler (Ghidra: FUN_00010c90 tail, four vdiv by DAT_00010e14=100.0).
-    const float flDstW = static_cast<float>(p7) * s * static_cast<float>(sx) / 100.0f;
-    const float flDstH = static_cast<float>(p8) * s * static_cast<float>(sy) / 100.0f;
+    // (p15) and alpha from nColorA (p9). The tail of FUN_00010c90 emits four
+    // `/DAT_00010e14 (=100.0)` divides, wired verbatim from the disassembly:
+    //   flDstW = renderScale * sx * srcW / 100  (0x10dd4 vmul by srcW=spriteRec[2],
+    //                                             0x10de8 vdiv) -> quad width
+    //   flDstH = renderScale * sy * srcH / 100  (srcH=spriteRec[3], 0x10de4 vdiv)
+    //   pivotX = renderScale * sx * nOfsX / 100  (0x10db8 vmul by nOfsX=p7,
+    //                                             0x10dc8 vdiv)
+    //   pivotY = renderScale * sy * nOfsY / 100  (nOfsY=p8, 0x10d86 vdiv)
+    // The destination SIZE is the source-rect W/H (not nOfsX/nOfsY, which are the
+    // pivot): a leaf sprite or drawAepFrame passes nOfsX=nOfsY=0, so sizing off
+    // them would collapse the quad to zero and draw nothing.
+    const float flDstW = static_cast<float>(spriteRec[2]) * s * static_cast<float>(sx) / 100.0f;
+    const float flDstH = static_cast<float>(spriteRec[3]) * s * static_cast<float>(sy) / 100.0f;
+    const float flPivotX = static_cast<float>(p7) * s * static_cast<float>(sx) / 100.0f;
+    const float flPivotY = static_cast<float>(p8) * s * static_cast<float>(sy) / 100.0f;
     drawAepSpriteClipped(frames,
                          spriteRec[0],
                          spriteRec[1],
@@ -659,8 +670,8 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                          flDstW,
                          flDstH,
                          0,
-                         static_cast<float>(aepScale(sx, s)),
-                         static_cast<float>(aepScale(sy, s)),
+                         flPivotX,
+                         flPivotY,
                          p9,
                          static_cast<float>(maskedAlpha),
                          blend,
