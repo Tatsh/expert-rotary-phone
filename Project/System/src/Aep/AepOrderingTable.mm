@@ -146,68 +146,6 @@ AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
     return cmd;
 }
 
-// Establish the per-frame 2D render state. This is NOT part of
-// renderAepOrderingTable (which is pure dispatch): in the binary the renderer
-// facade / GL view sets the projection and default render state at frame begin,
-// outside the OT flush. The reconstruction has not yet routed that frame-begin
-// setup through the facade, so this stand-in loads the top-left-origin ortho and
-// the default 2D blend state here, guarded by the cached screen extents
-// (setScreenParams). Once the facade's frame-begin path is wired this can be
-// dropped. Kept separate from the dispatch loop so the loop stays bit-exact.
-static void establishFrame2DState(int screenW, int screenH) {
-    if (screenW <= 0 || screenH <= 0) {
-        return;
-    }
-    const GLfloat W = (GLfloat)screenW;
-    const GLfloat H = (GLfloat)screenH;
-    // glOrtho(0, W, H, 0, -1, 1) as a column-major matrix (top-left origin).
-    const GLfloat ortho[16] = {
-        2.0f / W,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        -2.0f / H,
-        0.0f,
-        0.0f,
-        0.0f,
-        0.0f,
-        -1.0f,
-        0.0f,
-        -1.0f,
-        1.0f,
-        0.0f,
-        1.0f,
-    };
-    static const GLfloat identity[16] = {
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-    };
-    // Do NOT set glViewport here -- MainViewController -draw sets it to the full
-    // drawable so this content-resolution ortho stretches across the whole screen.
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(ortho);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(identity);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
 // Ghidra: renderAepOrderingTable (FUN_000115d0) — walk the priority buckets from
 // OT_PRI_MAX-1 (0x31) down to 0 (high priority drawn first = back-to-front) and
 // dispatch each queued command by its wFlags tag to the matching per-type draw
@@ -216,8 +154,12 @@ static void establishFrame2DState(int screenW, int screenH) {
 // bodies follow their own FUN_* decompiles). Priority 0 draws last = frontmost.
 // @complete
 void AepOrderingTable::flush() {
-    establishFrame2DState(m_screenW, m_screenH); // frame-begin bridge (see above)
-
+    // Pure dispatch, exactly as FUN_000115d0: the per-frame 2D render state
+    // (top-left ortho projection, identity model matrix and default blend) is
+    // established through the renderer facade by the draw primitives themselves —
+    // every neDraw* funnels through neApplyDefaultRenderState / neApplyViewport,
+    // which load g_pCurrentViewport's ortho (built by MainViewController's
+    // neCreateOrthoViewport) and reset the caps. No frame-begin setup happens here.
     if (NE_DBG_FIRST(240)) {
         int dbgTotal = 0, dbgType[8] = {0};
         for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
@@ -340,8 +282,8 @@ void AepOrderingTable::flush() {
                 // real string it pointed at.
                 drawAepOtText(t->pText,
                               "DFMaruGothic-Bd-WIN-RKSJ-H",
-                              static_cast<int>(t->flPosXf),
-                              static_cast<int>(t->flPosYf),
+                              t->nPosX,
+                              t->nPosY,
                               t->nColorTL,
                               t->nColorTR,
                               t->nColorBL,
@@ -403,7 +345,12 @@ static inline int aepScale(int c, float s) {
 
 // Ghidra: pushAepOtTextCmd (FUN_0001154c) — queue a type-6 text command. The
 // manager-level forwarders (FUN_00010540 / _1057c) reach it through
-// AepManager::orderingTable().
+// AepManager::orderingTable(). nType=6 (+0x04, strh), nReserved8=0 (+0x08),
+// strncpy(text, 256) into +0x0c with a forced NUL at +0x10b, the integer pen
+// position at +0x10c/+0x110, the four corner colours at +0x114..+0x120, and the
+// 16-byte clip vector at +0x124 (memcpy when supplied, else {0,0,screenW,screenH}
+// with the extents read as int16 from ot+0x04/+0x08).
+// @complete
 void pushAepOtTextCmd(AepOrderingTable *ot,
                       const char *text,
                       int a0,
@@ -422,14 +369,15 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
     cmd->nReserved8 = 0;                 // +0x08
     std::strncpy(cmd->pText, text, 256); // +0x0c
     cmd->pText[255] = '\0';              // +0x10b force-terminate
-    // The manager forwarders pass the pen position (a0/a1) and the four per-corner
-    // colours (a2..a5); PushAepOtTextCmd stores the position in the float slots.
-    cmd->flPosXf = static_cast<float>(a0); // +0x10c
-    cmd->flPosYf = static_cast<float>(a1); // +0x110
-    cmd->nColorTL = a2;                    // +0x114
-    cmd->nColorTR = a3;                    // +0x118
-    cmd->nColorBL = a4;                    // +0x11c
-    cmd->nColorBR = a5;                    // +0x120
+    // The manager forwarders pass the integer pen position (a0/a1) and the four
+    // per-corner colours (a2..a5); the binary stores the position as raw ints
+    // (str, not vstr) — drawAepOtText converts them to float when it scales.
+    cmd->nPosX = a0;    // +0x10c
+    cmd->nPosY = a1;    // +0x110
+    cmd->nColorTL = a2; // +0x114
+    cmd->nColorTR = a3; // +0x118
+    cmd->nColorBL = a4; // +0x11c
+    cmd->nColorBR = a5; // +0x120
     if (colorVec != nullptr) {
         std::memcpy(cmd->pAClipVec, colorVec, 16); // +0x124 copy the 16-byte clip vector
     } else {

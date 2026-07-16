@@ -116,8 +116,8 @@ struct AepTextCmd {
     int16_t nPriority;     // +0x06  bucket priority
     int32_t nReserved8;    // +0x08
     char pText[256];       // +0x0c..+0x10b  (force-terminated at pText[255])
-    float flPosXf;         // +0x10c  pen position x
-    float flPosYf;         // +0x110  pen position y
+    int32_t nPosX;         // +0x10c  pen position x (integer; scaled to float in drawAepOtText)
+    int32_t nPosY;         // +0x110  pen position y
     int32_t nColorTL;      // +0x114  per-corner colours (top-left / top-right /
     int32_t nColorTR;      // +0x118  bottom-left / bottom-right)
     int32_t nColorBL;      // +0x11c

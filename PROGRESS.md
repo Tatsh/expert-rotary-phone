@@ -4,7 +4,7 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 246/2731 (9%) definitions verified `@complete`.**
+**Overall: 247/2731 (9%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |    % |
 | -------------------------------------------------- | ---: | --------: | ---: |
@@ -12,6 +12,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/Aep/AepFrameDraw.mm`           |    6 |         6 | 100% |
 | `Project/System/src/Aep/AepLyrCtrl.mm`             |    9 |         9 | 100% |
 | `Project/System/src/Aep/AepManager.mm`             |   30 |        30 | 100% |
+| `Project/System/src/Aep/AepOrderingTable.mm`       |   13 |        13 | 100% |
 | `Project/System/src/OpenGL/neGLES11.cpp`           |   31 |        31 | 100% |
 | `Project/System/src/Render/AepTexture.mm`          |   13 |        13 | 100% |
 | `Project/System/src/Render/neGLView.mm`            |   15 |        15 | 100% |
@@ -24,7 +25,6 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/Task/MainTask.mm`              |   15 |        15 | 100% |
 | `Project/System/src/Task/MenuMainTask.mm`          |   10 |        10 | 100% |
 | `Project/System/src/Task/TitleTask.mm`             |    5 |         5 | 100% |
-| `Project/System/src/Aep/AepOrderingTable.mm`       |   13 |        12 |  92% |
 | `Project/AcViewerCategoryCell.mm`                  |    2 |         0 |   0% |
 | `Project/AcViewerCategoryViewController.mm`        |   15 |         0 |   0% |
 | `Project/AcViewerDetailCell.m`                     |    2 |         0 |   0% |
