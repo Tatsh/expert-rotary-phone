@@ -212,7 +212,7 @@ bool AepTexture::decodeAndUpload(const char *path) {
 // all walk ONE list. The self-linked empty-node structure is confirmed by the
 // list walk/splice in AepTextureCacheAcquire (FUN_0001bbf0).
 // @complete
-static AepTexture *AepTextureCacheSentinel() {
+AepTexture *AepTextureCacheSentinel() {
     if (g_textureCacheList == nullptr) {
         AepTexture *s = new AepTexture(); // operator new(0x48) + ctor FUN_000180c4
         s->next = s;

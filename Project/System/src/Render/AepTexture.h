@@ -117,6 +117,11 @@ extern int g_dwTextureMemTotal;
 // lazily by AepTextureCacheSentinel(). null until the first texture is cached.
 extern AepTexture *g_textureCacheList;
 
+// Return the shared cache list head, lazily building the self-linked sentinel node
+// into g_textureCacheList on first call. The engine bootstrap (bootstrapB) calls
+// this to create it eagerly; the acquire path calls it on demand.
+AepTexture *AepTextureCacheSentinel(void);
+
 // Drop one shared-cache reference of `tex` (an AepTexture); on the last
 // reference it frees the GL name, unlinks from the cache list and destroys it.
 // Ghidra: FUN_00018200.

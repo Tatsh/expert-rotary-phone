@@ -40,12 +40,14 @@ static const int kTaskStateOffsetAc = 0x20c;
 
 #pragma mark - neAppEventCenter (guarded singleton @ DAT_00187bb8)
 
+// @complete
 neAppEventCenter &neAppEventCenter::shared() {
     static neAppEventCenter instance; // Ghidra: NEAppEventCenter_shared (FUN_0000b150)
     return instance;
 }
 
 // Ghidra: FUN_00028c70 — zero the transient event-center state.
+// @complete
 void neAppEventCenter::begin() {
     m_result = PlayResult{};
     _startDate = nil;
@@ -56,12 +58,14 @@ void neAppEventCenter::begin() {
 }
 
 // Ghidra: FUN_00028c9c — a no-op in this build.
+// @complete
 void neAppEventCenter::flush() {
 }
 
 // @ 0x29274 — record the session start time (_startDate @ +0x20). The binary
 // released the previous NSDate and retained [NSDate date]; the ARC strong-ivar
 // store does both.
+// @complete
 void neAppEventCenter::setStartDate() {
     _startDate = [NSDate date];
 }
@@ -69,6 +73,7 @@ void neAppEventCenter::setStartDate() {
 // @ 0x292c0 — record the session end time (_endDate @ +0x24). The binary
 // released the previous NSDate and retained [NSDate date]; the ARC strong-ivar
 // store does both.
+// @complete
 void neAppEventCenter::setEndDate() {
     _endDate = [NSDate date];
 }
@@ -93,7 +98,7 @@ static int g_dwAcViewerSelMusicId = -1;  // g_dwAcViewerSelMusicId   @ 0x187bf8
 static int g_wAcViewerSelDifficulty = 0; // g_wAcViewerSelDifficulty @ 0x187bfc
 
 // Reset the pending selection to the "none" sentinels (music id -1, difficulty
-// 0xffff) — done when the viewer is cancelled.
+// 65535) — done when the viewer is cancelled.
 void neAppEventCenter::clearAcViewerSelection() {
     g_dwAcViewerSelMusicId = -1;
     g_wAcViewerSelDifficulty = 0xffff;
@@ -120,7 +125,8 @@ void neAppEventCenter::commitAcViewerSelection() {
     g_wAcViewerSelDifficulty = g_wAcViewerDifficulty;
 }
 
-// Reset only the current browsing music id (@ 0x187bf0) to the "none" sentinel.
+// Reset only the current browsing music id (g_dwAcViewerMusicId) to the "none"
+// sentinel (-1).
 void neAppEventCenter::clearAcViewerCurrentMusic() {
     g_dwAcViewerMusicId = -1;
 }
@@ -203,6 +209,7 @@ static_assert(offsetof(PlayScore, isNewHighScore) == 0x32, "PlayScore.isNewHighS
 // `rec` is unused (the binary reads everything from `recDup`, the same object);
 // the null guard mirrors the binary (only the score/rank/playCnt out-params are
 // checked).
+// @complete
 void readScoreDataFields(ScoreData *rec,
                          int *outScore,
                          short *outRank,
@@ -252,6 +259,7 @@ void readScoreDataFields(ScoreData *rec,
 // @ 0x293c4 — fetch the ScoreData record for `musicId` and hand it to
 // readScoreDataFields. `center` is the app-event-center pointer the binary
 // passes as arg 0; it is vestigial (unused).
+// @complete
 void fetchScoreDataForMusic(void *center,
                             int *outScore,
                             short *outRank,
@@ -269,6 +277,7 @@ void fetchScoreDataForMusic(void *center,
 
 // @ 0x28ca0 — persist a finished play into the ScoreData store for its
 // difficulty.
+// @complete
 void saveScoreData(PlayScore *s) {
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
     [ctx reset];
@@ -378,6 +387,7 @@ void saveScoreData(PlayScore *s) {
 // @ 0x2930c — pre-save "beat the record" check: read the current stored best,
 // flag a new high score, then write the passed play tallies / score /
 // full-combo into the record `s`.
+// @complete
 BOOL updateHighScore(PlayScore *s,
                      unsigned newScore,
                      short cool,
@@ -443,17 +453,20 @@ bool neAppEventCenter::recordPlayResult(
 
 #pragma mark - neSceneManager (guarded singleton @ DAT_00187b74)
 
+// @complete
 neSceneManager &neSceneManager::shared() {
     static neSceneManager instance; // Ghidra: NESceneManager_shared (FUN_0000b194)
     return instance;
 }
 
 // Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
+// @complete
 void neSceneManager::attachRoot(UIViewController *viewController) {
     m_root = viewController;
 }
 
 // Ghidra: NESceneManager_rootViewController (FUN_0002c5bc) — returns m_root.
+// @complete
 UIViewController *neSceneManager::rootViewController() {
     return shared().m_root;
 }
@@ -463,6 +476,7 @@ UIViewController *neSceneManager::rootViewController() {
 // The binary returns one of ten constant CFStrings from PTR_cf_normal_001310d4;
 // the picker rows show it. Returned as a __bridge void* to match the header's
 // opaque type (mirroring rootViewController()'s ObjC-on-the-far-side handoff).
+// @complete
 void *neSceneManager::normalSoundName(int soundNo) {
     static NSString *const kNames[] = {
         @"normal",
@@ -483,10 +497,11 @@ void *neSceneManager::normalSoundName(int soundNo) {
     return (__bridge void *)kNames[kind];
 }
 
-// Ghidra: getHitSoundName @ ~0x2c7c0 sibling — the bundle resource base-name of
-// the SE previewed for a touch-sound kind (0..9), loaded as "<name>.m4a". The
-// kind-order matches normalSoundName's display names. Constant CFString table;
-// kinds past the last fold to 0.
+// Ghidra: getHitSoundName @ 0x2c7a8 (the normalSoundName sibling) — the bundle
+// resource base-name of the SE previewed for a touch-sound kind (0..9), loaded
+// as "<name>.m4a". The kind-order matches normalSoundName's display names.
+// Constant CFString table; kinds past the last fold to 0.
+// @complete
 void *neSceneManager::hitSoundName(int soundNo) {
     // Ghidra: PTR_cf_hit001_001310ac[kind] — kind 7 ("shishamo") uses se06_nya,
     // not hit008.
@@ -604,14 +619,19 @@ void neSceneManager::setPadDisplay(bool isPad) {
 
 namespace neEngine {
 
-// Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) — lazily create the shared
-// texture-cache list (a circular sentinel neTexture). The reconstructed cache
-// (AepTexture.mm) builds that sentinel lazily on first use via
-// AepTextureCacheSentinel(), so this bring-up step needs no eager work here.
+// Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) — dispatch_once bring-up: build the
+// shared texture-cache sentinel (a self-linked empty AepTexture) and publish it as
+// the cache list head. The binary boxes the head behind a heap holder cell (double
+// indirection through DAT_00188464 -> holder -> sentinel, self-linked via +0x8/+0xc);
+// the reconstruction flattens that to the direct g_textureCacheList pointer that
+// AepTextureCacheSentinel() builds, so this eager bootstrap and the lazy-on-first-use
+// acquire path converge on one sentinel.
+// @complete
 void bootstrapB() {
     static bool once = false;
     if (!once) {
         once = true;
+        AepTextureCacheSentinel(); // create + publish the sentinel (once)
     }
 }
 
@@ -636,7 +656,9 @@ void onDidEnterBackground() {
 }
 
 // Ghidra: FUN_00030710 — nudge the passed MainTask toward its stop state
-// (6->5).
+// (6->5). The reconstruction adds a defensive null guard (the binary
+// dereferences unconditionally); behaviour is identical for non-null tasks.
+// @complete
 void stopMainTask(MainTask *mainTask) {
     if (mainTask == nullptr) {
         return;
@@ -648,7 +670,9 @@ void stopMainTask(MainTask *mainTask) {
 }
 
 // Ghidra: FUN_0002314c — nudge the passed AcMainTask toward its stop state
-// (6->0xc).
+// (6->0xc). The reconstruction adds a defensive null guard (the binary
+// dereferences unconditionally); behaviour is identical for non-null tasks.
+// @complete
 void stopAcMainTask(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
@@ -661,7 +685,9 @@ void stopAcMainTask(AcMainTask *acMainTask) {
 
 // Ghidra: requestGameExit (FUN_0002315c) — flag the running AcMainTask to leave
 // the arcade-viewer play (exit state @ +0x20c := 8, exit-request flag @ +0x1d9
-// := 1).
+// := 1). The reconstruction adds a defensive null guard (the binary
+// dereferences unconditionally); behaviour is identical for non-null tasks.
+// @complete
 void acMainRequestGameExit(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
@@ -675,6 +701,7 @@ void acMainRequestGameExit(AcMainTask *acMainTask) {
 // selections into the live AcViewerTask, re-seek its note stream, and resume
 // the render loop. Called from the options sheet's CONTINUE / BACK buttons
 // (AcViewerOptionViewController). @ 0x23850
+// @complete
 void acMainApplyGameplaySettings(AcViewerTask *task) {
     if (task == nullptr) {
         return;
@@ -808,9 +835,10 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
 }
 
 // Height (points) of the AEP-rendered content area, used to place UIKit
-// overlays below the GL scene (iPad panel layout). Ghidra: neAepContentHeight —
-// the AEP screen-quad height (AepManager +0x7f3b00), which screenHeight() also
-// reads. (Exact FUN not isolated; the content height is the AEP quad height.)
+// overlays below the GL scene (iPad panel layout). This is the AEP screen-quad
+// height, which AepManager::screenHeight() also reads. A thin helper — the
+// original inlined this read at its one call site, so there is no distinct
+// function to verify against.
 int aepContentHeight() {
     return AepManager::shared().screenHeight();
 }
@@ -829,6 +857,7 @@ int aepContentHeight() {
 // regex constant, and a glyph that does NOT match counts as 2 columns.
 // kHalfWidthPattern is a best-effort recovery of that regex constant (the
 // binary's cf__ string): printable ASCII plus the halfwidth-katakana range.
+// @complete
 int findCharIndexForColumn(NSString *text, int columnWidth) {
     static NSString *const kHalfWidthPattern = @"[\\x01-\\x7e\\uff61-\\uffdc\\uffe8-\\uffee]";
     NSUInteger length = [text length];
@@ -858,6 +887,7 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
 // C_TEXTURE); the unpadded source width/height pass through so the sprite
 // samples only the used sub-rect. Returns nullptr when the data isn't a
 // decodable image.
+// @complete
 AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     UIImage *image = [[UIImage alloc] initWithData:data];
     if (image == nil) {
@@ -901,6 +931,7 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
 // instead of the file cache. Defined here rather than neTextureForiOS.cpp
 // because LoadTexture needs NSData/CoreGraphics. Returns 0 on success, -1 for
 // null data, -5 on decode/upload failure.
+// @complete
 int neTextureForiOS::loadFromImageData(const void *imageData) {
     if (imageData == nullptr) {
         return -1;
