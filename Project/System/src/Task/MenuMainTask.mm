@@ -32,6 +32,7 @@
 #import "StoreUtil.h"     // +getRewardLoginTokenURL
 #import "TaskFactory.h"
 #import "UserSettingData.h"
+#import "neDebugLog.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
@@ -319,6 +320,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
             tapX = (int)((float)t->startX / uiScale);
             tapY = (int)((float)t->startY / uiScale);
+            neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);
             NSLog(@"%d %d", tapX, tapY);
             haveTap = true;
             break;
@@ -348,9 +350,13 @@ void MenuMainTask::update(int /*deltaMs*/) {
     case 1:                          // fade in, request the player record, start the intro layers
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         [dl startPlayerGetHttp];
-        m_layers[0]->play(); // the open animation (+0x28)
+        // Ghidra @ 0x6b00e: the open animation uses AepLyrCtrl::Play (play once,
+        // FUN_0002cac0), NOT the looping AepLyrCtrl_play — it must reach the held
+        // state so state 5's !isAnimating() gate fires and the menu turns
+        // interactive. The prompt/background layers below keep the looping play().
+        m_layers[0]->playOnce(); // the open animation (+0x28), one-shot
         if (!m_tutorialSkip) {
-            m_layers[2]->play(); // the prompt / "TRY" layer (+0x30)
+            m_layers[2]->play(); // the prompt / "TRY" layer (+0x30), looping
         }
         m_state = 2;
         break;
