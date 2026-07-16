@@ -262,6 +262,7 @@ ldid
 ldinext
 ldrb
 ldrd
+ldrsb
 ldrsh
 leetal
 lframe
@@ -424,6 +425,9 @@ segs
 selec
 selref
 senisivity
+smmul
+sxtb
+unclamped
 ＳＥＸＹ
 shellcheck
 shellformat
@@ -467,6 +471,7 @@ sugoroku
 superview
 superview's
 supportedi
+sxth
 sysctlbyname
 tagunz
 tagzip
