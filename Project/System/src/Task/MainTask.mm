@@ -300,11 +300,11 @@ void MainTask::update(int /*deltaMs*/) {
         break;
     }
 
-    case 1:                          // fade the select scene in and start its intro layers
-        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
-        m_layers[0]->play();
-        m_introLayers[0]->play();
-        m_introLayers[1]->play();
+    case 1:                           // fade the select scene in and start its intro layers
+        aep.setAepTransitionMode(1);  // fade in (fixed 30 frames)
+        m_layers[0]->play();          // +0x34 loop (Ghidra AepLyrCtrl_play @ 0x35b86)
+        m_introLayers[0]->playOnce(); // +0x44 once (Ghidra AepLyrCtrl::Play @ 0x35b8e)
+        m_introLayers[1]->play();     // +0x48 loop (Ghidra AepLyrCtrl_play @ 0x35b96)
         m_selectedCell = -1;
         m_state = 2;
         break;
