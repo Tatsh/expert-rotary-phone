@@ -75,6 +75,12 @@ BOOL gLaunchedFromPush = NO;
     if (![UserSettingData isPolicyAccepted]) {
         [UserSettingData saveIsPolicyAccepted:YES];
     }
+    // The DL file-list server is gone, so the first-run update check fails and (on a
+    // fresh install) loops on a blank "update" alert back to the title. Mark the
+    // client version as current so TitleTask state 4 falls through to the menu.
+    if ([UserSettingData lastCompletedClientVer] < self.appVersionNum) {
+        [UserSettingData saveLastCompletedClientVer:self.appVersionNum];
+    }
 #endif
 
     [self initHardware];
