@@ -260,6 +260,8 @@ layouted
 lclip
 ldid
 ldinext
+ldrb
+ldrd
 ldrsh
 leetal
 lframe
