@@ -536,6 +536,7 @@ vmov
 vmsize
 vmul
 vmxb
+vneg
 vollant
 wana
 warc
