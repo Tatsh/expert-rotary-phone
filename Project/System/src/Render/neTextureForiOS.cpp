@@ -21,13 +21,27 @@
 // Ghidra: FUN_00015eb4 — clears the two reserved words and defaults the tile
 // span to 7x7; the vtable pointer is written by the compiler-generated
 // prologue.
+// @complete
 AepTile::AepTile() = default;
-AepTile::~AepTile() = default;
+
+// Ghidra: FUN_00015edc (~AepTile / ~neTextureRef) — NOT a defaulted destructor:
+// it drops the reference the upload path retained on the tile's bound texture
+// (+0x04) via neTextureRelease (FUN_00018200), then leaves the compiler-emitted
+// operator-delete thunk to free the storage.
+// @complete
+AepTile::~AepTile() {
+    if (uploaded != nullptr) {
+        neTextureRelease(uploaded);
+        uploaded = nullptr;
+    }
+}
 
 // Ghidra: FUN_00011818 — vtable + null fields (a detached, unloaded sprite).
+// @complete
 neTextureForiOS::neTextureForiOS() = default;
 
 // Ghidra: FUN_00011a2c — resolve + cache-load `path`, then read its dimensions.
+// @complete
 int neTextureForiOS::load(const char *path) {
     if (path == nullptr) {
         return -1;
@@ -39,7 +53,7 @@ int neTextureForiOS::load(const char *path) {
     // param_2 at the bl).
     std::string key(path);
     for (char &c : key) {
-        c = (char)std::tolower((unsigned char)c);
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
     (void)key;
 
@@ -64,11 +78,11 @@ int neTextureForiOS::load(const char *path) {
     AepTextureUploadTiles(&m_tileRects[0], m_tiles[0]); // FUN_000166ec
     neDebugLog("neTextureForiOS::load OK path='%s' tex=%p glName=%u w=%d h=%d tile.uploaded=%p",
                path,
-               (void *)m_tiles[0],
+               static_cast<void *>(m_tiles[0]),
                m_tiles[0]->name(),
                m_tileWidths[0],
                m_tileHeights[0],
-               (void *)m_tileRects[0].uploaded);
+               static_cast<void *>(m_tileRects[0].uploaded));
     return 0;
 }
 
@@ -79,6 +93,7 @@ int neTextureForiOS::load(const char *path) {
 // null argument
 // (-1 in the binary) or a tile that fails to load (-5); the return code is
 // discarded by the sole caller (AepManager), so this reconstruction is void.
+// @complete
 void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_t *indexBase) {
     if (name == nullptr || indexBase == nullptr) {
         return; // 0xffffffff in FUN_00011e18
@@ -121,6 +136,7 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
 // sprite into the ordering table via AepOrderingTable_drawSprite (FUN_00011468:
 // allocEntry FUN_00010be0 + the field fill inlined below). A null clip defaults
 // to screen bounds.
+// @complete
 void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     // Fill a stretched-sprite command (wFlags=1) through the real fill
     // AepOrderingTable::drawSprite (FUN_00011468). The sprite's texture is THIS
@@ -169,11 +185,22 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
 // is defined in neEngineBridge.mm — it needs AepManager (whose header pulls
 // Foundation) which cannot be included into this pure-C++ .cpp.
 
-// Release the cached tiles (the cache is ref-counted; drop our references) and
-// the parallel per-tile arrays allocated by load()/loadFrames().
+// Ghidra: FUN_00011838 — release the cached tiles (the cache is ref-counted) and
+// free the parallel per-tile arrays allocated by load()/loadFrames(). Each tile
+// texture carries two references: one the acquire path retained in m_tiles[i]
+// (dropped here by the loop) and one the upload path retained in
+// m_tileRects[i].uploaded (dropped by delete[] m_tileRects running ~AepTile). The
+// free order matches the binary: release loop, then m_tileRects, then the widths /
+// heights / handles arrays.
+// @complete
 neTextureForiOS::~neTextureForiOS() {
-    delete[] m_tiles;
-    delete[] m_tileRects;
+    for (int i = 0; i < m_tileCount; ++i) {
+        if (m_tiles[i] != nullptr) {
+            neTextureRelease(m_tiles[i]); // FUN_00018200: drop the acquire reference
+        }
+    }
+    delete[] m_tileRects; // runs ~AepTile per element -> drops the upload reference
     delete[] m_tileWidths;
     delete[] m_tileHeights;
+    delete[] m_tiles;
 }
