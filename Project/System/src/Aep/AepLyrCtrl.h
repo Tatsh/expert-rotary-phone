@@ -40,10 +40,20 @@ public:
     // 0x2ca9c.
     void unlink();
 
-    // Start playing the layer's animation (Ghidra: AepLyrCtrl_play FUN_0002caf8):
-    // enters play state; a fully-faded layer seeks to its last frame, else frame
-    // 0.
+    // Start playing the layer's animation in the LOOPING mode (play-state 2)
+    // (Ghidra: AepLyrCtrl_play FUN_0002caf8): a fully-faded layer seeks to its
+    // last frame, else frame 0. On reaching the end the play head wraps, so the
+    // layer animates forever until stopped.
     void play();
+
+    // Start playing the layer's animation ONCE (play-state 1) (Ghidra:
+    // AepLyrCtrl::Play FUN_0002cac0): defaults the rate to 1.0 when unset, then
+    // seeks (frame 0 forward, last frame in reverse). On reaching the end the
+    // play head holds at the last frame and the layer enters the held state (4),
+    // so isAnimating() goes false — the caller (e.g. the mode-select open
+    // animation) polls that to know the intro has finished. Distinct from play()
+    // (FUN_0002caf8), which loops.
+    void playOnce();
 
     bool isVisible() const {
         return m_visible;

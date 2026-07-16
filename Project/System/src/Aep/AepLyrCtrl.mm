@@ -128,6 +128,24 @@ void AepLyrCtrl::play() {
     }
 }
 
+// Ghidra: AepLyrCtrl::Play (FUN_0002cac0) — enter the play-once state (1). When
+// no rate is set yet, default it to a forward 1.0; a reverse rate seeks to the
+// last frame, a forward rate to frame 0. Unlike play() (FUN_0002caf8, state 2 =
+// loop) this holds at the end (state 4) so isAnimating() eventually returns
+// false.
+// @complete
+void AepLyrCtrl::playOnce() {
+    m_state = 1;
+    if (m_playSpeed == 0.0f) {
+        m_playSpeed = 1.0f; // no rate set: default to forward 1x
+        m_curFrame = 0.0f;
+    } else if (m_playSpeed < 0.0f) {
+        m_curFrame = static_cast<float>(m_frameCount - 1); // reverse: start at last frame
+    } else {
+        m_curFrame = 0.0f;
+    }
+}
+
 // Ghidra: aepLyrCtrlStop (FUN_0002cb24) — enter the once-to-idle play state
 // (3). Only when `keepVisible == 1` does it seek the play head (to the last
 // frame for a reverse rate, otherwise to frame 0); any other value leaves the
