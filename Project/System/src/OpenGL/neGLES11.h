@@ -343,9 +343,10 @@ public:
     void drawArrays(int mode, int count) override;
     void drawElements(int mode, int count, int offset) override;
 
-    // The 8-slot bound-texture-name cache (renderer ivars at +0xfc) that
-    // neDeleteTexture (FUN_00013778, in neRenderer.cpp) clears when a name is
-    // deleted. Public because that helper operates on this backend's state.
+    // The 8-slot bound-texture-name cache (renderer ivars at +0xfc), indexed by
+    // the active texture unit. bindTexture updates it and deleteTexture (+0xb8,
+    // FUN_00013778) clears it when a name is deleted. Public so the texture-teardown
+    // path can reach it.
     struct TexBindCache {
         unsigned names[8] = {}; // +0xfc
     };
