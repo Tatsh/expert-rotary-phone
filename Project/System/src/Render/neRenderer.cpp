@@ -435,11 +435,13 @@ void neDrawTexturedQuad(void *sprite,
 
     // Corners: (0,0),(w,0),(0,h),(w,h) — the model matrix positions/rotates the
     // quad.
+    const float fw = static_cast<float>(width);
+    const float fh = static_cast<float>(height);
     neTexVertex verts[4] = {
-        {0, 0, uL, vT, c},
-        {width, 0, uR, vT, c},
-        {0, height, uL, vB, c},
-        {width, height, uR, vB, c},
+        {0.0f, 0.0f, uL, vT, c},
+        {fw, 0.0f, uR, vT, c},
+        {0.0f, fh, uL, vB, c},
+        {fw, fh, uR, vB, c},
     };
 
     neRenderer *r = neGetCurrentRenderer();
