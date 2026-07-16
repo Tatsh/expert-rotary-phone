@@ -212,19 +212,11 @@ void TitleTask::update(int /*deltaMs*/) {
         m_state = 1;
         break;
     case 1:
-#ifdef ENABLE_PATCHES
-        // Konami's Terms-of-Service acceptance server is defunct, so the policy
-        // dialog (state 2 -> GotoAcceptPolicy) can never complete. Skip the
-        // first-run policy gate and go straight to the title. The faithful build
-        // (no patches) still honours the original isPolicyAccepted gate below.
-        m_state = 3;
-#else
         if (![UserSettingData isPolicyAccepted]) {
             m_state = 2; // must accept the policy first
             break;
         }
         m_state = 3; // straight to the title
-#endif
         break;
     case 2: // wait for a tap, then go to the accept-policy screen
         if (tap) {

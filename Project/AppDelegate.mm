@@ -67,6 +67,16 @@ BOOL gLaunchedFromPush = NO;
 
     srand((unsigned)time(nullptr));
 
+#ifdef ENABLE_PATCHES
+    // Preservation build: Konami's Terms-of-Service acceptance server is defunct,
+    // so its first-run dialog can never complete. Pre-accept the policy here -- the
+    // setting the game actually gates on -- so every isPolicyAccepted check passes
+    // and the dialog is never shown, wherever it is triggered from.
+    if (![UserSettingData isPolicyAccepted]) {
+        [UserSettingData saveIsPolicyAccepted:YES];
+    }
+#endif
+
     [self initHardware];
     neAppEventCenter::shared().begin();
     neSceneManager::shared();
