@@ -120,6 +120,7 @@ void neGraphics::touchMoved(int x, int y, int prevX, int prevY) {
 
 // Ghidra: FUN_000125ec — like touchMoved but only over un-released slots, and
 // it marks the touch released once matched (an end reported per-touch).
+// @complete
 void neGraphics::touchEnded(int x, int y, int prevX, int prevY) {
     if (m_touchCount < 1) {
         return;
@@ -135,6 +136,21 @@ void neGraphics::touchEnded(int x, int y, int prevX, int prevY) {
             rec->y = ny;
             rec->prevX = ox;
             rec->prevY = oy;
+            rec->released = 1; // +0x2d
+            return;
+        }
+    }
+    // Fallback (Ghidra: FUN_000125ec second loop @ 0x12650-0x12674): no slot matched
+    // the old point, so rescan for an un-released slot whose CURRENT point equals the
+    // NEW point and reposition both current and previous to the new point before
+    // releasing it (the binary stores nx/ny to all four coord words at +0xc..+0x18).
+    for (int i = 0; i < m_touchCount; ++i) {
+        auto *rec = m_touches[i];
+        if (rec->released == 0 && rec->x == nx && rec->y == ny) {
+            rec->x = nx;
+            rec->y = ny;
+            rec->prevX = nx;
+            rec->prevY = ny;
             rec->released = 1; // +0x2d
             return;
         }
