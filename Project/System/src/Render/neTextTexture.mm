@@ -124,31 +124,31 @@ neTextTexture::~neTextTexture() {
 }
 
 // Ghidra: FUN_000179a8 — free the whole glyph cache and destroy every atlas.
-void neTextTextureMgr_dtor(neTextTextureMgr *mgr) {
+neTextTextureMgr::~neTextTextureMgr() {
     // Glyph cache: singly-linked (data at +0x00, next at +0x08).
     struct GlyphNode {
         uint8_t *data;
         void *_rsv;
         GlyphNode *next;
     };
-    GlyphNode *g = static_cast<GlyphNode *>(mgr->glyphList);
+    GlyphNode *g = static_cast<GlyphNode *>(glyphList);
     while (g != nullptr) {
         GlyphNode *next = g->next;
         delete[] g->data;
         delete g;
         g = next;
     }
-    mgr->glyphList = nullptr;
+    glyphList = nullptr;
 
     // Atlas list: destroy + free each neTextTexture.
-    neTextTexture *a = mgr->atlases;
+    neTextTexture *a = atlases;
     while (a != nullptr) {
         neTextTexture *next = a->next;
         delete a;
         a = next;
     }
-    mgr->atlases = nullptr;
-    mgr->atlasCount = 0;
+    atlases = nullptr;
+    atlasCount = 0;
 }
 
 // Ghidra: FUN_00017b28 — allocate a fresh 256x256 GL_ALPHA atlas and link it
@@ -575,9 +575,11 @@ void neDrawText(const char *text,
         r->drawElements(6, quadCount * 6, 0); // GL_TRIANGLES, indexed
     }
 
-    // Evict the atlas cache when it has grown past 4 textures (Ghidra: > 4).
+    // Evict the atlas cache when it has grown past 4 textures (Ghidra: > 4). The
+    // binary calls the destructor explicitly here to clear the manager in place;
+    // it stays alive and its lists are reset to empty.
     if (mgr->atlasCount > 4) {
-        neTextTextureMgr_dtor(mgr);
+        mgr->~neTextTextureMgr();
     }
 }
 

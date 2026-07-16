@@ -36,6 +36,12 @@ public:
 // (+0x04) and the atlas list (+0x0c); +0x00 is the content-scale shift applied
 // to point sizes, +0x08 the atlas count.
 struct neTextTextureMgr {
+    // Free every cached glyph and destroy every atlas texture. Ghidra:
+    // FUN_000179a8 (neTextTextureMgr::~neTextTextureMgr). The binary also invokes
+    // it explicitly to evict the atlas cache once it grows past 4 textures, after
+    // which the (now-empty) manager keeps being used.
+    ~neTextTextureMgr();
+
     int8_t scaleShift;      // +0x00 log2 content scale (glyph sizes are << by this)
     int8_t _pad[3];         // +0x01
     void *glyphList;        // +0x04 rendered-glyph cache (each: data +0x00, next +0x08)
@@ -45,10 +51,6 @@ struct neTextTextureMgr {
 
 // The manager singleton. Ghidra: FUN_00017998 returns DAT_0018845c.
 neTextTextureMgr *neGetTextTextureMgr(void);
-
-// Free every cached glyph and destroy every atlas texture (also used to evict
-// the atlas cache once it grows past 4 textures). Ghidra: FUN_000179a8.
-void neTextTextureMgr_dtor(neTextTextureMgr *mgr);
 
 // Byte length (1..6) of the UTF-8 sequence led by *s, or -1 on an invalid lead
 // byte, 0 on a stray continuation byte. Ghidra: FUN_00017a84.
