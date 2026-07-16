@@ -252,23 +252,19 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 
 // @ 0x754d8 — build the whole split hub (backdrop, left map list, arrow, right
 // area panel, header banner, event carousel, back button) then arm the
-// auto-scroll carousel.
-//
-// DEVIATION (unverified/omitted, left unmarked): the binary differs from this
-// reconstruction in two mainMapId-dependent details that are not modelled here:
-//   1. Negative-clamp of mainMapId: at 0x754e8 the binary clamps
-//      [UserSettingData treasureSelectedMapId] to >= 0 (cmp/it le/mov.le 0)
-//      before every later use; this reconstruction stores the raw short.
-//   2. Initial arrow displacement: at 0x75ae6-0x75b16 the binary sets
-//      _arrowImageView.frame.origin.x to _arrowFrm.origin.x + _arrowFrm.size.width
-//      when mainMapId != 0 (a map is already selected), starting the arrow
-//      displaced off-panel; this reconstruction sets the frame to _arrowFrm
-//      unconditionally (no displacement).
+// auto-scroll carousel. The saved map id is clamped non-negative and the arrow
+// starts displaced by its own width when a map is already selected.
+// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         [[DownloadMain getInstance] setDelegateGetEventInfo:self];
 
+        // The binary clamps the saved id to non-negative (cmp/it le/mov.le 0
+        // @ 0x755e8) before every later use.
         short mainMapId = [UserSettingData treasureSelectedMapId];
+        if (mainMapId < 0) {
+            mainMapId = 0;
+        }
 
         // Full-screen backdrop.
         UIImageView *bg = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"map_select_bg"]];
@@ -323,7 +319,18 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
             [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"map_select_arrow"]];
         _arrowFrm = CGRectMake(
             372.0f, 166.0f, _arrowImageView.image.size.width, _arrowImageView.image.size.height);
-        _arrowImageView.frame = _arrowFrm;
+        // When a map is already selected (mainMapId != 0) the arrow starts
+        // displaced by its own width so it sits off the panel until it slides in
+        // (NEON add of origin.x + size.width @ 0x75af6-0x75b04); otherwise it
+        // starts at its home frame.
+        if (mainMapId != 0) {
+            _arrowImageView.frame = CGRectMake(_arrowFrm.origin.x + _arrowFrm.size.width,
+                                               _arrowFrm.origin.y,
+                                               _arrowFrm.size.width,
+                                               _arrowFrm.size.height);
+        } else {
+            _arrowImageView.frame = _arrowFrm;
+        }
         [self.view addSubview:_arrowImageView];
 
         // Right "area select" backing image + clipped area panel.

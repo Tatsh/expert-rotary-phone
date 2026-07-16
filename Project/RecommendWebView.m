@@ -19,15 +19,15 @@
     int _viewType;                      // ad layout selector
 }
 
-// @ 0xff268 — create and attach the indicator overlay if enabled.
+// Create and attach the indicator overlay if enabled (impl below).
 - (void)loadRecommendView;
-// @ 0xff30c — detach and drop the indicator overlay.
+// Detach and drop the indicator overlay (impl below).
 - (void)unloadRecommendView;
-// @ 0xff86c — show/close the indicator overlay.
+// Show/close the indicator overlay (impl below).
 - (void)updateIndicator:(BOOL)show;
-// @ 0xff828 — unload the overlay, remove from superview, drop the delegate.
+// Unload the overlay, remove from superview, drop the delegate (impl below).
 - (void)appliListClosed;
-// @ 0xff6fc — shared load-failure handler for both web-view backends.
+// Shared load-failure handler for both web-view backends (impl below).
 - (void)handleNavigationFailWithError:(NSError *)error;
 
 @end

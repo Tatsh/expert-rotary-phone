@@ -31,7 +31,7 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 @property(nonatomic, assign) int initializeFlg;                             // @ 0xfe740 / 0xfe750
 @property(nonatomic, strong) NSString *countryCode;                         // @ 0xfe760 / 0xfe770
 
-// @ 0xfd688 — POST the install record to /ad/external/app/install/regist.php.
+// POST the install record to /ad/external/app/install/regist.php (impl below).
 - (void)postApplicationInstallWithAdIdFrom:(NSString *)adIdFrom
                                countryCode:(NSString *)countryCode
                                 categoryId:(NSString *)categoryId

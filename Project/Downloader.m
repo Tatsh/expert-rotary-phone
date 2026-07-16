@@ -34,13 +34,6 @@ static const NSTimeInterval kTimeout = 15.0;
 // retain), so they are annotated on the @property in Downloader.h rather than
 // hand-written here.
 
-// Apply the request headers every request carries (Ghidra: shared by both
-// inits).
-- (void)applyCommonHeadersTo:(NSMutableURLRequest *)request {
-    [request setValue:AppDelegate.appDelegate.userAgent forHTTPHeaderField:@"User-Agent"];
-    [request setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
-}
-
 // @ 0x620f4 — a GET request.
 // @complete
 - (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate {
@@ -56,6 +49,14 @@ static const NSTimeInterval kTimeout = 15.0;
         m_AdditionalData = nil;
     }
     return self;
+}
+
+// De-inlined reconstruction helper (no standalone binary function): both inits
+// emit these two header sets inline, so the shared pair is lifted into one
+// helper here. Not a counted binary function.
+- (void)applyCommonHeadersTo:(NSMutableURLRequest *)request {
+    [request setValue:AppDelegate.appDelegate.userAgent forHTTPHeaderField:@"User-Agent"];
+    [request setValue:[StoreUtil targetStore] forHTTPHeaderField:@"Accept-Language"];
 }
 
 // @ 0x6224c — a POST request with a body + Content-Type.

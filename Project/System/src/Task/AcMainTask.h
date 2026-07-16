@@ -276,7 +276,7 @@ private:
     int m_wallPieceTable[27] = {};         // +0x748 9x3 wallpaper-piece unlock grid
     int m_musicPieceTableDup[27] = {};     // +0x7b4 music grid duplicate
     int m_wallPieceTableDup[27] = {};      // +0x820 wallpaper grid duplicate
-    int m_squareFrameIdx = {};             // +0x88c current square frame/slot index
+    float m_squareFrameIdx = {};           // +0x88c square text-x / slot index (stored as float)
     float m_squareTextY = {};              // +0x890 current square text y
     uint8_t m_boardVisited[15] = {}; // +0x894 15-byte board-visited bitmap (from pending record)
     uint8_t _rsvd_8a3[0x8a4 - 0x8a3] = {};   // +0x8a3

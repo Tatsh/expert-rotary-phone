@@ -642,7 +642,12 @@ void AcMainTask::setupScene() {
 
 // Resolve the ~50 layer / frame / user handle tables into the this+0x21c..
 // arrays (Ghidra: the getLyrNo/layerFrameCount/getFrameNo/getUserNo loops of
-// FUN_0009fc90).
+// FUN_0009fc90). This hoists all of the binary's interleaved resolve loops ahead
+// of the overlay construction; the handle resolves read only the loaded AEP and
+// write task arrays, so the reorder is behaviour-preserving (loop counts,
+// offsets, the pad-only BT_ROULETTE_MOVE gate, and the interleaved TRIANGLE00 /
+// TRIANGLE01 pairing were all byte-verified).
+// @complete
 void AcMainTask::setupResolveHandles() {
     AepManager &aep = *m_aep;
 
@@ -693,7 +698,11 @@ void AcMainTask::setupResolveHandles() {
 // Build the ~35 AepLyrCtrl overlay objects (roulette / arrows / panels), then
 // apply the by-hand tweaks the scene makes to a couple of roulette layers
 // (Ghidra: the operator_new(0x60)+ctor+init loops of FUN_0009fc90 and the
-// +0x3c/+0x44/+0x18/+0x1c stores).
+// +0x3c/+0x44/+0x18/+0x1c stores). Counts (29/4/8), store bases
+// (+0x2c/+0xc0/+0xa0), the order tables, the pad panel-skip and tall-name
+// selection, the roulette[1]/[3] frameCount/playSpeed tweak, and the eight
+// anchor indices were byte-verified against disassembly and the order globals.
+// @complete
 void AcMainTask::setupBuildOverlays() {
     const bool pad = (m_padDisplay != 0);
 
@@ -732,8 +741,9 @@ void AcMainTask::setupBuildOverlays() {
     roul3->frameCount() = roul1Frames - 2;
     roul3->playSpeed() = 0.8f; // 0x3f4ccccd
 
-    // Anchor eight specific roulette layers to the layout base (y cleared, z =
-    // raw m_layoutAnchorZ); indices derived from the +0x18/+0x1c store offsets.
+    // Anchor eight specific roulette layers to the layout base (origin x cleared
+    // @ +0x18, origin y = raw m_layoutAnchorZ @ +0x1c); indices derived from the
+    // +0x18/+0x1c store offsets.
     static const int kAnchorIndex[8] = {8, 9, 5, 6, 10, 11, 12, 14};
     const int anchor = m_layoutAnchorZ;
     for (int i = 0; i < 8; i++) {
@@ -746,7 +756,11 @@ void AcMainTask::setupBuildOverlays() {
 // the operator_new(0x18)+ctor+load blocks of FUN_0009fc90). The number-set
 // names came from verified CFString tables (PTR_cf_num_points0 /
 // PTR_cf_num_roulette_0 / PTR_cf_ticket_num0); they are literal
-// "num_points0".."9" etc.
+// "num_points0".."9" etc. (the binary passes those literal CFString arrays; the
+// stringWithFormat regeneration below yields the identical names). Store offsets
+// (+0xd4/+0xe4/+0xdc/+0xfc/+0x124/+0x14c/+0x1ec), the per-iteration digit order,
+// and the "event_0_%03d@2x" ×12 loop were byte-verified against disassembly.
+// @complete
 void AcMainTask::setupLoadTextures() {
     NSBundle *bundle = [NSBundle mainBundle];
 
@@ -1388,11 +1402,13 @@ void AcMainTask::unloadMapBgGroup() {
 }
 
 // Ghidra: a sibling of FUN_000a4e84 called from sugorokuTaskDispose. It
-// unlink+deletes the board-background layer (+0xd0) and releases its AEP
-// texture group via AepManager::releaseAepTexture(6). That is exactly
-// unloadMapBgGroup's effect, so it delegates there
-// rather than duplicate the body (both are null-checked and idempotent,
-// matching the binary running both on teardown).
+// unlink+deletes the board-background layer (+0xd0) and releases its AEP texture
+// group via AepManager::releaseAepTexture(6) — exactly unloadMapBgGroup's body
+// (verified faithful @ 0xa4e84: +0xd0 null-check, unlink @ 0x2ca9c, virtual
+// delete, then releaseAepTexture(6) @ 0xf988). It delegates there rather than
+// duplicate the body; both are null-checked and idempotent, matching the binary
+// running both on teardown.
+// @complete
 void AcMainTask::sugorokuReleaseGoalLayer() {
     unloadMapBgGroup();
 }
@@ -1797,18 +1813,15 @@ static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
 // content asset that returns null in this build, so that path draws nothing);
 // node->text is the runtime map-loaded label.
 //
-// NOT @complete — one localised read deviates. Disasm 0xa1bd4 loads the text-x /
-// slot index at +0x88c as a FLOAT (`vldr.32 s0` then `vcvt.s32.f32` truncates to
-// int at 0xa1be2); the code below reads m_squareFrameIdx as a plain int. If the
-// field genuinely holds a float bit-pattern the int read is wrong; if the stored
-// value is always integral the result matches. The header types +0x88c as int,
-// so this needs the field's writer resolved before marking. Everything else --
-// all nine node-type branches, the tbb table (verified: types 6/7 map to the
-// wall/music tables @ +0x748/+0x6dc), the story-ready gate (readCount @ +0x8c0 /
-// readNo @ +0x8bc), and the text draw (m_squareTextY - 31.0f, constants 0x1b /
-// 0x2e / 0x615245 / 0x18 / 100) -- was verified faithful. The
-// getTreasureMapValue_fb54(0, ...) call is fine: the binary passes m_map (@
-// +0x4b0) but FUN_000cea50 ignores that argument.
+// The text-x / slot index at +0x88c is a FLOAT (writer @ 0x9a528 does
+// vcvt.f32.s32 + vstr.32; this reader does vldr.32 then vcvt.s32.f32 to truncate
+// @ 0xa1be2), so m_squareFrameIdx is a float truncated to int here. All nine
+// node-type branches, the tbb table (types 6/7 map to the wall/music tables @
+// +0x748/+0x6dc), the story-ready gate (readCount @ +0x8c0 / readNo @ +0x8bc),
+// and the text draw (m_squareTextY - 31.0f, constants 0x1b / 0x2e / 0x615245 /
+// 0x18 / 100) were verified faithful. The getTreasureMapValue_fb54(0, ...) call
+// is fine: the binary passes m_map (@ +0x4b0) but FUN_000cea50 ignores it.
+// @complete
 void AcMainTask::sugorokuDrawSquareText() {
     if (m_field5f3 != 0) {
         return; // suppressed while task+0x5f3 is set
@@ -1818,7 +1831,9 @@ void AcMainTask::sugorokuDrawSquareText() {
         return;
     }
 
-    int iVar8 = m_squareFrameIdx; // text x / slot index (task+0x88c)
+    // +0x88c is a float slot; the binary truncates it to int (vcvt.s32.f32 @
+    // 0xa1be2) for the text-x / slot index.
+    int iVar8 = static_cast<int>(m_squareFrameIdx); // task+0x88c
     enum { kNone, kCharAsset, kNodeText } pick = kNone;
 
     // A character message shows only once the board-story page counter
@@ -1900,14 +1915,12 @@ void AcMainTask::sugorokuDrawSquareText() {
 // Flush the in-flight TreasureTmpData to Core-Data (TreasureData) for the
 // square that was just visited.  Called when the board-walk animation ends.
 //
-// NOT @complete — two deviations. (1) fastRecord source: disasm 0xa2044 reads
-// the new fast value at sp+0xc0 == treasureTmp struct offset +0x4c, but the code
-// below reads tmp.raw0x49 (struct +0x49); +0x4c straddles the tail of raw0x49
-// and raw0x4d, so the field/offset needs reconciling. (2) The save-failure
-// re-fetch/enumeration block (disasm 0xa20d2..0xa2172, entered only when
-// `[ctx save:]` returns NO) is omitted here. The min-keep logic, goal-type
-// branch (m_goalType @ +0x8b1), clear/friend-meet increments, and the +0x08 /
-// +0x0c OR-in masks were verified faithful.
+// The new fast value is read as a 32-bit word at treasureTmp struct offset +0x4c
+// (disasm 0xa2044; decompile TStack_78._76_4_), the min-keep logic, the goal-type
+// branch (m_goalType @ +0x8b1), the clear/friend-meet increments, the +0x08 /
+// +0x0c OR-in masks, and the save-failure NSDetailedErrorsKey walk (empty loop
+// body @ 0xa210a..0xa215c) were all verified faithful.
+// @complete
 void AcMainTask::sugorokuSaveTreasureProgress() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     short subId = static_cast<short>(tmp.subMapId);
@@ -1938,10 +1951,14 @@ void AcMainTask::sugorokuSaveTreasureProgress() {
 
     td.clearCnt = @([td.clearCnt intValue] + 1);
 
-    // Keep the best (minimum) fast-record score.
+    // Keep the best (minimum) fast-record score. The binary reads the new value
+    // as a 32-bit word at struct offset +0x4c (@ 0xa2044 ldr [sp,#0xc0]), which
+    // straddles the top byte of raw0x49 and the low three bytes of raw0x4d in
+    // this packed record.
+    int32_t newFast;
+    memcpy(&newFast, reinterpret_cast<const uint8_t *>(&tmp) + 0x4c, sizeof(newFast));
     int existFast = [td.fastRecord intValue];
-    int newFast = static_cast<int>(tmp.raw0x49);
-    td.fastRecord = @(existFast < newFast ? existFast : newFast);
+    td.fastRecord = @(existFast < newFast ? existFast : static_cast<int>(newFast));
 
     // Friend-meet flag: byte 3 of raw0x4d.
     if ((tmp.raw0x4d >> 24) & 0xFF) {
@@ -1949,8 +1966,17 @@ void AcMainTask::sugorokuSaveTreasureProgress() {
     }
 
     NSError *saveErr = nil;
-    [ctx save:&saveErr];
-    // (error handling intentionally omitted: reconstruction)
+    if (![ctx save:&saveErr]) {
+        // On save failure the binary walks the validation sub-errors under
+        // NSDetailedErrorsKey (@ 0xa210a..0xa215c). The enumeration body is empty
+        // in the shipped code (the per-error diagnostic log compiled out, like the
+        // project's neDebugLog convention), so this only touches the collection.
+        NSArray *detailedErrors = saveErr.userInfo[NSDetailedErrorsKey];
+        if (detailedErrors.count != 0) {
+            for (__unused NSError *detail in detailedErrors) {
+            }
+        }
+    }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2044,15 +2070,13 @@ void AcMainTask::sugorokuLoadWallTextures(int page) {
 // unload assets, release sound effects, then kill this task and activate the
 // next one (+0x948).
 //
-// NOT @complete — one edge-case deviation in the tail. Disasm 0xa2fe2 gates BOTH
-// the kill flag (`strb #1,[+0x24]`) and next->setPriority(3) inside the
-// `if (m_nextTask != null)` check; the code below calls kill() unconditionally
-// and only guards the setPriority. When m_nextTask is null the binary does not
-// set +0x24, so this over-kills. All delete/unlink loops, slot ranges
-// (0x35..0x3e, digits 0xfc/0x124/0x14c, 0x69..0x86, layers roulette/arrows/
-// panels), the group-5/6 releases, the 15 SE releases, and the map disposal were
-// verified faithful (the FUN_000ce2e4 pre-step is folded into ~TreasureMap as
-// documented).
+// Disasm 0xa2fe2 gates BOTH the kill flag (`strb #1,[+0x24]`) and
+// next->setPriority(3) inside the `if (m_nextTask != null)` check (reproduced
+// below). All delete/unlink loops, slot ranges (0x35..0x3e, digits
+// 0xfc/0x124/0x14c, 0x69..0x86, layers roulette/arrows/panels), the group-5/6
+// releases, the 15 SE releases, and the map disposal were verified faithful (the
+// FUN_000ce2e4 pre-step is folded into ~TreasureMap as documented).
+// @complete
 void AcMainTask::sugorokuTaskDispose() {
     AudioManager *audioMgr = [AudioManager sharedManager];
 
@@ -2154,9 +2178,12 @@ void AcMainTask::sugorokuTaskDispose() {
     [audioMgr cleanupSe];
     neSceneManager::shared().loadSystemSe();
 
-    // 12. Kill this task and activate the next one (+0x948).
-    kill();
+    // 12. If a next task is queued (+0x948), kill this task and activate it. The
+    //     binary gates BOTH the kill flag (strb #1,[+0x24]) and the next task's
+    //     setPriority(3) on the null check (@ 0xa2fe6); when there is no next
+    //     task neither runs.
     if (C_TASK *next = static_cast<C_TASK *>(m_nextTask)) {
+        kill();
         next->setPriority(3);
     }
 }
@@ -2832,8 +2859,15 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 // 0xa48e4), and the chara-thumbnail texture index is idxBase (0..5, verified at
 // 0xa3bb6 / 0xa3bbe with the curr/prev selection gate at 0xa3b9e); the
 // highlight uses the same 6-per-page list layout as the verified row-count
-// (count / 6). The FixedToFP scale conversions the binary does are folded into
-// the int-percentage scale the GL layer consumes directly (see AepFrameDraw.mm).
+// (count / 6). The panel-position stores (m_charaPanelX/Y @ +0x60c/+0x610,
+// m_skillPanelX/Y @ +0x604/+0x608, index-14 baseX/Y) use the binary's signed
+// divide-by-100 (magic reciprocal 0x51eb851f @ 0xa3aca / 0xa3c88 / 0xa469c), not
+// a 16.16 shift; the only FixedToFP round-trip (index 9/13 grid @ 0xa3f66) is an
+// int<->float identity for the draw ABI, not a scale. The chara-select highlight
+// keys on object identity (info.charaId == m_charaId @ 0xa3a84), not on any
+// incoming coordinate. All 26 branches, offsets, digit-run bounds, and constants
+// were verified faithful against disassembly.
+// @complete
 void AcMainSugorokuDraw(int child,
                         int frame,
                         int x,

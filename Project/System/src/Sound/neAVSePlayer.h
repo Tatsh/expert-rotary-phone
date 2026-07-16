@@ -70,8 +70,10 @@ public:
     void unregisterSource(uint32_t sourceId);
     void unregisterSourceNamed(NSString *callName);
 
-    // Set the volume (0..1) of every voice in the pool.
-    void setGroupVolume(float volume);
+    // Set the volume of every voice in the pool from an integer level 0..127;
+    // the method converts to a 0..1 gain internally (Ghidra @ 0x2108c:
+    // vcvt.f32.s32 then vdiv by 127.0f before applying per player).
+    void setGroupVolume(int level);
 
     // AudioSession interruption handling. Ghidra: audioPauseAll @ 0x21288 (pause
     // every voice) / audioResumeAll @ 0x21294 (offPause every voice).

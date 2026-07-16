@@ -47,9 +47,9 @@
 // controls). Also the ConversionView delegate (id<ViewCmnProtocol>); callbacks
 // implemented below.
 @interface SettingTableViewController () <ViewCmnProtocol>
-- (void)settingClose;                   // @ 0x801dc
-- (void)onEffectOnChanged:(id)sender;   // @ 0x801ec
-- (void)onSimpleModeChanged:(id)sender; // @ 0x8029c
+- (void)settingClose;
+- (void)onEffectOnChanged:(id)sender;
+- (void)onSimpleModeChanged:(id)sender;
 @end
 
 // The app's root view controller (MainViewController), bridged from the C++

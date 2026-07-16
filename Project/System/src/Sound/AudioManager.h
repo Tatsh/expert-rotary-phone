@@ -114,7 +114,7 @@ static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
                 resourceId:(RSND_SOURCE_ID)resourceId; // Ghidra: @ 0x1f234
 - (RSND_INSTANCE_ID)playSe:(NSString *)name
                 resourceId:(RSND_SOURCE_ID)resourceId
-                    Volume:(float)volume;           // Ghidra: @ 0x1f2d8
+                    Volume:(int)volume;             // Ghidra: @ 0x1f2d8
 - (BOOL)stopSe:(RSND_INSTANCE_ID)instanceId;        // Ghidra: @ 0x1f3d0
 - (BOOL)stopSeAll;                                  // Ghidra: @ 0x1f630
 - (void)setSeVolume:(int)volume groupId:(int)group; // Ghidra: @ 0x1f99c

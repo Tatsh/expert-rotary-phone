@@ -88,11 +88,9 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // Private + class helpers not exposed in the header.
 @interface SearchView ()
-// YES when location services are on and this app is authorised. Ghidra:
-// +currentLocationEnabled @ 0x86330.
+// YES when location services are on and this app is authorised (impl below).
 + (BOOL)currentLocationEnabled;
-// MKMapRect covering `region` (± span * 0.6). Ghidra:
-// +mapRectForCoordinateRegion: @ 0x86250.
+// MKMapRect covering `region` (± span * 0.6) (impl below).
 + (MKMapRect)mapRectForCoordinateRegion:(MKCoordinateRegion)region;
 
 - (void)showError:(NSString *)message;

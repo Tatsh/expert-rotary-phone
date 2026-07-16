@@ -13,10 +13,12 @@
 #include <cstring>
 #include <ctime>
 #include <sys/time.h>
+#include <utility>
 
 #import <Foundation/Foundation.h>
 
 #import "../../System/src/Sound/AudioManager.h" // BGM start / drift sync (triggerBgmStart, applyBgmSync)
+#import "../Util/Random.h"
 #import "AcNoteMng.h"
 
 // Arcade-viewer judge-result globals (Ghidra: DAT_0016ebe0 / DAT_0016ebe4).
@@ -807,54 +809,64 @@ void AcNoteMng::resetPlayFlag() {
 }
 
 // Ghidra: acNoteSetupLaneMapping @ 0x7ad14 — build the lane-remap table for the
-// option. mode 2 (mirror, m_laneRemap[i]=8-i) and the identity default are
-// disassembly-faithful; the random shuffle for modes 1/3 is NOT yet an exact
-// match and is left unmarked. The binary (@ 0x7ad9a..0x7ae4c) differs from the
-// model below in three ways: (a) the identity seed (m_laneRemap[i]=i) runs ONCE
-// before the attempt loop, not per attempt, so each retry keeps shuffling the
-// already-permuted array; (b) after every single swap it inspects the array —
-// while it is still full identity it just advances to the next position, and
-// only once it is non-identity does it run a second scan checking whether the
-// array equals the mirror permutation (aLaneRemap[i] == 8-i, @ 0x7ae14); a
-// mirror mismatch bumps the attempt counter; (c) there is no early success
-// exit — every path (including completing all 9 positions) routes through the
-// attempt counter, so the loop always runs until nAttempt > 99999 (@ 0x7ae3a)
-// and takes whatever permutation the array holds then. The version below (reset
-// identity each attempt, one Fisher-Yates pass, break on first derangement) is
-// an approximation of the intended "randomised, non-trivial lane map" but does
-// not reproduce this exact iteration/validation.
+// option. Modes 1 and 3 shuffle with the engine's Random (xorshift128) seeded
+// from time(): the array is seeded to identity ONCE (@ 0x7adbe), then an outer
+// pass loop runs a fixed 100000 times (@ 0x7ae3a). Each pass walks positions
+// i = 0..8, at each doing a single Fisher-Yates swap of m_laneRemap[i] with
+// m_laneRemap[i + rand(9 - i)] (@ 0x7ade2-0x7ae00) on the accumulating array,
+// then inspecting it: while the array is still pure identity it advances to the
+// next position (@ 0x7ae04), and once it is non-identity it also checks whether
+// the array is exactly the mirror permutation (m_laneRemap[k] == 8 - k,
+// @ 0x7ae14) — a pure-identity or pure-mirror array advances the position, while
+// any other (the usual non-trivial) permutation ends the pass. There is no early
+// success exit, so the loop always burns all 100000 passes and keeps whatever
+// permutation the array holds at the end. Mode 2 is the mirror map; the default
+// is identity.
+// @complete
 void AcNoteMng::setupLaneMapping(int mode) {
     m_laneMode = mode;
     if (mode == 1 || mode == 3) {
-        // The binary uses the engine's C_Rand (rngStateInit / rngSeed(time) /
-        // GetRandRangeInt); modelled here with the same construction: time-seeded,
-        // in-place Fisher-Yates, retried until no fixed point remains.
-        unsigned rng = (unsigned)time(nullptr);
-        auto nextRange = [&rng](int range) -> int {
-            rng = rng * 1103515245u + 12345u;
-            return (int)((rng >> 16) % (unsigned)range);
-        };
-        for (int attempt = 0; attempt <= 99999; attempt++) {
+        Random rng;
+        rng.setSeed(static_cast<uint32_t>(time(nullptr)));
+
+        // Identity seed, once, before the pass loop.
+        for (int i = 0; i < 9; i++) {
+            m_laneRemap[i] = i;
+        }
+
+        int attempt = 0;
+        do {
             for (int i = 0; i < 9; i++) {
-                m_laneRemap[i] = i;
-            }
-            for (int i = 0; i < 9; i++) {
-                int r = nextRange(9 - i);
-                int32_t tmp = m_laneRemap[i + r];
-                m_laneRemap[i + r] = m_laneRemap[i];
-                m_laneRemap[i] = tmp;
-            }
-            bool deranged = true;
-            for (int i = 0; i < 9; i++) {
-                if (m_laneRemap[i] == i) {
-                    deranged = false;
-                    break;
+                const int j = i + rng.getRandRangeInt(9 - i);
+                std::swap(m_laneRemap[i], m_laneRemap[j]);
+
+                bool identity = true;
+                for (int k = 0; k < 9; k++) {
+                    if (m_laneRemap[k] != k) {
+                        identity = false;
+                        break;
+                    }
                 }
-            }
-            if (deranged) {
+                if (identity) {
+                    continue;
+                }
+
+                bool mirror = true;
+                for (int k = 0; k < 9; k++) {
+                    if (m_laneRemap[k] != 8 - k) {
+                        mirror = false;
+                        break;
+                    }
+                }
+                if (mirror) {
+                    continue;
+                }
+
+                // Non-identity, non-mirror permutation: end this pass.
                 break;
             }
-        }
+            attempt++;
+        } while (attempt < 100000);
     } else if (mode == 2) {
         for (int i = 0; i < 9; i++) {
             m_laneRemap[i] = 8 - i;
