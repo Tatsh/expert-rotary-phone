@@ -75,7 +75,7 @@
       'PROVISIONING_PROFILE_SPECIFIER=""',
     ],
     local cmake_package_ipa_commands = [
-      'app=$(find build -type d -name PopnRhythmn.app -print -quit)',
+      'app=$(find build -type d -name PopnRhythmin.app -print -quit)',
       'test -n "${app}"',
       'codesign --force --sign - --timestamp=none "${app}"',
       'codesign --verify --verbose=2 "${app}"',

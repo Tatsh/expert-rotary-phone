@@ -389,7 +389,6 @@ rhcrypto
 rhdvru
 rhydbg
 rhythmin
-rhythmn
 riccardo
 ripgreprc
 rksj
