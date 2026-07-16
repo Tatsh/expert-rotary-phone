@@ -70,7 +70,7 @@ bool TitleTask::tapReleased() const {
         if (dy < 0) {
             dy = -dy;
         }
-        if (dx < 0xb && dy < 0xb) {
+        if (dx < NE_TAP_SLOP(0xb) && dy < NE_TAP_SLOP(0xb)) { // slop widened under ENABLE_PATCHES
             return true;
         }
     }

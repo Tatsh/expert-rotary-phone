@@ -93,12 +93,12 @@ void PlayResultTask::update(int /*deltaMs*/) {
             if (dx < 0) {
                 dx = -dx;
             }
-            if (dx < 11) {
+            if (dx < NE_TAP_SLOP(11)) { // slop widened under ENABLE_PATCHES (NE_TAP_SLOP)
                 int dy = t->startY - t->y;
                 if (dy < 0) {
                     dy = -dy;
                 }
-                if (dy < 11) {
+                if (dy < NE_TAP_SLOP(11)) {
                     tapped = true;
                     tapX = t->x;
                     tapY = t->y;

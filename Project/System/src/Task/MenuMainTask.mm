@@ -316,21 +316,10 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if (t->released == 0) {
             continue;
         }
-        // dx/dy are 16.16 fixed-point pixel diffs (touchBegan stores FloatToFixed).
-        // The binary's tap-vs-drag slop is 0xb (11) in those fixed units, i.e.
-        // ~0.00017px, so it only accepts a tap whose down and up points are the
-        // exact same fixed value. That held on the 2014 device (integer-pixel touch
-        // reporting), but modern iOS reports sub-pixel coordinates, so a genuine tap
-        // that jitters a fraction of a pixel fails and the menu feels unresponsive
-        // ("have to tap again"). Under ENABLE_PATCHES widen the slop to 11 PIXELS
-        // (0xb << 16); the faithful 0xb stays in the #else.
+        // Tap-vs-drag slop 0xb (Ghidra @ 0x6ad88), widened to pixels under
+        // ENABLE_PATCHES for modern iOS sub-pixel touch. See NE_TAP_SLOP.
         const int dx = t->x - t->startX, dy = t->y - t->startY;
-#ifdef ENABLE_PATCHES
-        const int kTapSlop = 0xb << 16; // 11px in 16.16 fixed
-#else
-        const int kTapSlop = 0xb; // Ghidra: raw fixed-diff slop @ 0x6ad88
-#endif
-        if ((dx < 0 ? -dx : dx) < kTapSlop && (dy < 0 ? -dy : dy) < kTapSlop) {
+        if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
             // startX/startY are 16.16 fixed device pixels (touchBegan stores
             // FloatToFixed). The binary converts them to float via FixedToFP
             // (i.e. / 65536) before dividing by the UI scale; a plain (float)

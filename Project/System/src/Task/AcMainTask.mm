@@ -101,14 +101,14 @@ void AcMainTask::update(int /*deltaMs*/) {
             if (dx < 0) {
                 dx = -dx;
             }
-            if (dx > 10) {
-                break; // moved too far horizontally: not a tap
+            if (dx > NE_TAP_SLOP(10)) { // slop widened under ENABLE_PATCHES (NE_TAP_SLOP)
+                break;                  // moved too far horizontally: not a tap
             }
             int dy = t->y - t->startY;
             if (dy < 0) {
                 dy = -dy;
             }
-            m_frameTapped = (dy < 11);
+            m_frameTapped = (dy < NE_TAP_SLOP(11));
             m_frameTapTouch = t;
             break;
         }
@@ -1613,7 +1613,9 @@ int AcMainTask::sugorokuDrawSkillPanel() {
         if (ady < 0) {
             ady = -ady;
         }
-        if (adx >= (11 << 16) || ady >= (11 << 16)) {
+        // slop was hard-coded to 11px here; gate it like the other sites so the
+        // faithful build keeps the binary's raw fixed 0xb (NE_TAP_SLOP).
+        if (adx >= NE_TAP_SLOP(11) || ady >= NE_TAP_SLOP(11)) {
             continue;
         }
         // Button 1 (left).

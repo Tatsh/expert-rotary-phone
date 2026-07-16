@@ -276,7 +276,8 @@ void MainTask::update(int /*deltaMs*/) {
         }
         if (t->released) {
             int dx = t->startX - t->x, dy = t->startY - t->y;
-            if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
+            // slop widened to pixels under ENABLE_PATCHES (see NE_TAP_SLOP)
+            if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
                 tapX = t->x;
                 tapY = t->y;
                 haveTap = true;
