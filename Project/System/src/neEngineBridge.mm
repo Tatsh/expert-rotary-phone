@@ -519,11 +519,23 @@ static RSND_SOURCE_ID s_systemSeSource[5] = {
     (RSND_SOURCE_ID)-1,
     (RSND_SOURCE_ID)-1,
 }; // -1 sentinel (RSND_SOURCE_ID is unsigned; the loaded flag gates use)
+
+// SE-instance handles for the 5 shared UI sounds, indexed by slot (Ghidra: the
+// scene-manager global DAT_00187b74 + 0x28, the array that immediately follows
+// s_systemSeSource at +0x14 and precedes the loaded flag at +0x3c). -1 = idle.
+static RSND_INSTANCE_ID g_systemSeHandles[5] = {
+    (RSND_INSTANCE_ID)-1,
+    (RSND_INSTANCE_ID)-1,
+    (RSND_INSTANCE_ID)-1,
+    (RSND_INSTANCE_ID)-1,
+    (RSND_INSTANCE_ID)-1,
+};
 static bool s_systemSeLoaded = false;
 
 // Ghidra: loadSoundEffects FUN_0002c5c8 — load the 5 shared UI SEs (decide /
 // cancel / two slide sounds) into group 1 once per scene, then apply the saved
 // SE volume.
+// @complete
 void neSceneManager::loadSystemSe() {
     if (s_systemSeLoaded) {
         return;
@@ -533,7 +545,8 @@ void neSceneManager::loadSystemSe() {
     AudioManager *audio = [AudioManager sharedManager];
     for (int i = 0; i < 5; i++) {
         NSString *path = [[NSBundle mainBundle] pathForResource:kNames[i] ofType:@"m4a"];
-        s_systemSeSource[i] = [audio loadSe:path isLoop:NO callName:nil group:1];
+        s_systemSeSource[i] = [audio loadSe:path isLoop:NO callName:nil group:1]; // +0x14
+        g_systemSeHandles[i] = -1; // +0x28: reset the playing-instance handle to idle
     }
     [audio setSeVolume:[UserSettingData seVolume] groupId:1];
     s_systemSeLoaded = true;
@@ -541,14 +554,15 @@ void neSceneManager::loadSystemSe() {
 
 // Ghidra: releaseSoundEffects FUN_0002c6bc — release the 5 UI SEs on scene
 // teardown.
+// @complete
 void neSceneManager::releaseSystemSe() {
     if (!s_systemSeLoaded) {
         return;
     }
     AudioManager *audio = [AudioManager sharedManager];
     for (int i = 0; i < 5; i++) {
-        [audio releaseSe:nil resourceId:s_systemSeSource[i]];
-        s_systemSeSource[i] = -1;
+        [audio releaseSe:nil resourceId:s_systemSeSource[i]]; // release by source id (+0x14)
+        g_systemSeHandles[i] = -1; // clear the playing-instance handle (+0x28), not the source
     }
     s_systemSeLoaded = false;
 }
@@ -739,31 +753,28 @@ void notifyEnterForeground() {
     }
 }
 
-// SE-instance handles for short UI sounds, indexed by slot (Ghidra: the scene
-// manager global DAT_00187b74 + 0x28). Kept here as the engine's SE-handle
-// table.
-static RSND_INSTANCE_ID g_systemSeHandles[8] = {0};
-
-// @ 0x2c724 — play a UI SE and remember its instance handle in `slot`. The
-// binary passes the SE resource id in registers (not recoverable from the
-// decompile), so the slot doubles as the resource selector here.
+// Ghidra: playSystemSe FUN_0002c724 — play the UI SE whose loaded source id is
+// s_systemSeSource[slot] (+0x14) and cache the returned instance handle in
+// g_systemSeHandles[slot] (+0x28). The binary indexes both arrays directly with
+// no bounds check (the slot is a fixed caller-side constant).
+// @complete
 void playSystemSe(int slot) {
     RSND_INSTANCE_ID handle = [[AudioManager sharedManager] playSe:nil
-                                                        resourceId:(RSND_SOURCE_ID)slot];
-    if (slot >= 0 && slot < (int)(sizeof(g_systemSeHandles) / sizeof(g_systemSeHandles[0]))) {
-        g_systemSeHandles[slot] = handle;
-    }
+                                                        resourceId:s_systemSeSource[slot]];
+    g_systemSeHandles[slot] = handle;
 }
 
-// @ 0x2c764 (isSePlaying) — true while the SE instance cached in `slot` is
-// still audible. The binary probes AudioManager isPlayingSe: on the handle
-// stored at the scene-manager global + 0x28; here that handle table is
-// g_systemSeHandles.
+// Ghidra: isSePlaying FUN_0002c764 — true while the SE instance cached in `slot`
+// is still audible. The binary reads the handle at +0x28, returns false when it
+// is negative (the -1 idle sentinel), and otherwise tail-calls
+// AudioManager isPlayingSe: on it. The guard is on the HANDLE, not the slot.
+// @complete
 bool isSePlaying(int slot) {
-    if (slot < 0 || slot >= (int)(sizeof(g_systemSeHandles) / sizeof(g_systemSeHandles[0]))) {
+    RSND_INSTANCE_ID handle = g_systemSeHandles[slot];
+    if ((int)handle < 0) {
         return false;
     }
-    return [[AudioManager sharedManager] isPlayingSe:g_systemSeHandles[slot]] != NO;
+    return [[AudioManager sharedManager] isPlayingSe:handle];
 }
 
 // Menu button hit-test (the abstraction the ~13 inlined pointInRect hit-tests
