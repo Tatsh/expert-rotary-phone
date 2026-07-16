@@ -108,7 +108,7 @@ inline int MainTask::widgetIndexForButton(Button button) const {
 // round-toward-zero (int) truncation. The per-cell grid buttons + kBtnBackToMenu
 // remain a computed-rect seam.
 inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
-    const float scale = reinterpret_cast<const float &>(m_uiScale);
+    const float scale = m_uiScale;
     auto hit = [&](int x, int y, int w, int h) {
         return neGraphics::pointInRect(tapX,
                                        tapY,
@@ -278,8 +278,13 @@ void MainTask::update(int /*deltaMs*/) {
             int dx = t->startX - t->x, dy = t->startY - t->y;
             // slop widened to pixels under ENABLE_PATCHES (see NE_TAP_SLOP)
             if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
-                tapX = t->x;
-                tapY = t->y;
+                // The binary hit-test (update @ 0x35914) feeds neMath::pointInRect
+                // the raw integer-pixel down point (nStartX/nStartY) and scales the
+                // button rects by g_dwUiScale. The reconstruction's touch pool keeps
+                // 16.16 fixed device pixels, so drop the fractional bits to recover
+                // the integer pixel the rect comparison expects.
+                tapX = t->startX / 65536;
+                tapY = t->startY / 65536;
                 haveTap = true;
             }
         }
@@ -839,7 +844,14 @@ void MainTask::Setup() {
     m_aep = &AepManager::shared();
     m_screenWidth = (int)AepManager::shared().screenWidth();
     m_screenHeight = (int)AepManager::shared().screenHeight();
-    m_uiScale = (int)neSceneManager::screenScale();
+    // g_dwUiScale is published by MainViewController::loadView as screenScale * 0.5
+    // (loadView @ 0xb51c: vmul.f32 by 0.5, stored as the raw g_dwUiScale slot). The
+    // binary copies that slot into +0xa6c (musicSelTaskSetup @ 0x370f0:
+    // this->dwUiScale = g_dwUiScale). Compute the same value directly as a real
+    // float; the old (int)screenScale() truncation, read back through
+    // reinterpret_cast<float&>, produced a denormal (~0) that collapsed every
+    // scaled button rect to the origin.
+    m_uiScale = neSceneManager::screenScale() * 0.5f;
     m_isPadDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
     m_columnStride = m_isPadDisplay ? 9 : 6; // +0xa74 cells per column
 
