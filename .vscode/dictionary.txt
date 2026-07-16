@@ -217,6 +217,7 @@ hispeed
 hoge
 hyou
 idfa
+ifdef
 ifndef
 igles
 imagefrom
