@@ -177,7 +177,7 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
                    static_cast<int16_t>(p.blend0),   // clipRect.nLeft high half (blend mode)
                    p.layer,                          // clipRect.nTop
                    p.colorMul,                       // clipRect.nRight (RGB -> quad colour)
-                   nullptr,                          // extra / no explicit clip spill
+                   p.clip,                           // clip-spill block -> command +0x4c
                    p.priority);
 }
 

@@ -934,7 +934,7 @@ void neTextureForiOS_draw(AepManager *aep,
                           int alpha,
                           int blend0,
                           int colorMul,
-                          int extra,
+                          const int *extra,
                           int priority,
                           int layer) {
     if (tex == nullptr) {
@@ -960,7 +960,11 @@ void neTextureForiOS_draw(AepManager *aep,
     p.alpha = alpha;
     p.blend0 = static_cast<short>(blend0);
     p.colorMul = colorMul;
-    p.extra = extra;
+    // FUN_0000fbcc's `extra` arg is the clip-rect block pointer routed to command
+    // +0x4c (str r10=[r7+0x3c] @ 0x0fbe6; drawSprite copies 16 bytes from it when
+    // non-null). Store it as a real pointer (p.clip) rather than truncating into an
+    // int, and let draw() forward it to the clip-spill slot.
+    p.clip = extra;
     p.layer = layer;
     p.priority = priority;
     tex->draw(aep->orderingTable(), p);

@@ -171,7 +171,7 @@ void neTextureForiOS_draw(AepManager *aep,
                           int alpha,
                           int blend0,
                           int colorMul,
-                          int extra,
+                          const int *extra,
                           int priority,
                           int layer);
 
