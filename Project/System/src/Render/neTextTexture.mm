@@ -273,6 +273,7 @@ bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
 // alpha). Fills the glyph record's atlas placement. (ARC: the NSString and
 // CGContexts are managed here; the CF color space / bitmap context are
 // CoreFoundation and released explicitly.)
+// @complete
 int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGlyph *glyph) {
     NSString *str = [[NSString alloc] initWithUTF8String:utf8];
     UIFont *font = [label font];
@@ -295,8 +296,11 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
 
     neTextTexture *atlas = atlases;
 
-    // Rasterize the glyph into a w*h, 1-byte/pixel device-gray bitmap.
-    uint8_t *gray = new uint8_t[static_cast<size_t>(w) * static_cast<size_t>(h)];
+    // Rasterize the glyph into a w*h, 1-byte/pixel device-gray bitmap. The binary
+    // sizes this buffer from the FLOAT product (int)(width*height) (vmul.f32 +
+    // vcvt.s32.f32 @ 0x17d04), not (int)width * (int)height; the CGBitmapContext
+    // below still uses the truncated w/h for its dimensions and stride.
+    uint8_t *gray = new uint8_t[static_cast<size_t>(static_cast<int>(size.width * size.height))];
     [label setFrame:CGRectMake(0, 0, size.width, size.height)];
     [label setText:str];
 
@@ -315,9 +319,12 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     // channels).
     AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
     int atlasW = tex->textureWidth();
+    // The binary packs the cell transposed: cellX is the row stride multiplicand and
+    // cellY the column addend (mla outX, atlasW, outY @ 0x17e40), so a glyph row
+    // advances by atlasW along the cellX axis.
     for (int rrow = 0; rrow < h; ++rrow) {
         const uint8_t *src = gray + rrow * w;
-        uint8_t *dst = atlas->pixels + ((cellY + rrow) * atlasW + cellX) * 2;
+        uint8_t *dst = atlas->pixels + ((cellX + rrow) * atlasW + cellY) * 2;
         for (int col = 0; col < w; ++col) {
             uint8_t g = src[col];
             dst[col * 2 + 0] = g;
@@ -329,8 +336,11 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     glyph->atlasId = atlas->index;
     glyph->advance = w;
     glyph->height = h;
-    glyph->cellX = cellX;
-    glyph->cellY = cellY;
+    // The binary stores outY at glyph+0x18 and outX at glyph+0x1c (str r10=[sp+0x24]
+    // @ 0x17eb0, str r4=[sp+0x20] @ 0x17eb4) -- the transpose of the field names. Kept
+    // exact so neDrawText's +0x18->u / +0x1c->v read samples the cell the binary wrote.
+    glyph->cellX = cellY; // +0x18 = outY
+    glyph->cellY = cellX; // +0x1c = outX
     return 1;
 }
 
