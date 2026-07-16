@@ -60,6 +60,15 @@ public:
     void touchEnded(int x, int y, int prevX, int prevY);  // Ghidra: FUN_000125ec
     void clearTouches();                                  // Ghidra: FUN_00012698
 
+    // Per-frame touch-pool upkeep, run once at the end of each task tick. For
+    // every recorded touch it clears the +0x2c frame marker and latches the
+    // current point (+0x0c/+0x10) into the down-point copy (+0x1c/+0x20), then
+    // swap-removes any slot flagged released (+0x2d): the released pool pointer
+    // is swapped to the tail (the pool never frees a slot) and the live count
+    // (+0x80) is decremented. Ghidra: FUN_000126b8 (tail-called from
+    // -[MainViewController task]).
+    void endFrame();
+
     int activeTouchCount() const {
         return m_touchCount;
     } // +0x80

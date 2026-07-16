@@ -165,6 +165,32 @@ void neGraphics::clearTouches() {
     }
 }
 
+// Ghidra: FUN_000126b8 — end-of-frame touch-pool upkeep, run once per task tick.
+// For every live slot it clears the +0x2c frame marker and copies the current
+// point into the down-point pair, then swap-removes released slots: a released
+// pointer is exchanged with the tail slot (the pool keeps every pre-allocated
+// pointer) and the count decremented. A slot that received a swapped-in touch is
+// re-examined, so `i` is not advanced on removal.
+// @complete
+void neGraphics::endFrame() {
+    for (int i = 0; i < m_touchCount;) {
+        auto *rec = m_touches[i];
+        rec->valid = 0;      // +0x2c frame marker
+        rec->downX = rec->x; // +0x0c -> +0x1c
+        rec->downY = rec->y; // +0x10 -> +0x20
+        if (rec->released == 0) {
+            ++i;
+            continue;
+        }
+        int last = m_touchCount - 1;
+        if (i != last) {
+            m_touches[i] = m_touches[last];
+            m_touches[last] = rec;
+        }
+        --m_touchCount;
+    }
+}
+
 // Ghidra: FUN_000124cc — linear scan of the recorded touches for a matching id.
 // @complete
 const neTouchPoint *neGraphics::findTouchById(int id) const {

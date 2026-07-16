@@ -62,6 +62,7 @@
 
 // @ 0x6f8c0 — a plain view controller with a custom "back" button
 // (navi_btn_back) installed as the navigation item's left bar button.
+// @complete
 - (id)init {
     self = [super init];
     if (self != nil) {
@@ -81,6 +82,7 @@
 // @ 0x6fa3c — build the view tree. (setAutoresizingSize / setAutoresizingCenter
 // are UIView category helpers in the app; inlined here as the equivalent
 // autoresizing masks.)
+// @complete
 - (void)loadView {
     [super loadView];
 
@@ -176,6 +178,7 @@
 }
 
 // @ 0x7286c — nothing beyond the superclass hook.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
@@ -184,6 +187,7 @@
 
 // @ 0x72afc — on the first appearance (the table is still hidden) start the
 // detail load.
+// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     if (m_PackTableView.hidden) {
@@ -193,6 +197,7 @@
 
 // @ 0x72b60 — leaving the screen: stop any preview, cancel the in-flight sample
 // + detail downloads, and restore the store's nav-bar background image.
+// @complete
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [self stopSample];
@@ -212,6 +217,7 @@
 
 // @ 0x728c4 — the view was torn down: drop the row backgrounds, cancel + clear
 // the jacket downloads (the ARC-released ivars are niled after super).
+// @complete
 - (void)viewDidUnload {
     [super viewDidUnload];
     packBgImage0 = nil;
@@ -224,7 +230,11 @@
 
 // @ 0x72970 — release every owned ivar (the table / labels / spinners are
 // hierarchy-owned and are not released here). Cancels the in-flight detail +
-// sample downloads first.
+// sample downloads first. @ 0x72970 additionally releases packBgImage0,
+// packBgImage1, artworkDownloaders, packInfo, dummyView, and recommendPackIdArr;
+// under ARC those ivar releases are compiler-generated, so only the manual
+// cancellation work is spelt out here.
+// @complete
 - (void)dealloc {
     if (m_HeaderView != nil) {
         m_HeaderView = nil;
@@ -240,6 +250,7 @@
 
 // @ 0x72cb4 — the nav-bar back button: ignore taps while a recommend POST is in
 // flight; else play the cancel SE and pop this detail screen off the nav stack.
+// @complete
 - (void)backButtonFunc {
     if (recommendDownloader != nil) {
         return;
@@ -253,6 +264,7 @@
 // or register the pack as "recommended" (a POST). Not owned: once a birthday is
 // on record, spending-limit-check -> StoreKit purchase (or an over-limit
 // alert); otherwise show the age gate first.
+// @complete
 - (void)onPurchaseButton:(id)sender {
     neEngine::playSystemSe(1); // decide SE (Ghidra: SysSePlayIntoSlot(1))
 
@@ -322,6 +334,7 @@
 
 // @ 0x70af4 — not-owned purchase: forward to the store delegate's StoreKit
 // purchase.
+// @complete
 - (void)doPurchase {
     if ([delegate respondsToSelector:@selector(detailViewStartPurchase:)]) {
         [delegate performSelector:@selector(detailViewStartPurchase:) withObject:packInfo];
@@ -330,6 +343,7 @@
 
 // @ 0x70600 — the preview clip finished playing: tell the sampling row's cell
 // to reset, then clear the sampling index.
+// @complete
 - (void)finishBgm:(id)sender {
     if (rowSamplePlayed >= 0 && (NSUInteger)rowSamplePlayed < [[packInfo musicInfos] count]) {
         NSIndexPath *ip = [NSIndexPath indexPathForRow:rowSamplePlayed inSection:0];
@@ -342,6 +356,7 @@
 // @ 0x7048c — start the detail load: show it now if the songs are already
 // attached, else fetch them once via a StorePackInfoDownloader (delegate
 // callbacks drive -showPackInfo).
+// @complete
 - (void)loadInfo {
     if (packInfo == nil) {
         return;
@@ -355,12 +370,14 @@
     }
     m_StorePackInfoDownloader = [[StorePackInfoDownloader alloc] initWithStorePackInfo:packInfo];
     [m_StorePackInfoDownloader setDelegate:self];
-    [m_StorePackInfoDownloader downloadDetail:NO]; // auto-load (not a user-initiated open)
+    // @ 0x70538 passes r2 = 1 (YES): downloadDetail:YES, not NO.
+    [m_StorePackInfoDownloader downloadDetail:YES];
 }
 
 // @ 0x702bc — the detail is ready: size + fill the header, refresh the buy
 // button, install it as the table header, start the jacket download, and reveal
 // + reload the table.
+// @complete
 - (void)showPackInfo {
     CGRect b = m_PackTableView ? m_PackTableView.bounds : CGRectZero;
     m_HeaderView.bounds = CGRectMake(0, 0, b.size.width, 120.0f); // 0x42f00000
@@ -384,6 +401,7 @@
 
 // @ 0x70550 — stop the preview clip: fade the BGM out, cancel + drop the sample
 // download, clear the sampling row, and reload the table.
+// @complete
 - (void)stopSample {
     [[AudioManager sharedManager] stopBgm:0.2f]; // DAT_000705f8 fade
     [sampleDownloader cancel];
@@ -396,6 +414,7 @@
 
 // @ 0x70d54 — pick the buy button's text/state from the pack's owned +
 // downloaded status.
+// @complete
 - (void)selfCheckButtonText {
     if (packInfo != nil) {
         NSString *productID = [StoreUtil productIDForPackID:[packInfo packID]];
@@ -412,6 +431,7 @@
 }
 
 // @ 0x70e24 — not owned: show the price ("¥<price>") and enable the button.
+// @complete
 - (void)setButtonTextBuy {
     UIButton *buy = [m_HeaderView buttonPurchase];
     [buy setTitle:[NSString stringWithFormat:@"¥%@", packInfo.priceString]
@@ -421,6 +441,7 @@
 
 // @ 0x70ed4 — owned but not all downloaded: "INSTALL" (localized), enabled
 // (re-download).
+// @complete
 - (void)setButtonTextInstall {
     UIButton *buy = [m_HeaderView buttonPurchase];
     NSString *t = [[NSBundle mainBundle] localizedStringForKey:@"INSTALL" value:@"" table:nil];
@@ -430,6 +451,7 @@
 
 // @ 0x70f80 — a download is in progress: "INSTALLING" (localized, disabled
 // state), disabled.
+// @complete
 - (void)setButtonTextInstalling {
     UIButton *buy = [m_HeaderView buttonPurchase];
     NSString *t = [[NSBundle mainBundle] localizedStringForKey:@"INSTALLING" value:@"" table:nil];
@@ -439,6 +461,7 @@
 
 // @ 0x7102c — owned + all downloaded: offer to recommend the pack, or show it's
 // already recommended.
+// @complete
 - (void)setButtonTextInstalled {
     if ([self isRecommended]) {
         [self setButtonTextInstalledForce];
@@ -449,6 +472,7 @@
 
 // @ 0x7106c — owned, downloaded, already recommended: "INSTALLED" (localized,
 // disabled), disabled.
+// @complete
 - (void)setButtonTextInstalledForce {
     UIButton *buy = [m_HeaderView buttonPurchase];
     NSString *t = [[NSBundle mainBundle] localizedStringForKey:@"INSTALLED" value:@"" table:nil];
@@ -459,6 +483,7 @@
 // @ 0x71118 — owned + downloaded, not yet recommended: the "recommend this
 // pack" button, enabled. (The localization key is a Japanese string in the
 // binary; best-effort key here.)
+// @complete
 - (void)setButtonTextRecommend {
     UIButton *buy = [m_HeaderView buttonPurchase];
     NSString *t = [[NSBundle mainBundle] localizedStringForKey:@"おすすめに追加"
@@ -470,6 +495,7 @@
 
 // @ 0x70b9c — YES only when the pack has songs (local or arcade) and every one
 // is downloaded.
+// @complete
 - (BOOL)allDownloaded {
     if (packInfo == nil || [packInfo musicInfos] == nil) {
         return NO;
@@ -482,6 +508,7 @@
 
 // @ 0x70c14 — YES if this pack's id appears in the (lazily fetched)
 // recommended-pack list.
+// @complete
 - (BOOL)isRecommended {
     if (recommendPackIdArr == nil) {
         recommendPackIdArr = [[MusicManager getInstance] getRecommendPackArray];
@@ -497,6 +524,7 @@
 
 // @ 0x70b54 — reflect the owned state on the buy button (owned packs disable
 // the button).
+// @complete
 - (void)setPurchaseState:(BOOL)owned {
     if (m_HeaderView == nil) {
         return;
@@ -506,6 +534,7 @@
 
 // @ 0x711c4 — the pack detail finished downloading: show it, hide the loading
 // overlay, and drop the downloader.
+// @complete
 - (void)storePackInfoDownloaderFinished:(id)downloader {
     [self showPackInfo];
     m_AccessingLabel.hidden = YES;
@@ -518,6 +547,7 @@
 // @ 0x71248 — the pack detail failed to download: hide the overlay, show a
 // network-error alert, and drop the downloader. (Alert strings byte-verified:
 // title "Error", message @0x12bec4.)
+// @complete
 - (void)storePackInfoDownloaderError:(id)downloader {
     m_AccessingLabel.hidden = YES;
     CommonAlertView *alert =
@@ -537,6 +567,7 @@
 // @ 0x71334 — the age gate closed: drop it, then re-run the spending-limit
 // check now that a birthday is on record (over the limit -> alert, else proceed
 // to the StoreKit purchase).
+// @complete
 - (void)birthDayViewClose {
     m_BirthDayView = nil;
 
@@ -563,6 +594,7 @@
 // result -> on success register the pack + award a +300 treasure bonus (capped
 // 9999), else a network-error alert; drop the downloader and hide the dummy
 // cover either way.
+// @complete
 - (void)downloaderFinished:(id)downloader {
     if (sampleDownloader == downloader) {
         if (rowSamplePlayed >= 0) {
@@ -612,6 +644,7 @@
 // @ 0x717b0 — a Downloader failed. Sample clip: stop the row + drop the
 // downloader; recommend POST: drop the downloader + hide the cover. Either way,
 // show the network-error alert.
+// @complete
 - (void)downloaderError:(id)downloader {
     if (sampleDownloader == downloader) {
         if (rowSamplePlayed >= 0) {
@@ -637,12 +670,14 @@
 }
 
 // @ 0x719a8 — DownloaderDelegate progress hook (no-op in this controller).
+// @complete
 - (void)downloaderProceed:(id)downloader {
 }
 
 // @ 0x72600 — an async jacket finished: a song-row jacket (section 0) refreshes
 // that cell's artwork; the pack-header jacket (section 1, row 0) is handed to
 // the header view.
+// @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     if (indexPath.section == 0) {
         StoreDetailMusicCell *cell =
@@ -661,11 +696,13 @@
 }
 
 // @ 0x726ec — jacket download failed (no-op; the placeholder stays).
+// @complete
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
 }
 
 // @ 0x726f0 — an alert button was tapped: ask the store delegate to close this
 // detail screen.
+// @complete
 - (void)commonAlertView:(id)alertView clickedButtonAtIndex:(NSInteger)index {
     if ([delegate respondsToSelector:@selector(detailViewClose)]) {
         [delegate performSelector:@selector(detailViewClose)];
@@ -674,6 +711,7 @@
 
 // @ 0x72744 — cancel every in-flight jacket download and clear the map (on
 // teardown / navigation).
+// @complete
 - (void)stopDownloadArtworks {
     if ([artworkDownloaders count] != 0) {
         for (ImageDownloader *dl in [artworkDownloaders objectEnumerator]) {
@@ -684,25 +722,33 @@
     }
 }
 
-// @ 0x72860 — support all interface orientations (legacy rotation hook).
+// @ 0x72860 — support only the portrait orientations (legacy rotation hook).
+// @ 0x72860 computes (orientation - 1) unsigned-less-than 2, so it returns YES
+// only for UIInterfaceOrientationPortrait (1) and PortraitUpsideDown (2), not
+// for every orientation.
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)orientation {
-    return YES;
+    return orientation == UIInterfaceOrientationPortrait ||
+           orientation == UIInterfaceOrientationPortraitUpsideDown;
 }
 
 #pragma mark - UITableViewDataSource
 
 // @ 0x719ac — a single section.
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x719b0 — one row per song, plus a trailing copyright row.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (NSInteger)[[packInfo musicInfos] count] + 1;
 }
 
 // @ 0x719e8 — build a song row (jacket + name + artist + "LEVEL b/m/h" + arcade
 // badge + sample state), or the trailing copyright row.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     const NSInteger row = indexPath.row;
@@ -754,8 +800,10 @@
         cell.labelArtist.text = music.artist;
         NSString *hard =
             (music.lvHard == 11) ? @"10+" : [NSString stringWithFormat:@"%d", music.lvHard];
-        cell.labelLevels.text =
-            [NSString stringWithFormat:@"LEVEL %d/%d/%@", music.lvBasic, music.lvMedium, hard];
+        // @ 0x105aab: the format literal is "LEVEL:  %d / %d / %@" (colon, two
+        // spaces, and spaces around the slashes), not "LEVEL %d/%d/%@".
+        cell.labelLevels.text = [NSString
+            stringWithFormat:@"LEVEL:  %d / %d / %@", music.lvBasic, music.lvMedium, hard];
         [cell setLink:music.iTunesURL]; // Ghidra selector itunesURL
 
         // Jacket: cached/in-flight downloader if present, else start one;
@@ -808,6 +856,7 @@
 
 // @ 0x720b4 — song rows use the cell's content height + 24pt padding; the
 // copyright row is sized to its wrapped text + 20pt (10pt when empty).
+// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if ((NSUInteger)indexPath.row < [[packInfo musicInfos] count]) {
         return [StoreDetailMusicCell cellHeight] + 24.0f;
@@ -834,6 +883,7 @@
 
 // @ 0x721cc — alternate the stretchable row background on song rows (even ->
 // packBgImage0, odd -> packBgImage1); the copyright row gets a flat grey.
+// @complete
 - (void)tableView:(UITableView *)tableView
       willDisplayCell:(UITableViewCell *)cell
     forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -849,6 +899,7 @@
 // sampling row stops it; tapping another stops the current one and starts
 // downloading the new clip (played on completion by the Downloader delegate).
 // Copyright-row taps are ignored.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     const NSInteger row = indexPath.row;
     if ((NSUInteger)row >= [[packInfo musicInfos] count]) {

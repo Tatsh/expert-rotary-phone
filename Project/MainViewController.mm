@@ -47,6 +47,7 @@
 #import "neEngineBridge.h"
 #import "neFrameTimer.h"
 #import "neGLView.h"
+#import "neGraphics.h"
 #import "neRenderer.h"
 
 // Scene input-mode set + AEP content-area height come from the engine bridge
@@ -58,13 +59,6 @@
 // practice every frame draws (a gap longer than 1000 ms — e.g. after a long
 // stall — skips that frame's render).
 static const float kRenderMinInterval = 1000.0f;
-
-// Float(ms)->fixed-point (16.16) helper for the task update step. The binary
-// applies FPToFixed(ms, round-toward-zero, 16 frac bits) to the elapsed-ms
-// value before updateAll.
-static int FloatToFixed(float ms) {
-    return (int)(ms * 65536.0f);
-}
 
 // This VC is the neGLView render/layout delegate and the delegate for both the
 // common and custom alert views it raises.
@@ -767,20 +761,17 @@ static int FloatToFixed(float ms) {
     [self draw];
 }
 
-// @ 0xbb5c — advance all tasks by the elapsed time, then reap dead ones.
+// @ 0xbb5c — advance all tasks by the elapsed time, then run the end-of-frame
+// touch-pool upkeep. The binary truncates the elapsed-ms delta to an int
+// (vcvt.s32.f32, round toward zero) and hands it to the scheduler, then
+// tail-calls the neGraphics touch-pool maintenance (FUN_000126b8) on the shared
+// engine singleton.
+// @complete
 - (void)task {
     float dt = m_taskTime.elapsedMs();
     m_taskTime.reset();
-    // Ghidra applies FPToFixed(dt, 0, 0, 3, 0x20) — round toward zero, 16 frac
-    // bits — which FloatToFixed reproduces.
-    C_TASK::updateAll(FloatToFixed(dt));
-    // NOTE (Ghidra @ 0xbb5c): the binary then runs per-frame neGraphics
-    // touch-pool upkeep inline here — for each active touch it clears the +0x2c
-    // frame marker, copies the current point (+0xc/+0x10) into +0x1c/+0x20, and
-    // swap-removes any touch whose released flag (+0x2d) is set, decrementing the
-    // pool count (+0x80). That mutates neGraphics' private
-    // m_touches/m_touchCount; it belongs behind an engine-layer maintenance
-    // method (neGraphics), not reached into from here.
+    C_TASK::updateAll(static_cast<int>(dt));
+    neGraphics::shared().endFrame();
 }
 
 // @ 0xbd30 — render the scene, frame-limited by the render timer.
@@ -874,6 +865,10 @@ static int FloatToFixed(float ms) {
 // against the on-disk data path, seeds the scene manager with the UI scale,
 // then lays a hidden, clear cover button (with a tap recognizer) over the view
 // — the backdrop the iPad modal panels dim and dismiss-on-tap through.
+// @complete — matches the binary exactly EXCEPT for the deliberate
+// assets-in-bundle rebuild deviation: the AepManager asset baseDir/dimensions
+// (see the note below) are pointed at the app bundle with fixed content extents
+// instead of the shipped download path and view.size*2 dimensions.
 - (void)loadView {
     [super loadView];
     CGRect bounds = UIScreen.mainScreen.bounds;

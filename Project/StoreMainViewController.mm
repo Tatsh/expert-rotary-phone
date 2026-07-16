@@ -40,8 +40,9 @@
                                        StorePackDetailViewPadDelegate,
                                        StoreDetailViewControllerDelegate,
                                        PurchaseManagerMusicDelegate>
-// Inlined lazy-jacket loader used by tableView:cellForRowAtIndexPath: (see @
-// 0x4837c).
+// Inlined lazy-jacket loader used by tableView:cellForRowAtIndexPath:; it has no
+// distinct address in the binary (the loader is inlined into each cell path).
+// The reconstructed body is defined below.
 - (UIImage *)artworkForInfo:(StorePackInfo *)info atIndexPath:(NSIndexPath *)indexPath;
 @end
 

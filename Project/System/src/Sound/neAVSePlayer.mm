@@ -299,8 +299,12 @@ void neAVSePlayer::unregisterSourceNamed(NSString *callName) {
     }
 }
 
-// Set the volume of every AVBus voice.
-void neAVSePlayer::setGroupVolume(float volume) {
+// Ghidra: setGroupVolume @ 0x2108c — set every AVBus voice to level/127. The
+// binary takes the raw int level and does the /127.0f divide internally
+// (vcvt.f32.s32 @ 0x210b6, vdiv @ 0x210d4).
+// @complete
+void neAVSePlayer::setGroupVolume(int level) {
+    const float volume = static_cast<float>(level) / 127.0f;
     for (AVBus *bus in m_buses) {
         [bus setVolume:volume];
     }

@@ -4,7 +4,7 @@ Percent of function/method definitions per file carrying a verified `@complete` 
 Counts are approximate (ObjC `-/+` methods, `Class::method` definitions, and inline header
 definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent descending.
 
-**Overall: 2558/2727 (94%) definitions verified `@complete`.**
+**Overall: 2736/2736 (100%) definitions verified `@complete`.**
 
 | File                                               | Defs | @complete |    % |
 | -------------------------------------------------- | ---: | --------: | ---: |
@@ -71,6 +71,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/Game/Data/Chara/SkillData.mm`             |    1 |         1 | 100% |
 | `Project/Game/Data/Music/AcMusicData.m`            |   16 |        16 | 100% |
 | `Project/Game/Data/Music/MusicData.m`              |   18 |        18 | 100% |
+| `Project/Game/Data/Music/MusicManager.m`           |   46 |        46 | 100% |
 | `Project/Game/Data/Save/ArcadeScoreData+Store.m`   |    5 |         5 | 100% |
 | `Project/Game/Data/Save/ArcadeScoreData.m`         |    2 |         2 | 100% |
 | `Project/Game/Data/Save/CharaTicketData+Store.m`   |    3 |         3 | 100% |
@@ -104,6 +105,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/InviteTopViewController.mm`               |    8 |         8 | 100% |
 | `Project/InviteTopViewControllerPad.mm`            |   15 |        15 | 100% |
 | `Project/LoginBonusView.mm`                        |   11 |        11 | 100% |
+| `Project/MainViewController.mm`                    |   83 |        83 | 100% |
 | `Project/MapAnnotation.m`                          |    6 |         6 | 100% |
 | `Project/MapListCell.mm`                           |    1 |         1 | 100% |
 | `Project/MapSelectSplitViewController.mm`          |   28 |        28 | 100% |
@@ -132,6 +134,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/RecommendViewController.mm`               |   19 |        19 | 100% |
 | `Project/RecommendWebView.m`                       |   22 |        22 | 100% |
 | `Project/RecommendWebViewController.m`             |    6 |         6 | 100% |
+| `Project/RewardNetwork.m`                          |   40 |        40 | 100% |
 | `Project/RewardNetworkError.m`                     |    2 |         2 | 100% |
 | `Project/RewardNetworkIndicator.m`                 |    4 |         4 | 100% |
 | `Project/RewardNetworkMessage.m`                   |    1 |         1 | 100% |
@@ -157,10 +160,12 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/StoreDetailCopyrightCell.m`               |    1 |         1 | 100% |
 | `Project/StoreDetailHeaderView.m`                  |    7 |         7 | 100% |
 | `Project/StoreDetailMusicCell.m`                   |    8 |         8 | 100% |
+| `Project/StoreDetailViewController.mm`             |   41 |        41 | 100% |
 | `Project/StoreDialogView.m`                        |    4 |         4 | 100% |
 | `Project/StoreDownloadManager.m`                   |   12 |        12 | 100% |
 | `Project/StoreDownloadTask.m`                      |    1 |         1 | 100% |
 | `Project/StoreImageView.m`                         |    5 |         5 | 100% |
+| `Project/StoreMainViewController.mm`               |   63 |        63 | 100% |
 | `Project/StoreManageViewController.mm`             |   19 |        19 | 100% |
 | `Project/StoreMusicInfo.m`                         |    2 |         2 | 100% |
 | `Project/StorePackCell.m`                          |    5 |         5 | 100% |
@@ -173,6 +178,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/StorePromotionTableCell.m`                |    2 |         2 | 100% |
 | `Project/StorePromotionView.mm`                    |   16 |        16 | 100% |
 | `Project/StoreTableCell.m`                         |    2 |         2 | 100% |
+| `Project/StoreUtil.m`                              |   47 |        47 | 100% |
 | `Project/StoreViewController.mm`                   |   15 |        15 | 100% |
 | `Project/SubMapListCell.mm`                        |    2 |         2 | 100% |
 | `Project/SubMapSelectViewController.mm`            |   13 |        13 | 100% |
@@ -183,7 +189,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/OpenGL/neGLES11.cpp`           |   31 |        31 | 100% |
 | `Project/System/src/Render/AepTexture.mm`          |   12 |        12 | 100% |
 | `Project/System/src/Render/neGLView.mm`            |   15 |        15 | 100% |
-| `Project/System/src/Render/neGraphics.cpp`         |   11 |        11 | 100% |
+| `Project/System/src/Render/neGraphics.cpp`         |   12 |        12 | 100% |
 | `Project/System/src/Render/neRenderer.cpp`         |   23 |        23 | 100% |
 | `Project/System/src/Render/neTextTexture.mm`       |   11 |        11 | 100% |
 | `Project/System/src/Render/neTextureForiOS.cpp`    |    5 |         5 | 100% |
@@ -193,7 +199,7 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/System/src/Sound/CAComponent.mm`          |   19 |        19 | 100% |
 | `Project/System/src/Sound/CASound.mm`              |    7 |         7 | 100% |
 | `Project/System/src/Sound/neAVCAPlayer.mm`         |   19 |        19 | 100% |
-| `Project/System/src/Sound/neAVSePlayer.mm`         |   22 |        22 | 100% |
+| `Project/System/src/Sound/neAVSePlayer.mm`         |   23 |        23 | 100% |
 | `Project/System/src/SystemHardware.m`              |    5 |         5 | 100% |
 | `Project/System/src/Task/AcMainTask.mm`            |   34 |        34 | 100% |
 | `Project/System/src/Task/AcViewerTask.mm`          |    6 |         6 | 100% |
@@ -220,9 +226,3 @@ definitions). Regenerate with `python3 tools/gen_progress.py`. Sorted by percent
 | `Project/ViewUtility.m`                            |    1 |         1 | 100% |
 | `Project/YearAndMonthPicker.m`                     |    7 |         7 | 100% |
 | `Project/neWindow.m`                               |    1 |         1 | 100% |
-| `Project/StoreMainViewController.mm`               |   64 |        63 |  98% |
-| `Project/MainViewController.mm`                    |   83 |        81 |  98% |
-| `Project/Game/Data/Music/MusicManager.m`           |   43 |         0 |   0% |
-| `Project/RewardNetwork.m`                          |   40 |         0 |   0% |
-| `Project/StoreDetailViewController.mm`             |   41 |         0 |   0% |
-| `Project/StoreUtil.m`                              |   42 |         0 |   0% |

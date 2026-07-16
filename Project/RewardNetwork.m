@@ -29,6 +29,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 @implementation RewardNetwork
 
 // @ 0xee3f8   (sharedInstance forwarder twin @ 0xee3b0)
+// @complete
 - (int)initializeFlg {
     if (![RewardNetworkUdid isAdvertisingTrackingEnabled]) {
         return 0;
@@ -37,11 +38,13 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee438
+// @complete
 - (void)setInitializeFlg:(int)initializeFlg {
     _initializeFlg = initializeFlg;
 }
 
 // @ 0xee634
+// @complete
 - (instancetype)init {
     __block id result = nil;
     // Queue-guarded shared-instance handoff (dispatch_sync on
@@ -54,6 +57,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee550
+// @complete
 + (instancetype)allocWithZone:(struct _NSZone *)zone {
     static dispatch_once_t onceToken;
     // @ 0xee5bc — dispatch_once body: create the serial handoff queue, then alloc
@@ -69,6 +73,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee774
+// @complete
 + (instancetype)sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -78,16 +83,19 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee1d4
+// @complete
 + (NSString *)appliId {
     return [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.appliId"];
 }
 
 // @ 0xee230
+// @complete
 + (NSString *)version {
     return [RewardNetworkUtilities getSdkVersion];
 }
 
 // @ 0xee24c
+// @complete
 + (NSString *)udid {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         return nil;
@@ -102,6 +110,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee2f0
+// @complete
 + (NSString *)ad_udid {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         return nil;
@@ -111,6 +120,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee350
+// @complete
 + (NSString *)old_udid {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         return nil;
@@ -120,6 +130,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee448
+// @complete
 + (int)campaignFlg {
     if (![RewardNetworkUdid isAdvertisingTrackingEnabled]) {
         return -2;
@@ -135,11 +146,13 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xee52c
+// @complete
 + (BOOL)isSupportediOSVersion {
     return [RewardNetworkUtilities canUseRewardSdk];
 }
 
 // @ 0xee804
+// @complete
 + (void)setSessionParameters:(id)parameters url:(NSString *)url method:(NSString *)method {
     [[NSUserDefaults standardUserDefaults] setObject:url forKey:@"ApplilinkReward.appliURL"];
     [[NSUserDefaults standardUserDefaults] setObject:parameters
@@ -148,6 +161,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xeed2c
+// @complete
 + (void)startSessionWithBlock:(RewardNetworkErrorBlock)block {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         block([RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
@@ -193,6 +207,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xef274
+// @complete
 + (BOOL)createUdidWithError:(NSError **)error {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         return NO;
@@ -225,6 +240,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xef4c4
+// @complete
 + (void)postApplicationInstallWithPriority:(int)priority
                                   callback:(RewardNetworkErrorBlock)callback {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
@@ -307,6 +323,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xefc14
+// @complete
 + (void)checkLoginWithBlock:(RewardNetworkCallback)block {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         block(nil, [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
@@ -353,6 +370,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xeff88
+// @complete
 + (void)requestTokenWithBlock:(RewardNetworkCallback)block {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         block(nil, [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
@@ -411,6 +429,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf04bc
+// @complete
 + (void)startLoginWithToken:(NSString *)token
                withPriority:(int)priority
                    callback:(RewardNetworkErrorBlock)callback {
@@ -475,6 +494,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf16d4
+// @complete
 + (void)allInstallFlgWithInCompany:(NSString *)inCompany
                           callback:(RewardNetworkFlgCallback)callback {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
@@ -546,6 +566,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf2e14
+// @complete
 + (void)clearUDID {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (env == nil || [env isEqualToString:@"0"]) {
@@ -564,6 +585,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf2fb4
+// @complete
 + (void)clearKeyChainOldUDID {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (env != nil && ![env isEqualToString:@"0"]) {
@@ -579,6 +601,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf3110
+// @complete
 + (void)clearAdUDID {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (env == nil || [env isEqualToString:@"0"]) {
@@ -593,6 +616,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf3240
+// @complete
 + (void)clearSession {
     NSHTTPCookieStorage *storage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
     for (NSHTTPCookie *cookie in [storage cookies]) {
@@ -604,6 +628,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf33dc
+// @complete
 + (void)bannerInfoWithBlock:(RewardNetworkCallback)block {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         block(nil, [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
@@ -647,6 +672,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf3714
+// @complete
 + (void)isEnabledBannerWithBlock:(RewardNetworkFlgCallback)block {
     if (![RewardNetworkUtilities canUseRewardSdk]) {
         block(0, [RewardNetworkError localizedApplilinkErrorWithCode:0x401]);
@@ -688,6 +714,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf3b28
+// @complete
 + (BOOL)canUseBannerCache {
     NSString *udid = [RewardNetwork udid];
     NSString *adUdid = [RewardNetwork ad_udid];
@@ -701,6 +728,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf3bd0
+// @complete
 + (void)clearBannerCache {
     g_pRewardBannerInfo = nil;
     g_pRewardBannerExpireDate = nil;
@@ -709,6 +737,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // .cxx_destruct @ 0xf3bf8 — compiler-emitted; not hand-written.
 
 // @ 0xf0a80   (sharedInstance forwarder twin @ 0xf11fc)
+// @complete
 - (void)openAppListWebViewWithCampaignId:(NSNumber *)campaignId
                                inCompany:(id)inCompany
                                     type:(id)type
@@ -787,6 +816,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf12d4
+// @complete
 - (void)appListWithCampaignId:(NSNumber *)campaignId
                     inCompany:(id)inCompany
                          type:(id)type
@@ -842,6 +872,10 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf1ff8   (sharedInstance forwarder twin @ 0xf1fa4)
+// The shipped binary calls -[_webViewController
+// willAnimateRotationToInterfaceOrientation:duration:] directly (the #else
+// branch); the #if path is a documentary modernisation.
+// @complete
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
@@ -857,6 +891,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf2030
+// @complete
 - (void)setTemporaryCacheWithKey:(NSString *)key value:(id)value expiration:(NSInteger)expiration {
     NSDate *expire = [[NSDate alloc]
         initWithTimeIntervalSinceNow:(expiration == 0 ? 1.0 : (NSTimeInterval)expiration)];
@@ -874,6 +909,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf2168
+// @complete
 - (id)getTemporaryCacheWithKey:(NSString *)key {
     NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:key];
     if (data == nil) {
@@ -902,6 +938,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf22e0
+// @complete
 - (void)appliIdListWithType:(int)type callback:(RewardNetworkCallback)callback {
     NSDictionary *params = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:type]
                                                        forKey:@"type"];
@@ -937,6 +974,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf25fc
+// @complete
 - (void)postAppliInstallReportWithAppliList:(NSArray *)appliList
                                    callback:(RewardNetworkErrorBlock)callback {
     NSArray *batch;
@@ -987,6 +1025,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf2a48
+// @complete
 - (void)postAlreadyInstallAppWithCallback:(RewardNetworkErrorBlock)callback {
     // @ 0xf2ab4 — filter the returned appli-id list down to apps that are
     // actually installed (canOpenURL: on each default_scheme) and report them.
@@ -1026,32 +1065,37 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 }
 
 // @ 0xf3bf4
+// @complete
 - (void)debugLog {
     // No-op in release builds.
 }
 
 // @ 0xf1e88
+// @complete
 + (NSString *)baseUrlSsl {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if ([env isEqualToString:@"0"]) {
         return @"https://www.applilink.jp";
     }
     if ([env isEqualToString:@"1"]) {
-        return @"https://st.es.i.revoinf.jp";
+        // String literal @ 0x115c0c is "https://st.es.i-revoinf.jp" (hyphen).
+        return @"https://st.es.i-revoinf.jp";
     }
     if ([env isEqualToString:@"2"]) {
-        return @"https://dev.es.i.revoinf.jp";
+        // String literal @ 0x115c29 is "https://dev.es.i-revoinf.jp" (hyphen).
+        return @"https://dev.es.i-revoinf.jp";
     }
     if ([env isEqualToString:@"3"]) {
         return @"https://sandbox.applilink.jp";
     }
     if ([env isEqualToString:@"4"]) {
-        return @"https://dev.es.i.revoinf.jp";
+        return @"https://dev.es.i-revoinf.jp";
     }
     return nil;
 }
 
 // @ 0xef058
+// @complete
 + (void)startWithBlock:(void (^)(NSError *error))block {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSString *appliId = [defaults objectForKey:@"ApplilinkReward.appliId"];
@@ -1080,6 +1124,7 @@ static NSDate *g_pRewardBannerExpireDate = nil;
 // + SDK availability, persists appliId/env, ensures the reward UDID exists, and
 // (once) posts the install record. `callback` receives nil on success or a
 // localized error.
+// @complete
 + (void)startWithAppliId:(NSString *)appliId
                      env:(NSString *)env
                 callback:(RewardNetworkErrorBlock)callback {
