@@ -18,6 +18,7 @@
 #import <UIKit/UIKit.h>           // UILabel / UIFont / UIColor / UIGraphics + CoreGraphics
 
 #import "AepTexture.h" // neCreateTextureFromData / neTextureRelease (texture cache)
+#import "neDebugLog.h"
 #import "neRenderer.h"
 #import "neTextTexture.h"
 
