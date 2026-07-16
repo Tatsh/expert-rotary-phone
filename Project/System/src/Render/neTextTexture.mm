@@ -157,12 +157,17 @@ neTextTextureMgr::~neTextTextureMgr() {
     atlasCount = 0;
 }
 
-// Ghidra: FUN_00017b28 — allocate a fresh 256x256 GL_ALPHA atlas and link it
-// in.
+// Ghidra: FUN_00017b28 — allocate a fresh 256x256 glyph atlas and link it in.
+// The binary used GL_LUMINANCE_ALPHA (format 2), but that deprecated format is
+// not sampled correctly by modern iOS's GLES 1.1, which garbled all text (the CPU
+// glyph bitmap is correct; only text uses this format and only text was broken).
+// Upload the atlas as GL_RGBA (format 1) instead and replicate the LA behaviour by
+// writing the coverage into all four channels; this is a modern-iOS correctness
+// fix, not an ENABLE_PATCHES change.
 // @complete
 void neTextTextureMgr::createNewTextTexture() {
-    uint8_t *pixels = new uint8_t[0x20000](); // 256x256 zero-cleared cell buffer
-    void *tex = neCreateTextureFromData(0x100, 0x100, /*GL_ALPHA*/ 2, pixels, 0x100, 0x100);
+    uint8_t *pixels = new uint8_t[0x40000](); // 256x256 RGBA, zero-cleared
+    void *tex = neCreateTextureFromData(0x100, 0x100, /*GL_RGBA*/ 1, pixels, 0x100, 0x100);
     // assert(tex) — neTextTexture.mm:0xeb in the shipped binary.
     neTextTexture *atlas = new neTextTexture();
     atlas->index = atlasCount;
@@ -316,8 +321,10 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     CGColorSpaceRelease(cs);
     CGContextRelease(ctx);
 
-    // Blit the gray bitmap into the atlas cell (LA, gray copied into both
-    // channels).
+    // Blit the gray bitmap into the atlas cell. The atlas is GL_RGBA (see
+    // createNewTextTexture); replicate the binary's luminance-alpha by writing the
+    // coverage into all four channels (RGB = A = gray), so a MODULATE by the glyph
+    // vertex colour reproduces the original LA result.
     AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
     int atlasW = tex->textureWidth();
     // The binary packs the cell transposed: cellX is the row stride multiplicand and
@@ -325,11 +332,13 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     // advances by atlasW along the cellX axis.
     for (int rrow = 0; rrow < h; ++rrow) {
         const uint8_t *src = gray + rrow * w;
-        uint8_t *dst = atlas->pixels + ((cellX + rrow) * atlasW + cellY) * 2;
+        uint8_t *dst = atlas->pixels + ((cellX + rrow) * atlasW + cellY) * 4;
         for (int col = 0; col < w; ++col) {
             uint8_t g = src[col];
-            dst[col * 2 + 0] = g;
-            dst[col * 2 + 1] = g;
+            dst[col * 4 + 0] = g;
+            dst[col * 4 + 1] = g;
+            dst[col * 4 + 2] = g;
+            dst[col * 4 + 3] = g;
         }
     }
     if (NE_DBG_FIRST(60)) {
