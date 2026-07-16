@@ -485,14 +485,11 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     if (touch.view.tag == 300) {
+        NSURL *entryURL = [StoreUtil konamiIdQuickEntryURL];
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-        [[UIApplication sharedApplication]
-                      openURL:[NSURL URLWithString:@"https://id.konami.net/quick/Entry"]
-                      options:@{}
-            completionHandler:nil];
+        [[UIApplication sharedApplication] openURL:entryURL options:@{} completionHandler:nil];
 #else
-        [[UIApplication sharedApplication]
-            openURL:[NSURL URLWithString:@"https://id.konami.net/quick/Entry"]];
+        [[UIApplication sharedApplication] openURL:entryURL];
 #endif
     }
 }

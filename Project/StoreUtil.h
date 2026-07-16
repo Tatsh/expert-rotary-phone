@@ -25,6 +25,9 @@
 + (NSURL *)createHttpsURL:(NSString *)path;
 + (NSURL *)createOfficialURL:(NSString *)path;
 
+// Konami ID quick-entry web page (https://<KONAMI_ID_HOST>/quick/Entry).
++ (NSURL *)konamiIdQuickEntryURL;
+
 // Game API endpoints (all /apr/main.cgi/<name>/index.jsp over https). Endpoint
 // names are verified where noted; the rest follow the identical pattern derived
 // from the selector.

@@ -76,6 +76,7 @@ option(ENABLE_PATCHES "Compile in offline-preservation patches (skip dead servic
 set(APR_HOST "apr.konaminet.jp" CACHE STRING "Game-API host (http)")
 set(APR_SECURE_HOST "apr.s.konaminet.jp" CACHE STRING "Game-API host (https)")
 set(OFFICIAL_HOST "p.eagate.573.jp" CACHE STRING "Official / eagate host (http)")
+set(KONAMI_ID_HOST "id.konami.net" CACHE STRING "Konami ID host (https)")
 
 # ---------------------------------------------------------------------------
 # Toolchain discovery (informational)
@@ -115,7 +116,7 @@ set(SYS_FRAMEWORKS
 # (duplicate keys would be invalid plist). Under ENABLE_PATCHES the host can also
 # be overridden at runtime to something not known here, so arbitrary loads are
 # additionally allowed in that build.
-set(_ats_hosts "${APR_HOST}" "${APR_SECURE_HOST}" "${OFFICIAL_HOST}")
+set(_ats_hosts "${APR_HOST}" "${APR_SECURE_HOST}" "${OFFICIAL_HOST}" "${KONAMI_ID_HOST}")
 list(REMOVE_DUPLICATES _ats_hosts)
 set(_ats_domains "")
 foreach(_h IN LISTS _ats_hosts)
@@ -253,7 +254,8 @@ target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${ENABLE_PATCHES}>:ENAB
 target_compile_definitions(popnrhythmin PRIVATE
                            APR_HOST="${APR_HOST}"
                            APR_SECURE_HOST="${APR_SECURE_HOST}"
-                           OFFICIAL_HOST="${OFFICIAL_HOST}")
+                           OFFICIAL_HOST="${OFFICIAL_HOST}"
+                           KONAMI_ID_HOST="${KONAMI_ID_HOST}")
 
 set_target_properties(popnrhythmin PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${INFO_PLIST}"

@@ -45,6 +45,9 @@ static NSString *ApiPath(NSString *name) {
 #ifndef OFFICIAL_HOST
 #define OFFICIAL_HOST "p.eagate.573.jp"
 #endif
+#ifndef KONAMI_ID_HOST
+#define KONAMI_ID_HOST "id.konami.net"
+#endif
 
 // Resolve the effective host: the CMake/compile-time default, unless a preferences
 // override is present. The override is honoured only in ENABLE_PATCHES builds so
@@ -122,6 +125,18 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 #else
     return [[NSURL alloc] initWithScheme:@"https" host:host path:path];
 #endif
+}
+
+// The Konami ID quick-entry web page (InputKIDViewCtrl opens it). The host was a
+// hardcoded https://id.konami.net URL in the binary; now the KONAMI_ID_HOST
+// default, overridable like the others.
++ (NSURL *)konamiIdQuickEntryURL {
+    NSString *host = ResolveHost(@KONAMI_ID_HOST, @"KonamiIdHost");
+    NSURLComponents *components = [[NSURLComponents alloc] init];
+    components.scheme = @"https";
+    components.host = host;
+    components.path = @"/quick/Entry";
+    return components.URL;
 }
 
 // --- Game API endpoints (endpoint names byte-verified against Ghidra) ---
