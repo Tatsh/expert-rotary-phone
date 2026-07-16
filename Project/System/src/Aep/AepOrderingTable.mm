@@ -26,11 +26,13 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// @complete
 AepOrderingTable::AepOrderingTable() {
     reset();
 }
 
 // Reset for a new frame: no live commands, empty buckets.
+// @complete
 void AepOrderingTable::reset() {
     m_count = 0;
     m_maxPriority = 0;
@@ -362,6 +364,7 @@ void AepOrderingTable::flush() {
 
 // Ghidra: aepOtSetScreenParams (FUN_00010bbc) — cache the screen extents, the
 // per-slot texture-handle table and the device-pixel render scale on the OT.
+// @complete
 void AepOrderingTable::setScreenParams(void **textureTable, int screenW, int screenH, float scale) {
     m_screenW = screenW;           // +0x04
     m_screenH = screenH;           // +0x08
