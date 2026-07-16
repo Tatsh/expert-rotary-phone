@@ -302,14 +302,25 @@ static GLenum PrimitiveToGL(int mode) {
 }
 
 // @ 0x12c78
-// Ghidra: neGLESRenderer_ctor — installs the vtable and primes the cached GL
-// state to the backend's power-on defaults: identity/zero matrices and colour
-// vectors, the eight per-texture-unit filter/wrap slots ({mag,min,wrapS,wrapT}
-// ordinals {4,1,7,7}, bound name -1), a straight-alpha add-equation blend, and
-// every redundant-bind cache cleared. Those zero/-1/identity defaults are
-// carried by the in-class member initializers; the three blend-state fields
-// whose non-zero GL power-on values the ctor writes (ivars 0x19c/0x1a0/0x1a4)
-// are set explicitly here.
+// Ghidra: neGLESRenderer_ctor — installs the vtable and primes the whole
+// ~0x210-byte cached-GL-state block to the backend's power-on defaults.
+//
+// This reconstruction models only the subset of that block its method subset
+// actually reads back: the buffer-bind caches (ivars 0x44/0x50/0x5c/0x6c), the
+// two 8-slot texture caches (_boundTextures 0xb4, texBindCache 0xfc), the
+// matrix-mode cache (0x2c), the caps probed by initialize() (0x84/0x87/0x88),
+// and the blend cache (0x19c/0x1a0/0x1a4). Every one of those defaults to the
+// binary's power-on value under the in-class member initializers plus the three
+// explicit blend writes below — the buffer/texture/matrix caches are zero in
+// the binary (str of 0) and the blend cache is add-equation/ONE/ZERO.
+//
+// The remaining fields the binary's ctor writes back state consumed only by
+// methods outside this subset, so they are intentionally not carried as
+// members: the per-texture-unit tex-param cache {4,1,7,7} (0x11c, stride 0x10;
+// the reconstructed cache lives on the texture at +0x30, see setTexParamCached),
+// the -1 bound-name sentinels (0x94[8], 0x24/0x28/0x4c/0x58/0x64/0xd8/0xe8,
+// 0x1fc..0x20c), and the 1.0f current-colour vectors (0x14, 0x1dc/0x1e0/0x1e8).
+// @complete
 neGLES_11::neGLES_11()
     : _blendEquation(GL_FUNC_ADD_OES), // ivar 0x19c  (&DAT_00008006)
       _blendSrc(BLEND_SRC_ONE),        // ivar 0x1a0  (GL_ONE ordinal)
