@@ -71,6 +71,7 @@ static UIViewController *RootVC() {
 // @ 0x7eaf8 — 61 px rows; a patterned "back_bg_st" background on phone; on iPad
 // a clear background with a "side_bar_bg" backgroundView and (pre-iOS 7) a top
 // inset.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
         self.tableView.rowHeight = 61.0f;
@@ -94,6 +95,7 @@ static UIViewController *RootVC() {
 // @ 0x7ed98 — wrap self in a navigation controller (the phone presentation):
 // install the custom phone back button and the "frirep_navbar" nav-bar art.
 // Caches the iPad flag first.
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     _isPad = neSceneManager::isPadDisplay();
 
@@ -122,6 +124,7 @@ static UIViewController *RootVC() {
 #pragma mark - Modal open/close animation (shared lifecycle)
 
 // @ 0x7efec
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -139,11 +142,13 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x7f118
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x7f130 — fade out, then notify the host.
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -160,6 +165,7 @@ static UIViewController *RootVC() {
 
 // @ 0x7f250 — tear down the toggle controls, remove the nav view, and hand
 // control back to MainViewController.
+// @complete
 - (void)endCloseAnimation {
     // NOTE: the MRC original released _effectSwitch and _simpleModeSwitch here
     // (they were alloc-owned toggle controls torn down with the nav view). Under
@@ -177,6 +183,7 @@ static UIViewController *RootVC() {
 // @ 0x7f2f0 — NOTE: the binary tail-calls the *super* viewWillDisappear: here
 // (reproduced faithfully; matches the sibling SettingOtherTableViewController —
 // likely a copy/paste artifact in the original source).
+// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewWillDisappear:animated];
 }
@@ -187,12 +194,14 @@ static UIViewController *RootVC() {
 #pragma mark - Table structure
 
 // @ 0x7f374
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 6;
 }
 
 // @ 0x7f378 — rows per section = { News:1, Settings:3, HowTo:2, Treasure:1,
 // DeviceChange:1, Inquiry:3 } (DAT_0012f880).
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     static const NSInteger kRows[6] = {1, 3, 2, 1, 1, 3};
     if (section < 6) {
@@ -202,6 +211,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x7f708 — section header titles.
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     switch (section) {
     case 0:
@@ -224,6 +234,7 @@ static UIViewController *RootVC() {
 // @ 0x7f390 — plain default cells carrying the per-row title label. Building
 // the game-effect row (section 1, row 2) also seeds the cached effect flag from
 // UserSettingData.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -286,6 +297,7 @@ static UIViewController *RootVC() {
 
 // @ 0x7f764 — on the phone the sub-screen rows carry a disclosure indicator; on
 // the iPad none do. (Sections 0/3 have no accessory; section 5 rows likewise.)
+// @complete
 - (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
          accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     switch (indexPath.section) {
@@ -330,6 +342,7 @@ static UIViewController *RootVC() {
 // @ 0x7f818 — dispatch a tap while this VC is the top of the nav stack: push
 // (or, for the iPad how-to, overlay) the matching sub-screen and play the
 // confirm SE.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController != self) {
         return;
@@ -483,6 +496,7 @@ static UIViewController *RootVC() {
 
 // @ 0x80128 — confirming the retire (button index 1) wipes the treasure temp
 // and reports back.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (alertView == _treasureRetireAlertView && index == 1) {
         [UserSettingData initTreasureTmp];
@@ -500,12 +514,14 @@ static UIViewController *RootVC() {
 #pragma mark - Actions
 
 // @ 0x801dc — back button -> fade out.
+// @complete
 - (void)settingClose {
     [self startCloseAnimation];
 }
 
 // @ 0x801ec — effect toggle: flip the cached flag, play the confirm SE, swap
 // the button art, then persist to UserSettingData.
+// @complete
 - (void)onEffectOnChanged:(id)sender {
     _isEffectOn = !_isEffectOn;
     neEngine::playSystemSe(1);
@@ -515,6 +531,7 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x8029c — simple-mode toggle: persist the switch state to UserSettingData.
+// @complete
 - (void)onSimpleModeChanged:(id)sender {
     [UserSettingData saveIsSimpleMode:_simpleModeSwitch.isOn];
 }

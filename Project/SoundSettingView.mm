@@ -189,12 +189,14 @@ static inline float SoundFixedToFP(short v) {
 
 // @ 0x81a30 -- three volume sections, plus the touch-sound picker section only
 // when the player owns two or more unlocked touch sounds.
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return (_touchSoundArray.count >= 2) ? 4 : 3;
 }
 
 // @ 0x81a60 -- one row for each volume section; the picker section has one row
 // per unlocked touch-sound kind.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (section < 3) {
         return 1;

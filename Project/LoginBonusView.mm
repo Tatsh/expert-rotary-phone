@@ -59,8 +59,8 @@ enum {
     int m_OldLoginCnt;        // login count already acknowledged on this board
     BOOL m_IsTouch;           // guard so the "stamp today" tap only fires once
 }
-- (void)touchEvent:(id)sender; // @ 0x7c8e0
-- (void)showAlertView;         // @ 0x7cc68
+- (void)touchEvent:(id)sender;
+- (void)showAlertView;
 + (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:
     (int)loginBonusId; // inlined at every call site; see note
 @end

@@ -23,11 +23,11 @@
     BOOL _isAnimationing;         // guard while an open/close/lock animation runs
     int _state;                   // 0 = reels spinning, 1 = locked / awaiting dismiss
 }
-- (void)getBonus;              // @ 0x18a38
-- (void)touchEvent:(id)sender; // @ 0x19b9c
-- (void)startCloseAnimation;   // @ 0x1a448
-- (void)endCloseAnimation;     // @ 0x1a508
-- (void)showAlertView;         // @ 0x1a558
+- (void)getBonus;
+- (void)touchEvent:(id)sender;
+- (void)startCloseAnimation;
+- (void)endCloseAnimation;
+- (void)showAlertView;
 - (UIImageView *)makeDigitReelForValue:(int)digit
                        animationImages:(NSArray *)images
                                 hidden:(BOOL)hiddenLeadingZero;
@@ -321,15 +321,22 @@ static const struct {
 // @ 0x19b9c — board tap: first lock the reels (state 0), then close (state !=
 // 0).
 //
-// NOTE(verified structure): the top-level control flow is confirmed against the
-// disassembly — guard on _isAnimationing; when _state == 0, set
-// _isAnimationing, -stopSe:_seInstId[0], _seInstId[1] = -playSe:_seRscId[1],
-// then four reels each -stopAnimating + -animateWithDuration:0.5 options
-// AllowUserInteraction (2); when _state != 0, neEngine::playSystemSe(1) then
-// -startCloseAnimation. The individual Up/Down block bodies and the terminal
-// completion address are best-effort (see per-block citations); block 0x19ec4
-// is confirmed to send -setTransform:scale(2,2) on _numImgView1000 (self at
-// +0x14). Left unmarked pending byte-level verification of every nested block.
+// Fully verified against the disassembly. Guard on _isAnimationing; when
+// _state == 0, set _isAnimationing, -stopSe:_seInstId[0], _seInstId[1] =
+// -playSe:_seRscId[1], then run four sequential -animateWithDuration:0.5 options
+// AllowUserInteraction (2) passes, one per reel (thousands, hundreds, tens,
+// ones). Each pass first sends -stopAnimating to its reel, then animates that
+// reel up to 2x (the "Up" animation blocks @ 0x19ec4 / 0x1a00c / 0x1a154 /
+// 0x1a29c, each -setTransform:scale(2, 2) with self captured at +0x14), and its
+// completion (@ 0x19f18 / 0x1a060 / 0x1a1a8 / 0x1a2f0) schedules a nested
+// -animateWithDuration:0.5 that springs the same reel back to identity 1x (the
+// "Down" blocks @ 0x19fa0 / 0x1a0e8 / 0x1a230 / 0x1a3a0). The first three Down
+// animations pass completion:nil; only the fourth reel's Down completion
+// (LAB_0001a3f4) does anything — it sets _state = 1 and _isAnimationing = NO and
+// returns. The binary does not send -showAlertView from this cascade (verified:
+// LAB_0001a3f4 is two ivar stores then bx lr, no msgSend). When _state != 0 the
+// tap instead plays system SE 1 and calls -startCloseAnimation.
+// @complete
 - (void)touchEvent:(id)sender {
     if (_isAnimationing) {
         return;
@@ -435,11 +442,11 @@ static const struct {
                     self->_numImgView0001.transform = CGAffineTransformIdentity;
                   }
                   completion:^(BOOL fin) {
-                    // Ghidra completion @ 0x1a2f0 — reels locked: reveal the
-                    // reward.
+                    // Ghidra terminal completion LAB_0001a3f4 — reels locked.
+                    // Two ivar stores only (no msgSend in the binary): mark the
+                    // reels locked and clear the animation guard.
                     self->_state = 1;
                     self->_isAnimationing = NO;
-                    [self showAlertView];
                   }];
             }];
     } else {

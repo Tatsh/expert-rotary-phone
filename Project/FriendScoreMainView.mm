@@ -101,6 +101,7 @@ typedef struct {
 
 // Score -> rank index (0 best .. 6 worst). Shared routine (Ghidra FUN_00028a40,
 // also reconstructed file-local in PlayScene.mm / FriendScoreTableCell.mm).
+// @complete
 static int scoreToRank(int score) {
     if (score >= 100000) {
         return 0;
@@ -149,6 +150,7 @@ static int scoreToRank(int score) {
 @synthesize isAnimationing = _isAnimationing;
 
 // @ 0xa9df0
+// @complete
 - (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId
     __attribute__((objc_method_family(none))) {
     // family(none) factory: returns the nav, not self, so it cannot assign self;
@@ -399,6 +401,7 @@ static int scoreToRank(int score) {
 // friend-list delegate before teardown. Kept under ARC for those side effects;
 // the ivar releases are ARC-managed (the ScoreDataStruct strings are
 // __unsafe_unretained — see honesty note).
+// @complete
 - (void)dealloc {
     [self releaseFriendScore];
     if (_dlGetFriendScore != nil) {
@@ -412,6 +415,7 @@ static int scoreToRank(int score) {
 
 // @ 0xabef8 — become DownloadMain's friend-list delegate, kick a refresh,
 // reveal the spinner.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     DownloadMain *dm = [DownloadMain getInstance];
@@ -425,6 +429,7 @@ static int scoreToRank(int score) {
 #pragma mark - Open / close animation
 
 // @ 0xabfc8 — pause the render loop and cross-fade the nav host in.
+// @complete
 - (void)startOpenAnimation {
     [(MainViewController *)neSceneManager::rootViewController() PauseLoop];
     if (_isAnimationing) {
@@ -443,12 +448,14 @@ static int scoreToRank(int score) {
 }
 
 // @ 0xac120
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xac138 — cross-fade the nav host out (cancel SE), then resume the render
 // loop.
+// @complete
 - (void)startCloseAnimation {
     if (!_isAnimationing) {
         _isAnimationing = YES;
@@ -466,6 +473,7 @@ static int scoreToRank(int score) {
 
 // @ 0xac270 — detach every delegate/data source, remove the nav host and notify
 // the root VC.
+// @complete
 - (void)endCloseAnimation {
     _tabCtrl.delegate = nil;
     _tblViewCtrlN.tableView.delegate = nil;
@@ -480,6 +488,7 @@ static int scoreToRank(int score) {
 #pragma mark - Table data source / delegate
 
 // @ 0xac384
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
@@ -499,6 +508,7 @@ static int scoreToRank(int score) {
 }
 
 // @ 0xac388 — always show at least one (placeholder) row.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     NSArray *rows = [self arrayForTableView:tableView];
     NSInteger n = rows ? (NSInteger)rows.count : 0;
@@ -508,6 +518,7 @@ static int scoreToRank(int score) {
 
 // @ 0xac45c — one FriendScoreTableCell per row; empty tables get a single
 // placeholder row.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     int page = 0;
@@ -579,6 +590,7 @@ static int scoreToRank(int score) {
 
 // @ 0xac74c — taps are inert (the screen is read-only); just validate the index
 // path.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (tableView == _tblViewCtrlN.tableView) {
         if (indexPath.section != 0) {
@@ -593,6 +605,7 @@ static int scoreToRank(int score) {
 #pragma mark - UITabBarController delegate
 
 // @ 0xaddc0 — play the decide SE when switching to a different tab.
+// @complete
 - (void)tabBarController:(UITabBarController *)tabBarController
     didSelectViewController:(UIViewController *)viewController {
     if (_selectedView == viewController) {
@@ -604,15 +617,30 @@ static int scoreToRank(int score) {
 
 #pragma mark - Downloader delegate
 
-// downloaderProceed: @ 0xadc10 / downloaderError: @ 0xadc14 — no-ops (share one
-// empty body).
+// downloaderProceed: @ 0xadc10 — a true no-op (bx lr).
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
+
+// @ 0xadc14 — the friend-score request failed: drop the downloader, hide the
+// spinner and show the communication-failure alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
+    _dlGetFriendScore = nil;
+    _dummyView.view.hidden = YES;
+    CommonAlertView *alert =
+        [[CommonAlertView alloc] initWithTitle:nil
+                                       message:@"通信に失敗しました。\n電波状態"
+                                               @"の良い場所でやり直して下さい。"
+                                      delegate:nil
+                             cancelButtonTitle:nil
+                             otherButtonTitles:@"OK"];
+    [alert show];
 }
 
 // @ 0xac7f0 — the friend-score response arrived: parse it, build the three
 // display tables.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_dlGetFriendScore getDataInJSON];
 
@@ -896,6 +924,7 @@ static int scoreToRank(int score) {
 
 // @ 0xadcec — the friend list finished refreshing: on success fetch the friend
 // scores, else hide the spinner and show an error.
+// @complete
 - (void)downloadMainFinished:(NSNumber *)success {
     if ([success boolValue]) {
         [self startGetFriendScoreHttp];
@@ -915,6 +944,7 @@ static int scoreToRank(int score) {
 #pragma mark - Navigation / networking
 
 // @ 0xaddf4 — back button: clear this song's rival records, then close.
+// @complete
 - (void)onBackButtonTouched {
     [OverScoreData deleteRecordWithMusic:(int)_musicId
                   inManagedObjectContext:[[AppDelegate appDelegate] managedObjectContext]];
@@ -922,6 +952,7 @@ static int scoreToRank(int score) {
 }
 
 // @ 0xade6c — drop the three cached display arrays.
+// @complete
 - (void)releaseFriendScore {
     _frScoreNArray = nil;
     _frScoreHArray = nil;
@@ -929,6 +960,7 @@ static int scoreToRank(int score) {
 }
 
 // @ 0xadee4 — POST "uuid=…&music=…&client_ver=…" to the friend-score URL.
+// @complete
 - (void)startGetFriendScoreHttp {
     if (_dlGetFriendScore != nil) {
         return;
@@ -938,11 +970,13 @@ static int scoreToRank(int score) {
                                                 [[AppDelegate appDelegate] uuId],
                                                 _musicId,
                                                 ver];
+    // Ghidra @ 0xae004: the Content-Type argument is "application/json" (string @
+    // 0x102bd8), not a form-urlencoded type.
     _dlGetFriendScore =
         [[Downloader alloc] initWithURL:[StoreUtil getFriendScoreURL]
                                delegate:self
                                    Post:[body dataUsingEncoding:NSUTF8StringEncoding]
-                            ContextType:@"application/x-www-form-urlencoded"];
+                            ContextType:@"application/json"];
     [_dlGetFriendScore startDownloading];
 }
 

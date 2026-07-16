@@ -47,7 +47,11 @@ typedef struct {
 // difficulty 0..2 calling readScoreDataFields (FUN_00029438) with the row in the
 // recDup slot; totalScore += score when score > 0; bestScore = max; rank tally at
 // +8 + difficulty*0x1c + rank*4 incremented when (unsigned)rank < 7; fullCombo[d]
-// (+0x5c) and perfect[d] (+0x68) incremented on their flags.
+// (+0x5c) and perfect[d] (+0x68) incremented on their flags. The (unused) `rec`
+// slot holds a don't-care value at this call site in the binary (difficulty in
+// r0); readScoreDataFields reads only recDup, so the row is passed there and the
+// vestigial slot value is immaterial.
+// @complete
 static void aggregateScoreStats(ScoreStats *out) {
     if (out == nullptr) {
         return;
@@ -403,6 +407,11 @@ static void aggregateScoreStats(ScoreStats *out) {
 
 // Modern stand-in for the binary's sortedArrayUsingFunction: (FUN_000b1934
 // total / FUN_000b18e8 best): rank by total- or best-score, descending.
+// Verified against both comparators: each -getValue: on a and b, compares the
+// total-score field (+0xc, FUN_000b1934) or the best-score field (+0x10,
+// FUN_000b18e8), returns valB - valA (higher score first), and on a tie returns
+// -1 when a.playerId (+0x0) is nil or 1 when b.playerId is nil.
+// @complete
 - (NSArray *)sortedRows:(NSArray *)rows best:(BOOL)best {
     return [rows sortedArrayUsingComparator:^NSComparisonResult(NSValue *a, NSValue *b) {
       FriendListData da, db;

@@ -57,6 +57,7 @@
 
 // Number of decimal digits of `value` (min 1, so 0 -> 1). Ghidra: countDigits @
 // 0x2d884.
+// @complete
 static int QuizCountDigits(int value) {
     int digits = 1;
     while (value > 9) {
@@ -108,6 +109,7 @@ static int QuizCountDigits(int value) {
 // boards + speech bubbles + question label), the phone backdrop / back button,
 // the dimmed spinner overlay, kick off the first quiz fetch, and load the three
 // quiz SEs.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     _finaleAnswer = -1;
@@ -297,6 +299,7 @@ static int QuizCountDigits(int value) {
 
 // @ 0xdb2a4 — cancel any in-flight requests and release the loaded SEs (kept
 // under ARC because it cancels the Downloaders and releases the SEs).
+// @complete
 - (void)dealloc {
     AudioManager *audio = [AudioManager sharedManager];
     if (_dlQuiz != nil) {
@@ -314,6 +317,7 @@ static int QuizCountDigits(int value) {
 
 // @ 0xdb3d4 — reveal the spinner overlay (the fetch was started in
 // -initWithStyle:).
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -324,11 +328,13 @@ static int QuizCountDigits(int value) {
 #pragma mark - Table
 
 // @ 0xdb464
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xdb468 — one row per non-empty answer string.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     NSInteger count = 0;
     for (NSString *answer in _quizAnswerArray) {
@@ -340,6 +346,7 @@ static int QuizCountDigits(int value) {
 }
 
 // @ 0xdb538 — one QuizCell per answer choice.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -357,11 +364,13 @@ static int QuizCountDigits(int value) {
 }
 
 // @ 0xdb674
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xdb678 — accept a row tap once, then POST the reply.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (!_isAnswerable) {
         return;
@@ -376,6 +385,7 @@ static int QuizCountDigits(int value) {
 #pragma mark - Downloader delegate
 
 // @ 0xdb730 — dispatch to the matching handler, then hide the spinner.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (_dlQuiz == downloader) {
         [self getQuizFinished];
@@ -386,11 +396,13 @@ static int QuizCountDigits(int value) {
 }
 
 // @ 0xdb7ac — progress: unused.
+// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xdb7b0 — drop the failed request, hide the spinner, show the failure
 // alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (_dlQuiz == downloader) {
         _dlQuiz = nil;
@@ -414,6 +426,7 @@ static int QuizCountDigits(int value) {
 #pragma mark - Networking
 
 // @ 0xdc2b8 — GET the daily quiz (once), revealing the spinner overlay.
+// @complete
 - (void)startGetQuizHttp {
     if (_dlQuiz != nil) {
         return;
@@ -424,6 +437,7 @@ static int QuizCountDigits(int value) {
 }
 
 // @ 0xdc36c — POST the player's answer (once), revealing the spinner overlay.
+// @complete
 - (void)startReplyQuizHttp {
     if (_dlAnswer != nil) {
         return;
@@ -443,6 +457,7 @@ static int QuizCountDigits(int value) {
 #pragma mark - Response handling
 
 // @ 0xdb968 — the get-quiz response arrived.
+// @complete
 - (void)getQuizFinished {
     NSDictionary *json = [_dlQuiz getDataInJSON];
     BOOL showError = YES;
@@ -512,6 +527,7 @@ static int QuizCountDigits(int value) {
 
 // @ 0xdbda4 — the reply-quiz response arrived: persist the totals, then grade
 // the pick.
+// @complete
 - (void)replyQuizFinished {
     AudioManager *audio = [AudioManager sharedManager];
     NSDictionary *json = [_dlAnswer getDataInJSON];
@@ -584,6 +600,7 @@ static int QuizCountDigits(int value) {
 // @ 0xdc4ec — swap the question board for the result board and lay out the
 // running correct total (pq_total%d over pq_totalbase) and the streak
 // (b_invite_num%d over pq_ans_base).
+// @complete
 - (void)drawResult {
     _totalCorrect = [UserSettingData totalCorrectQuiz];
     _totalIncorrect = [UserSettingData totalInCorrectQuiz];
@@ -609,8 +626,10 @@ static int QuizCountDigits(int value) {
     if (digits > 0) {
         int x = digits * 10 + 0x6b;
         do {
+            // The CFString @ 0x11518e is "pq_total_%d" (with the trailing
+            // underscore); confirmed by read_memory.
             UIImage *digitImg =
-                [UIImage imageNamed:[NSString stringWithFormat:@"pq_total%d", value % 10]];
+                [UIImage imageNamed:[NSString stringWithFormat:@"pq_total_%d", value % 10]];
             UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
             digitView.frame =
                 CGRectMake((CGFloat)x, 58.0f, digitImg.size.width, digitImg.size.height);
@@ -651,7 +670,10 @@ static int QuizCountDigits(int value) {
 }
 
 // @ 0xdca68 — a tap on the graded board: draw the result (first time), then
-// toggle the present-reward popup in (state 1) / out (state 2).
+// toggle the present-reward popup in (state 1) / out (state 2). The present-num
+// digits are drawn from a 10-entry image-name table in the binary; the
+// stringWithFormat:@"pq_present_num%d_2x" reconstruction produces identical names.
+// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     if (_finaleAnswer < 0) {
         return;
@@ -714,6 +736,7 @@ static int QuizCountDigits(int value) {
 #pragma mark - Actions
 
 // @ 0xdb8cc — back button: restore the menu navbar art and pop.
+// @complete
 - (void)touchedBackButton:(id)sender {
     neEngine::playSystemSe(2); // cancel/back SE
     [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]

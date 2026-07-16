@@ -19,14 +19,13 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
     NSString *_dataType;
 }
 
-// @ 0xf69a8 — SHA-1 of a data blob (used to derive the per-record AES key).
+// SHA-1 of a data blob (used to derive the per-record AES key).
 + (NSData *)createHash:(NSData *)data;
 
-// @ 0xf6a54 — AES-128/PKCS7 encrypt (kCCEncrypt) or decrypt (kCCDecrypt)
-// `value`.
+// AES-128/PKCS7 encrypt (kCCEncrypt) or decrypt (kCCDecrypt) `value`.
 + (NSData *)cryptorToData:(CCOperation)operation value:(NSData *)value key:(NSData *)key;
 
-// @ 0xf6718 — ensure a decoded record dictionary carries the required keys.
+// Ensure a decoded record dictionary carries the required keys.
 + (BOOL)validate:(NSDictionary *)data error:(NSError **)error;
 
 @end

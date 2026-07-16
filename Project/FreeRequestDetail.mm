@@ -88,8 +88,14 @@
 // -touchedCancel; charaId clamped to >= 0 and the > 29 bundled/downloaded split
 // (phone "sgc_icon_%03d.png", pad "sugo_chara_%03d.png"); the count sheet runs
 // grade 0..3 x diff 0..2 at y = 0x95 + grade*0x23, then Perfect at y = 0x121 and
-// FullCombo at y = 0x143. The per-label sub-view frame arithmetic remains
-// best-effort (see the honesty note above); left unmarked accordingly.
+// FullCombo at y = 0x143. The per-label sub-view frame arithmetic is now derived
+// from the disassembly: the name label frame is (72, 30, 176, 24) * scale, and
+// the id / caption labels measure their text then lay out horizontally centred on
+// 212 with the top at y = 60 (id) / y = 81 (caption), scaling the whole frame;
+// the CGRect argument order (x = r2, y = r3, width = sp[0], height = sp[4]) was
+// cross-checked against the immediate-encoded chara / button frames in the same
+// method.
+// @complete
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData {
     if ((self = [super initWithFrame:frame])) {
         _friendData = friendData;
@@ -202,15 +208,25 @@
         nameLbl.font = [UIFont fontWithName:AppFontName() size:20.0f * _scaleForPad];
         nameLbl.minimumScaleFactor = 0.5f;
         nameLbl.textAlignment = NSTextAlignmentCenter;
-        nameLbl.frame = CGRectMake(28.0f * _scaleForPad,
+        // Frame (72, 30, 176, 24) * scale. Verified against the setFrame register
+        // layout (x = r2 = 72.0 (DAT_000e3954), y = r3 = 30.0 (0x41f00000),
+        // width = sp[0] = 176.0 (DAT_000e3958), height = sp[4] = 24.0
+        // (0x41c00000)); the CGRect arg order was cross-checked against the
+        // immediate-encoded chara frames in the same method.
+        nameLbl.frame = CGRectMake(72.0f * _scaleForPad,
                                    30.0f * _scaleForPad,
                                    176.0f * _scaleForPad,
-                                   60.0f * _scaleForPad); // approx (DAT 0xe3958/0xe3954)
+                                   24.0f * _scaleForPad);
         nameLbl.adjustsFontSizeToFitWidth = YES;
         [window addSubview:nameLbl];
 
-        // Player-id label (15pt * scale). On pad the frame is re-centred
-        // (approximated).
+        // Player-id label (15pt * scale). The binary measures the text (via
+        // -sizeWithFont:constrainedToSize:(640, 1136)) and lays it out
+        // horizontally centred on 212 with its top at y = 60, then scales the
+        // whole frame: frame = ((212 - w/2), 60, w, h) * scale (x from
+        // DAT_000e3964 = 212.0, y from DAT_000e3968 = 60.0). On iPad the label is
+        // then re-centred (its frame centre nudged down by 5.0, DAT 0x40a00000)
+        // and the font re-set to 15pt * scale.
         UILabel *idLbl = [[UILabel alloc] init];
         idLbl.backgroundColor = [UIColor clearColor];
         idLbl.textColor = textColor;
@@ -219,11 +235,19 @@
         idLbl.adjustsFontSizeToFitWidth = YES;
         idLbl.textAlignment = NSTextAlignmentCenter;
         [idLbl sizeToFit];
-        idLbl.center = CGPointMake(80.0f * _scaleForPad,
-                                   212.0f * _scaleForPad + 5.0f); // approx (DAT 0xe3960/0xe3964)
+        CGSize idSize = idLbl.bounds.size;
+        idLbl.frame = CGRectMake((212.0f - idSize.width * 0.5f) * _scaleForPad,
+                                 60.0f * _scaleForPad,
+                                 idSize.width * _scaleForPad,
+                                 idSize.height * _scaleForPad);
+        if (isPad) {
+            idLbl.center = CGPointMake(idLbl.center.x, idLbl.center.y + 5.0f);
+        }
         [window addSubview:idLbl];
 
-        // Caption label (Ghidra cf__ — a short JP static string).
+        // Caption label (Ghidra cf__ — a short JP static string). Same layout as
+        // the id label but with its top at y = 81 (DAT_000e40a8 = 81.0) instead
+        // of 60, sharing the horizontal centre 212.
         UILabel *captionLbl = [[UILabel alloc] init];
         captionLbl.backgroundColor = [UIColor clearColor];
         captionLbl.textColor = textColor;
@@ -231,8 +255,14 @@
         captionLbl.font = [UIFont fontWithName:AppFontName() size:15.0f * _scaleForPad];
         captionLbl.textAlignment = NSTextAlignmentCenter;
         [captionLbl sizeToFit];
-        captionLbl.center = CGPointMake(81.0f * _scaleForPad,
-                                        212.0f * _scaleForPad + 5.0f); // approx (DAT 0xe40a8)
+        CGSize capSize = captionLbl.bounds.size;
+        captionLbl.frame = CGRectMake((212.0f - capSize.width * 0.5f) * _scaleForPad,
+                                      81.0f * _scaleForPad,
+                                      capSize.width * _scaleForPad,
+                                      capSize.height * _scaleForPad);
+        if (isPad) {
+            captionLbl.center = CGPointMake(captionLbl.center.x, captionLbl.center.y + 5.0f);
+        }
         [window addSubview:captionLbl];
 
         // Per-difficulty count sheet on the card: 4 clear-medal grades (S/AAA/AA/A)

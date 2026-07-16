@@ -42,6 +42,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x620f4 — a GET request.
+// @complete
 - (instancetype)initWithURL:(NSURL *)url delegate:(id<DownloaderDelegate>)delegate {
     if ((self = [super init])) {
         m_Request = [[NSMutableURLRequest alloc]
@@ -58,6 +59,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x6224c — a POST request with a body + Content-Type.
+// @complete
 - (instancetype)initWithURL:(NSURL *)url
                    delegate:(id<DownloaderDelegate>)delegate
                        Post:(NSData *)body
@@ -82,6 +84,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x623f0 — start the connection (once) and stamp the start time.
+// @complete
 - (void)startDownloading {
     if (m_Connection != nil || m_Task != nil) {
         return;
@@ -125,6 +128,7 @@ static const NSTimeInterval kTimeout = 15.0;
 // @ 0x6249c — abort in flight. Clears the (unretained) delegate first so a
 // callback already queued on the run loop is ignored, then tears down the
 // connection + buffer.
+// @complete
 - (void)cancel {
     m_Delegate = nil;
 #if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
@@ -144,12 +148,14 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x62938 — the raw buffered response bytes.
+// @complete
 - (NSData *)getData {
     return m_DownloadedData;
 }
 
 // @ 0x62948 — decode the buffered body as JSON (system serializer, TouchJSON
 // fallback).
+// @complete
 - (NSDictionary *)getDataInJSON {
     if (m_DownloadedData == nil) {
         return nil;
@@ -163,12 +169,14 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x62888 — bytes buffered so far (the live length of the response buffer).
+// @complete
 - (NSUInteger)currentSize {
     return m_DownloadedData.length;
 }
 
 // @ 0x628a8 — fractional progress: buffered bytes over the expected content
 // length, or 0 when the length is not (yet) known / non-positive.
+// @complete
 - (float)currentProgress {
     if (m_DownloadSize > 0) {
         // Ghidra @ 0x62912: the ratio is saturated to 1.0 (vcmpe.f32 s0,#1.0 +
@@ -179,12 +187,15 @@ static const NSTimeInterval kTimeout = 15.0;
     return 0.0f;
 }
 
-// @ 0x629bc — time interval relative to the download's start (as-decompiled:
-// -timeIntervalSinceNow, negative and growing while in flight); 0 before
+// @ 0x629bc — elapsed seconds since the download started; 0 before
 // startDownloading.
+// @complete
 - (NSTimeInterval)getProgressSec {
     if (m_StartTime != nil) {
-        return [m_StartTime timeIntervalSinceNow];
+        // Ghidra @ 0x629e6: the result of -timeIntervalSinceNow (negative for a
+        // past date) is negated (vneg.f64 d16,d16), yielding the positive elapsed
+        // interval.
+        return -[m_StartTime timeIntervalSinceNow];
     }
     return 0.0;
 }
@@ -196,6 +207,7 @@ static const NSTimeInterval kTimeout = 15.0;
 // when the response was treated as a hard error and buffering should be skipped.
 // Funnelled into by both the NSURLConnection delegate (old SDK) and the
 // NSURLSession completion handler (modern SDK).
+// @complete
 - (BOOL)handleResponse:(NSURLResponse *)response {
     if ([response respondsToSelector:@selector(statusCode)] &&
         [(NSHTTPURLResponse *)response statusCode] == 404) {
@@ -214,6 +226,7 @@ static const NSTimeInterval kTimeout = 15.0;
 
 // @ 0x6267c — buffer the body (lazily creating a 64 KB-seeded NSMutableData) and
 // notify the delegate of progress.
+// @complete
 - (void)handleData:(NSData *)data {
     if (m_DownloadedData == nil) {
         m_DownloadedData = [[NSMutableData alloc] initWithCapacity:0x10000];
@@ -225,6 +238,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x627f4 — notify success.
+// @complete
 - (void)handleFinish {
     if ([m_Delegate respondsToSelector:@selector(downloaderFinished:)]) {
         [m_Delegate performSelector:@selector(downloaderFinished:) withObject:self];
@@ -232,6 +246,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x6273c — release the buffered data and notify failure.
+// @complete
 - (void)handleFailWithError:(NSError *)error {
     if (m_DownloadedData != nil) {
         m_DownloadedData = nil;
@@ -248,6 +263,7 @@ static const NSTimeInterval kTimeout = 15.0;
 // @ 0x62514 — capture the expected length and pre-size the buffer. A 404 is
 // treated as a hard error: cancel the connection and notify the delegate
 // instead of buffering.
+// @complete
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     if ([response respondsToSelector:@selector(statusCode)] &&
         [(NSHTTPURLResponse *)response statusCode] == 404) {
@@ -269,6 +285,7 @@ static const NSTimeInterval kTimeout = 15.0;
 
 // @ 0x6267c — buffer each chunk (lazily creating a 64 KB-seeded NSMutableData)
 // and notify the delegate of progress.
+// @complete
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     if (m_DownloadedData == nil) {
         m_DownloadedData = [[NSMutableData alloc] initWithCapacity:0x10000];
@@ -280,6 +297,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x627f4 — release the connection and notify success.
+// @complete
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     if (m_Connection == connection) {
         m_Connection = nil;
@@ -290,6 +308,7 @@ static const NSTimeInterval kTimeout = 15.0;
 }
 
 // @ 0x6273c — release the connection + buffered data and notify failure.
+// @complete
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     if (m_Connection == connection) {
         m_Connection = nil;
@@ -308,6 +327,7 @@ static const NSTimeInterval kTimeout = 15.0;
 // dealloc still does real work — drop the (unretained) delegate and cancel the
 // connection so a callback already queued on the run loop can't fire after the
 // object is gone.
+// @complete
 - (void)dealloc {
     m_Delegate = nil;
 #if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0

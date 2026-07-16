@@ -44,10 +44,11 @@
 // strings.
 - (NSDictionary *)convertToData:(NSDictionary *)dict;
 
-// Crypto helpers (class methods on RecommendAdId).
-+ (NSString *)sha1:(NSString *)string;                                             // @ 0xeac08
-+ (NSData *)createHash:(NSData *)data;                                             // @ 0xea72c
-+ (NSData *)cryptorToData:(uint)operation value:(NSData *)value key:(NSData *)key; // @ 0xea7d8
+// Crypto helpers (class methods on RecommendAdId). Their implementations below
+// carry the Ghidra address citations.
++ (NSString *)sha1:(NSString *)string;
++ (NSData *)createHash:(NSData *)data;
++ (NSData *)cryptorToData:(uint)operation value:(NSData *)value key:(NSData *)key;
 
 @end
 

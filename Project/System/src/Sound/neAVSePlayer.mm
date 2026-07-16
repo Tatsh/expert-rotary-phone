@@ -35,6 +35,7 @@
 // flag (the data slot stays nil). The URL copy is owned by this object, so the
 // __unsafe_unretained av.url stays valid for as long as the source table keeps
 // this descriptor alive.
+// @complete
 - (instancetype)initWithURL:(NSURL *)url loop:(BOOL)loop {
     if ((self = [super init])) {
         _url = [url copy];
@@ -52,6 +53,7 @@ constexpr float kAVSeVolumeScale = 127.0f; // Ghidra: DAT_00020f84 (raw 0..127 -
 
 // Ghidra: soundEngine_ctor @ 0x2120c -> audioMixerInit @ 0x20d1c. Build the
 // AVBus voice pool and the (empty) source table + name map.
+// @complete
 void neAVSePlayer::systemStart(int voices) {
     m_voiceCount = voices;
     m_buses = [[NSMutableArray alloc] init];
@@ -64,6 +66,7 @@ void neAVSePlayer::systemStart(int voices) {
 
 // Ghidra: audioMixerDtor @ 0x212a0 (the source table + name map teardown; the
 // AVBus pool and its array are released here too under ARC).
+// @complete
 neAVSePlayer::~neAVSePlayer() {
     m_sources = nil;
     m_nameMap = nil;
@@ -73,6 +76,7 @@ neAVSePlayer::~neAVSePlayer() {
 // Register a new source: build its descriptor (soundSourceInit) and drop it
 // into a reserved slot (allocSoundSlot), mirroring registerSound @ 0x212d0
 // (soundSourceInit + allocSoundSlot + store).
+// @complete
 int neAVSePlayer::addSource(NSURL *url, bool loop) {
     neSeSource *source = [[neSeSource alloc] initWithURL:url loop:loop];
     int slot = allocSoundSlot();
@@ -85,6 +89,7 @@ int neAVSePlayer::addSource(NSURL *url, bool loop) {
 // pointer array in blocks of 20 and hands back the old element count; the ARC
 // table (NSNull marks a free slot) grows one element at a time, which is
 // behaviourally identical to callers.
+// @complete
 int neAVSePlayer::allocSoundSlot() {
     for (NSUInteger i = 0; i < m_sources.count; i++) {
         if (m_sources[i] == NSNull.null) {
@@ -96,6 +101,7 @@ int neAVSePlayer::allocSoundSlot() {
 }
 
 // Ghidra: registerSound @ 0x212d0.
+// @complete
 int neAVSePlayer::load(NSURL *url, bool loop) {
     if (url == nil) {
         NSLog(@"AVSePlayer load: null url");
@@ -105,6 +111,10 @@ int neAVSePlayer::load(NSURL *url, bool loop) {
 }
 
 // Ghidra: registerSoundNamed @ 0x21328.
+// The binary builds a throwaway neSeSource before delegating to registerSound
+// (which builds the real one); only the load()/map/return path is observable, so
+// the redundant pre-init is omitted. Ghidra: 0x21374 (pre-init) + 0x21394 (load).
+// @complete
 int neAVSePlayer::loadNamed(NSURL *url, NSString *callName, bool loop) {
     if (m_nameMap[callName] != nil) {
         NSLog(@"AVSePlayer loadNamed: already registered");
@@ -121,6 +131,7 @@ int neAVSePlayer::loadNamed(NSURL *url, NSString *callName, bool loop) {
 // Ghidra: findFreeAudioBus @ 0x20f88 / isAudioBusFree @ 0x21114 — the first
 // voice whose status is free (none / stopped) or merely prepared (a playing or
 // paused voice is busy); -1 if none.
+// @complete
 static int findFreeBus(NSArray *buses, int count) {
     for (int i = 0; i < count; i++) {
         AVBus *bus = buses[i];
@@ -140,6 +151,7 @@ static int findFreeBus(NSArray *buses, int count) {
 // audioMixer object, +4 = voiceCount, +8 = voice array). The AVFoundation
 // routing flag the AudioManager packs into the handle is masked off here so
 // callers can pass the raw play handle straight through.
+// @complete
 AVBus *neAVSePlayer::busForHandle(uint32_t handle) {
     uint32_t bits = (handle & kAVSePlayerHandleFlag) ? (handle & 0x0fffffff) : 0xffffffffu;
     int index = (int)(bits >> 16);
@@ -153,6 +165,9 @@ AVBus *neAVSePlayer::busForHandle(uint32_t handle) {
 // Ghidra: audioPlaySource @ 0x20ed8 — grab a free voice, (re)load the source
 // onto it, prepare it, pack the play handle (voice << 16 | id) and apply the
 // volume. Returns -1 when the pool is full.
+// The binary passes the volume as a raw integer (vcvt.f32.s32) and divides by
+// DAT_00020f84 (127.0f); modelled here as a float 0..127 for the same result.
+// @complete
 static uint32_t audioPlaySource(NSArray *buses, int count, neSeSource *source, float volume) {
     int busIndex = findFreeBus(buses, count);
     if (busIndex == -1) {
@@ -170,6 +185,7 @@ static uint32_t audioPlaySource(NSArray *buses, int count, neSeSource *source, f
 }
 
 // Ghidra: playSoundByIndex @ 0x21438.
+// @complete
 uint32_t neAVSePlayer::prepare(uint32_t sourceId, float volume) {
     if ((int)sourceId >= (int)m_sources.count) {
         return 0;
@@ -183,6 +199,7 @@ uint32_t neAVSePlayer::prepare(uint32_t sourceId, float volume) {
 }
 
 // Ghidra: playSoundNamed @ 0x21464.
+// @complete
 uint32_t neAVSePlayer::prepareNamed(NSString *callName, float volume) {
     NSNumber *rid = m_nameMap[callName];
     if (rid != nil) {
@@ -191,7 +208,8 @@ uint32_t neAVSePlayer::prepareNamed(NSString *callName, float volume) {
     return 0;
 }
 
-// Ghidra: audioHandlePlay @ 0x214a8.
+// Ghidra: audioHandlePlay @ 0x214a8 (flag mask) -> 0x20fb4 (resolve + play).
+// @complete
 bool neAVSePlayer::play(uint32_t handle) {
     AVBus *bus = busForHandle(handle);
     if (bus != nil) {
@@ -201,7 +219,8 @@ bool neAVSePlayer::play(uint32_t handle) {
     return false;
 }
 
-// Ghidra: audioHandleStop @ 0x214c0.
+// Ghidra: audioHandleStop @ 0x214c0 (flag mask) -> 0x2101c (resolve + stop).
+// @complete
 bool neAVSePlayer::stop(uint32_t handle) {
     AVBus *bus = busForHandle(handle);
     if (bus != nil) {
@@ -211,7 +230,8 @@ bool neAVSePlayer::stop(uint32_t handle) {
     return false;
 }
 
-// Ghidra: audioHandlePause @ 0x214d8.
+// Ghidra: audioHandlePause @ 0x214d8 (flag mask) -> 0x21040 (resolve + pause).
+// @complete
 bool neAVSePlayer::pause(uint32_t handle) {
     AVBus *bus = busForHandle(handle);
     if (bus != nil) {
@@ -221,7 +241,8 @@ bool neAVSePlayer::pause(uint32_t handle) {
     return false;
 }
 
-// Ghidra: audioHandleStopAndRemove @ 0x21588.
+// Ghidra: audioHandleStopAndRemove @ 0x21588 (flag mask) -> 0x211d8.
+// @complete
 void neAVSePlayer::stopAndRemove(uint32_t handle) {
     AVBus *bus = busForHandle(handle);
     if (bus != nil) {
@@ -230,7 +251,8 @@ void neAVSePlayer::stopAndRemove(uint32_t handle) {
     }
 }
 
-// Ghidra: audioHandleGetStatus @ 0x214f0.
+// Ghidra: audioHandleGetStatus @ 0x214f0 (flag mask) -> 0x21064 (resolve + status).
+// @complete
 int neAVSePlayer::voiceState(uint32_t handle) {
     AVBus *bus = busForHandle(handle);
     if (bus == nil) {
@@ -241,6 +263,7 @@ int neAVSePlayer::voiceState(uint32_t handle) {
 
 // Ghidra: audioRemoveSourceAll @ 0x21168 — detach `source` from every voice
 // still holding it.
+// @complete
 static void audioRemoveSourceAll(NSArray *buses, int count, neSeSource *source) {
     for (int i = 0; i < count; i++) {
         AVBus *bus = buses[i];
@@ -251,6 +274,7 @@ static void audioRemoveSourceAll(NSArray *buses, int count, neSeSource *source) 
 }
 
 // Ghidra: unregisterSound @ 0x213d4.
+// @complete
 void neAVSePlayer::unregisterSource(uint32_t sourceId) {
     if ((int)sourceId >= (int)m_sources.count) {
         return;
@@ -267,6 +291,7 @@ void neAVSePlayer::unregisterSource(uint32_t sourceId) {
 }
 
 // Ghidra: unregisterSoundNamed @ 0x213fc.
+// @complete
 void neAVSePlayer::unregisterSourceNamed(NSString *callName) {
     NSNumber *rid = m_nameMap[callName];
     if (rid != nil) {
@@ -282,6 +307,7 @@ void neAVSePlayer::setGroupVolume(float volume) {
 }
 
 // Ghidra: audioPauseAll @ 0x21288 — pause every voice.
+// @complete
 void neAVSePlayer::suspend() {
     for (AVBus *bus in m_buses) {
         [bus pause];
@@ -289,6 +315,7 @@ void neAVSePlayer::suspend() {
 }
 
 // Ghidra: audioResumeAll @ 0x21294 — resume every paused voice.
+// @complete
 void neAVSePlayer::resume() {
     for (AVBus *bus in m_buses) {
         [bus offPause];

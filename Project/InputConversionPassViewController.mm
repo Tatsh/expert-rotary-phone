@@ -68,6 +68,7 @@
 #import <QuartzCore/QuartzCore.h> // CALayer cornerRadius on the indicator
 
 // Score -> rank index (0 best .. 6 worst). Ghidra: FUN_00028a40 (scoreToRank).
+// @complete
 static int scoreToRank(int score) {
     if (score >= 100000) {
         return 0;
@@ -91,8 +92,9 @@ static int scoreToRank(int score) {
 }
 
 // Sugoroku (treasure-map) main-map id -> touch-sound bit index (0 for
-// out-of-range). Ghidra: neSugorokuTouchSoundBit (matches UserSettingData.mm's
-// file-local copy).
+// out-of-range). Ghidra: neSugorokuTouchSoundBit (FUN_000a218c; matches
+// UserSettingData.mm's file-local copy).
+// @complete
 static int neSugorokuTouchSoundBit(int mainMapId) {
     static const int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     unsigned id = (unsigned)mainMapId & 0xffff;
@@ -117,6 +119,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x911d0 — build the input panel: (pad) a tap-to-dismiss dimmed cover, the
 // board backdrop, the id / pass boards each holding a centred text field, the
 // decide button, and the (detached) activity indicator.
+// @complete
 - (instancetype)init {
     self = [super init];
     if (self == nil) {
@@ -242,6 +245,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // @ 0x91e84 — phone entry point: wrap self in a nav controller with a custom
 // back button and the convert nav-bar art, and return that host.
+// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     InputConversionPassViewController *content = [self init];
     if (content == nil) {
@@ -271,12 +275,14 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // ARC-omitted.
 
 // @ 0x920b4 — nav-bar back button: play the cancel SE and run the close fade.
+// @complete
 - (void)onBackBtn {
     neEngine::playSystemSe(2);
     [self startCloseAnimation];
 }
 
 // @ 0x920e8 — fade the panel (and its embedded nav view) in over 0.3 s.
+// @complete
 - (void)startOpenAnimation {
     if (m_IsAnimationing) {
         return;
@@ -295,12 +301,14 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x92220
+// @complete
 - (void)endOpenAnimation {
     m_IsAnimationing = NO;
 }
 
 // @ 0x92238 — fade the panel out over 0.3 s (suspending root input for the
 // transition).
+// @complete
 - (void)startCloseAnimation {
     if (m_IsAnimationing) {
         return;
@@ -320,6 +328,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x92368 — close fade finished: tear down and notify the root view
 // controller. (The binary also -releases _idField / _passField / _indicator
 // here; ARC-stripped.)
+// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
@@ -336,16 +345,19 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // viewDidDisappear: @ 0x92514 — super-only override, omitted.
 
 // @ 0x92540 — portrait only.
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
 // @ 0x9254c
+// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     return YES;
 }
 
 // @ 0x92550 — Done/return dismisses the keyboard on whichever field is active.
+// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     if (_idField == textField) {
         [textField resignFirstResponder];
@@ -358,6 +370,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // @ 0x925a4 — decide tapped: if both fields are non-empty, dismiss the
 // keyboards, POST the convert request, and play the decide SE.
+// @complete
 - (void)touchedDecideButton:(id)sender {
     NSString *playerId = _idField.text;
     NSString *pass = _passField.text;
@@ -370,6 +383,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x92664 — length-limit the two fields (id: max 7 chars, pass: max 6 chars).
+// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -383,6 +397,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x926e0 — POST succeeded: on no ErrorCode, restore the entire server-side
 // save into UserSettingData + the Core Data stores and show the "done" alert;
 // otherwise show the id/pass-mismatch alert and drop the request.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_downloader getDataInJSON];
     id errorCode = [json objectForKey:@"ErrorCode"];
@@ -607,6 +622,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x93938 — POST failed: drop the request and show the network-error alert.
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     [_indicator stopAnimating];
     _downloader = nil;
@@ -624,6 +640,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x93a00 — build and POST {uuid, player_id, convert_code} to the convert
 // endpoint. No-op while a request is already in flight; validates the two
 // fields first.
+// @complete
 - (void)startConversionHttpWithId:(NSString *)playerId pass:(NSString *)pass {
     if (_downloader != nil) {
         return;
@@ -660,6 +677,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x93c38 — YES when every character of the id is alphanumeric (a-z A-Z 0-9).
+// @complete
 - (BOOL)checkUsableCharacterForId:(NSString *)str {
     NSMutableCharacterSet *set = [[NSMutableCharacterSet alloc] init];
     [set addCharactersInString:@"abcdefghijklmnopqrstuvwxyz"];
@@ -669,6 +687,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x93cf0 — YES when every character of the pass is a digit (0-9).
+// @complete
 - (BOOL)checkUsableCharacterForPass:(NSString *)str {
     NSMutableCharacterSet *set = [[NSMutableCharacterSet alloc] init];
     [set addCharactersInString:@"0123456789"];
@@ -676,12 +695,14 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 }
 
 // @ 0x93d80 — any alert dismissal runs the close fade.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     [self startCloseAnimation];
 }
 
 // @ 0x93d90 — pad cover tap: play the cancel SE and run the close fade (unless
 // a fade is already running).
+// @complete
 - (void)handleTapCoverView {
     if (m_IsAnimationing) {
         return;

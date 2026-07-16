@@ -30,6 +30,7 @@ static UIViewController *RootVC() {
 // Ghidra: setNavViewFrameD @ 0x2a458
 // Slides the navigation controller view to y = 420.0.
 // Animations block, first phase of the iPad open animation.
+// @complete
 static void setNavViewFrameD(OverScoreLogViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -40,6 +41,7 @@ static void setNavViewFrameD(OverScoreLogViewController *self) {
 // Ghidra: setNavViewFrameE @ 0x2a590
 // Settles the navigation controller view to y = 470.0.
 // Animations block of the settle phase (second step of open).
+// @complete
 static void setNavViewFrameE(OverScoreLogViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -50,6 +52,7 @@ static void setNavViewFrameE(OverScoreLogViewController *self) {
 // Ghidra: setNavViewFrameF @ 0x2a838
 // Slides the navigation controller view back to y = 420.0.
 // Animations block, first phase of the iPad close animation.
+// @complete
 static void setNavViewFrameF(OverScoreLogViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -62,6 +65,7 @@ static void setNavViewFrameF(OverScoreLogViewController *self) {
 // Animations block, second phase of the iPad close animation.  Captures self
 // and a reference UIViewController; sets nav-view origin.y to refController's
 // view height.
+// @complete
 static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
                                         UIViewController *refController) {
     UIView *navView = self.navigationController.view;
@@ -90,6 +94,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 // @ 0x29928 — build the transparent, separator-less table: a clear 20-pt spacer
 // header, the "friman" backdrop (phone) / clear (iPad), and a hidden dimmed
 // loading overlay with a large spinner.
+// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if (!(self = [super initWithStyle:style])) {
         return nil;
@@ -151,6 +156,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 // @ 0x29e24 — keep the C++ task pointer, (re)build the table via
 // initWithStyle:, wrap self in a UINavigationController (with a back button on
 // phone) and return that nav controller.
+// @complete
 - (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none))) {
     _musicSelTask = musicSelTask;
@@ -174,6 +180,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 // dealloc @ 0x29fd8 — ARC omits the -release of _overScoreLogDataArray /
 // _dummyView; kept only to detach self as DownloadMain's over-score-log
 // delegate (a non-object side effect ARC can't do).
+// @complete
 - (void)dealloc {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl delegateGetOverScoreLog] == self) {
@@ -183,6 +190,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 // @ 0x2a08c — reveal the spinner overlay, reset the pending selection, register
 // as DownloadMain's over-score-log delegate and kick off the download.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -207,6 +215,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 // @ 0x2a1b0 — fade the view + nav view in (phone) or slide the nav view up into
 // place (iPad).
+// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -253,12 +262,14 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 }
 
 // @ 0x2a664
+// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x2a678 — fade (phone) / slide (iPad) the panel out; the completion
 // (endCloseAnimation) launches the selected play.
+// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -319,27 +330,33 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0x2ab80
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x2ab84 — row height is the "osl_friend_banner" image's height.
+// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     UIImage *banner = [UIImage imageNamed:@"osl_friend_banner"];
     return banner ? banner.size.height : 0.0f;
 }
 
 // @ 0x2abe0 — one row per downloaded log entry.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (_overScoreLogDataArray != nil) ? (NSInteger)_overScoreLogDataArray.count : 0;
 }
 
-// @ 0x2ac1c — one OverScoreLogCell per entry (reused by "Cell%ld_%ld"), bound
+// @ 0x2ac1c — one OverScoreLogCell per entry (reused by "Cell%ld-%ld"), bound
 // to its boxed data.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Ghidra @ 0x2ac7e: the reuse-identifier format is "Cell%ld-%ld" (hyphen) —
+    // string @ 0x134e38 (shared with the other table cells).
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     OverScoreLogCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[OverScoreLogCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -351,6 +368,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 // @ 0x2ad28 — a row was picked: remember its music id / sheet and fade the
 // panel closed (the close completion launches the play).
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     OverScoreLogData data;
     [(NSValue *)[_overScoreLogDataArray objectAtIndex:indexPath.row] getValue:&data];
@@ -363,6 +381,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
 // @ 0x2adac — the over-score-log download finished: hide the spinner, then
 // either alert on failure or swap in the parsed list and reload.
+// @complete
 - (void)downloadMainFinished:(NSNumber *)success {
     _dummyView.view.hidden = YES;
     DownloadMain *dl = [DownloadMain getInstance];
@@ -384,6 +403,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 #pragma mark - Actions
 
 // @ 0x2aefc — the back button: play the cancel SE and fade the panel closed.
+// @complete
 - (void)backButtonFunc {
     neSceneManager::shared();
     neEngine::playSystemSe(2);

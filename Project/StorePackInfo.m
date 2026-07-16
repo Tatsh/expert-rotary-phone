@@ -14,6 +14,7 @@
 @implementation StorePackInfo
 
 // @ 0x568ac — record the pack id; product/details are filled in later.
+// @complete
 - (instancetype)initWithPackID:(int)packID {
     if ((self = [super init])) {
         [self setPackID:packID];
@@ -23,6 +24,7 @@
 
 // @ 0x5680c — build straight from a resolved product; derive the pack id from
 // it.
+// @complete
 - (instancetype)initWithProduct:(SKProduct *)product {
     if ((self = [super init]) && product != nil) {
         [self setProduct:product];
@@ -32,20 +34,24 @@
 }
 
 // @ 0x57370 / 0x5692c
+// @complete
 - (int)packID {
     return m_PackID;
 }
 
+// @complete
 - (void)setPackID:(int)packID {
     m_PackID = packID;
 }
 
 // @ 0x573b0
+// @complete
 - (SKProduct *)product {
     return m_Product;
 }
 
 // @ 0x568f4 — bind the StoreKit product exactly once.
+// @complete
 - (BOOL)setProduct:(SKProduct *)product {
     if (m_Product == nil) {
         if (product == nil) {
@@ -58,6 +64,7 @@
 }
 
 // @ 0x5693c — apply a server pack dictionary; only if the id matches ours.
+// @complete
 - (BOOL)setDictionary:(NSDictionary *)dictionary {
     if ([dictionary[@"ID"] intValue] != m_PackID) {
         return NO;
@@ -115,6 +122,7 @@
 }
 
 // @ 0x56d7c — build up to 4 StoreMusicInfo; ignored if already built.
+// @complete
 - (BOOL)setMusicInfo:(NSArray *)musicList {
     if (m_MusicInfos != nil) {
         return YES;
@@ -140,6 +148,7 @@
 }
 
 // @ 0x56f40 — build the arcade-viewer song list; ignored if already built.
+// @complete
 - (BOOL)setAcvMusicInfo:(NSArray *)acvMusicList {
     if (m_AcvMusicInfos != nil) {
         return YES;
@@ -162,57 +171,68 @@
 }
 
 // @ 0x573a0 / 0x573d0 / 0x573c0 — name, full comment, short blurb.
+// @complete
 - (NSString *)packName {
     return m_PackName;
 }
 
 // @ 0x573d0 (the accessor for m_Comment; the decompiler mis-typed its
 // signature).
+// @complete
 - (NSString *)comment {
     return m_Comment;
 }
 
 // @ 0x573c0
+// @complete
 - (NSString *)s_comment {
     return m_ShortComment;
 }
 
 // @ 0x57380
+// @complete
 - (BOOL)isNew {
     return m_IsNew;
 }
 
 // @ 0x573e0
+// @complete
 - (NSString *)copyright {
     return m_Copyright;
 }
 
 // @ 0x57390 + the sibling URL accessors populated by setDictionary:.
+// @complete
 - (NSString *)artworkURL {
     return m_ArtworkURL;
 }
 
 // @ 0x57410
+// @complete
 - (NSString *)artistURL {
     return m_ArtistURL;
 }
 
 // @ 0x57420 — Ghidra selector "bunnerURL"; plain read of m_ArtistBunnerURL.
+// @complete
 - (NSString *)artistBunnerURL {
     return m_ArtistBunnerURL;
 }
 
 // @ 0x57430
+// @complete
 - (int)acvNum {
     return m_AcvNum;
 }
 
 // @ 0x573f0
+// @complete
 - (NSArray *)musicInfos {
     return m_MusicInfos;
 }
 
 // @ 0x57400
+// @complete
 - (NSArray *)acvMusicInfos {
     return m_AcvMusicInfos;
 }
@@ -220,12 +240,14 @@
 // @ 0x571e4 — YES while the pack still needs its detail fetched: the song lists
 // aren't built yet (setDictionary: hasn't run), so the detail screen should
 // request them.
+// @complete
 - (BOOL)downloadDetailInfo {
     return m_MusicInfos == nil;
 }
 
 // @ 0x571fc — YES once every song in the pack (both the standard and arcade
 // lists) has its purchased file on disk.
+// @complete
 - (BOOL)allDownloaded {
     for (StoreMusicInfo *info in m_MusicInfos) {
         if (![info fileExist]) {
@@ -241,6 +263,7 @@
 }
 
 // @ 0x56d50 — always formatted live from the bound product.
+// @complete
 - (NSString *)priceString {
     return [StoreUtil priceString:m_Product];
 }

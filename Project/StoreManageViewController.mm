@@ -19,6 +19,7 @@
 @implementation StoreManageViewController
 
 // @ 0x4bc40 — tab item + action icons; iPad gets a patterned background.
+// @complete
 - (instancetype)initWithParent:(StoreViewController *)parent {
     if ((self = [super init])) {
         m_StoreViewCtrl = parent;
@@ -51,6 +52,7 @@
 
 // @ 0x4be00 — build the manage table (iPad gets a rounded, translucent card and
 // a "リズミン楽曲" header label; iPhone gets a flat dark table).
+// @complete
 - (void)loadView {
     [super loadView];
     self.view.autoresizesSubviews = YES;
@@ -108,6 +110,7 @@
 // then blanked, and drop-shadow duplicates (tags 0xE020/0xE021) carry the
 // visible song name + artist; the action button (tag 0xE01F) shows delete or
 // download.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [m_TableView dequeueReusableCellWithIdentifier:@"StoreManageCell"];
@@ -216,12 +219,14 @@
 }
 
 // @ 0x4cc94 — one row per purchased song.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [[[MusicManager getInstance] getPurchasedMusicDictionaris] count];
 }
 
 // @ 0x4ccd8 — zebra striping on iPhone; a per-row pack background image on
 // iPad.
+// @complete
 - (void)tableView:(UITableView *)tableView
       willDisplayCell:(UITableViewCell *)cell
     forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -238,12 +243,14 @@
 }
 
 // @ 0x4ce24 — single section.
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x4ce28 — per-row action: download a missing song or confirm deleting a
 // present one.
+// @complete
 - (void)pushCellButton:(id)sender {
     if (m_WorkingIndex != -1) {
         return; // already busy with another row
@@ -299,6 +306,7 @@
 }
 
 // @ 0x4d1ec — queue the audio-file download for the working row and start it.
+// @complete
 - (void)startDownloadMusic {
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedMusicDictionaris] objectAtIndex:m_WorkingIndex];
@@ -315,6 +323,7 @@
 
 // @ 0x4d360 — the StoreMusicInfo JSON came back: merge/save it, then fetch the
 // audio.
+// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (m_InfoDownloader != downloader) {
         return;
@@ -332,6 +341,7 @@
 // @ 0x4d460 — the info fetch failed. (Ghidra still calls startDownloadMusic
 // here — a best-effort attempt at the audio file — before clearing the working
 // index.)
+// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (m_InfoDownloader != downloader) {
         return;
@@ -343,6 +353,7 @@
 
 // @ 0x4d4b8 — abort button of the shared progress dialog: cancel both
 // downloaders.
+// @complete
 - (void)storeDialogCancel:(id)sender {
     if (m_InfoDownloader != nil) {
         [m_InfoDownloader cancel];
@@ -357,6 +368,7 @@
 }
 
 // @ 0x4d560 — "Yes" (index 1) on the delete confirmation removes the song.
+// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (alertView == m_DeleteAlertView && index == 1) {
         NSDictionary *item = [[[MusicManager getInstance] getPurchasedMusicDictionaris]
@@ -370,6 +382,7 @@
 
 // @ 0x4d64c — the audio download queue finished: refresh the list and close the
 // dialog.
+// @complete
 - (void)downloadManagerCompleted:(StoreDownloadManager *)manager {
     m_DlManager = nil;
     [m_TableView reloadData];
@@ -379,6 +392,7 @@
 
 // @ 0x4d6c4 — the audio download failed: show an error alert and close the
 // dialog.
+// @complete
 - (void)downloadManagerFailed:(StoreDownloadManager *)manager {
     m_DlManager = nil;
 
@@ -397,11 +411,13 @@
 
 // @ 0x4d7dc — mirror the queue's overall progress into the dialog's progress
 // bar.
+// @complete
 - (void)downloadManagerProceed:(StoreDownloadManager *)manager {
     [[[m_StoreViewCtrl modalDialog] progressView] setProgress:m_DlManager.overallProgress];
 }
 
 // @ 0x4d848 — all orientations supported.
+// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return YES;
 }
@@ -410,6 +426,7 @@
 
 // @ 0x4d878 — drop the table view when the view is torn down (ARC clears the
 // ivar).
+// @complete
 - (void)viewDidUnload {
     [super viewDidUnload];
     m_TableView = nil;
@@ -418,6 +435,7 @@
 // viewWillAppear: @ 0x4d8cc — super-only override, omitted.
 
 // @ 0x4d8f8 — refresh the list and flash the scroll indicators on appear.
+// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [m_TableView reloadData];
@@ -430,6 +448,7 @@
 // @ 0x4d9b0 — KEPT under ARC: cancels the in-flight downloads and detaches
 // delegates so no late callbacks fire (the ivar releases themselves are
 // ARC-automatic).
+// @complete
 - (void)dealloc {
     m_DeleteAlertView.delegate = nil;
     m_TableView.dataSource = nil;

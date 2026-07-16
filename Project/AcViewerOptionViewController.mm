@@ -67,6 +67,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // UITableView; the custom header (song banner, difficulty banner, title/genre
 // and BPM labels); and, off the AC-main flow, a back button, the PLAY /
 // CONTINUE buttons and the "friman" backdrop.
+// @complete
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStylePlain])) {
         return nil;
@@ -138,7 +139,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     UILabel *bpmLbl =
         AcvMakeHeaderLabel(14.0f, NSTextAlignmentRight, CGRectMake(195.0f, 46.0f, 100.0f, 18.0f));
     if (bpm != nil) {
-        bpmLbl.text = [NSString stringWithFormat:@"BPM:%@", bpm];
+        // Ghidra @ 0xdf72c: the format literal is "BPM %@" (space, no colon) —
+        // string @ 0x1029a7.
+        bpmLbl.text = [NSString stringWithFormat:@"BPM %@", bpm];
     }
 
     // Header container: the banner plus a 17 pt gap above and below it. (The
@@ -207,6 +210,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // keep the C++ task pointer, build the table (via init), wrap self in its own
 // navigation controller and install the back button + the "pl_navbar" nav-bar
 // background.
+// @complete
 - (instancetype)initForAcMain:(AcViewerTask *)acMain {
     _forAcMain = YES;
     _pAcMain = acMain;
@@ -232,6 +236,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0xdfe30 — after loading, add a right-swipe pan recogniser (phone only) that
 // acts as a back gesture.
+// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (!neSceneManager::isPadDisplay()) {
@@ -242,12 +247,14 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 }
 
 // @ 0xdfee0 — super only.
+// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 }
 
 // @ 0xdff0c — treat a rightward pan (translation.x > 80) as a back-button
 // press.
+// @complete
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer {
     if (recognizer == nil) {
         return;
@@ -261,21 +268,26 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0xdff78
+// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xdff7c — four option rows in section 0.
+// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (section == 0) ? 4 : 0;
 }
 
-// @ 0xdff88 — one AcViewerOptionCell per row (reused by "Cell%ld_%ld"), bound
+// @ 0xdff88 — one AcViewerOptionCell per row (reused by "Cell%ld-%ld"), bound
 // to the row's option kind.
+// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Ghidra @ 0xdffec: the reuse-identifier format is "Cell%ld-%ld" (hyphen) —
+    // string @ 0x1029ae, length 11.
     NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
     AcViewerOptionCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerOptionCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -303,11 +315,13 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 }
 
 // @ 0xe00c0 — no section headers.
+// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xe00c4 — no accessory (private UITableView delegate hook).
+// @complete
 - (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
          accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     return UITableViewCellAccessoryNone;
@@ -316,6 +330,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0xe00c8 — push the tapped option's detail screen and swap the nav-bar
 // background to match; guarded so it does nothing mid-animation or when not the
 // top view controller.
+// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController != self || _isAnimationing ||
         indexPath.section != 0) {
@@ -356,6 +371,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // game. On iPad the play scene shows behind the panel (fade the black board,
 // hide the panel, ask the AcMainTask to exit the *viewer*); on phone just close
 // this screen.
+// @complete
 - (void)touchedPlayButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -378,6 +394,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0xe0490 — CONTINUE: apply the current options to the running AcMainTask and
 // hide the panel (animated) so the in-progress play resumes.
+// @complete
 - (void)touchedResumeButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -394,6 +411,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0xe053c — BACK: off the AC-main flow, restore the "friman" nav-bar and pop
 // this screen; on the AC-main flow, apply the options to the task and fade the
 // panel closed.
+// @complete
 - (void)touchedBackButton:(id)sender {
     if (self.navigationController.topViewController != self || _isAnimationing) {
         return;
@@ -413,6 +431,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0xe0664 — fire-and-forget analytics POST recording that an AC play started
 // (uuid body, user-agent + store headers), sent to the arcade-viewer play-log
 // endpoint.
+// @complete
 - (void)sendLog {
     NSData *body = [[NSString stringWithFormat:@"uuid=%@", AppDelegate.appDelegate.uuId]
         dataUsingEncoding:NSUTF8StringEncoding];
@@ -441,6 +460,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0xe0820 — AC-main flow: add the nav controller's view over the root scene
 // and fade this screen (+ its nav view) 0 -> 1 over 0.3 s.
+// @complete
 - (void)startOpenAnimationForAcMain {
     [RootVC().view addSubview:_naviCtrl.view];
     self.view.alpha = 0.0f;
@@ -456,6 +476,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0xe0960 — fade this screen (+ its nav view) 1 -> 0 over 0.3 s; didStop
 // routes to endCloseAnimation (or endCloseAnimationForAcMain on the AC-main
 // flow).
+// @complete
 - (void)startCloseAnimation {
     _isAnimationing = YES;
     BOOL forAcMain = _forAcMain;
@@ -471,12 +492,14 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0xe0a78 — remove the nav view and notify the root that the AC viewer
 // closed.
+// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(AcViewerEndCallBack)];
 }
 
 // @ 0xe0ad4 — AC-main flow teardown: drop the owned nav controller.
+// @complete
 - (void)endCloseAnimationForAcMain {
     [_naviCtrl.view removeFromSuperview];
     _naviCtrl = nil;
