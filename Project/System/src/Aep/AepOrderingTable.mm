@@ -118,7 +118,16 @@ AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
     if (clipSpill != nullptr) {
         std::memcpy(&cmd->clipRect.nBottom, clipSpill, 16);
     } else {
-        std::memset(&cmd->clipRect.nBottom, 0, 16);
+        // No explicit clip: default to the full screen bounds, matching the binary
+        // (it fills the spill tail from aEntries[0].pAHeader+4/+8 = screen w/h). The
+        // flush reads &clipRect.nBottom as {left0, top0, right, bottom}; {0,0,W,H}
+        // clips to the whole content area, i.e. a no-op. Zero-filling it (as before)
+        // produced a {0,0,0,0} region that clipped every unclipped sprite away.
+        int32_t *spill = &cmd->clipRect.nBottom;
+        spill[0] = 0;
+        spill[1] = 0;
+        spill[2] = m_screenW;
+        spill[3] = m_screenH;
     }
     return cmd;
 }
@@ -574,13 +583,12 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
     const float vSpan = frameH ? static_cast<float>(nSrcU) / static_cast<float>(frameH) : 1.0f;
 
     // Optional heap clip rect (Ghidra: operator new(0x10) of the fixed->float copy).
-    // Only build/forward it when clipping is actually enabled: the binary defaults
-    // an unclipped sprite's spill to the full screen bounds, but the reconstruction
-    // zero-fills that spill, so an unclipped sprite would otherwise reach
-    // neDrawTexturedQuad with a degenerate {0,0,0,0} rect and get its clip planes
-    // enabled around a zero-area region -- clipping the whole quad away (black).
+    // The rect is always non-null here: an explicitly-clipped sprite carries its own
+    // rect, and an unclipped one carries the full screen bounds that drawSprite
+    // defaults into the spill (matching the binary's aEntries[0].pAHeader screen
+    // extents), so clipping to it is a whole-screen no-op.
     float *clipRect = nullptr;
-    if (nUseClip != 0 && pClipRect != nullptr) {
+    if (pClipRect != nullptr) {
         clipRect = new float[4];
         for (int i = 0; i < 4; ++i) {
             clipRect[i] = static_cast<float>(pClipRect[i]);
