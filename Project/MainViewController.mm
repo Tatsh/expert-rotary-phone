@@ -43,6 +43,7 @@
 #import "StoreViewController.h"
 #import "TreasureData.h"
 #import "UserSettingData.h"
+#import "neDebugLog.h"
 #import "neEngineBridge.h"
 #import "neFrameTimer.h"
 #import "neGLView.h"
@@ -735,6 +736,13 @@ static int FloatToFixed(float ms) {
     if (dt < kRenderMinInterval) {
         [_glView BeginRender];
         [_glView SetDefaultFrameBuffer];
+        if (NE_DBG_FIRST(240)) {
+            neDebugLog("MainVC::draw front=%dx%d content=%dx%d",
+                       [_glView GetFrontBufferWidth],
+                       [_glView GetFrontBufferHeight],
+                       m_AepManager ? m_AepManager->screenWidth() : -1,
+                       m_AepManager ? m_AepManager->screenHeight() : -1);
+        }
         // The binary sets no glViewport here (Ghidra: MainViewController::draw
         // @0xbd30 is BeginRender -> SetDefaultFrameBuffer -> clear -> AepManager
         // draw -> Present, nothing more). The GL viewport is owned by the engine's

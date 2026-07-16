@@ -17,7 +17,8 @@
 #include <OpenGLES/ES1/glext.h>
 
 #include "AepTexture.h" // AepTexture::name() for the sprite blit
-#include "neGLES11.h"   // ne::neGLES_11 concrete backend
+#include "neDebugLog.h"
+#include "neGLES11.h" // ne::neGLES_11 concrete backend
 #include "neRenderer.h"
 
 // ---------------------------------------------------------------------------
@@ -199,6 +200,18 @@ void neApplyViewport(neRenderer *r, neViewport *vp) {
     g_pAppliedViewport = vp;
     r->setViewport(vp->x, vp->y, vp->w, vp->h);
     r->loadMatrix(1, vp->proj); // projection
+    if (NE_DBG_FIRST(60)) {
+        neDebugLog("neApplyViewport rect=[%d,%d,%d,%d] proj[0]=%.4f proj[5]=%.4f proj[12]=%.4f "
+                   "proj[13]=%.4f",
+                   vp->x,
+                   vp->y,
+                   vp->w,
+                   vp->h,
+                   vp->proj.m[0],
+                   vp->proj.m[5],
+                   vp->proj.m[12],
+                   vp->proj.m[13]);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +440,38 @@ void neDrawTexturedQuad(void *sprite,
     };
 
     neRenderer *r = neGetCurrentRenderer();
+
+    if (NE_DBG_FIRST(600)) {
+        const neViewport *vp = g_pCurrentViewport;
+        neDebugLog(
+            "quad sprite=%p tex=%p glName=%u xy=(%d,%d) wh=(%d,%d) uv=(%d,%d,%d,%d) "
+            "rot=%.2f pivot=(%d,%d) argb=(%d,%d,%d,%d) blend=%d clip=%p vp=[%d,%d,%d,%d] r=%p",
+            sprite,
+            s->texture,
+            s->texture ? static_cast<AepTexture *>(s->texture)->name() : 0,
+            x,
+            y,
+            width,
+            height,
+            uL,
+            uR,
+            vT,
+            vB,
+            rotation,
+            pivotX,
+            pivotY,
+            alpha,
+            red,
+            green,
+            blue,
+            blendMode,
+            (const void *)clipRect,
+            vp ? vp->x : -1,
+            vp ? vp->y : -1,
+            vp ? vp->w : -1,
+            vp ? vp->h : -1,
+            (void *)r);
+    }
 
     // Model matrix: translate(x,y) [* rotateZ(-rotation)] * translate(-pivot).
     neApplyViewport(r, g_pCurrentViewport);

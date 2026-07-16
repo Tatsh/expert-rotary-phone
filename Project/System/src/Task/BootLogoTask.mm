@@ -12,6 +12,7 @@
 #import "AppDelegate.h"
 #import "BootLogoTask.h"
 #import "TaskFactory.h"
+#import "neDebugLog.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
@@ -93,8 +94,21 @@ void BootLogoTask::setup() {
     for (int i = 0; i < 3; i++) {
         m_logo[i] = new neTextureForiOS();
         NSString *path = [NSBundle.mainBundle pathForResource:imageSet[i] ofType:@"png"];
-        m_logo[i]->load(path.UTF8String);
+        int rc = m_logo[i]->load(path.UTF8String);
+        neDebugLog("BootLogoTask::setup logo[%d] name='%s' path=%s load=%d w=%d h=%d",
+                   i,
+                   imageSet[i].UTF8String,
+                   path.UTF8String ? path.UTF8String : "(nil)",
+                   rc,
+                   m_logo[i]->width(),
+                   m_logo[i]->height());
     }
+    neDebugLog("BootLogoTask::setup isPad=%d displayType=%d scale=%.2f pos=(%d,%d)",
+               (int)isPad,
+               (int)AppDelegate.appDelegate.displayType,
+               m_scale,
+               m_posX,
+               m_posY);
 }
 
 /**
@@ -128,6 +142,14 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     p.blend0 = 0x20;
     p.colorMul = 0xffffff;
     p.priority = 5; // logos in bucket 5; the fade overlay sits in bucket 1 -> on top
+    if (NE_DBG_FIRST(120)) {
+        neDebugLog("BootLogoTask::drawLogo logo=%p w=%d h=%d canvas=(%d,%d)",
+                   (void *)logo,
+                   logo->width(),
+                   logo->height(),
+                   m_posX,
+                   m_posY);
+    }
     logo->draw(m_aep->orderingTable(), p);
 }
 

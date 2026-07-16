@@ -17,6 +17,7 @@
 #import <UIKit/UIKit.h>
 
 #import "AepTexture.h"
+#import "neDebugLog.h"
 #import "neRenderer.h"      // current renderer for neTextureRebind
 #import "neTextureForiOS.h" // AepTile + the cache/bind free functions declared here
 
@@ -180,8 +181,14 @@ AepTexture *AepTextureCacheAcquire(const char *path) {
 
     AepTexture *tex = new AepTexture(); // operator new(0x48) + ctor FUN_000180c4
     if (!tex->load(path)) {             // FUN_00018218 (returns 1 on success)
+        neDebugLog("AepTextureCacheAcquire LOAD-FAILED path='%s'", path ? path : "(null)");
         return nullptr;
     }
+    neDebugLog("AepTextureCacheAcquire loaded path='%s' glName=%u w=%d h=%d",
+               path ? path : "(null)",
+               tex->name(),
+               tex->textureWidth(),
+               tex->textureHeight());
     ++tex->refCount; // +0x04
 
     // push_front: splice the new node in between the sentinel and the current
@@ -241,6 +248,15 @@ static void neTextureUpload(AepTexture *tex, int texW, int texH, int format, con
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     GLenum gl = TexDataFormatToGL(format);
     glTexImage2D(GL_TEXTURE_2D, 0, gl, texW, texH, 0, gl, GL_UNSIGNED_BYTE, pixels);
+    GLenum glErr = glGetError();
+    neDebugLog("neTextureUpload glName=%u %dx%d fmt=%d(gl=0x%x) pixels=%p glErr=0x%x",
+               name,
+               texW,
+               texH,
+               format,
+               (unsigned)gl,
+               pixels,
+               (unsigned)glErr);
     // Publish the name + padded size back onto the texture (AepTexture
     // +0x18/+0x1c/+0x20).
     tex->adoptGLName(name, texW, texH);

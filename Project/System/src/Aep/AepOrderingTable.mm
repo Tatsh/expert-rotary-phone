@@ -16,6 +16,7 @@
 #import <OpenGLES/ES1/gl.h>
 
 #import "AepOrderingTable.h"
+#import "neDebugLog.h"
 #import "neRenderer.h"      // neDrawLine/Triangle/Rect/Quad/TexturedQuad
 #import "neTextTexture.h"   // neDrawText (FUN_0001551c)
 #import "neTextureForiOS.h" // the sprite/frame-atlas object the flush walks
@@ -192,6 +193,28 @@ static void establishFrame2DState(int screenW, int screenH) {
 // bodies follow their own FUN_* decompiles). Priority 0 draws last = frontmost.
 void AepOrderingTable::flush() {
     establishFrame2DState(m_screenW, m_screenH); // frame-begin bridge (see above)
+
+    int dbgTotal = 0, dbgType[8] = {0};
+    for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
+        for (AepOtSpriteCmd *c = m_buckets[pri]; c != nullptr; c = c->pListNext) {
+            ++dbgTotal;
+            if ((unsigned)c->wFlags < 8) {
+                ++dbgType[c->wFlags];
+            }
+        }
+    }
+    if (NE_DBG_FIRST(240)) {
+        neDebugLog(
+            "flush m_count=%d queued=%d byType[sprite=%d stretch=%d t2=%d t6=%d] screen=%dx%d",
+            m_count,
+            dbgTotal,
+            dbgType[0],
+            dbgType[1],
+            dbgType[2],
+            dbgType[6],
+            m_screenW,
+            m_screenH);
+    }
 
     m_drawnCount = 0;
     for (int pri = kOtPriMax - 1; pri >= 0; pri--) {

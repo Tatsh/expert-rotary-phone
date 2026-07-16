@@ -14,6 +14,7 @@
 
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
+#import "neDebugLog.h"
 #import "neTextureForiOS.h"
 
 // Ghidra: FUN_0000fa30 — resolve `name` in a group's open-addressing hash
@@ -379,6 +380,17 @@ bool AepManager::isTransitionDone() const {
 // and count the frame down; then flush the OT and record the highest priority
 // drawn.
 void AepManager::draw() {
+    if (NE_DBG_FIRST(240)) {
+        neDebugLog("AepManager::draw transMode=%d transFrames=%d transTotal=%d transColor=0x%x "
+                   "screen=%dx%d renderScale=%.3f",
+                   m_transitionMode,
+                   m_transitionFrames,
+                   m_transitionTotal,
+                   m_transitionColor,
+                   screenWidth(),
+                   screenHeight(),
+                   m_ot.renderScale());
+    }
     if (m_transitionTotal > 0 && (m_transitionMode == 1 || m_transitionMode == 2)) {
         // Progress runs 100 -> 0 as the frames count down.
         float progress = (float)(m_transitionFrames * 100) / (float)m_transitionTotal;

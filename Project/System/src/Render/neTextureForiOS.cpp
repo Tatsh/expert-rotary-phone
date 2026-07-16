@@ -15,6 +15,7 @@
 
 #include "AepOrderingTable.h"
 #include "AepTexture.h"
+#include "neDebugLog.h"
 #include "neTextureForiOS.h"
 
 // Ghidra: FUN_00015eb4 — clears the two reserved words and defaults the tile
@@ -54,12 +55,20 @@ int neTextureForiOS::load(const char *path) {
     m_tiles[0] =
         AepTextureCacheAcquire(path); // FUN_0001bbf0 (original path, not the lowercased key)
     if (m_tiles[0] == nullptr) {
+        neDebugLog("neTextureForiOS::load FAILED path='%s' (acquire returned null)", path);
         return -5; // 0xfffffffb: the texture failed to load
     }
 
     m_tileWidths[0] = m_tiles[0]->textureWidth();       // AepTexture +0x1c
     m_tileHeights[0] = m_tiles[0]->textureHeight();     // AepTexture +0x20
     AepTextureUploadTiles(&m_tileRects[0], m_tiles[0]); // FUN_000166ec
+    neDebugLog("neTextureForiOS::load OK path='%s' tex=%p glName=%u w=%d h=%d tile.uploaded=%p",
+               path,
+               (void *)m_tiles[0],
+               m_tiles[0]->name(),
+               m_tileWidths[0],
+               m_tileHeights[0],
+               (void *)m_tileRects[0].uploaded);
     return 0;
 }
 
