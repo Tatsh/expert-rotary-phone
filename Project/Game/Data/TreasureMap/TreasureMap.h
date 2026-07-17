@@ -136,6 +136,17 @@ public:
         return m_field5c;
     }
 
+    // Ghidra: FUN_000ce96c (SugorokuMap::GetWarpSquare). Asserts node is a warp
+    // square (kSquareWarp), then returns the partner warp square sharing its
+    // field8 (warp-pair id), or null.
+    Node *getWarpSquare(Node *node);
+
+    // Ghidra: FUN_000ce9d4 (SugorokuMap::GetButtobiSquare). Picks a random
+    // destination node that is not a warp, not a player-start, and not
+    // currentNode, walking the links[0] chain if the first pick is unsuitable;
+    // falls back to the start node.
+    Node *getButtobiSquare(const Node *currentNode);
+
 private:
     // Ghidra: FUN_000ce2e4 — free the owned node table (+0x50) and edge array
     // (+0x58), then zero the whole 0x60-byte object. Shared by load()
@@ -146,11 +157,6 @@ private:
     // search in FUN_000ce340). Null for a negative / out-of-range id or an empty
     // table.
     Node *findNodeById(int id) const;
-
-    // Free helpers in TreasureMap.mm that need private member access (m_nodes,
-    // m_count, m_startSubId). Ghidra: FUN_000ce96c, FUN_000ce9d4.
-    friend Node *GetWarpSquare(TreasureMap *map, Node *node);
-    friend Node *getButtobiSquare(TreasureMap *map, const Node *currentNode);
 
     // Byte-exact layout to alignment 4 (offsets verified in
     // FUN_000ce2b0/340/934).
@@ -205,16 +211,6 @@ int getCharacterAssetCount(int characterId);
 // getCharacterAssetCount(characterId)). Returns null for out-of-range or
 // unrecognised ids.
 const char *getCharacterAssetName(int characterId, int slotIndex);
-
-// Ghidra: FUN_000ce96c  (SugorokuMap::GetWarpSquare)
-// Asserts node->type == 8 (warp square), then returns the OTHER warp square in
-// map that shares the same field8 (warp-pair id). Returns null if none found.
-TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node);
-
-// Ghidra: FUN_000ce9d4  (SugorokuMap::GetButtobiSquare)
-// Picks a random destination node in map that is not a warp (type 8), not a
-// start-reserved (type 1), and not currentNode. Falls back to the start node.
-TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *currentNode);
 
 // Ghidra: FUN_000cea50
 // Returns kSubMapFlagTable[mapId] (DAT_0012fb54). The first argument is ignored

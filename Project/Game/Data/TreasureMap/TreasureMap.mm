@@ -485,13 +485,13 @@ const char *getCharacterAssetName(int characterId, int slotIndex) {
 // Asserts node is a warp square (type 8), then scans all nodes in map for the
 // partner warp square: different id, same type 8, same field8 (warp-pair id).
 // @complete
-TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node) {
+TreasureMap::Node *TreasureMap::getWarpSquare(TreasureMap::Node *node) {
     if (node->type != TreasureMap::kSquareWarp) {
         assert(0);
     }
-    const int n = map->m_count;
+    const int n = m_count;
     if (n > 0) {
-        TreasureMap::Node *cur = map->m_nodes;
+        TreasureMap::Node *cur = m_nodes;
         for (int i = 0; i < n; i++, cur++) {
             if (cur->id != node->id && cur->type == TreasureMap::kSquareWarp &&
                 cur->field8 == node->field8) {
@@ -508,19 +508,19 @@ TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node) {
 // that node is walked until a valid node is found. Falls back to the start
 // node. Node types skipped: kSquareWarp (8) and kSquarePlayerStart (1).
 // @complete
-TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *currentNode) {
-    const int16_t count = map->m_count;
+TreasureMap::Node *TreasureMap::getButtobiSquare(const TreasureMap::Node *currentNode) {
+    const int16_t count = m_count;
     if (count < 1) {
         assert(0);
     }
     const int randIdx = std::rand() % (int)count;
-    TreasureMap::Node *node = map->m_nodes + randIdx;
+    TreasureMap::Node *node = m_nodes + randIdx;
     if (node->type != TreasureMap::kSquarePlayerStart && node->type != TreasureMap::kSquareWarp &&
         node != currentNode) {
         return node;
     }
     // Walk the links[0] chain from the same random starting node.
-    TreasureMap::Node *follow = map->m_nodes + randIdx;
+    TreasureMap::Node *follow = m_nodes + randIdx;
     while ((follow = follow->links[0]) != nullptr) {
         if (follow->type != TreasureMap::kSquareWarp) {
             if (follow->type == TreasureMap::kSquarePlayerStart) {
@@ -533,7 +533,7 @@ TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *c
     }
     // Fallback: return the start node (m_startSubId points to Node.id at offset
     // 0).
-    return reinterpret_cast<TreasureMap::Node *>(map->m_startSubId);
+    return reinterpret_cast<TreasureMap::Node *>(m_startSubId);
 }
 
 // Ghidra: FUN_000cea50
