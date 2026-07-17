@@ -479,12 +479,11 @@ void AepOrderingTable::drawAepOtText(const char *text,
     const float s = renderScale();
     const int scaledSize = aepScale(size, s);
     // Real signature: neDrawText(text, font, size, x, y, align, alpha, r, g, b,
-    // clipRect). The font is a C-string font name and colorVec is the clip rect.
-    // (The binary carries the font name as a pointer; it must stay a real 64-bit
-    // pointer here — the old int handle truncated it on arm64, producing a dead
-    // low address that crashed strlen in neDrawText's font lookup.)
+    // clipRect). The font is a C-string font name (a real 64-bit pointer — the
+    // old int handle truncated it on arm64, producing a dead low address that
+    // crashed strlen in neDrawText's font lookup) and colorVec is the clip rect.
     neDrawText(text,
-               const_cast<char *>(font),
+               font,
                scaledSize,
                aepScale(x, s),
                aepScale(y, s),

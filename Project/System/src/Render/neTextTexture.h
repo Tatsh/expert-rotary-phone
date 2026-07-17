@@ -95,7 +95,7 @@ int utf8CharLen(neTextTextureMgr *mgr, const char *s);
 // rendered as batched textured quads via the current renderer. Ghidra:
 // FUN_0001551c.
 void neDrawText(const char *text,
-                void *font,
+                const char *font,
                 int size,
                 int x,
                 int y,

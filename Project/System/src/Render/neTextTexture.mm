@@ -456,7 +456,7 @@ neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, i
 // Ghidra: FUN_0001551c — measure, lay out and batch-draw a string.
 // @complete
 void neDrawText(const char *text,
-                void *font,
+                const char *font,
                 int size,
                 int x,
                 int y,
@@ -485,7 +485,7 @@ void neDrawText(const char *text,
         }
         neGlyph *g = mgr->findCachedGlyph(text + i, size << shift);
         if (g == nullptr) {
-            g = mgr->createTextGlyphEntry(text + i, static_cast<const char *>(font), size << shift);
+            g = mgr->createTextGlyphEntry(text + i, font, size << shift);
         }
         glyphAtlas[i] = g->atlasId;
         glyphs[i] = g;
