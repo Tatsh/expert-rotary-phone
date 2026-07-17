@@ -47,8 +47,11 @@ class neGraphics;       // System/src/Render/neGraphics.h (applyDragScroll param
 
 class AcMainTask : public C_TASK {
 public:
-    AcMainTask();                      // Ghidra: AcMainTask_ctor (FUN_00099ab0)
-    ~AcMainTask() override;            // @ 0x99ba4 (acMainTaskDtor; destroys the RNG + base)
+    // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
+    // C_TASK base + Random member construct/destruct plus the members' in-class
+    // initialisers, so both are defaulted.
+    AcMainTask() = default;
+    ~AcMainTask() override = default;
     void update(int deltaMs) override; // Ghidra: AcMainTask_update (FUN_00099d18)
 
     // Chara-select page-texture helpers (CharaManager.mm). In the binary these
@@ -196,9 +199,8 @@ private:
     float m_clampMaxY = {};                  // +0x4ec scroll clamp max y
     int16_t m_treasureRaw06 = {};            // +0x4f0 pending record raw0x06
     uint8_t _rsvd_4f2[0x4f4 - 0x4f2] = {};   // +0x4f2
-    Random m_rng;               // +0x4f4 embedded arcade RNG (ctor placement-constructs; dtor
-                                // destroys)
-    int m_dragAnchorId = {};    // +0x508 touch drag anchor id (-1 == none)
+    Random m_rng;               // +0x4f4 embedded arcade RNG (auto-constructed/destructed)
+    int m_dragAnchorId = -1;    // +0x508 touch drag anchor id (-1 == none)
     float m_dragAnchorX = {};   // +0x50c drag anchor x (float; disasm 0x99e3e)
     float m_dragAnchorY = {};   // +0x510 drag anchor y (float)
     float m_scrollBaseX = {};   // +0x514 scroll base x (subtracted for screen space)
@@ -216,7 +218,7 @@ private:
     int m_stepValues[7] = {};  // +0x578 7 per-skill roulette step values
     int m_stepValueIndex = {}; // +0x594 roulette step-value index (cycles 0..6 mod 7 each frame)
     uint8_t _rsvd_598[0x5a0 - 0x598] = {}; // +0x598
-    int m_initFlag5a0 = {};                // +0x5a0 ctor writes 3; role opaque (write-only)
+    int m_initFlag5a0 = 3;                 // +0x5a0 ctor writes 3; role opaque (write-only)
     float m_scrollTargetX = {};            // +0x5a4 scroll ease target x
     float m_scrollTargetY = {};            // +0x5a8 scroll ease target y
     float m_scrollVelX = {};               // +0x5ac scroll ease velocity x
@@ -261,7 +263,7 @@ private:
     int16_t m_charaTicket = {};            // +0x622 owned chara tickets
     int m_treasurePoint = {};              // +0x624 treasure point balance
     int m_bonusCount = {};                 // +0x628 bonus/main-map id (roulette overlay gate)
-    int m_hudState = {};                   // +0x62c HUD state (ctor -0x63)
+    int m_hudState = -0x63;                // +0x62c HUD state (ctor -0x63)
     void *m_gotCharaArray = {};            // +0x630 owned-chara working copy (retained)
     void *m_availableInfos = {};           // +0x634 available chara infos (unretained)
     int m_charaRowCount = {};              // +0x638 chara list row count

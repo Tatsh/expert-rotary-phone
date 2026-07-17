@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cstring>
 #include <ctime>
-#include <new>
 
 #import "AepFrameDraw.h"
 #import "AepLyrCtrl.h"
@@ -38,28 +37,6 @@
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
-
-// Ghidra: AcMainTask_ctor (FUN_00099ab0) — base C_TASK ctor, the arcade RNG
-// constructed in place at +0x4f4, then the work area (already zeroed by the
-// members' default initialisers) and three sentinels (@ +0x508 = -1,
-// +0x62c = -0x63, +0x5a0 = 3).
-// @complete
-AcMainTask::AcMainTask() {
-    new (&m_rng) Random(); // FUN_00062b20: construct the arcade RNG
-    m_dragAnchorId = -1;   // no drag anchor yet
-    m_hudState = -0x63;    // stored as 0xffffff9d
-    m_initFlag5a0 = 3;
-}
-
-// @ 0x99ba4 — acMainTaskDtor. The compiler's deleting-destructor thunk calls
-// this then operator delete; the real body only destroys the RNG the ctor
-// placement-constructed in the play-data blob (@ +0x4f4, Ghidra:
-// rngStateDtorStub) and then chains to the C_TASK base (caSourceNode_dtor),
-// which runs implicitly after this body.
-// @complete
-AcMainTask::~AcMainTask() {
-    m_rng.~Random();
-}
 
 // Ghidra: AcMainTask_update (FUN_00099d18). Snapshot the touches (recording a
 // drag anchor and classifying a tap), refresh the "scrolled past the end" flag,
