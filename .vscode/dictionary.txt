@@ -188,6 +188,7 @@ frirec
 frirep
 fritop
 fsize
+ftrivial
 fukidasi
 fullcombo
 fullwidth
