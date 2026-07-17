@@ -103,7 +103,7 @@ void PlayTaskDraw(int child,
                   int rotation,
                   uint32_t blend,
                   int *clipRect,
-                  uint32_t p17,
+                  uint32_t judgeSlot,
                   void *context);
 
 // Clear the note manager's active-play flag on teardown. Ghidra: FUN_0003395c
@@ -1221,7 +1221,7 @@ void PlayTaskDraw(int child,
                   int rotation,
                   uint32_t blend,
                   int *clipRect,
-                  uint32_t p17,
+                  uint32_t judgeSlot,
                   void *context) {
     PlayTask *task = static_cast<PlayTask *>(context); // the play data (param_15)
 
@@ -1252,7 +1252,7 @@ void PlayTaskDraw(int child,
     // mapping verified against the binary @0x31196: loopFlags = 1, p9/p10 =
     // anchorX/anchorY, colour/alpha pass straight through, blend 0x20, p15
     // 0xffffff, p19 1; context = null (str #0 -> sp+0x30) and the priority slot
-    // (sp+0x34) is the literal 0x1a. (The callback's p17 word is the judge-slot
+    // (sp+0x34) is the literal 0x1a. (The callback's judgeSlot word is the judge-slot
     // index, not used here.)
     auto layerDraw = [&](int lyr, int lframe, int lscaleY, int *lclip, int /*unused*/) {
         aep.drawLayer(lyr,
@@ -1275,10 +1275,10 @@ void PlayTaskDraw(int child,
                       1);
     };
 
-    // In the note-sprite branches below, p17 is the judge slot index into
+    // In the note-sprite branches below, judgeSlot is the judge slot index into
     // m_judgePool; those branches read this slot's gauge index (slot.result @
     // +0x3d4) or tone note id (slot.noteKey @ +0x3cc), matching the binary's
-    // `p17*0x18 + 0x3c8` element access.
+    // `judgeSlot*0x18 + 0x3c8` element access.
 
     // --- Combo-count digits (NUM_COMBO_*, m_numComboUser): only once combo
     // exceeds 4 --- The binary reads DAT_00179000, which is the NoteMng combo
@@ -1290,7 +1290,7 @@ void PlayTaskDraw(int child,
         int v = nm.combo();
         for (int i = 0; i < 3; ++i) {
             if (task->m_numComboUser[i] == child) {
-                noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17)); // EFF_C_NUM
+                noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(judgeSlot)); // EFF_C_NUM
                 return;
             }
             v /= 10;
@@ -1301,7 +1301,8 @@ void PlayTaskDraw(int child,
         int v = task->m_score; // running score
         for (int i = 0; i < 6; ++i) {
             if (task->m_scoreNumUser[i] == child) {
-                noteQuad(task->m_scoreDigitFrm[v % 10], static_cast<int>(p17)); // SCO_N frames
+                noteQuad(task->m_scoreDigitFrm[v % 10],
+                         static_cast<int>(judgeSlot)); // SCO_N frames
                 return;
             }
             v /= 10;
@@ -1310,7 +1311,7 @@ void PlayTaskDraw(int child,
     // --- Gauge flash (GG_IFL, m_userSprite[0]): this judge slot's gauge index
     // (slot.result) ---
     if (task->m_userSprite[0] == child) {
-        const int gi = task->m_judgePool[static_cast<int>(p17)].result; // +0x3d4 gauge index
+        const int gi = task->m_judgePool[static_cast<int>(judgeSlot)].result; // +0x3d4 gauge index
         if (gi < 0) {
             return;
         }
@@ -1326,7 +1327,7 @@ void PlayTaskDraw(int child,
     // this note's state ---
     if (task->m_userSprite[2] == child) {
         // The slot's note identity (slot.noteId @ +0x3cc) is the raw tone note id.
-        const int id = static_cast<int>(task->m_judgePool[static_cast<int>(p17)].noteId);
+        const int id = static_cast<int>(task->m_judgePool[static_cast<int>(judgeSlot)].noteId);
         const int graphic = NoteToneGraphic(id); // FUN_00034bb4
         const int flags = NoteToneFlags(id);     // FUN_00034b98
         const int state = NoteToneState(id);     // FUN_00034b5c
@@ -1346,7 +1347,7 @@ void PlayTaskDraw(int child,
     }
     // --- Tone number overlay (TONE_08_NUM, m_userSprite[3]) ---
     if (task->m_userSprite[3] == child) {
-        const int id = static_cast<int>(task->m_judgePool[static_cast<int>(p17)].noteId);
+        const int id = static_cast<int>(task->m_judgePool[static_cast<int>(judgeSlot)].noteId);
         if (NoteToneState(id) != 1) {
             return;
         }
@@ -1392,18 +1393,18 @@ void PlayTaskDraw(int child,
                   task->m_cdColorFrame,
                   scaleY,
                   clipRect,
-                  static_cast<int>(p17));
+                  static_cast<int>(judgeSlot));
         return;
     }
     // --- On-field combo digits (EFF_C_NUM001/010/100, m_userSprite[12..14]) ---
     if (task->m_userSprite[12] == child) {
         const int v = static_cast<int>(task->m_comboMilestoneShown);
-        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17));
+        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(judgeSlot));
         return;
     }
     if (task->m_userSprite[13] == child) {
         const int v = static_cast<int>(task->m_comboMilestoneShown) / 10;
-        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17));
+        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(judgeSlot));
         return;
     }
     if (task->m_userSprite[14] == child) {
@@ -1411,7 +1412,7 @@ void PlayTaskDraw(int child,
             return;
         }
         const int v = static_cast<int>(task->m_comboMilestoneShown) / 100;
-        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17));
+        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(judgeSlot));
         return;
     }
     // --- Score star badge (FRAME_STAR, m_userSprite[10]) ---
@@ -1493,7 +1494,7 @@ void PlayTaskDraw(int child,
                 p.blend0 = 0x20;
                 p.blend1 = static_cast<short>(alpha); // alpha rides the sub-blend
                 p.colorMul = 0xffffff;
-                p.priority = static_cast<int>(p17);
+                p.priority = static_cast<int>(judgeSlot);
                 portrait->draw(aep.orderingTable(), p);
                 return;
             }
