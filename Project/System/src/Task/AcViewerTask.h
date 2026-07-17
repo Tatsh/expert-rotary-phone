@@ -43,6 +43,18 @@
 class AepLyrCtrl;
 class neTextureForiOS;
 
+// AcViewerTask play-state values the app-lifecycle bridge acts on (m_state
+// @+0x20c). Ghidra: stopAcMainTask @FUN_0002314c (running -> stopping),
+// requestGameExit @FUN_0002315c (-> exit-requested). The play-state machine uses
+// further values; only the bridge-relevant ones are named here. (The bridge's
+// "AcMainTask" naming is a misnomer: AppDelegate's acMainTask slot holds the
+// running AcViewerTask, which registers itself via setAcMainTask:self.)
+enum AcViewerPlayState : int {
+    kAcViewerRunning = 6,       // active play
+    kAcViewerExitRequested = 8, // requestGameExit: leave arcade play
+    kAcViewerStopping = 0xc,    // stopAcMainTask: resign teardown
+};
+
 class AcViewerTask : public C_TASK {
 public:
     // Constructed by the engine when the arcade viewer starts play (its
@@ -56,6 +68,19 @@ public:
     // note stream when they change. The options view controller reaches it through
     // the neEngine::acMainApplyGameplaySettings forwarder. Ghidra: FUN_00023850.
     void applyGameplaySettings();
+
+    // Play-state + board-up accessors for the app-lifecycle bridge
+    // (neEngine::stopAcMainTask / acMainRequestGameExit). m_state @+0x20c is the
+    // play-state machine; m_padBoardUp @+0x1d9 is raised on an exit request.
+    int playState() const {
+        return m_state;
+    }
+    void setPlayState(int state) {
+        m_state = state;
+    }
+    void setPadBoardUp(bool up) {
+        m_padBoardUp = up ? 1 : 0;
+    }
 
 private:
     void setup();           // @ 0x2230c  acMainTaskSetup — resolve the HUD, load chart + SE

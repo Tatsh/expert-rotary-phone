@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <cstring>
 
-#import "AcMainTask.h"   // AcMainTask::m_lifecycleState / m_exitRequested (arcade stop / exit)
 #import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AcViewerTask.h" // AcViewerTask named work-area (apply-settings owner)
 #import "AepManager.h"   // AepManager::orderingTable() for neTextureForiOS_draw
@@ -693,30 +692,33 @@ void stopMainTask(PlayTask *playTask) {
     }
 }
 
-// Ghidra: FUN_0002314c — nudge the passed AcMainTask toward its stop state
-// (6->0xc). The reconstruction adds a defensive null guard (the binary
-// dereferences unconditionally); behaviour is identical for non-null tasks.
+// Ghidra: FUN_0002314c — nudge the running arcade viewer toward its stop state
+// (6->0xc). AppDelegate's acMainTask slot holds the AcViewerTask (it registers
+// itself via setAcMainTask:self), so the poked +0x20c field is
+// AcViewerTask::m_state. The reconstruction adds a defensive null guard (the
+// binary dereferences unconditionally); behaviour is identical for non-null
+// tasks.
 // @complete
-void stopAcMainTask(AcMainTask *acMainTask) {
-    if (acMainTask == nullptr) {
+void stopAcMainTask(AcViewerTask *acViewerTask) {
+    if (acViewerTask == nullptr) {
         return;
     }
-    if (acMainTask->lifecycleState() == kAcLifecycleRunning) {
-        acMainTask->setLifecycleState(kAcLifecycleStopping);
+    if (acViewerTask->playState() == kAcViewerRunning) {
+        acViewerTask->setPlayState(kAcViewerStopping);
     }
 }
 
-// Ghidra: requestGameExit (FUN_0002315c) — flag the running AcMainTask to leave
-// the arcade-viewer play (exit state @ +0x20c := 8, exit-request flag @ +0x1d9
-// := 1). The reconstruction adds a defensive null guard (the binary
-// dereferences unconditionally); behaviour is identical for non-null tasks.
+// Ghidra: requestGameExit (FUN_0002315c) — flag the running AcViewerTask to
+// leave the arcade-viewer play (play state @ +0x20c := 8, board-up flag @ +0x1d9
+// := 1). The reconstruction adds a defensive null guard (the binary dereferences
+// unconditionally); behaviour is identical for non-null tasks.
 // @complete
-void acMainRequestGameExit(AcMainTask *acMainTask) {
-    if (acMainTask == nullptr) {
+void acMainRequestGameExit(AcViewerTask *acViewerTask) {
+    if (acViewerTask == nullptr) {
         return;
     }
-    acMainTask->setLifecycleState(kAcLifecycleExitRequested);
-    acMainTask->setExitRequested(true);
+    acViewerTask->setPlayState(kAcViewerExitRequested);
+    acViewerTask->setPadBoardUp(true);
 }
 
 // The arcade-viewer option bridge: a thin forwarder to

@@ -386,7 +386,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
         neAppEventCenter::commitAcViewerSelection();
         [self.delegate startHiddenAnimation:NO];
         neEngine::acMainRequestGameExit(
-            static_cast<AcMainTask *>(AppDelegate.appDelegate.acMainTask));
+            static_cast<AcViewerTask *>(AppDelegate.appDelegate.acMainTask));
     } else {
         [self startCloseAnimation];
     }

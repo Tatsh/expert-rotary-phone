@@ -26,9 +26,8 @@
 @class ScoreData;   // Game/Data/Save/ScoreData.h (Core Data entity, per-song play
                     // records)
 class PlayTask;     // System/src/Task/PlayTask.h    (: C_TASK)
-class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
 class AcViewerTask; // System/src/Task/AcViewerTask.h (: C_TASK) — the arcade
-                    // note-play task
+                    // note-play task (AppDelegate's acMainTask slot)
 
 // PlayScore is the store DTO for one (musicId, difficulty) result: the tallies,
 // score, rank and flags that saveScoreData / updateHighScore read and write. The
@@ -390,15 +389,15 @@ void onDidEnterBackground(); // Ghidra: NEEngine_onDidEnterBackground
 
 // Nudge the running play / arcade task toward its stop state. The task pointer
 // is passed in by the caller (AppDelegate's _mainTask / _acMainTask); the
-// foreground "main task" during play is a PlayTask, so its state field is
-// PlayTask::m_state.
-void stopMainTask(PlayTask *playTask);       // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
-void stopAcMainTask(AcMainTask *acMainTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
+// foreground "main task" during play is a PlayTask (PlayTask::m_state), and the
+// "acMainTask" slot holds the arcade AcViewerTask (AcViewerTask::m_state).
+void stopMainTask(PlayTask *playTask);           // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
+void stopAcMainTask(AcViewerTask *acViewerTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
 
-// Ask the running AcMainTask to leave the arcade-viewer play and exit back to
-// the menu (sets its exit state @ +0x20c := 8 and exit-request flag @ +0x1d9 :=
-// 1). Ghidra: requestGameExit (FUN_0002315c).
-void acMainRequestGameExit(AcMainTask *acMainTask);
+// Ask the running arcade AcViewerTask to leave play and exit back to the menu
+// (sets its play state @ +0x20c := 8 and the board-up flag @ +0x1d9 := 1).
+// Ghidra: requestGameExit (FUN_0002315c).
+void acMainRequestGameExit(AcViewerTask *acViewerTask);
 // Push the arcade-viewer option selections (hi-speed / pop-kun / hid-sud /
 // ran-mir) into the live AcViewerTask (the arcade note-play task AppDelegate
 // holds in its acMainTask property), re-seek its note stream and resume the

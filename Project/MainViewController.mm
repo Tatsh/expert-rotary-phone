@@ -745,8 +745,8 @@ static const float kRenderMinInterval = 1000.0f;
     }
     if (neSceneManager::isPadDisplay()) {
         // Stop the arcade main task (Ghidra: acMainTask + FUN_0002315c) on close.
-        neEngine::stopAcMainTask(
-            (AcMainTask *)AppDelegate.appDelegate.acMainTask); // acMainTask stored as void*
+        neEngine::stopAcMainTask(static_cast<AcViewerTask *>(
+            AppDelegate.appDelegate.acMainTask)); // acMainTask slot stores the AcViewerTask
         _acMusicSelViewing = NO;
     }
     [self ResumeLoop];

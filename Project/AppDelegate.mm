@@ -224,7 +224,7 @@ BOOL gLaunchedFromPush = NO;
         neEngine::stopMainTask(static_cast<PlayTask *>(_mainTask));
     }
     if (_acMainTask) {
-        neEngine::stopAcMainTask(static_cast<AcMainTask *>(_acMainTask));
+        neEngine::stopAcMainTask(static_cast<AcViewerTask *>(_acMainTask));
     }
 
     // The binary pumps mainLoop three times when a resume is expected.
