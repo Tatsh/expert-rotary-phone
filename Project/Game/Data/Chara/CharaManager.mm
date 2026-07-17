@@ -10,6 +10,7 @@
 //
 
 #include <cstdint>
+#include <vector>
 
 #import "AcMainTask.h"
 #import "AppDelegate.h"
@@ -55,13 +56,12 @@ const uint8_t kCharaKeyObfuscated[25] = {
 // @complete
 NSData *charaDecodeChr(NSMutableData *data) {
     const int length = (int)sizeof(kCharaKeyObfuscated);
-    auto *deob = new uint8_t[length];
+    std::vector<uint8_t> deob(length);
     for (int i = 0; i < length; i++) {
         deob[i] = (uint8_t)(kCharaKeyObfuscated[i] + (uint8_t)i);
     }
     uint8_t digest[16];
-    RhMD5(deob, length, digest);
-    delete[] deob;
+    RhMD5(deob.data(), length, digest);
 
     BFCodec *codec = [[BFCodec alloc] init];
     [codec cipherInit:(const char *)digest keyLength:16];

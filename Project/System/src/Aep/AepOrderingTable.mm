@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <memory>
 
 #import <OpenGLES/ES1/gl.h>
 
@@ -560,9 +561,9 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
     // rect, and an unclipped one carries the full screen bounds that drawSprite
     // defaults into the spill (matching the binary's aEntries[0].pAHeader screen
     // extents), so clipping to it is a whole-screen no-op.
-    float *clipRect = nullptr;
+    std::unique_ptr<float[]> clipRect;
     if (pClipRect != nullptr) {
-        clipRect = new float[4];
+        clipRect = std::make_unique<float[]>(4);
         for (int i = 0; i < 4; ++i) {
             clipRect[i] = static_cast<float>(pClipRect[i]);
         }
@@ -600,8 +601,7 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
                        green,
                        blue,
                        mode,
-                       clipRect);
-    delete[] clipRect;
+                       clipRect.get());
 }
 
 // Ghidra: drawAepOtSprite (FUN_00010c90) — resolve the slot's texture, gate on

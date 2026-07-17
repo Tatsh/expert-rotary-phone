@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 #import <CoreText/CoreText.h> // CTFontManagerRegisterFontsForURL (bundled DynaFont)
 #import <OpenGLES/ES1/gl.h>
@@ -306,12 +307,12 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     // sizes this buffer from the FLOAT product (int)(width*height) (vmul.f32 +
     // vcvt.s32.f32 @ 0x17d04), not (int)width * (int)height; the CGBitmapContext
     // below still uses the truncated w/h for its dimensions and stride.
-    uint8_t *gray = new uint8_t[static_cast<size_t>(static_cast<int>(size.width * size.height))];
+    std::vector<uint8_t> gray(static_cast<size_t>(static_cast<int>(size.width * size.height)));
     [label setFrame:CGRectMake(0, 0, size.width, size.height)];
     [label setText:str];
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceGray();
-    CGContextRef ctx = CGBitmapContextCreate(gray, w, h, 8, w, cs, kCGImageAlphaNone);
+    CGContextRef ctx = CGBitmapContextCreate(gray.data(), w, h, 8, w, cs, kCGImageAlphaNone);
     CGContextClearRect(ctx, CGRectMake(0, 0, size.width, size.height));
     UIGraphicsPushContext(ctx);
     CGContextTranslateCTM(ctx, 0, size.height); // flip to UIKit's top-left origin
@@ -345,7 +346,7 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
         // 0x17e40). Indexing the row by cellX instead overlapped consecutive glyph
         // cells and garbled text.
         for (int rrow = 0; rrow < h; ++rrow) {
-            const uint8_t *src = gray + rrow * w;
+            const uint8_t *src = gray.data() + rrow * w;
             uint8_t *dst = atlas->pixels + ((cellY + rrow) * atlasW + cellX) * 4;
             for (int col = 0; col < w; ++col) {
                 uint8_t g = src[col];
@@ -385,7 +386,6 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
                    w * h,
                    maxGray);
     }
-    delete[] gray;
 
     glyph->atlasId = atlas->index;
     glyph->advance = w;

@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <vector>
 
 #import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AcViewerTask.h" // AcViewerTask named work-area (apply-settings owner)
@@ -873,12 +874,11 @@ ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
         potH <<= 1;
     }
 
-    unsigned char *pixels = new unsigned char[potW * potH * 4];
-    std::memset(pixels, 0, potW * potH * 4);
+    std::vector<unsigned char> pixels(potW * potH * 4); // zero-initialised padded RGBA
 
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(
-        pixels, potW, potH, 8, potW * 4, colorSpace, kCGImageAlphaPremultipliedLast);
+        pixels.data(), potW, potH, 8, potW * 4, colorSpace, kCGImageAlphaPremultipliedLast);
     // Draw the source Y-flipped (GL wants a top-down row order) into the padded
     // buffer.
     CGContextTranslateCTM(ctx, 0, (CGFloat)srcH);
@@ -887,8 +887,7 @@ ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
     CGContextRelease(ctx);
     CGColorSpaceRelease(colorSpace);
 
-    ne::C_TEXTURE *texture = neCreateTextureFromData(potW, potH, 1, pixels, srcW, srcH);
-    delete[] pixels;
+    ne::C_TEXTURE *texture = neCreateTextureFromData(potW, potH, 1, pixels.data(), srcW, srcH);
     return texture;
 }
 
