@@ -30,29 +30,27 @@ class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
 class AcViewerTask; // System/src/Task/AcViewerTask.h (: C_TASK) — the arcade
                     // note-play task
 
-// The just-finished play's result record — the transient block the
-// app-event-center singleton fills and the score store persists. This IS the
-// leading layout of neAppEventCenter (the binary's free score-store functions
-// take the singleton pointer, DAT_00187bb8, as a `unsigned int *`), named here
-// so the store touches real fields instead of raw byte offsets. The
-// COOL/GREAT/GOOD/BAD tallies at +0x08..+0x0e mirror
-// neAppEventCenter::coolCount()..badCount().
+// PlayScore is the store DTO for one (musicId, difficulty) result: the tallies,
+// score, rank and flags that saveScoreData / updateHighScore read and write. The
+// binary overlaid this record on the event-center singleton's result region (the
+// free store functions took the singleton pointer, DAT_00187bb8, as a
+// `unsigned int *`), but it is also built free-standing (a friend's server score
+// in FriendScoreMainView), so it is a plain value type. The event-center wrappers
+// copy its fields to/from the singleton by name, so there is no overlay
+// requirement and no reinterpret_cast. The singleton offsets each field mapped to
+// in the binary are kept in the comments for cross-reference.
 struct PlayScore {
-    unsigned musicId;             // +0x00 music id being scored (== lastMusic)
-    int difficulty;               // +0x04 sheet index (0 N / 1 H / 2 EX) (== lastSheet)
-    short coolCount;              // +0x08 COOL tally
-    short greatCount;             // +0x0a GREAT tally
-    short goodCount;              // +0x0c GOOD tally  (a "miss/near" counter)
-    short badCount;               // +0x0e BAD  tally  (a "miss/near" counter)
-    int score;                    // +0x10 final score
-    short rank;                   // +0x14 rank (0 best .. 6 fail); written by the play task
-    short _pad16;                 // +0x16
-    short maxCombo;               // +0x18 max combo; written by the play task
-    short _pad1a;                 // +0x1a
-    unsigned char fullCombo;      // +0x1c full-combo flag
-    unsigned char _pad1d[0x15];   // +0x1d..+0x31 (transient state / _endDate region)
-    unsigned char isNewHighScore; // +0x32 set when this play beat the stored score
-    unsigned char _pad33[0x15];   // +0x33..+0x47 (pad to the 0x48-byte singleton size)
+    unsigned musicId;             // (singleton +0x00) music id being scored (== lastMusic)
+    int difficulty;               // (+0x04) sheet index (0 N / 1 H / 2 EX) (== lastSheet)
+    short coolCount;              // (+0x08) COOL tally
+    short greatCount;             // (+0x0a) GREAT tally
+    short goodCount;              // (+0x0c) GOOD tally  (a "miss/near" counter)
+    short badCount;               // (+0x0e) BAD  tally  (a "miss/near" counter)
+    int score;                    // (+0x10) final score
+    short rank;                   // (+0x14) rank (0 best .. 6 fail); written by the play task
+    short maxCombo;               // (+0x18) max combo; written by the play task
+    unsigned char fullCombo;      // (+0x1c) full-combo flag
+    unsigned char isNewHighScore; // (+0x32) set when this play beat the stored score
 };
 
 // ===== Score store (Core Data ScoreData entity) — free functions the binary

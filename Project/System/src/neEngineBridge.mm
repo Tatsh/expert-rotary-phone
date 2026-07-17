@@ -196,14 +196,12 @@ void neAppEventCenter::setGuestNoSaveMode(bool guest) {
 
 #pragma mark - Score store (Core Data ScoreData entity)
 
-// PlayScore is the named view of this singleton's result region; the
-// reinterpret_casts in the three member wrappers below rely on it overlaying
-// the singleton exactly.
-static_assert(sizeof(PlayScore) == 0x48, "PlayScore must overlay the neAppEventCenter singleton");
-static_assert(offsetof(PlayScore, coolCount) == 0x08, "PlayScore.coolCount @ +0x08");
-static_assert(offsetof(PlayScore, score) == 0x10, "PlayScore.score @ +0x10");
-static_assert(offsetof(PlayScore, fullCombo) == 0x1c, "PlayScore.fullCombo @ +0x1c");
-static_assert(offsetof(PlayScore, isNewHighScore) == 0x32, "PlayScore.isNewHighScore @ +0x32");
+// PlayScore is a standalone store DTO: the (musicId, difficulty, tallies, score,
+// rank, flags) record the two store functions read/write. The binary overlaid it
+// on the event-center singleton, but it is also built free-standing (a friend's
+// server score in FriendScoreMainView), so it is a plain value type here and the
+// event-center wrappers copy fields to/from it by name rather than aliasing the
+// singleton with a reinterpret_cast.
 
 // @ 0x29438 — read one difficulty's columns out of a fetched ScoreData record.
 // `rec` is unused (the binary reads everything from `recDup`, the same object);
@@ -420,9 +418,9 @@ BOOL updateHighScore(PlayScore *s,
 
 #pragma mark - neAppEventCenter score-store wrappers
 
-// The three OO faces the ObjC layer calls; each reinterprets the singleton as a
-// PlayScore (they share a layout — see the static_asserts above) and forwards
-// to the free store functions.
+// The three OO faces the ObjC layer calls. The binary overlaid the singleton on
+// a PlayScore; here they copy fields to/from a local PlayScore DTO by name, so no
+// reinterpret_cast (and no 0x48-byte overlay requirement) is needed.
 
 void neAppEventCenter::readStoredResult(
     int *outScore, short *outRank, int *outPlayCnt, bool *outFullCombo, bool *outPerfect) {
@@ -436,19 +434,43 @@ void neAppEventCenter::readStoredResult(
                            m_lastSheet);
 }
 
+// Snapshot this play's result fields into a store DTO and persist it.
+// saveScoreData only reads the DTO; +0x1c doubles as the full-combo flag the
+// store medals key on (m_result.cleared).
 void neAppEventCenter::commitResultToScoreData() {
-    saveScoreData(reinterpret_cast<PlayScore *>(this));
+    PlayScore ps = {};
+    ps.musicId = (unsigned)m_lastMusic;
+    ps.difficulty = m_lastSheet;
+    ps.coolCount = m_result.coolCount;
+    ps.greatCount = m_result.greatCount;
+    ps.goodCount = m_result.goodCount;
+    ps.badCount = m_result.badCount;
+    ps.score = m_result.playScore;
+    ps.rank = m_result.playRank;
+    ps.maxCombo = (short)m_result.maxCombo;
+    ps.fullCombo = m_result.cleared;
+    ps.isNewHighScore = m_resultExt.newRecord;
+    saveScoreData(&ps);
 }
 
 bool neAppEventCenter::recordPlayResult(
     unsigned score, short cool, short great, short good, short bad, bool fullCombo) {
-    return updateHighScore(reinterpret_cast<PlayScore *>(this),
-                           score,
-                           cool,
-                           great,
-                           good,
-                           bad,
-                           fullCombo ? 1 : 0) != NO;
+    // updateHighScore reads musicId/difficulty and writes the tallies, score,
+    // full-combo and new-record flag back into the DTO; mirror those writes into
+    // the singleton fields the old overlay updated in place (+0x1c is the
+    // full-combo byte, +0x32 the new-record byte).
+    PlayScore ps = {};
+    ps.musicId = (unsigned)m_lastMusic;
+    ps.difficulty = m_lastSheet;
+    const BOOL isNew = updateHighScore(&ps, score, cool, great, good, bad, fullCombo ? 1 : 0);
+    m_result.coolCount = ps.coolCount;
+    m_result.greatCount = ps.greatCount;
+    m_result.goodCount = ps.goodCount;
+    m_result.badCount = ps.badCount;
+    m_result.playScore = ps.score;
+    m_result.cleared = ps.fullCombo;
+    m_resultExt.newRecord = ps.isNewHighScore;
+    return isNew != NO;
 }
 
 #pragma mark - neSceneManager (guarded singleton @ DAT_00187b74)
