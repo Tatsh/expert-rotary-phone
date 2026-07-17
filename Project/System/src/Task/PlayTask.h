@@ -46,6 +46,16 @@ class AepLyrCtrl;
 class neAppEventCenter;
 class neTextureForiOS;
 
+// Indices into PlayTask::m_sceneLayers (the +0x98 sustained combo-effect bank):
+// as the combo crosses each band the judge holds the matching tier paused at its
+// frame and resets the others. The remaining m_sceneLayers slots are HUD /
+// end-of-song rank layers cued elsewhere.
+enum SceneComboTier {
+    kSceneComboTier5 = 0,   // sustained combo effect for combo band 5..9
+    kSceneComboTier10 = 1,  // ...10..99
+    kSceneComboTier100 = 2, // ...100+
+};
+
 class PlayTask : public C_TASK {
 public:
     PlayTask();                        // Ghidra: MainTask spawns this; PlayTask_init

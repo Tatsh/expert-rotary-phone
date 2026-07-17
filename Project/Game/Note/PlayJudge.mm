@@ -658,22 +658,22 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                            !m_comboLayers[2]->isAnimating();
     if (burstIdle && combo > 4) {
         if (combo < 10) {
-            m_sceneLayers[0]->pause();
-            m_sceneLayers[1]->reset();
-            m_sceneLayers[2]->reset();
+            m_sceneLayers[kSceneComboTier5]->pause();
+            m_sceneLayers[kSceneComboTier10]->reset();
+            m_sceneLayers[kSceneComboTier100]->reset();
         } else if (combo < 100) {
-            m_sceneLayers[0]->reset();
-            m_sceneLayers[1]->pause();
-            m_sceneLayers[2]->reset();
+            m_sceneLayers[kSceneComboTier5]->reset();
+            m_sceneLayers[kSceneComboTier10]->pause();
+            m_sceneLayers[kSceneComboTier100]->reset();
         } else {
-            m_sceneLayers[0]->reset();
-            m_sceneLayers[1]->reset();
-            m_sceneLayers[2]->pause();
+            m_sceneLayers[kSceneComboTier5]->reset();
+            m_sceneLayers[kSceneComboTier10]->reset();
+            m_sceneLayers[kSceneComboTier100]->pause();
         }
     } else {
-        m_sceneLayers[0]->reset();
-        m_sceneLayers[1]->reset();
-        m_sceneLayers[2]->reset();
+        m_sceneLayers[kSceneComboTier5]->reset();
+        m_sceneLayers[kSceneComboTier10]->reset();
+        m_sceneLayers[kSceneComboTier100]->reset();
     }
 
     // Re-stamp +0x9c2 with the current combo every frame, regardless of the gate.
