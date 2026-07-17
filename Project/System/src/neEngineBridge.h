@@ -25,7 +25,7 @@
 @class UIViewController;
 @class ScoreData;   // Game/Data/Save/ScoreData.h (Core Data entity, per-song play
                     // records)
-class MainTask;     // System/src/Task/MainTask.h   (: C_TASK)
+class PlayTask;     // System/src/Task/PlayTask.h    (: C_TASK)
 class AcMainTask;   // System/src/Task/AcMainTask.h (: C_TASK)
 class AcViewerTask; // System/src/Task/AcViewerTask.h (: C_TASK) — the arcade
                     // note-play task
@@ -388,9 +388,11 @@ void bootstrapC(int flag);   // Ghidra: NEEngine_bootstrapC (FUN_0001796c)
 void onDidEnterBackground(); // Ghidra: NEEngine_onDidEnterBackground
                              // (FUN_0001bdf8)
 
-// Nudge the running MainTask / AcMainTask toward its stop state. The task
-// pointer is passed in by the caller (AppDelegate's _mainTask / _acMainTask).
-void stopMainTask(MainTask *mainTask);       // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
+// Nudge the running play / arcade task toward its stop state. The task pointer
+// is passed in by the caller (AppDelegate's _mainTask / _acMainTask); the
+// foreground "main task" during play is a PlayTask, so its state field is
+// PlayTask::m_state.
+void stopMainTask(PlayTask *playTask);       // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
 void stopAcMainTask(AcMainTask *acMainTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
 
 // Ask the running AcMainTask to leave the arcade-viewer play and exit back to

@@ -221,7 +221,7 @@ BOOL gLaunchedFromPush = NO;
     [self.viewController PauseLoop];
 
     if (_mainTask) {
-        neEngine::stopMainTask(static_cast<MainTask *>(_mainTask));
+        neEngine::stopMainTask(static_cast<PlayTask *>(_mainTask));
     }
     if (_acMainTask) {
         neEngine::stopAcMainTask(static_cast<AcMainTask *>(_acMainTask));

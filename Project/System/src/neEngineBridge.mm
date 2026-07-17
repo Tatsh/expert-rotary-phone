@@ -17,6 +17,7 @@
 #import "AepTexture.h"
 #import "AppDelegate.h" // [AppDelegate appDelegate] / managedObjectContext (score store)
 #import "AudioManager.h"
+#import "PlayTask.h"        // PlayTask::m_state (the running play task's lifecycle state)
 #import "ScoreData+Store.h" // +[ScoreData getScoreData:inManagedObjectContext:] / hashScore:
 #import "ScoreData.h"       // ScoreData entity score/rank/playCnt/fullCombo/perfect properties
 #import "UserSettingData.h" // +acvHiSpeed/+acvPopKun/+acvHidSud/+acvRanMir option accessors
@@ -33,9 +34,9 @@ C_TASK *BootCreateTask(); // operator_new(0x4c) + BootLogoTask_ctor + setPriorit
 // unlinked by AepTexture as cached textures are acquired/released.
 AepTexture *g_textureCacheList = nullptr;
 
-// Task state-machine field offsets (play-data): 0x9fc (main), 0x20c (arcade);
-// state 6 = running, transitioned to a stopping state on resign.
-static const int kTaskStateOffsetMain = 0x9fc;
+// Arcade-task lifecycle-state field offset (+0x20c): state 6 = running,
+// transitioned to a stopping state on resign. (The play-task equivalent is now
+// reached by name as PlayTask::m_state.)
 static const int kTaskStateOffsetAc = 0x20c;
 
 #pragma mark - neAppEventCenter (guarded singleton @ DAT_00187bb8)
@@ -679,17 +680,20 @@ void onDidEnterBackground() {
     }
 }
 
-// Ghidra: FUN_00030710 — nudge the passed MainTask toward its stop state
-// (6->5). The reconstruction adds a defensive null guard (the binary
-// dereferences unconditionally); behaviour is identical for non-null tasks.
+// Ghidra: FUN_00030710 — nudge the running play task toward its stop state
+// (6->5). AppDelegate's "mainTask" slot holds the current foreground task,
+// which during play is a PlayTask; the poked field is PlayTask::m_state (+0x9fc
+// in the 32-bit binary). Reaching it by name lets the compiler resolve the real
+// rebuilt (64-bit) offset instead of the drifted original literal. The
+// reconstruction adds a defensive null guard (the binary dereferences
+// unconditionally); behaviour is identical for non-null tasks.
 // @complete
-void stopMainTask(MainTask *mainTask) {
-    if (mainTask == nullptr) {
+void stopMainTask(PlayTask *playTask) {
+    if (playTask == nullptr) {
         return;
     }
-    int *state = reinterpret_cast<int *>(reinterpret_cast<char *>(mainTask) + kTaskStateOffsetMain);
-    if (*state == 6) {
-        *state = 5;
+    if (playTask->m_state == 6) { // running -> stopping
+        playTask->m_state = 5;
     }
 }
 
