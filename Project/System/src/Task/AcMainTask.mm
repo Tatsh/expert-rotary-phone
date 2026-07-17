@@ -2933,7 +2933,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
 
     // ---- treasure-point / ticket / bonus digit readouts
     // -----------------------------------
-    if (self->m_boardUserNo[0] == child) { // treasure point (4 digits)
+    if (self->m_boardUserNo[kBoardTreasurePoint] == child) { // treasure point (4 digits)
         int v = self->m_treasurePoint;
         if (v > 9999) {
             v = 9999;
@@ -2941,13 +2941,13 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         drawDigits(self->m_pointsDigitTex, v, 4, x, self->m_dlgLayout954, 0x22, 0x26);
         return;
     }
-    if (self->m_boardUserNo[23] == child) { // bonus count (ticket glyphs)
+    if (self->m_boardUserNo[kBoardBonusCount] == child) { // bonus count (ticket glyphs)
         // Disasm +0x42c (0xa3806): 2 digits from x-7, step 0x20 (loop init -7, exit
         // at -0x47).
         drawDigits(self->m_ticketDigitTex, self->m_bonusCount, 2, x - 7, 0x20, 0x20, 0x24);
         return;
     }
-    if (self->m_boardUserNo[21] == child) { // owned chara tickets (<=99)
+    if (self->m_boardUserNo[kBoardCharaTickets] == child) { // owned chara tickets (<=99)
         int v = self->m_charaTicket;
         if (v > 99) {
             v = 99;
@@ -2957,13 +2957,13 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         drawDigits(self->m_ticketDigitTex, v, 2, x, 0x20, 0x20, 0x24);
         return;
     }
-    if (self->m_boardUserNo[22] == child) { // roulette-result digit
+    if (self->m_boardUserNo[kBoardRouletteDigit] == child) { // roulette-result digit
         const int val = self->m_rouletteDigit;
         const int n = numDigits(val);
         drawDigits(self->m_pointsDigitTex, val, n, x + n * 0x20 - 0x30, 0x20, 0x22, 0x26);
         return;
     }
-    if (self->m_boardUserNo[16] == child) { // per-skill step value (roulette digits)
+    if (self->m_boardUserNo[kBoardStepValue] == child) { // per-skill step value (roulette digits)
         // Ghidra 0xa48e4: the slot is m_stepValues[m_stepValueIndex], where the
         // index (+0x594) cycles 0..6 each frame — the spinning roulette readout.
         int val = self->m_stepValues[self->m_stepValueIndex];
@@ -2982,7 +2982,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             const int idxBase = leftCol ? i : i + 3;
             neTextureForiOS *tex;
             if (self->m_charaColLeft < self->m_charaColRight) {
-                tex = (base == self->m_boardUserNo[2] || base == self->m_boardUserNo[4]) ?
+                tex = (base == self->m_boardUserNo[kBoardCharaColLeftA] ||
+                       base == self->m_boardUserNo[kBoardCharaColLeftB]) ?
                           self->m_charaPageCurrTex[idxBase] :
                           self->m_charaPagePrevTex[idxBase];
             } else {
@@ -3035,18 +3036,20 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             cx += (scaleX * 0xc4) / 100;
         }
     };
-    if (self->m_boardUserNo[2] == child || self->m_boardUserNo[4] == child) {
+    if (self->m_boardUserNo[kBoardCharaColLeftA] == child ||
+        self->m_boardUserNo[kBoardCharaColLeftB] == child) {
         drawCharaColumn(child, true);
         return;
     }
-    if (self->m_boardUserNo[1] == child || self->m_boardUserNo[5] == child) {
+    if (self->m_boardUserNo[kBoardCharaColRightA] == child ||
+        self->m_boardUserNo[kBoardCharaColRightB] == child) {
         drawCharaColumn(child, false);
         return;
     }
 
     // ---- chara name / skill text
     // ----------------------------------------------------------
-    if (self->m_boardUserNo[6] == child) { // selected chara name
+    if (self->m_boardUserNo[kBoardCharaName] == child) { // selected chara name
         if (self->m_skillCharaId < 0) {
             return;
         }
@@ -3054,7 +3057,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         aep->DrawText(info.charaName.UTF8String, 0x23, x, y - 0xf, 1, color, 0, p17);
         return;
     }
-    if (self->m_boardUserNo[7] == child) { // skill name / id / description
+    if (self->m_boardUserNo[kBoardSkillText] == child) { // skill name / id / description
         if (self->m_skillCharaId < 0) {
             return;
         }
@@ -3139,11 +3142,11 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             }
         }
     };
-    if (self->m_boardUserNo[8] == child) { // music-piece grid
+    if (self->m_boardUserNo[kBoardMusicPieceGrid] == child) { // music-piece grid
         drawPieceGrid(self->m_musicPieceTableDup, self->m_jacketTex, 0x168, 0x26, nullptr);
         return;
     }
-    if (self->m_boardUserNo[12] == child) { // wall-piece grid
+    if (self->m_boardUserNo[kBoardWallPieceGrid] == child) { // wall-piece grid
         // Disasm +0x400 (0xa45c4): the wall-piece panel scale is 0x64 (100), not
         // 0x26 like music.
         drawPieceGrid(self->m_wallPieceTableDup, self->m_wallNailTex, 0x88, 0x64, nullptr);
@@ -3155,9 +3158,10 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // frame m_boardFrame[1]; each cell's anchored position (cx-anchorX,
     // cy-anchorY) is cached for the result-popup overlays. The
     // FixedToFP/FPToFixed here are int<->float identity round-trips (no scaling).
-    if (self->m_boardUserNo[9] == child || self->m_boardUserNo[13] == child) {
-        int *anchorCache =
-            (self->m_boardUserNo[9] == child) ? self->m_musicAnchor : self->m_wallAnchor;
+    if (self->m_boardUserNo[kBoardMusicPanel] == child ||
+        self->m_boardUserNo[kBoardWallPanel] == child) {
+        int *anchorCache = (self->m_boardUserNo[kBoardMusicPanel] == child) ? self->m_musicAnchor :
+                                                                              self->m_wallAnchor;
         for (int i = 0; i < 9; i++) {
             const int cx = (i % 3) * 200 + x;
             const int cy = (i / 3) * 0xcc + y;
@@ -3186,7 +3190,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // ---- "new chara available" button (index 17): two-frame icon
     // -------------------------- Ghidra +0x414: m_boardFrame[8] when >=5 tickets
     // AND all charas collected, else [9].
-    if (self->m_boardUserNo[17] == child) {
+    if (self->m_boardUserNo[kBoardNewCharaButton] == child) {
         const bool available =
             self->m_charaTicket >= 5 &&
             countAvailableCharacters((__bridge NSArray *)self->m_gotCharaArray) == 0;
@@ -3216,7 +3220,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // appears, then a final overlay. In each 3-slot piece word, bit b =
     // collected, bit b+8 = already revealed. iPad nudges positions; all scales
     // are integer (scale*N)/100 (no NEON).
-    if (self->m_boardUserNo[11] == child) {
+    if (self->m_boardUserNo[kBoardMusicReveal] == child) {
         int px = x, py = y;
         if (self->m_padDisplay != 0) {
             px = x + 1;
@@ -3322,7 +3326,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // + reveal-bit logic, then a final overlay. The ONE float NEON in this set:
     // on iPad the piece layers are scaled by 1.6949 (DAT_000a4a10 = 0x3FD8F27C,
     // byte-verified) -> zoom = (int)(scale * 1.6949f) + 1.
-    if (self->m_boardUserNo[14] == child) {
+    if (self->m_boardUserNo[kBoardWallReveal] == child) {
         neTextureForiOS_draw(aep,
                              self->m_reserveTex[0],
                              0,
@@ -3435,10 +3439,13 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         int w;
         int h;
     } kPanels[] = {
-        {self->m_boardUserNo[3], 0x2, 0x228, 0x228},  // m_reserveTex[2]-ish chara backing
-        {self->m_boardUserNo[10], 0x3, 0x168, 0x168}, // small panel
-        {self->m_boardUserNo[15], 0x4, 0x280, 0x3c0}, // full-board bg
-        {self->m_boardUserNo[18], 0x1, 0x228, 0x228}, // list panel
+        {self->m_boardUserNo[kBoardCharaBacking],
+         0x2,
+         0x228,
+         0x228}, // m_reserveTex[2]-ish chara backing
+        {self->m_boardUserNo[kBoardSmallPanel], 0x3, 0x168, 0x168}, // small panel
+        {self->m_boardUserNo[kBoardFullBg], 0x4, 0x280, 0x3c0},     // full-board bg
+        {self->m_boardUserNo[kBoardListPanel], 0x1, 0x228, 0x228},  // list panel
     };
     for (auto &pnl : kPanels) {
         if (pnl.usr == child) {
@@ -3468,7 +3475,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
 
     // ---- scroll bar / collection-complete pulse badge
     // -------------------------------------
-    if (self->m_boardUserNo[19] == child) { // list scroll bar
+    if (self->m_boardUserNo[kBoardListScrollBar] == child) { // list scroll bar
         if (self->m_charaColLeft > 0) {
             drawAepFrameEx(aep,
                            self->m_boardFrame[10],
@@ -3505,7 +3512,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                        1);
         return;
     }
-    if (self->m_boardUserNo[20] == child) { // collection-complete badge (pulsing)
+    if (self->m_boardUserNo[kBoardCompleteBadge] == child) { // collection-complete badge (pulsing)
         int phase = self->m_badgePulse;
         const int a = phase < 0x32 ? 100 : phase < 100 ? phase * -2 + 200 : phase * 2 - 200;
         self->m_badgePulse = (phase + 2) % 0x97;
@@ -3537,7 +3544,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // ---- roulette result panel / caption
     // --------------------------------------------------
     auto inRange12 = [](int i) { return i >= 0 && i < 12; };
-    if (self->m_boardUserNo[24] == child) { // roulette-result event icon
+    if (self->m_boardUserNo[kBoardRouletteIcon] == child) { // roulette-result event icon
         if (!inRange12(self->m_hudState)) {
             return;
         }
@@ -3563,7 +3570,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                              1);
         return;
     }
-    if (self->m_boardUserNo[25] == child) { // roulette-result caption text
+    if (self->m_boardUserNo[kBoardRouletteCaption] == child) { // roulette-result caption text
         if (!inRange12(self->m_hudState)) {
             return;
         }

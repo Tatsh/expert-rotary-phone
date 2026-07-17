@@ -56,6 +56,39 @@ enum AcLifecycleState : int {
     kAcLifecycleStopping = 0xc,    // stopAcMainTask: resign teardown
 };
 
+// Draw-dispatch keys into m_boardUserNo: each entry is a getUserNo element id
+// that the group-5 board draw callback (AcMainSugorokuDraw) matches the drawn
+// `child` against to render one sugoroku / chara-select board element. Names are
+// from the callback's per-element branches.
+enum BoardElem {
+    kBoardTreasurePoint = 0,    // treasure-point 4-digit counter
+    kBoardCharaColRightA = 1,   // chara-select right column (paired with RightB)
+    kBoardCharaColLeftA = 2,    // chara-select left column (paired with LeftB)
+    kBoardCharaBacking = 3,     // chara backing panel
+    kBoardCharaColLeftB = 4,    // chara-select left column (paired with LeftA)
+    kBoardCharaColRightB = 5,   // chara-select right column (paired with RightA)
+    kBoardCharaName = 6,        // selected chara name
+    kBoardSkillText = 7,        // skill name / id / description
+    kBoardMusicPieceGrid = 8,   // music-piece unlock grid
+    kBoardMusicPanel = 9,       // music-panel grid (music anchors)
+    kBoardSmallPanel = 10,      // small chara panel
+    kBoardMusicReveal = 11,     // music-piece reveal overlay
+    kBoardWallPieceGrid = 12,   // wallpaper-piece unlock grid
+    kBoardWallPanel = 13,       // wall-panel grid (wall anchors)
+    kBoardWallReveal = 14,      // wall-piece reveal overlay
+    kBoardFullBg = 15,          // full-board background panel
+    kBoardStepValue = 16,       // per-skill roulette step-value digits
+    kBoardNewCharaButton = 17,  // "new chara available" button
+    kBoardListPanel = 18,       // chara list panel
+    kBoardListScrollBar = 19,   // chara list scroll bar
+    kBoardCompleteBadge = 20,   // collection-complete badge (pulsing)
+    kBoardCharaTickets = 21,    // owned chara-ticket count (<= 99)
+    kBoardRouletteDigit = 22,   // roulette-result digit
+    kBoardBonusCount = 23,      // bonus count (ticket glyphs)
+    kBoardRouletteIcon = 24,    // roulette-result event icon
+    kBoardRouletteCaption = 25, // roulette-result caption text
+};
+
 class AcMainTask : public C_TASK {
 public:
     // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
@@ -206,7 +239,7 @@ private:
     int m_base05Frame[4] = {};             // +0x390 4 BASE_05_* sub-map-flag frames
     int m_triangle0Frame[6] = {};          // +0x3a0 TRIANGLE00_* forward-arrow frames
     int m_triangle1Frame[6] = {};          // +0x3b8 TRIANGLE01_* back-arrow frames
-    int m_boardUserNo[26] = {};            // +0x3d0 26 getUserNo handles
+    int m_boardUserNo[26] = {};            // +0x3d0 getUserNo handles, indexed by BoardElem
     int m_rouletteSe[15] = {};             // +0x438 15 roulette SE source ids
     uint8_t m_selScratch[36] = {};         // +0x474 selection-index scratch (memset 0xff)
     int m_rouletteSeInst = {};             // +0x498 roulette-hit SE playing instance (-1 idle)
