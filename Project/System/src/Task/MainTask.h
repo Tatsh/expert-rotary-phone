@@ -124,6 +124,69 @@ public:
         kBtnDifficulty, ///< state 4 preview
     };
 
+    /// @brief Indices into m_layers[4] (the +0x34 scene-layer bank; kLayerNames).
+    enum MainSceneLayer {
+        kLayerBg = 0,        ///< BG_640X1136 background
+        kLayerDiffOpen = 1,  ///< DIFFICULTY_OPEN sweep
+        kLayerDiffClose = 2, ///< DIFFICULTY_CLOSE sweep
+        kLayerDiffLoop = 3,  ///< DIFFICULTY_ROOP loop
+    };
+
+    /// @brief Indices into m_introLayers[2] (the +0x44 intro bank; kIntroNames).
+    enum IntroLayer {
+        kIntroImage = 0,   ///< 640IMG / 1024IMG foreground image
+        kIntroBgImage = 1, ///< BG_IMG_640 / BG_IMG_1136 background
+    };
+
+    /// @brief Indices into m_bgLyrNo[3] / m_bgLyrFrames[3] (+0x14c; kBgLyrNames).
+    enum BgLayer {
+        kBgNeko = 0,     ///< BG_NEKO
+        kBgStarOpen = 1, ///< DIFFICULTY_STAR_OPEN
+        kBgStarOut = 2,  ///< DIFFICULTY_STAR_OUT
+    };
+
+    /// @brief Indices into m_elemUsrNo[22] (+0x22c; kElemUsrNames) — the
+    /// AepDrawCallback per-element user-number dispatch keys.
+    enum ElemUsr {
+        kElemJacket00 = 0,
+        kElemJacket09 = 1,
+        kElemStarGreen = 2,
+        kElemStarYellow = 3,
+        kElemStarRed = 4,
+        kElemRankNumGreen = 5,
+        kElemRankNumYellow = 6,
+        kElemRankNumRed = 7,
+        kElemDiffRankE = 8,
+        kElemBt00 = 9,
+        kElemMusicTitle = 10,
+        kElemDiffTitle = 11,
+        kElemDiffName = 12,
+        kElemNewBoard = 13,
+        kElemFullCombo = 14,
+        kElemBgNeko = 15,
+        kElemPointNum = 16,
+        kElemFriendScoreFont = 17,
+        kElemFriendScoreIcon = 18,
+        kElemFriendUpdefFontbar = 19,
+        kElemFriendUpIcon = 20,
+        kElemFriendUpFirstIcon = 21,
+    };
+
+    /// @brief Indices into m_arrowTex[2] (+0x4c; kArrowNames).
+    enum ArrowTex {
+        kArrowRecommend = 0, ///< "circle" recommend arrow
+        kArrowWarning = 1,   ///< "vie_cmn_warning@2x" friend-request / over-score badge
+    };
+
+    /// @brief Group base offsets into m_digitTex[60] (+0x5c; kDigitAtlasNames):
+    /// each group is 10 consecutive glyphs (0..9), so the digit is `base + n`.
+    enum DigitGroup {
+        kDigitScore = 0,   ///< num_score_0..9
+        kDigitPoints = 10, ///< num_points0..9
+        kDigitJkDif = 20,  ///< num_jk_dif_0..9
+        kDigitRank = 30,   ///< rank block: green/yellow/pink 10s at 30/40/50
+    };
+
     /**
      * @brief Hit-test a UI-scaled button rect against a tap.
      * @param tapX Tap x in screen pixels.
@@ -200,12 +263,20 @@ public:
         uint8_t tutorialOffered; // first-play tutorial offered for the tapped cell
         uint8_t scrollLatchA;    // list-scroll latch pair (diff-toggle / friend-score)
         uint8_t scrollLatchB;
-        uint8_t fullCombo[3]; // FC medals  N / H / EX
-        uint8_t perfect[3];   // PERFECT medals N / H / EX
+        // Always exactly the three difficulties (accessed individually, never by a
+        // runtime index or loop), so these are named triples rather than [3] arrays.
+        struct {
+            uint8_t normal, hyper, ex;
+        } fullCombo; // FC medals per difficulty
+        struct {
+            uint8_t normal, hyper, ex;
+        } perfect; // PERFECT medals per difficulty
         uint8_t _pad0[2];
-        unsigned musicId;    // current song id
-        int difficulty;      // selected difficulty (0 N / 1 H / 2 EX)
-        int levels[3];       // song levels N / H / EX
+        unsigned musicId; // current song id
+        int difficulty;   // selected difficulty (0 N / 1 H / 2 EX)
+        struct {
+            int normal, hyper, ex;
+        } levels;            // song levels per difficulty
         int transitionLatch; // fade-out phase latch (state 0xe/0xf)
         int selectSeId;      // select-SE source id
         int selectSeInst;    // select-SE playing instance (for stop)
@@ -311,37 +382,29 @@ public:
     int m_state = 0;                           // +0xaa4 state-machine field
     MusicSelState m_sel = {};                  // +0xaa8 packed per-song select state (seam)
     uint8_t _reservedTail[0xcc1 - 0xae8] = {}; // +0xae8..0xcc1 remaining Setup/layout tail
-};
 
-/**
- * @brief Music-select scene per-layer Aep draw callback (group draw callback).
- * @param context Owning MainTask.
- * @note Ghidra: MainTask::AepDrawCallback @ 0x389fc — a ~98 KB routine;
- *       the jacket-grid dispatch is recovered, the long per-element tail is a seam.
- *       The remaining params are the standard Aep blit args (frame, position, scale,
- *       anchor, colour, alpha, rotation, blend).
- * @note The parameter types MUST match AepGroupDrawFn exactly: the engine invokes
- *       this through that function-pointer type, and on arm64 the size-critical
- *       stack args (rotation as int, and p13/clipRect as an int* pointer) shift
- *       every following slot when mistyped — corrupting `context` and faulting on
- *       a garbage `self`. rotation was short and p13 was int here, which is why
- *       music select crashed in AepDrawCallback.
- */
-void AepDrawCallback(int child,
-                     int frame,
-                     int x,
-                     int y,
-                     int scaleX,
-                     int scaleY,
-                     int anchorX,
-                     int anchorY,
-                     int color,
-                     int alpha,
-                     int rotation,
-                     uint32_t blend,
-                     int *p13,
-                     uint32_t p14,
-                     void *context);
+    // Music-select scene per-layer Aep draw callback (group draw callback). A
+    // static member so it stays a plain function pointer for setGroupDrawCallback
+    // while reaching this task's members and index enums through `context`. Ghidra:
+    // MainTask::AepDrawCallback @ 0x389fc. The param types MUST match AepGroupDrawFn
+    // exactly (rotation int, p13 int*): on arm64 a mistyped stack arg shifts every
+    // following slot and corrupts `context`, faulting on a garbage `self`.
+    static void AepDrawCallback(int child,
+                                int frame,
+                                int x,
+                                int y,
+                                int scaleX,
+                                int scaleY,
+                                int anchorX,
+                                int anchorY,
+                                int color,
+                                int alpha,
+                                int rotation,
+                                uint32_t blend,
+                                int *p13,
+                                uint32_t p14,
+                                void *context);
+};
 
 /// @brief `MainTask` was a Ghidra type-conflict artifact of MainTask (the same
 /// 0xaa8 object, never separately constructed); kept as an alias so existing

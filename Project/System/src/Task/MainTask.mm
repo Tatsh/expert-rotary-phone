@@ -200,11 +200,12 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
 // Seed the three difficulty-star background-layer frame counters (@ +0x170+i*4)
 // when the over-score preview opens (update states 3/4). Each counter starts on
 // its layer's last frame (frameCount - 1) so the stars render fully open/out on
-// entry: the selected difficulty tracks the OPEN layer (m_bgLyrFrames[1]), the
-// other two the OUT layer (m_bgLyrFrames[2]).
+// entry: the selected difficulty tracks the OPEN layer (m_bgLyrFrames[kBgStarOpen]), the
+// other two the OUT layer (m_bgLyrFrames[kBgStarOut]).
 inline void MainTask::seedDiffStarLayerFrames() {
     for (int i = 0; i < 3; i++) {
-        m_diffStarLayerFrame[i] = (i == m_sel.difficulty ? m_bgLyrFrames[1] : m_bgLyrFrames[2]) - 1;
+        m_diffStarLayerFrame[i] =
+            (i == m_sel.difficulty ? m_bgLyrFrames[kBgStarOpen] : m_bgLyrFrames[kBgStarOut]) - 1;
     }
 }
 
@@ -306,11 +307,11 @@ void MainTask::update(int /*deltaMs*/) {
         break;
     }
 
-    case 1:                           // fade the select scene in and start its intro layers
-        aep.setAepTransitionMode(1);  // fade in (fixed 30 frames)
-        m_layers[0]->play();          // +0x34 loop (Ghidra AepLyrCtrl_play @ 0x35b86)
-        m_introLayers[0]->playOnce(); // +0x44 once (Ghidra AepLyrCtrl::Play @ 0x35b8e)
-        m_introLayers[1]->play();     // +0x48 loop (Ghidra AepLyrCtrl_play @ 0x35b96)
+    case 1:                          // fade the select scene in and start its intro layers
+        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
+        m_layers[kLayerBg]->play();  // +0x34 loop (Ghidra AepLyrCtrl_play @ 0x35b86)
+        m_introLayers[kIntroImage]->playOnce(); // +0x44 once (Ghidra AepLyrCtrl::Play @ 0x35b8e)
+        m_introLayers[kIntroBgImage]->play();   // +0x48 loop (Ghidra AepLyrCtrl_play @ 0x35b96)
         m_selectedCell = -1;
         m_state = 2;
         break;
@@ -443,7 +444,7 @@ void MainTask::update(int /*deltaMs*/) {
         NSManagedObjectContext *moc = [[AppDelegate appDelegate] managedObjectContext];
         ScoreData *score = [ScoreData getScoreData:musicId inManagedObjectContext:moc];
 
-        m_layers[1]->stop(1);
+        m_layers[kLayerDiffOpen]->stop(1);
         if (m_nameTex) {
             delete m_nameTex;
             m_nameTex = nullptr;
@@ -463,15 +464,15 @@ void MainTask::update(int /*deltaMs*/) {
 
         // The three level values + the six full-combo / perfect medals for the
         // score panel.
-        m_sel.levels[0] = (int)[info lvNormal];
-        m_sel.levels[1] = (int)[info lvHyper];
-        m_sel.levels[2] = (int)[info lvEx];
-        m_sel.fullCombo[0] = [[score fullComboN] boolValue] ? 1 : 0;
-        m_sel.fullCombo[1] = [[score fullComboH] boolValue] ? 1 : 0;
-        m_sel.fullCombo[2] = [[score fullComboEx] boolValue] ? 1 : 0;
-        m_sel.perfect[0] = [[score perfectN] boolValue] ? 1 : 0;
-        m_sel.perfect[1] = [[score perfectH] boolValue] ? 1 : 0;
-        m_sel.perfect[2] = [[score perfectEx] boolValue] ? 1 : 0;
+        m_sel.levels.normal = (int)[info lvNormal];
+        m_sel.levels.hyper = (int)[info lvHyper];
+        m_sel.levels.ex = (int)[info lvEx];
+        m_sel.fullCombo.normal = [[score fullComboN] boolValue] ? 1 : 0;
+        m_sel.fullCombo.hyper = [[score fullComboH] boolValue] ? 1 : 0;
+        m_sel.fullCombo.ex = [[score fullComboEx] boolValue] ? 1 : 0;
+        m_sel.perfect.normal = [[score perfectN] boolValue] ? 1 : 0;
+        m_sel.perfect.hyper = [[score perfectH] boolValue] ? 1 : 0;
+        m_sel.perfect.ex = [[score perfectEx] boolValue] ? 1 : 0;
         m_sel.previewReady = 1;
 
         // Kick the full-resolution jacket decode onto a background queue.
@@ -512,9 +513,9 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // When the preview intro finishes, cross into its looping layer.
-        AepLyrCtrl *preview = m_layers[1];
+        AepLyrCtrl *preview = m_layers[kLayerDiffOpen];
         if (preview->isAnimating() /* Ghidra: layer[0x5c] one-shot flag, consumed here */) {
-            m_layers[3]->play();
+            m_layers[kLayerDiffLoop]->play();
         }
 
         // A pending difficulty change re-reads the three score rows.
@@ -580,9 +581,9 @@ void MainTask::update(int /*deltaMs*/) {
 
         // -- tap outside every button: back out to the song list --
         if (!m_sel.previewReady) {
-            m_layers[1]->reset();
-            m_layers[3]->reset();
-            m_layers[2]->stop(1);
+            m_layers[kLayerDiffOpen]->reset();
+            m_layers[kLayerDiffLoop]->reset();
+            m_layers[kLayerDiffClose]->stop(1);
             [audio popBgm];
             [audio setBgmVolume:[UserSettingData bgmVolume]];
             [audio playBgm:0];
@@ -973,7 +974,7 @@ void MainTask::Setup() {
 
     // Install the per-frame scene draw callback for group 3 (Ghidra:
     // setAepCallbacks).
-    m_aep->setGroupDrawCallback(3, &AepDrawCallback, this);
+    m_aep->setGroupDrawCallback(3, &MainTask::AepDrawCallback, this);
 
     // ---- load the 5 touch/select SEs (group 1) + the preview BGM ----
     for (int i = 0; i < 5; i++) {
@@ -1653,11 +1654,11 @@ void MainTask::UpdateHighlight() {
     // them), 0xffffff == white, 0x20 == blend mode, 10 == OT priority.
     const int kScale100 = 100;
 
-    // Pulsing new-recommend badge (m_arrowTex[1]) over the recommend button.
+    // Pulsing new-recommend badge (m_arrowTex[kArrowWarning]) over the recommend button.
     if (m_recommendBadge) {
         const int a = pulseAlpha(m_highlightAnim);
         neTextureForiOS_draw(m_aep,
-                             m_arrowTex[1],
+                             m_arrowTex[kArrowWarning],
                              0,
                              0,
                              m_layoutRects[kLR_ScreenW],
@@ -1677,11 +1678,11 @@ void MainTask::UpdateHighlight() {
                              10,
                              1);
     }
-    // Pulsing over-score badge (m_arrowTex[1]) over the over-score-log button.
+    // Pulsing over-score badge (m_arrowTex[kArrowWarning]) over the over-score-log button.
     if (m_overScoreBadge) {
         const int a = pulseAlpha(m_highlightAnim);
         neTextureForiOS_draw(m_aep,
-                             m_arrowTex[1],
+                             m_arrowTex[kArrowWarning],
                              0,
                              0,
                              m_layoutRects[kLR_ScreenW],
@@ -2059,21 +2060,21 @@ void MainTask::MusicSelLoadColumnPrev(int column) {
  * they are sourced from the Setup()-filled layout/element data — the maximum
  * fidelity the decompile permits.
  */
-void AepDrawCallback(int child,
-                     int frame,
-                     int x,
-                     int y,
-                     int scaleX,
-                     int scaleY,
-                     int anchorX,
-                     int anchorY,
-                     int color,
-                     int alpha,
-                     int rotation,
-                     uint32_t blend,
-                     int *p13,
-                     uint32_t p14,
-                     void *context) {
+void MainTask::AepDrawCallback(int child,
+                               int frame,
+                               int x,
+                               int y,
+                               int scaleX,
+                               int scaleY,
+                               int anchorX,
+                               int anchorY,
+                               int color,
+                               int alpha,
+                               int rotation,
+                               uint32_t blend,
+                               int *p13,
+                               uint32_t p14,
+                               void *context) {
     (void)frame;
     (void)p13;
     MainTask *self = static_cast<MainTask *>(context);
@@ -2160,7 +2161,7 @@ void AepDrawCallback(int child,
         }
     };
 
-    if (self->m_elemUsrNo[0] == (int)child) {
+    if (self->m_elemUsrNo[kElemJacket00] == (int)child) {
         // Current column grid. Cache the grid origin (@ +0xa40/+0xa44) for
         // hit-testing.
         self->m_layoutRects[46] = x - (anchorX * scaleX) / 100;
@@ -2332,9 +2333,9 @@ void AepDrawCallback(int child,
     // ------------------------------------------------------------------ grid
     // list elements ----
 
-    // Song-name text (per cell) — m_elemUsrNo[10]. Blits each cell's title string
+    // Song-name text (per cell) — m_elemUsrNo[kElemMusicTitle]. Blits each cell's title string
     // (@ cell+0x10).
-    if (self->m_elemUsrNo[10] == (int)child) {
+    if (self->m_elemUsrNo[kElemMusicTitle] == (int)child) {
         forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
             id name = cell->name;
             if (name) {
@@ -2364,24 +2365,24 @@ void AepDrawCallback(int child,
             return true;
         });
     };
-    if (self->m_elemUsrNo[2] == (int)child) {
+    if (self->m_elemUsrNo[kElemStarGreen] == (int)child) {
         drawStarGrid(self->m_starFrmNo[0], 0);
         return;
     }
-    if (self->m_elemUsrNo[3] == (int)child) {
+    if (self->m_elemUsrNo[kElemStarYellow] == (int)child) {
         drawStarGrid(self->m_starFrmNo[1], 1);
         return;
     }
-    if (self->m_elemUsrNo[4] == (int)child) {
+    if (self->m_elemUsrNo[kElemStarRed] == (int)child) {
         drawStarGrid(self->m_starFrmNo[2], 2);
         return;
     }
 
-    // Streaming placeholder frame (per cell) — m_elemUsrNo[13] draws m_frmNo[2]
+    // Streaming placeholder frame (per cell) — m_elemUsrNo[kElemNewBoard] draws m_frmNo[2]
     // over cells whose score/points slots (cell+0x20/+0x24/+0x28) are all zero,
     // unless m_showLevelNumbers is set. Stops the column at the first cell with
     // no jacket handle (cell+0xc == 0).
-    if (self->m_elemUsrNo[13] == (int)child) {
+    if (self->m_elemUsrNo[kElemNewBoard] == (int)child) {
         forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
             if (cell->texture == nullptr) {
                 return false;
@@ -2408,7 +2409,7 @@ void AepDrawCallback(int child,
             const int adv = (int)(((long long)pen * -0x51eb851f) >> 32); // pen / 100
             const int dx = ((adv >> 5) - (adv >> 31)) + cx + ((n << 4) >> 1) - 8;
             neTextureForiOS_draw(&AepManager::shared(),
-                                 self->m_digitTex[20 + value % 10],
+                                 self->m_digitTex[kDigitJkDif + value % 10],
                                  0,
                                  0,
                                  0x10,
@@ -2454,15 +2455,15 @@ void AepDrawCallback(int child,
             return true;
         });
     };
-    if (self->m_elemUsrNo[5] == (int)child) {
+    if (self->m_elemUsrNo[kElemRankNumGreen] == (int)child) {
         drawLevelGrid(0, 0, 0xb);
         return;
     } // Normal
-    if (self->m_elemUsrNo[6] == (int)child) {
+    if (self->m_elemUsrNo[kElemRankNumYellow] == (int)child) {
         drawLevelGrid(1, 1, 0xb);
         return;
     } // Hyper
-    if (self->m_elemUsrNo[7] == (int)child) {
+    if (self->m_elemUsrNo[kElemRankNumRed] == (int)child) {
         drawLevelGrid(2, 2, p14);
         return;
     } // Extra
@@ -2504,13 +2505,13 @@ void AepDrawCallback(int child,
         }
     }
 
-    // Treasure-point counter — m_elemUsrNo[16]. Fixed 4-digit run (atlas
+    // Treasure-point counter — m_elemUsrNo[kElemPointNum]. Fixed 4-digit run (atlas
     // m_digitTex[10..19]), least-significant digit at x, each preceding digit
     // 0x1e px to the left.
-    if (self->m_elemUsrNo[16] == (int)child) {
+    if (self->m_elemUsrNo[kElemPointNum] == (int)child) {
         int v = self->m_treasurePoint;
         for (int dx = 0; dx != -0x78; dx -= 0x1e) {
-            drawTex(self->m_digitTex[10 + v % 10], 0x22, 0x26, x + dx, y);
+            drawTex(self->m_digitTex[kDigitPoints + v % 10], 0x22, 0x26, x + dx, y);
             v /= 10;
         }
         return;
@@ -2534,16 +2535,16 @@ void AepDrawCallback(int child,
         }
         for (int d = 0; d < 6; d++) {
             if (self->m_scoreDigitUsrNo[d] == (int)child) {
-                drawTex(self->m_digitTex[score % 10], 0x20, 0x28, x, y);
+                drawTex(self->m_digitTex[kDigitScore + score % 10], 0x20, 0x28, x, y);
                 return;
             }
             score /= 10;
         }
     }
 
-    // Difficulty rank badge (selected song) — m_elemUsrNo[8] draws
+    // Difficulty rank badge (selected song) — m_elemUsrNo[kElemDiffRankE] draws
     // m_diffRankFrmNo[rank].
-    if (self->m_elemUsrNo[8] == (int)child) {
+    if (self->m_elemUsrNo[kElemDiffRankE] == (int)child) {
         const short rank = selCellPtr->scores.rank[resultSheet];
         if (rank < 0) {
             return;
@@ -2552,14 +2553,14 @@ void AepDrawCallback(int child,
         return;
     }
 
-    // Song-list backing frame — m_elemUsrNo[9] draws m_frmNo[0].
-    if (self->m_elemUsrNo[9] == (int)child) {
+    // Song-list backing frame — m_elemUsrNo[kElemBt00] draws m_frmNo[0].
+    if (self->m_elemUsrNo[kElemBt00] == (int)child) {
         drawFrame(self->m_frmNo[0], x, y);
         return;
     }
 
     // Difficulty backing layers — m_diffBlackUsrNo[0..2]. Play a looping Aep
-    // layer (m_bgLyrNo[1] for the selected sheet, else m_bgLyrNo[2]) advancing
+    // layer (m_bgLyrNo[kBgStarOpen] for the selected sheet, else m_bgLyrNo[kBgStarOut]) advancing
     // its own frame counter
     // (@ +0x170+i*4) until the layer's frame count (m_bgLyrFrames), then holding
     // on the last.
@@ -2593,22 +2594,22 @@ void AepDrawCallback(int child,
         }
     }
 
-    // Selected-song jacket preview — m_elemUsrNo[1] blits the big jacket texture
+    // Selected-song jacket preview — m_elemUsrNo[kElemJacket09] blits the big jacket texture
     // (@ selCell+0xc).
-    if (self->m_elemUsrNo[1] == (int)child) {
+    if (self->m_elemUsrNo[kElemJacket09] == (int)child) {
         drawTex(selCellPtr->texture, 0x168, 0x168, x, y);
         return;
     }
 
-    // Song-name / artist banners — m_elemUsrNo[11] / m_elemUsrNo[12].
-    if (self->m_elemUsrNo[11] == (int)child) {
+    // Song-name / artist banners — m_elemUsrNo[kElemDiffTitle] / m_elemUsrNo[kElemDiffName].
+    if (self->m_elemUsrNo[kElemDiffTitle] == (int)child) {
         if (!self->m_nameTex) {
             return;
         }
         drawTex(self->m_nameTex, 0x126, 0x20, x, y);
         return;
     }
-    if (self->m_elemUsrNo[12] == (int)child) {
+    if (self->m_elemUsrNo[kElemDiffName] == (int)child) {
         if (!self->m_artistTex) {
             return;
         }
@@ -2619,7 +2620,7 @@ void AepDrawCallback(int child,
     // Ranking-place digits — m_placeDigitUsrNo[0..8]: three groups (green /
     // yellow / pink) of up to three digit slots, each a single digit of the
     // group's place value (@ +0x908+grp*4) drawn from that group's 10-digit atlas
-    // (m_digitTex[30 + grp*10 + digit]).
+    // (m_digitTex[kDigitRank + grp * 10 + digit]).
     for (int grp = 0; grp < 3; grp++) {
         const int placeVal = self->m_placeValue[grp];
         const int nd = numDigits(placeVal);
@@ -2642,17 +2643,17 @@ void AepDrawCallback(int child,
                     }
                     digit = placeVal;
                 }
-                drawTex(self->m_digitTex[30 + grp * 10 + digit], 0x32, 0x32, x, y);
+                drawTex(self->m_digitTex[kDigitRank + grp * 10 + digit], 0x32, 0x32, x, y);
                 return;
             }
         }
     }
 
-    // Clear-mark badge (selected song) — m_elemUsrNo[14]. No record ->
+    // Clear-mark badge (selected song) — m_elemUsrNo[kElemFullCombo]. No record ->
     // m_frmNo[5] (NEW_BOARD); else perfect (byte@+0x917+sheet) -> m_frmNo[4]
     // (PERFECT); else full-combo (byte@+0x914+sheet) -> m_frmNo[3] (FULLCOMBO);
     // else none.
-    if (self->m_elemUsrNo[14] == (int)child) {
+    if (self->m_elemUsrNo[kElemFullCombo] == (int)child) {
         int frameNo;
         if (selCellPtr->scores.rank[resultSheet] == 0) {
             frameNo = self->m_frmNo[5];
@@ -2694,9 +2695,9 @@ void AepDrawCallback(int child,
     };
 
     if (![[DownloadMain getInstance] isGetRecommendListDownLoading]) {
-        // Recommend badge (per cell) — m_elemUsrNo[20], m_frmNo[22], pulsing (phase
+        // Recommend badge (per cell) — m_elemUsrNo[kElemFriendUpIcon], m_frmNo[22], pulsing (phase
         // @ +0xa9c).
-        if (self->m_elemUsrNo[20] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendUpIcon] == (int)child) {
             const int a = pulseAlpha(self->m_overScorePulse);
             forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
                 if (jacketPresent(cell) && overScoreMatch(listIndex, @"1")) {
@@ -2706,9 +2707,9 @@ void AepDrawCallback(int child,
             });
             return;
         }
-        // Over-score badge (per cell) — m_elemUsrNo[21], m_frmNo[23]. Advances the
+        // Over-score badge (per cell) — m_elemUsrNo[kElemFriendUpFirstIcon], m_frmNo[23]. Advances the
         // pulse phase.
-        if (self->m_elemUsrNo[21] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendUpFirstIcon] == (int)child) {
             const int a = pulseAlpha(self->m_overScorePulse);
             self->m_overScorePulse = (self->m_overScorePulse + 2) % 0x97;
             forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
@@ -2721,15 +2722,15 @@ void AepDrawCallback(int child,
         }
         // Chosen-song state frames (single blit at x,y) — m_elemUsrNo[17..19],
         // keyed on whether the chosen music id is in the over-score set.
-        if (self->m_elemUsrNo[17] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendScoreFont] == (int)child) {
             drawFrame(chosenTouched() ? self->m_frmNo[18] : self->m_frmNo[17], x, y);
             return;
         }
-        if (self->m_elemUsrNo[18] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendScoreIcon] == (int)child) {
             drawFrame(chosenTouched() ? self->m_frmNo[20] : self->m_frmNo[19], x, y);
             return;
         }
-        if (self->m_elemUsrNo[19] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendUpdefFontbar] == (int)child) {
             if (chosenTouched()) {
                 drawFrame(self->m_frmNo[21], x, y);
             }
@@ -2737,16 +2738,16 @@ void AepDrawCallback(int child,
         }
     }
 
-    // Difficulty intro sweep — m_elemUsrNo[15]. While the intro flag
-    // (byte@+0x91d) is set, play m_bgLyrNo[0] frame by frame (counter @ +0x164)
+    // Difficulty intro sweep — m_elemUsrNo[kElemBgNeko]. While the intro flag
+    // (byte@+0x91d) is set, play m_bgLyrNo[kBgNeko] frame by frame (counter @ +0x164)
     // until it ends, then clear the flag; once done it holds the static
     // difficulty backing frame m_frmNo[12].
-    if (self->m_elemUsrNo[15] != (int)child) {
+    if (self->m_elemUsrNo[kElemBgNeko] != (int)child) {
         return;
     }
     if (self->m_diffIntroActive != 0) {
         int &frm = self->m_diffIntroFrame;
-        self->m_aep->drawLayer(self->m_bgLyrNo[0],
+        self->m_aep->drawLayer(self->m_bgLyrNo[kBgNeko],
                                frm,
                                x,
                                y,
@@ -2765,7 +2766,7 @@ void AepDrawCallback(int child,
                                p14,
                                1);
         frm++;
-        if (frm < self->m_bgLyrFrames[0]) {
+        if (frm < self->m_bgLyrFrames[kBgNeko]) {
             return;
         }
         frm = 0;
