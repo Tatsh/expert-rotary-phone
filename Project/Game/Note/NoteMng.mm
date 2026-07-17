@@ -182,7 +182,7 @@ void NoteMng::registerTempoEvents() {
         if (r.type == NOTE_TYPE_TEMPO) {
             // In auto/preview mode the BPM is clamped to 200 (Ghidra: DAT_00013cc4).
             int16_t bpm = m_autoPlay ? 200 : (int16_t)r.value;
-            int rc = advanceRegisterEvent(bpm, r.tick);
+            [[maybe_unused]] const int rc = advanceRegisterEvent(bpm, r.tick);
             assert(rc == 0); // NoteMng.mm:0x4ae "AdvanceRegisterEvent"
         }
     }
