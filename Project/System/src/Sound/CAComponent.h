@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #import <AudioToolbox/AudioToolbox.h>
 
 class CASound;
@@ -109,11 +112,11 @@ private:
     AUGraph m_graph = nullptr;
     AUNode m_ioNode = 0;
     AUNode m_mixerNode = 0;
-    AudioUnit m_ioUnit = nullptr;    // +0x0c
-    AudioUnit m_mixerUnit = nullptr; // +0x10
-    bool m_running = false;          // +0x14
-    int m_voiceCount = 0;            // +0x18
-    CAVoice **m_voices = nullptr;    // +0x1c
+    AudioUnit m_ioUnit = nullptr;                   // +0x0c
+    AudioUnit m_mixerUnit = nullptr;                // +0x10
+    bool m_running = false;                         // +0x14
+    int m_voiceCount = 0;                           // +0x18
+    std::vector<std::unique_ptr<CAVoice>> m_voices; // +0x1c
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -8,6 +8,7 @@
 //
 
 #include <cstring>
+#include <memory>
 
 #import "CAComponent.h"
 #import "CASound.h"
@@ -75,14 +76,10 @@ void CAComponent::terminate() {
         NSLog(@"CAComponent terminate: DisposeAUGraph failed.");
         return;
     }
-    if (m_voices != nullptr) {
-        for (int i = 0; i < m_voiceCount; i++) {
-            m_voices[i]->source = nullptr;
-            delete m_voices[i];
-        }
-        delete[] m_voices;
-        m_voices = nullptr;
+    for (auto &v : m_voices) {
+        v->source = nullptr; // clear the back-pointer before the voice is destroyed
     }
+    m_voices.clear(); // unique_ptr elements delete each CAVoice
 }
 
 // Ghidra: FUN_00023a6c — build the AUGraph: a 3D-mixer feeding RemoteIO output.
@@ -150,9 +147,10 @@ bool CAComponent::initGraph(int voices) {
         return false;
     }
     m_voiceCount = (int)count;
-    m_voices = new CAVoice *[count]; // operator new[]; paired with delete[] in terminate
+    m_voices.clear();
+    m_voices.reserve(count);
     for (int i = 0; i < m_voiceCount; i++) {
-        m_voices[i] = new CAVoice(); // operator new; state -1 (free), generation 0
+        m_voices.push_back(std::make_unique<CAVoice>()); // state -1 (free), generation 0
     }
 
     AudioStreamBasicDescription out = {};
@@ -229,7 +227,7 @@ uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
 // the cursors, mark it playing.
 // @complete
 int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
-    CAVoice *v = m_voices[voice];
+    CAVoice *v = m_voices[voice].get();
     if (v->state != -1 && v->state != 4) {
         return -1;
     }
@@ -270,7 +268,7 @@ void CAComponent::setRenderCallback(int voice) {
     }
     AURenderCallbackStruct cb;
     cb.inputProc = &CAComponent::renderProc;
-    cb.inputProcRefCon = m_voices[voice];
+    cb.inputProcRefCon = m_voices[voice].get(); // raw CAVoice* handed to the CoreAudio callback
     if (AudioUnitSetProperty(m_mixerUnit,
                              kAudioUnitProperty_SetRenderCallback,
                              kAudioUnitScope_Input,
@@ -319,7 +317,7 @@ bool CAComponent::startVoice(int handle) {
     if (voice >= m_voiceCount) {
         return false;
     }
-    CAVoice *v = m_voices[voice];
+    CAVoice *v = m_voices[voice].get();
     if (v->generation != (handle & 0xffff)) {
         return false;
     }
@@ -339,7 +337,7 @@ bool CAComponent::stopVoice(int handle) {
     if (voice >= m_voiceCount) {
         return false;
     }
-    CAVoice *v = m_voices[voice];
+    CAVoice *v = m_voices[voice].get();
     if (v->generation != (handle & 0xffff)) {
         return false;
     }
@@ -356,7 +354,7 @@ int CAComponent::voiceState(int handle) const {
     if (voice >= m_voiceCount) {
         return -1;
     }
-    CAVoice *v = m_voices[voice];
+    CAVoice *v = m_voices[voice].get();
     if (v->generation != (handle & 0xffff)) {
         return -1;
     }
@@ -398,7 +396,7 @@ bool CAComponent::pauseVoice(int handle) {
     if (voice >= m_voiceCount) {
         return false;
     }
-    CAVoice *v = m_voices[voice];
+    CAVoice *v = m_voices[voice].get();
     if (v->generation != (handle & 0xffff)) {
         return false;
     }
@@ -420,7 +418,7 @@ void CAComponent::stopAndClearVoice(int handle) {
     if (voice >= m_voiceCount) {
         return;
     }
-    CAVoice *v = m_voices[voice];
+    CAVoice *v = m_voices[voice].get();
     if (v->generation == (handle & 0xffff)) {
         v->state = kVoiceFinished;
         v->source = nullptr;
