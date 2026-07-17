@@ -59,6 +59,13 @@ public:
         return m_visible;
     }
 
+    // Whether this layer-control is in any non-idle play-state (m_state != 0). The
+    // play scene drives some layers as one-shot SE cues and gates a new cue on this
+    // (idle == the previous cue finished). Ghidra: aepLyrCtrlIsActive (FUN_0002cba4).
+    bool isActive() const {
+        return m_state != 0;
+    }
+
     // Whether this layer is still mid-animation: false when idle (play-state 0)
     // or held (play-state 4), otherwise true while the play head at +0x40 has not
     // reached the end of its travel (0..m_frameCount for a forward rate, >0 for a

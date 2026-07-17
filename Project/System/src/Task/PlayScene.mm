@@ -1438,7 +1438,7 @@ void PlayTaskDraw(int child,
                     if (task->m_score < scoreGate) {
                         return; // score below chara threshold
                     }
-                    AepLyrCtrl *bg = task->m_sceneLayers[10]; // +0xc0
+                    AepLyrCtrl *bg = task->m_sceneLayers[kSceneRankFanfare]; // +0xc0
                     if (i > 2 && bg != nullptr && bg->isAnimating()) {
                         return;
                     }

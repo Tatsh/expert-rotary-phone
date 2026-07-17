@@ -19,14 +19,14 @@
 //        touch-sound volume (+0x9b4) and skipped while the pause menu (state 5)
 //        is up. Verified against the disassembly.
 //
-//    - PlayEndResultSe      Ghidra: the rank-SE cascade in PlayTask_update
+//    - PlayTask::playEndResultSe Ghidra: the rank-SE cascade in PlayTask_update
 //        (FUN_0002dc14) state 6, ~0x2e0d0..0x2e190. Chooses one of several
-//        pre-created SE-instance jingles from the final score + combo/tally,
+//        pre-created SE-cue jingle layers from the final score + combo/tally,
 //        plus a clear fanfare.
 //
-//  The play data is the standard-mode play task, PlayTask; playTouchSound is a
-//  PlayTask method reaching its named members directly, while the score/rank
-//  helpers below still read a few fields by cited byte offset (pd()/pdw()).
+//  The play data is the standard-mode play task, PlayTask; playTouchSound and
+//  playEndResultSe are PlayTask methods reaching its named members directly (the
+//  SE-cue jingles are m_sceneLayers[4..10], see the SceneLayer enum).
 //
 
 #import <Foundation/Foundation.h>
@@ -36,18 +36,7 @@
 #import "PlayTask.h"
 #import "SeInstance.h" // SeInstanceIsBusy / SeInstancePlay / SeInstancePlayMode
 
-// --- Play-data field access -------------------------------------------------
-// Same convention as PlayJudge.mm: the standard-mode MainTask is not
-// reconstructed as a whole, so its fields are reached by documented byte
-// offset.
 namespace {
-
-inline const char *pd(const void *p) {
-    return reinterpret_cast<const char *>(p);
-}
-inline char *pdw(void *p) {
-    return reinterpret_cast<char *>(p);
-}
 
 // Score weights, byte-verified from the Ghidra float constants:
 //   DAT_00030030 = 0x3f333333 = 0.7  (GREAT weight)
@@ -60,23 +49,6 @@ constexpr float kScoreMax = 100000.0f;
 
 // Below this the play "failed" rank jingles fire (Ghidra: score < 70000).
 constexpr int kClearScore = 70000;
-
-// The per-play SE-instance handles the play data pre-creates. Each is a pointer
-// to an SeInstance controller (see SeInstance.h), owned by the scene. Ghidra:
-// the play task fires *(playData + off) as an SE-instance through
-// FUN_0002cba4/cac0/cb24.
-inline void *seHandle(void *playData, int off) {
-    return *reinterpret_cast<void *const *>(pd(playData) + off);
-}
-
-// Song-clear rank jingle handle offsets (Ghidra: PlayTask_update state 6).
-constexpr int kSeClearMiss = 0xa8;    // score>=70000, some GOOD/BAD, combo broken
-constexpr int kSeClearFC = 0xac;      // score>=70000, some GOOD/BAD, full combo
-constexpr int kSePerfectGreat = 0xb0; // score>=70000, no GOOD/BAD, at least one GREAT
-constexpr int kSePerfectCool = 0xb4;  // score>=70000, no GOOD/BAD, all COOL
-constexpr int kSeFailMiss = 0xb8;     // score<70000, combo broken
-constexpr int kSeFailFC = 0xbc;       // score<70000, full combo
-constexpr int kSeClearFanfare = 0xc0; // score>=70000, always (over the rank jingle)
 
 // One tally snapshot of the global note manager. The engine keeps a hit count
 // per note kind (0..9) per judge tier (COOL/GREAT/GOOD/BAD). Ghidra: the three
@@ -100,15 +72,6 @@ TallyTotals collectTally(NoteMng &nm) {
         t.good += nm.judgeCount(kind, NOTE_JUDGE_GOOD);
     }
     return t;
-}
-
-// Fire an SE-instance jingle if its controller is idle. Ghidra: the repeated
-// `if (FUN_0002cba4(handle) == 0) FUN_0002cac0(handle);` idiom.
-inline void firePlay(void *playData, int off) {
-    void *inst = seHandle(playData, off);
-    if (!SeInstanceIsBusy(inst)) {
-        SeInstancePlay(inst);
-    }
 }
 
 } // namespace
@@ -170,17 +133,26 @@ void PlayTask::playTouchSound() {
     *instanceField = static_cast<int>([audio playSe:nil resourceId:m_hitSeId]);
 }
 
+// Fire one m_sceneLayers cue layer (an AepLyrCtrl driven as an SE) if it is idle.
+// Ghidra: the repeated `if (FUN_0002cba4(layer) == 0) FUN_0002cac0(layer);` idiom.
+void PlayTask::firePlayCue(int layer) {
+    AepLyrCtrl *inst = m_sceneLayers[layer];
+    if (!SeInstanceIsBusy(inst)) {
+        SeInstancePlay(inst);
+    }
+}
+
 // Ghidra: the SE-instance rank cascade in PlayTask_update (FUN_0002dc14) state
 // 6, ~0x2e0aa..0x2e17c. `score` is the value PlayCurrentScore produced (play
 // data +0x9b0). Verified against the disassembly: the clear line is `cmp` with
 // 0x11170 (70000); full combo is `cmp total(+0x4e28), combo(+0x515c); bls`;
 // spotless is FUN_00031868 returning 1 when (COOL + GREAT) >= total. The fired
-// handle offsets match the binary's branches exactly — fail: +0xbc (full) /
-// +0xb8 (broken); cleared-with-good: +0xac (full) / +0xa8 (broken); spotless:
-// +0xb4 (all COOL) / +0xb0 (any GREAT) — and every cleared path layers the
-// +0xc0 fanfare via FUN_0002cb24(handle, 1).
+// layers match the binary's branches exactly — fail: [9] (full) / [8] (broken);
+// cleared-with-good: [5] (full) / [4] (broken); spotless: [7] (all COOL) / [6]
+// (any GREAT) — and every cleared path layers the [10] fanfare via
+// FUN_0002cb24(layer, 1).
 // @complete
-void PlayEndResultSe(void *playData, int score) {
+void PlayTask::playEndResultSe(int score) {
     NoteMng &nm = NoteMng::shared();
     const TallyTotals t = collectTally(nm);
     const int noteTotal = nm.totalNoteCount(); // Ghidra: DAT_00178ccc
@@ -192,7 +164,7 @@ void PlayEndResultSe(void *playData, int score) {
     if (score < kClearScore) {
         // Below the clear line: the "not cleared" jingle, full-combo variant if
         // unbroken.
-        firePlay(playData, fullCombo ? kSeFailFC : kSeFailMiss);
+        firePlayCue(fullCombo ? kSceneRankFailFC : kSceneRankFailMiss);
         return;
     }
 
@@ -202,15 +174,15 @@ void PlayEndResultSe(void *playData, int score) {
     const bool spotless = (t.cool + t.great) >= noteTotal;
     if (spotless) {
         // All COOL -> the perfect jingle; any GREAT -> the full-perfect jingle.
-        firePlay(playData, (t.great == 0) ? kSePerfectCool : kSePerfectGreat);
+        firePlayCue((t.great == 0) ? kSceneRankPerfectCool : kSceneRankPerfectGreat);
     } else {
         // Cleared with some GOOD/BAD: full-combo or broken-combo clear jingle.
-        firePlay(playData, fullCombo ? kSeClearFC : kSeClearMiss);
+        firePlayCue(fullCombo ? kSceneRankClearFC : kSceneRankClearMiss);
     }
 
     // A clear always layers the clear fanfare over the chosen rank jingle
     // (Ghidra: FUN_0002cb24(*(playData + 0xc0), 1) after the rank pick).
-    void *fanfare = seHandle(playData, kSeClearFanfare);
+    AepLyrCtrl *fanfare = m_sceneLayers[kSceneRankFanfare];
     if (!SeInstanceIsBusy(fanfare)) {
         SeInstancePlayMode(fanfare, 1);
     }

@@ -13,8 +13,9 @@
 //  (2), count the score up with a tick SE (3-6), wait for a dismiss tap (7),
 //  show the "communicating" overlay while the score upload finishes (8-9), then
 //  fade out and hand off (10-0xc). The animation layers it drives (m_layers @
-//  +0x214..+0x228) are AepLyrCtrl overlays that the intro/score cues also poke
-//  as SeInstance controllers (see SeInstance.h). Progress tracked in STUBS.md.
+//  +0x214..+0x228) are AepLyrCtrl overlays that the intro/score cues also drive
+//  as one-shot SE cues (the SeInstance.h helpers are AepLyrCtrl methods). Progress
+//  tracked in STUBS.md.
 //
 //  ---- work area (this class IS the 0x3a0-byte result-data struct) ----
 //  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
@@ -136,9 +137,8 @@ private:
     neTextureForiOS *m_numPointsBig[10] = {};    // +0x1ec num_pointb_ (total, big)
 
     // --- 6 result overlay layers (device-branched names; owner = this). The
-    // intro/score
-    //     layers [0..3] are also poked as SeInstance controllers (SeInstance*,
-    //     void*). ---
+    // intro/score layers [0..3] are also driven as one-shot SE cues via the
+    // SeInstance.h helpers (which are AepLyrCtrl methods). ---
     AepLyrCtrl *m_layers[6] = {}; // +0x214 640IMG/BONUS_*/NEW_RECORD/EVENT
 
     // --- Resolved Aep handle tables (frame/user numbers, by name) ---

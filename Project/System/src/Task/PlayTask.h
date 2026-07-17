@@ -46,14 +46,22 @@ class AepLyrCtrl;
 class neAppEventCenter;
 class neTextureForiOS;
 
-// Indices into PlayTask::m_sceneLayers (the +0x98 sustained combo-effect bank):
-// as the combo crosses each band the judge holds the matching tier paused at its
-// frame and resets the others. The remaining m_sceneLayers slots are HUD /
-// end-of-song rank layers cued elsewhere.
-enum SceneComboTier {
-    kSceneComboTier5 = 0,   // sustained combo effect for combo band 5..9
-    kSceneComboTier10 = 1,  // ...10..99
-    kSceneComboTier100 = 2, // ...100+
+// Indices into PlayTask::m_sceneLayers (the +0x98 bank of AepLyrCtrl layers, some
+// driven as one-shot SE cues). [0..2] are the sustained combo-milestone effect
+// tiers (the judge holds the crossed tier paused and resets the others); [4..10]
+// are the song-clear rank jingles fired by playEndResultSe.
+enum SceneLayer {
+    kSceneComboTier5 = 0,       // sustained combo effect for combo band 5..9
+    kSceneComboTier10 = 1,      // ...10..99
+    kSceneComboTier100 = 2,     // ...100+
+    kSceneLayer3 = 3,           // paused at song end (Ghidra: Pause(pAepLyrSub[3]))
+    kSceneRankClearMiss = 4,    // score >= 70000, some GOOD/BAD, combo broken
+    kSceneRankClearFC = 5,      // score >= 70000, some GOOD/BAD, full combo
+    kSceneRankPerfectGreat = 6, // score >= 70000, no GOOD/BAD, at least one GREAT
+    kSceneRankPerfectCool = 7,  // score >= 70000, no GOOD/BAD, all COOL
+    kSceneRankFailMiss = 8,     // score < 70000, combo broken
+    kSceneRankFailFC = 9,       // score < 70000, full combo
+    kSceneRankFanfare = 10,     // clear fanfare, layered over the chosen rank jingle
 };
 
 class PlayTask : public C_TASK {
@@ -103,6 +111,16 @@ private:
     // calls it after a frame that resolved a note. Body in PlayScore.mm. Ghidra:
     // FUN_00031338 (PlayTask::PlayTouchSound).
     void playTouchSound();
+
+    // Fire the song-clear rank jingle(s) chosen by the final score, layering the
+    // clear fanfare over the chosen jingle. update() state 6 calls it. Body in
+    // PlayScore.mm. Ghidra: the SE-instance cascade inlined in PlayTask_update
+    // state 6 (FUN_0002cba4 / 0002cac0 / 0002cb24 on the m_sceneLayers cue layers).
+    void playEndResultSe(int score);
+
+    // Fire one m_sceneLayers cue layer (an AepLyrCtrl driven as an SE) if it is
+    // idle -- the "if not busy, play" idiom the rank cascade repeats.
+    void firePlayCue(int layer);
 
 public:
     // ================= work-area layout (offsets are binary-exact)
@@ -251,9 +269,6 @@ void PlayTaskGotoResult(void *playData); // Ghidra: FUN_0003003c (transition to 
 
 // The current running score/gauge value used for end-of-song rank SEs.
 int PlayCurrentScore(); // Ghidra: FUN_0002ff7c
-// Fire the song-clear rank jingle(s) chosen by the final score. Ghidra: the SE-
-// instance cascade in PlayTask_update state 6 (FUN_0002cba4/0002cac0/0002cb24).
-void PlayEndResultSe(void *playData, int score);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

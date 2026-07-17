@@ -316,11 +316,11 @@ void PlayTask::update(int /*deltaMs*/) {
         PlayTaskInit(this); // FUN_0002e2d8: allocate the play scene
         m_state = 1;
         [[fallthrough]];
-    case 1:                          // NoteMng bring-up + fade in + pause the intro layers
-        nm.primePlay();              // Ghidra: NoteMng::ResetPlayback (FUN_0003396c)
-        aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
-        m_comboLayers[4]->pause();   // Ghidra: AepLyrCtrl::Pause(pAepLyrMain[4])
-        m_sceneLayers[3]->pause();   // Ghidra: AepLyrCtrl::Pause(pAepLyrSub[3])
+    case 1:                                   // NoteMng bring-up + fade in + pause the intro layers
+        nm.primePlay();                       // Ghidra: NoteMng::ResetPlayback (FUN_0003396c)
+        aep.setAepTransitionMode(1);          // fade in (fixed 30 frames)
+        m_comboLayers[4]->pause();            // Ghidra: AepLyrCtrl::Pause(pAepLyrMain[4])
+        m_sceneLayers[kSceneLayer3]->pause(); // Ghidra: AepLyrCtrl::Pause(pAepLyrSub[3])
         m_state = 2;
         [[fallthrough]];
     case 2:               // ready: reset playback + draw the field; on BGM-ready, cue the start
@@ -411,7 +411,7 @@ void PlayTask::update(int /*deltaMs*/) {
                 // high voice (+0x3ac).
                 const int voice = (m_score < 70000) ? m_playSeIds[2] : m_playSeIds[1];
                 [audio playSe:nil resourceId:voice];
-                PlayEndResultSe(this, m_score); // the rank / clear jingle cascade
+                playEndResultSe(m_score); // the rank / clear jingle cascade
             }
         }
 
