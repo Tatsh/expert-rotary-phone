@@ -243,13 +243,20 @@ set_source_files_properties(
 
 # Compiler options as real -flags (not XCODE_ATTRIBUTE build settings) so they
 # apply under every generator and can be overridden per source file. Language
-# standards are per-language; ARC and its exception cleanup are Objective-C only.
+# standards are per-language (AppleClang 15 / LLVM 16 spells C23 / C++23 gnu2x /
+# gnu++2b); ARC and its exception cleanup are Objective-C only; stack variables
+# are zero-initialised (matching the binary's memset-zeroed work areas; the flag
+# is non-experimental as of clang 16).
 target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:C,OBJC>:-std=gnu2x>
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-std=gnu++2b>
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-stdlib=libc++>
+    # Keep u8"" literals as char[] (C-era UTF-8 strings used as const char*);
+    # C++20 otherwise makes them char8_t[].
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-fno-char8_t>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc-exceptions>)
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc-exceptions>
+    -ftrivial-auto-var-init=zero)
 
 # The reconstruction faithfully uses the OpenGL ES 1.1 API, which Apple
 # deprecated wholesale on iOS 12 with no in-place replacement (Metal is a
