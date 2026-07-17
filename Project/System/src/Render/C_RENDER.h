@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 // ---------------------------------------------------------------------------
 // 4x4 matrix (column-major, 16 floats) and its builders.
@@ -246,16 +247,16 @@ public:
     // Detach this node from its parent's child ring. Ghidra: FUN_00014d40.
     void unlink();
 
-    neRenderNode *listNext = this;     // +0x04 owner list (self when detached)
-    neRenderNode *listPrev = this;     // +0x08
-    neRenderNode *parent = nullptr;    // +0x10
-    neRenderNode *childHead = nullptr; // +0x14 first child (null when none)
-    neRenderNode *siblingNext = this;  // +0x18 sibling ring (self when only child)
-    neRenderNode *siblingPrev = this;  // +0x1c
-    uint8_t *colorBuffer = nullptr;    // +0x20 per-node colour/vertex buffer (delete[] on destroy)
-    neMatrix4 localMatrix{};           // +0x30 node transform
-    neMatrix4 worldMatrix{};           // +0x70 cached world transform
-    bool visible = true;               // +0xb1
+    neRenderNode *listNext = this;          // +0x04 owner list (self when detached)
+    neRenderNode *listPrev = this;          // +0x08
+    neRenderNode *parent = nullptr;         // +0x10
+    neRenderNode *childHead = nullptr;      // +0x14 first child (null when none)
+    neRenderNode *siblingNext = this;       // +0x18 sibling ring (self when only child)
+    neRenderNode *siblingPrev = this;       // +0x1c
+    std::unique_ptr<uint8_t[]> colorBuffer; // +0x20 per-node colour/vertex buffer
+    neMatrix4 localMatrix{};                // +0x30 node transform
+    neMatrix4 worldMatrix{};                // +0x70 cached world transform
+    bool visible = true;                    // +0xb1
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

@@ -691,7 +691,7 @@ neRenderNode::~neRenderNode() {
     while (childHead != nullptr) {
         childHead->unlink();
     }
-    delete[] colorBuffer;
+    // colorBuffer is a unique_ptr<uint8_t[]>; freed by the member destructor.
 }
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
