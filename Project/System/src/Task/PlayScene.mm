@@ -1249,10 +1249,11 @@ void PlayTaskDraw(int child,
                             1);
     };
     // Nested-layer tail (Ghidra: LAB_00031196 -> AepManager::drawLayer). Arg
-    // mapping corrected against the binary: loopFlags = 1, p9/p10 =
+    // mapping verified against the binary @0x31196: loopFlags = 1, p9/p10 =
     // anchorX/anchorY, colour/alpha pass straight through, blend 0x20, p15
-    // 0xffffff, p19 1; the OT priority slot (fe8c p17) is 0 in this call and the
-    // callback's p17 word is threaded as the context.
+    // 0xffffff, p19 1; context = null (str #0 -> sp+0x30) and the priority slot
+    // (sp+0x34) is the literal 0x1a. (The callback's p17 word is the judge-slot
+    // index, not used here.)
     auto layerDraw = [&](int lyr, int lframe, int lscaleY, int *lclip, int /*unused*/) {
         aep.drawLayer(lyr,
                       lframe,
@@ -1269,8 +1270,8 @@ void PlayTaskDraw(int child,
                       0x20,
                       0xffffff,
                       lclip,
-                      reinterpret_cast<void *>(static_cast<intptr_t>(p17)),
-                      0,
+                      nullptr, // context (binary: str #0 -> null)
+                      0x1a,    // priority (binary: movs r1,#0x1a)
                       1);
     };
 
