@@ -239,12 +239,10 @@ set_source_files_properties(
     "${_zip}/minizip/zip.c"
     PROPERTIES COMPILE_OPTIONS "-Wno-parentheses-equality")
 
-# -fobjc-arc / -fobjc-exceptions are Objective-C(++)-only; passing them to the
-# plain C minizip sources triggers an unused-argument warning, so scope them to
-# the Objective-C languages.
-target_compile_options(popnrhythmin PRIVATE
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
-    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-exceptions>)
+# ARC and ObjC-ARC exceptions are turned on through the Xcode build settings
+# (CLANG_ENABLE_OBJC_ARC / CLANG_ENABLE_OBJC_ARC_EXCEPTIONS below), which scope
+# themselves to the Objective-C languages, so no -fobjc-arc / -fobjc-exceptions
+# compile flags are needed here (they would only warn on the plain C sources).
 # The reconstruction faithfully uses the OpenGL ES 1.1 API, which Apple
 # deprecated wholesale on iOS 12 with no in-place replacement (Metal is a
 # separate stack). Silence the blanket ES deprecation warnings rather than
@@ -278,8 +276,10 @@ set_target_properties(popnrhythmin PROPERTIES
     XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO"
     XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
     XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
-    XCODE_ATTRIBUTE_GCC_C_LANGUAGE_STANDARD "gnu11"
-    XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "gnu++14"
+    XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC_EXCEPTIONS "YES"
+    XCODE_ATTRIBUTE_CLANG_ENABLE_STACK_ZERO_INIT "YES"
+    XCODE_ATTRIBUTE_GCC_C_LANGUAGE_STANDARD "gnu23"
+    XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "gnu++23"
     XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
     OUTPUT_NAME "PopnRhythmin")
 

@@ -57,13 +57,13 @@ PopnRhythmin_FILES = $(shell find $(PROJECT_ROOT)/Project \
 # ARC (the reconstructed sources use ARC — __bridge casts + ARC-synthesized dealloc —
 # exactly as the CMake/Xcode build does); every Project subdir on -I, plus the generated
 # sugoroku dialogue include dir (see tools/extract_sugoroku_dialogue.py).
-PopnRhythmin_CFLAGS  = -fobjc-arc -fobjc-exceptions -DGLES_SILENCE_DEPRECATION \
+PopnRhythmin_CFLAGS  = -std=gnu23 -fobjc-arc -fobjc-exceptions -DGLES_SILENCE_DEPRECATION \
                        -I$(PROJECT_ROOT)/Project \
                        $(addprefix -I,$(shell find $(PROJECT_ROOT)/Project -type d)) \
                        -I$(SUGO_GEN_DIR) \
                        -I$(PROJECT_ROOT)/3rdparty/ziparchive \
                        -I$(PROJECT_ROOT)/3rdparty/ziparchive/minizip
-PopnRhythmin_CCFLAGS = -std=gnu++14 -stdlib=libc++
+PopnRhythmin_CCFLAGS = -std=gnu++23 -stdlib=libc++
 # minizip is vendored upstream C we do not patch; silence its extraneous
 # parentheses-equality warnings there without touching the third-party source.
 $(PROJECT_ROOT)/3rdparty/ziparchive/minizip/ioapi.c_CFLAGS = -Wno-parentheses-equality
