@@ -636,10 +636,12 @@ void PlayResultTask::loadNumberTextures() {
 // @complete
 void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int displayType) {
     AudioManager *audio = [AudioManager sharedManager];
-    SeInstance *intro = reinterpret_cast<SeInstance *>(m_layers[0]);
+    AepLyrCtrl *intro = m_layers[0];
 
-    if (SeInstanceIsPlaying(intro)) {
-        const int frame = (int)intro->cursor; // m_layers[0] play head (+0x40)
+    // Binary case 2 (resultTaskUpdate @ 0x3d690): AepLyrCtrl::IsPlaying(m_layers[0]),
+    // then FPToFixed of the layer's +0x40 play head truncates it to a frame number.
+    if (intro->isAnimating()) {
+        const int frame = static_cast<int>(intro->curFrame()); // +0x40 flCurFrame
         switch (frame) {
         case 0x18:
             // First count tick: nothing to stop yet.
