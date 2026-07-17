@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 // One glyph atlas: a 256x256 GL_ALPHA texture (created via
 // neCreateTextureFromData) plus the CPU-side pixel buffer it was uploaded from.
@@ -22,13 +23,13 @@ class neTextTexture {
 public:
     ~neTextTexture(); // Ghidra: FUN_000180a4
 
-    int32_t index = 0;             // +0x00 atlas index (its slot in the manager's list)
-    void *texture = nullptr;       // +0x04 ne::C_TEXTURE* (released on destroy)
-    int32_t penX = 0;              // +0x08 current pack cursor X
-    int32_t penY = 0;              // +0x0c current pack cursor Y
-    int32_t rowHeight = 0;         // +0x10 tallest glyph in the current row
-    uint8_t *pixels = nullptr;     // +0x14 CPU pixel buffer (delete[] on destroy)
-    neTextTexture *next = nullptr; // +0x18 manager list link
+    int32_t index = 0;                 // +0x00 atlas index (its slot in the manager's list)
+    void *texture = nullptr;           // +0x04 ne::C_TEXTURE* (released on destroy)
+    int32_t penX = 0;                  // +0x08 current pack cursor X
+    int32_t penY = 0;                  // +0x0c current pack cursor Y
+    int32_t rowHeight = 0;             // +0x10 tallest glyph in the current row
+    std::unique_ptr<uint8_t[]> pixels; // +0x14 CPU pixel buffer
+    neTextTexture *next = nullptr;     // +0x18 manager list link
 };
 
 // One cached glyph record (defined in neTextTexture.mm).

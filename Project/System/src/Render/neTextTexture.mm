@@ -120,10 +120,9 @@ int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
 }
 
 // Ghidra: FUN_000180a4 — release the atlas's ne::C_TEXTURE reference and free its
-// pixels.
+// pixels (the unique_ptr buffer releases automatically).
 // @complete
 neTextTexture::~neTextTexture() {
-    delete[] pixels;
     if (texture != nullptr) {
         neTextureRelease(texture);
     }
@@ -167,13 +166,13 @@ neTextTextureMgr::~neTextTextureMgr() {
 // fix, not an ENABLE_PATCHES change.
 // @complete
 void neTextTextureMgr::createNewTextTexture() {
-    uint8_t *pixels = new uint8_t[0x40000](); // 256x256 RGBA, zero-cleared
-    void *tex = neCreateTextureFromData(0x100, 0x100, /*GL_RGBA*/ 1, pixels, 0x100, 0x100);
-    // assert(tex) — neTextTexture.mm:0xeb in the shipped binary.
     neTextTexture *atlas = new neTextTexture();
+    atlas->pixels = std::make_unique<uint8_t[]>(0x40000); // 256x256 RGBA, zero-cleared
+    void *tex =
+        neCreateTextureFromData(0x100, 0x100, /*GL_RGBA*/ 1, atlas->pixels.get(), 0x100, 0x100);
+    // assert(tex) — neTextTexture.mm:0xeb in the shipped binary.
     atlas->index = atlasCount;
     atlas->texture = tex;
-    atlas->pixels = pixels;
     ++atlasCount;
     atlas->next = atlases;
     atlases = atlas;
@@ -265,7 +264,7 @@ bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
         }
 
         // Atlas full: flush its CPU pixels to GL and open a fresh one.
-        neTextureRebind(tex, atlas->pixels);
+        neTextureRebind(tex, atlas->pixels.get());
         createNewTextTexture();
         if (++retries > 1) {
             return true;
@@ -347,7 +346,7 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
         // cells and garbled text.
         for (int rrow = 0; rrow < h; ++rrow) {
             const uint8_t *src = gray.data() + rrow * w;
-            uint8_t *dst = atlas->pixels + ((cellY + rrow) * atlasW + cellX) * 4;
+            uint8_t *dst = atlas->pixels.get() + ((cellY + rrow) * atlasW + cellX) * 4;
             for (int col = 0; col < w; ++col) {
                 uint8_t g = src[col];
                 dst[col * 4 + 0] = g;
@@ -443,7 +442,7 @@ neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, i
     // Re-upload the atlas the glyph landed in so the new pixels reach GL.
     neTextTexture *atlas = atlases;
     if (atlas != nullptr) {
-        neTextureRebind(static_cast<ne::C_TEXTURE *>(atlas->texture), atlas->pixels);
+        neTextureRebind(static_cast<ne::C_TEXTURE *>(atlas->texture), atlas->pixels.get());
     }
 
     // Head-insert onto the glyph cache.
