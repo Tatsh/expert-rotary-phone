@@ -782,7 +782,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // sentinels set.)
 //
 // The empty-record branch writes a 32-bit -1 at offset 0x2 (covering subMapId
-// and raw0x04) and a 16-bit 0xffff at 0x44, i.e. the three sentinels below.
+// and curSubMapId) and a 16-bit 0xffff at 0x44, i.e. the three sentinels below.
 // @complete
 + (TreasureTmpData)treasureTmp {
     TreasureTmpData out;
@@ -797,8 +797,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     }
     memset(&out, 0, sizeof(out));
     out.subMapId = -1;
-    out.raw0x04 = -1;
-    out.raw0x44 = -1;
+    out.curSubMapId = -1;
+    out.rouletteMode = -1;
     return out;
 }
 
@@ -1116,8 +1116,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     TreasureTmpData data;
     memset(&data, 0, sizeof(data));
     data.subMapId = -1;
-    data.raw0x04 = -1;
-    data.raw0x44 = -1;
+    data.curSubMapId = -1;
+    data.rouletteMode = -1;
     [self saveTreasureTmp:data];
 }
 

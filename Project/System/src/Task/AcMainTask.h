@@ -198,7 +198,7 @@ private:
     float m_clampMinY = {};                     // +0x4e4 scroll clamp min y
     float m_clampCentreX2 = {};                 // +0x4e8 scroll clamp max centre x
     float m_clampMaxY = {};                     // +0x4ec scroll clamp max y
-    int16_t m_treasureRaw06 = {};               // +0x4f0 pending record raw0x06
+    int16_t m_treasureRaw06 = {};               // +0x4f0 pending record field06 (role unknown)
     // +0x4f2: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
     Random m_rng;               // +0x4f4 embedded arcade RNG (auto-constructed/destructed)
     int m_dragAnchorId = -1;    // +0x508 touch drag anchor id (-1 == none)
@@ -312,9 +312,9 @@ private:
     int16_t m_activeType4SquareId = {}; // +0x8b4 latched type-4 event-square id (-1 none)
     int16_t m_activeType3SquareId = {}; // +0x8b6 latched type-3 event-square id (-1 none)
     int8_t m_listHalveCount =
-        {}; // +0x8b8 >0 halves the list bottom; +on roulette 0x14-0x17; saved raw0x52
+        {}; // +0x8b8 >0 halves the list bottom; +on roulette 0x14-0x17; saved listHalveCount
     int8_t m_treasureProgress =
-        {}; // +0x8b9 *5+25 (cap 100) for treasure-event 10; +in state 0x1d; saved raw0x51
+        {}; // +0x8b9 *5+25 (cap 100) for treasure-event 10; +in state 0x1d; saved treasureProgress
     // +0x8ba: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
     int m_readNo = {};    // +0x8bc board-story read progress
     int m_readCount = {}; // +0x8c0 board-story page count

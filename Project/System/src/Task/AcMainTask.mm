@@ -913,19 +913,19 @@ void AcMainTask::loadTreasureMap() {
 
     // Choose the current board position: the pending record's node id, or the
     // map's start node when it is out of range (id <= 0 or >= node count).
-    if (tmp.raw0x04 <= 0 || tmp.raw0x04 >= nodeCount) {
-        tmp.raw0x04 = map->startSubId();
+    if (tmp.curSubMapId <= 0 || tmp.curSubMapId >= nodeCount) {
+        tmp.curSubMapId = map->startSubId();
     }
 
     // Current node screen origin (tile size 0x1a == 26 px) + the "reached" flag.
-    const TreasureMap::Node *cur = map->findArea(tmp.raw0x04); // FUN_000ce934
+    const TreasureMap::Node *cur = map->findArea(tmp.curSubMapId); // FUN_000ce934
     m_curNode = cur;
     m_playerX = (float)((cur ? cur->x : 0) * 0x1a);
     m_playerY = (float)((cur ? cur->y : 0) * 0x1a);
-    m_boardMoveState = (tmp.raw0x10 == 2) ? (unsigned)tmp.raw0x10 : 0u;
+    m_boardMoveState = (tmp.boardMoveState == 2) ? (unsigned)tmp.boardMoveState : 0u;
     m_bonusCount = tmp.mainMapId;
-    m_treasureRaw06 = tmp.raw0x06;
-    std::memcpy(&m_boardVisited[0], tmp.raw0x35,
+    m_treasureRaw06 = tmp.field06;
+    std::memcpy(&m_boardVisited[0], tmp.visitedSquares,
                 15); // board-visited bitmap (0x894..0x8a2)
 
     // --- Scroll bounding box + rubber-band clamp (Ghidra: the NEON block at
@@ -1027,9 +1027,9 @@ void AcMainTask::loadTreasureMap() {
     bgTex->load([[[NSBundle mainBundle] pathForResource:bgTexName ofType:@"png"] UTF8String]);
 
     // Remaining record fields + the board character/panel builders.
-    m_rouletteMode = tmp.raw0x44;
-    m_listHalveCount = (int8_t)tmp.raw0x52;
-    m_treasureProgress = (int8_t)tmp.raw0x51;
+    m_rouletteMode = tmp.rouletteMode;
+    m_listHalveCount = (int8_t)tmp.listHalveCount;
+    m_treasureProgress = (int8_t)tmp.treasureProgress;
     buildMapCharaLayers(); // FUN_000a2264
     buildMapPanelLayers(); // FUN_000a2650
 
@@ -1038,7 +1038,8 @@ void AcMainTask::loadTreasureMap() {
         (void)(__bridge_transfer id)m_mapName;
         m_mapName = nullptr;
     }
-    m_mapName = (__bridge_retained void *)[NSString stringWithUTF8String:(const char *)tmp.raw0x28];
+    m_mapName =
+        (__bridge_retained void *)[NSString stringWithUTF8String:(const char *)tmp.goalName];
 
     // Push + load the board treasure BGM ("bgm04_tre_%02d.m4a").
     AudioManager *audio = [AudioManager sharedManager];
@@ -1220,27 +1221,27 @@ void AcMainTask::buildMapCharaLayers() {
     const short sm = m_subMapId;
     const int curIdx = (sm / 10) * -0x1c + sm * 4;
     reinterpret_cast<uint32_t &>(m_musicPieceTable[curIdx / 4]) |=
-        (uint32_t)tmp.raw0x08; // music mask
+        (uint32_t)tmp.musicPieceMask; // music mask
     reinterpret_cast<uint32_t &>(m_wallPieceTable[curIdx / 4]) |=
-        (uint32_t)tmp.raw0x0c; // wallpaper mask
+        (uint32_t)tmp.wallPieceMask; // wallpaper mask
 }
 
 // ===========================================================================
 // buildMapPanelLayers — Ghidra FUN_000a2650 (called by loadTreasureMap).
 // Despite the declared name this (re)loads the goal-character portrait texture
-// into +0xe0. The whole rebuild is gated by the high byte of the pending
-// record's raw0x4d field (offset 0x50): when it is non-zero the routine is a
-// no-op. Otherwise it frees any previous texture and, if a goal character is
-// present (raw0x20[0] != 0), loads "sugo_chara%03d.png" for chara id raw0x12
+// into +0xe0. The whole rebuild is gated by the pending record's friendMeetFlag
+// (+0x50): when it is non-zero the routine is a no-op. Otherwise it frees any
+// previous texture and, if a goal character is
+// present (friendPlayerId[0] != 0), loads "sugo_chara%03d.png" for chara id goalCharaId
 // from the app-support directory.
 // @complete
 // ===========================================================================
 void AcMainTask::buildMapPanelLayers() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
 
-    // Byte 3 of raw0x4d (record offset 0x50) is the enable gate (Ghidra:
-    // field19_0x4d._3_1_). Non-zero -> leave the current texture untouched.
-    if ((uint8_t)((uint32_t)tmp.raw0x4d >> 24) != 0) {
+    // The friend-meet flag (+0x50) is the enable gate: non-zero -> leave the
+    // current texture untouched.
+    if (tmp.friendMeetFlag != 0) {
         return;
     }
 
@@ -1251,13 +1252,13 @@ void AcMainTask::buildMapPanelLayers() {
     }
 
     // No goal character on this record -> nothing more to load.
-    if (tmp.raw0x20[0] == 0) {
+    if (tmp.friendPlayerId[0] == 0) {
         return;
     }
 
     neTextureForiOS *tex = new neTextureForiOS();
     m_goalCharaTex = tex;
-    NSString *file = [NSString stringWithFormat:@"sugo_chara%03d.png", (int)(short)tmp.raw0x12];
+    NSString *file = [NSString stringWithFormat:@"sugo_chara%03d.png", (int)(short)tmp.goalCharaId];
     NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
     tex->load([path UTF8String]);
 }
@@ -1861,7 +1862,7 @@ void AcMainTask::sugorokuDrawSquareText() {
     case 10: { // friend-meet: node label while the meet is pending and not yet
                // consumed
         TreasureTmpData tmp = [UserSettingData treasureTmp];
-        bool consumed = ((tmp.raw0x4d >> 24) & 0xff) != 0; // field19_0x4d, byte 3
+        bool consumed = tmp.friendMeetFlag != 0;
         pick = (m_goalCharaTex && !consumed) ? kNodeText : kNone;
         break;
     }
@@ -1922,8 +1923,8 @@ void AcMainTask::sugorokuSaveTreasureProgress() {
         return;
     }
 
-    td.musicPiece = @([td.musicPiece intValue] | (int)tmp.raw0x08);
-    td.wallPaperPiece = @([td.wallPaperPiece intValue] | (int)tmp.raw0x0c);
+    td.musicPiece = @([td.musicPiece intValue] | (int)tmp.musicPieceMask);
+    td.wallPaperPiece = @([td.wallPaperPiece intValue] | (int)tmp.wallPieceMask);
 
     // Goal type: task[0x8b1] == 2 → sound ticket; 1 → chara ticket.
     uint8_t goalType = m_goalType;
@@ -1935,17 +1936,14 @@ void AcMainTask::sugorokuSaveTreasureProgress() {
 
     td.clearCnt = @([td.clearCnt intValue] + 1);
 
-    // Keep the best (minimum) fast-record score. The binary reads the new value
-    // as a 32-bit word at struct offset +0x4c (@ 0xa2044 ldr [sp,#0xc0]), which
-    // straddles the top byte of raw0x49 and the low three bytes of raw0x4d in
-    // this packed record.
-    int32_t newFast;
-    memcpy(&newFast, reinterpret_cast<const uint8_t *>(&tmp) + 0x4c, sizeof(newFast));
+    // Keep the best (minimum) fast-record score (the misaligned int at +0x4c;
+    // binary @ 0xa2044 ldr [sp,#0xc0]).
+    const int32_t newFast = tmp.fastRecord;
     int existFast = [td.fastRecord intValue];
     td.fastRecord = @(existFast < newFast ? existFast : static_cast<int>(newFast));
 
-    // Friend-meet flag: byte 3 of raw0x4d.
-    if ((tmp.raw0x4d >> 24) & 0xFF) {
+    // Friend-meet flag (+0x50).
+    if (tmp.friendMeetFlag) {
         td.friendMeetCnt = @([td.friendMeetCnt intValue] + 1);
     }
 

@@ -1127,14 +1127,14 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
         if (playerId != nil && name != nil && charaId != nil && musicPiece != nil &&
             wallPiece != nil) {
             TreasureTmpData tmp = [UserSettingData treasureTmp];
-            strncpy((char *)tmp.raw0x20, [playerId UTF8String], 8);
-            strncpy((char *)tmp.raw0x28, [name UTF8String], 13);
-            tmp.raw0x20[7] = '\0';
-            tmp.raw0x28[12] = '\0';
-            tmp.raw0x12 = [charaId shortValue];
-            tmp.raw0x14 = [musicPiece intValue];
-            tmp.raw0x18 = [wallPiece intValue];
-            tmp.raw0x1c = [friendship intValue];
+            strncpy((char *)tmp.friendPlayerId, [playerId UTF8String], 8);
+            strncpy((char *)tmp.goalName, [name UTF8String], 13);
+            tmp.friendPlayerId[7] = '\0';
+            tmp.goalName[12] = '\0';
+            tmp.goalCharaId = [charaId shortValue];
+            tmp.musicPiece = [musicPiece intValue];
+            tmp.wallPaperPiece = [wallPiece intValue];
+            tmp.friendship = [friendship intValue];
             [UserSettingData saveTreasureTmp:tmp];
             _isGetVisitorSuccess = YES;
         }

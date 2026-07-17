@@ -261,7 +261,7 @@ typedef struct SubMapData {
 
 // @ 0xc2d54 — choose an area: snapshot the pending treasure, then request its
 // visitor. (mapId = mainMapId*10 + subMapId; rng.setSeed(time(NULL));
-// raw0x48 = getRandRangeInt(100); coalesced 5-byte clear at tmp+0x4c — verified.)
+// bonusRoll = getRandRangeInt(100); coalesced 5-byte clear at tmp+0x4c — verified.)
 // @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0 || _isDecide) {
@@ -289,16 +289,17 @@ typedef struct SubMapData {
 
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     tmp.subMapId = mapId; // combined map id (main*10 + sub)
-    tmp.raw0x06 = -1;
-    tmp.raw0x12 = 0;
-    tmp.raw0x14 = 0;
-    tmp.raw0x18 = 0;
-    memset(tmp.raw0x20, 0, sizeof(tmp.raw0x20));
-    memset(tmp.raw0x28, 0, sizeof(tmp.raw0x28));
-    tmp.raw0x48 = (uint8_t)rng.getRandRangeInt(100);
-    // Binary also clears bytes 0x4c..0x50 (raw0x49 high byte + all of raw0x4d)
-    // as one coalesced 5-byte zero store.
-    memset((uint8_t *)&tmp + 0x4c, 0, 5);
+    tmp.field06 = -1;
+    tmp.goalCharaId = 0;
+    tmp.musicPiece = 0;
+    tmp.wallPaperPiece = 0;
+    memset(tmp.friendPlayerId, 0, sizeof(tmp.friendPlayerId));
+    memset(tmp.goalName, 0, sizeof(tmp.goalName));
+    tmp.bonusRoll = (uint8_t)rng.getRandRangeInt(100);
+    // Clear the fast-record score and the friend-meet flag (+0x4c..+0x50; the
+    // binary does this as one coalesced 5-byte zero store).
+    tmp.fastRecord = 0;
+    tmp.friendMeetFlag = 0;
     [UserSettingData saveTreasureTmp:tmp];
     [UserSettingData saveConsumedTreasurePoint:0];
 

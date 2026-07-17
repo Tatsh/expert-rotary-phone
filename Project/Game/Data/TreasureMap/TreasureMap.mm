@@ -74,7 +74,7 @@ void TreasureMap::reset() {
 // at SugorokuMap.mm:0x215 — all byte-verified against the disassembly.
 // @complete
 void TreasureMap::load(const char *path) {
-    // Snapshot the pending-treasure record; raw0x46 (Ghidra field15_0x46) records
+    // Snapshot the pending-treasure record; bonusSquareIndex (Ghidra field15_0x46) records
     // which bonus square is this session's treasure and is (re)generated +
     // persisted below.
     TreasureTmpData tmp = [UserSettingData treasureTmp];
@@ -158,16 +158,16 @@ void TreasureMap::load(const char *path) {
     }
 
     // --- Bonus-treasure selection. Exactly one of the bonusCount type==10
-    // squares stays the active treasure; the persisted 1-based index raw0x46
+    // squares stays the active treasure; the persisted 1-based index bonusSquareIndex
     // picks it (generated once and saved so it is stable across launches). Every
     // other candidate is deactivated (type -> 2, text cleared).
     if (bonusCount > 0) {
-        if ((int8_t)tmp.raw0x46 < 1) {
+        if ((int8_t)tmp.bonusSquareIndex < 1) {
             std::srand((unsigned)std::time(nullptr));
-            tmp.raw0x46 = (uint8_t)((std::rand() % bonusCount) + 1);
+            tmp.bonusSquareIndex = (uint8_t)((std::rand() % bonusCount) + 1);
             [UserSettingData saveTreasureTmp:tmp];
         }
-        const int target = (int)tmp.raw0x46; // 1-based chosen index
+        const int target = (int)tmp.bonusSquareIndex; // 1-based chosen index
         int seen = 0;
         for (int i = 0; i < m_count; i++) {
             Node &node = m_nodes[i];
