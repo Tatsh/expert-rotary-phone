@@ -46,15 +46,17 @@ neAppEventCenter &neAppEventCenter::shared() {
     return instance;
 }
 
-// Ghidra: FUN_00028c70 — zero the transient event-center state.
+// Ghidra: FUN_00028c70 — zero the transient event-center state. The binary
+// zeroed the whole 0x48-byte singleton block in one sweep, which also cleared the
+// login-context / AC-viewer globals; in the rebuild those live as separate
+// file-statics reset by their own clear methods, so begin() only zeroes the
+// result record and session dates it actually owns.
 // @complete
 void neAppEventCenter::begin() {
     m_result = PlayResult{};
     _startDate = nil;
     _endDate = nil;
     m_resultExt = PlayResultExt{};
-    m_flags[0] = 0;
-    m_flags[1] = 0;
 }
 
 // Ghidra: FUN_00028c9c — a no-op in this build.
