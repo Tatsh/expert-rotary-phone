@@ -878,17 +878,17 @@ void AcMainTask::loadTreasureMap() {
     // Stop every scene layer built by setupScene before the map rebuild (Ghidra:
     // the FUN_0002cb5c loops over the roulette / panel / arrow slots + the bg
     // layer).
-    for (AepLyrCtrl *l : m_rouletteLayers) {
+    for (auto &l : m_rouletteLayers) {
         if (l) {
             l->stopPlay(); // 29 roulette
         }
     }
-    for (AepLyrCtrl *l : m_panelLayers) {
+    for (auto &l : m_panelLayers) {
         if (l) {
             l->stopPlay(); // 8 panels
         }
     }
-    for (AepLyrCtrl *l : m_arrowLayers) {
+    for (auto &l : m_arrowLayers) {
         if (l) {
             l->stopPlay(); // 4 arrows
         }
@@ -2878,33 +2878,38 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     };
     // A right-to-left digit run from a texture atlas (glyph w x h), stepping x by
     // -step.
-    auto drawDigits =
-        [&](neTextureForiOS **atlas, int value, int count, int px, int step, int gw, int gh) {
-            for (int k = 0; k < count; k++) {
-                neTextureForiOS_draw(aep,
-                                     atlas[value % 10],
-                                     0,
-                                     0,
-                                     gw,
-                                     gh,
-                                     px,
-                                     y,
-                                     scaleX,
-                                     scaleY,
-                                     rotation,
-                                     anchorX,
-                                     anchorY,
-                                     color,
-                                     alpha,
-                                     blend,
-                                     0xffffff,
-                                     nullptr,
-                                     priority,
-                                     1);
-                px -= step;
-                value /= 10;
-            }
-        };
+    auto drawDigits = [&](std::unique_ptr<neTextureForiOS> *atlas,
+                          int value,
+                          int count,
+                          int px,
+                          int step,
+                          int gw,
+                          int gh) {
+        for (int k = 0; k < count; k++) {
+            neTextureForiOS_draw(aep,
+                                 atlas[value % 10].get(),
+                                 0,
+                                 0,
+                                 gw,
+                                 gh,
+                                 px,
+                                 y,
+                                 scaleX,
+                                 scaleY,
+                                 rotation,
+                                 anchorX,
+                                 anchorY,
+                                 color,
+                                 alpha,
+                                 blend,
+                                 0xffffff,
+                                 nullptr,
+                                 priority,
+                                 1);
+            px -= step;
+            value /= 10;
+        }
+    };
 
     // ---- treasure-point / ticket / bonus digit readouts
     // -----------------------------------
@@ -3058,7 +3063,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         return n;
     };
     auto drawPieceGrid = [&](const uint32_t *pieceTable,
-                             neTextureForiOS **panelTex,
+                             std::unique_ptr<neTextureForiOS> *panelTex,
                              int panelW,
                              int panelScale,
                              int *anchorOut) {
@@ -3092,7 +3097,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                1);
             }
             neTextureForiOS_draw(aep,
-                                 panelTex[i],
+                                 panelTex[i].get(),
                                  0,
                                  0,
                                  panelW,
