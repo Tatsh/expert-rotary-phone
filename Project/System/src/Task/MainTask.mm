@@ -281,7 +281,7 @@ void MainTask::update(int /*deltaMs*/) {
             if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
                 // The binary hit-test (update @ 0x35914) feeds neMath::pointInRect
                 // the raw integer-pixel down point (nStartX/nStartY) and scales the
-                // button rects by g_dwUiScale. The reconstruction's touch pool keeps
+                // button rects by g_uiScale. The reconstruction's touch pool keeps
                 // 16.16 fixed device pixels, so drop the fractional bits to recover
                 // the integer pixel the rect comparison expects.
                 tapX = t->startX / 65536;
@@ -846,10 +846,10 @@ void MainTask::Setup() {
     m_aep = &AepManager::shared();
     m_screenWidth = static_cast<int>(AepManager::shared().screenWidth());
     m_screenHeight = static_cast<int>(AepManager::shared().screenHeight());
-    // g_dwUiScale is published by MainViewController::loadView as screenScale * 0.5
-    // (loadView @ 0xb51c: vmul.f32 by 0.5, stored as the raw g_dwUiScale slot). The
+    // g_uiScale is published by MainViewController::loadView as screenScale * 0.5
+    // (loadView @ 0xb51c: vmul.f32 by 0.5, stored as the raw g_uiScale slot). The
     // binary copies that slot into +0xa6c (musicSelTaskSetup @ 0x370f0:
-    // this->dwUiScale = g_dwUiScale). Compute the same value directly as a real
+    // this->dwUiScale = g_uiScale). Compute the same value directly as a real
     // float; the old (int)screenScale() truncation, read back through
     // reinterpret_cast<float&>, produced a denormal (~0) that collapsed every
     // scaled button rect to the origin.

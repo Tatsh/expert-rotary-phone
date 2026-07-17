@@ -52,9 +52,9 @@ bool BootLogoTask::skipRequested() const {
  */
 void BootLogoTask::setup() {
     m_aep = &AepManager::shared();
-    // Ghidra: m_scale (+0x38) = g_dwUiScale — the saved half-scale (screenScale*0.5),
-    // copied as raw bits; finish() restores it into orderingTable.flScreenHalfScale.
-    m_scale = reinterpret_cast<const float &>(g_dwUiScale);
+    // Ghidra: m_scale (+0x38) = g_uiScale — the saved half-scale (screenScale*0.5);
+    // finish() restores it into orderingTable.flScreenHalfScale.
+    m_scale = g_uiScale;
 
     // Boot logos render at native scale 1.0 (Ghidra: *(m_aep + 0x7c16e0) = 1.0f,
     // i.e. orderingTable.flScreenHalfScale); the saved m_scale is restored in finish().

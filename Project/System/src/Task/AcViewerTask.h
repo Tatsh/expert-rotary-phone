@@ -170,7 +170,7 @@ private:
     int16_t m_judgeTotal = 0;     // +0x102 running judged total (HUD 4-digit)
     int m_screenWidth = 0;        // +0x104 aep screen width
     int m_screenHeight = 0;       // +0x108 aep screen height
-    float m_uiScale = 0.0f;       // +0x10c UI scale (g_dwUiScale = screenScale * 0.5)
+    float m_uiScale = 0.0f;       // +0x10c UI scale (g_uiScale = screenScale * 0.5)
     // ---- device-branched HUD layout constants (+0x110..+0x1c4, documented seam)
     // ----
     // +0x110/+0x134/+0x138/+0x140/+0x144 are written by setup() as part of the

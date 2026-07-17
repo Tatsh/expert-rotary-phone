@@ -788,14 +788,14 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
     if (t == nullptr) {
         return false;
     }
-    // Ghidra: MenuMainTask_update divides the tap by the UI scale (g_dwUiScale)
+    // Ghidra: MenuMainTask_update divides the tap by the UI scale (g_uiScale)
     // before the rect test -- the mode-button rects are stored in logical
     // (unscaled) space, so the raw physical-pixel touch must be scaled down to
     // match (FPToFixed round-to-zero = trunc). Without this, buttons mis-hit on
     // every scale != 1 device (Retina / iPad).
-    const int scale = g_dwUiScale > 0 ? g_dwUiScale : 1;
-    const int px = (int)((float)t->x / (float)scale);
-    const int py = (int)((float)t->y / (float)scale);
+    const float scale = g_uiScale > 0.0f ? g_uiScale : 1.0f;
+    const int px = (int)((float)t->x / scale);
+    const int py = (int)((float)t->y / scale);
     return neGraphics::pointInRect(px, py, rect[0], rect[1], rect[2], rect[3]);
 }
 
@@ -917,10 +917,9 @@ int neTextureForiOS::loadFromImageData(const void *imageData) {
     return 0;
 }
 
-// UI scale (screenScale * 0.5) as float bits; published by
-// MainViewController::loadView, read by the task m_uiScale caches
-// (neEngineBridge.h).
-int g_dwUiScale = 0;
+// UI scale (screenScale * 0.5); published by MainViewController::loadView, read
+// by the task m_uiScale caches (neEngineBridge.h).
+float g_uiScale = 0.0f;
 
 // neTextureForiOS_draw (FUN_0000fbcc): the flat-argument wrapper the task draw
 // passes call — packs the args into a neSpriteDrawParams and emits the sprite

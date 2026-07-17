@@ -324,7 +324,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             // FloatToFixed). The binary converts them to float via FixedToFP
             // (i.e. / 65536) before dividing by the UI scale; a plain (float)
             // cast skips that and yields ~pixel * 65536, so the tap misses every
-            // button rect. Ghidra: FixedToFP(nStartX) / g_dwUiScale @ ~0x6aec0.
+            // button rect. Ghidra: FixedToFP(nStartX) / g_uiScale @ ~0x6aec0.
             tapX = static_cast<int>(t->startX / 65536.0f / uiScale);
             tapY = static_cast<int>(t->startY / 65536.0f / uiScale);
             neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);

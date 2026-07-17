@@ -913,8 +913,7 @@ static const float kRenderMinInterval = 1000.0f;
     }
     aep.init(bundlePath.UTF8String, texDir.UTF8String, contentW, contentH, scale);
     neSceneManager::shared(); // force scene-manager lazy init
-    reinterpret_cast<float &>(g_dwUiScale) =
-        scale * 0.5f; // publish UI scale as float bits (binary @0xb51c)
+    g_uiScale = scale * 0.5f; // publish UI scale (binary @0xb51c)
 
     m_capturedImg = nil;
     m_flgCapture = NO;

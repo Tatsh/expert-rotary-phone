@@ -362,7 +362,7 @@ public:
     int m_layoutRects[(0xa64 - 0x988) / 4] = {}; // +0x988 Setup()-filled button rects
     int m_screenWidth = 0;                       // +0xa64 aep screen width
     int m_screenHeight = 0;                      // +0xa68 aep screen height
-    float m_uiScale = 0.0f;      // +0xa6c UI scale factor (g_dwUiScale = screenScale * 0.5)
+    float m_uiScale = 0.0f;      // +0xa6c UI scale factor (g_uiScale = screenScale * 0.5)
     int m_treasurePoint = 0;     // +0xa70 treasure-point count
     int m_columnStride = 0;      // +0xa74 cells per column (6 phone / 9 pad)
     int m_touchX = -1;           // +0xa78 current-frame drag touch x (-1 none)

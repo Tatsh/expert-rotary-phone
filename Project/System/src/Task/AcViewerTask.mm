@@ -93,9 +93,9 @@ void AcViewerTask::setup() {
 
     m_screenWidth = aep.screenWidth();   // aepGetScreenWidth
     m_screenHeight = aep.screenHeight(); // aepGetScreenHeight
-    // g_dwUiScale is an int slot carrying float bits (screenScale * 0.5, published
-    // by MainViewController::loadView); compute the same value directly as a real
-    // float, matching MainTask/PlayTask, rather than punning the raw slot.
+    // g_uiScale is the UI scale (screenScale * 0.5) published by
+    // MainViewController::loadView; compute the same value directly here,
+    // matching MainTask/PlayTask.
     m_uiScale = neSceneManager::screenScale() * 0.5f;
     m_comboDigitX = -1; // HUD combo digit screen x (HUD writes it)
     m_comboDigitY = -1; // HUD combo digit screen y

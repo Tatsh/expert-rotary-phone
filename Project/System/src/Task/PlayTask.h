@@ -199,7 +199,7 @@ public:
     neAppEventCenter *m_eventCenter = nullptr; // +0x968 picked {musicId, sheet} carrier
     int m_screenWidth = 0;                     // +0x96c aep screen width
     int m_screenHeight = 0;                    // +0x970 aep screen height
-    float m_uiScale = 0.0f;                    // +0x974 UI scale (g_dwUiScale; the judge and the
+    float m_uiScale = 0.0f;                    // +0x974 UI scale (g_uiScale; the judge and the
     //        note draw read it directly as a float)
     int m_pauseOriginX = 0; // +0x978 pause-menu layout x origin
     // +0x97c device-branched pause-menu + note-field geometry (phone/pad

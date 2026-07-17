@@ -433,11 +433,13 @@ bool isSePlaying(int slot);
 int aepContentHeight();
 } // namespace neEngine
 
-// The UI scale = screenScale * 0.5, stored as float BITS in a 32-bit slot
-// (binary: DAT written by MainViewController::loadView @0xb51c as
-// `(dword)float`). Task m_uiScale caches copy it as int and
-// reinterpret_cast<float&> to read it (see PlayScene.mm / AcViewerTask.mm).
-extern int g_dwUiScale;
+// The UI scale = screenScale * 0.5, published by MainViewController::loadView
+// (@0xb51c) and read back as a float by the tap hit-tests (binary: vldr.32,
+// e.g. the menu update @0x6ae30). Ghidra: DAT_00187b80 (g_dwUiScale) — the `dw`
+// name reflects only the 4-byte storage slot; the slot is semantically a float,
+// so it is typed as one here and the readers do float maths directly rather
+// than reinterpreting an int slot.
+extern float g_uiScale;
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
