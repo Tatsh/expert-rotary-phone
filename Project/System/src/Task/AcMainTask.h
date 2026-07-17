@@ -131,9 +131,11 @@ public:
     // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
     // ne::C_TASK base + Random member construct/destruct plus the members' in-class
     // initialisers, so both are defaulted.
-    AcMainTask() = default;
-    ~AcMainTask()
-        override; // out-of-line: unique_ptr members need complete AepLyrCtrl/neTextureForiOS
+    // Both defined out-of-line so the unique_ptr scene members are constructed /
+    // destroyed where AepLyrCtrl / neTextureForiOS are complete (the header only
+    // forward-declares them).
+    AcMainTask();
+    ~AcMainTask() override;
     void update(int deltaMs) override; // Ghidra: AcMainTask_update (FUN_00099d18)
 
 private:

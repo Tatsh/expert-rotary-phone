@@ -39,10 +39,11 @@
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
 
-// Defaulted out-of-line so the unique_ptr scene members are destroyed where
-// AepLyrCtrl / neTextureForiOS are complete (the header only forward-declares
-// them). dispose() already releases the scene resources; this frees anything
-// still held if the task is destroyed without it.
+// Defaulted out-of-line so the unique_ptr scene members are constructed /
+// destroyed where AepLyrCtrl / neTextureForiOS are complete (the header only
+// forward-declares them). dispose() already releases the scene resources; the
+// destructor frees anything still held if the task is destroyed without it.
+AcMainTask::AcMainTask() = default;
 AcMainTask::~AcMainTask() = default;
 
 // Ghidra: AcMainTask_update (FUN_00099d18). Snapshot the touches (recording a
