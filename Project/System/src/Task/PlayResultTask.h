@@ -40,6 +40,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "C_TASK.h"
 
@@ -49,6 +50,7 @@ class neTextureForiOS;
 class PlayResultTask : public ne::C_TASK {
 public:
     PlayResultTask();                  // Ghidra: FUN_0003d5bc
+    ~PlayResultTask() override;        // out-of-line: unique_ptr members are incomplete here
     void update(int deltaMs) override; // Ghidra: FUN_0003d690
 
 private:
@@ -117,29 +119,29 @@ private:
     // ================= work-area layout (offsets are binary-exact)
     // =================
     // --- Artwork / name-image / chara portraits (standalone textures) ---
-    neTextureForiOS *m_artworkTex = nullptr; // +0x28 music artwork2xData
-    neTextureForiOS *m_nameTex = nullptr;    // +0x2c music-name image2xData
-    neTextureForiOS *m_charaTex = nullptr;   // +0x30 result_chara<id>@2x
+    std::unique_ptr<neTextureForiOS> m_artworkTex; // +0x28 music artwork2xData
+    std::unique_ptr<neTextureForiOS> m_nameTex;    // +0x2c music-name image2xData
+    std::unique_ptr<neTextureForiOS> m_charaTex;   // +0x30 result_chara<id>@2x
 
     // --- 12 digit-strip texture rows (0..9 glyphs each), drawn by the num_*
     // branches ---
-    neTextureForiOS *m_numCool[10] = {};         // +0x34  num_cool_
-    neTextureForiOS *m_numGreat[10] = {};        // +0x5c  num_great_
-    neTextureForiOS *m_numGood[10] = {};         // +0x84  num_good_
-    neTextureForiOS *m_numBad[10] = {};          // +0xac  num_bad_
-    neTextureForiOS *m_numCom[10] = {};          // +0xd4  num_com_
-    neTextureForiOS *m_numScore[10] = {};        // +0xfc  num_score_
-    neTextureForiOS *m_numBonusClear[10] = {};   // +0x124 num_bonus_clear
-    neTextureForiOS *m_numBonusCombo[10] = {};   // +0x14c num_bonus_combo
-    neTextureForiOS *m_numBonusRank[10] = {};    // +0x174 num_bonus_rank
-    neTextureForiOS *m_numBonusPerfect[10] = {}; // +0x19c num_bonus_perfect
-    neTextureForiOS *m_numPoints[10] = {};       // +0x1c4 num_points (S_POINT_NUM)
-    neTextureForiOS *m_numPointsBig[10] = {};    // +0x1ec num_pointb_ (total, big)
+    std::unique_ptr<neTextureForiOS> m_numCool[10];         // +0x34  num_cool_
+    std::unique_ptr<neTextureForiOS> m_numGreat[10];        // +0x5c  num_great_
+    std::unique_ptr<neTextureForiOS> m_numGood[10];         // +0x84  num_good_
+    std::unique_ptr<neTextureForiOS> m_numBad[10];          // +0xac  num_bad_
+    std::unique_ptr<neTextureForiOS> m_numCom[10];          // +0xd4  num_com_
+    std::unique_ptr<neTextureForiOS> m_numScore[10];        // +0xfc  num_score_
+    std::unique_ptr<neTextureForiOS> m_numBonusClear[10];   // +0x124 num_bonus_clear
+    std::unique_ptr<neTextureForiOS> m_numBonusCombo[10];   // +0x14c num_bonus_combo
+    std::unique_ptr<neTextureForiOS> m_numBonusRank[10];    // +0x174 num_bonus_rank
+    std::unique_ptr<neTextureForiOS> m_numBonusPerfect[10]; // +0x19c num_bonus_perfect
+    std::unique_ptr<neTextureForiOS> m_numPoints[10];       // +0x1c4 num_points (S_POINT_NUM)
+    std::unique_ptr<neTextureForiOS> m_numPointsBig[10];    // +0x1ec num_pointb_ (total, big)
 
     // --- 6 result overlay layers (device-branched names; owner = this). The
     // intro/score layers [0..3] are also driven as one-shot SE cues via the
     // SeInstance.h helpers (which are AepLyrCtrl methods). ---
-    AepLyrCtrl *m_layers[6] = {}; // +0x214 640IMG/BONUS_*/NEW_RECORD/EVENT
+    std::unique_ptr<AepLyrCtrl> m_layers[6]; // +0x214 640IMG/BONUS_*/NEW_RECORD/EVENT
 
     // --- Resolved Aep handle tables (frame/user numbers, by name) ---
     int m_frmA[4] = {};          // +0x22c FULLCOMBO/PERFECT/BONUS_COM/FULLCOM board

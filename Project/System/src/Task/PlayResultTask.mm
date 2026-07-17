@@ -69,6 +69,12 @@ static MainViewController *RootVC() {
 PlayResultTask::PlayResultTask() {
 }
 
+// Out-of-line so the unique_ptr texture / layer members are destroyed where
+// neTextureForiOS and AepLyrCtrl are complete (the header keeps them on forward
+// declarations). Matches the compiler-generated deleting destructor at 0x3d5f0:
+// resultGotoNext already frees every slot, so this only runs the base chain.
+PlayResultTask::~PlayResultTask() = default;
+
 // Ghidra: FUN_0003d690 — the result-screen state machine.
 // Verified against disassembly: tap detection uses < 11 on both axes (dx =
 // startX-x @ +4/+c, dy = startY-y @ +8/+10); state ivar @ +0x394; case 1 plays
@@ -123,12 +129,12 @@ void PlayResultTask::update(int /*deltaMs*/) {
         // Fade the screen in and start the intro animation layers; drop the play
         // scene's captured backdrop now that this scene owns the display.
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
-        SeInstancePlay(m_layers[0]);
+        SeInstancePlay(m_layers[0].get());
         if (m_eventBonus) {
             m_layers[5]->play();
         }
         if (m_isNewRecord) {
-            SeInstancePlay(m_layers[4]);
+            SeInstancePlay(m_layers[4].get());
         }
         [RootVC() releaseCapturedImage];
         m_state = 2;
@@ -144,7 +150,7 @@ void PlayResultTask::update(int /*deltaMs*/) {
     case 4:
         // The score-line animation finished: start the count-up, unless this was a
         // wash-out (rank 6), which drops straight to waiting for the dismiss tap.
-        if (!SeInstanceIsPlaying(m_layers[1])) {
+        if (!SeInstanceIsPlaying(m_layers[1].get())) {
             if (m_rank != 6) {
                 m_state = 5;
                 break;
@@ -445,9 +451,8 @@ void PlayResultTask::resultSetup() {
     const int displayType = [[AppDelegate appDelegate] displayType];
     const char *const *layerNames = (displayType == 2) ? kLayerPad : kLayerPhone;
     for (int i = 0; i < 6; i++) {
-        AepLyrCtrl *layer = new AepLyrCtrl(); // operator_new(0x60) + FUN_0002c7d8
-        m_layers[i] = layer;
-        layer->init(4, layerNames[i], this, kLayerOrder[i]); // FUN_0002c834
+        m_layers[i] = std::make_unique<AepLyrCtrl>(); // operator_new(0x60) + FUN_0002c7d8
+        m_layers[i]->init(4, layerNames[i], this, kLayerOrder[i]); // FUN_0002c834
     }
 
     // Frame/sprite handles resolved by name (getFrmNo).
@@ -504,13 +509,11 @@ void PlayResultTask::resultSetup() {
     [mm getMusicDataArray]; // ensure the catalog cache is built
     MusicData *md = [mm getMusicData:music];
 
-    neTextureForiOS *artTex = new neTextureForiOS(); // operator_new(0x18) + FUN_00011818
-    m_artworkTex = artTex;
-    artTex->loadFromImageData((__bridge const void *)[md artwork2xData]); // FUN_00011cbc
+    m_artworkTex = std::make_unique<neTextureForiOS>(); // operator_new(0x18) + FUN_00011818
+    m_artworkTex->loadFromImageData((__bridge const void *)[md artwork2xData]); // FUN_00011cbc
 
-    neTextureForiOS *nameTex = new neTextureForiOS();
-    m_nameTex = nameTex;
-    nameTex->loadFromImageData((__bridge const void *)[md musicNameImage2xData]);
+    m_nameTex = std::make_unique<neTextureForiOS>();
+    m_nameTex->loadFromImageData((__bridge const void *)[md musicNameImage2xData]);
 
     // Difficulty level for the played sheet (other sheet ids leave m_level as
     // is).
@@ -528,13 +531,12 @@ void PlayResultTask::resultSetup() {
         break;
     }
 
-    neTextureForiOS *charaTex = new neTextureForiOS();
-    m_charaTex = charaTex;
+    m_charaTex = std::make_unique<neTextureForiOS>();
     NSString *charaFile =
         [NSString stringWithFormat:@"result_chara%03d@2x.png", (int)[UserSettingData charaId]];
     NSString *charaPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
-    charaTex->load([charaPath UTF8String]); // FUN_00011a2c
+    m_charaTex->load([charaPath UTF8String]); // FUN_00011a2c
 
     loadNumberTextures();
 
@@ -583,7 +585,7 @@ void PlayResultTask::loadNumberTextures() {
     // (byte-verified: e.g. num_bonus_clear<d> and num_points<d> have no
     // separator).
     struct NumGroup {
-        neTextureForiOS **row;
+        std::unique_ptr<neTextureForiOS> *row;
         const char *prefix;
     };
     const NumGroup kGroups[12] = {
@@ -603,11 +605,11 @@ void PlayResultTask::loadNumberTextures() {
     NSBundle *bundle = [NSBundle mainBundle];
     for (int lane = 0; lane < 10; lane++) {
         for (int g = 0; g < 12; g++) {
-            neTextureForiOS *tex = new neTextureForiOS(); // operator_new(0x18) + FUN_00011818
-            kGroups[g].row[lane] = tex;
+            auto tex = std::make_unique<neTextureForiOS>(); // operator_new(0x18) + FUN_00011818
             NSString *name = [NSString stringWithFormat:@"%s%d", kGroups[g].prefix, lane];
             NSString *path = [bundle pathForResource:name ofType:@"png"];
             tex->load([path UTF8String]); // FUN_00011a2c
+            kGroups[g].row[lane] = std::move(tex);
         }
     }
 }
@@ -637,7 +639,7 @@ void PlayResultTask::loadNumberTextures() {
 // @complete
 void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int displayType) {
     AudioManager *audio = [AudioManager sharedManager];
-    AepLyrCtrl *intro = m_layers[0];
+    AepLyrCtrl *intro = m_layers[0].get();
 
     // Binary case 2 (resultTaskUpdate @ 0x3d690): AepLyrCtrl::IsPlaying(m_layers[0]),
     // then FPToFixed of the layer's +0x40 play head truncates it to a frame number.
@@ -828,17 +830,17 @@ void PlayResultTask::updateScoreCount(bool tapped) {
     case 3:
         // Play the score line-in SE and start the score-line animation layer.
         [audio playSe:nil resourceId:m_rankSe[6]];
-        SeInstancePlay(m_layers[1]);
+        SeInstancePlay(m_layers[1].get());
         m_state = 4;
         break;
     case 5:
         // Stop the score line, start the count-up layer(s) (the second only on a
         // perfect full-combo), reset the tick counter, and play the bonus-tally
         // start SE.
-        SeInstanceStop(m_layers[1]);
-        SeInstancePlay(m_layers[2]);
+        SeInstanceStop(m_layers[1].get());
+        SeInstancePlay(m_layers[2].get());
         if (m_perfectFullCombo) {
-            SeInstancePlay(m_layers[3]);
+            SeInstancePlay(m_layers[3].get());
         }
         m_tickCounter = 0;
         [audio playSe:nil resourceId:m_rankSe[8]];
@@ -849,7 +851,7 @@ void PlayResultTask::updateScoreCount(bool tapped) {
         // step retriggers the count SE (stopping the previous instance first); a
         // tap snaps straight to the total. On reaching it, play the clear SE and
         // finish.
-        if (SeInstanceIsPlaying(m_layers[2])) {
+        if (SeInstanceIsPlaying(m_layers[2].get())) {
             break;
         }
         const int total = m_baseBonus + m_bonusSubtotal;
@@ -901,45 +903,35 @@ void PlayResultTask::resultGotoNext() {
     [audio cleanupSe];
     neSceneManager::shared().loadSystemSe(); // FUN_0002c5c8
 
-    // Delete the artwork / name / chara textures (+0x28/+0x2c/+0x30).
-    neTextureForiOS *portraits[3] = {m_artworkTex, m_nameTex, m_charaTex};
-    for (int i = 0; i < 3; i++) {
-        delete portraits[i]; // delete nullptr is a no-op
-    }
-    m_artworkTex = nullptr;
-    m_nameTex = nullptr;
-    m_charaTex = nullptr;
+    // Release the artwork / name / chara textures (+0x28/+0x2c/+0x30).
+    m_artworkTex.reset();
+    m_nameTex.reset();
+    m_charaTex.reset();
 
-    // Delete the 10-lane x 12-array number textures (@ 0x3f414..0x3f4f0).
-    neTextureForiOS **kNumGroups[12] = {m_numCool,
-                                        m_numGreat,
-                                        m_numGood,
-                                        m_numBad,
-                                        m_numCom,
-                                        m_numScore,
-                                        m_numBonusClear,
-                                        m_numBonusCombo,
-                                        m_numBonusRank,
-                                        m_numBonusPerfect,
-                                        m_numPoints,
-                                        m_numPointsBig};
+    // Release the 10-lane x 12-array number textures (@ 0x3f414..0x3f4f0).
+    std::unique_ptr<neTextureForiOS> *kNumGroups[12] = {m_numCool,
+                                                        m_numGreat,
+                                                        m_numGood,
+                                                        m_numBad,
+                                                        m_numCom,
+                                                        m_numScore,
+                                                        m_numBonusClear,
+                                                        m_numBonusCombo,
+                                                        m_numBonusRank,
+                                                        m_numBonusPerfect,
+                                                        m_numPoints,
+                                                        m_numPointsBig};
     for (int lane = 0; lane < 10; lane++) {
         for (int g = 0; g < 12; g++) {
-            neTextureForiOS *tex = kNumGroups[g][lane];
-            if (tex) {
-                delete tex;
-                kNumGroups[g][lane] = nullptr;
-            }
+            kNumGroups[g][lane].reset();
         }
     }
 
-    // Unlink + delete the 6 result layers (+0x214).
+    // Unlink + release the 6 result layers (+0x214).
     for (int i = 0; i < 6; i++) {
-        AepLyrCtrl *layer = m_layers[i];
-        if (layer) {
-            layer->unlink(); // FUN_0002ca9c
-            delete layer;
-            m_layers[i] = nullptr;
+        if (m_layers[i]) {
+            m_layers[i]->unlink(); // FUN_0002ca9c
+            m_layers[i].reset();
         }
     }
 
@@ -1091,36 +1083,40 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     // (scaleX * dxStep)/100 per further digit, stopping once the value is a
     // single digit or `maxDigits` is reached. `row` is the num_* digit-texture
     // row (glyphs 0..9).
-    auto drawDigits =
-        [&](neTextureForiOS *const *row, int value, int w, int h, int dxStep, int maxDigits) {
-            int v = value;
-            int cx = x;
-            for (int d = 0; d < maxDigits; ++d) {
-                neTextureForiOS *tex = row[v % 10];
-                drawTexQuad(aep,
-                            tex,
-                            0,
-                            0,
-                            w,
-                            h,
-                            cx,
-                            y,
-                            scaleX,
-                            scaleY,
-                            rotation,
-                            anchorX,
-                            anchorY,
-                            color,
-                            alpha,
-                            (int)blend,
-                            (int)priority);
-                if (v < 10) {
-                    return;
-                }
-                v /= 10;
-                cx += (scaleX * dxStep) / 100;
+    auto drawDigits = [&](const std::unique_ptr<neTextureForiOS> *row,
+                          int value,
+                          int w,
+                          int h,
+                          int dxStep,
+                          int maxDigits) {
+        int v = value;
+        int cx = x;
+        for (int d = 0; d < maxDigits; ++d) {
+            neTextureForiOS *tex = row[v % 10].get();
+            drawTexQuad(aep,
+                        tex,
+                        0,
+                        0,
+                        w,
+                        h,
+                        cx,
+                        y,
+                        scaleX,
+                        scaleY,
+                        rotation,
+                        anchorX,
+                        anchorY,
+                        color,
+                        alpha,
+                        (int)blend,
+                        (int)priority);
+            if (v < 10) {
+                return;
             }
-        };
+            v /= 10;
+            cx += (scaleX * dxStep) / 100;
+        }
+    };
 
     // --- Full-combo / perfect stamp (FULLCOMBO user, m_usr[5]) ---
     if (self->m_usr[5] == child) {
@@ -1169,7 +1165,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     // --- Jacket / music-name standalone textures (m_usr[4] / m_usr[0]) ---
     if (self->m_usr[4] == child) {
         drawTexQuad(aep,
-                    self->m_artworkTex,
+                    self->m_artworkTex.get(),
                     0,
                     0,
                     0x168,
@@ -1189,7 +1185,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     }
     if (self->m_usr[0] == child) {
         drawTexQuad(aep,
-                    self->m_nameTex,
+                    self->m_nameTex.get(),
                     0,
                     0,
                     0x126,
@@ -1220,7 +1216,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
         // taller than wide. The decompiler/reconstruction had the w/h transposed
         // (0x75e,0x38c).
         drawTexQuad(aep,
-                    self->m_charaTex,
+                    self->m_charaTex.get(),
                     0,
                     0,
                     0x38c,
@@ -1282,7 +1278,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
             v = 9999;
         }
         for (int step = 0; step != -0x80; step -= 0x20) {
-            neTextureForiOS *tex = self->m_numPoints[v % 10];
+            neTextureForiOS *tex = self->m_numPoints[v % 10].get();
             drawTexQuad(aep,
                         tex,
                         0,
@@ -1348,7 +1344,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
         }
         // rank != 0: play the ranked effect layer (additively) while the intro
         // layer has settled, then draw the rank number glyph.
-        AepLyrCtrl *intro = self->m_layers[0];
+        AepLyrCtrl *intro = self->m_layers[0].get();
         if (intro == nullptr || !intro->isAnimating()) {     // FUN_0002cb64 == 0
             if (static_cast<unsigned short>(rank - 1) < 2) { // rank 1 or 2
                 const int ei = (rank != 1) ? 1 : 0;
@@ -1387,7 +1383,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
         if (rank == 0) {
             return;
         }
-        AepLyrCtrl *intro = self->m_layers[0];
+        AepLyrCtrl *intro = self->m_layers[0].get();
         if ((intro == nullptr || !intro->isAnimating()) &&
             static_cast<unsigned short>(rank - 1) < 2) {
             const int ei = (rank != 1) ? 1 : 0;
