@@ -472,7 +472,7 @@ void AcMainTask::setupScene() {
     if (!pad) {
         if ([[AppDelegate appDelegate] displayType] == 2) {
             m_layoutAnchorZ = 0x6a;
-            m_field618 = 0x9e;
+            m_layoutOffsetY = 0x9e;
         }
         m_bgTileW = 0x280;
         m_bgTileH = 0x470;

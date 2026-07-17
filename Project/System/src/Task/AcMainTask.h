@@ -182,21 +182,24 @@ private:
     int m_edgesPtr = {}; // +0x4b8 edge (ConnectStruct) array pointer, held in an
                          // int slot (type-pun)
     const TreasureMap::Node *m_curNode = {}; // +0x4bc current board node
-    uint8_t _rsvd_4c0[0x4c4 - 0x4c0] = {};   // +0x4c0
-    uint16_t m_nodeCount = {};               // +0x4c4 map node count
-    int16_t m_edgeCount = {};                // +0x4c6 map edge count
-    float m_scrollBoxOriginX = {};           // +0x4c8 scroll bounding box origin x
-    float m_scrollBoxOriginY = {};           // +0x4cc scroll bounding box origin y
-    float m_scrollBoxW = {};                 // +0x4d0 scroll bounding box width
-    float m_scrollBoxH = {};                 // +0x4d4 scroll bounding box height
-    float m_scrollX = {};                    // +0x4d8 scroll position x (clamped)
-    float m_scrollY = {};                    // +0x4dc scroll position y (clamped)
-    float m_clampCentreX = {};               // +0x4e0 scroll clamp min centre x
-    float m_clampMinY = {};                  // +0x4e4 scroll clamp min y
-    float m_clampCentreX2 = {};              // +0x4e8 scroll clamp max centre x
-    float m_clampMaxY = {};                  // +0x4ec scroll clamp max y
-    int16_t m_treasureRaw06 = {};            // +0x4f0 pending record raw0x06
-    uint8_t _rsvd_4f2[0x4f4 - 0x4f2] = {};   // +0x4f2
+    // +0x4c0 the pending/target board node: update swaps it with m_curNode
+    // (@ 0x9d... copies +0x4c0 <-> +0x4bc) as the player moves. A Node* in the
+    // 32-bit binary's 4-byte slot; a real pointer here.
+    const TreasureMap::Node *m_targetNode = {}; // +0x4c0
+    uint16_t m_nodeCount = {};                  // +0x4c4 map node count
+    int16_t m_edgeCount = {};                   // +0x4c6 map edge count
+    float m_scrollBoxOriginX = {};              // +0x4c8 scroll bounding box origin x
+    float m_scrollBoxOriginY = {};              // +0x4cc scroll bounding box origin y
+    float m_scrollBoxW = {};                    // +0x4d0 scroll bounding box width
+    float m_scrollBoxH = {};                    // +0x4d4 scroll bounding box height
+    float m_scrollX = {};                       // +0x4d8 scroll position x (clamped)
+    float m_scrollY = {};                       // +0x4dc scroll position y (clamped)
+    float m_clampCentreX = {};                  // +0x4e0 scroll clamp min centre x
+    float m_clampMinY = {};                     // +0x4e4 scroll clamp min y
+    float m_clampCentreX2 = {};                 // +0x4e8 scroll clamp max centre x
+    float m_clampMaxY = {};                     // +0x4ec scroll clamp max y
+    int16_t m_treasureRaw06 = {};               // +0x4f0 pending record raw0x06
+    uint8_t _rsvd_4f2[0x4f4 - 0x4f2] = {};      // +0x4f2
     Random m_rng;               // +0x4f4 embedded arcade RNG (auto-constructed/destructed)
     int m_dragAnchorId = -1;    // +0x508 touch drag anchor id (-1 == none)
     float m_dragAnchorX = {};   // +0x50c drag anchor x (float; disasm 0x99e3e)
@@ -259,12 +262,13 @@ private:
     int m_charaPanelX = {};                // +0x60c chara-panel origin x cache
     int m_charaPanelY = {};                // +0x610 chara-panel origin y cache
     int m_layoutAnchorZ = {};              // +0x614 roulette layer anchor z (tall-phone seed)
-    int m_field618 = {};                   // +0x618 tall-phone layout seed
-    int m_friendOpacity = {};              // +0x61c friend-meet fade opacity
-    int16_t m_subMapId = {};               // +0x620 pending sub-map id (board*10+sub; -1 none)
-    int16_t m_charaTicket = {};            // +0x622 owned chara tickets
-    int m_treasurePoint = {};              // +0x624 treasure point balance
-    int m_bonusCount = {};                 // +0x628 bonus/main-map id (roulette overlay gate)
+    int m_layoutOffsetY =
+        {}; // +0x618 board-draw Y offset (added to +0x95c/0x96c/0x97c; 0x9e on tall phones)
+    int m_friendOpacity = {};   // +0x61c friend-meet fade opacity
+    int16_t m_subMapId = {};    // +0x620 pending sub-map id (board*10+sub; -1 none)
+    int16_t m_charaTicket = {}; // +0x622 owned chara tickets
+    int m_treasurePoint = {};   // +0x624 treasure point balance
+    int m_bonusCount = {};      // +0x628 bonus/main-map id (roulette overlay gate)
     // +0x62c is seeded to this out-of-range negative sentinel so the first update
     // frame forces the initial treasure-event scan (update @ 0x9d... checks
     // == this value); it reads as "no event" (< 0) and is distinct from the -1
