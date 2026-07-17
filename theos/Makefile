@@ -66,9 +66,9 @@ PopnRhythmin_CFLAGS  = -std=gnu2x -fobjc-arc -fobjc-exceptions -DGLES_SILENCE_DE
 PopnRhythmin_CCFLAGS = -std=gnu++2b -stdlib=libc++
 # minizip is vendored upstream C we do not patch; silence its extraneous
 # parentheses-equality warnings there without touching the third-party source.
-$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/ioapi.c_CFLAGS = -Wno-parentheses-equality
-$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/unzip.c_CFLAGS = -Wno-parentheses-equality
-$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/zip.c_CFLAGS = -Wno-parentheses-equality
+$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/ioapi.c_CFLAGS = -std=gnu17 -Wno-parentheses-equality
+$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/unzip.c_CFLAGS = -std=gnu17 -Wno-parentheses-equality
+$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/zip.c_CFLAGS = -std=gnu17 -Wno-parentheses-equality
 
 PopnRhythmin_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore CoreText OpenGLES \
                           AudioToolbox AVFoundation CoreData StoreKit Social \

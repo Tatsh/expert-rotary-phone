@@ -230,19 +230,27 @@ target_sources(popnrhythmin PRIVATE
     "${_zip}/minizip/unzip.c"
     "${_zip}/minizip/zip.c")
 target_include_directories(popnrhythmin PRIVATE "${_zip}" "${_zip}/minizip")
-# minizip is vendored upstream C we do not patch; silence its extraneous
-# parentheses-equality warnings (e.g. zip.c's `if ((level==2))`) without
-# touching the third-party source.
+# minizip is vendored upstream, really old-style C we do not patch: pin it to
+# gnu17 (C23 rejects its old constructs; this per-source -std lands after the
+# target-wide one, so it wins) and silence its extraneous parentheses-equality
+# warnings (e.g. zip.c's `if ((level==2))`) without touching the third-party
+# source.
 set_source_files_properties(
     "${_zip}/minizip/ioapi.c"
     "${_zip}/minizip/unzip.c"
     "${_zip}/minizip/zip.c"
-    PROPERTIES COMPILE_OPTIONS "-Wno-parentheses-equality")
+    PROPERTIES COMPILE_OPTIONS "-std=gnu17;-Wno-parentheses-equality")
 
-# ARC and ObjC-ARC exceptions are turned on through the Xcode build settings
-# (CLANG_ENABLE_OBJC_ARC / CLANG_ENABLE_OBJC_ARC_EXCEPTIONS below), which scope
-# themselves to the Objective-C languages, so no -fobjc-arc / -fobjc-exceptions
-# compile flags are needed here (they would only warn on the plain C sources).
+# Compiler options as real -flags (not XCODE_ATTRIBUTE build settings) so they
+# apply under every generator and can be overridden per source file. Language
+# standards are per-language; ARC and its exception cleanup are Objective-C only.
+target_compile_options(popnrhythmin PRIVATE
+    $<$<COMPILE_LANGUAGE:C,OBJC>:-std=gnu2x>
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-std=gnu++2b>
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-stdlib=libc++>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc-exceptions>)
+
 # The reconstruction faithfully uses the OpenGL ES 1.1 API, which Apple
 # deprecated wholesale on iOS 12 with no in-place replacement (Metal is a
 # separate stack). Silence the blanket ES deprecation warnings rather than
@@ -275,12 +283,6 @@ set_target_properties(popnrhythmin PROPERTIES
     XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
     XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO"
     XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
-    XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES"
-    XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC_EXCEPTIONS "YES"
-    XCODE_ATTRIBUTE_CLANG_ENABLE_STACK_ZERO_INIT "YES"
-    XCODE_ATTRIBUTE_GCC_C_LANGUAGE_STANDARD "gnu2x"
-    XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "gnu++2b"
-    XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
     # This build is never submitted to the App Store.
     XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT "YES"
     # Turn the static analyzer's checkers on.
