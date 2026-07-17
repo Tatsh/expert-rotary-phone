@@ -631,8 +631,8 @@ void AcMainTask::setupResolveHandles() {
 
     for (int i = 0; i < 5; i++) {
         const int lyr = aep.getLyrNo(5, kLyrSkillBoards[i]);
-        m_skillBoardLyr[i] = lyr;
-        m_skillBoardFrames[i] = aep.layerFrameCount(lyr);
+        m_skillBoard[i].lyr = lyr;
+        m_skillBoard[i].frameCount = aep.layerFrameCount(lyr);
     }
     for (int i = 0; i < 9; i++) {
         m_musicPeaceLyr[i] = aep.getLyrNo(5, kLyrMusicPeace[i]);
@@ -644,8 +644,8 @@ void AcMainTask::setupResolveHandles() {
     m_wallPeaceFrames = aep.layerFrameCount(m_wallPeaceLyr[0]);
     for (int i = 0; i < 4; i++) {
         const int lyr = aep.getLyrNo(5, kLyrIconMental[i]);
-        m_iconMentalLyr[i] = lyr;
-        m_iconMentalFrames[i] = aep.layerFrameCount(lyr);
+        m_iconMental[i].lyr = lyr;
+        m_iconMental[i].frameCount = aep.layerFrameCount(lyr);
     }
 
     for (int i = 0; i < 26; i++) {
@@ -1548,7 +1548,7 @@ int AcMainTask::sugorokuDrawSkillPanel() {
     int iVar10 = static_cast<int>(m_playerY - scrollOffY + static_cast<float>(halfH));
 
     // Draw skill panel AEP art (FUN_000a14a0 step).
-    drawAepFrame(mgr, m_skillBoardLyr[0], iVar7 + 52, iVar10 - 300, 0x20, 0x22);
+    drawAepFrame(mgr, m_skillBoard[0].lyr, iVar7 + 52, iVar10 - 300, 0x20, 0x22);
 
     // Skill name label (from the active character's skill record).
     __unsafe_unretained id skillObj = (__bridge id)m_skillInfo;
@@ -1654,7 +1654,7 @@ int AcMainTask::sugorokuDrawButtonHitTest() {
     int iVar6 = m_overlayH / 2 - panelH / 2; // panel top Y
 
     // Draw panel: AEP layer handle @ +0x220, frame = panelW/2.
-    mgr->drawLayer(m_skillBoardLyr[1],
+    mgr->drawLayer(m_skillBoard[1].lyr,
                    panelW / 2,
                    iVar5,
                    iVar6,
@@ -2602,8 +2602,8 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     // warp flash).
     uint8_t badgeType = m_rankBadgeType;
     if (badgeType < 4 && m_warpFlash == 0) {
-        int badgeLyrHandle = m_iconMentalLyr[static_cast<int>(badgeType)];
-        int badgeFrameCnt = m_iconMentalFrames[static_cast<int>(badgeType)];
+        int badgeLyrHandle = m_iconMental[static_cast<int>(badgeType)].lyr;
+        int badgeFrameCnt = m_iconMental[static_cast<int>(badgeType)].frameCount;
         int &frameCtr = m_animFrameCtr;
         int frame = (badgeFrameCnt > 0) ? (frameCtr % badgeFrameCnt) : 0;
         mgr->drawLayer(badgeLyrHandle,
@@ -2815,7 +2815,7 @@ void AcMainTask::sugorokuDrawFriendMeet() {
     // Name label.
     __unsafe_unretained NSString *nameStr = (__bridge NSString *)m_mapName;
     if (nameStr) {
-        mgr->drawLayer(m_skillBoardLyr[4],
+        mgr->drawLayer(m_skillBoard[4].lyr,
                        0,
                        iVar7,
                        iVar6 + 0x5a,
@@ -3160,8 +3160,9 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // FixedToFP/FPToFixed here are int<->float identity round-trips (no scaling).
     if (self->m_boardUserNo[kBoardMusicPanel] == child ||
         self->m_boardUserNo[kBoardWallPanel] == child) {
-        int *anchorCache = (self->m_boardUserNo[kBoardMusicPanel] == child) ? self->m_musicAnchor :
-                                                                              self->m_wallAnchor;
+        AcAnchor *anchorCache = (self->m_boardUserNo[kBoardMusicPanel] == child) ?
+                                    self->m_musicAnchor :
+                                    self->m_wallAnchor;
         for (int i = 0; i < 9; i++) {
             const int cx = (i % 3) * 200 + x;
             const int cy = (i / 3) * 0xcc + y;
@@ -3181,8 +3182,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                            clipRect,
                            p17,
                            1);
-            anchorCache[i * 2] = cx - anchorX;
-            anchorCache[i * 2 + 1] = cy - anchorY;
+            anchorCache[i].x = cx - anchorX;
+            anchorCache[i].y = cy - anchorY;
         }
         return;
     }
@@ -3299,7 +3300,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         if (!anyMissing && !anyNew) {
             return;
         }
-        self->m_aep->drawLayer(self->m_skillBoardLyr[2],
+        self->m_aep->drawLayer(self->m_skillBoard[2].lyr,
                                anyMissing ? 0 : self->m_musicResultFrame,
                                x - 0xc,
                                rowY,
@@ -3410,7 +3411,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         if (!anyMissing && !anyNew) {
             return;
         }
-        self->m_aep->drawLayer(self->m_skillBoardLyr[3],
+        self->m_aep->drawLayer(self->m_skillBoard[3].lyr,
                                anyMissing ? 0 : self->m_wallResultFrame,
                                baseX,
                                baseY,

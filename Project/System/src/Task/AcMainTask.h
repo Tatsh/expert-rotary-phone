@@ -89,6 +89,20 @@ enum BoardElem {
     kBoardRouletteCaption = 25, // roulette-result caption text
 };
 
+// A resolved Aep layer handle paired with its frame count; the setup pass always
+// resolves the two together (getLyrNo then layerFrameCount).
+struct AcLayerRef {
+    int lyr = 0;        // getLyrNo handle
+    int frameCount = 0; // layerFrameCount(lyr)
+};
+
+// An integer (x, y) board-panel anchor position (a grid cell's top-left after
+// the per-cell anchor offset).
+struct AcAnchor {
+    int x = 0;
+    int y = 0;
+};
+
 class AcMainTask : public C_TASK {
 public:
     // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
@@ -218,14 +232,14 @@ private:
     // layout-preserved on the 64-bit rebuild.
     AcLifecycleState m_lifecycleState = kAcLifecycleNone; // +0x20c
     uint8_t m_exitRequested = 0;                          // +0x1d9
-    int m_skillBoardLyr[5] = {};    // +0x21c SKILL_COM_BOARD/... layer numbers
-    int m_skillBoardFrames[5] = {}; // +0x230 their frame counts
+    AcLayerRef m_skillBoard[5] = {}; // SKILL_COM_BOARD/... layers + frame counts
+                                     // (binary: lyr @+0x21c, frameCount @+0x230; paired here)
     // +0x244: 8 bytes unused padding (dropped; runtime struct, layout not preserved)
     int m_musicResultFrame = {}; // +0x24c music collection-result overlay frame
     int m_wallResultFrame = {};  // +0x250 wall collection-result overlay frame
     // +0x254: 4 bytes unused padding (dropped; runtime struct, layout not preserved)
-    int m_iconMentalLyr[4] = {};           // +0x258 ICON_MENTAL00..03 layer numbers
-    int m_iconMentalFrames[4] = {};        // +0x268 their frame counts (rank badge)
+    AcLayerRef m_iconMental[4] = {};       // ICON_MENTAL00..03 rank-badge layers + frame
+                                           // counts (binary: lyr @+0x258, frameCount @+0x268)
     int m_animFrameCtr = {};               // +0x278 shared per-frame animation counter
     int m_musicPeaceLyr[9] = {};           // +0x27c MUSIC_PEACE00..08 layers
     int m_wallPeaceLyr[9] = {};            // +0x2a0 WALL_PEACE00..08 layers
@@ -358,9 +372,9 @@ private:
     // +0x63e: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
     void *m_treasureMusicArray = {};   // +0x640 treasure music data array (retained)
     int m_selMusicPanel = {};          // +0x644 selected music panel index (result popup)
-    int m_musicAnchor[18] = {};        // +0x648 9 music-panel (x,y) anchor positions
+    AcAnchor m_musicAnchor[9] = {};    // +0x648 9 music-panel (x,y) anchor positions
     int m_rouletteMapId = {};          // +0x690 current roulette map id
-    int m_wallAnchor[18] = {};         // +0x694 9 wall-panel (x,y) anchor positions
+    AcAnchor m_wallAnchor[9] = {};     // +0x694 9 wall-panel (x,y) anchor positions
     int m_musicPieceTable[27] = {};    // +0x6dc 9x3 music-piece unlock grid
     int m_wallPieceTable[27] = {};     // +0x748 9x3 wallpaper-piece unlock grid
     int m_musicPieceTableDup[27] = {}; // +0x7b4 music grid duplicate
