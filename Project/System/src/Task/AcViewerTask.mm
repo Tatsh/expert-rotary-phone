@@ -42,7 +42,7 @@ static const int kAcvGroup = 7;
 // The root nav host the play machine drives (GotoAcViewer / black-board
 // overlay).
 static MainViewController *AcvRootVC() {
-    return (MainViewController *)neSceneManager::rootViewController();
+    return static_cast<MainViewController *>(neSceneManager::rootViewController());
 }
 
 // ===========================================================================
@@ -102,7 +102,7 @@ void AcViewerTask::setup() {
     m_popKun = [UserSettingData acvPopKun];
     m_hidSud = [UserSettingData acvHidSud];
     m_ranMir = [UserSettingData acvRanMir];
-    m_difficulty = (int)(short)neAppEventCenter::acViewerDifficulty();
+    m_difficulty = static_cast<int>(static_cast<short>(neAppEventCenter::acViewerDifficulty()));
     m_padDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
 
     // Lane remap for the RAN/MIR option, then load + init the chart.
@@ -111,7 +111,7 @@ void AcViewerTask::setup() {
 
     // Total note count + the initial gauge value (0x100 == full at 256/1024
     // scale).
-    m_totalNoteCount = (int16_t)note.getTotalNoteCount();
+    m_totalNoteCount = static_cast<int16_t>(note.getTotalNoteCount());
     m_gaugeValue = 0x100;
 
     // Per-lane scroll-speed table (@ +0x1cc[4]). Each entry is a packed
@@ -126,10 +126,11 @@ void AcViewerTask::setup() {
         int16_t speed;
         if (i < 2) {
             // Fixed rate: numerator / (denominator * 30), negated.
-            speed = (int16_t)(-(numerator / (denominator * 30)));
+            speed = static_cast<int16_t>(-(numerator / (denominator * 30)));
         } else {
             // Inversely proportional to the note count, floored at 1.
-            const int16_t scaled = (int16_t)(numerator / (denominator * m_totalNoteCount));
+            const int16_t scaled =
+                static_cast<int16_t>(numerator / (denominator * m_totalNoteCount));
             speed = scaled <= 1 ? 1 : scaled;
         }
         m_scrollSpeed[i] = speed;
@@ -138,7 +139,7 @@ void AcViewerTask::setup() {
     // Load the "TIMING" arcade SE and the group-7 viewer Aep data.
     AudioManager *audio = [AudioManager sharedManager];
     NSString *sePath = [[NSBundle mainBundle] pathForResource:@"v12" ofType:@"m4a"];
-    m_readySeId = (int)[audio loadSe:sePath isLoop:NO callName:nil group:1];
+    m_readySeId = static_cast<int>([audio loadSe:sePath isLoop:NO callName:nil group:1]);
 
     const bool pad = (m_padDisplay != 0);
     aep.loadAepDataDefaultPath(kAcvGroup, pad ? "arcade_viewer_ipad" : "arcade_viewer");
@@ -308,7 +309,7 @@ void AcViewerTask::loadChart() {
     // Cache the display music name (+0x1e4, +1 retained); its length picks the
     // HUD title offsets (+0x1e8 x-advance / +0x1c4 baseline).
     if (m_songTitle) {
-        (void)(__bridge_transfer id)m_songTitle;
+        static_cast<void>((__bridge_transfer id)m_songTitle);
         m_songTitle = nullptr;
     }
     NSString *name = [acMusic musicName];
@@ -342,7 +343,7 @@ void AcViewerTask::loadChart() {
     // normal / 2 hyper / 3 ex), retain it, and init the note timeline at the
     // chosen hi-speed.
     if (m_sheet) {
-        (void)(__bridge_transfer id)m_sheet;
+        static_cast<void>((__bridge_transfer id)m_sheet);
         m_sheet = nullptr;
     }
     NSData *sheet;
@@ -386,7 +387,7 @@ void AcViewerTask::drawActiveNotes() {
     AcNoteMng &note = AcNoteMng::shared();
 
     const int count = note.countActiveNotes();
-    const uint32_t now = (uint32_t)note.getCurrentPosition();
+    const uint32_t now = static_cast<uint32_t>(note.getCurrentPosition());
 
     int clip[4] = {0, m_noteClipTop, m_screenWidth, m_screenHeight};
 
@@ -400,15 +401,16 @@ void AcViewerTask::drawActiveNotes() {
         // m_noteFieldY * drawY scaled by DAT_00022ff8 = -1/1024, minus half the
         // effect-note height to centre the sprite.
         const int noteY =
-            (int)((float)m_noteFieldX + (float)m_noteFieldY * n.drawY * (-1.0f / 1024.0f) -
-                  (float)(m_effectNoteHeight / 2));
+            static_cast<int>(static_cast<float>(m_noteFieldX) +
+                             static_cast<float>(m_noteFieldY) * n.drawY * (-1.0f / 1024.0f) -
+                             static_cast<float>(m_effectNoteHeight / 2));
 
         if (n.tick < now) {
             // Note has passed the spawn point: scroll it toward the judge line. The
             // frame steps at DAT_00022ffc = 1/16 of the elapsed ticks, +0.5 bias
             // (Ghidra 0x22d70..0x22d8a). While still within the layer's frame count
             // it is drawn as the EFFECT_COOL layer.
-            const int frame = (int)((float)(now - n.tick) * 0.0625f + 0.5f);
+            const int frame = static_cast<int>(static_cast<float>(now - n.tick) * 0.0625f + 0.5f);
             if (frame < m_effectCoolFrames) {
                 // drawLayer args (0xfd64 callee map): x = per-lane note frame
                 // (@+0x158[lane]), y = the scroll-derived noteY; scale 100/100,
@@ -437,14 +439,14 @@ void AcViewerTask::drawActiveNotes() {
                 // add to the combo counter (@ +0x1ca, saturated to 0x3ff) and mark the
                 // note handled (bit 6). Ghidra: +0x1d2 combo step / acNoteSetNoteFlag.
                 if (m_paused == 0 && m_pauseMenuOpen == 0 && (n.flags & 0x40) == 0) {
-                    int c = (int)m_scrollSpeed[3] + (int)m_gaugeValue;
+                    int c = static_cast<int>(m_scrollSpeed[3]) + static_cast<int>(m_gaugeValue);
                     if (c < 0) {
                         c = 0;
                     }
                     if (c > 0x3ff) {
                         c = 0x3ff;
                     }
-                    m_gaugeValue = (int16_t)c;
+                    m_gaugeValue = static_cast<int16_t>(c);
                     note.setNoteFlag(i, 0x40);
                 }
             }
@@ -488,7 +490,7 @@ void AcViewerTask::drawActiveNotes() {
     }
 
     // Running judged total -> the combo readout (@ +0x102).
-    m_judgeTotal = (int16_t)note.getJudgeTotal();
+    m_judgeTotal = static_cast<int16_t>(note.getJudgeTotal());
 
     // The time-line marker sweeps left->right across the song: x = barWidth * pos
     // / total.
@@ -524,7 +526,7 @@ void AcViewerTask::drawActiveNotes() {
 void AcViewerTask::drawLifeGauge() {
     AepManager &aep = AepManager::shared();
 
-    int value = (int)m_gaugeBase + (int)m_gaugeValue;
+    int value = static_cast<int>(m_gaugeBase) + static_cast<int>(m_gaugeValue);
     if (value < 0) {
         value = 0;
     }
@@ -626,11 +628,11 @@ void AcViewerTask::cleanup() {
     // balances the +1 retains loadChart() took at +0x1e0 / +0x1e4, then nil the
     // ivars).
     if (m_sheet) {
-        (void)(__bridge_transfer id)m_sheet; // sheet NSData
+        static_cast<void>((__bridge_transfer id)m_sheet); // sheet NSData
         m_sheet = nullptr;
     }
     if (m_songTitle) {
-        (void)(__bridge_transfer id)m_songTitle; // song-title NSString
+        static_cast<void>((__bridge_transfer id)m_songTitle); // song-title NSString
         m_songTitle = nullptr;
     }
 
@@ -642,7 +644,7 @@ void AcViewerTask::cleanup() {
     // Release the arcade option-sheet controller (@ +0x208, ARC:
     // __bridge_transfer + nil).
     if (m_optionVC) {
-        (void)(__bridge_transfer id)m_optionVC;
+        static_cast<void>((__bridge_transfer id)m_optionVC);
         m_optionVC = nullptr;
     }
 
@@ -718,8 +720,8 @@ void AcViewerTask::update(int /*deltaMs*/) {
                     continue;
                 }
                 m_dragTouchId = t->id;
-                const float sx = (float)t->x / scale;
-                const float sy = (float)t->y / scale;
+                const float sx = static_cast<float>(t->x) / scale;
+                const float sy = static_cast<float>(t->y) / scale;
                 m_dragStartX = sx;
                 m_dragStartY = sy;
                 m_dragLastX = sx;
@@ -738,8 +740,8 @@ void AcViewerTask::update(int /*deltaMs*/) {
                 m_dragAccumX = 0.0f;
                 m_seekCoef = 0.0f;
             } else {
-                const float sx = (float)t->x / scale;
-                const float sy = (float)t->y / scale;
+                const float sx = static_cast<float>(t->x) / scale;
+                const float sy = static_cast<float>(t->y) / scale;
                 m_dragAccumX += sx - m_dragLastX;
                 m_seekCoef += (sy - m_dragLastY) * 10.0f;
                 m_dragLastX = sx;
@@ -750,9 +752,9 @@ void AcViewerTask::update(int /*deltaMs*/) {
                 if (t->released != 0) {
                     m_dragTouchId = -1;
                     released = true;
-                    const int upX = (int)sx, upY = (int)sy;
-                    const int dnX = (int)((float)t->startX / scale);
-                    const int dnY = (int)((float)t->startY / scale);
+                    const int upX = static_cast<int>(sx), upY = static_cast<int>(sy);
+                    const int dnX = static_cast<int>(static_cast<float>(t->startX) / scale);
+                    const int dnY = static_cast<int>(static_cast<float>(t->startY) / scale);
                     const int adx = (dnX - upX) < 0 ? (upX - dnX) : (dnX - upX);
                     const int ady = (dnY - upY) < 0 ? (upY - dnY) : (dnY - upY);
                     if (adx <= 10 && ady < 11) {
@@ -772,15 +774,15 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // 0) never fades. Log the state + gates on change to see where it stalls.
     {
         static int s_acvLastState = -1;
-        if ((int)m_state != s_acvLastState) {
+        if (static_cast<int>(m_state) != s_acvLastState) {
             neDebugLog("AcViewer state=%d hudReady=%d hudArmed=%d pad=%d transDone=%d padBoard=%d",
-                       (int)m_state,
-                       (int)m_hudReady,
-                       (int)m_hudArmed,
+                       static_cast<int>(m_state),
+                       static_cast<int>(m_hudReady),
+                       static_cast<int>(m_hudArmed),
                        neSceneManager::isPadDisplay() ? 1 : 0,
                        aep.isTransitionDone(),
-                       (int)m_padBoardUp);
-            s_acvLastState = (int)m_state;
+                       static_cast<int>(m_padBoardUp));
+            s_acvLastState = static_cast<int>(m_state);
         }
     }
 #endif
@@ -823,7 +825,8 @@ void AcViewerTask::update(int /*deltaMs*/) {
         }
         // On phone (or once the pad board is up) fire the ready SE, then advance.
         if (!neSceneManager::isPadDisplay() || m_padBoardUp != 0) {
-            m_readySeInst = (int)[[AudioManager sharedManager] playSe:0 resourceId:m_readySeId];
+            m_readySeInst = static_cast<int>([[AudioManager sharedManager] playSe:0
+                                                                       resourceId:m_readySeId]);
         }
         next = 5;
         break;
@@ -915,23 +918,24 @@ void AcViewerTask::update(int /*deltaMs*/) {
         }
         if (released) {
             // (B) release side: snapshot the seek base, or quantize the gauge scrub.
-            if (m_dragStartY >= (float)m_scrubZoneTopY) {
-                if (m_dragStartY >= (float)m_seekGaugeSplitY) {
+            if (m_dragStartY >= static_cast<float>(m_scrubZoneTopY)) {
+                if (m_dragStartY >= static_cast<float>(m_seekGaugeSplitY)) {
                     // (C) gauge quantize: v -> 0..24 steps (v*24/1023, magic 0x80200803),
                     // each 42.5 units, capped at 1023 (constants byte-verified).
-                    int v = (uint16_t)m_gaugeBase + (uint16_t)m_gaugeValue;
+                    int v =
+                        static_cast<uint16_t>(m_gaugeBase) + static_cast<uint16_t>(m_gaugeValue);
                     if (v & 0x8000) {
                         v = 0;
                     }
-                    v = (int16_t)v;
+                    v = static_cast<int16_t>(v);
                     int q = (v * 24) / 1023;
                     if (q < 0) {
                         q = 0;
                     } else if (q > 24) {
                         q = 24;
                     }
-                    const float f = (q < 24) ? (float)q * 42.5f : 1023.0f;
-                    m_gaugeValue = (int16_t)(int)std::ceil(f);
+                    const float f = (q < 24) ? static_cast<float>(q) * 42.5f : 1023.0f;
+                    m_gaugeValue = static_cast<int16_t>(static_cast<int>(std::ceil(f)));
                     m_gaugeBase = 0;
                 } else {
                     m_pauseTime = note.getCurrentPosition(); // snapshot the seek base
@@ -940,9 +944,10 @@ void AcViewerTask::update(int /*deltaMs*/) {
             // fall through to the tap tests (E)
         } else if (m_dragTouchId >= 0 && m_moved != 0) {
             // (D) mid-drag live scrub
-            if (m_dragStartY >= (float)m_scrubZoneTopY) {
-                if (m_dragStartY >= (float)m_seekGaugeSplitY) {
-                    m_gaugeBase = (int16_t)(int)(m_dragAccumX * (float)m_xScrubScale); // x-scrub
+            if (m_dragStartY >= static_cast<float>(m_scrubZoneTopY)) {
+                if (m_dragStartY >= static_cast<float>(m_seekGaugeSplitY)) {
+                    m_gaugeBase = static_cast<int16_t>(static_cast<int>(
+                        m_dragAccumX * static_cast<float>(m_xScrubScale))); // x-scrub
                 } else {
                     // live seek: re-init the chart then seek to base + accumulated
                     // dy*scale. The 2nd arg is the hi-speed setting index (+0x1f4),
@@ -951,17 +956,18 @@ void AcViewerTask::update(int /*deltaMs*/) {
                     // and the matching one in loadChart (0x2333e).
                     note.initPlayDataWithData((__bridge NSData *)m_sheet, m_hiSpeed);
                     int seek =
-                        (int)((float)(uint32_t)m_pauseTime + m_seekCoef * (float)m_seekScale);
+                        static_cast<int>(static_cast<float>(static_cast<uint32_t>(m_pauseTime)) +
+                                         m_seekCoef * static_cast<float>(m_seekScale));
                     if (seek < 0) {
                         seek = 0;
                     }
-                    note.seekTo((uint32_t)seek);
+                    note.seekTo(static_cast<uint32_t>(seek));
                 }
             }
             break; // mid-drag returns without the tap tests
         }
         // (E) tap tests -- only a tap above the scrub zone.
-        if (flick && m_dragStartY < (float)m_scrubZoneTopY) {
+        if (flick && m_dragStartY < static_cast<float>(m_scrubZoneTopY)) {
             if (neGraphics::pointInRect(
                     flickX, flickY, m_comboDigitX, m_comboDigitY, m_playTouchW, m_playTouchH)) {
                 note.resume();
@@ -1060,7 +1066,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // AcViewerOptionViewController bound to this task, fire the open SE +
         // animation, and resume the nav loop.
         if (m_optionVC) {
-            (void)(__bridge_transfer id)m_optionVC;
+            static_cast<void>((__bridge_transfer id)m_optionVC);
             m_optionVC = nullptr;
         }
         AcViewerOptionViewController *optVC =
@@ -1093,7 +1099,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
 
     // Draw tail: update+draw all Aep layers, then (once the HUD is up and armed)
     // the note field and life gauge.
-    (void)audio;
+    static_cast<void>(audio);
     AepLyrCtrl::updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
     if (m_hudArmed != 0 && m_hudReady != 0) {
         drawActiveNotes();
@@ -1123,7 +1129,7 @@ void AcViewerTask::AcViewerHudDraw(int child,
                                    int *p13,
                                    uint32_t p14,
                                    void *context) {
-    (void)frame;
+    static_cast<void>(frame);
     AepManager &aep = AepManager::shared();
     AcViewerTask *self = static_cast<AcViewerTask *>(context);
 
@@ -1217,17 +1223,17 @@ void AcViewerTask::AcViewerHudDraw(int child,
         // COOL count layer -> 3 digits from the engine's COOL counter
         // (DAT_0016ebe0).
         AcNoteMng::shared();
-        drawDigits((int)g_dwAcCoolCount, 3);
+        drawDigits(static_cast<int>(g_dwAcCoolCount), 3);
     } else if (self->m_usrNo[6] == child) {
         // GREAT count layer -> 2 digits from the GREAT counter (DAT_0016ebe4).
         AcNoteMng::shared();
-        drawDigits((int)g_dwAcGreatCount, 2);
+        drawDigits(static_cast<int>(g_dwAcGreatCount), 2);
     } else if (self->m_usrNo[4] == child) {
         // Note-count layer -> 4 digits of the total note count (@ +0x100).
-        drawDigits((int)self->m_totalNoteCount, 4);
+        drawDigits(static_cast<int>(self->m_totalNoteCount), 4);
     } else if (self->m_usrNo[3] == child) {
         // Judged-total layer -> 4 digits of the running judge total (@ +0x102).
-        drawDigits((int)self->m_judgeTotal, 4);
+        drawDigits(static_cast<int>(self->m_judgeTotal), 4);
     }
 }
 
@@ -1280,11 +1286,12 @@ void AcViewerTask::applyGameplaySettings() {
         // the plain linear combine below; the exact fractional-bit width of each
         // helper call is opaque (see the disclosure note), so this models the
         // arithmetic rather than the NEON intrinsics. Clamp >= 0 as the binary.
-        long seekPos = (long)pauseTime + (long)(seekCoef * (float)seekScale);
+        long seekPos = static_cast<long>(pauseTime) +
+                       static_cast<long>(seekCoef * static_cast<float>(seekScale));
         if (seekPos < 0) {
             seekPos = 0;
         }
-        nm.seekTo((uint32_t)seekPos);
+        nm.seekTo(static_cast<uint32_t>(seekPos));
     }
 
     // Resume the render loop; on phone advance the play-state machine into its
