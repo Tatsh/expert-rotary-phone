@@ -13,6 +13,8 @@
 //  constructors are referenced as seams via the task factory.
 //
 
+#include <memory>
+
 #import <UIKit/UIKit.h>
 
 #import "AepLyrCtrl.h"
@@ -196,9 +198,9 @@ void MenuMainTask::setup() {
     // (+0x30).
     aep.loadAepDataDefaultPath(2, sceneGroup);
     for (int i = 0; i < 3; i++) {
-        AepLyrCtrl *layer = new AepLyrCtrl();
+        auto layer = std::make_unique<AepLyrCtrl>();
         layer->init(2, layerNames[i]);
-        m_layers[i] = layer;
+        m_layers[i] = std::move(layer);
     }
 
     // Overlay handles the draw pass reads: the NEWS ticker user-frame (+0x34)
@@ -225,11 +227,10 @@ void MenuMainTask::setup() {
 
     // The friend-request warning texture (a bundled PNG drawn straight into the
     // OT).
-    neTextureForiOS *warn = new neTextureForiOS();
-    m_warnTexture = warn;
+    m_warnTexture = std::make_unique<neTextureForiOS>();
     NSString *warnPath = [[NSBundle mainBundle] pathForResource:@"vie_cmn_warning@2x"
                                                          ofType:@"png"];
-    warn->load([warnPath UTF8String]);
+    m_warnTexture->load([warnPath UTF8String]);
 
     // Menu BGM (looping) at the saved volume.
     NSString *bgmPath =
@@ -779,16 +780,12 @@ void MenuMainTask::dispose() {
     for (int i = 0; i < 3; i++) {
         if (m_layers[i] != nullptr) {
             m_layers[i]->unlink();
-            delete m_layers[i];
-            m_layers[i] = nullptr;
+            m_layers[i].reset();
         }
     }
 
     aep.releaseAepTexture(2);
-    if (m_warnTexture != nullptr) {
-        delete m_warnTexture;
-        m_warnTexture = nullptr;
-    }
+    m_warnTexture.reset();
 
     // ARC: clear the retained news-cache fields.
     m_newsArray = nil;

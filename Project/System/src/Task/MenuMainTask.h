@@ -27,6 +27,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "C_TASK.h"
 
@@ -139,25 +140,25 @@ private:
 
     // ================= work-area layout (offsets are binary-exact)
     // =================
-    AepLyrCtrl *m_layers[3] = {};             // +0x28 open / loop-bg / prompt transports
-    int m_newsHandle = 0;                     // +0x34 resolved NEWS ticker Aep handle
-    int m_badgeHandles[5] = {};               // +0x38 NEWS/BT_SETTING/NEW_STORE/BT_GIFT/BT_FEATU
-    neTextureForiOS *m_warnTexture = nullptr; // +0x4c friend-request warning texture
-    int m_seId[6] = {};                       // +0x50 six UI SE source ids
-    int m_seInst[6] = {};                     // +0x68 their playing-instance handles (-1 idle)
-    void *m_spawnedTask = nullptr;            // +0x80 the sub-task being launched into
-    int m_labelRowY = 0;                      // +0x84 button-label row Y
-    int m_settingsLabelX = 0;                 // +0x88 settings label X
-    int m_storeLabelX = 0;                    // +0x8c store label X
-    int m_giftLabelX = 0;                     // +0x90 gift label X
-    TopCluster m_top = {};                    // +0x94 settings/gift packed rects
-    int m_warnScaleX = 0;                     // +0xac warning-badge scale X
-    int m_warnScaleY = 0;                     // +0xb0 warning-badge scale Y
-    uint8_t m_suppressOverlay = 0;            // +0xb4 overlay suppressed while tearing down
-    uint8_t m_tutorialSkip = 0;               // +0xb5 tutorial already played
-    uint8_t m_giftEnabled = 0;                // +0xb6 gift button/label enabled
-    uint8_t m_treasureEvent = 0;              // +0xb7 treasure-event badge visible
-    uint8_t m_gameEvent = 0;                  // +0xb8 game-event badge visible
+    std::unique_ptr<AepLyrCtrl> m_layers[3]; // +0x28 open / loop-bg / prompt transports
+    int m_newsHandle = 0;                    // +0x34 resolved NEWS ticker Aep handle
+    int m_badgeHandles[5] = {};              // +0x38 NEWS/BT_SETTING/NEW_STORE/BT_GIFT/BT_FEATU
+    std::unique_ptr<neTextureForiOS> m_warnTexture; // +0x4c friend-request warning texture
+    int m_seId[6] = {};                             // +0x50 six UI SE source ids
+    int m_seInst[6] = {};          // +0x68 their playing-instance handles (-1 idle)
+    void *m_spawnedTask = nullptr; // +0x80 the sub-task being launched into
+    int m_labelRowY = 0;           // +0x84 button-label row Y
+    int m_settingsLabelX = 0;      // +0x88 settings label X
+    int m_storeLabelX = 0;         // +0x8c store label X
+    int m_giftLabelX = 0;          // +0x90 gift label X
+    TopCluster m_top = {};         // +0x94 settings/gift packed rects
+    int m_warnScaleX = 0;          // +0xac warning-badge scale X
+    int m_warnScaleY = 0;          // +0xb0 warning-badge scale Y
+    uint8_t m_suppressOverlay = 0; // +0xb4 overlay suppressed while tearing down
+    uint8_t m_tutorialSkip = 0;    // +0xb5 tutorial already played
+    uint8_t m_giftEnabled = 0;     // +0xb6 gift button/label enabled
+    uint8_t m_treasureEvent = 0;   // +0xb7 treasure-event badge visible
+    uint8_t m_gameEvent = 0;       // +0xb8 game-event badge visible
     // +0xb9..+0xc0 reward/event scan state (news seam; populated by the tail of
     // FUN_0006c6a4, outside this reconstruction's scope). Kept as a documented
     // block.
