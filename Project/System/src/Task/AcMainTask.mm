@@ -1032,8 +1032,8 @@ void AcMainTask::loadTreasureMap() {
     m_rouletteMode = tmp.rouletteMode;
     m_listHalveCount = static_cast<int8_t>(tmp.listHalveCount);
     m_treasureProgress = static_cast<int8_t>(tmp.treasureProgress);
-    buildMapCharaLayers(); // FUN_000a2264
-    buildMapPanelLayers(); // FUN_000a2650
+    loadTreasureProgress(); // FUN_000a2264
+    buildMapPanelLayers();  // FUN_000a2650
 
     // Cache the map's display name (+0x944, +1 retained), replacing any previous.
     if (m_mapName) {
@@ -1186,20 +1186,22 @@ void AcMainTask::buildSelectListLayout() {
 }
 
 // ===========================================================================
-// buildMapCharaLayers — Ghidra FUN_000a2264 (called by loadTreasureMap).
+// loadTreasureProgress — Ghidra FUN_000a2264 (Ghidra name sugorokuLoadTreasureMap;
+// renamed here from the earlier misnomer buildMapCharaLayers — the disassembly
+// @0xa2264 is a Core Data TreasureData load, not a layer builder).
 // Rebuild the per-board music / wallpaper "piece" unlock tables from the
 // persisted Core Data TreasureData records, then OR in the pending record's own
 // masks for the current board.
 //
 // The tables live at this+0x28 + {0x6b4, 0x720, 0x78c, 0x7f8}, i.e.
 // this-relative +0x6dc (music), +0x748 (wallpaper), +0x7b4 (music dup) and
-// +0x820 (wallpaper dup). Each is a 9x3 int grid indexed by mainMapId*0xc +
-// subMapId*4 (mainMapId is the board 0..8, subMapId the 0..2 sub-index). The
-// binary writes the music and wallpaper values into BOTH their primary and
-// duplicate tables each iteration.
+// +0x820 (wallpaper dup). Each is a 9x3 uint32_t bitmask grid indexed by
+// mainMapId*0xc + subMapId*4 (mainMapId is the board 0..8, subMapId the 0..2
+// sub-index). The binary writes the music and wallpaper values into BOTH their
+// primary and duplicate tables each iteration.
 // @complete
 // ===========================================================================
-void AcMainTask::buildMapCharaLayers() {
+void AcMainTask::loadTreasureProgress() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
 
     // The binary only zeroes the first two tables (0xd8 bytes @ +0x6dc); the two

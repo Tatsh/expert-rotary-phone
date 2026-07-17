@@ -153,7 +153,7 @@ private:
     // Genuine sub-routines the arcade scene builders call.
     void computeStepValues();              // Ghidra: FUN_000a1950 (fills the m_stepValues table)
     void buildSelectListLayout();          // Ghidra: FUN_000a21a8
-    void buildMapCharaLayers();            // Ghidra: FUN_000a2264
+    void loadTreasureProgress();           // Ghidra: FUN_000a2264 (sugorokuLoadTreasureMap)
     void buildMapPanelLayers();            // Ghidra: FUN_000a2650
     void refreshMapScroll(int mode);       // Ghidra: FUN_000a3550
     void applyDragScroll(neGraphics &gfx); // drag/rubber-band scroll update
