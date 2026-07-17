@@ -214,8 +214,8 @@ public:
     };
 
     // ---- work-area layout (offsets are binary-exact) ----
-    AepManager *m_aep = nullptr;                  // +0x28 Aep context (AepManager::shared)
-    uint8_t _rsvd_2c[0x30 - 0x2c] = {};           // +0x2c
+    AepManager *m_aep = nullptr;         // +0x28 Aep context (AepManager::shared)
+    uint8_t unused_2c[0x30 - 0x2c] = {}; // +0x2c unused 4-byte slot (Ghidra: no field access)
     __unsafe_unretained id m_musicList = nullptr; // +0x30 NSArray<MusicInfo*>*
     AepLyrCtrl *m_layers[4] = {};                 // +0x34 BG / preview / loop transports
     AepLyrCtrl *m_introLayers[2] = {};            // +0x44 intro transports
@@ -225,14 +225,14 @@ public:
     neTextureForiOS *m_digitTex[60] = {};         // +0x5c score/points/rank digit atlases
     // Resolved Aep handle tables (+0x14c..+0x2d8), filled by Setup() via getLyrNo /
     // layerFrameCount / getFrameNo / getUserNo over the const name lists in MainTask.mm.
-    int m_bgLyrNo[3] = {};                 // +0x14c getLyrNo(BG_NEKO / DIFFICULTY_STAR_OPEN / _OUT)
-    int m_bgLyrFrames[3] = {};             // +0x158 layerFrameCount of each m_bgLyrNo
-    int m_diffIntroFrame = 0;              // +0x164 difficulty-intro sweep frame counter
-    uint8_t _rsvd_168[0x170 - 0x168] = {}; // +0x168 (2 ints) not written by Setup()
-    int m_diffStarLayerFrame[3] = {};      // +0x170 difficulty-star bg-layer frame counters
-    int m_frmNo[24] = {};                  // +0x17c getFrameNo(kFrmNames[24]) button/icon frames
-    int m_starFrmNo[3] = {};               // +0x1dc getFrameNo(DIFFICULTY_STAR_GREEN/YELLOW/RED)
-    int m_musicRankFrmNo[7] = {};          // +0x1e8 getFrameNo(MUSIC_RUNK_NUMBER_S/AAA/AA/A/B/C/D)
+    int m_bgLyrNo[3] = {};     // +0x14c getLyrNo(BG_NEKO / DIFFICULTY_STAR_OPEN / _OUT)
+    int m_bgLyrFrames[3] = {}; // +0x158 layerFrameCount of each m_bgLyrNo
+    int m_diffIntroFrame = 0;  // +0x164 difficulty-intro sweep frame counter
+    uint8_t unused_168[0x170 - 0x168] = {}; // +0x168 unused (2 ints; Ghidra: no MainTask access)
+    int m_diffStarLayerFrame[3] = {};       // +0x170 difficulty-star bg-layer frame counters
+    int m_frmNo[24] = {};                   // +0x17c getFrameNo(kFrmNames[24]) button/icon frames
+    int m_starFrmNo[3] = {};                // +0x1dc getFrameNo(DIFFICULTY_STAR_GREEN/YELLOW/RED)
+    int m_musicRankFrmNo[7] = {};           // +0x1e8 getFrameNo(MUSIC_RUNK_NUMBER_S/AAA/AA/A/B/C/D)
     int m_diffRankFrmNo[7] = {};   // +0x204 getFrameNo(DIFFICULTY_RUNK_NUMBER_S/AAA/AA/A/B/C/D)
     int m_jacketTipFrmNo[3] = {};  // +0x220 getFrameNo(JACKET_TIP00/01/02)
     int m_elemUsrNo[22] = {};      // +0x22c getUserNo(kElemUsrNames[22]) — draw dispatch
@@ -243,35 +243,36 @@ public:
     MusicSelCell m_cells[27] = {}; // +0x2d8 jacket + widget array (stride 0x38)
     // Three per-column row-load latches (0xff == idle); a latch holds the row index
     // whose jacket column is currently streaming.
-    uint8_t m_prevColLatch = 0xff;         // +0x8c0 prev-column row-load latch
-    uint8_t m_curColLatch = 0xff;          // +0x8c1 current-column widget-row latch
-    uint8_t m_nextColLatch = 0xff;         // +0x8c2 next-column row-load latch
-    uint8_t _rsvd_8c3[0x8c4 - 0x8c3] = {}; // +0x8c3
-    int m_seId[5] = {};                    // +0x8c4 loaded touch-SE source ids
-    int m_seInst[5] = {};                  // +0x8d8 touch-SE instance handles (-1 idle)
-    int m_songCount = 0;                   // +0x8ec total songs in m_musicList (rebuildList)
-    int m_columnIndex = 0;                 // +0x8f0 current list column
-    int m_columnCount = 0;                 // +0x8f4 total columns
-    int m_chosenIndex = 0;                 // +0x8f8 chosen song list index (save)
-    int m_appliedSort = 0;                 // +0x8fc music-sort rebuildList last applied
-    int m_chosenMusicId = 0;               // +0x900 chosen music id (launch save)
-    int m_resultSheet = 0;                 // +0x904 saved result sheet (difficulty)
-    int m_placeValue[3] = {};              // +0x908 ranking place values (green/yellow/pink)
-    uint8_t m_clearMedal[3] = {};          // +0x914 per-sheet cleared flag
-    uint8_t m_fullComboMedal[3] = {};      // +0x917 per-sheet full-combo flag
-    uint8_t _rsvd_91a[0x91b - 0x91a] = {}; // +0x91a
-    uint8_t m_suppressDraw = 0;            // +0x91b hide the scene during teardown
-    uint8_t m_showLevelNumbers = 0;        // +0x91c show numeric level instead of rank frame
-    uint8_t m_diffIntroActive = 0;         // +0x91d difficulty-intro sweep playing
-    uint8_t m_tutorialBadge = 0;           // +0x91e first-play tutorial badge visible
-    uint8_t m_recommendBadge = 0;          // +0x91f new-recommend badge visible
-    uint8_t _rsvd_920[0x922 - 0x920] = {}; // +0x920
-    uint8_t m_cellLoaderStarted = 0;       // +0x922 background jacket loader launched
-    uint8_t m_noSaveMode = 0;              // +0x923 guest / no-save teardown flag
-    uint8_t m_overScoreBadge = 0;          // +0x924 over-score badge visible
-    uint8_t m_isPadDisplay = 0;            // +0x925 pad-class display
-    uint8_t _rsvd_926[0x928 - 0x926] = {}; // +0x926
-    int m_selectedCell = -1;               // +0x928 drag touch id / chosen cell (ctor -1)
+    uint8_t m_prevColLatch = 0xff;        // +0x8c0 prev-column row-load latch
+    uint8_t m_curColLatch = 0xff;         // +0x8c1 current-column widget-row latch
+    uint8_t m_nextColLatch = 0xff;        // +0x8c2 next-column row-load latch
+    uint8_t _pad_8c3[0x8c4 - 0x8c3] = {}; // +0x8c3 alignment pad before m_seId (no access)
+    int m_seId[5] = {};                   // +0x8c4 loaded touch-SE source ids
+    int m_seInst[5] = {};                 // +0x8d8 touch-SE instance handles (-1 idle)
+    int m_songCount = 0;                  // +0x8ec total songs in m_musicList (rebuildList)
+    int m_columnIndex = 0;                // +0x8f0 current list column
+    int m_columnCount = 0;                // +0x8f4 total columns
+    int m_chosenIndex = 0;                // +0x8f8 chosen song list index (save)
+    int m_appliedSort = 0;                // +0x8fc music-sort rebuildList last applied
+    int m_chosenMusicId = 0;              // +0x900 chosen music id (launch save)
+    int m_resultSheet = 0;                // +0x904 saved result sheet (difficulty)
+    int m_placeValue[3] = {};             // +0x908 ranking place values (green/yellow/pink)
+    uint8_t m_clearMedal[3] = {};         // +0x914 per-sheet cleared flag
+    uint8_t m_fullComboMedal[3] = {};     // +0x917 per-sheet full-combo flag
+    uint8_t m_bgmLoading = 0;       // +0x91a preview-BGM async load in flight (cleared by loadBgm)
+    uint8_t m_suppressDraw = 0;     // +0x91b hide the scene during teardown
+    uint8_t m_showLevelNumbers = 0; // +0x91c show numeric level instead of rank frame
+    uint8_t m_diffIntroActive = 0;  // +0x91d difficulty-intro sweep playing
+    uint8_t m_tutorialBadge = 0;    // +0x91e first-play tutorial badge visible
+    uint8_t m_recommendBadge = 0;   // +0x91f new-recommend badge visible
+    uint8_t m_scoreRefreshPending = 0; // +0x920 re-fetch the 3 cells' scores after friend-score
+    uint8_t m_inviteMusicOpen = 0;     // +0x921 chosen invite music is open (gates EX cell select)
+    uint8_t m_cellLoaderStarted = 0;   // +0x922 background jacket loader launched
+    uint8_t m_noSaveMode = 0;          // +0x923 guest / no-save teardown flag
+    uint8_t m_overScoreBadge = 0;      // +0x924 over-score badge visible
+    uint8_t m_isPadDisplay = 0;        // +0x925 pad-class display
+    uint8_t _pad_926[0x928 - 0x926] = {}; // +0x926 alignment pad before m_selectedCell (no access)
+    int m_selectedCell = -1;              // +0x928 drag touch id / chosen cell (ctor -1)
     // List-scroll fling ring (Update @ 0x34f4c): the drag finger is sampled into
     // a 10-deep ring each frame ([0] newest); the two arrays are contiguous.
     int m_dragSampleTime[10] = {};               // +0x92c sample timestamps (ms), [0] newest
@@ -288,10 +289,10 @@ public:
     int m_touchX = -1;           // +0xa78 current-frame drag touch x (-1 none)
     int m_touchY = -1;           // +0xa7c current-frame drag touch y (-1 none)
     uint8_t m_touchReleased = 0; // +0xa80 finger lifted this frame (settle trigger)
-    uint8_t _rsvd_a81[0xa84 - 0xa81] = {};            // +0xa81
-    int m_layoutBaseX = 0;                            // +0xa84 layout base x (phone)
-    int m_layoutBaseY = 0;                            // +0xa88 layout base y
-    int m_loaderCursor = 0;                           // +0xa8c async jacket-loader progress cursor
+    uint8_t _pad_a81[0xa84 - 0xa81] = {}; // +0xa81 alignment pad before m_layoutBaseX (no access)
+    int m_layoutBaseX = 0;                // +0xa84 layout base x (phone)
+    int m_layoutBaseY = 0;                // +0xa88 layout base y
+    int m_loaderCursor = 0;               // +0xa8c async jacket-loader progress cursor
     dispatch_semaphore_t m_cellSem = nullptr;         // +0xa90 guards the jacket cell array
     int m_highlightAnim = 0;                          // +0xa94 highlight pulse phase (0..0x96)
     __unsafe_unretained id m_overScoreDict = nullptr; // +0xa98 over-score "touched" set
