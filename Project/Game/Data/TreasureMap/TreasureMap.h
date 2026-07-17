@@ -118,22 +118,16 @@ public:
     int16_t startSubId() const {
         return m_startSubId ? *m_startSubId : 0;
     } // *(+0x54)
-    // +0x58 is the malloc'd ConnectStruct edge array (its raw pointer bits are
-    // what the arcade scene copies into play data +0x4b8); +0x5c is that array's
-    // element count (copied to play data +0x4c6). Kept as int/int16_t to match
-    // the fields the scene reads; edges()/edgeCount() re-expose them with their
-    // real meaning.
-    int field58() const {
-        return m_field58;
-    } // +0x58
-    int16_t field5c() const {
-        return m_field5c;
-    } // +0x5c
+    // +0x58 is the malloc'd ConnectStruct edge array; +0x5c is its element count
+    // (both copied into the arcade play data). The 32-bit binary held the array
+    // pointer in a 4-byte int slot at +0x58; a 64-bit pointer does not fit, so the
+    // reconstruction stores a real ConnectStruct* (m_edges), matching how m_nodes
+    // (+0x50) is already a real pointer.
     const ConnectStruct *edges() const {
-        return reinterpret_cast<const ConnectStruct *>((intptr_t)m_field58);
+        return m_edges;
     }
     int edgeCount() const {
-        return m_field5c;
+        return m_edgeCount;
     }
 
     // Ghidra: FUN_000ce96c (SugorokuMap::GetWarpSquare). Asserts node is a warp
@@ -165,8 +159,8 @@ private:
     uint8_t m_pad04[0x50 - 4] = {};   // +0x04
     Node *m_nodes = nullptr;          // +0x50 node array base (stride 0x120)
     int16_t *m_startSubId = nullptr;  // +0x54 default/start node id source
-    int m_field58 = 0;                // +0x58
-    int16_t m_field5c = 0;            // +0x5c
+    ConnectStruct *m_edges = nullptr; // +0x58 malloc'd edge array (real ptr; was an int slot)
+    int16_t m_edgeCount = 0;          // +0x5c edge count (was m_field5c)
     uint8_t m_tail[0x60 - 0x5e] = {}; // +0x5e
 };
 

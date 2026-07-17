@@ -908,8 +908,8 @@ void AcMainTask::loadTreasureMap() {
     const int nodeCount = map->nodeCount();
     m_nodeCount = (uint16_t)nodeCount;
     m_nodes = map->nodes();
-    m_edgeCount = map->field5c();
-    m_edgesPtr = map->field58();
+    m_edgeCount = map->edgeCount();
+    m_edges = map->edges();
 
     // Choose the current board position: the pending record's node id, or the
     // map's start node when it is out of range (id <= 0 or >= node count).
@@ -1497,7 +1497,7 @@ short findTreasureMapIndexById(int id) {
 // Ghidra: FUN_??? — the binary frees the TreasureMap's node/connect buffers
 // (fields +0x14/+0x16) and re-zeroes its header before disposeTreasureMap runs.
 // In this reconstruction that teardown is entirely owned by ~TreasureMap
-// (reset(): it frees m_nodes/m_field58), which `delete m_map` in
+// (reset(): it frees m_nodes/m_edges), which `delete m_map` in
 // sugorokuTaskDispose invokes. Re-freeing them here would double-free, so this
 // is intentionally folded into the destructor and the call site relies on
 // `delete m_map` alone.
@@ -2206,8 +2206,7 @@ void AcMainTask::sugorokuDrawBoard() {
     }
 
     // Draw edges.
-    const TreasureMap::ConnectStruct *edges =
-        reinterpret_cast<const TreasureMap::ConnectStruct *>(static_cast<intptr_t>(m_edgesPtr));
+    const TreasureMap::ConnectStruct *edges = m_edges;
     int edgeCount = static_cast<int>(m_edgeCount);
     for (int i = 0; i < edgeCount; i++) {
         const TreasureMap::ConnectStruct *e = edges + i;

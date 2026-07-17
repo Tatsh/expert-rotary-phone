@@ -63,10 +63,13 @@ void TreasureMap::reset() {
     if (m_nodes) {
         std::free(m_nodes);
     }
-    if (m_field58) {
-        std::free(reinterpret_cast<void *>((intptr_t)m_field58));
+    if (m_edges) {
+        std::free(m_edges);
     }
-    std::memset(this, 0, 0x60);
+    // Zero the whole object back to its constructed state. sizeof(*this) instead
+    // of the binary's 0x60 so it stays correct now that m_edges is a real 64-bit
+    // pointer at +0x58 (the object is larger than 0x60 on the 64-bit target).
+    std::memset(this, 0, sizeof(*this));
 }
 
 // Ghidra FUN_000ce340. Node stride 0x120 (r0*9<<5), file record stride 0xaa,
@@ -232,11 +235,11 @@ void TreasureMap::load(const char *path) {
     // --- Flatten the edge list into the owned +0x58 array (+0x5c = element
     // count).
     const int16_t edgeCount = (int16_t)edgeValues.count;
-    m_field5c = edgeCount;
+    m_edgeCount = edgeCount;
     if (edgeCount > 0) {
         ConnectStruct *edges =
             static_cast<ConnectStruct *>(std::malloc((size_t)edgeCount * sizeof(ConnectStruct)));
-        m_field58 = (int)(intptr_t)edges;
+        m_edges = edges;
         for (int i = 0; i < edgeCount; i++) {
             [[edgeValues objectAtIndex:i] getValue:&edges[i]];
         }

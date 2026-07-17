@@ -20,6 +20,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Saving a result screenshot no longer crashes on iOS 11 and later: the required
   `NSPhotoLibraryAddUsageDescription` purpose string was missing from
   `Info.plist`.
+- Fixed a 64-bit pointer truncation in the arcade treasure-map edge list. The
+  edge-array pointer was stored in a 32-bit `int` field (in `TreasureMap` and the
+  arcade play data), which corrupted it on arm64 and garbled or crashed the
+  sugoroku map's edge drawing; it is now a real typed pointer.
 
 ## [0.0.1] - 2026-00-00
 

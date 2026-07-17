@@ -179,8 +179,8 @@ private:
     uint8_t m_selScratch2[20] = {};        // +0x49c remainder of the selection scratch
     TreasureMap *m_map = {};               // +0x4b0 loaded TreasureMap
     const TreasureMap::Node *m_nodes = {}; // +0x4b4 map node array
-    int m_edgesPtr = {};                   // +0x4b8 edge (ConnectStruct) array pointer, held in an
-                                           // int slot (type-pun)
+    const TreasureMap::ConnectStruct *m_edges = {}; // +0x4b8 edge (ConnectStruct) array (a real
+    // pointer; the 32-bit binary held it in an int slot)
     const TreasureMap::Node *m_curNode = {}; // +0x4bc current board node
     // +0x4c0 the pending/target board node: update swaps it with m_curNode
     // (@ 0x9d... copies +0x4c0 <-> +0x4bc) as the player moves. A Node* in the
