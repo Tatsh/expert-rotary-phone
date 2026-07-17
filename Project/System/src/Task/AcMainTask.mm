@@ -1560,24 +1560,16 @@ int AcMainTask::sugorokuDrawSkillPanel() {
         }
     }
 
-    // Skill-data name string (skillData[0]) + skill points (short at
-    // skillData+4).
-    const void *descPtr = m_skillData;
-    if (descPtr) {
-        __unsafe_unretained id skillDataName =
-            *reinterpret_cast<__unsafe_unretained const id *>(descPtr);
-        if (skillDataName) {
-            mgr->DrawText([skillDataName UTF8String],
-                          0x14,
-                          iVar7 + 52,
-                          iVar10 - 0xed,
-                          1,
-                          100,
-                          0x59514f,
-                          0x13);
+    // Skill description string + weight (shown as "N pt"), read from the active
+    // SkillDataStruct by name (m_skillData is already a typed pointer).
+    if (m_skillData) {
+        __unsafe_unretained NSString *skillText = m_skillData->description;
+        if (skillText) {
+            mgr->DrawText(
+                [skillText UTF8String], 0x14, iVar7 + 52, iVar10 - 0xed, 1, 100, 0x59514f, 0x13);
         }
 
-        int pts = *reinterpret_cast<const short *>(reinterpret_cast<const char *>(descPtr) + 4);
+        const int pts = m_skillData->weight;
         char ptsBuf[16];
         snprintf(ptsBuf, sizeof(ptsBuf), "%d pt", pts);
         mgr->DrawText(ptsBuf, 0x12, iVar7 + 52, iVar10 - 0xca, 1, 100, 0xe10000, 0x13);
