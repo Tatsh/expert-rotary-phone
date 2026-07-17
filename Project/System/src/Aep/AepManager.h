@@ -197,7 +197,7 @@ public:
                          int cTR,
                          int cBL,
                          int cBR,
-                         const void *clip,
+                         const int *clip,
                          int priority);
 
     AepOrderingTable *orderingTable() {

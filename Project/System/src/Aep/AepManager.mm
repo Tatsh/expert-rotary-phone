@@ -622,7 +622,7 @@ void AepManager::DrawTextClipped(const char *text,
                                  int cTR,
                                  int cBL,
                                  int cBR,
-                                 const void *clip,
+                                 const int *clip,
                                  int priority) {
     pushAepOtTextCmd(orderingTable(), text, x, y, cTL, cTR, cBL, cBR, clip, priority);
 }

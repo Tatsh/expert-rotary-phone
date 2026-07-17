@@ -248,7 +248,7 @@ private:
                        int size,
                        int p7,
                        int alpha,
-                       const void *colorVec,
+                       const int *colorVec,
                        uint32_t color);
 
     int m_screenW = 0;                      // +0x04
@@ -290,7 +290,7 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
                       int a3,
                       int a4,
                       int a5,
-                      const void *colorVec,
+                      const int *colorVec,
                       int priority);
 
 // The seven per-type draw handlers (drawAepOtSprite / …Stretch / …Line /

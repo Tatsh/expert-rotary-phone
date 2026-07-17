@@ -362,7 +362,7 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
                       int a3,
                       int a4,
                       int a5,
-                      const void *colorVec,
+                      const int *colorVec,
                       int priority) {
     AepTextCmd *cmd = reinterpret_cast<AepTextCmd *>(ot->allocEntry(priority));
     if (cmd == nullptr) {
@@ -474,7 +474,7 @@ void AepOrderingTable::drawAepOtText(const char *text,
                                      int size,
                                      int align,
                                      int alpha,
-                                     const void *colorVec,
+                                     const int *colorVec,
                                      uint32_t color) {
     const float s = renderScale();
     const int scaledSize = aepScale(size, s);
@@ -493,7 +493,7 @@ void AepOrderingTable::drawAepOtText(const char *text,
                aepColR(color),
                aepColG(color),
                aepColB(color),
-               reinterpret_cast<const int *>(colorVec));
+               colorVec);
 }
 
 // Ghidra: drawAepSpriteClipped (FUN_00012020) — pick the active sub-frame, set
