@@ -144,8 +144,10 @@ public:
     // search finds no PlayTask access to this offset (every #0x19c reference
     // belongs to another task / struct, or is a stack / literal-pool slot), so it
     // is a dead gap rather than a live per-chara table.
+#ifndef ENABLE_PATCHES
     uint8_t unused_19c[0x1dc - 0x19c] =
-        {};                        // +0x19c unused 64-byte gap (Ghidra: no PlayTask access)
+        {}; // +0x19c unused 64-byte gap (Ghidra: no PlayTask access)
+#endif
     int m_charaJumpFrames[8] = {}; // +0x1dc ...chara-jump layer frame counts
     int m_pauseEyeToneFrm[8] = {}; // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
     int m_barSegFrame = 0;         // +0x21c long-note connecting-bar segment frame

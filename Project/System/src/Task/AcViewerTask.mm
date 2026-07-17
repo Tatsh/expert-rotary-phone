@@ -646,11 +646,16 @@ void AcViewerTask::cleanup() {
         m_optionVC = nullptr;
     }
 
-    // Wipe the whole play-data region (@ +0x28..+0x20b, up to state @ +0x20c).
-    // Preserve the pad "board up" byte (@ +0x1d9) across the wipe, but only on
-    // the pad display (Ghidra: g_bIsPadDisplay after NESceneManager_shared()).
+    // Wipe the play-data region [m_stateTask .. m_state): everything setup() and
+    // loadChart() populate, stopping before the play-state field so it survives.
+    // Preserve the pad "board up" byte (@ +0x1d9) across the wipe, but only on the
+    // pad display (Ghidra: g_bIsPadDisplay after NESceneManager_shared()). The span
+    // is taken from the member addresses (0x1e4 on the faithful layout) so it stays
+    // correct when the dead scratch fields are dropped under ENABLE_PATCHES.
     const unsigned char boardUp = m_padBoardUp;
-    memset(reinterpret_cast<char *>(this) + 0x28, 0, 0x1e4);
+    const auto wipeSize = static_cast<size_t>(reinterpret_cast<char *>(&m_state) -
+                                              reinterpret_cast<char *>(&m_stateTask));
+    memset(&m_stateTask, 0, wipeSize);
     if (neSceneManager::isPadDisplay()) {
         m_padBoardUp = boardUp;
     }
