@@ -387,7 +387,7 @@ public:
     // static member so it stays a plain function pointer for setGroupDrawCallback
     // while reaching this task's members and index enums through `context`. Ghidra:
     // MainTask::AepDrawCallback @ 0x389fc. The param types MUST match AepGroupDrawFn
-    // exactly (rotation int, p13 int*): on arm64 a mistyped stack arg shifts every
+    // exactly (rotation int, clipRect int*): on arm64 a mistyped stack arg shifts every
     // following slot and corrupts `context`, faulting on a garbage `self`.
     static void AepDrawCallback(int child,
                                 int frame,
@@ -401,8 +401,8 @@ public:
                                 int alpha,
                                 int rotation,
                                 uint32_t blend,
-                                int *p13,
-                                uint32_t p14,
+                                int *clipRect,
+                                uint32_t priority,
                                 void *context);
 };
 

@@ -2077,11 +2077,11 @@ void MainTask::AepDrawCallback(int child,
                                int alpha,
                                int rotation,
                                uint32_t blend,
-                               int *p13,
-                               uint32_t p14,
+                               int *clipRect,
+                               uint32_t priority,
                                void *context) {
     static_cast<void>(frame);
-    static_cast<void>(p13);
+    static_cast<void>(clipRect);
     MainTask *self = static_cast<MainTask *>(context);
     using MusicSelCell = MainTask::MusicSelCell; // nested type, unqualified in this free function
 
@@ -2121,7 +2121,7 @@ void MainTask::AepDrawCallback(int child,
                                    blend,
                                    0xffffff,
                                    0,
-                                   p14,
+                                   priority,
                                    1);
                 } else {
                     neTextureForiOS_draw(&AepManager::shared(),
@@ -2142,7 +2142,7 @@ void MainTask::AepDrawCallback(int child,
                                          blend,
                                          0xffffff,
                                          nullptr,
-                                         p14,
+                                         priority,
                                          1);
                 }
                 // Selection frame over the cell (@ +0x1a8, +0x994/+0x998 nudge).
@@ -2160,7 +2160,7 @@ void MainTask::AepDrawCallback(int child,
                                blend,
                                0xffffff,
                                0,
-                               p14,
+                               priority,
                                1);
             }
         }
@@ -2211,7 +2211,7 @@ void MainTask::AepDrawCallback(int child,
     };
 
     // Common blits (head drawAepFrameEx / neTextureForiOS_draw forms; color/alpha
-    // collapse to blend/p14 exactly as the head's drawJacketGrid does).
+    // collapse to blend/priority exactly as the head's drawJacketGrid does).
     auto drawFrame = [&](int frameNo, int fx, int fy) {
         drawAepFrameEx(&AepManager::shared(),
                        frameNo,
@@ -2227,7 +2227,7 @@ void MainTask::AepDrawCallback(int child,
                        blend,
                        0xffffff,
                        0,
-                       p14,
+                       priority,
                        1);
     };
     auto drawFrameAlpha = [&](int frameNo,
@@ -2248,7 +2248,7 @@ void MainTask::AepDrawCallback(int child,
                        blend,
                        0xffffff,
                        0,
-                       p14,
+                       priority,
                        1);
     };
     auto drawFrameFixed = [&](int frameNo,
@@ -2270,7 +2270,7 @@ void MainTask::AepDrawCallback(int child,
                        blend,
                        0xffffff,
                        0,
-                       p14,
+                       priority,
                        1);
     };
     auto drawTex = [&](neTextureForiOS *tex,
@@ -2296,7 +2296,7 @@ void MainTask::AepDrawCallback(int child,
                              blend,
                              0xffffff,
                              nullptr,
-                             p14,
+                             priority,
                              1);
     };
 
@@ -2353,7 +2353,7 @@ void MainTask::AepDrawCallback(int child,
                                       1,
                                       100,
                                       0,
-                                      p14);
+                                      priority);
             }
             return true;
         });
@@ -2472,7 +2472,7 @@ void MainTask::AepDrawCallback(int child,
         return;
     } // Hyper
     if (self->m_elemUsrNo[kElemRankNumRed] == static_cast<int>(child)) {
-        drawLevelGrid(2, 2, p14);
+        drawLevelGrid(2, 2, priority);
         return;
     } // Extra
 
@@ -2592,7 +2592,7 @@ void MainTask::AepDrawCallback(int child,
                                    0xffffff,
                                    0,
                                    0,
-                                   p14,
+                                   priority,
                                    1);
             if (self->m_bgLyrFrames[lyrSlot] - 1 <= frm) {
                 return;
@@ -2771,7 +2771,7 @@ void MainTask::AepDrawCallback(int child,
                                0xffffff,
                                0,
                                0,
-                               p14,
+                               priority,
                                1);
         frm++;
         if (frm < self->m_bgLyrFrames[kBgNeko]) {
