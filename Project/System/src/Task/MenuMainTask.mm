@@ -125,12 +125,12 @@ void MenuMainTask::setup() {
         m_settingsLabelX = 8;                                            // +0x88
         m_storeLabelX = 0xa6;                                            // +0x8c
         m_giftLabelX = 0x144;                                            // +0x90
-        m_top.fielda4 = 0xa3;                                            // +0xa4
-        m_top.fielda8 = 0x4b;                                            // +0xa8
+        m_top.buttonWidth = 0xa3;                                        // +0xa4
+        m_top.buttonHeight = 0x4b;                                       // +0xa8
         m_top.rowY = baseY - 0x4b;                                       // +0x94
         m_top.settingsX = 0;                                             // +0x98
-        m_top.field9c = 0xa3;                                            // +0x9c
-        m_top.fielda0 = 0x146;                                           // +0xa0
+        m_top.presentBoxX = 0xa3;                                        // +0x9c
+        m_top.featuredX = 0x146;                                         // +0xa0
         m_newsTickerParams[0] = 0x5b;                                    // +0xf4
         m_newsTickerParams[1] = 0xb;                                     // +0xf8
         m_newsTickerParams[2] = 0x21e;                                   // +0xfc
@@ -160,12 +160,12 @@ void MenuMainTask::setup() {
         m_settingsLabelX = 0x1e;                                    // +0x88
         m_storeLabelX = 0x10d;                                      // +0x8c
         m_giftLabelX = 0x1fc;                                       // +0x90
-        m_top.fielda4 = 0xef;                                       // +0xa4
-        m_top.fielda8 = 0x82;                                       // +0xa8
+        m_top.buttonWidth = 0xef;                                   // +0xa4
+        m_top.buttonHeight = 0x82;                                  // +0xa8
         m_top.rowY = baseY - 0x80;                                  // +0x94
         m_top.settingsX = 0x14;                                     // +0x98
-        m_top.field9c = 0x103;                                      // +0x9c
-        m_top.fielda0 = 0x1f2;                                      // +0xa0
+        m_top.presentBoxX = 0x103;                                  // +0x9c
+        m_top.featuredX = 0x1f2;                                    // +0xa0
         m_newsTickerParams[0] = 0x80;                               // +0xf4
         m_newsTickerParams[1] = 0xb;                                // +0xf8
         m_newsTickerParams[2] = 0x540;                              // +0xfc
@@ -571,18 +571,18 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // differ only in their X origin.
         auto hitTop = [&](int rectX) {
             return neGraphics::pointInRect(
-                tapX, tapY, rectX, m_top.rowY, m_top.fielda4, m_top.fielda8);
+                tapX, tapY, rectX, m_top.rowY, m_top.buttonWidth, m_top.buttonHeight);
         };
 
         if (hitTop(m_top.settingsX)) { // settings (+0x98)
             if (introQuiet()) {
                 m_state = 0xd;
             }
-        } else if (hitTop(m_top.fielda0)) { // featured / reward offer wall (+0xa0)
+        } else if (hitTop(m_top.featuredX)) { // featured / reward offer wall (+0xa0)
             if (introQuiet() && m_giftEnabled) {
                 m_state = 0xf;
             }
-        } else if (hitTop(m_top.field9c)) { // present box (+0x9c)
+        } else if (hitTop(m_top.presentBoxX)) { // present box (+0x9c)
             if (introQuiet()) {
                 neEngine::playSystemSe(1);
                 [root GotoPresentBox];

@@ -120,13 +120,16 @@ public:
 private:
     // ---- packed top-row cluster (+0x94.. settings/gift rects, overlapping
     // fields) ----
+    // The packed top-row button cluster: settings / present-box / featured
+    // buttons share one row Y and one width/height, each with its own x. The
+    // hit-test reads them as pointInRect(x, rowY, buttonWidth, buttonHeight).
     struct TopCluster {
-        int rowY;      // +0x94 shared top-row Y (also the settings enable field)
-        int settingsX; // +0x98 settings rect x
-        int field9c;   // +0x9c
-        int fielda0;   // +0xa0
-        int fielda4;   // +0xa4
-        int fielda8;   // +0xa8
+        int rowY;         // +0x94 shared top-row Y (also the settings enable field)
+        int settingsX;    // +0x98 settings button x
+        int presentBoxX;  // +0x9c present-box button x
+        int featuredX;    // +0xa0 featured / reward-offer-wall button x
+        int buttonWidth;  // +0xa4 shared top-row button width
+        int buttonHeight; // +0xa8 shared top-row button height
     };
 
     // ---- one badge / sprite screen position ----
