@@ -2653,7 +2653,9 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 
     // Roulette result frame (+0x8ac, visible when player is idle).
     if (m_warpFlash == 0) {
-        int roulVal = reinterpret_cast<int32_t &>(m_rouletteMode);
+        // +0x8ac is a signed 16-bit field (Ghidra @ 0xa552a/0xa553c: ldrsh.w);
+        // assigning the int16_t to int sign-extends exactly like the binary's load.
+        int roulVal = m_rouletteMode;
         if (roulVal >= -1) {
             AepLyrCtrl *resultLyr = m_rouletteLayers[15];
             if (!resultLyr || !resultLyr->isAnimating()) {
