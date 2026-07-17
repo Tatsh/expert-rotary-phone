@@ -370,7 +370,7 @@ private:
     // Fix up (relocate) a freshly-loaded group's .idx name tables into the
     // per-group hash tables above. Ghidra: relocateAepData (FUN_0000f824); called
     // from loadAepData.
-    void relocateData(int group, AepIndexHeader *header, const uint8_t *idxBase);
+    void relocateData(int group, const AepIndexHeader *header, const uint8_t *idxBase);
 };
 
 // The active transition mode (free-function form of

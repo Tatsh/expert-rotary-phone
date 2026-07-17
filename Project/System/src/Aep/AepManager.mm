@@ -107,8 +107,7 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     // and resolve the frame-position and frame-entry pointers (each sits past its name
     // table + the layer-ordinal array) into m_framePosData / m_groupFrameData. The index
     // buffer is a private mutable copy (readIndexFile already stamps the group id into it).
-    relocateData(
-        group, reinterpret_cast<AepIndexHeader *>(const_cast<uint8_t *>(indexBase)), indexBase);
+    relocateData(group, reinterpret_cast<const AepIndexHeader *>(indexBase), indexBase);
 
     // Replace the group's texture.
     delete m_groupTexture[group];
@@ -560,7 +559,7 @@ void AepManager::init(
 // int16 layer ordinals that follow the names are copied into the per-group
 // layer-number table (feeding getLyrNo).
 // @complete
-void AepManager::relocateData(int group, AepIndexHeader *header, const uint8_t *idxBase) {
+void AepManager::relocateData(int group, const AepIndexHeader *header, const uint8_t *idxBase) {
     if (group < 0 || group >= AepManager::kMaxAepGroups) {
         return;
     }
