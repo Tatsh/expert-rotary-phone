@@ -93,12 +93,12 @@ void TreasureMap::load(const char *path) {
     std::fseek(fp, 0, SEEK_END);
     const long size = std::ftell(fp);
     std::fseek(fp, 0, SEEK_SET);
-    void *raw = std::malloc((size_t)size);
+    void *raw = std::malloc(static_cast<size_t>(size));
     if (!raw) {
         std::fclose(fp);
         return;
     }
-    const size_t got = std::fread(raw, (size_t)size, 1, fp);
+    const size_t got = std::fread(raw, static_cast<size_t>(size), 1, fp);
     std::fclose(fp);
     if (got != 1) {
         std::free(raw);
@@ -113,7 +113,7 @@ void TreasureMap::load(const char *path) {
     }
 
     // Allocate + zero the in-memory node table (stride sizeof(Node) == 0x120).
-    const size_t tableBytes = (size_t)m_count * sizeof(Node);
+    const size_t tableBytes = static_cast<size_t>(m_count) * sizeof(Node);
     Node *nodes = static_cast<Node *>(std::malloc(tableBytes));
     m_nodes = nodes;
     if (!nodes) {
@@ -127,7 +127,7 @@ void TreasureMap::load(const char *path) {
 
     // --- Pass 1: fill each square from its 0xaa-byte file record.
     for (int i = 0; i < m_count; i++) {
-        const uint8_t *rec = fileBase + (size_t)i * 0xaa;
+        const uint8_t *rec = fileBase + static_cast<size_t>(i) * 0xaa;
         Node &node = nodes[i];
 
         // Leading five int16 fields (id, x, y, type, slotId) copied verbatim.
@@ -166,12 +166,12 @@ void TreasureMap::load(const char *path) {
     // stable across launches). Every other candidate is deactivated
     // (type -> kSquareDeactivatedBonus, text cleared).
     if (bonusCount > 0) {
-        if ((int8_t)tmp.bonusSquareIndex < 1) {
-            std::srand((unsigned)std::time(nullptr));
-            tmp.bonusSquareIndex = (uint8_t)((std::rand() % bonusCount) + 1);
+        if (static_cast<int8_t>(tmp.bonusSquareIndex) < 1) {
+            std::srand(static_cast<unsigned>(std::time(nullptr)));
+            tmp.bonusSquareIndex = static_cast<uint8_t>((std::rand() % bonusCount) + 1);
             [UserSettingData saveTreasureTmp:tmp];
         }
-        const int target = (int)tmp.bonusSquareIndex; // 1-based chosen index
+        const int target = static_cast<int>(tmp.bonusSquareIndex); // 1-based chosen index
         int seen = 0;
         for (int i = 0; i < m_count; i++) {
             Node &node = m_nodes[i];
@@ -191,7 +191,7 @@ void TreasureMap::load(const char *path) {
     // square whose id matches.
     NSMutableArray *edgeValues = [[NSMutableArray alloc] init];
     for (int i = 0; i < m_count; i++) {
-        const uint8_t *rec = fileBase + (size_t)i * 0xaa;
+        const uint8_t *rec = fileBase + static_cast<size_t>(i) * 0xaa;
         Node &node = m_nodes[i];
 
         // Back link (file +0x0a): a negative id means "no neighbour".
@@ -234,11 +234,11 @@ void TreasureMap::load(const char *path) {
 
     // --- Flatten the edge list into the owned +0x58 array (+0x5c = element
     // count).
-    const int16_t edgeCount = (int16_t)edgeValues.count;
+    const int16_t edgeCount = static_cast<int16_t>(edgeValues.count);
     m_edgeCount = edgeCount;
     if (edgeCount > 0) {
-        ConnectStruct *edges =
-            static_cast<ConnectStruct *>(std::malloc((size_t)edgeCount * sizeof(ConnectStruct)));
+        ConnectStruct *edges = static_cast<ConnectStruct *>(
+            std::malloc(static_cast<size_t>(edgeCount) * sizeof(ConnectStruct)));
         m_edges = edges;
         for (int i = 0; i < edgeCount; i++) {
             [[edgeValues objectAtIndex:i] getValue:&edges[i]];
@@ -356,7 +356,7 @@ unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink) 
             return count;
         }
         count++;
-    } while ((int)count < 3);
+    } while (static_cast<int>(count) < 3);
     return count;
 }
 
@@ -429,13 +429,13 @@ int getTreasureMapValue_fb30(int mapId) {
 // 0xce1a8, confirmed by the bl target in getCharacterAssetName @ 0xce208).
 // @complete
 int getCharacterAssetCount(int characterId) {
-    short group = (short)(characterId / 10);
-    short slot = (short)(characterId - group * 10); // == characterId % 10
+    short group = static_cast<short>(characterId / 10);
+    short slot = static_cast<short>(characterId - group * 10); // == characterId % 10
     if ((characterId / 10 & 0xffffu) == 8) {
-        if ((unsigned int)(int)slot < 3u) {
+        if (static_cast<unsigned int>(static_cast<int>(slot)) < 3u) {
             return kAssetCountsGroup8[slot];
         }
-    } else if (group == 6 && (unsigned int)(int)slot < 3u) {
+    } else if (group == 6 && static_cast<unsigned int>(static_cast<int>(slot)) < 3u) {
         return kAssetCountsGroup6[slot];
     }
     return 0;
@@ -453,8 +453,8 @@ const char *getCharacterAssetName(int characterId, int slotIndex) {
         return nullptr;
     }
 
-    unsigned int slot = (unsigned int)(characterId % 10);
-    short group = (short)(characterId / 10);
+    unsigned int slot = static_cast<unsigned int>(characterId % 10);
+    short group = static_cast<short>(characterId / 10);
     const char *const *strings = nullptr;
 
     if ((characterId / 10 & 0xffffu) == 8) {
@@ -516,7 +516,7 @@ TreasureMap::Node *TreasureMap::getButtobiSquare(const TreasureMap::Node *curren
     if (count < 1) {
         assert(0);
     }
-    const int randIdx = std::rand() % (int)count;
+    const int randIdx = std::rand() % static_cast<int>(count);
     TreasureMap::Node *node = m_nodes + randIdx;
     if (node->type != TreasureMap::kSquarePlayerStart && node->type != TreasureMap::kSquareWarp &&
         node != currentNode) {

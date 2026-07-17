@@ -109,7 +109,7 @@ public:
         }
         const Node *node = m_nodes;
         for (int i = 0; i < n; i++, node++) {
-            if ((uint16_t)node->id == (uint16_t)subId) {
+            if (static_cast<uint16_t>(node->id) == static_cast<uint16_t>(subId)) {
                 return node;
             }
         }
