@@ -232,10 +232,8 @@ void PlayTaskInit(void *playData) {
     task->m_gaugeBase = 0;                                         // +0x9ac (DAT_00178d00)
     task->m_gaugeGainGreat = 3072.0f / (float)nm.totalNoteCount(); // +0x9cc
     task->m_gaugeGainGood = 1.0f;                                  // +0x9d0 (0x3f800000)
-    // +0x9d4 = -34.1333f: store the exact IEEE-754 bit pattern (0xc2088889) the
-    // binary uses, which a decimal float literal would not reproduce.
-    reinterpret_cast<int &>(task->m_gaugeLossMiss) = (int)0xc2088889; // +0x9d4
-    task->m_gaugeValue = 0;                                           // +0x9c0
+    task->m_gaugeLossMiss = -34.133335f;                           // +0x9d4 (0xc2088889)
+    task->m_gaugeValue = 0;                                        // +0x9c0
 
     // Per-display note-field geometry + the common AEP layer group.
     if (task->m_isPadDisplay == 0) {     // phone
