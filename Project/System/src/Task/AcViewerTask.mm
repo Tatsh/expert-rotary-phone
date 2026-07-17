@@ -1226,6 +1226,70 @@ void AcViewerTask::AcViewerHudDraw(int child,
     }
 }
 
+// Ghidra: applyGameplaySettings (FUN_00023850). Push the arcade-viewer option
+// selections into the work area, rebuild the lane map / re-seek the note stream
+// when hi-speed or ran/mir changed, and resume the render loop. The options
+// sheet reaches it through the neEngine::acMainApplyGameplaySettings forwarder.
+void AcViewerTask::applyGameplaySettings() {
+    // Copy the pop-kun / hid-sud selections straight into the work area.
+    m_popKun = [UserSettingData acvPopKun];
+    m_hidSud = [UserSettingData acvHidSud];
+
+    AcNoteMng &nm = AcNoteMng::shared();
+
+    const int hiSpeed = [UserSettingData acvHiSpeed];
+    const int ranMir = [UserSettingData acvRanMir];
+
+    // Rebuild the lane-remap table whenever the ran/mir selection changed.
+    if (ranMir != m_ranMir) {
+        nm.setupLaneMapping(ranMir);
+    }
+
+    // Re-init the play data and re-seek only when hi-speed or ran/mir actually
+    // changed vs the stored values (decompile bVar5 logic: bVar5 =
+    // hiSpeed==m_hiSpeed; if bVar5 it then compares ran/mir — i.e. proceed iff
+    // hiSpeed changed OR ran/mir changed).
+    const bool hiSpeedChanged = (hiSpeed != m_hiSpeed);
+    const bool ranMirChanged = (ranMir != m_ranMir);
+    if (hiSpeedChanged || ranMirChanged) {
+        // Snapshot the seek-math inputs (the decompile captures +0xf4/+0xfc/+0x118
+        // here, before the re-init) then commit the new selections.
+        const float seekCoef = m_seekCoef; // +0xf4
+        const int pauseTime = m_pauseTime; // +0xfc  (position snapshot at pause)
+        const int seekScale = m_seekScale; // +0x118
+
+        m_hiSpeed = hiSpeed;
+        m_ranMir = ranMir;
+
+        // Re-parse the chart with the new hi-speed (arg shape matches
+        // acNoteMngInitPlayData
+        // @ 0x7a774 — the sheet NSData @ +0x1e0 and the hi-speed step). m_sheet is
+        // the bridged, task-owned chart data, so a non-owning __bridge cast is
+        // correct here.
+        nm.initPlayDataWithData((__bridge NSData *)m_sheet, hiSpeed);
+
+        // Resume-seek target: the binary computes
+        //   FPToFixed( FixedToFP(pauseTime) + seekCoef * FixedToFP(seekScale) )
+        // via the FixedToFP/FPToFixed 16.16 pixel-math helpers (a documented
+        // conversion seam). With a common Q16.16 scale that round-trip reduces to
+        // the plain linear combine below; the exact fractional-bit width of each
+        // helper call is opaque (see the disclosure note), so this models the
+        // arithmetic rather than the NEON intrinsics. Clamp >= 0 as the binary.
+        long seekPos = (long)pauseTime + (long)(seekCoef * (float)seekScale);
+        if (seekPos < 0) {
+            seekPos = 0;
+        }
+        nm.seekTo((uint32_t)seekPos);
+    }
+
+    // Resume the render loop; on phone advance the play-state machine into its
+    // resume state.
+    [neSceneManager::rootViewController() performSelector:@selector(ResumeLoop)];
+    if (!neSceneManager::isPadDisplay()) {
+        m_state = 0xd; // +0x20c
+    }
+}
+
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4

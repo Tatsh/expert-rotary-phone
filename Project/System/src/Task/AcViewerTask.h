@@ -42,16 +42,6 @@
 
 class AepLyrCtrl;
 class neTextureForiOS;
-class AcViewerTask; // (defined below) — named here so the neEngine bridge hook
-                    // can befriend it
-
-// The neEngineBridge apply-settings hook (options sheet CONTINUE / BACK):
-// pushes the recovered option selections + re-seek into this task, writing its
-// private option / seek fields directly. Befriended below so it reaches them
-// like the HUD callback does. Ghidra: FUN_00023850.
-namespace neEngine {
-void acMainApplyGameplaySettings(AcViewerTask *task);
-}
 
 class AcViewerTask : public C_TASK {
 public:
@@ -60,6 +50,12 @@ public:
     AcViewerTask();
     ~AcViewerTask() override;          // @ 0x215d8 (task_delete deleting-dtor: base + delete)
     void update(int deltaMs) override; // @ 0x21678  acMainTaskUpdate
+
+    // Apply the arcade-viewer option sheet's selections (hi-speed / pop-kun /
+    // hid-sud / ran-mir) to this task, rebuilding the lane map and re-seeking the
+    // note stream when they change. The options view controller reaches it through
+    // the neEngine::acMainApplyGameplaySettings forwarder. Ghidra: FUN_00023850.
+    void applyGameplaySettings();
 
 private:
     void setup();           // @ 0x2230c  acMainTaskSetup — resolve the HUD, load chart + SE
@@ -90,10 +86,6 @@ private:
                                 int *p13,
                                 uint32_t p14,
                                 void *context);
-
-    // The apply-settings bridge hook writes the option / seek fields below
-    // directly.
-    friend void neEngine::acMainApplyGameplaySettings(AcViewerTask *task);
 
     // ================= work-area layout (offsets are binary-exact)
     // =================
