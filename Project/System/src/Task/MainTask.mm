@@ -48,7 +48,7 @@
 #import "neTextureForiOS.h"
 
 static inline MainViewController *RootVC() {
-    return (MainViewController *)neSceneManager::rootViewController();
+    return static_cast<MainViewController *>(neSceneManager::rootViewController());
 }
 
 // Recommend-list refresh throttle: stale if never fetched, > 4 min old, or a
@@ -60,7 +60,7 @@ static inline bool recommendListIsStale() {
         return true; // never fetched
     }
     NSTimeInterval elapsedMinutes = [[NSDate date] timeIntervalSinceDate:lastFetch] / 60.0;
-    if ((int)elapsedMinutes > 4) {
+    if (static_cast<int>(elapsedMinutes) > 4) {
         return true; // stale window elapsed
     }
     return ec.remoteNotifyPending(); // a push arrived -> force a refresh
@@ -112,10 +112,10 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
     auto hit = [&](int x, int y, int w, int h) {
         return neGraphics::pointInRect(tapX,
                                        tapY,
-                                       (int)((float)x * scale),
-                                       (int)((float)y * scale),
-                                       (int)((float)w * scale),
-                                       (int)((float)h * scale));
+                                       static_cast<int>((static_cast<float>(x) * scale)),
+                                       static_cast<int>((static_cast<float>(y) * scale)),
+                                       static_cast<int>((static_cast<float>(w) * scale)),
+                                       static_cast<int>((static_cast<float>(h) * scale)));
     };
 
     int base = -1;
@@ -389,7 +389,8 @@ void MainTask::update(int /*deltaMs*/) {
         }
         if (hitButton(tapX, tapY, kBtnTutorial)) {
             if (m_sel.tutorialOffered) {
-                m_sel.selectSeInst = (int)[audio playSe:nil resourceId:m_sel.selectSeId];
+                m_sel.selectSeInst = static_cast<int>([audio playSe:nil
+                                                         resourceId:m_sel.selectSeId]);
                 neAppEventCenter::shared().setGuestNoSaveMode(
                     true); // guided first play: don't save
                 [UserSettingData saveIsTutorialPlayed:YES];
@@ -429,7 +430,7 @@ void MainTask::update(int /*deltaMs*/) {
         [audio pushBgm];
         m_chosenIndex = m_selectedCell;
         MusicData *info = [m_musicList objectAtIndexedSubscript:m_selectedCell];
-        unsigned musicId = (unsigned)[info MusicID];
+        unsigned musicId = static_cast<unsigned>([info MusicID]);
         m_sel.musicId = musicId;
 
         // Invite songs are only playable while their invite window is open.
@@ -464,9 +465,9 @@ void MainTask::update(int /*deltaMs*/) {
 
         // The three level values + the six full-combo / perfect medals for the
         // score panel.
-        m_sel.levels.normal = (int)[info lvNormal];
-        m_sel.levels.hyper = (int)[info lvHyper];
-        m_sel.levels.ex = (int)[info lvEx];
+        m_sel.levels.normal = static_cast<int>([info lvNormal]);
+        m_sel.levels.hyper = static_cast<int>([info lvHyper]);
+        m_sel.levels.ex = static_cast<int>([info lvEx]);
         m_sel.fullCombo.normal = [[score fullComboN] boolValue] ? 1 : 0;
         m_sel.fullCombo.hyper = [[score fullComboH] boolValue] ? 1 : 0;
         m_sel.fullCombo.ex = [[score fullComboEx] boolValue] ? 1 : 0;
@@ -481,8 +482,8 @@ void MainTask::update(int /*deltaMs*/) {
           // Background jacket decode for `info` (Ghidra: block
           // invoke @ 0x37f79). The decoded textures are streamed
           // into the cell array by state 2. Seam.
-          (void)self;
-          (void)info;
+          static_cast<void>(self);
+          static_cast<void>(info);
         });
 
         seedDiffStarLayerFrames();
@@ -536,9 +537,9 @@ void MainTask::update(int /*deltaMs*/) {
         // -- PLAY --
         if (hitButton(tapX, tapY, kBtnPlay)) {
             [audio popBgm];
-            m_sel.selectSeInst = (int)[audio playSe:nil resourceId:m_sel.selectSeId];
+            m_sel.selectSeInst = static_cast<int>([audio playSe:nil resourceId:m_sel.selectSeId]);
             m_spawnedTask = PlayTaskCreate();
-            [[AppDelegate appDelegate] setMainTask:(MainTask *)m_spawnedTask];
+            [[AppDelegate appDelegate] setMainTask:static_cast<MainTask *>(m_spawnedTask)];
             m_state = 0xc; // -> play-launch handoff (0xc -> 0xd -> 0xe)
             break;
         }
@@ -843,8 +844,8 @@ void MainTask::Setup() {
     AudioManager *audio = [AudioManager sharedManager];
 
     m_aep = &AepManager::shared();
-    m_screenWidth = (int)AepManager::shared().screenWidth();
-    m_screenHeight = (int)AepManager::shared().screenHeight();
+    m_screenWidth = static_cast<int>(AepManager::shared().screenWidth());
+    m_screenHeight = static_cast<int>(AepManager::shared().screenHeight());
     // g_dwUiScale is published by MainViewController::loadView as screenScale * 0.5
     // (loadView @ 0xb51c: vmul.f32 by 0.5, stored as the raw g_dwUiScale slot). The
     // binary copies that slot into +0xa6c (musicSelTaskSetup @ 0x370f0:
@@ -857,7 +858,7 @@ void MainTask::Setup() {
     m_columnStride = m_isPadDisplay ? 9 : 6; // +0xa74 cells per column
 
     // ---- per-platform button-rect layout table (m_layoutRects + base) ----
-    const int displayType = (int)[[AppDelegate appDelegate] displayType];
+    const int displayType = static_cast<int>([[AppDelegate appDelegate] displayType]);
     if (!m_isPadDisplay) {
         int baseY, rectSort, rectDiff; // rectSort @ +0xa10, rectDiff @ +0xa24
         if (displayType == 2) {        // tall (notch/1136) phone
@@ -885,7 +886,7 @@ void MainTask::Setup() {
         m_layoutRects[31] = m_screenHeight - 0x46;
     }
 
-    m_treasurePoint = (int)[UserSettingData treasurePoint];
+    m_treasurePoint = static_cast<int>([UserSettingData treasurePoint]);
 
     // ---- load the music-select Aep group (3) + resolve its BG layer handles
     // ----
@@ -980,8 +981,8 @@ void MainTask::Setup() {
     for (int i = 0; i < 5; i++) {
         NSString *sePath = [[NSBundle mainBundle] pathForResource:@(kSeNames[i]) ofType:@"m4a"];
         RSND_SOURCE_ID sid = [audio loadSe:sePath isLoop:NO callName:nil group:1];
-        m_seId[i] = (int)sid; // +0x8c4
-        m_seInst[i] = -1;     // +0x8d8 idle
+        m_seId[i] = static_cast<int>(sid); // +0x8c4
+        m_seInst[i] = -1;                  // +0x8d8 idle
     }
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm02_musicsel.m4a"];
@@ -1038,7 +1039,7 @@ void MainTask::Update() {
             m_dragSampleTime[i] = m_dragSampleTime[i - 1];
             m_dragSampleX[i] = m_dragSampleX[i - 1];
         }
-        const int now = (int)getTimeMillis();
+        const int now = static_cast<int>(getTimeMillis());
         m_dragSampleTime[0] = now;
         m_dragSampleX[0] = curX;
 
@@ -1053,7 +1054,7 @@ void MainTask::Update() {
         const bool atLast = (off < 0 && m_columnIndex >= m_columnCount - 1); // drag right, last col
         if (atFirst || atLast) {
             const int a = (off < 0) ? -off : off; // |off|
-            m_scrollOffset = (int)(0.5f - std::sqrt((float)a));
+            m_scrollOffset = static_cast<int>((0.5f - std::sqrt(static_cast<float>(a))));
         } else {
             m_scrollOffset = off;
         }
@@ -1066,8 +1067,8 @@ void MainTask::Update() {
             float dTime = 0.0f;
             for (int i = 9; i >= 0; i--) {
                 if (m_dragSampleTime[i] != 0) {
-                    dTime = (float)(now - m_dragSampleTime[i]);
-                    velocity = (float)(m_dragSampleX[i] - curX);
+                    dTime = static_cast<float>((now - m_dragSampleTime[i]));
+                    velocity = static_cast<float>((m_dragSampleX[i] - curX));
                     break;
                 }
             }
@@ -1121,7 +1122,7 @@ void MainTask::Update() {
                     m_dragSampleX[k] = 0;
                 }
                 m_selectedCell = t->id; // +0x928 drag touch id
-                m_dragSampleTime[0] = (int)getTimeMillis();
+                m_dragSampleTime[0] = static_cast<int>(getTimeMillis());
                 m_scrollVelocity = 0.0f;
                 m_dragSampleX[0] = t->x;
                 break;
@@ -1151,7 +1152,8 @@ void MainTask::Update() {
             }
         }
         m_scrollVelocity = vel;
-        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        m_scrollOffset =
+            static_cast<int>((static_cast<float>(m_scrollOffset) + vel * kFrameStepMs));
         if (m_scrollOffset >= columnWidth) {
             // Column change committed: reset physics and step to the previous column.
             m_scrollOffset = 0;
@@ -1188,7 +1190,8 @@ void MainTask::Update() {
             }
         }
         m_scrollVelocity = vel;
-        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        m_scrollOffset =
+            static_cast<int>((static_cast<float>(m_scrollOffset) + vel * kFrameStepMs));
         if (m_scrollOffset <= -columnWidth) {
             m_scrollOffset = 0;
             m_scrollVelocity = 0.0f;
@@ -1214,8 +1217,9 @@ void MainTask::Update() {
             vel = -kMinVelocity; // max(-1.0, vel)
         }
         m_scrollVelocity = vel;
-        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
-        if ((unsigned)m_scrollOffset < 0x80000000u) {
+        m_scrollOffset =
+            static_cast<int>((static_cast<float>(m_scrollOffset) + vel * kFrameStepMs));
+        if (static_cast<unsigned>(m_scrollOffset) < 0x80000000u) {
             break; // still >= 0: keep animating
         }
         m_scrollOffset = 0; // crossed below 0: settled
@@ -1229,7 +1233,8 @@ void MainTask::Update() {
             vel = kMinVelocity; // min(1.0, vel)
         }
         m_scrollVelocity = vel;
-        m_scrollOffset = (int)((float)m_scrollOffset + vel * kFrameStepMs);
+        m_scrollOffset =
+            static_cast<int>((static_cast<float>(m_scrollOffset) + vel * kFrameStepMs));
         if (m_scrollOffset < 0) {
             break; // still negative: keep animating
         }
@@ -1330,7 +1335,7 @@ void MainTask::rebuildList() {
     // ---- 1. sort the song array per the applied order (retained into
     // m_musicList) ----
     NSArray *sorted = nil;
-    switch ((unsigned short)sort) {
+    switch (static_cast<unsigned short>(sort)) {
     case 0:
         sorted = [music sortedArrayUsingSelector:@selector(compareMusicNameCustom:)];
         break;
@@ -1356,7 +1361,7 @@ void MainTask::rebuildList() {
         NSMutableArray *unplayed = [NSMutableArray array];
         NSMutableArray *played = [NSMutableArray array];
         for (id song in byId) {
-            unsigned musicId = (unsigned)[song MusicID];
+            unsigned musicId = static_cast<unsigned>([song MusicID]);
             bool hasScore = false;
             for (int diff = 0; diff < 3; diff++) {
                 // A song counts as scored if any difficulty has a stored play count
@@ -1387,12 +1392,12 @@ void MainTask::rebuildList() {
         sorted = m_musicList; // unknown sort: keep the existing (already-cleared) list
         break;
     }
-    if ((unsigned short)sort <= 5) {
+    if (static_cast<unsigned short>(sort) <= 5) {
         m_musicList = (__bridge id)CFBridgingRetain(sorted); // Ghidra: [sorted retain]
     }
 
     // ---- 2. column geometry ----
-    m_songCount = (int)[m_musicList count];
+    m_songCount = static_cast<int>([m_musicList count]);
     const int stride = m_columnStride; // cells per column (6 phone / 9 pad)
     m_columnIndex = 0;
     m_columnCount = (m_songCount - 1) / stride + 1;
@@ -1404,7 +1409,7 @@ void MainTask::rebuildList() {
     const int currentId = neAppEventCenter::shared().lastMusic(); // g_pNeAppEventCenter (seam)
     for (int i = 0; i < m_songCount; i++) {
         MusicData *song = [m_musicList objectAtIndexedSubscript:i];
-        if ((int)[song MusicID] == currentId) {
+        if (static_cast<int>([song MusicID]) == currentId) {
             m_columnIndex = i / stride;
             break;
         }
@@ -1420,7 +1425,7 @@ void MainTask::rebuildList() {
                 break;
             }
             MusicData *song = [m_musicList objectAtIndexedSubscript:songIdx];
-            unsigned musicId = (unsigned)[song MusicID];
+            unsigned musicId = static_cast<unsigned>([song MusicID]);
             NSData *artwork = [song artwork2xData];
             MusicSelCell &cell = m_cells[slot];
 
@@ -1530,7 +1535,7 @@ void MainTask::backgroundCellLoader() {
             dispatch_semaphore_signal(m_cellSem);
 
             MusicData *md = [m_musicList objectAtIndexedSubscript:songIndex];
-            const int musicId = (int)[md MusicID];
+            const int musicId = static_cast<int>([md MusicID]);
             id artwork;
             @autoreleasepool {
                 artwork = [md artwork2xData]; // decode off the shared array
@@ -1874,8 +1879,8 @@ void MainTask::StopAndSave() {
         neAppEventCenter &ec = neAppEventCenter::shared();
         MusicData *info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
         if (!ec.guestNoSaveMode()) {
-            ec.setLastMusic((int)[info MusicID]);
-            ec.setLastSheet((int)m_resultSheet);
+            ec.setLastMusic(static_cast<int>([info MusicID]));
+            ec.setLastSheet(static_cast<int>(m_resultSheet));
             [UserSettingData saveSettingData];
         } else {
             ec.setLastMusic(0);
@@ -1918,7 +1923,7 @@ void MainTask::UpdateInfoPanel(int mode) {
         NSString *lastViewed = [UserSettingData lastRecommendViewTimeString];
         m_recommendBadge = 1;
         RecommendData newest;
-        [(NSValue *)[recommend objectAtIndex:0] getValue:&newest];
+        [static_cast<NSValue *>([recommend objectAtIndex:0]) getValue:&newest];
         if (lastViewed != nil && newest.updateDate != nil &&
             [lastViewed compare:newest.updateDate] != NSOrderedAscending) {
             m_recommendBadge = 0; // already viewed something at least this fresh
@@ -2007,7 +2012,7 @@ inline void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
             releaseCell(cell);
         }
     }
-    latch = (uint8_t)rowBase;
+    latch = static_cast<uint8_t>(rowBase);
     dispatch_semaphore_signal(m_cellSem);
 }
 
@@ -2075,8 +2080,8 @@ void MainTask::AepDrawCallback(int child,
                                int *p13,
                                uint32_t p14,
                                void *context) {
-    (void)frame;
-    (void)p13;
+    static_cast<void>(frame);
+    static_cast<void>(p13);
     MainTask *self = static_cast<MainTask *>(context);
     using MusicSelCell = MainTask::MusicSelCell; // nested type, unqualified in this free function
 
@@ -2161,17 +2166,17 @@ void MainTask::AepDrawCallback(int child,
         }
     };
 
-    if (self->m_elemUsrNo[kElemJacket00] == (int)child) {
+    if (self->m_elemUsrNo[kElemJacket00] == static_cast<int>(child)) {
         // Current column grid. Cache the grid origin (@ +0xa40/+0xa44) for
         // hit-testing.
         self->m_layoutRects[46] = x - (anchorX * scaleX) / 100;
         self->m_layoutRects[47] = y - (anchorY * scaleY) / 100;
-        const int8_t curRow = (int8_t)self->m_curColLatch;
+        const int8_t curRow = static_cast<int8_t>(self->m_curColLatch);
         drawJacketGrid(curRow, self->m_columnIndex, 0);
 
         // Incoming next column (m_nextColLatch), shifted one screen width right.
         if (self->m_columnIndex < self->m_columnCount - 1) {
-            const int8_t nextRow = (int8_t)self->m_nextColLatch;
+            const int8_t nextRow = static_cast<int8_t>(self->m_nextColLatch);
             drawJacketGrid(nextRow, self->m_columnIndex + 1, self->m_screenWidth);
         }
     }
@@ -2183,11 +2188,13 @@ void MainTask::AepDrawCallback(int child,
     // columns, latched via m_curColLatch / m_nextColLatch / m_prevColLatch; (b)
     // "selected song" elements that draw the highlighted song's score / rank /
     // place / banners. @ 0x389fc
-    const int perRow = self->m_columnStride;            // m_columnStride  — cells per column
-    const int songCount = self->m_songCount;            // m_songCount
-    const int col = self->m_columnIndex;                // m_columnIndex
-    const int colCount = self->m_columnCount;           // m_columnCount
-    auto s8 = [](uint8_t b) { return (int)(int8_t)b; }; // signed row-load latch
+    const int perRow = self->m_columnStride;  // m_columnStride  — cells per column
+    const int songCount = self->m_songCount;  // m_songCount
+    const int col = self->m_columnIndex;      // m_columnIndex
+    const int colCount = self->m_columnCount; // m_columnCount
+    auto s8 = [](uint8_t b) {
+        return static_cast<int>(static_cast<int8_t>(b));
+    }; // signed row-load latch
     auto numDigits = [](int v) {
         int n = 1;
         while (v > 9) {
@@ -2335,7 +2342,7 @@ void MainTask::AepDrawCallback(int child,
 
     // Song-name text (per cell) — m_elemUsrNo[kElemMusicTitle]. Blits each cell's title string
     // (@ cell+0x10).
-    if (self->m_elemUsrNo[kElemMusicTitle] == (int)child) {
+    if (self->m_elemUsrNo[kElemMusicTitle] == static_cast<int>(child)) {
         forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
             id name = cell->name;
             if (name) {
@@ -2365,15 +2372,15 @@ void MainTask::AepDrawCallback(int child,
             return true;
         });
     };
-    if (self->m_elemUsrNo[kElemStarGreen] == (int)child) {
+    if (self->m_elemUsrNo[kElemStarGreen] == static_cast<int>(child)) {
         drawStarGrid(self->m_starFrmNo[0], 0);
         return;
     }
-    if (self->m_elemUsrNo[kElemStarYellow] == (int)child) {
+    if (self->m_elemUsrNo[kElemStarYellow] == static_cast<int>(child)) {
         drawStarGrid(self->m_starFrmNo[1], 1);
         return;
     }
-    if (self->m_elemUsrNo[kElemStarRed] == (int)child) {
+    if (self->m_elemUsrNo[kElemStarRed] == static_cast<int>(child)) {
         drawStarGrid(self->m_starFrmNo[2], 2);
         return;
     }
@@ -2382,7 +2389,7 @@ void MainTask::AepDrawCallback(int child,
     // over cells whose score/points slots (cell+0x20/+0x24/+0x28) are all zero,
     // unless m_showLevelNumbers is set. Stops the column at the first cell with
     // no jacket handle (cell+0xc == 0).
-    if (self->m_elemUsrNo[kElemNewBoard] == (int)child) {
+    if (self->m_elemUsrNo[kElemNewBoard] == static_cast<int>(child)) {
         forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
             if (cell->texture == nullptr) {
                 return false;
@@ -2406,7 +2413,8 @@ void MainTask::AepDrawCallback(int child,
         const int n = numDigits(value);
         int pen = 0;
         for (int k = 1;; k++) {
-            const int adv = (int)(((long long)pen * -0x51eb851f) >> 32); // pen / 100
+            const int adv =
+                static_cast<int>(((static_cast<long long>(pen) * -0x51eb851f) >> 32)); // pen / 100
             const int dx = ((adv >> 5) - (adv >> 31)) + cx + ((n << 4) >> 1) - 8;
             neTextureForiOS_draw(&AepManager::shared(),
                                  self->m_digitTex[kDigitJkDif + value % 10],
@@ -2447,23 +2455,23 @@ void MainTask::AepDrawCallback(int child,
                 }
             } else {
                 MusicData *info = [self->m_musicList objectAtIndexedSubscript:listIndex];
-                const int lvl = whichLevel == 0 ? (int)[info lvNormal] :
-                                whichLevel == 1 ? (int)[info lvHyper] :
-                                                  (int)[info lvEx];
+                const int lvl = whichLevel == 0 ? static_cast<int>([info lvNormal]) :
+                                whichLevel == 1 ? static_cast<int>([info lvHyper]) :
+                                                  static_cast<int>([info lvEx]);
                 drawLevelDigits(lvl, cx0 + self->m_layoutRects[2], cy0, digitPriority);
             }
             return true;
         });
     };
-    if (self->m_elemUsrNo[kElemRankNumGreen] == (int)child) {
+    if (self->m_elemUsrNo[kElemRankNumGreen] == static_cast<int>(child)) {
         drawLevelGrid(0, 0, 0xb);
         return;
     } // Normal
-    if (self->m_elemUsrNo[kElemRankNumYellow] == (int)child) {
+    if (self->m_elemUsrNo[kElemRankNumYellow] == static_cast<int>(child)) {
         drawLevelGrid(1, 1, 0xb);
         return;
     } // Hyper
-    if (self->m_elemUsrNo[kElemRankNumRed] == (int)child) {
+    if (self->m_elemUsrNo[kElemRankNumRed] == static_cast<int>(child)) {
         drawLevelGrid(2, 2, p14);
         return;
     } // Extra
@@ -2499,7 +2507,7 @@ void MainTask::AepDrawCallback(int child,
         });
     };
     for (int tip = 0; tip < 3; tip++) {
-        if (self->m_jacketTipUsrNo[tip] == (int)child) {
+        if (self->m_jacketTipUsrNo[tip] == static_cast<int>(child)) {
             drawTipGrid(tip);
             return;
         }
@@ -2508,7 +2516,7 @@ void MainTask::AepDrawCallback(int child,
     // Treasure-point counter — m_elemUsrNo[kElemPointNum]. Fixed 4-digit run (atlas
     // m_digitTex[10..19]), least-significant digit at x, each preceding digit
     // 0x1e px to the left.
-    if (self->m_elemUsrNo[kElemPointNum] == (int)child) {
+    if (self->m_elemUsrNo[kElemPointNum] == static_cast<int>(child)) {
         int v = self->m_treasurePoint;
         for (int dx = 0; dx != -0x78; dx -= 0x1e) {
             drawTex(self->m_digitTex[kDigitPoints + v % 10], 0x22, 0x26, x + dx, y);
@@ -2534,7 +2542,7 @@ void MainTask::AepDrawCallback(int child,
             score = 0;
         }
         for (int d = 0; d < 6; d++) {
-            if (self->m_scoreDigitUsrNo[d] == (int)child) {
+            if (self->m_scoreDigitUsrNo[d] == static_cast<int>(child)) {
                 drawTex(self->m_digitTex[kDigitScore + score % 10], 0x20, 0x28, x, y);
                 return;
             }
@@ -2544,7 +2552,7 @@ void MainTask::AepDrawCallback(int child,
 
     // Difficulty rank badge (selected song) — m_elemUsrNo[kElemDiffRankE] draws
     // m_diffRankFrmNo[rank].
-    if (self->m_elemUsrNo[kElemDiffRankE] == (int)child) {
+    if (self->m_elemUsrNo[kElemDiffRankE] == static_cast<int>(child)) {
         const short rank = selCellPtr->scores.rank[resultSheet];
         if (rank < 0) {
             return;
@@ -2554,7 +2562,7 @@ void MainTask::AepDrawCallback(int child,
     }
 
     // Song-list backing frame — m_elemUsrNo[kElemBt00] draws m_frmNo[0].
-    if (self->m_elemUsrNo[kElemBt00] == (int)child) {
+    if (self->m_elemUsrNo[kElemBt00] == static_cast<int>(child)) {
         drawFrame(self->m_frmNo[0], x, y);
         return;
     }
@@ -2565,7 +2573,7 @@ void MainTask::AepDrawCallback(int child,
     // (@ +0x170+i*4) until the layer's frame count (m_bgLyrFrames), then holding
     // on the last.
     for (int i = 0; i < 3; i++) {
-        if (self->m_diffBlackUsrNo[i] == (int)child) {
+        if (self->m_diffBlackUsrNo[i] == static_cast<int>(child)) {
             const int lyrSlot = (resultSheet == i) ? 1 : 2;
             int &frm = self->m_diffStarLayerFrame[i];
             self->m_aep->drawLayer(self->m_bgLyrNo[lyrSlot],
@@ -2596,20 +2604,20 @@ void MainTask::AepDrawCallback(int child,
 
     // Selected-song jacket preview — m_elemUsrNo[kElemJacket09] blits the big jacket texture
     // (@ selCell+0xc).
-    if (self->m_elemUsrNo[kElemJacket09] == (int)child) {
+    if (self->m_elemUsrNo[kElemJacket09] == static_cast<int>(child)) {
         drawTex(selCellPtr->texture, 0x168, 0x168, x, y);
         return;
     }
 
     // Song-name / artist banners — m_elemUsrNo[kElemDiffTitle] / m_elemUsrNo[kElemDiffName].
-    if (self->m_elemUsrNo[kElemDiffTitle] == (int)child) {
+    if (self->m_elemUsrNo[kElemDiffTitle] == static_cast<int>(child)) {
         if (!self->m_nameTex) {
             return;
         }
         drawTex(self->m_nameTex, 0x126, 0x20, x, y);
         return;
     }
-    if (self->m_elemUsrNo[kElemDiffName] == (int)child) {
+    if (self->m_elemUsrNo[kElemDiffName] == static_cast<int>(child)) {
         if (!self->m_artistTex) {
             return;
         }
@@ -2625,7 +2633,7 @@ void MainTask::AepDrawCallback(int child,
         const int placeVal = self->m_placeValue[grp];
         const int nd = numDigits(placeVal);
         for (int d = 0; d < 3; d++) {
-            if (self->m_placeDigitUsrNo[grp * 3 + d] == (int)child) {
+            if (self->m_placeDigitUsrNo[grp * 3 + d] == static_cast<int>(child)) {
                 int digit;
                 if (d == 2) {
                     if (nd != 2) {
@@ -2653,7 +2661,7 @@ void MainTask::AepDrawCallback(int child,
     // m_frmNo[5] (NEW_BOARD); else perfect (byte@+0x917+sheet) -> m_frmNo[4]
     // (PERFECT); else full-combo (byte@+0x914+sheet) -> m_frmNo[3] (FULLCOMBO);
     // else none.
-    if (self->m_elemUsrNo[kElemFullCombo] == (int)child) {
+    if (self->m_elemUsrNo[kElemFullCombo] == static_cast<int>(child)) {
         int frameNo;
         if (selCellPtr->scores.rank[resultSheet] == 0) {
             frameNo = self->m_frmNo[5];
@@ -2674,7 +2682,7 @@ void MainTask::AepDrawCallback(int child,
     // constants, "1"/"0"). Helpers factor the dict lookups.
     auto overScoreMatch = [&](int listIndex, NSString *wantValue) -> bool {
         MusicData *info = [self->m_musicList objectAtIndexedSubscript:listIndex];
-        NSString *key = [@((int)[info MusicID]) stringValue];
+        NSString *key = [@(static_cast<int>([info MusicID])) stringValue];
         id dict = self->m_overScoreDict;
         if (![[dict allKeys] containsObject:key]) {
             return false;
@@ -2697,7 +2705,7 @@ void MainTask::AepDrawCallback(int child,
     if (![[DownloadMain getInstance] isGetRecommendListDownLoading]) {
         // Recommend badge (per cell) — m_elemUsrNo[kElemFriendUpIcon], m_frmNo[22], pulsing (phase
         // @ +0xa9c).
-        if (self->m_elemUsrNo[kElemFriendUpIcon] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendUpIcon] == static_cast<int>(child)) {
             const int a = pulseAlpha(self->m_overScorePulse);
             forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
                 if (jacketPresent(cell) && overScoreMatch(listIndex, @"1")) {
@@ -2709,7 +2717,7 @@ void MainTask::AepDrawCallback(int child,
         }
         // Over-score badge (per cell) — m_elemUsrNo[kElemFriendUpFirstIcon], m_frmNo[23]. Advances the
         // pulse phase.
-        if (self->m_elemUsrNo[kElemFriendUpFirstIcon] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendUpFirstIcon] == static_cast<int>(child)) {
             const int a = pulseAlpha(self->m_overScorePulse);
             self->m_overScorePulse = (self->m_overScorePulse + 2) % 0x97;
             forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int listIndex) {
@@ -2722,15 +2730,15 @@ void MainTask::AepDrawCallback(int child,
         }
         // Chosen-song state frames (single blit at x,y) — m_elemUsrNo[17..19],
         // keyed on whether the chosen music id is in the over-score set.
-        if (self->m_elemUsrNo[kElemFriendScoreFont] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendScoreFont] == static_cast<int>(child)) {
             drawFrame(chosenTouched() ? self->m_frmNo[18] : self->m_frmNo[17], x, y);
             return;
         }
-        if (self->m_elemUsrNo[kElemFriendScoreIcon] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendScoreIcon] == static_cast<int>(child)) {
             drawFrame(chosenTouched() ? self->m_frmNo[20] : self->m_frmNo[19], x, y);
             return;
         }
-        if (self->m_elemUsrNo[kElemFriendUpdefFontbar] == (int)child) {
+        if (self->m_elemUsrNo[kElemFriendUpdefFontbar] == static_cast<int>(child)) {
             if (chosenTouched()) {
                 drawFrame(self->m_frmNo[21], x, y);
             }
@@ -2742,7 +2750,7 @@ void MainTask::AepDrawCallback(int child,
     // (byte@+0x91d) is set, play m_bgLyrNo[kBgNeko] frame by frame (counter @ +0x164)
     // until it ends, then clear the flag; once done it holds the static
     // difficulty backing frame m_frmNo[12].
-    if (self->m_elemUsrNo[kElemBgNeko] != (int)child) {
+    if (self->m_elemUsrNo[kElemBgNeko] != static_cast<int>(child)) {
         return;
     }
     if (self->m_diffIntroActive != 0) {
