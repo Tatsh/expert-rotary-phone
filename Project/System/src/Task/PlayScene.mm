@@ -212,7 +212,7 @@ void PlayTaskInit(void *playData) {
     task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn] ? 1 : 0; // +0x9e6
 
     // Note ("popkun") size -> 16.16 fixed. Ghidra: FPToFixed(popkunSize).
-    task->m_popkunSize = (int)([UserSettingData popkunSize] * 65536.0f); // +0x9bc
+    task->m_popkunSize = static_cast<int>([UserSettingData popkunSize] * 65536.0f); // +0x9bc
 
     // The bundled-demo / sugoroku play flag, copied out of the event center
     // (+0x33).
@@ -229,11 +229,11 @@ void PlayTaskInit(void *playData) {
     // Gauge / score bookkeeping. m_gaugeGainGreat is the per-note gauge weight: a
     // fixed 3072-unit budget (DAT_0002e768 == 3072.0) spread across the chart's
     // playable-note total.
-    task->m_gaugeBase = 0;                                         // +0x9ac (DAT_00178d00)
-    task->m_gaugeGainGreat = 3072.0f / (float)nm.totalNoteCount(); // +0x9cc
-    task->m_gaugeGainGood = 1.0f;                                  // +0x9d0 (0x3f800000)
-    task->m_gaugeLossMiss = -34.133335f;                           // +0x9d4 (0xc2088889)
-    task->m_gaugeValue = 0;                                        // +0x9c0
+    task->m_gaugeBase = 0; // +0x9ac (DAT_00178d00)
+    task->m_gaugeGainGreat = 3072.0f / static_cast<float>(nm.totalNoteCount()); // +0x9cc
+    task->m_gaugeGainGood = 1.0f;        // +0x9d0 (0x3f800000)
+    task->m_gaugeLossMiss = -34.133335f; // +0x9d4 (0xc2088889)
+    task->m_gaugeValue = 0;              // +0x9c0
 
     // Per-display note-field geometry + the common AEP layer group.
     if (task->m_isPadDisplay == 0) {     // phone
@@ -302,7 +302,7 @@ void PlayTaskInit(void *playData) {
     for (int i = 0; i < 3; ++i) {
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kPlaySeNames[i]) ofType:@"m4a"];
         RSND_SOURCE_ID src = [audio loadSe:path isLoop:NO callName:nil group:0];
-        task->m_playSeIds[i] = (int)src;
+        task->m_playSeIds[i] = static_cast<int>(src);
     }
 }
 
@@ -343,8 +343,8 @@ void PlayTaskGotoResult(void *playData) {
     // (m_playSeIds) and the two gauge/tap SEs (m_hitSeId / m_gaugeSeId), then
     // release the BGM.
     auto stopReleaseSe = [&](int rawSrc) {
-        RSND_SOURCE_ID src = (RSND_SOURCE_ID)rawSrc;
-        [audio stopSe:(RSND_INSTANCE_ID)src];
+        RSND_SOURCE_ID src = static_cast<RSND_SOURCE_ID>(rawSrc);
+        [audio stopSe:static_cast<RSND_INSTANCE_ID>(src)];
         [audio releaseSe:nil resourceId:src];
     };
     for (int i = 0; i < 3; ++i) {
@@ -374,10 +374,14 @@ void PlayTaskGotoResult(void *playData) {
 
         neAppEventCenter *event = task->m_eventCenter;
         // Ghidra: FUN_0002930c (updateHighScore on the event center).
-        event->recordPlayResult(
-            (unsigned)score, (short)cool, (short)great, (short)good, (short)bad, fullCombo);
-        event->setMaxCombo(nm.maxCombo()); // event +0x18 (DAT_00179004)
-        event->setPlayRank((short)rank);   // event +0x14
+        event->recordPlayResult(static_cast<unsigned>(score),
+                                static_cast<short>(cool),
+                                static_cast<short>(great),
+                                static_cast<short>(good),
+                                static_cast<short>(bad),
+                                fullCombo);
+        event->setMaxCombo(nm.maxCombo());            // event +0x18 (DAT_00179004)
+        event->setPlayRank(static_cast<short>(rank)); // event +0x14
     }
 
     PlayNoteMngDetach(&nm); // Ghidra: FUN_0003395c — clear the note-play active flag
@@ -406,7 +410,7 @@ void PlayTaskGotoResult(void *playData) {
 // "hit%03d" (kind + 1) is behaviourally identical.
 // @complete
 static NSString *TouchSeResourceName(int kind) {
-    if ((unsigned)kind > 9) {
+    if (static_cast<unsigned>(kind) > 9) {
         kind = 0;
     }
     return [NSString stringWithFormat:@"hit%03d", kind + 1];
@@ -470,7 +474,7 @@ void PlayLoadSong(void *playData, int reload) {
         const int kind = [UserSettingData touchSoundKind];
         NSString *path = [[NSBundle mainBundle] pathForResource:TouchSeResourceName(kind)
                                                          ofType:@"m4a"];
-        task->m_hitSeId = (int)[audio loadSe:path isLoop:NO callName:nil group:0];
+        task->m_hitSeId = static_cast<int>([audio loadSe:path isLoop:NO callName:nil group:0]);
         [audio setSeVolume:task->m_seVolume groupId:0];
     }
 }
@@ -957,7 +961,7 @@ void PlayLoadCharaTextures(void *playData) {
     if (task->m_isDemoPlay == 0) {
         // Normal play: build the pool of other unlocked characters, then fill eight
         // portrait slots. Ghidra: _srand(_time(0)) then the CharaManager pick loop.
-        srand((unsigned)time(nullptr));
+        srand(static_cast<unsigned>(time(nullptr)));
         const short selfChara = [UserSettingData charaId];
         NSArray *gotCharas = [UserSettingData gotCharaArray];
         NSMutableArray *pool = [NSMutableArray array];
@@ -967,9 +971,10 @@ void PlayLoadCharaTextures(void *playData) {
         // owned bit is set. The list index is used directly as the character id,
         // exactly as the binary tests it against gotCharaArray.
         NSArray *available = CharaManagerShared().availableInfos();
-        const int availableCount = (int)available.count;
+        const int availableCount = static_cast<int>(available.count);
         for (int i = 0; i < availableCount; ++i) {
-            if (i != (int)selfChara && RhTestBitInNumberArray(gotCharas, (unsigned)i)) {
+            if (i != static_cast<int>(selfChara) &&
+                RhTestBitInNumberArray(gotCharas, static_cast<unsigned>(i))) {
                 [pool addObject:@(i)];
             }
         }
@@ -986,7 +991,7 @@ void PlayLoadCharaTextures(void *playData) {
                     }
                     chara = -1;
                 } else {
-                    const int pick = rand() % (int)pool.count;
+                    const int pick = rand() % static_cast<int>(pool.count);
                     chara = [[pool objectAtIndexedSubscript:pick] intValue];
                     [pool removeObjectAtIndex:pick];
                 }
@@ -1263,7 +1268,7 @@ void PlayTaskDraw(int child,
                       0x20,
                       0xffffff,
                       lclip,
-                      reinterpret_cast<void *>((intptr_t)p17),
+                      reinterpret_cast<void *>(static_cast<intptr_t>(p17)),
                       0,
                       1);
     };
@@ -1283,7 +1288,7 @@ void PlayTaskDraw(int child,
         int v = nm.combo();
         for (int i = 0; i < 3; ++i) {
             if (task->m_numComboUser[i] == child) {
-                noteQuad(task->m_comboDigitFrm[v % 10], (int)p17); // EFF_C_NUM
+                noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17)); // EFF_C_NUM
                 return;
             }
             v /= 10;
@@ -1294,7 +1299,7 @@ void PlayTaskDraw(int child,
         int v = task->m_score; // running score
         for (int i = 0; i < 6; ++i) {
             if (task->m_scoreNumUser[i] == child) {
-                noteQuad(task->m_scoreDigitFrm[v % 10], (int)p17); // SCO_N frames
+                noteQuad(task->m_scoreDigitFrm[v % 10], static_cast<int>(p17)); // SCO_N frames
                 return;
             }
             v /= 10;
@@ -1303,7 +1308,7 @@ void PlayTaskDraw(int child,
     // --- Gauge flash (GG_IFL, m_userSprite[0]): this judge slot's gauge index
     // (slot.result) ---
     if (task->m_userSprite[0] == child) {
-        const int gi = task->m_judgePool[(int)p17].result; // +0x3d4 gauge index
+        const int gi = task->m_judgePool[static_cast<int>(p17)].result; // +0x3d4 gauge index
         if (gi < 0) {
             return;
         }
@@ -1319,7 +1324,7 @@ void PlayTaskDraw(int child,
     // this note's state ---
     if (task->m_userSprite[2] == child) {
         // The slot's note identity (slot.noteId @ +0x3cc) is the raw tone note id.
-        const int id = (int)task->m_judgePool[(int)p17].noteId;
+        const int id = static_cast<int>(task->m_judgePool[static_cast<int>(p17)].noteId);
         const int graphic = NoteToneGraphic(id); // FUN_00034bb4
         const int flags = NoteToneFlags(id);     // FUN_00034b98
         const int state = NoteToneState(id);     // FUN_00034b5c
@@ -1339,7 +1344,7 @@ void PlayTaskDraw(int child,
     }
     // --- Tone number overlay (TONE_08_NUM, m_userSprite[3]) ---
     if (task->m_userSprite[3] == child) {
-        const int id = (int)task->m_judgePool[(int)p17].noteId;
+        const int id = static_cast<int>(task->m_judgePool[static_cast<int>(p17)].noteId);
         if (NoteToneState(id) != 1) {
             return;
         }
@@ -1381,26 +1386,30 @@ void PlayTaskDraw(int child,
         if (task->m_optOldHardware != 0) {
             return; // old hardware
         }
-        layerDraw(task->m_effectStateLyr[11], task->m_cdColorFrame, scaleY, clipRect, (int)p17);
+        layerDraw(task->m_effectStateLyr[11],
+                  task->m_cdColorFrame,
+                  scaleY,
+                  clipRect,
+                  static_cast<int>(p17));
         return;
     }
     // --- On-field combo digits (EFF_C_NUM001/010/100, m_userSprite[12..14]) ---
     if (task->m_userSprite[12] == child) {
-        const int v = (int)task->m_comboMilestoneShown;
-        noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
+        const int v = static_cast<int>(task->m_comboMilestoneShown);
+        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17));
         return;
     }
     if (task->m_userSprite[13] == child) {
-        const int v = (int)task->m_comboMilestoneShown / 10;
-        noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
+        const int v = static_cast<int>(task->m_comboMilestoneShown) / 10;
+        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17));
         return;
     }
     if (task->m_userSprite[14] == child) {
-        if ((int)task->m_comboMilestoneShown < 100) {
+        if (static_cast<int>(task->m_comboMilestoneShown) < 100) {
             return;
         }
-        const int v = (int)task->m_comboMilestoneShown / 100;
-        noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
+        const int v = static_cast<int>(task->m_comboMilestoneShown) / 100;
+        noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(p17));
         return;
     }
     // --- Score star badge (FRAME_STAR, m_userSprite[10]) ---
@@ -1418,9 +1427,10 @@ void PlayTaskDraw(int child,
     }
     // --- Gauge side bar (FRAME_SIDEBAR, m_userSprite[11]) ---
     if (task->m_userSprite[11] == child) {
-        const int barCount = task->m_effectStateFrames[8];               // FRAME_SIDEMT_BAR length
-        const int t = (int)task->m_gaugeValue * (barCount - 1);          // gauge * (frames-1)
-        const int lframe = (t + (int)((unsigned)(t >> 31) >> 22)) >> 10; // t / 1024 toward 0
+        const int barCount = task->m_effectStateFrames[8]; // FRAME_SIDEMT_BAR length
+        const int t = static_cast<int>(task->m_gaugeValue) * (barCount - 1); // gauge * (frames-1)
+        const int lframe =
+            (t + static_cast<int>(static_cast<unsigned>(t >> 31) >> 22)) >> 10; // t / 1024 toward 0
         layerDraw(task->m_effectStateLyr[8], lframe, scaleY, nullptr, 0x16);
         return;
     }
@@ -1429,7 +1439,7 @@ void PlayTaskDraw(int child,
     // m_charaAnmUser) --- Skipped entirely when effects are off and this is not
     // the bundled demo.
     if (task->m_optEffectOn != 0 || task->m_isDemoPlay != 0) {
-        const int ivl = (int)NoteBeatIntervalMs(); // beat interval, ms
+        const int ivl = static_cast<int>(NoteBeatIntervalMs()); // beat interval, ms
         const int pos = (ivl != 0) ? (nm.getCurrentPosition() % ivl) : 0;
         int scoreGate = 0; // i * 10000
         for (int i = 0; i < 8; ++i) {
@@ -1479,9 +1489,9 @@ void PlayTaskDraw(int child,
                 p.color = color;
                 p.rotation = rotation;
                 p.blend0 = 0x20;
-                p.blend1 = (short)alpha; // alpha rides the sub-blend
+                p.blend1 = static_cast<short>(alpha); // alpha rides the sub-blend
                 p.colorMul = 0xffffff;
-                p.priority = (int)p17;
+                p.priority = static_cast<int>(p17);
                 portrait->draw(aep.orderingTable(), p);
                 return;
             }
