@@ -287,24 +287,39 @@ private:
     // The just-finished play's result record. In the binary these are read at
     // fixed byte offsets in the event-center's transient region (DAT_00187bc0..);
     // modelled here as named fields so no raw offset access is needed. begin()
-    // zeroes them.
-    struct PlayResult {                // +0x08..0x20
-        short coolCount = 0;           // +0x08
-        short greatCount = 0;          // +0x0a
-        short goodCount = 0;           // +0x0c
-        short badCount = 0;            // +0x0e
-        int playScore = 0;             // +0x10
-        short playRank = 0;            // +0x14
-        short _rsvd16 = 0;             // +0x16
-        int maxCombo = 0;              // +0x18
-        unsigned char cleared = 0;     // +0x1c
-        unsigned char _rsvd1d[3] = {}; // +0x1d
+    // (Ghidra: FUN_00028c70) zeroes the whole +0x00..+0x44 region in one NEON
+    // splat, so the reserved gaps below are genuinely part of the reset block --
+    // they are not this struct's own padding in every case (see _rsvd28/_rsvd34).
+    struct PlayResult {            // +0x08..0x20
+        short coolCount = 0;       // +0x08
+        short greatCount = 0;      // +0x0a
+        short goodCount = 0;       // +0x0c
+        short badCount = 0;        // +0x0e
+        int playScore = 0;         // +0x10
+        short playRank = 0;        // +0x14
+        short _rsvd16 = 0;         // +0x16 alignment pad before maxCombo (no xrefs -- verified)
+        int maxCombo = 0;          // +0x18
+        unsigned char cleared = 0; // +0x1c
+        unsigned char _rsvd1d[3] =
+            {}; // +0x1d alignment pad before _startDate (no xrefs -- verified)
     };
-    struct PlayResultExt {                       // +0x28..0x40
-        unsigned char _rsvd28[0x32 - 0x28] = {}; // +0x28
-        unsigned char newRecord = 0;             // +0x32 DAT_00187bea
-        unsigned char demoPlayFlag = 0;          // +0x33
-        unsigned char _rsvd34[0x40 - 0x34] = {}; // +0x34
+    struct PlayResultExt { // +0x28..0x40
+        // The _rsvd runs here are NOT this result view's own bytes: they are the
+        // login-context and AC-viewer globals that this same class already exposes
+        // through its static accessors, co-zeroed with the result record by begin()
+        // (FUN_00028c70's single-sweep reset). Named by the accessors above:
+        //   +0x28 g_pLinkRefId (linkRefId), +0x2c g_pInputPassword (inputPassword),
+        //   +0x31 g_bRequireOtpInput (requireOtpInput).
+        //   +0x34 g_bRegisteredForRemoteNotif (remoteNotifyPending),
+        //   +0x38 g_dwAcViewerMusicId (acViewerMusicId), +0x3c g_wAcViewerDifficulty.
+        // Kept opaque in this instance view so the result record stays a clean
+        // 0x48-byte map without re-declaring globals the accessors own.
+        unsigned char _rsvd28[0x32 - 0x28] =
+            {};                         // +0x28 login context (see linkRefId/inputPassword)
+        unsigned char newRecord = 0;    // +0x32 DAT_00187bea (read by result Draw @ 0x3e094)
+        unsigned char demoPlayFlag = 0; // +0x33 (MainTask demo-play flag)
+        unsigned char _rsvd34[0x40 - 0x34] =
+            {}; // +0x34 remoteNotifyPending + AC-viewer current pair
     };
 
     int m_lastMusic = 0;          // +0x00
@@ -313,7 +328,8 @@ private:
     __strong id _startDate = nil; // +0x20 session start timestamp (NSDate); setStartDate @ 0x29274
     __strong id _endDate = nil;   // +0x24 session end timestamp (NSDate); setEndDate @ 0x292c0
     PlayResultExt m_resultExt;    // +0x28..0x40 (was float m_state2[6])
-    int m_flags[2] = {};          // +0x40..0x48
+    int m_flags[2] = {};          // +0x40..0x48 AC-viewer pending pair
+                                  // (acViewerSelMusicId @ +0x40 / acViewerSelDifficulty @ +0x44)
 };
 
 // Scene manager owning the root view controller (guarded singleton @
