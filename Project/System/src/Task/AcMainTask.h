@@ -142,7 +142,8 @@ private:
 
     // Scene build / map load (their own reconstruction pieces).
     void setupScene();      // Ghidra: FUN_0009fc90 (build the select/map scene)
-    void loadTreasureMap(); // Ghidra: FUN_000a0b58 (load the sugoroku map data)
+    void loadTreasureMap(); // Ghidra: FUN_000a0b58 (Ghidra name charaSelectReloadData is a
+                            // misnomer; it loads map_%03d.map — see the .mm plate)
 
     // setupScene() reconstruction helpers (big resolve/build/load loops of
     // FUN_0009fc90).

@@ -793,6 +793,13 @@ void AcMainTask::setupLoadTextures() {
 // loadTreasureMap — Ghidra FUN_000a0b58. Load the pending sugoroku map,
 // snapshot the record + progress, rebuild the board scroll, and push the board
 // BGM.
+//
+// Ghidra labels this charaSelectReloadData, but that is the misnomer: the
+// disassembly @0xa0b58 loads "map_%03d.map" into a new TreasureMap (nodes @+0x54,
+// edges @+0x58, findArea @0xce934), sets the player position, board-square state
+// and scroll bounds, then calls loadTreasureProgress + buildMapPanelLayers and
+// pushes the board bg / BGM. The chara-progress reload Ghidra named it after is
+// just the preamble; loadTreasureMap is the accurate name (verified 2026-07-17).
 // ===========================================================================
 
 // Ghidra: FUN_000ce1a8 — the "read count" (number of board-story pages) for a
