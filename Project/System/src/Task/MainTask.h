@@ -19,10 +19,10 @@
 #include <memory>
 
 #include "C_TASK.h"
+#include "neTextureForiOS.h" // complete type: MusicSelCell holds a unique_ptr<neTextureForiOS>
 
 class AepManager;
 class AepLyrCtrl;
-class neTextureForiOS;
 
 /// @brief Standard-mode music-select task: song list, score display, and option nav.
 class MainTask : public ne::C_TASK {
