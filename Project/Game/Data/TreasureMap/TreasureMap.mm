@@ -120,7 +120,7 @@ void TreasureMap::load(const char *path) {
     std::memset(nodes, 0, tableBytes);
 
     const uint8_t *fileBase = static_cast<const uint8_t *>(raw) + 0x50;
-    int bonusCount = 0; // Ghidra local_134: number of type == 10 bonus candidates
+    int bonusCount = 0; // Ghidra local_134: number of kSquareBonusTreasure candidates
 
     // --- Pass 1: fill each square from its 0xaa-byte file record.
     for (int i = 0; i < m_count; i++) {
@@ -146,21 +146,22 @@ void TreasureMap::load(const char *path) {
         // type gate (Ghidra: node+0x6). A -1 square is corrupt and the original
         // aborts.
         const int16_t type = m_nodes[i].type;
-        if (type == -1) {
+        if (type == TreasureMap::kSquareInvalid) {
             // Original aborts on a corrupt (-1) square. Ghidra: ___assert_rtn @
             // SugorokuMap.mm:0x215.
             assert(0);
-        } else if (type == 10) {
+        } else if (type == TreasureMap::kSquareBonusTreasure) {
             bonusCount++;
-        } else if (type == 0) {
+        } else if (type == TreasureMap::kSquareStart) {
             m_startSubId = &m_nodes[i].id; // *(+0x54): the start square
         }
     }
 
-    // --- Bonus-treasure selection. Exactly one of the bonusCount type==10
-    // squares stays the active treasure; the persisted 1-based index bonusSquareIndex
-    // picks it (generated once and saved so it is stable across launches). Every
-    // other candidate is deactivated (type -> 2, text cleared).
+    // --- Bonus-treasure selection. Exactly one of the bonusCount
+    // kSquareBonusTreasure squares stays the active treasure; the persisted
+    // 1-based index bonusSquareIndex picks it (generated once and saved so it is
+    // stable across launches). Every other candidate is deactivated
+    // (type -> kSquareDeactivatedBonus, text cleared).
     if (bonusCount > 0) {
         if ((int8_t)tmp.bonusSquareIndex < 1) {
             std::srand((unsigned)std::time(nullptr));
@@ -171,10 +172,10 @@ void TreasureMap::load(const char *path) {
         int seen = 0;
         for (int i = 0; i < m_count; i++) {
             Node &node = m_nodes[i];
-            if (node.type == 10) {
+            if (node.type == TreasureMap::kSquareBonusTreasure) {
                 seen++;               // 1-based ordinal of this candidate
                 if (target != seen) { // not the chosen one -> deactivate
-                    node.type = 2;
+                    node.type = TreasureMap::kSquareDeactivatedBonus;
                     std::memset(node.text, 0, 0x101); // Ghidra clears 0x101 bytes
                 }
             }
@@ -485,14 +486,15 @@ const char *getCharacterAssetName(int characterId, int slotIndex) {
 // partner warp square: different id, same type 8, same field8 (warp-pair id).
 // @complete
 TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node) {
-    if (node->type != 8) {
+    if (node->type != TreasureMap::kSquareWarp) {
         assert(0);
     }
     const int n = map->m_count;
     if (n > 0) {
         TreasureMap::Node *cur = map->m_nodes;
         for (int i = 0; i < n; i++, cur++) {
-            if (cur->id != node->id && cur->type == 8 && cur->field8 == node->field8) {
+            if (cur->id != node->id && cur->type == TreasureMap::kSquareWarp &&
+                cur->field8 == node->field8) {
                 return cur;
             }
         }
@@ -504,8 +506,7 @@ TreasureMap::Node *GetWarpSquare(TreasureMap *map, TreasureMap::Node *node) {
 // Picks a random non-warp, non-reserved, non-current destination node.
 // The random node is chosen by index; if unsuitable, the links[0] chain from
 // that node is walked until a valid node is found. Falls back to the start
-// node. Node types skipped: 8 (warp), 1 (reserved/unused in TreasureMap.h type
-// list).
+// node. Node types skipped: kSquareWarp (8) and kSquarePlayerStart (1).
 // @complete
 TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *currentNode) {
     const int16_t count = map->m_count;
@@ -514,14 +515,15 @@ TreasureMap::Node *getButtobiSquare(TreasureMap *map, const TreasureMap::Node *c
     }
     const int randIdx = std::rand() % (int)count;
     TreasureMap::Node *node = map->m_nodes + randIdx;
-    if (node->type != 1 && node->type != 8 && node != currentNode) {
+    if (node->type != TreasureMap::kSquarePlayerStart && node->type != TreasureMap::kSquareWarp &&
+        node != currentNode) {
         return node;
     }
     // Walk the links[0] chain from the same random starting node.
     TreasureMap::Node *follow = map->m_nodes + randIdx;
     while ((follow = follow->links[0]) != nullptr) {
-        if (follow->type != 8) {
-            if (follow->type == 1) {
+        if (follow->type != TreasureMap::kSquareWarp) {
+            if (follow->type == TreasureMap::kSquarePlayerStart) {
                 break;
             }
             if (follow != currentNode) {

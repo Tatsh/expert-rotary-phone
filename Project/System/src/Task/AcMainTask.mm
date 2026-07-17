@@ -1801,7 +1801,8 @@ static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
 // The text-x / slot index at +0x88c is a FLOAT (writer @ 0x9a528 does
 // vcvt.f32.s32 + vstr.32; this reader does vldr.32 then vcvt.s32.f32 to truncate
 // @ 0xa1be2), so m_squareFrameIdx is a float truncated to int here. All nine
-// node-type branches, the tbb table (types 6/7 map to the wall/music tables @
+// node-type branches, the tbb table (wallpaper/music-piece squares map to the
+// wall/music tables @
 // +0x748/+0x6dc), the story-ready gate (readCount @ +0x8c0 / readNo @ +0x8bc),
 // and the text draw (m_squareTextY - 31.0f, constants 0x1b / 0x2e / 0x615245 /
 // 0x18 / 100) were verified faithful. The getTreasureMapValue_fb54(0, ...) call
@@ -1826,19 +1827,19 @@ void AcMainTask::sugorokuDrawSquareText() {
     const bool storyReady = (m_readCount > 0) && (m_readCount > m_readNo);
 
     switch (node->type) {
-    case 2: // board-story square
+    case TreasureMap::kSquareDeactivatedBonus: // board-story message (deactivated bonus)
         pick = (m_readCount >= 1) ? (storyReady ? kCharAsset : kNone) : kNodeText;
         break;
-    case 3: // bonus: message live when roulette == 0x12 or HUD state 2
+    case TreasureMap::kSquareBonus: // message live when roulette == 0x12 or HUD state 2
         pick = (m_rouletteMode == 0x12 || m_hudState == 2) ? (storyReady ? kCharAsset : kNone) :
                                                              kNodeText;
         break;
-    case 4: // treasure: message live when roulette == 0x12 or HUD state 3
+    case TreasureMap::kSquareTreasure: // message live when roulette == 0x12 or HUD state 3
         pick = (m_rouletteMode == 0x12 || m_hudState == 3) ? (storyReady ? kCharAsset : kNone) :
                                                              kNodeText;
         break;
-    case 5: { // sub-map flag: message when the flag value matches the current
-              // state
+    case TreasureMap::kSquareSubMapFlag: { // message when the flag value matches the current
+                                           // state
         int v = getTreasureMapValue_fb54(0, node->field8);
         int st = m_hudState;
         bool matched = (st == 6 && v == 0) || (st == 7 && v == 1) || (st == 8 && v == 2) ||
@@ -1846,27 +1847,27 @@ void AcMainTask::sugorokuDrawSquareText() {
         pick = matched ? (storyReady ? kCharAsset : kNone) : kNodeText;
         break;
     }
-    case 6: // wallpaper-piece square (grid @ 0x748): label shown only while
+    case TreasureMap::kSquareWallpaperPiece: // grid @ 0x748: label shown only while
         // locked
         pick =
             sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->field8) ? kNone : kNodeText;
         break;
-    case 7: // music-piece square (grid @ 0x6dc): label shown only while locked
+    case TreasureMap::kSquareMusicPiece: // grid @ 0x6dc: label shown only while locked
         pick =
             sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8) ? kNone : kNodeText;
         break;
-    case 9: // goal-lock: character-message live once the goal is cleared (HUD
-        // state 4)
+    case TreasureMap::kSquareGoalLock: // character-message live once the goal is cleared
+        // (HUD state 4)
         pick = (m_hudState == 4) ? (storyReady ? kCharAsset : kNone) : kNodeText;
         break;
-    case 10: { // friend-meet: node label while the meet is pending and not yet
-               // consumed
+    case TreasureMap::kSquareBonusTreasure: { // friend-meet: node label while the meet is
+                                              // pending and not yet consumed
         TreasureTmpData tmp = [UserSettingData treasureTmp];
         bool consumed = tmp.friendMeetFlag != 0;
         pick = (m_goalCharaTex && !consumed) ? kNodeText : kNone;
         break;
     }
-    default: // types 0/1/8/...: the node's own label if present
+    default: // start / player-start / warp / ...: the node's own label if present
         pick = kNodeText;
         break;
     }
@@ -2335,7 +2336,8 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
     // "Active move" override: while a move is in progress (flag byte @ task+0x8a2
     // > 0), every walkable square (not player-start, not warp) shows the
     // move-hint frame.
-    if (m_boardSquareState[14] > 0 && type != 1 && type != 8) {
+    if (m_boardSquareState[14] > 0 && type != TreasureMap::kSquarePlayerStart &&
+        type != TreasureMap::kSquareWarp) {
         drawAepFrame(mgr,
                      m_base1Frame[2],
                      node->x * 26 - scrollOffX + screenW / 2,
@@ -2345,28 +2347,29 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
         return;
     }
 
-    int frameHandle = m_base1Frame[2]; // default (type 2 and any unmet condition -> 0x340)
+    int frameHandle =
+        m_base1Frame[2]; // default (kSquareDeactivatedBonus and any unmet condition -> 0x340)
     switch (type) {
-    case 0:
+    case TreasureMap::kSquareStart:
         frameHandle = m_base1Frame[0];
-        break; // start
-    case 1:
+        break;
+    case TreasureMap::kSquarePlayerStart:
         frameHandle = m_base1Frame[1];
-        break; // player-start
-    case 3:    // bonus: locked frame unless the bonus is live (roulette 0x12 or HUD
-               // state 2)
+        break;
+    case TreasureMap::kSquareBonus: // locked frame unless the bonus is live (roulette 0x12 or
+                                    // HUD state 2)
         if (m_rouletteMode != 0x12 && m_hudState != 2) {
             frameHandle = m_base1Frame[3];
         }
         break;
-    case 4: // treasure: locked frame unless the treasure is live (roulette 0x12
-        // or state 3)
+    case TreasureMap::kSquareTreasure: // locked frame unless the treasure is live (roulette
+        // 0x12 or state 3)
         if (m_rouletteMode != 0x12 && m_hudState != 3) {
             frameHandle = m_base1Frame[4];
         }
         break;
-    case 5: { // sub-map flag: flag sprite unless the flag value matches the
-              // current state
+    case TreasureMap::kSquareSubMapFlag: { // flag sprite unless the flag value matches the
+                                           // current state
         int v = getTreasureMapValue_fb54(0, node->field8);
         int st = m_hudState;
         bool matched = (st == 6 && v == 0) || (st == 7 && v == 1) || (st == 8 && v == 2) ||
@@ -2379,20 +2382,20 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
         }
         break;
     }
-    case 6: // wallpaper-piece square (grid @ 0x748): filled vs empty frame by
+    case TreasureMap::kSquareWallpaperPiece: // grid @ 0x748: filled vs empty frame by
         // unlock bit
         frameHandle = sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->field8) ?
                           m_base1Frame[6] :
                           m_base1Frame[5];
         break;
-    case 7: // music-piece square (grid @ 0x6dc): filled vs empty frame by unlock
+    case TreasureMap::kSquareMusicPiece: // grid @ 0x6dc: filled vs empty frame by unlock
         // bit
         frameHandle = sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8) ?
                           m_base1Frame[8] :
                           m_base1Frame[7];
         break;
-    case 8: // warp: warp-index sprite, but only until the warp animation settles
-        // (<2)
+    case TreasureMap::kSquareWarp: // warp-index sprite, but only until the warp animation
+        // settles (<2)
         if (m_boardSquareState[10] < 2) {
             int warpIdx = node->field8;
             if (warpIdx < 0) {
@@ -2404,12 +2407,12 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
             frameHandle = m_base08Frame[warpIdx];
         }
         break;
-    case 9: // goal-lock: locked frame unless already cleared (HUD state 4)
+    case TreasureMap::kSquareGoalLock: // locked frame unless already cleared (HUD state 4)
         if (m_hudState != 4) {
             frameHandle = m_base1Frame[9];
         }
         break;
-    case 10: // friend-meet: draw the overlay, then the base frame
+    case TreasureMap::kSquareBonusTreasure: // friend-meet: draw the overlay, then the base frame
         sugorokuDrawFriendMeet();
         frameHandle = m_base1Frame[10];
         break;

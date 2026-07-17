@@ -32,6 +32,27 @@ public:
     // Large binary parser kept as a declared seam. Ghidra: FUN_000ce340.
     void load(const char *path);
 
+    // Board-square kind, stored in Node::type (+0x06) and read straight from the
+    // ".map" file. Ghidra-verified across the map loader (FUN_000ce340) and both
+    // draw passes (drawSquareText FUN_000a1bb4, drawSquare FUN_000a4eb4). The
+    // loader rewrites every non-chosen bonus-treasure candidate
+    // (kSquareBonusTreasure) to kSquareDeactivatedBonus and clears its text, so a
+    // deactivated bonus then renders as an ordinary board-story message square.
+    enum SquareKind : int16_t {
+        kSquareInvalid = -1,         // corrupt square; load() asserts
+        kSquareStart = 0,            // board start square (recorded in *(+0x54))
+        kSquarePlayerStart = 1,      // player spawn square
+        kSquareDeactivatedBonus = 2, // board-story message / deactivated bonus square
+        kSquareBonus = 3,            // bonus square (live when roulette 0x12 or HUD state 2)
+        kSquareTreasure = 4,         // treasure square (live when roulette 0x12 or HUD state 3)
+        kSquareSubMapFlag = 5,       // sub-map flag square (label keyed to the HUD state)
+        kSquareWallpaperPiece = 6,   // wallpaper-piece square (unlock grid @ +0x748)
+        kSquareMusicPiece = 7,       // music-piece square (unlock grid @ +0x6dc)
+        kSquareWarp = 8,             // warp square (paired with another by field8)
+        kSquareGoalLock = 9,         // goal-lock square (message once the goal clears, HUD state 4)
+        kSquareBonusTreasure = 10,   // active bonus-treasure / friend-meet goal square
+    };
+
     // One board square. id is the sub-map id; x / y are the board column / row in
     // tile units (the scene multiplies by the 0x1a == 26 px tile size). The
     // in-memory record is 0x120 bytes (stride verified in FUN_000ce934); the file
@@ -49,8 +70,7 @@ public:
         int16_t id;       // +0x00 sub-map id
         int16_t x;        // +0x02 board column (tile units)
         int16_t y;        // +0x04 board row (tile units)
-        int16_t type;     // +0x06 square kind: -1 invalid (asserts), 0 start,
-                          //        2 deactivated bonus, 10 active bonus treasure
+        int16_t type;     // +0x06 square kind (SquareKind)
         int16_t field8;   // +0x08 copied verbatim from the file record
         int16_t _pad0a;   // +0x0a (zeroed; file neighbour ids are not stored here)
         Node *backLink;   // +0x0c neighbour resolved from file record +0x0a
