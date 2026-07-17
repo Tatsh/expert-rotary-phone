@@ -17,10 +17,10 @@
 //  tracked in STUBS.md.
 //
 //  ---- work area (this class IS the ~0xa00-byte play-data struct) ----
-//  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
-//  binary offsets. Every scalar/array the ctor / setup / map-load /
-//  sugoroku-draw passes reach by flat `*(T*)(this+off)` in the binary is named
-//  at its exact offset (`// +0xNN`); genuine gaps are `_rsvd_NN[]` fillers. A
+//  This is a runtime-only struct (never serialised to/from a file), so its exact
+//  byte layout is NOT preserved: the `// +0xNN` comments cross-reference each
+//  field's binary offset, but unused gaps are dropped (noted inline) rather than
+//  padded, and members are reached by name, not raw offset. A
 //  few device-branched select/dialog layout regions (m_selSceneLayout,
 //  m_dlgLayoutA/B, m_dlgLayout954) are pure coordinate constants the setup pass
 //  writes and only the not-yet-reconstructed select/option draw states read;
@@ -127,8 +127,8 @@ private:
                                    uint32_t p17,
                                    void *context);
 
-    // ================= work-area layout (offsets are binary-exact)
-    // =================
+    // ================= work-area layout (// +0xNN = binary offset, for
+    // cross-reference; the C++ layout is not byte-exact) =================
     AepManager *m_aep = {}; // +0x28 cached AepManager (every resolve/draw reads it)
     AepLyrCtrl *m_rouletteLayers[29] =
         {}; // +0x2c 29 roulette/effect overlay layers (built by setupScene)
@@ -153,34 +153,34 @@ private:
     neTextureForiOS *m_eventTex[12] = {};        // +0x1ec 12 event_0_%03d icons
     int m_skillBoardLyr[5] = {};                 // +0x21c SKILL_COM_BOARD/... layer numbers
     int m_skillBoardFrames[5] = {};              // +0x230 their frame counts
-    uint8_t _rsvd_244[0x24c - 0x244] = {};       // +0x244
-    int m_musicResultFrame = {};                 // +0x24c music collection-result overlay frame
-    int m_wallResultFrame = {};                  // +0x250 wall collection-result overlay frame
-    uint8_t _rsvd_254[0x258 - 0x254] = {};       // +0x254
-    int m_iconMentalLyr[4] = {};                 // +0x258 ICON_MENTAL00..03 layer numbers
-    int m_iconMentalFrames[4] = {};              // +0x268 their frame counts (rank badge)
-    int m_animFrameCtr = {};                     // +0x278 shared per-frame animation counter
-    int m_musicPeaceLyr[9] = {};                 // +0x27c MUSIC_PEACE00..08 layers
-    int m_wallPeaceLyr[9] = {};                  // +0x2a0 WALL_PEACE00..08 layers
-    int m_musicPeaceFrames = {};                 // +0x2c4 MUSIC_PEACE frame count
-    int m_wallPeaceFrames = {};                  // +0x2c8 WALL_PEACE frame count
-    int m_pieceRevealFrame = {};                 // +0x2cc frame for a newly-collected piece reveal
-    int m_boardFrame[26] = {};                   // +0x2d0 26 board/roulette-result frame numbers
-    int m_base1Frame[11] = {};                   // +0x338 11 BASE_* square frame numbers
-    int m_rouletteMoveFrame = {};                // +0x364 BT_ROULETTE_MOVE frame (pad only)
-    int m_base08Frame[10] = {};                  // +0x368 10 BASE_08_* warp frames
-    int m_base05Frame[4] = {};                   // +0x390 4 BASE_05_* sub-map-flag frames
-    int m_triangle0Frame[6] = {};                // +0x3a0 TRIANGLE00_* forward-arrow frames
-    int m_triangle1Frame[6] = {};                // +0x3b8 TRIANGLE01_* back-arrow frames
-    int m_boardUserNo[26] = {};                  // +0x3d0 26 getUserNo handles
-    int m_rouletteSe[15] = {};                   // +0x438 15 roulette SE source ids
-    uint8_t m_selScratch[0x498 - 0x474] = {};    // +0x474 selection-index scratch (memset 0xff)
-    int m_rouletteSeInst = {};                 // +0x498 roulette-hit SE playing instance (-1 idle)
-    uint8_t m_selScratch2[0x4b0 - 0x49c] = {}; // +0x49c remainder of the selection scratch
-    TreasureMap *m_map = {};                   // +0x4b0 loaded TreasureMap
-    const TreasureMap::Node *m_nodes = {};     // +0x4b4 map node array
-    int m_edgesPtr = {}; // +0x4b8 edge (ConnectStruct) array pointer, held in an
-                         // int slot (type-pun)
+    // +0x244: 8 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_musicResultFrame = {}; // +0x24c music collection-result overlay frame
+    int m_wallResultFrame = {};  // +0x250 wall collection-result overlay frame
+    // +0x254: 4 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_iconMentalLyr[4] = {};           // +0x258 ICON_MENTAL00..03 layer numbers
+    int m_iconMentalFrames[4] = {};        // +0x268 their frame counts (rank badge)
+    int m_animFrameCtr = {};               // +0x278 shared per-frame animation counter
+    int m_musicPeaceLyr[9] = {};           // +0x27c MUSIC_PEACE00..08 layers
+    int m_wallPeaceLyr[9] = {};            // +0x2a0 WALL_PEACE00..08 layers
+    int m_musicPeaceFrames = {};           // +0x2c4 MUSIC_PEACE frame count
+    int m_wallPeaceFrames = {};            // +0x2c8 WALL_PEACE frame count
+    int m_pieceRevealFrame = {};           // +0x2cc frame for a newly-collected piece reveal
+    int m_boardFrame[26] = {};             // +0x2d0 26 board/roulette-result frame numbers
+    int m_base1Frame[11] = {};             // +0x338 11 BASE_* square frame numbers
+    int m_rouletteMoveFrame = {};          // +0x364 BT_ROULETTE_MOVE frame (pad only)
+    int m_base08Frame[10] = {};            // +0x368 10 BASE_08_* warp frames
+    int m_base05Frame[4] = {};             // +0x390 4 BASE_05_* sub-map-flag frames
+    int m_triangle0Frame[6] = {};          // +0x3a0 TRIANGLE00_* forward-arrow frames
+    int m_triangle1Frame[6] = {};          // +0x3b8 TRIANGLE01_* back-arrow frames
+    int m_boardUserNo[26] = {};            // +0x3d0 26 getUserNo handles
+    int m_rouletteSe[15] = {};             // +0x438 15 roulette SE source ids
+    uint8_t m_selScratch[36] = {};         // +0x474 selection-index scratch (memset 0xff)
+    int m_rouletteSeInst = {};             // +0x498 roulette-hit SE playing instance (-1 idle)
+    uint8_t m_selScratch2[20] = {};        // +0x49c remainder of the selection scratch
+    TreasureMap *m_map = {};               // +0x4b0 loaded TreasureMap
+    const TreasureMap::Node *m_nodes = {}; // +0x4b4 map node array
+    int m_edgesPtr = {};                   // +0x4b8 edge (ConnectStruct) array pointer, held in an
+                                           // int slot (type-pun)
     const TreasureMap::Node *m_curNode = {}; // +0x4bc current board node
     // +0x4c0 the pending/target board node: update swaps it with m_curNode
     // (@ 0x9d... copies +0x4c0 <-> +0x4bc) as the player moves. A Node* in the
@@ -199,7 +199,7 @@ private:
     float m_clampCentreX2 = {};                 // +0x4e8 scroll clamp max centre x
     float m_clampMaxY = {};                     // +0x4ec scroll clamp max y
     int16_t m_treasureRaw06 = {};               // +0x4f0 pending record raw0x06
-    uint8_t _rsvd_4f2[0x4f4 - 0x4f2] = {};      // +0x4f2
+    // +0x4f2: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
     Random m_rng;               // +0x4f4 embedded arcade RNG (auto-constructed/destructed)
     int m_dragAnchorId = -1;    // +0x508 touch drag anchor id (-1 == none)
     float m_dragAnchorX = {};   // +0x50c drag anchor x (float; disasm 0x99e3e)
@@ -236,11 +236,11 @@ private:
     float m_playerX = {};       // +0x5cc player board draw x
     float m_playerY = {};       // +0x5d0 player board draw y
     int m_boardMoveState = {};  // +0x5d4 board move / warp state
-    uint8_t m_boardBgmLoaded = {};         // +0x5d8 board BGM loaded flag
-    uint8_t _rsvd_5d9[0x5e0 - 0x5d9] = {}; // +0x5d9
-    int m_charaColRight = {};              // +0x5e0 chara-grid right column base index
-    int m_charaColLeft = {};               // +0x5e4 chara-grid left column base index
-    int m_friendAnimFrame = {};            // +0x5e8 friend-meet animation frame
+    uint8_t m_boardBgmLoaded = {}; // +0x5d8 board BGM loaded flag
+    // +0x5d9: 7 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_charaColRight = {};        // +0x5e0 chara-grid right column base index
+    int m_charaColLeft = {};         // +0x5e4 chara-grid left column base index
+    int m_friendAnimFrame = {};      // +0x5e8 friend-meet animation frame
     uint8_t m_skillPanelActive = {}; // +0x5ec skill-use panel modal (drives sugorokuDrawSkillPanel)
     uint8_t m_buttonPanelActive = {}; // +0x5ed board-button panel modal (sugorokuDrawButtonHitTest)
     uint8_t m_bgmActive = {};         // +0x5ee select-BGM active flag
@@ -251,25 +251,25 @@ private:
     // +0x5f3 board-square select animation running; while set, sugorokuDrawSquareText
     // hides the square label and case 0x23 clears it when the +0x6c layer finishes.
     // Accessed as a byte in the binary (strb/ldrb), not an int.
-    uint8_t m_squareAnimActive = {};       // +0x5f3
-    uint8_t _rsvd_5f4[0x5f7 - 0x5f4] = {}; // +0x5f4
-    uint8_t m_padDisplay = {};             // +0x5f7 iPad display flag
+    uint8_t m_squareAnimActive = {}; // +0x5f3
+    // +0x5f4: 3 bytes unused padding (dropped; runtime struct, layout not preserved)
+    uint8_t m_padDisplay = {}; // +0x5f7 iPad display flag
     uint8_t m_revealTexLoaded =
         {}; // +0x5f8 reveal texture loaded (gates the +0x60-layer reveal, case 0x2c/0x2d)
     uint8_t m_eventIntroStarted =
         {};                 // +0x5f9 one-shot: kicked the +0x98 event-intro layer (play once)
     uint8_t m_fadeDir = {}; // +0x5fa transition fade direction
-    uint8_t _rsvd_5fb[0x5fc - 0x5fb] = {}; // +0x5fb
-    int16_t m_charaId = {};                // +0x5fc active character id
-    int16_t m_skillCharaId = {};           // +0x5fe skill-panel active character id
+    // +0x5fb: 1 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int16_t m_charaId = {};      // +0x5fc active character id
+    int16_t m_skillCharaId = {}; // +0x5fe skill-panel active character id
     int16_t m_skillCharaSlot =
         {}; // +0x600 selected chara grid slot (0..5; 0xffff none) for m_skillCharaId
-    uint8_t _rsvd_602[0x604 - 0x602] = {}; // +0x602
-    int m_skillPanelX = {};                // +0x604 skill-panel origin x cache
-    int m_skillPanelY = {};                // +0x608 skill-panel origin y cache
-    int m_charaPanelX = {};                // +0x60c chara-panel origin x cache
-    int m_charaPanelY = {};                // +0x610 chara-panel origin y cache
-    int m_layoutAnchorZ = {};              // +0x614 roulette layer anchor z (tall-phone seed)
+    // +0x602: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_skillPanelX = {};   // +0x604 skill-panel origin x cache
+    int m_skillPanelY = {};   // +0x608 skill-panel origin y cache
+    int m_charaPanelX = {};   // +0x60c chara-panel origin x cache
+    int m_charaPanelY = {};   // +0x610 chara-panel origin y cache
+    int m_layoutAnchorZ = {}; // +0x614 roulette layer anchor z (tall-phone seed)
     int m_layoutOffsetY =
         {}; // +0x618 board-draw Y offset (added to +0x95c/0x96c/0x97c; 0x9e on tall phones)
     int m_friendOpacity = {};   // +0x61c friend-meet fade opacity
@@ -287,20 +287,20 @@ private:
     void *m_availableInfos = {};             // +0x634 available chara infos (unretained)
     int m_charaRowCount = {};                // +0x638 chara list row count
     int16_t m_listBottom = {};               // +0x63c list content bottom
-    uint8_t _rsvd_63e[0x640 - 0x63e] = {};   // +0x63e
-    void *m_treasureMusicArray = {};         // +0x640 treasure music data array (retained)
-    int m_selMusicPanel = {};                // +0x644 selected music panel index (result popup)
-    int m_musicAnchor[18] = {};              // +0x648 9 music-panel (x,y) anchor positions
-    int m_rouletteMapId = {};                // +0x690 current roulette map id
-    int m_wallAnchor[18] = {};               // +0x694 9 wall-panel (x,y) anchor positions
-    int m_musicPieceTable[27] = {};          // +0x6dc 9x3 music-piece unlock grid
-    int m_wallPieceTable[27] = {};           // +0x748 9x3 wallpaper-piece unlock grid
-    int m_musicPieceTableDup[27] = {};       // +0x7b4 music grid duplicate
-    int m_wallPieceTableDup[27] = {};        // +0x820 wallpaper grid duplicate
-    float m_squareFrameIdx = {};             // +0x88c square text-x / slot index (stored as float)
-    float m_squareTextY = {};                // +0x890 current square text y
-    uint8_t m_boardVisited[15] = {}; // +0x894 15-byte board-visited bitmap (from pending record)
-    uint8_t _rsvd_8a3[0x8a4 - 0x8a3] = {};   // +0x8a3
+    // +0x63e: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
+    void *m_treasureMusicArray = {};   // +0x640 treasure music data array (retained)
+    int m_selMusicPanel = {};          // +0x644 selected music panel index (result popup)
+    int m_musicAnchor[18] = {};        // +0x648 9 music-panel (x,y) anchor positions
+    int m_rouletteMapId = {};          // +0x690 current roulette map id
+    int m_wallAnchor[18] = {};         // +0x694 9 wall-panel (x,y) anchor positions
+    int m_musicPieceTable[27] = {};    // +0x6dc 9x3 music-piece unlock grid
+    int m_wallPieceTable[27] = {};     // +0x748 9x3 wallpaper-piece unlock grid
+    int m_musicPieceTableDup[27] = {}; // +0x7b4 music grid duplicate
+    int m_wallPieceTableDup[27] = {};  // +0x820 wallpaper grid duplicate
+    float m_squareFrameIdx = {};       // +0x88c square text-x / slot index (stored as float)
+    float m_squareTextY = {};          // +0x890 current square text y
+    uint8_t m_boardVisited[15] = {};   // +0x894 15-byte board-visited bitmap (from pending record)
+    // +0x8a3: 1 bytes unused padding (dropped; runtime struct, layout not preserved)
     void *m_skillInfo = {};                  // +0x8a4 active CharaInfo (unretained)
     const SkillDataStruct *m_skillData = {}; // +0x8a8 active SkillDataStruct
     int16_t m_rouletteMode = {};             // +0x8ac roulette mode / result value
@@ -315,31 +315,33 @@ private:
         {}; // +0x8b8 >0 halves the list bottom; +on roulette 0x14-0x17; saved raw0x52
     int8_t m_treasureProgress =
         {}; // +0x8b9 *5+25 (cap 100) for treasure-event 10; +in state 0x1d; saved raw0x51
-    uint8_t _rsvd_8ba[0x8bc - 0x8ba] = {}; // +0x8ba
-    int m_readNo = {};                     // +0x8bc board-story read progress
-    int m_readCount = {};                  // +0x8c0 board-story page count
-    uint8_t _rsvd_8c4[0x944 - 0x8c4] = {}; // +0x8c4
-    void *m_mapName = {};                  // +0x944 map display name (retained)
-    void *m_nextTask = {};                 // +0x948 follow-on task activated on dispose
-    int m_badgePulse = {};                 // +0x94c collection-complete badge pulse phase
-    int m_transitionAlpha = {};            // +0x950 background transition overlay alpha
-    int m_dlgLayout954 = {};               // +0x954 dialog layout constant (write-only)
+    // +0x8ba: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_readNo = {};    // +0x8bc board-story read progress
+    int m_readCount = {}; // +0x8c0 board-story page count
+    // +0x8c4 skill-panel info block: update copies the selected skill's name/text
+    // records here (the s__* string-table entries) when the skill panel opens.
+    uint8_t m_skillInfoBuffer[128] = {}; // +0x8c4
+    void *m_mapName = {};                // +0x944 map display name (retained)
+    void *m_nextTask = {};               // +0x948 follow-on task activated on dispose
+    int m_badgePulse = {};               // +0x94c collection-complete badge pulse phase
+    int m_transitionAlpha = {};          // +0x950 background transition overlay alpha
+    int m_dlgLayout954 = {};             // +0x954 dialog layout constant (write-only)
     int m_dlgLayoutA[12] = {}; // +0x958 device-branched dialog layout constants (write-only)
-    uint8_t _rsvd_988[0x990 - 0x988] = {}; // +0x988
-    int m_dlgPanelW = {};                  // +0x990 two-button dialog panel width
-    int m_dlgPanelH = {};                  // +0x994 panel height
-    int m_dlgBtn1X = {};                   // +0x998 button1 x
-    int m_dlgBtn1Y = {};                   // +0x99c button1 y
-    int m_dlgBtn1W = {};                   // +0x9a0 button1 w
-    int m_dlgBtn1H = {};                   // +0x9a4 button1 h
-    int m_dlgBtn2X = {};                   // +0x9a8 button2 x
-    int m_dlgBtn2Y = {};                   // +0x9ac button2 y
-    int m_dlgBtn2W = {};                   // +0x9b0 button2 w
-    int m_dlgBtn2H = {};                   // +0x9b4 button2 h
+    // +0x988: 8 bytes unused padding (dropped; runtime struct, layout not preserved)
+    int m_dlgPanelW = {};      // +0x990 two-button dialog panel width
+    int m_dlgPanelH = {};      // +0x994 panel height
+    int m_dlgBtn1X = {};       // +0x998 button1 x
+    int m_dlgBtn1Y = {};       // +0x99c button1 y
+    int m_dlgBtn1W = {};       // +0x9a0 button1 w
+    int m_dlgBtn1H = {};       // +0x9a4 button1 h
+    int m_dlgBtn2X = {};       // +0x9a8 button2 x
+    int m_dlgBtn2Y = {};       // +0x9ac button2 y
+    int m_dlgBtn2W = {};       // +0x9b0 button2 w
+    int m_dlgBtn2H = {};       // +0x9b4 button2 h
     int m_dlgLayoutB[16] = {}; // +0x9b8 device-branched dialog/friend layout constants (write-only)
     int m_state = {};          // +0x9f8 play-data state machine field (update switch
                                // dispatches on it)
-    uint8_t _reservedTail[0xa00 - 0x9fc] = {}; // +0x9fc object tail
+    // +0x9fc: 4 bytes unused padding (dropped; runtime struct, layout not preserved)
     // Per-frame touch classification produced by update()'s preamble
     // (reconstruction-only: in the binary these are shared stack locals of the
     // one megafunction, hoisted here as the function is de-inlined into per-state
