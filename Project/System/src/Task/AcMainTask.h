@@ -26,8 +26,8 @@
 //  writes and only the not-yet-reconstructed select/option draw states read;
 //  they are kept as documented write-only arrays (their interior roles are
 //  best-effort). The play state @ +0x9f8 is what update() dispatches on; the
-//  embedded arcade RNG @ +0x4f4 is placement-constructed by the ctor and
-//  destroyed by the dtor.
+//  embedded arcade RNG @ +0x4f4 is a real Random member (auto-constructed and
+//  destroyed).
 //
 
 #pragma once
@@ -263,23 +263,28 @@ private:
     int16_t m_charaTicket = {};            // +0x622 owned chara tickets
     int m_treasurePoint = {};              // +0x624 treasure point balance
     int m_bonusCount = {};                 // +0x628 bonus/main-map id (roulette overlay gate)
-    int m_hudState = -0x63;                // +0x62c HUD state (ctor -0x63)
-    void *m_gotCharaArray = {};            // +0x630 owned-chara working copy (retained)
-    void *m_availableInfos = {};           // +0x634 available chara infos (unretained)
-    int m_charaRowCount = {};              // +0x638 chara list row count
-    int16_t m_listBottom = {};             // +0x63c list content bottom
-    uint8_t _rsvd_63e[0x640 - 0x63e] = {}; // +0x63e
-    void *m_treasureMusicArray = {};       // +0x640 treasure music data array (retained)
-    int m_selMusicPanel = {};              // +0x644 selected music panel index (result popup)
-    int m_musicAnchor[18] = {};            // +0x648 9 music-panel (x,y) anchor positions
-    int m_rouletteMapId = {};              // +0x690 current roulette map id
-    int m_wallAnchor[18] = {};             // +0x694 9 wall-panel (x,y) anchor positions
-    int m_musicPieceTable[27] = {};        // +0x6dc 9x3 music-piece unlock grid
-    int m_wallPieceTable[27] = {};         // +0x748 9x3 wallpaper-piece unlock grid
-    int m_musicPieceTableDup[27] = {};     // +0x7b4 music grid duplicate
-    int m_wallPieceTableDup[27] = {};      // +0x820 wallpaper grid duplicate
-    float m_squareFrameIdx = {};           // +0x88c square text-x / slot index (stored as float)
-    float m_squareTextY = {};              // +0x890 current square text y
+    // +0x62c is seeded to this out-of-range negative sentinel so the first update
+    // frame forces the initial treasure-event scan (update @ 0x9d... checks
+    // == this value); it reads as "no event" (< 0) and is distinct from the -1
+    // "scanned, none found" value.
+    static constexpr int kHudStateUninitialized = -99;
+    int m_hudState = kHudStateUninitialized; // +0x62c HUD state / active treasure-event id
+    void *m_gotCharaArray = {};              // +0x630 owned-chara working copy (retained)
+    void *m_availableInfos = {};             // +0x634 available chara infos (unretained)
+    int m_charaRowCount = {};                // +0x638 chara list row count
+    int16_t m_listBottom = {};               // +0x63c list content bottom
+    uint8_t _rsvd_63e[0x640 - 0x63e] = {};   // +0x63e
+    void *m_treasureMusicArray = {};         // +0x640 treasure music data array (retained)
+    int m_selMusicPanel = {};                // +0x644 selected music panel index (result popup)
+    int m_musicAnchor[18] = {};              // +0x648 9 music-panel (x,y) anchor positions
+    int m_rouletteMapId = {};                // +0x690 current roulette map id
+    int m_wallAnchor[18] = {};               // +0x694 9 wall-panel (x,y) anchor positions
+    int m_musicPieceTable[27] = {};          // +0x6dc 9x3 music-piece unlock grid
+    int m_wallPieceTable[27] = {};           // +0x748 9x3 wallpaper-piece unlock grid
+    int m_musicPieceTableDup[27] = {};       // +0x7b4 music grid duplicate
+    int m_wallPieceTableDup[27] = {};        // +0x820 wallpaper grid duplicate
+    float m_squareFrameIdx = {};             // +0x88c square text-x / slot index (stored as float)
+    float m_squareTextY = {};                // +0x890 current square text y
     uint8_t m_boardVisited[15] = {}; // +0x894 15-byte board-visited bitmap (from pending record)
     uint8_t _rsvd_8a3[0x8a4 - 0x8a3] = {};   // +0x8a3
     void *m_skillInfo = {};                  // +0x8a4 active CharaInfo (unretained)
