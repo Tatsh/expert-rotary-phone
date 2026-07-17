@@ -75,6 +75,11 @@ public:
     int &frameCount() {
         return m_frameCount;
     } // +0x3c
+    // Current play head (+0x40 flCurFrame). The sugoroku warp-bounce reads it as a
+    // float (Ghidra sugorokuDrawPlayerAndUi @ 0xa53aa: vldr.32 s0, [layer,#0x40]).
+    float &curFrame() {
+        return m_curFrame;
+    } // +0x40
     float &playSpeed() {
         return m_playSpeed;
     } // +0x44

@@ -2559,10 +2559,14 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     // Warp / board-entry horizontal scale (squish animation).
     int warpSX = 30;
     if (m_warpAnim != 0) {
-        // Bounce using the active AepLyrCtrl's frame counter.
-        void *lyrPtr = m_rouletteLayers[17]; // AepLyrCtrl* slot
-        int frameTotal = *reinterpret_cast<int *>(reinterpret_cast<char *>(lyrPtr) + 0x3c) - 1;
-        float frame = *reinterpret_cast<float *>(reinterpret_cast<char *>(lyrPtr) + 0x40);
+        // Bounce using the active roulette layer's frame counter. Ghidra
+        // sugorokuDrawPlayerAndUi @ 0xa53a4: ldr r0,[this,#0x70] (m_rouletteLayers[17]),
+        // then ldr [r0,#0x3c] (frame count) and vldr.32 [r0,#0x40] (current frame).
+        AepLyrCtrl *lyr = m_rouletteLayers[17];
+        int frameTotal = lyr->frameCount() - 1; // +0x3c nFrameCount
+        // The binary truncates the float play head to an int before the multiply
+        // (Ghidra @ 0xa53b0: vcvt.s32.f32, then vcvt.f64.s32 into the *6pi term).
+        int frame = static_cast<int>(lyr->curFrame()); // +0x40 flCurFrame
         double angle = (frameTotal > 0) ?
                            (double)frame * (6.0 * M_PI) / (double)frameTotal // DAT_000a5710 == 6*pi
                            :
