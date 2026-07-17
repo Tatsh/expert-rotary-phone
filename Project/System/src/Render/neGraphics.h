@@ -115,9 +115,6 @@ private:
     int m_touchCount = 0;                 // +0x80 touches recorded this frame
     int m_nextTouchId = 0;                // +0x84 rolling id counter
     float m_contentScale = 1.0f;          // +0x88 device content scale
-
-    friend int NEGraphics_activeTouchCount(const neGraphics *g);
-    friend const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i);
 };
 
 // ---- free text / geometry helpers (siblings of neGraphics::pointInRect) ----
