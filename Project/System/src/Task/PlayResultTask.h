@@ -24,10 +24,12 @@
 //  update state machine / loadNumberTextures / resultGotoNext / the draw
 //  callback) reach by flat
 //  `*(T*)(this+off)` in the binary is named at its exact offset (with a `//
-//  +0xNN` comment); genuine gaps are `_rsvd_NN[]` fillers. Two interior scratch
-//  regions
-//  (+0x310..+0x32b and +0x330..+0x33b) are never reached by any reconstructed
-//  method and are kept as documented reserved fillers.
+//  +0xNN` comment). Gaps verified against Ghidra are named for what they are:
+//  `_pad_NN` for alignment padding before a wider field, `unused_NN` for dead
+//  allocation gaps no reconstructed method reaches. The two interior gaps
+//  (+0x310..+0x32b and +0x330..+0x33b) are the latter: a program-wide instruction
+//  search finds no resultTask access to those offsets (only stack frames, literal
+//  pools, and other classes' objects), so they are kept as `unused_NN`.
 //
 //  NOTE (target ABI): offsets assume the 32-bit ARMv7 target (pointers and
 //  `unsigned long` are 4 bytes), matching the reference reworks; this header is
@@ -153,45 +155,47 @@ private:
     // line-in, [7] se07_count tick, [8] se08_bonus_fai, [9] se09_bonus_cl.
     uint32_t m_rankSe[11] = {}; // +0x2e4 (..+0x30f)
 
-    uint8_t _rsvd_310[0x32c - 0x310] = {}; // +0x310 scratch (unreached by this class)
-    int m_countSeInst = 0;                 // +0x32c currently-playing count-SE instance id
-    uint8_t _rsvd_330[0x33c - 0x330] = {}; // +0x330 scratch (unreached by this class)
+    uint8_t unused_310[0x32c - 0x310] =
+        {};                // +0x310 unused gap (Ghidra: no resultTask field access)
+    int m_countSeInst = 0; // +0x32c currently-playing count-SE instance id
+    uint8_t unused_330[0x33c - 0x330] =
+        {}; // +0x330 unused gap (Ghidra: no resultTask field access)
 
-    int m_overlayWidth = 0;                // +0x33c transition fade-quad width
-    int m_overlayHeight = 0;               // +0x340 transition fade-quad height
-    int m_score = 0;                       // +0x344 final play score
-    int16_t m_coolCount = 0;               // +0x348 COOL tally
-    int16_t m_greatCount = 0;              // +0x34a GREAT tally
-    int16_t m_goodCount = 0;               // +0x34c GOOD tally
-    int16_t m_badCount = 0;                // +0x34e BAD tally
-    int16_t m_maxCombo = 0;                // +0x350 max combo
-    uint8_t m_isNewRecord = 0;             // +0x352 new-record flag
-    uint8_t m_perfectFullCombo = 0;        // +0x353 cleared + no GOOD/BAD
-    uint8_t m_cleared = 0;                 // +0x354 cleared flag
-    uint8_t m_padDisplay = 0;              // +0x355 pad-class display
-    uint8_t m_eventBonus = 0;              // +0x356 event-song bonus flag
-    uint8_t _rsvd_357 = 0;                 // +0x357
-    int16_t m_sheet = 0;                   // +0x358 played difficulty index
-    int16_t m_level = 0;                   // +0x35a chart level for the played sheet
-    int16_t m_rank = 0;                    // +0x35c play rank (0 best .. 6 fail)
-    uint8_t _rsvd_35e[0x360 - 0x35e] = {}; // +0x35e
-    int m_treasureStart = 0;               // +0x360 starting treasure point
-    int m_treasurePoint = 0;               // +0x364 running treasure point (S_POINT_NUM)
-    int m_baseBonus = 0;                   // +0x368 play-count base bonus (+event)
-    int m_clearBonus = 0;                  // +0x36c clear bonus (0 on wash-out)
-    int m_fullComboBonus = 0;              // +0x370 full-combo bonus (note-count scaled)
-    int m_rankBonus = 0;                   // +0x374 rank bonus (S..fail)
-    int m_perfectBonus = 0;                // +0x378 perfect-full-combo bonus
-    int m_pointsCountUp = 0;               // +0x37c animated count-up total (big strip)
-    int m_bonusSubtotal = 0;               // +0x380 perfect+clear+fc+rank subtotal
-    int m_boardScale = 0;                  // +0x384 result board scale (100 pad / 50 phone)
-    int m_tickCounter = 0;                 // +0x388 count-up tick counter (read as uint for %5)
-    int m_music = 0;                       // +0x38c played music id
-    C_TASK *m_nextTask = nullptr;          // +0x390 spawned music-select task
-    int m_state = 0;                       // +0x394 update() state machine field
-    void *m_shareButton = nullptr;         // +0x398 Twitter share UIButton (ARC-bridged raw)
-    void *m_tweeter = nullptr;             // +0x39c TwitterUtil (unmanaged +1)
-                                           // object end +0x3a0
+    int m_overlayWidth = 0;               // +0x33c transition fade-quad width
+    int m_overlayHeight = 0;              // +0x340 transition fade-quad height
+    int m_score = 0;                      // +0x344 final play score
+    int16_t m_coolCount = 0;              // +0x348 COOL tally
+    int16_t m_greatCount = 0;             // +0x34a GREAT tally
+    int16_t m_goodCount = 0;              // +0x34c GOOD tally
+    int16_t m_badCount = 0;               // +0x34e BAD tally
+    int16_t m_maxCombo = 0;               // +0x350 max combo
+    uint8_t m_isNewRecord = 0;            // +0x352 new-record flag
+    uint8_t m_perfectFullCombo = 0;       // +0x353 cleared + no GOOD/BAD
+    uint8_t m_cleared = 0;                // +0x354 cleared flag
+    uint8_t m_padDisplay = 0;             // +0x355 pad-class display
+    uint8_t m_eventBonus = 0;             // +0x356 event-song bonus flag
+    uint8_t _pad_357 = 0;                 // +0x357 alignment pad before m_sheet (no access)
+    int16_t m_sheet = 0;                  // +0x358 played difficulty index
+    int16_t m_level = 0;                  // +0x35a chart level for the played sheet
+    int16_t m_rank = 0;                   // +0x35c play rank (0 best .. 6 fail)
+    uint8_t _pad_35e[0x360 - 0x35e] = {}; // +0x35e alignment pad before m_treasureStart (no access)
+    int m_treasureStart = 0;              // +0x360 starting treasure point
+    int m_treasurePoint = 0;              // +0x364 running treasure point (S_POINT_NUM)
+    int m_baseBonus = 0;                  // +0x368 play-count base bonus (+event)
+    int m_clearBonus = 0;                 // +0x36c clear bonus (0 on wash-out)
+    int m_fullComboBonus = 0;             // +0x370 full-combo bonus (note-count scaled)
+    int m_rankBonus = 0;                  // +0x374 rank bonus (S..fail)
+    int m_perfectBonus = 0;               // +0x378 perfect-full-combo bonus
+    int m_pointsCountUp = 0;              // +0x37c animated count-up total (big strip)
+    int m_bonusSubtotal = 0;              // +0x380 perfect+clear+fc+rank subtotal
+    int m_boardScale = 0;                 // +0x384 result board scale (100 pad / 50 phone)
+    int m_tickCounter = 0;                // +0x388 count-up tick counter (read as uint for %5)
+    int m_music = 0;                      // +0x38c played music id
+    C_TASK *m_nextTask = nullptr;         // +0x390 spawned music-select task
+    int m_state = 0;                      // +0x394 update() state machine field
+    void *m_shareButton = nullptr;        // +0x398 Twitter share UIButton (ARC-bridged raw)
+    void *m_tweeter = nullptr;            // +0x39c TwitterUtil (unmanaged +1)
+                                          // object end +0x3a0
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
