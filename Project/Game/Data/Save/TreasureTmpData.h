@@ -37,7 +37,9 @@ typedef struct __attribute__((packed)) TreasureTmpData {
     int32_t friendship;     // +0x1c downloaded goal friendship value (Friendship)
     char friendPlayerId[8]; // +0x20 visiting friend's player id (NUL-terminated; PlayerId)
     char goalName[13];      // +0x28 goal / friend name (NUL-terminated; Name)
-    uint8_t visitedSquares[15]; // +0x35 per-square visited flags (copied to m_boardVisited)
+    int8_t boardSquareState[15]; // +0x35 per-square animation/event state (see
+                                 // AcMainTask::BoardSquareState); copied to/from
+                                 // m_boardSquareState
     int16_t
         rouletteMode; // +0x44 roulette mode / result; -1 in the default record (-> m_rouletteMode)
     uint8_t bonusSquareIndex;  // +0x46 1-based chosen bonus-treasure square (rand % bonusCount + 1)

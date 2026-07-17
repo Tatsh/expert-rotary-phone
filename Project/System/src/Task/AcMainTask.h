@@ -300,7 +300,26 @@ private:
     int m_wallPieceTableDup[27] = {};  // +0x820 wallpaper grid duplicate
     float m_squareFrameIdx = {};       // +0x88c square text-x / slot index (stored as float)
     float m_squareTextY = {};          // +0x890 current square text y
-    uint8_t m_boardVisited[15] = {};   // +0x894 15-byte board-visited bitmap (from pending record)
+    // Named values held per entry of m_boardSquareState (and the record's
+    // boardSquareState). Positive values 1..0x7e are a countdown of highlight
+    // animation frames remaining, decremented toward idle each tick; these two are
+    // the named non-countdown states.
+    enum BoardSquareState : int8_t {
+        kBoardSquareIdle = 0,          // no animation, no pending event
+        kBoardSquareEventPending = -1, // 0xff in the byte: permanent marker; the
+                                       // per-frame tick skips it (it is negative)
+                                       // until the square's event fires and clears
+                                       // it back to idle
+    };
+    // Per-square board-cell animation/event state, one signed byte per square,
+    // indexed by TreasureMap::Node::field8 (the square's slot id, 0..14). Copied
+    // to/from the pending record's boardSquareState (+0x35). Ghidra: a per-frame
+    // tick (loop at 0x9c... in AcMainTask_update) decrements every positive entry
+    // toward idle; the -1 sentinel is negative, so the tick skips it and it
+    // persists until the square's event fires (mark-square state 0x22) and resets
+    // it to idle. Every binary read site casts to signed char, so the element type
+    // is int8_t (which drops those casts here).
+    int8_t m_boardSquareState[15] = {}; // +0x894
     // +0x8a3: 1 bytes unused padding (dropped; runtime struct, layout not preserved)
     void *m_skillInfo = {};                  // +0x8a4 active CharaInfo (unretained)
     const SkillDataStruct *m_skillData = {}; // +0x8a8 active SkillDataStruct

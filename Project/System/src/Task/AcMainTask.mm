@@ -925,8 +925,9 @@ void AcMainTask::loadTreasureMap() {
     m_boardMoveState = (tmp.boardMoveState == 2) ? (unsigned)tmp.boardMoveState : 0u;
     m_bonusCount = tmp.mainMapId;
     m_lastBranchNodeId = tmp.lastBranchNodeId;
-    std::memcpy(&m_boardVisited[0], tmp.visitedSquares,
-                15); // board-visited bitmap (0x894..0x8a2)
+    std::memcpy(&m_boardSquareState[0],
+                tmp.boardSquareState,
+                15); // per-square board state (0x894..0x8a2)
 
     // --- Scroll bounding box + rubber-band clamp (Ghidra: the NEON block at
     // 0xa0f88..0xa10d2). The node bounding box gives the board content rect;
@@ -1073,9 +1074,9 @@ void AcMainTask::computeStepValues() {
         // Board-derived base (computed for every index, though modes 0..6 discard
         // it below — matching the binary, which evaluates the base before the tbb).
         int value;
-        if ((signed char)m_boardVisited[0] >= 1) {
+        if (m_boardSquareState[0] >= 1) {
             value = kStepBoardA[i];
-        } else if ((signed char)m_boardVisited[1] >= 1) {
+        } else if (m_boardSquareState[1] >= 1) {
             value = kStepBoardB[i];
         } else {
             value = i + 1;
@@ -2246,7 +2247,7 @@ void AcMainTask::sugorokuDrawBoard() {
 
     // Notice layer: drawn at m_selSceneLayout[9], [13] + overlayH, size 0x20 x
     // 0x1b.
-    if (m_boardVisited[6]) {
+    if (m_boardSquareState[6]) {
         drawAepFrame(
             mgr, m_boardFrame[21], m_selSceneLayout[9], m_selSceneLayout[13] + screenH, 0x20, 0x1b);
     }
@@ -2334,7 +2335,7 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
     // "Active move" override: while a move is in progress (flag byte @ task+0x8a2
     // > 0), every walkable square (not player-start, not warp) shows the
     // move-hint frame.
-    if ((int8_t)m_boardVisited[14] > 0 && type != 1 && type != 8) {
+    if (m_boardSquareState[14] > 0 && type != 1 && type != 8) {
         drawAepFrame(mgr,
                      m_base1Frame[2],
                      node->x * 26 - scrollOffX + screenW / 2,
@@ -2392,7 +2393,7 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
         break;
     case 8: // warp: warp-index sprite, but only until the warp animation settles
         // (<2)
-        if ((int8_t)m_boardVisited[10] < 2) {
+        if (m_boardSquareState[10] < 2) {
             int warpIdx = node->field8;
             if (warpIdx < 0) {
                 warpIdx = 0;
@@ -2610,7 +2611,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     }
 
     // Event badge (+0x89b).
-    if (m_boardVisited[7]) {
+    if (m_boardSquareState[7]) {
         int evHandle = m_boardFrame[20];
         AepDrawSpriteHandle(mgr,
                             evHandle,
