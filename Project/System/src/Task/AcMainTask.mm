@@ -794,12 +794,13 @@ void AcMainTask::setupLoadTextures() {
 // snapshot the record + progress, rebuild the board scroll, and push the board
 // BGM.
 //
-// Ghidra labels this charaSelectReloadData, but that is the misnomer: the
+// Ghidra formerly labeled this charaSelectReloadData, which was the misnomer: the
 // disassembly @0xa0b58 loads "map_%03d.map" into a new TreasureMap (nodes @+0x54,
 // edges @+0x58, findArea @0xce934), sets the player position, board-square state
 // and scroll bounds, then calls loadTreasureProgress + buildMapPanelLayers and
-// pushes the board bg / BGM. The chara-progress reload Ghidra named it after is
-// just the preamble; loadTreasureMap is the accurate name (verified 2026-07-17).
+// pushes the board bg / BGM. The chara-progress reload it was named after is just
+// the preamble; loadTreasureMap is the accurate name (verified against the
+// disassembly 2026-07-17, and the rb420 DB is now synced to loadTreasureMap).
 // ===========================================================================
 
 // Ghidra: FUN_000ce1a8 — the "read count" (number of board-story pages) for a
@@ -1193,9 +1194,10 @@ void AcMainTask::buildSelectListLayout() {
 }
 
 // ===========================================================================
-// loadTreasureProgress — Ghidra FUN_000a2264 (Ghidra name sugorokuLoadTreasureMap;
-// renamed here from the earlier misnomer buildMapCharaLayers — the disassembly
-// @0xa2264 is a Core Data TreasureData load, not a layer builder).
+// loadTreasureProgress — Ghidra FUN_000a2264 (renamed from the reconstruction's
+// earlier misnomer buildMapCharaLayers and Ghidra's sugorokuLoadTreasureMap; the
+// rb420 DB is now synced to loadTreasureProgress. The disassembly @0xa2264 is a
+// Core Data TreasureData load, not a layer builder).
 // Rebuild the per-board music / wallpaper "piece" unlock tables from the
 // persisted Core Data TreasureData records, then OR in the pending record's own
 // masks for the current board.

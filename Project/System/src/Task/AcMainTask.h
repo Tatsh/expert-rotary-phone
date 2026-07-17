@@ -142,8 +142,8 @@ private:
 
     // Scene build / map load (their own reconstruction pieces).
     void setupScene();      // Ghidra: FUN_0009fc90 (build the select/map scene)
-    void loadTreasureMap(); // Ghidra: FUN_000a0b58 (Ghidra name charaSelectReloadData is a
-                            // misnomer; it loads map_%03d.map — see the .mm plate)
+    void loadTreasureMap(); // Ghidra: FUN_000a0b58 (DB synced; was mislabeled
+                            // charaSelectReloadData — it loads map_%03d.map, see the .mm plate)
 
     // setupScene() reconstruction helpers (big resolve/build/load loops of
     // FUN_0009fc90).
@@ -152,10 +152,10 @@ private:
     void setupLoadTextures();   // circle/chara/number/event textures + BGM prep
 
     // Genuine sub-routines the arcade scene builders call.
-    void computeStepValues();              // Ghidra: FUN_000a1950 (fills the m_stepValues table)
-    void buildSelectListLayout();          // Ghidra: FUN_000a21a8
-    void loadTreasureProgress();           // Ghidra: FUN_000a2264 (sugorokuLoadTreasureMap)
-    void buildMapPanelLayers();            // Ghidra: FUN_000a2650
+    void computeStepValues();     // Ghidra: FUN_000a1950 (fills the m_stepValues table)
+    void buildSelectListLayout(); // Ghidra: FUN_000a21a8
+    void loadTreasureProgress();  // Ghidra: FUN_000a2264 (DB synced; was sugorokuLoadTreasureMap)
+    void buildMapPanelLayers();   // Ghidra: FUN_000a2650
     void refreshMapScroll(int mode);       // Ghidra: FUN_000a3550
     void applyDragScroll(neGraphics &gfx); // drag/rubber-band scroll update
                                            // (disasm 0x9a6ba / 0x9cb56)
