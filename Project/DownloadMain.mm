@@ -1127,8 +1127,8 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
         if (playerId != nil && name != nil && charaId != nil && musicPiece != nil &&
             wallPiece != nil) {
             TreasureTmpData tmp = [UserSettingData treasureTmp];
-            strncpy((char *)tmp.friendPlayerId, [playerId UTF8String], 8);
-            strncpy((char *)tmp.goalName, [name UTF8String], 13);
+            strncpy(tmp.friendPlayerId, [playerId UTF8String], 8);
+            strncpy(tmp.goalName, [name UTF8String], 13);
             tmp.friendPlayerId[7] = '\0';
             tmp.goalName[12] = '\0';
             tmp.goalCharaId = [charaId shortValue];

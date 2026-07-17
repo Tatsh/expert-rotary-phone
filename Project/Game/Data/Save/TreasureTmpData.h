@@ -35,8 +35,8 @@ typedef struct __attribute__((packed)) TreasureTmpData {
     int32_t musicPiece;     // +0x14 downloaded goal music-piece reward (visitor JSON MusicPiece)
     int32_t wallPaperPiece; // +0x18 downloaded goal wallpaper-piece reward (WallPiece)
     int32_t friendship;     // +0x1c downloaded goal friendship value (Friendship)
-    uint8_t friendPlayerId[8];  // +0x20 visiting friend's player id (NUL-terminated; PlayerId)
-    uint8_t goalName[13];       // +0x28 goal / friend name (NUL-terminated; Name)
+    char friendPlayerId[8]; // +0x20 visiting friend's player id (NUL-terminated; PlayerId)
+    char goalName[13];      // +0x28 goal / friend name (NUL-terminated; Name)
     uint8_t visitedSquares[15]; // +0x35 per-square visited flags (copied to m_boardVisited)
     int16_t
         rouletteMode; // +0x44 roulette mode / result; -1 in the default record (-> m_rouletteMode)

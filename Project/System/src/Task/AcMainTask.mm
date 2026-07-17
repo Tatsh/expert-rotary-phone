@@ -1038,8 +1038,7 @@ void AcMainTask::loadTreasureMap() {
         (void)(__bridge_transfer id)m_mapName;
         m_mapName = nullptr;
     }
-    m_mapName =
-        (__bridge_retained void *)[NSString stringWithUTF8String:(const char *)tmp.goalName];
+    m_mapName = (__bridge_retained void *)[NSString stringWithUTF8String:tmp.goalName];
 
     // Push + load the board treasure BGM ("bgm04_tre_%02d.m4a").
     AudioManager *audio = [AudioManager sharedManager];
