@@ -6,6 +6,8 @@
 //  splash task's setup/state-machine/finish.
 //
 
+#include <memory>
+
 #import <Foundation/Foundation.h>
 
 #import "AepManager.h"
@@ -92,7 +94,7 @@ void BootLogoTask::setup() {
     }
 
     for (int i = 0; i < 3; i++) {
-        m_logo[i] = new neTextureForiOS();
+        m_logo[i] = std::make_unique<neTextureForiOS>();
         NSString *path = [NSBundle.mainBundle pathForResource:imageSet[i] ofType:@"png"];
         int rc = m_logo[i]->load(path.UTF8String);
         neDebugLog("BootLogoTask::setup logo[%d] name='%s' path=%s load=%d w=%d h=%d",
@@ -161,7 +163,7 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
  * @complete
  */
 void BootLogoTask::drawLogo1() {
-    drawLogo(m_logo[1]);
+    drawLogo(m_logo[1].get());
 }
 
 /**
@@ -171,7 +173,7 @@ void BootLogoTask::drawLogo1() {
  * @complete
  */
 void BootLogoTask::drawLogo2() {
-    drawLogo(m_logo[2]);
+    drawLogo(m_logo[2].get());
 }
 
 /**
@@ -184,9 +186,8 @@ void BootLogoTask::finish() {
     [AppDelegate.appDelegate loginGameCenter];
     // Ghidra: orderingTable.flScreenHalfScale = m_scale — restore the saved UI half-scale.
     m_aep->orderingTable()->setRenderScale(m_scale);
-    for (int i = 0; i < 3; i++) {
-        delete m_logo[i];
-        m_logo[i] = nullptr;
+    for (auto &logo : m_logo) {
+        logo.reset(); // free the branding sprite (unique_ptr)
     }
     kill(); // +0x24 = 1: reaped on the next scheduler pass
 
@@ -225,11 +226,11 @@ void BootLogoTask::update(int /*deltaMs*/) {
             }
             m_counter++;
         }
-        drawLogo(m_logo[0]);
+        drawLogo(m_logo[0].get());
         return;
     case 3: // fade logo 0 out -> fade logo 2 in
         if (!m_aep->isTransitionDone()) {
-            drawLogo(m_logo[0]);
+            drawLogo(m_logo[0].get());
             return;
         }
         m_aep->playTransition(1, kFadeFrames, 0);
