@@ -26,7 +26,7 @@
 
 // MenuCreateTask is declared in TaskFactory.h.
 
-// Ghidra: TitleTask_ctor (FUN_0002b678) — base C_TASK ctor + zeroed fields.
+// Ghidra: TitleTask_ctor (FUN_0002b678) — base ne::C_TASK ctor + zeroed fields.
 TitleTask::TitleTask() = default;
 
 /**
@@ -131,7 +131,7 @@ void TitleTask::finish() {
     gCharaManager.reload(); // CharaManager::reload
     kill();                 // +0x24 = 1
 
-    if (C_TASK *menu = MenuCreateTask()) {
+    if (ne::C_TASK *menu = MenuCreateTask()) {
         menu->setPriority(3);
     }
     m_soundTestHidden = true; // +0x45 = 1: stop drawing the label after the handoff

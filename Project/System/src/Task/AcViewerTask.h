@@ -19,7 +19,7 @@
 //  kept in its own file to avoid clobbering that class.
 //
 //  ---- work area (this class IS the ~0x214-byte play-data struct) ----
-//  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
+//  ne::C_TASK's base is exactly 0x28 bytes, so the members below land at their true
 //  binary offsets. Every scalar the setup / draw / HUD passes reach by flat
 //  `*(T*)(this+off)` in the binary is named and placed at its exact offset
 //  (with a `// +0xNN` comment); genuine gaps are `_rsvd_NN[]` fillers. The
@@ -70,7 +70,7 @@ enum AcViewerState : int {
     kAcvDone = 17,           // ACST_DONE
 };
 
-class AcViewerTask : public C_TASK {
+class AcViewerTask : public ne::C_TASK {
 public:
     // Constructed by the engine when the arcade viewer starts play (its
     // ctor/vtable live @ 0x130bb8; not part of this reconstruction batch).
@@ -129,7 +129,7 @@ private:
 
     // ================= work-area layout (offsets are binary-exact)
     // =================
-    C_TASK *m_stateTask = nullptr;        // +0x28 play-state sub-task (deleted in cleanup)
+    ne::C_TASK *m_stateTask = nullptr;    // +0x28 play-state sub-task (deleted in cleanup)
     neTextureForiOS *m_digitTex[10] = {}; // +0x2c HUD digit textures ticket_num/num_pointb
     AepLyrCtrl *m_pauseLayer = nullptr;   // +0x54 PAUSE_LOOP overlay
     AepLyrCtrl *m_topLayer = nullptr;     // +0x58 TOP_* banner overlay

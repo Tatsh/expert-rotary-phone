@@ -28,7 +28,7 @@
 // holds in its acMainTask property); opaque on the ObjC side (a raw pointer,
 // non-ARC), passed straight through to the engine hooks. Ghidra: struct
 // AcViewerTask.
-class AcViewerTask; // System/src/Task/AcViewerTask.h (: C_TASK)
+class AcViewerTask; // System/src/Task/AcViewerTask.h (: ne::C_TASK)
 
 // The app's root navigation host (bridged UIViewController on the C++ scene
 // manager).

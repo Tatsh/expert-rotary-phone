@@ -2179,7 +2179,7 @@ void AcMainTask::sugorokuTaskDispose() {
     //     binary gates BOTH the kill flag (strb #1,[+0x24]) and the next task's
     //     setPriority(3) on the null check (@ 0xa2fe6); when there is no next
     //     task neither runs.
-    if (C_TASK *next = static_cast<C_TASK *>(m_nextTask)) {
+    if (ne::C_TASK *next = static_cast<ne::C_TASK *>(m_nextTask)) {
         kill();
         next->setPriority(3);
     }

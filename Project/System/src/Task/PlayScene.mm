@@ -388,12 +388,12 @@ void PlayTaskGotoResult(void *playData) {
     PlayNoteMngDetach(&nm); // Ghidra: FUN_0003395c — clear the note-play active flag
 
     [[AppDelegate appDelegate] setMainTask:nullptr]; // deregister the play task
-    task->kill(); // +0x24 = C_TASK m_killed (reap on next scheduler pass)
+    task->kill(); // +0x24 = ne::C_TASK m_killed (reap on next scheduler pass)
 
     // Spawn the next scene at priority 3: the result screen for a completed
     // normal play, else back to the music-select MainTask (aborted play, or the
     // bundled/sugoroku path).
-    C_TASK *next;
+    ne::C_TASK *next;
     if (task->m_stopped == 0 && task->m_isDemoPlay == 0) {
         next = PlayResultCreateTask(); // operator_new(0x3a0) + FUN_0003d5bc
     } else {

@@ -45,7 +45,7 @@ PlayTask::PlayTask() = default;
 
 // @ 0x2db74 — taskNode_deleteB is the compiler's deleting-destructor thunk
 // (caSourceNode_dtor then operator delete). PlayTask's own destructor only
-// chains to the C_TASK base (the scene/notes are torn down through
+// chains to the ne::C_TASK base (the scene/notes are torn down through
 // PlayTaskGotoResult / the scheduler), so there is no per-member teardown here.
 // @complete
 PlayTask::~PlayTask() = default;

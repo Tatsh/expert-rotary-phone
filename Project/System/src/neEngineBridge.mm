@@ -27,8 +27,10 @@
 #import <UIKit/UIKit.h>     // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
 
 // Create + register the boot logo splash task (Task/TaskFactory.mm).
+namespace ne {
 class C_TASK;
-C_TASK *BootCreateTask(); // operator_new(0x4c) + BootLogoTask_ctor + setPriority(3)
+}
+ne::C_TASK *BootCreateTask(); // operator_new(0x4c) + BootLogoTask_ctor + setPriority(3)
 
 // Head of the shared-texture cache list (Ghidra: DAT_00188464). Registered/
 // unlinked by AepTexture as cached textures are acquired/released.

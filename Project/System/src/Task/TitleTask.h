@@ -26,7 +26,7 @@ class AepManager;
 class AepLyrCtrl; // the title screen's animated sprite layer (Ghidra ctor
                   // FUN_0002c7d8)
 
-class TitleTask : public C_TASK {
+class TitleTask : public ne::C_TASK {
 public:
     /// @brief Construct the title / first-run task (spawned by BootLogoTask::finish).
     /// @note Ghidra: TitleTask::TitleTask (FUN_0002b678).

@@ -21,7 +21,7 @@
 // neEngine::startBootTask (operator_new(0x4c) + BootLogoTask_ctor +
 // setPriority(3)).
 // @complete
-C_TASK *BootCreateTask() {
+ne::C_TASK *BootCreateTask() {
     auto *task = new BootLogoTask();
     task->setPriority(3);
     return task;
@@ -31,7 +31,7 @@ C_TASK *BootCreateTask() {
 // MenuMainTask_ctor + MenuMainTask_setInfoFlag(1) + setPriority(3)
 // (BootLogoTask_finish/TitleTask_finish).
 // @complete
-C_TASK *MenuCreateTask() {
+ne::C_TASK *MenuCreateTask() {
     auto *task = new MenuMainTask();
     task->setInfoFlag(true); // FUN_0006d194(_, 1)
     return task;             // the caller sets priority 3
@@ -40,14 +40,14 @@ C_TASK *MenuCreateTask() {
 // MenuMainTask -> relaunch the title. Ghidra: operator_new(0x54) +
 // TitleTask_ctor.
 // @complete
-C_TASK *TitleTaskCreate() {
+ne::C_TASK *TitleTaskCreate() {
     return new TitleTask();
 }
 
 // MenuMainTask (standard play button) -> the music-select task. Ghidra:
 // operator_new(0xaa8) + MainTask_ctor (FUN_00034d48).
 // @complete
-C_TASK *MainTaskCreate() {
+ne::C_TASK *MainTaskCreate() {
     return new MainTask();
 }
 
@@ -55,14 +55,14 @@ C_TASK *MainTaskCreate() {
 // +0x9fc, update PlayTask_update FUN_0002dc14) — drives the PlayJudge/NoteMng
 // core.
 // @complete
-C_TASK *PlayTaskCreate() {
+ne::C_TASK *PlayTaskCreate() {
     return new PlayTask();
 }
 
 // MenuMainTask (arcade button) -> the arcade select+play task. Ghidra:
 // operator_new(0x9fc) + AcMainTask_ctor (FUN_00099ab0) — drives AcNoteMng.
 // @complete
-C_TASK *AcMainTaskCreate() {
+ne::C_TASK *AcMainTaskCreate() {
     return new AcMainTask();
 }
 
@@ -70,7 +70,7 @@ C_TASK *AcMainTaskCreate() {
 // Ghidra: FUN_0002db10 is PlayTask_ctor (PlayTask_update vtable, 0x9d4 play
 // data).
 // @complete
-C_TASK *TutorialTaskCreate() {
+ne::C_TASK *TutorialTaskCreate() {
     return new PlayTask();
 }
 
@@ -81,7 +81,7 @@ C_TASK *TutorialTaskCreate() {
 // vtable acMainTask* because AppDelegate holds the task in its `acMainTask`
 // property. The +0x168 menu button spawns this.
 // @complete
-C_TASK *AcViewerTaskCreate() {
+ne::C_TASK *AcViewerTaskCreate() {
     return new AcViewerTask();
 }
 
@@ -89,8 +89,8 @@ C_TASK *AcViewerTaskCreate() {
 // TitleTask_ctor; the boot path is operator_new(0x54) + ctor + setPriority(3).
 // This factory models only the operator_new + ctor; the single setPriority(3)
 // is issued by the caller (BootLogoTask::finish), matching the binary which
-// calls C_TASK::setPriority exactly once.
+// calls ne::C_TASK::setPriority exactly once.
 // @complete
-C_TASK *BootCreateNextTask() {
+ne::C_TASK *BootCreateNextTask() {
     return new TitleTask();
 }

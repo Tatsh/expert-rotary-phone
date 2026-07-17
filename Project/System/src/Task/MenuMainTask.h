@@ -15,7 +15,7 @@
 //  screen rectangles recovered as real members (below).
 //
 //  ---- work area (this class IS the 0x1b0-byte MenuMainTask struct) ----
-//  C_TASK's base is exactly 0x28 bytes, and MenuMainTask_ctor does
+//  ne::C_TASK's base is exactly 0x28 bytes, and MenuMainTask_ctor does
 //  memset(this + 0x28, 0, 0x185) — i.e. every field from +0x28..+0x1ad is
 //  zero-initialised — so the members below (default-initialised to 0) land at
 //  their true binary offsets. Offsets that setup()/update()/drawOverlay() reach
@@ -34,7 +34,7 @@ class AepManager;
 class AepLyrCtrl;
 class neTextureForiOS;
 
-class MenuMainTask : public C_TASK {
+class MenuMainTask : public ne::C_TASK {
 public:
     MenuMainTask();                    // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
     ~MenuMainTask() override;          // @ 0x6abcc (modeSelTaskDtor; clears news delegate + base)

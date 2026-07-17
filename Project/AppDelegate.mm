@@ -164,7 +164,7 @@ BOOL gLaunchedFromPush = NO;
 
     [[DownloadMain getInstance] startGetDlFileListHttp:-1];
 
-    // operator_new(0x4c) + BootLogoTask::BootLogoTask + C_TASK::setPriority(_, 3).
+    // operator_new(0x4c) + BootLogoTask::BootLogoTask + ne::C_TASK::setPriority(_, 3).
     neEngine::startBootTask();
 
     [self.viewController SetLoopInterval:1];

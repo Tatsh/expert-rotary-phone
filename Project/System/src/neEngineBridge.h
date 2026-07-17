@@ -25,8 +25,8 @@
 @class UIViewController;
 @class ScoreData;   // Game/Data/Save/ScoreData.h (Core Data entity, per-song play
                     // records)
-class PlayTask;     // System/src/Task/PlayTask.h    (: C_TASK)
-class AcViewerTask; // System/src/Task/AcViewerTask.h (: C_TASK) — the arcade
+class PlayTask;     // System/src/Task/PlayTask.h    (: ne::C_TASK)
+class AcViewerTask; // System/src/Task/AcViewerTask.h (: ne::C_TASK) — the arcade
                     // note-play task (AppDelegate's acMainTask slot)
 
 // PlayScore is the store DTO for one (musicId, difficulty) result: the tallies,

@@ -13,6 +13,8 @@
 
 #import "C_TASK.h"
 
+namespace ne {
+
 // Ghidra: DAT_00188468 — a self-linked sentinel whose priority is the maximum
 // so every real task sorts before it, and whose next/prev bound the circular
 // list.
@@ -120,3 +122,5 @@ void C_TASK::updateAll(int deltaMs) {
         }
     }
 }
+
+} // namespace ne

@@ -49,21 +49,21 @@ static MainViewController *RootVC() {
 // MainTask::backgroundCellLoader() (Project/System/src/Task/MainTask.mm), the
 // dispatch_async body rebuildList kicks off.
 
-// Ghidra: resultTask_ctor @ 0x3d5bc — C_TASK base ctor + vtable init +
+// Ghidra: resultTask_ctor @ 0x3d5bc — ne::C_TASK base ctor + vtable init +
 // 0x378-byte memset on the data block starting at +0x28. Corresponds to
 // PlayResultTask::PlayResultTask() (confirmed: *param_1 =
 // &PTR_resultTaskUpdate_1; _memset(param_1+10, 0, 0x378)).
 //
 // Ghidra: resultTask_delete @ 0x3d5f0 — compiler-generated deleting destructor.
-// Calls caSourceNode_dtor (= C_TASK::~C_TASK() base-dtor chain via SjLj EH
+// Calls caSourceNode_dtor (= ne::C_TASK::~ne::C_TASK() base-dtor chain via SjLj EH
 // frame) then operator_delete on the same pointer. No user-defined
 // ~PlayResultTask() exists in source; this thunk is synthesised by the compiler
 // for the vtable delete slot.
 //
-// Ghidra: FUN_0003d5bc — base C_TASK ctor, set the vtable, and zero the
+// Ghidra: FUN_0003d5bc — base ne::C_TASK ctor, set the vtable, and zero the
 // 0x378-byte result-data block (already done by the members' in-class
 // initialisers and the base ctor).
-// Verified against disassembly: bl 0x27ea8 (C_TASK base ctor), str [r0],#0x28
+// Verified against disassembly: bl 0x27ea8 (ne::C_TASK base ctor), str [r0],#0x28
 // (vtable at +0, advance to data block), _memset(+0x28, 0, 0x378).
 // @complete
 PlayResultTask::PlayResultTask() {
@@ -1418,6 +1418,6 @@ void PlayResultTask::PlayResultDrawCallback(int child,
 
 // Ghidra: FUN_0003d5bc call site in PlayTaskGotoResult (operator_new(0x3a0)).
 // @complete
-C_TASK *PlayResultCreateTask() {
+ne::C_TASK *PlayResultCreateTask() {
     return new PlayResultTask();
 }

@@ -50,15 +50,15 @@ static MainViewController *AcvRootVC() {
 // ===========================================================================
 
 // Constructed by the engine (ctor/vtable @ 0x130bb8, not in this batch). The
-// C_TASK base + the zeroed play-data blob (m_playData) are all the ctor needs
+// ne::C_TASK base + the zeroed play-data blob (m_playData) are all the ctor needs
 // here.
 AcViewerTask::AcViewerTask() = default;
 
 // @ 0x215d8 — task_delete is the compiler's deleting-destructor thunk
 // (caSourceNode_dtor then operator delete). The real destructor body only
-// chains to the C_TASK base: this task frees its HUD/textures/layers +
+// chains to the ne::C_TASK base: this task frees its HUD/textures/layers +
 // AcNoteMng in cleanup() (state 9), so there is no per-member teardown here.
-// ~C_TASK() (caSourceNode_dtor) runs implicitly after this.
+// ~ne::C_TASK() (caSourceNode_dtor) runs implicitly after this.
 // @complete
 AcViewerTask::~AcViewerTask() = default;
 
@@ -594,10 +594,10 @@ void AcViewerTask::cleanup() {
     AudioManager *audio = [AudioManager sharedManager];
 
     // The play-state sub-task (@ +0x28, the first word of the play-data block):
-    // delete it through its virtual destructor. (Modelled as a C_TASK sub-object;
+    // delete it through its virtual destructor. (Modelled as a ne::C_TASK sub-object;
     // the exact subclass is not recovered here — the vtbl-slot-1
     // deleting-destructor confirms it is deleted.)
-    if (C_TASK *stateTask = m_stateTask) {
+    if (ne::C_TASK *stateTask = m_stateTask) {
         delete stateTask;
         m_stateTask = nullptr;
     }

@@ -27,7 +27,7 @@ public:
     // binary computes sec_delta*1000 + usec_delta/1000 (both NEON vcvt.f32.s32,
     // divisor/scale DAT_000280d0 = 1000.0); an earlier reconstruction used
     // /1000000 (seconds), which was 1000x off and broke both consumers (the
-    // C_TASK::updateAll fixed-point delta and the draw() lag guard, whose
+    // ne::C_TASK::updateAll fixed-point delta and the draw() lag guard, whose
     // threshold DAT_0000be7c = 1000.0f is a millisecond value).
     float elapsedMs() const {
         timeval now;

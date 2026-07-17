@@ -17,7 +17,7 @@
 class AepManager;
 class neTextureForiOS;
 
-class BootLogoTask : public C_TASK {
+class BootLogoTask : public ne::C_TASK {
 public:
     BootLogoTask();                    // Ghidra: BootLogoTask_ctor (FUN_0002af58)
     ~BootLogoTask() override;          // @ 0x2af8c (taskNode_deleteA deleting-dtor: base + delete)

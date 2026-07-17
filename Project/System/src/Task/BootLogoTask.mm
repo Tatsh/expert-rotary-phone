@@ -19,12 +19,12 @@
 
 // BootCreateNextTask comes from TaskFactory.h.
 
-// Ghidra: BootLogoTask_ctor (FUN_0002af58) — base C_TASK ctor + zeroed fields.
+// Ghidra: BootLogoTask_ctor (FUN_0002af58) — base ne::C_TASK ctor + zeroed fields.
 BootLogoTask::BootLogoTask() = default;
 
 // @ 0x2af8c — taskNode_deleteA is the compiler's deleting-destructor thunk
 // (caSourceNode_dtor then operator delete). BootLogoTask frees its three
-// sprites in finish(), so the real destructor only chains to the C_TASK base —
+// sprites in finish(), so the real destructor only chains to the ne::C_TASK base —
 // nothing to do here.
 BootLogoTask::~BootLogoTask() = default;
 
@@ -190,7 +190,7 @@ void BootLogoTask::finish() {
     }
     kill(); // +0x24 = 1: reaped on the next scheduler pass
 
-    if (C_TASK *next = BootCreateNextTask()) {
+    if (ne::C_TASK *next = BootCreateNextTask()) {
         next->setPriority(3);
     }
 }

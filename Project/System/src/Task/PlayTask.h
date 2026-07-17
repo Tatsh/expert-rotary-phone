@@ -17,7 +17,7 @@
 //  pause-menu units.
 //
 //  ---- work area (this class IS the 0xa00-byte play-data struct) ----
-//  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
+//  ne::C_TASK's base is exactly 0x28 bytes, so the members below land at their true
 //  binary offsets. The whole body is memset 0 by playTask_ctor (@ 0x2db2c:
 //  memset +0x28..+0x9fc
 //  == 0x9d4 bytes, then m_state @ +0x9fc). Every offset the reconstructed
@@ -64,7 +64,7 @@ enum SceneLayer {
     kSceneRankFanfare = 10,     // clear fanfare, layered over the chosen rank jingle
 };
 
-class PlayTask : public C_TASK {
+class PlayTask : public ne::C_TASK {
 public:
     PlayTask();                        // Ghidra: MainTask spawns this; PlayTask_init
     ~PlayTask() override;              // @ 0x2db74 (taskNode_deleteB deleting-dtor: base + delete)

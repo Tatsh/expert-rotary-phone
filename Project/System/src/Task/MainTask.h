@@ -5,9 +5,9 @@
 
 /// @file
 /// @brief Standard-mode MUSIC-SELECT task (launched by MenuMainTask), reconstructed
-/// from Ghidra project rb420, program PopnRhythmin. A C_TASK subclass allocated at
+/// from Ghidra project rb420, program PopnRhythmin. A ne::C_TASK subclass allocated at
 /// 0xaa8 bytes (operator_new(0xaa8) in MenuMainTask::update and the post-play Finish).
-/// C_TASK's base is 0x28 bytes, so the members land at their true 32-bit binary
+/// ne::C_TASK's base is 0x28 bytes, so the members land at their true 32-bit binary
 /// offsets (documented for reference; exact size/position is not preserved on the
 /// 64-bit target). "MainTask" was a Ghidra type-conflict artifact of this same
 /// class; see the alias below. The packed per-song select state is a documented seam.
@@ -24,11 +24,11 @@ class AepLyrCtrl;
 class neTextureForiOS;
 
 /// @brief Standard-mode music-select task: song list, score display, and option nav.
-class MainTask : public C_TASK {
+class MainTask : public ne::C_TASK {
 public:
     /// @brief Construct with a zero-initialised work area. Ghidra: MainTask::MainTask @ 0x34d48.
     MainTask();
-    /// @brief Detach as DownloadMain's recommend-list delegate, then ~C_TASK. Ghidra: MainTask::~MainTask @ 0x34d90.
+    /// @brief Detach as DownloadMain's recommend-list delegate, then ~ne::C_TASK. Ghidra: MainTask::~MainTask @ 0x34d90.
     ~MainTask() override;
 
     /**
@@ -378,7 +378,7 @@ public:
     int m_highlightAnim = 0;                          // +0xa94 highlight pulse phase (0..0x96)
     __unsafe_unretained id m_overScoreDict = nullptr; // +0xa98 over-score "touched" set
     int m_overScorePulse = 0;                  // +0xa9c over-score badge pulse phase (0..0x96)
-    C_TASK *m_spawnedTask = nullptr;           // +0xaa0 launched play / tutorial / menu sub-task
+    ne::C_TASK *m_spawnedTask = nullptr;       // +0xaa0 launched play / tutorial / menu sub-task
     int m_state = 0;                           // +0xaa4 state-machine field
     MusicSelState m_sel = {};                  // +0xaa8 packed per-song select state (seam)
     uint8_t _reservedTail[0xcc1 - 0xae8] = {}; // +0xae8..0xcc1 remaining Setup/layout tail

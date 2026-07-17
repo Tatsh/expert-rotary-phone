@@ -125,10 +125,10 @@ struct AcAnchor {
     int y = 0;
 };
 
-class AcMainTask : public C_TASK {
+class AcMainTask : public ne::C_TASK {
 public:
     // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
-    // C_TASK base + Random member construct/destruct plus the members' in-class
+    // ne::C_TASK base + Random member construct/destruct plus the members' in-class
     // initialisers, so both are defaulted.
     AcMainTask() = default;
     ~AcMainTask() override = default;

@@ -10,21 +10,23 @@
 #ifndef TASKFACTORY_H
 #define TASKFACTORY_H
 
+namespace ne {
 class C_TASK;
+}
 
-C_TASK *BootCreateTask();       // boot logo splash
-C_TASK *MenuCreateTask();       // main menu hub
-C_TASK *TitleTaskCreate();      // title screen
-C_TASK *MainTaskCreate();       // standard music-select
-C_TASK *PlayTaskCreate();       // note-play
-C_TASK *AcMainTaskCreate();     // arcade main
-C_TASK *TutorialTaskCreate();   // tutorial (FUN_0002db10)
-C_TASK *AcViewerTaskCreate();   // arcade-viewer note-play (AcViewerTask ctor
-                                // FUN_000215a0)
-C_TASK *BootCreateNextTask();   // the title task the boot logo hands off to
-                                // (FUN_0002b678)
-C_TASK *PlayResultCreateTask(); // note-play result screen (operator_new(0x3a0)
-                                // + FUN_0003d5bc)
+ne::C_TASK *BootCreateTask();       // boot logo splash
+ne::C_TASK *MenuCreateTask();       // main menu hub
+ne::C_TASK *TitleTaskCreate();      // title screen
+ne::C_TASK *MainTaskCreate();       // standard music-select
+ne::C_TASK *PlayTaskCreate();       // note-play
+ne::C_TASK *AcMainTaskCreate();     // arcade main
+ne::C_TASK *TutorialTaskCreate();   // tutorial (FUN_0002db10)
+ne::C_TASK *AcViewerTaskCreate();   // arcade-viewer note-play (AcViewerTask ctor
+                                    // FUN_000215a0)
+ne::C_TASK *BootCreateNextTask();   // the title task the boot logo hands off to
+                                    // (FUN_0002b678)
+ne::C_TASK *PlayResultCreateTask(); // note-play result screen (operator_new(0x3a0)
+                                    // + FUN_0003d5bc)
 
 #endif /* TASKFACTORY_H */
 

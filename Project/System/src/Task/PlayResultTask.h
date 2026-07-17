@@ -18,7 +18,7 @@
 //  tracked in STUBS.md.
 //
 //  ---- work area (this class IS the 0x3a0-byte result-data struct) ----
-//  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
+//  ne::C_TASK's base is exactly 0x28 bytes, so the members below land at their true
 //  binary offsets. The whole body is memset 0 by the ctor (FUN_0003d5bc: memset
 //  +0x28..+0x3a0
 //  == 0x378 bytes). Every offset the reconstructed methods (resultSetup / the
@@ -46,7 +46,7 @@
 class AepLyrCtrl;
 class neTextureForiOS;
 
-class PlayResultTask : public C_TASK {
+class PlayResultTask : public ne::C_TASK {
 public:
     PlayResultTask();                  // Ghidra: FUN_0003d5bc
     void update(int deltaMs) override; // Ghidra: FUN_0003d690
@@ -187,23 +187,23 @@ private:
 #ifndef ENABLE_PATCHES
     uint8_t _pad_35e[0x360 - 0x35e] = {}; // +0x35e alignment pad before m_treasureStart (no access)
 #endif
-    int m_treasureStart = 0;       // +0x360 starting treasure point
-    int m_treasurePoint = 0;       // +0x364 running treasure point (S_POINT_NUM)
-    int m_baseBonus = 0;           // +0x368 play-count base bonus (+event)
-    int m_clearBonus = 0;          // +0x36c clear bonus (0 on wash-out)
-    int m_fullComboBonus = 0;      // +0x370 full-combo bonus (note-count scaled)
-    int m_rankBonus = 0;           // +0x374 rank bonus (S..fail)
-    int m_perfectBonus = 0;        // +0x378 perfect-full-combo bonus
-    int m_pointsCountUp = 0;       // +0x37c animated count-up total (big strip)
-    int m_bonusSubtotal = 0;       // +0x380 perfect+clear+fc+rank subtotal
-    int m_boardScale = 0;          // +0x384 result board scale (100 pad / 50 phone)
-    int m_tickCounter = 0;         // +0x388 count-up tick counter (read as uint for %5)
-    int m_music = 0;               // +0x38c played music id
-    C_TASK *m_nextTask = nullptr;  // +0x390 spawned music-select task
-    int m_state = 0;               // +0x394 update() state machine field
-    void *m_shareButton = nullptr; // +0x398 Twitter share UIButton (ARC-bridged raw)
-    void *m_tweeter = nullptr;     // +0x39c TwitterUtil (unmanaged +1)
-                                   // object end +0x3a0
+    int m_treasureStart = 0;          // +0x360 starting treasure point
+    int m_treasurePoint = 0;          // +0x364 running treasure point (S_POINT_NUM)
+    int m_baseBonus = 0;              // +0x368 play-count base bonus (+event)
+    int m_clearBonus = 0;             // +0x36c clear bonus (0 on wash-out)
+    int m_fullComboBonus = 0;         // +0x370 full-combo bonus (note-count scaled)
+    int m_rankBonus = 0;              // +0x374 rank bonus (S..fail)
+    int m_perfectBonus = 0;           // +0x378 perfect-full-combo bonus
+    int m_pointsCountUp = 0;          // +0x37c animated count-up total (big strip)
+    int m_bonusSubtotal = 0;          // +0x380 perfect+clear+fc+rank subtotal
+    int m_boardScale = 0;             // +0x384 result board scale (100 pad / 50 phone)
+    int m_tickCounter = 0;            // +0x388 count-up tick counter (read as uint for %5)
+    int m_music = 0;                  // +0x38c played music id
+    ne::C_TASK *m_nextTask = nullptr; // +0x390 spawned music-select task
+    int m_state = 0;                  // +0x394 update() state machine field
+    void *m_shareButton = nullptr;    // +0x398 Twitter share UIButton (ARC-bridged raw)
+    void *m_tweeter = nullptr;        // +0x39c TwitterUtil (unmanaged +1)
+                                      // object end +0x3a0
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

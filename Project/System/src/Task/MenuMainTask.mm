@@ -60,7 +60,7 @@ static int AepBaselineY(AepManager &aep) {
 // engine bridge. (TaskFactory.h / neEngineBridge.h imported above.)
 
 /**
- * MenuMainTask_ctor — base C_TASK ctor + memset(this+0x28, 0, 0x185) (every
+ * MenuMainTask_ctor — base ne::C_TASK ctor + memset(this+0x28, 0, 0x185) (every
  * field zero-initialised, matching the members' default inits).
  * @ghidraAddress 0x6aba0
  * @complete
@@ -70,7 +70,7 @@ MenuMainTask::MenuMainTask() = default;
 /**
  * modeSelTaskDtor — the mode-select task's destructor (its vtable is the
  * MenuMainTask update vtable). De-register this task as DownloadMain's NEWS
- * delegate (only if it is still us), then the C_TASK base dtor
+ * delegate (only if it is still us), then the ne::C_TASK base dtor
  * (caSourceNode_dtor) runs implicitly.
  * @ghidraAddress 0x6abcc
  * @complete
@@ -803,7 +803,7 @@ void MenuMainTask::dispose() {
     if (m_spawnedTask == nullptr) {
         m_spawnedTask = MainTaskCreate(); // operator_new(0xaa8) + MainTask_ctor
     }
-    static_cast<C_TASK *>(m_spawnedTask)->setPriority(3);
+    static_cast<ne::C_TASK *>(m_spawnedTask)->setPriority(3);
     m_suppressOverlay = 1; // +0xb4: stop drawing this task after the handoff
 }
 

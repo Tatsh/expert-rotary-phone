@@ -15,6 +15,8 @@
 
 #pragma once
 
+namespace ne {
+
 class C_TASK {
 public:
     C_TASK(); // Ghidra: base ctor FUN_00027ea8 (vtable PTR_LAB_00027f88)
@@ -70,6 +72,8 @@ protected:
     // FUN_0002af58, vtable PTR_FUN_0002b02c). The base ctor (FUN_00027ea8) only
     // sets the vtable, self-links, priority (9), name and killed flag.
 };
+
+} // namespace ne
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

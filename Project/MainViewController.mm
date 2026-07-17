@@ -770,7 +770,7 @@ static const float kRenderMinInterval = 1000.0f;
 - (void)task {
     float dt = m_taskTime.elapsedMs();
     m_taskTime.reset();
-    C_TASK::updateAll(static_cast<int>(dt));
+    ne::C_TASK::updateAll(static_cast<int>(dt));
     neGraphics::shared().endFrame();
 }
 
