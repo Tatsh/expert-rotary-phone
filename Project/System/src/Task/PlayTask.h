@@ -136,11 +136,14 @@ public:
     int m_effectStateLyr[14] = {}; // +0xe4  GG_HANTEI..EFF_HIT lyr handles;
                                    //        [6]/[7]=FRAME_SIDEMT_BARSTAR0/1 @+0xfc/+0x100,
     //        [8]=FRAME_SIDEMT_BAR @+0x104, [11]=BGMT_CD_COLOR @+0x110
-    int m_effectStateFrames[14] = {};      // +0x11c ...frame counts ([8]=BAR length @+0x13c)
-    int m_scoreBpmLyr[5] = {};             // +0x154 BPM / score lyr handles
-    int m_scoreBpmFrames[5] = {};          // +0x168 ...frame counts
-    int m_charaJumpLyr[8] = {};            // +0x17c BGMTBPM1_CHARAn_JUMP lyr handles
-    uint8_t _rsvd_19c[0x1dc - 0x19c] = {}; // +0x19c per-chara aux (no reconstructed reader)
+    int m_effectStateFrames[14] = {}; // +0x11c ...frame counts ([8]=BAR length @+0x13c)
+    int m_scoreBpmLyr[5] = {};        // +0x154 BPM / score lyr handles
+    int m_scoreBpmFrames[5] = {};     // +0x168 ...frame counts
+    int m_charaJumpLyr[8] = {};       // +0x17c BGMTBPM1_CHARAn_JUMP lyr handles
+    // +0x19c a 64-byte gap in the chara-jump tables (likely two more 8-entry
+    // per-chara tables PlayTask_init fills); no play function reads this offset
+    // (Ghidra: the +0x19c accesses all belong to other tasks / structs).
+    uint8_t _rsvd_19c[0x1dc - 0x19c] = {}; // +0x19c per-chara aux (no play-task reader)
     int m_charaJumpFrames[8] = {};         // +0x1dc ...chara-jump layer frame counts
     int m_pauseEyeToneFrm[8] = {};         // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
     int m_barSegFrame = 0;                 // +0x21c long-note connecting-bar segment frame
@@ -164,12 +167,13 @@ public:
     int m_timingSeInst[2] = {}; // +0x3a0 timing-SE playing instances (-1 idle,
                                 //        reaped each frame in update)
     int m_playSeIds[3] = {};    // +0x3a8 v12/v13/v14 play-SE source ids
-    uint8_t _rsvd_3b4[0x3b8 - 0x3b4] = {}; // +0x3b4
-    int m_scrubBarFrame = 0;               // +0x3b8 gauge/scrub-bar eased frame (DrawHud)
-    int m_cdColorFrame = 0;                // +0x3bc BGMT_CD_COLOR anim frame / HUD fever-loop frame
-    int m_barStarFrame = 0;                // +0x3c0 FRAME_SIDEMT_BARSTAR1 anim frame (update wraps)
-    int m_cdFrame = 0;                     // +0x3c4 BGMT_CD anim frame (update wraps)
-    NoteJudgeState m_judgePool[60] = {};   // +0x3c8 per-note judge slots (stride 0x18)
+    uint8_t _pad_3b4[0x3b8 - 0x3b4] = {}; // +0x3b4 4-byte gap; no play-task access (only
+                                          //        pc-relative literals alias this offset)
+    int m_scrubBarFrame = 0;              // +0x3b8 gauge/scrub-bar eased frame (DrawHud)
+    int m_cdColorFrame = 0;               // +0x3bc BGMT_CD_COLOR anim frame / HUD fever-loop frame
+    int m_barStarFrame = 0;               // +0x3c0 FRAME_SIDEMT_BARSTAR1 anim frame (update wraps)
+    int m_cdFrame = 0;                    // +0x3c4 BGMT_CD anim frame (update wraps)
+    NoteJudgeState m_judgePool[60] = {};  // +0x3c8 per-note judge slots (stride 0x18)
     neAppEventCenter *m_eventCenter = nullptr; // +0x968 picked {musicId, sheet} carrier
     int m_screenWidth = 0;                     // +0x96c aep screen width
     int m_screenHeight = 0;                    // +0x970 aep screen height
@@ -189,16 +193,16 @@ public:
     int m_pauseTapRadius = 0;  // +0x994 in-play pause-tap hit-circle radius
     // Long-note connecting-bar geometry (judge FUN_0002f1f8: len = fade*scale +
     // base, drawn along the head->target angle; priority halved into the anchor).
-    int m_barLenScale = 0;                 // +0x998 bar length gain per fade
-    int m_barSegLyr1 = 0;                  // +0x99c second bar-segment layer id
-    int m_barPriority = 0;                 // +0x9a0 bar draw priority (halved)
-    int m_barLenBase = 0;                  // +0x9a4 bar length base
-    int m_charaDrawSize = 0;               // +0x9a8 chara portrait draw size (PlayTaskDraw)
-    int16_t m_gaugeBase = 0;               // +0x9ac default life-gauge base (g_wPlayDefaultGauge)
-    uint8_t _rsvd_9ae[0x9b0 - 0x9ae] = {}; // +0x9ae
-    int m_score = 0;                       // +0x9b0 running score readout (PlayCurrentScore)
-    int16_t m_seVolume = 0;                // +0x9b4 touch-sound volume (UserSettingData)
-    uint8_t _rsvd_9b6[0x9b8 - 0x9b6] = {}; // +0x9b6
+    int m_barLenScale = 0;                // +0x998 bar length gain per fade
+    int m_barSegLyr1 = 0;                 // +0x99c second bar-segment layer id
+    int m_barPriority = 0;                // +0x9a0 bar draw priority (halved)
+    int m_barLenBase = 0;                 // +0x9a4 bar length base
+    int m_charaDrawSize = 0;              // +0x9a8 chara portrait draw size (PlayTaskDraw)
+    int16_t m_gaugeBase = 0;              // +0x9ac default life-gauge base (g_wPlayDefaultGauge)
+    uint8_t _pad_9ae[0x9b0 - 0x9ae] = {}; // +0x9ae alignment before m_score (no access)
+    int m_score = 0;                      // +0x9b0 running score readout (PlayCurrentScore)
+    int16_t m_seVolume = 0;               // +0x9b4 touch-sound volume (UserSettingData)
+    uint8_t _pad_9b6[0x9b8 - 0x9b6] = {}; // +0x9b6 alignment before m_hitRadius (no access)
     float m_hitRadius = 0.0f; // +0x9b8 note hit-test radius (read as float by PlayJudge)
     int m_popkunSize = 0;     // +0x9bc note ("popkun") size, 16.16 fixed
     int16_t m_gaugeValue = 0; // +0x9c0 life-gauge value (0..0x400)
@@ -208,33 +212,33 @@ public:
     int16_t m_comboMilestoneGuard = 0; // +0x9c2 previous combo count (milestone guard)
     // +0x9c4 the combo milestone just celebrated (25 / 50 / 100+): the judge
     // records the crossed value here as it stops the matching burst layer.
-    int16_t m_comboMilestoneShown = 0;     // +0x9c4 last combo milestone celebrated
-    uint8_t m_bgmReady = 0;                // +0x9c6 async BGM decode finished (state-2 gate)
-    uint8_t m_suppressHud = 0;             // +0x9c7 hide the HUD (teardown)
-    uint8_t m_endSeFired = 0;              // +0x9c8 one-shot song-end clear/rank-SE latch
-    uint8_t m_isDemoPlay = 0;              // +0x9c9 tutorial / auto-demo flag
-                                           //        (init from event-center +0x33)
-    uint8_t m_isPadDisplay = 0;            // +0x9ca pad-class display (g_bIsPadDisplay)
-    uint8_t _rsvd_9cb[0x9cc - 0x9cb] = {}; // +0x9cb
-    float m_gaugeGainGreat = 0.0f;         // +0x9cc great / perfect gauge delta
-    float m_gaugeGainGood = 0.0f;          // +0x9d0 good gauge delta (1.0)
-    float m_gaugeLossMiss = 0.0f;          // +0x9d4 miss / down gauge delta (negative)
-    int m_damageAccum = 0;                 // +0x9d8 damage accumulator (reset 0)
-    uint8_t m_damagedThisFrame = 0;        // +0x9dc took damage this frame (updateGauge)
-    uint8_t _rsvd_9dd[0x9e0 - 0x9dd] = {}; // +0x9dd
-    int m_hitEffectScale = 0;              // +0x9e0 note hit-effect extent (init 500/1000); the
-                                           //        judge passes its half (/2) as the draw scale
-    uint8_t m_optSimpleMode = 0;           // +0x9e4 UserSettingData isSimpleMode
-    uint8_t m_optEffectOn = 0;             // +0x9e5 UserSettingData isEffectOn
-    uint8_t m_optLongNoteEffect = 0;       // +0x9e6 UserSettingData isLongNotesEffectOn
-    uint8_t m_optOldHardware = 0;          // +0x9e7 AppDelegate isOldHardware
-    uint8_t m_stopped = 0;                 // +0x9e8 audio stopped (quit path)
-    uint8_t _rsvd_9e9[0x9ec - 0x9e9] = {}; // +0x9e9
-    int m_backTouchId = -1;                // +0x9ec held back-tap touch id (-1 none)
-    int m_backTouchTime = 0;               // +0x9f0 getTimeMillis at back-tap start
-    int m_beatPulse = 0;                   // +0x9f4 demo chara-window beat pulse (0..100)
-    int m_endPos = 0;                      // +0x9f8 NoteMng position latched at song end
-    int m_state = 0;                       // +0x9fc play state-machine field
+    int16_t m_comboMilestoneShown = 0;    // +0x9c4 last combo milestone celebrated
+    uint8_t m_bgmReady = 0;               // +0x9c6 async BGM decode finished (state-2 gate)
+    uint8_t m_suppressHud = 0;            // +0x9c7 hide the HUD (teardown)
+    uint8_t m_endSeFired = 0;             // +0x9c8 one-shot song-end clear/rank-SE latch
+    uint8_t m_isDemoPlay = 0;             // +0x9c9 tutorial / auto-demo flag
+                                          //        (init from event-center +0x33)
+    uint8_t m_isPadDisplay = 0;           // +0x9ca pad-class display (g_bIsPadDisplay)
+    uint8_t _pad_9cb[0x9cc - 0x9cb] = {}; // +0x9cb alignment before the gauge floats (no access)
+    float m_gaugeGainGreat = 0.0f;        // +0x9cc great / perfect gauge delta
+    float m_gaugeGainGood = 0.0f;         // +0x9d0 good gauge delta (1.0)
+    float m_gaugeLossMiss = 0.0f;         // +0x9d4 miss / down gauge delta (negative)
+    int m_damageAccum = 0;                // +0x9d8 damage accumulator (reset 0)
+    uint8_t m_damagedThisFrame = 0;       // +0x9dc took damage this frame (updateGauge)
+    uint8_t _pad_9dd[0x9e0 - 0x9dd] = {}; // +0x9dd alignment before m_hitEffectScale (no access)
+    int m_hitEffectScale = 0;             // +0x9e0 note hit-effect extent (init 500/1000); the
+                                          //        judge passes its half (/2) as the draw scale
+    uint8_t m_optSimpleMode = 0;          // +0x9e4 UserSettingData isSimpleMode
+    uint8_t m_optEffectOn = 0;            // +0x9e5 UserSettingData isEffectOn
+    uint8_t m_optLongNoteEffect = 0;      // +0x9e6 UserSettingData isLongNotesEffectOn
+    uint8_t m_optOldHardware = 0;         // +0x9e7 AppDelegate isOldHardware
+    uint8_t m_stopped = 0;                // +0x9e8 audio stopped (quit path)
+    uint8_t _pad_9e9[0x9ec - 0x9e9] = {}; // +0x9e9 alignment before m_backTouchId (no access)
+    int m_backTouchId = -1;               // +0x9ec held back-tap touch id (-1 none)
+    int m_backTouchTime = 0;              // +0x9f0 getTimeMillis at back-tap start
+    int m_beatPulse = 0;                  // +0x9f4 demo chara-window beat pulse (0..100)
+    int m_endPos = 0;                     // +0x9f8 NoteMng position latched at song end
+    int m_state = 0;                      // +0x9fc play state-machine field
 };
 
 // Play-scene lifecycle seams operating on the play-data block.
