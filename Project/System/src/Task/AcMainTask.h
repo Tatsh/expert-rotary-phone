@@ -45,6 +45,17 @@ struct SkillDataStruct; // System/../SkillData.h (pointer member only)
 struct neTouchPoint;    // System/src/Render/neGraphics.h (touch pool record)
 class neGraphics;       // System/src/Render/neGraphics.h (applyDragScroll parameter)
 
+// AcMainTask lifecycle state (m_lifecycleState): the app-lifecycle signal the
+// bridge raises when the app resigns / the player exits. Ghidra: stopAcMainTask
+// @FUN_0002314c (running -> stopping), requestGameExit @FUN_0002315c (->
+// exit-requested).
+enum AcLifecycleState : int {
+    kAcLifecycleNone = 0,          // initial / inactive
+    kAcLifecycleRunning = 6,       // active play
+    kAcLifecycleExitRequested = 8, // requestGameExit: leave the arcade play
+    kAcLifecycleStopping = 0xc,    // stopAcMainTask: resign teardown
+};
+
 class AcMainTask : public C_TASK {
 public:
     // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
@@ -53,6 +64,19 @@ public:
     AcMainTask() = default;
     ~AcMainTask() override = default;
     void update(int deltaMs) override; // Ghidra: AcMainTask_update (FUN_00099d18)
+
+    // Arcade-task lifecycle accessors for the app-lifecycle bridge
+    // (neEngine::stopAcMainTask / acMainRequestGameExit); see m_lifecycleState /
+    // m_exitRequested. 6 = running, 0xc = stopping, 8 = exit-requested.
+    AcLifecycleState lifecycleState() const {
+        return m_lifecycleState;
+    }
+    void setLifecycleState(AcLifecycleState state) {
+        m_lifecycleState = state;
+    }
+    void setExitRequested(bool requested) {
+        m_exitRequested = requested ? 1 : 0;
+    }
 
 private:
     // Per-state handlers, lifted from AcMainTask_update's inlined switch cases.
@@ -151,8 +175,18 @@ private:
     neTextureForiOS *m_jacketTex[9] = {};        // +0x1a4 9 music-panel jacket textures
     neTextureForiOS *m_wallNailTex[9] = {};      // +0x1c8 9 wall-nail textures
     neTextureForiOS *m_eventTex[12] = {};        // +0x1ec 12 event_0_%03d icons
-    int m_skillBoardLyr[5] = {};                 // +0x21c SKILL_COM_BOARD/... layer numbers
-    int m_skillBoardFrames[5] = {};              // +0x230 their frame counts
+    // Arcade-task lifecycle signals the app-lifecycle bridge raises on resign /
+    // exit (neEngine::stopAcMainTask @FUN_0002314c, acMainRequestGameExit
+    // @FUN_0002315c), reached through the accessors below. Ghidra: nState @+0x20c
+    // (6 = running, 0xc = stopping, 8 = exit-requested) and bExitFlag @+0x1d9.
+    // These are genuine arcade-AcMainTask fields; the surrounding m_*Tex arrays
+    // belong to CharaSelectTask, which the reconstruction currently merges into
+    // AcMainTask, so the original byte offsets overlap and are not
+    // layout-preserved on the 64-bit rebuild.
+    AcLifecycleState m_lifecycleState = kAcLifecycleNone; // +0x20c
+    uint8_t m_exitRequested = 0;                          // +0x1d9
+    int m_skillBoardLyr[5] = {};    // +0x21c SKILL_COM_BOARD/... layer numbers
+    int m_skillBoardFrames[5] = {}; // +0x230 their frame counts
     // +0x244: 8 bytes unused padding (dropped; runtime struct, layout not preserved)
     int m_musicResultFrame = {}; // +0x24c music collection-result overlay frame
     int m_wallResultFrame = {};  // +0x250 wall collection-result overlay frame

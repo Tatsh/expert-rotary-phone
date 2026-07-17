@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstring>
 
+#import "AcMainTask.h"   // AcMainTask::m_lifecycleState / m_exitRequested (arcade stop / exit)
 #import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AcViewerTask.h" // AcViewerTask named work-area (apply-settings owner)
 #import "AepManager.h"   // AepManager::orderingTable() for neTextureForiOS_draw
@@ -33,11 +34,6 @@ C_TASK *BootCreateTask(); // operator_new(0x4c) + BootLogoTask_ctor + setPriorit
 // Head of the shared-texture cache list (Ghidra: DAT_00188464). Registered/
 // unlinked by AepTexture as cached textures are acquired/released.
 AepTexture *g_textureCacheList = nullptr;
-
-// Arcade-task lifecycle-state field offset (+0x20c): state 6 = running,
-// transitioned to a stopping state on resign. (The play-task equivalent is now
-// reached by name as PlayTask::m_state.)
-static const int kTaskStateOffsetAc = 0x20c;
 
 #pragma mark - neAppEventCenter (guarded singleton @ DAT_00187bb8)
 
@@ -705,9 +701,8 @@ void stopAcMainTask(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
     }
-    int *state = reinterpret_cast<int *>(reinterpret_cast<char *>(acMainTask) + kTaskStateOffsetAc);
-    if (*state == 6) {
-        *state = 0xc;
+    if (acMainTask->lifecycleState() == kAcLifecycleRunning) {
+        acMainTask->setLifecycleState(kAcLifecycleStopping);
     }
 }
 
@@ -720,9 +715,8 @@ void acMainRequestGameExit(AcMainTask *acMainTask) {
     if (acMainTask == nullptr) {
         return;
     }
-    char *t = reinterpret_cast<char *>(acMainTask);
-    *reinterpret_cast<int *>(t + 0x20c) = 8;
-    *(t + 0x1d9) = 1;
+    acMainTask->setLifecycleState(kAcLifecycleExitRequested);
+    acMainTask->setExitRequested(true);
 }
 
 // The arcade-viewer option bridge: a thin forwarder to
