@@ -289,7 +289,7 @@ typedef struct SubMapData {
 
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     tmp.subMapId = mapId; // combined map id (main*10 + sub)
-    tmp.field06 = -1;
+    tmp.lastBranchNodeId = -1;
     tmp.goalCharaId = 0;
     tmp.musicPiece = 0;
     tmp.wallPaperPiece = 0;

@@ -924,7 +924,7 @@ void AcMainTask::loadTreasureMap() {
     m_playerY = (float)((cur ? cur->y : 0) * 0x1a);
     m_boardMoveState = (tmp.boardMoveState == 2) ? (unsigned)tmp.boardMoveState : 0u;
     m_bonusCount = tmp.mainMapId;
-    m_treasureRaw06 = tmp.field06;
+    m_lastBranchNodeId = tmp.lastBranchNodeId;
     std::memcpy(&m_boardVisited[0], tmp.visitedSquares,
                 15); // board-visited bitmap (0x894..0x8a2)
 

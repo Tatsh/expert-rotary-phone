@@ -26,7 +26,8 @@ typedef struct __attribute__((packed)) TreasureTmpData {
     int16_t mainMapId;   // +0x00 main map id (parallels TreasureData.mainMapId)
     int16_t subMapId;    // +0x02 goal sub-map id (main*10+sub); -1 == nothing pending
     int16_t curSubMapId; // +0x04 current board node id; out of range -> reset to the start square
-    int16_t field06;     // +0x06 role unknown; -1 in the default record (cached to m_treasureRaw06)
+    int16_t
+        lastBranchNodeId; // +0x06 last junction (>1 forward link) board node id; -1 in the default record
     int32_t musicPieceMask; // +0x08 music-piece bits earned at this goal (OR'd into the collection)
     int32_t wallPieceMask;  // +0x0c wallpaper-piece bits earned at this goal
     int16_t boardMoveState; // +0x10 board move / warp state (== 2 gate)
@@ -40,9 +41,9 @@ typedef struct __attribute__((packed)) TreasureTmpData {
     int16_t
         rouletteMode; // +0x44 roulette mode / result; -1 in the default record (-> m_rouletteMode)
     uint8_t bonusSquareIndex; // +0x46 1-based chosen bonus-treasure square (rand % bonusCount + 1)
-    uint8_t field47;          // +0x47 role unknown
+    uint8_t field47;          // +0x47 no reconstructed access; kept for the serialized layout
     uint8_t bonusRoll;        // +0x48 random 0..99 roll (getRandRangeInt(100))
-    uint8_t field49[3];       // +0x49 role unknown (3 bytes ahead of fastRecord)
+    uint8_t field49[3];       // +0x49 no reconstructed access; the 3 bytes ahead of fastRecord
     int32_t
         fastRecord; // +0x4c best (minimum) fast-clear score (misaligned int in the packed record)
     uint8_t
