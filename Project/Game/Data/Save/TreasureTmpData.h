@@ -40,10 +40,11 @@ typedef struct __attribute__((packed)) TreasureTmpData {
     uint8_t visitedSquares[15]; // +0x35 per-square visited flags (copied to m_boardVisited)
     int16_t
         rouletteMode; // +0x44 roulette mode / result; -1 in the default record (-> m_rouletteMode)
-    uint8_t bonusSquareIndex; // +0x46 1-based chosen bonus-treasure square (rand % bonusCount + 1)
-    uint8_t field47;          // +0x47 no reconstructed access; kept for the serialized layout
-    uint8_t bonusRoll;        // +0x48 random 0..99 roll (getRandRangeInt(100))
-    uint8_t field49[3];       // +0x49 no reconstructed access; the 3 bytes ahead of fastRecord
+    uint8_t bonusSquareIndex;  // +0x46 1-based chosen bonus-treasure square (rand % bonusCount + 1)
+    uint8_t visitorFetchCount; // +0x47 get-visitor request counter; incremented before each
+                               // startGetVisitorHttp (AcMainTask update state 0x11) and persisted
+    uint8_t bonusRoll;         // +0x48 random 0..99 roll (getRandRangeInt(100))
+    uint8_t unused49[3];       // +0x49 alignment padding before fastRecord; no access
     int32_t
         fastRecord; // +0x4c best (minimum) fast-clear score (misaligned int in the packed record)
     uint8_t
