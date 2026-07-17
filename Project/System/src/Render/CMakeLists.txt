@@ -5,19 +5,19 @@
 
 target_sources(popnrhythmin PRIVATE
     AepTexture.mm
+    C_SINGLE_SPRITE.cpp
     neGLView.mm
     neGraphics.cpp
     neRenderer.cpp
     neTextTexture.mm
     neTextureForiOS.cpp
-    neTextureRef.cpp
     AepTexture.h
+    C_SINGLE_SPRITE.h
     neGLView.h
     neGraphics.h
     neRenderer.h
     neTextTexture.h
     neTextureForiOS.h
-    neTextureRef.h
 )
 
 target_include_directories(popnrhythmin PRIVATE .)

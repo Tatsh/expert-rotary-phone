@@ -16,11 +16,11 @@
 #import <OpenGLES/ES1/gl.h>
 
 #import "AepOrderingTable.h"
+#import "C_SINGLE_SPRITE.h" // C_SINGLE_SPRITE::setRenderStateSlot (FUN_00016710)
 #import "neDebugLog.h"
 #import "neRenderer.h"      // neDrawLine/Triangle/Rect/Quad/TexturedQuad
 #import "neTextTexture.h"   // neDrawText (FUN_0001551c)
 #import "neTextureForiOS.h" // the sprite/frame-atlas object the flush walks
-#import "neTextureRef.h"    // neTextureRef::setRenderStateSlot (FUN_00016710)
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -569,9 +569,9 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
         }
     }
 
-    // Render-state slot for this sub-frame (AepTile is the same 0x18-byte record as
-    // neTextureRef; the compiler applies the real stride). Slot 0/1 = clip enable.
-    neTextureRef *slot = reinterpret_cast<neTextureRef *>(&pFrames->tileRects()[frameIdx]);
+    // Render-state slot for this sub-frame (slot 0/1 = clip enable). The tile
+    // records are C_SINGLE_SPRITE, which owns setRenderStateSlot directly.
+    C_SINGLE_SPRITE *slot = &pFrames->tileRects()[frameIdx];
     slot->setRenderStateSlot(0, nUseClip != 0 ? 1 : 0);
     slot->setRenderStateSlot(1, nUseClip != 0 ? 1 : 0);
 

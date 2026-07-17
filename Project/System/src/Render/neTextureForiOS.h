@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "C_SINGLE_SPRITE.h" // one C_SINGLE_SPRITE per GPU upload tile (m_tileRects)
+
 #ifdef __OBJC__
 @class NSData; // the in-memory image path (LoadTexture:) takes a bridged NSData*
 #endif
@@ -20,20 +22,6 @@
 class AepTexture;
 class AepOrderingTable;
 class AepManager;
-
-// One GPU upload record per tile (0x18 bytes). A large image is split into
-// several GL-max-size tiles; each keeps the AepTexture it is currently bound to
-// so a context loss can re-upload it. Ghidra: ctor FUN_00015eb4 sets the
-// defaults below; the vtable pointer sits at +0x00 (the type is polymorphic).
-struct AepTile {
-    AepTile();                      // Ghidra: FUN_00015eb4
-    virtual ~AepTile();             // +0x00 vtable slot
-    AepTexture *uploaded = nullptr; // +0x04 currently-bound texture (refcounted)
-    int reserved0 = 0;              // +0x08 (ctor: 0)
-    int reserved1 = 0;              // +0x0c (ctor: 0)
-    int tileX = 7;                  // +0x10 (ctor: 7)
-    int tileY = 7;                  // +0x14 (ctor: 7)
-};
 
 // Acquire (ref-counted) the cached AepTexture for a bundled image path, loading
 // + uploading it on first use; returns null on load failure. Ghidra:
@@ -45,7 +33,7 @@ AepTexture *AepTextureCacheAcquire(const char *path);
 // retain the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at
 // the call site, but it is a real incoming AepTexture* — verified in
 // disassembly).
-void AepTextureUploadTiles(AepTile *tile, AepTexture *tex);
+void AepTextureUploadTiles(C_SINGLE_SPRITE *tile, AepTexture *tex);
 
 // Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468
 // fills into an AepSpriteCommand (offsets in comments). Zero-defaulted like a
@@ -117,9 +105,9 @@ public:
 
     // Tile-table accessors for the ordering-table flush. drawAepSpriteClipped walks
     // these members rather than raw byte offsets, so the field positions and the
-    // AepTile element stride stay correct on the 64-bit rebuild. The per-tile
-    // records double as the render-state slots (AepTile is the same 0x18-byte
-    // record as neTextureRef). These accessors have no binary counterpart (the
+    // C_SINGLE_SPRITE element stride stay correct on the 64-bit rebuild. The
+    // per-tile records double as the render-state slots (they are C_SINGLE_SPRITE,
+    // the same 0x18-byte record). These accessors have no binary counterpart (the
     // binary inlines the field reads); they exist only to avoid the offset math.
     /** @newCode */
     int tileCount() const {
@@ -134,7 +122,7 @@ public:
         return m_tileHeights;
     }
     /** @newCode */
-    AepTile *tileRects() const {
+    C_SINGLE_SPRITE *tileRects() const {
         return m_tileRects;
     }
 
@@ -148,7 +136,8 @@ private:
     int *m_tileWidths = nullptr;    // +0x08 per-tile texture width  (AepTexture +0x1c)
     int *m_tileHeights = nullptr;   // +0x0c per-tile texture height (AepTexture +0x20)
     AepTexture **m_tiles = nullptr; // +0x10 cached AepTexture per tile
-    AepTile *m_tileRects = nullptr; // +0x14 per-tile upload records (new AepTile[N])
+    C_SINGLE_SPRITE *m_tileRects =
+        nullptr; // +0x14 per-tile upload records (new C_SINGLE_SPRITE[N])
 };
 
 // Flat-argument sprite-draw wrapper the task draw passes call (Ghidra:

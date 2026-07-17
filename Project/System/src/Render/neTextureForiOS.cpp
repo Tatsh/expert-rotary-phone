@@ -18,23 +18,8 @@
 #include "neDebugLog.h"
 #include "neTextureForiOS.h"
 
-// Ghidra: FUN_00015eb4 — clears the two reserved words and defaults the tile
-// span to 7x7; the vtable pointer is written by the compiler-generated
-// prologue.
-// @complete
-AepTile::AepTile() = default;
-
-// Ghidra: FUN_00015edc (~AepTile / ~neTextureRef) — NOT a defaulted destructor:
-// it drops the reference the upload path retained on the tile's bound texture
-// (+0x04) via neTextureRelease (FUN_00018200), then leaves the compiler-emitted
-// operator-delete thunk to free the storage.
-// @complete
-AepTile::~AepTile() {
-    if (uploaded != nullptr) {
-        neTextureRelease(uploaded);
-        uploaded = nullptr;
-    }
-}
+// C_SINGLE_SPRITE's ctor/dtor (FUN_00015eb4 / FUN_00015edc) and setRenderStateSlot
+// live in C_SINGLE_SPRITE.cpp; a neTextureForiOS just holds an array of them.
 
 // Ghidra: FUN_00011818 — vtable + null fields (a detached, unloaded sprite).
 // @complete
@@ -62,7 +47,7 @@ int neTextureForiOS::load(const char *path) {
     // arrays sized 1 here.
     m_tileCount = 1;
     m_tiles = new AepTexture *[1];
-    m_tileRects = new AepTile[1]; // 0x18-byte record (ctor FUN_00015eb4)
+    m_tileRects = new C_SINGLE_SPRITE[1]; // 0x18-byte record (ctor FUN_00015eb4)
     m_tileWidths = new int[1];
     m_tileHeights = new int[1];
 
@@ -76,13 +61,13 @@ int neTextureForiOS::load(const char *path) {
     m_tileWidths[0] = m_tiles[0]->textureWidth();       // AepTexture +0x1c
     m_tileHeights[0] = m_tiles[0]->textureHeight();     // AepTexture +0x20
     AepTextureUploadTiles(&m_tileRects[0], m_tiles[0]); // FUN_000166ec
-    neDebugLog("neTextureForiOS::load OK path='%s' tex=%p glName=%u w=%d h=%d tile.uploaded=%p",
+    neDebugLog("neTextureForiOS::load OK path='%s' tex=%p glName=%u w=%d h=%d tile.texture=%p",
                path,
                static_cast<void *>(m_tiles[0]),
                m_tiles[0]->name(),
                m_tileWidths[0],
                m_tileHeights[0],
-               static_cast<void *>(m_tileRects[0].uploaded));
+               static_cast<void *>(m_tileRects[0].texture));
     return 0;
 }
 
@@ -106,7 +91,7 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
     // padded width/height (+0x08/+0x0c). Ghidra: operator new[] for each, count
     // at +0x04.
     m_tiles = new AepTexture *[tileCount];
-    m_tileRects = new AepTile[tileCount]; // 0x18-byte records (ctor FUN_00015eb4)
+    m_tileRects = new C_SINGLE_SPRITE[tileCount]; // 0x18-byte records (ctor FUN_00015eb4)
     m_tileWidths = new int[tileCount];
     m_tileHeights = new int[tileCount];
     m_tileCount = tileCount;
@@ -211,7 +196,7 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
 // free the parallel per-tile arrays allocated by load()/loadFrames(). Each tile
 // texture carries two references: one the acquire path retained in m_tiles[i]
 // (dropped here by the loop) and one the upload path retained in
-// m_tileRects[i].uploaded (dropped by delete[] m_tileRects running ~AepTile). The
+// m_tileRects[i].texture (dropped by delete[] m_tileRects running ~C_SINGLE_SPRITE). The
 // free order matches the binary: release loop, then m_tileRects, then the widths /
 // heights / handles arrays.
 // @complete
@@ -221,7 +206,7 @@ neTextureForiOS::~neTextureForiOS() {
             neTextureRelease(m_tiles[i]); // FUN_00018200: drop the acquire reference
         }
     }
-    delete[] m_tileRects; // runs ~AepTile per element -> drops the upload reference
+    delete[] m_tileRects; // runs ~C_SINGLE_SPRITE per element -> drops the upload reference
     delete[] m_tileWidths;
     delete[] m_tileHeights;
     delete[] m_tiles;
