@@ -9,6 +9,7 @@
 //
 
 #include <cstring>
+#include <span>
 
 #import <Foundation/Foundation.h>
 
@@ -276,7 +277,6 @@ void PlayTask::update(int /*deltaMs*/) {
     AudioManager *audio = [AudioManager sharedManager];
     NoteMng &nm = NoteMng::shared();
     neGraphics &gfx = neGraphics::shared();
-    PlayTask *playData = this; // the play data the judge operates on is this task
 
     // Snapshot up to 8 live touches (their x/y + ids) for the judge pass, and
     // detect a "back" tap (a released touch that barely moved).
@@ -285,7 +285,7 @@ void PlayTask::update(int /*deltaMs*/) {
     // 0x2dc70 memsets the 0x40-byte touchXY block to 0xff (each float becomes the
     // 0xffffffff sentinel), so unfilled lanes carry that pattern into the judge.
     std::memset(touchXY, 0xff, sizeof(touchXY));
-    int touchCount = 0;
+    auto touchCount = 0uz;
     bool backTap = false;
     int backTapStartY = 0; // the back-tap's nStartY (Ghidra local_8c), used by the pause menu
     for (int i = 0, n = gfx.activeTouchCount(); i < n; i++) {
@@ -313,7 +313,7 @@ void PlayTask::update(int /*deltaMs*/) {
 
     switch (m_state) {
     case 0:
-        PlayTaskInit(playData); // FUN_0002e2d8: allocate the play scene
+        PlayTaskInit(this); // FUN_0002e2d8: allocate the play scene
         m_state = 1;
         [[fallthrough]];
     case 1:                          // NoteMng bring-up + fade in + pause the intro layers
@@ -329,8 +329,8 @@ void PlayTask::update(int /*deltaMs*/) {
             m_comboLayers[3]->stop(1); // Ghidra: AepLyrCtrl::Stop(pAepLyrMain[3])
             m_state = 4;
         }
-        nm.primePlay();                                  // Ghidra: NoteMng::ResetPlayback
-        PlayJudge_update(playData, nullptr, nullptr, 0); // draw the field
+        nm.primePlay();               // Ghidra: NoteMng::ResetPlayback
+        playJudgeUpdate(nullptr, {}); // draw the field
         break;
     case 3: // retry: after the fade, rebuild the play and restart
         if (aep.isTransitionDone()) {
@@ -345,7 +345,7 @@ void PlayTask::update(int /*deltaMs*/) {
             m_state = 6;
         } else {
             nm.primePlay(); // Ghidra: NoteMng::ResetPlayback
-            PlayJudge_update(playData, nullptr, nullptr, 0);
+            playJudgeUpdate(nullptr, {});
         }
         break;
     case 5: { // pause menu: hit-test resume / retry / quit, then draw the menu + field
@@ -379,14 +379,14 @@ void PlayTask::update(int /*deltaMs*/) {
         }
         aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0); // the pause-menu layer
         nm.update(); // Ghidra: NoteMng::Update — keep the notes scrolling behind
-        PlayJudge_update(playData, nullptr, nullptr, 0);
+        playJudgeUpdate(nullptr, {});
         break;
     }
     case 6: {               // *** PLAYING ***: drive the note engine, then judge/render, gauge,
                             // song-end
         nm.updatePlaying(); // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
                             // BGM drift sync
-        PlayJudge_update(playData, touchXY, touchIds, touchCount);
+        playJudgeUpdate(touchXY, {touchIds, touchCount});
 
         // Cache the current gauge/score for the end-of-song rank SEs. Ghidra:
         // FUN_0002ff7c.
@@ -411,7 +411,7 @@ void PlayTask::update(int /*deltaMs*/) {
                 // high voice (+0x3ac).
                 const int voice = (m_score < 70000) ? m_playSeIds[2] : m_playSeIds[1];
                 [audio playSe:nil resourceId:voice];
-                PlayEndResultSe(playData, m_score); // the rank / clear jingle cascade
+                PlayEndResultSe(this, m_score); // the rank / clear jingle cascade
             }
         }
 
@@ -475,7 +475,7 @@ void PlayTask::update(int /*deltaMs*/) {
         break;
     case 10: // hand off to the result screen
         if (aep.isTransitionDone()) {
-            PlayTaskGotoResult(playData);
+            PlayTaskGotoResult(this);
         }
         break;
     default:

@@ -3,17 +3,18 @@
 //  pop'n rhythmin
 //
 //  The standard-mode NOTE-PLAY task: the actual gameplay screen. It runs the
-//  play clock, drives the per-frame note judge/render pass (PlayJudge_update /
+//  play clock, drives the per-frame note judge/render pass (playJudgeUpdate /
 //  NoteMng), handles the pause menu, fires combo SEs, watches the gauge + song
 //  end, and hands off to the result screen. Reconstructed from Ghidra project
 //  rb420, program PopnRhythmin (init PlayTask_init FUN_0002e2d8, update
 //  PlayTask_update FUN_0002dc14).
 //
 //  This task's storage IS the play data the judge pass operates on (state @
-//  +0x9fc, judge-state pool @ +0x3c8, scale/radius @ +0x974/+0x9b8): the note
-//  engine's PlayJudge_update takes this class by pointer (PlayJudge.h declares
-//  only the NoteJudgeState pool element it needs). The heavy per-state screen
-//  geometry is delegated to the note draw + pause-menu units.
+//  +0x9fc, judge-state pool @ +0x3c8, scale/radius @ +0x974/+0x9b8). The judge
+//  pass is the member playJudgeUpdate() (its body lives in the note engine,
+//  Game/Note/PlayJudge.mm); PlayJudge.h only declares the NoteJudgeState pool
+//  element. The heavy per-state screen geometry is delegated to the note draw +
+//  pause-menu units.
 //
 //  ---- work area (this class IS the 0xa00-byte play-data struct) ----
 //  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
@@ -36,6 +37,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 
 #include "C_TASK.h"
 #include "PlayJudge.h" // NoteJudgeState (the +0x3c8 pool element)
@@ -75,6 +77,22 @@ private:
     // while the task is not finishing (m_suppressHud == 0). Ghidra:
     // PlayTask::DrawHud (FUN_000303fc).
     void DrawHud(); // @ 0x303fc
+
+    // The per-frame note judge/render pass: hit-tests the touches against the
+    // active notes, dispatches to NoteMng, resolves holds, draws each note + its
+    // effects, and fires the combo-milestone bursts. update() calls it every
+    // frame. Body lives in the note engine (Game/Note/PlayJudge.mm). Ghidra:
+    // FUN_0002f1f8 (MainTask::PlayJudgeUpdate). touchXY is a fixed 8-pair (x, y)
+    // block (a negative coordinate marks an empty slot); touchIds carries the
+    // parallel neGraphics touch ids for the live touches, its size being the
+    // touch count the binary passes separately.
+    void playJudgeUpdate(const float *touchXY, std::span<const int> touchIds);
+
+    // Play the per-tap feedback SE, restarting any still-playing instance, gated
+    // by the touch-sound volume and skipped during the pause menu; playJudgeUpdate
+    // calls it after a frame that resolved a note. Body in PlayScore.mm. Ghidra:
+    // FUN_00031338 (PlayTask::PlayTouchSound).
+    void playTouchSound();
 
 public:
     // ================= work-area layout (offsets are binary-exact)

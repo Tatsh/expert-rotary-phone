@@ -54,27 +54,11 @@ struct NoteJudgeState {
 // pointer. This file used to carry a duplicate MainTaskPlayData overlay of the
 // same 0xa00-byte memory — removed once the two were reconciled.)
 
-// Run one play/judge pass over the global NoteMng's active notes.
-//   playData  : the standard-mode MainTask play data.
-//   touchXY   : current touch points as (x, y) float pairs in view pixels; a
-//               negative x or y marks an empty/consumed slot. Up to 8 pairs.
-//   touchIds  : the neGraphics touch id parallel to each touchXY pair (bound to
-//   a
-//               note when its tap lands, so the hold can track the same
-//               finger).
-//   touchCount: number of touch pairs.
-// Ghidra: FUN_0002f1f8.
-void PlayJudge_update(PlayTask *playData,
-                      const float *touchXY,
-                      const int *touchIds,
-                      int touchCount);
-
-// Play the per-tap feedback SE (retriggering it if already sounding), gated by
-// the user's touch-sound volume and skipped while the pause menu is up. Called
-// after a frame that resolved any note. (Despite the historical name it does
-// NOT recompute the score/gauge — that is done by the play loop via
-// PlayCurrentScore.) Ghidra: FUN_00031338.
-void PlayScoreGaugeUpdate(PlayTask *playData);
+// The per-frame play/judge pass and the per-tap feedback SE are PlayTask methods
+// (PlayTask::playJudgeUpdate — Ghidra FUN_0002f1f8 — and PlayTask::playTouchSound
+// — Ghidra FUN_00031338); their bodies live in PlayJudge.mm / PlayScore.mm but
+// they are declared on the class in PlayTask.h. Only the miss callback below,
+// which NoteMng invokes through a function pointer, stays a free function.
 
 // The note engine's miss callback: apply the BAD/miss gauge penalty to the play
 // data (raise the missed flag, subtract gaugeLossMiss, clamp [0, 0x400]). The

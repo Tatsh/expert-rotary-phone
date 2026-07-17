@@ -12,32 +12,28 @@
 //        result into the play data (+0x9b0) each frame and the results screen
 //        reads it back.
 //
-//    - PlayScoreGaugeUpdate Ghidra: FUN_00031338
-//        Called after any frame that resolved a note (PlayJudge_update's tail).
-//        Its name is historical: the running score itself is recomputed by the
-//        state-6 caller via PlayCurrentScore; this routine only (re)fires the
-//        per-judge gauge feedback SE, retriggering the loaded source (+0x398)
-//        and dropping the prior instance (+0x3a0), gated by the gauge-enable
-//        count (+0x9b4) and skipped while the pause menu (state 5) is up.
-//        Verified against the disassembly, not the heavier score math the name
-//        suggests.
+//    - PlayTask::playTouchSound Ghidra: FUN_00031338
+//        Called after any frame that resolved a note (playJudgeUpdate's tail).
+//        It (re)fires the per-tap feedback SE, retriggering the loaded source
+//        (+0x398) and dropping the prior instance (+0x3a0), gated by the
+//        touch-sound volume (+0x9b4) and skipped while the pause menu (state 5)
+//        is up. Verified against the disassembly.
 //
 //    - PlayEndResultSe      Ghidra: the rank-SE cascade in PlayTask_update
 //        (FUN_0002dc14) state 6, ~0x2e0d0..0x2e190. Chooses one of several
 //        pre-created SE-instance jingles from the final score + combo/tally,
 //        plus a clear fanfare.
 //
-//  The play data is the standard-mode play task, PlayTask; PlayScoreGaugeUpdate
-//  reaches its named members directly, while the score/rank helpers below still
-//  read a few fields by cited byte offset (pd()/pdw()).
+//  The play data is the standard-mode play task, PlayTask; playTouchSound is a
+//  PlayTask method reaching its named members directly, while the score/rank
+//  helpers below still read a few fields by cited byte offset (pd()/pdw()).
 //
 
 #import <Foundation/Foundation.h>
 
 #import "AudioManager.h"
 #import "NoteMng.h"
-#import "PlayJudge.h"  // PlayScoreGaugeUpdate proto
-#import "PlayTask.h"   // PlayCurrentScore / PlayEndResultSe protos
+#import "PlayTask.h"
 #import "SeInstance.h" // SeInstanceIsBusy / SeInstancePlay / SeInstancePlayMode
 
 // --- Play-data field access -------------------------------------------------
@@ -150,20 +146,20 @@ int PlayCurrentScore() {
 // instance at +0x3a0 is stopped and reset to -1 before the +0x398 source is
 // retriggered and its new instance id stored back into +0x3a0.
 // @complete
-void PlayScoreGaugeUpdate(PlayTask *playData) {
+void PlayTask::playTouchSound() {
     // Play the per-tap feedback SE only when the user's touch-sound volume is on,
     // and never while the pause menu is up (state 5).
-    if (playData->m_seVolume <= 0) {
+    if (m_seVolume <= 0) {
         return;
     }
-    if (playData->m_state == 5) {
+    if (m_state == 5) {
         return;
     }
 
     AudioManager *audio = [AudioManager sharedManager];
 
     // Drop any still-playing tap instance before retriggering.
-    int *instanceField = &playData->m_timingSeInst[0];
+    int *instanceField = &m_timingSeInst[0];
     if (*instanceField != -1) {
         [audio stopSe:static_cast<RSND_INSTANCE_ID>(*instanceField)];
         *instanceField = -1;
@@ -171,7 +167,7 @@ void PlayScoreGaugeUpdate(PlayTask *playData) {
 
     // m_hitSeId is a 4-byte SE source id (RSND_SOURCE_ID is unsigned long, 8 bytes
     // on the 64-bit target, so the field stays int and widens implicitly here).
-    *instanceField = static_cast<int>([audio playSe:nil resourceId:playData->m_hitSeId]);
+    *instanceField = static_cast<int>([audio playSe:nil resourceId:m_hitSeId]);
 }
 
 // Ghidra: the SE-instance rank cascade in PlayTask_update (FUN_0002dc14) state
