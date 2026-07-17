@@ -111,7 +111,7 @@ private:
                                        int rotation,
                                        uint32_t blend,
                                        int *clipRect,
-                                       uint32_t p17,
+                                       uint32_t priority,
                                        void *context);
 
     // ================= work-area layout (offsets are binary-exact)
