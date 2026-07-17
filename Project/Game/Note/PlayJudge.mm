@@ -692,5 +692,9 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
 // a tapped BAD does.
 // @complete
 void PlayApplyMissGauge(void *playData) {
-    updateGaugeValue(reinterpret_cast<PlayTask *>(playData), NOTE_JUDGE_BAD);
+    // playData is the PlayTask* registered as the miss-callback userdata
+    // (PlayTask::start -> initPlayDataWithData(..., this)); the binary uses it
+    // straight as the PlayTask base (@0x3122c: gauge fields at r0+0x9c0/0x9d4,
+    // missed flag at r0+0x9dc), so recover it with a plain void* conversion.
+    updateGaugeValue(static_cast<PlayTask *>(playData), NOTE_JUDGE_BAD);
 }
