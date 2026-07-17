@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstring>
 #include <ctime>
+#include <memory>
 
 #import "AepFrameDraw.h"
 #import "AepLyrCtrl.h"
@@ -37,6 +38,12 @@
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
+
+// Defaulted out-of-line so the unique_ptr scene members are destroyed where
+// AepLyrCtrl / neTextureForiOS are complete (the header only forward-declares
+// them). dispose() already releases the scene resources; this frees anything
+// still held if the task is destroyed without it.
+AcMainTask::~AcMainTask() = default;
 
 // Ghidra: AcMainTask_update (FUN_00099d18). Snapshot the touches (recording a
 // drag anchor and classifying a tap), refresh the "scrolled past the end" flag,
@@ -687,15 +694,13 @@ void AcMainTask::setupBuildOverlays() {
     // 29 roulette layers -> +0x2c: new(0x60)+ctor+init(5, name, owner=this,
     // order).
     for (int i = 0; i < 29; i++) {
-        AepLyrCtrl *layer = new AepLyrCtrl();
-        m_rouletteLayers[i] = layer;
-        layer->init(5, kRouletteNames[i], this, kRouletteOrder[i]);
+        m_rouletteLayers[i] = std::make_unique<AepLyrCtrl>();
+        m_rouletteLayers[i]->init(5, kRouletteNames[i], this, kRouletteOrder[i]);
     }
     // 4 arrows -> +0xc0, order 0x1d.
     for (int i = 0; i < 4; i++) {
-        AepLyrCtrl *layer = new AepLyrCtrl();
-        m_arrowLayers[i] = layer;
-        layer->init(5, kArrowNames[i], this, 0x1d);
+        m_arrowLayers[i] = std::make_unique<AepLyrCtrl>();
+        m_arrowLayers[i]->init(5, kArrowNames[i], this, 0x1d);
     }
     // 8 select panels -> +0xa0. The tall-phone name table is used only for a tall
     // (displayType 2) phone; on a pad the two COLLECTION_SELECT panels (i == 4/5)
@@ -704,16 +709,15 @@ void AcMainTask::setupBuildOverlays() {
     const char *const *panelNames = tall ? kPanelNamesTall : kPanelNamesDefault;
     for (int i = 0; i < 8; i++) {
         if (!pad || (i != 4 && i != 5)) {
-            AepLyrCtrl *layer = new AepLyrCtrl();
-            m_panelLayers[i] = layer;
-            layer->init(5, panelNames[i], this, kPanelOrder[i]);
+            m_panelLayers[i] = std::make_unique<AepLyrCtrl>();
+            m_panelLayers[i]->init(5, panelNames[i], this, kPanelOrder[i]);
         }
     }
 
     // Hand-tune two roulette layers: shorten roulette[1] by one frame and set
     // roulette[3] to (roulette[1] original length - 2) at 0.8 alpha.
-    AepLyrCtrl *roul1 = m_rouletteLayers[1]; // roulette index 1
-    AepLyrCtrl *roul3 = m_rouletteLayers[3]; // roulette index 3
+    AepLyrCtrl *roul1 = m_rouletteLayers[1].get(); // roulette index 1
+    AepLyrCtrl *roul3 = m_rouletteLayers[3].get(); // roulette index 3
     const int roul1Frames = roul1->frameCount();
     roul1->frameCount() = roul1Frames - 1;
     roul3->frameCount() = roul1Frames - 2;
@@ -743,49 +747,46 @@ void AcMainTask::setupLoadTextures() {
     NSBundle *bundle = [NSBundle mainBundle];
 
     // circle / blind_circle -> +0xd4 / +0xe4.
-    neTextureForiOS *circleTex = new neTextureForiOS();
-    m_circleTex = circleTex;
-    circleTex->load([[bundle pathForResource:@"circle" ofType:@"png"] UTF8String]);
+    m_circleTex = std::make_unique<neTextureForiOS>();
+    m_circleTex->load([[bundle pathForResource:@"circle" ofType:@"png"] UTF8String]);
 
-    neTextureForiOS *blindTex = new neTextureForiOS();
-    m_blindCircleTex = blindTex;
-    blindTex->load([[bundle pathForResource:@"blind_circle" ofType:@"png"] UTF8String]);
+    m_blindCircleTex = std::make_unique<neTextureForiOS>();
+    m_blindCircleTex->load([[bundle pathForResource:@"blind_circle" ofType:@"png"] UTF8String]);
 
     // The active character's board sprite from the downloadable support dir ->
     // +0xdc.
-    neTextureForiOS *charaTex = new neTextureForiOS();
-    m_charaTex = charaTex;
+    m_charaTex = std::make_unique<neTextureForiOS>();
     NSString *charaFile = [NSString
         stringWithFormat:@"sugo_chara%03d.png", static_cast<int>([UserSettingData charaId])];
     NSString *charaPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
-    charaTex->load([charaPath UTF8String]);
+    m_charaTex->load([charaPath UTF8String]);
 
     // 10 digit glyphs each for points (+0xfc), roulette (+0x124) and ticket
     // (+0x14c).
     for (int i = 0; i < 10; i++) {
-        neTextureForiOS *pointsTex = new neTextureForiOS();
-        m_pointsDigitTex[i] = pointsTex;
-        pointsTex->load([[bundle pathForResource:[NSString stringWithFormat:@"num_points%d", i]
-                                          ofType:@"png"] UTF8String]);
+        m_pointsDigitTex[i] = std::make_unique<neTextureForiOS>();
+        m_pointsDigitTex[i]->load(
+            [[bundle pathForResource:[NSString stringWithFormat:@"num_points%d", i]
+                              ofType:@"png"] UTF8String]);
 
-        neTextureForiOS *roulTex = new neTextureForiOS();
-        m_roulDigitTex[i] = roulTex;
-        roulTex->load([[bundle pathForResource:[NSString stringWithFormat:@"num_roulette_%d", i]
-                                        ofType:@"png"] UTF8String]);
+        m_roulDigitTex[i] = std::make_unique<neTextureForiOS>();
+        m_roulDigitTex[i]->load(
+            [[bundle pathForResource:[NSString stringWithFormat:@"num_roulette_%d", i]
+                              ofType:@"png"] UTF8String]);
 
-        neTextureForiOS *ticketTex = new neTextureForiOS();
-        m_ticketDigitTex[i] = ticketTex;
-        ticketTex->load([[bundle pathForResource:[NSString stringWithFormat:@"ticket_num%d", i]
-                                          ofType:@"png"] UTF8String]);
+        m_ticketDigitTex[i] = std::make_unique<neTextureForiOS>();
+        m_ticketDigitTex[i]->load(
+            [[bundle pathForResource:[NSString stringWithFormat:@"ticket_num%d", i]
+                              ofType:@"png"] UTF8String]);
     }
 
     // 12 event icons ("event_0_%03d@2x") -> +0x1ec.
     for (int i = 0; i < 12; i++) {
-        neTextureForiOS *eventTex = new neTextureForiOS();
-        m_eventTex[i] = eventTex;
-        eventTex->load([[bundle pathForResource:[NSString stringWithFormat:@"event_0_%03d@2x", i]
-                                         ofType:@"png"] UTF8String]);
+        m_eventTex[i] = std::make_unique<neTextureForiOS>();
+        m_eventTex[i]->load(
+            [[bundle pathForResource:[NSString stringWithFormat:@"event_0_%03d@2x", i]
+                              ofType:@"png"] UTF8String]);
     }
 }
 
@@ -898,19 +899,12 @@ void AcMainTask::loadTreasureMap() {
     // Re-read the pending record (its non-position fields are copied in below).
     TreasureTmpData tmp = [UserSettingData treasureTmp];
 
-    // Free the previous map object (Ghidra: FUN_000ce2e4 pre-step + dtor
-    // FUN_000ce330
-    // + operator delete; modelled as `delete`).
-    if (TreasureMap *old = m_map) {
-        delete old;
-        m_map = nullptr;
-    }
-
-    // Load "map_%03d.map" for this sub-map.
+    // Load "map_%03d.map" for this sub-map. make_unique frees the previous map
+    // object first (Ghidra: FUN_000ce2e4 pre-step + dtor FUN_000ce330).
     NSString *mapName = [NSString stringWithFormat:@"map_%03d", static_cast<int>(subMapId)];
     NSString *mapPath = [[NSBundle mainBundle] pathForResource:mapName ofType:@"map"];
-    TreasureMap *map = new TreasureMap(); // FUN_000ce2b0
-    m_map = map;
+    m_map = std::make_unique<TreasureMap>(); // FUN_000ce2b0
+    TreasureMap *map = m_map.get();
     map->load([mapPath UTF8String]); // FUN_000ce340
 
     // Copy the map header into play data.
@@ -1020,21 +1014,16 @@ void AcMainTask::loadTreasureMap() {
         }
         AepManager &aep = *m_aep;
         aep.loadAepDataDefaultPath(6, [bgGroupName UTF8String]); // FUN_0000f758 slot 6
-        AepLyrCtrl *bgLayer = new AepLyrCtrl();
-        m_boardBgLayer = bgLayer;
-        bgLayer->init(6, [bgLoopName UTF8String], this, 0x24);
+        m_boardBgLayer = std::make_unique<AepLyrCtrl>();
+        m_boardBgLayer->init(6, [bgLoopName UTF8String], this, 0x24);
     }
 
     // Board-bg texture (+0xd8): "sugoroku_bg%02d(~iPad)" for this board index.
-    if (neTextureForiOS *oldBg = m_boardBgTex) {
-        delete oldBg;
-        m_boardBgTex = nullptr;
-    }
-    neTextureForiOS *bgTex = new neTextureForiOS();
-    m_boardBgTex = bgTex;
+    m_boardBgTex = std::make_unique<neTextureForiOS>(); // frees the previous board bg
     NSString *bgTexName = pad ? [NSString stringWithFormat:@"sugoroku_bg%02d~iPad", bgIndex] :
                                 [NSString stringWithFormat:@"sugoroku_bg%02d", bgIndex];
-    bgTex->load([[[NSBundle mainBundle] pathForResource:bgTexName ofType:@"png"] UTF8String]);
+    m_boardBgTex->load([[[NSBundle mainBundle] pathForResource:bgTexName
+                                                        ofType:@"png"] UTF8String]);
 
     // Remaining record fields + the board character/panel builders.
     m_rouletteMode = tmp.rouletteMode;
@@ -1259,23 +1248,19 @@ void AcMainTask::buildMapPanelLayers() {
     }
 
     // Free the previously loaded portrait (Ghidra: the vtable[1] deleting dtor).
-    if (neTextureForiOS *old = m_goalCharaTex) {
-        delete old;
-        m_goalCharaTex = nullptr;
-    }
+    m_goalCharaTex.reset();
 
     // No goal character on this record -> nothing more to load.
     if (tmp.friendPlayerId[0] == 0) {
         return;
     }
 
-    neTextureForiOS *tex = new neTextureForiOS();
-    m_goalCharaTex = tex;
+    m_goalCharaTex = std::make_unique<neTextureForiOS>();
     NSString *file =
         [NSString stringWithFormat:@"sugo_chara%03d.png",
                                    static_cast<int>(static_cast<short>(tmp.goalCharaId))];
     NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
-    tex->load([path UTF8String]);
+    m_goalCharaTex->load([path UTF8String]);
 }
 
 // ===========================================================================
@@ -1363,11 +1348,8 @@ static int MapPanelOrder(int displaySlot) {
 // the list (only page 0 fits the 9 panels, matching the < 9 guard).
 // @complete
 void AcMainTask::refreshMapScroll(int mode) {
-    for (int i = 0; i < 9; i++) {
-        if (neTextureForiOS *tex = m_jacketTex[i]) {
-            delete tex;
-            m_jacketTex[i] = nullptr;
-        }
+    for (auto &tex : m_jacketTex) {
+        tex.reset();
     }
     if (m_treasureMusicArray) {
         static_cast<void>((__bridge_transfer id)m_treasureMusicArray);
@@ -1380,9 +1362,9 @@ void AcMainTask::refreshMapScroll(int mode) {
 
     for (int slot = mode * 9; slot < count && slot < 9; slot++) {
         MusicData *md = songs[MapPanelOrder(slot)];
-        neTextureForiOS *tex = new neTextureForiOS();
-        m_jacketTex[slot] = tex;
-        tex->loadFromImageData((__bridge const void *)[md artwork2xData]); // FUN_00011cbc
+        m_jacketTex[slot] = std::make_unique<neTextureForiOS>();
+        m_jacketTex[slot]->loadFromImageData(
+            (__bridge const void *)[md artwork2xData]); // FUN_00011cbc
     }
 }
 
@@ -1391,10 +1373,9 @@ void AcMainTask::refreshMapScroll(int mode) {
 // next board's bg.
 // @complete
 void AcMainTask::unloadMapBgGroup() {
-    if (AepLyrCtrl *bg = m_boardBgLayer) {
-        bg->unlink(); // FUN_0002ca9c
-        delete bg;
-        m_boardBgLayer = nullptr;
+    if (m_boardBgLayer) {
+        m_boardBgLayer->unlink(); // FUN_0002ca9c
+        m_boardBgLayer.reset();
     }
     m_aep->releaseAepTexture(6); // FUN_0000f988
 }
@@ -2040,22 +2021,17 @@ void AcMainTask::sugorokuSetupScrollBounds() {
 // @complete
 void AcMainTask::sugorokuLoadWallTextures(int page) {
     // Delete existing wall textures.
-    for (int i = 0; i < 9; i++) {
-        neTextureForiOS *&slot = m_wallNailTex[i];
-        if (slot) {
-            delete slot;
-            slot = nullptr;
-        }
+    for (auto &slot : m_wallNailTex) {
+        slot.reset();
     }
     int base = page * 9;
     for (int i = 0; i < 9; i++) {
         short idx = findTreasureMapIndexById(base + i);
-        neTextureForiOS *t = new neTextureForiOS();
-        m_wallNailTex[i] = t;
+        m_wallNailTex[i] = std::make_unique<neTextureForiOS>();
         NSString *name = [NSString stringWithFormat:@"sugo_wall_nail_%02d", static_cast<int>(idx)];
         NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"png"];
         if (path) {
-            t->load([path UTF8String]);
+            m_wallNailTex[i]->load([path UTF8String]);
         }
     }
 }
@@ -2079,42 +2055,37 @@ void AcMainTask::sugorokuTaskDispose() {
 
     // 1. Delete the scene sprite textures (offsets 0xd4..0xf8): the named
     //    circle/board-bg/chara/goal/blind textures plus the five reserve slots.
-    auto dropTex = [](neTextureForiOS *&s) {
-        if (s) {
-            delete s;
-            s = nullptr;
-        }
-    };
+    auto dropTex = [](std::unique_ptr<neTextureForiOS> &s) { s.reset(); };
     dropTex(m_circleTex);
     dropTex(m_boardBgTex);
     dropTex(m_charaTex);
     dropTex(m_goalCharaTex);
     dropTex(m_blindCircleTex);
-    for (neTextureForiOS *&s : m_reserveTex) {
+    for (auto &s : m_reserveTex) {
         dropTex(s);
     }
 
     // 2. Delete the three 10-glyph digit texture sets (points / roulette /
     // ticket).
-    for (neTextureForiOS *&s : m_pointsDigitTex) {
+    for (auto &s : m_pointsDigitTex) {
         dropTex(s);
     }
-    for (neTextureForiOS *&s : m_roulDigitTex) {
+    for (auto &s : m_roulDigitTex) {
         dropTex(s);
     }
-    for (neTextureForiOS *&s : m_ticketDigitTex) {
+    for (auto &s : m_ticketDigitTex) {
         dropTex(s);
     }
 
     // 3. Delete the music-jacket (9), wall-nail (9) and event (12) textures
     //    (Ghidra slot range 0x69..0x86 == byte offsets 0x1a4..0x218).
-    for (neTextureForiOS *&s : m_jacketTex) {
+    for (auto &s : m_jacketTex) {
         dropTex(s);
     }
-    for (neTextureForiOS *&s : m_wallNailTex) {
+    for (auto &s : m_wallNailTex) {
         dropTex(s);
     }
-    for (neTextureForiOS *&s : m_eventTex) {
+    for (auto &s : m_eventTex) {
         dropTex(s);
     }
 
@@ -2123,20 +2094,19 @@ void AcMainTask::sugorokuTaskDispose() {
 
     // 5. Unlink + delete AEP layer slots (Ghidra loop order preserved:
     //    roulette, then arrows, then panels).
-    auto dropLayer = [](AepLyrCtrl *&lyr) {
+    auto dropLayer = [](std::unique_ptr<AepLyrCtrl> &lyr) {
         if (lyr) {
             lyr->unlink();
-            delete lyr;
-            lyr = nullptr;
+            lyr.reset();
         }
     };
-    for (AepLyrCtrl *&lyr : m_rouletteLayers) {
+    for (auto &lyr : m_rouletteLayers) {
         dropLayer(lyr); // offsets 0x2c..0x9c
     }
-    for (AepLyrCtrl *&lyr : m_arrowLayers) {
+    for (auto &lyr : m_arrowLayers) {
         dropLayer(lyr); // offsets 0xc0..0xcc
     }
-    for (AepLyrCtrl *&lyr : m_panelLayers) {
+    for (auto &lyr : m_panelLayers) {
         dropLayer(lyr); // offsets 0xa0..0xbc
     }
 
@@ -2151,10 +2121,7 @@ void AcMainTask::sugorokuTaskDispose() {
     //    frees the map's node/connect buffers before disposal; here ~TreasureMap
     //    (invoked by delete) owns that teardown, so calling it again would
     //    double-free.
-    if (m_map) {
-        delete m_map;
-        m_map = nullptr;
-    }
+    m_map.reset();
 
     // 9. Release Objective-C objects stored in the blob (null the raw slots, as
     // the
@@ -2281,7 +2248,7 @@ void AcMainTask::sugorokuDrawBoard() {
 // @complete
 void AcMainTask::sugorokuDrawBackground() {
     AepManager *mgr = m_aep;
-    neTextureForiOS *bgTex = m_boardBgTex;
+    neTextureForiOS *bgTex = m_boardBgTex.get();
     if (!bgTex) {
         return;
     }
@@ -2323,7 +2290,7 @@ void AcMainTask::sugorokuDrawBackground() {
     }
 
     // Background animation layer (+0x9c): play/reset driven by board state.
-    AepLyrCtrl *bgLyr = m_rouletteLayers[28];
+    AepLyrCtrl *bgLyr = m_rouletteLayers[28].get();
     if (bgLyr) {
         int bgState = m_boardMoveState;
         if (static_cast<uint32_t>(bgState - 1) <
@@ -2565,7 +2532,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         // Bounce using the active roulette layer's frame counter. Ghidra
         // sugorokuDrawPlayerAndUi @ 0xa53a4: ldr r0,[this,#0x70] (m_rouletteLayers[17]),
         // then ldr [r0,#0x3c] (frame count) and vldr.32 [r0,#0x40] (current frame).
-        AepLyrCtrl *lyr = m_rouletteLayers[17];
+        AepLyrCtrl *lyr = m_rouletteLayers[17].get();
         int frameTotal = lyr->frameCount() - 1; // +0x3c nFrameCount
         // The binary truncates the float play head to an int before the multiply
         // (Ghidra @ 0xa53b0: vcvt.s32.f32, then vcvt.f64.s32 into the *6pi term).
@@ -2585,7 +2552,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     // Player sprite (hidden during warp flash).
     if (m_warpFlash == 0) {
         drawSprite(mgr,
-                   m_charaTex,
+                   m_charaTex.get(),
                    0,
                    0,
                    0x228,
@@ -2661,7 +2628,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         // assigning the int16_t to int sign-extends exactly like the binary's load.
         int roulVal = m_rouletteMode;
         if (roulVal >= -1) {
-            AepLyrCtrl *resultLyr = m_rouletteLayers[15];
+            AepLyrCtrl *resultLyr = m_rouletteLayers[15].get();
             if (!resultLyr || !resultLyr->isAnimating()) {
                 int rHandle = -1; // no match / not-found frame -> skip (binary: -1 < handle)
                 switch (roulVal) {
@@ -2723,7 +2690,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     // 4 hit-flash animation layers (+0xc0..+0xcf); position each to its
     // screen slot while it is playing.
     for (int i = 0; i < 4; i++) {
-        AepLyrCtrl *lyr = m_arrowLayers[i];
+        AepLyrCtrl *lyr = m_arrowLayers[i].get();
         if (!lyr || !lyr->isAnimating()) {
             continue;
         }
@@ -2770,7 +2737,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 // (4 chars + ".."), and the fade-out (opacity-5 floored at 0) were verified
 // faithful.
 void AcMainTask::sugorokuDrawFriendMeet() {
-    neTextureForiOS *friendTex = m_goalCharaTex;
+    neTextureForiOS *friendTex = m_goalCharaTex.get();
     if (!friendTex) {
         return;
     }
@@ -2991,10 +2958,10 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             if (self->m_charaColLeft < self->m_charaColRight) {
                 tex = (base == self->m_boardUserNo[kBoardCharaColLeftA] ||
                        base == self->m_boardUserNo[kBoardCharaColLeftB]) ?
-                          self->m_charaPageCurrTex[idxBase] :
-                          self->m_charaPagePrevTex[idxBase];
+                          self->m_charaPageCurrTex[idxBase].get() :
+                          self->m_charaPagePrevTex[idxBase].get();
             } else {
-                tex = self->m_charaPagePrevTex[idxBase];
+                tex = self->m_charaPagePrevTex[idxBase].get();
             }
             neTextureForiOS_draw(aep,
                                  tex,
@@ -3022,7 +2989,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             if (static_cast<unsigned>(listIdx) < [avail count]) {
                 CharaInfo *info = avail[listIdx];
                 if (info && static_cast<int>(info.charaId) == self->m_charaId) {
-                    AepLyrCtrl *hl = self->m_rouletteLayers[18];
+                    AepLyrCtrl *hl = self->m_rouletteLayers[18].get();
                     if (!hl->isAnimating() && !self->m_panelLayers[2]->isAnimating() &&
                         !self->m_panelLayers[3]->isAnimating()) {
                         hl->play();
@@ -3235,7 +3202,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             py = y - 5;
         }
         neTextureForiOS_draw(aep,
-                             self->m_jacketTex[self->m_selMusicPanel],
+                             self->m_jacketTex[self->m_selMusicPanel].get(),
                              0,
                              0,
                              0x168,
@@ -3335,7 +3302,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // byte-verified) -> zoom = (int)(scale * 1.6949f) + 1.
     if (self->m_boardUserNo[kBoardWallReveal] == child) {
         neTextureForiOS_draw(aep,
-                             self->m_reserveTex[0],
+                             self->m_reserveTex[0].get(),
                              0,
                              0,
                              0x280,
@@ -3456,7 +3423,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     for (auto &pnl : kPanels) {
         if (pnl.usr == child) {
             neTextureForiOS_draw(aep,
-                                 self->m_reserveTex[pnl.slot],
+                                 self->m_reserveTex[pnl.slot].get(),
                                  0,
                                  0,
                                  pnl.w,
@@ -3555,7 +3522,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             return;
         }
         neTextureForiOS_draw(aep,
-                             self->m_eventTex[self->m_hudState],
+                             self->m_eventTex[self->m_hudState].get(),
                              0,
                              0,
                              0x280,

@@ -33,6 +33,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "C_TASK.h"
 #include "Random.h"      // embedded PRNG at this+0x4f4 (Ghidra: FUN_00062b20)
@@ -131,7 +132,8 @@ public:
     // ne::C_TASK base + Random member construct/destruct plus the members' in-class
     // initialisers, so both are defaulted.
     AcMainTask() = default;
-    ~AcMainTask() override = default;
+    ~AcMainTask()
+        override; // out-of-line: unique_ptr members need complete AepLyrCtrl/neTextureForiOS
     void update(int deltaMs) override; // Ghidra: AcMainTask_update (FUN_00099d18)
 
 private:
@@ -211,28 +213,27 @@ private:
     // ================= work-area layout (// +0xNN = binary offset, for
     // cross-reference; the C++ layout is not byte-exact) =================
     AepManager *m_aep = {}; // +0x28 cached AepManager (every resolve/draw reads it)
-    AepLyrCtrl *m_rouletteLayers[29] =
-        {}; // +0x2c 29 roulette/effect overlay layers (built by setupScene)
-    AepLyrCtrl *m_panelLayers[8] = {};      // +0xa0 8 character/collection select panels
-    AepLyrCtrl *m_arrowLayers[4] = {};      // +0xc0 4 sugoroku hit-flash / direction arrows
-    AepLyrCtrl *m_boardBgLayer = {};        // +0xd0 current board background layer (group 6)
-    neTextureForiOS *m_circleTex = {};      // +0xd4 bundled circle.png
-    neTextureForiOS *m_boardBgTex = {};     // +0xd8 board background texture
-    neTextureForiOS *m_charaTex = {};       // +0xdc active player-character board sprite
-    neTextureForiOS *m_goalCharaTex = {};   // +0xe0 goal / friend-meet character portrait
-    neTextureForiOS *m_blindCircleTex = {}; // +0xe4 bundled blind_circle.png
-    neTextureForiOS *m_reserveTex[5] =
-        {}; // +0xe8 scene textures freed by dispose; populated by unreconstructed
-            // states
-    neTextureForiOS *m_pointsDigitTex[10] = {};  // +0xfc num_points0..9 glyphs
-    neTextureForiOS *m_roulDigitTex[10] = {};    // +0x124 num_roulette_0..9 glyphs
-    neTextureForiOS *m_ticketDigitTex[10] = {};  // +0x14c ticket_num0..9 glyphs
-    neTextureForiOS *m_charaPagePrevTex[6] = {}; // +0x174 prev-page chara textures
-    neTextureForiOS *m_charaPageCurrTex[6] = {}; // +0x18c current-page chara textures
-    neTextureForiOS *m_jacketTex[9] = {};        // +0x1a4 9 music-panel jacket textures
-    neTextureForiOS *m_wallNailTex[9] = {};      // +0x1c8 9 wall-nail textures
-    neTextureForiOS *m_eventTex[12] = {};        // +0x1ec 12 event_0_%03d icons
-    AcLayerRef m_skillBoard[5] = {};             // SKILL_COM_BOARD/... layers + frame counts
+    std::unique_ptr<AepLyrCtrl>
+        m_rouletteLayers[29]; // +0x2c 29 roulette/effect overlay layers (built by setupScene)
+    std::unique_ptr<AepLyrCtrl> m_panelLayers[8];  // +0xa0 8 character/collection select panels
+    std::unique_ptr<AepLyrCtrl> m_arrowLayers[4];  // +0xc0 4 sugoroku hit-flash / direction arrows
+    std::unique_ptr<AepLyrCtrl> m_boardBgLayer;    // +0xd0 current board background layer (group 6)
+    std::unique_ptr<neTextureForiOS> m_circleTex;  // +0xd4 bundled circle.png
+    std::unique_ptr<neTextureForiOS> m_boardBgTex; // +0xd8 board background texture
+    std::unique_ptr<neTextureForiOS> m_charaTex;   // +0xdc active player-character board sprite
+    std::unique_ptr<neTextureForiOS> m_goalCharaTex; // +0xe0 goal / friend-meet character portrait
+    std::unique_ptr<neTextureForiOS> m_blindCircleTex; // +0xe4 bundled blind_circle.png
+    std::unique_ptr<neTextureForiOS>
+        m_reserveTex[5]; // +0xe8 scene textures freed by dispose (unreconstructed states)
+    std::unique_ptr<neTextureForiOS> m_pointsDigitTex[10];  // +0xfc num_points0..9 glyphs
+    std::unique_ptr<neTextureForiOS> m_roulDigitTex[10];    // +0x124 num_roulette_0..9 glyphs
+    std::unique_ptr<neTextureForiOS> m_ticketDigitTex[10];  // +0x14c ticket_num0..9 glyphs
+    std::unique_ptr<neTextureForiOS> m_charaPagePrevTex[6]; // +0x174 prev-page chara textures
+    std::unique_ptr<neTextureForiOS> m_charaPageCurrTex[6]; // +0x18c current-page chara textures
+    std::unique_ptr<neTextureForiOS> m_jacketTex[9];        // +0x1a4 9 music-panel jacket textures
+    std::unique_ptr<neTextureForiOS> m_wallNailTex[9];      // +0x1c8 9 wall-nail textures
+    std::unique_ptr<neTextureForiOS> m_eventTex[12];        // +0x1ec 12 event_0_%03d icons
+    AcLayerRef m_skillBoard[5] = {}; // SKILL_COM_BOARD/... layers + frame counts
     // (binary: lyr @+0x21c, frameCount @+0x230; paired here)
     // +0x244: 8 bytes unused padding (dropped; runtime struct, layout not preserved)
     int m_musicResultFrame = {}; // +0x24c music collection-result overlay frame
@@ -258,7 +259,7 @@ private:
     uint8_t m_selScratch[36] = {};         // +0x474 selection-index scratch (memset 0xff)
     int m_rouletteSeInst = {};             // +0x498 roulette-hit SE playing instance (-1 idle)
     uint8_t m_selScratch2[20] = {};        // +0x49c remainder of the selection scratch
-    TreasureMap *m_map = {};               // +0x4b0 loaded TreasureMap
+    std::unique_ptr<TreasureMap> m_map;    // +0x4b0 loaded TreasureMap
     const TreasureMap::Node *m_nodes = {}; // +0x4b4 map node array
     const TreasureMap::ConnectStruct *m_edges = {}; // +0x4b8 edge (ConnectStruct) array (a real
     // pointer; the 32-bit binary held it in an int slot)

@@ -10,6 +10,7 @@
 //
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #import "AcMainTask.h"
@@ -281,13 +282,10 @@ void AcMainTask::charaSelectLoadPageTextures(int page) {
         CharaInfo *info = available[idx];
         const int charaId = info.charaId;
 
-        // Release the occupant of the current-page texture slot.
-        neTextureForiOS *&slot = m_charaPageCurrTex[i];
-        if (slot) {
-            delete slot;
-            slot = nullptr;
-        }
-        slot = new neTextureForiOS();
+        // Replace the occupant of the current-page texture slot (make_unique
+        // frees any previous one).
+        auto &slot = m_charaPageCurrTex[i];
+        slot = std::make_unique<neTextureForiOS>();
 
         // Characters 0-29 are bundled resources; 30+ are downloaded to
         // the app-support directory.  Owned chars use the "open" art;
@@ -328,23 +326,11 @@ int AcMainTask::charaSelectFindCharaIndex(int charaId) {
 // @complete
 void AcMainTask::charaSelectReleaseTextures() {
     for (int i = 0; i < 6; i++) {
-        neTextureForiOS *&prev = m_charaPagePrevTex[i];
-        if (prev) {
-            delete prev;
-            prev = nullptr;
-        }
-        neTextureForiOS *&curr = m_charaPageCurrTex[i];
-        if (curr) {
-            delete curr;
-            curr = nullptr;
-        }
+        m_charaPagePrevTex[i].reset();
+        m_charaPageCurrTex[i].reset();
     }
     // Highlight texture (reserve slot 2 @ +0xf0).
-    neTextureForiOS *&highlight = m_reserveTex[2];
-    if (highlight) {
-        delete highlight;
-        highlight = nullptr;
-    }
+    m_reserveTex[2].reset();
 }
 
 // Ghidra: countAvailableCharacters @ 0x28b10.
