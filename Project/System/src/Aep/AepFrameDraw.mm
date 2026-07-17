@@ -196,8 +196,8 @@ static void aepEmitSprite(AepManager *mgr,
                           uint32_t blend,
                           int *clipRect,
                           uint32_t priority,
-                          uint32_t p15,
-                          uint32_t p19) {
+                          uint32_t colorRGB,
+                          uint32_t visFlag) {
     AepOrderingTable *ot = mgr->orderingTable();                      // this+0x727538
     AepOtSpriteCmd *cmd = ot->allocEntry(static_cast<int>(priority)); // FUN_00010be0
     if (cmd == nullptr) {
@@ -237,10 +237,10 @@ static void aepEmitSprite(AepManager *mgr,
     cmd->nOfsY = h;                             // +0x28  int view (entry anchorY doubles as height)
     cmd->nColorA = color;                       // +0x2c  int view: colour (brightness) 0..100
     cmd->nColorMul = alpha;                     // +0x30  alpha 0..100 (see the >=100 split)
-    cmd->nUKey = static_cast<int16_t>(rotation); // +0x34  packed rotation word
-    cmd->nVKey = static_cast<int16_t>(blend);    // +0x36  packed blend word
-    cmd->nBlendFlags = static_cast<int>(p19);    // +0x38  user word (param_19)
-    cmd->nColorRGB = static_cast<int>(p15);      // +0x3c  user word (param_15)
+    cmd->nUKey = static_cast<int16_t>(rotation);  // +0x34  packed rotation word
+    cmd->nVKey = static_cast<int16_t>(blend);     // +0x36  packed blend word
+    cmd->nBlendFlags = static_cast<int>(visFlag); // +0x38  visibility/natural-scale flag (param_19)
+    cmd->nColorRGB = static_cast<int>(colorRGB);  // +0x3c  packed 0x00RRGGBB colour (param_15)
     if (clipRect != nullptr) {
         cmd->clipRect.nLeft = clipRect[0];
         cmd->clipRect.nTop = clipRect[1];
@@ -261,7 +261,7 @@ static void aepEmitSprite(AepManager *mgr,
 // its record from the low 16 bits, then hands both to the sprite-command fill
 // FUN_000113d0. Here the record lookup is folded into aepEmitSprite(slot,
 // child); `anchorX`/`anchorY` become the quad width/height (the entry anchor
-// doubles as size for a leaf), `colorMul` rides the p15 user word. Exact
+// doubles as size for a leaf), `colorMul` rides the colorRGB slot. Exact
 // float-vs-int arg positions in the original are VFP-ABI obscured; the
 // call-site value threading is reproduced.
 // @complete
@@ -280,7 +280,7 @@ void AepDrawSpriteHandle(AepManager *mgr,
                          uint32_t colorMul,
                          int *clipRect,
                          int priority,
-                         uint32_t p19) {
+                         uint32_t visFlag) {
     const int groupSlot = mgr->groupSlotForHandle(handle); // (handle >> 16) -> slot byte
     const int child = handle & 0xffff;                     // low 16 bits = record index
     aepEmitSprite(mgr,
@@ -299,7 +299,7 @@ void AepDrawSpriteHandle(AepManager *mgr,
                   clipRect,
                   static_cast<uint32_t>(priority),
                   colorMul,
-                  p19);
+                  visFlag);
 }
 
 // Ghidra: FUN_0000fe8c. The 19-argument frame-tree fill.
@@ -312,17 +312,17 @@ void AepDrawLayer(AepManager *mgr,
                   int y,
                   int scaleX,
                   int scaleY,
-                  int p9,
-                  int p10,
+                  int anchorX,
+                  int anchorY,
                   int color,
                   int colorHi,
                   uint32_t rotation,
                   uint32_t blendFlags,
-                  uint32_t p15,
+                  uint32_t colorRGB,
                   int *clipRect,
-                  uint32_t p17,
+                  uint32_t priority,
                   void *context,
-                  uint32_t p19) {
+                  uint32_t visFlag) {
     const AepFrameEntry *entries = mgr->frameEntries(groupSlot); // this+slot*4+0x7f39c8
     if (entries == nullptr || entries[layerNo].type < 0) {
         return;
@@ -341,8 +341,8 @@ void AepDrawLayer(AepManager *mgr,
     const uint8_t *chBase = mgr->channelBase(groupSlot); // this+slot*4+0x7274d4
 
     // Anchor-relative base translation, pre-scaled (Ghidra: iVar6 / iVar5).
-    const int baseX = -(scaleX * p9) / 100;
-    const int baseY = -(scaleY * p10) / 100;
+    const int baseX = -(scaleX * anchorX) / 100;
+    const int baseY = -(scaleY * anchorY) / 100;
     const int16_t combinedHi = (int16_t)(colorHi + color); // sVar4
 
     for (const AepFrameEntry *e = &entries[layerNo]; e->type >= 0; e++) {
@@ -535,11 +535,11 @@ void AepDrawLayer(AepManager *mgr,
                                  alpha,
                                  childRotation,
                                  blend,
-                                 p15,
+                                 colorRGB,
                                  childClip,
-                                 p17,
+                                 priority,
                                  context,
-                                 p19);
+                                 visFlag);
                 } else {
                     AepGroupDrawFn cb = mgr->groupCallback(groupSlot); // this+slot*4+0x7f3a2c
                     if (cb != nullptr) {
@@ -560,7 +560,7 @@ void AepDrawLayer(AepManager *mgr,
                            childRotArg,
                            blend,
                            childClip,
-                           p17,
+                           priority,
                            ctx);
                     }
                 }
@@ -581,9 +581,9 @@ void AepDrawLayer(AepManager *mgr,
                           childRotArg,
                           blend,
                           clipRect,
-                          p17,
-                          p15,
-                          p19);
+                          priority,
+                          colorRGB,
+                          visFlag);
         }
         // type 1 (and any other): no emission (matches FUN_0000fe8c).
     }
@@ -613,6 +613,6 @@ void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_
                   blend,
                   /*clipRect*/ nullptr,
                   priority,
-                  /*p15*/ 0,
-                  /*p19*/ 0);
+                  /*colorRGB*/ 0,
+                  /*visFlag*/ 0);
 }

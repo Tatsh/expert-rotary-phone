@@ -615,15 +615,15 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                                        int y,
                                        int sx,
                                        int sy,
-                                       int p7,
-                                       int p8,
-                                       int p9,
+                                       int nOfsX,
+                                       int nOfsY,
+                                       int nColorA,
                                        uint32_t alpha,
                                        uint32_t blend,
-                                       int p12,
+                                       int modeFlags,
                                        const void *clip,
-                                       int p14,
-                                       int p15,
+                                       int visFlag,
+                                       int colorRGB,
                                        int slot) {
     const float s = renderScale();
     const int dstX = aepScale(x, s);
@@ -632,36 +632,36 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
     // Natural-scale flag (Ghidra's param_14==1 short-circuit): the binary clears
     // it when the sprite is at its natural 100% scale in both axes — scaled sx/sy
     // == 100.0 (DAT_00010e14) — with no blend bits set. Otherwise mask the alpha
-    // by the sign of (p12<<0x1a).
-    bool visible = (p14 != 0);
-    if (p14 == 1 && aepScale(sx, s) == 100 && aepScale(sy, s) == 100 && (blend & 0xffff) == 0) {
+    // by the sign of (modeFlags<<0x1a).
+    bool visible = (visFlag != 0);
+    if (visFlag == 1 && aepScale(sx, s) == 100 && aepScale(sy, s) == 100 && (blend & 0xffff) == 0) {
         visible = false;
     }
     uint32_t maskedAlpha =
         alpha &
-        static_cast<uint32_t>((static_cast<int>(static_cast<uint32_t>(p12) << 0x1a)) >> 0x1f);
-    if (p9 == 0 && maskedAlpha == 100) {
+        static_cast<uint32_t>((static_cast<int>(static_cast<uint32_t>(modeFlags) << 0x1a)) >> 0x1f);
+    if (nColorA == 0 && maskedAlpha == 100) {
         return; // fully-opaque untinted no-op: nothing to composite
     }
 
     neTextureForiOS *frames = textureTable() ? textureTable()[slot] : nullptr;
     // spriteRec: +0 srcX, +2 srcY, +4 srcW, +6 srcH (the atlas source rect). The
-    // quad geometry is the scaled destination rect; colour comes from nColorRGB
-    // (p15) and alpha from nColorA (p9). The tail of FUN_00010c90 emits four
+    // quad geometry is the scaled destination rect; colour comes from colorRGB
+    // and the tint level from nColorA. The tail of FUN_00010c90 emits four
     // `/DAT_00010e14 (=100.0)` divides, wired verbatim from the disassembly:
     //   flDstW = renderScale * sx * srcW / 100  (0x10dd4 vmul by srcW=spriteRec[2],
     //                                             0x10de8 vdiv) -> quad width
     //   flDstH = renderScale * sy * srcH / 100  (srcH=spriteRec[3], 0x10de4 vdiv)
-    //   pivotX = renderScale * sx * nOfsX / 100  (0x10db8 vmul by nOfsX=p7,
+    //   pivotX = renderScale * sx * nOfsX / 100  (0x10db8 vmul by nOfsX,
     //                                             0x10dc8 vdiv)
-    //   pivotY = renderScale * sy * nOfsY / 100  (nOfsY=p8, 0x10d86 vdiv)
+    //   pivotY = renderScale * sy * nOfsY / 100  (nOfsY, 0x10d86 vdiv)
     // The destination SIZE is the source-rect W/H (not nOfsX/nOfsY, which are the
     // pivot): a leaf sprite or drawAepFrame passes nOfsX=nOfsY=0, so sizing off
     // them would collapse the quad to zero and draw nothing.
     const float flDstW = static_cast<float>(spriteRec[2]) * s * static_cast<float>(sx) / 100.0f;
     const float flDstH = static_cast<float>(spriteRec[3]) * s * static_cast<float>(sy) / 100.0f;
-    const float flPivotX = static_cast<float>(p7) * s * static_cast<float>(sx) / 100.0f;
-    const float flPivotY = static_cast<float>(p8) * s * static_cast<float>(sy) / 100.0f;
+    const float flPivotX = static_cast<float>(nOfsX) * s * static_cast<float>(sx) / 100.0f;
+    const float flPivotY = static_cast<float>(nOfsY) * s * static_cast<float>(sy) / 100.0f;
     drawAepSpriteClipped(frames,
                          spriteRec[0],
                          spriteRec[1],
@@ -674,12 +674,12 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                          0,
                          flPivotX,
                          flPivotY,
-                         p9,
+                         nColorA,
                          static_cast<float>(maskedAlpha),
                          blend,
                          static_cast<const int *>(clip),
                          visible ? 1 : 0,
-                         static_cast<uint32_t>(p15));
+                         static_cast<uint32_t>(colorRGB));
 }
 
 // Ghidra: drawAepOtSpriteStretch (FUN_00010e18) — the stretched-sprite handler.

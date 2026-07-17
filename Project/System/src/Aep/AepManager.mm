@@ -245,17 +245,17 @@ void AepManager::drawLayer(int lyr,
                            int scaleX,
                            int scaleY,
                            int rotation,
-                           int p9,
-                           int p10,
+                           int anchorX,
+                           int anchorY,
                            int color,
                            int colorHi,
                            uint32_t loopFlags,
                            uint32_t blendFlags,
-                           uint32_t p15,
+                           uint32_t colorRGB,
                            int *clipRect,
                            void *context,
-                           uint32_t p17,
-                           uint32_t p19) {
+                           uint32_t priority,
+                           uint32_t visFlag) {
     assert(lyr >= 0); // AepManager.mm:0x26a "0 <= lyr"
 
     const unsigned slot = m_groupIndex[(unsigned)lyr >> 16]; // this+0x7c1748
@@ -287,17 +287,17 @@ void AepManager::drawLayer(int lyr,
                  y,
                  scaleX,
                  scaleY,
-                 p9,
-                 p10,
+                 anchorX,
+                 anchorY,
                  color,
                  colorHi,
                  (uint32_t)rotation,
                  blendFlags,
-                 p15,
+                 colorRGB,
                  clip,
-                 p17,
+                 priority,
                  context,
-                 p19);
+                 visFlag);
 }
 
 // Compatibility overload for the transform-only callers (MenuMainTask /
@@ -305,7 +305,7 @@ void AepManager::drawLayer(int lyr,
 // and colourHi = 100 give a fully-opaque, un-tinted quad (the >=100 alpha split
 // turns alpha 100 into the 0x200 "opaque" blend bit); pivots and user words
 // default to 0, no clip override, and the transform's priority becomes the
-// ordering-table priority (param_18 / p17).
+// ordering-table priority (binary param_18).
 // @complete
 void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
     drawLayer(lyr,
@@ -315,17 +315,17 @@ void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_
               static_cast<int>(root.sx),
               static_cast<int>(root.sy),
               static_cast<int>(root.rotation),
-              /*p9*/ 0,
-              /*p10*/ 0,
+              /*anchorX*/ 0,
+              /*anchorY*/ 0,
               /*color*/ 100,
               /*colorHi*/ 100,
               flags, // loopFlags (binary position 13, after colorHi)
               /*blendFlags*/ 0,
-              /*p15*/ 0,
+              /*colorRGB*/ 0,
               /*clipRect*/ nullptr,
               /*context*/ nullptr,
-              /*p17 = priority*/ static_cast<uint32_t>(root.priority),
-              /*p19*/ 0);
+              /*priority*/ static_cast<uint32_t>(root.priority),
+              /*visFlag*/ 0);
 }
 
 // Ghidra: FUN_0000f9b0 — install a per-group frame-tree draw callback + context

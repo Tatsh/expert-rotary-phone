@@ -163,8 +163,8 @@ protected:
     int m_posY;         // +0x24  nPosY: scale y (default 100)
     int16_t m_rotation; // +0x28  packed rotation (read as signed short; pReserved28)
     int16_t m_pad2a;    // +0x2a
-    int m_p9;           // +0x2c  drawLayer p9 (pReserved28)
-    int m_p10;          // +0x30  drawLayer p10 (pReserved28)
+    int m_anchorX;      // +0x2c  drawLayer anchorX (pivot X offset)
+    int m_anchorY;      // +0x30  drawLayer anchorY (pivot Y offset)
     int m_renderMode;   // +0x34  nRenderMode (blend mode; default 0x20, low 16 bits read)
     int m_lyr;          // +0x38  nLyr: resolved layer handle (AepManager::getLyrNo)
     int m_frameCount;   // +0x3c  nFrameCount: layer length (AepManager::layerFrameCount)

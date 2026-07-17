@@ -26,7 +26,7 @@ static AepLyrCtrl *s_layerListHead = nullptr;
 // @complete
 AepLyrCtrl::AepLyrCtrl()
     : m_prev(nullptr), m_next(nullptr), m_group(-1), m_owner(nullptr), m_order(0), m_originX(0),
-      m_originY(0), m_posX(100), m_posY(100), m_rotation(0), m_pad2a(0), m_p9(0), m_p10(0),
+      m_originY(0), m_posX(100), m_posY(100), m_rotation(0), m_pad2a(0), m_anchorX(0), m_anchorY(0),
       m_renderMode(0), m_lyr(0), m_frameCount(0), m_curFrame(0), m_playSpeed(1.0f),
       m_clipRect{0, 0, 0, 0}, m_state(0), m_visible(false), m_pad5a{0, 0}, m_finished(0),
       m_pad5d{0, 0, 0} {
@@ -69,7 +69,7 @@ void AepLyrCtrl::draw() {
 // Ghidra: AepLyrCtrl_init (FUN_0002c834) — resolve the layer by (group, name)
 // through the render manager and register in the active-layer list. The binary
 // form takes two extra args: `owner` stored at +0x10 and `order` (the
-// ordering-priority word threaded into drawLayer as p17) stored raw into the
+// ordering-priority word threaded into drawLayer as `priority`) stored raw into the
 // +0x14 slot.
 // @complete
 void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
@@ -85,8 +85,8 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     m_posX = 100;
     m_posY = 100;
     m_rotation = 0;
-    m_p9 = 0;
-    m_p10 = 0;
+    m_anchorX = 0;
+    m_anchorY = 0;
     m_renderMode = 0x20;
 
     m_lyr = mgr.getLyrNo(group, name);         // Ghidra: AepManager_getLyrNo
@@ -213,10 +213,10 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
 
         // Frame index handed to drawLayer: the float play head truncated to int
         // (vcvt.s32.f32). Argument order matches the binary's drawLayer stack layout
-        // (bl @ 0x2c9ce): m_p9/m_p10/100/0 at positions 8-11 and the loopFlags
+        // (bl @ 0x2c9ce): m_anchorX/m_anchorY/100/0 at positions 8-11 and the loopFlags
         // constant 8 at position 12 (str r4=#8 -> [sp+0x20] -> callee [r7+0x28], the
         // slot drawLayer bit-tests for loop/clamp), AFTER colorHi. Constants:
-        // loopFlags=8, color=100, colorHi=0, p15=0xffffff, p19=1.
+        // loopFlags=8, color=100, colorHi=0, colorRGB=0xffffff, visFlag=1.
         const int frame = static_cast<int>(l->m_curFrame);
         mgr.drawLayer(l->m_lyr,
                       frame,
@@ -225,17 +225,17 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
                       l->m_posX,
                       l->m_posY,
                       static_cast<int>(l->m_rotation),
-                      l->m_p9,
-                      l->m_p10,
+                      l->m_anchorX,
+                      l->m_anchorY,
                       100,
                       0, // color / colorHi
                       8, // loopFlags (kDrawClampLast), binary position 13
                       static_cast<uint32_t>(static_cast<unsigned short>(l->m_renderMode)),
-                      0x00ffffff, // p15
+                      0x00ffffff, // colorRGB
                       root,
                       l->m_owner,                        // context
-                      static_cast<uint32_t>(l->m_order), // p17
-                      1);                                // p19
+                      static_cast<uint32_t>(l->m_order), // priority
+                      1);                                // visFlag
 
         if (playState == 4 || drawOnly != 0) {
             continue; // held frame, or draw-only pass: do not advance

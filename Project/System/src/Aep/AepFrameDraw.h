@@ -43,7 +43,7 @@ using AepGroupDrawFn = void (*)(int child,
                                 int rotation,
                                 uint32_t blend,
                                 int *clipRect,
-                                uint32_t p17,
+                                uint32_t priority,
                                 void *context);
 
 // One 36-byte frame-data entry (Ghidra: stride 0x24). Each entry animates one
@@ -104,7 +104,7 @@ void AepDrawSpriteHandle(AepManager *mgr,
                          uint32_t colorMul,
                          int *clipRect,
                          int priority,
-                         uint32_t p19);
+                         uint32_t visFlag);
 
 // The name the task draw passes call the same sprite-handle draw by; the AEP
 // group-draw callback carries the clip-rect argument as a plain int (its 32-bit
@@ -125,7 +125,7 @@ inline void drawAepFrameEx(AepManager *mgr,
                            uint32_t colorMul,
                            int *clipRect,
                            int priority,
-                           uint32_t p19) {
+                           uint32_t visFlag) {
     // clipRect is a pointer to the 4-int clip rect (nullptr = full screen). It
     // was previously typed `int` and reinterpret-cast to a pointer, which
     // truncated it on 64-bit; pass the real pointer through. Callers passing 0
@@ -145,7 +145,7 @@ inline void drawAepFrameEx(AepManager *mgr,
                         colorMul,
                         clipRect,
                         priority,
-                        p19);
+                        visFlag);
 }
 
 // Draw a single sprite-atlas frame by its packed handle with a default (100%,
@@ -170,17 +170,17 @@ void AepDrawLayer(AepManager *mgr,
                   int y,
                   int scaleX,
                   int scaleY,
-                  int p9,
-                  int p10,
+                  int anchorX,
+                  int anchorY,
                   int color,
                   int colorHi,
                   uint32_t rotation,
                   uint32_t blendFlags,
-                  uint32_t p15,
+                  uint32_t colorRGB,
                   int *clipRect,
-                  uint32_t p17,
+                  uint32_t priority,
                   void *context,
-                  uint32_t p19);
+                  uint32_t visFlag);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

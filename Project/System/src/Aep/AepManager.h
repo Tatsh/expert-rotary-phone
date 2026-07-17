@@ -143,17 +143,17 @@ public:
                    int scaleX,
                    int scaleY,
                    int rotation,
-                   int p9,
-                   int p10,
+                   int anchorX,
+                   int anchorY,
                    int color,
                    int colorHi,
                    uint32_t loopFlags,
                    uint32_t blendFlags,
-                   uint32_t p15,
+                   uint32_t colorRGB,
                    int *clipRect,
                    void *context,
-                   uint32_t p17,
-                   uint32_t p19);
+                   uint32_t priority,
+                   uint32_t visFlag);
 
     // Compatibility overload: the scenes (MenuMainTask / PlayTask / AepLyrCtrl)
     // drive layers with just a resolved transform and the loop flags. It maps the
