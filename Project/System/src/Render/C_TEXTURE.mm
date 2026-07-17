@@ -17,9 +17,9 @@
 
 #import <UIKit/UIKit.h>
 
+#import "C_RENDER.h" // current renderer for neTextureRebind
 #import "C_TEXTURE.h"
 #import "neDebugLog.h"
-#import "neRenderer.h"      // current renderer for neTextureRebind
 #import "neTextureForiOS.h" // ne::C_SINGLE_SPRITE + the cache/bind free functions declared here
 
 // GPU texture-memory accounting (Ghidra: g_dwTextureMemTotal).
@@ -295,7 +295,7 @@ void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, ne::C_TEXTURE *tex) {
 // @complete
 static int neTextureUpload(ne::C_TEXTURE *tex, int texW, int texH, int format, const void *pixels) {
     tex->m_format = format; // +0x40
-    neRenderer *r = neGetCurrentRenderer();
+    ne::C_RENDER *r = neGetCurrentRenderer();
     unsigned name = 0;
     r->genTexture(name);         // +0xb4 glGenTextures
     r->bindTexture(name);        // +0xc0
@@ -385,7 +385,7 @@ int neTextureLoadFromData(ne::C_TEXTURE *tex, const void *nsData) {
 // (+0xcc). Disassembly-verified.
 // @complete
 void neTextureRebind(ne::C_TEXTURE *tex, const void *pixels) {
-    neRenderer *r = neGetCurrentRenderer();
+    ne::C_RENDER *r = neGetCurrentRenderer();
     r->bindTexture(tex->name()); // +0xc0
     r->uploadTexture(tex->format(), tex->textureWidth(), tex->textureHeight(),
                      pixels); // +0xcc

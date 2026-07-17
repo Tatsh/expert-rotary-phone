@@ -9,7 +9,7 @@
 //
 //  `neIGLES` is the abstract GL interface (holds the enum vocabulary,
 //  referenced in the binary as "neIGLES::HINT_MAX" etc.); `neGLES_11` is the GL
-//  ES 1.1 backend. neIGLES derives from the engine's abstract `neRenderer`
+//  ES 1.1 backend. neIGLES derives from the engine's abstract `ne::C_RENDER`
 //  (System/src/Render), so the immediate-mode primitives dispatch their
 //  drawing-slot virtuals through the very same object; neGLES_11 implements
 //  both those slots and the enum-typed wrappers below.
@@ -24,11 +24,11 @@
 
 #pragma once
 
-#include "neRenderer.h" // ::neRenderer abstract drawing interface + neMatrix4
+#include "C_RENDER.h" // ::ne::C_RENDER abstract drawing interface + neMatrix4
 
 namespace ne {
 
-class neIGLES : public ::neRenderer {
+class neIGLES : public ne::C_RENDER {
 public:
     // Framebuffer attachment points. Table @ DAT_0012e110 (3 entries), consumed
     // by RenderKindToGLRenderKind (FUN_00012f64; asserts kind < RENDER_KIND_MAX).
@@ -319,7 +319,7 @@ public:
     void getRenderbufferWidth(int &outWidth);   // @ 0x13008 (+0x38) glGetRenderbufferParameterivOES
     void getRenderbufferHeight(int &outHeight); // @ 0x13018 (+0x3c) glGetRenderbufferParameterivOES
 
-    // --- drawing slots (::neRenderer) dispatched through by the neDraw*
+    // --- drawing slots (::ne::C_RENDER) dispatched through by the neDraw*
     // primitives ---
     void initialize() override;
     void setViewport(int x, int y, int w, int h) override;

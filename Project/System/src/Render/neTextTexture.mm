@@ -17,9 +17,9 @@
 #import <QuartzCore/QuartzCore.h> // CALayer renderInContext:
 #import <UIKit/UIKit.h>           // UILabel / UIFont / UIColor / UIGraphics + CoreGraphics
 
+#import "C_RENDER.h"
 #import "C_TEXTURE.h" // neCreateTextureFromData / neTextureRelease (texture cache)
 #import "neDebugLog.h"
-#import "neRenderer.h"
 #import "neTextTexture.h"
 
 // The manager singleton (Ghidra: DAT_0018845c), created lazily by the engine
@@ -492,7 +492,7 @@ void neDrawText(const char *text,
         totalWidth += g->advance;
     }
 
-    neRenderer *r = neGetCurrentRenderer();
+    ne::C_RENDER *r = neGetCurrentRenderer();
 
     // --- Shared quad index buffer (256 quads: 0,1,2, 2,1,3 per quad). ---
     if (g_pTextQuadIndexBuffer == 0) {

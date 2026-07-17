@@ -12,10 +12,10 @@
 #import <OpenGLES/ES1/glext.h>
 #import <QuartzCore/QuartzCore.h>
 
+#import "C_RENDER.h" // neEnsureRenderer / neGetCurrentRenderer
 #import "neGLES11.h" // ne::neGLES_11 backend — the view's m_GLInterface
 #import "neGLView.h"
 #import "neGraphics.h"
-#import "neRenderer.h" // neEnsureRenderer / neGetCurrentRenderer
 
 // Engine touch coordinates are 16.16 fixed point; the render/input manager
 // (neGraphics) scales them to pixels and records them for the play-judge loop.

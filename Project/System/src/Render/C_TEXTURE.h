@@ -97,7 +97,7 @@ private:
 public:
     // Per-texture tex-param cache (Ghidra: tex+0x30): the last value applied for
     // each of the 4 tex-param types {MAG,MIN,WRAP_S,WRAP_T}. neTextureUpload seeds
-    // it to the values it applies; setTexParamCached (neRenderer.cpp) consults it
+    // it to the values it applies; setTexParamCached (C_RENDER.cpp) consults it
     // to skip redundant glTexParameteri calls.
     int m_texParamCache[4] = {}; // +0x30
     int m_format = 0;            // +0x40 upload format (0=RGBA, 2=ALPHA); read by neTextureRebind

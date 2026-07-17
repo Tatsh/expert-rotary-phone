@@ -14,6 +14,7 @@
 #import "AcceptPolicyViewController.h"
 #import "AepManager.h"
 #import "AppDelegate.h"
+#import "C_RENDER.h"
 #import "C_TASK.h"
 #import "CommonAlertView.h"
 #import "CommunicatingView.h"
@@ -48,7 +49,6 @@
 #import "neFrameTimer.h"
 #import "neGLView.h"
 #import "neGraphics.h"
-#import "neRenderer.h"
 
 // Scene input-mode set + AEP content-area height come from the engine bridge
 // (neEngine::playSystemSe / neEngine::aepContentHeight). neEngineBridge.h

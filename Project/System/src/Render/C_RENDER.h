@@ -1,5 +1,5 @@
 //
-//  neRenderer.h
+//  C_RENDER.h
 //  pop'n rhythmin
 //
 //  The engine-side renderer facade: the abstract renderer interface, the global
@@ -9,9 +9,9 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 //  Every primitive funnels through a single polymorphic renderer created by
-//  neEnsureRenderer(). `neRenderer` is the abstract interface those primitives
+//  neEnsureRenderer(). `ne::C_RENDER` is the abstract interface those primitives
 //  call; the concrete backend is ne::neGLES_11
-//  (System/src/OpenGL/neGLES11.{h,cpp}), which derives from neRenderer and
+//  (System/src/OpenGL/neGLES11.{h,cpp}), which derives from ne::C_RENDER and
 //  wraps OpenGL ES 1.1. These functions are NOT reimplementations of OpenGL —
 //  they wire the app's GL calls, dispatched through that backend, exactly as
 //  the binary does. The `// @ 0xADDR` / `Ghidra:` annotations map each function
@@ -64,9 +64,14 @@ void matrix4Multiply(neMatrix4 &inout, const neMatrix4 &rhs);
 // arguments carry the engine's own ordinals (primitive mode, enable-cap,
 // client-array, blend factor, tex-param), which the backend maps to GL via its
 // decoded tables.
-class neRenderer {
+namespace ne {
+
+// ne::C_RENDER (RTTI type ne::C_RENDER, type_info @0x12e2e0). The abstract
+// renderer interface the immediate primitives dispatch through; ne::neGLES_11
+// derives from it.
+class C_RENDER {
 public:
-    virtual ~neRenderer() = default;
+    virtual ~C_RENDER() = default;
 
     // Lifecycle. Ghidra: initialize = vtbl +0x08 (QueryCaps, activate default GL
     // state). Slot +0x04 is the compiler-emitted deleting destructor (invoked by
@@ -108,11 +113,13 @@ public:
                               int offset) = 0; // +0x104 glDrawElements
 };
 
+} // namespace ne
+
 // The current renderer (Ghidra: g_pCurrentRenderer). Lazily created by
 // neEnsureRenderer.
-neRenderer *neGetCurrentRenderer(void);   // Ghidra: FUN_00012c14
-void neSetCurrentRenderer(neRenderer *r); // Ghidra: FUN_00012c24
-void neEnsureRenderer(void);              // Ghidra: FUN_00012c4c
+ne::C_RENDER *neGetCurrentRenderer(void);   // Ghidra: FUN_00012c14
+void neSetCurrentRenderer(ne::C_RENDER *r); // Ghidra: FUN_00012c24
+void neEnsureRenderer(void);                // Ghidra: FUN_00012c4c
 
 // ---------------------------------------------------------------------------
 // Orthographic viewport (a refcounted projection + glViewport rectangle).
@@ -136,7 +143,7 @@ void neSetCurrentViewport(neViewport *vp); // Ghidra: FUN_00014db8
 
 // If `vp` differs from the renderer's last-applied viewport, retain it, issue
 // glViewport and load its projection matrix. Ghidra: FUN_00015e78.
-void neApplyViewport(neRenderer *r, neViewport *vp);
+void neApplyViewport(ne::C_RENDER *r, neViewport *vp);
 
 // The app-side current viewport (set by neSetCurrentViewport). Used by the
 // primitives and by neDrawText (neTextTexture.mm) to re-apply the projection
@@ -219,7 +226,7 @@ void neDrawTexturedQuad(void *sprite,
 
 // Cache-aware glTexParameteri: skips the call when `value` already matches the
 // texture's per-type cache. Ghidra: FUN_0001885c.
-void setTexParamCached(void *tex, neRenderer *r, int type, int value);
+void setTexParamCached(void *tex, ne::C_RENDER *r, int type, int value);
 
 // ---------------------------------------------------------------------------
 // Scene-graph transform node (a child/sibling tree with per-node matrices).

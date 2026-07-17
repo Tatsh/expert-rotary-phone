@@ -8,14 +8,14 @@ target_sources(popnrhythmin PRIVATE
     C_SINGLE_SPRITE.cpp
     neGLView.mm
     neGraphics.cpp
-    neRenderer.cpp
+    C_RENDER.cpp
     neTextTexture.mm
     neTextureForiOS.cpp
     C_TEXTURE.h
     C_SINGLE_SPRITE.h
     neGLView.h
     neGraphics.h
-    neRenderer.h
+    C_RENDER.h
     neTextTexture.h
     neTextureForiOS.h
 )

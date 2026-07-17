@@ -554,7 +554,7 @@ void neGLES_11::getRenderbufferHeight(int &outHeight) {
 }
 
 // ---------------------------------------------------------------------------
-// neRenderer drawing slots (dispatched through by the neDraw* primitives). The
+// ne::C_RENDER drawing slots (dispatched through by the neDraw* primitives). The
 // integer arguments carry the engine's own ordinals, mapped to GL via the
 // tables above / the enum-typed wrappers.
 // ---------------------------------------------------------------------------
@@ -745,7 +745,7 @@ void neGLES_11::setClientArray(int array, bool on) {
 
 // The primitive-draw slot (vtable +0x100). Its body is in the binary's undisassembled
 // vtable-only region, but its behaviour is pinned by its sole caller neDrawColorArray/
-// neDrawTexturedQuad, which the neRenderer verification confirmed issue
+// neDrawTexturedQuad, which the ne::C_RENDER verification confirmed issue
 // glDrawArrays(PrimitiveToGL(mode), 0, count) (e.g. drawArrays(4, 4) -> GL_TRIANGLE_STRIP).
 // @complete
 void neGLES_11::drawArrays(int mode, int count) {

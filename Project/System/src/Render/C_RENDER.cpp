@@ -1,12 +1,12 @@
 //
-//  neRenderer.cpp
+//  C_RENDER.cpp
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. The
 //  engine-side renderer facade: the global current renderer, 4x4 matrix
 //  helpers, the orthographic viewport, the immediate-mode primitives and the
 //  scene-graph transform node. All GL is issued through the ne::neGLES_11
-//  backend (System/src/OpenGL/neGLES11.*) via the neRenderer virtual interface;
+//  backend (System/src/OpenGL/neGLES11.*) via the ne::C_RENDER virtual interface;
 //  this file never reimplements GL, it wires it.
 //
 
@@ -16,18 +16,18 @@
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
 
+#include "C_RENDER.h"
 #include "C_TEXTURE.h" // ne::C_TEXTURE::name() for the sprite blit
 #include "neDebugLog.h"
 #include "neGLES11.h" // ne::neGLES_11 concrete backend
-#include "neRenderer.h"
 
 // ---------------------------------------------------------------------------
 // Globals (Ghidra data symbols).
 // ---------------------------------------------------------------------------
 
-static neRenderer *g_pCurrentRenderer = nullptr; // Ghidra: g_pCurrentRenderer
-static neViewport *g_pCurrentViewport = nullptr; // Ghidra: g_pCurrentViewport (app-side)
-static neViewport *g_pAppliedViewport = nullptr; // Ghidra: DAT_00188454 (renderer-side)
+static ne::C_RENDER *g_pCurrentRenderer = nullptr; // Ghidra: g_pCurrentRenderer
+static neViewport *g_pCurrentViewport = nullptr;   // Ghidra: g_pCurrentViewport (app-side)
+static neViewport *g_pAppliedViewport = nullptr;   // Ghidra: DAT_00188454 (renderer-side)
 
 // @complete
 neViewport *neGetCurrentViewport(void) {
@@ -131,7 +131,7 @@ void matrix4Multiply(neMatrix4 &inout, const neMatrix4 &rhs) {
 
 // Ghidra: FUN_00012c14.
 // @complete
-neRenderer *neGetCurrentRenderer(void) {
+ne::C_RENDER *neGetCurrentRenderer(void) {
     return g_pCurrentRenderer;
 }
 
@@ -141,7 +141,7 @@ neRenderer *neGetCurrentRenderer(void) {
 // there is no distinct "shutdown" virtual. The engine builds one renderer and never
 // replaces it, so this branch is not exercised in practice.
 // @complete
-void neSetCurrentRenderer(neRenderer *r) {
+void neSetCurrentRenderer(ne::C_RENDER *r) {
     if (g_pCurrentRenderer != nullptr && g_pCurrentRenderer != r) {
         delete g_pCurrentRenderer;
     }
@@ -206,7 +206,7 @@ void neSetCurrentViewport(neViewport *vp) {
 
 // Ghidra: FUN_00015e78.
 // @complete
-void neApplyViewport(neRenderer *r, neViewport *vp) {
+void neApplyViewport(ne::C_RENDER *r, neViewport *vp) {
     if (g_pAppliedViewport == vp) {
         return;
     }
@@ -264,7 +264,7 @@ static uint32_t nePremultRGBA(int a, int r, int g, int b) {
 // each of FUN_00014de4 / FUN_00015188 / FUN_000152ac / FUN_000153e8.
 // @complete
 static void neDrawColorArray(const neColorVertex *verts, int mode, int count) {
-    neRenderer *r = neGetCurrentRenderer();
+    ne::C_RENDER *r = neGetCurrentRenderer();
     r->setClientArray(5, true); // vertex array on (drawing-slot ordinal 5 -> GL_VERTEX_ARRAY)
     r->vertexPointer(&verts[0].x, 2, sizeof(neColorVertex));
     r->setClientArray(2, false);
@@ -330,7 +330,7 @@ void neDrawQuad(float x0,
 // matrix and force every enable-cap to its 2D default (only BLEND stays on).
 // @complete
 void neApplyDefaultRenderState(void) {
-    neRenderer *r = neGetCurrentRenderer();
+    ne::C_RENDER *r = neGetCurrentRenderer();
     neApplyViewport(r, g_pCurrentViewport);
 
     neMatrix4 model;
@@ -362,7 +362,7 @@ void neApplyDefaultRenderState(void) {
 // cache is the ne::C_TEXTURE's own 4-entry tex-param array (Ghidra: tex+0x30),
 // seeded by neTextureUpload to the values it applies at upload time.
 // @complete
-void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
+void setTexParamCached(void *tex, ne::C_RENDER *r, int type, int value) {
     int &slot = static_cast<ne::C_TEXTURE *>(tex)->m_texParamCache[type];
     if (slot == value) {
         return;
@@ -451,7 +451,7 @@ void neDrawTexturedQuad(void *sprite,
         {fw, fh, uR, vB, c},
     };
 
-    neRenderer *r = neGetCurrentRenderer();
+    ne::C_RENDER *r = neGetCurrentRenderer();
 
     if (NE_DBG_FIRST(600)) {
         const neViewport *vp = g_pCurrentViewport;
