@@ -263,8 +263,8 @@ public:
     int m_chosenMusicId = 0;          // +0x900 chosen music id (launch save)
     int m_resultSheet = 0;            // +0x904 saved result sheet (difficulty)
     int m_placeValue[3] = {};         // +0x908 ranking place values (green/yellow/pink)
-    uint8_t m_clearMedal[3] = {};     // +0x914 per-sheet cleared flag
-    uint8_t m_fullComboMedal[3] = {}; // +0x917 per-sheet full-combo flag
+    uint8_t m_fullComboMedal[3] = {}; // +0x914 per-sheet full-combo medal (fullComboN/H/Ex)
+    uint8_t m_perfectMedal[3] = {};   // +0x917 per-sheet perfect medal (perfectN/H/Ex)
     uint8_t m_bgmLoading = 0;       // +0x91a preview-BGM async load in flight (cleared by loadBgm)
     uint8_t m_suppressDraw = 0;     // +0x91b hide the scene during teardown
     uint8_t m_showLevelNumbers = 0; // +0x91c show numeric level instead of rank frame

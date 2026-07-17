@@ -2649,15 +2649,16 @@ void AepDrawCallback(int child,
     }
 
     // Clear-mark badge (selected song) — m_elemUsrNo[14]. No record ->
-    // m_frmNo[5]; else full-combo (byte@+0x917+sheet) -> m_frmNo[4]; else cleared
-    // (byte@+0x914+sheet) -> m_frmNo[3]; else none.
+    // m_frmNo[5] (NEW_BOARD); else perfect (byte@+0x917+sheet) -> m_frmNo[4]
+    // (PERFECT); else full-combo (byte@+0x914+sheet) -> m_frmNo[3] (FULLCOMBO);
+    // else none.
     if (self->m_elemUsrNo[14] == (int)child) {
         int frameNo;
         if (selCellPtr->scores.rank[resultSheet] == 0) {
             frameNo = self->m_frmNo[5];
-        } else if (self->m_fullComboMedal[resultSheet] != 0) {
+        } else if (self->m_perfectMedal[resultSheet] != 0) {
             frameNo = self->m_frmNo[4];
-        } else if (self->m_clearMedal[resultSheet] != 0) {
+        } else if (self->m_fullComboMedal[resultSheet] != 0) {
             frameNo = self->m_frmNo[3];
         } else {
             return;
