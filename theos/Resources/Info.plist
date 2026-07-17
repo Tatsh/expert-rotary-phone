@@ -71,6 +71,17 @@
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
+    <!-- Privacy purpose strings. REQUIRED on modern iOS for the reconstructed
+         behaviour: NSPhotoLibraryAddUsageDescription for the camera-roll save
+         (UIImageWriteToSavedPhotosAlbum in MainViewController, hard-crashes
+         without it on iOS 11+), NSLocationWhenInUseUsageDescription for the
+         arcade-finder map's showsUserLocation prompt (SearchView). Keep in sync
+         with ../../Info.plist.in. -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>pop'n rhythmin saves your result screenshots to your photo library.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>pop'n rhythmin uses your location to show nearby arcades on the map.</string>
+
     <key>UIStatusBarHidden</key>
     <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>

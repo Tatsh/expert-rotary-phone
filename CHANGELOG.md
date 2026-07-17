@@ -9,6 +9,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
 
+### Added
+
+- Location and Photos usage-description strings in `Info.plist` so the
+  arcade-finder map's user-location display and the result-screenshot save to
+  the camera roll work on modern iOS.
+
+### Fixed
+
+- Saving a result screenshot no longer crashes on iOS 11 and later: the required
+  `NSPhotoLibraryAddUsageDescription` purpose string was missing from
+  `Info.plist`.
+
 ## [0.0.1] - 2026-00-00
 
 First version.

@@ -72,6 +72,20 @@
          otherwise blocks weak-TLS / cleartext loads. -->
 @APP_TRANSPORT_SECURITY@
 
+    <!-- Privacy purpose strings. These are REQUIRED on modern iOS for the
+         behaviour the reconstructed code performs, and the original iOS 8 bundle
+         shipped equivalents (SearchView checks AuthorizedAlways, so it prompted
+         for location). Without NSPhotoLibraryAddUsageDescription the camera-roll
+         save (UIImageWriteToSavedPhotosAlbum in MainViewController) hard-crashes
+         on iOS 11+; without NSLocationWhenInUseUsageDescription the arcade-finder
+         map's showsUserLocation prompt (SearchView) is silently denied. Only
+         add-only Photos access and when-in-use location are used, so the
+         narrowest keys are declared. -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>pop'n rhythmin saves your result screenshots to your photo library.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>pop'n rhythmin uses your location to show nearby arcades on the map.</string>
+
     <key>UIStatusBarHidden</key>
     <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>
