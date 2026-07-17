@@ -85,7 +85,7 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
     // only then compares bytes[4] to 'E' (@ 0x7a880-0x7a886). An oversized chart
     // therefore asserts even when the magic is wrong.
     const int count = (size / 8) - 2;
-    assert(count >= 0 && (unsigned)count < 7999); // AcNoteMng.mm:0x69
+    assert(count >= 0 && static_cast<unsigned>(count) < 7999); // AcNoteMng.mm:0x69
 
     // Magic: byte at +4 must be 'E' (arcade chart tag), else reject.
     if (bytes[4] != 'E') {
@@ -107,7 +107,7 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
             break;
         case AC_NOTE_END: // type 3: the BGM-start anchor -> the drift-sync
                           // reference time
-            m_expectedTimeBase = (int)m_records[i].tick;
+            m_expectedTimeBase = static_cast<int>(m_records[i].tick);
             break;
         case AC_NOTE_EVENT: // type 6: the real end-of-chart tick
             m_endValue = m_records[i].tick;
@@ -183,7 +183,7 @@ void AcNoteMng::initNodePool() {
 }
 
 int AcNoteMng::initPlayDataWithData(NSData *data, int hiSpeedLevel) {
-    return initPlayData(data.bytes, (int)data.length, hiSpeedLevel);
+    return initPlayData(data.bytes, static_cast<int>(data.length), hiSpeedLevel);
 }
 
 // Ghidra: FUN_0007aa90 — walk the chart from the first record; register a
@@ -201,7 +201,7 @@ void AcNoteMng::registerTempoEvents() {
         } else if (r.type == AC_NOTE_TEMPO) {
             // The binary asserts ("AdvanceRegisterEvent") if the segment table
             // overflows.
-            assert(registerScrollSegment((int16_t)r.value, r.tick) == 0);
+            assert(registerScrollSegment(static_cast<int16_t>(r.value), r.tick) == 0);
         }
     }
 }
@@ -224,7 +224,7 @@ int AcNoteMng::registerScrollSegment(int16_t bpm, uint32_t tick) {
     }
     m_scrollMap[k].bpm = bpm;
     m_scrollMap[k].startTick = tick;
-    m_scrollMap[k].speed = (float)bpm * 1024.0f / 480000.0f;
+    m_scrollMap[k].speed = static_cast<float>(bpm) * 1024.0f / 480000.0f;
     m_scrollCount++;
     recomputeSpawnLookahead(tick);
     return 0;
@@ -240,7 +240,8 @@ void AcNoteMng::recomputeSpawnLookahead(uint32_t pos) {
     int accum = 0;
     for (int step = 0; step < 8; step++) {
         accum += 60000 / m_scrollMap[seg].bpm;
-        if (m_scrollMap[seg + 1].startTick <= (uint32_t)(accum + (int)pos)) {
+        if (m_scrollMap[seg + 1].startTick <=
+            static_cast<uint32_t>(accum + static_cast<int>(pos))) {
             seg++;
         }
     }
@@ -279,7 +280,7 @@ int AcNoteMng::changeTempo(uint32_t tick) {
 void AcNoteMng::seekTo(uint32_t pos) {
     const uint32_t endValue = m_endValue;
     bool proceed;
-    if ((uint32_t)m_positionOffset < endValue) {
+    if (static_cast<uint32_t>(m_positionOffset) < endValue) {
         proceed = true;
     } else {
         proceed = (pos < endValue);
@@ -293,14 +294,14 @@ void AcNoteMng::seekTo(uint32_t pos) {
     m_holdElapsed = 0;
     m_startThreshold = 0;
     m_holdFlags = 1; // freeze the clock until the lead-in completes
-    m_positionOffset = (int)((pos < endValue) ? pos : endValue); // clamp to the end
+    m_positionOffset = static_cast<int>((pos < endValue) ? pos : endValue); // clamp to the end
 
     timeval tv;
     gettimeofday(&tv, nullptr); // stamp m_startSec/m_startUsec (@ +0x14cb8)
     m_startSec = tv.tv_sec;
     m_startUsec = tv.tv_usec;
 
-    const uint32_t p = (uint32_t)getCurrentPosition();
+    const uint32_t p = static_cast<uint32_t>(getCurrentPosition());
     while (changeTempo(p) != 0) { // settle the tempo segments to the start position
     }
     update(); // prime the first frame
@@ -315,7 +316,7 @@ int AcNoteMng::getElapsedTimeMs() const {
     }
     timeval now;
     gettimeofday(&now, nullptr);
-    return (int)((now.tv_sec - m_startSec) * 1000 + (now.tv_usec - m_startUsec) / 1000);
+    return static_cast<int>((now.tv_sec - m_startSec) * 1000 + (now.tv_usec - m_startUsec) / 1000);
 }
 
 // Ghidra: FUN_0007aeb4 — the current chart position. Uses live elapsed time
@@ -331,10 +332,10 @@ int AcNoteMng::getCurrentPosition() {
     } else {
         elapsed = m_frozenElapsed;
     }
-    const uint32_t pos = (uint32_t)(elapsed + m_positionOffset);
+    const uint32_t pos = static_cast<uint32_t>(elapsed + m_positionOffset);
     int result = m_scrollBase;
     if (m_startThreshold <= pos) {
-        result += (int)(pos - m_startThreshold);
+        result += static_cast<int>(pos - m_startThreshold);
     }
     return result;
 }
@@ -406,13 +407,13 @@ void AcNoteMng::retireNode(AcActiveNote *node) {
 void AcNoteMng::makeNoteEvent(const AcNoteRecord *rec) {
     int lane = rec->value & 0xf;
     if (m_laneMode == 3) {
-        lane = (lane + (int)(rec->tick / 0x48)) % 9;
+        lane = (lane + static_cast<int>(rec->tick / 0x48)) % 9;
     }
     AcActiveNote *node = m_freeHead;
     assert(node != nullptr); // "MakeNoteEvent" AcNoteMng.mm:0x483
     node->record = rec;
     node->tick = rec->tick;
-    node->lane = (uint8_t)m_laneRemap[lane];
+    node->lane = static_cast<uint8_t>(m_laneRemap[lane]);
     node->flags = 0;
     node->drawY = 1024.0f; // 0x44800000
     moveNodeFreeToActive(node);
@@ -478,7 +479,7 @@ void AcNoteMng::applyBgmSync(const AcNoteRecord *rec) {
         int cur = getCurrentPosition();
         int expected = m_expectedTimeBase;
         double bgmMs = [am bgmCurrentTime] * 1000.0; // DAT_0007b598 = 1000.0
-        int drift = (bgmMs > 0.0) ? (int)(long long)bgmMs : 0;
+        int drift = (bgmMs > 0.0) ? static_cast<int>(static_cast<long long>(bgmMs)) : 0;
         m_scrollTarget += drift + (expected - cur);
     } else {
         makeAdjustEvent(rec->tick + 0x20);
@@ -490,16 +491,16 @@ void AcNoteMng::applyBgmSync(const AcNoteRecord *rec) {
 // events fire their side effects.
 // @complete
 void AcNoteMng::spawnNotes(uint32_t pos) {
-    if ((unsigned)(m_state - 3) <= 1) { // state 3 or 4: nothing left to spawn
+    if (static_cast<unsigned>(m_state - 3) <= 1) { // state 3 or 4: nothing left to spawn
         return;
     }
     AcNoteRecord *rec = m_spawnCursor;
-    const uint32_t spawnUntil = (uint32_t)(m_spawnLookahead + (int)pos);
+    const uint32_t spawnUntil = static_cast<uint32_t>(m_spawnLookahead + static_cast<int>(pos));
     if (rec->tick > spawnUntil) {
         return;
     }
     do {
-        const int dt = (pos <= rec->tick) ? 0 : (int)(pos - rec->tick);
+        const int dt = (pos <= rec->tick) ? 0 : static_cast<int>(pos - rec->tick);
         switch (rec->type) {
         case AC_NOTE_TAP: // 1
             if (dt < 4000) {
@@ -622,14 +623,14 @@ void AcNoteMng::updateNearest(AcActiveNote *node, uint32_t pos) {
     if (lane >= 9) {
         return;
     }
-    const int dt = (int)pos - (int)node->tick;
+    const int dt = static_cast<int>(pos) - static_cast<int>(node->tick);
     if (m_autoPlay && dt >= 0) {
         m_laneResult[lane].hits++;
-        node->flags = (uint16_t)(flags | 1);
-        const uint32_t combo = (uint32_t)m_combo + 1;
-        m_combo = (int)combo;
-        if ((uint32_t)m_maxCombo < combo) {
-            m_maxCombo = (int)combo;
+        node->flags = static_cast<uint16_t>(flags | 1);
+        const uint32_t combo = static_cast<uint32_t>(m_combo) + 1;
+        m_combo = static_cast<int>(combo);
+        if (static_cast<uint32_t>(m_maxCombo) < combo) {
+            m_maxCombo = static_cast<int>(combo);
         }
     }
     const int adt = (dt < 0) ? -dt : dt;
@@ -657,7 +658,7 @@ void AcNoteMng::updateDrawPos(AcActiveNote *node, uint32_t pos) {
     }
     if (node->tick < pos) {
         if ((flags & 4) == 0) {
-            node->flags = (uint16_t)(flags | 4);
+            node->flags = static_cast<uint16_t>(flags | 4);
         }
         if (!m_autoPlay) {
             node->drawY = node->drawY + m_playSpeed * -16.0f;
@@ -685,7 +686,7 @@ float AcNoteMng::computeScrollY(const AcActiveNote *node, uint32_t pos) const {
             if (segSpan < span) {
                 span = segSpan;
             }
-            accum += m_scrollMap[seg].speed * (float)span;
+            accum += m_scrollMap[seg].speed * static_cast<float>(span);
             pos += span;
             seg++;
         } while (pos < tick);
@@ -714,7 +715,7 @@ void AcNoteMng::update() {
         }
     }
 
-    const uint32_t pos = (uint32_t)getCurrentPosition();
+    const uint32_t pos = static_cast<uint32_t>(getCurrentPosition());
 
     if (m_state != 4) {
         spawnNotes(pos);
@@ -798,10 +799,11 @@ void AcNoteMng::resume() {
     m_holdFlags ^= 1; // clear bit 0
     m_state = 1;
 
-    const uint32_t pos = (uint32_t)getCurrentPosition();
-    if (pos >= (uint32_t)m_expectedTimeBase && m_endFlag == 0) {
+    const uint32_t pos = static_cast<uint32_t>(getCurrentPosition());
+    if (pos >= static_cast<uint32_t>(m_expectedTimeBase) && m_endFlag == 0) {
         AudioManager *am = [AudioManager sharedManager];
-        float seconds = (float)((int)pos - m_expectedTimeBase) / 1000.0f; // DAT_0007b78c = 1000.0
+        float seconds = static_cast<float>(static_cast<int>(pos) - m_expectedTimeBase) /
+                        1000.0f; // DAT_0007b78c = 1000.0
         [am setBgmCurrentTime:seconds];
         [[AudioManager sharedManager] playBgm:0];
         makeAdjustEvent(pos + 0x20);
@@ -895,7 +897,7 @@ int AcNoteMng::getTotalNoteCount() const {
     for (int lane = 0; lane < 9; lane++) {
         total += m_laneCounts[lane];
     }
-    return (int)(int16_t)total;
+    return static_cast<int>(static_cast<int16_t>(total));
 }
 
 // Ghidra: acNoteGetJudgeTotal @ 0x7b908 — sum the whole 9x4 per-lane
@@ -912,7 +914,7 @@ int AcNoteMng::getJudgeTotal() const {
         total += m_laneResult[lane]._unwritten[2];
         total += m_laneResult[lane].hits;
     }
-    return (int)(int16_t)total;
+    return static_cast<int>(static_cast<int16_t>(total));
 }
 
 // Ghidra: acNoteCountActiveNotes @ 0x7b93c — count on-screen notes (lane < 9)
