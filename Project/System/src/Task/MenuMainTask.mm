@@ -748,7 +748,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
     // Per-frame tail (Ghidra: updateAndDrawAepLayers then ModeSelectTask::Draw):
     // advance + enqueue every live AEP layer globally, then emit this menu's own
     // overlay sprites.
-    updateAndDrawAepLayers(0);
+    AepLyrCtrl::updateAndDrawAepLayers(0);
     drawOverlay();
 }
 

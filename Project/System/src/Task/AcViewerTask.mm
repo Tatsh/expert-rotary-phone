@@ -1089,7 +1089,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // Draw tail: update+draw all Aep layers, then (once the HUD is up and armed)
     // the note field and life gauge.
     (void)audio;
-    updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
+    AepLyrCtrl::updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
     if (m_hudArmed != 0 && m_hudReady != 0) {
         drawActiveNotes();
         drawLifeGauge();

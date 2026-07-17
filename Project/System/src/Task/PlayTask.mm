@@ -485,7 +485,7 @@ void PlayTask::update(int /*deltaMs*/) {
     // Per-frame tail (Ghidra 0x2dc14): advance + draw the AEP layers (draw-only
     // while the pause menu is up, state 5), then draw the HUD unless the task is
     // already tearing down (m_suppressHud, +0x9c7).
-    updateAndDrawAepLayers(m_state == 5 ? 1 : 0); // Ghidra: FUN_0002c924
+    AepLyrCtrl::updateAndDrawAepLayers(m_state == 5 ? 1 : 0); // Ghidra: FUN_0002c924
     if (!m_suppressHud) {
         DrawHud();
     }

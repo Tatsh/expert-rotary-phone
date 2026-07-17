@@ -134,10 +134,11 @@ public:
         m_originY = y;
     }
 
-    // Grant the free-function frame-advance loop access to the members below (it
-    // was the reason the file-static lc* offset helpers existed). Ghidra:
+    // Advance and draw every live AEP layer for the frame (drawOnly != 0 redraws
+    // the held frame without advancing time). A static member: it walks the global
+    // live-layer list and reaches each layer's members directly. Ghidra:
     // FUN_0002c924.
-    friend void updateAndDrawAepLayers(int drawOnly);
+    static void updateAndDrawAepLayers(int drawOnly);
 
 protected:
     // Field TYPES/offsets are byte-verified from the updateAndDrawAepLayers
@@ -169,14 +170,6 @@ protected:
     uint8_t m_finished; // +0x5c  bFlag59: animation-completed flag (set at end of travel)
     uint8_t m_pad5d[3]; // +0x5d  -> 0x60
 };
-
-// Advance and draw every active animation layer in the global list (the
-// intrusive +0x08 chain from the DAT_00188490 head) for this frame: each
-// playing layer is drawn through AepManager::drawLayer at its current frame,
-// then (when drawOnly == 0) its frame is stepped by its play mode (1 once, 2
-// loop, 3 once-reverse) and finished layers are marked done. The result screen
-// calls this each update. Ghidra: FUN_0002c924.
-void updateAndDrawAepLayers(int drawOnly);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

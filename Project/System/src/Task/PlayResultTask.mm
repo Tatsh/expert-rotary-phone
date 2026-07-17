@@ -192,7 +192,7 @@ void PlayResultTask::update(int /*deltaMs*/) {
     }
 
     // Advance + draw every active animation layer this frame.
-    updateAndDrawAepLayers(0); // FUN_0002c924
+    AepLyrCtrl::updateAndDrawAepLayers(0); // FUN_0002c924
 }
 
 // Ghidra: FUN_0003dfe0 — build the whole result screen: snapshot the finished

@@ -194,7 +194,7 @@ bool AepLyrCtrl::isAnimating() const {
 // The drawLayer argument threading and the state machine below are
 // byte-verified from the disassembly at 0x2c958..0x2ca82.
 // @complete
-void updateAndDrawAepLayers(int drawOnly) {
+void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
     AepManager &mgr = AepManager::shared(); // Ghidra: AepManager_shared (FUN_0000f1ec)
 
     for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {

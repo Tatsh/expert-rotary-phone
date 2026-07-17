@@ -313,8 +313,8 @@ void TitleTask::update(int /*deltaMs*/) {
 
     // Per-frame tail (Ghidra 0x2b838, run after every state including 9): advance
     // and draw the active AEP layers, then draw the version / sound-test label.
-    updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
-    drawSoundTestLabel();      // Ghidra: FUN_0002c52c
+    AepLyrCtrl::updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
+    drawSoundTestLabel();                  // Ghidra: FUN_0002c52c
 }
 
 /**
