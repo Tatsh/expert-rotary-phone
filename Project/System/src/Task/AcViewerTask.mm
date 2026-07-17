@@ -93,7 +93,10 @@ void AcViewerTask::setup() {
 
     m_screenWidth = aep.screenWidth();   // aepGetScreenWidth
     m_screenHeight = aep.screenHeight(); // aepGetScreenHeight
-    m_uiScale = g_dwUiScale;
+    // g_dwUiScale is an int slot carrying float bits (screenScale * 0.5, published
+    // by MainViewController::loadView); compute the same value directly as a real
+    // float, matching MainTask/PlayTask, rather than punning the raw slot.
+    m_uiScale = neSceneManager::screenScale() * 0.5f;
     m_comboDigitX = -1; // HUD combo digit screen x (HUD writes it)
     m_comboDigitY = -1; // HUD combo digit screen y
 
@@ -710,7 +713,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     bool flick = false, released = false;
     int flickX = 0, flickY = 0;
     if (m_hudReady != 0) {
-        const float scale = reinterpret_cast<float &>(m_uiScale);
+        const float scale = m_uiScale;
         const int n = gfx.activeTouchCount();
         if (m_dragTouchId < 0) {
             // Idle: latch the first valid touch as the drag anchor.
