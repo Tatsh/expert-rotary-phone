@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <dispatch/dispatch.h>
+#include <memory>
 
 #include "C_TASK.h"
 
@@ -232,16 +233,16 @@ public:
             float scale;   // +0x00 per-widget UI scale (button widgets)
             int songIndex; // +0x00 jacket cells: list index of the song
         };
-        int loadState;                    // +0x04 jacket state: 0 empty / 3 ready
-        __unsafe_unretained id imageData; // +0x08 bundled PNG data (released after upload)
-        neTextureForiOS *texture;         // +0x0c uploaded jacket texture
-        __unsafe_unretained id name;      // +0x10 truncated song-name string
-        struct ScoreRows {                // +0x14 jacket-cell score rows (0x24 bytes)
-            int score[3];                 // +0x00 per-difficulty best score
-            int playCnt[3];               // +0x0c per-difficulty play count
-            short rank[3];                // +0x18 per-difficulty rank
-            uint8_t fullCombo[3];         // +0x1e FC medal
-            uint8_t perfect[3];           // +0x21 PERFECT medal
+        int loadState;                            // +0x04 jacket state: 0 empty / 3 ready
+        __unsafe_unretained id imageData;         // +0x08 bundled PNG data (released after upload)
+        std::unique_ptr<neTextureForiOS> texture; // +0x0c uploaded jacket texture
+        __unsafe_unretained id name;              // +0x10 truncated song-name string
+        struct ScoreRows {                        // +0x14 jacket-cell score rows (0x24 bytes)
+            int score[3];                         // +0x00 per-difficulty best score
+            int playCnt[3];                       // +0x0c per-difficulty play count
+            short rank[3];                        // +0x18 per-difficulty rank
+            uint8_t fullCombo[3];                 // +0x1e FC medal
+            uint8_t perfect[3];                   // +0x21 PERFECT medal
         };
         struct WidgetRect {
             int x, y, w, h;
@@ -289,13 +290,13 @@ public:
 #ifndef ENABLE_PATCHES
     uint8_t unused_2c[0x30 - 0x2c] = {}; // +0x2c unused 4-byte slot (Ghidra: no field access)
 #endif
-    __unsafe_unretained id m_musicList = nullptr; // +0x30 NSArray<MusicInfo*>*
-    AepLyrCtrl *m_layers[4] = {};                 // +0x34 BG / preview / loop transports
-    AepLyrCtrl *m_introLayers[2] = {};            // +0x44 intro transports
-    neTextureForiOS *m_arrowTex[2] = {};          // +0x4c recommend / over-score arrows
-    neTextureForiOS *m_nameTex = nullptr;         // +0x54 song-name banner
-    neTextureForiOS *m_artistTex = nullptr;       // +0x58 artist-name banner
-    neTextureForiOS *m_digitTex[60] = {};         // +0x5c score/points/rank digit atlases
+    __unsafe_unretained id m_musicList = nullptr;    // +0x30 NSArray<MusicInfo*>*
+    std::unique_ptr<AepLyrCtrl> m_layers[4];         // +0x34 BG / preview / loop transports
+    std::unique_ptr<AepLyrCtrl> m_introLayers[2];    // +0x44 intro transports
+    std::unique_ptr<neTextureForiOS> m_arrowTex[2];  // +0x4c recommend / over-score arrows
+    std::unique_ptr<neTextureForiOS> m_nameTex;      // +0x54 song-name banner
+    std::unique_ptr<neTextureForiOS> m_artistTex;    // +0x58 artist-name banner
+    std::unique_ptr<neTextureForiOS> m_digitTex[60]; // +0x5c score/points/rank digit atlases
     // Resolved Aep handle tables (+0x14c..+0x2d8), filled by Setup() via getLyrNo /
     // layerFrameCount / getFrameNo / getUserNo over the const name lists in MainTask.mm.
     int m_bgLyrNo[3] = {};     // +0x14c getLyrNo(BG_NEKO / DIFFICULTY_STAR_OPEN / _OUT)

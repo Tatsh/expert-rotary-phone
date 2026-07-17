@@ -331,9 +331,8 @@ void MainTask::update(int /*deltaMs*/) {
             for (int c = 0; c < 27; c++) {
                 MusicSelCell &cell = m_cells[c];
                 if (cell.imageData != nil && cell.texture == nullptr) {
-                    neTextureForiOS *loaded = new neTextureForiOS();
-                    cell.texture = loaded;
-                    loaded->loadFromImageData((__bridge const void *)cell.imageData);
+                    cell.texture = std::make_unique<neTextureForiOS>();
+                    cell.texture->loadFromImageData((__bridge const void *)cell.imageData);
                     cell.imageData = nil;
                     break;
                 }
@@ -446,21 +445,14 @@ void MainTask::update(int /*deltaMs*/) {
         ScoreData *score = [ScoreData getScoreData:musicId inManagedObjectContext:moc];
 
         m_layers[kLayerDiffOpen]->stop(1);
-        if (m_nameTex) {
-            delete m_nameTex;
-            m_nameTex = nullptr;
-        }
-        if (m_artistTex) {
-            delete m_artistTex;
-            m_artistTex = nullptr;
-        }
 
+        // make_unique frees any previously-loaded banner before installing the new one.
         NSData *nameImg = [info musicNameImage2xData];
-        m_nameTex = new neTextureForiOS();
+        m_nameTex = std::make_unique<neTextureForiOS>();
         m_nameTex->loadFromImageData((__bridge const void *)nameImg);
 
         NSData *artistImg = [info artistNameImage2xData];
-        m_artistTex = new neTextureForiOS();
+        m_artistTex = std::make_unique<neTextureForiOS>();
         m_artistTex->loadFromImageData((__bridge const void *)artistImg);
 
         // The three level values + the six full-combo / perfect medals for the
@@ -514,7 +506,7 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // When the preview intro finishes, cross into its looping layer.
-        AepLyrCtrl *preview = m_layers[kLayerDiffOpen];
+        AepLyrCtrl *preview = m_layers[kLayerDiffOpen].get();
         if (preview->isAnimating() /* Ghidra: layer[0x5c] one-shot flag, consumed here */) {
             m_layers[kLayerDiffLoop]->play();
         }
@@ -899,7 +891,7 @@ void MainTask::Setup() {
 
     // ---- build the 4 scene layers, then the 2 device-branched intro layers ----
     for (int i = 0; i < 4; i++) {
-        m_layers[i] = new AepLyrCtrl();
+        m_layers[i] = std::make_unique<AepLyrCtrl>();
         m_layers[i]->init(3, kLayerNames[i], this, kLayerOrder[i]);
     }
     const char *const *introNames;
@@ -916,7 +908,7 @@ void MainTask::Setup() {
         introNames = kIntroNamesShort;
     }
     for (int i = 0; i < 2; i++) {
-        m_introLayers[i] = new AepLyrCtrl();
+        m_introLayers[i] = std::make_unique<AepLyrCtrl>();
         m_introLayers[i]->init(3, introNames[i], this, kIntroOrder[i]);
     }
 
@@ -955,11 +947,10 @@ void MainTask::Setup() {
 
     // ---- upload the 60 score / points / rank digit-atlas textures ----
     for (int i = 0; i < 60; i++) {
-        neTextureForiOS *tex = new neTextureForiOS();
-        m_digitTex[i] = tex;
+        m_digitTex[i] = std::make_unique<neTextureForiOS>();
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kDigitAtlasNames[i])
                                                          ofType:@"png"];
-        tex->load(path.UTF8String);
+        m_digitTex[i]->load(path.UTF8String);
     }
 
     rebuildList(); // musicSelUpdate — build the initial sorted list + column
@@ -967,10 +958,9 @@ void MainTask::Setup() {
 
     // ---- the 2 badge/arrow atlases ----
     for (int i = 0; i < 2; i++) {
-        neTextureForiOS *tex = new neTextureForiOS();
-        m_arrowTex[i] = tex;
+        m_arrowTex[i] = std::make_unique<neTextureForiOS>();
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kArrowNames[i]) ofType:@"png"];
-        tex->load(path.UTF8String);
+        m_arrowTex[i]->load(path.UTF8String);
     }
 
     // Install the per-frame scene draw callback for group 3 (Ghidra:
@@ -1292,10 +1282,7 @@ void MainTask::Cleanup() {
         m_musicList = nil;
     }
     for (MusicSelCell &cell : m_cells) {
-        if (cell.texture != nullptr) {
-            delete cell.texture; // vtable[1] dtor on the texture
-            cell.texture = nullptr;
-        }
+        cell.texture.reset(); // release the uploaded jacket texture
         if (cell.imageData != nil) {
             cell.imageData = nil; // ARC releases the bundled PNG data
         }
@@ -1430,9 +1417,8 @@ void MainTask::rebuildList() {
             MusicSelCell &cell = m_cells[slot];
 
             // Upload the @2x jacket art straight into a fresh texture.
-            neTextureForiOS *tex = new neTextureForiOS(); // neTextureForiOS_ctor
-            cell.texture = tex;
-            tex->loadFromImageData((__bridge const void *)artwork); // neTextureLoadSingle
+            cell.texture = std::make_unique<neTextureForiOS>();              // neTextureForiOS_ctor
+            cell.texture->loadFromImageData((__bridge const void *)artwork); // neTextureLoadSingle
 
             // Cache a (possibly ellipsis-truncated) copy of the song name for the
             // cell label.
@@ -1663,7 +1649,7 @@ void MainTask::UpdateHighlight() {
     if (m_recommendBadge) {
         const int a = pulseAlpha(m_highlightAnim);
         neTextureForiOS_draw(m_aep,
-                             m_arrowTex[kArrowWarning],
+                             m_arrowTex[kArrowWarning].get(),
                              0,
                              0,
                              m_layoutRects[kLR_ScreenW],
@@ -1687,7 +1673,7 @@ void MainTask::UpdateHighlight() {
     if (m_overScoreBadge) {
         const int a = pulseAlpha(m_highlightAnim);
         neTextureForiOS_draw(m_aep,
-                             m_arrowTex[kArrowWarning],
+                             m_arrowTex[kArrowWarning].get(),
                              0,
                              0,
                              m_layoutRects[kLR_ScreenW],
@@ -1832,41 +1818,27 @@ void MainTask::StopAndSave() {
     [audio cleanupSe];
     neSceneManager::shared().loadSystemSe();
 
-    // Delete the digit / name / artist textures.
+    // Release the digit / name / artist textures.
     for (auto &tex : m_digitTex) {
-        if (tex) {
-            delete tex;
-            tex = nullptr;
-        }
+        tex.reset();
     }
     for (auto &tex : m_arrowTex) {
-        if (tex) {
-            delete tex;
-            tex = nullptr;
-        }
+        tex.reset();
     }
-    if (m_nameTex) {
-        delete m_nameTex;
-        m_nameTex = nullptr;
-    }
-    if (m_artistTex) {
-        delete m_artistTex;
-        m_artistTex = nullptr;
-    }
+    m_nameTex.reset();
+    m_artistTex.reset();
 
-    // Unlink + delete the scene layers.
+    // Unlink + release the scene layers (~AepLyrCtrl also splices itself out).
     for (auto &layer : m_layers) {
         if (layer) {
             layer->unlink();
-            delete layer;
-            layer = nullptr;
+            layer.reset();
         }
     }
     for (auto &layer : m_introLayers) {
         if (layer) {
             layer->unlink();
-            delete layer;
-            layer = nullptr;
+            layer.reset();
         }
     }
     m_aep->releaseAepTexture(3); // Ghidra: FUN_0000f988
@@ -1980,10 +1952,7 @@ extern "C" void musicSelUpdateInfoPanel(MainTask *task, int mode) {
 // the vtable[1] delete on the texture @ +0xc, then release on the ObjC ids @
 // +0x8/+0x10).
 static inline void releaseCell(MainTask::MusicSelCell &cell) {
-    if (cell.texture) {
-        delete cell.texture;
-        cell.texture = nullptr;
-    }
+    cell.texture.reset();
     cell.imageData = nil; // ARC-released by owner
     cell.name = nil;
 }
@@ -2125,7 +2094,7 @@ void MainTask::AepDrawCallback(int child,
                                    1);
                 } else {
                     neTextureForiOS_draw(&AepManager::shared(),
-                                         cell->texture,
+                                         cell->texture.get(),
                                          0,
                                          0,
                                          0x168,
@@ -2417,7 +2386,7 @@ void MainTask::AepDrawCallback(int child,
                 static_cast<int>(((static_cast<long long>(pen) * -0x51eb851f) >> 32)); // pen / 100
             const int dx = ((adv >> 5) - (adv >> 31)) + cx + ((n << 4) >> 1) - 8;
             neTextureForiOS_draw(&AepManager::shared(),
-                                 self->m_digitTex[kDigitJkDif + value % 10],
+                                 self->m_digitTex[kDigitJkDif + value % 10].get(),
                                  0,
                                  0,
                                  0x10,
@@ -2519,7 +2488,7 @@ void MainTask::AepDrawCallback(int child,
     if (self->m_elemUsrNo[kElemPointNum] == static_cast<int>(child)) {
         int v = self->m_treasurePoint;
         for (int dx = 0; dx != -0x78; dx -= 0x1e) {
-            drawTex(self->m_digitTex[kDigitPoints + v % 10], 0x22, 0x26, x + dx, y);
+            drawTex(self->m_digitTex[kDigitPoints + v % 10].get(), 0x22, 0x26, x + dx, y);
             v /= 10;
         }
         return;
@@ -2543,7 +2512,7 @@ void MainTask::AepDrawCallback(int child,
         }
         for (int d = 0; d < 6; d++) {
             if (self->m_scoreDigitUsrNo[d] == static_cast<int>(child)) {
-                drawTex(self->m_digitTex[kDigitScore + score % 10], 0x20, 0x28, x, y);
+                drawTex(self->m_digitTex[kDigitScore + score % 10].get(), 0x20, 0x28, x, y);
                 return;
             }
             score /= 10;
@@ -2605,7 +2574,7 @@ void MainTask::AepDrawCallback(int child,
     // Selected-song jacket preview — m_elemUsrNo[kElemJacket09] blits the big jacket texture
     // (@ selCell+0xc).
     if (self->m_elemUsrNo[kElemJacket09] == static_cast<int>(child)) {
-        drawTex(selCellPtr->texture, 0x168, 0x168, x, y);
+        drawTex(selCellPtr->texture.get(), 0x168, 0x168, x, y);
         return;
     }
 
@@ -2614,14 +2583,14 @@ void MainTask::AepDrawCallback(int child,
         if (!self->m_nameTex) {
             return;
         }
-        drawTex(self->m_nameTex, 0x126, 0x20, x, y);
+        drawTex(self->m_nameTex.get(), 0x126, 0x20, x, y);
         return;
     }
     if (self->m_elemUsrNo[kElemDiffName] == static_cast<int>(child)) {
         if (!self->m_artistTex) {
             return;
         }
-        drawTex(self->m_artistTex, 0x122, 0x14, x, y);
+        drawTex(self->m_artistTex.get(), 0x122, 0x14, x, y);
         return;
     }
 
@@ -2651,7 +2620,7 @@ void MainTask::AepDrawCallback(int child,
                     }
                     digit = placeVal;
                 }
-                drawTex(self->m_digitTex[kDigitRank + grp * 10 + digit], 0x32, 0x32, x, y);
+                drawTex(self->m_digitTex[kDigitRank + grp * 10 + digit].get(), 0x32, 0x32, x, y);
                 return;
             }
         }
