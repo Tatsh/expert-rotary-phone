@@ -692,32 +692,33 @@ void stopMainTask(PlayTask *playTask) {
     }
 }
 
-// Ghidra: FUN_0002314c — nudge the running arcade viewer toward its stop state
-// (6->0xc). AppDelegate's acMainTask slot holds the AcViewerTask (it registers
-// itself via setAcMainTask:self), so the poked +0x20c field is
-// AcViewerTask::m_state. The reconstruction adds a defensive null guard (the
-// binary dereferences unconditionally); behaviour is identical for non-null
-// tasks.
+// Ghidra: FUN_0002314c — on app resign, pause the running arcade viewer: if it
+// is Playing (state 6), open its pause menu (state 0xc). AppDelegate's acMainTask
+// slot holds the AcViewerTask (it registers itself via setAcMainTask:self), so
+// the poked +0x20c field is AcViewerTask::m_state. The reconstruction adds a
+// defensive null guard (the binary dereferences unconditionally); behaviour is
+// identical for non-null tasks.
 // @complete
 void stopAcMainTask(AcViewerTask *acViewerTask) {
     if (acViewerTask == nullptr) {
         return;
     }
-    if (acViewerTask->playState() == kAcViewerRunning) {
-        acViewerTask->setPlayState(kAcViewerStopping);
+    if (acViewerTask->playState() == kAcvPlaying) {
+        acViewerTask->setPlayState(kAcvPauseMenuOpen);
     }
 }
 
-// Ghidra: requestGameExit (FUN_0002315c) — flag the running AcViewerTask to
-// leave the arcade-viewer play (play state @ +0x20c := 8, board-up flag @ +0x1d9
-// := 1). The reconstruction adds a defensive null guard (the binary dereferences
+// Ghidra: requestGameExit (FUN_0002315c) — send the running AcViewerTask into its
+// exit transition (play state @ +0x20c := 8 = ExitTransition) and mark the pad
+// board as already up (@ +0x1d9 := 1) so the transition does not re-insert it.
+// The reconstruction adds a defensive null guard (the binary dereferences
 // unconditionally); behaviour is identical for non-null tasks.
 // @complete
 void acMainRequestGameExit(AcViewerTask *acViewerTask) {
     if (acViewerTask == nullptr) {
         return;
     }
-    acViewerTask->setPlayState(kAcViewerExitRequested);
+    acViewerTask->setPlayState(kAcvExitTransition);
     acViewerTask->setPadBoardUp(true);
 }
 

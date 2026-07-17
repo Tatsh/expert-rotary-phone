@@ -793,9 +793,9 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // uninitialised corrupted m_state to garbage (RHYDBG showed state=3260),
     // resetting the task every frame. In the binary those wait paths goto the draw
     // tail and skip the state commit; initialising next = m_state is equivalent.
-    int next = m_state;
+    AcViewerState next = m_state;
     switch (m_state) {
-    case 0:
+    case kAcvInit:
         // Enter the arcade viewer nav screen (and, on pad, insert the black board),
         // then register this task on the AppDelegate.
         [AcvRootVC() GotoAcViewer];
@@ -803,23 +803,23 @@ void AcViewerTask::update(int /*deltaMs*/) {
             [AcvRootVC() InsertBlackBoard];
         }
         [[AppDelegate appDelegate] setAcMainTask:this];
-        next = 1;
+        next = kAcvWaitMusicId;
         break;
-    case 1:
+    case kAcvWaitMusicId:
         // Wait for a valid song id (set when the viewer picks a song).
-        next = (neAppEventCenter::acViewerMusicId() < 0) ? 0x10 : 2;
+        next = (neAppEventCenter::acViewerMusicId() < 0) ? kAcvExitToMenu : kAcvSetup;
         break;
-    case 2:
+    case kAcvSetup:
         setup();
-        next = 3;
+        next = kAcvStartTransition;
         [[fallthrough]];
-    case 3:
+    case kAcvStartTransition:
         // Fade the HUD in and play the top banner.
         aep.setAepTransitionMode(1); // Ghidra: setAepTransitionMode(aep, 1)
         m_topLayer->play();
-        next = 4;
+        next = kAcvWaitTransition;
         [[fallthrough]];
-    case 4:
+    case kAcvWaitTransition:
         if (m_hudArmed == 0 || !aep.isTransitionDone()) {
             break; // still transitioning
         }
@@ -828,21 +828,21 @@ void AcViewerTask::update(int /*deltaMs*/) {
             m_readySeInst = static_cast<int>([[AudioManager sharedManager] playSe:0
                                                                        resourceId:m_readySeId]);
         }
-        next = 5;
+        next = kAcvWaitSe;
         break;
-    case 5:
+    case kAcvWaitSe:
         // When the ready SE finishes, start note playback.
         if ([[AudioManager sharedManager] isPlayingSe:m_readySeInst] == 0) {
             note.startPlayback();
-            next = 6;
+            next = kAcvPlaying;
         }
         if (neSceneManager::isPadDisplay()) {
             [AcvRootVC() FadeOutBlackBoard];
         }
         break;
-    case 6: { // *** PLAYING ***
+    case kAcvPlaying: { // *** PLAYING ***
         if (neSceneManager::isPadDisplay() && [AcvRootVC() acMusicSelViewing] == 1) {
-            next = 10;
+            next = kAcvPause;
             break;
         }
         note.update();
@@ -854,21 +854,21 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // exit/pause button opens the pause menu (0xc).
         if (g_bAcNoteFinished) {
             m_endHoldCounter = 0;
-            next = 7;
+            next = kAcvPauseDelay;
         } else if (flick &&
                    neGraphics::pointInRect(
                        flickX, flickY, m_comboDigitX, m_comboDigitY, m_playTouchW, m_playTouchH)) {
-            next = 10;
+            next = kAcvPause;
         } else if (flick &&
                    neGraphics::pointInRect(
                        flickX, flickY, m_exitTouchX, m_exitTouchY, m_exitTouchW, m_exitTouchH)) {
-            next = 0xc;
+            next = kAcvPauseMenuOpen;
         } else {
             break;
         }
         break;
     }
-    case 7: {
+    case kAcvPauseDelay: {
         // End-of-song hold: after ~30 frames, pause + snapshot and go to the pause
         // state.
         int t = m_endHoldCounter;
@@ -876,45 +876,45 @@ void AcViewerTask::update(int /*deltaMs*/) {
             note.Pause();
             m_pauseTime = note.getCurrentPosition();
             m_paused = 1;
-            next = 0xc;
+            next = kAcvPauseMenuOpen;
             t = m_endHoldCounter;
         }
         m_endHoldCounter = t + 1;
         break;
     }
-    case 8:
+    case kAcvExitTransition:
         // Teardown transition out.
         note.resetPlayFlag();
         aep.setAepTransitionMode(2); // Ghidra: setAepTransitionMode(aep, 2)
-        next = 9;
+        next = kAcvWaitExit;
         break;
-    case 9:
+    case kAcvWaitExit:
         if (aep.isTransitionDone()) {
             cleanup(); // AcMainTask::Cleanup — free HUD/textures/AcNoteMng
-            next = 0;
+            next = kAcvInit;
         } else {
             return;
         }
         break;
-    case 10:
+    case kAcvPause:
         // Song-select viewing: pause + snapshot, then wait to resume.
         note.Pause();
         m_pauseTime = note.getCurrentPosition();
         m_paused = 1;
-        next = 0xb;
+        next = kAcvScrub;
         break;
-    case 0xb: {
+    case kAcvScrub: {
         // Paused-for-song-select / seek-scrub (Ghidra 0x21bd4, disasm-recovered).
         // The drag anchor's scaled start-Y picks the interaction: at/below
         // m_scrubZoneTopY is the scrub zone (>= m_seekGaugeSplitY = gauge scrub,
         // else seek scrub); above it, a tap resumes play or opens the pause menu.
-        next = 0xb;
+        next = kAcvScrub;
         // (A) iPad resume-at-top: only when NOT paused (rarely fires; normally
         // m_paused=1 here).
         if (neSceneManager::isPadDisplay() && m_paused == 0) {
             note.resume();
             m_paused = 0;
-            next = 6;
+            next = kAcvPlaying;
         }
         if (released) {
             // (B) release side: snapshot the seek base, or quantize the gauge scrub.
@@ -972,19 +972,19 @@ void AcViewerTask::update(int /*deltaMs*/) {
                     flickX, flickY, m_comboDigitX, m_comboDigitY, m_playTouchW, m_playTouchH)) {
                 note.resume();
                 m_paused = 0;
-                next = 6;
+                next = kAcvPlaying;
             } else if (neGraphics::pointInRect(flickX,
                                                flickY,
                                                m_exitTouchX,
                                                m_exitTouchY,
                                                m_exitTouchW,
                                                m_exitTouchH)) {
-                next = 0xc;
+                next = kAcvPauseMenuOpen;
             }
         }
         break;
     }
-    case 0xc:
+    case kAcvPauseMenuOpen:
         // Pause menu: freeze play (if not already), play the pause overlay (phone)
         // or the black board (pad), and wait for the resume/quit tap.
         if (m_paused == 0) {
@@ -997,15 +997,15 @@ void AcViewerTask::update(int /*deltaMs*/) {
         } else {
             [AcvRootVC() GotoAcViewer];
         }
-        next = 0xd;
+        next = kAcvPauseMenuInput;
         break;
-    case 0xd: {
+    case kAcvPauseMenuInput: {
         // Pause menu (Ghidra 0x21cf2): three x-agnostic vertical button bands,
         // y-only hit-tested against the tap. m_pauseBtnY[0]=options, [1]=resume,
         // [2]=quit; each band is [anchor + height/2, anchor + height/2 + rowH].
         // Reaches the draw tail (the binary keeps drawing behind the menu), so
         // `next` is set on every path.
-        next = 0xd; // stay unless a button is hit / the pad overlay is dismissed
+        next = kAcvPauseMenuInput; // stay unless a button is hit / the pad overlay is dismissed
         const int h = m_pauseBtnHeight / 2;
         const int rowH = m_pauseBtnRowH;
         const bool isPad = neSceneManager::isPadDisplay();
@@ -1019,7 +1019,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
             m_pauseMenuOpen = 0;
             note.resume();
             m_paused = 0;
-            next = 6;
+            next = kAcvPlaying;
         };
         if (flick) {
             if (inBand(m_pauseBtnY[0])) { // options
@@ -1027,7 +1027,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
                     neEngine::playSystemSe(1);
                     padResumeToViewer();
                 } else {
-                    next = 0xe;
+                    next = kAcvOptionOpen;
                 }
                 handled = true;
             } else if (inBand(m_pauseBtnY[2])) { // quit
@@ -1035,18 +1035,18 @@ void AcViewerTask::update(int /*deltaMs*/) {
                 if (isPad) {
                     padResumeToViewer();
                 } else {
-                    next = 8;
+                    next = kAcvExitTransition;
                 }
                 handled = true;
             } else if (inBand(m_pauseBtnY[1])) { // resume
                 m_pauseLayer->reset();
                 m_pauseMenuOpen = 0;
                 if (m_paused != 0) {
-                    next = 0xb;
+                    next = kAcvScrub;
                 } else {
                     note.resume();
                     m_paused = 0;
-                    next = 6;
+                    next = kAcvPlaying;
                 }
                 handled = true;
             }
@@ -1056,11 +1056,11 @@ void AcViewerTask::update(int /*deltaMs*/) {
             m_pauseMenuOpen = 0;
             note.resume();
             m_paused = 0;
-            next = 6;
+            next = kAcvPlaying;
         }
         break;
     }
-    case 0xe: {
+    case kAcvOptionOpen: {
         // Open the arcade option sheet (hi-speed / pop-kun / hid-sud / ran-mir).
         // Release any previous controller (@ +0x208), build a fresh
         // AcViewerOptionViewController bound to this task, fire the open SE +
@@ -1074,10 +1074,10 @@ void AcViewerTask::update(int /*deltaMs*/) {
         m_optionVC = (__bridge_retained void *)optVC;
         [optVC startOpenAnimationForAcMain];
         [AcvRootVC() ResumeLoop];
-        next = 0xf;
+        next = kAcvOptionActive;
         break;
     }
-    case 0x10:
+    case kAcvExitToMenu:
         // No song selected: fade the pad board, clear the AppDelegate task and hand
         // back to the mode menu.
         if (neSceneManager::isPadDisplay()) {
@@ -1090,7 +1090,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
             MenuMainTask *menu = new MenuMainTask();
             menu->setPriority(3);
         }
-        m_state = 0x11;
+        m_state = kAcvDone;
         return;
     default:
         break;
@@ -1298,7 +1298,7 @@ void AcViewerTask::applyGameplaySettings() {
     // resume state.
     [neSceneManager::rootViewController() performSelector:@selector(ResumeLoop)];
     if (!neSceneManager::isPadDisplay()) {
-        m_state = 0xd; // +0x20c
+        m_state = kAcvPauseMenuInput; // +0x20c
     }
 }
 

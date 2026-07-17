@@ -43,16 +43,31 @@
 class AepLyrCtrl;
 class neTextureForiOS;
 
-// AcViewerTask play-state values the app-lifecycle bridge acts on (m_state
-// @+0x20c). Ghidra: stopAcMainTask @FUN_0002314c (running -> stopping),
-// requestGameExit @FUN_0002315c (-> exit-requested). The play-state machine uses
-// further values; only the bridge-relevant ones are named here. (The bridge's
+// AcViewerTask::update play-state machine (m_state @+0x20c). Values and names are
+// Ghidra's AcMainTaskState (ACST_*). The app-lifecycle bridge acts on three of
+// them: stopAcMainTask (resign) sends Playing -> PauseMenuOpen (i.e. pauses the
+// game), and requestGameExit sends it to ExitTransition. (The bridge's
 // "AcMainTask" naming is a misnomer: AppDelegate's acMainTask slot holds the
 // running AcViewerTask, which registers itself via setAcMainTask:self.)
-enum AcViewerPlayState : int {
-    kAcViewerRunning = 6,       // active play
-    kAcViewerExitRequested = 8, // requestGameExit: leave arcade play
-    kAcViewerStopping = 0xc,    // stopAcMainTask: resign teardown
+enum AcViewerState : int {
+    kAcvInit = 0,            // ACST_INIT: enter viewer, insert pad board, register task
+    kAcvWaitMusicId = 1,     // ACST_WAIT_MUSIC_ID
+    kAcvSetup = 2,           // ACST_SETUP
+    kAcvStartTransition = 3, // ACST_START_TRANSITION
+    kAcvWaitTransition = 4,  // ACST_WAIT_TRANSITION
+    kAcvWaitSe = 5,          // ACST_WAIT_SE
+    kAcvPlaying = 6,         // ACST_PLAYING
+    kAcvPauseDelay = 7,      // ACST_PAUSE_DELAY
+    kAcvExitTransition = 8,  // ACST_EXIT_TRANSITION (requestGameExit target)
+    kAcvWaitExit = 9,        // ACST_WAIT_EXIT
+    kAcvPause = 10,          // ACST_PAUSE
+    kAcvScrub = 11,          // ACST_SCRUB
+    kAcvPauseMenuOpen = 12,  // ACST_PAUSE_MENU_OPEN (stopAcMainTask target)
+    kAcvPauseMenuInput = 13, // ACST_PAUSE_MENU_INPUT
+    kAcvOptionOpen = 14,     // ACST_OPTION_OPEN
+    kAcvOptionActive = 15,   // ACST_OPTION_ACTIVE
+    kAcvExitToMenu = 16,     // ACST_EXIT_TO_MENU
+    kAcvDone = 17,           // ACST_DONE
 };
 
 class AcViewerTask : public C_TASK {
@@ -71,11 +86,11 @@ public:
 
     // Play-state + board-up accessors for the app-lifecycle bridge
     // (neEngine::stopAcMainTask / acMainRequestGameExit). m_state @+0x20c is the
-    // play-state machine; m_padBoardUp @+0x1d9 is raised on an exit request.
-    int playState() const {
+    // play-state machine; m_padBoardUp @+0x1d9 marks the pad board as already up.
+    AcViewerState playState() const {
         return m_state;
     }
-    void setPlayState(int state) {
+    void setPlayState(AcViewerState state) {
         m_state = state;
     }
     void setPadBoardUp(bool up) {
@@ -214,25 +229,30 @@ private:
     uint8_t m_paused = 0;          // +0x1d6 note playback paused / muted
     uint8_t m_pauseMenuOpen = 0;   // +0x1d7 pause-menu open
     uint8_t m_padDisplay = 0;      // +0x1d8 pad-class display
-    uint8_t m_padBoardUp = 0;      // +0x1d9 pad "board up" (survives cleanup wipe)
+    // +0x1d9 pad-only flag: the black board is up / the pad viewer is already
+    // set up (Ghidra calls it bIpadSubMode). ACST_INIT skips GotoAcViewer +
+    // InsertBlackBoard when it is set; ACST_WAIT_TRANSITION gates the ready-SE on
+    // it; requestGameExit raises it so the exit transition does not re-insert the
+    // board; Cleanup preserves it across the play-data wipe (hence "survives").
+    uint8_t m_padBoardUp = 0;
 #ifndef ENABLE_PATCHES
     uint8_t _pad_1da[0x1dc - 0x1da] = {}; // +0x1da alignment pad before m_difficulty (no access)
 #endif
-    int m_difficulty = 0;        // +0x1dc selected difficulty (0 easy..3 ex)
-    void *m_sheet = nullptr;     // +0x1e0 chart sheet NSData (strong, ARC-bridged)
-    void *m_songTitle = nullptr; // +0x1e4 song-title NSString (strong, ARC-bridged)
-    int m_titleXAdvance = 0;     // +0x1e8 HUD title x-advance (by name length)
-    int m_comboDigitX = 0;       // +0x1ec cached combo-digit x; also the
-                                 //        in-play song-select touch rect origin x
-    int m_comboDigitY = 0;       // +0x1f0 cached combo-digit y; also the
-                                 //        in-play song-select touch rect origin y
-    int m_hiSpeed = 0;           // +0x1f4 hi-speed option (+500)
-    int m_popKun = 0;            // +0x1f8 pop-kun option
-    int m_hidSud = 0;            // +0x1fc hid/sud option (read as uint32 mask)
-    int m_ranMir = 0;            // +0x200 ran/mir lane-remap option
-    int m_endHoldCounter = 0;    // +0x204 end-of-song hold frame counter
-    void *m_optionVC = nullptr;  // +0x208 option-sheet controller (strong, ARC-bridged)
-    int m_state = 0;             // +0x20c play-state machine field
+    int m_difficulty = 0;             // +0x1dc selected difficulty (0 easy..3 ex)
+    void *m_sheet = nullptr;          // +0x1e0 chart sheet NSData (strong, ARC-bridged)
+    void *m_songTitle = nullptr;      // +0x1e4 song-title NSString (strong, ARC-bridged)
+    int m_titleXAdvance = 0;          // +0x1e8 HUD title x-advance (by name length)
+    int m_comboDigitX = 0;            // +0x1ec cached combo-digit x; also the
+                                      //        in-play song-select touch rect origin x
+    int m_comboDigitY = 0;            // +0x1f0 cached combo-digit y; also the
+                                      //        in-play song-select touch rect origin y
+    int m_hiSpeed = 0;                // +0x1f4 hi-speed option (+500)
+    int m_popKun = 0;                 // +0x1f8 pop-kun option
+    int m_hidSud = 0;                 // +0x1fc hid/sud option (read as uint32 mask)
+    int m_ranMir = 0;                 // +0x200 ran/mir lane-remap option
+    int m_endHoldCounter = 0;         // +0x204 end-of-song hold frame counter
+    void *m_optionVC = nullptr;       // +0x208 option-sheet controller (strong, ARC-bridged)
+    AcViewerState m_state = kAcvInit; // +0x20c play-state machine (AcViewerState)
     uint8_t _reservedTail[0x214 - 0x210] = {}; // +0x210 object tail
 };
 
