@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <memory>
 #include <vector>
 
 #import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
@@ -903,10 +904,10 @@ int neTextureForiOS::loadFromImageData(const void *imageData) {
         return -1;
     }
     m_tileCount = 1;
-    m_tiles = new ne::C_TEXTURE *[1];
-    m_tileRects = new ne::C_SINGLE_SPRITE[1];
-    m_tileWidths = new int[1];
-    m_tileHeights = new int[1];
+    m_tiles = std::make_unique<ne::C_TEXTURE *[]>(1);
+    m_tileRects = std::make_unique<ne::C_SINGLE_SPRITE[]>(1);
+    m_tileWidths = std::make_unique<int[]>(1);
+    m_tileHeights = std::make_unique<int[]>(1);
 
     m_tiles[0] = LoadTexture((__bridge NSData *)imageData);
     if (m_tiles[0] == nullptr) {

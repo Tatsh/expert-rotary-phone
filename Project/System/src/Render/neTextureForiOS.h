@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "C_SINGLE_SPRITE.h" // one ne::C_SINGLE_SPRITE per GPU upload tile (m_tileRects)
 
@@ -117,15 +118,15 @@ public:
     }
     /** @newCode */
     const int *tileWidths() const {
-        return m_tileWidths;
+        return m_tileWidths.get();
     }
     /** @newCode */
     const int *tileHeights() const {
-        return m_tileHeights;
+        return m_tileHeights.get();
     }
     /** @newCode */
     ne::C_SINGLE_SPRITE *tileRects() const {
-        return m_tileRects;
+        return m_tileRects.get();
     }
 
 private:
@@ -134,12 +135,11 @@ private:
     // width and height arrays hold the padded GL texture size of each tile, read
     // from the resolved ne::C_TEXTURE (+0x1c / +0x20). Ghidra: operator new[]
     // results stored at +0x08 / +0x0c / +0x10 / +0x14.
-    int m_tileCount = 0;               // +0x04 number of tiles
-    int *m_tileWidths = nullptr;       // +0x08 per-tile texture width  (ne::C_TEXTURE +0x1c)
-    int *m_tileHeights = nullptr;      // +0x0c per-tile texture height (ne::C_TEXTURE +0x20)
-    ne::C_TEXTURE **m_tiles = nullptr; // +0x10 cached ne::C_TEXTURE per tile
-    ne::C_SINGLE_SPRITE *m_tileRects =
-        nullptr; // +0x14 per-tile upload records (new ne::C_SINGLE_SPRITE[N])
+    int m_tileCount = 0;                  // +0x04 number of tiles
+    std::unique_ptr<int[]> m_tileWidths;  // +0x08 per-tile texture width  (ne::C_TEXTURE +0x1c)
+    std::unique_ptr<int[]> m_tileHeights; // +0x0c per-tile texture height (ne::C_TEXTURE +0x20)
+    std::unique_ptr<ne::C_TEXTURE *[]> m_tiles;         // +0x10 cached ne::C_TEXTURE per tile
+    std::unique_ptr<ne::C_SINGLE_SPRITE[]> m_tileRects; // +0x14 per-tile upload records
 };
 
 // Flat-argument sprite-draw wrapper the task draw passes call (Ghidra:

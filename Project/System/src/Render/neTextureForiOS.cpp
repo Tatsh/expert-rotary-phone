@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 #include <string>
 
 #include "AepOrderingTable.h"
@@ -46,10 +47,11 @@ int neTextureForiOS::load(const char *path) {
     // (loadFrames) allocates more. Ghidra: the +0x08/+0x0c/+0x10/+0x14 heap
     // arrays sized 1 here.
     m_tileCount = 1;
-    m_tiles = new ne::C_TEXTURE *[1];
-    m_tileRects = new ne::C_SINGLE_SPRITE[1]; // 0x18-byte record (ctor FUN_00015eb4)
-    m_tileWidths = new int[1];
-    m_tileHeights = new int[1];
+    m_tiles = std::make_unique<ne::C_TEXTURE *[]>(1);
+    m_tileRects =
+        std::make_unique<ne::C_SINGLE_SPRITE[]>(1); // 0x18-byte record (ctor FUN_00015eb4)
+    m_tileWidths = std::make_unique<int[]>(1);
+    m_tileHeights = std::make_unique<int[]>(1);
 
     m_tiles[0] =
         AepTextureCacheAcquire(path); // FUN_0001bbf0 (original path, not the lowercased key)
@@ -90,10 +92,10 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
     // Parallel per-tile arrays: handles (+0x10), upload records (+0x14), and
     // padded width/height (+0x08/+0x0c). Ghidra: operator new[] for each, count
     // at +0x04.
-    m_tiles = new ne::C_TEXTURE *[tileCount];
-    m_tileRects = new ne::C_SINGLE_SPRITE[tileCount]; // 0x18-byte records (ctor FUN_00015eb4)
-    m_tileWidths = new int[tileCount];
-    m_tileHeights = new int[tileCount];
+    m_tiles = std::make_unique<ne::C_TEXTURE *[]>(tileCount);
+    m_tileRects = std::make_unique<ne::C_SINGLE_SPRITE[]>(tileCount); // ctor FUN_00015eb4
+    m_tileWidths = std::make_unique<int[]>(tileCount);
+    m_tileHeights = std::make_unique<int[]>(tileCount);
     m_tileCount = tileCount;
 
     for (int i = 0; i < tileCount; ++i) {
@@ -196,9 +198,9 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
 // free the parallel per-tile arrays allocated by load()/loadFrames(). Each tile
 // texture carries two references: one the acquire path retained in m_tiles[i]
 // (dropped here by the loop) and one the upload path retained in
-// m_tileRects[i].texture (dropped by delete[] m_tileRects running ~ne::C_SINGLE_SPRITE). The
-// free order matches the binary: release loop, then m_tileRects, then the widths /
-// heights / handles arrays.
+// m_tileRects[i].texture (dropped when the m_tileRects unique_ptr<T[]> runs
+// ~ne::C_SINGLE_SPRITE per element). The loop runs first (in the dtor body); the
+// member destructors then free the parallel arrays.
 // @complete
 neTextureForiOS::~neTextureForiOS() {
     for (int i = 0; i < m_tileCount; ++i) {
@@ -206,8 +208,7 @@ neTextureForiOS::~neTextureForiOS() {
             neTextureRelease(m_tiles[i]); // FUN_00018200: drop the acquire reference
         }
     }
-    delete[] m_tileRects; // runs ~ne::C_SINGLE_SPRITE per element -> drops the upload reference
-    delete[] m_tileWidths;
-    delete[] m_tileHeights;
-    delete[] m_tiles;
+    // m_tileRects / m_tileWidths / m_tileHeights / m_tiles are unique_ptr<T[]>; the
+    // member destructors free the arrays (m_tileRects runs ~ne::C_SINGLE_SPRITE per
+    // element, dropping each upload reference).
 }
