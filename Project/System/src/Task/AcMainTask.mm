@@ -67,8 +67,8 @@ void AcMainTask::update(int /*deltaMs*/) {
                 // per-frame scroll-normalization lives in the not-yet-reconstructed
                 // arcade states 0x10 / 0x4d: delta = ((float)touch - anchor) /
                 // m_screenScale (NEON_ACCURACY.md #13).
-                m_dragAnchorX = (float)t->x;
-                m_dragAnchorY = (float)t->y;
+                m_dragAnchorX = static_cast<float>(t->x);
+                m_dragAnchorY = static_cast<float>(t->y);
             }
             m_frameDragging = true;
             break;
@@ -93,7 +93,7 @@ void AcMainTask::update(int /*deltaMs*/) {
 
     // "Scrolled past the last row" flag (@ +0x5f2): list offset >= content
     // bottom.
-    m_scrolledPastEnd = (int)m_listBottom <= m_treasurePoint;
+    m_scrolledPastEnd = static_cast<int>(m_listBottom) <= m_treasurePoint;
 
     switch (m_state) {
     case 0:
@@ -142,42 +142,42 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
     // binary does vcvt.f32.s32 on the raw touch coords, subtracts the float
     // anchor, then divides by m_screenScale (vdiv) — no 65536 fixed-point scaling
     // anywhere.
-    const float dX = ((float)t->x - m_dragAnchorX) / m_screenScale;
-    const float dY = ((float)t->y - m_dragAnchorY) / m_screenScale;
+    const float dX = (static_cast<float>(t->x) - m_dragAnchorX) / m_screenScale;
+    const float dY = (static_cast<float>(t->y) - m_dragAnchorY) / m_screenScale;
 
     // Proposed scroll positions, minus whatever is already banked in the
     // rubber-band. The clamp comparisons in the binary use the truncated
     // (int)->(float) round-trip of these values, so mirror the int cast before
     // comparing.
-    const int nx = (int)((m_scrollX - dX) - m_scrollRubberX);
-    const int ny = (int)((m_scrollY - dY) - m_scrollRubberY);
+    const int nx = static_cast<int>((m_scrollX - dX) - m_scrollRubberX);
+    const int ny = static_cast<int>((m_scrollY - dY) - m_scrollRubberY);
 
     int fx;
-    if ((float)nx > m_clampCentreX2) {
-        m_scrollRubberX += (float)nx - m_clampCentreX2;
-        fx = (int)m_clampCentreX2;
-    } else if ((float)nx < m_clampCentreX) {
-        m_scrollRubberX += (float)nx - m_clampCentreX;
-        fx = (int)m_clampCentreX;
+    if (static_cast<float>(nx) > m_clampCentreX2) {
+        m_scrollRubberX += static_cast<float>(nx) - m_clampCentreX2;
+        fx = static_cast<int>(m_clampCentreX2);
+    } else if (static_cast<float>(nx) < m_clampCentreX) {
+        m_scrollRubberX += static_cast<float>(nx) - m_clampCentreX;
+        fx = static_cast<int>(m_clampCentreX);
     } else {
         fx = nx;
     }
 
     int fy;
-    if ((float)ny > m_clampMaxY) {
-        m_scrollRubberY += (float)ny - m_clampMaxY;
-        fy = (int)m_clampMaxY;
-    } else if ((float)ny < m_clampMinY) {
-        m_scrollRubberY += (float)ny - m_clampMinY;
-        fy = (int)m_clampMinY;
+    if (static_cast<float>(ny) > m_clampMaxY) {
+        m_scrollRubberY += static_cast<float>(ny) - m_clampMaxY;
+        fy = static_cast<int>(m_clampMaxY);
+    } else if (static_cast<float>(ny) < m_clampMinY) {
+        m_scrollRubberY += static_cast<float>(ny) - m_clampMinY;
+        fy = static_cast<int>(m_clampMinY);
     } else {
         fy = ny;
     }
 
     // Publish the clamped screen-space base the board draw subtracts from every
     // layer.
-    m_scrollBaseX = m_scrollX - (float)fx;
-    m_scrollBaseY = m_scrollY - (float)fy;
+    m_scrollBaseX = m_scrollX - static_cast<float>(fx);
+    m_scrollBaseY = m_scrollY - static_cast<float>(fy);
 }
 
 // case 0 — build the select/map scene, then start the BGM if a treasure record
@@ -211,7 +211,8 @@ void AcMainTask::stateFadeIn() {
     }
     [audio playBgm:0.5f];
 
-    MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
+    MainViewController *root =
+        static_cast<MainViewController *>(neSceneManager::rootViewController());
     [root GotoMapSelect]; // -[MainViewController GotoMapSelect] @ 0xc7d8
     m_state = 2;
 }
@@ -429,13 +430,13 @@ void AcMainTask::setupScene() {
     // to the nearest whole number of rows, stored at +0x638.
     NSArray *available = gCharaManager.availableInfos();
     m_availableInfos = (__bridge void *)available; // cached raw (unretained), as the binary does
-    const int availableCount = (int)available.count;
-    m_charaRowCount = (int)((float)availableCount / 6.0f + 0.5f);
+    const int availableCount = static_cast<int>(available.count);
+    m_charaRowCount = static_cast<int>(static_cast<float>(availableCount) / 6.0f + 0.5f);
 
     // Working copy of the owned-character set (+1 retained; released on the next
     // rebuild). Ghidra: release the old, then gotCharaArray mutableCopy.
     if (m_gotCharaArray) {
-        (void)(__bridge_transfer id)m_gotCharaArray;
+        static_cast<void>((__bridge_transfer id)m_gotCharaArray);
         m_gotCharaArray = nullptr;
     }
     m_gotCharaArray = (__bridge_retained void *)[[UserSettingData gotCharaArray] mutableCopy];
@@ -445,7 +446,7 @@ void AcMainTask::setupScene() {
     const short charaId = [UserSettingData charaId];
     CharaInfo *info = gCharaManager.availableInfoForCharaId(charaId);
     m_skillInfo = (__bridge void *)info;
-    m_skillData = GetSkillDataStruct((int)info.skillId);
+    m_skillData = GetSkillDataStruct(static_cast<int>(info.skillId));
 
     // Clear the 0x3c-byte selection-index scratch to -1 (Ghidra: memset +0x474).
     std::memset(&m_selScratch[0], 0xff, 0x3c);
@@ -464,7 +465,7 @@ void AcMainTask::setupScene() {
     m_rankBadgeType = 0xff;
 
     // Seed the arcade RNG with wall-clock time (Ghidra: time(0) -> FUN_00062b5c).
-    m_rng.setSeed((unsigned)time(nullptr));
+    m_rng.setSeed(static_cast<unsigned>(time(nullptr)));
 
     // Device-branched layout constants. this+0x5f7 == 0 is a phone; the extra
     // this+0x614/0x618 seed applies only to a tall (displayType 2) phone.
@@ -754,8 +755,8 @@ void AcMainTask::setupLoadTextures() {
     // +0xdc.
     neTextureForiOS *charaTex = new neTextureForiOS();
     m_charaTex = charaTex;
-    NSString *charaFile =
-        [NSString stringWithFormat:@"sugo_chara%03d.png", (int)[UserSettingData charaId]];
+    NSString *charaFile = [NSString
+        stringWithFormat:@"sugo_chara%03d.png", static_cast<int>([UserSettingData charaId])];
     NSString *charaPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
     charaTex->load([charaPath UTF8String]);
@@ -804,10 +805,10 @@ static int TreasureReadCount(short subMapId) {
     const int board = subMapId / 10;
     const int sub = subMapId - board * 10;
     if (board == 8) {
-        if ((unsigned)sub < 3) {
+        if (static_cast<unsigned>(sub) < 3) {
             return kBoard8[sub];
         }
-    } else if (board == 6 && (unsigned)sub < 3) {
+    } else if (board == 6 && static_cast<unsigned>(sub) < 3) {
         return kBoard6[sub];
     }
     return 0;
@@ -827,7 +828,7 @@ void AcMainTask::loadTreasureMap() {
 
     // Drop the previous owned-character working copy (+0x630, +1 retained).
     if (m_gotCharaArray) {
-        (void)(__bridge_transfer id)m_gotCharaArray;
+        static_cast<void>((__bridge_transfer id)m_gotCharaArray);
         m_gotCharaArray = nullptr;
     }
 
@@ -898,7 +899,7 @@ void AcMainTask::loadTreasureMap() {
     }
 
     // Load "map_%03d.map" for this sub-map.
-    NSString *mapName = [NSString stringWithFormat:@"map_%03d", (int)subMapId];
+    NSString *mapName = [NSString stringWithFormat:@"map_%03d", static_cast<int>(subMapId)];
     NSString *mapPath = [[NSBundle mainBundle] pathForResource:mapName ofType:@"map"];
     TreasureMap *map = new TreasureMap(); // FUN_000ce2b0
     m_map = map;
@@ -906,7 +907,7 @@ void AcMainTask::loadTreasureMap() {
 
     // Copy the map header into play data.
     const int nodeCount = map->nodeCount();
-    m_nodeCount = (uint16_t)nodeCount;
+    m_nodeCount = static_cast<uint16_t>(nodeCount);
     m_nodes = map->nodes();
     m_edgeCount = map->edgeCount();
     m_edges = map->edges();
@@ -920,9 +921,9 @@ void AcMainTask::loadTreasureMap() {
     // Current node screen origin (tile size 0x1a == 26 px) + the "reached" flag.
     const TreasureMap::Node *cur = map->findArea(tmp.curSubMapId); // FUN_000ce934
     m_curNode = cur;
-    m_playerX = (float)((cur ? cur->x : 0) * 0x1a);
-    m_playerY = (float)((cur ? cur->y : 0) * 0x1a);
-    m_boardMoveState = (tmp.boardMoveState == 2) ? (unsigned)tmp.boardMoveState : 0u;
+    m_playerX = static_cast<float>((cur ? cur->x : 0) * 0x1a);
+    m_playerY = static_cast<float>((cur ? cur->y : 0) * 0x1a);
+    m_boardMoveState = (tmp.boardMoveState == 2) ? static_cast<unsigned>(tmp.boardMoveState) : 0u;
     m_bonusCount = tmp.mainMapId;
     m_lastBranchNodeId = tmp.lastBranchNodeId;
     std::memcpy(&m_boardSquareState[0],
@@ -958,17 +959,17 @@ void AcMainTask::loadTreasureMap() {
             }
         }
     }
-    const float originX = (float)(minX * 0x1a);
-    const float originY = (float)(minY * 0x1a);
-    const float contentW = (float)((maxX - minX) * 0x1a + 0x68); // +104
-    const float contentH = (float)((maxY - minY) * 0x1a + 0x80); // +128
+    const float originX = static_cast<float>(minX * 0x1a);
+    const float originY = static_cast<float>(minY * 0x1a);
+    const float contentW = static_cast<float>((maxX - minX) * 0x1a + 0x68); // +104
+    const float contentH = static_cast<float>((maxY - minY) * 0x1a + 0x80); // +128
     m_scrollBoxOriginX = originX;
     m_scrollBoxOriginY = originY;
     m_scrollBoxW = contentW;
     m_scrollBoxH = contentH;
 
-    const float halfW = (float)(m_overlayW / 2);
-    const float halfH = (float)(m_overlayH / 2);
+    const float halfW = static_cast<float>(m_overlayW / 2);
+    const float halfH = static_cast<float>(m_overlayH / 2);
     const bool pad = (m_padDisplay != 0);
     const float marginTop = pad ? 380.0f : 480.0f; // DAT_000a148c / DAT_000a1490
     const float marginBot = pad ? 480.0f : 300.0f; // DAT_000a1494 / DAT_000a1498
@@ -987,8 +988,8 @@ void AcMainTask::loadTreasureMap() {
 
     // Scroll position: the current node's pixel position (tile 26, +52 x / +64 y
     // biases), clamped into [minCentreX, maxCentreX] x [clampMinY, clampMaxY].
-    const float scrollXRaw = (float)((cur ? cur->x : 0) * 0x1a + 0x34); // +52
-    const float scrollYRaw = (float)((cur ? cur->y : 0) * 0x1a + 0x40); // +64
+    const float scrollXRaw = static_cast<float>((cur ? cur->x : 0) * 0x1a + 0x34); // +52
+    const float scrollYRaw = static_cast<float>((cur ? cur->y : 0) * 0x1a + 0x40); // +64
     m_scrollX = std::min(std::max(scrollXRaw, minCentreX), m_clampCentreX2);
     m_scrollY = std::min(std::max(scrollYRaw, clampMinY), clampMaxY);
     unloadMapBgGroup(); // FUN_000a4e84 — drop the previous board bg before
@@ -1000,13 +1001,13 @@ void AcMainTask::loadTreasureMap() {
         NSString *bgGroupName;
         NSString *bgLoopName;
         if (!pad) {
-            bgGroupName =
-                [NSString stringWithFormat:@"sugoroku_bg%02d", (int)kMapBgNumber[bgIndex]];
+            bgGroupName = [NSString
+                stringWithFormat:@"sugoroku_bg%02d", static_cast<int>(kMapBgNumber[bgIndex])];
             bgLoopName =
                 ([[AppDelegate appDelegate] displayType] == 2) ? @"BG_LOOP1136" : @"BG_LOOP960";
         } else {
-            bgGroupName =
-                [NSString stringWithFormat:@"sugoroku_bg%02d_ipad", (int)kMapBgNumber[bgIndex]];
+            bgGroupName = [NSString
+                stringWithFormat:@"sugoroku_bg%02d_ipad", static_cast<int>(kMapBgNumber[bgIndex])];
             bgLoopName = @"BG_LOOP";
         }
         AepManager &aep = *m_aep;
@@ -1029,14 +1030,14 @@ void AcMainTask::loadTreasureMap() {
 
     // Remaining record fields + the board character/panel builders.
     m_rouletteMode = tmp.rouletteMode;
-    m_listHalveCount = (int8_t)tmp.listHalveCount;
-    m_treasureProgress = (int8_t)tmp.treasureProgress;
+    m_listHalveCount = static_cast<int8_t>(tmp.listHalveCount);
+    m_treasureProgress = static_cast<int8_t>(tmp.treasureProgress);
     buildMapCharaLayers(); // FUN_000a2264
     buildMapPanelLayers(); // FUN_000a2650
 
     // Cache the map's display name (+0x944, +1 retained), replacing any previous.
     if (m_mapName) {
-        (void)(__bridge_transfer id)m_mapName;
+        static_cast<void>((__bridge_transfer id)m_mapName);
         m_mapName = nullptr;
     }
     m_mapName = (__bridge_retained void *)[NSString stringWithUTF8String:tmp.goalName];
@@ -1044,7 +1045,7 @@ void AcMainTask::loadTreasureMap() {
     // Push + load the board treasure BGM ("bgm04_tre_%02d.m4a").
     AudioManager *audio = [AudioManager sharedManager];
     NSString *bgmName =
-        [NSString stringWithFormat:@"bgm04_tre_%02d.m4a", (int)kMapBgmNumber[bgIndex]];
+        [NSString stringWithFormat:@"bgm04_tre_%02d.m4a", static_cast<int>(kMapBgmNumber[bgIndex])];
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:bgmName];
     [audio pushBgm];
@@ -1177,7 +1178,10 @@ void AcMainTask::buildSelectListLayout() {
     for (int i = 0; i < 15; i++) {
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kRouletteSeNames[i])
                                                          ofType:@"m4a"];
-        m_rouletteSe[i] = (int)[audio loadSe:path isLoop:(i == 1) callName:nil group:1];
+        m_rouletteSe[i] = static_cast<int>([audio loadSe:path
+                                                  isLoop:(i == 1)
+                                                callName:nil
+                                                   group:1]);
     }
 }
 
@@ -1221,9 +1225,9 @@ void AcMainTask::buildMapCharaLayers() {
     const short sm = m_subMapId;
     const int curIdx = (sm / 10) * -0x1c + sm * 4;
     reinterpret_cast<uint32_t &>(m_musicPieceTable[curIdx / 4]) |=
-        (uint32_t)tmp.musicPieceMask; // music mask
+        static_cast<uint32_t>(tmp.musicPieceMask); // music mask
     reinterpret_cast<uint32_t &>(m_wallPieceTable[curIdx / 4]) |=
-        (uint32_t)tmp.wallPieceMask; // wallpaper mask
+        static_cast<uint32_t>(tmp.wallPieceMask); // wallpaper mask
 }
 
 // ===========================================================================
@@ -1258,7 +1262,9 @@ void AcMainTask::buildMapPanelLayers() {
 
     neTextureForiOS *tex = new neTextureForiOS();
     m_goalCharaTex = tex;
-    NSString *file = [NSString stringWithFormat:@"sugo_chara%03d.png", (int)(short)tmp.goalCharaId];
+    NSString *file =
+        [NSString stringWithFormat:@"sugo_chara%03d.png",
+                                   static_cast<int>(static_cast<short>(tmp.goalCharaId))];
     NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
     tex->load([path UTF8String]);
 }
@@ -1355,13 +1361,13 @@ void AcMainTask::refreshMapScroll(int mode) {
         }
     }
     if (m_treasureMusicArray) {
-        (void)(__bridge_transfer id)m_treasureMusicArray;
+        static_cast<void>((__bridge_transfer id)m_treasureMusicArray);
         m_treasureMusicArray = nullptr;
     }
 
     NSArray<MusicData *> *songs = [[MusicManager getInstance] getTreasureMusicDataArray];
     m_treasureMusicArray = (__bridge_retained void *)songs;
-    const int count = (int)songs.count;
+    const int count = static_cast<int>(songs.count);
 
     for (int slot = mode * 9; slot < count && slot < 9; slot++) {
         MusicData *md = songs[MapPanelOrder(slot)];
@@ -1538,8 +1544,8 @@ int AcMainTask::sugorokuDrawSkillPanel() {
     float scrollOffY = m_scrollY - m_scrollBaseY;
     int halfW = m_overlayW / 2;
     int halfH = m_overlayH / 2;
-    int iVar7 = (int)(m_playerX - scrollOffX + (float)halfW);
-    int iVar10 = (int)(m_playerY - scrollOffY + (float)halfH);
+    int iVar7 = static_cast<int>(m_playerX - scrollOffX + static_cast<float>(halfW));
+    int iVar10 = static_cast<int>(m_playerY - scrollOffY + static_cast<float>(halfH));
 
     // Draw skill panel AEP art (FUN_000a14a0 step).
     drawAepFrame(mgr, m_skillBoardLyr[0], iVar7 + 52, iVar10 - 300, 0x20, 0x22);
@@ -1604,19 +1610,19 @@ int AcMainTask::sugorokuDrawSkillPanel() {
         // Button 1 (left).
         if (neGraphics::pointInRect(tx,
                                     ty,
-                                    (int)((iVar7 - 0xbb) * scale),
-                                    (int)((iVar10 - 0xbc) * scale),
-                                    (int)hw,
-                                    (int)hh)) {
+                                    static_cast<int>((iVar7 - 0xbb) * scale),
+                                    static_cast<int>((iVar10 - 0xbc) * scale),
+                                    static_cast<int>(hw),
+                                    static_cast<int>(hh))) {
             return 0;
         }
         // Button 2 (right).
         if (neGraphics::pointInRect(tx,
                                     ty,
-                                    (int)((iVar7 + 0x3f) * scale),
-                                    (int)((iVar10 - 0xbc) * scale),
-                                    (int)hw,
-                                    (int)hh)) {
+                                    static_cast<int>((iVar7 + 0x3f) * scale),
+                                    static_cast<int>((iVar10 - 0xbc) * scale),
+                                    static_cast<int>(hw),
+                                    static_cast<int>(hh))) {
             return 1;
         }
     }
@@ -1679,19 +1685,19 @@ int AcMainTask::sugorokuDrawButtonHitTest() {
         // Button 1.
         if (neGraphics::pointInRect(tx,
                                     ty,
-                                    (int)((iVar5 - panelW / 2 + m_dlgBtn1X) * scale),
-                                    (int)((m_dlgBtn1Y + iVar6) * scale),
-                                    (int)(m_dlgBtn1W * scale),
-                                    (int)(m_dlgBtn1H * scale))) {
+                                    static_cast<int>((iVar5 - panelW / 2 + m_dlgBtn1X) * scale),
+                                    static_cast<int>((m_dlgBtn1Y + iVar6) * scale),
+                                    static_cast<int>(m_dlgBtn1W * scale),
+                                    static_cast<int>(m_dlgBtn1H * scale))) {
             return 1;
         }
         // Button 2.
         if (neGraphics::pointInRect(tx,
                                     ty,
-                                    (int)((iVar5 - panelW / 2 + m_dlgBtn2X) * scale),
-                                    (int)((m_dlgBtn2Y + iVar6) * scale),
-                                    (int)(m_dlgBtn2W * scale),
-                                    (int)(m_dlgBtn2H * scale))) {
+                                    static_cast<int>((iVar5 - panelW / 2 + m_dlgBtn2X) * scale),
+                                    static_cast<int>((m_dlgBtn2Y + iVar6) * scale),
+                                    static_cast<int>(m_dlgBtn2W * scale),
+                                    static_cast<int>(m_dlgBtn2H * scale))) {
             return -1;
         }
     }
@@ -1875,7 +1881,7 @@ void AcMainTask::sugorokuDrawSquareText() {
     const char *text = nullptr;
     unsigned style = 1; // uVar7: 1 for node text, 0 for character asset
     if (pick == kCharAsset) {
-        text = getCharacterAssetName((int)m_subMapId, iVar8);
+        text = getCharacterAssetName(static_cast<int>(m_subMapId), iVar8);
         if (!text) {
             return; // content asset absent in this build
         }
@@ -1891,8 +1897,15 @@ void AcMainTask::sugorokuDrawSquareText() {
         return;
     }
 
-    drawAepTextMultiline(
-        text, iVar8, (int)(m_squareTextY - 31.0f), style, 0x1b, 0x2e, 0x615245, 0x18, 100);
+    drawAepTextMultiline(text,
+                         iVar8,
+                         static_cast<int>(m_squareTextY - 31.0f),
+                         style,
+                         0x1b,
+                         0x2e,
+                         0x615245,
+                         0x18,
+                         100);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -1924,8 +1937,8 @@ void AcMainTask::sugorokuSaveTreasureProgress() {
         return;
     }
 
-    td.musicPiece = @([td.musicPiece intValue] | (int)tmp.musicPieceMask);
-    td.wallPaperPiece = @([td.wallPaperPiece intValue] | (int)tmp.wallPieceMask);
+    td.musicPiece = @([td.musicPiece intValue] | static_cast<int>(tmp.musicPieceMask));
+    td.wallPaperPiece = @([td.wallPaperPiece intValue] | static_cast<int>(tmp.wallPieceMask));
 
     // Goal type: task[0x8b1] == 2 → sound ticket; 1 → chara ticket.
     uint8_t goalType = m_goalType;
@@ -2038,7 +2051,7 @@ void AcMainTask::sugorokuLoadWallTextures(int page) {
         short idx = findTreasureMapIndexById(base + i);
         neTextureForiOS *t = new neTextureForiOS();
         m_wallNailTex[i] = t;
-        NSString *name = [NSString stringWithFormat:@"sugo_wall_nail_%02d", (int)idx];
+        NSString *name = [NSString stringWithFormat:@"sugo_wall_nail_%02d", static_cast<int>(idx)];
         NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"png"];
         if (path) {
             t->load([path UTF8String]);
@@ -2188,18 +2201,18 @@ void AcMainTask::sugorokuDrawBoard() {
     int halfH = screenH / 2;
 
     // Camera AABB (in board-pixel space).
-    float camL = scrollOffX - (float)halfW;
-    float camR = scrollOffX + (float)halfW;
-    float camT = scrollOffY - (float)halfH;
-    float camH = scrollOffY + (float)halfH;
+    float camL = scrollOffX - static_cast<float>(halfW);
+    float camR = scrollOffX + static_cast<float>(halfW);
+    float camT = scrollOffY - static_cast<float>(halfH);
+    float camH = scrollOffY + static_cast<float>(halfH);
 
     // Draw squares.
     const TreasureMap::Node *nodes = m_nodes;
     int nodeCount = m_nodeCount;
     for (int i = 0; i < nodeCount; i++) {
         const TreasureMap::Node *n = nodes + i; // stride 0x120
-        float nx = (float)(n->x * 26);
-        float ny = (float)(n->y * 26);
+        float nx = static_cast<float>(n->x * 26);
+        float ny = static_cast<float>(n->y * 26);
         if (isWithinRange2D(nx, nx, nx + 104.0f, ny, ny + 128.0f, camL, camT, camR, camH)) {
             sugorokuDrawSquare(n);
         }
@@ -2210,8 +2223,8 @@ void AcMainTask::sugorokuDrawBoard() {
     int edgeCount = static_cast<int>(m_edgeCount);
     for (int i = 0; i < edgeCount; i++) {
         const TreasureMap::ConnectStruct *e = edges + i;
-        float ax = (float)(e->a->x * 26), ay = (float)(e->a->y * 26);
-        float bx = (float)(e->b->x * 26), by = (float)(e->b->y * 26);
+        float ax = static_cast<float>(e->a->x * 26), ay = static_cast<float>(e->a->y * 26);
+        float bx = static_cast<float>(e->b->x * 26), by = static_cast<float>(e->b->y * 26);
         float minX = ax < bx ? ax : bx, maxX = ax > bx ? ax : bx;
         float minY = ay < by ? ay : by, maxY = ay > by ? ay : by;
         if (isWithinRange2D(
@@ -2237,7 +2250,7 @@ void AcMainTask::sugorokuDrawBoard() {
     // choosing boardFrame[4..7]; drawn unconditionally at the same layout anchor.
     {
         int frame;
-        if ((uint32_t)m_hudState < 2) {
+        if (static_cast<uint32_t>(m_hudState) < 2) {
             frame = m_scrolledPastEnd ? m_boardFrame[6] : m_boardFrame[7];
         } else {
             frame = m_scrolledPastEnd ? m_boardFrame[4] : m_boardFrame[5];
@@ -2266,7 +2279,7 @@ void AcMainTask::sugorokuDrawBackground() {
         return;
     }
 
-    int scrollX = (int)(m_scrollX - m_scrollBaseX);
+    int scrollX = static_cast<int>(m_scrollX - m_scrollBaseX);
     int screenW = m_overlayW;
     bool fadeFl = m_padDisplay != 0;
     int sx = fadeFl ? 201 : 100;
@@ -2306,7 +2319,8 @@ void AcMainTask::sugorokuDrawBackground() {
     AepLyrCtrl *bgLyr = m_rouletteLayers[28];
     if (bgLyr) {
         int bgState = m_boardMoveState;
-        if ((uint32_t)(bgState - 1) < 2) { // unsigned: idle state 0 falls to the reset branch
+        if (static_cast<uint32_t>(bgState - 1) <
+            2) { // unsigned: idle state 0 falls to the reset branch
             if (!bgLyr->isAnimating()) {
                 bgLyr->play();
             }
@@ -2326,8 +2340,8 @@ void AcMainTask::sugorokuDrawBackground() {
 // @complete
 void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
     AepManager *mgr = m_aep;
-    int scrollOffX = (int)(m_scrollX - m_scrollBaseX);
-    int scrollOffY = (int)(m_scrollY - m_scrollBaseY);
+    int scrollOffX = static_cast<int>(m_scrollX - m_scrollBaseX);
+    int scrollOffY = static_cast<int>(m_scrollY - m_scrollBaseY);
     int screenW = m_overlayW;
     int screenH = m_overlayH;
     int type = node->type;
@@ -2437,8 +2451,8 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
 // @complete
 void AcMainTask::sugorokuDrawPath(const TreasureMap::ConnectStruct *edge) {
     AepManager *mgr = m_aep;
-    int scrollOffX = (int)(m_scrollX - m_scrollBaseX);
-    int scrollOffY = (int)(m_scrollY - m_scrollBaseY);
+    int scrollOffX = static_cast<int>(m_scrollX - m_scrollBaseX);
+    int scrollOffY = static_cast<int>(m_scrollY - m_scrollBaseY);
     int halfW = m_overlayW / 2;
     int halfH = m_overlayH / 2;
 
@@ -2534,8 +2548,8 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     float scrollOffY = m_scrollY - m_scrollBaseY;
     int halfW = m_overlayW / 2;
     int halfH = m_overlayH / 2;
-    int screenX = (int)(m_playerX - scrollOffX + (float)halfW);
-    int screenY = (int)(m_playerY - scrollOffY + (float)halfH);
+    int screenX = static_cast<int>(m_playerX - scrollOffX + static_cast<float>(halfW));
+    int screenY = static_cast<int>(m_playerY - scrollOffY + static_cast<float>(halfH));
     int iVar6 = screenX + 0x34; // player draw X (offset from board node centre)
 
     // Warp / board-entry horizontal scale (squish animation).
@@ -2550,10 +2564,11 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         // (Ghidra @ 0xa53b0: vcvt.s32.f32, then vcvt.f64.s32 into the *6pi term).
         int frame = static_cast<int>(lyr->curFrame()); // +0x40 flCurFrame
         double angle = (frameTotal > 0) ?
-                           (double)frame * (6.0 * M_PI) / (double)frameTotal // DAT_000a5710 == 6*pi
+                           static_cast<double>(frame) * (6.0 * M_PI) /
+                               static_cast<double>(frameTotal) // DAT_000a5710 == 6*pi
                            :
                            0.0;
-        warpSX = (int)(cosf((float)angle) * 30.0f);
+        warpSX = static_cast<int>(cosf(static_cast<float>(angle)) * 30.0f);
     }
     // Reverse horizontal scale when moving right (board-state bit).
     if ((m_boardMoveState & ~1) == 2) {
@@ -2587,8 +2602,8 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     // warp flash).
     uint8_t badgeType = m_rankBadgeType;
     if (badgeType < 4 && m_warpFlash == 0) {
-        int badgeLyrHandle = m_iconMentalLyr[(int)badgeType];
-        int badgeFrameCnt = m_iconMentalFrames[(int)badgeType];
+        int badgeLyrHandle = m_iconMentalLyr[static_cast<int>(badgeType)];
+        int badgeFrameCnt = m_iconMentalFrames[static_cast<int>(badgeType)];
         int &frameCtr = m_animFrameCtr;
         int frame = (badgeFrameCnt > 0) ? (frameCtr % badgeFrameCnt) : 0;
         mgr->drawLayer(badgeLyrHandle,
@@ -2757,8 +2772,8 @@ void AcMainTask::sugorokuDrawFriendMeet() {
         return;
     }
 
-    int scrollOffX = (int)(m_scrollX - m_scrollBaseX);
-    int scrollOffY = (int)(m_scrollY - m_scrollBaseY);
+    int scrollOffX = static_cast<int>(m_scrollX - m_scrollBaseX);
+    int scrollOffY = static_cast<int>(m_scrollY - m_scrollBaseY);
     int screenW = m_overlayW;
     int screenH = m_overlayH;
 
@@ -2770,11 +2785,11 @@ void AcMainTask::sugorokuDrawFriendMeet() {
     int frame = m_friendAnimFrame;
     float animVal;
     if (frame < 15) {
-        animVal = cosf((float)((double)frame * M_PI / 15.0));
+        animVal = cosf(static_cast<float>(static_cast<double>(frame) * M_PI / 15.0));
     } else {
-        animVal = sinf((float)((double)(frame - 15) * M_PI / 15.0));
+        animVal = sinf(static_cast<float>(static_cast<double>(frame - 15) * M_PI / 15.0));
     }
-    int animScale = (int)(animVal * 30.0f);
+    int animScale = static_cast<int>(animVal * 30.0f);
 
     AepManager *mgr = m_aep;
     drawSprite(mgr,
@@ -2873,8 +2888,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                     int *clipRect,
                                     uint32_t p17,
                                     void *context) {
-    (void)frame;
-    (void)clipRect;
+    static_cast<void>(frame);
+    static_cast<void>(clipRect);
     AcMainTask *self = static_cast<AcMainTask *>(context);
     AepManager *aep = self->m_aep;
 
@@ -2996,9 +3011,9 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             // Highlight the currently-selected chara with the hit-flash layer.
             const int listIdx = idxBase + self->m_charaColLeft * 6;
             NSArray *avail = (__bridge NSArray *)self->m_availableInfos;
-            if ((unsigned)listIdx < [avail count]) {
+            if (static_cast<unsigned>(listIdx) < [avail count]) {
                 CharaInfo *info = avail[listIdx];
-                if (info && (int)info.charaId == self->m_charaId) {
+                if (info && static_cast<int>(info.charaId) == self->m_charaId) {
                     AepLyrCtrl *hl = self->m_rouletteLayers[18];
                     if (!hl->isAnimating() && !self->m_panelLayers[2]->isAnimating() &&
                         !self->m_panelLayers[3]->isAnimating()) {
@@ -3044,7 +3059,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             return;
         }
         CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
-        const SkillDataStruct *sd = GetSkillDataStruct((int)info.skillId);
+        const SkillDataStruct *sd = GetSkillDataStruct(static_cast<int>(info.skillId));
         aep->DrawText("SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, p17);
         aep->DrawText(info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, p17);
         aep->DrawText(sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, p17);
@@ -3232,7 +3247,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         const int rowY = y - 0x10;
         bool anyMissing = false, anyNew = false;
         for (int i = 0; i < 9; i++) {
-            const uint32_t bits = (uint32_t)self->m_musicPieceTableDup[mapIdx * 3 + i / 3];
+            const uint32_t bits =
+                static_cast<uint32_t>(self->m_musicPieceTableDup[mapIdx * 3 + i / 3]);
             int frameNo = 0;
             bool draw = false;
             if ((bits & (1u << (i % 3))) == 0) { // not collected
@@ -3241,9 +3257,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             } else if ((bits & (1u << (i % 3 + 8))) == 0) { // collected, not yet revealed
                 frameNo = self->m_pieceRevealFrame;
                 if (self->m_rouletteSeInst < 0) {
-                    self->m_rouletteSeInst =
-                        (int)[[AudioManager sharedManager] playSe:0
-                                                       resourceId:self->m_rouletteSe[9]];
+                    self->m_rouletteSeInst = static_cast<int>(
+                        [[AudioManager sharedManager] playSe:0 resourceId:self->m_rouletteSe[9]]);
                 }
                 anyNew = true;
                 draw = (frameNo >= 0);
@@ -3328,14 +3343,15 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                              nullptr,
                              p17,
                              1);
-        const int zoomX = (int)((float)scaleX * 1.6949f) + 1;
-        const int zoomY = (int)((float)scaleY * 1.6949f) + 1;
+        const int zoomX = static_cast<int>(static_cast<float>(scaleX) * 1.6949f) + 1;
+        const int zoomY = static_cast<int>(static_cast<float>(scaleY) * 1.6949f) + 1;
         const int baseX = x - (anchorX * scaleX) / 100;
         const int baseY = y - (anchorY * scaleY) / 100;
         const int mapIdx = findTreasureMapIndexById(self->m_rouletteMapId);
         bool anyMissing = false, anyNew = false;
         for (int i = 0; i < 9; i++) {
-            const uint32_t bits = (uint32_t)self->m_wallPieceTableDup[mapIdx * 3 + i / 3];
+            const uint32_t bits =
+                static_cast<uint32_t>(self->m_wallPieceTableDup[mapIdx * 3 + i / 3]);
             int frameNo = 0;
             bool draw = false;
             if ((bits & (1u << (i % 3))) == 0) {
@@ -3344,9 +3360,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             } else if ((bits & (1u << (i % 3 + 8))) == 0) {
                 frameNo = self->m_pieceRevealFrame;
                 if (self->m_rouletteSeInst < 0) {
-                    self->m_rouletteSeInst =
-                        (int)[[AudioManager sharedManager] playSe:0
-                                                       resourceId:self->m_rouletteSe[9]];
+                    self->m_rouletteSeInst = static_cast<int>(
+                        [[AudioManager sharedManager] playSe:0 resourceId:self->m_rouletteSe[9]]);
                 }
                 anyNew = true;
                 draw = (frameNo >= 0);
@@ -3552,7 +3567,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         if (!inRange12(self->m_hudState)) {
             return;
         }
-        const char *desc = getStringByIndex12((unsigned)self->m_hudState);
+        const char *desc = getStringByIndex12(static_cast<unsigned>(self->m_hudState));
         aep->DrawText(desc, 0x16, x, y - 10, 1, color, 0xffffff, p17);
         return;
     }
