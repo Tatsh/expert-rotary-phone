@@ -1061,13 +1061,14 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                                             int rotation,
                                             uint32_t blend,
                                             int *clipRect,
-                                            uint32_t p17,
+                                            uint32_t priority,
                                             void *context) {
     AepManager &aep = AepManager::shared();                        // Ghidra: AepManager_shared
     PlayResultTask *self = static_cast<PlayResultTask *>(context); // the PlayResultTask (param_15)
 
     // Atlas-quad tail (Ghidra: LAB_0003f8d6 -> FUN_0000fcd0): clip is always null
-    // here and the priority is the incoming p17.
+    // here and the ordering-table priority is the callback's `priority` argument
+    // (the AEP group-draw callback's 14th arg; Ghidra mislabels it nColorG).
     auto rquad = [&](int handle) {
         AepDrawSpriteHandle(&aep,
                             handle,
@@ -1083,7 +1084,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                             blend,
                             0xffffff,
                             nullptr,
-                            (int)p17,
+                            (int)priority,
                             1);
     };
     // A right-to-left digit strip: draw `value`'s ones place, then shift left by
@@ -1112,7 +1113,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                             color,
                             alpha,
                             (int)blend,
-                            (int)p17);
+                            (int)priority);
                 if (v < 10) {
                     return;
                 }
@@ -1183,7 +1184,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                     color,
                     alpha,
                     (int)blend,
-                    (int)p17);
+                    (int)priority);
         return;
     }
     if (self->m_usr[0] == child) {
@@ -1203,7 +1204,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                     color,
                     alpha,
                     (int)blend,
-                    (int)p17);
+                    (int)priority);
         return;
     }
     // --- Character portrait (RESULT_CHARA, m_usr[1]): board-scaled, anchors
@@ -1234,7 +1235,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                     color,
                     alpha,
                     (int)blend,
-                    (int)p17);
+                    (int)priority);
         return;
     }
 
@@ -1298,7 +1299,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                         color,
                         alpha,
                         (int)blend,
-                        (int)p17);
+                        (int)priority);
             v /= 10;
         }
         return;
@@ -1330,9 +1331,9 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                           1, // loopFlags (binary position 13, after colorHi)
                           0x10,
                           0xffffff,
-                          nullptr,
-                          reinterpret_cast<void *>((intptr_t)p17),
-                          0,
+                          nullptr, // clipRect
+                          nullptr, // context (binary: str #0 -> null)
+                          priority,
                           1);
             self->m_effFrame[idx] += 1;
             if (counter2 < count2) {
@@ -1367,7 +1368,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                               0xffffff,
                               clipRect,
                               nullptr,
-                              static_cast<uint32_t>(p17),
+                              static_cast<uint32_t>(priority),
                               1);
                 self->m_effFrame[ei] = (self->m_effFrame[ei] + 1) % self->m_effLyrFrames[ei];
             }
@@ -1405,8 +1406,8 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                           0x200,
                           0xffffff,
                           clipRect,
-                          reinterpret_cast<void *>((intptr_t)p17),
-                          0,
+                          nullptr, // context (binary: str #0 -> null)
+                          priority,
                           1);
         }
         rquad(self->m_frmRank[rank]); // rank number glyph
