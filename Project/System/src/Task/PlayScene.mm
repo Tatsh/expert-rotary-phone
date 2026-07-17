@@ -12,9 +12,9 @@
 //
 //  The play data (`playData`) IS a PlayTask (the 0xa00-byte work area,
 //  PlayTask.h): each seam below casts it once to a `PlayTask *task` and reaches
-//  every field through its named members (the note-engine's opaque
-//  MainTaskPlayData view in PlayJudge.h/.mm is left as-is, since that pass
-//  genuinely operates on the struct blind). The original FUN_0002e2d8 is a
+//  every field through its named members (the note-engine's judge pass in
+//  PlayJudge.mm reaches the same PlayTask through named members too, since the
+//  two were reconciled into one class). The original FUN_0002e2d8 is a
 //  ~400-line megafunction; as PlayJudge.mm
 //  does for the note-quad geometry, the asset-heavy repetitive units it calls
 //  into are delegated to their own reconstruction seams (declared below) rather
@@ -51,7 +51,7 @@
 #import "MusicData.h"
 #import "MusicManager.h"
 #import "NoteMng.h"
-#import "PlayJudge.h"   // MainTaskPlayData (fwd) + NoteJudgeState (judge pool)
+#import "PlayJudge.h"   // NoteJudgeState (judge pool) + judge protos
 #import "PlayTask.h"    // PlayTaskInit / PlayTaskGotoResult / PlayCurrentScore
 #import "RhUtil.h"      // RhFileExists / RhTestBitInNumberArray
 #import "TaskFactory.h" // MainTaskCreate / PlayResultCreateTask
@@ -240,33 +240,33 @@ void PlayTaskInit(void *playData) {
         task->m_pauseTapCenterX = 0x24e; // +0x98c
         task->m_pauseTapCenterY = 0x32;  // +0x990
         task->m_pauseTapRadius = 0x40;   // +0x994
-        task->m_noteFieldGeom0 = 0x3fe;  // +0x998
-        task->m_noteFieldGeom1 = 0x4a;   // +0x99c
-        task->m_noteFieldGeom2 = 0x82;   // +0x9a0
-        task->m_noteFieldGeom3 = -0x44;  // +0x9a4 (0xffffffbc)
+        task->m_barLenScale = 0x3fe;     // +0x998
+        task->m_barSegLyr1 = 0x4a;       // +0x99c
+        task->m_barPriority = 0x82;      // +0x9a0
+        task->m_barLenBase = -0x44;      // +0x9a4 (0xffffffbc)
         task->m_pauseBtnResumeX = 0x194; // +0x97c
         task->m_pauseBtnRetryX = 0x248;  // +0x980
         task->m_pauseBtnQuitX = 0x306;   // +0x984
         task->m_pauseBtnWidth = 0x5e;    // +0x988
         task->m_hitRadius = 136.0f;      // +0x9b8 (0x43080000)
         task->m_charaDrawSize = 0xc4;    // +0x9a8
-        task->m_startHoldMs = 500;       // +0x9e0
+        task->m_hitEffectScale = 500;    // +0x9e0
         aep.loadAepDataDefaultPath(0, "game_cmn");
     } else {                             // pad
         task->m_pauseTapCenterX = 0x590; // +0x98c
         task->m_pauseTapCenterY = 0x7e;  // +0x990
         task->m_pauseTapRadius = 0x40;   // +0x994
-        task->m_noteFieldGeom0 = 0x666;  // +0x998
-        task->m_noteFieldGeom1 = 0x76;   // +0x99c
-        task->m_noteFieldGeom2 = 0xb2;   // +0x9a0
-        task->m_noteFieldGeom3 = -0x74;  // +0x9a4 (0xffffff8c)
+        task->m_barLenScale = 0x666;     // +0x998
+        task->m_barSegLyr1 = 0x76;       // +0x99c
+        task->m_barPriority = 0xb2;      // +0x9a0
+        task->m_barLenBase = -0x74;      // +0x9a4 (0xffffff8c)
         task->m_pauseBtnResumeX = 0x32e; // +0x97c
         task->m_pauseBtnRetryX = 0x434;  // +0x980
         task->m_pauseBtnQuitX = 0x53e;   // +0x984
         task->m_pauseBtnWidth = 0xb0;    // +0x988
         task->m_hitRadius = 272.0f;      // +0x9b8 (0x43880000)
         task->m_charaDrawSize = 0x228;   // +0x9a8
-        task->m_startHoldMs = 1000;      // +0x9e0
+        task->m_hitEffectScale = 1000;   // +0x9e0
         aep.loadAepDataDefaultPath(0, "game_cmn_ipad");
     }
 
@@ -1386,20 +1386,20 @@ void PlayTaskDraw(int child,
     }
     // --- On-field combo digits (EFF_C_NUM001/010/100, m_userSprite[12..14]) ---
     if (task->m_userSprite[12] == child) {
-        const int v = (int)task->m_fieldCombo;
+        const int v = (int)task->m_comboMilestoneShown;
         noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
         return;
     }
     if (task->m_userSprite[13] == child) {
-        const int v = (int)task->m_fieldCombo / 10;
+        const int v = (int)task->m_comboMilestoneShown / 10;
         noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
         return;
     }
     if (task->m_userSprite[14] == child) {
-        if ((int)task->m_fieldCombo < 100) {
+        if ((int)task->m_comboMilestoneShown < 100) {
             return;
         }
-        const int v = (int)task->m_fieldCombo / 100;
+        const int v = (int)task->m_comboMilestoneShown / 100;
         noteQuad(task->m_comboDigitFrm[v % 10], (int)p17);
         return;
     }

@@ -34,23 +34,23 @@
 #import "AepManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"
+#import "PlayTask.h"
 #import "neGraphics.h"
 
 #include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
 
 // --- Play-data field access -------------------------------------------------
-// The play data is the standard-mode MainTask; the note engine reaches it
-// through the partial MainTaskPlayData overlay (PlayJudge.h), so field
-// reads/writes below are plain named-member access at their binary-exact
-// offsets.
+// The play data is the standard-mode play task, PlayTask; the judge reaches its
+// named members directly, so the field reads/writes below are plain member
+// access.
 namespace {
 
 // The combo-milestone burst layers only restart while the play is live and the
 // hit-effect option is on (Ghidra: the milestone if/else chain is wrapped in
 // playData+0x9c9==0 && +0x9e5!=0 && +0x9e7==0 && +0x9ca==0).
-inline bool comboBurstEnabled(const MainTaskPlayData *p) {
-    return p->isDemoPlay == 0 && p->optEffectOn != 0 && p->optOldHardware == 0 &&
-           p->isPadDisplay == 0;
+inline bool comboBurstEnabled(const PlayTask *p) {
+    return p->m_isDemoPlay == 0 && p->m_optEffectOn != 0 && p->m_optOldHardware == 0 &&
+           p->m_isPadDisplay == 0;
 }
 
 constexpr int kJudgeStateCount = 60; // Ghidra: FUN_0003126c loop bound 0x3c
@@ -69,8 +69,8 @@ constexpr uint16_t kFlagHoldFail = 0x200; // hold broken
 // Ghidra: FUN_0003126c — find the judge state for pool note `noteId`, or claim a
 // free slot and initialise it. Returns nullptr if the pool is full.
 // @complete
-NoteJudgeState *judgeStateFor(MainTaskPlayData *playData, unsigned noteId) {
-    NoteJudgeState *pool = playData->judgePool; // the +0x3c8 pool
+NoteJudgeState *judgeStateFor(PlayTask *playData, unsigned noteId) {
+    NoteJudgeState *pool = playData->m_judgePool; // the +0x3c8 pool
     NoteJudgeState *freeSlot = nullptr;
     for (int i = 0; i < kJudgeStateCount; ++i) {
         NoteJudgeState *s = &pool[i];
@@ -106,15 +106,15 @@ bool g_autoPlay = false; // extern flag in the binary; false in normal play
 // Any other result leaves the value unchanged and only re-clamps. The binary
 // accumulates in fixed->float->fixed; modelled here as a float add + round.
 // @complete
-void updateGaugeValue(MainTaskPlayData *playData, int result) {
-    int gauge = playData->gaugeValue;
+void updateGaugeValue(PlayTask *playData, int result) {
+    int gauge = playData->m_gaugeValue;
     if (result == 2 || result == 3) {
-        gauge = (int)lroundf((float)gauge + playData->gaugeGainGreat);
+        gauge = (int)lroundf((float)gauge + playData->m_gaugeGainGreat);
     } else if (result == 0) {
-        playData->gaugeMissed = 1;
-        gauge = (int)lroundf((float)gauge + playData->gaugeLossMiss);
+        playData->m_damagedThisFrame = 1;
+        gauge = (int)lroundf((float)gauge + playData->m_gaugeLossMiss);
     } else if (result == 1) {
-        gauge = (int)lroundf((float)gauge + playData->gaugeGainGood);
+        gauge = (int)lroundf((float)gauge + playData->m_gaugeGainGood);
     }
     if (gauge < 1) {
         gauge = 0;
@@ -122,7 +122,7 @@ void updateGaugeValue(MainTaskPlayData *playData, int result) {
     if (gauge > 0x400) {
         gauge = 0x400;
     }
-    playData->gaugeValue = (int16_t)gauge;
+    playData->m_gaugeValue = (int16_t)gauge;
 }
 
 } // namespace
@@ -149,7 +149,7 @@ inline int specialLapseOffset(int graphic, unsigned holdJudge) {
 
 // Ghidra: FUN_0002f1f8.
 // @complete
-void PlayJudge_update(MainTaskPlayData *playData,
+void PlayJudge_update(PlayTask *playData,
                       const float *touchXY,
                       const int *touchIds,
                       int touchCount) {
@@ -170,10 +170,10 @@ void PlayJudge_update(MainTaskPlayData *playData,
     const float beat = NoteBeatIntervalMs(); // Ghidra: GetBeatInterval (extraout_r0)
     const int curTime = nm.getCurrentPosition();
     const int noteCount = nm.getActiveNoteCount();
-    const float scale = playData->playScale;
-    const float radius = playData->hitRadius;
-    const bool autoJudge = g_autoPlay;          // Ghidra: DAT_00187b59
-    const bool stopping = playData->state == 5; // Ghidra: playData+0x9fc == 5
+    const float scale = playData->m_uiScale;
+    const float radius = playData->m_hitRadius;
+    const bool autoJudge = g_autoPlay;            // Ghidra: DAT_00187b59
+    const bool stopping = playData->m_state == 5; // Ghidra: playData+0x9fc == 5
 
     bool judgedAny = false; // Ghidra bVar4: a tap/auto hit graded positive this frame
     bool holdEnded = false; // Ghidra bVar5: a long note completed this frame
@@ -223,7 +223,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
                         (note.renderKind == NOTE_RENDER_SPECIAL && (int8_t)note.spawnKind > 0))) {
             if (!autoJudge) {
                 if (touchCount > 0) {
-                    if (playData->spatialTouchMode == 0) {
+                    if (playData->m_optSimpleMode == 0) {
                         // Distance-test each live touch against the judge-line target.
                         for (int t = 0; t < touchCount; ++t) {
                             const float tx = xy[t * 2];
@@ -361,7 +361,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
         // frame 0.
         int noteFrame;
         if (st->phase == 1) {
-            const int last = playData->toneJudgeFrames[1] - 1;
+            const int last = playData->m_toneJudgeFrames[1] - 1;
             noteFrame = (int)((float)((curTime - st->timestamp) * last) / beat);
             if (noteFrame > last) {
                 noteFrame = last;
@@ -371,7 +371,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
             const int halfBeats = (int)((float)(unsigned)anchor / beat);
             if (halfBeats & 1) {
                 const float ph = std::fmod(0.5f * beat + (float)(curTime - st->timestamp), beat);
-                noteFrame = (int)(ph * (float)(playData->toneJudgeFrames[0] - 1) / beat);
+                noteFrame = (int)(ph * (float)(playData->m_toneJudgeFrames[0] - 1) / beat);
             } else {
                 noteFrame = 0;
             }
@@ -385,10 +385,10 @@ void PlayJudge_update(MainTaskPlayData *playData,
         // its head (x/y) and tail (x2/y2), both toward the same judge target — a tap
         // (head == tail) draws one sprite, a long note stretches head-to-tail. The
         // draw is gated on the note frame being within the phase layer's length.
-        if (noteFrame < playData->toneJudgeFrames[st->phase]) {
+        if (noteFrame < playData->m_toneJudgeFrames[st->phase]) {
             const float progress = (1024.0f - note.scrollStart) / 1024.0f;
-            const int noteLayer = playData->toneJudgeLyr[st->phase]; // +0xc4[phase]
-            const int drawScale = playData->noteDrawScale;           // +0x9bc
+            const int noteLayer = playData->m_toneJudgeLyr[st->phase]; // +0xc4[phase]
+            const int drawScale = playData->m_popkunSize;              // +0x9bc
             for (int pt = 0; pt < 2; ++pt) {
                 const float nx = (pt == 0) ? note.x : note.x2;
                 const float ny = (pt == 0) ? note.y : note.y2;
@@ -439,14 +439,14 @@ void PlayJudge_update(MainTaskPlayData *playData,
                                                         std::atan2((double)dy, (double)dx);
                     const int angleDeg = (int)(angleRad * 180.0 / M_PI);
                     const float len =
-                        fade * (float)playData->barLenScale + (float)playData->barLenBase;
-                    const int prio = playData->barPriority / 2;
+                        fade * (float)playData->m_barLenScale + (float)playData->m_barLenBase;
+                    const int prio = playData->m_barPriority / 2;
 
                     if (fade > 0.0f) {
                         const int bx = screenX + (int)(len * (float)std::cos(angleRad));
                         const int by = screenY + (int)(len * (float)std::sin(angleRad));
                         drawAepFrameEx(&aep,
-                                       playData->barSegLyr0,
+                                       playData->m_barSegFrame,
                                        bx,
                                        by,
                                        100,
@@ -465,7 +465,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
                     // The second segment sits at the note, scaled by fade*len.
                     const int seg2Scale = (int)(fade * len);
                     drawAepFrameEx(&aep,
-                                   playData->barSegLyr1,
+                                   playData->m_barSegLyr1,
                                    screenX,
                                    screenY,
                                    seg2Scale,
@@ -486,11 +486,11 @@ void PlayJudge_update(MainTaskPlayData *playData,
                 // note is on the field but not yet spanning its hold: layer
                 // effectStateLyr[12] (+0x114), frame cdFrame (+0x3c4), at the note's
                 // interp position. Args traced at 0x2fa8c (blend 0x200, context 16).
-                if (pt == 0 && playData->optJacket != 0 && (noteFlags & 0x2f) != 0 &&
+                if (pt == 0 && playData->m_optLongNoteEffect != 0 && (noteFlags & 0x2f) != 0 &&
                     (noteFlags & kFlagHold) == 0) {
-                    const int effScale = playData->hitEffectScale / 2;
-                    aep.drawLayer(playData->effectStateLyr[12],
-                                  playData->cdFrame,
+                    const int effScale = playData->m_hitEffectScale / 2;
+                    aep.drawLayer(playData->m_effectStateLyr[12],
+                                  playData->m_cdFrame,
                                   screenX,
                                   screenY,
                                   drawScale,
@@ -521,10 +521,10 @@ void PlayJudge_update(MainTaskPlayData *playData,
         // 0x2fbe2 (burst), 0x2fce0 (base), and the branch tangle 0x2fb84..0x2fce8.
         const int hx = (int)note.targetX;
         const int hy = (int)note.targetY;
-        const int effScale = playData->hitEffectScale / 2; // +0x9e0
+        const int effScale = playData->m_hitEffectScale / 2; // +0x9e0
 
-        if (st->phase == 1 && noteFrame < playData->effectStateFrames[1]) {
-            aep.drawLayer(playData->effectStateLyr[1],
+        if (st->phase == 1 && noteFrame < playData->m_effectStateFrames[1]) {
+            aep.drawLayer(playData->m_effectStateLyr[1],
                           noteFrame,
                           hx,
                           hy,
@@ -545,7 +545,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
         }
 
         if (st->result >= 0) {
-            const int hitScale = playData->noteDrawScale; // +0x9bc
+            const int hitScale = playData->m_popkunSize; // +0x9bc
             // Whether the GOOD/GREAT/COOL burst shows for this render kind (0x2fb84):
             // a SPECIAL note only once its hold-tap count is exhausted, a LONG note
             // only with its hold-completed bit set.
@@ -554,8 +554,8 @@ void PlayJudge_update(MainTaskPlayData *playData,
                 (note.renderKind == NOTE_RENDER_SPECIAL && (holdJudge & 0xff) == 0) ||
                 (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHoldOK) != 0);
             if (showBurst && st->result >= 1 && st->result <= 3 &&
-                nFrameNo < playData->effectStateFrames[st->result + 1]) {
-                aep.drawLayer(playData->effectStateLyr[st->result + 1],
+                nFrameNo < playData->m_effectStateFrames[st->result + 1]) {
+                aep.drawLayer(playData->m_effectStateLyr[st->result + 1],
                               nFrameNo,
                               hx,
                               hy,
@@ -582,8 +582,8 @@ void PlayJudge_update(MainTaskPlayData *playData,
                 (note.renderKind == NOTE_RENDER_SPECIAL &&
                  ((holdJudge & 0xff) == 0 || st->result != 0)) ||
                 (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHold) != 0);
-            if (showBase && nFrameNo < playData->effectStateFrames[0]) {
-                aep.drawLayer(playData->effectStateLyr[0],
+            if (showBase && nFrameNo < playData->m_effectStateFrames[0]) {
+                aep.drawLayer(playData->m_effectStateLyr[0],
                               nFrameNo,
                               hx,
                               hy,
@@ -606,7 +606,7 @@ void PlayJudge_update(MainTaskPlayData *playData,
 
         // --- Retire / auto-lapse ---------------------------------------------
         if (st->phase - 2u < 2u) { // phase 2 or 3: resolved, playing its display
-            if (playData->toneJudgeFrames[st->phase] <= nFrameNo) {
+            if (playData->m_toneJudgeFrames[st->phase] <= nFrameNo) {
                 nm.setLaneFlag(st->noteId); // mark the pool lane fired
                 st->noteId = 0xffffffffu;   // free the judge slot
             }
@@ -634,19 +634,19 @@ void PlayJudge_update(MainTaskPlayData *playData,
     // from-head restart) and recording the crossed value in the HUD field
     // (+0x9c4). The if/else chain (only) is gated by the effect-enable check.
     const int combo = nm.combo();
-    const short prevCombo = playData->lastMilestone; // +0x9c2: last frame's combo
+    const short prevCombo = playData->m_comboMilestoneGuard; // +0x9c2: last frame's combo
     if (comboBurstEnabled(playData)) {
         if (prevCombo < 25 && combo > 24) {
-            playData->comboLayers[0]->stop(1);
-            playData->comboMilestoneShown = 25;
+            playData->m_comboLayers[0]->stop(1);
+            playData->m_comboMilestoneShown = 25;
         } else if (prevCombo < 50 && combo > 49) {
-            playData->comboLayers[1]->stop(1);
-            playData->comboMilestoneShown = 50;
+            playData->m_comboLayers[1]->stop(1);
+            playData->m_comboMilestoneShown = 50;
         } else if (combo > 99) {
             const int step = (combo / 50) * 50; // nearest 50 at or below the combo
             if (prevCombo < step && step <= combo) {
-                playData->comboLayers[2]->stop(1);
-                playData->comboMilestoneShown = (int16_t)step;
+                playData->m_comboLayers[2]->stop(1);
+                playData->m_comboMilestoneShown = (int16_t)step;
             }
         }
     }
@@ -656,31 +656,31 @@ void PlayJudge_update(MainTaskPlayData *playData,
     // sceneLayers[0], 10..99 -> [1], 100+ -> [2]) paused at its frame and reset
     // the others; otherwise reset all three. Ghidra: the IsPlaying gate + the
     // Pause/Reset cascade at LAB_0002fe52/62.
-    const bool burstIdle = !playData->comboLayers[0]->isAnimating() &&
-                           !playData->comboLayers[1]->isAnimating() &&
-                           !playData->comboLayers[2]->isAnimating();
+    const bool burstIdle = !playData->m_comboLayers[0]->isAnimating() &&
+                           !playData->m_comboLayers[1]->isAnimating() &&
+                           !playData->m_comboLayers[2]->isAnimating();
     if (burstIdle && combo > 4) {
         if (combo < 10) {
-            playData->sceneLayers[0]->pause();
-            playData->sceneLayers[1]->reset();
-            playData->sceneLayers[2]->reset();
+            playData->m_sceneLayers[0]->pause();
+            playData->m_sceneLayers[1]->reset();
+            playData->m_sceneLayers[2]->reset();
         } else if (combo < 100) {
-            playData->sceneLayers[0]->reset();
-            playData->sceneLayers[1]->pause();
-            playData->sceneLayers[2]->reset();
+            playData->m_sceneLayers[0]->reset();
+            playData->m_sceneLayers[1]->pause();
+            playData->m_sceneLayers[2]->reset();
         } else {
-            playData->sceneLayers[0]->reset();
-            playData->sceneLayers[1]->reset();
-            playData->sceneLayers[2]->pause();
+            playData->m_sceneLayers[0]->reset();
+            playData->m_sceneLayers[1]->reset();
+            playData->m_sceneLayers[2]->pause();
         }
     } else {
-        playData->sceneLayers[0]->reset();
-        playData->sceneLayers[1]->reset();
-        playData->sceneLayers[2]->reset();
+        playData->m_sceneLayers[0]->reset();
+        playData->m_sceneLayers[1]->reset();
+        playData->m_sceneLayers[2]->reset();
     }
 
     // Re-stamp +0x9c2 with the current combo every frame, regardless of the gate.
-    playData->lastMilestone = (short)combo;
+    playData->m_comboMilestoneGuard = (short)combo;
 
     // If any note resolved this frame, play the per-tap feedback SE.
     if (judgedAny || holdEnded) {
@@ -695,5 +695,5 @@ void PlayJudge_update(MainTaskPlayData *playData,
 // a tapped BAD does.
 // @complete
 void PlayApplyMissGauge(void *playData) {
-    updateGaugeValue(reinterpret_cast<MainTaskPlayData *>(playData), NOTE_JUDGE_BAD);
+    updateGaugeValue(reinterpret_cast<PlayTask *>(playData), NOTE_JUDGE_BAD);
 }

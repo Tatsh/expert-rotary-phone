@@ -84,7 +84,7 @@ void PlayTask::resetState() {
     m_gaugeBase = (int16_t)g_wPlayDefaultGauge; // DAT_00178d00
     m_score = 0;
     m_gaugeValue = 0;
-    m_gaugeValueSub = 0;
+    m_comboMilestoneGuard = 0;
     m_damageAccum = 0;
     m_damagedThisFrame = 0;
 }
@@ -276,7 +276,7 @@ void PlayTask::update(int /*deltaMs*/) {
     AudioManager *audio = [AudioManager sharedManager];
     NoteMng &nm = NoteMng::shared();
     neGraphics &gfx = neGraphics::shared();
-    auto *playData = reinterpret_cast<MainTaskPlayData *>(this);
+    PlayTask *playData = this; // the play data the judge operates on is this task
 
     // Snapshot up to 8 live touches (their x/y + ids) for the judge pass, and
     // detect a "back" tap (a released touch that barely moved).
@@ -350,7 +350,7 @@ void PlayTask::update(int /*deltaMs*/) {
         break;
     case 5: { // pause menu: hit-test resume / retry / quit, then draw the menu + field
         if (backTap) {
-            const float scale = reinterpret_cast<const float &>(m_uiScale);
+            const float scale = m_uiScale;
             // 0x2de40 halves the pause-menu x origin (+0x978), not the UI scale.
             const int half = m_pauseOriginX / 2;
             const float tapY = (float)backTapStartY / 65536.0f;
@@ -428,7 +428,7 @@ void PlayTask::update(int /*deltaMs*/) {
             // Normal play: pause by pressing the pause hit-circle and holding ~500ms.
             if (m_backTouchId == -1) {
                 if (touchCount > 0) {
-                    const float scale = reinterpret_cast<const float &>(m_uiScale);
+                    const float scale = m_uiScale;
                     const int cx = (int)((float)m_pauseTapCenterX * scale);
                     const int cy = (int)((float)m_pauseTapCenterY * scale);
                     const int r = (int)((float)m_pauseTapRadius * scale);

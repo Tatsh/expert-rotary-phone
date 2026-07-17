@@ -10,9 +10,10 @@
 //  PlayTask_update FUN_0002dc14).
 //
 //  This task's storage IS the play data the judge pass operates on (state @
-//  +0x9fc, judge-state pool @ +0x3c8, scale/radius @ +0x974/+0x9b8 — see
-//  PlayJudge.h's MainTaskPlayData). The heavy per-state screen geometry is
-//  delegated to the note draw + pause-menu units.
+//  +0x9fc, judge-state pool @ +0x3c8, scale/radius @ +0x974/+0x9b8): the note
+//  engine's PlayJudge_update takes this class by pointer (PlayJudge.h declares
+//  only the NoteJudgeState pool element it needs). The heavy per-state screen
+//  geometry is delegated to the note draw + pause-menu units.
 //
 //  ---- work area (this class IS the 0xa00-byte play-data struct) ----
 //  C_TASK's base is exactly 0x28 bytes, so the members below land at their true
@@ -113,7 +114,9 @@ public:
     int m_charaJumpLyr[8] = {};            // +0x17c BGMTBPM1_CHARAn_JUMP lyr handles
     uint8_t _rsvd_19c[0x1dc - 0x19c] = {}; // +0x19c per-chara aux (no reconstructed reader)
     int m_charaJumpFrames[8] = {};         // +0x1dc ...chara-jump layer frame counts
-    int m_pauseEyeToneFrm[9] = {};         // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
+    int m_pauseEyeToneFrm[8] = {};         // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
+    int m_barSegFrame = 0;                 // +0x21c long-note connecting-bar segment frame
+                                           //        (getFrmNo; judge draws it via drawAepFrameEx)
     int m_scoreDigitFrm[10] = {};          // +0x220 SCO_0..9 frame nos
     int m_comboDigitFrm[10] = {};          // +0x248 EFF_C_NUM0..9 frame nos
     int m_gaugeFlashFrm[4] = {};           // +0x270 GG_IFL_* frame nos
@@ -142,41 +145,48 @@ public:
     neAppEventCenter *m_eventCenter = nullptr; // +0x968 picked {musicId, sheet} carrier
     int m_screenWidth = 0;                     // +0x96c aep screen width
     int m_screenHeight = 0;                    // +0x970 aep screen height
-    int m_uiScale = 0;                         // +0x974 UI scale (g_dwUiScale: holds float bits,
-    //        stored via reinterpret; read as float by PlayJudge)
+    float m_uiScale = 0.0f;                    // +0x974 UI scale (g_dwUiScale; the judge and the
+    //        note draw read it directly as a float)
     int m_pauseOriginX = 0; // +0x978 pause-menu layout x origin
     // +0x97c device-branched pause-menu + note-field geometry (phone/pad
     // constants). The pause fields are verified against the state-5/6 hit tests
     // in PlayTask_update; the note-field fields are consumed by the delegated
     // note-quad draw.
-    int m_pauseBtnResumeX = 0;             // +0x97c pause button 0 (resume) x
-    int m_pauseBtnRetryX = 0;              // +0x980 pause button 1 (retry) x
-    int m_pauseBtnQuitX = 0;               // +0x984 pause button 2 (quit) x
-    int m_pauseBtnWidth = 0;               // +0x988 pause-menu button hit width
-    int m_pauseTapCenterX = 0;             // +0x98c in-play pause-tap hit-circle center x
-    int m_pauseTapCenterY = 0;             // +0x990 in-play pause-tap hit-circle center y
-    int m_pauseTapRadius = 0;              // +0x994 in-play pause-tap hit-circle radius
-    int m_noteFieldGeom0 = 0;              // +0x998 note-field layout (delegated note draw)
-    int m_noteFieldGeom1 = 0;              // +0x99c   "
-    int m_noteFieldGeom2 = 0;              // +0x9a0   "
-    int m_noteFieldGeom3 = 0;              // +0x9a4   "
+    int m_pauseBtnResumeX = 0; // +0x97c pause button 0 (resume) x
+    int m_pauseBtnRetryX = 0;  // +0x980 pause button 1 (retry) x
+    int m_pauseBtnQuitX = 0;   // +0x984 pause button 2 (quit) x
+    int m_pauseBtnWidth = 0;   // +0x988 pause-menu button hit width
+    int m_pauseTapCenterX = 0; // +0x98c in-play pause-tap hit-circle center x
+    int m_pauseTapCenterY = 0; // +0x990 in-play pause-tap hit-circle center y
+    int m_pauseTapRadius = 0;  // +0x994 in-play pause-tap hit-circle radius
+    // Long-note connecting-bar geometry (judge FUN_0002f1f8: len = fade*scale +
+    // base, drawn along the head->target angle; priority halved into the anchor).
+    int m_barLenScale = 0;                 // +0x998 bar length gain per fade
+    int m_barSegLyr1 = 0;                  // +0x99c second bar-segment layer id
+    int m_barPriority = 0;                 // +0x9a0 bar draw priority (halved)
+    int m_barLenBase = 0;                  // +0x9a4 bar length base
     int m_charaDrawSize = 0;               // +0x9a8 chara portrait draw size (PlayTaskDraw)
     int16_t m_gaugeBase = 0;               // +0x9ac default life-gauge base (g_wPlayDefaultGauge)
     uint8_t _rsvd_9ae[0x9b0 - 0x9ae] = {}; // +0x9ae
     int m_score = 0;                       // +0x9b0 running score readout (PlayCurrentScore)
     int16_t m_seVolume = 0;                // +0x9b4 touch-sound volume (UserSettingData)
     uint8_t _rsvd_9b6[0x9b8 - 0x9b6] = {}; // +0x9b6
-    float m_hitRadius = 0.0f;    // +0x9b8 note hit-test radius (read as float by PlayJudge)
-    int m_popkunSize = 0;        // +0x9bc note ("popkun") size, 16.16 fixed
-    int16_t m_gaugeValue = 0;    // +0x9c0 life-gauge value (0..0x400)
-    int16_t m_gaugeValueSub = 0; // +0x9c2 secondary gauge word (reset with m_gaugeValue)
-    int16_t m_fieldCombo = 0;    // +0x9c4 on-field combo digit value (PlayTaskDraw)
-    uint8_t m_bgmReady = 0;      // +0x9c6 async BGM decode finished (state-2 gate)
-    uint8_t m_suppressHud = 0;   // +0x9c7 hide the HUD (teardown)
-    uint8_t m_endSeFired = 0;    // +0x9c8 one-shot song-end clear/rank-SE latch
-    uint8_t m_isDemoPlay = 0;    // +0x9c9 tutorial / auto-demo flag
-                                 //        (init from event-center +0x33)
-    uint8_t m_isPadDisplay = 0;  // +0x9ca pad-class display (g_bIsPadDisplay)
+    float m_hitRadius = 0.0f; // +0x9b8 note hit-test radius (read as float by PlayJudge)
+    int m_popkunSize = 0;     // +0x9bc note ("popkun") size, 16.16 fixed
+    int16_t m_gaugeValue = 0; // +0x9c0 life-gauge value (0..0x400)
+    // +0x9c2 combo-milestone re-trigger guard: the judge sets it to the current
+    // combo count each frame and compares it against the 25 / 50 / every-50 past
+    // 100 thresholds to fire each milestone burst once.
+    int16_t m_comboMilestoneGuard = 0; // +0x9c2 previous combo count (milestone guard)
+    // +0x9c4 the combo milestone just celebrated (25 / 50 / 100+): the judge
+    // records the crossed value here as it stops the matching burst layer.
+    int16_t m_comboMilestoneShown = 0;     // +0x9c4 last combo milestone celebrated
+    uint8_t m_bgmReady = 0;                // +0x9c6 async BGM decode finished (state-2 gate)
+    uint8_t m_suppressHud = 0;             // +0x9c7 hide the HUD (teardown)
+    uint8_t m_endSeFired = 0;              // +0x9c8 one-shot song-end clear/rank-SE latch
+    uint8_t m_isDemoPlay = 0;              // +0x9c9 tutorial / auto-demo flag
+                                           //        (init from event-center +0x33)
+    uint8_t m_isPadDisplay = 0;            // +0x9ca pad-class display (g_bIsPadDisplay)
     uint8_t _rsvd_9cb[0x9cc - 0x9cb] = {}; // +0x9cb
     float m_gaugeGainGreat = 0.0f;         // +0x9cc great / perfect gauge delta
     float m_gaugeGainGood = 0.0f;          // +0x9d0 good gauge delta (1.0)
@@ -184,7 +194,8 @@ public:
     int m_damageAccum = 0;                 // +0x9d8 damage accumulator (reset 0)
     uint8_t m_damagedThisFrame = 0;        // +0x9dc took damage this frame (updateGauge)
     uint8_t _rsvd_9dd[0x9e0 - 0x9dd] = {}; // +0x9dd
-    int m_startHoldMs = 0;                 // +0x9e0 device-branched start-hold ms (init 500/1000)
+    int m_hitEffectScale = 0;              // +0x9e0 note hit-effect extent (init 500/1000); the
+                                           //        judge passes its half (/2) as the draw scale
     uint8_t m_optSimpleMode = 0;           // +0x9e4 UserSettingData isSimpleMode
     uint8_t m_optEffectOn = 0;             // +0x9e5 UserSettingData isEffectOn
     uint8_t m_optLongNoteEffect = 0;       // +0x9e6 UserSettingData isLongNotesEffectOn
