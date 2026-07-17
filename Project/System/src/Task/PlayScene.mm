@@ -200,10 +200,11 @@ void PlayTaskInit(void *playData) {
     task->m_screenHeight = aep.transitionOverlayHeight(); // FUN_0000f4a4 (aep + 0x7f3b00)
 
     neSceneManager::shared();
-    // +0x974 is g_dwUiScale: an int slot carrying float bits (PlayJudge reads it
-    // as float), so the screen scale is stored through a float reinterpret,
-    // matching the binary.
-    reinterpret_cast<float &>(task->m_uiScale) = neSceneManager::screenScale(); // DAT_00187b80
+    // +0x974 is the UI scale. The binary stores screenScale()'s float bits here
+    // with an integer str (soft-float ABI @ 0x2e394: str.w r1,[r5,#0x974]);
+    // m_uiScale is modelled as a real float (PlayJudge reads it as float), so
+    // assign it directly.
+    task->m_uiScale = neSceneManager::screenScale(); // DAT_00187b80
 
     // User settings driving the note field / judge.
     task->m_seVolume = [UserSettingData touchSoundVolume];                     // +0x9b4
