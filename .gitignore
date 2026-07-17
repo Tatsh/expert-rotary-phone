@@ -55,3 +55,6 @@ sugoroku_chara_msg.generated.inc
 
 # Local arm64 crash-triage scratch (downloaded build artifact + venv)
 .arm64-dbg/
+
+# Local reference screenshots (device captures used while reconstructing UI)
+/screenshots/
