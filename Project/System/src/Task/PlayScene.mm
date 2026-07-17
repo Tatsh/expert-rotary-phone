@@ -41,6 +41,7 @@
 
 #include <cstdlib> // rand / srand (Ghidra: _rand / _srand)
 #include <ctime>   // time (Ghidra: _time)
+#include <memory>
 
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
@@ -157,12 +158,9 @@ int scoreToRank(int score) {
 // ~neTextureForiOS and ~AepLyrCtrl (which folds the draw-list unlink in) make a
 // plain `delete` match. Ghidra: the dtor loops in FUN_0003003c.
 template <typename T, size_t N>
-void destroyAll(T *(&slots)[N]) {
+void destroyAll(std::unique_ptr<T> (&slots)[N]) {
     for (size_t i = 0; i < N; ++i) {
-        if (slots[i] != nullptr) {
-            delete slots[i];
-            slots[i] = nullptr;
-        }
+        slots[i].reset();
     }
 }
 
@@ -803,9 +801,8 @@ void PlayBuildFieldLayers(void *playData) {
     // 5th init arg the pseudocode truncates (local_1c0 = DAT_0012e600[i],
     // verified against the AepLyrCtrl::init(...,owner,order) form).
     for (int i = 0; i < 5; ++i) {
-        AepLyrCtrl *layer = new AepLyrCtrl();
-        task->m_comboLayers[i] = layer;
-        layer->init(0, kEffectLayerNames[i], playData, kEffectLayerOrder[i]);
+        task->m_comboLayers[i] = std::make_unique<AepLyrCtrl>();
+        task->m_comboLayers[i]->init(0, kEffectLayerNames[i], playData, kEffectLayerOrder[i]);
     }
 
     // Per-display-tier repositioning of the effect banners + selection of the bg
@@ -842,9 +839,8 @@ void PlayBuildFieldLayers(void *playData) {
     // The eleven background layers in m_sceneLayers (+0x98..+0xc0), same new +
     // init + order.
     for (int i = 0; i < 11; ++i) {
-        AepLyrCtrl *layer = new AepLyrCtrl();
-        task->m_sceneLayers[i] = layer;
-        layer->init(0, bgNames[i], playData, kBgLayerOrder[i]);
+        task->m_sceneLayers[i] = std::make_unique<AepLyrCtrl>();
+        task->m_sceneLayers[i]->init(0, bgNames[i], playData, kBgLayerOrder[i]);
     }
 
     // getLyrNo -> lyr table, layerFrameCount(handle) -> frame-count table.
@@ -998,8 +994,7 @@ void PlayLoadCharaTextures(void *playData) {
                 }
             }
 
-            neTextureForiOS *tex = new neTextureForiOS();
-            task->m_charaTex[slot] = tex;
+            auto tex = std::make_unique<neTextureForiOS>();
 
             NSString *path;
             if (chara < 0) {
@@ -1026,10 +1021,10 @@ void PlayLoadCharaTextures(void *playData) {
 
             if (RhFileExists(path)) {
                 tex->load([path UTF8String]);
-            } else {
-                delete tex;
-                task->m_charaTex[slot] = nullptr;
+                task->m_charaTex[slot] = std::move(tex);
             }
+            // Missing file: the scratch texture is dropped here, leaving the slot
+            // null (matching the binary's delete + nullptr store).
         }
         return;
     }
@@ -1037,8 +1032,7 @@ void PlayLoadCharaTextures(void *playData) {
     // Bundled demo / sugoroku: three portraits, the window frame, thirteen text
     // panels.
     for (int i = 0; i < 3; ++i) {
-        neTextureForiOS *tex = new neTextureForiOS();
-        task->m_charaTex[i] = tex;
+        task->m_charaTex[i] = std::make_unique<neTextureForiOS>();
 
         NSString *path;
         if (!pad) {
@@ -1049,19 +1043,17 @@ void PlayLoadCharaTextures(void *playData) {
             path = [[AppDelegate appAppSupportDirectory]
                 stringByAppendingPathComponent:kSugoCharaFiles[i]];
         }
-        tex->load([path UTF8String]);
+        task->m_charaTex[i]->load([path UTF8String]);
     }
 
-    neTextureForiOS *window = new neTextureForiOS();
-    task->m_windowTex[1] = window; // +0x2c window frame
+    task->m_windowTex[1] = std::make_unique<neTextureForiOS>(); // +0x2c window frame
     NSString *windowPath = [[NSBundle mainBundle] pathForResource:@"t_window" ofType:@"png"];
-    window->load([windowPath UTF8String]);
+    task->m_windowTex[1]->load([windowPath UTF8String]);
 
     for (int i = 0; i < 13; ++i) {
-        neTextureForiOS *tex = new neTextureForiOS();
-        task->m_textPanels[i] = tex;
+        task->m_textPanels[i] = std::make_unique<neTextureForiOS>();
         NSString *path = [[NSBundle mainBundle] pathForResource:kTextPanelNames[i] ofType:@"png"];
-        tex->load([path UTF8String]);
+        task->m_textPanels[i]->load([path UTF8String]);
     }
 }
 
@@ -1135,7 +1127,7 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
             pulse = 0;
         }
         task->m_beatPulse = pulse;
-        neTextureForiOS *tex = task->m_textPanels[panel];
+        neTextureForiOS *tex = task->m_textPanels[panel].get();
         if (tex != nullptr) { // beat flash
             neTextureForiOS_draw(&aep,
                                  tex,
@@ -1161,7 +1153,7 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
     }
     // The window frame is always drawn (pulse 0 in a rest window).
     neTextureForiOS_draw(&aep,
-                         task->m_windowTex[1],
+                         task->m_windowTex[1].get(),
                          0,
                          0,
                          0x21e,
@@ -1451,7 +1443,7 @@ void PlayTaskDraw(int child,
                     if (task->m_score < scoreGate) {
                         return; // score below chara threshold
                     }
-                    AepLyrCtrl *bg = task->m_sceneLayers[kSceneRankFanfare]; // +0xc0
+                    AepLyrCtrl *bg = task->m_sceneLayers[kSceneRankFanfare].get(); // +0xc0
                     if (i > 2 && bg != nullptr && bg->isAnimating()) {
                         return;
                     }
@@ -1475,7 +1467,7 @@ void PlayTaskDraw(int child,
                 return;
             }
             if (task->m_charaAnmUser[i] == child) { // chara i portrait (anim)
-                neTextureForiOS *portrait = task->m_charaTex[i];
+                neTextureForiOS *portrait = task->m_charaTex[i].get();
                 if (portrait == nullptr) {
                     return;
                 }

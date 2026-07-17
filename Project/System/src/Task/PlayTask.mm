@@ -57,12 +57,12 @@ void PlayTask::resetState() {
     reloadChart(1);    // FUN_0002fed8 calls playTaskLoadChart(this, 1)
 
     // Reset the two animated-layer banks (5 @ +0x84, 11 @ +0x98).
-    for (AepLyrCtrl *l : m_comboLayers) {
+    for (auto &l : m_comboLayers) {
         if (l) {
             l->reset();
         }
     }
-    for (AepLyrCtrl *l : m_sceneLayers) {
+    for (auto &l : m_sceneLayers) {
         if (l) {
             l->reset();
         }

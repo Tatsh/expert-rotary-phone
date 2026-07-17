@@ -136,7 +136,7 @@ void PlayTask::playTouchSound() {
 // Fire one m_sceneLayers cue layer (an AepLyrCtrl driven as an SE) if it is idle.
 // Ghidra: the repeated `if (FUN_0002cba4(layer) == 0) FUN_0002cac0(layer);` idiom.
 void PlayTask::firePlayCue(int layer) {
-    AepLyrCtrl *inst = m_sceneLayers[layer];
+    AepLyrCtrl *inst = m_sceneLayers[layer].get();
     if (!SeInstanceIsBusy(inst)) {
         SeInstancePlay(inst);
     }
@@ -182,7 +182,7 @@ void PlayTask::playEndResultSe(int score) {
 
     // A clear always layers the clear fanfare over the chosen rank jingle
     // (Ghidra: FUN_0002cb24(*(playData + 0xc0), 1) after the rank pick).
-    AepLyrCtrl *fanfare = m_sceneLayers[kSceneRankFanfare];
+    AepLyrCtrl *fanfare = m_sceneLayers[kSceneRankFanfare].get();
     if (!SeInstanceIsBusy(fanfare)) {
         SeInstancePlayMode(fanfare, 1);
     }

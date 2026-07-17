@@ -37,6 +37,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <span>
 
 #include "C_TASK.h"
@@ -135,15 +136,15 @@ public:
     // +0x28 scene textures (neTextureForiOS*), allocated by PlayLoadCharaTextures
     // and freed in PlayTaskGotoResult. Slot 1 of the first pair is the demo
     // window frame (t_window @ +0x2c).
-    neTextureForiOS *m_windowTex[2] = {};   // +0x28 window-frame texture pair
-    neTextureForiOS *m_charaTex[8] = {};    // +0x30 character portrait textures
-    neTextureForiOS *m_textPanels[13] = {}; // +0x50 demo text-panel textures
+    std::unique_ptr<neTextureForiOS> m_windowTex[2];   // +0x28 window-frame texture pair
+    std::unique_ptr<neTextureForiOS> m_charaTex[8];    // +0x30 character portrait textures
+    std::unique_ptr<neTextureForiOS> m_textPanels[13]; // +0x50 demo text-panel textures
 
     // The two animated AepLyrCtrl layer banks: PlayTask_init operator_new's +
     // AepLyrCtrl::init's each element; resetState() rewinds every non-null layer.
     // update() cues the combo-milestone SEs off m_sceneLayers[4..10].
-    AepLyrCtrl *m_comboLayers[5] = {};  // +0x84 EFF_COM* combo-effect transports
-    AepLyrCtrl *m_sceneLayers[11] = {}; // +0x98 scene / HUD / combo-cue transports
+    std::unique_ptr<AepLyrCtrl> m_comboLayers[5];  // +0x84 EFF_COM* combo-effect transports
+    std::unique_ptr<AepLyrCtrl> m_sceneLayers[11]; // +0x98 scene / HUD / combo-cue transports
 
     // +0xc4 resolved Aep layer-no / frame-count / user-no tables.
     // PlayBuildFieldLayers fills them (AepManager getLyrNo / layerFrameCount /
