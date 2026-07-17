@@ -2766,7 +2766,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 // (4 chars + ".."), and the fade-out (opacity-5 floored at 0) were verified
 // faithful.
 void AcMainTask::sugorokuDrawFriendMeet() {
-    void *friendTex = m_goalCharaTex;
+    neTextureForiOS *friendTex = m_goalCharaTex;
     if (!friendTex) {
         return;
     }
@@ -2796,7 +2796,7 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 
     AepManager *mgr = m_aep;
     drawSprite(mgr,
-               reinterpret_cast<neTextureForiOS *>(friendTex),
+               friendTex,
                0,
                0,
                0x228,
