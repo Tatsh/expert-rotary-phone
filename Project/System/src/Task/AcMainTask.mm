@@ -862,7 +862,12 @@ void AcMainTask::loadTreasureMap() {
     m_flag5ed = 0;
     m_bgmActive = 1;
     m_field5f3 = 0;
-    reinterpret_cast<int &>(m_warpFlash) = 0;
+    // The binary zeroes +0x5ef with one 32-bit store (Ghidra loadTreasureMap
+    // @ 0xa0c34: str.w r1(=0), [r4,#0x5ef]); it spans these four named bytes.
+    m_warpFlash = 0;
+    m_warpAnim = 0;
+    _rsvd_5f1[0] = 0;
+    m_scrolledPastEnd = 0;
 
     // Re-snapshot player progress.
     m_treasurePoint = [UserSettingData treasurePoint];
