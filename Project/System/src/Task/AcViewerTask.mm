@@ -417,7 +417,7 @@ void AcViewerTask::drawActiveNotes() {
                 // p19=1.
                 aep.drawLayer(m_effectCoolLyrNo,
                               frame,
-                              m_laneFrm[n.lane],
+                              laneFrame,
                               noteY,
                               100,
                               100,
@@ -469,7 +469,7 @@ void AcViewerTask::drawActiveNotes() {
                 // colorMul 0xffffff, clip, prio 0xb, p19 1. Ghidra 0x22f46.
                 drawAepFrameEx(&aep,
                                frm,
-                               m_laneFrm[n.lane],
+                               laneFrame,
                                noteY,
                                100,
                                100,
