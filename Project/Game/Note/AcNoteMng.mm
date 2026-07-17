@@ -907,10 +907,10 @@ int AcNoteMng::getTotalNoteCount() const {
 int AcNoteMng::getJudgeTotal() const {
     int total = 0;
     for (int lane = 0; lane < 9; lane++) {
+        total += m_laneResult[lane]._unwritten[0];
+        total += m_laneResult[lane]._unwritten[1];
+        total += m_laneResult[lane]._unwritten[2];
         total += m_laneResult[lane].hits;
-        total += m_laneResult[lane]._reserved[0];
-        total += m_laneResult[lane]._reserved[1];
-        total += m_laneResult[lane]._reserved[2];
     }
     return (int)(int16_t)total;
 }

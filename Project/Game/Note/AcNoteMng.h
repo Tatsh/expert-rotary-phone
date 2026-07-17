@@ -275,10 +275,14 @@ private:
     AcActiveNote m_notePool[kAcMaxActiveNotes] = {}; // the fixed node pool (linked at play init)
     AcScrollSegment m_scrollMap[64] = {}; // +0xfa4c scroll/tempo segments (max 63 + guard)
 
+    // One lane's judgement tally (Ghidra aJudgeTally row: 4 ints, stride 0x10).
+    // Only the 4th int (the hit counter) is written in this arcade-viewer /
+    // auto-play mode; the leading three are the binary's other judge-tier slots,
+    // never written here. getJudgeTotal() sums all four per lane.
     struct LaneResult {
-        int hits = 0;
-        int _reserved[3] = {};
-    }; // +0xfd68, stride 0x10
+        int _unwritten[3] = {}; // +0x00 other judge-tier slots (unwritten in this mode)
+        int hits = 0;           // +0x0c the auto-play hit counter
+    }; // +0xfd5c, stride 0x10
     LaneResult m_laneResult[9];
     struct NearestNote {
         AcActiveNote *note = nullptr;
