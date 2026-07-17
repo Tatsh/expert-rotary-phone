@@ -267,9 +267,9 @@ NSArray *CharaManager::collectUnlockedCharaIds() {
 
 // Ghidra: charaSelectLoadPageTextures @ 0xa27f0.
 // @complete
-void charaSelectLoadPageTextures(AcMainTask *task, int page) {
-    __unsafe_unretained NSArray *available = (__bridge NSArray *)task->m_availableInfos;
-    __unsafe_unretained NSArray *gotChara = (__bridge NSArray *)task->m_gotCharaArray;
+void AcMainTask::charaSelectLoadPageTextures(int page) {
+    __unsafe_unretained NSArray *available = (__bridge NSArray *)m_availableInfos;
+    __unsafe_unretained NSArray *gotChara = (__bridge NSArray *)m_gotCharaArray;
 
     const int start = page * 6;
     for (int i = 0; i < 6; i++) {
@@ -282,7 +282,7 @@ void charaSelectLoadPageTextures(AcMainTask *task, int page) {
         const int charaId = info.charaId;
 
         // Release the occupant of the current-page texture slot.
-        neTextureForiOS *&slot = task->m_charaPageCurrTex[i];
+        neTextureForiOS *&slot = m_charaPageCurrTex[i];
         if (slot) {
             delete slot;
             slot = nullptr;
@@ -310,8 +310,8 @@ void charaSelectLoadPageTextures(AcMainTask *task, int page) {
 
 // Ghidra: charaSelectFindCharaIndex @ 0xa2a40.
 // @complete
-int charaSelectFindCharaIndex(AcMainTask *task, int charaId) {
-    __unsafe_unretained NSArray *available = (__bridge NSArray *)task->m_availableInfos;
+int AcMainTask::charaSelectFindCharaIndex(int charaId) {
+    __unsafe_unretained NSArray *available = (__bridge NSArray *)m_availableInfos;
     int idx = 0;
     for (CharaInfo *info in available) {
         if (info.charaId == charaId) {
@@ -326,21 +326,21 @@ int charaSelectFindCharaIndex(AcMainTask *task, int charaId) {
 
 // Ghidra: charaSelectReleaseTextures @ 0xa2b10.
 // @complete
-void charaSelectReleaseTextures(AcMainTask *task) {
+void AcMainTask::charaSelectReleaseTextures() {
     for (int i = 0; i < 6; i++) {
-        neTextureForiOS *&prev = task->m_charaPagePrevTex[i];
+        neTextureForiOS *&prev = m_charaPagePrevTex[i];
         if (prev) {
             delete prev;
             prev = nullptr;
         }
-        neTextureForiOS *&curr = task->m_charaPageCurrTex[i];
+        neTextureForiOS *&curr = m_charaPageCurrTex[i];
         if (curr) {
             delete curr;
             curr = nullptr;
         }
     }
     // Highlight texture (reserve slot 2 @ +0xf0).
-    neTextureForiOS *&highlight = task->m_reserveTex[2];
+    neTextureForiOS *&highlight = m_reserveTex[2];
     if (highlight) {
         delete highlight;
         highlight = nullptr;

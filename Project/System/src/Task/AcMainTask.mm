@@ -2106,7 +2106,7 @@ void AcMainTask::sugorokuTaskDispose() {
     }
 
     // 4. Release character-select textures.
-    charaSelectReleaseTextures(this);
+    charaSelectReleaseTextures();
 
     // 5. Unlink + delete AEP layer slots (Ghidra loop order preserved:
     //    roulette, then arrows, then panels).

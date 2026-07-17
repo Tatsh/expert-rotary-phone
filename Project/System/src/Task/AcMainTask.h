@@ -54,14 +54,6 @@ public:
     ~AcMainTask() override = default;
     void update(int deltaMs) override; // Ghidra: AcMainTask_update (FUN_00099d18)
 
-    // Chara-select page-texture helpers (CharaManager.mm). In the binary these
-    // are AcMainTask methods (@ 0xa27f0 / 0xa2a40 / 0xa2b10); reconstructed as
-    // free functions, they read this task's private chara arrays/textures by
-    // name.
-    friend void charaSelectLoadPageTextures(AcMainTask *task, int page);
-    friend int charaSelectFindCharaIndex(AcMainTask *task, int charaId);
-    friend void charaSelectReleaseTextures(AcMainTask *task);
-
 private:
     // Per-state handlers, lifted from AcMainTask_update's inlined switch cases.
     void stateInit();          // case 0  (setup, then BGM or the no-treasure path)
@@ -109,6 +101,12 @@ private:
     void sugorokuDrawPath(const TreasureMap::ConnectStruct *edge); // FUN_000a50dc
     void sugorokuDrawPlayerAndUi();                                // FUN_000a52f0
     void sugorokuDrawFriendMeet();                                 // FUN_000a5740
+
+    // Chara-select page-texture helpers (defined in CharaManager.mm; the binary
+    // has them as AcMainTask methods reading this task's chara arrays/textures).
+    void charaSelectLoadPageTextures(int page); // Ghidra: FUN @ 0xa27f0
+    int charaSelectFindCharaIndex(int charaId); // Ghidra: FUN @ 0xa2a40
+    void charaSelectReleaseTextures();          // Ghidra: FUN @ 0xa2b10
 
     // The group-5 sugoroku render callback reaches this task's members through
     // `context` (it will drive the sugoroku* passes above); befriended like
