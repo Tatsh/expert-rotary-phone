@@ -2893,7 +2893,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                     int rotation,
                                     uint32_t blend,
                                     int *clipRect,
-                                    uint32_t p17,
+                                    uint32_t priority,
                                     void *context) {
     static_cast<void>(frame);
     static_cast<void>(clipRect);
@@ -2931,7 +2931,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                      blend,
                                      0xffffff,
                                      nullptr,
-                                     p17,
+                                     priority,
                                      1);
                 px -= step;
                 value /= 10;
@@ -3014,7 +3014,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                  blend,
                                  0xffffff,
                                  nullptr,
-                                 p17,
+                                 priority,
                                  1);
             // Highlight the currently-selected chara with the hit-flash layer.
             const int listIdx = idxBase + self->m_charaColLeft * 6;
@@ -3061,7 +3061,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             return;
         }
         CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
-        aep->DrawText(info.charaName.UTF8String, 0x23, x, y - 0xf, 1, color, 0, p17);
+        aep->DrawText(info.charaName.UTF8String, 0x23, x, y - 0xf, 1, color, 0, priority);
         return;
     }
     if (self->m_boardUserNo[kBoardSkillText] == child) { // skill name / id / description
@@ -3070,11 +3070,11 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         }
         CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
         const SkillDataStruct *sd = GetSkillDataStruct(static_cast<int>(info.skillId));
-        aep->DrawText("SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, p17);
-        aep->DrawText(info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, p17);
-        aep->DrawText(sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, p17);
+        aep->DrawText("SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, priority);
+        aep->DrawText(info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, priority);
+        aep->DrawText(sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, priority);
         drawAepTextMultiline(
-            info.info.UTF8String, x, y + 0x1f, 1, 0x16, 0x1c, 0x59514f, p17, color);
+            info.info.UTF8String, x, y + 0x1f, 1, 0x16, 0x1c, 0x59514f, priority, color);
         return;
     }
 
@@ -3120,7 +3120,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                blend,
                                0xffffff,
                                clipRect,
-                               p17,
+                               priority,
                                1);
             }
             neTextureForiOS_draw(aep,
@@ -3141,7 +3141,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                  blend,
                                  0xffffff,
                                  nullptr,
-                                 p17,
+                                 priority,
                                  1);
             if (anchorOut) {
                 anchorOut[i * 2] = cx;
@@ -3187,7 +3187,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                            blend,
                            0xffffff,
                            clipRect,
-                           p17,
+                           priority,
                            1);
             anchorCache[i].x = cx - anchorX;
             anchorCache[i].y = cy - anchorY;
@@ -3216,7 +3216,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                        blend,
                        0xffffff,
                        clipRect,
-                       p17,
+                       priority,
                        1);
         return;
     }
@@ -3252,7 +3252,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                              blend,
                              0xffffff,
                              nullptr,
-                             p17,
+                             priority,
                              1);
         const int yAdj = (scaleY * 0xe) / 100;
         const int mapIdx = findTreasureMapIndexById(self->m_selMusicPanel);
@@ -3352,7 +3352,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                              blend,
                              0xffffff,
                              nullptr,
-                             p17,
+                             priority,
                              1);
         const int zoomX = static_cast<int>(static_cast<float>(scaleX) * 1.6949f) + 1;
         const int zoomY = static_cast<int>(static_cast<float>(scaleY) * 1.6949f) + 1;
@@ -3473,7 +3473,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                  blend,
                                  0xffffff,
                                  nullptr,
-                                 p17,
+                                 priority,
                                  1);
             return;
         }
@@ -3497,7 +3497,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                            blend,
                            0xffffff,
                            clipRect,
-                           p17,
+                           priority,
                            1);
         }
         drawAepFrameEx(aep,
@@ -3514,7 +3514,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                        blend,
                        0xffffff,
                        clipRect,
-                       p17,
+                       priority,
                        1);
         return;
     }
@@ -3542,7 +3542,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                        blend,
                        0xffffff,
                        0,
-                       p17,
+                       priority,
                        1);
         return;
     }
@@ -3572,7 +3572,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                              blend,
                              0xffffff,
                              nullptr,
-                             p17,
+                             priority,
                              1);
         return;
     }
@@ -3581,7 +3581,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             return;
         }
         const char *desc = getStringByIndex12(static_cast<unsigned>(self->m_hudState));
-        aep->DrawText(desc, 0x16, x, y - 10, 1, color, 0xffffff, p17);
+        aep->DrawText(desc, 0x16, x, y - 10, 1, color, 0xffffff, priority);
         return;
     }
 }

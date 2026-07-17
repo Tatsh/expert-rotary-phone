@@ -205,7 +205,7 @@ private:
                                    int rotation,
                                    uint32_t blend,
                                    int *clipRect,
-                                   uint32_t p17,
+                                   uint32_t priority,
                                    void *context);
 
     // ================= work-area layout (// +0xNN = binary offset, for
@@ -471,7 +471,7 @@ void AcMainSugorokuDraw(int child,
                         int rotation,
                         uint32_t blend,
                         int *clipRect,
-                        uint32_t p17,
+                        uint32_t priority,
                         void *context);
 
 // Unlock the board-8 bonus treasure record when its prerequisite purchased
