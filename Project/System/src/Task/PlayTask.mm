@@ -82,7 +82,7 @@ void PlayTask::resetState() {
 
     // Gauge / score scalars.
     m_backTouchId = -1;
-    m_gaugeBase = (int16_t)g_wPlayDefaultGauge; // DAT_00178d00
+    m_gaugeBase = static_cast<int16_t>(g_wPlayDefaultGauge); // DAT_00178d00
     m_score = 0;
     m_gaugeValue = 0;
     m_comboMilestoneGuard = 0;
@@ -105,8 +105,8 @@ void PlayTask::reloadChart(int restart) {
     if (m_isDemoPlay == 0) {
         // Normal play: the picked {musicId, sheet} pair the event center carries (@
         // +0x968).
-        const int musicId = m_eventCenter->lastMusic(); // pair[0]
-        difficulty = (short)m_eventCenter->lastSheet(); // (short)pair[1]
+        const int musicId = m_eventCenter->lastMusic();              // pair[0]
+        difficulty = static_cast<short>(m_eventCenter->lastSheet()); // (short)pair[1]
         md = [[MusicManager getInstance] getMusicData:musicId];
     } else {
         // Tutorial / bundled-demo play (flag @ +0x9c9): the fixed bundled song,
@@ -146,7 +146,7 @@ void PlayTask::reloadChart(int restart) {
         const int kind = [UserSettingData touchSoundKind];
         NSString *name = (__bridge NSString *)neSceneManager::hitSoundName(kind);
         NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"m4a"];
-        m_hitSeId = (int)[audio loadSe:path isLoop:NO callName:nil group:0];
+        m_hitSeId = static_cast<int>([audio loadSe:path isLoop:NO callName:nil group:0]);
         [audio setSeVolume:m_seVolume groupId:0];
     }
 }
@@ -157,7 +157,7 @@ void PlayTask::reloadChart(int restart) {
 void PlayTask::updateGauge(int mode) {
     int16_t &gauge = m_gaugeValue;
     const float *delta = nullptr;
-    if ((unsigned)(mode - 2) < 2) { // mode 2 or 3 (great / perfect)
+    if (static_cast<unsigned>(mode - 2) < 2) { // mode 2 or 3 (great / perfect)
         delta = &m_gaugeGainGreat;
     } else if (mode == 0) { // miss / down
         delta = &m_gaugeLossMiss;
@@ -168,7 +168,7 @@ void PlayTask::updateGauge(int mode) {
 
     if (delta != nullptr) {
         // gauge += *delta (fixed<->float round-trip in the binary).
-        gauge = (int16_t)((float)gauge + *delta);
+        gauge = static_cast<int16_t>(static_cast<float>(gauge) + *delta);
     }
     if (gauge < 1) {
         gauge = 0;
@@ -194,11 +194,15 @@ void PlayTask::DrawHud() {
 
     // Beat phase: the current play position modulo the beat interval (both in ms).
     // 0x30428 casts NoteBeatIntervalMs() straight to int (vcvt.s32.f32, no scale).
-    const int beat = (int)NoteBeatIntervalMs();
-    const unsigned beatMod = (unsigned)beat;
-    const int phase = (beat != 0) ? (int)((unsigned)nm.getCurrentPosition() % beatMod) : 0;
+    const int beat = static_cast<int>(NoteBeatIntervalMs());
+    const unsigned beatMod = static_cast<unsigned>(beat);
+    const int phase =
+        (beat != 0) ? static_cast<int>(static_cast<unsigned>(nm.getCurrentPosition()) % beatMod) :
+                      0;
     const auto beatFrame = [&](int frmCount) -> int {
-        return (beat != 0) ? (int)((unsigned)((frmCount - 1) * phase) / beatMod) : 0;
+        return (beat != 0) ?
+                   static_cast<int>(static_cast<unsigned>((frmCount - 1) * phase) / beatMod) :
+                   0;
     };
 
     // Score gauge (skipped in the auto-demo), best gauge (effect-on only), combo gauge.
@@ -296,8 +300,8 @@ void PlayTask::update(int /*deltaMs*/) {
                 // key). 0x2dc98/0x2dca0 load [+0xc]/[+0x10] and 0x2dca4/0x2dca8
                 // convert them straight to float (vcvt.f32.s32, no fixed-point scale),
                 // so the raw coordinates are stored as floats.
-                touchXY[touchCount * 2] = (float)t->x;
-                touchXY[touchCount * 2 + 1] = (float)t->y;
+                touchXY[touchCount * 2] = static_cast<float>(t->x);
+                touchXY[touchCount * 2 + 1] = static_cast<float>(t->y);
                 touchIds[touchCount] = t->id;
                 touchCount++;
             }
@@ -353,13 +357,14 @@ void PlayTask::update(int /*deltaMs*/) {
             const float scale = m_uiScale;
             // 0x2de40 halves the pause-menu x origin (+0x978), not the UI scale.
             const int half = m_pauseOriginX / 2;
-            const float tapY = (float)backTapStartY / 65536.0f;
+            const float tapY = static_cast<float>(backTapStartY) / 65536.0f;
             // Each stacked button spans [pos + half, pos + half + width], scaled by
             // the UI scale, and is hit-tested against the tap's start Y (Ghidra:
             // FixedToFP(pos + half) * scale <= FixedToFP(local_8c)).
             const auto inBand = [&](int pos) -> bool {
-                const float lo = (float)(pos + half) / 65536.0f * scale;
-                const float hi = (float)(pos + half + m_pauseBtnWidth) / 65536.0f * scale;
+                const float lo = static_cast<float>(pos + half) / 65536.0f * scale;
+                const float hi =
+                    static_cast<float>(pos + half + m_pauseBtnWidth) / 65536.0f * scale;
                 return lo <= tapY && tapY <= hi;
             };
             if (inBand(m_pauseBtnResumeX)) { // resume: unpause and resume play
@@ -405,7 +410,7 @@ void PlayTask::update(int /*deltaMs*/) {
             if (m_endPos == 0) {
                 m_endPos = pos;
             }
-            if (!m_isDemoPlay && (unsigned)(pos - m_endPos) > 999) {
+            if (!m_isDemoPlay && static_cast<unsigned>(pos - m_endPos) > 999) {
                 m_endSeFired = true;
                 // The score-tier voice: below 70000 the low voice (+0x3b0), else the
                 // high voice (+0x3ac).
@@ -429,22 +434,23 @@ void PlayTask::update(int /*deltaMs*/) {
             if (m_backTouchId == -1) {
                 if (touchCount > 0) {
                     const float scale = m_uiScale;
-                    const int cx = (int)((float)m_pauseTapCenterX * scale);
-                    const int cy = (int)((float)m_pauseTapCenterY * scale);
-                    const int r = (int)((float)m_pauseTapRadius * scale);
+                    const int cx = static_cast<int>(static_cast<float>(m_pauseTapCenterX) * scale);
+                    const int cy = static_cast<int>(static_cast<float>(m_pauseTapCenterY) * scale);
+                    const int r = static_cast<int>(static_cast<float>(m_pauseTapRadius) * scale);
                     // 0x2e278/0x2e264 convert touchXY[0]/[1] straight back to int
                     // (vcvt.s32.f32, no fixed-point scale) to match the raw floats
                     // stored in the snapshot above.
-                    const int tx = (int)touchXY[0];
-                    const int ty = (int)touchXY[1];
+                    const int tx = static_cast<int>(touchXY[0]);
+                    const int ty = static_cast<int>(touchXY[1]);
                     if (pointInCircle(tx, ty, cx, cy, r)) {
                         m_backTouchId = touchIds[0];
-                        m_backTouchTime = (int)getTimeMillis();
+                        m_backTouchTime = static_cast<int>(getTimeMillis());
                     }
                 }
             } else if (gfx.findTouchById(m_backTouchId) == nullptr) {
                 m_backTouchId = -1; // the finger lifted before the hold completed
-            } else if ((unsigned)((int)getTimeMillis() - m_backTouchTime) > 500) {
+            } else if (static_cast<unsigned>(static_cast<int>(getTimeMillis()) - m_backTouchTime) >
+                       500) {
                 m_backTouchId = -1;
                 nm.onResignActivePushHook(); // freeze the notes
                 m_state = 5;                 // open the pause menu
@@ -453,7 +459,7 @@ void PlayTask::update(int /*deltaMs*/) {
         }
 
         // Auto-demo (title attract): hand off to the fade-out ~3s after the song ends.
-        if (m_endPos != 0 && (unsigned)(nm.getCurrentPosition() - m_endPos) >= 3000) {
+        if (m_endPos != 0 && static_cast<unsigned>(nm.getCurrentPosition() - m_endPos) >= 3000) {
             m_state = 8;
         }
         break;
