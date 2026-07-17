@@ -25,6 +25,7 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager::hitSoundName
 #import "neGraphics.h"
+#import "neTextureForiOS.h" // complete type for the unique_ptr texture members' dtor
 
 // DAT_00178d00 — the play default life-gauge base, read by PlayTask_init +
 // playTaskResetState. A data global that is only ever read (never written) and
