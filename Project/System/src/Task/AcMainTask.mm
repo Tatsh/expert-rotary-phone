@@ -835,15 +835,15 @@ void AcMainTask::loadTreasureMap() {
 
     // Reset the per-map play flags + counters.
     std::memset(&m_selScratch[0], 0xff, 0x3c);
-    m_flag5ec = 0;
-    m_flag5ed = 0;
+    m_skillPanelActive = 0;
+    m_buttonPanelActive = 0;
     m_bgmActive = 1;
-    m_field5f3 = 0;
+    m_squareAnimActive = 0;
     // The binary zeroes +0x5ef with one 32-bit store (Ghidra loadTreasureMap
     // @ 0xa0c34: str.w r1(=0), [r4,#0x5ef]); it spans these four named bytes.
     m_warpFlash = 0;
     m_warpAnim = 0;
-    _rsvd_5f1[0] = 0;
+    m_wallpaperComplete = 0;
     m_scrolledPastEnd = 0;
 
     // Re-snapshot player progress.
@@ -1807,8 +1807,8 @@ static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
 // is fine: the binary passes m_map (@ +0x4b0) but FUN_000cea50 ignores it.
 // @complete
 void AcMainTask::sugorokuDrawSquareText() {
-    if (m_field5f3 != 0) {
-        return; // suppressed while task+0x5f3 is set
+    if (m_squareAnimActive != 0) {
+        return; // hide the square label while the select animation runs (+0x5f3)
     }
     const TreasureMap::Node *node = m_curNode;
     if (!node) {

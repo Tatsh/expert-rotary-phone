@@ -237,15 +237,19 @@ private:
     int m_charaColRight = {};              // +0x5e0 chara-grid right column base index
     int m_charaColLeft = {};               // +0x5e4 chara-grid left column base index
     int m_friendAnimFrame = {};            // +0x5e8 friend-meet animation frame
-    uint8_t m_flag5ec = {};                // +0x5ec per-map flag
-    uint8_t m_flag5ed = {};                // +0x5ed per-map flag
-    uint8_t m_bgmActive = {};              // +0x5ee select-BGM active flag
-    uint8_t m_warpFlash = {};              // +0x5ef warp flash gate
-    uint8_t m_warpAnim = {};               // +0x5f0 warp squish animation active
-    uint8_t _rsvd_5f1[0x5f2 - 0x5f1] = {}; // +0x5f1
-    uint8_t m_scrolledPastEnd = {}; // +0x5f2 list scrolled-past-end flag (recomputed each frame)
-    int m_field5f3 = {};            // +0x5f3 cleared each map load; role opaque
-    uint8_t m_padDisplay = {};      // +0x5f7 iPad display flag
+    uint8_t m_skillPanelActive = {}; // +0x5ec skill-use panel modal (drives sugorokuDrawSkillPanel)
+    uint8_t m_buttonPanelActive = {}; // +0x5ed board-button panel modal (sugorokuDrawButtonHitTest)
+    uint8_t m_bgmActive = {};         // +0x5ee select-BGM active flag
+    uint8_t m_warpFlash = {};         // +0x5ef warp flash gate
+    uint8_t m_warpAnim = {};          // +0x5f0 warp squish animation active
+    uint8_t m_wallpaperComplete = {}; // +0x5f1 all 9 wall pieces owned -> reveal draw enabled
+    uint8_t m_scrolledPastEnd = {};   // +0x5f2 list scrolled-past-end flag (recomputed each frame)
+    // +0x5f3 board-square select animation running; while set, sugorokuDrawSquareText
+    // hides the square label and case 0x23 clears it when the +0x6c layer finishes.
+    // Accessed as a byte in the binary (strb/ldrb), not an int.
+    uint8_t m_squareAnimActive = {};       // +0x5f3
+    uint8_t _rsvd_5f4[0x5f7 - 0x5f4] = {}; // +0x5f4
+    uint8_t m_padDisplay = {};             // +0x5f7 iPad display flag
     uint8_t _rsvd_5f8[0x5fa - 0x5f8] = {}; // +0x5f8
     uint8_t m_fadeDir = {};                // +0x5fa transition fade direction
     uint8_t _rsvd_5fb[0x5fc - 0x5fb] = {}; // +0x5fb
