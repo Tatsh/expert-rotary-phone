@@ -109,9 +109,8 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     // buffer is a private mutable copy (readIndexFile already stamps the group id into it).
     relocateData(group, reinterpret_cast<const AepIndexHeader *>(indexBase), indexBase);
 
-    // Replace the group's texture.
-    delete m_groupTexture[group];
-    m_groupTexture[group] = new neTextureForiOS();
+    // Replace the group's texture (assigning frees the previous one).
+    m_groupTexture[group] = std::make_unique<neTextureForiOS>();
     NSString *texDir = single ? nil : [NSString stringWithFormat:@"%s/%s", dir, name];
     // The tile loader reads "<texDir>/<name>_<i>.png" for each of the index's
     // tiles (Ghidra FUN_00011e18); it fills the sprite's tile/handle arrays.
@@ -149,8 +148,7 @@ void AepManager::releaseAepTexture(int group) {
     if (group < 0 || group >= kMaxAepGroups) {
         return;
     }
-    delete m_groupTexture[group];
-    m_groupTexture[group] = nullptr;
+    m_groupTexture[group].reset();
 }
 
 // Ghidra: FUN_0000f758 — load a single-file group ("<baseDir>/<name>.idx") from

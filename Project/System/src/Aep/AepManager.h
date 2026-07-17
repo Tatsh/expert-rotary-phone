@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <memory>
+
 #import <Foundation/Foundation.h>
 
 #include "AepFrameDraw.h"
@@ -306,7 +308,7 @@ private:
     NSData *m_idxData[kMaxAepGroups] = {};
     // The sprite/texture object each group's frames draw from (neTextureForiOS).
     // Ghidra: this + group*4 + 0x7c16e4.
-    neTextureForiOS *m_groupTexture[kMaxAepGroups] = {};
+    std::unique_ptr<neTextureForiOS> m_groupTexture[kMaxAepGroups];
     // 8-byte frame-position records copied out of the idx (Ghidra: @ 0x7c1962,
     // stride 8, bounded by MAX_FRAME_DATA). x / y / span / h.
     struct AepFramePos {
