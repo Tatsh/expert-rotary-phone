@@ -95,7 +95,7 @@ private:
 
     // The per-frame draw pass reaches the members below through its `context` (=
     // this), so it is a friend rather than reaching them by raw offset.
-    friend void PlayResultDrawCallback(int child,
+    static void PlayResultDrawCallback(int child,
                                        int frame,
                                        int x,
                                        int y,
@@ -193,25 +193,6 @@ private:
     void *m_tweeter = nullptr;             // +0x39c TwitterUtil (unmanaged +1)
                                            // object end +0x3a0
 };
-
-// The result screen's per-frame draw pass, registered with the Aep manager as
-// group 4's draw callback (context = the task). Reconstructed separately.
-// Ghidra: FUN_0003f5f0.
-void PlayResultDrawCallback(int child,
-                            int frame,
-                            int x,
-                            int y,
-                            int scaleX,
-                            int scaleY,
-                            int anchorX,
-                            int anchorY,
-                            int color,
-                            int alpha,
-                            int rotation,
-                            uint32_t blend,
-                            int *clipRect,
-                            uint32_t p17,
-                            void *context);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=cpp sw=4 ts=4 et :

@@ -220,8 +220,8 @@ void MenuMainTask::setup() {
     // Install the per-layer NEWS-ticker draw callback on group 2 (the engine
     // hands this task back as the trailing context). NewsTickerUpdate has the
     // AepGroupDrawFn signature exactly, so it registers without a cast.
-    // Ghidra: setAepCallbacks(aep, 2, &NewsTickerUpdate, this).
-    aep.setGroupDrawCallback(2, &NewsTickerUpdate, this);
+    // Ghidra: setAepCallbacks(aep, 2, &MenuMainTask::NewsTickerUpdate, this).
+    aep.setGroupDrawCallback(2, &MenuMainTask::NewsTickerUpdate, this);
 
     // The friend-request warning texture (a bundled PNG drawn straight into the
     // OT).
@@ -419,7 +419,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // modeSelectAlertClosed, then show a tagged OK alert.
         auto showUnlockAlert = [&](NSString *title, NSString *message) {
             MainViewController *root = RootVC();
-            [root SetAlertViewCallback:&modeSelectAlertClosed param:this];
+            [root SetAlertViewCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             CommonAlertView *alert =
                 [[CommonAlertView alloc] initWithTitle:title
                                                message:message
@@ -488,7 +488,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if (m_infoFlag && ![UserSettingData isEqualToInfoViewDay:today]) {
             CustomWebView *web =
                 [[CustomWebView alloc] initWithURL:[StoreUtil getOfficialAppInfoURL]];
-            [web SetCloseCallback:&modeSelectAlertClosed param:this];
+            [web SetCloseCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             [web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
             [UserSettingData saveInfoViewDay:today];
             m_state = 9;
@@ -507,7 +507,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             if (!cntUpdated) {
                 break;
             }
-            [RootVC() SetAlertViewCallback:&modeSelectAlertClosed param:this];
+            [RootVC() SetAlertViewCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             RandomLoginBonusView *view = [[RandomLoginBonusView alloc] init];
             [view show];
             m_state = 0xb;
@@ -526,7 +526,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             [UserSettingData saveLoginBonusCnt:settled];
         }
         if ([UserSettingData getLoginBonusCnt] != [dl loginCnt]) {
-            [RootVC() SetAlertViewCallback:&modeSelectAlertClosed param:this];
+            [RootVC() SetAlertViewCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             LoginBonusView *view = [[LoginBonusView alloc] init];
             [view show];
             m_state = 0xb;
@@ -892,7 +892,7 @@ void MenuMainTask::drawOverlay() {
  * @ghidraAddress 0x6d1a4
  * @complete
  */
-void modeSelectAlertClosed(void *context) {
+void MenuMainTask::modeSelectAlertClosed(void *context) {
     auto *self = static_cast<MenuMainTask *>(context);
     [RootVC() SetAlertViewCallback:nullptr param:nullptr];
     switch (self->m_state) {
@@ -920,21 +920,21 @@ void modeSelectAlertClosed(void *context) {
  * @ghidraAddress 0x6d6d4
  * @complete
  */
-void NewsTickerUpdate(int child,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      uint32_t,
-                      int *,
-                      uint32_t priority,
-                      void *context) {
+void MenuMainTask::NewsTickerUpdate(int child,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    int,
+                                    uint32_t,
+                                    int *,
+                                    uint32_t priority,
+                                    void *context) {
     AepManager &aep = AepManager::shared();
     auto *self = static_cast<MenuMainTask *>(context);
     if (self->m_newsHandle != child) {

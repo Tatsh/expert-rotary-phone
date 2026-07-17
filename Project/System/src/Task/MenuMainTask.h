@@ -34,36 +34,6 @@ class AepManager;
 class AepLyrCtrl;
 class neTextureForiOS;
 
-// The group-2 per-layer NEWS-ticker draw callback, installed by setup() via
-// setGroupDrawCallback(2, &NewsTickerUpdate, this). The AEP engine invokes it
-// once per drawn layer: `child` is the layer being drawn (only the resolved news
-// handle acts), `priority` is the order-table slot handed to the clipped-text
-// draw, and the trailing `context` is the owning MenuMainTask (the binary passes
-// the task pointer there, i.e. the method receiver). It scrolls the current news
-// line and pages through the news array with a pause/reset fade ramp. Ghidra:
-// NewsTickerUpdate (FUN_0006d6d4) @ 0x6d6d4.
-void NewsTickerUpdate(int child,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      int,
-                      uint32_t,
-                      int *,
-                      uint32_t priority,
-                      void *context);
-
-// The mode-select confirm-dialog dismiss callback, installed as the root VC's
-// SetAlertViewCallback and as the daily-info CustomWebView close callback with
-// the task as `context`. It detaches the callback then steps the state machine
-// (7 & 11 -> 6, 9 -> 10, else -> 0xc). Ghidra: FUN_0006d1a4 @ 0x6d1a4.
-void modeSelectAlertClosed(void *context);
-
 class MenuMainTask : public C_TASK {
 public:
     MenuMainTask();                    // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
@@ -118,11 +88,11 @@ private:
     void dispose();
 
     // The alert-dismiss callback reaches m_state through its `context`; let it in.
-    friend void modeSelectAlertClosed(void *context);
+    static void modeSelectAlertClosed(void *context);
 
     // The registered NEWS-ticker draw callback reaches these private news fields
     // through its `context` argument; let it in.
-    friend void NewsTickerUpdate(int child,
+    static void NewsTickerUpdate(int child,
                                  int,
                                  int,
                                  int,

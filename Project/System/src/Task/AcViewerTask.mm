@@ -283,12 +283,12 @@ void AcViewerTask::setup() {
     }
 
     // Register the per-layer HUD draw callback (Ghidra: setAepCallbacks(aep, 7,
-    // 0x23359, this) — 0x23359 is &AcViewerHudDraw in Thumb). Its signature
+    // 0x23359, this) — 0x23359 is &AcViewerTask::AcViewerHudDraw in Thumb). Its signature
     // matches AepGroupDrawFn exactly so no reinterpret_cast is needed. A previous
     // int16_t rotation (param 11) was NOT ABI-compatible: params 9+ are passed on
     // the stack on arm64, so a 2-byte rotation shifted every following slot and
     // corrupted `context`, crashing the callback on a garbage `this`.
-    aep.setGroupDrawCallback(kAcvGroup, &AcViewerHudDraw, this);
+    aep.setGroupDrawCallback(kAcvGroup, &AcViewerTask::AcViewerHudDraw, this);
     m_hudReady = 1; // HUD ready
 }
 
@@ -1103,21 +1103,21 @@ void AcViewerTask::update(int /*deltaMs*/) {
 // runs, COOL/GREAT).
 // @complete
 // ===========================================================================
-void AcViewerHudDraw(int child,
-                     int frame,
-                     int x,
-                     int y,
-                     int scaleX,
-                     int scaleY,
-                     int anchorX,
-                     int anchorY,
-                     int color,
-                     int alpha,
-                     int rotation,
-                     uint32_t blend,
-                     int *p13,
-                     uint32_t p14,
-                     void *context) {
+void AcViewerTask::AcViewerHudDraw(int child,
+                                   int frame,
+                                   int x,
+                                   int y,
+                                   int scaleX,
+                                   int scaleY,
+                                   int anchorX,
+                                   int anchorY,
+                                   int color,
+                                   int alpha,
+                                   int rotation,
+                                   uint32_t blend,
+                                   int *p13,
+                                   uint32_t p14,
+                                   void *context) {
     (void)frame;
     AepManager &aep = AepManager::shared();
     AcViewerTask *self = static_cast<AcViewerTask *>(context);

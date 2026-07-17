@@ -539,7 +539,8 @@ void PlayResultTask::resultSetup() {
     loadNumberTextures();
 
     // Install this scene's per-frame draw pass for group 4.
-    aep.setGroupDrawCallback(4, &PlayResultDrawCallback,
+    aep.setGroupDrawCallback(4,
+                             &PlayResultTask::PlayResultDrawCallback,
                              this); // FUN_0000f9b0 (cb FUN_0003f5f0)
 
     // --- 11 rank SEs + the result BGM ---
@@ -1047,21 +1048,21 @@ void drawTexQuad(AepManager &aep,
 // rank-effect cross-fade idx from effFrame[2] (+0x2dc) vs effLyrFrames[2]
 // (+0x2cc) with one-shot screenshot.
 // @complete
-void PlayResultDrawCallback(int child,
-                            int /*frame*/,
-                            int x,
-                            int y,
-                            int scaleX,
-                            int scaleY,
-                            int anchorX,
-                            int anchorY,
-                            int color,
-                            int alpha,
-                            int rotation,
-                            uint32_t blend,
-                            int *clipRect,
-                            uint32_t p17,
-                            void *context) {
+void PlayResultTask::PlayResultDrawCallback(int child,
+                                            int /*frame*/,
+                                            int x,
+                                            int y,
+                                            int scaleX,
+                                            int scaleY,
+                                            int anchorX,
+                                            int anchorY,
+                                            int color,
+                                            int alpha,
+                                            int rotation,
+                                            uint32_t blend,
+                                            int *clipRect,
+                                            uint32_t p17,
+                                            void *context) {
     AepManager &aep = AepManager::shared();                        // Ghidra: AepManager_shared
     PlayResultTask *self = static_cast<PlayResultTask *>(context); // the PlayResultTask (param_15)
 

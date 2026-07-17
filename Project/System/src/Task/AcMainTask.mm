@@ -614,7 +614,7 @@ void AcMainTask::setupScene() {
     AcMainUnlockBonusTreasure();
     loadTreasureMap();
     refreshMapScroll(0);
-    aep.setGroupDrawCallback(5, &AcMainSugorokuDraw, this);
+    aep.setGroupDrawCallback(5, &AcMainTask::AcMainSugorokuDraw, this);
 }
 
 // Resolve the ~50 layer / frame / user handle tables into the this+0x21c..
@@ -2859,21 +2859,21 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 // incoming coordinate. All 26 branches, offsets, digit-run bounds, and constants
 // were verified faithful against disassembly.
 // @complete
-void AcMainSugorokuDraw(int child,
-                        int frame,
-                        int x,
-                        int y,
-                        int scaleX,
-                        int scaleY,
-                        int anchorX,
-                        int anchorY,
-                        int color,
-                        int alpha,
-                        int rotation,
-                        uint32_t blend,
-                        int *clipRect,
-                        uint32_t p17,
-                        void *context) {
+void AcMainTask::AcMainSugorokuDraw(int child,
+                                    int frame,
+                                    int x,
+                                    int y,
+                                    int scaleX,
+                                    int scaleY,
+                                    int anchorX,
+                                    int anchorY,
+                                    int color,
+                                    int alpha,
+                                    int rotation,
+                                    uint32_t blend,
+                                    int *clipRect,
+                                    uint32_t p17,
+                                    void *context) {
     (void)frame;
     (void)clipRect;
     AcMainTask *self = static_cast<AcMainTask *>(context);

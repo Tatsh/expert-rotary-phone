@@ -53,27 +53,6 @@ namespace neEngine {
 void acMainApplyGameplaySettings(AcViewerTask *task);
 }
 
-// The registered group-7 per-layer HUD draw callback (score / combo /
-// music-title / gauge-digit blitter). It is a C function-pointer callback
-// installed by setup() via setAepCallbacks(aep, 7, &AcViewerHudDraw, this); the
-// trailing `context` is the owning AcViewerTask. Ghidra: aepHudDrawCallback
-// (registered id 0x23359). @ 0x23358
-void AcViewerHudDraw(int child,
-                     int frame,
-                     int x,
-                     int y,
-                     int scaleX,
-                     int scaleY,
-                     int anchorX,
-                     int anchorY,
-                     int color,
-                     int alpha,
-                     int rotation,
-                     uint32_t blend,
-                     int *p13,
-                     uint32_t p14,
-                     void *context);
-
 class AcViewerTask : public C_TASK {
 public:
     // Constructed by the engine when the arcade viewer starts play (its
@@ -96,7 +75,7 @@ private:
 
     // The HUD draw callback reaches these same members through `context`; let it
     // in.
-    friend void AcViewerHudDraw(int child,
+    static void AcViewerHudDraw(int child,
                                 int frame,
                                 int x,
                                 int y,

@@ -109,9 +109,9 @@ private:
     void charaSelectReleaseTextures();          // Ghidra: FUN @ 0xa2b10
 
     // The group-5 sugoroku render callback reaches this task's members through
-    // `context` (it will drive the sugoroku* passes above); befriended like
-    // AcViewerTask's HUD hook.
-    friend void AcMainSugorokuDraw(int child,
+    // `context`; a static member so it is a plain function pointer for
+    // setGroupDrawCallback while still reaching the private members directly.
+    static void AcMainSugorokuDraw(int child,
                                    int frame,
                                    int x,
                                    int y,
