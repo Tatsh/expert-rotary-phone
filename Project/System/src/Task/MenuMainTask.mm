@@ -41,7 +41,7 @@
 // Goto*/Is*Enable/ SetAlertViewCallback selectors the menu sends; type RootVC()
 // as such so they resolve.
 static MainViewController *RootVC() {
-    return (MainViewController *)neSceneManager::rootViewController();
+    return static_cast<MainViewController *>(neSceneManager::rootViewController());
 }
 
 /**
@@ -268,7 +268,7 @@ void MenuMainTask::setup() {
     // query reports flag 1. The block captures this task (its +0x14 capture in
     // the binary).
     [RewardNetwork isEnabledBannerWithBlock:^(NSInteger flg, NSError *error) { // @ 0x6d8bc
-      (void)error;
+      static_cast<void>(error);
       m_giftEnabled = static_cast<uint8_t>(flg == 1);
     }];
 
@@ -276,7 +276,7 @@ void MenuMainTask::setup() {
     // id is in range (< 12; app helper isIndexInRange12), and the game badge
     // (+0xb8) if any game-event id is 0 (the binary's folded isZeroInt predicate).
     for (NSNumber *eventId in dl.treasureEventIdArray) {
-        if (isIndexInRange12((unsigned int)[eventId intValue])) {
+        if (isIndexInRange12(static_cast<unsigned int>([eventId intValue]))) {
             m_treasureEvent = 1;
             break;
         }
@@ -325,8 +325,8 @@ void MenuMainTask::update(int /*deltaMs*/) {
             // (i.e. / 65536) before dividing by the UI scale; a plain (float)
             // cast skips that and yields ~pixel * 65536, so the tap misses every
             // button rect. Ghidra: FixedToFP(nStartX) / g_dwUiScale @ ~0x6aec0.
-            tapX = (int)(t->startX / 65536.0f / uiScale);
-            tapY = (int)(t->startY / 65536.0f / uiScale);
+            tapX = static_cast<int>(t->startX / 65536.0f / uiScale);
+            tapY = static_cast<int>(t->startY / 65536.0f / uiScale);
             neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);
             NSLog(@"%d %d", tapX, tapY);
             haveTap = true;
@@ -345,7 +345,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             bool stale = startDate == nil;
             if (!stale) {
                 NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:startDate];
-                stale = (int)((float)elapsed / 3600.0f) > 0;
+                stale = static_cast<int>(static_cast<float>(elapsed) / 3600.0f) > 0;
             }
             if (stale) {
                 [dl setCppDelegateNews:this];
@@ -398,8 +398,8 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // dictionary, but those __stdcall_softfp string args are lost in the
         // decompile; only the {"env": "0"} pair is recoverable. RewardNetwork is a
         // no-op stub here, so the exact dictionary is inert.
-        (void)[[AppDelegate appDelegate] rewardAppId];
-        (void)[UserSettingData playerId];
+        static_cast<void>([[AppDelegate appDelegate] rewardAppId]);
+        static_cast<void>([UserSettingData playerId]);
         NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"env", nil];
         [RewardNetwork setSessionParameters:params url:url method:@"GET"];
         m_state = 5;
@@ -420,19 +420,20 @@ void MenuMainTask::update(int /*deltaMs*/) {
         auto showUnlockAlert = [&](NSString *title, NSString *message) {
             MainViewController *root = RootVC();
             [root SetAlertViewCallback:&MenuMainTask::modeSelectAlertClosed param:this];
-            CommonAlertView *alert =
-                [[CommonAlertView alloc] initWithTitle:title
-                                               message:message
-                                              delegate:(id<CommonAlertViewDelegate>)root
-                                     cancelButtonTitle:nil
-                                     otherButtonTitles:@"OK"];
+            CommonAlertView *alert = [[CommonAlertView alloc]
+                    initWithTitle:title
+                          message:message
+                         delegate:static_cast<id<CommonAlertViewDelegate>>(root)
+                cancelButtonTitle:nil
+                otherButtonTitles:@"OK"];
             [alert setTag:1];
             [alert show];
         };
         switch (m_unlockStep) {
         case 0: // 3 invites -> 5 character tickets
             if (invitePresent <= 2 && inviteCnt >= 3) {
-                [UserSettingData saveCharaTicket:(short)([UserSettingData charaTicket] + 5)];
+                [UserSettingData
+                    saveCharaTicket:static_cast<short>([UserSettingData charaTicket] + 5)];
                 [UserSettingData saveInvitePresent:3];
                 m_state = 7;
                 showUnlockAlert(@"招待コード",
@@ -539,7 +540,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if ([dl isTreasureEventInfoUpdated]) {
             m_treasureEvent = 0;
             for (NSNumber *eventId in dl.treasureEventIdArray) {
-                if (isIndexInRange12((unsigned int)[eventId intValue])) {
+                if (isIndexInRange12(static_cast<unsigned int>([eventId intValue]))) {
                     m_treasureEvent = 1;
                     break;
                 }
@@ -659,7 +660,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
         } else if (tapY < 0x33 && introQuiet()) {
             // A tap in the top news-ticker band opens the current news line's URL.
             NSArray *urls = dl.newsUrlArray;
-            if (urls != nil && (NSUInteger)m_newsIndex < [urls count]) {
+            if (urls != nil && static_cast<NSUInteger>(m_newsIndex) < [urls count]) {
                 NSString *url = [urls objectAtIndex:m_newsIndex];
                 if ([url length] != 0) {
                     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
@@ -701,7 +702,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
                                                                   offset:nil
                                                                    limit:nil
                                                               parentView:[root view]
-                                                                delegate:(id)root];
+                                                                delegate:static_cast<id>(root)];
         m_state = 0x10;
         break;
     }
@@ -956,9 +957,9 @@ void MenuMainTask::NewsTickerUpdate(int child,
     int elapsed = self->m_newsFrame++;
     if (elapsed > 0x3b) { // ~60 frames of hold elapsed
         if (!self->m_newsPaused) {
-            unsigned segment = (unsigned)self->m_newsSegment;
-            unsigned lineSegments = (unsigned)[self->m_newsCurLine length] /
-                                    (unsigned)(self->m_newsTickerParams[4] + 1);
+            unsigned segment = static_cast<unsigned>(self->m_newsSegment);
+            unsigned lineSegments = static_cast<unsigned>([self->m_newsCurLine length]) /
+                                    static_cast<unsigned>(self->m_newsTickerParams[4] + 1);
             if (segment < lineSegments) {
                 self->m_newsScrollX -= 2; // scroll left
                 int nextSegment = self->m_newsSegment + 1;
@@ -980,7 +981,8 @@ void MenuMainTask::NewsTickerUpdate(int child,
                 self->m_newsSegment = 0;
                 self->m_newsPauseCounter = 0;
                 self->m_newsPauseStep = 2;
-                self->m_newsIndex = (self->m_newsIndex + 1) % (int)[self->m_newsArray count];
+                self->m_newsIndex =
+                    (self->m_newsIndex + 1) % static_cast<int>([self->m_newsArray count]);
                 self->m_newsCurLine = [self->m_newsArray objectAtIndex:self->m_newsIndex];
             }
         } else if (self->m_newsPauseCounter > 99) { // faded back in: resume scrolling
