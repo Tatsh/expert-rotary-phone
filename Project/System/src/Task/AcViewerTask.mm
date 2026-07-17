@@ -417,9 +417,9 @@ void AcViewerTask::drawActiveNotes() {
             if (frame < m_effectCoolFrames) {
                 // drawLayer args (0xfd64 callee map): x = per-lane note frame
                 // (@+0x158[lane]), y = the scroll-derived noteY; scale 100/100,
-                // anchors m_coolLayerArg{A,B}, p10=100, color=0, colorHi=1,
-                // blend=0x200, p15=0xffffff, clip={0,top,w,h}, ctx=null, p17=0xb,
-                // p19=1.
+                // anchorX = m_coolLayerArgB, anchorY = 100, color=0, colorHi=1,
+                // loopFlags = m_coolLayerArgA, blend=0x200, colorRGB=0xffffff,
+                // clip={0,top,w,h}, ctx=null, priority=0xb, visFlag=1.
                 aep.drawLayer(m_effectCoolLyrNo,
                               frame,
                               laneFrame,
@@ -1129,8 +1129,8 @@ void AcViewerTask::AcViewerHudDraw(int child,
                                    int alpha,
                                    int rotation,
                                    uint32_t blend,
-                                   int *p13,
-                                   uint32_t p14,
+                                   int *clipRect,
+                                   uint32_t priority,
                                    void *context) {
     static_cast<void>(frame);
     AepManager &aep = AepManager::shared();
@@ -1160,7 +1160,7 @@ void AcViewerTask::AcViewerHudDraw(int child,
                                  blend,
                                  0xffffff,
                                  nullptr,
-                                 p14,
+                                 priority,
                                  1);
             cx -= self->m_digitAdvance;
             val /= 10;
@@ -1182,7 +1182,7 @@ void AcViewerTask::AcViewerHudDraw(int child,
                        alpha,
                        blend,
                        0xffffff,
-                       p13,
+                       clipRect,
                        0xe,
                        1);
     } else if (self->m_usrNo[1] == child) {
@@ -1206,7 +1206,7 @@ void AcViewerTask::AcViewerHudDraw(int child,
                        alpha,
                        blend,
                        0xffffff,
-                       p13,
+                       clipRect,
                        0xe,
                        1);
     } else if (self->m_usrNo[2] == child) {
