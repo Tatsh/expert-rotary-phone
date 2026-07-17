@@ -539,8 +539,7 @@ void AepManager::init(
 
     // Screen extents + render scale -> ordering table; the per-slot texture
     // handle table is the group texture pointers (this+0x7c16e4 in the binary).
-    aepOtSetScreenParams(
-        orderingTable(), reinterpret_cast<void **>(m_groupTexture), screenW, screenH, scale);
+    aepOtSetScreenParams(orderingTable(), m_groupTexture, screenW, screenH, scale);
 
     // Cache the screen extents (the fade-quad w/h slots) and seed the transition
     // defaults.

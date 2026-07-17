@@ -175,14 +175,14 @@ public:
     // the per-slot GL texture-handle table sprites resolve their texture from.
     // Ghidra: aepOtSetScreenParams FUN_00010bbc (writes +0x04 / +0x08 / +0x9a1a4
     // / +0x9a1a8).
-    void setScreenParams(void **textureTable, int screenW, int screenH, float scale);
+    void setScreenParams(neTextureForiOS **textureTable, int screenW, int screenH, float scale);
     int screenW() const {
         return m_screenW;
     } // +0x04
     int screenH() const {
         return m_screenH;
     } // +0x08
-    void **textureTable() const {
+    neTextureForiOS **textureTable() const {
         return m_textureTable;
     } // +0x9a1a4
     float renderScale() const {
@@ -260,8 +260,8 @@ private:
     int m_count = 0;                        // m_OtCount (+0x9a00c)
     int m_maxPriority = 0;                  // highest used priority (+0x9a010)
     int m_drawnCount = 0;
-    void **m_textureTable = nullptr; // +0x9a1a4  per-slot GL texture handles
-    float m_renderScale = 1.0f;      // +0x9a1a8  device-pixel scale
+    neTextureForiOS **m_textureTable = nullptr; // +0x9a1a4  per-slot GL texture handles
+    float m_renderScale = 1.0f;                 // +0x9a1a8  device-pixel scale
 };
 
 // ---------------------------------------------------------------------------
@@ -277,7 +277,7 @@ private:
 // Set the OT's screen extents, per-slot texture table and render scale.
 // Ghidra: aepOtSetScreenParams (FUN_00010bbc).
 void aepOtSetScreenParams(
-    AepOrderingTable *ot, void **textureTable, int screenW, int screenH, float scale);
+    AepOrderingTable *ot, neTextureForiOS **textureTable, int screenW, int screenH, float scale);
 
 // Queue a text draw command (type 6) at `priority`. `colorVec` (16 bytes)
 // overrides the per-glyph colour vector; when null it defaults to
