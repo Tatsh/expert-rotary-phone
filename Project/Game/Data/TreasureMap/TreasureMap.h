@@ -155,14 +155,15 @@ private:
 
     // Byte-exact layout to alignment 4 (offsets verified in
     // FUN_000ce2b0/340/934).
-    uint8_t m_head[2] = {};           // +0x00
-    int16_t m_count = 0;              // +0x02 node count
-    uint8_t m_pad04[0x50 - 4] = {};   // +0x04
-    Node *m_nodes = nullptr;          // +0x50 node array base (stride 0x120)
-    int16_t *m_startSubId = nullptr;  // +0x54 default/start node id source
+    [[maybe_unused]] uint8_t m_head[2] =
+        {};              // +0x00 file header bytes (memcpy target; unread by name)
+    int16_t m_count = 0; // +0x02 node count
+    [[maybe_unused]] uint8_t m_pad04[0x50 - 4] = {}; // +0x04 file header padding (memcpy target)
+    Node *m_nodes = nullptr;                         // +0x50 node array base (stride 0x120)
+    int16_t *m_startSubId = nullptr;                 // +0x54 default/start node id source
     ConnectStruct *m_edges = nullptr; // +0x58 malloc'd edge array (real ptr; was an int slot)
     int16_t m_edgeCount = 0;          // +0x5c edge count (was m_field5c)
-    uint8_t m_tail[0x60 - 0x5e] = {}; // +0x5e
+    [[maybe_unused]] uint8_t m_tail[0x60 - 0x5e] = {}; // +0x5e tail padding
 };
 
 // ──────────────────────────────────────────────────────────────────────────────

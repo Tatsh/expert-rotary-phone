@@ -158,34 +158,34 @@ private:
     // +0xb9..+0xc0 reward/event scan state (news seam; populated by the tail of
     // FUN_0006c6a4, outside this reconstruction's scope). Kept as a documented
     // block.
-    uint8_t _reserved_newsScan[0xc0 - 0xb9] = {};
+    [[maybe_unused]] uint8_t _reserved_newsScan[0xc0 - 0xb9] = {};
     // ---- NEWS-ticker run state (used by updateNewsTicker, FUN_0006d6d4) ----
-    id m_newsArray = nil;                   // +0xc0 the news-text array copy (retained)
-    id m_newsTimestamp = nil;               // +0xc4 lastGetNewsTime of the cached copy (NSDate)
-    id m_newsCurLine = nil;                 // +0xc8 current news line (retained)
-    int m_newsIndex = 0;                    // +0xcc index into m_newsArray
-    int m_newsFrame = 0;                    // +0xd0 per-line frame counter
-    int m_newsScrollX = 0;                  // +0xd4 current scroll x
-    int m_newsSegment = 0;                  // +0xd8 line-segment counter
-    int m_newsPauseCounter = 0;             // +0xdc pause/fade ramp value (0..100)
-    int m_newsPauseStep = 0;                // +0xe0 pause ramp step (-2 out, +2 in; 0 = uninit)
-    uint8_t m_newsPaused = 0;               // +0xe4 true while ramping the pause
-    uint8_t _reserved_e5[0xe8 - 0xe5] = {}; // +0xe5..+0xe8 pad
-    int m_layoutYOffset = 0;                // +0xe8 tall-screen vertical shift
-    int m_pulsePhase = 0;                   // +0xec attention-pulse phase counter
-    int m_unlockStep = 0;                   // +0xf0 invite-present unlock step (case-6 seam)
+    id m_newsArray = nil;       // +0xc0 the news-text array copy (retained)
+    id m_newsTimestamp = nil;   // +0xc4 lastGetNewsTime of the cached copy (NSDate)
+    id m_newsCurLine = nil;     // +0xc8 current news line (retained)
+    int m_newsIndex = 0;        // +0xcc index into m_newsArray
+    int m_newsFrame = 0;        // +0xd0 per-line frame counter
+    int m_newsScrollX = 0;      // +0xd4 current scroll x
+    int m_newsSegment = 0;      // +0xd8 line-segment counter
+    int m_newsPauseCounter = 0; // +0xdc pause/fade ramp value (0..100)
+    int m_newsPauseStep = 0;    // +0xe0 pause ramp step (-2 out, +2 in; 0 = uninit)
+    uint8_t m_newsPaused = 0;   // +0xe4 true while ramping the pause
+    [[maybe_unused]] uint8_t _reserved_e5[0xe8 - 0xe5] = {}; // +0xe5..+0xe8 pad
+    int m_layoutYOffset = 0;                                 // +0xe8 tall-screen vertical shift
+    int m_pulsePhase = 0;                                    // +0xec attention-pulse phase counter
+    int m_unlockStep = 0; // +0xf0 invite-present unlock step (case-6 seam)
     // +0xf4..+0x108 the NEWS ticker draw params (position/scale); write-only in
     // this scope (consumed by the news draw seam). Kept as a documented named
     // block.
-    int m_newsTickerParams[5] = {};       // +0xf4
-    SpritePos m_newPackBadgePos = {};     // +0x108 "new music pack" badge
-    SpritePos m_treasureBadgePos = {};    // +0x110 treasure-event badge
-    SpritePos m_gameBadgePos = {};        // +0x118 game-event badge
-    SpritePos m_warnBadgePos = {};        // +0x120 friend-request warning badge
-    ButtonRect m_buttons[kBtnCount] = {}; // +0x128 the eight mode-button rects
-    int m_state = 0;                      // +0x1a8 state-machine state
-    bool m_infoFlag = false;              // +0x1ac daily-info screen already shown
-    uint8_t m_pad_tail[3] = {};           // +0x1ad..+0x1b0 tail padding
+    int m_newsTickerParams[5] = {};              // +0xf4
+    SpritePos m_newPackBadgePos = {};            // +0x108 "new music pack" badge
+    SpritePos m_treasureBadgePos = {};           // +0x110 treasure-event badge
+    SpritePos m_gameBadgePos = {};               // +0x118 game-event badge
+    SpritePos m_warnBadgePos = {};               // +0x120 friend-request warning badge
+    ButtonRect m_buttons[kBtnCount] = {};        // +0x128 the eight mode-button rects
+    int m_state = 0;                             // +0x1a8 state-machine state
+    bool m_infoFlag = false;                     // +0x1ac daily-info screen already shown
+    [[maybe_unused]] uint8_t m_pad_tail[3] = {}; // +0x1ad..+0x1b0 tail padding
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
