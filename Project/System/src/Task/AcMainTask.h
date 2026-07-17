@@ -89,6 +89,39 @@ enum BoardElem {
     kBoardRouletteCaption = 25, // roulette-result caption text
 };
 
+// Frame handles into m_boardFrame, resolved in setup from getFrameNo(5,
+// kFrmBoard[i]); each entry is named after its board frame asset. The DEFENSE_*
+// / SQUARE frames are the roulette-result event frames the result switch selects
+// by outcome mode.
+enum BoardFrame {
+    kBoardFrameCharaKoma = 0,        // CHARA_KOMA00
+    kBoardFrameMusicPeaceBoardS = 1, // MUSIC_PEACE_BOARD_S
+    kBoardFrameJacketQuestion = 2,   // JACKET_QUESTION
+    kBoardFrameJacketDiscovery = 3,  // JACKET_DISCOVERY
+    kBoardFrameRoulette = 4,         // BT_ROULETTE
+    kBoardFrameRouletteNo = 5,       // BT_ROULETTE_NO
+    kBoardFrameRouletteEvent = 6,    // BT_ROULETTE_EVENT
+    kBoardFrameRouletteEventNo = 7,  // BT_ROULETTE_EVENT_NO
+    kBoardFrameGatya = 8,            // BT_GATYA
+    kBoardFrameGatya01 = 9,          // BT_GATYA01
+    kBoardFramePageBefore = 10,      // PAGE_BEFORE
+    kBoardFramePageNext = 11,        // PAGE_NEXT
+    kBoardFrameWarning = 12,         // WARNING
+    kBoardFrameWallSave = 13,        // BT_WALL_SAVE
+    kBoardFrameDefense0100 = 14,     // DEFENSE_01_00
+    kBoardFrameDefense0101 = 15,     // DEFENSE_01_01
+    kBoardFrameDefense0102 = 16,     // DEFENSE_01_02
+    kBoardFrameDefense0103 = 17,     // DEFENSE_01_03
+    kBoardFrameDefense0104 = 18,     // DEFENSE_01_04
+    kBoardFrameDefense00 = 19,       // DEFENSE_00
+    kBoardFrameDefense02 = 20,       // DEFENSE_02
+    kBoardFrameSquare0100 = 21,      // BT_SQUARE01_00
+    kBoardFrameDefense0300 = 22,     // DEFENSE_03_00
+    kBoardFrameDefense0301 = 23,     // DEFENSE_03_01
+    kBoardFrameDefense0302 = 24,     // DEFENSE_03_02
+    kBoardFrameDefense0303 = 25,     // DEFENSE_03_03
+};
+
 // A resolved Aep layer handle paired with its frame count; the setup pass always
 // resolves the two together (getLyrNo then layerFrameCount).
 struct AcLayerRef {
@@ -246,7 +279,7 @@ private:
     int m_musicPeaceFrames = {};           // +0x2c4 MUSIC_PEACE frame count
     int m_wallPeaceFrames = {};            // +0x2c8 WALL_PEACE frame count
     int m_pieceRevealFrame = {};           // +0x2cc frame for a newly-collected piece reveal
-    int m_boardFrame[26] = {};             // +0x2d0 26 board/roulette-result frame numbers
+    int m_boardFrame[26] = {};             // +0x2d0 board frame numbers, indexed by BoardFrame
     int m_base1Frame[11] = {};             // +0x338 11 BASE_* square frame numbers
     int m_rouletteMoveFrame = {};          // +0x364 BT_ROULETTE_MOVE frame (pad only)
     int m_base08Frame[10] = {};            // +0x368 10 BASE_08_* warp frames

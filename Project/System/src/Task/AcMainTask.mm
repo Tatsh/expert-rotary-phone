@@ -2251,9 +2251,11 @@ void AcMainTask::sugorokuDrawBoard() {
     {
         int frame;
         if (static_cast<uint32_t>(m_hudState) < 2) {
-            frame = m_scrolledPastEnd ? m_boardFrame[6] : m_boardFrame[7];
+            frame = m_scrolledPastEnd ? m_boardFrame[kBoardFrameRouletteEvent] :
+                                        m_boardFrame[kBoardFrameRouletteEventNo];
         } else {
-            frame = m_scrolledPastEnd ? m_boardFrame[4] : m_boardFrame[5];
+            frame = m_scrolledPastEnd ? m_boardFrame[kBoardFrameRoulette] :
+                                        m_boardFrame[kBoardFrameRouletteNo];
         }
         drawAepFrame(mgr, frame, m_selSceneLayout[0], m_selSceneLayout[1] + screenH, 0x20, 0x1a);
     }
@@ -2261,8 +2263,12 @@ void AcMainTask::sugorokuDrawBoard() {
     // Notice layer: drawn at m_selSceneLayout[9], [13] + overlayH, size 0x20 x
     // 0x1b.
     if (m_boardSquareState[6]) {
-        drawAepFrame(
-            mgr, m_boardFrame[21], m_selSceneLayout[9], m_selSceneLayout[13] + screenH, 0x20, 0x1b);
+        drawAepFrame(mgr,
+                     m_boardFrame[kBoardFrameSquare0100],
+                     m_selSceneLayout[9],
+                     m_selSceneLayout[13] + screenH,
+                     0x20,
+                     0x1b);
     }
 }
 
@@ -2629,7 +2635,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 
     // Event badge (+0x89b).
     if (m_boardSquareState[7]) {
-        int evHandle = m_boardFrame[20];
+        int evHandle = m_boardFrame[kBoardFrameDefense02];
         AepDrawSpriteHandle(mgr,
                             evHandle,
                             screenX + 0x43,
@@ -2659,34 +2665,34 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
                 int rHandle = -1; // no match / not-found frame -> skip (binary: -1 < handle)
                 switch (roulVal) {
                 case 10:
-                    rHandle = m_boardFrame[14];
+                    rHandle = m_boardFrame[kBoardFrameDefense0100];
                     break;
                 case 11:
-                    rHandle = m_boardFrame[15];
+                    rHandle = m_boardFrame[kBoardFrameDefense0101];
                     break;
                 case 12:
-                    rHandle = m_boardFrame[16];
+                    rHandle = m_boardFrame[kBoardFrameDefense0102];
                     break;
                 case 13:
-                    rHandle = m_boardFrame[17];
+                    rHandle = m_boardFrame[kBoardFrameDefense0103];
                     break;
                 case 16:
-                    rHandle = m_boardFrame[19];
+                    rHandle = m_boardFrame[kBoardFrameDefense00];
                     break;
                 case 19:
-                    rHandle = m_boardFrame[18];
+                    rHandle = m_boardFrame[kBoardFrameDefense0104];
                     break;
                 case 20:
-                    rHandle = m_boardFrame[22];
+                    rHandle = m_boardFrame[kBoardFrameDefense0300];
                     break;
                 case 21:
-                    rHandle = m_boardFrame[23];
+                    rHandle = m_boardFrame[kBoardFrameDefense0301];
                     break;
                 case 22:
-                    rHandle = m_boardFrame[24];
+                    rHandle = m_boardFrame[kBoardFrameDefense0302];
                     break;
                 case 23:
-                    rHandle = m_boardFrame[25];
+                    rHandle = m_boardFrame[kBoardFrameDefense0303];
                     break;
                 default:
                     break;
@@ -3095,8 +3101,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             }
             const int cy = (i / 3) * 0xcc + y;
             const int cx = (i % 3) * 200 + x;
-            const int frameNo = (lit == 0) ? self->m_boardFrame[0] :
-                                (lit < 9)  ? self->m_boardFrame[1] :
+            const int frameNo = (lit == 0) ? self->m_boardFrame[kBoardFrameCharaKoma] :
+                                (lit < 9)  ? self->m_boardFrame[kBoardFrameMusicPeaceBoardS] :
                                              -1;
             if (frameNo >= 0) {
                 drawAepFrameEx(aep,
@@ -3155,7 +3161,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
 
     // ---- collection frame grids + anchor cache (index 9 music, 13 wall)
     // ------------------- Ghidra +0x3f4 / +0x404: a 3x3 grid of the collection
-    // frame m_boardFrame[1]; each cell's anchored position (cx-anchorX,
+    // frame m_boardFrame[kBoardFrameMusicPeaceBoardS]; each cell's anchored position (cx-anchorX,
     // cy-anchorY) is cached for the result-popup overlays. The
     // FixedToFP/FPToFixed here are int<->float identity round-trips (no scaling).
     if (self->m_boardUserNo[kBoardMusicPanel] == child ||
@@ -3167,7 +3173,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             const int cx = (i % 3) * 200 + x;
             const int cy = (i / 3) * 0xcc + y;
             drawAepFrameEx(aep,
-                           self->m_boardFrame[1],
+                           self->m_boardFrame[kBoardFrameMusicPeaceBoardS],
                            cx,
                            cy,
                            scaleX,
@@ -3189,7 +3195,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     }
 
     // ---- "new chara available" button (index 17): two-frame icon
-    // -------------------------- Ghidra +0x414: m_boardFrame[8] when >=5 tickets
+    // -------------------------- Ghidra +0x414: m_boardFrame[kBoardFrameGatya] when >=5 tickets
     // AND all charas collected, else [9].
     if (self->m_boardUserNo[kBoardNewCharaButton] == child) {
         const bool available =
@@ -3479,7 +3485,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     if (self->m_boardUserNo[kBoardListScrollBar] == child) { // list scroll bar
         if (self->m_charaColLeft > 0) {
             drawAepFrameEx(aep,
-                           self->m_boardFrame[10],
+                           self->m_boardFrame[kBoardFramePageBefore],
                            x,
                            y,
                            scaleX,
@@ -3496,7 +3502,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                            1);
         }
         drawAepFrameEx(aep,
-                       self->m_boardFrame[11],
+                       self->m_boardFrame[kBoardFramePageNext],
                        self->m_dlgLayoutA[6] + x + 4,
                        y,
                        scaleX,
@@ -3524,7 +3530,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             return;
         }
         drawAepFrameEx(aep,
-                       self->m_boardFrame[12],
+                       self->m_boardFrame[kBoardFrameWarning],
                        x - 10,
                        y + 10,
                        scaleX,
