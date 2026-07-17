@@ -107,10 +107,8 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     // and resolve the frame-position and frame-entry pointers (each sits past its name
     // table + the layer-ordinal array) into m_framePosData / m_groupFrameData. The index
     // buffer is a private mutable copy (readIndexFile already stamps the group id into it).
-    relocateAepData(this,
-                    group,
-                    reinterpret_cast<AepIndexHeader *>(const_cast<uint8_t *>(indexBase)),
-                    indexBase);
+    relocateData(
+        group, reinterpret_cast<AepIndexHeader *>(const_cast<uint8_t *>(indexBase)), indexBase);
 
     // Replace the group's texture.
     delete m_groupTexture[group];
@@ -531,37 +529,30 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
 // It then hands the screen extents + render scale to the ordering table and
 // seeds the transition defaults (total = 30 frames).
 // @complete
-void aepManagerInit(AepManager *mgr,
-                    const char *basePath,
-                    const char *dataPath,
-                    int screenW,
-                    int screenH,
-                    float scale) {
+void AepManager::init(
+    const char *basePath, const char *dataPath, int screenW, int screenH, float scale) {
     (void)basePath; // the bundle-path buffer at this+0 is not separately modelled
     if (dataPath != nullptr) {
-        std::strncpy(mgr->m_baseDir, dataPath, sizeof(mgr->m_baseDir) - 1);
-        mgr->m_baseDir[sizeof(mgr->m_baseDir) - 1] = '\0';
+        std::strncpy(m_baseDir, dataPath, sizeof(m_baseDir) - 1);
+        m_baseDir[sizeof(m_baseDir) - 1] = '\0';
     }
 
     // Screen extents + render scale -> ordering table; the per-slot texture
     // handle table is the group texture pointers (this+0x7c16e4 in the binary).
-    aepOtSetScreenParams(mgr->orderingTable(),
-                         reinterpret_cast<void **>(mgr->m_groupTexture),
-                         screenW,
-                         screenH,
-                         scale);
+    aepOtSetScreenParams(
+        orderingTable(), reinterpret_cast<void **>(m_groupTexture), screenW, screenH, scale);
 
     // Cache the screen extents (the fade-quad w/h slots) and seed the transition
     // defaults.
-    mgr->m_transitionOverlay[0] = 0;
-    mgr->m_transitionOverlay[1] = 0;
-    mgr->m_transitionOverlay[2] = screenW; // screenWidth()  (+0x7f3afc)
-    mgr->m_transitionOverlay[3] = screenH; // screenHeight() (+0x7f3b00)
-    mgr->m_transitionMode = 0;
-    mgr->m_transitionFrames = 0;
-    mgr->m_transitionTotal = 30; // 0x1e
-    mgr->m_transitionColor = 0;
-    mgr->m_maxPriority = 0;
+    m_transitionOverlay[0] = 0;
+    m_transitionOverlay[1] = 0;
+    m_transitionOverlay[2] = screenW; // screenWidth()  (+0x7f3afc)
+    m_transitionOverlay[3] = screenH; // screenHeight() (+0x7f3b00)
+    m_transitionMode = 0;
+    m_transitionFrames = 0;
+    m_transitionTotal = 30; // 0x1e
+    m_transitionColor = 0;
+    m_maxPriority = 0;
 }
 
 // Ghidra: relocateAepData (FUN_0000f824). Build the group's frame / layer /
@@ -570,7 +561,7 @@ void aepManagerInit(AepManager *mgr,
 // int16 layer ordinals that follow the names are copied into the per-group
 // layer-number table (feeding getLyrNo).
 // @complete
-void relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const uint8_t *idxBase) {
+void AepManager::relocateData(int group, AepIndexHeader *header, const uint8_t *idxBase) {
     if (group < 0 || group >= AepManager::kMaxAepGroups) {
         return;
     }
@@ -580,30 +571,30 @@ void relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const u
     // fit, so store it in the manager instead.
     if (header->frameNamesOff != 0) {
         const char *cursor = reinterpret_cast<const char *>(idxBase + header->frameNamesOff);
-        buildAepNameHashTable(&cursor, &mgr->m_frameNames[group]);
-        mgr->m_framePosData[group] = reinterpret_cast<const int16_t *>(cursor);
+        buildAepNameHashTable(&cursor, &m_frameNames[group]);
+        m_framePosData[group] = reinterpret_cast<const int16_t *>(cursor);
     }
     // Layer-name block (+0x10), followed by the layer-ordinal array; the cursor past
     // both is the frame-entry array.
     if (header->layerNamesOff != 0) {
         const char *cursor = reinterpret_cast<const char *>(idxBase + header->layerNamesOff);
-        int n = buildAepNameHashTable(&cursor, &mgr->m_groupNames[group]);
+        int n = buildAepNameHashTable(&cursor, &m_groupNames[group]);
         const int16_t *ordinals = reinterpret_cast<const int16_t *>(cursor);
         if (n > 0) {
             for (int i = 0; i < n && i < 256; i++) {
-                mgr->m_layerNumbers[group][i] = static_cast<uint16_t>(ordinals[i]);
+                m_layerNumbers[group][i] = static_cast<uint16_t>(ordinals[i]);
             }
             ordinals += n;
         }
         if (n % 4 != 0) {
             ordinals += (4 - n % 4); // align to 4 int16s (8 bytes)
         }
-        mgr->m_groupFrameData[group] = reinterpret_cast<const AepFrameEntry *>(ordinals);
+        m_groupFrameData[group] = reinterpret_cast<const AepFrameEntry *>(ordinals);
     }
     // User-name block (+0x14).
     if (header->userNamesOff != 0) {
         const char *cursor = reinterpret_cast<const char *>(idxBase + header->userNamesOff);
-        buildAepNameHashTable(&cursor, &mgr->m_userNames[group]);
+        buildAepNameHashTable(&cursor, &m_userNames[group]);
     }
 }
 
@@ -611,14 +602,6 @@ void relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const u
 // @complete
 int getAepTransitionMode(const AepManager *mgr) {
     return mgr->transitionMode();
-}
-
-// Ghidra: drawAepTransitionOverlay (FUN_00010530) — free-function entry that
-// forwards to the ordering table's overlay push (FUN_0001151c, modelled as the
-// private method).
-// @complete
-void drawAepTransitionOverlay(AepManager *mgr, int alpha) {
-    mgr->drawTransitionOverlay(alpha);
 }
 
 // Ghidra: AepManager::DrawText (FUN_00010540; audit label "aepManagerReset_a" —

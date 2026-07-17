@@ -277,12 +277,6 @@ private:
     // / FUN_0000fb8c.
     static int layerLength(const AepFrameEntry *entries, int layerNo);
 
-    // Queue the full-screen fade quad at the given opacity. Ghidra: FUN_0001151c.
-    void drawTransitionOverlay(int alpha);
-
-    // Free-function entry (FUN_00010530) forwards to the private overlay push.
-    friend void drawAepTransitionOverlay(AepManager *mgr, int alpha);
-
     // Base resource directory (Ghidra: char buffer @ this + 0x100).
     char m_baseDir[256] = {};
 
@@ -337,6 +331,17 @@ private:
     // it. Public type (the file-static build/probe helpers in AepManager.mm name
     // it); the per-group table instances below stay private.
 public:
+    // Queue the full-screen fade quad at the given opacity (Ghidra FUN_0001151c;
+    // the former free drawAepTransitionOverlay wrapper FUN_00010530 just forwarded
+    // here, so it is folded into this direct call).
+    void drawTransitionOverlay(int alpha);
+
+    // Initialise the manager against its resource paths and screen surface (copies
+    // the base + data paths, seeds the identity transforms, hands the screen
+    // extents + device scale to the ordering table). Ghidra: aepManagerInit
+    // (FUN_0000f33c). Called once from MainViewController -loadView.
+    void init(const char *basePath, const char *dataPath, int screenW, int screenH, float scale);
+
     struct NameHashTable {
         uint16_t value[2048];  // +0x0000 layer index stored per bucket
         const char *key[2047]; // +0x1000 name per bucket (null = empty slot)
@@ -362,49 +367,15 @@ private:
     int m_transitionColor = 0;       // +0x7f3b10  fade colour (0x00RRGGBB; 0 = black)
     int m_maxPriority = 0;           // +0x7f3b14  highest OT priority drawn last flush
 
-    // Free-function initialisers that populate the private storage above.
-    friend void aepManagerInit(AepManager *mgr,
-                               const char *basePath,
-                               const char *dataPath,
-                               int screenW,
-                               int screenH,
-                               float scale);
-    friend void
-    relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const uint8_t *idxBase);
+    // Fix up (relocate) a freshly-loaded group's .idx name tables into the
+    // per-group hash tables above. Ghidra: relocateAepData (FUN_0000f824); called
+    // from loadAepData.
+    void relocateData(int group, AepIndexHeader *header, const uint8_t *idxBase);
 };
-
-// Initialise the scene manager against its resource paths and screen surface.
-// Copies `basePath` (the bundle path) to this+0, `dataPath` (the on-disk
-// texture root) to the base-dir buffer at this+0x100, zeroes the frame tables,
-// seeds the identity transform matrices, and hands the screen extents +
-// device-pixel `scale` to the ordering table. Ghidra: aepManagerInit
-// (FUN_0000f33c). Called once from MainViewController -loadView.
-void aepManagerInit(AepManager *mgr,
-                    const char *basePath,
-                    const char *dataPath,
-                    int screenW,
-                    int screenH,
-                    float scale);
-
-// Fix up (relocate) a freshly-loaded group's .idx name tables: builds the
-// per-group frame-name / layer-name / user-name open-addressed hash tables from
-// the NUL-separated string blocks the index header points at, rewriting each
-// header offset in place to the post-block cursor and copying the resolved
-// layer ordinals into the layer-number table. Ghidra: relocateAepData
-// (FUN_0000f824). `header` is the loaded index header (its name-block offsets at
-// +0x04 / +0x10 / +0x14); `idxBase` is the group's idx buffer base. Builds the
-// frame/layer/user name hash tables and stores the relocated frame-position and
-// frame-entry pointers into m_framePosData / m_groupFrameData.
-void relocateAepData(AepManager *mgr, int group, AepIndexHeader *header, const uint8_t *idxBase);
 
 // The active transition mode (free-function form of
 // AepManager::transitionMode()). Ghidra: getAepTransitionMode (FUN_00010724).
 int getAepTransitionMode(const AepManager *mgr);
-
-// Draw the screen-transition (fade) overlay quad at `alpha`. Free-function
-// entry that forwards to the ordering table's overlay push. Ghidra:
-// drawAepTransitionOverlay (FUN_00010530 -> FUN_0001151c).
-void drawAepTransitionOverlay(AepManager *mgr, int alpha);
 
 // Draw a multi-line ('\n'-separated) string vertically centred about `y`, one
 // text command per line spaced `lineHeight` apart. Ghidra: drawAepTextMultiline

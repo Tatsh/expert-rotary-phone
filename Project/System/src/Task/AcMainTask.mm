@@ -2300,7 +2300,7 @@ void AcMainTask::sugorokuDrawBackground() {
     }
     m_transitionAlpha = alpha;
     if (alpha > 0) {
-        drawAepTransitionOverlay(mgr, alpha);
+        mgr->drawTransitionOverlay(alpha);
     }
 
     // Background animation layer (+0x9c): play/reset driven by board state.
