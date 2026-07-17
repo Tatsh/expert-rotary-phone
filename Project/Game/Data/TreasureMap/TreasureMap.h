@@ -48,7 +48,7 @@ public:
         kSquareSubMapFlag = 5,       // sub-map flag square (label keyed to the HUD state)
         kSquareWallpaperPiece = 6,   // wallpaper-piece square (unlock grid @ +0x748)
         kSquareMusicPiece = 7,       // music-piece square (unlock grid @ +0x6dc)
-        kSquareWarp = 8,             // warp square (paired with another by field8)
+        kSquareWarp = 8,             // warp square (paired with another by slotId)
         kSquareGoalLock = 9,         // goal-lock square (message once the goal clears, HUD state 4)
         kSquareBonusTreasure = 10,   // active bonus-treasure / friend-meet goal square
     };
@@ -71,7 +71,8 @@ public:
         int16_t x;        // +0x02 board column (tile units)
         int16_t y;        // +0x04 board row (tile units)
         int16_t type;     // +0x06 square kind (SquareKind)
-        int16_t field8;   // +0x08 copied verbatim from the file record
+        int16_t slotId;   // +0x08 per-square slot id (0..14; from the file record). Doubles as the
+                          // warp-pair key and the wall/music piece-table index.
         int16_t _pad0a;   // +0x0a (zeroed; file neighbour ids are not stored here)
         Node *backLink;   // +0x0c neighbour resolved from file record +0x0a
         Node *links[3];   // +0x10 neighbours resolved from file record +0x0c/0e/10
@@ -132,7 +133,7 @@ public:
 
     // Ghidra: FUN_000ce96c (SugorokuMap::GetWarpSquare). Asserts node is a warp
     // square (kSquareWarp), then returns the partner warp square sharing its
-    // field8 (warp-pair id), or null.
+    // slotId (warp-pair id), or null.
     Node *getWarpSquare(Node *node);
 
     // Ghidra: FUN_000ce9d4 (SugorokuMap::GetButtobiSquare). Picks a random

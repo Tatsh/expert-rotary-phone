@@ -1781,9 +1781,9 @@ bool AcMainTask::sugorokuEasePositionPairB() {
 
 // A music/wallpaper "piece" square is unlocked when the per-character piece
 // grid (9 characters x 3 slots, indexed by the pending sub-map's character id)
-// has the node's field8 bit set. Ghidra address form: task + (charId/10)*-0x1c
+// has the node's slotId bit set. Ghidra address form: task + (charId/10)*-0x1c
 // + charId*4 + gridBase, i.e. grid[(charId/10)*3 + charId%10] tested against (1
-// << field8).
+// << slotId).
 static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
     const int idx = charId - (charId / 10) * 7; // == (charId/10)*3 + charId%10
     return (grid[idx] & (1 << (bitIndex & 0xff))) != 0;
@@ -1840,7 +1840,7 @@ void AcMainTask::sugorokuDrawSquareText() {
         break;
     case TreasureMap::kSquareSubMapFlag: { // message when the flag value matches the current
                                            // state
-        int v = getTreasureMapValue_fb54(0, node->field8);
+        int v = getTreasureMapValue_fb54(0, node->slotId);
         int st = m_hudState;
         bool matched = (st == 6 && v == 0) || (st == 7 && v == 1) || (st == 8 && v == 2) ||
                        (st == 9 && v == 3) || (st == 5);
@@ -1850,11 +1850,11 @@ void AcMainTask::sugorokuDrawSquareText() {
     case TreasureMap::kSquareWallpaperPiece: // grid @ 0x748: label shown only while
         // locked
         pick =
-            sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->field8) ? kNone : kNodeText;
+            sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->slotId) ? kNone : kNodeText;
         break;
     case TreasureMap::kSquareMusicPiece: // grid @ 0x6dc: label shown only while locked
         pick =
-            sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8) ? kNone : kNodeText;
+            sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->slotId) ? kNone : kNodeText;
         break;
     case TreasureMap::kSquareGoalLock: // character-message live once the goal is cleared
         // (HUD state 4)
@@ -2369,7 +2369,7 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
         break;
     case TreasureMap::kSquareSubMapFlag: { // flag sprite unless the flag value matches the
                                            // current state
-        int v = getTreasureMapValue_fb54(0, node->field8);
+        int v = getTreasureMapValue_fb54(0, node->slotId);
         int st = m_hudState;
         bool matched = (st == 6 && v == 0) || (st == 7 && v == 1) || (st == 8 && v == 2) ||
                        (st == 9 && v == 3) || (st == 5);
@@ -2383,20 +2383,20 @@ void AcMainTask::sugorokuDrawSquare(const TreasureMap::Node *node) {
     }
     case TreasureMap::kSquareWallpaperPiece: // grid @ 0x748: filled vs empty frame by
         // unlock bit
-        frameHandle = sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->field8) ?
+        frameHandle = sugorokuPieceUnlocked(m_wallPieceTable, m_subMapId, node->slotId) ?
                           m_base1Frame[6] :
                           m_base1Frame[5];
         break;
     case TreasureMap::kSquareMusicPiece: // grid @ 0x6dc: filled vs empty frame by unlock
         // bit
-        frameHandle = sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->field8) ?
+        frameHandle = sugorokuPieceUnlocked(m_musicPieceTable, m_subMapId, node->slotId) ?
                           m_base1Frame[8] :
                           m_base1Frame[7];
         break;
     case TreasureMap::kSquareWarp: // warp-index sprite, but only until the warp animation
         // settles (<2)
         if (m_boardSquareState[10] < 2) {
-            int warpIdx = node->field8;
+            int warpIdx = node->slotId;
             if (warpIdx < 0) {
                 warpIdx = 0;
             }

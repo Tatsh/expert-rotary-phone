@@ -23,7 +23,7 @@
 //      +0x02  int16      x  (board column, tile units)
 //      +0x04  int16      y  (board row, tile units)
 //      +0x06  int16      type  (-1 invalid/assert, 0 start, 10 bonus candidate)
-//      +0x08  int16      field8
+//      +0x08  int16      slotId
 //      +0x0a  int16      neighbour id -> Node.backLink
 //      +0x0c  int16      neighbour id -> Node.links[0]
 //      +0x0e  int16      neighbour id -> Node.links[1]
@@ -130,7 +130,7 @@ void TreasureMap::load(const char *path) {
         const uint8_t *rec = fileBase + (size_t)i * 0xaa;
         Node &node = nodes[i];
 
-        // Leading five int16 fields (id, x, y, type, field8) copied verbatim.
+        // Leading five int16 fields (id, x, y, type, slotId) copied verbatim.
         std::memcpy(&node, rec, 10);
 
         // Message text: 0x98 ShiftJIS bytes at file +0x12, "<br>" -> newline, into
@@ -486,7 +486,7 @@ const char *getCharacterAssetName(int characterId, int slotIndex) {
 
 // Ghidra: FUN_000ce96c  (SugorokuMap::GetWarpSquare)
 // Asserts node is a warp square (type 8), then scans all nodes in map for the
-// partner warp square: different id, same type 8, same field8 (warp-pair id).
+// partner warp square: different id, same type 8, same slotId (warp-pair id).
 // @complete
 TreasureMap::Node *TreasureMap::getWarpSquare(TreasureMap::Node *node) {
     if (node->type != TreasureMap::kSquareWarp) {
@@ -497,7 +497,7 @@ TreasureMap::Node *TreasureMap::getWarpSquare(TreasureMap::Node *node) {
         TreasureMap::Node *cur = m_nodes;
         for (int i = 0; i < n; i++, cur++) {
             if (cur->id != node->id && cur->type == TreasureMap::kSquareWarp &&
-                cur->field8 == node->field8) {
+                cur->slotId == node->slotId) {
                 return cur;
             }
         }

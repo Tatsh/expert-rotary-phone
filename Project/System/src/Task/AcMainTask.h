@@ -312,7 +312,7 @@ private:
                                        // it back to idle
     };
     // Per-square board-cell animation/event state, one signed byte per square,
-    // indexed by TreasureMap::Node::field8 (the square's slot id, 0..14). Copied
+    // indexed by TreasureMap::Node::slotId (the square's slot id, 0..14). Copied
     // to/from the pending record's boardSquareState (+0x35). Ghidra: a per-frame
     // tick (loop at 0x9c... in AcMainTask_update) decrements every positive entry
     // toward idle; the -1 sentinel is negative, so the tick skips it and it
