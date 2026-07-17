@@ -18,6 +18,8 @@
 
 class AepTexture;
 
+namespace ne {
+
 // ne::C_SINGLE_SPRITE (RTTI N2ne15C_SINGLE_SPRITEE). A polymorphic single-sprite
 // record filling a 0x18-byte slot: +0x04 the bound texture (a refcounted
 // C_TEXTURE, released on destroy) and +0x08..+0x17 four metadata ints —
@@ -37,6 +39,8 @@ public:
     int32_t meta[4] = {0, 0, 7, 7}; // +0x08..+0x17 render-state slots / tile span
 };
 
+} // namespace ne
+
 // A set of animation frames: parallel heap arrays (all `frameCount` long) of
 // per-frame padded texture size, the cached AepTexture handles and the
 // C_SINGLE_SPRITE records. Each array is owned (RAII); the handles are
@@ -46,11 +50,11 @@ public:
     virtual ~neTextureFrames(); // Ghidra: FUN_00011838 (+ compiler-emitted
                                 // deleting dtor FUN_0001198c)
 
-    int32_t frameCount = 0;                    // +0x04
-    std::unique_ptr<int32_t[]> frameWidths;    // +0x08
-    std::unique_ptr<int32_t[]> frameHeights;   // +0x0c
-    std::unique_ptr<void *[]> handles;         // +0x10 AepTexture*[] (each cache-released)
-    std::unique_ptr<C_SINGLE_SPRITE[]> frames; // +0x14
+    int32_t frameCount = 0;                        // +0x04
+    std::unique_ptr<int32_t[]> frameWidths;        // +0x08
+    std::unique_ptr<int32_t[]> frameHeights;       // +0x0c
+    std::unique_ptr<void *[]> handles;             // +0x10 AepTexture*[] (each cache-released)
+    std::unique_ptr<ne::C_SINGLE_SPRITE[]> frames; // +0x14
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

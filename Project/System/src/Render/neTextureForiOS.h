@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-#include "C_SINGLE_SPRITE.h" // one C_SINGLE_SPRITE per GPU upload tile (m_tileRects)
+#include "C_SINGLE_SPRITE.h" // one ne::C_SINGLE_SPRITE per GPU upload tile (m_tileRects)
 
 #ifdef __OBJC__
 @class NSData; // the in-memory image path (LoadTexture:) takes a bridged NSData*
@@ -33,7 +33,7 @@ AepTexture *AepTextureCacheAcquire(const char *path);
 // retain the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at
 // the call site, but it is a real incoming AepTexture* — verified in
 // disassembly).
-void AepTextureUploadTiles(C_SINGLE_SPRITE *tile, AepTexture *tex);
+void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, AepTexture *tex);
 
 // Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468
 // fills into an AepSpriteCommand (offsets in comments). Zero-defaulted like a
@@ -105,8 +105,8 @@ public:
 
     // Tile-table accessors for the ordering-table flush. drawAepSpriteClipped walks
     // these members rather than raw byte offsets, so the field positions and the
-    // C_SINGLE_SPRITE element stride stay correct on the 64-bit rebuild. The
-    // per-tile records double as the render-state slots (they are C_SINGLE_SPRITE,
+    // ne::C_SINGLE_SPRITE element stride stay correct on the 64-bit rebuild. The
+    // per-tile records double as the render-state slots (they are ne::C_SINGLE_SPRITE,
     // the same 0x18-byte record). These accessors have no binary counterpart (the
     // binary inlines the field reads); they exist only to avoid the offset math.
     /** @newCode */
@@ -122,7 +122,7 @@ public:
         return m_tileHeights;
     }
     /** @newCode */
-    C_SINGLE_SPRITE *tileRects() const {
+    ne::C_SINGLE_SPRITE *tileRects() const {
         return m_tileRects;
     }
 
@@ -136,8 +136,8 @@ private:
     int *m_tileWidths = nullptr;    // +0x08 per-tile texture width  (AepTexture +0x1c)
     int *m_tileHeights = nullptr;   // +0x0c per-tile texture height (AepTexture +0x20)
     AepTexture **m_tiles = nullptr; // +0x10 cached AepTexture per tile
-    C_SINGLE_SPRITE *m_tileRects =
-        nullptr; // +0x14 per-tile upload records (new C_SINGLE_SPRITE[N])
+    ne::C_SINGLE_SPRITE *m_tileRects =
+        nullptr; // +0x14 per-tile upload records (new ne::C_SINGLE_SPRITE[N])
 };
 
 // Flat-argument sprite-draw wrapper the task draw passes call (Ghidra:

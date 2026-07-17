@@ -11,6 +11,8 @@
 #import "C_SINGLE_SPRITE.h"
 #import "AepTexture.h" // neTextureRelease (shared cache release)
 
+namespace ne {
+
 // Ghidra: FUN_00015eb4 — clears the two render-state words and defaults the tile
 // span to 7x7; the vtable pointer is written by the compiler-generated prologue.
 // @complete
@@ -35,6 +37,8 @@ C_SINGLE_SPRITE::~C_SINGLE_SPRITE() {
 void C_SINGLE_SPRITE::setRenderStateSlot(int slot, int value) {
     meta[slot] = value;
 }
+
+} // namespace ne
 
 // Ghidra: FUN_00011838 — release every frame texture; the parallel arrays (and,
 // with them, each C_SINGLE_SPRITE record's own cache reference) are freed by their

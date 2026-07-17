@@ -16,7 +16,7 @@
 #import <OpenGLES/ES1/gl.h>
 
 #import "AepOrderingTable.h"
-#import "C_SINGLE_SPRITE.h" // C_SINGLE_SPRITE::setRenderStateSlot (FUN_00016710)
+#import "C_SINGLE_SPRITE.h" // ne::C_SINGLE_SPRITE::setRenderStateSlot (FUN_00016710)
 #import "neDebugLog.h"
 #import "neRenderer.h"      // neDrawLine/Triangle/Rect/Quad/TexturedQuad
 #import "neTextTexture.h"   // neDrawText (FUN_0001551c)
@@ -570,8 +570,8 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
     }
 
     // Render-state slot for this sub-frame (slot 0/1 = clip enable). The tile
-    // records are C_SINGLE_SPRITE, which owns setRenderStateSlot directly.
-    C_SINGLE_SPRITE *slot = &pFrames->tileRects()[frameIdx];
+    // records are ne::C_SINGLE_SPRITE, which owns setRenderStateSlot directly.
+    ne::C_SINGLE_SPRITE *slot = &pFrames->tileRects()[frameIdx];
     slot->setRenderStateSlot(0, nUseClip != 0 ? 1 : 0);
     slot->setRenderStateSlot(1, nUseClip != 0 ? 1 : 0);
 

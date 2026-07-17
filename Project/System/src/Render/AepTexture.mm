@@ -20,7 +20,7 @@
 #import "AepTexture.h"
 #import "neDebugLog.h"
 #import "neRenderer.h"      // current renderer for neTextureRebind
-#import "neTextureForiOS.h" // C_SINGLE_SPRITE + the cache/bind free functions declared here
+#import "neTextureForiOS.h" // ne::C_SINGLE_SPRITE + the cache/bind free functions declared here
 
 // GPU texture-memory accounting (Ghidra: g_dwTextureMemTotal).
 int g_dwTextureMemTotal = 0;
@@ -266,7 +266,7 @@ AepTexture *AepTextureCacheAcquire(const char *path) {
 // incoming AepTexture* (verified in the disassembly) that the decompiler drops
 // at the call site. The tile's texture is at tile+0x4; its refcount at +0x04.
 // @complete
-void AepTextureUploadTiles(C_SINGLE_SPRITE *tile, AepTexture *tex) {
+void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, AepTexture *tex) {
     // Release whatever texture the tile currently holds — unconditionally, the
     // binary does NOT skip the release when the incoming texture is the same one
     // — then retain and store the new one. The release routes through

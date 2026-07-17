@@ -903,7 +903,7 @@ int neTextureForiOS::loadFromImageData(const void *imageData) {
     }
     m_tileCount = 1;
     m_tiles = new AepTexture *[1];
-    m_tileRects = new C_SINGLE_SPRITE[1];
+    m_tileRects = new ne::C_SINGLE_SPRITE[1];
     m_tileWidths = new int[1];
     m_tileHeights = new int[1];
 
