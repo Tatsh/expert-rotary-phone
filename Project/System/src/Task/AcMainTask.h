@@ -369,17 +369,17 @@ private:
     int m_charaRowCount = {};                // +0x638 chara list row count
     int16_t m_listBottom = {};               // +0x63c list content bottom
     // +0x63e: 2 bytes unused padding (dropped; runtime struct, layout not preserved)
-    void *m_treasureMusicArray = {};   // +0x640 treasure music data array (retained)
-    int m_selMusicPanel = {};          // +0x644 selected music panel index (result popup)
-    AcAnchor m_musicAnchor[9] = {};    // +0x648 9 music-panel (x,y) anchor positions
-    int m_rouletteMapId = {};          // +0x690 current roulette map id
-    AcAnchor m_wallAnchor[9] = {};     // +0x694 9 wall-panel (x,y) anchor positions
-    int m_musicPieceTable[27] = {};    // +0x6dc 9x3 music-piece unlock grid
-    int m_wallPieceTable[27] = {};     // +0x748 9x3 wallpaper-piece unlock grid
-    int m_musicPieceTableDup[27] = {}; // +0x7b4 music grid duplicate
-    int m_wallPieceTableDup[27] = {};  // +0x820 wallpaper grid duplicate
-    float m_squareFrameIdx = {};       // +0x88c square text-x / slot index (stored as float)
-    float m_squareTextY = {};          // +0x890 current square text y
+    void *m_treasureMusicArray = {};        // +0x640 treasure music data array (retained)
+    int m_selMusicPanel = {};               // +0x644 selected music panel index (result popup)
+    AcAnchor m_musicAnchor[9] = {};         // +0x648 9 music-panel (x,y) anchor positions
+    int m_rouletteMapId = {};               // +0x690 current roulette map id
+    AcAnchor m_wallAnchor[9] = {};          // +0x694 9 wall-panel (x,y) anchor positions
+    uint32_t m_musicPieceTable[27] = {};    // +0x6dc 9x3 music-piece unlock bitmask grid
+    uint32_t m_wallPieceTable[27] = {};     // +0x748 9x3 wallpaper-piece unlock bitmask grid
+    uint32_t m_musicPieceTableDup[27] = {}; // +0x7b4 music grid duplicate
+    uint32_t m_wallPieceTableDup[27] = {};  // +0x820 wallpaper grid duplicate
+    float m_squareFrameIdx = {};            // +0x88c square text-x / slot index (stored as float)
+    float m_squareTextY = {};               // +0x890 current square text y
     // Named values held per entry of m_boardSquareState (and the record's
     // boardSquareState). Positive values 1..0x7e are a countdown of highlight
     // animation frames remaining, decremented toward idle each tick; these two are

@@ -1224,10 +1224,8 @@ void AcMainTask::buildMapCharaLayers() {
     // for sm >= 0.
     const short sm = m_subMapId;
     const int curIdx = (sm / 10) * -0x1c + sm * 4;
-    reinterpret_cast<uint32_t &>(m_musicPieceTable[curIdx / 4]) |=
-        static_cast<uint32_t>(tmp.musicPieceMask); // music mask
-    reinterpret_cast<uint32_t &>(m_wallPieceTable[curIdx / 4]) |=
-        static_cast<uint32_t>(tmp.wallPieceMask); // wallpaper mask
+    m_musicPieceTable[curIdx / 4] |= static_cast<uint32_t>(tmp.musicPieceMask); // music mask
+    m_wallPieceTable[curIdx / 4] |= static_cast<uint32_t>(tmp.wallPieceMask);   // wallpaper mask
 }
 
 // ===========================================================================
@@ -1782,7 +1780,7 @@ bool AcMainTask::sugorokuEasePositionPairB() {
 // has the node's slotId bit set. Ghidra address form: task + (charId/10)*-0x1c
 // + charId*4 + gridBase, i.e. grid[(charId/10)*3 + charId%10] tested against (1
 // << slotId).
-static bool sugorokuPieceUnlocked(const int *grid, int charId, int bitIndex) {
+static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex) {
     const int idx = charId - (charId / 10) * 7; // == (charId/10)*3 + charId%10
     return (grid[idx] & (1 << (bitIndex & 0xff))) != 0;
 }
@@ -3071,7 +3069,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
 
     // ---- music / wall collection grids (treasure-map piece unlock state)
     // -------------------
-    auto pieceCount = [](const int *table, int mapIdx, int col) {
+    auto pieceCount = [](const uint32_t *table, int mapIdx, int col) {
         int n = 0;
         for (int b = 0; b < 3; b++) {
             if (table[mapIdx * 3 + col] & (1 << b)) {
@@ -3080,7 +3078,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         }
         return n;
     };
-    auto drawPieceGrid = [&](const int *pieceTable,
+    auto drawPieceGrid = [&](const uint32_t *pieceTable,
                              neTextureForiOS **panelTex,
                              int panelW,
                              int panelScale,
@@ -3250,8 +3248,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         const int rowY = y - 0x10;
         bool anyMissing = false, anyNew = false;
         for (int i = 0; i < 9; i++) {
-            const uint32_t bits =
-                static_cast<uint32_t>(self->m_musicPieceTableDup[mapIdx * 3 + i / 3]);
+            const uint32_t bits = self->m_musicPieceTableDup[mapIdx * 3 + i / 3];
             int frameNo = 0;
             bool draw = false;
             if ((bits & (1u << (i % 3))) == 0) { // not collected
@@ -3353,8 +3350,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         const int mapIdx = findTreasureMapIndexById(self->m_rouletteMapId);
         bool anyMissing = false, anyNew = false;
         for (int i = 0; i < 9; i++) {
-            const uint32_t bits =
-                static_cast<uint32_t>(self->m_wallPieceTableDup[mapIdx * 3 + i / 3]);
+            const uint32_t bits = self->m_wallPieceTableDup[mapIdx * 3 + i / 3];
             int frameNo = 0;
             bool draw = false;
             if ((bits & (1u << (i % 3))) == 0) {
