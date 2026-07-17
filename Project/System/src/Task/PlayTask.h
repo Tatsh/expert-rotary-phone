@@ -140,27 +140,29 @@ public:
     int m_scoreBpmLyr[5] = {};        // +0x154 BPM / score lyr handles
     int m_scoreBpmFrames[5] = {};     // +0x168 ...frame counts
     int m_charaJumpLyr[8] = {};       // +0x17c BGMTBPM1_CHARAn_JUMP lyr handles
-    // +0x19c a 64-byte gap in the chara-jump tables (likely two more 8-entry
-    // per-chara tables PlayTask_init fills); no play function reads this offset
-    // (Ghidra: the +0x19c accesses all belong to other tasks / structs).
-    uint8_t _rsvd_19c[0x1dc - 0x19c] = {}; // +0x19c per-chara aux (no play-task reader)
-    int m_charaJumpFrames[8] = {};         // +0x1dc ...chara-jump layer frame counts
-    int m_pauseEyeToneFrm[8] = {};         // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
-    int m_barSegFrame = 0;                 // +0x21c long-note connecting-bar segment frame
-                                           //        (getFrmNo; judge draws it via drawAepFrameEx)
-    int m_scoreDigitFrm[10] = {};          // +0x220 SCO_0..9 frame nos
-    int m_comboDigitFrm[10] = {};          // +0x248 EFF_C_NUM0..9 frame nos
-    int m_gaugeFlashFrm[4] = {};           // +0x270 GG_IFL_* frame nos
-    int m_tone08Frm[5] = {};               // +0x280 TONE_08_1.. frame nos
-    int m_tone08NumFrm[5] = {};            // +0x294 TONE_08_NUM2.. frame nos
-    int m_toneNumberFrm[10] = {};          // +0x2a8 tone-number frame nos
-    int m_toneSameFrm[10] = {};            // +0x2d0 tone-same frame nos
-    int m_userSprite[15] = {};             // +0x2f8 GG_IFL..EFF_C_NUM100 user nos (indices
-                                           //        map to the CMD_PAUSE/TONE/ORB/FRAME reads)
-    int m_numComboUser[3] = {};            // +0x334 NUM_COMBO_* user nos
-    int m_scoreNumUser[6] = {};            // +0x340 SCO_0000NN user nos
-    int m_charaUser[8] = {};               // +0x358 CHARAn user nos
-    int m_charaAnmUser[8] = {};            // +0x378 CHARAn_ANM user nos
+    // +0x19c a 64-byte gap in the chara-jump tables. A program-wide instruction
+    // search finds no PlayTask access to this offset (every #0x19c reference
+    // belongs to another task / struct, or is a stack / literal-pool slot), so it
+    // is a dead gap rather than a live per-chara table.
+    uint8_t unused_19c[0x1dc - 0x19c] =
+        {};                        // +0x19c unused 64-byte gap (Ghidra: no PlayTask access)
+    int m_charaJumpFrames[8] = {}; // +0x1dc ...chara-jump layer frame counts
+    int m_pauseEyeToneFrm[8] = {}; // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
+    int m_barSegFrame = 0;         // +0x21c long-note connecting-bar segment frame
+                                   //        (getFrmNo; judge draws it via drawAepFrameEx)
+    int m_scoreDigitFrm[10] = {};  // +0x220 SCO_0..9 frame nos
+    int m_comboDigitFrm[10] = {};  // +0x248 EFF_C_NUM0..9 frame nos
+    int m_gaugeFlashFrm[4] = {};   // +0x270 GG_IFL_* frame nos
+    int m_tone08Frm[5] = {};       // +0x280 TONE_08_1.. frame nos
+    int m_tone08NumFrm[5] = {};    // +0x294 TONE_08_NUM2.. frame nos
+    int m_toneNumberFrm[10] = {};  // +0x2a8 tone-number frame nos
+    int m_toneSameFrm[10] = {};    // +0x2d0 tone-same frame nos
+    int m_userSprite[15] = {};     // +0x2f8 GG_IFL..EFF_C_NUM100 user nos (indices
+                                   //        map to the CMD_PAUSE/TONE/ORB/FRAME reads)
+    int m_numComboUser[3] = {};    // +0x334 NUM_COMBO_* user nos
+    int m_scoreNumUser[6] = {};    // +0x340 SCO_0000NN user nos
+    int m_charaUser[8] = {};       // +0x358 CHARAn user nos
+    int m_charaAnmUser[8] = {};    // +0x378 CHARAn_ANM user nos
 
     int m_hitSeId = 0;          // +0x398 per-tap hit-SE source id (reloadChart loadSe)
     int m_gaugeSeId = 0;        // +0x39c second gauge/tap SE source id (freed in gotoResult)
