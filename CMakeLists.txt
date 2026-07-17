@@ -232,14 +232,13 @@ target_sources(popnrhythmin PRIVATE
 target_include_directories(popnrhythmin PRIVATE "${_zip}" "${_zip}/minizip")
 # minizip is vendored upstream, really old-style C we do not patch: pin it to
 # gnu17 (C23 rejects its old constructs; this per-source -std lands after the
-# target-wide one, so it wins) and silence its extraneous parentheses-equality
-# warnings (e.g. zip.c's `if ((level==2))`) without touching the third-party
-# source.
+# target-wide one, so it wins) and silence its warnings entirely with -w (it
+# inherits the target-wide -Wall/-Wextra, and we do not fix third-party source).
 set_source_files_properties(
     "${_zip}/minizip/ioapi.c"
     "${_zip}/minizip/unzip.c"
     "${_zip}/minizip/zip.c"
-    PROPERTIES COMPILE_OPTIONS "-std=gnu17;-Wno-parentheses-equality")
+    PROPERTIES COMPILE_OPTIONS "-std=gnu17;-w")
 
 # Compiler options as real -flags (not XCODE_ATTRIBUTE build settings) so they
 # apply under every generator and can be overridden per source file. Language
@@ -256,7 +255,43 @@ target_compile_options(popnrhythmin PRIVATE
     $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-fno-char8_t>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc>
     $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-fobjc-arc-exceptions>
+    # libc++ hardening (Xcode's CLANG_CXX_STANDARD_LIBRARY_HARDENING "fast").
+    # The CI toolchain is AppleClang 15 / LLVM 16, whose libc++ predates the
+    # _LIBCPP_HARDENING_MODE macro (LLVM 18+); the effective knob there is
+    # _LIBCPP_ENABLE_ASSERTIONS, which newer libc++ still honours (mapped to the
+    # hardened mode). ABI-neutral, low overhead: bad indices / iterators trap
+    # instead of corrupting memory.
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-D_LIBCPP_ENABLE_ASSERTIONS=1>
     -ftrivial-auto-var-init=zero)
+
+# Warnings: most of Xcode's recommended GCC_WARN_* / CLANG_WARN_* set as real -W
+# flags (warnings only -- there is no -Werror, so the build stays green). The
+# noisy conversion / cast / pedantic families are deliberately left off: this is
+# a faithful binary reconstruction with intentional narrowing, pointer-in-int and
+# reinterpret casts.
+target_compile_options(popnrhythmin PRIVATE
+    -Wall
+    -Wextra
+    -Wshadow
+    -Wcomma
+    -Wnewline-eof
+    -Wpointer-arith
+    -Wimplicit-fallthrough
+    -Wunreachable-code
+    -Wconditional-uninitialized
+    -Winfinite-recursion
+    # C++ / Objective-C++
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Woverloaded-virtual>
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wnon-virtual-dtor>
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wdelete-non-abstract-non-virtual-dtor>
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wrange-loop-analysis>
+    $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wextra-semi>
+    # Objective-C / Objective-C++
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wundeclared-selector>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wblock-capture-autoreleasing>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wobjc-literal-conversion>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wduplicate-method-match>
+    $<$<COMPILE_LANGUAGE:OBJC,OBJCXX>:-Wimplicit-retain-self>)
 
 # The reconstruction faithfully uses the OpenGL ES 1.1 API, which Apple
 # deprecated wholesale on iOS 12 with no in-place replacement (Metal is a

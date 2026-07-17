@@ -57,19 +57,38 @@ PopnRhythmin_FILES = $(shell find $(PROJECT_ROOT)/Project \
 # ARC (the reconstructed sources use ARC — __bridge casts + ARC-synthesized dealloc —
 # exactly as the CMake/Xcode build does); every Project subdir on -I, plus the generated
 # sugoroku dialogue include dir (see tools/extract_sugoroku_dialogue.py).
+# Warning policy mirrors CMakeLists.txt: enable most useful diagnostics but NOT -Weverything,
+# and NOT -Werror (warnings must not break the build). The all-language set lives in CFLAGS;
+# the ObjC-only groups are harmless no-ops when they reach the vendored C, so they ride along
+# here rather than needing a separate ObjC dialect variable. The C++-only groups
+# (-Woverloaded-virtual etc.) go in CCFLAGS so they never reach the C sources.
+PopnRhythmin_WARNINGS = -Wall -Wextra -Wshadow -Wcomma -Wnewline-eof -Wpointer-arith \
+                        -Wimplicit-fallthrough -Wunreachable-code -Wconditional-uninitialized \
+                        -Winfinite-recursion \
+                        -Wundeclared-selector -Wblock-capture-autoreleasing \
+                        -Wobjc-literal-conversion -Wduplicate-method-match -Wimplicit-retain-self
 PopnRhythmin_CFLAGS  = -std=gnu2x -ftrivial-auto-var-init=zero -fobjc-arc -fobjc-exceptions \
                        -DGLES_SILENCE_DEPRECATION \
+                       $(PopnRhythmin_WARNINGS) \
                        -I$(PROJECT_ROOT)/Project \
                        $(addprefix -I,$(shell find $(PROJECT_ROOT)/Project -type d)) \
                        -I$(SUGO_GEN_DIR) \
                        -I$(PROJECT_ROOT)/3rdparty/ziparchive \
                        -I$(PROJECT_ROOT)/3rdparty/ziparchive/minizip
-PopnRhythmin_CCFLAGS = -std=gnu++2b -stdlib=libc++ -fno-char8_t
-# minizip is vendored upstream C we do not patch; silence its extraneous
-# parentheses-equality warnings there without touching the third-party source.
-$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/ioapi.c_CFLAGS = -std=gnu17 -Wno-parentheses-equality
-$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/unzip.c_CFLAGS = -std=gnu17 -Wno-parentheses-equality
-$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/zip.c_CFLAGS = -std=gnu17 -Wno-parentheses-equality
+# libc++ hardening (Xcode's CLANG_CXX_STANDARD_LIBRARY_HARDENING "fast"): bad
+# indices / iterators trap instead of corrupting memory. _LIBCPP_ENABLE_ASSERTIONS
+# is the knob understood by both the LLVM 16-era libc++ and newer ones (the
+# _LIBCPP_HARDENING_MODE macro only exists on LLVM 18+). ABI-neutral.
+PopnRhythmin_CCFLAGS = -std=gnu++2b -stdlib=libc++ -fno-char8_t \
+                       -D_LIBCPP_ENABLE_ASSERTIONS=1 \
+                       -Woverloaded-virtual -Wnon-virtual-dtor \
+                       -Wdelete-non-abstract-non-virtual-dtor -Wrange-loop-analysis -Wextra-semi
+# minizip is vendored upstream C we do not patch; it now inherits the project-wide -Wall/-Wextra
+# from CFLAGS, so silence all warnings there (-w) rather than chase each one in third-party source.
+# The trailing -w wins over the earlier -Wall/-Wextra because later flags override.
+$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/ioapi.c_CFLAGS = -std=gnu17 -w
+$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/unzip.c_CFLAGS = -std=gnu17 -w
+$(PROJECT_ROOT)/3rdparty/ziparchive/minizip/zip.c_CFLAGS = -std=gnu17 -w
 
 PopnRhythmin_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore CoreText OpenGLES \
                           AudioToolbox AVFoundation CoreData StoreKit Social \
