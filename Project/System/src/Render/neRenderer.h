@@ -190,7 +190,7 @@ void neDrawQuad(float x0,
 // (x,y). The texture sub-rect is (u0,v0)+(uSpan,vSpan) in normalized 0..1
 // coords (V flipped, stored as 0..32767 GL_SHORT); the model matrix is
 // translate(x,y) [* rotateZ(-rotation)] * translate(-pivotX,-pivotY). `sprite`
-// carries the AepTexture at +0x04 (null => untextured). `blendMode` selects
+// carries the ne::C_TEXTURE at +0x04 (null => untextured). `blendMode` selects
 // GL_ONE / GL_SRC_ALPHA / an additive preset; `clipRect` (or null) installs 4
 // clip planes. Ghidra: FUN_00015fb8. Core sprite path.
 void neDrawTexturedQuad(void *sprite,

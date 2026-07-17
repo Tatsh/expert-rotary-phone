@@ -3,7 +3,7 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. A drawable
-//  sprite backed by the shared AepTexture cache; draws a textured quad into the
+//  sprite backed by the shared ne::C_TEXTURE cache; draws a textured quad into the
 //  ordering table.
 //
 
@@ -14,7 +14,7 @@
 #include <string>
 
 #include "AepOrderingTable.h"
-#include "AepTexture.h"
+#include "C_TEXTURE.h"
 #include "neDebugLog.h"
 #include "neTextureForiOS.h"
 
@@ -46,7 +46,7 @@ int neTextureForiOS::load(const char *path) {
     // (loadFrames) allocates more. Ghidra: the +0x08/+0x0c/+0x10/+0x14 heap
     // arrays sized 1 here.
     m_tileCount = 1;
-    m_tiles = new AepTexture *[1];
+    m_tiles = new ne::C_TEXTURE *[1];
     m_tileRects = new ne::C_SINGLE_SPRITE[1]; // 0x18-byte record (ctor FUN_00015eb4)
     m_tileWidths = new int[1];
     m_tileHeights = new int[1];
@@ -58,8 +58,8 @@ int neTextureForiOS::load(const char *path) {
         return -5; // 0xfffffffb: the texture failed to load
     }
 
-    m_tileWidths[0] = m_tiles[0]->textureWidth();       // AepTexture +0x1c
-    m_tileHeights[0] = m_tiles[0]->textureHeight();     // AepTexture +0x20
+    m_tileWidths[0] = m_tiles[0]->textureWidth();       // ne::C_TEXTURE +0x1c
+    m_tileHeights[0] = m_tiles[0]->textureHeight();     // ne::C_TEXTURE +0x20
     AepTextureUploadTiles(&m_tileRects[0], m_tiles[0]); // FUN_000166ec
     neDebugLog("neTextureForiOS::load OK path='%s' tex=%p glName=%u w=%d h=%d tile.texture=%p",
                path,
@@ -90,7 +90,7 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
     // Parallel per-tile arrays: handles (+0x10), upload records (+0x14), and
     // padded width/height (+0x08/+0x0c). Ghidra: operator new[] for each, count
     // at +0x04.
-    m_tiles = new AepTexture *[tileCount];
+    m_tiles = new ne::C_TEXTURE *[tileCount];
     m_tileRects = new ne::C_SINGLE_SPRITE[tileCount]; // 0x18-byte records (ctor FUN_00015eb4)
     m_tileWidths = new int[tileCount];
     m_tileHeights = new int[tileCount];
@@ -105,14 +105,14 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
             std::snprintf(path, sizeof(path), "%s/%s_%d.png", dir, name, i);
         }
 
-        AepTexture *tex = AepTextureCacheAcquire(path); // FUN_0001bbf0
+        ne::C_TEXTURE *tex = AepTextureCacheAcquire(path); // FUN_0001bbf0
         m_tiles[i] = tex;
         if (tex == nullptr) {
             return; // 0xfffffffb in FUN_00011e18
         }
 
-        m_tileWidths[i] = tex->textureWidth();       // AepTexture +0x1c
-        m_tileHeights[i] = tex->textureHeight();     // AepTexture +0x20
+        m_tileWidths[i] = tex->textureWidth();       // ne::C_TEXTURE +0x1c
+        m_tileHeights[i] = tex->textureHeight();     // ne::C_TEXTURE +0x20
         AepTextureUploadTiles(&m_tileRects[i], tex); // FUN_000166ec
     }
 }

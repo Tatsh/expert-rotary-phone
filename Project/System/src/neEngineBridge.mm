@@ -14,9 +14,9 @@
 #import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AcViewerTask.h" // AcViewerTask named work-area (apply-settings owner)
 #import "AepManager.h"   // AepManager::orderingTable() for neTextureForiOS_draw
-#import "AepTexture.h"
-#import "AppDelegate.h" // [AppDelegate appDelegate] / managedObjectContext (score store)
+#import "AppDelegate.h"  // [AppDelegate appDelegate] / managedObjectContext (score store)
 #import "AudioManager.h"
+#import "C_TEXTURE.h"
 #import "PlayTask.h"        // PlayTask::m_state (the running play task's lifecycle state)
 #import "ScoreData+Store.h" // +[ScoreData getScoreData:inManagedObjectContext:] / hashScore:
 #import "ScoreData.h"       // ScoreData entity score/rank/playCnt/fullCombo/perfect properties
@@ -33,8 +33,8 @@ class C_TASK;
 ne::C_TASK *BootCreateTask(); // operator_new(0x4c) + BootLogoTask_ctor + setPriority(3)
 
 // Head of the shared-texture cache list (Ghidra: DAT_00188464). Registered/
-// unlinked by AepTexture as cached textures are acquired/released.
-AepTexture *g_textureCacheList = nullptr;
+// unlinked by ne::C_TEXTURE as cached textures are acquired/released.
+ne::C_TEXTURE *g_textureCacheList = nullptr;
 
 #pragma mark - neAppEventCenter (guarded singleton @ DAT_00187bb8)
 
@@ -642,7 +642,7 @@ void neSceneManager::setPadDisplay(bool isPad) {
 namespace neEngine {
 
 // Ghidra: NEEngine_bootstrapB (FUN_0001ba2c) — dispatch_once bring-up: build the
-// shared texture-cache sentinel (a self-linked empty AepTexture) and publish it as
+// shared texture-cache sentinel (a self-linked empty ne::C_TEXTURE) and publish it as
 // the cache list head. The binary boxes the head behind a heap holder cell (double
 // indirection through DAT_00188464 -> holder -> sentinel, self-linked via +0x8/+0xc);
 // the reconstruction flattens that to the direct g_textureCacheList pointer that
@@ -668,11 +668,11 @@ void bootstrapB() {
 // the first texture is cached (the lazy sentinel), so the guard is a no-op then.
 // @complete
 void onDidEnterBackground() {
-    AepTexture *head = g_textureCacheList;
+    ne::C_TEXTURE *head = g_textureCacheList;
     if (head == nullptr) {
         return;
     }
-    for (AepTexture *tex = head->next; tex != head; tex = tex->next) {
+    for (ne::C_TEXTURE *tex = head->next; tex != head; tex = tex->next) {
         tex->releaseGL(); // FUN_00018884
     }
 }
@@ -741,14 +741,14 @@ void startBootTask() {
 // Ghidra: FUN_0001be20 — walk the same shared texture cache list on foreground,
 // re-decoding + re-uploading each texture (its per-texture reload is FUN_000188ac).
 // This is the single reconstruction of the foreground-reload walk (the former
-// AepTexture.mm duplicate was dead and has been removed).
+// C_TEXTURE.mm duplicate was dead and has been removed).
 // @complete
 void notifyEnterForeground() {
-    AepTexture *head = g_textureCacheList;
+    ne::C_TEXTURE *head = g_textureCacheList;
     if (head == nullptr) {
         return;
     }
-    for (AepTexture *tex = head->next; tex != head; tex = tex->next) {
+    for (ne::C_TEXTURE *tex = head->next; tex != head; tex = tex->next) {
         tex->reload(); // FUN_000188ac
     }
 }
@@ -850,12 +850,12 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
 // neTextureForiOS LoadTexture: — decode one PNG (bridged NSData) into a padded
 // power-of-two RGBA8 GL texture. Rounds the CGImage's width/height up to the
 // next power of two, renders the image Y-flipped into a zeroed RGBA buffer, and
-// hands it to neCreateTextureFromData (whose AepTexture is the binary's
+// hands it to neCreateTextureFromData (whose ne::C_TEXTURE is the binary's
 // C_TEXTURE); the unpadded source width/height pass through so the sprite
 // samples only the used sub-rect. Returns nullptr when the data isn't a
 // decodable image.
 // @complete
-AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
+ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
     UIImage *image = [[UIImage alloc] initWithData:data];
     if (image == nil) {
         return nullptr;
@@ -887,7 +887,7 @@ AepTexture *neTextureForiOS::LoadTexture(NSData *data) {
     CGContextRelease(ctx);
     CGColorSpaceRelease(colorSpace);
 
-    AepTexture *texture = neCreateTextureFromData(potW, potH, 1, pixels, srcW, srcH);
+    ne::C_TEXTURE *texture = neCreateTextureFromData(potW, potH, 1, pixels, srcW, srcH);
     delete[] pixels;
     return texture;
 }
@@ -904,7 +904,7 @@ int neTextureForiOS::loadFromImageData(const void *imageData) {
         return -1;
     }
     m_tileCount = 1;
-    m_tiles = new AepTexture *[1];
+    m_tiles = new ne::C_TEXTURE *[1];
     m_tileRects = new ne::C_SINGLE_SPRITE[1];
     m_tileWidths = new int[1];
     m_tileHeights = new int[1];

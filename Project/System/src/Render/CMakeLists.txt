@@ -4,14 +4,14 @@
 # defined in the root CMakeLists, and puts the directory on the include path. Bare filenames.
 
 target_sources(popnrhythmin PRIVATE
-    AepTexture.mm
+    C_TEXTURE.mm
     C_SINGLE_SPRITE.cpp
     neGLView.mm
     neGraphics.cpp
     neRenderer.cpp
     neTextTexture.mm
     neTextureForiOS.cpp
-    AepTexture.h
+    C_TEXTURE.h
     C_SINGLE_SPRITE.h
     neGLView.h
     neGraphics.h

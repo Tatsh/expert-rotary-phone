@@ -665,7 +665,7 @@ void neGLES_11::genTexture(unsigned &outName) {
 
 // Ghidra: FUN_00013778 (vtable +0xb8) — clear every bound-texture-cache slot
 // holding this name (so a later reused name is not treated as still bound),
-// then glDeleteTextures. This is the slot the AepTexture teardown path dispatches
+// then glDeleteTextures. This is the slot the ne::C_TEXTURE teardown path dispatches
 // through (deleteTexture), which is why the raw glDeleteTextures would leave a
 // stale cache entry.
 // @complete

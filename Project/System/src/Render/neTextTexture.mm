@@ -17,7 +17,7 @@
 #import <QuartzCore/QuartzCore.h> // CALayer renderInContext:
 #import <UIKit/UIKit.h>           // UILabel / UIFont / UIColor / UIGraphics + CoreGraphics
 
-#import "AepTexture.h" // neCreateTextureFromData / neTextureRelease (texture cache)
+#import "C_TEXTURE.h" // neCreateTextureFromData / neTextureRelease (texture cache)
 #import "neDebugLog.h"
 #import "neRenderer.h"
 #import "neTextTexture.h"
@@ -118,7 +118,7 @@ int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
     return -1; // invalid
 }
 
-// Ghidra: FUN_000180a4 — release the atlas's AepTexture reference and free its
+// Ghidra: FUN_000180a4 — release the atlas's ne::C_TEXTURE reference and free its
 // pixels.
 // @complete
 neTextTexture::~neTextTexture() {
@@ -232,9 +232,9 @@ bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
             createNewTextTexture();
             atlas = atlases;
         }
-        AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
-        int atlasW = tex->textureWidth();  // AepTexture +0x1c
-        int atlasH = tex->textureHeight(); // AepTexture +0x20
+        ne::C_TEXTURE *tex = static_cast<ne::C_TEXTURE *>(atlas->texture);
+        int atlasW = tex->textureWidth();  // ne::C_TEXTURE +0x1c
+        int atlasH = tex->textureHeight(); // ne::C_TEXTURE +0x20
 
         // A glyph that is as wide/tall as an atlas can never be packed.
         if (w >= atlasW || h >= atlasH) {
@@ -325,7 +325,7 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
     // createNewTextTexture); replicate the binary's luminance-alpha by writing the
     // coverage into all four channels (RGB = A = gray), so a MODULATE by the glyph
     // vertex colour reproduces the original LA result.
-    AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
+    ne::C_TEXTURE *tex = static_cast<ne::C_TEXTURE *>(atlas->texture);
     int atlasW = tex->textureWidth();
     const int atlasH = tex->textureHeight();
     // allocGlyphAtlasSlot returns true even on its give-up path (2 failed
@@ -443,7 +443,7 @@ neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, i
     // Re-upload the atlas the glyph landed in so the new pixels reach GL.
     neTextTexture *atlas = atlases;
     if (atlas != nullptr) {
-        neTextureRebind(static_cast<AepTexture *>(atlas->texture), atlas->pixels);
+        neTextureRebind(static_cast<ne::C_TEXTURE *>(atlas->texture), atlas->pixels);
     }
 
     // Head-insert onto the glyph cache.
@@ -571,9 +571,9 @@ void neDrawText(const char *text,
             continue;
         }
         neTextTexture *atlas = mgr->findTextTextureById(atlasId);
-        AepTexture *tex = static_cast<AepTexture *>(atlas->texture);
-        float atlasW = static_cast<float>(tex->textureWidth());  // AepTexture +0x1c
-        float atlasH = static_cast<float>(tex->textureHeight()); // AepTexture +0x20
+        ne::C_TEXTURE *tex = static_cast<ne::C_TEXTURE *>(atlas->texture);
+        float atlasW = static_cast<float>(tex->textureWidth());  // ne::C_TEXTURE +0x1c
+        float atlasH = static_cast<float>(tex->textureHeight()); // ne::C_TEXTURE +0x20
 
         // Emit every glyph that belongs to this atlas into `quads`, advancing the
         // pen.
@@ -614,7 +614,7 @@ void neDrawText(const char *text,
         }
 
         r->setEnable(0x22, true);        // GL_TEXTURE_2D
-        r->bindTexture(tex->name());     // AepTexture +0x18
+        r->bindTexture(tex->name());     // ne::C_TEXTURE +0x18
         setTexParamCached(tex, r, 2, 7); // wrap S = REPEAT
         setTexParamCached(tex, r, 3, 7); // wrap T = REPEAT
         setTexParamCached(tex, r, 0, 0); // mag = NEAREST

@@ -1,23 +1,26 @@
 //
-//  AepTexture.h
+//  C_TEXTURE.h
 //  pop'n rhythmin
 //
 //  A GL texture decoded from an image file, referenced by AepLyrCtrl layers and
 //  shared (refcounted, keyed by path) through the engine's texture cache. On a
 //  GL context loss the name is freed and re-uploaded on return to foreground.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (ctor FUN_000180c4, load FUN_00018218, upload FUN_000185a0,
-//  releaseGL FUN_00018884, reload FUN_000188ac; cache FUN_0001bbf0).
+//  Reconstructed from Ghidra project rb420, program PopnRhythmin (RTTI type
+//  ne::C_TEXTURE, type_info @0x12e308; vtable @0x13089c; ctor FUN_000180c4, load
+//  FUN_00018218, upload FUN_000185a0, releaseGL FUN_00018884, reload FUN_000188ac;
+//  cache FUN_0001bbf0).
 //
 
 #pragma once
 
 #import <OpenGLES/ES1/gl.h>
 
-class AepTexture {
+namespace ne {
+
+class C_TEXTURE {
 public:
-    AepTexture();
-    ~AepTexture();
+    C_TEXTURE();
+    ~C_TEXTURE();
 
     // Decode `path` (a bundled PNG, with @2x fallback) and upload it as a GL
     // texture. Returns true on success. Ghidra: FUN_00018218.
@@ -75,8 +78,8 @@ public:
     // Intrusive cache-list links (Ghidra: refcount +0x04, next +0x08, prev
     // +0x0c).
     int refCount = 0;
-    AepTexture *next = nullptr;
-    AepTexture *prev = nullptr;
+    C_TEXTURE *next = nullptr;
+    C_TEXTURE *prev = nullptr;
 
 private:
     // Decode `path` into a power-of-two RGBA buffer and upload it as a GL texture
@@ -106,6 +109,8 @@ private:
     float m_scale = 1.0f; // +0x44 (2.0 for an @2x asset)
 };
 
+} // namespace ne
+
 // GPU texture-memory accounting: total bytes of all live textures. Ghidra:
 // g_dwTextureMemTotal.
 extern int g_dwTextureMemTotal;
@@ -115,14 +120,14 @@ extern int g_dwTextureMemTotal;
 // background (onDidEnterBackground) and foreground (notifyEnterForeground) GL
 // handlers walk). Defined in neEngineBridge.mm; the sentinel node is created
 // lazily by AepTextureCacheSentinel(). null until the first texture is cached.
-extern AepTexture *g_textureCacheList;
+extern ne::C_TEXTURE *g_textureCacheList;
 
 // Return the shared cache list head, lazily building the self-linked sentinel node
 // into g_textureCacheList on first call. The engine bootstrap (bootstrapB) calls
 // this to create it eagerly; the acquire path calls it on demand.
-AepTexture *AepTextureCacheSentinel(void);
+ne::C_TEXTURE *AepTextureCacheSentinel(void);
 
-// Drop one shared-cache reference of `tex` (an AepTexture); on the last
+// Drop one shared-cache reference of `tex` (a C_TEXTURE); on the last
 // reference it frees the GL name, unlinks from the cache list and destroys it.
 // Ghidra: FUN_00018200.
 void neTextureRelease(void *tex);
@@ -131,21 +136,21 @@ void neTextureRelease(void *tex);
 // upload it as a single GL texture (`texW`x`texH` padded size). Returns 1.
 // Ghidra: FUN_00018644.
 int neTextureSetDataParams(
-    AepTexture *tex, int width, int height, int format, const void *pixels, int texW, int texH);
+    ne::C_TEXTURE *tex, int width, int height, int format, const void *pixels, int texW, int texH);
 
 // Decode an in-memory image (a bridged NSData* of PNG/other bytes) via UIImage
 // and upload it as a power-of-two GL texture. Returns 1 on success, 0 on decode
 // failure. Ghidra: FUN_00018684.
-int neTextureLoadFromData(AepTexture *tex, const void *nsData);
+int neTextureLoadFromData(ne::C_TEXTURE *tex, const void *nsData);
 
 // Re-bind + re-upload this texture through the current renderer (context
 // restore path). Ghidra: FUN_00018828.
-void neTextureRebind(AepTexture *tex, const void *pixels);
+void neTextureRebind(ne::C_TEXTURE *tex, const void *pixels);
 
-// Allocate an AepTexture from raw pixel data, upload it and link it into the
+// Allocate a C_TEXTURE from raw pixel data, upload it and link it into the
 // shared cache. Returns the new texture (refcounted) or null on failure.
 // Ghidra: FUN_0001bcfc.
-AepTexture *
+ne::C_TEXTURE *
 neCreateTextureFromData(int width, int height, int format, const void *pixels, int texW, int texH);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

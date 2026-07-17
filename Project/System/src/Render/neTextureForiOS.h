@@ -2,7 +2,7 @@
 //  neTextureForiOS.h
 //  pop'n rhythmin
 //
-//  A drawable sprite backed by a cached AepTexture. A bundled PNG is loaded
+//  A drawable sprite backed by a cached ne::C_TEXTURE. A bundled PNG is loaded
 //  through the shared texture cache (large images may be split into GL-max-size
 //  tiles), and the sprite is drawn straight into the ordering table as a
 //  textured quad. Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -19,21 +19,23 @@
 @class NSData; // the in-memory image path (LoadTexture:) takes a bridged NSData*
 #endif
 
-class AepTexture;
+namespace ne {
+class C_TEXTURE;
+}
 class AepOrderingTable;
 class AepManager;
 
-// Acquire (ref-counted) the cached AepTexture for a bundled image path, loading
+// Acquire (ref-counted) the cached ne::C_TEXTURE for a bundled image path, loading
 // + uploading it on first use; returns null on load failure. Ghidra:
 // FUN_0001bbf0 (the shared texture cache, head list DAT_00188464). Implemented
-// in AepTexture.mm.
-AepTexture *AepTextureCacheAcquire(const char *path);
+// in C_TEXTURE.mm.
+ne::C_TEXTURE *AepTextureCacheAcquire(const char *path);
 
 // Rebind a tile to a texture: release the tile's previously-bound texture and
 // retain the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at
-// the call site, but it is a real incoming AepTexture* — verified in
+// the call site, but it is a real incoming ne::C_TEXTURE* — verified in
 // disassembly).
-void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, AepTexture *tex);
+void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, ne::C_TEXTURE *tex);
 
 // Geometry + appearance of one sprite draw. Mirrors the fields FUN_00011468
 // fills into an AepSpriteCommand (offsets in comments). Zero-defaulted like a
@@ -63,7 +65,7 @@ public:
 
     // Load `path` (lowercased) through the shared texture cache. Returns 0 on
     // success, -1 for a null path, -5 if the texture failed to load. Fills the
-    // source width/height from the resolved AepTexture. Ghidra: FUN_00011a2c.
+    // source width/height from the resolved ne::C_TEXTURE. Ghidra: FUN_00011a2c.
     int load(const char *path);
 
     // Upload an already-decoded, in-memory image (a bridged NSData* of PNG bytes)
@@ -84,11 +86,11 @@ public:
     // Decode a single PNG (bridged NSData) into one padded power-of-two RGBA GL
     // texture and return the created texture (or nullptr if the image fails to
     // decode). The source is drawn Y-flipped into a POT RGBA8 bitmap, then handed
-    // to neCreateTextureFromData (its AepTexture is the binary's C_TEXTURE).
+    // to neCreateTextureFromData (its ne::C_TEXTURE is the binary's C_TEXTURE).
     // objc-dispatched class helper the in-memory image path uses. Ghidra:
     // neTextureForiOS LoadTexture: @ 0x1acac. Defined in neEngineBridge.mm (needs
     // UIKit/CoreGraphics).
-    static AepTexture *LoadTexture(NSData *data);
+    static ne::C_TEXTURE *LoadTexture(NSData *data);
 #endif
 
     int width() const {
@@ -130,12 +132,12 @@ private:
     // Split-texture storage: an image wider/taller than the GL max is loaded as
     // several tiles. These parallel heap arrays are all m_tileCount long. The
     // width and height arrays hold the padded GL texture size of each tile, read
-    // from the resolved AepTexture (+0x1c / +0x20). Ghidra: operator new[]
+    // from the resolved ne::C_TEXTURE (+0x1c / +0x20). Ghidra: operator new[]
     // results stored at +0x08 / +0x0c / +0x10 / +0x14.
-    int m_tileCount = 0;            // +0x04 number of tiles
-    int *m_tileWidths = nullptr;    // +0x08 per-tile texture width  (AepTexture +0x1c)
-    int *m_tileHeights = nullptr;   // +0x0c per-tile texture height (AepTexture +0x20)
-    AepTexture **m_tiles = nullptr; // +0x10 cached AepTexture per tile
+    int m_tileCount = 0;               // +0x04 number of tiles
+    int *m_tileWidths = nullptr;       // +0x08 per-tile texture width  (ne::C_TEXTURE +0x1c)
+    int *m_tileHeights = nullptr;      // +0x0c per-tile texture height (ne::C_TEXTURE +0x20)
+    ne::C_TEXTURE **m_tiles = nullptr; // +0x10 cached ne::C_TEXTURE per tile
     ne::C_SINGLE_SPRITE *m_tileRects =
         nullptr; // +0x14 per-tile upload records (new ne::C_SINGLE_SPRITE[N])
 };

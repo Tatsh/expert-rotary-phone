@@ -23,7 +23,7 @@ public:
     ~neTextTexture(); // Ghidra: FUN_000180a4
 
     int32_t index = 0;             // +0x00 atlas index (its slot in the manager's list)
-    void *texture = nullptr;       // +0x04 AepTexture* (released on destroy)
+    void *texture = nullptr;       // +0x04 ne::C_TEXTURE* (released on destroy)
     int32_t penX = 0;              // +0x08 current pack cursor X
     int32_t penY = 0;              // +0x0c current pack cursor Y
     int32_t rowHeight = 0;         // +0x10 tallest glyph in the current row

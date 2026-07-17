@@ -16,7 +16,9 @@
 #include <cstdint>
 #include <memory>
 
-class AepTexture;
+namespace ne {
+class C_TEXTURE;
+}
 
 namespace ne {
 
@@ -35,14 +37,14 @@ public:
     // the AepSprite draw path (drawAepSpriteClipped) on each frame's sprite.
     void setRenderStateSlot(int slot, int value); // @ 0x16710
 
-    AepTexture *texture = nullptr;  // +0x04 bound texture (refcounted C_TEXTURE)
-    int32_t meta[4] = {0, 0, 7, 7}; // +0x08..+0x17 render-state slots / tile span
+    ne::C_TEXTURE *texture = nullptr; // +0x04 bound texture (refcounted C_TEXTURE)
+    int32_t meta[4] = {0, 0, 7, 7};   // +0x08..+0x17 render-state slots / tile span
 };
 
 } // namespace ne
 
 // A set of animation frames: parallel heap arrays (all `frameCount` long) of
-// per-frame padded texture size, the cached AepTexture handles and the
+// per-frame padded texture size, the cached ne::C_TEXTURE handles and the
 // C_SINGLE_SPRITE records. Each array is owned (RAII); the handles are
 // additionally cache-released in the destructor. Ghidra: dtor FUN_00011838.
 class neTextureFrames {
@@ -53,7 +55,7 @@ public:
     int32_t frameCount = 0;                        // +0x04
     std::unique_ptr<int32_t[]> frameWidths;        // +0x08
     std::unique_ptr<int32_t[]> frameHeights;       // +0x0c
-    std::unique_ptr<void *[]> handles;             // +0x10 AepTexture*[] (each cache-released)
+    std::unique_ptr<void *[]> handles;             // +0x10 ne::C_TEXTURE*[] (each cache-released)
     std::unique_ptr<ne::C_SINGLE_SPRITE[]> frames; // +0x14
 };
 

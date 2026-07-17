@@ -4,12 +4,12 @@
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. The single
 //  sprite record (ne::C_SINGLE_SPRITE) and the multi-frame set (neTextureFrames);
-//  both drop their AepTexture cache references (neTextureRelease) and free their
+//  both drop their ne::C_TEXTURE cache references (neTextureRelease) and free their
 //  backing arrays.
 //
 
 #import "C_SINGLE_SPRITE.h"
-#import "AepTexture.h" // neTextureRelease (shared cache release)
+#import "C_TEXTURE.h" // neTextureRelease (shared cache release)
 
 namespace ne {
 

@@ -16,7 +16,7 @@
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
 
-#include "AepTexture.h" // AepTexture::name() for the sprite blit
+#include "C_TEXTURE.h" // ne::C_TEXTURE::name() for the sprite blit
 #include "neDebugLog.h"
 #include "neGLES11.h" // ne::neGLES_11 concrete backend
 #include "neRenderer.h"
@@ -359,11 +359,11 @@ void neApplyDefaultRenderState(void) {
 
 // Ghidra: FUN_0001885c — skip glTexParameteri when the value is already cached
 // on the texture; the setter itself is dispatched on the renderer (+0xc4). The
-// cache is the AepTexture's own 4-entry tex-param array (Ghidra: tex+0x30),
+// cache is the ne::C_TEXTURE's own 4-entry tex-param array (Ghidra: tex+0x30),
 // seeded by neTextureUpload to the values it applies at upload time.
 // @complete
 void setTexParamCached(void *tex, neRenderer *r, int type, int value) {
-    int &slot = static_cast<AepTexture *>(tex)->m_texParamCache[type];
+    int &slot = static_cast<ne::C_TEXTURE *>(tex)->m_texParamCache[type];
     if (slot == value) {
         return;
     }
@@ -397,12 +397,12 @@ struct neTexVertex {
     uint32_t rgba;
 };
 
-// View of the sprite command the blit reads: refcount (+0x00), the AepTexture
+// View of the sprite command the blit reads: refcount (+0x00), the ne::C_TEXTURE
 // (+0x04, null => untextured), and the 4 tex-param values (+0x08). Ghidra:
 // fields at param_1+4/+8.
 struct neSpriteView {
     int32_t refCount;     // +0x00
-    void *texture;        // +0x04 AepTexture* (GL name at texture+0x18)
+    void *texture;        // +0x04 ne::C_TEXTURE* (GL name at texture+0x18)
     int32_t texParams[4]; // +0x08 mag/min/wrapS/wrapT
 };
 
@@ -460,7 +460,7 @@ void neDrawTexturedQuad(void *sprite,
             "rot=%.2f pivot=(%d,%d) argb=(%d,%d,%d,%d) blend=%d clip=%p vp=[%d,%d,%d,%d] r=%p",
             sprite,
             s->texture,
-            s->texture ? static_cast<AepTexture *>(s->texture)->name() : 0,
+            s->texture ? static_cast<ne::C_TEXTURE *>(s->texture)->name() : 0,
             x,
             y,
             width,
@@ -510,7 +510,7 @@ void neDrawTexturedQuad(void *sprite,
     if (s->texture == nullptr) {
         r->setEnable(0x22, false); // GL_TEXTURE_2D off
     } else {
-        GLuint name = static_cast<AepTexture *>(s->texture)->name(); // AepTexture +0x18
+        GLuint name = static_cast<ne::C_TEXTURE *>(s->texture)->name(); // ne::C_TEXTURE +0x18
         r->setEnable(0x22, true);
         r->bindTexture(name);
         r->setClientArray(4, true);

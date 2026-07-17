@@ -15,7 +15,9 @@
 
 #include <cstdint>
 
-class AepTexture;
+namespace ne {
+class C_TEXTURE;
+}
 
 class AepLyrCtrl {
 public:

@@ -889,7 +889,7 @@ static const float kRenderMinInterval = 1000.0f;
     // at the .app bundle root, so point baseDir at the bundle resource path --
     // the .idx files fopen straight from there, and the tile PNGs already resolve
     // via [NSBundle pathForResource:] regardless of baseDir
-    // (AepTexture::decodeAndUpload).
+    // (ne::C_TEXTURE::decodeAndUpload).
     NSString *texDir = NSBundle.mainBundle.resourcePath;
     NSString *bundlePath = NSBundle.mainBundle.bundlePath;
     AepManager &aep = AepManager::shared();
