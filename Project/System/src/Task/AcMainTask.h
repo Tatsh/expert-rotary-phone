@@ -218,21 +218,24 @@ private:
                                // consumed by unreconstructed draw)
     int m_stepValues[7] = {};  // +0x578 7 per-skill roulette step values
     int m_stepValueIndex = {}; // +0x594 roulette step-value index (cycles 0..6 mod 7 each frame)
-    uint8_t _rsvd_598[0x5a0 - 0x598] = {}; // +0x598
-    int m_initFlag5a0 = 3;                 // +0x5a0 ctor writes 3; role opaque (write-only)
-    float m_scrollTargetX = {};            // +0x5a4 scroll ease target x
-    float m_scrollTargetY = {};            // +0x5a8 scroll ease target y
-    float m_scrollVelX = {};               // +0x5ac scroll ease velocity x
-    float m_scrollVelY = {};               // +0x5b0 scroll ease velocity y
-    float m_scrollAccumX = {};             // +0x5b4 scroll ease accumulator x
-    float m_scrollAccumY = {};             // +0x5b8 scroll ease accumulator y
-    float m_playerTargetX = {};            // +0x5bc player ease target x
-    float m_playerTargetY = {};            // +0x5c0 player ease target y
-    float m_playerVelX = {};               // +0x5c4 player ease velocity x
-    float m_playerVelY = {};               // +0x5c8 player ease velocity y
-    float m_playerX = {};                  // +0x5cc player board draw x
-    float m_playerY = {};                  // +0x5d0 player board draw y
-    int m_boardMoveState = {};             // +0x5d4 board move / warp state
+    int m_stepSubTick =
+        {}; // +0x598 sub-tick; wraps mod m_stepSubTickLen, advancing m_stepValueIndex
+    int m_charaLayerTargetFrame =
+        {};                     // +0x59c +0x30 chara-layer target frame (next multiple of 6, wraps)
+    int m_stepSubTickLen = 3;   // +0x5a0 sub-tick period / modulus for m_stepSubTick (ctor 3)
+    float m_scrollTargetX = {}; // +0x5a4 scroll ease target x
+    float m_scrollTargetY = {}; // +0x5a8 scroll ease target y
+    float m_scrollVelX = {};    // +0x5ac scroll ease velocity x
+    float m_scrollVelY = {};    // +0x5b0 scroll ease velocity y
+    float m_scrollAccumX = {};  // +0x5b4 scroll ease accumulator x
+    float m_scrollAccumY = {};  // +0x5b8 scroll ease accumulator y
+    float m_playerTargetX = {}; // +0x5bc player ease target x
+    float m_playerTargetY = {}; // +0x5c0 player ease target y
+    float m_playerVelX = {};    // +0x5c4 player ease velocity x
+    float m_playerVelY = {};    // +0x5c8 player ease velocity y
+    float m_playerX = {};       // +0x5cc player board draw x
+    float m_playerY = {};       // +0x5d0 player board draw y
+    int m_boardMoveState = {};  // +0x5d4 board move / warp state
     uint8_t m_boardBgmLoaded = {};         // +0x5d8 board BGM loaded flag
     uint8_t _rsvd_5d9[0x5e0 - 0x5d9] = {}; // +0x5d9
     int m_charaColRight = {};              // +0x5e0 chara-grid right column base index
@@ -251,12 +254,17 @@ private:
     uint8_t m_squareAnimActive = {};       // +0x5f3
     uint8_t _rsvd_5f4[0x5f7 - 0x5f4] = {}; // +0x5f4
     uint8_t m_padDisplay = {};             // +0x5f7 iPad display flag
-    uint8_t _rsvd_5f8[0x5fa - 0x5f8] = {}; // +0x5f8
-    uint8_t m_fadeDir = {};                // +0x5fa transition fade direction
+    uint8_t m_revealTexLoaded =
+        {}; // +0x5f8 reveal texture loaded (gates the +0x60-layer reveal, case 0x2c/0x2d)
+    uint8_t m_eventIntroStarted =
+        {};                 // +0x5f9 one-shot: kicked the +0x98 event-intro layer (play once)
+    uint8_t m_fadeDir = {}; // +0x5fa transition fade direction
     uint8_t _rsvd_5fb[0x5fc - 0x5fb] = {}; // +0x5fb
     int16_t m_charaId = {};                // +0x5fc active character id
     int16_t m_skillCharaId = {};           // +0x5fe skill-panel active character id
-    uint8_t _rsvd_600[0x604 - 0x600] = {}; // +0x600
+    int16_t m_skillCharaSlot =
+        {}; // +0x600 selected chara grid slot (0..5; 0xffff none) for m_skillCharaId
+    uint8_t _rsvd_602[0x604 - 0x602] = {}; // +0x602
     int m_skillPanelX = {};                // +0x604 skill-panel origin x cache
     int m_skillPanelY = {};                // +0x608 skill-panel origin y cache
     int m_charaPanelX = {};                // +0x60c chara-panel origin x cache
@@ -296,22 +304,26 @@ private:
     void *m_skillInfo = {};                  // +0x8a4 active CharaInfo (unretained)
     const SkillDataStruct *m_skillData = {}; // +0x8a8 active SkillDataStruct
     int16_t m_rouletteMode = {};             // +0x8ac roulette mode / result value
-    uint8_t _rsvd_8ae[0x8b0 - 0x8ae] = {};   // +0x8ae
-    uint8_t m_rankBadgeType = {};            // +0x8b0 rank badge type (>=4 hidden)
-    uint8_t m_goalType = {};                 // +0x8b1 goal reward type (1 chara / 2 sound)
-    int16_t m_rouletteDigit = {};            // +0x8b2 roulette-result digit value
-    uint8_t _rsvd_8b4[0x8b8 - 0x8b4] = {};   // +0x8b4
-    char m_field8b8 = {};                    // +0x8b8 pending record raw0x52
-    char m_field8b9 = {};                    // +0x8b9 pending record raw0x51
-    uint8_t _rsvd_8ba[0x8bc - 0x8ba] = {};   // +0x8ba
-    int m_readNo = {};                       // +0x8bc board-story read progress
-    int m_readCount = {};                    // +0x8c0 board-story page count
-    uint8_t _rsvd_8c4[0x944 - 0x8c4] = {};   // +0x8c4
-    void *m_mapName = {};                    // +0x944 map display name (retained)
-    void *m_nextTask = {};                   // +0x948 follow-on task activated on dispose
-    int m_badgePulse = {};                   // +0x94c collection-complete badge pulse phase
-    int m_transitionAlpha = {};              // +0x950 background transition overlay alpha
-    int m_dlgLayout954 = {};                 // +0x954 dialog layout constant (write-only)
+    int16_t m_wonCharaId =
+        {}; // +0x8ae rarity-weighted RNG chara award; saved + loads sugo_chara_%03d
+    uint8_t m_rankBadgeType = {};       // +0x8b0 rank badge type (>=4 hidden)
+    uint8_t m_goalType = {};            // +0x8b1 goal reward type (1 chara / 2 sound)
+    int16_t m_rouletteDigit = {};       // +0x8b2 roulette-result digit value
+    int16_t m_activeType4SquareId = {}; // +0x8b4 latched type-4 event-square id (-1 none)
+    int16_t m_activeType3SquareId = {}; // +0x8b6 latched type-3 event-square id (-1 none)
+    int8_t m_listHalveCount =
+        {}; // +0x8b8 >0 halves the list bottom; +on roulette 0x14-0x17; saved raw0x52
+    int8_t m_treasureProgress =
+        {}; // +0x8b9 *5+25 (cap 100) for treasure-event 10; +in state 0x1d; saved raw0x51
+    uint8_t _rsvd_8ba[0x8bc - 0x8ba] = {}; // +0x8ba
+    int m_readNo = {};                     // +0x8bc board-story read progress
+    int m_readCount = {};                  // +0x8c0 board-story page count
+    uint8_t _rsvd_8c4[0x944 - 0x8c4] = {}; // +0x8c4
+    void *m_mapName = {};                  // +0x944 map display name (retained)
+    void *m_nextTask = {};                 // +0x948 follow-on task activated on dispose
+    int m_badgePulse = {};                 // +0x94c collection-complete badge pulse phase
+    int m_transitionAlpha = {};            // +0x950 background transition overlay alpha
+    int m_dlgLayout954 = {};               // +0x954 dialog layout constant (write-only)
     int m_dlgLayoutA[12] = {}; // +0x958 device-branched dialog layout constants (write-only)
     uint8_t _rsvd_988[0x990 - 0x988] = {}; // +0x988
     int m_dlgPanelW = {};                  // +0x990 two-button dialog panel width

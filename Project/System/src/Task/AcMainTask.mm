@@ -1028,8 +1028,8 @@ void AcMainTask::loadTreasureMap() {
 
     // Remaining record fields + the board character/panel builders.
     m_rouletteMode = tmp.raw0x44;
-    m_field8b8 = (char)tmp.raw0x52;
-    m_field8b9 = (char)tmp.raw0x51;
+    m_listHalveCount = (int8_t)tmp.raw0x52;
+    m_treasureProgress = (int8_t)tmp.raw0x51;
     buildMapCharaLayers(); // FUN_000a2264
     buildMapPanelLayers(); // FUN_000a2650
 
