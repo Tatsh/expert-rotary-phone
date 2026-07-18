@@ -55,9 +55,14 @@ inline bool comboBurstEnabled(const PlayTask *p) {
 
 constexpr int kJudgeStateCount = 60; // Ghidra: FUN_0003126c loop bound 0x3c
 
-// Note flag bits (Ghidra: the (flags & mask) tests in the per-note body).
+// Note flag bits, as the draw/judge pass reads them off the render descriptor.
+// These are the same ActiveNote flags NoteMng sets (see NoteFlag in NoteMng.h),
+// named here for the render context: kFlagJudged 0xc0 = LANE_HELD|HANDLED,
+// kFlagInactive 0x20 = MISSED, kFlagGraded 0x2f = any grade result (RESOLVED),
+// kFlagHold 0x300 = LONG_DONE, kFlagHoldOK/Fail 0x100/0x200 = LONG_SUCCESS/FAILED.
 constexpr uint16_t kFlagJudged = 0xc0;    // already resolved -> skip
-constexpr uint16_t kFlagInactive = 0x20;  // not yet on the judge field
+constexpr uint16_t kFlagInactive = 0x20;  // not yet / no longer on the judge field
+constexpr uint16_t kFlagGraded = 0x2f;    // has a grade result (good/great/cool/bad/missed)
 constexpr uint16_t kFlagHold = 0x300;     // long-note span bits
 constexpr uint16_t kFlagHoldOK = 0x100;   // hold completed
 constexpr uint16_t kFlagHoldFail = 0x200; // hold broken
@@ -266,7 +271,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                         }
                     }
                 }
-            } else if ((note.flags & 0x2f) != 0) {
+            } else if ((note.flags & kFlagGraded) != 0) {
                 st->result = 3; // demo mode auto-judges to COOL
                 judgedAny = true;
             }
@@ -282,7 +287,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // its outcome not yet latched: while the bound finger has lifted, advance
         // the hold and record whether it broke (0x200) or completed (0x100).
         if (!stopping && onField && note.renderKind == NOTE_RENDER_LONG &&
-            (note.flags & 0x2f) != 0 && (note.flags & kFlagHold) == 0) {
+            (note.flags & kFlagGraded) != 0 && (note.flags & kFlagHold) == 0) {
             const bool fingerUp = st->touchId == -1 || gfx.findTouchById(st->touchId) == nullptr;
             if (fingerUp) {
                 const unsigned r = (unsigned)nm.updateLongNote(note.noteId);
@@ -490,7 +495,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                 // note is on the field but not yet spanning its hold: layer
                 // effectStateLyr[12] (+0x114), frame cdFrame (+0x3c4), at the note's
                 // interp position. Args traced at 0x2fa8c (blend 0x200, context 16).
-                if (pt == 0 && m_optLongNoteEffect && (noteFlags & 0x2f) != 0 &&
+                if (pt == 0 && m_optLongNoteEffect && (noteFlags & kFlagGraded) != 0 &&
                     (noteFlags & kFlagHold) == 0) {
                     const int effScale = m_hitEffectScale / 2;
                     aep.drawLayer(m_effectStateLyr[12],
