@@ -36,6 +36,11 @@ struct neTouchPoint {
     unsigned char pad[2];   // +0x2e..+0x2f (record rounded up to 0x30)
 };
 
+// 1.0 expressed in the 16.16 fixed-point coordinate system used for all touch
+// and layout coordinates (see above): divide a fixed value by this to get
+// pixels, or multiply pixels by it to get a fixed value.
+inline constexpr float kFixed16One = 65536.0f;
+
 // Tap-vs-drag slop for the touch-pool hit tests. Coordinates are 16.16 fixed
 // pixels (see above), so the binary's raw slop values (0xa/0xb) are ~0.0002px:
 // they only register a tap whose down and up points are the EXACT same fixed
