@@ -204,28 +204,28 @@ void TitleTask::update(int /*deltaMs*/) {
     DownloadMain *dl = [DownloadMain getInstance];
 
     switch (m_state) {
-    case 0:
+    case kTitleStateSetup:
         setup();
         [[AudioManager sharedManager] playBgm:0.0f];
         m_aep->setAepTransitionMode(1); // fade in (fixed 30 frames)
         m_titleLayer->play();           // start the title animation
-        m_state = 1;
+        m_state = kTitleStateCheckPolicy;
         break;
-    case 1:
+    case kTitleStateCheckPolicy:
         if (![UserSettingData isPolicyAccepted]) {
-            m_state = 2; // must accept the policy first
+            m_state = kTitleStateAcceptPolicy; // must accept the policy first
             break;
         }
-        m_state = 3; // straight to the title
+        m_state = kTitleStateTitle; // straight to the title
         break;
-    case 2: // wait for a tap, then go to the accept-policy screen
+    case kTitleStateAcceptPolicy: // wait for a tap, then go to the accept-policy screen
         if (tap) {
             neEngine::playSystemSe(1); // Ghidra: SysSePlayIntoSlot(sceneManager, 1)
             [root GotoAcceptPolicy];
-            m_state = 1;
+            m_state = kTitleStateCheckPolicy;
         }
         break;
-    case 3:
+    case kTitleStateTitle:
         if (!m_state3Built) {
             buildConversionButton();
             break;
@@ -253,9 +253,9 @@ void TitleTask::update(int /*deltaMs*/) {
                              }
                              completion:nil];
         }
-        m_state = 4;
+        m_state = kTitleStateAwaitFileList;
         break;
-    case 4: // await the DL file list, then decide download vs skip
+    case kTitleStateAwaitFileList: // await the DL file list, then decide download vs skip
         if ([dl isGetDlFileListDownLoading]) {
             break;
         }
@@ -270,41 +270,41 @@ void TitleTask::update(int /*deltaMs*/) {
                                                           cancelButtonTitle:nil
                                                           otherButtonTitles:@""];
                 [a show];
-                m_state = 3;
+                m_state = kTitleStateTitle;
                 break;
             }
         } else {
             m_needUpdate = false;
             if (m_dlFileList.count != 0) {
-                m_state = 5;
+                m_state = kTitleStateDownload;
                 break;
             }
         }
-        m_state = 7;
+        m_state = kTitleStateFadeOut;
         break;
-    case 5: // there are files to fetch: go to the default-download screen
+    case kTitleStateDownload: // there are files to fetch: go to the default-download screen
         [root GotoDefaultDownload];
-        m_state = 6;
+        m_state = kTitleStateDownloadDone;
         break;
-    case 6: // default download finished
+    case kTitleStateDownloadDone: // default download finished
         if ([root isDefaultDlFailed] == 1) {
             m_needUpdate = true;
-            m_state = 3;
+            m_state = kTitleStateTitle;
         } else {
             [UserSettingData saveLastCompletedClientVer:AppDelegate.appDelegate.appVersionNum];
-            m_state = 7;
+            m_state = kTitleStateFadeOut;
         }
         break;
-    case 7:
+    case kTitleStateFadeOut:
         m_aep->setAepTransitionMode(2); // fade out (fixed 30 frames)
-        m_state = 8;
+        m_state = kTitleStateWaitFadeOut;
         break;
-    case 8:
+    case kTitleStateWaitFadeOut:
         if (m_aep->isTransitionDone()) {
-            m_state = 9;
+            m_state = kTitleStateFinish;
         }
         break;
-    case 9:
+    case kTitleStateFinish:
         finish();
         break;
     default:

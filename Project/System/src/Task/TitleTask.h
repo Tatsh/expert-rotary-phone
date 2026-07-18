@@ -50,15 +50,28 @@ private:
     bool tapReleased() const;     // a touch released with < 11 px travel = a tap
     void buildConversionButton(); // state-3 UI: the "conversion" button + code alert
 
-    AepManager *m_aep = nullptr;            // +0x28 render manager
-    AepLyrCtrl *m_titleLayer = nullptr;     // +0x30 title animated sprite layer
-    NSArray *m_dlFileList = nil;            // +0x34 DownloadMain's file-list result
-    NSString *m_versionLabel = nil;         // +0x38 retained "Ver <n>"
-    int m_titleSe = 0;                      // +0x3c title SE handle
-    int m_soundTestLabelX = 0;              // +0x40 version-label draw x (0x19 phone / 0x24 iPad)
-    bool m_needUpdate = false;              // +0x44 an app update is required
-    bool m_soundTestHidden = false;         // +0x45 suppress the version / sound-test label
-    int m_state = 0;                        // +0x48 state machine (0..9)
+    AepManager *m_aep = nullptr;        // +0x28 render manager
+    AepLyrCtrl *m_titleLayer = nullptr; // +0x30 title animated sprite layer
+    NSArray *m_dlFileList = nil;        // +0x34 DownloadMain's file-list result
+    NSString *m_versionLabel = nil;     // +0x38 retained "Ver <n>"
+    int m_titleSe = 0;                  // +0x3c title SE handle
+    int m_soundTestLabelX = 0;          // +0x40 version-label draw x (0x19 phone / 0x24 iPad)
+    bool m_needUpdate = false;          // +0x44 an app update is required
+    bool m_soundTestHidden = false;     // +0x45 suppress the version / sound-test label
+    // update() state-machine values (Ghidra: TitleTask::update).
+    enum TitleState {
+        kTitleStateSetup = 0,         // build the scene, start the BGM and title animation
+        kTitleStateCheckPolicy = 1,   // branch on whether the privacy policy is accepted
+        kTitleStateAcceptPolicy = 2,  // wait for a tap, then show the accept-policy screen
+        kTitleStateTitle = 3,         // title: build the convert button, wait for the start tap
+        kTitleStateAwaitFileList = 4, // await the DL file list, then decide download vs skip
+        kTitleStateDownload = 5,      // there are files to fetch: the default-download screen
+        kTitleStateDownloadDone = 6,  // default download finished
+        kTitleStateFadeOut = 7,       // start the fade-out transition
+        kTitleStateWaitFadeOut = 8,   // wait for the fade-out to finish
+        kTitleStateFinish = 9,        // tear down and hand off to the menu
+    };
+    int m_state = 0;                        // +0x48 state machine (TitleState)
     bool m_state3Built = false;             // +0x4c the title UI has been built
     CustomButton *m_conversionButton = nil; // +0x50 the code-conversion button
 };
