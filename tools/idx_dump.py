@@ -79,10 +79,13 @@ def read_header(data: bytes) -> Header:
 def parse_names(data: bytes, file_off: int) -> tuple[list[str], int]:
     """Parse a NUL-separated name block; return (names, end_file_offset).
 
-    Mirrors buildAepNameHashTable: names run until an empty string, then the
-    cursor is 8-byte-aligned. The reconstruction aligns the in-memory ADDRESS,
-    which (with an 8-aligned idxBase at file+4) is equivalent to aligning the
-    idxBase-relative offset; we replicate that here on the file offset.
+    Mirrors buildAepNameHashTable, which 8-byte-aligns the cursor after the names
+    by its raw pointer *address* (`(int)pCursor % 8`). At runtime the .idx is a
+    16-byte-aligned NSData buffer and readIndexFile returns idxBase = buffer + 4,
+    so idxBase is 4 mod 8 and the alignment lands the following block at a FILE
+    offset that is a multiple of 8. Align the file offset to 8 to match the running
+    app (verified: the layer ordinals then resolve to the same entry indices the
+    device logs, e.g. DIFFICULTY_STAR_OUT -> 113).
     """
     names: list[str] = []
     p = file_off
@@ -91,8 +94,7 @@ def parse_names(data: bytes, file_off: int) -> tuple[list[str], int]:
         names.append(data[p:end].decode('latin1'))
         p = end + 1
     end = p + 1  # past the terminating empty string
-    rel = end - 4  # idxBase-relative
-    misalign = rel % 8
+    misalign = end % 8
     if misalign:
         end += 8 - misalign
     return names, end
