@@ -29,6 +29,18 @@ class PlayTask;     // System/src/Task/PlayTask.h    (: ne::C_TASK)
 class AcViewerTask; // System/src/Task/AcViewerTask.h (: ne::C_TASK) — the arcade
                     // note-play task (AppDelegate's acMainTask slot)
 
+// Persisted score difficulty tier — the sheet index held in PlayScore::difficulty
+// that selects which ScoreData N/H/Ex field group a play reads or writes. This is
+// the three-tier save scheme (Normal/Hyper/Ex), distinct from the arcade viewer's
+// four-tier AcvDifficulty. Ghidra: readScoreDataFields (0x29438) and saveScoreData
+// (0x28ca0) branch on these values. Pinned to int so an out-of-range sheet index
+// (which readScoreDataFields guards with its default arm) casts cleanly.
+enum ScoreDifficulty : int {
+    kScoreDiffNormal = 0, // ScoreData scoreN / rankN / playCntN / fullComboN / perfectN
+    kScoreDiffHyper = 1,  // ScoreData scoreH / rankH / playCntH / fullComboH / perfectH
+    kScoreDiffEx = 2,     // ScoreData scoreEx / rankEx / playCntEx / fullComboEx / perfectEx
+};
+
 // PlayScore is the store DTO for one (musicId, difficulty) result: the tallies,
 // score, rank and flags that saveScoreData / updateHighScore read and write. The
 // binary overlaid this record on the event-center singleton's result region (the
@@ -40,7 +52,7 @@ class AcViewerTask; // System/src/Task/AcViewerTask.h (: ne::C_TASK) — the arc
 // in the binary are kept in the comments for cross-reference.
 struct PlayScore {
     unsigned musicId;             // (singleton +0x00) music id being scored (== lastMusic)
-    int difficulty;               // (+0x04) sheet index (0 N / 1 H / 2 EX) (== lastSheet)
+    int difficulty;               // (+0x04) sheet index (ScoreDifficulty; == lastSheet)
     short coolCount;              // (+0x08) COOL tally
     short greatCount;             // (+0x0a) GREAT tally
     short goodCount;              // (+0x0c) GOOD tally  (a "miss/near" counter)

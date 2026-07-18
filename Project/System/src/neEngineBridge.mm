@@ -224,22 +224,22 @@ void readScoreDataFields(ScoreData *rec,
     }
     *outScore = 0;
     NSNumber *score, *rank, *playCnt, *fullCombo, *perfect;
-    switch (difficulty) {
-    case 0:
+    switch (static_cast<ScoreDifficulty>(difficulty)) {
+    case kScoreDiffNormal:
         score = recDup.scoreN;
         rank = recDup.rankN;
         playCnt = recDup.playCntN;
         fullCombo = recDup.fullComboN;
         perfect = recDup.perfectN;
         break;
-    case 1:
+    case kScoreDiffHyper:
         score = recDup.scoreH;
         rank = recDup.rankH;
         playCnt = recDup.playCntH;
         fullCombo = recDup.fullComboH;
         perfect = recDup.perfectH;
         break;
-    case 2:
+    case kScoreDiffEx:
         score = recDup.scoreEx;
         rank = recDup.rankEx;
         playCnt = recDup.playCntEx;
@@ -282,31 +282,31 @@ void saveScoreData(PlayScore *s) {
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
     [ctx reset];
     ScoreData *rec = [ScoreData getScoreData:(int)s->musicId inManagedObjectContext:ctx];
-    const int diff = s->difficulty;
+    const ScoreDifficulty diff = static_cast<ScoreDifficulty>(s->difficulty);
 
     // Full combo -> set this difficulty's FC medal; a spotless sheet (no GOOD and
     // no BAD) also sets the PERFECT medal.
     if (s->fullCombo) {
         switch (diff) {
-        case 0:
+        case kScoreDiffNormal:
             rec.fullComboN = @YES;
             break;
-        case 1:
+        case kScoreDiffHyper:
             rec.fullComboH = @YES;
             break;
-        case 2:
+        case kScoreDiffEx:
             rec.fullComboEx = @YES;
             break;
         }
         if (s->badCount == 0 && s->goodCount == 0) {
             switch (diff) {
-            case 0:
+            case kScoreDiffNormal:
                 rec.perfectN = @YES;
                 break;
-            case 1:
+            case kScoreDiffHyper:
                 rec.perfectH = @YES;
                 break;
-            case 2:
+            case kScoreDiffEx:
                 rec.perfectEx = @YES;
                 break;
             }
@@ -317,21 +317,21 @@ void saveScoreData(PlayScore *s) {
     // "unset".
     const int newRank = s->rank;
     switch (diff) {
-    case 0: {
+    case kScoreDiffNormal: {
         int ex = [rec.rankN intValue];
         if (ex == -1 || newRank < ex) {
             rec.rankN = @(newRank);
         }
         break;
     }
-    case 1: {
+    case kScoreDiffHyper: {
         int ex = [rec.rankH intValue];
         if (ex == -1 || newRank < ex) {
             rec.rankH = @(newRank);
         }
         break;
     }
-    case 2: {
+    case kScoreDiffEx: {
         int ex = [rec.rankEx intValue];
         if (ex == -1 || newRank < ex) {
             rec.rankEx = @(newRank);
@@ -343,13 +343,13 @@ void saveScoreData(PlayScore *s) {
     // New high score -> store it and re-hash the tamper checksum.
     if (s->isNewHighScore) {
         switch (diff) {
-        case 0:
+        case kScoreDiffNormal:
             rec.scoreN = @(s->score);
             break;
-        case 1:
+        case kScoreDiffHyper:
             rec.scoreH = @(s->score);
             break;
-        case 2:
+        case kScoreDiffEx:
             rec.scoreEx = @(s->score);
             break;
         }
@@ -360,13 +360,13 @@ void saveScoreData(PlayScore *s) {
 
     // Bump this difficulty's play count.
     switch (diff) {
-    case 0:
+    case kScoreDiffNormal:
         rec.playCntN = @([rec.playCntN intValue] + 1);
         break;
-    case 1:
+    case kScoreDiffHyper:
         rec.playCntH = @([rec.playCntH intValue] + 1);
         break;
-    case 2:
+    case kScoreDiffEx:
         rec.playCntEx = @([rec.playCntEx intValue] + 1);
         break;
     }
