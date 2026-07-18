@@ -549,7 +549,7 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 - (void)addBlockListFinished {
     NSDictionary *json = [_dlAddBlockList getDataInJSON];
     if (json != nil) {
-        (void)json[@"ErrorCode"];
+        static_cast<void>(json[@"ErrorCode"]);
     }
     _dlAddBlockList = nil;
 }
@@ -558,7 +558,7 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 - (void)delBlockListFinished {
     NSDictionary *json = [_dlDelBlockList getDataInJSON];
     if (json != nil) {
-        (void)json[@"ErrorCode"];
+        static_cast<void>(json[@"ErrorCode"]);
     }
     _dlDelBlockList = nil;
 }
@@ -607,7 +607,7 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
     // isKindOfClass:NSNumber without acting on the result; only the presence of a
     // JSON body drives the delegate flag. The probe is an inert, side-effect-free
     // call, so it is elided here.
-    (void)json[@"ErrorCode"];
+    static_cast<void>(json[@"ErrorCode"]);
 
     _dlCancelFriend = nil;
 
@@ -1095,8 +1095,8 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
     _isGetVisitorSuccess = NO;
     NSString *body = [NSString stringWithFormat:@"uuid=%@&map_id=%d&type=%d",
                                                 AppDelegate.appDelegate.uuId,
-                                                (int)mapId,
-                                                (int)type];
+                                                static_cast<int>(mapId),
+                                                static_cast<int>(type)];
     _dlGetVisitor = [[Downloader alloc] initWithURL:[StoreUtil getVisitorURL]
                                            delegate:self
                                                Post:[body dataUsingEncoding:NSUTF8StringEncoding]
@@ -1246,7 +1246,7 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
     if (json == nil) {
         result = 1;
     } else {
-        (void)json[@"ErrorCode"];
+        static_cast<void>(json[@"ErrorCode"]);
         result = -1;
     }
     _dlGetPresent = nil;

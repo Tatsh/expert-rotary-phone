@@ -172,8 +172,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // The format string is the shared CFString @ 0x1029ae = "Cell%ld-%ld" (byte
     // 0x2d is a hyphen, not an underscore).
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     AcViewerDetailCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerDetailCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -183,7 +184,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
         static NSString *const kHidSud[] = {@"OFF", @"HIDDEN", @"SUDDEN", @"HID-SUD"};
         cell.optionName = kHidSud[indexPath.row];
         cell.optionKind = AcvOptionRowHidSud;
-        [cell setData:(int)indexPath.row];
+        [cell setData:static_cast<int>(indexPath.row)];
     }
     return cell;
 }
@@ -211,7 +212,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     if ([UserSettingData acvHidSud] == indexPath.row) {
         return;
     }
-    [UserSettingData saveAcvHidSud:(int)indexPath.row];
+    [UserSettingData saveAcvHidSud:static_cast<int>(indexPath.row)];
     [self.tableView reloadData];
     neEngine::playSystemSe(1);
     [self touchedBackButton:nil];

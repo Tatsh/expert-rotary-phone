@@ -117,8 +117,8 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
         context = CGBitmapContextCreate(NULL, 0, 0, 8, 0, colorSpace, (CGBitmapInfo)0);
     } else {
         context = CGBitmapContextCreate(NULL,
-                                        (size_t)image.size.width,
-                                        (size_t)image.size.height,
+                                        static_cast<size_t>(image.size.width),
+                                        static_cast<size_t>(image.size.height),
                                         8,
                                         0,
                                         colorSpace,
@@ -632,10 +632,10 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 // @complete
 - (void)touchedSheetButton:(id)sender {
     NSInteger tag = [sender tag];
-    if ((NSUInteger)(tag - 200) >= 4) {
+    if (static_cast<NSUInteger>(tag - 200) >= 4) {
         return;
     }
-    int sheet = (int)(tag - 200); // kSheetButtonTag maps identically to the sheet index
+    int sheet = static_cast<int>(tag - 200); // kSheetButtonTag maps identically to the sheet index
     if (_selectedSheet == sheet) {
         return;
     }
@@ -686,10 +686,10 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 // @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     NSInteger tag = [[[touches anyObject] view] tag];
-    if ((NSUInteger)(tag - 204) >= 4) {
+    if (static_cast<NSUInteger>(tag - 204) >= 4) {
         return;
     }
-    int sheet = (int)(tag - 204); // kNamePlateTag maps identically to the sheet index
+    int sheet = static_cast<int>(tag - 204); // kNamePlateTag maps identically to the sheet index
     if (_selectedSheet != sheet) {
         return;
     }

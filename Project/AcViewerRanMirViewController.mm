@@ -171,8 +171,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Binary's reuse identifier is "Cell%ld-%ld" (hyphen), string @ 0x1029ae.
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     AcViewerDetailCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerDetailCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -182,7 +183,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
         static NSString *const kRanMir[] = {@"OFF", @"RANDOM", @"MIRROR", @"S-RAN"};
         cell.optionName = kRanMir[indexPath.row];
         cell.optionKind = AcvOptionRowRanMir;
-        [cell setData:(int)indexPath.row];
+        [cell setData:static_cast<int>(indexPath.row)];
     }
     return cell;
 }
@@ -210,7 +211,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     if ([UserSettingData acvRanMir] == indexPath.row) {
         return;
     }
-    [UserSettingData saveAcvRanMir:(int)indexPath.row];
+    [UserSettingData saveAcvRanMir:static_cast<int>(indexPath.row)];
     [self.tableView reloadData];
     neEngine::playSystemSe(1);
     [self touchedBackButton:nil];

@@ -292,8 +292,9 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Ghidra @ 0xdffec: the reuse-identifier format is "Cell%ld-%ld" (hyphen) —
     // string @ 0x1029ae, length 11.
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     AcViewerOptionCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerOptionCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -458,7 +459,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
           }] resume];
 #else
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:nil];
-    (void)connection;
+    static_cast<void>(connection);
 #endif
 }
 

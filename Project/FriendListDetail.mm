@@ -189,7 +189,8 @@ constexpr int kColX[3] = {139, 190, 242};
         [window addSubview:plate];
 
         charaView = [[UIImageView alloc] initWithFrame:CGRectMake(25, 38, 43, 43)];
-        NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+        NSString *iconFile =
+            [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
         UIImage *icon =
             (charaId > 0x1d) ?
                 [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
@@ -198,7 +199,8 @@ constexpr int kColX[3] = {139, 190, 242};
         [charaView setImage:icon];
     } else {
         charaView = [[UIImageView alloc] initWithFrame:CGRectMake(66, 72, 125, 120)];
-        NSString *sugoFile = [NSString stringWithFormat:@"sugo_chara_%03d.png", (int)charaId];
+        NSString *sugoFile =
+            [NSString stringWithFormat:@"sugo_chara_%03d.png", static_cast<int>(charaId)];
         NSURL *sugoURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
                                                     stringByAppendingPathComponent:sugoFile]];
         [charaView setImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:sugoURL]]];

@@ -131,7 +131,8 @@
         UIActivityIndicatorView *spinner =
             [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
         spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
-        spinner.center = CGPointMake(frame.size.width * 0.5f, (int)(frame.size.height * 0.5f) - 10);
+        spinner.center =
+            CGPointMake(frame.size.width * 0.5f, static_cast<int>(frame.size.height * 0.5f) - 10);
         spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
         [spinner startAnimating];
         [_dummyView addSubview:spinner];
@@ -173,7 +174,8 @@
             [charaBg setImage:[UIImage imageNamed:@"frilis_btn_chara"]];
             [window addSubview:charaBg];
 
-            NSString *charaName = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+            NSString *charaName =
+                [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
             UIImage *charaImg;
             if (charaId > 29) {
                 charaImg =
@@ -187,7 +189,8 @@
             [chara setImage:charaImg];
             [window addSubview:chara];
         } else {
-            NSString *charaName = [NSString stringWithFormat:@"sugo_chara_%03d.png", (int)charaId];
+            NSString *charaName =
+                [NSString stringWithFormat:@"sugo_chara_%03d.png", static_cast<int>(charaId)];
             NSURL *url = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
                                                     stringByAppendingPathComponent:charaName]];
             UIImageView *chara =

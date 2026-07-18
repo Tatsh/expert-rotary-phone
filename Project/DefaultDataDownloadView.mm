@@ -83,7 +83,7 @@
 // _downloader-nil gate that resets _tryCnt and starts the fetch.
 // @complete
 - (BOOL)downloadWithIdx:(int)idx {
-    if ((int)_dlFileListDataArray.count <= idx) {
+    if (static_cast<int>(_dlFileListDataArray.count) <= idx) {
         return NO;
     }
     _filePath = nil; // @ release
@@ -138,9 +138,9 @@
     _downloader = nil; // @ release
 
     NSError *error = nil;
-    if (data.length == (NSUInteger)_fileSize && [data writeToFile:_filePath
-                                                          options:NSDataWritingAtomic
-                                                            error:&error]) {
+    if (data.length == static_cast<NSUInteger>(_fileSize) && [data writeToFile:_filePath
+                                                                       options:NSDataWritingAtomic
+                                                                         error:&error]) {
         // The just-finished entry is re-read here in the binary (result unused).
         DlFileListData finished;
         [_dlFileListDataArray[_downloadingIdx] getValue:&finished];
@@ -153,7 +153,7 @@
                     break;
                 }
                 _downloadingIdx++;
-            } while ((NSUInteger)_downloadingIdx < _dlFileListDataArray.count);
+            } while (static_cast<NSUInteger>(_downloadingIdx) < _dlFileListDataArray.count);
         }
     } else {
         _isFailed = YES;
@@ -170,9 +170,10 @@
         [alert show];
     }
 
-    if ((NSUInteger)_downloadingIdx < _dlFileListDataArray.count && !_isFailed) {
+    if (static_cast<NSUInteger>(_downloadingIdx) < _dlFileListDataArray.count && !_isFailed) {
         [self setJustDownloadedSize];
-        [_downloadView.progressView setProgress:(float)_downloadedFileSize / (float)_totalFileSize];
+        [_downloadView.progressView setProgress:static_cast<float>(_downloadedFileSize) /
+                                                static_cast<float>(_totalFileSize)];
     } else {
         [_downloadView.indicatorView stopAnimating];
         [self startCloseAnimation];
@@ -189,12 +190,13 @@
     [self setJustDownloadedSize];
     _downloadedFileSize += [downloader currentSize];
 
-    float progress = (float)_downloadedFileSize / (float)_totalFileSize;
+    float progress = static_cast<float>(_downloadedFileSize) / static_cast<float>(_totalFileSize);
     if (progress > 1.0f) {
         progress = 1.0f;
     }
     [_downloadView.labelMessage
-        setText:[NSString stringWithFormat:@"Downloading %d%%", (int)(progress * 100.0f)]];
+        setText:[NSString
+                    stringWithFormat:@"Downloading %d%%", static_cast<int>(progress * 100.0f)]];
     [_downloadView.progressView setProgress:progress];
 }
 
@@ -266,12 +268,13 @@
                 [alert show];
             }
             _downloadingIdx++;
-        } while ((NSUInteger)_downloadingIdx < _dlFileListDataArray.count);
+        } while (static_cast<NSUInteger>(_downloadingIdx) < _dlFileListDataArray.count);
     }
 
-    if ((NSUInteger)_downloadingIdx < _dlFileListDataArray.count && !_isFailed) {
+    if (static_cast<NSUInteger>(_downloadingIdx) < _dlFileListDataArray.count && !_isFailed) {
         [self setJustDownloadedSize];
-        [_downloadView.progressView setProgress:(float)_downloadedFileSize / (float)_totalFileSize];
+        [_downloadView.progressView setProgress:static_cast<float>(_downloadedFileSize) /
+                                                static_cast<float>(_totalFileSize)];
         [_downloadView.indicatorView startAnimating];
     } else {
         [self startCloseAnimation];

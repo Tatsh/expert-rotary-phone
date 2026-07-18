@@ -278,7 +278,7 @@
     if (type > CustomAlertViewAnimeTypeScale) {
         return;
     }
-    m_OpenAnimeType = (int)type;
+    m_OpenAnimeType = static_cast<int>(type);
 }
 
 // @ 0x269ac
@@ -287,7 +287,7 @@
     if (type > CustomAlertViewAnimeTypeScale) {
         return;
     }
-    m_CloseAnimeType = (int)type;
+    m_CloseAnimeType = static_cast<int>(type);
 }
 
 #pragma mark - Show / dismiss

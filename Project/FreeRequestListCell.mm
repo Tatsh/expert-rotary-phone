@@ -110,20 +110,21 @@
     self.backgroundColor = [UIColor clearColor];
 
     // Chara icon backing plate.
-    _charaBgImgView =
-        [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)imgCharaX, 5.0f, 43.0f, 43.0f)];
+    _charaBgImgView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(imgCharaX), 5.0f, 43.0f, 43.0f)];
     [_charaBgImgView setImage:[UIImage imageNamed:@"frisco_icon_cmn"]];
     [_bgImgView addSubview:_charaBgImgView];
 
     // Chara icon (built-in charas from the bundle, downloaded ones from the
     // app-support dir).
-    _charaImgView =
-        [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)imgCharaX, 5.0f, 43.0f, 43.0f)];
+    _charaImgView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(imgCharaX), 5.0f, 43.0f, 43.0f)];
     short charaId = data.charaId;
     if (charaId < 0) {
         charaId = 0;
     }
-    NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+    NSString *iconFile =
+        [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
     UIImage *icon =
         (charaId < 0x1e) ?
             [UIImage imageNamed:iconFile] :
@@ -133,8 +134,8 @@
     [_bgImgView addSubview:_charaImgView];
 
     // Player name (BullyBold 14, dark gray rgb 93/88/84).
-    _playerNameLbl =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)imgPlayerNameX, 5.0f, 180.0f, 20.0f)];
+    _playerNameLbl = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(imgPlayerNameX), 5.0f, 180.0f, 20.0f)];
     _playerNameLbl.backgroundColor = [UIColor clearColor];
     _playerNameLbl.textColor = [UIColor colorWithRed:0.36470f
                                                green:0.34510f
@@ -150,13 +151,13 @@
 
     // Score plate.
     _scoreBaseImgView = [[UIImageView alloc]
-        initWithFrame:CGRectMake((CGFloat)imgScoreBaseX, 24.0f, 190.0f, 20.0f)];
+        initWithFrame:CGRectMake(static_cast<CGFloat>(imgScoreBaseX), 24.0f, 190.0f, 20.0f)];
     [_scoreBaseImgView setImage:[UIImage imageNamed:@"frilis_scototal_cmn"]];
     [_bgImgView addSubview:_scoreBaseImgView];
 
     // Score value (BullyBold 18, right-aligned).
-    _scoreLbl =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)imgScoreX, 25.0f, 262.0f, 20.0f)];
+    _scoreLbl = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(imgScoreX), 25.0f, 262.0f, 20.0f)];
     _scoreLbl.backgroundColor = [UIColor clearColor];
     _scoreLbl.textColor = [UIColor colorWithRed:0.36470f green:0.34510f blue:0.32941f alpha:1.0f];
     _scoreLbl.highlightedTextColor = [UIColor whiteColor];

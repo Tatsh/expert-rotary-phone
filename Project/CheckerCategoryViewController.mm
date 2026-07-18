@@ -232,8 +232,9 @@ static NSString *const kMsgNoPlayData =
 // @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld_%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld_%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     CheckerCategoryCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[CheckerCategoryCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -251,7 +252,7 @@ static NSString *const kMsgNoPlayData =
             found++;
         }
     }
-    [cell setData:_scoreDataArray[idx] category:(short)idx];
+    [cell setData:_scoreDataArray[idx] category:static_cast<short>(idx)];
     return cell;
 }
 
@@ -283,7 +284,7 @@ static NSString *const kMsgNoPlayData =
     }
     CheckerMusicViewController *music =
         [[CheckerMusicViewController alloc] initWithScoreData:_scoreDataArray[idx]
-                                                     category:(short)idx];
+                                                     category:static_cast<short>(idx)];
     neSceneManager::shared();
     [self.navigationController pushViewController:music animated:!neSceneManager::isPadDisplay()];
 }
@@ -413,7 +414,7 @@ static NSString *const kMsgNoPlayData =
                     // The binary walks the detailed validation errors but does nothing
                     // with them; kept for fidelity.
                     for (id detail in [error.userInfo objectForKey:NSDetailedErrorsKey]) {
-                        (void)detail;
+                        static_cast<void>(detail);
                     }
                 }
             }

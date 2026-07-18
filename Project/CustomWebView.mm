@@ -423,7 +423,7 @@
 
     if (![UserSettingData isFollowBonusGet]) {
         short pts = [UserSettingData treasurePoint];
-        [UserSettingData saveTreasurePoint:(short)(pts + 3000)];
+        [UserSettingData saveTreasurePoint:static_cast<short>(pts + 3000)];
 
         // Reward text recovered from the binary (Ghidra UTF-16 CFString @ 0x1374c8,
         // formatted with the 3000-point award; "OK" dismiss button CFString @

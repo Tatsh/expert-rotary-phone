@@ -203,7 +203,8 @@ static NSString *const kScoreBestImg[4] = {
         _youImgView = [[UIImageView alloc] initWithFrame:self.bounds];
         [_youImgView setImage:youImg];
         [_youImgView
-            setFrame:CGRectMake((CGFloat)_imgYouX, 0, youImg.size.width, youImg.size.height)];
+            setFrame:CGRectMake(
+                         static_cast<CGFloat>(_imgYouX), 0, youImg.size.width, youImg.size.height)];
         [parent addSubview:_youImgView];
     }
 
@@ -215,41 +216,47 @@ static NSString *const kScoreBestImg[4] = {
         _rankImgView01 = [[UIImageView alloc] init];
         [_rankImgView01 setImage:img];
         [_rankImgView01
-            setFrame:CGRectMake((CGFloat)_imgFrameX, 12.0f, img.size.width, img.size.height)];
+            setFrame:CGRectMake(
+                         static_cast<CGFloat>(_imgFrameX), 12.0f, img.size.width, img.size.height)];
         [parent addSubview:_rankImgView01];
     } else {
         int place = rank + 1;
         UIImage *ones = [UIImage imageNamed:kRankDigitImg[place % 10]];
         _rankImgView01 = [[UIImageView alloc] init];
         [_rankImgView01 setImage:ones];
-        [_rankImgView01
-            setFrame:CGRectMake((CGFloat)_imgFrame01X, 12.0f, ones.size.width, ones.size.height)];
+        [_rankImgView01 setFrame:CGRectMake(static_cast<CGFloat>(_imgFrame01X),
+                                            12.0f,
+                                            ones.size.width,
+                                            ones.size.height)];
         [parent addSubview:_rankImgView01];
 
         UIImage *tens = [UIImage imageNamed:kRankDigitImg[(place / 10) % 10]];
         _rankImgView10 = [[UIImageView alloc] init];
         [_rankImgView10 setImage:tens];
-        [_rankImgView10
-            setFrame:CGRectMake((CGFloat)_imgFrame10X, 12.0f, tens.size.width, tens.size.height)];
+        [_rankImgView10 setFrame:CGRectMake(static_cast<CGFloat>(_imgFrame10X),
+                                            12.0f,
+                                            tens.size.width,
+                                            tens.size.height)];
         [parent addSubview:_rankImgView10];
     }
 
     // Chara icon backing plate (gold/silver/bronze for top 3, common otherwise).
-    _charaBgImgView =
-        [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)_imgOrderX, 5.0f, 43.0f, 43.0f)];
+    _charaBgImgView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgOrderX), 5.0f, 43.0f, 43.0f)];
     [_charaBgImgView
         setImage:[UIImage imageNamed:(rank < 3 ? kCharaIconBg[rank] : @"frisco_icon_cmn")]];
     [parent addSubview:_charaBgImgView];
 
     // Chara icon. Built-in charas (id <= 29) ship in the bundle; downloaded
     // charas load from the Application Support directory.
-    _charaImgView =
-        [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)_imgCharaX, 5.0f, 43.0f, 43.0f)];
+    _charaImgView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgCharaX), 5.0f, 43.0f, 43.0f)];
     short charaId = data.charaId;
     if (charaId < 0) {
         charaId = 0;
     }
-    NSString *charaFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+    NSString *charaFile =
+        [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
     UIImage *charaImg;
     if (charaId > 0x1d) {
         NSString *path =
@@ -262,8 +269,8 @@ static NSString *const kScoreBestImg[4] = {
     [parent addSubview:_charaImgView];
 
     // Player name.
-    _playerNameLbl =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 130.0f, 20.0f)];
+    _playerNameLbl = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgPlayerNameX), 5.0f, 130.0f, 20.0f)];
     _playerNameLbl.backgroundColor = [UIColor clearColor];
     // Exact constants from the binary (0x3ebababb / 0x3eb0b0b1 / 0x3ea8a8a9) ~=
     // rgb(93,88,84).
@@ -286,7 +293,7 @@ static NSString *const kScoreBestImg[4] = {
 
     // Score plaque (art keyed by place, and by which score is being ranked on).
     _scoreBaseImgView = [[UIImageView alloc]
-        initWithFrame:CGRectMake((CGFloat)_imgScoreBaseX, 24.0f, 190.0f, 20.0f)];
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgScoreBaseX), 24.0f, 190.0f, 20.0f)];
     int placeIdx = (rank > 2) ? 3 : rank;
     int score;
     if (!isBestScoreSort) {
@@ -299,8 +306,8 @@ static NSString *const kScoreBestImg[4] = {
     [parent addSubview:_scoreBaseImgView];
 
     // Score value (right-aligned over the plaque).
-    _scoreLbl =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_imgScoreX, 25.0f, 262.0f, 20.0f)];
+    _scoreLbl = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgScoreX), 25.0f, 262.0f, 20.0f)];
     _scoreLbl.backgroundColor = [UIColor clearColor];
     _scoreLbl.textColor = [UIColor colorWithRed:0.36458503f
                                           green:0.34506654f

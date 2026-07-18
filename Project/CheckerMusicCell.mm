@@ -100,8 +100,8 @@
         }
     } else {
         // iPad: fixed-size banner (300x59) at bgX, kept as a content subview.
-        UIImageView *bg =
-            [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)bgX, 0.0f, 300.0f, 59.0f)];
+        UIImageView *bg = [[UIImageView alloc]
+            initWithFrame:CGRectMake(static_cast<CGFloat>(bgX), 0.0f, 300.0f, 59.0f)];
         [bg setImage:baseImg];
         _bgImg = bg;
         [self.contentView addSubview:bg];
@@ -124,7 +124,7 @@
     _dateLbl.adjustsFontSizeToFitWidth = YES;
     _dateLbl.minimumScaleFactor = 10.0f; // faithful to binary (0x41200000); out-of-range as shipped
     _dateLbl.text = [df stringFromDate:scoreData.updateDate];
-    [_dateLbl setFrame:CGRectMake((CGFloat)dateX, 33.0f, 62.0f, 13.0f)];
+    [_dateLbl setFrame:CGRectMake(static_cast<CGFloat>(dateX), 33.0f, 62.0f, 13.0f)];
     [self.contentView addSubview:_dateLbl];
 
     // Title label (DFSoGei 14, dark gray, left-aligned).
@@ -140,7 +140,7 @@
     _titleLbl.adjustsFontSizeToFitWidth = YES;
     _titleLbl.minimumScaleFactor = 10.0f; // faithful to binary (0x41200000)
     _titleLbl.text = scoreData.title;
-    [_titleLbl setFrame:CGRectMake((CGFloat)titleX, 9.0f, 116.0f, 18.0f)];
+    [_titleLbl setFrame:CGRectMake(static_cast<CGFloat>(titleX), 9.0f, 116.0f, 18.0f)];
     [self.contentView addSubview:_titleLbl];
 
     // Genre label (DFSoGei 14, near-white, left-aligned).
@@ -156,7 +156,7 @@
     _genreLbl.adjustsFontSizeToFitWidth = YES;
     _genreLbl.minimumScaleFactor = 10.0f; // faithful to binary (0x41200000)
     _genreLbl.text = scoreData.genre;
-    [_genreLbl setFrame:CGRectMake((CGFloat)genreX, 33.0f, 116.0f, 18.0f)];
+    [_genreLbl setFrame:CGRectMake(static_cast<CGFloat>(genreX), 33.0f, 116.0f, 18.0f)];
     [self.contentView addSubview:_genreLbl];
 }
 

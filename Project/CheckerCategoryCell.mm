@@ -121,7 +121,7 @@
         [_musicCntBaseView setImage:playedImage];
         [self.contentView addSubview:_musicCntBaseView];
 
-        int count = (int)playedList.count;
+        int count = static_cast<int>(playedList.count);
         int digitCount = 1;
         for (int t = count; t >= 10; t /= 10) {
             digitCount++;
@@ -129,7 +129,8 @@
         int shown = MIN(digitCount, 3);
         // Rightmost (units) digit sits furthest right; earlier digits step left
         // by 10.
-        CGFloat x = (CGFloat)_imgMusicCntX + 15.0f + (CGFloat)(shown * 5 - 5);
+        CGFloat x =
+            static_cast<CGFloat>(_imgMusicCntX) + 15.0f + static_cast<CGFloat>(shown * 5 - 5);
         int remaining = count;
         for (int i = 0; i < shown; i++) {
             UIImageView *numView =

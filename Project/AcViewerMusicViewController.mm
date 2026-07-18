@@ -68,8 +68,9 @@ static NSString *const kCategoryBanner[] = {
 
     // --- Custom header: the genre-category banner of the first listed song ---
     int category = [(AcMusicData *)[acMusicDataArray objectAtIndexedSubscript:0] category];
-    NSString *bannerName =
-        (acMusicDataArray == nil) ? @"ppc_mlist_header_all" : kCategoryBanner[(short)category];
+    NSString *bannerName = (acMusicDataArray == nil) ?
+                               @"ppc_mlist_header_all" :
+                               kCategoryBanner[static_cast<short>(category)];
     UIImage *bannerImg = [UIImage imageNamed:bannerName];
     UIImageView *bannerView = [[UIImageView alloc] initWithImage:bannerImg];
     bannerView.frame = CGRectMake(0.0f, 17.0f, bannerImg.size.width, bannerImg.size.height);
@@ -188,7 +189,7 @@ static NSString *const kCategoryBanner[] = {
 // @ 0xcc3b8 — one row per listed song.
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return (_acMusicDataArray != nil) ? (NSInteger)_acMusicDataArray.count : 0;
+    return (_acMusicDataArray != nil) ? static_cast<NSInteger>(_acMusicDataArray.count) : 0;
 }
 
 // @ 0xcc3e0 — one AcViewerMusicCell per song (reused by "Cell%ld-%ld"); on
@@ -199,8 +200,9 @@ static NSString *const kCategoryBanner[] = {
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // The reuse identifier uses a hyphen separator (CFString @ 0x1029ae:
     // "Cell%ld-%ld"), not an underscore.
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     AcViewerMusicCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[AcViewerMusicCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -286,7 +288,7 @@ static NSString *const kCategoryBanner[] = {
     // 0x12fa90); any other tag falls back to 1.
     static constexpr int kDifficultyForTag[] = {0, 1, 2, 3};
     NSInteger tag = [sender tag];
-    int difficulty = ((NSUInteger)(tag - 100) < 4) ? kDifficultyForTag[tag - 100] : 1;
+    int difficulty = (static_cast<NSUInteger>(tag - 100) < 4) ? kDifficultyForTag[tag - 100] : 1;
 
     NSIndexPath *indexPath = [self indexPathForControlEvent:event];
     AcMusicData *data = [_acMusicDataArray objectAtIndexedSubscript:indexPath.row];

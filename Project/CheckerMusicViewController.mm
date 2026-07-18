@@ -135,7 +135,7 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (_scoreDataArray != nil) {
-        return (NSInteger)_scoreDataArray.count;
+        return static_cast<NSInteger>(_scoreDataArray.count);
     }
     return 0;
 }
@@ -145,8 +145,9 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Binary's reuse identifier is "Cell%ld-%ld" (hyphen), string @ 0x1029ae.
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     CheckerMusicCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[CheckerMusicCell alloc] initWithStyle:UITableViewCellStyleDefault

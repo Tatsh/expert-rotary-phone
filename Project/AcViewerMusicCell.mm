@@ -77,7 +77,7 @@ static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {
             CGFloat x = (prev == nil) ? firstX : prev.frame.origin.x + 70.0f;
             [btn setBackgroundImage:img forState:UIControlStateNormal];
             btn.frame = CGRectMake(x, 51, img.size.width, img.size.height);
-            btn.tag = 100 + (NSInteger)i;
+            btn.tag = 100 + static_cast<NSInteger>(i);
             switch (static_cast<AcvDifficulty>(i)) {
             case AcvDifficultyEasy:
                 self.easyBtn = btn;

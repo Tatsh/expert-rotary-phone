@@ -373,7 +373,7 @@
     NSArray *charaArray = [UserSettingData gotCharaArray];
     for (NSUInteger i = 0; i < charaArray.count; i++) {
         NSMutableDictionary *entry = [NSMutableDictionary dictionary];
-        [entry setObject:[NSNumber numberWithInt:(int)i] forKey:@"idx"];
+        [entry setObject:[NSNumber numberWithInt:static_cast<int>(i)] forKey:@"idx"];
         [entry setObject:[charaArray objectAtIndex:i] forKey:@"data"];
         [gotChara addObject:entry];
     }

@@ -124,8 +124,8 @@
         UIActivityIndicatorView *spinner =
             [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
         spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray; // style 2
-        spinner.center =
-            CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
+        spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
+                                     static_cast<int>(viewFrame.size.height * 0.5f) - 10);
         spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
         [spinner startAnimating];
         [_dummyView.view addSubview:spinner];
@@ -176,14 +176,16 @@
 // @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     FreeRequestListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FreeRequestListCell alloc] initWithStyle:UITableViewCellStyleDefault
                                           reuseIdentifier:identifier];
     }
-    [cell setFriendData:[_frinedDataArray objectAtIndex:indexPath.row] rank:(int)indexPath.row];
+    [cell setFriendData:[_frinedDataArray objectAtIndex:indexPath.row]
+                   rank:static_cast<int>(indexPath.row)];
     return cell;
 }
 

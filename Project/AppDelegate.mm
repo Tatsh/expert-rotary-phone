@@ -74,7 +74,7 @@ BOOL gLaunchedFromPush = NO;
     self.mainWindow = [[neWindow alloc] initWithFrame:bounds];
     self.mainWindow.backgroundColor = UIColor.blackColor;
 
-    srand((unsigned)time(nullptr));
+    srand(static_cast<unsigned>(time(nullptr)));
 
 #ifdef ENABLE_PATCHES
     // Preservation build: Konami's Terms-of-Service acceptance server is defunct,
@@ -134,7 +134,7 @@ BOOL gLaunchedFromPush = NO;
     neSceneManager::shared().attachRoot(self.viewController);
     [self.mainWindow makeKeyAndVisible];
 
-    neGraphics::configure((float)UIScreen.mainScreen.scale);
+    neGraphics::configure(static_cast<float>(UIScreen.mainScreen.scale));
     neEngine::bootstrapB();
 #ifdef ENABLE_PATCHES
     // Engine-text enlargement. The binary calls bootstrapC(0) (@ 0x91b0), which
@@ -168,7 +168,7 @@ BOOL gLaunchedFromPush = NO;
     [RewardNetwork startWithAppliId:_rewardAppId
                                 env:@"0"
                            callback:^(NSError *error) {
-                             (void)error;
+                             static_cast<void>(error);
                            }];
 
     [[DownloadMain getInstance] startGetDlFileListHttp:-1];
@@ -326,7 +326,7 @@ BOOL gLaunchedFromPush = NO;
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
     didReceiveNotificationResponse:(UNNotificationResponse *)response
              withCompletionHandler:(void (^)(void))completionHandler {
-    (void)response.notification.request.content.userInfo;
+    static_cast<void>(response.notification.request.content.userInfo);
     completionHandler();
 }
 #else
@@ -348,7 +348,7 @@ BOOL gLaunchedFromPush = NO;
  */
 - (void)application:(UIApplication *)application
     didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    (void)userInfo[@"body"];
+    static_cast<void>(userInfo[@"body"]);
     if (application.applicationState > UIApplicationStateInactive) {
         return;
     }
@@ -501,7 +501,7 @@ BOOL gLaunchedFromPush = NO;
  * @complete
  */
 - (BOOL)isOldHardware {
-    unsigned type = (unsigned)_hardwareType;
+    unsigned type = static_cast<unsigned>(_hardwareType);
     if (type < 28 && ((1u << type) & 0x0ff7803f) != 0) {
         return YES;
     }
@@ -726,7 +726,7 @@ constexpr const char *const kHardwareModels[40] = {
         if (SecItemAdd((__bridge CFDictionaryRef)add, nullptr) == errSecSuccess) {
             NSLog(@"setUsersettingVer add success.");
         } else {
-            NSLog(@"setUsersettingVer add error. (%d)", (int)status);
+            NSLog(@"setUsersettingVer add error. (%d)", static_cast<int>(status));
         }
     } else if (status == errSecSuccess) {
         NSMutableDictionary *update = [NSMutableDictionary dictionary];
@@ -736,7 +736,7 @@ constexpr const char *const kHardwareModels[40] = {
             errSecSuccess) {
             NSLog(@"setUsersettingVer update success.");
         } else {
-            NSLog(@"setUsersettingVer update error. (%d)", (int)status);
+            NSLog(@"setUsersettingVer update error. (%d)", static_cast<int>(status));
         }
     }
 }
