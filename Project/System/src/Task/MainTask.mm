@@ -325,10 +325,13 @@ void MainTask::update(int /*deltaMs*/) {
         }
         Update(); // per-frame list scroll / cell animation
 
-        // While the song list is still being built, stream one pending jacket
-        // texture per frame (upload the first cell that has image data but no
-        // texture yet).
-        if (!m_sel.listReady) {
+        // Ghidra 0x35914: the gate is the per-frame touch phase (this->bTouchReleased
+        // @ +0xa80), NOT a list-built flag. m_touchReleased is cleared at the top of
+        // every Update() and set to 1 only on the frame the finger lifts, so on any
+        // non-release frame (idle or mid-drag) stream one pending jacket texture per
+        // frame (the first cell with image data but no texture yet) and break; the
+        // button hit-tests below run only on the release frame.
+        if (!m_touchReleased) {
             for (int c = 0; c < 27; c++) {
                 MusicSelCell &cell = m_cells[c];
                 if (cell.imageData != nil && cell.texture == nullptr) {

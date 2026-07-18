@@ -256,7 +256,6 @@ public:
 
     // ---- packed per-song select state (documented tail seam), 0x40 bytes ----
     struct MusicSelState {
-        uint8_t listReady;       // song list built (else stream jacket textures)
         uint8_t inviteOpen;      // EX unlocked for this invite song
         uint8_t previewReady;    // jackets + score loaded (state 4 gate)
         uint8_t diffDirty;       // difficulty changed -> refresh score rows
@@ -272,7 +271,7 @@ public:
         struct {
             uint8_t normal, hyper, ex;
         } perfect; // PERFECT medals per difficulty
-        uint8_t _pad0[2];
+        uint8_t _pad0[3];
         unsigned musicId; // current song id
         int difficulty;   // selected difficulty (0 N / 1 H / 2 EX)
         struct {
