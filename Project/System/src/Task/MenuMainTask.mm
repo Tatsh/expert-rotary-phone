@@ -317,12 +317,12 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if (t->released == 0) {
             continue;
         }
-        // Tap-vs-drag slop 0xb (Ghidra @ 0x6ad88), widened to pixels under
-        // ENABLE_PATCHES for modern iOS sub-pixel touch. See NE_TAP_SLOP.
+        // Tap-vs-drag slop 0xb in device pixels (Ghidra @ 0x6ad88); the touch
+        // pool stores plain pixels, so the binary's raw value applies directly.
         const int dx = t->x - t->startX, dy = t->y - t->startY;
-        if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
+        if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
             // startX/startY are plain device pixels (touchBegan stores them via
-            // vcvt, no fixed-point). The binary divides by the UI scale to reach
+            // vcvt). The binary divides by the UI scale to reach
             // logical coords. Disasm @ 0x6afae: vcvt.f32.s32(nStartX) / g_uiScale
             // -> vcvt.s32.f32, i.e. (int)((float)nStartX / uiScale).
             tapX = static_cast<int>(static_cast<float>(t->startX) / uiScale);

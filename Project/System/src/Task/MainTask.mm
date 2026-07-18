@@ -105,9 +105,9 @@ inline int MainTask::widgetIndexForButton(Button button) const {
 // buttons read a rect quad (x, y, w, h) from the Setup()-filled layout table
 // m_layoutRects[base..base+3] — settings +0x9a0, sort +0x9b0, recommend +0x9c0,
 // over-score +0x9d0, diff-toggle +0x9e0, tutorial +0x9f0 (index = (off-0x988)/4).
-// The FixedToFP/FloatVectorMult/FPToFixed block is a float scale then a
-// round-toward-zero (int) truncation. The per-cell grid buttons + kBtnBackToMenu
-// remain a computed-rect seam.
+// The vcvt.s32.f32 / vmul / vcvt.f32.s32 block is a plain int->float scale then
+// a round-toward-zero truncation back to int. The per-cell grid buttons +
+// kBtnBackToMenu remain a computed-rect seam.
 inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex) const {
     const float scale = m_uiScale;
     auto hit = [&](int x, int y, int w, int h) {
@@ -280,12 +280,12 @@ void MainTask::update(int /*deltaMs*/) {
         }
         if (t->released) {
             int dx = t->startX - t->x, dy = t->startY - t->y;
-            // slop widened to pixels under ENABLE_PATCHES (see NE_TAP_SLOP)
-            if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
+            // The binary's raw pixel tap slop (0xb); the touch pool stores plain pixels.
+            if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
                 // The binary hit-test (update @ 0x35914) feeds neMath::pointInRect
                 // the raw integer-pixel down point (nStartX/nStartY) and scales the
-                // button rects by g_uiScale. The touch pool now stores plain device
-                // pixels (touchBegan vcvt, no fixed-point), so read them straight.
+                // button rects by g_uiScale. The touch pool stores plain device
+                // pixels (touchBegan vcvt), so read them straight.
                 tapX = t->startX;
                 tapY = t->startY;
                 haveTap = true;
@@ -1076,10 +1076,9 @@ void MainTask::Update() {
             return;
         }
 
-        // The touch pool keeps 16.16 fixed device pixels; the scroll offset,
-        // its |>= 10| tap-suppression gate and the cell-position math are all in
-        // integer pixels. The touch pool now stores plain device pixels, so read
-        // them straight (previously divided by 65536 to undo a fixed-point store).
+        // The touch pool stores plain device pixels; the scroll offset, its
+        // |>= 10| tap-suppression gate and the cell-position math are all in
+        // integer pixels, so read the coordinates straight.
         const int startX = t->startX; // +0x04 drag anchor (px)
         m_touchX = t->x;              // +0xa78 current point (px)
         m_touchY = t->y;              // +0xa7c

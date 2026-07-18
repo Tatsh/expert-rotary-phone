@@ -16,9 +16,10 @@
 
 // One tracked touch. The manager pre-allocates a fixed pool of these
 // (operator_new(0x30) = 48 bytes each) at init and mutates them in place as
-// touches begin/move/end; slots are never freed. All coordinates are 16.16
-// fixed-point in *pixels* (the raw point value from UIKit is multiplied by the
-// content scale on the way in). Ghidra: sentinel-initialised by FUN_0001243c.
+// touches begin/move/end; slots are never freed. All coordinates are plain
+// integer device pixels (the raw point value from UIKit is multiplied by the
+// content scale on the way in via vcvt). Ghidra: sentinel-initialised by
+// FUN_0001243c.
 struct neTouchPoint {
     int id;                 // +0x00 rolling id assigned at began (-1 when never used)
     int startX;             // +0x04 down point                     (pair A)
@@ -36,13 +37,6 @@ struct neTouchPoint {
     unsigned char pad[2];   // +0x2e..+0x2f (record rounded up to 0x30)
 };
 
-// Tap-vs-drag slop for the touch-pool hit tests, in device pixels. The touch
-// pool stores plain integer pixels (touchBegan vcvt.s32.f32, no fixed-point),
-// so the binary's raw slop values (0xa/0xb ~= 10/11 px) apply directly: a tap is
-// one whose down and up points differ by fewer than that many pixels. Pass the
-// binary's slop, e.g. `d < NE_TAP_SLOP(0xb)` where d is |startX - x| in pixels.
-#define NE_TAP_SLOP(slop) (slop)
-
 // C-ABI accessors the play-judge loop uses on the raw manager pointer. Ghidra:
 // FUN_000124bc reads +0x80 (touch count); FUN_000124c4 reads the +0x00 pool
 // array (i-th touch pointer). Thin wrappers over the class members; declared
@@ -59,9 +53,9 @@ public:
     static neGraphics &shared();               // Ghidra: FUN_00012358 (returns DAT_00188384)
     static void configure(float contentScale); // Ghidra: NEGraphics_configure (FUN_00012368)
 
-    // Touch plumbing. neGLView forwards UIKit touches here as 16.16 fixed-point
-    // point coordinates; this scales them to pixels and records them. The
-    // play-judge loop (FUN_0002f1f8) reads the pool back via shared().
+    // Touch plumbing. neGLView forwards UIKit touch points here; this scales
+    // them to plain device pixels (multiply by content scale) and records them.
+    // The play-judge loop (FUN_0002f1f8) reads the pool back via shared().
     void touchBegan(int x, int y, int width, int height); // Ghidra: FUN_000124f8
     void touchMoved(int x, int y, int prevX, int prevY);  // Ghidra: FUN_00012588
     void touchEnded(int x, int y, int prevX, int prevY);  // Ghidra: FUN_000125ec

@@ -96,8 +96,8 @@ public:
         kScrollSnapRight = 3, ///< rubber-band back after a rightward drag
         kScrollSnapLeft = 4,  ///< rubber-band back after a leftward drag
     };
-    // Scroll-physics tuning constants (Ghidra 0x354xx floats; 16.16 pixel
-    // conversions modelled as identity — a Q-format seam).
+    // Scroll-physics tuning constants (Ghidra 0x354xx floats). The pixel
+    // conversions around them are plain int<->float (vcvt).
     static constexpr float kSpringAccel = 0.2f;    ///< 0x35440/44: fling-complete accel
     static constexpr float kFrictionAccel = 0.1f;  ///< 0x35434/38: snap-back accel
     static constexpr float kFrameStepMs = 16.6f;   ///< 0x3543c: per-frame time step

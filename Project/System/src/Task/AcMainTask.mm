@@ -72,8 +72,8 @@ void AcMainTask::update(int /*deltaMs*/) {
             if (m_dragAnchorId < 0) {
                 m_dragAnchorId = t->id;
                 // Disasm 0x99e3e: the anchor is stored as a plain float (vcvt.f32.s32
-                // of the touch coord, vstr.32) -- NOT divided by 65536. The consuming
-                // per-frame scroll-normalization lives in the not-yet-reconstructed
+                // of the touch coord, vstr.32). The consuming per-frame
+                // scroll-normalization lives in the not-yet-reconstructed
                 // arcade states 0x10 / 0x4d: delta = ((float)touch - anchor) /
                 // m_screenScale (NEON_ACCURACY.md #13).
                 m_dragAnchorX = static_cast<float>(t->x);
@@ -87,14 +87,14 @@ void AcMainTask::update(int /*deltaMs*/) {
             if (dx < 0) {
                 dx = -dx;
             }
-            if (dx > NE_TAP_SLOP(10)) { // slop widened under ENABLE_PATCHES (NE_TAP_SLOP)
-                break;                  // moved too far horizontally: not a tap
+            if (dx > 10) { // the binary's raw pixel slop; not a tap if moved too far
+                break;     // moved too far horizontally: not a tap
             }
             int dy = t->y - t->startY;
             if (dy < 0) {
                 dy = -dy;
             }
-            m_frameTapped = (dy < NE_TAP_SLOP(11));
+            m_frameTapped = (dy < 11);
             m_frameTapTouch = t;
             break;
         }
@@ -149,8 +149,7 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
 
     // Drag delta from the latched anchor, converted to logical screen units. The
     // binary does vcvt.f32.s32 on the raw touch coords, subtracts the float
-    // anchor, then divides by m_screenScale (vdiv) — no 65536 fixed-point scaling
-    // anywhere.
+    // anchor, then divides by m_screenScale (vdiv).
     const float dX = (static_cast<float>(t->x) - m_dragAnchorX) / m_screenScale;
     const float dY = (static_cast<float>(t->y) - m_dragAnchorY) / m_screenScale;
 
@@ -1523,11 +1522,10 @@ short findTreasureMapIndexById(int id) {
 // FUN_000a14a0 takes the touch point as its second parameter (r1, stored @
 // sp+0x44) and performs a single tap-distance test on raw coordinates (0xa1674:
 // x@+0xc, startX@+0x4; `subs; abs; cmp #0xa; bgt` reject when > 10 px), not the
-// internal `activeTouchCount()`/`touchAt(i)` loop below. The binary's coords are
-// raw pixels, so the `tp->x >> 16` shifts and the `11 << 16` thresholds here are
-// wrong for this routine (the 16.16 handling was carried over from elsewhere).
-// The AEP draw, DrawText labels, button geometry (iVar7-0xbb/iVar10-0xbc and
-// iVar7+0x3f) and the 0/1/-1 returns were all verified faithful.
+// internal `activeTouchCount()`/`touchAt(i)` loop below. The AEP draw, DrawText
+// labels, button geometry (iVar7-0xbb/iVar10-0xbc and iVar7+0x3f) and the 0/1/-1
+// returns were all verified faithful; the touch coords are plain pixels
+// (0xa16c0 feeds x@+0xc / y@+0x10 straight to pointInRect, no shift).
 int AcMainTask::sugorokuDrawSkillPanel() {
     AepManager *mgr = m_aep;
     const neGraphics &gfx = neGraphics::shared();
@@ -1577,9 +1575,9 @@ int AcMainTask::sugorokuDrawSkillPanel() {
         if (!tp || !tp->released) {
             continue;
         }
-        int tx = tp->x >> 16; // 16.16 fixed-point → integer pixel
-        int ty = tp->y >> 16;
-        // Tap test: finger displacement < 11 px (coords are 16.16).
+        int tx = tp->x; // plain device pixels (0xa16c0 uses x/y unshifted)
+        int ty = tp->y;
+        // Tap test: finger displacement < 11 px on the raw coordinates.
         int adx = tp->x - tp->startX;
         if (adx < 0) {
             adx = -adx;
@@ -1588,9 +1586,8 @@ int AcMainTask::sugorokuDrawSkillPanel() {
         if (ady < 0) {
             ady = -ady;
         }
-        // slop was hard-coded to 11px here; gate it like the other sites so the
-        // faithful build keeps the binary's raw fixed 0xb (NE_TAP_SLOP).
-        if (adx >= NE_TAP_SLOP(11) || ady >= NE_TAP_SLOP(11)) {
+        // The binary's raw pixel slop (0xb); moved too far means not a tap.
+        if (adx >= 11 || ady >= 11) {
             continue;
         }
         // Button 1 (left).
@@ -1625,10 +1622,10 @@ int AcMainTask::sugorokuDrawSkillPanel() {
 // sugorokuDrawSkillPanel. Ghidra FUN_000a178c takes the touch point as its
 // second parameter (r1, tested @ 0xa1810 on raw coords: `subs; abs; cmp #0xa;
 // bgt` reject when > 10 px, returning -1) rather than looping over
-// `activeTouchCount()`/`touchAt(i)`. The binary's coords are raw pixels, so the
-// `tp->x >> 16` shifts here are wrong. The panel draw (drawLayer at
-// overlayW/2, overlayH/2 - panelH/2, frame = panelW/2) and both button
-// hit-rects (m_dlgBtn1*/m_dlgBtn2* @ +0x998..+0x9b4) were verified faithful.
+// `activeTouchCount()`/`touchAt(i)`. The panel draw (drawLayer at overlayW/2,
+// overlayH/2 - panelH/2, frame = panelW/2) and both button hit-rects
+// (m_dlgBtn1*/m_dlgBtn2* @ +0x998..+0x9b4) were verified faithful; the touch
+// coords are plain pixels (0xa1830 uses x@+0xc / y@+0x10 unshifted).
 int AcMainTask::sugorokuDrawButtonHitTest() {
     AepManager *mgr = m_aep;
     const neGraphics &gfx = neGraphics::shared();
@@ -1666,8 +1663,8 @@ int AcMainTask::sugorokuDrawButtonHitTest() {
         if (!tp || !tp->released) {
             continue;
         }
-        int tx = tp->x >> 16;
-        int ty = tp->y >> 16;
+        int tx = tp->x; // plain device pixels (0xa1830 uses x/y unshifted)
+        int ty = tp->y;
         // Button 1.
         if (neGraphics::pointInRect(tx,
                                     ty,
@@ -2844,9 +2841,9 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 // highlight uses the same 6-per-page list layout as the verified row-count
 // (count / 6). The panel-position stores (m_charaPanelX/Y @ +0x60c/+0x610,
 // m_skillPanelX/Y @ +0x604/+0x608, index-14 baseX/Y) use the binary's signed
-// divide-by-100 (magic reciprocal 0x51eb851f @ 0xa3aca / 0xa3c88 / 0xa469c), not
-// a 16.16 shift; the only FixedToFP round-trip (index 9/13 grid @ 0xa3f66) is an
-// int<->float identity for the draw ABI, not a scale. The chara-select highlight
+// divide-by-100 (magic reciprocal 0x51eb851f @ 0xa3aca / 0xa3c88 / 0xa469c). The
+// index-9/13 grid round-trip @ 0xa3f66 is an int<->float identity for the draw
+// ABI. The chara-select highlight
 // keys on object identity (info.charaId == m_charaId @ 0xa3a84), not on any
 // incoming coordinate. All 26 branches, offsets, digit-run bounds, and constants
 // were verified faithful against disassembly.
@@ -3167,8 +3164,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // ---- collection frame grids + anchor cache (index 9 music, 13 wall)
     // ------------------- Ghidra +0x3f4 / +0x404: a 3x3 grid of the collection
     // frame m_boardFrame[kBoardFrameMusicPeaceBoardS]; each cell's anchored position (cx-anchorX,
-    // cy-anchorY) is cached for the result-popup overlays. The
-    // FixedToFP/FPToFixed here are int<->float identity round-trips (no scaling).
+    // cy-anchorY) is cached for the result-popup overlays. The int<->float
+    // conversions here are identity round-trips (no scaling).
     if (self->m_boardUserNo[kBoardMusicPanel] == child ||
         self->m_boardUserNo[kBoardWallPanel] == child) {
         AcAnchor *anchorCache = (self->m_boardUserNo[kBoardMusicPanel] == child) ?

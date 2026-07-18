@@ -102,12 +102,12 @@ void PlayResultTask::update(int /*deltaMs*/) {
             if (dx < 0) {
                 dx = -dx;
             }
-            if (dx < NE_TAP_SLOP(11)) { // slop widened under ENABLE_PATCHES (NE_TAP_SLOP)
+            if (dx < 11) { // the binary's raw pixel tap slop
                 int dy = t->startY - t->y;
                 if (dy < 0) {
                     dy = -dy;
                 }
-                if (dy < NE_TAP_SLOP(11)) {
+                if (dy < 11) {
                     tapped = true;
                     tapX = t->x;
                     tapY = t->y;
@@ -646,7 +646,8 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
     AepLyrCtrl *intro = m_layers[0].get();
 
     // Binary case 2 (resultTaskUpdate @ 0x3d690): AepLyrCtrl::IsPlaying(m_layers[0]),
-    // then FPToFixed of the layer's +0x40 play head truncates it to a frame number.
+    // then a plain vcvt.s32.f32 of the layer's +0x40 play head truncates it to a
+    // frame number.
     if (intro->isAnimating()) {
         const int frame = static_cast<int>(intro->curFrame()); // +0x40 flCurFrame
         switch (frame) {
