@@ -20,6 +20,7 @@
     '/.to-format.txt',
     '/Project/.audit/',
     '/build/',
+    '/logs/',
     '/screenshots/',
     '/theos/.theos/',
     '/theos/obj/',

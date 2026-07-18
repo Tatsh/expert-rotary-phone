@@ -46,6 +46,7 @@
 /Project/.audit/
 /build/
 /dist/
+/logs/
 /screenshots/
 /session-recover.yaml
 /theos/.theos/
