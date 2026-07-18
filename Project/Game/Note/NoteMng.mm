@@ -982,7 +982,7 @@ int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
     }
     ActiveNote &slot = m_notePool[noteId];
     if (tier >= 4) {
-        return static_cast<int> static_cast<int8_t>(slot.spawnKind);
+        return static_cast<int>(static_cast<int8_t>(slot.spawnKind));
     }
     if ((slot.flags & NOTE_FLAG_RESOLVED) == 0 || static_cast<int8_t>(slot.spawnKind) < 1) {
         slot.spawnKind = 0;
@@ -1018,7 +1018,7 @@ int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
         }
         m_tally[slot.kind][tier]++;
     }
-    return static_cast<int> static_cast<int8_t>(slot.spawnKind);
+    return static_cast<int>(static_cast<int8_t>(slot.spawnKind));
 }
 
 // Ghidra: noteMngSetLaneFlag @ 0x347c8 — set the "lane held" flag (0x40) on
@@ -1110,7 +1110,7 @@ int NoteToneDefaultGraphic(int type) {
 // @complete
 int NoteToneCount(int noteId) {
     if (static_cast<unsigned>(noteId) >> 3 < 0x7d) {
-        return static_cast<int> static_cast<int8_t>(NoteMng::shared().toneSlot(noteId).spawnKind);
+        return static_cast<int>(static_cast<int8_t>(NoteMng::shared().toneSlot(noteId).spawnKind));
     }
     return 0;
 }

@@ -377,7 +377,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             const int anchor =
                 static_cast<int>(static_cast<float>(note.startTick) - 0.5f * beat) - curTime;
             const int halfBeats =
-                static_cast<int>(static_cast<float> static_cast<unsigned>(anchor) / beat);
+                static_cast<int>(static_cast<float>(static_cast<unsigned>(anchor)) / beat);
             if (halfBeats & 1) {
                 const float ph =
                     std::fmod(0.5f * beat + static_cast<float>(curTime - st->timestamp), beat);
