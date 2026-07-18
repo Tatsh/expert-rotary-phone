@@ -197,8 +197,9 @@
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Binary format is "Cell%ld-%ld" (0xa84b4: __cfstring at 0x134e38 -> chars at
     // 0x1029ae = "Cell%ld-%ld"), not "Cell_%ld_%ld".
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     FriendReplyCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendReplyCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -218,7 +219,7 @@
 // @ 0xa8584 — no navigation on row tap (the OK/NG buttons drive everything).
 // @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    (void)indexPath.section;
+    static_cast<void>(indexPath.section);
 }
 
 // @ 0xa8720 — release each row's retained string fields, then the array itself.

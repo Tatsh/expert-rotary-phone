@@ -107,7 +107,8 @@
             [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 24.0f, 24.0f)];
         [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
         [spinner setCenter:CGPointMake(bounds.size.width * 0.5f,
-                                       (float)((int)(bounds.size.height * 0.5f) - 10))];
+                                       static_cast<float>(
+                                           static_cast<int>(bounds.size.height * 0.5f) - 10))];
         [spinner setTransform:CGAffineTransformMakeScale(2.0f, 2.0f)];
         [spinner startAnimating];
         [_dummyView.view addSubview:spinner];

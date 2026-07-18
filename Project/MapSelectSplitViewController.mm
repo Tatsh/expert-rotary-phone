@@ -239,7 +239,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     CGFloat pageWidth = self->_scrollView ? self->_scrollView.frame.size.width : 0.0f;
     NSInteger page = [self->_pageCtrl currentPage];
     CGPoint offset = self->_scrollView ? self->_scrollView.contentOffset : CGPointZero;
-    offset.x = pageWidth * (CGFloat)page;
+    offset.x = pageWidth * static_cast<CGFloat>(page);
     [self->_scrollView setContentOffset:offset];
 }
 
@@ -274,7 +274,8 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         // Player character art (bundled for stock ids < 30, otherwise the
         // downloaded copy under the app-support directory).
         short charaId = [UserSettingData charaId];
-        NSString *charaName = [NSString stringWithFormat:@"open_chara_%03d.png", (int)charaId];
+        NSString *charaName =
+            [NSString stringWithFormat:@"open_chara_%03d.png", static_cast<int>(charaId)];
         NSString *charaPath;
         if (charaId < 30) {
             charaPath = [[NSBundle mainBundle] pathForResource:charaName ofType:nil];
@@ -369,8 +370,8 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
             [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"map_select_banner"]];
         [_rightHeaderDummyView addSubview:banner];
 
-        UIImage *mapIcon =
-            [UIImage imageNamed:[NSString stringWithFormat:@"map_icon_%02d", (int)mainMapId]];
+        UIImage *mapIcon = [UIImage
+            imageNamed:[NSString stringWithFormat:@"map_icon_%02d", static_cast<int>(mainMapId)]];
         _rightHeaderImageView = [[UIImageView alloc]
             initWithFrame:CGRectMake(23.0f, 7.0f, mapIcon.size.width, mapIcon.size.height)];
         _rightHeaderImageView.image = mapIcon;
@@ -549,7 +550,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     // Target arrow Y = home Y + selectedRow * rowHeight - the map list's scroll
     // offset.
     CGFloat rowHeight = _mapSelectViewCtrl.tableView.rowHeight;
-    CGFloat targetY = _arrowFrm.origin.y + (CGFloat)_selectIndexPath.row * rowHeight;
+    CGFloat targetY = _arrowFrm.origin.y + static_cast<CGFloat>(_selectIndexPath.row) * rowHeight;
     targetY -= _mapSelectViewCtrl.tableView.contentOffset.y;
 
     if (_arrowImageView.frame.origin.x == _arrowFrm.origin.x) {
@@ -615,10 +616,10 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
           // Ghidra: LAB_000772f8_1 — swap SubMapSelectViewController,
           // release animating guard, restore panel widths.
           [self->_subMapSelectViewCtrl.view removeFromSuperview];
-          self->_subMapSelectViewCtrl =
-              [[SubMapSelectViewController alloc] initWithTreasureData:treasureData
-                                                          mapHeadArray:mapHeadArray
-                                                             mainMapId:(short)mainMapId];
+          self->_subMapSelectViewCtrl = [[SubMapSelectViewController alloc]
+              initWithTreasureData:treasureData
+                      mapHeadArray:mapHeadArray
+                         mainMapId:static_cast<short>(mainMapId)];
           [self->_subMapSelectViewCtrl setDelegate:self];
           [self->_rightDummyView addSubview:self->_subMapSelectViewCtrl.view];
           self->_isAnimationing = NO;
@@ -684,7 +685,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     NSInteger previousPage = _pageCtrl.currentPage;
     CGFloat width = _scrollView.frame.size.width;
     CGFloat page = width != 0.0f ? (_scrollView.contentOffset.x / width) + 0.5f : 0.5f;
-    _pageCtrl.currentPage = (NSInteger)page;
+    _pageCtrl.currentPage = static_cast<NSInteger>(page);
     if (previousPage != _pageCtrl.currentPage) {
         neEngine::playSystemSe(4);
         [self pageControlDidChanged:_pageCtrl];
@@ -817,7 +818,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
 - (void)pageControlDidChanged:(UIPageControl *)pageControl {
     CGFloat width = _scrollView.frame.size.width;
     CGFloat height = _scrollView.frame.size.height;
-    CGFloat x = width * (CGFloat)pageControl.currentPage;
+    CGFloat x = width * static_cast<CGFloat>(pageControl.currentPage);
     [_scrollView scrollRectToVisible:CGRectMake(x, 0.0f, width, height) animated:YES];
 }
 

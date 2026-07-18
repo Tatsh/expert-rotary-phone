@@ -976,7 +976,8 @@ constexpr float kRenderMinInterval = 1000.0f;
     neGetCurrentRenderer();
     int w = [view GetFrontBufferWidth];
     int h = [view GetFrontBufferHeight];
-    neViewport *viewport = neCreateOrthoViewport((float)w, (float)h, 0, 0, w, h);
+    neViewport *viewport =
+        neCreateOrthoViewport(static_cast<float>(w), static_cast<float>(h), 0, 0, w, h);
     neSetCurrentViewport(viewport);
     neReleaseRef(viewport);
     [view BeginRender];
@@ -987,7 +988,8 @@ constexpr float kRenderMinInterval = 1000.0f;
     [view Present];
     // Publish the new drawable pixel size (keeps the scale set by neGLView
     // -layoutSubviews). Ghidra: DAT_00187b78 / DAT_00187b7c.
-    neSceneManager::setScreenMetrics((float)w, (float)h, neSceneManager::screenScale());
+    neSceneManager::setScreenMetrics(
+        static_cast<float>(w), static_cast<float>(h), neSceneManager::screenScale());
 }
 
 // @ 0xc150 — the hosted GL view.

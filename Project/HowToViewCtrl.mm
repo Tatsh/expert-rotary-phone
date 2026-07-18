@@ -145,14 +145,16 @@
 // @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     NSInteger oldPage = _pageCtrl.currentPage;
-    NSInteger page = (NSInteger)(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);
+    NSInteger page =
+        static_cast<NSInteger>(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);
     _pageCtrl.currentPage = page;
     if (oldPage != _pageCtrl.currentPage) {
         // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 4)
         // — page SE.
         neEngine::playSystemSe(4);
         if (_isCloseButtonEnable) {
-            _closeBtn.hidden = (_pageCtrl.currentPage != (NSInteger)_fileNameArray.count - 1);
+            _closeBtn.hidden =
+                (_pageCtrl.currentPage != static_cast<NSInteger>(_fileNameArray.count) - 1);
         }
     }
 }

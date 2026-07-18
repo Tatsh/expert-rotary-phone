@@ -293,7 +293,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
     }
     [_popkun setCenter:CGPointMake(centerX, centerY)];
 
-    [_sizeLbl setText:[NSString stringWithFormat:@"%d%%", (int)_size]];
+    [_sizeLbl setText:[NSString stringWithFormat:@"%d%%", static_cast<int>(_size)]];
     [_sizeLbl sizeToFit];
     // Keep the readout 45pt above the pop-kun's centre.
     _sizeLbl.center = CGPointMake(_popkun.center.x, _popkun.center.y - 45.0f); // DAT_0008c61c

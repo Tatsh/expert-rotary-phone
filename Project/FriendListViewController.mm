@@ -153,13 +153,13 @@ static void aggregateScoreStats(ScoreStats *out) {
         // Ghidra @ 0xb0c48: the y coordinate truncates height*0.5 to an int
         // (vcvt.s32.f32) before subtracting 10; the x coordinate is not
         // truncated.
-        spinner.center =
-            CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
+        spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
+                                     static_cast<int>(viewFrame.size.height * 0.5f) - 10);
     } else {
         // Pad: fixed x=214, y still tracks the (truncated) view mid-height minus
         // 10 (0x43560000 = 214; not the lonely image's 160/328). Ghidra @
         // 0xb0c12 truncates the same way as the phone path.
-        spinner.center = CGPointMake(214.0f, (int)(viewFrame.size.height * 0.5f) - 10);
+        spinner.center = CGPointMake(214.0f, static_cast<int>(viewFrame.size.height * 0.5f) - 10);
     }
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
@@ -244,8 +244,9 @@ static void aggregateScoreStats(ScoreStats *out) {
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // The reuse identifier uses hyphen separators (CFString @ 0x10af18:
     // "Cell%d-%d"), not underscores.
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%d-%d", (int)indexPath.section, (int)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%d-%d",
+                                                      static_cast<int>(indexPath.section),
+                                                      static_cast<int>(indexPath.row)];
     FriendListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendListCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -253,7 +254,7 @@ static void aggregateScoreStats(ScoreStats *out) {
         cell.backgroundColor = [UIColor redColor];
     }
     [cell setFriendData:_frinedDataArray[indexPath.row]
-                   rank:(int)indexPath.row
+                   rank:static_cast<int>(indexPath.row)
         isBestScoreSort:_isBestScoreSort];
     return cell;
 }

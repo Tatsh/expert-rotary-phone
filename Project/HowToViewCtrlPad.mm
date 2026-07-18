@@ -145,7 +145,8 @@
 // @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     NSInteger oldPage = _pageCtrl.currentPage;
-    NSInteger page = (NSInteger)(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);
+    NSInteger page =
+        static_cast<NSInteger>(scrollView.contentOffset.x / scrollView.frame.size.width + 0.5f);
     _pageCtrl.currentPage = page;
     [self setPageImages];
     if (oldPage != _pageCtrl.currentPage) {
@@ -218,8 +219,9 @@
         }
         NSInteger x = 0;
         for (NSUInteger i = 0; i < _fileNameArray.count; i++) {
-            NSString *name =
-                (i == (NSUInteger)_pageCtrl.currentPage) ? @"howto_page_on" : @"howto_page_off";
+            NSString *name = (i == static_cast<NSUInteger>(_pageCtrl.currentPage)) ?
+                                 @"howto_page_on" :
+                                 @"howto_page_off";
             UIImage *img = [UIImage imageNamed:name];
             UIImageView *dot = [[UIImageView alloc] initWithImage:img];
             CGRect f = dot.frame;

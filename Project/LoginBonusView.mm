@@ -108,7 +108,7 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
         return kLoginBonusRow0;
     }
     const uint8_t *base = (const uint8_t *)0x001320d0;
-    return (const LoginBonusRewardEntry *)(base + (size_t)loginBonusId * 0x600);
+    return (const LoginBonusRewardEntry *)(base + static_cast<size_t>(loginBonusId) * 0x600);
 }
 
 // @ 0x7bf70 — count reward rows until the terminator (type == 2), capped at
@@ -180,14 +180,15 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
             if (dl.loginCnt - 1 <= i) {
                 break;
             }
-            NSString *name = [NSString stringWithFormat:@"login_popn%02d", (int)(random() % 5 + 1)];
+            NSString *name =
+                [NSString stringWithFormat:@"login_popn%02d", static_cast<int>(random() % 5 + 1)];
             UIImage *stampImg = [UIImage imageNamed:name];
             UIImageView *stamp = [[UIImageView alloc] initWithImage:stampImg];
 
             int col = i % 5;
             int row = i / 5;
-            CGFloat x = (CGFloat)((stampImg.size.width + 3) * col + 0x2b); // 43
-            CGFloat y = (CGFloat)(stampImg.size.height * row + 0x71);      // 113
+            CGFloat x = static_cast<CGFloat>((stampImg.size.width + 3) * col + 0x2b); // 43
+            CGFloat y = static_cast<CGFloat>(stampImg.size.height * row + 0x71);      // 113
             stamp.frame = CGRectMake(x, y, stampImg.size.width, stampImg.size.height);
             [m_BgImgView addSubview:stamp];
         }
@@ -234,7 +235,8 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
                 short have = [UserSettingData treasurePoint];
                 // Ghidra reads the amount via -[value intValue] (value is a baked
                 // NSString).
-                [UserSettingData saveTreasurePoint:(short)(have + [table[i].value intValue])];
+                [UserSettingData
+                    saveTreasurePoint:static_cast<short>(have + [table[i].value intValue])];
             } else if (table[i].type == kLoginBonusRewardMusic) {
                 [UserSettingData saveOpenedLoginBonusId:dl.loginBonusId];
                 [[MusicManager getInstance] openLoginBonusMusic];
@@ -281,7 +283,8 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
 
     neEngine::playSystemSe(1);
 
-    NSString *name = [NSString stringWithFormat:@"login_popn%02d", (int)(random() % 5 + 1)];
+    NSString *name =
+        [NSString stringWithFormat:@"login_popn%02d", static_cast<int>(random() % 5 + 1)];
     UIImage *stampImg = [UIImage imageNamed:name];
     UIImageView *stamp = [[UIImageView alloc] initWithImage:stampImg];
 
@@ -289,8 +292,8 @@ static const LoginBonusRewardEntry kLoginBonusRow0[] = {
     int slot = dl.loginCnt - 1;
     int col = slot % 5;
     int row = slot / 5;
-    CGFloat x = (CGFloat)((stampImg.size.width + 3) * col + 0x2b); // 43
-    CGFloat y = (CGFloat)(stampImg.size.height * row + 0x71);      // 113
+    CGFloat x = static_cast<CGFloat>((stampImg.size.width + 3) * col + 0x2b); // 43
+    CGFloat y = static_cast<CGFloat>(stampImg.size.height * row + 0x71);      // 113
     stamp.frame = CGRectMake(x, y, stampImg.size.width, stampImg.size.height);
 
     [m_BgImgView addSubview:stamp];

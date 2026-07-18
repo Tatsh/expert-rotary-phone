@@ -78,7 +78,8 @@
     // Friend's chara portrait (downloaded 2x art from Application Support).
     // Exact format string @ 0x1053f0 (no underscore after "chara", "@2x" not
     // "_2x").
-    NSString *portraitFile = [NSString stringWithFormat:@"result_chara%03d@2x.png", (int)charaId];
+    NSString *portraitFile =
+        [NSString stringWithFormat:@"result_chara%03d@2x.png", static_cast<int>(charaId)];
     NSURL *portraitURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
                                                     stringByAppendingPathComponent:portraitFile]];
     UIImageView *portrait = [[UIImageView alloc]
@@ -105,7 +106,8 @@
 
     // Chara icon inside the card (built-in charas from the bundle, downloaded
     // ones from disk).
-    NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+    NSString *iconFile =
+        [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
     UIImage *iconImg;
     if (charaId > 0x1d) {
         iconImg = [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
@@ -132,7 +134,7 @@
     // binary is a C++ local-static init; here the global is already loaded by the
     // time a friend can be tapped).
     CharaInfo *info = gCharaManager.availableInfoForCharaId(charaId);
-    const SkillDataStruct *skill = GetSkillDataStruct((int)info.skillId);
+    const SkillDataStruct *skill = GetSkillDataStruct(static_cast<int>(info.skillId));
 
     // Chara name label.
     UILabel *nameLabel =
@@ -187,7 +189,8 @@
 
     // Sugoroku chara art, centred in the card.
     // Exact format string @ 0x104395 (no underscore after "chara").
-    NSString *sugoFile = [NSString stringWithFormat:@"sugo_chara%03d.png", (int)charaId];
+    NSString *sugoFile =
+        [NSString stringWithFormat:@"sugo_chara%03d.png", static_cast<int>(charaId)];
     NSURL *sugoURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
                                                 stringByAppendingPathComponent:sugoFile]];
     UIImageView *sugoView = [[UIImageView alloc]

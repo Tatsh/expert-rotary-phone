@@ -138,7 +138,7 @@
         UIActivityIndicatorView *spinner =
             [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
         spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
-        spinner.center = CGPointMake(plateSize.width * 0.5f, (int)(tableH * 0.5f) - 10);
+        spinner.center = CGPointMake(plateSize.width * 0.5f, static_cast<int>(tableH * 0.5f) - 10);
         spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
         [spinner startAnimating];
         [_dummyView.view addSubview:spinner];
@@ -202,8 +202,9 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Byte-verified format literal @ 0x1029ae: "Cell%ld-%ld" (section then row).
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     FriendRequestCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendRequestCell alloc] initWithStyle:UITableViewCellStyleDefault

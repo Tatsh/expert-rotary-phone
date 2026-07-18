@@ -105,8 +105,8 @@
             [navc.view addSubview:innerBox];
 
             contentView = navc.view;
-            baseX = (int)navFrame.origin.x;
-            baseY = (int)(navFrame.origin.y + 44.0f);
+            baseX = static_cast<int>(navFrame.origin.x);
+            baseY = static_cast<int>(navFrame.origin.y + 44.0f);
         }
         [self.view addSubview:contentView];
 

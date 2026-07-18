@@ -98,20 +98,21 @@
     self.backgroundColor = [UIColor clearColor];
 
     // Chara icon backing plate.
-    _charaBgImgView =
-        [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, 43.0f, 43.0f)];
+    _charaBgImgView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgCharaX), 7.0f, 43.0f, 43.0f)];
     [_charaBgImgView setImage:[UIImage imageNamed:@"frisco_icon_cmn"]];
     [self.contentView addSubview:_charaBgImgView];
 
     // Chara icon (built-in charas from the bundle, downloaded ones from the
     // app-support dir).
-    _charaImgView =
-        [[UIImageView alloc] initWithFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, 43.0f, 43.0f)];
+    _charaImgView = [[UIImageView alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgCharaX), 7.0f, 43.0f, 43.0f)];
     short charaId = data.charaId;
     if (charaId < 0) {
         charaId = 0;
     }
-    NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+    NSString *iconFile =
+        [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
     UIImage *icon =
         (charaId < 0x1e) ?
             [UIImage imageNamed:iconFile] :
@@ -121,8 +122,8 @@
     [self.contentView addSubview:_charaImgView];
 
     // Requester name.
-    _playerNameLbl =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)];
+    _playerNameLbl = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgPlayerNameX), 5.0f, 200.0f, 20.0f)];
     _playerNameLbl.backgroundColor = [UIColor clearColor];
     _playerNameLbl.textColor = [UIColor colorWithRed:0.36458503f
                                                green:0.34506654f
@@ -137,8 +138,8 @@
     [self.contentView addSubview:_playerNameLbl];
 
     // Request date (no font-shrink on this label, unlike the name).
-    _requestDateLbl =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_imgDateX, 34.0f, 200.0f, 20.0f)];
+    _requestDateLbl = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgDateX), 34.0f, 200.0f, 20.0f)];
     _requestDateLbl.backgroundColor = [UIColor clearColor];
     _requestDateLbl.textColor = [UIColor colorWithRed:0.36458503f
                                                 green:0.34506654f
@@ -154,9 +155,10 @@
     _cancelButton = [[UIButton alloc] init];
     UIImage *cancelImg = [UIImage imageNamed:@"fripre_btn_cancel"];
     [_cancelButton setBackgroundImage:cancelImg forState:UIControlStateNormal];
-    [_cancelButton
-        setFrame:CGRectMake(
-                     (CGFloat)_btnCancelX, 24.0f, cancelImg.size.width, cancelImg.size.height)];
+    [_cancelButton setFrame:CGRectMake(static_cast<CGFloat>(_btnCancelX),
+                                       24.0f,
+                                       cancelImg.size.width,
+                                       cancelImg.size.height)];
     [_cancelButton addTarget:self
                       action:@selector(onTouchedCancelButton)
             forControlEvents:UIControlEventTouchUpInside];

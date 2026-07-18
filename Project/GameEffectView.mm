@@ -123,8 +123,9 @@
 // @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *cellId =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *cellId = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                  static_cast<long>(indexPath.section),
+                                                  static_cast<long>(indexPath.row)];
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
     if (cell != nil) {
         return cell;

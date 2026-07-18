@@ -108,7 +108,7 @@ NSArray *loadAllTreasureMapHeaders(void) {
             long size = ftell(fp);
             fseek(fp, 0, SEEK_SET);
             MapFileHead head;
-            if (size >= (long)sizeof(MapFileHead) &&
+            if (size >= static_cast<long>(sizeof(MapFileHead)) &&
                 fread(&head, sizeof(MapFileHead), 1, fp) == 1) {
                 [heads addObject:[NSValue value:&head withObjCType:@encode(MapFileHead)]];
             }
@@ -228,8 +228,8 @@ bool isIndexInRange12(unsigned int index) {
     UIActivityIndicatorView *spinner =
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
-    spinner.center =
-        CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
+    spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
+                                 static_cast<int>(viewFrame.size.height * 0.5f) - 10);
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];
@@ -354,7 +354,7 @@ bool isIndexInRange12(unsigned int index) {
 // @ 0xbfcf0
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return _mapDataArray ? (NSInteger)_mapDataArray.count : 0;
+    return _mapDataArray ? static_cast<NSInteger>(_mapDataArray.count) : 0;
 }
 
 // @ 0xbfd18 — one MapListCell per main map. On pad the highlighted row draws
@@ -362,8 +362,9 @@ bool isIndexInRange12(unsigned int index) {
 // @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     MapListCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[MapListCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -373,7 +374,7 @@ bool isIndexInRange12(unsigned int index) {
     // result, and always passes NO for isSelect (movs r3,#0 @ 0xbfe2a) — the row
     // highlight is never engaged from here.
     if (neSceneManager::isPadDisplay()) {
-        (void)indexPath.row;
+        static_cast<void>(indexPath.row);
     }
     [cell setMapData:[_mapDataArray objectAtIndex:indexPath.row] isSelect:NO];
     return cell;
@@ -421,7 +422,7 @@ bool isIndexInRange12(unsigned int index) {
     }
 
     if (neSceneManager::isPadDisplay()) {
-        _selectedIndexRow = (int)indexPath.row;
+        _selectedIndexRow = static_cast<int>(indexPath.row);
         [tableView reloadData];
     }
     [UserSettingData saveTreasureSelectedMapId:mainMapId];

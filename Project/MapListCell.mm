@@ -72,7 +72,7 @@ typedef struct {
 
     // Map icon.
     CGFloat iconX = isPad ? 23.0f : (osVersion >= 7.0f ? 23.0f : 20.0f);
-    NSString *iconName = [NSString stringWithFormat:@"map_icon%02d", (int)v.mapId];
+    NSString *iconName = [NSString stringWithFormat:@"map_icon%02d", static_cast<int>(v.mapId)];
     UIImage *iconImage = [UIImage imageNamed:iconName];
     UIImageView *iconView = [[UIImageView alloc]
         initWithFrame:CGRectMake(iconX, 7.0f, iconImage.size.width, iconImage.size.height)];

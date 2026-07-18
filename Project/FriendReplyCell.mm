@@ -113,7 +113,8 @@
     UIImage *plate = [UIImage imageNamed:@"frisco_icon_cmn"];
     [_charaBgView setImage:plate];
     [_charaBgView
-        setFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, plate.size.width, plate.size.height)];
+        setFrame:CGRectMake(
+                     static_cast<CGFloat>(_imgCharaX), 7.0f, plate.size.width, plate.size.height)];
     [_bgImgView addSubview:_charaBgView];
 
     _charaView = [[UIImageView alloc] init];
@@ -121,19 +122,20 @@
     if (charaId < 0) {
         charaId = 0;
     }
-    NSString *iconFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+    NSString *iconFile =
+        [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
     UIImage *icon =
         (charaId < 0x1e) ?
             [UIImage imageNamed:iconFile] :
             [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
                                                  stringByAppendingPathComponent:iconFile]];
     [_charaView setImage:icon];
-    [_charaView setFrame:CGRectMake((CGFloat)_imgCharaX, 7.0f, 43.0f, 43.0f)];
+    [_charaView setFrame:CGRectMake(static_cast<CGFloat>(_imgCharaX), 7.0f, 43.0f, 43.0f)];
     [_bgImgView addSubview:_charaView];
 
     // Requester name.
-    _playerNameLabel =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_imgPlayerNameX, 5.0f, 200.0f, 20.0f)];
+    _playerNameLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_imgPlayerNameX), 5.0f, 200.0f, 20.0f)];
     _playerNameLabel.backgroundColor = [UIColor clearColor];
     _playerNameLabel.textColor = [UIColor colorWithRed:0.36470589f
                                                  green:0.34509805f
@@ -149,8 +151,8 @@
     [_bgImgView addSubview:_playerNameLabel];
 
     // Request date.
-    _requestDateLabel =
-        [[UILabel alloc] initWithFrame:CGRectMake((CGFloat)_dateX, 25.0f, 200.0f, 20.0f)];
+    _requestDateLabel = [[UILabel alloc]
+        initWithFrame:CGRectMake(static_cast<CGFloat>(_dateX), 25.0f, 200.0f, 20.0f)];
     _requestDateLabel.backgroundColor = [UIColor clearColor];
     _requestDateLabel.textColor = [UIColor colorWithRed:0.36470589f
                                                   green:0.34509805f
@@ -169,9 +171,10 @@
     _ngButton = [[UIButton alloc] init];
     UIImage *ngImg = [UIImage imageNamed:@"frirep_btn_no"];
     [_ngButton setBackgroundImage:ngImg forState:UIControlStateNormal];
-    [_ngButton
-        setFrame:CGRectMake(
-                     (CGFloat)(_btnNoX + padOffset), 43.0f, ngImg.size.width, ngImg.size.height)];
+    [_ngButton setFrame:CGRectMake(static_cast<CGFloat>(_btnNoX + padOffset),
+                                   43.0f,
+                                   ngImg.size.width,
+                                   ngImg.size.height)];
     [_ngButton addTarget:self
                   action:@selector(onTouchedNgButton)
         forControlEvents:UIControlEventTouchUpInside];
@@ -181,9 +184,10 @@
     _okButton = [[UIButton alloc] init];
     UIImage *okImg = [UIImage imageNamed:@"frirep_btn_ok"];
     [_okButton setBackgroundImage:okImg forState:UIControlStateNormal];
-    [_okButton
-        setFrame:CGRectMake(
-                     (CGFloat)(_btnYesX + padOffset), 43.0f, okImg.size.width, okImg.size.height)];
+    [_okButton setFrame:CGRectMake(static_cast<CGFloat>(_btnYesX + padOffset),
+                                   43.0f,
+                                   okImg.size.width,
+                                   okImg.size.height)];
     [_okButton setUserInteractionEnabled:YES];
     [_okButton addTarget:self
                   action:@selector(onTouchedOkButton)

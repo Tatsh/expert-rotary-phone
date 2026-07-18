@@ -231,7 +231,7 @@ static int scoreToRank(int score) {
         // Disasm 0xaaa1c: the /3.0 numerator is self.view.frame width (viewFrame @
         // sp+0x270), NOT the table VC's frame (which the binary never reads here).
         // Divisor 3.0f, truncated.
-        CGFloat third = (CGFloat)(int)(viewFrame.size.width / 3.0f);
+        CGFloat third = static_cast<CGFloat>(static_cast<int>(viewFrame.size.width / 3.0f));
         NSString *const banner[3] = {@"frisco_table_no", @"frisco_table_hy", @"frisco_table_ex"};
         for (int i = 0; i < 3; i++) {
             UIImageView *hdr = [[UIImageView alloc] initWithImage:[UIImage imageNamed:banner[i]]];
@@ -252,7 +252,7 @@ static int scoreToRank(int score) {
         NSArray *over =
             [OverScoreData getAllOverScoreData:[[AppDelegate appDelegate] managedObjectContext]];
         for (OverScoreData *rec in over) {
-            if ([rec.music intValue] != (int)musicId) {
+            if ([rec.music intValue] != static_cast<int>(musicId)) {
                 continue;
             }
             switch (static_cast<ScoreDifficulty>([rec.sheet intValue])) {
@@ -389,8 +389,8 @@ static int scoreToRank(int score) {
     UIActivityIndicatorView *spinner =
         [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 24.0f, 24.0f)];
     spinner.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
-    spinner.center =
-        CGPointMake(viewFrame.size.width * 0.5f, (int)(viewFrame.size.height * 0.5f) - 10);
+    spinner.center = CGPointMake(viewFrame.size.width * 0.5f,
+                                 static_cast<int>(viewFrame.size.height * 0.5f) - 10);
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];
@@ -512,7 +512,7 @@ static int scoreToRank(int score) {
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     NSArray *rows = [self arrayForTableView:tableView];
-    NSInteger n = rows ? (NSInteger)rows.count : 0;
+    NSInteger n = rows ? static_cast<NSInteger>(rows.count) : 0;
     (void)[[AppDelegate appDelegate] displayType]; // (touched in the binary; no effect)
     return n < 1 ? 1 : n;
 }
@@ -532,8 +532,10 @@ static int scoreToRank(int score) {
         rows = _frScoreExArray;
     }
 
-    NSString *identifier = [NSString
-        stringWithFormat:@"Cell%d-%ld-%ld", page, (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%d-%ld-%ld",
+                                                      page,
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     FriendScoreTableCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[FriendScoreTableCell alloc] initWithStyle:UITableViewCellStyleDefault
@@ -542,7 +544,7 @@ static int scoreToRank(int score) {
     cell.backgroundView = nil;
 
     NSValue *scoreValue = nil;
-    if ((NSUInteger)indexPath.row < rows.count) {
+    if (static_cast<NSUInteger>(indexPath.row) < rows.count) {
         // The rows carry their finishing place in the `rank` field; the visual row
         // R shows the row whose place (with ties broken by list order) equals R.
         // Mirror the binary's scan: for each candidate count how many rows placed
@@ -578,7 +580,7 @@ static int scoreToRank(int score) {
         empty.score = -1;
         empty.isPerfect = NO;
         empty.isFullCombo = NO;
-        empty.rank = (char)indexPath.row;
+        empty.rank = static_cast<char>(indexPath.row);
         empty.charaId = 0;
         empty.isNotice = NO;
         scoreValue = [NSValue value:&empty withObjCType:@encode(ScoreDataStruct)];
@@ -597,9 +599,9 @@ static int scoreToRank(int score) {
         if (indexPath.section != 0) {
             return;
         }
-        (void)indexPath.row;
+        static_cast<void>(indexPath.row);
     } else if (tableView == _tblViewCtrlH.tableView || tableView == _tblViewCtrlEx.tableView) {
-        (void)indexPath.section;
+        static_cast<void>(indexPath.section);
     }
 }
 
@@ -793,20 +795,20 @@ static int scoreToRank(int score) {
                     // verbatim.
                     ps.difficulty = d; // g_wResultSheet
                     updateHighScore(&ps,
-                                    (unsigned)srvScore,
+                                    static_cast<unsigned>(srvScore),
                                     1,
                                     2,
                                     pfMedal ? 0 : 3,
                                     fcMedal ? 0 : ((pfMedal << 2) ^ 4),
-                                    (char)fcMedal);
-                    ps.rank = (short)scoreToRank(srvScore); // g_wResultClearRank
+                                    static_cast<char>(fcMedal));
+                    ps.rank = static_cast<short>(scoreToRank(srvScore)); // g_wResultClearRank
                     saveScoreData(&ps);
 
                     // Bump the local display best with the (now persisted) server values.
                     if (myScore[d] < srvScore) {
                         myScore[d] = srvScore; // display the better of local vs. server
                     }
-                    short srvRank = (short)scoreToRank(srvScore);
+                    short srvRank = static_cast<short>(scoreToRank(srvScore));
                     if (srvRank < myRank[d]) {
                         myRank[d] = srvRank;
                     }
@@ -855,7 +857,7 @@ static int scoreToRank(int score) {
             [OverScoreData getAllOverScoreData:[[AppDelegate appDelegate] managedObjectContext]];
         NSMutableArray *over = [[NSMutableArray alloc] init];
         for (OverScoreData *rec in allOver) {
-            if ([rec.music intValue] == (int)_musicId) {
+            if ([rec.music intValue] == static_cast<int>(_musicId)) {
                 [over addObject:rec];
             }
         }
@@ -895,7 +897,7 @@ static int scoreToRank(int score) {
                 int flag = [[flags objectAtIndex:i] intValue];
                 row.isFullCombo = (flag & (1 << fcBit[d])) != 0;
                 row.isPerfect = (flag & (1 << pfBit[d])) != 0;
-                row.rank = (char)place;
+                row.rank = static_cast<char>(place);
                 row.isNotice = NO;
                 for (OverScoreData *rec in over) {
                     if ([rec.sheet intValue] == d && playerId != nil &&
@@ -947,7 +949,7 @@ static int scoreToRank(int score) {
 // @ 0xaddf4 — back button: clear this song's rival records, then close.
 // @complete
 - (void)onBackButtonTouched {
-    [OverScoreData deleteRecordWithMusic:(int)_musicId
+    [OverScoreData deleteRecordWithMusic:static_cast<int>(_musicId)
                   inManagedObjectContext:[[AppDelegate appDelegate] managedObjectContext]];
     [self startCloseAnimation];
 }

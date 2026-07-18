@@ -198,7 +198,8 @@
         [spinner setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleGray];
         if (!isPad) {
             [spinner setCenter:CGPointMake(bounds.size.width * 0.5f,
-                                           (float)((int)(bounds.size.height * 0.5f) - 10))];
+                                           static_cast<float>(
+                                               static_cast<int>(bounds.size.height * 0.5f) - 10))];
         } else {
             [spinner setCenter:CGPointMake(148.0f, 300.0f)];
         }

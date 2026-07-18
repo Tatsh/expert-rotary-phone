@@ -272,20 +272,21 @@ static int scoreToRank(int score) {
         _youImgView = [[UIImageView alloc] initWithFrame:self.bounds];
         [_youImgView setImage:youImg];
         [_youImgView
-            setFrame:CGRectMake((CGFloat)_imgYouX, 0, youImg.size.width, youImg.size.height)];
+            setFrame:CGRectMake(
+                         static_cast<CGFloat>(_imgYouX), 0, youImg.size.width, youImg.size.height)];
         [_bgImgView addSubview:_youImgView];
     }
 
     // Rank badge (only when a score exists). Rows 0..8 use a single "place"
     // glyph; rows 9+ compose the one-based place number from two digit glyphs.
     if (data.score != -1) {
-        int place = (int)data.rank;
+        int place = static_cast<int>(data.rank);
         if (place < 9) {
             int idx = (data.rank > 8) ? 8 : place;
             UIImage *img = [UIImage imageNamed:kRankPlaceImg[idx]];
             _rankImgView01 = [[UIImageView alloc] init];
             [_rankImgView01 setImage:img];
-            CGFloat x = isPad ? (padX0 + 7.0f) : (CGFloat)_imgFrameX;
+            CGFloat x = isPad ? (padX0 + 7.0f) : static_cast<CGFloat>(_imgFrameX);
             CGFloat y = isPad ? 40.0f : 14.0f;
             [_rankImgView01 setFrame:CGRectMake(x, y, img.size.width, img.size.height)];
             [self.contentView addSubview:_rankImgView01];
@@ -294,7 +295,7 @@ static int scoreToRank(int score) {
             UIImage *ones = [UIImage imageNamed:kRankDigitImg[oneBased % 10]];
             _rankImgView01 = [[UIImageView alloc] init];
             [_rankImgView01 setImage:ones];
-            CGFloat x1 = isPad ? (padX0 + 22.0f) : (CGFloat)_imgFrame01X;
+            CGFloat x1 = isPad ? (padX0 + 22.0f) : static_cast<CGFloat>(_imgFrame01X);
             CGFloat y1 = isPad ? 40.0f : 14.0f;
             [_rankImgView01 setFrame:CGRectMake(x1, y1, ones.size.width, ones.size.height)];
             [self.contentView addSubview:_rankImgView01];
@@ -302,7 +303,7 @@ static int scoreToRank(int score) {
             UIImage *tens = [UIImage imageNamed:kRankDigitImg[(oneBased / 10) % 10]];
             _rankImgView10 = [[UIImageView alloc] init];
             [_rankImgView10 setImage:tens];
-            CGFloat x2 = isPad ? (padX0 + 7.0f) : (CGFloat)_imgFrameX;
+            CGFloat x2 = isPad ? (padX0 + 7.0f) : static_cast<CGFloat>(_imgFrameX);
             CGFloat y2 = isPad ? 40.0f : 14.0f;
             [_rankImgView10 setFrame:CGRectMake(x2, y2, tens.size.width, tens.size.height)];
             [self.contentView addSubview:_rankImgView10];
@@ -311,14 +312,15 @@ static int scoreToRank(int score) {
 
     // Chara icon backing plate + icon (only when a player occupies the row).
     if (data.playerId != nil) {
-        CGFloat cx = isPad ? 6.0f : (CGFloat)_imgOrderX;
+        CGFloat cx = isPad ? 6.0f : static_cast<CGFloat>(_imgOrderX);
         CGFloat cy = isPad ? 17.0f : 5.0f;
         CGRect charaFrame = CGRectMake(cx, cy, 43.0f, 43.0f);
 
         _charaBgImgView = [[UIImageView alloc] initWithFrame:charaFrame];
         [_charaBgImgView
-            setImage:[UIImage imageNamed:(data.rank < 3 ? kCharaIconBg[(int)data.rank] :
-                                                          @"frisco_icon_cmn")]];
+            setImage:[UIImage
+                         imageNamed:(data.rank < 3 ? kCharaIconBg[static_cast<int>(data.rank)] :
+                                                     @"frisco_icon_cmn")]];
         [_bgImgView addSubview:_charaBgImgView];
 
         _charaImgView = [[UIImageView alloc] initWithFrame:charaFrame];
@@ -326,7 +328,8 @@ static int scoreToRank(int score) {
         if (charaId < 0) {
             charaId = 0;
         }
-        NSString *charaFile = [NSString stringWithFormat:@"sgc_icon_%03d.png", (int)charaId];
+        NSString *charaFile =
+            [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
         UIImage *charaImg;
         if (charaId > 0x1d) {
             NSString *path =
@@ -352,7 +355,7 @@ static int scoreToRank(int score) {
     // Player name, score plaque and score value (only when a player occupies the
     // row).
     if (data.playerId != nil) {
-        CGFloat nameX = isPad ? 8.0f : (CGFloat)_imgPlayerNameX;
+        CGFloat nameX = isPad ? 8.0f : static_cast<CGFloat>(_imgPlayerNameX);
         CGFloat nameY = isPad ? 60.0f : 5.0f;
         _playerNameLbl = [[UILabel alloc] initWithFrame:CGRectMake(nameX, nameY, 130.0f, 20.0f)];
         _playerNameLbl.backgroundColor = [UIColor clearColor];
@@ -380,8 +383,8 @@ static int scoreToRank(int score) {
         [_bgImgView addSubview:_playerNameLbl];
 
         // Score plaque (art keyed by place).
-        int placeIdx = (data.rank < 3) ? (int)data.rank : 3;
-        CGFloat baseX = isPad ? 6.0f : (CGFloat)_imgScoreBaseX;
+        int placeIdx = (data.rank < 3) ? static_cast<int>(data.rank) : 3;
+        CGFloat baseX = isPad ? 6.0f : static_cast<CGFloat>(_imgScoreBaseX);
         CGFloat baseY = isPad ? 80.0f : 24.0f;
         _scoreBaseImgView =
             [[UIImageView alloc] initWithFrame:CGRectMake(baseX, baseY, 135.0f, 20.0f)];
@@ -389,7 +392,7 @@ static int scoreToRank(int score) {
         [_bgImgView addSubview:_scoreBaseImgView];
 
         // Score value (right-aligned over the plaque).
-        CGFloat scoreX = isPad ? 6.0f : (CGFloat)_imgScoreX;
+        CGFloat scoreX = isPad ? 6.0f : static_cast<CGFloat>(_imgScoreX);
         CGFloat scoreY = isPad ? 80.0f : 25.0f;
         CGFloat scoreW = isPad ? 130.0f : 206.0f;
         _scoreLbl = [[UILabel alloc] initWithFrame:CGRectMake(scoreX, scoreY, scoreW, 20.0f)];
@@ -411,7 +414,7 @@ static int scoreToRank(int score) {
     }
     int rank = scoreToRank(data.score);
 
-    CGFloat rrX = isPad ? 135.0f : (CGFloat)_imgRankX;
+    CGFloat rrX = isPad ? 135.0f : static_cast<CGFloat>(_imgRankX);
     CGFloat rrY = isPad ? 15.0f : 5.0f;
     _scoreRankImgView = [[UIImageView alloc] initWithFrame:CGRectMake(rrX, rrY, 63.0f, 40.0f)];
     [_scoreRankImgView setImage:[UIImage imageNamed:kScoreRankImg[rank]]];
@@ -434,7 +437,7 @@ static int scoreToRank(int score) {
     [_fullcomboMarkImgView setImage:markImg];
     CGFloat mx, my;
     if (!isPad) {
-        mx = (CGFloat)_imgFullComboX;
+        mx = static_cast<CGFloat>(_imgFullComboX);
         my = 39.0f;
     } else {
         // Pinned just inside the score-rank badge on iPad.

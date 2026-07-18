@@ -97,7 +97,7 @@ static int scoreToRank(int score) {
 // @complete
 static int neSugorokuTouchSoundBit(int mainMapId) {
     static constexpr int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    unsigned id = (unsigned)mainMapId & 0xffff;
+    unsigned id = static_cast<unsigned>(mainMapId) & 0xffff;
     return id < 9 ? kBits[id] : 0;
 }
 
@@ -445,7 +445,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
             int mainMapId = [[t objectForKey:@"MainMapId"] intValue];
             int touchSound = [[t objectForKey:@"TouchSound"] intValue];
             if (touchSound != 0) {
-                touchSoundFlg |= 1 << neSugorokuTouchSoundBit((short)mainMapId);
+                touchSoundFlg |= 1 << neSugorokuTouchSoundBit(static_cast<short>(mainMapId));
             }
         }
 
@@ -469,13 +469,13 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         [UserSettingData savePlayerId:playerId];
         [UserSettingData saveHaveTouchSoundFlg:touchSoundFlg];
         [UserSettingData saveSumPurchase:sumPurchase];
-        [UserSettingData saveIsInputInviteCode:(BOOL)isInvited];
+        [UserSettingData saveIsInputInviteCode:static_cast<BOOL>(isInvited)];
         [UserSettingData saveInvitePresent:invitePresent];
         [UserSettingData saveInviteCnt:inviteCnt];
-        [UserSettingData saveCharaId:(short)charaId];
-        [UserSettingData saveCharaIdServer:(short)charaId];
-        [UserSettingData saveCharaTicket:(short)charaTicketCnt];
-        [UserSettingData saveTreasurePoint:(short)treasurePoint];
+        [UserSettingData saveCharaId:static_cast<short>(charaId)];
+        [UserSettingData saveCharaIdServer:static_cast<short>(charaId)];
+        [UserSettingData saveCharaTicket:static_cast<short>(charaTicketCnt)];
+        [UserSettingData saveTreasurePoint:static_cast<short>(treasurePoint)];
         [UserSettingData saveLastAnswerQuizId:lastAnswerQuizId];
         [UserSettingData saveTotalCorrectQuiz:totalCorrectQuiz];
         [UserSettingData saveTotalInCorrectQuiz:totalInCorrectQuiz];
@@ -574,8 +574,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
             int charaTicket = [[t objectForKey:@"CharaTicket"] intValue];
             int touchSound = [[t objectForKey:@"TouchSound"] intValue];
 
-            TreasureData *td = [TreasureData addRecordWithMainMapId:(short)mainMapId
-                                                           subMapId:(short)subMapId
+            TreasureData *td = [TreasureData addRecordWithMainMapId:static_cast<short>(mainMapId)
+                                                           subMapId:static_cast<short>(subMapId)
                                              inManagedObjectContext:context];
             td.musicPiece = [NSNumber numberWithInt:musicPiece];
             td.wallPaperPiece = [NSNumber numberWithInt:wallPiece];

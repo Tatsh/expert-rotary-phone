@@ -151,7 +151,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     // back to float (vcvt.s32.f32 / subs #0xa / vcvt.f32.s32 @ 0x29d86..0x29d9c).
     // center.x stays a pure float.
     spinner.center =
-        CGPointMake(frame.size.width * 0.5f, (float)((int)(frame.size.height * 0.5f) - 10));
+        CGPointMake(frame.size.width * 0.5f,
+                    static_cast<float>(static_cast<int>(frame.size.height * 0.5f) - 10));
     spinner.transform = CGAffineTransformMakeScale(2.0f, 2.0f);
     [spinner startAnimating];
     [_dummyView.view addSubview:spinner];
@@ -338,7 +339,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     [(MainViewController *)RootVC() OverScoreLogEndCallBack];
     _isAnimationing = NO;
 
-    if ((unsigned)m_musicId == 0xffffffff || m_sheet == -1) {
+    if (static_cast<unsigned>(m_musicId) == 0xffffffff || m_sheet == -1) {
         return;
     }
 
@@ -346,7 +347,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
     NSArray<MusicData *> *songs = task->m_musicList;
     for (NSUInteger i = 0; i < songs.count; i++) {
         if ((int)[songs[i] MusicID] == m_musicId) {
-            task->m_chosenIndex = (int)i;
+            task->m_chosenIndex = static_cast<int>(i);
             task->m_chosenMusicId = m_musicId;
             task->m_resultSheet = m_sheet;
 
@@ -391,7 +392,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 // @ 0x2abe0 — one row per downloaded log entry.
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return (_overScoreLogDataArray != nil) ? (NSInteger)_overScoreLogDataArray.count : 0;
+    return (_overScoreLogDataArray != nil) ? static_cast<NSInteger>(_overScoreLogDataArray.count) :
+                                             0;
 }
 
 // @ 0x2ac1c — one OverScoreLogCell per entry (reused by "Cell%ld-%ld"), bound
@@ -401,8 +403,9 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Ghidra @ 0x2ac7e: the reuse-identifier format is "Cell%ld-%ld" (hyphen) —
     // string @ 0x134e38 (shared with the other table cells).
-    NSString *identifier =
-        [NSString stringWithFormat:@"Cell%ld-%ld", (long)indexPath.section, (long)indexPath.row];
+    NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
+                                                      static_cast<long>(indexPath.section),
+                                                      static_cast<long>(indexPath.row)];
     OverScoreLogCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     if (cell == nil) {
         cell = [[OverScoreLogCell alloc] initWithStyle:UITableViewCellStyleDefault
