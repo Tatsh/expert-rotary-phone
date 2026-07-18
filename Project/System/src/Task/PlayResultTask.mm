@@ -949,7 +949,7 @@ void PlayResultTask::resultGotoNext() {
     if (m_tweeter) {
         // Held as an unmanaged raw +1 pointer; the binary sends -release, so
         // transfer ownership to ARC and let it drop at the end of this statement.
-        static_cast<void>(__bridge_transfer id) m_tweeter;
+        static_cast<void>((__bridge_transfer id)m_tweeter);
         m_tweeter = nullptr;
     }
 
