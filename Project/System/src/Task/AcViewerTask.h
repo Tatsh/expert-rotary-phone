@@ -161,7 +161,7 @@ private:
     float m_seekCoef = 0.0f;   // +0xf4 accumulated scaled dy*10 (the seek
                                //        coefficient; * m_seekScale in the
                                //        case-0xb live seek)
-    uint8_t m_moved = 0;       // +0xf8 per-frame touch "moved" flag
+    bool m_moved = false;      // +0xf8 per-frame touch "moved" flag
 #ifndef ENABLE_PATCHES
     uint8_t _pad_f9[0xfc - 0xf9] = {}; // +0xf9 alignment pad before m_pauseTime (no access)
 #endif
@@ -224,17 +224,17 @@ private:
     // combo-step addend read by drawActiveNotes (setup writes all four in one
     // loop).
     int16_t m_scrollSpeed[4] = {}; // +0x1cc per-lane scroll-speed table
-    uint8_t m_hudReady = 0;        // +0x1d4 HUD resolved / ready
-    uint8_t m_hudArmed = 0;        // +0x1d5 HUD armed (transition done)
-    uint8_t m_paused = 0;          // +0x1d6 note playback paused / muted
-    uint8_t m_pauseMenuOpen = 0;   // +0x1d7 pause-menu open
-    uint8_t m_padDisplay = 0;      // +0x1d8 pad-class display
+    bool m_hudReady = false;       // +0x1d4 HUD resolved / ready
+    bool m_hudArmed = false;       // +0x1d5 HUD armed (transition done)
+    bool m_paused = false;         // +0x1d6 note playback paused / muted
+    bool m_pauseMenuOpen = false;  // +0x1d7 pause-menu open
+    bool m_padDisplay = false;     // +0x1d8 pad-class display
     // +0x1d9 pad-only flag: the black board is up / the pad viewer is already
     // set up (Ghidra calls it bIpadSubMode). ACST_INIT skips GotoAcViewer +
     // InsertBlackBoard when it is set; ACST_WAIT_TRANSITION gates the ready-SE on
     // it; requestGameExit raises it so the exit transition does not re-insert the
     // board; Cleanup preserves it across the play-data wipe (hence "survives").
-    uint8_t m_padBoardUp = 0;
+    bool m_padBoardUp = false;
 #ifndef ENABLE_PATCHES
     uint8_t _pad_1da[0x1dc - 0x1da] = {}; // +0x1da alignment pad before m_difficulty (no access)
 #endif

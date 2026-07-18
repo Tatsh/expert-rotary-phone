@@ -106,7 +106,7 @@ void AcViewerTask::setup() {
     m_hidSud = [UserSettingData acvHidSud];
     m_ranMir = [UserSettingData acvRanMir];
     m_difficulty = static_cast<int>(static_cast<short>(neAppEventCenter::acViewerDifficulty()));
-    m_padDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_padDisplay = neSceneManager::isPadDisplay();
 
     // Lane remap for the RAN/MIR option, then load + init the chart.
     note.setupLaneMapping(m_ranMir);
@@ -144,7 +144,7 @@ void AcViewerTask::setup() {
     NSString *sePath = [[NSBundle mainBundle] pathForResource:@"v12" ofType:@"m4a"];
     m_readySeId = static_cast<int>([audio loadSe:sePath isLoop:NO callName:nil group:1]);
 
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = m_padDisplay;
     aep.loadAepDataDefaultPath(kAcvGroup, pad ? "arcade_viewer_ipad" : "arcade_viewer");
 
     // Two AepLyrCtrl overlays: the PAUSE_LOOP layer (+0x54) and the top banner
@@ -293,7 +293,7 @@ void AcViewerTask::setup() {
     // the stack on arm64, so a 2-byte rotation shifted every following slot and
     // corrupted `context`, crashing the callback on a garbage `this`.
     aep.setGroupDrawCallback(kAcvGroup, &AcViewerTask::AcViewerHudDraw, this);
-    m_hudReady = 1; // HUD ready
+    m_hudReady = true; // HUD ready
 }
 
 // ===========================================================================
@@ -318,7 +318,7 @@ void AcViewerTask::loadChart() {
     NSString *name = [acMusic musicName];
     m_songTitle = (__bridge_retained void *)name;
 
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = m_padDisplay;
     if (name.length < 0x14) {
         m_titleXAdvance = pad ? 0x2a : 0x1c;
         m_titleBaselineY = pad ? -34 : -20; // 0xffffffde / 0xffffffec
@@ -339,7 +339,7 @@ void AcViewerTask::loadChart() {
       NSData *track = [acMusic getBackTrack:difficulty];
       [audio loadBgmData:track isLoop:NO];
       [audio playBgm:1.0f];
-      m_hudArmed = 1; // +0x1d5 (strb 1 at block tail)
+      m_hudArmed = true; // +0x1d5 (strb 1 at block tail)
     });
 
     // Release the previous sheet, pick the new one by difficulty (0 easy / 1
@@ -441,7 +441,7 @@ void AcViewerTask::drawActiveNotes() {
                 // First time a note crosses the line (and not in HID/SUD hidden state),
                 // add to the combo counter (@ +0x1ca, saturated to 0x3ff) and mark the
                 // note handled (bit 6). Ghidra: +0x1d2 combo step / acNoteSetNoteFlag.
-                if (m_paused == 0 && m_pauseMenuOpen == 0 && (n.flags & 0x40) == 0) {
+                if (!m_paused && !m_pauseMenuOpen && (n.flags & 0x40) == 0) {
                     int c = static_cast<int>(m_scrollSpeed[3]) + static_cast<int>(m_gaugeValue);
                     if (c < 0) {
                         c = 0;
@@ -542,7 +542,7 @@ void AcViewerTask::drawLifeGauge() {
         lit = 0x18;
     }
 
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = m_padDisplay;
     const int nudge = pad ? 4 : 2;
 
     for (int cell = 0; cell < 0x18; cell++) {
@@ -697,7 +697,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     AcNoteMng &note = AcNoteMng::shared();
     neGraphics &gfx = neGraphics::shared();
 
-    m_moved = 0; // per-frame "moved" flag (field17_0xd0; recomputed)
+    m_moved = false; // per-frame "moved" flag (field17_0xd0; recomputed)
 
     // --- Touch preamble (Ghidra: the drag/tap classifier at 0x21704..0x21880,
     // recovered from the disassembly of FUN_00021678). While the HUD is up
@@ -712,7 +712,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // feed the case-0xb seek-scrub.
     bool flick = false, released = false;
     int flickX = 0, flickY = 0;
-    if (m_hudReady != 0) {
+    if (m_hudReady) {
         const float scale = m_uiScale;
         const int n = gfx.activeTouchCount();
         if (m_dragTouchId < 0) {
@@ -750,7 +750,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
                 m_dragLastX = sx;
                 m_dragLastY = sy;
                 if (m_dragAccumX != 0.0f || m_seekCoef != 0.0f) {
-                    m_moved = 1;
+                    m_moved = true;
                 }
                 if (t->released != 0) {
                     m_dragTouchId = -1;
@@ -802,7 +802,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // Enter the arcade viewer nav screen (and, on pad, insert the black board),
         // then register this task on the AppDelegate.
         [AcvRootVC() GotoAcViewer];
-        if (neSceneManager::isPadDisplay() && m_padBoardUp == 0) {
+        if (neSceneManager::isPadDisplay() && !m_padBoardUp) {
             [AcvRootVC() InsertBlackBoard];
         }
         [[AppDelegate appDelegate] setAcMainTask:this];
@@ -823,11 +823,11 @@ void AcViewerTask::update(int /*deltaMs*/) {
         next = kAcvWaitTransition;
         [[fallthrough]];
     case kAcvWaitTransition:
-        if (m_hudArmed == 0 || !aep.isTransitionDone()) {
+        if (!m_hudArmed || !aep.isTransitionDone()) {
             break; // still transitioning
         }
         // On phone (or once the pad board is up) fire the ready SE, then advance.
-        if (!neSceneManager::isPadDisplay() || m_padBoardUp != 0) {
+        if (!neSceneManager::isPadDisplay() || m_padBoardUp) {
             m_readySeInst = static_cast<int>([[AudioManager sharedManager] playSe:0
                                                                        resourceId:m_readySeId]);
         }
@@ -878,7 +878,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         if (t > 0x1e) {
             note.Pause();
             m_pauseTime = note.getCurrentPosition();
-            m_paused = 1;
+            m_paused = true;
             next = kAcvPauseMenuOpen;
             t = m_endHoldCounter;
         }
@@ -903,7 +903,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
         // Song-select viewing: pause + snapshot, then wait to resume.
         note.Pause();
         m_pauseTime = note.getCurrentPosition();
-        m_paused = 1;
+        m_paused = true;
         next = kAcvScrub;
         break;
     case kAcvScrub: {
@@ -914,9 +914,9 @@ void AcViewerTask::update(int /*deltaMs*/) {
         next = kAcvScrub;
         // (A) iPad resume-at-top: only when NOT paused (rarely fires; normally
         // m_paused=1 here).
-        if (neSceneManager::isPadDisplay() && m_paused == 0) {
+        if (neSceneManager::isPadDisplay() && !m_paused) {
             note.resume();
-            m_paused = 0;
+            m_paused = false;
             next = kAcvPlaying;
         }
         if (released) {
@@ -945,7 +945,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
                 }
             }
             // fall through to the tap tests (E)
-        } else if (m_dragTouchId >= 0 && m_moved != 0) {
+        } else if (m_dragTouchId >= 0 && m_moved) {
             // (D) mid-drag live scrub
             if (m_dragStartY >= static_cast<float>(m_scrubZoneTopY)) {
                 if (m_dragStartY >= static_cast<float>(m_seekGaugeSplitY)) {
@@ -974,7 +974,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
             if (neGraphics::pointInRect(
                     flickX, flickY, m_comboDigitX, m_comboDigitY, m_playTouchW, m_playTouchH)) {
                 note.resume();
-                m_paused = 0;
+                m_paused = false;
                 next = kAcvPlaying;
             } else if (neGraphics::pointInRect(flickX,
                                                flickY,
@@ -990,11 +990,11 @@ void AcViewerTask::update(int /*deltaMs*/) {
     case kAcvPauseMenuOpen:
         // Pause menu: freeze play (if not already), play the pause overlay (phone)
         // or the black board (pad), and wait for the resume/quit tap.
-        if (m_paused == 0) {
+        if (!m_paused) {
             note.Pause();
             m_pauseTime = note.getCurrentPosition();
         }
-        m_pauseMenuOpen = 1;
+        m_pauseMenuOpen = true;
         if (!neSceneManager::isPadDisplay()) {
             m_pauseLayer->playOnce(); // +0x54 once (Ghidra AepLyrCtrl::Play @ 0x21f5e)
         } else {
@@ -1019,9 +1019,9 @@ void AcViewerTask::update(int /*deltaMs*/) {
         auto padResumeToViewer = [&]() { // shared pad "close menu, resume" path
             [AcvRootVC() GotoAcViewer];
             m_pauseLayer->reset();
-            m_pauseMenuOpen = 0;
+            m_pauseMenuOpen = false;
             note.resume();
-            m_paused = 0;
+            m_paused = false;
             next = kAcvPlaying;
         };
         if (flick) {
@@ -1043,12 +1043,12 @@ void AcViewerTask::update(int /*deltaMs*/) {
                 handled = true;
             } else if (inBand(m_pauseBtnY[1])) { // resume
                 m_pauseLayer->reset();
-                m_pauseMenuOpen = 0;
-                if (m_paused != 0) {
+                m_pauseMenuOpen = false;
+                if (m_paused) {
                     next = kAcvScrub;
                 } else {
                     note.resume();
-                    m_paused = 0;
+                    m_paused = false;
                     next = kAcvPlaying;
                 }
                 handled = true;
@@ -1056,9 +1056,9 @@ void AcViewerTask::update(int /*deltaMs*/) {
         }
         // Pad tail: auto-resume once the song-select overlay is no longer showing.
         if (!handled && isPad && [AcvRootVC() acMusicSelViewing] == 0) {
-            m_pauseMenuOpen = 0;
+            m_pauseMenuOpen = false;
             note.resume();
-            m_paused = 0;
+            m_paused = false;
             next = kAcvPlaying;
         }
         break;
@@ -1087,7 +1087,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
             [AcvRootVC() FadeOutBlackBoard];
         }
         [[AppDelegate appDelegate] setAcMainTask:nil];
-        m_padBoardUp = 0;
+        m_padBoardUp = false;
         kill(); // +0x24 = 1
         {
             MenuMainTask *menu = new MenuMainTask();
@@ -1104,7 +1104,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
     // the note field and life gauge.
     static_cast<void>(audio);
     AepLyrCtrl::updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
-    if (m_hudArmed != 0 && m_hudReady != 0) {
+    if (m_hudArmed && m_hudReady) {
         drawActiveNotes();
         drawLifeGauge();
     }
@@ -1190,9 +1190,9 @@ void AcViewerTask::AcViewerHudDraw(int child,
         // drawActiveNotes, then draw the MUSIC_ON / MUSIC_OFF marker per the mute
         // flag.
         self->m_comboDigitY = y - (anchorY * scaleY) / 100;
-        const int dy = self->m_padDisplay == 0 ? -0xc : -0x18; // phone vs pad offset
+        const int dy = !self->m_padDisplay ? -0xc : -0x18; // phone vs pad offset
         self->m_comboDigitX = (x - (anchorX * scaleX) / 100) + dy;
-        const int frm = self->m_paused == 0 ? self->m_musicOffFrm : self->m_musicOnFrm;
+        const int frm = !self->m_paused ? self->m_musicOffFrm : self->m_musicOnFrm;
         drawAepFrameEx(&aep,
                        frm,
                        x,
