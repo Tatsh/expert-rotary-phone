@@ -376,9 +376,29 @@ public:
     dispatch_semaphore_t m_cellSem = nullptr;         // +0xa90 guards the jacket cell array
     int m_highlightAnim = 0;                          // +0xa94 highlight pulse phase (0..0x96)
     __unsafe_unretained id m_overScoreDict = nullptr; // +0xa98 over-score "touched" set
-    int m_overScorePulse = 0;                  // +0xa9c over-score badge pulse phase (0..0x96)
-    ne::C_TASK *m_spawnedTask = nullptr;       // +0xaa0 launched play / tutorial / menu sub-task
-    int m_state = 0;                           // +0xaa4 state-machine field
+    int m_overScorePulse = 0;            // +0xa9c over-score badge pulse phase (0..0x96)
+    ne::C_TASK *m_spawnedTask = nullptr; // +0xaa0 launched play / tutorial / menu sub-task
+    /// @brief MainTask::m_state music-select flow states, in the order update()
+    /// walks them (Ghidra: MainTask_update). Values 0xb is unused.
+    enum SelectState {
+        kSelSetup = 0,            ///< build the scene, start BGM, fetch the recommend list
+        kSelFadeIn = 1,           ///< fade the select scene in, start the intro layers
+        kSelSelect = 2,           ///< interactive song / menu select
+        kSelSongChosen = 3,       ///< a song was chosen: preview BGM + load textures
+        kSelDifficulty = 4,       ///< difficulty / option select + BGM preview loop
+        kSelGotoSettings = 5,     ///< open the settings screen
+        kSelWaitSettings = 6,     ///< wait for settings to close (or relaunch the title)
+        kSelGotoSort = 7,         ///< open the sort-select modal
+        kSelSortModal = 8,        ///< sort modal shown -> resume select
+        kSelGotoScoreLog = 9,     ///< open the over-score (friend score) log
+        kSelScoreLogModal = 10,   ///< score-log modal shown -> resume select
+        kSelPlayLaunch = 0xc,     ///< play-launch handoff
+        kSelPlayLaunchWait = 0xd, ///< play-launch intermediate wait
+        kSelFadeOut = 0xe,        ///< fade out, signal the async loader to stop
+        kSelWaitFadeOut = 0xf,    ///< wait for the fade-out and the loader to stop
+        kSelTeardown = 0x10,      ///< tear down once the select SEs finish
+    };
+    int m_state = 0;                           // +0xaa4 state-machine field (SelectState)
     MusicSelState m_sel = {};                  // +0xaa8 packed per-song select state (seam)
     uint8_t _reservedTail[0xcc1 - 0xae8] = {}; // +0xae8..0xcc1 remaining Setup/layout tail
 

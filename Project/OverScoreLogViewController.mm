@@ -356,7 +356,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 
             task->m_spawnedTask = new PlayTask();
             [[AppDelegate appDelegate] setMainTask:(MainTask *)task->m_spawnedTask];
-            task->m_state = 0xc; // -> play-launch handoff
+            task->m_state = MainTask::kSelPlayLaunch; // -> play-launch handoff
             return;
         }
     }
@@ -370,7 +370,7 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
                              cancelButtonTitle:nil
                              otherButtonTitles:@"OK"];
     [alert show];
-    task->m_state = 2;
+    task->m_state = MainTask::kSelSelect;
 }
 
 #pragma mark - UITableViewDataSource / UITableViewDelegate

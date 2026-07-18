@@ -295,8 +295,8 @@ void MainTask::update(int /*deltaMs*/) {
     }
 
     switch (m_state) {
-    case 0: { // build the scene, start BGM, kick off (or reuse) the recommend
-              // list
+    case kSelSetup: { // build the scene, start BGM, kick off (or reuse) the recommend
+                      // list
         Setup();
         [audio setBgmVolume:[UserSettingData bgmVolume]];
         [audio playBgm:0];
@@ -306,20 +306,20 @@ void MainTask::update(int /*deltaMs*/) {
         } else {
             UpdateInfoPanel(1); // reuse the cached recommend panel
         }
-        m_state = 1;
+        m_state = kSelFadeIn;
         break;
     }
 
-    case 1:                          // fade the select scene in and start its intro layers
+    case kSelFadeIn:                 // fade the select scene in and start its intro layers
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         m_layers[kLayerBg]->play();  // +0x34 loop (Ghidra AepLyrCtrl_play @ 0x35b86)
         m_introLayers[kIntroImage]->playOnce(); // +0x44 once (Ghidra AepLyrCtrl::Play @ 0x35b8e)
         m_introLayers[kIntroBgImage]->play();   // +0x48 loop (Ghidra AepLyrCtrl_play @ 0x35b96)
         m_selectedCell = -1;
-        m_state = 2;
+        m_state = kSelSelect;
         break;
 
-    case 2: { // *** interactive song / menu select ***
+    case kSelSelect: { // *** interactive song / menu select ***
         // Re-arm the recommend fetch if it finished while a push is pending.
         if (![dl isGetRecommendListDownLoading] && recommendListIsStale()) {
             [dl setCppDelegateRecommendList:this];
@@ -380,12 +380,12 @@ void MainTask::update(int /*deltaMs*/) {
 
         // -- top row --
         if (hitButton(tapX, tapY, kBtnSettings)) {
-            m_state = 5; // -> GotoSetting
+            m_state = kSelGotoSettings; // -> GotoSetting
             break;
         }
         if (hitButton(tapX, tapY, kBtnSort)) {
             if (AllCellsReady()) {
-                m_state = 7; // -> GotoSortSelect
+                m_state = kSelGotoSort; // -> GotoSortSelect
             }
             break;
         }
@@ -399,7 +399,7 @@ void MainTask::update(int /*deltaMs*/) {
         }
         if (hitButton(tapX, tapY, kBtnOverScoreLog)) {
             if (AllCellsReady()) {
-                m_state = 9; // -> GotoOverScoreLog
+                m_state = kSelGotoScoreLog; // -> GotoOverScoreLog
             }
             break;
         }
@@ -408,7 +408,7 @@ void MainTask::update(int /*deltaMs*/) {
         if (hitButton(tapX, tapY, kBtnBackToMenu)) {
             m_spawnedTask = MenuCreateTask(); // back to the mode-select hub
             neEngine::playSystemSe(2);
-            m_state = 0xe;
+            m_state = kSelFadeOut;
             break;
         }
         if (hitButton(tapX, tapY, kBtnTutorial)) {
@@ -419,7 +419,7 @@ void MainTask::update(int /*deltaMs*/) {
                     true); // guided first play: don't save
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = PlayTaskCreate(); // first-play guided play
-                m_state = 0xe;
+                m_state = kSelFadeOut;
             }
             break;
         }
@@ -449,7 +449,7 @@ void MainTask::update(int /*deltaMs*/) {
                 if (AllCellsReady()) {
                     m_chosenIndex = m_columnIndex * m_columnStride + c;
                     neEngine::playSystemSe(1);
-                    m_state = 3; // preview the chosen song
+                    m_state = kSelSongChosen; // preview the chosen song
                 }
                 goto tail; // grid consumed the tap
             }
@@ -462,7 +462,7 @@ void MainTask::update(int /*deltaMs*/) {
         break;
     }
 
-    case 3: { // a song was chosen: preview its BGM + load textures + ScoreData
+    case kSelSongChosen: { // a song was chosen: preview its BGM + load textures + ScoreData
         [audio pushBgm];
         // m_chosenIndex (+0x8f8) is the absolute song index already set when the
         // cell was tapped (state 2); the binary subscripts m_musicList with it.
@@ -536,11 +536,11 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         m_resultSheet = 0; // Ghidra 0x364ae: default the active difficulty to NORMAL
-        m_state = 4;
+        m_state = kSelDifficulty;
         break;
     }
 
-    case 4: { // difficulty / option select + BGM preview loop
+    case kSelDifficulty: { // difficulty / option select + BGM preview loop
         if (!m_sel.previewBgmLoading) {
             if (![audio isPlayingBgm]) {
                 [audio seekBgmToTop];
@@ -576,7 +576,7 @@ void MainTask::update(int /*deltaMs*/) {
             m_sel.selectSeInst = static_cast<int>([audio playSe:nil resourceId:m_sel.selectSeId]);
             m_spawnedTask = PlayTaskCreate();
             [[AppDelegate appDelegate] setMainTask:static_cast<MainTask *>(m_spawnedTask)];
-            m_state = 0xc; // -> play-launch handoff (0xc -> 0xd -> 0xe)
+            m_state = kSelPlayLaunch; // -> play-launch handoff (0xc -> 0xd -> 0xe)
             break;
         }
 
@@ -631,56 +631,56 @@ void MainTask::update(int /*deltaMs*/) {
             [audio playBgm:0];
             neEngine::playSystemSe(2);
             m_selectedCell = -1;
-            m_state = 2;
+            m_state = kSelSelect;
         }
         break;
     }
 
-    case 5: // options -> settings
+    case kSelGotoSettings: // options -> settings
         neEngine::playSystemSe(1);
         [RootVC() GotoSetting];
-        m_state = 6;
+        m_state = kSelWaitSettings;
         break;
 
-    case 6: // wait for settings to close; relaunch the title on request, else
+    case kSelWaitSettings: // wait for settings to close; relaunch the title on request, else
         // re-select
         if (![RootVC() settingViewing]) {
             if ([RootVC() isGotoTitle] == 1) {
                 m_spawnedTask = TitleTaskCreate();
-                m_state = 0xe;
+                m_state = kSelFadeOut;
                 [RootVC() setIsGotoTitle:0];
             } else {
-                m_state = 2; // (falls through to the case 8/10 handoff in the binary)
+                m_state = kSelSelect; // (falls through to the case 8/10 handoff in the binary)
             }
         }
         break;
 
-    case 7: // sort
+    case kSelGotoSort: // sort
         neEngine::playSystemSe(1);
         [RootVC() GotoSortSelect:this];
-        m_state = 8;
+        m_state = kSelSortModal;
         break;
 
-    case 8:  // sort modal shown -> resume interactive select
-    case 10: // over-score-log modal shown -> resume interactive select
-        m_state = 2;
+    case kSelSortModal:     // sort modal shown -> resume interactive select
+    case kSelScoreLogModal: // over-score-log modal shown -> resume interactive select
+        m_state = kSelSelect;
         break;
 
-    case 9: // over-score (friend score) log
+    case kSelGotoScoreLog: // over-score (friend score) log
         neEngine::playSystemSe(1);
         [RootVC() GotoOverScoreLog:this];
-        m_state = 10;
+        m_state = kSelScoreLogModal;
         break;
 
-    case 0xc: // play-launch handoff
-        m_state = 0xd;
+    case kSelPlayLaunch: // play-launch handoff
+        m_state = kSelPlayLaunchWait;
         break;
 
-    case 0xd:
-        m_state = 0xe;
+    case kSelPlayLaunchWait:
+        m_state = kSelFadeOut;
         break;
 
-    case 0xe:                        // fade out, and signal the async loader to stop
+    case kSelFadeOut:                // fade out, and signal the async loader to stop
         aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
         // Ghidra 0x36048: field_0xa8c = 1 -- ask the background jacket loader to
         // shut down (backgroundCellLoader acknowledges by setting the cursor to 2).
@@ -688,19 +688,19 @@ void MainTask::update(int /*deltaMs*/) {
         // the handoff until the loader has actually stopped, so StopAndSave can
         // tear the cell array down without racing the loader thread.
         m_loaderCursor = 1;
-        m_state = 0xf;
+        m_state = kSelWaitFadeOut;
         break;
 
-    case 0xf: // wait for the fade-out AND the background loader to acknowledge stop
+    case kSelWaitFadeOut: // wait for the fade-out AND the background loader to acknowledge stop
         // Ghidra 0x3605e: advance only once the fade is done, no preview overlay is
         // up (m_sel.previewBgmLoading == 0), and the loader has acknowledged shutdown
         // (m_loaderCursor == 2, set by backgroundCellLoader as it exits).
         if (aep.isTransitionDone() && !m_sel.previewBgmLoading && m_loaderCursor == 2) {
-            m_state = 0x10;
+            m_state = kSelTeardown;
         }
         break;
 
-    case 0x10: // handoff: tear down once the select SEs finish
+    case kSelTeardown: // handoff: tear down once the select SEs finish
         if (!neEngine::isSePlaying(2)) {
             if (m_sel.selectSeInst >= 0 && [audio isPlayingSe:0]) {
                 break; // a select SE is still sounding
