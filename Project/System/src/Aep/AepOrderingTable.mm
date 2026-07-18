@@ -308,7 +308,7 @@ void AepOrderingTable::flush() {
 // Ghidra: aepOtSetScreenParams (FUN_00010bbc) — cache the screen extents, the
 // per-slot texture-handle table and the device-pixel render scale on the OT.
 // @complete
-void AepOrderingTable::setScreenParams(std::unique_ptr<neTextureForiOS> *textureTable,
+void AepOrderingTable::setScreenParams(neTextureForiOS **textureTable,
                                        int screenW,
                                        int screenH,
                                        float scale) {
@@ -318,11 +318,8 @@ void AepOrderingTable::setScreenParams(std::unique_ptr<neTextureForiOS> *texture
     m_renderScale = scale;         // +0x9a1a8
 }
 
-void aepOtSetScreenParams(AepOrderingTable *ot,
-                          std::unique_ptr<neTextureForiOS> *textureTable,
-                          int screenW,
-                          int screenH,
-                          float scale) {
+void aepOtSetScreenParams(
+    AepOrderingTable *ot, neTextureForiOS **textureTable, int screenW, int screenH, float scale) {
     ot->setScreenParams(textureTable, screenW, screenH, scale);
 }
 
@@ -646,7 +643,7 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
         return; // fully-opaque untinted no-op: nothing to composite
     }
 
-    neTextureForiOS *frames = textureTable() ? textureTable()[slot].get() : nullptr;
+    neTextureForiOS *frames = textureTable() ? textureTable()[slot] : nullptr;
     // spriteRec: +0 srcX, +2 srcY, +4 srcW, +6 srcH (the atlas source rect). The
     // quad geometry is the scaled destination rect; colour comes from colorRGB
     // and the tint level from nColorA. The tail of FUN_00010c90 emits four
