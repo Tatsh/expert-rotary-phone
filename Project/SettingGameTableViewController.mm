@@ -43,18 +43,30 @@
 #import "PopkunSizeViewCtrl.h" // row 5 detail sub-controller (@ PTR_PopkunSizeViewCtrl_0015c0a4)
 #import "SoundSettingView.h"   // row 1 detail sub-controller (@ PTR_SoundSettingView_0015c0a0)
 
+// The game-settings table rows: three category headers, each followed by a
+// collapsible detail sub-controller.
+typedef NS_ENUM(NSInteger, SettingGameRow) {
+    SettingGameRowSoundHeader = 0,  // サウンド
+    SettingGameRowSoundDetail = 1,  // SoundSettingView
+    SettingGameRowEffectHeader = 2, // ゲーム演出
+    SettingGameRowEffectDetail = 3, // GameEffectView
+    SettingGameRowSizeHeader = 4,   // ポップ君サイズ
+    SettingGameRowSizeDetail = 5,   // PopkunSizeViewCtrl
+    SettingGameRowCount = 6,
+};
+
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
 @implementation SettingGameTableViewController {
-    BOOL _isAnimationing;             // @162 (0xa2)  open/close animation guard
-    NSIndexPath *_selectedIndexPath;  // @164 (0xa4)  currently expanded header row
-                                      // (retained)
-    UIViewController *_detailView[6]; // @168 (0xa8)  lazily-built detail
-                                      // controllers (indices 0/2/4)
-    CGRect _dummyFrm[6];              // @192 (0xc0)  per-detail-row content frames (indices
-                                      // 0/2/4)
+    BOOL _isAnimationing;            // @162 (0xa2)  open/close animation guard
+    NSIndexPath *_selectedIndexPath; // @164 (0xa4)  currently expanded header row
+                                     // (retained)
+    UIViewController *_detailView[SettingGameRowCount]; // @168 (0xa8)  lazily-built detail
+                                                        // controllers (indices 0/2/4)
+    CGRect _dummyFrm[SettingGameRowCount]; // @192 (0xc0)  per-detail-row content frames (indices
+                                           // 0/2/4)
 }
 
 // @ 0x88b08 -- grouped-table styling; iPad content inset tweak; seeds the three
@@ -222,8 +234,8 @@ static UIViewController *RootVC() {
 //
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 6; // 3 header rows (0/2/4) each followed by a collapsible detail row
-              // (1/3/5)
+    return SettingGameRowCount; // 3 header rows (0/2/4) each followed by a collapsible detail row
+                                // (1/3/5)
 }
 
 // @ 0x8934c -- detail rows (1/3/5) are 0-height unless the header above them is
@@ -233,19 +245,19 @@ static UIViewController *RootVC() {
 // @complete (row 5/3/1 read _dummyFrm[4/2/0].size.height at offsets
 // 0x4c/0x2c/0xc; default 65.0).
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.row == 5) {
+    if (indexPath.row == SettingGameRowSizeDetail) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:4 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
             return _dummyFrm[4].size.height; // 430
         }
         return 0.0f;
-    } else if (indexPath.row == 3) {
+    } else if (indexPath.row == SettingGameRowEffectDetail) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:2 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
             return _dummyFrm[2].size.height; // 137
         }
         return 0.0f;
-    } else if (indexPath.row == 1) {
+    } else if (indexPath.row == SettingGameRowSoundDetail) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:0 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
             return _dummyFrm[0].size.height; // 320
@@ -288,7 +300,7 @@ static UIViewController *RootVC() {
     UIColor *headerColor = nil;
 
     switch (indexPath.row) {
-    case 1: {
+    case SettingGameRowSoundDetail: {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         CGRect frm = _dummyFrm[0];
         UIView *box = [[UIView alloc] initWithFrame:frm];
@@ -317,7 +329,7 @@ static UIViewController *RootVC() {
         [cell.contentView addSubview:box];
         return cell;
     }
-    case 3: {
+    case SettingGameRowEffectDetail: {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         CGRect frm = _dummyFrm[2];
         UIView *box = [[UIView alloc] initWithFrame:frm];
@@ -346,7 +358,7 @@ static UIViewController *RootVC() {
         [cell.contentView addSubview:box];
         return cell;
     }
-    case 5: {
+    case SettingGameRowSizeDetail: {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         CGRect frm = _dummyFrm[4];
         UIView *box = [[UIView alloc] initWithFrame:frm];
@@ -376,15 +388,15 @@ static UIViewController *RootVC() {
         [cell.contentView addSubview:box];
         return cell;
     }
-    case 0:
+    case SettingGameRowSoundHeader:
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         headerColor = [UIColor colorWithRed:1.0f green:0.647059f blue:0.627451f alpha:1.0f];
         break;
-    case 2:
+    case SettingGameRowEffectHeader:
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         headerColor = [UIColor colorWithRed:1.0f green:0.733333f blue:0.313726f alpha:1.0f];
         break;
-    case 4:
+    case SettingGameRowSizeHeader:
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         headerColor = [UIColor colorWithRed:0.580392f green:0.960784f blue:0.372549f alpha:1.0f];
         break;
@@ -395,13 +407,13 @@ static UIViewController *RootVC() {
     // @ 0x89748/0x899f8).
     NSString *title = nil;
     switch (indexPath.row) {
-    case 0:
+    case SettingGameRowSoundHeader:
         title = @"サウンド";
         break; // サウンド (Sound)
-    case 2:
+    case SettingGameRowEffectHeader:
         title = @"ゲーム演出";
         break; // ゲーム演出 (Game effect)
-    case 4:
+    case SettingGameRowSizeHeader:
         title = @"ポップ君サイズ";
         break; // ポップ君サイズ (Pop-kun size)
     }
@@ -451,7 +463,8 @@ static UIViewController *RootVC() {
 //
 // @complete (reload animation is UITableViewRowAnimationNone = 5).
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.row == 1 || indexPath.row == 3 || indexPath.row == 5) {
+    if (indexPath.row == SettingGameRowSoundDetail || indexPath.row == SettingGameRowEffectDetail ||
+        indexPath.row == SettingGameRowSizeDetail) {
         return;
     }
     if (_selectedIndexPath != nil && [_selectedIndexPath compare:indexPath] == NSOrderedSame) {
