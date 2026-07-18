@@ -15,6 +15,25 @@
 
 #import "Downloader.h"
 
+// Server result codes returned in the friend-request / free-request API's
+// "ErrorCode" field. Codes 3..9 have distinct, screen-consistent meanings; codes
+// 0/1/2/7 are surfaced to the user as a generic "communication failed" message
+// and their individual server meanings are not distinguished by the client (the
+// friend-request and free-request screens even bucket code 1 differently), so
+// they are named by code rather than given invented semantics.
+typedef NS_ENUM(NSInteger, FriendResultCode) {
+    FriendResultCommError0 = 0,        // reported as "communication failed"
+    FriendResultCommError1 = 1,        // ditto (free-request) / invalid id (friend-request)
+    FriendResultCommError2 = 2,        // reported as "communication failed"
+    FriendResultInvalidPlayerId = 3,   // 無効なプレーヤーID (invalid player id)
+    FriendResultSelfListFull = 4,      // this player cannot register any more friends
+    FriendResultPeerListFull = 5,      // the other player cannot register any more friends
+    FriendResultBlocked = 6,           // on the block list
+    FriendResultCommError7 = 7,        // reported as "communication failed"
+    FriendResultAlreadyRequested = 8,  // already applied / already received a request
+    FriendResultAlreadyRegistered = 9, // already friends
+};
+
 // One downloadable file's metadata. Obj-C type-encoding "{DlFileListData=i@i}"
 // (verified in getDlFileListFinished's NSValue wrapping).
 typedef struct {

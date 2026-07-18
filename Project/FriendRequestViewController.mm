@@ -322,28 +322,28 @@
         id errorCode = json[@"ErrorCode"];
         if ([errorCode isKindOfClass:[NSNumber class]]) {
             switch ([errorCode intValue]) {
-            case 0:
-            case 2:
-            case 7:
+            case FriendResultCommError0:
+            case FriendResultCommError2:
+            case FriendResultCommError7:
                 message = @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。";
                 break;
-            case 1:
-            case 3:
+            case FriendResultCommError1:
+            case FriendResultInvalidPlayerId:
                 message = @"無効なプレーヤーIDです。";
                 break;
-            case 4:
+            case FriendResultSelfListFull:
                 message = @"これ以上、フレンドを登録することはできません。";
                 break;
-            case 5:
+            case FriendResultPeerListFull:
                 message = @"相手の人は、これ以上、フレンドを登録することはできません。";
                 break;
-            case 6:
+            case FriendResultBlocked:
                 message = @"ブロックリスト対象です。";
                 break;
-            case 8:
+            case FriendResultAlreadyRequested:
                 message = @"既に申請済み\nまたは、申請を受けています。";
                 break;
-            case 9:
+            case FriendResultAlreadyRegistered:
                 message = @"既に登録済みです。";
                 break;
             default:
