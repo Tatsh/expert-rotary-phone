@@ -35,6 +35,7 @@ atsync
 attrb
 aumx
 auou
+autobuild
 autocapitalization
 autocorrection
 autorelease
@@ -170,6 +171,7 @@ easyyou
 elif
 endforeach
 errno
+esac
 esbenp
 etop
 extern
@@ -256,6 +258,7 @@ inzip
 ioapi
 iphoneos
 isspace
+isysroot
 itms
 ivar
 ivars
@@ -612,6 +615,7 @@ wundeclared
 wunreachable
 xcdatamodel
 xcmappingmodel
+xcrun
 xform
 xors
 xorshift
