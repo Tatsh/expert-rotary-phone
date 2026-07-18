@@ -19,8 +19,12 @@ struct CharaDataStruct {
     short rarity;        // +0x0e
 };
 
-// Bounds-checked accessor for the 30 built-in characters (asserts index < 30).
-// Ghidra: GetHardCodeCharaDataStruct @ 0xcb958
+/**
+ * @brief Get the built-in character data for the given index (0..29).
+ * @param index 0-based index of the built-in character (0..29).
+ * @return Pointer to the CharaDataStruct for the built-in character at the given index.
+ * @ghidraAddress 0xcb958
+ */
 const CharaDataStruct *GetHardCodeCharaDataStruct(int index);
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
