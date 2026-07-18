@@ -92,7 +92,7 @@ int PlayCurrentScore() {
     const TallyTotals t = collectTally(nm);
     const int noteTotal = nm.totalNoteCount(); // Ghidra: DAT_00178ccc (fixed divisor)
     if (noteTotal <= 0) {
-        // No chart loaded: the original's fixed-point path would divide by zero.
+        // No chart loaded: the original's float division would produce inf/NaN.
         return 0;
     }
     // score = (COOL*1.0 + GREAT*0.7 + GOOD*0.4) * 100000 / totalNotes,

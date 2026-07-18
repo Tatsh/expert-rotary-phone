@@ -1282,13 +1282,12 @@ void AcViewerTask::applyGameplaySettings() {
         // correct here.
         nm.initPlayDataWithData((__bridge NSData *)m_sheet, hiSpeed);
 
-        // Resume-seek target: the binary computes
-        //   FPToFixed( FixedToFP(pauseTime) + seekCoef * FixedToFP(seekScale) )
-        // via the FixedToFP/FPToFixed 16.16 pixel-math helpers (a documented
-        // conversion seam). With a common Q16.16 scale that round-trip reduces to
-        // the plain linear combine below; the exact fractional-bit width of each
-        // helper call is opaque (see the disclosure note), so this models the
-        // arithmetic rather than the NEON intrinsics. Clamp >= 0 as the binary.
+        // Resume-seek target: the binary computes (0x2391c-0x2392e)
+        //   (int)( (float)pauseTime + seekCoef * (float)seekScale )
+        // with plain int->float conversions (vcvt.f32.u32 on pauseTime,
+        // vcvt.f32.s32 on seekScale, vcvt.s32.f32 on the result). This models the
+        // arithmetic as a long combine rather than the NEON float intrinsics.
+        // Clamp >= 0 as the binary.
         long seekPos = static_cast<long>(pauseTime) +
                        static_cast<long>(seekCoef * static_cast<float>(seekScale));
         if (seekPos < 0) {

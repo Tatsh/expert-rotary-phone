@@ -292,7 +292,8 @@ int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGly
         size = [str sizeWithFont:font];
 #endif
     }
-    // The binary rounds the measured size to integer texels (FPToFixed, mode 3).
+    // The binary truncates the measured size to integer texels (plain
+    // vcvt.s32.f32).
     int w = static_cast<int>(size.width);
     int h = static_cast<int>(size.height);
 
@@ -415,7 +416,7 @@ neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, i
     std::strncpy(glyph->key, utf8, len);
     glyph->key[len] = '\0';
 
-    // The binary converts the (fixed-point) point size to a float for UIFont.
+    // The binary converts the integer point size to a float for UIFont.
     CGFloat sizePt = static_cast<CGFloat>(pointSize);
     UIFont *font;
     if (fontName == nullptr) {

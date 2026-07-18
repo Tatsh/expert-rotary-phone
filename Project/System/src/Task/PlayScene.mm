@@ -173,7 +173,7 @@ void destroyAll(std::unique_ptr<T> (&slots)[N]) {
 // Verified against the disassembly for the whole cited lifecycle / field-init
 // block: the +0x968 event centre, +0x96c/+0x970 screen extents, +0x974 UI
 // scale, every user-setting ivar (+0x9b4/+0x9e4/+0x9e5/+0x9e6), the popkun
-// 16.16 conversion (vcvt.s32.f32 #16 at 0x2e418), +0x9c9 demo flag from
+// size conversion (plain vcvt.s32.f32 at 0x2e418), +0x9c9 demo flag from
 // eventCentre+0x33, +0x9e7 old-hardware, +0x9ca pad-display, the gauge
 // constants (m_gaugeBase read from DAT_00178d00 which is 0 at rest,
 // 3072.0 / totalNoteCount at +0x9cc, 0x3f800000 at +0x9d0, and the exact
@@ -213,8 +213,7 @@ void PlayTaskInit(void *playData) {
     task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn]; // +0x9e6
 
     // Note ("popkun") size: a plain float->int (the note-sprite draw scale, a
-    // percent). Disasm @ 0x2e418: vcvt.s32.f32 (int)popkunSize — NOT fixed-point
-    // (the decompile's FPToFixed is that plain vcvt; the binary has no 16.16).
+    // percent). Disasm @ 0x2e418: vcvt.s32.f32 (int)popkunSize.
     task->m_popkunSize = static_cast<int>([UserSettingData popkunSize]); // +0x9bc
 
     // The bundled-demo / sugoroku play flag, copied out of the event center

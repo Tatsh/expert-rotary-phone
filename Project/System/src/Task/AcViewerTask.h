@@ -180,8 +180,8 @@ private:
     int m_pauseBtnTopY = 0;      // +0x110 pause-button top y (write-only)
     int m_pauseBtnHeight = 0;    // +0x114 pause-menu button full height (halved in the y-band test)
     int m_seekScale = 0;         // +0x118 resume-seek scale constant (setup
-                                 //        writes 5 phone / 3 ipad); read as a
-                                 //        fixed-point value by the seek math
+                                 //        writes 5 phone / 3 ipad); converted to
+                                 //        float and multiplied by the seek math
     int m_xScrubScale = 0;       // +0x11c x-scrub scale (drag dx -> gauge base)
     int m_noteClipTop = 0;       // +0x120 note-field clip top / y
     int m_noteFieldX = 0;        // +0x124 note-field x (= m_noteClipTop + m_noteFieldY)

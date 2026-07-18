@@ -231,8 +231,8 @@ static void aepEmitSprite(AepManager *mgr,
     std::memcpy(cmd->srcRect, rec, 8); // +0x0c..+0x13
     cmd->nPosX = x;                    // +0x14
     cmd->nPosY = y;                    // +0x18
-    // The binary converts the integer scale to float (FixedToFP, 16.16) here; the
-    // flush reads (int)flPosXf back out as the percentage scale.
+    // The binary converts the integer scale to float (plain vcvt.f32.s32) here;
+    // the flush reads (int)flPosXf back out as the percentage scale.
     cmd->flPosXfF = static_cast<float>(scaleX); // +0x1c float view (case-0 vldr)
     cmd->flPosYfF = static_cast<float>(scaleY); // +0x20 float view (case-0 vldr)
     cmd->nOfsX = w;                             // +0x24  (entry anchorX doubles as width)

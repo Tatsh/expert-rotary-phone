@@ -235,7 +235,7 @@ void neApplyViewport(ne::C_RENDER *r, neViewport *vp) {
 // Render state + immediate-mode primitives.
 // ---------------------------------------------------------------------------
 
-// One interleaved vertex: 16.16 fixed-point position + premultiplied RGBA8.
+// One interleaved vertex: GL_FLOAT position + premultiplied RGBA8.
 // Stride 12, position size 2 (glVertexPointer), colour at +8 (glColorPointer).
 // Ghidra: built inline on the stack by each neDraw* primitive. Positions are
 // GL_FLOAT (the backend's glVertexPointer uses type 0x1406); each primitive
@@ -247,8 +247,7 @@ struct neColorVertex {
 };
 
 // Ghidra: colours arrive as 0..255 (a,r,g,b); rgb is premultiplied by alpha/255
-// (DAT = 255.0f) and stored [R,G,B,A]. FixedToFP/FPToFixed here are int<->float
-// conversions.
+// (DAT = 255.0f) and stored [R,G,B,A] with plain int<->float conversions.
 // @complete
 static uint32_t nePremultRGBA(int a, int r, int g, int b) {
     float f = static_cast<float>(a) / 255.0f;

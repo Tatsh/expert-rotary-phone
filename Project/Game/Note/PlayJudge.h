@@ -14,7 +14,7 @@
 //  task struct whose full 0xa00-byte layout is owned by the task layer
 //  (System/src/Task/PlayTask.h). The judge functions here take it by pointer and
 //  reach its named members; this header only forward-declares the class.
-//  The per-note sprite/effect geometry (16.16-fixed / NEON in the original:
+//  The per-note sprite/effect geometry (plain float / NEON in the original:
 //  FUN_0000fd64 note quad, FUN_0000fcd0 hit effect) is a separate draw unit —
 //  this file carries the verified judge control flow and delegates the pixel
 //  math to those helpers.

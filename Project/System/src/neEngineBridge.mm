@@ -796,8 +796,8 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
     // Ghidra: MenuMainTask_update divides the tap by the UI scale (g_uiScale)
     // before the rect test -- the mode-button rects are stored in logical
     // (unscaled) space, so the raw physical-pixel touch must be scaled down to
-    // match (FPToFixed round-to-zero = trunc). Without this, buttons mis-hit on
-    // every scale != 1 device (Retina / iPad).
+    // match (plain vcvt.s32.f32 round-to-zero = trunc). Without this, buttons
+    // mis-hit on every scale != 1 device (Retina / iPad).
     const float scale = g_uiScale > 0.0f ? g_uiScale : 1.0f;
     const int px = static_cast<int>(static_cast<float>(t->x) / scale);
     const int py = static_cast<int>(static_cast<float>(t->y) / scale);

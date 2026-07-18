@@ -364,8 +364,8 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
     // Score plates (number backgrounds) per column. The three plates in a column
     // are driven by their score heights but nudged apart by a plate-height so
     // they never overlap, and clamped between Y=55 and the graph baseline. The
-    // precise fixed-point clamp chain is transcribed from the binary (init @
-    // 0xd752c) and reproduced here.
+    // precise float clamp chain (plain vcvt.f32.s32) is transcribed from the
+    // binary (init @ 0xd752c) and reproduced here.
     CGFloat plateBaseline = topY + 40.0f;
     CGFloat plateColX = 0.0f;
     for (int i = 0; i < 4; i++) {

@@ -19,17 +19,16 @@
 //    0x82cc4, isHaveTouchSound: @ 0x82d9c, backButtonFunc @ 0x82dc0.
 //  Objective-C++ for the neSceneManager / neEngine C++ bridge.
 //
-//  FIXED-POINT NOTE: the SE and touch-sound volumes are stored as fixed-point
-//  shorts. The binary converts with FPToFixed(value, frac=0, round) on save and
-//  FixedToFP on load, i.e. a plain rounded float<->short in the 0..127 range;
-//  reconstructed here as ordinary (short)/(float) casts. The BGM volume is a
-//  plain float (0..1).
+//  VOLUME NOTE: the SE and touch-sound volumes are stored as shorts. The binary
+//  converts on save with a plain vcvt.s32.f32 (0x82c0a, no scale) and on load
+//  with vcvt.f32.s32, i.e. an ordinary float<->short truncation in the 0..127
+//  range. The BGM volume is a plain float (0..1).
 //
 //  HONESTY NOTE: three "preview" playSe:resourceId:Volume: calls (the SE/touch
 //  sliders and the picker selection) have their resourceId/Volume argument
 //  registers callee-saved-/NEON-spilled in the decompile (shown uninitialised).
 //  They are reconstructed with the semantically-matching loaded SE handle and
-//  the slider's fixed-point volume, and flagged inline — these are runtime
+//  the slider's volume, and flagged inline — these are runtime
 //  values and cannot be expressed as compile-time constants. The iPad
 //  picker-cell check frame constants are now exact by disassembly (y+8.0,
 //  unmodified w/h; see inline). Everything else
@@ -56,12 +55,12 @@ typedef NS_ENUM(NSInteger, SoundSettingSection) {
     SoundSettingSectionCount = 4,
 };
 
-// Fixed-point <-> float helpers matching the binary's FPToFixed/FixedToFP (frac
-// = 0).
-static inline short SoundFPToFixed(float v) {
+// Volume <-> stored-short helpers: a plain truncating float<->short round-trip
+// (the binary's vcvt ops).
+static inline short SoundVolumeToShort(float v) {
     return (short)v;
 }
-static inline float SoundFixedToFP(short v) {
+static inline float SoundShortToVolume(short v) {
     return (float)v;
 }
 
@@ -105,8 +104,8 @@ static inline float SoundFixedToFP(short v) {
 // @complete
 - (void)dealloc {
     [UserSettingData saveBgmVolume:_bgmSlider.value];
-    [UserSettingData saveSeVolume:SoundFPToFixed(_seSlider.value)];
-    [UserSettingData saveTouchSoundVolume:SoundFPToFixed(_touchSoundSlider.value)];
+    [UserSettingData saveSeVolume:SoundVolumeToShort(_seSlider.value)];
+    [UserSettingData saveTouchSoundVolume:SoundVolumeToShort(_touchSoundSlider.value)];
     [UserSettingData saveTouchSoundKind:(short)_selectedTouchSoundNo];
 
     AudioManager *audio = [AudioManager sharedManager];
@@ -280,7 +279,7 @@ static inline float SoundFixedToFP(short v) {
             _seSlider = [[UISlider alloc] initWithFrame:sliderFrame];
             _seSlider.minimumValue = 0.0f;
             _seSlider.maximumValue = 127.0f; // 0x42fe0000
-            _seSlider.value = SoundFixedToFP([UserSettingData seVolume]);
+            _seSlider.value = SoundShortToVolume([UserSettingData seVolume]);
             _seSlider.minimumValueImage = [UIImage imageNamed:@"volume_small"];
             _seSlider.maximumValueImage = [UIImage imageNamed:@"volume_big"];
             _seSlider.continuous = NO;
@@ -295,7 +294,7 @@ static inline float SoundFixedToFP(short v) {
             _touchSoundSlider = [[UISlider alloc] initWithFrame:sliderFrame];
             _touchSoundSlider.minimumValue = 0.0f;
             _touchSoundSlider.maximumValue = 127.0f;
-            _touchSoundSlider.value = SoundFixedToFP([UserSettingData touchSoundVolume]);
+            _touchSoundSlider.value = SoundShortToVolume([UserSettingData touchSoundVolume]);
             _touchSoundSlider.minimumValueImage = [UIImage imageNamed:@"volume_small"];
             _touchSoundSlider.maximumValueImage = [UIImage imageNamed:@"volume_big"];
             _touchSoundSlider.continuous = NO;
@@ -436,10 +435,10 @@ static inline float SoundFixedToFP(short v) {
         }
         // Preview the (possibly new) touch SE. NOTE: resourceId/Volume registers
         // are NEON-spilled in the binary -- reconstructed as the loaded touch
-        // handle at the touch-sound slider's fixed-point volume.
+        // handle at the touch-sound slider's volume.
         [audio playSe:nil
             resourceId:_touchSoundRscId
-                Volume:(float)SoundFPToFixed(_touchSoundSlider.value)];
+                Volume:(float)SoundVolumeToShort(_touchSoundSlider.value)];
     }
 }
 
@@ -461,14 +460,14 @@ static inline float SoundFixedToFP(short v) {
 // persists it.
 // @complete
 - (void)seSliderValChanged:(id)sender {
-    short vol = SoundFPToFixed(_seSlider.value);
+    short vol = SoundVolumeToShort(_seSlider.value);
     [[AudioManager sharedManager] setSeVolume:vol groupId:1];
     if (vol > 0) {
         // Preview SE (NEON-spilled resourceId/Volume -- reconstructed as the decide
         // SE handle at the SE slider's volume).
         [[AudioManager sharedManager] playSe:nil resourceId:_seRscId Volume:(float)vol];
         if (neSceneManager::isPadDisplay()) {
-            [UserSettingData saveSeVolume:SoundFPToFixed(_seSlider.value)];
+            [UserSettingData saveSeVolume:SoundVolumeToShort(_seSlider.value)];
         }
     }
 }
@@ -477,13 +476,13 @@ static inline float SoundFixedToFP(short v) {
 // it.
 // @complete
 - (void)touchSoundSliderValChanged:(id)sender {
-    short vol = SoundFPToFixed(_touchSoundSlider.value);
+    short vol = SoundVolumeToShort(_touchSoundSlider.value);
     if (vol > 0) {
         // Preview touch SE (NEON-spilled resourceId/Volume -- reconstructed as the
         // touch SE handle at the touch-sound slider's volume).
         [[AudioManager sharedManager] playSe:nil resourceId:_touchSoundRscId Volume:(float)vol];
         if (neSceneManager::isPadDisplay()) {
-            [UserSettingData saveTouchSoundVolume:SoundFPToFixed(_touchSoundSlider.value)];
+            [UserSettingData saveTouchSoundVolume:SoundVolumeToShort(_touchSoundSlider.value)];
         }
     }
 }

@@ -19,10 +19,8 @@
 
 // Pass each touch's raw locationInView coordinate to neGraphics as a plain int.
 // Disasm @ 0x2869c/0x286a0: the binary does vcvt.s32.f32 (a truncating
-// float->int, NO fixed-point scale) before the bl to touchBegan @ 0x124f8, which
-// itself does vcvt.f32.s32 -> * contentScale -> vcvt.s32.f32 to store plain
-// pixels. There is no 16.16 fixed point in the touch path; the decompiler
-// mis-rendered those vcvt ops as FixedToFP/FPToFixed.
+// float->int) before the bl to touchBegan @ 0x124f8, which itself does
+// vcvt.f32.s32 -> * contentScale -> vcvt.s32.f32 to store plain pixels.
 static inline int ToViewInt(CGFloat v) {
     return static_cast<int>(v);
 }

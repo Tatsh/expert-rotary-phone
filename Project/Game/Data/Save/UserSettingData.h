@@ -96,7 +96,7 @@ typedef struct Crypt109Data {
 // Play-scene settings read by PlayTaskInit (Ghidra: FUN_0002e2d8).
 // touchSoundVolume is the per-tap SE volume (stored at play data +0x9b4);
 // isSimpleMode selects the simplified note field (+0x9e4); popkunSize is the
-// note ("popkun") size, converted to 16.16 fixed at +0x9bc.
+// note ("popkun") size, truncated from float to a plain int at +0x9bc.
 + (short)touchSoundVolume; // -[UserSettingData touchSoundVolume]
 + (BOOL)isSimpleMode;      // -[UserSettingData isSimpleMode]
 + (float)popkunSize;       // -[UserSettingData popkunSize]
@@ -202,7 +202,7 @@ typedef struct Crypt109Data {
 // -[SoundSettingView bgmSliderValChanged:] (iPad).
 + (void)saveBgmVolume:(float)volume;
 
-// SE master volume, stored as a fixed-point short (0..127). Read by
+// SE master volume, stored as a plain short (0..127). Read by
 // SoundSettingView to seed its SE slider. Ghidra: -[UserSettingData seVolume]
 // (PTR_s_seVolume_0015a758) / -[UserSettingData saveSeVolume:]
 // (PTR_s_saveSeVolume__0015afbc).
