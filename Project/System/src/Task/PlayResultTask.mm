@@ -1363,6 +1363,9 @@ void PlayResultTask::PlayResultDrawCallback(int child,
         if (intro == nullptr || !intro->isAnimating()) {     // FUN_0002cb64 == 0
             if (static_cast<unsigned short>(rank - 1) < 2) { // rank 1 or 2
                 const int ei = (rank != 1) ? 1 : 0;
+                // Ghidra 0x3fdca: anchorX, anchorY, color=[r7+0x18], colorHi=alpha
+                // ([r7+0x1c]), loopFlags=1 -- same order as the m_usr[3] draw below.
+                // The args were shifted (colorHi=1, loopFlags=anchorX).
                 aep.drawLayer(self->m_effLyrNo[ei],
                               self->m_effFrame[ei],
                               x,
@@ -1370,11 +1373,11 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                               scaleX,
                               scaleY,
                               rotation,
+                              anchorX,
                               anchorY,
                               color,
                               alpha,
                               1,
-                              static_cast<uint32_t>(anchorX), // loopFlags (binary position 13)
                               0x200,
                               0xffffff,
                               clipRect,
