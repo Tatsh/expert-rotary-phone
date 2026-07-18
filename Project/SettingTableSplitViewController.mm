@@ -15,6 +15,16 @@
 #import "SettingOtherTableViewController.h"
 #import "neEngineBridge.h"
 
+// The four settings panes the left column selects between (ゲーム / 遊び方 /
+// お問い合わせ / その他). The index is the tab row and picks both the right-pane
+// table and its navbar image. Ghidra: startViewAnimation's tbb switch @ 0xb6a8c.
+typedef NS_ENUM(NSInteger, SettingPane) {
+    SettingPaneGame = 0,     // SettingGameTableViewController / set_game_navbar
+    SettingPaneHowto = 1,    // SettingHowtoTableViewController / set_howto_navbar
+    SettingPaneCustomer = 2, // SettingCustomerTableViewController / set_inquiry_navbar
+    SettingPaneOther = 3,    // SettingOtherTableViewController / set_other_navbar
+};
+
 // Root nav host (Ghidra: NESceneManager_rootViewController). The settings-close
 // callback is sent to whatever VC the scene manager stored, mirroring the
 // AC-viewer sibling.
@@ -30,13 +40,13 @@ static UIViewController *RootVC() {
     SettingTopViewController *_leftViewCtrl; // the four-button left column
     UINavigationController *_rightViewCtrl;  // the detail pane (swapped per tab)
     UIImageView *_arrowImageView;            // selection arrow (slides between rows)
-    int _selectedIndex;                      // 0 game / 1 howto / 2 customer / 3 other
+    int _selectedIndex;                      // current SettingPane (0 game .. 3 other)
     CGRect _viewFrm[4];                      // right-pane frame per tab
     CGRect _arrowFrm[4];                     // arrow frame per tab
 }
 - (void)endOpenAnimation;
 - (void)endCloseAnimation;
-- (void)startViewAnimation:(int)index;
+- (void)startViewAnimation:(SettingPane)index;
 - (void)handleTapCoverView;
 @end
 
@@ -238,16 +248,16 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 // to its tab. Each is a tail call to startViewAnimation: with 0/1/2/3.
 // @complete
 - (void)onGameButtonTouched:(id)sender {
-    [self startViewAnimation:0];
+    [self startViewAnimation:SettingPaneGame];
 }
 - (void)onHowtoButtonTouched:(id)sender {
-    [self startViewAnimation:1];
+    [self startViewAnimation:SettingPaneHowto];
 }
 - (void)onCustomerButtonTouched:(id)sender {
-    [self startViewAnimation:2];
+    [self startViewAnimation:SettingPaneCustomer];
 }
 - (void)onOtherButtonTouched:(id)sender {
-    [self startViewAnimation:3];
+    [self startViewAnimation:SettingPaneOther];
 }
 
 #pragma mark - Right-pane swap
@@ -262,7 +272,7 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
 // arrow animateWithDuration 0.5 with AllowUserInteraction (options 0x2); the
 // saved right bar button item is restored in the innermost completion.
 // @complete
-- (void)startViewAnimation:(int)index {
+- (void)startViewAnimation:(SettingPane)index {
     if (_isAnimationing || _selectedIndex == index) {
         return;
     }
@@ -275,19 +285,19 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
     UITableViewController *vc = nil;
     NSString *navbar = nil;
     switch (index) {
-    case 0:
+    case SettingPaneGame:
         vc = [[SettingGameTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
         navbar = @"set_game_navbar";
         break;
-    case 1:
+    case SettingPaneHowto:
         vc = [[SettingHowtoTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
         navbar = @"set_howto_navbar";
         break;
-    case 2:
+    case SettingPaneCustomer:
         vc = [[SettingCustomerTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
         navbar = @"set_inquiry_navbar";
         break;
-    case 3: {
+    case SettingPaneOther: {
         SettingOtherTableViewController *other =
             [[SettingOtherTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
         [other setViewCmnDelegate:(id)self]; // forwarded down to the embedded
