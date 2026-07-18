@@ -17,6 +17,10 @@
 #import "YearAndMonthPicker.h"
 #import "neEngineBridge.h" // neEngine::playSystemSe
 
+// The modal open/close (fade) transition duration, shared by
+// startOpenAnimation / startCloseAnimation.
+static const NSTimeInterval kModalAnimationDuration = 0.5;
+
 @implementation BirthDayViewController
 
 // Plain assign accessors (the delegate is not retained). Ghidra: delegate
@@ -273,7 +277,7 @@
     self.view.backgroundColor = [self.view.backgroundColor colorWithAlphaComponent:0.0f];
 
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
+    [UIView setAnimationDuration:kModalAnimationDuration];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
     _borderView.frame = f;
@@ -309,7 +313,7 @@
     _subBorderView.hidden = NO;
 
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
+    [UIView setAnimationDuration:kModalAnimationDuration];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
     // Info panel drops off the bottom; sub-panel slides down into place.
@@ -334,7 +338,7 @@
     CGRect f = (_subBorderView != nil) ? _subBorderView.frame : CGRectZero;
 
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
+    [UIView setAnimationDuration:kModalAnimationDuration];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
     _subBorderView.frame = CGRectMake(f.origin.x, -f.size.height, f.size.width, f.size.height);

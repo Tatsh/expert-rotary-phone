@@ -27,6 +27,10 @@ static UIViewController *RootVC() {
 @interface AcViewerSplitViewController () <AcViewerViewControllerDelegate>
 @end
 
+// The modal open/close (fade) transition duration, shared by
+// startOpenAnimation / startCloseAnimation.
+static const NSTimeInterval kModalAnimationDuration = 0.5;
+
 @implementation AcViewerSplitViewController {
     UIViewController *_leftViewCtrl;        // left button column
     UINavigationController *_rightViewCtrl; // right list pane
@@ -197,7 +201,7 @@ static UIViewController *RootVC() {
     self.view.alpha = 0;
     self.navigationController.view.alpha = 0;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.5];
+    [UIView setAnimationDuration:kModalAnimationDuration];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
     self.view.alpha = 1;
@@ -225,7 +229,7 @@ static UIViewController *RootVC() {
     neAppEventCenter::clearAcViewerCurrentMusic(); // g_dwAcViewerMusicId = -1
     if (!neSceneManager::isPadDisplay()) {
         [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.5];
+        [UIView setAnimationDuration:kModalAnimationDuration];
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
         self.view.alpha = 0;
