@@ -204,9 +204,9 @@ constexpr struct {
         // The base X delta from board.origin.x is 24.0f (0x41c00000). Each reel's Y
         // is taken from the board (not the previous reel); each reel's X is the
         // previous reel's origin.x + 54.0.
-        static const CGFloat kReelBaseXDelta = 24.0f; // 0x41c00000
-        static const CGFloat kReelXStep = 54.0f;      // 0x42580000 (DAT_00019530 / DAT_00019880)
-        static const CGFloat kReelYDelta = 133.0f;    // 0x43050000 (DAT_0001952c / DAT_0001987c)
+        static constexpr CGFloat kReelBaseXDelta = 24.0f; // 0x41c00000
+        static constexpr CGFloat kReelXStep = 54.0f;   // 0x42580000 (DAT_00019530 / DAT_00019880)
+        static constexpr CGFloat kReelYDelta = 133.0f; // 0x43050000 (DAT_0001952c / DAT_0001987c)
 
         BOOL isPad = neSceneManager::isPadDisplay();
         UIImage *digitImg = up.firstObject;

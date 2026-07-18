@@ -84,7 +84,7 @@ NSArray *loadAllTreasureMapHeaders(void) {
     // Display-order -> file-number order table (DAT_0012faa0). The binary finds
     // the file number by scanning for the display index; this is that inverse
     // lookup.
-    static const int kMapOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
+    static constexpr int kMapOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
     NSMutableArray *heads = [NSMutableArray array];
     for (int display = 0; display < 9; display++) {
         int fileNo = -1;

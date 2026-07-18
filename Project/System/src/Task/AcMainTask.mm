@@ -729,7 +729,7 @@ void AcMainTask::setupBuildOverlays() {
     // Anchor eight specific roulette layers to the layout base (origin x cleared
     // @ +0x18, origin y = raw m_layoutAnchorZ @ +0x1c); indices derived from the
     // +0x18/+0x1c store offsets.
-    static const int kAnchorIndex[8] = {8, 9, 5, 6, 10, 11, 12, 14};
+    static constexpr int kAnchorIndex[8] = {8, 9, 5, 6, 10, 11, 12, 14};
     const int anchor = m_layoutAnchorZ;
     for (int i = 0; i < 8; i++) {
         m_rouletteLayers[kAnchorIndex[i]]->setRouletteAnchor(anchor);
@@ -812,8 +812,8 @@ void AcMainTask::setupLoadTextures() {
 // else is 0. Tables byte-verified at DAT_0012fb90 / DAT_0012fb9c.
 // @complete
 static int TreasureReadCount(short subMapId) {
-    static const int kBoard6[3] = {41, 35, 47}; // DAT_0012fb90
-    static const int kBoard8[3] = {64, 72, 71}; // DAT_0012fb9c
+    static constexpr int kBoard6[3] = {41, 35, 47}; // DAT_0012fb90
+    static constexpr int kBoard8[3] = {64, 72, 71}; // DAT_0012fb9c
     const int board = subMapId / 10;
     const int sub = subMapId - board * 10;
     if (board == 8) {
@@ -1335,7 +1335,7 @@ void AcMainUnlockBonusTreasure() {
 // {0,3,4,5,6,1,2,7,8}).
 // @complete
 static int MapPanelOrder(int displaySlot) {
-    static const int kOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
+    static constexpr int kOrder[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
     for (int i = 0; i < 9; i++) {
         if (kOrder[i] == displaySlot) {
             return i;
@@ -1481,7 +1481,7 @@ bool isWithinRange2D(float x0,
 // raw id order.)
 // @complete
 short findTreasureMapIndexById(int id) {
-    static const int kWallNailIdTable[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
+    static constexpr int kWallNailIdTable[9] = {0, 3, 4, 5, 6, 1, 2, 7, 8};
     for (int i = 0; i < 9; ++i) {
         if (kWallNailIdTable[i] == id) {
             return static_cast<short>(i);

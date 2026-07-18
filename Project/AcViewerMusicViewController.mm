@@ -284,7 +284,7 @@ static NSString *const kCategoryBanner[] = {
     }
     // Button tags 100/101/102/103 -> difficulty 0/1/2/3 (Ghidra table @
     // 0x12fa90); any other tag falls back to 1.
-    static const int kDifficultyForTag[] = {0, 1, 2, 3};
+    static constexpr int kDifficultyForTag[] = {0, 1, 2, 3};
     NSInteger tag = [sender tag];
     int difficulty = ((NSUInteger)(tag - 100) < 4) ? kDifficultyForTag[tag - 100] : 1;
 

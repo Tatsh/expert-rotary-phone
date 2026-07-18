@@ -450,7 +450,7 @@ void PlayResultTask::resultSetup() {
                                              "BONUS_PERFECT_1136",
                                              "NEW_RECORD_1136",
                                              "BONUS_EVENT"};
-    static const int kLayerOrder[6] = {12, 9, 9, 9, 10, 11};
+    static constexpr int kLayerOrder[6] = {12, 9, 9, 9, 10, 11};
     const int displayType = [[AppDelegate appDelegate] displayType];
     const char *const *layerNames =
         (displayType == DisplayTypePhoneRetinaTall) ? kLayerPad : kLayerPhone;

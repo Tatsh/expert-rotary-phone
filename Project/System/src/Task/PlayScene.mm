@@ -1105,7 +1105,7 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
         int panel;
         bool up;
     };
-    static const BeatWindow kWindows[] = {
+    static constexpr BeatWindow kWindows[] = {
         {0x1d4c, -1, false}, {0x2f30, 0, true},    {0x337c, 0, false},   {0x431c, 1, true},
         {0x4704, 1, false},  {0x523a, 2, true},    {0x529e, 2, false},   {0x79ae, -1, false},
         {0x88c2, 3, true},   {0x8962, 3, false},   {0x951a, 4, true},    {0x9d08, 4, false},

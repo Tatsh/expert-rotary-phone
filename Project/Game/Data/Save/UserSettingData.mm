@@ -37,7 +37,7 @@ static NSString *const kKeyIsLongNotesEffectOn = @"IsLongNotesEffectOn";
 // table at DAT_0012f958 = {1,2,...,9} (verified), i.e. id + 1 for a valid id.
 // @complete
 static int neSugorokuTouchSoundBit(int mainMapId) {
-    static const int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    static constexpr int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     unsigned id = (unsigned)mainMapId & 0xffff;
     return id < 9 ? kBits[id] : 0;
 }

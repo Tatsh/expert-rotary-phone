@@ -96,7 +96,7 @@ static int scoreToRank(int score) {
 // UserSettingData.mm's file-local copy).
 // @complete
 static int neSugorokuTouchSoundBit(int mainMapId) {
-    static const int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    static constexpr int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     unsigned id = (unsigned)mainMapId & 0xffff;
     return id < 9 ? kBits[id] : 0;
 }

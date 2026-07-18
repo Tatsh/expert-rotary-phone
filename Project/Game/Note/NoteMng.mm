@@ -158,7 +158,7 @@ int NoteMng::initPlayData(const void *data,
     }
 
     // Copy the six timing windows (Ghidra: g_noteJudgeWindows @ 0x12e64c).
-    static const int kJudgeWindows[6] = {-280, -280, -120, 120, 280, 280};
+    static constexpr int kJudgeWindows[6] = {-280, -280, -120, 120, 280, 280};
     std::memcpy(m_judgeWindows, kJudgeWindows, sizeof(m_judgeWindows));
 
     registerTempoEvents();

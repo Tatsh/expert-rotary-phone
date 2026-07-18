@@ -297,7 +297,7 @@
 // three right-aligned digits (count /= 10) all match.
 - (void)addCntNum:(int)count sheet:(int)sheet y:(int)y view:(UIView *)view {
     static NSString *const kSet[3] = {@"n", @"h", @"e"};
-    static const int kBaseX[3] = {139, 190, 242}; // DAT_0012fbe0
+    static constexpr int kBaseX[3] = {139, 190, 242}; // DAT_0012fbe0
     for (int i = 0; i < 3; i++) {
         int digit = count % 10;
         UIImage *img =

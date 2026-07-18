@@ -471,7 +471,7 @@ void neDrawText(const char *text,
 
     // --- Measure: resolve each char to a cached glyph, accumulate total advance.
     // ---
-    static const int kMaxChars = 256;
+    static constexpr int kMaxChars = 256;
     int glyphAtlas[kMaxChars];  // per-char atlas id (-1 => skip)
     neGlyph *glyphs[kMaxChars]; // per-char glyph record (0 => skip)
     int totalWidth = 0;
@@ -537,7 +537,7 @@ void neDrawText(const char *text,
     r->setEnable(0, false);
     r->setEnable(1, true);
     r->setBlendFunc(1, 5);
-    static const int kCaps[] = {
+    static constexpr int kCaps[] = {
         2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,   18,
         19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 0x23,
     };

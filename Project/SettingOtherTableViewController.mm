@@ -210,7 +210,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // (DAT_0012fba8).
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    static const NSInteger kRows[SettingOtherSectionCount] = {1, 1, 2};
+    static constexpr NSInteger kRows[SettingOtherSectionCount] = {1, 1, 2};
     if (section < SettingOtherSectionCount) {
         return kRows[section];
     }

@@ -218,7 +218,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // DeviceChange:1, Inquiry:3 } (DAT_0012f880).
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    static const NSInteger kRows[SettingSectionCount] = {1, 3, 2, 1, 1, 3};
+    static constexpr NSInteger kRows[SettingSectionCount] = {1, 3, 2, 1, 1, 3};
     if (section < SettingSectionCount) {
         return kRows[section];
     }

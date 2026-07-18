@@ -146,7 +146,7 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
     m_spawnLookahead = 0;
 
     // Judge windows (Ghidra: DAT_0012f868).
-    static const int kAcJudgeWindows[6] = {-250, -250, -80, 120, 250, 250};
+    static constexpr int kAcJudgeWindows[6] = {-250, -250, -80, 120, 250, 250};
     std::memcpy(m_judgeWindows, kAcJudgeWindows, sizeof(m_judgeWindows));
 
     registerTempoEvents();

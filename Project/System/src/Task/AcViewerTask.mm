@@ -122,7 +122,7 @@ void AcViewerTask::setup() {
     // (<< 10) and divided by a per-lane denominator. The two low lanes use a
     // fixed negative rate; the two high lanes scale inversely with the chart's
     // note count and are floored at 1. Table @ DAT_0012e350.
-    static const int kScrollSpeedTable[4][2] = {{3, 2}, {1, 2}, {9, 6}, {18, 6}};
+    static constexpr int kScrollSpeedTable[4][2] = {{3, 2}, {1, 2}, {9, 6}, {18, 6}};
     for (int i = 0; i < 4; i++) {
         const int numerator = kScrollSpeedTable[i][0] << 10;
         const int denominator = kScrollSpeedTable[i][1];
@@ -165,8 +165,8 @@ void AcViewerTask::setup() {
     // There are three form factors: iPad (pad), tall iPhone (displayType == DisplayTypePhoneRetinaTall,
     // the 1136 screen), and the normal 960 iPhone. The per-lane note-frame
     // tables are DAT_0012e370 (phone) / DAT_0012e394 (pad).
-    static const int kLaneFrmPhone[9] = {78, 138, 199, 260, 320, 381, 441, 502, 561};
-    static const int kLaneFrmPad[9] = {284, 405, 526, 647, 768, 889, 1010, 1132, 1250};
+    static constexpr int kLaneFrmPhone[9] = {78, 138, 199, 260, 320, 381, 441, 502, 561};
+    static constexpr int kLaneFrmPad[9] = {284, 405, 526, 647, 768, 889, 1010, 1132, 1250};
     if (pad) {
         m_pauseBtnTopY = 0;
         m_pauseBtnHeight = -176;
