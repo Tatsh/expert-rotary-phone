@@ -1059,18 +1059,21 @@ void MainTask::Update() {
         m_dragSampleTime[0] = now;
         m_dragSampleX[0] = curX;
 
-        // Live drag: the offset is the finger delta from the anchor, measured as
-        // (startX - curX) exactly as the binary (Ghidra: uScroll = nStartX - nCurX),
-        // so a rightward drag yields a negative offset. Rubber-band resistance at
-        // the ends: dragging left past the first column, or right past the last,
-        // damps to (int)(0.5 - sqrt(|off|)) (Ghidra 0x34fe6: FloatVectorNeg(sqrt) +
-        // 0.5, then a truncating vcvt.s32.f32).
-        const int off = startX - curX;
-        const bool atFirst = (off > 0 && m_columnIndex < 1);                 // drag left, first col
-        const bool atLast = (off < 0 && m_columnIndex >= m_columnCount - 1); // drag right, last col
+        // Live drag: the offset is the finger delta from the anchor, curX - startX
+        // (disasm 0x34fc4: subs r2, r1=curX(+0xa78), r4=startX(+0x04)), so the grid
+        // follows the finger -- a rightward drag yields a positive offset and moves
+        // the grid right. Rubber-band resistance at the ends: dragging right past
+        // the first column, or left past the last, damps to (int)(sign(off) *
+        // sqrt(|off|) + 0.5) -- the sqrt is negated only for a leftward (negative)
+        // drag (disasm 0x34ffe vsqrt then 0x35004 vneg.f32 under `it le`, 0x35008
+        // vadd 0.5, truncating vcvt.s32.f32). The reconstruction had off inverted
+        // and dropped that sign, so a rightward drag scrolled the grid left.
+        const int off = curX - startX;
+        const bool atFirst = (off > 0 && m_columnIndex < 1); // drag right, first col
+        const bool atLast = (off < 0 && m_columnIndex >= m_columnCount - 1); // drag left, last col
         if (atFirst || atLast) {
-            const int a = (off < 0) ? -off : off; // |off|
-            m_scrollOffset = static_cast<int>((0.5f - std::sqrt(static_cast<float>(a))));
+            const float root = std::sqrt(static_cast<float>(off < 0 ? -off : off)); // sqrt(|off|)
+            m_scrollOffset = static_cast<int>((off < 0 ? -root : root) + 0.5f);
         } else {
             m_scrollOffset = off;
         }
