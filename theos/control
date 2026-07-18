@@ -5,6 +5,6 @@ Architecture: iphoneos-arm
 Description: Reconstructed pop'n rhythmin (PopnRhythmin) — a source-level rebuild of the
  32-bit-only game with modern 64-bit (arm64/arm64e) slices added so it can run on iOS 11+.
 Maintainer: PopnRhythmin reconstruction
-Author: Konami (original) / reverse-engineering reconstruction
+Author: Konami / Tatsh
 Section: Games
 Depends: firmware (>= 5.1.1)
