@@ -570,30 +570,6 @@ void MainTask::update(int /*deltaMs*/) {
             break; // buttons only respond to a tap
         }
 
-        // RHYDBG: does an overlay tap land in a difficulty rect? Logs the tap, the
-        // difficulty rect base/stride (uiScale-scaled at test time), the current
-        // sheet, and each of the three difficulty hit-tests + the Play/Friend rects
-        // that are checked first, so a coordinate-space or ordering problem shows.
-        if (NE_DBG_FIRST(16)) {
-            neDebugLog("MusicSel diff gate: this=%p tap=(%d,%d) uiScale=%.3f sheet=%d "
-                       "diffBase=(%d,%d,%d,%d) stride=%d hits=[%d %d %d] play=%d friend=%d",
-                       static_cast<void *>(this),
-                       tapX,
-                       tapY,
-                       static_cast<double>(m_uiScale),
-                       m_resultSheet,
-                       m_layoutRects[33],
-                       m_layoutRects[34],
-                       m_layoutRects[35],
-                       m_layoutRects[36],
-                       m_layoutRects[37],
-                       hitButton(tapX, tapY, kBtnDifficulty, 0) ? 1 : 0,
-                       hitButton(tapX, tapY, kBtnDifficulty, 1) ? 1 : 0,
-                       hitButton(tapX, tapY, kBtnDifficulty, 2) ? 1 : 0,
-                       hitButton(tapX, tapY, kBtnPlay) ? 1 : 0,
-                       hitButton(tapX, tapY, kBtnFriendScore) ? 1 : 0);
-        }
-
         // -- PLAY --
         if (hitButton(tapX, tapY, kBtnPlay)) {
             [audio popBgm];
@@ -634,13 +610,6 @@ void MainTask::update(int /*deltaMs*/) {
                             (i == d || i == m_resultSheet) ? 0 : (m_bgLyrFrames[kBgStarOut] - 1);
                     }
                     m_resultSheet = d;
-                    // RHYDBG: fires only on a real difficulty change, so it maps the
-                    // tap point to the difficulty index committed.
-                    NE_DBG(neDebugLog("MusicSel diff CHANGED: tap=(%d,%d) d=%d sheet=%d",
-                                      tapX,
-                                      tapY,
-                                      d,
-                                      m_resultSheet));
                 } else {
                     neEngine::playSystemSe(2); // locked -> cancel SE
                 }
@@ -2689,16 +2658,6 @@ void MainTask::AepDrawCallback(int child,
         if (self->m_diffBlackUsrNo[i] == static_cast<int>(child)) {
             const int lyrSlot = (resultSheet == i) ? 1 : 2;
             int &frm = self->m_diffStarLayerFrame[i];
-            // RHYDBG (throttled): where the OPEN star (lyrSlot 1) actually draws and
-            // which sheet drives it, so tap index -> open-star screen position ->
-            // sheet can be correlated with the selection-change log below.
-            NE_DBG(static int s_starLog = 0; if (lyrSlot == 1 && (s_starLog++ % 40) == 0)
-                       neDebugLog("MusicSel OPEN star: i=%d x=%d y=%d selfSheet=%d frm=%d",
-                                  i,
-                                  x,
-                                  y,
-                                  self->m_resultSheet,
-                                  frm));
             self->m_aep->drawLayer(self->m_bgLyrNo[lyrSlot],
                                    frm,
                                    x,
