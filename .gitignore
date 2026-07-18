@@ -57,3 +57,4 @@ __pycache__/
 node_modules/
 sugoroku_chara_msg.bin
 sugoroku_chara_msg.generated.inc
+.re-star/
