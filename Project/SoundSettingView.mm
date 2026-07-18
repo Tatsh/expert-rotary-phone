@@ -45,6 +45,17 @@
 #import "neEngineBridge.h"  // neSceneManager::isPadDisplay / hitSoundName / normalSoundName
                             //   neEngine::playSystemSe (back-button cancel SE)
 
+// The sound-settings table sections: three single-row volume sliders, then a
+// touch-sound picker (one row per unlocked touch sound; only shown when there
+// is more than one, so the count is 3 or 4).
+typedef NS_ENUM(NSInteger, SoundSettingSection) {
+    SoundSettingSectionBgmVolume = 0,   // BGM ボリューム
+    SoundSettingSectionSeVolume = 1,    // SE ボリューム
+    SoundSettingSectionTouchVolume = 2, // タッチサウンド ボリューム
+    SoundSettingSectionTouchPicker = 3, // タッチサウンド (per-kind picker)
+    SoundSettingSectionCount = 4,
+};
+
 // Fixed-point <-> float helpers matching the binary's FPToFixed/FixedToFP (frac
 // = 0).
 static inline short SoundFPToFixed(float v) {
@@ -191,17 +202,18 @@ static inline float SoundFixedToFP(short v) {
 // when the player owns two or more unlocked touch sounds.
 // @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return (_touchSoundArray.count >= 2) ? 4 : 3;
+    return (_touchSoundArray.count >= 2) ? SoundSettingSectionCount :
+                                           SoundSettingSectionTouchPicker;
 }
 
 // @ 0x81a60 -- one row for each volume section; the picker section has one row
 // per unlocked touch-sound kind.
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    if (section < 3) {
+    if (section < SoundSettingSectionTouchPicker) {
         return 1;
     }
-    if (section == 3) {
+    if (section == SoundSettingSectionTouchPicker) {
         return _touchSoundArray.count;
     }
     return 0;
@@ -249,7 +261,7 @@ static inline float SoundFixedToFP(short v) {
         }
 
         // --- Section 0 / row 0: BGM volume (linear 0..1) ---
-        if (indexPath.section == 0 && indexPath.row == 0) {
+        if (indexPath.section == SoundSettingSectionBgmVolume && indexPath.row == 0) {
             _bgmSlider = [[UISlider alloc] initWithFrame:sliderFrame];
             _bgmSlider.minimumValue = 0.0f;
             _bgmSlider.maximumValue = 1.0f; // 0x3f800000
@@ -264,7 +276,7 @@ static inline float SoundFixedToFP(short v) {
         }
 
         // --- Section 1 / row 0: SE volume (0..127) ---
-        if (indexPath.section == 1 && indexPath.row == 0) {
+        if (indexPath.section == SoundSettingSectionSeVolume && indexPath.row == 0) {
             _seSlider = [[UISlider alloc] initWithFrame:sliderFrame];
             _seSlider.minimumValue = 0.0f;
             _seSlider.maximumValue = 127.0f; // 0x42fe0000
@@ -279,7 +291,7 @@ static inline float SoundFixedToFP(short v) {
         }
 
         // --- Section 2 / row 0: touch-sound volume (0..127) ---
-        if (indexPath.section == 2 && indexPath.row == 0) {
+        if (indexPath.section == SoundSettingSectionTouchVolume && indexPath.row == 0) {
             _touchSoundSlider = [[UISlider alloc] initWithFrame:sliderFrame];
             _touchSoundSlider.minimumValue = 0.0f;
             _touchSoundSlider.maximumValue = 127.0f;
@@ -295,7 +307,7 @@ static inline float SoundFixedToFP(short v) {
     }
 
     // --- Section 3: touch-sound kind picker ---
-    if (indexPath.section == 3) {
+    if (indexPath.section == SoundSettingSectionTouchPicker) {
         int soundNo = [[_touchSoundArray objectAtIndexedSubscript:indexPath.row] intValue];
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         cell.textLabel.text = (__bridge NSString *)neSceneManager::normalSoundName(soundNo);
@@ -374,16 +386,16 @@ static inline float SoundFixedToFP(short v) {
 
     NSString *title;
     switch (section) {
-    case 0:
+    case SoundSettingSectionBgmVolume:
         title = @"BGM ボリューム";
         break; // cf_B      (UTF-16)
-    case 1:
+    case SoundSettingSectionSeVolume:
         title = @"SE ボリューム";
         break; // cf_S      (UTF-16)
-    case 2:
+    case SoundSettingSectionTouchVolume:
         title = @"タッチサウンド ボリューム";
         break; // cf_0000000 (UTF-16)
-    case 3:
+    case SoundSettingSectionTouchPicker:
         title = @"タッチサウンド";
         break; // cf_0000000 (UTF-16)
     default:
@@ -410,7 +422,7 @@ static inline float SoundFixedToFP(short v) {
 // @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     AudioManager *audio = [AudioManager sharedManager];
-    if (indexPath.section == 3) {
+    if (indexPath.section == SoundSettingSectionTouchPicker) {
         int soundNo = [[_touchSoundArray objectAtIndexedSubscript:indexPath.row] intValue];
         if (soundNo != _selectedTouchSoundNo) {
             _selectedTouchSoundNo = soundNo;
