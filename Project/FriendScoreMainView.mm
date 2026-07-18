@@ -255,14 +255,14 @@ static int scoreToRank(int score) {
             if ([rec.music intValue] != (int)musicId) {
                 continue;
             }
-            switch ([rec.sheet intValue]) {
-            case 0:
+            switch (static_cast<ScoreDifficulty>([rec.sheet intValue])) {
+            case kScoreDiffNormal:
                 warnN = YES;
                 break;
-            case 1:
+            case kScoreDiffHyper:
                 warnH = YES;
                 break;
-            case 2:
+            case kScoreDiffEx:
                 warnEx = YES;
                 break;
             }
