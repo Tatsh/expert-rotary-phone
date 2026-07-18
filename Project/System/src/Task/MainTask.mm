@@ -634,6 +634,13 @@ void MainTask::update(int /*deltaMs*/) {
                             (i == d || i == m_resultSheet) ? 0 : (m_bgLyrFrames[kBgStarOut] - 1);
                     }
                     m_resultSheet = d;
+                    // RHYDBG: fires only on a real difficulty change, so it maps the
+                    // tap point to the difficulty index committed.
+                    NE_DBG(neDebugLog("MusicSel diff CHANGED: tap=(%d,%d) d=%d sheet=%d",
+                                      tapX,
+                                      tapY,
+                                      d,
+                                      m_resultSheet));
                 } else {
                     neEngine::playSystemSe(2); // locked -> cancel SE
                 }
@@ -2682,20 +2689,16 @@ void MainTask::AepDrawCallback(int child,
         if (self->m_diffBlackUsrNo[i] == static_cast<int>(child)) {
             const int lyrSlot = (resultSheet == i) ? 1 : 2;
             int &frm = self->m_diffStarLayerFrame[i];
-            // RHYDBG: what the star draw actually reads. If selfSheet stays 0 while
-            // update()'s gate log shows a changed sheet, the draw is reading a stale
-            // object; self= lets us compare the callback context to update()'s this.
-            if (NE_DBG_FIRST(24)) {
-                neDebugLog("MusicSel star draw: i=%d child=%d localSheet=%d selfSheet=%d "
-                           "lyrSlot=%d frm=%d self=%p",
-                           i,
-                           static_cast<int>(child),
-                           resultSheet,
-                           self->m_resultSheet,
-                           lyrSlot,
-                           frm,
-                           static_cast<void *>(self));
-            }
+            // RHYDBG (throttled): where the OPEN star (lyrSlot 1) actually draws and
+            // which sheet drives it, so tap index -> open-star screen position ->
+            // sheet can be correlated with the selection-change log below.
+            NE_DBG(static int s_starLog = 0; if (lyrSlot == 1 && (s_starLog++ % 40) == 0)
+                       neDebugLog("MusicSel OPEN star: i=%d x=%d y=%d selfSheet=%d frm=%d",
+                                  i,
+                                  x,
+                                  y,
+                                  self->m_resultSheet,
+                                  frm));
             self->m_aep->drawLayer(self->m_bgLyrNo[lyrSlot],
                                    frm,
                                    x,
