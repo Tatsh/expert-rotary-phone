@@ -78,6 +78,14 @@ int NoteMng::initPlayData(const void *data,
     m_missCallback = missCallback;
     m_missCallbackArg = missCallbackArg;
 
+    // The chart's leading 4 bytes are a float32 — the base hi-speed / scroll
+    // multiplier computeScrollY multiplies by — stored verbatim into the float
+    // field; the BGM start position is armed to the -1 sentinel updatePlaying
+    // tests. Ghidra: 0x335d6 stores -1 to +0x13cc8 (before the memset, which
+    // stops at +0x13cbc) and 0x335fc stores the header word to +0x13cc0.
+    std::memcpy(&m_hiSpeed, data, sizeof(m_hiSpeed));
+    m_bgmStartPos = -1;
+
     // Reset play state.
     m_recordCount = 0;
     m_totalNotes = 0;

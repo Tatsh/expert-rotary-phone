@@ -33,7 +33,10 @@
 // ---------------------------------------------------------------------------
 // Chart format (decoded "info" payload)
 // ---------------------------------------------------------------------------
-// Layout: a 4-byte header word, then N note records of 20 bytes each, where
+// Layout: a 4-byte header — a little-endian float32, the chart's base
+// hi-speed / scroll multiplier, stored into m_hiSpeed (Ghidra: InitPlayData
+// 0x335fc stores it to +0x13cc0; computeScrollY reads it back as a float @
+// 0x34d1e) — then N note records of 20 bytes each, where
 //   N = (payloadSize - 4) / 20   (Ghidra: InitPlayData @ 0x335a4).
 // The record `type` byte at +0x8 selects how the other fields are read.
 enum NoteType : uint8_t {
@@ -390,7 +393,8 @@ private:
     NoteScrollSegment m_scrollMap[64] = {};
     int16_t m_scrollCount = 0; // +0x5154 live segment count
     int m_spawnLookahead = 0;  // +0x4e30 spawn look-ahead (ms), recomputed each register/change
-    float m_hiSpeed = 1.0f;    // +0x13cc0 scroll-speed multiplier (armed at play start)
+    float m_hiSpeed = 1.0f;    // +0x13cc0 scroll-speed multiplier, seeded from the
+                               //          chart's float32 header word at initPlayData
 
     // Play clock (gettimeofday at play start).
     long m_startSec = 0;
@@ -425,7 +429,9 @@ private:
     // NB: the auto-grade "+dt eligible" bound the binary reads at +0x13ca8 is
     // exactly m_judgeWindows[5] (the +280 upper window);
     // autoGradeHead/autoGradeTail use it directly.
-    int m_bgmStartPos = 0; // +0x13cc8 chart position captured when the BGM started
+    int m_bgmStartPos = 0; // +0x13cc8 chart position captured when the BGM started;
+                           //          initPlayData arms it to the -1 "no BGM yet"
+                           //          sentinel updatePlaying tests
     void (*m_missCallback)(void *) = nullptr; // +0x13cb8 fired on a miss (score/UI hook)
     void *m_missCallbackArg = nullptr;        // +0x13cbc
 
