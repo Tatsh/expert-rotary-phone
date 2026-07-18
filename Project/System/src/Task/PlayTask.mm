@@ -456,10 +456,14 @@ void PlayTask::update(int /*deltaMs*/) {
                 nm.onResignActivePushHook(); // freeze the notes
                 m_state = 5;                 // open the pause menu
             }
-            break;
+            // Fall through to the song-end handoff below; the pause block does not
+            // exit state 6 on its own (Ghidra: no branch to the tail here).
         }
 
-        // Auto-demo (title attract): hand off to the fade-out ~3s after the song ends.
+        // Song-end handoff to the fade-out ~3s after the last note passes. Ghidra
+        // 0x2e196 gates this on NoteMng::m_endFlag (+0x13cb4), NOT the demo flag, so
+        // it runs for normal play too -- the reconstruction had it inside the
+        // demo-only branch behind a break, so a finished normal play never advanced.
         if (m_endPos != 0 && static_cast<unsigned>(nm.getCurrentPosition() - m_endPos) >= 3000) {
             m_state = 8;
         }
