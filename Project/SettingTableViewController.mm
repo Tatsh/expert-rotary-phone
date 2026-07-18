@@ -43,6 +43,17 @@
 #import "PopkunSizeViewCtrl.h" // section 1, row 1
 #import "SoundSettingView.h"   // section 1, row 0
 
+// The settings-table sections, in display order (row counts: 1/3/2/1/1/3).
+typedef NS_ENUM(NSInteger, SettingSection) {
+    SettingSectionNews = 0,         // お知らせ
+    SettingSectionSettings = 1,     // 設定 (sound / popkun size / game effect)
+    SettingSectionHowToPlay = 2,    // 遊び方 (game play / treasure mode)
+    SettingSectionTreasure = 3,     // トレジャーモード (retire)
+    SettingSectionDeviceChange = 4, // 機種変更
+    SettingSectionInquiry = 5,      // お問い合わせ (inquiry / legal / terms)
+    SettingSectionCount = 6,
+};
+
 // Private action / target methods (wired from the back button and the toggle
 // controls). Also the ConversionView delegate (id<ViewCmnProtocol>); callbacks
 // implemented below.
@@ -203,8 +214,8 @@ static UIViewController *RootVC() {
 // DeviceChange:1, Inquiry:3 } (DAT_0012f880).
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    static const NSInteger kRows[6] = {1, 3, 2, 1, 1, 3};
-    if (section < 6) {
+    static const NSInteger kRows[SettingSectionCount] = {1, 3, 2, 1, 1, 3};
+    if (section < SettingSectionCount) {
         return kRows[section];
     }
     return 0;
@@ -214,17 +225,17 @@ static UIViewController *RootVC() {
 // @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     switch (section) {
-    case 0:
+    case SettingSectionNews:
         return @"お知らせ"; // News
-    case 1:
+    case SettingSectionSettings:
         return @"設定"; // Settings
-    case 2:
+    case SettingSectionHowToPlay:
         return @"遊び方"; // How to play
-    case 3:
+    case SettingSectionTreasure:
         return @"トレジャーモード"; // Treasure Mode
-    case 4:
+    case SettingSectionDeviceChange:
         return @"機種変更"; // Device change
-    case 5:
+    case SettingSectionInquiry:
         return @"お問い合わせ"; // Inquiry
     default:
         return nil;
@@ -243,7 +254,7 @@ static UIViewController *RootVC() {
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
                                       reuseIdentifier:identifier];
-        if (indexPath.section == 1 && indexPath.row == 2) {
+        if (indexPath.section == SettingSectionSettings && indexPath.row == 2) {
             _isEffectOn = [UserSettingData isEffectOn];
         }
     }
@@ -251,12 +262,12 @@ static UIViewController *RootVC() {
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
     switch (indexPath.section) {
-    case 0:
+    case SettingSectionNews:
         if (indexPath.row == 0) {
             cell.textLabel.text = @"お知らせ";
         }
         break;
-    case 1:
+    case SettingSectionSettings:
         if (indexPath.row == 2) {
             cell.textLabel.text = @"ゲーム演出";
         } else if (indexPath.row == 1) {
@@ -265,24 +276,24 @@ static UIViewController *RootVC() {
             cell.textLabel.text = @"サウンド";
         }
         break;
-    case 2:
+    case SettingSectionHowToPlay:
         if (indexPath.row == 1) {
             cell.textLabel.text = @"トレジャーモード";
         } else if (indexPath.row == 0) {
             cell.textLabel.text = @"ゲームプレー";
         }
         break;
-    case 3:
+    case SettingSectionTreasure:
         if (indexPath.row == 0) {
             cell.textLabel.text = @"リタイア";
         }
         break;
-    case 4:
+    case SettingSectionDeviceChange:
         if (indexPath.row == 0) {
             cell.textLabel.text = @"機種変更";
         }
         break;
-    case 5:
+    case SettingSectionInquiry:
         if (indexPath.row == 2) {
             cell.textLabel.text = @"利用規約";
         } else if (indexPath.row == 1) {
@@ -301,7 +312,7 @@ static UIViewController *RootVC() {
 - (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
          accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     switch (indexPath.section) {
-    case 1: {
+    case SettingSectionSettings: {
         NSInteger row = indexPath.row;
         if (row != 0) {
             if (row == 2) {
@@ -314,7 +325,7 @@ static UIViewController *RootVC() {
         }
         break; // rows 0/1 (and row 2 on iPad) fall to the final isPad check
     }
-    case 2:
+    case SettingSectionHowToPlay:
         if (_isPad) {
             return UITableViewCellAccessoryNone;
         }
@@ -322,7 +333,7 @@ static UIViewController *RootVC() {
             return UITableViewCellAccessoryDisclosureIndicator;
         }
         return UITableViewCellAccessoryNone;
-    case 4:
+    case SettingSectionDeviceChange:
         if (indexPath.row != 0) {
             return UITableViewCellAccessoryNone;
         }
@@ -349,7 +360,7 @@ static UIViewController *RootVC() {
     }
 
     switch (indexPath.section) {
-    case 0: {
+    case SettingSectionNews: {
         // News -> the official app-info page in the in-app web view.
         if (indexPath.row != 0) {
             return;
@@ -359,7 +370,7 @@ static UIViewController *RootVC() {
         (void)web; // ARC: the web view installs itself; the local ref is not retained
         break;
     }
-    case 1: {
+    case SettingSectionSettings: {
         // Settings sub-screens.
         UIViewController *sub;
         NSString *navImage;
@@ -380,7 +391,7 @@ static UIViewController *RootVC() {
         [self.navigationController pushViewController:sub animated:YES];
         break;
     }
-    case 2: {
+    case SettingSectionHowToPlay: {
         // How to play: basic (row 0) or treasure-mode (row 1). On the iPad this is
         // shown as an overlay on the root scene view; on the phone it is pushed.
         NSArray *files;
@@ -419,7 +430,7 @@ static UIViewController *RootVC() {
         }
         break;
     }
-    case 3: {
+    case SettingSectionTreasure: {
         // Treasure Mode -> Retire: confirm before wiping progress.
         if (indexPath.row != 0) {
             return;
@@ -436,7 +447,7 @@ static UIViewController *RootVC() {
         // callback (the pointer is used there only to identify this alert).
         return; // note: the retire branch does not play the trailing SE
     }
-    case 4: {
+    case SettingSectionDeviceChange: {
         // Device change -> the ConversionView (data-transfer) screen.
         if (indexPath.row != 0) {
             return;
@@ -449,7 +460,7 @@ static UIViewController *RootVC() {
         [self.navigationController pushViewController:conv animated:YES];
         break;
     }
-    case 5: {
+    case SettingSectionInquiry: {
         // Inquiry: FAQ (row 0) / 特定商取引法 (row 1) open in Safari; 利用規約 (row
         // 2) pushes the in-app PolicyView.
         if (indexPath.row == 2) {
