@@ -876,14 +876,17 @@ void MainTask::Setup() {
     m_aep = &AepManager::shared();
     m_screenWidth = static_cast<int>(AepManager::shared().screenWidth());
     m_screenHeight = static_cast<int>(AepManager::shared().screenHeight());
-    // g_uiScale is published by MainViewController::loadView as screenScale * 0.5
-    // (loadView @ 0xb51c: vmul.f32 by 0.5, stored as the raw g_uiScale slot). The
-    // binary copies that slot into +0xa6c (musicSelTaskSetup @ 0x370f0:
-    // this->dwUiScale = g_uiScale). Compute the same value directly as a real
-    // float; the old (int)screenScale() truncation, read back through
-    // reinterpret_cast<float&>, produced a denormal (~0) that collapsed every
-    // scaled button rect to the origin.
-    m_uiScale = neSceneManager::screenScale() * 0.5f;
+    // The UI scale is the g_uiScale global that MainViewController::loadView
+    // publishes once as UIScreen.scale * 0.5 (loadView @ 0xb51c: vmul.f32 by 0.5).
+    // Setup copies that slot straight into +0xa6c -- disassembly 0x3717a/0x3717c:
+    // `ldr r0,[g_uiScale]; str.w r0,[r5,#0xa6c]`, decompiled as
+    // `this->dwUiScale = g_dwUiScale` -- a plain word copy with NO multiply here.
+    // Recomputing screenScale() * 0.5 was doubly wrong: it re-applied the 0.5 and
+    // read s_screenScale, which is stuck at its 1.0 default (setScreenMetrics only
+    // ever feeds screenScale() back into itself), so m_uiScale came out 0.5 on a
+    // 2x device instead of 1.0. That halved every hit rect, placing the settings
+    // button's hit box half-way up the screen and mis-registering every tap.
+    m_uiScale = g_uiScale;
     m_isPadDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
     m_columnStride = m_isPadDisplay ? 9 : 6; // +0xa74 cells per column
 
