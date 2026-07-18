@@ -603,27 +603,28 @@ int getAepTransitionMode(const AepManager *mgr) {
 }
 
 // Ghidra: AepManager::DrawText (FUN_00010540; audit label "aepManagerReset_a" —
-// a misnomer). Forward the string + the six positional / per-corner-colour words
-// to the ordering table's text command with no clip rect.
+// a misnomer). Forward the string + the six glyph-run words (size, x, y, justify,
+// alpha, colorRGB) to the ordering table's text command with no clip rect.
 // @complete
 void AepManager::DrawText(
-    const char *text, int x, int y, int cTL, int cTR, int cBL, int cBR, int priority) {
-    pushAepOtTextCmd(orderingTable(), text, x, y, cTL, cTR, cBL, cBR, nullptr, priority);
+    const char *text, int size, int x, int y, int justify, int alpha, int colorRGB, int priority) {
+    pushAepOtTextCmd(
+        orderingTable(), text, size, x, y, justify, alpha, colorRGB, nullptr, priority);
 }
 
 // Ghidra: AepManager::DrawTextClipped (FUN_0001057c) — as DrawText but threads
 // the caller-supplied clip rect straight through.
 // @complete
 void AepManager::DrawTextClipped(const char *text,
+                                 int size,
                                  int x,
                                  int y,
-                                 int cTL,
-                                 int cTR,
-                                 int cBL,
-                                 int cBR,
+                                 int justify,
+                                 int alpha,
+                                 int colorRGB,
                                  const int *clip,
                                  int priority) {
-    pushAepOtTextCmd(orderingTable(), text, x, y, cTL, cTR, cBL, cBR, clip, priority);
+    pushAepOtTextCmd(orderingTable(), text, size, x, y, justify, alpha, colorRGB, clip, priority);
 }
 
 // Ghidra: drawAepTextMultiline (FUN_0002d8b0). Split `text` on '\n' and draw

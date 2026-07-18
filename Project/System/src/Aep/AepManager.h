@@ -162,41 +162,49 @@ public:
     void drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags);
 
     /// @brief Queue a single-line text draw through the manager's ordering table.
-    /// @details Forwards the string and the six positional / per-corner-colour
-    ///          words to the OT text command (type 6) with no clip rect. x/y are
-    ///          integer positions (Ghidra's `float` typing is a soft-float
-    ///          artifact — the callers pass integer pen coordinates).
+    /// @details Forwards the string and the six glyph-run words to the OT text
+    ///          command (type 6) with no clip rect. The first word is the glyph
+    ///          point SIZE, not a position (Ghidra's `float flPosXf` typing on it
+    ///          is a soft-float misnomer); drawAepOtText reads them back as
+    ///          neDrawText(pointSize, posX, posY).
     /// @param text Null-terminated string to draw.
+    /// @param size Glyph point size (scaled by the render scale).
     /// @param x Pen x position.
     /// @param y Pen y position.
-    /// @param cTL Top-left corner colour word.
-    /// @param cTR Top-right corner colour word.
-    /// @param cBL Bottom-left corner colour word.
-    /// @param cBR Bottom-right corner colour word.
+    /// @param justify Justify / alignment mode.
+    /// @param alpha Alpha percentage (0..100).
+    /// @param colorRGB Glyph colour (0x00RRGGBB).
     /// @param priority Ordering-table draw priority.
     /// @note Ghidra: AepManager::DrawText (FUN_00010540).
-    void DrawText(const char *text, int x, int y, int cTL, int cTR, int cBL, int cBR, int priority);
+    void DrawText(const char *text,
+                  int size,
+                  int x,
+                  int y,
+                  int justify,
+                  int alpha,
+                  int colorRGB,
+                  int priority);
 
     /// @brief Queue a single-line text draw with an explicit clip rectangle.
     /// @details As DrawText, but threads the caller-supplied clip rect straight
     ///          through to the ordering-table text command.
     /// @param text Null-terminated string to draw.
+    /// @param size Glyph point size (scaled by the render scale).
     /// @param x Pen x position.
     /// @param y Pen y position.
-    /// @param cTL Top-left corner colour word.
-    /// @param cTR Top-right corner colour word.
-    /// @param cBL Bottom-left corner colour word.
-    /// @param cBR Bottom-right corner colour word.
+    /// @param justify Justify / alignment mode.
+    /// @param alpha Alpha percentage (0..100).
+    /// @param colorRGB Glyph colour (0x00RRGGBB).
     /// @param clip Clip rectangle (16-byte vector), or null for none.
     /// @param priority Ordering-table draw priority.
     /// @note Ghidra: AepManager::DrawTextClipped (FUN_0001057c).
     void DrawTextClipped(const char *text,
+                         int size,
                          int x,
                          int y,
-                         int cTL,
-                         int cTR,
-                         int cBL,
-                         int cBR,
+                         int justify,
+                         int alpha,
+                         int colorRGB,
                          const int *clip,
                          int priority);
 

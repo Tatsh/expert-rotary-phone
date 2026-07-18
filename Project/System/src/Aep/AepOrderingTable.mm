@@ -285,11 +285,11 @@ void AepOrderingTable::flush() {
                               "DFMaruGothic-Bd-WIN-RKSJ-H",
                               t->nPosX,
                               t->nPosY,
-                              t->nColorTL,
-                              t->nColorTR,
-                              t->nColorBL,
+                              t->nSize,
+                              t->nJustify,
+                              t->nAlpha,
                               t->pAClipVec,
-                              static_cast<uint32_t>(t->nColorBR));
+                              static_cast<uint32_t>(t->nColorRGB));
                 break;
             }
             default:
@@ -350,19 +350,21 @@ static inline int aepScale(int c, float s) {
 // Ghidra: pushAepOtTextCmd (FUN_0001154c) — queue a type-6 text command. The
 // manager-level forwarders (FUN_00010540 / _1057c) reach it through
 // AepManager::orderingTable(). nType=6 (+0x04, strh), nReserved8=0 (+0x08),
-// strncpy(text, 256) into +0x0c with a forced NUL at +0x10b, the integer pen
-// position at +0x10c/+0x110, the four corner colours at +0x114..+0x120, and the
-// 16-byte clip vector at +0x124 (memcpy when supplied, else {0,0,screenW,screenH}
-// with the extents read as int16 from ot+0x04/+0x08).
+// strncpy(text, 256) into +0x0c with a forced NUL at +0x10b, then the six glyph-run
+// words at +0x10c..+0x120 and the 16-byte clip vector at +0x124 (memcpy when
+// supplied, else {0,0,screenW,screenH} with the extents read as int16 from
+// ot+0x04/+0x08). The six words are (size, x, y, justify, alpha, colorRGB) in that
+// order — the first is the point size, NOT a position (Ghidra mislabelled it
+// flPosXf); drawAepOtText reads them back as neDrawText(pointSize, posX, posY).
 // @complete
 void pushAepOtTextCmd(AepOrderingTable *ot,
                       const char *text,
-                      int a0,
-                      int a1,
-                      int a2,
-                      int a3,
-                      int a4,
-                      int a5,
+                      int size,
+                      int x,
+                      int y,
+                      int justify,
+                      int alpha,
+                      int colorRGB,
                       const int *colorVec,
                       int priority) {
     AepTextCmd *cmd = reinterpret_cast<AepTextCmd *>(ot->allocEntry(priority));
@@ -373,15 +375,14 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
     cmd->nReserved8 = 0;                 // +0x08
     std::strncpy(cmd->pText, text, 256); // +0x0c
     cmd->pText[255] = '\0';              // +0x10b force-terminate
-    // The manager forwarders pass the integer pen position (a0/a1) and the four
-    // per-corner colours (a2..a5); the binary stores the position as raw ints
-    // (str, not vstr) — drawAepOtText converts them to float when it scales.
-    cmd->nPosX = a0;    // +0x10c
-    cmd->nPosY = a1;    // +0x110
-    cmd->nColorTL = a2; // +0x114
-    cmd->nColorTR = a3; // +0x118
-    cmd->nColorBL = a4; // +0x11c
-    cmd->nColorBR = a5; // +0x120
+    // The binary stores these as raw ints (str, not vstr) — drawAepOtText converts
+    // them to float when it scales by the render scale.
+    cmd->nSize = size;         // +0x10c  glyph point size
+    cmd->nPosX = x;            // +0x110  pen x
+    cmd->nPosY = y;            // +0x114  pen y
+    cmd->nJustify = justify;   // +0x118  justify / align mode
+    cmd->nAlpha = alpha;       // +0x11c  0..100 alpha
+    cmd->nColorRGB = colorRGB; // +0x120  0x00RRGGBB
     if (colorVec != nullptr) {
         std::memcpy(cmd->pAClipVec, colorVec, 16); // +0x124 copy the 16-byte clip vector
     } else {

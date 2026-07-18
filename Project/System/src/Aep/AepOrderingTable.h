@@ -116,13 +116,18 @@ struct AepTextCmd {
     int16_t nPriority;     // +0x06  bucket priority
     int32_t nReserved8;    // +0x08
     char pText[256];       // +0x0c..+0x10b  (force-terminated at pText[255])
-    int32_t nPosX;         // +0x10c  pen position x (integer; scaled to float in drawAepOtText)
-    int32_t nPosY;         // +0x110  pen position y
-    int32_t nColorTL;      // +0x114  per-corner colours (top-left / top-right /
-    int32_t nColorTR;      // +0x118  bottom-left / bottom-right)
-    int32_t nColorBL;      // +0x11c
-    int32_t nColorBR;      // +0x120
-    int32_t pAClipVec[4];  // +0x124..+0x133  clip vector, or {0,0,screenW,screenH}
+    // The glyph run's point size and pen position. The flush reads these back
+    // through the AepOtSpriteCmd view (pCmd[3].flPosXf/flPosYf/nOfsX = +0x10c/
+    // +0x110/+0x114) and drawAepOtText (FUN_00011310) feeds them to neDrawText as
+    // (pointSize, posX, posY) in THAT order -- so +0x10c is the size, not a
+    // position. (Ghidra had auto-named these flPosXf/flPosYf/nColorTL, misnomers.)
+    int32_t nSize;        // +0x10c  glyph point size (scaled by the render scale)
+    int32_t nPosX;        // +0x110  pen position x
+    int32_t nPosY;        // +0x114  pen position y
+    int32_t nJustify;     // +0x118  justify / alignment mode (neDrawText param 6)
+    int32_t nAlpha;       // +0x11c  0..100 alpha percentage
+    int32_t nColorRGB;    // +0x120  0x00RRGGBB glyph colour
+    int32_t pAClipVec[4]; // +0x124..+0x133  clip vector, or {0,0,screenW,screenH}
 };
 
 class AepOrderingTable {
@@ -279,17 +284,19 @@ private:
 void aepOtSetScreenParams(
     AepOrderingTable *ot, neTextureForiOS **textureTable, int screenW, int screenH, float scale);
 
-// Queue a text draw command (type 6) at `priority`. `colorVec` (16 bytes)
-// overrides the per-glyph colour vector; when null it defaults to
-// {0,0,screenW,screenH}. Ghidra: pushAepOtTextCmd (FUN_0001154c).
+// Queue a text draw command (type 6) at `priority`: the glyph run `text` at point
+// `size`, pen (`x`, `y`), `justify` mode, `alpha` (0..100), and `colorRGB`
+// (0x00RRGGBB). `colorVec` (16 bytes) overrides the per-glyph clip vector; when
+// null it defaults to {0,0,screenW,screenH}. Ghidra: pushAepOtTextCmd
+// (FUN_0001154c). The first value is the SIZE, not a position — see AepTextCmd.
 void pushAepOtTextCmd(AepOrderingTable *ot,
                       const char *text,
-                      int a0,
-                      int a1,
-                      int a2,
-                      int a3,
-                      int a4,
-                      int a5,
+                      int size,
+                      int x,
+                      int y,
+                      int justify,
+                      int alpha,
+                      int colorRGB,
                       const int *colorVec,
                       int priority);
 
