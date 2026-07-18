@@ -541,7 +541,7 @@ static const char *const kHardwareModels[40] = {
             case 15:
             case 16:
             case 17:
-                _displayType = 0;
+                _displayType = DisplayTypePhoneNonRetina;
                 break;
             case 3:
             case 4:
@@ -550,7 +550,7 @@ static const char *const kHardwareModels[40] = {
             case 7:
             case 8:
             case 18:
-                _displayType = 1;
+                _displayType = DisplayTypePhoneRetina;
                 break;
             case 9:
             case 10:
@@ -559,7 +559,7 @@ static const char *const kHardwareModels[40] = {
             case 13:
             case 14:
             case 19:
-                _displayType = 2;
+                _displayType = DisplayTypePhoneRetinaTall;
                 break;
             case 20:
             case 21:
@@ -569,10 +569,11 @@ static const char *const kHardwareModels[40] = {
             case 34:
             case 35:
             case 36:
-                _displayType = 3;
+                _displayType = DisplayTypePadNonRetina;
                 break;
             default:
-                _displayType = ((i >= 25 && i <= 33) || i == 37 || i == 38) ? 4 : 5;
+                _displayType = ((i >= 25 && i <= 33) || i == 37 || i == 38) ? DisplayTypePadRetina :
+                                                                              DisplayTypeUnknown;
                 break;
             }
             free(machine);
@@ -584,25 +585,25 @@ static const char *const kHardwareModels[40] = {
     if (strncmp("iPhone", machine, 6) == 0) {
         if (strncmp("iPhone5", machine, 7) > 0) {
             _hardwareType = 40;
-            _displayType = 5;
+            _displayType = DisplayTypeUnknown;
         } else {
             _hardwareType = 42;
-            _displayType = 2;
+            _displayType = DisplayTypePhoneRetinaTall;
         }
     } else if (strncmp("iPad", machine, 4) == 0) {
         if (strncmp("iPad3", machine, 7) > 0) {
             _hardwareType = 40;
-            _displayType = 5;
+            _displayType = DisplayTypeUnknown;
         } else {
             _hardwareType = 43;
-            _displayType = 4;
+            _displayType = DisplayTypePadRetina;
         }
     } else if (strncmp("iPod", machine, 4) == 0 && strncmp("iPod5", machine, 7) <= 0) {
         _hardwareType = 41;
-        _displayType = 2;
+        _displayType = DisplayTypePhoneRetinaTall;
     } else {
         _hardwareType = 40;
-        _displayType = 5;
+        _displayType = DisplayTypeUnknown;
     }
     free(machine);
 }

@@ -13,6 +13,18 @@
 
 @class MainViewController, neWindow, CommonAlertView, SKProduct;
 
+// Device display class the app lays out against, derived from the hardware model
+// in -initHardware (returned by the -displayType property). Ordered by screen
+// class, not by iOS device family.
+typedef NS_ENUM(NSInteger, DisplayType) {
+    DisplayTypePhoneNonRetina = 0,  // 320x480 iPhone / iPod (1x)
+    DisplayTypePhoneRetina = 1,     // 640x960 iPhone / iPod, 3.5" (2x)
+    DisplayTypePhoneRetinaTall = 2, // 640x1136+ iPhone / iPod, 4"+ (2x tall)
+    DisplayTypePadNonRetina = 3,    // 1024x768 iPad (1x)
+    DisplayTypePadRetina = 4,       // 2048x1536 iPad (2x)
+    DisplayTypeUnknown = 5,         // unrecognised model / simulator
+};
+
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 @interface AppDelegate : UIResponder <UIApplicationDelegate, UNUserNotificationCenterDelegate>
 #else
