@@ -208,6 +208,24 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
     for (int index = noteCount - 1; index >= 0; --index) {
         NoteRenderData note;
         nm.getNoteObject(&note, index);
+        // TEMP RHYDBG: every active note, BEFORE the skip gates, so we see why a
+        // note never reaches the draw code.
+        if (NE_DBG_FIRST(300)) {
+            neDebugLog("PJ act idx=%d id=%u flags=0x%x kind=%d start=%u end=%u scroll=%.0f "
+                       "xy=(%.0f,%.0f) tgt=(%.0f,%.0f) judged=%d",
+                       index,
+                       note.noteId,
+                       note.flags,
+                       note.renderKind,
+                       note.startTick,
+                       note.endTick,
+                       note.scrollStart,
+                       note.x,
+                       note.y,
+                       note.targetX,
+                       note.targetY,
+                       (note.flags & kFlagJudged) != 0);
+        }
         if ((note.flags & kFlagJudged) != 0) {
             continue; // already fired / not judgeable
         }
@@ -215,7 +233,14 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         NoteJudgeState *st = judgeStateFor(this, note.noteId);
         if (st == nullptr) {
             NSLog(@"PlayJudge: judge-state pool exhausted");
+            if (NE_DBG_FIRST(20)) {
+                neDebugLog("PJ st-null id=%u", note.noteId);
+            }
             continue;
+        }
+        // TEMP RHYDBG: reached the judge state (past both skip gates).
+        if (NE_DBG_FIRST(300)) {
+            neDebugLog("PJ st id=%u phase=%d result=%d", note.noteId, st->phase, st->result);
         }
 
         // Seed the animation timestamp to the beat boundary at or before now,
