@@ -55,11 +55,17 @@ struct AcNoteRecord {
 };
 static_assert(sizeof(AcNoteRecord) == 8, "arcade note record is 8 bytes");
 
-// AcActiveNote::flags bits used as single flags (bit 2 "judged" is documented on
-// the field but only ever read via multi-bit masks, so it is left unnamed).
+// AcActiveNote::flags bits. The arcade viewer (a non-scored preview) only ever
+// sets bits 0, 2, and 5; the two guard masks below are over-broad — they also
+// cover bits 1/3 and 4 that the fuller standard-engine flag scheme (NoteFlag in
+// NoteMng.h) uses but this preview never sets — so in practice they test
+// COUNTED and HANDLED respectively.
 enum AcNoteFlag : uint16_t {
-    AC_NOTE_FLAG_COUNTED = 0x1,  // bit 0: counted into the per-lane tally
-    AC_NOTE_FLAG_HANDLED = 0x20, // bit 5: the note's event fired / it is resolved
+    AC_NOTE_FLAG_COUNTED = 0x1,     // bit 0: counted into the per-lane tally
+    AC_NOTE_FLAG_JUDGED = 0x4,      // bit 2: head has scrolled past the judge line
+    AC_NOTE_FLAG_HANDLED = 0x20,    // bit 5: the note's event fired / it is resolved
+    AC_NOTE_FLAG_COUNT_GUARD = 0xb, // bits 0,1,3: "already counted" retire/skip guard
+    AC_NOTE_FLAG_RETIRE = 0x30,     // bits 4,5: "resolved" retire guard
 };
 
 // One active (on-screen / in-flight) note. A fixed pool is threaded onto either

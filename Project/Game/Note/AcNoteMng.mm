@@ -599,12 +599,12 @@ void AcNoteMng::retireActiveNote(AcActiveNote **pnode, uint32_t pos) {
     AcActiveNote *node = *pnode;
     AcActiveNote *next = node->next;
     if (node->tick + 4000u < pos) {
-        if (m_autoPlay && (node->flags & 0xb) == 0) {
+        if (m_autoPlay && (node->flags & AC_NOTE_FLAG_COUNT_GUARD) == 0) {
             node->flags |= AC_NOTE_FLAG_COUNTED;
             m_laneResult[node->lane].hits++;
         }
         retireNode(node);
-    } else if (node->flags & 0x30) {
+    } else if (node->flags & AC_NOTE_FLAG_RETIRE) {
         retireNode(node);
     }
     *pnode = next;
@@ -616,7 +616,7 @@ void AcNoteMng::retireActiveNote(AcActiveNote **pnode, uint32_t pos) {
 // @complete
 void AcNoteMng::updateNearest(AcActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
-    if ((flags & 0xb) != 0) {
+    if ((flags & AC_NOTE_FLAG_COUNT_GUARD) != 0) {
         return;
     }
     const uint8_t lane = node->lane;
@@ -653,12 +653,12 @@ void AcNoteMng::updateNearest(AcActiveNote *node, uint32_t pos) {
 // @complete
 void AcNoteMng::updateDrawPos(AcActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
-    if ((flags & 4) == 0 && node->lane < 9) {
+    if ((flags & AC_NOTE_FLAG_JUDGED) == 0 && node->lane < 9) {
         node->drawY = computeScrollY(node, pos);
     }
     if (node->tick < pos) {
-        if ((flags & 4) == 0) {
-            node->flags = static_cast<uint16_t>(flags | 4);
+        if ((flags & AC_NOTE_FLAG_JUDGED) == 0) {
+            node->flags = static_cast<uint16_t>(flags | AC_NOTE_FLAG_JUDGED);
         }
         if (!m_autoPlay) {
             node->drawY = node->drawY + m_playSpeed * -16.0f;
