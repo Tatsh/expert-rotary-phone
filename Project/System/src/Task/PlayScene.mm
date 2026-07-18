@@ -212,8 +212,10 @@ void PlayTaskInit(void *playData) {
     task->m_optEffectOn = [UserSettingData isEffectOn];                // +0x9e5
     task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn]; // +0x9e6
 
-    // Note ("popkun") size -> 16.16 fixed. Ghidra: FPToFixed(popkunSize).
-    task->m_popkunSize = static_cast<int>([UserSettingData popkunSize] * kFixed16One); // +0x9bc
+    // Note ("popkun") size: a plain float->int (the note-sprite draw scale, a
+    // percent). Disasm @ 0x2e418: vcvt.s32.f32 (int)popkunSize — NOT fixed-point
+    // (the decompile's FPToFixed is that plain vcvt; the binary has no 16.16).
+    task->m_popkunSize = static_cast<int>([UserSettingData popkunSize]); // +0x9bc
 
     // The bundled-demo / sugoroku play flag, copied out of the event center
     // (+0x33).
