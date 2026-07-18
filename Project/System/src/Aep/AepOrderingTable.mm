@@ -731,6 +731,15 @@ void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
     const float flDstW = static_cast<float>(nPosX) * ox / 100.0f;
     const float flDstH = static_cast<float>(nPosY) * oy / 100.0f;
 
+    // Pivot = the sprite's anchor offset (nColorMul/nColorA are the anchor x/y),
+    // scaled by the same scale% * hs the size uses — identical to the type-0 path
+    // drawAepOtSprite (nOfsX * s * sx / 100). neDrawTexturedQuad's model matrix is
+    // translate(pos) * translate(-pivot); passing the destination POSITION here
+    // (flDstX/flDstY) made it cancel to translate(0,0), so every stretched-sprite
+    // texture (jackets, name/artist images, digit atlases) drew at the origin.
+    const float flPivotX = static_cast<float>(nColorMul) * ox / 100.0f;
+    const float flPivotY = static_cast<float>(nColorA) * oy / 100.0f;
+
     NE_DBG(neDebugLog(
         "otStretch base=(%d,%d) scale=(%.2f,%.2f) hs=%.3f pos=(%d,%d) dst=(%.1f,%.1f,%.1f,%.1f) "
         "src=(u=%d v=%d) alpha=%d blendFlag=%d",
@@ -760,8 +769,8 @@ void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
                          flDstW,
                          flDstH,
                          static_cast<int>(nColorA2),
-                         flDstX,
-                         flDstY,
+                         flPivotX,
+                         flPivotY,
                          nAlpha,
                          static_cast<float>(nColorMul),
                          nBlendMask,
