@@ -86,7 +86,7 @@ NoteJudgeState *judgeStateFor(PlayTask *playData, unsigned noteId) {
         // 0xffffffff), NOT 0 — the binary tests the field as a signed int `< 0`.
         // Testing == 0 here would match pool slot 0 and report the pool exhausted
         // on a freshly-reset pool (every slot is -1).
-        if (freeSlot == nullptr && static_cast<int32_t>(s->noteId) < 0) {
+        if (freeSlot == nullptr && (int32_t)s->noteId < 0) {
             freeSlot = s;
         }
     }
@@ -114,12 +114,12 @@ bool g_autoPlay = false; // extern flag in the binary; false in normal play
 void updateGaugeValue(PlayTask *playData, int result) {
     int gauge = playData->m_gaugeValue;
     if (result == 2 || result == 3) {
-        gauge = static_cast<int>(lroundf(static_cast<float>(gauge) + playData->m_gaugeGainGreat));
+        gauge = (int)lroundf((float)gauge + playData->m_gaugeGainGreat);
     } else if (result == 0) {
         playData->m_damagedThisFrame = true;
-        gauge = static_cast<int>(lroundf(static_cast<float>(gauge) + playData->m_gaugeLossMiss));
+        gauge = (int)lroundf((float)gauge + playData->m_gaugeLossMiss);
     } else if (result == 1) {
-        gauge = static_cast<int>(lroundf(static_cast<float>(gauge) + playData->m_gaugeGainGood));
+        gauge = (int)lroundf((float)gauge + playData->m_gaugeGainGood);
     }
     if (gauge < 1) {
         gauge = 0;
@@ -127,7 +127,7 @@ void updateGaugeValue(PlayTask *playData, int result) {
     if (gauge > 0x400) {
         gauge = 0x400;
     }
-    playData->m_gaugeValue = static_cast<int16_t>(gauge);
+    playData->m_gaugeValue = (int16_t)gauge;
 }
 
 } // namespace
@@ -146,8 +146,8 @@ namespace {
 // difference (as a signed byte) still waits one window. The binary computes
 // (graphic - holdJudge) << 24 and tests the sign, i.e. an int8 comparison.
 inline int specialLapseOffset(int graphic, unsigned holdJudge) {
-    const int8_t d = static_cast<int8_t>(graphic - static_cast<int>(holdJudge));
-    return d <= 0 ? 0x118 : static_cast<int>(d) * 0x118 + 0x118;
+    const int8_t d = (int8_t)(graphic - (int)holdJudge);
+    return d <= 0 ? 0x118 : (int)d * 0x118 + 0x118;
 }
 
 } // namespace
@@ -200,21 +200,20 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // Seed the animation timestamp to the beat boundary at or before now,
         // counting back from the note's own time (drives the approach animation).
         if (st->timestamp == 0) {
-            float t = static_cast<float>(note.startTick);
+            float t = (float)note.startTick;
             do {
                 t -= beat;
-            } while (static_cast<float>(curTime) < t);
-            st->timestamp = static_cast<int>(lroundf(t));
+            } while ((float)curTime < t);
+            st->timestamp = (int)lroundf(t);
         }
 
         unsigned holdJudge = note.spawnKind; // Ghidra dwHoldJudge: hold-tap count
 
         // Approach -> active: once the note is within one beat of the judge line,
         // enter phase 1 and re-anchor the animation one beat before the note time.
-        if (st->phase == 0 && static_cast<float>(static_cast<int>(
-                                  note.startTick - static_cast<unsigned>(curTime))) <= beat) {
+        if (st->phase == 0 && (float)(int)(note.startTick - (unsigned)curTime) <= beat) {
             st->phase = 1;
-            st->timestamp = static_cast<int>(lroundf(static_cast<float>(note.startTick) - beat));
+            st->timestamp = (int)lroundf((float)note.startTick - beat);
         }
 
         const bool onField = (note.flags & kFlagInactive) == 0;
@@ -223,8 +222,8 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // Judge this note if it is on the field and still open: either unresolved
         // (a fresh tap) or a SPECIAL note (renderKind 1) with taps remaining (a
         // re-tap that feeds judgeHold).
-        if (onField && (st->result < 0 || (note.renderKind == NOTE_RENDER_SPECIAL &&
-                                           static_cast<int8_t>(note.spawnKind) > 0))) {
+        if (onField && (st->result < 0 ||
+                        (note.renderKind == NOTE_RENDER_SPECIAL && (int8_t)note.spawnKind > 0))) {
             if (!autoJudge) {
                 if (touchCount > 0) {
                     if (!m_optSimpleMode) {
@@ -241,8 +240,8 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                                 if (st->result < 0) {
                                     st->result = nm.judgeNoteHit(note.noteId);
                                 } else {
-                                    holdJudge = static_cast<unsigned>(nm.judgeHold(
-                                        note.noteId, static_cast<unsigned>(st->result)));
+                                    holdJudge =
+                                        (unsigned)nm.judgeHold(note.noteId, (unsigned)st->result);
                                 }
                                 judgedAny = judgedAny || st->result > 0;
                                 if (st->result >= 0) {
@@ -261,8 +260,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                         if (st->result < 0) {
                             st->result = nm.judgeNoteHit(note.noteId);
                         } else {
-                            holdJudge = static_cast<unsigned>(
-                                nm.judgeHold(note.noteId, static_cast<unsigned>(st->result)));
+                            holdJudge = (unsigned)nm.judgeHold(note.noteId, (unsigned)st->result);
                         }
                         judgedAny = judgedAny || st->result > 0;
                         if (st->result >= 0) {
@@ -292,7 +290,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             (note.flags & kFlagGraded) != 0 && (note.flags & kFlagHold) == 0) {
             const bool fingerUp = st->touchId == -1 || gfx.findTouchById(st->touchId) == nullptr;
             if (fingerUp) {
-                const unsigned r = static_cast<unsigned>(nm.updateLongNote(note.noteId));
+                const unsigned r = (unsigned)nm.updateLongNote(note.noteId);
                 if ((r & 0xffff) != 0) {
                     noteFlags = r;
                     if (r & kFlagHoldFail) {
@@ -320,8 +318,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                 advance = true;
                 break;
             case NOTE_RENDER_LONG:
-                if (note.endTick <= static_cast<unsigned>(curTime) &&
-                    (noteFlags & kFlagHold) != 0) {
+                if (note.endTick <= (unsigned)curTime && (noteFlags & kFlagHold) != 0) {
                     advance = true;
                     longComplete = true;
                 }
@@ -354,7 +351,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // stack setup at 0x2f818.
 
         // Elapsed animation frames (~16.6 ms each): the retire path keys on this.
-        int nFrameNo = static_cast<int>(static_cast<float>(curTime - st->timestamp) / kFrameStepMs);
+        int nFrameNo = (int)((float)(curTime - st->timestamp) / kFrameStepMs);
         if (nFrameNo < 0) {
             nFrameNo = 0;
         }
@@ -368,21 +365,16 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         int noteFrame;
         if (st->phase == 1) {
             const int last = m_toneJudgeFrames[1] - 1;
-            noteFrame =
-                static_cast<int>(static_cast<float>((curTime - st->timestamp) * last) / beat);
+            noteFrame = (int)((float)((curTime - st->timestamp) * last) / beat);
             if (noteFrame > last) {
                 noteFrame = last;
             }
         } else if (st->phase == 0) {
-            const int anchor =
-                static_cast<int>(static_cast<float>(note.startTick) - 0.5f * beat) - curTime;
-            const int halfBeats =
-                static_cast<int>(static_cast<float>(static_cast<unsigned>(anchor)) / beat);
+            const int anchor = (int)((float)note.startTick - 0.5f * beat) - curTime;
+            const int halfBeats = (int)((float)(unsigned)anchor / beat);
             if (halfBeats & 1) {
-                const float ph =
-                    std::fmod(0.5f * beat + static_cast<float>(curTime - st->timestamp), beat);
-                noteFrame =
-                    static_cast<int>(ph * static_cast<float>(m_toneJudgeFrames[0] - 1) / beat);
+                const float ph = std::fmod(0.5f * beat + (float)(curTime - st->timestamp), beat);
+                noteFrame = (int)(ph * (float)(m_toneJudgeFrames[0] - 1) / beat);
             } else {
                 noteFrame = 0;
             }
@@ -403,8 +395,8 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             for (int pt = 0; pt < 2; ++pt) {
                 const float nx = (pt == 0) ? note.x : note.x2;
                 const float ny = (pt == 0) ? note.y : note.y2;
-                const int screenX = static_cast<int>(nx + progress * (note.targetX - nx));
-                const int screenY = static_cast<int>(ny + progress * (note.targetY - ny));
+                const int screenX = (int)(nx + progress * (note.targetX - nx));
+                const int screenY = (int)(ny + progress * (note.targetY - ny));
                 // Arg values resolved from the caller's stack push (0x2f818) mapped
                 // onto drawLayer via the callee's r7-relative reads (0xfd64): layer,
                 // frame, integer x/y, scale on both axes, then the constant tuple
@@ -443,30 +435,25 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                 // (cos,sin) offset uses len = fade*barLenScale + barLenBase, and the
                 // angle is atan2(dy,dx) with the +/-90 table for the vertical case).
                 if (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHold) == 0) {
-                    int span = static_cast<int>(note.endTick) - curTime;
-                    const int full =
-                        static_cast<int>(note.endTick) - static_cast<int>(note.startTick);
+                    int span = (int)note.endTick - curTime;
+                    const int full = (int)note.endTick - (int)note.startTick;
                     if (full < span) {
                         span = full;
                     }
                     const float fade =
-                        span < 1 ? 0.0f : (span > 2999 ? 1.0f : static_cast<float>(span) / 3000.0f);
+                        span < 1 ? 0.0f : (span > 2999 ? 1.0f : (float)span / 3000.0f);
 
-                    const int dx = static_cast<int>(nx - note.targetX);
-                    const int dy = static_cast<int>(ny - note.targetY);
-                    const double angleRad =
-                        (dx == 0) ? (dy < 0 ? -M_PI_2 : M_PI_2) :
-                                    std::atan2(static_cast<double>(dy), static_cast<double>(dx));
-                    const int angleDeg = static_cast<int>(angleRad * 180.0 / M_PI);
-                    const float len =
-                        fade * static_cast<float>(m_barLenScale) + static_cast<float>(m_barLenBase);
+                    const int dx = (int)(nx - note.targetX);
+                    const int dy = (int)(ny - note.targetY);
+                    const double angleRad = (dx == 0) ? (dy < 0 ? -M_PI_2 : M_PI_2) :
+                                                        std::atan2((double)dy, (double)dx);
+                    const int angleDeg = (int)(angleRad * 180.0 / M_PI);
+                    const float len = fade * (float)m_barLenScale + (float)m_barLenBase;
                     const int prio = m_barPriority / 2;
 
                     if (fade > 0.0f) {
-                        const int bx = screenX + static_cast<int>(
-                                                     len * static_cast<float>(std::cos(angleRad)));
-                        const int by = screenY + static_cast<int>(
-                                                     len * static_cast<float>(std::sin(angleRad)));
+                        const int bx = screenX + (int)(len * (float)std::cos(angleRad));
+                        const int by = screenY + (int)(len * (float)std::sin(angleRad));
                         drawAepFrameEx(&aep,
                                        m_barSegFrame,
                                        bx,
@@ -485,7 +472,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                                        2);
                     }
                     // The second segment sits at the note, scaled by fade*len.
-                    const int seg2Scale = static_cast<int>(fade * len);
+                    const int seg2Scale = (int)(fade * len);
                     drawAepFrameEx(&aep,
                                    m_barSegLyr1,
                                    screenX,
@@ -541,8 +528,8 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // effScale = hitEffectScale/2. Arg tuples and gates traced from the
         // drawLayer callee (0xfd64) against the caller pushes at 0x2fb16 (hit),
         // 0x2fbe2 (burst), 0x2fce0 (base), and the branch tangle 0x2fb84..0x2fce8.
-        const int hx = static_cast<int>(note.targetX);
-        const int hy = static_cast<int>(note.targetY);
+        const int hx = (int)note.targetX;
+        const int hy = (int)note.targetY;
         const int effScale = m_hitEffectScale / 2; // +0x9e0
 
         if (st->phase == 1 && noteFrame < m_effectStateFrames[1]) {
@@ -639,10 +626,9 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             st->result = 0;
             if (note.renderKind == NOTE_RENDER_SPECIAL) {
                 const int graphic = NoteToneDefaultGraphic(note.kind);
-                st->timestamp =
-                    static_cast<int>(note.startTick) + specialLapseOffset(graphic, holdJudge);
+                st->timestamp = (int)note.startTick + specialLapseOffset(graphic, holdJudge);
             } else {
-                st->timestamp = static_cast<int>(note.startTick) + 0x118;
+                st->timestamp = (int)note.startTick + 0x118;
             }
         }
     }
@@ -669,7 +655,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             const int step = (combo / 50) * 50; // nearest 50 at or below the combo
             if (prevCombo < step && step <= combo) {
                 m_comboLayers[2]->stop(1);
-                m_comboMilestoneShown = static_cast<int16_t>(step);
+                m_comboMilestoneShown = (int16_t)step;
             }
         }
     }
@@ -702,7 +688,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
     }
 
     // Re-stamp +0x9c2 with the current combo every frame, regardless of the gate.
-    m_comboMilestoneGuard = static_cast<short>(combo);
+    m_comboMilestoneGuard = (short)combo;
 
     // If any note resolved this frame, play the per-tap feedback SE.
     if (judgedAny || holdEnded) {
