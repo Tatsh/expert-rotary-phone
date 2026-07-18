@@ -218,7 +218,7 @@ void readScoreDataFields(ScoreData *rec,
                          bool *outPerfect,
                          ScoreData *recDup,
                          int difficulty) {
-    (void)rec;
+    static_cast<void>(rec);
     if (outScore == nullptr || outRank == nullptr || outPlayCnt == nullptr) {
         return;
     }
@@ -268,9 +268,9 @@ void fetchScoreDataForMusic(void *center,
                             bool *outPerfect,
                             unsigned musicId,
                             int difficulty) {
-    (void)center;
+    static_cast<void>(center);
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
-    ScoreData *rec = [ScoreData getScoreData:(int)musicId inManagedObjectContext:ctx];
+    ScoreData *rec = [ScoreData getScoreData:static_cast<int>(musicId) inManagedObjectContext:ctx];
     readScoreDataFields(
         rec, outScore, outRank, outPlayCnt, outFullCombo, outPerfect, rec, difficulty);
 }
@@ -281,7 +281,8 @@ void fetchScoreDataForMusic(void *center,
 void saveScoreData(PlayScore *s) {
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
     [ctx reset];
-    ScoreData *rec = [ScoreData getScoreData:(int)s->musicId inManagedObjectContext:ctx];
+    ScoreData *rec = [ScoreData getScoreData:static_cast<int>(s->musicId)
+                      inManagedObjectContext:ctx];
     const ScoreDifficulty diff = static_cast<ScoreDifficulty>(s->difficulty);
 
     // Full combo -> set this difficulty's FC medal; a spotless sheet (no GOOD and
@@ -379,7 +380,7 @@ void saveScoreData(PlayScore *s) {
         // glue and is omitted.
         NSArray *detailed = [[err userInfo] objectForKey:NSDetailedErrorsKey];
         for (NSError *sub in detailed) {
-            (void)sub;
+            static_cast<void>(sub);
         }
     }
 }
@@ -401,20 +402,20 @@ BOOL updateHighScore(PlayScore *s,
     short curRank = 0;
     int curPlayCnt = 0;
     bool curFullCombo = false, curPerfect = false;
-    ScoreData *rec = [ScoreData getScoreData:(int)s->musicId
+    ScoreData *rec = [ScoreData getScoreData:static_cast<int>(s->musicId)
                       inManagedObjectContext:[[AppDelegate appDelegate] managedObjectContext]];
     readScoreDataFields(
         rec, &curScore, &curRank, &curPlayCnt, &curFullCombo, &curPerfect, rec, s->difficulty);
 
-    const BOOL isNew = (curScore < (int)newScore);
+    const BOOL isNew = (curScore < static_cast<int>(newScore));
     s->isNewHighScore = isNew ? 1 : 0;
 
     s->coolCount = cool;
     s->greatCount = great;
     s->goodCount = good;
     s->badCount = bad;
-    s->score = (int)newScore;
-    s->fullCombo = (unsigned char)fullCombo;
+    s->score = static_cast<int>(newScore);
+    s->fullCombo = static_cast<unsigned char>(fullCombo);
     return isNew;
 }
 
@@ -432,7 +433,7 @@ void neAppEventCenter::readStoredResult(
                            outPlayCnt,
                            outFullCombo,
                            outPerfect,
-                           (unsigned)m_lastMusic,
+                           static_cast<unsigned>(m_lastMusic),
                            m_lastSheet);
 }
 
@@ -441,7 +442,7 @@ void neAppEventCenter::readStoredResult(
 // store medals key on (m_result.cleared).
 void neAppEventCenter::commitResultToScoreData() {
     PlayScore ps = {};
-    ps.musicId = (unsigned)m_lastMusic;
+    ps.musicId = static_cast<unsigned>(m_lastMusic);
     ps.difficulty = m_lastSheet;
     ps.coolCount = m_result.coolCount;
     ps.greatCount = m_result.greatCount;
@@ -449,7 +450,7 @@ void neAppEventCenter::commitResultToScoreData() {
     ps.badCount = m_result.badCount;
     ps.score = m_result.playScore;
     ps.rank = m_result.playRank;
-    ps.maxCombo = (short)m_result.maxCombo;
+    ps.maxCombo = static_cast<short>(m_result.maxCombo);
     ps.fullCombo = m_result.cleared;
     ps.isNewHighScore = m_resultExt.newRecord;
     saveScoreData(&ps);
@@ -462,7 +463,7 @@ bool neAppEventCenter::recordPlayResult(
     // the singleton fields the old overlay updated in place (+0x1c is the
     // full-combo byte, +0x32 the new-record byte).
     PlayScore ps = {};
-    ps.musicId = (unsigned)m_lastMusic;
+    ps.musicId = static_cast<unsigned>(m_lastMusic);
     ps.difficulty = m_lastSheet;
     const BOOL isNew = updateHighScore(&ps, score, cool, great, good, bad, fullCombo ? 1 : 0);
     m_result.coolCount = ps.coolCount;
@@ -552,22 +553,22 @@ void *neSceneManager::hitSoundName(int soundNo) {
 // once-per-scene loaded flag (+0x3c). The playing-instance handles live in
 // neEngine::g_systemSeHandles.
 static RSND_SOURCE_ID s_systemSeSource[5] = {
-    (RSND_SOURCE_ID)-1,
-    (RSND_SOURCE_ID)-1,
-    (RSND_SOURCE_ID)-1,
-    (RSND_SOURCE_ID)-1,
-    (RSND_SOURCE_ID)-1,
+    static_cast<RSND_SOURCE_ID>(-1),
+    static_cast<RSND_SOURCE_ID>(-1),
+    static_cast<RSND_SOURCE_ID>(-1),
+    static_cast<RSND_SOURCE_ID>(-1),
+    static_cast<RSND_SOURCE_ID>(-1),
 }; // -1 sentinel (RSND_SOURCE_ID is unsigned; the loaded flag gates use)
 
 // SE-instance handles for the 5 shared UI sounds, indexed by slot (Ghidra: the
 // scene-manager global DAT_00187b74 + 0x28, the array that immediately follows
 // s_systemSeSource at +0x14 and precedes the loaded flag at +0x3c). -1 = idle.
 static RSND_INSTANCE_ID g_systemSeHandles[5] = {
-    (RSND_INSTANCE_ID)-1,
-    (RSND_INSTANCE_ID)-1,
-    (RSND_INSTANCE_ID)-1,
-    (RSND_INSTANCE_ID)-1,
-    (RSND_INSTANCE_ID)-1,
+    static_cast<RSND_INSTANCE_ID>(-1),
+    static_cast<RSND_INSTANCE_ID>(-1),
+    static_cast<RSND_INSTANCE_ID>(-1),
+    static_cast<RSND_INSTANCE_ID>(-1),
+    static_cast<RSND_INSTANCE_ID>(-1),
 };
 static bool s_systemSeLoaded = false;
 
@@ -773,7 +774,7 @@ void playSystemSe(int slot) {
 // @complete
 bool isSePlaying(int slot) {
     RSND_INSTANCE_ID handle = g_systemSeHandles[slot];
-    if ((int)handle < 0) {
+    if (static_cast<int>(handle) < 0) {
         return false;
     }
     return [[AudioManager sharedManager] isPlayingSe:handle];
@@ -798,8 +799,8 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable) {
     // match (FPToFixed round-to-zero = trunc). Without this, buttons mis-hit on
     // every scale != 1 device (Retina / iPad).
     const float scale = g_uiScale > 0.0f ? g_uiScale : 1.0f;
-    const int px = (int)((float)t->x / scale);
-    const int py = (int)((float)t->y / scale);
+    const int px = static_cast<int>(static_cast<float>(t->x) / scale);
+    const int py = static_cast<int>(static_cast<float>(t->y) / scale);
     return neGraphics::pointInRect(px, py, rect[0], rect[1], rect[2], rect[3]);
 }
 
@@ -842,7 +843,7 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
         }
         width += columns;
         if (width >= columnWidth) {
-            return (int)i;
+            return static_cast<int>(i);
         }
     }
     return -1;
@@ -863,8 +864,8 @@ ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
         return nullptr;
     }
     CGImageRef cgImage = image.CGImage;
-    const int srcW = (int)CGImageGetWidth(cgImage);
-    const int srcH = (int)CGImageGetHeight(cgImage);
+    const int srcW = static_cast<int>(CGImageGetWidth(cgImage));
+    const int srcH = static_cast<int>(CGImageGetHeight(cgImage));
 
     int potW = 1;
     while (potW < srcW) {
@@ -882,7 +883,7 @@ ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
         pixels.data(), potW, potH, 8, potW * 4, colorSpace, kCGImageAlphaPremultipliedLast);
     // Draw the source Y-flipped (GL wants a top-down row order) into the padded
     // buffer.
-    CGContextTranslateCTM(ctx, 0, (CGFloat)srcH);
+    CGContextTranslateCTM(ctx, 0, static_cast<CGFloat>(srcH));
     CGContextScaleCTM(ctx, 1.0f, -1.0f);
     CGContextDrawImage(ctx, CGRectMake(0, 0, srcW, srcH), cgImage);
     CGContextRelease(ctx);

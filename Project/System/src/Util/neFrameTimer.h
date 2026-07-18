@@ -32,7 +32,8 @@ public:
     float elapsedMs() const {
         timeval now;
         gettimeofday(&now, nullptr);
-        return (float)(now.tv_sec - m_sec) * 1000.0f + (float)(now.tv_usec - m_usec) / 1000.0f;
+        return static_cast<float>(now.tv_sec - m_sec) * 1000.0f +
+               static_cast<float>(now.tv_usec - m_usec) / 1000.0f;
     }
 
 private:

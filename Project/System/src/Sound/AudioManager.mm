@@ -26,7 +26,7 @@ constexpr int kSeVoiceCount = 8; // onStartPlayer starts each backend with 8 voi
 // bytes: the reap/steal/add paths write handle at offset 0 and group at offset
 // 8 (e.g. stopSeAll @ 0x1f630 reads group at [entry+0x8], stride 0xc), leaving a
 // reserved word at offset 4, so group must sit at +8 rather than +4.
-static const RSND_INSTANCE_ID kFreeInstance = (RSND_INSTANCE_ID)-1;
+static const RSND_INSTANCE_ID kFreeInstance = static_cast<RSND_INSTANCE_ID>(-1);
 struct SeInstance {
     RSND_INSTANCE_ID handle;
     int reserved;
@@ -462,7 +462,7 @@ struct SeVoiceSlot {
 // AVFoundation), looked up in m_seType by call name or by boxed resource id.
 // @complete
 - (int)getGroupID:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId {
-    id key = name ? name : @((unsigned)resourceId);
+    id key = name ? name : @(static_cast<unsigned>(resourceId));
     return [[m_seType objectForKey:key] intValue];
 }
 
@@ -480,14 +480,15 @@ struct SeVoiceSlot {
         const char *cpath = path.UTF8String;
         if (name == nil) {
             RSND_SOURCE_ID rid = m_caPlayer->load(cpath, loop);
-            if (rid != (RSND_SOURCE_ID)-1) {
-                [m_seRidList addObject:@((unsigned)rid)];
+            if (rid != static_cast<RSND_SOURCE_ID>(-1)) {
+                [m_seRidList addObject:@(static_cast<unsigned>(rid))];
             }
             // The returned source id is the raw rid tagged with the group-0 backend
             // bit; it is both the caller's handle and the m_seType key (value = group
             // 0).
-            RSND_SOURCE_ID packed = (RSND_SOURCE_ID)((unsigned)rid | 0x10000000u);
-            m_seType[@((unsigned)packed)] = @(0);
+            RSND_SOURCE_ID packed =
+                static_cast<RSND_SOURCE_ID>(static_cast<unsigned>(rid) | 0x10000000u);
+            m_seType[@(static_cast<unsigned>(packed))] = @(0);
             return packed;
         }
         if (m_caPlayer->loadNamed(cpath, name.UTF8String, loop)) {
@@ -498,14 +499,15 @@ struct SeVoiceSlot {
     }
     NSURL *url = [NSURL fileURLWithPath:path];
     if (name == nil) {
-        RSND_SOURCE_ID rid = (RSND_SOURCE_ID)m_seAVPlayer->load(url, loop);
-        if (rid != (RSND_SOURCE_ID)-1) {
-            [m_seRidList addObject:@((unsigned)rid)];
+        RSND_SOURCE_ID rid = static_cast<RSND_SOURCE_ID>(m_seAVPlayer->load(url, loop));
+        if (rid != static_cast<RSND_SOURCE_ID>(-1)) {
+            [m_seRidList addObject:@(static_cast<unsigned>(rid))];
         }
         // As above: return the AVFoundation-tagged packed id and key m_seType by it
         // (value = group).
-        RSND_SOURCE_ID packed = (RSND_SOURCE_ID)((unsigned)rid | 0x60000000u);
-        m_seType[@((unsigned)packed)] = @(group);
+        RSND_SOURCE_ID packed =
+            static_cast<RSND_SOURCE_ID>(static_cast<unsigned>(rid) | 0x60000000u);
+        m_seType[@(static_cast<unsigned>(packed))] = @(group);
         return packed;
     }
     if (m_seAVPlayer->loadNamed(url, name, loop)) {
@@ -528,7 +530,7 @@ struct SeVoiceSlot {
                                               name:name
                                         resourceId:resourceId
                                             volume:volume];
-    if (handle == (RSND_INSTANCE_ID)-1) {
+    if (handle == static_cast<RSND_INSTANCE_ID>(-1)) {
         [self stopOldInstance];
         handle = [self prepareInGroup:group name:name resourceId:resourceId volume:volume];
     }
@@ -542,7 +544,7 @@ struct SeVoiceSlot {
                         resourceId:(RSND_SOURCE_ID)resourceId
                             volume:(float)volume {
     if (name == nil) {
-        uint32_t rid = (uint32_t)(resourceId & 0xfffffff);
+        uint32_t rid = static_cast<uint32_t>(resourceId & 0xfffffff);
         return (group == 0) ? m_caPlayer->prepare(rid, volume) : m_seAVPlayer->prepare(rid, volume);
     }
     return (group == 0) ? m_caPlayer->prepareNamed(name.UTF8String, volume) :
@@ -553,18 +555,18 @@ struct SeVoiceSlot {
 // others through the AVFoundation player.
 // @complete
 - (RSND_INSTANCE_ID)playSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId {
-    if (name == nil && resourceId == (RSND_SOURCE_ID)-1) {
+    if (name == nil && resourceId == static_cast<RSND_SOURCE_ID>(-1)) {
         return RSND_INSTANCE_ID_ERROR;
     }
     int group = [self getGroupID:name resourceId:resourceId];
     RSND_INSTANCE_ID handle = [self prepare:name resourceId:resourceId volume:m_seVolume[group]];
-    if (handle == (RSND_INSTANCE_ID)-1) {
+    if (handle == static_cast<RSND_INSTANCE_ID>(-1)) {
         return RSND_INSTANCE_ID_ERROR;
     }
     if (group == 0) {
-        m_caPlayer->play((uint32_t)handle);
+        m_caPlayer->play(static_cast<uint32_t>(handle));
     } else {
-        m_seAVPlayer->play((uint32_t)handle);
+        m_seAVPlayer->play(static_cast<uint32_t>(handle));
     }
     return handle;
 }
@@ -590,7 +592,7 @@ struct SeVoiceSlot {
 - (RSND_INSTANCE_ID)playSe:(NSString *)name
                 resourceId:(RSND_SOURCE_ID)resourceId
                     Volume:(int)volume {
-    if (name == nil && resourceId == (RSND_SOURCE_ID)-1) {
+    if (name == nil && resourceId == static_cast<RSND_SOURCE_ID>(-1)) {
         return RSND_INSTANCE_ID_ERROR;
     }
     int level = volume;
@@ -601,13 +603,13 @@ struct SeVoiceSlot {
     }
     int group = [self getGroupID:name resourceId:resourceId];
     RSND_INSTANCE_ID handle = [self prepare:name resourceId:resourceId volume:level];
-    if (handle == (RSND_INSTANCE_ID)-1) {
+    if (handle == static_cast<RSND_INSTANCE_ID>(-1)) {
         return RSND_INSTANCE_ID_ERROR;
     }
     if (group != 0) {
-        m_seAVPlayer->play((uint32_t)handle);
+        m_seAVPlayer->play(static_cast<uint32_t>(handle));
     } else {
-        m_caPlayer->play((uint32_t)handle);
+        m_caPlayer->play(static_cast<uint32_t>(handle));
     }
     return handle;
 }
@@ -617,8 +619,8 @@ struct SeVoiceSlot {
 - (BOOL)stopSe:(RSND_INSTANCE_ID)instanceId {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].handle == instanceId) {
-            return m_seList[i].group != 0 ? m_seAVPlayer->stop((uint32_t)instanceId) :
-                                            m_caPlayer->stop((uint32_t)instanceId);
+            return m_seList[i].group != 0 ? m_seAVPlayer->stop(static_cast<uint32_t>(instanceId)) :
+                                            m_caPlayer->stop(static_cast<uint32_t>(instanceId));
         }
     }
     return NO;
@@ -629,9 +631,9 @@ struct SeVoiceSlot {
 - (BOOL)stopSeAll {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].group != 0) {
-            m_seAVPlayer->stop((uint32_t)m_seList[i].handle);
+            m_seAVPlayer->stop(static_cast<uint32_t>(m_seList[i].handle));
         } else {
-            m_caPlayer->stop((uint32_t)m_seList[i].handle);
+            m_caPlayer->stop(static_cast<uint32_t>(m_seList[i].handle));
         }
     }
     return YES;
@@ -646,13 +648,13 @@ struct SeVoiceSlot {
             break;
         }
         int state = m_seList[i].group != 0 ?
-                        m_seAVPlayer->voiceState((uint32_t)m_seList[i].handle) :
-                        m_caPlayer->voiceState((uint32_t)m_seList[i].handle);
+                        m_seAVPlayer->voiceState(static_cast<uint32_t>(m_seList[i].handle)) :
+                        m_caPlayer->voiceState(static_cast<uint32_t>(m_seList[i].handle));
         if (state == -1 || state == 4) {
             if (m_seList[i].group != 0) {
-                m_seAVPlayer->stop((uint32_t)m_seList[i].handle);
+                m_seAVPlayer->stop(static_cast<uint32_t>(m_seList[i].handle));
             } else {
-                m_caPlayer->stop((uint32_t)m_seList[i].handle);
+                m_caPlayer->stop(static_cast<uint32_t>(m_seList[i].handle));
             }
             m_seList[i].handle = kFreeInstance;
         }
@@ -676,9 +678,9 @@ struct SeVoiceSlot {
 // @complete
 - (void)stopOldInstance {
     if (m_seList[0].group != 0) {
-        m_seAVPlayer->stop((uint32_t)m_seList[0].handle);
+        m_seAVPlayer->stop(static_cast<uint32_t>(m_seList[0].handle));
     } else {
-        m_caPlayer->stop((uint32_t)m_seList[0].handle);
+        m_caPlayer->stop(static_cast<uint32_t>(m_seList[0].handle));
     }
     for (int i = 0; i < 7; i++) {
         m_seList[i] = m_seList[i + 1];
@@ -729,8 +731,8 @@ struct SeVoiceSlot {
 - (BOOL)onPauseSe:(RSND_INSTANCE_ID)instanceId {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].handle == instanceId) {
-            return m_seList[i].group != 0 ? m_seAVPlayer->pause((uint32_t)instanceId) :
-                                            m_caPlayer->pause((uint32_t)instanceId);
+            return m_seList[i].group != 0 ? m_seAVPlayer->pause(static_cast<uint32_t>(instanceId)) :
+                                            m_caPlayer->pause(static_cast<uint32_t>(instanceId));
         }
     }
     return NO;
@@ -741,8 +743,8 @@ struct SeVoiceSlot {
 - (BOOL)offPauseSe:(RSND_INSTANCE_ID)instanceId {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].handle == instanceId) {
-            return m_seList[i].group != 0 ? m_seAVPlayer->play((uint32_t)instanceId) :
-                                            m_caPlayer->play((uint32_t)instanceId);
+            return m_seList[i].group != 0 ? m_seAVPlayer->play(static_cast<uint32_t>(instanceId)) :
+                                            m_caPlayer->play(static_cast<uint32_t>(instanceId));
         }
     }
     return NO;
@@ -754,8 +756,9 @@ struct SeVoiceSlot {
 - (BOOL)isPlayingSe:(RSND_INSTANCE_ID)instanceId {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].handle == instanceId) {
-            int state = m_seList[i].group != 0 ? m_seAVPlayer->voiceState((uint32_t)instanceId) :
-                                                 m_caPlayer->voiceState((uint32_t)instanceId);
+            int state = m_seList[i].group != 0 ?
+                            m_seAVPlayer->voiceState(static_cast<uint32_t>(instanceId)) :
+                            m_caPlayer->voiceState(static_cast<uint32_t>(instanceId));
             return state == 2;
         }
     }
@@ -767,9 +770,9 @@ struct SeVoiceSlot {
 - (BOOL)onPauseSeAll {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].group != 0) {
-            m_seAVPlayer->pause((uint32_t)m_seList[i].handle);
+            m_seAVPlayer->pause(static_cast<uint32_t>(m_seList[i].handle));
         } else {
-            m_caPlayer->pause((uint32_t)m_seList[i].handle);
+            m_caPlayer->pause(static_cast<uint32_t>(m_seList[i].handle));
         }
     }
     return YES;
@@ -780,9 +783,9 @@ struct SeVoiceSlot {
 - (BOOL)offPauseSeAll {
     for (int i = 0; i < 8; i++) {
         if (m_seList[i].group != 0) {
-            m_seAVPlayer->play((uint32_t)m_seList[i].handle);
+            m_seAVPlayer->play(static_cast<uint32_t>(m_seList[i].handle));
         } else {
-            m_caPlayer->play((uint32_t)m_seList[i].handle);
+            m_caPlayer->play(static_cast<uint32_t>(m_seList[i].handle));
         }
     }
     return YES;
@@ -800,9 +803,9 @@ struct SeVoiceSlot {
         if (handle == kFreeInstance) {
             break;
         }
-        int state = m_caPlayer->voiceState((uint32_t)handle);
+        int state = m_caPlayer->voiceState(static_cast<uint32_t>(handle));
         if (state == -1 || state == 4) {
-            m_caPlayer->stop((uint32_t)handle); // stop-and-clear the voice
+            m_caPlayer->stop(static_cast<uint32_t>(handle)); // stop-and-clear the voice
             m_seManageId[groupId][i].handle = kFreeInstance;
         }
     }
@@ -854,7 +857,7 @@ struct SeVoiceSlot {
     int voiceIndex = m_seManageId[groupId][slot].voiceIndex;
     RSND_INSTANCE_ID handle;
     if (name == nil) {
-        handle = m_caPlayer->prepareAtVoice((uint32_t)resourceId, voiceIndex);
+        handle = m_caPlayer->prepareAtVoice(static_cast<uint32_t>(resourceId), voiceIndex);
     } else {
         handle = m_caPlayer->prepareNamedAtVoice(name, voiceIndex);
     }
@@ -867,10 +870,10 @@ struct SeVoiceSlot {
 - (RSND_INSTANCE_ID)playSeSetGroup:(NSString *)name
                         resourceId:(RSND_SOURCE_ID)resourceId
                            groupId:(int)groupId {
-    if (name != nil || resourceId != (RSND_SOURCE_ID)-1) {
+    if (name != nil || resourceId != static_cast<RSND_SOURCE_ID>(-1)) {
         RSND_INSTANCE_ID handle = [self prepareSetGroup:name resourceId:resourceId groupId:groupId];
-        if (handle != (RSND_INSTANCE_ID)-1) {
-            m_caPlayer->play((uint32_t)handle);
+        if (handle != static_cast<RSND_INSTANCE_ID>(-1)) {
+            m_caPlayer->play(static_cast<uint32_t>(handle));
             return handle;
         }
     }
@@ -886,9 +889,9 @@ struct SeVoiceSlot {
     int group = [self getGroupID:name resourceId:resourceId];
     if (name == nil) {
         if (group == 0) {
-            m_caPlayer->unregisterSource((uint32_t)(resourceId & 0xfffffff));
+            m_caPlayer->unregisterSource(static_cast<uint32_t>(resourceId & 0xfffffff));
         } else {
-            m_seAVPlayer->unregisterSource((uint32_t)(resourceId & 0xfffffff));
+            m_seAVPlayer->unregisterSource(static_cast<uint32_t>(resourceId & 0xfffffff));
         }
         NSUInteger count = m_seRidList.count;
         for (NSUInteger i = 0; i < count; i++) {
@@ -898,7 +901,7 @@ struct SeVoiceSlot {
             }
             count = m_seRidList.count;
         }
-        [m_seType removeObjectForKey:[NSNumber numberWithInt:(int)resourceId]];
+        [m_seType removeObjectForKey:[NSNumber numberWithInt:static_cast<int>(resourceId)]];
     } else {
         if (group == 0) {
             m_caPlayer->unregisterSourceNamed(name);
@@ -937,9 +940,9 @@ struct SeVoiceSlot {
     for (NSUInteger i = 0; i < ridCount; i++) {
         RSND_SOURCE_ID rid = (RSND_SOURCE_ID)[m_seRidList[i] intValue];
         if ([self getGroupID:nil resourceId:rid] == 0) {
-            m_caPlayer->unregisterSource((uint32_t)(rid & 0xfffffff));
+            m_caPlayer->unregisterSource(static_cast<uint32_t>(rid & 0xfffffff));
         } else {
-            m_seAVPlayer->unregisterSource((uint32_t)(rid & 0xfffffff));
+            m_seAVPlayer->unregisterSource(static_cast<uint32_t>(rid & 0xfffffff));
         }
         ridCount = m_seRidList.count;
     }

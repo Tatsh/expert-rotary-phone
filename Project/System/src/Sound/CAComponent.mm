@@ -26,7 +26,7 @@ float caGainForLevel(int level) {
     if (level > 100) {
         level = 100;
     }
-    return (float)level / 100.0f;
+    return static_cast<float>(level) / 100.0f;
 }
 
 // Voice states, as stored at CAVoice::state (offset 0x14).
@@ -135,7 +135,7 @@ bool CAComponent::initGraph(int voices) {
     if (voices > 0xfff) {
         return false;
     }
-    UInt32 count = (UInt32)voices;
+    UInt32 count = static_cast<UInt32>(voices);
     if (AudioUnitSetProperty(m_mixerUnit,
                              kAudioUnitProperty_ElementCount,
                              kAudioUnitScope_Input,
@@ -146,7 +146,7 @@ bool CAComponent::initGraph(int voices) {
         m_voiceCount = 0;
         return false;
     }
-    m_voiceCount = (int)count;
+    m_voiceCount = static_cast<int>(count);
     m_voices.clear();
     m_voices.reserve(count);
     for (int i = 0; i < m_voiceCount; i++) {
@@ -215,7 +215,7 @@ uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
     for (int i = 0; i < m_voiceCount; i++) {
         int state = m_voices[i]->state;
         if (state == -1 || state == 4) {
-            return (uint32_t)preparePlayer(source, i, volumeIndex);
+            return static_cast<uint32_t>(preparePlayer(source, i, volumeIndex));
         }
     }
     NSLog(@"CAComponent: no free voice");
@@ -232,7 +232,7 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
         return -1;
     }
     v->source = source;
-    uint16_t generation = (uint16_t)(v->generation + 1);
+    uint16_t generation = static_cast<uint16_t>(v->generation + 1);
     v->generation = generation;
 
     AudioStreamBasicDescription in = source->format();
@@ -257,7 +257,7 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     v->playPos = 0;
     v->total = 0;
     v->state = 1; // playing
-    return (int)(generation | (voice << 16));
+    return static_cast<int>(generation | (voice << 16));
 }
 
 // Ghidra: FUN_00023e5c — install the render callback for a voice's mixer input.

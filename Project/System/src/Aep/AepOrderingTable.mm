@@ -166,7 +166,7 @@ void AepOrderingTable::flush() {
         for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
             for (AepOtSpriteCmd *c = m_buckets[pri]; c != nullptr; c = c->pListNext) {
                 ++dbgTotal;
-                if ((unsigned)c->wFlags < 8) {
+                if (static_cast<unsigned>(c->wFlags) < 8) {
                     ++dbgType[c->wFlags];
                 }
             }
@@ -707,7 +707,7 @@ void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
                                               const int *pClipRect,
                                               int nBlendFlag,
                                               uint32_t nColorRGB) {
-    (void)nColorA;
+    static_cast<void>(nColorA);
     const float hs = renderScale();
     const float ox = nOfsX * hs;
     const float oy = nOfsY * hs;

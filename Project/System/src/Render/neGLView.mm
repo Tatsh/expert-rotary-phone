@@ -20,7 +20,7 @@
 // Engine touch coordinates are 16.16 fixed point; the render/input manager
 // (neGraphics) scales them to pixels and records them for the play-judge loop.
 static inline int ToFixed(CGFloat v) {
-    return (int)(v * 65536.0f);
+    return static_cast<int>(v * 65536.0f);
 }
 
 // The most-recently-created view, published for GetInstance. The binary keeps a

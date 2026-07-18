@@ -45,7 +45,7 @@ size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const 
     uint8_t *out = static_cast<uint8_t *>(dst);
     while (true) {
         size_t chunk = bytes;
-        if ((int)(cursor + bytes) >= (int)m_bufferSize) {
+        if (static_cast<int>(cursor + bytes) >= static_cast<int>(m_bufferSize)) {
             chunk = m_bufferSize - cursor;
         }
         if (chunk != 0) {
@@ -53,9 +53,9 @@ size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const 
         }
         copied += chunk;
         const bool done = (bytes == chunk);
-        cursor += (UInt32)chunk;
+        cursor += static_cast<UInt32>(chunk);
         *pos = cursor;
-        *total += (UInt32)chunk;
+        *total += static_cast<UInt32>(chunk);
         bytes -= chunk;
         if (done || !m_loop) {
             break;
@@ -137,7 +137,7 @@ bool CASound::configureFormat(ExtAudioFileRef file) {
     m_format.mChannelsPerFrame = channels;
 
     m_frameCount = channels; // (matches the decompiled +0x8 store)
-    m_bufferSize = (UInt32)(lengthFrames * bytesPerFrame);
+    m_bufferSize = static_cast<UInt32>(lengthFrames * bytesPerFrame);
     return true;
 }
 

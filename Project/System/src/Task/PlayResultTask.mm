@@ -241,8 +241,8 @@ void PlayResultTask::resultSetup() {
     // +0x353: perfect full-combo == cleared with no GOOD and no BAD.
     m_perfectFullCombo = (cleared && evt.goodCount() == 0 && evt.badCount() == 0);
 
-    m_sheet = (short)evt.lastSheet(); // DAT_00187bbc difficulty index
-    m_rank = evt.playRank();          // DAT_00187bcc rank (0 best .. 6 fail)
+    m_sheet = static_cast<short>(evt.lastSheet()); // DAT_00187bbc difficulty index
+    m_rank = evt.playRank();                       // DAT_00187bcc rank (0 best .. 6 fail)
 
     const short treasureStart = [UserSettingData treasurePoint];
     m_treasureStart = treasureStart; // starting treasure point (for the count-up)
@@ -417,7 +417,7 @@ void PlayResultTask::resultSetup() {
     // Perfect-full-combo bonus (10) and the total, then persist (capped at 9999).
     m_perfectBonus = m_perfectFullCombo ? 10 : 0;
     m_bonusSubtotal = m_perfectBonus + m_clearBonus + m_fullComboBonus + m_rankBonus;
-    const short treasureTotal = (short)(m_bonusSubtotal + m_treasureStart + m_baseBonus);
+    const short treasureTotal = static_cast<short>(m_bonusSubtotal + m_treasureStart + m_baseBonus);
     [UserSettingData saveTreasurePoint:(treasureTotal < 9999 ? treasureTotal : 9999)];
 
     // Board scale for the result layout (100 on pad, 50 on phone).
@@ -949,7 +949,7 @@ void PlayResultTask::resultGotoNext() {
     if (m_tweeter) {
         // Held as an unmanaged raw +1 pointer; the binary sends -release, so
         // transfer ownership to ARC and let it drop at the end of this statement.
-        (void)(__bridge_transfer id)m_tweeter;
+        static_cast<void>(__bridge_transfer id) m_tweeter;
         m_tweeter = nullptr;
     }
 
@@ -1017,8 +1017,8 @@ void drawTexQuad(AepManager &aep,
     p.ey = anchorY;
     p.color = color;
     p.rotation = rotation;
-    p.blend0 = (short)blend;
-    p.blend1 = (short)alpha;
+    p.blend0 = static_cast<short>(blend);
+    p.blend1 = static_cast<short>(alpha);
     p.colorMul = 0xffffff;
     p.priority = priority;
     tex->draw(aep.orderingTable(), p);
@@ -1080,7 +1080,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                             blend,
                             0xffffff,
                             nullptr,
-                            (int)priority,
+                            static_cast<int>(priority),
                             1);
     };
     // drawDigits only READS its digit row, so borrow the owning num_* slots as a
@@ -1119,8 +1119,8 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                             anchorY,
                             color,
                             alpha,
-                            (int)blend,
-                            (int)priority);
+                            static_cast<int>(blend),
+                            static_cast<int>(priority));
                 if (v < 10) {
                     return;
                 }
@@ -1148,24 +1148,48 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     }
     // --- Judge tally digit strips (COOL/GREAT/GOOD/BAD/COM, m_usr[6..10]) ---
     if (self->m_usr[6] == child) {
-        drawDigits(atlasView(self->m_numCool).data(), (int)self->m_coolCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numCool).data(),
+                   static_cast<int>(self->m_coolCount),
+                   0x1a,
+                   0x1e,
+                   -0x1c,
+                   3);
         return;
     }
     if (self->m_usr[7] == child) {
-        drawDigits(
-            atlasView(self->m_numGreat).data(), (int)self->m_greatCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numGreat).data(),
+                   static_cast<int>(self->m_greatCount),
+                   0x1a,
+                   0x1e,
+                   -0x1c,
+                   3);
         return;
     }
     if (self->m_usr[8] == child) {
-        drawDigits(atlasView(self->m_numGood).data(), (int)self->m_goodCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numGood).data(),
+                   static_cast<int>(self->m_goodCount),
+                   0x1a,
+                   0x1e,
+                   -0x1c,
+                   3);
         return;
     }
     if (self->m_usr[9] == child) {
-        drawDigits(atlasView(self->m_numBad).data(), (int)self->m_badCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numBad).data(),
+                   static_cast<int>(self->m_badCount),
+                   0x1a,
+                   0x1e,
+                   -0x1c,
+                   3);
         return;
     }
     if (self->m_usr[10] == child) {
-        drawDigits(atlasView(self->m_numCom).data(), (int)self->m_maxCombo, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numCom).data(),
+                   static_cast<int>(self->m_maxCombo),
+                   0x1a,
+                   0x1e,
+                   -0x1c,
+                   3);
         return;
     }
     // --- Score digit strip (RESULT_SCORE, m_usr[11]) ---
@@ -1191,8 +1215,8 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                     anchorY,
                     color,
                     alpha,
-                    (int)blend,
-                    (int)priority);
+                    static_cast<int>(blend),
+                    static_cast<int>(priority));
         return;
     }
     if (self->m_usr[0] == child) {
@@ -1211,8 +1235,8 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                     anchorY,
                     color,
                     alpha,
-                    (int)blend,
-                    (int)priority);
+                    static_cast<int>(blend),
+                    static_cast<int>(priority));
         return;
     }
     // --- Character portrait (RESULT_CHARA, m_usr[1]): board-scaled, anchors
@@ -1242,15 +1266,15 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                     ay,
                     color,
                     alpha,
-                    (int)blend,
-                    (int)priority);
+                    static_cast<int>(blend),
+                    static_cast<int>(priority));
         return;
     }
 
     // --- Difficulty font glyph (DIFFICULTY_FONT, m_usr[12]): selected by played
     // sheet ---
     if (self->m_usr[12] == child) {
-        rquad(self->m_frmDifficulty[(int)self->m_sheet]);
+        rquad(self->m_frmDifficulty[static_cast<int>(self->m_sheet)]);
         return;
     }
     // --- Bonus board glyph (BONUS_COM_BOARD, m_usr[13]): full-combo vs plain
@@ -1310,8 +1334,8 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                         anchorY,
                         color,
                         alpha,
-                        (int)blend,
-                        (int)priority);
+                        static_cast<int>(blend),
+                        static_cast<int>(priority));
             v /= 10;
         }
         return;
@@ -1320,7 +1344,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     // --- Rank-effect layer A + rank glyph (DIFFICULTY_RUNK_NUMBER_E, m_usr[2])
     // ---
     if (self->m_usr[2] == child) {
-        const int rank = (int)self->m_rank;
+        const int rank = static_cast<int>(self->m_rank);
         if (rank == 0) {
             // Cross-fade the two AAA/AA effect layers: play layer 2 until its counter
             // reaches its length, then layer 3; freeze the backdrop the moment layer
@@ -1398,7 +1422,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     // --- Rank-effect layer B + rank glyph (DIFFICULTY_RUNK_NUMBER_E2, m_usr[3])
     // ---
     if (self->m_usr[3] == child) {
-        const int rank = (int)self->m_rank;
+        const int rank = static_cast<int>(self->m_rank);
         if (rank == 0) {
             return;
         }

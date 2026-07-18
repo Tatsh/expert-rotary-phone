@@ -106,8 +106,8 @@ void BootLogoTask::setup() {
                    m_logo[i]->height());
     }
     neDebugLog("BootLogoTask::setup isPad=%d displayType=%d scale=%.2f pos=(%d,%d)",
-               (int)isPad,
-               (int)AppDelegate.appDelegate.displayType,
+               static_cast<int>(isPad),
+               static_cast<int>(AppDelegate.appDelegate.displayType),
                m_scale,
                m_posX,
                m_posY);
@@ -146,7 +146,7 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     p.priority = 5; // logos in bucket 5; the fade overlay sits in bucket 1 -> on top
     if (NE_DBG_FIRST(120)) {
         neDebugLog("BootLogoTask::drawLogo logo=%p w=%d h=%d canvas=(%d,%d)",
-                   (void *)logo,
+                   static_cast<void *>(logo),
                    logo->width(),
                    logo->height(),
                    m_posX,

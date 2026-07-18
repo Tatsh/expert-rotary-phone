@@ -97,8 +97,8 @@ bool ne::C_TEXTURE::reload() {
         return false;
     }
     CGImageRef cg = image.CGImage;
-    m_width = (int)CGImageGetWidth(cg);   // +0x24
-    m_height = (int)CGImageGetHeight(cg); // +0x28
+    m_width = static_cast<int>(CGImageGetWidth(cg));   // +0x24
+    m_height = static_cast<int>(CGImageGetHeight(cg)); // +0x28
 
     int tw = 1;
     while (tw < m_width) {
@@ -148,7 +148,7 @@ bool ne::C_TEXTURE::decodeAndUpload(const char *path) {
     UIImage *image = [[UIImage alloc] initWithContentsOfFile:resolved];
     if (image != nil) {
         if ([image respondsToSelector:@selector(scale)]) {
-            m_scale = (float)image.scale;
+            m_scale = static_cast<float>(image.scale);
         }
     } else {
         // @2x variant, then the plain base+ext lookup.
@@ -170,8 +170,8 @@ bool ne::C_TEXTURE::decodeAndUpload(const char *path) {
     m_filePath = strdup(resolved.UTF8String); // +0x14 resolved path (for reload)
 
     CGImageRef cg = image.CGImage;
-    m_width = (int)CGImageGetWidth(cg);
-    m_height = (int)CGImageGetHeight(cg);
+    m_width = static_cast<int>(CGImageGetWidth(cg));
+    m_height = static_cast<int>(CGImageGetHeight(cg));
 
     int tw = 1;
     while (tw < m_width) {
@@ -315,7 +315,7 @@ static int neTextureUpload(ne::C_TEXTURE *tex, int texW, int texH, int format, c
                       texH,
                       format,
                       pixels,
-                      (unsigned)glErr));
+                      static_cast<unsigned>(glErr)));
     // Publish the name + padded size back onto the texture (ne::C_TEXTURE
     // +0x18/+0x1c/+0x20).
     tex->adoptGLName(name, texW, texH);
@@ -346,11 +346,11 @@ int neTextureLoadFromData(ne::C_TEXTURE *tex, const void *nsData) {
         return 0;
     }
     if ([image respondsToSelector:@selector(scale)]) {
-        tex->setScale((float)image.scale);
+        tex->setScale(static_cast<float>(image.scale));
     }
     CGImageRef cg = image.CGImage;
-    int w = (int)CGImageGetWidth(cg);
-    int h = (int)CGImageGetHeight(cg);
+    int w = static_cast<int>(CGImageGetWidth(cg));
+    int h = static_cast<int>(CGImageGetHeight(cg));
     tex->setSourceSize(w, h);
 
     int tw = 1;

@@ -80,7 +80,7 @@
 // @complete
 - (BOOL)removeSource {
     mSource = NULL;
-    mCurrentID = (uint16_t)(mCurrentID + 1);
+    mCurrentID = static_cast<uint16_t>(mCurrentID + 1);
     BOOL had = (mPlayer != nil);
     if (had) {
         mPlayer = nil; // Ghidra: release + clear

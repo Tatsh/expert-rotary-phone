@@ -40,11 +40,13 @@
 // at the identical 1.0 == 0xffff fixed scale.
 // @complete
 static int aepSin(int deg) {
-    return (int)std::lround(std::sin((double)deg * (M_PI / 180.0)) * 65535.0);
+    return static_cast<int>(
+        std::lround(std::sin(static_cast<double>(deg) * (M_PI / 180.0)) * 65535.0));
 }
 // @complete
 static int aepCos(int deg) {
-    return (int)std::lround(std::cos((double)deg * (M_PI / 180.0)) * 65535.0);
+    return static_cast<int>(
+        std::lround(std::cos(static_cast<double>(deg) * (M_PI / 180.0)) * 65535.0));
 }
 
 // Normalise a fixed-point product back to pixels. Ghidra: the exact sequence is
@@ -54,9 +56,9 @@ static int aepCos(int deg) {
 // whose net effect is v / 0xffff (matching cos/sin's 1.0 == 0xffff scale).
 // @complete
 static inline int aepRotNorm(int v) {
-    long long prod =
-        (long long)v * (long long)(-0x7fff7fffLL) + ((unsigned long long)(unsigned)v << 32);
-    int m = (int)(prod >> 32);
+    long long prod = static_cast<long long>(v) * static_cast<long long>(-0x7fff7fffLL) +
+                     (static_cast<unsigned long long>(static_cast<unsigned>(v)) << 32);
+    int m = static_cast<int>(prod >> 32);
     return (m >> 15) - (m >> 31);
 }
 
@@ -109,11 +111,11 @@ static void aepComputeChildClip(AepManager *mgr,
             screenW -= px;
         }
 
-        int16_t clipX = (int16_t)px;
+        int16_t clipX = static_cast<int16_t>(px);
         if (scaleX < 0) {
             int w = (screenW * -scaleX) / 100;
             out[2] = w;
-            clipX = (int16_t)(clipX - w);
+            clipX = static_cast<int16_t>(clipX - w);
         } else {
             out[2] = (screenW * scaleX) / 100;
         }
@@ -126,7 +128,7 @@ static void aepComputeChildClip(AepManager *mgr,
         } else {
             out[3] = (screenH * scaleY) / 100;
         }
-        out[1] = (int16_t)py;
+        out[1] = static_cast<int16_t>(py);
         return;
     }
 
@@ -343,7 +345,7 @@ void AepDrawLayer(AepManager *mgr,
     // Anchor-relative base translation, pre-scaled (Ghidra: iVar6 / iVar5).
     const int baseX = -(scaleX * anchorX) / 100;
     const int baseY = -(scaleY * anchorY) / 100;
-    const int16_t combinedHi = (int16_t)(colorHi + color); // sVar4
+    const int16_t combinedHi = static_cast<int16_t>(colorHi + color); // sVar4
 
     for (const AepFrameEntry *e = &entries[layerNo]; e->type >= 0; e++) {
         if (frame < e->frameStart || frame >= e->frameEnd) {
@@ -376,8 +378,8 @@ void AepDrawLayer(AepManager *mgr,
         int px = posX;
         int py = posY;
         if ((rotation & 0xffff) != 0) {
-            int C = aepCos((int)rotation);
-            int S = aepSin((int)rotation);
+            int C = aepCos(static_cast<int>(rotation));
+            int S = aepSin(static_cast<int>(rotation));
             px = aepRotNorm(posX * C - posY * S);
             py = aepRotNorm(posX * S + posY * C);
         }
@@ -395,15 +397,15 @@ void AepDrawLayer(AepManager *mgr,
                 if (prev[0] >= 0) {
                     int a;
                     if (cur == prev || cur[0] < 0) {
-                        a = (uint16_t)prev[1];
+                        a = static_cast<uint16_t>(prev[1]);
                     } else {
-                        a = (int)(short)prev[1] +
+                        a = static_cast<int>(static_cast<short>(prev[1])) +
                             (frame - prev[0]) * (cur[1] - prev[1]) / (cur[0] - prev[0]);
                     }
-                    if ((unsigned)scaleX > 0x7fffffff) {
+                    if (static_cast<unsigned>(scaleX) > 0x7fffffff) {
                         a = -(a & 0xffff);
                     }
-                    if ((unsigned)scaleY > 0x7fffffff) {
+                    if (static_cast<unsigned>(scaleY) > 0x7fffffff) {
                         a = -(a & 0xffff);
                     }
                     childRotation = (rotation & 0xffff) + (a & 0xffff);
@@ -430,11 +432,11 @@ void AepDrawLayer(AepManager *mgr,
                 sy = prev[2];
             } else { // lerp
                 int denom = cur[0] - prev[0];
-                sx = (int16_t)(prev[1] + (frame - prev[0]) * (cur[1] - prev[1]) / denom);
-                sy = (int16_t)(prev[2] + (frame - prev[0]) * (cur[2] - prev[2]) / denom);
+                sx = static_cast<int16_t>(prev[1] + (frame - prev[0]) * (cur[1] - prev[1]) / denom);
+                sy = static_cast<int16_t>(prev[2] + (frame - prev[0]) * (cur[2] - prev[2]) / denom);
             }
-            outSx = (scaleX * (int)sx) / 100;
-            outSy = (scaleY * (int)sy) / 100;
+            outSx = (scaleX * static_cast<int>(sx)) / 100;
+            outSy = (scaleY * static_cast<int>(sy)) / 100;
         }
 
         // --- Colour / alpha channel (entry+0x1c, stride 2: frame,
@@ -446,15 +448,15 @@ void AepDrawLayer(AepManager *mgr,
             const int16_t *prev, *cur;
             aepBracket(keys, 2, frame, &prev, &cur);
             if (prev[0] >= 0) {
-                int pLo = (int8_t)(prev[1] & 0xff);
-                int pHi = (int8_t)((prev[1] >> 8) & 0xff);
+                int pLo = static_cast<int8_t>(prev[1] & 0xff);
+                int pHi = static_cast<int8_t>((prev[1] >> 8) & 0xff);
                 int v0, v1; // v0 = colour, v1 = colour+alpha
                 if (cur == prev || cur[0] < 0) {
                     v0 = pLo;
                     v1 = pLo + pHi;
                 } else {
-                    int cLo = (int8_t)(cur[1] & 0xff);
-                    int cHi = (int8_t)((cur[1] >> 8) & 0xff);
+                    int cLo = static_cast<int8_t>(cur[1] & 0xff);
+                    int cHi = static_cast<int8_t>((cur[1] >> 8) & 0xff);
                     int denom = cur[0] - prev[0];
                     int pSum = pLo + pHi;
                     v0 = pLo + (frame - prev[0]) * (cLo - pLo) / denom;
@@ -462,7 +464,7 @@ void AepDrawLayer(AepManager *mgr,
                 }
                 colorVal = (color * v0) / 100;
                 if (colorHi + color <= 100) {
-                    highVal = (int16_t)((combinedHi * v1) / 100);
+                    highVal = static_cast<int16_t>((combinedHi * v1) / 100);
                 } else {
                     highVal = colorHi + colorVal;
                 }
@@ -472,11 +474,11 @@ void AepDrawLayer(AepManager *mgr,
         // --- Compose translation, blend flags and the >=100 alpha split ---
         int drawX = px + x;
         int drawY = py + y;
-        int finalSx = (int16_t)outSx;
-        int finalSy = (int16_t)outSy;
+        int finalSx = static_cast<int16_t>(outSx);
+        int finalSy = static_cast<int16_t>(outSy);
         int alpha = highVal - colorVal;
 
-        uint32_t entryBlend = (uint16_t)e->blendFlags; // entry+0x04
+        uint32_t entryBlend = static_cast<uint16_t>(e->blendFlags); // entry+0x04
         uint32_t bf = blendFlags;
         if (colorVal != 100 || highVal != 100) {
             bf = (entryBlend & 0x30) | blendFlags;
@@ -487,7 +489,7 @@ void AepDrawLayer(AepManager *mgr,
             blend |= 0x200;
         }
 
-        const int childRotArg = (int)(int16_t)childRotation;
+        const int childRotArg = static_cast<int>(static_cast<int16_t>(childRotation));
 
         if (e->type == 2 || e->type == 3) {
             // Group / nested layer: build and intersect the child clip rect, and only
@@ -501,7 +503,7 @@ void AepDrawLayer(AepManager *mgr,
                 childClip[0] = cx;
             }
             if (cx + clipRect[2] < childClip[2] + childClip[0]) {
-                childClip[2] = (int16_t)((cx + clipRect[2]) - childClip[0]);
+                childClip[2] = static_cast<int16_t>((cx + clipRect[2]) - childClip[0]);
             }
             int cy = clipRect[1];
             if (childClip[1] < cy) {
@@ -509,7 +511,7 @@ void AepDrawLayer(AepManager *mgr,
                 childClip[1] = cy;
             }
             if (cy + clipRect[3] < childClip[3] + childClip[1]) {
-                childClip[3] = (int16_t)((cy + clipRect[3]) - childClip[1]);
+                childClip[3] = static_cast<int16_t>((cy + clipRect[3]) - childClip[1]);
             }
             int vis = childClip[2];
             if (childClip[2] > 0) {

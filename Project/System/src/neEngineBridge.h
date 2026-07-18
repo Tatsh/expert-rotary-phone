@@ -255,7 +255,7 @@ public:
         return m_result.playRank;
     } // DAT_00187bcc
     short maxCombo() const {
-        return (short)m_result.maxCombo;
+        return static_cast<short>(m_result.maxCombo);
     } // DAT_00187bd0 (low 16 bits)
     bool isCleared() const {
         return m_result.cleared != 0;

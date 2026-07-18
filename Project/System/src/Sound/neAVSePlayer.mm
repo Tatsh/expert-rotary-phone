@@ -93,11 +93,11 @@ int neAVSePlayer::addSource(NSURL *url, bool loop) {
 int neAVSePlayer::allocSoundSlot() {
     for (NSUInteger i = 0; i < m_sources.count; i++) {
         if (m_sources[i] == NSNull.null) {
-            return (int)i;
+            return static_cast<int>(i);
         }
     }
     [m_sources addObject:NSNull.null];
-    return (int)(m_sources.count - 1);
+    return static_cast<int>(m_sources.count - 1);
 }
 
 // Ghidra: registerSound @ 0x212d0.
@@ -154,12 +154,12 @@ static int findFreeBus(NSArray *buses, int count) {
 // @complete
 AVBus *neAVSePlayer::busForHandle(uint32_t handle) {
     uint32_t bits = (handle & kAVSePlayerHandleFlag) ? (handle & 0x0fffffff) : 0xffffffffu;
-    int index = (int)(bits >> 16);
+    int index = static_cast<int>(bits >> 16);
     if (index < 0 || index >= m_voiceCount) {
         return nil;
     }
     AVBus *bus = m_buses[index];
-    return ([bus currentID] == (uint16_t)(bits & 0xffff)) ? bus : nil;
+    return ([bus currentID] == static_cast<uint16_t>(bits & 0xffff)) ? bus : nil;
 }
 
 // Ghidra: audioPlaySource @ 0x20ed8 — grab a free voice, (re)load the source
@@ -171,13 +171,13 @@ AVBus *neAVSePlayer::busForHandle(uint32_t handle) {
 static uint32_t audioPlaySource(NSArray *buses, int count, neSeSource *source, float volume) {
     int busIndex = findFreeBus(buses, count);
     if (busIndex == -1) {
-        return (uint32_t)-1;
+        return static_cast<uint32_t>(-1);
     }
     AVBus *bus = buses[busIndex];
     [bus removeSource];
     uint16_t id = [bus setSource:&source->av];
     [bus prepare];
-    uint32_t handle = (uint32_t)id | ((uint32_t)busIndex << 16);
+    uint32_t handle = static_cast<uint32_t>(id) | (static_cast<uint32_t>(busIndex) << 16);
     // The voice just grabbed is exactly the one this handle resolves to, so set
     // its volume directly (equivalent to re-resolving via getAudioBusForHandle).
     [bus setVolume:volume / kAVSeVolumeScale];
@@ -187,12 +187,12 @@ static uint32_t audioPlaySource(NSArray *buses, int count, neSeSource *source, f
 // Ghidra: playSoundByIndex @ 0x21438.
 // @complete
 uint32_t neAVSePlayer::prepare(uint32_t sourceId, float volume) {
-    if ((int)sourceId >= (int)m_sources.count) {
+    if (static_cast<int>(sourceId) >= static_cast<int>(m_sources.count)) {
         return 0;
     }
     id slot = m_sources[sourceId];
     if (slot == NSNull.null) {
-        return (uint32_t)-1;
+        return static_cast<uint32_t>(-1);
     }
     return audioPlaySource(m_buses, m_voiceCount, (neSeSource *)slot, volume) |
            kAVSePlayerHandleFlag;
@@ -203,7 +203,7 @@ uint32_t neAVSePlayer::prepare(uint32_t sourceId, float volume) {
 uint32_t neAVSePlayer::prepareNamed(NSString *callName, float volume) {
     NSNumber *rid = m_nameMap[callName];
     if (rid != nil) {
-        return prepare((uint32_t)rid.intValue, volume);
+        return prepare(static_cast<uint32_t>(rid.intValue), volume);
     }
     return 0;
 }
@@ -276,7 +276,7 @@ static void audioRemoveSourceAll(NSArray *buses, int count, neSeSource *source) 
 // Ghidra: unregisterSound @ 0x213d4.
 // @complete
 void neAVSePlayer::unregisterSource(uint32_t sourceId) {
-    if ((int)sourceId >= (int)m_sources.count) {
+    if (static_cast<int>(sourceId) >= static_cast<int>(m_sources.count)) {
         return;
     }
     id slot = m_sources[sourceId];
@@ -295,7 +295,7 @@ void neAVSePlayer::unregisterSource(uint32_t sourceId) {
 void neAVSePlayer::unregisterSourceNamed(NSString *callName) {
     NSNumber *rid = m_nameMap[callName];
     if (rid != nil) {
-        unregisterSource((uint32_t)rid.intValue);
+        unregisterSource(static_cast<uint32_t>(rid.intValue));
     }
 }
 

@@ -24,7 +24,7 @@
 // playing-instance id used to stop that instance later.
 typedef unsigned long RSND_SOURCE_ID;
 typedef unsigned long RSND_INSTANCE_ID;
-static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
+static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = static_cast<RSND_INSTANCE_ID>(-1);
 
 @interface AudioManager : NSObject <AVAudioPlayerDelegate>
 

@@ -23,7 +23,7 @@
 // empty/looped slot is hit (return -1).
 // @complete
 static int AepNameHashLookup(const char *name, const AepManager::NameHashTable *table) {
-    unsigned c = (unsigned char)name[0];
+    unsigned c = static_cast<unsigned char>(name[0]);
     int bucket = 0;
     if (c != 0) {
         unsigned h = 0;
@@ -32,10 +32,10 @@ static int AepNameHashLookup(const char *name, const AepManager::NameHashTable *
             ++p;
             h += c;
             unsigned r = (0x20 - (c & 0x1f)) & 0x1f;
-            c = (unsigned char)*p;
+            c = static_cast<unsigned char>(*p);
             h = (h >> r) | (h << (0x20 - r)); // rotate-right by r
         } while (c != 0);
-        bucket = (int)(h % 2047);
+        bucket = static_cast<int>(h % 2047);
     }
     const int start = bucket;
     for (;;) {
@@ -78,8 +78,8 @@ const uint8_t *AepManager::readIndexFile(int group, NSString *path) {
     assert(data.length < 0x40000 && "fileSize < MAX_IDXBUFSIZE");
     m_idxData[group] = [data copy];
     uint8_t *bytes = (uint8_t *)m_idxData[group].bytes;
-    uint8_t *indexBase = bytes + 4;                           // skip the 4-byte header
-    *reinterpret_cast<int16_t *>(indexBase) = (int16_t)group; // stamp the group id
+    uint8_t *indexBase = bytes + 4;                                        // skip the 4-byte header
+    *reinterpret_cast<int16_t *>(indexBase) = static_cast<int16_t>(group); // stamp the group id
     return indexBase;
 }
 
@@ -121,8 +121,8 @@ bool AepManager::loadAepData(int group, const char *dir, const char *name, bool 
     // pABankGroupTable[nSlot] = groupId @ +0x7c1948). Both stores are needed:
     // getLyrNo packs m_groupSlot[group] into the lyr handle, and groupEntries reads
     // it back through m_groupIndex to reach this group's frame data.
-    m_groupIndex[groupId] = (uint8_t)group;
-    m_groupSlot[group] = (uint8_t)groupId;
+    m_groupIndex[groupId] = static_cast<uint8_t>(group);
+    m_groupSlot[group] = static_cast<uint8_t>(groupId);
 
     // Copy the frame-position table (8-byte records, terminated by a zero span),
     // bounded by MAX_FRAME_DATA. relocateAepData resolved its pointer (past the
@@ -257,8 +257,8 @@ void AepManager::drawLayer(int lyr,
                            uint32_t visFlag) {
     assert(lyr >= 0); // AepManager.mm:0x26a "0 <= lyr"
 
-    const unsigned slot = m_groupIndex[(unsigned)lyr >> 16]; // this+0x7c1748
-    const AepFrameEntry *entries = m_groupFrameData[slot];   // this+slot*4+0x7f39c8
+    const unsigned slot = m_groupIndex[static_cast<unsigned>(lyr) >> 16]; // this+0x7c1748
+    const AepFrameEntry *entries = m_groupFrameData[slot];                // this+slot*4+0x7f39c8
     const int layerNo = lyr & 0xffff;
     const int length = layerLength(entries, layerNo);
     if (length == 0 || frame < 0) {
@@ -279,7 +279,7 @@ void AepManager::drawLayer(int lyr,
     int *clip = clipRect ? clipRect : m_transitionOverlay;
 
     AepDrawLayer(this,
-                 (int)slot,
+                 static_cast<int>(slot),
                  layerNo,
                  frame,
                  x,
@@ -290,7 +290,7 @@ void AepManager::drawLayer(int lyr,
                  anchorY,
                  color,
                  colorHi,
-                 (uint32_t)rotation,
+                 static_cast<uint32_t>(rotation),
                  blendFlags,
                  colorRGB,
                  clip,
@@ -346,7 +346,7 @@ void AepManager::setGroupDrawCallback(int slot, AepGroupDrawFn callback, void *c
 // (0x00RRGGBB) the overlay dips to (0 = black, as every boot-logo call passes).
 // @complete
 void AepManager::playTransition(int mode, int frames, int color) {
-    if ((unsigned)mode < 3 && frames > 0) {
+    if (static_cast<unsigned>(mode) < 3 && frames > 0) {
         m_transitionMode = mode;
         m_transitionFrames = frames;
         m_transitionTotal = frames;
@@ -363,7 +363,7 @@ void AepManager::playTransition(int mode, int frames, int color) {
 // playTransition, which takes an explicit frame count and colour.
 // @complete
 void AepManager::setAepTransitionMode(int mode) {
-    if ((unsigned)mode < 3) {
+    if (static_cast<unsigned>(mode) < 3) {
         m_transitionMode = mode;
         m_transitionFrames = 0x1e;
         m_transitionTotal = 0x1e;
@@ -428,7 +428,7 @@ void AepManager::draw() {
             if (alpha > 100.0f) {
                 alpha = 100.0f;
             }
-            drawTransitionOverlay((int)alpha);
+            drawTransitionOverlay(static_cast<int>(alpha));
         }
         if (m_transitionFrames > 0) {
             m_transitionFrames--;
@@ -485,16 +485,16 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
     while (*p != '\0') {
         // Rotate-add hash over the NUL-terminated name (identical to the lookup).
         unsigned h = 0;
-        unsigned c = (unsigned char)*p;
+        unsigned c = static_cast<unsigned char>(*p);
         const char *q = p;
         do {
             ++q;
             unsigned r = (0x20 - (c & 0x1f)) & 0x1f;
             h = ((h + c) >> r) | ((h + c) << (0x20 - r)); // rotate-right by r
-            c = (unsigned char)*q;
+            c = static_cast<unsigned char>(*q);
         } while (c != 0);
 
-        const int start = (int)(h % 2047);
+        const int start = static_cast<int>(h % 2047);
         int bucket = start;
         while (out->key[bucket] != nullptr) {
             bucket = (bucket + 1) % 2047;
@@ -503,7 +503,7 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
             }
         }
         out->key[bucket] = p;
-        out->value[bucket] = (uint16_t)count;
+        out->value[bucket] = static_cast<uint16_t>(count);
 
         while (*p != '\0') { // skip to this name's terminator
             ++p;
@@ -513,9 +513,9 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
     }
     // The producer 8-byte-aligns the cursor (by its address) after the block.
     const char *end = p + 1;
-    uintptr_t misalign = (uintptr_t)end % 8;
-    if ((int)misalign > 0) {
-        end = p + (9 - (int)misalign);
+    uintptr_t misalign = reinterpret_cast<uintptr_t>(end) % 8;
+    if (static_cast<int>(misalign) > 0) {
+        end = p + (9 - static_cast<int>(misalign));
     }
     *cursor = end;
     return count;
@@ -530,7 +530,7 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
 // @complete
 void AepManager::init(
     const char *basePath, const char *dataPath, int screenW, int screenH, float scale) {
-    (void)basePath; // the bundle-path buffer at this+0 is not separately modelled
+    static_cast<void>(basePath); // the bundle-path buffer at this+0 is not separately modelled
     if (dataPath != nullptr) {
         std::strncpy(m_baseDir, dataPath, sizeof(m_baseDir) - 1);
         m_baseDir[sizeof(m_baseDir) - 1] = '\0';
@@ -658,7 +658,7 @@ void drawAepTextMultiline(
         if (nl == nullptr) {
             nl = text + std::strlen(text); // last line runs to the end (Ghidra quirk: from `text`)
         }
-        size_t len = (size_t)(nl - cursor);
+        size_t len = static_cast<size_t>(nl - cursor);
         if (len > 0xfe) {
             len = 0xff;
         }
