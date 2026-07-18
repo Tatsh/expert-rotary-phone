@@ -1012,9 +1012,10 @@ void MainTask::Setup() {
  * active touch, drives the horizontal list drag/fling, and on a column change
  * streams the newly-visible jacket column (musicSelLoadColumnPrev/Next). This is
  * NOT the re-sort routine: that is rebuildList() (musicSelUpdate 0x3835c). The
- * scroll direction matches the binary exactly: offset = startX - curX, drag left
- * commits nColumnIndex-- (previous column), drag right commits nColumnIndex++
- * (next), with the end rubber-band damped to (int)(0.5 - sqrt(|off|)).
+ * scroll direction matches the binary exactly: offset = curX - startX (the grid
+ * follows the finger), drag left commits nColumnIndex-- (previous column), drag
+ * right commits nColumnIndex++ (next), with the end rubber-band damped to
+ * (int)(sign(off) * sqrt(|off|) + 0.5).
  * @ghidraAddress 0x34f4c
  * @complete
  */
