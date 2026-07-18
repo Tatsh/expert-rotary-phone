@@ -177,12 +177,22 @@ private:
 // first null).
 unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink);
 
+// Cardinal search direction for findAdjacentSquareIndex. The geometry is fixed
+// by the board's screen coordinates: a lower x is further left, a lower y is
+// further up (Ghidra-verified in FUN_000ce114, whose case arms compare exactly
+// these axes). The perpendicular axis must match for a link to qualify.
+enum TreasureMapDirection : int {
+    kTreasureDirLeft = 0,  // neighbour with link->x < node->x, same row (y)
+    kTreasureDirRight = 1, // neighbour with link->x > node->x, same row (y)
+    kTreasureDirUp = 2,    // neighbour with link->y < node->y, same column (x)
+    kTreasureDirDown = 3,  // neighbour with link->y > node->y, same column (x)
+};
+
 // Ghidra: FUN_000ce114
 // Searches node->links[0..2] for a neighbour that lies in the given cardinal
-// direction relative to node (0=left, 1=right, 2=up, 3=down, same-axis
-// coordinate must match). Returns the slot index (0..2) of the matching link,
-// or -1 if not found.
-int findAdjacentSquareIndex(const TreasureMap::Node *node, int direction);
+// direction relative to node (same-axis coordinate must match). Returns the
+// slot index (0..2) of the matching link, or -1 if not found.
+int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection direction);
 
 // Ghidra: FUN_000ce180
 // Indexes kTreasureMapTable[mainMapId][subMapId] (DAT_0012fac4, row stride

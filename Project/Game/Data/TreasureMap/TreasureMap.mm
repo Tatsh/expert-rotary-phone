@@ -361,12 +361,10 @@ unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink) 
 }
 
 // Ghidra: FUN_000ce114
-// direction 0 — link to the left  (link.x < node.x, same y)
-// direction 1 — link to the right (link.x > node.x, same y)
-// direction 2 — link above        (link.y < node.y, same x)
-// direction 3 — link below        (link.y > node.y, same x)
+// The four case arms below map one-to-one onto TreasureMapDirection (see the
+// per-value geometry documented on that enum in TreasureMap.h).
 // @complete
-int findAdjacentSquareIndex(const TreasureMap::Node *node, int direction) {
+int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection direction) {
     for (int i = 0; i <= 2; i++) {
         const TreasureMap::Node *link = node->links[i];
         if (link == nullptr) {
@@ -374,19 +372,19 @@ int findAdjacentSquareIndex(const TreasureMap::Node *node, int direction) {
         }
         int16_t sVar1, sVar2;
         switch (direction) {
-        case 0:
+        case kTreasureDirLeft:
             sVar1 = node->x;
             sVar2 = link->x;
             break;
-        case 1:
+        case kTreasureDirRight:
             sVar1 = link->x;
             sVar2 = node->x;
             break;
-        case 2:
+        case kTreasureDirUp:
             sVar1 = node->y;
             sVar2 = link->y;
             goto LAB_ce162;
-        case 3:
+        case kTreasureDirDown:
             sVar1 = link->y;
             sVar2 = node->y;
         LAB_ce162:
