@@ -270,7 +270,7 @@ void MenuMainTask::setup() {
     // the binary).
     [RewardNetwork isEnabledBannerWithBlock:^(NSInteger flg, NSError *error) { // @ 0x6d8bc
       static_cast<void>(error);
-      m_giftEnabled = static_cast<uint8_t>(flg == 1);
+      m_giftEnabled = (flg == 1);
     }];
 
     // Event badges: light the treasure badge (+0xb7) if any active treasure-event
@@ -278,13 +278,13 @@ void MenuMainTask::setup() {
     // (+0xb8) if any game-event id is 0 (the binary's folded isZeroInt predicate).
     for (NSNumber *eventId in dl.treasureEventIdArray) {
         if (isIndexInRange12(static_cast<unsigned int>([eventId intValue]))) {
-            m_treasureEvent = 1;
+            m_treasureEvent = true;
             break;
         }
     }
     for (NSNumber *eventId in dl.gameEventIdArray) {
         if ([eventId intValue] == 0) {
-            m_gameEvent = 1;
+            m_gameEvent = true;
             break;
         }
     }
@@ -336,7 +336,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
     }
 
     switch (m_state) {
-    case 0: // build the scene, start the BGM, refresh the news if it is stale
+    case kMenuStateSetup: // build the scene, start the BGM, refresh the news if it is stale
         setup();
         [audio playBgm:0];
         {
@@ -353,9 +353,9 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 [dl startNewsHttp];
             }
         }
-        m_state = 1;
+        m_state = kMenuStateFadeIn;
         break;
-    case 1:                          // fade in, request the player record, start the intro layers
+    case kMenuStateFadeIn:           // fade in, request the player record, start the intro layers
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
         [dl startPlayerGetHttp];
         // Ghidra @ 0x6b00e: the open animation uses AepLyrCtrl::Play (play once,
@@ -366,15 +366,15 @@ void MenuMainTask::update(int /*deltaMs*/) {
         if (!m_tutorialSkip) {
             m_layers[2]->play(); // the prompt / "TRY" layer (+0x30), looping
         }
-        m_state = 2;
+        m_state = kMenuStateAwaitPlayer;
         break;
-    case 2: { // await the player record, then branch on whether a name is set
+    case kMenuStateAwaitPlayer: { // await the player record, then branch on whether a name is set
         MainViewController *root = RootVC();
         if (![dl isPlayerGetDownLoading]) {
             [root DeleteCommunicating];
             BOOL needName = [UserSettingData playerId] == nil ||
                             [UserSettingData playerName] == nil || [dl errorGetPlayer] == 1;
-            m_state = needName ? 3 : 4;
+            m_state = needName ? kMenuStateNameEntry : kMenuStateRewardSession;
             // Once the daily-info flag is enabled, re-derive it from the
             // player-get result (error 99 = not-yet-known disables it).
             if (m_infoFlag) {
@@ -389,11 +389,11 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
         break;
     }
-    case 3: // no player name yet -> the name-entry screen
+    case kMenuStateNameEntry: // no player name yet -> the name-entry screen
         [RootVC() GotoInPlayerName];
-        m_state = 4;
+        m_state = kMenuStateRewardSession;
         break;
-    case 4: { // hand the reward network its session parameters
+    case kMenuStateRewardSession: { // hand the reward network its session parameters
         NSString *url = [[StoreUtil getRewardLoginTokenURL] absoluteString];
         // The binary also folds the reward appli id + player id into the session
         // dictionary, but those __stdcall_softfp string args are lost in the
@@ -403,17 +403,17 @@ void MenuMainTask::update(int /*deltaMs*/) {
         static_cast<void>([UserSettingData playerId]);
         NSDictionary *params = [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"env", nil];
         [RewardNetwork setSessionParameters:params url:url method:@"GET"];
-        m_state = 5;
+        m_state = kMenuStateWaitOpen;
         break;
     }
-    case 5: // wait for the open layer to finish, then start the looping background
+    case kMenuStateWaitOpen: // wait for the open layer to finish, then start the looping background
         if (!m_layers[0]->isAnimating()) {
             m_layers[0]->reset();
             m_layers[1]->play(); // the looping background (+0x2c)
-            m_state = 8;
+            m_state = kMenuStateDailyInfo;
         }
         break;
-    case 6: { // unlock gates, one per frame via m_unlockStep, then the interactive menu
+    case kMenuStateUnlockGates: { // unlock gates, one per frame via m_unlockStep, then the interactive menu
         const int invitePresent = [UserSettingData invitePresent];
         const int inviteCnt = [UserSettingData inviteCnt];
         // The shared "you unlocked something" confirm dialog: wire its dismiss to
@@ -436,7 +436,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 [UserSettingData
                     saveCharaTicket:static_cast<short>([UserSettingData charaTicket] + 5)];
                 [UserSettingData saveInvitePresent:3];
-                m_state = 7;
+                m_state = kMenuStateUnlockAlert;
                 showUnlockAlert(@"招待コード",
                                 @"招待数 3人 達成！\nキャラチケットを５枚手に入れました！");
             }
@@ -445,7 +445,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             if (invitePresent < 5 && inviteCnt >= 5) {
                 [UserSettingData saveInvitePresent:5];
                 [[MusicManager getInstance] openInviteMusic];
-                m_state = 7;
+                m_state = kMenuStateUnlockAlert;
                 showUnlockAlert(@"招待コード",
                                 @"招待数 5人 達成！\nスペシャル楽曲 [N/H譜面] が解禁されました！");
             }
@@ -454,7 +454,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             if (invitePresent < 7 && inviteCnt >= 7) {
                 [UserSettingData saveInvitePresent:7];
                 [[MusicManager getInstance] openInviteMusic];
-                m_state = 7;
+                m_state = kMenuStateUnlockAlert;
                 showUnlockAlert(@"招待コード",
                                 @"招待数 7人 達成！\nスペシャル楽曲 [Ex譜面] が解禁されました！");
             }
@@ -464,7 +464,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 [MusicManager isOpenBemaniCollaboMusic]) {
                 [UserSettingData saveIsBemaniCollaboOpened:YES];
                 [[MusicManager getInstance] openCollaboMusic];
-                m_state = 7;
+                m_state = kMenuStateUnlockAlert;
                 showUnlockAlert(
                     nil, @"アプリでビーマニはじめようキャンペーン！\n限定楽曲が解禁されました！");
             }
@@ -474,16 +474,16 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
         // No unlock fired this frame: advance the step, and after the last gate
         // (collabo, step 3) drop into the interactive menu.
-        if (m_state == 6) {
+        if (m_state == kMenuStateUnlockGates) {
             if (m_unlockStep++ >= 3) {
-                m_state = 0xc;
+                m_state = kMenuStateInteractive;
             }
         }
         break;
     }
-    case 8: { // the once-a-day official-info web view, then the login bonus
+    case kMenuStateDailyInfo: { // the once-a-day official-info web view, then the login bonus
         if (!m_tutorialSkip) {
-            m_state = 6;
+            m_state = kMenuStateUnlockGates;
             break;
         }
         NSDate *today = [NSDate date];
@@ -493,14 +493,14 @@ void MenuMainTask::update(int /*deltaMs*/) {
             [web SetCloseCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             [web setErrorMsg:@"ERROR" text:@"お知らせの取得に失敗しました。"];
             [UserSettingData saveInfoViewDay:today];
-            m_state = 9;
+            m_state = kMenuStateInfoWebWait;
         } else {
-            m_state = 10;
+            m_state = kMenuStateLoginBonus;
         }
         break;
     }
-    case 10: { // the login bonus (random or regular), then the interactive menu
-        m_state = 6;
+    case kMenuStateLoginBonus: { // the login bonus (random or regular), then the interactive menu
+        m_state = kMenuStateUnlockGates;
         if ([dl loginCnt] < 1) {
             break;
         }
@@ -512,7 +512,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             [RootVC() SetAlertViewCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             RandomLoginBonusView *view = [[RandomLoginBonusView alloc] init];
             [view show];
-            m_state = 0xb;
+            m_state = kMenuStateLoginBonusWait;
             [dl setIsLoginCntUpdate:NO];
             break;
         }
@@ -531,28 +531,28 @@ void MenuMainTask::update(int /*deltaMs*/) {
             [RootVC() SetAlertViewCallback:&MenuMainTask::modeSelectAlertClosed param:this];
             LoginBonusView *view = [[LoginBonusView alloc] init];
             [view show];
-            m_state = 0xb;
+            m_state = kMenuStateLoginBonusWait;
         }
         break;
     }
-    case 0xc: { // *** interactive main menu — hit-test every mode button ***
+    case kMenuStateInteractive: { // *** interactive main menu — hit-test every mode button ***
         // Re-scan the treasure / game event ids whenever DownloadMain reports a
         // refresh, so the overlay badges reflect the latest active events.
         if ([dl isTreasureEventInfoUpdated]) {
-            m_treasureEvent = 0;
+            m_treasureEvent = false;
             for (NSNumber *eventId in dl.treasureEventIdArray) {
                 if (isIndexInRange12(static_cast<unsigned int>([eventId intValue]))) {
-                    m_treasureEvent = 1;
+                    m_treasureEvent = true;
                     break;
                 }
             }
             [dl setIsTreasureEventInfoUpdated:NO];
         }
         if ([dl isGameEventInfoUpdated]) {
-            m_gameEvent = 0;
+            m_gameEvent = false;
             for (NSNumber *eventId in dl.gameEventIdArray) {
                 if ([eventId intValue] == 0) {
-                    m_gameEvent = 1;
+                    m_gameEvent = true;
                     break;
                 }
             }
@@ -578,23 +578,23 @@ void MenuMainTask::update(int /*deltaMs*/) {
 
         if (hitTop(m_top.settingsX)) { // settings (+0x98)
             if (introQuiet()) {
-                m_state = 0xd;
+                m_state = kMenuStateGotoSettings;
             }
         } else if (hitTop(m_top.featuredX)) { // featured / reward offer wall (+0xa0)
             if (introQuiet() && m_giftEnabled) {
-                m_state = 0xf;
+                m_state = kMenuStateRewardWall;
             }
         } else if (hitTop(m_top.presentBoxX)) { // present box (+0x9c)
             if (introQuiet()) {
                 neEngine::playSystemSe(1);
                 [root GotoPresentBox];
-                m_state = 0x11;
+                m_state = kMenuStateWaitPushed;
             }
         } else if (hit(m_buttons[kBtnFriend])) { // +0x148 friend management
             if (introQuiet()) {
                 m_seInst[2] = static_cast<int>([audio playSe:0 resourceId:m_seId[2]]);
                 [root GotoFriendManage];
-                m_state = 0x11;
+                m_state = kMenuStateWaitPushed;
             }
         } else if (hit(m_buttons[kBtnPlay])) { // +0x128 play (tutorial on first play)
             m_seInst[0] = static_cast<int>([audio playSe:0 resourceId:m_seId[0]]);
@@ -605,19 +605,19 @@ void MenuMainTask::update(int /*deltaMs*/) {
             } else {
                 m_spawnedTask = MainTaskCreate();
             }
-            m_state = 0x12;
+            m_state = kMenuStateFadeOut;
         } else if (hit(m_buttons[kBtnStore])) { // +0x138 store
             if (introQuiet()) {
                 m_seInst[3] = static_cast<int>([audio playSe:0 resourceId:m_seId[3]]);
                 [[DownloadMain getInstance] setIsNewMusicPackReleased:NO];
                 [root GotoStoreButton];
-                m_state = 0x11;
+                m_state = kMenuStateWaitPushed;
             }
         } else if (hit(m_buttons[kBtnArcade])) { // +0x158 AcMainTask (treasure board)
             if (introQuiet()) {
                 m_seInst[1] = static_cast<int>([audio playSe:0 resourceId:m_seId[1]]);
                 m_spawnedTask = AcMainTaskCreate();
-                m_state = 0x12;
+                m_state = kMenuStateFadeOut;
             }
         } else if (hit(m_buttons[kBtnAcViewer])) { // +0x168 AcViewerTask
             if (introQuiet()) {
@@ -631,13 +631,13 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 }
                 m_seInst[5] = static_cast<int>([audio playSe:0 resourceId:m_seId[5]]);
                 m_spawnedTask = AcViewerTaskCreate();
-                m_state = 0x12;
+                m_state = kMenuStateFadeOut;
             }
         } else if (hit(m_buttons[kBtnPopnLink])) { // +0x178 pop'n link
             if (introQuiet()) {
                 m_seInst[4] = static_cast<int>([audio playSe:0 resourceId:m_seId[4]]);
                 [root GotoPopnLink];
-                m_state = 0x11;
+                m_state = kMenuStateWaitPushed;
             }
         } else if (hit(m_buttons[kBtnInvite])) { // +0x188 invite code
             // Only enter the invite screen when a player record exists: play the
@@ -647,7 +647,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
                 if ([UserSettingData playerId] != nil && [UserSettingData playerName] != nil) {
                     neEngine::playSystemSe(0);
                     [root GotoInviteCode];
-                    m_state = 0x11;
+                    m_state = kMenuStateWaitPushed;
                 } else {
                     neEngine::playSystemSe(2);
                 }
@@ -656,7 +656,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             if (introQuiet()) {
                 neEngine::playSystemSe(0);
                 [root GotoArcadeSearch];
-                m_state = 0x11;
+                m_state = kMenuStateWaitPushed;
             }
         } else if (tapY < 0x33 && introQuiet()) {
             // A tap in the top news-ticker band opens the current news line's URL.
@@ -670,25 +670,25 @@ void MenuMainTask::update(int /*deltaMs*/) {
         }
         break;
     }
-    case 0xd: // settings screen
+    case kMenuStateGotoSettings: // settings screen
         neEngine::playSystemSe(1);
         [RootVC() GotoSetting];
-        m_state = 0xe;
+        m_state = kMenuStateWaitSettings;
         break;
-    case 0xe: { // wait for settings to close; relaunch the title on request
+    case kMenuStateWaitSettings: { // wait for settings to close; relaunch the title on request
         MainViewController *root = RootVC();
         if (![root settingViewing]) {
             if ([root isGotoTitle] == 1) {
                 m_spawnedTask = TitleTaskCreate(); // spawn a fresh TitleTask
-                m_state = 0x12;
+                m_state = kMenuStateFadeOut;
                 [root setIsGotoTitle:NO];
             } else {
-                m_state = 0xc;
+                m_state = kMenuStateInteractive;
             }
         }
         break;
     }
-    case 0xf: { // the reward offer-wall web panel (RewardNetwork)
+    case kMenuStateRewardWall: { // the reward offer-wall web panel (RewardNetwork)
         neEngine::playSystemSe(1);
         MainViewController *root = RootVC();
         [root setRewardListViweing:YES];
@@ -704,34 +704,34 @@ void MenuMainTask::update(int /*deltaMs*/) {
                                                                    limit:nil
                                                               parentView:[root view]
                                                                 delegate:static_cast<id>(root)];
-        m_state = 0x10;
+        m_state = kMenuStateWaitRewardWall;
         break;
     }
-    case 0x10: // wait for the offer-wall to close, then re-enter the menu
+    case kMenuStateWaitRewardWall: // wait for the offer-wall to close, then re-enter the menu
         if (![RootVC() rewardListViweing]) {
-            m_state = 0xc;
+            m_state = kMenuStateInteractive;
         }
         break;
-    case 0x11: { // wait for the pushed screen to close, then re-enter the menu
+    case kMenuStateWaitPushed: { // wait for the pushed screen to close, then re-enter the menu
         MainViewController *root = RootVC();
         if (![root IsPresentBoxEnable] && ![root IsInviteCodeEnable] &&
             ![root IsArcadeSearchEnable] && ![root IsStoreEnable] && ![root IsPopnLinkEnable] &&
             ![root IsFriendManageEnable]) {
-            m_state = 0xc;
+            m_state = kMenuStateInteractive;
         }
         break;
     }
-    case 0x12:                       // fade out into the launched sub-task
+    case kMenuStateFadeOut:          // fade out into the launched sub-task
         aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
-        m_state = 0x13;
+        m_state = kMenuStateWaitFadeOut;
         break;
-    case 0x13:
+    case kMenuStateWaitFadeOut:
         if (aep.isTransitionDone()) {
-            m_state = 0x14;
+            m_state = kMenuStateHandoff;
         }
         break;
-    case 0x14: { // hand off: once every menu SE and the shared system SE have
-                 // finished sounding, dispose (teardown + schedule the sub-task).
+    case kMenuStateHandoff: { // hand off: once every menu SE and the shared system SE have
+                              // finished sounding, dispose (teardown + schedule the sub-task).
         bool sePlaying = false;
         for (int i = 0; i < 6; i++) {
             if (m_seInst[i] >= 0 && [audio isPlayingSe:m_seInst[i]]) {
@@ -801,7 +801,7 @@ void MenuMainTask::dispose() {
         m_spawnedTask = MainTaskCreate(); // operator_new(0xaa8) + MainTask_ctor
     }
     static_cast<ne::C_TASK *>(m_spawnedTask)->setPriority(3);
-    m_suppressOverlay = 1; // +0xb4: stop drawing this task after the handoff
+    m_suppressOverlay = true; // +0xb4: stop drawing this task after the handoff
 }
 
 /**
@@ -894,15 +894,15 @@ void MenuMainTask::modeSelectAlertClosed(void *context) {
     auto *self = static_cast<MenuMainTask *>(context);
     [RootVC() SetAlertViewCallback:nullptr param:nullptr];
     switch (self->m_state) {
-    case 7:
-    case 11:
-        self->m_state = 6;
+    case kMenuStateUnlockAlert:
+    case kMenuStateLoginBonusWait:
+        self->m_state = kMenuStateUnlockGates;
         break;
-    case 9:
-        self->m_state = 10;
+    case kMenuStateInfoWebWait:
+        self->m_state = kMenuStateLoginBonus;
         break;
     default:
-        self->m_state = 0xc;
+        self->m_state = kMenuStateInteractive;
         break;
     }
 }
@@ -970,7 +970,7 @@ void MenuMainTask::NewsTickerUpdate(int child,
             }
         }
         // Line finished scrolling: run the pause/fade ramp.
-        self->m_newsPaused = 1;
+        self->m_newsPaused = true;
         self->m_newsPauseCounter += self->m_newsPauseStep;
         if (self->m_newsPauseStep < 0) {
             if (self->m_newsPauseCounter < 1) { // faded out: advance to the next line
@@ -986,7 +986,7 @@ void MenuMainTask::NewsTickerUpdate(int child,
             self->m_newsPauseCounter = 100;
             self->m_newsPauseStep = -2;
             self->m_newsFrame = 0;
-            self->m_newsPaused = 0;
+            self->m_newsPaused = false;
         }
     }
 

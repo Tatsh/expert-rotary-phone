@@ -145,20 +145,20 @@ private:
     int m_badgeHandles[5] = {};              // +0x38 NEWS/BT_SETTING/NEW_STORE/BT_GIFT/BT_FEATU
     std::unique_ptr<neTextureForiOS> m_warnTexture; // +0x4c friend-request warning texture
     int m_seId[6] = {};                             // +0x50 six UI SE source ids
-    int m_seInst[6] = {};          // +0x68 their playing-instance handles (-1 idle)
-    void *m_spawnedTask = nullptr; // +0x80 the sub-task being launched into
-    int m_labelRowY = 0;           // +0x84 button-label row Y
-    int m_settingsLabelX = 0;      // +0x88 settings label X
-    int m_storeLabelX = 0;         // +0x8c store label X
-    int m_giftLabelX = 0;          // +0x90 gift label X
-    TopCluster m_top = {};         // +0x94 settings/gift packed rects
-    int m_warnScaleX = 0;          // +0xac warning-badge scale X
-    int m_warnScaleY = 0;          // +0xb0 warning-badge scale Y
-    uint8_t m_suppressOverlay = 0; // +0xb4 overlay suppressed while tearing down
-    uint8_t m_tutorialSkip = 0;    // +0xb5 tutorial already played
-    uint8_t m_giftEnabled = 0;     // +0xb6 gift button/label enabled
-    uint8_t m_treasureEvent = 0;   // +0xb7 treasure-event badge visible
-    uint8_t m_gameEvent = 0;       // +0xb8 game-event badge visible
+    int m_seInst[6] = {};           // +0x68 their playing-instance handles (-1 idle)
+    void *m_spawnedTask = nullptr;  // +0x80 the sub-task being launched into
+    int m_labelRowY = 0;            // +0x84 button-label row Y
+    int m_settingsLabelX = 0;       // +0x88 settings label X
+    int m_storeLabelX = 0;          // +0x8c store label X
+    int m_giftLabelX = 0;           // +0x90 gift label X
+    TopCluster m_top = {};          // +0x94 settings/gift packed rects
+    int m_warnScaleX = 0;           // +0xac warning-badge scale X
+    int m_warnScaleY = 0;           // +0xb0 warning-badge scale Y
+    bool m_suppressOverlay = false; // +0xb4 overlay suppressed while tearing down
+    bool m_tutorialSkip = false;    // +0xb5 tutorial already played
+    bool m_giftEnabled = false;     // +0xb6 gift button/label enabled
+    bool m_treasureEvent = false;   // +0xb7 treasure-event badge visible
+    bool m_gameEvent = false;       // +0xb8 game-event badge visible
     // +0xb9..+0xc0 reward/event scan state (news seam; populated by the tail of
     // FUN_0006c6a4, outside this reconstruction's scope). Kept as a documented
     // block.
@@ -173,7 +173,7 @@ private:
     int m_newsSegment = 0;      // +0xd8 line-segment counter
     int m_newsPauseCounter = 0; // +0xdc pause/fade ramp value (0..100)
     int m_newsPauseStep = 0;    // +0xe0 pause ramp step (-2 out, +2 in; 0 = uninit)
-    uint8_t m_newsPaused = 0;   // +0xe4 true while ramping the pause
+    bool m_newsPaused = false;  // +0xe4 true while ramping the pause
     [[maybe_unused]] uint8_t _reserved_e5[0xe8 - 0xe5] = {}; // +0xe5..+0xe8 pad
     int m_layoutYOffset = 0;                                 // +0xe8 tall-screen vertical shift
     int m_pulsePhase = 0;                                    // +0xec attention-pulse phase counter
@@ -181,13 +181,39 @@ private:
     // +0xf4..+0x108 the NEWS ticker draw params (position/scale); write-only in
     // this scope (consumed by the news draw seam). Kept as a documented named
     // block.
-    int m_newsTickerParams[5] = {};              // +0xf4
-    SpritePos m_newPackBadgePos = {};            // +0x108 "new music pack" badge
-    SpritePos m_treasureBadgePos = {};           // +0x110 treasure-event badge
-    SpritePos m_gameBadgePos = {};               // +0x118 game-event badge
-    SpritePos m_warnBadgePos = {};               // +0x120 friend-request warning badge
-    ButtonRect m_buttons[kBtnCount] = {};        // +0x128 the eight mode-button rects
-    int m_state = 0;                             // +0x1a8 state-machine state
+    int m_newsTickerParams[5] = {};       // +0xf4
+    SpritePos m_newPackBadgePos = {};     // +0x108 "new music pack" badge
+    SpritePos m_treasureBadgePos = {};    // +0x110 treasure-event badge
+    SpritePos m_gameBadgePos = {};        // +0x118 game-event badge
+    SpritePos m_warnBadgePos = {};        // +0x120 friend-request warning badge
+    ButtonRect m_buttons[kBtnCount] = {}; // +0x128 the eight mode-button rects
+
+    // update() state-machine values (Ghidra: MenuMainTask::update). The modal /
+    // web-view waits (7, 9, 11) resume via modeSelectAlertClosed.
+    enum MenuState {
+        kMenuStateSetup = 0,           // build the scene, start the BGM, refresh the news
+        kMenuStateFadeIn = 1,          // fade in, request the player record, start intro layers
+        kMenuStateAwaitPlayer = 2,     // await the player record, branch on whether a name is set
+        kMenuStateNameEntry = 3,       // no player name yet -> the name-entry screen
+        kMenuStateRewardSession = 4,   // hand the reward network its session parameters
+        kMenuStateWaitOpen = 5,        // wait for the open layer, then start the looping background
+        kMenuStateUnlockGates = 6,     // step the invite / collabo unlock gates one per frame
+        kMenuStateUnlockAlert = 7,     // wait for an unlock confirm alert to dismiss
+        kMenuStateDailyInfo = 8,       // the once-a-day official-info web view
+        kMenuStateInfoWebWait = 9,     // wait for the info web view to dismiss
+        kMenuStateLoginBonus = 10,     // the random / regular login bonus
+        kMenuStateLoginBonusWait = 11, // wait for the login-bonus view to dismiss
+        kMenuStateInteractive = 0xc,   // interactive main menu: hit-test the mode buttons
+        kMenuStateGotoSettings = 0xd,  // open the settings screen
+        kMenuStateWaitSettings = 0xe,  // wait for settings to close (or relaunch the title)
+        kMenuStateRewardWall = 0xf,    // open the reward offer-wall web panel
+        kMenuStateWaitRewardWall = 0x10, // wait for the offer-wall to close
+        kMenuStateWaitPushed = 0x11, // wait for a pushed screen (present box / friend / …) to close
+        kMenuStateFadeOut = 0x12,    // fade out into the launched sub-task
+        kMenuStateWaitFadeOut = 0x13, // wait for the fade-out to finish
+        kMenuStateHandoff = 0x14,     // tear down + schedule the sub-task once the SEs finish
+    };
+    int m_state = 0;                             // +0x1a8 state-machine state (MenuState)
     bool m_infoFlag = false;                     // +0x1ac daily-info screen already shown
     [[maybe_unused]] uint8_t m_pad_tail[3] = {}; // +0x1ad..+0x1b0 tail padding
 };
