@@ -274,15 +274,13 @@ public:
         } perfect; // PERFECT medals per difficulty
         uint8_t _pad0[3];
         unsigned musicId; // current song id
-        int difficulty;   // selected difficulty (0 N / 1 H / 2 EX)
-        struct {
-            int normal, hyper, ex;
-        } levels;            // song levels per difficulty
-        int transitionLatch; // fade-out phase latch (state 0xe/0xf)
-        int selectSeId;      // select-SE source id
-        int selectSeInst;    // select-SE playing instance (for stop)
-        int scrollConfig;    // per-column scroll config
-        int overRowLen[3];   // over-score display row lengths (unused seam field)
+        // The selected difficulty lives in the real field m_resultSheet (+0x904),
+        // the three levels in m_diffLevel (+0x908), and the fade-out handoff waits
+        // on m_loaderCursor (+0xa8c) -- all outside this seam.
+        int selectSeId;    // select-SE source id
+        int selectSeInst;  // select-SE playing instance (for stop)
+        int scrollConfig;  // per-column scroll config
+        int overRowLen[3]; // over-score display row lengths (unused seam field)
     };
 
     // ---- work-area layout (offsets are binary-exact) ----
@@ -334,7 +332,7 @@ public:
     int m_appliedSort = 0;            // +0x8fc music-sort rebuildList last applied
     int m_chosenMusicId = 0;          // +0x900 chosen music id (launch save)
     int m_resultSheet = 0;            // +0x904 saved result sheet (difficulty)
-    int m_placeValue[3] = {};         // +0x908 ranking place values (green/yellow/pink)
+    int m_diffLevel[3] = {};          // +0x908 per-difficulty level (lvNormal/Hyper/Ex)
     uint8_t m_fullComboMedal[3] = {}; // +0x914 per-sheet full-combo medal (fullComboN/H/Ex)
     uint8_t m_perfectMedal[3] = {};   // +0x917 per-sheet perfect medal (perfectN/H/Ex)
     uint8_t m_bgmLoading = 0;       // +0x91a preview-BGM async load in flight (cleared by loadBgm)

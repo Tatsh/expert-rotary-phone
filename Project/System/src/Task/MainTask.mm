@@ -206,7 +206,7 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
 inline void MainTask::seedDiffStarLayerFrames() {
     for (int i = 0; i < 3; i++) {
         m_diffStarLayerFrame[i] =
-            (i == m_sel.difficulty ? m_bgLyrFrames[kBgStarOpen] : m_bgLyrFrames[kBgStarOut]) - 1;
+            (i == m_resultSheet ? m_bgLyrFrames[kBgStarOpen] : m_bgLyrFrames[kBgStarOut]) - 1;
     }
 }
 
@@ -495,9 +495,12 @@ void MainTask::update(int /*deltaMs*/) {
 
         // The three level values + the six full-combo / perfect medals for the
         // score panel.
-        m_sel.levels.normal = static_cast<int>([info lvNormal]);
-        m_sel.levels.hyper = static_cast<int>([info lvHyper]);
-        m_sel.levels.ex = static_cast<int>([info lvEx]);
+        // Ghidra 0x3620a: the three levels go into m_diffLevel (+0x908/90c/910),
+        // which the overlay difficulty-number elements read; the earlier
+        // m_sel.levels seam was write-only, so the stars showed 0.
+        m_diffLevel[0] = static_cast<int>([info lvNormal]);
+        m_diffLevel[1] = static_cast<int>([info lvHyper]);
+        m_diffLevel[2] = static_cast<int>([info lvEx]);
         m_sel.fullCombo.normal = [[score fullComboN] boolValue] ? 1 : 0;
         m_sel.fullCombo.hyper = [[score fullComboH] boolValue] ? 1 : 0;
         m_sel.fullCombo.ex = [[score fullComboEx] boolValue] ? 1 : 0;
@@ -532,7 +535,7 @@ void MainTask::update(int /*deltaMs*/) {
             overDict[idStr] = @"1";
         }
 
-        m_sel.difficulty = 0; // default to NORMAL
+        m_resultSheet = 0; // Ghidra 0x364ae: default the active difficulty to NORMAL
         m_state = 4;
         break;
     }
@@ -581,7 +584,7 @@ void MainTask::update(int /*deltaMs*/) {
         if (hitButton(tapX, tapY, kBtnFriendScore)) {
             neEngine::playSystemSe(1);
             [audio stopBgm:0];
-            m_sel.scrollLatchA = 1;
+            m_sel.diffDirty = 1; // Ghidra 0x367d2: field_0x920 = 1 -> refetch scores on return
             if (hasOverScore) {
                 [overDict removeObjectForKey:idStr];
             }
@@ -595,13 +598,18 @@ void MainTask::update(int /*deltaMs*/) {
             if (!hitButton(tapX, tapY, kBtnDifficulty, d)) {
                 continue;
             }
-            if (m_sel.difficulty != d) {
+            if (m_resultSheet != d) {
                 // EX is locked for a not-yet-open invite song.
                 if (d != 2 || m_sel.inviteOpen) {
                     [audio playSe:nil resourceId:0];
-                    m_sel.difficulty = d;
-                    m_sel.diffDirty = 1;
-                    refreshScoreRows();
+                    // Ghidra: restart the newly-selected star's open animation and
+                    // the previously-selected star's close (both frame 0), holding
+                    // the others on their last OUT frame; then commit the sheet.
+                    for (int i = 0; i < 3; i++) {
+                        m_diffStarLayerFrame[i] =
+                            (i == d || i == m_resultSheet) ? 0 : (m_bgLyrFrames[kBgStarOut] - 1);
+                    }
+                    m_resultSheet = d;
                 } else {
                     neEngine::playSystemSe(2); // locked -> cancel SE
                 }
@@ -2713,12 +2721,12 @@ void MainTask::AepDrawCallback(int child,
         return;
     }
 
-    // Ranking-place digits — m_placeDigitUsrNo[0..8]: three groups (green /
-    // yellow / pink) of up to three digit slots, each a single digit of the
-    // group's place value (@ +0x908+grp*4) drawn from that group's 10-digit atlas
-    // (m_digitTex[kDigitRank + grp * 10 + digit]).
+    // Difficulty-level digits — m_placeDigitUsrNo[0..8] (elements GREEN/YELLOW/RED,
+    // i.e. NORMAL/HYPER/EX): three groups of up to three digit slots, each one
+    // digit of that difficulty's level (m_diffLevel[grp] @ +0x908+grp*4) drawn from
+    // the group's 10-digit atlas (m_digitTex[kDigitRank + grp * 10 + digit]).
     for (int grp = 0; grp < 3; grp++) {
-        const int placeVal = self->m_placeValue[grp];
+        const int placeVal = self->m_diffLevel[grp];
         const int nd = numDigits(placeVal);
         for (int d = 0; d < 3; d++) {
             if (self->m_placeDigitUsrNo[grp * 3 + d] == static_cast<int>(child)) {
