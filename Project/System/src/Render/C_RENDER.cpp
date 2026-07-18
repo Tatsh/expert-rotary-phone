@@ -432,7 +432,8 @@ void neDrawTexturedQuad(void *sprite,
                         int blendMode,
                         const float *clipRect) {
     neSpriteView *s = static_cast<neSpriteView *>(sprite);
-    NE_DBG((void)glGetError()); // clear accumulated error so the quadGL probe isolates this draw
+    NE_DBG(static_cast<void>(
+        glGetError())); // clear accumulated error so the quadGL probe isolates this draw
     uint32_t c = nePremultRGBA(alpha, red, green, blue);
 
     // UV sub-rect (V flipped for GL's bottom-left origin), normalized to
@@ -477,12 +478,12 @@ void neDrawTexturedQuad(void *sprite,
             green,
             blue,
             blendMode,
-            (const void *)clipRect,
+            static_cast<const void *>(clipRect),
             vp ? vp->x : -1,
             vp ? vp->y : -1,
             vp ? vp->w : -1,
             vp ? vp->h : -1,
-            (void *)r);
+            static_cast<void *>(r));
     }
 
     // Model matrix: translate(x,y) [* rotateZ(-rotation)] * translate(-pivot).
@@ -618,12 +619,12 @@ void neDrawTexturedQuad(void *sprite,
                    "boundTex=%d arrBuf=%d elemBuf=%d vp=[%d,%d,%d,%d] "
                    "verts=[(%.1f,%.1f)(%.1f,%.1f)(%.1f,%.1f)(%.1f,%.1f)] "
                    "proj[0,5,12,13]=%.4f,%.4f,%.2f,%.2f mv[12,13]=%.2f,%.2f",
-                   (unsigned)err,
-                   (int)texEnabled,
-                   (int)blendEnabled,
-                   (unsigned)blendSrc,
-                   (unsigned)blendDst,
-                   (int)depthEnabled,
+                   static_cast<unsigned>(err),
+                   static_cast<int>(texEnabled),
+                   static_cast<int>(blendEnabled),
+                   static_cast<unsigned>(blendSrc),
+                   static_cast<unsigned>(blendDst),
+                   static_cast<int>(depthEnabled),
                    boundTex,
                    arrBuf,
                    elemBuf,

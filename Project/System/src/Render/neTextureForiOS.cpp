@@ -41,7 +41,7 @@ int neTextureForiOS::load(const char *path) {
     for (char &c : key) {
         c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     }
-    (void)key;
+    static_cast<void>(key);
 
     // One tile for the common (non-split) case; the split-texture path
     // (loadFrames) allocates more. Ghidra: the +0x08/+0x0c/+0x10/+0x14 heap

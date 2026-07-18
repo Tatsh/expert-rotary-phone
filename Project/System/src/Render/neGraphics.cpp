@@ -14,10 +14,10 @@
 // 16.16 fixed-point <-> float. UIKit hands neGLView point coordinates already
 // converted to fixed; the manager scales them to pixels with the content scale.
 static inline float FixedToFloat(int v) {
-    return (float)v / 65536.0f;
+    return static_cast<float>(v) / 65536.0f;
 }
 static inline int FloatToFixed(float v) {
-    return (int)(v * 65536.0f);
+    return static_cast<int>(v * 65536.0f);
 }
 
 // Sentinel coordinate a free slot is initialised to (Ghidra: 0x80000000).

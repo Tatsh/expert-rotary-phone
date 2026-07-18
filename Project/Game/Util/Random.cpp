@@ -60,5 +60,5 @@ uint32_t Random::next() {
 // @complete
 int Random::getRandRangeInt(int max) {
     assert(max >= 0);
-    return (int)((next() & 0x7fffffff) % (uint32_t)max);
+    return static_cast<int>((next() & 0x7fffffff) % static_cast<uint32_t>(max));
 }
