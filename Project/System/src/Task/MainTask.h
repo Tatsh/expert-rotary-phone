@@ -335,18 +335,18 @@ public:
     int m_diffLevel[3] = {};          // +0x908 per-difficulty level (lvNormal/Hyper/Ex)
     uint8_t m_fullComboMedal[3] = {}; // +0x914 per-sheet full-combo medal (fullComboN/H/Ex)
     uint8_t m_perfectMedal[3] = {};   // +0x917 per-sheet perfect medal (perfectN/H/Ex)
-    uint8_t m_bgmLoading = 0;       // +0x91a preview-BGM async load in flight (cleared by loadBgm)
-    uint8_t m_suppressDraw = 0;     // +0x91b hide the scene during teardown
-    uint8_t m_showLevelNumbers = 0; // +0x91c show numeric level instead of rank frame
-    uint8_t m_diffIntroActive = 0;  // +0x91d difficulty-intro sweep playing
-    uint8_t m_tutorialBadge = 0;    // +0x91e first-play tutorial badge visible
-    uint8_t m_recommendBadge = 0;   // +0x91f new-recommend badge visible
-    uint8_t m_scoreRefreshPending = 0; // +0x920 re-fetch the 3 cells' scores after friend-score
-    uint8_t m_inviteMusicOpen = 0;     // +0x921 chosen invite music is open (gates EX cell select)
-    uint8_t m_cellLoaderStarted = 0;   // +0x922 background jacket loader launched
-    uint8_t m_noSaveMode = 0;          // +0x923 guest / no-save teardown flag
-    uint8_t m_overScoreBadge = 0;      // +0x924 over-score badge visible
-    uint8_t m_isPadDisplay = 0;        // +0x925 pad-class display
+    bool m_bgmLoading = false;       // +0x91a preview-BGM async load in flight (cleared by loadBgm)
+    bool m_suppressDraw = false;     // +0x91b hide the scene during teardown
+    bool m_showLevelNumbers = false; // +0x91c show numeric level instead of rank frame
+    bool m_diffIntroActive = false;  // +0x91d difficulty-intro sweep playing
+    bool m_tutorialBadge = false;    // +0x91e first-play tutorial badge visible
+    bool m_recommendBadge = false;   // +0x91f new-recommend badge visible
+    bool m_scoreRefreshPending = false; // +0x920 re-fetch the 3 cells' scores after friend-score
+    bool m_inviteMusicOpen = false;     // +0x921 chosen invite music is open (gates EX cell select)
+    bool m_cellLoaderStarted = false;   // +0x922 background jacket loader launched
+    bool m_noSaveMode = false;          // +0x923 guest / no-save teardown flag
+    bool m_overScoreBadge = false;      // +0x924 over-score badge visible
+    bool m_isPadDisplay = false;        // +0x925 pad-class display
 #ifndef ENABLE_PATCHES
     uint8_t _pad_926[0x928 - 0x926] = {}; // +0x926 alignment pad before m_selectedCell (no access)
 #endif
@@ -361,12 +361,12 @@ public:
     int m_layoutRects[(0xa64 - 0x988) / 4] = {}; // +0x988 Setup()-filled button rects
     int m_screenWidth = 0;                       // +0xa64 aep screen width
     int m_screenHeight = 0;                      // +0xa68 aep screen height
-    float m_uiScale = 0.0f;      // +0xa6c UI scale factor (g_uiScale = screenScale * 0.5)
-    int m_treasurePoint = 0;     // +0xa70 treasure-point count
-    int m_columnStride = 0;      // +0xa74 cells per column (6 phone / 9 pad)
-    int m_touchX = -1;           // +0xa78 current-frame drag touch x (-1 none)
-    int m_touchY = -1;           // +0xa7c current-frame drag touch y (-1 none)
-    uint8_t m_touchReleased = 0; // +0xa80 finger lifted this frame (settle trigger)
+    float m_uiScale = 0.0f;       // +0xa6c UI scale factor (g_uiScale = screenScale * 0.5)
+    int m_treasurePoint = 0;      // +0xa70 treasure-point count
+    int m_columnStride = 0;       // +0xa74 cells per column (6 phone / 9 pad)
+    int m_touchX = -1;            // +0xa78 current-frame drag touch x (-1 none)
+    int m_touchY = -1;            // +0xa7c current-frame drag touch y (-1 none)
+    bool m_touchReleased = false; // +0xa80 finger lifted this frame (settle trigger)
 #ifndef ENABLE_PATCHES
     uint8_t _pad_a81[0xa84 - 0xa81] = {}; // +0xa81 alignment pad before m_layoutBaseX (no access)
 #endif

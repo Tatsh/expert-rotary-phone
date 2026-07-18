@@ -905,7 +905,7 @@ void MainTask::Setup() {
     // 2x device instead of 1.0. That halved every hit rect, placing the settings
     // button's hit box half-way up the screen and mis-registering every tap.
     m_uiScale = g_uiScale;
-    m_isPadDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_isPadDisplay = neSceneManager::isPadDisplay();
     m_columnStride = m_isPadDisplay ? 9 : 6; // +0xa74 cells per column
 
     // ---- per-platform button-rect layout table (m_layoutRects + base) ----
@@ -1038,7 +1038,7 @@ void MainTask::Setup() {
     [audio loadBgm:bgmPath isLoop:YES];
 
     // First-play tutorial is offered until the player has cleared it once.
-    m_tutorialBadge = [UserSettingData isTutorialPlayed] ? 0 : 1;
+    m_tutorialBadge = ![UserSettingData isTutorialPlayed];
     m_sel.tutorialOffered = m_tutorialBadge;
     m_overScoreDict = nil; // +0xa98
 }
@@ -1061,9 +1061,9 @@ void MainTask::Update() {
 
     // Clear the current-frame drag scratch (rewritten below only if a touch is
     // present).
-    m_touchX = -1;       // +0xa78
-    m_touchY = -1;       // +0xa7c
-    m_touchReleased = 0; // +0xa80
+    m_touchX = -1;           // +0xa78
+    m_touchY = -1;           // +0xa7c
+    m_touchReleased = false; // +0xa80
 
     // ---- a drag is in progress: follow / sample the finger
     // ----------------------------
@@ -1135,8 +1135,8 @@ void MainTask::Update() {
         }
         m_scrollVelocity = velocity;
 
-        if (t->released) {       // +0x2d finger lifted this frame
-            m_touchReleased = 1; // +0xa80
+        if (t->released) {          // +0x2d finger lifted this frame
+            m_touchReleased = true; // +0xa80
             if (curX < startX) {
                 // Dragged left -> return toward the PREVIOUS column (Ghidra: drag
                 // left commits nColumnIndex--), if a fast-enough fling and not first.
@@ -1529,7 +1529,7 @@ void MainTask::rebuildList() {
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
           self->backgroundCellLoader(); // Ghidra: block invoke @ 0x3d040 -> 0x3d048
         });
-        m_cellLoaderStarted = 1;
+        m_cellLoaderStarted = true;
     }
 
     // ---- 6. prime the adjacent columns' jacket rows ----
@@ -1946,7 +1946,7 @@ void MainTask::StopAndSave() {
         m_spawnedTask = MenuCreateTask(); // no sub-task queued -> back to the menu hub
     }
     m_spawnedTask->setPriority(3);
-    m_suppressDraw = 1;
+    m_suppressDraw = true;
     m_overScoreDict = nil; // ARC releases the over-score dictionary
 }
 
@@ -1971,12 +1971,12 @@ void MainTask::UpdateInfoPanel(int mode) {
         // NSValue-boxed RecommendData (DownloadMain); recommend[0]'s updateDate is
         // compared against the stored view time.
         NSString *lastViewed = [UserSettingData lastRecommendViewTimeString];
-        m_recommendBadge = 1;
+        m_recommendBadge = true;
         RecommendData newest;
         [static_cast<NSValue *>([recommend objectAtIndex:0]) getValue:&newest];
         if (lastViewed != nil && newest.updateDate != nil &&
             [lastViewed compare:newest.updateDate] != NSOrderedAscending) {
-            m_recommendBadge = 0; // already viewed something at least this fresh
+            m_recommendBadge = false; // already viewed something at least this fresh
         }
     }
 
@@ -1984,7 +1984,7 @@ void MainTask::UpdateInfoPanel(int mode) {
     NSArray *overScores = [OverScoreData getAllOverScoreData:moc];
     m_overScoreDict = [NSMutableDictionary dictionary];
     if ([overScores count] != 0) {
-        m_overScoreBadge = 1;
+        m_overScoreBadge = true;
         NSMutableDictionary *dict = m_overScoreDict;
         for (OverScoreData *entry in overScores) {
             NSString *key = [[entry music] stringValue]; // -music is the id NSNumber
@@ -2448,7 +2448,7 @@ void MainTask::AepDrawCallback(int child,
     auto drawStarGrid = [&](int frameNo, int diff) {
         forEachGridCell([&](MusicSelCell *cell, int, int cx0, int cy0, int) {
             const short sv = cell->scores.rank[diff];
-            if (sv >= 0 || self->m_showLevelNumbers != 0) {
+            if (sv >= 0 || self->m_showLevelNumbers) {
                 drawFrame(frameNo, cx0 + self->m_layoutRects[2], cy0);
             }
             return true;
@@ -2478,7 +2478,7 @@ void MainTask::AepDrawCallback(int child,
             }
             const int sum =
                 cell->scores.playCnt[0] + cell->scores.playCnt[1] + cell->scores.playCnt[2];
-            if (sum == 0 && self->m_showLevelNumbers == 0) {
+            if (sum == 0 && !self->m_showLevelNumbers) {
                 drawFrame(self->m_frmNo[2], cx0 + self->m_layoutRects[2], cy0);
             }
             return true;
@@ -2530,7 +2530,7 @@ void MainTask::AepDrawCallback(int child,
             if (cell->name == nil) {
                 return true; // empty cell -> skip
             }
-            if (self->m_showLevelNumbers == 0) {
+            if (!self->m_showLevelNumbers) {
                 const int rank = cell->scores.rank[diff];
                 if (rank >= 0) {
                     drawFrame(self->m_musicRankFrmNo[rank], cx0 + self->m_layoutRects[2], cy0);
@@ -2579,7 +2579,7 @@ void MainTask::AepDrawCallback(int child,
             }
             const int fx = cx0 + self->m_layoutRects[2];
             int bx = fx, by = cy0;
-            if (self->m_isPadDisplay == 0) {
+            if (!self->m_isPadDisplay) {
                 bx = fx + 10;
                 by = cy0 + 4;
             } // phone nudge
@@ -2855,7 +2855,7 @@ void MainTask::AepDrawCallback(int child,
     if (self->m_elemUsrNo[kElemBgNeko] != static_cast<int>(child)) {
         return;
     }
-    if (self->m_diffIntroActive != 0) {
+    if (self->m_diffIntroActive) {
         int &frm = self->m_diffIntroFrame;
         // Same drawLayer arg order as the difficulty stars (Ghidra 0x3baf8):
         // anchorX, anchorY, color, colorHi=alpha, loopFlags=1.
@@ -2882,7 +2882,7 @@ void MainTask::AepDrawCallback(int child,
             return;
         }
         frm = 0;
-        self->m_diffIntroActive = 0;
+        self->m_diffIntroActive = false;
         return;
     }
     drawFrame(self->m_frmNo[12], x, y);
