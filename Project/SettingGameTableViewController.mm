@@ -88,6 +88,14 @@ static UIViewController *RootVC() {
     self.tableView.backgroundView = nil;
     self.tableView.backgroundColor = [UIColor clearColor];
 
+    // Modern-iOS workaround (not in the iOS 8 binary): the detail rows embed
+    // nested UITableViewControllers whose cells hold UISliders. On current iOS
+    // this outer table's scroll pan-gesture claims a quick drag before the nested
+    // slider can track, so the sliders appear frozen. Delivering content touches
+    // immediately (and not cancelling them) lets the sliders drag.
+    self.tableView.delaysContentTouches = NO;
+    self.tableView.canCancelContentTouches = NO;
+
     if (neSceneManager::isPadDisplay()) {
         // The binary writes the top inset twice; the first (-100) is immediately
         // overwritten by the version-based value below, so the net inset top is 20
@@ -325,6 +333,9 @@ static UIViewController *RootVC() {
         }
         _detailView[0].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+        // Modern-iOS: let the nested volume sliders receive drags (see initWithStyle).
+        _detailView[0].tableView.delaysContentTouches = NO;
+        _detailView[0].tableView.canCancelContentTouches = NO;
         [inner addSubview:_detailView[0].view];
         [cell.contentView addSubview:box];
         return cell;
@@ -354,6 +365,9 @@ static UIViewController *RootVC() {
         }
         _detailView[2].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+        // Modern-iOS: let the nested controls receive drags (see initWithStyle).
+        _detailView[2].tableView.delaysContentTouches = NO;
+        _detailView[2].tableView.canCancelContentTouches = NO;
         [inner addSubview:_detailView[2].view];
         [cell.contentView addSubview:box];
         return cell;
