@@ -16,6 +16,13 @@
 #import "StoreUtil.h"         // web-API URL builder
 #import "neEngineBridge.h"    // neSceneManager::isPadDisplay
 
+// Per-row subview tags, set once when the cell is built and read back when it is
+// reused. The button drives the download/delete action; the two labels are
+// drop-shadow duplicates of the cell's name and artist text.
+constexpr NSInteger kTagManageCellButton = 0xE01F; // action button (pushCellButton:)
+constexpr NSInteger kTagManageCellName = 0xE020;   // drop-shadow of the song name
+constexpr NSInteger kTagManageCellArtist = 0xE021; // drop-shadow of the artist
+
 @implementation StoreManageViewController
 
 // @ 0x4bc40 — tab item + action icons; iPad gets a patterned background.
@@ -135,7 +142,7 @@
         UIButton *button = [UIButton buttonWithType:UIButtonTypeRoundedRect];
         button.titleLabel.font = [UIFont fontWithName:AppFontName() size:(m_IsPad ? 16.0f : 14.0f)];
         [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        button.tag = 0xE01F;
+        button.tag = kTagManageCellButton;
         button.autoresizingMask =
             (UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin |
              UIViewAutoresizingFlexibleBottomMargin); // 0x29
@@ -150,7 +157,7 @@
         nameLabel.backgroundColor = [UIColor clearColor];
         nameLabel.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
         nameLabel.highlightedTextColor = [UIColor whiteColor];
-        nameLabel.tag = 0xE020;
+        nameLabel.tag = kTagManageCellName;
         neSceneManager::shared();
         if (neSceneManager::isPadDisplay()) {
             nameLabel.font = [UIFont fontWithName:AppFontName() size:17.0f];
@@ -166,7 +173,7 @@
         artistLabel.backgroundColor = [UIColor clearColor];
         artistLabel.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
         artistLabel.highlightedTextColor = [UIColor whiteColor];
-        artistLabel.tag = 0xE021;
+        artistLabel.tag = kTagManageCellArtist;
         neSceneManager::shared();
         if (neSceneManager::isPadDisplay()) {
             artistLabel.font = [UIFont fontWithName:AppFontName() size:14.0f];
@@ -183,7 +190,7 @@
     unsigned int musicId = [[item objectForKey:@"ID"] unsignedIntValue];
     BOOL downloaded = RhFileExists([[MusicManager getInstance] getPathFromPurchased:musicId]);
 
-    UIButton *button = (UIButton *)[cell viewWithTag:0xE01F];
+    UIButton *button = (UIButton *)[cell viewWithTag:kTagManageCellButton];
     if (downloaded) {
         [button setImage:m_ImgDelete forState:UIControlStateNormal];
         if (m_IsPad) {
@@ -210,9 +217,9 @@
     // blank them.
     cell.textLabel.text = [item objectForKey:@"Name"];
     cell.detailTextLabel.text = [item objectForKey:@"Artist"];
-    [(UILabel *)[cell viewWithTag:0xE020] setText:cell.textLabel.text];
+    [(UILabel *)[cell viewWithTag:kTagManageCellName] setText:cell.textLabel.text];
     cell.textLabel.text = @"";
-    [(UILabel *)[cell viewWithTag:0xE021] setText:cell.detailTextLabel.text];
+    [(UILabel *)[cell viewWithTag:kTagManageCellArtist] setText:cell.detailTextLabel.text];
     cell.detailTextLabel.text = @"";
 
     return cell;

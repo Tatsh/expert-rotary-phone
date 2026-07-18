@@ -17,6 +17,13 @@
 
 #import "neEngineBridge.h" // neSceneManager::shared / isPadDisplay
 
+// Per-row subview tags, set once when the cell is built and read back when it is
+// reused. The button drives the download/delete action; the two labels are
+// drop-shadow duplicates of the cell's title and genre text.
+constexpr NSInteger kTagAcvManageCellButton = 0xE01F; // action button (pushCellButton:)
+constexpr NSInteger kTagAcvManageCellTitle = 0xE020;  // drop-shadow of the song title
+constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genre
+
 @implementation StoreAcvManageViewController
 
 // @ 0x8c630 — identical to StoreManageViewController but for the arcade viewer.
@@ -167,7 +174,7 @@
         UIButton *button = [UIButton buttonWithType:UIButtonTypeRoundedRect]; // 1
         button.titleLabel.font = [UIFont fontWithName:AppFontName() size:(m_IsPad ? 16.0f : 14.0f)];
         [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        button.tag = 0xe01f;
+        button.tag = kTagAcvManageCellButton;
         button.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
                                   UIViewAutoresizingFlexibleTopMargin |
                                   UIViewAutoresizingFlexibleBottomMargin; // 0x29
@@ -183,7 +190,7 @@
         titleShadow.backgroundColor = [UIColor clearColor];
         titleShadow.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
         titleShadow.highlightedTextColor = [UIColor whiteColor];
-        titleShadow.tag = 0xe020;
+        titleShadow.tag = kTagAcvManageCellTitle;
         neSceneManager::shared();
         if (!neSceneManager::isPadDisplay()) {
             titleShadow.font = [UIFont fontWithName:AppFontName() size:15.0f];
@@ -199,7 +206,7 @@
         genreShadow.backgroundColor = [UIColor clearColor];
         genreShadow.textColor = [UIColor colorWithRed:0.188f green:0.188f blue:0.188f alpha:1.0f];
         genreShadow.highlightedTextColor = [UIColor whiteColor];
-        genreShadow.tag = 0xe021;
+        genreShadow.tag = kTagAcvManageCellGenre;
         neSceneManager::shared();
         if (!neSceneManager::isPadDisplay()) {
             genreShadow.font = [UIFont fontWithName:AppFontName() size:12.0f];
@@ -217,7 +224,7 @@
     NSString *path = [[MusicManager getInstance] getAcPathFromPurchased:acMusicId];
     BOOL exists = RhFileExists(path);
 
-    UIButton *button = (UIButton *)[cell viewWithTag:0xe01f];
+    UIButton *button = (UIButton *)[cell viewWithTag:kTagAcvManageCellButton];
     if (exists) {
         [button setImage:m_ImgDelete forState:UIControlStateNormal];
         if (m_IsPad) {
@@ -244,9 +251,9 @@
     // then blank the built-ins so only the engraved shadow labels are visible.
     cell.textLabel.text = [item objectForKey:@"Title"];
     cell.detailTextLabel.text = [item objectForKey:@"Genre"];
-    [(UILabel *)[cell viewWithTag:0xe020] setText:cell.textLabel.text];
+    [(UILabel *)[cell viewWithTag:kTagAcvManageCellTitle] setText:cell.textLabel.text];
     cell.textLabel.text = @"";
-    [(UILabel *)[cell viewWithTag:0xe021] setText:cell.detailTextLabel.text];
+    [(UILabel *)[cell viewWithTag:kTagAcvManageCellGenre] setText:cell.detailTextLabel.text];
     cell.detailTextLabel.text = @"";
 
     return cell;
