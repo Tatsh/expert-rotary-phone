@@ -592,7 +592,6 @@ wconditional
 wdelete
 wduplicate
 werror
-weverything
 wextra
 wimplicit
 winfinite

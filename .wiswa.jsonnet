@@ -47,6 +47,7 @@
       ignorePaths+: [
         '*.pbxproj',
         '*.xc*',
+        '3rdparty/',
       ],
     },
     prettier+: {
