@@ -139,8 +139,8 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
     // Prime the arcade play state the per-frame update() drives.
     m_spawnCursor = m_records; // +0xfa0c: spawning starts at the first record
     m_state = 0;
-    m_autoPlay = 1; // +0x14cc1: InitPlayData enables auto-play (attract/demo default)
-    m_endFlag = 0;
+    m_autoPlay = true; // +0x14cc1: InitPlayData enables auto-play (attract/demo default)
+    m_endFlag = false;
     m_barCount = 0;
     m_beatCount = 0;
     m_spawnLookahead = 0;
@@ -743,7 +743,7 @@ void AcNoteMng::update() {
         updateDrawPos(node, pos);
         if (!m_endFlag && node->record->type == AC_NOTE_EVENT && node->tick <= pos) {
             node->flags |= 0x20;
-            m_endFlag = 1;
+            m_endFlag = true;
         }
     }
 }
@@ -813,7 +813,7 @@ void AcNoteMng::resume() {
 // Ghidra: acNoteResetPlayFlag @ 0x7aea4.
 // @complete
 void AcNoteMng::resetPlayFlag() {
-    m_playFlag = 0;
+    m_playFlag = false;
 }
 
 // Ghidra: acNoteSetupLaneMapping @ 0x7ad14 — build the lane-remap table for the

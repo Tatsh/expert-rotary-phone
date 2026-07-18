@@ -162,7 +162,7 @@ public:
     // on-resign arcade pause (AppDelegate applicationWillResignActive @ 0x95a8
     // reads AcNoteMng+0x14cc2).
     bool isPlaying() const {
-        return m_playFlag != 0;
+        return m_playFlag;
     }
 
     // Build the logical-lane -> display-lane table for the selected lane option:
@@ -262,9 +262,9 @@ private:
     int16_t m_barCount = 0;                // +0xfa30  measure counter
     int16_t m_beatCount = 0;               // +0xfa34  beat counter (reset each measure)
     float m_playSpeed = 0.0f;         // +0xfa4c  base scroll speed (also scroll segment 0's speed)
-    uint8_t m_endFlag = 0;            // +0x14cc0 the end (type 6) note has been reached
-    uint8_t m_autoPlay = 0;           // +0x14cc1 auto-play (attract/replay) drives the hits itself
-    uint8_t m_playFlag = 0;           // +0x14cc2 per-play "playing" flag (cleared by resetPlayFlag)
+    bool m_endFlag = false;           // +0x14cc0 the end (type 6) note has been reached
+    bool m_autoPlay = false;          // +0x14cc1 auto-play (attract/replay) drives the hits itself
+    bool m_playFlag = false;          // +0x14cc2 per-play "playing" flag (cleared by resetPlayFlag)
     int m_laneMode = 0;               // +0x14cc8 3 = rotating lane assignment
     int32_t m_laneRemap[16] = {};     // +0x14ccc logical lane -> display lane
     int m_nearestThreshold = 0;       // +0x14c58 max +dt still eligible as the lane's "nearest"
