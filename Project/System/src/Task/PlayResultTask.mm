@@ -452,7 +452,8 @@ void PlayResultTask::resultSetup() {
                                              "BONUS_EVENT"};
     static const int kLayerOrder[6] = {12, 9, 9, 9, 10, 11};
     const int displayType = [[AppDelegate appDelegate] displayType];
-    const char *const *layerNames = (displayType == 2) ? kLayerPad : kLayerPhone;
+    const char *const *layerNames =
+        (displayType == DisplayTypePhoneRetinaTall) ? kLayerPad : kLayerPhone;
     for (int i = 0; i < 6; i++) {
         m_layers[i] = std::make_unique<AepLyrCtrl>(); // operator_new(0x60) + FUN_0002c7d8
         m_layers[i]->init(4, layerNames[i], this, kLayerOrder[i]); // FUN_0002c834
@@ -691,7 +692,7 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
         buildShareButton(displayType);
     }
     if (tapped) {
-        const int bottomEdge = (displayType == 2) ? 0x370 : 0x30c;
+        const int bottomEdge = (displayType == DisplayTypePhoneRetinaTall) ? 0x370 : 0x30c;
         if (tapX > 0xdc || tapY < bottomEdge) {
             m_state = kResultStateScoreLineIn;
             UIButton *shareButton = (__bridge UIButton *)m_shareButton;
@@ -709,7 +710,7 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
 // Frame math (device-branched, byte-verified from the disassembly):
 //   x = 5.0 always (0x40a00000).
 //   phone (not a pad display): y = 435.0 (0x43d98000), or 526.9921875 == 527.0
-//     (0x4403c000) when displayType == 2 (the tall-screen layout). On a Retina
+//     (0x4403c000) when displayType == DisplayTypePhoneRetinaTall (the tall-screen layout). On a Retina
 //     board (transition overlay >= 640x960) the image is drawn at half size and
 //     y += 15.0.
 //   pad: y = 965.0 (0x44714000); no half-scaling.
@@ -721,7 +722,7 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
 // link + #リズミン hashtag literally. English: "I played <title>! Score:<n>
 // Rank:<R> <link> #Rhythmin".
 // Verified against disassembly: x = 5.0 (0x40a00000); phone y = 435.0
-// (0x43d98000) or 527.0 (0x4403c000) when displayType == 2; pad y = 965.0
+// (0x43d98000) or 527.0 (0x4403c000) when displayType == DisplayTypePhoneRetinaTall; pad y = 965.0
 // (0x44714000); Retina half-scale (0.5) + y += 15.0 when overlayW > 0x27f &&
 // overlayH > 0x3bf; rank-letter table @ 0xf3d64 indexed by m_rank; tweet
 // UTF-16 format @ 0x12bde0 (byte-verified); bounce options literal 2.
@@ -748,7 +749,7 @@ void PlayResultTask::buildShareButton(int displayType) {
     CGSize size = (btImage != nil) ? btImage.size : CGSizeZero;
     CGFloat y;
     if (!neSceneManager::isPadDisplay()) { // DAT_00187b84 == 0 : phone layout
-        y = (displayType == 2) ? 527.0 : 435.0;
+        y = (displayType == DisplayTypePhoneRetinaTall) ? 527.0 : 435.0;
         // Retina board (>= 640 x 960): draw the button at half size, nudged down
         // 15pt.
         if (aep.transitionOverlayWidth() > 0x27f && aep.transitionOverlayHeight() > 0x3bf) {

@@ -188,7 +188,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 
     // Header banner + song update-date / title / genre labels.
     UIImage *headerImg = [UIImage imageNamed:@"ppc_ps_header"];
-    CGFloat headerY = headerYOffset + (displayType == 2 ? 18.0f : 8.0f);
+    CGFloat headerY = headerYOffset + (displayType == DisplayTypePhoneRetinaTall ? 18.0f : 8.0f);
     UIImageView *header = [[UIImageView alloc]
         initWithFrame:CGRectMake(5.0f, headerY, headerImg.size.width, headerImg.size.height)];
     [header setImage:headerImg];
@@ -246,7 +246,7 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
     UIImage *graphBaseImg;
     CGFloat topY;     // graph Y of a 0% score (the baseline the columns rise from)
     CGFloat baseImgY; // Y of the graph image inside the view
-    if (displayType == 2) {
+    if (displayType == DisplayTypePhoneRetinaTall) {
         graphBaseImg = [UIImage imageNamed:@"ppc_ps_base"];
         scoreLineOffNames = kBaselineOff;
         scoreLineOnNames = kBaselineOn;

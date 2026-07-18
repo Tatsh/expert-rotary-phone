@@ -311,7 +311,8 @@ static int scoreToRank(int score) {
         [self.view addSubview:_tabCtrl.view];
 
         // Blink a warning badge over each difficulty tab that has a rival record.
-        CGFloat warnY = (displayType == 2) ? 34.0f : 30.0f; // DAT_000abce0/ce4
+        CGFloat warnY =
+            (displayType == DisplayTypePhoneRetinaTall) ? 34.0f : 30.0f; // DAT_000abce0/ce4
         const CGFloat warnX[3] = {2.0f, 108.0f, 214.0f};
         const BOOL warn[3] = {warnN, warnH, warnEx};
         for (int i = 0; i < 3; i++) {
@@ -342,7 +343,7 @@ static int scoreToRank(int score) {
     [jacketBg setImage:[UIImage imageNamed:(isPad ? @"frisco_bg_jk" : @"frisco_jacket_BG")]];
     {
         CGFloat jx = isPad ? 183.0f : 13.0f;
-        CGFloat jy = (displayType == 2) ? 20.0f : 6.0f;
+        CGFloat jy = (displayType == DisplayTypePhoneRetinaTall) ? 20.0f : 6.0f;
         jacketBg.frame = CGRectMake(jx, jy, jacketBg.image.size.width, jacketBg.image.size.height);
         [self.view addSubview:jacketBg];
     }
@@ -372,7 +373,7 @@ static int scoreToRank(int score) {
         CGFloat tx = isPad ? 128.0f : 111.0f;
         CGFloat tw = isPad ? 294.0f : 147.0f;
         CGFloat th = isPad ? 32.0f : 16.0f;
-        CGFloat ty = (displayType == 2) ? 50.0f : 41.0f;
+        CGFloat ty = (displayType == DisplayTypePhoneRetinaTall) ? 50.0f : 41.0f;
         titleView.frame = CGRectMake(tx, ty, tw, th);
         [self.view addSubview:titleView];
     }

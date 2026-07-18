@@ -92,7 +92,9 @@ void TitleTask::setup() {
     if (!neSceneManager::isPadDisplay()) {
         m_aep->loadAepDataDefaultPath(1, "title");
         m_soundTestLabelX = 0x19;
-        imageFolder = (AppDelegate.appDelegate.displayType == 2) ? "1136IMG" : "640IMG";
+        imageFolder = (AppDelegate.appDelegate.displayType == DisplayTypePhoneRetinaTall) ?
+                          "1136IMG" :
+                          "640IMG";
     } else {
         m_aep->loadAepDataDefaultPath(1, "title_ipad");
         m_soundTestLabelX = 0x24;

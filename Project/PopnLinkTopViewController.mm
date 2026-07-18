@@ -58,7 +58,9 @@ static UIViewController *RootVC() {
 - (instancetype)init {
     if ((self = [super init])) {
         int displayType = [AppDelegate appDelegate].displayType;
-        CGFloat yAdj = (displayType == 2) ? 0 : -20; // 4-inch vs 3.5-inch vertical nudge
+        CGFloat yAdj = (displayType == DisplayTypePhoneRetinaTall) ?
+                           0 :
+                           -20; // 4-inch vs 3.5-inch vertical nudge
         BOOL isPad = neSceneManager::isPadDisplay();
 
         if (!isPad) {

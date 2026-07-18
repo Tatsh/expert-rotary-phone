@@ -480,7 +480,7 @@ void AcMainTask::setupScene() {
     // this+0x614/0x618 seed applies only to a tall (displayType 2) phone.
     const bool pad = (m_padDisplay);
     if (!pad) {
-        if ([[AppDelegate appDelegate] displayType] == 2) {
+        if ([[AppDelegate appDelegate] displayType] == DisplayTypePhoneRetinaTall) {
             m_layoutAnchorZ = 0x6a;
             m_layoutOffsetY = 0x9e;
         }
@@ -707,7 +707,8 @@ void AcMainTask::setupBuildOverlays() {
     // 8 select panels -> +0xa0. The tall-phone name table is used only for a tall
     // (displayType 2) phone; on a pad the two COLLECTION_SELECT panels (i == 4/5)
     // are skipped entirely.
-    const bool tall = ([[AppDelegate appDelegate] displayType] == 2) && !pad;
+    const bool tall =
+        ([[AppDelegate appDelegate] displayType] == DisplayTypePhoneRetinaTall) && !pad;
     const char *const *panelNames = tall ? kPanelNamesTall : kPanelNamesDefault;
     for (int i = 0; i < 8; i++) {
         if (!pad || (i != 4 && i != 5)) {
@@ -1007,8 +1008,9 @@ void AcMainTask::loadTreasureMap() {
         if (!pad) {
             bgGroupName = [NSString
                 stringWithFormat:@"sugoroku_bg%02d", static_cast<int>(kMapBgNumber[bgIndex])];
-            bgLoopName =
-                ([[AppDelegate appDelegate] displayType] == 2) ? @"BG_LOOP1136" : @"BG_LOOP960";
+            bgLoopName = ([[AppDelegate appDelegate] displayType] == DisplayTypePhoneRetinaTall) ?
+                             @"BG_LOOP1136" :
+                             @"BG_LOOP960";
         } else {
             bgGroupName = [NSString
                 stringWithFormat:@"sugoroku_bg%02d_ipad", static_cast<int>(kMapBgNumber[bgIndex])];

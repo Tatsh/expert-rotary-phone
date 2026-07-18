@@ -156,13 +156,13 @@ void AcViewerTask::setup() {
     const char *topName = "TOP_960";
     if (pad) {
         topName = "TOP_IPAD";
-    } else if ([app displayType] == 2) {
+    } else if ([app displayType] == DisplayTypePhoneRetinaTall) {
         topName = "TOP_1136";
     }
 
     // Device-branched HUD layout constants (@ +0x110..+0x1c0) plus the per-lane
     // note-frame x table (@ +0x158[9]), written before the top layer is built.
-    // There are three form factors: iPad (pad), tall iPhone (displayType == 2,
+    // There are three form factors: iPad (pad), tall iPhone (displayType == DisplayTypePhoneRetinaTall,
     // the 1136 screen), and the normal 960 iPhone. The per-lane note-frame
     // tables are DAT_0012e370 (phone) / DAT_0012e394 (pad).
     static const int kLaneFrmPhone[9] = {78, 138, 199, 260, 320, 381, 441, 502, 561};
@@ -207,7 +207,7 @@ void AcViewerTask::setup() {
             m_laneFrm[i] = kLaneFrmPad[i];
         }
     } else {
-        const bool tall = ([app displayType] == 2); // 1136 screen vs 960
+        const bool tall = ([app displayType] == DisplayTypePhoneRetinaTall); // 1136 screen vs 960
         m_pauseBtnTopY = tall ? 88 : 0;
         m_pauseBtnHeight = tall ? 0 : -176;
         m_seekScale = 5;

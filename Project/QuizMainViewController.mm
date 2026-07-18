@@ -129,8 +129,8 @@ static int QuizCountDigits(int value) {
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         self.tableView.separatorColor = [UIColor clearColor];
 
-        // Extra vertical nudge: -10, or 0 when displayType == 2; +10 again on pad.
-        int yNudge = (displayType == 2) ? 0 : -10;
+        // Extra vertical nudge: -10, or 0 when displayType == DisplayTypePhoneRetinaTall; +10 again on pad.
+        int yNudge = (displayType == DisplayTypePhoneRetinaTall) ? 0 : -10;
         if (isPad) {
             yNudge += 10;
         }

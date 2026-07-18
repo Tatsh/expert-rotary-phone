@@ -517,7 +517,7 @@ void PlayNoteMngDetach(NoteMng *nm) {
 //
 // Verified against FUN_0002e2d8: the 5-entry effect-layer new(0x60)+init loop at
 // 0x2e6be, the per-tier reposition + bg/score table selection (0x2e712 pad,
-// 0x2e746 displayType == 2, 0x2e76c 960), the 11-entry bg-layer loop at 0x2e7b2,
+// 0x2e746 displayType == DisplayTypePhoneRetinaTall, 0x2e76c 960), the 11-entry bg-layer loop at 0x2e7b2,
 // and every getLyrNo/getFrameNo/getUserNo fill loop with its exact count and
 // destination offset: +0x154/+0x168 x5, +0xc4/+0xd4 x4, +0xe4/+0x11c x14,
 // +0x17c/+0x1dc x8, +0x1fc x9, +0x220 x10, +0x248 x10, +0x270 x4, +0x280 x5,
@@ -821,8 +821,8 @@ void PlayBuildFieldLayers(void *playData) {
     const char *const *bgNames;
     const char *const *scoreNames;
     if (!pad) {
-        if ([app displayType] == 2) {                         // 1136 tall phone
-            task->m_comboLayers[3]->setRouletteAnchor(0x140); // ARE_YOU_READY y=320
+        if ([app displayType] == DisplayTypePhoneRetinaTall) { // 1136 tall phone
+            task->m_comboLayers[3]->setRouletteAnchor(0x140);  // ARE_YOU_READY y=320
             task->m_pauseOriginX = 0;
             bgNames = kBgNames1136;
             scoreNames = kScoreNames1136;

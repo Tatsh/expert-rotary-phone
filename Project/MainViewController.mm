@@ -909,7 +909,9 @@ static const float kRenderMinInterval = 1000.0f;
         contentH = 2048; // iPad retina canvas
     } else {
         contentW = 640;
-        contentH = (AppDelegate.appDelegate.displayType == 2) ? 1136 : 960; // 4" vs 3.5" iPhone
+        contentH = (AppDelegate.appDelegate.displayType == DisplayTypePhoneRetinaTall) ?
+                       1136 :
+                       960; // 4" vs 3.5" iPhone
     }
     aep.init(bundlePath.UTF8String, texDir.UTF8String, contentW, contentH, scale);
     neSceneManager::shared(); // force scene-manager lazy init

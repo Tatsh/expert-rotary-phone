@@ -156,8 +156,10 @@ typedef struct SubMapData {
 
         // Phone: a scaled map backdrop behind the table.
         if (!isPad) {
-            NSString *bgName = ([[AppDelegate appDelegate] displayType] == 2) ? @"map_select_bg" :
-                                                                                @"map_select_bg960";
+            NSString *bgName =
+                ([[AppDelegate appDelegate] displayType] == DisplayTypePhoneRetinaTall) ?
+                    @"map_select_bg" :
+                    @"map_select_bg960";
             UIImage *bgImg = [UIImage imageNamed:bgName];
             UIImageView *bgView = [[UIImageView alloc] initWithImage:bgImg];
             bgView.frame = CGRectMake(0, 0, bgImg.size.width, bgImg.size.height);

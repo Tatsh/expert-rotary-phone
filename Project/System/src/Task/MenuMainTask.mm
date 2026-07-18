@@ -120,7 +120,7 @@ void MenuMainTask::setup() {
     const char *sceneGroup;
 
     if (!isPad) {
-        const bool tall = (AppDelegate.appDelegate.displayType == 2);
+        const bool tall = (AppDelegate.appDelegate.displayType == DisplayTypePhoneRetinaTall);
         const int yoff = tall ? 0x50 : 0;
         m_layoutYOffset = yoff;                                          // +0xe8
         m_labelRowY = baseY - 0x3c;                                      // +0x84

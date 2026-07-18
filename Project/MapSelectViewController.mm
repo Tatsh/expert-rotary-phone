@@ -206,8 +206,9 @@ bool isIndexInRange12(unsigned int index) {
 
     // Backdrop: phone paints a full map image behind the table; pad stays clear.
     if (!neSceneManager::isPadDisplay()) {
-        NSString *bgName =
-            ([[AppDelegate appDelegate] displayType] == 2) ? @"map_select_bg" : @"map_select_bg960";
+        NSString *bgName = ([[AppDelegate appDelegate] displayType] == DisplayTypePhoneRetinaTall) ?
+                               @"map_select_bg" :
+                               @"map_select_bg960";
         UIImage *bgImg = [UIImage imageNamed:bgName];
         UIImageView *bgView = [[UIImageView alloc] initWithImage:bgImg];
         bgView.frame = CGRectMake(0, 0, bgImg.size.width, bgImg.size.height);

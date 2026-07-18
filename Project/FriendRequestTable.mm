@@ -101,7 +101,9 @@
 
         // Clear header spacer: 40pt (50pt on the tall-screen tier @ iOS7), +10pt on
         // iPad.
-        CGFloat headerH = ([AppDelegate appDelegate].displayType == 2 && isOS7) ? 50.0f : 40.0f;
+        CGFloat headerH =
+            ([AppDelegate appDelegate].displayType == DisplayTypePhoneRetinaTall && isOS7) ? 50.0f :
+                                                                                             40.0f;
         if (isPad) {
             headerH += 10.0f;
         }

@@ -74,7 +74,7 @@ void BootLogoTask::setup() {
     NSArray<NSString *> *imageSet;
     const bool isPad = neSceneManager::isPadDisplay(); // DAT_00187b84 != 0
     if (!isPad) {
-        if (AppDelegate.appDelegate.displayType == 2) {
+        if (AppDelegate.appDelegate.displayType == DisplayTypePhoneRetinaTall) {
             m_posX = 0x280;
             m_posY = 0x470; // 640x1136 (4" retina)
             imageSet = @[ @"konami-568@2x", @"bemani640X1136@2x", @"eamusement-568@2x" ];

@@ -761,7 +761,8 @@ static const char *const kLayerNames[4] = {
 static const int kLayerOrder[4] = {13, 9, 9, 9};
 // The 2 intro-layer names + priorities, device-branched (@ 0x1315e8/f0 /
 // 0x12e680).
-static const char *const kIntroNamesTall[2] = {"1024IMG", "BG_IMG_1136"}; // displayType == 2
+static const char *const kIntroNamesTall[2] = {
+    "1024IMG", "BG_IMG_1136"}; // displayType == DisplayTypePhoneRetinaTall
 static const char *const kIntroNamesShort[2] = {"640IMG", "BG_IMG_640"};
 static const int kIntroOrder[2] = {15, 14};
 // getFrameNo names -> m_frmNo[24] @ 0x1315f8.
@@ -911,8 +912,8 @@ void MainTask::Setup() {
     // ---- per-platform button-rect layout table (m_layoutRects + base) ----
     const int displayType = static_cast<int>([[AppDelegate appDelegate] displayType]);
     if (!m_isPadDisplay) {
-        int baseY, rectSort, rectDiff; // rectSort @ +0xa10, rectDiff @ +0xa24
-        if (displayType == 2) {        // tall (notch/1136) phone
+        int baseY, rectSort, rectDiff;                   // rectSort @ +0xa10, rectDiff @ +0xa24
+        if (displayType == DisplayTypePhoneRetinaTall) { // tall (notch/1136) phone
             baseY = 0xaa;
             rectSort = 0x311;
             rectDiff = 0x3c6;
@@ -954,7 +955,7 @@ void MainTask::Setup() {
         m_layers[i]->init(3, kLayerNames[i], this, kLayerOrder[i]);
     }
     const char *const *introNames;
-    if (displayType == 2) {
+    if (displayType == DisplayTypePhoneRetinaTall) {
         // Tall-phone/pad nudge: park each scene layer at y=0, z=0x6a (Ghidra: the
         // +0x18/+0x1c stores). setRouletteAnchor performs exactly that (m_y = 0,
         // raw z = value).
