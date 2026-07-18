@@ -270,9 +270,8 @@ float NoteMng::computeScrollY(uint32_t targetTick, uint32_t pos) const {
 // ---------------------------------------------------------------------------
 // Standard per-frame update cluster (FUN_00033ae4 and its closure). The
 // active-note list is a singly-linked list of pooled slots; retiring a slot
-// pushes it back onto the free-list head. Note slot flags (@ +0x38): 0x80 =
-// handled by the judge pass, 0x10 = head scrolled off, 0x4 = auto-graded, 0x100
-// = long-note tail done, 0x20/0x220 = missed, 0x2f / 0x300 = per-tier masks.
+// pushes it back onto the free-list head. The note slot's flags field (@ +0x38)
+// is the NoteFlag bit set defined in NoteMng.h.
 // ---------------------------------------------------------------------------
 
 // Ghidra: FUN_00034468 — the kind-1 (mark) event: start the BGM once and
@@ -310,16 +309,16 @@ void NoteMng::retireNode(ActiveNote *node) {
 // @complete
 void NoteMng::judgeActiveNote(ActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
-    if ((flags & 0x80) != 0 || node->startTick > pos) {
+    if ((flags & NOTE_FLAG_HANDLED) != 0 || node->startTick > pos) {
         return;
     }
     const uint8_t type = node->rec->type;
     if (type == NOTE_TYPE_MARK) { // 1: start BGM
         triggerBgmStart();
-        node->flags = (uint16_t)(flags | 0x80);
+        node->flags = (uint16_t)(flags | NOTE_FLAG_HANDLED);
     } else if (type == NOTE_TYPE_BAR) { // 4: measure line
         m_barCount++;
-        node->flags = (uint16_t)(flags | 0x80);
+        node->flags = (uint16_t)(flags | NOTE_FLAG_HANDLED);
     }
     // other types are handled elsewhere (or not at all)
 }
@@ -334,7 +333,7 @@ void NoteMng::retireActiveNote(ActiveNote **pnode, uint32_t pos) {
     ActiveNote *next = node->next;
     if (node->startTick + 10000u < pos && node->rec->type != NOTE_TYPE_END) {
         retireNode(node);
-    } else if ((node->flags & 0xc0) != 0) {
+    } else if ((node->flags & NOTE_FLAG_RETIRE) != 0) {
         retireNode(node);
     }
     *pnode = next;
@@ -350,7 +349,8 @@ void NoteMng::detectMiss(ActiveNote *node, uint32_t pos) {
     const unsigned k = kind - 6;
     const bool special = (k < 4) && !m_autoPlay;
     const uint16_t flags = node->flags;
-    if (((flags & 0x2f) == 0 || (special && (flags & 0x20) == 0 && node->spawnKind != 0)) &&
+    if (((flags & NOTE_FLAG_RESOLVED) == 0 ||
+         (special && (flags & NOTE_FLAG_MISSED) == 0 && node->spawnKind != 0)) &&
         kind < 10) {
         unsigned sk = (k < 4) ? ((0x05040302u >> (k * 8)) & 0xff) : 1;
         int window = 0x118; // 280 ms
@@ -361,7 +361,9 @@ void NoteMng::detectMiss(ActiveNote *node, uint32_t pos) {
             }
         }
         if (window < (int)(pos - node->startTick)) {
-            node->flags = (uint16_t)(flags | (node->startTick < node->endTick ? 0x220 : 0x20));
+            node->flags = (uint16_t)(flags | (node->startTick < node->endTick ?
+                                                  (NOTE_FLAG_MISSED | NOTE_FLAG_LONG_FAILED) :
+                                                  NOTE_FLAG_MISSED));
             m_combo = 0;
             m_tally[kind][NOTE_JUDGE_BAD]++;
             if (m_missCallback != nullptr) {
@@ -380,10 +382,13 @@ void NoteMng::completeLongNoteTail(ActiveNote *node, uint32_t pos) {
         return; // not a long note
     }
     const uint16_t flags = node->flags;
-    if (node->endTick <= pos && (flags & 0x2f) != 0 && (flags & 0x20) == 0 &&
-        (flags & 0x300) == 0) {
-        int tier = (flags & 1) ? 1 : (flags & 2) ? 2 : (flags & 4) ? 3 : 0;
-        node->flags = (uint16_t)(flags | 0x100);
+    if (node->endTick <= pos && (flags & NOTE_FLAG_RESOLVED) != 0 &&
+        (flags & NOTE_FLAG_MISSED) == 0 && (flags & NOTE_FLAG_LONG_DONE) == 0) {
+        int tier = (flags & NOTE_FLAG_GOOD)  ? 1 :
+                   (flags & NOTE_FLAG_GREAT) ? 2 :
+                   (flags & NOTE_FLAG_COOL)  ? 3 :
+                                               0;
+        node->flags = (uint16_t)(flags | NOTE_FLAG_LONG_SUCCESS);
         uint32_t c = (uint32_t)m_combo + 1;
         m_combo = (int)c;
         if ((uint32_t)m_maxCombo < c) {
@@ -398,13 +403,13 @@ void NoteMng::completeLongNoteTail(ActiveNote *node, uint32_t pos) {
 // is handled by autoGradeTail).
 // @complete
 void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
-    if ((node->flags & 0x2f) != 0 || node->kind >= 10) {
+    if ((node->flags & NOTE_FLAG_RESOLVED) != 0 || node->kind >= 10) {
         return;
     }
     const int dt = (int)pos - (int)node->startTick;
     const int adt = (dt < 0) ? -dt : dt;
     if (adt < 0x200 && dt >= 0 && dt <= m_judgeWindows[5]) { // DAT_00013ca8 == judge window[5]
-        node->flags |= 4;
+        node->flags |= NOTE_FLAG_COOL;
         node->spawnKind = 0;
         if (node->startTick < node->endTick) {
             return; // long note: grade the tail separately
@@ -422,7 +427,8 @@ void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
 // passes (within the window) auto-credit the tail as a COOL.
 // @complete
 void NoteMng::autoGradeTail(ActiveNote *node, uint32_t pos) {
-    if (node->startTick >= node->endTick || node->kind >= 10 || (node->flags & 0x300) != 0) {
+    if (node->startTick >= node->endTick || node->kind >= 10 ||
+        (node->flags & NOTE_FLAG_LONG_DONE) != 0) {
         return;
     }
     const int dt = (int)pos - (int)node->endTick;
@@ -430,7 +436,7 @@ void NoteMng::autoGradeTail(ActiveNote *node, uint32_t pos) {
         return;
     }
     m_tally[node->kind][NOTE_JUDGE_COOL]++;
-    node->flags |= 0x104;
+    node->flags |= (NOTE_FLAG_COOL | NOTE_FLAG_LONG_SUCCESS);
     node->spawnKind = 0;
     uint32_t c = (uint32_t)m_combo + 1;
     m_combo = (int)c;
@@ -449,7 +455,7 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
     const uint32_t startTick = node->startTick;
     const uint32_t endTick = node->endTick;
 
-    if ((flags & 0x10) == 0 && node->kind < 10) {
+    if ((flags & NOTE_FLAG_HEAD_SCROLLED) == 0 && node->kind < 10) {
         node->scrollStart = computeScrollY(startTick, pos); // +0x14 head scroll position
     }
     if (endTick > startTick && pos <= endTick && node->kind < 10) {
@@ -457,8 +463,8 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
     }
 
     if (startTick < pos) {
-        if ((flags & 0x10) == 0) {
-            node->flags = (uint16_t)(flags | 0x10);
+        if ((flags & NOTE_FLAG_HEAD_SCROLLED) == 0) {
+            node->flags = (uint16_t)(flags | NOTE_FLAG_HEAD_SCROLLED);
         }
         node->scrollStart = node->scrollStart + m_scrollMap[0].speed * -16.0f;
     } else if (node->scrollStart < 0.0f) {
@@ -504,7 +510,7 @@ void NoteMng::update() {
         }
         updateDrawPos(node, pos);
         if (!m_endFlag && node->rec->type == NOTE_TYPE_END && node->startTick <= pos) {
-            node->flags |= 0x80;
+            node->flags |= NOTE_FLAG_HANDLED;
             m_endFlag = true;
         }
     }
@@ -587,7 +593,7 @@ void NoteMng::updatePlaying() {
         }
         updateDrawPos(node, pos);
         if (!m_endFlag && node->rec->type == NOTE_TYPE_END && node->startTick <= pos) {
-            node->flags |= 0x80;
+            node->flags |= NOTE_FLAG_HANDLED;
             m_endFlag = true;
         }
     }
@@ -651,7 +657,7 @@ int NoteMng::getCurrentPosition() const {
 int NoteMng::getActiveNoteCount() const {
     int n = 0;
     for (ActiveNote *note = m_activeList; note != nullptr; note = note->next) {
-        if (note->kind < 10 && (note->flags & 0x80) == 0) {
+        if (note->kind < 10 && (note->flags & NOTE_FLAG_HANDLED) == 0) {
             n++;
         }
     }
@@ -788,7 +794,7 @@ void NoteMng::spawnNotes(uint32_t pos) {
 ActiveNote *NoteMng::activeNoteAt(unsigned index) {
     unsigned i = 0;
     for (ActiveNote *note = m_activeList; note != nullptr; note = note->next) {
-        if (note->kind < 10 && (note->flags & 0x80) == 0) {
+        if (note->kind < 10 && (note->flags & NOTE_FLAG_HANDLED) == 0) {
             if (i == index) {
                 return note;
             }
@@ -842,7 +848,7 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
         return NOTE_JUDGE_MISS;
     }
     ActiveNote &note = m_notePool[noteId];
-    if ((note.flags & 0x2f) != 0) {
+    if ((note.flags & NOTE_FLAG_RESOLVED) != 0) {
         return NOTE_JUDGE_MISS; // already judged
     }
 
@@ -865,26 +871,28 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
                     }
                     // BAD: a long note also latches LONG_FAILED (0x200) here.
                     tier = NOTE_JUDGE_BAD;
-                    note.flags |= (note.startTick < note.endTick) ? 0x208 : 8;
+                    note.flags |= (note.startTick < note.endTick) ?
+                                      (NOTE_FLAG_BAD | NOTE_FLAG_LONG_FAILED) :
+                                      NOTE_FLAG_BAD;
                     m_combo = 0;
                     countsCombo = false;
                 } else {
                     tier = NOTE_JUDGE_GOOD;
-                    note.flags |= 1;
+                    note.flags |= NOTE_FLAG_GOOD;
                 }
             } else {
                 // Central band: within ~50 ms is the tightest tier.
                 if ((unsigned)(delta + 50) < 101) {
                     tier = NOTE_JUDGE_COOL;
-                    note.flags |= 4;
+                    note.flags |= NOTE_FLAG_COOL;
                 } else {
                     tier = NOTE_JUDGE_GREAT;
-                    note.flags |= 2;
+                    note.flags |= NOTE_FLAG_GREAT;
                 }
             }
         } else {
             tier = NOTE_JUDGE_GOOD;
-            note.flags |= 1;
+            note.flags |= NOTE_FLAG_GOOD;
         }
         if (countsCombo && !(note.startTick < note.endTick) && !special) {
             m_combo++;
@@ -895,7 +903,8 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
     } else {
         // BAD (late): a long note also latches LONG_FAILED (0x200) here.
         tier = NOTE_JUDGE_BAD;
-        note.flags |= (note.startTick < note.endTick) ? 0x208 : 8;
+        note.flags |= (note.startTick < note.endTick) ? (NOTE_FLAG_BAD | NOTE_FLAG_LONG_FAILED) :
+                                                        NOTE_FLAG_BAD;
         m_combo = 0;
         countsCombo = false;
     }
@@ -924,7 +933,7 @@ int NoteMng::updateLongNote(unsigned noteId) {
         return 0;
     }
     ActiveNote &note = m_notePool[noteId];
-    if ((note.flags & 0x2f) == 0 || (note.flags & 0x300) != 0) {
+    if ((note.flags & NOTE_FLAG_RESOLVED) == 0 || (note.flags & NOTE_FLAG_LONG_DONE) != 0) {
         return note.flags;
     }
 
@@ -934,18 +943,18 @@ int NoteMng::updateLongNote(unsigned noteId) {
     int delta = getCurrentPosition() - (int)note.endTick;
     int tier;
     if (delta < -60) {
-        note.flags |= 0x200; // NOTE_FLAGS_LONG_FAILED
+        note.flags |= NOTE_FLAG_LONG_FAILED; // NOTE_FLAGS_LONG_FAILED
         m_combo = 0;
         tier = 0;
         NSLog(@"NOTE_FLAGS_LONG_FAILED");
     } else {
-        note.flags |= 0x100; // NOTE_FLAGS_LONG_SUCCESS
+        note.flags |= NOTE_FLAG_LONG_SUCCESS; // NOTE_FLAGS_LONG_SUCCESS
         m_combo++;
         if (m_combo > m_maxCombo) {
             m_maxCombo = m_combo;
         }
         int f = note.flags;
-        tier = (f & 1) ? 1 : (f & 2) ? 2 : (f & 4) ? 3 : 0;
+        tier = (f & NOTE_FLAG_GOOD) ? 1 : (f & NOTE_FLAG_GREAT) ? 2 : (f & NOTE_FLAG_COOL) ? 3 : 0;
         NSLog(@"NOTE_FLAGS_LONG_SUCCESS");
     }
     m_tally[note.kind][tier]++;
@@ -969,7 +978,7 @@ int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
     if (tier >= 4) {
         return (int)(int8_t)slot.spawnKind;
     }
-    if ((slot.flags & 0x2f) == 0 || (int8_t)slot.spawnKind < 1) {
+    if ((slot.flags & NOTE_FLAG_RESOLVED) == 0 || (int8_t)slot.spawnKind < 1) {
         slot.spawnKind = 0;
         return 0;
     }
@@ -1012,7 +1021,7 @@ void NoteMng::setLaneFlag(unsigned noteId) {
     if (noteId >> 3 >= 0x7d) { // noteId >= 1000
         return;
     }
-    m_notePool[noteId].flags |= 0x40;
+    m_notePool[noteId].flags |= NOTE_FLAG_LANE_HELD;
 }
 
 // Ghidra: noteMngTogglePause @ 0x34570 — resume play from a pause (the

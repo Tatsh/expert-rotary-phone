@@ -135,6 +135,26 @@ enum NoteJudge {
 // tally).
 constexpr int kNoteKindCount = 10;
 
+// ActiveNote::flags bits (verified against the judge / miss / retire / draw
+// passes and the binary's NOTE_FLAGS_LONG_* debug strings). Bits 0..3 are the
+// judge-result flags the judge OR-sets, one per tier (see NoteJudge above).
+enum NoteFlag : uint16_t {
+    NOTE_FLAG_GOOD = 0x1,           // bit 0: graded GOOD
+    NOTE_FLAG_GREAT = 0x2,          // bit 1: graded GREAT
+    NOTE_FLAG_COOL = 0x4,           // bit 2: graded COOL (tightest tier)
+    NOTE_FLAG_BAD = 0x8,            // bit 3: graded BAD (hit in the bad window)
+    NOTE_FLAG_HEAD_SCROLLED = 0x10, // bit 4: head has passed the judge line
+    NOTE_FLAG_MISSED = 0x20,        // bit 5: scrolled past un-hit (auto-BAD miss)
+    NOTE_FLAG_LANE_HELD = 0x40,     // bit 6: a finger is on this note's lane
+    NOTE_FLAG_HANDLED = 0x80,       // bit 7: event fired / retire-eligible / inactive
+    NOTE_FLAG_LONG_SUCCESS = 0x100, // bit 8: hold tail completed
+    NOTE_FLAG_LONG_FAILED = 0x200,  // bit 9: hold tail failed
+    // Composite masks the passes test against:
+    NOTE_FLAG_RESOLVED = 0x2f,   // GOOD|GREAT|COOL|BAD|MISSED: any grade result
+    NOTE_FLAG_RETIRE = 0xc0,     // LANE_HELD|HANDLED: retire-eligible
+    NOTE_FLAG_LONG_DONE = 0x300, // LONG_SUCCESS|LONG_FAILED: hold resolved
+};
+
 // Playback state machine (m_state @ +0x5158): advances once the end (type 3)
 // note is spawned, then once every note has been retired.
 enum NoteMngState {
