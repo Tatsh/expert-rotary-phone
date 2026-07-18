@@ -1,10 +1,14 @@
 concurrency:
   cancel-in-progress: true
   group: codeql-${{ github.ref }}
+env:
+  BUILD_CONFIG: 'Release'
+  IOS_CMAKE_REF: '21598aa550701d20654c032328f7e8710a14099b'
 jobs:
   analyze:
     env:
       DEPLOYMENT_TARGET: '12.0'
+      IOS_ARCHS: 'arm64'
     permissions:
       actions: read
       contents: read
@@ -19,36 +23,36 @@ jobs:
         with:
           build-mode: 'manual'
           languages: 'c-cpp'
-      # The CodeQL C/C++ extractor cannot parse Objective-C, so the app target's
-      # .m/.mm sources cannot be traced via autobuild. Compile only the pure C
-      # and C++ translation units against the iOS SDK instead.
-      - name: Build C and C++ translation units
+      - name: Fetch ios-cmake toolchain
         run: |
-          sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
-          includes=(-IProject)
-          while IFS= read -r dir; do
-            includes+=("-I${dir}")
-          done < <(find Project -type d | sort)
-          mkdir -p build-codeql
-          count=0
-          while IFS= read -r src; do
-            obj="build-codeql/obj-${count}.o"
-            case "${src}" in
-              *.c)
-                xcrun clang -target "arm64-apple-ios${DEPLOYMENT_TARGET}" \
-                  -isysroot "${sdk}" -std=gnu2x -DGLES_SILENCE_DEPRECATION \
-                  "${includes[@]}" -c "${src}" -o "${obj}"
-                ;;
-              *.cpp)
-                xcrun clang++ -target "arm64-apple-ios${DEPLOYMENT_TARGET}" \
-                  -isysroot "${sdk}" -std=gnu++2b -stdlib=libc++ -fno-char8_t \
-                  -DGLES_SILENCE_DEPRECATION "${includes[@]}" -c "${src}" -o "${obj}"
-                ;;
-            esac
-            count=$((count + 1))
-          done < <(git ls-files 'Project/*.c' 'Project/*.cpp')
-          echo "Compiled ${count} translation units"
-          test "${count}" -gt 0
+          git clone --revision="$IOS_CMAKE_REF" https://github.com/leetal/ios-cmake.git .ios-cmake
+      - name: Configure
+        run: |
+          CMAKE_ARGS=(
+            -B build
+            -G Xcode
+            -DCMAKE_TOOLCHAIN_FILE="${GITHUB_WORKSPACE}/.ios-cmake/ios.toolchain.cmake"
+            -DDEPLOYMENT_TARGET="$DEPLOYMENT_TARGET"
+            -DENABLE_BITCODE=NO
+            -DIOS_ARCHS="$IOS_ARCHS"
+            -DPLATFORM=OS64
+            -DRHYDBG=ON
+            -DENABLE_PATCHES=ON
+            -DENABLE_OFFLINE_PATCHES=ON
+          )
+          cmake "${CMAKE_ARGS[@]}"
+      # The CodeQL tracer follows the same CMake/Xcode build as build.yml. The
+      # C/C++ extractor cannot parse the Objective-C translation units, so only
+      # the C and C++ ones are extracted from the traced build.
+      - name: Build
+        run: |
+          cmake --build build --config "$BUILD_CONFIG" -- \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGNING_REQUIRED=NO \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a
         with:
