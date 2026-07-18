@@ -244,12 +244,12 @@ void PlayTask::DrawHud() {
 
     // Gauge-overflow band once the score passes 10000, clamped to the last frame.
     if (m_score >= 10000) {
-        const int last = m_effectStateFrames[9] - 1;
+        const int last = m_effectStateFrames[kEffectStateTwl0Start] - 1;
         int f = (last * (m_score - 10000)) / 60000;
         if (last < f) {
             f = last;
         }
-        aep.drawLayer(m_effectStateLyr[9], f, AepTransform(), 0);
+        aep.drawLayer(m_effectStateLyr[kEffectStateTwl0Start], f, AepTransform(), 0);
         if (!m_optEffectOn) {
             return;
         }
@@ -263,7 +263,7 @@ void PlayTask::DrawHud() {
 
     // Scrub / gauge bar: step m_scrubBarFrame one frame toward the gauge-derived
     // target (22.10 fixed), clamped to [0, last].
-    const int last = m_effectStateFrames[10] - 1;
+    const int last = m_effectStateFrames[kEffectStateCd] - 1;
     const int target = (last * m_gaugeValue) >> 10;
     if (m_scrubBarFrame < target) {
         const int c = m_scrubBarFrame + 1;
@@ -272,10 +272,10 @@ void PlayTask::DrawHud() {
         const int c = m_scrubBarFrame - 1;
         m_scrubBarFrame = (c < 0) ? 0 : c;
     }
-    aep.drawLayer(m_effectStateLyr[10], m_scrubBarFrame, AepTransform(), 0);
+    aep.drawLayer(m_effectStateLyr[kEffectStateCd], m_scrubBarFrame, AepTransform(), 0);
 
     // Advance the fever-loop frame counter.
-    m_cdColorFrame = (m_cdColorFrame + 1) % (m_effectStateFrames[11] - 1);
+    m_cdColorFrame = (m_cdColorFrame + 1) % (m_effectStateFrames[kEffectStateCdColor] - 1);
 }
 
 // Ghidra: PlayTask_update (FUN_0002dc14).
@@ -361,14 +361,15 @@ void PlayTask::update(int /*deltaMs*/) {
             const float scale = m_uiScale;
             // 0x2de40 halves the pause-menu x origin (+0x978), not the UI scale.
             const int half = m_pauseOriginX / 2;
-            const float tapY = static_cast<float>(backTapStartY) / kFixed16One;
-            // Each stacked button spans [pos + half, pos + half + width], scaled by
-            // the UI scale, and is hit-tested against the tap's start Y (Ghidra:
-            // FixedToFP(pos + half) * scale <= FixedToFP(local_8c)).
+            // backTapStartY is a plain device pixel now (the touch pool stores plain
+            // pixels). Each stacked button spans [pos + half, pos + half + width]
+            // scaled by the UI scale, hit-tested against the tap's start Y. Disasm
+            // @ 0x2de50: vcvt.f32.s32(pos+half) * scale <= vcvt.f32.s32(startY) — no
+            // fixed-point (the decompiler rendered the vcvt ops as FixedToFP).
+            const float tapY = static_cast<float>(backTapStartY);
             const auto inBand = [&](int pos) -> bool {
-                const float lo = static_cast<float>(pos + half) / kFixed16One * scale;
-                const float hi =
-                    static_cast<float>(pos + half + m_pauseBtnWidth) / kFixed16One * scale;
+                const float lo = static_cast<float>(pos + half) * scale;
+                const float hi = static_cast<float>(pos + half + m_pauseBtnWidth) * scale;
                 return lo <= tapY && tapY <= hi;
             };
             if (inBand(m_pauseBtnResumeX)) { // resume: unpause and resume play
@@ -386,7 +387,11 @@ void PlayTask::update(int /*deltaMs*/) {
                 break;
             }
         }
-        aep.drawLayer(0 /*+0xf8*/, 0, AepTransform(), 0); // the pause-menu layer
+        aep.drawLayer(
+            m_effectStateLyr[kEffectStatePauseLoop],
+            0,
+            AepTransform(),
+            0); // the pause-menu layer (Ghidra: ldr r1,[this,#0xf8] = m_effectStateLyr[kEffectStatePauseLoop])
         nm.update(); // Ghidra: NoteMng::Update — keep the notes scrolling behind
         playJudgeUpdate(nullptr, {});
         break;
@@ -402,8 +407,8 @@ void PlayTask::update(int /*deltaMs*/) {
         m_score = PlayCurrentScore();
 
         // Advance the fever-hi HUD frame (wraps at its length, +0x138).
-        if (m_effectStateFrames[7] != 0) {
-            m_barStarFrame = (m_barStarFrame + 1) % m_effectStateFrames[7];
+        if (m_effectStateFrames[kEffectStateBarStar1] != 0) {
+            m_barStarFrame = (m_barStarFrame + 1) % m_effectStateFrames[kEffectStateBarStar1];
         }
 
         // Song-end: once every note has been judged (isFinished), latch the end
@@ -428,7 +433,7 @@ void PlayTask::update(int /*deltaMs*/) {
         // Advance the CD-jacket HUD frame by two (wraps at its length, +0x14c).
         {
             int f = m_cdFrame + 2;
-            if (m_effectStateFrames[12] <= f) {
+            if (m_effectStateFrames[kEffectStateHitLong] <= f) {
                 f = 0;
             }
             m_cdFrame = f;

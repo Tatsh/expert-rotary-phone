@@ -65,6 +65,25 @@ enum SceneLayer {
     kSceneRankFanfare = 10,     // clear fanfare, layered over the chosen rank jingle
 };
 
+// Indices into PlayTask::m_effectStateLyr / m_effectStateFrames (the +0xe4 /
+// +0x11c tables), in the order kEffectStateNames resolves them.
+enum EffectStateLayer {
+    kEffectStateGgHantei = 0,    // GG_HANTEI (judge-ground flash)
+    kEffectStateNearUnder = 1,   // EFF_NEAR_UNDER
+    kEffectStateHitOver = 2,     // EFF_HIT_OVER
+    kEffectStateHitOver2 = 3,    // EFF_HIT_OVER2
+    kEffectStateHitOverMore = 4, // EFF_HIT_OVER_MORE
+    kEffectStatePauseLoop = 5,   // PAUSE_LOOP (the pause-menu overlay layer)
+    kEffectStateBarStar0 = 6,    // FRAME_SIDEMT_BARSTAR0
+    kEffectStateBarStar1 = 7,    // FRAME_SIDEMT_BARSTAR1
+    kEffectStateBar = 8,         // FRAME_SIDEMT_BAR (fever bar; [8] frame count = its length)
+    kEffectStateTwl0Start = 9,   // BGMTSCO_TWL0_START
+    kEffectStateCd = 10,         // BGMT_CD
+    kEffectStateCdColor = 11,    // BGMT_CD_COLOR
+    kEffectStateHitLong = 12,    // EFF_HIT_LONG ([12] frame count = CD-jacket length)
+    kEffectStateHit = 13,        // EFF_HIT
+};
+
 // Indices into PlayTask::m_userSprite (the +0x2f8 user-no table). PlayTaskDraw
 // dispatches on the AEP callback's `child` id by matching it against each slot,
 // so these name the sprite each slot drives (verified against FUN_00030944).
