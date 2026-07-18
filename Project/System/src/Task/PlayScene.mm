@@ -284,10 +284,15 @@ void PlayTaskInit(void *playData) {
     task->m_sceneLayers[kSceneComboTier100]->renderMode() = 0x200; // +0xa0
 
     // Initialise the 60-entry judge-state pool: each slot's persistent layer id
-    // is its index; the note-binding fields stay zero (free). Ghidra: the +0x3c8
-    // stride-24 loop.
+    // is its index, and its noteId is the -1 free sentinel. judgeStateFor claims
+    // a slot whose noteId, read as a signed int, is < 0 (verified @ 0x31288:
+    // mov.lt from cmp noteId,#0), so a slot left at 0 reads as owned by note 0
+    // and the pool never yields a free slot — no note ever gets a judge state.
+    // Ghidra: the +0x3c8 stride-24 loop (the shipped block reaches PlayTaskInit
+    // with these noteIds already negative; stamp them here to match).
     for (int i = 0; i < 60; ++i) {
         task->m_judgePool[i].layerId = i;
+        task->m_judgePool[i].noteId = 0xffffffffu;
     }
 
     // Character-portrait / window / text-panel textures.
