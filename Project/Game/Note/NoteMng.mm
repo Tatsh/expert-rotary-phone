@@ -68,9 +68,9 @@ int NoteMng::initPlayData(const void *data,
                           int size,
                           void (*missCallback)(void *),
                           void *missCallbackArg) {
-    assert(data != nullptr && size > 0);      // NoteMng.mm:0x45 (0x335b4/0x335ba)
-    assert((unsigned)(size - 24) <= 0x4e0bu); // NoteMng.mm:0x59 (0x3360c/0x33618): the
-                                              // record span must fit the note pool
+    assert(data != nullptr && size > 0);                 // NoteMng.mm:0x45 (0x335b4/0x335ba)
+    assert(static_cast<unsigned>(size - 24) <= 0x4e0bu); // NoteMng.mm:0x59 (0x3360c/0x33618): the
+                                                         // record span must fit the note pool
 
     // The miss hook detectMiss fires when a note scrolls past un-tapped (Ghidra:
     // the callback stored at +0x13cbc and its argument at +0x13cb8, both read back
@@ -152,7 +152,7 @@ int NoteMng::initPlayData(const void *data,
     m_freeList = nullptr;
     m_activeList = nullptr;
     for (int i = 0; i < kMaxActiveNotes; i++) {
-        m_notePool[i].poolId = (uint32_t)i;
+        m_notePool[i].poolId = static_cast<uint32_t>(i);
         m_notePool[i].next = m_freeList;
         m_freeList = &m_notePool[i];
     }
@@ -171,7 +171,7 @@ int NoteMng::initPlayData(const void *data,
 int NoteMng::initPlayDataWithData(NSData *data,
                                   void (*missCallback)(void *),
                                   void *missCallbackArg) {
-    return initPlayData(data.bytes, (int)data.length, missCallback, missCallbackArg);
+    return initPlayData(data.bytes, static_cast<int>(data.length), missCallback, missCallbackArg);
 }
 
 // Ghidra: registerTempoEvents @ 0x337e0. Register every tempo (type 2) event
@@ -189,7 +189,7 @@ void NoteMng::registerTempoEvents() {
         }
         if (r.type == NOTE_TYPE_TEMPO) {
             // In auto/preview mode the BPM is clamped to 200 (Ghidra: DAT_00013cc4).
-            int16_t bpm = m_autoPlay ? 200 : (int16_t)r.value;
+            int16_t bpm = m_autoPlay ? 200 : static_cast<int16_t>(r.value);
             [[maybe_unused]] const int rc = advanceRegisterEvent(bpm, r.tick);
             assert(rc == 0); // NoteMng.mm:0x4ae "AdvanceRegisterEvent"
         }
@@ -212,9 +212,9 @@ int NoteMng::advanceRegisterEvent(int bpm, uint32_t tick) {
     for (int j = m_scrollCount; j > k; j--) {
         m_scrollMap[j] = m_scrollMap[j - 1];
     }
-    m_scrollMap[k].bpm = (int16_t)bpm;
+    m_scrollMap[k].bpm = static_cast<int16_t>(bpm);
     m_scrollMap[k].startTick = tick;
-    m_scrollMap[k].speed = (float)(bpm << 10) / 480000.0f;
+    m_scrollMap[k].speed = static_cast<float>(bpm << 10) / 480000.0f;
     m_scrollCount++;
     recomputeSpawnLookahead(tick);
     return 0;
@@ -230,7 +230,8 @@ void NoteMng::recomputeSpawnLookahead(uint32_t pos) {
     int accum = 0;
     for (int step = 0; step < 8; step++) {
         accum += 60000 / m_scrollMap[seg].bpm;
-        if (m_scrollMap[seg + 1].startTick <= (uint32_t)(accum + (int)pos)) {
+        if (m_scrollMap[seg + 1].startTick <=
+            static_cast<uint32_t>(accum + static_cast<int>(pos))) {
             seg++;
         }
     }
@@ -252,7 +253,7 @@ float NoteMng::computeScrollY(uint32_t targetTick, uint32_t pos) const {
             if (segSpan < span) {
                 span = segSpan;
             }
-            accum += m_scrollMap[seg].speed * (float)span;
+            accum += m_scrollMap[seg].speed * static_cast<float>(span);
             pos += span;
             seg++;
         } while (pos < targetTick);
@@ -315,10 +316,10 @@ void NoteMng::judgeActiveNote(ActiveNote *node, uint32_t pos) {
     const uint8_t type = node->rec->type;
     if (type == NOTE_TYPE_MARK) { // 1: start BGM
         triggerBgmStart();
-        node->flags = (uint16_t)(flags | NOTE_FLAG_HANDLED);
+        node->flags = static_cast<uint16_t>(flags | NOTE_FLAG_HANDLED);
     } else if (type == NOTE_TYPE_BAR) { // 4: measure line
         m_barCount++;
-        node->flags = (uint16_t)(flags | NOTE_FLAG_HANDLED);
+        node->flags = static_cast<uint16_t>(flags | NOTE_FLAG_HANDLED);
     }
     // other types are handled elsewhere (or not at all)
 }
@@ -355,15 +356,16 @@ void NoteMng::detectMiss(ActiveNote *node, uint32_t pos) {
         unsigned sk = (k < 4) ? ((0x05040302u >> (k * 8)) & 0xff) : 1;
         int window = 0x118; // 280 ms
         if (special) {
-            int d = (int8_t)(sk - node->spawnKind);
+            int d = static_cast<int8_t>(sk - node->spawnKind);
             if (d > 0) {
                 window = d * 0x118 + 0x118;
             }
         }
-        if (window < (int)(pos - node->startTick)) {
-            node->flags = (uint16_t)(flags | (node->startTick < node->endTick ?
-                                                  (NOTE_FLAG_MISSED | NOTE_FLAG_LONG_FAILED) :
-                                                  NOTE_FLAG_MISSED));
+        if (window < static_cast<int>(pos - node->startTick)) {
+            node->flags =
+                static_cast<uint16_t>(flags | (node->startTick < node->endTick ?
+                                                   (NOTE_FLAG_MISSED | NOTE_FLAG_LONG_FAILED) :
+                                                   NOTE_FLAG_MISSED));
             m_combo = 0;
             m_tally[kind][NOTE_JUDGE_BAD]++;
             if (m_missCallback != nullptr) {
@@ -388,11 +390,11 @@ void NoteMng::completeLongNoteTail(ActiveNote *node, uint32_t pos) {
                    (flags & NOTE_FLAG_GREAT) ? 2 :
                    (flags & NOTE_FLAG_COOL)  ? 3 :
                                                0;
-        node->flags = (uint16_t)(flags | NOTE_FLAG_LONG_SUCCESS);
-        uint32_t c = (uint32_t)m_combo + 1;
-        m_combo = (int)c;
-        if ((uint32_t)m_maxCombo < c) {
-            m_maxCombo = (int)c;
+        node->flags = static_cast<uint16_t>(flags | NOTE_FLAG_LONG_SUCCESS);
+        uint32_t c = static_cast<uint32_t>(m_combo) + 1;
+        m_combo = static_cast<int>(c);
+        if (static_cast<uint32_t>(m_maxCombo) < c) {
+            m_maxCombo = static_cast<int>(c);
         }
         m_tally[node->kind][tier]++;
     }
@@ -406,7 +408,7 @@ void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
     if ((node->flags & NOTE_FLAG_RESOLVED) != 0 || node->kind >= 10) {
         return;
     }
-    const int dt = (int)pos - (int)node->startTick;
+    const int dt = static_cast<int>(pos) - static_cast<int>(node->startTick);
     const int adt = (dt < 0) ? -dt : dt;
     if (adt < 0x200 && dt >= 0 && dt <= m_judgeWindows[5]) { // DAT_00013ca8 == judge window[5]
         node->flags |= NOTE_FLAG_COOL;
@@ -415,10 +417,10 @@ void NoteMng::autoGradeHead(ActiveNote *node, uint32_t pos) {
             return; // long note: grade the tail separately
         }
         m_tally[node->kind][NOTE_JUDGE_COOL]++;
-        uint32_t c = (uint32_t)m_combo + 1;
-        m_combo = (int)c;
-        if ((uint32_t)m_maxCombo < c) {
-            m_maxCombo = (int)c;
+        uint32_t c = static_cast<uint32_t>(m_combo) + 1;
+        m_combo = static_cast<int>(c);
+        if (static_cast<uint32_t>(m_maxCombo) < c) {
+            m_maxCombo = static_cast<int>(c);
         }
     }
 }
@@ -431,17 +433,17 @@ void NoteMng::autoGradeTail(ActiveNote *node, uint32_t pos) {
         (node->flags & NOTE_FLAG_LONG_DONE) != 0) {
         return;
     }
-    const int dt = (int)pos - (int)node->endTick;
+    const int dt = static_cast<int>(pos) - static_cast<int>(node->endTick);
     if (dt < 0 || m_judgeWindows[5] < dt) { // DAT_00013ca8 == judge window[5]
         return;
     }
     m_tally[node->kind][NOTE_JUDGE_COOL]++;
     node->flags |= (NOTE_FLAG_COOL | NOTE_FLAG_LONG_SUCCESS);
     node->spawnKind = 0;
-    uint32_t c = (uint32_t)m_combo + 1;
-    m_combo = (int)c;
-    if ((uint32_t)m_maxCombo < c) {
-        m_maxCombo = (int)c;
+    uint32_t c = static_cast<uint32_t>(m_combo) + 1;
+    m_combo = static_cast<int>(c);
+    if (static_cast<uint32_t>(m_maxCombo) < c) {
+        m_maxCombo = static_cast<int>(c);
     }
 }
 
@@ -464,7 +466,7 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
 
     if (startTick < pos) {
         if ((flags & NOTE_FLAG_HEAD_SCROLLED) == 0) {
-            node->flags = (uint16_t)(flags | NOTE_FLAG_HEAD_SCROLLED);
+            node->flags = static_cast<uint16_t>(flags | NOTE_FLAG_HEAD_SCROLLED);
         }
         node->scrollStart = node->scrollStart + m_scrollMap[0].speed * -16.0f;
     } else if (node->scrollStart < 0.0f) {
@@ -485,7 +487,7 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
 // Ghidra: FUN_00033ae4 — the standard note engine's per-frame update.
 // @complete
 void NoteMng::update() {
-    const uint32_t pos = (uint32_t)getCurrentPosition();
+    const uint32_t pos = static_cast<uint32_t>(getCurrentPosition());
 
     if (m_state != NOTE_STATE_FINISHED) {
         spawnNotes(pos);
@@ -557,15 +559,15 @@ void NoteMng::updatePlaying() {
     if (m_holdFlag) {
         return;
     }
-    const uint32_t pos = (uint32_t)getCurrentPosition();
+    const uint32_t pos = static_cast<uint32_t>(getCurrentPosition());
 
     // One-shot BGM drift sync: align the scroll to the actual audio playhead.
     if (!m_bgmSynced) {
         AudioManager *am = [AudioManager sharedManager];
         if ([am isPlayingBgm]) {
             double bgmMs = [am bgmCurrentTime] * 1000.0; // DAT_00034158 = 1000.0
-            int drift = (bgmMs > 0.0) ? (int)(long long)bgmMs : 0;
-            m_scrollTarget = drift + (m_expectedTimeBase - (int)pos);
+            int drift = (bgmMs > 0.0) ? static_cast<int>(static_cast<long long>(bgmMs)) : 0;
+            m_scrollTarget = drift + (m_expectedTimeBase - static_cast<int>(pos));
             m_bgmSynced = true;
         }
     }
@@ -625,7 +627,7 @@ int NoteMng::getElapsedTimeMs() const {
     }
     timeval now;
     gettimeofday(&now, nullptr);
-    return (int)((now.tv_sec - m_startSec) * 1000 + (now.tv_usec - m_startUsec) / 1000);
+    return static_cast<int>((now.tv_sec - m_startSec) * 1000 + (now.tv_usec - m_startUsec) / 1000);
 }
 
 // Ghidra: getCurrentPosition @ 0x34164. The current scroll/judge position in
@@ -643,12 +645,13 @@ int NoteMng::getElapsedTimeMs() const {
 // @complete
 int NoteMng::getCurrentPosition() const {
     const int elapsed = getElapsedTimeMs();
-    uint32_t sub = (uint32_t)m_positionLeadIn;
+    uint32_t sub = static_cast<uint32_t>(m_positionLeadIn);
     if (m_holdFlag) {
-        sub += (uint32_t)elapsed - (uint32_t)m_holdElapsed; // freeze while held
+        sub += static_cast<uint32_t>(elapsed) -
+               static_cast<uint32_t>(m_holdElapsed); // freeze while held
     }
-    const uint32_t val = (uint32_t)elapsed + (uint32_t)m_scrollTarget;
-    return (val < sub) ? 0 : (int)(val - sub);
+    const uint32_t val = static_cast<uint32_t>(elapsed) + static_cast<uint32_t>(m_scrollTarget);
+    return (val < sub) ? 0 : static_cast<int>(val - sub);
 }
 
 // Ghidra: getActiveNoteCount @ 0x34694. Count active notes still awaiting
@@ -709,15 +712,16 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     note->rec = rec;
     note->startTick = rec->tick;
     note->endTick = rec->param < rec->tick ? rec->tick : rec->param; // max(param, tick)
-    note->kind = (uint8_t)(rec->value & 0xff);
-    note->kindHi = (uint8_t)(rec->value >> 8);
+    note->kind = static_cast<uint8_t>(rec->value & 0xff);
+    note->kindHi = static_cast<uint8_t>(rec->value >> 8);
     note->flags = 0;
     note->scrollStart = 1024.0f;
     note->scrollEnd = 1024.0f;
 
     // Render/spawn kind: chart kinds 6..9 map to 2..5 (unless auto-play), else 1.
     unsigned k = (rec->value & 0xff) - 6;
-    note->spawnKind = (!m_autoPlay && k < 4) ? (uint8_t)((0x05040302u >> (k * 8)) & 0xff) : 1;
+    note->spawnKind =
+        (!m_autoPlay && k < 4) ? static_cast<uint8_t>((0x05040302u >> (k * 8)) & 0xff) : 1;
 
     // On-screen position. MakeNote loads two drawable metrics from the scene
     // manager and divides each by the UI scale: DAT_00187b78 = front-buffer WIDTH
@@ -730,14 +734,16 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     // split into low/high byte lanes by the NEON pack, so the odd bytes
     // (0xf/0x11/0x13) feed the y triplet. (constants 150/75; MakeNote @ 0x341a4.)
     const float scale = neSceneManager::screenScale();
-    const int baseX = (int)(neSceneManager::screenWidth() / scale);  // DAT_00187b78 = width
-    const int baseY = (int)(neSceneManager::screenHeight() / scale); // DAT_00187b7c = height
-    note->x = (float)((baseX * recByte(rec, 0xe)) / 100);
-    note->y = (float)((baseY * recByte(rec, 0xf)) / 100);
-    note->x2 = (float)(((baseX + 150) * recByte(rec, 0x10)) / 100 - 75);
-    note->y2 = (float)(((baseY + 150) * recByte(rec, 0x11)) / 100 - 75);
-    note->targetX = (float)(((baseX + 150) * recByte(rec, 0x12)) / 100 - 75);
-    note->targetY = (float)(((baseY + 150) * recByte(rec, 0x13)) / 100 - 75);
+    const int baseX =
+        static_cast<int>(neSceneManager::screenWidth() / scale); // DAT_00187b78 = width
+    const int baseY =
+        static_cast<int>(neSceneManager::screenHeight() / scale); // DAT_00187b7c = height
+    note->x = static_cast<float>((baseX * recByte(rec, 0xe)) / 100);
+    note->y = static_cast<float>((baseY * recByte(rec, 0xf)) / 100);
+    note->x2 = static_cast<float>(((baseX + 150) * recByte(rec, 0x10)) / 100 - 75);
+    note->y2 = static_cast<float>(((baseY + 150) * recByte(rec, 0x11)) / 100 - 75);
+    note->targetX = static_cast<float>(((baseX + 150) * recByte(rec, 0x12)) / 100 - 75);
+    note->targetY = static_cast<float>(((baseY + 150) * recByte(rec, 0x13)) / 100 - 75);
 
     moveToActive(note);
 }
@@ -763,7 +769,7 @@ void NoteMng::makeEvent(const NoteRecord *rec) {
 // @complete
 void NoteMng::spawnNotes(uint32_t pos) {
     NoteRecord *rec = m_spawnCursor;
-    const uint32_t spawnUntil = (uint32_t)(m_spawnLookahead + (int)pos);
+    const uint32_t spawnUntil = static_cast<uint32_t>(m_spawnLookahead + static_cast<int>(pos));
     if (rec->tick > spawnUntil) {
         return;
     }
@@ -808,7 +814,7 @@ ActiveNote *NoteMng::activeNoteAt(unsigned index) {
 // index-th judgeable note into a render descriptor.
 // @complete
 void NoteMng::getNoteObject(NoteRenderData *out, int index) {
-    ActiveNote *note = activeNoteAt((unsigned)index);
+    ActiveNote *note = activeNoteAt(static_cast<unsigned>(index));
     assert(note != nullptr); // NoteMng.mm GetNoteObject:0x32b/0x344
 
     out->noteId = note->poolId; // Ghidra: nField0 = *(int *)pNote->pReserved8
@@ -829,7 +835,7 @@ void NoteMng::getNoteObject(NoteRenderData *out, int index) {
 
     // Recompute the render kind: special (chart kind 6..9), long (start < end),
     // else normal.
-    if (!m_autoPlay && (uint8_t)(note->kind - 6) < 4) {
+    if (!m_autoPlay && static_cast<uint8_t>(note->kind - 6) < 4) {
         out->renderKind = NOTE_RENDER_SPECIAL;
     } else if (note->startTick < note->endTick) {
         out->renderKind = NOTE_RENDER_LONG;
@@ -852,8 +858,8 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
         return NOTE_JUDGE_MISS; // already judged
     }
 
-    bool special = !m_autoPlay && (uint8_t)(note.kind - 6) < 4;
-    int delta = (int)note.startTick - getCurrentPosition(); // + = early, - = late
+    bool special = !m_autoPlay && static_cast<uint8_t>(note.kind - 6) < 4;
+    int delta = static_cast<int>(note.startTick) - getCurrentPosition(); // + = early, - = late
     if (delta <= m_judgeWindows[0]) {
         return NOTE_JUDGE_MISS; // already past the note
     }
@@ -882,7 +888,7 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
                 }
             } else {
                 // Central band: within ~50 ms is the tightest tier.
-                if ((unsigned)(delta + 50) < 101) {
+                if (static_cast<unsigned>(delta + 50) < 101) {
                     tier = NOTE_JUDGE_COOL;
                     note.flags |= NOTE_FLAG_COOL;
                 } else {
@@ -915,7 +921,7 @@ int NoteMng::judgeNoteHit(unsigned noteId) {
     // Each graded hit counts down the note's remaining-taps counter (spawnKind,
     // Ghidra: the DAT_00005266 = flags+2 decrement at the tail; misses return
     // early and never reach it).
-    if ((int8_t)note.spawnKind > 0) {
+    if (static_cast<int8_t>(note.spawnKind) > 0) {
         note.spawnKind--;
     }
     return tier;
@@ -940,7 +946,7 @@ int NoteMng::updateLongNote(unsigned noteId) {
     // Ghidra uses 0x523c (endTick), not startTick: a hold whose finger lifted
     // more than 60 ticks BEFORE the tail is a fail. (Pre-existing reconstruction
     // bug, decompile-confirmed.)
-    int delta = getCurrentPosition() - (int)note.endTick;
+    int delta = getCurrentPosition() - static_cast<int>(note.endTick);
     int tier;
     if (delta < -60) {
         note.flags |= NOTE_FLAG_LONG_FAILED; // NOTE_FLAGS_LONG_FAILED
@@ -976,29 +982,30 @@ int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
     }
     ActiveNote &slot = m_notePool[noteId];
     if (tier >= 4) {
-        return (int)(int8_t)slot.spawnKind;
+        return static_cast<int>(static_cast<int8_t>(slot.spawnKind));
     }
-    if ((slot.flags & NOTE_FLAG_RESOLVED) == 0 || (int8_t)slot.spawnKind < 1) {
+    if ((slot.flags & NOTE_FLAG_RESOLVED) == 0 || static_cast<int8_t>(slot.spawnKind) < 1) {
         slot.spawnKind = 0;
         return 0;
     }
 
-    const int startTick = (int)slot.startTick;
+    const int startTick = static_cast<int>(slot.startTick);
     const int pos = getCurrentPosition();
     // The note's spawn graphic (chart kind 6..9 -> 2..5, else 1), used as a
     // distance scale.
     int graphic;
-    if ((uint8_t)(slot.kind - 6) < 4) {
-        graphic = (int)(int8_t)(0x5040302 >> (((slot.kind - 6) & 0x1f) << 3));
+    if (static_cast<uint8_t>(slot.kind - 6) < 4) {
+        graphic =
+            static_cast<int>(static_cast<int8_t>(0x5040302 >> (((slot.kind - 6) & 0x1f) << 3)));
     } else {
         graphic = 1;
     }
-    const int8_t remaining = (int8_t)slot.spawnKind;
+    const int8_t remaining = static_cast<int8_t>(slot.spawnKind);
     graphic -= remaining;
     int8_t next = remaining;
     if (remaining > 0) {
         next = remaining - 1;
-        slot.spawnKind = (uint8_t)next;
+        slot.spawnKind = static_cast<uint8_t>(next);
     }
 
     if (graphic * 0x118 + 0x118 < startTick - pos) {
@@ -1011,7 +1018,7 @@ int NoteMng::judgeHold(unsigned noteId, unsigned tier) {
         }
         m_tally[slot.kind][tier]++;
     }
-    return (int)(int8_t)slot.spawnKind;
+    return static_cast<int>(static_cast<int8_t>(slot.spawnKind));
 }
 
 // Ghidra: noteMngSetLaneFlag @ 0x347c8 — set the "lane held" flag (0x40) on
@@ -1043,7 +1050,7 @@ void NoteMng::togglePause() {
     if (m_bgmStartPos != -1 && !m_endFlag) {
         const int pos = getCurrentPosition();
         AudioManager *am = [AudioManager sharedManager];
-        double seconds = (double)(pos - m_bgmStartPos) / 1000.0; // DAT_00034660 = 1000.0
+        double seconds = static_cast<double>(pos - m_bgmStartPos) / 1000.0; // DAT_00034660 = 1000.0
         [am setBgmCurrentTime:seconds];
     }
     [[AudioManager sharedManager] playBgm:0];
@@ -1058,7 +1065,7 @@ void NoteMng::togglePause() {
 // Ghidra: FUN_00034bb4 — the slot's chart kind (drives the tone graphic).
 // @complete
 int NoteToneGraphic(int noteId) {
-    if ((unsigned)noteId >> 3 < 0x7d) {
+    if (static_cast<unsigned>(noteId) >> 3 < 0x7d) {
         return NoteMng::shared().toneSlot(noteId).kind;
     }
     return 0;
@@ -1067,7 +1074,7 @@ int NoteToneGraphic(int noteId) {
 // Ghidra: FUN_00034b98 — the slot's high kind byte.
 // @complete
 int NoteToneFlags(int noteId) {
-    if ((unsigned)noteId >> 3 < 0x7d) {
+    if (static_cast<unsigned>(noteId) >> 3 < 0x7d) {
         return NoteMng::shared().toneSlot(noteId).kindHi;
     }
     return 0;
@@ -1078,9 +1085,9 @@ int NoteToneFlags(int noteId) {
 // NoteRenderKind.
 // @complete
 int NoteToneState(int noteId) {
-    if ((unsigned)noteId >> 3 < 0x7d) {
+    if (static_cast<unsigned>(noteId) >> 3 < 0x7d) {
         const ActiveNote &slot = NoteMng::shared().toneSlot(noteId);
-        if ((uint8_t)(slot.kind - 6) < 4) {
+        if (static_cast<uint8_t>(slot.kind - 6) < 4) {
             return 1;
         }
         return (slot.startTick < slot.endTick) ? 2 : 0;
@@ -1093,8 +1100,8 @@ int NoteToneState(int noteId) {
 // spawnKind.)
 // @complete
 int NoteToneDefaultGraphic(int type) {
-    if ((unsigned)(type - 6) < 4) {
-        return (int)(char)(0x5040302 >> (((type - 6) & 0x1f) << 3));
+    if (static_cast<unsigned>(type - 6) < 4) {
+        return static_cast<int>(static_cast<char>(0x5040302 >> (((type - 6) & 0x1f) << 3)));
     }
     return 1;
 }
@@ -1102,8 +1109,8 @@ int NoteToneDefaultGraphic(int type) {
 // Ghidra: FUN_00034bd0 — the slot's spawn graphic (read back as a signed byte).
 // @complete
 int NoteToneCount(int noteId) {
-    if ((unsigned)noteId >> 3 < 0x7d) {
-        return (int)(int8_t)NoteMng::shared().toneSlot(noteId).spawnKind;
+    if (static_cast<unsigned>(noteId) >> 3 < 0x7d) {
+        return static_cast<int>(static_cast<int8_t>(NoteMng::shared().toneSlot(noteId).spawnKind));
     }
     return 0;
 }
@@ -1112,9 +1119,9 @@ int NoteToneCount(int noteId) {
 // positive.
 // @complete
 float NoteBeatIntervalMs() {
-    int16_t tempo = (int16_t)NoteMng::shared().beatTempoValue();
+    int16_t tempo = static_cast<int16_t>(NoteMng::shared().beatTempoValue());
     if (tempo < 1) {
         return 0.0f;
     }
-    return 60000.0f / (float)tempo;
+    return 60000.0f / static_cast<float>(tempo);
 }

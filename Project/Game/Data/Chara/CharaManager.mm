@@ -38,7 +38,7 @@ CharaManager &CharaManagerShared() {
         gCharaManager.reload();
         return true;
     }();
-    (void)once;
+    static_cast<void>(once);
     return gCharaManager;
 }
 
@@ -56,10 +56,10 @@ const uint8_t kCharaKeyObfuscated[25] = {
 // BFCodec-decipher the data in place. Returns the data on success, nil on fail.
 // @complete
 NSData *charaDecodeChr(NSMutableData *data) {
-    const int length = (int)sizeof(kCharaKeyObfuscated);
+    const int length = static_cast<int>(sizeof(kCharaKeyObfuscated));
     std::vector<uint8_t> deob(length);
     for (int i = 0; i < length; i++) {
-        deob[i] = (uint8_t)(kCharaKeyObfuscated[i] + (uint8_t)i);
+        deob[i] = static_cast<uint8_t>(kCharaKeyObfuscated[i] + static_cast<uint8_t>(i));
     }
     uint8_t digest[16];
     RhMD5(deob.data(), length, digest);
@@ -178,7 +178,7 @@ void CharaManager::reload() {
 
     // Keep only the characters the player can currently use.
     for (CharaInfo *info in allChara) {
-        if (isCharaAvailable((unsigned short)info.charaId)) {
+        if (isCharaAvailable(static_cast<unsigned short>(info.charaId))) {
             [available addObject:info];
         }
     }
@@ -294,7 +294,7 @@ void AcMainTask::charaSelectLoadPageTextures(int page) {
             RhTestBitInNumberArray(gotChara, static_cast<unsigned>(static_cast<short>(charaId)));
         NSString *imageName =
             [NSString stringWithFormat:(owned ? @"open_chara_%03d.png" : @"lock_chara_%03d.png"),
-                                       (int)charaId];
+                                       static_cast<int>(charaId)];
 
         NSString *path;
         if (charaId < 30) {

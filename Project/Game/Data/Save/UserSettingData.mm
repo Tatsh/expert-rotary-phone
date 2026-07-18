@@ -38,7 +38,7 @@ static NSString *const kKeyIsLongNotesEffectOn = @"IsLongNotesEffectOn";
 // @complete
 static int neSugorokuTouchSoundBit(int mainMapId) {
     static constexpr int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    unsigned id = (unsigned)mainMapId & 0xffff;
+    unsigned id = static_cast<unsigned>(mainMapId) & 0xffff;
     return id < 9 ? kBits[id] : 0;
 }
 
@@ -586,7 +586,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     int word = charaIndex >> 5;
     int bit = 1 << (charaIndex & 0x1f);
     for (int i = 0; i <= word; i++) {
-        if ((int)arr.count <= i) {
+        if (static_cast<int>(arr.count) <= i) {
             [arr addObject:@0];
         }
         if (i == word) {
@@ -623,13 +623,13 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @complete
 + (short)charaTicket108 {
     int v = static_cast<int16_t>([self getInt:@"CharaTicket"]);
-    return (short)(v < 1 ? 0 : v);
+    return static_cast<short>(v < 1 ? 0 : v);
 }
 // @ 0x5fcfc — key "TreasurePoint"; same sign-extend and le clamp as charaTicket.
 // @complete
 + (short)treasurePoint108 {
     int v = static_cast<int16_t>([self getInt:@"TreasurePoint"]);
-    return (short)(v < 1 ? 0 : v);
+    return static_cast<short>(v < 1 ? 0 : v);
 }
 // @ 0x5fd34 — key "OpenedLoginBonusId"; returns the stored value minus 1
 // (subs r0,#1), unbiasing the +1 the setter applied.
@@ -714,7 +714,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         int got = [self gotChara];
         for (int i = 0; i < 30; i++) {
             if (got & (1 << i)) {
-                [self saveGotCharaArray:(short)i];
+                [self saveGotCharaArray:static_cast<short>(i)];
             }
         }
         [[AppDelegate appDelegate] setUsersettingVer:@"109"]; // @0x137548 CFString "109"
@@ -817,8 +817,10 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (void)saveSettingData {
     auto &ec = neAppEventCenter::shared();
     NSUserDefaults *ud = NSUserDefaults.standardUserDefaults;
-    [ud setObject:[NSNumber numberWithFloat:(float)ec.lastMusic()] forKey:kKeyLastMusic];
-    [ud setObject:[NSNumber numberWithFloat:(float)ec.lastSheet()] forKey:kKeyLastSheet];
+    [ud setObject:[NSNumber numberWithFloat:static_cast<float>(ec.lastMusic())]
+           forKey:kKeyLastMusic];
+    [ud setObject:[NSNumber numberWithFloat:static_cast<float>(ec.lastSheet())]
+           forKey:kKeyLastSheet];
     [ud synchronize];
 }
 
@@ -855,8 +857,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (short)seVolume {
     int v = [self getInt:@"SeVolume"];
     short r = 0x7f;
-    if ((short)v < 0x7f) {
-        r = (short)v;
+    if (static_cast<short>(v) < 0x7f) {
+        r = static_cast<short>(v);
     }
     if (r < 0) {
         r = 0;
@@ -882,8 +884,8 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 + (short)touchSoundVolume {
     int v = [self getInt:@"TouchSoundVolume"];
     short r = 0x7f;
-    if ((short)v < 0x7f) {
-        r = (short)v;
+    if (static_cast<short>(v) < 0x7f) {
+        r = static_cast<short>(v);
     }
     if (r < 0) {
         r = 0;
@@ -963,7 +965,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @complete
 + (short)musicSort {
     int v = [self getInt:@"MusicSort"];
-    short sort = ((short)v < 5) ? (short)v : 5;
+    short sort = (static_cast<short>(v) < 5) ? static_cast<short>(v) : 5;
     if (sort < 0) {
         sort = 0;
     }
@@ -1284,7 +1286,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         return;
     }
     short cur = [self charaTicket];
-    [self saveCharaTicket:(short)(cur + count)];
+    [self saveCharaTicket:static_cast<short>(cur + count)];
 }
 
 #pragma mark - Store / recommend view timestamps
@@ -1394,7 +1396,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @complete
 + (void)addConsumedTreasurePoint:(short)value {
     short cur = [self consumedTreasurePoint];
-    int total = (short)(cur + value);
+    int total = static_cast<short>(cur + value);
     if (total > 9998) { // Ghidra: 0x270e < total
         total = 9999;
     }
@@ -1432,7 +1434,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
         }
         NSMutableDictionary *entry = [NSMutableDictionary dictionary];
         [entry setObject:[NSNumber numberWithShort:subMapId] forKey:@"mapid"];
-        [entry setObject:[NSNumber numberWithShort:(short)no] forKey:@"readno"];
+        [entry setObject:[NSNumber numberWithShort:static_cast<short>(no)] forKey:@"readno"];
         [array addObject:entry];
         NSLog(@"%@", entry);
     }
