@@ -65,6 +65,10 @@ BOOL gLaunchedFromPush = NO;
     // RHYDBG: stamp the build's git SHA at startup so any captured log identifies
     // exactly which build produced it (no-op unless RHYDBG). idevicesyslog|grep RHYDBG.
     neDebugLog("build sha=%s", RHYDBG_BUILD_SHA);
+    // RHYDBG: the persistent device UUID whose MD5 is the BFCodec key for the
+    // purchased-song lists (mulist / acmulist / prodlist), so those blobs can be
+    // decrypted offline. Diagnostic builds only.
+    neDebugLog("mulist/prodlist key uuId=%s", self.uuId.UTF8String);
 
     CGRect bounds = UIScreen.mainScreen ? UIScreen.mainScreen.bounds : CGRectZero;
     self.mainWindow = [[neWindow alloc] initWithFrame:bounds];

@@ -341,6 +341,25 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
 
+        // RHYDBG: why a tap did or didn't reach the button hit-tests. Shows the
+        // fling-gate value, whether a tap was registered this frame, the tap point
+        // and the settings-button rect (uiScale-scaled) so a coordinate-space
+        // mismatch is visible directly.
+        if (NE_DBG_FIRST(24)) {
+            const int b = 6; // kBtnSettings base in m_layoutRects
+            neDebugLog("MusicSel tap gate: scrollOff=%d haveTap=%d tap=(%d,%d) uiScale=%.3f "
+                       "settingsRect=(%d,%d,%d,%d)*scale",
+                       m_scrollOffset,
+                       haveTap ? 1 : 0,
+                       tapX,
+                       tapY,
+                       static_cast<double>(m_uiScale),
+                       m_layoutRects[b + 0],
+                       m_layoutRects[b + 1],
+                       m_layoutRects[b + 2],
+                       m_layoutRects[b + 3]);
+        }
+
         // Ghidra 0x35a?? : suppress taps while the list is still flinging — the
         // binary bails when |m_scrollOffset| (as float) >= 10.0 before any
         // hit-test, so a fast drag never lands on a button.
