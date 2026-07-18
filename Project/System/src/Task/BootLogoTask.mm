@@ -206,84 +206,84 @@ void BootLogoTask::update(int /*deltaMs*/) {
     const bool skip = skipRequested();
 
     switch (m_state) {
-    case 0:
+    case kBootStateSetup:
         setup();
-        m_state = 1;
+        m_state = kBootStateFadeInLogo0;
         break;
-    case 1:
+    case kBootStateFadeInLogo0:
         m_aep->playTransition(1, kFirstFadeFrames, 0); // fade in
         m_counter = 0;
-        m_state = 2;
+        m_state = kBootStateHoldLogo0;
         break;
-    case 2: // hold logo 0
+    case kBootStateHoldLogo0: // hold logo 0
         if (skip) {
             m_counter = kHoldFrames;
         }
         if (m_aep->isTransitionDone()) {
-            if (m_counter > 0x77) {
+            if (m_counter >= kHoldFrames) {
                 m_aep->playTransition(2, kFadeFrames, 0); // fade out
-                m_state = 3;
+                m_state = kBootStateCrossToLogo2;
             }
             m_counter++;
         }
         drawLogo(m_logo[0].get());
         return;
-    case 3: // fade logo 0 out -> fade logo 2 in
+    case kBootStateCrossToLogo2: // fade logo 0 out -> fade logo 2 in
         if (!m_aep->isTransitionDone()) {
             drawLogo(m_logo[0].get());
             return;
         }
         m_aep->playTransition(1, kFadeFrames, 0);
         m_counter = 0;
-        m_state = 4;
+        m_state = kBootStateHoldLogo2;
         break;
-    case 4: // hold logo 2
+    case kBootStateHoldLogo2: // hold logo 2
         if (skip) {
             m_counter = kHoldFrames;
         }
         if (m_aep->isTransitionDone()) {
-            if (m_counter > 0x77) {
+            if (m_counter >= kHoldFrames) {
                 m_aep->playTransition(2, kFadeFrames, 0);
-                m_state = 5;
+                m_state = kBootStateCrossToLogo1;
             }
             m_counter++;
         }
         drawLogo2();
         return;
-    case 5: // fade logo 2 out -> fade logo 1 in
+    case kBootStateCrossToLogo1: // fade logo 2 out -> fade logo 1 in
         if (!m_aep->isTransitionDone()) {
             drawLogo2();
             return;
         }
         m_aep->playTransition(1, kFadeFrames, 0);
         m_counter = 0;
-        m_state = 6;
+        m_state = kBootStateHoldLogo1;
         break;
-    case 6: // hold logo 1
+    case kBootStateHoldLogo1: // hold logo 1
         if (skip) {
             m_counter = kHoldFrames;
         }
         if (m_aep->isTransitionDone()) {
-            if (m_counter > 0x77) {
-                m_state = 7;
+            if (m_counter >= kHoldFrames) {
+                m_state = kBootStateFadeOutLogo1;
             }
             m_counter++;
         }
         drawLogo1();
         return;
-    case 7: // fade logo 1 out
+    case kBootStateFadeOutLogo1: // fade logo 1 out
         m_aep->playTransition(2, kFadeFrames, 0);
         drawLogo1();
-        m_state = 8;
+        m_state = kBootStateWaitFadeOut;
         break;
-    case 8:
+    case kBootStateWaitFadeOut:
         if (!m_aep->isTransitionDone()) {
             drawLogo1();
             return;
         }
-        m_state = 9;
+        m_state = kBootStateFinish;
         break;
-    case 9:
+    case kBootStateFinish:
         finish();
         return;
     default:

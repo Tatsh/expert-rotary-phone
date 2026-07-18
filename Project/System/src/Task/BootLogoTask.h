@@ -44,7 +44,21 @@ private:
     int m_counter = 0;                          // +0x3c per-screen frame counter
     int m_posX = 0;                             // +0x40 logo centre x
     int m_posY = 0;                             // +0x44 logo centre y
-    int m_state = 0;                            // +0x48 state machine (0..9)
+    // update() state-machine values: a three-logo cross-fade sequence
+    // (Ghidra: BootLogoTask::update).
+    enum BootState {
+        kBootStateSetup = 0,        // build the scene
+        kBootStateFadeInLogo0 = 1,  // fade the first logo in
+        kBootStateHoldLogo0 = 2,    // hold the first logo
+        kBootStateCrossToLogo2 = 3, // fade logo 0 out, then logo 2 in
+        kBootStateHoldLogo2 = 4,    // hold logo 2
+        kBootStateCrossToLogo1 = 5, // fade logo 2 out, then logo 1 in
+        kBootStateHoldLogo1 = 6,    // hold logo 1
+        kBootStateFadeOutLogo1 = 7, // fade logo 1 out
+        kBootStateWaitFadeOut = 8,  // wait for the final fade-out
+        kBootStateFinish = 9,       // tear down and hand off to the title
+    };
+    int m_state = 0; // +0x48 state machine (BootState)
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
