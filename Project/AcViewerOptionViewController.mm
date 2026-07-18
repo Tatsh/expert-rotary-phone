@@ -24,6 +24,24 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
+// The four arcade chart difficulties, in ascending order (drives the header BPM
+// label lookup).
+typedef NS_ENUM(NSInteger, AcvDifficulty) {
+    AcvDifficultyEasy = 0,
+    AcvDifficultyNormal = 1,
+    AcvDifficultyHyper = 2,
+    AcvDifficultyEx = 3,
+};
+
+// The arcade-viewer option list's rows, each pushing its own detail screen.
+typedef NS_ENUM(NSInteger, AcvOptionRow) {
+    AcvOptionRowHiSpeed = 0, // AcViewerHiSpeedViewController
+    AcvOptionRowPopKun = 1,  // AcViewerPopKunViewController
+    AcvOptionRowHidSud = 2,  // AcViewerHidSudViewController
+    AcvOptionRowRanMir = 3,  // AcViewerRanMirViewController
+    AcvOptionRowCount = 4,
+};
+
 // The C++ arcade note-play task the AC-main flow owns (the one AppDelegate
 // holds in its acMainTask property); opaque on the ObjC side (a raw pointer,
 // non-ARC), passed straight through to the engine hooks. Ghidra: struct
@@ -121,16 +139,16 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
     NSString *bpm = nil;
     switch (difficulty) {
-    case 0:
+    case AcvDifficultyEasy:
         bpm = [data bpmEasy];
         break;
-    case 1:
+    case AcvDifficultyNormal:
         bpm = [data bpmNormal];
         break;
-    case 2:
+    case AcvDifficultyHyper:
         bpm = [data bpmHyper];
         break;
-    case 3:
+    case AcvDifficultyEx:
         bpm = [data bpmEx];
         break;
     default:
@@ -276,7 +294,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0xdff7c — four option rows in section 0.
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return (section == 0) ? 4 : 0;
+    return (section == 0) ? AcvOptionRowCount : 0;
 }
 
 // @ 0xdff88 — one AcViewerOptionCell per row (reused by "Cell%ld-%ld"), bound
@@ -295,17 +313,17 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     }
     if (indexPath.section == 0) {
         switch (indexPath.row) {
-        case 0:
-            [cell setData:0];
+        case AcvOptionRowHiSpeed:
+            [cell setData:AcvOptionRowHiSpeed];
             break;
-        case 1:
-            [cell setData:1];
+        case AcvOptionRowPopKun:
+            [cell setData:AcvOptionRowPopKun];
             break;
-        case 2:
-            [cell setData:2];
+        case AcvOptionRowHidSud:
+            [cell setData:AcvOptionRowHidSud];
             break;
-        case 3:
-            [cell setData:3];
+        case AcvOptionRowRanMir:
+            [cell setData:AcvOptionRowRanMir];
             break;
         default:
             break;
@@ -340,19 +358,19 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     UIViewController *vc = nil;
     NSString *navbarName = nil;
     switch (indexPath.row) {
-    case 0:
+    case AcvOptionRowHiSpeed:
         vc = [[AcViewerHiSpeedViewController alloc] init];
         navbarName = @"acv_hispeed_navbar";
         break;
-    case 1:
+    case AcvOptionRowPopKun:
         vc = [[AcViewerPopKunViewController alloc] init];
         navbarName = @"acv_popkun_navbar";
         break;
-    case 2:
+    case AcvOptionRowHidSud:
         vc = [[AcViewerHidSudViewController alloc] init];
         navbarName = @"acv_hidsud_navbar";
         break;
-    case 3:
+    case AcvOptionRowRanMir:
         vc = [[AcViewerRanMirViewController alloc] init];
         navbarName = @"acv_ranmir_navbar";
         break;
