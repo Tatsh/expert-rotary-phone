@@ -214,18 +214,20 @@ inline void MainTask::seedDiffStarLayerFrames() {
 // diffDirty fetchScoreDataForMusic loop in update state 4 @ 0x35914). Each of
 // the three difficulties is re-fetched from the local ScoreData store into the
 // previewed song's jacket-cell score rows (the same MusicSelCell::ScoreRows
-// block loadCellScoreRows fills). The destination storage is the named cell
-// block; only the visible-row *index* the binary computes
-// (___modsi3 of the packed per-cell select-state seam) does not decompile
-// cleanly, so the chosen cell is taken as m_selectedCell (the cell tapped to
-// enter the preview).
+// block loadCellScoreRows fills). The destination cell is the previewed song's
+// cell-within-column, which the binary computes as m_chosenIndex % m_columnStride
+// (___modsi3(field_0x8f8, nColorGroupStride) @ 0x35914) -- not the drag touch id.
 inline void MainTask::refreshScoreRows() {
-    if (m_selectedCell < 0 || m_selectedCell >= 27) {
+    if (m_columnStride <= 0) {
+        return;
+    }
+    const int cell = m_chosenIndex % m_columnStride;
+    if (cell < 0 || cell >= 27) {
         return; // no cell in preview
     }
     // fetchScoreDataForMusic (neEngineBridge.h) is reconstructed; drive it per
     // difficulty.
-    loadCellScoreRows(m_cells[m_selectedCell], m_sel.musicId);
+    loadCellScoreRows(m_cells[cell], m_sel.musicId);
 }
 
 /**
@@ -429,11 +431,23 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
 
-        // -- song grid: first the whole cell, then its favourite toggle --
-        for (int c = 0; c < 27; c++) {
+        // -- song grid: first the whole cell, then its favourite toggle. The
+        // binary (0x35914) only tests the cells the current column actually fills:
+        // a full m_columnStride for every column but the last, and
+        // (m_songCount - 1) % m_columnStride + 1 for the final (partial) column, so
+        // empty trailing slots are never hit-tested. The tapped cell c is only the
+        // cell-within-column; the absolute song index is
+        // m_columnIndex * m_columnStride + c, stored in m_chosenIndex (+0x8f8) for
+        // the state-3 lookup. (Indexing m_musicList by c alone overran the list --
+        // e.g. c=21 against a 3-song list -- and crashed with NSRangeException.)
+        int cellsInColumn = m_columnStride;
+        if (m_columnStride > 0 && (m_songCount - 1) / m_columnStride <= m_columnIndex) {
+            cellsInColumn = (m_songCount - 1) % m_columnStride + 1;
+        }
+        for (int c = 0; c < cellsInColumn; c++) {
             if (hitButton(tapX, tapY, kBtnSongCell, c)) {
                 if (AllCellsReady()) {
-                    m_selectedCell = c;
+                    m_chosenIndex = m_columnIndex * m_columnStride + c;
                     neEngine::playSystemSe(1);
                     m_state = 3; // preview the chosen song
                 }
@@ -450,8 +464,9 @@ void MainTask::update(int /*deltaMs*/) {
 
     case 3: { // a song was chosen: preview its BGM + load textures + ScoreData
         [audio pushBgm];
-        m_chosenIndex = m_selectedCell;
-        MusicData *info = [m_musicList objectAtIndexedSubscript:m_selectedCell];
+        // m_chosenIndex (+0x8f8) is the absolute song index already set when the
+        // cell was tapped (state 2); the binary subscripts m_musicList with it.
+        MusicData *info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
         unsigned musicId = static_cast<unsigned>([info MusicID]);
         m_sel.musicId = musicId;
 
