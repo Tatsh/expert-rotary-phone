@@ -39,6 +39,15 @@
 #import "ConversionView.h" // embedded "device change" (data transfer) panel (section 2, row 1)
 #import "CustomWebView.h"  // in-app web view for the official app-info page (section 0)
 
+// The iPad "other settings" table sections (row counts 1/1/2; section 2's
+// second row is the expandable ConversionView panel).
+typedef NS_ENUM(NSInteger, SettingOtherSection) {
+    SettingOtherSectionNews = 0,         // お知らせ
+    SettingOtherSectionTreasure = 1,     // トレジャーモード (retire)
+    SettingOtherSectionDeviceChange = 2, // 機種変更 (toggle + conversion panel)
+    SettingOtherSectionCount = 3,
+};
+
 // The app's root view controller (MainViewController), bridged from the C++
 // scene manager.
 static UIViewController *RootVC() {
@@ -197,8 +206,8 @@ static UIViewController *RootVC() {
 // (DAT_0012fba8).
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    static const NSInteger kRows[3] = {1, 1, 2};
-    if (section < 3) {
+    static const NSInteger kRows[SettingOtherSectionCount] = {1, 1, 2};
+    if (section < SettingOtherSectionCount) {
         return kRows[section];
     }
     return 0;
@@ -209,7 +218,7 @@ static UIViewController *RootVC() {
 // collapses to 0.
 // @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 2 && indexPath.row == 1) {
+    if (indexPath.section == SettingOtherSectionDeviceChange && indexPath.row == 1) {
         NSIndexPath *toggle = [NSIndexPath indexPathForRow:0 inSection:2];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:toggle] == NSOrderedSame) {
             return _convDummyFrm.size.height; // expanded: show the conversion panel
@@ -240,13 +249,13 @@ static UIViewController *RootVC() {
 
     NSString *title;
     switch (section) {
-    case 0:
+    case SettingOtherSectionNews:
         title = @"お知らせ";
         break; // News
-    case 2:
+    case SettingOtherSectionDeviceChange:
         title = @"機種変更";
         break; // Device change
-    case 1:
+    case SettingOtherSectionTreasure:
         title = @"トレジャーモード";
         break; // Treasure Mode
     default:
@@ -292,7 +301,7 @@ static UIViewController *RootVC() {
     cell.clipsToBounds = YES;
 
     // --- Section 2, row 1: the embedded ConversionView panel ---
-    if (indexPath.section == 2 && indexPath.row == 1) {
+    if (indexPath.section == SettingOtherSectionDeviceChange && indexPath.row == 1) {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
         // Outer pill sized to the pre-computed panel frame; greenish border +
@@ -335,14 +344,14 @@ static UIViewController *RootVC() {
     // --- All other rows: a colored title pill with a centered label ---
     UIColor *pillColor;
     NSString *title;
-    if (indexPath.section == 0) {
+    if (indexPath.section == SettingOtherSectionNews) {
         // News.
         pillColor = [UIColor colorWithRed:1.0f
                                     green:0.6470588445663452f
                                      blue:0.6274510025978088f
                                     alpha:1.0f];
         title = (indexPath.row == 0) ? @"お知らせ" : @"";
-    } else if (indexPath.section == 1) {
+    } else if (indexPath.section == SettingOtherSectionTreasure) {
         // Treasure Mode -> Retire.
         pillColor = [UIColor colorWithRed:1.0f
                                     green:0.7333333492279053f
@@ -355,7 +364,9 @@ static UIViewController *RootVC() {
                                     green:0.9607843160629272f
                                      blue:0.37254902720451355f
                                     alpha:1.0f];
-        title = ((indexPath.section == 2) && (indexPath.row == 0)) ? @"機種変更" : @"";
+        title = ((indexPath.section == SettingOtherSectionDeviceChange) && (indexPath.row == 0)) ?
+                    @"機種変更" :
+                    @"";
     }
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
@@ -412,11 +423,11 @@ static UIViewController *RootVC() {
         return;
     }
     // The embedded conversion row (section 2, row 1) is not itself tappable.
-    if (indexPath.section == 2 && indexPath.row == 1) {
+    if (indexPath.section == SettingOtherSectionDeviceChange && indexPath.row == 1) {
         return;
     }
 
-    if (indexPath.section == 2) {
+    if (indexPath.section == SettingOtherSectionDeviceChange) {
         // "機種変更" toggle: expand, or collapse if already expanded, then reload
         // the row.
         if (indexPath.row == 0) {
@@ -431,7 +442,7 @@ static UIViewController *RootVC() {
             [tableView reloadRowsAtIndexPaths:@[ indexPath ]
                              withRowAnimation:UITableViewRowAnimationNone];
         }
-    } else if (indexPath.section == 1) {
+    } else if (indexPath.section == SettingOtherSectionTreasure) {
         // Treasure Mode -> Retire: confirm before wiping progress.
         if (indexPath.row == 0) {
             neEngine::playSystemSe(1);
@@ -446,7 +457,7 @@ static UIViewController *RootVC() {
             // delegate callback once a button is tapped (the pointer is used there
             // only to identify this alert).
         }
-    } else if (indexPath.section == 0) {
+    } else if (indexPath.section == SettingOtherSectionNews) {
         // News: open the official app-info page in the in-app web view.
         if (indexPath.row == 0) {
             CustomWebView *web =
