@@ -222,8 +222,8 @@ static void aepEmitSprite(AepManager *mgr,
                       rec[2],
                       rec[3]));
 
-    cmd->wFlags = 0;        // +0x04  type 0 = textured sprite
-    cmd->nBank = groupSlot; // +0x08  (flush case 0 forwards this as the texture slot)
+    cmd->wFlags = kAepOtCmdSprite; // +0x04  textured sprite
+    cmd->nBank = groupSlot;        // +0x08  (flush case 0 forwards this as the texture slot)
     // The binary copies the 8-byte sprite record verbatim into the nTexU/nTexV
     // slots; the flush reads them back as the u/v/w/h source-rect shorts (srcRect).
     std::memcpy(cmd->srcRect, rec, 8); // +0x0c..+0x13

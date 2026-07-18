@@ -101,7 +101,7 @@ AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
     if (cmd == nullptr) {
         return nullptr;
     }
-    cmd->wFlags = 1; // type 1 = stretched sprite
+    cmd->wFlags = kAepOtCmdSpriteStretch;
     cmd->nBank = 0;
     cmd->pTexObj = pTexture; // sprite texture object (the binary packs it into nTexU)
     cmd->nTexU = 0;          // unused for sprites here; the texture lives in pTexObj
@@ -187,7 +187,7 @@ void AepOrderingTable::flush() {
     for (int pri = kOtPriMax - 1; pri >= 0; pri--) {
         for (AepOtSpriteCmd *cmd = m_buckets[pri]; cmd != nullptr; cmd = cmd->pListNext) {
             switch (cmd->wFlags) {
-            case 0:                           // textured sprite -> drawAepOtSprite (FUN_00010c90)
+            case kAepOtCmdSprite:             // textured sprite -> drawAepOtSprite (FUN_00010c90)
                 drawAepOtSprite(cmd->srcRect, // packed {u, v, w, h} source rect
                                 cmd->nPosX,
                                 cmd->nPosY,
@@ -204,11 +204,11 @@ void AepOrderingTable::flush() {
                                 cmd->nColorRGB,
                                 cmd->nBank);
                 break;
-            case 1: { // stretched sprite -> drawAepOtSpriteStretch (FUN_00010e18)
-                // Exact command->handler field mapping per Ghidra FUN_000115d0
-                // case-1. The scale percentages (nOfsY/nColorA slots) are read as
-                // floats; the base size lives in nPosY/flPosXf, the position in
-                // flPosYf/nOfsX.
+            case kAepOtCmdSpriteStretch: {
+                // Stretched sprite -> drawAepOtSpriteStretch (FUN_00010e18). Exact
+                // command->handler field mapping per Ghidra FUN_000115d0 case-1. The
+                // scale percentages (nOfsY/nColorA slots) are read as floats; the base
+                // size lives in nPosY/flPosXf, the position in flPosYf/nOfsX.
                 const int nColorA =
                     static_cast<uint16_t>(cmd->nUKey) | (static_cast<int>(cmd->nVKey) << 16);
                 const uint32_t clipLeft = static_cast<uint32_t>(cmd->clipRect.nLeft);
@@ -232,7 +232,7 @@ void AepOrderingTable::flush() {
                                        static_cast<uint32_t>(cmd->clipRect.nRight)); // nColorRGB
                 break;
             }
-            case 2: // line -> drawAepOtLine (FUN_00010f98)
+            case kAepOtCmdLine: // line -> drawAepOtLine (FUN_00010f98)
                 drawAepOtLine(cmd->nTexU,
                               cmd->nTexV,
                               cmd->nPosX,
@@ -240,7 +240,7 @@ void AepOrderingTable::flush() {
                               static_cast<int>(cmd->flPosXf),
                               static_cast<uint32_t>(cmd->flPosYf));
                 break;
-            case 3: // triangle -> drawAepOtTriangle (FUN_00011054)
+            case kAepOtCmdTriangle: // triangle -> drawAepOtTriangle (FUN_00011054)
                 drawAepOtTriangle(cmd->nTexU,
                                   cmd->nTexV,
                                   cmd->nPosX,
@@ -250,7 +250,7 @@ void AepOrderingTable::flush() {
                                   cmd->nOfsX,
                                   cmd->nOfsY); // +0x28 int view
                 break;
-            case 4: // rect (transition fade overlay) -> drawAepOtRect (FUN_0001113c)
+            case kAepOtCmdRect: // rect (transition fade overlay) -> drawAepOtRect (FUN_0001113c)
                 drawAepOtRect(cmd->nTexU,
                               cmd->nTexV,
                               cmd->nPosX,
@@ -258,7 +258,7 @@ void AepOrderingTable::flush() {
                               static_cast<int>(cmd->flPosXf),
                               static_cast<uint32_t>(cmd->flPosYf));
                 break;
-            case 5: // quad -> drawAepOtQuad (FUN_000111f8)
+            case kAepOtCmdQuad: // quad -> drawAepOtQuad (FUN_000111f8)
                 drawAepOtQuad(cmd->nTexU,
                               cmd->nTexV,
                               cmd->nPosX,
@@ -270,7 +270,7 @@ void AepOrderingTable::flush() {
                               cmd->nColorA,                           // alpha (+0x2c int view)
                               static_cast<uint32_t>(cmd->nColorMul)); // colour (+0x30)
                 break;
-            case 6: { // text -> drawAepOtText (FUN_00011310)
+            case kAepOtCmdText: { // text -> drawAepOtText (FUN_00011310)
                 // The type-6 entry is an AepTextCmd overlaid on the same pool slot:
                 // the string lives at +0x0c (the nTexU slot) and the glyph
                 // parameters at +0x10c. (The binary reaches them as pCmd[3].* using
@@ -371,7 +371,7 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
     if (cmd == nullptr) {
         return;
     }
-    cmd->nType = 6;                      // +0x04
+    cmd->nType = kAepOtCmdText;          // +0x04
     cmd->nReserved8 = 0;                 // +0x08
     std::strncpy(cmd->pText, text, 256); // +0x0c
     cmd->pText[255] = '\0';              // +0x10b force-terminate

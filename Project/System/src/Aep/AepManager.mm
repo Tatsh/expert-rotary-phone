@@ -456,7 +456,7 @@ void AepManager::drawTransitionOverlay(int alpha) {
     if (cmd == nullptr) {
         return;
     }
-    cmd->wFlags = 4; // -> renderAepOrderingTable case 4 = drawAepOtRect
+    cmd->wFlags = kAepOtCmdRect; // -> renderAepOrderingTable drawAepOtRect
     cmd->nBank = 0;
     cmd->nTexU = m_transitionOverlay[0]; // x
     cmd->nTexV = m_transitionOverlay[1]; // y

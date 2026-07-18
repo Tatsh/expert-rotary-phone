@@ -37,14 +37,28 @@ struct AepClipRect {
 // the fills (drawSprite FUN_00011468, drawTransitionOverlay FUN_0001151c,
 // aepEmitSprite FUN_000113d0) write; the tail is per-command scratch, and the
 // fills spill an 8-byte source-rect word into the *next* entry, so the whole
-// entry stride (0x134) is reserved here. wFlags @+0x04 is the type discriminator
-// renderAepOrderingTable (FUN_000115d0) switches on: 0 sprite, 1 stretched
-// sprite, 2 line, 3 triangle, 4 rect (the transition-fade overlay), 5 quad, 6
-// text. Field names are Ghidra's; where a slot's role varies by command type the
-// per-fill comment gives the concrete meaning.
+// entry stride (0x134) is reserved here. wFlags @+0x04 is the AepOtCmdType
+// discriminator renderAepOrderingTable (FUN_000115d0) switches on. Field names
+// are Ghidra's; where a slot's role varies by command type the per-fill comment
+// gives the concrete meaning.
+
+// Command-type discriminator held in AepOtSpriteCmd::wFlags (and the overlaid
+// AepTextCmd::nType) at +0x04. renderAepOrderingTable (FUN_000115d0) switches on
+// it to select the per-type draw handler. The values are the binary's; the
+// underlying type is pinned to uint16_t so the field stays two bytes at +0x04.
+enum AepOtCmdType : uint16_t {
+    kAepOtCmdSprite = 0,        // textured sprite -> drawAepOtSprite
+    kAepOtCmdSpriteStretch = 1, // stretched sprite -> drawAepOtSpriteStretch
+    kAepOtCmdLine = 2,          // line -> drawAepOtLine
+    kAepOtCmdTriangle = 3,      // triangle -> drawAepOtTriangle
+    kAepOtCmdRect = 4,          // rect (the transition-fade overlay) -> drawAepOtRect
+    kAepOtCmdQuad = 5,          // quad -> drawAepOtQuad
+    kAepOtCmdText = 6,          // text -> drawAepOtText
+};
+
 struct AepOtSpriteCmd {
     AepOtSpriteCmd *pListNext; // +0x00  priority-bucket link
-    uint16_t wFlags;           // +0x04  command type discriminator
+    AepOtCmdType wFlags;       // +0x04  command type discriminator
     int16_t nPriority;         // +0x06  bucket priority (bookkeeping, not traversal)
     int32_t nBank;             // +0x08  texture bank / layer slot
     // +0x0c/+0x10  Source origin. Line/rect/quad/text commands use nTexU/nTexV as
@@ -112,7 +126,7 @@ struct AepOtSpriteCmd {
 // (pCmd[3]) of the entry.
 struct AepTextCmd {
     AepOtSpriteCmd *pNext; // +0x00
-    int16_t nType;         // +0x04  == 6 (same discriminator slot as AepOtSpriteCmd::wFlags)
+    int16_t nType;         // +0x04  == kAepOtCmdText (same discriminator slot as wFlags)
     int16_t nPriority;     // +0x06  bucket priority
     int32_t nReserved8;    // +0x08
     char pText[256];       // +0x0c..+0x10b  (force-terminated at pText[255])
