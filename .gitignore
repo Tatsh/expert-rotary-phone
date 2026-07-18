@@ -6,11 +6,13 @@
 .*.swp
 .*_cache/
 .DS_Store*
+.arm64-dbg/
 .coverage
 .cspellcache
 .decompile/
 .directory
 .pnp.*
+.venv/
 /.audit/
 /.bash_profile
 /.bashrc
@@ -44,17 +46,13 @@
 /Project/.audit/
 /build/
 /dist/
+/screenshots/
 /session-recover.yaml
 /theos/.theos/
 /theos/obj/
 /theos/packages/
 CMakeCache.txt
+__pycache__/
 node_modules/
 sugoroku_chara_msg.bin
 sugoroku_chara_msg.generated.inc
-
-# Local arm64 crash-triage scratch (downloaded build artifact + venv)
-.arm64-dbg/
-
-# Local reference screenshots (device captures used while reconstructing UI)
-/screenshots/
