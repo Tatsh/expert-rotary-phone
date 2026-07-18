@@ -23,7 +23,6 @@
 #import "PlayTask.h"
 #import "RhUtil.h" // pointInCircle / getTimeMillis (the pause hit-circle)
 #import "UserSettingData.h"
-#import "neDebugLog.h"     // RHYDBG pause diagnostics (temporary)
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager::hitSoundName
 #import "neGraphics.h"
 #import "neTextureForiOS.h" // complete type for the unique_ptr texture members' dtor
@@ -472,26 +471,12 @@ void PlayTask::update(int /*deltaMs*/) {
                     const int tx = static_cast<int>(touchXY[0]);
                     const int ty = static_cast<int>(touchXY[1]);
                     const bool inCircle = pointInCircle(tx, ty, cx, cy, r);
-                    // TEMP RHYDBG: log every candidate pause touch (bounded).
-                    if (NE_DBG_FIRST(80)) {
-                        neDebugLog("PJ pause touch=(%d,%d) circle=(%d,%d,r=%d) in=%d scale=%.2f",
-                                   tx,
-                                   ty,
-                                   cx,
-                                   cy,
-                                   r,
-                                   inCircle,
-                                   scale);
-                    }
                     if (inCircle) {
                         m_backTouchId = touchIds[0];
                         m_backTouchTime = static_cast<int>(getTimeMillis());
                     }
                 }
             } else if (gfx.findTouchById(m_backTouchId) == nullptr) {
-                if (NE_DBG_FIRST(40)) {
-                    neDebugLog("PJ pause CANCEL id=%d (findTouchById null)", m_backTouchId);
-                }
                 m_backTouchId = -1; // the finger lifted before the hold completed
             } else if (static_cast<unsigned>(static_cast<int>(getTimeMillis()) - m_backTouchTime) >
                        500) {
