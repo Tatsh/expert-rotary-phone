@@ -2619,6 +2619,20 @@ void MainTask::AepDrawCallback(int child,
     // Selected-song jacket preview — m_elemUsrNo[kElemJacket09] blits the big jacket texture
     // (@ selCell+0xc).
     if (self->m_elemUsrNo[kElemJacket09] == static_cast<int>(child)) {
+        // RHYDBG: the big-preview element position + which cell it reads. If (x, y)
+        // is (0, 0) the selected-song detail elements are drawing at the origin
+        // (the top-left artwork2x); selCell/tex confirm which song and that it is
+        // loaded even while the grid cell looks empty.
+        if (NE_DBG_FIRST(4)) {
+            neDebugLog(
+                "MusicSel PREVIEW jacket09 x=%d y=%d selCell=%d chosen=%d curLatch=%d tex=%d",
+                x,
+                y,
+                selCell,
+                self->m_chosenIndex,
+                static_cast<int>(static_cast<int8_t>(self->m_curColLatch)),
+                selCellPtr->texture != nullptr);
+        }
         drawTex(selCellPtr->texture.get(), 0x168, 0x168, x, y);
         return;
     }
