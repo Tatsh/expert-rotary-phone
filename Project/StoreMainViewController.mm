@@ -33,6 +33,20 @@
 #import <QuartzCore/QuartzCore.h> // CALayer cornerRadius / borderColor / borderWidth
 #import <StoreKit/StoreKit.h>     // SKProduct.price
 
+// Subview tags looked up with -viewWithTag: (the views are built and tagged in
+// the setup methods and fetched back throughout).
+static const NSInteger kTagStoreTable = 10000;    // the pack-catalogue UITableView
+static const NSInteger kTagStorePromo = 0x2775;   // the promotion banner view
+static const NSInteger kTagStoreLoading = 0x2711; // the loading-spinner label
+static const NSInteger kTagStoreEmpty = 0x2712;   // the empty-state label
+static const NSInteger kTagStoreHint = 100000;    // the "push up to show more" hint
+static const NSInteger kTagStoreBanner = 0x186a1; // the store_fun.png banner image
+
+// CommonAlertView tags, read back in -commonAlertView:clickedButtonAtIndex: to
+// tell which confirm dialog fired.
+static const NSInteger kTagAlertRestoreConfirm = 0x1f;    // "restore purchased pack info?"
+static const NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored packs?"
+
 // StoreMainViewController is the delegate for the pack views, the detail
 // controllers and the purchase manager (it implements their callbacks below);
 // declare the conformances privately.
@@ -148,7 +162,7 @@
                                          480.0f,
                                          105.0f)]; // 0x43f00000 / 0x42d20000
             promo.autoresizingMask = kBottomAnchored;
-            promo.tag = 0x2775;
+            promo.tag = kTagStorePromo;
             promo.delegate = self;
             [promo setImageViewSize:CGSizeMake(320.0f,
                                                105.0f)]; // 0x43a00000 / 0x42d20000
@@ -165,11 +179,11 @@
         m_PromotionViewDummy.hidden = YES;
 
         // Pack catalogue table (tag 10000) filling the view.
-        if ([self.view viewWithTag:10000] == nil) {
+        if ([self.view viewWithTag:kTagStoreTable] == nil) {
             UITableView *table = [[UITableView alloc] initWithFrame:bounds
                                                               style:UITableViewStylePlain];
             table.opaque = YES;
-            table.tag = 10000;
+            table.tag = kTagStoreTable;
             table.autoresizingMask = UIViewAutoresizingFlexibleWidth |
                                      UIViewAutoresizingFlexibleHeight; // setAutoresizingSize
             table.backgroundColor = [UIColor colorWithRed:226.0f / 255.0f
@@ -268,7 +282,7 @@
         m_ShowMoreIndicator = showMoreSpinner;
 
         // Rounded, translucent inset pack table (tag 10000).
-        if ([self.view viewWithTag:10000] == nil) {
+        if ([self.view viewWithTag:kTagStoreTable] == nil) {
             CGFloat tableHeight =
                 bounds.size.height - 316.0f -
                 (m_ShowMoreButton.bounds.size.height + 32.0f); // -0x439e0000 / 0x42000000
@@ -278,7 +292,7 @@
                                                               728.0f,
                                                               tableHeight) // 0x44360000
                                              style:UITableViewStylePlain];
-            table.tag = 10000;
+            table.tag = kTagStoreTable;
             table.center = CGPointMake(bounds.size.width * 0.5f,
                                        table.bounds.size.height * 0.5f + 316.0f); // 0x439e0000
             table.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin |
@@ -330,14 +344,14 @@
     // pinned
     //      store_fun banner (tag 0x186a1) live inside whichever table exists.
     //      ----
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     if (table != nil) {
-        if ([table viewWithTag:100000] == nil) {
+        if ([table viewWithTag:kTagStoreHint] == nil) {
             UILabel *hint = [[UILabel alloc] initWithFrame:CGRectMake(0.0f,
                                                                       0.0f,
                                                                       bounds.size.width,
                                                                       25.0f)]; // 0x41c80000
-            hint.tag = 100000;
+            hint.tag = kTagStoreHint;
             hint.backgroundColor = [UIColor clearColor];
             hint.text = [[NSBundle mainBundle] localizedStringForKey:@"Push up to show more"
                                                                value:@""
@@ -348,19 +362,19 @@
             hint.hidden = YES;
             [table addSubview:hint];
         }
-        if ([table viewWithTag:0x186a1] == nil) {
+        if ([table viewWithTag:kTagStoreBanner] == nil) {
             UIImageView *banner =
                 [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"store_fun.png"]];
-            banner.tag = 0x186a1;
+            banner.tag = kTagStoreBanner;
             banner.hidden = YES;
             [table addSubview:banner];
         }
     }
 
     // Loading placeholder (tag 0x2711): a light label carrying a centred spinner.
-    if ([self.view viewWithTag:0x2711] == nil) {
+    if ([self.view viewWithTag:kTagStoreLoading] == nil) {
         UILabel *loading = [[UILabel alloc] initWithFrame:bounds];
-        loading.tag = 0x2711;
+        loading.tag = kTagStoreLoading;
         loading.backgroundColor = [UIColor colorWithRed:226.0f / 255.0f
                                                   green:227.0f / 255.0f
                                                    blue:228.0f / 255.0f
@@ -399,9 +413,9 @@
 
     // Empty-state label (tag 0x2712): centred 20pt above the middle, wired later
     // by -showError:.
-    if ([self.view viewWithTag:0x2712] == nil) {
+    if ([self.view viewWithTag:kTagStoreEmpty] == nil) {
         UILabel *empty = [[UILabel alloc] initWithFrame:bounds];
-        empty.tag = 0x2712;
+        empty.tag = kTagStoreEmpty;
         empty.backgroundColor = self.view.backgroundColor;
         empty.font = [UIFont fontWithName:AppFontName()
                                      size:(m_IsPad ? 18.0f : 16.0f)]; // 0x41900000 / 0x41800000
@@ -460,7 +474,7 @@
     m_ShowMoreButton.center = center;
 
     m_ShowMoreIndicator.hidden = NO;
-    [[self.view viewWithTag:100000] setHidden:YES];
+    [[self.view viewWithTag:kTagStoreHint] setHidden:YES];
 
     [m_PackListCtrl startFetchingPack:-1];
 }
@@ -495,9 +509,9 @@
         return;
     }
 
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     [table setHidden:NO];
-    [[self.view viewWithTag:0x2711] setHidden:YES];
+    [[self.view viewWithTag:kTagStoreLoading] setHidden:YES];
     if (m_PackTableLabel) {
         [m_PackTableLabel setHidden:NO];
     }
@@ -525,7 +539,7 @@
     // @ 0x44e18: slack iPad=mov.ne.w r5,#0x12c=300, phone=movs r5,#0x64=100
     // (integer); origin.x @ 0x44e24: movt r2,#0x4248 → 0x42480000=50.0
     // (byte-exact).
-    UIView *banner = [table viewWithTag:0x186a1];
+    UIView *banner = [table viewWithTag:kTagStoreBanner];
     CGFloat slack = m_IsPad ? 300.0f : 100.0f;
     CGRect bannerFrame = banner ? banner.frame : CGRectZero;
     CGFloat bannerY = (table.contentSize.height < table.bounds.size.height) ?
@@ -544,7 +558,7 @@
         if (m_ShowMoreButton) {
             [m_ShowMoreButton setHidden:YES];
         }
-        [[table viewWithTag:100000] setHidden:YES];
+        [[table viewWithTag:kTagStoreHint] setHidden:YES];
     } else {
         if (m_ShowMoreButton) {
             [m_ShowMoreButton setTitle:@"▼ SHOW MORE ▼" forState:UIControlStateNormal];
@@ -552,7 +566,7 @@
             [m_ShowMoreButton sizeToFit];
             m_ShowMoreButton.center = center;
         }
-        UIView *hint = [table viewWithTag:100000];
+        UIView *hint = [table viewWithTag:kTagStoreHint];
         [hint setHidden:NO];
         // Hint centred under the content.
         // @ 0x4540c: 0.5 from vmov.f32 d16,#0x3f000000; 25 from vmov.f32
@@ -582,7 +596,7 @@
 // @complete
 - (void)packListDownloadError:(StorePackListController *)controller
                  errorMessage:(NSString *)message {
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     NSString *text = message ? message : @"サーバに接続できません。\n";
     if ([table isHidden]) {
         [self showError:text];
@@ -604,7 +618,7 @@
 // path.
 // @complete
 - (void)packListDownloadNothing:(StorePackListController *)controller {
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     if ([table isHidden]) {
         [self showError:@"サーバーエラーが発生しました。\n後ほど再接続して下さい。"];
     } else {
@@ -622,9 +636,9 @@
 // (tag 0x2712).
 // @complete
 - (void)showError:(NSString *)message {
-    [[self.view viewWithTag:10000] setHidden:YES];
-    [[self.view viewWithTag:0x2711] setHidden:YES];
-    UILabel *label = (UILabel *)[self.view viewWithTag:0x2712];
+    [[self.view viewWithTag:kTagStoreTable] setHidden:YES];
+    [[self.view viewWithTag:kTagStoreLoading] setHidden:YES];
+    UILabel *label = (UILabel *)[self.view viewWithTag:kTagStoreEmpty];
     [label setText:message];
     [label setHidden:NO];
 }
@@ -643,7 +657,7 @@
                                       delegate:self
                              cancelButtonTitle:@"Cancel"
                              otherButtonTitles:@"OK"];
-    alert.tag = 0x1f;
+    alert.tag = kTagAlertRestoreConfirm;
     [alert show];
 }
 
@@ -668,7 +682,7 @@
         [m_RestoreButton setEnabled:NO];
     }
     [(id)view stopAnimation];
-    if (![[self.view viewWithTag:10000] allowsSelection]) {
+    if (![[self.view viewWithTag:kTagStoreTable] allowsSelection]) {
         return;
     }
     [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
@@ -748,7 +762,7 @@
         return;
     }
     m_IsAnimationing = YES;
-    if (![[self.view viewWithTag:10000] allowsSelection]) {
+    if (![[self.view viewWithTag:kTagStoreTable] allowsSelection]) {
         return;
     }
     if (m_PromotionView) {
@@ -1005,7 +1019,7 @@
             NSArray *ids = [m_PackListCtrl packIDList];
             for (NSUInteger i = 0; i < [ids count]; i++) {
                 if ([[ids objectAtIndex:i] intValue] == [packInfo packID]) {
-                    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+                    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
                     NSIndexPath *ip = [NSIndexPath indexPathForRow:i inSection:1];
                     [table reloadRowsAtIndexPaths:[NSArray arrayWithObject:ip]
                                  withRowAnimation:UITableViewRowAnimationNone];
@@ -1017,7 +1031,7 @@
         NSArray *ids = [m_PackListCtrl packIDList];
         for (NSUInteger i = 0; i < [ids count]; i++) {
             if ([[ids objectAtIndex:i] intValue] == [packInfo packID]) {
-                UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+                UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
                 NSIndexPath *ip = [NSIndexPath indexPathForRow:(i / 2) inSection:0];
                 [table reloadRowsAtIndexPaths:[NSArray arrayWithObject:ip]
                              withRowAnimation:UITableViewRowAnimationNone];
@@ -1155,7 +1169,7 @@
                                           delegate:self
                                  cancelButtonTitle:@"Cancel"
                                  otherButtonTitles:@"OK"];
-        alert.tag = 0x1e;
+        alert.tag = kTagAlertInstallAllConfirm;
         [alert show];
         return;
     }
@@ -1336,7 +1350,7 @@
 // StoreTableCell).
 // @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     if (!m_IsPad) {
         UITableViewCell *cell = [table cellForRowAtIndexPath:indexPath];
         UIImage *image = [downloader getImage];
@@ -1383,7 +1397,7 @@
 // @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     NSInteger tag = alertView.tag;
-    if (tag == 0x1f) {
+    if (tag == kTagAlertRestoreConfirm) {
         if (index == 1) {
             if (![PurchaseManager isPurchasable]) {
                 CommonAlertView *alert = [[CommonAlertView alloc]
@@ -1403,7 +1417,7 @@
             }
         }
         _isAlertViewShowing = NO;
-    } else if (tag == 0x1e) {
+    } else if (tag == kTagAlertInstallAllConfirm) {
         if (index == 1) {
             [self restoreDownloadAllMusics];
         } else {
@@ -1653,8 +1667,8 @@
         }
     }
 
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
-    UIView *banner = [table viewWithTag:0x186a1];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
+    UIView *banner = [table viewWithTag:kTagStoreBanner];
     if (banner == nil) {
         return;
     }
@@ -1694,7 +1708,7 @@
 // @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     if (!m_IsPad && ![table isHidden]) {
         NSIndexPath *selected = [table indexPathForSelectedRow];
         if (selected != nil) {
@@ -1711,8 +1725,8 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     if ([[m_PackListCtrl packIDList] count] == 0 && ![m_PackListCtrl isFetching]) {
-        [[self.view viewWithTag:0x2712] setHidden:YES];
-        [[self.view viewWithTag:10000] setHidden:YES];
+        [[self.view viewWithTag:kTagStoreEmpty] setHidden:YES];
+        [[self.view viewWithTag:kTagStoreTable] setHidden:YES];
         [m_PackListCtrl startFetchingPack:[m_StoreViewCtrl recommendPackId]];
     } else {
         [self packListDownloadSuccess:m_PackListCtrl];
@@ -1730,7 +1744,7 @@
     }
     if ([m_PackListCtrl isFetching]) {
         m_IsLoadingMoreList = NO;
-        UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+        UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
         [table setAllowsSelection:YES];
         [table reloadData];
     }
@@ -1774,7 +1788,7 @@
         [m_StorePackInfoDownloader cancel];
         m_StorePackInfoDownloader = nil;
     }
-    UITableView *table = (UITableView *)[self.view viewWithTag:10000];
+    UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     [table setDelegate:nil];
     [table setDataSource:nil];
     [self stopDownloadArtworks];
