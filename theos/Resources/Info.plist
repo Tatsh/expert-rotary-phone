@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--
-  Info.plist for the Theos build of pop'n rhythmin (FIXED, hand-maintained). Kept in
-  theos/Resources/ so application.mk copies it into PopnRhythmin.app. The original
-  bundle's own Info.plist is NOT reused (it references the 64-bit-less Mach-O and Konami
-  provisioning); this reproduces the keys the reconstructed code actually reads at
-  runtime, chiefly CFBundleVersion (AppDelegate reads infoDictionary[@"CFBundleVersion"]).
-  Keep in sync with ../Info.plist.in (the CMake/Xcode template) when values change.
--->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
+  <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
@@ -33,50 +25,30 @@
     <true />
     <key>MinimumOSVersion</key>
     <string>5.1.1</string>
-
-    <!-- Do NOT require a specific CPU arch here: this rebuild ships both 32-bit
-         (armv7/armv7s) and 64-bit (arm64/arm64e) slices, and requiring "armv7" would
-         block installation on the arm64-only iOS 11+ devices this reconstruction exists
-         to reach. Only the real hardware requirement (OpenGL ES 2) is asserted. -->
     <key>UIRequiredDeviceCapabilities</key>
     <array>
-        <string>opengles-2</string>
+      <string>opengles-2</string>
     </array>
-
-    <!-- iPhone + iPad: the reconstructed UI branches on neSceneManager::isPadDisplay(). -->
     <key>UIDeviceFamily</key>
     <array>
-        <integer>1</integer>
-        <integer>2</integer>
+      <integer>1</integer>
+      <integer>2</integer>
     </array>
-
-    <!-- The game runs full-screen only (no multitasking / Slide Over); this also
-         lets us ship without a launch storyboard or xib. -->
     <key>UIRequiresFullScreen</key>
     <true />
-
-    <!-- Rhythm gameplay runs full-screen; allow both portrait and landscape and let the
-         controllers drive it. Adjust if the shipped app was orientation-locked. -->
     <key>UISupportedInterfaceOrientations</key>
     <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
-
-    <!-- Privacy purpose strings. REQUIRED on modern iOS for the reconstructed
-         behaviour: NSPhotoLibraryAddUsageDescription for the camera-roll save
-         (UIImageWriteToSavedPhotosAlbum in MainViewController, hard-crashes
-         without it on iOS 11+), NSLocationWhenInUseUsageDescription for the
-         arcade-finder map's showsUserLocation prompt (SearchView). Keep in sync
-         with ../../Info.plist.in. -->
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>pop'n rhythmin saves your result screenshots to your photo library.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
@@ -86,5 +58,5 @@
     <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false />
-</dict>
+  </dict>
 </plist>
