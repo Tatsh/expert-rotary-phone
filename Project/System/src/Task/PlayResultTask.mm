@@ -120,15 +120,15 @@ void PlayResultTask::update(int /*deltaMs*/) {
     const int displayType = [[AppDelegate appDelegate] displayType];
 
     switch (m_state) {
-    case 0:
+    case kResultStateSetup:
         // Set up the result data + load the result BGM, then start it. (The playBgm
         // fade argument is clobbered in the decompile by the preceding void call;
         // 0.5 matches the fade the app's other playBgm sites use.)
         resultSetup(); // FUN_0003dfe0
         [audio playBgm:0.5f];
-        m_state = 1;
+        m_state = kResultStateFadeIn;
         break;
-    case 1:
+    case kResultStateFadeIn:
         // Fade the screen in and start the intro animation layers; drop the play
         // scene's captured backdrop now that this scene owns the display.
         aep.setAepTransitionMode(1); // fade in (fixed 30 frames)
@@ -140,60 +140,60 @@ void PlayResultTask::update(int /*deltaMs*/) {
             SeInstancePlay(m_layers[4].get());
         }
         [RootVC() releaseCapturedImage];
-        m_state = 2;
+        m_state = kResultStatePresent;
         break;
-    case 2:
+    case kResultStatePresent:
         updateResultPresent(tapped, tapX, tapY, displayType);
         break;
-    case 3:
-    case 5:
-    case 6:
+    case kResultStateScoreLineIn:
+    case kResultStateBonusCountStart:
+    case kResultStateBonusCountUp:
         updateScoreCount(tapped);
         break;
-    case 4:
+    case kResultStateScoreLineDone:
         // The score-line animation finished: start the count-up, unless this was a
         // wash-out (rank 6), which drops straight to waiting for the dismiss tap.
         if (!SeInstanceIsPlaying(m_layers[1].get())) {
             if (m_rank != 6) {
-                m_state = 5;
+                m_state = kResultStateBonusCountStart;
                 break;
             }
             if (tapped) { // rank 6 falls into the case-7 dismiss wait
-                m_state = 8;
+                m_state = kResultStateUploadCheck;
             }
         }
         break;
-    case 7:
+    case kResultStateDismissWait:
         if (tapped) {
-            m_state = 8;
+            m_state = kResultStateUploadCheck;
         }
         break;
-    case 8:
+    case kResultStateUploadCheck:
         // Show the "communicating" overlay while the score upload is still in
         // flight.
         if ([dl isSaveScoreDownLoading]) {
             [RootVC() InsertCommunicating];
-            m_state = 9;
+            m_state = kResultStateWaitUpload;
         } else {
-            m_state = 10;
+            m_state = kResultStateFadeOut;
         }
         break;
-    case 9:
+    case kResultStateWaitUpload:
         if (![dl isSaveScoreDownLoading]) {
             [RootVC() DeleteCommunicating];
-            m_state = 10;
+            m_state = kResultStateFadeOut;
         }
         break;
-    case 10:
+    case kResultStateFadeOut:
         aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
-        m_state = 0xb;
+        m_state = kResultStateWaitFadeOut;
         break;
-    case 0xb:
+    case kResultStateWaitFadeOut:
         if (aep.isTransitionDone()) {
-            m_state = 0xc;
+            m_state = kResultStateGotoNext;
         }
         break;
-    case 0xc:
+    case kResultStateGotoNext:
         resultGotoNext(); // FUN_0003f2e0 — tear down + spawn the next scene
         break;
     default:
@@ -228,18 +228,18 @@ void PlayResultTask::resultSetup() {
     m_overlayHeight = aep.transitionOverlayHeight(); // FUN_0000f4a4
 
     // --- Snapshot the just-finished play's result (neAppEventCenter fields) ---
-    m_score = evt.playScore();                 // DAT_00187bc8 score
-    m_maxCombo = evt.maxCombo();               // DAT_00187bd0 max combo
-    m_coolCount = evt.coolCount();             // DAT_00187bc0 low  COOL tally
-    m_greatCount = evt.greatCount();           // DAT_00187bc0 high GREAT tally
-    m_goodCount = evt.goodCount();             // DAT_00187bc4 low  GOOD tally
-    m_badCount = evt.badCount();               // DAT_00187bc4 high BAD tally
-    m_isNewRecord = evt.isNewRecord() ? 1 : 0; // DAT_00187bea new-record flag
-    const bool cleared = evt.isCleared();      // DAT_00187bd4
-    m_cleared = cleared ? 1 : 0;
+    m_score = evt.playScore();            // DAT_00187bc8 score
+    m_maxCombo = evt.maxCombo();          // DAT_00187bd0 max combo
+    m_coolCount = evt.coolCount();        // DAT_00187bc0 low  COOL tally
+    m_greatCount = evt.greatCount();      // DAT_00187bc0 high GREAT tally
+    m_goodCount = evt.goodCount();        // DAT_00187bc4 low  GOOD tally
+    m_badCount = evt.badCount();          // DAT_00187bc4 high BAD tally
+    m_isNewRecord = evt.isNewRecord();    // DAT_00187bea new-record flag
+    const bool cleared = evt.isCleared(); // DAT_00187bd4
+    m_cleared = cleared;
 
     // +0x353: perfect full-combo == cleared with no GOOD and no BAD.
-    m_perfectFullCombo = (cleared && evt.goodCount() == 0 && evt.badCount() == 0) ? 1 : 0;
+    m_perfectFullCombo = (cleared && evt.goodCount() == 0 && evt.badCount() == 0);
 
     m_sheet = (short)evt.lastSheet(); // DAT_00187bbc difficulty index
     m_rank = evt.playRank();          // DAT_00187bcc rank (0 best .. 6 fail)
@@ -255,7 +255,7 @@ void PlayResultTask::resultSetup() {
 
     // Pad-vs-phone display flag (scene manager DAT_00187b84).
     neSceneManager::shared();
-    m_padDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_padDisplay = neSceneManager::isPadDisplay();
 
     // --- Decide + post the score save (FUN_0003dfe0 @ 0x3e12c..0x3e604) ---
     int stScore = 0;
@@ -333,7 +333,7 @@ void PlayResultTask::resultSetup() {
     // redundantly re-tests x == 0, so the net condition is [id intValue] == 0.
     for (id eventId in [dl gameEventIdArray]) {
         if ([eventId intValue] == 0) {
-            m_eventBonus = 1;
+            m_eventBonus = true;
         }
     }
 
@@ -424,7 +424,7 @@ void PlayResultTask::resultSetup() {
     m_boardScale = m_padDisplay ? 100 : 50;
 
     // --- Load the result asset group + build the animation layers ---
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = m_padDisplay;
     aep.loadAepDataDefaultPath(4, pad ? "result_ipad" : "result"); // FUN_0000f758
 
     // 4 effect layers resolved to raw layer handles + their frame counts.
@@ -693,7 +693,7 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
     if (tapped) {
         const int bottomEdge = (displayType == 2) ? 0x370 : 0x30c;
         if (tapX > 0xdc || tapY < bottomEdge) {
-            m_state = 3;
+            m_state = kResultStateScoreLineIn;
             UIButton *shareButton = (__bridge UIButton *)m_shareButton;
             if (shareButton != nil) {
                 [shareButton setUserInteractionEnabled:NO];
@@ -830,13 +830,13 @@ void PlayResultTask::buildShareButton(int displayType) {
 void PlayResultTask::updateScoreCount(bool tapped) {
     AudioManager *audio = [AudioManager sharedManager];
     switch (m_state) {
-    case 3:
+    case kResultStateScoreLineIn:
         // Play the score line-in SE and start the score-line animation layer.
         [audio playSe:nil resourceId:m_rankSe[6]];
         SeInstancePlay(m_layers[1].get());
-        m_state = 4;
+        m_state = kResultStateScoreLineDone;
         break;
-    case 5:
+    case kResultStateBonusCountStart:
         // Stop the score line, start the count-up layer(s) (the second only on a
         // perfect full-combo), reset the tick counter, and play the bonus-tally
         // start SE.
@@ -847,9 +847,9 @@ void PlayResultTask::updateScoreCount(bool tapped) {
         }
         m_tickCounter = 0;
         [audio playSe:nil resourceId:m_rankSe[8]];
-        m_state = 6;
+        m_state = kResultStateBonusCountUp;
         break;
-    case 6: {
+    case kResultStateBonusCountUp: {
         // Once the count layer settles, count the treasure total up. Every fifth
         // step retriggers the count SE (stopping the previous instance first); a
         // tap snaps straight to the total. On reaching it, play the clear SE and
@@ -871,7 +871,7 @@ void PlayResultTask::updateScoreCount(bool tapped) {
         } else {
             m_pointsCountUp = total;
             [audio playSe:nil resourceId:m_rankSe[9]];
-            m_state = 7;
+            m_state = kResultStateDismissWait;
         }
         break;
     }
@@ -1134,8 +1134,8 @@ void PlayResultTask::PlayResultDrawCallback(int child,
             return;
         }
         int handle;
-        if (self->m_perfectFullCombo == 0) { // not perfect full-combo
-            if (self->m_cleared == 0) {      // not cleared either
+        if (!self->m_perfectFullCombo) { // not perfect full-combo
+            if (!self->m_cleared) {      // not cleared either
                 return;
             }
             handle = self->m_frmA[0]; // FULLCOMBO frame
@@ -1218,7 +1218,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     // doubled on phone ---
     if (self->m_usr[1] == child) {
         int ax = anchorX, ay = anchorY;
-        if (self->m_padDisplay == 0) { // phone
+        if (!self->m_padDisplay) { // phone
             ay <<= 1;
             ax <<= 1;
         }
@@ -1255,7 +1255,7 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     // --- Bonus board glyph (BONUS_COM_BOARD, m_usr[13]): full-combo vs plain
     // board ---
     if (self->m_usr[13] == child) {
-        const int idx = (self->m_cleared == 0) ? 2 : 3; // cleared -> BONUS_FULLCOM_BOARD
+        const int idx = (!self->m_cleared) ? 2 : 3; // cleared -> BONUS_FULLCOM_BOARD
         rquad(self->m_frmA[idx]);
         return;
     }

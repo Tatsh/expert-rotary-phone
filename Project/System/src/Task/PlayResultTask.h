@@ -167,19 +167,19 @@ private:
         {}; // +0x330 unused gap (Ghidra: no resultTask field access)
 #endif
 
-    int m_overlayWidth = 0;         // +0x33c transition fade-quad width
-    int m_overlayHeight = 0;        // +0x340 transition fade-quad height
-    int m_score = 0;                // +0x344 final play score
-    int16_t m_coolCount = 0;        // +0x348 COOL tally
-    int16_t m_greatCount = 0;       // +0x34a GREAT tally
-    int16_t m_goodCount = 0;        // +0x34c GOOD tally
-    int16_t m_badCount = 0;         // +0x34e BAD tally
-    int16_t m_maxCombo = 0;         // +0x350 max combo
-    uint8_t m_isNewRecord = 0;      // +0x352 new-record flag
-    uint8_t m_perfectFullCombo = 0; // +0x353 cleared + no GOOD/BAD
-    uint8_t m_cleared = 0;          // +0x354 cleared flag
-    uint8_t m_padDisplay = 0;       // +0x355 pad-class display
-    uint8_t m_eventBonus = 0;       // +0x356 event-song bonus flag
+    int m_overlayWidth = 0;          // +0x33c transition fade-quad width
+    int m_overlayHeight = 0;         // +0x340 transition fade-quad height
+    int m_score = 0;                 // +0x344 final play score
+    int16_t m_coolCount = 0;         // +0x348 COOL tally
+    int16_t m_greatCount = 0;        // +0x34a GREAT tally
+    int16_t m_goodCount = 0;         // +0x34c GOOD tally
+    int16_t m_badCount = 0;          // +0x34e BAD tally
+    int16_t m_maxCombo = 0;          // +0x350 max combo
+    bool m_isNewRecord = false;      // +0x352 new-record flag
+    bool m_perfectFullCombo = false; // +0x353 cleared + no GOOD/BAD
+    bool m_cleared = false;          // +0x354 cleared flag
+    bool m_padDisplay = false;       // +0x355 pad-class display
+    bool m_eventBonus = false;       // +0x356 event-song bonus flag
 #ifndef ENABLE_PATCHES
     uint8_t _pad_357 = 0; // +0x357 alignment pad before m_sheet (no access)
 #endif
@@ -202,10 +202,28 @@ private:
     int m_tickCounter = 0;            // +0x388 count-up tick counter (read as uint for %5)
     int m_music = 0;                  // +0x38c played music id
     ne::C_TASK *m_nextTask = nullptr; // +0x390 spawned music-select task
-    int m_state = 0;                  // +0x394 update() state machine field
-    void *m_shareButton = nullptr;    // +0x398 Twitter share UIButton (ARC-bridged raw)
-    void *m_tweeter = nullptr;        // +0x39c TwitterUtil (unmanaged +1)
-                                      // object end +0x3a0
+
+    // update() state machine values, in the order the result screen walks them
+    // (Ghidra: PlayResultTask::update FUN_0003d690).
+    enum ResultState {
+        kResultStateSetup = 0,           // set up result data, load + start the BGM
+        kResultStateFadeIn = 1,          // fade in, start intro layers, drop the capture
+        kResultStatePresent = 2,         // interactive result presentation
+        kResultStateScoreLineIn = 3,     // play the score line-in SE + animation
+        kResultStateScoreLineDone = 4,   // score-line settled: start the count-up
+        kResultStateBonusCountStart = 5, // stop the line, start the bonus count-up
+        kResultStateBonusCountUp = 6,    // count the treasure total up to the subtotal
+        kResultStateDismissWait = 7,     // wait for the dismiss tap
+        kResultStateUploadCheck = 8,     // show the "communicating" overlay if uploading
+        kResultStateWaitUpload = 9,      // wait for the score upload to finish
+        kResultStateFadeOut = 10,        // start the fade-out transition
+        kResultStateWaitFadeOut = 0xb,   // wait for the fade-out to finish
+        kResultStateGotoNext = 0xc,      // tear down + spawn the next scene
+    };
+    int m_state = 0;               // +0x394 update() state machine field (ResultState)
+    void *m_shareButton = nullptr; // +0x398 Twitter share UIButton (ARC-bridged raw)
+    void *m_tweeter = nullptr;     // +0x39c TwitterUtil (unmanaged +1)
+                                   // object end +0x3a0
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
