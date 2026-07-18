@@ -43,6 +43,7 @@
 #import "ScoreData.h"
 #import "TaskFactory.h"
 #import "UserSettingData.h"
+#import "neDebugLog.h" // RHYDBG grid-origin diagnostics (no-op unless RHYDBG)
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neTextureForiOS.h"
@@ -2140,6 +2141,29 @@ void MainTask::AepDrawCallback(int child,
         // hit-testing.
         self->m_layoutRects[46] = x - (anchorX * scaleX) / 100;
         self->m_layoutRects[47] = y - (anchorY * scaleY) / 100;
+        // RHYDBG: the JACKET00 element transform AepDrawLayer hands the grid. If
+        // (x, y) is (0, 0) the whole grid pins to the top-left corner. Capture the
+        // first few frames' origin, cached hit-test origin and the cell stride /
+        // scroll so we can tell a bad element transform from a hidden-by-overdraw
+        // grid. idevicesyslog | grep RHYDBG.
+        if (NE_DBG_FIRST(4)) {
+            neDebugLog("MusicSel JACKET00 pad=%d x=%d y=%d sx=%d sy=%d ax=%d ay=%d "
+                       "origin=(%d,%d) cellW=%d cellH=%d scroll=%d cols=%d songs=%d",
+                       self->m_isPadDisplay,
+                       x,
+                       y,
+                       scaleX,
+                       scaleY,
+                       anchorX,
+                       anchorY,
+                       self->m_layoutRects[46],
+                       self->m_layoutRects[47],
+                       self->m_layoutRects[0],
+                       self->m_layoutRects[1],
+                       self->m_scrollOffset,
+                       self->m_columnStride,
+                       self->m_songCount);
+        }
         const int8_t curRow = static_cast<int8_t>(self->m_curColLatch);
         drawJacketGrid(curRow, self->m_columnIndex, 0);
 
