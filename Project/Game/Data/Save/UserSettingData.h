@@ -17,6 +17,18 @@
 
 #import "TreasureTmpData.h"
 
+// The four AC-viewer custom options, in row order. The value is both the option
+// group index and which sub-setting the row edits (acvHiSpeed / acvPopKun /
+// acvHidSud / acvRanMir). Shared here because the option-list controller and
+// both of its cells key off it.
+typedef NS_ENUM(NSInteger, AcvOptionRow) {
+    AcvOptionRowHiSpeed = 0, // AcViewerHiSpeedViewController
+    AcvOptionRowPopKun = 1,  // AcViewerPopKunViewController
+    AcvOptionRowHidSud = 2,  // AcViewerHidSudViewController
+    AcvOptionRowRanMir = 3,  // AcViewerRanMirViewController
+    AcvOptionRowCount = 4,
+};
+
 // Player-progress blob, version 109. Serialized as exactly 36 bytes (0x24),
 // AES-128-CBC encrypted, and stored under NSUserDefaults key "c".
 // Field offsets/types recovered from -[UserSettingData crypt109Data:] @

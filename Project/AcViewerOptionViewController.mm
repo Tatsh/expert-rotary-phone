@@ -27,14 +27,8 @@
 // AcvDifficulty (the chart difficulty tiers) now lives in AcMusicData.h, shared
 // with the option detail screens.
 
-// The arcade-viewer option list's rows, each pushing its own detail screen.
-typedef NS_ENUM(NSInteger, AcvOptionRow) {
-    AcvOptionRowHiSpeed = 0, // AcViewerHiSpeedViewController
-    AcvOptionRowPopKun = 1,  // AcViewerPopKunViewController
-    AcvOptionRowHidSud = 2,  // AcViewerHidSudViewController
-    AcvOptionRowRanMir = 3,  // AcViewerRanMirViewController
-    AcvOptionRowCount = 4,
-};
+// AcvOptionRow (the arcade-viewer option list's rows) now lives in
+// UserSettingData.h, shared with both option cells.
 
 // The C++ arcade note-play task the AC-main flow owns (the one AppDelegate
 // holds in its acMainTask property); opaque on the ObjC side (a raw pointer,

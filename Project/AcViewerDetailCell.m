@@ -52,13 +52,13 @@
     // short).
     int lastIndex;
     switch (_optionKind) {
-    case 1:
+    case AcvOptionRowPopKun:
         lastIndex = 1;
         break; // POP-KUN
-    case 2:
+    case AcvOptionRowHidSud:
         lastIndex = 3;
         break; // HID-SUD
-    case 3:
+    case AcvOptionRowRanMir:
         lastIndex = 3;
         break; // RAN-MIR
     default:
@@ -102,16 +102,16 @@
     // check mark).
     int selected = 0;
     switch (_optionKind) {
-    case 0:
+    case AcvOptionRowHiSpeed:
         selected = [UserSettingData acvHiSpeed];
         break;
-    case 1:
+    case AcvOptionRowPopKun:
         selected = [UserSettingData acvPopKun];
         break;
-    case 2:
+    case AcvOptionRowHidSud:
         selected = [UserSettingData acvHidSud];
         break;
-    case 3:
+    case AcvOptionRowRanMir:
         selected = [UserSettingData acvRanMir];
         break;
     default:

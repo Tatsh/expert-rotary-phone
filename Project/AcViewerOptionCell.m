@@ -43,15 +43,15 @@
     // Background image varies with the row's position in the group.
     NSString *bgName;
     switch (optionKind) {
-    case 0:
+    case AcvOptionRowHiSpeed:
         bgName = @"acv_custom_option_top";
         break; // first row
-    case 3:
+    case AcvOptionRowRanMir:
         bgName = @"acv_custom_option_under";
         break; // last row
     default:
         bgName = @"acv_custom_option_bar";
-        break; // 1, 2 (middle rows)
+        break; // POP-KUN, HID-SUD (middle rows)
     }
     UIImage *bg = [UIImage imageNamed:bgName];
     UIImageView *bgView = [[UIImageView alloc] initWithImage:bg];
@@ -75,16 +75,16 @@
     _optionKindLbl.frame = CGRectMake(50.0f, 9.0f, 100.0f, 26.0f);
     [self.contentView addSubview:_optionKindLbl];
     switch (optionKind) {
-    case 0:
+    case AcvOptionRowHiSpeed:
         _optionKindLbl.text = @"HI-SPEED";
         break;
-    case 1:
+    case AcvOptionRowPopKun:
         _optionKindLbl.text = @"POP-KUN";
         break;
-    case 2:
+    case AcvOptionRowHidSud:
         _optionKindLbl.text = @"HID-SUD";
         break;
-    case 3:
+    case AcvOptionRowRanMir:
         _optionKindLbl.text = @"RAN-MIR";
         break;
     }
@@ -106,7 +106,7 @@
 
     NSString *value = nil;
     switch (optionKind) {
-    case 0: {
+    case AcvOptionRowHiSpeed: {
         static NSString *const kHiSpeed[] = {@"OFF",
                                              @"HI-SP 1.5",
                                              @"HI-SP 2.0",
@@ -121,17 +121,17 @@
         value = kHiSpeed[[UserSettingData acvHiSpeed]];
         break;
     }
-    case 1: {
+    case AcvOptionRowPopKun: {
         static NSString *const kPopKun[] = {@"OFF", @"BEAT POP"};
         value = kPopKun[[UserSettingData acvPopKun]];
         break;
     }
-    case 2: {
+    case AcvOptionRowHidSud: {
         static NSString *const kHidSud[] = {@"OFF", @"HIDDEN", @"SUDDEN", @"HID-SUD"};
         value = kHidSud[[UserSettingData acvHidSud]];
         break;
     }
-    case 3: {
+    case AcvOptionRowRanMir: {
         static NSString *const kRanMir[] = {@"OFF", @"RANDOM", @"MIRROR", @"S-RAN"};
         value = kRanMir[[UserSettingData acvRanMir]];
         break;
