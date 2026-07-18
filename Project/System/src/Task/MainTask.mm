@@ -2658,6 +2658,12 @@ void MainTask::AepDrawCallback(int child,
         if (self->m_diffBlackUsrNo[i] == static_cast<int>(child)) {
             const int lyrSlot = (resultSheet == i) ? 1 : 2;
             int &frm = self->m_diffStarLayerFrame[i];
+            // Ghidra 0x3baf8: drawLayer gets anchorX, anchorY, color, colorHi=alpha,
+            // loopFlags=1 (callback args [r7+0x10..0x1c] then a literal 1). The
+            // reconstruction had these shifted by one (colorHi=1, loopFlags=anchorX),
+            // which flipped the (colorHi+color) <= 100 alpha-split branch and threw
+            // away the layer's per-frame alpha -- so STAR_OUT lost its pale (alpha 20)
+            // keyframe and every difficulty star rendered full.
             self->m_aep->drawLayer(self->m_bgLyrNo[lyrSlot],
                                    frm,
                                    x,
@@ -2665,11 +2671,11 @@ void MainTask::AepDrawCallback(int child,
                                    scaleX,
                                    scaleY,
                                    rotation,
+                                   anchorX,
                                    anchorY,
                                    color,
                                    alpha,
                                    1,
-                                   anchorX,
                                    blend,
                                    0xffffff,
                                    0,
@@ -2851,6 +2857,8 @@ void MainTask::AepDrawCallback(int child,
     }
     if (self->m_diffIntroActive != 0) {
         int &frm = self->m_diffIntroFrame;
+        // Same drawLayer arg order as the difficulty stars (Ghidra 0x3baf8):
+        // anchorX, anchorY, color, colorHi=alpha, loopFlags=1.
         self->m_aep->drawLayer(self->m_bgLyrNo[kBgNeko],
                                frm,
                                x,
@@ -2858,11 +2866,11 @@ void MainTask::AepDrawCallback(int child,
                                scaleX,
                                scaleY,
                                rotation,
+                               anchorX,
                                anchorY,
                                color,
                                alpha,
                                1,
-                               anchorX,
                                blend,
                                0xffffff,
                                0,
