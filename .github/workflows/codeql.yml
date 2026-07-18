@@ -1,0 +1,63 @@
+concurrency:
+  cancel-in-progress: true
+  group: codeql-${{ github.ref }}
+jobs:
+  analyze:
+    env:
+      DEPLOYMENT_TARGET: '12.0'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a
+        with:
+          build-mode: 'manual'
+          languages: 'c-cpp'
+      # The CodeQL C/C++ extractor cannot parse Objective-C, so the app target's
+      # .m/.mm sources cannot be traced via autobuild. Compile only the pure C
+      # and C++ translation units against the iOS SDK instead.
+      - name: Build C and C++ translation units
+        run: |
+          sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
+          includes=(-IProject)
+          while IFS= read -r dir; do
+            includes+=("-I${dir}")
+          done < <(find Project -type d | sort)
+          mkdir -p build-codeql
+          count=0
+          while IFS= read -r src; do
+            obj="build-codeql/obj-${count}.o"
+            case "${src}" in
+              *.c)
+                xcrun clang -target "arm64-apple-ios${DEPLOYMENT_TARGET}" \
+                  -isysroot "${sdk}" -std=gnu2x -DGLES_SILENCE_DEPRECATION \
+                  "${includes[@]}" -c "${src}" -o "${obj}"
+                ;;
+              *.cpp)
+                xcrun clang++ -target "arm64-apple-ios${DEPLOYMENT_TARGET}" \
+                  -isysroot "${sdk}" -std=gnu++2b -stdlib=libc++ -fno-char8_t \
+                  -DGLES_SILENCE_DEPRECATION "${includes[@]}" -c "${src}" -o "${obj}"
+                ;;
+            esac
+            count=$((count + 1))
+          done < <(git ls-files 'Project/*.c' 'Project/*.cpp')
+          echo "Compiled ${count} translation units"
+          test "${count}" -gt 0
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a
+        with:
+          category: '/language:c-cpp'
+name: codeql
+'on':
+  pull_request:
+    branches: ['master']
+  push:
+    branches: ['master']
+  schedule:
+    - cron: '30 5 * * 1'
