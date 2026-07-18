@@ -56,7 +56,7 @@ static void PresentTweet(NSString *text, UIImage *image) {
     // The Social-framework Twitter composer (SLServiceTypeTwitter) was removed
     // in iOS 11, so this is a no-op when built against a modern SDK.
     (void)text;
-    (void)image;
+    static_cast<void>(image);
     return;
 #endif
 }
