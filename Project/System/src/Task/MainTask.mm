@@ -1417,6 +1417,15 @@ void MainTask::rebuildList() {
             NSData *artwork = [song artwork2xData];
             MusicSelCell &cell = m_cells[slot];
 
+            // RHYDBG: does the streaming loader run, and is the @2x jacket present?
+            // A nil artwork yields a blank texture (still non-null), so this tells a
+            // missing-asset case from a never-ran loader.
+            neDebugLog("MusicSel load slot=%d songIdx=%d musicId=%u artworkBytes=%lu",
+                       slot,
+                       songIdx,
+                       musicId,
+                       static_cast<unsigned long>(artwork ? artwork.length : 0));
+
             // Upload the @2x jacket art straight into a fresh texture.
             cell.texture = std::make_unique<neTextureForiOS>();              // neTextureForiOS_ctor
             cell.texture->loadFromImageData((__bridge const void *)artwork); // neTextureLoadSingle
@@ -2076,6 +2085,18 @@ void MainTask::AepDrawCallback(int child,
                 const int cellY = self->m_layoutRects[1] * (i / 3) + y;
                 const int cellX =
                     self->m_layoutRects[0] * (i % 3) + x + extraX + self->m_scrollOffset;
+                // RHYDBG: per-cell jacket state. tex=0 -> placeholder (empty cell);
+                // tex=1 -> jacket drawn at (drawX, drawY). Tells apart a load failure
+                // (all tex=0) from a mispositioned draw.
+                if (NE_DBG_FIRST(12)) {
+                    neDebugLog("MusicSel cell i=%d col=%d idx=%d tex=%d drawX=%d drawY=%d",
+                               i,
+                               columnIndex,
+                               idx,
+                               cell->texture != nullptr,
+                               self->m_layoutRects[2] + cellX,
+                               cellY);
+                }
                 if (cell->texture == nullptr) { // no texture yet -> placeholder
                     drawAepFrameEx(&AepManager::shared(),
                                    self->m_frmNo[1],
