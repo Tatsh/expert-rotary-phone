@@ -107,16 +107,16 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
     NSString *bpm = nil;
     switch (difficulty) {
-    case 0:
+    case AcvDifficultyEasy:
         bpm = [data bpmEasy];
         break;
-    case 1:
+    case AcvDifficultyNormal:
         bpm = [data bpmNormal];
         break;
-    case 2:
+    case AcvDifficultyHyper:
         bpm = [data bpmHyper];
         break;
-    case 3:
+    case AcvDifficultyEx:
         bpm = [data bpmEx];
         break;
     default:

@@ -12,6 +12,15 @@
 
 #import <Foundation/Foundation.h>
 
+// The four arcade chart difficulties, in ascending order. Keys the per-tier
+// level / BPM / sheet / back-track lookups (Easy, Normal, Hyper, Ex).
+typedef NS_ENUM(NSInteger, AcvDifficulty) {
+    AcvDifficultyEasy = 0,
+    AcvDifficultyNormal = 1,
+    AcvDifficultyHyper = 2,
+    AcvDifficultyEx = 3,
+};
+
 @interface AcMusicData : NSObject
 
 @property(nonatomic) int acMusicId;                 // Ghidra: acMusicId @ 0x666ec

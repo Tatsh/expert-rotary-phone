@@ -24,14 +24,8 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
-// The four arcade chart difficulties, in ascending order (drives the header BPM
-// label lookup).
-typedef NS_ENUM(NSInteger, AcvDifficulty) {
-    AcvDifficultyEasy = 0,
-    AcvDifficultyNormal = 1,
-    AcvDifficultyHyper = 2,
-    AcvDifficultyEx = 3,
-};
+// AcvDifficulty (the chart difficulty tiers) now lives in AcMusicData.h, shared
+// with the option detail screens.
 
 // The arcade-viewer option list's rows, each pushing its own detail screen.
 typedef NS_ENUM(NSInteger, AcvOptionRow) {
