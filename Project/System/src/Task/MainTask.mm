@@ -575,8 +575,9 @@ void MainTask::update(int /*deltaMs*/) {
         // sheet, and each of the three difficulty hit-tests + the Play/Friend rects
         // that are checked first, so a coordinate-space or ordering problem shows.
         if (NE_DBG_FIRST(16)) {
-            neDebugLog("MusicSel diff gate: tap=(%d,%d) uiScale=%.3f sheet=%d "
+            neDebugLog("MusicSel diff gate: this=%p tap=(%d,%d) uiScale=%.3f sheet=%d "
                        "diffBase=(%d,%d,%d,%d) stride=%d hits=[%d %d %d] play=%d friend=%d",
+                       static_cast<void *>(this),
                        tapX,
                        tapY,
                        static_cast<double>(m_uiScale),
@@ -2681,6 +2682,20 @@ void MainTask::AepDrawCallback(int child,
         if (self->m_diffBlackUsrNo[i] == static_cast<int>(child)) {
             const int lyrSlot = (resultSheet == i) ? 1 : 2;
             int &frm = self->m_diffStarLayerFrame[i];
+            // RHYDBG: what the star draw actually reads. If selfSheet stays 0 while
+            // update()'s gate log shows a changed sheet, the draw is reading a stale
+            // object; self= lets us compare the callback context to update()'s this.
+            if (NE_DBG_FIRST(24)) {
+                neDebugLog("MusicSel star draw: i=%d child=%d localSheet=%d selfSheet=%d "
+                           "lyrSlot=%d frm=%d self=%p",
+                           i,
+                           static_cast<int>(child),
+                           resultSheet,
+                           self->m_resultSheet,
+                           lyrSlot,
+                           frm,
+                           static_cast<void *>(self));
+            }
             self->m_aep->drawLayer(self->m_bgLyrNo[lyrSlot],
                                    frm,
                                    x,
