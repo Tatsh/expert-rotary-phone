@@ -15,6 +15,7 @@
 #import "AcMainTask.h"
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <ctime>
 #include <memory>
@@ -2876,40 +2877,47 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         }
         return n;
     };
+    // The digit / panel draw helpers below only READ their atlas, so borrow the
+    // owning unique_ptr slots as a raw view rather than handing a routine a
+    // pointer-to-smart-pointer. The returned array outlives the draw call it is
+    // passed to (it lives to the end of the enclosing full-expression).
+    auto atlasView = []<std::size_t N>(const std::unique_ptr<neTextureForiOS>(&owned)[N]) {
+        std::array<neTextureForiOS *, N> view{};
+        for (std::size_t i = 0; i < N; i++) {
+            view[i] = owned[i].get();
+        }
+        return view;
+    };
+
     // A right-to-left digit run from a texture atlas (glyph w x h), stepping x by
     // -step.
-    auto drawDigits = [&](std::unique_ptr<neTextureForiOS> *atlas,
-                          int value,
-                          int count,
-                          int px,
-                          int step,
-                          int gw,
-                          int gh) {
-        for (int k = 0; k < count; k++) {
-            neTextureForiOS_draw(aep,
-                                 atlas[value % 10].get(),
-                                 0,
-                                 0,
-                                 gw,
-                                 gh,
-                                 px,
-                                 y,
-                                 scaleX,
-                                 scaleY,
-                                 rotation,
-                                 anchorX,
-                                 anchorY,
-                                 color,
-                                 alpha,
-                                 blend,
-                                 0xffffff,
-                                 nullptr,
-                                 priority,
-                                 1);
-            px -= step;
-            value /= 10;
-        }
-    };
+    auto drawDigits =
+        [&](neTextureForiOS *const *atlas, int value, int count, int px, int step, int gw, int gh) {
+            for (int k = 0; k < count; k++) {
+                neTextureForiOS_draw(aep,
+                                     atlas[value % 10],
+                                     0,
+                                     0,
+                                     gw,
+                                     gh,
+                                     px,
+                                     y,
+                                     scaleX,
+                                     scaleY,
+                                     rotation,
+                                     anchorX,
+                                     anchorY,
+                                     color,
+                                     alpha,
+                                     blend,
+                                     0xffffff,
+                                     nullptr,
+                                     priority,
+                                     1);
+                px -= step;
+                value /= 10;
+            }
+        };
 
     // ---- treasure-point / ticket / bonus digit readouts
     // -----------------------------------
@@ -2918,13 +2926,20 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         if (v > 9999) {
             v = 9999;
         }
-        drawDigits(self->m_pointsDigitTex, v, 4, x, self->m_dlgLayout954, 0x22, 0x26);
+        drawDigits(
+            atlasView(self->m_pointsDigitTex).data(), v, 4, x, self->m_dlgLayout954, 0x22, 0x26);
         return;
     }
     if (self->m_boardUserNo[kBoardBonusCount] == child) { // bonus count (ticket glyphs)
         // Disasm +0x42c (0xa3806): 2 digits from x-7, step 0x20 (loop init -7, exit
         // at -0x47).
-        drawDigits(self->m_ticketDigitTex, self->m_bonusCount, 2, x - 7, 0x20, 0x20, 0x24);
+        drawDigits(atlasView(self->m_ticketDigitTex).data(),
+                   self->m_bonusCount,
+                   2,
+                   x - 7,
+                   0x20,
+                   0x20,
+                   0x24);
         return;
     }
     if (self->m_boardUserNo[kBoardCharaTickets] == child) { // owned chara tickets (<=99)
@@ -2934,13 +2949,19 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         }
         // Disasm +0x424 (0xa38a6): 2 digits (loop init 0, exit at -0x40), step
         // 0x20.
-        drawDigits(self->m_ticketDigitTex, v, 2, x, 0x20, 0x20, 0x24);
+        drawDigits(atlasView(self->m_ticketDigitTex).data(), v, 2, x, 0x20, 0x20, 0x24);
         return;
     }
     if (self->m_boardUserNo[kBoardRouletteDigit] == child) { // roulette-result digit
         const int val = self->m_rouletteDigit;
         const int n = numDigits(val);
-        drawDigits(self->m_pointsDigitTex, val, n, x + n * 0x20 - 0x30, 0x20, 0x22, 0x26);
+        drawDigits(atlasView(self->m_pointsDigitTex).data(),
+                   val,
+                   n,
+                   x + n * 0x20 - 0x30,
+                   0x20,
+                   0x22,
+                   0x26);
         return;
     }
     if (self->m_boardUserNo[kBoardStepValue] == child) { // per-skill step value (roulette digits)
@@ -2949,7 +2970,13 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         int val = self->m_stepValues[self->m_stepValueIndex];
         const int n = numDigits(val);
         if (n >= 1) {
-            drawDigits(self->m_roulDigitTex, val, n, x + (n == 2 ? 0x1c : -2), 0x3c, 0x3c, 0x48);
+            drawDigits(atlasView(self->m_roulDigitTex).data(),
+                       val,
+                       n,
+                       x + (n == 2 ? 0x1c : -2),
+                       0x3c,
+                       0x3c,
+                       0x48);
         }
         return;
     }
@@ -3063,7 +3090,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         return n;
     };
     auto drawPieceGrid = [&](const uint32_t *pieceTable,
-                             std::unique_ptr<neTextureForiOS> *panelTex,
+                             neTextureForiOS *const *panelTex,
                              int panelW,
                              int panelScale,
                              int *anchorOut) {
@@ -3097,7 +3124,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                                1);
             }
             neTextureForiOS_draw(aep,
-                                 panelTex[i].get(),
+                                 panelTex[i],
                                  0,
                                  0,
                                  panelW,
@@ -3123,13 +3150,15 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         }
     };
     if (self->m_boardUserNo[kBoardMusicPieceGrid] == child) { // music-piece grid
-        drawPieceGrid(self->m_musicPieceTableDup, self->m_jacketTex, 0x168, 0x26, nullptr);
+        drawPieceGrid(
+            self->m_musicPieceTableDup, atlasView(self->m_jacketTex).data(), 0x168, 0x26, nullptr);
         return;
     }
     if (self->m_boardUserNo[kBoardWallPieceGrid] == child) { // wall-piece grid
         // Disasm +0x400 (0xa45c4): the wall-piece panel scale is 0x64 (100), not
         // 0x26 like music.
-        drawPieceGrid(self->m_wallPieceTableDup, self->m_wallNailTex, 0x88, 0x64, nullptr);
+        drawPieceGrid(
+            self->m_wallPieceTableDup, atlasView(self->m_wallNailTex).data(), 0x88, 0x64, nullptr);
         return;
     }
 
