@@ -196,7 +196,7 @@ void AcNoteMng::registerTempoEvents() {
         if (r.type == AC_NOTE_EVENT) { // type 6: end of chart
             return;
         }
-        if (r.type == 10) { // measure line
+        if (r.type == AC_NOTE_MEASURE) { // measure line
             m_chartBarCount++;
         } else if (r.type == AC_NOTE_TEMPO) {
             // The binary asserts ("AdvanceRegisterEvent") if the segment table
@@ -445,7 +445,7 @@ void AcNoteMng::makeAdjustEvent(uint32_t tick) {
     m_scrollTarget = 0;
     m_scrollBase = 0;
     m_adjustRecord.tick = tick;
-    m_adjustRecord.type = 0xf;
+    m_adjustRecord.type = AC_NOTE_ADJUST;
     m_adjustRecord.value = 1; // mark the adjust in flight
     node->record = &m_adjustRecord;
     node->tick = tick;
@@ -517,7 +517,7 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
             makeEvent(rec);
             m_state = AC_NOTE_STATE_ENDING;
             break;
-        case 10: // 0xa: measure boundary
+        case AC_NOTE_MEASURE: // measure boundary
             if (dt < 4000) {
                 makeEvent(rec);
             } else {
@@ -525,7 +525,7 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
                 m_beatCount = 0;
             }
             break;
-        case 11: // 0xb: beat boundary
+        case AC_NOTE_BEAT: // beat boundary
             if (dt < 4000) {
                 makeEvent(rec);
             } else {
@@ -573,14 +573,14 @@ void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
         triggerBgmStart();
         node->flags |= 0x20;
         return;
-    case 10:
+    case AC_NOTE_MEASURE:
         m_barCount++;
         m_beatCount = 0;
         break;
-    case 11:
+    case AC_NOTE_BEAT:
         m_beatCount++;
         break;
-    case 0xf:
+    case AC_NOTE_ADJUST:
         applyBgmSync(node->record);
         node->flags |= 0x20;
         return;

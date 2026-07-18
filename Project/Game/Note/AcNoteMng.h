@@ -26,10 +26,13 @@
 // marker (its tick -> the end value, and the appended terminator is stamped
 // type 6 so update() can raise the end flag).
 enum AcNoteType : uint8_t {
-    AC_NOTE_TAP = 1,   // playable note (counted per lane)
-    AC_NOTE_END = 3,   // BGM-start / drift-sync anchor (NOT the chart end)
-    AC_NOTE_TEMPO = 4, // tempo/BPM event (min/max tracked)
-    AC_NOTE_EVENT = 6, // the real end-of-chart marker
+    AC_NOTE_TAP = 1,       // playable note (counted per lane)
+    AC_NOTE_END = 3,       // BGM-start / drift-sync anchor (NOT the chart end)
+    AC_NOTE_TEMPO = 4,     // tempo/BPM event (min/max tracked)
+    AC_NOTE_EVENT = 6,     // the real end-of-chart marker
+    AC_NOTE_MEASURE = 0xa, // measure boundary (advances the bar counter)
+    AC_NOTE_BEAT = 0xb,    // beat boundary (advances the beat counter)
+    AC_NOTE_ADJUST = 0xf,  // synthesised BGM drift-sync adjust event (applyBgmSync)
 };
 
 // Playback state machine (m_state @ +0xfd50): idle before play, then playing,
