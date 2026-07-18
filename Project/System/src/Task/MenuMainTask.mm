@@ -321,13 +321,12 @@ void MenuMainTask::update(int /*deltaMs*/) {
         // ENABLE_PATCHES for modern iOS sub-pixel touch. See NE_TAP_SLOP.
         const int dx = t->x - t->startX, dy = t->y - t->startY;
         if ((dx < 0 ? -dx : dx) < NE_TAP_SLOP(0xb) && (dy < 0 ? -dy : dy) < NE_TAP_SLOP(0xb)) {
-            // startX/startY are 16.16 fixed device pixels (touchBegan stores
-            // FloatToFixed). The binary converts them to float via FixedToFP
-            // (i.e. / 65536) before dividing by the UI scale; a plain (float)
-            // cast skips that and yields ~pixel * 65536, so the tap misses every
-            // button rect. Ghidra: FixedToFP(nStartX) / g_uiScale @ ~0x6aec0.
-            tapX = static_cast<int>(t->startX / 65536.0f / uiScale);
-            tapY = static_cast<int>(t->startY / 65536.0f / uiScale);
+            // startX/startY are plain device pixels (touchBegan stores them via
+            // vcvt, no fixed-point). The binary divides by the UI scale to reach
+            // logical coords. Disasm @ 0x6afae: vcvt.f32.s32(nStartX) / g_uiScale
+            // -> vcvt.s32.f32, i.e. (int)((float)nStartX / uiScale).
+            tapX = static_cast<int>(static_cast<float>(t->startX) / uiScale);
+            tapY = static_cast<int>(static_cast<float>(t->startY) / uiScale);
             neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);
             NSLog(@"%d %d", tapX, tapY);
             haveTap = true;

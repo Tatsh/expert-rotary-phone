@@ -301,13 +301,11 @@ void PlayTask::update(int /*deltaMs*/) {
         if (t->valid != 0) { // a currently-down touch -> feed the judge
             if (touchCount < 8) {
                 // The judge/pause are fed each touch's current point (the +0x0c/+0x10
-                // match key) in PIXELS. neGraphics stores the point in 16.16 fixed
-                // (neGLView ToFixed), so divide by 65536 here to recover pixels — the
-                // same convention MenuMainTask/MainTask use on t->startX. (The binary
-                // stores plain pixels in the touch record, so it reads them straight;
-                // this reconstruction keeps the fixed-point store, hence the /65536.)
-                touchXY[touchCount * 2] = static_cast<float>(t->x) / 65536.0f;
-                touchXY[touchCount * 2 + 1] = static_cast<float>(t->y) / 65536.0f;
+                // match key) in plain pixels. 0x2dc98/0x2dca0 load [+0xc]/[+0x10] and
+                // 0x2dca4/0x2dca8 vcvt.f32.s32 them straight to float (no fixed-point
+                // scale) — the touch pool now stores plain device pixels.
+                touchXY[touchCount * 2] = static_cast<float>(t->x);
+                touchXY[touchCount * 2 + 1] = static_cast<float>(t->y);
                 touchIds[touchCount] = t->id;
                 touchCount++;
             }

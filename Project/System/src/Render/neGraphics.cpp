@@ -75,8 +75,8 @@ void neGraphics::configure(float contentScale) {
 void neGraphics::touchBegan(int x, int y, int width, int height) {
     int slot = m_touchCount;
     auto *rec = m_touches[slot];
-    int px = FloatToFixed(FixedToFloat(x) * m_contentScale);
-    int py = FloatToFixed(FixedToFloat(y) * m_contentScale);
+    int px = static_cast<int>(static_cast<float>(x) * m_contentScale);
+    int py = static_cast<int>(static_cast<float>(y) * m_contentScale);
     rec->id = m_nextTouchId;
     // All four coordinate pairs start at the down point.
     rec->startX = px;
@@ -102,10 +102,10 @@ void neGraphics::touchMoved(int x, int y, int prevX, int prevY) {
     if (m_touchCount < 1) {
         return;
     }
-    int nx = FloatToFixed(FixedToFloat(x) * m_contentScale);
-    int ny = FloatToFixed(FixedToFloat(y) * m_contentScale);
-    int ox = FloatToFixed(FixedToFloat(prevX) * m_contentScale);
-    int oy = FloatToFixed(FixedToFloat(prevY) * m_contentScale);
+    int nx = static_cast<int>(static_cast<float>(x) * m_contentScale);
+    int ny = static_cast<int>(static_cast<float>(y) * m_contentScale);
+    int ox = static_cast<int>(static_cast<float>(prevX) * m_contentScale);
+    int oy = static_cast<int>(static_cast<float>(prevY) * m_contentScale);
     for (int i = 0; i < m_touchCount; ++i) {
         auto *rec = m_touches[i];
         if (rec->x == ox && rec->y == oy) {
@@ -125,10 +125,10 @@ void neGraphics::touchEnded(int x, int y, int prevX, int prevY) {
     if (m_touchCount < 1) {
         return;
     }
-    int nx = FloatToFixed(FixedToFloat(x) * m_contentScale);
-    int ny = FloatToFixed(FixedToFloat(y) * m_contentScale);
-    int ox = FloatToFixed(FixedToFloat(prevX) * m_contentScale);
-    int oy = FloatToFixed(FixedToFloat(prevY) * m_contentScale);
+    int nx = static_cast<int>(static_cast<float>(x) * m_contentScale);
+    int ny = static_cast<int>(static_cast<float>(y) * m_contentScale);
+    int ox = static_cast<int>(static_cast<float>(prevX) * m_contentScale);
+    int oy = static_cast<int>(static_cast<float>(prevY) * m_contentScale);
     for (int i = 0; i < m_touchCount; ++i) {
         auto *rec = m_touches[i];
         if (rec->released == 0 && rec->x == ox && rec->y == oy) {
