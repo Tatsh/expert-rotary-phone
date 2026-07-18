@@ -1017,9 +1017,15 @@ void MainTask::Update() {
             return;
         }
 
-        const int startX = t->startX; // +0x04 drag anchor
-        m_touchX = t->x;              // +0xa78 current point
-        m_touchY = t->y;              // +0xa7c
+        // The touch pool keeps 16.16 fixed device pixels; the scroll offset,
+        // its |>= 10| tap-suppression gate and the cell-position math are all in
+        // integer pixels, so drop the fractional bits here (as the tap path does
+        // for tapX). Leaving these in 16.16 made m_scrollOffset ~65536x too large:
+        // it flung the grid and, worse, pinned |m_scrollOffset| >= 10 forever, so
+        // every button hit-test (cells, back, the bottom row) was suppressed.
+        const int startX = t->startX / 65536; // +0x04 drag anchor (px)
+        m_touchX = t->x / 65536;              // +0xa78 current point (px)
+        m_touchY = t->y / 65536;              // +0xa7c
         const int curX = m_touchX;
 
         // Push the ring one slot toward "older"; index 0 receives the new sample.
@@ -1115,7 +1121,7 @@ void MainTask::Update() {
                 m_selectedCell = t->id; // +0x928 drag touch id
                 m_dragSampleTime[0] = static_cast<int>(getTimeMillis());
                 m_scrollVelocity = 0.0f;
-                m_dragSampleX[0] = t->x;
+                m_dragSampleX[0] = t->x / 65536; // px (see the drag block above)
                 break;
             }
         }
