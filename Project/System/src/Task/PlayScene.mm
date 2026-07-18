@@ -58,6 +58,7 @@
 #import "TaskFactory.h" // MainTaskCreate / PlayResultCreateTask
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager
+#import "neGraphics.h"     // kFixed16One (16.16 fixed-point unit)
 #import "neTextureForiOS.h"
 
 // --- Play-scene sub-unit seams
@@ -146,7 +147,7 @@ int scoreToRank(int score) {
     if (score >= 80000) {
         return 4;
     }
-    if (score >= 70000) {
+    if (score >= kScoreClearThreshold) {
         return 5;
     }
     return 6;
@@ -211,7 +212,7 @@ void PlayTaskInit(void *playData) {
     task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn] ? 1 : 0; // +0x9e6
 
     // Note ("popkun") size -> 16.16 fixed. Ghidra: FPToFixed(popkunSize).
-    task->m_popkunSize = static_cast<int>([UserSettingData popkunSize] * 65536.0f); // +0x9bc
+    task->m_popkunSize = static_cast<int>([UserSettingData popkunSize] * kFixed16One); // +0x9bc
 
     // The bundled-demo / sugoroku play flag, copied out of the event center
     // (+0x33).
@@ -1306,7 +1307,7 @@ void PlayTaskDraw(int child,
     }
     // --- Gauge flash (GG_IFL, m_userSprite[0]): this judge slot's gauge index
     // (slot.result) ---
-    if (task->m_userSprite[0] == child) {
+    if (task->m_userSprite[kUserSpriteGaugeFlash] == child) {
         const int gi = task->m_judgePool[static_cast<int>(judgeSlot)].result; // +0x3d4 gauge index
         if (gi < 0) {
             return;
@@ -1315,13 +1316,13 @@ void PlayTaskDraw(int child,
         return;
     }
     // --- Pause command icon (CMD_PAUSE_1, m_userSprite[1]) ---
-    if (task->m_userSprite[1] == child) {
+    if (task->m_userSprite[kUserSpritePauseCmd] == child) {
         noteQuad(task->m_pauseEyeToneFrm[0], 9); // CMD_PAUSE_1_F
         return;
     }
     // --- Tone lane graphic (TONE_1, m_userSprite[2]): pick a tone sprite from
     // this note's state ---
-    if (task->m_userSprite[2] == child) {
+    if (task->m_userSprite[kUserSpriteToneLane] == child) {
         // The slot's note identity (slot.noteId @ +0x3cc) is the raw tone note id.
         const int id = static_cast<int>(task->m_judgePool[static_cast<int>(judgeSlot)].noteId);
         const int graphic = NoteToneGraphic(id); // FUN_00034bb4
@@ -1342,7 +1343,7 @@ void PlayTaskDraw(int child,
         return;
     }
     // --- Tone number overlay (TONE_08_NUM, m_userSprite[3]) ---
-    if (task->m_userSprite[3] == child) {
+    if (task->m_userSprite[kUserSpriteToneNumber] == child) {
         const int id = static_cast<int>(task->m_judgePool[static_cast<int>(judgeSlot)].noteId);
         if (NoteToneState(id) != 1) {
             return;
@@ -1355,30 +1356,30 @@ void PlayTaskDraw(int child,
         return;
     }
     // --- Pause-eye tone frames (ORB_EYES_*, m_userSprite[4..8]) ---
-    if (task->m_userSprite[4] == child) {
+    if (task->m_userSprite[kUserSpritePauseEye0] == child) {
         noteQuad(task->m_pauseEyeToneFrm[1], 0x12);
         return;
     }
-    if (task->m_userSprite[5] == child) {
+    if (task->m_userSprite[kUserSpritePauseEye1] == child) {
         noteQuad(task->m_pauseEyeToneFrm[2], 0x12);
         return;
     }
-    if (task->m_userSprite[6] == child) {
+    if (task->m_userSprite[kUserSpritePauseEye2] == child) {
         noteQuad(task->m_pauseEyeToneFrm[3], 0x12);
         return;
     }
-    if (task->m_userSprite[7] == child) {
+    if (task->m_userSprite[kUserSpritePauseEye3] == child) {
         noteQuad(task->m_pauseEyeToneFrm[4], 0x12);
         return;
     }
-    if (task->m_userSprite[8] == child) {
+    if (task->m_userSprite[kUserSpritePauseEye4] == child) {
         noteQuad(task->m_pauseEyeToneFrm[5], 0x12);
         return;
     }
 
     // --- Background colour layer (BG_CL_COLOR, m_userSprite[9]): effects-on, new
     // hardware only ---
-    if (task->m_userSprite[9] == child) {
+    if (task->m_userSprite[kUserSpriteBgColor] == child) {
         if (task->m_optEffectOn == 0) {
             return; // effects off
         }
@@ -1393,17 +1394,17 @@ void PlayTaskDraw(int child,
         return;
     }
     // --- On-field combo digits (EFF_C_NUM001/010/100, m_userSprite[12..14]) ---
-    if (task->m_userSprite[12] == child) {
+    if (task->m_userSprite[kUserSpriteComboDigit1] == child) {
         const int v = static_cast<int>(task->m_comboMilestoneShown);
         noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(judgeSlot));
         return;
     }
-    if (task->m_userSprite[13] == child) {
+    if (task->m_userSprite[kUserSpriteComboDigit10] == child) {
         const int v = static_cast<int>(task->m_comboMilestoneShown) / 10;
         noteQuad(task->m_comboDigitFrm[v % 10], static_cast<int>(judgeSlot));
         return;
     }
-    if (task->m_userSprite[14] == child) {
+    if (task->m_userSprite[kUserSpriteComboDigit100] == child) {
         if (static_cast<int>(task->m_comboMilestoneShown) < 100) {
             return;
         }
@@ -1412,9 +1413,9 @@ void PlayTaskDraw(int child,
         return;
     }
     // --- Score star badge (FRAME_STAR, m_userSprite[10]) ---
-    if (task->m_userSprite[10] == child) {
+    if (task->m_userSprite[kUserSpriteScoreStar] == child) {
         int lyr, lframe;
-        if (task->m_score < 70000) { // FRAME_SIDEMT_BARSTAR0
+        if (task->m_score < kScoreClearThreshold) { // FRAME_SIDEMT_BARSTAR0
             lyr = task->m_effectStateLyr[6];
             lframe = 0;
         } else { // FRAME_SIDEMT_BARSTAR1
@@ -1425,7 +1426,7 @@ void PlayTaskDraw(int child,
         return;
     }
     // --- Gauge side bar (FRAME_SIDEBAR, m_userSprite[11]) ---
-    if (task->m_userSprite[11] == child) {
+    if (task->m_userSprite[kUserSpriteGaugeSideBar] == child) {
         const int barCount = task->m_effectStateFrames[8]; // FRAME_SIDEMT_BAR length
         const int t = static_cast<int>(task->m_gaugeValue) * (barCount - 1); // gauge * (frames-1)
         const int lframe =

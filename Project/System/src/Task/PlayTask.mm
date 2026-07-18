@@ -225,9 +225,11 @@ void PlayTask::DrawHud() {
     // Fever gauge: below 70000 the lo layer's frame tracks the score; above it the
     // hi layer's frame tracks the beat phase. 0x30562 compares against 69999 with a
     // signed bgt (hi when score > 69999, i.e. score >= 70000).
-    if (m_score < 70000) {
-        aep.drawLayer(
-            m_scoreBpmLyr[3], ((m_scoreBpmFrames[3] - 1) * m_score) / 70000, AepTransform(), 0);
+    if (m_score < kScoreClearThreshold) {
+        aep.drawLayer(m_scoreBpmLyr[3],
+                      ((m_scoreBpmFrames[3] - 1) * m_score) / kScoreClearThreshold,
+                      AepTransform(),
+                      0);
     } else {
         aep.drawLayer(m_scoreBpmLyr[4], beatFrame(m_scoreBpmFrames[4]), AepTransform(), 0);
     }
@@ -317,69 +319,69 @@ void PlayTask::update(int /*deltaMs*/) {
     }
 
     switch (m_state) {
-    case 0:
+    case kPlayStateInit:
         PlayTaskInit(this); // FUN_0002e2d8: allocate the play scene
-        m_state = 1;
+        m_state = kPlayStateBringUp;
         [[fallthrough]];
-    case 1:                                   // NoteMng bring-up + fade in + pause the intro layers
+    case kPlayStateBringUp:                   // NoteMng bring-up + fade in + pause the intro layers
         nm.primePlay();                       // Ghidra: NoteMng::ResetPlayback (FUN_0003396c)
         aep.setAepTransitionMode(1);          // fade in (fixed 30 frames)
         m_comboLayers[4]->pause();            // Ghidra: AepLyrCtrl::Pause(pAepLyrMain[4])
         m_sceneLayers[kSceneLayer3]->pause(); // Ghidra: AepLyrCtrl::Pause(pAepLyrSub[3])
-        m_state = 2;
+        m_state = kPlayStateReady;
         [[fallthrough]];
-    case 2:               // ready: reset playback + draw the field; on BGM-ready, cue the start
+    case kPlayStateReady: // ready: reset playback + draw the field; on BGM-ready, cue the start
         if (m_bgmReady) { // +0x9c6 async BGM decode done
             [audio playSe:nil resourceId:m_playSeIds[0]]; // the "go" voice SE
             m_comboLayers[3]->stop(1); // Ghidra: AepLyrCtrl::Stop(pAepLyrMain[3])
-            m_state = 4;
+            m_state = kPlayStateWaitIntro;
         }
         nm.primePlay();               // Ghidra: NoteMng::ResetPlayback
         playJudgeUpdate(nullptr, {}); // draw the field
         break;
-    case 3: // retry: after the fade, rebuild the play and restart
+    case kPlayStateRetry: // retry: after the fade, rebuild the play and restart
         if (aep.isTransitionDone()) {
             aep.setAepTransitionMode(1); // fade back in
             resetState();                // Ghidra: playTaskResetState (FUN_0002fed8)
-            m_state = 1;
+            m_state = kPlayStateBringUp;
         }
         break;
-    case 4: // wait for the intro layer to finish, then start the clock -> playing
+    case kPlayStateWaitIntro: // wait for the intro layer to finish, then start the clock -> playing
         if (!m_comboLayers[3]->isAnimating()) { // Ghidra: !AepLyrCtrl::IsPlaying(pAepLyrMain[3])
             nm.startClock();                    // Ghidra: NoteMng::ResetTiming (FUN_000344c4)
-            m_state = 6;
+            m_state = kPlayStatePlaying;
         } else {
             nm.primePlay(); // Ghidra: NoteMng::ResetPlayback
             playJudgeUpdate(nullptr, {});
         }
         break;
-    case 5: { // pause menu: hit-test resume / retry / quit, then draw the menu + field
+    case kPlayStatePauseMenu: { // pause menu: hit-test resume / retry / quit, draw the menu + field
         if (backTap) {
             const float scale = m_uiScale;
             // 0x2de40 halves the pause-menu x origin (+0x978), not the UI scale.
             const int half = m_pauseOriginX / 2;
-            const float tapY = static_cast<float>(backTapStartY) / 65536.0f;
+            const float tapY = static_cast<float>(backTapStartY) / kFixed16One;
             // Each stacked button spans [pos + half, pos + half + width], scaled by
             // the UI scale, and is hit-tested against the tap's start Y (Ghidra:
             // FixedToFP(pos + half) * scale <= FixedToFP(local_8c)).
             const auto inBand = [&](int pos) -> bool {
-                const float lo = static_cast<float>(pos + half) / 65536.0f * scale;
+                const float lo = static_cast<float>(pos + half) / kFixed16One * scale;
                 const float hi =
-                    static_cast<float>(pos + half + m_pauseBtnWidth) / 65536.0f * scale;
+                    static_cast<float>(pos + half + m_pauseBtnWidth) / kFixed16One * scale;
                 return lo <= tapY && tapY <= hi;
             };
             if (inBand(m_pauseBtnResumeX)) { // resume: unpause and resume play
                 nm.togglePause();            // Ghidra: NoteMng::TogglePause
-                m_state = 6;                 // the decompile re-enters state 6 at once
+                m_state = kPlayStatePlaying; // the decompile re-enters state 6 at once
                 break;
             }
             if (inBand(m_pauseBtnRetryX)) { // retry: fade out and rebuild the play
                 aep.setAepTransitionMode(2);
-                m_state = 3;
+                m_state = kPlayStateRetry;
                 break;
             }
             if (inBand(m_pauseBtnQuitX)) { // quit: stop audio and go to results
-                m_state = 7;
+                m_state = kPlayStateQuit;
                 break;
             }
         }
@@ -388,10 +390,10 @@ void PlayTask::update(int /*deltaMs*/) {
         playJudgeUpdate(nullptr, {});
         break;
     }
-    case 6: {               // *** PLAYING ***: drive the note engine, then judge/render, gauge,
-                            // song-end
-        nm.updatePlaying(); // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
-                            // BGM drift sync
+    case kPlayStatePlaying: { // *** PLAYING ***: drive the note engine, then judge/render, gauge,
+                              // song-end
+        nm.updatePlaying();   // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
+                              // BGM drift sync
         playJudgeUpdate(touchXY, {touchIds, touchCount});
 
         // Cache the current gauge/score for the end-of-song rank SEs. Ghidra:
@@ -415,7 +417,8 @@ void PlayTask::update(int /*deltaMs*/) {
                 m_endSeFired = true;
                 // The score-tier voice: below 70000 the low voice (+0x3b0), else the
                 // high voice (+0x3ac).
-                const int voice = (m_score < 70000) ? m_playSeIds[2] : m_playSeIds[1];
+                const int voice =
+                    (m_score < kScoreClearThreshold) ? m_playSeIds[2] : m_playSeIds[1];
                 [audio playSe:nil resourceId:voice];
                 playEndResultSe(m_score); // the rank / clear jingle cascade
             }
@@ -453,8 +456,8 @@ void PlayTask::update(int /*deltaMs*/) {
             } else if (static_cast<unsigned>(static_cast<int>(getTimeMillis()) - m_backTouchTime) >
                        500) {
                 m_backTouchId = -1;
-                nm.onResignActivePushHook(); // freeze the notes
-                m_state = 5;                 // open the pause menu
+                nm.onResignActivePushHook();   // freeze the notes
+                m_state = kPlayStatePauseMenu; // open the pause menu
             }
             // Fall through to the song-end handoff below; the pause block does not
             // exit state 6 on its own (Ghidra: no branch to the tail here).
@@ -465,26 +468,26 @@ void PlayTask::update(int /*deltaMs*/) {
         // it runs for normal play too -- the reconstruction had it inside the
         // demo-only branch behind a break, so a finished normal play never advanced.
         if (m_endPos != 0 && static_cast<unsigned>(nm.getCurrentPosition() - m_endPos) >= 3000) {
-            m_state = 8;
+            m_state = kPlayStateFadeOut;
         }
         break;
     }
-    case 7: // quit: stop all audio, latch the stopped flag, and fall through to the
+    case kPlayStateQuit: // quit: stop all audio, latch the stopped flag, and fall through to the
         // fade-out. 0x2df7a stores 1 to m_stopped (+0x9e8) after stopAll.
         [audio stopAll];
         m_stopped = 1;
-        m_state = 8;
+        m_state = kPlayStateFadeOut;
         break;
-    case 8:                          // fade out
+    case kPlayStateFadeOut:          // fade out
         aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
-        m_state = 9;
+        m_state = kPlayStateWaitFade;
         break;
-    case 9:
+    case kPlayStateWaitFade:
         if (aep.isTransitionDone()) {
-            m_state = 10;
+            m_state = kPlayStateGotoResult;
         }
         break;
-    case 10: // hand off to the result screen
+    case kPlayStateGotoResult: // hand off to the result screen
         if (aep.isTransitionDone()) {
             PlayTaskGotoResult(this);
         }
@@ -496,7 +499,8 @@ void PlayTask::update(int /*deltaMs*/) {
     // Per-frame tail (Ghidra 0x2dc14): advance + draw the AEP layers (draw-only
     // while the pause menu is up, state 5), then draw the HUD unless the task is
     // already tearing down (m_suppressHud, +0x9c7).
-    AepLyrCtrl::updateAndDrawAepLayers(m_state == 5 ? 1 : 0); // Ghidra: FUN_0002c924
+    // Ghidra: FUN_0002c924 (draw-only while the pause menu is up).
+    AepLyrCtrl::updateAndDrawAepLayers(m_state == kPlayStatePauseMenu ? 1 : 0);
     if (!m_suppressHud) {
         DrawHud();
     }

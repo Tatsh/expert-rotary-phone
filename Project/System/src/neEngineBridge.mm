@@ -691,8 +691,8 @@ void stopMainTask(PlayTask *playTask) {
     if (playTask == nullptr) {
         return;
     }
-    if (playTask->m_state == 6) { // running -> stopping
-        playTask->m_state = 5;
+    if (playTask->m_state == kPlayStatePlaying) { // running -> stopping
+        playTask->m_state = kPlayStatePauseMenu;
     }
 }
 

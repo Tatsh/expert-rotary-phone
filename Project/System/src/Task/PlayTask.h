@@ -65,6 +65,49 @@ enum SceneLayer {
     kSceneRankFanfare = 10,     // clear fanfare, layered over the chosen rank jingle
 };
 
+// Indices into PlayTask::m_userSprite (the +0x2f8 user-no table). PlayTaskDraw
+// dispatches on the AEP callback's `child` id by matching it against each slot,
+// so these name the sprite each slot drives (verified against FUN_00030944).
+enum UserSprite {
+    kUserSpriteGaugeFlash = 0, // GG_IFL gauge-flash frames
+    kUserSpritePauseCmd = 1,   // CMD_PAUSE_1 pause command icon
+    kUserSpriteToneLane = 2,   // TONE_1 tone-lane graphic
+    kUserSpriteToneNumber = 3, // TONE_08_NUM tone-number overlay
+    kUserSpritePauseEye0 = 4,  // ORB_EYES_* pause-eye tone frames [4..8]
+    kUserSpritePauseEye1 = 5,
+    kUserSpritePauseEye2 = 6,
+    kUserSpritePauseEye3 = 7,
+    kUserSpritePauseEye4 = 8,
+    kUserSpriteBgColor = 9,       // BG_CL_COLOR background colour layer
+    kUserSpriteScoreStar = 10,    // FRAME_STAR score-star badge
+    kUserSpriteGaugeSideBar = 11, // FRAME_SIDEBAR gauge side bar
+    kUserSpriteComboDigit1 = 12,  // EFF_C_NUM001/010/100 on-field combo digits
+    kUserSpriteComboDigit10 = 13,
+    kUserSpriteComboDigit100 = 14,
+};
+
+// PlayTask::m_state (+0x9fc) play state-machine values, in the order update()
+// walks them (Ghidra: FUN_0002dc14).
+enum PlayState {
+    kPlayStateInit = 0,        // allocate the play scene, then fall through
+    kPlayStateBringUp = 1,     // NoteMng bring-up, fade in, pause the intro layers
+    kPlayStateReady = 2,       // draw the field; on BGM-ready cue the "go" voice
+    kPlayStateRetry = 3,       // after a fade, rebuild the play and restart
+    kPlayStateWaitIntro = 4,   // wait for the intro layer, then start the clock
+    kPlayStatePauseMenu = 5,   // hit-test resume/retry/quit, draw the menu + field
+    kPlayStatePlaying = 6,     // drive the note engine: judge, gauge, song-end
+    kPlayStateQuit = 7,        // stop all audio, latch stopped, fall into fade-out
+    kPlayStateFadeOut = 8,     // start the fade-out transition
+    kPlayStateWaitFade = 9,    // wait for the fade-out to finish
+    kPlayStateGotoResult = 10, // hand off to the result screen
+};
+
+// The clear/fail score boundary. A score at or above this is the "clear" tier
+// (hi fever-gauge layer, high end-of-song voice, lit score star, clear rank
+// jingles); below it is the "fail" tier. The same line is rank 5's lower bound
+// in scoreToRank. Ghidra compares against 0x1116f (69999) with a signed bgt.
+inline constexpr int kScoreClearThreshold = 70000;
+
 class PlayTask : public ne::C_TASK {
 public:
     PlayTask();                        // Ghidra: MainTask spawns this; PlayTask_init
@@ -189,7 +232,7 @@ public:
     int m_gaugeSeId = 0;        // +0x39c second gauge/tap SE source id (freed in gotoResult)
     int m_timingSeInst[2] = {}; // +0x3a0 timing-SE playing instances (-1 idle,
                                 //        reaped each frame in update)
-    int m_playSeIds[3] = {};    // +0x3a8 v12/v13/v14 play-SE source ids
+    int m_playSeIds[3] = {};    // +0x3a8 v12/v29/v30 play-SE source ids
     uint8_t _pad_3b4[0x3b8 - 0x3b4] = {}; // +0x3b4 4-byte gap; no play-task access (only
                                           //        pc-relative literals alias this offset)
     int m_scrubBarFrame = 0;              // +0x3b8 gauge/scrub-bar eased frame (DrawHud)
@@ -261,7 +304,7 @@ public:
     int m_backTouchTime = 0;              // +0x9f0 getTimeMillis at back-tap start
     int m_beatPulse = 0;                  // +0x9f4 demo chara-window beat pulse (0..100)
     int m_endPos = 0;                     // +0x9f8 NoteMng position latched at song end
-    int m_state = 0;                      // +0x9fc play state-machine field
+    int m_state = 0;                      // +0x9fc play state-machine field (PlayState)
 };
 
 // Play-scene lifecycle seams operating on the play-data block.
