@@ -39,8 +39,9 @@
 
 #import <Foundation/Foundation.h>
 
-#include <cstdlib> // rand / srand (Ghidra: _rand / _srand)
-#include <ctime>   // time (Ghidra: _time)
+#include <cstdlib>  // rand / srand (Ghidra: _rand / _srand)
+#include <ctime>    // time (Ghidra: _time)
+#include <iterator> // std::size (fill-loop bounds from the destination array)
 #include <memory>
 
 #import "AepLyrCtrl.h"
@@ -848,51 +849,58 @@ void PlayBuildFieldLayers(void *playData) {
         task->m_sceneLayers[i]->init(0, bgNames[i], playData, kBgLayerOrder[i]);
     }
 
+    // The loop bound is the destination member array's own size (std::size), so
+    // it can never drift from the field being filled.
     // getLyrNo -> lyr table, layerFrameCount(handle) -> frame-count table.
-    auto fillLyr = [&](int *lyr, int *frm, const char *const *names, int n) {
-        for (int i = 0; i < n; ++i) {
+    auto fillLyr = [&](auto &lyr, auto &frm, const char *const *names) {
+        for (size_t i = 0; i < std::size(lyr); ++i) {
             const int h = aep.getLyrNo(0, names[i]);
             lyr[i] = h;
             frm[i] = aep.layerFrameCount(h);
         }
     };
     // getFrameNo -> table (no frame count).
-    auto fillFrm = [&](int *dst, const char *const *names, int n) {
-        for (int i = 0; i < n; ++i) {
+    auto fillFrm = [&](auto &dst, const char *const *names) {
+        for (size_t i = 0; i < std::size(dst); ++i) {
             dst[i] = aep.getFrameNo(0, names[i]);
         }
     };
     // getUserNo -> table (no frame count).
-    auto fillUsr = [&](int *dst, const char *const *names, int n) {
-        for (int i = 0; i < n; ++i) {
+    auto fillUsr = [&](auto &dst, const char *const *names) {
+        for (size_t i = 0; i < std::size(dst); ++i) {
             dst[i] = aep.getUserNo(0, names[i]);
         }
     };
 
-    fillLyr(task->m_scoreBpmLyr, task->m_scoreBpmFrames, scoreNames, 5);
-    fillLyr(task->m_toneJudgeLyr, task->m_toneJudgeFrames, kToneJudgeNames, 4);
-    fillLyr(task->m_effectStateLyr, task->m_effectStateFrames, kEffectStateNames, 14);
-    fillLyr(task->m_charaJumpLyr, task->m_charaJumpFrames, kCharaJumpNames, 8);
+    fillLyr(task->m_scoreBpmLyr, task->m_scoreBpmFrames, scoreNames);
+    fillLyr(task->m_toneJudgeLyr, task->m_toneJudgeFrames, kToneJudgeNames);
+    fillLyr(task->m_effectStateLyr, task->m_effectStateFrames, kEffectStateNames);
+    fillLyr(task->m_charaJumpLyr, task->m_charaJumpFrames, kCharaJumpNames);
 
-    fillFrm(task->m_pauseEyeToneFrm, kPauseEyeToneFrames, 9);
-    fillFrm(task->m_scoreDigitFrm, kScoreDigitFrames, 10);
-    fillFrm(task->m_comboDigitFrm, kComboDigitFrames, 10);
-    fillFrm(task->m_gaugeFlashFrm, kGaugeFlashFrames, 4);
+    fillFrm(task->m_pauseEyeToneFrm, kPauseEyeToneFrames);
+    // The names table's last entry is the long-note connecting-bar segment frame,
+    // which the binary stores in the field immediately after the pause-eye table
+    // (+0x21c). Set it explicitly rather than running off the end of the array.
+    task->m_barSegFrame =
+        aep.getFrameNo(0, kPauseEyeToneFrames[std::size(task->m_pauseEyeToneFrm)]);
+    fillFrm(task->m_scoreDigitFrm, kScoreDigitFrames);
+    fillFrm(task->m_comboDigitFrm, kComboDigitFrames);
+    fillFrm(task->m_gaugeFlashFrm, kGaugeFlashFrames);
     // In the binary the +0x280/+0x294 fills interleave in one loop, as do
     // +0x2a8/+0x2d0; split here since each is an independent lookup with no
     // ordering dependency.
-    fillFrm(task->m_tone08Frm, kTone08Frames, 5);
-    fillFrm(task->m_tone08NumFrm, kTone08NumFrames, 5);
-    fillFrm(task->m_toneNumberFrm, kToneNumberFrames, 10);
-    fillFrm(task->m_toneSameFrm, kToneSameFrames, 10);
+    fillFrm(task->m_tone08Frm, kTone08Frames);
+    fillFrm(task->m_tone08NumFrm, kTone08NumFrames);
+    fillFrm(task->m_toneNumberFrm, kToneNumberFrames);
+    fillFrm(task->m_toneSameFrm, kToneSameFrames);
 
-    fillUsr(task->m_userSprite, kUserSpriteNames, 15);
-    fillUsr(task->m_numComboUser, kNumComboUser, 3);
-    fillUsr(task->m_scoreNumUser, kScoreNumUser, 6);
+    fillUsr(task->m_userSprite, kUserSpriteNames);
+    fillUsr(task->m_numComboUser, kNumComboUser);
+    fillUsr(task->m_scoreNumUser, kScoreNumUser);
     // +0x358 / +0x378 interleave in one binary loop; independent lookups, split
     // here.
-    fillUsr(task->m_charaUser, kCharaUser, 8);
-    fillUsr(task->m_charaAnmUser, kCharaAnmUser, 8);
+    fillUsr(task->m_charaUser, kCharaUser);
+    fillUsr(task->m_charaAnmUser, kCharaAnmUser);
 }
 
 // ---------------------------------------------------------------------------------
