@@ -181,7 +181,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     if (indexPath.section == 0) {
         static NSString *const kRanMir[] = {@"OFF", @"RANDOM", @"MIRROR", @"S-RAN"};
         cell.optionName = kRanMir[indexPath.row];
-        cell.optionKind = 3;
+        cell.optionKind = AcvOptionRowRanMir;
         [cell setData:(int)indexPath.row];
     }
     return cell;

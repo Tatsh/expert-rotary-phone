@@ -205,7 +205,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
                                              @"HI-SP 5.5",
                                              @"HI-SP 6.0"};
         cell.optionName = kHiSpeed[indexPath.row];
-        cell.optionKind = 0;
+        cell.optionKind = AcvOptionRowHiSpeed;
         [cell setData:(int)indexPath.row];
     }
     return cell;

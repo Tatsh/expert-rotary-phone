@@ -182,7 +182,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     if (indexPath.section == 0) {
         static NSString *const kHidSud[] = {@"OFF", @"HIDDEN", @"SUDDEN", @"HID-SUD"};
         cell.optionName = kHidSud[indexPath.row];
-        cell.optionKind = 2;
+        cell.optionKind = AcvOptionRowHidSud;
         [cell setData:(int)indexPath.row];
     }
     return cell;

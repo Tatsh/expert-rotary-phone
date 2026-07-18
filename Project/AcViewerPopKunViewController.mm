@@ -180,7 +180,7 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     if (indexPath.section == 0) {
         static NSString *const kPopKun[] = {@"OFF", @"BEAT POP"};
         cell.optionName = kPopKun[indexPath.row];
-        cell.optionKind = 1;
+        cell.optionKind = AcvOptionRowPopKun;
         [cell setData:(int)indexPath.row];
     }
     return cell;
