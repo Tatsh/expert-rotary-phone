@@ -31,6 +31,7 @@
 #import "TreasureData+Store.h"
 #import "TreasureData.h"
 #import "UserSettingData.h"
+#import "neDebugLog.h" // RHYDBG build-SHA startup banner (no-op unless RHYDBG)
 #import "neEngineBridge.h"
 #import "neGraphics.h"
 #import "neWindow.h"
@@ -60,6 +61,10 @@ BOOL gLaunchedFromPush = NO;
  */
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    // RHYDBG: stamp the build's git SHA at startup so any captured log identifies
+    // exactly which build produced it (no-op unless RHYDBG). idevicesyslog|grep RHYDBG.
+    neDebugLog("build sha=%s", RHYDBG_BUILD_SHA);
 
     CGRect bounds = UIScreen.mainScreen ? UIScreen.mainScreen.bounds : CGRectZero;
     self.mainWindow = [[neWindow alloc] initWithFrame:bounds];

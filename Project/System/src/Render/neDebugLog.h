@@ -73,6 +73,12 @@ static inline void neDebugLog(const char *, ...) {
 
 #endif
 
+// The build's git SHA (set by CMake at configure time). Logged once at startup
+// under RHYDBG so a captured os_log identifies exactly which build produced it.
+#ifndef RHYDBG_BUILD_SHA
+#define RHYDBG_BUILD_SHA "unknown"
+#endif
+
 // kate: hl C++;
 // vim: set ft=cpp sw=4 ts=4 et :
 // code: language=cpp insertSpaces=true tabSize=4

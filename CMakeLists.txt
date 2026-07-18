@@ -304,6 +304,19 @@ target_compile_definitions(popnrhythmin PRIVATE GLES_SILENCE_DEPRECATION)
 # configuration alike.
 target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${RHYDBG}>:RHYDBG=1>)
 target_compile_definitions(popnrhythmin PRIVATE $<$<BOOL:${ENABLE_PATCHES}>:ENABLE_PATCHES=1>)
+
+# Build git SHA, captured at configure time for the RHYDBG startup banner so a
+# captured log always identifies exactly which build produced it. Diagnostics
+# only (the banner is compiled out unless RHYDBG); falls back to "unknown" when
+# git is unavailable.
+execute_process(COMMAND git -C ${CMAKE_SOURCE_DIR} rev-parse --short=12 HEAD
+                OUTPUT_VARIABLE RHYDBG_BUILD_SHA
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
+if(NOT RHYDBG_BUILD_SHA)
+  set(RHYDBG_BUILD_SHA "unknown")
+endif()
+target_compile_definitions(popnrhythmin PRIVATE RHYDBG_BUILD_SHA="${RHYDBG_BUILD_SHA}")
 target_compile_definitions(popnrhythmin
                            PRIVATE $<$<BOOL:${ENABLE_OFFLINE_PATCHES}>:ENABLE_OFFLINE_PATCHES=1>)
 
