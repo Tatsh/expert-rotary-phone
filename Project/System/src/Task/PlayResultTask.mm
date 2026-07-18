@@ -14,6 +14,9 @@
 
 #import "PlayResultTask.h"
 
+#include <array>
+#include <span>
+
 #import <UIKit/UIKit.h>
 
 #import "AepLyrCtrl.h"
@@ -585,7 +588,7 @@ void PlayResultTask::loadNumberTextures() {
     // (byte-verified: e.g. num_bonus_clear<d> and num_points<d> have no
     // separator).
     struct NumGroup {
-        std::unique_ptr<neTextureForiOS> *row;
+        std::span<std::unique_ptr<neTextureForiOS>> row; // a view of the owning member array
         const char *prefix;
     };
     const NumGroup kGroups[12] = {
@@ -909,18 +912,18 @@ void PlayResultTask::resultGotoNext() {
     m_charaTex.reset();
 
     // Release the 10-lane x 12-array number textures (@ 0x3f414..0x3f4f0).
-    std::unique_ptr<neTextureForiOS> *kNumGroups[12] = {m_numCool,
-                                                        m_numGreat,
-                                                        m_numGood,
-                                                        m_numBad,
-                                                        m_numCom,
-                                                        m_numScore,
-                                                        m_numBonusClear,
-                                                        m_numBonusCombo,
-                                                        m_numBonusRank,
-                                                        m_numBonusPerfect,
-                                                        m_numPoints,
-                                                        m_numPointsBig};
+    std::span<std::unique_ptr<neTextureForiOS>> kNumGroups[12] = {m_numCool,
+                                                                  m_numGreat,
+                                                                  m_numGood,
+                                                                  m_numBad,
+                                                                  m_numCom,
+                                                                  m_numScore,
+                                                                  m_numBonusClear,
+                                                                  m_numBonusCombo,
+                                                                  m_numBonusRank,
+                                                                  m_numBonusPerfect,
+                                                                  m_numPoints,
+                                                                  m_numPointsBig};
     for (int lane = 0; lane < 10; lane++) {
         for (int g = 0; g < 12; g++) {
             kNumGroups[g][lane].reset();
@@ -1079,44 +1082,51 @@ void PlayResultTask::PlayResultDrawCallback(int child,
                             (int)priority,
                             1);
     };
+    // drawDigits only READS its digit row, so borrow the owning num_* slots as a
+    // raw view rather than handing the routine a pointer-to-smart-pointer. The
+    // returned array outlives the drawDigits call it is passed to (it lives to the
+    // end of the enclosing full-expression).
+    auto atlasView = []<std::size_t N>(const std::unique_ptr<neTextureForiOS>(&owned)[N]) {
+        std::array<neTextureForiOS *, N> view{};
+        for (std::size_t i = 0; i < N; i++) {
+            view[i] = owned[i].get();
+        }
+        return view;
+    };
     // A right-to-left digit strip: draw `value`'s ones place, then shift left by
     // (scaleX * dxStep)/100 per further digit, stopping once the value is a
     // single digit or `maxDigits` is reached. `row` is the num_* digit-texture
     // row (glyphs 0..9).
-    auto drawDigits = [&](const std::unique_ptr<neTextureForiOS> *row,
-                          int value,
-                          int w,
-                          int h,
-                          int dxStep,
-                          int maxDigits) {
-        int v = value;
-        int cx = x;
-        for (int d = 0; d < maxDigits; ++d) {
-            neTextureForiOS *tex = row[v % 10].get();
-            drawTexQuad(aep,
-                        tex,
-                        0,
-                        0,
-                        w,
-                        h,
-                        cx,
-                        y,
-                        scaleX,
-                        scaleY,
-                        rotation,
-                        anchorX,
-                        anchorY,
-                        color,
-                        alpha,
-                        (int)blend,
-                        (int)priority);
-            if (v < 10) {
-                return;
+    auto drawDigits =
+        [&](neTextureForiOS *const *row, int value, int w, int h, int dxStep, int maxDigits) {
+            int v = value;
+            int cx = x;
+            for (int d = 0; d < maxDigits; ++d) {
+                neTextureForiOS *tex = row[v % 10];
+                drawTexQuad(aep,
+                            tex,
+                            0,
+                            0,
+                            w,
+                            h,
+                            cx,
+                            y,
+                            scaleX,
+                            scaleY,
+                            rotation,
+                            anchorX,
+                            anchorY,
+                            color,
+                            alpha,
+                            (int)blend,
+                            (int)priority);
+                if (v < 10) {
+                    return;
+                }
+                v /= 10;
+                cx += (scaleX * dxStep) / 100;
             }
-            v /= 10;
-            cx += (scaleX * dxStep) / 100;
-        }
-    };
+        };
 
     // --- Full-combo / perfect stamp (FULLCOMBO user, m_usr[5]) ---
     if (self->m_usr[5] == child) {
@@ -1137,28 +1147,29 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     }
     // --- Judge tally digit strips (COOL/GREAT/GOOD/BAD/COM, m_usr[6..10]) ---
     if (self->m_usr[6] == child) {
-        drawDigits(self->m_numCool, (int)self->m_coolCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numCool).data(), (int)self->m_coolCount, 0x1a, 0x1e, -0x1c, 3);
         return;
     }
     if (self->m_usr[7] == child) {
-        drawDigits(self->m_numGreat, (int)self->m_greatCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(
+            atlasView(self->m_numGreat).data(), (int)self->m_greatCount, 0x1a, 0x1e, -0x1c, 3);
         return;
     }
     if (self->m_usr[8] == child) {
-        drawDigits(self->m_numGood, (int)self->m_goodCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numGood).data(), (int)self->m_goodCount, 0x1a, 0x1e, -0x1c, 3);
         return;
     }
     if (self->m_usr[9] == child) {
-        drawDigits(self->m_numBad, (int)self->m_badCount, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numBad).data(), (int)self->m_badCount, 0x1a, 0x1e, -0x1c, 3);
         return;
     }
     if (self->m_usr[10] == child) {
-        drawDigits(self->m_numCom, (int)self->m_maxCombo, 0x1a, 0x1e, -0x1c, 3);
+        drawDigits(atlasView(self->m_numCom).data(), (int)self->m_maxCombo, 0x1a, 0x1e, -0x1c, 3);
         return;
     }
     // --- Score digit strip (RESULT_SCORE, m_usr[11]) ---
     if (self->m_usr[11] == child) {
-        drawDigits(self->m_numScore, self->m_score, 0x20, 0x28, -0x22, 6);
+        drawDigits(atlasView(self->m_numScore).data(), self->m_score, 0x20, 0x28, -0x22, 6);
         return;
     }
 
@@ -1250,23 +1261,27 @@ void PlayResultTask::PlayResultDrawCallback(int child,
     }
     // --- Bonus / treasure digit strips (m_usr[14..17], m_usr[19]) ---
     if (self->m_usr[14] == child) {
-        drawDigits(self->m_numBonusClear, self->m_clearBonus, 0x1e, 0x22, -0x21, 4);
+        drawDigits(
+            atlasView(self->m_numBonusClear).data(), self->m_clearBonus, 0x1e, 0x22, -0x21, 4);
         return;
     } // clear bonus
     if (self->m_usr[15] == child) {
-        drawDigits(self->m_numBonusCombo, self->m_fullComboBonus, 0x1e, 0x22, -0x21, 4);
+        drawDigits(
+            atlasView(self->m_numBonusCombo).data(), self->m_fullComboBonus, 0x1e, 0x22, -0x21, 4);
         return;
     } // combo bonus
     if (self->m_usr[16] == child) {
-        drawDigits(self->m_numBonusRank, self->m_rankBonus, 0x1e, 0x22, -0x21, 4);
+        drawDigits(atlasView(self->m_numBonusRank).data(), self->m_rankBonus, 0x1e, 0x22, -0x21, 4);
         return;
     } // rank bonus
     if (self->m_usr[17] == child) {
-        drawDigits(self->m_numBonusPerfect, self->m_perfectBonus, 0x1e, 0x22, -0x21, 4);
+        drawDigits(
+            atlasView(self->m_numBonusPerfect).data(), self->m_perfectBonus, 0x1e, 0x22, -0x21, 4);
         return;
     } // perfect bonus
     if (self->m_usr[19] == child) {
-        drawDigits(self->m_numPointsBig, self->m_pointsCountUp, 0x3c, 0x48, -0x3f, 4);
+        drawDigits(
+            atlasView(self->m_numPointsBig).data(), self->m_pointsCountUp, 0x3c, 0x48, -0x3f, 4);
         return;
     } // total (big)
     // Treasure-point strip (S_POINT_NUM, m_usr[18]): a fixed 4-digit field
