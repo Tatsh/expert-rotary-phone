@@ -294,10 +294,14 @@ void PlayTaskInit(void *playData) {
     aep.setGroupDrawCallback(0, &PlayTaskDraw,
                              playData); // FUN_0000f9b0 / FUN_00030944
 
-    // Load the three play SEs into m_playSeIds (+0x3a8/+0x3ac/+0x3b0, v12/v13/v14
-    // .m4a). Ghidra: the loadSe:isLoop:callName:group: loop at the tail.
+    // Load the three play SEs into m_playSeIds (+0x3a8/+0x3ac/+0x3b0). The names
+    // come from the CFString table at 0x131488 (Ghidra: the loadSe loop at 0x2f118
+    // reads [0x131488 + i*4]); the strings are "v12" (the "go" voice, +0x3a8),
+    // "v29" (high-score voice, +0x3ac), and "v30" (low-score/fail voice, +0x3b0).
+    // The names were previously guessed as v12/v13/v14, so the fail voice loaded the
+    // wrong clip (the "TREASURE MODE" speech) instead of the FAILED speech.
     AudioManager *audio = [AudioManager sharedManager];
-    static const char *const kPlaySeNames[3] = {"v12", "v13", "v14"};
+    static const char *const kPlaySeNames[3] = {"v12", "v29", "v30"};
     for (int i = 0; i < 3; ++i) {
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kPlaySeNames[i]) ofType:@"m4a"];
         RSND_SOURCE_ID src = [audio loadSe:path isLoop:NO callName:nil group:0];
