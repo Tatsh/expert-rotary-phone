@@ -302,8 +302,8 @@ void PlayTask::update(int /*deltaMs*/) {
             if (touchCount < 8) {
                 // The judge/pause are fed each touch's current point (the +0x0c/+0x10
                 // match key) in plain pixels. 0x2dc98/0x2dca0 load [+0xc]/[+0x10] and
-                // 0x2dca4/0x2dca8 vcvt.f32.s32 them straight to float (no fixed-point
-                // scale) — the touch pool now stores plain device pixels.
+                // 0x2dca4/0x2dca8 vcvt.f32.s32 them straight to float — the touch pool
+                // stores plain device pixels.
                 touchXY[touchCount * 2] = static_cast<float>(t->x);
                 touchXY[touchCount * 2 + 1] = static_cast<float>(t->y);
                 touchIds[touchCount] = t->id;
@@ -364,8 +364,7 @@ void PlayTask::update(int /*deltaMs*/) {
             // backTapStartY is a plain device pixel now (the touch pool stores plain
             // pixels). Each stacked button spans [pos + half, pos + half + width]
             // scaled by the UI scale, hit-tested against the tap's start Y. Disasm
-            // @ 0x2de50: vcvt.f32.s32(pos+half) * scale <= vcvt.f32.s32(startY) — no
-            // fixed-point (the decompiler rendered the vcvt ops as FixedToFP).
+            // @ 0x2de50: vcvt.f32.s32(pos+half) * scale <= vcvt.f32.s32(startY).
             const float tapY = static_cast<float>(backTapStartY);
             const auto inBand = [&](int pos) -> bool {
                 const float lo = static_cast<float>(pos + half) * scale;
@@ -387,11 +386,31 @@ void PlayTask::update(int /*deltaMs*/) {
                 break;
             }
         }
-        aep.drawLayer(
-            m_effectStateLyr[kEffectStatePauseLoop],
-            0,
-            AepTransform(),
-            0); // the pause-menu layer (Ghidra: ldr r1,[this,#0xf8] = m_effectStateLyr[kEffectStatePauseLoop])
+        // The pause-menu layer. The transform-only overload cannot express this
+        // draw: the binary (0x2df00-0x2df42, before bl 0x0000fd64) passes a
+        // white colour key (0x00ffffff, un-tinted), priority 10 so it sits ON TOP
+        // of the field, blend 0x20, loop bit 1, and a non-identity placement
+        // (y = m_pauseOriginX / 2 = [r11,#0x978] arithmetic-halved, scale 100).
+        // The 4-arg overload would substitute colorRGB=0 (a black tint -> dark)
+        // and priority=0 (drawn behind), so spell out the full call verbatim.
+        aep.drawLayer(m_effectStateLyr[kEffectStatePauseLoop], // r1: [r11,#0xf8]
+                      /*frame*/ 0,
+                      /*x*/ 0,
+                      /*y*/ m_pauseOriginX / 2,
+                      /*scaleX*/ 100,
+                      /*scaleY*/ 100,
+                      /*rotation*/ 0,
+                      /*anchorX*/ 0,
+                      /*anchorY*/ 0,
+                      /*color*/ 100,
+                      /*colorHi*/ 0,
+                      /*loopFlags*/ 1,
+                      /*blendFlags*/ 0x20,
+                      /*colorRGB*/ 0x00ffffff,
+                      /*clipRect*/ nullptr,
+                      /*context*/ nullptr,
+                      /*priority*/ 10,
+                      /*visFlag*/ 0);
         nm.update(); // Ghidra: NoteMng::Update — keep the notes scrolling behind
         playJudgeUpdate(nullptr, {});
         break;
@@ -448,8 +467,8 @@ void PlayTask::update(int /*deltaMs*/) {
                     const int cy = static_cast<int>(static_cast<float>(m_pauseTapCenterY) * scale);
                     const int r = static_cast<int>(static_cast<float>(m_pauseTapRadius) * scale);
                     // 0x2e278/0x2e264 convert touchXY[0]/[1] straight back to int
-                    // (vcvt.s32.f32, no fixed-point scale) to match the raw floats
-                    // stored in the snapshot above.
+                    // (vcvt.s32.f32) to match the raw floats stored in the snapshot
+                    // above.
                     const int tx = static_cast<int>(touchXY[0]);
                     const int ty = static_cast<int>(touchXY[1]);
                     const bool inCircle = pointInCircle(tx, ty, cx, cy, r);

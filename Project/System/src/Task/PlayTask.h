@@ -289,7 +289,7 @@ public:
     int16_t m_seVolume = 0;               // +0x9b4 touch-sound volume (UserSettingData)
     uint8_t _pad_9b6[0x9b8 - 0x9b6] = {}; // +0x9b6 alignment before m_hitRadius (no access)
     float m_hitRadius = 0.0f; // +0x9b8 note hit-test radius (read as float by PlayJudge)
-    int m_popkunSize = 0;     // +0x9bc note ("popkun") size, 16.16 fixed
+    int m_popkunSize = 0;     // +0x9bc note ("popkun") size (float truncated to int, 0x2e418)
     int16_t m_gaugeValue = 0; // +0x9c0 life-gauge value (0..0x400)
     // +0x9c2 combo-milestone re-trigger guard: the judge sets it to the current
     // combo count each frame and compares it against the 25 / 50 / every-50 past
