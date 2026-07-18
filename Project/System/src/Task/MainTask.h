@@ -256,12 +256,13 @@ public:
 
     // ---- packed per-song select state (documented tail seam), 0x40 bytes ----
     struct MusicSelState {
-        uint8_t inviteOpen;      // EX unlocked for this invite song
-        uint8_t previewReady;    // jackets + score loaded (state 4 gate)
-        uint8_t diffDirty;       // difficulty changed -> refresh score rows
-        uint8_t favorite;        // favourite toggle
-        uint8_t tutorialOffered; // first-play tutorial offered for the tapped cell
-        uint8_t scrollLatchA;    // list-scroll latch pair (diff-toggle / friend-score)
+        uint8_t inviteOpen;        // EX unlocked for this invite song
+        uint8_t previewBgmLoading; // +0x91a preview BGM (re)load in progress; the
+                                   // async loadMusicPreviewBgm block clears it
+        uint8_t diffDirty;         // difficulty changed -> refresh score rows
+        uint8_t favorite;          // favourite toggle
+        uint8_t tutorialOffered;   // first-play tutorial offered for the tapped cell
+        uint8_t scrollLatchA;      // list-scroll latch pair (diff-toggle / friend-score)
         uint8_t scrollLatchB;
         // Always exactly the three difficulties (accessed individually, never by a
         // runtime index or loop), so these are named triples rather than [3] arrays.

@@ -504,16 +504,19 @@ void MainTask::update(int /*deltaMs*/) {
         m_sel.perfect.normal = [[score perfectN] boolValue] ? 1 : 0;
         m_sel.perfect.hyper = [[score perfectH] boolValue] ? 1 : 0;
         m_sel.perfect.ex = [[score perfectEx] boolValue] ? 1 : 0;
-        m_sel.previewReady = 1;
+        m_sel.previewBgmLoading = 1; // arm the latch; the async block clears it
 
-        // Kick the full-resolution jacket decode onto a background queue.
+        // Swap the BGM to this song's looping preview clip on a background queue
+        // (Ghidra: loadMusicPreviewBgm / MusicSelPreview::loadBgm, block invoke @
+        // 0x37f78). The block releases the current BGM, loads [info musicPre] (the
+        // "pre" zip entry) looping, then clears the "preview BGM load in progress"
+        // latch so state 4 starts the preview and re-enables tap-out / handoff.
         MainTask *self = this;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-          // Background jacket decode for `info` (Ghidra: block
-          // invoke @ 0x37f79). The decoded textures are streamed
-          // into the cell array by state 2. Seam.
-          static_cast<void>(self);
-          static_cast<void>(info);
+          AudioManager *am = [AudioManager sharedManager];
+          [am releaseBgm];
+          [[AudioManager sharedManager] loadBgmData:[info musicPre] isLoop:YES];
+          self->m_sel.previewBgmLoading = 0; // fPreviewBgmLoading = false
         });
 
         seedDiffStarLayerFrames();
@@ -535,7 +538,7 @@ void MainTask::update(int /*deltaMs*/) {
     }
 
     case 4: { // difficulty / option select + BGM preview loop
-        if (!m_sel.previewReady) {
+        if (!m_sel.previewBgmLoading) {
             if (![audio isPlayingBgm]) {
                 [audio seekBgmToTop];
                 [audio setBgmVolume:1.0f];
@@ -611,7 +614,7 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // -- tap outside every button: back out to the song list --
-        if (!m_sel.previewReady) {
+        if (!m_sel.previewBgmLoading) {
             m_layers[kLayerDiffOpen]->reset();
             m_layers[kLayerDiffLoop]->reset();
             m_layers[kLayerDiffClose]->stop(1);
@@ -669,15 +672,22 @@ void MainTask::update(int /*deltaMs*/) {
         m_state = 0xe;
         break;
 
-    case 0xe:                        // fade out into the spawned task / title
+    case 0xe:                        // fade out, and signal the async loader to stop
         aep.setAepTransitionMode(2); // fade out (fixed 30 frames)
-        m_sel.transitionLatch = 1;   // transition-out latch
+        // Ghidra 0x36048: field_0xa8c = 1 -- ask the background jacket loader to
+        // shut down (backgroundCellLoader acknowledges by setting the cursor to 2).
+        // This is m_loaderCursor, not a separate transition latch; case 0xf holds
+        // the handoff until the loader has actually stopped, so StopAndSave can
+        // tear the cell array down without racing the loader thread.
+        m_loaderCursor = 1;
         m_state = 0xf;
         break;
 
-    case 0xf: // wait for the fade-out (and, on a preview exit, the layer to
-              // settle)
-        if (aep.isTransitionDone() && !m_sel.previewReady && m_sel.transitionLatch == 2) {
+    case 0xf: // wait for the fade-out AND the background loader to acknowledge stop
+        // Ghidra 0x3605e: advance only once the fade is done, no preview overlay is
+        // up (m_sel.previewBgmLoading == 0), and the loader has acknowledged shutdown
+        // (m_loaderCursor == 2, set by backgroundCellLoader as it exits).
+        if (aep.isTransitionDone() && !m_sel.previewBgmLoading && m_loaderCursor == 2) {
             m_state = 0x10;
         }
         break;
