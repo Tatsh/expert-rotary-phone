@@ -50,8 +50,7 @@ namespace {
 // hit-effect option is on (Ghidra: the milestone if/else chain is wrapped in
 // playData+0x9c9==0 && +0x9e5!=0 && +0x9e7==0 && +0x9ca==0).
 inline bool comboBurstEnabled(const PlayTask *p) {
-    return p->m_isDemoPlay == 0 && p->m_optEffectOn != 0 && p->m_optOldHardware == 0 &&
-           p->m_isPadDisplay == 0;
+    return !p->m_isDemoPlay && p->m_optEffectOn && !p->m_optOldHardware && !p->m_isPadDisplay;
 }
 
 constexpr int kJudgeStateCount = 60; // Ghidra: FUN_0003126c loop bound 0x3c
@@ -112,7 +111,7 @@ void updateGaugeValue(PlayTask *playData, int result) {
     if (result == 2 || result == 3) {
         gauge = (int)lroundf((float)gauge + playData->m_gaugeGainGreat);
     } else if (result == 0) {
-        playData->m_damagedThisFrame = 1;
+        playData->m_damagedThisFrame = true;
         gauge = (int)lroundf((float)gauge + playData->m_gaugeLossMiss);
     } else if (result == 1) {
         gauge = (int)lroundf((float)gauge + playData->m_gaugeGainGood);
@@ -222,7 +221,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                         (note.renderKind == NOTE_RENDER_SPECIAL && (int8_t)note.spawnKind > 0))) {
             if (!autoJudge) {
                 if (touchCount > 0) {
-                    if (m_optSimpleMode == 0) {
+                    if (!m_optSimpleMode) {
                         // Distance-test each live touch against the judge-line target.
                         for (auto t = 0uz; t < touchCount; ++t) {
                             const float tx = xy[t * 2];
@@ -491,7 +490,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                 // note is on the field but not yet spanning its hold: layer
                 // effectStateLyr[12] (+0x114), frame cdFrame (+0x3c4), at the note's
                 // interp position. Args traced at 0x2fa8c (blend 0x200, context 16).
-                if (pt == 0 && m_optLongNoteEffect != 0 && (noteFlags & 0x2f) != 0 &&
+                if (pt == 0 && m_optLongNoteEffect && (noteFlags & 0x2f) != 0 &&
                     (noteFlags & kFlagHold) == 0) {
                     const int effScale = m_hitEffectScale / 2;
                     aep.drawLayer(m_effectStateLyr[12],

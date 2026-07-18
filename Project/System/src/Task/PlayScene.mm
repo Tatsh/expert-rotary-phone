@@ -206,10 +206,10 @@ void PlayTaskInit(void *playData) {
     task->m_uiScale = neSceneManager::screenScale(); // DAT_00187b80
 
     // User settings driving the note field / judge.
-    task->m_seVolume = [UserSettingData touchSoundVolume];                     // +0x9b4
-    task->m_optSimpleMode = [UserSettingData isSimpleMode] ? 1 : 0;            // +0x9e4
-    task->m_optEffectOn = [UserSettingData isEffectOn] ? 1 : 0;                // +0x9e5
-    task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn] ? 1 : 0; // +0x9e6
+    task->m_seVolume = [UserSettingData touchSoundVolume];             // +0x9b4
+    task->m_optSimpleMode = [UserSettingData isSimpleMode];            // +0x9e4
+    task->m_optEffectOn = [UserSettingData isEffectOn];                // +0x9e5
+    task->m_optLongNoteEffect = [UserSettingData isLongNotesEffectOn]; // +0x9e6
 
     // Note ("popkun") size -> 16.16 fixed. Ghidra: FPToFixed(popkunSize).
     task->m_popkunSize = static_cast<int>([UserSettingData popkunSize] * kFixed16One); // +0x9bc
@@ -218,8 +218,8 @@ void PlayTaskInit(void *playData) {
     // (+0x33).
     task->m_isDemoPlay = evc.demoPlayFlag(); // +0x9c9
 
-    task->m_optOldHardware = [app isOldHardware] ? 1 : 0;          // +0x9e7
-    task->m_isPadDisplay = neSceneManager::isPadDisplay() ? 1 : 0; // +0x9ca (DAT_00187b84)
+    task->m_optOldHardware = [app isOldHardware];          // +0x9e7
+    task->m_isPadDisplay = neSceneManager::isPadDisplay(); // +0x9ca (DAT_00187b84)
 
     // Load the song's BGM + parse its chart into NoteMng + load the tap SE
     // (+0x398).
@@ -236,7 +236,7 @@ void PlayTaskInit(void *playData) {
     task->m_gaugeValue = 0;              // +0x9c0
 
     // Per-display note-field geometry + the common AEP layer group.
-    if (task->m_isPadDisplay == 0) {     // phone
+    if (!task->m_isPadDisplay) {         // phone
         task->m_pauseTapCenterX = 0x24e; // +0x98c
         task->m_pauseTapCenterY = 0x32;  // +0x990
         task->m_pauseTapRadius = 0x40;   // +0x994
@@ -361,7 +361,7 @@ void PlayTaskGotoResult(void *playData) {
     // Record the result into the event center for the result screen to read back
     // — unless the play was aborted (m_stopped set, e.g. quit from the pause
     // menu).
-    if (task->m_stopped == 0) {
+    if (!task->m_stopped) {
         int cool = 0, great = 0, good = 0, bad = 0;
         for (int k = 0; k < kNoteKindCount; ++k) {
             cool += nm.judgeCount(k, NOTE_JUDGE_COOL);   // DAT_00179014 columns
@@ -397,13 +397,13 @@ void PlayTaskGotoResult(void *playData) {
     // normal play, else back to the music-select MainTask (aborted play, or the
     // bundled/sugoroku path).
     ne::C_TASK *next;
-    if (task->m_stopped == 0 && task->m_isDemoPlay == 0) {
+    if (!task->m_stopped && !task->m_isDemoPlay) {
         next = PlayResultCreateTask(); // operator_new(0x3a0) + FUN_0003d5bc
     } else {
         next = MainTaskCreate(); // operator_new(0xaa8) + MainTask_ctor
     }
-    next->setPriority(3);    // Ghidra: C_TASK_setPriority
-    task->m_suppressHud = 1; // +0x9c7 = hand-off complete
+    next->setPriority(3);       // Ghidra: C_TASK_setPriority
+    task->m_suppressHud = true; // +0x9c7 = hand-off complete
 }
 
 // The per-tap feedback SE resource name for a touch-sound kind (clamped to
@@ -440,7 +440,7 @@ void PlayLoadSong(void *playData, int reload) {
 
     MusicData *music;
     int sheetIndex;
-    if (task->m_isDemoPlay == 0) {
+    if (!task->m_isDemoPlay) {
         // Normal play: the event center carries the picked music id + difficulty.
         neAppEventCenter *evc = task->m_eventCenter;
         sheetIndex = evc->lastSheet();
@@ -459,7 +459,7 @@ void PlayLoadSong(void *playData, int reload) {
           NSData *bgm = [music music];
           [audio loadBgmData:bgm isLoop:NO];
           [audio setBgmVolume:1.0f];
-          task->m_bgmReady = 1;
+          task->m_bgmReady = true;
         });
     }
 
@@ -816,7 +816,7 @@ void PlayBuildFieldLayers(void *playData) {
     // the z slot
     // (+0x1c) — the same +0x18/+0x1c store AepLyrCtrl::setRouletteAnchor
     // performs.
-    const bool pad = task->m_isPadDisplay != 0;
+    const bool pad = task->m_isPadDisplay;
     const char *const *bgNames;
     const char *const *scoreNames;
     if (!pad) {
@@ -958,9 +958,9 @@ NSString *const kTextPanelNames[13] = {
 void PlayLoadCharaTextures(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
-    const bool pad = task->m_isPadDisplay != 0; // isPadDisplay (drives sugo naming)
+    const bool pad = task->m_isPadDisplay; // isPadDisplay (drives sugo naming)
 
-    if (task->m_isDemoPlay == 0) {
+    if (!task->m_isDemoPlay) {
         // Normal play: build the pool of other unlocked characters, then fill eight
         // portrait slots. Ghidra: _srand(_time(0)) then the CharaManager pick loop.
         srand(static_cast<unsigned>(time(nullptr)));
@@ -1380,10 +1380,10 @@ void PlayTaskDraw(int child,
     // --- Background colour layer (BG_CL_COLOR, m_userSprite[9]): effects-on, new
     // hardware only ---
     if (task->m_userSprite[kUserSpriteBgColor] == child) {
-        if (task->m_optEffectOn == 0) {
+        if (!task->m_optEffectOn) {
             return; // effects off
         }
-        if (task->m_optOldHardware != 0) {
+        if (task->m_optOldHardware) {
             return; // old hardware
         }
         layerDraw(task->m_effectStateLyr[11],
@@ -1438,13 +1438,13 @@ void PlayTaskDraw(int child,
     // --- Character jump layers / portraits (CHARA[i] m_charaUser, CHARA[i]_ANM
     // m_charaAnmUser) --- Skipped entirely when effects are off and this is not
     // the bundled demo.
-    if (task->m_optEffectOn != 0 || task->m_isDemoPlay != 0) {
+    if (task->m_optEffectOn || task->m_isDemoPlay) {
         const int ivl = static_cast<int>(NoteBeatIntervalMs()); // beat interval, ms
         const int pos = (ivl != 0) ? (nm.getCurrentPosition() % ivl) : 0;
         int scoreGate = 0; // i * 10000
         for (int i = 0; i < 8; ++i) {
             if (task->m_charaUser[i] == child) { // chara i jump layer
-                if (task->m_isDemoPlay == 0) {   // normal play
+                if (!task->m_isDemoPlay) {       // normal play
                     if (task->m_score < scoreGate) {
                         return; // score below chara threshold
                     }

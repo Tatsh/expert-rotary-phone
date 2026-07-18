@@ -88,7 +88,7 @@ void PlayTask::resetState() {
     m_gaugeValue = 0;
     m_comboMilestoneGuard = 0;
     m_damageAccum = 0;
-    m_damagedThisFrame = 0;
+    m_damagedThisFrame = false;
 }
 
 // @ 0x30720 — playTaskLoadChart. Reload the selected chart into the note
@@ -103,7 +103,7 @@ void PlayTask::reloadChart(int restart) {
 
     MusicData *md;
     int difficulty;
-    if (m_isDemoPlay == 0) {
+    if (!m_isDemoPlay) {
         // Normal play: the picked {musicId, sheet} pair the event center carries (@
         // +0x968).
         const int musicId = m_eventCenter->lastMusic();              // pair[0]
@@ -126,7 +126,7 @@ void PlayTask::reloadChart(int restart) {
           NSData *bgm = [md music];
           [audio loadBgmData:bgm isLoop:NO];
           [audio setBgmVolume:1.0f];
-          m_bgmReady = 1;
+          m_bgmReady = true;
         });
     }
 
@@ -162,8 +162,8 @@ void PlayTask::updateGauge(int mode) {
         delta = &m_gaugeGainGreat;
     } else if (mode == 0) { // miss / down
         delta = &m_gaugeLossMiss;
-        m_damagedThisFrame = 1; // damaged this frame
-    } else if (mode == 1) {     // good
+        m_damagedThisFrame = true; // damaged this frame
+    } else if (mode == 1) {        // good
         delta = &m_gaugeGainGood;
     }
 
@@ -475,7 +475,7 @@ void PlayTask::update(int /*deltaMs*/) {
     case kPlayStateQuit: // quit: stop all audio, latch the stopped flag, and fall through to the
         // fade-out. 0x2df7a stores 1 to m_stopped (+0x9e8) after stopAll.
         [audio stopAll];
-        m_stopped = 1;
+        m_stopped = true;
         m_state = kPlayStateFadeOut;
         break;
     case kPlayStateFadeOut:          // fade out

@@ -279,26 +279,26 @@ public:
     // +0x9c4 the combo milestone just celebrated (25 / 50 / 100+): the judge
     // records the crossed value here as it stops the matching burst layer.
     int16_t m_comboMilestoneShown = 0;    // +0x9c4 last combo milestone celebrated
-    uint8_t m_bgmReady = 0;               // +0x9c6 async BGM decode finished (state-2 gate)
-    uint8_t m_suppressHud = 0;            // +0x9c7 hide the HUD (teardown)
-    uint8_t m_endSeFired = 0;             // +0x9c8 one-shot song-end clear/rank-SE latch
-    uint8_t m_isDemoPlay = 0;             // +0x9c9 tutorial / auto-demo flag
+    bool m_bgmReady = false;              // +0x9c6 async BGM decode finished (state-2 gate)
+    bool m_suppressHud = false;           // +0x9c7 hide the HUD (teardown)
+    bool m_endSeFired = false;            // +0x9c8 one-shot song-end clear/rank-SE latch
+    bool m_isDemoPlay = false;            // +0x9c9 tutorial / auto-demo flag
                                           //        (init from event-center +0x33)
-    uint8_t m_isPadDisplay = 0;           // +0x9ca pad-class display (g_bIsPadDisplay)
+    bool m_isPadDisplay = false;          // +0x9ca pad-class display (g_bIsPadDisplay)
     uint8_t _pad_9cb[0x9cc - 0x9cb] = {}; // +0x9cb alignment before the gauge floats (no access)
     float m_gaugeGainGreat = 0.0f;        // +0x9cc great / perfect gauge delta
     float m_gaugeGainGood = 0.0f;         // +0x9d0 good gauge delta (1.0)
     float m_gaugeLossMiss = 0.0f;         // +0x9d4 miss / down gauge delta (negative)
     int m_damageAccum = 0;                // +0x9d8 damage accumulator (reset 0)
-    uint8_t m_damagedThisFrame = 0;       // +0x9dc took damage this frame (updateGauge)
+    bool m_damagedThisFrame = false;      // +0x9dc took damage this frame (updateGauge)
     uint8_t _pad_9dd[0x9e0 - 0x9dd] = {}; // +0x9dd alignment before m_hitEffectScale (no access)
     int m_hitEffectScale = 0;             // +0x9e0 note hit-effect extent (init 500/1000); the
                                           //        judge passes its half (/2) as the draw scale
-    uint8_t m_optSimpleMode = 0;          // +0x9e4 UserSettingData isSimpleMode
-    uint8_t m_optEffectOn = 0;            // +0x9e5 UserSettingData isEffectOn
-    uint8_t m_optLongNoteEffect = 0;      // +0x9e6 UserSettingData isLongNotesEffectOn
-    uint8_t m_optOldHardware = 0;         // +0x9e7 AppDelegate isOldHardware
-    uint8_t m_stopped = 0;                // +0x9e8 audio stopped (quit path)
+    bool m_optSimpleMode = false;         // +0x9e4 UserSettingData isSimpleMode
+    bool m_optEffectOn = false;           // +0x9e5 UserSettingData isEffectOn
+    bool m_optLongNoteEffect = false;     // +0x9e6 UserSettingData isLongNotesEffectOn
+    bool m_optOldHardware = false;        // +0x9e7 AppDelegate isOldHardware
+    bool m_stopped = false;               // +0x9e8 audio stopped (quit path)
     uint8_t _pad_9e9[0x9ec - 0x9e9] = {}; // +0x9e9 alignment before m_backTouchId (no access)
     int m_backTouchId = -1;               // +0x9ec held back-tap touch id (-1 none)
     int m_backTouchTime = 0;              // +0x9f0 getTimeMillis at back-tap start
