@@ -552,7 +552,7 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
 // @complete
 void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
     const uint16_t flags = node->flags;
-    if (flags & 0x20) {
+    if (flags & AC_NOTE_FLAG_HANDLED) {
         return;
     }
     if (pos < node->tick) {
@@ -571,7 +571,7 @@ void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
             return;
         }
         triggerBgmStart();
-        node->flags |= 0x20;
+        node->flags |= AC_NOTE_FLAG_HANDLED;
         return;
     case AC_NOTE_MEASURE:
         m_barCount++;
@@ -582,12 +582,12 @@ void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
         break;
     case AC_NOTE_ADJUST:
         applyBgmSync(node->record);
-        node->flags |= 0x20;
+        node->flags |= AC_NOTE_FLAG_HANDLED;
         return;
     default:
         return; // unhandled type: leave un-marked
     }
-    node->flags |= 0x20;
+    node->flags |= AC_NOTE_FLAG_HANDLED;
 }
 
 // Ghidra: FUN_0007b0a8 — second per-note pass: retire notes that have scrolled
@@ -600,7 +600,7 @@ void AcNoteMng::retireActiveNote(AcActiveNote **pnode, uint32_t pos) {
     AcActiveNote *next = node->next;
     if (node->tick + 4000u < pos) {
         if (m_autoPlay && (node->flags & 0xb) == 0) {
-            node->flags |= 1;
+            node->flags |= AC_NOTE_FLAG_COUNTED;
             m_laneResult[node->lane].hits++;
         }
         retireNode(node);
@@ -626,7 +626,7 @@ void AcNoteMng::updateNearest(AcActiveNote *node, uint32_t pos) {
     const int dt = static_cast<int>(pos) - static_cast<int>(node->tick);
     if (m_autoPlay && dt >= 0) {
         m_laneResult[lane].hits++;
-        node->flags = static_cast<uint16_t>(flags | 1);
+        node->flags = static_cast<uint16_t>(flags | AC_NOTE_FLAG_COUNTED);
         const uint32_t combo = static_cast<uint32_t>(m_combo) + 1;
         m_combo = static_cast<int>(combo);
         if (static_cast<uint32_t>(m_maxCombo) < combo) {
@@ -742,7 +742,7 @@ void AcNoteMng::update() {
         updateNearest(node, pos);
         updateDrawPos(node, pos);
         if (!m_endFlag && node->record->type == AC_NOTE_EVENT && node->tick <= pos) {
-            node->flags |= 0x20;
+            node->flags |= AC_NOTE_FLAG_HANDLED;
             m_endFlag = true;
         }
     }
@@ -923,7 +923,7 @@ int AcNoteMng::getJudgeTotal() const {
 int AcNoteMng::countActiveNotes() const {
     int count = 0;
     for (const AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
-        if (node->lane < 9 && (node->flags & 0x20) == 0) {
+        if (node->lane < 9 && (node->flags & AC_NOTE_FLAG_HANDLED) == 0) {
             count++;
         }
     }
@@ -937,7 +937,7 @@ void AcNoteMng::getNoteObject(AcNoteObject *out, int index) const {
     assert(out != nullptr); // "GetNoteObject" AcNoteMng.mm:0x37c
     int seen = 0;
     for (const AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
-        if (node->lane < 9 && (node->flags & 0x20) == 0) {
+        if (node->lane < 9 && (node->flags & AC_NOTE_FLAG_HANDLED) == 0) {
             if (seen == index) {
                 out->tick = node->tick;
                 out->lane = node->lane;
@@ -957,7 +957,7 @@ void AcNoteMng::getNoteObject(AcNoteObject *out, int index) const {
 void AcNoteMng::setNoteFlag(int index, uint16_t flags) {
     int seen = 0;
     for (AcActiveNote *node = m_activeHead; node != nullptr; node = node->next) {
-        if (node->lane < 9 && (node->flags & 0x20) == 0) {
+        if (node->lane < 9 && (node->flags & AC_NOTE_FLAG_HANDLED) == 0) {
             if (seen == index) {
                 node->flags |= flags;
                 return;

@@ -55,6 +55,13 @@ struct AcNoteRecord {
 };
 static_assert(sizeof(AcNoteRecord) == 8, "arcade note record is 8 bytes");
 
+// AcActiveNote::flags bits used as single flags (bit 2 "judged" is documented on
+// the field but only ever read via multi-bit masks, so it is left unnamed).
+enum AcNoteFlag : uint16_t {
+    AC_NOTE_FLAG_COUNTED = 0x1,  // bit 0: counted into the per-lane tally
+    AC_NOTE_FLAG_HANDLED = 0x20, // bit 5: the note's event fired / it is resolved
+};
+
 // One active (on-screen / in-flight) note. A fixed pool is threaded onto either
 // the free list or the active list; play never allocates. Layout mirrors the
 // binary's node: next@0x0, record@0x4, tick@0x8, drawY@0xc, lane@0x10,
