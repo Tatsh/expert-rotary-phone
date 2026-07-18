@@ -28,8 +28,8 @@ AepLyrCtrl::AepLyrCtrl()
     : m_prev(nullptr), m_next(nullptr), m_group(-1), m_owner(nullptr), m_order(0), m_originX(0),
       m_originY(0), m_posX(100), m_posY(100), m_rotation(0), m_pad2a(0), m_anchorX(0), m_anchorY(0),
       m_renderMode(0), m_lyr(0), m_frameCount(0), m_curFrame(0), m_playSpeed(1.0f),
-      m_clipRect{0, 0, 0, 0}, m_state(0), m_visible(false), m_pad5a{0, 0}, m_finished(0),
-      m_pad5d{0, 0, 0} {
+      m_clipRect{0, 0, 0, 0}, m_state(kAnimIdle), m_visible(false), m_pad5a{0, 0},
+      m_finished(false), m_pad5d{0, 0, 0} {
 }
 
 // @complete
@@ -98,7 +98,7 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     m_clipRect[1] = 0;
     m_clipRect[2] = 0;
     m_clipRect[3] = 0; // +0x48..0x54 (vst1 q8,#0)
-    m_state = 0;
+    m_state = kAnimIdle;
     m_visible = false;
 
     // Head-insert into the global layer list.
@@ -120,7 +120,7 @@ void AepLyrCtrl::init(int group, const char *name) {
 // layer (alpha <= 0) jumps to its last frame; otherwise it restarts at frame 0.
 // @complete
 void AepLyrCtrl::play() {
-    m_state = 2;
+    m_state = kAnimLoop;
     if (m_playSpeed <= 0.0f) {
         m_curFrame = static_cast<float>(m_frameCount - 1); // seek to last frame
     } else {
@@ -135,7 +135,7 @@ void AepLyrCtrl::play() {
 // false.
 // @complete
 void AepLyrCtrl::playOnce() {
-    m_state = 1;
+    m_state = kAnimOnceHold;
     if (m_playSpeed == 0.0f) {
         m_playSpeed = 1.0f; // no rate set: default to forward 1x
         m_curFrame = 0.0f;
@@ -152,7 +152,7 @@ void AepLyrCtrl::playOnce() {
 // play head where it is.
 // @complete
 void AepLyrCtrl::stop(int keepVisible) {
-    m_state = 3;
+    m_state = kAnimOnceIdle;
     if (keepVisible != 1) {
         return;
     }
@@ -167,7 +167,7 @@ void AepLyrCtrl::stop(int keepVisible) {
 // stopping the layer's animation without unlinking it.
 // @complete
 void AepLyrCtrl::reset() {
-    m_state = 0;
+    m_state = kAnimIdle;
 }
 
 // Ghidra: FUN_0002cb64 — still-animating predicate. `(playState | 4) == 4` is
@@ -177,7 +177,7 @@ void AepLyrCtrl::reset() {
 // (+0x3c).
 // @complete
 bool AepLyrCtrl::isAnimating() const {
-    if ((static_cast<unsigned>(m_state) | 4u) == 4u) { // idle (0) or held (4)
+    if (m_state == kAnimIdle || m_state == kAnimHeld) { // idle (0) or held (4)
         return false;
     }
     const int frame = static_cast<int>(m_curFrame); // vcvt.s32.f32: truncate to int
@@ -199,7 +199,7 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
 
     for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {
         const int playState = l->m_state;
-        if (playState == 0) {
+        if (playState == kAnimIdle) {
             continue;
         }
 
@@ -237,7 +237,7 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
                       static_cast<uint32_t>(l->m_order), // priority
                       1);                                // visFlag
 
-        if (playState == 4 || drawOnly != 0) {
+        if (playState == kAnimHeld || drawOnly != 0) {
             continue; // held frame, or draw-only pass: do not advance
         }
 
@@ -250,30 +250,30 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
 
         if (rate > 0.0f) {                                  // forward
             if (static_cast<int>(newFrame) >= frameCount) { // reached the end
-                if (playState == 3) {                       // once, stop to idle
+                if (playState == kAnimOnceIdle) {           // once, stop to idle
                     l->m_curFrame = static_cast<float>(frameCount - 1);
-                    l->m_state = 0;
-                    l->m_finished = 1;
-                } else if (playState == 2) { // loop, wrap to start
+                    l->m_state = kAnimIdle;
+                    l->m_finished = true;
+                } else if (playState == kAnimLoop) { // loop, wrap to start
                     l->m_curFrame = 0.0f;
-                } else if (playState == 1) { // once, hold at last frame
+                } else if (playState == kAnimOnceHold) { // once, hold at last frame
                     l->m_curFrame = static_cast<float>(frameCount - 1);
-                    l->m_state = 4;
-                    l->m_finished = 1;
+                    l->m_state = kAnimHeld;
+                    l->m_finished = true;
                 }
             }
-        } else {                      // reverse (rate <= 0)
-            if (newFrame <= 0.0f) {   // reached the start
-                if (playState == 3) { // once, stop to idle
+        } else {                                  // reverse (rate <= 0)
+            if (newFrame <= 0.0f) {               // reached the start
+                if (playState == kAnimOnceIdle) { // once, stop to idle
                     l->m_curFrame = 0.0f;
-                    l->m_state = 0;
-                    l->m_finished = 1;
-                } else if (playState == 2) { // loop, wrap to the end
+                    l->m_state = kAnimIdle;
+                    l->m_finished = true;
+                } else if (playState == kAnimLoop) { // loop, wrap to the end
                     l->m_curFrame = static_cast<float>(frameCount - 1);
-                } else if (playState == 1) { // once, hold at frame 0
+                } else if (playState == kAnimOnceHold) { // once, hold at frame 0
                     l->m_curFrame = 0.0f;
-                    l->m_state = 4;
-                    l->m_finished = 1;
+                    l->m_state = kAnimHeld;
+                    l->m_finished = true;
                 }
             }
         }

@@ -57,6 +57,15 @@ public:
     // (FUN_0002caf8), which loops.
     void playOnce();
 
+    // Animation play-state values (m_state / Ghidra nState @ +0x58).
+    enum AnimState {
+        kAnimIdle = 0,     // not playing
+        kAnimOnceHold = 1, // play once, then hold at the last frame (-> kAnimHeld)
+        kAnimLoop = 2,     // play looping forever
+        kAnimOnceIdle = 3, // play once, then stop back to idle (-> kAnimIdle)
+        kAnimHeld = 4,     // held at the final frame after a once-hold play
+    };
+
     bool isVisible() const {
         return m_visible;
     }
@@ -65,7 +74,7 @@ public:
     // play scene drives some layers as one-shot SE cues and gates a new cue on this
     // (idle == the previous cue finished). Ghidra: aepLyrCtrlIsActive (FUN_0002cba4).
     bool isActive() const {
-        return m_state != 0;
+        return m_state != kAnimIdle;
     }
 
     // Whether this layer is still mid-animation: false when idle (play-state 0)
@@ -173,10 +182,10 @@ protected:
     float m_curFrame;   // +0x40  flCurFrame: current play head
     float m_playSpeed;  // +0x44  flPlaySpeed: signed frame-advance rate (default 1.0)
     int m_clipRect[4];  // +0x48  pReserved48 (0x50/0x54 double as >0 gate words)
-    int m_state;        // +0x58  nState (0 idle / 1 once-hold / 2 loop / 3 once-idle / 4 held)
+    int m_state;        // +0x58  nState animation play-state (AnimState)
     bool m_visible;     // +0x59
     uint8_t m_pad5a[2]; // +0x5a
-    uint8_t m_finished; // +0x5c  bFlag59: animation-completed flag (set at end of travel)
+    bool m_finished;    // +0x5c  bFlag59: animation-completed flag (set at end of travel)
     uint8_t m_pad5d[3]; // +0x5d  -> 0x60
 };
 
