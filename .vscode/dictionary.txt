@@ -264,8 +264,8 @@ jinja
 jsonnet
 jsonschema
 jubeat
-jubeatplus
 jubeat's
+jubeatplus
 judgeable
 jumptable
 kagome
