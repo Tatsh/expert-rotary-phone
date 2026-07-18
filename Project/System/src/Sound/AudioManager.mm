@@ -16,10 +16,10 @@
 // rather than through a fade timer. Ghidra: DAT_0001fe08 / DAT_0001ff50 /
 // DAT_0001fec0
 // == 0.05 (one fade tick; float 0.05 widened to double = 0x3fa99999a0000000).
-static const float kBgmInstantFade = 0.05f;
+constexpr float kBgmInstantFade = 0.05f;
 
-static const int kSeGroupCount = 16;
-static const int kSeVoiceCount = 8; // onStartPlayer starts each backend with 8 voices
+constexpr int kSeGroupCount = 16;
+constexpr int kSeVoiceCount = 8; // onStartPlayer starts each backend with 8 voices
 
 // One live SE instance tracked for voice-stealing (Ghidra: the 8-entry seList,
 // 0xc bytes each). handle == kFreeInstance marks a free slot. The struct is 12
@@ -38,8 +38,8 @@ struct SeInstance {
 // caplayer voice for its lifetime (banks 0/1 own voices 0..7 / 8..15) and
 // prepare/play/stop always go through m_caPlayer. handle == kFreeInstance marks
 // an idle slot.
-static const int kSeSetGroupCount = 2;
-static const int kSeSetGroupVoices = 8;
+constexpr int kSeSetGroupCount = 2;
+constexpr int kSeSetGroupVoices = 8;
 struct SeVoiceSlot {
     RSND_INSTANCE_ID handle;
     int voiceIndex;

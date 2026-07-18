@@ -32,7 +32,7 @@ int g_dwAcGreatCount = 0;
 bool g_bAcNoteFinished = false;
 
 // Hi-speed multiplier per hi-speed level (Ghidra: the switch in InitPlayData).
-static const float kAcHiSpeed[kAcHiSpeedCount] = {
+constexpr float kAcHiSpeed[kAcHiSpeedCount] = {
     1.2f,
     1.5f,
     2.0f,

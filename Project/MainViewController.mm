@@ -58,7 +58,7 @@
 // -draw renders only while the elapsed render time (ms) is below this, so in
 // practice every frame draws (a gap longer than 1000 ms — e.g. after a long
 // stall — skips that frame's render).
-static const float kRenderMinInterval = 1000.0f;
+constexpr float kRenderMinInterval = 1000.0f;
 
 // This VC is the neGLView render/layout delegate and the delegate for both the
 // common and custom alert views it raises.

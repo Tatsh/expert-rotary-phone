@@ -732,7 +732,7 @@ tail:
 // origin cache, never written by Setup). Button roles:
 // settings/sort/recommend/over-score-log row, back/tutorial/diff-toggle
 // overlay, song-cell/fav grid, play/friend-score/difficulty.
-static const int kPhoneLayoutRects[55] = {
+constexpr int kPhoneLayoutRects[55] = {
     0xd2, 0x13a, 0,     -30,  -48,   0,    5,     0, // 0..7
     0x9c, 0x34,  0xa8,  0,    0x9c,  0x34, 0x141, 0, // 8..15
     0x9c, 0x34,  0x1df, 0,    0x9c,  0x34, 0x50,  0, // 16..23
@@ -741,7 +741,7 @@ static const int kPhoneLayoutRects[55] = {
     0xe3, 0x4d,  0x14,  0,    0x15e, 0x5a, 0,     0, // 40..47
     0xb4, 0xb4,  0xbe,  0x32, 0x2a,  0x2a, 0x14      // 48..54
 };
-static const int kPadLayoutRects[55] = {
+constexpr int kPadLayoutRects[55] = {
     0x1e4, 0x210, -1,    -53,   -88,   -13,   0x1e,  0x78f, // 0..7
     0xea,  0x4e,  0x10d, 0x78f, 0xea,  0x4e,  0x1fc, 0x78f, // 8..15
     0xea,  0x4e,  0x2eb, 0x78f, 0xea,  0x4e,  0x4ea, 0x6c0, // 16..23
@@ -752,114 +752,114 @@ static const int kPadLayoutRects[55] = {
 };
 
 // getLyrNo layer names -> m_bgLyrNo[3] @ 0x1315c8.
-static const char *const kBgLyrNames[3] = {
+constexpr const char *const kBgLyrNames[3] = {
     "BG_NEKO", "DIFFICULTY_STAR_OPEN", "DIFFICULTY_STAR_OUT"};
 // The 4 scene-layer names + ordering-table priorities (@ 0x1315d4 /
 // 0x12e670).
-static const char *const kLayerNames[4] = {
+constexpr const char *const kLayerNames[4] = {
     "BG_640X1136", "DIFFICULTY_OPEN", "DIFFICULTY_CLOSE", "DIFFICULTY_ROOP"};
-static const int kLayerOrder[4] = {13, 9, 9, 9};
+constexpr int kLayerOrder[4] = {13, 9, 9, 9};
 // The 2 intro-layer names + priorities, device-branched (@ 0x1315e8/f0 /
 // 0x12e680).
-static const char *const kIntroNamesTall[2] = {
+constexpr const char *const kIntroNamesTall[2] = {
     "1024IMG", "BG_IMG_1136"}; // displayType == DisplayTypePhoneRetinaTall
-static const char *const kIntroNamesShort[2] = {"640IMG", "BG_IMG_640"};
-static const int kIntroOrder[2] = {15, 14};
+constexpr const char *const kIntroNamesShort[2] = {"640IMG", "BG_IMG_640"};
+constexpr int kIntroOrder[2] = {15, 14};
 // getFrameNo names -> m_frmNo[24] @ 0x1315f8.
-static const char *const kFrmNames[24] = {"DIFFICULTY_BT00",
-                                          "JACKET10_LOAD",
-                                          "NEW_BOARD",
-                                          "FULLCOMBO",
-                                          "PERFECT",
-                                          "PERFECT1",
-                                          "BT_SETTING",
-                                          "BT_RETURN",
-                                          "BT_SORT",
-                                          "BT_OSSUME",
-                                          "BT_EMULATE",
-                                          "JACKET_LINE0",
-                                          "BG_NEKO",
-                                          "JACKET_TIP_FONT0",
-                                          "JACKET_TIP_PERFECT1",
-                                          "JACKET_TIP_PERFECT2",
-                                          "BT_TUTORIAL",
-                                          "FRIEND_SCORE_FONT",
-                                          "FRIEND_UPDEF_FONT",
-                                          "FRIEND_SCORE_ICON",
-                                          "FRIEND_UPDEF_ICON",
-                                          "FRIEND_UPDEF_FONTBAR",
-                                          "FRIEND_UP_ICON",
-                                          "FRIEND_UP_FIRST_ICON"};
+constexpr const char *const kFrmNames[24] = {"DIFFICULTY_BT00",
+                                             "JACKET10_LOAD",
+                                             "NEW_BOARD",
+                                             "FULLCOMBO",
+                                             "PERFECT",
+                                             "PERFECT1",
+                                             "BT_SETTING",
+                                             "BT_RETURN",
+                                             "BT_SORT",
+                                             "BT_OSSUME",
+                                             "BT_EMULATE",
+                                             "JACKET_LINE0",
+                                             "BG_NEKO",
+                                             "JACKET_TIP_FONT0",
+                                             "JACKET_TIP_PERFECT1",
+                                             "JACKET_TIP_PERFECT2",
+                                             "BT_TUTORIAL",
+                                             "FRIEND_SCORE_FONT",
+                                             "FRIEND_UPDEF_FONT",
+                                             "FRIEND_SCORE_ICON",
+                                             "FRIEND_UPDEF_ICON",
+                                             "FRIEND_UPDEF_FONTBAR",
+                                             "FRIEND_UP_ICON",
+                                             "FRIEND_UP_FIRST_ICON"};
 // getFrameNo -> m_starFrmNo[3] @ 0x131658.
-static const char *const kStarFrmNames[3] = {
+constexpr const char *const kStarFrmNames[3] = {
     "DIFFICULTY_STAR_GREEN", "DIFFICULTY_STAR_YELLOW", "DIFFICULTY_STAR_RED"};
 // getFrameNo -> m_musicRankFrmNo[7] @ 0x131664.
-static const char *const kMusicRankFrmNames[7] = {"MUSIC_RUNK_NUMBER_S",
-                                                  "MUSIC_RUNK_NUMBER_AAA",
-                                                  "MUSIC_RUNK_NUMBER_AA",
-                                                  "MUSIC_RUNK_NUMBER_A",
-                                                  "MUSIC_RUNK_NUMBER_B",
-                                                  "MUSIC_RUNK_NUMBER_C",
-                                                  "MUSIC_RUNK_NUMBER_D"};
+constexpr const char *const kMusicRankFrmNames[7] = {"MUSIC_RUNK_NUMBER_S",
+                                                     "MUSIC_RUNK_NUMBER_AAA",
+                                                     "MUSIC_RUNK_NUMBER_AA",
+                                                     "MUSIC_RUNK_NUMBER_A",
+                                                     "MUSIC_RUNK_NUMBER_B",
+                                                     "MUSIC_RUNK_NUMBER_C",
+                                                     "MUSIC_RUNK_NUMBER_D"};
 // getFrameNo -> m_diffRankFrmNo[7] @ 0x131680.
-static const char *const kDiffRankFrmNames[7] = {"DIFFICULTY_RUNK_NUMBER_S",
-                                                 "DIFFICULTY_RUNK_NUMBER_AAA",
-                                                 "DIFFICULTY_RUNK_NUMBER_AA",
-                                                 "DIFFICULTY_RUNK_NUMBER_A",
-                                                 "DIFFICULTY_RUNK_NUMBER_B",
-                                                 "DIFFICULTY_RUNK_NUMBER_C",
-                                                 "DIFFICULTY_RUNK_NUMBER_D"};
+constexpr const char *const kDiffRankFrmNames[7] = {"DIFFICULTY_RUNK_NUMBER_S",
+                                                    "DIFFICULTY_RUNK_NUMBER_AAA",
+                                                    "DIFFICULTY_RUNK_NUMBER_AA",
+                                                    "DIFFICULTY_RUNK_NUMBER_A",
+                                                    "DIFFICULTY_RUNK_NUMBER_B",
+                                                    "DIFFICULTY_RUNK_NUMBER_C",
+                                                    "DIFFICULTY_RUNK_NUMBER_D"};
 // JACKET_TIP names, resolved BOTH as frames (m_jacketTipFrmNo) and users
 // (m_jacketTipUsrNo)
 // (@ 0x13173c).
-static const char *const kJacketTipNames[3] = {"JACKET_TIP00", "JACKET_TIP01", "JACKET_TIP02"};
+constexpr const char *const kJacketTipNames[3] = {"JACKET_TIP00", "JACKET_TIP01", "JACKET_TIP02"};
 // getUserNo -> m_elemUsrNo[22] @ 0x13169c — AepDrawCallback per-element
 // dispatch keys.
-static const char *const kElemUsrNames[22] = {"JACKET00",
-                                              "JACKET09",
-                                              "DIFFICULTY_STAR_GREEN",
-                                              "DIFFICULTY_STAR_YELLOW",
-                                              "DIFFICULTY_STAR_RED",
-                                              "MUSIC_RUNK_NUM_GREEN",
-                                              "MUSIC_RUNK_NUM_YELLOW",
-                                              "MUSIC_RUNK_NUM_RED",
-                                              "DIFFICULTY_RUNK_NUMBER_E",
-                                              "DIFFICULTY_BT00",
-                                              "MUSIC_TITLE",
-                                              "DIFFICULTY_TITLE",
-                                              "DIFFICULTY_NAME",
-                                              "NEW_BOARD",
-                                              "FULLCOMBO",
-                                              "BG_NEKO",
-                                              "S_POINT_NUM",
-                                              "FRIEND_SCORE_FONT",
-                                              "FRIEND_SCORE_ICON",
-                                              "FRIEND_UPDEF_FONTBAR",
-                                              "FRIEND_UP_ICON",
-                                              "FRIEND_UP_FIRST_ICON"};
+constexpr const char *const kElemUsrNames[22] = {"JACKET00",
+                                                 "JACKET09",
+                                                 "DIFFICULTY_STAR_GREEN",
+                                                 "DIFFICULTY_STAR_YELLOW",
+                                                 "DIFFICULTY_STAR_RED",
+                                                 "MUSIC_RUNK_NUM_GREEN",
+                                                 "MUSIC_RUNK_NUM_YELLOW",
+                                                 "MUSIC_RUNK_NUM_RED",
+                                                 "DIFFICULTY_RUNK_NUMBER_E",
+                                                 "DIFFICULTY_BT00",
+                                                 "MUSIC_TITLE",
+                                                 "DIFFICULTY_TITLE",
+                                                 "DIFFICULTY_NAME",
+                                                 "NEW_BOARD",
+                                                 "FULLCOMBO",
+                                                 "BG_NEKO",
+                                                 "S_POINT_NUM",
+                                                 "FRIEND_SCORE_FONT",
+                                                 "FRIEND_SCORE_ICON",
+                                                 "FRIEND_UPDEF_FONTBAR",
+                                                 "FRIEND_UP_ICON",
+                                                 "FRIEND_UP_FIRST_ICON"};
 // getUserNo -> m_scoreDigitUsrNo[6] @ 0x1316f4.
-static const char *const kScoreDigitUsrNames[6] = {
+constexpr const char *const kScoreDigitUsrNames[6] = {
     "SCORE0", "SCORE00", "SCORE000", "SCORE0000", "SCORE00000", "SCORE000000"};
 // getUserNo -> m_diffBlackUsrNo[3] @ 0x13170c.
-static const char *const kDiffBlackUsrNames[3] = {
+constexpr const char *const kDiffBlackUsrNames[3] = {
     "DIFFICULTY_BLACK", "DIFFICULTY_BLACK2", "DIFFICULTY_BLACK3"};
 // getUserNo -> m_placeDigitUsrNo[9] @ 0x131718: the 3 colours x 3 digit
 // places.
-static const char *const kPlaceDigitUsrNames[9] = {"GREEN_0",
-                                                   "GREEN_0_0",
-                                                   "GREEN_0_0_0",
-                                                   "YELLOW_0",
-                                                   "YELLOW_0_0",
-                                                   "YELLOW_0_0_0",
-                                                   "PINK_0",
-                                                   "PINK_0_0",
-                                                   "PINK_0_0_0"};
+constexpr const char *const kPlaceDigitUsrNames[9] = {"GREEN_0",
+                                                      "GREEN_0_0",
+                                                      "GREEN_0_0_0",
+                                                      "YELLOW_0",
+                                                      "YELLOW_0_0",
+                                                      "YELLOW_0_0_0",
+                                                      "PINK_0",
+                                                      "PINK_0_0",
+                                                      "PINK_0_0_0"};
 
 // The 60 digit-atlas bundle resource names -> m_digitTex[60] (each loaded as
 // "<name>.png"). Index order matches the binary's write offsets: score(+0x5c),
 // points(+0x84), jk_dif(+0xac), then the 30-entry rank block (+0xd4) written as
 // green/yellow/pink 10s (@ 0x131748..).
-static const char *const kDigitAtlasNames[60] = {
+constexpr const char *const kDigitAtlasNames[60] = {
     "num_score_0",  "num_score_1",  "num_score_2",  "num_score_3",  "num_score_4",
     "num_score_5",  "num_score_6",  "num_score_7",  "num_score_8",  "num_score_9", // [0..9]
     "num_points0",  "num_points1",  "num_points2",  "num_points3",  "num_points4",
@@ -874,10 +874,10 @@ static const char *const kDigitAtlasNames[60] = {
     "num_pink_5",   "num_pink_6",   "num_pink_7",   "num_pink_8",   "num_pink_9"}; // [50..59]
 // The 2 badge/arrow atlases -> m_arrowTex[2] @ 0x131838, loaded as
 // "<name>.png".
-static const char *const kArrowNames[2] = {"circle", "vie_cmn_warning@2x"};
+constexpr const char *const kArrowNames[2] = {"circle", "vie_cmn_warning@2x"};
 // The 5 touch/select SE names -> m_seId[5] (@ 0x131840), loaded as
 // "<name>.m4a".
-static const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya"};
+constexpr const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya"};
 
 /**
  * Ghidra: musicSelTaskSetup (0x370f0) — state-0 scene build. Resolves the

@@ -509,7 +509,7 @@ BOOL gLaunchedFromPush = NO;
 }
 
 // hw.machine identifiers ordered by hardwareType. Ghidra: DAT_00130574.
-static const char *const kHardwareModels[40] = {
+constexpr const char *const kHardwareModels[40] = {
     "iPhone1,1", "iPhone1,2", "iPhone2,1", "iPhone3,1", "iPhone3,2", "iPhone3,3", "iPhone4,1",
     "iPhone4,2", "iPhone4,3", "iPhone5,1", "iPhone5,2", "iPhone5,3", "iPhone5,4", "iPhone6,1",
     "iPhone6,2", "iPod1,1",   "iPod2,1",   "iPod3,1",   "iPod4,1",   "iPod5,1",   "iPad1,1",

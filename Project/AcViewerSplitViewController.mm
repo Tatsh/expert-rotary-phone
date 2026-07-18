@@ -29,7 +29,7 @@ static UIViewController *RootVC() {
 
 // The modal open/close (fade) transition duration, shared by
 // startOpenAnimation / startCloseAnimation.
-static const NSTimeInterval kModalAnimationDuration = 0.5;
+constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 @implementation AcViewerSplitViewController {
     UIViewController *_leftViewCtrl;        // left button column

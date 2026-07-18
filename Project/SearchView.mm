@@ -31,37 +31,37 @@
 
 // Initial map region: central Tokyo. Ghidra DAT_00085ac0 (lat) / DAT_00085ab8
 // (lon) and the setRegion:animated: span literals.
-static const CLLocationDegrees kInitialLatitude = 35.681382;
-static const CLLocationDegrees kInitialLongitude = 139.766084;
-static const CLLocationDegrees kInitialLatDelta = 0.01004;
-static const CLLocationDegrees kInitialLonDelta = 0.01159;
+constexpr CLLocationDegrees kInitialLatitude = 35.681382;
+constexpr CLLocationDegrees kInitialLongitude = 139.766084;
+constexpr CLLocationDegrees kInitialLatDelta = 0.01004;
+constexpr CLLocationDegrees kInitialLonDelta = 0.01159;
 
 // The map must be zoomed in to at least this longitudeDelta before pins are
 // shown; wider than this and the "zoom in" prompt appears instead. Ghidra
 // DAT_00086e78 = 0.26.
-static const CLLocationDegrees kMarkerSpanThreshold = 0.26;
+constexpr CLLocationDegrees kMarkerSpanThreshold = 0.26;
 
 // Loose Japan bounding box; the server is only re-queried while the map centre
 // sits inside it. Ghidra DAT_00087080/88/90/98.
-static const CLLocationDegrees kJPLatMin = 20.5;
-static const CLLocationDegrees kJPLatMax = 45.6;
-static const CLLocationDegrees kJPLonMin = 24.45;
-static const CLLocationDegrees kJPLonMax = 153.0;
+constexpr CLLocationDegrees kJPLatMin = 20.5;
+constexpr CLLocationDegrees kJPLatMax = 45.6;
+constexpr CLLocationDegrees kJPLonMin = 24.45;
+constexpr CLLocationDegrees kJPLonMax = 153.0;
 
 // Metres-per-degree divisor + degree threshold: re-query only after the centre
 // has moved far enough. Ghidra DAT_000870a0 = 111132.0 / DAT_000870a8 = 0.15.
-static const double kMetresPerDegree = 111132.0;
-static const double kRequeryDegrees = 0.15;
+constexpr double kMetresPerDegree = 111132.0;
+constexpr double kRequeryDegrees = 0.15;
 
 // mapRectForCoordinateRegion: expands the region's centre by ±span*0.6 to get
 // the corner coordinates. Ghidra DAT_00086328 = 0.6.
-static const double kRegionCornerFactor = 0.6;
+constexpr double kRegionCornerFactor = 0.6;
 
 // Animation timings. Ghidra: open 0.5 (0x3fe00000), close ~0.3 (DAT_00088a90),
 // error fade 0.3 (DAT_00086478).
-static const NSTimeInterval kOpenAnimationDuration = 0.5;
-static const NSTimeInterval kCloseAnimationDuration = 0.3;
-static const NSTimeInterval kErrorFadeDuration = 0.3;
+constexpr NSTimeInterval kOpenAnimationDuration = 0.5;
+constexpr NSTimeInterval kCloseAnimationDuration = 0.3;
+constexpr NSTimeInterval kErrorFadeDuration = 0.3;
 
 // --- Recovered UI strings (UTF-16LE CFStrings in the binary) ---
 static NSString *const kSubtitleFormat = @"営業時間: %@"; // cf_UmiBf_ @ 0x12ca20

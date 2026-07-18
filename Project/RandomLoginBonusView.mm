@@ -42,7 +42,7 @@
 // which matches the arc4random() % 1000 + 1 roll below.
 //
 // @complete (table bytes verified @ 0x12e318: value at +0, weight at +4).
-static const struct {
+constexpr struct {
     int value;
     int weight;
 } kBonusTable[7] = {

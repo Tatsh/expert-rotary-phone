@@ -35,17 +35,17 @@
 
 // Subview tags looked up with -viewWithTag: (the views are built and tagged in
 // the setup methods and fetched back throughout).
-static const NSInteger kTagStoreTable = 10000;    // the pack-catalogue UITableView
-static const NSInteger kTagStorePromo = 0x2775;   // the promotion banner view
-static const NSInteger kTagStoreLoading = 0x2711; // the loading-spinner label
-static const NSInteger kTagStoreEmpty = 0x2712;   // the empty-state label
-static const NSInteger kTagStoreHint = 100000;    // the "push up to show more" hint
-static const NSInteger kTagStoreBanner = 0x186a1; // the store_fun.png banner image
+constexpr NSInteger kTagStoreTable = 10000;    // the pack-catalogue UITableView
+constexpr NSInteger kTagStorePromo = 0x2775;   // the promotion banner view
+constexpr NSInteger kTagStoreLoading = 0x2711; // the loading-spinner label
+constexpr NSInteger kTagStoreEmpty = 0x2712;   // the empty-state label
+constexpr NSInteger kTagStoreHint = 100000;    // the "push up to show more" hint
+constexpr NSInteger kTagStoreBanner = 0x186a1; // the store_fun.png banner image
 
 // CommonAlertView tags, read back in -commonAlertView:clickedButtonAtIndex: to
 // tell which confirm dialog fired.
-static const NSInteger kTagAlertRestoreConfirm = 0x1f;    // "restore purchased pack info?"
-static const NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored packs?"
+constexpr NSInteger kTagAlertRestoreConfirm = 0x1f;    // "restore purchased pack info?"
+constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored packs?"
 
 // StoreMainViewController is the delegate for the pack views, the detail
 // controllers and the purchase manager (it implements their callbacks below);

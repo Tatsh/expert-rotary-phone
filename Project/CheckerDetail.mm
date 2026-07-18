@@ -70,8 +70,8 @@ static NSString *const kScoBaseYou[4] = {@"ppc_ps_scobase_eyou",
 
 // Column tag bases: sheet-select buttons are 200+sheet, name-mode plates
 // 204+sheet.
-static const NSInteger kSheetButtonTag[4] = {200, 201, 202, 203};
-static const NSInteger kNamePlateTag[4] = {204, 205, 206, 207};
+constexpr NSInteger kSheetButtonTag[4] = {200, 201, 202, 203};
+constexpr NSInteger kNamePlateTag[4] = {204, 205, 206, 207};
 
 // Ghidra: setNavControllerViewFrameTall @ 0xd9750
 // Block invoke — restores the navigation controller view to the "tall" split

@@ -70,7 +70,7 @@ static NSString *const kNumImg[3][10] = {
      @"frilis_num_e9"},
 };
 // Column origin per difficulty (DAT_0012fa00).
-static const int kColX[3] = {139, 190, 242};
+constexpr int kColX[3] = {139, 190, 242};
 
 @implementation FriendListDetail {
     UIView *_dummyView;          // loading overlay (+ activity indicator), @0x34

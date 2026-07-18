@@ -277,7 +277,7 @@ TreasureMap::Node *TreasureMap::findNodeById(int id) const {
 // Ghidra: DAT_0012fac4.  Goal-star counts indexed [mainMapId][subMapId].
 // Row stride 0xc (3 × int32_t), column stride 4.  9 maps × 3 sub-map slots.
 // Source: read_memory(0x12fac4, 108).
-static const int32_t kTreasureMapTable[9][3] = {
+constexpr int32_t kTreasureMapTable[9][3] = {
     // DAT_0012fac4
     {1, 1, 2}, // mainMapId 0
     {4, 3, 4}, // mainMapId 1
@@ -293,7 +293,7 @@ static const int32_t kTreasureMapTable[9][3] = {
 // Ghidra: DAT_0012fb30.  Parent map id for each main map; -1 = root (no
 // parent). The same table is used verbatim in TreasureData.m as kParentMapId[].
 // Element stride 4 (int32_t).  Source: read_memory(0x12fb30, 36).
-static const int32_t kParentMapTable[9] = { // DAT_0012fb30
+constexpr int32_t kParentMapTable[9] = { // DAT_0012fb30
     5,
     2,
     3,
@@ -307,7 +307,7 @@ static const int32_t kParentMapTable[9] = { // DAT_0012fb30
 // Ghidra: DAT_0012fb54.  Sub-map type flags per main map.
 // Element stride 4 (int32_t).  0x12fb54 == 0x12fb30 + 9 * sizeof(int32_t).
 // Source: read_memory(0x12fb30, 72), bytes [36..71].
-static const int32_t kSubMapFlagTable[9] = { // DAT_0012fb54
+constexpr int32_t kSubMapFlagTable[9] = { // DAT_0012fb54
     0,
     1,
     0,
@@ -320,8 +320,8 @@ static const int32_t kSubMapFlagTable[9] = { // DAT_0012fb54
 
 // Ghidra: DAT_0012fb90 / DAT_0012fb9c.  Per-slot character message counts.
 // Source: read_memory(0x12fb90, 24) — 6 int32_t values, two groups of three.
-static const int32_t kAssetCountsGroup6[3] = {41, 35, 47}; // DAT_0012fb90
-static const int32_t kAssetCountsGroup8[3] = {64, 72, 71}; // DAT_0012fb9c
+constexpr int32_t kAssetCountsGroup6[3] = {41, 35, 47}; // DAT_0012fb90
+constexpr int32_t kAssetCountsGroup8[3] = {64, 72, 71}; // DAT_0012fb9c
 
 // ── Character message string pools (Ghidra pointer tables @ 0x1335c8 …
 // 0x1339d4) ──

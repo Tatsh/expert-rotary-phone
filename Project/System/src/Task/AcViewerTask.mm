@@ -37,7 +37,7 @@
 #import "neTextureForiOS.h"
 
 // Group-7 asset slot for the arcade viewer HUD.
-static const int kAcvGroup = 7;
+constexpr int kAcvGroup = 7;
 
 // The root nav host the play machine drives (GotoAcViewer / black-board
 // overlay).
@@ -78,13 +78,13 @@ AcViewerTask::~AcViewerTask() = default;
 // getUserNo layer-name table (Ghidra: DAT_00130bc4, 7 names) -> +0xb8. These
 // are the HUD layers AcViewerHudDraw dispatches on (score / combo / title /
 // gauge digits).
-static const char *const kAcvUsrNames[7] = {
+constexpr const char *const kAcvUsrNames[7] = {
     "SCORE_NUM", "COMBO_NUM", "MUSIC_NAME", "MAX_COMBO_NUM", "GAUGE_NUM", "COOL_NUM", "GREAT_NUM"};
 // getFrmNo names (Ghidra: DAT_00130bf0, 9) -> +0x94.
-static const char *const kAcvFrmNames[9] = {
+constexpr const char *const kAcvFrmNames[9] = {
     "NUM_00", "NUM_01", "NUM_02", "NUM_03", "NUM_04", "NUM_05", "NUM_06", "NUM_07", "NUM_08"};
 // Difficulty -> BAR_* time-line frame (Ghidra: PTR_s_BAR_EASY_00130be0).
-static const char *const kAcvBarFrm[4] = {"BAR_EASY", "BAR_NORMAL", "BAR_HYPER", "BAR_EX"};
+constexpr const char *const kAcvBarFrm[4] = {"BAR_EASY", "BAR_NORMAL", "BAR_HYPER", "BAR_EX"};
 
 void AcViewerTask::setup() {
     AepManager &aep = AepManager::shared();

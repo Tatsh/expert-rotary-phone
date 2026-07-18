@@ -248,13 +248,13 @@ void AcMainTask::stateTreasureCheck() {
 // Byte-verified layer names for the getLyrNo tables (Ghidra: DAT_001327d4 /
 // DAT_001327e8 / DAT_0013280c / DAT_001328f4). Each resolves within asset
 // group 5.
-static const char *const kLyrSkillBoards[5] = { // -> +0x21c (+0x230 frame counts)
+constexpr const char *const kLyrSkillBoards[5] = { // -> +0x21c (+0x230 frame counts)
     "SKILL_COM_BOARD",
     "RETIRE_COM_BOARD",
     "MUSIC_PEACE_LOCK1",
     "WALL_PEACE_LOCK1",
     "FRIEND_NAME_BOARD2"};
-static const char *const kLyrMusicPeace[9] = { // -> +0x27c
+constexpr const char *const kLyrMusicPeace[9] = { // -> +0x27c
     "MUSIC_PEACE00",
     "MUSIC_PEACE01",
     "MUSIC_PEACE02",
@@ -264,7 +264,7 @@ static const char *const kLyrMusicPeace[9] = { // -> +0x27c
     "MUSIC_PEACE06",
     "MUSIC_PEACE07",
     "MUSIC_PEACE08"};
-static const char *const kLyrWallPeace[9] = { // -> +0x2a0
+constexpr const char *const kLyrWallPeace[9] = { // -> +0x2a0
     "WALL_PEACE00",
     "WALL_PEACE01",
     "WALL_PEACE02",
@@ -274,7 +274,7 @@ static const char *const kLyrWallPeace[9] = { // -> +0x2a0
     "WALL_PEACE06",
     "WALL_PEACE07",
     "WALL_PEACE08"};
-static const char *const kLyrIconMental[4] = { // -> +0x258 (+0x268 frame counts)
+constexpr const char *const kLyrIconMental[4] = { // -> +0x258 (+0x268 frame counts)
     "ICON_MENTAL00",
     "ICON_MENTAL01",
     "ICON_MENTAL02",
@@ -282,7 +282,7 @@ static const char *const kLyrIconMental[4] = { // -> +0x258 (+0x268 frame counts
 
 // getFrameNo names (Ghidra: DAT_00132904 / DAT_0013296c / DAT_00132998 /
 // DAT_001329c0 / DAT_001329d0 / PTR_s_TRIANGLE01_05).
-static const char *const kFrmBoard[26] = { // -> +0x2d0
+constexpr const char *const kFrmBoard[26] = { // -> +0x2d0
     "CHARA_KOMA00",  "MUSIC_PEACE_BOARD_S", "JACKET_QUESTION",   "JACKET_DISCOVERY",
     "BT_ROULETTE",   "BT_ROULETTE_NO",      "BT_ROULETTE_EVENT", "BT_ROULETTE_EVENT_NO",
     "BT_GATYA",      "BT_GATYA01",          "PAGE_BEFORE",       "PAGE_NEXT",
@@ -290,7 +290,7 @@ static const char *const kFrmBoard[26] = { // -> +0x2d0
     "DEFENSE_01_02", "DEFENSE_01_03",       "DEFENSE_01_04",     "DEFENSE_00",
     "DEFENSE_02",    "BT_SQUARE01_00",      "DEFENSE_03_00",     "DEFENSE_03_01",
     "DEFENSE_03_02", "DEFENSE_03_03"};
-static const char *const kFrmBase1[11] = { // -> +0x338
+constexpr const char *const kFrmBase1[11] = { // -> +0x338
     "BASE_00",
     "BASE_01",
     "BASE_02",
@@ -302,7 +302,7 @@ static const char *const kFrmBase1[11] = { // -> +0x338
     "BASE_07_01",
     "BASE_09",
     "BASE_10"};
-static const char *const kFrmBase08[10] = { // -> +0x368
+constexpr const char *const kFrmBase08[10] = { // -> +0x368
     "BASE_08_00",
     "BASE_08_01",
     "BASE_08_02",
@@ -313,19 +313,19 @@ static const char *const kFrmBase08[10] = { // -> +0x368
     "BASE_08_07",
     "BASE_08_08",
     "BASE_08_09"};
-static const char *const kFrmBase05[4] = { // -> +0x390
+constexpr const char *const kFrmBase05[4] = { // -> +0x390
     "BASE_05_00",
     "BASE_05_01",
     "BASE_05_02",
     "BASE_05_03"};
-static const char *const kFrmTriangle0[6] = { // -> +0x3a0 (interleaved with the below)
+constexpr const char *const kFrmTriangle0[6] = { // -> +0x3a0 (interleaved with the below)
     "TRIANGLE00_05",
     "TRIANGLE00_04",
     "TRIANGLE00_03",
     "TRIANGLE00_02",
     "TRIANGLE00_01",
     "TRIANGLE00_00"};
-static const char *const kFrmTriangle1[6] = { // -> +0x3b8
+constexpr const char *const kFrmTriangle1[6] = { // -> +0x3b8
     "TRIANGLE01_05",
     "TRIANGLE01_04",
     "TRIANGLE01_03",
@@ -334,7 +334,7 @@ static const char *const kFrmTriangle1[6] = { // -> +0x3b8
     "TRIANGLE01_00"};
 
 // getUserNo names (Ghidra: DAT_00132a00) -> +0x3d0.
-static const char *const kUsrBoard[26] = {
+constexpr const char *const kUsrBoard[26] = {
     "S_POINT_NUM",         "CHARACT00",          "CHARACT01",
     "CHARACT02",           "CHARACT04",          "CHARACT05",
     "CHARACT_NAME00",      "CHARACT_COMMENT00",  "JACKET_QUESTION",
@@ -347,47 +347,47 @@ static const char *const kUsrBoard[26] = {
 
 // The 29 roulette overlay layers + their ordering-table priorities (Ghidra:
 // PTR_s_ROULETTE_START_OPEN_00132830 + DAT_0012f8a0) -> +0x2c.
-static const char *const kRouletteNames[29] = {"ROULETTE_START_OPEN",
-                                               "ROULETTE_START_ROOP",
-                                               "ROULETTE_START_OPEN_EVENT",
-                                               "ROULETTE_START_ROOP_EVENT",
-                                               "ROULETTE_EFF",
-                                               "SELECTION_CHARA_OPEN",
-                                               "SELECTION_CHARA_CLOSE",
-                                               "SUGO_COMMENT_BOARD",
-                                               "MUSIC_PEACE_OPEN",
-                                               "WALL_PEACE_OPEN",
-                                               "GOAL_OPEN",
-                                               "GET_MUSIC",
-                                               "GET_WALL",
-                                               "GATSHA_OPEN",
-                                               "WALL_SAVE_COM",
-                                               "EFF_SKILL2",
-                                               "EFF_SKILL_KOUKA2",
-                                               "EFF_WARP_3",
-                                               "SELECT_ARROW",
-                                               "LIFTING_MUSIC",
-                                               "LIFTING_WALL",
-                                               "LIFTING_MAP",
-                                               "LIFTING_AREA",
-                                               "LIFTING_GAOL_BOARD_01_02",
-                                               "LIFTING_GAOL_BOARD_02_02",
-                                               "LIFTING_GAOL_BOARD_03_02",
-                                               "EVENT_TXT_1136",
-                                               "EVENT_INFO_OPEN",
-                                               "ICON_REVERSE"};
-static const int kRouletteOrder[29] = {20, 20, 20, 20, 19, 15, 15, 25, 11, 11, 23, 23, 23, 14, 7,
-                                       31, 32, 31, 16, 23, 23, 23, 23, 23, 23, 23, 22, 6,  22};
+constexpr const char *const kRouletteNames[29] = {"ROULETTE_START_OPEN",
+                                                  "ROULETTE_START_ROOP",
+                                                  "ROULETTE_START_OPEN_EVENT",
+                                                  "ROULETTE_START_ROOP_EVENT",
+                                                  "ROULETTE_EFF",
+                                                  "SELECTION_CHARA_OPEN",
+                                                  "SELECTION_CHARA_CLOSE",
+                                                  "SUGO_COMMENT_BOARD",
+                                                  "MUSIC_PEACE_OPEN",
+                                                  "WALL_PEACE_OPEN",
+                                                  "GOAL_OPEN",
+                                                  "GET_MUSIC",
+                                                  "GET_WALL",
+                                                  "GATSHA_OPEN",
+                                                  "WALL_SAVE_COM",
+                                                  "EFF_SKILL2",
+                                                  "EFF_SKILL_KOUKA2",
+                                                  "EFF_WARP_3",
+                                                  "SELECT_ARROW",
+                                                  "LIFTING_MUSIC",
+                                                  "LIFTING_WALL",
+                                                  "LIFTING_MAP",
+                                                  "LIFTING_AREA",
+                                                  "LIFTING_GAOL_BOARD_01_02",
+                                                  "LIFTING_GAOL_BOARD_02_02",
+                                                  "LIFTING_GAOL_BOARD_03_02",
+                                                  "EVENT_TXT_1136",
+                                                  "EVENT_INFO_OPEN",
+                                                  "ICON_REVERSE"};
+constexpr int kRouletteOrder[29] = {20, 20, 20, 20, 19, 15, 15, 25, 11, 11, 23, 23, 23, 14, 7,
+                                    31, 32, 31, 16, 23, 23, 23, 23, 23, 23, 23, 22, 6,  22};
 
 // 4 sugoroku arrows (Ghidra: PTR_s_SUGOROKU_ARROW01_001328a4) -> +0xc0, order
 // 0x1d.
-static const char *const kArrowNames[4] = {
+constexpr const char *const kArrowNames[4] = {
     "SUGOROKU_ARROW01", "SUGOROKU_ARROW03", "SUGOROKU_ARROW02", "SUGOROKU_ARROW00"};
 
 // The 8 select-panel layers -> +0xa0. Two device-branched name tables (Ghidra:
 // DAT_001328d4 default / DAT_001328b4 tall-phone) share one order table
 // (DAT_0012f914).
-static const char *const kPanelNamesDefault[8] = { // 640/960 assets
+constexpr const char *const kPanelNamesDefault[8] = { // 640/960 assets
     "IMG960",
     "CHARACTER_SELECTION640_OPEN",
     "CHARACTER_SELECTION640_OUT",
@@ -396,7 +396,7 @@ static const char *const kPanelNamesDefault[8] = { // 640/960 assets
     "COLLECTION_SELECT_640_OUT",
     "MUSIC_PEACE_S_960_OPEN",
     "WALL_PEACE_S_960_OPEN"};
-static const char *const kPanelNamesTall[8] = { // 1136 assets (tall phone, dt==2)
+constexpr const char *const kPanelNamesTall[8] = { // 1136 assets (tall phone, dt==2)
     "IMG1136",
     "CHARACTER_SELECTION1136_OPEN",
     "CHARACTER_SELECTION1136_OUT",
@@ -405,7 +405,7 @@ static const char *const kPanelNamesTall[8] = { // 1136 assets (tall phone, dt==
     "COLLECTION_SELECT_1136_OUT",
     "MUSIC_PEACE_S_1136_OPEN",
     "WALL_PEACE_S_1136_OPEN"};
-static const int kPanelOrder[8] = {28, 17, 17, 17, 13, 13, 12, 12};
+constexpr int kPanelOrder[8] = {28, 17, 17, 17, 13, 13, 12, 12};
 
 void AcMainTask::setupScene() {
     // Cache the audio manager for the BGM prep at the tail (Ghidra: local_174).
@@ -829,8 +829,8 @@ static int TreasureReadCount(short subMapId) {
 // Sub-map board number (subMapId/10) -> board-background / board-BGM asset
 // numbers. Only indices 0..4 and 7 are reachable (the 0x9f bitmask gate); both
 // tables are the identity there. Byte-verified at DAT_0012f934 / DAT_0012f946.
-static const short kMapBgNumber[9] = {0, 1, 2, 3, 4, -1, -1, 7, -1};
-static const short kMapBgmNumber[9] = {0, 1, 2, 3, 4, 0, 6, 7, 8};
+constexpr short kMapBgNumber[9] = {0, 1, 2, 3, 4, -1, -1, 7, -1};
+constexpr short kMapBgmNumber[9] = {0, 1, 2, 3, 4, 0, 6, 7, 8};
 
 void AcMainTask::loadTreasureMap() {
     const short subMapId = m_subMapId;
@@ -1067,8 +1067,8 @@ void AcMainTask::loadTreasureMap() {
 // undefined1).
 //   +0x894 >= 1 -> kStepBoardA (DAT_0012f97c, verified 0x12f97c)
 //   +0x895 >= 1 -> kStepBoardB (UNK_0012f998, verified 0x12f998)
-static const int kStepBoardA[7] = {1, 2, 1, 3, 1, 2, 3};
-static const int kStepBoardB[7] = {4, 5, 4, 6, 4, 5, 6};
+constexpr int kStepBoardA[7] = {1, 2, 1, 3, 1, 2, 3};
+constexpr int kStepBoardB[7] = {4, 5, 4, 6, 4, 5, 6};
 
 // @complete
 void AcMainTask::computeStepValues() {
@@ -1132,21 +1132,21 @@ void AcMainTask::computeStepValues() {
 // array of 15 ASCII CFStrings, dataPtrs verified contiguous @ 0x10a6a4). Note
 // the two warp variants (se17_warp AND se17b_warp) and the gap from se23
 // straight to se25.
-static const char *const kRouletteSeNames[15] = {"se11_roulapp",
-                                                 "se12_roulturn",
-                                                 "se13_roulstop",
-                                                 "se14_move",
-                                                 "se15_skill",
-                                                 "se16_wana",
-                                                 "se17_warp",
-                                                 "se17b_warp",
-                                                 "se18_shield",
-                                                 "se19_peace",
-                                                 "se20_peaceopen",
-                                                 "se21_itemget",
-                                                 "se22_goal",
-                                                 "se23_gacha",
-                                                 "se25_quiz_x"};
+constexpr const char *const kRouletteSeNames[15] = {"se11_roulapp",
+                                                    "se12_roulturn",
+                                                    "se13_roulstop",
+                                                    "se14_move",
+                                                    "se15_skill",
+                                                    "se16_wana",
+                                                    "se17_warp",
+                                                    "se17b_warp",
+                                                    "se18_shield",
+                                                    "se19_peace",
+                                                    "se20_peaceopen",
+                                                    "se21_itemget",
+                                                    "se22_goal",
+                                                    "se23_gacha",
+                                                    "se25_quiz_x"};
 
 // @ 0xe2c54 — roulette result-item caption by index (nullptr when index >= 12).
 // The sugoroku roulette-result draw (AcMainSugorokuDraw, FUN_000a3724) looks
@@ -1278,14 +1278,14 @@ void AcMainTask::buildMapPanelLayers() {
 // Byte-verified prerequisite song ids (Ghidra: DAT_0012f9e0 / DAT_0012f9f0,
 // each four consecutive int32 ids). getPathFromPurchased: is queried per id and
 // probed on disk.
-static const int kBonusPrereqSongsA[4] = {
+constexpr int kBonusPrereqSongsA[4] = {
     // DAT_0012f9e0
     200000204,
     200000205,
     200000206,
     200000207 // 0x0bebc2cc..0x0bebc2cf
 };
-static const int kBonusPrereqSongsB[4] = {
+constexpr int kBonusPrereqSongsB[4] = {
     // DAT_0012f9f0
     200000208,
     200000209,

@@ -19,7 +19,7 @@
 
 // The modal open/close (fade) transition duration, shared by
 // startOpenAnimation / startCloseAnimation.
-static const NSTimeInterval kModalAnimationDuration = 0.5;
+constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 @implementation BirthDayViewController
 
