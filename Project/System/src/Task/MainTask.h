@@ -398,7 +398,7 @@ public:
         kSelWaitFadeOut = 0xf,    ///< wait for the fade-out and the loader to stop
         kSelTeardown = 0x10,      ///< tear down once the select SEs finish
     };
-    int m_state = 0;                           // +0xaa4 state-machine field (SelectState)
+    SelectState m_state = kSelSetup;           // +0xaa4 state-machine field
     MusicSelState m_sel = {};                  // +0xaa8 packed per-song select state (seam)
     uint8_t _reservedTail[0xcc1 - 0xae8] = {}; // +0xae8..0xcc1 remaining Setup/layout tail
 

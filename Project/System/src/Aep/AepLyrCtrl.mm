@@ -198,7 +198,7 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
     AepManager &mgr = AepManager::shared(); // Ghidra: AepManager_shared (FUN_0000f1ec)
 
     for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {
-        const int playState = l->m_state;
+        const AnimState playState = l->m_state;
         if (playState == kAnimIdle) {
             continue;
         }

@@ -58,7 +58,7 @@ private:
         kBootStateWaitFadeOut = 8,  // wait for the final fade-out
         kBootStateFinish = 9,       // tear down and hand off to the title
     };
-    int m_state = 0; // +0x48 state machine (BootState)
+    BootState m_state = kBootStateSetup; // +0x48 state machine
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

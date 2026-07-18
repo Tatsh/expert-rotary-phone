@@ -113,7 +113,7 @@ public:
     // (clears the play-state field at +0x58); the arcade map reload calls it on
     // every scene layer before rebuilding.
     void stopPlay() {
-        m_state = 0;
+        m_state = kAnimIdle;
     }
 
     // Freeze this layer on its current frame without unlinking or hiding it:
@@ -123,7 +123,7 @@ public:
     // FUN_0002cb54 (stores 4 at +0x58). The music-select preview pauses its layer
     // this way between songs.
     void pause() {
-        m_state = 4;
+        m_state = kAnimHeld;
     } // @ 0x2cb54
 
     // Stop this layer, optionally leaving it drawn at its current frame. Ghidra:
@@ -182,7 +182,7 @@ protected:
     float m_curFrame;   // +0x40  flCurFrame: current play head
     float m_playSpeed;  // +0x44  flPlaySpeed: signed frame-advance rate (default 1.0)
     int m_clipRect[4];  // +0x48  pReserved48 (0x50/0x54 double as >0 gate words)
-    int m_state;        // +0x58  nState animation play-state (AnimState)
+    AnimState m_state;  // +0x58  nState animation play-state
     bool m_visible;     // +0x59
     uint8_t m_pad5a[2]; // +0x5a
     bool m_finished;    // +0x5c  bFlag59: animation-completed flag (set at end of travel)

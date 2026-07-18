@@ -213,7 +213,7 @@ private:
         kMenuStateWaitFadeOut = 0x13, // wait for the fade-out to finish
         kMenuStateHandoff = 0x14,     // tear down + schedule the sub-task once the SEs finish
     };
-    int m_state = 0;                             // +0x1a8 state-machine state (MenuState)
+    MenuState m_state = kMenuStateSetup;         // +0x1a8 state-machine state
     bool m_infoFlag = false;                     // +0x1ac daily-info screen already shown
     [[maybe_unused]] uint8_t m_pad_tail[3] = {}; // +0x1ad..+0x1b0 tail padding
 };

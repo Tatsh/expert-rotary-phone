@@ -71,7 +71,7 @@ private:
         kTitleStateWaitFadeOut = 8,   // wait for the fade-out to finish
         kTitleStateFinish = 9,        // tear down and hand off to the menu
     };
-    int m_state = 0;                        // +0x48 state machine (TitleState)
+    TitleState m_state = kTitleStateSetup;  // +0x48 state machine
     bool m_state3Built = false;             // +0x4c the title UI has been built
     CustomButton *m_conversionButton = nil; // +0x50 the code-conversion button
 };

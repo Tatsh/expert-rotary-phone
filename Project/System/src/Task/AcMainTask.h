@@ -452,8 +452,8 @@ private:
         kAcMainStateMapDrag = 0x10,    // sugoroku map drag-scroll
         kAcMainStateMapDragAlt = 0x4d, // same drag-scroll body, interleaved state
     };
-    int m_state = {}; // +0x9f8 play-data state machine field (AcMainState; update
-                      // switch dispatches on it)
+    AcMainState m_state = {}; // +0x9f8 play-data state machine field (update switch
+                              // dispatches on it)
     // +0x9fc: 4 bytes unused padding (dropped; runtime struct, layout not preserved)
     // Per-frame touch classification produced by update()'s preamble
     // (reconstruction-only: in the binary these are shared stack locals of the

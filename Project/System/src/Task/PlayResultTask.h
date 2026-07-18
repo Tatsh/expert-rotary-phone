@@ -220,10 +220,10 @@ private:
         kResultStateWaitFadeOut = 0xb,   // wait for the fade-out to finish
         kResultStateGotoNext = 0xc,      // tear down + spawn the next scene
     };
-    int m_state = 0;               // +0x394 update() state machine field (ResultState)
-    void *m_shareButton = nullptr; // +0x398 Twitter share UIButton (ARC-bridged raw)
-    void *m_tweeter = nullptr;     // +0x39c TwitterUtil (unmanaged +1)
-                                   // object end +0x3a0
+    ResultState m_state = kResultStateSetup; // +0x394 update() state machine field
+    void *m_shareButton = nullptr;           // +0x398 Twitter share UIButton (ARC-bridged raw)
+    void *m_tweeter = nullptr;               // +0x39c TwitterUtil (unmanaged +1)
+                                             // object end +0x3a0
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

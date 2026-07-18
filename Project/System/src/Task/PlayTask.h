@@ -304,7 +304,7 @@ public:
     int m_backTouchTime = 0;              // +0x9f0 getTimeMillis at back-tap start
     int m_beatPulse = 0;                  // +0x9f4 demo chara-window beat pulse (0..100)
     int m_endPos = 0;                     // +0x9f8 NoteMng position latched at song end
-    int m_state = 0;                      // +0x9fc play state-machine field (PlayState)
+    PlayState m_state = kPlayStateInit;   // +0x9fc play state-machine field
 };
 
 // Play-scene lifecycle seams operating on the play-data block.
