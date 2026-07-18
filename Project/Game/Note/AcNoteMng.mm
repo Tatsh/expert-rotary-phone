@@ -138,7 +138,7 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
 
     // Prime the arcade play state the per-frame update() drives.
     m_spawnCursor = m_records; // +0xfa0c: spawning starts at the first record
-    m_state = 0;
+    m_state = AC_NOTE_STATE_IDLE;
     m_autoPlay = true; // +0x14cc1: InitPlayData enables auto-play (attract/demo default)
     m_endFlag = false;
     m_barCount = 0;
@@ -289,7 +289,7 @@ void AcNoteMng::seekTo(uint32_t pos) {
         return;
     }
 
-    m_state = 2; // seeking
+    m_state = AC_NOTE_STATE_SEEKING; // seeking
     m_frozenElapsed = 0;
     m_holdElapsed = 0;
     m_startThreshold = 0;
@@ -491,8 +491,8 @@ void AcNoteMng::applyBgmSync(const AcNoteRecord *rec) {
 // events fire their side effects.
 // @complete
 void AcNoteMng::spawnNotes(uint32_t pos) {
-    if (static_cast<unsigned>(m_state - 3) <= 1) { // state 3 or 4: nothing left to spawn
-        return;
+    if (m_state == AC_NOTE_STATE_ENDING || m_state == AC_NOTE_STATE_FINISHED) {
+        return; // nothing left to spawn
     }
     AcNoteRecord *rec = m_spawnCursor;
     const uint32_t spawnUntil = static_cast<uint32_t>(m_spawnLookahead + static_cast<int>(pos));
@@ -515,7 +515,7 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
             break;
         case AC_NOTE_EVENT: // 6 (begin the ending)
             makeEvent(rec);
-            m_state = 3;
+            m_state = AC_NOTE_STATE_ENDING;
             break;
         case 10: // 0xa: measure boundary
             if (dt < 4000) {
@@ -567,7 +567,7 @@ void AcNoteMng::judgeActiveNote(AcActiveNote *node, uint32_t pos) {
     case 0xd:
         break; // no side effect; just mark handled below
     case 3:
-        if (m_state != 1) {
+        if (m_state != AC_NOTE_STATE_PLAYING) {
             return;
         }
         triggerBgmStart();
@@ -717,7 +717,7 @@ void AcNoteMng::update() {
 
     const uint32_t pos = static_cast<uint32_t>(getCurrentPosition());
 
-    if (m_state != 4) {
+    if (m_state != AC_NOTE_STATE_FINISHED) {
         spawnNotes(pos);
         AcActiveNote *node = m_activeHead;
         while (node != nullptr) {
@@ -725,7 +725,7 @@ void AcNoteMng::update() {
             retireActiveNote(&node, pos); // advances `node` to the next active note
         }
         if (m_endFlag) {
-            m_state = 4;
+            m_state = AC_NOTE_STATE_FINISHED;
         }
     }
 
@@ -766,7 +766,7 @@ void AcNoteMng::startPlayback() {
     m_startThreshold = 0;
     m_holdElapsed = 0;
     m_holdFlags = 0;
-    m_state = 1;
+    m_state = AC_NOTE_STATE_PLAYING;
 }
 
 // Ghidra: AcNoteMng::Pause @ 0x7b638 — freeze the clock and stop the BGM,
@@ -797,7 +797,7 @@ void AcNoteMng::resume() {
     m_scrollBase = 0;
     m_holdElapsed = 0;
     m_holdFlags ^= 1; // clear bit 0
-    m_state = 1;
+    m_state = AC_NOTE_STATE_PLAYING;
 
     const uint32_t pos = static_cast<uint32_t>(getCurrentPosition());
     if (pos >= static_cast<uint32_t>(m_expectedTimeBase) && m_endFlag == 0) {

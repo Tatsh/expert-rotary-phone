@@ -141,7 +141,7 @@ int NoteMng::initPlayData(const void *data,
     // (Ghidra: InitPlayData 0x336c6 stores 1 to +0x5158, startClock 0x3450c
     // stores 0).
     m_spawnCursor = m_records;
-    m_state = 1;
+    m_state = NOTE_STATE_END_SPAWNED;
     m_endFlag = false;
     m_barCount = 0;
 
@@ -481,7 +481,7 @@ void NoteMng::updateDrawPos(ActiveNote *node, uint32_t pos) {
 void NoteMng::update() {
     const uint32_t pos = (uint32_t)getCurrentPosition();
 
-    if (m_state != 2) {
+    if (m_state != NOTE_STATE_FINISHED) {
         spawnNotes(pos);
         ActiveNote *node = m_activeList;
         while (node != nullptr) {
@@ -489,7 +489,7 @@ void NoteMng::update() {
             retireActiveNote(&node, pos); // advances `node`
         }
         if (m_endFlag) {
-            m_state = 2;
+            m_state = NOTE_STATE_FINISHED;
         }
     }
 
@@ -540,7 +540,7 @@ void NoteMng::startClock() {
     m_scrollTarget = 0;
     m_bgmSynced = false;
     m_holdFlag = false;
-    m_state = 0;
+    m_state = NOTE_STATE_PLAYING;
 }
 
 // Ghidra: FUN_00033fc0 — the playing-state per-frame update. Identical to
@@ -564,7 +564,7 @@ void NoteMng::updatePlaying() {
         }
     }
 
-    if (m_state != 2) {
+    if (m_state != NOTE_STATE_FINISHED) {
         spawnNotes(pos);
         ActiveNote *node = m_activeList;
         while (node != nullptr) {
@@ -572,7 +572,7 @@ void NoteMng::updatePlaying() {
             retireActiveNote(&node, pos);
         }
         if (m_endFlag) {
-            m_state = 2;
+            m_state = NOTE_STATE_FINISHED;
         }
     }
 
@@ -771,11 +771,11 @@ void NoteMng::spawnNotes(uint32_t pos) {
             makeEvent(rec);
             break;
         case NOTE_TYPE_END: // 3: one-shot terminator
-            if (m_state != 0) {
+            if (m_state != NOTE_STATE_PLAYING) {
                 return;
             }
             makeEvent(rec);
-            m_state = 1;
+            m_state = NOTE_STATE_END_SPAWNED;
             return;
         default: // type 2 (tempo) is consumed at register time
             break;

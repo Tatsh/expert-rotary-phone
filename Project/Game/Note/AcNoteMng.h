@@ -32,6 +32,17 @@ enum AcNoteType : uint8_t {
     AC_NOTE_EVENT = 6, // the real end-of-chart marker
 };
 
+// Playback state machine (m_state @ +0xfd50): idle before play, then playing,
+// briefly seeking on a mid-play jump, ending once the chart-end marker is hit,
+// and finished once the field has drained.
+enum AcNoteMngState {
+    AC_NOTE_STATE_IDLE = 0,     // before playback starts / after a reset
+    AC_NOTE_STATE_PLAYING = 1,  // notes scrolling and being spawned
+    AC_NOTE_STATE_SEEKING = 2,  // seeking to a new position
+    AC_NOTE_STATE_ENDING = 3,   // chart-end marker reached; draining the field
+    AC_NOTE_STATE_FINISHED = 4, // playback complete
+};
+
 // One 8-byte arcade chart record.
 struct AcNoteRecord {
     uint32_t tick;     // +0x0  timing position
@@ -254,8 +265,8 @@ private:
 
     // --- per-frame arcade update state (Ghidra offsets into the play-data blob)
     // ---
-    int m_state = 0;                       // +0xfd50  1=playing, 2=seeking, 3=ending, 4=finished
-    int m_scrollTarget = 0;                // +0xfe14  scroll base is smoothed toward this
+    AcNoteMngState m_state = AC_NOTE_STATE_IDLE; // +0xfd50 playback state machine
+    int m_scrollTarget = 0;                      // +0xfe14  scroll base is smoothed toward this
     int m_expectedTimeBase = 0;            // +0xfe10  expected time used by the BGM drift sync
     AcNoteRecord *m_spawnCursor = nullptr; // +0xfa0c  next chart record awaiting spawn
     int m_spawnLookahead = 0;              // +0xfa2c  look-ahead added to the position for spawning

@@ -135,6 +135,14 @@ enum NoteJudge {
 // tally).
 constexpr int kNoteKindCount = 10;
 
+// Playback state machine (m_state @ +0x5158): advances once the end (type 3)
+// note is spawned, then once every note has been retired.
+enum NoteMngState {
+    NOTE_STATE_PLAYING = 0,     // notes still scrolling / being spawned
+    NOTE_STATE_END_SPAWNED = 1, // the end note has been spawned; draining the field
+    NOTE_STATE_FINISHED = 2,    // every note retired; playback complete
+};
+
 // Per-note render descriptor the renderer receives from getNoteObject: the
 // ticks, kind, scale and positions copied out of the ActiveNote plus a
 // freshly-computed NoteRenderKind. Ghidra: copyNoteRenderData @ 0x34758.
@@ -377,8 +385,8 @@ private:
 
     // Parsed chart (records copied out of the decoded payload).
     NoteRecord *m_records = nullptr;
-    NoteRecord *m_spawnCursor = nullptr; // +0x4e20 next chart record awaiting spawn
-    int m_state = 0;                     // +0x5158 0=playing, 1=end spawned, 2=finished
+    NoteRecord *m_spawnCursor = nullptr;       // +0x4e20 next chart record awaiting spawn
+    NoteMngState m_state = NOTE_STATE_PLAYING; // +0x5158 playback state machine
     int m_recordCount = 0;
     uint16_t m_minTempoValue = 0x7fff;
     uint16_t m_maxTempoValue = 0;
