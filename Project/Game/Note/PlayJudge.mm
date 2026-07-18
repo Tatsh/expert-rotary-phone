@@ -35,6 +35,7 @@
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "PlayTask.h"
+#import "neDebugLog.h" // RHYDBG note-draw diagnostics (temporary)
 #import "neGraphics.h"
 
 #include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
@@ -181,6 +182,26 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
     bool judgedAny = false; // Ghidra bVar4: a tap/auto hit graded positive this frame
     bool holdEnded = false; // Ghidra bVar5: a long note completed this frame
     auto boundCount = 0uz;  // Ghidra nBoundCount: fingers bound in non-spatial mode
+
+    // TEMP RHYDBG: once-per-~60-calls summary of the note-draw preconditions.
+    if (NE_DBG_FIRST(3000)) {
+        neDebugLog("PJ draw noteCount=%d state=%d curTime=%d scale=%.2f beat=%.1f "
+                   "toneLyr=[%d %d %d %d] toneFrm=[%d %d %d %d] popkun=%d",
+                   noteCount,
+                   m_state,
+                   curTime,
+                   scale,
+                   beat,
+                   m_toneJudgeLyr[0],
+                   m_toneJudgeLyr[1],
+                   m_toneJudgeLyr[2],
+                   m_toneJudgeLyr[3],
+                   m_toneJudgeFrames[0],
+                   m_toneJudgeFrames[1],
+                   m_toneJudgeFrames[2],
+                   m_toneJudgeFrames[3],
+                   m_popkunSize);
+    }
 
     // Walk active notes nearest-the-judge-line last (high index -> low), so one
     // tap resolves the closest matching note.
@@ -396,6 +417,24 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // its head (x/y) and tail (x2/y2), both toward the same judge target — a tap
         // (head == tail) draws one sprite, a long note stretches head-to-tail. The
         // draw is gated on the note frame being within the phase layer's length.
+        // TEMP RHYDBG: capture the draw gate + a few note draws per run.
+        if (NE_DBG_FIRST(200)) {
+            neDebugLog("PJ note idx=%d phase=%d noteFrame=%d gate=%d(<%d) flags=0x%x kind=%d "
+                       "xy=(%.0f,%.0f) tgt=(%.0f,%.0f) scroll=%.0f layer=%d",
+                       index,
+                       st->phase,
+                       noteFrame,
+                       noteFrame < m_toneJudgeFrames[st->phase],
+                       m_toneJudgeFrames[st->phase],
+                       note.flags,
+                       note.renderKind,
+                       note.x,
+                       note.y,
+                       note.targetX,
+                       note.targetY,
+                       note.scrollStart,
+                       m_toneJudgeLyr[st->phase]);
+        }
         if (noteFrame < m_toneJudgeFrames[st->phase]) {
             const float progress = (1024.0f - note.scrollStart) / 1024.0f;
             const int noteLayer = m_toneJudgeLyr[st->phase]; // +0xc4[phase]
