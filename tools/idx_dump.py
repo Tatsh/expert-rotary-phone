@@ -154,6 +154,93 @@ def decode_pos_channel(data: bytes, pos_channel: int) -> list[tuple[int, int, in
     return keys
 
 
+def layer_numbers(data: bytes, header: Header) -> list[int]:
+    """The per-ordinal entry-index table (``m_layerNumbers``).
+
+    A layer *name*'s ordinal indexes this int16 table to get the entry index its
+    chain starts at (mirrors ``getLyrNo``: ``m_layerNumbers[group][ordinal]``).
+    The table sits immediately after the layer-name block, before the frame
+    entries.
+    """
+    layer_names, cur = parse_names(data, 4 + header.layer_names_off)
+    return list(struct.unpack_from(f'<{len(layer_names)}h', data, cur))
+
+
+def decode_color_channel(data: bytes, color_channel: int) -> list[tuple[int, int, int]]:
+    """Decode a colour/alpha channel (idxBase-relative) to [(frame, colour, alpha)].
+
+    Stride is 2 int16 per key: ``frame`` then a packed word whose low byte is the
+    colour (brightness) and high byte the alpha delta, both read *signed* (the
+    engine uses ``ldrsb``). A negative ``frame`` terminates the list.
+    """
+    if color_channel == 0:
+        return []
+    keys: list[tuple[int, int, int]] = []
+    off = 4 + color_channel
+    while off + 4 <= len(data):
+        frame, packed = struct.unpack_from('<2h', data, off)
+        if frame < 0:
+            break
+        colour = packed & 0xff
+        alpha = (packed >> 8) & 0xff
+        colour = colour - 256 if colour >= 128 else colour
+        alpha = alpha - 256 if alpha >= 128 else alpha
+        keys.append((frame, colour, alpha))
+        off += 4
+        if len(keys) > 4096:
+            break
+    return keys
+
+
+def dump_layer(path: str, layer: str) -> int:
+    """Dump one layer's frame-entry chain with decoded channels.
+
+    Resolves the layer name to its entry index via ``layer_numbers`` and walks
+    the chain (``entries[layerNo]`` until a negative type terminates it, exactly
+    as ``AepManager::layerLength``), printing each entry's blend, frame window,
+    and its position / scale / colour keyframes. The colour keyframes are the
+    interesting bit for selected/unselected state art (e.g. STAR_OPEN vs
+    STAR_OUT).
+    """
+    data = open(path, 'rb').read()
+    header = read_header(data)
+    layer_names, _ = parse_names(data, 4 + header.layer_names_off)
+    if layer not in layer_names:
+        print(f'error: "{layer}" is not a layer name', file=sys.stderr)
+        return 1
+    ordinal = layer_names.index(layer)
+    entry_index = layer_numbers(data, header)[ordinal]
+    start = frame_entries_start(data, header)
+    off = start + entry_index * FRAME_ENTRY_SIZE
+    print(f'{path}')
+    print(f'  layer "{layer}" ordinal={ordinal} entryIndex={entry_index} '
+          f'@0x{off:x}')
+    row = 0
+    while off + FRAME_ENTRY_SIZE <= len(data):
+        e = read_frame_entry(data, off)
+        if e.type < 0:
+            print(f'  [terminator] type={e.type} length(frameEnd)={e.frame_end}')
+            break
+        # A chain is a run of leaf (0) / nested (2) / group (3) entries; anything
+        # else means we have walked off the end into an adjacent section.
+        if e.type not in (0, 2, 3):
+            print(f'  [end of chain: next entry type={e.type} is not a frame entry]')
+            break
+        parts = [f'+{row:<2d} type={e.type} child={e.child} '
+                 f'blend=0x{e.blend_flags & 0xffff:04x} '
+                 f'frames=[{e.frame_start},{e.frame_end})']
+        if e.pos_channel:
+            parts.append(f'pos={decode_pos_channel(data, e.pos_channel)}')
+        if e.scale_channel:
+            parts.append(f'scaleCh=0x{e.scale_channel:x}')
+        if e.color_channel:
+            parts.append(f'colour(frame,c,a)={decode_color_channel(data, e.color_channel)}')
+        print('  ' + ' '.join(parts))
+        off += FRAME_ENTRY_SIZE
+        row += 1
+    return 0
+
+
 def dump(path: str, *, names_only: bool, find: str | None) -> int:
     data = open(path, 'rb').read()
     header = read_header(data)
@@ -221,7 +308,12 @@ def main(argv: list[str]) -> int:
     ap.add_argument('--names', action='store_true', help='print only the name blocks')
     ap.add_argument('--find', metavar='NAME',
                     help='locate a named element (e.g. JACKET00) and its position keyframe')
+    ap.add_argument('--layer', metavar='NAME',
+                    help='dump one layer\'s frame-entry chain with decoded channels '
+                         '(e.g. DIFFICULTY_STAR_OUT)')
     args = ap.parse_args(argv)
+    if args.layer is not None:
+        return dump_layer(args.idx, args.layer)
     return dump(args.idx, names_only=args.names, find=args.find)
 
 
