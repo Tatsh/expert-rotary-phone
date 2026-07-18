@@ -59,7 +59,7 @@
 #import "TaskFactory.h" // MainTaskCreate / PlayResultCreateTask
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager
-#import "neGraphics.h"     // kFixed16One (16.16 fixed-point unit)
+#import "neGraphics.h"     // neGraphics / neTouchPoint
 #import "neTextureForiOS.h"
 
 // --- Play-scene sub-unit seams

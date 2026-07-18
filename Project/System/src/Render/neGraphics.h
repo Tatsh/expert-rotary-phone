@@ -36,25 +36,12 @@ struct neTouchPoint {
     unsigned char pad[2];   // +0x2e..+0x2f (record rounded up to 0x30)
 };
 
-// 1.0 expressed in the 16.16 fixed-point coordinate system used for all touch
-// and layout coordinates (see above): divide a fixed value by this to get
-// pixels, or multiply pixels by it to get a fixed value.
-inline constexpr float kFixed16One = 65536.0f;
-
-// Tap-vs-drag slop for the touch-pool hit tests. Coordinates are 16.16 fixed
-// pixels (see above), so the binary's raw slop values (0xa/0xb) are ~0.0002px:
-// they only register a tap whose down and up points are the EXACT same fixed
-// value. That held on the 2014 device (integer-pixel touch reporting) but fails
-// on modern iOS's sub-pixel coordinates, so a genuine tap that jitters a fraction
-// of a pixel is rejected and the UI feels unresponsive. Under ENABLE_PATCHES,
-// scale the slop to whole pixels (<< 16); the faithful fixed value stays in the
-// plain build. Pass the binary's fixed slop, e.g. `d < NE_TAP_SLOP(0xb)` where d
-// is an absolute |startX - x| difference in 16.16 fixed units.
-#ifdef ENABLE_PATCHES
-#define NE_TAP_SLOP(fixedSlop) ((fixedSlop) << 16)
-#else
-#define NE_TAP_SLOP(fixedSlop) (fixedSlop)
-#endif
+// Tap-vs-drag slop for the touch-pool hit tests, in device pixels. The touch
+// pool stores plain integer pixels (touchBegan vcvt.s32.f32, no fixed-point),
+// so the binary's raw slop values (0xa/0xb ~= 10/11 px) apply directly: a tap is
+// one whose down and up points differ by fewer than that many pixels. Pass the
+// binary's slop, e.g. `d < NE_TAP_SLOP(0xb)` where d is |startX - x| in pixels.
+#define NE_TAP_SLOP(slop) (slop)
 
 // C-ABI accessors the play-judge loop uses on the raw manager pointer. Ghidra:
 // FUN_000124bc reads +0x80 (touch count); FUN_000124c4 reads the +0x00 pool
