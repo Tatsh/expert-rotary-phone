@@ -17,14 +17,10 @@
 #import "neGLView.h"
 #import "neGraphics.h"
 
-// The binary passes each touch's raw locationInView coordinate to neGraphics as
-// a plain int (disasm @ 0x2869c/0x286a0: vcvt.s32.f32, a truncating float->int
-// with NO fixed-point scale); neGraphics::touchBegan then multiplies by the
-// content scale to reach pixels. A prior ×65536 here stored every touch 65536×
-// too large, so no touch ever fell inside the pause hit-circle or a note's
-// judge target.
-static inline int ToViewInt(CGFloat v) {
-    return static_cast<int>(v);
+// Engine touch coordinates are 16.16 fixed point; the render/input manager
+// (neGraphics) scales them to pixels and records them for the play-judge loop.
+static inline int ToFixed(CGFloat v) {
+    return static_cast<int>(v * 65536.0f);
 }
 
 // The most-recently-created view, published for GetInstance. The binary keeps a
@@ -83,10 +79,10 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
     neGraphics &gfx = neGraphics::shared();
     for (UITouch *touch in touches) {
         CGPoint p = [touch locationInView:self];
-        gfx.touchBegan(ToViewInt(p.x),
-                       ToViewInt(p.y),
-                       ToViewInt(CGRectGetWidth(frame)),
-                       ToViewInt(CGRectGetHeight(frame)));
+        gfx.touchBegan(ToFixed(p.x),
+                       ToFixed(p.y),
+                       ToFixed(CGRectGetWidth(frame)),
+                       ToFixed(CGRectGetHeight(frame)));
     }
 }
 
@@ -97,7 +93,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
     for (UITouch *touch in touches) {
         CGPoint p = [touch locationInView:self];
         CGPoint prev = [touch previousLocationInView:self];
-        gfx.touchMoved(ToViewInt(p.x), ToViewInt(p.y), ToViewInt(prev.x), ToViewInt(prev.y));
+        gfx.touchMoved(ToFixed(p.x), ToFixed(p.y), ToFixed(prev.x), ToFixed(prev.y));
     }
 }
 
@@ -112,7 +108,7 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
     for (UITouch *touch in touches) {
         CGPoint p = [touch locationInView:self];
         CGPoint prev = [touch previousLocationInView:self];
-        gfx.touchEnded(ToViewInt(p.x), ToViewInt(p.y), ToViewInt(prev.x), ToViewInt(prev.y));
+        gfx.touchEnded(ToFixed(p.x), ToFixed(p.y), ToFixed(prev.x), ToFixed(prev.y));
     }
 }
 
