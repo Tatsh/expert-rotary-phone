@@ -45,6 +45,14 @@
 #import "PolicyView.h"     // row 2 terms-of-use overlay (@ PTR_PolicyView_0015c0b4)
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
+// The customer-support table's single-section rows.
+typedef NS_ENUM(NSInteger, SettingCustomerRow) {
+    SettingCustomerRowInquiry = 0, // お問い合わせ (Inquiry / FAQ)
+    SettingCustomerRowLegal = 1,   // 特定商取引法に基づく表示 (SCTA notation)
+    SettingCustomerRowTerms = 2,   // 利用規約 (Terms of Use)
+    SettingCustomerRowCount = 3,
+};
+
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
@@ -117,7 +125,7 @@ static UIViewController *RootVC() {
 // @ 0xd39c0
 // @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 3; // お問い合わせ / 特定商取引法に基づく表示 / 利用規約
+    return SettingCustomerRowCount; // お問い合わせ / 特定商取引法に基づく表示 / 利用規約
 }
 
 // @ 0xd39c4 — each row is a rounded, colour-bordered "back_bg_st" button with a
@@ -141,17 +149,17 @@ static UIViewController *RootVC() {
     UIColor *borderColor = nil;
     NSString *title = nil;
     switch (indexPath.row) {
-    case 2: // 利用規約 (Terms of Use)
+    case SettingCustomerRowTerms: // 利用規約 (Terms of Use)
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         borderColor = [UIColor colorWithRed:0.580f green:0.961f blue:0.373f alpha:1.0f];
         title = @"利用規約";
         break;
-    case 1: // 特定商取引法に基づく表示 (SCTA notation)
+    case SettingCustomerRowLegal: // 特定商取引法に基づく表示 (SCTA notation)
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         borderColor = [UIColor colorWithRed:1.0f green:0.733f blue:0.314f alpha:1.0f];
         title = @"特定商取引法に基づく表示";
         break;
-    case 0: // お問い合わせ (Inquiry / FAQ)
+    case SettingCustomerRowInquiry: // お問い合わせ (Inquiry / FAQ)
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         borderColor = [UIColor colorWithRed:1.0f green:0.647f blue:0.627f alpha:1.0f];
         title = @"お問い合わせ";
@@ -203,7 +211,7 @@ static UIViewController *RootVC() {
 // @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     switch (indexPath.row) {
-    case 2: { // 利用規約 -> in-app Terms-of-Use overlay
+    case SettingCustomerRowTerms: { // 利用規約 -> in-app Terms-of-Use overlay
         if (_policyView == nil) {
             // Ghidra: PTR_PolicyView_0015c0b4, -[PolicyView init] @ 0x52a04.
             PolicyView *policy = [[PolicyView alloc] init];
@@ -215,7 +223,7 @@ static UIViewController *RootVC() {
         [RootVC().view addSubview:_policyView.view];
         break;
     }
-    case 1: { // 特定商取引法に基づく表示 -> KONAMI TOKUSHO page
+    case SettingCustomerRowLegal: { // 特定商取引法に基づく表示 -> KONAMI TOKUSHO page
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
         [[UIApplication sharedApplication]
                       openURL:[NSURL URLWithString:@"http://license.konami.com/TOKUSHO/"
@@ -229,7 +237,7 @@ static UIViewController *RootVC() {
 #endif
         break;
     }
-    case 0: { // お問い合わせ -> FAQ page
+    case SettingCustomerRowInquiry: { // お問い合わせ -> FAQ page
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
         [[UIApplication sharedApplication]
                       openURL:[NSURL URLWithString:@"https://www.faq.konami.jp/app/confirm"]
