@@ -105,23 +105,23 @@ void AcMainTask::update(int /*deltaMs*/) {
     m_scrolledPastEnd = static_cast<int>(m_listBottom) <= m_treasurePoint;
 
     switch (m_state) {
-    case 0:
+    case kAcMainStateInit:
         stateInit();
         break;
-    case 1:
+    case kAcMainStateFadeIn:
         stateFadeIn();
         break;
-    case 2:
+    case kAcMainStateTreasureCheck:
         stateTreasureCheck();
         break;
-    case 0x10:
+    case kAcMainStateMapDrag:
         // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
         // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at
         // 0x9a6ba). The remainder of this state's body (board redraw / input
         // arbitration) is not yet reconstructed.
         applyDragScroll(gfx);
         break;
-    case 0x4d:
+    case kAcMainStateMapDragAlt:
         // Same drag-scroll block, interleaved into state 0x4d at 0x9cb56
         // (byte-identical).
         applyDragScroll(gfx);
@@ -223,7 +223,7 @@ void AcMainTask::stateFadeIn() {
     MainViewController *root =
         static_cast<MainViewController *>(neSceneManager::rootViewController());
     [root GotoMapSelect]; // -[MainViewController GotoMapSelect] @ 0xc7d8
-    m_state = 2;
+    m_state = kAcMainStateTreasureCheck;
 }
 
 // case 2 — read the temp-treasure record; if a sub-map is pending (subMapId >=
@@ -425,7 +425,7 @@ void AcMainTask::setupScene() {
     AepManager &aep = AepManager::shared();
     m_aep = &aep;
     neSceneManager::shared();
-    m_padDisplay = neSceneManager::isPadDisplay() ? 1 : 0;
+    m_padDisplay = neSceneManager::isPadDisplay();
 
     // Player progress snapshot.
     m_treasurePoint = [UserSettingData treasurePoint];
@@ -478,7 +478,7 @@ void AcMainTask::setupScene() {
 
     // Device-branched layout constants. this+0x5f7 == 0 is a phone; the extra
     // this+0x614/0x618 seed applies only to a tall (displayType 2) phone.
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = (m_padDisplay);
     if (!pad) {
         if ([[AppDelegate appDelegate] displayType] == 2) {
             m_layoutAnchorZ = 0x6a;
@@ -663,7 +663,7 @@ void AcMainTask::setupResolveHandles() {
     for (int i = 0; i < 11; i++) {
         m_base1Frame[i] = aep.getFrameNo(5, kFrmBase1[i]);
     }
-    if (m_padDisplay != 0) { // pad only
+    if (m_padDisplay) { // pad only
         m_rouletteMoveFrame = aep.getFrameNo(5, "BT_ROULETTE_MOVE");
     }
     for (int i = 0; i < 10; i++) {
@@ -691,7 +691,7 @@ void AcMainTask::setupResolveHandles() {
 // anchor indices were byte-verified against disassembly and the order globals.
 // @complete
 void AcMainTask::setupBuildOverlays() {
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = (m_padDisplay);
 
     // 29 roulette layers -> +0x2c: new(0x60)+ctor+init(5, name, owner=this,
     // order).
@@ -847,16 +847,16 @@ void AcMainTask::loadTreasureMap() {
 
     // Reset the per-map play flags + counters.
     std::memset(&m_selScratch[0], 0xff, 0x3c);
-    m_skillPanelActive = 0;
-    m_buttonPanelActive = 0;
-    m_bgmActive = 1;
-    m_squareAnimActive = 0;
+    m_skillPanelActive = false;
+    m_buttonPanelActive = false;
+    m_bgmActive = true;
+    m_squareAnimActive = false;
     // The binary zeroes +0x5ef with one 32-bit store (Ghidra loadTreasureMap
     // @ 0xa0c34: str.w r1(=0), [r4,#0x5ef]); it spans these four named bytes.
-    m_warpFlash = 0;
-    m_warpAnim = 0;
-    m_wallpaperComplete = 0;
-    m_scrolledPastEnd = 0;
+    m_warpFlash = false;
+    m_warpAnim = false;
+    m_wallpaperComplete = false;
+    m_scrolledPastEnd = false;
 
     // Re-snapshot player progress.
     m_treasurePoint = [UserSettingData treasurePoint];
@@ -974,7 +974,7 @@ void AcMainTask::loadTreasureMap() {
 
     const float halfW = static_cast<float>(m_overlayW / 2);
     const float halfH = static_cast<float>(m_overlayH / 2);
-    const bool pad = (m_padDisplay != 0);
+    const bool pad = (m_padDisplay);
     const float marginTop = pad ? 380.0f : 480.0f; // DAT_000a148c / DAT_000a1490
     const float marginBot = pad ? 480.0f : 300.0f; // DAT_000a1494 / DAT_000a1498
 
@@ -1799,7 +1799,7 @@ static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex
 // is fine: the binary passes m_map (@ +0x4b0) but FUN_000cea50 ignores it.
 // @complete
 void AcMainTask::sugorokuDrawSquareText() {
-    if (m_squareAnimActive != 0) {
+    if (m_squareAnimActive) {
         return; // hide the square label while the select animation runs (+0x5f3)
     }
     const TreasureMap::Node *node = m_curNode;
@@ -2257,7 +2257,7 @@ void AcMainTask::sugorokuDrawBackground() {
 
     int scrollX = static_cast<int>(m_scrollX - m_scrollBaseX);
     int screenW = m_overlayW;
-    bool fadeFl = m_padDisplay != 0;
+    bool fadeFl = m_padDisplay;
     int sx = fadeFl ? 201 : 100;
     int sy = fadeFl ? 200 : 100;
     int bgW = m_bgTileW;
@@ -2530,7 +2530,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 
     // Warp / board-entry horizontal scale (squish animation).
     int warpSX = 30;
-    if (m_warpAnim != 0) {
+    if (m_warpAnim) {
         // Bounce using the active roulette layer's frame counter. Ghidra
         // sugorokuDrawPlayerAndUi @ 0xa53a4: ldr r0,[this,#0x70] (m_rouletteLayers[17]),
         // then ldr [r0,#0x3c] (frame count) and vldr.32 [r0,#0x40] (current frame).
@@ -2552,7 +2552,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     }
 
     // Player sprite (hidden during warp flash).
-    if (m_warpFlash == 0) {
+    if (!m_warpFlash) {
         drawSprite(mgr,
                    m_charaTex.get(),
                    0,
@@ -2577,7 +2577,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     // Rank badge (types 0..3, stored at +0x8b0; hidden if type >= 4 or during
     // warp flash).
     uint8_t badgeType = m_rankBadgeType;
-    if (badgeType < 4 && m_warpFlash == 0) {
+    if (badgeType < 4 && !m_warpFlash) {
         int badgeLyrHandle = m_iconMental[static_cast<int>(badgeType)].lyr;
         int badgeFrameCnt = m_iconMental[static_cast<int>(badgeType)].frameCount;
         int &frameCtr = m_animFrameCtr;
@@ -2625,7 +2625,7 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
     }
 
     // Roulette result frame (+0x8ac, visible when player is idle).
-    if (m_warpFlash == 0) {
+    if (!m_warpFlash) {
         // +0x8ac is a signed 16-bit field (Ghidra @ 0xa552a/0xa553c: ldrsh.w);
         // assigning the int16_t to int sign-extends exactly like the binary's load.
         int roulVal = m_rouletteMode;
@@ -3232,7 +3232,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
     // are integer (scale*N)/100 (no NEON).
     if (self->m_boardUserNo[kBoardMusicReveal] == child) {
         int px = x, py = y;
-        if (self->m_padDisplay != 0) {
+        if (self->m_padDisplay) {
             px = x + 1;
             py = y - 5;
         }
@@ -3278,7 +3278,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             }
             if (draw) {
                 int lx, ly;
-                if (self->m_padDisplay == 0) { // phone
+                if (!self->m_padDisplay) { // phone
                     lx = x - 0xe;
                     ly = rowY;
                 } else { // pad
@@ -3380,7 +3380,7 @@ void AcMainTask::AcMainSugorokuDraw(int child,
             }
             if (draw) {
                 int lx, ly, sx, sy, ax, ay;
-                if (self->m_padDisplay == 0) { // phone
+                if (!self->m_padDisplay) { // phone
                     lx = baseX - 7;
                     ly = baseY - 7;
                     sx = 100;

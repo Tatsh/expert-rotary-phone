@@ -321,27 +321,27 @@ private:
     float m_playerX = {};       // +0x5cc player board draw x
     float m_playerY = {};       // +0x5d0 player board draw y
     int m_boardMoveState = {};  // +0x5d4 board move / warp state
-    uint8_t m_boardBgmLoaded = {}; // +0x5d8 board BGM loaded flag
+    bool m_boardBgmLoaded = {}; // +0x5d8 board BGM loaded flag
     // +0x5d9: 7 bytes unused padding (dropped; runtime struct, layout not preserved)
-    int m_charaColRight = {};        // +0x5e0 chara-grid right column base index
-    int m_charaColLeft = {};         // +0x5e4 chara-grid left column base index
-    int m_friendAnimFrame = {};      // +0x5e8 friend-meet animation frame
-    uint8_t m_skillPanelActive = {}; // +0x5ec skill-use panel modal (drives sugorokuDrawSkillPanel)
-    uint8_t m_buttonPanelActive = {}; // +0x5ed board-button panel modal (sugorokuDrawButtonHitTest)
-    uint8_t m_bgmActive = {};         // +0x5ee select-BGM active flag
-    uint8_t m_warpFlash = {};         // +0x5ef warp flash gate
-    uint8_t m_warpAnim = {};          // +0x5f0 warp squish animation active
-    uint8_t m_wallpaperComplete = {}; // +0x5f1 all 9 wall pieces owned -> reveal draw enabled
-    uint8_t m_scrolledPastEnd = {};   // +0x5f2 list scrolled-past-end flag (recomputed each frame)
+    int m_charaColRight = {};      // +0x5e0 chara-grid right column base index
+    int m_charaColLeft = {};       // +0x5e4 chara-grid left column base index
+    int m_friendAnimFrame = {};    // +0x5e8 friend-meet animation frame
+    bool m_skillPanelActive = {};  // +0x5ec skill-use panel modal (drives sugorokuDrawSkillPanel)
+    bool m_buttonPanelActive = {}; // +0x5ed board-button panel modal (sugorokuDrawButtonHitTest)
+    bool m_bgmActive = {};         // +0x5ee select-BGM active flag
+    bool m_warpFlash = {};         // +0x5ef warp flash gate
+    bool m_warpAnim = {};          // +0x5f0 warp squish animation active
+    bool m_wallpaperComplete = {}; // +0x5f1 all 9 wall pieces owned -> reveal draw enabled
+    bool m_scrolledPastEnd = {};   // +0x5f2 list scrolled-past-end flag (recomputed each frame)
     // +0x5f3 board-square select animation running; while set, sugorokuDrawSquareText
     // hides the square label and case 0x23 clears it when the +0x6c layer finishes.
     // Accessed as a byte in the binary (strb/ldrb), not an int.
-    uint8_t m_squareAnimActive = {}; // +0x5f3
+    bool m_squareAnimActive = {}; // +0x5f3
     // +0x5f4: 3 bytes unused padding (dropped; runtime struct, layout not preserved)
-    uint8_t m_padDisplay = {}; // +0x5f7 iPad display flag
-    uint8_t m_revealTexLoaded =
+    bool m_padDisplay = {}; // +0x5f7 iPad display flag
+    bool m_revealTexLoaded =
         {}; // +0x5f8 reveal texture loaded (gates the +0x60-layer reveal, case 0x2c/0x2d)
-    uint8_t m_eventIntroStarted =
+    bool m_eventIntroStarted =
         {};                 // +0x5f9 one-shot: kicked the +0x98 event-intro layer (play once)
     uint8_t m_fadeDir = {}; // +0x5fa transition fade direction
     // +0x5fb: 1 bytes unused padding (dropped; runtime struct, layout not preserved)
@@ -443,8 +443,17 @@ private:
     int m_dlgBtn2W = {};       // +0x9b0 button2 w
     int m_dlgBtn2H = {};       // +0x9b4 button2 h
     int m_dlgLayoutB[16] = {}; // +0x9b8 device-branched dialog/friend layout constants (write-only)
-    int m_state = {};          // +0x9f8 play-data state machine field (update switch
-                               // dispatches on it)
+    // update()'s switch dispatches on this. The values are sparse (from the
+    // binary); states 0x10 and 0x4d share the map drag-scroll body.
+    enum AcMainState {
+        kAcMainStateInit = 0,          // build the select / map scene, start the BGM
+        kAcMainStateFadeIn = 1,        // fade out, restore the BGM stack, push map-select
+        kAcMainStateTreasureCheck = 2, // wait for / load the pending treasure sub-map
+        kAcMainStateMapDrag = 0x10,    // sugoroku map drag-scroll
+        kAcMainStateMapDragAlt = 0x4d, // same drag-scroll body, interleaved state
+    };
+    int m_state = {}; // +0x9f8 play-data state machine field (AcMainState; update
+                      // switch dispatches on it)
     // +0x9fc: 4 bytes unused padding (dropped; runtime struct, layout not preserved)
     // Per-frame touch classification produced by update()'s preamble
     // (reconstruction-only: in the binary these are shared stack locals of the
