@@ -724,14 +724,12 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     note->spawnKind =
         (!m_autoPlay && k < 4) ? static_cast<uint8_t>((0x05040302u >> (k * 8)) & 0xff) : 1;
 
-    // On-screen position. The x / x2 / targetX triplet scales off the base width;
-    // the y / y2 / targetY triplet off the base height. x and y are raw
-    // percentages of the base; the four end/target fields add 150 to the base
-    // before the percentage then subtract 75. Six record bytes (0xe..0x13) drive
-    // the six coordinates — the binary reads them as three 16-bit words
-    // (0xe/0x10/0x12) split into low/high byte lanes by the NEON pack, so the odd
-    // bytes (0xf/0x11/0x13) feed the y triplet. (constants 150/75;
-    // MakeNote @ 0x341a4.)
+    // On-screen position. The hitX / buttonAX / buttonBX triplet scales off the
+    // base width; the hitY / buttonAY / buttonBY triplet off the base height. Six
+    // record bytes (0xe..0x13) drive the six coordinates — the binary reads them
+    // as three 16-bit words (0xe/0x10/0x12) split into low/high byte lanes by the
+    // NEON pack, so the odd bytes (0xf/0x11/0x13) feed the y triplet. (constants
+    // 150/75; MakeNote @ 0x341a4.)
     //
     // The binary derived the base from the drawable size (DAT_00187b78/7c) over
     // the note scale (DAT_00187b80 = UIScreen.scale * 0.5): on the 2014 retina
@@ -744,12 +742,15 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     // identical to the binary on the original hardware, correct on any device.
     const int baseX = AepManager::shared().screenWidth();  // AEP canvas width (authored res)
     const int baseY = AepManager::shared().screenHeight(); // AEP canvas height
-    note->x = static_cast<float>((baseX * recByte(rec, 0xe)) / 100);
-    note->y = static_cast<float>((baseY * recByte(rec, 0xf)) / 100);
-    note->x2 = static_cast<float>(((baseX + 150) * recByte(rec, 0x10)) / 100 - 75);
-    note->y2 = static_cast<float>(((baseY + 150) * recByte(rec, 0x11)) / 100 - 75);
-    note->targetX = static_cast<float>(((baseX + 150) * recByte(rec, 0x12)) / 100 - 75);
-    note->targetY = static_cast<float>(((baseY + 150) * recByte(rec, 0x13)) / 100 - 75);
+    // The intersection (hit target) is a plain percentage of the base, so it
+    // always lands on-screen; the two incoming buttons add 150 to the base before
+    // the percentage then subtract 75, so they can start off the canvas edges.
+    note->hitX = static_cast<float>((baseX * recByte(rec, 0xe)) / 100);
+    note->hitY = static_cast<float>((baseY * recByte(rec, 0xf)) / 100);
+    note->buttonAX = static_cast<float>(((baseX + 150) * recByte(rec, 0x10)) / 100 - 75);
+    note->buttonAY = static_cast<float>(((baseY + 150) * recByte(rec, 0x11)) / 100 - 75);
+    note->buttonBX = static_cast<float>(((baseX + 150) * recByte(rec, 0x12)) / 100 - 75);
+    note->buttonBY = static_cast<float>(((baseY + 150) * recByte(rec, 0x13)) / 100 - 75);
 
     moveToActive(note);
 }
@@ -832,12 +833,12 @@ void NoteMng::getNoteObject(NoteRenderData *out, int index) {
     out->scrollStart = note->scrollStart;
     out->scrollEnd = note->scrollEnd;
     out->spawnKind = note->spawnKind;
-    out->x = note->x;
-    out->y = note->y;
-    out->x2 = note->x2;
-    out->y2 = note->y2;
-    out->targetX = note->targetX;
-    out->targetY = note->targetY;
+    out->hitX = note->hitX;
+    out->hitY = note->hitY;
+    out->buttonAX = note->buttonAX;
+    out->buttonAY = note->buttonAY;
+    out->buttonBX = note->buttonBX;
+    out->buttonBY = note->buttonBY;
 
     // Recompute the render kind: special (chart kind 6..9), long (start < end),
     // else normal.

@@ -235,13 +235,11 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                                 continue; // consumed / empty
                             }
                             // The judge target is the intersection the two buttons
-                            // converge on -- note.x/note.y (pAflPos[0..1]), the same
-                            // point the draw uses. The binary tests the touch against
-                            // local_bc[4]/local_a8 (Ghidra 0x2f4c0), which map to the
-                            // reordered pAflPos[0..1], not note.targetX/targetY (a
-                            // button start).
-                            const float dx = note.x - tx / scale;
-                            const float dy = note.y - ty / scale;
+                            // converge on -- note.hitX/hitY. The binary tests the
+                            // touch against local_bc[4]/local_a8 (Ghidra 0x2f4c0),
+                            // the reordered hit point, not a button start.
+                            const float dx = note.hitX - tx / scale;
+                            const float dy = note.hitY - ty / scale;
                             if (dx * dx + dy * dy < radius * radius) {
                                 if (st->result < 0) {
                                     st->result = nm.judgeNoteHit(note.noteId);
@@ -408,17 +406,16 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             // Each note is two buttons that fly in from opposite sides and meet at
             // the intersection -- the hit target. copyNoteRenderData (Ghidra
             // 0x34758) reorders the six position floats, so the per-frame draw
-            // (0x2f7xx) uses pAflPos[2..3] (note.x2/y2) and pAflPos[4..5]
-            // (note.targetX/targetY) as the two incoming buttons and pAflPos[0..1]
-            // (note.x/y) -- the byte[0xe] plain-percentage field with no +150/-75
+            // (0x2f7xx) uses buttonA/buttonB as the two incoming buttons and the
+            // hit point -- the byte[0xe] plain-percentage field with no +150/-75
             // edge offset -- as the fixed intersection both converge on. The two
             // buttons are authored equidistant from the intersection, so with the
             // same progress they approach from opposite sides at matching speed.
-            const float hitX = note.x;
-            const float hitY = note.y;
+            const float hitX = note.hitX;
+            const float hitY = note.hitY;
             for (int pt = 0; pt < 2; ++pt) {
-                const float nx = (pt == 0) ? note.x2 : note.targetX;
-                const float ny = (pt == 0) ? note.y2 : note.targetY;
+                const float nx = (pt == 0) ? note.buttonAX : note.buttonBX;
+                const float ny = (pt == 0) ? note.buttonAY : note.buttonBY;
                 const int screenX = static_cast<int>(nx + progress * (hitX - nx));
                 const int screenY = static_cast<int>(ny + progress * (hitY - ny));
                 // Arg values resolved from the caller's stack push (0x2f818) mapped
@@ -557,10 +554,10 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // effScale = hitEffectScale/2. Arg tuples and gates traced from the
         // drawLayer callee (0xfd64) against the caller pushes at 0x2fb16 (hit),
         // 0x2fbe2 (burst), 0x2fce0 (base), and the branch tangle 0x2fb84..0x2fce8.
-        // The judge-line effects flash at the intersection (note.x/note.y =
-        // pAflPos[0..1], local_bc[4]/local_a8 in the binary), not note.targetX/Y.
-        const int hx = static_cast<int>(note.x);
-        const int hy = static_cast<int>(note.y);
+        // The judge-line effects flash at the intersection (note.hitX/hitY =
+        // local_bc[4]/local_a8 in the binary), not at a button start.
+        const int hx = static_cast<int>(note.hitX);
+        const int hy = static_cast<int>(note.hitY);
         const int effScale = m_hitEffectScale / 2; // +0x9e0
 
         if (st->phase == 1 && noteFrame < m_effectStateFrames[1]) {

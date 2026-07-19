@@ -97,12 +97,17 @@ struct ActiveNote {
     uint8_t kind;          // +0x1c  note kind (>= 10 marks an event)
     uint8_t kindHi;        // +0x1d
     uint8_t reserved1e[2]; // +0x1e
-    float x;               // +0x20  on-screen position
-    float y;               // +0x24
-    float x2;              // +0x28  hold-note end position
-    float y2;              // +0x2c
-    float targetX;         // +0x30  judge-line target
-    float targetY;         // +0x34
+    float hitX;            // +0x20  the intersection the two buttons converge on --
+    float hitY;            // +0x24  the hit target. Chart byte[0xe]/[0xf] as a plain
+                           //         percentage of the base (no +150/-75), so it
+                           //         always lands on-screen. Taps and judge-line
+                           //         effects test against this point.
+    float buttonAX;        // +0x28  incoming button A start (chart byte[0x10]/[0x11];
+    float buttonAY;        // +0x2c  base+150 then -75, so it can start off the edge)
+    float buttonBX;        // +0x30  incoming button B start (chart byte[0x12]/[0x13];
+    float buttonBY;        // +0x34  same off-edge offset). Both buttons interpolate
+                           //         toward (hitX, hitY). copyNoteRenderData 0x34758
+                           //         reorders these six floats in the descriptor.
     uint16_t flags;        // +0x38  bit 0x80 = judged / inactive
     uint8_t spawnKind;     // +0x3a  1..5 (from the type-6..9 table, else 1)
     uint8_t reserved3b;    // +0x3b
@@ -180,12 +185,12 @@ struct NoteRenderData {
     float scrollStart; // Ghidra flScrollStart (head scroll position)
     float scrollEnd;   // Ghidra flScrollEnd (tail scroll position)
     uint8_t spawnKind;
-    float x;
-    float y;
-    float x2; // hold-note end
-    float y2;
-    float targetX; // judge-line target
-    float targetY;
+    float hitX; // the intersection both buttons converge on -- the hit target
+    float hitY;
+    float buttonAX; // incoming button A start
+    float buttonAY;
+    float buttonBX; // incoming button B start
+    float buttonBY;
 };
 
 class NoteMng {
