@@ -35,6 +35,7 @@
 #import "NoteMng.h"
 #import "PlayJudge.h"
 #import "PlayTask.h"
+#import "neDebugLog.h"
 #import "neGraphics.h"
 
 #include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
@@ -474,6 +475,31 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                     const float len =
                         fade * static_cast<float>(m_barLenScale) + static_cast<float>(m_barLenBase);
                     const int prio = m_barPriority / 2;
+
+                    // Temporary NE_DBG trace to diagnose why the hold bar body does
+                    // not render on device (idevicesyslog). Logs the inputs to both
+                    // bar-segment draws once per button per frame.
+                    NE_DBG(neDebugLog(
+                        "holdbar pt=%d kind=%d flags=0x%x fade=%.3f bodyScaleX=%d capDrawn=%d "
+                        "notePos=(%d,%d) ang=%d hit=(%.0f,%.0f) btn=(%.0f,%.0f) barFrame=%d "
+                        "lenScale=%d lenBase=%d segLyr1=%d",
+                        pt,
+                        note.renderKind,
+                        noteFlags,
+                        static_cast<double>(fade),
+                        static_cast<int>(fade * 100.0f),
+                        fade > 0.0f ? 1 : 0,
+                        screenX,
+                        screenY,
+                        angleDeg,
+                        static_cast<double>(hitX),
+                        static_cast<double>(hitY),
+                        static_cast<double>(nx),
+                        static_cast<double>(ny),
+                        m_barSegFrame,
+                        m_barLenScale,
+                        m_barLenBase,
+                        m_barSegLyr1));
 
                     if (fade > 0.0f) {
                         const int bx = screenX + static_cast<int>(
