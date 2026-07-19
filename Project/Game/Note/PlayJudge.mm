@@ -498,19 +498,21 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                                        2);
                     }
                     // The second segment is the bar body: the same TONE_L1_2_LIGHT
-                    // sprite (m_barSegFrame) stretched along its length. Ghidra
-                    // 0x2fa6a: handle = m_barSegFrame (r10, shared with the cap),
-                    // scaleX = fade*len (the shrinking bar length), scaleY = 100
-                    // (fixed thickness), anchorY = m_barSegLyr1/2. m_barSegLyr1
-                    // (+0x99c) is NOT a layer id -- it is this segment's anchorY
-                    // source; passing it as the handle drew a stray sprite blown up
-                    // by the length (the "huge rings" that grew with the hold).
-                    const int seg2Len = static_cast<int>(fade * len);
+                    // sprite (m_barSegFrame) drawn at `fade` of its natural width so
+                    // it shrinks along its length as the hold drains, at a fixed
+                    // thickness. Ghidra 0x2fa6a: handle = m_barSegFrame (r10, shared
+                    // with the cap), scaleX = fade*100 (a percentage; 0x2fa24
+                    // multiplies fade by d15, and d15 = [0x2f688] = 100.0, NOT the
+                    // bar length `len`), scaleY = 100 (fixed thickness), anchorY =
+                    // m_barSegLyr1/2. `len` positions the cap only, never scales the
+                    // body -- scaling by it drew the bar ~15x off-screen. m_barSegLyr1
+                    // (+0x99c) is NOT a layer id; it is this segment's anchorY source.
+                    const int seg2Scale = static_cast<int>(fade * 100.0f);
                     drawAepFrameEx(&aep,
                                    m_barSegFrame,
                                    screenX,
                                    screenY,
-                                   seg2Len,
+                                   seg2Scale,
                                    100,
                                    angleDeg,
                                    0,
