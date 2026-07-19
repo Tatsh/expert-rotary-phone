@@ -662,6 +662,28 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
     const float flDstH = static_cast<float>(spriteRec[3]) * s * static_cast<float>(sy) / 100.0f;
     const float flPivotX = static_cast<float>(nOfsX) * s * static_cast<float>(sx) / 100.0f;
     const float flPivotY = static_cast<float>(nOfsY) * s * static_cast<float>(sy) / 100.0f;
+    // Temporary NE_DBG trace for the invisible hold bar: TONE_L1_2_LIGHT is the
+    // only srcW==1638 sprite, so this fires only for the bar and prints the render
+    // values (size, colour, alpha, blend, visibility flag, texture slot).
+    NE_DBG(if (spriteRec[2] == 1638) neDebugLog(
+        "OTbar dst=(%d,%d,%.0f,%.0f) srcWH=(%d,%d) sx=%d sy=%d rs=%.3f nColorA=%d alpha=%u "
+        "blend=0x%x vis=%d colorRGB=0x%06x slot=%d tex=%p",
+        dstX,
+        dstY,
+        static_cast<double>(flDstW),
+        static_cast<double>(flDstH),
+        spriteRec[2],
+        spriteRec[3],
+        sx,
+        sy,
+        static_cast<double>(s),
+        nColorA,
+        alpha,
+        blend,
+        visible ? 1 : 0,
+        static_cast<unsigned>(colorRGB) & 0xffffffu,
+        slot,
+        static_cast<const void *>(frames)));
     drawAepSpriteClipped(frames,
                          spriteRec[0],
                          spriteRec[1],
