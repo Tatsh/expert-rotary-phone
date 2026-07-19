@@ -320,7 +320,12 @@ void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_
               /*colorHi*/ 100,
               flags, // loopFlags (binary position 13, after colorHi)
               /*blendFlags*/ 0,
-              /*colorRGB*/ 0,
+              // White = no tint. 0 is a black colour-multiply: every layer drawn
+              // through this transform-only overload (the play-field background incl.
+              // BG_PLANTS_GROUND grass, and the score/BPM layers) composited to black.
+              // AepLyrCtrl's full-form draw uses the same 0x00ffffff (updateAndDraw-
+              // AepLayers 0x2c924), and drawAepFrame loads 0xffffffff.
+              /*colorRGB*/ 0x00ffffff,
               /*clipRect*/ nullptr,
               /*context*/ nullptr,
               /*priority*/ static_cast<uint32_t>(root.priority),
