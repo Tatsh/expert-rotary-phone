@@ -56,6 +56,26 @@ enum AepOtCmdType : uint16_t {
     kAepOtCmdText = 6,          // text -> drawAepOtText
 };
 
+// Bits of the AEP blend word (the nVKey blend flags threaded through the frame
+// tree and stored in AepOtSpriteCmd::nVKey). drawAepSpriteClipped extracts the
+// mode selector `(flags & kAepBlendModeMask) >> kAepBlendModeShift` (or forces
+// kAepBlendModeReverseSub when kAepBlendReverseSubtract is set).
+enum AepBlendFlag : uint32_t {
+    kAepBlendAlphaGateBit = 0x20,     // bit 5: gates the per-sprite alpha (blend << 0x1a sign)
+    kAepBlendModeShift = 9,           // the mode selector occupies bit 9
+    kAepBlendModeMask = 0x3ff,        // bits 0..9 hold the mode selector
+    kAepBlendAdditive = 0x200,        // bit 9: additive blend (drawAepSpriteClipped mode 1)
+    kAepBlendReverseSubtract = 0x400, // forces reverse-subtract (mode 2)
+};
+
+// GL blend presets drawAepSpriteClipped selects from the mode field and hands to
+// neDrawTexturedQuad (FUN_00015fb8): straight alpha, additive, reverse-subtract.
+enum AepBlendMode : int {
+    kAepBlendModeStraightAlpha = 0, // GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+    kAepBlendModeAdd = 1,           // GL_ONE, GL_ONE
+    kAepBlendModeReverseSub = 2,    // GL_FUNC_REVERSE_SUBTRACT_OES
+};
+
 struct AepOtSpriteCmd {
     AepOtSpriteCmd *pListNext; // +0x00  priority-bucket link
     AepOtCmdType wFlags;       // +0x04  command type discriminator

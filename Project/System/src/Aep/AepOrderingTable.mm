@@ -576,8 +576,11 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
     slot->setRenderStateSlot(0, nUseClip != 0 ? 1 : 0);
     slot->setRenderStateSlot(1, nUseClip != 0 ? 1 : 0);
 
-    // Blend mode: bit 0x400 forces 2, else (nFlags & 0x3ff) >> 9.
-    const int mode = (nFlags & 0x400) ? 2 : static_cast<int>((nFlags & 0x3ff) >> 9);
+    // Blend mode: kAepBlendReverseSubtract forces mode 2, else the mode selector
+    // held in bits 0..9 (>> kAepBlendModeShift).
+    const int mode = (nFlags & kAepBlendReverseSubtract) ?
+                         kAepBlendModeReverseSub :
+                         static_cast<int>((nFlags & kAepBlendModeMask) >> kAepBlendModeShift);
 
     // Colour: nColor is 0x00RRGGBB; alpha is the nAlpha percentage scaled to 0..255.
     const int red = static_cast<int>((nColor >> 16) & 0xff);
@@ -639,9 +642,9 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
         (rotation & 0xffff) == 0) {
         visible = false;
     }
-    uint32_t maskedAlpha =
-        alpha &
-        static_cast<uint32_t>((static_cast<int>(static_cast<uint32_t>(blend) << 0x1a)) >> 0x1f);
+    // Gate the alpha on kAepBlendAlphaGateBit (the binary sign-extends
+    // blend << 0x1a >> 0x1f, i.e. all-ones only when bit 5 is set).
+    uint32_t maskedAlpha = (blend & kAepBlendAlphaGateBit) ? alpha : 0;
     if (nColorA == 0 && maskedAlpha == 100) {
         return; // fully-opaque untinted no-op: nothing to composite
     }

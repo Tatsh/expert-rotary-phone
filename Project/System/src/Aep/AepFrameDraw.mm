@@ -483,10 +483,10 @@ void AepDrawLayer(AepManager *mgr,
         if (colorVal != 100 || highVal != 100) {
             bf = (entryBlend & 0x30) | blendFlags;
         }
-        uint32_t blend = (bf | (entryBlend & 0x400)) ^ (entryBlend & 0xc0);
+        uint32_t blend = (bf | (entryBlend & kAepBlendReverseSubtract)) ^ (entryBlend & 0xc0);
         if (alpha >= 100) { // byte-verified: cmp #0x64, sub.ge, orr.ge #0x200
             alpha -= 100;
-            blend |= 0x200;
+            blend |= kAepBlendAdditive; // 0x200: additive blend (drawAepSpriteClipped mode 1)
         }
 
         const int childRotArg = static_cast<int>(static_cast<int16_t>(childRotation));
