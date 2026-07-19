@@ -20,6 +20,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "AepManager.h"
 #import "AudioManager.h"
 #import "NoteMng.h"
 #import "neEngineBridge.h"
@@ -723,21 +724,26 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     note->spawnKind =
         (!m_autoPlay && k < 4) ? static_cast<uint8_t>((0x05040302u >> (k * 8)) & 0xff) : 1;
 
-    // On-screen position. MakeNote loads two drawable metrics from the scene
-    // manager and divides each by the UI scale: DAT_00187b78 = front-buffer WIDTH
-    // and DAT_00187b7c = front-buffer HEIGHT (LayoutedGLView @ 0xbb4c stamps them
-    // from GetFrontBufferWidth/Height). The x / x2 / targetX triplet scales off
-    // width; the y / y2 / targetY triplet off height. x and y are raw percentages
-    // of the base; the four end/target fields add 150 to the base before the
-    // percentage then subtract 75. Six record bytes (0xe..0x13) drive the six
-    // coordinates — the binary reads them as three 16-bit words (0xe/0x10/0x12)
-    // split into low/high byte lanes by the NEON pack, so the odd bytes
-    // (0xf/0x11/0x13) feed the y triplet. (constants 150/75; MakeNote @ 0x341a4.)
-    const float scale = neSceneManager::screenScale();
-    const int baseX =
-        static_cast<int>(neSceneManager::screenWidth() / scale); // DAT_00187b78 = width
-    const int baseY =
-        static_cast<int>(neSceneManager::screenHeight() / scale); // DAT_00187b7c = height
+    // On-screen position. The x / x2 / targetX triplet scales off the base width;
+    // the y / y2 / targetY triplet off the base height. x and y are raw
+    // percentages of the base; the four end/target fields add 150 to the base
+    // before the percentage then subtract 75. Six record bytes (0xe..0x13) drive
+    // the six coordinates — the binary reads them as three 16-bit words
+    // (0xe/0x10/0x12) split into low/high byte lanes by the NEON pack, so the odd
+    // bytes (0xf/0x11/0x13) feed the y triplet. (constants 150/75;
+    // MakeNote @ 0x341a4.)
+    //
+    // The binary derived the base from the drawable size (DAT_00187b78/7c) over
+    // the note scale (DAT_00187b80 = UIScreen.scale * 0.5): on the 2014 retina
+    // iPad that resolved to the exact 1536x2048 the sprites are authored for, so
+    // notes landed in the render canvas. This build pins the AEP canvas to that
+    // authored resolution (MainViewController loadView) and stretches it to the
+    // real drawable, so on a larger drawable (e.g. 2048x2732 on a 12.9" iPad Pro)
+    // the old formula pushed the note/intersection coordinates far off the canvas.
+    // Take the base straight from the AEP canvas the notes actually render in:
+    // identical to the binary on the original hardware, correct on any device.
+    const int baseX = AepManager::shared().screenWidth();  // AEP canvas width (authored res)
+    const int baseY = AepManager::shared().screenHeight(); // AEP canvas height
     note->x = static_cast<float>((baseX * recByte(rec, 0xe)) / 100);
     note->y = static_cast<float>((baseY * recByte(rec, 0xf)) / 100);
     note->x2 = static_cast<float>(((baseX + 150) * recByte(rec, 0x10)) / 100 - 75);
