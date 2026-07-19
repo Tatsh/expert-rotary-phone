@@ -497,17 +497,24 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                                        21,
                                        2);
                     }
-                    // The second segment sits at the note, scaled by fade*len.
-                    const int seg2Scale = static_cast<int>(fade * len);
+                    // The second segment is the bar body: the same TONE_L1_2_LIGHT
+                    // sprite (m_barSegFrame) stretched along its length. Ghidra
+                    // 0x2fa6a: handle = m_barSegFrame (r10, shared with the cap),
+                    // scaleX = fade*len (the shrinking bar length), scaleY = 100
+                    // (fixed thickness), anchorY = m_barSegLyr1/2. m_barSegLyr1
+                    // (+0x99c) is NOT a layer id -- it is this segment's anchorY
+                    // source; passing it as the handle drew a stray sprite blown up
+                    // by the length (the "huge rings" that grew with the hold).
+                    const int seg2Len = static_cast<int>(fade * len);
                     drawAepFrameEx(&aep,
-                                   m_barSegLyr1,
+                                   m_barSegFrame,
                                    screenX,
                                    screenY,
-                                   seg2Scale,
-                                   seg2Scale,
+                                   seg2Len,
+                                   100,
                                    angleDeg,
                                    0,
-                                   prio,
+                                   m_barSegLyr1 / 2,
                                    100,
                                    0,
                                    0x200,
