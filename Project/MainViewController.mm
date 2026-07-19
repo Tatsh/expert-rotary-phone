@@ -258,15 +258,25 @@ constexpr float kRenderMinInterval = 1000.0f;
 // device).
 // @complete
 - (void)GotoFriendManage {
+    // Modern iOS forbids adding a CONTAINER view controller's view (a navigation or
+    // split controller) to a hierarchy without parenting it: as the view enters the
+    // window, _associatedViewControllerForwardsAppearanceCallbacks:performHierarchy-
+    // Check: throws and the app aborts. The iOS 8 original (0xcdc8) used a bare
+    // addSubview:; wrap it in the containment API so the controller is a real child
+    // (FriendManageEndCallBack removes it). A plain-VC Goto* does not hit this check.
     if (!neSceneManager::isPadDisplay()) {
         FriendMngTopViewController *content = [FriendMngTopViewController alloc];
         _friendMngNaviCtrl = [content initAtNavigationController];
+        [self addChildViewController:_friendMngNaviCtrl];
         [self.view addSubview:_friendMngNaviCtrl.view];
+        [_friendMngNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
     } else {
         FriendMngTopSplitViewController *split = [[FriendMngTopSplitViewController alloc] init];
         _friendMngViewCtrl = split;
+        [self addChildViewController:split];
         [self.view addSubview:split.view];
+        [split didMoveToParentViewController:self];
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -346,10 +356,17 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @ 0xcf0c
 // @complete
 - (void)FriendManageEndCallBack {
+    // Unparent the child controller added in GotoFriendManage (its view is already
+    // pulled by endCloseAnimation); nil-ing the ivar alone would leak it via the
+    // retained child relationship.
     if (_friendMngViewCtrl != nil) {
+        [_friendMngViewCtrl willMoveToParentViewController:nil];
+        [_friendMngViewCtrl removeFromParentViewController];
         _friendMngViewCtrl = nil;
     }
     if (_friendMngNaviCtrl != nil) {
+        [_friendMngNaviCtrl willMoveToParentViewController:nil];
+        [_friendMngNaviCtrl removeFromParentViewController];
         _friendMngNaviCtrl = nil;
     }
     [self ResumeLoop];
