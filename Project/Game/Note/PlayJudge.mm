@@ -234,8 +234,14 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                             if (tx < 0.0f || ty < 0.0f) {
                                 continue; // consumed / empty
                             }
-                            const float dx = note.targetX - tx / scale;
-                            const float dy = note.targetY - ty / scale;
+                            // The judge target is the intersection the two buttons
+                            // converge on -- note.x/note.y (pAflPos[0..1]), the same
+                            // point the draw uses. The binary tests the touch against
+                            // local_bc[4]/local_a8 (Ghidra 0x2f4c0), which map to the
+                            // reordered pAflPos[0..1], not note.targetX/targetY (a
+                            // button start).
+                            const float dx = note.x - tx / scale;
+                            const float dy = note.y - ty / scale;
                             if (dx * dx + dy * dy < radius * radius) {
                                 if (st->result < 0) {
                                     st->result = nm.judgeNoteHit(note.noteId);
@@ -399,11 +405,22 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
             const float progress = (1024.0f - note.scrollStart) / 1024.0f;
             const int noteLayer = m_toneJudgeLyr[st->phase]; // +0xc4[phase]
             const int drawScale = m_popkunSize;              // +0x9bc
+            // Each note is two buttons that fly in from opposite sides and meet at
+            // the intersection -- the hit target. copyNoteRenderData (Ghidra
+            // 0x34758) reorders the six position floats, so the per-frame draw
+            // (0x2f7xx) uses pAflPos[2..3] (note.x2/y2) and pAflPos[4..5]
+            // (note.targetX/targetY) as the two incoming buttons and pAflPos[0..1]
+            // (note.x/y) -- the byte[0xe] plain-percentage field with no +150/-75
+            // edge offset -- as the fixed intersection both converge on. The two
+            // buttons are authored equidistant from the intersection, so with the
+            // same progress they approach from opposite sides at matching speed.
+            const float hitX = note.x;
+            const float hitY = note.y;
             for (int pt = 0; pt < 2; ++pt) {
-                const float nx = (pt == 0) ? note.x : note.x2;
-                const float ny = (pt == 0) ? note.y : note.y2;
-                const int screenX = static_cast<int>(nx + progress * (note.targetX - nx));
-                const int screenY = static_cast<int>(ny + progress * (note.targetY - ny));
+                const float nx = (pt == 0) ? note.x2 : note.targetX;
+                const float ny = (pt == 0) ? note.y2 : note.targetY;
+                const int screenX = static_cast<int>(nx + progress * (hitX - nx));
+                const int screenY = static_cast<int>(ny + progress * (hitY - ny));
                 // Arg values resolved from the caller's stack push (0x2f818) mapped
                 // onto drawLayer via the callee's r7-relative reads (0xfd64): layer,
                 // frame, integer x/y, scale on both axes, then the constant tuple
@@ -451,8 +468,8 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                     const float fade =
                         span < 1 ? 0.0f : (span > 2999 ? 1.0f : static_cast<float>(span) / 3000.0f);
 
-                    const int dx = static_cast<int>(nx - note.targetX);
-                    const int dy = static_cast<int>(ny - note.targetY);
+                    const int dx = static_cast<int>(nx - hitX);
+                    const int dy = static_cast<int>(ny - hitY);
                     const double angleRad =
                         (dx == 0) ? (dy < 0 ? -M_PI_2 : M_PI_2) :
                                     std::atan2(static_cast<double>(dy), static_cast<double>(dx));
@@ -540,8 +557,10 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // effScale = hitEffectScale/2. Arg tuples and gates traced from the
         // drawLayer callee (0xfd64) against the caller pushes at 0x2fb16 (hit),
         // 0x2fbe2 (burst), 0x2fce0 (base), and the branch tangle 0x2fb84..0x2fce8.
-        const int hx = static_cast<int>(note.targetX);
-        const int hy = static_cast<int>(note.targetY);
+        // The judge-line effects flash at the intersection (note.x/note.y =
+        // pAflPos[0..1], local_bc[4]/local_a8 in the binary), not note.targetX/Y.
+        const int hx = static_cast<int>(note.x);
+        const int hy = static_cast<int>(note.y);
         const int effScale = m_hitEffectScale / 2; // +0x9e0
 
         if (st->phase == 1 && noteFrame < m_effectStateFrames[1]) {
