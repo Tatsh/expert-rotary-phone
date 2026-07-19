@@ -102,8 +102,10 @@ static UIViewController *RootVC() {
     // this outer table's scroll pan-gesture claims a quick drag before the nested
     // slider can track, so the sliders appear frozen. Delivering content touches
     // immediately (and not cancelling them) lets the sliders drag.
+#ifdef ENABLE_PATCHES
     self.tableView.delaysContentTouches = NO;
     self.tableView.canCancelContentTouches = NO;
+#endif
 
     if (neSceneManager::isPadDisplay()) {
         // The binary writes the top inset twice; the first (-100) is immediately
@@ -344,11 +346,13 @@ static UIViewController *RootVC() {
         }
         _detailView[SettingGameSectionSound].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+#ifdef ENABLE_PATCHES
         // Modern-iOS: let the nested volume sliders receive drags (see initWithStyle).
         UITableView *soundTable =
             static_cast<UITableViewController *>(_detailView[SettingGameSectionSound]).tableView;
         soundTable.delaysContentTouches = NO;
         soundTable.canCancelContentTouches = NO;
+#endif
         [inner addSubview:_detailView[SettingGameSectionSound].view];
         [cell.contentView addSubview:box];
         return cell;
@@ -379,11 +383,13 @@ static UIViewController *RootVC() {
         }
         _detailView[SettingGameSectionEffect].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
+#ifdef ENABLE_PATCHES
         // Modern-iOS: let the nested controls receive drags (see initWithStyle).
         UITableView *effectTable =
             static_cast<UITableViewController *>(_detailView[SettingGameSectionEffect]).tableView;
         effectTable.delaysContentTouches = NO;
         effectTable.canCancelContentTouches = NO;
+#endif
         [inner addSubview:_detailView[SettingGameSectionEffect].view];
         [cell.contentView addSubview:box];
         return cell;
