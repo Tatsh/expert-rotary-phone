@@ -334,8 +334,9 @@ static UIViewController *RootVC() {
         _detailView[0].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
         // Modern-iOS: let the nested volume sliders receive drags (see initWithStyle).
-        _detailView[0].tableView.delaysContentTouches = NO;
-        _detailView[0].tableView.canCancelContentTouches = NO;
+        UITableView *soundTable = static_cast<UITableViewController *>(_detailView[0]).tableView;
+        soundTable.delaysContentTouches = NO;
+        soundTable.canCancelContentTouches = NO;
         [inner addSubview:_detailView[0].view];
         [cell.contentView addSubview:box];
         return cell;
@@ -366,8 +367,9 @@ static UIViewController *RootVC() {
         _detailView[2].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
         // Modern-iOS: let the nested controls receive drags (see initWithStyle).
-        _detailView[2].tableView.delaysContentTouches = NO;
-        _detailView[2].tableView.canCancelContentTouches = NO;
+        UITableView *effectTable = static_cast<UITableViewController *>(_detailView[2]).tableView;
+        effectTable.delaysContentTouches = NO;
+        effectTable.canCancelContentTouches = NO;
         [inner addSubview:_detailView[2].view];
         [cell.contentView addSubview:box];
         return cell;
