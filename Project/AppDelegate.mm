@@ -36,9 +36,6 @@
 #import "neGraphics.h"
 #import "neWindow.h"
 
-// Ghidra: DAT_00187b5a (read in applicationWillResignActive:).
-BOOL gLaunchedFromPush = NO;
-
 @implementation AppDelegate {
     BOOL _isNecessaryToResume;
     void *_mainTask;
@@ -212,8 +209,13 @@ BOOL gLaunchedFromPush = NO;
  * @complete
  */
 - (void)applicationWillResignActive:(UIApplication *)application {
-    NoteMng::shared();
-    if (gLaunchedFromPush) {
+    // The flag the binary tests here (DAT_00187b5a) is the NoteMng singleton's
+    // m_playActive field @ +0x13cb6 -- set by initPlayData, cleared by
+    // PlayNoteMngDetach. When a play session owns the manager, freeze its timeline
+    // (stop the BGM + anchor the play position via m_holdFlag) so locking/unlocking
+    // the screen does not resume the song mid-play; togglePause folds the frozen
+    // span back on the resume. (onResignActivePushHook self-guards if already frozen.)
+    if (NoteMng::shared().isPlayActive()) {
         NoteMng::shared().onResignActivePushHook();
     }
     if (AcNoteMng::shared().isPlaying()) {

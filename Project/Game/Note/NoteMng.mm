@@ -164,6 +164,14 @@ int NoteMng::initPlayData(const void *data,
 
     registerTempoEvents();
     changeTempo(0);
+
+    // Mark the play session as owning the manager. Ghidra InitPlayData tail:
+    // `this[1].pReserved0[0x102] = 1`, i.e. m_playActive @ +0x13cb6 := 1 (the struct
+    // stride 0x13bb4 + 0x102 = 0x13cb6). -[AppDelegate applicationWillResignActive]
+    // reads this flag to freeze play when the app backgrounds; PlayNoteMngDetach
+    // clears it on teardown. Without this set the resign path never saw an active
+    // play, so locking/unlocking the screen resumed the song mid-play.
+    m_playActive = true;
     return 0;
 }
 
