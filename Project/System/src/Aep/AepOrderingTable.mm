@@ -197,8 +197,8 @@ void AepOrderingTable::flush() {
                                 cmd->nOfsY,   // +0x28 int view (ldr): width/height
                                 cmd->nColorA, // +0x2c int view (ldr): colour
                                 static_cast<uint32_t>(cmd->nColorMul),
-                                static_cast<int>(cmd->nUKey),
-                                static_cast<uint32_t>(static_cast<uint16_t>(cmd->nVKey)),
+                                static_cast<int>(cmd->nUKey), // +0x34 rotation (ldrsh: signed)
+                                static_cast<int>(static_cast<uint16_t>(cmd->nVKey)), // +0x36 blend
                                 &cmd->clipRect.nLeft,
                                 cmd->nBlendFlags,
                                 cmd->nColorRGB,
@@ -619,8 +619,8 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                                        int nOfsY,
                                        int nColorA,
                                        uint32_t alpha,
-                                       uint32_t blend,
-                                       int modeFlags,
+                                       int rotation,
+                                       int blend,
                                        const void *clip,
                                        int visFlag,
                                        int colorRGB,
@@ -631,15 +631,17 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
 
     // Natural-scale flag (Ghidra's param_14==1 short-circuit): the binary clears
     // it when the sprite is at its natural 100% scale in both axes — scaled sx/sy
-    // == 100.0 (DAT_00010e14) — with no blend bits set. Otherwise mask the alpha
-    // by the sign of (modeFlags<<0x1a).
+    // == 100.0 (DAT_00010e14) — and is unrotated. The unrotated test is `tst nUKey,
+    // 0xffff` (0x10d12), i.e. the rotation word == 0. Otherwise mask the alpha by the
+    // sign of (blend<<0x1a).
     bool visible = (visFlag != 0);
-    if (visFlag == 1 && aepScale(sx, s) == 100 && aepScale(sy, s) == 100 && (blend & 0xffff) == 0) {
+    if (visFlag == 1 && aepScale(sx, s) == 100 && aepScale(sy, s) == 100 &&
+        (rotation & 0xffff) == 0) {
         visible = false;
     }
     uint32_t maskedAlpha =
         alpha &
-        static_cast<uint32_t>((static_cast<int>(static_cast<uint32_t>(modeFlags) << 0x1a)) >> 0x1f);
+        static_cast<uint32_t>((static_cast<int>(static_cast<uint32_t>(blend) << 0x1a)) >> 0x1f);
     if (nColorA == 0 && maskedAlpha == 100) {
         return; // fully-opaque untinted no-op: nothing to composite
     }
@@ -670,7 +672,7 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
     // so digits and pause art do not flood the log. srcWH identifies each sprite.
     NE_DBG(if (spriteRec[1] >= 6144 && (spriteRec[2] == 1638 || NE_DBG_FIRST(600))) neDebugLog(
         "OTp3 dst=(%d,%d,%.0f,%.0f) srcWH=(%d,%d) sxy=(%d,%d) rs=%.3f nColorA=%d alpha=%u "
-        "blend=0x%x vis=%d colorRGB=0x%06x tex=%p",
+        "rot=%d blend=0x%x vis=%d colorRGB=0x%06x tex=%p",
         dstX,
         dstY,
         static_cast<double>(flDstW),
@@ -682,6 +684,7 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
         static_cast<double>(s),
         nColorA,
         alpha,
+        rotation,
         blend,
         visible ? 1 : 0,
         static_cast<unsigned>(colorRGB) & 0xffffffu,
@@ -695,7 +698,7 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                          static_cast<float>(dstY),
                          flDstW,
                          flDstH,
-                         0,
+                         rotation,
                          flPivotX,
                          flPivotY,
                          nColorA,
