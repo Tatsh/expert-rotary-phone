@@ -200,11 +200,21 @@ void PlayTaskInit(void *playData) {
     task->m_screenHeight = aep.transitionOverlayHeight(); // FUN_0000f4a4 (aep + 0x7f3b00)
 
     neSceneManager::shared();
-    // +0x974 is the UI scale. The binary stores screenScale()'s float bits here
-    // with an integer str (soft-float ABI @ 0x2e394: str.w r1,[r5,#0x974]);
-    // m_uiScale is modelled as a real float (PlayJudge reads it as float), so
-    // assign it directly.
-    task->m_uiScale = neSceneManager::screenScale(); // DAT_00187b80
+    // +0x974 is the UI scale: the pixel<->canvas conversion the hit-tests use.
+    // The binary stored screenScale() here (soft-float str @ 0x2e394); the note
+    // judge divides the touch by it (PlayJudge 0x2f4c0: tx/m_uiScale) and the
+    // pause band multiplies the button position by it (0x2de60: pos*m_uiScale) --
+    // so it is the factor between the canvas the sprites are laid out in and the
+    // device pixels the touch pool stores. On the 2014 retina iPad screenScale()
+    // == drawable/canvas == 1.0, so this matched. This build pins the AEP canvas
+    // to a fixed authored resolution (see NoteMng MakeNote), so on a larger
+    // drawable (e.g. a 12.9" iPad Pro) screenScale() no longer equals that
+    // stretch. Use the real stretch factor drawable/canvas so both hit-tests line
+    // up with the on-screen positions. Identical to the binary on the original
+    // hardware; correct on any device.
+    const float canvasW = static_cast<float>(AepManager::shared().screenWidth());
+    task->m_uiScale = canvasW > 0.0f ? static_cast<float>(neSceneManager::screenWidth()) / canvasW :
+                                       1.0f; // DAT_00187b80 (= screenScale() on 2014 hardware)
 
     // User settings driving the note field / judge.
     task->m_seVolume = [UserSettingData touchSoundVolume];             // +0x9b4
