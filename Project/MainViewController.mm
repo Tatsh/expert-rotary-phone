@@ -67,6 +67,34 @@ constexpr float kRenderMinInterval = 1000.0f;
                                   CustomAlertViewDelegate>
 @end
 
+// Container view-controller present/dismiss helpers. Modern iOS aborts when a
+// UINavigationController's or UISplitViewController's view enters the window
+// without view-controller containment (the appearance-forwarding hierarchy check
+// -_associatedViewControllerForwardsAppearanceCallbacks:... throws), so under
+// ENABLE_PATCHES the child is parented before its view is shown and unparented on
+// teardown. A faithful build reproduces the iOS 8 binary, which showed the view
+// with a bare -addSubview: and used no containment.
+static void MainPresentContainerVC(MainViewController *parent, UIViewController *child) {
+#ifdef ENABLE_PATCHES
+    [parent addChildViewController:child];
+    [parent.view addSubview:child.view];
+    [child didMoveToParentViewController:parent];
+#else
+    [parent.view addSubview:child.view];
+#endif
+}
+
+static void MainDismissContainerVC(UIViewController *child) {
+#ifdef ENABLE_PATCHES
+    [child willMoveToParentViewController:nil];
+    [child removeFromParentViewController];
+#else
+    // A faithful build never parented the child; its view is removed by each
+    // screen's own close animation, as in the binary.
+    (void)child;
+#endif
+}
+
 // .cxx_construct @ 0xf1e8 — compiler-emitted C++ ivar constructor; not
 // hand-written.
 @implementation MainViewController {
@@ -221,17 +249,12 @@ constexpr float kRenderMinInterval = 1000.0f;
         _settingNaviCtrl = [content initAtNavigationController];
         [_settingNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
                                              forBarMetrics:UIBarMetricsDefault];
-        // Modern iOS requires container-VC containment; see GotoFriendManage.
-        [self addChildViewController:_settingNaviCtrl];
-        [self.view addSubview:_settingNaviCtrl.view];
-        [_settingNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _settingNaviCtrl);
         [content startOpenAnimation];
     } else {
         SettingTableSplitViewController *split = [[SettingTableSplitViewController alloc] init];
         _settingViewCtrl = split;
-        [self addChildViewController:split];
-        [self.view addSubview:split.view];
-        [split didMoveToParentViewController:self];
+        MainPresentContainerVC(self, split);
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -248,17 +271,12 @@ constexpr float kRenderMinInterval = 1000.0f;
         [_mapSelectNaviCtrl.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
                  forBarMetrics:UIBarMetricsDefault];
-        // Modern iOS requires container-VC containment; see GotoFriendManage.
-        [self addChildViewController:_mapSelectNaviCtrl];
-        [self.view addSubview:_mapSelectNaviCtrl.view];
-        [_mapSelectNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _mapSelectNaviCtrl);
         [content startOpenAnimation];
     } else {
         MapSelectSplitViewController *split = [[MapSelectSplitViewController alloc] init];
         _mapSelectViewCtrl = split;
-        [self addChildViewController:split];
-        [self.view addSubview:split.view];
-        [split didMoveToParentViewController:self];
+        MainPresentContainerVC(self, split);
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -277,16 +295,12 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         FriendMngTopViewController *content = [FriendMngTopViewController alloc];
         _friendMngNaviCtrl = [content initAtNavigationController];
-        [self addChildViewController:_friendMngNaviCtrl];
-        [self.view addSubview:_friendMngNaviCtrl.view];
-        [_friendMngNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _friendMngNaviCtrl);
         [content startOpenAnimation];
     } else {
         FriendMngTopSplitViewController *split = [[FriendMngTopSplitViewController alloc] init];
         _friendMngViewCtrl = split;
-        [self addChildViewController:split];
-        [self.view addSubview:split.view];
-        [split didMoveToParentViewController:self];
+        MainPresentContainerVC(self, split);
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -316,10 +330,7 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         InputConversionPassViewController *content = [InputConversionPassViewController alloc];
         _inputConvPassNaviCtrl = [content initAtNavigationController];
-        // Modern iOS requires container-VC containment; see GotoFriendManage.
-        [self addChildViewController:_inputConvPassNaviCtrl];
-        [self.view addSubview:_inputConvPassNaviCtrl.view];
-        [_inputConvPassNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _inputConvPassNaviCtrl);
         [content startOpenAnimation];
     } else {
         InputConversionPassViewController *vc = [[InputConversionPassViewController alloc] init];
@@ -345,13 +356,11 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)SettingEndCallBack {
     if (_settingViewCtrl != nil) {
-        [_settingViewCtrl willMoveToParentViewController:nil];
-        [_settingViewCtrl removeFromParentViewController];
+        MainDismissContainerVC(_settingViewCtrl);
         _settingViewCtrl = nil;
     }
     if (_settingNaviCtrl != nil) {
-        [_settingNaviCtrl willMoveToParentViewController:nil];
-        [_settingNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_settingNaviCtrl);
         _settingNaviCtrl = nil;
     }
     _settingViewing = NO;
@@ -362,13 +371,11 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)MapSelectEndCallBack {
     if (_mapSelectViewCtrl != nil) {
-        [_mapSelectViewCtrl willMoveToParentViewController:nil];
-        [_mapSelectViewCtrl removeFromParentViewController];
+        MainDismissContainerVC(_mapSelectViewCtrl);
         _mapSelectViewCtrl = nil;
     }
     if (_mapSelectNaviCtrl != nil) {
-        [_mapSelectNaviCtrl willMoveToParentViewController:nil];
-        [_mapSelectNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_mapSelectNaviCtrl);
         _mapSelectNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -381,13 +388,11 @@ constexpr float kRenderMinInterval = 1000.0f;
     // pulled by endCloseAnimation); nil-ing the ivar alone would leak it via the
     // retained child relationship.
     if (_friendMngViewCtrl != nil) {
-        [_friendMngViewCtrl willMoveToParentViewController:nil];
-        [_friendMngViewCtrl removeFromParentViewController];
+        MainDismissContainerVC(_friendMngViewCtrl);
         _friendMngViewCtrl = nil;
     }
     if (_friendMngNaviCtrl != nil) {
-        [_friendMngNaviCtrl willMoveToParentViewController:nil];
-        [_friendMngNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_friendMngNaviCtrl);
         _friendMngNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -408,8 +413,7 @@ constexpr float kRenderMinInterval = 1000.0f;
         _inputConvPassViewCtrl = nil;
     }
     if (_inputConvPassNaviCtrl != nil) {
-        [_inputConvPassNaviCtrl willMoveToParentViewController:nil];
-        [_inputConvPassNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_inputConvPassNaviCtrl);
         _inputConvPassNaviCtrl = nil;
     }
     self.view.userInteractionEnabled = YES;
@@ -425,17 +429,12 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         PopnLinkTopViewController *content = [PopnLinkTopViewController alloc];
         _popnLinkNaviCtrl = [content initAtNavigationController];
-        // Modern iOS requires container-VC containment; see GotoFriendManage.
-        [self addChildViewController:_popnLinkNaviCtrl];
-        [self.view addSubview:_popnLinkNaviCtrl.view];
-        [_popnLinkNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _popnLinkNaviCtrl);
         [content startOpenAnimation];
     } else {
         PopnLinkTopSplitViewController *split = [[PopnLinkTopSplitViewController alloc] init];
         _popnLinkViewCtrl = split;
-        [self addChildViewController:split];
-        [self.view addSubview:split.view];
-        [split didMoveToParentViewController:self];
+        MainPresentContainerVC(self, split);
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -447,10 +446,7 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         InputNameViewCtrl *content = [InputNameViewCtrl alloc];
         _inputNameNaviCtrl = [content initAtNavigationController];
-        // Modern iOS requires container-VC containment; see GotoFriendManage.
-        [self addChildViewController:_inputNameNaviCtrl];
-        [self.view addSubview:_inputNameNaviCtrl.view];
-        [_inputNameNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _inputNameNaviCtrl);
         [content startOpenAnimation];
     } else {
         InputNameViewCtrl *vc = [[InputNameViewCtrl alloc] init];
@@ -469,10 +465,7 @@ constexpr float kRenderMinInterval = 1000.0f;
                                                   [InviteTopViewControllerPad class];
     InviteTopViewController *content = [[cls alloc] initAtNavigationController];
     _inviteNaviCtrl = (UINavigationController *)content;
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_inviteNaviCtrl];
-    [self.view addSubview:_inviteNaviCtrl.view];
-    [_inviteNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _inviteNaviCtrl);
     [(InviteTopViewController *)content startOpenAnimation];
     [self PauseLoop];
 }
@@ -482,10 +475,7 @@ constexpr float kRenderMinInterval = 1000.0f;
 - (void)GotoArcadeSearch {
     SearchView *content = [SearchView alloc];
     _searchNaviCtrl = [content initAtNavigationController];
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_searchNaviCtrl];
-    [self.view addSubview:_searchNaviCtrl.view];
-    [_searchNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _searchNaviCtrl);
     [content startOpenAnimation];
     [self PauseLoop];
 }
@@ -496,10 +486,7 @@ constexpr float kRenderMinInterval = 1000.0f;
 - (void)GotoFriendScore:(unsigned int)musicId {
     FriendScoreMainView *content = [FriendScoreMainView alloc];
     _friendMngNaviCtrl = [content initAtNavigationControllerWithMusicId:musicId];
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_friendMngNaviCtrl];
-    [self.view addSubview:_friendMngNaviCtrl.view];
-    [_friendMngNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _friendMngNaviCtrl);
     [content startOpenAnimation];
 }
 
@@ -521,13 +508,11 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)PopnLinkEndCallBack {
     if (_popnLinkViewCtrl != nil) {
-        [_popnLinkViewCtrl willMoveToParentViewController:nil];
-        [_popnLinkViewCtrl removeFromParentViewController];
+        MainDismissContainerVC(_popnLinkViewCtrl);
         _popnLinkViewCtrl = nil;
     }
     if (_popnLinkNaviCtrl != nil) {
-        [_popnLinkNaviCtrl willMoveToParentViewController:nil];
-        [_popnLinkNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_popnLinkNaviCtrl);
         _popnLinkNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -540,8 +525,7 @@ constexpr float kRenderMinInterval = 1000.0f;
         _inputNameViewCtrl = nil;
     }
     if (_inputNameNaviCtrl != nil) {
-        [_inputNameNaviCtrl willMoveToParentViewController:nil];
-        [_inputNameNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_inputNameNaviCtrl);
         _inputNameNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -551,8 +535,7 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)InviteCodeEndCallBack {
     if (_inviteNaviCtrl != nil) {
-        [_inviteNaviCtrl willMoveToParentViewController:nil];
-        [_inviteNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_inviteNaviCtrl);
         _inviteNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -562,8 +545,7 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)ArcadeSearchEndCallBack {
     if (_searchNaviCtrl != nil) {
-        [_searchNaviCtrl willMoveToParentViewController:nil];
-        [_searchNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_searchNaviCtrl);
         _searchNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -574,8 +556,7 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)FriendScoreEndCallBack {
     if (_friendMngNaviCtrl != nil) {
-        [_friendMngNaviCtrl willMoveToParentViewController:nil];
-        [_friendMngNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_friendMngNaviCtrl);
         _friendMngNaviCtrl = nil;
     }
 }
@@ -612,10 +593,7 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_recommendNaviCtrl pushViewController:_recommendViewCtrl animated:NO];
     [_recommendNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirec_navbar"]
                                            forBarMetrics:UIBarMetricsDefault];
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_recommendNaviCtrl];
-    [self.view addSubview:_recommendNaviCtrl.view];
-    [_recommendNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _recommendNaviCtrl);
     [_recommendViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -643,10 +621,7 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_sortSelectNaviCtrl pushViewController:_sortSelectViewCtrl animated:NO];
     [_sortSelectNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"m_sort_navbar"]
                                             forBarMetrics:UIBarMetricsDefault];
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_sortSelectNaviCtrl];
-    [self.view addSubview:_sortSelectNaviCtrl.view];
-    [_sortSelectNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _sortSelectNaviCtrl);
     [_sortSelectViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -671,10 +646,7 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_overScoreLogNaviCtrl.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"osl_friend_navbar"]
              forBarMetrics:UIBarMetricsDefault];
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_overScoreLogNaviCtrl];
-    [self.view addSubview:_overScoreLogNaviCtrl.view];
-    [_overScoreLogNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _overScoreLogNaviCtrl);
     [_overScoreLogViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -696,10 +668,7 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_presentBoxNaviCtrl pushViewController:_presentBoxViewCtrl animated:NO];
     [_presentBoxNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pbox_nav_gift"]
                                             forBarMetrics:UIBarMetricsDefault];
-    // Modern iOS requires container-VC containment; see GotoFriendManage.
-    [self addChildViewController:_presentBoxNaviCtrl];
-    [self.view addSubview:_presentBoxNaviCtrl.view];
-    [_presentBoxNaviCtrl didMoveToParentViewController:self];
+    MainPresentContainerVC(self, _presentBoxNaviCtrl);
     [_presentBoxViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -731,18 +700,13 @@ constexpr float kRenderMinInterval = 1000.0f;
         [_acViewerNaviCtrl.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"acv_category_navbar"]
                  forBarMetrics:UIBarMetricsDefault];
-        // Modern iOS requires container-VC containment; see GotoFriendManage.
-        [self addChildViewController:_acViewerNaviCtrl];
-        [self.view addSubview:_acViewerNaviCtrl.view];
-        [_acViewerNaviCtrl didMoveToParentViewController:self];
+        MainPresentContainerVC(self, _acViewerNaviCtrl);
         [content startOpenAnimation];
         [self PauseLoop];
     } else if (_acViewerViewCtrl == nil) {
         AcViewerSplitViewController *split = [[AcViewerSplitViewController alloc] init];
         _acViewerViewCtrl = split;
-        [self addChildViewController:split];
-        [self.view addSubview:split.view];
-        [split didMoveToParentViewController:self];
+        MainPresentContainerVC(self, split);
         [split startOpenAnimation];
     }
 }
@@ -768,8 +732,7 @@ constexpr float kRenderMinInterval = 1000.0f;
         _recommendViewCtrl = nil;
     }
     if (_recommendNaviCtrl != nil) {
-        [_recommendNaviCtrl willMoveToParentViewController:nil];
-        [_recommendNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_recommendNaviCtrl);
         _recommendNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -783,8 +746,7 @@ constexpr float kRenderMinInterval = 1000.0f;
         _sortSelectViewCtrl = nil;
     }
     if (_sortSelectNaviCtrl != nil) {
-        [_sortSelectNaviCtrl willMoveToParentViewController:nil];
-        [_sortSelectNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_sortSelectNaviCtrl);
         _sortSelectNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -798,8 +760,7 @@ constexpr float kRenderMinInterval = 1000.0f;
         _overScoreLogViewCtrl = nil;
     }
     if (_overScoreLogNaviCtrl != nil) {
-        [_overScoreLogNaviCtrl willMoveToParentViewController:nil];
-        [_overScoreLogNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_overScoreLogNaviCtrl);
         _overScoreLogNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -813,8 +774,7 @@ constexpr float kRenderMinInterval = 1000.0f;
         _presentBoxViewCtrl = nil;
     }
     if (_presentBoxNaviCtrl != nil) {
-        [_presentBoxNaviCtrl willMoveToParentViewController:nil];
-        [_presentBoxNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_presentBoxNaviCtrl);
         _presentBoxNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -832,13 +792,11 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)AcViewerEndCallBack {
     if (_acViewerViewCtrl != nil) {
-        [_acViewerViewCtrl willMoveToParentViewController:nil];
-        [_acViewerViewCtrl removeFromParentViewController];
+        MainDismissContainerVC(_acViewerViewCtrl);
         _acViewerViewCtrl = nil;
     }
     if (_acViewerNaviCtrl != nil) {
-        [_acViewerNaviCtrl willMoveToParentViewController:nil];
-        [_acViewerNaviCtrl removeFromParentViewController];
+        MainDismissContainerVC(_acViewerNaviCtrl);
         _acViewerNaviCtrl = nil;
     }
     if (neSceneManager::isPadDisplay()) {
