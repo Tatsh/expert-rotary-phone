@@ -292,6 +292,7 @@ ldid
 ldinext
 ldrb
 ldrd
+ldrh
 ldrsb
 ldrsh
 leetal
