@@ -11,6 +11,7 @@
 #import "AudioManager.h"
 #import "neAVCAPlayer.h"
 #import "neAVSePlayer.h"
+#import "neDebugLog.h"
 
 // Fade thresholds: at or below these the BGM start/stop/pause happens instantly
 // rather than through a fade timer. Ghidra: DAT_0001fe08 / DAT_0001ff50 /
@@ -556,18 +557,37 @@ struct SeVoiceSlot {
 // @complete
 - (RSND_INSTANCE_ID)playSe:(NSString *)name resourceId:(RSND_SOURCE_ID)resourceId {
     if (name == nil && resourceId == static_cast<RSND_SOURCE_ID>(-1)) {
+        // Temporary NE_DBG: a -1 id means the SE never loaded (loadSe returned an error),
+        // so the menu voice was never registered.
+        NE_DBG(neDebugLog("playSe idERR rid=-1 (SE not loaded)"));
         return RSND_INSTANCE_ID_ERROR;
     }
     int group = [self getGroupID:name resourceId:resourceId];
     RSND_INSTANCE_ID handle = [self prepare:name resourceId:resourceId volume:m_seVolume[group]];
     if (handle == static_cast<RSND_INSTANCE_ID>(-1)) {
+        // Temporary NE_DBG: diagnose the silent main-menu mode SEs. A -1 here means
+        // prepare found no free voice or a bad source id.
+        NE_DBG(neDebugLog("playSe prepFAIL rid=0x%x group=%d vol=%.0f",
+                          static_cast<unsigned>(resourceId),
+                          group,
+                          static_cast<double>(m_seVolume[group])));
         return RSND_INSTANCE_ID_ERROR;
     }
+    bool played;
     if (group == 0) {
-        m_caPlayer->play(static_cast<uint32_t>(handle));
+        played = m_caPlayer->play(static_cast<uint32_t>(handle));
     } else {
-        m_seAVPlayer->play(static_cast<uint32_t>(handle));
+        played = m_seAVPlayer->play(static_cast<uint32_t>(handle));
     }
+    // Temporary NE_DBG: group should be 1 for the menu voices; played==0 points at
+    // the AVBus/session, group==0 at a getGroupID (m_seType key) miss, vol==0 at a
+    // volume issue.
+    NE_DBG(neDebugLog("playSe rid=0x%x group=%d vol=%.0f handle=0x%x played=%d",
+                      static_cast<unsigned>(resourceId),
+                      group,
+                      static_cast<double>(m_seVolume[group]),
+                      static_cast<unsigned>(handle),
+                      played ? 1 : 0));
     return handle;
 }
 
