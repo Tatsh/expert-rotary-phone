@@ -476,13 +476,27 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                         fade * static_cast<float>(m_barLenScale) + static_cast<float>(m_barLenBase);
                     const int prio = m_barPriority / 2;
 
+                    // The bar BODY sprite is the wide TONE_L1_2 (m_pauseEyeToneFrm[6],
+                    // atlas 1638x118) -- or the pressed TONE_L1_2_PUSH
+                    // (m_pauseEyeToneFrm[7]) while the button is actively held. Ghidra
+                    // 0x2f7d0-0x2f7d4 selects the body handle: play+0x214 (TONE_L1_2)
+                    // when (flags & 0x300) != 0 or (flags & 0x2f) == 0, else play+0x218
+                    // (TONE_L1_2_PUSH). It is NOT m_barSegFrame (+0x21c = TONE_L1_2_LIGHT,
+                    // the 170x178 glow the cap segment draws): drawing that 170-wide tile
+                    // as the body was the "tiny grey ellipse" bug.
+                    const int barBodyFrame =
+                        ((noteFlags & kFlagHold) != 0 || (noteFlags & kFlagGraded) == 0) ?
+                            m_pauseEyeToneFrm[6] // TONE_L1_2 (+0x214), the wide bar
+                            :
+                            m_pauseEyeToneFrm[7]; // TONE_L1_2_PUSH (+0x218)
+
                     // Temporary NE_DBG trace to diagnose why the hold bar body does
                     // not render on device (idevicesyslog). Logs the inputs to both
                     // bar-segment draws once per button per frame.
                     NE_DBG(neDebugLog(
                         "holdbar pt=%d kind=%d flags=0x%x fade=%.3f bodyScaleX=%d capDrawn=%d "
-                        "notePos=(%d,%d) ang=%d hit=(%.0f,%.0f) btn=(%.0f,%.0f) barFrame=%d "
-                        "lenScale=%d lenBase=%d segLyr1=%d",
+                        "notePos=(%d,%d) ang=%d hit=(%.0f,%.0f) btn=(%.0f,%.0f) capFrame=%d "
+                        "bodyFrame=%d lenScale=%d lenBase=%d segLyr1=%d",
                         pt,
                         note.renderKind,
                         noteFlags,
@@ -497,6 +511,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                         static_cast<double>(nx),
                         static_cast<double>(ny),
                         m_barSegFrame,
+                        barBodyFrame,
                         m_barLenScale,
                         m_barLenBase,
                         m_barSegLyr1));
@@ -523,19 +538,19 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
                                        21,
                                        2);
                     }
-                    // The second segment is the bar body: the same TONE_L1_2_LIGHT
-                    // sprite (m_barSegFrame) drawn at `fade` of its natural width so
-                    // it shrinks along its length as the hold drains, at a fixed
-                    // thickness. Ghidra 0x2fa6a: handle = m_barSegFrame (r10, shared
-                    // with the cap), scaleX = fade*100 (a percentage; 0x2fa24
-                    // multiplies fade by d15, and d15 = [0x2f688] = 100.0, NOT the
-                    // bar length `len`), scaleY = 100 (fixed thickness), anchorY =
-                    // m_barSegLyr1/2. `len` positions the cap only, never scales the
-                    // body -- scaling by it drew the bar ~15x off-screen. m_barSegLyr1
-                    // (+0x99c) is NOT a layer id; it is this segment's anchorY source.
+                    // The second segment is the bar BODY (barBodyFrame, the wide
+                    // TONE_L1_2 / TONE_L1_2_PUSH selected above), drawn from the note
+                    // toward the judge line and scaled along its length by `fade` so it
+                    // drains as the hold plays, at a fixed thickness. Ghidra 0x2fa6a:
+                    // handle = *[sp+0xc8] (the body frame, not m_barSegFrame), scaleX =
+                    // fade*100 (a percentage; 0x2fa24 multiplies fade by d15, and d15 =
+                    // [0x2f688] = 100.0, NOT the bar length `len`), scaleY = 100 (fixed
+                    // thickness), anchorY = m_barSegLyr1/2. `len` positions the cap only,
+                    // never scales the body. m_barSegLyr1 (+0x99c) is NOT a layer id; it
+                    // is this segment's anchorY source.
                     const int seg2Scale = static_cast<int>(fade * 100.0f);
                     drawAepFrameEx(&aep,
-                                   m_barSegFrame,
+                                   barBodyFrame,
                                    screenX,
                                    screenY,
                                    seg2Scale,
