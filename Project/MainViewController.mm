@@ -221,12 +221,17 @@ constexpr float kRenderMinInterval = 1000.0f;
         _settingNaviCtrl = [content initAtNavigationController];
         [_settingNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
                                              forBarMetrics:UIBarMetricsDefault];
+        // Modern iOS requires container-VC containment; see GotoFriendManage.
+        [self addChildViewController:_settingNaviCtrl];
         [self.view addSubview:_settingNaviCtrl.view];
+        [_settingNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
     } else {
         SettingTableSplitViewController *split = [[SettingTableSplitViewController alloc] init];
         _settingViewCtrl = split;
+        [self addChildViewController:split];
         [self.view addSubview:split.view];
+        [split didMoveToParentViewController:self];
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -243,12 +248,17 @@ constexpr float kRenderMinInterval = 1000.0f;
         [_mapSelectNaviCtrl.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
                  forBarMetrics:UIBarMetricsDefault];
+        // Modern iOS requires container-VC containment; see GotoFriendManage.
+        [self addChildViewController:_mapSelectNaviCtrl];
         [self.view addSubview:_mapSelectNaviCtrl.view];
+        [_mapSelectNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
     } else {
         MapSelectSplitViewController *split = [[MapSelectSplitViewController alloc] init];
         _mapSelectViewCtrl = split;
+        [self addChildViewController:split];
         [self.view addSubview:split.view];
+        [split didMoveToParentViewController:self];
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -332,9 +342,13 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)SettingEndCallBack {
     if (_settingViewCtrl != nil) {
+        [_settingViewCtrl willMoveToParentViewController:nil];
+        [_settingViewCtrl removeFromParentViewController];
         _settingViewCtrl = nil;
     }
     if (_settingNaviCtrl != nil) {
+        [_settingNaviCtrl willMoveToParentViewController:nil];
+        [_settingNaviCtrl removeFromParentViewController];
         _settingNaviCtrl = nil;
     }
     _settingViewing = NO;
@@ -345,9 +359,13 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)MapSelectEndCallBack {
     if (_mapSelectViewCtrl != nil) {
+        [_mapSelectViewCtrl willMoveToParentViewController:nil];
+        [_mapSelectViewCtrl removeFromParentViewController];
         _mapSelectViewCtrl = nil;
     }
     if (_mapSelectNaviCtrl != nil) {
+        [_mapSelectNaviCtrl willMoveToParentViewController:nil];
+        [_mapSelectNaviCtrl removeFromParentViewController];
         _mapSelectNaviCtrl = nil;
     }
     [self ResumeLoop];
