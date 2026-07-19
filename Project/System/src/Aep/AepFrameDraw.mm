@@ -207,10 +207,11 @@ static void aepEmitSprite(AepManager *mgr,
     }
     const int16_t *rec = mgr->spriteRecord(groupSlot, child); // this+slot*0x2000+child*8+0x7c1962
 
-    NE_DBG(neDebugLog("aepEmit slot=%d child=%d scale=(%d,%d) wh=(%d,%d) pos=(%d,%d) "
-                      "color=%d alpha=%d rec=(%d,%d,%d,%d)",
+    NE_DBG(neDebugLog("aepEmit slot=%d child=%d prio=%d scale=(%d,%d) wh=(%d,%d) pos=(%d,%d) "
+                      "color=%d alpha=%d blend=0x%x rec=(%d,%d,%d,%d)",
                       groupSlot,
                       child,
+                      static_cast<int>(priority),
                       scaleX,
                       scaleY,
                       w,
@@ -219,6 +220,7 @@ static void aepEmitSprite(AepManager *mgr,
                       y,
                       color,
                       alpha,
+                      static_cast<unsigned>(blend),
                       rec[0],
                       rec[1],
                       rec[2],
