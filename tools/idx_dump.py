@@ -15,6 +15,16 @@ reconstruction's ``AepManager::readIndexFile`` / ``relocateData``):
 * each ``*NamesOff`` points at a NUL-separated string block terminated by an
   empty string; the producer 8-byte-aligns the cursor (by ``idxBase``-relative
   offset) after the block.
+* the frame-name block is immediately followed by the **sprite-record table**:
+  one ``{width, height, atlasU, atlasV}`` (4 ``int16``, stride 8) record per
+  frame name, in frame-name ordinal order. ``getFrameNo(group, name)`` resolves a
+  name to its ordinal and ``spriteRecord(slot, idx)`` (``m_framePos``, stride 8)
+  reads this record — so ``sprite_records()[getFrameNo(name)]`` is the atlas rect
+  a drawn sprite samples. The texture atlas is paged into 2048x2048 pages
+  (``game_cmn_ipad_N.png``); ``atlasV`` runs across pages (page ~ ``atlasV //
+  2048``). Example (``game_cmn_ipad.idx``): ``TONE_00_1`` = 215x215 (a round
+  note), ``TONE_L1_2_LIGHT`` = 1638x118 (the long-note connecting **bar**, tinted
+  to the note colour when drawn).
 * the layer-name block is followed by ``n`` ``int16`` layer ordinals (``n`` =
   number of layer names), then padding to a multiple of 4 ``int16`` (8 bytes);
   the frame-entry array (``AepFrameEntry``, stride 0x24) starts there.
@@ -42,6 +52,8 @@ from dataclasses import dataclass
 
 FRAME_ENTRY_SIZE = 0x24
 POS_KEYFRAME_SIZE = 8  # 4 * int16: frame, x, y, _
+SPRITE_RECORD_SIZE = 8  # 4 * int16: width, height, atlasU, atlasV
+ATLAS_PAGE_SIZE = 2048  # game_cmn_ipad_N.png pages are 2048x2048
 
 
 @dataclass
@@ -98,6 +110,37 @@ def parse_names(data: bytes, file_off: int) -> tuple[list[str], int]:
     if misalign:
         end += 8 - misalign
     return names, end
+
+
+def sprite_records(data: bytes, header: Header) -> list[tuple[int, int, int, int]]:
+    """Decode the sprite-record table into [(width, height, atlasU, atlasV), ...].
+
+    The table follows the frame-name block, one stride-8 record per frame name in
+    frame-name ordinal order. ``getFrameNo(name)`` -> ordinal indexes this table
+    (``spriteRecord`` / ``m_framePos``), so the i-th record is the atlas rect the
+    i-th frame name samples. ``atlasV`` runs across 2048-tall atlas pages.
+
+    Unlike the name-to-name transitions, the records start at the *raw* end of the
+    frame-name block (the byte past the terminating empty string), NOT the 8-byte
+    aligned end ``parse_names`` returns; using the aligned end shifts every record
+    by one int16 pair (e.g. a 215x215 note reads back as 927x1522). Verified
+    against ``game_cmn_ipad.idx``: ``TONE_00_1`` = 215x215, ``TONE_L1_2_LIGHT`` =
+    1638x118.
+    """
+    # Raw end of the frame-name block: scan to the terminating empty string.
+    p = 4 + header.frame_names_off
+    n_names = 0
+    while data[p:p + 1] != b'\x00':
+        p = data.index(b'\x00', p) + 1
+        n_names += 1
+    rec_off = p + 1  # past the terminating empty string's NUL, no 8-alignment
+    records: list[tuple[int, int, int, int]] = []
+    for i in range(n_names):
+        off = rec_off + i * SPRITE_RECORD_SIZE
+        if off + SPRITE_RECORD_SIZE > len(data):
+            break
+        records.append(struct.unpack_from('<4h', data, off))
+    return records
 
 
 def frame_entries_start(data: bytes, header: Header) -> int:
@@ -258,10 +301,16 @@ def dump(path: str, *, names_only: bool, find: str | None) -> int:
           f'user names ({len(user_names)})')
 
     if find is not None:
+        records = sprite_records(data, header)
         for label, block in (('frame', frame_names), ('layer', layer_names),
                              ('user', user_names)):
             if find in block:
-                print(f'  found "{find}" as a {label} name, ordinal {block.index(find)}')
+                ordinal = block.index(find)
+                print(f'  found "{find}" as a {label} name, ordinal {ordinal}')
+                if label == 'frame' and ordinal < len(records):
+                    w, h, u, v = records[ordinal]
+                    print(f'    sprite rect: {w}x{h} at atlas ({u},{v}) '
+                          f'[page ~{v // ATLAS_PAGE_SIZE}]')
         start = frame_entries_start(data, header)
         entries = walk_frame_entries(data, start)
         target = user_names.index(find) if find in user_names else None
@@ -275,6 +324,14 @@ def dump(path: str, *, names_only: bool, find: str | None) -> int:
                       f'firstKey(frame,x,y)={first}{mark}')
         return 0
 
+    records = sprite_records(data, header)
+    print('\nframe names (sprite rect: WxH @ atlasU,atlasV):')
+    for i, n in enumerate(frame_names):
+        if i < len(records):
+            w, h, u, v = records[i]
+            print(f'  [{i:3d}] {n:24s} {w}x{h} @ ({u},{v}) [page ~{v // ATLAS_PAGE_SIZE}]')
+        else:
+            print(f'  [{i:3d}] {n}')
     print('\nlayer names:')
     for i, n in enumerate(layer_names):
         print(f'  [{i:3d}] {n}')
