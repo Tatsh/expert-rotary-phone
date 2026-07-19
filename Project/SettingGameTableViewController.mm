@@ -23,9 +23,9 @@
 //  rounded, coloured container that embeds the detail sub-controller's view.
 //
 //  Rows 1/3/5 embed three sub-controllers -- SoundSettingView, GameEffectView
-//  and PopkunSizeViewCtrl -- each lazily built into _detailView[0/2/4] and
-//  hosted inside the coloured detail container. All three are reconstructed and
-//  wired below.
+//  and PopkunSizeViewCtrl -- each lazily built into its section's _detailView
+//  slot and hosted inside the coloured detail container. All three are
+//  reconstructed and wired below.
 //
 //  Honesty note: panel/label centring in cellForRowAtIndexPath: is exact
 //  (byte-decoded @ 0x89748): cell.frame.size.width * 0.5 (vldr.32/vmul,
@@ -55,6 +55,15 @@ typedef NS_ENUM(NSInteger, SettingGameRow) {
     SettingGameRowCount = 6,
 };
 
+// The lazily-built detail controllers and their content frames are stored per
+// section, keyed by that section's header row (the even rows). The odd detail
+// rows read their section's slot when expanded.
+typedef NS_ENUM(NSInteger, SettingGameSection) {
+    SettingGameSectionSound = SettingGameRowSoundHeader,   // 0
+    SettingGameSectionEffect = SettingGameRowEffectHeader, // 2
+    SettingGameSectionSize = SettingGameRowSizeHeader,     // 4
+};
+
 static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
@@ -64,9 +73,9 @@ static UIViewController *RootVC() {
     NSIndexPath *_selectedIndexPath; // @164 (0xa4)  currently expanded header row
                                      // (retained)
     UIViewController *_detailView[SettingGameRowCount]; // @168 (0xa8)  lazily-built detail
-                                                        // controllers (indices 0/2/4)
-    CGRect _dummyFrm[SettingGameRowCount]; // @192 (0xc0)  per-detail-row content frames (indices
-                                           // 0/2/4)
+                                                        // controllers, keyed by section
+    CGRect _dummyFrm[SettingGameRowCount]; // @192 (0xc0)  per-detail-row content frames, keyed by
+                                           // section
 }
 
 // @ 0x88b08 -- grouped-table styling; iPad content inset tweak; seeds the three
@@ -105,13 +114,14 @@ static UIViewController *RootVC() {
         self.tableView.contentInset = UIEdgeInsetsMake(topInset, 0, 0, 0); // 0x41a00000 / 0
     }
 
-    // Detail-row content frames. x = 15 (iOS 7+) or 5 (pre-iOS 7); width 290.
-    // Heights differ per section: Sound 320, Game-effect 137, Pop-kun size 430.
-    // Only indices 0/2/4 are populated.
+    // Detail-row content frames. x = 15 (iOS 7+) or 5 (pre-iOS 7); width 290
+    // (0x43910000). Heights differ per section: Sound 320 (0x43a00000),
+    // Game-effect 137 (0x43090000), Pop-kun size 430 (0x43d70000). Only the
+    // header-keyed section slots are populated.
     const CGFloat x = (UIDevice.currentDevice.systemVersion.floatValue < 7.0f) ? 5.0f : 15.0f;
-    _dummyFrm[0] = CGRectMake(x, 0.0f, 290.0f, 320.0f); // 0x43910000 / 0x43a00000
-    _dummyFrm[2] = CGRectMake(x, 0.0f, 290.0f, 137.0f); // 0x43910000 / 0x43090000
-    _dummyFrm[4] = CGRectMake(x, 0.0f, 290.0f, 430.0f); // 0x43910000 / 0x43d70000
+    _dummyFrm[SettingGameSectionSound] = CGRectMake(x, 0.0f, 290.0f, 320.0f);
+    _dummyFrm[SettingGameSectionEffect] = CGRectMake(x, 0.0f, 290.0f, 137.0f);
+    _dummyFrm[SettingGameSectionSize] = CGRectMake(x, 0.0f, 290.0f, 430.0f);
 
     return self;
 }
@@ -256,19 +266,19 @@ static UIViewController *RootVC() {
     if (indexPath.row == SettingGameRowSizeDetail) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:4 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
-            return _dummyFrm[4].size.height; // 430
+            return _dummyFrm[SettingGameSectionSize].size.height; // 430
         }
         return 0.0f;
     } else if (indexPath.row == SettingGameRowEffectDetail) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:2 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
-            return _dummyFrm[2].size.height; // 137
+            return _dummyFrm[SettingGameSectionEffect].size.height; // 137
         }
         return 0.0f;
     } else if (indexPath.row == SettingGameRowSoundDetail) {
         NSIndexPath *parent = [NSIndexPath indexPathForRow:0 inSection:indexPath.section];
         if (_selectedIndexPath != nil && [_selectedIndexPath compare:parent] == NSOrderedSame) {
-            return _dummyFrm[0].size.height; // 320
+            return _dummyFrm[SettingGameSectionSound].size.height; // 320
         }
         return 0.0f;
     }
@@ -310,7 +320,7 @@ static UIViewController *RootVC() {
     switch (indexPath.row) {
     case SettingGameRowSoundDetail: {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-        CGRect frm = _dummyFrm[0];
+        CGRect frm = _dummyFrm[SettingGameSectionSound];
         UIView *box = [[UIView alloc] initWithFrame:frm];
         box.layer.borderWidth = 3.0f;
         box.layer.borderColor = [UIColor colorWithRed:1.0f
@@ -328,22 +338,24 @@ static UIViewController *RootVC() {
         inner.backgroundColor = [UIColor clearColor];
         inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
         [box addSubview:inner];
-        if (_detailView[0] == nil) {
-            _detailView[0] = [[SoundSettingView alloc] initWithStyle:UITableViewStyleGrouped];
+        if (_detailView[SettingGameSectionSound] == nil) {
+            _detailView[SettingGameSectionSound] =
+                [[SoundSettingView alloc] initWithStyle:UITableViewStyleGrouped];
         }
-        _detailView[0].view.frame =
+        _detailView[SettingGameSectionSound].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
         // Modern-iOS: let the nested volume sliders receive drags (see initWithStyle).
-        UITableView *soundTable = static_cast<UITableViewController *>(_detailView[0]).tableView;
+        UITableView *soundTable =
+            static_cast<UITableViewController *>(_detailView[SettingGameSectionSound]).tableView;
         soundTable.delaysContentTouches = NO;
         soundTable.canCancelContentTouches = NO;
-        [inner addSubview:_detailView[0].view];
+        [inner addSubview:_detailView[SettingGameSectionSound].view];
         [cell.contentView addSubview:box];
         return cell;
     }
     case SettingGameRowEffectDetail: {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-        CGRect frm = _dummyFrm[2];
+        CGRect frm = _dummyFrm[SettingGameSectionEffect];
         UIView *box = [[UIView alloc] initWithFrame:frm];
         box.layer.borderWidth = 3.0f;
         box.layer.borderColor = [UIColor colorWithRed:1.0f
@@ -361,22 +373,24 @@ static UIViewController *RootVC() {
         inner.backgroundColor = [UIColor clearColor];
         inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 4.0f);
         [box addSubview:inner];
-        if (_detailView[2] == nil) {
-            _detailView[2] = [[GameEffectView alloc] initWithStyle:UITableViewStyleGrouped];
+        if (_detailView[SettingGameSectionEffect] == nil) {
+            _detailView[SettingGameSectionEffect] =
+                [[GameEffectView alloc] initWithStyle:UITableViewStyleGrouped];
         }
-        _detailView[2].view.frame =
+        _detailView[SettingGameSectionEffect].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 4.0f);
         // Modern-iOS: let the nested controls receive drags (see initWithStyle).
-        UITableView *effectTable = static_cast<UITableViewController *>(_detailView[2]).tableView;
+        UITableView *effectTable =
+            static_cast<UITableViewController *>(_detailView[SettingGameSectionEffect]).tableView;
         effectTable.delaysContentTouches = NO;
         effectTable.canCancelContentTouches = NO;
-        [inner addSubview:_detailView[2].view];
+        [inner addSubview:_detailView[SettingGameSectionEffect].view];
         [cell.contentView addSubview:box];
         return cell;
     }
     case SettingGameRowSizeDetail: {
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-        CGRect frm = _dummyFrm[4];
+        CGRect frm = _dummyFrm[SettingGameSectionSize];
         UIView *box = [[UIView alloc] initWithFrame:frm];
         box.layer.borderWidth = 3.0f;
         box.layer.borderColor = [UIColor colorWithRed:0.580392f
@@ -395,12 +409,12 @@ static UIViewController *RootVC() {
         // Row 5 trims 20 from the height (rows 1/3 trim 4).
         inner.frame = CGRectMake(10.0f, 2.0f, frm.size.width - 20.0f, frm.size.height - 20.0f);
         [box addSubview:inner];
-        if (_detailView[4] == nil) {
-            _detailView[4] = [[PopkunSizeViewCtrl alloc] init];
+        if (_detailView[SettingGameSectionSize] == nil) {
+            _detailView[SettingGameSectionSize] = [[PopkunSizeViewCtrl alloc] init];
         }
-        _detailView[4].view.frame =
+        _detailView[SettingGameSectionSize].view.frame =
             CGRectMake(0, 0, frm.size.width - 20.0f, frm.size.height - 20.0f);
-        [inner addSubview:_detailView[4].view];
+        [inner addSubview:_detailView[SettingGameSectionSize].view];
         [cell.contentView addSubview:box];
         return cell;
     }
