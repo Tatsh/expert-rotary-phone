@@ -202,7 +202,8 @@ void AepOrderingTable::flush() {
                                 &cmd->clipRect.nLeft,
                                 cmd->nBlendFlags,
                                 cmd->nColorRGB,
-                                cmd->nBank);
+                                cmd->nBank,
+                                pri); // ordering-table bucket, for the OTp3 trace
                 break;
             case kAepOtCmdSpriteStretch: {
                 // Stretched sprite -> drawAepOtSpriteStretch (FUN_00010e18). Exact
@@ -627,7 +628,8 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                                        const void *clip,
                                        int visFlag,
                                        int colorRGB,
-                                       int slot) {
+                                       int slot,
+                                       int priority) { // priority: the OT bucket, trace-only
     const float s = renderScale();
     const int dstX = aepScale(x, s);
     const int dstY = aepScale(y, s);
@@ -674,8 +676,9 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
     // bar (the only srcW==1638 sprite) always logs; other page-3 sprites are capped
     // so digits and pause art do not flood the log. srcWH identifies each sprite.
     NE_DBG(if (spriteRec[1] >= 6144 && (spriteRec[2] == 1638 || NE_DBG_FIRST(600))) neDebugLog(
-        "OTp3 dst=(%d,%d,%.0f,%.0f) srcWH=(%d,%d) sxy=(%d,%d) rs=%.3f nColorA=%d alpha=%u "
+        "OTp3 prio=%d dst=(%d,%d,%.0f,%.0f) srcWH=(%d,%d) sxy=(%d,%d) rs=%.3f nColorA=%d alpha=%u "
         "rot=%d blend=0x%x vis=%d colorRGB=0x%06x tex=%p",
+        priority,
         dstX,
         dstY,
         static_cast<double>(flDstW),

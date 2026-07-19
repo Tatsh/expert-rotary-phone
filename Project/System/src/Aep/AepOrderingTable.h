@@ -255,7 +255,8 @@ private:
                          const void *clip,
                          int visFlag,
                          int colorRGB,
-                         int slot);
+                         int slot,
+                         int priority);
     void drawAepOtSpriteStretch(neTextureForiOS *pFrames,
                                 int nU,
                                 int nV,
