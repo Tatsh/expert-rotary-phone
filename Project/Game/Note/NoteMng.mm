@@ -15,7 +15,9 @@
 //
 
 #include <cassert>
+#include <cstddef>
 #include <cstring>
+#include <span>
 #include <sys/time.h>
 
 #import <Foundation/Foundation.h>
@@ -65,11 +67,11 @@ inline uint8_t recByte(const NoteRecord *r, int off) {
 // Ghidra: InitPlayData @ 0x335a4. Parse the decoded payload (4-byte header then
 // 20-byte records) into the timeline.
 // @complete
-int NoteMng::initPlayData(const void *data,
-                          int size,
+int NoteMng::initPlayData(std::span<const std::byte> data,
                           void (*missCallback)(void *),
                           void *missCallbackArg) {
-    assert(data != nullptr && size > 0);                 // NoteMng.mm:0x45 (0x335b4/0x335ba)
+    assert(!data.empty()); // NoteMng.mm:0x45 (0x335b4/0x335ba)
+    const int size = static_cast<int>(data.size());
     assert(static_cast<unsigned>(size - 24) <= 0x4e0bu); // NoteMng.mm:0x59 (0x3360c/0x33618): the
                                                          // record span must fit the note pool
 
@@ -84,7 +86,7 @@ int NoteMng::initPlayData(const void *data,
     // field; the BGM start position is armed to the -1 sentinel updatePlaying
     // tests. Ghidra: 0x335d6 stores -1 to +0x13cc8 (before the memset, which
     // stops at +0x13cbc) and 0x335fc stores the header word to +0x13cc0.
-    std::memcpy(&m_hiSpeed, data, sizeof(m_hiSpeed));
+    std::memcpy(&m_hiSpeed, data.data(), sizeof(m_hiSpeed));
     m_bgmStartPos = -1;
 
     // Reset play state.
@@ -101,9 +103,8 @@ int NoteMng::initPlayData(const void *data,
     std::memset(m_tally, 0, sizeof(m_tally));
     std::memset(m_earlyMiss, 0, sizeof(m_earlyMiss));
 
-    const uint8_t *bytes = static_cast<const uint8_t *>(data);
     const int count = (size - 4) / 20;
-    const NoteRecord *src = reinterpret_cast<const NoteRecord *>(bytes + 4);
+    const NoteRecord *src = reinterpret_cast<const NoteRecord *>(data.data() + 4);
 
     // Copy the records and scan for note-total, tempo range and the mark tick.
     m_records = new NoteRecord[count + 1];
@@ -180,7 +181,8 @@ int NoteMng::initPlayData(const void *data,
 int NoteMng::initPlayDataWithData(NSData *data,
                                   void (*missCallback)(void *),
                                   void *missCallbackArg) {
-    return initPlayData(data.bytes, static_cast<int>(data.length), missCallback, missCallbackArg);
+    return initPlayData(
+        {static_cast<const std::byte *>(data.bytes), data.length}, missCallback, missCallbackArg);
 }
 
 // Ghidra: registerTempoEvents @ 0x337e0. Register every tempo (type 2) event

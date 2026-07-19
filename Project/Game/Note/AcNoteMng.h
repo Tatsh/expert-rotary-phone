@@ -11,7 +11,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <span>
 
 #ifdef __OBJC__
 @class NSData;
@@ -119,7 +121,7 @@ public:
     // multiplier for `hiSpeedLevel` (the acvHiSpeed setting, 0..10 -> 1.2x ..
     // 6.0x). Returns 0 on success, -3 if the magic byte is not 'E'. Ghidra:
     // InitPlayData FUN_0007a774.
-    int initPlayData(const void *data, int size, int hiSpeedLevel);
+    int initPlayData(std::span<const std::byte> data, int hiSpeedLevel);
 
 #ifdef __OBJC__
     int initPlayDataWithData(NSData *data, int hiSpeedLevel);

@@ -10,8 +10,10 @@
 //
 
 #include <cassert>
+#include <cstddef>
 #include <cstring>
 #include <ctime>
+#include <span>
 #include <sys/time.h>
 #include <utility>
 
@@ -62,8 +64,9 @@ AcNoteMng &AcNoteMng::shared() {
 // heap array (m_records / m_spawnCursor) for readability. Behaviour, field
 // offsets, and control flow are otherwise disassembly-faithful.
 // @complete
-int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
-    assert(data != nullptr && size > 0); // AcNoteMng.mm:0x59
+int AcNoteMng::initPlayData(std::span<const std::byte> data, int hiSpeedLevel) {
+    assert(!data.empty()); // AcNoteMng.mm:0x59
+    const int size = static_cast<int>(data.size());
 
     m_recordCount = 0;
     m_minTempoValue = 0x7fff;
@@ -79,7 +82,7 @@ int AcNoteMng::initPlayData(const void *data, int size, int hiSpeedLevel) {
         m_hiSpeed = kAcHiSpeed[hiSpeedLevel];
     }
 
-    const uint8_t *bytes = static_cast<const uint8_t *>(data);
+    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data.data());
     // The record-count bound is checked BEFORE the magic byte: the binary runs
     // the 7999 assert (@ 0x7a86e-0x7a87c, bcs -> ___assert_rtn 0x69) first, and
     // only then compares bytes[4] to 'E' (@ 0x7a880-0x7a886). An oversized chart
@@ -183,7 +186,7 @@ void AcNoteMng::initNodePool() {
 }
 
 int AcNoteMng::initPlayDataWithData(NSData *data, int hiSpeedLevel) {
-    return initPlayData(data.bytes, static_cast<int>(data.length), hiSpeedLevel);
+    return initPlayData({static_cast<const std::byte *>(data.bytes), data.length}, hiSpeedLevel);
 }
 
 // Ghidra: FUN_0007aa90 — walk the chart from the first record; register a

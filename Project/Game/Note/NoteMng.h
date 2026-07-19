@@ -24,7 +24,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <span>
 
 #ifdef __OBJC__
 @class NSData;
@@ -201,8 +203,9 @@ public:
     // detectMiss fires when a note scrolls past un-tapped — the play scene passes
     // its gauge-penalty function here. Ghidra: InitPlayData @ 0x335a4 (asserts
     // size validity at NoteMng.mm:0x45/0x59; arg4/arg5 -> +0x104/+0x108).
-    int
-    initPlayData(const void *data, int size, void (*missCallback)(void *), void *missCallbackArg);
+    int initPlayData(std::span<const std::byte> data,
+                     void (*missCallback)(void *),
+                     void *missCallbackArg);
 
 #ifdef __OBJC__
     // Parse a chart straight from an NSData (bytes + length -> initPlayData); the
