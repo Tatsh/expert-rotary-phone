@@ -15,16 +15,17 @@ reconstruction's ``AepManager::readIndexFile`` / ``relocateData``):
 * each ``*NamesOff`` points at a NUL-separated string block terminated by an
   empty string; the producer 8-byte-aligns the cursor (by ``idxBase``-relative
   offset) after the block.
-* the frame-name block is immediately followed by the **sprite-record table**:
-  one ``{width, height, atlasU, atlasV}`` (4 ``int16``, stride 8) record per
-  frame name, in frame-name ordinal order. ``getFrameNo(group, name)`` resolves a
+* the frame-name block's 8-byte-aligned end is the **sprite-record table**: one
+  ``{atlasU, atlasV, width, height}`` (4 ``int16``, stride 8) record per frame
+  name, in frame-name ordinal order (``sprite_records()`` returns them reordered
+  to ``(width, height, atlasU, atlasV)``). ``getFrameNo(group, name)`` resolves a
   name to its ordinal and ``spriteRecord(slot, idx)`` (``m_framePos``, stride 8)
   reads this record — so ``sprite_records()[getFrameNo(name)]`` is the atlas rect
   a drawn sprite samples. The texture atlas is paged into 2048x2048 pages
   (``game_cmn_ipad_N.png``); ``atlasV`` runs across pages (page ~ ``atlasV //
-  2048``). Example (``game_cmn_ipad.idx``): ``TONE_00_1`` = 215x215 (a round
-  note), ``TONE_L1_2_LIGHT`` = 1638x118 (the long-note connecting **bar**, tinted
-  to the note colour when drawn).
+  2048``). Example (``game_cmn_ipad.idx``): ``TONE_00_1`` = 252x252 (a round
+  note), ``TONE_L1_2_LIGHT`` = 170x178 (the long-note **bar** tile, stretched by
+  scaleX and tinted to the note colour when drawn).
 * the layer-name block is followed by ``n`` ``int16`` layer ordinals (``n`` =
   number of layer names), then padding to a multiple of 4 ``int16`` (8 bytes);
   the frame-entry array (``AepFrameEntry``, stride 0x24) starts there.
@@ -52,7 +53,7 @@ from dataclasses import dataclass
 
 FRAME_ENTRY_SIZE = 0x24
 POS_KEYFRAME_SIZE = 8  # 4 * int16: frame, x, y, _
-SPRITE_RECORD_SIZE = 8  # 4 * int16: width, height, atlasU, atlasV
+SPRITE_RECORD_SIZE = 8  # 4 * int16 stored as atlasU, atlasV, width, height
 ATLAS_PAGE_SIZE = 2048  # game_cmn_ipad_N.png pages are 2048x2048
 
 
@@ -120,26 +121,26 @@ def sprite_records(data: bytes, header: Header) -> list[tuple[int, int, int, int
     (``spriteRecord`` / ``m_framePos``), so the i-th record is the atlas rect the
     i-th frame name samples. ``atlasV`` runs across 2048-tall atlas pages.
 
-    Unlike the name-to-name transitions, the records start at the *raw* end of the
-    frame-name block (the byte past the terminating empty string), NOT the 8-byte
-    aligned end ``parse_names`` returns; using the aligned end shifts every record
-    by one int16 pair (e.g. a 215x215 note reads back as 927x1522). Verified
-    against ``game_cmn_ipad.idx``: ``TONE_00_1`` = 215x215, ``TONE_L1_2_LIGHT`` =
-    1638x118.
+    The records begin at the frame-name block's 8-byte-**aligned** end -- the same
+    cursor ``buildAepNameHashTable`` returns and ``loadAepData`` reads them from
+    (``*(short**)(pIndexData+2)``), which ``parse_names`` reproduces. In the file
+    each record is stored ``(atlasU, atlasV, width, height)`` -- the flush
+    ``drawAepOtSprite`` (0x10c90) takes the source width from field 2 (``ldrh
+    [r1,#4]``) and height from field 3; this returns them reordered to ``(width,
+    height, atlasU, atlasV)``. Reading the raw end instead (4 bytes short) shifts
+    the whole table one int16 pair and overflows the atlas for 19 of 218 records in
+    ``game_cmn_ipad.idx``; the aligned base overflows none. Verified sizes there:
+    ``TONE_00_1`` = 252x252 (a round note), ``TONE_L1_2_LIGHT`` = 170x178 (the
+    long-note bar tile, stretched by scaleX when drawn).
     """
-    # Raw end of the frame-name block: scan to the terminating empty string.
-    p = 4 + header.frame_names_off
-    n_names = 0
-    while data[p:p + 1] != b'\x00':
-        p = data.index(b'\x00', p) + 1
-        n_names += 1
-    rec_off = p + 1  # past the terminating empty string's NUL, no 8-alignment
+    frame_names, rec_off = parse_names(data, 4 + header.frame_names_off)
     records: list[tuple[int, int, int, int]] = []
-    for i in range(n_names):
+    for i in range(len(frame_names)):
         off = rec_off + i * SPRITE_RECORD_SIZE
         if off + SPRITE_RECORD_SIZE > len(data):
             break
-        records.append(struct.unpack_from('<4h', data, off))
+        atlas_u, atlas_v, width, height = struct.unpack_from('<4h', data, off)
+        records.append((width, height, atlas_u, atlas_v))
     return records
 
 
@@ -329,7 +330,13 @@ def dump(path: str, *, names_only: bool, find: str | None) -> int:
     for i, n in enumerate(frame_names):
         if i < len(records):
             w, h, u, v = records[i]
-            print(f'  [{i:3d}] {n:24s} {w}x{h} @ ({u},{v}) [page ~{v // ATLAS_PAGE_SIZE}]')
+            # A record whose rect runs past the 2048-wide page (or past the atlas
+            # height) cannot be a real sprite; flag it, since a mis-based table
+            # (reading the raw vs aligned end) shows up as exactly this overflow.
+            fits = 0 <= u and u + w <= ATLAS_PAGE_SIZE and 0 <= v and w > 0 and h > 0
+            flag = '' if fits else '  !ATLAS-OVERFLOW'
+            print(f'  [{i:3d}] {n:24s} {w}x{h} @ ({u},{v}) '
+                  f'[page ~{v // ATLAS_PAGE_SIZE}]{flag}')
         else:
             print(f'  [{i:3d}] {n}')
     print('\nlayer names:')
