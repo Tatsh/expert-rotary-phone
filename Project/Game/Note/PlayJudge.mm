@@ -580,21 +580,6 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
                 if (pt == 0 && m_optLongNoteEffect && (noteFlags & kFlagGraded) != 0 &&
                     (noteFlags & kFlagHold) == 0) {
                     const int effScale = m_hitEffectScale / 2;
-                    // Temporary NE_DBG trace: the long-note "spinning stars" (EFF_HIT_LONG)
-                    // effect executes here but does not render on device. Log the layer,
-                    // frame and position so we can see whether it is off-screen or a bad
-                    // layer/frame.
-                    NE_DBG(
-                        neDebugLog("holdStar flags=0x%x lyr=%d cdFrame=%d pos=(%d,%d) drawScale=%d "
-                                   "effScale=%d effFrames12=%d",
-                                   noteFlags,
-                                   m_effectStateLyr[12],
-                                   m_cdFrame,
-                                   screenX,
-                                   screenY,
-                                   drawScale,
-                                   effScale,
-                                   m_effectStateFrames[12]));
                     aep.drawLayer(m_effectStateLyr[12],
                                   m_cdFrame,
                                   screenX,
