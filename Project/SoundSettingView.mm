@@ -64,6 +64,13 @@ static inline float SoundShortToVolume(short v) {
     return (float)v;
 }
 
+// Private modern-iOS drag-fix helpers (see the "Nested-scroll drag fix" section);
+// declared here because cellForRowAtIndexPath: wires them before their
+// definitions.
+@interface SoundSettingView ()
+- (void)wireSliderDragFix:(UISlider *)slider;
+@end
+
 @implementation SoundSettingView {
     UISlider *_bgmSlider;        // @0xa4  BGM master volume (0..1)
     UISlider *_seSlider;         // @0xa8  SE master volume (0..127)
@@ -271,6 +278,7 @@ static inline float SoundShortToVolume(short v) {
             [_bgmSlider addTarget:self
                            action:@selector(bgmSliderValChanged:)
                  forControlEvents:UIControlEventValueChanged]; // 0x1000
+            [self wireSliderDragFix:_bgmSlider];
             [cell addSubview:_bgmSlider];
         }
 
@@ -286,6 +294,7 @@ static inline float SoundShortToVolume(short v) {
             [_seSlider addTarget:self
                           action:@selector(seSliderValChanged:)
                 forControlEvents:UIControlEventValueChanged];
+            [self wireSliderDragFix:_seSlider];
             [cell addSubview:_seSlider];
         }
 
@@ -301,6 +310,7 @@ static inline float SoundShortToVolume(short v) {
             [_touchSoundSlider addTarget:self
                                   action:@selector(touchSoundSliderValChanged:)
                         forControlEvents:UIControlEventValueChanged];
+            [self wireSliderDragFix:_touchSoundSlider];
             [cell addSubview:_touchSoundSlider];
         }
     }
@@ -440,6 +450,44 @@ static inline float SoundShortToVolume(short v) {
             resourceId:_touchSoundRscId
                 Volume:(float)SoundVolumeToShort(_touchSoundSlider.value)];
     }
+}
+
+#pragma mark - Nested-scroll drag fix (modern iOS, not in the iOS 8 binary)
+
+// The volume sliders live in cells of this table, which is itself embedded in a
+// cell of SettingGameTableViewController's table -- a table inside a table. On
+// current iOS the enclosing scroll views' pan-gesture recognisers claim a drag
+// before the slider can track it, so the sliders appear frozen (the pop-kun-size
+// slider, which sits in a plain view, is unaffected). Delivering content touches
+// immediately (delaysContentTouches = NO on both tables) is not enough for the
+// nested case, so each slider additionally suspends scrolling on every enclosing
+// scroll view while it is being dragged and restores it on release. Scrolling is
+// only disabled for the duration of the drag, so the picker rows below stay
+// reachable.
+- (void)wireSliderDragFix:(UISlider *)slider {
+    [slider addTarget:self
+                  action:@selector(sliderTouchDown:)
+        forControlEvents:UIControlEventTouchDown];
+    [slider addTarget:self
+                  action:@selector(sliderTouchUp:)
+        forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside |
+                         UIControlEventTouchCancel];
+}
+
+- (void)setEnclosingScrollEnabled:(BOOL)enabled forSlider:(UISlider *)slider {
+    for (UIView *view = slider.superview; view != nil; view = view.superview) {
+        if ([view isKindOfClass:[UIScrollView class]]) {
+            ((UIScrollView *)view).scrollEnabled = enabled;
+        }
+    }
+}
+
+- (void)sliderTouchDown:(UISlider *)slider {
+    [self setEnclosingScrollEnabled:NO forSlider:slider];
+}
+
+- (void)sliderTouchUp:(UISlider *)slider {
+    [self setEnclosingScrollEnabled:YES forSlider:slider];
 }
 
 #pragma mark - Slider actions
