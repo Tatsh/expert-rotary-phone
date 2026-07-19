@@ -615,6 +615,11 @@ void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_
                   blend,
                   /*clipRect*/ nullptr,
                   priority,
-                  /*colorRGB*/ 0,
+                  // White (no tint), NOT black: the binary loads 0xffffffff into the
+                  // colorRGB slot (FUN_0000fc58 0xfc76: mov r5,#0xffffffff; str
+                  // [sp,#0x24]) which FUN_000113d0 stores to cmd->nColorRGB. Passing
+                  // 0 multiplied every drawAepFrame sprite to black (the grass and
+                  // other background art rendered black).
+                  /*colorRGB*/ 0xffffffffu,
                   /*visFlag*/ 0);
 }
