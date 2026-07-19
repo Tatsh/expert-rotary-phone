@@ -316,7 +316,10 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         InputConversionPassViewController *content = [InputConversionPassViewController alloc];
         _inputConvPassNaviCtrl = [content initAtNavigationController];
+        // Modern iOS requires container-VC containment; see GotoFriendManage.
+        [self addChildViewController:_inputConvPassNaviCtrl];
         [self.view addSubview:_inputConvPassNaviCtrl.view];
+        [_inputConvPassNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
     } else {
         InputConversionPassViewController *vc = [[InputConversionPassViewController alloc] init];
@@ -405,6 +408,8 @@ constexpr float kRenderMinInterval = 1000.0f;
         _inputConvPassViewCtrl = nil;
     }
     if (_inputConvPassNaviCtrl != nil) {
+        [_inputConvPassNaviCtrl willMoveToParentViewController:nil];
+        [_inputConvPassNaviCtrl removeFromParentViewController];
         _inputConvPassNaviCtrl = nil;
     }
     self.view.userInteractionEnabled = YES;
@@ -420,12 +425,17 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         PopnLinkTopViewController *content = [PopnLinkTopViewController alloc];
         _popnLinkNaviCtrl = [content initAtNavigationController];
+        // Modern iOS requires container-VC containment; see GotoFriendManage.
+        [self addChildViewController:_popnLinkNaviCtrl];
         [self.view addSubview:_popnLinkNaviCtrl.view];
+        [_popnLinkNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
     } else {
         PopnLinkTopSplitViewController *split = [[PopnLinkTopSplitViewController alloc] init];
         _popnLinkViewCtrl = split;
+        [self addChildViewController:split];
         [self.view addSubview:split.view];
+        [split didMoveToParentViewController:self];
         [split startOpenAnimation];
     }
     [self PauseLoop];
@@ -437,7 +447,10 @@ constexpr float kRenderMinInterval = 1000.0f;
     if (!neSceneManager::isPadDisplay()) {
         InputNameViewCtrl *content = [InputNameViewCtrl alloc];
         _inputNameNaviCtrl = [content initAtNavigationController];
+        // Modern iOS requires container-VC containment; see GotoFriendManage.
+        [self addChildViewController:_inputNameNaviCtrl];
         [self.view addSubview:_inputNameNaviCtrl.view];
+        [_inputNameNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
     } else {
         InputNameViewCtrl *vc = [[InputNameViewCtrl alloc] init];
@@ -456,7 +469,10 @@ constexpr float kRenderMinInterval = 1000.0f;
                                                   [InviteTopViewControllerPad class];
     InviteTopViewController *content = [[cls alloc] initAtNavigationController];
     _inviteNaviCtrl = (UINavigationController *)content;
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_inviteNaviCtrl];
     [self.view addSubview:_inviteNaviCtrl.view];
+    [_inviteNaviCtrl didMoveToParentViewController:self];
     [(InviteTopViewController *)content startOpenAnimation];
     [self PauseLoop];
 }
@@ -466,7 +482,10 @@ constexpr float kRenderMinInterval = 1000.0f;
 - (void)GotoArcadeSearch {
     SearchView *content = [SearchView alloc];
     _searchNaviCtrl = [content initAtNavigationController];
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_searchNaviCtrl];
     [self.view addSubview:_searchNaviCtrl.view];
+    [_searchNaviCtrl didMoveToParentViewController:self];
     [content startOpenAnimation];
     [self PauseLoop];
 }
@@ -477,7 +496,10 @@ constexpr float kRenderMinInterval = 1000.0f;
 - (void)GotoFriendScore:(unsigned int)musicId {
     FriendScoreMainView *content = [FriendScoreMainView alloc];
     _friendMngNaviCtrl = [content initAtNavigationControllerWithMusicId:musicId];
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_friendMngNaviCtrl];
     [self.view addSubview:_friendMngNaviCtrl.view];
+    [_friendMngNaviCtrl didMoveToParentViewController:self];
     [content startOpenAnimation];
 }
 
@@ -499,9 +521,13 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)PopnLinkEndCallBack {
     if (_popnLinkViewCtrl != nil) {
+        [_popnLinkViewCtrl willMoveToParentViewController:nil];
+        [_popnLinkViewCtrl removeFromParentViewController];
         _popnLinkViewCtrl = nil;
     }
     if (_popnLinkNaviCtrl != nil) {
+        [_popnLinkNaviCtrl willMoveToParentViewController:nil];
+        [_popnLinkNaviCtrl removeFromParentViewController];
         _popnLinkNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -514,6 +540,8 @@ constexpr float kRenderMinInterval = 1000.0f;
         _inputNameViewCtrl = nil;
     }
     if (_inputNameNaviCtrl != nil) {
+        [_inputNameNaviCtrl willMoveToParentViewController:nil];
+        [_inputNameNaviCtrl removeFromParentViewController];
         _inputNameNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -523,6 +551,8 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)InviteCodeEndCallBack {
     if (_inviteNaviCtrl != nil) {
+        [_inviteNaviCtrl willMoveToParentViewController:nil];
+        [_inviteNaviCtrl removeFromParentViewController];
         _inviteNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -532,6 +562,8 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)ArcadeSearchEndCallBack {
     if (_searchNaviCtrl != nil) {
+        [_searchNaviCtrl willMoveToParentViewController:nil];
+        [_searchNaviCtrl removeFromParentViewController];
         _searchNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -542,6 +574,8 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)FriendScoreEndCallBack {
     if (_friendMngNaviCtrl != nil) {
+        [_friendMngNaviCtrl willMoveToParentViewController:nil];
+        [_friendMngNaviCtrl removeFromParentViewController];
         _friendMngNaviCtrl = nil;
     }
 }
@@ -578,7 +612,10 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_recommendNaviCtrl pushViewController:_recommendViewCtrl animated:NO];
     [_recommendNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirec_navbar"]
                                            forBarMetrics:UIBarMetricsDefault];
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_recommendNaviCtrl];
     [self.view addSubview:_recommendNaviCtrl.view];
+    [_recommendNaviCtrl didMoveToParentViewController:self];
     [_recommendViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -606,7 +643,10 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_sortSelectNaviCtrl pushViewController:_sortSelectViewCtrl animated:NO];
     [_sortSelectNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"m_sort_navbar"]
                                             forBarMetrics:UIBarMetricsDefault];
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_sortSelectNaviCtrl];
     [self.view addSubview:_sortSelectNaviCtrl.view];
+    [_sortSelectNaviCtrl didMoveToParentViewController:self];
     [_sortSelectViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -631,7 +671,10 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_overScoreLogNaviCtrl.navigationBar
         setBackgroundImage:[UIImage imageNamed:@"osl_friend_navbar"]
              forBarMetrics:UIBarMetricsDefault];
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_overScoreLogNaviCtrl];
     [self.view addSubview:_overScoreLogNaviCtrl.view];
+    [_overScoreLogNaviCtrl didMoveToParentViewController:self];
     [_overScoreLogViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -653,7 +696,10 @@ constexpr float kRenderMinInterval = 1000.0f;
     [_presentBoxNaviCtrl pushViewController:_presentBoxViewCtrl animated:NO];
     [_presentBoxNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pbox_nav_gift"]
                                             forBarMetrics:UIBarMetricsDefault];
+    // Modern iOS requires container-VC containment; see GotoFriendManage.
+    [self addChildViewController:_presentBoxNaviCtrl];
     [self.view addSubview:_presentBoxNaviCtrl.view];
+    [_presentBoxNaviCtrl didMoveToParentViewController:self];
     [_presentBoxViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
         [self PauseLoop];
@@ -685,13 +731,18 @@ constexpr float kRenderMinInterval = 1000.0f;
         [_acViewerNaviCtrl.navigationBar
             setBackgroundImage:[UIImage imageNamed:@"acv_category_navbar"]
                  forBarMetrics:UIBarMetricsDefault];
+        // Modern iOS requires container-VC containment; see GotoFriendManage.
+        [self addChildViewController:_acViewerNaviCtrl];
         [self.view addSubview:_acViewerNaviCtrl.view];
+        [_acViewerNaviCtrl didMoveToParentViewController:self];
         [content startOpenAnimation];
         [self PauseLoop];
     } else if (_acViewerViewCtrl == nil) {
         AcViewerSplitViewController *split = [[AcViewerSplitViewController alloc] init];
         _acViewerViewCtrl = split;
+        [self addChildViewController:split];
         [self.view addSubview:split.view];
+        [split didMoveToParentViewController:self];
         [split startOpenAnimation];
     }
 }
@@ -717,6 +768,8 @@ constexpr float kRenderMinInterval = 1000.0f;
         _recommendViewCtrl = nil;
     }
     if (_recommendNaviCtrl != nil) {
+        [_recommendNaviCtrl willMoveToParentViewController:nil];
+        [_recommendNaviCtrl removeFromParentViewController];
         _recommendNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -730,6 +783,8 @@ constexpr float kRenderMinInterval = 1000.0f;
         _sortSelectViewCtrl = nil;
     }
     if (_sortSelectNaviCtrl != nil) {
+        [_sortSelectNaviCtrl willMoveToParentViewController:nil];
+        [_sortSelectNaviCtrl removeFromParentViewController];
         _sortSelectNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -743,6 +798,8 @@ constexpr float kRenderMinInterval = 1000.0f;
         _overScoreLogViewCtrl = nil;
     }
     if (_overScoreLogNaviCtrl != nil) {
+        [_overScoreLogNaviCtrl willMoveToParentViewController:nil];
+        [_overScoreLogNaviCtrl removeFromParentViewController];
         _overScoreLogNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -756,6 +813,8 @@ constexpr float kRenderMinInterval = 1000.0f;
         _presentBoxViewCtrl = nil;
     }
     if (_presentBoxNaviCtrl != nil) {
+        [_presentBoxNaviCtrl willMoveToParentViewController:nil];
+        [_presentBoxNaviCtrl removeFromParentViewController];
         _presentBoxNaviCtrl = nil;
     }
     [self ResumeLoop];
@@ -773,9 +832,13 @@ constexpr float kRenderMinInterval = 1000.0f;
 // @complete
 - (void)AcViewerEndCallBack {
     if (_acViewerViewCtrl != nil) {
+        [_acViewerViewCtrl willMoveToParentViewController:nil];
+        [_acViewerViewCtrl removeFromParentViewController];
         _acViewerViewCtrl = nil;
     }
     if (_acViewerNaviCtrl != nil) {
+        [_acViewerNaviCtrl willMoveToParentViewController:nil];
+        [_acViewerNaviCtrl removeFromParentViewController];
         _acViewerNaviCtrl = nil;
     }
     if (neSceneManager::isPadDisplay()) {
