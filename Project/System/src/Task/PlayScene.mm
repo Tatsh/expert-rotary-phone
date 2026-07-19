@@ -718,14 +718,16 @@ const char *const kTone08Frames[5] = {
 };
 const char *const kTone08NumFrames[5] = {
     // +0x294 (DAT_00131338)
+    "TONE_08_NUM1",
     "TONE_08_NUM2",
     "TONE_08_NUM3",
     "TONE_08_NUM4",
     "TONE_08_NUM5",
-    "TONE_00_1",
 };
 const char *const kToneNumberFrames[10] = {
-    // +0x2a8 (DAT_0013134c) — padded tail
+    // +0x2a8 (DAT_0013134c). Index 0 is TONE_00 (the grey note); the note-kind
+    // byte indexes this table directly, so it must be 0-based.
+    "TONE_00_1",
     "TONE_01_1",
     "TONE_02_1",
     "TONE_03_1",
@@ -735,7 +737,6 @@ const char *const kToneNumberFrames[10] = {
     "TONE_08_1",
     "TONE_08_1",
     "TONE_08_1",
-    "TONE_SAME_00",
 };
 const char *const kToneSameFrames[10] = {
     // +0x2d0 (PTR_s_TONE_SAME_00) — reordered
