@@ -300,10 +300,15 @@ void AepManager::drawLayer(int lyr,
 }
 
 // Compatibility overload for the transform-only callers (MenuMainTask /
-// PlayTask / AepLyrCtrl). Maps the transform into the full form: colour = 100
-// and colourHi = 100 give a fully-opaque, un-tinted quad (the >=100 alpha split
-// turns alpha 100 into the 0x200 "opaque" blend bit); pivots and user words
-// default to 0, no clip override, and the transform's priority becomes the
+// PlayTask / AepLyrCtrl). Maps the transform into the full form with colour = 100
+// and colourHi = 0. The frame-tree derives alpha = colourHi, and an alpha >= 100
+// sets the 0x200 blend bit -- which selects ADDITIVE blending (GL_ONE, GL_ONE;
+// verified in neDrawTexturedQuad FUN_00015fb8 @0x162d8), NOT opacity. Passing
+// colourHi = 0 keeps alpha 0 so each leaf uses its own intrinsic blend mode
+// rather than being force-composited additively (which washed the whole scene
+// translucent over the dark background). The binary's callers pass colourHi = 0
+// too -- e.g. DrawHud loads 0 into the colourHi slot at 0x3047c. Pivots and user
+// words default to 0, no clip override, and the transform's priority becomes the
 // ordering-table priority (binary param_18).
 // @complete
 void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags) {
@@ -317,8 +322,8 @@ void AepManager::drawLayer(int lyr, int frame, const AepTransform &root, uint32_
               /*anchorX*/ 0,
               /*anchorY*/ 0,
               /*color*/ 100,
-              /*colorHi*/ 100,
-              flags, // loopFlags (binary position 13, after colorHi)
+              /*colorHi*/ 0, // alpha = colourHi; 0 keeps each leaf's own blend (not additive)
+              flags,         // loopFlags (binary position 13, after colorHi)
               /*blendFlags*/ 0,
               // White = no tint. 0 is a black colour-multiply: every layer drawn
               // through this transform-only overload (the play-field background incl.
