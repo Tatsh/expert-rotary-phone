@@ -401,7 +401,13 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
         // (head == tail) draws one sprite, a long note stretches head-to-tail. The
         // draw is gated on the note frame being within the phase layer's length.
         if (noteFrame < m_toneJudgeFrames[st->phase]) {
-            const float progress = (1024.0f - note.scrollStart) / 1024.0f;
+            // progress is CAPPED at 1: the binary holds the interp factor at 1024
+            // (vmin.f32 d11, d11, d11 - flScrollStart @0x2f7ae, with d11 = 1024.0), so
+            // once flScrollStart passes 0 the note -- and its anchored hold bar --
+            // freeze at the intersection instead of extrapolating past it. Only the
+            // lower bound (pre-spawn) stays unclamped.
+            const float scrollNum = 1024.0f - note.scrollStart;
+            const float progress = (scrollNum < 1024.0f ? scrollNum : 1024.0f) / 1024.0f;
             const int noteLayer = m_toneJudgeLyr[st->phase]; // +0xc4[phase]
             const int drawScale = m_popkunSize;              // +0x9bc
             // Each note is two buttons that fly in from opposite sides and meet at
