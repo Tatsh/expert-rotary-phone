@@ -913,7 +913,12 @@ constexpr float kRenderMinInterval = 1000.0f;
                        1136 :
                        960; // 4" vs 3.5" iPhone
     }
-    aep.init(bundlePath.UTF8String, texDir.UTF8String, contentW, contentH, scale);
+    // The binary passes UIScreen.scale * 0.5 as the aepManagerInit render scale
+    // (loadView 0xb790: vmul.f32 by 0.5 -> the scale arg at sp+0x4, stored 0xb7a0),
+    // the same factor published as g_uiScale below. Passing the raw scale doubled
+    // m_renderScale and every AEP sprite-path draw (flDstW = srcW * renderScale *
+    // scaleX / 100), so the wide hold bar ran ~2x off-screen.
+    aep.init(bundlePath.UTF8String, texDir.UTF8String, contentW, contentH, scale * 0.5f);
     neSceneManager::shared(); // force scene-manager lazy init
     g_uiScale = scale * 0.5f; // publish UI scale (binary @0xb51c)
 
