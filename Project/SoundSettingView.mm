@@ -64,12 +64,14 @@ static inline float SoundShortToVolume(short v) {
     return (float)v;
 }
 
+#ifdef ENABLE_PATCHES
 // Private modern-iOS drag-fix helpers (see the "Nested-scroll drag fix" section);
 // declared here because cellForRowAtIndexPath: wires them before their
 // definitions.
 @interface SoundSettingView ()
 - (void)wireSliderDragFix:(UISlider *)slider;
 @end
+#endif
 
 @implementation SoundSettingView {
     UISlider *_bgmSlider;        // @0xa4  BGM master volume (0..1)
@@ -278,7 +280,9 @@ static inline float SoundShortToVolume(short v) {
             [_bgmSlider addTarget:self
                            action:@selector(bgmSliderValChanged:)
                  forControlEvents:UIControlEventValueChanged]; // 0x1000
+#ifdef ENABLE_PATCHES
             [self wireSliderDragFix:_bgmSlider];
+#endif
             [cell addSubview:_bgmSlider];
         }
 
@@ -294,7 +298,9 @@ static inline float SoundShortToVolume(short v) {
             [_seSlider addTarget:self
                           action:@selector(seSliderValChanged:)
                 forControlEvents:UIControlEventValueChanged];
+#ifdef ENABLE_PATCHES
             [self wireSliderDragFix:_seSlider];
+#endif
             [cell addSubview:_seSlider];
         }
 
@@ -310,7 +316,9 @@ static inline float SoundShortToVolume(short v) {
             [_touchSoundSlider addTarget:self
                                   action:@selector(touchSoundSliderValChanged:)
                         forControlEvents:UIControlEventValueChanged];
+#ifdef ENABLE_PATCHES
             [self wireSliderDragFix:_touchSoundSlider];
+#endif
             [cell addSubview:_touchSoundSlider];
         }
     }
@@ -452,6 +460,7 @@ static inline float SoundShortToVolume(short v) {
     }
 }
 
+#ifdef ENABLE_PATCHES
 #pragma mark - Nested-scroll drag fix (modern iOS, not in the iOS 8 binary)
 
 // The volume sliders live in cells of this table, which is itself embedded in a
@@ -489,6 +498,7 @@ static inline float SoundShortToVolume(short v) {
 - (void)sliderTouchUp:(UISlider *)slider {
     [self setEnclosingScrollEnabled:YES forSlider:slider];
 }
+#endif // ENABLE_PATCHES
 
 #pragma mark - Slider actions
 
