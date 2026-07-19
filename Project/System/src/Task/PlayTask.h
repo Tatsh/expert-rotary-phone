@@ -167,7 +167,7 @@ private:
     // block (a negative coordinate marks an empty slot); touchIds carries the
     // parallel neGraphics touch ids for the live touches, its size being the
     // touch count the binary passes separately.
-    void playJudgeUpdate(const float *touchXY, std::span<const int> touchIds);
+    void playJudgeUpdate(std::span<const float> touchXY, std::span<const int> touchIds);
 
     // Play the per-tap feedback SE, restarting any still-playing instance, gated
     // by the touch-sound volume and skipped during the pause menu; playJudgeUpdate

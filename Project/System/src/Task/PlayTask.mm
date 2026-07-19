@@ -336,8 +336,8 @@ void PlayTask::update(int /*deltaMs*/) {
             m_comboLayers[3]->stop(1); // Ghidra: AepLyrCtrl::Stop(pAepLyrMain[3])
             m_state = kPlayStateWaitIntro;
         }
-        nm.primePlay();               // Ghidra: NoteMng::ResetPlayback
-        playJudgeUpdate(nullptr, {}); // draw the field
+        nm.primePlay();          // Ghidra: NoteMng::ResetPlayback
+        playJudgeUpdate({}, {}); // draw the field
         break;
     case kPlayStateRetry: // retry: after the fade, rebuild the play and restart
         if (aep.isTransitionDone()) {
@@ -352,7 +352,7 @@ void PlayTask::update(int /*deltaMs*/) {
             m_state = kPlayStatePlaying;
         } else {
             nm.primePlay(); // Ghidra: NoteMng::ResetPlayback
-            playJudgeUpdate(nullptr, {});
+            playJudgeUpdate({}, {});
         }
         break;
     case kPlayStatePauseMenu: { // pause menu: hit-test resume / retry / quit, draw the menu + field
@@ -411,7 +411,7 @@ void PlayTask::update(int /*deltaMs*/) {
                       /*priority*/ 10,
                       /*visFlag*/ 0);
         nm.update(); // Ghidra: NoteMng::Update — keep the notes scrolling behind
-        playJudgeUpdate(nullptr, {});
+        playJudgeUpdate({}, {});
         break;
     }
     case kPlayStatePlaying: { // *** PLAYING ***: drive the note engine, then judge/render, gauge,

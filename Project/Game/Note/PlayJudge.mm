@@ -155,7 +155,7 @@ inline int specialLapseOffset(int graphic, unsigned holdJudge) {
 
 // Ghidra: FUN_0002f1f8.
 // @complete
-void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchIds) {
+void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const int> touchIds) {
     const auto touchCount = touchIds.size();
     NoteMng &nm = NoteMng::shared();
     neGraphics &gfx = neGraphics::shared();
@@ -168,7 +168,7 @@ void PlayTask::playJudgeUpdate(const float *touchXY, std::span<const int> touchI
     constexpr int kMaxTouches = 8;
     float xy[kMaxTouches * 2];
     for (int i = 0; i < kMaxTouches * 2; ++i) {
-        xy[i] = touchXY != nullptr ? touchXY[i] : -1.0f;
+        xy[i] = !touchXY.empty() ? touchXY[i] : -1.0f;
     }
 
     const float beat = NoteBeatIntervalMs(); // Ghidra: GetBeatInterval (extraout_r0)
