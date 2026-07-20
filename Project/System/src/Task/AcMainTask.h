@@ -173,17 +173,18 @@ private:
     // operate on this task's work area, so they are real members (the
     // "SugorokuMainTask" a prior agent invented was a mis-attribution). The
     // group-5 draw callback drives them.
-    int sugorokuDrawSkillPanel();                                  // FUN_000a14a0
-    int sugorokuDrawButtonHitTest();                               // FUN_000a178c
-    bool sugorokuEasePositionPairA();                              // FUN_000a19dc
-    bool sugorokuEasePositionPairB();                              // FUN_000a1ac8
-    void sugorokuDrawSquareText();                                 // FUN_000a1bb4
-    void sugorokuSaveTreasureProgress();                           // FUN_000a1ddc
-    void sugorokuSetupScrollBounds();                              // FUN_000a2544
-    void sugorokuLoadWallTextures(int page);                       // FUN_000a2b64
-    void sugorokuTaskDispose();                                    // FUN_000a2d00
-    void sugorokuDrawBoard();                                      // FUN_000a303c
-    void sugorokuDrawBackground();                                 // FUN_000a3308
+    int sugorokuDrawSkillPanel();            // FUN_000a14a0
+    int sugorokuDrawButtonHitTest();         // FUN_000a178c
+    bool sugorokuEasePositionPairA();        // FUN_000a19dc
+    bool sugorokuEasePositionPairB();        // FUN_000a1ac8
+    void sugorokuDrawSquareText();           // FUN_000a1bb4
+    void sugorokuSaveTreasureProgress();     // FUN_000a1ddc
+    void sugorokuSetupScrollBounds();        // FUN_000a2544
+    void sugorokuLoadWallTextures(int page); // FUN_000a2b64
+    void sugorokuTaskDispose();              // FUN_000a2d00
+    void drawFrame();                        // Ghidra: RealUpdate draw tail @ 0x9ddb0
+    void sugorokuDrawBoard();                // FUN_000a303c
+    void sugorokuDrawBackground();           // FUN_000a3308
     void sugorokuDrawSquare(const TreasureMap::Node *node);        // FUN_000a4eb4
     void sugorokuDrawPath(const TreasureMap::ConnectStruct *edge); // FUN_000a50dc
     void sugorokuDrawPlayerAndUi();                                // FUN_000a52f0

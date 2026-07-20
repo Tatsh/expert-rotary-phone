@@ -27,6 +27,7 @@
 #import "AudioManager.h"
 #import "CharaInfo.h"
 #import "CharaManager.h"
+#import "DownloadMain.h"
 #import "MainViewController.h"
 #import "MusicData.h"
 #import "MusicManager.h"
@@ -128,6 +129,57 @@ void AcMainTask::update(int /*deltaMs*/) {
     default:
         break;
     }
+
+    // Common draw tail. In the binary every state falls through to this shared
+    // block (Ghidra: RealUpdate @ 0x9ddb0): when the board is up it renders the
+    // sugoroku board and background and drives the treasure-event tab layer, and
+    // it always advances/draws the Aep layer scene. The reconstruction previously
+    // returned after the state switch without ever drawing, which is why Treasure
+    // Mode showed a black screen.
+    drawFrame();
+}
+
+static bool acIsIndexInRange12(int index);
+
+// Common per-frame draw tail (Ghidra: the switch's fall-through at 0x9ddb0). The
+// board draw is gated on the board-visible flag (+0x5ee); the Aep layer scene is
+// always advanced and drawn.
+void AcMainTask::drawFrame() {
+    if (m_bgmActive) {
+        sugorokuDrawBoard();      // Ghidra: sugorokuDrawBoard @ 0xa303c
+        sugorokuDrawBackground(); // Ghidra: sugorokuDrawBackground @ 0xa3308
+
+        // Resolve the active treasure-event tab whenever the download layer flags
+        // new info (or on the first frame, when m_hudState still holds its -99
+        // sentinel): pick the first event id that falls in the 0..11 tab range.
+        DownloadMain *download = [DownloadMain getInstance];
+        if (download.isTreasureEventInfoUpdated || m_hudState == kHudStateUninitialized) {
+            m_hudState = -1;
+            for (NSNumber *eventId in download.treasureEventIdArray) {
+                if (acIsIndexInRange12(eventId.intValue)) {
+                    m_hudState = eventId.intValue;
+                    break;
+                }
+            }
+            download.isTreasureEventInfoUpdated = NO;
+        }
+
+        // The event-tab overlay (roulette layer 0x1a) loops while a tab is active
+        // and resets to hidden when none is.
+        AepLyrCtrl *eventTab = m_rouletteLayers[0x1a].get();
+        if (m_hudState < 0) {
+            eventTab->reset();
+        } else if (!eventTab->isAnimating()) {
+            eventTab->play();
+        }
+    }
+
+    AepLyrCtrl::updateAndDrawAepLayers(0); // Ghidra: FUN_0002c924
+}
+
+// Ghidra: isIndexInRange12 @ 0xe2c3c — true when the unsigned index is below 12.
+static bool acIsIndexInRange12(int index) {
+    return static_cast<unsigned>(index) < 12u;
 }
 
 // Per-frame drag / rubber-band scroll normalization. Ground truth is the
