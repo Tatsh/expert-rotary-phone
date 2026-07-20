@@ -70,6 +70,16 @@
     CGRect bounds = UIScreen.mainScreen ? UIScreen.mainScreen.bounds : CGRectZero;
     self.mainWindow = [[neWindow alloc] initWithFrame:bounds];
     self.mainWindow.backgroundColor = UIColor.blackColor;
+    // The game's UIKit chrome (settings, store, alert views) is entirely light-themed.
+    // The iOS 8 binary predates Dark Mode, so its dynamic label colours were always
+    // the light-appearance (dark-text) values. On iOS 13+ a device in Dark Mode
+    // flips those to white, which made the settings detail labels (背景演出 /
+    // ロングノート演出 and the sound rows) invisible on the light panels. Pin the
+    // whole app to the light appearance so every dynamic colour resolves as the
+    // original did.
+    if (@available(iOS 13.0, *)) {
+        self.mainWindow.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
+    }
 
     srand(static_cast<unsigned>(time(nullptr)));
 
