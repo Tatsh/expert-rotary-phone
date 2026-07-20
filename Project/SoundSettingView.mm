@@ -130,9 +130,10 @@ static inline float SoundShortToVolume(short v) {
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self != nil) {
-        // (The fixed row height that keeps the slider cells hit-testable on modern
-        // iOS is enforced in tableView:heightForRowAtIndexPath:; setting it on the
-        // tableView here did not stick.)
+        // (The modern-iOS slider hit-testing fix lives in viewDidLoad, which
+        // disables self-sizing, and in tableView:heightForRowAtIndexPath:, which
+        // pins the row height; both are applied there rather than here because the
+        // tableView discards these settings when it is configured after init.)
         self.tableView.backgroundColor = [UIColor clearColor];
         if (!neSceneManager::isPadDisplay()) {
             self.tableView.backgroundColor =
@@ -167,6 +168,19 @@ static inline float SoundShortToVolume(short v) {
 // button.
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    // @newCode -- Modern iOS defaults tables to self-sizing (estimatedRowHeight is
+    // automatic, i.e. -1). That path sizes each cell's contentView from Auto Layout;
+    // these frame-based, constraint-less cells collapse the contentView to ~0 height,
+    // and because hitTest clips at the zero-height contentView the sliders draw but
+    // never receive touches. heightForRowAtIndexPath: fixes the cell height but not
+    // the contentView. Setting estimatedRowHeight = 0 disables self-sizing outright,
+    // restoring the classic fixed-height path where the contentView fills the cell.
+    // This must be set in viewDidLoad (after loadView): the same assignment in
+    // initWithStyle: was discarded when the tableView was configured.
+    self.tableView.estimatedRowHeight = 0.0f;
+    self.tableView.estimatedSectionHeaderHeight = 0.0f;
+    self.tableView.estimatedSectionFooterHeight = 0.0f;
 
     _touchSoundHaveFlg = [UserSettingData haveTouchSoundFlg];
     short kind = [UserSettingData touchSoundKind];
@@ -484,13 +498,10 @@ static inline float SoundShortToVolume(short v) {
     return 32.0f; // 0x42000000
 }
 
-// @newCode -- The iOS 8 binary let rows use the default 44pt height. Modern iOS
-// defaults tables to self-sizing (estimatedRowHeight = automatic), and since these
-// cells are laid out by frame with no Auto Layout constraints self-sizing collapses
-// each row to ~0, which left the sliders' cells with an empty hit area so touches
-// never reached them. Setting rowHeight / estimatedRowHeight on the table did not
-// stick (the tableView resets them on its lazy load), so pin the fixed height here
-// -- this delegate method is authoritative and overrides self-sizing.
+// @newCode -- The iOS 8 binary let rows use the default 44pt height. Pin it
+// explicitly here for modern iOS; combined with the estimatedRowHeight = 0 set in
+// viewDidLoad (which disables self-sizing so the cell's contentView fills the cell
+// and the sliders stay hit-testable) this restores the original fixed-height rows.
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     return 44.0f;
 }
