@@ -16,7 +16,6 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import "AVBus.h"
-#import "neDebugLog.h" // temporary SE-path diagnostics
 
 // A loaded source held by the SE table: owns the URL / data (Ghidra:
 // soundSourceInit copies the URL; soundSourceRelease releases it) and vends a
@@ -162,7 +161,6 @@ AVBus *neAVSePlayer::busForHandle(uint32_t handle) {
 // DAT_00020f84 (127.0f); modelled here as a float 0..127 for the same result.
 static uint32_t audioPlaySource(NSArray *buses, int count, neSeSource *source, float volume) {
     int busIndex = findFreeBus(buses, count);
-    NE_DBG(neDebugLog("audioPlaySource freeBus=%d/%d vol=%.1f", busIndex, count, volume));
     if (busIndex == -1) {
         return static_cast<uint32_t>(-1);
     }
