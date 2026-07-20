@@ -18,8 +18,9 @@
 //    shouldAutorotateToInterfaceOrientation: @ 0x53e58   dealloc @ 0x53708
 //
 
-#import "StoreDialogView.h"
 #import <UIKit/UIKit.h>
+
+#import "StoreDialogView.h"
 
 @interface StoreViewController : UITabBarController {
     UINavigationController *m_MainNavCtrl;      // pack store tab

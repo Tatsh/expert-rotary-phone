@@ -6,6 +6,9 @@
 //
 
 #import "MusicManager.h"
+
+#import <UIKit/UIKit.h>
+
 #import "AcMusicData.h"
 #import "AppDelegate.h"
 #import "BFCodec.h"      // Blowfish cipher (cipherInit:/decipher:)
@@ -17,7 +20,6 @@
 #import "StoreMusicInfo.h"     // -musicID/name/artist/itemURL/itunesURL (addPurchasedMusic:)
 #import "TreasureData+Store.h" // +isOpenMusic:inManagedObjectContext:
 #import "UserSettingData.h"    // inviteCnt / getOpenedLoginBonusId / isBemaniCollaboOpened
-#import <UIKit/UIKit.h>
 
 // LoginBonusView is a UI class without a project header in this reconstruction;
 // only its +getRewardMaxCnt class method is referenced from here (Ghidra:

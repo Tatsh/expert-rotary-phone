@@ -10,6 +10,9 @@
 //
 
 #import "StoreDetailViewController.h"
+
+#import <StoreKit/StoreKit.h> // SKProduct.price
+
 #import "AppDelegate.h"
 #import "AudioManager.h"
 #import "BirthDayViewController.h"
@@ -28,7 +31,6 @@
 #import "StoreUtil.h"
 #import "System/src/neEngineBridge.h" // neEngine::playSystemSe (decide SE)
 #import "UserSettingData.h"
-#import <StoreKit/StoreKit.h> // SKProduct.price
 
 // Private methods reconstructed alongside the content-load flow.
 // Delegate for the pack-info/image downloaders and the common alert (callbacks

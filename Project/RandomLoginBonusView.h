@@ -16,8 +16,9 @@
 //  black backgroundColor as a modal dimmer. Recovered superclass: UIView.
 //
 
-#import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 #import <UIKit/UIKit.h>
+
+#import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 
 @interface RandomLoginBonusView : UIView <CustomAlertViewDelegate>
 

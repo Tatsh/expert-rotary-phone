@@ -23,7 +23,8 @@
         // Both halves are built with a (0, 0, 365, 140) frame (0x43b68000 =
         // 365.0, 0x430c0000 = 140.0 at 0x528b4 / 0x528ea); the VC reframes them
         // per row.
-        _leftPackView = [[StorePackView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 365.0f, 140.0f)];
+        _leftPackView =
+            [[StorePackView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 365.0f, 140.0f)];
         _rightPackView =
             [[StorePackView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 365.0f, 140.0f)];
         [self.contentView addSubview:_leftPackView];

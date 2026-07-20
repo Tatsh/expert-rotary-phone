@@ -9,6 +9,8 @@
 //  .../Project/System/src/Render/neTextTexture.mm.
 //
 
+#import "neTextTexture.h"
+
 #include <cstdint>
 #include <cstring>
 #include <vector>
@@ -21,7 +23,6 @@
 #import "C_RENDER.h"
 #import "C_TEXTURE.h" // neCreateTextureFromData / neTextureRelease (texture cache)
 #import "neDebugLog.h"
-#import "neTextTexture.h"
 
 // The manager singleton (Ghidra: DAT_0018845c), created lazily by the engine
 // bootstrap.

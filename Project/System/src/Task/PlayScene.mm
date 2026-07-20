@@ -37,12 +37,12 @@
 //  seam).
 //
 
-#import <Foundation/Foundation.h>
-
 #include <cstdlib>  // rand / srand (Ghidra: _rand / _srand)
 #include <ctime>    // time (Ghidra: _time)
 #include <iterator> // std::size (fill-loop bounds from the destination array)
 #include <memory>
+
+#import <Foundation/Foundation.h>
 
 #import "AepLyrCtrl.h"
 #import "AepManager.h"

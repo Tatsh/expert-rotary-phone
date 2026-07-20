@@ -6,6 +6,8 @@
 //  Objective-C++ (ARC): syncs last music/sheet into the C++ neAppEventCenter.
 //
 
+#import "UserSettingData.h"
+
 #import <string.h>
 
 #import "AppDelegate.h"
@@ -16,7 +18,6 @@
 #import "ScoreData.h"
 #import "TreasureData+Store.h"
 #import "TreasureData.h"
-#import "UserSettingData.h"
 #import "neEngineBridge.h"
 
 // AES-128-CBC key/IV protecting the save blobs (Ghidra string literals).

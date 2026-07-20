@@ -12,10 +12,11 @@
 //  constant tables (DAT_0004a7xx) and are sized to their superview here.
 //
 
+#import "CommonAlertView.h"
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "AppFont.h"
-#import "CommonAlertView.h"
 #import "CustomTextView.h"
 #import "neEngineBridge.h"
 

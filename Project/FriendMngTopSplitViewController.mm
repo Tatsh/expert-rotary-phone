@@ -8,6 +8,7 @@
 //
 
 #import "FriendMngTopSplitViewController.h"
+
 #import "DownloadMain.h"                // friendRequestedCnt (reply badge)
 #import "FriendListViewController.h"    // list section
 #import "FriendMngTopViewController.h"  // left pane (also the iPhone hub); delegate target

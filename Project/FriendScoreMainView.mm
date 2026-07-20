@@ -70,6 +70,8 @@
 
 #import "FriendScoreMainView.h"
 
+#import <objc/message.h>
+
 #import "AppDelegate.h" // +appDelegate.displayType / managedObjectContext / uuId / appVersionNum
 #import "CommonAlertView.h"      // error alert
 #import "DownloadMain.h"         // friend list + DownloadMainDelegate
@@ -82,8 +84,6 @@
 #import "StoreUtil.h"           // friend-score URL
 #import "UserSettingData.h"     // local player id / chara
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
-
-#import <objc/message.h>
 
 // NSValue payload for one friend-score row, shared with FriendScoreTableCell
 // (type-encoding "{ScoreDataStruct=@@iBBcsB}").

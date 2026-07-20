@@ -6,6 +6,10 @@
 //
 
 #import "StorePackDetailViewPad.h"
+
+#import <QuartzCore/QuartzCore.h> // CALayer shadow/rasterize
+#import <StoreKit/StoreKit.h>
+
 #import "AppDelegate.h"
 #import "AudioManager.h"
 #import "BirthDayViewController.h"
@@ -20,9 +24,7 @@
 #import "StorePackInfoDownloader.h"
 #import "StorePackMusicView.h"
 #import "StoreUtil.h"
-#import "UserSettingData.h"       // birthday / settings reads in the purchase flow
-#import <QuartzCore/QuartzCore.h> // CALayer shadow/rasterize
-#import <StoreKit/StoreKit.h>
+#import "UserSettingData.h" // birthday / settings reads in the purchase flow
 
 @implementation StorePackDetailViewPad
 

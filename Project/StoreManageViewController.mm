@@ -6,7 +6,6 @@
 //
 
 #import "StoreManageViewController.h"
-#import "StoreViewController.h"
 
 #import "AppFont.h"           // AppFontName() == getFontNameDFSoGei() -> @"DFSoGei-W5-WIN-RKSJ-H"
 #import "MusicManager.h"      // purchased-music library singleton
@@ -14,7 +13,8 @@
 #import "StoreDownloadTask.h" // one queued download (URL + local path)
 #import "StoreMusicInfo.h"    // parsed music metadata (initWithDictionary:)
 #import "StoreUtil.h"         // web-API URL builder
-#import "neEngineBridge.h"    // neSceneManager::isPadDisplay
+#import "StoreViewController.h"
+#import "neEngineBridge.h" // neSceneManager::isPadDisplay
 
 // Per-row subview tags, set once when the cell is built and read back when it is
 // reused. The button drives the download/delete action; the two labels are

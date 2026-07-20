@@ -6,10 +6,11 @@
 //
 
 #import "RewardNetworkPasteBoard.h"
-#import "RewardNetworkError.h"
 
 #import <CommonCrypto/CommonCrypto.h>
 #import <UIKit/UIKit.h>
+
+#import "RewardNetworkError.h"
 
 // Slots are named "<service>-<index>" for index in 0..518 (< 0x207).
 static const NSInteger kRewardStorageIndexLimit = 0x207;

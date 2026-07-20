@@ -6,6 +6,7 @@
 //
 
 #import "CJSONDataSerializer.h"
+
 #import "CSerializedJSONData.h"
 
 // Cached constant JSON tokens (g_pJsonNullData / g_pJsonTrueData /

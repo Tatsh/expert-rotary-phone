@@ -12,13 +12,14 @@
 //  release FUN_00018884, dtor FUN_000180f8, release-ref FUN_00018200.
 //
 
+#import "C_TEXTURE.h"
+
 #include <cstdlib>
 #include <cstring>
 
 #import <UIKit/UIKit.h>
 
 #import "C_RENDER.h" // current renderer for neTextureRebind
-#import "C_TEXTURE.h"
 #import "neDebugLog.h"
 #import "neTextureForiOS.h" // ne::C_SINGLE_SPRITE + the cache/bind free functions declared here
 

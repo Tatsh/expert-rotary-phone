@@ -9,9 +9,9 @@
 //  Base ctor FUN_00027ea8, setPriority FUN_00027f08, updateAll FUN_00027f40.
 //
 
-#include <climits>
-
 #import "C_TASK.h"
+
+#include <climits>
 
 namespace ne {
 

@@ -8,12 +8,13 @@
 //
 
 #import "LoginBonusView.h"
+
+#import <stdlib.h>
+
 #import "DownloadMain.h"    // +getInstance, .loginCnt, .loginBonusId, .isLoginCntUpdate
 #import "MusicManager.h"    // +getInstance, -openLoginBonusMusic
 #import "UserSettingData.h" // +getLoginBonusCnt/+saveLoginBonusCnt:, +treasurePoint/+saveTreasurePoint:, +saveOpenedLoginBonusId:, +playerId
 #import "neEngineBridge.h"  // neSceneManager::rootViewController(), neEngine::playSystemSe(int)
-
-#import <stdlib.h>
 
 // ---------------------------------------------------------------------------
 // Login-bonus reward definition table.

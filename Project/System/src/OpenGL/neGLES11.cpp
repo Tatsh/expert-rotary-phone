@@ -9,14 +9,14 @@
 //  table, call the matching glXxx" pattern (mapper functions cited per method).
 //
 
+#include "neGLES11.h"
+
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
-
-#include "neGLES11.h"
 
 namespace ne {
 

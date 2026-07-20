@@ -13,9 +13,11 @@
 //  ARC-managed).
 //
 
-#import "UIView+neSystemAddFunc.h"
-#import <QuartzCore/QuartzCore.h>
 #import <float.h>
+
+#import <QuartzCore/QuartzCore.h>
+
+#import "UIView+neSystemAddFunc.h"
 
 @implementation UIView (neSystemAddFunc)
 

@@ -6,11 +6,13 @@
 //
 
 #import "StoreUtil.h"
+
+#import <StoreKit/StoreKit.h>
+#import <UIKit/UIKit.h>
+
 #import "AppDelegate.h"
 #import "RhUtil.h"
 #import "UserSettingData.h"
-#import <StoreKit/StoreKit.h>
-#import <UIKit/UIKit.h>
 
 // StoreKit product-identifier prefix (Ghidra: CFString cf_rhythmin_pack).
 static NSString *const kPackProductPrefix = @"rhythmin_pack";

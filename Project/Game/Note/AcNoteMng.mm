@@ -9,6 +9,8 @@
 //  changeTempo FUN_0007aaf8.
 //
 
+#import "AcNoteMng.h"
+
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -21,7 +23,6 @@
 
 #import "../../System/src/Sound/AudioManager.h" // BGM start / drift sync (triggerBgmStart, applyBgmSync)
 #import "../Util/Random.h"
-#import "AcNoteMng.h"
 
 // Arcade-viewer judge-result globals (Ghidra: DAT_0016ebe0 / DAT_0016ebe4).
 // Verified via xref: the ONLY references in the binary are two READs from

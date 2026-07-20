@@ -8,8 +8,9 @@
 //  backing arrays.
 //
 
-#import "C_SINGLE_SPRITE.h"
-#import "C_TEXTURE.h" // neTextureRelease (shared cache release)
+#include "C_SINGLE_SPRITE.h"
+
+#include "C_TEXTURE.h" // neTextureRelease (shared cache release)
 
 namespace ne {
 

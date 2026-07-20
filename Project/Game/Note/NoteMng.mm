@@ -14,6 +14,8 @@
 //  layout.
 //
 
+#import "NoteMng.h"
+
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -24,7 +26,6 @@
 
 #import "AepManager.h"
 #import "AudioManager.h"
-#import "NoteMng.h"
 #import "neEngineBridge.h"
 
 // The global standard-mode note manager (Ghidra: DAT_00173ea4). Ghidra:

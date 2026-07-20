@@ -8,12 +8,13 @@
 //  classes (the lib_rsnd static library is not available), not imported.
 //
 
+#import "neAVCAPlayer.h"
+
 #include <cstdlib>
 #include <cstring>
 
 #import "CAComponent.h"
 #import "CASound.h"
-#import "neAVCAPlayer.h"
 
 namespace {
 constexpr int kSourceGrow = 20;

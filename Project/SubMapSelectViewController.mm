@@ -54,6 +54,10 @@
 
 #import "SubMapSelectViewController.h"
 
+#import <objc/message.h>
+#import <string.h>
+#import <time.h>
+
 #import "AppDelegate.h"        // +appDelegate.displayType
 #import "DownloadMain.h"       // visitor request + DownloadMainDelegate
 #import "MainViewController.h" // MapSelectEndCallBack on the root VC
@@ -63,10 +67,6 @@
 #import "TreasureTmpData.h"    // pending-treasure struct
 #import "UserSettingData.h"    // treasure snapshot
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
-
-#import <objc/message.h>
-#import <string.h>
-#import <time.h>
 
 // NSValue payload for one visible area row. Obj-C type-encoding
 // "{SubMapData=ss@@}".

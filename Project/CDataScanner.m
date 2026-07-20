@@ -7,10 +7,10 @@
 
 #import "CDataScanner.h"
 
-#import "NSCharacterSet_Extensions.h"
-
 #import <ctype.h>
 #import <string.h>
+
+#import "NSCharacterSet_Extensions.h"
 
 @implementation CDataScanner
 

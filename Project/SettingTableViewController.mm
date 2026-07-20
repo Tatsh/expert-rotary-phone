@@ -29,11 +29,7 @@
 
 #import "SettingTableViewController.h"
 
-#import "CommonAlertView.h" // retire-confirm alert
-#import "StoreUtil.h"       // +getOfficialAppInfoURL
-#import "UserSettingData.h" // +isEffectOn / +saveIsEffectOn: / +saveIsSimpleMode: / +initTreasureTmp
-#import "neEngineBridge.h" // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
-
+#import "CommonAlertView.h"    // retire-confirm alert
 #import "ConversionView.h"     // "device change" (data transfer) panel
 #import "CustomWebView.h"      // in-app web view (お問い合わせ / terms)
 #import "GameEffectView.h"     // section 1, row 2
@@ -42,6 +38,9 @@
 #import "PolicyView.h"         // section 5, row 2
 #import "PopkunSizeViewCtrl.h" // section 1, row 1
 #import "SoundSettingView.h"   // section 1, row 0
+#import "StoreUtil.h"          // +getOfficialAppInfoURL
+#import "UserSettingData.h" // +isEffectOn / +saveIsEffectOn: / +saveIsSimpleMode: / +initTreasureTmp
+#import "neEngineBridge.h" // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
 
 // The settings-table sections, in display order (row counts: 1/3/2/1/1/3).
 typedef NS_ENUM(NSInteger, SettingSection) {

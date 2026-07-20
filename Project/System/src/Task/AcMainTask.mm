@@ -1402,9 +1402,10 @@ void AcMainTask::sugorokuReleaseGoalLayer() {
 // they belong here, operating on AcMainTask *.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-#import "TreasureTmpData.h"
 #include <cmath>  // cosf, sinf, M_PI
 #include <cstdio> // snprintf
+
+#import "TreasureTmpData.h"
 
 namespace {
 

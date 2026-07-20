@@ -5,11 +5,11 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
+#import "SystemHardware.h"
+
 #import <stdlib.h>
 #import <string.h>
 #import <sys/sysctl.h>
-
-#import "SystemHardware.h"
 
 // Sentinel stored in m_HardwareType before detection runs.
 static const int kHardwareUndetected = 15;

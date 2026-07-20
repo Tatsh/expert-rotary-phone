@@ -12,9 +12,9 @@
 //  comment.
 //
 
-#include <cassert>
-
 #import "CharaData.h"
+
+#include <cassert>
 
 // The 30 built-in characters (Ghidra: table @ 0x133298, PTR_cf_00_00133298).
 // skillId indexes the character's active skill; rarity is 100/70/50.

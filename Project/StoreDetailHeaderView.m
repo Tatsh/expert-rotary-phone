@@ -12,9 +12,10 @@
 //  refined there).
 //
 
+#import "StoreDetailHeaderView.h"
+
 #import <CoreGraphics/CoreGraphics.h>
 
-#import "StoreDetailHeaderView.h"
 #import "StorePackInfo.h"
 
 // The stretchable button-background font helper the binary uses (FUN_0005ef9c)

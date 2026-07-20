@@ -12,22 +12,32 @@
 //  with PKCS#7 padding (kCCOptionPKCS7Padding).
 //
 
-#import <CommonCrypto/CommonCryptor.h> // CCOperation
-
+#import <CommonCrypto/CommonCryptor.h>
 #import <Foundation/Foundation.h>
 
 @interface NSData (Crypt)
-
-// Encrypt the receiver with AES-128-CBC. `key` and `iv` are 16-char NSStrings.
+/**
+ * @brief Encrypts the receiver using AES-128-CBC with the provided key and initialization vector.
+ * @param key The 16-character key.
+ * @param iv The 16-character initialization vector.
+ * @return A new NSData object containing the encrypted data, or nil if encryption fails.
+ */
 - (NSData *)encryptWith128Key:(NSString *)key initVector:(NSString *)iv;
-
-// Decrypt an AES-128-CBC blob produced by the method above.
+/**
+ * @brief Decrypts the receiver using AES-128-CBC with the provided key and initialization vector.
+ * @param key The 16-character key as an NSString.
+ * @param iv The 16-character initialization vector as an NSString.
+ * @return A new NSData object containing the decrypted data, or nil if decryption fails.
+ */
 - (NSData *)decryptWith128Key:(NSString *)key initVector:(NSString *)iv;
-
-// Shared AES-128-CBC core: `op` is kCCEncrypt or kCCDecrypt.
-// Ghidra: -[NSData mainOperation:key:initVector:] @ 0xbeaf8
+/**
+ * @brief Performs AES-128-CBC encryption or decryption on the receiver.
+ * @param op The operation to perform (kCCEncrypt or kCCDecrypt).
+ * @param key The 16-character key as an NSString.
+ * @param iv The 16-character initialization vector as an NSString.
+ * @return A new NSData object containing the result of the operation, or nil if an error occurred.
+    */
 - (NSData *)mainOperation:(CCOperation)op key:(NSString *)key initVector:(NSString *)iv;
-
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

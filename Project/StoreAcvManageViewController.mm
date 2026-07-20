@@ -6,7 +6,6 @@
 //
 
 #import "StoreAcvManageViewController.h"
-#import "StoreViewController.h"
 
 #import "AppFont.h"           // AppFontName() == @"DFSoGei-W5-WIN-RKSJ-H" (getFontNameDFSoGei)
 #import "MusicManager.h"      // [MusicManager getInstance] purchased-AC-music accessors
@@ -14,7 +13,7 @@
 #import "StoreAcMusicInfo.h"  // initWithDictionary: (parse the fetched AC-song info)
 #import "StoreDownloadTask.h" // one file download descriptor
 #import "StoreUtil.h"         // acvMusicInfoURL:
-
+#import "StoreViewController.h"
 #import "neEngineBridge.h" // neSceneManager::shared / isPadDisplay
 
 // Per-row subview tags, set once when the cell is built and read back when it is

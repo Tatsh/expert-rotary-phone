@@ -6,6 +6,7 @@
 //
 
 #import "CJSONDeserializer.h"
+
 #import "CJSONScanner.h"
 
 NSString *const kJSONDeserializerErrorDomain = @"CJSONDeserializerErrorDomain";

@@ -133,7 +133,8 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
     labelArtist = [[UILabel alloc] initWithFrame:CGRectMake(labelX, 26.0f, labelW, 15.0f)];
     labelArtist.backgroundColor = [UIColor clearColor];
     labelArtist.font = [UIFont fontWithName:kCellFont size:12.0f];
-    labelArtist.autoresizingMask = UIViewAutoresizingFlexibleWidth; // 0x2 (sel_setAutoresizingMask_)
+    labelArtist.autoresizingMask =
+        UIViewAutoresizingFlexibleWidth; // 0x2 (sel_setAutoresizingMask_)
     labelArtist.adjustsFontSizeToFitWidth = YES;
     labelArtist.minimumScaleFactor = 0.8f;
 

@@ -10,13 +10,14 @@
 //  calls are issued directly here.
 //
 
+#import "AepOrderingTable.h"
+
 #include <cassert>
 #include <cstring>
 #include <memory>
 
 #import <OpenGLES/ES1/gl.h>
 
-#import "AepOrderingTable.h"
 #import "C_RENDER.h"        // neDrawLine/Triangle/Rect/Quad/TexturedQuad
 #import "C_SINGLE_SPRITE.h" // ne::C_SINGLE_SPRITE::setRenderStateSlot (FUN_00016710)
 #import "neDebugLog.h"

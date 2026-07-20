@@ -4,12 +4,13 @@
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
-
 #import "RhUtil.h"
-#import "RhCrypto.h"
+
+#import <sys/time.h>
 
 #import <CommonCrypto/CommonDigest.h>
-#import <sys/time.h>
+
+#import "RhCrypto.h"
 
 // Ghidra: FUN_0005c258 — plist -> NSDictionary (nil unless the root is a dict).
 // The binary version-gates the parse: it compares

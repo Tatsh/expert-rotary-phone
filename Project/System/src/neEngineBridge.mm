@@ -8,10 +8,14 @@
 //  singletons.
 //
 
+#import "neEngineBridge.h"
+
 #include <cstddef>
 #include <cstring>
 #include <memory>
 #include <vector>
+
+#import <UIKit/UIKit.h> // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
 
 #import "AcNoteMng.h"    // AcNoteMng singleton (arcade note engine) — apply-settings re-seek
 #import "AcViewerTask.h" // AcViewerTask named work-area (apply-settings owner)
@@ -23,10 +27,8 @@
 #import "ScoreData+Store.h" // +[ScoreData getScoreData:inManagedObjectContext:] / hashScore:
 #import "ScoreData.h"       // ScoreData entity score/rank/playCnt/fullCombo/perfect properties
 #import "UserSettingData.h" // +acvHiSpeed/+acvPopKun/+acvHidSud/+acvRanMir option accessors
-#import "neEngineBridge.h"
 #import "neGraphics.h"      // findCharIndexForColumn declaration (defined below)
 #import "neTextureForiOS.h" // neTextureForiOS::LoadTexture + neTextureForiOS_draw (defined below)
-#import <UIKit/UIKit.h>     // UIImage / CoreGraphics (neTextureForiOS::LoadTexture)
 
 // Create + register the boot logo splash task (Task/TaskFactory.mm).
 namespace ne {

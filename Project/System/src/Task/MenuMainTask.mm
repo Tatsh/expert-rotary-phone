@@ -13,6 +13,8 @@
 //  constructors are referenced as seams via the task factory.
 //
 
+#import "MenuMainTask.h"
+
 #include <memory>
 
 #import <UIKit/UIKit.h>
@@ -27,7 +29,6 @@
 #import "LoginBonusView.h"
 #import "MainViewController.h"      // the concrete root VC: Goto*/Is*Enable/SetAlertViewCallback
 #import "MapSelectViewController.h" // the isIndexInRange12 event-id bounds helper
-#import "MenuMainTask.h"
 #import "MusicManager.h"
 #import "RandomLoginBonusView.h"
 #import "RewardNetwork.h" // +setSessionParameters:url:method: (state 4)

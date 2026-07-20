@@ -16,8 +16,9 @@
 //    0x79af8  dealloc @ 0x79994
 //
 
-#import "ImageDownloader.h"
 #import <UIKit/UIKit.h>
+
+#import "ImageDownloader.h"
 
 @class StorePromotionView;
 

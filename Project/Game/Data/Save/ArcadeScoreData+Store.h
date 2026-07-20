@@ -7,8 +7,9 @@
 //  PopnRhythmin.
 //
 
-#import "ArcadeScoreData.h"
 #import <CoreData/CoreData.h>
+
+#import "ArcadeScoreData.h"
 
 @interface ArcadeScoreData (Store)
 

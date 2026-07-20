@@ -57,10 +57,9 @@
     // args are frame.origin.x / frame.origin.y (r2 = s16, r3 = s22 at 0x5dce4),
     // not zero.
     m_leftViewCtrl = leftViewController;
-    [[m_leftViewCtrl view] setFrame:CGRectMake(frame.origin.x,
-                                               frame.origin.y,
-                                               (float)m_leftViewWidth,
-                                               frame.size.height)];
+    [[m_leftViewCtrl view]
+        setFrame:CGRectMake(
+                     frame.origin.x, frame.origin.y, (float)m_leftViewWidth, frame.size.height)];
     [m_leftViewCtrl reloadInputViews];
 
     // Right child: offset past the left column, filling the remaining width.

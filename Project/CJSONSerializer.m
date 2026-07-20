@@ -6,6 +6,7 @@
 //
 
 #import "CJSONSerializer.h"
+
 #import "CJSONDataSerializer.h"
 
 @implementation CJSONSerializer

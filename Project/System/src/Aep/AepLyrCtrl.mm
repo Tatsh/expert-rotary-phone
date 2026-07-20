@@ -8,11 +8,12 @@
 //  global layer list (Ghidra: DAT_00188490).
 //
 
+#import "AepLyrCtrl.h"
+
 #include <cassert>
 #include <cmath>
 #include <cstdint>
 
-#import "AepLyrCtrl.h"
 #import "AepManager.h"
 
 // Intrusive doubly-linked list of all live layers (Ghidra: head @

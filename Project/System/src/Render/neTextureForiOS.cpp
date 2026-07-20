@@ -7,6 +7,8 @@
 //  ordering table.
 //
 
+#include "neTextureForiOS.h"
+
 #include <cctype>
 #include <cstdint>
 #include <cstdio>
@@ -17,7 +19,6 @@
 #include "AepOrderingTable.h"
 #include "C_TEXTURE.h"
 #include "neDebugLog.h"
-#include "neTextureForiOS.h"
 
 // ne::C_SINGLE_SPRITE's ctor/dtor (FUN_00015eb4 / FUN_00015edc) and setRenderStateSlot
 // live in C_SINGLE_SPRITE.cpp; a neTextureForiOS just holds an array of them.

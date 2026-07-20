@@ -21,12 +21,13 @@
 //
 
 #import "AepFrameDraw.h"
-#import "AepManager.h"
-#import "AepOrderingTable.h"
-#import "neDebugLog.h"
 
 #include <cmath>
 #include <cstring>
+
+#import "AepManager.h"
+#import "AepOrderingTable.h"
+#import "neDebugLog.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

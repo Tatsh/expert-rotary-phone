@@ -31,7 +31,6 @@
 
 #include <cstdarg>
 #include <cstdio>
-
 #include <os/log.h>
 
 // printf-style wrapper over os_log (works in both .cpp and .mm translation

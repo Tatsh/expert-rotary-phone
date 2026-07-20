@@ -6,6 +6,7 @@
 //
 
 #import "PurchaseManager.h"
+
 #import "AppDelegate.h"
 #import "BFCodec.h"
 #import "CommonAlertView.h"

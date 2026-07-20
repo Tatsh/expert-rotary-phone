@@ -10,8 +10,9 @@
 //  caller resets the record if it fails.
 //
 
-#import "ScoreData.h"
 #import <CoreData/CoreData.h>
+
+#import "ScoreData.h"
 
 @interface ScoreData (Store)
 

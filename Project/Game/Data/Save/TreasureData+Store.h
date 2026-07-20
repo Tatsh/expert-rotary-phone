@@ -7,8 +7,9 @@
 //  PopnRhythmin.
 //
 
-#import "TreasureData.h"
 #import <CoreData/CoreData.h>
+
+#import "TreasureData.h"
 
 @interface TreasureData (Store)
 

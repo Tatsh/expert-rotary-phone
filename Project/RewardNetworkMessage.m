@@ -6,6 +6,7 @@
 //
 
 #import "RewardNetworkMessage.h"
+
 #import "NSBundle+RewardNetwork.h" // +rewardBundle (RewardNetworkResources.bundle)
 
 @implementation RewardNetworkMessage

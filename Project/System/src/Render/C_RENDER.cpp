@@ -10,13 +10,14 @@
 //  this file never reimplements GL, it wires it.
 //
 
+#include "C_RENDER.h"
+
 #include <cmath>
 #include <cstdint>
 
 #include <OpenGLES/ES1/gl.h>
 #include <OpenGLES/ES1/glext.h>
 
-#include "C_RENDER.h"
 #include "C_TEXTURE.h" // ne::C_TEXTURE::name() for the sprite blit
 #include "neDebugLog.h"
 #include "neGLES11.h" // ne::neGLES_11 concrete backend

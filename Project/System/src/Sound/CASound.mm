@@ -6,10 +6,10 @@
 //  audio file into an interleaved signed-16-bit LPCM buffer using ExtAudioFile.
 //
 
+#import "CASound.h"
+
 #include <cstdlib>
 #include <cstring>
-
-#import "CASound.h"
 
 // Ghidra: FUN_00027bac.
 // @complete

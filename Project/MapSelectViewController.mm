@@ -60,6 +60,8 @@
 
 #import "MapSelectViewController.h"
 
+#import <string.h>
+
 #import "AppDelegate.h"                // +appDelegate.displayType / managedObjectContext
 #import "DownloadMain.h"               // event-info push + DownloadMainDelegate
 #import "HowToViewCtrl.h"              // first-run how-to overlay
@@ -70,8 +72,6 @@
 #import "TreasureTmpData.h"            // pending-treasure struct (cleared on back)
 #import "UserSettingData.h"            // first-run flag + selected-map persistence
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
-
-#import <string.h>
 
 // @ 0xcdee0 — sugoroku map-header loader. For each of the 9 maps in display
 // order, resolve its bundle file number through the order table

@@ -19,8 +19,9 @@
 //  superclass: UIImageView.
 //
 
-#import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 #import <UIKit/UIKit.h>
+
+#import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 
 @interface LoginBonusView : UIImageView <CustomAlertViewDelegate>
 

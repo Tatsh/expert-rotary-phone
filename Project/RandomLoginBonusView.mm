@@ -8,6 +8,7 @@
 //
 
 #import "RandomLoginBonusView.h"
+
 #import "AudioManager.h" // +sharedManager, -loadSe:isLoop:callName:group:, -playSe:resourceId:, -stopSe:, -releaseSe:resourceId:
 #import "UserSettingData.h" // +treasurePoint / +saveTreasurePoint:
 #import "neEngineBridge.h" // neSceneManager::rootViewController(), neSceneManager::isPadDisplay(), neEngine::playSystemSe(int)

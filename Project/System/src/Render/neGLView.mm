@@ -6,6 +6,8 @@
 //  Objective-C++ (ARC): forwards touches to the C++ task/input system.
 //
 
+#import "neGLView.h"
+
 #import <OpenGLES/EAGL.h>
 #import <OpenGLES/EAGLDrawable.h>
 #import <OpenGLES/ES1/gl.h>
@@ -14,7 +16,6 @@
 
 #import "C_RENDER.h" // neEnsureRenderer / neGetCurrentRenderer
 #import "neGLES11.h" // ne::neGLES_11 backend — the view's m_GLInterface
-#import "neGLView.h"
 #import "neGraphics.h"
 
 // Pass each touch's raw locationInView coordinate to neGraphics as a plain int.

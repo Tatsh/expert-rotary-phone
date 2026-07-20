@@ -36,12 +36,11 @@
 
 #import "SettingGameTableViewController.h"
 
-#import "AppFont.h"        // AppFontName (label typeface)
-#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
-
+#import "AppFont.h"            // AppFontName (label typeface)
 #import "GameEffectView.h"     // row 3 detail sub-controller (@ PTR_GameEffectView_0015c0a8)
 #import "PopkunSizeViewCtrl.h" // row 5 detail sub-controller (@ PTR_PopkunSizeViewCtrl_0015c0a4)
 #import "SoundSettingView.h"   // row 1 detail sub-controller (@ PTR_SoundSettingView_0015c0a0)
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
 
 // The game-settings table rows: three category headers, each followed by a
 // collapsible detail sub-controller.

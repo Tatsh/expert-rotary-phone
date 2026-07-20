@@ -7,6 +7,8 @@
 //  + first-run flow, handed off from BootLogoTask.
 //
 
+#import "TitleTask.h"
+
 #import <UIKit/UIKit.h>
 
 #import "AepLyrCtrl.h"
@@ -19,7 +21,6 @@
 #import "DownloadMain.h"
 #import "MainViewController.h" // the concrete root VC the title flow drives (Goto*/Communicating)
 #import "TaskFactory.h"
-#import "TitleTask.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 #import "neGraphics.h"

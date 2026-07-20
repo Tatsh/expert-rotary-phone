@@ -27,19 +27,20 @@
 //  matching its arg reads to the caller's stack pushes.
 //
 
+#import "PlayJudge.h"
+
+#include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
+#include <span>
+
 #import <Foundation/Foundation.h>
 
 #import "AepFrameDraw.h"
 #import "AepLyrCtrl.h"
 #import "AepManager.h"
 #import "NoteMng.h"
-#import "PlayJudge.h"
 #import "PlayTask.h"
 #import "neDebugLog.h"
 #import "neGraphics.h"
-
-#include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
-#include <span>
 
 // --- Play-data field access -------------------------------------------------
 // The play data is the standard-mode play task, PlayTask; the judge reaches its

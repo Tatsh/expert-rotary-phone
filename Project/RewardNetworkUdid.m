@@ -6,14 +6,15 @@
 //
 
 #import "RewardNetworkUdid.h"
-#import "RewardNetwork.h" // +ad_udid / +udid / +old_udid
-#import "RewardNetworkError.h"
-#import "RewardNetworkPasteBoard.h"
 
 #import <AdSupport/AdSupport.h>       // ASIdentifierManager
 #import <CommonCrypto/CommonDigest.h> // CC_MD5
 #import <Security/Security.h>
 #import <UIKit/UIKit.h> // UIDevice
+
+#import "RewardNetwork.h" // +ad_udid / +udid / +old_udid
+#import "RewardNetworkError.h"
+#import "RewardNetworkPasteBoard.h"
 
 // The process-wide singleton backing +allocWithZone: / +sharedInstance
 // (g_pRewardNetworkUdidInstance in the binary).

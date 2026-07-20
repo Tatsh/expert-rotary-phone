@@ -8,6 +8,8 @@
 //  (see PlayJudge.h).
 //
 
+#import "PlayTask.h"
+
 #include <cstring>
 #include <span>
 
@@ -20,7 +22,6 @@
 #import "MusicManager.h"
 #import "NoteMng.h"
 #import "PlayJudge.h"
-#import "PlayTask.h"
 #import "RhUtil.h" // pointInCircle / getTimeMillis (the pause hit-circle)
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager::hitSoundName

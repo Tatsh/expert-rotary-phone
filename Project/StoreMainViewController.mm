@@ -6,6 +6,10 @@
 //
 
 #import "StoreMainViewController.h"
+
+#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius / borderColor / borderWidth
+#import <StoreKit/StoreKit.h>     // SKProduct.price
+
 #import "AppDelegate.h"
 #import "AppFont.h" // AppFontName() == getFontNameDFSoGei() -> @"DFSoGei-W5-WIN-RKSJ-H"
 #import "CharaTicketData+Store.h" // isExistData:... / addRecordWithProductId:...
@@ -30,8 +34,6 @@
 #import "StoreViewController.h"
 #import "UserSettingData.h" // addCharaTicket: / sumPurchase / saveSumPurchase: ...
 #import "neEngineBridge.h"
-#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius / borderColor / borderWidth
-#import <StoreKit/StoreKit.h>     // SKProduct.price
 
 // Subview tags looked up with -viewWithTag: (the views are built and tagged in
 // the setup methods and fetched back throughout).

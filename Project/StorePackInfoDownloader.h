@@ -13,8 +13,9 @@
 //    dealloc @ 0x57488
 //
 
-#import "Downloader.h"
 #import <Foundation/Foundation.h>
+
+#import "Downloader.h"
 
 @class StorePackInfo;
 @class StorePackInfoDownloader;

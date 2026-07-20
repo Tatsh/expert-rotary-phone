@@ -6,6 +6,8 @@
 //  Objective-C++ (ARC): drives the C++ task/scene engine each display frame.
 //
 
+#import "MainViewController.h"
+
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
 
@@ -28,7 +30,6 @@
 #import "InputNameViewCtrl.h"
 #import "InviteTopViewController.h"
 #import "InviteTopViewControllerPad.h"
-#import "MainViewController.h"
 #import "MapSelectSplitViewController.h"
 #import "MapSelectViewController.h"
 #import "MusicManager.h"

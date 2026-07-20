@@ -6,6 +6,7 @@
 //
 
 #import "DevDataDownloader.h"
+
 #import "AppDelegate.h"
 
 // Lazily-created shared instance (Ghidra global g_pDevDataDownloaderInstance).
@@ -37,10 +38,10 @@ static DevDataDownloader *s_instance = nil;
         return NO;
     }
     // Ghidra: literal-pool strings @ 0x108997 / 0x1089af (byte-verified).
-    NSString *path = [NSString
-        stringWithFormat:(m_IsOld ? @"/apr/dev/data/old/%@/%@" : @"/apr/dev/data/%@/%@"),
-                         title,
-                         fileName];
+    NSString *path =
+        [NSString stringWithFormat:(m_IsOld ? @"/apr/dev/data/old/%@/%@" : @"/apr/dev/data/%@/%@"),
+                                   title,
+                                   fileName];
 #if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
     NSURLComponents *components = [[NSURLComponents alloc] init];
     components.scheme = @"http";

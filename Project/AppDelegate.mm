@@ -6,19 +6,20 @@
 //  Cited @ addresses are relative to the program image base (0x4000).
 //
 
+#import "AppDelegate.h"
+
 #import <stdlib.h>
 #import <string.h>
+#import <sys/sysctl.h>
 
 #import <GameKit/GameKit.h>
 #import <Security/Security.h>
 #import <StoreKit/StoreKit.h>
-#import <sys/sysctl.h>
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 #import <UserNotifications/UserNotifications.h>
 #endif
 
 #import "AcNoteMng.h"
-#import "AppDelegate.h"
 #import "AudioManager.h"
 #import "CommonAlertView.h"
 #import "DownloadMain.h"

@@ -6,6 +6,7 @@
 //
 
 #import "RewardNetworkError.h"
+
 #import "NSBundle+RewardNetwork.h" // +rewardBundle (RewardNetworkResources.bundle)
 
 // Error domain constant (CFString cf_ApplilinkErrorDomain @ 0x115d6d).

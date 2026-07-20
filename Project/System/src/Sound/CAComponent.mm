@@ -7,10 +7,11 @@
 //  render callback. Output format: 32000 Hz, stereo, interleaved signed 16-bit.
 //
 
+#import "CAComponent.h"
+
 #include <cstring>
 #include <memory>
 
-#import "CAComponent.h"
 #import "CASound.h"
 #import "SDKCompat.h"
 

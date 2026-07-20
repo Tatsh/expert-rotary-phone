@@ -14,6 +14,7 @@
 //
 
 #import "FriendMngTopViewController.h"
+
 #import "DownloadMain.h" // friendRequestedCnt (drives the reply badge)
 #import "FriendListViewController.h"
 #import "FriendReplyViewController.h"

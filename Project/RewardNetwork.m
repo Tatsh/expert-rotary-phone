@@ -7,11 +7,12 @@
 //
 
 #import "RewardNetwork.h"
-#import "RewardNetworkError.h"
-#import "RewardNetworkUtilities.h"
+
 #import <UIKit/UIKit.h>
 
+#import "RewardNetworkError.h"
 #import "RewardNetworkUdid.h" // +isAdvertisingTrackingEnabled (reconstructed in parallel)
+#import "RewardNetworkUtilities.h"
 #import "RewardNetworkWebAPI.h"
 
 // Serial queue guarding the shared-instance handoff in -init. Created in

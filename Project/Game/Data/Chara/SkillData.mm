@@ -9,9 +9,9 @@
 //  English translation.
 //
 
-#include <cassert>
-
 #import "SkillData.h"
+
+#include <cassert>
 
 // The outer table (Ghidra: @ 0x133478). Each entry is { NSString*, int weight
 // }; the first word points at the constant-NSString description.

@@ -50,22 +50,21 @@
 
 #import "InputConversionPassViewController.h"
 
+#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius on the indicator
+
+#import "AppDelegate.h"           // +appDelegate -> uuId / managedObjectContext
 #import "CharaTicketData+Store.h" // +addRecordWithProductId:inManagedObjectContext:
 #import "CharaTicketData.h"
-#import "MusicManager.h"    // +getInstance -> open*Music
-#import "ScoreData+Store.h" // +getScoreData:inManagedObjectContext: / +hashScore:
-#import "ScoreData.h"
-#import "TreasureData+Store.h" // +addRecordWithMainMapId:subMapId:inManagedObjectContext:
-#import "TreasureData.h"       // +init:
-
-#import "AppDelegate.h"        // +appDelegate -> uuId / managedObjectContext
 #import "DownloadMain.h"       // Downloader-based download manager (shared helper)
 #import "MainViewController.h" // -InConversionPassEndCallBack (root callback)
+#import "MusicManager.h"       // +getInstance -> open*Music
+#import "ScoreData+Store.h"    // +getScoreData:inManagedObjectContext: / +hashScore:
+#import "ScoreData.h"
 #import "StoreUtil.h"          // +convertURL
+#import "TreasureData+Store.h" // +addRecordWithMainMapId:subMapId:inManagedObjectContext:
+#import "TreasureData.h"       // +init:
 #import "UserSettingData.h"    // player-save accessors + initForConvert
-
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController / isPadDisplay
-#import <QuartzCore/QuartzCore.h> // CALayer cornerRadius on the indicator
 
 // Score -> rank index (0 best .. 6 worst). Ghidra: FUN_00028a40 (scoreToRank).
 // @complete

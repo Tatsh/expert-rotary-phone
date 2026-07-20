@@ -7,9 +7,10 @@
 
 #import "StoreDownloadManager.h"
 
+#import <UIKit/UIKit.h> // UIApplication.idleTimerDisabled (keep the device awake during a download)
+
 #import "MusicManager.h"
 #import "StoreDownloadTask.h"
-#import <UIKit/UIKit.h> // UIApplication.idleTimerDisabled (keep the device awake during a download)
 
 @implementation StoreDownloadManager {
     Downloader *m_FileDownloader; // the in-flight per-file download

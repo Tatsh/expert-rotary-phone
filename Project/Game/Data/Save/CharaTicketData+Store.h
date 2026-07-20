@@ -6,8 +6,9 @@
 //  IAP tickets). Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
-#import "CharaTicketData.h"
 #import <CoreData/CoreData.h>
+
+#import "CharaTicketData.h"
 
 @interface CharaTicketData (Store)
 

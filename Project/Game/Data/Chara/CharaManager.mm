@@ -9,6 +9,8 @@
 //  data).
 //
 
+#import "CharaManager.h"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -18,7 +20,6 @@
 #import "BFCodec.h"
 #import "CharaData.h"
 #import "CharaInfo.h"
-#import "CharaManager.h"
 #import "LimitedCharaInfo.h"
 #import "MusicManager.h"
 #import "PreferredCharaInfo.h"

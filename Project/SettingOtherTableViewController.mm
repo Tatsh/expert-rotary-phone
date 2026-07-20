@@ -32,12 +32,11 @@
 #import "SettingOtherTableViewController.h"
 
 #import "AppFont.h"         // AppFontName
+#import "ConversionView.h"  // embedded "device change" (data transfer) panel (section 2, row 1)
+#import "CustomWebView.h"   // in-app web view for the official app-info page (section 0)
 #import "StoreUtil.h"       // +getOfficialAppInfoURL
 #import "UserSettingData.h" // +initTreasureTmp
 #import "neEngineBridge.h" // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
-
-#import "ConversionView.h" // embedded "device change" (data transfer) panel (section 2, row 1)
-#import "CustomWebView.h"  // in-app web view for the official app-info page (section 0)
 
 // The iPad "other settings" table sections (row counts 1/1/2; section 2's
 // second row is the expandable ConversionView panel).

@@ -11,6 +11,8 @@
 
 #import "SearchView.h"
 
+#import <CoreLocation/CoreLocation.h>
+
 #import "AppFont.h"            // AppFontName() (== Ghidra getFontNameDFSoGei)
 #import "CommonAlertView.h"    // styled modal alert
 #import "DownloadMain.h"       // app download stack (shared networking headers)
@@ -18,13 +20,9 @@
 #import "ImageDownloader.h"    // marker-image loader
 #import "MainViewController.h" // -ArcadeSearchEndCallBack (nav host)
 #import "MapAnnotation.h"      // the MKAnnotation dropped for each arcade
-#import "StoreUtil.h"          // +searchMasterURL / +searchURL / urlEncodeString
-
-#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
-
-#import <CoreLocation/CoreLocation.h>
-
 #import "SDKCompat.h"
+#import "StoreUtil.h" // +searchMasterURL / +searchURL / urlEncodeString
+#import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
 
 // --- Recovered constants (little-endian doubles read straight out of the
 // binary) ---

@@ -60,20 +60,19 @@
 //
 
 #import "ConversionView.h"
-#import "CharaTicketData.h"
-#import "MusicManager.h"
-#import "ScoreData+Store.h"
-#import "ScoreData.h"
-#import "TreasureData.h"
 
 #import "AppDelegate.h" // +appDelegate -> uuId / managedObjectContext
 #import "AppFont.h" // AppFontName() == getFontNameDFSoGei(), AppMaruFontName() == getFontNameDFMaruGothic()
+#import "CharaTicketData.h"
 #import "CommonAlertView.h"
 #import "Downloader.h"
 #import "MainViewController.h" // -GotoMailWithText: / isGotoTitle / -AcceptPolicyEndCallBack (root)
-#import "StoreUtil.h"          // +getConvertCodeURL
-#import "UserSettingData.h"    // player save accessors
-
+#import "MusicManager.h"
+#import "ScoreData+Store.h"
+#import "ScoreData.h"
+#import "StoreUtil.h" // +getConvertCodeURL
+#import "TreasureData.h"
+#import "UserSettingData.h" // player save accessors
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
 
 @implementation ConversionView {

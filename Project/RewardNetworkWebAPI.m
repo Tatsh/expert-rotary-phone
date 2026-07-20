@@ -7,6 +7,7 @@
 //
 
 #import "RewardNetworkWebAPI.h"
+
 #import <UIKit/UIKit.h> // UIDevice (canUseNetworkRetry)
 
 #import "RewardNetworkError.h"     // localized NSError by code
@@ -337,14 +338,16 @@ static int sRetryCount = 0;
     } else if ([status isEqualToString:@"2"]) {
         NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:text, @"response", nil];
         if (failedBlock) {
-            failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee
-                                                                                userInfo:info]);
+            failedBlock(request,
+                        [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ee
+                                                                       userInfo:info]);
         }
     } else {
         NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:text, @"response", nil];
         if (failedBlock) {
-            failedBlock(request, [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ef
-                                                                                userInfo:info]);
+            failedBlock(request,
+                        [RewardNetworkError localizedRewardNetworkErrorWithCode:0x3ef
+                                                                       userInfo:info]);
         }
     }
 

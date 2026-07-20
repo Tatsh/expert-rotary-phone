@@ -8,12 +8,13 @@
 //  Ghidra: loadAepData FUN_0000f4b0, draw FUN_0001058c, drawLayer FUN_0000fd64.
 //
 
+#import "AepManager.h"
+
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 
 #import "AepLyrCtrl.h"
-#import "AepManager.h"
 #import "neDebugLog.h"
 #import "neTextureForiOS.h"
 

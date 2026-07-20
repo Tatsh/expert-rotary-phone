@@ -12,8 +12,9 @@
 //    imageDownloaderDidFail:didLoad: @ 0xbe244
 //
 
-#import "ImageDownloader.h"
 #import <UIKit/UIKit.h>
+
+#import "ImageDownloader.h"
 
 @interface RecommendListCell : UITableViewCell <ImageDownloaderDelegate>
 

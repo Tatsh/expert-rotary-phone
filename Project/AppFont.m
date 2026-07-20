@@ -5,9 +5,9 @@
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //
 
-#import <UIKit/UIKit.h>
-
 #import "AppFont.h"
+
+#import <UIKit/UIKit.h>
 
 // @ 0x5ef9c — returns the constant font name (CFString
 // cf_DFSoGei_W5_WIN_RKSJ_H).
