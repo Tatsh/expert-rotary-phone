@@ -1593,14 +1593,28 @@ void MainTask::backgroundCellLoader() {
     }
     const int maxNameChars = m_isPadDisplay ? 21 : 15; // Ghidra: 0x15 default, 0xf when !isPad
     unsigned i = 0;
+    int idleScans = 0; // consecutive scanned cells with no work; a full ring -> idle back-off
     do {
+#ifdef ENABLE_PATCHES
+        // The binary slept 0.3s (0x3d368) before every cell scan, which serialises a
+        // freshly-paginated column into one jacket per ~0.5s -- 5-15s of "LOADING"
+        // over the large mulist catalogue. Back off only once a full 27-cell ring
+        // finds nothing to do, so queued jackets decode back-to-back while an idle
+        // loader still parks instead of busy-spinning.
+        if (idleScans >= 27) {
+            [NSThread sleepForTimeInterval:0.3];
+            idleScans = 0;
+        }
+#else
         [NSThread sleepForTimeInterval:0.3]; // 0x3d368 == 0.3
+#endif
         dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
         if (i > 26) {
             i = 0; // wrap the 27-cell ring
         }
         MusicSelCell &cell = m_cells[i];
         if (cell.loadState == 1) { // queued for load
+            idleScans = 0;
             const int songIndex = cell.songIndex;
             cell.loadState = 2; // processing
             dispatch_semaphore_signal(m_cellSem);
@@ -1649,6 +1663,7 @@ void MainTask::backgroundCellLoader() {
             }
             dispatch_semaphore_signal(m_cellSem);
         } else {
+            ++idleScans;
             dispatch_semaphore_signal(m_cellSem);
         }
         i++;
