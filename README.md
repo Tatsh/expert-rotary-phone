@@ -86,5 +86,4 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 ### Arcade viewer
 
-- On song selection screen, hitting the back button just goes to a black screen.
-- Viewer is not functional: song does not play, cannot exit.
+- Viewer is not functional: song does not play.

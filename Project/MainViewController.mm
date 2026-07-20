@@ -756,8 +756,11 @@ static void MainDismissContainerVC(UIViewController *child) {
         _acViewerNaviCtrl = nil;
     }
     if (neSceneManager::isPadDisplay()) {
-        // Stop the arcade main task (Ghidra: acMainTask + FUN_0002315c) on close.
-        neEngine::stopAcMainTask(static_cast<AcViewerTask *>(
+        // Ask the arcade viewer task to exit back to the menu (Ghidra:
+        // AcMainTask::requestGameExit @ FUN_0002315c). This sends it into its exit
+        // transition so the scene is restored; stopAcMainTask (FUN_0002314c) only
+        // opens the pause menu, which left the screen black on close.
+        neEngine::acMainRequestGameExit(static_cast<AcViewerTask *>(
             AppDelegate.appDelegate.acMainTask)); // acMainTask slot stores the AcViewerTask
         _acMusicSelViewing = NO;
     }
