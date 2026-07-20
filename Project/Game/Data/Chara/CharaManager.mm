@@ -286,7 +286,7 @@ void AcMainTask::charaSelectLoadPageTextures(int page) {
         BOOL owned =
             RhTestBitInNumberArray(gotChara, static_cast<unsigned>(static_cast<short>(charaId)));
         NSString *imageName =
-            [NSString stringWithFormat:(owned ? @"open_chara_%03d.png" : @"lock_chara_%03d.png"),
+            [NSString stringWithFormat:(owned ? @"open_chara%03d.png" : @"lock_chara%03d.png"),
                                        static_cast<int>(charaId)];
 
         NSString *path;

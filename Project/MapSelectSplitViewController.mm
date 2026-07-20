@@ -267,7 +267,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         // downloaded copy under the app-support directory).
         short charaId = [UserSettingData charaId];
         NSString *charaName =
-            [NSString stringWithFormat:@"open_chara_%03d.png", static_cast<int>(charaId)];
+            [NSString stringWithFormat:@"open_chara%03d.png", static_cast<int>(charaId)];
         NSString *charaPath;
         if (charaId < 30) {
             charaPath = [[NSBundle mainBundle] pathForResource:charaName ofType:nil];
