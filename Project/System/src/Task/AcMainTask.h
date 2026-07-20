@@ -146,9 +146,10 @@ private:
     void stateFadeIn();        // case 1  (fade the select scene, open the sugoroku map)
     void stateTreasureCheck(); // case 2  (read the temp-treasure record, branch)
     void stateBoardReveal();   // case 3  (fade the board in, save the tmp, arm the move count)
-    void stateExitBegin();     // case 0x4b (start the exit fade-out)
-    void stateExitWait();      // case 0x4c (wait for the exit fade-out to finish)
-    void stateExitToMenu();    // case 0x4d (spawn MenuMainTask, dispose this task)
+    void stateBoardIdle(neGraphics &gfx); // case 4 (roulette intro, drag; tap routing is TODO)
+    void stateExitBegin();                // case 0x4b (start the exit fade-out)
+    void stateExitWait();                 // case 0x4c (wait for the exit fade-out to finish)
+    void stateExitToMenu();               // case 0x4d (spawn MenuMainTask, dispose this task)
 
     // Scene build / map load (their own reconstruction pieces).
     void setupScene();      // Ghidra: FUN_0009fc90 (build the select/map scene)
@@ -451,17 +452,19 @@ private:
     int m_dlgBtn2H = {};       // +0x9b4 button2 h
     int m_dlgLayoutB[16] = {}; // +0x9b8 device-branched dialog/friend layout constants (write-only)
     // update()'s switch dispatches on this. The values are sparse (from the
-    // binary); states 0x10 and 0x4d share the map drag-scroll body.
+    // binary); states 4 and 0x10 share the map drag-scroll body.
     enum AcMainState {
-        kAcMainStateInit = 0,          // build the select / map scene, start the BGM
-        kAcMainStateFadeIn = 1,        // fade out, restore the BGM stack, push map-select
-        kAcMainStateTreasureCheck = 2, // wait for / load the pending treasure sub-map
-        kAcMainStateBoardReveal = 3,   // switch the scene to fade-in, save the tmp record,
-                                       // play the board layers, arm the reveal countdown
-        kAcMainStateMapDrag = 0x10,    // sugoroku map drag-scroll
-        kAcMainStateExitBegin = 0x4b,  // begin the exit fade-out (no pending sub-map)
-        kAcMainStateExitWait = 0x4c,   // wait for the exit fade-out to finish
-        kAcMainStateExitToMenu = 0x4d, // fade done: spawn MenuMainTask, dispose this task
+        kAcMainStateInit = 0,           // build the select / map scene, start the BGM
+        kAcMainStateFadeIn = 1,         // fade out, restore the BGM stack, push map-select
+        kAcMainStateTreasureCheck = 2,  // wait for / load the pending treasure sub-map
+        kAcMainStateBoardReveal = 3,    // switch the scene to fade-in, save the tmp record,
+                                        // play the board layers, arm the reveal countdown
+        kAcMainStateBoardIdle = 4,      // interactive board hub: roulette intro, drag, tap routing
+        kAcMainStateBoardIdleBonus = 9, // board hub variant entered when a bonus map is active
+        kAcMainStateMapDrag = 0x10,     // sugoroku map drag-scroll
+        kAcMainStateExitBegin = 0x4b,   // begin the exit fade-out (no pending sub-map)
+        kAcMainStateExitWait = 0x4c,    // wait for the exit fade-out to finish
+        kAcMainStateExitToMenu = 0x4d,  // fade done: spawn MenuMainTask, dispose this task
     };
     AcMainState m_state = {}; // +0x9f8 play-data state machine field (update switch
                               // dispatches on it)

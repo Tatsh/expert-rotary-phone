@@ -118,6 +118,9 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateBoardReveal:
         stateBoardReveal();
         break;
+    case kAcMainStateBoardIdle:
+        stateBoardIdle(gfx);
+        break;
     case kAcMainStateMapDrag:
         // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
         // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at
@@ -387,7 +390,47 @@ void AcMainTask::stateBoardReveal() {
 
     // Advance to the board-idle state (4), or the bonus-overlay variant (9) when a
     // bonus/main-map is active. Ghidra: 0x9cc72 (m_bonusCount > 0 -> 9), 0x9cc7c.
-    m_state = static_cast<AcMainState>(m_bonusCount > 0 ? 9 : 4);
+    m_state = m_bonusCount > 0 ? kAcMainStateBoardIdleBonus : kAcMainStateBoardIdle;
+}
+
+// case 4 — the interactive board-idle hub. This reconstructs the state's entry:
+// the result-roulette auto-stop, the one-shot event-intro kick, and the
+// drag-scroll normalisation. The tap router that follows (findTouchById then
+// dispatch to states 5 / 0xb / 0x25 / 0x29 / 0x36 / 0x49 via
+// sugorokuDrawButtonHitTest / sugorokuDrawSkillPanel / the square-kind switch) is
+// not yet reconstructed. Ghidra: case 4 body scattered across 0x9a172 (roulette),
+// 0x9c748 (event-intro) and 0x9cb50 (drag, byte-identical to the state-0x10
+// block).
+void AcMainTask::stateBoardIdle(neGraphics &gfx) {
+    AepLyrCtrl *roul = m_rouletteLayers[0x1b].get();
+
+    // The result roulette is spinning: once it has run past its last frame and the
+    // player taps, brake it (-2.0) and stop it. Ghidra: 0x9a172..0x9a1ce.
+    if (roul->isActive()) {
+        if (roul->playSpeed() > 0.0f &&
+            roul->frameCount() - 1 <= static_cast<int>(roul->curFrame()) && m_frameTapped) {
+            roul->playSpeed() = -2.0f;
+            roul->stop(true);
+            m_fadeDir = 0;
+        }
+        return;
+    }
+
+    // First idle frame with a pending treasure-event tab (m_hudState >= 0): kick the
+    // event-intro roulette once. The binary's 0x101 half-word store sets both the
+    // one-shot flag and the fade direction. Ghidra: 0x9c748..0x9c774 (playOnce @
+    // 0x2cac0).
+    if (!m_eventIntroStarted && m_hudState >= 0) {
+        roul->playSpeed() = 1.0f;
+        roul->playOnce();
+        m_eventIntroStarted = true;
+        m_fadeDir = 1;
+        return;
+    }
+
+    // Otherwise run the per-frame drag / rubber-band scroll normalisation. Ghidra:
+    // 0x9cb50 (byte-identical to the state-0x10 block at 0x9a6ba).
+    applyDragScroll(gfx);
 }
 
 // case 0x4b — begin the exit fade-out. Reached from stateTreasureCheck when no
