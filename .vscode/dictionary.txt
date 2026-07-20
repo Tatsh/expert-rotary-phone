@@ -13,7 +13,6 @@ aish
 alignement
 analyzer
 analyzer's
-Ångström
 anim
 animationing
 aninationing
@@ -31,6 +30,7 @@ arith
 armv
 asbd
 assetcatalog
+asyncio
 atsync
 attrb
 aumx
@@ -50,6 +50,7 @@ aveoff
 badzipfile
 barriered
 barstar
+bascom
 bday
 beatmaps
 beginswith
@@ -85,6 +86,7 @@ casesensitivitydefault
 casesensitivitydefaultvalue
 cate
 ccflags
+cdrommsf
 centered
 centraldir
 centralheader
@@ -110,6 +112,7 @@ colored
 colors
 commitizen
 compr
+conftest
 conn
 cooldown
 coredata
@@ -125,16 +128,17 @@ cryptor
 cstr
 cstring
 ctype
+ctypes
 ctypting
 currenty
 curretly
-ＣＵＴＥ
 cutoff
 dakuten
 dalegate
 danu
 daon
 dashcam
+dataclasses
 dcmake
 ddeployment
 deadcode
@@ -161,6 +165,7 @@ dpopnrhythmin
 dresources
 drhydbg
 dumpable
+dunder
 dyna
 eagate
 eagl
@@ -206,6 +211,7 @@ ftrivial
 fukidasi
 fullcombo
 fullwidth
+functools
 gacha
 gailly
 gamecenter
@@ -260,6 +266,7 @@ ioapi
 iphoneos
 isspace
 isysroot
+itertools
 itms
 ivar
 ivars
@@ -285,6 +292,7 @@ konamiid
 konaminet
 kouka
 kuji
+kwargs
 lanczos
 lapistoria
 layouted
@@ -345,9 +353,11 @@ movw
 mulist
 multisample
 musicinfo
+myproject
 mypy
 mztools
 nakaji
+namedtuples
 navbars
 navc
 navi
@@ -377,6 +387,7 @@ nsurl
 nsutf
 nulled
 nullptr
+numpy
 nyami
 nyan
 nyou
@@ -395,12 +406,14 @@ packlist
 parameteri
 parameteriv
 passthrough
+pathlib
 pbxproj
 pcrc
 peaceopen
 pfex
 pkware
 planef
+plistlib
 plists
 plumesign
 pointb
@@ -420,6 +433,7 @@ pycache
 pyinstaller
 pylock
 pyproject
+pytest
 pzlib
 quize
 ranknum
@@ -471,7 +485,6 @@ segs
 selec
 selref
 senisivity
-ＳＥＸＹ
 shellcheck
 shellformat
 shishamo
@@ -541,6 +554,7 @@ transactioing
 truepredicate
 trunc
 tssort
+ubyte
 udid
 udids
 udvare
@@ -648,4 +662,7 @@ zseek
 ztell
 zunzexport
 zwrite
+Ångström
 фade
+ＣＵＴＥ
+ＳＥＸＹ
