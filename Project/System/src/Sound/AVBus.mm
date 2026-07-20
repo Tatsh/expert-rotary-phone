@@ -9,6 +9,8 @@
 
 #import "AVBus.h"
 
+#import "neDebugLog.h" // temporary SE-path diagnostics
+
 @implementation AVBus {
     AVAudioPlayer *mPlayer; // the wrapped voice (strong)
     int mStatus;            // AVBusStatus
@@ -38,6 +40,11 @@
     // the single designated initializer instead, exactly as the data variant
     // already does. This is a modern-iOS correctness fix, not a behaviour change.
     AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+    NE_DBG(neDebugLog("AVBus initURL '%s' player=%p err=%s dur=%.2f",
+                      url.lastPathComponent.UTF8String,
+                      player,
+                      error ? error.localizedDescription.UTF8String : "nil",
+                      player ? player.duration : -1.0));
     if (player != nil && error == nil) {
         mPlayer = player;
         player.numberOfLoops = loop ? -1 : 0;
@@ -101,10 +108,15 @@
 - (BOOL)play {
     // Ghidra: (mStatus | 2) == 3, i.e. Prepared(1) or Paused(3).
     if (((mStatus | 2) == 3) && mPlayer != nil) {
-        [mPlayer play];
+        BOOL started = [mPlayer play];
         mStatus = AVBusStatusPlaying;
+        NE_DBG(neDebugLog("AVBus play OK started=%d isPlaying=%d vol=%.2f",
+                          started,
+                          mPlayer.isPlaying,
+                          mPlayer.volume));
         return YES;
     }
+    NE_DBG(neDebugLog("AVBus play SKIP status=%d player=%p", mStatus, mPlayer));
     return NO;
 }
 
