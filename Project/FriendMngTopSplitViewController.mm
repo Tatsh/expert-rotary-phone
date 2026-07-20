@@ -104,6 +104,14 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
         // -initAtNavigationController; its own view is embedded here).
         _leftViewCtrl = [[FriendMngTopViewController alloc] init];
         [_leftViewCtrl initAtNavigationController];
+#ifdef ENABLE_PATCHES
+        // initAtNavigationController wraps the left controller as a discarded navigation
+        // controller's root, but its view is embedded directly in the board below. On modern iOS
+        // the appearance-callback hierarchy check then aborts when the board enters the window, so
+        // detach it from that orphan navigation controller. Its view, with the section buttons
+        // built above, is unaffected; this matches the parentless left pane of the other splits.
+        [_leftViewCtrl removeFromParentViewController];
+#endif
         _leftViewCtrl.view.frame = CGRectMake(_leftViewCtrl.view.frame.origin.x + 65,
                                               _leftViewCtrl.view.frame.origin.y + 100,
                                               354,
