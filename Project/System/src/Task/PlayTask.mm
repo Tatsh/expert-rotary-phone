@@ -214,18 +214,18 @@ void PlayTask::DrawHud() {
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmScoreGauge],
                       beatFrame(m_scoreBpmFrames[kScoreBpmScoreGauge]),
                       AepTransform{.priority = 23}, // 0x17
-                      kDrawLoop);
+                      AepManager::kDrawLoop);
     }
     if (m_optEffectOn) { // +0x9e5
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmBestGauge],
                       beatFrame(m_scoreBpmFrames[kScoreBpmBestGauge]),
                       AepTransform{.priority = 23}, // 0x17
-                      kDrawLoop);
+                      AepManager::kDrawLoop);
     }
     aep.drawLayer(m_scoreBpmLyr[kScoreBpmComboGauge],
                   beatFrame(m_scoreBpmFrames[kScoreBpmComboGauge]),
                   AepTransform{.priority = 28}, // 0x1c
-                  kDrawLoop);
+                  AepManager::kDrawLoop);
 
     if (!m_optEffectOn) {
         return;
@@ -241,12 +241,12 @@ void PlayTask::DrawHud() {
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmFeverLo],
                       ((m_scoreBpmFrames[kScoreBpmFeverLo] - 1) * m_score) / kScoreClearThreshold,
                       AepTransform{.priority = 31}, // 0x1f, Ghidra 0x305b6
-                      kDrawLoop);
+                      AepManager::kDrawLoop);
     } else {
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmFeverHi],
                       beatFrame(m_scoreBpmFrames[kScoreBpmFeverHi]),
                       AepTransform{.priority = 31}, // 0x1f, Ghidra 0x305b6
-                      kDrawLoop);
+                      AepManager::kDrawLoop);
     }
 
     if (!m_optEffectOn) {
@@ -266,7 +266,7 @@ void PlayTask::DrawHud() {
         aep.drawLayer(m_effectStateLyr[kEffectStateTwl0Start],
                       f,
                       AepTransform{.priority = 29}, // 0x1d, Ghidra 0x30624
-                      kDrawLoop);
+                      AepManager::kDrawLoop);
         if (!m_optEffectOn) {
             return;
         }
@@ -292,7 +292,7 @@ void PlayTask::DrawHud() {
     aep.drawLayer(m_effectStateLyr[kEffectStateCd],
                   m_scrubBarFrame,
                   AepTransform{.priority = 27}, // 0x1b, Ghidra 0x306d4
-                  kDrawLoop);
+                  AepManager::kDrawLoop);
 
     // Advance the fever-loop frame counter.
     m_cdColorFrame = (m_cdColorFrame + 1) % (m_effectStateFrames[kEffectStateCdColor] - 1);
