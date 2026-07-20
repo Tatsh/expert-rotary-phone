@@ -32,6 +32,7 @@
 #import "StoreTableCell.h"
 #import "StoreUtil.h"
 #import "StoreViewController.h"
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // addCharaTicket: / sumPurchase / saveSumPurchase: ...
 #import "neEngineBridge.h"
 
@@ -805,8 +806,7 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
     }
     [vc setPackInfo:[list getPackInfo:packID]];
     UIImage *navbar = [UIImage imageNamed:@"p_store_detail_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:navbar
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setBackgroundImageModern:navbar];
     [self.navigationController pushViewController:vc animated:YES];
 }
 

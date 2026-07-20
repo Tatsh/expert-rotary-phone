@@ -20,7 +20,8 @@
 #import "Downloader.h"                 // the score-sync HTTP request
 #import "InputOTPViewCtrl.h"           // OTP-input screen (initWithCategoryView:)
 #import "StoreUtil.h"                  // +getArcadeScoreURL
-#import "UserSettingData.h"            // +konamiId
+#import "UINavigationBar+RHHeader.h"
+#import "UserSettingData.h" // +konamiId
 #import "neEngineBridge.h"
 
 // Alert messages (Ghidra CFStrings cf_Ok01YWeW0_0W0_00 @ 0x134a78 and
@@ -459,8 +460,8 @@ static NSString *const kMsgNoPlayData =
     }
     neSceneManager::shared();
     neEngine::playSystemSe(2); // cancel SE
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 
@@ -478,8 +479,7 @@ static NSString *const kMsgNoPlayData =
         [self startGetArcadeScoreHttpWithOtp:nil];
     } else {
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"input_kid_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"input_kid_navbar"]];
         InputOTPViewCtrl *otpViewCtrl = [[InputOTPViewCtrl alloc] initWithCategoryView:self];
         [self.navigationController pushViewController:otpViewCtrl animated:YES];
     }

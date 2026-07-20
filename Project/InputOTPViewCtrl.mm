@@ -14,6 +14,7 @@
 #import "CheckerCategoryViewController.h" // owner type + -startGetArcadeScoreHttpWithOtp:
 #import "MainViewController.h"            // scene root -PopnLinkEndCallBack
 #import "TouchableScrollView.h"           // the tap-through form host
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController
 
 // Own privates (button targets wired up by -initWithCategoryView:).
@@ -171,8 +172,7 @@
     if (code.length != 0) {
         [_categoryView startGetArcadeScoreHttpWithOtp:code];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"ppc_navbar"]];
         [self.navigationController popViewControllerAnimated:YES];
     }
     neSceneManager::shared();
@@ -183,8 +183,8 @@
 - (void)touchedBackButton:(id)sender {
     neSceneManager::shared();
     neEngine::playSystemSe(2); // cancel SE
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"ppc_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

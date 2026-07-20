@@ -164,6 +164,7 @@ target_sources(popnrhythmin PRIVATE
     HowToViewCtrlPad.mm
     StoreDialogView.m
     UIImage+Effects.m
+    UINavigationBar+RHHeader.m
     UIView+neSystemAddFunc.m
     AcViewerDetailCell.h
     AcViewerMusicCell.h
@@ -250,6 +251,7 @@ target_sources(popnrhythmin PRIVATE
     QuizCell.h
     ViewUtility.h
     UIImage+Effects.h
+    UINavigationBar+RHHeader.h
     UIView+neSystemAddFunc.h
     neWindow.h
     AcViewerOptionViewController.h

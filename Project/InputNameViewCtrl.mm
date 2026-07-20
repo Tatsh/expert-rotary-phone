@@ -19,7 +19,8 @@
 #import "CommonAlertView.h"    // error alerts
 #import "MainViewController.h" // scene root -InPlayerNameEndCallBack
 #import "StoreUtil.h"          // +playerNewURL, urlEncodeString()
-#import "UserSettingData.h"    // +savePlayerName: / +savePlayerId:
+#import "UINavigationBar+RHHeader.h"
+#import "UserSettingData.h" // +savePlayerName: / +savePlayerId:
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay / rootViewController
 
 // Own privates (button target + the name-registration POST wired up by -init).
@@ -66,8 +67,7 @@
             navc.view.clipsToBounds = YES;
             navc.view.layer.cornerRadius = 2.5f;
             navc.view.center = CGPointMake(frame.size.width * 0.5f, frame.size.height * 0.5f);
-            [navc.navigationBar setBackgroundImage:[UIImage imageNamed:@"inputname_navbar"]
-                                     forBarMetrics:UIBarMetricsDefault];
+            [navc.navigationBar setBackgroundImageModern:[UIImage imageNamed:@"inputname_navbar"]];
 
             // Gradient "frame" card, 3pt larger than the nav card, sitting behind it.
             CGRect navFrame = navc.view.frame;
@@ -219,8 +219,7 @@
     UINavigationController *navc = [[UINavigationController alloc] initWithRootViewController:self];
     [self.navigationItem setHidesBackButton:YES];
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"inputname_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"inputname_navbar"]];
     return navc;
 }
 

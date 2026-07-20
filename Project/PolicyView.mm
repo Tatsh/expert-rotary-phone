@@ -45,6 +45,7 @@
 
 #import "PolicyView.h"
 
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation PolicyView
@@ -151,8 +152,7 @@
     UINavigationController *nav = self.navigationController;
     if (!neSceneManager::isPadDisplay() && nav.viewControllers.count > 1) {
         // Phone, embedded in a nav stack: restore the settings nav-bar art and pop.
-        [nav.navigationBar setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-                                forBarMetrics:UIBarMetricsDefault];
+        [nav.navigationBar setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
         [nav popViewControllerAnimated:YES]; // BOOL best-effort (tail-call)
     } else {
         // Pad / presented as the nav root: just drop the nav view.

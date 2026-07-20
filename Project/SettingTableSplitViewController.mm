@@ -13,6 +13,7 @@
 #import "SettingGameTableViewController.h"
 #import "SettingHowtoTableViewController.h"
 #import "SettingOtherTableViewController.h"
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h"
 
 // The four settings panes the left column selects between (ゲーム / 遊び方 /
@@ -160,8 +161,8 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
         SettingGameTableViewController *game =
             [[SettingGameTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
         game.navigationItem.hidesBackButton = YES;
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"set_game_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"set_game_navbar"]];
         [_rightViewCtrl pushViewController:game animated:NO];
 
         // Top cover strip (blocks the panel's title area from stray taps).
@@ -319,8 +320,7 @@ static void settingTableSetArrowFrame(SettingTableSplitViewController *self, NSI
         }
         completion:^(BOOL finished) {
           [self->_rightViewCtrl setViewControllers:@[ vc ] animated:NO];
-          [self->_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:navbar]
-                                                   forBarMetrics:UIBarMetricsDefault];
+          [self->_rightViewCtrl.navigationBar setBackgroundImageModern:[UIImage imageNamed:navbar]];
           [UIView transitionWithView:self->_rightViewCtrl.view
               duration:0.25
               options:UIViewAnimationOptionCurveEaseIn

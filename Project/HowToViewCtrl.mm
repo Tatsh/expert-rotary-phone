@@ -11,6 +11,7 @@
 #import "HowToViewCtrl.h"
 
 #import "HowToView.h"
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h" // neEngine::playSystemSe (page / cancel SE)
 
 @implementation HowToViewCtrl
@@ -114,8 +115,7 @@
     // cancel SE.
     neEngine::playSystemSe(2);
     if (_fromNaviBarImage) {
-        [self.navigationController.navigationBar setBackgroundImage:_fromNaviBarImage
-                                                      forBarMetrics:UIBarMetricsDefault];
+        [self.navigationController.navigationBar setBackgroundImageModern:_fromNaviBarImage];
         _fromNaviBarImage = nil; // ARC: was release + nil.
     }
     [self.navigationController popViewControllerAnimated:YES];

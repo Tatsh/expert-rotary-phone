@@ -15,6 +15,7 @@
 #import "MainViewController.h"            // scene root -PopnLinkEndCallBack
 #import "PopnLinkTopViewController.h"     // left pane + PopnLinkTopViewControllerDelegate
 #import "QuizMainViewController.h"        // quiz section
+#import "UINavigationBar+RHHeader.h"      // setBackgroundImageModern:
 #import "UserSettingData.h"               // isPopnLinkSelected / saveIsPopnLinkSelected:
 #import "neEngineBridge.h" // neAppEventCenter::linkButtonsEnabled, neEngine::playSystemSe,
                            //   neSceneManager::rootViewController
@@ -182,8 +183,7 @@
             [UserSettingData saveIsPopnLinkSelected:YES];
         } else {
             [self.navigationController.navigationBar
-                setBackgroundImage:[UIImage imageNamed:@"input_kid_navbar"]
-                     forBarMetrics:UIBarMetricsDefault];
+                setBackgroundImageModern:[UIImage imageNamed:@"input_kid_navbar"]];
         }
     }
 
@@ -257,8 +257,7 @@
     vc.delegate = self;
 
     if (_selectedIndex < 0) {
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
@@ -277,8 +276,8 @@
             completion:^(BOOL finished) {
               // showKonamiIdView @ 0xe1d18 — set the navbar art, swap in the KID
               // input, then expand the pane to its section frame.
-              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view
@@ -329,8 +328,7 @@
     vc.navigationItem.hidesBackButton = YES;
 
     if (_selectedIndex < 0) {
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar setBackgroundImageModern:[UIImage imageNamed:@"ppc_navbar"]];
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
@@ -346,8 +344,8 @@
             completion:^(BOOL finished) {
               // showCheckerView @ 0xe2320 — set the navbar art, swap in the
               // checker, then expand.
-              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImageModern:[UIImage imageNamed:@"ppc_navbar"]];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view
@@ -398,8 +396,8 @@
     vc.navigationItem.hidesBackButton = YES;
 
     if (_selectedIndex < 0) {
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_konamiid_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"pl_konamiid_navbar"]];
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
@@ -417,8 +415,8 @@
               // expand. The animated-flip path uses "pq_navbar" (verified against
               // the imageNamed: CFString at 0xe2928), unlike the initial-populate
               // path above, which uses "pl_konamiid_navbar".
-              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pq_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImageModern:[UIImage imageNamed:@"pq_navbar"]];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view

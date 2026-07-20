@@ -44,6 +44,7 @@
 #import "SortSelectViewController.h"
 #import "StoreViewController.h"
 #import "TreasureData.h"
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h"
 #import "neDebugLog.h"
 #import "neEngineBridge.h"
@@ -238,8 +239,8 @@ static void MainDismissContainerVC(UIViewController *child) {
     if (!neSceneManager::isPadDisplay()) {
         SettingTableViewController *content = [SettingTableViewController alloc];
         _settingNaviCtrl = [content initAtNavigationController];
-        [_settingNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-                                             forBarMetrics:UIBarMetricsDefault];
+        [_settingNaviCtrl.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
         MainPresentContainerVC(self, _settingNaviCtrl);
         [content startOpenAnimation];
     } else {
@@ -259,8 +260,7 @@ static void MainDismissContainerVC(UIViewController *child) {
         MapSelectViewController *content = [MapSelectViewController alloc];
         _mapSelectNaviCtrl = [content initAtNavigationController];
         [_mapSelectNaviCtrl.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"map_select_navbar"]];
         MainPresentContainerVC(self, _mapSelectNaviCtrl);
         [content startOpenAnimation];
     } else {
@@ -559,8 +559,8 @@ static void MainDismissContainerVC(UIViewController *child) {
                       border:[UIColor colorWithRed:1.0f green:0.62f blue:0.808f alpha:1]];
     }
     [_recommendNaviCtrl pushViewController:_recommendViewCtrl animated:NO];
-    [_recommendNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirec_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+    [_recommendNaviCtrl.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"frirec_navbar"]];
     MainPresentContainerVC(self, _recommendNaviCtrl);
     [_recommendViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
@@ -586,8 +586,8 @@ static void MainDismissContainerVC(UIViewController *child) {
         _sortSelectNaviCtrl.view.userInteractionEnabled = YES;
     }
     [_sortSelectNaviCtrl pushViewController:_sortSelectViewCtrl animated:NO];
-    [_sortSelectNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"m_sort_navbar"]
-                                            forBarMetrics:UIBarMetricsDefault];
+    [_sortSelectNaviCtrl.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"m_sort_navbar"]];
     MainPresentContainerVC(self, _sortSelectNaviCtrl);
     [_sortSelectViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
@@ -610,8 +610,7 @@ static void MainDismissContainerVC(UIViewController *child) {
     }
     [_overScoreLogNaviCtrl pushViewController:_overScoreLogViewCtrl animated:NO];
     [_overScoreLogNaviCtrl.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"osl_friend_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"osl_friend_navbar"]];
     MainPresentContainerVC(self, _overScoreLogNaviCtrl);
     [_overScoreLogViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
@@ -631,8 +630,8 @@ static void MainDismissContainerVC(UIViewController *child) {
                       border:[UIColor colorWithRed:0.929f green:0.659f blue:0.0784f alpha:1]];
     }
     [_presentBoxNaviCtrl pushViewController:_presentBoxViewCtrl animated:NO];
-    [_presentBoxNaviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"pbox_nav_gift"]
-                                            forBarMetrics:UIBarMetricsDefault];
+    [_presentBoxNaviCtrl.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"pbox_nav_gift"]];
     MainPresentContainerVC(self, _presentBoxNaviCtrl);
     [_presentBoxViewCtrl startOpenAnimation];
     if (!neSceneManager::isPadDisplay()) {
@@ -661,8 +660,7 @@ static void MainDismissContainerVC(UIViewController *child) {
         AcViewerCategoryViewController *content = [AcViewerCategoryViewController alloc];
         _acViewerNaviCtrl = [content initAtNavigationController];
         [_acViewerNaviCtrl.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"acv_category_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"acv_category_navbar"]];
         MainPresentContainerVC(self, _acViewerNaviCtrl);
         [content startOpenAnimation];
         [self PauseLoop];

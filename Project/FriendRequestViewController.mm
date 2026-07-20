@@ -51,6 +51,7 @@
 #import "FreeRequestListViewController.h" // recommended-friend list (right-bar button)
 #import "FriendRequestTable.h"            // embedded sent-requests table
 #import "StoreUtil.h"                     // +requestFriendURL
+#import "UINavigationBar+RHHeader.h"      // setBackgroundImageModern:
 #import "UserSettingData.h"               // +playerId (own id)
 #import "neEngineBridge.h"                // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
@@ -269,8 +270,8 @@
     if (self.navigationController.topViewController != self) {
         return;
     }
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"fpl_navbar"]
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"fpl_navbar"]];
     FreeRequestListViewController *vc =
         [[FreeRequestListViewController alloc] initWithStyle:UITableViewStyleGrouped];
     [self.navigationController pushViewController:vc animated:!neSceneManager::isPadDisplay()];
@@ -399,8 +400,7 @@
     }
     neEngine::playSystemSe(2); // cancel/back SE
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"friman_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"friman_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

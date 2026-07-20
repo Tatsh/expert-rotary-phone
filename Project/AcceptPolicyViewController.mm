@@ -19,9 +19,10 @@
 
 #import <QuartzCore/QuartzCore.h> // CAGradientLayer / CALayer cornerRadius
 
-#import "AppFont.h"         // AppFontName()  (getFontNameDFSoGei)
-#import "CustomTextView.h"  // the read-only terms text view
-#import "PolicyView.h"      // the full terms overlay (onDetailBtn:)
+#import "AppFont.h"        // AppFontName()  (getFontNameDFSoGei)
+#import "CustomTextView.h" // the read-only terms text view
+#import "PolicyView.h"     // the full terms overlay (onDetailBtn:)
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // +saveIsPolicyAccepted:
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController / isPadDisplay
 
@@ -78,8 +79,8 @@
     _naviCtrl.view.layer.cornerRadius = 2.5f;
     _naviCtrl.view.backgroundColor =
         [UIColor colorWithPatternImage:[UIImage imageNamed:@"back_bg_st"]];
-    [_naviCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"btn_navbar_conditions"]
-                                  forBarMetrics:UIBarMetricsDefault];
+    [_naviCtrl.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"btn_navbar_conditions"]];
     [card addSubview:_naviCtrl.view];
 
     // Read-only terms summary text (seeded with the placeholder above). x=10.0
@@ -173,8 +174,8 @@
     if (_policyView == nil) {
         PolicyView *pv = [[PolicyView alloc] init];
         _policyView = [[UINavigationController alloc] initWithRootViewController:pv];
-        [_policyView.navigationBar setBackgroundImage:[UIImage imageNamed:@"set_agreement_navbar"]
-                                        forBarMetrics:UIBarMetricsDefault];
+        [_policyView.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"set_agreement_navbar"]];
     }
     UIViewController *root = neSceneManager::rootViewController();
     [root.view addSubview:_policyView.view];

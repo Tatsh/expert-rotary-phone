@@ -16,6 +16,7 @@
 #import "InputKidViewController.h"
 #import "MainViewController.h" // scene root -PopnLinkEndCallBack
 #import "QuizMainViewController.h"
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
@@ -166,8 +167,8 @@ static UIViewController *RootVC() {
         forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:back];
 
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
     return nav;
 }
 
@@ -221,8 +222,7 @@ static UIViewController *RootVC() {
 
         UINavigationBar *bar = self.navigationController.navigationBar;
         if (![UserSettingData isPopnLinkSelected]) {
-            [bar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                      forBarMetrics:UIBarMetricsDefault];
+            [bar setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
 
             HowToViewCtrl *howto = [[HowToViewCtrl alloc]
                 initWithFileNameArray:[NSArray arrayWithObjects:@"firstplay_popnlink", nil]];
@@ -233,8 +233,7 @@ static UIViewController *RootVC() {
 
             [UserSettingData saveIsPopnLinkSelected:YES];
         } else {
-            [bar setBackgroundImage:[UIImage imageNamed:@"input_kid_navbar"]
-                      forBarMetrics:UIBarMetricsDefault];
+            [bar setBackgroundImageModern:[UIImage imageNamed:@"input_kid_navbar"]];
         }
     }
 
@@ -304,8 +303,7 @@ static UIViewController *RootVC() {
         InputKidViewController *kid = [[InputKidViewController alloc] init];
         [self.navigationController pushViewController:kid animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"input_kid_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"input_kid_navbar"]];
     } else {
         [_delegate onInKidButtonTouched:sender];
     }
@@ -325,8 +323,7 @@ static UIViewController *RootVC() {
             [[CheckerCategoryViewController alloc] initWithStyle:UITableViewStyleGrouped];
         [self.navigationController pushViewController:checker animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"ppc_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"ppc_navbar"]];
     } else {
         [_delegate onScoreCheckerButtonTouched:sender];
     }
@@ -345,8 +342,7 @@ static UIViewController *RootVC() {
             [[QuizMainViewController alloc] initWithStyle:UITableViewStyleGrouped];
         [self.navigationController pushViewController:quiz animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"pq_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"pq_navbar"]];
     } else {
         [_delegate onQuizButtonTouched:sender];
     }

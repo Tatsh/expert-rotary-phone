@@ -39,6 +39,7 @@
 #import "PopkunSizeViewCtrl.h" // section 1, row 1
 #import "SoundSettingView.h"   // section 1, row 0
 #import "StoreUtil.h"          // +getOfficialAppInfoURL
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // +isEffectOn / +saveIsEffectOn: / +saveIsSimpleMode: / +initTreasureTmp
 #import "neEngineBridge.h" // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
 
@@ -125,8 +126,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
 
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
     return nav;
 }
 
@@ -376,8 +376,8 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
         } else {
             return;
         }
-        [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:navImage]
-                                                      forBarMetrics:UIBarMetricsDefault];
+        [self.navigationController.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:navImage]];
         [self.navigationController pushViewController:sub animated:YES];
         break;
     }
@@ -406,16 +406,14 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
             if (indexPath.row == 0) {
                 // The basic how-to also themes the overlay's nav bar.
                 [_howtoViewCtrlPad.navigationController.navigationBar
-                    setBackgroundImage:[UIImage imageNamed:@"howto_navbar"]
-                         forBarMetrics:UIBarMetricsDefault];
+                    setBackgroundImageModern:[UIImage imageNamed:@"howto_navbar"]];
             }
             [RootVC().view addSubview:_howtoViewCtrlPad.view];
         } else {
             HowToViewCtrl *howto = [[HowToViewCtrl alloc] initWithFileNameArray:files];
             howto.fromNaviBarImage = [UIImage imageNamed:@"settings_navbar"];
             [self.navigationController.navigationBar
-                setBackgroundImage:[UIImage imageNamed:@"howto_navbar"]
-                     forBarMetrics:UIBarMetricsDefault];
+                setBackgroundImageModern:[UIImage imageNamed:@"howto_navbar"]];
             [self.navigationController pushViewController:howto animated:YES];
         }
         break;
@@ -445,8 +443,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
         ConversionView *conv = [[ConversionView alloc] init];
         [conv setDelegate:self];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"conv_navbar_change"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"conv_navbar_change"]];
         [self.navigationController pushViewController:conv animated:YES];
         break;
     }
@@ -456,8 +453,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
         if (indexPath.row == 2) {
             PolicyView *policy = [[PolicyView alloc] init];
             [self.navigationController.navigationBar
-                setBackgroundImage:[UIImage imageNamed:@"set_agreement_navbar"]
-                     forBarMetrics:UIBarMetricsDefault];
+                setBackgroundImageModern:[UIImage imageNamed:@"set_agreement_navbar"]];
             [self.navigationController pushViewController:policy animated:YES];
         } else if (indexPath.row == 1) {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0

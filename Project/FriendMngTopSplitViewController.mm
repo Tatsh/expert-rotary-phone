@@ -15,6 +15,7 @@
 #import "FriendReplyViewController.h"   // reply section
 #import "FriendRequestViewController.h" // "presenting" (requests you sent) section
 #import "HowToViewCtrlPad.h"            // first-play how-to overlay
+#import "UINavigationBar+RHHeader.h"    // setBackgroundImageModern:
 #import "UserSettingData.h"             // isFriendSelected / saveIsFriendSelected:
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController
 
@@ -235,8 +236,8 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
     vc.navigationItem.hidesBackButton = YES;
 
     if (_selectedIndex < 0) {
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frilis_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"frilis_navbar"]];
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
@@ -254,8 +255,8 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
               friendMngSyncRightViewFrame(self);
             }
             completion:^(BOOL finished) {
-              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frilis_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImageModern:[UIImage imageNamed:@"frilis_navbar"]];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view
@@ -291,8 +292,8 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
     vc.navigationItem.hidesBackButton = YES;
 
     if (_selectedIndex < 0) {
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"fripre_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"fripre_navbar"]];
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
@@ -310,8 +311,8 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
               friendMngSyncRightViewFrame(self);
             }
             completion:^(BOOL finished) {
-              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"fripre_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImageModern:[UIImage imageNamed:@"fripre_navbar"]];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view
@@ -347,8 +348,8 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
     vc.navigationItem.hidesBackButton = YES;
 
     if (_selectedIndex < 0) {
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-                                           forBarMetrics:UIBarMetricsDefault];
+        [_rightViewCtrl.navigationBar
+            setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:vc animated:NO];
     } else {
@@ -364,8 +365,8 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
               friendMngSyncRightViewFrame(self);
             }
             completion:^(BOOL finished) {
-              [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-                                                 forBarMetrics:UIBarMetricsDefault];
+              [_rightViewCtrl.navigationBar
+                  setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
               [_rightViewCtrl popToRootViewControllerAnimated:NO];
               [_rightViewCtrl pushViewController:vc animated:NO];
               [UIView transitionWithView:_rightViewCtrl.view

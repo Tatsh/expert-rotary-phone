@@ -30,6 +30,7 @@
 #import "StorePackInfoDownloader.h"
 #import "StoreUtil.h"
 #import "System/src/neEngineBridge.h" // neEngine::playSystemSe (decide SE)
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h"
 
 // Private methods reconstructed alongside the content-load flow.
@@ -206,8 +207,7 @@
         m_StorePackInfoDownloader = nil;
     }
     UIImage *navbar = [UIImage imageNamed:@"p_store_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:navbar
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setBackgroundImageModern:navbar];
 }
 
 // viewDidDisappear: @ 0x72c88 — super-only override, omitted.

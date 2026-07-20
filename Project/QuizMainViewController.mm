@@ -52,7 +52,8 @@
 #import "QuizCell.h"           // one row per answer choice
 #import "StoreUtil.h"          // +getQuizURL / +replyQuizURL / urlEncodeString()
 #import "TouchableTableView.h" // pass-through table used for the header/board taps
-#import "UserSettingData.h"    // quiz totals + charaTicket
+#import "UINavigationBar+RHHeader.h"
+#import "UserSettingData.h" // quiz totals + charaTicket
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
 // Number of decimal digits of `value` (min 1, so 0 -> 1). Ghidra: countDigits @
@@ -720,8 +721,8 @@ static int QuizCountDigits(int value) {
 // @ 0xdb8cc — back button: restore the menu navbar art and pop.
 - (void)touchedBackButton:(id)sender {
     neEngine::playSystemSe(2); // cancel/back SE
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                                                  forBarMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar
+        setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 
