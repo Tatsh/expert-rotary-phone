@@ -146,6 +146,9 @@ private:
     void stateFadeIn();        // case 1  (fade the select scene, open the sugoroku map)
     void stateTreasureCheck(); // case 2  (read the temp-treasure record, branch)
     void stateBoardReveal();   // case 3  (fade the board in, save the tmp, arm the move count)
+    void stateExitBegin();     // case 0x4b (start the exit fade-out)
+    void stateExitWait();      // case 0x4c (wait for the exit fade-out to finish)
+    void stateExitToMenu();    // case 0x4d (spawn MenuMainTask, dispose this task)
 
     // Scene build / map load (their own reconstruction pieces).
     void setupScene();      // Ghidra: FUN_0009fc90 (build the select/map scene)
@@ -456,12 +459,9 @@ private:
         kAcMainStateBoardReveal = 3,   // switch the scene to fade-in, save the tmp record,
                                        // play the board layers, arm the reveal countdown
         kAcMainStateMapDrag = 0x10,    // sugoroku map drag-scroll
-        kAcMainStateExitBegin = 0x4b,  // start the exit fade-out (no pending sub-map)
-        // 0x4b -> 0x4c (await fade) -> 0x4d (spawn MenuMainTask, dispose) is the exit
-        // chain; its handlers are not reconstructed yet. Ghidra's 0x4d is the
-        // exit-to-menu final, not the drag-scroll state the switch currently treats it
-        // as.
-        kAcMainStateMapDragAlt = 0x4d, // TODO: 0x4d is really the exit-to-menu final
+        kAcMainStateExitBegin = 0x4b,  // begin the exit fade-out (no pending sub-map)
+        kAcMainStateExitWait = 0x4c,   // wait for the exit fade-out to finish
+        kAcMainStateExitToMenu = 0x4d, // fade done: spawn MenuMainTask, dispose this task
     };
     AcMainState m_state = {}; // +0x9f8 play-data state machine field (update switch
                               // dispatches on it)

@@ -29,6 +29,7 @@
 #import "CharaManager.h"
 #import "DownloadMain.h"
 #import "MainViewController.h"
+#import "MenuMainTask.h"
 #import "MusicData.h"
 #import "MusicManager.h"
 #import "RhUtil.h"
@@ -121,13 +122,18 @@ void AcMainTask::update(int /*deltaMs*/) {
         // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
         // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at
         // 0x9a6ba). The remainder of this state's body (board redraw / input
-        // arbitration) is not yet reconstructed.
+        // arbitration) is not yet reconstructed. The same drag-scroll block also
+        // appears in state 4 (0x9cb56); it belongs there, not to state 0x4d.
         applyDragScroll(gfx);
         break;
-    case kAcMainStateMapDragAlt:
-        // Same drag-scroll block, interleaved into state 0x4d at 0x9cb56
-        // (byte-identical).
-        applyDragScroll(gfx);
+    case kAcMainStateExitBegin:
+        stateExitBegin();
+        break;
+    case kAcMainStateExitWait:
+        stateExitWait();
+        break;
+    case kAcMainStateExitToMenu:
+        stateExitToMenu();
         break;
     default:
         break;
@@ -382,6 +388,39 @@ void AcMainTask::stateBoardReveal() {
     // Advance to the board-idle state (4), or the bonus-overlay variant (9) when a
     // bonus/main-map is active. Ghidra: 0x9cc72 (m_bonusCount > 0 -> 9), 0x9cc7c.
     m_state = static_cast<AcMainState>(m_bonusCount > 0 ? 9 : 4);
+}
+
+// case 0x4b — begin the exit fade-out. Reached from stateTreasureCheck when no
+// sub-map is pending. Ghidra: 0x9c6ac (getAepTransitionMode != 2 ->
+// setAepTransitionMode(2)) then 0x9c6ca (unconditional -> 0x4c).
+void AcMainTask::stateExitBegin() {
+    AepManager &aep = AepManager::shared();
+    if (aep.transitionMode() != 2) {
+        aep.setAepTransitionMode(2); // fade out, 30 frames
+    }
+    m_state = kAcMainStateExitWait;
+}
+
+// case 0x4c — hold until the fade-out finishes, then advance to the hand-off.
+// Ghidra: 0x9c6d0 (isTransitionDone == 1 -> 0x4d, else draw and stay).
+void AcMainTask::stateExitWait() {
+    if (AepManager::shared().isTransitionDone()) {
+        m_state = kAcMainStateExitToMenu;
+    }
+}
+
+// case 0x4d — the exit-to-menu final. Once the cancel/back SE (slot 2) has
+// stopped, hand off to a fresh MenuMainTask (activated by the task framework on
+// dispose) and tear this task down. Ghidra: 0x9c6ea (isSePlaying(2) == 0 -> clear
+// board flag, operator new(0x1b0) MenuMainTask, store m_nextTask +0x948,
+// sugorokuTaskDispose).
+void AcMainTask::stateExitToMenu() {
+    if (neEngine::isSePlaying(2)) {
+        return; // the cancel/back SE is still sounding
+    }
+    m_bgmActive = false;
+    m_nextTask = new MenuMainTask();
+    sugorokuTaskDispose();
 }
 
 // ===========================================================================
