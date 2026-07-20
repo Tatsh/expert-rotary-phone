@@ -19,6 +19,8 @@
 
 #pragma once
 
+#import <Foundation/Foundation.h>
+
 // Real types used across the ObjC<->C++ boundary (this header is ObjC++; every
 // including translation unit is .mm). Using the true types instead of opaque
 // void* keeps the bridge signatures honest.
