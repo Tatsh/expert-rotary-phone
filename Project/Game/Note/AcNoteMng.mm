@@ -77,6 +77,24 @@ int AcNoteMng::initPlayData(std::span<const std::byte> data, int hiSpeedLevel) {
     m_maxCombo = 0;
     std::memset(m_laneCounts, 0, sizeof(m_laneCounts));
 
+    // The binary starts InitPlayData with memset(this, 0, 0x14cc4), zeroing the
+    // whole play-data region. Reset the play clock and scroll state the setup
+    // update() below reads so a reused AcNoteMng does not carry a stale baseline:
+    // getElapsedTimeMs() returns "now - m_startSec" (0 only while the stamp is
+    // zero), so a leftover stamp makes the first getCurrentPosition() enormous,
+    // the spawn window then covers the entire chart, and spawnNotes drains the
+    // 1000-node pool and writes through a null free node.
+    m_startSec = 0;
+    m_startUsec = 0;
+    m_frozenElapsed = 0;
+    m_holdElapsed = 0;
+    m_positionOffset = 0;
+    m_startThreshold = 0;
+    m_scrollBase = 0;
+    m_scrollTarget = 0;
+    m_holdFlags = 0;
+    m_adjustRecord = {};
+
     if (hiSpeedLevel >= 0 && hiSpeedLevel < kAcHiSpeedCount) {
         m_hiSpeed = kAcHiSpeed[hiSpeedLevel];
     }
