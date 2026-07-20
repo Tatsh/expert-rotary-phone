@@ -38,6 +38,12 @@ struct AepIndexHeader {
     int32_t userNamesOff;  /*!< User-name block offset (+0x14). */
 };
 
+/**
+ * @brief The Aep 2D scene manager: ordering table, screen-transition fades, and sprite factory.
+ *
+ * Owns the ordering table, drives the screen-transition fades, and is the sprite/texture factory
+ * the graphics manager creates through. A single, very large global object.
+ */
 class AepManager {
 public:
     /**
