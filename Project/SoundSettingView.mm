@@ -41,8 +41,44 @@
 #import "AppFont.h"         // AppFontName (== Ghidra getFontNameDFSoGei / FUN_0005ef9c)
 #import "AudioManager.h"    // BGM/SE volume + lib_rsnd SE load/play/stop/release
 #import "UserSettingData.h" // persisted BGM/SE/touch volumes + touch-sound kind
+#import "neDebugLog.h"      // temporary slider hit-test diagnostics
 #import "neEngineBridge.h"  // neSceneManager::isPadDisplay / hitSoundName / normalSoundName
-                            //   neEngine::playSystemSe (back-button cancel SE)
+
+// Temporary: log where a touch at the slider's centre actually lands, and name any
+// ancestor view that would block the touch (point outside its bounds, interaction
+// disabled, hidden, or transparent). A `hit=` that is not the slider/its thumb, or
+// any BLOCKER line, is the reason the sliders ignore drags and taps.
+static void neDumpSliderHit(const char *tag, UISlider *s) {
+    if (s == nil || s.window == nil) {
+        neDebugLog("sliderHit %s: slider=%p window=%p (not in a window)", tag, s, s.window);
+        return;
+    }
+    CGRect win = [s convertRect:s.bounds toView:s.window];
+    CGPoint c = [s convertPoint:CGPointMake(CGRectGetMidX(s.bounds), CGRectGetMidY(s.bounds))
+                         toView:s.window];
+    UIView *hit = [s.window hitTest:c withEvent:nil];
+    neDebugLog("sliderHit %s winFrame=%s center=%s hit=%s selfUI=%d",
+               tag,
+               NSStringFromCGRect(win).UTF8String,
+               NSStringFromCGPoint(c).UTF8String,
+               hit ? NSStringFromClass(hit.class).UTF8String : "nil",
+               s.userInteractionEnabled);
+    for (UIView *v = s.superview; v != nil; v = v.superview) {
+        CGPoint p = [s.window convertPoint:c toView:v];
+        BOOL inside = [v pointInside:p withEvent:nil];
+        if (!inside || !v.userInteractionEnabled || v.hidden || v.alpha < 0.01f) {
+            neDebugLog("  BLOCKER %s frame=%s inside=%d ui=%d hidden=%d alpha=%.2f clip=%d",
+                       NSStringFromClass(v.class).UTF8String,
+                       NSStringFromCGRect(v.frame).UTF8String,
+                       inside,
+                       v.userInteractionEnabled,
+                       v.hidden,
+                       (double)v.alpha,
+                       v.clipsToBounds);
+        }
+    }
+}
+//   neEngine::playSystemSe (back-button cancel SE)
 
 // The sound-settings table sections: three single-row volume sliders, then a
 // touch-sound picker (one row per unlocked touch sound; only shown when there
@@ -171,6 +207,17 @@ static inline float SoundShortToVolume(short v) {
         // iPad: hosted inside a panel, so just suppress the system back button.
         self.navigationItem.hidesBackButton = YES;
     }
+
+    // Guaranteed fallback dump (viewDidAppear may not fire without proper
+    // containment): after the table has laid the slider cells out, log the
+    // hit-test result for each slider.
+    NE_DBG(dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)),
+                          dispatch_get_main_queue(),
+                          ^{
+                            neDumpSliderHit("bgm(vdl)", self->_bgmSlider);
+                            neDumpSliderHit("se(vdl)", self->_seSlider);
+                            neDumpSliderHit("touch(vdl)", self->_touchSoundSlider);
+                          }));
 }
 
 // @ 0x8191c / 0x81948 / 0x81974 / 0x819a0 / 0x819cc / 0x819f8 -- plain super
@@ -186,6 +233,17 @@ static inline float SoundShortToVolume(short v) {
 }
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+    // If this line never appears in the log, the nested view controller is not
+    // getting appearance callbacks (added via bare addSubview without
+    // addChildViewController) -- a strong hint the containment is the problem.
+    NE_DBG(neDebugLog("SoundSettingView viewDidAppear"));
+    NE_DBG(dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+                          dispatch_get_main_queue(),
+                          ^{
+                            neDumpSliderHit("bgm", self->_bgmSlider);
+                            neDumpSliderHit("se", self->_seSlider);
+                            neDumpSliderHit("touch", self->_touchSoundSlider);
+                          }));
 }
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
