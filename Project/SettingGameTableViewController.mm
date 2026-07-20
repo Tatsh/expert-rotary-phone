@@ -513,6 +513,17 @@ static UIViewController *RootVC() {
     }
     [tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath]
                      withRowAnimation:UITableViewRowAnimationNone]; // animation 5
+
+    // @newCode -- The binary only reloads the tapped header row and relied on the
+    // iOS 8 table re-querying every visible row's height during that pass. Modern
+    // iOS re-queries the height of reloaded rows only, so the detail row (the next
+    // row, whose height toggles between 0 and its expanded height) keeps its stale
+    // height and never opens -- which leaves its embedded slider table zero-height
+    // and the sliders unreachable. An empty begin/end updates pass forces the
+    // table to re-query all visible row heights, expanding or collapsing the
+    // detail row without rebuilding its content.
+    [tableView beginUpdates];
+    [tableView endUpdates];
 }
 
 // @ 0x8a34c -- back button action.
