@@ -1,15 +1,9 @@
-//
-//  AepLyrCtrl.h
-//  pop'n rhythmin
-//
-//  A single drawable layer / sprite in the Aep 2D scene (position, size, color,
-//  alpha, a texture reference and its slot in the ordering table).
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  Layout derived from the constructor (Ghidra: FUN_0002c7d8, 0x60 bytes);
-//  init-with-texture is FUN_0002c834. Several vec3 groups are transform/color
-//  channels whose exact roles are still being pinned down.
-//
+/** @file
+ * A single drawable layer or sprite in the Aep 2D scene: its position, size, colour, alpha, a
+ * texture reference, and its slot in the ordering table. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin. The layout is derived from the constructor (0x60 bytes); several vec3
+ * groups are transform or colour channels whose exact roles are still being pinned down.
+ */
 
 #pragma once
 
@@ -19,143 +13,239 @@ namespace ne {
 class C_TEXTURE;
 }
 
+/**
+ * @brief A single drawable layer or sprite in the Aep 2D scene.
+ *
+ * Holds a layer's position, size, colour, alpha, animation play-state, a resolved texture or layer
+ * reference, and its slot in the ordering table.
+ */
 class AepLyrCtrl {
 public:
-    AepLyrCtrl(); // Ghidra: FUN_0002c7d8
+    /**
+     * @brief Construct an empty layer with default transform and play-state.
+     * @ghidraAddress 0x2c7d8
+     */
+    AepLyrCtrl();
+
+    /**
+     * @brief Destroy the layer, splicing it out of the global active-layer list.
+     */
     virtual ~AepLyrCtrl();
 
-    virtual void draw(); // vtable @ PTR_LAB_0002c82c
+    /**
+     * @brief Draw the base layer; overridden by concrete sprite subclasses.
+     */
+    virtual void draw();
 
-    // Bind a texture / named resource to this layer. Ghidra: AepLyrCtrl_init
-    // (FUN_0002c834): resolves the layer via AepManager::getLyrNo/layerFrameCount
-    // and links into the active-layer list.
+    /**
+     * @brief Bind a texture or named resource to this layer.
+     *
+     * Resolves the layer via AepManager::getLyrNo and layerFrameCount, then links it into the
+     * active-layer list. Simplified reconstruction used by scenes that pass neither owner nor
+     * order.
+     *
+     * @param group Resource group of the layer to bind.
+     * @param name Name of the layer resource to resolve.
+     */
     void init(int group, const char *name);
 
-    // Full four-parameter form the binary actually exports (FUN_0002c834 takes
-    // this,group,name,arg3,arg4). `owner` is stored at +0x10 (the owning task the
-    // result screen threads in) and `order` at +0x14. The two-arg form above is
-    // the simplified reconstruction used by scenes that pass neither.
+    /**
+     * @brief Bind a texture or named resource to this layer, with owner and order.
+     *
+     * Full four-parameter form the binary actually exports. Resolves the layer via AepManager and
+     * links it into the active-layer list.
+     *
+     * @param group Resource group of the layer to bind.
+     * @param name Name of the layer resource to resolve.
+     * @param owner Owning task or context (the result screen threads it in).
+     * @param order Ordering-priority word threaded into drawLayer.
+     * @ghidraAddress 0x2c834
+     */
     void init(int group, const char *name, void *owner, int order);
 
-    // Unlink this layer from the global active-layer list (DAT_00188490) without
-    // destroying it; the owner then deletes it. Ghidra: AepLyrCtrl_unlink @
-    // 0x2ca9c.
+    /**
+     * @brief Splice this layer out of the global active-layer list.
+     *
+     * Removes the layer without destroying it; the owner then deletes it. Standard doubly-linked
+     * removal that patches the neighbours and advances the head when this layer was the head.
+     * @ghidraAddress 0x2ca9c
+     */
     void unlink();
 
-    // Start playing the layer's animation in the LOOPING mode (play-state 2)
-    // (Ghidra: AepLyrCtrl_play FUN_0002caf8): a fully-faded layer seeks to its
-    // last frame, else frame 0. On reaching the end the play head wraps, so the
-    // layer animates forever until stopped.
+    /**
+     * @brief Start playing the layer's animation in the looping mode.
+     *
+     * Enters play-state 2. A fully-faded layer seeks to its last frame, else frame 0. On reaching
+     * the end the play head wraps, so the layer animates forever until stopped.
+     * @ghidraAddress 0x2caf8
+     */
     void play();
 
-    // Start playing the layer's animation ONCE (play-state 1) (Ghidra:
-    // AepLyrCtrl::Play FUN_0002cac0): defaults the rate to 1.0 when unset, then
-    // seeks (frame 0 forward, last frame in reverse). On reaching the end the
-    // play head holds at the last frame and the layer enters the held state (4),
-    // so isAnimating() goes false — the caller (e.g. the mode-select open
-    // animation) polls that to know the intro has finished. Distinct from play()
-    // (FUN_0002caf8), which loops.
+    /**
+     * @brief Start playing the layer's animation once.
+     *
+     * Enters play-state 1. Defaults the rate to 1.0 when unset, then seeks (frame 0 forward, last
+     * frame in reverse). On reaching the end the play head holds at the last frame and the layer
+     * enters the held state, so isAnimating() goes false; the caller polls that to know the intro
+     * has finished. Distinct from play(), which loops.
+     * @ghidraAddress 0x2cac0
+     */
     void playOnce();
 
-    // Animation play-state values (m_state / Ghidra nState @ +0x58).
+    /**
+     * @brief Animation play-state values held in m_state.
+     */
     enum AnimState {
-        kAnimIdle = 0,     // not playing
-        kAnimOnceHold = 1, // play once, then hold at the last frame (-> kAnimHeld)
-        kAnimLoop = 2,     // play looping forever
-        kAnimOnceIdle = 3, // play once, then stop back to idle (-> kAnimIdle)
-        kAnimHeld = 4,     // held at the final frame after a once-hold play
+        kAnimIdle = 0,     /*!< Not playing. */
+        kAnimOnceHold = 1, /*!< Play once, then hold at the last frame (-> kAnimHeld). */
+        kAnimLoop = 2,     /*!< Play looping forever. */
+        kAnimOnceIdle = 3, /*!< Play once, then stop back to idle (-> kAnimIdle). */
+        kAnimHeld = 4,     /*!< Held at the final frame after a once-hold play. */
     };
 
+    /**
+     * @brief Report whether the layer is currently visible.
+     * @return True when the layer is drawn.
+     */
     bool isVisible() const {
         return m_visible;
     }
 
-    // Whether this layer-control is in any non-idle play-state (m_state != 0). The
-    // play scene drives some layers as one-shot SE cues and gates a new cue on this
-    // (idle == the previous cue finished). Ghidra: aepLyrCtrlIsActive (FUN_0002cba4).
+    /**
+     * @brief Report whether the layer is in any non-idle play-state.
+     *
+     * The play scene drives some layers as one-shot SE cues and gates a new cue on this, since idle
+     * means the previous cue finished.
+     * @return True when the play-state is not idle.
+     * @ghidraAddress 0x2cba4
+     */
     bool isActive() const {
         return m_state != kAnimIdle;
     }
 
-    // Whether this layer is still mid-animation: false when idle (play-state 0)
-    // or held (play-state 4), otherwise true while the play head at +0x40 has not
-    // reached the end of its travel (0..m_frameCount for a forward rate, >0 for a
-    // reverse rate). The play
-    // + result draw passes gate their layer draws on this. Ghidra: FUN_0002cb64.
-    // NOTE: the play head at +0x40 is a float in the binary, so it is read as
-    // such here even though the reconstructed m_curFrame models it as int.
+    /**
+     * @brief Report whether the layer is still mid-animation.
+     *
+     * False when idle or held, otherwise true while the play head has not reached the end of its
+     * travel (0..m_frameCount for a forward rate, >0 for a reverse rate). The play and result draw
+     * passes gate their layer draws on this. The play head is a float in the binary, so it is read
+     * as such even though the reconstruction models the current frame as an int.
+     * @return True while the animation is still advancing.
+     * @ghidraAddress 0x2cb64
+     */
     bool isAnimating() const;
 
-    // Mutable access to the resolved layer length (+0x3c nFrameCount) and the play
-    // speed / frame-advance rate (+0x44 flPlaySpeed). The sugoroku scene builder
-    // trims two of its roulette layers by hand after resolving them (Ghidra:
-    // FUN_0009fc90 pokes +0x3c / +0x44).
+    /**
+     * @brief Mutable access to the resolved layer length.
+     *
+     * The sugoroku scene builder trims two of its roulette layers by hand after resolving them.
+     * @return Reference to the frame count.
+     */
     int &frameCount() {
         return m_frameCount;
     } // +0x3c
-    // Current play head (+0x40 flCurFrame). The sugoroku warp-bounce reads it as a
-    // float (Ghidra sugorokuDrawPlayerAndUi @ 0xa53aa: vldr.32 s0, [layer,#0x40]).
+
+    /**
+     * @brief Mutable access to the current play head.
+     *
+     * The sugoroku warp-bounce reads it as a float.
+     * @return Reference to the current frame.
+     */
     float &curFrame() {
         return m_curFrame;
     } // +0x40
+
+    /**
+     * @brief Mutable access to the frame-advance rate.
+     * @return Reference to the play speed.
+     */
     float &playSpeed() {
         return m_playSpeed;
     } // +0x44
 
-    // Mutable access to the render mode (+0x34 nRenderMode; encodes the blend). The
-    // play scene forces its three additive field layers to 0x200 after building
-    // them (Ghidra: PlayTask_init stores into +0x34).
+    /**
+     * @brief Mutable access to the render mode, which encodes the blend.
+     *
+     * The play scene forces its three additive field layers to 0x200 after building them.
+     * @return Reference to the render mode.
+     */
     int &renderMode() {
         return m_renderMode;
     } // +0x34
 
-    // Stop this layer's animation without unlinking it. Ghidra: FUN_0002cb5c
-    // (clears the play-state field at +0x58); the arcade map reload calls it on
-    // every scene layer before rebuilding.
+    /**
+     * @brief Stop this layer's animation without unlinking it.
+     *
+     * Clears the play-state field; the arcade map reload calls it on every scene layer before
+     * rebuilding.
+     * @ghidraAddress 0x2cb5c
+     */
     void stopPlay() {
         m_state = kAnimIdle;
     }
 
-    // Freeze this layer on its current frame without unlinking or hiding it:
-    // enters the "held" play-state (4). AepLyrCtrl::isAnimating() treats state 4
-    // as done, and updateAndDrawAepLayers keeps drawing the held frame but stops
-    // advancing it (the `playState == 4` early-continue). Ghidra: aepLyrCtrlPause
-    // FUN_0002cb54 (stores 4 at +0x58). The music-select preview pauses its layer
-    // this way between songs.
+    /**
+     * @brief Freeze this layer on its current frame without unlinking or hiding it.
+     *
+     * Enters the held play-state. isAnimating() treats the held state as done, and
+     * updateAndDrawAepLayers keeps drawing the held frame but stops advancing it. The music-select
+     * preview pauses its layer this way between songs.
+     * @ghidraAddress 0x2cb54
+     */
     void pause() {
         m_state = kAnimHeld;
-    } // @ 0x2cb54
+    }
 
-    // Stop this layer, optionally leaving it drawn at its current frame. Ghidra:
-    // aepLyrCtrlStop (FUN_0002cb24) — the music-select preview transitions call
-    // it with keepVisible = 1 to freeze the preview layer on screen.
+    /**
+     * @brief Stop this layer, optionally leaving it drawn at its current frame.
+     *
+     * The music-select preview transitions call it with keepVisible = 1 to freeze the preview layer
+     * on screen.
+     * @param keepVisible When 1, seek and keep the current frame drawn; otherwise leave the play
+     * head where it is.
+     * @ghidraAddress 0x2cb24
+     */
     void stop(int keepVisible);
 
-    // Rewind this layer's play head to frame 0 (without unlinking). Ghidra:
-    // aepLyrCtrlReset (FUN_0002cb5c) — used when backing out of a song preview.
+    /**
+     * @brief Rewind this layer's play head to frame 0 without unlinking.
+     *
+     * Used when backing out of a song preview.
+     * @ghidraAddress 0x2cb5c
+     */
     void reset();
 
-    // Sugoroku roulette-layer anchor: clear the draw-x slot and store the raw
-    // integer into the draw-y slot. Ghidra: the +0x18 / +0x1c stores in
-    // FUN_0009fc90.
+    /**
+     * @brief Set the sugoroku roulette-layer anchor.
+     *
+     * Clears the draw-x slot and stores the raw integer into the draw-y slot.
+     * @param value Raw draw-y value to store.
+     */
     void setRouletteAnchor(int value) {
         m_originX = 0;
         m_originY = value;
     }
 
-    // Position the layer's on-screen anchor: the +0x18/+0x1c integer draw x/y
-    // that updateAndDrawAepLayers reads. The arcade hit-flash arrows re-anchor this
-    // every frame (Ghidra: FUN_0009fc90 stores the computed x/y into these two
-    // words).
+    /**
+     * @brief Position the layer's on-screen anchor.
+     *
+     * Sets the integer draw x/y that updateAndDrawAepLayers reads. The arcade hit-flash arrows
+     * re-anchor this every frame.
+     * @param x Draw x coordinate.
+     * @param y Draw y coordinate.
+     */
     void setPosition(int x, int y) {
         m_originX = x;
         m_originY = y;
     }
 
-    // Advance and draw every live AEP layer for the frame (drawOnly != 0 redraws
-    // the held frame without advancing time). A static member: it walks the global
-    // live-layer list and reaches each layer's members directly. Ghidra:
-    // FUN_0002c924.
+    /**
+     * @brief Advance and draw every live AEP layer for the frame.
+     *
+     * Walks the global live-layer list and reaches each layer's members directly.
+     * @param drawOnly When non-zero, redraw the held frame without advancing time.
+     * @ghidraAddress 0x2c924
+     */
     static void updateAndDrawAepLayers(int drawOnly);
 
 protected:

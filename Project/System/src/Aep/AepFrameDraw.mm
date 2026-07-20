@@ -2,22 +2,17 @@
 //  AepFrameDraw.mm
 //  pop'n rhythmin
 //
-//  TRUE 1:1 reconstruction of the Aep animated frame-tree renderer from Ghidra
-//  project rb420, program PopnRhythmin. The core is FUN_0000fe8c
-//  (AepDrawLayer): it walks a layer's frame-entry chain and, for every entry
-//  active on the current frame, interpolates each keyframe channel in the
-//  engine's integer fixed point, composes the parent transform + colour/alpha +
-//  rotation + blend flags, clips to the active clip rect and emits.
+//  The Aep animated frame-tree renderer. The core is AepDrawLayer: it walks a
+//  layer's frame-entry chain and, for every entry active on the current frame,
+//  interpolates each keyframe channel in the engine's integer fixed point,
+//  composes the parent transform + colour/alpha + rotation + blend flags, clips
+//  to the active clip rect and emits.
 //
 //  Fixed-point notes (byte-verified):
-//    * `x * 0x51eb851f >> 0x20` (and the `>> 0x25` variant) is a /100
-//    reciprocal
-//      multiply; reproduced here as C integer `/ 100` (both truncate toward
-//      zero).
-//    * rotation uses `x * 0x80008001 >> 47` (spelled `* -0x7fff7fff + (x<<32)
-//    >> 32`
-//      then `>>15`) which normalises by 0xffff, i.e. cos/sin are fixed with 1.0
-//      == 0xffff. Reproduced faithfully in aepRotNorm().
+//    * The /100 reciprocal multiply is reproduced here as C integer `/ 100`
+//      (both truncate toward zero).
+//    * rotation normalises by 0xffff, i.e. cos/sin are fixed with 1.0 == 0xffff.
+//      Reproduced faithfully in aepRotNorm().
 //
 
 #import "AepFrameDraw.h"
@@ -33,9 +28,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// Ghidra: FUN_0001234c (cos) / FUN_0001228c (sin). The originals reduce the
-// angle to [0,360) at 1/3-degree granularity (index = angle*3 mod 0x438) and
-// fold a quarter- wave lookup table @ DAT_0012ded2 whose entries are
+// The originals reduce the angle to [0,360) at 1/3-degree granularity (index =
+// angle*3 mod 0x438) and fold a quarter-wave lookup table whose entries are
 // ~round(sin*0xffff) (byte-verified: table[1] == 0x017d == round(sin(1/3
 // deg)*0xffff)). The LUT itself is a data seam; the same value is produced here
 // at the identical 1.0 == 0xffff fixed scale.
@@ -48,10 +42,9 @@ static int aepCos(int deg) {
         std::lround(std::cos(static_cast<double>(deg) * (M_PI / 180.0)) * 65535.0));
 }
 
-// Normalise a fixed-point product back to pixels. Ghidra: the exact sequence is
-//   m  = (int)((long long)v * -0x7fff7fff + ((u64)(u32)v << 32) >> 32);   // v
-//   * 0x80008001 >> 32 r  = (m >> 15) - (m >> 31); // /0x8000, round toward
-//   zero
+// Normalise a fixed-point product back to pixels. The exact sequence is
+//   m = (int)((long long)v * -0x7fff7fff + ((u64)(u32)v << 32) >> 32);
+//   r = (m >> 15) - (m >> 31); // /0x8000, round toward zero
 // whose net effect is v / 0xffff (matching cos/sin's 1.0 == 0xffff scale).
 static inline int aepRotNorm(int v) {
     long long prod = static_cast<long long>(v) * static_cast<long long>(-0x7fff7fffLL) +
@@ -63,8 +56,7 @@ static inline int aepRotNorm(int v) {
 // Walk a keyframe channel to the pair bracketing `frame`. Each keyframe is
 // `stride` int16s wide; the list is terminated by frame == -1. Returns prev
 // (last keyframe with frame <= target, or the first) and cur (the following
-// keyframe / terminator), reproducing FUN_0000fe8c's per-channel bracket
-// search.
+// keyframe / terminator), reproducing the per-channel bracket search.
 static void
 aepBracket(const int16_t *keys, int stride, int frame, const int16_t **prev, const int16_t **cur) {
     const int16_t *p = keys;
@@ -77,9 +69,8 @@ aepBracket(const int16_t *keys, int stride, int frame, const int16_t **prev, con
     *cur = c;
 }
 
-// Ghidra: FUN_00010850 — build the child's clip rectangle {x, y, w, h}
-// (out[0..3]) from the group's screen extents (this+0x7f3afc / +0x7f3b00), the
-// entry's anchor (entry+0x10 / +0x12), the composed scale and the rotation.
+// Build the child's clip rectangle {x, y, w, h} (out[0..3]) from the group's
+// screen extents, the entry's anchor, the composed scale and the rotation.
 // Axis-aligned when the rotation is zero; otherwise the min/max of the four
 // rotated corners.
 static void aepComputeChildClip(AepManager *mgr,
@@ -92,8 +83,8 @@ static void aepComputeChildClip(AepManager *mgr,
                                 int *out) {
     const int anchorX = e->anchorX;
     const int anchorY = e->anchorY;
-    int screenW = mgr->screenWidth();  // this+0x7f3afc
-    int screenH = mgr->screenHeight(); // this+0x7f3b00
+    int screenW = mgr->screenWidth();
+    int screenH = mgr->screenHeight();
 
     if ((rotation & 0xffff) == 0) {
         // Axis-aligned. The screen span grows when the (anchor-relative) origin is
@@ -173,11 +164,11 @@ static void aepComputeChildClip(AepManager *mgr,
     out[3] = (maxY - minY) + 1;
 }
 
-// Ghidra: FUN_000113d0 (-> allocEntry FUN_00010be0) — reserve an ordering-table
-// command at `priority` and fill the textured-quad payload. Field offsets are
-// the binary's; the AepOtSpriteCmd slots at +0x2c..+0x3c carry colour/alpha,
-// the packed rotation/blend words and the two user words, so they are written
-// by their offset meaning (the field names carry the sprite-command roles).
+// Reserve an ordering-table command at `priority` and fill the textured-quad
+// payload. Field offsets are the binary's; the AepOtSpriteCmd slots at
+// +0x2c..+0x3c carry colour/alpha, the packed rotation/blend words and the two
+// user words, so they are written by their offset meaning (the field names
+// carry the sprite-command roles).
 static void aepEmitSprite(AepManager *mgr,
                           int groupSlot,
                           int child,
@@ -195,12 +186,12 @@ static void aepEmitSprite(AepManager *mgr,
                           uint32_t priority,
                           uint32_t colorRGB,
                           uint32_t visFlag) {
-    AepOrderingTable *ot = mgr->orderingTable();                      // this+0x727538
-    AepOtSpriteCmd *cmd = ot->allocEntry(static_cast<int>(priority)); // FUN_00010be0
+    AepOrderingTable *ot = mgr->orderingTable();
+    AepOtSpriteCmd *cmd = ot->allocEntry(static_cast<int>(priority));
     if (cmd == nullptr) {
         return;
     }
-    const int16_t *rec = mgr->spriteRecord(groupSlot, child); // this+slot*0x2000+child*8+0x7c1962
+    const int16_t *rec = mgr->spriteRecord(groupSlot, child);
 
     NE_DBG(neDebugLog("aepEmit slot=%d child=%d prio=%d scale=(%d,%d) wh=(%d,%d) pos=(%d,%d) "
                       "color=%d alpha=%d blend=0x%x rec=(%d,%d,%d,%d)",
@@ -255,14 +246,13 @@ static void aepEmitSprite(AepManager *mgr,
     }
 }
 
-// Ghidra: FUN_0000fcd0 — the note-quad wrapper. It resolves the sprite's group
-// slot from the handle's high 16 bits (the byte group table @ +0x7c1748) and
-// its record from the low 16 bits, then hands both to the sprite-command fill
-// FUN_000113d0. Here the record lookup is folded into aepEmitSprite(slot,
-// child); `anchorX`/`anchorY` become the quad width/height (the entry anchor
-// doubles as size for a leaf), `colorMul` rides the colorRGB slot. Exact
-// float-vs-int arg positions in the original are VFP-ABI obscured; the
-// call-site value threading is reproduced.
+// The note-quad wrapper. It resolves the sprite's group slot from the handle's
+// high 16 bits (the byte group table) and its record from the low 16 bits, then
+// hands both to the sprite-command fill. Here the record lookup is folded into
+// aepEmitSprite(slot, child); `anchorX`/`anchorY` become the quad width/height
+// (the entry anchor doubles as size for a leaf), `colorMul` rides the colorRGB
+// slot. Exact float-vs-int arg positions in the original are VFP-ABI obscured;
+// the call-site value threading is reproduced.
 void AepDrawSpriteHandle(AepManager *mgr,
                          int handle,
                          int x,
@@ -300,7 +290,7 @@ void AepDrawSpriteHandle(AepManager *mgr,
                   visFlag);
 }
 
-// Ghidra: FUN_0000fe8c. The 19-argument frame-tree fill.
+// The 19-argument frame-tree fill.
 void AepDrawLayer(AepManager *mgr,
                   int groupSlot,
                   int layerNo,
@@ -320,7 +310,7 @@ void AepDrawLayer(AepManager *mgr,
                   uint32_t priority,
                   void *context,
                   uint32_t visFlag) {
-    const AepFrameEntry *entries = mgr->frameEntries(groupSlot); // this+slot*4+0x7f39c8
+    const AepFrameEntry *entries = mgr->frameEntries(groupSlot);
     if (entries == nullptr || entries[layerNo].type < 0) {
         return;
     }
@@ -335,12 +325,12 @@ void AepDrawLayer(AepManager *mgr,
                       y,
                       entries[layerNo].type,
                       entries[layerNo].scaleChannel));
-    const uint8_t *chBase = mgr->channelBase(groupSlot); // this+slot*4+0x7274d4
+    const uint8_t *chBase = mgr->channelBase(groupSlot);
 
-    // Anchor-relative base translation, pre-scaled (Ghidra: iVar6 / iVar5).
+    // Anchor-relative base translation, pre-scaled.
     const int baseX = -(scaleX * anchorX) / 100;
     const int baseY = -(scaleY * anchorY) / 100;
-    const int16_t combinedHi = static_cast<int16_t>(colorHi + color); // sVar4
+    const int16_t combinedHi = static_cast<int16_t>(colorHi + color);
 
     for (const AepFrameEntry *e = &entries[layerNo]; e->type >= 0; e++) {
         if (frame < e->frameStart || frame >= e->frameEnd) {
@@ -538,11 +528,11 @@ void AepDrawLayer(AepManager *mgr,
                                  context,
                                  visFlag);
                 } else {
-                    AepGroupDrawFn cb = mgr->groupCallback(groupSlot); // this+slot*4+0x7f3a2c
+                    AepGroupDrawFn cb = mgr->groupCallback(groupSlot);
                     if (cb != nullptr) {
                         void *ctx = context;
                         if (ctx == nullptr) {
-                            ctx = mgr->groupContext(groupSlot); // this+slot*4+0x7f3a90
+                            ctx = mgr->groupContext(groupSlot);
                         }
                         cb(e->child,
                            childFrame,
@@ -582,15 +572,14 @@ void AepDrawLayer(AepManager *mgr,
                           colorRGB,
                           visFlag);
         }
-        // type 1 (and any other): no emission (matches FUN_0000fe8c).
+        // type 1 (and any other): no emission.
     }
 }
 
-// Ghidra: drawAepFrame (FUN_0000fc58). Resolve the handle's group slot (the
-// byte group table @ +0x7c1748) and its sprite record (low 16 bits), then queue
-// a full-scale, opaque sprite command. The binary passes 100.0f scale, colour
-// 100, alpha 0, no rotation and the full-screen clip sentinel; those map onto
-// aepEmitSprite's integer-percentage form.
+// Resolve the handle's group slot (the byte group table) and its sprite record
+// (low 16 bits), then queue a full-scale, opaque sprite command. The binary
+// passes 100.0f scale, colour 100, alpha 0, no rotation and the full-screen
+// clip sentinel; those map onto aepEmitSprite's integer-percentage form.
 void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_t priority) {
     const int groupSlot = mgr->groupSlotForHandle(id); // (id >> 16) -> slot byte
     const int child = id & 0xffff;                     // low 16 bits = record index
@@ -610,10 +599,9 @@ void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_
                   /*clipRect*/ nullptr,
                   priority,
                   // White (no tint), NOT black: the binary loads 0xffffffff into the
-                  // colorRGB slot (FUN_0000fc58 0xfc76: mov r5,#0xffffffff; str
-                  // [sp,#0x24]) which FUN_000113d0 stores to cmd->nColorRGB. Passing
-                  // 0 multiplied every drawAepFrame sprite to black (the grass and
-                  // other background art rendered black).
+                  // colorRGB slot, which the sprite-command fill stores to
+                  // cmd->nColorRGB. Passing 0 multiplied every drawAepFrame sprite to
+                  // black (the grass and other background art rendered black).
                   /*colorRGB*/ 0xffffffffu,
                   /*visFlag*/ 0);
 }

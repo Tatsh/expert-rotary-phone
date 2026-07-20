@@ -3,9 +3,8 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin. A drawable
-//  Aep layer/sprite: ctor FUN_0002c7d8, init-with-texture FUN_0002c834. init
-//  creates a texture through the render manager and links the layer into the
-//  global layer list (Ghidra: DAT_00188490).
+//  Aep layer/sprite. init creates a texture through the render manager and links
+//  the layer into the global layer list.
 //
 
 #import "AepLyrCtrl.h"
@@ -16,14 +15,12 @@
 
 #import "AepManager.h"
 
-// Intrusive doubly-linked list of all live layers (Ghidra: head @
-// DAT_00188490).
+// Intrusive doubly-linked list of all live layers.
 static AepLyrCtrl *s_layerListHead = nullptr;
 
-// Ghidra: AepLyrCtrl_ctor (FUN_0002c7d8). The field types/offsets are
-// byte-verified from the updateAndDrawAepLayers (0x2c924) disassembly; see
-// AepLyrCtrl.h. The whole struct is reached through its named members now (the
-// file-static lc* offset helpers are gone).
+// The field types/offsets are byte-verified from the updateAndDrawAepLayers
+// disassembly; see AepLyrCtrl.h. The whole struct is reached through its named
+// members now (the file-static lc* offset helpers are gone).
 AepLyrCtrl::AepLyrCtrl()
     : m_prev(nullptr), m_next(nullptr), m_group(-1), m_owner(nullptr), m_order(0), m_originX(0),
       m_originY(0), m_posX(100), m_posY(100), m_rotation(0), m_pad2a(0), m_anchorX(0), m_anchorY(0),
@@ -44,10 +41,9 @@ AepLyrCtrl::~AepLyrCtrl() {
     }
 }
 
-// Ghidra: AepLyrCtrl_unlink @ 0x2ca9c — splice this layer out of the global
-// active list without destroying it (the owner deletes it afterward). Standard
-// doubly-linked removal: patch the neighbours, and if this was the head (m_prev
-// == null) advance it.
+// Splice this layer out of the global active list without destroying it (the
+// owner deletes it afterward). Standard doubly-linked removal: patch the
+// neighbours, and if this was the head (m_prev == null) advance it.
 void AepLyrCtrl::unlink() {
     if (m_next) {
         m_next->m_prev = m_prev;
@@ -59,17 +55,16 @@ void AepLyrCtrl::unlink() {
     }
 }
 
-// Base layer draw: overridden by concrete sprite subclasses. vtable @ 0x2c82c.
+// Base layer draw: overridden by concrete sprite subclasses.
 void AepLyrCtrl::draw() {
 }
 
-// Ghidra: AepLyrCtrl_init (FUN_0002c834) — resolve the layer by (group, name)
-// through the render manager and register in the active-layer list. The binary
-// form takes two extra args: `owner` stored at +0x10 and `order` (the
-// ordering-priority word threaded into drawLayer as `priority`) stored raw into the
-// +0x14 slot.
+// Resolve the layer by (group, name) through the render manager and register in
+// the active-layer list. The binary form takes two extra args: `owner` stored at
+// +0x10 and `order` (the ordering-priority word threaded into drawLayer as
+// `priority`) stored raw into the +0x14 slot.
 void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
-    assert(group >= 0); // AepLyrCtrl.mm:0x42
+    assert(group >= 0);
     assert(name != nullptr);
     AepManager &mgr = AepManager::shared();
 
@@ -85,9 +80,9 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     m_anchorY = 0;
     m_renderMode = 0x20;
 
-    m_lyr = mgr.getLyrNo(group, name);         // Ghidra: AepManager_getLyrNo
-    assert(m_lyr >= 0);                        // AepLyrCtrl.mm:0x56
-    m_frameCount = mgr.layerFrameCount(m_lyr); // Ghidra: AepManager_layerFrameCount
+    m_lyr = mgr.getLyrNo(group, name);
+    assert(m_lyr >= 0);
+    m_frameCount = mgr.layerFrameCount(m_lyr);
     m_curFrame = 0;
     m_playSpeed = 1.0f;
     m_clipRect[0] = 0;
@@ -111,8 +106,8 @@ void AepLyrCtrl::init(int group, const char *name) {
     init(group, name, nullptr, 0);
 }
 
-// Ghidra: AepLyrCtrl_play (FUN_0002caf8) — enter play state. A fully-faded
-// layer (alpha <= 0) jumps to its last frame; otherwise it restarts at frame 0.
+// Enter play state. A fully-faded layer (alpha <= 0) jumps to its last frame;
+// otherwise it restarts at frame 0.
 void AepLyrCtrl::play() {
     m_state = kAnimLoop;
     if (m_playSpeed <= 0.0f) {
@@ -122,11 +117,10 @@ void AepLyrCtrl::play() {
     }
 }
 
-// Ghidra: AepLyrCtrl::Play (FUN_0002cac0) — enter the play-once state (1). When
-// no rate is set yet, default it to a forward 1.0; a reverse rate seeks to the
-// last frame, a forward rate to frame 0. Unlike play() (FUN_0002caf8, state 2 =
-// loop) this holds at the end (state 4) so isAnimating() eventually returns
-// false.
+// Enter the play-once state (1). When no rate is set yet, default it to a
+// forward 1.0; a reverse rate seeks to the last frame, a forward rate to frame 0.
+// Unlike play() (state 2 = loop) this holds at the end (state 4) so isAnimating()
+// eventually returns false.
 void AepLyrCtrl::playOnce() {
     m_state = kAnimOnceHold;
     if (m_playSpeed == 0.0f) {
@@ -139,10 +133,9 @@ void AepLyrCtrl::playOnce() {
     }
 }
 
-// Ghidra: aepLyrCtrlStop (FUN_0002cb24) — enter the once-to-idle play state
-// (3). Only when `keepVisible == 1` does it seek the play head (to the last
-// frame for a reverse rate, otherwise to frame 0); any other value leaves the
-// play head where it is.
+// Enter the once-to-idle play state (3). Only when `keepVisible == 1` does it
+// seek the play head (to the last frame for a reverse rate, otherwise to frame
+// 0); any other value leaves the play head where it is.
 void AepLyrCtrl::stop(int keepVisible) {
     m_state = kAnimOnceIdle;
     if (keepVisible != 1) {
@@ -155,17 +148,16 @@ void AepLyrCtrl::stop(int keepVisible) {
     }
 }
 
-// Ghidra: aepLyrCtrlReset (FUN_0002cb5c) — clear the play state (+0x58 = 0),
-// stopping the layer's animation without unlinking it.
+// Clear the play state (+0x58 = 0), stopping the layer's animation without
+// unlinking it.
 void AepLyrCtrl::reset() {
     m_state = kAnimIdle;
 }
 
-// Ghidra: FUN_0002cb64 — still-animating predicate. `(playState | 4) == 4` is
-// true for the idle (0) and held (4) states; otherwise the float play head at
-// +0x40 is compared against its travel: a reverse rate (+0x44 <= 0) animates
-// while the head is > 0, a forward rate while the head is < the layer length
-// (+0x3c).
+// Still-animating predicate. `(playState | 4) == 4` is true for the idle (0) and
+// held (4) states; otherwise the float play head at +0x40 is compared against its
+// travel: a reverse rate (+0x44 <= 0) animates while the head is > 0, a forward
+// rate while the head is < the layer length (+0x3c).
 bool AepLyrCtrl::isAnimating() const {
     if (m_state == kAnimIdle || m_state == kAnimHeld) { // idle (0) or held (4)
         return false;
@@ -177,14 +169,13 @@ bool AepLyrCtrl::isAnimating() const {
     return frame < m_frameCount;
 }
 
-// Ghidra: FUN_0002c924 (updateAndDrawAepLayers). Walk the global live-layer list
-// and, for every layer whose play state (+0x58) is non-zero, draw it at its
-// current frame through AepManager::drawLayer, then (unless drawOnly) step the
-// frame by its signed rate (+0x44) and apply the per-play-mode end handling.
-// The drawLayer argument threading and the state machine below are
-// byte-verified from the disassembly at 0x2c958..0x2ca82.
+// Walk the global live-layer list and, for every layer whose play state (+0x58)
+// is non-zero, draw it at its current frame through AepManager::drawLayer, then
+// (unless drawOnly) step the frame by its signed rate (+0x44) and apply the
+// per-play-mode end handling. The drawLayer argument threading and the state
+// machine below are byte-verified from the disassembly.
 void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
-    AepManager &mgr = AepManager::shared(); // Ghidra: AepManager_shared (FUN_0000f1ec)
+    AepManager &mgr = AepManager::shared();
 
     for (AepLyrCtrl *l = s_layerListHead; l != nullptr; l = l->m_next) {
         const AnimState playState = l->m_state;
@@ -201,11 +192,11 @@ void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
         }
 
         // Frame index handed to drawLayer: the float play head truncated to int
-        // (vcvt.s32.f32). Argument order matches the binary's drawLayer stack layout
-        // (bl @ 0x2c9ce): m_anchorX/m_anchorY/100/0 at positions 8-11 and the loopFlags
-        // constant 8 at position 12 (str r4=#8 -> [sp+0x20] -> callee [r7+0x28], the
-        // slot drawLayer bit-tests for loop/clamp), AFTER colorHi. Constants:
-        // loopFlags=8, color=100, colorHi=0, colorRGB=0xffffff, visFlag=1.
+        // (vcvt.s32.f32). Argument order matches the binary's drawLayer stack layout:
+        // m_anchorX/m_anchorY/100/0 at positions 8-11 and the loopFlags constant 8 at
+        // position 12 (str r4=#8 -> [sp+0x20] -> callee [r7+0x28], the slot drawLayer
+        // bit-tests for loop/clamp), AFTER colorHi. Constants: loopFlags=8, color=100,
+        // colorHi=0, colorRGB=0xffffff, visFlag=1.
         const int frame = static_cast<int>(l->m_curFrame);
         mgr.drawLayer(l->m_lyr,
                       frame,
