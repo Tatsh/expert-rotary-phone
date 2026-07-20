@@ -598,7 +598,11 @@ void MainTask::update(int /*deltaMs*/) {
             if (m_resultSheet != d) {
                 // EX is locked for a not-yet-open invite song.
                 if (d != 2 || m_sel.inviteOpen) {
-                    [audio playSe:nil resourceId:0];
+                    // Play the selected difficulty's voice cue (m_seId[0..2] =
+                    // v18/v19/v20 = "NORMAL!" / "HYPER!" / "EX!"). The prior
+                    // reconstruction left this as resourceId:0 (a stub), so no cue
+                    // played on a difficulty change.
+                    [audio playSe:nil resourceId:m_seId[d]];
                     // Ghidra: restart the newly-selected star's open animation and
                     // the previously-selected star's close (both frame 0), holding
                     // the others on their last OUT frame; then commit the sheet.
@@ -1030,6 +1034,10 @@ void MainTask::Setup() {
         m_seId[i] = static_cast<int>(sid); // +0x8c4
         m_seInst[i] = -1;                  // +0x8d8 idle
     }
+    // The overlay decide/kettei button (kBtnPlay) plays m_sel.selectSeId, which the
+    // prior reconstruction never set (so it played nothing). It is the "HERE WE GO!"
+    // voice = v11 = m_seId[3].
+    m_sel.selectSeId = m_seId[3];
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm02_musicsel.m4a"];
     [audio loadBgm:bgmPath isLoop:YES];
