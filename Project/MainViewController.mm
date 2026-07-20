@@ -441,10 +441,10 @@ static void MainDismissContainerVC(UIViewController *child) {
 - (void)GotoInviteCode {
     Class cls = !neSceneManager::isPadDisplay() ? [InviteTopViewController class] :
                                                   [InviteTopViewControllerPad class];
-    InviteTopViewController *content = [[cls alloc] initAtNavigationController];
-    _inviteNaviCtrl = (UINavigationController *)content;
+    InviteTopViewController *content = [cls alloc];
+    _inviteNaviCtrl = [content initAtNavigationController];
     MainPresentContainerVC(self, _inviteNaviCtrl);
-    [(InviteTopViewController *)content startOpenAnimation];
+    [content startOpenAnimation];
     [self PauseLoop];
 }
 

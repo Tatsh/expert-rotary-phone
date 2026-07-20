@@ -84,7 +84,6 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 - Friend button crashes the game.
 - Treasure Mode goes to a black screen.
-- Invite button crashes the game.
 
 ### Arcade viewer
 
