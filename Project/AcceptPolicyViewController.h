@@ -1,21 +1,16 @@
-//
-//  AcceptPolicyViewController.h
-//  pop'n rhythmin
-//
-//  The first-run "accept the terms of use" modal. A rounded, gradient-filled
-//  card centred over the game view, holding a scrolling terms summary (a
-//  read-only CustomTextView inside an embedded navigation controller) and three
-//  buttons: "詳細" (show the full PolicyView), reject, and accept. Accepting
-//  records the agreement (UserSettingData +saveIsPolicyAccepted:). Shown by
-//  MainViewController -GotoAcceptPolicy, which adds self.view over the root and
-//  calls startOpenAnimation. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (init @ 0xaf848, dealloc @ 0xb02bc). Built in
-//  AcceptPolicyViewController.mm (Objective-C++: the SE / scene-root bridge
-//  drives the C++ neEngine singletons).
-//
+/** @file
+ * The first-run "accept the terms of use" modal: a rounded, gradient-filled card centred over the
+ * game view. It holds a scrolling terms summary (a read-only CustomTextView inside an embedded
+ * navigation controller) and three buttons: show the full PolicyView, reject, and accept.
+ * Accepting records the agreement through UserSettingData. MainViewController's GotoAcceptPolicy
+ * adds the view over the root and calls startOpenAnimation.
+ */
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The first-run "accept the terms of use" modal card.
+ */
 @interface AcceptPolicyViewController : UIViewController {
     BOOL isAnimationing;                 // an open/close fade is running (guards re-entry)
     UIView *_topView;                    // the card's primary content view
@@ -24,7 +19,10 @@
     UINavigationController *_naviCtrl;   // the card's embedded content navigation controller
 }
 
-// Fade the card in over 0.3 s. Ghidra: startOpenAnimation @ 0xb0540.
+/**
+ * @brief Fade the card in over 0.3 s.
+ * @ghidraAddress 0xb0540
+ */
 - (void)startOpenAnimation;
 
 @end
