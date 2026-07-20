@@ -181,9 +181,22 @@ static int scoreToRank(int score) {
                   action:@selector(onBackButtonTouched)
         forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
-    [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"frisco_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+    UIImage *navbarImage = [UIImage imageNamed:@"frisco_navbar"];
+    [self.navigationController.navigationBar setBackgroundImage:navbarImage
+                                                  forBarMetrics:UIBarMetricsDefault];
+    // iOS 13+ ignores the legacy background image at the transparent scroll edge;
+    // mirror it into the appearance so the friend-score-compare header shows.
+    if (@available(iOS 13.0, *)) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundImage = navbarImage;
+        appearance.shadowColor = UIColor.clearColor;
+        self.navigationController.navigationBar.standardAppearance = appearance;
+        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+        if (@available(iOS 15.0, *)) {
+            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
+        }
+    }
 
     // --- The three difficulty tables (N / H / Ex)
     // ---------------------------------------
