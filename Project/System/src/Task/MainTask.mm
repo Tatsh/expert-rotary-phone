@@ -1047,13 +1047,16 @@ void MainTask::Setup() {
  * mainTaskUpdate — per-frame list scroll physics. Reads the render manager's
  * active touch, drives the horizontal list drag/fling, and on a column change
  * streams the newly-visible jacket column (musicSelLoadColumnPrev/Next). This is
- * NOT the re-sort routine: that is rebuildList() (musicSelUpdate 0x3835c). The
- * scroll direction matches the binary exactly: offset = curX - startX (the grid
- * follows the finger), drag left commits nColumnIndex-- (previous column), drag
- * right commits nColumnIndex++ (next), with the end rubber-band damped to
+ * NOT the re-sort routine: that is rebuildList() (musicSelUpdate 0x3835c).
+ *
+ * Scroll direction: the binary is content-opposite-finger -- offset = startX -
+ * curX, so a drag right slides the grid LEFT and commits nColumnIndex++ (next).
+ * This reconstruction uses the modern direct-manipulation feel instead: offset =
+ * curX - startX so the grid follows the finger, with the commit inverted to match
+ * -- drag right slides the grid right and commits nColumnIndex-- (previous), drag
+ * left commits nColumnIndex++ (next). The end rubber-band is damped to
  * (int)(sign(off) * sqrt(|off|) + 0.5).
  * @ghidraAddress 0x34f4c
- * @complete
  */
 void MainTask::Update() {
     neSceneManager::shared();               // NESceneManager_shared — force the singleton
@@ -1135,25 +1138,32 @@ void MainTask::Update() {
         if (t->released) {          // +0x2d finger lifted this frame
             m_touchReleased = true; // +0xa80
             if (curX < startX) {
-                // Dragged left -> return toward the PREVIOUS column (Ghidra: drag
-                // left commits nColumnIndex--), if a fast-enough fling and not first.
-                if (m_columnIndex > 0 && velocity > kFlingThreshold) {
+                // Dragged left: with the finger-following offset (curX - startX) the
+                // grid slides left and the NEXT column enters from the right, so commit
+                // toward the next column -- kScrollFlingNext continues the leftward
+                // motion to -columnWidth and does columnIndex++ -- if a fast-enough
+                // fling and not already at the last column. (The binary uses the
+                // opposite pairing because its offset is startX - curX; see the header.)
+                if (m_columnIndex < m_columnCount - 1 && velocity > kFlingThreshold) {
                     neEngine::playSystemSe(
                         4); // SysSePlayIntoSlot(...,4) — confirm SE on a real fling
-                    m_scrollState = kScrollFlingPrev;
-                } else {
-                    m_scrollVelocity = 0.0f;
-                    m_scrollState = kScrollSnapRight;
-                }
-            } else if (startX < curX) {
-                // Dragged right -> advance toward the NEXT column (Ghidra: drag right
-                // commits nColumnIndex++), if a fast-enough fling and not last.
-                if (m_columnIndex < m_columnCount - 1 && velocity < -kFlingThreshold) {
-                    neEngine::playSystemSe(4); // confirm SE on a real fling
                     m_scrollState = kScrollFlingNext;
                 } else {
                     m_scrollVelocity = 0.0f;
                     m_scrollState = kScrollSnapLeft;
+                }
+            } else if (startX < curX) {
+                // Dragged right: the grid slides right and the PREVIOUS column enters
+                // from the left, so commit toward the previous column --
+                // kScrollFlingPrev continues the rightward motion to +columnWidth and
+                // does columnIndex-- -- if a fast-enough fling and not already at the
+                // first column.
+                if (m_columnIndex > 0 && velocity < -kFlingThreshold) {
+                    neEngine::playSystemSe(4); // confirm SE on a real fling
+                    m_scrollState = kScrollFlingPrev;
+                } else {
+                    m_scrollVelocity = 0.0f;
+                    m_scrollState = kScrollSnapRight;
                 }
             } else {
                 // Released with no net movement: snap straight back to the current
