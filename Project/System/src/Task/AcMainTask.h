@@ -145,6 +145,7 @@ private:
     void stateInit();          // case 0  (setup, then BGM or the no-treasure path)
     void stateFadeIn();        // case 1  (fade the select scene, open the sugoroku map)
     void stateTreasureCheck(); // case 2  (read the temp-treasure record, branch)
+    void stateBoardReveal();   // case 3  (fade the board in, save the tmp, arm the move count)
 
     // Scene build / map load (their own reconstruction pieces).
     void setupScene();      // Ghidra: FUN_0009fc90 (build the select/map scene)

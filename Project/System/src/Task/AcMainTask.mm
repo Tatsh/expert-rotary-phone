@@ -114,6 +114,9 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateTreasureCheck:
         stateTreasureCheck();
         break;
+    case kAcMainStateBoardReveal:
+        stateBoardReveal();
+        break;
     case kAcMainStateMapDrag:
         // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
         // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at
@@ -180,6 +183,17 @@ void AcMainTask::drawFrame() {
 // Ghidra: isIndexInRange12 @ 0xe2c3c — true when the unsigned index is below 12.
 static bool acIsIndexInRange12(int index) {
     return static_cast<unsigned>(index) < 12u;
+}
+
+// The "start the layer if it is idle" idiom (Ghidra: IsPlaying @ 0x2cb64 then
+// play @ 0x2caf8) that RealUpdate inlines at roughly forty sites. isAnimating()
+// is the reconstruction's name for IsPlaying; the null guard mirrors the
+// call sites that check the layer pointer first and is a no-op for the ones that
+// do not (those layers are always built by setupScene).
+static void acPlayIfIdle(AepLyrCtrl *layer) {
+    if (layer && !layer->isAnimating()) {
+        layer->play();
+    }
 }
 
 // Per-frame drag / rubber-band scroll normalization. Ground truth is the
@@ -297,6 +311,77 @@ void AcMainTask::stateTreasureCheck() {
         // sub-map, so begin the exit fade-out.
         m_state = kAcMainStateExitBegin;
     }
+}
+
+// case 3 — reveal the sugoroku board. Flip the scene from fade-out to fade-in,
+// persist the just-entered board snapshot back to the pending record, start the
+// board background layers, drop the drag / type-4 latches, then arm the
+// player-token move-frame countdown and advance to the board-idle state. Ghidra:
+// RealUpdate case 3, whose body the compiler scattered across 0x9a046 (fade / save
+// / layers), 0x9a12c (base count) and 0x9cc2c (scale, halve, store, next state).
+void AcMainTask::stateBoardReveal() {
+    AepManager &aep = AepManager::shared();
+    if (aep.transitionMode() == 2) { // was fading out: switch to fade-in
+        aep.setAepTransitionMode(1); // Ghidra: 0x9a04e getMode == 2 -> 0x9a060 setMode(1)
+    }
+
+    // Persist the live board state into the pending TreasureTmpData: read it,
+    // patch the eight fields the board owns, write it back. Ghidra:
+    // 0x9a086..0x9a0f2.
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+    tmp.mainMapId = static_cast<int16_t>(m_bonusCount);              // +0x00 <- +0x628
+    tmp.curSubMapId = m_curNode->id;                                 // +0x04 <- curNode->id
+    tmp.lastBranchNodeId = m_lastBranchNodeId;                       // +0x06 <- +0x4f0
+    tmp.boardMoveState = static_cast<int16_t>(m_boardMoveState);     // +0x10 <- +0x5d4
+    tmp.rouletteMode = m_rouletteMode;                               // +0x44 <- +0x8ac
+    tmp.treasureProgress = static_cast<uint8_t>(m_treasureProgress); // +0x51 <- +0x8b9
+    tmp.listHalveCount = static_cast<uint8_t>(m_listHalveCount);     // +0x52 <- +0x8b8
+    std::memcpy(tmp.boardSquareState,
+                m_boardSquareState,
+                sizeof(tmp.boardSquareState)); // +0x35 <- +0x894 (15 bytes)
+    [UserSettingData saveTreasureTmp:tmp];
+
+    // Start the board background layers if idle. Ghidra: 0x9a0f6 (panel[0]) and
+    // 0x9a110 (board background, null-guarded).
+    acPlayIfIdle(m_panelLayers[0].get());
+    acPlayIfIdle(m_boardBgLayer.get());
+
+    // Drop the drag anchor and the latched type-4 event square. Ghidra: 0x9a130
+    // str -1,[+0x508]; 0x9a134 str -1,[+0x8b4].
+    m_dragAnchorId = -1;
+    m_activeType4SquareId = -1;
+
+    // Arm the player-token move-frame countdown (kept in the +0x63c slot). Base is
+    // 20, or 50 when the sub-map id sits in [30, 50). Ghidra: 0x9a138..0x9a148
+    // (ldrh so the id is read unsigned).
+    int moveFrames = 20;
+    if (static_cast<uint16_t>(static_cast<uint16_t>(m_subMapId) - 30) < 20) {
+        moveFrames = 50;
+    }
+    // Scale by the two board-square flags: square 4 set stretches it x1.5, else
+    // square 5 set doubles it. Ghidra: 0x9a156..0x9a166 (vmul by 0x3fc00000 == 1.5,
+    // truncated) / 0x9cc34 (lsl #1).
+    if (m_boardSquareState[4] >= 1) {
+        moveFrames = static_cast<int>(static_cast<float>(moveFrames) * 1.5f);
+    } else if (m_boardSquareState[5] >= 1) {
+        moveFrames <<= 1;
+    }
+    // Halve for treasure-event 11 and again when the list-halve flag is set.
+    // Ghidra: 0x9cc3c (m_hudState == 0xb) / 0x9cc50 (m_listHalveCount >= 1).
+    if (m_hudState == 11) {
+        moveFrames /= 2;
+    }
+    if (m_listHalveCount >= 1) {
+        moveFrames /= 2;
+    }
+    if (moveFrames < 1) {
+        moveFrames = 1;
+    }
+    m_listBottom = static_cast<int16_t>(moveFrames);
+
+    // Advance to the board-idle state (4), or the bonus-overlay variant (9) when a
+    // bonus/main-map is active. Ghidra: 0x9cc72 (m_bonusCount > 0 -> 9), 0x9cc7c.
+    m_state = static_cast<AcMainState>(m_bonusCount > 0 ? 9 : 4);
 }
 
 // ===========================================================================
