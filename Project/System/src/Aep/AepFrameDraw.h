@@ -22,6 +22,8 @@
 
 #include <cstdint>
 
+#import <Foundation/Foundation.h>
+
 class AepManager;
 
 // The per-frame group draw callback the play/result/sugoroku scenes install

@@ -18,6 +18,8 @@
 #include <dispatch/dispatch.h>
 #include <memory>
 
+#import <Foundation/Foundation.h>
+
 #include "C_TASK.h"
 #include "neTextureForiOS.h" // complete type: MusicSelCell holds a unique_ptr<neTextureForiOS>
 

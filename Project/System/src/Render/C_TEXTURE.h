@@ -13,6 +13,10 @@
 
 #pragma once
 
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+#endif
+
 #import <OpenGLES/ES1/gl.h>
 
 namespace ne {

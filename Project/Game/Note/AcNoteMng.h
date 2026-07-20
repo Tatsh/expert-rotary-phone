@@ -15,6 +15,8 @@
 #include <cstdint>
 #include <span>
 
+#import <Foundation/Foundation.h>
+
 #ifdef __OBJC__
 @class NSData;
 #endif

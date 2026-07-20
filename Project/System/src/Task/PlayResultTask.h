@@ -42,6 +42,8 @@
 #include <cstdint>
 #include <memory>
 
+#import <Foundation/Foundation.h>
+
 #include "C_TASK.h"
 
 class AepLyrCtrl;

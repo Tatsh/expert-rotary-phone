@@ -16,6 +16,8 @@
 
 #pragma once
 
+#import <Foundation/Foundation.h>
+
 #import <Availability.h>
 
 // --- Modern constant names aliased back to the originals on old SDKs ----------

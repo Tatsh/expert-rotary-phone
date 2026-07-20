@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+#import <Foundation/Foundation.h>
+
 typedef struct __attribute__((packed)) TreasureTmpData {
     int16_t mainMapId;   // +0x00 main map id (parallels TreasureData.mainMapId)
     int16_t subMapId;    // +0x02 goal sub-map id (main*10+sub); -1 == nothing pending

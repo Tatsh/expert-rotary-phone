@@ -19,6 +19,8 @@
 
 #include <cstdint>
 
+#import <Foundation/Foundation.h>
+
 class TreasureMap {
 public:
     // Ghidra: FUN_000ce2b0 — zero-inits the 0x60-byte object (the member

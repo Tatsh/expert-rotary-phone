@@ -24,6 +24,8 @@
 
 #include <cstdint>
 
+#import <Foundation/Foundation.h>
+
 // The play data the judge pass operates on IS the standard-mode play task,
 // PlayTask (System/src/Task/PlayTask.h) — the whole 0xa00-byte class. The judge
 // only takes it by pointer, so a forward declaration keeps this note-engine

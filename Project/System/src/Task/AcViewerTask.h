@@ -38,6 +38,8 @@
 
 #include <cstdint>
 
+#import <Foundation/Foundation.h>
+
 #include "C_TASK.h"
 
 class AepLyrCtrl;

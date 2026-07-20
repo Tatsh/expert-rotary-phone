@@ -14,6 +14,10 @@
 
 #pragma once
 
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+#endif
+
 // One tracked touch. The manager pre-allocates a fixed pool of these
 // (operator_new(0x30) = 48 bytes each) at init and mutates them in place as
 // touches begin/move/end; slots are never freed. All coordinates are plain

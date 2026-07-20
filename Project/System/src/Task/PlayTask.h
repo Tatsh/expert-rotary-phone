@@ -40,6 +40,8 @@
 #include <memory>
 #include <span>
 
+#import <Foundation/Foundation.h>
+
 #include "C_TASK.h"
 #include "PlayJudge.h" // NoteJudgeState (the +0x3c8 pool element)
 

@@ -35,6 +35,8 @@
 #include <cstdint>
 #include <memory>
 
+#import <Foundation/Foundation.h>
+
 #include "C_TASK.h"
 #include "Random.h"      // embedded PRNG at this+0x4f4 (Ghidra: FUN_00062b20)
 #include "TreasureMap.h" // TreasureMap + nested Node / ConnectStruct (sugoroku draw params)

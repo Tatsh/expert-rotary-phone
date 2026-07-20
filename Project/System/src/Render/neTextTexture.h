@@ -15,6 +15,8 @@
 #include <cstdint>
 #include <memory>
 
+#import <Foundation/Foundation.h>
+
 // One glyph atlas: a 256x256 GL_ALPHA texture (created via
 // neCreateTextureFromData) plus the CPU-side pixel buffer it was uploaded from.
 // Ghidra: CreateNewTextTexture (FUN_00017b28) fills these; the destructor is
