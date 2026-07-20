@@ -17,6 +17,7 @@
 #import "AppDelegate.h"                 // +appAppSupportDirectory (mode-select BGM)
 #import "AudioManager.h"                // shared BGM player
 #import "MusicManager.h"                // +getInstance / -getAcMusicDataArray
+#import "UINavigationBar+RHHeader.h"    // -setBackgroundImageModern:
 #import "UserSettingData.h"             // +bgmVolume
 #import "neEngineBridge.h"
 
@@ -275,22 +276,7 @@ static UIViewController *RootVC() {
 
     AcViewerMusicViewController *music = [[AcViewerMusicViewController alloc] initWithData:data];
     UIImage *barImage = [UIImage imageNamed:@"acv_friman_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:barImage
-                                                  forBarMetrics:UIBarMetricsDefault];
-    // On iOS 13 and later the bar background resolves through
-    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
-    // ignored at the transparent scroll edge; mirror the image in.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = barImage;
-        appearance.shadowColor = UIColor.clearColor;
-        self.navigationController.navigationBar.standardAppearance = appearance;
-        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [self.navigationController.navigationBar setBackgroundImageModern:barImage];
     neSceneManager::shared();
     BOOL animated = !neSceneManager::isPadDisplay();
     if (!animated) {

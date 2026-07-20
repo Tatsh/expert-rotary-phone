@@ -21,7 +21,8 @@
 #import "MainViewController.h" // -ArcadeSearchEndCallBack (nav host)
 #import "MapAnnotation.h"      // the MKAnnotation dropped for each arcade
 #import "SDKCompat.h"
-#import "StoreUtil.h" // +searchMasterURL / +searchURL / urlEncodeString
+#import "StoreUtil.h"                // +searchMasterURL / +searchURL / urlEncodeString
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
 
 // --- Recovered constants (little-endian doubles read straight out of the
@@ -125,22 +126,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
     // Nav bar background.
     UIImage *barImage = [UIImage imageNamed:@"set_nowpoint_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:barImage
-                                                  forBarMetrics:UIBarMetricsDefault];
-    // iOS 13+ resolves the bar background through UINavigationBarAppearance; the
-    // legacy setBackgroundImage: above is ignored at the transparent scroll edge,
-    // which dropped this arcade-locator screen's header. Mirror the image in.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = barImage;
-        appearance.shadowColor = UIColor.clearColor;
-        self.navigationController.navigationBar.standardAppearance = appearance;
-        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [self.navigationController.navigationBar setBackgroundImageModern:barImage];
 
     m_DictSpot = [[NSMutableDictionary alloc] initWithCapacity:0x40];
     m_LoadedMaster = NO;
@@ -814,8 +800,7 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 - (void)backButtonFunc {
     neEngine::playSystemSe(2);
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

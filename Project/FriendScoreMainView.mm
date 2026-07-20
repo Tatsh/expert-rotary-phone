@@ -78,11 +78,12 @@
 #import "FriendScoreTableCell.h" // one ranking row
 #import "MainViewController.h"   // PauseLoop / ResumeLoop / FriendScoreEndCallBack on the root VC
 #import "MusicData.h"
-#import "MusicManager.h"        // song jacket / title art
-#import "OverScoreData+Store.h" // getAllOverScoreData: / deleteRecordWithMusic:...
-#import "OverScoreData.h"       // "a rival beat you" markers
-#import "StoreUtil.h"           // friend-score URL
-#import "UserSettingData.h"     // local player id / chara
+#import "MusicManager.h"             // song jacket / title art
+#import "OverScoreData+Store.h"      // getAllOverScoreData: / deleteRecordWithMusic:...
+#import "OverScoreData.h"            // "a rival beat you" markers
+#import "StoreUtil.h"                // friend-score URL
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
+#import "UserSettingData.h"          // local player id / chara
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 // NSValue payload for one friend-score row, shared with FriendScoreTableCell
@@ -182,21 +183,7 @@ static int scoreToRank(int score) {
         forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     UIImage *navbarImage = [UIImage imageNamed:@"frisco_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:navbarImage
-                                                  forBarMetrics:UIBarMetricsDefault];
-    // iOS 13+ ignores the legacy background image at the transparent scroll edge;
-    // mirror it into the appearance so the friend-score-compare header shows.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = navbarImage;
-        appearance.shadowColor = UIColor.clearColor;
-        self.navigationController.navigationBar.standardAppearance = appearance;
-        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [self.navigationController.navigationBar setBackgroundImageModern:navbarImage];
 
     // --- The three difficulty tables (N / H / Ex)
     // ---------------------------------------

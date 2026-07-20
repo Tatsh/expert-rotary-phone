@@ -14,13 +14,14 @@
 
 #import "InviteTopViewControllerPad.h"
 
-#import "AppDelegate.h"     // +appDelegate / -uuId (device uuid for the request)
-#import "CommonAlertView.h" // modal alerts + CommonAlertViewDelegate
-#import "Downloader.h"      // the invite POST + DownloaderDelegate
-#import "StoreUtil.h"       // +invitedURL, urlEncodeString()
-#import "TwitterUtil.h"     // +tweetWithText:image:
-#import "UserSettingData.h" // +playerId, +isInputInviteCode/+save..., tickets
-#import "neEngineBridge.h"  // neEngine::playSystemSe, neSceneManager::rootViewController
+#import "AppDelegate.h"              // +appDelegate / -uuId (device uuid for the request)
+#import "CommonAlertView.h"          // modal alerts + CommonAlertViewDelegate
+#import "Downloader.h"               // the invite POST + DownloaderDelegate
+#import "StoreUtil.h"                // +invitedURL, urlEncodeString()
+#import "TwitterUtil.h"              // +tweetWithText:image:
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
+#import "UserSettingData.h"          // +playerId, +isInputInviteCode/+save..., tickets
+#import "neEngineBridge.h"           // neEngine::playSystemSe, neSceneManager::rootViewController
 
 // Own privates + adopted delegates.
 @interface InviteTopViewControllerPad () <UITextFieldDelegate,
@@ -61,22 +62,7 @@
         forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     UIImage *barImage = [UIImage imageNamed:@"invite_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:barImage
-                                                  forBarMetrics:UIBarMetricsDefault];
-    // On iOS 13 and later the bar background resolves through
-    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
-    // ignored at the transparent scroll edge; mirror the image in.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = barImage;
-        appearance.shadowColor = UIColor.clearColor;
-        self.navigationController.navigationBar.standardAppearance = appearance;
-        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [self.navigationController.navigationBar setBackgroundImageModern:barImage];
 
     // Full-screen backdrop.
     UIImageView *bg =

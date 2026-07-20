@@ -15,6 +15,7 @@
 #import "AcViewerOptionViewController.h"
 #import "DownloadMain.h"
 #import "MusicManager.h"
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
@@ -232,22 +233,7 @@ static NSString *const kCategoryBanner[] = {
     neSceneManager::shared();
     neEngine::playSystemSe(2);
     UIImage *barImage = [UIImage imageNamed:@"acv_category_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:barImage
-                                                  forBarMetrics:UIBarMetricsDefault];
-    // On iOS 13 and later the bar background resolves through
-    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
-    // ignored at the transparent scroll edge; mirror the image in.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = barImage;
-        appearance.shadowColor = UIColor.clearColor;
-        self.navigationController.navigationBar.standardAppearance = appearance;
-        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [self.navigationController.navigationBar setBackgroundImageModern:barImage];
     [self.navigationController popViewControllerAnimated:!neSceneManager::isPadDisplay()];
 }
 
@@ -297,22 +283,7 @@ static NSString *const kCategoryBanner[] = {
     neAppEventCenter::setAcViewerSelection(data.acMusicId, difficulty);
 
     UIImage *barImage = [UIImage imageNamed:@"acv_option_navbar"];
-    [self.navigationController.navigationBar setBackgroundImage:barImage
-                                                  forBarMetrics:UIBarMetricsDefault];
-    // On iOS 13 and later the bar background resolves through
-    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
-    // ignored at the transparent scroll edge; mirror the image in.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = barImage;
-        appearance.shadowColor = UIColor.clearColor;
-        self.navigationController.navigationBar.standardAppearance = appearance;
-        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [self.navigationController.navigationBar setBackgroundImageModern:barImage];
     AcViewerOptionViewController *option = [[AcViewerOptionViewController alloc] init];
     BOOL animated = !neSceneManager::isPadDisplay();
     if (neSceneManager::isPadDisplay()) {

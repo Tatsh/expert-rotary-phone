@@ -13,6 +13,7 @@
 #import "StoreAcvManageViewController.h"
 #import "StoreMainViewController.h"
 #import "StoreManageViewController.h"
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h"
 
 @implementation StoreViewController
@@ -34,23 +35,7 @@
 
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
     UIImage *navbarImage = [UIImage imageNamed:navbarImageName];
-    [nav.navigationBar setBackgroundImage:navbarImage forBarMetrics:UIBarMetricsDefault];
-    // iOS 13+ resolves the navigation-bar background through UINavigationBarAppearance;
-    // the legacy setBackgroundImage: above is ignored at the scroll edge (the default
-    // scrollEdgeAppearance is transparent), which dropped the custom "pop'n STORE"
-    // navbar art entirely. Mirror the image into every appearance slot so the header
-    // shows regardless of scroll position. Pre-iOS-13 keeps the legacy path above.
-    if (@available(iOS 13.0, *)) {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundImage = navbarImage;
-        appearance.shadowColor = UIColor.clearColor; // the art carries its own edge
-        nav.navigationBar.standardAppearance = appearance;
-        nav.navigationBar.scrollEdgeAppearance = appearance;
-        if (@available(iOS 15.0, *)) {
-            nav.navigationBar.compactScrollEdgeAppearance = appearance;
-        }
-    }
+    [nav.navigationBar setBackgroundImageModern:navbarImage];
     return nav;
 }
 
