@@ -760,6 +760,30 @@ void AcViewerTask::update(int /*deltaMs*/) {
                         flick = true;
                         flickX = upX;
                         flickY = upY;
+                        // Diagnose the dead MENU button: log every tap with the
+                        // scaled coords, the scrub-zone guard, and whether the tap
+                        // lands in the exit (MENU) rect, so the next run shows why
+                        // the pause-menu branch never fires. neDebugLog is a no-op
+                        // when RHYDBG is off, so no call-site guard is needed.
+                        neDebugLog(
+                            "AcViewer TAP x=%d y=%d dragStartY=%d scrubTop=%d uiScale=%d/1000 "
+                            "state=%d exitRect=(%d,%d,%d,%d) inExit=%d",
+                            flickX,
+                            flickY,
+                            static_cast<int>(m_dragStartY),
+                            m_scrubZoneTopY,
+                            static_cast<int>(m_uiScale * 1000.0f),
+                            static_cast<int>(m_state),
+                            m_exitTouchX,
+                            m_exitTouchY,
+                            m_exitTouchW,
+                            m_exitTouchH,
+                            neGraphics::pointInRect(flickX,
+                                                    flickY,
+                                                    m_exitTouchX,
+                                                    m_exitTouchY,
+                                                    m_exitTouchW,
+                                                    m_exitTouchH));
                     }
                 }
             }
