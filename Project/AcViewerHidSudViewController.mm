@@ -222,9 +222,23 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     NSArray *vcs = self.navigationController.viewControllers;
     UITableViewController *prev = (UITableViewController *)[vcs objectAtIndex:vcs.count - 2];
     [prev.tableView reloadData];
-    [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"acv_option_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+    UIImage *barImage = [UIImage imageNamed:@"acv_option_navbar"];
+    [self.navigationController.navigationBar setBackgroundImage:barImage
+                                                  forBarMetrics:UIBarMetricsDefault];
+    // On iOS 13 and later the bar background resolves through
+    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
+    // ignored at the transparent scroll edge; mirror the image in.
+    if (@available(iOS 13.0, *)) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundImage = barImage;
+        appearance.shadowColor = UIColor.clearColor;
+        self.navigationController.navigationBar.standardAppearance = appearance;
+        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+        if (@available(iOS 15.0, *)) {
+            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
+        }
+    }
     [self.navigationController popViewControllerAnimated:!neSceneManager::isPadDisplay()];
 }
 

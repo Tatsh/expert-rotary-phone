@@ -108,8 +108,23 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
         AcViewerCategoryViewController *cat =
             [[AcViewerCategoryViewController alloc] initWithStyle:UITableViewStyleGrouped];
         cat.delegate = (id)self;
-        [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_friman_navbar"]
+        UIImage *barImage = [UIImage imageNamed:@"acv_friman_navbar"];
+        [_rightViewCtrl.navigationBar setBackgroundImage:barImage
                                            forBarMetrics:UIBarMetricsDefault];
+        // On iOS 13 and later the bar background resolves through
+        // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
+        // ignored at the transparent scroll edge; mirror the image in.
+        if (@available(iOS 13.0, *)) {
+            UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+            [appearance configureWithOpaqueBackground];
+            appearance.backgroundImage = barImage;
+            appearance.shadowColor = UIColor.clearColor;
+            _rightViewCtrl.navigationBar.standardAppearance = appearance;
+            _rightViewCtrl.navigationBar.scrollEdgeAppearance = appearance;
+            if (@available(iOS 15.0, *)) {
+                _rightViewCtrl.navigationBar.compactScrollEdgeAppearance = appearance;
+            }
+        }
         [_rightViewCtrl popToRootViewControllerAnimated:NO];
         [_rightViewCtrl pushViewController:cat animated:NO];
         [bg addSubview:_arrowImageView];
@@ -359,8 +374,23 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
         }
         completion:^(BOOL finished) {
           // @ 0x33200 — swap in the destination list, then expand the pane back.
-          [_rightViewCtrl.navigationBar setBackgroundImage:[UIImage imageNamed:@"acv_friman_navbar"]
+          UIImage *barImage = [UIImage imageNamed:@"acv_friman_navbar"];
+          [_rightViewCtrl.navigationBar setBackgroundImage:barImage
                                              forBarMetrics:UIBarMetricsDefault];
+          // On iOS 13 and later the bar background resolves through
+          // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
+          // ignored at the transparent scroll edge; mirror the image in.
+          if (@available(iOS 13.0, *)) {
+              UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+              [appearance configureWithOpaqueBackground];
+              appearance.backgroundImage = barImage;
+              appearance.shadowColor = UIColor.clearColor;
+              _rightViewCtrl.navigationBar.standardAppearance = appearance;
+              _rightViewCtrl.navigationBar.scrollEdgeAppearance = appearance;
+              if (@available(iOS 15.0, *)) {
+                  _rightViewCtrl.navigationBar.compactScrollEdgeAppearance = appearance;
+              }
+          }
           [_rightViewCtrl popToRootViewControllerAnimated:NO];
           [_rightViewCtrl pushViewController:dest animated:NO];
           [UIView transitionWithView:_rightViewCtrl.view

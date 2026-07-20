@@ -233,8 +233,23 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
         forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
+    UIImage *barImage = [UIImage imageNamed:@"pl_navbar"];
+    [self.navigationController.navigationBar setBackgroundImage:barImage
                                                   forBarMetrics:UIBarMetricsDefault];
+    // On iOS 13 and later the bar background resolves through
+    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
+    // ignored at the transparent scroll edge; mirror the image in.
+    if (@available(iOS 13.0, *)) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundImage = barImage;
+        appearance.shadowColor = UIColor.clearColor;
+        self.navigationController.navigationBar.standardAppearance = appearance;
+        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+        if (@available(iOS 15.0, *)) {
+            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
+        }
+    }
     return self;
 }
 
@@ -355,8 +370,23 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     default:
         return;
     }
-    [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:navbarName]
+    UIImage *barImage = [UIImage imageNamed:navbarName];
+    [self.navigationController.navigationBar setBackgroundImage:barImage
                                                   forBarMetrics:UIBarMetricsDefault];
+    // On iOS 13 and later the bar background resolves through
+    // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
+    // ignored at the transparent scroll edge; mirror the image in.
+    if (@available(iOS 13.0, *)) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundImage = barImage;
+        appearance.shadowColor = UIColor.clearColor;
+        self.navigationController.navigationBar.standardAppearance = appearance;
+        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+        if (@available(iOS 15.0, *)) {
+            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
+        }
+    }
     [self.navigationController pushViewController:vc animated:!neSceneManager::isPadDisplay()];
     neEngine::playSystemSe(1);
 }
@@ -411,9 +441,23 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
     }
     neEngine::playSystemSe(2);
     if (!_forAcMain) {
-        [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"acv_friman_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+        UIImage *barImage = [UIImage imageNamed:@"acv_friman_navbar"];
+        [self.navigationController.navigationBar setBackgroundImage:barImage
+                                                      forBarMetrics:UIBarMetricsDefault];
+        // On iOS 13 and later the bar background resolves through
+        // UINavigationBarAppearance, so the legacy setBackgroundImage: above is
+        // ignored at the transparent scroll edge; mirror the image in.
+        if (@available(iOS 13.0, *)) {
+            UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+            [appearance configureWithOpaqueBackground];
+            appearance.backgroundImage = barImage;
+            appearance.shadowColor = UIColor.clearColor;
+            self.navigationController.navigationBar.standardAppearance = appearance;
+            self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+            if (@available(iOS 15.0, *)) {
+                self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
+            }
+        }
         [self.navigationController popViewControllerAnimated:!neSceneManager::isPadDisplay()];
     } else {
         neEngine::acMainApplyGameplaySettings(_pAcMain);
