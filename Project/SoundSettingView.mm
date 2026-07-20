@@ -41,49 +41,8 @@
 #import "AppFont.h"         // AppFontName (== Ghidra getFontNameDFSoGei / FUN_0005ef9c)
 #import "AudioManager.h"    // BGM/SE volume + lib_rsnd SE load/play/stop/release
 #import "UserSettingData.h" // persisted BGM/SE/touch volumes + touch-sound kind
-#import "neDebugLog.h"      // temporary slider hit-test diagnostics
 #import "neEngineBridge.h"  // neSceneManager::isPadDisplay / hitSoundName / normalSoundName
 //   neEngine::playSystemSe (back-button cancel SE)
-
-// Temporary: log where a touch at the slider's centre lands and name any ancestor
-// that would block it (point outside its bounds, interaction disabled, hidden,
-// transparent). A hit= that is not the slider, or any BLOCKER line, is why the
-// slider ignores touches. Also prints the enclosing cell's height so we can tell
-// whether the fixed row-height fix took effect (should be ~44, not ~0).
-static void neDumpSliderHit(const char *tag, UISlider *s) {
-    if (s == nil || s.window == nil) {
-        neDebugLog("sliderHit %s: slider=%p window=%p (not in a window)", tag, s, s.window);
-        return;
-    }
-    CGPoint c = [s convertPoint:CGPointMake(CGRectGetMidX(s.bounds), CGRectGetMidY(s.bounds))
-                         toView:s.window];
-    UIView *hit = [s.window hitTest:c withEvent:nil];
-    neDebugLog("sliderHit %s winFrame=%s center=%s hit=%s selfUI=%d",
-               tag,
-               NSStringFromCGRect([s convertRect:s.bounds toView:s.window]).UTF8String,
-               NSStringFromCGPoint(c).UTF8String,
-               hit ? NSStringFromClass(hit.class).UTF8String : "nil",
-               s.userInteractionEnabled);
-    // Full, unfiltered ancestor walk: print every node from the slider up to the
-    // window with its frame, bounds and whether the slider's centre point lands
-    // inside it. The first node (top-down) that reports inside = 0 is what blocks
-    // the hit-test from reaching the slider.
-    int depth = 0;
-    for (UIView *v = s.superview; v != nil; v = v.superview) {
-        CGPoint p = [s.window convertPoint:c toView:v];
-        BOOL inside = [v pointInside:p withEvent:nil];
-        neDebugLog("  [%d] %s frame=%s bounds=%s inside=%d ui=%d hidden=%d alpha=%.2f clip=%d",
-                   depth++,
-                   NSStringFromClass(v.class).UTF8String,
-                   NSStringFromCGRect(v.frame).UTF8String,
-                   NSStringFromCGRect(v.bounds).UTF8String,
-                   inside,
-                   v.userInteractionEnabled,
-                   v.hidden,
-                   (double)v.alpha,
-                   v.clipsToBounds);
-    }
-}
 
 // The sound-settings table sections: three single-row volume sliders, then a
 // touch-sound picker (one row per unlocked touch sound; only shown when there
@@ -252,19 +211,6 @@ static inline float SoundShortToVolume(short v) {
         // iPad: hosted inside a panel, so just suppress the system back button.
         self.navigationItem.hidesBackButton = YES;
     }
-
-    // Confirm the row-height fix actually applied to this table instance.
-    NE_DBG(neDebugLog("SoundSettingView table=%p rowHeight=%.2f estRowHeight=%.2f",
-                      self.tableView,
-                      (double)self.tableView.rowHeight,
-                      (double)self.tableView.estimatedRowHeight));
-    NE_DBG(dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)),
-                          dispatch_get_main_queue(),
-                          ^{
-                            neDumpSliderHit("bgm(vdl)", self->_bgmSlider);
-                            neDumpSliderHit("se(vdl)", self->_seSlider);
-                            neDumpSliderHit("touch(vdl)", self->_touchSoundSlider);
-                          }));
 }
 
 // @ 0x8191c / 0x81948 / 0x81974 / 0x819a0 / 0x819cc / 0x819f8 -- plain super
@@ -280,14 +226,6 @@ static inline float SoundShortToVolume(short v) {
 }
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    NE_DBG(neDebugLog("SoundSettingView viewDidAppear"));
-    NE_DBG(dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
-                          dispatch_get_main_queue(),
-                          ^{
-                            neDumpSliderHit("bgm", self->_bgmSlider);
-                            neDumpSliderHit("se", self->_seSlider);
-                            neDumpSliderHit("touch", self->_touchSoundSlider);
-                          }));
 }
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
@@ -598,7 +536,6 @@ static inline float SoundShortToVolume(short v) {
 }
 
 - (void)sliderTouchDown:(UISlider *)slider {
-    NE_DBG(neDebugLog("sliderEvent touchDown slider=%p", slider));
     [self setEnclosingScrollEnabled:NO forSlider:slider];
 }
 
@@ -612,7 +549,6 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x82af4 -- live-apply the BGM volume (with and without fade); iPad persists
 // it.
 - (void)bgmSliderValChanged:(id)sender {
-    NE_DBG(neDebugLog("sliderEvent bgm valueChanged value=%.3f", (double)_bgmSlider.value));
     float v = _bgmSlider.value;
     [[AudioManager sharedManager] setBgmVolume:v];
     [[AudioManager sharedManager] setJustBgmVolume:v];
@@ -624,7 +560,6 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x82bbc -- apply the SE group volume, preview it when non-zero; iPad
 // persists it.
 - (void)seSliderValChanged:(id)sender {
-    NE_DBG(neDebugLog("sliderEvent se valueChanged value=%.3f", (double)_seSlider.value));
     short vol = SoundVolumeToShort(_seSlider.value);
     [[AudioManager sharedManager] setSeVolume:vol groupId:1];
     if (vol > 0) {
@@ -640,8 +575,6 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x82cc4 -- preview the touch SE when the volume is non-zero; iPad persists
 // it.
 - (void)touchSoundSliderValChanged:(id)sender {
-    NE_DBG(
-        neDebugLog("sliderEvent touch valueChanged value=%.3f", (double)_touchSoundSlider.value));
     short vol = SoundVolumeToShort(_touchSoundSlider.value);
     if (vol > 0) {
         // Preview touch SE (NEON-spilled resourceId/Volume -- reconstructed as the
