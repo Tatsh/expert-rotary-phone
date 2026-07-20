@@ -115,6 +115,7 @@ cooldown
 coredata
 couse
 coveragerc
+cplusplus
 cpsize
 cputype
 crcerror
