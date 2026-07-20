@@ -48,7 +48,6 @@
 // @ 0x72d4c — grouped-table styling. On phone the whole table gets a
 // "back_bg_st" patterned background and 61 px rows; on iPad the table is made
 // borderless and clear.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self != nil) {
@@ -72,7 +71,6 @@
 // @ 0x72edc — phone: tile the table with "popkun_size_bg" and install a custom
 // "navi_btn_back" back button (targets -backButtonFunc). iPad: just hide the
 // back button.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -98,7 +96,6 @@
 }
 
 // @ 0x730f4
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -106,13 +103,11 @@
 #pragma mark - Table
 
 // @ 0x73120
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x73124
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return 2; // row 0 = isEffectOn, row 1 = isLongNotesEffectOn
 }
@@ -120,7 +115,6 @@
 // @ 0x73128 — one toggle row: a text label (row 0 "背景演出", row 1 "ロングノート
 // 演出"), an on/off checkmark, and (iPad only) a "custom_bt02" row background.
 // Reuse id is "Cell<section>-<row>".
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *cellId = [NSString stringWithFormat:@"Cell%ld-%ld",
@@ -176,7 +170,6 @@
 
 // @ 0x73518 — play the decide SE, flip the tapped row's stored flag, then
 // reload the row so its checkmark updates.
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     neEngine::playSystemSe(1); // decide SE (Ghidra: SysSePlayIntoSlot(1))
 
@@ -193,7 +186,6 @@
 // @ 0x735dc — section header: a clear container UIView holding a centred label.
 // The label text is the "ゲーム演出" (game effect) caption. Phone uses a 320x61
 // container at x=15 with a 16 pt font; iPad a 320x32 container at x=5 with 14 pt.
-// @complete
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     CGRect frame;
     CGFloat fontSize;
@@ -220,7 +212,6 @@
 }
 
 // @ 0x737b0 — 61 pt header on phone, 32 pt on iPad.
-// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return neSceneManager::isPadDisplay() ? 32.0f : 61.0f; // 0x42000000 / 0x42740000
 }
@@ -228,7 +219,6 @@
 // @ 0x737d8 — back-button action: play the cancel SE, restore the
 // "settings_navbar" bar background, pop self, then re-apply the stored SE
 // volume.
-// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // cancel SE (Ghidra: SysSePlayIntoSlot(2))
 

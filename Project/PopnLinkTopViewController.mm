@@ -54,7 +54,6 @@ static UIViewController *RootVC() {
 // (DAT_000cd2dc = 0x42b80000); phone captions x = 22.0f (0x41b00000), y 106
 // (0x6a) / 243 (0xf3) / 380 (0x17c) + yAdj; both link buttons seeded from
 // neAppEventCenter::linkButtonsEnabled (ldrsb [center + 0x30]).
-// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         int displayType = [AppDelegate appDelegate].displayType;
@@ -151,7 +150,6 @@ static UIViewController *RootVC() {
 // Verified against disassembly: -init is invoked on the original self (r10) and
 // its result is discarded (r10 kept), the nav controller is built from that same
 // self, and the returned value is the nav controller ([sp,#0xc]).
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // The binary calls -init only for its side effects and keeps the original
     // self; the result is intentionally discarded, so this is not
@@ -177,7 +175,6 @@ static UIViewController *RootVC() {
 
 // @ 0xcd4e4 — re-apply the checker / quiz enabled state when the screen
 // reappears.
-// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     if (_btnChecker) {
@@ -193,7 +190,6 @@ static UIViewController *RootVC() {
 // @ 0xcca48 — external nudge to re-sync the link-gated buttons.
 // Verified against disassembly: both buttons re-seeded from linkButtonsEnabled,
 // then a tail-call to reloadInputViews.
-// @complete
 - (void)updateButtonEnable {
     if (_btnChecker) {
         _btnChecker.enabled = neAppEventCenter::linkButtonsEnabled();
@@ -213,7 +209,6 @@ static UIViewController *RootVC() {
 // first-time branch keys on !isPopnLinkSelected (tst; beq) and does pl_navbar +
 // how-to + saveIsPopnLinkSelected:YES, the else does input_kid_navbar; the fade
 // duration is the exact double 0.5 (vmov.f64 0x3fe0000000000000).
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -255,7 +250,6 @@ static UIViewController *RootVC() {
 }
 
 // @ 0xcd8f4
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -266,7 +260,6 @@ static UIViewController *RootVC() {
 // [_delegate startCloseAnimation]; the phone fade duration is the single 0.3f
 // promoted to double (vldr.64 0x3fd3333340000000 at DAT_000cda60), unlike the
 // 0.5 open fade.
-// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2);
     if (!neSceneManager::isPadDisplay()) {
@@ -290,7 +283,6 @@ static UIViewController *RootVC() {
 // @ 0xcda68 — remove the nav view and notify the host that pop'n-link closed.
 // Verified against disassembly: removeFromSuperview, then RootVC()
 // PopnLinkEndCallBack, then _isAnimationing cleared to 0, in that order.
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [(MainViewController *)RootVC() PopnLinkEndCallBack];
@@ -304,7 +296,6 @@ static UIViewController *RootVC() {
 // Verified against disassembly: pad branch forwards to the delegate; phone
 // pushes InputKID animated:YES with input_kid_navbar; playSystemSe(1) runs on
 // both paths as a tail-call.
-// @complete
 - (void)onInKidButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {
@@ -325,7 +316,6 @@ static UIViewController *RootVC() {
 // forwards.
 // Verified against disassembly: phone pushes CheckerCategoryViewController
 // initWithStyle:1 animated:YES with ppc_navbar; playSystemSe(1) tail-call.
-// @complete
 - (void)onScoreCheckerButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {
@@ -346,7 +336,6 @@ static UIViewController *RootVC() {
 // @ 0xcdd5c — quiz: phone pushes the quiz screen; pad forwards.
 // Verified against disassembly: phone pushes QuizMainViewController
 // initWithStyle:1 animated:YES with pq_navbar; playSystemSe(1) tail-call.
-// @complete
 - (void)onQuizButtonTouched:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self || _isAnimationing) {

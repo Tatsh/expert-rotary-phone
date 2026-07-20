@@ -42,7 +42,7 @@
 // &DAT_0012e31c weights, interleaved 8 bytes per row). The weights sum to 1000,
 // which matches the arc4random() % 1000 + 1 roll below.
 //
-// @complete (table bytes verified @ 0x12e318: value at +0, weight at +4).
+// (table bytes verified @ 0x12e318: value at +0, weight at +4).
 constexpr struct {
     int value;
     int weight;
@@ -62,7 +62,6 @@ constexpr struct {
 // (weights sum to 1000); the first row whose running weight covers the roll
 // supplies the value.
 //
-// @complete
 - (void)getBonus {
     _bonus = 0;
     int roll = (int)(arc4random() % 1000) + 1;
@@ -77,21 +76,18 @@ constexpr struct {
 
 // @ 0x18a90 — nib path funnels into -init.
 //
-// @complete
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     return [self init];
 }
 
 // @ 0x18aa0 — frame path funnels into -init.
 //
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     return [self init];
 }
 
 // @ 0x18ab0 — designated setup: dimmer + panel + four spinning digit reels.
 //
-// @complete
 // Verified: SE load order (se26_roll loop / se08_bonus_fai / se09_bonus_cl, all
 // group 1); dimmer white alpha 0.5; login_board_02; -getBonus after the board;
 // iPad reel X = 183/288/398/503 at y = 523 (0x4337c000/0x43900000/0x43c70000/
@@ -268,7 +264,6 @@ constexpr struct {
 
 // @ 0x19884 — stop and release the SE, then up-chain.
 //
-// @complete
 // Verified: -stopSe:_seInstId[0], -stopSe:_seInstId[1], -releaseSe:nil
 // resourceId:_seRscId[0], -releaseSe:nil resourceId:_seRscId[1], [super dealloc].
 - (void)dealloc {
@@ -284,7 +279,6 @@ constexpr struct {
 
 // @ 0x19960 — install over the root scene view, credit the bonus, pop open.
 //
-// @complete
 // Verified: addSubview:self, bringSubviewToFront:self, credit
 // (treasurePoint + _bonus only when treasurePoint >= 0, stored as short),
 // scale 2.0, hidden = NO, animateWithDuration:0.3 options
@@ -337,7 +331,6 @@ constexpr struct {
 // returns. The binary does not send -showAlertView from this cascade (verified:
 // LAB_0001a3f4 is two ivar stores then bx lr, no msgSend). When _state != 0 the
 // tap instead plays system SE 1 and calls -startCloseAnimation.
-// @complete
 - (void)touchEvent:(id)sender {
     if (_isAnimationing) {
         return;
@@ -458,7 +451,6 @@ constexpr struct {
 
 // @ 0x1a448 — fade the overlay out; -endCloseAnimation runs when it stops.
 //
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -474,7 +466,6 @@ constexpr struct {
 
 // @ 0x1a508 — remove self and notify the root scene it was dismissed.
 //
-// @complete
 // The binary sends -customAlertView:clickedButtonAtIndex: unconditionally
 // (no -respondsToSelector: guard is emitted @ 0x1a508); the root scene is
 // always the outer delegate.
@@ -488,7 +479,6 @@ constexpr struct {
 
 // @ 0x1a558 — report the rolled bonus in a gift-styled CustomAlertView.
 //
-// @complete
 // Title/message CFStrings verified: "ログインボーナス" @ 0x12b94c and
 // "トレジャーポイントをGET！\n[%dP]" @ 0x12b95e; type 1 (Gift), otherButton
 // "OK", -setOpenAnimeType:1 (Scale).
@@ -513,7 +503,6 @@ constexpr struct {
 
 // @ 0x1a650 — CustomAlertViewDelegate: fade the dimmer away, then remove.
 //
-// @complete
 // Verified: background white alpha 0, animateWithDuration:0.3 options
 // AllowUserInteraction (2); collapse block @ 0x1a740 sends
 // -setTransform:(0,0,0,0,0,0) on self (captured at +0x14); completion removes.

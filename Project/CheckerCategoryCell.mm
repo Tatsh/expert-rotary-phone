@@ -20,7 +20,6 @@
 }
 
 // @ 0xcf49c — the music-count label x offset varies by device + OS.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -46,7 +45,6 @@
 // @ 0xcf5f4 — rebuild the row for a category: a full-bleed banner image whose
 // placement depends on device/OS, over a "played" badge showing how many musics
 // in this category the player has already played.
-// @complete
 - (void)setData:(NSArray *)playedList category:(short)category {
     // Base category banner images, indexed by `category` (0..23); >=24 uses
     // "near".

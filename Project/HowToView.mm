@@ -21,7 +21,6 @@
 }
 
 // @ 0xe9230 — retain the image list (+ background); clear the backdrop on iPad.
-// @complete
 - (instancetype)initWithImageList:(NSArray *)imageList
                             frame:(CGRect)frame
                     backGroundImg:(UIImage *)backGroundImg {
@@ -40,7 +39,6 @@
 
 // @ 0xe9368 — lay the pages out horizontally: iPhone draws them (+ background)
 // into the context; iPad adds an image view per page.
-// @complete
 - (void)drawRect:(CGRect)rect {
     CGFloat x = 0;
     if (!neSceneManager::isPadDisplay()) {

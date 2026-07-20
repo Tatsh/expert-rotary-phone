@@ -12,17 +12,14 @@
 #include <cstring>
 
 // Ghidra: FUN_00027bac.
-// @complete
 CASound::CASound() = default;
 
 // Ghidra: FUN_00027bdc.
-// @complete
 CASound::~CASound() {
     freeBuffer();
 }
 
 // Ghidra: caSourceFreeBuffer @ 0x27bc0.
-// @complete
 void CASound::freeBuffer() {
     if (m_buffer != nullptr) {
         free(m_buffer);
@@ -34,7 +31,6 @@ void CASound::freeBuffer() {
 // Ghidra: caSourceRead @ 0x27e10 — the mixer render read. Copies from the
 // current byte cursor, clamping each copy to the buffer end; a looped source
 // wraps (and clears the pass total), a one-shot stops at the end.
-// @complete
 size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const {
     if (bytes == 0) {
         return 0;
@@ -74,7 +70,6 @@ size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const 
 // In the binary the `loop` flag is passed on to loadURL, which performs the
 // m_loop store (0x27c62); setting it here first is behaviourally identical since
 // nothing reads m_loop before readFrames runs.
-// @complete
 bool CASound::load(const char *path, bool loop) {
     m_loop = loop;
     CFURLRef url = CFURLCreateFromFileSystemRepresentation(
@@ -90,7 +85,6 @@ bool CASound::load(const char *path, bool loop) {
 
 // Ghidra: FUN_00027c58. In the binary this also takes the loop flag and stores
 // m_loop (strb r2,[this,#0xc]); that store is hoisted into load() here.
-// @complete
 bool CASound::loadURL(CFURLRef url) {
     ExtAudioFileRef file = nullptr;
     if (ExtAudioFileOpenURL(url, &file) != noErr) {
@@ -106,7 +100,6 @@ bool CASound::loadURL(CFURLRef url) {
 
 // Ghidra: FUN_00027cb8 — read the file's format + length, then derive the
 // interleaved signed-16-bit LPCM client format to decode into.
-// @complete
 bool CASound::configureFormat(ExtAudioFileRef file) {
     AudioStreamBasicDescription fileFormat = {};
     UInt32 size = sizeof(fileFormat);
@@ -146,7 +139,6 @@ bool CASound::configureFormat(ExtAudioFileRef file) {
 // The binary loops purely on `remaining > 0` (mls/mla update per read) with no
 // frames==0 guard; the `break` on end-of-file here is a reconstruction-added
 // safety that only fires on a short/malformed read the binary would spin on.
-// @complete
 bool CASound::readFrames(ExtAudioFileRef file) {
     if (m_bufferSize == 0) {
         return false;

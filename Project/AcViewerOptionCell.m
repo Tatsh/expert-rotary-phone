@@ -16,7 +16,6 @@
 }
 
 // @ 0x65480 — plain non-selectable cell; content set by the VC on reuse.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -31,7 +30,6 @@
 // image (top / bar / under depending on the row's position), a left caption
 // label and a right value label showing the player's stored setting for that
 // kind.
-// @complete
 - (void)setData:(int)optionKind {
     [_optionKindLbl removeFromSuperview];
     _optionKindLbl = nil;

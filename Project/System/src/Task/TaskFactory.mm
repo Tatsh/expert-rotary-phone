@@ -20,7 +20,6 @@
 // App boot: create + register the logo splash task at priority 3. Ghidra:
 // neEngine::startBootTask (operator_new(0x4c) + BootLogoTask_ctor +
 // setPriority(3)).
-// @complete
 ne::C_TASK *BootCreateTask() {
     auto *task = new BootLogoTask();
     task->setPriority(3);
@@ -30,7 +29,6 @@ ne::C_TASK *BootCreateTask() {
 // TitleTask -> the mode-select hub. Ghidra: operator_new(0x1b0) +
 // MenuMainTask_ctor + MenuMainTask_setInfoFlag(1) + setPriority(3)
 // (BootLogoTask_finish/TitleTask_finish).
-// @complete
 ne::C_TASK *MenuCreateTask() {
     auto *task = new MenuMainTask();
     task->setInfoFlag(true); // FUN_0006d194(_, 1)
@@ -39,14 +37,12 @@ ne::C_TASK *MenuCreateTask() {
 
 // MenuMainTask -> relaunch the title. Ghidra: operator_new(0x54) +
 // TitleTask_ctor.
-// @complete
 ne::C_TASK *TitleTaskCreate() {
     return new TitleTask();
 }
 
 // MenuMainTask (standard play button) -> the music-select task. Ghidra:
 // operator_new(0xaa8) + MainTask_ctor (FUN_00034d48).
-// @complete
 ne::C_TASK *MainTaskCreate() {
     return new MainTask();
 }
@@ -54,14 +50,12 @@ ne::C_TASK *MainTaskCreate() {
 // MainTask (song chosen) -> the note-play task. Ghidra: PlayTask (state @
 // +0x9fc, update PlayTask_update FUN_0002dc14) — drives the PlayJudge/NoteMng
 // core.
-// @complete
 ne::C_TASK *PlayTaskCreate() {
     return new PlayTask();
 }
 
 // MenuMainTask (arcade button) -> the arcade select+play task. Ghidra:
 // operator_new(0x9fc) + AcMainTask_ctor (FUN_00099ab0) — drives AcNoteMng.
-// @complete
 ne::C_TASK *AcMainTaskCreate() {
     return new AcMainTask();
 }
@@ -69,7 +63,6 @@ ne::C_TASK *AcMainTaskCreate() {
 // MainTask/MenuMainTask (tutorial) -> a PlayTask running the tutorial chart.
 // Ghidra: FUN_0002db10 is PlayTask_ctor (PlayTask_update vtable, 0x9d4 play
 // data).
-// @complete
 ne::C_TASK *TutorialTaskCreate() {
     return new PlayTask();
 }
@@ -80,7 +73,6 @@ ne::C_TASK *TutorialTaskCreate() {
 // (ctor FUN_00099ab0, 0x9fc bytes, vtable @ 0x1327c8): Ghidra only labels this
 // vtable acMainTask* because AppDelegate holds the task in its `acMainTask`
 // property. The +0x168 menu button spawns this.
-// @complete
 ne::C_TASK *AcViewerTaskCreate() {
     return new AcViewerTask();
 }
@@ -90,7 +82,6 @@ ne::C_TASK *AcViewerTaskCreate() {
 // This factory models only the operator_new + ctor; the single setPriority(3)
 // is issued by the caller (BootLogoTask::finish), matching the binary which
 // calls ne::C_TASK::setPriority exactly once.
-// @complete
 ne::C_TASK *BootCreateNextTask() {
     return new TitleTask();
 }

@@ -51,7 +51,6 @@
 // button, placeholder. Verified: rowHeight 98/78 (DAT_000a8054/58), messager at
 // (22, 33) in a 140-tall header, spinner scale 2x centred (160, 328) pad / half -
 // 10 phone, placeholder centred (160, 328) pad / half - 44 phone.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -134,7 +133,6 @@
 }
 
 // @ 0xa8060 — kick off the request-list fetch (uuid-only POST) once.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (dlGetFriendRequest == nil) {
@@ -152,14 +150,12 @@
 }
 
 // @ 0xa81c0
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xa82d8 — accept (reply == 1) / reject (reply == 0) a request: POST and
 // show the loading cover.
-// @complete
 - (void)startReplyFriendHttp:(NSString *)playerId reply:(int)reply {
     if (dlReplyFriend != nil) {
         return;
@@ -180,19 +176,16 @@
 }
 
 // @ 0xa8434
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xa8438
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _receiveDataArray ? (NSInteger)[_receiveDataArray count] : 0;
 }
 
 // @ 0xa8460
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Binary format is "Cell%ld-%ld" (0xa84b4: __cfstring at 0x134e38 -> chars at
@@ -211,13 +204,11 @@
 }
 
 // @ 0xa8580
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xa8584 — no navigation on row tap (the OK/NG buttons drive everything).
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     static_cast<void>(indexPath.section);
 }
@@ -227,7 +218,6 @@
 // @ string fields (playerId, name, message) before releasing the array; under
 // ARC those manual releases fold into the array release, so only the getValue
 // loop and the array nil-out remain (behaviour equivalent).
-// @complete
 - (void)releaseReceiveDataArray {
     if (_receiveDataArray != nil) {
         for (NSUInteger i = 0; i < [_receiveDataArray count]; i++) {
@@ -240,7 +230,6 @@
 
 // @ 0xa8598 — dispatch a completed download to the right handler, then hide the
 // loading cover.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (dlGetFriendRequest == downloader) {
         [self getFriendRequestFinished];
@@ -252,13 +241,11 @@
 }
 
 // @ 0xa861c
-// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xa8620 — transport-level failure on either request: clear it, hide cover,
 // generic alert.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (dlGetFriendRequest == downloader) {
         dlGetFriendRequest = nil;
@@ -279,7 +266,6 @@
 
 // @ 0xa87f0 — parse the "Receive" request list into ReplyDataStruct rows; swap
 // headers/placeholder and update the badge count.
-// @complete
 - (void)getFriendRequestFinished {
     NSDictionary *json = [dlGetFriendRequest getDataInJSON];
     NSString *errorMessage = nil;
@@ -352,7 +338,6 @@
 
 // @ 0xa8dc0 — reply POST done: on success drop the replied row + update
 // headers/badge; alert either way.
-// @complete
 - (void)replyFriendFinished {
     NSDictionary *json = [dlReplyFriend getDataInJSON];
     NSString *message;
@@ -395,7 +380,6 @@
 }
 
 // @ 0xa90b4 — cancel SE, restore the hub nav bar art, pop.
-// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2);
     [self.navigationController.navigationBar
@@ -407,7 +391,6 @@
 // @ 0xa81ec — the binary (MRC) additionally releases _dummyView / _lonelyImageView
 // / _headView / _lonelyHeadView (ARC-automatic here); the cancels and
 // releaseReceiveDataArray are the load-bearing cleanup.
-// @complete
 - (void)dealloc {
     if (dlGetFriendRequest != nil) {
         [dlGetFriendRequest cancel];

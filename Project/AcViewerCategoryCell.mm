@@ -18,7 +18,6 @@
 @implementation AcViewerCategoryCell
 
 // @ 0x1a804 — plain non-selectable cell.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -33,7 +32,6 @@
 // full-width background view on iOS 7+ phones, used directly as the cell
 // background on older phones, and added as a horizontally-centered subview on
 // iPad.
-// @complete
 - (void)setData:(NSArray *)dataList {
     // Banner images indexed by category (0 = etc, 1 = TV, 2..23 = p01..p22).
     static NSString *const kCateBase[24] = {

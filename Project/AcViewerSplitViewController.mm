@@ -53,7 +53,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0x318e8 — build the dimmed backdrop (tap to close), the artwork panel, the
 // left button column (initForLeftView), the right navigation pane hosting the
 // category list, the selection arrow, and a back button.
-// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         _rightViewFrm = CGRectMake(385, 182, 320, 716);
@@ -138,7 +137,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0x322c4 — the left column: category / music-name / genre buttons, stacked.
-// @complete
 - (void)initForLeftView {
     if (_leftViewCtrl == nil) {
         return;
@@ -182,7 +180,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0x32234 — detach the selection arrow from its superview on teardown; the
 // left/right panel controllers are released automatically under ARC.
-// @complete
 - (void)dealloc {
     [_arrowImageView removeFromSuperview];
 }
@@ -193,7 +190,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 #pragma mark - Open/close animation (shared modal-VC lifecycle)
 
 // @ 0x3272c — fade the view + nav view in over ~0.5s.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -211,14 +207,12 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0x32858
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x32870 — reset the last-selected music, then fade out (phone) / fade the
 // black board in (iPad) and dismiss.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -243,7 +237,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0x329f0 — remove the panel and notify the nav host it closed.
-// @complete
 - (void)endCloseAnimation {
     UIView *v = neSceneManager::isPadDisplay() ? self.view : self.navigationController.view;
     [v removeFromSuperview];
@@ -257,7 +250,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // screen: freeze input on the nav view, then either fade the view + nav view
 // out over 0.3 s (animated, didStop -> endHiddenAnimation) or, non-animated,
 // fire hiddenFunc after a 0.3 s delay.
-// @complete
 - (void)startHiddenAnimation:(BOOL)animated {
     if (_isAnimationing) {
         return;
@@ -281,7 +273,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0x32c18 — non-animated hide path: snap the view + nav view transparent,
 // then run endHiddenAnimation.
-// @complete
 - (void)hiddenFunc {
     self.view.alpha = 0;
     self.navigationController.view.alpha = 0;
@@ -291,7 +282,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0x32c7c — swap the right pane from the category list to the AC-viewer
 // option screen (delegate = self) and flag the root VC that the AC music
 // selection is no longer viewing.
-// @complete
 - (void)endHiddenAnimation {
     _isAnimationing = NO;
     AcViewerOptionViewController *opt = [[AcViewerOptionViewController alloc] init];
@@ -315,7 +305,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // DAT_00033350), arrow slide 0.6 s (DAT_00033168). Options 0x10000 =
 // UIViewAnimationOptionCurveEaseIn; the arrow uses 0x2 =
 // UIViewAnimationOptionAllowUserInteraction.
-// @complete
 - (void)onButtonTouched:(UIButton *)sender {
     if (_isAnimationing) {
         return;
@@ -403,7 +392,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0x32d44 — the back button: play the cancel SE, clear the pending AC-viewer
 // selection (music id / difficulty -> "none"), then fade the panel out.
-// @complete
 - (void)onBackButtonTouched:(UIButton *)sender {
     neEngine::playSystemSe(2);
     neAppEventCenter::clearAcViewerSelection();
@@ -413,7 +401,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0x3350c — the dimmed backdrop / top-cover taps are swallowed (the real
 // handler is empty; the covers just block touches from falling through to the
 // panel).
-// @complete
 - (void)handleTapCoverView {
 }
 

@@ -51,7 +51,6 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // button; the "friman" backdrop (phone only); and the shared custom header
 // (song banner, difficulty banner, title/genre and BPM labels) built from the
 // AC-viewer's current event-center selection.
-// @complete
 - (instancetype)init {
     if (!(self = [super initWithStyle:UITableViewStyleGrouped])) {
         return nil;
@@ -147,7 +146,6 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0x2d484 — after loading, poke the scene manager (populates the pad-display
 // flag).
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -155,7 +153,6 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0x2d4b4 — treat a rightward pan (translation.x > 80) as a back-button
 // press.
-// @complete
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer {
     if (recognizer == nil) {
         return;
@@ -169,20 +166,17 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0x2d520
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x2d524 — eleven HI-SPEED values in section 0.
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (section == 0) ? 11 : 0;
 }
 
 // @ 0x2d530 — one AcViewerDetailCell per value (reused by "Cell%ld-%ld"), bound
 // to the HI-SPEED option kind (0) and the row's value label.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
@@ -213,13 +207,11 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 }
 
 // @ 0x2d660 — no section headers.
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0x2d664 — no accessory (private UITableView delegate hook).
-// @complete
 - (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
          accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     return UITableViewCellAccessoryNone;
@@ -227,7 +219,6 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 
 // @ 0x2d668 — a new value: store it, refresh, play the decide SE and pop back
 // to the option list. Re-selecting the current value does nothing.
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
@@ -246,7 +237,6 @@ static UILabel *AcvMakeHeaderLabel(CGFloat fontSize, NSTextAlignment alignment, 
 // @ 0x2d738 — BACK: (on a real tap) play the cancel SE, refresh the option list
 // behind this screen, restore the option-list nav-bar background and pop. A nil
 // sender (the post-select auto-pop) skips the cancel SE.
-// @complete
 - (void)touchedBackButton:(id)sender {
     if (sender != nil) {
         neEngine::playSystemSe(2);

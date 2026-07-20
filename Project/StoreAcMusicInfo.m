@@ -13,7 +13,6 @@
 @implementation StoreAcMusicInfo
 
 // @ 0x852dc
-// @complete
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary {
     if ([dictionary[@"ID"] intValue] <= 0) {
         return nil;
@@ -32,7 +31,6 @@
 // 0x85504, itemURL @ 0x85514, sampleURL @ 0x85524.
 // Verified: each is a single `ldr r0,[r0,ivarOffset]; bx lr` load of its
 // backing ivar.
-// @complete
 - (int)acMusicId {
     return m_AcMusicId;
 }
@@ -50,7 +48,6 @@
 }
 
 // @ 0x85418 — the purchased arcade-music file exists on disk.
-// @complete
 - (BOOL)fileExist {
     return RhFileExists([[MusicManager getInstance] getAcPathFromPurchased:m_AcMusicId]);
 }

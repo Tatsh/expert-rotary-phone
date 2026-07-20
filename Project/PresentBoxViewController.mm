@@ -60,7 +60,6 @@
 // Ghidra: setNavViewFrameA @ 0x24f40
 // Slides the navigation controller view to y = 420.0.
 // Animations block, first phase of the iPad open animation.
-// @complete
 static void setNavViewFrameA(PresentBoxViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -71,7 +70,6 @@ static void setNavViewFrameA(PresentBoxViewController *self) {
 // Ghidra: setNavViewFrameB @ 0x25078
 // Settles the navigation controller view to y = 470.0.
 // Animations block of the settle phase (second step of open).
-// @complete
 static void setNavViewFrameB(PresentBoxViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -82,7 +80,6 @@ static void setNavViewFrameB(PresentBoxViewController *self) {
 // Ghidra: setNavViewFrameC @ 0x25320
 // Slides the navigation controller view back to y = 420.0.
 // Animations block, first phase of the iPad close animation.
-// @complete
 static void setNavViewFrameC(PresentBoxViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -95,7 +92,6 @@ static void setNavViewFrameC(PresentBoxViewController *self) {
 // Animations block, second phase of the iPad close animation.  Captures self
 // and a reference UIViewController; sets nav-view origin.y to refController's
 // view height.
-// @complete
 static void setNavViewFrameFromSubview(PresentBoxViewController *self,
                                        UIViewController *refController) {
     UIView *navView = self.navigationController.view;
@@ -129,7 +125,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 // @ 0x24098 — build the table (empty spacer header, phone backdrop), the dimmed
 // dummy overlay + spinner, the phone back button, the empty-state banner and
 // the acquire-all button; inset the content by the acquire button's height.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
         CGRect viewFrame = self.view ? self.view.frame : CGRectZero;
@@ -218,7 +213,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 }
 
 // @ 0x24938 — wrap a freshly (re)initialised controller in a portrait nav host.
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [UINavigationController alloc];
     PresentBoxViewController *vc = [self initWithStyle:UITableViewStyleGrouped]; // style 1
@@ -229,7 +223,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 // because it detaches DownloadMain callbacks so no late message fires into a
 // dead controller). The _customAlert delegate is also cleared; object-ivar
 // releases are ARC-managed.
-// @complete
 - (void)dealloc {
     if (_customAlert != nil) {
         _customAlert.delegate = nil;
@@ -248,7 +241,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x24abc — reveal the spinner, register as the present list/claim delegate
 // and kick off the list fetch. On pad, size for the popover host.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (neSceneManager::isPadDisplay()) {
@@ -268,7 +260,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x24ba4 — recentre the empty-state banner in the view (the binary does NOT
 // chain to super here).
-// @complete
 - (void)viewWillAppear:(BOOL)animated {
     CGRect f = self.view.frame;
     _emptyImageView.center = CGPointMake(f.size.width * 0.5f, f.size.height * 0.5f - 5.0f);
@@ -279,7 +270,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 #pragma mark - Open / close animation
 
 // @ 0x24c98
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -327,13 +317,11 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 }
 
 // @ 0x2514c
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x25160
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -379,7 +367,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x255bc — tear the nav host down and notify the menu the present box has
 // closed.
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
@@ -390,20 +377,17 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 #pragma mark - Table
 
 // @ 0x25628
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x2562c
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _presentDataArray ? [_presentDataArray count] : 0;
 }
 
 // @ 0x25668 — one PresentBoxCell per row; wire its acquire button to
 // -touchedGetButton:event:.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -424,7 +408,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x257a8 — shared present callback. result.intValue: <0 network error, ==1 a
 // claim finished, ==0 the present list finished.
-// @complete
 - (void)downloadMainFinished:(NSNumber *)result {
     _dummyView.view.hidden = YES;
     DownloadMain *dm = [DownloadMain getInstance];
@@ -508,7 +491,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x25cdc — back button: close the box (blocked unless we are the top VC and
 // no claim confirm is up).
-// @complete
 - (void)backButtonFunc {
     if (self.navigationController.topViewController != self) {
         return;
@@ -522,7 +504,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x25d48 — "acquire all": claim every present (id -1), unless a claim is
 // already running.
-// @complete
 - (void)allGetFunc {
     neEngine::playSystemSe(1); // decide/confirm SE
     DownloadMain *dm = [DownloadMain getInstance];
@@ -534,7 +515,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x25db4 — map the control event's touch back to the table row it fired
 // from.
-// @complete
 - (NSIndexPath *)indexPathForControlEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
     CGPoint point = [touch locationInView:self.tableView];
@@ -542,7 +522,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 }
 
 // @ 0x25e34 — a row's acquire button: raise the per-row claim confirm alert.
-// @complete
 - (void)touchedGetButton:(id)sender event:(UIEvent *)event {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self) {
@@ -585,7 +564,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 
 // @ 0x260a4 — confirm result: index 1 claims the bound present (unless one is
 // already downloading); always drop the alert.
-// @complete
 - (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (index == 1) {
         DownloadMain *dm = [DownloadMain getInstance];
@@ -600,7 +578,6 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
 }
 
 // @ 0x26144 — atomic read of the animation-in-flight flag.
-// @complete
 - (BOOL)isAnimationing {
     return _isAnimationing;
 }

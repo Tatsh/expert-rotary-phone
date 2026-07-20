@@ -29,7 +29,6 @@
 @synthesize rightViewCtrl = m_rightViewCtrl;
 
 // @ 0x5dbc0
-// @complete
 - (id)initWithFrame:(CGRect)frame
          leftViewWidth:(int)leftViewWidth
     leftViewController:(UIViewController *)leftViewController
@@ -77,7 +76,6 @@
 }
 
 // @ 0x5dde0
-// @complete
 - (id)initWithLeftViewWidth:(int)leftViewWidth
          leftViewController:(UIViewController *)leftViewController
                   rightView:(UIViewController *)rightView {

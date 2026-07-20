@@ -38,7 +38,6 @@ C_TASK &C_TASK::scheduler() {
 // [+0x20] (name), strb [+0x24] (killed); str r0,[+0x4]; str r0,[+0x8]
 // (self-linked prev/next). The binary leaves m_parent..m_link3 (+0x10..+0x1c)
 // uninitialised; modelling them as null is the documented convention.
-// @complete
 C_TASK::C_TASK()
     : m_prev(this), m_next(this), m_priority(9), m_parent(nullptr), m_link1(nullptr),
       m_link2(nullptr), m_link3(nullptr), m_name(nullptr), m_killed(false) {
@@ -55,7 +54,6 @@ C_TASK::C_TASK()
 // m_next->m_prev = m_prev (str [r_next+4]); m_prev->m_next = m_next
 // (str [r_prev+8]); then cbz-guarded operator delete on m_name [+0x20] and
 // zero it.
-// @complete
 C_TASK::~C_TASK() {
     m_next->m_prev = m_prev;
     m_prev->m_next = m_next;
@@ -79,7 +77,6 @@ void C_TASK::draw() {
 // m_next); walk `at = head->m_next` advancing `before = at` while
 // at->m_priority (+0xc) < priority; splice this between before/at; store
 // priority last.
-// @complete
 void C_TASK::setPriority(int priority) {
     // Unlink from the current slot.
     m_next->m_prev = m_prev;
@@ -107,7 +104,6 @@ void C_TASK::setPriority(int priority) {
 // task = task->m_next. Killed path saves task->m_next (+0x8) first, then calls
 // the deleting-destructor vtable slot [+0x8] (== `delete task`), then continues
 // from the saved next.
-// @complete
 void C_TASK::updateAll(int deltaMs) {
     C_TASK &sentinel = scheduler();
     C_TASK *task = sentinel.m_next;

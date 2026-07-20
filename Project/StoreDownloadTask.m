@@ -18,7 +18,6 @@
 // @ 0x42700 — copy the source URL and local path (NSString -initWithString:),
 // and retain the completion object (nil-safe: stored as nil when none is
 // given).
-// @complete
 - (instancetype)initWithURL:(NSString *)url path:(NSString *)path AddObject:(id)object {
     if ((self = [super init])) {
         m_FileURL = [[NSString alloc] initWithString:url];

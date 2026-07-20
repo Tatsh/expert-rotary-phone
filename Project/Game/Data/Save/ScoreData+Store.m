@@ -11,7 +11,6 @@
 @implementation ScoreData (Store)
 
 // Ghidra: +[ScoreData getScoreData:inManagedObjectContext:] @ 0x6da30
-// @complete
 + (ScoreData *)getScoreData:(int)musicId inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
 
@@ -41,7 +40,6 @@
 }
 
 // Ghidra: +[ScoreData recordWithMusicId:inManagedObjectContext:] @ 0x6ded0
-// @complete
 + (ScoreData *)recordWithMusicId:(int)musicId
           inManagedObjectContext:(NSManagedObjectContext *)context {
     [context reset];
@@ -55,7 +53,6 @@
 }
 
 // Ghidra: +[ScoreData getAllScoreData:] @ 0x6dca4
-// @complete
 + (NSArray *)getAllScoreData:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"ScoreData"
@@ -64,7 +61,6 @@
 }
 
 // Ghidra: +[ScoreData reset:] @ 0x6df80
-// @complete
 + (void)reset:(ScoreData *)record {
     record.fullComboN = @NO;
     record.fullComboH = @NO;
@@ -90,7 +86,6 @@
 }
 
 // Ghidra: +[ScoreData checkScore:] @ 0x6e354
-// @complete
 + (BOOL)checkScore:(ScoreData *)record {
     if (record == nil) {
         return NO;
@@ -99,7 +94,6 @@
 }
 
 // Ghidra: +[ScoreData hashScore:] @ 0x6e260
-// @complete
 + (NSData *)hashScore:(ScoreData *)record {
     unsigned char digest[16];
     [self hashScoreForTune:record.musicId.intValue
@@ -111,7 +105,6 @@
 }
 
 // Ghidra: +[ScoreData hashScoreForTune:Normal:Hyper:Ex:Hash:] @ 0x6e20c
-// @complete
 + (void)hashScoreForTune:(int)musicId
                   Normal:(int)scoreN
                    Hyper:(int)scoreH

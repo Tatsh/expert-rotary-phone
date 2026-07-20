@@ -24,7 +24,6 @@
 // attach the image view. Ghidra-faithful (the spinner / marker are retained by
 // their superview; the +1 from -init is intentionally not autoreleased,
 // matching the "alloc"-named binary routine).
-// @complete
 + (instancetype)allocWithImage:(UIImage *)image {
     DelayImageView *view = [[DelayImageView alloc] init];
     view.backgroundColor = [UIColor clearColor];
@@ -48,7 +47,6 @@
 
 // @ 0x88c8 — build a UIImageView from the stored image, size it to the image,
 // add it to self.
-// @complete
 - (void)threadFunc {
     UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
     imageView.frame = CGRectMake(0, 0, image.size.width, image.size.height);

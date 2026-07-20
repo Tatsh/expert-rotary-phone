@@ -21,7 +21,6 @@
 // +propertyListFromData:mutabilityOption:format:errorDescription: (option 0).
 // The iOS < 4.0 branch is dead on the 64-bit rebuild target, so only the
 // modern call is reconstructed here; behaviour on the target is identical.
-// @complete
 NSDictionary *RhParsePlistDict(NSData *data) {
     if (data == nil) {
         return nil;
@@ -39,7 +38,6 @@ NSDictionary *RhParsePlistDict(NSData *data) {
 // +propertyListWithData:options:format:error: (options 0), earlier systems the
 // legacy +propertyListFromData:mutabilityOption:format:errorDescription:; the
 // legacy branch is dead on the rebuild target, so only the modern path is kept.
-// @complete
 NSMutableArray *RhParsePlistArray(NSData *data) {
     if (data == nil) {
         return nil;
@@ -55,14 +53,12 @@ NSMutableArray *RhParsePlistArray(NSData *data) {
 }
 
 // Ghidra: FUN_0005c434 — file (not directory) existence.
-// @complete
 BOOL RhFileExists(NSString *path) {
     BOOL isDir = NO;
     return [NSFileManager.defaultManager fileExistsAtPath:path isDirectory:&isDir] && !isDir;
 }
 
 // Ghidra: FUN_0005c48c — file byte size (int), or -1 when the file is absent.
-// @complete
 int getFileSize(NSString *path) {
     if (!RhFileExists(path)) {
         return -1;
@@ -75,7 +71,6 @@ int getFileSize(NSString *path) {
 // 32-bit-per-element bitfield and return whether bit `bit` is set: element (bit
 // >> 5)'s intValue masked by 1 << (bit & 31). An out-of-range element index
 // reads as 0 (NO).
-// @complete
 BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit) {
     unsigned idx = bit >> 5;
     if (idx >= [numberArray count]) {
@@ -88,7 +83,6 @@ BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit) {
 // Ghidra: FUN_0005b4b8 — MD5 of a C string as NSData.
 // The binary inlines strlen + CC_MD5_Init/Update/Final; that sequence is
 // factored into the RhMD5 helper here (identical behaviour).
-// @complete
 NSData *RhMD5Data(const char *cString) {
     unsigned char digest[16];
     RhMD5(cString, (uint32_t)strlen(cString), digest);
@@ -99,7 +93,6 @@ NSData *RhMD5Data(const char *cString) {
 // The binary streams CC_MD5_Init/Update/Final (equivalent to the one-shot
 // CC_MD5 used here), reserves a 0x20-capacity NSMutableString, and appends
 // "%02x" for each of the 16 digest bytes.
-// @complete
 NSString *ComputeMD5HexString(const char *cString) {
     unsigned char digest[CC_MD5_DIGEST_LENGTH];
     CC_MD5(cString, (CC_LONG)strlen(cString), digest);
@@ -115,7 +108,6 @@ NSString *ComputeMD5HexString(const char *cString) {
 // The binary streams CC_SHA256_Init/Update/Final (equivalent to the one-shot
 // CC_SHA256 used here), reserves a 0x40-capacity NSMutableString, and appends
 // "%02x" for each of the 32 digest bytes.
-// @complete
 NSString *ComputeSHA256HexString(const char *cString) {
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
     CC_SHA256(cString, (CC_LONG)strlen(cString), digest);
@@ -127,7 +119,6 @@ NSString *ComputeSHA256HexString(const char *cString) {
 }
 
 // Ghidra: getTimeMillis @ 0x2dae0 — gettimeofday reduced to milliseconds.
-// @complete
 long getTimeMillis(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -139,7 +130,6 @@ long getTimeMillis(void) {
 //   0xxxxxxx -> 1        110xxxxx -> 2        1110xxxx -> 3
 //   11110xxx -> 4        111110xx -> 5        1111110x -> 6
 //   10xxxxxx -> 0 (stray continuation byte)  0xFE/0xFF -> -1 (invalid)
-// @complete
 int utf8CharLen(const char *s) {
     unsigned c = (unsigned char)s[0];
     if ((c & 0x80) == 0) {
@@ -164,7 +154,6 @@ int utf8CharLen(const char *s) {
 }
 
 // Ghidra: pointInCircle @ 0x2d9bc — inclusive squared-distance hit test.
-// @complete
 BOOL pointInCircle(int x, int y, int cx, int cy, int r) {
     return (y - cy) * (y - cy) + (x - cx) * (x - cx) <= r * r;
 }
@@ -174,7 +163,6 @@ BOOL pointInCircle(int x, int y, int cx, int cy, int r) {
 // "_pn2"; both fall back to the plain "name.png" resource. When a "_pn2" (or
 // its fallback) asset is used the image is rebuilt at scale 2.0 so it renders
 // at the intended point size.
-// @complete
 UIImage *loadDeviceImage(NSString *name) {
     NSString *path = nil;
     BOOL rebuildAtScale2 = NO;

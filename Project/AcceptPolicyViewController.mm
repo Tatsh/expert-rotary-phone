@@ -40,7 +40,6 @@
 
 // @ 0xaf848 — build the terms card (gradient card + embedded content nav +
 // three buttons).
-// @complete
 - (instancetype)init {
     self = [super init];
     if (self == nil) {
@@ -155,7 +154,6 @@
 
 // @ 0xb032c — accept: play the decide SE, record acceptance, run the close
 // fade.
-// @complete
 - (void)onYesBtn:(id)sender {
     neEngine::playSystemSe(1);
     [UserSettingData saveIsPolicyAccepted:YES];
@@ -163,7 +161,6 @@
 }
 
 // @ 0xb037c — reject: play the cancel SE and run the close fade.
-// @complete
 - (void)onNoBtn:(id)sender {
     neEngine::playSystemSe(2);
     [self startCloseAnimation];
@@ -171,7 +168,6 @@
 
 // @ 0xb03ac — "詳細": lazily build the full-terms overlay (PolicyView in its
 // own nav controller) and add it over the root scene view.
-// @complete
 - (void)onDetailBtn:(id)sender {
     neEngine::playSystemSe(1);
     if (_policyView == nil) {
@@ -186,7 +182,6 @@
 
 // @ 0xb04e4 — detail back: play the cancel SE, hide the detail overlay, re-show
 // the card.
-// @complete
 - (void)onBackBtn:(id)sender {
     neEngine::playSystemSe(2);
     _detailView.hidden = YES;
@@ -194,7 +189,6 @@
 }
 
 // @ 0xb0540 — fade the card in over 0.3 s.
-// @complete
 - (void)startOpenAnimation {
     if (isAnimationing) {
         return;
@@ -211,13 +205,11 @@
 }
 
 // @ 0xb0630
-// @complete
 - (void)endOpenAnimation {
     isAnimationing = NO;
 }
 
 // @ 0xb0648 — fade the card out over 0.3 s.
-// @complete
 - (void)startCloseAnimation {
     if (isAnimationing) {
         return;
@@ -234,7 +226,6 @@
 // @ 0xb0718 — pull the view, notify the root VC the policy modal closed, clear
 // the guard. The binary calls -[root AcceptPolicyEndCallBack] directly;
 // modelled as performSelector: (behaviourally identical for a no-arg selector).
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();

@@ -40,7 +40,6 @@
 // Disassembly-verified: the enumeration accumulates each entry's size field
 // (state buffer offset 0x30) into _totalFileSize, and the "Filecheck..." label
 // is set before addSubview.
-// @complete
 - (instancetype)initWithFileDataArray:(NSArray *)fileDataArray {
     self = [super init];
     _dlFileListDataArray = fileDataArray; // @ retained
@@ -66,7 +65,6 @@
 
 // @ 0xdd42c — cancel any in-flight fetch on teardown (kept under ARC; the array
 // / path are released by ARC).
-// @complete
 - (void)dealloc {
     if (_downloader != nil) {
         [_downloader cancel];
@@ -81,7 +79,6 @@
 // keyed by the numeric base name) versus the appAppSupportDirectory branch, the
 // getFileSize equality skip (bl 0x5c48c; cmp; beq -> return NO), and the
 // _downloader-nil gate that resets _tryCnt and starts the fetch.
-// @complete
 - (BOOL)downloadWithIdx:(int)idx {
     if (static_cast<int>(_dlFileListDataArray.count) <= idx) {
         return NO;
@@ -132,7 +129,6 @@
 // advance loop, the loop break on (started || _isFailed), and the trailing
 // _downloadingIdx < count && !_isFailed proceed-versus-close branch. The
 // progress fraction here is the unclamped _downloadedFileSize / _totalFileSize.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSData *data = [_downloader getData];
     _downloader = nil; // @ release
@@ -185,7 +181,6 @@
 // Disassembly-verified: the vcmpe against 1.0 with vmov.ls that clamps the
 // fraction to 1.0, the (int)(clamped * 100) "Downloading %d%%" label, and the
 // clamped value passed to setProgress.
-// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
     [self setJustDownloadedSize];
     _downloadedFileSize += [downloader currentSize];
@@ -204,7 +199,6 @@
 // Disassembly-verified: cmp _tryCnt, #2; bgt fail (so _tryCnt < 3 retries),
 // then _tryCnt++ and startDownloading, else set _isFailed, release the
 // downloader, show the shared alert, and startCloseAnimation.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (_tryCnt < 3) {
         _tryCnt++;
@@ -225,7 +219,6 @@
 }
 
 // @ 0xddbe8 — fade the view up to opaque over 0.3 s.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -246,7 +239,6 @@
 // Disassembly-verified: the one-file-at-a-time advance loop (break on a started
 // download after setting the "Downloading 0%%" label, else alert on _isFailed
 // then _downloadingIdx++), and the trailing proceed-versus-close branch.
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
     _downloadingIdx = 0;
@@ -282,7 +274,6 @@
 }
 
 // @ 0xddf38 — fade the view out over 0.3 s.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -300,7 +291,6 @@
 
 // @ 0xde028 — pull the view and notify the root scene the default download
 // closed.
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();
@@ -310,7 +300,6 @@
 
 // @ 0xde084 — YES if `string` is all decimal digits (used to validate an .orb's
 // numeric base name before treating it as a music id).
-// @complete
 - (BOOL)isDigit:(NSString *)string {
     NSCharacterSet *digits = [NSCharacterSet characterSetWithCharactersInString:@"0123456789"];
     NSScanner *scanner = [NSScanner localizedScannerWithString:string];
@@ -323,7 +312,6 @@
 // already- completed file's size (files before _downloadingIdx).
 // Disassembly-verified: _downloadedFileSize is zeroed, then each entry's size
 // field (struct offset 0x8) is summed for i in [0, _downloadingIdx).
-// @complete
 - (void)setJustDownloadedSize {
     _downloadedFileSize = 0;
     for (int i = 0; i < _downloadingIdx; i++) {
@@ -338,7 +326,6 @@
 // Disassembly-verified: both back a plain atomic BOOL ivar (getter ldrb + dmb +
 // sxtb; setter dmb + strb + dmb), i.e. exactly a synthesized atomic get/set with
 // no extra app logic.
-// @complete
 
 @end
 

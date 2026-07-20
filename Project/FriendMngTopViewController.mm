@@ -27,7 +27,6 @@
 
 // delegate @ 0xa6c00 / setDelegate: @ 0xa6c10 — synthesized assign accessors
 // over m_Delegate.
-// @complete
 @synthesize delegate = m_Delegate;
 
 // dealloc @ 0xa6488 — ARC-omitted (super-only; _markView released
@@ -36,7 +35,6 @@
 
 // @ 0xa650c — refresh the "new reply" badge on appear: shown only when at least
 // one friend request is pending (DownloadMain friendRequestedCnt).
-// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     _markView.hidden = ([[DownloadMain getInstance] friendRequestedCnt] < 1);
@@ -50,7 +48,6 @@
 // read via bl 0xb194 / `ldrb [r0,#0x10]` @ 0xa638a, `cmp #0; bne skip`) hold.
 // The button/caption frames remain the centre-relative vertical stack noted in
 // the file header (the exact origins are NEON-spilled from runtime .size).
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // The binary (0xa5a18) calls -init only for its side effects and keeps the
     // original self; the result is intentionally discarded, so this is not
@@ -132,7 +129,6 @@
 
 // @ 0xa6590 — fade the hub view + its nav view up to opaque over 0.5 s;
 // endOpenAnimation clears the guard.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -151,7 +147,6 @@
 }
 
 // @ 0xa66bc
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -161,7 +156,6 @@
 // to the split-hub delegate. NB: the binary *clears* _isAnimationing here (strb
 // #0 @ 0xa6742) instead of raising the guard — reproduced exactly as
 // decompiled.
-// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2);
     if (!neSceneManager::isPadDisplay()) {
@@ -183,7 +177,6 @@
 
 // @ 0xa6810 — pull the nav view, notify the root VC the friend hub closed
 // (FriendManageEndCallBack), then clear the animation guard.
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();
@@ -194,7 +187,6 @@
 // @ 0xa687c — push the friend ranking list (iPhone); on iPad forward to the
 // split hub delegate. The nav-bar art is swapped to the list's on the way in
 // (backButtonFunc restores friman_navbar).
-// @complete
 - (void)onListButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
@@ -218,7 +210,6 @@
 // iPad it forwards to the split hub.
 // @ 0xa69a8 — push the send-a-request screen (iPhone); iPad forwards to the
 // split hub.
-// @complete
 - (void)onRequestButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {
@@ -237,7 +228,6 @@
 
 // @ 0xa6ad4 — push the incoming-requests reply screen (iPhone); iPad forwards
 // to the split hub.
-// @complete
 - (void)onReplyButtonTouched:(id)sender {
     neEngine::playSystemSe(1);
     if (!neSceneManager::isPadDisplay()) {

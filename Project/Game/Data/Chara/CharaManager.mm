@@ -33,7 +33,6 @@ CharaManager gCharaManager;
 // Ghidra: getCharaManager FUN_0002980c — a ___cxa_guard-protected one-shot that
 // calls gCharaManager.reload() on first use, then returns the global. The C++
 // function-local static reproduces the same construct-once guard semantics.
-// @complete
 CharaManager &CharaManagerShared() {
     static const bool once = [] {
         gCharaManager.reload();
@@ -55,7 +54,6 @@ const uint8_t kCharaKeyObfuscated[25] = {
 
 // Ghidra: FUN_0005c508 — deobfuscate the key (byte + index), MD5 it, then
 // BFCodec-decipher the data in place. Returns the data on success, nil on fail.
-// @complete
 NSData *charaDecodeChr(NSMutableData *data) {
     const int length = static_cast<int>(sizeof(kCharaKeyObfuscated));
     std::vector<uint8_t> deob(length);
@@ -75,7 +73,6 @@ NSData *charaDecodeChr(NSMutableData *data) {
 
 // Ghidra: FUN_00028aa4 — treat an NSArray of NSNumber as a packed bitfield
 // (32 bits per element) and test bit `bit`.
-// @complete
 bool charaTestGotBit(NSArray *bits, unsigned bit) {
     unsigned word = bit >> 5;
     if (word >= [bits count]) {
@@ -97,7 +94,6 @@ NSArray *collectIds(NSArray *entries) {
 } // namespace
 
 // Ghidra: FUN_000b85bc.
-// @complete
 void CharaManager::reload() {
     NSMutableArray *preferred = [NSMutableArray array];
     NSMutableArray *limited = [NSMutableArray array];
@@ -188,7 +184,6 @@ void CharaManager::reload() {
 
 // Ghidra: FUN_000b9048. A character is available unless it belongs to a limited
 // set that has not been unlocked (neither owned nor its music purchased).
-// @complete
 bool CharaManager::isCharaAvailable(unsigned short charaId) const {
     NSArray *gotChara = [UserSettingData gotCharaArray];
     bool inLimitedSet = false;
@@ -218,7 +213,6 @@ bool CharaManager::isCharaAvailable(unsigned short charaId) const {
 }
 
 // Ghidra: FUN_000b9308 — linear search of the available list by charaId.
-// @complete
 CharaInfo *CharaManager::availableInfoForCharaId(short charaId) const {
     for (CharaInfo *info in _available) {
         if (info.charaId == charaId) {
@@ -230,7 +224,6 @@ CharaInfo *CharaManager::availableInfoForCharaId(short charaId) const {
 
 // Ghidra: FUN_000b93d0 — mark preferred sets whose music is now purchased and
 // whose characters are owned, returning the ids that just unlocked.
-// @complete
 NSArray *CharaManager::collectUnlockedCharaIds() {
     NSMutableArray *unlocked = [NSMutableArray array];
     NSArray *gotChara = [UserSettingData gotCharaArray];
@@ -268,7 +261,6 @@ NSArray *CharaManager::collectUnlockedCharaIds() {
 // ---------------------------------------------------------------------------
 
 // Ghidra: charaSelectLoadPageTextures @ 0xa27f0.
-// @complete
 void AcMainTask::charaSelectLoadPageTextures(int page) {
     __unsafe_unretained NSArray *available = (__bridge NSArray *)m_availableInfos;
     __unsafe_unretained NSArray *gotChara = (__bridge NSArray *)m_gotCharaArray;
@@ -308,7 +300,6 @@ void AcMainTask::charaSelectLoadPageTextures(int page) {
 }
 
 // Ghidra: charaSelectFindCharaIndex @ 0xa2a40.
-// @complete
 int AcMainTask::charaSelectFindCharaIndex(int charaId) {
     __unsafe_unretained NSArray *available = (__bridge NSArray *)m_availableInfos;
     int idx = 0;
@@ -324,7 +315,6 @@ int AcMainTask::charaSelectFindCharaIndex(int charaId) {
 }
 
 // Ghidra: charaSelectReleaseTextures @ 0xa2b10.
-// @complete
 void AcMainTask::charaSelectReleaseTextures() {
     for (int i = 0; i < 6; i++) {
         m_charaPagePrevTex[i].reset();
@@ -337,7 +327,6 @@ void AcMainTask::charaSelectReleaseTextures() {
 // Ghidra: countAvailableCharacters @ 0x28b10.
 // The binary uses NEON SIMD to popcount each 32-bit word; __builtin_popcount
 // produces the same result portably.
-// @complete
 int countAvailableCharacters(NSArray *gotCharaArray) {
     // Count the total number of owned characters (set bits in the gotChara
     // bitfield, where each NSNumber element holds 32 bits).

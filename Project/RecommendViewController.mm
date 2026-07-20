@@ -35,7 +35,6 @@ static UIViewController *RootVC() {
 // boxes/reads both RecommendData records and orders by the record's date string
 // (offset +0xc) with -localizedCaseInsensitiveCompare:, receiver = the second
 // element, so the list ends up newest-first. Best-effort.
-// @complete
 static NSInteger RecommendCompareByDate(id obj1, id obj2, void *context) {
     RecommendData a;
     RecommendData b;
@@ -55,7 +54,6 @@ static NSInteger RecommendCompareByDate(id obj1, id obj2, void *context) {
 // Ghidra: settingNavSetFrameA @ 0xbc888
 // Slides the navigation controller view to y = 420.0.
 // Animations block for the first phase of startOpenAnimation (iPad path).
-// @complete
 static void settingNavSetFrameA(RecommendViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -66,7 +64,6 @@ static void settingNavSetFrameA(RecommendViewController *self) {
 // Ghidra: settingNavSetFrameB @ 0xbc9c0
 // Settles the navigation controller view to y = 470.0.
 // Animations block inside settingNavAnimateShow (settle phase).
-// @complete
 static void settingNavSetFrameB(RecommendViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -80,7 +77,6 @@ static void settingNavSetFrameB(RecommendViewController *self) {
 // nav view from y = 420 down to y = 470, then calls -endOpenAnimation.
 // The two inner block invokes are settingNavSetFrameB (animations, @ 0xbc9c0)
 // and an unnamed completion that calls [self endOpenAnimation] (@ ~0xbca58).
-// @complete
 static void settingNavAnimateShow(RecommendViewController *self) {
     [UIView animateWithDuration:0.25
         delay:0.0
@@ -96,7 +92,6 @@ static void settingNavAnimateShow(RecommendViewController *self) {
 // Ghidra: settingNavSetFrameC @ 0xbccb8
 // Slides the navigation controller view back to y = 420.0.
 // Animations block for the first phase of startCloseAnimation (iPad path).
-// @complete
 static void settingNavSetFrameC(RecommendViewController *self) {
     UIView *navView = self.navigationController.view;
     CGRect f = navView ? navView.frame : CGRectZero;
@@ -109,7 +104,6 @@ static void settingNavSetFrameC(RecommendViewController *self) {
 // Animations block for the second phase of startCloseAnimation.  Captures
 // self and a reference controller; sets nav-view origin.y to refController's
 // view height (moves the panel just out of sight below the root scene).
-// @complete
 static void settingNavSetFrameFromView(RecommendViewController *self,
                                        UIViewController *refController) {
     UIView *navView = self.navigationController.view;
@@ -134,7 +128,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // header, the "friman" backdrop on phone / clear on iPad, and a hidden dimmed
 // loading overlay with a large spinner) and load + date-sort the recommend
 // list.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if (!(self = [super initWithStyle:style])) {
         return nil;
@@ -196,7 +189,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // @ 0xbc30c — keep the C++ task pointer, (re)build the table via
 // initWithStyle:, wrap self in a UINavigationController (with a back button on
 // phone) and return that nav controller.
-// @complete
 - (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none))) {
     _pMusicSelTask = musicSelTask;
@@ -221,7 +213,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // super); omitted under ARC.
 
 // @ 0xbc524 — reveal the (transparent) overlay after load.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     neSceneManager::shared();
@@ -241,7 +232,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 
 // @ 0xbc5e0 — fade the view + nav view in (phone) or slide the nav view up into
 // place (iPad).
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -285,7 +275,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 }
 
 // @ 0xbca94
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -293,7 +282,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // @ 0xbcaa8 — if a store was opened on a tapped recommendation, re-sort the
 // task's list (and hide the overlay), then fade (phone) / slide (iPad) the
 // panel out.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -350,7 +338,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // screen closed.  The binary sends -RecommendEndCallBack directly (objc_msgSend
 // @ 0xbcfaa); reconstructed via -performSelector: since the selector is not
 // declared on the root view controller's interface.
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(RecommendEndCallBack)];
@@ -360,20 +347,17 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 #pragma mark - UITableViewDataSource / UITableViewDelegate
 
 // @ 0xbcfc0
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xbcfc4 — one row per recommended pack.
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (_recommendDataArray != nil) ? (NSInteger)_recommendDataArray.count : 0;
 }
 
 // @ 0xbcfec — one RecommendListCell per pack (reused by "Cell%ld-%ld"), bound
 // to its boxed record.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // The reuse identifier uses a hyphen separator (CFString @ 0x134e38 reads
@@ -390,7 +374,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 }
 
 // @ 0xbd0f8 — no section headers.
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
@@ -399,7 +382,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // (unless the back transition has begun, or that store is already presented).
 // Releases any previous store, builds StoreViewController for the pack id, adds
 // it over the nav view (phone) / root view (iPad) and runs its show animation.
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (_isBack) {
         return;
@@ -436,7 +418,6 @@ static void settingNavSetFrameFromView(RecommendViewController *self,
 // @ 0xbd2c4 — the back button: unless already backing out or the store is
 // presented, latch the back state, play the cancel SE, reveal the overlay and
 // (after 0.1 s) fade the panel closed.
-// @complete
 - (void)touchedBackButton:(id)sender {
     if (_isBack) {
         return;

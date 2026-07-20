@@ -92,7 +92,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x93dd4 — construct the singleton once, guarded by @synchronized.
-// @complete
 + (instancetype)getInstance {
     @synchronized(self) {
         if (sInstance == nil) {
@@ -104,20 +103,17 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x93ec0 — real teardown: unbox the retained struct fields of the friend and
 // recommend arrays before they drop (ARC calls [super dealloc]).
-// @complete
 - (void)dealloc {
     [self releaseFriendList];
     [self releaseRecommendData];
 }
 
 // @ 0x979d8 — a request is in flight while its Downloader exists.
-// @complete
 - (BOOL)isGetDlFileListDownLoading {
     return _dlGetDlFileList != nil;
 }
 
 // @ 0x999e8
-// @complete
 - (NSArray *)dlFileListDataArray {
     return _dlFileListDataArray;
 }
@@ -125,7 +121,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x978ac — POST "target=<store>&file_id=<id>&client_ver=<ver>" to the
 // file-list URL through a Downloader (with self as delegate) and start it.
 // No-op if already downloading.
-// @complete
 - (void)startGetDlFileListHttp:(int)fileId {
     if (_dlGetDlFileList != nil) {
         return;
@@ -147,7 +142,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x98f78 — DownloaderDelegate: route a finished download to the handler that
 // owns the matching Downloader. (The treasure-save case just frees its
 // downloader inline.)
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (downloader == _dlGetPlayer) {
         [self playerGetFinished];
@@ -185,14 +179,12 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x9918c — proceed callbacks are ignored.
-// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0x99190 — a download failed: free the matching Downloader and notify the
 // owning delegate / C++ scene with a failure result, mirroring each *Finished's
 // teardown.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (downloader == _dlGetPlayer) {
         _errorGetPlayer = 99;
@@ -269,7 +261,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x979f0 — unbox each DlFileListData (its retained url field) before
 // dropping the array.
-// @complete
 - (void)releaseFileListData {
     if (_dlFileListDataArray == nil) {
         return;
@@ -285,7 +276,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // "ErrorCode" and a "List" array is present, turn each {Id, Url, Size} entry
 // into a DlFileListData wrapped in an NSValue, and keep them as an immutable
 // array.
-// @complete
 - (void)getDlFileListFinished {
     NSDictionary *json = [_dlGetDlFileList getDataInJSON];
     if (json[@"ErrorCode"] == nil) {
@@ -309,42 +299,35 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 #pragma mark - Friend list
 
 // @ 0x99914 / 0x99734 — atomic accessors.
-// @complete
 - (NSArray *)friendListArray {
     return _friendListArray;
 }
 
-// @complete
 - (int)friendRequestedCnt {
     return _friendRequestedCnt;
 }
 
 // @ 0x99748 — updated by the reply screen after fetching/answering requests.
-// @complete
 - (void)setFriendRequestedCnt:(int)cnt {
     _friendRequestedCnt = cnt;
 }
 
 // @ 0x99604 / 0x99618 — atomic delegate accessors (assign).
-// @complete
 - (id<DownloadMainDelegate>)delegateGetFriendList {
     return _delegateGetFriendList;
 }
 
-// @complete
 - (void)setDelegateGetFriendList:(id<DownloadMainDelegate>)delegate {
     _delegateGetFriendList = delegate;
 }
 
 // @ 0x958a8
-// @complete
 - (BOOL)isGetFriendListDownLoading {
     return _dlGetFriendList != nil;
 }
 
 // @ 0x95794 — POST "uuid=<uuId>" to the friend-list endpoint. No-op if in
 // flight.
-// @complete
 - (void)startGetFriendListHttp {
     if (_dlGetFriendList != nil) {
         return;
@@ -359,7 +342,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x958c0 — unbox each friend struct and release its two retained NSString
 // fields, then drop the array.
-// @complete
 - (void)releaseFriendList {
     if (_friendListArray == nil) {
         return;
@@ -377,7 +359,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // temp arrays; the ObjCType encode @ 0x108ec4 is
 // "{FriendListData=@@siii[3[7i]][3i][3i]}" and the fullCombo/perfect derivation
 // loop @ 0x96312 clamps (fullCombo - perfect) at 0.
-// @complete
 - (void)getFriendListFinished {
     // Rank key prefixes per difficulty (N / H / Ex).
     static NSString *const kDiff[3] = {@"N", @"H", @"Ex"};
@@ -433,30 +414,25 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 #pragma mark - Block list
 
 // @ 0x9997c / 0x99990 — the parsed blocked-player id/name arrays (parallel).
-// @complete
 - (NSArray *)blPlayerIdArray {
     return _blPlayerIdArray;
 }
 
 // @ 0x99990
-// @complete
 - (NSArray *)blNameArray {
     return _blNameArray;
 }
 
 // @ 0x9658c / 0x96710
-// @complete
 - (BOOL)isAddBlockListDownLoading {
     return _dlAddBlockList != nil;
 }
 
-// @complete
 - (BOOL)isGetBlockListDownLoading {
     return _dlGetBlockList != nil;
 }
 
 // @ 0x96ae4
-// @complete
 - (BOOL)isDelBlockListDownLoading {
     return _dlDelBlockList != nil;
 }
@@ -483,7 +459,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x965fc
-// @complete
 - (void)startGetBlockListHttp {
     if (_dlGetBlockList != nil) {
         return;
@@ -495,7 +470,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x96440 — block a player; refuses to block yourself. No-op if already
 // running.
-// @complete
 - (void)startAddBlockListHttp:(NSString *)playerId {
     if ([playerId isEqualToString:[UserSettingData playerId]]) {
         return;
@@ -509,7 +483,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x969cc — unblock a player. No-op if already running.
-// @complete
 - (void)startDelBlockListHttp:(NSString *)playerId {
     if (_dlDelBlockList != nil) {
         return;
@@ -520,7 +493,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x96728 — parse the block list into parallel id/name arrays.
-// @complete
 - (void)getBlockListFinished {
     NSDictionary *json = [_dlGetBlockList getDataInJSON];
     if (json[@"ErrorCode"] == nil) {
@@ -545,7 +517,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x965a4 / 0x96afc — the mutations read the response and, when there is a
 // body, probe ErrorCode (without acting on it) before freeing the downloader.
-// @complete
 - (void)addBlockListFinished {
     NSDictionary *json = [_dlAddBlockList getDataInJSON];
     if (json != nil) {
@@ -554,7 +525,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
     _dlAddBlockList = nil;
 }
 
-// @complete
 - (void)delBlockListFinished {
     NSDictionary *json = [_dlDelBlockList getDataInJSON];
     if (json != nil) {
@@ -566,25 +536,21 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 #pragma mark - Cancel friend request
 
 // @ 0x99630 / 0x99644 — atomic delegate accessors (assign).
-// @complete
 - (id<DownloadMainDelegate>)delegateCancelFriend {
     return _delegateCancelFriend;
 }
 
-// @complete
 - (void)setDelegateCancelFriend:(id<DownloadMainDelegate>)delegate {
     _delegateCancelFriend = delegate;
 }
 
 // @ 0x9566c
-// @complete
 - (BOOL)isCancelFriendDownLoading {
     return _dlCancelFriend != nil;
 }
 
 // @ 0x95554 — cancel an outbound friend request to playerId. No-op if in
 // flight.
-// @complete
 - (void)startCancelFriendHttp:(NSString *)playerId {
     if (_dlCancelFriend != nil) {
         return;
@@ -600,7 +566,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x95684 — finish: notify the delegate. The reported flag is (json == nil),
 // exactly as in the binary (it signals the no-response / error state).
-// @complete
 - (void)cancelFriendFinished {
     NSDictionary *json = [_dlCancelFriend getDataInJSON];
     // The original (when json is non-nil) reads ErrorCode and probes it with
@@ -621,7 +586,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x97698 — POST the player's collected pieces for a map cell to the server.
 // mapId encodes main/sub as (mapId / 10, mapId % 10).
-// @complete
 - (void)startSaveTreasureHttp:(short)mapId visitor:(NSString *)visitor friendship:(int)friendship {
     if (_dlSaveTreasure != nil) {
         return;
@@ -656,7 +620,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x97894
-// @complete
 - (BOOL)isSaveTreasureDownLoading {
     return _dlSaveTreasure != nil;
 }
@@ -665,7 +628,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x93f14 — POST "uuid=<url-encoded uuId>&client_ver=<ver>" to the player-get
 // URL and mark errorGetPlayer as in-flight (-1). No-op if already running.
-// @complete
 - (void)startPlayerGetHttp {
     if (_dlGetPlayer != nil) {
         return;
@@ -683,13 +645,11 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x94060
-// @complete
 - (BOOL)isPlayerGetDownLoading {
     return _dlGetPlayer != nil;
 }
 
 // @ 0x94078 — the active player-get Downloader's elapsed seconds (0 when idle).
-// @complete
 - (NSTimeInterval)getPlayerGetProgressSec {
     if ([self isPlayerGetDownLoading]) {
         return [_dlGetPlayer getProgressSec];
@@ -703,7 +663,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // code (99 when absent). The registerForRemoteNotificationTypes:0x7 path @
 // 0x9447a (Badge|Sound|Alert) is the shipped iOS 8 call; the UNUserNotification
 // branch is a modern-SDK equivalent.
-// @complete
 - (void)playerGetFinished {
     NSDictionary *json = [_dlGetPlayer getDataInJSON];
     if (json != nil) {
@@ -780,7 +739,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x94488 — POST "info_id=<lastInformationId>" to the store-info URL. No-op
 // if running.
-// @complete
 - (void)startNewsHttp {
     if (_dlNews != nil) {
         return;
@@ -794,14 +752,12 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x9458c
-// @complete
 - (BOOL)isNewsDownLoading {
     return _dlNews != nil;
 }
 
 // @ 0x945a4 — unbox each InformationData (its retained title/body) before
 // dropping.
-// @complete
 - (void)releaseInformationData {
     if (_informationDataArray == nil) {
         return;
@@ -816,7 +772,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x946b8 — parse the news response: the server clock, the store "new pack"
 // flag, the scrolling ticker (text + tap URL), and the information posts. Pokes
 // the C++ mode-select scene with whether ticker text was parsed.
-// @complete
 - (void)newsGetFinished {
     _lastGetNewsTime = [NSDate date];
 
@@ -930,7 +885,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x952d4 — POST the finished play's score. Remembers music/sheet so
 // saveScoreFinished can clear the "unsent" mark on success. No-op if already
 // uploading.
-// @complete
 - (void)startSaveScoreHttp:(int)music
                      sheet:(short)sheet
                      score:(int)score
@@ -957,7 +911,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x9541c
-// @complete
 - (BOOL)isSaveScoreDownLoading {
     return _dlSaveScore != nil;
 }
@@ -965,7 +918,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x95434 — on an "Update" number, clear the pending-upload mark for the
 // saved music/sheet; otherwise the original just probes ErrorCode without
 // acting on it.
-// @complete
 - (void)saveScoreFinished {
     NSDictionary *json = [_dlSaveScore getDataInJSON];
     if (json != nil) {
@@ -982,7 +934,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x96b54 — POST "uuid=<uuId>" to the recommend-list URL. No-op if already
 // running.
-// @complete
 - (void)startGetRecommendListHttp {
     if (_dlGetRecommendList != nil) {
         return;
@@ -997,14 +948,12 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x96c68
-// @complete
 - (BOOL)isGetRecommendListDownLoading {
     return _dlGetRecommendList != nil;
 }
 
 // @ 0x96c80 — unbox each RecommendData (its four retained fields) before
 // dropping.
-// @complete
 - (void)releaseRecommendData {
     if (_recommendDataArray == nil) {
         return;
@@ -1018,7 +967,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x96db0 — comparator (used via sortedArrayUsingSelector:) that orders two
 // NSValue-wrapped RecommendData elements by their updateDate string.
-// @complete
 - (NSComparisonResult)compareToUpdateDate:(id)other {
     RecommendData a, b;
     [(NSValue *)self getValue:&a];
@@ -1029,7 +977,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x96df0 — parse the recommend "List" into recommendDataArray, and merge the
 // "Over" (a friend beat your score) records into the CoreData over-score store.
 // Pokes the C++ music-select scene with whether a list was parsed.
-// @complete
 - (void)getRecommendListFinished {
     NSDictionary *json = [_dlGetRecommendList getDataInJSON];
     BOOL hasList = NO;
@@ -1087,7 +1034,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x972e4 — POST "uuid=<uuId>&map_id=<mapId>&type=<type>" to the visitor URL.
 // Clears the success flag first. No-op if already running.
-// @complete
 - (void)startGetVisitorHttp:(short)mapId type:(short)type {
     if (_dlGetVisitor != nil) {
         return;
@@ -1105,7 +1051,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x97410
-// @complete
 - (BOOL)isGetVisitorDownLoading {
     return _dlGetVisitor != nil;
 }
@@ -1113,7 +1058,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x97428 — when a valid visitor (id/name/chara + both piece counts) is
 // returned, stash it into the pending-treasure record and flag success; notify
 // the delegate.
-// @complete
 - (void)getVisitorFinished {
     NSDictionary *json = [_dlGetVisitor getDataInJSON];
     _isGetVisitorSuccess = NO;
@@ -1150,7 +1094,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x97d60 — POST "uuid=<uuId>" to the present-list URL. No-op if already
 // running.
-// @complete
 - (void)startGetPresentListHttp {
     if (_dlGetPresentList != nil) {
         return;
@@ -1165,13 +1108,11 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x97e74
-// @complete
 - (BOOL)isGetPresentListDownLoading {
     return _dlGetPresentList != nil;
 }
 
 // @ 0x97e8c — unbox each PresentData (its retained info field) before dropping.
-// @complete
 - (void)releasePresentList {
     if (_presentDataArray == nil) {
         return;
@@ -1185,7 +1126,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x97f90 — parse the present list into presentDataArray; notify the delegate
 // with 0 on success or -1 on error.
-// @complete
 - (void)getPresentListFinished {
     NSDictionary *json = [_dlGetPresentList getDataInJSON];
     int result = -1;
@@ -1215,7 +1155,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x9829c — POST "uuid=<uuId>&present_id=<id>" to claim one present. No-op if
 // running.
-// @complete
 - (void)startGetPresentHttp:(int)presentId {
     if (_dlGetPresent != nil) {
         return;
@@ -1231,7 +1170,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x983c0
-// @complete
 - (BOOL)isGetPresentDownLoading {
     return _dlGetPresent != nil;
 }
@@ -1239,7 +1177,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x983d8 — notify the delegate. Faithful to the binary, the flag is 1 when
 // there was no response body and -1 when there was (it only probes ErrorCode
 // otherwise).
-// @complete
 - (void)getPresentFinished {
     NSDictionary *json = [_dlGetPresent getDataInJSON];
     int result;
@@ -1260,7 +1197,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x984b4 — POST "uuid=<uuId>" to the over-score-log URL. No-op if already
 // running.
-// @complete
 - (void)startGetOverScoreLogHttp {
     if (_dlGetOverScoreLog != nil) {
         return;
@@ -1275,14 +1211,12 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x985c8
-// @complete
 - (BOOL)isGetOverScoreLogDownLoading {
     return _dlGetOverScoreLog != nil;
 }
 
 // @ 0x985e0 — unbox each OverScoreLogData (its three retained fields) before
 // dropping.
-// @complete
 - (void)releaseOverScoreLogArray {
     if (_overScoreLogArray == nil) {
         return;
@@ -1296,7 +1230,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x98700 — parse the "Over" list into overScoreLogArray; notify the delegate
 // with a BOOL success flag.
-// @complete
 - (void)getOverScoreLogFinished {
     NSDictionary *json = [_dlGetOverScoreLog getDataInJSON];
     BOOL success = NO;
@@ -1331,7 +1264,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 
 // @ 0x98a6c — POST "client_ver=<ver>" to the event-info URL. No-op if already
 // running.
-// @complete
 - (void)startGetEventInfoHttp {
     if (_dlGetEventInfo != nil) {
         return;
@@ -1346,7 +1278,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 }
 
 // @ 0x98b7c
-// @complete
 - (BOOL)isGetEventInfoDownLoading {
     return _dlGetEventInfo != nil;
 }
@@ -1354,7 +1285,6 @@ static DownloadMain *sInstance = nil; // Ghidra: DAT_00188310
 // @ 0x98b94 — parse the active treasure-event and game-event music ids into
 // their NSNumber arrays and mark both refreshed; notify the delegate with a
 // BOOL success flag.
-// @complete
 - (void)getEventInfoFinished {
     NSDictionary *json = [_dlGetEventInfo getDataInJSON];
     BOOL success = NO;

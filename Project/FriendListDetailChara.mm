@@ -42,7 +42,6 @@
 // border colour (1.0, 0.690430, 0.690430, 1.0), fukidasi offset 7.0, and the
 // charaId > 0x1d bundle/disk icon branch. The two %03d filename formats are the
 // exact binary strings (fixed above).
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData {
     // NB: the binary calls -[UIImageView initWithFrame:] with a zero rect (the
     // popup is then sized by its window image + re-centred), ignoring the passed
@@ -211,7 +210,6 @@
 // @ 0xbbb48 — fade in over 0.3s (DAT_000bbc10 = 0x3fd3333340000000). Verified:
 // guard returns if _isAnimationing; set flag; setAlpha:0; begin/duration
 // 0.3/delegate self/didStop endOpenAnimation; setAlpha:1.0; commit.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -227,7 +225,6 @@
 }
 
 // @ 0xbbc18 — verified: _isAnimationing = NO (strb 0).
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -237,7 +234,6 @@
 // Verified: guard returns if _isAnimationing; _isAnimationing = NO;
 // NESceneManager_shared + SysSePlayIntoSlot slot 2; begin/duration
 // 0.3/delegate self/didStop endCloseAnimation; setAlpha:0; commit.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -253,7 +249,6 @@
 }
 
 // @ 0xbbd00 — verified: removeFromSuperview; _isAnimationing = NO.
-// @complete
 - (void)endCloseAnimation {
     [self removeFromSuperview];
     _isAnimationing = NO;

@@ -32,7 +32,6 @@
 @implementation InviteTopViewController
 
 // @ 0xe6f88 — build the top view + wrap it in a navigation controller.
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // family(none) factory: returns the nav, not self, so it cannot assign self;
     // super init returns the receiver in place -> self stays valid (matches the
@@ -129,7 +128,6 @@
 
 // @ 0xe7860 — "player" button: push the my-invite-code screen (play the decide
 // SE).
-// @complete
 - (void)touchedInviteButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -144,7 +142,6 @@
 
 // @ 0xe7914 — "guest" button: push the invite-code input screen (play the
 // decide SE).
-// @complete
 - (void)touchedInputButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -158,7 +155,6 @@
 }
 
 // @ 0xe79c8 — back button: play the cancel SE and run the close fade.
-// @complete
 - (void)touchedBackButton {
     if (self.navigationController.topViewController != self) {
         return;
@@ -171,7 +167,6 @@
 }
 
 // @ 0xe7a38 — fade the view + its nav view up to opaque over 0.3 s.
-// @complete
 - (void)startOpenAnimation {
     if (isAnimationing) {
         return;
@@ -190,13 +185,11 @@
 }
 
 // @ 0xe7b70
-// @complete
 - (void)endOpenAnimation {
     isAnimationing = NO;
 }
 
 // @ 0xe7b88 — fade the view + its nav view out over 0.3 s.
-// @complete
 - (void)startCloseAnimation {
     if (isAnimationing) {
         return;
@@ -214,7 +207,6 @@
 // @ 0xe7c90 — pull the view, notify the root VC the invite flow closed, clear
 // the guard. The binary calls -[root InviteCodeEndCallBack] directly; modelled
 // as performSelector: (behaviourally identical for a no-argument selector).
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();

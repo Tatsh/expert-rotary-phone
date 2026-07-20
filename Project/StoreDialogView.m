@@ -54,13 +54,11 @@
 @synthesize buttonAbort = m_ButtonAbort;
 
 // @ 0x416dc — forward to the designated initializer with abortable = YES.
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     return [self initWithFrame:frame abortable:YES];
 }
 
 // @ 0x41708 — build the card and its subviews.
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame abortable:(BOOL)abortable {
     self = [super initWithFrame:frame];
     if (self != nil) {
@@ -152,7 +150,6 @@
 
 // @ 0x41e4c — toggle the progress bar / abort button and recenter the message
 // label.
-// @complete
 - (void)layout:(BOOL)hideControls {
     CGRect frame = self.frame;
     CGFloat centerX = frame.size.width * 0.5f;
@@ -174,7 +171,6 @@
 
 // @ 0x41f38 — abort button action: notify the delegate if it implements
 // -storeDialogCancel:.
-// @complete
 - (void)btnAbort:(id)sender {
     if ([delegate respondsToSelector:@selector(storeDialogCancel:)]) {
         [delegate performSelector:@selector(storeDialogCancel:) withObject:self];

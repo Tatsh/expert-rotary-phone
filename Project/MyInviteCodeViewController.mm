@@ -15,7 +15,6 @@
 @implementation MyInviteCodeViewController
 
 // @ 0xe8c98 — build the invite-code screen.
-// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -68,19 +67,16 @@
 }
 
 // @ 0xe9194 — nothing beyond the superclass.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 // @ 0xe91c0 — nothing beyond the superclass.
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xe91ec — back button: play the cancel SE and pop.
-// @complete
 - (void)touchedBackButton {
     // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
     // cancel SE.

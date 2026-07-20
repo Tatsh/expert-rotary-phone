@@ -66,7 +66,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 // (365, 307/469/631); left pane origin +65/+100, width 354; top cover height 140;
 // border/background colours and radii (3D border 0/0.835/0.679, right-pane grey
 // 0.953, corner 6, backdrop white 0/0.5).
-// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         // The three sections share the same right-pane rect (385,182,320,716).
@@ -151,7 +150,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 // didReceiveMemoryWarning @ 0xc3c58 — super-only override, omitted.
 
 // @ 0xc3c84 — show/hide the "new reply" badge for a pending friend request.
-// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     _markView.hidden = ([[DownloadMain getInstance] friendRequestedCnt] < 1);
@@ -160,7 +158,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 #pragma mark - Open/close animation
 
 // @ 0xc3d08 — fade the view + nav view in over 0.5s.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -179,7 +176,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 
 // @ 0xc3e34 — clear the guard, then (first time only) show the friend how-to
 // overlay.
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
     if (![UserSettingData isFriendSelected]) {
@@ -192,7 +188,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 }
 
 // @ 0xc3f68 — fade the view + nav view out over 0.3s.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -208,7 +203,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 }
 
 // @ 0xc4070 — remove the panel and notify the nav host it closed.
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     UIViewController *root = neSceneManager::rootViewController();
@@ -229,7 +223,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 // friendMngSetListFrame (0xc45a0), and the inner completion (0xc4618) inlines
 // friendMngSetListArrowFrame (0xc4700) + restore rightItem + clear guard; sets
 // _selectedIndex = 0.
-// @complete
 - (void)onListButtonTouched:(id)sender {
     if (_isAnimationing || _selectedIndex == 0) {
         return;
@@ -287,7 +280,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 // style); navbar art fripre_navbar; sets _selectedIndex = 1. Block structure
 // mirrors onListButtonTouched: (outer sync → show → inner set-frame → arrow +
 // restore rightItem + clear guard).
-// @complete
 - (void)onRequestButtonTouched:(id)sender {
     if (_isAnimationing || _selectedIndex == 1) {
         return;
@@ -343,7 +335,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 // Verified: guards on _isAnimationing / _selectedIndex == 2; initWithStyle:Grouped;
 // navbar art frirep_navbar; sets _selectedIndex = 2. The inner completion clears
 // the guard without restoring a rightBarButtonItem (matching this reconstruction).
-// @complete
 - (void)onReplyButtonTouched:(id)sender {
     if (_isAnimationing || _selectedIndex == 2) {
         return;
@@ -394,7 +385,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 
 // @ 0xc53d0 — a backdrop / top-cover tap: play the cancel SE and fade the panel
 // out.
-// @complete
 - (void)handleTapCoverView {
     if (_isAnimationing) {
         return;
@@ -419,7 +409,6 @@ static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *);
 // 0xc50b0) Outer-transition animations block: reads _rightViewCtrl.view.frame,
 // zeroes size.width, then writes the modified frame back → collapses the right
 // pane to zero width so the VC swap starts from an invisible right pane.
-// @complete
 static void friendMngSyncRightViewFrame(FriendMngTopSplitViewController *self) {
     UIView *v = self->_rightViewCtrl.view;
     CGRect f = (v != nil) ? v.frame : CGRectZero;
@@ -430,14 +419,12 @@ static void friendMngSyncRightViewFrame(FriendMngTopSplitViewController *self) {
 // Ghidra: friendMngSetListFrame @ 0xc45a0
 // Inner-transition animations block inside friendMngShowListView (0xc4448):
 // restores the right view's frame from the stored _listFrm after the VC swap.
-// @complete
 static void friendMngSetListFrame(FriendMngTopSplitViewController *self) {
     [self->_rightViewCtrl.view setFrame:self->_listFrm];
 }
 
 // Ghidra: friendMngSetListArrowFrame @ 0xc4700
 // Inner-transition completion: repositions the selection arrow to the list row.
-// @complete
 static void friendMngSetListArrowFrame(FriendMngTopSplitViewController *self) {
     [self->_arrowImageView setFrame:self->_listArrowFrm];
 }
@@ -445,28 +432,24 @@ static void friendMngSetListArrowFrame(FriendMngTopSplitViewController *self) {
 // Ghidra: friendMngSetRequestFrame @ 0xc4c30
 // Analogous to friendMngSetListFrame but for the "presenting" (requests)
 // section.
-// @complete
 static void friendMngSetRequestFrame(FriendMngTopSplitViewController *self) {
     [self->_rightViewCtrl.view setFrame:self->_requestFrm];
 }
 
 // Ghidra: friendMngSetRequestArrowFrame @ 0xc4d90
 // Inner-transition completion for the request section.
-// @complete
 static void friendMngSetRequestArrowFrame(FriendMngTopSplitViewController *self) {
     [self->_arrowImageView setFrame:self->_requestArrowFrm];
 }
 
 // Ghidra: friendMngSetReplyFrame @ 0xc5290
 // Analogous to friendMngSetListFrame but for the reply section.
-// @complete
 static void friendMngSetReplyFrame(FriendMngTopSplitViewController *self) {
     [self->_rightViewCtrl.view setFrame:self->_replyFrm];
 }
 
 // Ghidra: friendMngSetReplyArrowFrame @ 0xc5370
 // Inner-transition completion for the reply section.
-// @complete
 static void friendMngSetReplyArrowFrame(FriendMngTopSplitViewController *self) {
     [self->_arrowImageView setFrame:self->_replyArrowFrm];
 }

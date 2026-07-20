@@ -34,7 +34,6 @@ typedef struct {
 
 // @ 0x6e3ac — non-selectable, clear background, no background view (the gift
 // artwork is added by the VC).
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -54,7 +53,6 @@ typedef struct {
 // on each call. On iPad the banner is centred in the content view (with a
 // pre-iOS 7 nudge) instead of becoming the cell's backgroundView; the "acquire"
 // button also shifts left pre-iOS 7.
-// @complete
 - (void)setPresentData:(NSValue *)presentData {
     BOOL isPad = neSceneManager::isPadDisplay();
     CGFloat sysVer = UIDevice.currentDevice.systemVersion.floatValue;

@@ -10,7 +10,6 @@
 @implementation TreasureData (Store)
 
 // Ghidra: @ 0xc088c
-// @complete
 + (TreasureData *)getTreasureData:(short)mainMapId
                          subMapId:(short)subMapId
            inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -24,7 +23,6 @@
 }
 
 // Ghidra: @ 0xc0bd0
-// @complete
 + (TreasureData *)addRecordWithMainMapId:(short)mainMapId
                                 subMapId:(short)subMapId
                   inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -39,7 +37,6 @@
 }
 
 // Ghidra: @ 0xc0d90
-// @complete
 + (BOOL)isOpenMusic:(short)mainMapId inManagedObjectContext:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
@@ -62,7 +59,6 @@
 }
 
 // Ghidra: -[TreasureData reset] @ 0xc0c9c
-// @complete
 - (void)reset {
     self.musicPiece = @0;
     self.wallPaperPiece = @0;

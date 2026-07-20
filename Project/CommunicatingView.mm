@@ -19,7 +19,6 @@
 @implementation CommunicatingView
 
 // @ 0xde740 — build the window backdrop, spinner, and the two captions.
-// @complete
 - (instancetype)init {
     self = [super init];
     // Ghidra reads self.view.frame here (falling back to CGRectZero when the view
@@ -87,7 +86,6 @@
 // only).
 
 // @ 0xdecb4 — enter the "failed" state.
-// @complete
 - (void)failed {
     [communicatingView setHidden:YES];
     [communicateFailedView setHidden:NO];
@@ -95,7 +93,6 @@
 }
 
 // @ 0xded10 — fade in over 0.3s; endOpenAnimation fires when the fade stops.
-// @complete
 - (void)startOpenAnimation {
     if (!_isAnimationing) {
         _isAnimationing = YES;
@@ -111,7 +108,6 @@
 
 // @ 0xdee00 — open fade finished; run a deferred close if one was requested
 // mid-fade.
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
     if (_isCloseReserve) {
@@ -122,7 +118,6 @@
 
 // @ 0xdee48 — fade out over 0.3s; if a fade is already running, defer the
 // close.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         _isCloseReserve = YES;
@@ -140,7 +135,6 @@
 
 // @ 0xdef48 — close fade finished: tear down and notify the root view
 // controller.
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();
@@ -150,7 +144,6 @@
 
 // @ 0xdef94 — a tap dismisses the overlay only once the failure caption is
 // showing.
-// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     if ([communicateFailedView isHidden]) {
         return;
@@ -159,7 +152,6 @@
 }
 
 // @ 0xdefd8
-// @complete
 - (BOOL)isAnimationing {
     return _isAnimationing;
 }

@@ -10,7 +10,6 @@
 @dynamic productId;
 
 // @ 0xe2da0 — fetch every "CharaTicketData" row, sorted by productId ascending.
-// @complete
 + (id)getAllData:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"CharaTicketData"
@@ -24,7 +23,6 @@
 // initForConvert]). Resets the context first, then (only when the fetch returns
 // rows) deletes them and saves.
 // @ 0xe2ebc
-// @complete
 + (void)deleteAll:(NSManagedObjectContext *)context {
     // Binary resets the context, guards on a non-nil/non-empty fetch result, and
     // saves after deleting (0xe2ee6 reset, 0xe2f82/0xe2f98 count guard, 0xe302c

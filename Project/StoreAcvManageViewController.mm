@@ -26,7 +26,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 @implementation StoreAcvManageViewController
 
 // @ 0x8c630 — identical to StoreManageViewController but for the arcade viewer.
-// @complete
 - (instancetype)initWithParent:(StoreViewController *)parent {
     if ((self = [super init])) {
         m_StoreViewCtrl = parent;
@@ -63,7 +62,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // songs not yet present in the purchased-arcade list and, if any, kick off the
 // integrity check. (setAutoresizingSize is a UIView category helper in the app;
 // inlined here as the equivalent flexible mask.)
-// @complete
 - (void)loadView {
     [super loadView];
 
@@ -148,7 +146,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // labels) and a right-aligned delete / download action button. The button image
 // (and, on iPad, its title) reflects whether the arcade file is already on
 // disk.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [m_TableView dequeueReusableCellWithIdentifier:@"StoreAcvManageCell"];
@@ -259,14 +256,12 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 }
 
 // @ 0x8d8b4 — one section listing every purchased arcade-viewer song.
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [[[MusicManager getInstance] getPurchasedAcMusicDictionaris] count];
 }
 
 // @ 0x8d8f8 — per-device row background: phone alternates two grays, iPad uses
 // a stretchable pack-background image over a clear cell.
-// @complete
 - (void)tableView:(UITableView *)tableView
       willDisplayCell:(UITableViewCell *)cell
     forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -284,7 +279,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 }
 
 // @ 0x8da44 — single section.
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
@@ -293,7 +287,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // resolve the row's arcade song, and either (file missing) re-download it via
 // the store modal dialog, or (file present) confirm deletion. Ignored while
 // another action or a check pass is running.
-// @complete
 - (void)pushCellButton:(id)sender {
     if (m_WorkingIndex != -1 || m_CheckMusicIds.count != 0) {
         return;
@@ -347,7 +340,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8de20 — start the arcade file download for the working row via
 // StoreDownloadManager.
-// @complete
 - (void)startDownloadMusic {
     NSDictionary *item =
         [[[MusicManager getInstance] getPurchasedAcMusicDictionaris] objectAtIndex:m_WorkingIndex];
@@ -364,7 +356,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8df94 — fetch the arcade-viewer info for the first pending id (see
 // -loadView).
-// @complete
 - (void)startCheck {
     unsigned int acMusicId = [[m_CheckMusicIds objectAtIndex:0] unsignedIntValue];
     NSURL *url = [StoreUtil acvMusicInfoURL:acMusicId];
@@ -375,7 +366,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // @ 0x8e03c — a Downloader finished. If it is the info downloader, register the
 // fetched arcade song, then advance: process the next pending id, or (when the
 // check list is drained) download the working row's file / reload the table.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (m_InfoDownloader != downloader) {
         return;
@@ -406,7 +396,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // @ 0x8e1a4 — the info download failed. Abandon the whole check batch (reload)
 // if one was running; otherwise fall through to the file download for the
 // working row.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (m_InfoDownloader != downloader) {
         return;
@@ -426,7 +415,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8e250 — the store modal dialog's abort button: cancel any in-flight
 // info/file download, hide the dialog, and clear the working row.
-// @complete
 - (void)storeDialogCancel:(id)sender {
     if (m_InfoDownloader != nil) {
         [m_InfoDownloader cancel];
@@ -442,7 +430,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8e2f8 — delete-confirm alert result: on "はい" (index 1) delete the
 // working row's arcade file and reload; either way clear the working row.
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (m_DeleteAlertView == alertView && index == 1) {
         NSDictionary *item = [[[MusicManager getInstance] getPurchasedAcMusicDictionaris]
@@ -456,7 +443,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8e3e4 — file download finished: reload, hide the dialog, clear the
 // working row.
-// @complete
 - (void)downloadManagerCompleted:(StoreDownloadManager *)manager {
     m_DlManager = nil;
     [m_TableView reloadData];
@@ -466,7 +452,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8e45c — file download failed: report it, hide the dialog, clear the
 // working row.
-// @complete
 - (void)downloadManagerFailed:(StoreDownloadManager *)manager {
     m_DlManager = nil;
 
@@ -485,7 +470,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8e574 — file download progressed: push the overall progress into the
 // dialog's bar.
-// @complete
 - (void)downloadManagerProceed:(StoreDownloadManager *)manager {
     id dialog = m_StoreViewCtrl.modalDialog;
     [(UIProgressView *)[dialog performSelector:@selector(progressView)]
@@ -493,7 +477,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 }
 
 // @ 0x8e5e0 — all orientations supported.
-// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return YES;
 }
@@ -502,7 +485,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 
 // @ 0x8e610 — the view was torn down: release the table (the ARC-managed ivar
 // is niled after super).
-// @complete
 - (void)viewDidUnload {
     [super viewDidUnload];
     if (m_TableView != nil) {
@@ -513,7 +495,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // viewWillAppear: @ 0x8e664 — super-only override, omitted.
 
 // @ 0x8e690 — refresh the list and flash the scroll indicators on appearance.
-// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     [m_TableView reloadData];
@@ -528,7 +509,6 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
 // source/delegate, cancel the active file download and the in-flight info
 // download. KEPT under ARC because it cancels downloads and detaches delegates
 // (not object-only). Object releases and [super dealloc] are ARC-omitted.
-// @complete
 - (void)dealloc {
     [m_DeleteAlertView setDelegate:nil];
     m_TableView.dataSource = nil;

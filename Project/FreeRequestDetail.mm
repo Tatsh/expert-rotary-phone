@@ -95,7 +95,6 @@
 // the CGRect argument order (x = r2, y = r3, width = sp[0], height = sp[4]) was
 // cross-checked against the immediate-encoded chara / button frames in the same
 // method.
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData {
     if ((self = [super initWithFrame:frame])) {
         _friendData = friendData;
@@ -292,7 +291,6 @@
 // (frilis_num_<n|h|e><digit>) for difficulty row `sheet` (0=N,1=H,2=Ex) at
 // vertical position `y`, into `view`. All frames are scaled by _scaleForPad.
 //
-// @complete
 // kBaseX = {139, 190, 242} verified @ 0x12fbe0. The binary indexes a static
 // [sheet][digit] table of pre-built "frilis_num_XY" image-name constants where
 // this reconstruction rebuilds the same names via -stringWithFormat:; the X
@@ -320,7 +318,7 @@
 
 // @ 0xe42f8 — fade in (alpha 0 -> 1 over 0.3s); marks enabled + animating.
 //
-// @complete (both _isAnimationing and _isEnabled set; duration 0.3 @ 0xe43c8).
+// (both _isAnimationing and _isEnabled set; duration 0.3 @ 0xe43c8).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -338,14 +336,13 @@
 
 // @ 0xe43d0 — open animation finished.
 //
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xe43e8 — fade out (alpha -> 0 over 0.3s), then remove on stop.
 //
-// @complete (the binary clears _isAnimationing to 0 here; duration 0.3 @
+// (the binary clears _isAnimationing to 0 here; duration 0.3 @
 // 0xe44a0).
 - (void)startCloseAnimation {
     if (_isAnimationing) {
@@ -362,7 +359,6 @@
 
 // @ 0xe44a8 — close animation finished: drop off screen and disable.
 //
-// @complete
 - (void)endCloseAnimation {
     [self removeFromSuperview];
     _isAnimationing = NO;
@@ -375,7 +371,6 @@
 // "ErrorCode" number to a result message. Always drops the downloader + hides
 // the spinner, then alerts.
 //
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSString *message;
     NSDictionary *json = [downloader getDataInJSON];
@@ -430,14 +425,13 @@
 
 // @ 0xe46a0 — per-chunk progress: no-op.
 //
-// @complete (bx lr).
+// (bx lr).
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xe46a4 — request failed: drop the downloader, hide the spinner, show the
 // network alert.
 //
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     _dummyView.hidden = YES;
@@ -456,7 +450,6 @@
 
 // @ 0xe476c — dismissing a result alert closes the overlay.
 //
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     [self startCloseAnimation];
 }
@@ -466,7 +459,6 @@
 // @ 0xe477c — POST the friend request (once) for this row's player id,
 // revealing the spinner.
 //
-// @complete
 // Verified: guarded on _downloader == nil && fd.playerId != nil; plays SE 1 on
 // send / SE 2 otherwise; POST body "uuid=%@&player_id=%@&message=%@" (message
 // empty), UTF-8, Content-Type "application/json" to +[StoreUtil
@@ -495,7 +487,6 @@
 
 // @ 0xe490c — cancel button: play the back SE and close.
 //
-// @complete
 - (void)touchedCancel {
     neEngine::playSystemSe(2);
     [self startCloseAnimation];
@@ -504,7 +495,6 @@
 // @ 0xe493c — a touch that ends outside the card (tag != 400) dismisses the
 // overlay.
 //
-// @complete
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     if ([[touches anyObject] view].tag == 400) {
         return;
@@ -516,14 +506,14 @@
 
 // @ 0xe4994
 //
-// @complete (atomic BOOL getter; dmb barrier).
+// (atomic BOOL getter; dmb barrier).
 - (BOOL)isAnimationing {
     return _isAnimationing;
 }
 
 // @ 0xe49ac
 //
-// @complete (atomic BOOL getter; dmb barrier).
+// (atomic BOOL getter; dmb barrier).
 - (BOOL)isEnabled {
     return _isEnabled;
 }
@@ -532,7 +522,7 @@
 // callback fires into a dead overlay. Kept under ARC because it cancels a
 // Downloader; the _dummyView / _downloader object releases are ARC-managed.
 //
-// @complete (binary releases _dummyView, then cancels + releases _downloader,
+// (binary releases _dummyView, then cancels + releases _downloader,
 // then [super dealloc]; the cancel is the load-bearing part kept under ARC).
 - (void)dealloc {
     if (_downloader != nil) {

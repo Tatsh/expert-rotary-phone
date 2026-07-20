@@ -72,13 +72,11 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x58904 — returns the constant "JP" CFString @ 0x136e28 (char* 0x1063ca,
 // length 2, byte-verified).
-// @complete
 + (NSString *)targetStore {
     return @"JP";
 }
 
 // @ 0x589f4
-// @complete
 + (NSURL *)createURL:(NSString *)path {
     NSString *host = ResolveHost(@APR_HOST, @"AprHost");
     // The binary used http here, but App Transport Security blocks cleartext on
@@ -96,7 +94,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x58a58
-// @complete
 + (NSURL *)createHttpsURL:(NSString *)path {
     // Ghidra: host CFString char* @ 0x106a3f is literally "apr.s.konaminet.jp"
     // (dots, not a hyphen); verified via read_memory of the CFString struct at
@@ -114,7 +111,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59f24
-// @complete
 + (NSURL *)createOfficialURL:(NSString *)path {
     NSString *host = ResolveHost(@OFFICIAL_HOST, @"OfficialHost");
     // https for modern-iOS ATS (see createURL); host declared in Info.plist.
@@ -144,42 +140,41 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // --- Game API endpoints (endpoint names byte-verified against Ghidra) ---
 + (NSURL *)getDlFileListURL {
     return [self createHttpsURL:ApiPath(@"get_dl_file_list")];
-} // @ 0x599c8 @complete
+} // @ 0x599c8
 + (NSURL *)getFriendListURL {
     return [self createHttpsURL:ApiPath(@"get_friend_list")];
-} // @ 0x594a8 @complete
+} // @ 0x594a8
 + (NSURL *)getEventInfoURL {
     return [self createHttpsURL:ApiPath(@"get_event_info")];
-} // @ 0x59d94 @complete
+} // @ 0x59d94
 + (NSURL *)getConvertCodeURL {
     return [self createHttpsURL:ApiPath(@"get_convert_code")];
-} // @ 0x59e00 @complete
+} // @ 0x59e00
 + (NSURL *)convertURL {
     return [self createHttpsURL:ApiPath(@"convert")];
-} // @ 0x59e6c @complete
+} // @ 0x59e6c
 
 // --- Friend actions (endpoint names byte-verified against Ghidra) ---
 + (NSURL *)requestFriendURL {
     return [self createHttpsURL:ApiPath(@"request_friend")];
-} // @ 0x59220 @complete
+} // @ 0x59220
 + (NSURL *)replyFriendURL {
     return [self createHttpsURL:ApiPath(@"reply_friend")];
-} // @ 0x5928c @complete
+} // @ 0x5928c
 + (NSURL *)removeFriendURL {
     return [self createHttpsURL:ApiPath(@"remove_friend")];
-} // @ 0x5943c @complete
+} // @ 0x5943c
 + (NSURL *)getRecommendFriendURL {
     return [self createHttpsURL:ApiPath(@"get_recommend_friend")];
-} // @ 0x59a34 @complete
+} // @ 0x59a34
 + (NSURL *)saveTreasureURL {
     return [self createHttpsURL:ApiPath(@"save_treasure")];
-} // @ 0x59884 @complete
+} // @ 0x59884
 
 // @ 0x59740 — the recommended-pack endpoint. Path is the shared base
 // "/apr/main/cgi/" (the single base CFString cf__apr_main_cgi_ @ 0x106a30) plus
 // "pack_recommend/index.jsp". It is written out as two literals rather than via
 // ApiPath, but the base is identical to every other endpoint here.
-// @complete
 + (NSURL *)recommendPackURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                                            @"/apr/main/cgi/",
@@ -189,7 +184,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x59148 — the invite-code redemption endpoint. Same literal-path form as
 // recommendPackURL (byte-verified "/apr/main/cgi/" slashes) plus
 // "invited/index.jsp".
-// @complete
 + (NSURL *)invitedURL {
     return [self
         createHttpsURL:[NSString
@@ -198,7 +192,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x59070 — the "register a new player name" endpoint. Same literal-path form
 // (byte-verified "/apr/main/cgi/" slashes) plus "new_player/index.jsp".
-// @complete
 + (NSURL *)playerNewURL {
     return [self
         createHttpsURL:[NSString
@@ -207,7 +200,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x598f0 — the pop'n-link (KONAMI ID) linking endpoint. Same literal-path
 // form (byte-verified "/apr/main/cgi/" slashes) plus "link_kid/index.jsp".
-// @complete
 + (NSURL *)linkKidURL {
     return [self
         createHttpsURL:[NSString
@@ -218,40 +210,36 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // ---
 + (NSURL *)getFriendRequestURL {
     return [self createHttpsURL:ApiPath(@"get_friend_request")];
-} // @ 0x592f8 @complete
+} // @ 0x592f8
 + (NSURL *)getFriendScoreURL {
     return [self createHttpsURL:ApiPath(@"get_friend_score")];
-} // @ 0x59364 @complete
+} // @ 0x59364
 + (NSURL *)getArcadeScoreURL {
     return [self createHttpsURL:ApiPath(@"get_arcade_score")];
-} // @ 0x5995c @complete
+} // @ 0x5995c
 + (NSURL *)getOverScoreLogURL {
     return [self createHttpsURL:ApiPath(@"get_over_score_log")];
-} // @ 0x59d28 @complete
+} // @ 0x59d28
 // The endpoint name is one word "blocklist" (no underscore); Ghidra string @
 // 0x106844 is "get_blocklist/index.jsp" (byte-verified).
-// @complete
 + (NSURL *)getBlockListURL {
     return [self createHttpsURL:ApiPath(@"get_blocklist")];
 } // @ 0x59580
 // Endpoint name "add_blocklist" (one word); Ghidra string @ 0x10685c.
-// @complete
 + (NSURL *)addBlockListURL {
     return [self createHttpsURL:ApiPath(@"add_blocklist")];
 } // @ 0x59514
 // Endpoint name "del_blocklist" (one word); Ghidra string @ 0x10682c.
-// @complete
 + (NSURL *)delBlockListURL {
     return [self createHttpsURL:ApiPath(@"del_blocklist")];
 } // @ 0x595ec
 + (NSURL *)cancelFriendURL {
     return [self createHttpsURL:ApiPath(@"cancel_friend")];
-} // @ 0x593d0 @complete
+} // @ 0x593d0
 
 // @ 0x59658 / 0x596cc — daily-quiz endpoints. Path is the shared base
 // "/apr/main/cgi/" + "<name>/index.jsp" plus a "?target=JP" query (Ghidra fmt
 // "%@%@?target=%@", store "JP").
-// @complete
 + (NSURL *)getQuizURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@?target=%@",
                                                            @"/apr/main/cgi/",
@@ -259,7 +247,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
                                                            @"JP"]];
 }
 // @ 0x596cc — reply-quiz endpoint (same shape as getQuizURL).
-// @complete
 + (NSURL *)replyQuizURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@?target=%@",
                                                            @"/apr/main/cgi/",
@@ -270,7 +257,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x59f88 — official app-info page. The binary composes it as two literals
 // ("/game/popn/rhythmin/" + "app/appinfo.html"); joined here into one literal
 // for readability (identical result).
-// @complete
 + (NSURL *)getOfficialAppInfoURL {
     return [self createOfficialURL:@"/game/popn/rhythmin/app/appinfo.html"];
 }
@@ -282,7 +268,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // The nil-product fallback is the placeholder CFString @ 0x136f58, a UTF-16
 // constant byte-verified as "¥573" (U+FFE5 fullwidth yen sign followed by
 // "573"), not an empty string.
-// @complete
 + (NSString *)priceString:(SKProduct *)product {
     if (product == nil) {
         return @"¥573";
@@ -297,7 +282,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x5a088 — "rhythmin_pack" + zero-padded 4-digit id; nil for non-positive
 // ids.
-// @complete
 + (NSString *)productIDForPackID:(int)packID {
     if (packID < 1) {
         return nil;
@@ -310,7 +294,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // is set); 18+ has no limit. Under-16 is capped at 5000 yen/month, 16-17 at
 // 10000 yen/month, counting the running monthly total (reset implicitly when
 // the stored month no longer matches now).
-// @complete
 + (BOOL)isPurchasable:(unsigned int)price {
     NSDate *birthDay = [UserSettingData birthDay];
     NSCalendar *cal = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -358,7 +341,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x5a0d0 — strip the prefix and read the trailing integer; -1 on mismatch.
-// @complete
 + (int)packIDForProductID:(NSString *)productID {
     if (productID.length <= kPackProductPrefix.length) {
         return -1;
@@ -373,7 +355,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // --- Receipt verification ---
 
 // @ 0x58f04
-// @complete
 + (NSURL *)receiptURL {
     return [self createHttpsURL:ApiPath(@"verify_receipt")];
 }
@@ -381,7 +362,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x58830 — the binary branches on idiom == UIUserInterfaceIdiomPhone (0):
 // phone returns "iphone", every other idiom returns "ipad" (not an explicit
 // pad test).
-// @complete
 + (NSString *)deviceName {
     if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
         return @"iphone";
@@ -392,7 +372,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x58880 — computed once, then cached (Ghidra global g_pStoreIdentifierParams
 // @ DAT_001882f4). The binary retains the MD5 result before storing it; the
 // static strong reference here is the ARC-faithful equivalent.
-// @complete
 + (NSString *)identifierParams {
     static NSString *sIdentifierParams = nil;
     if (sIdentifierParams != nil) {
@@ -406,7 +385,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x5a2ac — wrap the receipt with client info for the verify endpoint. The
 // JSON format CFString @ 0x10653c is byte-verified identical to the literal
 // below.
-// @complete
 + (NSString *)createReceiptCheckJSON:(NSString *)base64Receipt {
     AppDelegate *app = [AppDelegate appDelegate];
     return [NSString stringWithFormat:@"{\"receipt_data\":\"%@\",\"client_info\":{\"uuid\":\"%"
@@ -422,7 +400,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x5a394 — SHA-256 hex of (salt[2,27) + json). Range is substringWithRange(2,
 // 27) of kReceiptSalt @ 0x1065a3, format "%@%@" (byte-verified).
-// @complete
 + (NSString *)createReceiptChecckDigest:(NSString *)json {
     NSString *salt = [kReceiptSalt substringWithRange:NSMakeRange(2, 27)];
     NSString *seed = [NSString stringWithFormat:@"%@%@", salt, json];
@@ -430,7 +407,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x5a240 — must be an http(s) string that NSURL accepts.
-// @complete
 + (BOOL)isValidURL:(NSString *)urlString {
     if (![urlString hasPrefix:@"http://"] && ![urlString hasPrefix:@"https://"]) {
         return NO;
@@ -442,7 +418,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x58910 — the client-info query fragment shared by catalogue requests.
 // Format "uuid=%@&version=%@&device=%@&os=%@&locale=%@" (byte-verified).
-// @complete
 + (NSString *)userInfo {
     AppDelegate *app = [AppDelegate appDelegate];
     return [NSString stringWithFormat:@"uuid=%@&version=%@&device=%@&os=%@&locale=%@",
@@ -456,7 +431,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x58abc —
 // /apr/main/cgi/packlist/index.jsp?target=JP&head=..&limit=..&<userInfo> with
 // an optional &pack_id=.. seed.
-// @complete
 + (NSURL *)packListURL:(unsigned int)head limit:(unsigned int)limit packId:(int)packId {
     NSString *path = [NSString stringWithFormat:@"%@%@?target=%@&head=%d&limit=%d&%@",
                                                 @"/apr/main/cgi/",
@@ -472,7 +446,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x58b80 — /apr/main/cgi/packinfo/index.jsp?target=JP&pack=<id>[&<userInfo>]
-// @complete
 + (NSURL *)packInfoURL:(unsigned int)packID UserOpen:(BOOL)userOpen {
     NSString *path;
     if (userOpen) {
@@ -494,7 +467,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x58c5c — store per-song info page:
 // /apr/main/cgi/musicinfo/index.jsp?target=JP&music=<id>&<userInfo>
-// @complete
 + (NSURL *)musicInfoURL:(unsigned int)musicId {
     NSString *path = [NSString stringWithFormat:@"%@%@?target=%@&music=%d&%@",
                                                 @"/apr/main/cgi/",
@@ -507,7 +479,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x58cf4 — arcade-viewer per-song info page:
 // /apr/main/cgi/acv_musicinfo/index.jsp?target=JP&music=<id>&<userInfo>
-// @complete
 + (NSURL *)acvMusicInfoURL:(unsigned int)acMusicId {
     NSString *path = [NSString stringWithFormat:@"%@%@?target=%@&music=%d&%@",
                                                 @"/apr/main/cgi/",
@@ -520,7 +491,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x59b0c — arcade-viewer play-log POST endpoint:
 // https://apr.s.konaminet.jp/apr/main/cgi/log_acv_play/index.jsp
-// @complete
 + (NSURL *)logAcvPlayURL {
     return [self
         createHttpsURL:[NSString
@@ -531,7 +501,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // https://apr.s.konaminet.jp/apr/main/cgi/search_master/index.jsp?target=JP&<userInfo>
 // The format CFString @ 0x106482 is "%@%@?target=%@&%@" (length 17): a literal
 // "&" separates target from the userInfo suffix (byte-verified).
-// @complete
 + (NSURL *)searchMasterURL {
     NSString *path = [NSString stringWithFormat:@"%@%@?target=%@&%@",
                                                 @"/apr/main/cgi/",
@@ -543,7 +512,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x59004 — per-region arcade query (POST lat/long/range body attached by the
 // caller): https://apr.s.konaminet.jp/apr/main/cgi/gamecenter/index.jsp
-// @complete
 + (NSURL *)searchURL {
     return [self
         createHttpsURL:[NSString
@@ -552,13 +520,11 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x59ed8 — the official eAmusement site base string:
 // "http://p.eagate.573.jp/game/popn/rhythmin/".
-// @complete
 + (NSString *)getOfficialPath {
     return [NSString stringWithFormat:@"http://%@%@", @"p.eagate.573.jp", @"/game/popn/rhythmin/"];
 }
 
 // @ 0x5a060 — official pop'n team Twitter page.
-// @complete
 + (NSURL *)getOfficialTwitterURL {
     return [NSURL URLWithString:@"https://twitter.com/popn_team"];
 }
@@ -570,7 +536,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x58d8c — "register/refresh player" info feed:
 // https://apr.s.konaminet.jp/apr/main/cgi/new/index.jsp?target=JP&<userInfo>
 // Format "%@%@?target=%@&%@" (the "&" before userInfo is byte-verified).
-// @complete
 + (NSURL *)storeNewInfoURL {
     NSString *path = [NSString stringWithFormat:@"%@%@?target=%@&%@",
                                                 @"/apr/main/cgi/",
@@ -585,7 +550,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // where key = SHA-256 hex of ("target=JP&pid=<pid>&<userInfo>" +
 // kPurchaseKeySalt). Params format "target=%@&pid=%d&%@", final format
 // "%@%@?%@&key=%@", salt kPurchaseKeySalt @ 0x1064a8 (all byte-verified).
-// @complete
 + (NSURL *)purchasedURL:(unsigned int)pid {
     NSString *params =
         [NSString stringWithFormat:@"target=%@&pid=%d&%@", @"JP", pid, [self userInfo]];
@@ -597,7 +561,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x590dc — https://.../apr/main/cgi/get_player/index.jsp
-// @complete
 + (NSURL *)playerGetURL {
     return [self
         createHttpsURL:[NSString
@@ -605,7 +568,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x591b4 — https://.../apr/main/cgi/save_score/index.jsp
-// @complete
 + (NSURL *)saveScoreURL {
     return [self
         createHttpsURL:[NSString
@@ -613,7 +575,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x597ac — https://.../apr/main/cgi/get_recommend_list/index.jsp
-// @complete
 + (NSURL *)getRecommendListURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                                            @"/apr/main/cgi/",
@@ -621,7 +582,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59818 — https://.../apr/main/cgi/get_visitor/index.jsp
-// @complete
 + (NSURL *)getVisitorURL {
     return [self
         createHttpsURL:[NSString
@@ -629,7 +589,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59aa0 — https://.../apr/main/cgi/log_chara_kuji/index.jsp
-// @complete
 + (NSURL *)logCharaKujiURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                                            @"/apr/main/cgi/",
@@ -637,7 +596,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59b78 — https://.../apr/main/cgi/save_apns_token/index.jsp
-// @complete
 + (NSURL *)saveApnsTokenURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                                            @"/apr/main/cgi/",
@@ -645,7 +603,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59be4 — https://.../apr/main/cgi/get_reward_login_token/index.jsp
-// @complete
 + (NSURL *)getRewardLoginTokenURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                                            @"/apr/main/cgi/",
@@ -653,7 +610,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59c50 — https://.../apr/main/cgi/get_present_list/index.jsp
-// @complete
 + (NSURL *)getPresentListURL {
     return [self createHttpsURL:[NSString stringWithFormat:@"%@%@",
                                                            @"/apr/main/cgi/",
@@ -661,7 +617,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 }
 
 // @ 0x59cbc — https://.../apr/main/cgi/get_present/index.jsp
-// @complete
 + (NSURL *)getPresentURL {
     return [self
         createHttpsURL:[NSString
@@ -670,7 +625,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x59ff4 — official eAmusement "old info" page:
 // http://p.eagate.573.jp/game/popn/rhythmin/app/old_info.html
-// @complete
 + (NSURL *)getOfficialOldInfoURL {
     return [self createOfficialURL:[NSString stringWithFormat:@"%@%@",
                                                               @"/game/popn/rhythmin/",
@@ -682,7 +636,6 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 // @ 0x5c5ec — percent-encode a string for use in a URL query. Escapes the
 // reserved set "!*'();:@&=+$,/?%#[]" (byte-verified @ 0x106c29) using UTF-8
 // (encoding 0x8000100 = kCFStringEncodingUTF8). nil in -> nil out.
-// @complete
 NSString *urlEncodeString(NSString *s) {
     if (s == nil) {
         return nil;

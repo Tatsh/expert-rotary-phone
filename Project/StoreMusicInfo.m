@@ -25,7 +25,6 @@ static int ClampLevel(int value, int lo, int hi) {
 @implementation StoreMusicInfo
 
 // @ 0x56398
-// @complete
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary {
     // Reject entries without a positive id before allocating anything real.
     if ([dictionary[@"ID"] intValue] < 1) {
@@ -66,7 +65,6 @@ static int ClampLevel(int value, int lo, int hi) {
 
 // Each getter below is a plain ivar load at its cited address (verified against
 // the disassembly).
-// @complete
 - (int)musicID {
     return m_MusicID;
 } // @ 0x5676c
@@ -100,7 +98,6 @@ static int ClampLevel(int value, int lo, int hi) {
 
 // @ 0x56678 — the purchased song file exists on disk (path resolved by
 // MusicManager).
-// @complete
 - (BOOL)fileExist {
     return RhFileExists([[MusicManager getInstance] getPathFromPurchased:m_MusicID]);
 }

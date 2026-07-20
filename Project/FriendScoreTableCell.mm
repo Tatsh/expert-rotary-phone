@@ -82,7 +82,6 @@ static NSString *const kScoreRankImg[7] = {
 // Verified: FUN_00028a40 compares against 0x1869f/0x17ecf/0x17317/0x15f8f/
 // 0x1387f/0x1116f (99999/97999/94999/89999/79999/69999), the same >= 100000 /
 // 98000 / 95000 / 90000 / 80000 / 70000 thresholds.
-// @complete
 static int scoreToRank(int score) {
     if (score >= 100000) {
         return 0;
@@ -126,7 +125,6 @@ static int scoreToRank(int score) {
 }
 
 // @ 0xae06c — record the full row layout x offsets (iOS 6 vs 7).
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -166,7 +164,6 @@ static int scoreToRank(int score) {
 // built last time. Phone uses the iOS6/7 x-offset ivars above; iPad uses its
 // own fixed metrics (only the pre-iOS7 -10pt shift, folded into `padX0`,
 // carries over). The self row (nil name) shows the "you" marker.
-// @complete
 - (void)setScoreData:(NSValue *)scoreData {
     ScoreDataStruct data;
     [scoreData getValue:&data];

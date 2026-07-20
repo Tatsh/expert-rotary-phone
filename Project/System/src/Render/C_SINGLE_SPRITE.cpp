@@ -16,14 +16,12 @@ namespace ne {
 
 // Ghidra: FUN_00015eb4 — clears the two render-state words and defaults the tile
 // span to 7x7; the vtable pointer is written by the compiler-generated prologue.
-// @complete
 C_SINGLE_SPRITE::C_SINGLE_SPRITE() = default;
 
 // Ghidra: FUN_00015edc — NOT a defaulted destructor: it drops the reference the
 // upload path retained on the sprite's bound texture (+0x04) via neTextureRelease
 // (FUN_00018200), then leaves the compiler-emitted operator-delete thunk to free
 // the storage.
-// @complete
 C_SINGLE_SPRITE::~C_SINGLE_SPRITE() {
     if (texture != nullptr) {
         neTextureRelease(texture);
@@ -34,7 +32,6 @@ C_SINGLE_SPRITE::~C_SINGLE_SPRITE() {
 // @ 0x16710
 // Ghidra: FUN_00016710 — write one per-frame render-state slot (meta[slot] =
 // value).
-// @complete
 void C_SINGLE_SPRITE::setRenderStateSlot(int slot, int value) {
     meta[slot] = value;
 }
@@ -45,7 +42,6 @@ void C_SINGLE_SPRITE::setRenderStateSlot(int slot, int value) {
 // with them, each C_SINGLE_SPRITE record's own cache reference) are freed by their
 // unique_ptrs in reverse declaration order, matching the shipped last-to-first
 // teardown.
-// @complete
 neTextureFrames::~neTextureFrames() {
     for (int i = 0; i < frameCount; ++i) {
         if (handles && handles[i] != nullptr) {

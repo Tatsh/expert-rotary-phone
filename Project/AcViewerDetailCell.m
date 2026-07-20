@@ -21,7 +21,6 @@
 
 // @ 0x5b620 — a plain non-selectable cell; its content is filled by the VC on
 // reuse.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -37,7 +36,6 @@
 // "last" depends on how many values the kind has), draw the option name on the
 // left, and place a check mark on the right of whichever row is the player's
 // current stored value for this kind.
-// @complete
 - (void)setData:(int)index {
     _index = index;
 

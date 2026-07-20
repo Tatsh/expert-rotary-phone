@@ -15,7 +15,6 @@
 @implementation CDataScanner
 
 // @ 0x6475c
-// @complete
 + (id)scannerWithData:(NSData *)inData {
     CDataScanner *theScanner = [[self alloc] init];
     [theScanner setData:inData];
@@ -23,7 +22,6 @@
 }
 
 // @ 0x647ac
-// @complete
 - (id)init {
     if ((self = [super init]) != nil) {
         [self setDoubleCharacters:[NSCharacterSet
@@ -37,19 +35,16 @@
 // automatically).
 
 // @ 0x64870
-// @complete
 - (NSUInteger)scanLocation {
     return (NSUInteger)(current - start);
 }
 
 // @ 0x64890
-// @complete
 - (NSData *)data {
     return data;
 }
 
 // @ 0x648a0
-// @complete
 - (void)setData:(NSData *)inData {
     if (data != inData) {
         data = inData;
@@ -63,25 +58,21 @@
 }
 
 // @ 0x6496c
-// @complete
 - (void)setScanLocation:(NSUInteger)inScanLocation {
     current = start + inScanLocation;
 }
 
 // @ 0x6498c
-// @complete
 - (BOOL)isAtEnd {
     return [self scanLocation] >= length;
 }
 
 // @ 0x649c0
-// @complete
 - (unichar)currentCharacter {
     return (unichar)(unsigned char)*current;
 }
 
 // @ 0x649d4
-// @complete
 - (unichar)scanCharacter {
     unichar theCharacter = (unichar)(unsigned char)*current;
     current += 1;
@@ -89,7 +80,6 @@
 }
 
 // @ 0x649ec
-// @complete
 - (BOOL)scanCharacter:(unichar)inCharacter {
     if ((unsigned char)*current == inCharacter) {
         current += 1;
@@ -99,7 +89,6 @@
 }
 
 // @ 0x64a14
-// @complete
 - (BOOL)scanUTF8String:(const char *)inString intoString:(NSString **)outString {
     size_t theLength = strlen(inString);
     if ((unsigned)(end - current) < theLength || strncmp(current, inString, theLength) != 0) {
@@ -113,7 +102,6 @@
 }
 
 // @ 0x64a98
-// @complete
 - (BOOL)scanString:(NSString *)inString intoString:(NSString **)outString {
     if ([inString length] <= (unsigned)(end - current) &&
         strncmp(current, [inString UTF8String], [inString length]) == 0) {
@@ -127,7 +115,6 @@
 }
 
 // @ 0x64b40
-// @complete
 - (BOOL)scanCharactersFromSet:(NSCharacterSet *)inSet intoString:(NSString **)outString {
     const char *P = current;
     while (P < end && [inSet characterIsMember:(unichar)(unsigned char)*P]) {
@@ -146,7 +133,6 @@
 }
 
 // @ 0x64c1c
-// @complete
 - (BOOL)scanUpToString:(NSString *)inString intoString:(NSString **)outString {
     const char *P = strnstr(current, [inString UTF8String], end - current);
     if (P == NULL) {
@@ -162,7 +148,6 @@
 }
 
 // @ 0x64cc4
-// @complete
 - (BOOL)scanUpToCharactersFromSet:(NSCharacterSet *)inSet intoString:(NSString **)outString {
     const char *P = current;
     while (P < end && ![inSet characterIsMember:(unichar)(unsigned char)*P]) {
@@ -181,7 +166,6 @@
 }
 
 // @ 0x64da0
-// @complete
 - (BOOL)scanNumber:(NSNumber **)outNumber {
     NSString *theString = nil;
     if ([self scanCharactersFromSet:doubleCharacters intoString:&theString]) {
@@ -194,7 +178,6 @@
 }
 
 // @ 0x64e14
-// @complete
 - (void)skipWhitespace {
     const char *P = current;
     while (P < end && isspace((unsigned char)*P)) {
@@ -204,26 +187,22 @@
 }
 
 // @ 0x64e84
-// @complete
 - (NSString *)remainingString {
     NSData *theData = [NSData dataWithBytes:current length:(end - current)];
     return [[NSString alloc] initWithData:theData encoding:NSUTF8StringEncoding];
 }
 
 // @ 0x64f0c
-// @complete
 - (NSCharacterSet *)doubleCharacters {
     return doubleCharacters;
 }
 
 // @ 0x64f1c
-// @complete
 - (void)setDoubleCharacters:(NSCharacterSet *)inDoubleCharacters {
     doubleCharacters = inDoubleCharacters;
 }
 
 // @ 0x65204
-// @complete
 - (BOOL)scanCStyleComment:(NSString **)outComment {
     if ([self scanString:@"/*" intoString:NULL] != YES) {
         return NO;
@@ -254,7 +233,6 @@ scanEnd:
 }
 
 // @ 0x65364
-// @complete
 - (BOOL)scanCPlusPlusStyleComment:(NSString **)outComment {
     if ([self scanString:@"//" intoString:NULL] == YES) {
         NSString *theComment = nil;

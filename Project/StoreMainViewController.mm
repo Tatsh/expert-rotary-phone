@@ -66,7 +66,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x42b40 — set up the tab item, the two pack-list controllers, the artwork
 // cache, and the per-OS layout offset.
-// @complete
 - (instancetype)initWithParent:(StoreViewController *)parent {
     if ((self = [super init])) {
         m_StoreViewCtrl = parent;
@@ -103,7 +102,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x42d48 — root view backdrop. Phone: opaque light-grey table backdrop.
 // iPad: a clear view over a tiled "friman_bg" pattern image.
-// @complete
 - (void)loadView {
     [super loadView];
     self.view.opaque = YES;
@@ -133,7 +131,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // StorePackDetailViewPad; plus the stretchable pack-cell backgrounds
 // (store_pack_bg_0/1). Fixed float constants are byte-decoded from the
 // disassembly; bounds-relative rects are kept structural.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -445,13 +442,11 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x4a2d8
-// @complete
 - (void)startStoreClose {
     m_IsStoreClosing = YES;
 }
 
 // @ 0x4a2ec
-// @complete
 - (BOOL)isAlertViewShowing {
     return _isAlertViewShowing;
 }
@@ -463,7 +458,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // reveals the spinner, hides the "push up to show more" hint label (tag
 // 100000), and asks the pack list for the next page (-1 = "the page after the
 // last one loaded").
-// @complete
 - (void)selectShowMore {
     if (m_IsLoadingMoreList) {
         return;
@@ -488,7 +482,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // restore bar button on first success, repositions the store_fun banner,
 // refreshes the "show more" footer + promotion header, and — if a recommend
 // pack is still pending — starts the recommend fetch.
-// @complete
 - (void)packListDownloadSuccess:(StorePackListController *)controller {
     if (controller != m_PackListCtrl) {
         // The recommend (deep-link) list arrived: open the requested pack's detail.
@@ -595,7 +588,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // hidden) route through the empty-state label; once rows exist, pop an alert
 // and re-enable the table. Either way clear the host's pending recommend-pack
 // id.
-// @complete
 - (void)packListDownloadError:(StorePackListController *)controller
                  errorMessage:(NSString *)message {
     UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
@@ -618,7 +610,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x45258 — the fetch returned an empty catalogue; same split as the error
 // path.
-// @complete
 - (void)packListDownloadNothing:(StorePackListController *)controller {
     UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     if ([table isHidden]) {
@@ -636,7 +627,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x44864 — surface a load failure in the pack table's empty area: hide the
 // table (tag 10000) + its spinner (tag 0x2711) and show the empty-state label
 // (tag 0x2712).
-// @complete
 - (void)showError:(NSString *)message {
     [[self.view viewWithTag:kTagStoreTable] setHidden:YES];
     [[self.view viewWithTag:kTagStoreLoading] setHidden:YES];
@@ -646,7 +636,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x44904 — "復元" bar button: confirm before kicking off a StoreKit restore.
-// @complete
 - (void)pushBarBtnRestore:(id)sender {
     if (m_IsStoreClosing) {
         return;
@@ -667,7 +656,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x45648 — a promotion banner tile was tapped. Phone pushes a detail screen;
 // iPad slides the in-place detail card up over a dim cover.
-// @complete
 - (void)storePromotionViewTaped:(StorePromotionView *)view PackID:(int)packID {
     if (packID < 0) {
         return;
@@ -706,7 +694,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x45510 — iPad: the "open detail" slide finished for a normal cell tap.
 // Resolve the tapped index against whichever list is populated (recommend
 // first) and hand the pack info to the embedded detail card.
-// @complete
 - (void)openDetailAnimStop:(NSString *)animationID
                   finished:(NSNumber *)finished
                    context:(void *)ctx {
@@ -725,7 +712,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x45898 — iPad: the promotion-tap slide finished; load the promoted pack's
 // detail.
-// @complete
 - (void)openDetailAnimStopFromPromotion:(NSString *)animationID
                                finished:(NSNumber *)finished
                                 context:(void *)ctx {
@@ -737,7 +723,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x45a80 — iPad: the detail-close slide finished; tear the card down and
 // restart the promotion animation.
-// @complete
 - (void)closeDetailAnimStop:(NSString *)animationID
                    finished:(NSNumber *)finished
                     context:(void *)ctx {
@@ -758,7 +743,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // promotion banner / restore button, then slide the dim cover + embedded detail
 // card in. The tapped tile is carried as the animation context so
 // -openDetailAnimStop:… can resolve its row index on completion.
-// @complete
 - (void)packViewSelected:(id)packView {
     if (m_IsAnimationing) {
         return;
@@ -791,7 +775,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x45940 — iPad: the dim cover was tapped. Cancel any in-flight detail load
 // / sample, then slide the cover + detail card back out; -closeDetailAnimStop:…
 // tears the card down once the fade completes.
-// @complete
 - (void)handleTapCoverView:(id)sender {
     [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
     [m_PackDetailViewPad cancelLoading];
@@ -810,7 +793,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // No-op unless this controller is on top of its nav stack. Resolves the pack
 // info against whichever list is populated (recommend first), skins the nav
 // bar, then pushes the detail screen.
-// @complete
 - (void)showDetailViewForPhone:(int)packID {
     if (self.navigationController.topViewController != self) {
         return;
@@ -830,7 +812,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x46270 — detail card asked to buy: gate on StoreKit availability + a valid
 // product, show the "処理中..." modal and begin the purchase.
-// @complete
 - (void)detailViewStartPurchase:(StorePackInfo *)packInfo {
     if ([PurchaseManager isPurchasable] && [packInfo product]) {
         m_PurchasingPackInfo = packInfo;
@@ -853,7 +834,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x46420 — detail card asked to close: phone pops the nav stack, iPad slides
 // the card.
-// @complete
 - (void)detailViewClose {
     if (m_IsPad) {
         [self handleTapCoverView:nil];
@@ -864,7 +844,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x46470 — the download/purchase modal's cancel button: abort the download,
 // hide the modal and let the visible detail re-check its button caption.
-// @complete
 - (void)storeDialogCancel:(id)sender {
     if (m_DownloadManager) {
         [m_DownloadManager cancel];
@@ -885,12 +864,10 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 #pragma mark - NSURLConnection stubs
 
 // @ 0x46584 — NSURLConnection delegate stub (empty in the binary).
-// @complete
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 }
 
 // @ 0x46588 — NSURLConnection delegate stub (empty in the binary).
-// @complete
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
 }
 
@@ -898,7 +875,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x4658c — fold a pack's music + AC-music infos into the purchased library,
 // optionally persisting.
-// @complete
 - (void)updateMusicInfo:(StorePackInfo *)packInfo Save:(BOOL)save {
     if (packInfo == nil) {
         return;
@@ -924,7 +900,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // pack's character ticket, shows the download modal, builds a StoreDownloadTask
 // per missing file (both normal + AC music) and starts a StoreDownloadManager —
 // or, if nothing is missing, just flips the button caption to "installed".
-// @complete
 - (void)startDownloadPackMusics:(StorePackInfo *)packInfo {
     if (packInfo == nil) {
         return;
@@ -999,7 +974,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x46a7c — re-download: re-register the pack's musics (persisting) then
 // download.
-// @complete
 - (void)reDownloadPackMusics:(StorePackInfo *)packInfo {
     [self updateMusicInfo:packInfo Save:YES];
     [self startDownloadPackMusics:packInfo];
@@ -1009,7 +983,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // the detail screen is up flip its purchase state, else reload the pack's row
 // in the main list (section 1); iPad: reload the pack's row (section 0, two
 // packs per row).
-// @complete
 - (void)updatePurchasedTableCell:(StorePackInfo *)packInfo {
     if (!m_IsPad) {
         UIViewController *top = self.navigationController.topViewController;
@@ -1047,7 +1020,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // pack, persist the musics, register the product, refresh the row, start the
 // downloads, and roll the month's spend total forward for the parental spending
 // guard.
-// @complete
 - (void)purchaseSucceeded:(NSString *)productID {
     if ([StoreUtil packIDForProductID:productID] != [m_PurchasingPackInfo packID]) {
         return;
@@ -1082,7 +1054,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x46d1c — a purchase failed/cancelled: drop the delegate, hide the modal
 // and report.
-// @complete
 - (void)purchaseFailed:(NSString *)productID error:(NSError *)error {
     [[PurchaseManager sharedManager] setMusicDataDelegate:nil];
     m_PurchasingPackInfo = nil;
@@ -1099,7 +1070,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x46e58 — remember a restored pack's info and tick its product off the
 // pending list.
-// @complete
 - (void)addRestorePackInfo:(StorePackInfo *)packInfo {
     [m_RestorePackInfo addObject:packInfo];
     NSString *productID = [StoreUtil productIDForPackID:[packInfo packID]];
@@ -1112,7 +1082,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // info (or spin up a StorePackInfoDownloader to fetch a missing one). Returns
 // YES while a detail fetch is still in flight (the download callback re-enters
 // here), NO when all are ready.
-// @complete
 - (BOOL)nextRestorePackInfo {
     NSArray *productIDs = [NSArray arrayWithArray:m_RestoreProductID];
     NSLog(@"IDs=%@", productIDs);
@@ -1140,7 +1109,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // purchase-checked products, refresh their rows, and — if any file is still
 // missing — offer to download them all (alert tag 0x1e); otherwise finish
 // silently.
-// @complete
 - (void)askDownloadAllMusics {
     for (StorePackInfo *info in m_RestorePackInfo) {
         [self updateMusicInfo:info Save:NO];
@@ -1183,7 +1151,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x4753c — download every missing music across the restored packs (grants
 // tickets), then start the download manager (or hide the modal when nothing is
 // missing).
-// @complete
 - (void)restoreDownloadAllMusics {
     NSMutableArray *tasks = [NSMutableArray arrayWithCapacity:0];
     for (StorePackInfo *info in m_RestorePackInfo) {
@@ -1224,7 +1191,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x47c14 — StoreKit restore succeeded: reset the restore accumulators, seed
 // the pending product-id list from the purchase-checked products, and start
 // walking them.
-// @complete
 - (void)restoreSucceeded {
     if (m_RestorePackInfo) {
         [m_RestorePackInfo removeAllObjects];
@@ -1243,7 +1209,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x47d50 — StoreKit restore failed: hide the modal and report.
-// @complete
 - (void)restoreFailed:(NSError *)error {
     [m_StoreViewCtrl hideModalDialog];
     NSString *message = [[NSString alloc]
@@ -1257,7 +1222,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x47e40 — StoreKit reported nothing to restore: just hide the modal.
-// @complete
 - (void)restoreNothing {
     [m_StoreViewCtrl hideModalDialog];
 }
@@ -1266,7 +1230,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x47e60 — a missing pack's detail finished downloading during a restore:
 // fold it in and continue walking (or move on to the download-all prompt).
-// @complete
 - (void)storePackInfoDownloaderFinished:(StorePackInfoDownloader *)downloader {
     [self addRestorePackInfo:downloader.packInfo]; // @0x57734 packInfo getter (no
                                                    // getPackInfo selector)
@@ -1280,7 +1243,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x47ef4 — a restore-time detail fetch errored: drop the downloader.
-// @complete
 - (void)storePackInfoDownloaderError:(StorePackInfoDownloader *)downloader {
     if (m_StorePackInfoDownloader == nil) {
         return;
@@ -1291,7 +1253,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x47f38 — the download manager began the next file: show its name in the
 // modal.
-// @complete
 - (void)downloadManagerStartTask:(StoreDownloadManager *)manager {
     id name = [[[manager tasks] objectAtIndex:[manager currentIndex]] addObject];
     id label = [[m_StoreViewCtrl modalDialog] labelMessage];
@@ -1300,7 +1261,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x47ffc — all files downloaded: drop the manager, mark the detail button
 // installed and hide the modal.
-// @complete
 - (void)downloadManagerCompleted:(StoreDownloadManager *)manager {
     m_DownloadManager = nil;
     m_PurchasingPackInfo = nil;
@@ -1317,7 +1277,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x48108 — a download failed: drop the manager, hide the modal, report, and
 // let the detail re-check its caption.
-// @complete
 - (void)downloadManagerFailed:(StoreDownloadManager *)manager {
     m_DownloadManager = nil;
     [m_StoreViewCtrl hideModalDialog];
@@ -1341,7 +1300,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x482c0 — a download progressed: push the overall progress into the modal's
 // bar.
-// @complete
 - (void)downloadManagerProceed:(StoreDownloadManager *)manager {
     UIProgressView *progressView = [[m_StoreViewCtrl modalDialog] progressView];
     [progressView setProgress:[m_DownloadManager overallProgress]];
@@ -1350,7 +1308,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x495e4 — a jacket finished loading: drop it into the on-screen cell
 // (phone: one StorePackCell per row; iPad: the left/right pack view of a
 // StoreTableCell).
-// @complete
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
     UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
     if (!m_IsPad) {
@@ -1375,12 +1332,10 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x49750 — a jacket failed to load (no-op in the binary).
-// @complete
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath {
 }
 
 // @ 0x49b6c — cancel + drop every in-flight jacket ImageDownloader.
-// @complete
 - (void)stopDownloadArtworks {
     if ([m_ArtworkDownloaders count] != 0) {
         for (ImageDownloader *downloader in [m_ArtworkDownloaders allValues]) {
@@ -1396,7 +1351,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x47a04 — CommonAlertView button handler. Tag 0x1f = the restore-confirm
 // alert (begin the StoreKit restore on "OK"); tag 0x1e = the download-all
 // prompt (start the downloads on "OK", else abandon the restore).
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     NSInteger tag = alertView.tag;
     if (tag == kTagAlertRestoreConfirm) {
@@ -1434,7 +1388,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x4832c — number of pack rows: the pack-id count, halved (rounding up) on
 // iPad where two packs share a row.
-// @complete
 - (NSInteger)numPackRows {
     NSInteger count = [[m_PackListCtrl packIDList] count];
     if (m_IsPad) {
@@ -1445,14 +1398,12 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x48fc0 — phone has a promotion section + a pack section; iPad has just the
 // packs.
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return m_IsPad ? 1 : 2;
 }
 
 // @ 0x48fd8 — phone promo section is one row; the pack section is numPackRows
 // (+1 for the "show more" footer while the list continues).
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     NSInteger rows;
     if (!m_IsPad && section == 0) {
@@ -1469,7 +1420,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x49038 — row heights: phone promo scales to the table width (730:240);
 // pack rows are 104 (phone) / 140 (iPad), the "show more" footer 84 (phone) /
 // 60 (iPad).
-// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (!m_IsPad) {
         if (indexPath.section == 0) {
@@ -1485,7 +1435,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // section is one StorePackCell per pack (phone) or a StoreTableCell holding two
 // StorePackViews (iPad); the trailing row is the "show more" footer. Jackets
 // load lazily through an ImageDownloader keyed by the row's index path.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSArray *ids = [m_PackListCtrl packIDList];
@@ -1621,7 +1570,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // @ 0x4912c — colour each cell as it appears: phone pack rows take the
 // alternating pack backdrop, everything else a flat grey (packs 0.5 iPad,
 // footer 0.6).
-// @complete
 - (void)tableView:(UITableView *)tableView
       willDisplayCell:(UITableViewCell *)cell
     forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -1644,7 +1592,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x49258 — a phone pack row was tapped: push its detail (ignored on iPad /
 // when not the visible controller / on the "show more" footer).
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController == self && !m_IsPad &&
         indexPath.row < [self numPackRows]) {
@@ -1660,7 +1607,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // parallax that keeps the store_fun banner (tag 0x186a1) pinned to the content.
 // The banner clamp is runtime-derived (contentOffset + bounds height), so no
 // literal constants to recover.
-// @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (!m_IsLoadingMoreList && [m_PackListCtrl packlistContinued]) {
         CGFloat bottom = scrollView.contentOffset.y + scrollView.bounds.size.height;
@@ -1694,12 +1640,10 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x49b64 — no-op in the binary.
-// @complete
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
 }
 
 // @ 0x49b68 — no-op in the binary.
-// @complete
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
 }
 
@@ -1707,7 +1651,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x49c84 — coming back on screen (phone): refresh + deselect the previously
 // selected pack row so its purchased state updates.
-// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     UITableView *table = (UITableView *)[self.view viewWithTag:kTagStoreTable];
@@ -1723,7 +1666,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x49d64 — first appearance kicks off the initial fetch (hiding the empty
 // label + table); otherwise re-run the success path to lay everything out.
-// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     if ([[m_PackListCtrl packIDList] count] == 0 && ![m_PackListCtrl isFetching]) {
@@ -1737,7 +1679,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 
 // @ 0x49e88 — leaving the screen: stop the iPad detail card, cancel any
 // in-flight page / detail fetch and re-enable the table.
-// @complete
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     if (m_IsPad) {
@@ -1759,19 +1700,16 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 }
 
 // @ 0x49fe4 — viewDidDisappear: super-only, kept for the annotation.
-// @complete
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
 }
 
 // @ 0x4a010 — allow every orientation.
-// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)orientation {
     return YES;
 }
 
 // @ 0x4a014 — no-op in the binary.
-// @complete
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)orientation
                                 duration:(NSTimeInterval)duration {
 }
@@ -1783,7 +1721,6 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // loads, cancels the download manager and detaches/cancels the promotion view.
 // ARC releases the ivars, so the object-only release lines and [super dealloc]
 // are omitted.
-// @complete
 - (void)dealloc {
     if (m_StorePackInfoDownloader) {
         [m_StorePackInfoDownloader setDelegate:nil];

@@ -10,7 +10,6 @@
 @implementation ArcadeScoreData (Store)
 
 // Ghidra: @ 0xcea60
-// @complete
 + (ArcadeScoreData *)getDataFromMusicId:(short)musicId
                                   refId:(NSString *)refId
                  inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -25,7 +24,6 @@
 }
 
 // Ghidra: @ 0xceb78
-// @complete
 + (NSArray *)getLatestDataLimit:(short)limit
                           refId:(NSString *)refId
          inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -42,7 +40,6 @@
 }
 
 // Ghidra: @ 0xcece8
-// @complete
 + (NSArray *)getDataFromCategory:(short)category
                            refId:(NSString *)refId
           inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -59,7 +56,6 @@
 }
 
 // Ghidra: @ 0xcf164
-// @complete
 + (ArcadeScoreData *)addRecordWithMusicId:(short)musicId
                                     refId:(NSString *)refId
                    inManagedObjectContext:(NSManagedObjectContext *)context {
@@ -77,7 +73,6 @@
 // Ghidra: -[ArcadeScoreData reset] @ 0xcf220 — verified: setter order and
 // values match exactly (title/genre "", category @0, updateDate [NSDate date],
 // topName×4 "", topScore×4 @0, meanScore×4 @0, myScore×4 @0).
-// @complete
 - (void)reset {
     self.title = @"";
     self.genre = @"";

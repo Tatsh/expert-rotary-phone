@@ -16,19 +16,16 @@
 @implementation NSScanner (Extensions)
 
 // @ 0x6682c
-// @complete
 - (NSString *)remainingString {
     return [[self string] substringFromIndex:[self scanLocation]];
 }
 
 // @ 0x66870
-// @complete
 - (unichar)currentCharacter {
     return [[self string] characterAtIndex:[self scanLocation]];
 }
 
 // @ 0x668b4
-// @complete
 - (unichar)scanCharacter {
     NSUInteger theScanLocation = [self scanLocation];
     unichar theCharacter = [[self string] characterAtIndex:theScanLocation];
@@ -37,7 +34,6 @@
 }
 
 // @ 0x6690c
-// @complete
 - (BOOL)scanCharacter:(unichar)inCharacter {
     NSUInteger theScanLocation = [self scanLocation];
     if ([[self string] characterAtIndex:theScanLocation] == inCharacter) {
@@ -48,7 +44,6 @@
 }
 
 // @ 0x6696c
-// @complete
 - (void)backtrack:(NSUInteger)inCount {
     NSUInteger theScanLocation = [self scanLocation];
     if (theScanLocation < inCount) {
@@ -58,7 +53,6 @@
 }
 
 // @ 0x669dc
-// @complete
 - (BOOL)scanCStyleComment:(NSString **)outComment {
     if ([self scanString:@"/*" intoString:NULL] != YES) {
         return NO;
@@ -89,7 +83,6 @@ scanEnd:
 }
 
 // @ 0x66b3c
-// @complete
 - (BOOL)scanCPlusPlusStyleComment:(NSString **)outComment {
     if ([self scanString:@"//" intoString:NULL] == YES) {
         NSString *theComment = nil;

@@ -79,7 +79,6 @@
 // table), then read the header of each of its up-to-3 variants
 // ("map_%02d%d.map"). A missing/short file aborts the whole load (returns nil,
 // matching the binary). Each valid 0x50-byte header is boxed as an NSValue.
-// @complete
 NSArray *loadAllTreasureMapHeaders(void) {
     // Display-order -> file-number order table (DAT_0012faa0). The binary finds
     // the file number by scanning for the display index; this is that inverse
@@ -119,7 +118,6 @@ NSArray *loadAllTreasureMapHeaders(void) {
 }
 
 // @ 0xe2c3c — valid event id iff < 12.
-// @complete
 bool isIndexInRange12(unsigned int index) {
     return index < 12;
 }
@@ -150,7 +148,6 @@ bool isIndexInRange12(unsigned int index) {
 @synthesize mapDataArray = _mapDataArray;
 
 // @ 0xbec60 — build the main-map row list and the overlay spinner.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self == nil) {
@@ -238,7 +235,6 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xbf498 — wrap self in a nav controller; first run pushes a how-to overlay.
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
@@ -276,7 +272,6 @@ bool isIndexInRange12(unsigned int index) {
 // Kept under ARC for that side effect; the map-name string releases and the
 // array/overlay releases are ARC-managed (the MainMapData strings are
 // __unsafe_unretained — see honesty note).
-// @complete
 - (void)dealloc {
     if (!neSceneManager::isPadDisplay()) {
         [[DownloadMain getInstance] setDelegateGetEventInfo:nil];
@@ -284,7 +279,6 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xbf980 — reveal the overlay host.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -296,7 +290,6 @@ bool isIndexInRange12(unsigned int index) {
 #pragma mark - Open / close animation
 
 // @ 0xbfa38 — cross-fade the nav host in.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -314,14 +307,12 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xbfb70
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xbfb88 — cross-fade the nav host out. (See honesty note: the guard stores
 // 0, not 1.)
-// @complete
 - (void)startCloseAnimation {
     if (!_isAnimationing) {
         _isAnimationing = NO;
@@ -336,7 +327,6 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xbfc90 — remove the host and notify the root map controller.
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     [(MainViewController *)neSceneManager::rootViewController() MapSelectEndCallBack];
@@ -346,20 +336,17 @@ bool isIndexInRange12(unsigned int index) {
 #pragma mark - Table
 
 // @ 0xbfcec
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xbfcf0
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _mapDataArray ? static_cast<NSInteger>(_mapDataArray.count) : 0;
 }
 
 // @ 0xbfd18 — one MapListCell per main map. On pad the highlighted row draws
 // its selected art.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier = [NSString stringWithFormat:@"Cell%ld-%ld",
@@ -381,14 +368,12 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xbfe40
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xbfe44 — choose a main map: push the area list (phone) or forward to the
 // overlay (pad).
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
@@ -429,7 +414,6 @@ bool isIndexInRange12(unsigned int index) {
 }
 
 // @ 0xc0098 — mirror the scroll into the pad overlay.
-// @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (_mapSelectDelegate == nil) {
         return;
@@ -440,7 +424,6 @@ bool isIndexInRange12(unsigned int index) {
 #pragma mark - DownloadMain delegate
 
 // @ 0xc00bc — event-info refreshed: rebuild the banner header and reload.
-// @complete
 - (void)downloadMainFinished:(NSNumber *)success {
     [self updateEventInfo];
     [self.tableView reloadData];
@@ -449,7 +432,6 @@ bool isIndexInRange12(unsigned int index) {
 #pragma mark - Navigation
 
 // @ 0xc00fc — back button: clear any pending treasure selection, then close.
-// @complete
 - (void)backButtonFunc {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     tmp.subMapId = -1;
@@ -461,7 +443,6 @@ bool isIndexInRange12(unsigned int index) {
 #pragma mark - Event banner
 
 // @ 0xc0190 — rebuild the active-event id list and the table-header banner.
-// @complete
 - (void)updateEventInfo {
     _eventIds = [NSMutableArray array];
     for (NSNumber *eventId in [[DownloadMain getInstance] treasureEventIdArray]) {

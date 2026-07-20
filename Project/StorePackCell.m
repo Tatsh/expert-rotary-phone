@@ -16,7 +16,6 @@
 
 // @ 0x6ed4c — disclosure cell with a shadowed jacket, name/price/purchased
 // labels (font auto-shrinks to fit), and new / arcade / chara marker icons.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -89,7 +88,6 @@
 // purchased state. Purchased → show the "purchased" label and hide the
 // chara-ticket & arcade markers; not purchased → hide it, show the chara-ticket
 // marker, and show the arcade marker only when the pack has arcade content.
-// @complete
 - (void)loadPackInfo:(StorePackInfo *)packInfo {
     _labelName.text = [packInfo packName];
     _labelPrice.text = [packInfo priceString];
@@ -109,19 +107,16 @@
 }
 
 // @ 0x6f7b4 — swap the row's background image.
-// @complete
 - (void)setBgImage:(UIImage *)image {
     [_bgView setImage:image];
 }
 
 // @ 0x6f5a8 — purchased iff the "purchased" label is visible.
-// @complete
 - (BOOL)isPurchased {
     return !_labelPurchased.hidden;
 }
 
 // @ 0x6f5d8 — toggle the "purchased" label's visibility.
-// @complete
 - (void)setIsPurchased:(BOOL)isPurchased {
     _labelPurchased.hidden = !isPurchased;
 }

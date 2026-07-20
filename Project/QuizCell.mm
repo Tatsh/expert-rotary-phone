@@ -18,7 +18,6 @@
 }
 
 // @ 0xd9bac — plain non-selectable cell.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -31,7 +30,6 @@
 
 // @ 0xd9c20 — rebuild the row: answer-base background + answer label + number
 // badge.
-// @complete
 - (void)setData:(NSString *)text
        answerId:(int)answerId
         rightId:(int)rightId

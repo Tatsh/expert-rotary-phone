@@ -90,7 +90,6 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x811c8 -- grouped-table styling. iPhone tiles the "back_bg_st" panel
 // behind the table; iPad goes transparent with no separators (cells draw their
 // own frames).
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self != nil) {
@@ -110,7 +109,6 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x8131c -- commit every setting and tear down the two loaded SEs.
 // (Slider/array releases and the leftover retainCount NSLog debug traces are
 // ARC-omitted -- ARC forbids -retainCount and manages the object ivars.)
-// @complete
 - (void)dealloc {
     [UserSettingData saveBgmVolume:_bgmSlider.value];
     [UserSettingData saveSeVolume:SoundVolumeToShort(_seSlider.value)];
@@ -127,7 +125,6 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x81564 -- read the persisted touch-sound state, build the unlocked-kinds
 // list, preload the selected touch SE + the "decide" SE, and install the back
 // button.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -178,7 +175,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x8191c / 0x81948 / 0x81974 / 0x819a0 / 0x819cc / 0x819f8 -- plain super
 // forwards.
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -199,7 +195,6 @@ static inline float SoundShortToVolume(short v) {
 }
 
 // @ 0x81a24 -- portrait only (UIInterfaceOrientationPortrait == 1).
-// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)orientation {
     return orientation == UIInterfaceOrientationPortrait;
 }
@@ -208,7 +203,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x81a30 -- three volume sections, plus the touch-sound picker section only
 // when the player owns two or more unlocked touch sounds.
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return (_touchSoundArray.count >= 2) ? SoundSettingSectionCount :
                                            SoundSettingSectionTouchPicker;
@@ -216,7 +210,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x81a60 -- one row for each volume section; the picker section has one row
 // per unlocked touch-sound kind.
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (section < SoundSettingSectionTouchPicker) {
         return 1;
@@ -229,7 +222,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x81a8c -- volume-slider cells (sections 0/1/2) are built once, on first
 // creation; picker cells (section 3) are re-decorated on every layout pass.
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *cellId =
@@ -385,13 +377,11 @@ static inline float SoundShortToVolume(short v) {
 }
 
 // @ 0x82780 -- header text comes from viewForHeaderInSection: instead.
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0x82784 -- a transparent header carrying the section title in the app font.
-// @complete
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     // Header container: x = 5, w = 320, h = 32.
     UIView *header =
@@ -429,14 +419,12 @@ static inline float SoundShortToVolume(short v) {
 }
 
 // @ 0x8292c -- constant 32pt headers.
-// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return 32.0f; // 0x42000000
 }
 
 // @ 0x82934 -- only the touch-sound picker rows respond: switch the selected
 // kind (reloading its SE), then preview it at the current touch-sound volume.
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     AudioManager *audio = [AudioManager sharedManager];
     if (indexPath.section == SoundSettingSectionTouchPicker) {
@@ -504,7 +492,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x82af4 -- live-apply the BGM volume (with and without fade); iPad persists
 // it.
-// @complete
 - (void)bgmSliderValChanged:(id)sender {
     float v = _bgmSlider.value;
     [[AudioManager sharedManager] setBgmVolume:v];
@@ -516,7 +503,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x82bbc -- apply the SE group volume, preview it when non-zero; iPad
 // persists it.
-// @complete
 - (void)seSliderValChanged:(id)sender {
     short vol = SoundVolumeToShort(_seSlider.value);
     [[AudioManager sharedManager] setSeVolume:vol groupId:1];
@@ -532,7 +518,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x82cc4 -- preview the touch SE when the volume is non-zero; iPad persists
 // it.
-// @complete
 - (void)touchSoundSliderValChanged:(id)sender {
     short vol = SoundVolumeToShort(_touchSoundSlider.value);
     if (vol > 0) {
@@ -547,7 +532,6 @@ static inline float SoundShortToVolume(short v) {
 
 // @ 0x82d9c -- kind 0 is always owned; the rest are gated by the unlock
 // bitmask.
-// @complete
 - (BOOL)isHaveTouchSound:(int)soundNo {
     if (soundNo == 0) {
         return YES;
@@ -556,7 +540,6 @@ static inline float SoundShortToVolume(short v) {
 }
 
 // @ 0x82dc0 -- play the cancel SE, restore the settings nav bar, and pop self.
-// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
     [self.navigationController.navigationBar

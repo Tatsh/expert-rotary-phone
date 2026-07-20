@@ -34,7 +34,6 @@ static NSString *const kHeaderFont = @"DFSoGei-W5-WIN-RKSJ-H";
 // 0x5bfe6-0x5c052, the CGContextDrawImage @ 0x5c0f6, the flip transform table
 // load @ 0x5c134 / re-draw @ 0x5c170, and the imageWithCGImage:scale: /
 // imageWithCGImage: return @ 0x5c1fc / 0x5c216).
-// @complete
 static UIImage *StoreMakeReflection(UIImage *image, unsigned reflectionHeight) {
     if (image == nil || reflectionHeight == 0) {
         return nil;
@@ -67,25 +66,21 @@ static UIImage *StoreMakeReflection(UIImage *image, unsigned reflectionHeight) {
 }
 
 // @ 0x74564 — the buy button (the controller titles it + wires its tap).
-// @complete
 - (UIButton *)buttonPurchase {
     return m_ButtonPurchase;
 }
 
 // @ 0x74544 — the pack name label.
-// @complete
 - (UILabel *)labelName {
     return m_LabelName;
 }
 
 // @ 0x74554 — the pack description label.
-// @complete
 - (UILabel *)labelComment {
     return m_LabelComment;
 }
 
 // @ 0x73a0c — build the header subviews.
-// @complete
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self == nil) {
@@ -176,7 +171,6 @@ static UIImage *StoreMakeReflection(UIImage *image, unsigned reflectionHeight) {
 
 // @ 0x740d4 — fill the header from the pack and self-size the name/comment
 // labels + the header.
-// @complete
 - (void)loadPackInfo:(StorePackInfo *)packInfo {
     // Name: grow the label to fit up to 214x50, keep its origin.
     NSString *name = [packInfo packName];
@@ -243,7 +237,6 @@ static UIImage *StoreMakeReflection(UIImage *image, unsigned reflectionHeight) {
 // the reflection height as (unsigned)(image.size.height * 0.2) (literal
 // 0x3e4ccccd @ 0x74478, vcvt.u32.f32), builds the flipped reflection via
 // FUN_0005bf5c, and installs it on m_ReflectionArtworkView.
-// @complete
 - (void)setArtwork:(UIImage *)image {
     if (image == nil) {
         return;

@@ -24,7 +24,6 @@ static AepLyrCtrl *s_layerListHead = nullptr;
 // byte-verified from the updateAndDrawAepLayers (0x2c924) disassembly; see
 // AepLyrCtrl.h. The whole struct is reached through its named members now (the
 // file-static lc* offset helpers are gone).
-// @complete
 AepLyrCtrl::AepLyrCtrl()
     : m_prev(nullptr), m_next(nullptr), m_group(-1), m_owner(nullptr), m_order(0), m_originX(0),
       m_originY(0), m_posX(100), m_posY(100), m_rotation(0), m_pad2a(0), m_anchorX(0), m_anchorY(0),
@@ -33,7 +32,6 @@ AepLyrCtrl::AepLyrCtrl()
       m_finished(false), m_pad5d{0, 0, 0} {
 }
 
-// @complete
 AepLyrCtrl::~AepLyrCtrl() {
     if (m_prev) {
         m_prev->m_next = m_next;
@@ -50,7 +48,6 @@ AepLyrCtrl::~AepLyrCtrl() {
 // active list without destroying it (the owner deletes it afterward). Standard
 // doubly-linked removal: patch the neighbours, and if this was the head (m_prev
 // == null) advance it.
-// @complete
 void AepLyrCtrl::unlink() {
     if (m_next) {
         m_next->m_prev = m_prev;
@@ -63,7 +60,6 @@ void AepLyrCtrl::unlink() {
 }
 
 // Base layer draw: overridden by concrete sprite subclasses. vtable @ 0x2c82c.
-// @complete
 void AepLyrCtrl::draw() {
 }
 
@@ -72,7 +68,6 @@ void AepLyrCtrl::draw() {
 // form takes two extra args: `owner` stored at +0x10 and `order` (the
 // ordering-priority word threaded into drawLayer as `priority`) stored raw into the
 // +0x14 slot.
-// @complete
 void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
     assert(group >= 0); // AepLyrCtrl.mm:0x42
     assert(name != nullptr);
@@ -112,14 +107,12 @@ void AepLyrCtrl::init(int group, const char *name, void *owner, int order) {
 }
 
 // Convenience 2-arg form used by scenes that pass neither owner nor order.
-// @complete
 void AepLyrCtrl::init(int group, const char *name) {
     init(group, name, nullptr, 0);
 }
 
 // Ghidra: AepLyrCtrl_play (FUN_0002caf8) — enter play state. A fully-faded
 // layer (alpha <= 0) jumps to its last frame; otherwise it restarts at frame 0.
-// @complete
 void AepLyrCtrl::play() {
     m_state = kAnimLoop;
     if (m_playSpeed <= 0.0f) {
@@ -134,7 +127,6 @@ void AepLyrCtrl::play() {
 // last frame, a forward rate to frame 0. Unlike play() (FUN_0002caf8, state 2 =
 // loop) this holds at the end (state 4) so isAnimating() eventually returns
 // false.
-// @complete
 void AepLyrCtrl::playOnce() {
     m_state = kAnimOnceHold;
     if (m_playSpeed == 0.0f) {
@@ -151,7 +143,6 @@ void AepLyrCtrl::playOnce() {
 // (3). Only when `keepVisible == 1` does it seek the play head (to the last
 // frame for a reverse rate, otherwise to frame 0); any other value leaves the
 // play head where it is.
-// @complete
 void AepLyrCtrl::stop(int keepVisible) {
     m_state = kAnimOnceIdle;
     if (keepVisible != 1) {
@@ -166,7 +157,6 @@ void AepLyrCtrl::stop(int keepVisible) {
 
 // Ghidra: aepLyrCtrlReset (FUN_0002cb5c) — clear the play state (+0x58 = 0),
 // stopping the layer's animation without unlinking it.
-// @complete
 void AepLyrCtrl::reset() {
     m_state = kAnimIdle;
 }
@@ -176,7 +166,6 @@ void AepLyrCtrl::reset() {
 // +0x40 is compared against its travel: a reverse rate (+0x44 <= 0) animates
 // while the head is > 0, a forward rate while the head is < the layer length
 // (+0x3c).
-// @complete
 bool AepLyrCtrl::isAnimating() const {
     if (m_state == kAnimIdle || m_state == kAnimHeld) { // idle (0) or held (4)
         return false;
@@ -194,7 +183,6 @@ bool AepLyrCtrl::isAnimating() const {
 // frame by its signed rate (+0x44) and apply the per-play-mode end handling.
 // The drawLayer argument threading and the state machine below are
 // byte-verified from the disassembly at 0x2c958..0x2ca82.
-// @complete
 void AepLyrCtrl::updateAndDrawAepLayers(int drawOnly) {
     AepManager &mgr = AepManager::shared(); // Ghidra: AepManager_shared (FUN_0000f1ec)
 

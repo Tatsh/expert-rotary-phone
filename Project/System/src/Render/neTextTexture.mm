@@ -48,7 +48,6 @@ struct neGlyph {
 };
 
 // Ghidra: FUN_00017998.
-// @complete
 neTextTextureMgr *neGetTextTextureMgr(void) {
     return g_pTextTextureMgr;
 }
@@ -78,7 +77,6 @@ namespace neEngine {
 // store actually reaches the static the whole text path reads through
 // neGetTextTextureMgr; a stub in another unit would leave the manager null and
 // every neDrawText would dereference it.
-// @complete
 void bootstrapC(int fixedShift) {
     if (g_pTextTextureMgr != nullptr) {
         return;
@@ -93,7 +91,6 @@ void bootstrapC(int fixedShift) {
 } // namespace neEngine
 
 // Ghidra: FUN_00017a84 — UTF-8 lead-byte length classifier.
-// @complete
 int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
     unsigned c = static_cast<unsigned char>(*s);
     if ((c & 0x80) == 0) {
@@ -122,7 +119,6 @@ int utf8CharLen(neTextTextureMgr * /*mgr*/, const char *s) {
 
 // Ghidra: FUN_000180a4 — release the atlas's ne::C_TEXTURE reference and free its
 // pixels (the unique_ptr buffer releases automatically).
-// @complete
 neTextTexture::~neTextTexture() {
     if (texture != nullptr) {
         neTextureRelease(texture);
@@ -130,7 +126,6 @@ neTextTexture::~neTextTexture() {
 }
 
 // Ghidra: FUN_000179a8 — free the whole glyph cache and destroy every atlas.
-// @complete
 neTextTextureMgr::~neTextTextureMgr() {
     // Glyph cache: singly-linked (data at +0x00, next at +0x08).
     struct GlyphNode {
@@ -165,7 +160,6 @@ neTextTextureMgr::~neTextTextureMgr() {
 // Upload the atlas as GL_RGBA (format 1) instead and replicate the LA behaviour by
 // writing the coverage into all four channels; this is a modern-iOS correctness
 // fix, not an ENABLE_PATCHES change.
-// @complete
 void neTextTextureMgr::createNewTextTexture() {
     neTextTexture *atlas = new neTextTexture();
     // The binary always used a 256x256 atlas (it shipped scaleShift == 0). The
@@ -202,7 +196,6 @@ struct neGlyphVertex {
 // @ 0x17ad4
 // Ghidra: FUN_00017ad4 — linear search of the glyph cache for a record matching
 // the first UTF-8 char of `utf8` at `pointSize`; returns null when not cached.
-// @complete
 neGlyph *neTextTextureMgr::findCachedGlyph(const char *utf8, int pointSize) {
     size_t len = utf8CharLen(this, utf8);
     for (neGlyph *g = static_cast<neGlyph *>(glyphList); g != nullptr; g = g->next) {
@@ -216,7 +209,6 @@ neGlyph *neTextTextureMgr::findCachedGlyph(const char *utf8, int pointSize) {
 // @ 0x17b10
 // Ghidra: FUN_00017b10 — find the atlas with index `atlasId` in the manager's
 // list.
-// @complete
 neTextTexture *neTextTextureMgr::findTextTextureById(int atlasId) {
     for (neTextTexture *a = atlases; a != nullptr; a = a->next) {
         if (a->index == atlasId) {
@@ -232,7 +224,6 @@ neTextTexture *neTextTextureMgr::findTextTextureById(int atlasId) {
 // when full. Writes the cell origin to *outX/*outY. Returns false only when the
 // glyph is larger than an atlas (in which case *outX/*outY are left as the
 // caller set them).
-// @complete
 bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
     int retries = 0;
     for (;;) {
@@ -288,7 +279,6 @@ bool neTextTextureMgr::allocGlyphAtlasSlot(int w, int h, int *outX, int *outY) {
 // alpha). Fills the glyph record's atlas placement. (ARC: the NSString and
 // CGContexts are managed here; the CF color space / bitmap context are
 // CoreFoundation and released explicitly.)
-// @complete
 int neTextTextureMgr::renderGlyphToAtlas(const char *utf8, UILabel *label, neGlyph *glyph) {
     NSString *str = [[NSString alloc] initWithUTF8String:utf8];
     UIFont *font = [label font];
@@ -463,7 +453,6 @@ neTextTextureMgr::createTextGlyphEntry(const char *utf8, const char *fontName, i
 }
 
 // Ghidra: FUN_0001551c — measure, lay out and batch-draw a string.
-// @complete
 void neDrawText(const char *text,
                 const char *font,
                 int size,

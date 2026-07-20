@@ -49,11 +49,9 @@ PlayTask::PlayTask() = default;
 // (caSourceNode_dtor then operator delete). PlayTask's own destructor only
 // chains to the ne::C_TASK base (the scene/notes are torn down through
 // PlayTaskGotoResult / the scheduler), so there is no per-member teardown here.
-// @complete
 PlayTask::~PlayTask() = default;
 
 // @ 0x2fed8 — playTaskResetState. Reset the play scene for a fresh attempt.
-// @complete
 void PlayTask::resetState() {
     NoteMng::shared(); // ensure the note manager singleton exists
     reloadChart(1);    // FUN_0002fed8 calls playTaskLoadChart(this, 1)
@@ -97,7 +95,6 @@ void PlayTask::resetState() {
 // == 0) restart the BGM decode on a background queue, parse the chosen sheet
 // into NoteMng, and load the per-tap hit SE. `restart` != 0 reparses the chart
 // only (the mid-play reset path calls reloadChart(1)), skipping the audio work.
-// @complete
 void PlayTask::reloadChart(int restart) {
     AudioManager *audio = [AudioManager sharedManager];
     NoteMng &nm = NoteMng::shared();
@@ -155,7 +152,6 @@ void PlayTask::reloadChart(int restart) {
 
 // @ 0x312cc — updateGaugeValue. Nudge the life gauge by the per-mode delta and
 // clamp it.
-// @complete
 void PlayTask::updateGauge(int mode) {
     int16_t &gauge = m_gaugeValue;
     const float *delta = nullptr;
@@ -189,7 +185,6 @@ void PlayTask::updateGauge(int mode) {
 // +0x9e7 m_optOldHardware, +0x9ca m_isPadDisplay gate the HUD tiers; the layer
 // ids/frame counts live in the +0x154/+0x168 (m_scoreBpm*) and +0xe4/+0x11c
 // (m_effectState*) tables.
-// @complete
 void PlayTask::DrawHud() {
     NoteMng &nm = NoteMng::shared();
     AepManager &aep = AepManager::shared();
@@ -300,7 +295,6 @@ void PlayTask::DrawHud() {
 }
 
 // Ghidra: PlayTask_update (FUN_0002dc14).
-// @complete
 void PlayTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];

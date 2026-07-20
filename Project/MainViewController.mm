@@ -155,21 +155,18 @@ static void MainDismissContainerVC(UIViewController *child) {
 #pragma mark - Loop control
 
 // @ 0xbeb0
-// @complete
 - (void)StartLoop {
     m_IsLoop = YES;
     [self CreateTimer];
 }
 
 // @ 0xbef0
-// @complete
 - (void)PauseLoop {
     m_IsPause = YES;
     [self RemoveTimer];
 }
 
 // @ 0xbf10
-// @complete
 - (void)ResumeLoop {
     m_IsPause = NO;
     [self CreateTimer];
@@ -178,7 +175,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // @ 0xc054 — the binary inlines the -CreateTimer body here (same guards:
 // !m_IsPause && m_IsLoop && m_DisplayLink == nil); calling -CreateTimer is
 // behaviourally identical.
-// @complete
 - (void)SetLoopInterval:(int)interval {
     m_LoopInterval = interval;
     if (!m_IsPause && m_IsLoop && m_DisplayLink == nil) {
@@ -187,7 +183,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xbf30 — (re)create the CADisplayLink bound to -mainLoop.
-// @complete
 - (void)CreateTimer {
     if (m_IsPause || !m_IsLoop) {
         return;
@@ -206,7 +201,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xc024
-// @complete
 - (void)RemoveTimer {
     if (m_DisplayLink == nil) {
         return;
@@ -216,12 +210,10 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xf148
-// @complete
 - (BOOL)isPause {
     return m_IsPause;
 }
 // @ 0xf160
-// @complete
 - (BOOL)isLoop {
     return m_IsLoop;
 }
@@ -232,7 +224,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // pause the render loop. (The pattern every Goto* follows: alloc/init the child
 // VC, add its view, run its open animation, PauseLoop; the *EndCallBack
 // reverses it.)
-// @complete
 - (void)GotoAcceptPolicy {
     _acceptPolicyCtrl = [[AcceptPolicyViewController alloc] init];
     [self.view addSubview:_acceptPolicyCtrl.view];
@@ -243,7 +234,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // @ 0xc160 — the settings screen. Phone: SettingTableViewController hosted in a
 // nav controller (with a custom navbar image); iPad:
 // SettingTableSplitViewController.
-// @complete
 - (void)GotoSetting {
     if (!neSceneManager::isPadDisplay()) {
         SettingTableViewController *content = [SettingTableViewController alloc];
@@ -264,7 +254,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xc7d8 — the sugoroku map-select screen (nav controller / split view per
 // device).
-// @complete
 - (void)GotoMapSelect {
     if (!neSceneManager::isPadDisplay()) {
         MapSelectViewController *content = [MapSelectViewController alloc];
@@ -285,7 +274,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xcdc8 — the friend-management top screen (nav controller / split view per
 // device).
-// @complete
 - (void)GotoFriendManage {
     // Modern iOS forbids adding a CONTAINER view controller's view (a navigation or
     // split controller) to a hierarchy without parenting it: as the view enters the
@@ -309,7 +297,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xd560 — the initial "default data" download screen; built once, seeded
 // with DownloadMain's file list.
-// @complete
 - (void)GotoDefaultDownload {
     if (_defaultDlViewController != nil) {
         return;
@@ -322,7 +309,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xe53c — the conversion-passcode entry screen; built once.
-// @complete
 - (void)GotoInConversionPass {
     if (_inputConvPassViewCtrl != nil) {
         return;
@@ -345,7 +331,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 #pragma mark - Navigation teardown
 
 // @ 0xdae4
-// @complete
 - (void)AcceptPolicyEndCallBack {
     if (_acceptPolicyCtrl != nil) {
         _acceptPolicyCtrl = nil;
@@ -354,7 +339,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xc300 — also clears the "settings visible" flag.
-// @complete
 - (void)SettingEndCallBack {
     if (_settingViewCtrl != nil) {
         MainDismissContainerVC(_settingViewCtrl);
@@ -369,7 +353,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xc978
-// @complete
 - (void)MapSelectEndCallBack {
     if (_mapSelectViewCtrl != nil) {
         MainDismissContainerVC(_mapSelectViewCtrl);
@@ -383,7 +366,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xcf0c
-// @complete
 - (void)FriendManageEndCallBack {
     // Unparent the child controller added in GotoFriendManage (its view is already
     // pulled by endCloseAnimation); nil-ing the ivar alone would leak it via the
@@ -400,7 +382,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd640 — latches whether the download failed (read later by TitleTask).
-// @complete
 - (void)DefaultDownloadEndCallBack {
     _isDefaultDlFailed = [_defaultDlViewController isFailed] ? YES : NO;
     _defaultDlViewController = nil;
@@ -408,7 +389,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xe67c — re-enables touch on the GL view when the passcode screen closes.
-// @complete
 - (void)InConversionPassEndCallBack {
     if (_inputConvPassViewCtrl != nil) {
         _inputConvPassViewCtrl = nil;
@@ -425,7 +405,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // header.
 
 // @ 0xd074 — the pop'n link (data-link) top screen (nav / split per device).
-// @complete
 - (void)GotoPopnLink {
     if (!neSceneManager::isPadDisplay()) {
         PopnLinkTopViewController *content = [PopnLinkTopViewController alloc];
@@ -442,7 +421,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd248 — the player-name entry screen (nav controller / plain per device).
-// @complete
 - (void)GotoInPlayerName {
     if (!neSceneManager::isPadDisplay()) {
         InputNameViewCtrl *content = [InputNameViewCtrl alloc];
@@ -460,7 +438,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xd7f4 — the invite-code screen; the phone/iPad variant is a distinct
 // class.
-// @complete
 - (void)GotoInviteCode {
     Class cls = !neSceneManager::isPadDisplay() ? [InviteTopViewController class] :
                                                   [InviteTopViewControllerPad class];
@@ -472,7 +449,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd930 — the arcade song-search screen.
-// @complete
 - (void)GotoArcadeSearch {
     SearchView *content = [SearchView alloc];
     _searchNaviCtrl = [content initAtNavigationController];
@@ -483,7 +459,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xcf9c — the friend-score screen for one music id. Shown over the friend
 // nav (shares _friendMngNaviCtrl) and does NOT pause the loop.
-// @complete
 - (void)GotoFriendScore:(unsigned int)musicId {
     FriendScoreMainView *content = [FriendScoreMainView alloc];
     _friendMngNaviCtrl = [content initAtNavigationControllerWithMusicId:musicId];
@@ -492,7 +467,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xe830 — open the App Store review page for this app.
-// @complete
 - (void)GotoReviewPage {
     NSURL *url = [NSURL URLWithString:@"itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/"
                                       @"viewContentsUserReviews?id=626574779&onlyLatestVersion="
@@ -506,7 +480,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd1b8
-// @complete
 - (void)PopnLinkEndCallBack {
     if (_popnLinkViewCtrl != nil) {
         MainDismissContainerVC(_popnLinkViewCtrl);
@@ -520,7 +493,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd370
-// @complete
 - (void)InPlayerNameEndCallBack {
     if (_inputNameViewCtrl != nil) {
         _inputNameViewCtrl = nil;
@@ -533,7 +505,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd8d8
-// @complete
 - (void)InviteCodeEndCallBack {
     if (_inviteNaviCtrl != nil) {
         MainDismissContainerVC(_inviteNaviCtrl);
@@ -543,7 +514,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd9e8
-// @complete
 - (void)ArcadeSearchEndCallBack {
     if (_searchNaviCtrl != nil) {
         MainDismissContainerVC(_searchNaviCtrl);
@@ -554,7 +524,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xd044 — mirror of GotoFriendScore: releases the shared friend nav, no
 // ResumeLoop.
-// @complete
 - (void)FriendScoreEndCallBack {
     if (_friendMngNaviCtrl != nil) {
         MainDismissContainerVC(_friendMngNaviCtrl);
@@ -568,7 +537,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // `border` differ per screen. Ghidra: the inlined block in the iPad branch of
 // each Goto* (DAT_0000c750 = -480, then -10; grey 0.953 = 0x3f73f3f4; width 341
 // = 0x43aa8000; height 480 = 0x43f00000; borderWidth 3; cornerRadius 10).
-// @complete
 - (void)styleIPadPanel:(UINavigationController *)nav leftX:(CGFloat)leftX border:(UIColor *)border {
     _coverView.hidden = NO;
     CGFloat y = (neEngine::aepContentHeight() - 128) * 0.5f - 490.0f;
@@ -580,7 +548,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xc374 — the friend/recommend screen (param = context); a boxed iPad panel.
-// @complete
 - (void)GotoRecommend:(void *)context {
     _recommendViewCtrl = [[RecommendViewController alloc] init];
     [(RecommendViewController *)_recommendViewCtrl initAtNavigationController:(MainTask *)context];
@@ -606,7 +573,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xc9dc — the music sort-select screen (param = context); a boxed iPad
 // panel.
-// @complete
 - (void)GotoSortSelect:(void *)context {
     _sortSelectViewCtrl = [[SortSelectViewController alloc] init];
     [(SortSelectViewController *)_sortSelectViewCtrl
@@ -631,7 +597,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xe170 — the over-score (friend score log) screen (param = context); iPad
 // panel.
-// @complete
 - (void)GotoOverScoreLog:(void *)context {
     _overScoreLogViewCtrl = [[OverScoreLogViewController alloc] init];
     [(OverScoreLogViewController *)_overScoreLogViewCtrl
@@ -655,7 +620,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xdd8c — the present box (gifts) screen; iPad panel styling.
-// @complete
 - (void)GotoPresentBox {
     _presentBoxViewCtrl = [[PresentBoxViewController alloc] init];
     [(PresentBoxViewController *)_presentBoxViewCtrl initAtNavigationController];
@@ -678,7 +642,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xd3d4 — the in-app store; built once, uses its own showAnimation (no
 // PauseLoop), and records the view timestamp.
-// @complete
 - (void)GotoStoreButton {
     if (_storeViewController != nil) {
         return;
@@ -692,7 +655,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xdb24 — the arcade (AC) viewer; phone nav / iPad split (guarded).
-// @complete
 - (void)GotoAcViewer {
     _acMusicSelViewing = YES;
     if (!neSceneManager::isPadDisplay()) {
@@ -713,7 +675,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xe890 — open the Mail composer via a mailto: URL carrying `body`.
-// @complete
 - (void)GotoMailWithText:(NSString *)body {
     NSString *urlStr = [NSString stringWithFormat:@"mailto:?body=%@", body];
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
@@ -726,7 +687,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xc754
-// @complete
 - (void)RecommendEndCallBack {
     _coverView.hidden = YES;
     if (_recommendViewCtrl != nil) {
@@ -740,7 +700,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xcd44
-// @complete
 - (void)SortSelectEndCallBack {
     _coverView.hidden = YES;
     if (_sortSelectViewCtrl != nil) {
@@ -754,7 +713,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xe4b8
-// @complete
 - (void)OverScoreLogEndCallBack {
     _coverView.hidden = YES;
     if (_overScoreLogViewCtrl != nil) {
@@ -768,7 +726,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xe0d4
-// @complete
 - (void)PresentBoxEndCallBack {
     _coverView.hidden = YES;
     if (_presentBoxViewCtrl != nil) {
@@ -782,7 +739,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd518 — the store closes without resuming the loop (it never paused it).
-// @complete
 - (void)StoreEndCallBack {
     if (_storeViewController != nil) {
         _storeViewController = nil;
@@ -790,7 +746,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xdcd4 — on iPad also tears down the arcade play task before resuming.
-// @complete
 - (void)AcViewerEndCallBack {
     if (_acViewerViewCtrl != nil) {
         MainDismissContainerVC(_acViewerViewCtrl);
@@ -812,7 +767,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 #pragma mark - Frame
 
 // @ 0xbe80 — one display frame.
-// @complete
 - (void)mainLoop {
     [self task];
     [self draw];
@@ -823,7 +777,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // (vcvt.s32.f32, round toward zero) and hands it to the scheduler, then
 // tail-calls the neGraphics touch-pool maintenance (FUN_000126b8) on the shared
 // engine singleton.
-// @complete
 - (void)task {
     float dt = m_taskTime.elapsedMs();
     m_taskTime.reset();
@@ -832,7 +785,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xbd30 — render the scene, frame-limited by the render timer.
-// @complete
 - (void)draw {
     float dt = m_renderTime.elapsedMs();
     if (dt < kRenderMinInterval) {
@@ -875,7 +827,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // wraps them in a CGImage, then redraws (copy blend) into a UIKit image context
 // at the view's content scale so the returned image is upright at point size.
 // Ghidra-faithful.
-// @complete
 + (UIImage *)capture:(neGLView *)glView {
     GLint width = 0, height = 0;
     glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &width);
@@ -922,7 +873,7 @@ static void MainDismissContainerVC(UIViewController *child) {
 // against the on-disk data path, seeds the scene manager with the UI scale,
 // then lays a hidden, clear cover button (with a tap recognizer) over the view
 // — the backdrop the iPad modal panels dim and dismiss-on-tap through.
-// @complete — matches the binary exactly EXCEPT for the deliberate
+// matches the binary exactly EXCEPT for the deliberate
 // assets-in-bundle rebuild deviation: the AepManager asset baseDir/dimensions
 // (see the note below) are pointed at the app bundle with fixed content extents
 // instead of the shipped download path and view.size*2 dimensions.
@@ -997,7 +948,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xb970 — cache the AepManager scene singleton after the base setup.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     m_AepManager = &AepManager::shared();
@@ -1006,7 +956,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // @ 0xb440 — real teardown only: stop the loop and detach the cover view. Under
 // ARC the object ivars (m_capturedImg, GL view, …) are released automatically
 // and there is no [super dealloc].
-// @complete
 - (void)dealloc {
     [self StopLoop];
     [_coverView removeFromSuperview];
@@ -1020,7 +969,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // viewDidDisappear: @ 0xba34 — super-only override, omitted.
 
 // @ 0xba60 — allow every orientation except upside-down portrait.
-// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown;
 }
@@ -1033,7 +981,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // into the scene manager. neGetCurrentRenderer / neCreateOrthoViewport /
 // neSetCurrentViewport / neReleaseRef are System-layer engine calls, kept as-is
 // (not reimplemented here).
-// @complete
 - (void)LayoutedGLView:(neGLView *)view {
     neGetCurrentRenderer();
     int w = [view GetFrontBufferWidth];
@@ -1055,27 +1002,23 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xc150 — the hosted GL view.
-// @complete
 - (neGLView *)GetGlView {
     return _glView;
 }
 
 // @ 0xbb98 — arm a one-shot frame capture; -draw performs it on the next
 // rendered frame.
-// @complete
 - (void)screenshot {
     m_flgCapture = YES;
 }
 
 // @ 0xbbac — return the stored screenshot image (nil until -draw services a
 // capture).
-// @complete
 - (UIImage *)getCapturedImage {
     return m_capturedImg;
 }
 
 // @ 0xbbbc — drop the stored screenshot (ARC releases on nil-assign).
-// @complete
 - (void)releaseCapturedImage {
     if (m_capturedImg != nil) {
         m_capturedImg = nil;
@@ -1084,7 +1027,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xbed0 — stop the loop for good (title exit): clear the run flag then drop
 // the timer.
-// @complete
 - (void)StopLoop {
     m_IsLoop = NO;
     [self RemoveTimer];
@@ -1093,7 +1035,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 #pragma mark - Feature gates
 
 // @ 0xcf70 — the friend-manage screen is up (phone nav or iPad split).
-// @complete
 - (BOOL)IsFriendManageEnable {
     if (_friendMngViewCtrl != nil) {
         return YES;
@@ -1102,7 +1043,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd21c — the pop'n link screen is up (phone nav or iPad split).
-// @complete
 - (BOOL)IsPopnLinkEnable {
     if (_popnLinkViewCtrl != nil) {
         return YES;
@@ -1111,25 +1051,21 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd548 — the store screen is up.
-// @complete
 - (BOOL)IsStoreEnable {
     return _storeViewController != nil;
 }
 
 // @ 0xd918 — the invite-code screen is up.
-// @complete
 - (BOOL)IsInviteCodeEnable {
     return _inviteNaviCtrl != nil;
 }
 
 // @ 0xda28 — the arcade-search screen is up.
-// @complete
 - (BOOL)IsArcadeSearchEnable {
     return _searchNaviCtrl != nil;
 }
 
 // @ 0xe158 — the present-box screen is up.
-// @complete
 - (BOOL)IsPresentBoxEnable {
     return _presentBoxViewCtrl != nil;
 }
@@ -1138,7 +1074,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xd6a8 — raise the "communicating…" overlay (built once) and play its
 // fade-in.
-// @complete
 - (void)InsertCommunicating {
     if (_communicatingView == nil) {
         _communicatingView = [[CommunicatingView alloc] init];
@@ -1148,19 +1083,16 @@ static void MainDismissContainerVC(UIViewController *child) {
 }
 
 // @ 0xd764 — YES while the overlay is mid-fade.
-// @complete
 - (BOOL)IsCommunicatingAnimationing {
     return [_communicatingView isAnimationing];
 }
 
 // @ 0xd790 — YES while the overlay is present.
-// @complete
 - (BOOL)IsCommunicatingEnable {
     return _communicatingView != nil;
 }
 
 // @ 0xd7a8 — switch the overlay to its "communication failed" caption.
-// @complete
 - (void)CommunicatingFailed {
     [_communicatingView failed];
 }
@@ -1168,14 +1100,12 @@ static void MainDismissContainerVC(UIViewController *child) {
 // @ 0xd744 — begin removing the "communicating…" overlay: play its fade-out.
 // The overlay itself is dropped later in -CommunicatingEndCallBack when the
 // animation ends.
-// @complete
 - (void)DeleteCommunicating {
     [_communicatingView startCloseAnimation];
 }
 
 // @ 0xd7c8 — the overlay finished closing; drop it (ARC releases on
 // nil-assign).
-// @complete
 - (void)CommunicatingEndCallBack {
     _communicatingView = nil;
 }
@@ -1184,7 +1114,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xe704 — save a captured screenshot (stored under the app-support dir as
 // `fileName`) into the camera roll; completion routes to onCompleteCapture:….
-// @complete
 - (void)SaveToCameraRoll:(NSString *)fileName {
     _cameraRollSaving = YES;
     NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:fileName];
@@ -1197,7 +1126,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // @ 0xe7c0 — camera-roll save completion: stash the error (nil on success) and
 // clear the in-flight flag. (ARC drops the manual release/retain the binary
 // does here.)
-// @complete
 - (void)onCompleteCapture:(UIImage *)image
     didFinishSavingWithError:(NSError *)error
                  contextInfo:(void *)contextInfo {
@@ -1209,7 +1137,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xe810 — install the one-shot confirm callback fired by the alert
 // delegates.
-// @complete
 - (void)SetAlertViewCallback:(void (*)(void *))callback param:(void *)param {
     m_AlertViewCallback = callback;
     m_AlertViewCallbackParam = param;
@@ -1221,7 +1148,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // managed context) and show a completion alert. Tag 1 routes to the registered
 // confirm callback. (The button index is unused — the binary re-reads the alert
 // tag both times.)
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (alertView.tag == 0) {
         [UserSettingData initForConvert];
@@ -1246,7 +1172,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xeac8 — CustomAlertView delegate: any dismissal fires the registered
 // callback.
-// @complete
 - (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (m_AlertViewCallback != NULL) {
         m_AlertViewCallback(m_AlertViewCallbackParam);
@@ -1256,13 +1181,11 @@ static void MainDismissContainerVC(UIViewController *child) {
 #pragma mark - Reward app list
 
 // @ 0xeaec — reward app-list appeared: nothing to do.
-// @complete
 - (void)appListDidAppear {
 }
 
 // @ 0xeaf0 — reward app-list dismissed: play the cancel SE and clear the
 // "viewing" flag.
-// @complete
 - (void)appListDidDisappear {
     neEngine::playSystemSe(2);
     _rewardListViweing = NO;
@@ -1270,7 +1193,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xeb1c — reward app-list failed to load: show a "communication failed"
 // alert and clear the "viewing" flag.
-// @complete
 - (void)appListFailLoadWithError:(NSError *)error {
     CommonAlertView *alert =
         [[CommonAlertView alloc] initWithTitle:nil
@@ -1288,7 +1210,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // @ 0xeba8 — a tap on the dim cover behind an iPad modal panel: close whichever
 // boxed panel is open (present-box only when it isn't already animating),
 // playing the cancel SE.
-// @complete
 - (void)handleTapCoverView:(UITapGestureRecognizer *)gesture {
     if (_presentBoxViewCtrl != nil && ![_presentBoxViewCtrl isAnimationing]) {
         neEngine::playSystemSe(2);
@@ -1310,7 +1231,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 
 // @ 0xeca4 — snap an opaque black scrim over the whole view (built once), on
 // top.
-// @complete
 - (void)InsertBlackBoard {
     if (_blackBoardView == nil) {
         _blackBoardView = [[UIView alloc] initWithFrame:self.view.frame];
@@ -1325,7 +1245,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // needed. (Ghidra: duration DAT_0000ef98 = 0.3; options 2 =
 // UIViewAnimationOptionAllowUserInteraction; the completion block @ 0xefd8 is a
 // bare `bx lr`, i.e. an empty completion reconstructed as nil.)
-// @complete
 - (void)FadeInBlackBoard {
     if (_blackBoardView == nil) {
         _blackBoardView = [[UIView alloc] initWithFrame:self.view.frame];
@@ -1348,7 +1267,6 @@ static void MainDismissContainerVC(UIViewController *child) {
 // block invoke @ 0xf0cc), i.e. an empty completion that neither hides nor
 // removes the scrim; that is behaviourally nil, so it is reconstructed as
 // completion:nil.
-// @complete
 - (void)FadeOutBlackBoard {
     if (_blackBoardView != nil) {
         [self.view bringSubviewToFront:_blackBoardView];

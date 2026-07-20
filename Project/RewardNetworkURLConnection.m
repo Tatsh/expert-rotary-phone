@@ -25,7 +25,6 @@
 @implementation RewardNetworkURLConnection
 
 // @ 0xff9d0
-// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -39,7 +38,6 @@
 }
 
 // @ 0xffa6c
-// @complete
 - (void)requestAsynchronousWithURL:(NSString *)url
                            request:(NSURLRequest *)request
                      finishedBlock:(void (^)(id response, id userInfo))finishedBlock
@@ -120,7 +118,6 @@
 }
 
 // @ 0xffd08 — watchdog fired: cancel and retry.
-// @complete
 - (void)connectionTimeout:(NSTimer *)timer {
 #if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
     [_task cancel];
@@ -136,7 +133,6 @@
 
 // @ 0xffd58 — HTTP 4xx/5xx are treated as failures (cancel + retry); any other
 // status resets the receive buffer and continues.
-// @complete
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
     NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
     if (statusCode >= 400 && statusCode <= 599) {
@@ -148,20 +144,17 @@
 }
 
 // @ 0xffe00
-// @complete
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     [self.receiveData appendData:data];
 }
 
 // @ 0xffe50 — post-process the body, then parse it as JSON and dispatch to the
 // finished / failed block.
-// @complete
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [self finishLoading];
 }
 
 // @ 0x1001cc — transport error: retry.
-// @complete
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     [self retryConnection];
 }
@@ -173,7 +166,6 @@
 // @ 0xffe50 — post-process the body, then parse it as JSON and dispatch to the
 // finished / failed block. Funnelled into by both the NSURLConnection finish
 // delegate (old SDK) and the NSURLSession completion handler (modern SDK).
-// @complete
 - (void)finishLoading {
     if (self.timer != nil) {
         [self.timer invalidate];
@@ -220,7 +212,6 @@
 
 // @ 0x1001dc — up to two retries with a back-off, then fail with a timeout
 // error.
-// @complete
 - (void)retryConnection {
     if (self.timer != nil) {
         [self.timer invalidate];

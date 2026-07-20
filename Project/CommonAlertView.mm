@@ -32,7 +32,6 @@
 
 // @ 0x4a308 — designated UIView initializer: chain to super and clear the
 // animation guard.
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self != nil) {
@@ -60,7 +59,6 @@
 // 257.0 x 84.0 (DAT_0004b46c/b470). The message / title / button / button-row
 // sub-frames the binary derives from runtime .frame/.size/.center calls are
 // reproduced as such below.
-// @complete
 - (instancetype)initWithTitle:(NSString *)title
                       message:(NSString *)message
                      delegate:(id<CommonAlertViewDelegate>)delegate
@@ -217,7 +215,6 @@
 }
 
 // @ 0x4b4cc
-// @complete
 - (void)show {
     _titleView.text = self.title;
     _messageView.text = self.message;
@@ -238,7 +235,6 @@
 }
 
 // @ 0x4bb9c
-// @complete
 - (BOOL)isVisible {
     return !self.isHidden;
 }
@@ -247,7 +243,6 @@
 
 // @ 0x4b970 — "other"/yes button: play the decide SE, then route through the
 // click handler.
-// @complete
 - (void)onYesButton {
     neEngine::playSystemSe(1); // Ghidra: NESceneManager_shared();
                                // SysSePlayIntoSlot(&g_pNeSceneManager, 1)
@@ -256,7 +251,6 @@
 
 // @ 0x4b9a4 — "cancel"/no button: play the cancel SE, then route through the
 // click handler.
-// @complete
 - (void)onNoButton {
     neEngine::playSystemSe(2); // Ghidra: NESceneManager_shared();
                                // SysSePlayIntoSlot(&g_pNeSceneManager, 2)
@@ -267,7 +261,6 @@
 // animation, then (once) notify the real delegate with the button index and
 // tear the alert down. Guarded by _isAnimationing so a second tap during the
 // close is ignored.
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (_isAnimationing) {
         return;
@@ -291,7 +284,6 @@
 
 // @ 0x4b718 — the "pop open" bounce: snap to 75%, overshoot to 125% over 0.2s,
 // then settle back to 100% over 0.2s. Guarded so it only runs once at a time.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;

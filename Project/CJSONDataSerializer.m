@@ -22,7 +22,6 @@ static NSData *g_pJsonFalseData = nil;
 // "true" (4) NSData constants (each behind its own nil check), so the order the
 // three globals are assigned does not matter; initWithBytes is a faithful stand-in
 // for the binary's initWithBytesNoCopy on the static literals.
-// @complete
 + (void)initialize {
     if (g_pJsonNullData == nil) {
         g_pJsonNullData = [[NSData alloc] initWithBytes:"null" length:4];
@@ -34,7 +33,6 @@ static NSData *g_pJsonFalseData = nil;
 // +[CJSONDataSerializer serializer]  @ 0x66dc8 — autoreleased convenience
 // instance.
 // Verified: `[[self alloc] init]` (autoreleased under ARC).
-// @complete
 + (CJSONDataSerializer *)serializer {
     return [[self alloc] init];
 }
@@ -46,7 +44,6 @@ static NSData *g_pJsonFalseData = nil;
 // initWithData:encoding:NSUTF8 + serializeString, CSerializedJSONData -> -data,
 // else raises "Cannot serialize data of type '%@'"; a null result then raises
 // "Could not serialize object '%@'".
-// @complete
 - (NSData *)serializeObject:(id)inObject {
     NSData *theResult = NULL;
     if ([inObject isKindOfClass:[NSNull class]]) {
@@ -78,7 +75,6 @@ static NSData *g_pJsonFalseData = nil;
 
 // @ 0x6704c
 // Verified: returns the cached g_pJsonNullData global directly.
-// @complete
 - (NSData *)serializeNull:(NSNull *)inNull {
     return g_pJsonNullData;
 }
@@ -87,7 +83,6 @@ static NSData *g_pJsonFalseData = nil;
 // Verified: CFNumberGetType == 7 (kCFNumberCharType) then intValue == 1 ->
 // g_pJsonTrueData, == 0 -> g_pJsonFalseData; otherwise stringValue
 // dataUsingEncoding:NSASCIIStringEncoding.
-// @complete
 - (NSData *)serializeNumber:(NSNumber *)inNumber {
     NSData *theResult = NULL;
     if (CFNumberGetType((CFNumberRef)inNumber) == kCFNumberCharType) {
@@ -107,7 +102,6 @@ static NSData *g_pJsonFalseData = nil;
 // Verified: mutableCopy, then the eight replaceOccurrencesOfString passes in this
 // exact order (\\, ", /, \b, \f, \n, \r, \t) each over range (0, length), then
 // stringWithFormat:@"\"%@\"" and dataUsingEncoding:NSUTF8StringEncoding.
-// @complete
 - (NSData *)serializeString:(NSString *)inString {
     NSMutableString *theString = [inString mutableCopy];
     [theString replaceOccurrencesOfString:@"\\"
@@ -149,7 +143,6 @@ static NSData *g_pJsonFalseData = nil;
 // @ 0x672cc
 // Verified: appendBytes:"[", enumerate objects serializing + appending each,
 // appendBytes:"," while the running index (from 1) is below count, appendBytes:"]".
-// @complete
 - (NSData *)serializeArray:(NSArray *)inArray {
     NSMutableData *theData = [NSMutableData data];
     [theData appendBytes:"[" length:1];
@@ -172,7 +165,6 @@ static NSData *g_pJsonFalseData = nil;
 // appendBytes:":", serialize the value, and append a comma (via
 // [@"," dataUsingEncoding:NSASCIIStringEncoding]) unless the key is the last
 // object; appendBytes:"}".
-// @complete
 - (NSData *)serializeDictionary:(NSDictionary *)inDictionary {
     NSMutableData *theData = [NSMutableData data];
     [theData appendBytes:"{" length:1];

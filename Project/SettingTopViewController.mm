@@ -56,7 +56,6 @@ static UIViewController *RootVC() {
 @synthesize settingTopDelegate = _settingTopDelegate; // getter @ 0x14b80 / setter @ 0x14b90
 
 // @ 0x13fe8 — backdrop + the four custom menu buttons.
-// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         if (!neSceneManager::isPadDisplay()) {
@@ -90,7 +89,6 @@ static UIViewController *RootVC() {
 
 // @ 0x14464 — build self, wrap it in a nav controller, add a back button +
 // settings nav-bar art.
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     // The binary calls -init only for its side effects and keeps the original
     // self; the result is intentionally discarded, so this is not
@@ -119,7 +117,6 @@ static UIViewController *RootVC() {
 #pragma mark - Modal open/close animation (shared lifecycle)
 
 // @ 0x14694 — fade the view + nav view in over 0.5s.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -137,13 +134,11 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x147c0
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0x147d8 — cancel SE, then fade out over 0.3s; also the back-button action.
-// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2); // cancel/back SE
     if (_isAnimationing) {
@@ -160,7 +155,6 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x148f8 — remove the nav view and hand control back to MainViewController.
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(SettingEndCallBack)];
@@ -171,7 +165,6 @@ static UIViewController *RootVC() {
 
 // @ 0x14964 — ゲーム: phone pushes SettingGameTableViewController; pad forwards
 // to the delegate.
-// @complete
 - (void)onGameButtonTouched:(id)sender {
     neEngine::playSystemSe(1); // decide/confirm SE
     if (!neSceneManager::isPadDisplay()) {
@@ -190,7 +183,6 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x14a90 — 遊び方: phone is a no-op; pad forwards to the delegate.
-// @complete
 - (void)onHowtoButtonTouched:(id)sender {
     neEngine::playSystemSe(1); // decide/confirm SE
     if (!neSceneManager::isPadDisplay()) {
@@ -200,7 +192,6 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x14ae0 — お問い合わせ: phone is a no-op; pad forwards to the delegate.
-// @complete
 - (void)onCustomerButtonTouched:(id)sender {
     neEngine::playSystemSe(1); // decide/confirm SE
     if (!neSceneManager::isPadDisplay()) {
@@ -210,7 +201,6 @@ static UIViewController *RootVC() {
 }
 
 // @ 0x14b30 — その他: phone is a no-op; pad forwards to the delegate.
-// @complete
 - (void)onOtherButtonTouched:(id)sender {
     neEngine::playSystemSe(1); // decide/confirm SE
     if (!neSceneManager::isPadDisplay()) {

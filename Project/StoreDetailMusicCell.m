@@ -32,7 +32,6 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 @synthesize labelName, labelArtist, labelLevels, artworkView, arcadeViewer, linkURL;
 
 // @ 0x7501c — set the iTunes link (hides the link button when there is none).
-// @complete
 - (void)setLink:(NSString *)url {
     linkURL = url ? [NSURL URLWithString:url] : nil;
     buttonLink.hidden = (linkURL == nil);
@@ -40,7 +39,6 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // @ 0x74fb0 — the iTunes-link button opens the stored URL. Ghidra selector
 // handleLink:.
-// @complete
 - (void)handleLink:(id)sender {
     if (linkURL != nil) {
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
@@ -52,7 +50,6 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 }
 
 // @ 0x75094 — reset the sample overlay: stop the spinner and hide the overlay.
-// @complete
 - (void)sampleStop {
     [indicator stopAnimating];
     sampleView.hidden = YES;
@@ -60,7 +57,6 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // @ 0x750dc — buffering the clip: start the spinner, hide the play glyph, show
 // the overlay.
-// @complete
 - (void)sampleDownloading {
     [indicator startAnimating];
     playingView.hidden = YES;
@@ -69,7 +65,6 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 // @ 0x7513c — the clip is playing: stop the spinner, show the play glyph +
 // overlay.
-// @complete
 - (void)samplePlaying {
     [indicator stopAnimating];
     playingView.hidden = NO;
@@ -77,7 +72,6 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 }
 
 // @ 0x74ffc — the stretchable even/odd row background. Ghidra: setBgImage:.
-// @complete
 - (void)setBgImage:(UIImage *)image {
     bgView.image = image;
 }
@@ -85,13 +79,11 @@ static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 // The fixed content height of a song cell (heightForRow adds padding).
 // @ 0x74574 — returns the immediate 0x42a00000 (movt r0,#0x42a0; softfp float
 // in r0).
-// @complete
 + (CGFloat)cellHeight {
     return 80.0f;
 }
 
 // @ 0x7457c — build the row's subviews inside the content view.
-// @complete
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self == nil) {

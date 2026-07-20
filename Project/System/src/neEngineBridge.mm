@@ -42,7 +42,6 @@ ne::C_TEXTURE *g_textureCacheList = nullptr;
 
 #pragma mark - neAppEventCenter (guarded singleton @ DAT_00187bb8)
 
-// @complete
 neAppEventCenter &neAppEventCenter::shared() {
     static neAppEventCenter instance; // Ghidra: NEAppEventCenter_shared (FUN_0000b150)
     return instance;
@@ -53,7 +52,6 @@ neAppEventCenter &neAppEventCenter::shared() {
 // login-context / AC-viewer globals; in the rebuild those live as separate
 // file-statics reset by their own clear methods, so begin() only zeroes the
 // result record and session dates it actually owns.
-// @complete
 void neAppEventCenter::begin() {
     m_result = PlayResult{};
     _startDate = nil;
@@ -62,14 +60,12 @@ void neAppEventCenter::begin() {
 }
 
 // Ghidra: FUN_00028c9c — a no-op in this build.
-// @complete
 void neAppEventCenter::flush() {
 }
 
 // @ 0x29274 — record the session start time (_startDate @ +0x20). The binary
 // released the previous NSDate and retained [NSDate date]; the ARC strong-ivar
 // store does both.
-// @complete
 void neAppEventCenter::setStartDate() {
     _startDate = [NSDate date];
 }
@@ -77,7 +73,6 @@ void neAppEventCenter::setStartDate() {
 // @ 0x292c0 — record the session end time (_endDate @ +0x24). The binary
 // released the previous NSDate and retained [NSDate date]; the ARC strong-ivar
 // store does both.
-// @complete
 void neAppEventCenter::setEndDate() {
     _endDate = [NSDate date];
 }
@@ -211,7 +206,6 @@ void neAppEventCenter::setGuestNoSaveMode(bool guest) {
 // `rec` is unused (the binary reads everything from `recDup`, the same object);
 // the null guard mirrors the binary (only the score/rank/playCnt out-params are
 // checked).
-// @complete
 void readScoreDataFields(ScoreData *rec,
                          int *outScore,
                          short *outRank,
@@ -261,7 +255,6 @@ void readScoreDataFields(ScoreData *rec,
 // @ 0x293c4 — fetch the ScoreData record for `musicId` and hand it to
 // readScoreDataFields. `center` is the app-event-center pointer the binary
 // passes as arg 0; it is vestigial (unused).
-// @complete
 void fetchScoreDataForMusic(void *center,
                             int *outScore,
                             short *outRank,
@@ -279,7 +272,6 @@ void fetchScoreDataForMusic(void *center,
 
 // @ 0x28ca0 — persist a finished play into the ScoreData store for its
 // difficulty.
-// @complete
 void saveScoreData(PlayScore *s) {
     NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
     [ctx reset];
@@ -390,7 +382,6 @@ void saveScoreData(PlayScore *s) {
 // @ 0x2930c — pre-save "beat the record" check: read the current stored best,
 // flag a new high score, then write the passed play tallies / score /
 // full-combo into the record `s`.
-// @complete
 BOOL updateHighScore(PlayScore *s,
                      unsigned newScore,
                      short cool,
@@ -480,20 +471,17 @@ bool neAppEventCenter::recordPlayResult(
 
 #pragma mark - neSceneManager (guarded singleton @ DAT_00187b74)
 
-// @complete
 neSceneManager &neSceneManager::shared() {
     static neSceneManager instance; // Ghidra: NESceneManager_shared (FUN_0000b194)
     return instance;
 }
 
 // Ghidra: NESceneManager_attachRoot (FUN_0002c5b8).
-// @complete
 void neSceneManager::attachRoot(UIViewController *viewController) {
     m_root = viewController;
 }
 
 // Ghidra: NESceneManager_rootViewController (FUN_0002c5bc) — returns m_root.
-// @complete
 UIViewController *neSceneManager::rootViewController() {
     return shared().m_root;
 }
@@ -503,7 +491,6 @@ UIViewController *neSceneManager::rootViewController() {
 // The binary returns one of ten constant CFStrings from PTR_cf_normal_001310d4;
 // the picker rows show it. Returned as a __bridge void* to match the header's
 // opaque type (mirroring rootViewController()'s ObjC-on-the-far-side handoff).
-// @complete
 void *neSceneManager::normalSoundName(int soundNo) {
     static NSString *const kNames[] = {
         @"normal",
@@ -528,7 +515,6 @@ void *neSceneManager::normalSoundName(int soundNo) {
 // resource base-name of the SE previewed for a touch-sound kind (0..9), loaded
 // as "<name>.m4a". The kind-order matches normalSoundName's display names.
 // Constant CFString table; kinds past the last fold to 0.
-// @complete
 void *neSceneManager::hitSoundName(int soundNo) {
     // Ghidra: PTR_cf_hit001_001310ac[kind] — kind 7 ("shishamo") uses se06_nya,
     // not hit008.
@@ -577,7 +563,6 @@ static bool s_systemSeLoaded = false;
 // Ghidra: loadSoundEffects FUN_0002c5c8 — load the 5 shared UI SEs (decide /
 // cancel / two slide sounds) into group 1 once per scene, then apply the saved
 // SE volume.
-// @complete
 void neSceneManager::loadSystemSe() {
     if (s_systemSeLoaded) {
         return;
@@ -596,7 +581,6 @@ void neSceneManager::loadSystemSe() {
 
 // Ghidra: releaseSoundEffects FUN_0002c6bc — release the 5 UI SEs on scene
 // teardown.
-// @complete
 void neSceneManager::releaseSystemSe() {
     if (!s_systemSeLoaded) {
         return;
@@ -653,7 +637,6 @@ namespace neEngine {
 // the reconstruction flattens that to the direct g_textureCacheList pointer that
 // AepTextureCacheSentinel() builds, so this eager bootstrap and the lazy-on-first-use
 // acquire path converge on one sentinel.
-// @complete
 void bootstrapB() {
     static bool once = false;
     if (!once) {
@@ -671,7 +654,6 @@ void bootstrapB() {
 // and free every texture's GL name (invalidated by the GL context going away).
 // Reads the same g_textureCacheList head the acquire path links into; null before
 // the first texture is cached (the lazy sentinel), so the guard is a no-op then.
-// @complete
 void onDidEnterBackground() {
     ne::C_TEXTURE *head = g_textureCacheList;
     if (head == nullptr) {
@@ -689,7 +671,6 @@ void onDidEnterBackground() {
 // rebuilt (64-bit) offset instead of the drifted original literal. The
 // reconstruction adds a defensive null guard (the binary dereferences
 // unconditionally); behaviour is identical for non-null tasks.
-// @complete
 void stopMainTask(PlayTask *playTask) {
     if (playTask == nullptr) {
         return;
@@ -705,7 +686,6 @@ void stopMainTask(PlayTask *playTask) {
 // the poked +0x20c field is AcViewerTask::m_state. The reconstruction adds a
 // defensive null guard (the binary dereferences unconditionally); behaviour is
 // identical for non-null tasks.
-// @complete
 void stopAcMainTask(AcViewerTask *acViewerTask) {
     if (acViewerTask == nullptr) {
         return;
@@ -720,7 +700,6 @@ void stopAcMainTask(AcViewerTask *acViewerTask) {
 // board as already up (@ +0x1d9 := 1) so the transition does not re-insert it.
 // The reconstruction adds a defensive null guard (the binary dereferences
 // unconditionally); behaviour is identical for non-null tasks.
-// @complete
 void acMainRequestGameExit(AcViewerTask *acViewerTask) {
     if (acViewerTask == nullptr) {
         return;
@@ -747,7 +726,6 @@ void startBootTask() {
 // re-decoding + re-uploading each texture (its per-texture reload is FUN_000188ac).
 // This is the single reconstruction of the foreground-reload walk (the former
 // C_TEXTURE.mm duplicate was dead and has been removed).
-// @complete
 void notifyEnterForeground() {
     ne::C_TEXTURE *head = g_textureCacheList;
     if (head == nullptr) {
@@ -762,7 +740,6 @@ void notifyEnterForeground() {
 // s_systemSeSource[slot] (+0x14) and cache the returned instance handle in
 // g_systemSeHandles[slot] (+0x28). The binary indexes both arrays directly with
 // no bounds check (the slot is a fixed caller-side constant).
-// @complete
 void playSystemSe(int slot) {
     RSND_INSTANCE_ID handle = [[AudioManager sharedManager] playSe:nil
                                                         resourceId:s_systemSeSource[slot]];
@@ -773,7 +750,6 @@ void playSystemSe(int slot) {
 // is still audible. The binary reads the handle at +0x28, returns false when it
 // is negative (the -1 idle sentinel), and otherwise tail-calls
 // AudioManager isPlayingSe: on it. The guard is on the HANDLE, not the slot.
-// @complete
 bool isSePlaying(int slot) {
     RSND_INSTANCE_ID handle = g_systemSeHandles[slot];
     if (static_cast<int>(handle) < 0) {
@@ -829,7 +805,6 @@ int aepContentHeight() {
 // regex constant, and a glyph that does NOT match counts as 2 columns.
 // kHalfWidthPattern is a best-effort recovery of that regex constant (the
 // binary's cf__ string): printable ASCII plus the halfwidth-katakana range.
-// @complete
 int findCharIndexForColumn(NSString *text, int columnWidth) {
     static NSString *const kHalfWidthPattern = @"[\\x01-\\x7e\\uff61-\\uffdc\\uffe8-\\uffee]";
     NSUInteger length = [text length];
@@ -859,7 +834,6 @@ int findCharIndexForColumn(NSString *text, int columnWidth) {
 // C_TEXTURE); the unpadded source width/height pass through so the sprite
 // samples only the used sub-rect. Returns nullptr when the data isn't a
 // decodable image.
-// @complete
 ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
     UIImage *image = [[UIImage alloc] initWithData:data];
     if (image == nil) {
@@ -901,7 +875,6 @@ ne::C_TEXTURE *neTextureForiOS::LoadTexture(NSData *data) {
 // instead of the file cache. Defined here rather than neTextureForiOS.cpp
 // because LoadTexture needs NSData/CoreGraphics. Returns 0 on success, -1 for
 // null data, -5 on decode/upload failure.
-// @complete
 int neTextureForiOS::loadFromImageData(const void *imageData) {
     if (imageData == nullptr) {
         return -1;
@@ -937,7 +910,6 @@ float g_uiScale = 0.0f;
 // Disassembly-verified: r0 = aep + 0x727538 (the ordering table), r1 preserved as
 // pTexture, args 9/10 (sx/sy) taken through vcvt.f32.s32 to float, and the
 // extra->clip / colorMul / alpha / layer routing matches FUN_0000fbcc store-for-store.
-// @complete
 void neTextureForiOS_draw(AepManager *aep,
                           neTextureForiOS *tex,
                           int u,

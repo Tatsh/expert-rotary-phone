@@ -13,30 +13,43 @@
 #import <UIKit/UIKit.h>
 
 @interface TwitterUtil : UIViewController
-
-// The pending tweet body + attached image (Ghidra ivars m_Text / m_Img). `text`
-// is copied (its setter @ 0x789a8 does [[NSString alloc] initWithString:]);
-// `image` is retained (setter @ 0x78a08). Synthesized accessors.
+/**
+ * @brief The text to be tweeted.
+ * @note The text is copied by the setter.
+ */
 @property(nonatomic, copy) NSString *text;
+/**
+ * @brief The image to be attached to the tweet.
+ * @note The image is retained by the TwitterUtil instance.
+ */
 @property(nonatomic, strong) UIImage *image;
-
-// Convenience initializer: empty pending tweet (forwards to
-// -initWithText:image: with nils). Ghidra: -[TwitterUtil init] @ 0x78934.
+/**
+ * @brief Initializes a TwitterUtil instance with no text or image.
+ * @return An initialized TwitterUtil instance.
+ * @ghidraAddress 0x78934
+ */
 - (instancetype)init;
-
-// Retain the text + image to tweet later (the result screen's share button owns
-// one). Ghidra: -[TwitterUtil initWithText:image:] @ 0x78948.
+/**
+ * @brief Initializes a TwitterUtil instance with the given text and image.
+ * @param text The text to be tweeted.
+ * @param image The image to be attached to the tweet.
+ * @return An initialized TwitterUtil instance with the specified text and image.
+ * @ghidraAddress 0x78948
+ */
 - (instancetype)initWithText:(NSString *)text image:(UIImage *)image;
-
-// Present the Twitter compose sheet with this instance's text + image (the
-// button's action selector). Ghidra: -[TwitterUtil tweet] @ 0x78a4c.
+/**
+ * @brief Presents the Twitter compose sheet with the instance's text and image.
+ * @note This method is typically called as an action from a UIButton.
+ * @ghidraAddress 0x78a4c
+ */
 - (void)tweet;
-
-// One-shot: present the Twitter compose sheet with the given text + image.
-// Ghidra:
-// -[TwitterUtil tweetWithText:image:] @ 0x78bb8.
+/**
+ * @brief Presents the Twitter compose sheet with the specified text and image.
+ * @param text The text to be tweeted.
+ * @param image The image to be attached to the tweet.
+ * @ghidraAddress 0x78bb8
+ */
 + (void)tweetWithText:(NSString *)text image:(UIImage *)image;
-
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

@@ -24,11 +24,9 @@
 // live in C_SINGLE_SPRITE.cpp; a neTextureForiOS just holds an array of them.
 
 // Ghidra: FUN_00011818 — vtable + null fields (a detached, unloaded sprite).
-// @complete
 neTextureForiOS::neTextureForiOS() = default;
 
 // Ghidra: FUN_00011a2c — resolve + cache-load `path`, then read its dimensions.
-// @complete
 int neTextureForiOS::load(const char *path) {
     if (path == nullptr) {
         return -1;
@@ -81,7 +79,6 @@ int neTextureForiOS::load(const char *path) {
 // null argument
 // (-1 in the binary) or a tile that fails to load (-5); the return code is
 // discarded by the sole caller (AepManager), so this reconstruction is void.
-// @complete
 void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_t *indexBase) {
     if (name == nullptr || indexBase == nullptr) {
         return; // 0xffffffff in FUN_00011e18
@@ -124,7 +121,6 @@ void neTextureForiOS::loadFrames(const char *dir, const char *name, const uint8_
 // sprite into the ordering table via AepOrderingTable_drawSprite (FUN_00011468:
 // allocEntry FUN_00010be0 + the field fill inlined below). A null clip defaults
 // to screen bounds.
-// @complete
 void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
     NE_DBG(neDebugLog("neTexDraw tex=%p tiles=%d uv=(%d,%d) wh=(%d,%d) xy=(%d,%d) "
                       "scale=(%d,%d) ex=(%d,%d) color=%d alpha=%d blend=%d colorMul=%d "
@@ -202,7 +198,6 @@ void neTextureForiOS::draw(AepOrderingTable *ot, const neSpriteDrawParams &p) {
 // m_tileRects[i].texture (dropped when the m_tileRects unique_ptr<T[]> runs
 // ~ne::C_SINGLE_SPRITE per element). The loop runs first (in the dtor body); the
 // member destructors then free the parallel arrays.
-// @complete
 neTextureForiOS::~neTextureForiOS() {
     for (int i = 0; i < m_tileCount; ++i) {
         if (m_tiles[i] != nullptr) {

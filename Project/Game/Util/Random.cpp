@@ -20,17 +20,14 @@ constexpr uint32_t kSeedW = 88675123;  // 0x05491333
 } // namespace
 
 // Ghidra: FUN_00062b20.
-// @complete
 Random::Random() : m_x(kSeedX), m_y(kSeedY), m_z(kSeedZ), m_w(kSeedW) {
 }
 
 // Ghidra: FUN_00062b54 (empty).
-// @complete
 Random::~Random() {
 }
 
 // Ghidra: FUN_00062b5c — x/y/z back to canonical, w = seed.
-// @complete
 void Random::setSeed(uint32_t seed) {
     m_x = kSeedX;
     m_y = kSeedY;
@@ -42,7 +39,6 @@ void Random::setSeed(uint32_t seed) {
 // the `gt`-predicated block at 0x62b80: t = x ^ (x << 11) (eor lsl #0xb); word
 // down-shift x=y, y=z, z=w; w_new = (t ^ (t >> 8)) ^ w ^ (w >> 19). XOR is
 // associative, so this matches the source expression.
-// @complete
 uint32_t Random::next() {
     uint32_t t = m_x ^ (m_x << 11);
     m_x = m_y;
@@ -57,7 +53,6 @@ uint32_t Random::next() {
 // pool (0x107183..) confirms "GetRandRangeInt", the Random.cpp path, and the
 // condition "max >= 0". The body BICs bit 31 (& 0x7fffffff) then tail-calls the
 // unsigned modulo helper with the restored `max`.
-// @complete
 int Random::getRandRangeInt(int max) {
     assert(max >= 0);
     return static_cast<int>((next() & 0x7fffffff) % static_cast<uint32_t>(max));

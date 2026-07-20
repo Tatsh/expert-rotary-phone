@@ -39,12 +39,10 @@
 // ~round(sin*0xffff) (byte-verified: table[1] == 0x017d == round(sin(1/3
 // deg)*0xffff)). The LUT itself is a data seam; the same value is produced here
 // at the identical 1.0 == 0xffff fixed scale.
-// @complete
 static int aepSin(int deg) {
     return static_cast<int>(
         std::lround(std::sin(static_cast<double>(deg) * (M_PI / 180.0)) * 65535.0));
 }
-// @complete
 static int aepCos(int deg) {
     return static_cast<int>(
         std::lround(std::cos(static_cast<double>(deg) * (M_PI / 180.0)) * 65535.0));
@@ -55,7 +53,6 @@ static int aepCos(int deg) {
 //   * 0x80008001 >> 32 r  = (m >> 15) - (m >> 31); // /0x8000, round toward
 //   zero
 // whose net effect is v / 0xffff (matching cos/sin's 1.0 == 0xffff scale).
-// @complete
 static inline int aepRotNorm(int v) {
     long long prod = static_cast<long long>(v) * static_cast<long long>(-0x7fff7fffLL) +
                      (static_cast<unsigned long long>(static_cast<unsigned>(v)) << 32);
@@ -68,7 +65,6 @@ static inline int aepRotNorm(int v) {
 // (last keyframe with frame <= target, or the first) and cur (the following
 // keyframe / terminator), reproducing FUN_0000fe8c's per-channel bracket
 // search.
-// @complete
 static void
 aepBracket(const int16_t *keys, int stride, int frame, const int16_t **prev, const int16_t **cur) {
     const int16_t *p = keys;
@@ -86,7 +82,6 @@ aepBracket(const int16_t *keys, int stride, int frame, const int16_t **prev, con
 // entry's anchor (entry+0x10 / +0x12), the composed scale and the rotation.
 // Axis-aligned when the rotation is zero; otherwise the min/max of the four
 // rotated corners.
-// @complete
 static void aepComputeChildClip(AepManager *mgr,
                                 const AepFrameEntry *e,
                                 int x,
@@ -183,7 +178,6 @@ static void aepComputeChildClip(AepManager *mgr,
 // the binary's; the AepOtSpriteCmd slots at +0x2c..+0x3c carry colour/alpha,
 // the packed rotation/blend words and the two user words, so they are written
 // by their offset meaning (the field names carry the sprite-command roles).
-// @complete
 static void aepEmitSprite(AepManager *mgr,
                           int groupSlot,
                           int child,
@@ -269,7 +263,6 @@ static void aepEmitSprite(AepManager *mgr,
 // doubles as size for a leaf), `colorMul` rides the colorRGB slot. Exact
 // float-vs-int arg positions in the original are VFP-ABI obscured; the
 // call-site value threading is reproduced.
-// @complete
 void AepDrawSpriteHandle(AepManager *mgr,
                          int handle,
                          int x,
@@ -308,7 +301,6 @@ void AepDrawSpriteHandle(AepManager *mgr,
 }
 
 // Ghidra: FUN_0000fe8c. The 19-argument frame-tree fill.
-// @complete
 void AepDrawLayer(AepManager *mgr,
                   int groupSlot,
                   int layerNo,
@@ -599,7 +591,6 @@ void AepDrawLayer(AepManager *mgr,
 // a full-scale, opaque sprite command. The binary passes 100.0f scale, colour
 // 100, alpha 0, no rotation and the full-screen clip sentinel; those map onto
 // aepEmitSprite's integer-percentage form.
-// @complete
 void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_t priority) {
     const int groupSlot = mgr->groupSlotForHandle(id); // (id >> 16) -> slot byte
     const int child = id & 0xffff;                     // low 16 bits = record index

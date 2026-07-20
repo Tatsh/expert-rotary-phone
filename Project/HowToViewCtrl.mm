@@ -21,7 +21,6 @@
 
 // @ 0x82e5c — retain the ordered image-name list.
 // Verified: [super init]; on non-nil, _fileNameArray = fileNameArray (retain).
-// @complete
 - (instancetype)initWithFileNameArray:(NSArray *)fileNameArray {
     self = [super init];
     if (self != nil) {
@@ -40,7 +39,6 @@
 // for TouchUpInside (0x40) as leftBarButtonItem; close-button branch guarded by
 // _isCloseButtonEnable: hide back, close button (howto_btn_close) as
 // rightBarButtonItem, and hide it when count >= 2.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -111,7 +109,6 @@
 // Verified: NESceneManager_shared; SysSePlayIntoSlot slot 2; if _fromNaviBarImage
 // non-nil setBackgroundImage:forBarMetrics:0 (Default), release + nil; tail-call
 // popViewControllerAnimated:1.
-// @complete
 - (void)backButtonFunc {
     // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
     // cancel SE.
@@ -128,7 +125,6 @@
 // visible.
 // Verified: frame = _scrollView.frame; origin.x = frame.width *
 // sender.currentPage (vmul); origin.y = 0; scrollRectToVisible:animated:1.
-// @complete
 - (void)pageControlDidChanged:(UIPageControl *)sender {
     CGRect frame = _scrollView.frame;
     frame.origin.x = frame.size.width * sender.currentPage;
@@ -143,7 +139,6 @@
 // frame.width + 0.5) (vdiv, vadd 0.5, vcvt truncate); set currentPage; on
 // change (re-read getter) SysSePlayIntoSlot slot 4 and, if _isCloseButtonEnable,
 // _closeBtn.hidden = (currentPage != count - 1).
-// @complete
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     NSInteger oldPage = _pageCtrl.currentPage;
     NSInteger page =

@@ -50,7 +50,6 @@
 @implementation PolicyView
 
 // @ 0x52a04 — light-grey (0.953) background.
-// @complete
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -64,7 +63,6 @@
 
 // @ 0x52a8c — build the read-only agreement text view from bundled policy.txt,
 // then add a nav-bar back button.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -111,50 +109,42 @@
 }
 
 // @ 0x52eec
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0x52f18
-// @complete
 - (void)viewDidUnload {
     [super viewDidUnload];
 }
 
 // @ 0x52f44 — reset the scroll position to the top each time it appears.
-// @complete
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [_textView setContentOffset:CGPointZero];
 }
 
 // @ 0x52fac
-// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
 }
 
 // @ 0x52fd8
-// @complete
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
 }
 
 // @ 0x53004
-// @complete
 - (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
 }
 
 // @ 0x53030 — portrait only.
-// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
 // @ 0x5303c — back-button action.
-// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // cancel/back SE
 
@@ -173,7 +163,6 @@
 #pragma mark - NSLayoutManagerDelegate
 
 // @ 0x53134 — constant 3.8pt spacing after every glyph (0x40733333).
-// @complete
 - (CGFloat)layoutManager:(NSLayoutManager *)layoutManager
     lineSpacingAfterGlyphAtIndex:(NSUInteger)glyphIndex
     withProposedLineFragmentRect:(CGRect)rect {

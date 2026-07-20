@@ -71,7 +71,6 @@
 // @ 0xb1c08 — lay out the own-id label, the target-id field + request button,
 // the spinner, the nav-bar buttons (back + recommended-friend list), and the
 // embedded sent-requests table.
-// @complete
 - (instancetype)init {
     if (!(self = [super init])) {
         return nil;
@@ -195,24 +194,21 @@
 
 // @ 0xb28ac — register as the cancel-friend delegate so a cancel from a row
 // updates this screen.
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     [DownloadMain getInstance].delegateCancelFriend = self;
 }
 
-// didReceiveMemoryWarning @ 0xb2908 — super-only override, ARC/omit. @complete
+// didReceiveMemoryWarning @ 0xb2908 — super-only override, ARC/omit.
 
 #pragma mark - UITextFieldDelegate
 
 // @ 0xb2934
-// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     return YES;
 }
 
 // @ 0xb2938
-// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [_playerIdField resignFirstResponder];
     return YES;
@@ -220,7 +216,6 @@
 
 // @ 0xb2960 — cap the entry at 7 characters (the resulting string must stay
 // under 8).
-// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -233,7 +228,6 @@
 
 // @ 0xb29c8 — validate the typed id and fire the request (blocked while not the
 // top VC on phone).
-// @complete
 - (void)touchedRequestButton:(id)sender {
     if (!neSceneManager::isPadDisplay()) {
         if (self.navigationController.topViewController != self) {
@@ -271,7 +265,6 @@
 }
 
 // @ 0xb2bb0 — push the recommended-friend list (only when this is the top VC).
-// @complete
 - (void)touchedFreeRequestButton:(id)sender {
     if (self.navigationController.topViewController != self) {
         return;
@@ -287,7 +280,6 @@
 #pragma mark - Networking
 
 // @ 0xb303c — POST the friend request (once), revealing the spinner.
-// @complete
 - (void)startFriendRequestHttp:(NSString *)playerId {
     if (_downloader != nil) {
         return;
@@ -309,7 +301,6 @@
 // @ 0xb2ccc — request result. Empty (non-JSON) body = success (clear the field
 // + reload the sent list); a JSON "ErrorCode" maps to a message. Always drops
 // the downloader, stops the spinner, and shows the "フレンド申請" alert.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSString *message = nil;
 
@@ -368,7 +359,6 @@
 
 // @ 0xb2ecc — request failed: drop the downloader, stop the spinner, show the
 // failure alert.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_indicator stopAnimating];
@@ -387,7 +377,6 @@
 
 // @ 0xb2f98 — a friend request was cancelled elsewhere: acknowledge and reload
 // the sent list.
-// @complete
 - (void)downloadMainFinished:(NSNumber *)success {
     CommonAlertView *alert =
         [[CommonAlertView alloc] initWithTitle:@"フレンド申請"
@@ -404,7 +393,6 @@
 // @ 0xb317c — back button: restore the friend-hub nav bar art and pop (only
 // when top VC). (The binary calls neSceneManager::isPadDisplay before the SE
 // and discards the result; elided here as an observably no-op call.)
-// @complete
 - (void)backButtonFunc {
     if (self.navigationController.topViewController != self) {
         return;
@@ -420,7 +408,6 @@
 // dead controller) and detach from DownloadMain's cancel-friend delegate. Kept
 // under ARC because it cancels a Downloader and clears a non-owning delegate
 // reference; the object-ivar releases are ARC-managed.
-// @complete
 - (void)dealloc {
     if (_downloader != nil) {
         [_downloader cancel];

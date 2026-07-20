@@ -46,7 +46,6 @@ static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {
 // subsequent button steps a fixed 70 points right of the previous button's
 // origin x (0x428c0000, verified at 0x406d8). Tags 100..103 identify the chosen
 // difficulty.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     _isPad = neSceneManager::isPadDisplay();
@@ -106,7 +105,6 @@ static UILabel *AcvMakeLevelLabel(UIColor *color, int level) {
 // level number for each available difficulty drawn inside its matching
 // difficulty button. A difficulty whose level is < 1 has no chart, so its
 // button is pulled from the view.
-// @complete
 - (void)setData:(AcMusicData *)data {
     [_bgImgView removeFromSuperview];
     [_titleLbl removeFromSuperview];

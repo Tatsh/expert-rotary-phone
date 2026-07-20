@@ -36,7 +36,6 @@ TitleTask::TitleTask() = default;
  * compiler-implicit dtor would drop m_conversionButton without removing it from
  * the view hierarchy, so this behaviour is reproduced explicitly.
  * @ghidraAddress 0x2b6b0
- * @complete
  */
 TitleTask::~TitleTask() {
     if (m_conversionButton != nil) {
@@ -83,7 +82,6 @@ bool TitleTask::tapReleased() const {
  * device-specific title scene + its image folder, and load + start the title SE
  * and looping BGM.
  * @ghidraAddress 0x2c084
- * @complete
  */
 void TitleTask::setup() {
     m_aep = &AepManager::shared();
@@ -119,7 +117,6 @@ void TitleTask::setup() {
  * Ghidra: TitleTask_finish (FUN_0002c3d0) — release SE/BGM/label + title view,
  * unload the title scene, reload character data, kill this task, and spawn the
  * main-menu task.
- * @complete
  */
 void TitleTask::finish() {
     [[AudioManager sharedManager] releaseSe:0 resourceId:m_titleSe];
@@ -199,7 +196,6 @@ void TitleTask::buildConversionButton() {
 /**
  * Ghidra: TitleTask_update (FUN_0002b838) — the 10-state title / first-run
  * machine.
- * @complete
  */
 void TitleTask::update(int /*deltaMs*/) {
     const bool tap = tapReleased();
@@ -326,7 +322,6 @@ void TitleTask::update(int /*deltaMs*/) {
  * four numeric words are the per-corner gradient colour (20, 0, 100, 0x181818)
  * and the draw priority is 9.
  * @ghidraAddress 0x2c52c
- * @complete
  */
 void TitleTask::drawSoundTestLabel() {
     if (m_soundTestHidden) {

@@ -76,7 +76,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0xd4180 — grouped table with no separators; computes the expanded-panel
 // frame per OS.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self != nil) {
@@ -102,7 +101,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0xd4398 — wrap in a nav controller, install the phone back button, set the
 // nav-bar art.
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [[UINavigationController alloc]
         initWithRootViewController:[self initWithStyle:UITableViewStyleGrouped]];
@@ -128,7 +126,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 #pragma mark - Modal open/close animation
 
 // @ 0xd45ec
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -146,13 +143,11 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0xd4718
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xd4730 — plays the cancel SE (slot 2) up front, then fades out.
-// @complete
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2);
     if (_isAnimationing) {
@@ -169,7 +164,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0xd4850 — remove and hand control back to the host (MainViewController).
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(SettingEndCallBack)];
@@ -180,19 +174,16 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0xd48bc — NOTE: the binary tail-calls the *super* viewWillDisappear: here
 // (reproduced faithfully; likely a copy/paste artifact in the original source).
-// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewWillDisappear:animated];
 }
 
 // @ 0xd48e8
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 // @ 0xd4914
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
@@ -200,14 +191,12 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 #pragma mark - Table structure
 
 // @ 0xd4940
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 3;
 }
 
 // @ 0xd4944 — rows per section = { News:1, TreasureMode:1, DeviceChange:2 }
 // (DAT_0012fba8).
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     static constexpr NSInteger kRows[SettingOtherSectionCount] = {1, 1, 2};
     if (section < SettingOtherSectionCount) {
@@ -219,7 +208,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0xd495c — the expandable ConversionView row (section 2, row 1) is only tall
 // when the toggle row (section 2, row 0) is currently selected; otherwise it
 // collapses to 0.
-// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == SettingOtherSectionDeviceChange && indexPath.row == 1) {
         NSIndexPath *toggle = [NSIndexPath indexPathForRow:0 inSection:2];
@@ -232,20 +220,17 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0xd5330
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil; // headers are provided as views (below)
 }
 
 // @ 0xd54d4
-// @complete
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return 32.0f; // 0x42000000
 }
 
 // @ 0xd5334 — a 320x32 clear header carrying the section title label (14pt app
 // font).
-// @complete
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     UIView *header = [[UIView alloc] initWithFrame:CGRectMake(15.0f, 0.0f, 320.0f, 32.0f)];
     header.backgroundColor = [UIColor clearColor];
@@ -275,7 +260,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0xd54dc — no accessory (disclosure) on any row.
-// @complete
 - (UITableViewCellAccessoryType)tableView:(UITableView *)tableView
          accessoryTypeForRowWithIndexPath:(NSIndexPath *)indexPath {
     (void)indexPath.section;
@@ -287,7 +271,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0xd4a08 — every row is a bordered, rounded "pill". Section 2 / row 1 hosts
 // the embedded ConversionView; all other rows show a colored title pill (color
 // varies per section).
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier =
@@ -420,7 +403,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 #pragma mark - Selection
 
 // @ 0xd54f8 — dispatch a tap while this VC is the top of the nav stack.
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (self.navigationController.topViewController != self) {
         return;
@@ -477,7 +459,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0xd579c — confirming the retire (button index 1) wipes the treasure temp
 // and reports back.
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if (alertView == _treasureRetireAlertView && index == 1) {
         [UserSettingData initTreasureTmp];
@@ -496,7 +477,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 #pragma mark - Actions
 
 // @ 0xd5850 — back button -> fade out.
-// @complete
 - (void)settingClose {
     [self startCloseAnimation];
 }

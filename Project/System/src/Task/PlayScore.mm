@@ -86,7 +86,6 @@ TallyTotals collectTally(NoteMng &nm) {
 // 0.7, 0.4, and 100000.0. The binary has no divisor guard; the noteTotal <= 0
 // early return here is a disclosed defensive addition for the no-chart case, and
 // the scored path is byte-faithful otherwise.
-// @complete
 int PlayCurrentScore() {
     NoteMng &nm = NoteMng::shared(); // Ghidra: NoteMng_shared() at entry
     const TallyTotals t = collectTally(nm);
@@ -108,7 +107,6 @@ int PlayCurrentScore() {
 // `ldr +0x9fc; cmp #5` (return on the pause-menu state); the still-playing
 // instance at +0x3a0 is stopped and reset to -1 before the +0x398 source is
 // retriggered and its new instance id stored back into +0x3a0.
-// @complete
 void PlayTask::playTouchSound() {
     // Play the per-tap feedback SE only when the user's touch-sound volume is on,
     // and never while the pause menu is up (state 5).
@@ -151,7 +149,6 @@ void PlayTask::firePlayCue(int layer) {
 // cleared-with-good: [5] (full) / [4] (broken); spotless: [7] (all COOL) / [6]
 // (any GREAT) — and every cleared path layers the [10] fanfare via
 // FUN_0002cb24(layer, 1).
-// @complete
 void PlayTask::playEndResultSe(int score) {
     NoteMng &nm = NoteMng::shared();
     const TallyTotals t = collectTally(nm);

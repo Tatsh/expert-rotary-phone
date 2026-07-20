@@ -14,13 +14,11 @@
 // dealloc]).
 
 // @ 0x28080 — never editable/selectable.
-// @complete
 - (BOOL)canBecomeFirstResponder {
     return NO;
 }
 
 // @ 0x28034 — suppress the copy/select menu and drop first responder.
-// @complete
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
     UIMenuController.sharedMenuController.menuVisible = NO;
     [self resignFirstResponder];

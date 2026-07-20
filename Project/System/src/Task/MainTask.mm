@@ -235,7 +235,6 @@ inline void MainTask::refreshScoreRows() {
  * MainTask_ctor — base ctor + zero-fill; the sentinels (selected cell -1,
  * column latches 0xff, state 0) are member initializers.
  * @ghidraAddress 0x34d48
- * @complete
  */
 MainTask::MainTask() {
 }
@@ -244,7 +243,6 @@ MainTask::MainTask() {
  * mainTask_dtor — detach from DownloadMain's recommend-list delegate so the
  * singleton stops calling back into a freed task (delete thunk @ 0x34eac).
  * @ghidraAddress 0x34d90
- * @complete
  */
 MainTask::~MainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
@@ -259,7 +257,6 @@ MainTask::~MainTask() {
  * chosen-song preview is states 3/4; 5-0xa are the settings/sort/score-log nav;
  * 0xc-0x10 fade out and hand off to the spawned play/menu/title task.
  * @ghidraAddress 0x35914
- * @complete
  */
 void MainTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
@@ -886,7 +883,6 @@ constexpr const char *const kSeNames[5] = {"v18", "v19", "v20", "v11", "se06_nya
  * resolves every layer / frame / user animation handle, uploads the score /
  * points / rank digit textures, loads the touch SEs + preview BGM, and sets the
  * tutorial / badge flags. @ 0x370f0
- * @complete
  */
 void MainTask::Setup() {
     neAppEventCenter::shared().setGuestNoSaveMode(false); // normal entry: results are saved
@@ -1352,7 +1348,6 @@ inline int MainTask::findFreeColumnRow() const {
  * per-column row latches (+0x8c0/+0x8c1/+0x8c2) and the current column back to 0.
  * Called at the top of rebuildList() and from StopAndSave().
  * @ghidraAddress 0x3cfb0
- * @complete
  */
 void MainTask::Cleanup() {
     if (m_musicList != nil) {
@@ -1387,7 +1382,6 @@ void MainTask::Cleanup() {
  * jacket cells + 3-difficulty score rows, one-shot-kicks the background jacket
  * loader, and primes the adjacent columns.
  * @ghidraAddress 0x3835c
- * @complete
  */
 void MainTask::rebuildList() {
     neAppEventCenter::shared(); // force the event center (current-song id) live
@@ -1586,7 +1580,6 @@ inline void MainTask::loadCellScoreRows(MusicSelCell &cell, unsigned musicId) {
  * platform column width (21 iPad / 15 phone), and marks the cell "ready"
  * (loadState 3). Exits when m_loaderCursor is set.
  * @ghidraAddress 0x3d048
- * @complete
  */
 void MainTask::backgroundCellLoader() {
     if (m_loaderCursor != 0) {
@@ -1677,7 +1670,6 @@ void MainTask::backgroundCellLoader() {
  * musicSelAllCellsReady — true when every jacket cell has finished loading
  * (state 0 empty or 3 ready). Guarded by the cell-array semaphore.
  * @ghidraAddress 0x37f38
- * @complete
  */
 bool MainTask::AllCellsReady() {
     dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
@@ -1699,7 +1691,6 @@ bool MainTask::AllCellsReady() {
  * recommend / over-score badges, redraws the four difficulty frames + the
  * tutorial badge, and (for a multi-column list) draws the "current/total"
  * column counter.
- * @complete
  */
 void MainTask::UpdateHighlight() {
     if (m_suppressDraw) {
@@ -1905,7 +1896,6 @@ void MainTask::UpdateHighlight() {
  * and jacket cells, then kills this task (spawning the menu hub if no sub-task
  * was queued).
  * @ghidraAddress 0x38008
- * @complete
  */
 void MainTask::StopAndSave() {
     AudioManager *audio = [AudioManager sharedManager];
@@ -1981,7 +1971,6 @@ void MainTask::StopAndSave() {
  * (m_overScoreDict) — touched -> "1", untouched -> "0" unless already "1" — and
  * clears the pending-push flag.
  * @ghidraAddress 0x37c88
- * @complete
  */
 void MainTask::UpdateInfoPanel(int mode) {
     if (mode != 1) {
@@ -2092,7 +2081,6 @@ inline void MainTask::loadColumn(int rowBase, int delta, uint8_t &latch) {
  * `column`, gated by the next-column latch (+0x8c2) and the no-next sentinel
  * (m_columnIndex == -2). Shared grid fill via loadColumn(delta = +1).
  * @ghidraAddress 0x35448
- * @complete
  */
 void MainTask::MusicSelLoadColumnNext(int column) {
     if (m_nextColLatch == 0xff && m_columnIndex != -2) { // next-column latch idle
@@ -2106,7 +2094,6 @@ void MainTask::MusicSelLoadColumnNext(int column) {
  * no-previous sentinel (m_columnIndex == 0). Shared grid fill via
  * loadColumn(delta = -1). Mirror of MusicSelLoadColumnNext.
  * @ghidraAddress 0x35520
- * @complete
  */
 void MainTask::MusicSelLoadColumnPrev(int column) {
     if (m_prevColLatch == 0xff && m_columnIndex != 0) {
@@ -2127,7 +2114,7 @@ void MainTask::MusicSelLoadColumnPrev(int column) {
  * rank-digit / badge elements.
  *
  * @ghidraAddress 0x389fc
- * @complete Dispatch order verified branch-for-branch against the decompile
+ * Dispatch order verified branch-for-branch against the decompile
  * (elemUsrNo 0,10,2,3,4,13,5,6,7,16,8,9,1,11,12,14,20,21,17,18,19,15 with the
  * jacket-tip / score-digit arrays interleaved); the draw-primitive counts match
  * (45 drawAepFrameEx, 14 neTextureForiOS::draw, the 3 inlined per-column name

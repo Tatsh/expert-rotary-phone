@@ -36,7 +36,6 @@
 // button), a 2x2 grid of song rows, a centred loading spinner + caption, a
 // hidden "web/artist-site" button, and a hidden dummy cover VC (shown during
 // the recommend-pack POST). Geometry decoded from the NEON disassembly.
-// @complete
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self == nil) {
@@ -237,7 +236,6 @@
 // and show it; otherwise grey the card, attach + spin the loading
 // spinner/label, drop any in-flight detail fetch, and start a fresh
 // StorePackInfoDownloader (self is its delegate) fetching the full detail.
-// @complete
 - (void)loadInfo {
     if (m_PackInfo == nil) {
         return;
@@ -270,7 +268,6 @@
 // show the row, else clear + hide it. Finally kick every artwork download, hide
 // the artist button when there is no artist URL, and latch isInfoLoaded so this
 // only runs once.
-// @complete
 - (void)showPackInfo {
     if (isInfoLoaded) {
         return;
@@ -323,7 +320,6 @@
 // @ 0x4ef54 — pick the purchase button's label for the current state: no pack
 // or not owned -> buy; owned but not fully downloaded -> install; owned +
 // downloaded -> installed.
-// @complete
 - (void)selfCheckButtonText {
     if (m_PackInfo != nil) {
         NSString *productID = [StoreUtil productIDForPackID:m_PackInfo.packID];
@@ -340,7 +336,6 @@
 }
 
 // @ 0x4f024 — "buy" state: title "購入 (<price>)", button enabled.
-// @complete
 - (void)setButtonTextBuy {
     [buttonPurchase setTitle:[NSString stringWithFormat:@"購入 (%@)", m_PackInfo.priceString]
                     forState:UIControlStateNormal];
@@ -348,7 +343,6 @@
 }
 
 // @ 0x4f0b8 — "install" state: localized "INSTALL", button enabled.
-// @complete
 - (void)setButtonTextInstall {
     NSString *title = [[NSBundle mainBundle] localizedStringForKey:@"INSTALL" value:@"" table:nil];
     [buttonPurchase setTitle:title forState:UIControlStateNormal];
@@ -357,7 +351,6 @@
 
 // @ 0x4f144 — "installing" state: localized "INSTALLING" on the disabled state,
 // button disabled.
-// @complete
 - (void)setButtonTextInstalling {
     NSString *title = [[NSBundle mainBundle] localizedStringForKey:@"INSTALLING"
                                                              value:@""
@@ -371,7 +364,6 @@
 // still-tappable "友達に勧める"
 // ("recommend to friends") label so the user can register the pack as
 // recommended.
-// @complete
 - (void)setButtonTextInstalled {
     if ([self isRecommended]) {
         [self setButtonTextInstalledForce];
@@ -390,7 +382,6 @@
 // assignment protocol-clean (the full detail view —
 // StorePackInfoDownloaderDelegate conformance — is reconstructed with
 // setPackInfo: @ 0x50b58).
-// @complete
 - (void)cancelLoading {
     if (m_StorePackInfoDownloader != nil) {
         [m_StorePackInfoDownloader setDelegate:(id)self];
@@ -400,7 +391,6 @@
 }
 
 // @ 0x4ed28 — stop the preview clip and reset the rows.
-// @complete
 - (void)stopSample {
     [m_SampleDownloader cancel];
     if (m_SampleDownloader != nil) {
@@ -416,7 +406,6 @@
 // if it is already sampling, otherwise stop whatever is sampling and start
 // fetching this row's clip (the Downloader callback plays it once the bytes
 // arrive). BGM fades over 0.2s (DAT_00050078).
-// @complete
 - (void)handleSample:(id)sender {
     for (int i = 0; i < 4; i++) {
         if ([musicView[i] buttonSample] != sender) {
@@ -459,7 +448,6 @@
 
 // @ 0x4fd04 — find the row whose iTunes button was tapped and open its song's
 // iTunes page.
-// @complete
 - (void)handleLink:(id)sender {
     for (int i = 0; i < 4; i++) {
         if ([musicView[i] buttonLink] != sender) {
@@ -480,7 +468,6 @@
 }
 
 // @ 0x50080 — open the pack's artist website.
-// @complete
 - (void)selectWebButton {
     NSString *url = [m_PackInfo artistURL];
     if (url == nil) {
@@ -498,7 +485,6 @@
 // @ 0x4fca4 — the actual "buy" entry point: forward to the delegate, which owns
 // the StoreKit transaction (the big doPurchase: dispatcher decides whether to
 // reach here).
-// @complete
 - (void)doPurchase {
     if ([m_Delegate respondsToSelector:@selector(detailViewStartPurchase:)]) {
         [m_Delegate performSelector:@selector(detailViewStartPurchase:) withObject:m_PackInfo];
@@ -507,7 +493,6 @@
 
 // @ 0x4edb8 — the pack has songs and they are all downloaded (guards against an
 // empty pack).
-// @complete
 - (BOOL)allDownloaded {
     if (m_PackInfo != nil && [m_PackInfo musicInfos] != nil &&
         [[m_PackInfo musicInfos] count] != 0) {
@@ -520,7 +505,6 @@
 // modal and re-run the spending-limit gate: if the price is within limit, hand
 // off to the delegate; otherwise show the "can't purchase any more this month"
 // alert. Default price 573 yen when the pack has no bound product.
-// @complete
 - (void)birthDayViewClose {
     m_BirthDayView = nil;
 
@@ -548,7 +532,6 @@
 //     button installed, award 300 treasure points (capped 9999) and show a
 //     success alert; on an error-code response show a connection-error alert;
 //     either way drop the downloader and hide the cover.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     if (m_SampleDownloader == downloader) {
         if (samplePlaying >= 0) {
@@ -611,7 +594,6 @@
 // pack, and on teardown): stop the preview BGM, drop the bound pack, blank
 // every text/image field, hide the sub-views, reset each song row, and pull the
 // loading spinner + label out.
-// @complete
 - (void)removePackInfo {
     [[AudioManager sharedManager] stopBgm:0.2f];
     self.packInfo = nil;
@@ -642,7 +624,6 @@
 // @ 0x4f28c — mark the pack as installed: set the disabled-state title to the
 // localized "INSTALLED" string and disable the button (called once a
 // re-download / registration succeeds).
-// @complete
 - (void)setButtonTextInstalledForce {
     NSString *title = [[NSBundle mainBundle] localizedStringForKey:@"INSTALLED"
                                                              value:@""
@@ -661,7 +642,7 @@
 //     limit check (buy, or show the "over limit" alert); otherwise show the age
 //     gate.
 //
-// DEVIATION (not @complete): in the binary the not-owned path re-opens the age
+// DEVIATION: in the binary the not-owned path re-opens the age
 // gate whenever the spending-limit check fails and no birthday is on record —
 // including the "birthday was cancelled, no birthday, over limit" case. The
 // disassembly @0x4fc30 branches `cmp r5,#0; beq 0x4faac` (bday == nil -> the
@@ -723,7 +704,6 @@
 
 // @ 0x4ee14 — is this pack recommended? Lazily fetch + cache the recommended-id
 // list, then test this pack's id against it.
-// @complete
 - (BOOL)isRecommended {
     if (recommendPackIdArr == nil) {
         recommendPackIdArr = [[MusicManager getInstance] getRecommendPackArray];
@@ -740,7 +720,6 @@
 // @ 0x50100 — AudioManager BGM-finished callback (a looping preview clip
 // reached its end): reset every row's sample button and mark nothing playing.
 // No BGM stop here (the clip already ended).
-// @complete
 - (void)finishBgm:(id)sender {
     for (int i = 0; i < 4; i++) {
         [musicView[i] sampleStop];
@@ -751,7 +730,6 @@
 // @ 0x505d8 — Downloader delegate: a fetch failed. For the preview downloader,
 // reset the playing row and drop it; for the recommend-registration POST, drop
 // it and hide the cover. Either way show the network-connection-error alert.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     if (m_SampleDownloader == downloader) {
         if (samplePlaying >= 0) {
@@ -782,14 +760,12 @@
 }
 
 // @ 0x507a4 — Downloader delegate: incremental progress. No-op in this view.
-// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0x507a8 — StorePackInfoDownloader delegate: the pack detail arrived.
 // Populate the card, stop and pull the loading spinner + caption, then unhook +
 // drop the downloader.
-// @complete
 - (void)storePackInfoDownloaderFinished:(StorePackInfoDownloader *)downloader {
     [self showPackInfo];
     [indicator stopAnimating];
@@ -803,7 +779,6 @@
 // pull the spinner and caption, show the network-error alert (self is the alert
 // delegate, so tapping OK closes the detail view via
 // commonAlertView:clickedButtonAtIndex:), then unhook + drop the downloader.
-// @complete
 - (void)storePackInfoDownloaderError:(StorePackInfoDownloader *)downloader {
     [indicator stopAnimating];
     [indicator removeFromSuperview];
@@ -822,7 +797,6 @@
 
 // @ 0x5093c — CommonAlertView delegate: a button was tapped. Ask the host to
 // close the detail view.
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if ([m_Delegate respondsToSelector:@selector(detailViewClose)]) {
         [m_Delegate performSelector:@selector(detailViewClose)];
@@ -835,7 +809,6 @@
 // then calls [super dealloc]. Under ARC only the download-cancelling side
 // effects are kept: unhook + cancel the in-flight detail fetch and cancel the
 // in-flight preview clip.
-// @complete
 - (void)dealloc {
     [m_StorePackInfoDownloader setDelegate:nil];
     [m_StorePackInfoDownloader cancel];

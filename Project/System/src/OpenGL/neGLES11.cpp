@@ -22,7 +22,6 @@ namespace ne {
 
 // Ghidra: RenderKindToGLRenderKind @ FUN_00012f64 (table @ DAT_0012e110): the
 // GL ES OES framebuffer attachment points.
-// @complete
 static GLenum RenderKindToGL(int kind) {
     assert(kind >= 0 && kind < neIGLES::RENDER_KIND_MAX);
     static const GLenum kTable[neIGLES::RENDER_KIND_MAX] = {
@@ -35,7 +34,6 @@ static GLenum RenderKindToGL(int kind) {
 
 // Renderbuffer storage format per RenderType (pairs 1:1 with RenderKind; no
 // separate DAT table — the attach path is inlined).
-// @complete
 static GLenum RenderTypeToGLFormat(int type) {
     assert(type >= 0 && type < neIGLES::RENDER_TYPE_MAX);
     static const GLenum kTable[neIGLES::RENDER_TYPE_MAX] = {
@@ -48,7 +46,6 @@ static GLenum RenderTypeToGLFormat(int type) {
 
 // Ghidra: setMatrixMode @ FUN_00013110 (table @ DAT_0012e11c). Index 0 is the
 // GL_MODELVIEW out-of-range default; 1..3 index the table.
-// @complete
 static GLenum MatrixModeToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::MATRIX_MODE_MAX);
     if (mode - 1U < 3U) {
@@ -63,7 +60,6 @@ static GLenum MatrixModeToGL(int mode) {
 }
 
 // glHint targets. Ghidra: table @ DAT_0012e290 (5 entries).
-// @complete
 static GLenum HintTargetToGL(int target) {
     assert(target >= 0 && target < neIGLES::HINT_MAX);
     static const GLenum kTable[neIGLES::HINT_MAX] = {
@@ -77,7 +73,6 @@ static GLenum HintTargetToGL(int target) {
 }
 
 // glFog(GL_FOG_MODE) modes. Ghidra: table @ DAT_0012e27c (3 entries).
-// @complete
 static GLenum FogModeToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::FOG_MODE_MAX);
     static const GLenum kTable[neIGLES::FOG_MODE_MAX] = {
@@ -89,7 +84,6 @@ static GLenum FogModeToGL(int mode) {
 }
 
 // glEnableClientState array targets. Ghidra: table @ DAT_0012e25c (8 entries).
-// @complete
 static GLenum ClientStateToGL(int state) {
     assert(state >= 0 && state < neIGLES::CS_MAX);
     static const GLenum kTable[neIGLES::CS_MAX] = {
@@ -106,7 +100,6 @@ static GLenum ClientStateToGL(int state) {
 }
 
 // glEnable / glDisable capabilities. Ghidra: table @ DAT_0012e1d0 (35 entries).
-// @complete
 static GLenum EnableStateToGL(int state) {
     assert(state >= 0 && state < neIGLES::ES_MAX);
     static const GLenum kTable[neIGLES::ES_MAX] = {
@@ -150,7 +143,6 @@ static GLenum EnableStateToGL(int state) {
 }
 
 // glCullFace. Ghidra: table @ DAT_0012e1c0 (3 entries).
-// @complete
 static GLenum CullFaceToGL(int face) {
     assert(face >= 0 && face < neIGLES::CULL_FACE_MAX);
     static const GLenum kTable[neIGLES::CULL_FACE_MAX] = {
@@ -162,7 +154,6 @@ static GLenum CullFaceToGL(int face) {
 }
 
 // Depth/alpha compare functions. Ghidra: table @ DAT_0012e130 (8 entries).
-// @complete
 static GLenum CompareFuncToGL(int func) {
     assert(func >= 0 && func < neIGLES::COMPARE_FUNC_MAX);
     static const GLenum kTable[neIGLES::COMPARE_FUNC_MAX] = {
@@ -180,7 +171,6 @@ static GLenum CompareFuncToGL(int func) {
 
 // GL src blend factors. Ghidra: table @ DAT_0012e170 (9 entries; setBlendFunc
 // FUN_00013a34 asserts src < BLEND_SRC_VALUE_MAX at neGLES11.cpp:0xa8-0xa9).
-// @complete
 static GLenum BlendSrcToGL(int src) {
     assert(src >= 0 && src < neIGLES::BLEND_SRC_VALUE_MAX);
     static const GLenum kTable[neIGLES::BLEND_SRC_VALUE_MAX] = {
@@ -199,7 +189,6 @@ static GLenum BlendSrcToGL(int src) {
 
 // GL dest blend factors. Ghidra: table @ DAT_0012e1a0 (8 entries; setBlendFunc
 // FUN_00013a34 asserts dest < BLEND_DEST_VALUE_MAX at neGLES11.cpp:0xbd-0xbe).
-// @complete
 static GLenum BlendDestToGL(int dest) {
     assert(dest >= 0 && dest < neIGLES::BLEND_DEST_VALUE_MAX);
     static const GLenum kTable[neIGLES::BLEND_DEST_VALUE_MAX] = {
@@ -216,7 +205,6 @@ static GLenum BlendDestToGL(int dest) {
 }
 
 // Ghidra: TexParamTypeFuncToGLType @ FUN_00013864 (table @ DAT_0012e2d0).
-// @complete
 static GLenum TexParamTypeToGL(int type) {
     assert(type >= 0 && type < neIGLES::TEX_PARAM_TYPE_MAX);
     static const GLenum kTable[neIGLES::TEX_PARAM_TYPE_MAX] = {
@@ -229,7 +217,6 @@ static GLenum TexParamTypeToGL(int type) {
 }
 
 // glTexParameter value forward map. Ghidra: table @ DAT_0012e150 (8 entries).
-// @complete
 static GLint TexParamValueToGL(int value) {
     assert(value >= 0 && value < neIGLES::TEX_PARAM_VALUE_MAX);
     static const GLint kTable[neIGLES::TEX_PARAM_VALUE_MAX] = {
@@ -247,7 +234,6 @@ static GLint TexParamValueToGL(int value) {
 
 // Ghidra: GLValueToTexParamValue @ FUN_000138cc (reverse of
 // glGetTexParameteriv).
-// @complete
 static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
     switch (v) {
     case GL_NEAREST:
@@ -272,7 +258,6 @@ static neIGLES::TexParamValue GLValueToTexParamValue(GLint v) {
 }
 
 // Texture upload format. Ghidra: TextureFormatToGLFormat @ FUN_00013970.
-// @complete
 static GLenum TextureFormatToGL(int format) {
     switch (format) {
     case neIGLES::TEX_FORMAT_RGBA:
@@ -286,7 +271,6 @@ static GLenum TextureFormatToGL(int format) {
 
 // Engine primitive ordinal -> GL mode. Ghidra: table @ DAT_0012e2b0 (7
 // entries), indexed by drawArrays/drawElements.
-// @complete
 static GLenum PrimitiveToGL(int mode) {
     assert(mode >= 0 && mode < neIGLES::PRIM_MAX);
     static const GLenum kTable[neIGLES::PRIM_MAX] = {
@@ -320,7 +304,6 @@ static GLenum PrimitiveToGL(int mode) {
 // the reconstructed cache lives on the texture at +0x30, see setTexParamCached),
 // the -1 bound-name sentinels (0x94[8], 0x24/0x28/0x4c/0x58/0x64/0xd8/0xe8,
 // 0x1fc..0x20c), and the 1.0f current-colour vectors (0x14, 0x1dc/0x1e0/0x1e8).
-// @complete
 neGLES_11::neGLES_11()
     : _blendEquation(GL_FUNC_ADD_OES), // ivar 0x19c  (&DAT_00008006)
       _blendSrc(BLEND_SRC_ONE),        // ivar 0x1a0  (GL_ONE ordinal)
@@ -329,29 +312,24 @@ neGLES_11::neGLES_11()
 
 neGLES_11::~neGLES_11() = default;
 
-// @complete
 void neGLES_11::enable(EnableState state) {
     glEnable(EnableStateToGL(state));
 }
 
-// @complete
 void neGLES_11::disable(EnableState state) {
     glDisable(EnableStateToGL(state));
 }
 
-// @complete
 void neGLES_11::enableClientState(ClientState state) {
     glEnableClientState(ClientStateToGL(state));
 }
 
-// @complete
 void neGLES_11::disableClientState(ClientState state) {
     glDisableClientState(ClientStateToGL(state));
 }
 
 // Ghidra: FUN_00013110 — caches the mode (ivar 0x2c) and only re-issues
 // glMatrixMode on change.
-// @complete
 void neGLES_11::setMatrixMode(MatrixMode mode) {
     if (_matrixMode == static_cast<unsigned>(mode)) {
         return;
@@ -360,22 +338,18 @@ void neGLES_11::setMatrixMode(MatrixMode mode) {
     glMatrixMode(MatrixModeToGL(mode));
 }
 
-// @complete
 void neGLES_11::setHint(Hint target, int mode) {
     glHint(HintTargetToGL(target), static_cast<GLenum>(mode));
 }
 
-// @complete
 void neGLES_11::setFogMode(FogMode mode) {
     glFogx(GL_FOG_MODE, static_cast<GLfixed>(FogModeToGL(mode)));
 }
 
-// @complete
 void neGLES_11::setCullFace(CullFace face) {
     glCullFace(CullFaceToGL(face));
 }
 
-// @complete
 void neGLES_11::setFrontFace(FrontFace face) {
     assert(face >= 0 && face < FRONT_FACE_MAX);
     glFrontFace(face == FRONT_FACE_CW ? GL_CW : GL_CCW);
@@ -383,7 +357,6 @@ void neGLES_11::setFrontFace(FrontFace face) {
 
 // Ghidra: FUN_00013a34 — caches (equation 0x19c, src 0x1a0, dest 0x1a4), skips
 // redundant calls, then glBlendEquationOES(equation); glBlendFunc(src, dest).
-// @complete
 void neGLES_11::setBlendFunc(BlendSrcValue src, BlendDestValue dest, unsigned equation) {
     if (_blendSrc == static_cast<unsigned>(src) && _blendDest == static_cast<unsigned>(dest) &&
         _blendEquation == equation) {
@@ -397,31 +370,26 @@ void neGLES_11::setBlendFunc(BlendSrcValue src, BlendDestValue dest, unsigned eq
     glBlendFunc(glSrc, BlendDestToGL(dest));
 }
 
-// @complete
 void neGLES_11::setDepthFunc(DepthTestFunc func) {
     glDepthFunc(CompareFuncToGL(func));
 }
 
-// @complete
 void neGLES_11::setAlphaFunc(AlphaTestFunc func, float ref) {
     glAlphaFunc(CompareFuncToGL(func), ref);
 }
 
 // Ghidra: FUN_00013970 — upload a 2D texture (GL_TEXTURE_2D, level 0,
 // UNSIGNED_BYTE).
-// @complete
 void neGLES_11::texImage2D(TexFormat format, int width, int height, const void *pixels) {
     GLenum glFormat = TextureFormatToGL(format);
     glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, pixels);
 }
 
-// @complete
 void neGLES_11::setTexParameter(TexParamType type, TexParamValue value) {
     glTexParameteri(GL_TEXTURE_2D, TexParamTypeToGL(type), TexParamValueToGL(value));
 }
 
 // Ghidra: FUN_000138cc — read a texture parameter back as our enum.
-// @complete
 neIGLES::TexParamValue neGLES_11::getTexParameter(TexParamType type) {
     GLint value = 0;
     glGetTexParameteriv(GL_TEXTURE_2D, TexParamTypeToGL(type), &value);
@@ -431,7 +399,6 @@ neIGLES::TexParamValue neGLES_11::getTexParameter(TexParamType type) {
 // Ghidra: FUN_00013290 — invalidate any cached binding referring to this buffer
 // (ivars 0x44/0x50/0x5c/0x6c and the 8-slot texture array at 0xb4), then
 // delete.
-// @complete
 void neGLES_11::deleteBuffer(unsigned buffer) {
     if (_boundArrayBuffer == buffer) {
         _boundArrayBuffer = 0;
@@ -455,7 +422,6 @@ void neGLES_11::deleteBuffer(unsigned buffer) {
 }
 
 // Attach a renderbuffer at the given attachment point (GL ES OES FBO).
-// @complete
 void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned renderbuffer) {
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
     glRenderbufferStorageOES(GL_RENDERBUFFER_OES, RenderTypeToGLFormat(type), 0, 0);
@@ -469,14 +435,12 @@ void neGLES_11::attachRenderbuffer(RenderKind kind, RenderType type, unsigned re
 // ---------------------------------------------------------------------------
 
 // Ghidra: FUN_00012e94.
-// @complete
 void neGLES_11::deleteFramebuffer(unsigned framebuffer) {
     GLuint name = framebuffer;
     glDeleteFramebuffersOES(1, &name);
 }
 
 // Ghidra: FUN_00012eb8.
-// @complete
 void neGLES_11::deleteRenderbuffer(unsigned renderbuffer) {
     GLuint name = renderbuffer;
     glDeleteRenderbuffersOES(1, &name);
@@ -484,13 +448,11 @@ void neGLES_11::deleteRenderbuffer(unsigned renderbuffer) {
 
 // Ghidra: FUN_00012f3c — attach a 2D texture's level 0 at attachment point
 // `kind`.
-// @complete
 void neGLES_11::framebufferTexture2D(RenderKind kind, unsigned texture) {
     glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_TEXTURE_2D, texture, 0);
 }
 
 // Ghidra: FUN_00012fcc — attach a renderbuffer at attachment point `kind`.
-// @complete
 void neGLES_11::framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer) {
     glFramebufferRenderbufferOES(
         GL_FRAMEBUFFER_OES, RenderKindToGL(kind), GL_RENDERBUFFER_OES, renderbuffer);
@@ -498,7 +460,6 @@ void neGLES_11::framebufferRenderbuffer(RenderKind kind, unsigned renderbuffer) 
 
 // Ghidra: FUN_00012fec (vtable +0x34) — is the currently-bound OES framebuffer
 // complete? (result discarded by the sole caller, neGLView -layoutSubviews).
-// @complete
 bool neGLES_11::isFramebufferComplete() {
     return glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) == GL_FRAMEBUFFER_COMPLETE_OES;
 }
@@ -506,13 +467,11 @@ bool neGLES_11::isFramebufferComplete() {
 // Ghidra: 0x12e84 (vtable +0x0c) — returns the GL_RENDERBUFFER_OES constant the
 // view caches in its m_PresentTarget ivar and later hands to -presentRenderbuffer:
 // (movw r0, #0x8d41; bx lr — no GL call).
-// @complete
 unsigned neGLES_11::presentTarget() const {
     return GL_RENDERBUFFER_OES;
 }
 
 // Ghidra: 0x12e8c (vtable +0x10) — thin glGenFramebuffersOES(1, &out) wrapper.
-// @complete
 void neGLES_11::genFramebuffer(unsigned &outName) {
     GLuint name = 0;
     glGenFramebuffersOES(1, &name);
@@ -521,13 +480,11 @@ void neGLES_11::genFramebuffer(unsigned &outName) {
 
 // Ghidra: 0x12ea8 (vtable +0x18) — glBindFramebufferOES(GL_FRAMEBUFFER_OES, fb)
 // (movw r0, #0x8d40 = GL_FRAMEBUFFER_OES; tailcall).
-// @complete
 void neGLES_11::bindFramebuffer(unsigned framebuffer) {
     glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
 }
 
 // Ghidra: 0x12eb0 (vtable +0x1c) — thin glGenRenderbuffersOES(1, &out) wrapper.
-// @complete
 void neGLES_11::genRenderbuffer(unsigned &outName) {
     GLuint name = 0;
     glGenRenderbuffersOES(1, &name);
@@ -536,19 +493,16 @@ void neGLES_11::genRenderbuffer(unsigned &outName) {
 
 // Ghidra: 0x12ecc (vtable +0x24) — glBindRenderbufferOES(GL_RENDERBUFFER_OES, rb)
 // (movw r0, #0x8d41 = GL_RENDERBUFFER_OES; tailcall).
-// @complete
 void neGLES_11::bindRenderbuffer(unsigned renderbuffer) {
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, renderbuffer);
 }
 
 // Ghidra: 0x13008 (vtable +0x38) — read the bound renderbuffer's pixel width.
-// @complete
 void neGLES_11::getRenderbufferWidth(int &outWidth) {
     glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &outWidth);
 }
 
 // Ghidra: 0x13018 (vtable +0x3c) — read the bound renderbuffer's pixel height.
-// @complete
 void neGLES_11::getRenderbufferHeight(int &outHeight) {
     glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &outHeight);
 }
@@ -562,7 +516,6 @@ void neGLES_11::getRenderbufferHeight(int &outHeight) {
 // Ghidra: QueryCaps (FUN_00012da0), the renderer's pInit virtual. Probes the GL
 // extension string for GL_OES_matrix_palette, reads GL_MAX_TEXTURE_SIZE, loads the
 // texcoord-normalizing texture matrix, and sets the default line width.
-// @complete
 void neGLES_11::initialize() {
     // Scan the space-delimited extension list for matrix-palette support. The
     // binary copies each token with memcpy (0x12de2) and a single nul terminator,
@@ -599,35 +552,29 @@ void neGLES_11::initialize() {
     glLineWidth(1.0f);
 }
 
-// @complete
 void neGLES_11::setViewport(int x, int y, int w, int h) {
     glViewport(x, y, w, h);
 }
 
-// @complete
 void neGLES_11::loadMatrix(int mode, const neMatrix4 &m) {
     setMatrixMode(static_cast<MatrixMode>(mode));
     glLoadMatrixf(m.m);
 }
 
-// @complete
 void neGLES_11::genBuffer(unsigned &outName) {
     GLuint name = 0;
     glGenBuffers(1, &name);
     outName = name;
 }
 
-// @complete
 void neGLES_11::selectTextureUnit(int unit) {
     glActiveTexture(GL_TEXTURE0 + unit);
 }
 
-// @complete
 void neGLES_11::colorPointer(const void *ptr, int stride) {
     glColorPointer(4, GL_UNSIGNED_BYTE, stride, ptr);
 }
 
-// @complete
 void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
     // The type is GL_FLOAT: the caching variant FUN_0001342c tail-calls
     // glVertexPointer(size, 0x1406, stride, ptr), and 0x1406 is GL_FLOAT. That
@@ -637,17 +584,14 @@ void neGLES_11::vertexPointer(const void *ptr, int size, int stride) {
     glVertexPointer(size, GL_FLOAT, stride, ptr);
 }
 
-// @complete
 void neGLES_11::texCoordPointer(const void *ptr, int stride) {
     glTexCoordPointer(2, GL_SHORT, stride, ptr); // normalized GL_SHORT UVs
 }
 
-// @complete
 void neGLES_11::bindElementBuffer(unsigned name) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, name);
 }
 
-// @complete
 void neGLES_11::bufferData(const void *data, int size, int usage) {
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, size, data, usage == 0 ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
@@ -656,7 +600,6 @@ void neGLES_11::bufferData(const void *data, int size, int usage) {
 // Ghidra: vtable +0xb4 (0x13770) — thin glGenTextures wrapper (movs r0,#1;
 // b.w glGenTextures veneer). The renderer `this` is discarded; the caller's
 // &outName is already in r1, so this is exactly glGenTextures(1, &outName).
-// @complete
 void neGLES_11::genTexture(unsigned &outName) {
     GLuint name = 0;
     glGenTextures(1, &name);
@@ -668,7 +611,6 @@ void neGLES_11::genTexture(unsigned &outName) {
 // then glDeleteTextures. This is the slot the ne::C_TEXTURE teardown path dispatches
 // through (deleteTexture), which is why the raw glDeleteTextures would leave a
 // stale cache entry.
-// @complete
 void neGLES_11::deleteTexture(unsigned name) {
     for (unsigned &slot : texBindCache.names) {
         if (slot == name) {
@@ -683,7 +625,6 @@ void neGLES_11::deleteTexture(unsigned name) {
 // texBindCache by the active texture unit (ivar 0xf8), skip when the cached name
 // already matches, else update the slot and glBindTexture. Keeping the cache
 // coherent is why deleteTexture (+0xb8) must clear it on a delete.
-// @complete
 void neGLES_11::bindTexture(unsigned name) {
     unsigned &slot = texBindCache.names[_activeTexUnit];
     if (slot == name) {
@@ -693,29 +634,24 @@ void neGLES_11::bindTexture(unsigned name) {
     glBindTexture(GL_TEXTURE_2D, name);
 }
 
-// @complete
 void neGLES_11::applyTexParameter(int type, int value) {
     setTexParameter(static_cast<TexParamType>(type), static_cast<TexParamValue>(value));
 }
 
-// @complete
 void neGLES_11::uploadTexture(int format, int w, int h, const void *pixels) {
     texImage2D(static_cast<TexFormat>(format), w, h, pixels);
 }
 
 // The 2-argument primitive-blend slot uses the default add equation.
-// @complete
 void neGLES_11::setBlendFunc(int src, int dst) {
     setBlendFunc(
         static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst), GL_FUNC_ADD_OES);
 }
 
-// @complete
 void neGLES_11::setBlendFuncSeparate(int src, int dst, unsigned equation) {
     setBlendFunc(static_cast<BlendSrcValue>(src), static_cast<BlendDestValue>(dst), equation);
 }
 
-// @complete
 void neGLES_11::setEnable(int cap, bool on) {
     if (on) {
         enable(static_cast<EnableState>(cap));
@@ -733,7 +669,6 @@ void neGLES_11::setEnable(int cap, bool on) {
 // the sprite path enabled GL_MATRIX_PALETTE_OES (a matrix mode, invalid for
 // glEnableClientState -> GL_INVALID_ENUM) and never enabled GL_VERTEX_ARRAY, so
 // glDrawArrays drew nothing (black screen).
-// @complete
 void neGLES_11::setClientArray(int array, bool on) {
     ClientState state = static_cast<ClientState>(array + 1);
     if (on) {
@@ -747,7 +682,6 @@ void neGLES_11::setClientArray(int array, bool on) {
 // vtable-only region, but its behaviour is pinned by its sole caller neDrawColorArray/
 // neDrawTexturedQuad, which the ne::C_RENDER verification confirmed issue
 // glDrawArrays(PrimitiveToGL(mode), 0, count) (e.g. drawArrays(4, 4) -> GL_TRIANGLE_STRIP).
-// @complete
 void neGLES_11::drawArrays(int mode, int count) {
     glDrawArrays(PrimitiveToGL(mode), 0, count);
 }
@@ -756,7 +690,6 @@ void neGLES_11::drawArrays(int mode, int count) {
 // index-type constant GL_UNSIGNED_SHORT / 0x1403 does not appear anywhere in the binary),
 // so this path is never exercised; it is reconstructed as the standard ES 1.1 indexed
 // draw for completeness. The offset is a byte offset into the bound element buffer.
-// @complete
 void neGLES_11::drawElements(int mode, int count, int offset) {
     glDrawElements(PrimitiveToGL(mode),
                    count,

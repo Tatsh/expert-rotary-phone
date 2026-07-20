@@ -47,7 +47,6 @@
 
 // Ghidra dtor FUN_000ce330 -> FUN_000ce2e4. `delete` (invoked by the arcade
 // task in loadTreasureMap, FUN_000a0b58) frees the object storage itself.
-// @complete
 TreasureMap::~TreasureMap() {
     reset();
 }
@@ -58,7 +57,6 @@ TreasureMap::~TreasureMap() {
 // its constructed state, exactly as the binary does with its 16-byte NEON
 // stores. (The binary's six overlapping vst1.16 stores clear bytes 0x00..0x5d;
 // the memset of 0x60 clears the whole object identically.)
-// @complete
 void TreasureMap::reset() {
     if (m_nodes) {
         std::free(m_nodes);
@@ -75,7 +73,6 @@ void TreasureMap::reset() {
 // Ghidra FUN_000ce340. Node stride 0x120 (r0*9<<5), file record stride 0xaa,
 // header memcpy 0x50, text at node+0x1c (strncpy 0x100), corrupt-square assert
 // at SugorokuMap.mm:0x215 — all byte-verified against the disassembly.
-// @complete
 void TreasureMap::load(const char *path) {
     // Snapshot the pending-treasure record; bonusSquareIndex (Ghidra field15_0x46) records
     // which bonus square is this session's treasure and is (re)generated +
@@ -251,7 +248,6 @@ void TreasureMap::load(const char *path) {
 // Linear id lookup shared by both neighbour resolutions in load(). Mirrors the
 // inline search in FUN_000ce340 (and findArea / FUN_000ce934): null for a
 // negative id, an id that is out of range, or an empty table.
-// @complete
 TreasureMap::Node *TreasureMap::findNodeById(int id) const {
     if (id < 0 || !m_nodes) {
         return nullptr;
@@ -345,7 +341,6 @@ constexpr int32_t kAssetCountsGroup8[3] = {64, 72, 71}; // DAT_0012fb9c
 // ──────────────────────────────────────────────────────
 
 // Ghidra: FUN_000ce0ec
-// @complete
 unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink) {
     if (checkBackLink != 0) {
         return node->backLink != nullptr ? 1u : 0u;
@@ -363,7 +358,6 @@ unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink) 
 // Ghidra: FUN_000ce114
 // The four case arms below map one-to-one onto TreasureMapDirection (see the
 // per-value geometry documented on that enum in TreasureMap.h).
-// @complete
 int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection direction) {
     for (int i = 0; i <= 2; i++) {
         const TreasureMap::Node *link = node->links[i];
@@ -411,13 +405,11 @@ int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection 
 }
 
 // Ghidra: FUN_000ce180
-// @complete
 int getTreasureMapTableEntry(int mainMapId, int subMapId) {
     return kTreasureMapTable[mainMapId][subMapId];
 }
 
 // Ghidra: FUN_000ce198
-// @complete
 int getTreasureMapValue_fb30(int mapId) {
     return kParentMapTable[mapId];
 }
@@ -425,7 +417,6 @@ int getTreasureMapValue_fb30(int mapId) {
 // Ghidra: getCharacterAssetCount @ 0xce1a8 (0xce1c8 in the file header cited a
 // mid-body address; the function entry — the div-by-10 magic multiply — is
 // 0xce1a8, confirmed by the bl target in getCharacterAssetName @ 0xce208).
-// @complete
 int getCharacterAssetCount(int characterId) {
     short group = static_cast<short>(characterId / 10);
     short slot = static_cast<short>(characterId - group * 10); // == characterId % 10
@@ -440,7 +431,6 @@ int getCharacterAssetCount(int characterId) {
 }
 
 // Ghidra: FUN_000ce200
-// @complete
 const char *getCharacterAssetName(int characterId, int slotIndex) {
     const int count = getCharacterAssetCount(characterId);
     if (slotIndex < 0) {
@@ -485,7 +475,6 @@ const char *getCharacterAssetName(int characterId, int slotIndex) {
 // Ghidra: FUN_000ce96c  (SugorokuMap::GetWarpSquare)
 // Asserts node is a warp square (type 8), then scans all nodes in map for the
 // partner warp square: different id, same type 8, same slotId (warp-pair id).
-// @complete
 TreasureMap::Node *TreasureMap::getWarpSquare(TreasureMap::Node *node) {
     if (node->type != TreasureMap::kSquareWarp) {
         assert(0);
@@ -508,7 +497,6 @@ TreasureMap::Node *TreasureMap::getWarpSquare(TreasureMap::Node *node) {
 // The random node is chosen by index; if unsuitable, the links[0] chain from
 // that node is walked until a valid node is found. Falls back to the start
 // node. Node types skipped: kSquareWarp (8) and kSquarePlayerStart (1).
-// @complete
 TreasureMap::Node *TreasureMap::getButtobiSquare(const TreasureMap::Node *currentNode) {
     const int16_t count = m_count;
     if (count < 1) {
@@ -540,7 +528,6 @@ TreasureMap::Node *TreasureMap::getButtobiSquare(const TreasureMap::Node *curren
 // Ghidra: FUN_000cea50
 // param_1 (first argument) is ignored by the binary (undefined4 in Ghidra);
 // preserved here for ABI fidelity.
-// @complete
 int getTreasureMapValue_fb54(int /*unused*/, int mapId) {
     return kSubMapFlagTable[mapId];
 }

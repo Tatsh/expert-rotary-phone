@@ -47,7 +47,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 
 // @ 0xfc258 (dispatch_once block recommendCoreSharedAlloc @ 0xfc2c4) — create
 // the serial queue and the single instance once.
-// @complete
 + (instancetype)allocWithZone:(NSZone *)zone {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -59,7 +58,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfc47c
-// @complete
 + (instancetype)sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -71,7 +69,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 // @ 0xfc33c — perform [super init] on the shared "RewardCore" serial queue
 // (recommendCoreInitBlock
 // @ 0xfc404 stores the result into the __block variable returned here).
-// @complete
 - (instancetype)init {
     __block RecommendCore *result = nil;
     dispatch_sync(g_pRewardCoreQueue, ^{
@@ -81,7 +78,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfc50c — pick the SSL base URL for the stored environment index (0..4).
-// @complete
 + (NSString *)baseUrlSsl {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkRecommend.env"];
     if ([env isEqualToString:@"0"]) {
@@ -103,25 +99,21 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfc628
-// @complete
 - (NSString *)getCountryCode {
     return [self countryCode];
 }
 
 // @ 0xfc638
-// @complete
 - (NSString *)getCategoryId {
     return [self categoryId];
 }
 
 // @ 0xfc648
-// @complete
 - (BOOL)isInitialized {
     return [self initializeFlg] == 1;
 }
 
 // @ 0xfc664
-// @complete
 - (BOOL)isInstalledAppliWithScheme:(NSString *)scheme {
     UIApplication *app = [UIApplication sharedApplication];
     NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@://", scheme]];
@@ -129,7 +121,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfc734
-// @complete
 - (void)startWithCountryCode:(NSString *)countryCode
                   categoryId:(NSString *)categoryId
                          env:(NSString *)env
@@ -186,7 +177,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 // @ 0xfcc0c — wrap the raw fetch (recommendCoreLoadOpenAppliList @ 0xfcc78)
 // that filters the installed apps, lazily builds the web-view controller and
 // loads /ad/external/index.php.
-// @complete
 - (void)openAppliListWithCallback:(RecommendOpenAppliListCallback)callback {
     [self appliListWithCallBack:^(NSArray *appliList, NSError *error) {
       if (error != nil) {
@@ -236,7 +226,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfd1c8
-// @complete
 - (void)appliListWithCallBack:(RecommendAppliListCallback)callback {
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithCapacity:2];
     [params setValue:self.countryCode forKey:@"country_code"];
@@ -272,7 +261,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfd630
-// @complete
 - (void)closeAppliList {
     if (self.webViewController != nil) {
         [self.webViewController appliListClosed];
@@ -280,7 +268,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfd688
-// @complete
 - (void)postApplicationInstallWithAdIdFrom:(NSString *)adIdFrom
                                countryCode:(NSString *)countryCode
                                 categoryId:(NSString *)categoryId
@@ -344,7 +331,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfdb28
-// @complete
 - (void)setParentView:(UIView *)parentView delegate:(id)delegate {
     if (self.webViewController == nil) {
         self.webViewController = [[RecommendWebViewController alloc] init];
@@ -356,13 +342,11 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfdc1c
-// @complete
 - (void)setNavigationBarHidden:(BOOL)hidden {
     navigationBarHidden = hidden;
 }
 
 // @ 0xfdc2c
-// @complete
 - (BOOL)redirectWithRequest:(NSURLRequest *)request {
     NSURL *url = [request URL];
     NSString *scheme = [url scheme];
@@ -462,7 +446,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfe4e4
-// @complete
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration {
     if (self.webViewController != nil) {
@@ -484,12 +467,10 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 #pragma mark - RewardNetworkWebViewDelegate
 
 // @ 0xfe56c
-// @complete
 - (void)appListDidAppear {
 }
 
 // @ 0xfe570
-// @complete
 - (void)appListDidDisappear {
     RecommendOpenAppliListCallback callback = [self callbackForOpenAppliList];
     if (callback != nil) {
@@ -499,7 +480,6 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 }
 
 // @ 0xfe610
-// @complete
 - (void)appListFailLoadWithError:(NSError *)error {
     [self setLastErrorForOpenAppliList:error];
     [self.webViewController setDelegate:nil];

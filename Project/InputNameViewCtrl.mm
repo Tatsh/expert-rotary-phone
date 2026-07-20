@@ -34,7 +34,6 @@
 // @ 0x8f438 — build the player-name form. Phone: full-screen "friman_bg"
 // backdrop with caption images. Pad: a floating rounded UINavigationController
 // card over a dimmed cover, with the caption drawn as DFSoGei labels.
-// @complete
 - (instancetype)init {
     self = [super init];
     neSceneManager::shared();
@@ -213,7 +212,6 @@
 
 // @ 0x90668 — wrap in a UINavigationController (back button hidden, custom bar
 // image).
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     if ([self init] == nil) {
         return nil;
@@ -229,7 +227,6 @@
 #pragma mark - Open / close animations
 
 // @ 0x90740
-// @complete
 - (void)startOpenAnimation {
     if (m_IsAnimationing) {
         return;
@@ -247,13 +244,11 @@
 }
 
 // @ 0x90878
-// @complete
 - (void)endOpenAnimation {
     m_IsAnimationing = NO;
 }
 
 // @ 0x90890
-// @complete
 - (void)startCloseAnimation {
     if (m_IsAnimationing) {
         return;
@@ -271,7 +266,6 @@
 // @ 0x90998 — tear down the panel and notify the scene root the name flow
 // ended. (The binary also releases _nameField / _indicator here; automatic
 // under ARC.)
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     neSceneManager::shared();
@@ -284,20 +278,17 @@
 #pragma mark - UITextFieldDelegate
 
 // @ 0x90b68
-// @complete
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
     return YES;
 }
 
 // @ 0x90b6c
-// @complete
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     [_nameField resignFirstResponder];
     return YES;
 }
 
 // @ 0x90c10 — cap the name at 12 characters.
-// @complete
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
@@ -310,7 +301,6 @@
 #pragma mark - Actions
 
 // @ 0x90b94 — submit a non-empty name, then play the decide SE.
-// @complete
 - (void)touchedDecideButton:(id)sender {
     [_nameField resignFirstResponder];
     NSString *name = _nameField.text;
@@ -325,7 +315,6 @@
 #pragma mark - Networking
 
 // @ 0x90f14 — validate the name's charset, then POST "uuid&name&client_ver".
-// @complete
 - (void)startPlayerNewHttp:(NSString *)name {
     if (_downloader != nil) {
         return;
@@ -374,7 +363,6 @@
 // @ 0x90c4c — new-player POST finished. A JSON body with a string "PlayerId"
 // means success (save the id + name and fade out); anything else is a failure
 // alert.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [downloader getDataInJSON];
     id playerId = nil;
@@ -413,7 +401,6 @@
 }
 
 // @ 0x90e48 — new-player POST failed (network/transport error).
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _downloader = nil;
     [_indicator stopAnimating];
@@ -429,7 +416,6 @@
 
 // @ 0x91108 — YES when the name consists only of ASCII letters, digits and the
 // punctuation "@+-/!#%?$&_" (trimming that set leaves an empty string).
-// @complete
 - (BOOL)checkUsableCharacter:(NSString *)name {
     NSMutableCharacterSet *set = [[NSMutableCharacterSet alloc] init];
     [set addCharactersInString:@"abcdefghijklmnopqrstuvwxyz"];
@@ -448,7 +434,6 @@
 // below).
 
 // @ 0x90b5c
-// @complete
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return interfaceOrientation == UIInterfaceOrientationPortrait;
 }

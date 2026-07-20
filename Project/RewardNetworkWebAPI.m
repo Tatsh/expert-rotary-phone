@@ -21,7 +21,6 @@ static int sRetryCount = 0;
 @implementation RewardNetworkWebAPI
 
 // @ 0xfa744
-// @complete
 - (instancetype)init {
     self = [super init];
     if (self) {
@@ -31,13 +30,11 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfa790
-// @complete
 + (NSDictionary *)commonParameters {
     return [NSDictionary dictionaryWithObjectsAndKeys:@"0", @"cr", @"json", @"format", nil];
 }
 
 // @ 0xfa7e8
-// @complete
 + (NSMutableURLRequest *)requestWithURL:(NSString *)url
                                  method:(NSString *)method
                              parameters:(NSDictionary *)parameters
@@ -60,7 +57,6 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfa948
-// @complete
 + (NSMutableURLRequest *)requestForGetWithURL:(NSString *)url
                                    parameters:(NSDictionary *)parameters {
     NSString *fullURL = [RewardNetworkUtilities appendParametersToURL:url parameters:parameters];
@@ -68,7 +64,6 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfa9f0
-// @complete
 + (NSMutableURLRequest *)requestForPostWithURL:(NSString *)url
                                     parameters:(NSDictionary *)parameters {
     NSMutableArray *pairs = [NSMutableArray array];
@@ -105,7 +100,6 @@ static int sRetryCount = 0;
 // failing-URL / localized-description userInfo, the -1001 (0xfffffc17) code, and
 // the JSON dispatch are all reproduced. The 0x3ee non-dictionary fallback is the
 // one-arg Applilink selector (@ 0xfb4f2), not the RewardNetwork variant.
-// @complete
 + (void)requestAsynchronousWithURL:(NSString *)url
                             method:(NSString *)method
                         parameters:(NSDictionary *)parameters
@@ -296,7 +290,6 @@ static int sRetryCount = 0;
 // localizedRewardNetworkErrorWithCode:userInfo: selector (@ 0xfb8b2 / 0xfb908),
 // with code 0x3ee (status 2) and 0x3ef (otherwise). The empty-body path (@
 // 0xfb800) uses the one-arg localizedApplilinkErrorWithCode:0x3eb.
-// @complete
 + (NSData *)responseFromContentsServer:(NSString *)contentsServer
                                request:(NSURLRequest *)request
                                   data:(NSData *)data
@@ -355,7 +348,6 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfbb34   (class entry allocs+forwards @ 0xfbee0)
-// @complete
 + (id)requestSynchronousWithURL:(NSString *)url
                          method:(NSString *)method
                      parameters:(NSDictionary *)parameters
@@ -454,7 +446,6 @@ static int sRetryCount = 0;
 }
 
 // @ 0xfc048
-// @complete
 + (BOOL)canUseNetworkRetry {
     return [[[UIDevice currentDevice] systemVersion] doubleValue] >= 6.0;
 }

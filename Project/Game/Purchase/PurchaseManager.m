@@ -36,7 +36,6 @@
 @synthesize musicDataDelegate = m_MusicDataDelegate; // getter @ 0x56148, setter @ 0x56158
 
 // @ 0x54450 — lazy singleton.
-// @complete
 + (instancetype)sharedManager {
     static PurchaseManager *sInstance = nil;
     if (sInstance == nil) {
@@ -47,13 +46,11 @@
 
 // @ 0x5459c — StoreKit availability gate: tail-call [SKPaymentQueue
 // canMakePayments].
-// @complete
 + (BOOL)isPurchasable {
     return [SKPaymentQueue canMakePayments];
 }
 
 // @ 0x54498 — allocate the four backing arrays; flags start clear.
-// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         m_PurchasedProducts = [[NSMutableArray alloc] initWithCapacity:0];
@@ -67,14 +64,12 @@
 }
 
 // @ 0x546c0 — become the StoreKit payment-queue observer.
-// @complete
 - (void)start {
     [[SKPaymentQueue defaultQueue] addTransactionObserver:self];
 }
 
 // @ 0x546f8 — stop observing the payment queue (teardown counterpart of
 // -start).
-// @complete
 - (void)end {
     [[SKPaymentQueue defaultQueue] removeTransactionObserver:self];
 }
@@ -82,7 +77,6 @@
 // @ 0x545b8 — cancel the in-flight receipt-check download; the four backing
 // arrays are ARC-released. (Original also nils musicDataDelegate and releases
 // the arrays by hand.)
-// @complete
 - (void)dealloc {
     [self setMusicDataDelegate:nil];
     [m_Downloader cancel];
@@ -91,7 +85,6 @@
 #pragma mark - Purchased-product persistence
 
 // @ 0x548d8 — load the Blowfish-encrypted "prodlist" (keyed by MD5(uuId)).
-// @complete
 - (void)loadProductList {
     m_PurchasedProducts = nil;
 
@@ -115,7 +108,6 @@
 
 // @ 0x54730 — persist the owned list: plist-serialise, prepend 4 random salt
 // bytes, Blowfish-encipher (keyed by MD5(uuId)), write atomically.
-// @complete
 - (void)saveProductList {
     if (m_PurchasedProducts.count == 0) {
         return;
@@ -142,7 +134,6 @@
 
 // @ 0x54e28 — record a product as owned; optionally persist. YES if newly
 // added.
-// @complete
 - (BOOL)addProductID:(NSString *)productID Save:(BOOL)save {
     if ([m_PurchasedProducts containsObject:productID]) {
         return NO;
@@ -173,25 +164,21 @@
 #pragma mark - Purchase-checked products (validated during a restore)
 
 // @ 0x54dd8
-// @complete
 - (NSMutableArray *)purchaseCheckedProducts {
     return m_PurchaseCheckedProducts;
 }
 
 // @ 0x54de8
-// @complete
 - (void)removePurchaseCheckedProduct:(NSString *)productID {
     [m_PurchaseCheckedProducts removeObject:productID];
 }
 
 // @ 0x54e08
-// @complete
 - (void)clearPurchaseCheckedProducts {
     [m_PurchaseCheckedProducts removeAllObjects];
 }
 
 // @ 0x54e94 — commit every validated product into the owned list, then persist.
-// @complete
 - (void)addProductFromPurchaseCheckedProducts {
     for (NSString *productID in m_PurchaseCheckedProducts) {
         [self addProductID:productID Save:NO];
@@ -202,7 +189,6 @@
 #pragma mark - Purchase / restore entry points
 
 // @ 0x54ac0 — buy a (non-consumable) music-data product.
-// @complete
 - (BOOL)beginPurchase:(SKProduct *)product {
     if (product == nil || m_Transactioing || ![SKPaymentQueue canMakePayments]) {
         return NO;
@@ -220,7 +206,6 @@
 }
 
 // @ 0x54bbc — buy a consumable; alert if the device cannot make payments.
-// @complete
 - (BOOL)beginConsumablePurchase:(SKProduct *)product {
     if (product == nil || m_Transactioing) {
         return NO;
@@ -247,7 +232,6 @@
 }
 
 // @ 0x54d14 — restore previous purchases.
-// @complete
 - (BOOL)beginRestore {
     if (m_Transactioing || ![SKPaymentQueue canMakePayments]) {
         return NO;
@@ -265,7 +249,6 @@
 
 // @ 0x54f6c — queue a purchased transaction for server receipt check (unless it
 // is already owned). Kicks the check pump. YES if accepted.
-// @complete
 - (BOOL)addPurchaseCheckTransaction:(PurchaseTransactionCache *)cache {
     if (cache == nil) {
         return NO;
@@ -280,7 +263,6 @@
 
 // @ 0x54fdc — if idle, POST the next queued receipt (base64 + digest) to the
 // verify endpoint. YES if a request was started.
-// @complete
 - (BOOL)checkNextReceipt {
     if (m_PurchaseCheckTransactions.count == 0 || m_Downloader != nil) {
         return NO;
@@ -302,7 +284,6 @@
 }
 
 // @ 0x55824 — base64-encode with '=' padding (the binary hand-rolls this).
-// @complete
 - (NSString *)encodedStringWithBase64:(NSData *)data {
     static const char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const unsigned char *bytes = data.bytes;
@@ -326,7 +307,6 @@
 
 // @ 0x55170 — query the store for a set of product identifiers (self is the
 // delegate); the response arrives in -productsRequest:didReceiveResponse:.
-// @complete
 - (SKProductsRequest *)startProductRequest:(NSSet<NSString *> *)productIdentifiers {
     SKProductsRequest *request =
         [[SKProductsRequest alloc] initWithProductIdentifiers:productIdentifiers];
@@ -337,7 +317,6 @@
 
 // @ 0x55960 — the binary walks invalidProductIdentifiers without acting on
 // them, then forwards the valid products to the delegate.
-// @complete
 - (void)productsRequest:(SKProductsRequest *)request
      didReceiveResponse:(SKProductsResponse *)response {
     [m_Delegate finishRequest:response.products];
@@ -346,7 +325,6 @@
 #pragma mark - SKPaymentTransactionObserver
 
 // @ 0x551d4 — drive the purchase / fail / restore state machine.
-// @complete
 - (void)paymentQueue:(SKPaymentQueue *)queue
     updatedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
     for (SKPaymentTransaction *transaction in transactions) {
@@ -395,7 +373,6 @@
 }
 
 // @ 0x55554 — the original walks the removed transactions but takes no action.
-// @complete
 - (void)paymentQueue:(SKPaymentQueue *)queue
     removedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
 }
@@ -404,7 +381,6 @@
 // report "nothing to restore" when the queue is empty. (The binary also runs an
 // empty fast-enumeration over m_RestoredTransactions before the pump loop; it
 // has no observable effect and is omitted here.)
-// @complete
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
     while (YES) {
         if (m_RestoredTransactions.count == 0) {
@@ -424,7 +400,6 @@
 }
 
 // @ 0x55798
-// @complete
 - (void)paymentQueue:(SKPaymentQueue *)queue
     restoreCompletedTransactionsFailedWithError:(NSError *)error {
     // Binary clears ONLY m_RestoredTransactions here (single -removeAllObjects
@@ -441,7 +416,6 @@
 
 // @ 0x55a50 — the verify server answered: accept the unlock only when
 // status==0 and the echoed "code" matches the digest we sent.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     PurchaseTransactionCache *cache = downloader.addData;
     NSString *productID = cache.productID;
@@ -499,7 +473,6 @@
 }
 
 // @ 0x55ebc — the verify request failed at the network layer.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     PurchaseTransactionCache *cache = downloader.addData;
     NSString *productID = cache.productID;
@@ -523,7 +496,6 @@
 }
 
 // @ 0x55eb8 — DownloaderDelegate progress hook (no-op in this manager).
-// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 

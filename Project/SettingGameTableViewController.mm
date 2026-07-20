@@ -80,7 +80,6 @@ static UIViewController *RootVC() {
 // @ 0x88b08 -- grouped-table styling; iPad content inset tweak; seeds the three
 // detail-row frames.
 //
-// @complete
 // Verified: rowHeight 65.0; iPad inset -100.0 (0xc2c80000) then version-based
 // 20.0 (<7) / 0.0; _dummyFrm[0/2/4] widths 290.0, heights 320.0/137.0/430.0,
 // x = 5.0 (<7) / 15.0.
@@ -130,7 +129,6 @@ static UIViewController *RootVC() {
 // @ 0x88d7c -- wrap self (grouped style) in a navigation controller with a
 // custom back button and the "frirep_navbar" bar background.
 //
-// @complete
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none))) {
     UINavigationController *nav = [UINavigationController alloc];
     // The binary (0x88dbe) passes the -initWithStyle: result straight into
@@ -157,25 +155,22 @@ static UIViewController *RootVC() {
 
 // dealloc @ 0x88f5c — ARC-omitted (released object ivars only).
 // Verified: releases _selectedIndexPath, then _detailView[0..5], then
-// [super dealloc]. @complete
+// [super dealloc].
 
 // @ 0x88ff0
 //
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 }
 
 // @ 0x8901c
 //
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0x89048
 //
-// @complete
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
 }
@@ -184,7 +179,7 @@ static UIViewController *RootVC() {
 
 // @ 0x89074 -- fade the view + nav view in over 0.5s.
 //
-// @complete (duration 0.5 verified inline @ 0x89108).
+// (duration 0.5 verified inline @ 0x89108).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -203,7 +198,6 @@ static UIViewController *RootVC() {
 
 // @ 0x891a0
 //
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -211,7 +205,7 @@ static UIViewController *RootVC() {
 // @ 0x891b8 -- play the "back/cancel" system SE, then fade the view + nav view
 // out over 0.3s.
 //
-// @complete (SE played first, before the _isAnimationing guard; duration 0.3
+// (SE played first, before the _isAnimationing guard; duration 0.3
 // verified @ 0x892d0).
 - (void)startCloseAnimation {
     neEngine::playSystemSe(2); // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
@@ -230,7 +224,6 @@ static UIViewController *RootVC() {
 
 // @ 0x892d8 -- remove and hand control back to MainViewController.
 //
-// @complete
 // The binary sends -SettingEndCallBack directly to the root VC @ 0x8932e; it is
 // expressed here via -performSelector: because RootVC's static type does not
 // declare the selector (behaviourally identical for a 0-argument void method).
@@ -244,14 +237,12 @@ static UIViewController *RootVC() {
 
 // @ 0x89344
 //
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0x89348
 //
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return SettingGameRowCount; // 3 header rows (0/2/4) each followed by a collapsible detail row
                                 // (1/3/5)
@@ -261,7 +252,7 @@ static UIViewController *RootVC() {
 // the selected row, in which case they expand to their _dummyFrm height. Header
 // rows use the default 65pt.
 //
-// @complete (row 5/3/1 read _dummyFrm[4/2/0].size.height at offsets
+// (row 5/3/1 read _dummyFrm[4/2/0].size.height at offsets
 // 0x4c/0x2c/0xc; default 65.0).
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == SettingGameRowSizeDetail) {
@@ -290,7 +281,6 @@ static UIViewController *RootVC() {
 // detail-container cell (rows 1/3/5) that embeds the section's sub-controller
 // view.
 //
-// @complete
 // Every colour, frame, and centring constant was byte-verified: the "Cell%ld-%ld"
 // identifier (0x134-region CFString, hyphen), the three header colours
 // (1.0/0.647/0.627, 1.0/0.733/0.313, 0.580/0.961/0.373), the detail box borders
@@ -496,7 +486,7 @@ static UIViewController *RootVC() {
 // section, then reload the tapped row to animate the detail row above/below
 // open or closed.
 //
-// @complete (reload animation is UITableViewRowAnimationNone = 5).
+// (reload animation is UITableViewRowAnimationNone = 5).
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.row == SettingGameRowSoundDetail || indexPath.row == SettingGameRowEffectDetail ||
         indexPath.row == SettingGameRowSizeDetail) {
@@ -514,7 +504,6 @@ static UIViewController *RootVC() {
 
 // @ 0x8a34c -- back button action.
 //
-// @complete
 - (void)settingClose {
     [self startCloseAnimation];
 }

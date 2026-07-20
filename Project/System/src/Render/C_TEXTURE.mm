@@ -34,7 +34,6 @@ static int neTextureUpload(ne::C_TEXTURE *tex, int texW, int texH, int format, c
 // (+0x44); every other field is zero (the disasm zero-fills +0x04..+0x33 with
 // three vst1 stores and writes +0x40 = 0). The in-class member initializers
 // reproduce this exactly.
-// @complete
 ne::C_TEXTURE::C_TEXTURE() = default;
 
 // Ghidra: FUN_000180f8 — the destructor owns teardown: unlink from the shared
@@ -45,7 +44,6 @@ ne::C_TEXTURE::C_TEXTURE() = default;
 // compiler-emitted deleting-destructor thunk (this dtor + operator delete under
 // an SjLj cleanup frame); neTextureRelease dispatches through it on the last
 // reference.
-// @complete
 ne::C_TEXTURE::~C_TEXTURE() {
     if (next != nullptr && prev != nullptr) { // unlink from the cache ring
         next->prev = prev;
@@ -73,7 +71,6 @@ bool ne::C_TEXTURE::load(const char *path) {
 // (+0x18), and routes the delete through the renderer's deleteTexture vtable slot
 // (+0xb8) so the backend's bound-texture cache is cleared too — a raw
 // glDeleteTextures would leave a stale cache entry for a later reused name.
-// @complete
 void ne::C_TEXTURE::releaseGL() {
     if (m_filePath != nullptr && m_name != 0) {
         neGetCurrentRenderer()->deleteTexture(m_name); // +0xb8
@@ -88,7 +85,6 @@ void ne::C_TEXTURE::releaseGL() {
 // padded buffer size (+0x2c) for the CoreGraphics context and re-uploads through
 // the same neTextureUpload path. Returns true when there is nothing to reload
 // (no resolved path) or the re-upload succeeds, false only on a decode failure.
-// @complete
 bool ne::C_TEXTURE::reload() {
     if (m_filePath == nullptr) {
         return true;
@@ -130,7 +126,6 @@ bool ne::C_TEXTURE::reload() {
 // function: bundle lookup order (base+ext, then raw-path fallback, then @2x, then
 // base+ext), m_bufferSize = tw*4*th, g_dwTextureMemTotal += m_bufferSize, and the
 // format-1 upload through neTextureUpload are all disassembly-verified.
-// @complete
 bool ne::C_TEXTURE::decodeAndUpload(const char *path) {
     NSString *full = @(path);
     NSString *ext = full.pathExtension;
@@ -212,7 +207,6 @@ bool ne::C_TEXTURE::decodeAndUpload(const char *path) {
 // (onDidEnterBackground / notifyEnterForeground, which read the very same global)
 // all walk ONE list. The self-linked empty-node structure is confirmed by the
 // list walk/splice in AepTextureCacheAcquire (FUN_0001bbf0).
-// @complete
 ne::C_TEXTURE *AepTextureCacheSentinel() {
     if (g_textureCacheList == nullptr) {
         ne::C_TEXTURE *s = new ne::C_TEXTURE(); // operator new(0x48) + ctor FUN_000180c4
@@ -229,7 +223,6 @@ ne::C_TEXTURE *AepTextureCacheSentinel() {
 // list, and returns it. Returns null when the image fails to load (the binary,
 // like this, leaves the failed allocation without an explicit delete). The
 // neDebugLog calls are RHYDBG diagnostics that compile out in the shipped config.
-// @complete
 ne::C_TEXTURE *AepTextureCacheAcquire(const char *path) {
     ne::C_TEXTURE *sentinel = AepTextureCacheSentinel();
 
@@ -266,7 +259,6 @@ ne::C_TEXTURE *AepTextureCacheAcquire(const char *path) {
 // (FUN_00018200), then retain and bind the new one. The 2nd argument is a real
 // incoming ne::C_TEXTURE* (verified in the disassembly) that the decompiler drops
 // at the call site. The tile's texture is at tile+0x4; its refcount at +0x04.
-// @complete
 void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, ne::C_TEXTURE *tex) {
     // Release whatever texture the tile currently holds — unconditionally, the
     // binary does NOT skip the release when the incoming texture is the same one
@@ -293,7 +285,6 @@ void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, ne::C_TEXTURE *tex) {
 // enum — RGBA(1) or LUMINANCE_ALPHA(2)). Returns 1. No old name is released: a
 // fresh load has none, and a foreground reload's old names died with the GL
 // context.
-// @complete
 static int neTextureUpload(ne::C_TEXTURE *tex, int texW, int texH, int format, const void *pixels) {
     tex->m_format = format; // +0x40
     ne::C_RENDER *r = neGetCurrentRenderer();
@@ -326,7 +317,6 @@ static int neTextureUpload(ne::C_TEXTURE *tex, int texW, int texH, int format, c
 // Ghidra: FUN_00018644 — record dims + byte size for pre-decoded pixels and
 // upload. The byte size is width*height*4 (source dims, not the padded texW*texH),
 // added to g_dwTextureMemTotal; returns 1. Disassembly-verified.
-// @complete
 int neTextureSetDataParams(
     ne::C_TEXTURE *tex, int width, int height, int format, const void *pixels, int texW, int texH) {
     tex->setSourceSize(texW, texH); // +0x24/+0x28
@@ -340,7 +330,6 @@ int neTextureSetDataParams(
 // Ghidra: FUN_00018684 — decode an in-memory image (bridged NSData*) and upload
 // it as a power-of-two GL texture. bytes = tw*4*th, added to g_dwTextureMemTotal;
 // format-1 upload; returns 1 on success, 0 on decode failure. Disassembly-verified.
-// @complete
 int neTextureLoadFromData(ne::C_TEXTURE *tex, const void *nsData) {
     UIImage *image = [[UIImage alloc] initWithData:(__bridge NSData *)nsData];
     if (image == nil) {
@@ -384,7 +373,6 @@ int neTextureLoadFromData(ne::C_TEXTURE *tex, const void *nsData) {
 // Ghidra: FUN_00018828 — re-bind + re-upload through the current renderer.
 // bindTexture(name) (+0xc0) then uploadTexture(format, texWidth, texHeight, pixels)
 // (+0xcc). Disassembly-verified.
-// @complete
 void neTextureRebind(ne::C_TEXTURE *tex, const void *pixels) {
     ne::C_RENDER *r = neGetCurrentRenderer();
     r->bindTexture(tex->name()); // +0xc0
@@ -393,7 +381,6 @@ void neTextureRebind(ne::C_TEXTURE *tex, const void *pixels) {
 }
 
 // Ghidra: FUN_0001bcfc — build a cached ne::C_TEXTURE from raw pixel data.
-// @complete
 ne::C_TEXTURE *
 neCreateTextureFromData(int width, int height, int format, const void *pixels, int texW, int texH) {
     ne::C_TEXTURE *tex = new ne::C_TEXTURE(); // operator new(0x48) + ctor FUN_000180cc
@@ -423,7 +410,6 @@ neCreateTextureFromData(int width, int height, int format, const void *pixels, i
 // the node to `delete` (its deleting-destructor vtable slot +0x04). The unlink,
 // GL-name delete and memory-accounting all live in the destructor (FUN_000180f8),
 // so this is just the refcount gate — it does NOT unlink or release GL itself.
-// @complete
 void neTextureRelease(void *tex) {
     ne::C_TEXTURE *t = static_cast<ne::C_TEXTURE *>(tex);
     if (--t->refCount != 0) { // destroy only when the count hits exactly zero

@@ -14,7 +14,6 @@
 // (UTF-8). The binary passes the "%d/%02d/15 12:00:00" CFString (@ 0x10869e) as
 // charactersToLeaveEscaped — a reused date-format literal, unusual but
 // recovered verbatim and kept faithful.
-// @complete
 - (NSString *)URLDecodedString {
 #if defined(__IPHONE_9_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0
     // -stringByRemovingPercentEncoding unescapes every escape (UTF-8); the

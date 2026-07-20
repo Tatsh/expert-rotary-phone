@@ -51,24 +51,20 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 @synthesize delegate = _delegate; // -delegate @ 0x289d4 / -setDelegate: @ 0x289e8
 
 // @ 0x28524
-// @complete
 - (int)GetFrontBufferWidth {
     return m_FrontBufferWidth;
 }
 // @ 0x28534
-// @complete
 - (int)GetFrontBufferHeight {
     return m_FrontBufferHeight;
 }
 
 // GL ES views are backed by a CAEAGLLayer. @ 0x280e4
-// @complete
 + (Class)layerClass {
     return [CAEAGLLayer class];
 }
 
 // @ 0x280d4 — the live view instance (raw global set in initWithFrame:).
-// @complete
 + (neGLView *)GetInstance {
     return g_pGLViewInstance;
 }
@@ -76,7 +72,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 #pragma mark - Touch -> engine input
 
 // @ 0x285e8 — report each touch's location (+ the view size for mapping).
-// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     CGRect frame = self.frame;
     neGraphics &gfx = neGraphics::shared();
@@ -90,7 +85,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 }
 
 // @ 0x28718 — report each touch's new + previous location (drag tracking).
-// @complete
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     neGraphics &gfx = neGraphics::shared();
     for (UITouch *touch in touches) {
@@ -101,7 +95,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 }
 
 // @ 0x28850 — if every touch ended, clear all; otherwise report each end.
-// @complete
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     neGraphics &gfx = neGraphics::shared();
     if (touches.count == [event touchesForView:self].count) {
@@ -117,7 +110,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 
 // @ 0x289c4 — a cancelled touch is handled exactly like an ended one
 // (the binary tail-calls -touchesEnded:withEvent:).
-// @complete
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [self touchesEnded:touches withEvent:event];
 }
@@ -125,7 +117,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 #pragma mark - Render surface
 
 // @ 0x28100 — create the EAGL context + FBO once the view exists.
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         // The CAEAGLLayer drawable: opaque, non-retained backing, RGB565.
@@ -168,7 +159,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 // state, not object graph, so ARC will not free them. The original also
 // released m_GLContext (ARC handles that) and called [super dealloc] (never
 // call it here).
-// @complete
 - (void)dealloc {
     // Buffer deletes route through m_GLInterface (vtable +0x14 / +0x20), each gated
     // on a live name, matching the binary.
@@ -187,19 +177,16 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 }
 
 // @ 0x28544 — make the GL context current.
-// @complete
 - (BOOL)BeginRender {
     return [EAGLContext setCurrentContext:m_GLContext];
 }
 
 // @ 0x28570 — bind the default framebuffer through m_GLInterface (vtable +0x18).
-// @complete
 - (void)SetDefaultFrameBuffer {
     m_GLInterface->bindFramebuffer(m_DefaultFramebuffer);
 }
 
 // @ 0x28594 — bind the colour renderbuffer through m_GLInterface (vtable +0x24).
-// @complete
 - (void)SetDefaultColorBuffer {
     m_GLInterface->bindRenderbuffer(m_ColorRenderbuffer);
 }
@@ -207,7 +194,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 // @ 0x285b8 — present the cached renderbuffer target to the screen. The binary
 // does NOT bind the colour renderbuffer first; it hands -presentRenderbuffer: the
 // m_PresentTarget ivar (GL_RENDERBUFFER_OES, cached from presentTarget() at init).
-// @complete
 - (BOOL)Present {
     return [m_GLContext presentRenderbuffer:m_PresentTarget];
 }
@@ -217,7 +203,6 @@ static __unsafe_unretained neGLView *g_pGLViewInstance = nil;
 // completeness, then notify the delegate so it can update the projection. The
 // binary does NOT publish scene metrics here (no neSceneManager::setScreenMetrics);
 // that stand-in has been removed.
-// @complete
 - (void)layoutSubviews {
     m_GLInterface->bindRenderbuffer(m_ColorRenderbuffer); // +0x24
     [m_GLContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer *)self.layer];

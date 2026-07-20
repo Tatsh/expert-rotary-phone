@@ -83,7 +83,6 @@ constexpr int kColX[3] = {139, 190, 242};
 
 // @ 0xb5230 — draw a right-aligned 3-digit count using the difficulty's digit
 // art.
-// @complete
 - (void)addCntNum:(int)value sheet:(int)sheet y:(int)y view:(UIView *)view {
     const CGFloat s = _scaleForPad;
     const int baseX = kColX[sheet];
@@ -102,7 +101,6 @@ constexpr int kColX[3] = {139, 190, 242};
 }
 
 // @ 0xb4280
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData {
     self = [super initWithFrame:frame];
     _friendData = friendData; // stored before the nil-check, matching the binary
@@ -269,7 +267,6 @@ constexpr int kColX[3] = {139, 190, 242};
 }
 
 // @ 0xb5480 — fade in over 0.3s (DAT_000b5550).
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -286,14 +283,12 @@ constexpr int kColX[3] = {139, 190, 242};
 }
 
 // @ 0xb5558
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
 
 // @ 0xb5570 — decide cancel SE, fade out over 0.3s (DAT_000b5638). The binary
 // clears the guard.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -309,7 +304,6 @@ constexpr int kColX[3] = {139, 190, 242};
 }
 
 // @ 0xb5640
-// @complete
 - (void)endCloseAnimation {
     [self removeFromSuperview];
     _isAnimationing = NO;
@@ -318,7 +312,6 @@ constexpr int kColX[3] = {139, 190, 242};
 
 // @ 0xb5a34 — tapping the portrait (tag 0x65) opens the chara/skill card (tag
 // 0x66) with the decide SE.
-// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     if ([[[touches anyObject] view] tag] == 0x65) {
         neEngine::playSystemSe(1);
@@ -333,7 +326,6 @@ constexpr int kColX[3] = {139, 190, 242};
 
 // @ 0xb5b70 — a tap that ends outside the portrait/card region closes the card
 // (or the detail).
-// @complete
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     NSUInteger tag = [[[touches anyObject] view] tag];
     if (tag - 100 < 3) { // unsigned (BLO): only 100/101/102 swallow; other tags fall through
@@ -348,7 +340,6 @@ constexpr int kColX[3] = {139, 190, 242};
 
 // @ 0xb5be8 — confirm before unfriending (needs a friendData and no request
 // already running).
-// @complete
 - (void)startRemoveFriendHttp {
     if (_dlRemoveFriend == nil && _friendData != nil) {
         CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"フレンドを解除します"
@@ -362,7 +353,6 @@ constexpr int kColX[3] = {139, 190, 242};
 
 // @ 0xb5898 — alert responses: tag-100 (result) reloads the list + closes; the
 // confirm alert's "OK" (index 1) fires the unfriend POST.
-// @complete
 - (void)commonAlertView:(CommonAlertView *)alertView clickedButtonAtIndex:(NSInteger)index {
     if ([alertView tag] == 100) {
         [[DownloadMain getInstance] startGetFriendListHttp];
@@ -386,7 +376,6 @@ constexpr int kColX[3] = {139, 190, 242};
 
 // @ 0xb5678 — unfriend POST finished: show the result (tag 100), success vs.
 // failure by whether the JSON body came back.
-// @complete
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_dlRemoveFriend getDataInJSON];
     NSString *message;
@@ -415,13 +404,11 @@ constexpr int kColX[3] = {139, 190, 242};
 }
 
 // @ 0xb57cc — no-op.
-// @complete
 - (void)downloaderProceed:(Downloader *)downloader {
 }
 
 // @ 0xb57d0 — unfriend POST failed at the transport level: generic comms-error
 // alert.
-// @complete
 - (void)downloaderError:(Downloader *)downloader {
     _dlRemoveFriend = nil;
     [_dummyView setHidden:YES];
@@ -436,13 +423,11 @@ constexpr int kColX[3] = {139, 190, 242};
 }
 
 // @ 0xb5c98
-// @complete
 - (BOOL)isEnabled {
     return _isEnabled;
 }
 
 // @ 0xb53fc
-// @complete
 - (void)dealloc {
     if (_dlRemoveFriend != nil) {
         [_dlRemoveFriend cancel];

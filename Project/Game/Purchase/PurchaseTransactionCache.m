@@ -10,7 +10,6 @@
 @implementation PurchaseTransactionCache
 
 // @ 0x56168
-// @complete
 - (instancetype)initWithTransaction:(SKPaymentTransaction *)transaction {
     if ((self = [super init])) {
         _productID = transaction.payment.productIdentifier;

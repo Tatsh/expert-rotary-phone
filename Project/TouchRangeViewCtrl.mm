@@ -58,7 +58,6 @@
 }
 
 // @ 0x8a360
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -140,7 +139,6 @@
 // behavior)
 
 // @ 0x8a9fc — persist the chosen radius on the way out.
-// @complete
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     // NOTE: +saveTouchRadius: is present in the binary but not yet declared in
@@ -152,13 +150,11 @@
 
 // @ 0x8aa9c — live slider drag: track the value (the radius circle is re-tested
 // on the next touch via -isEnablePoint:).
-// @complete
 - (void)sliderValChanged:(id)sender {
     _radius = [_radiusSlider value];
 }
 
 // @ 0x8aad0 — reset to the default radius and reflect it on the slider.
-// @complete
 - (void)touchedResetButton:(id)sender {
     _radius = 68.0f; // 0x42880000
     [_radiusSlider setValue:_radius];
@@ -168,7 +164,6 @@
 // centre is the live view width's midpoint horizontally, and the pop-kun's
 // vertical midpoint (top 268 + height/2). Modelled from the binary's
 // pointInCircle() helper.
-// @complete
 - (BOOL)isEnablePoint:(CGPoint)point {
     const CGFloat cx = self.view.frame.size.width * 0.5f;
     const CGFloat cy = [_toucheRangeView getImageHeight] * 0.5f + 268.0f; // 0x43860000
@@ -179,7 +174,6 @@
 
 // @ 0x8abd0 — first touch down: if no touch is active, record its point and
 // light up the preview when it falls inside the radius.
-// @complete
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     if (_touchedPoint.x == -1.0f && _touchedPoint.y == -1.0f) {
         for (UITouch *touch in touches) {
@@ -196,7 +190,6 @@
 // @ 0x8ad0c — drag: find the touch whose previous location matches the tracked
 // point, update it, and toggle the preview only when the enabled-state actually
 // changes.
-// @complete
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     if (_touchedPoint.x != -1.0f || _touchedPoint.y != -1.0f) {
         for (UITouch *touch in touches) {
@@ -216,7 +209,6 @@
 
 // @ 0x8af28 — lift: when every touch has ended (or the tracked touch's is the
 // one that lifted), clear the preview and reset the tracked point to "none".
-// @complete
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     if (_touchedPoint.x != -1.0f || _touchedPoint.y != -1.0f) {
         if ([touches count] == [[event touchesForView:self.view] count]) {
@@ -238,14 +230,12 @@
 }
 
 // @ 0x8b15c — cancel is handled identically to a normal touch end.
-// @complete
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [self touchesEnded:touches withEvent:event];
 }
 
 // @ 0x8b16c — back button: play the cancel SE, restore the settings nav bar
 // background and pop.
-// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // Ghidra: NESceneManager_shared();
                                // SysSePlayIntoSlot(&g_pNeSceneManager, 2)

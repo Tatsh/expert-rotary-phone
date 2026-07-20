@@ -25,7 +25,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // Plain assign accessors (the delegate is not retained). Ghidra: delegate
 // getter @ 0x850c4 / setDelegate: @ 0x850d4 (synthesized).
-// @complete
 @synthesize delegate = _delegate;
 
 // @ 0x8396c — build the whole age-gate: a full-screen touch blocker, a rounded
@@ -34,7 +33,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // (title + YearAndMonthPicker + Cancel/ Decide). The two panels swap places
 // when OK is tapped (see -onOkBtn:). All frames, the 3-stop border gradient and
 // the OK-button placement are decoded from the NEON geometry.
-// @complete
 - (id)init {
     self = [super init];
     if (self == nil) {
@@ -230,7 +228,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 
 // @ 0x84c30 — cancel: play the cancel SE (slot 2), record that the gate was
 // dismissed without a birthday, then slide the panel away.
-// @complete
 - (void)onCancelBtn:(id)sender {
     neEngine::playSystemSe(2);
     [UserSettingData saveIsBirthDayCanceled:YES];
@@ -241,7 +238,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // into a concrete date (the 15th of that month at noon, parsed through a fixed
 // formatter so the day/time are pinned), persist it as the birthday, clear the
 // cancel flag, then close.
-// @complete
 - (void)onDecideBtn:(id)sender {
     neEngine::playSystemSe(1);
 
@@ -265,7 +261,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // backdrop up to 50%. Guarded against overlapping animations; -endOpenAnimation
 // clears the guard. (The off-screen start frame is NEON-spilled in the binary;
 // the panel begins one panel-height above its resting Y.)
-// @complete
 - (void)startOpenAnimation {
     if (m_IsAnimationing) {
         return;
@@ -294,7 +289,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // (@ 0x84a94: y <- root.view.frame.size.height, so it drops off the bottom), and
 // the sub-panel animates back to its own captured resting frame (@ 0x84aac: y <-
 // its original origin.y in s16). Duration 0.5 (0x3fe0000000000000).
-// @complete
 - (void)onOkBtn:(id)sender {
     if (m_IsAnimationing) {
         return;
@@ -328,7 +322,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // Guarded so overlapping animations are ignored. (The exact off-screen frame is
 // NEON-spilled in the binary; the panel is moved up by its own height, the
 // reverse of the open slide.)
-// @complete
 - (void)startCloseAnimation {
     if (m_IsAnimationing) {
         return;
@@ -349,7 +342,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 // @ 0x84fec — close finished: pull the whole VC view out of the hierarchy and
 // tell the delegate the gate is done (so the purchase flow can re-check the
 // spending limit).
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     if ([_delegate respondsToSelector:@selector(birthDayViewClose)]) {
@@ -359,7 +351,6 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
 }
 
 // @ 0x84e70 — open finished: just clear the animating guard.
-// @complete
 - (void)endOpenAnimation {
     m_IsAnimationing = NO;
 }

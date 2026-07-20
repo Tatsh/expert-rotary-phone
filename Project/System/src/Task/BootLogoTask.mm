@@ -51,7 +51,6 @@ bool BootLogoTask::skipRequested() const {
  * chosen per display (iPad/Retina/phone); all twelve resource names were read
  * from the DAT_00130fd4.. CFString tables (pool @ 0x103779) and match exactly.
  * @ghidraAddress 0x2b1f4
- * @complete
  */
 void BootLogoTask::setup() {
     m_aep = &AepManager::shared();
@@ -122,7 +121,6 @@ void BootLogoTask::setup() {
  * at FUN_0000fbcc).
  * @ghidraAddress 0x2b4b4
  * @ghidraAddress 0x2b504
- * @complete
  */
 void BootLogoTask::drawLogo(neTextureForiOS *logo) {
     if (logo == nullptr) {
@@ -161,7 +159,6 @@ void BootLogoTask::drawLogo(neTextureForiOS *logo) {
  * blit the second branding sprite (m_logo[1], @ +0x30); just drawLogo() bound to
  * that sprite.
  * @ghidraAddress 0x2b504
- * @complete
  */
 void BootLogoTask::drawLogo1() {
     drawLogo(m_logo[1].get());
@@ -171,7 +168,6 @@ void BootLogoTask::drawLogo1() {
  * BootLogoTask_drawLogo2 — the per-screen draw wrapper for the third branding
  * sprite (m_logo[2], @ +0x34); drawLogo() bound to that sprite.
  * @ghidraAddress 0x2b4b4
- * @complete
  */
 void BootLogoTask::drawLogo2() {
     drawLogo(m_logo[2].get());
@@ -181,7 +177,6 @@ void BootLogoTask::drawLogo2() {
  * Ghidra: BootLogoTask_finish (FUN_0002b554) — log into Game Center, restore
  * the screen scale, release the three sprites, kill this task, and spawn the
  * next one (TitleTask).
- * @complete
  */
 void BootLogoTask::finish() {
     [AppDelegate.appDelegate loginGameCenter];
@@ -201,7 +196,6 @@ void BootLogoTask::finish() {
  * Ghidra: BootLogoTask_update (FUN_0002b02c) — the 10-state splash machine.
  * Each screen fades in, holds ~kHoldFrames (or until a tap), then fades out;
  * the three logos are shown in the order 0, 2, 1.
- * @complete
  */
 void BootLogoTask::update(int /*deltaMs*/) {
     const bool skip = skipRequested();

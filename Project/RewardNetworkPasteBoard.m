@@ -34,7 +34,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 @implementation RewardNetworkPasteBoard
 
 // @ 0xf5988
-// @complete
 - (instancetype)initWithServiceName:(NSString *)serviceName dataType:(NSString *)dataType {
     self = [super init];
     if (self) {
@@ -49,7 +48,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 //   _dataType; not hand-written.
 
 // @ 0xf6d64
-// @complete
 - (NSString *)getServiceName {
     NSString *env = [[NSUserDefaults standardUserDefaults] objectForKey:@"ApplilinkReward.env"];
     if (![env isEqualToString:@"0"] && env != nil) {
@@ -59,7 +57,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf5a60
-// @complete
 - (NSDictionary *)storageData {
     if (_serviceName == nil) {
         return nil;
@@ -82,7 +79,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf5bb8
-// @complete
 - (NSDictionary *)storageDataWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error {
     if (storageIndex >= kRewardStorageIndexLimit) {
         if (error != NULL) {
@@ -146,7 +142,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 
 // @ 0xf604c — scan for the first free slot (no existing pasteboard) and write
 // there; on a failed write the slot is deleted and scanning continues.
-// @complete
 - (NSDictionary *)writeStorageData:(NSString *)data error:(NSError **)error {
     NSString *service = [self getServiceName];
     NSError *deleteError = nil;
@@ -181,7 +176,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf6214
-// @complete
 - (NSDictionary *)writeStorageData:(NSString *)data
                       storageIndex:(NSInteger)storageIndex
                              error:(NSError **)error {
@@ -237,7 +231,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf6560
-// @complete
 - (BOOL)deleteWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error {
     if (storageIndex >= kRewardStorageIndexLimit) {
         if (error != NULL) {
@@ -272,7 +265,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf6b90
-// @complete
 - (NSDictionary *)convertToData:(NSDictionary *)data storageIndex:(NSInteger)storageIndex {
     NSMutableDictionary *converted = [NSMutableDictionary dictionaryWithDictionary:data];
     converted[@"StorageIndex"] = @(storageIndex);
@@ -288,7 +280,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf6e48
-// @complete
 - (void)debugLog {
     if (_serviceName == nil) {
         return;
@@ -308,7 +299,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf69a8
-// @complete
 + (NSData *)createHash:(NSData *)data {
     unsigned char digest[CC_SHA1_DIGEST_LENGTH] = {0};
     CC_SHA1(data.bytes, (CC_LONG)data.length, digest);
@@ -316,7 +306,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf6a54
-// @complete
 + (NSData *)cryptorToData:(CCOperation)operation value:(NSData *)value key:(NSData *)key {
     NSMutableData *output = [NSMutableData dataWithLength:value.length + kCCBlockSizeAES128];
     size_t moved = 0;
@@ -338,7 +327,6 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 // @ 0xf6718
-// @complete
 + (BOOL)validate:(NSDictionary *)data error:(NSError **)error {
     if (![data isKindOfClass:[NSDictionary class]]) {
         if (error != NULL) {

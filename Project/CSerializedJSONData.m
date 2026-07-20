@@ -10,7 +10,6 @@
 @implementation CSerializedJSONData
 
 // @ 0x6a4c4
-// @complete
 - (id)initWithData:(NSData *)inData {
     if ((self = [super init]) == nil) {
         return nil;
@@ -22,7 +21,6 @@
 // dealloc @ 0x6a4f0 — ARC-omitted (object ivars only).
 
 // @ 0x6a540
-// @complete
 - (NSData *)data {
     return data;
 }

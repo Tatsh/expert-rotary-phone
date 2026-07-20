@@ -20,7 +20,6 @@
 // the alert for result < 2 (fires it for result > Done), building the CommonAlert
 // with title nil / cancel nil / other "OK", then always re-fetches the root VC
 // (bl 0xb194) and tail-calls dismissViewControllerAnimated:1 completion:nil.
-// @complete
 static void PresentTweet(NSString *text, UIImage *image) {
 #if !defined(__IPHONE_11_0) || __IPHONE_OS_VERSION_MAX_ALLOWED < __IPHONE_11_0
     UIViewController *root = neSceneManager::rootViewController();
@@ -71,14 +70,12 @@ static void PresentTweet(NSString *text, UIImage *image) {
 //   the @property declarations in TwitterUtil.h.
 
 // Ghidra: @ 0x78934 — verified: tail-call initWithText:nil image:nil.
-// @complete
 - (instancetype)init {
     return [self initWithText:nil image:nil];
 }
 
 // Ghidra: @ 0x78948 — verified: [super init]; on non-nil, self.text = text;
 // self.image = image (property setters).
-// @complete
 - (instancetype)initWithText:(NSString *)text image:(UIImage *)image {
     self = [super init];
     if (self != nil) {
@@ -91,14 +88,12 @@ static void PresentTweet(NSString *text, UIImage *image) {
 // Ghidra: @ 0x78a4c — verified: rootViewController; compose for Twitter;
 // setCompletionHandler: (block @ 0x78b10); setInitialText:self.text; addImage:
 // only if self.image != nil; presentViewController animated:1 completion:nil.
-// @complete
 - (void)tweet {
     PresentTweet(self.text, self.image);
 }
 
 // Ghidra: @ 0x78bb8 — verified: identical body to -tweet with text/image args
 // (distinct block instance @ 0x78c70, same body).
-// @complete
 + (void)tweetWithText:(NSString *)text image:(UIImage *)image {
     PresentTweet(text, image);
 }

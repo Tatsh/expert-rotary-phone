@@ -10,7 +10,6 @@
 @implementation RewardNetworkIndicator
 
 // @ 0xf3c0c — a half-opaque black overlay with an 80x80 large white spinner.
-// @complete
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
@@ -25,7 +24,6 @@
 }
 
 // @ 0xf3d58 — keep the spinner centered in the overlay.
-// @complete
 - (void)layoutSubviews {
     [super layoutSubviews];
     self.indicator.center =
@@ -33,14 +31,12 @@
 }
 
 // @ 0xf3e14
-// @complete
 - (void)show {
     self.hidden = NO;
     [self.indicator startAnimating];
 }
 
 // @ 0xf3e64
-// @complete
 - (void)close {
     self.hidden = YES;
     [self.indicator stopAnimating];

@@ -28,13 +28,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// @complete
 AepOrderingTable::AepOrderingTable() {
     reset();
 }
 
 // Reset for a new frame: no live commands, empty buckets.
-// @complete
 void AepOrderingTable::reset() {
     m_count = 0;
     m_maxPriority = 0;
@@ -46,7 +44,6 @@ void AepOrderingTable::reset() {
 
 // Ghidra: FUN_00010be0 (get_aepOt/allocEntry). Grab the next pool entry, tag it
 // with `priority`, and head-insert it into that priority's bucket.
-// @complete
 AepOtSpriteCmd *AepOrderingTable::allocEntry(int priority) {
     assert(m_count < kOtRegistMax); // AepOrderingTable.mm:0x3d "m_OtCount < OT_REGIST_MAX"
     assert(priority < kOtPriMax);   // AepOrderingTable.mm:0x3e "pri < OT_PRI_MAX"
@@ -78,7 +75,6 @@ AepOtSpriteCmd *AepOrderingTable::allocEntry(int priority) {
 // neTextureForiOS::draw (FUN_0000fbcc) already vcvt-converts exactly those two scale
 // args to float and passes the positions as ints, so this fill mirrors the binary
 // store-for-store.
-// @complete
 AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
                                              int nTexV,
                                              int nPosX,
@@ -154,7 +150,6 @@ AepOtSpriteCmd *AepOrderingTable::drawSprite(neTextureForiOS *pTexture,
 // handler. Each handler receives the raw command fields in the exact order the
 // binary passes them (the field slots are reinterpreted per type; the handler
 // bodies follow their own FUN_* decompiles). Priority 0 draws last = frontmost.
-// @complete
 void AepOrderingTable::flush() {
     // Pure dispatch, exactly as FUN_000115d0: the per-frame 2D render state
     // (top-left ortho projection, identity model matrix and default blend) is
@@ -309,7 +304,6 @@ void AepOrderingTable::flush() {
 
 // Ghidra: aepOtSetScreenParams (FUN_00010bbc) — cache the screen extents, the
 // per-slot texture-handle table and the device-pixel render scale on the OT.
-// @complete
 void AepOrderingTable::setScreenParams(neTextureForiOS **textureTable,
                                        int screenW,
                                        int screenH,
@@ -358,7 +352,6 @@ static inline int aepScale(int c, float s) {
 // ot+0x04/+0x08). The six words are (size, x, y, justify, alpha, colorRGB) in that
 // order — the first is the point size, NOT a position (Ghidra mislabelled it
 // flPosXf); drawAepOtText reads them back as neDrawText(pointSize, posX, posY).
-// @complete
 void pushAepOtTextCmd(AepOrderingTable *ot,
                       const char *text,
                       int size,
@@ -397,7 +390,6 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
 }
 
 // Ghidra: AepOrderingTable::drawAepOtLine (FUN_00010f98).
-// @complete
 void AepOrderingTable::drawAepOtLine(int x0, int y0, int x1, int y1, int alpha, uint32_t color) {
     const float s = renderScale();
     neDrawLine(aepScale(x0, s),
@@ -411,7 +403,6 @@ void AepOrderingTable::drawAepOtLine(int x0, int y0, int x1, int y1, int alpha, 
 }
 
 // Ghidra: AepOrderingTable::drawAepOtRect (FUN_0001113c).
-// @complete
 void AepOrderingTable::drawAepOtRect(int x0, int y0, int x1, int y1, int alpha, uint32_t color) {
     const float s = renderScale();
     neDrawRect(aepScale(x0, s),
@@ -430,7 +421,6 @@ void AepOrderingTable::drawAepOtRect(int x0, int y0, int x1, int y1, int alpha, 
 // reconstruction appended a fabricated fourth x that the real, extern-"C"
 // primitive silently discarded; removed for 1:1. (The exact VFP vertex
 // permutation is register-allocator obscured.)
-// @complete
 void AepOrderingTable::drawAepOtTriangle(
     int x0, int y0, int x1, int y1, int x2, int y2, int alpha, uint32_t color) {
     const float s = renderScale();
@@ -449,7 +439,6 @@ void AepOrderingTable::drawAepOtTriangle(
 // Ghidra: drawAepOtQuad (FUN_000111f8). Four scaled corner vertices. neDrawQuad
 // (FUN_000153e8) consumes exactly those four; the earlier reconstruction
 // appended a fabricated fifth x (a discarded extern-"C" arg) — removed for 1:1.
-// @complete
 void AepOrderingTable::drawAepOtQuad(
     int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int alpha, uint32_t color) {
     const float s = renderScale();
@@ -470,7 +459,6 @@ void AepOrderingTable::drawAepOtQuad(
 // Ghidra: drawAepOtText (FUN_00011310). Position and glyph size are scaled by
 // the render scale; the colour vector is likewise scaled (VectorMultiply by
 // scale) and forwarded.
-// @complete
 void AepOrderingTable::drawAepOtText(const char *text,
                                      const char *font,
                                      int x,
@@ -507,7 +495,6 @@ void AepOrderingTable::drawAepOtText(const char *text,
 // bl 0x15fb8 argument mapping was traced register-by-register from the
 // disassembly (r0=&pTexRefArray[frameIdx], r1=flDstX->x, r2=flDstY->y,
 // r3=flDstW->width, [sp]=flDstH->height, colour from nColor, alpha=nAlpha*255/100).
-// @complete
 void drawAepSpriteClipped(neTextureForiOS *pFrames,
                           int nWidth,
                           int nFrameIn,
@@ -614,7 +601,6 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
 // visibility (a fully-transparent, unrotated, unscaled sprite is culled) and
 // forward to drawAepSpriteClipped with the sprite record's source rect and the
 // scaled transform.
-// @complete
 void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
                                        int x,
                                        int y,
@@ -722,7 +708,6 @@ void AepOrderingTable::drawAepOtSprite(const int16_t *spriteRec,
 // drawAepSpriteClipped. The parameter order matches the binary exactly: nScaleX/Y
 // are the (int) screen position, nOfsX/Y the (float) scale percentages, nPosX/Y
 // the base size, nAlpha the colour percentage and nColorRGB the 0x00RRGGBB colour.
-// @complete
 void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
                                               int nU,
                                               int nV,

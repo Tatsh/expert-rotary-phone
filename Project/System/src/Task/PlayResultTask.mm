@@ -68,7 +68,6 @@ static MainViewController *RootVC() {
 // initialisers and the base ctor).
 // Verified against disassembly: bl 0x27ea8 (ne::C_TASK base ctor), str [r0],#0x28
 // (vtable at +0, advance to data block), _memset(+0x28, 0, 0x378).
-// @complete
 PlayResultTask::PlayResultTask() {
 }
 
@@ -84,7 +83,6 @@ PlayResultTask::~PlayResultTask() = default;
 // m_layers[5] (eventBonus @ +0x356, via 0x2caf8) then m_layers[4] (isNewRecord
 // @ +0x352); case 4 checks +0x218 not playing then rank != 6 (+0x35c); every
 // case store/order matches.
-// @complete
 void PlayResultTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
     DownloadMain *dl = [DownloadMain getInstance];
@@ -217,7 +215,6 @@ void PlayResultTask::update(int /*deltaMs*/) {
 // +0x36c (20, 0 on rank 6), FC bonus +0x370 by note count, rank bonus +0x374,
 // perfect bonus +0x378 (10), m_bonusSubtotal +0x380, m_baseBonus +0x368, 9999
 // cap, m_boardScale +0x384 (pad 100 / phone 50 via +0x355).
-// @complete
 void PlayResultTask::resultSetup() {
     AepManager &aep = AepManager::shared();
     neAppEventCenter &evt = neAppEventCenter::shared();
@@ -582,7 +579,6 @@ void PlayResultTask::resultSetup() {
 // Verified against disassembly: outer lane loop 0..9 (sp+0x34), inner group
 // loop 0..0xb; per-cell operator_new(0x18) + FUN_00011818 + load; store bases
 // step +0x28 per group (+0x34, +0x5c, ... +0x1ec), matching resultGotoNext.
-// @complete
 void PlayResultTask::loadNumberTextures() {
     // {digit-texture row, resource-name prefix}. The digit 0..9 is appended to
     // the prefix; note the underscore is present/absent exactly as in the binary
@@ -640,7 +636,6 @@ void PlayResultTask::loadNumberTextures() {
 // switch 0x18 / 0x20..0x40 / 0x46; jingle select via +0x353 (pfc), +0x354
 // (cleared), +0x35c (rank) into m_rankSe[+0x2e4..]; dismiss edge 0x370 (pad,
 // displayType 2) / 0x30c, tapX > 0xdc or tapY < edge -> state 3.
-// @complete
 void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int displayType) {
     AudioManager *audio = [AudioManager sharedManager];
     AepLyrCtrl *intro = m_layers[0].get();
@@ -727,7 +722,6 @@ void PlayResultTask::updateResultPresent(bool tapped, int tapX, int tapY, int di
 // (0x44714000); Retina half-scale (0.5) + y += 15.0 when overlayW > 0x27f &&
 // overlayH > 0x3bf; rank-letter table @ 0xf3d64 indexed by m_rank; tweet
 // UTF-16 format @ 0x12bde0 (byte-verified); bounce options literal 2.
-// @complete
 void PlayResultTask::buildShareButton(int displayType) {
     UIImage *btImage = [UIImage imageNamed:@"bt_twitter"];
 
@@ -828,7 +822,6 @@ void PlayResultTask::buildShareButton(int displayType) {
 // m_bonusSubtotal (+0x380) compared against m_pointsCountUp (+0x37c); tick % 5
 // via umull 0xcccccccd; every fifth step stops m_countSeInst (+0x32c) then
 // replays se07_count; tap snaps m_pointsCountUp to total; finish -> state 7.
-// @complete
 void PlayResultTask::updateScoreCount(bool tapped) {
     AudioManager *audio = [AudioManager sharedManager];
     switch (m_state) {
@@ -890,7 +883,6 @@ void PlayResultTask::updateScoreCount(bool tapped) {
 // unlink (0x2ca9c) + delete; shareButton +0x398, tweeter +0x39c;
 // releaseAepTexture(4); kill (+0x24 = 1); new MainTask(0xaa8) @ +0x390 if nil;
 // setPriority(3).
-// @complete
 void PlayResultTask::resultGotoNext() {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
@@ -984,7 +976,6 @@ namespace {
 // (strh r3 from stack +0x30), +0x42 = blend1 (strh r5 from stack +0x34),
 // colour @ +0x34, rotation @ +0x38, colour-multiply @ +0x44 (0xffffff here);
 // this helper delegates to the already-verified neTextureForiOS::draw.
-// @complete
 void drawTexQuad(AepManager &aep,
                  neTextureForiOS *tex,
                  int u,
@@ -1044,7 +1035,6 @@ void drawTexQuad(AepManager &aep,
 // -0x3f/4); S_POINT strip 4 digits at step -= 0x20 until -0x80, x+0x12 base;
 // rank-effect cross-fade idx from effFrame[2] (+0x2dc) vs effLyrFrames[2]
 // (+0x2cc) with one-shot screenshot.
-// @complete
 void PlayResultTask::PlayResultDrawCallback(int child,
                                             int /*frame*/,
                                             int x,
@@ -1457,7 +1447,6 @@ void PlayResultTask::PlayResultDrawCallback(int child,
 }
 
 // Ghidra: FUN_0003d5bc call site in PlayTaskGotoResult (operator_new(0x3a0)).
-// @complete
 ne::C_TASK *PlayResultCreateTask() {
     return new PlayResultTask();
 }

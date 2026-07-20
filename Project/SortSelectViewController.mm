@@ -69,7 +69,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // dimmed loading overlay with a large spinner. The rows are seeded with the
 // current sort checked.
 //
-// @complete
 // Verified: rowHeight 59.0 (0x426c0000); clear separator; 6 boxed SortData rows
 // ({SortData=sc}); 20-pt clear header; iPad inset -20/-10; friman_bg backdrop
 // on phone; dimmed overlay UIViewController with a WhiteLarge spinner centred at
@@ -134,7 +133,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // initWithStyle:, wrap self in a UINavigationController (with a back button on
 // phone) and return that nav controller.
 //
-// @complete
 - (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none))) {
     _pMusicSelTask = musicSelTask;
@@ -164,7 +162,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // @ 0xc6288 — fade the view + nav view in (phone) or slide the nav view up into
 // place (iPad).
 //
-// @complete (phone duration 0.3 verified @ 0xc6528; iPad slides 1/6 s each).
+// (phone duration 0.3 verified @ 0xc6528; iPad slides 1/6 s each).
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -212,7 +210,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 
 // @ 0xc673c
 //
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -221,7 +218,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // re-sort the task's list (and hide the loading overlay), then fade (phone) /
 // slide (iPad) the panel out.
 //
-// @complete
 // Verified: the re-sort test compares musicSort against MainTask+0x8fc
 // (appliedSort()); on a change it calls rebuildList() (FUN_0003835c) and hides
 // the overlay; phone fade uses duration 0.0; iPad slides 1/6 s each.
@@ -272,7 +268,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // @ 0xc6c0c — remove the nav view and notify the root host that the sort screen
 // closed.
 //
-// @complete
 - (void)endCloseAnimation {
     [self.navigationController.view removeFromSuperview];
     [RootVC() performSelector:@selector(SortSelectEndCallBack)];
@@ -283,14 +278,12 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 
 // @ 0xc6c78
 //
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xc6c7c — one row per sort option.
 //
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return (_sortDataArray != nil) ? (NSInteger)_sortDataArray.count : 0;
 }
@@ -298,7 +291,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // @ 0xc6ca4 — one SortCell per option (reused by "Cell%ld-%ld"), bound to its
 // boxed SortData.
 //
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // The reuse identifier uses a hyphen separator (CFString @ 0x134e38 ->
@@ -316,7 +308,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 
 // @ 0xc6db0 — no section headers.
 //
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
@@ -326,7 +317,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // overlay and (after 0.1 s) fade the panel closed. Re-picking the active sort
 // does nothing.
 //
-// @complete (saveMusicSort takes the signed-short sortType; afterDelay 0.1).
+// (saveMusicSort takes the signed-short sortType; afterDelay 0.1).
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section != 0) {
         return;
@@ -349,7 +340,6 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // @ 0xc6fe4 — the back button: play the cancel SE and fade the panel closed
 // (unless already animating).
 //
-// @complete
 - (void)backButtonFunc {
     if (_isAnimationing) {
         return;
@@ -381,7 +371,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 // Animations-block invoke of the first open-animation step. Reads the current
 // nav view frame, overrides origin.y = 420.0f, sets it back.
 //
-// @complete (self at +0x14; origin.y = 0x43d20000 = 420.0).
+// (self at +0x14; origin.y = 0x43d20000 = 420.0).
 static void friendNavSetFrameA(SortSelectViewController *self) {
     UIView *v = self.navigationController.view;
     CGRect f = (v != nil) ? v.frame : CGRectZero;
@@ -393,7 +383,7 @@ static void friendNavSetFrameA(SortSelectViewController *self) {
 // Animations-block invoke of the settle step (completion of A). Overrides
 // origin.y = 470.0f — the final resting position of the panel on screen.
 //
-// @complete (self at +0x14; origin.y = 0x43eb0000 = 470.0).
+// (self at +0x14; origin.y = 0x43eb0000 = 470.0).
 static void friendNavSetFrameB(SortSelectViewController *self) {
     UIView *v = self.navigationController.view;
     CGRect f = (v != nil) ? v.frame : CGRectZero;
@@ -407,7 +397,7 @@ static void friendNavSetFrameB(SortSelectViewController *self) {
 // addresses because the compiler emits one block-invoke function per lambda
 // site.
 //
-// @complete (self at +0x14; origin.y = 0x43d20000 = 420.0).
+// (self at +0x14; origin.y = 0x43d20000 = 420.0).
 static void friendNavSetFrameC(SortSelectViewController *self) {
     UIView *v = self.navigationController.view;
     CGRect f = (v != nil) ? v.frame : CGRectZero;
@@ -421,7 +411,7 @@ static void friendNavSetFrameC(SortSelectViewController *self) {
 // frame (or CGRectZero if nil), then replaces origin.y with rootVC.view's
 // height to push the panel off-screen below.
 //
-// @complete (self at +0x14, rootVC at +0x18; origin.y = rootVC.view height).
+// (self at +0x14, rootVC at +0x18; origin.y = rootVC.view height).
 static void friendNavSetFrameFromView(SortSelectViewController *self, UIViewController *rootVC) {
     UIView *navView = self.navigationController.view;
     CGRect f = (navView != nil) ? navView.frame : CGRectZero;

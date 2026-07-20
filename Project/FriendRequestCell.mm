@@ -32,7 +32,6 @@
 
 // @ 0xb9740 — record the layout x offsets for the chara icon / player name /
 // date / cancel button, which shift by ~2 px on iOS 7 vs 6.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -61,7 +60,6 @@
 // (`cmp #0; it lt; mov.lt #0`), the rgb(93,88,84) label colours
 // (0x3ebababb/0x3eb0b0b1/0x3ea8a8a9), the name font 0x41600000 (14.0) / date
 // font 0x41700000 (15.0), and setMinimumScaleFactor:0x41700000 (15.0).
-// @complete
 - (void)setFriendData:(NSValue *)friendData {
     FriendRequestDataStruct data;
     [friendData getValue:&data];
@@ -166,7 +164,6 @@
 }
 
 // @ 0xba048 — cancel this outgoing friend request.
-// @complete
 - (void)onTouchedCancelButton {
     // Ghidra: NESceneManager_shared(); SysSePlayIntoSlot(&g_pNeSceneManager, 2) —
     // cancel SE.

@@ -11,7 +11,6 @@
 
 // @ 0x5ef9c — returns the constant font name (CFString
 // cf_DFSoGei_W5_WIN_RKSJ_H).
-// @complete
 //
 // The binary returned this unconditionally: DFSoGei-W5-WIN-RKSJ-H was a Japanese
 // system font on the iOS 8 SDK. Modern iOS does not ship it, and the app bundles
@@ -28,7 +27,6 @@ NSString *AppFontName(void) {
 }
 
 // @ 0x5efa8 — the rounded gothic face (CFString cf_DFMaruGothic_Bd_WIN_RKSJ_H).
-// @complete
 NSString *AppMaruFontName(void) {
     return @"DFMaruGothic-Bd-WIN-RKSJ-H";
 }

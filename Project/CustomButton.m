@@ -24,7 +24,6 @@
 // With the negative insets callers pass (e.g. -20 on every edge) this enlarges
 // the tap area; the recovered vector math (origin += top/left, size -=
 // top+bottom / left+ right) is exactly UIEdgeInsetsInsetRect.
-// @complete
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
     CGRect area = UIEdgeInsetsInsetRect(self.bounds, self.tappableInsets);
     return CGRectContainsPoint(area, point);

@@ -32,7 +32,6 @@ inline uint32_t caHandleBits(uint32_t handle) {
 
 // Ghidra: FUN_0002615c. The binary mallocs 0x50 bytes and NEON-zeroes them (five
 // 16-byte vst1 stores); calloc(20, sizeof) is the behavioural equivalent.
-// @complete
 void neAVCAPlayer::systemStart(int voices) {
     m_component = new CAComponent(voices);
     m_component->start();
@@ -42,7 +41,6 @@ void neAVCAPlayer::systemStart(int voices) {
 }
 
 // Ghidra: FUN_000261e0 — AUGraphStop via the component.
-// @complete
 void neAVCAPlayer::suspend() {
     if (m_component) {
         m_component->stop();
@@ -50,7 +48,6 @@ void neAVCAPlayer::suspend() {
 }
 
 // Ghidra: FUN_000261ec — AUGraphStart via the component.
-// @complete
 void neAVCAPlayer::resume() {
     if (m_component) {
         m_component->start();
@@ -61,7 +58,6 @@ void neAVCAPlayer::resume() {
 // FUN_0002644c, which delegates the scan/grow to FUN_000267ec (grow = malloc a
 // (capacity+20)-entry array, memset it to zero, memcpy the old entries in, free
 // the old array — realloc + tail memset is the behavioural equivalent).
-// @complete
 uint32_t neAVCAPlayer::addSource(CASound *source) {
     for (int i = 0; i < m_capacity; i++) {
         if (m_sources[i] == nullptr) {
@@ -81,7 +77,6 @@ uint32_t neAVCAPlayer::addSource(CASound *source) {
 // The two NSLog literals are the exact UTF-16 CFStrings the binary references
 // (@ 0x135538 / the failure format @ 0x135548, the latter carrying a %s that
 // takes `path`); load() success is CASound::load() returning 1.
-// @complete
 uint32_t neAVCAPlayer::load(const char *path, bool loop) {
     if (path == nullptr) {
         NSLog(@"CAPlayer load: filePathが指定されていません");
@@ -99,7 +94,6 @@ uint32_t neAVCAPlayer::load(const char *path, bool loop) {
 // Ghidra: FUN_0002648c. The binary also NSLogs the JP CFStrings "…filePathが指
 // 定されていません" (null path) and "…指定された名前は既に登録済みです。" (name already
 // registered @ 0x135558); those are bare debug logs and are elided here.
-// @complete
 uint32_t neAVCAPlayer::loadNamed(const char *path, const char *callName, bool loop) {
     NSString *key = @(callName);
     if (m_nameMap[key] != nil) {
@@ -116,7 +110,6 @@ uint32_t neAVCAPlayer::loadNamed(const char *path, const char *callName, bool lo
 }
 
 // Ghidra: FUN_0002669c — reserve a mixer voice for a loaded source id.
-// @complete
 uint32_t neAVCAPlayer::prepare(uint32_t sourceId, float volume) {
     if (static_cast<int>(sourceId) < m_capacity && m_sources[sourceId] != nullptr) {
         return m_component->reserveVoice(m_sources[sourceId], static_cast<int>(volume)) |
@@ -126,7 +119,6 @@ uint32_t neAVCAPlayer::prepare(uint32_t sourceId, float volume) {
 }
 
 // Ghidra: FUN_000266f8.
-// @complete
 uint32_t neAVCAPlayer::prepareNamed(const char *callName, float volume) {
     NSNumber *rid = m_nameMap[@(callName)];
     if (rid != nil) {
@@ -140,7 +132,6 @@ uint32_t neAVCAPlayer::prepareNamed(const char *callName, float volume) {
 // value to the CAComponent play body @ 0x23f5c, which splits voice = bits >> 16
 // and generation = bits & 0xffff, bounds-checks the voice, verifies the
 // generation, and only moves a prepared/paused voice to playing.
-// @complete
 bool neAVCAPlayer::play(uint32_t handle) {
     return m_component->startVoice(static_cast<int>(caHandleBits(handle)));
 }
@@ -148,7 +139,6 @@ bool neAVCAPlayer::play(uint32_t handle) {
 // Ghidra: FUN_0002679c (caHandleStop) — forward the decoded handle bits to the
 // CAComponent stop body @ 0x23f90 (voice = bits >> 16 plus the generation check),
 // which marks the voice finished.
-// @complete
 bool neAVCAPlayer::stop(uint32_t handle) {
     return m_component->stopVoice(static_cast<int>(caHandleBits(handle)));
 }
@@ -156,19 +146,16 @@ bool neAVCAPlayer::stop(uint32_t handle) {
 // Ghidra: FUN_000267cc (caHandleGetState) — forward the decoded handle bits to
 // the CAComponent state body @ 0x23fe8 (voice = bits >> 16 plus the generation
 // check), which returns the voice state or -1.
-// @complete
 int neAVCAPlayer::voiceState(uint32_t handle) {
     return m_component->voiceState(static_cast<int>(caHandleBits(handle)));
 }
 
 // Ghidra: FUN_000267e4 (applied to all voices by setSeVolume:groupId:).
-// @complete
 void neAVCAPlayer::setAllVoiceVolume(int level) {
     m_component->setAllVolume(level);
 }
 
 // Ghidra: caPlayerMgr_dtor @ 0x261f8.
-// @complete
 neAVCAPlayer::~neAVCAPlayer() {
     if (m_component != nullptr) {
         m_component->terminate(); // auGraphTerminate
@@ -194,7 +181,6 @@ neAVCAPlayer::~neAVCAPlayer() {
 // (generation-checked). The binary passes the whole decoded handle to the
 // CAComponent pause body @ 0x23fbc, which splits it into voice = bits >> 16 and
 // generation = bits & 0xffff.
-// @complete
 bool neAVCAPlayer::pause(uint32_t handle) {
     return m_component->pauseVoice(static_cast<int>(caHandleBits(handle)));
 }
@@ -202,14 +188,12 @@ bool neAVCAPlayer::pause(uint32_t handle) {
 // Ghidra: caHandleStopAndClear @ 0x26864. The binary passes the whole decoded
 // handle to the CAComponent stop-and-clear body @ 0x2406c, which splits it into
 // voice = bits >> 16 and generation = bits & 0xffff.
-// @complete
 void neAVCAPlayer::stopAndClear(uint32_t handle) {
     m_component->stopAndClearVoice(static_cast<int>(caHandleBits(handle)));
 }
 
 // Ghidra: caUnregisterSource @ 0x26610 — detach a loaded source from any voice
 // and free its PCM.
-// @complete
 void neAVCAPlayer::unregisterSource(uint32_t sourceId) {
     if (static_cast<int>(sourceId) >= m_capacity || static_cast<int>(sourceId) < 0) {
         return;
@@ -226,7 +210,6 @@ void neAVCAPlayer::unregisterSource(uint32_t sourceId) {
 // then drop the name from the lookup map. (The binary only removes the key when
 // unregisterSource reported a live source, an edge that cannot recur under the
 // void return; the mainline behaviour is identical.)
-// @complete
 void neAVCAPlayer::unregisterSourceNamed(NSString *callName) {
     NSNumber *rid = m_nameMap[callName];
     if (rid == nil) {
@@ -238,7 +221,6 @@ void neAVCAPlayer::unregisterSourceNamed(NSString *callName) {
 
 // Ghidra: caPrepareSourceByIndex @ 0x266c0 — reserve a *fixed* mixer voice for
 // a loaded source id.
-// @complete
 uint32_t neAVCAPlayer::prepareAtVoice(uint32_t sourceId, int voiceIndex) {
     if (static_cast<int>(sourceId) >= m_capacity || static_cast<int>(sourceId) < 0) {
         return static_cast<uint32_t>(-1);
@@ -256,7 +238,6 @@ uint32_t neAVCAPlayer::prepareAtVoice(uint32_t sourceId, int voiceIndex) {
 }
 
 // Ghidra: caPrepareSourceNamed @ 0x2673c.
-// @complete
 uint32_t neAVCAPlayer::prepareNamedAtVoice(NSString *callName, int voiceIndex) {
     NSNumber *rid = m_nameMap[callName];
     if (rid != nil) {

@@ -21,7 +21,6 @@
 
 // @ 0xc09a4 — fetch every persisted "TreasureData" row (the whole sugoroku save
 // table; no predicate).
-// @complete
 + (id)getAllTreasureData:(NSManagedObjectContext *)context {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.entity = [NSEntityDescription entityForName:@"TreasureData"
@@ -35,7 +34,6 @@
 // already present, insert its (still-missing) row. The parent-map ids come from
 // the getTreasureMapValue table @ 0x12fb30 (−1 means "no parent"). Callers
 // ignore the result (the original IMP returns void).
-// @complete
 + (id)init:(NSManagedObjectContext *)context {
     static const short kRootMapIds[2] = {0, 6}; // DAT_0012fa28
     for (int i = 0; i < 2; i++) {
@@ -63,7 +61,6 @@
 
 // @ 0xc0f64 — YES if `mainMapId` is one of the two root ("default") maps (0 or
 // 6).
-// @complete
 + (BOOL)isDefaultMap:(short)mainMapId {
     static const short kRootMapIds[2] = {0, 6}; // DAT_0012fa28
     for (int i = 0; i < 2; i++) {
@@ -77,7 +74,6 @@
 // Delete every persisted TreasureData row (called by -[UserSettingData
 // initForConvert]).
 // @ 0xc0a44
-// @complete
 + (void)deleteAll:(NSManagedObjectContext *)context {
     // The binary discards any pending edits first (0xc0a6e: [context reset]).
     [context reset];

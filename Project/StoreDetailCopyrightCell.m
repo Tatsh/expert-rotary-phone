@@ -11,7 +11,6 @@
 
 // @ 0x75324 — a word-wrapping grey label at (5, 5, 310, 0), sized by the VC, on
 // a clear background.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {

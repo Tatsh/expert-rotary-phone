@@ -69,7 +69,6 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 }
 
 // @ 0x8b44c
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -223,13 +222,11 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 }
 
 // @ 0x8c1a4
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0x8c1d0
-// @complete
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
 }
@@ -238,14 +235,12 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 // retained by the view hierarchy).
 
 // @ 0x8c228 -- live slider drag: track the value and re-apply it.
-// @complete
 - (void)sliderValChanged:(id)sender {
     _size = [_sizeSlider value];
     [self resizePopkun];
 }
 
 // @ 0x8c270 -- slider touch-up: persist the chosen size.
-// @complete
 - (void)sliderValDecide:(id)sender {
     // NOTE: +savePopkunSize: is present in the binary but not yet declared in
     // UserSettingData.h (only the +popkunSize getter is).
@@ -253,7 +248,6 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 }
 
 // @ 0x8c29c -- reset to 100% and persist.
-// @complete
 - (void)touchedResetButton:(id)sender {
     _size = 100.0f; // 0x42c80000
     [_sizeSlider setValue:_size];
@@ -263,7 +257,6 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 
 // @ 0x8c30c -- iPhone back button: play the cancel SE, restore the settings nav
 // bar background and pop.
-// @complete
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
     [self.navigationController.navigationBar
@@ -274,7 +267,6 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 
 // @ 0x8c3a8 -- scale the preview pop-kun to _size percent of its natural frame,
 // reposition it, and refresh the "%d%%" readout.
-// @complete
 - (void)resizePopkun {
     const BOOL isPad = neSceneManager::isPadDisplay();
 

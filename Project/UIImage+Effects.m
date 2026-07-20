@@ -14,7 +14,6 @@
 @implementation UIImage (Effects)
 
 // @ 0x7bba0
-// @complete
 - (UIImage *)createReverseImage:(BOOL)flip {
     CGImageRef cg = self.CGImage;
     CGSize size = self.size;
@@ -36,7 +35,6 @@
 }
 
 // @ 0x7bcc4
-// @complete
 - (UIImage *)createImageHarfBlightness {
     CGImageRef cg = self.CGImage;
     if (cg == NULL) {
@@ -88,7 +86,6 @@
 }
 
 // @ 0x7be1c
-// @complete
 - (UIImage *)createImagefromRect:(CGRect)rect {
     CGImageRef cg = self.CGImage;
 

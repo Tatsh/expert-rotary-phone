@@ -23,7 +23,6 @@ typedef struct {
     UIImageView *_checkImageView; // check-mark
 }
 
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -35,7 +34,6 @@ typedef struct {
 // dealloc @ 0xc5460 — ARC-omitted (releases ivars only; synthesized by ARC).
 
 // @ 0xc548c — rebuild the row from an NSValue-wrapped sort-option record.
-// @complete
 - (void)setSortData:(NSValue *)sortValue {
     // Sort-key title images, indexed by sortType (0..5).
     static NSString *const kSortTitle[6] = {@"m_sort_text_title",

@@ -63,7 +63,6 @@ static NSString *const kYomiLabels[10] = {
 // @ 0xc7054 — map a reading's first character to its gojuon row 0..9. Scans
 // each row's katakana membership set for the character; returns 9 (wa/other) if
 // none match, or -1 for a nil/empty input.
-// @complete
 + (int)GetYomiIndex:(NSString *)ch {
     if (ch == nil || ch.length == 0) {
         return -1;
@@ -82,7 +81,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc70e0 — the display label (hiragana) for a gojuon row; "#" past the end.
-// @complete
 + (NSString *)GetYomiString:(int)index {
     if (index < 10) {
         return kYomiLabels[index];
@@ -91,7 +89,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc71ec — the .orb is a ZIP; read + BF-decrypt its "info" entry.
-// @complete
 + (NSData *)getZipData:(NSString *)entry Path:(NSString *)path DecodeType:(int)type {
     if (type != 0) {
         return nil;
@@ -110,7 +107,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc788c — decode an entry using this record's stored path + decode type.
-// @complete
 - (NSData *)getZipData:(NSString *)entry {
     return [MusicData getZipData:entry Path:self.filePath DecodeType:self.decodeType];
 }
@@ -120,7 +116,6 @@ static NSString *const kYomiLabels[10] = {
 // at music @ 0xc78d8, musicPre @ 0xc78f4, sheetNormal @ 0xc7910, sheetHyper @
 // 0xc792c, sheetEx @ 0xc7948 (the play scene loads "bgm" as the BGM and the
 // difficulty's sheet as the note chart).
-// @complete
 - (NSData *)music {
     return [self getZipData:@"bgm"];
 }
@@ -141,7 +136,6 @@ static NSString *const kYomiLabels[10] = {
 // (and BF-decoded) on demand — plain getZipData: wrappers, no scaling. Ghidra:
 // artwork2xData @ 0xc7964 (entry "artwork2x"), musicNameImage2xData @ 0xc7980
 // (entry "title_2x"), artistNameImage2xData @ 0xc799c (entry "artist_2x").
-// @complete
 - (NSData *)artwork2xData {
     return [self getZipData:@"artwork2x"];
 }
@@ -154,7 +148,6 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc7104 — deobfuscate key (byte + index), MD5 it, Blowfish-decrypt in
 // place.
-// @complete
 + (NSData *)decodeBF:(NSData *)data Key:(const char *)key KeyLength:(int)keyLen {
     char *buf = (char *)malloc(keyLen);
     for (int i = 0; i < keyLen; i++) {
@@ -172,7 +165,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc72c8
-// @complete
 + (instancetype)dataWithPath:(NSString *)path ID:(int)musicId {
     NSData *raw = [self getZipData:kOrbInfoEntry Path:path DecodeType:0];
     if (raw == nil) {
@@ -233,7 +225,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc776c
-// @complete
 - (void)setLevelN:(int)n H:(int)h Ex:(int)ex {
     self.lvNormal = n;
     self.lvHyper = h;
@@ -242,7 +233,6 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc79b8 — default sort: by the music reading (plain compare:); ties broken
 // so the shorter reading sorts first (ascending by length).
-// @complete
 - (NSComparisonResult)compare:(MusicData *)other {
     NSString *a = self.musicNameHira;
     NSString *b = other.musicNameHira;
@@ -258,7 +248,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc7a28 — ascending by MusicID.
-// @complete
 - (NSComparisonResult)compareMusicID:(MusicData *)other {
     int a = self.MusicID, b = other.MusicID;
     if (b <= a) {
@@ -269,7 +258,6 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc7a60 — by the music sort key (literal compare); ties broken by shorter
 // first.
-// @complete
 - (NSComparisonResult)compareMusicNameCustom:(MusicData *)other {
     NSString *a = self.musicSortName;
     NSString *b = other.musicSortName;
@@ -286,7 +274,6 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc7ad4 — by the artist sort key (literal compare); on a tie fall back to
 // the music-name-custom order.
-// @complete
 - (NSComparisonResult)compareArtistNameCustom:(MusicData *)other {
     NSComparisonResult r = [self.artistSortName compare:other.artistSortName
                                                 options:NSLiteralSearch];
@@ -298,7 +285,6 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc7b3c — by the music reading (literal compare); ties broken by shorter
 // first.
-// @complete
 - (NSComparisonResult)compareMusicNameHira:(MusicData *)other {
     NSString *a = self.musicNameHira;
     NSString *b = other.musicNameHira;
@@ -315,7 +301,6 @@ static NSString *const kYomiLabels[10] = {
 
 // @ 0xc7bb0 — by the artist reading (literal compare); on a tie fall back to
 // the music-name-hira order.
-// @complete
 - (NSComparisonResult)compareArtistNameHira:(MusicData *)other {
     NSComparisonResult r = [self.artistNameHira compare:other.artistNameHira
                                                 options:NSLiteralSearch];
@@ -326,7 +311,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc7c18 — ascending by Normal level.
-// @complete
 - (NSComparisonResult)compareDifficultyNormal:(MusicData *)other {
     int a = self.lvNormal, b = other.lvNormal;
     if (b <= a) {
@@ -336,7 +320,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc7c50 — ascending by Hyper level.
-// @complete
 - (NSComparisonResult)compareDifficultyHyper:(MusicData *)other {
     int a = self.lvHyper, b = other.lvHyper;
     if (b <= a) {
@@ -346,7 +329,6 @@ static NSString *const kYomiLabels[10] = {
 }
 
 // @ 0xc7c88 — ascending by Ex level.
-// @complete
 - (NSComparisonResult)compareDifficultyEx:(MusicData *)other {
     int a = self.lvEx, b = other.lvEx;
     if (b <= a) {

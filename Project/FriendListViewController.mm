@@ -51,7 +51,6 @@ typedef struct {
 // slot holds a don't-care value at this call site in the binary (difficulty in
 // r0); readScoreDataFields reads only recDup, so the row is passed there and the
 // vestigial slot value is immaterial.
-// @complete
 static void aggregateScoreStats(ScoreStats *out) {
     if (out == nullptr) {
         return;
@@ -100,7 +99,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 
 // @ 0xb0774 — grouped table styling, header spacer, loading overlay, back +
 // sort bar buttons, and the "no friends" placeholder image.
-// @complete
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     _isBestScoreSort = [UserSettingData isBestScoreSort];
@@ -205,7 +203,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 }
 
 // @ 0xb1144
-// @complete
 - (void)viewDidLoad {
     [super viewDidLoad];
     _dummyView.view.hidden = NO;
@@ -215,19 +212,16 @@ static void aggregateScoreStats(ScoreStats *out) {
 }
 
 // @ 0xb11e8
-// @complete
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 // @ 0xb1214
-// @complete
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
 
 // @ 0xb1218 — rows only once there is more than the self row.
-// @complete
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     if (_frinedDataArray != nil) {
         NSUInteger count = [_frinedDataArray count];
@@ -239,7 +233,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 }
 
 // @ 0xb1254
-// @complete
 - (UITableViewCell *)tableView:(UITableView *)tableView
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     // The reuse identifier uses hyphen separators (CFString @ 0x10af18:
@@ -260,14 +253,12 @@ static void aggregateScoreStats(ScoreStats *out) {
 }
 
 // @ 0xb13b0
-// @complete
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return nil;
 }
 
 // @ 0xb13b4 — raise the friend detail overlay for the tapped row (guarded
 // against re-entry while one is already up).
-// @complete
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UIViewController *root = neSceneManager::rootViewController();
     if (indexPath.section != 0) {
@@ -297,7 +288,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 
 // @ 0xb1980 — restore the hub nav bar art and pop (blocked while a detail
 // overlay is up).
-// @complete
 - (void)backButtonFunc {
     if (_detailView != nil && [_detailView isEnabled]) {
         return;
@@ -311,7 +301,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 
 // @ 0xb1a44 — flip the sort mode, persist it, re-sort + reload, and swap the
 // button art.
-// @complete
 - (void)sortButtonFunc {
     if (_frinedDataArray == nil) {
         return;
@@ -350,7 +339,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 // perfect[d], 0). The NSValue boxing (objCType
 // "{FriendListData=@@siii[3[7i]][3i][3i]}"), sortedArrayUsingFunction (total/best
 // per _isBestScoreSort), reload, and placeholder/scroll toggles all match.
-// @complete
 - (void)downloadMainFinished:(NSNumber *)result {
     _dummyView.view.hidden = YES;
 
@@ -412,7 +400,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 // total-score field (+0xc, FUN_000b1934) or the best-score field (+0x10,
 // FUN_000b18e8), returns valB - valA (higher score first), and on a tie returns
 // -1 when a.playerId (+0x0) is nil or 1 when b.playerId is nil.
-// @complete
 - (NSArray *)sortedRows:(NSArray *)rows best:(BOOL)best {
     return [rows sortedArrayUsingComparator:^NSComparisonResult(NSValue *a, NSValue *b) {
       FriendListData da, db;
@@ -442,7 +429,6 @@ static void aggregateScoreStats(ScoreStats *out) {
 }
 
 // @ 0xb1064
-// @complete
 - (void)dealloc {
     DownloadMain *dl = [DownloadMain getInstance];
     if ([dl delegateGetFriendList] == self) {

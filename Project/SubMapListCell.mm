@@ -44,7 +44,6 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
 
 // @ 0xc0f8c — plain non-selectable cell; its content is bound by the VC on
 // reuse.
-// @complete
 - (instancetype)initWithStyle:(UITableViewCellStyle)style
               reuseIdentifier:(NSString *)reuseIdentifier {
     if ((self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])) {
@@ -56,7 +55,6 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
 // dealloc @ 0xc0fd4 — ARC-omitted (releases ivars only; synthesized by ARC).
 
 // @ 0xc1000 — rebuild the area row from an NSValue-wrapped sub-map record.
-// @complete
 - (void)setMapData:(NSValue *)mapValue {
     SubMapListRowValue v;
     [mapValue getValue:&v];

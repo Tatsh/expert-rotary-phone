@@ -43,7 +43,6 @@
 
 // .cxx_construct @ 0xe2c38 — compiler-emitted C++ ivar constructor; not
 // hand-written. (Verified: 0xe2c38 is a bare `bx lr`.)
-// @complete
 
 // @ 0xe0b40 — build the dimmed backdrop (tap to close), the artwork panel, the
 // left section column (PopnLinkTopViewController), the right navigation pane,
@@ -58,7 +57,6 @@
 // 3, the background colour (0.953,0.953,0.953,1), the corner radius 6, and the
 // initial _selectedIndex = -1 followed by -onScoreCheckerButtonTouched:nil all
 // match.
-// @complete
 - (instancetype)init {
     if ((self = [super init])) {
         _konamiIdFrm = CGRectMake(385, 220, 320, 600);
@@ -147,7 +145,6 @@
 // Verified: the binary releases _leftViewCtrl, _rightViewCtrl,
 // _konamiIdArrowImageView (via -removeFromSuperview) and _howToView before
 // [super dealloc]; only the arrow detach is real work under ARC.
-// @complete
 - (void)dealloc {
     [_konamiIdArrowImageView removeFromSuperview];
 }
@@ -166,7 +163,6 @@
 // overlay from @[@"firstplay_popnlink"] and saves the flag (else it swaps in the
 // "input_kid_navbar" art), and the fade uses the 0.5 duration double at 0xe1958,
 // setAnimationDidStopSelector:endOpenAnimation, and alpha 0 -> 1.
-// @complete
 - (void)startOpenAnimation {
     if (_isAnimationing) {
         return;
@@ -203,7 +199,6 @@
 }
 
 // @ 0xe1840 — clear the guard. (Verified: 0xe1840 stores 0 into the guard ivar.)
-// @complete
 - (void)endOpenAnimation {
     _isAnimationing = NO;
 }
@@ -213,7 +208,6 @@
 // Verified against 0xe1858: after the guard check it stores 0 (not 1) into the
 // guard, the duration is the 0.3 double at 0xe1958,
 // setAnimationDidStopSelector:endCloseAnimation, and alpha 0/0.
-// @complete
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -231,7 +225,6 @@
 // @ 0xe1960 — remove the panel and notify the nav host it closed.
 // Verified against 0xe1960: -removeFromSuperview, fetch the scene-root VC,
 // -PopnLinkEndCallBack, then clear the guard.
-// @complete
 - (void)endCloseAnimation {
     [self.view removeFromSuperview];
     MainViewController *root = (MainViewController *)neSceneManager::rootViewController();
@@ -252,7 +245,6 @@
 // the KID input and expands to _konamiIdFrm (blocks 0xe1d18/0xe1e68), and slides
 // the arrow to _konamiIdArrowFrm (block 0xe1f48). Durations are the 0.3 doubles
 // at 0xe1c78/0xe1d18 and the 0.6 double at 0xe1c80; options 0x10000.
-// @complete
 - (void)onInKidButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -320,7 +312,6 @@
 // collapses the pane width to 0 (block 0xe2290), swaps in the checker and expands
 // to _checkerFrm (blocks 0xe2470), and slides the arrow to _checkerArrowFrm
 // (block 0xe2550); navbar art is "ppc_navbar" and _selectedIndex ends at 1.
-// @complete
 - (void)onScoreCheckerButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -390,7 +381,6 @@
 // quiz and expands to _quizFrm (blocks 0xe2a78), and slides the arrow to
 // _quizArrowFrm (block 0xe2b58). The animated showQuizView path uses "pq_navbar"
 // (CFString at 0xe2928) — corrected here — and _selectedIndex ends at 2.
-// @complete
 - (void)onQuizButtonTouched:(id)sender {
     if (_isAnimationing) {
         return;
@@ -455,7 +445,6 @@
 // button-enabled state.
 // Verified: 0xe2bb8 calls -reloadInputViews then tail-calls -updateButtonEnable
 // on _leftViewCtrl.
-// @complete
 - (void)reloadLeftView {
     [_leftViewCtrl reloadInputViews];
     [_leftViewCtrl updateButtonEnable];
@@ -465,7 +454,6 @@
 // out.
 // Verified against 0xe2bf4: guard check, playSystemSe(2) (r1 = 2 into the SE
 // call at 0xe2c1e), then tail-calls -startCloseAnimation.
-// @complete
 - (void)handleTapCoverView {
     if (_isAnimationing) {
         return;

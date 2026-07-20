@@ -52,7 +52,6 @@ static MainViewController *RootVC() {
  * relative to which the top-row button rects are placed. Reads it through the
  * manager's screenHeight() accessor rather than a raw offset.
  * @ghidraAddress 0xf4a4
- * @complete
  */
 static int AepBaselineY(AepManager &aep) {
     return aep.screenHeight();
@@ -66,7 +65,6 @@ static int AepBaselineY(AepManager &aep) {
  * MenuMainTask_ctor — base ne::C_TASK ctor + memset(this+0x28, 0, 0x185) (every
  * field zero-initialised, matching the members' default inits).
  * @ghidraAddress 0x6aba0
- * @complete
  */
 MenuMainTask::MenuMainTask() = default;
 
@@ -76,7 +74,6 @@ MenuMainTask::MenuMainTask() = default;
  * delegate (only if it is still us), then the ne::C_TASK base dtor
  * (caSourceNode_dtor) runs implicitly.
  * @ghidraAddress 0x6abcc
- * @complete
  */
 MenuMainTask::~MenuMainTask() {
     DownloadMain *dl = [DownloadMain getInstance];
@@ -89,7 +86,6 @@ MenuMainTask::~MenuMainTask() {
  * MenuMainTask_setInfoFlag — set the menu's info/notification flag (+0x1ac),
  * guarded against a redundant write (the binary only stores on a change).
  * @ghidraAddress 0x6d194
- * @complete
  */
 void MenuMainTask::setInfoFlag(bool shown) {
     if (m_infoFlag != shown) {
@@ -104,7 +100,6 @@ void MenuMainTask::setInfoFlag(bool shown) {
  * callback, load the warning texture, the menu BGM and the six UI SEs, snapshot
  * the news array, query the reward banner, and scan the treasure/game events.
  * @ghidraAddress 0x6c6a4
- * @complete
  */
 void MenuMainTask::setup() {
     AepManager &aep = AepManager::shared();
@@ -299,7 +294,6 @@ void MenuMainTask::setup() {
  * hand-off; 6 unlock gates; 8 daily info; 10 login bonus; 0xc INTERACTIVE menu;
  * 0xd..0x14 the sub-task spawn + fade-out + teardown.
  * @ghidraAddress 0x6ad88
- * @complete
  */
 void MenuMainTask::update(int /*deltaMs*/) {
     AepManager &aep = AepManager::shared();
@@ -760,7 +754,6 @@ void MenuMainTask::update(int /*deltaMs*/) {
  * @+0x28, m_warnTexture @+0x4c (pIconTexture), m_spawnedTask @+0x80 (pMainTask),
  * m_suppressOverlay @+0xb4 (bHidden). The spawned task only starts once it is
  * given a priority here, so an unimplemented state 0x14 would strand it.
- * @complete
  */
 void MenuMainTask::dispose() {
     AepManager &aep = AepManager::shared();
@@ -810,7 +803,6 @@ void MenuMainTask::dispose() {
  * and m_tutorialSkip), and the always-on mode-button labels (plus the conditional
  * gift label), each pulsed by a triangle-wave phase counter at +0xec.
  * @ghidraAddress 0x6d428
- * @complete
  */
 void MenuMainTask::drawOverlay() {
     if (m_suppressOverlay) { // +0xb4: overlay suppressed while the task is
@@ -888,7 +880,6 @@ void MenuMainTask::drawOverlay() {
  * 7 & 11 -> 6 (re-check the next unlock gate), 9 -> 10 (login bonus after the
  * daily-info web view), anything else -> 0xc (the interactive menu).
  * @ghidraAddress 0x6d1a4
- * @complete
  */
 void MenuMainTask::modeSelectAlertClosed(void *context) {
     auto *self = static_cast<MenuMainTask *>(context);
@@ -916,7 +907,6 @@ void MenuMainTask::modeSelectAlertClosed(void *context) {
  * 100->0->100 fade ramp at each end. The dozen transform args are ignored (the
  * ticker positions itself from its own params), matching the decompile.
  * @ghidraAddress 0x6d6d4
- * @complete
  */
 void MenuMainTask::NewsTickerUpdate(int child,
                                     int,
@@ -1014,7 +1004,6 @@ draw:
  * 0. The binary's manual retain/release around the array / timestamp is ARC
  * bookkeeping here.
  * @ghidraAddress 0x6d8cc
- * @complete
  */
 void MenuMainTask::refreshNews(bool hasNews) {
     if (!hasNews) {

@@ -45,7 +45,6 @@ enum : int {
 // prepareGraph) and, only if that succeeds, size and initialise the mixer
 // (auGraphInitMixer = initGraph). The caplayer manager ctor (caPlayerMgr_ctor @
 // 0x26172) runs this on a freshly-allocated CAComponent.
-// @complete
 CAComponent::CAComponent(int voices) {
     if (prepareGraph()) {
         initGraph(voices);
@@ -68,7 +67,6 @@ CAComponent::~CAComponent() {
 //     source (offset 0) is zeroed then the voice is `operator delete`d
 //     (0x12feb8), and the pool itself is released with `operator delete[]`
 //     (0x12feb4), after which m_voices is set to nullptr.
-// @complete
 void CAComponent::terminate() {
     if (m_running) {
         stop(); // auGraphStop (only if still running)
@@ -88,7 +86,6 @@ void CAComponent::terminate() {
 // @ offset 4), the 3D-mixer descriptor ('aumx'/'3dem'/'appl', i.e.
 // SpatialMixer's FourCC) second (m_mixerNode @ offset 8); the connect wires
 // mixer output 0 -> io input 0. Verified against the byte-exact FourCCs.
-// @complete
 bool CAComponent::prepareGraph() {
     AudioComponentDescription outDesc = {
         kAudioUnitType_Output, kAudioUnitSubType_RemoteIO, kAudioUnitManufacturer_Apple, 0, 0};
@@ -131,7 +128,6 @@ bool CAComponent::prepareGraph() {
 // The voice pool is `operator new[]` (0x12febc) and each voice `operator new`
 // (0x12fec0, 24 bytes) in the binary; the loop writes every slot. All ASBD fields
 // (32000.0 sample rate, 'lpcm', flags 0xc2c, 4/1/4/2/16) verified byte-exact.
-// @complete
 bool CAComponent::initGraph(int voices) {
     if (voices > 0xfff) {
         return false;
@@ -185,7 +181,6 @@ bool CAComponent::initGraph(int voices) {
 }
 
 // Ghidra: FUN_00023ccc.
-// @complete
 void CAComponent::start() {
     if (!m_running) {
         if (AUGraphStart(m_graph) != noErr) {
@@ -199,7 +194,6 @@ void CAComponent::start() {
 
 // Ghidra: auGraphStop @ 0x23d0c (also reached via the caplayer's FUN_000261e0
 // suspend).
-// @complete
 void CAComponent::stop() {
     if (m_running) {
         if (AUGraphStop(m_graph) != noErr) {
@@ -211,7 +205,6 @@ void CAComponent::stop() {
 }
 
 // Ghidra: FUN_00023f08 — find a free (or finished) voice and prepare it.
-// @complete
 uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
     for (int i = 0; i < m_voiceCount; i++) {
         int state = m_voices[i]->state;
@@ -226,7 +219,6 @@ uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
 // Ghidra: auMixerPreparePlayer (FUN_00023dac) — bind `source` to voice `voice`:
 // set the input stream format, install the render callback, set volume, reset
 // the cursors, mark it playing.
-// @complete
 int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
     CAVoice *v = m_voices[voice].get();
     if (v->state != -1 && v->state != 4) {
@@ -262,7 +254,6 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
 }
 
 // Ghidra: FUN_00023e5c — install the render callback for a voice's mixer input.
-// @complete
 void CAComponent::setRenderCallback(int voice) {
     if (voice >= m_voiceCount || m_voices[voice]->callbackSet) {
         return;
@@ -289,7 +280,6 @@ void CAComponent::setRenderCallback(int voice) {
 // (0x23eda: vldr s0, [base + volumeIndex*4]); caGainForLevel models this as a
 // 0..1 ramp — the value is an acknowledged approximation, the lookup structure
 // is exact.
-// @complete
 bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
     if (voice >= m_voiceCount) {
         return false;
@@ -312,7 +302,6 @@ bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
 // and the voice is prepared (state 1) or paused (state 3) does it move to playing
 // (state 2). The binary spells "state == 1 || state == 3" as the bit-trick
 // (state | 2) == 3.
-// @complete
 bool CAComponent::startVoice(int handle) {
     const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
     if (voice >= m_voiceCount) {
@@ -332,7 +321,6 @@ bool CAComponent::startVoice(int handle) {
 // Ghidra: caCAMixer stop body @ 0x23f90 (forwarded from caHandleStop) — mark the
 // voice finished so reserveVoice can recycle it. Same handle split and generation
 // check as startVoice.
-// @complete
 bool CAComponent::stopVoice(int handle) {
     const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
     if (voice >= m_voiceCount) {
@@ -349,7 +337,6 @@ bool CAComponent::stopVoice(int handle) {
 // Ghidra: caCAMixer state body @ 0x23fe8 (forwarded from caHandleGetState) —
 // return the voice's state, or -1 for an out-of-range or stale handle. Same
 // handle split and generation check as startVoice.
-// @complete
 int CAComponent::voiceState(int handle) const {
     const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
     if (voice >= m_voiceCount) {
@@ -368,14 +355,12 @@ int CAComponent::voiceState(int handle) const {
 // `b setPlayerVolume`). setPlayerVolume always writes the master output-scope
 // element 0 gain, so this single call sets the overall volume; `voice = 0` is
 // only the bounds argument.
-// @complete
 void CAComponent::setAllVolume(int volumeIndex) {
     setPlayerVolume(volumeIndex, 0);
 }
 
 // Ghidra: auClearSourceRef @ 0x24014 — drop `source` from any voice still
 // pointing at it.
-// @complete
 void CAComponent::clearSourceRef(CASound *source) {
     for (int i = 0; i < m_voiceCount; i++) {
         if (m_voices[i]->source == source) {
@@ -391,7 +376,6 @@ void CAComponent::clearSourceRef(CASound *source) {
 // generation match, write state = 3 and return true. The 0x267b4 caplayer stub
 // has already validated the 0x20000000 tag and stripped the top four bits before
 // this body runs.
-// @complete
 bool CAComponent::pauseVoice(int handle) {
     const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
     if (voice >= m_voiceCount) {
@@ -413,7 +397,6 @@ bool CAComponent::pauseVoice(int handle) {
 // generation = handle & 0xffff; on a generation match, write state = 4 and clear
 // the source. The binary always returns 1; this returns void. The 0x26864
 // caplayer stub has already validated the 0x20000000 tag before this body runs.
-// @complete
 void CAComponent::stopAndClearVoice(int handle) {
     const int voice = static_cast<int>(static_cast<uint32_t>(handle) >> 16);
     if (voice >= m_voiceCount) {
@@ -434,7 +417,6 @@ void CAComponent::stopAndClearVoice(int handle) {
 // finished so reserveVoice can recycle it. The actual copy + loop/finish lives
 // in CASound::read (Ghidra: caSourceRead @ 0x27e10, called with &total at
 // voice+0x8 and &playPos at voice+0xc).
-// @complete
 size_t CAComponent::CAVoice::readInto(void *dst, size_t size) {
     if (source != nullptr && state == 2) {
         const size_t got = source->read(dst, size, &total, &playPos);
@@ -449,7 +431,6 @@ size_t CAComponent::CAVoice::readInto(void *dst, size_t size) {
 // Ghidra: auRenderCallback @ 0x24044 — the AURenderCallback. Clear the output
 // buffer, then let the voice (passed as refCon) mix its next PCM span in via
 // readInto (auMixerStartIfReady).
-// @complete
 OSStatus CAComponent::renderProc(void *refCon,
                                  AudioUnitRenderActionFlags * /*flags*/,
                                  const AudioTimeStamp *,

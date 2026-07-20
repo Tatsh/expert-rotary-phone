@@ -131,7 +131,6 @@ namespace {
 // 0x1387f, and 0x1116f (i.e. 99999, 97999, 94999, 89999, 79999, and 69999),
 // returning 0..6 — the same >= 100000 / 98000 / 95000 / 90000 / 80000 / 70000
 // thresholds.
-// @complete
 int scoreToRank(int score) {
     if (score >= 100000) {
         return 0;
@@ -183,7 +182,6 @@ void destroyAll(std::unique_ptr<T> (&slots)[N]) {
 // +0x98/+0x9c/+0xa0, the 60-entry judge-pool loop (+0x3c8, stride 0x18), and the
 // three tail play-SE loads into +0x3a8. The asset-heavy sub-blocks are
 // delegated to the seams below.
-// @complete
 void PlayTaskInit(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -341,7 +339,6 @@ void PlayTaskInit(void *playData) {
 // setMaxCombo from +0x5160 into event+0x18, setPlayRank into event+0x14, the
 // +0x24 kill store, the (stopped || demo) -> MainTask(0xaa8) else result(0x3a0)
 // branch, setPriority(3) (FUN_00027f08), and the +0x9c7 hand-off flag.
-// @complete
 void PlayTaskGotoResult(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -429,7 +426,6 @@ void PlayTaskGotoResult(void *playData) {
 // Verified: the binary does `uxth; cmp #9; if hi kind = 0` then returns the
 // kind'th entry of a constant CFString table; rendering that table as
 // "hit%03d" (kind + 1) is behaviourally identical.
-// @complete
 static NSString *TouchSeResourceName(int kind) {
     if (static_cast<unsigned>(kind) > 9) {
         kind = 0;
@@ -448,7 +444,6 @@ static NSString *TouchSeResourceName(int kind) {
 // initPlayDataWithData (FUN_00033550) with the PlayApplyMissGauge callback and
 // playData; the reload == 0 tail loads the touch-kind SE (TouchSeResourceName ->
 // pathForResource:ofType:m4a) into +0x398 and setSeVolume from +0x9b4.
-// @complete
 void PlayLoadSong(void *playData, int reload) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -504,7 +499,6 @@ void PlayLoadSong(void *playData, int reload) {
 // "play session active" flag (@ +0x13cb6) so a later app-resign does not try to
 // pause a scene that is already tearing down.
 // Verified: the whole function is `strb #0, [r0 + 0x13cb6]; bx lr`.
-// @complete
 void PlayNoteMngDetach(NoteMng *nm) {
     nm->setPlayActive(false);
 }
@@ -811,7 +805,6 @@ const char *const kCharaAnmUser[8] = {
 
 } // namespace
 
-// @complete
 void PlayBuildFieldLayers(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -979,7 +972,6 @@ NSString *const kTextPanelNames[13] = {
 
 } // namespace
 
-// @complete
 void PlayLoadCharaTextures(void *playData) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -1108,7 +1100,6 @@ void PlayLoadCharaTextures(void *playData) {
 // colour=pulse alpha=100-pulse, blend 0x20, 0xffffff, priority 0xd, loop 1), and
 // the always-drawn window frame (m_windowTex[1] @ +0x2c, w=0x21e h=0xcc, x+0x32
 // y-0x50, same colour/alpha).
-// @complete
 void PlayDrawCharaWindow(void *playData, int x, int y) {
     PlayTask *task = static_cast<PlayTask *>(playData);
     AepManager &aep = AepManager::shared();
@@ -1229,7 +1220,6 @@ void PlayDrawCharaWindow(void *playData, int x, int y) {
 // `(gaugeValue*(count-1))>>10` with the +0x16 lsr rounding), and the chara loop
 // (+0x358 m_charaUser jump / +0x378 m_charaAnmUser portrait, gated on +0x9e5 ||
 // +0x9c9, PlayDrawCharaWindow fired only when the i*4 cursor == 4, i.e. i == 1).
-// @complete
 void PlayTaskDraw(int child,
                   int /*frame*/,
                   int x,
