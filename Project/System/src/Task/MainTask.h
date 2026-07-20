@@ -233,10 +233,16 @@ public:
             float scale;   // +0x00 per-widget UI scale (button widgets)
             int songIndex; // +0x00 jacket cells: list index of the song
         };
-        int loadState;                            // +0x04 jacket state: 0 empty / 3 ready
-        __unsafe_unretained id imageData;         // +0x08 bundled PNG data (released after upload)
+        int loadState; // +0x04 jacket state: 0 empty / 3 ready
+        // ARC-strong: the binary's MRC path transfers a -copy (+1) into the cell and
+        // releases it in cleanup, so the cell OWNS these. Declaring them
+        // __unsafe_unretained left the assigned strings/data unowned, so ARC freed them
+        // at the assignment's scope end and the per-frame draw retained a dangling
+        // pointer (SIGSEGV in objc_retain, from musicSelLoadColumn's -copy name and its
+        // truncated-name temporary). Strong keeps them alive until cleanup nils them.
+        id imageData;                             // +0x08 bundled PNG data (released after upload)
         std::unique_ptr<neTextureForiOS> texture; // +0x0c uploaded jacket texture
-        __unsafe_unretained id name;              // +0x10 truncated song-name string
+        id name;                                  // +0x10 truncated song-name string
         struct ScoreRows {                        // +0x14 jacket-cell score rows (0x24 bytes)
             int score[3];                         // +0x00 per-difficulty best score
             int playCnt[3];                       // +0x0c per-difficulty play count
