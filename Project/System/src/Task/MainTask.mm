@@ -19,12 +19,14 @@
 //  `this` with no identity cast.
 //
 
-#import <UIKit/UIKit.h>
+#import "MainTask.h"
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <functional>
+
+#import <UIKit/UIKit.h>
 
 #import "AepFrameDraw.h" // drawAepFrameEx (settings/sort/badge frame draws)
 #import "AepLyrCtrl.h"
@@ -32,7 +34,6 @@
 #import "AppDelegate.h"
 #import "AudioManager.h"
 #import "DownloadMain.h"
-#import "MainTask.h"
 #import "MainViewController.h" // the concrete root VC: Goto*/settingViewing/isGotoTitle
 #import "MusicData.h" // MusicID/lvNormal/lvHyper/lvEx/musicNameImage2xData (m_musicList entries)
 #import "MusicManager.h"
@@ -1049,13 +1050,14 @@ void MainTask::Setup() {
  * streams the newly-visible jacket column (musicSelLoadColumnPrev/Next). This is
  * NOT the re-sort routine: that is rebuildList() (musicSelUpdate 0x3835c).
  *
- * Scroll direction: the binary is content-opposite-finger -- offset = startX -
- * curX, so a drag right slides the grid LEFT and commits nColumnIndex++ (next).
- * This reconstruction uses the modern direct-manipulation feel instead: offset =
- * curX - startX so the grid follows the finger, with the commit inverted to match
- * -- drag right slides the grid right and commits nColumnIndex-- (previous), drag
- * left commits nColumnIndex++ (next). The end rubber-band is damped to
- * (int)(sign(off) * sqrt(|off|) + 0.5).
+ * Scroll direction (read from the disassembly; the decompile flips the sign):
+ * offset = curX - startX (0x34fc4: subs r2,r1=curX,r4=startX), so the grid follows
+ * the finger. On release the binary commits by finger direction: a drag right
+ * (curX > startX, 0x350e2) sets flick state 1, which runs the offset to
+ * +columnWidth and does nColumnIndex-- -> the PREVIOUS column (0x352e4, then
+ * musicSelLoadColumnPrev 0x35520); a drag left sets flick state 2 -> nColumnIndex++
+ * / NEXT (0x3539c, musicSelLoadColumnNext 0x35448). The end rubber-band is damped
+ * to (int)(sign(off) * sqrt(|off|) + 0.5).
  * @ghidraAddress 0x34f4c
  */
 void MainTask::Update() {
@@ -1142,8 +1144,8 @@ void MainTask::Update() {
                 // grid slides left and the NEXT column enters from the right, so commit
                 // toward the next column -- kScrollFlingNext continues the leftward
                 // motion to -columnWidth and does columnIndex++ -- if a fast-enough
-                // fling and not already at the last column. (The binary uses the
-                // opposite pairing because its offset is startX - curX; see the header.)
+                // fling and not already at the last column. (Binary flick state 2 @
+                // 0x351b0.)
                 if (m_columnIndex < m_columnCount - 1 && velocity > kFlingThreshold) {
                     neEngine::playSystemSe(
                         4); // SysSePlayIntoSlot(...,4) — confirm SE on a real fling
