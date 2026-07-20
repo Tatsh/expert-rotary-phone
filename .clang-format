@@ -50,13 +50,20 @@ DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
+IncludeBlocks: Preserve
 IncludeCategories:
-  - Priority: 2
-    Regex: '^"(llvm|llvm-c|clang|clang-c)/'
-  - Priority: 3
-    Regex: '^(<|"(gtest|gmock|isl|json)/)'
+  # 1: C and C++ standard library and POSIX/system headers, e.g. <memory>, <sys/time.h>.
   - Priority: 1
-    Regex: '.*'
+    Regex: '^<[a-z]'
+  # 2: first-party frameworks (Apple, etc.): <Framework/Header.h>.
+  - Priority: 2
+    Regex: '^<[A-Z][A-Za-z0-9]*/'
+  # 3: third-party libraries imported by angle brackets: <ThirdParty.h>.
+  - Priority: 3
+    Regex: '^<[A-Z][^/]*>'
+  # 4: project headers (and vendored third-party imported by quote).
+  - Priority: 4
+    Regex: '^"'
 IncludeIsMainRegex: '(Test)?$'
 IndentCaseLabels: false
 IndentWidth: 4
