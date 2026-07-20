@@ -245,10 +245,16 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
 void AcMainTask::stateInit() {
     setupScene(); // FUN_0009fc90
     if (m_subMapId >= 0) {
+        // Ghidra: 0x99f46 bgt 0x9a026 — the treasure path jumps into the case-2
+        // tail (playBgm then b 0x9dda8), sharing its state-3 store but skipping
+        // loadTreasureMap.
         AudioManager *audio = [AudioManager sharedManager];
         [audio playBgm:0.5f]; // Ghidra: playBgm:, arg 0x3fe00000 == 0.5
+        m_state = kAcMainStateBoardReveal;
     } else {
-        m_bgmActive = false; // the binary jumps to LAB_0009aa74 (no-treasure)
+        // Ghidra: 0x99f48 clears +0x5ee then b 0x9aa74 (movs r0,#1; b 0x9ddac).
+        m_bgmActive = false;
+        m_state = kAcMainStateFadeIn;
     }
 }
 
@@ -281,9 +287,15 @@ void AcMainTask::stateTreasureCheck() {
     TreasureTmpData tmp = [UserSettingData treasureTmp];
     m_subMapId = tmp.subMapId;
     if (tmp.subMapId >= 0) {
+        // Ghidra: 0x9a022 loadTreasureMap, 0x9a026 playBgm, 0x9a042 b 0x9dda8.
         loadTreasureMap(); // FUN_000a0b58
         AudioManager *audio = [AudioManager sharedManager];
         [audio playBgm:0.5f];
+        m_state = kAcMainStateBoardReveal;
+    } else {
+        // Ghidra: 0x9a01a blt 0x9fa72 (movs r0,#0x4b; b 0x9ddac): no pending
+        // sub-map, so begin the exit fade-out.
+        m_state = kAcMainStateExitBegin;
     }
 }
 

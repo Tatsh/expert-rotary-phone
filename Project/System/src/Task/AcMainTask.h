@@ -452,8 +452,15 @@ private:
         kAcMainStateInit = 0,          // build the select / map scene, start the BGM
         kAcMainStateFadeIn = 1,        // fade out, restore the BGM stack, push map-select
         kAcMainStateTreasureCheck = 2, // wait for / load the pending treasure sub-map
+        kAcMainStateBoardReveal = 3,   // switch the scene to fade-in, save the tmp record,
+                                       // play the board layers, arm the reveal countdown
         kAcMainStateMapDrag = 0x10,    // sugoroku map drag-scroll
-        kAcMainStateMapDragAlt = 0x4d, // same drag-scroll body, interleaved state
+        kAcMainStateExitBegin = 0x4b,  // start the exit fade-out (no pending sub-map)
+        // 0x4b -> 0x4c (await fade) -> 0x4d (spawn MenuMainTask, dispose) is the exit
+        // chain; its handlers are not reconstructed yet. Ghidra's 0x4d is the
+        // exit-to-menu final, not the drag-scroll state the switch currently treats it
+        // as.
+        kAcMainStateMapDragAlt = 0x4d, // TODO: 0x4d is really the exit-to-menu final
     };
     AcMainState m_state = {}; // +0x9f8 play-data state machine field (update switch
                               // dispatches on it)
