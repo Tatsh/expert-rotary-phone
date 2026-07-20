@@ -1,23 +1,10 @@
-//
-//  AcViewerCategoryViewController.h
-//  pop'n rhythmin
-//
-//  The arcade (AC) viewer's genre-category list: a transparent, separator-less
-//  UITableView. Row 0 is the "all songs" banner; the remaining rows are the
-//  non-empty genre categories (each an AcViewerCategoryCell). Selecting a row
-//  pushes the AcViewerMusicViewController song list for that category. On phone
-//  the whole screen fades in / out via the open / close animations; the iPad
-//  flow forwards this screen's delegate to the pushed music list.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0x68804, initAtNavigationController @ 0x68d40, the table
-//  data source / delegate, the open/close animations and the back action).
-//
-//  .mm because init / viewDidLoad / the animations and the row actions reach
-//  the C++ "ne" engine singletons via neEngineBridge (scene-manager pad flag,
-//  the AC-viewer event-center selection, the system-SE hooks and the root view
-//  controller's AcViewerEndCallBack).
-//
+/** @file
+ * The arcade (AC) viewer's genre-category list: a transparent, separator-less UITableView. Row 0 is
+ * the "all songs" banner; the remaining rows are the non-empty genre categories (each an
+ * AcViewerCategoryCell). Selecting a row pushes the AcViewerMusicViewController song list for that
+ * category. On phone the whole screen fades in and out via the open/close animations; the iPad flow
+ * forwards this screen's delegate to the pushed music list.
+ */
 
 #import <UIKit/UIKit.h>
 
@@ -26,24 +13,39 @@
 // pushed music list.
 #import "AcViewerOptionViewController.h"
 
+/**
+ * @brief The arcade viewer's genre-category list screen.
+ */
 @interface AcViewerCategoryViewController : UITableViewController
 
-// Synthesized accessors: delegate getter @ 0x69740, setDelegate: @ 0x69750
-// (assign — the binary stores the pointer raw, with no retain).
-// @ 0x69740
-// @ 0x69750
+/**
+ * @brief The host that hides the split panel; the iPad flow forwards it to the pushed music list.
+ *
+ * Stored raw with no retain, matching the binary's synthesised assign accessors.
+ */
 @property(nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
-// Build the transparent grouped table, bucketing every MusicManager AC song
-// into one of 24 genre categories. Ghidra: initWithStyle: @ 0x68804.
+/**
+ * @brief Build the transparent grouped table, bucketing every MusicManager AC song into one of
+ * 24 genre categories.
+ * @param style The table style (grouped).
+ * @return The initialised AcViewerCategoryViewController.
+ * @ghidraAddress 0x68804
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
-// Initialize the receiver (grouped style) and return it wrapped in a fresh
-// UINavigationController with a custom back button in the left nav slot (the
-// phone nav host). Ghidra: initAtNavigationController @ 0x68d40.
+/**
+ * @brief Initialize the receiver (grouped style) and return it wrapped in a fresh
+ * UINavigationController with a custom back button in the left nav slot (the phone nav host).
+ * @return The initialised AcViewerCategoryViewController wrapped in a UINavigationController.
+ * @ghidraAddress 0x68d40
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Fade the screen + its nav view in (phone entry animation). Ghidra: @ 0x69068.
+/**
+ * @brief Fade the screen + its nav view in (phone entry animation).
+ * @ghidraAddress 0x69068
+ */
 - (void)startOpenAnimation;
 
 @end

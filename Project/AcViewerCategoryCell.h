@@ -1,20 +1,22 @@
-//
-//  AcViewerCategoryCell.h
-//  pop'n rhythmin
-//
-//  An arcade-viewer category header row: a single full-bleed banner image whose
-//  placement varies by device (iPad vs phone) and iOS version.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0x1a804).
-//
+/** @file
+ * An arcade-viewer category header row: a single full-bleed banner image whose placement varies by
+ * device (iPad versus phone) and iOS version.
+ */
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief An arcade-viewer category header row showing a single full-bleed banner image.
+ */
 @interface AcViewerCategoryCell : UITableViewCell
 
-// Bind the row to a category: the first element of `dataList` supplies the
-// category index (0 = etc, 1 = TV, 2..23 = p01..p22) that picks the banner
-// image; a nil list falls back to the "all" banner.
+/**
+ * @brief Bind the row to a category: the first element of `dataList` supplies the category index
+ * (0 = etc, 1 = TV, 2..23 = p01..p22) that picks the banner image; a nil list falls back to the
+ * "all" banner.
+ * @param dataList The category data list (first element is the category index).
+ * @ghidraAddress 0x1a878
+ */
 - (void)setData:(NSArray *)dataList;
 
 @end
