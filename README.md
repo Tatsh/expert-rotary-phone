@@ -61,3 +61,32 @@ Project/
 Naming follows the original: System-layer C++ uses the lowercase `ne` prefix (`neIGLES`,
 `neTextTexture`); Game-layer classes are PascalCase (`NoteMng`, `CharaData`, `SugorokuMap`).
 Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherever possible.
+
+## Status
+
+- Items that require online services are obviously non-functional.
+- Taps on the main menu and song selection screen can be less than ideal in terms of
+  accuracy/timing/lag. This looks like it may have been an issue in the original version, at least
+  slightly.
+
+### Song selection screen
+
+- Unusual rendering when moving to a page on the left (song titles show but no border or cover for a
+  visible number of frames).
+- Pagination rubber-band mechanics is imperfect.
+- Patches are used that are not faithful to the original game.
+
+#### Picked song overlay
+
+- Inaccurate animation: it shows the overlay but then moves and fades in a copy downward.
+
+### Main menu
+
+- Friend button crashes the game.
+- Treasure Mode goes to a black screen.
+- Invite button crashes the game.
+
+### Arcade viewer
+
+- On song selection screen, hitting the back button just goes to a black screen.
+- Viewer is not functional: song does not play, cannot exit.
