@@ -50,13 +50,14 @@
 
 #import "FreeRequestListViewController.h"
 
-#import "AppDelegate.h"         // +appDelegate.uuId
-#import "CommonAlertView.h"     // network-failure alert
-#import "DownloadMain.h"        // FriendListData struct + @encode
-#import "Downloader.h"          // Downloader + DownloaderDelegate
-#import "FreeRequestDetail.h"   // the friend-request confirm overlay
-#import "FreeRequestListCell.h" // one row per recommended friend
-#import "StoreUtil.h"           // +getRecommendFriendURL
+#import "AppDelegate.h"              // +appDelegate.uuId
+#import "CommonAlertView.h"          // network-failure alert
+#import "DownloadMain.h"             // FriendListData struct + @encode
+#import "Downloader.h"               // Downloader + DownloaderDelegate
+#import "FreeRequestDetail.h"        // the friend-request confirm overlay
+#import "FreeRequestListCell.h"      // one row per recommended friend
+#import "StoreUtil.h"                // +getRecommendFriendURL
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
 @interface FreeRequestListViewController () <DownloaderDelegate>
@@ -339,8 +340,7 @@
     }
     neEngine::playSystemSe(2); // cancel/back SE
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"fripre_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"fripre_navbar"]];
     [self.navigationController popViewControllerAnimated:!neSceneManager::isPadDisplay()];
 }
 

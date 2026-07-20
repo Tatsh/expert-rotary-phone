@@ -58,14 +58,15 @@
 #import <string.h>
 #import <time.h>
 
-#import "AppDelegate.h"        // +appDelegate.displayType
-#import "DownloadMain.h"       // visitor request + DownloadMainDelegate
-#import "MainViewController.h" // MapSelectEndCallBack on the root VC
-#import "Random.h"             // xorshift128 (Ghidra rngStateInit/rngSeed/GetRandRangeInt)
-#import "SubMapListCell.h"     // one row per area
-#import "TreasureData.h"       // sugoroku save records
-#import "TreasureTmpData.h"    // pending-treasure struct
-#import "UserSettingData.h"    // treasure snapshot
+#import "AppDelegate.h"              // +appDelegate.displayType
+#import "DownloadMain.h"             // visitor request + DownloadMainDelegate
+#import "MainViewController.h"       // MapSelectEndCallBack on the root VC
+#import "Random.h"                   // xorshift128 (Ghidra rngStateInit/rngSeed/GetRandRangeInt)
+#import "SubMapListCell.h"           // one row per area
+#import "TreasureData.h"             // sugoroku save records
+#import "TreasureTmpData.h"          // pending-treasure struct
+#import "UINavigationBar+RHHeader.h" // -setBackgroundImageModern:
+#import "UserSettingData.h"          // treasure snapshot
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 // NSValue payload for one visible area row. Obj-C type-encoding
@@ -344,8 +345,7 @@ typedef struct SubMapData {
     _isDecide = YES;
     neEngine::playSystemSe(2); // cancel SE
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"map_select_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

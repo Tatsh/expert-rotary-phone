@@ -38,10 +38,11 @@
 
 #import "GameEffectView.h"
 
-#import "AppFont.h"         // AppFontName (label typeface)
-#import "AudioManager.h"    // -[AudioManager sharedManager], -setSeVolume:groupId:
-#import "UserSettingData.h" // isEffectOn / isLongNotesEffectOn (+ save…) toggles
-#import "neEngineBridge.h"  // neSceneManager::isPadDisplay, neEngine::playSystemSe
+#import "AppFont.h"                  // AppFontName (label typeface)
+#import "AudioManager.h"             // -[AudioManager sharedManager], -setSeVolume:groupId:
+#import "UINavigationBar+RHHeader.h" // -setBackgroundImageModern:
+#import "UserSettingData.h"          // isEffectOn / isLongNotesEffectOn (+ save…) toggles
+#import "neEngineBridge.h"           // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
 @implementation GameEffectView
 
@@ -223,8 +224,7 @@
     neEngine::playSystemSe(2); // cancel SE (Ghidra: SysSePlayIntoSlot(2))
 
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 
     [[AudioManager sharedManager] setSeVolume:[UserSettingData seVolume] groupId:1];

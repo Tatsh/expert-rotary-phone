@@ -53,12 +53,13 @@
 
 #import "FriendRequestTable.h"
 
-#import "AppDelegate.h"       // +appDelegate.uuId / .displayType
-#import "CommonAlertView.h"   // error alerts
-#import "Downloader.h"        // Downloader + DownloaderDelegate
-#import "FriendRequestCell.h" // one row per sent request (setFriendData:)
-#import "StoreUtil.h"         // +getFriendRequestURL
-#import "neEngineBridge.h"    // neSceneManager::isPadDisplay, neEngine::playSystemSe
+#import "AppDelegate.h"              // +appDelegate.uuId / .displayType
+#import "CommonAlertView.h"          // error alerts
+#import "Downloader.h"               // Downloader + DownloaderDelegate
+#import "FriendRequestCell.h"        // one row per sent request (setFriendData:)
+#import "StoreUtil.h"                // +getFriendRequestURL
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
+#import "neEngineBridge.h"           // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
 @interface FriendRequestTable () <DownloaderDelegate>
 - (void)releaseSendDataArray;
@@ -336,8 +337,7 @@
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // cancel/back SE
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"friman_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"friman_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

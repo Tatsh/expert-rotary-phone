@@ -29,12 +29,13 @@
 
 #import "FriendReplyViewController.h"
 
-#import "AppDelegate.h"     // appDelegate.uuId
-#import "CommonAlertView.h" // result alerts
-#import "DownloadMain.h"    // getInstance / setFriendRequestedCnt:
-#import "Downloader.h"      // request fetch + reply POST
-#import "StoreUtil.h"       // +getFriendRequestURL / +replyFriendURL
-#import "neEngineBridge.h"  // neEngine::playSystemSe, neSceneManager::isPadDisplay
+#import "AppDelegate.h"              // appDelegate.uuId
+#import "CommonAlertView.h"          // result alerts
+#import "DownloadMain.h"             // getInstance / setFriendRequestedCnt:
+#import "Downloader.h"               // request fetch + reply POST
+#import "StoreUtil.h"                // +getFriendRequestURL / +replyFriendURL
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
+#import "neEngineBridge.h"           // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
 @implementation FriendReplyViewController {
     UIView *_headView;                 // @164  populated-list header (frirep_messager)
@@ -383,8 +384,7 @@
 - (void)backButtonFunc {
     neEngine::playSystemSe(2);
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"friman_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"friman_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

@@ -23,6 +23,7 @@
 #import "FriendListDetail.h"               // tap-row overlay
 #import "Game/Data/Save/ScoreData+Store.h" // +getAllScoreData:
 #import "Game/Data/Save/UserSettingData.h" // isBestScoreSort / playerName / charaId
+#import "UINavigationBar+RHHeader.h"       // setBackgroundImageModern:
 #import "neEngineBridge.h"                 // neSceneManager / readScoreDataFields
 
 // Aggregated tallies over every saved ScoreData row, in the exact layout
@@ -294,8 +295,7 @@ static void aggregateScoreStats(ScoreStats *out) {
     }
     neEngine::playSystemSe(2);
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"friman_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"friman_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

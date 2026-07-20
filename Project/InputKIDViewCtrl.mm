@@ -13,12 +13,13 @@
 
 #import <QuartzCore/QuartzCore.h> // CALayer cornerRadius (spinner backdrop)
 
-#import "AppDelegate.h"         // +appDelegate / -uuId (device uuid for the request)
-#import "MainViewController.h"  // scene root -PopnLinkEndCallBack
-#import "StoreUtil.h"           // +linkKidURL, urlEncodeString()
-#import "TouchableScrollView.h" // the tap-through form host
-#import "UserSettingData.h"     // +konamiId / +saveKonamiId:
-#import "neEngineBridge.h"      // neEngine::playSystemSe, neSceneManager / neAppEventCenter
+#import "AppDelegate.h"              // +appDelegate / -uuId (device uuid for the request)
+#import "MainViewController.h"       // scene root -PopnLinkEndCallBack
+#import "StoreUtil.h"                // +linkKidURL, urlEncodeString()
+#import "TouchableScrollView.h"      // the tap-through form host
+#import "UINavigationBar+RHHeader.h" // -setBackgroundImageModern:
+#import "UserSettingData.h"          // +konamiId / +saveKonamiId:
+#import "neEngineBridge.h"           // neEngine::playSystemSe, neSceneManager / neAppEventCenter
 
 // Own privates (button targets + the link POST wired up by -init).
 @interface InputKIDViewCtrl ()
@@ -321,8 +322,7 @@
         [UIView commitAnimations];
     } else {
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"pl_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"pl_navbar"]];
         [self.navigationController popViewControllerAnimated:YES];
     }
 }

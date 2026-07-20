@@ -72,7 +72,8 @@
 #import "ScoreData.h"
 #import "StoreUtil.h" // +getConvertCodeURL
 #import "TreasureData.h"
-#import "UserSettingData.h" // player save accessors
+#import "UINavigationBar+RHHeader.h" // -setBackgroundImageModern:
+#import "UserSettingData.h"          // player save accessors
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::shared/rootViewController/isPadDisplay
 
 @implementation ConversionView {
@@ -252,8 +253,7 @@
     neEngine::playSystemSe(2); // cancel/back SE
 
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

@@ -45,6 +45,7 @@
 
 #import "AppFont.h"         // AppMaruFontName (info label typeface)
 #import "CustomAlertView.h" // CustomAlertView (the _hoge overlay created in viewDidLoad)
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // popkunSize getter (+ savePopkunSize: setter)
 #import "neEngineBridge.h"  // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
@@ -260,8 +261,7 @@ static NSString *const kPopkunSizeLabelFontName = @"BullyBold";
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

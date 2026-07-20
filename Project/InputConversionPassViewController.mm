@@ -60,10 +60,11 @@
 #import "MusicManager.h"       // +getInstance -> open*Music
 #import "ScoreData+Store.h"    // +getScoreData:inManagedObjectContext: / +hashScore:
 #import "ScoreData.h"
-#import "StoreUtil.h"          // +convertURL
-#import "TreasureData+Store.h" // +addRecordWithMainMapId:subMapId:inManagedObjectContext:
-#import "TreasureData.h"       // +init:
-#import "UserSettingData.h"    // player-save accessors + initForConvert
+#import "StoreUtil.h"                // +convertURL
+#import "TreasureData+Store.h"       // +addRecordWithMainMapId:subMapId:inManagedObjectContext:
+#import "TreasureData.h"             // +init:
+#import "UINavigationBar+RHHeader.h" // -setBackgroundImageModern:
+#import "UserSettingData.h"          // player-save accessors + initForConvert
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController / isPadDisplay
 
 // Score -> rank index (0 best .. 6 worst). Ghidra: FUN_00028a40 (scoreToRank).
@@ -260,8 +261,7 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     content.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [content.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"conv_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"conv_navbar"]];
 
     return nav;
 }

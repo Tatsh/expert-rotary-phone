@@ -30,6 +30,7 @@
 #import "AppFont.h"
 #import "HowToViewCtrl.h"    // declares -initWithFileNameArray: (shared how-to selector)
 #import "HowToViewCtrlPad.h" // iPad how-to overlay presented by -didSelectRowAtIndexPath:
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h"
 
 static UIViewController *RootVC() {
@@ -83,8 +84,7 @@ static UIViewController *RootVC() {
 
     // Nav-bar background art (Ghidra references the "frirep_navbar" asset here).
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
 
     return nav;
 }
@@ -261,8 +261,7 @@ static UIViewController *RootVC() {
         }
         _howtoViewCtrlPad = [[HowToViewCtrlPad alloc] initWithFileNameArray:images];
         [_howtoViewCtrlPad.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"howto_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"howto_navbar"]];
         [RootVC().view addSubview:_howtoViewCtrlPad.view];
     }
 }

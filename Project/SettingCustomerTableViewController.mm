@@ -41,8 +41,9 @@
 
 #import "SettingCustomerTableViewController.h"
 
-#import "AppFont.h"        // AppFontName (DFSoGei gothic face)
-#import "PolicyView.h"     // row 2 terms-of-use overlay (@ PTR_PolicyView_0015c0b4)
+#import "AppFont.h"    // AppFontName (DFSoGei gothic face)
+#import "PolicyView.h" // row 2 terms-of-use overlay (@ PTR_PolicyView_0015c0b4)
+#import "UINavigationBar+RHHeader.h"
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
 // The customer-support table's single-section rows.
@@ -95,8 +96,7 @@ static UIViewController *RootVC() {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
     return nav;
 }
 
@@ -209,8 +209,7 @@ static UIViewController *RootVC() {
             PolicyView *policy = [[PolicyView alloc] init];
             _policyView = [[UINavigationController alloc] initWithRootViewController:policy];
             [_policyView.navigationBar
-                setBackgroundImage:[UIImage imageNamed:@"set_agreement_navbar"]
-                     forBarMetrics:UIBarMetricsDefault];
+                setBackgroundImageModern:[UIImage imageNamed:@"set_agreement_navbar"]];
         }
         [RootVC().view addSubview:_policyView.view];
         break;

@@ -70,6 +70,7 @@
 #import "SubMapSelectViewController.h" // pushed area list (phone)
 #import "TreasureData.h"               // sugoroku save records
 #import "TreasureTmpData.h"            // pending-treasure struct (cleared on back)
+#import "UINavigationBar+RHHeader.h"   // -setBackgroundImageModern:
 #import "UserSettingData.h"            // first-run flag + selected-map persistence
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
@@ -241,8 +242,7 @@ bool isIndexInRange12(unsigned int index) {
 
     if (neSceneManager::isPadDisplay()) {
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"map_select_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"map_select_navbar"]];
     }
 
     // First-ever visit: show the two-page treasure how-to over the list.
@@ -391,8 +391,7 @@ bool isIndexInRange12(unsigned int index) {
     if (_mapSelectDelegate == nil) {
         // Phone: push the sub-map (area) list.
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"area_selec_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"area_selec_navbar"]];
         SubMapSelectViewController *sub =
             [[SubMapSelectViewController alloc] initWithTreasureData:_treasureDataArray
                                                         mapHeadArray:_mapHeadArray

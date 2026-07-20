@@ -38,8 +38,9 @@
 
 #import "SoundSettingView.h"
 
-#import "AppFont.h"         // AppFontName (== Ghidra getFontNameDFSoGei / FUN_0005ef9c)
-#import "AudioManager.h"    // BGM/SE volume + lib_rsnd SE load/play/stop/release
+#import "AppFont.h"      // AppFontName (== Ghidra getFontNameDFSoGei / FUN_0005ef9c)
+#import "AudioManager.h" // BGM/SE volume + lib_rsnd SE load/play/stop/release
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // persisted BGM/SE/touch volumes + touch-sound kind
 #import "neEngineBridge.h"  // neSceneManager::isPadDisplay / hitSoundName / normalSoundName
 //   neEngine::playSystemSe (back-button cancel SE)
@@ -599,8 +600,7 @@ static inline float SoundShortToVolume(short v) {
 - (void)backButtonFunc {
     neEngine::playSystemSe(2); // Ghidra: SysSePlayIntoSlot(&g_pNeSceneManager, 2)
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 

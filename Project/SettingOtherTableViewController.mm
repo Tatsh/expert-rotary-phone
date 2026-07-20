@@ -31,10 +31,11 @@
 
 #import "SettingOtherTableViewController.h"
 
-#import "AppFont.h"         // AppFontName
-#import "ConversionView.h"  // embedded "device change" (data transfer) panel (section 2, row 1)
-#import "CustomWebView.h"   // in-app web view for the official app-info page (section 0)
-#import "StoreUtil.h"       // +getOfficialAppInfoURL
+#import "AppFont.h"        // AppFontName
+#import "ConversionView.h" // embedded "device change" (data transfer) panel (section 2, row 1)
+#import "CustomWebView.h"  // in-app web view for the official app-info page (section 0)
+#import "StoreUtil.h"      // +getOfficialAppInfoURL
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // +initTreasureTmp
 #import "neEngineBridge.h" // neSceneManager::rootViewController / isPadDisplay, neEngine::playSystemSe
 
@@ -115,8 +116,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
     return nav;
 }
 

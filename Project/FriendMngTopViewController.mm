@@ -19,6 +19,7 @@
 #import "FriendReplyViewController.h"
 #import "FriendRequestViewController.h"
 #import "HowToViewCtrl.h"
+#import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
 #import "UserSettingData.h"
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::isPadDisplay
 
@@ -78,8 +79,7 @@
         self.navigationItem.leftBarButtonItem =
             [[UIBarButtonItem alloc] initWithCustomView:backBtn];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"friman_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"friman_navbar"]];
     } else {
         // iPad: the transparent left column of the split hub, with no navigation
         // controller (the split embeds this view directly; nil is returned).
@@ -234,8 +234,7 @@
         }
         [self.navigationController pushViewController:vc animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"frilis_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"frilis_navbar"]];
     } else {
         [m_Delegate onListButtonTouched:sender];
     }
@@ -256,8 +255,7 @@
         }
         [self.navigationController pushViewController:vc animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"fripre_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"fripre_navbar"]];
     } else {
         [m_Delegate onRequestButtonTouched:sender];
     }
@@ -275,8 +273,7 @@
         }
         [self.navigationController pushViewController:vc animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"frirep_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"frirep_navbar"]];
     } else {
         [m_Delegate onReplyButtonTouched:sender];
     }

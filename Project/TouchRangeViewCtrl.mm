@@ -44,7 +44,8 @@
 
 #import "TouchRangeViewCtrl.h"
 
-#import "TouchRangeView.h"  // embedded pop-kun preview (_toucheRangeView)
+#import "TouchRangeView.h" // embedded pop-kun preview (_toucheRangeView)
+#import "UINavigationBar+RHHeader.h"
 #import "UserSettingData.h" // touchRadius getter (+ saveTouchRadius: setter)
 #import "neEngineBridge.h"  // neEngine::playSystemSe (system "cancel" SE)
 
@@ -240,8 +241,7 @@
     neEngine::playSystemSe(2); // Ghidra: NESceneManager_shared();
                                // SysSePlayIntoSlot(&g_pNeSceneManager, 2)
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     [self.navigationController popViewControllerAnimated:YES];
 }
 
