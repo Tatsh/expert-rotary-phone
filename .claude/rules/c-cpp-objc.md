@@ -9,9 +9,12 @@
 - By default use decimal integer literals unless hex is required for bitwise operations or when it
   genuinely aids readability.
 - Use `.h` extension for all headers regardless of language.
-- Include grouping: system, first party (Apple, etc), third party, ours (in double quotes):
+- Include grouping: the file's own header first, then system, first party (Apple, etc), third party,
+  and ours (in double quotes). Each group is separated by a single blank line:
 
   ```c
+  #import "ThisFile.h"
+
   #include <memory>
 
   #include <CoreFoundation/CoreFoundation.h>
@@ -22,7 +25,9 @@
   #include "OurFile.h"
   ```
 
-  This project should not have anything that requires a specific header order.
+  `clang-format` enforces this (`IncludeBlocks: Regroup`): it moves the file's own header to the top
+  and inserts the blank line between each group. This project should not have anything that requires
+  a specific header order beyond this.
 
 - Keep all header groups sorted alphabetically.
 - Use `clang-format` to format source files. Shortcut: `yarn format`.

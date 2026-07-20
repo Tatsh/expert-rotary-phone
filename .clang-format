@@ -50,16 +50,20 @@ DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 IncludeCategories:
   - Priority: 1
     Regex: '^<[a-z]'
+    CaseSensitive: true
   - Priority: 2
     Regex: '^<[A-Z][A-Za-z0-9]*/'
+    CaseSensitive: true
   - Priority: 3
     Regex: '^<[A-Z][^/]*>'
+    CaseSensitive: true
   - Priority: 4
     Regex: '^"'
+    CaseSensitive: true
 IncludeIsMainRegex: '(Test)?$'
 IndentCaseLabels: false
 IndentWidth: 4
