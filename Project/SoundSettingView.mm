@@ -112,6 +112,29 @@ static inline float SoundShortToVolume(short v) {
 @interface SoundSettingView ()
 - (void)wireSliderDragFix:(UISlider *)slider;
 @end
+
+// @newCode -- Volume cell that guarantees its slider is hit-testable. This table
+// is embedded several layers deep (a table inside a game-settings cell), and on
+// modern iOS the hit-test resolves a touch that lands on the slider to the cell
+// itself rather than descending into it, so the slider never receives drags.
+// Prefer the slider explicitly: if the point falls inside it, return it.
+@interface RHVolumeSliderCell : UITableViewCell
+@end
+
+@implementation RHVolumeSliderCell
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    for (UIView *sub in self.subviews) {
+        if ([sub isKindOfClass:[UISlider class]] && !sub.hidden && sub.userInteractionEnabled &&
+            sub.alpha > 0.01f) {
+            CGPoint local = [self convertPoint:point toView:sub];
+            if ([sub pointInside:local withEvent:event]) {
+                return sub;
+            }
+        }
+    }
+    return [super hitTest:point withEvent:event];
+}
+@end
 #endif
 
 @implementation SoundSettingView {
@@ -308,8 +331,16 @@ static inline float SoundShortToVolume(short v) {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
 
     if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                      reuseIdentifier:cellId];
+#ifdef ENABLE_PATCHES
+        // Volume rows use the hit-test-forcing cell so their sliders stay draggable
+        // through the nested-table embedding on modern iOS.
+        Class cellClass = (indexPath.section <= SoundSettingSectionTouchVolume) ?
+                              [RHVolumeSliderCell class] :
+                              [UITableViewCell class];
+#else
+        Class cellClass = [UITableViewCell class];
+#endif
+        cell = [[cellClass alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
 
         // iPad: give the volume cells a rounded, light-cream backgroundView.
         if (neSceneManager::isPadDisplay() && indexPath.section != 3) {
