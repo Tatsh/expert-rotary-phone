@@ -582,10 +582,17 @@ void neDrawText(const char *text,
         for (int j = 0; j < count; ++j) {
             neGlyph *g = glyphs[j];
             if (g == nullptr) {
-                continue;
+                continue; // continuation/invalid byte: no glyph, no advance
             }
-            if (g->atlasId != atlasId) {
-                pen += (g->advance >> 1); // still advance for glyphs on other atlases
+            // Match (and consume) on the mutable per-char atlas-id slot, NOT on the
+            // glyph's own atlasId. The binary keeps the glyph pointer live and only
+            // nulls the atlas-id entry when a glyph is emitted; a consumed glyph
+            // (glyphAtlas[j] == -1) therefore still falls through here and advances
+            // the pen on every later atlas pass. Testing g->atlasId and nulling the
+            // pointer instead dropped the advance once a string spanned two atlases,
+            // which scrambled the later glyphs (Ghidra FUN_0001551c).
+            if (glyphAtlas[j] != atlasId) {
+                pen += (g->advance >> 1); // other atlas, or already consumed
                 continue;
             }
             int w = g->advance; // cell width / horizontal advance
@@ -610,7 +617,8 @@ void neDrawText(const char *text,
             }
             pen += (w >> 1);
             ++quadCount;
-            glyphs[j] = nullptr; // consumed
+            glyphAtlas[j] = -1; // consumed: null the atlas-id slot, keep the glyph pointer live
+                                // so later atlas passes still advance the pen past this glyph
         }
 
         r->setEnable(0x22, true);        // GL_TEXTURE_2D
