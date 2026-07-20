@@ -31,10 +31,14 @@
         mPlayer = nil; // Ghidra: release old player before reloading
     }
     NSError *error = nil;
-    // Ghidra: +new then re-init on the same object (double init, faithful).
-    AVAudioPlayer *player = [AVAudioPlayer new];
-    player = [player initWithContentsOfURL:url error:&error];
-    if (error == nil) {
+    // The binary did [AVAudioPlayer new] then re-init the same object (0x20832 ->
+    // 0x20846, double init). Modern iOS's AVAudioPlayer -init yields a
+    // non-functional player and the following initWithContentsOfURL: leaves
+    // mPlayer unusable without setting `error`, so every SE voice was silent. Use
+    // the single designated initializer instead, exactly as the data variant
+    // already does. This is a modern-iOS correctness fix, not a behaviour change.
+    AVAudioPlayer *player = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+    if (player != nil && error == nil) {
         mPlayer = player;
         player.numberOfLoops = loop ? -1 : 0;
         mPlayer.delegate = self;
