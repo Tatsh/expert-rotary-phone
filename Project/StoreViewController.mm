@@ -104,6 +104,20 @@
 - (void)loadView {
     [super loadView];
 
+    // The footer (tab bar) must be solid white. iOS 13+ defaults the tab bar to a
+    // translucent material, and iOS 15+ makes its scroll edge transparent, which
+    // let the play-field background bleed through it. Force an opaque white bar.
+    if (@available(iOS 13.0, *)) {
+        UITabBarAppearance *tabAppearance = [[UITabBarAppearance alloc] init];
+        [tabAppearance configureWithOpaqueBackground];
+        tabAppearance.backgroundColor = UIColor.whiteColor;
+        tabAppearance.shadowColor = UIColor.clearColor;
+        self.tabBar.standardAppearance = tabAppearance;
+        if (@available(iOS 15.0, *)) {
+            self.tabBar.scrollEdgeAppearance = tabAppearance;
+        }
+    }
+
     if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)] &&
         [self.view respondsToSelector:@selector(contentScaleFactor)]) {
         self.view.contentScaleFactor = [UIScreen mainScreen].scale;
