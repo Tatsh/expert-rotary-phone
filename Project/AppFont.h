@@ -1,25 +1,25 @@
-//
-//  AppFont.h
-//  pop'n rhythmin
-//
-//  The app's shared UI typeface name.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (FUN_0005ef9c).
-//
+/** @file
+ * The app's shared UI typeface names. C-linkage (defined in AppFont.m) so the C++ (.mm) callers
+ * resolve the unmangled symbols.
+ */
 
 #import <Foundation/Foundation.h>
 
-// C-linkage (defined in AppFont.m) so the C++ (.mm) callers resolve the
-// unmangled symbols.
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// The bundled DynaFont gothic face used for nearly all UIKit text in the app.
+/**
+ * @brief The bundled DynaFont face used for the app's UI text.
+ * @return The name of the app font.
+ * @ghidraAddress 0x5ef9c
+ */
 NSString *AppFontName(void);
-
-// The rounded ("maru") DynaFont face used for alert/message text.
-// Ghidra: FUN_0005efa8.
+/**
+ * @brief The bundled DynaFont maru face used for the "maru" text in the app.
+ * @return The name of the maru font.
+ * @ghidraAddress 0x5efa8
+ */
 NSString *AppMaruFontName(void);
 
 #ifdef __cplusplus
