@@ -41,6 +41,7 @@
 #import "SettingTopViewController.h"
 
 #import "SettingGameTableViewController.h" // phone: pushed by the ゲーム button
+#import "UINavigationBar+RHHeader.h"       // setBackgroundImageModern:
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
 static UIViewController *RootVC() {
@@ -106,8 +107,7 @@ static UIViewController *RootVC() {
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
 
     [self.navigationController.navigationBar
-        setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-             forBarMetrics:UIBarMetricsDefault];
+        setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     return nav;
 }
 
@@ -175,8 +175,7 @@ static UIViewController *RootVC() {
         }
         [self.navigationController pushViewController:vc animated:YES];
         [self.navigationController.navigationBar
-            setBackgroundImage:[UIImage imageNamed:@"settings_navbar"]
-                 forBarMetrics:UIBarMetricsDefault];
+            setBackgroundImageModern:[UIImage imageNamed:@"settings_navbar"]];
     } else {
         [_settingTopDelegate onGameButtonTouched:sender];
     }
