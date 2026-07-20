@@ -532,7 +532,22 @@ void MainTask::update(int /*deltaMs*/) {
             overDict[idStr] = @"1";
         }
 
+#ifdef ENABLE_PATCHES
+        // @newCode — re-open the overlay on the player's last-picked difficulty
+        // (persisted in NSUserDefaults), clamped to a valid, currently-unlocked
+        // sheet, and re-seed the difficulty stars so they reflect it. EX falls back
+        // to NORMAL when it is locked for this song.
+        {
+            int saved = [UserSettingData lastPickedDifficulty];
+            if (saved < 0 || saved > 2 || (saved == 2 && !m_sel.inviteOpen)) {
+                saved = 0;
+            }
+            m_resultSheet = saved;
+            seedDiffStarLayerFrames();
+        }
+#else
         m_resultSheet = 0; // Ghidra 0x364ae: default the active difficulty to NORMAL
+#endif
         m_state = kSelDifficulty;
         break;
     }
@@ -611,6 +626,9 @@ void MainTask::update(int /*deltaMs*/) {
                             (i == d || i == m_resultSheet) ? 0 : (m_bgLyrFrames[kBgStarOut] - 1);
                     }
                     m_resultSheet = d;
+#ifdef ENABLE_PATCHES
+                    [UserSettingData saveLastPickedDifficulty:d]; // @newCode — persist the pick
+#endif
                 } else {
                     neEngine::playSystemSe(2); // locked -> cancel SE
                 }

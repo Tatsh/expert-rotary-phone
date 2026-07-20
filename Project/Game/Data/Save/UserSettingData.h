@@ -170,6 +170,14 @@ typedef struct Crypt109Data {
 + (void)saveCharaIdServer:(short)v;
 + (int)touchSoundKind;
 + (void)saveTouchSoundKind:(int)v;
+#ifdef ENABLE_PATCHES
+// @newCode — persist the last difficulty (sheet 0/1/2 = Normal/Hyper/Ex) the
+// player picked in the song-select overlay, so the overlay re-opens on it instead
+// of always defaulting to Normal. Backed by a plain NSUserDefaults key (which
+// caches in memory and is flushed by the OS at an opportune time).
++ (int)lastPickedDifficulty;
++ (void)saveLastPickedDifficulty:(int)v;
+#endif
 + (int)haveTouchSoundFlg;
 + (void)saveHaveTouchSoundFlg:(int)v;
 + (BOOL)isBemaniCollaboOpened;

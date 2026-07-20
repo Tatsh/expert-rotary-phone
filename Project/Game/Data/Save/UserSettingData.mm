@@ -32,6 +32,9 @@ static NSString *const kKeyLastMusic = @"LastMusic";
 static NSString *const kKeyLastSheet = @"LastSheet";
 static NSString *const kKeyIsEffectOn = @"IsEffectOn";
 static NSString *const kKeyIsLongNotesEffectOn = @"IsLongNotesEffectOn";
+#ifdef ENABLE_PATCHES
+static NSString *const kKeyLastPickedDiff = @"LastPickedDifficulty"; // @newCode
+#endif
 
 // Maps a sugoroku main-map id (0..8) to its touch-sound bit index. Ghidra:
 // FUN_000a218c — uxth the id, return 0 when it exceeds 8, else index a 9-entry
@@ -445,6 +448,19 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
     d.touchSoundKind = v;
     [self saveCrypt109Data:&d];
 }
+
+#ifdef ENABLE_PATCHES
+// @newCode — last-picked song-select difficulty. A plain NSUserDefaults integer:
+// standardUserDefaults holds it in memory and the OS flushes it to disk at an
+// opportune time, so the write side is effectively "update memory now".
++ (int)lastPickedDifficulty {
+    return static_cast<int>([NSUserDefaults.standardUserDefaults integerForKey:kKeyLastPickedDiff]);
+}
+
++ (void)saveLastPickedDifficulty:(int)v {
+    [NSUserDefaults.standardUserDefaults setInteger:v forKey:kKeyLastPickedDiff];
+}
+#endif
 
 // @ 0x6052c — bit 0 is always set (movs r1,#1; bics r1,r0; orrs r0,r1 == r0 | 1),
 // so the default touch sound is always reported as owned.
