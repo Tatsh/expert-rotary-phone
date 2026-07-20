@@ -206,14 +206,26 @@ void PlayTask::DrawHud() {
                    0;
     };
 
-    // Score gauge (skipped in the auto-demo), best gauge (effect-on only), combo gauge.
+    // Score gauge (skipped in the auto-demo), best gauge (effect-on only), combo
+    // gauge. The binary passes each layer an explicit high priority and the loop
+    // flag (verified from the drawLayer stack slots @0x30478/0x304d0/0x30522 and
+    // 0x3045c); these sit BEHIND the notes (priority 14) so the notes stay on top.
     if (!m_isDemoPlay) { // +0x9c9
-        aep.drawLayer(m_scoreBpmLyr[0], beatFrame(m_scoreBpmFrames[0]), AepTransform(), 0);
+        aep.drawLayer(m_scoreBpmLyr[kScoreBpmScoreGauge],
+                      beatFrame(m_scoreBpmFrames[kScoreBpmScoreGauge]),
+                      AepTransform{.priority = 23}, // 0x17
+                      kDrawLoop);
     }
     if (m_optEffectOn) { // +0x9e5
-        aep.drawLayer(m_scoreBpmLyr[1], beatFrame(m_scoreBpmFrames[1]), AepTransform(), 0);
+        aep.drawLayer(m_scoreBpmLyr[kScoreBpmBestGauge],
+                      beatFrame(m_scoreBpmFrames[kScoreBpmBestGauge]),
+                      AepTransform{.priority = 23}, // 0x17
+                      kDrawLoop);
     }
-    aep.drawLayer(m_scoreBpmLyr[2], beatFrame(m_scoreBpmFrames[2]), AepTransform(), 0);
+    aep.drawLayer(m_scoreBpmLyr[kScoreBpmComboGauge],
+                  beatFrame(m_scoreBpmFrames[kScoreBpmComboGauge]),
+                  AepTransform{.priority = 28}, // 0x1c
+                  kDrawLoop);
 
     if (!m_optEffectOn) {
         return;
@@ -226,12 +238,15 @@ void PlayTask::DrawHud() {
     // hi layer's frame tracks the beat phase. 0x30562 compares against 69999 with a
     // signed bgt (hi when score > 69999, i.e. score >= 70000).
     if (m_score < kScoreClearThreshold) {
-        aep.drawLayer(m_scoreBpmLyr[3],
-                      ((m_scoreBpmFrames[3] - 1) * m_score) / kScoreClearThreshold,
-                      AepTransform(),
-                      0);
+        aep.drawLayer(m_scoreBpmLyr[kScoreBpmFeverLo],
+                      ((m_scoreBpmFrames[kScoreBpmFeverLo] - 1) * m_score) / kScoreClearThreshold,
+                      AepTransform{.priority = 31}, // 0x1f, Ghidra 0x305b6
+                      kDrawLoop);
     } else {
-        aep.drawLayer(m_scoreBpmLyr[4], beatFrame(m_scoreBpmFrames[4]), AepTransform(), 0);
+        aep.drawLayer(m_scoreBpmLyr[kScoreBpmFeverHi],
+                      beatFrame(m_scoreBpmFrames[kScoreBpmFeverHi]),
+                      AepTransform{.priority = 31}, // 0x1f, Ghidra 0x305b6
+                      kDrawLoop);
     }
 
     if (!m_optEffectOn) {
@@ -248,7 +263,10 @@ void PlayTask::DrawHud() {
         if (last < f) {
             f = last;
         }
-        aep.drawLayer(m_effectStateLyr[kEffectStateTwl0Start], f, AepTransform(), 0);
+        aep.drawLayer(m_effectStateLyr[kEffectStateTwl0Start],
+                      f,
+                      AepTransform{.priority = 29}, // 0x1d, Ghidra 0x30624
+                      kDrawLoop);
         if (!m_optEffectOn) {
             return;
         }
@@ -271,7 +289,10 @@ void PlayTask::DrawHud() {
         const int c = m_scrubBarFrame - 1;
         m_scrubBarFrame = (c < 0) ? 0 : c;
     }
-    aep.drawLayer(m_effectStateLyr[kEffectStateCd], m_scrubBarFrame, AepTransform(), 0);
+    aep.drawLayer(m_effectStateLyr[kEffectStateCd],
+                  m_scrubBarFrame,
+                  AepTransform{.priority = 27}, // 0x1b, Ghidra 0x306d4
+                  kDrawLoop);
 
     // Advance the fever-loop frame counter.
     m_cdColorFrame = (m_cdColorFrame + 1) % (m_effectStateFrames[kEffectStateCdColor] - 1);

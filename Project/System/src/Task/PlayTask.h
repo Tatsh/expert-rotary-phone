@@ -65,6 +65,16 @@ enum SceneLayer {
     kSceneRankFanfare = 10,     // clear fanfare, layered over the chosen rank jingle
 };
 
+// Indices into PlayTask::m_scoreBpmLyr / m_scoreBpmFrames (the +0x154 / +0x168
+// handle + frame-count tables). Names from the getLyrNo source layer names.
+enum ScoreBpmLayer {
+    kScoreBpmScoreGauge = 0, // BG_*_BPM2SCORE — score gauge (skipped in the auto-demo)
+    kScoreBpmBestGauge = 1,  // BG_*_BPM0 — best gauge (effects-on only)
+    kScoreBpmComboGauge = 2, // BG_*_BPM1 — combo gauge (always drawn)
+    kScoreBpmFeverLo = 3,    // BGMTSCO_TW0_* — fever gauge, score < 70000
+    kScoreBpmFeverHi = 4,    // BGMTSCO_TW1_* — fever gauge, score >= 70000
+};
+
 // Indices into PlayTask::m_effectStateLyr / m_effectStateFrames (the +0xe4 /
 // +0x11c tables), in the order kEffectStateNames resolves them.
 enum EffectStateLayer {
