@@ -1,16 +1,8 @@
-//
-//  CAComponent.h
-//  pop'n rhythmin
-//
-//  The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a
-//  RemoteIO output. Each mixer input ("voice") streams one CASound's PCM
-//  through a render callback. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (the lib_rsnd / caplayer engine — reconstructed, not imported).
-//    prepareGraph  FUN_00023a6c   initGraph     FUN_00023b74
-//    start         FUN_00023ccc   stop          (AUGraphStop, FUN_000261e0)
-//    reserveVoice  FUN_00023f08   preparePlayer FUN_00023dac
-//    setVolume     FUN_00023eb0   renderProc    FUN_00024044
-//
+/** @file
+ * The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output. Each
+ * mixer input ("voice") streams one CASound's PCM through a render callback. This is the
+ * lib_rsnd / caplayer engine, reconstructed rather than imported.
+ */
 
 #pragma once
 
@@ -21,62 +13,151 @@
 
 class CASound;
 
+/**
+ * @brief The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output.
+ *
+ * Each mixer input ("voice") streams one CASound's PCM through a render callback. This is the
+ * lib_rsnd / caplayer engine, reconstructed rather than imported.
+ */
 class CAComponent {
 public:
+    /**
+     * @brief Build the AUGraph and, if that succeeds, size and initialise the mixer.
+     * @param voices Number of mixer inputs (voices) to allocate.
+     */
     explicit CAComponent(int voices);
+
+    /**
+     * @brief Tear the AUGraph down and free the voice pool via terminate().
+     */
     ~CAComponent();
 
-    void start(); // AUGraphStart + unmute
-    void stop();  // AUGraphStop
+    /**
+     * @brief Start the graph and unmute it.
+     * @ghidraAddress 0x23ccc
+     */
+    void start();
+
+    /**
+     * @brief Stop the graph.
+     * @ghidraAddress 0x23d0c
+     */
+    void stop();
+
+    /**
+     * @brief Report whether the graph is currently running.
+     * @return True while the graph is started, false otherwise.
+     */
     bool isRunning() const {
         return m_running;
     }
 
-    // Reserve a free voice for `source` (state -1/free or 4/finished), wire its
-    // stream format + render callback, and return the play handle
-    // (generation | voice << 16), or 0xffffffff when the mixer is full.
+    /**
+     * @brief Reserve a free voice for a source, wire it up, and return its play handle.
+     * @details Finds a voice in the free (state -1) or finished (state 4) state, wires its stream
+     * format and render callback, and returns the play handle (generation | voice << 16), or
+     * 0xffffffff when the mixer is full.
+     * @param source The sound whose PCM the reserved voice will stream.
+     * @param volumeIndex Index into the volume-level table for the voice's initial gain.
+     * @return The packed play handle, or 0xffffffff when no voice is free.
+     * @ghidraAddress 0x23f08
+     */
     uint32_t reserveVoice(CASound *source, int volumeIndex);
 
-    // Set a voice's mixer gain from the volume-level table. Ghidra: FUN_00023eb0.
+    /**
+     * @brief Set a voice's mixer gain from the volume-level table.
+     * @param volumeIndex Index into the volume-level table.
+     * @param voice The voice to set the gain for.
+     * @return True on success, false when the voice index is out of range or the set fails.
+     * @ghidraAddress 0x23eb0
+     */
     bool setPlayerVolume(int volumeIndex, int voice);
 
-    // Resume/start, stop, or query a voice named by a raw packed play handle
-    // (voice << 16 | generation). Each method extracts voice = handle >> 16,
-    // bounds-checks it, and verifies generation = handle & 0xffff against the
-    // voice's stored generation, so a stale handle is rejected. startVoice moves
-    // a prepared (1) or paused (3) voice to playing (2); stopVoice marks it
-    // finished (4); voiceState returns the voice state or -1. Ghidra: the
-    // caCAMixer bodies @ 0x23f5c / 0x23f90 / 0x23fe8 (the caplayer forwarders
-    // caHandlePlay/caHandleStop/caHandleGetState pass the decoded handle through).
+    /**
+     * @brief Resume or start a voice named by a raw packed play handle.
+     * @details Extracts voice = handle >> 16, bounds-checks it, and verifies
+     * generation = handle & 0xffff against the voice's stored generation so a stale handle is
+     * rejected. Moves a prepared (1) or paused (3) voice to playing (2).
+     * @param handle The raw packed play handle (voice << 16 | generation).
+     * @return True when the voice was moved to playing, false for a stale or ineligible handle.
+     * @ghidraAddress 0x23f5c
+     */
     bool startVoice(int handle);
+
+    /**
+     * @brief Stop a voice named by a raw packed play handle, marking it finished (4).
+     * @details Extracts voice = handle >> 16, bounds-checks it, and verifies
+     * generation = handle & 0xffff against the voice's stored generation so a stale handle is
+     * rejected.
+     * @param handle The raw packed play handle (voice << 16 | generation).
+     * @return True when the voice was marked finished, false for a stale or out-of-range handle.
+     * @ghidraAddress 0x23f90
+     */
     bool stopVoice(int handle);
+
+    /**
+     * @brief Query the state of a voice named by a raw packed play handle.
+     * @details Extracts voice = handle >> 16, bounds-checks it, and verifies
+     * generation = handle & 0xffff against the voice's stored generation so a stale handle is
+     * rejected.
+     * @param handle The raw packed play handle (voice << 16 | generation).
+     * @return The voice state, or -1 for an out-of-range or stale handle.
+     * @ghidraAddress 0x23fe8
+     */
     int voiceState(int handle) const;
 
-    // Set the mixer's master gain from the volume-level table. Ghidra:
-    // caHandleSetVolume @ 0x267e4 forwards to setPlayerVolume(volumeIndex, 0).
+    /**
+     * @brief Set the mixer's master gain from the volume-level table.
+     * @details Forwards to setPlayerVolume(volumeIndex, 0), which writes the master output-scope
+     * gain.
+     * @param volumeIndex Index into the volume-level table.
+     * @ghidraAddress 0x267e4
+     */
     void setAllVolume(int volumeIndex);
 
-    // Detach `source` from any voice still referencing it (called when the source
-    // is unloaded). Ghidra: auClearSourceRef @ 0x24014.
+    /**
+     * @brief Detach a source from any voice still referencing it.
+     * @details Called when the source is unloaded so no voice keeps a dangling back-pointer.
+     * @param source The sound to detach from the voices.
+     * @ghidraAddress 0x24014
+     */
     void clearSourceRef(CASound *source);
 
-    // Pause or stop-and-clear a single voice named by a raw packed play handle,
-    // guarded by its generation (a stale handle is ignored). pauseVoice sets
-    // state 3; stopAndClearVoice frees the voice (state 4 + drop the source).
-    // Both extract voice = handle >> 16 and generation = handle & 0xffff. Ghidra:
-    // the caCAMixer bodies @ 0x23fbc / 0x2406c (forwarded from caHandlePause @
-    // 0x267b4 / caHandleStopAndClear @ 0x26864).
+    /**
+     * @brief Pause a voice named by a raw packed play handle, setting state 3.
+     * @details Extracts voice = handle >> 16 and generation = handle & 0xffff; a stale handle is
+     * ignored.
+     * @param handle The raw packed play handle (voice << 16 | generation).
+     * @return True when the voice was paused, false for a stale or out-of-range handle.
+     * @ghidraAddress 0x23fbc
+     */
     bool pauseVoice(int handle);
+
+    /**
+     * @brief Stop and clear a voice named by a raw packed play handle.
+     * @details Frees the voice (state 4 and drops the source) so reserveVoice can recycle it.
+     * Extracts voice = handle >> 16 and generation = handle & 0xffff; a stale handle is ignored.
+     * @param handle The raw packed play handle (voice << 16 | generation).
+     * @ghidraAddress 0x2406c
+     */
     void stopAndClearVoice(int handle);
 
-    // Prepare a *specific* voice for `source` (the fixed-voice SetGroup path):
-    // wire its stream format + render callback, set volume, mark it playing, and
-    // return the play handle (generation | voice << 16), or -1 if the voice is
-    // busy. Ghidra: auMixerPreparePlayer.
+    /**
+     * @brief Prepare a specific voice for a source (the fixed-voice SetGroup path).
+     * @details Wires the voice's stream format and render callback, sets its volume, marks it
+     * playing, and returns the play handle (generation | voice << 16), or -1 if the voice is busy.
+     * @param source The sound whose PCM the voice will stream.
+     * @param voice The specific voice to prepare.
+     * @param volumeIndex Index into the volume-level table for the voice's gain.
+     * @return The packed play handle, or -1 when the voice is busy.
+     * @ghidraAddress 0x23dac
+     */
     int preparePlayer(CASound *source, int voice, int volumeIndex);
 
-    // Tear the AUGraph down and free the voices (idempotent). Ghidra:
-    // auGraphTerminate @ 0x23d40.
+    /**
+     * @brief Tear the AUGraph down and free the voices (idempotent).
+     * @ghidraAddress 0x23d40
+     */
     void terminate();
 
 private:

@@ -2,8 +2,8 @@
 //  CASound.mm
 //  pop'n rhythmin
 //
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Decodes an
-//  audio file into an interleaved signed-16-bit LPCM buffer using ExtAudioFile.
+//  Decodes an audio file into an interleaved signed-16-bit LPCM buffer using
+//  ExtAudioFile.
 //
 
 #import "CASound.h"
@@ -11,15 +11,12 @@
 #include <cstdlib>
 #include <cstring>
 
-// Ghidra: FUN_00027bac.
 CASound::CASound() = default;
 
-// Ghidra: FUN_00027bdc.
 CASound::~CASound() {
     freeBuffer();
 }
 
-// Ghidra: caSourceFreeBuffer @ 0x27bc0.
 void CASound::freeBuffer() {
     if (m_buffer != nullptr) {
         free(m_buffer);
@@ -28,9 +25,9 @@ void CASound::freeBuffer() {
     m_bufferSize = 0;
 }
 
-// Ghidra: caSourceRead @ 0x27e10 — the mixer render read. Copies from the
-// current byte cursor, clamping each copy to the buffer end; a looped source
-// wraps (and clears the pass total), a one-shot stops at the end.
+// The mixer render read. Copies from the current byte cursor, clamping each
+// copy to the buffer end; a looped source wraps (and clears the pass total), a
+// one-shot stops at the end.
 size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const {
     if (bytes == 0) {
         return 0;
@@ -66,10 +63,10 @@ size_t CASound::read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const 
     return copied;
 }
 
-// Ghidra: FUN_00027bf8 — build a CFURL from the path and load through it.
+// Build a CFURL from the path and load through it.
 // In the binary the `loop` flag is passed on to loadURL, which performs the
-// m_loop store (0x27c62); setting it here first is behaviourally identical since
-// nothing reads m_loop before readFrames runs.
+// m_loop store; setting it here first is behaviourally identical since nothing
+// reads m_loop before readFrames runs.
 bool CASound::load(const char *path, bool loop) {
     m_loop = loop;
     CFURLRef url = CFURLCreateFromFileSystemRepresentation(
@@ -83,8 +80,8 @@ bool CASound::load(const char *path, bool loop) {
     return ok;
 }
 
-// Ghidra: FUN_00027c58. In the binary this also takes the loop flag and stores
-// m_loop (strb r2,[this,#0xc]); that store is hoisted into load() here.
+// In the binary this also takes the loop flag and stores m_loop; that store is
+// hoisted into load() here.
 bool CASound::loadURL(CFURLRef url) {
     ExtAudioFileRef file = nullptr;
     if (ExtAudioFileOpenURL(url, &file) != noErr) {
@@ -98,8 +95,8 @@ bool CASound::loadURL(CFURLRef url) {
     return ok;
 }
 
-// Ghidra: FUN_00027cb8 — read the file's format + length, then derive the
-// interleaved signed-16-bit LPCM client format to decode into.
+// Read the file's format and length, then derive the interleaved signed-16-bit
+// LPCM client format to decode into.
 bool CASound::configureFormat(ExtAudioFileRef file) {
     AudioStreamBasicDescription fileFormat = {};
     UInt32 size = sizeof(fileFormat);
@@ -134,8 +131,8 @@ bool CASound::configureFormat(ExtAudioFileRef file) {
     return true;
 }
 
-// Ghidra: FUN_00027d50 — allocate the buffer, set the client format, and read
-// every frame in with ExtAudioFileRead.
+// Allocate the buffer, set the client format, and read every frame in with
+// ExtAudioFileRead.
 // The binary loops purely on `remaining > 0` (mls/mla update per read) with no
 // frames==0 guard; the `break` on end-of-file here is a reconstruction-added
 // safety that only fires on a short/malformed read the binary would spin on.

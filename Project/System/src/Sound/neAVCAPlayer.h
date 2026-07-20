@@ -1,14 +1,8 @@
-//
-//  neAVCAPlayer.h
-//  pop'n rhythmin
-//
-//  Low-latency sound-effect backend built on CoreAudio (the caplayer / lib_rsnd
-//  layer described in the bundle's readme.txt). It owns a pool of CASound
-//  slots; a play handle packs the slot index and a generation counter so a
-//  stale handle can't restart a recycled slot. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (Project/System/src/Sound region,
-//  FUN_00026xxx).
-//
+/** @file
+ * Low-latency sound-effect backend built on CoreAudio (the caplayer / lib_rsnd layer described in
+ * the bundle's readme.txt). It owns a pool of CASound slots; a play handle packs the slot index and
+ * a generation counter so a stale handle cannot restart a recycled slot.
+ */
 
 #pragma once
 
@@ -19,71 +13,166 @@
 class CAComponent;
 class CASound;
 
-// Handle bit layout (shared with AudioManager): low 28 bits = (slot << 16) |
-// generation; 0x20000000 marks a CoreAudio (caplayer) instance.
+/**
+ * @brief Handle bit that marks a CoreAudio (caplayer) instance.
+ * @details The handle layout is shared with AudioManager: the low 28 bits hold
+ * `(slot << 16) | generation`, and this bit distinguishes a caplayer handle from other backends.
+ */
 constexpr uint32_t kCAPlayerHandleFlag = 0x20000000;
 
+/**
+ * @brief Low-latency CoreAudio sound-effect backend (the caplayer / lib_rsnd layer).
+ *
+ * Owns a pool of CASound slots; a play handle packs the slot index and a generation counter so a
+ * stale handle cannot restart a recycled slot.
+ */
 class neAVCAPlayer {
 public:
-    // Tear down the CoreAudio SE engine: terminate + delete the mixer, free every
-    // loaded CASound, drop the source array and the name map. Ghidra:
-    // caPlayerMgr_dtor @ 0x261f8.
+    /**
+     * @brief Tear down the CoreAudio SE engine.
+     * @details Terminates and deletes the mixer, frees every loaded CASound, and drops the source
+     * array and the name map.
+     * @ghidraAddress 0x261f8
+     */
     ~neAVCAPlayer();
 
-    // Load a file into a new CASound slot; returns a source id, or 0xffffffff on
-    // failure. Ghidra: FUN_00026320.
+    /**
+     * @brief Load a file into a new CASound slot.
+     * @param path Path to the sound file to load.
+     * @param loop Whether the loaded source should loop on playback.
+     * @return The new source id, or 0xffffffff on failure.
+     * @ghidraAddress 0x26320
+     */
     uint32_t load(const char *path, bool loop);
 
-    // As load(), but also register a call-name for later lookup. Ghidra:
-    // FUN_0002648c.
+    /**
+     * @brief Load a file into a new CASound slot and register a call-name for later lookup.
+     * @param path Path to the sound file to load.
+     * @param callName Name under which the source can be looked up.
+     * @param loop Whether the loaded source should loop on playback.
+     * @return The new source id, or 0xffffffff on failure.
+     * @ghidraAddress 0x2648c
+     */
     uint32_t loadNamed(const char *path, const char *callName, bool loop);
 
-    // Start CoreAudio with `voices` concurrent channels. Ghidra: FUN_0002615c.
+    /**
+     * @brief Start CoreAudio with the given number of concurrent channels.
+     * @param voices Number of concurrent voices to allocate.
+     * @ghidraAddress 0x2615c
+     */
     void systemStart(int voices);
 
-    // Reserve a playing instance for a loaded source (by id or call name) at the
-    // given volume; returns the play handle, or -1 on failure. Ghidra: by-id
-    // FUN_0002669c / by-name FUN_000266f8.
+    /**
+     * @brief Reserve a playing instance for a loaded source by id at the given volume.
+     * @param sourceId Id of the loaded source to reserve.
+     * @param volume Playback volume for the reserved instance.
+     * @return The play handle, or -1 on failure.
+     * @ghidraAddress 0x2669c
+     */
     uint32_t prepare(uint32_t sourceId, float volume);
+
+    /**
+     * @brief Reserve a playing instance for a loaded source by call name at the given volume.
+     * @param callName Call name of the loaded source to reserve.
+     * @param volume Playback volume for the reserved instance.
+     * @return The play handle, or -1 on failure.
+     * @ghidraAddress 0x266f8
+     */
     uint32_t prepareNamed(const char *callName, float volume);
 
-    // Reserve a playing instance targeting a *fixed* voice index (used by
-    // AudioManager's SetGroup pool, which owns each caplayer voice permanently),
-    // by source id or by call name. Returns the play handle, or -1 on failure.
-    // Ghidra: caPrepareSourceByIndex / caPrepareSourceNamed.
+    /**
+     * @brief Reserve a playing instance for a loaded source id targeting a fixed voice index.
+     * @details Used by AudioManager's SetGroup pool, which owns each caplayer voice permanently.
+     * @param sourceId Id of the loaded source to reserve.
+     * @param voiceIndex Fixed mixer voice index to target.
+     * @return The play handle, or -1 on failure.
+     * @ghidraAddress 0x266c0
+     */
     uint32_t prepareAtVoice(uint32_t sourceId, int voiceIndex);
+
+    /**
+     * @brief Reserve a playing instance for a loaded source by call name targeting a fixed voice.
+     * @details Used by AudioManager's SetGroup pool, which owns each caplayer voice permanently.
+     * @param callName Call name of the loaded source to reserve.
+     * @param voiceIndex Fixed mixer voice index to target.
+     * @return The play handle, or -1 on failure.
+     * @ghidraAddress 0x2673c
+     */
     uint32_t prepareNamedAtVoice(NSString *callName, int voiceIndex);
 
-    // Start the sound referenced by `handle` (slot generation must still match).
-    // Ghidra: FUN_00026784.
+    /**
+     * @brief Start the sound referenced by a handle.
+     * @details The slot generation must still match for playback to begin.
+     * @param handle Play handle previously returned by a prepare call.
+     * @return True if the voice started playing, false otherwise.
+     * @ghidraAddress 0x26784
+     */
     bool play(uint32_t handle);
 
-    // Stop the voice named by `handle`. Ghidra: FUN_0002679c.
+    /**
+     * @brief Stop the voice named by a handle.
+     * @param handle Play handle previously returned by a prepare call.
+     * @return True if the voice was stopped, false otherwise.
+     * @ghidraAddress 0x2679c
+     */
     bool stop(uint32_t handle);
 
-    // Pause the voice named by `handle` (resume via play()). Ghidra:
-    // caHandlePause.
+    /**
+     * @brief Pause the voice named by a handle.
+     * @details Resume the paused voice via play().
+     * @param handle Play handle previously returned by a prepare call.
+     * @return True if the voice was paused, false otherwise.
+     * @ghidraAddress 0x267b4
+     */
     bool pause(uint32_t handle);
 
-    // Stop the voice named by `handle` and drop its source so the mixer can
-    // recycle it immediately (used when reaping a finished SetGroup voice).
-    // Ghidra: caHandleStopAndClear.
+    /**
+     * @brief Stop the voice named by a handle and drop its source so the mixer can recycle it.
+     * @details Used when reaping a finished SetGroup voice, freeing the slot immediately.
+     * @param handle Play handle previously returned by a prepare call.
+     * @ghidraAddress 0x26864
+     */
     void stopAndClear(uint32_t handle);
 
-    // The voice's state (-1 free / 1 playing / 4 finished). Ghidra: FUN_000267cc.
+    /**
+     * @brief Query the state of the voice named by a handle.
+     * @param handle Play handle previously returned by a prepare call.
+     * @return The voice state: -1 free, 1 playing, or 4 finished.
+     * @ghidraAddress 0x267cc
+     */
     int voiceState(uint32_t handle);
 
-    // Unload a loaded source (by id or call name), freeing its CASound slot.
-    // Ghidra: caUnregisterSource / caUnregisterSourceNamed.
+    /**
+     * @brief Unload a loaded source by id, freeing its CASound slot.
+     * @param sourceId Id of the loaded source to unload.
+     * @ghidraAddress 0x26610
+     */
     void unregisterSource(uint32_t sourceId);
+
+    /**
+     * @brief Unload a loaded source by call name, freeing its CASound slot.
+     * @param callName Call name of the loaded source to unload.
+     * @ghidraAddress 0x26644
+     */
     void unregisterSourceNamed(NSString *callName);
 
-    // Set the gain (volume level 0..127) of every voice. Ghidra: FUN_000267e4.
+    /**
+     * @brief Set the gain of every voice.
+     * @param level Volume level in the range 0 to 127.
+     * @ghidraAddress 0x267e4
+     */
     void setAllVoiceVolume(int level);
 
-    // AudioSession interruption handling. Ghidra: suspend FUN_000261e0 /
-    // resume FUN_000261ec.
+    /**
+     * @brief Handle an AudioSession interruption by stopping the mixer.
+     * @ghidraAddress 0x261e0
+     */
     void suspend();
+
+    /**
+     * @brief Resume from an AudioSession interruption by restarting the mixer.
+     * @ghidraAddress 0x261ec
+     */
     void resume();
 
 private:
