@@ -796,9 +796,16 @@ void AcViewerTask::update(int /*deltaMs*/) {
     switch (m_state) {
     case kAcvInit:
         // Enter the arcade viewer nav screen (and, on pad, insert the black board),
-        // then register this task on the AppDelegate.
-        [AcvRootVC() GotoAcViewer];
-        if (neSceneManager::isPadDisplay() && !m_padBoardUp) {
+        // then register this task on the AppDelegate. On pad, only enter when the
+        // board is not already up (m_padBoardUp, +0x1d9): requestGameExit sets that
+        // flag before routing back through here so the exit pass does NOT re-create
+        // the viewer split. The binary (ACST_INIT @ 0x21678) gates GotoAcViewer on
+        // bIpadSubMode == 0 the same way; calling it unconditionally re-showed the
+        // viewer ("reload") and left the screen black after the exit.
+        if (!neSceneManager::isPadDisplay()) {
+            [AcvRootVC() GotoAcViewer];
+        } else if (!m_padBoardUp) {
+            [AcvRootVC() GotoAcViewer];
             [AcvRootVC() InsertBlackBoard];
         }
         [[AppDelegate appDelegate] setAcMainTask:this];
