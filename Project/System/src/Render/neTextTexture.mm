@@ -167,9 +167,17 @@ neTextTextureMgr::~neTextTextureMgr() {
 // @complete
 void neTextTextureMgr::createNewTextTexture() {
     neTextTexture *atlas = new neTextTexture();
-    atlas->pixels = std::make_unique<uint8_t[]>(0x40000); // 256x256 RGBA, zero-cleared
-    void *tex =
-        neCreateTextureFromData(0x100, 0x100, /*GL_RGBA*/ 1, atlas->pixels.get(), 0x100, 0x100);
+    // The binary always used a 256x256 atlas (it shipped scaleShift == 0). The
+    // engine-text enlargement patch (bootstrapC(1) in AppDelegate) rasterises
+    // glyphs at size << scaleShift, i.e. 4x the atlas area at shift 1, but left
+    // this atlas at 256x256 -- so it filled 4x sooner and the atlasCount > 4
+    // cache wipe thrashed on glyph-heavy screens (whole-cache re-rasterisation
+    // every few frames -> slow, flickering song titles). Scale the atlas with the
+    // same shift so glyph density (and therefore the atlas budget) is preserved.
+    // scaleShift == 0 keeps the original 256x256 atlas byte-for-byte.
+    const int dim = 0x100 << scaleShift;
+    atlas->pixels = std::make_unique<uint8_t[]>(static_cast<size_t>(dim) * dim * 4); // RGBA, zeroed
+    void *tex = neCreateTextureFromData(dim, dim, /*GL_RGBA*/ 1, atlas->pixels.get(), dim, dim);
     // assert(tex) — neTextTexture.mm:0xeb in the shipped binary.
     atlas->index = atlasCount;
     atlas->texture = tex;
