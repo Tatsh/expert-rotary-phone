@@ -141,6 +141,12 @@ bool isIndexInRange12(unsigned int index) {
     BOOL _isAnimationing;
     NSMutableArray *_eventIds; // active treasure-event ids (NSNumber, 0..11)
     int _selectedIndexRow;     // pad: highlighted row
+    // Retains the map-name strings that the _mapDataArray NSValue payloads point to
+    // with an unretained pointer (the boxed MainMapData does not own them). Without
+    // this they are deallocated at loop scope exit and -[MapListCell setMapData:]
+    // crashes retaining a dangling NSString. The MRC binary leaked the +1 string,
+    // keeping it alive; under ARC this array does the same job.
+    NSMutableArray<NSString *> *_mapRowNames;
 }
 
 @synthesize mapSelectDelegate = _mapSelectDelegate;
@@ -170,6 +176,7 @@ bool isIndexInRange12(unsigned int index) {
 
     // One row per main map (mapId % 10 == 0) that has a save record.
     NSMutableArray *rows = [NSMutableArray array];
+    _mapRowNames = [NSMutableArray array];
     for (NSValue *headValue in _mapHeadArray) {
         int16_t head[40];
         [headValue getValue:head];
@@ -187,6 +194,9 @@ bool isIndexInRange12(unsigned int index) {
             NSData *nameData = [NSData dataWithBytes:sjis length:strlen(sjis)];
             NSString *name = [[NSString alloc] initWithData:nameData
                                                    encoding:NSShiftJISStringEncoding];
+            if (name) {
+                [_mapRowNames addObject:name]; // keep it alive for the unretained payload
+            }
             MainMapData d;
             d.mainMapId = mapId / 10;
             d.name = name;
