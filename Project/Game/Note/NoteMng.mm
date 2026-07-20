@@ -69,6 +69,13 @@ int NoteMng::initPlayData(std::span<const std::byte> data,
                           void (*missCallback)(void *),
                           void *missCallbackArg) {
     assert(!data.empty()); // NoteMng.mm:0x45 (0x335b4/0x335ba)
+    // The binary only asserts here, so a release build dereferences a nil sheet
+    // (the assert compiles out) and crashes in the memcpy below. Guard it: a
+    // missing / unreadable chart (e.g. the tutorial's .orb whose sheet entry did
+    // not decode) leaves the note manager uninitialised rather than faulting.
+    if (data.empty() || data.data() == nullptr) {
+        return -1;
+    }
     const int size = static_cast<int>(data.size());
     assert(static_cast<unsigned>(size - 24) <= 0x4e0bu); // NoteMng.mm:0x59 (0x3360c/0x33618): the
                                                          // record span must fit the note pool
