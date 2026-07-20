@@ -127,6 +127,20 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
     UIImage *barImage = [UIImage imageNamed:@"set_nowpoint_navbar"];
     [self.navigationController.navigationBar setBackgroundImage:barImage
                                                   forBarMetrics:UIBarMetricsDefault];
+    // iOS 13+ resolves the bar background through UINavigationBarAppearance; the
+    // legacy setBackgroundImage: above is ignored at the transparent scroll edge,
+    // which dropped this arcade-locator screen's header. Mirror the image in.
+    if (@available(iOS 13.0, *)) {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundImage = barImage;
+        appearance.shadowColor = UIColor.clearColor;
+        self.navigationController.navigationBar.standardAppearance = appearance;
+        self.navigationController.navigationBar.scrollEdgeAppearance = appearance;
+        if (@available(iOS 15.0, *)) {
+            self.navigationController.navigationBar.compactScrollEdgeAppearance = appearance;
+        }
+    }
 
     m_DictSpot = [[NSMutableDictionary alloc] initWithCapacity:0x40];
     m_LoadedMaster = NO;
