@@ -1,0 +1,39 @@
+---
+concurrency:
+  cancel-in-progress: false
+  group: pages
+jobs:
+  pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+      - name: Setup Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+      - name: Configure
+        run: cmake -B ${{ github.workspace }}/build -DBUILD_DOCS_ONLY=ON
+      - name: Build documentation
+        run: cmake --build ${{ github.workspace }}/build --target docs
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
+        with:
+          path: ${{ github.workspace }}/build/html
+      - id: deployment
+        name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
+name: GitHub Pages
+'on':
+  push:
+    branches: [master]
+permissions:
+  contents: read
+  id-token: write
+  pages: write

@@ -29,9 +29,38 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-project(PopnRhythmin
-        VERSION 2.0.3
-        LANGUAGES C CXX OBJC OBJCXX)
+# Documentation switches sit before project() because a docs-only configure must
+# not probe for the Objective-C toolchain: the GitHub Pages runner is Linux and
+# has no OBJC/OBJCXX compilers, so that mode declares no languages at all.
+option(BUILD_DOCS "Build documentation." OFF)
+option(BUILD_DOCS_ONLY "Build documentation only." OFF)
+
+if(BUILD_DOCS_ONLY)
+    project(PopnRhythmin VERSION 2.0.3 LANGUAGES NONE)
+else()
+    project(PopnRhythmin
+            VERSION 2.0.3
+            LANGUAGES C CXX OBJC OBJCXX)
+endif()
+
+# ---------------------------------------------------------------------------
+# Documentation (Doxygen). The ghidraAddress alias implements this project's
+# custom @ghidraAddress tag, which ties a reconstructed routine to its function
+# in the original binary (address relative to the program's image base).
+# DOXYGEN_VERBATIM_VARS stops CMake re-quoting the alias, so the embedded
+# Doxygen-side quoting reaches the Doxyfile intact.
+# ---------------------------------------------------------------------------
+if(BUILD_DOCS OR BUILD_DOCS_ONLY)
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
+    set(DOXYGEN_GENERATE_HTML YES)
+    set(DOXYGEN_VERBATIM_VARS DOXYGEN_ALIASES)
+    set(DOXYGEN_ALIASES [[ghidraAddress="\par Ghidra address (image-base relative):^^"]])
+    find_package(Doxygen REQUIRED)
+    doxygen_add_docs(docs README.md Project ALL)
+endif()
+if(BUILD_DOCS_ONLY)
+    return()
+endif()
 
 # ---------------------------------------------------------------------------
 # User-facing options (all overridable via -D...)
