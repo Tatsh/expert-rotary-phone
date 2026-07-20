@@ -64,20 +64,24 @@ static void neDumpSliderHit(const char *tag, UISlider *s) {
                NSStringFromCGPoint(c).UTF8String,
                hit ? NSStringFromClass(hit.class).UTF8String : "nil",
                s.userInteractionEnabled);
+    // Full, unfiltered ancestor walk: print every node from the slider up to the
+    // window with its frame, bounds and whether the slider's centre point lands
+    // inside it. The first node (top-down) that reports inside = 0 is what blocks
+    // the hit-test from reaching the slider.
+    int depth = 0;
     for (UIView *v = s.superview; v != nil; v = v.superview) {
         CGPoint p = [s.window convertPoint:c toView:v];
         BOOL inside = [v pointInside:p withEvent:nil];
-        if ([v isKindOfClass:[UITableViewCell class]] || !inside || !v.userInteractionEnabled ||
-            v.hidden || v.alpha < 0.01f) {
-            neDebugLog("  NODE %s frame=%s inside=%d ui=%d hidden=%d alpha=%.2f clip=%d",
-                       NSStringFromClass(v.class).UTF8String,
-                       NSStringFromCGRect(v.frame).UTF8String,
-                       inside,
-                       v.userInteractionEnabled,
-                       v.hidden,
-                       (double)v.alpha,
-                       v.clipsToBounds);
-        }
+        neDebugLog("  [%d] %s frame=%s bounds=%s inside=%d ui=%d hidden=%d alpha=%.2f clip=%d",
+                   depth++,
+                   NSStringFromClass(v.class).UTF8String,
+                   NSStringFromCGRect(v.frame).UTF8String,
+                   NSStringFromCGRect(v.bounds).UTF8String,
+                   inside,
+                   v.userInteractionEnabled,
+                   v.hidden,
+                   (double)v.alpha,
+                   v.clipsToBounds);
     }
 }
 
@@ -563,6 +567,7 @@ static inline float SoundShortToVolume(short v) {
 }
 
 - (void)sliderTouchDown:(UISlider *)slider {
+    NE_DBG(neDebugLog("sliderEvent touchDown slider=%p", slider));
     [self setEnclosingScrollEnabled:NO forSlider:slider];
 }
 
@@ -576,6 +581,7 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x82af4 -- live-apply the BGM volume (with and without fade); iPad persists
 // it.
 - (void)bgmSliderValChanged:(id)sender {
+    NE_DBG(neDebugLog("sliderEvent bgm valueChanged value=%.3f", (double)_bgmSlider.value));
     float v = _bgmSlider.value;
     [[AudioManager sharedManager] setBgmVolume:v];
     [[AudioManager sharedManager] setJustBgmVolume:v];
@@ -587,6 +593,7 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x82bbc -- apply the SE group volume, preview it when non-zero; iPad
 // persists it.
 - (void)seSliderValChanged:(id)sender {
+    NE_DBG(neDebugLog("sliderEvent se valueChanged value=%.3f", (double)_seSlider.value));
     short vol = SoundVolumeToShort(_seSlider.value);
     [[AudioManager sharedManager] setSeVolume:vol groupId:1];
     if (vol > 0) {
@@ -602,6 +609,8 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x82cc4 -- preview the touch SE when the volume is non-zero; iPad persists
 // it.
 - (void)touchSoundSliderValChanged:(id)sender {
+    NE_DBG(
+        neDebugLog("sliderEvent touch valueChanged value=%.3f", (double)_touchSoundSlider.value));
     short vol = SoundVolumeToShort(_touchSoundSlider.value);
     if (vol > 0) {
         // Preview touch SE (NEON-spilled resourceId/Volume -- reconstructed as the
