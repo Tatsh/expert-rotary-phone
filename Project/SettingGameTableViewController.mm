@@ -161,6 +161,19 @@ static UIViewController *RootVC() {
 //
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    // @newCode -- This accordion table drives each detail row's height through
+    // tableView:heightForRowAtIndexPath: (0 when collapsed, the section's dummy
+    // height when expanded). Modern iOS still leaves estimatedRowHeight automatic,
+    // so the self-sizing pass intermittently collapses the expanded detail cell's
+    // contentView back to ~0 height. Because that cell embeds a whole nested table
+    // of volume sliders, the collapse stops the sliders dragging: hitTest clips
+    // at the zero-height host cell before reaching them. Disabling self-sizing
+    // keeps the host cell at its concrete accordion height. Set here (after
+    // loadView) so the tableView does not discard it.
+    self.tableView.estimatedRowHeight = 0.0f;
+    self.tableView.estimatedSectionHeaderHeight = 0.0f;
+    self.tableView.estimatedSectionFooterHeight = 0.0f;
 }
 
 // @ 0x8901c
