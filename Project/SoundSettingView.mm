@@ -130,16 +130,9 @@ static inline float SoundShortToVolume(short v) {
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     self = [super initWithStyle:style];
     if (self != nil) {
-        // Modern iOS defaults the table to self-sizing cells (automatic estimated
-        // row height). These slider/picker cells are laid out by frame with no Auto
-        // Layout constraints, so self-sizing collapses each row to ~0 height; the
-        // slider still draws at its 44pt frame (overflowing the zero-height cell) but
-        // the cell's hit area is empty, so taps and drags never reach the slider
-        // (confirmed via hitTest -- the touch resolved to the table, not the slider,
-        // and the cell's pointInside: was false). Pin the fixed row height the iOS 8
-        // binary used so each cell actually contains its slider.
-        self.tableView.estimatedRowHeight = 0;
-        self.tableView.rowHeight = 44.0f;
+        // (The fixed row height that keeps the slider cells hit-testable on modern
+        // iOS is enforced in tableView:heightForRowAtIndexPath:; setting it on the
+        // tableView here did not stick.)
         self.tableView.backgroundColor = [UIColor clearColor];
         if (!neSceneManager::isPadDisplay()) {
             self.tableView.backgroundColor =
@@ -489,6 +482,17 @@ static inline float SoundShortToVolume(short v) {
 // @ 0x8292c -- constant 32pt headers.
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return 32.0f; // 0x42000000
+}
+
+// @newCode -- The iOS 8 binary let rows use the default 44pt height. Modern iOS
+// defaults tables to self-sizing (estimatedRowHeight = automatic), and since these
+// cells are laid out by frame with no Auto Layout constraints self-sizing collapses
+// each row to ~0, which left the sliders' cells with an empty hit area so touches
+// never reached them. Setting rowHeight / estimatedRowHeight on the table did not
+// stick (the tableView resets them on its lazy load), so pin the fixed height here
+// -- this delegate method is authoritative and overrides self-sizing.
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 44.0f;
 }
 
 // @ 0x82934 -- only the touch-sound picker rows respond: switch the selected
