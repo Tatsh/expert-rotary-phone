@@ -13,6 +13,7 @@ aish
 alignement
 analyzer
 analyzer's
+Ångström
 anim
 animationing
 aninationing
@@ -132,6 +133,7 @@ ctypes
 ctypting
 currenty
 curretly
+ＣＵＴＥ
 cutoff
 dakuten
 dalegate
@@ -139,6 +141,7 @@ danu
 daon
 dashcam
 dataclasses
+dbuild
 dcmake
 ddeployment
 deadcode
@@ -160,6 +163,8 @@ dios
 disasm
 divsi
 docstrings
+doxyfile
+doxygen
 dplatform
 dpopnrhythmin
 dresources
@@ -230,6 +235,7 @@ gojuon
 gokusotsu
 gpflag
 gradeable
+graphviz
 haksi
 hanamaru
 handakuten
@@ -275,8 +281,8 @@ jinja
 jsonnet
 jsonschema
 jubeat
-jubeat's
 jubeatplus
+jubeat's
 judgeable
 jumptable
 kagome
@@ -318,6 +324,7 @@ lotte
 lpcm
 lumion
 lvex
+mainpage
 malloc
 malloc'd
 maneuvering
@@ -325,6 +332,7 @@ maru
 math
 matrixf
 maxfilenameinzip
+mdfile
 memcpy
 memset
 messager
@@ -485,6 +493,7 @@ segs
 selec
 selref
 senisivity
+ＳＥＸＹ
 shellcheck
 shellformat
 shishamo
@@ -662,7 +671,4 @@ zseek
 ztell
 zunzexport
 zwrite
-Ångström
 фade
-ＣＵＴＥ
-ＳＥＸＹ
