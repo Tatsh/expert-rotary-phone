@@ -606,6 +606,15 @@ constexpr const char *const kHardwareModels[40] = {
  * @ghidraAddress 0x9890
  */
 - (NSString *)uuId {
+#ifdef ENABLE_PATCHES
+    // Preservation build: pin the device UUID to a fixed value. The BFCodec key
+    // for the purchased-song lists (mulist / acmulist / prodlist / recpack) is
+    // MD5 of this string, so hard-coding it makes those lists device-independent:
+    // they are generated offline against this UUID and then decrypt on any device
+    // running this build, without per-device regeneration. A faithful build (no
+    // ENABLE_PATCHES) still mints and persists a real per-device Keychain UUID.
+    return @"55B23B58-C962-413A-BD83-11CBE16CB189";
+#else
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
 
     NSDictionary *attrQuery = @{
@@ -659,6 +668,7 @@ constexpr const char *const kHardwareModels[40] = {
     add[(__bridge id)kSecValueData] = [result dataUsingEncoding:NSUTF8StringEncoding];
     SecItemAdd((__bridge CFDictionaryRef)add, nullptr);
     return result;
+#endif
 }
 
 /**
