@@ -84,4 +84,17 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 ### Arcade viewer
 
-- Viewer is not functional: song does not play.
+-
+- iPhone: pause menu displays but tapping the buttons does nothing.
+
+### iPhone support
+
+- The app's launch images top out at the 4-inch (320x568) size, so it runs in compatibility mode
+  on everything larger:
+  - iPhone 6 / 6 Plus through 8 (4.7-inch and 5.5-inch) share the 4-inch 16:9 aspect ratio, so the
+    content is just scaled up to fill the screen (slightly soft, but no black bars).
+  - iPhone X and later (the tall 19.5:9 displays) have a different aspect ratio, so the 16:9 content
+    cannot fill the screen and is letterboxed with black bars top and bottom.
+
+  Fixing this so the whole screen is used at native resolution is a significant effort, including
+  tasks like re-creating assets.
