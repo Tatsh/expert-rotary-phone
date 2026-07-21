@@ -594,6 +594,12 @@ void MenuMainTask::update(int /*deltaMs*/) {
             m_seInst[0] = static_cast<int>([audio playSe:0 resourceId:m_seId[0]]);
             if (!m_tutorialSkip) {
                 neAppEventCenter::shared().setGuestNoSaveMode(true);
+                // The first-play tutorial is a bundled-demo play: set the demo-play
+                // flag so PlayTask_init takes the bundled-song path
+                // (getPathFromBundle:0 -> the on-disk 000000000.orb) instead of the
+                // normal branch, whose getMusicData needs the (absent) music list and
+                // returned nil -> crash. Ghidra: strb #1,[ec,#0x33] @ 0x6c2c6.
+                neAppEventCenter::shared().setDemoPlayFlag(1);
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = TutorialTaskCreate(); // the guest-mode tutorial PlayTask
             } else {
