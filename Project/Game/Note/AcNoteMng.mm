@@ -22,6 +22,7 @@
 #import <Foundation/Foundation.h>
 
 #import "../../System/src/Sound/AudioManager.h" // BGM start / drift sync (triggerBgmStart, applyBgmSync)
+#import "../../System/src/neDebugLog.h"
 #import "../Util/Random.h"
 
 // Arcade-viewer judge-result globals (Ghidra: DAT_0016ebe0 / DAT_0016ebe4).
@@ -419,6 +420,22 @@ void AcNoteMng::makeNoteEvent(const AcNoteRecord *rec) {
         lane = (lane + static_cast<int>(rec->tick / 0x48)) % 9;
     }
     AcActiveNote *node = m_freeHead;
+#if RHYDBG
+    // The 1000-node pool should never run dry: the binary asserts here too (@ 0x483).
+    // Faithful analysis of every shipped chart shows the init spawn window is only a
+    // few thousand ms, so a real exhaustion means the spawn window (or the loaded
+    // sheet) is not what the offline model expects. Capture the context and bail
+    // instead of faulting so the RHYDBG session can report it; the release build
+    // keeps the original assert.
+    if (node == nullptr) {
+        neDebugLog("AcNote POOL EXHAUSTED makeNoteEvent recCount=%d rec.tick=%u lane=%d state=%d",
+                   m_recordCount,
+                   rec->tick,
+                   rec->value & 0xf,
+                   static_cast<int>(m_state));
+        return;
+    }
+#endif
     assert(node != nullptr); // "MakeNoteEvent" AcNoteMng.mm:0x483
     node->record = rec;
     node->tick = rec->tick;
@@ -500,6 +517,20 @@ void AcNoteMng::spawnNotes(uint32_t pos) {
     }
     AcNoteRecord *rec = m_spawnCursor;
     const uint32_t spawnUntil = static_cast<uint32_t>(m_spawnLookahead + static_cast<int>(pos));
+    if (NE_DBG_FIRST(8)) {
+        // First few spawn passes (the init pass is where the arcade viewer faults):
+        // log the window so a device run shows whether spawnUntil covers the whole
+        // chart (pool-drain risk) versus the small look-ahead the offline model
+        // predicts.
+        neDebugLog("AcNote spawnNotes pos=%u until=%u lookahead=%d recCount=%d cursorTick=%u "
+                   "state=%d",
+                   pos,
+                   spawnUntil,
+                   m_spawnLookahead,
+                   m_recordCount,
+                   rec->tick,
+                   static_cast<int>(m_state));
+    }
     if (rec->tick > spawnUntil) {
         return;
     }
