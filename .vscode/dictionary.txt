@@ -349,6 +349,7 @@ mobileprovision
 modeled
 modelines
 modelview
+modesel
 modsi
 moffuffo
 moffy
@@ -361,6 +362,7 @@ movw
 mulist
 multisample
 musicinfo
+musicsel
 myproject
 mypy
 mztools
