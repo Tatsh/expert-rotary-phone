@@ -76,6 +76,11 @@ int AcNoteMng::initPlayData(std::span<const std::byte> data, int hiSpeedLevel) {
     m_combo = 0;
     m_maxCombo = 0;
     std::memset(m_laneCounts, 0, sizeof(m_laneCounts));
+    // The binary's InitPlayData memset(this, 0, 0x14cc4) also clears the per-lane
+    // score/judge table. Ours resets fields by hand, so clear it too -- otherwise
+    // getJudgeTotal() carries the previous song's count into the note counter on a
+    // reused singleton.
+    std::memset(m_laneResult, 0, sizeof(m_laneResult));
 
     // The binary starts InitPlayData with memset(this, 0, 0x14cc4), zeroing the
     // whole play-data region. Reset the play clock and scroll state the setup
