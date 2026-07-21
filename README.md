@@ -82,10 +82,6 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 - Inaccurate animation: it shows the overlay but then a copy behind that loads translucent slightly
   above the opaque one, and it moves down behind it.
 
-### Arcade viewer
-
-- iPhone: pause menu displays but tapping the buttons does nothing.
-
 ### iPhone support
 
 - The app's launch images top out at the 4-inch (320x568) size, so it runs in compatibility mode

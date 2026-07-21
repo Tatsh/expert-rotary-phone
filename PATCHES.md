@@ -110,23 +110,6 @@ UUID string, so each blob only decrypts on the device it was created on. The pat
 fixed value, making the key device-independent: the lists can be generated once offline against that
 UUID and then decrypt on any device running the build, without per-device regeneration.
 
-### Modern-device display classification
-
-**File:** `Project/AppDelegate.mm` — `-initHardware`
-
-The binary maps `hw.machine` to a display tier through a 2014-era model table (last entries
-`iPhone6,2` / `iPad4,5`). Any newer model falls to a family-and-generation-floor fallback that uses
-a **lexical** `strncmp` as a stand-in for a numeric generation compare. That held while model ids
-were
-single-digit, but iPhone 8 / X and every model since report two-digit ids (`iPhone10,1`,
-`iPhone11,8`, `iPhone12,1`, …) whose seventh character is `'1' < '5'`, so `strncmp("iPhone5", …) > 0`
-misfires and drops them to `DisplayTypeUnknown`. That in turn selects the short 640x960 phone layout,
-the wrong `contentH`, and the wrong result-screen layer set (`640IMG` instead of `1136IMG`). The iPad
-fallback (`strncmp("iPad3", …)`) has the identical defect for `iPad10,x`+. The patch pins any
-table-missing iPhone/iPod to `DisplayTypePhoneRetinaTall` and any table-missing iPad to
-`DisplayTypePadRetina`, which is correct for every device newer than the shipped table. A faithful
-build keeps the original lexical fallback.
-
 ### Arcade viewer keep-awake
 
 **File:** `Project/System/src/Task/AcViewerTask.mm` — `update()` / `cleanup()`.

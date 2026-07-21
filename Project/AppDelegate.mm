@@ -651,20 +651,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
 
     // Unknown model: classify by family and generation floor.
     if (strncmp("iPhone", machine, 6) == 0) {
-#ifdef ENABLE_PATCHES
-        // The faithful floor test below is a lexical comparison standing in for a
-        // numeric one: it treats any model that sorts after "iPhone5" as a tall 4"
-        // device. That held while model ids were single-digit ("iPhone6,1"..
-        // "iPhone9,1"), but iPhone 8 / X and every model since report two-digit ids
-        // ("iPhone10,1", "iPhone11,8", "iPhone12,1", ...) whose seventh character is
-        // '1' < '5', so the test misfires and drops them to DisplayTypeUnknown --
-        // which then selects the short 640x960 layout and the wrong result-screen
-        // layer set. Every iPhone from the 4" iPhone 5 onward is a tall 2x display
-        // (and runs this 640-wide-launch-image build in 640x1136 compatibility mode),
-        // so pin any table-missing iPhone to the tall layout.
-        _hardwareType = kHardwareTypeNewerIPhone;
-        _displayType = DisplayTypePhoneRetinaTall;
-#else
         if (strncmp("iPhone5", machine, 7) > 0) {
             _hardwareType = kHardwareTypeUnrecognized;
             _displayType = DisplayTypeUnknown;
@@ -672,16 +658,7 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
             _hardwareType = kHardwareTypeNewerIPhone;
             _displayType = DisplayTypePhoneRetinaTall;
         }
-#endif
     } else if (strncmp("iPad", machine, 4) == 0) {
-#ifdef ENABLE_PATCHES
-        // Same lexical-floor defect as the iPhone branch: two-digit iPad ids
-        // ("iPad10,1", "iPad11,1", "iPad13,1", ...) sort before "iPad3" at the fifth
-        // character ('1' < '3') and would fall to DisplayTypeUnknown. Every iPad the
-        // table does not name is a retina 2x display, so pin them to the pad layout.
-        _hardwareType = kHardwareTypeNewerIPad;
-        _displayType = DisplayTypePadRetina;
-#else
         if (strncmp("iPad3", machine, 7) > 0) {
             _hardwareType = kHardwareTypeUnrecognized;
             _displayType = DisplayTypeUnknown;
@@ -689,7 +666,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
             _hardwareType = kHardwareTypeNewerIPad;
             _displayType = DisplayTypePadRetina;
         }
-#endif
     } else if (strncmp("iPod", machine, 4) == 0 && strncmp("iPod5", machine, 7) <= 0) {
         _hardwareType = kHardwareTypeNewerIPod;
         _displayType = DisplayTypePhoneRetinaTall;
