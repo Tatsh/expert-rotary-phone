@@ -170,6 +170,20 @@ int AcNoteMng::initPlayData(std::span<const std::byte> data, int hiSpeedLevel) {
     static constexpr int kAcJudgeWindows[6] = {-250, -250, -80, 120, 250, 250};
     std::memcpy(m_judgeWindows, kAcJudgeWindows, sizeof(m_judgeWindows));
 
+    // Re-seed the tempo/scroll table to its sentinels (startTick = 0xffffffff,
+    // bpm = -1), exactly as the binary does at the top of every InitPlayData (the
+    // aTempoTable init loop after the memset). AcNoteMng is a singleton, so without
+    // this reset a previous chart's segments survive across plays: the insert scan
+    // in registerScrollSegment (startTick <= tick) then walks past those stale low
+    // startTicks and drops the new tempo into a high slot, leaving m_scrollMap[0].bpm
+    // at the -1 sentinel. recomputeSpawnLookahead then returns 8 * (60000 / -1) =
+    // -480000, so spawnUntil wraps to a huge unsigned value and spawnNotes spawns the
+    // whole chart at once -- draining the 1000-node pool on dense (HYPER/EX) charts.
+    for (auto &segment : m_scrollMap) {
+        segment = AcScrollSegment{};
+    }
+    m_scrollCount = 0;
+
     registerTempoEvents();
     changeTempo(0);
 
