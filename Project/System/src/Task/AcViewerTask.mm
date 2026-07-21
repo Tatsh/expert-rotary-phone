@@ -918,13 +918,16 @@ void AcViewerTask::update(int /*deltaMs*/) {
             break;
         }
         note.update();
-        // DAT_00173e70 is the engine's global "chart finished" flag (raised when
-        // the type-6 end marker is reached). On finish, reset the end-hold counter
-        // (@ +0x204) and go to the end-hold state. Otherwise a TAP is hit-tested by
-        // position (Ghidra: two pointInRect calls, FUN_0002d974): a tap inside the
-        // play/song-select rect opens the song-select (state 10); a tap on the
-        // exit/pause button opens the pause menu (0xc).
-        if (g_bAcNoteFinished) {
+        // Chart-finished flag: the binary reads DAT_00173e70, which is the
+        // g_abAcNoteMng.bBgmMuted field raised when the type-6 end marker passes the
+        // judge line (AcNoteMng sets m_endFlag there). An earlier reconstruction
+        // gated on a separate g_bAcNoteFinished global that nothing ever set, so the
+        // viewer never left play when a song ended. Read the engine flag instead. On
+        // finish, reset the end-hold counter (@ +0x204) and go to the end-hold state.
+        // Otherwise a TAP is hit-tested by position (Ghidra: two pointInRect calls,
+        // FUN_0002d974): a tap inside the play/song-select rect opens the song-select
+        // (state 10); a tap on the exit/pause button opens the pause menu (0xc).
+        if (note.isFinished()) {
             m_endHoldCounter = 0;
             next = kAcvPauseDelay;
         } else if (flick &&

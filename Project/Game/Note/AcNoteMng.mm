@@ -33,7 +33,6 @@
 // init-0-and-read model is exact, not a gap.
 int g_dwAcCoolCount = 0;
 int g_dwAcGreatCount = 0;
-bool g_bAcNoteFinished = false;
 
 // Hi-speed multiplier per hi-speed level (Ghidra: the switch in InitPlayData).
 constexpr float kAcHiSpeed[kAcHiSpeedCount] = {

@@ -211,6 +211,12 @@ public:
     uint32_t playheadMs() const {
         return m_endValue;
     }
+    // True once the type-6 end note has passed the judge line (binary: the
+    // g_abAcNoteMng.bBgmMuted field, read by the arcade viewer as DAT_00173e70 to
+    // detect chart completion and return to the song menu).
+    bool isFinished() const {
+        return m_endFlag;
+    }
     // The running judged-note total: the sum of the 9x4 per-lane score/judge
     // table (low 16 bits). Ghidra: acNoteGetJudgeTotal @ 0x7b908.
     int getJudgeTotal() const;
@@ -331,11 +337,9 @@ private:
 // g_dwAcCoolCount / g_dwAcGreatCount @ DAT_0016ebe0 / DAT_0016ebe4).
 // Xref-verified: the binary ONLY reads them (aepHudDrawCallback), never writes
 // them, and their baked value is 0 — the non-scored arcade preview shows 0 for
-// COOL/GREAT. The init-0-and-read model is exact. (g_bAcNoteFinished is the
-// sibling finished flag, same treatment.)
+// COOL/GREAT. The init-0-and-read model is exact.
 extern int g_dwAcCoolCount;
 extern int g_dwAcGreatCount;
-extern bool g_bAcNoteFinished;
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
