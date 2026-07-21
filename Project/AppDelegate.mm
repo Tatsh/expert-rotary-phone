@@ -502,8 +502,68 @@
     return (type - 34) < 3;
 }
 
+// Number of named model tiers in kHardwareModels (hardwareType 0..kHardwareModelsMax-1).
+constexpr int kHardwareModelsMax = 40;
+
+// Synthetic hardware-type sentinels for models the shipped table does not name.
+// -initHardware's family fallback assigns these to devices newer than the 2014
+// table, so they sit just past the named tiers.
+enum {
+    kHardwareTypeUnrecognized = kHardwareModelsMax,    // 40: unknown family / simulator
+    kHardwareTypeNewerIPod = kHardwareModelsMax + 1,   // 41: iPod newer than the table
+    kHardwareTypeNewerIPhone = kHardwareModelsMax + 2, // 42: iPhone newer than the table
+    kHardwareTypeNewerIPad = kHardwareModelsMax + 3,   // 43: iPad newer than the table
+};
+
+// Named hardware tiers, one per kHardwareModels entry and in the same order, so
+// the classification switch reads as model names rather than table indices.
+enum {
+    kHwModelIPhone1_1,
+    kHwModelIPhone1_2,
+    kHwModelIPhone2_1,
+    kHwModelIPhone3_1,
+    kHwModelIPhone3_2,
+    kHwModelIPhone3_3,
+    kHwModelIPhone4_1,
+    kHwModelIPhone4_2,
+    kHwModelIPhone4_3,
+    kHwModelIPhone5_1,
+    kHwModelIPhone5_2,
+    kHwModelIPhone5_3,
+    kHwModelIPhone5_4,
+    kHwModelIPhone6_1,
+    kHwModelIPhone6_2,
+    kHwModelIPod1_1,
+    kHwModelIPod2_1,
+    kHwModelIPod3_1,
+    kHwModelIPod4_1,
+    kHwModelIPod5_1,
+    kHwModelIPad1_1,
+    kHwModelIPad2_1,
+    kHwModelIPad2_2,
+    kHwModelIPad2_3,
+    kHwModelIPad2_4,
+    kHwModelIPad3_1,
+    kHwModelIPad3_2,
+    kHwModelIPad3_3,
+    kHwModelIPad3_4,
+    kHwModelIPad3_5,
+    kHwModelIPad3_6,
+    kHwModelIPad4_1,
+    kHwModelIPad4_2,
+    kHwModelIPad4_3,
+    kHwModelIPad2_5,
+    kHwModelIPad2_6,
+    kHwModelIPad2_7,
+    kHwModelIPad4_4,
+    kHwModelIPad4_5,
+    kHwModelSimulator,
+};
+static_assert(kHwModelSimulator + 1 == kHardwareModelsMax,
+              "the hardware-model enum must cover every kHardwareModels tier");
+
 // hw.machine identifiers ordered by hardwareType. Ghidra: DAT_00130574.
-constexpr const char *const kHardwareModels[40] = {
+constexpr const char *const kHardwareModels[kHardwareModelsMax] = {
     "iPhone1,1", "iPhone1,2", "iPhone2,1", "iPhone3,1", "iPhone3,2", "iPhone3,3", "iPhone4,1",
     "iPhone4,2", "iPhone4,3", "iPhone5,1", "iPhone5,2", "iPhone5,3", "iPhone5,4", "iPhone6,1",
     "iPhone6,2", "iPod1,1",   "iPod2,1",   "iPod3,1",   "iPod4,1",   "iPod5,1",   "iPad1,1",
@@ -511,6 +571,8 @@ constexpr const char *const kHardwareModels[40] = {
     "iPad3,4",   "iPad3,5",   "iPad3,6",   "iPad4,1",   "iPad4,2",   "iPad4,3",   "iPad2,5",
     "iPad2,6",   "iPad2,7",   "iPad4,4",   "iPad4,5",   "i386",
 };
+static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareModelsMax,
+              "kHardwareModelsMax must match the kHardwareModels entry count");
 
 /**
  * -[AppDelegate initHardware] — sysctl hw.machine -> _hardwareType / _displayType tiers.
@@ -524,49 +586,62 @@ constexpr const char *const kHardwareModels[40] = {
 
     self.hardwareName = [[NSString alloc] initWithCString:machine encoding:NSUTF8StringEncoding];
 
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < kHardwareModelsMax; i++) {
         if (kHardwareModels[i] && strcmp(kHardwareModels[i], machine) == 0) {
             _hardwareType = i;
             switch (i) {
-            case 0:
-            case 1:
-            case 2:
-            case 15:
-            case 16:
-            case 17:
+            case kHwModelIPhone1_1:
+            case kHwModelIPhone1_2:
+            case kHwModelIPhone2_1:
+            case kHwModelIPod1_1:
+            case kHwModelIPod2_1:
+            case kHwModelIPod3_1:
                 _displayType = DisplayTypePhoneNonRetina;
                 break;
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-            case 18:
+            case kHwModelIPhone3_1:
+            case kHwModelIPhone3_2:
+            case kHwModelIPhone3_3:
+            case kHwModelIPhone4_1:
+            case kHwModelIPhone4_2:
+            case kHwModelIPhone4_3:
+            case kHwModelIPod4_1:
                 _displayType = DisplayTypePhoneRetina;
                 break;
-            case 9:
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-            case 14:
-            case 19:
+            case kHwModelIPhone5_1:
+            case kHwModelIPhone5_2:
+            case kHwModelIPhone5_3:
+            case kHwModelIPhone5_4:
+            case kHwModelIPhone6_1:
+            case kHwModelIPhone6_2:
+            case kHwModelIPod5_1:
                 _displayType = DisplayTypePhoneRetinaTall;
                 break;
-            case 20:
-            case 21:
-            case 22:
-            case 23:
-            case 24:
-            case 34:
-            case 35:
-            case 36:
+            case kHwModelIPad1_1:
+            case kHwModelIPad2_1:
+            case kHwModelIPad2_2:
+            case kHwModelIPad2_3:
+            case kHwModelIPad2_4:
+            case kHwModelIPad2_5:
+            case kHwModelIPad2_6:
+            case kHwModelIPad2_7:
                 _displayType = DisplayTypePadNonRetina;
                 break;
+            case kHwModelIPad3_1:
+            case kHwModelIPad3_2:
+            case kHwModelIPad3_3:
+            case kHwModelIPad3_4:
+            case kHwModelIPad3_5:
+            case kHwModelIPad3_6:
+            case kHwModelIPad4_1:
+            case kHwModelIPad4_2:
+            case kHwModelIPad4_3:
+            case kHwModelIPad4_4:
+            case kHwModelIPad4_5:
+                _displayType = DisplayTypePadRetina;
+                break;
+            case kHwModelSimulator:
             default:
-                _displayType = ((i >= 25 && i <= 33) || i == 37 || i == 38) ? DisplayTypePadRetina :
-                                                                              DisplayTypeUnknown;
+                _displayType = DisplayTypeUnknown;
                 break;
             }
             free(machine);
@@ -576,26 +651,50 @@ constexpr const char *const kHardwareModels[40] = {
 
     // Unknown model: classify by family and generation floor.
     if (strncmp("iPhone", machine, 6) == 0) {
+#ifdef ENABLE_PATCHES
+        // The faithful floor test below is a lexical comparison standing in for a
+        // numeric one: it treats any model that sorts after "iPhone5" as a tall 4"
+        // device. That held while model ids were single-digit ("iPhone6,1"..
+        // "iPhone9,1"), but iPhone 8 / X and every model since report two-digit ids
+        // ("iPhone10,1", "iPhone11,8", "iPhone12,1", ...) whose seventh character is
+        // '1' < '5', so the test misfires and drops them to DisplayTypeUnknown --
+        // which then selects the short 640x960 layout and the wrong result-screen
+        // layer set. Every iPhone from the 4" iPhone 5 onward is a tall 2x display
+        // (and runs this 640-wide-launch-image build in 640x1136 compatibility mode),
+        // so pin any table-missing iPhone to the tall layout.
+        _hardwareType = kHardwareTypeNewerIPhone;
+        _displayType = DisplayTypePhoneRetinaTall;
+#else
         if (strncmp("iPhone5", machine, 7) > 0) {
-            _hardwareType = 40;
+            _hardwareType = kHardwareTypeUnrecognized;
             _displayType = DisplayTypeUnknown;
         } else {
-            _hardwareType = 42;
+            _hardwareType = kHardwareTypeNewerIPhone;
             _displayType = DisplayTypePhoneRetinaTall;
         }
+#endif
     } else if (strncmp("iPad", machine, 4) == 0) {
+#ifdef ENABLE_PATCHES
+        // Same lexical-floor defect as the iPhone branch: two-digit iPad ids
+        // ("iPad10,1", "iPad11,1", "iPad13,1", ...) sort before "iPad3" at the fifth
+        // character ('1' < '3') and would fall to DisplayTypeUnknown. Every iPad the
+        // table does not name is a retina 2x display, so pin them to the pad layout.
+        _hardwareType = kHardwareTypeNewerIPad;
+        _displayType = DisplayTypePadRetina;
+#else
         if (strncmp("iPad3", machine, 7) > 0) {
-            _hardwareType = 40;
+            _hardwareType = kHardwareTypeUnrecognized;
             _displayType = DisplayTypeUnknown;
         } else {
-            _hardwareType = 43;
+            _hardwareType = kHardwareTypeNewerIPad;
             _displayType = DisplayTypePadRetina;
         }
+#endif
     } else if (strncmp("iPod", machine, 4) == 0 && strncmp("iPod5", machine, 7) <= 0) {
-        _hardwareType = 41;
+        _hardwareType = kHardwareTypeNewerIPod;
         _displayType = DisplayTypePhoneRetinaTall;
     } else {
-        _hardwareType = 40;
+        _hardwareType = kHardwareTypeUnrecognized;
         _displayType = DisplayTypeUnknown;
     }
     free(machine);
