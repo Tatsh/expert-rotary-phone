@@ -22,8 +22,8 @@
 #import <Foundation/Foundation.h>
 
 #import "../../System/src/Sound/AudioManager.h" // BGM start / drift sync (triggerBgmStart, applyBgmSync)
-#import "../../System/src/neDebugLog.h"
 #import "../Util/Random.h"
+#import "neDebugLog.h"
 
 // Arcade-viewer judge-result globals (Ghidra: DAT_0016ebe0 / DAT_0016ebe4).
 // Verified via xref: the ONLY references in the binary are two READs from
