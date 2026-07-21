@@ -1194,22 +1194,10 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 // @ 0x5ff28 / 0x5ff50 — first-run tutorial played flag (key
 // "IsTutorialPlayed").
 + (BOOL)isTutorialPlayed {
-#if RHYDBG
-    // TEMPORARY (debugging): always report the tutorial as un-played so it is
-    // triggered on every launch, and never persist the played flag (see
-    // -saveIsTutorialPlayed:). Remove both overrides once the tutorial crash is
-    // fixed.
-    return NO;
-#else
     return [self getBOOL:@"IsTutorialPlayed"];
-#endif
 }
 + (void)saveIsTutorialPlayed:(BOOL)played {
-#if RHYDBG
-    (void)played; // TEMPORARY (debugging): do not persist, so the tutorial re-triggers.
-#else
     [self saveBOOL:played Key:@"IsTutorialPlayed"];
-#endif
 }
 
 // @ 0x60068 — getter paired with +saveIsPolicyAccepted:. The binary's shared

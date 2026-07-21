@@ -58,7 +58,6 @@
 #import "RhUtil.h"      // RhFileExists / RhTestBitInNumberArray
 #import "TaskFactory.h" // MainTaskCreate / PlayResultCreateTask
 #import "UserSettingData.h"
-#import "neDebugLog.h"     // neDebugLog (RHYDBG diagnostics; no-op when RHYDBG off)
 #import "neEngineBridge.h" // neAppEventCenter / neSceneManager
 #import "neGraphics.h"     // neGraphics / neTouchPoint
 #import "neTextureForiOS.h"
@@ -483,17 +482,6 @@ void PlayLoadSong(void *playData, int reload) {
     NSData *sheet = (sheetIndex == 2) ? [music sheetEx] :
                     (sheetIndex == 1) ? [music sheetHyper] :
                                         [music sheetNormal];
-    // Tutorial crash: a nil sheet faults NoteMng::initPlayData. Log why so the
-    // next run says whether the .orb itself failed to load (musicNil) or only its
-    // sheet entry did not decode (sheetLen == 0). neDebugLog is a no-op when
-    // RHYDBG is off, so this needs no call-site guard.
-    if (sheet == nil || sheet.length == 0) {
-        neDebugLog("PlayLoadSong nil sheet: demo=%d sheetIndex=%d musicNil=%d sheetLen=%d",
-                   task->m_isDemoPlay ? 1 : 0,
-                   sheetIndex,
-                   music == nil ? 1 : 0,
-                   static_cast<int>(sheet.length));
-    }
     nm.initPlayDataWithData(sheet, PlayApplyMissGauge, playData);
 
     if (reload == 0) {
