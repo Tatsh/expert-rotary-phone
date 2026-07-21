@@ -79,8 +79,13 @@
     // "_2x").
     NSString *portraitFile =
         [NSString stringWithFormat:@"result_chara%03d@2x.png", static_cast<int>(charaId)];
-    NSURL *portraitURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
-                                                    stringByAppendingPathComponent:portraitFile]];
+#ifdef ENABLE_PATCHES
+    NSString *portraitPath = [AppDelegate appAssetsPath:portraitFile];
+#else
+    NSString *portraitPath =
+        [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:portraitFile];
+#endif
+    NSURL *portraitURL = [NSURL fileURLWithPath:portraitPath];
     UIImageView *portrait = [[UIImageView alloc]
         initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:portraitURL]]];
     // x=29.5*s (@0xbb0a8=0x41ec0000), y=0.2*s*height (@0xbb0ac=0x3e4ccccd); w/h =
@@ -109,8 +114,13 @@
         [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
     UIImage *iconImg;
     if (charaId > 0x1d) {
-        iconImg = [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
-                                                       stringByAppendingPathComponent:iconFile]];
+#ifdef ENABLE_PATCHES
+        NSString *iconPath = [AppDelegate appAssetsPath:iconFile];
+#else
+        NSString *iconPath =
+            [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:iconFile];
+#endif
+        iconImg = [UIImage imageWithContentsOfFile:iconPath];
     } else {
         iconImg = [UIImage imageNamed:iconFile];
     }
@@ -190,8 +200,13 @@
     // Exact format string @ 0x104395 (no underscore after "chara").
     NSString *sugoFile =
         [NSString stringWithFormat:@"sugo_chara%03d.png", static_cast<int>(charaId)];
-    NSURL *sugoURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
-                                                stringByAppendingPathComponent:sugoFile]];
+#ifdef ENABLE_PATCHES
+    NSString *sugoPath = [AppDelegate appAssetsPath:sugoFile];
+#else
+    NSString *sugoPath =
+        [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:sugoFile];
+#endif
+    NSURL *sugoURL = [NSURL fileURLWithPath:sugoPath];
     UIImageView *sugoView = [[UIImageView alloc]
         initWithImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:sugoURL]]];
     sugoView.backgroundColor = [UIColor clearColor];

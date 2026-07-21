@@ -177,9 +177,13 @@
                 [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
             UIImage *charaImg;
             if (charaId > 29) {
-                charaImg =
-                    [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
-                                                         stringByAppendingPathComponent:charaName]];
+#ifdef ENABLE_PATCHES
+                NSString *path = [AppDelegate appAssetsPath:charaName];
+#else
+                NSString *path =
+                    [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaName];
+#endif
+                charaImg = [UIImage imageWithContentsOfFile:path];
             } else {
                 charaImg = [UIImage imageWithContentsOfFile:charaName];
             }
@@ -190,8 +194,13 @@
         } else {
             NSString *charaName =
                 [NSString stringWithFormat:@"sugo_chara_%03d.png", static_cast<int>(charaId)];
-            NSURL *url = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
-                                                    stringByAppendingPathComponent:charaName]];
+#ifdef ENABLE_PATCHES
+            NSString *charaPath = [AppDelegate appAssetsPath:charaName];
+#else
+            NSString *charaPath =
+                [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaName];
+#endif
+            NSURL *url = [NSURL fileURLWithPath:charaPath];
             UIImageView *chara =
                 [[UIImageView alloc] initWithFrame:CGRectMake(66.0f, 72.0f, 125.0f, 120.0f)];
             [chara setImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:url]]];

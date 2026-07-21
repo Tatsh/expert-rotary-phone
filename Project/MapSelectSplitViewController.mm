@@ -272,8 +272,12 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         if (charaId < 30) {
             charaPath = [[NSBundle mainBundle] pathForResource:charaName ofType:nil];
         } else {
+#ifdef ENABLE_PATCHES
+            charaPath = [AppDelegate appAssetsPath:charaName];
+#else
             charaPath =
                 [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaName];
+#endif
         }
         UIImage *charaImage = [UIImage
             imageWithData:[NSData dataWithContentsOfURL:[NSURL fileURLWithPath:charaPath]]];

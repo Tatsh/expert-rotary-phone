@@ -189,18 +189,26 @@ constexpr int kColX[3] = {139, 190, 242};
         charaView = [[UIImageView alloc] initWithFrame:CGRectMake(25, 38, 43, 43)];
         NSString *iconFile =
             [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
-        UIImage *icon =
-            (charaId > 0x1d) ?
-                [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
-                                                     stringByAppendingPathComponent:iconFile]] :
-                [UIImage imageNamed:iconFile];
+#ifdef ENABLE_PATCHES
+        NSString *iconPath = [AppDelegate appAssetsPath:iconFile];
+#else
+        NSString *iconPath =
+            [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:iconFile];
+#endif
+        UIImage *icon = (charaId > 0x1d) ? [UIImage imageWithContentsOfFile:iconPath] :
+                                           [UIImage imageNamed:iconFile];
         [charaView setImage:icon];
     } else {
         charaView = [[UIImageView alloc] initWithFrame:CGRectMake(66, 72, 125, 120)];
         NSString *sugoFile =
             [NSString stringWithFormat:@"sugo_chara_%03d.png", static_cast<int>(charaId)];
-        NSURL *sugoURL = [NSURL fileURLWithPath:[[AppDelegate appAppSupportDirectory]
-                                                    stringByAppendingPathComponent:sugoFile]];
+#ifdef ENABLE_PATCHES
+        NSString *sugoPath = [AppDelegate appAssetsPath:sugoFile];
+#else
+        NSString *sugoPath =
+            [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:sugoFile];
+#endif
+        NSURL *sugoURL = [NSURL fileURLWithPath:sugoPath];
         [charaView setImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:sugoURL]]];
         charaView.backgroundColor = [UIColor clearColor];
     }

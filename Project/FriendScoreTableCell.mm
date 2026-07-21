@@ -329,8 +329,12 @@ static int scoreToRank(int score) {
             [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
         UIImage *charaImg;
         if (charaId > 0x1d) {
+#ifdef ENABLE_PATCHES
+            NSString *path = [AppDelegate appAssetsPath:charaFile];
+#else
             NSString *path =
                 [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
+#endif
             charaImg = [UIImage imageWithContentsOfFile:path];
         } else {
             charaImg = [UIImage imageNamed:charaFile];

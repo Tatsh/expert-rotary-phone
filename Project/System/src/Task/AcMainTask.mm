@@ -987,8 +987,12 @@ void AcMainTask::setupLoadTextures() {
     m_charaTex = std::make_unique<neTextureForiOS>();
     NSString *charaFile = [NSString
         stringWithFormat:@"sugo_chara%03d.png", static_cast<int>([UserSettingData charaId])];
+#ifdef ENABLE_PATCHES
+    NSString *charaPath = [AppDelegate appAssetsPath:charaFile];
+#else
     NSString *charaPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
+#endif
     m_charaTex->load([charaPath UTF8String]);
 
     // 10 digit glyphs each for points (+0xfc), roulette (+0x124) and ticket
@@ -1487,7 +1491,11 @@ void AcMainTask::buildMapPanelLayers() {
     NSString *file =
         [NSString stringWithFormat:@"sugo_chara%03d.png",
                                    static_cast<int>(static_cast<short>(tmp.goalCharaId))];
+#ifdef ENABLE_PATCHES
+    NSString *path = [AppDelegate appAssetsPath:file];
+#else
     NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
+#endif
     m_goalCharaTex->load([path UTF8String]);
 }
 

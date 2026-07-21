@@ -1031,14 +1031,22 @@ void PlayLoadCharaTextures(void *playData) {
                 if (chara < 30) {
                     path = [[NSBundle mainBundle] pathForResource:file ofType:nil];
                 } else {
+#ifdef ENABLE_PATCHES
+                    path = [AppDelegate appAssetsPath:file];
+#else
                     path =
                         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
+#endif
                 }
             } else {
                 // Pad: the downloaded sugo_charaNNN.png under the app-support
                 // directory.
                 NSString *file = [NSString stringWithFormat:@"sugo_chara%03d.png", chara];
+#ifdef ENABLE_PATCHES
+                path = [AppDelegate appAssetsPath:file];
+#else
                 path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:file];
+#endif
             }
 
             if (RhFileExists(path)) {
@@ -1062,8 +1070,12 @@ void PlayLoadCharaTextures(void *playData) {
         } else if (i == 0) {
             path = [[NSBundle mainBundle] pathForResource:@"sugo_charassm" ofType:@"png"];
         } else {
+#ifdef ENABLE_PATCHES
+            path = [AppDelegate appAssetsPath:kSugoCharaFiles[i]];
+#else
             path = [[AppDelegate appAppSupportDirectory]
                 stringByAppendingPathComponent:kSugoCharaFiles[i]];
+#endif
         }
         task->m_charaTex[i]->load([path UTF8String]);
     }

@@ -535,8 +535,12 @@ void PlayResultTask::resultSetup() {
     m_charaTex = std::make_unique<neTextureForiOS>();
     NSString *charaFile =
         [NSString stringWithFormat:@"result_chara%03d@2x.png", (int)[UserSettingData charaId]];
+#ifdef ENABLE_PATCHES
+    NSString *charaPath = [AppDelegate appAssetsPath:charaFile];
+#else
     NSString *charaPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:charaFile];
+#endif
     m_charaTex->load([charaPath UTF8String]); // FUN_00011a2c
 
     loadNumberTextures();

@@ -122,11 +122,13 @@
     }
     NSString *iconFile =
         [NSString stringWithFormat:@"sgc_icon_%03d.png", static_cast<int>(charaId)];
+#ifdef ENABLE_PATCHES
+    NSString *path = [AppDelegate appAssetsPath:iconFile];
+#else
+    NSString *path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:iconFile];
+#endif
     UIImage *icon =
-        (charaId < 0x1e) ?
-            [UIImage imageNamed:iconFile] :
-            [UIImage imageWithContentsOfFile:[[AppDelegate appAppSupportDirectory]
-                                                 stringByAppendingPathComponent:iconFile]];
+        (charaId < 0x1e) ? [UIImage imageNamed:iconFile] : [UIImage imageWithContentsOfFile:path];
     [_charaView setImage:icon];
     [_charaView setFrame:CGRectMake(static_cast<CGFloat>(_imgCharaX), 7.0f, 43.0f, 43.0f)];
     [_bgImgView addSubview:_charaView];

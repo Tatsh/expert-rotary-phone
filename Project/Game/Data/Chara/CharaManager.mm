@@ -118,10 +118,16 @@ void CharaManager::reload() {
     }
 
     // Every downloaded chara_%03d.chr (numbered 0..999, stop at the first gap).
+#ifndef ENABLE_PATCHES
     NSString *supportDir = [AppDelegate appAppSupportDirectory];
+#endif
     for (int n = 0; n < 1000; n++) {
         NSString *name = [NSString stringWithFormat:@"chara_%03d.chr", n];
+#ifdef ENABLE_PATCHES
+        NSString *path = [AppDelegate appAssetsPath:name];
+#else
         NSString *path = [supportDir stringByAppendingPathComponent:name];
+#endif
         if (!RhFileExists(path)) {
             break;
         }
@@ -293,7 +299,11 @@ void AcMainTask::charaSelectLoadPageTextures(int page) {
         if (charaId < 30) {
             path = [[NSBundle mainBundle] pathForResource:imageName ofType:nil];
         } else {
+#ifdef ENABLE_PATCHES
+            path = [AppDelegate appAssetsPath:imageName];
+#else
             path = [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:imageName];
+#endif
         }
         slot->load([path UTF8String]);
     }
