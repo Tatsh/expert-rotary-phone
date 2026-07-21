@@ -53,6 +53,60 @@
     <true />
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false />
+    <key>UILaunchImageFile</key>
+    <string>LaunchImage</string>
+    <key>UILaunchImages</key>
+    <array>
+      <dict>
+        <key>UILaunchImageOrientation</key>
+        <string>Portrait</string>
+        <key>UILaunchImageName</key>
+        <string>LaunchImage-700</string>
+        <key>UILaunchImageSize</key>
+        <string>{320, 480}</string>
+        <key>UILaunchImageMinimumOSVersion</key>
+        <string>7.0</string>
+      </dict>
+      <dict>
+        <key>UILaunchImageOrientation</key>
+        <string>Portrait</string>
+        <key>UILaunchImageName</key>
+        <string>LaunchImage-700-568h</string>
+        <key>UILaunchImageSize</key>
+        <string>{320, 568}</string>
+        <key>UILaunchImageMinimumOSVersion</key>
+        <string>7.0</string>
+      </dict>
+      <dict>
+        <key>UILaunchImageOrientation</key>
+        <string>Portrait</string>
+        <key>UILaunchImageName</key>
+        <string>LaunchImage-700-Portrait</string>
+        <key>UILaunchImageSize</key>
+        <string>{768, 1024}</string>
+        <key>UILaunchImageMinimumOSVersion</key>
+        <string>7.0</string>
+      </dict>
+    </array>
+    <key>UIAppFonts</key>
+    <array>
+      <string>prf03w05</string>
+      <string>prf02w07</string>
+      <string>prf01</string>
+    </array>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLName</key>
+        <string>jp.konami.popn</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>popnrhythmin</string>
+        </array>
+      </dict>
+    </array>
     <key>CFBundleIcons</key>
     <dict>
       <key>CFBundlePrimaryIcon</key>
@@ -63,6 +117,8 @@
           <string>AppIcon57x57</string>
           <string>AppIcon60x60</string>
         </array>
+        <key>UIPrerenderedIcon</key>
+        <true />
       </dict>
     </dict>
     <key>CFBundleIcons~ipad</key>
@@ -78,6 +134,8 @@
           <string>AppIcon72x72</string>
           <string>AppIcon76x76</string>
         </array>
+        <key>UIPrerenderedIcon</key>
+        <true />
       </dict>
     </dict>
   </dict>
