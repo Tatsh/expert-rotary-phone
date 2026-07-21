@@ -232,9 +232,16 @@ void AcNoteMng::registerTempoEvents() {
         if (r.type == AC_NOTE_MEASURE) { // measure line
             m_chartBarCount++;
         } else if (r.type == AC_NOTE_TEMPO) {
-            // The binary asserts ("AdvanceRegisterEvent") if the segment table
-            // overflows.
-            assert(registerScrollSegment(static_cast<int16_t>(r.value), r.tick) == 0);
+            // registerScrollSegment REGISTERS the tempo (a side effect), so it must
+            // run unconditionally. It must NOT sit inside assert(): the release build
+            // defines NDEBUG, which drops the assert expression entirely, so the tempo
+            // was never registered -- m_scrollMap[0] kept its -1 sentinel bpm and
+            // recomputeSpawnLookahead returned 8 * (60000 / -1) = -480000, wrapping
+            // spawnUntil huge and spawning the whole chart at once (pool exhaustion on
+            // dense charts). The binary asserts only on the overflow return value.
+            const int registerResult = registerScrollSegment(static_cast<int16_t>(r.value), r.tick);
+            assert(registerResult == 0); // "AdvanceRegisterEvent": segment table full
+            static_cast<void>(registerResult);
         }
     }
 }
