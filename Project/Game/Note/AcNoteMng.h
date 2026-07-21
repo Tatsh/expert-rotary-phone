@@ -206,6 +206,11 @@ public:
     // The chart's total playable-note count (sum of the 9 per-lane tap counters).
     // Ghidra: acNoteGetTotalNoteCount @ 0x7b8ec.
     int getTotalNoteCount() const;
+    // The chart's end tick (the type-6 end marker's tick, +0xfe18 nPlayheadMs):
+    // the denominator for the play-progress time-line bar.
+    uint32_t playheadMs() const {
+        return m_endValue;
+    }
     // The running judged-note total: the sum of the 9x4 per-lane score/judge
     // table (low 16 bits). Ghidra: acNoteGetJudgeTotal @ 0x7b908.
     int getJudgeTotal() const;

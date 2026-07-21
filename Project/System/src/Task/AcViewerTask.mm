@@ -74,11 +74,20 @@ AcViewerTask::~AcViewerTask() = default;
 // fields the class abstracts. Everything else here is instruction-faithful.
 // ===========================================================================
 
-// getUserNo layer-name table (Ghidra: DAT_00130bc4, 7 names) -> +0xb8. These
-// are the HUD layers AcViewerHudDraw dispatches on (score / combo / title /
-// gauge digits).
-constexpr const char *const kAcvUsrNames[7] = {
-    "SCORE_NUM", "COMBO_NUM", "MUSIC_NAME", "MAX_COMBO_NUM", "GAUGE_NUM", "COOL_NUM", "GREAT_NUM"};
+// getUsrNo layer-name table (Ghidra: DAT_00130bc4, 7 names -> +0xb8). These are
+// the HUD user-draw layers AcViewerHudDraw dispatches on, in the binary's order:
+// [0] difficulty bar, [1] note-field/music icon, [2] title, [3] judged total,
+// [4] total note count, [5]/[6] the 3-/2-digit counters. (An earlier
+// reconstruction guessed SCORE_NUM/COMBO_NUM/... -- those layers do not exist in
+// arcade_viewer.idx, so getUsrNo never matched and the whole HUD was invisible.
+// Verified by reading the 7 string pointers at 0x130bc4 and the idx layer list.)
+constexpr const char *const kAcvUsrNames[7] = {"BAR_EASY",
+                                               "MUSIC_ON",
+                                               "VIW_NAME",
+                                               "MUSIC_NUM0",
+                                               "MUSIC_NUM00",
+                                               "MUSIC_NUM000",
+                                               "MUSIC_NUM0000"};
 // Per-lane note-sprite frame names (Ghidra: DAT_00130bf0, 9 -> +0x94). The
 // binary's table is the classic pop'n 9-button colour layout, symmetric about the
 // red centre: white, yellow, green, blue, RED, blue, green, yellow, white. (An
@@ -525,8 +534,10 @@ void AcViewerTask::drawActiveNotes() {
     m_judgeTotal = static_cast<int16_t>(note.getJudgeTotal());
 
     // The time-line marker sweeps left->right across the song: x = barWidth * pos
-    // / total.
-    const int total = 0x16ebd8; // DAT_0016ebd8 (chart length denominator)
+    // / total, where total is the chart's end tick (binary: g_abAcNoteMng.nPlayheadMs
+    // at +0xfe18). An earlier reconstruction used the literal 0x16ebd8 (the global's
+    // ADDRESS, not its value), so the bar never advanced.
+    const int total = static_cast<int>(note.playheadMs());
     const int barW = m_barWidth;
     const int cur = note.getCurrentPosition();
     int lineClip[4] = {m_timeLineX, m_timeLineY, (total ? barW * cur / total : 0), m_screenHeight};
