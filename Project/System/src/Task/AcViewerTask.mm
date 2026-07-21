@@ -339,10 +339,21 @@ void AcViewerTask::loadChart() {
     // (r2 == 0x3f800000 at 0x237f6), then sets the bgm-ready flag (+0x1d5).
     const int difficulty = m_difficulty;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
+      // getBackTrack unzips and Blowfish-decrypts the ~4 MB M4A, so it stays on the
+      // background queue.
       NSData *track = [acMusic getBackTrack:difficulty];
-      [audio loadBgmData:track isLoop:NO];
-      [audio playBgm:1.0f];
-      m_hudArmed = true; // +0x1d5 (strb 1 at block tail)
+      // DEVIATION (modern iOS): the binary runs loadBgmData + playBgm on this
+      // background queue too, but playBgm:1.0f schedules its fade-in NSTimer on
+      // [NSRunLoop currentRunLoop] (createBgmFadeInTimer @ 0x1fa38). A GCD
+      // global-queue thread has no running run loop, so that timer never fires and
+      // the BGM stays at the volume-0 the fade ramps up from -- i.e. silent. Start
+      // playback on the main queue so the fade timer lands on the main run loop and
+      // actually ramps the volume in.
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [audio loadBgmData:track isLoop:NO];
+        [audio playBgm:1.0f];
+        m_hudArmed = true; // +0x1d5 (strb 1 at block tail)
+      });
     });
 
     // Release the previous sheet, pick the new one by difficulty (0 easy / 1
