@@ -100,6 +100,16 @@ Konami-ID hosts be redirected through `NSUserDefaults` keys (`AprHost`, `AprSecu
 `OfficialHost`, `KonamiIdHost`), so a revival or private server can be pointed to from configuration
 without rebuilding.
 
+### Fixed device UUID
+
+**File:** `Project/AppDelegate.mm` — `-uuId`
+
+A faithful build mints and Keychain-persists a per-device UUID. The purchased-song lists
+(`mulist` / `acmulist` / `prodlist` / `recpack`) are BFCodec-encrypted with a key of MD5 of that
+UUID string, so each blob only decrypts on the device it was created on. The patch pins `uuId` to a
+fixed value, making the key device-independent: the lists can be generated once offline against that
+UUID and then decrypt on any device running the build, without per-device regeneration.
+
 ### 64-bit struct-layout trimming
 
 **Files:** `Project/System/src/Task/MainTask.h`, `Project/System/src/Task/AcViewerTask.h`,
