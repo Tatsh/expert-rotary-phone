@@ -561,6 +561,7 @@ thunks
 timeval
 tokusho
 tomosuke
+tostring
 transactioing
 truepredicate
 trunc
