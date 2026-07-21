@@ -92,10 +92,15 @@ void AcViewerTask::setup() {
 
     m_screenWidth = aep.screenWidth();   // aepGetScreenWidth
     m_screenHeight = aep.screenHeight(); // aepGetScreenHeight
-    // g_uiScale is the UI scale (screenScale * 0.5) published by
-    // MainViewController::loadView; compute the same value directly here,
-    // matching MainTask/PlayTask.
-    m_uiScale = neSceneManager::screenScale() * 0.5f;
+    // Touch<->canvas scale for the play-state hit-tests (exit/pause rects, drag).
+    // Use the real drawable/canvas stretch, not screenScale()*0.5: screenScale()
+    // returns the wrong factor on a drawable that is not the authored resolution
+    // (RHYDBG showed uiScale=0.5 on an iPad Air 2, so a MENU tap landed at 2x the
+    // rect). On the original 2014 hardware drawable == canvas so this equals the
+    // old value; on any other device it keeps the rects aligned with the on-screen
+    // HUD. Identical approach to PlayTask_init.
+    const float canvasW = static_cast<float>(m_screenWidth);
+    m_uiScale = canvasW > 0.0f ? static_cast<float>(neSceneManager::screenWidth()) / canvasW : 1.0f;
     m_comboDigitX = -1; // HUD combo digit screen x (HUD writes it)
     m_comboDigitY = -1; // HUD combo digit screen y
 
