@@ -22,13 +22,12 @@
 #import "UserSettingData.h"    // inviteCnt / getOpenedLoginBonusId / isBemaniCollaboOpened
 
 // LoginBonusView is a UI class without a project header in this reconstruction;
-// only its +getRewardMaxCnt class method is referenced from here (Ghidra:
-// LoginBonusView getRewardMaxCnt).
+// only its +getRewardMaxCnt class method is referenced from here.
 @interface LoginBonusView : NSObject
 + (int)getRewardMaxCnt;
 @end
 
-// Treasure/sugoroku song ids, one per main map (Ghidra: DAT_0012fa58).
+// Treasure/sugoroku song IDs, one per main map.
 static const int kTreasureMusicIds[9] = {
     100000000,
     100000001,
@@ -41,10 +40,10 @@ static const int kTreasureMusicIds[9] = {
     100000008,
 };
 
-// Always-available bundled song ids (Ghidra: DAT_0012fa4c).
+// Always-available bundled song IDs.
 static const int kDefaultMusicIds[3] = {1, 2, 3};
 
-// Default arcade catalog ids (Ghidra: DAT_0012fa80).
+// Default arcade catalog IDs.
 static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 @implementation MusicManager {
@@ -65,7 +64,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     BOOL m_IsMusicData;
 }
 
-// @ 0xc7dd8
 + (instancetype)getInstance {
     static MusicManager *sInstance = nil;
     if (sInstance == nil) {
@@ -76,8 +74,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Lifecycle
 
-// @ 0xc81dc — build all of the built-in song tables up front. Purchased lists
-// and level patches are loaded lazily/separately.
 - (instancetype)init {
     self = [super init];
     if (self != nil) {
@@ -91,14 +87,13 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return self;
 }
 
-// @ 0xc827c — releases m_DefaultMusicIDs, m_PurchasedMusicDictionaris,
+// -dealloc releases m_DefaultMusicIDs, m_PurchasedMusicDictionaris,
 // m_PurchasedAcMusicDictionaris, m_MusicDataArray, m_AcDefaultMusicIDs and
 // m_AcMusicDataArray, then [super dealloc]. All object-ivar cleanup; nothing
 // else. Under ARC this is automatic, so -dealloc is omitted.
 
 #pragma mark - Built-in song tables
 
-// @ 0xc8384 — the three always-available bundled songs.
 - (void)createDefaultMusics {
     NSMutableArray *array = [NSMutableArray array];
     for (int i = 0; i < 3; i++) {
@@ -107,20 +102,24 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     m_DefaultMusicIDs = [[NSArray alloc] initWithArray:array];
 }
 
-// @ 0xc8440 — treasure songs, one per main map (0..8), included only when the
-// map's music-piece collection gate is open.
 - (void)createOpenTreasureMusics {
     NSMutableArray *array = [NSMutableArray array];
+#ifndef ENABLE_PATCHES
     NSManagedObjectContext *moc = [AppDelegate appDelegate].managedObjectContext;
+#endif
     for (int i = 0; i < 9; i++) {
+#ifdef ENABLE_PATCHES
+        // Every treasure song is always unlocked in the preservation build.
+        [array addObject:@(kTreasureMusicIds[i])];
+#else
         if ([TreasureData isOpenMusic:(short)i inManagedObjectContext:moc]) {
             [array addObject:[NSNumber numberWithInt:kTreasureMusicIds[i]]];
         }
+#endif
     }
     m_OpenTreasureMusicIDs = array;
 }
 
-// @ 0xc8554 — invite-reward song (id 4), gated by the invite predicate.
 - (void)createOpenInviteMusics {
     NSMutableArray *array = [NSMutableArray array];
     if ([MusicManager isOpenInviteMusic:0]) {
@@ -129,7 +128,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     m_OpenInviteMusicIDs = array;
 }
 
-// @ 0xc8604 — BEMANI-collabo song (id 5), gated by the collabo predicate.
 - (void)createOpenCollaboMusics {
     NSMutableArray *array = [NSMutableArray array];
     if ([MusicManager isOpenBemaniCollaboMusic]) {
@@ -138,7 +136,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     m_OpenCollaboMusicIDs = array;
 }
 
-// @ 0xc86b4 — login-bonus song (id 6), gated by the login-bonus predicate.
 - (void)createOpenLoginBonusMusics {
     NSMutableArray *array = [NSMutableArray array];
     if ([MusicManager isOpenLoginBonusMusic:0]) {
@@ -147,7 +144,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     m_OpenLoginBonusMusicIDs = array;
 }
 
-// @ 0xc8764 — default arcade catalog ids.
 - (void)createAcDefaultMusics {
     NSMutableArray *array = [NSMutableArray array];
     for (int i = 0; i < 4; i++) {
@@ -158,10 +154,10 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Unlock gates
 
-// @ 0xc7f94 — invite-reward unlock predicate. `index` selects the reward tier:
-// tier 2 requires at least 7 accepted invites; tiers 0 and 1 require at least
-// 5; any higher tier is never open. (Ghidra: reads UserSettingData.inviteCnt.)
 + (BOOL)isOpenInviteMusic:(int)index {
+#ifdef ENABLE_PATCHES
+    return YES;
+#else
     int inviteCnt = [UserSettingData inviteCnt];
     if (index == 2) {
         if (inviteCnt < 7) {
@@ -171,19 +167,17 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
         return NO;
     }
     return YES;
+#endif
 }
 
-// YES if `musicId` is the invite-reward song (id 4).
-// @ 0xc7fd4
 + (BOOL)isInviteMusic:(int)musicId {
     return musicId == 4;
 }
 
-// @ 0xc7fe0 — BEMANI-collabo (jubeat plus x REFLEC BEAT plus x GITADORA) unlock
-// predicate. Open when the bundled collabo song (id 5) is present AND either
-// the saved collabo flag is set or all three companion BEMANI apps are
-// installed (their URL schemes can be opened).
 + (BOOL)isOpenBemaniCollaboMusic {
+#ifdef ENABLE_PATCHES
+    return YES;
+#else
     NSString *path = [MusicManager getPathFromBundle:5];
     if (!RhFileExists(path)) {
         return NO;
@@ -198,16 +192,13 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
         return YES;
     }
     return NO;
+#endif
 }
 
-// @ 0xc8108 — login-bonus unlock predicate. `index` is the requested
-// login-bonus reward tier. Requires a non-negative saved opened-login-bonus id
-// and that the tier's bundled song file exists. An already-passed tier (index
-// <= opened id) is open; the current tier (matching the DownloadMain
-// login-bonus id) opens once the day count reaches the reward maximum. (Ghidra:
-// DAT_0012fa48 is the login-bonus song-id table {6, ...}, indexed by the opened
-// id.)
 + (BOOL)isOpenLoginBonusMusic:(int)index {
+#ifdef ENABLE_PATCHES
+    return YES;
+#else
     if (index < 0) {
         return NO;
     }
@@ -215,8 +206,8 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     if (openedId < 0) {
         return NO;
     }
-    // Login-bonus song ids, indexed by the opened-login-bonus id (Ghidra
-    // DAT_0012fa48). Only tier 0 (song id 6) exists in this build.
+    // Login-bonus song IDs, indexed by the opened-login-bonus id. Only tier 0
+    // (song id 6) exists in this build.
     static const int kLoginBonusMusicIds[] = {6};
     int musicId = kLoginBonusMusicIds[openedId];
     NSString *path = [MusicManager getPathFromBundle:musicId];
@@ -231,25 +222,23 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
         return YES;
     }
     return NO;
+#endif
 }
 
 #pragma mark - Dirty flags / cache
 
-// @ 0xcae18
 - (void)setMusicDataArrayDirty {
     m_MusicDataArrayDirty = YES;
 }
-// @ 0xcae2c
 - (void)setAcMusicDataArrayDirty {
     m_AcMusicDataArrayDirty = YES;
 }
-// @ 0xcb248 — no-op in this build.
 - (void)releaseChacheMusicData {
+    // No-op in this build.
 }
 
 #pragma mark - Accessors
 
-// @ 0xcae40
 - (NSArray *)getMusicDataArray {
     if (m_MusicDataArray != nil && !m_MusicDataArrayDirty) {
         return m_MusicDataArray;
@@ -258,7 +247,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return m_MusicDataArray;
 }
 
-// @ 0xcae84
 - (NSArray *)getAcMusicDataArray {
     if (m_AcMusicDataArray != nil && !m_AcMusicDataArrayDirty) {
         return m_AcMusicDataArray;
@@ -267,7 +255,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return m_AcMusicDataArray;
 }
 
-// @ 0xcb080 — linear search by MusicID.
 - (MusicData *)getMusicData:(int)musicId {
     for (MusicData *data in m_MusicDataArray) {
         if (data.MusicID == musicId) {
@@ -277,7 +264,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return nil;
 }
 
-// @ 0xcb154 — rebuilds AC array if needed, then linear search by acMusicId.
 - (AcMusicData *)getAcMusicData:(int)acMusicId {
     if (m_AcMusicDataArray == nil) {
         [self createAcMusicDataArray];
@@ -290,18 +276,15 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return nil;
 }
 
-// @ 0xc7e20 — class method in the binary (stateless; no instance ivars).
 + (NSString *)getMusicDataFilename:(int)musicId {
+    // Class method in the binary (stateless; no instance ivars).
     return [NSString stringWithFormat:@"%09d.orb", musicId];
 }
 
-// @ 0xc7e50 — arcade charts use an "ac" prefix and the ".acv" extension
-// (Ghidra: format literal "ac%09d.acv" at 0x10bb64, loaded at 0xc7e6e).
 - (NSString *)getAcMusicDataFilename:(int)acMusicId {
     return [NSString stringWithFormat:@"ac%09d.acv", acMusicId];
 }
 
-// @ 0xcaec8 — every treasure song bundled with the app (one per main map).
 - (NSArray *)getTreasureMusicDataArray {
     NSMutableArray *array = [NSMutableArray array];
     for (int i = 0; i < 9; i++) {
@@ -319,9 +302,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Cache building
 
-// @ 0xca248 — assemble the playable song list from all unlock sources, then
-// apply level patches. Sources: defaults, purchased, open treasure/invite/
-// collabo/login-bonus songs.
 - (void)createMusicDataArray {
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:0];
 
@@ -383,8 +363,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     m_MusicDataArrayDirty = NO;
 }
 
-// @ 0xcaabc — arcade catalog: default AC songs (bundled, else purchased) plus
-// purchased AC songs.
 - (void)createAcMusicDataArray {
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:0];
 
@@ -419,14 +397,16 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     m_AcMusicDataArrayDirty = NO;
 }
 
-// @ 0xcb610 — load downloadable per-song level overrides ("rhythmin_lv", a JSON
-// { "Music": [ { Id, N, H, Ex }, ... ] } in Application Support). The filename
-// literal is "rhythmin_lv" with an underscore (Ghidra: 0x10bb8d), not a dot.
 - (void)createMusicLvPatchArray {
+    // The filename literal is "rhythmin_lv" with an underscore, not a dot.
     m_MusicLvPatchArray = nil;
 
+#ifdef ENABLE_PATCHES
+    NSString *path = [AppDelegate appAssetsPath:@"rhythmin_lv"];
+#else
     NSString *path =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"rhythmin_lv"];
+#endif
     if (!RhFileExists(path)) {
         return;
     }
@@ -454,13 +434,18 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Purchased song lists (Blowfish)
 
-// @ 0xc8820 — load "mulist"/"acmulist" from Documents, Blowfish-decrypt with
-// the device uuId as key, skip the 4-byte header, parse into a dictionary.
 - (void)loadPurchasedMusics {
     m_PurchasedMusicDictionaris = nil;
     m_PurchasedAcMusicDictionaris = nil;
 
     NSString *uuId = [AppDelegate appDelegate].uuId;
+
+#ifdef ENABLE_PATCHES
+    // The bundle install is read-only, so a shipped assets/ copy of each list is copied into
+    // Documents once; Documents is the read-write store from then on.
+    [self seedListFromAssets:@"mulist"];
+    [self seedListFromAssets:@"acmulist"];
+#endif
 
     // Local purchased songs: "mulist".
     NSString *muPath =
@@ -499,43 +484,166 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
         m_PurchasedAcMusicDictionaris = [[NSMutableArray alloc] initWithCapacity:64];
         [self setAcMusicDataArrayDirty];
     }
+
+#ifdef ENABLE_PATCHES
+    // Reconcile against the charts actually present, then persist to Documents only when the
+    // reconciliation changed something (a dropped-in custom song, or a removed one).
+    if ([self reconcilePurchasedMusics]) {
+        [self savePurchasedMusics];
+    }
+#endif
 }
+
+#ifdef ENABLE_PATCHES
+- (void)seedListFromAssets:(NSString *)name {
+    NSFileManager *fileManager = NSFileManager.defaultManager;
+    NSString *destination =
+        [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:name];
+    if ([fileManager fileExistsAtPath:destination]) {
+        return;
+    }
+    NSString *source = [AppDelegate appAssetsPath:name];
+    if ([fileManager fileExistsAtPath:source]) {
+        [fileManager copyItemAtPath:source toPath:destination error:nil];
+    }
+}
+
+- (BOOL)reconcilePurchasedMusics {
+    // Songs another catalogue source provides must never also appear in a purchased
+    // list, or they would load twice. This is unconditional, independent of the
+    // per-boot unlock gates: the reserved/default IDs 0-3, the invite/collabo/
+    // login-bonus reward IDs 4-6, and the treasure songs.
+    NSMutableSet<NSNumber *> *musicExcluded = [NSMutableSet set];
+    for (int reservedId = 0; reservedId <= 6; reservedId++) {
+        [musicExcluded addObject:@(reservedId)];
+    }
+    for (size_t i = 0; i < sizeof(kTreasureMusicIds) / sizeof(kTreasureMusicIds[0]); i++) {
+        [musicExcluded addObject:@(kTreasureMusicIds[i])];
+    }
+
+    // Arcade defaults (1-3 and 300000000) come from the default source.
+    NSMutableSet<NSNumber *> *acExcluded = [NSMutableSet set];
+    for (NSNumber *acMusicId in m_AcDefaultMusicIDs) {
+        [acExcluded addObject:acMusicId];
+    }
+
+    BOOL musicChanged = [self reconcileList:m_PurchasedMusicDictionaris
+                                   excluded:musicExcluded
+                                     prefix:@""
+                                     suffix:@".orb"];
+    BOOL acChanged = [self reconcileList:m_PurchasedAcMusicDictionaris
+                                excluded:acExcluded
+                                  prefix:@"ac"
+                                  suffix:@".acv"];
+
+    [self setMusicDataArrayDirty];
+    [self setAcMusicDataArrayDirty];
+    return musicChanged || acChanged;
+}
+
+- (BOOL)reconcileList:(NSMutableArray *)purchased
+             excluded:(NSSet<NSNumber *> *)excluded
+               prefix:(NSString *)prefix
+               suffix:(NSString *)suffix {
+    NSFileManager *fileManager = NSFileManager.defaultManager;
+    NSCharacterSet *nonDigits =
+        [NSCharacterSet characterSetWithCharactersInString:@"0123456789"].invertedSet;
+    BOOL changed = NO;
+
+    // Prune: drop an entry that a bundled/unlock source already covers, that a
+    // previous entry already listed, or whose chart file no longer resolves in
+    // either assets/ or Application Support.
+    NSMutableIndexSet *dropIndexes = [NSMutableIndexSet indexSet];
+    NSMutableSet<NSNumber *> *present = [NSMutableSet set];
+    for (NSUInteger index = 0; index < purchased.count; index++) {
+        NSNumber *musicId = @([purchased[index][@"ID"] intValue]);
+        NSString *filename =
+            [NSString stringWithFormat:@"%@%09d%@", prefix, musicId.intValue, suffix];
+        if ([excluded containsObject:musicId] || [present containsObject:musicId] ||
+            !RhFileExists([MusicManager assetOrAppSupportPath:filename])) {
+            [dropIndexes addIndex:index];
+        } else {
+            [present addObject:musicId];
+        }
+    }
+    if (dropIndexes.count > 0) {
+        changed = YES;
+    }
+    [purchased removeObjectsAtIndexes:dropIndexes];
+
+    // Discover: register any chart present in assets/ (a jailbroken drop into the
+    // bundle) or Application Support that is not already listed and not excluded.
+    for (NSString *directory in
+         @[[AppDelegate appAssetsDirectory], [AppDelegate appAppSupportDirectory]]) {
+        for (NSString *entryName in [fileManager contentsOfDirectoryAtPath:directory error:nil]) {
+            if (![entryName hasPrefix:prefix] || ![entryName hasSuffix:suffix]) {
+                continue;
+            }
+            NSString *digits = [entryName
+                substringWithRange:NSMakeRange(prefix.length,
+                                               entryName.length - prefix.length - suffix.length)];
+            if (digits.length != 9 ||
+                [digits rangeOfCharacterFromSet:nonDigits].location != NSNotFound) {
+                continue;
+            }
+            NSNumber *musicId = @(digits.intValue);
+            if ([excluded containsObject:musicId] || [present containsObject:musicId]) {
+                continue;
+            }
+            [purchased addObject:@{@"ID" : musicId}];
+            [present addObject:musicId];
+            changed = YES;
+        }
+    }
+    return changed;
+}
+#endif
 
 #pragma mark - Paths
 
-// @ 0xc7e80 — class method in the binary. It uses no instance state, so the
-// original calls it on the MusicManager class object (never through
-// getInstance). That is what keeps the init-time open-song predicates
-// (isOpenBemaniCollaboMusic / isOpenLoginBonusMusic, which run inside -init)
-// from re-entering getInstance before its singleton global is assigned. The
-// prior reconstruction made this an instance method, so those predicates called
-// [[MusicManager getInstance] ...] and recursed forever during init -> stack
-// overflow (SIGSEGV). The binary's base directory is
-// AppDelegate::appAppSupportDirectory (the .orb data files live under
-// Application Support, not the app bundle).
+#ifdef ENABLE_PATCHES
++ (NSString *)assetOrAppSupportPath:(NSString *)filename {
+    // A class method with no instance state: the init-time open-song predicates
+    // (isOpenBemaniCollaboMusic / isOpenLoginBonusMusic) call it on the class object,
+    // so it never re-enters getInstance before the singleton global is assigned. As an
+    // instance method it would recurse forever during -init and overflow the stack.
+    NSString *assetPath =
+        [[AppDelegate appAssetsDirectory] stringByAppendingPathComponent:filename];
+    if (RhFileExists(assetPath)) {
+        return assetPath;
+    }
+    return [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:filename];
+}
+#endif
+
 + (NSString *)getPathFromBundle:(int)musicId {
-    return [[AppDelegate appAppSupportDirectory]
-        stringByAppendingPathComponent:[MusicManager getMusicDataFilename:musicId]];
+    NSString *filename = [MusicManager getMusicDataFilename:musicId];
+#ifdef ENABLE_PATCHES
+    return [MusicManager assetOrAppSupportPath:filename];
+#else
+    return [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:filename];
+#endif
 }
 
-// @ 0xc7edc — downloaded local songs also live under Application Support, not
-// Documents (the binary uses AppDelegate::appAppSupportDirectory at 0xc7efa).
 - (NSString *)getPathFromPurchased:(int)musicId {
-    return [[AppDelegate appAppSupportDirectory]
-        stringByAppendingPathComponent:[MusicManager getMusicDataFilename:musicId]];
+    // Downloaded local songs also live under Application Support, not Documents.
+    NSString *filename = [MusicManager getMusicDataFilename:musicId];
+#ifdef ENABLE_PATCHES
+    return [MusicManager assetOrAppSupportPath:filename];
+#else
+    return [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:filename];
+#endif
 }
 
-// @ 0xc7f38 — arcade counterpart; same Application Support base directory
-// (Ghidra: appAppSupportDirectory at 0xc7f56).
 - (NSString *)getAcPathFromPurchased:(int)acMusicId {
-    return [[AppDelegate appAppSupportDirectory]
-        stringByAppendingPathComponent:[self getAcMusicDataFilename:acMusicId]];
+    NSString *filename = [self getAcMusicDataFilename:acMusicId];
+#ifdef ENABLE_PATCHES
+    return [MusicManager assetOrAppSupportPath:filename];
+#else
+    return [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:filename];
+#endif
 }
 
-// @ 0xc9bd0 — the recommended-pack id list: decode the encrypted "recpack" file
-// (same Blowfish-with-MD5(uuid) scheme as the purchased-music lists), then
-// collect each entry's "ID". Returns an empty array when there is no recommend
-// file.
 - (NSArray *)getRecommendPackArray {
     NSString *path =
         [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"recpack"];
@@ -551,17 +659,13 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
             entries = RhParsePlistArray(body);
         }
     }
-    NSMutableArray *ids = [NSMutableArray array];
+    NSMutableArray *IDs = [NSMutableArray array];
     for (NSDictionary *entry in entries) {
-        [ids addObject:[entry objectForKey:@"ID"]];
+        [IDs addObject:[entry objectForKey:@"ID"]];
     }
-    return ids;
+    return IDs;
 }
 
-// @ 0xc9e20 — add `packID` to the encrypted "recpack" list (a no-op if it is
-// already there). Decodes the existing list (same BFCodec + MD5(uuid) scheme),
-// appends a {ID: packID} entry, then re-encodes it behind 4 random salt bytes
-// and writes it back.
 - (void)saveRecommendedPack:(unsigned int)packID {
     NSString *path =
         [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"recpack"];
@@ -609,8 +713,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     [out writeToFile:path atomically:YES];
 }
 
-// @ 0xc8bec — Blowfish-encrypt each non-empty purchased list (device-uuid MD5
-// key) behind 4 random salt bytes and write it back to "mulist"/"acmulist".
 - (void)savePurchasedMusics {
     NSString *uuId = [AppDelegate appDelegate].uuId;
 
@@ -654,18 +756,13 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Purchased list accessors
 
-// @ 0xc8f28 — synthesized-style accessor.
 - (NSMutableArray *)getPurchasedMusicDictionaris {
     return m_PurchasedMusicDictionaris;
 }
-// @ 0xc8f38 — synthesized-style accessor.
 - (NSMutableArray *)getPurchasedAcMusicDictionaris {
     return m_PurchasedAcMusicDictionaris;
 }
 
-// @ 0xc8f48 — merge `item` into the local purchased list. If an entry with the
-// same ID exists, update any differing metadata (returns YES only if something
-// changed); otherwise append a new entry (always YES). Marks the cache dirty.
 - (BOOL)addPurchasedMusic:(id)item {
     unsigned int musicID = (unsigned int)[item musicID];
     NSUInteger count = m_PurchasedMusicDictionaris.count;
@@ -721,8 +818,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return YES;
 }
 
-// @ 0xc93f0 — arcade counterpart of -addPurchasedMusic: (keys Title/Genre/
-// ItemURL/SampleURL, matched by acMusicId). Marks the AC cache dirty.
 - (BOOL)addPurchasedAcMusic:(id)item {
     unsigned int acMusicId = (unsigned int)[item acMusicId];
     NSUInteger count = m_PurchasedAcMusicDictionaris.count;
@@ -781,7 +876,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Delete downloaded songs
 
-// @ 0xc9898 — remove a downloaded local song file; YES if it existed.
 - (BOOL)deleteMusic:(int)musicId {
     NSString *path = [self getPathFromPurchased:musicId];
     if (!RhFileExists(path)) {
@@ -793,7 +887,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return YES;
 }
 
-// @ 0xc9914 — arcade counterpart of -deleteMusic:.
 - (BOOL)deleteAcMusic:(int)acMusicId {
     NSString *path = [self getAcPathFromPurchased:acMusicId];
     if (!RhFileExists(path)) {
@@ -805,8 +898,6 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     return YES;
 }
 
-// @ 0xc9990 — YES if `packID` is present in the encrypted "recpack" list (same
-// BFCodec + MD5(uuid) scheme as the purchased lists).
 - (BOOL)isRecommendedPack:(int)packID {
     NSString *path =
         [[AppDelegate appDocumentsDirectory] stringByAppendingPathComponent:@"recpack"];
@@ -831,22 +922,18 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Unlock gate refresh
 
-// @ 0xcafc0 — re-evaluate the treasure gate and invalidate the local cache.
 - (void)openTreasureMusic {
     [self createOpenTreasureMusics];
     [self setMusicDataArrayDirty];
 }
-// @ 0xcaff0
 - (void)openInviteMusic {
     [self createOpenInviteMusics];
     [self setMusicDataArrayDirty];
 }
-// @ 0xcb020
 - (void)openCollaboMusic {
     [self createOpenCollaboMusics];
     [self setMusicDataArrayDirty];
 }
-// @ 0xcb050
 - (void)openLoginBonusMusic {
     [self createOpenLoginBonusMusics];
     [self setMusicDataArrayDirty];
@@ -854,36 +941,31 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
 
 #pragma mark - Flat id lists
 
-// @ 0xcb24c — every currently-available local song id: defaults, then purchased
-// (each entry's "ID"), then unlocked treasure ids. (Invite/collabo/login-bonus
-// are intentionally not included here.)
 - (NSMutableArray *)getMusicIDs {
-    NSMutableArray *ids = [NSMutableArray arrayWithCapacity:4];
+    NSMutableArray *IDs = [NSMutableArray arrayWithCapacity:4];
     for (NSNumber *idNum in m_DefaultMusicIDs) {
-        [ids addObject:idNum];
+        [IDs addObject:idNum];
     }
     for (NSDictionary *entry in m_PurchasedMusicDictionaris) {
-        [ids addObject:[entry objectForKey:@"ID"]];
+        [IDs addObject:[entry objectForKey:@"ID"]];
     }
     for (NSNumber *idNum in m_OpenTreasureMusicIDs) {
-        [ids addObject:idNum];
+        [IDs addObject:idNum];
     }
-    return ids;
+    return IDs;
 }
 
-// @ 0xcb474 — arcade ids: default AC ids then purchased-AC entry "ID"s.
 - (NSMutableArray *)getAcMusicIDs {
-    NSMutableArray *ids = [NSMutableArray arrayWithCapacity:4];
+    NSMutableArray *IDs = [NSMutableArray arrayWithCapacity:4];
     for (NSNumber *idNum in m_AcDefaultMusicIDs) {
-        [ids addObject:idNum];
+        [IDs addObject:idNum];
     }
     for (NSDictionary *entry in m_PurchasedAcMusicDictionaris) {
-        [ids addObject:[entry objectForKey:@"ID"]];
+        [IDs addObject:[entry objectForKey:@"ID"]];
     }
-    return ids;
+    return IDs;
 }
 
-// @ 0xcb948 — synthesized-style accessor.
 - (NSArray *)getMusicPatchArray {
     return m_MusicLvPatchArray;
 }

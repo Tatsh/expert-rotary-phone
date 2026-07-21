@@ -131,6 +131,38 @@ falling back to the "all" banner/base, so a build that ships **zero** `.acv` fil
 none downloaded) shows an empty arcade viewer instead of throwing `NSRangeException`. A faithful
 build keeps the original unconditional read.
 
+### Bundled assets folder and custom songs
+
+**Files:** `Project/AppDelegate.{h,mm}` — `+appAssetsDirectory` / `+appAssetsPath:`;
+`Project/Game/Data/Music/MusicManager.{h,m}` — `+assetOrAppSupportPath:`, the `.orb` / `.acv`
+chart-path resolvers, `loadPurchasedMusics`, `-reconcilePurchasedMusics`,
+`-reconcileList:excluded:prefix:suffix:`, and the `rhythmin_lv` loader.
+
+The original downloaded its charts, purchased-song lists, and other data at runtime into Application
+Support and Documents. This patch lets a self-contained build ship that content in an optional
+`assets/` subdirectory of the app bundle, and makes adding songs painless.
+
+- **Charts and lists** (`.orb`, `.acv`, `mulist`, `acmulist`) resolve with priority `assets/` then
+  Application Support; a file present in neither is simply ignored. Nothing is copied to Documents.
+- **Lists are seeded once, then read-write in Documents.** The bundle install is read-only, so on
+  first boot a shipped `assets/mulist` / `assets/acmulist` is copied into Documents; from then on
+  Documents is the read-write store. `mulist` lists only purchased songs (not the defaults, the
+  always-unlocked invite/collabo/login-bonus/treasure songs, or IDs 0-3), and the unlock gates for
+  those bundled songs are forced open (`createOpenTreasureMusics`, `+isOpenInviteMusic:`,
+  `+isOpenBemaniCollaboMusic`, `+isOpenLoginBonusMusic:`) so they load from their own catalogue
+  sources without ever being double-listed.
+- **Custom songs** work with no list editing: after decrypting the lists, `loadPurchasedMusics`
+  reconciles them against the charts actually present — it drops entries whose chart file is gone or
+  that another catalogue source already provides (defaults 0-3, the invite/collabo/login-bonus rewards
+  4-6, the treasure songs), registers any canonical `%09d.orb` / `ac%09d.acv` found in `assets/` or
+  Application Support that is not already listed, and persists the result back to Documents when it
+  changed. So dropping a chart into Application Support (or into `assets/` on a jailbroken device)
+  makes it appear next boot, and duplicates can never occur.
+- **Level overrides** (`rhythmin_lv`) load from `assets/` only via `+appAssetsPath:`, with no
+  fallback.
+
+A faithful build keeps the original Application Support / Documents paths and the real unlock gates.
+
 ### 64-bit struct-layout trimming
 
 **Files:** `Project/System/src/Task/MainTask.h`, `Project/System/src/Task/AcViewerTask.h`,
@@ -150,5 +182,5 @@ structs use named fields rather than hardcoded offsets on the 64-bit target.
 
 The original registration server issued the numeric PlayerId and can no longer be reached. The patch
 saves the chosen name locally with a stable seven-digit id synthesised from the device UUID (matching
-the server's short numeric ids) and continues down the success path, so a new player can be created
+the server's short numeric IDs) and continues down the success path, so a new player can be created
 offline.

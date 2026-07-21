@@ -3,7 +3,6 @@
 //  pop'n rhythmin
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//  Cited @ addresses are relative to the program image base (0x4000).
 //
 
 #import "AppDelegate.h"
@@ -49,13 +48,10 @@
     NSPersistentStoreCoordinator *_persistentStoreCoordinator;
 }
 
-// -[AppDelegate dealloc]  @ 0x8c74 — ARC-omitted.
+// -[AppDelegate dealloc] — ARC-omitted.
 
 #pragma mark - Launch
 
-/**
- * -[AppDelegate application:didFinishLaunchingWithOptions:]  @ 0x8cf0
- */
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 
@@ -136,7 +132,7 @@
     // of launch; the binary's addSubview: path aborts at runtime under them.
     self.mainWindow.rootViewController = self.viewController;
 #else
-    [self.mainWindow addSubview:self.viewController.view]; // Ghidra @ 0x8cf0
+    [self.mainWindow addSubview:self.viewController.view];
 #endif
     neSceneManager::shared().attachRoot(self.viewController);
     [self.mainWindow makeKeyAndVisible];
@@ -144,11 +140,11 @@
     neGraphics::configure(static_cast<float>(UIScreen.mainScreen.scale));
     neEngine::bootstrapB();
 #ifdef ENABLE_PATCHES
-    // Engine-text enlargement. The binary calls bootstrapC(0) (@ 0x91b0), which
-    // sets the glyph manager's fixed shift to 0: neDrawText then rasterises each
-    // glyph at its raw point size and emits the quad at 0.5x (@ 0x15b70), so a
-    // "20"-point label lands ~10px tall on the 1536x2048 framebuffer — verified
-    // faithful to the original, but tiny on a modern high-density iPad. The 0.5x
+    // Engine-text enlargement. The binary calls bootstrapC(0), which sets the
+    // glyph manager's fixed shift to 0: neDrawText then rasterises each glyph at
+    // its raw point size and emits the quad at 0.5x, so a "20"-point label lands
+    // ~10px tall on the 1536x2048 framebuffer — verified faithful to the
+    // original, but tiny on a modern high-density iPad. The 0.5x
     // emit is designed to pair with a non-zero shift: a shift of 1 rasterises at
     // 2x point size and still emits at 0.5x, so all engine text doubles in size
     // and gains supersampled sharpness while the alignment/advance math (which
@@ -156,7 +152,7 @@
     // shift for a larger enlargement (2 => 4x); 1 is the retina-faithful factor.
     neEngine::bootstrapC(1);
 #else
-    neEngine::bootstrapC(0); // Ghidra @ 0x91b0
+    neEngine::bootstrapC(0);
 #endif
 
     [UserSettingData loadSettingData];
@@ -211,19 +207,13 @@
 
 #pragma mark - Lifecycle
 
-/**
- * -[AppDelegate applicationWillResignActive:] — pause the note engines and audio,
- * remember whether a resume is needed, tear down the running task, and pump the
- * main loop three times when a resume is expected.
- * @ghidraAddress 0x95a8
- */
 - (void)applicationWillResignActive:(UIApplication *)application {
-    // The flag the binary tests here (DAT_00187b5a) is the NoteMng singleton's
-    // m_playActive field @ +0x13cb6 -- set by initPlayData, cleared by
-    // PlayNoteMngDetach. When a play session owns the manager, freeze its timeline
-    // (stop the BGM + anchor the play position via m_holdFlag) so locking/unlocking
-    // the screen does not resume the song mid-play; togglePause folds the frozen
-    // span back on the resume. (onResignActivePushHook self-guards if already frozen.)
+    // The flag the binary tests here is the NoteMng singleton's m_playActive
+    // field -- set by initPlayData, cleared by PlayNoteMngDetach. When a play
+    // session owns the manager, freeze its timeline (stop the BGM + anchor the
+    // play position via m_holdFlag) so locking/unlocking the screen does not
+    // resume the song mid-play; togglePause folds the frozen span back on the
+    // resume. (onResignActivePushHook self-guards if already frozen.)
     if (NoteMng::shared().isPlayActive()) {
         NoteMng::shared().onResignActivePushHook();
     }
@@ -255,21 +245,12 @@
     }
 }
 
-/**
- * -[AppDelegate applicationWillEnterForeground:] — reload every cached texture
- * (the binary inlines the texture-list walk; de-inlined here into
- * neEngine::notifyEnterForeground).
- * @ghidraAddress 0x9728
- */
 - (void)applicationWillEnterForeground:(UIApplication *)application {
+    // The binary inlines the texture-list walk that reloads every cached texture;
+    // de-inlined here into neEngine::notifyEnterForeground.
     neEngine::notifyEnterForeground();
 }
 
-/**
- * -[AppDelegate applicationDidBecomeActive:] — resume audio + the render loop,
- * then show the low-storage alert once free space drops to 24 MB or below.
- * @ghidraAddress 0x972c
- */
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [[AudioManager sharedManager] systemResume];
     if (_isNecessaryToResume) {
@@ -288,32 +269,17 @@
     [self.strageAlert show];
 }
 
-/**
- * -[AppDelegate applicationDidEnterBackground:] — flush the event center, notify
- * the engine, and clear the app icon badge.
- * @ghidraAddress 0x96dc
- */
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     neAppEventCenter::shared().flush();
     neEngine::onDidEnterBackground();
     [UIApplication.sharedApplication setApplicationIconBadgeNumber:0];
 }
 
-/**
- * -[AppDelegate applicationWillTerminate:] — flush the event center and clear the
- * app icon badge.
- * @ghidraAddress 0x9810
- */
 - (void)applicationWillTerminate:(UIApplication *)application {
     neAppEventCenter::shared().flush();
     [UIApplication.sharedApplication setApplicationIconBadgeNumber:0];
 }
 
-/**
- * -[AppDelegate applicationDidReceiveMemoryWarning:] — release MusicManager's
- * cached music data.
- * @ghidraAddress 0x985c
- */
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
     [[MusicManager getInstance] releaseChacheMusicData];
 }
@@ -321,14 +287,6 @@
 #pragma mark - Notifications
 
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-/**
- * -[AppDelegate userNotificationCenter:didReceiveNotificationResponse:
- * withCompletionHandler:] — the modern UNUserNotificationCenterDelegate tap
- * callback replacing the iOS 10-deprecated
- * -application:didReceiveLocalNotification: (empty in the binary). Reads the
- * notification's user info and immediately calls the completion handler.
- * @newCode
- */
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
     didReceiveNotificationResponse:(UNNotificationResponse *)response
              withCompletionHandler:(void (^)(void))completionHandler {
@@ -336,20 +294,12 @@
     completionHandler();
 }
 #else
-/**
- * -[AppDelegate application:didReceiveLocalNotification:] — empty in the binary.
- * @ghidraAddress 0x9858
- */
 - (void)application:(UIApplication *)application
     didReceiveLocalNotification:(UILocalNotification *)notification {
+    // Empty in the binary.
 }
 #endif
 
-/**
- * -[AppDelegate application:didReceiveRemoteNotification:] — when the app is
- * backgrounded/inactive, mark a pending remote-notify on the event center.
- * @ghidraAddress 0xafb8
- */
 - (void)application:(UIApplication *)application
     didReceiveRemoteNotification:(NSDictionary *)userInfo {
     static_cast<void>(userInfo[@"body"]);
@@ -359,12 +309,6 @@
     neAppEventCenter::shared().setRemoteNotifyPending(true);
 }
 
-/**
- * -[AppDelegate application:didRegisterForRemoteNotificationsWithDeviceToken:] —
- * strip the device-token description to hex, then fire-and-forget POST it (with
- * the uuid, user agent, and target store) to the save-APNs-token endpoint.
- * @ghidraAddress 0xad90
- */
 - (void)application:(UIApplication *)application
     didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     NSString *token = [deviceToken description];
@@ -394,38 +338,32 @@
 #endif
 }
 
-/**
- * -[AppDelegate application:didFailToRegisterForRemoteNotificationsWithError:] —
- * empty in the binary.
- * @ghidraAddress 0xafb4
- */
 - (void)application:(UIApplication *)application
     didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    // Empty in the binary.
 }
 
 #pragma mark - App identity & hardware
 
-/**
- * -[AppDelegate appDelegate] — shared app delegate.
- * @ghidraAddress 0x89a0
- */
 + (instancetype)appDelegate {
     return (AppDelegate *)UIApplication.sharedApplication.delegate;
 }
 
-/**
- * -[AppDelegate appDocumentsDirectory].
- * @ghidraAddress 0x89d4
- */
 + (NSString *)appDocumentsDirectory {
     return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)
         .lastObject;
 }
 
-/**
- * -[AppDelegate appAppSupportDirectory] — lazily creates the dir + marks it excluded from backup.
- * @ghidraAddress 0x8a1c
- */
+#ifdef ENABLE_PATCHES
++ (NSString *)appAssetsDirectory {
+    return [NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"assets"];
+}
+
++ (NSString *)appAssetsPath:(NSString *)filename {
+    return [[AppDelegate appAssetsDirectory] stringByAppendingPathComponent:filename];
+}
+#endif
+
 + (NSString *)appAppSupportDirectory {
     NSString *path =
         NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES)
@@ -447,10 +385,6 @@
     return path;
 }
 
-/**
- * +[AppDelegate addSkipBackupAttributeToItemAtURL:] — mark a URL excluded from backup.
- * @ghidraAddress 0x8af8
- */
 + (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL {
     NSAssert([NSFileManager.defaultManager fileExistsAtPath:URL.path],
              @"[[NSFileManager defaultManager] fileExistsAtPath:[URL path]]");
@@ -462,18 +396,10 @@
     return success;
 }
 
-/**
- * -[AppDelegate appCachesDirectory].
- * @ghidraAddress 0x89f8
- */
 + (NSString *)appCachesDirectory {
     return NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).lastObject;
 }
 
-/**
- * -[AppDelegate freeFileSystemSize].
- * @ghidraAddress 0x8be8
- */
 + (unsigned long long)freeFileSystemSize {
     NSDictionary *attrs =
         [NSFileManager.defaultManager attributesOfFileSystemForPath:[self appDocumentsDirectory]
@@ -481,19 +407,11 @@
     return [[attrs valueForKey:NSFileSystemFreeSize] longLongValue];
 }
 
-/**
- * -[AppDelegate hardwareType] — cached device-model enum.
- * @ghidraAddress 0xb13c
- */
 - (int)hardwareType {
     return _hardwareType;
 }
-// displayType is a synthesized atomic getter @ 0xb0a8.
+// displayType is a synthesized atomic getter.
 
-/**
- * -[AppDelegate isOldHardware] — low-spec device test.
- * @ghidraAddress 0xad5c
- */
 - (BOOL)isOldHardware {
     unsigned type = static_cast<unsigned>(_hardwareType);
     if (type < 28 && ((1u << type) & 0x0ff7803f) != 0) {
@@ -562,7 +480,7 @@ enum {
 static_assert(kHwModelSimulator + 1 == kHardwareModelsMax,
               "the hardware-model enum must cover every kHardwareModels tier");
 
-// hw.machine identifiers ordered by hardwareType. Ghidra: DAT_00130574.
+// hw.machine identifiers ordered by hardwareType.
 constexpr const char *const kHardwareModels[kHardwareModelsMax] = {
     "iPhone1,1", "iPhone1,2", "iPhone2,1", "iPhone3,1", "iPhone3,2", "iPhone3,3", "iPhone4,1",
     "iPhone4,2", "iPhone4,3", "iPhone5,1", "iPhone5,2", "iPhone5,3", "iPhone5,4", "iPhone6,1",
@@ -574,10 +492,6 @@ constexpr const char *const kHardwareModels[kHardwareModelsMax] = {
 static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareModelsMax,
               "kHardwareModelsMax must match the kHardwareModels entry count");
 
-/**
- * -[AppDelegate initHardware] — sysctl hw.machine -> _hardwareType / _displayType tiers.
- * @ghidraAddress 0xa58c
- */
 - (void)initHardware {
     size_t size = 0;
     sysctlbyname("hw.machine", nullptr, &size, nullptr, 0);
@@ -676,10 +590,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     free(machine);
 }
 
-/**
- * -[AppDelegate uuId] — read (or mint + Keychain-store) the persistent device UUID.
- * @ghidraAddress 0x9890
- */
 - (NSString *)uuId {
 #ifdef ENABLE_PATCHES
     // Preservation build: pin the device UUID to a fixed value. The BFCodec key
@@ -746,10 +656,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
 #endif
 }
 
-/**
- * -[AppDelegate deleteUuid] — remove the stored device UUID.
- * @ghidraAddress 0x9c20
- */
 - (void)deleteUuid {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
     NSDictionary *query = @{
@@ -771,10 +677,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
 
 #pragma mark - Settings-version keychain record
 
-/**
- * -[AppDelegate setUsersettingVer:] — Keychain add-or-update the setting version.
- * @ghidraAddress 0x9d58
- */
 - (void)setUsersettingVer:(NSString *)ver {
     NSData *data = [ver dataUsingEncoding:NSUTF8StringEncoding];
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
@@ -816,10 +718,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     }
 }
 
-/**
- * -[AppDelegate getUsersettingVer] — read the setting version ("0" if absent).
- * @ghidraAddress 0xa044
- */
 - (NSString *)getUsersettingVer {
     NSDictionary *query = @{
         (__bridge id)kSecClass : (__bridge id)kSecClassGenericPassword,
@@ -848,10 +746,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     return [NSString stringWithFormat:@"0"];
 }
 
-/**
- * -[AppDelegate deleteUsersettingVer] — remove the setting-version Keychain item.
- * @ghidraAddress 0xa270
- */
 - (void)deleteUsersettingVer {
     NSString *service = NSBundle.mainBundle.bundleIdentifier;
     NSDictionary *query = @{
@@ -873,83 +767,46 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
 
 #pragma mark - Environment strings
 
-/**
- * -[AppDelegate userAgent] — copy of the cached UA string.
- * @ghidraAddress 0xa3a8
- */
 - (NSString *)userAgent {
     return [NSString stringWithString:_userAgent];
 }
 
-/**
- * -[AppDelegate appVersion] — Info.plist CFBundleVersion.
- * @ghidraAddress 0xa408
- */
 - (NSString *)appVersion {
     return NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"];
 }
 
-/**
- * -[AppDelegate appVersionNum] — version with dots stripped.
- * @ghidraAddress 0xa458
- */
 - (int)appVersionNum {
     NSString *stripped = [self.appVersion stringByReplacingOccurrencesOfString:@"." withString:@""];
     return [stripped intValue];
 }
 
-/**
- * -[AppDelegate osVersion] — UIDevice systemVersion.
- * @ghidraAddress 0xa3d4
- */
 - (NSString *)osVersion {
     return UIDevice.currentDevice.systemVersion;
 }
 
-/**
- * -[AppDelegate localeLanguage] — NSLocaleLanguageCode.
- * @ghidraAddress 0xa548
- */
 - (NSString *)localeLanguage {
     return [NSLocale.currentLocale objectForKey:NSLocaleLanguageCode];
 }
 
-/**
- * -[AppDelegate localeCountry] — NSLocaleCountryCode.
- * @ghidraAddress 0xa504
- */
 - (NSString *)localeCountry {
     return [NSLocale.currentLocale objectForKey:NSLocaleCountryCode];
 }
 
-/**
- * -[AppDelegate localeString] — "language_country".
- * @ghidraAddress 0xa4a4
- */
 - (NSString *)localeString {
     return [NSString stringWithFormat:@"%@_%@", self.localeLanguage, self.localeCountry];
 }
 
 #pragma mark - StoreKit / purchases
 
-/**
- * -[AppDelegate finishRequest:] — retain the received StoreKit products array
- * (the vestigial objectAtIndex:0 whose result is discarded matches the binary).
- * @ghidraAddress 0xab44
- */
 - (void)finishRequest:(NSArray *)products {
     _products = products;
     if (_products.count == 0) {
         return;
     }
+    // The vestigial objectAtIndex:0 whose result is discarded matches the binary.
     (void)[_products objectAtIndex:0];
 }
 
-/**
- * -[AppDelegate purchaseSucceeded:] — global "purchase completed" confirm alert
- * (title "Succeeded", the store view controllers do the actual unlock).
- * @ghidraAddress 0xab9c
- */
 - (void)purchaseSucceeded:(id)transaction {
     CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"Succeeded"
                                                             message:@"購入処理が完了しました。"
@@ -959,11 +816,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     [alert show];
 }
 
-/**
- * -[AppDelegate purchaseFailed:error:] — global "purchase failed" alert (title
- * "Failed"); the store view controller does the real cleanup.
- * @ghidraAddress 0xac24
- */
 - (void)purchaseFailed:(id)transaction error:(NSError *)error {
     CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:@"Failed"
                                                             message:@"購入処理が失敗しました。"
@@ -973,11 +825,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     [alert show];
 }
 
-/**
- * -[AppDelegate getProduct:] — linear-search the cached StoreKit products for a
- * matching product identifier.
- * @ghidraAddress 0xacac
- */
 - (SKProduct *)getProduct:(NSString *)productId {
     if (self.products != nil) {
         for (NSUInteger i = 0; i < self.products.count; i++) {
@@ -992,15 +839,9 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
 
 #pragma mark - Game Center
 
-/**
- * -[AppDelegate loginGameCenter] — install the local player's authenticate
- * handler, which presents the Game Center login VC when one is provided.
- * @ghidraAddress 0xb00c
- */
 - (void)loginGameCenter {
     GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
     localPlayer.authenticateHandler = ^(UIViewController *viewController, NSError *error) {
-      // Block invoke @ 0xb07c.
       if (viewController != nil) {
           [self.viewController presentViewController:viewController animated:YES completion:nil];
       }
@@ -1009,13 +850,9 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
 
 #pragma mark - Core Data stack
 
-/**
- * -[AppDelegate managedObjectContext] — lazily build the main Core Data context
- * wired to the shared store coordinator. The binary uses plain -init; the
- * concurrency-type init is a guarded modernization for current iOS.
- * @ghidraAddress 0xa810
- */
 - (NSManagedObjectContext *)managedObjectContext {
+    // The binary uses plain -init; the concurrency-type init is a guarded modernisation
+    // for current iOS.
     if (_managedObjectContext == nil) {
         NSPersistentStoreCoordinator *coordinator = self.persistentStoreCoordinator;
         if (coordinator != nil) {
@@ -1031,12 +868,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     return _managedObjectContext;
 }
 
-/**
- * -[AppDelegate managedObjectContextSub] — lazily build the secondary Core Data
- * context sharing the same store coordinator (same shape as
- * managedObjectContext).
- * @ghidraAddress 0xa890
- */
 - (NSManagedObjectContext *)managedObjectContextSub {
     if (_managedObjectContextSub == nil) {
         NSPersistentStoreCoordinator *coordinator = self.persistentStoreCoordinator;
@@ -1053,11 +884,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     return _managedObjectContextSub;
 }
 
-/**
- * -[AppDelegate managedObjectModel] — lazily load the compiled model
- * ScoreData.momd from the app bundle.
- * @ghidraAddress 0xa910
- */
 - (NSManagedObjectModel *)managedObjectModel {
     if (_managedObjectModel == nil) {
         NSString *path = [NSBundle.mainBundle pathForResource:@"ScoreData" ofType:@"momd"];
@@ -1067,12 +893,6 @@ static_assert(sizeof(kHardwareModels) / sizeof(kHardwareModels[0]) == kHardwareM
     return _managedObjectModel;
 }
 
-/**
- * -[AppDelegate persistentStoreCoordinator] — lazily build the auto-migrating
- * SQLite store coordinator (Documents/ScoreData.sqlite); aborts if the store
- * cannot be added.
- * @ghidraAddress 0xa9cc
- */
 - (NSPersistentStoreCoordinator *)persistentStoreCoordinator {
     if (_persistentStoreCoordinator == nil) {
         NSString *storePath = [[AppDelegate appDocumentsDirectory]
