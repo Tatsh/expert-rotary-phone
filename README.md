@@ -84,12 +84,15 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 ### iPhone support
 
-- The app's launch images top out at the 4-inch (320x568) size, so it runs in compatibility mode
-  on everything larger:
+- The app declares no support for screen sizes past the 4-inch (320x568) iPhone. It ships no launch
+  storyboard and no larger launch images, so iOS runs it in compatibility mode on everything larger:
   - iPhone 6 / 6 Plus through 8 (4.7-inch and 5.5-inch) share the 4-inch 16:9 aspect ratio, so the
     content is just scaled up to fill the screen (slightly soft, but no black bars).
   - iPhone X and later (the tall 19.5:9 displays) have a different aspect ratio, so the 16:9 content
     cannot fill the screen and is letterboxed with black bars top and bottom.
 
-  Fixing this so the whole screen is used at native resolution is a significant effort, including
-  tasks like re-creating assets.
+  The render canvas is fixed to the legacy 640x960 / 640x1136 / 1536x2048 sizes and every sprite
+  atlas is authored only at those resolutions, so a native-size drawable would just stretch the same
+  fixed content. Using the whole screen at native resolution is a significant effort: a launch
+  storyboard (not merely larger launch images) to leave compatibility mode, plus re-created assets
+  and a reworked layout and touch path.
