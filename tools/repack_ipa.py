@@ -46,14 +46,38 @@ def _die(message: str) -> NoReturn:
     raise SystemExit(1)
 
 
-def _session(token: str) -> requests.Session:
+def _gh_token() -> str | None:
     """
-    Build a GitHub REST session authenticated with the given token.
+    Read the github.com OAuth token from the gh CLI's ``~/.config/gh/hosts.yml``.
+
+    Returns
+    -------
+    str | None
+        The stored token, or ``None`` when the file or entry is absent.
+    """
+    hosts = Path.home() / '.config' / 'gh' / 'hosts.yml'
+    if not hosts.is_file():
+        return None
+    host: str | None = None
+    for line in hosts.read_text(encoding='utf-8').splitlines():
+        if line[:1] and not line[:1].isspace():
+            host = line.split(':', 1)[0].strip()
+        elif host == 'github.com' and line.strip().startswith('oauth_token:'):
+            return line.split(':', 1)[1].strip() or None
+    return None
+
+
+def _session(token: str | None) -> requests.Session:
+    """
+    Build a GitHub REST session, authenticated only when a token is given.
+
+    The run and artifact listings work against the public API unauthenticated; a token is needed only
+    when the artifact download is gated (a private repo, or GitHub declining an anonymous download).
 
     Parameters
     ----------
-    token : str
-        A GitHub token that can read the repo's Actions artifacts.
+    token : str | None
+        A GitHub token that can read the repo's Actions artifacts, or ``None`` for the public API.
 
     Returns
     -------
@@ -62,10 +86,11 @@ def _session(token: str) -> requests.Session:
     """
     session = requests.Session()
     session.headers.update({
-        'Authorization': f'Bearer {token}',
         'Accept': 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
     })
+    if token:
+        session.headers['Authorization'] = f'Bearer {token}'
     return session
 
 
@@ -295,7 +320,10 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
                         type=Path,
                         default=Path.cwd() / 'PopnRhythmin-signed.ipa',
                         help='output path for the final .ipa (default: ./PopnRhythmin-signed.ipa)')
-    parser.add_argument('--token', required=True, help='GitHub token that can read the artifacts')
+    parser.add_argument('--token',
+                        default=None,
+                        help='GitHub token that can read the artifacts (default: the gh CLI token '
+                        'from ~/.config/gh/hosts.yml, else the public API)')
     parser.add_argument('--repo', default='Tatsh/expert-rotary-phone', help='the owner/name repo')
     parser.add_argument('--artifact', default='PopnRhythmin-adhoc-ipa', help='the artifact name')
     parser.add_argument('--workflow', default='build.yml', help='the workflow that builds the .ipa')
@@ -341,7 +369,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     asset_dir = args.asset_dir.resolve()
     output_ipa = args.output_ipa.resolve()
 
-    session = _session(args.token)
+    session = _session(args.token or _gh_token())
     with tempfile.TemporaryDirectory() as work_name:
         work = Path(work_name)
 
