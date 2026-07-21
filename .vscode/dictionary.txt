@@ -13,7 +13,6 @@ aish
 alignement
 analyzer
 analyzer's
-Ångström
 anim
 animationing
 aninationing
@@ -133,7 +132,6 @@ ctypes
 ctypting
 currenty
 curretly
-ＣＵＴＥ
 cutoff
 dakuten
 dalegate
@@ -281,8 +279,8 @@ jinja
 jsonnet
 jsonschema
 jubeat
-jubeatplus
 jubeat's
+jubeatplus
 judgeable
 jumptable
 kagome
@@ -311,6 +309,8 @@ ldrh
 ldrsb
 ldrsh
 leetal
+letterbox
+letterboxed
 lframe
 libc
 libcpp
@@ -493,7 +493,6 @@ segs
 selec
 selref
 senisivity
-ＳＥＸＹ
 shellcheck
 shellformat
 shishamo
@@ -671,4 +670,7 @@ zseek
 ztell
 zunzexport
 zwrite
+Ångström
 фade
+ＣＵＴＥ
+ＳＥＸＹ
