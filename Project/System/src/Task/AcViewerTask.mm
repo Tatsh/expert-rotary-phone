@@ -447,9 +447,14 @@ void AcViewerTask::drawActiveNotes() {
             if (frame < m_effectCoolFrames) {
                 // drawLayer args (0xfd64 callee map): x = per-lane note frame
                 // (@+0x158[lane]), y = the scroll-derived noteY; scale 100/100,
-                // anchorX = m_coolLayerArgB, anchorY = 100, color=0, colorHi=1,
-                // loopFlags = m_coolLayerArgA, blend=0x200, colorRGB=0xffffff,
-                // clip={0,top,w,h}, ctx=null, priority=0xb, visFlag=1.
+                // anchorX = m_coolLayerArgB, anchorY = 100, colour + additive alpha
+                // both 100, loopFlags = m_coolLayerArgA, blend = 0x200 (additive),
+                // colorRGB = 0xffffff, clip = {0,top,w,h}, ctx = null, priority = 0xb,
+                // visFlag = 1. The COOL burst is an additive sprite, so the colour
+                // multiply and the alpha-split (colorHi) must both be 100 -- an
+                // earlier reconstruction passed 0 / 1, which multiplied the sprite to
+                // black and gave it no additive weight, so the hit effect never showed
+                // (the binary stores 0x64 in both slots).
                 aep.drawLayer(m_effectCoolLyrNo,
                               frame,
                               laneFrame,
@@ -459,8 +464,8 @@ void AcViewerTask::drawActiveNotes() {
                               0,
                               m_coolLayerArgB,
                               100,
-                              0,
-                              1,
+                              100,
+                              100,
                               m_coolLayerArgA,
                               0x200,
                               0xffffff,
