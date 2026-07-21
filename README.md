@@ -46,7 +46,7 @@ Project/
     Sound/      caplayer.mm (CoreAudio AUGraph player)
     Aep/        AepManager/AepOrderingTable/AepLyrCtrl.mm
     Util/       RhCrypto.{h,c}, NSData+Crypt.{h,m}
-    neEngineBridge.h                 provisional C++ engine singleton interface
+    neEngineBridge.h                 C++ engine singleton interface
   Game/
     Note/       NoteMng.mm, AcNoteMng.mm
     Task/       SugorokuMainTask.mm
