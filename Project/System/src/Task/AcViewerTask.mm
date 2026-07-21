@@ -79,9 +79,21 @@ AcViewerTask::~AcViewerTask() = default;
 // gauge digits).
 constexpr const char *const kAcvUsrNames[7] = {
     "SCORE_NUM", "COMBO_NUM", "MUSIC_NAME", "MAX_COMBO_NUM", "GAUGE_NUM", "COOL_NUM", "GREAT_NUM"};
-// getFrmNo names (Ghidra: DAT_00130bf0, 9) -> +0x94.
-constexpr const char *const kAcvFrmNames[9] = {
-    "NUM_00", "NUM_01", "NUM_02", "NUM_03", "NUM_04", "NUM_05", "NUM_06", "NUM_07", "NUM_08"};
+// Per-lane note-sprite frame names (Ghidra: DAT_00130bf0, 9 -> +0x94). The
+// binary's table is the classic pop'n 9-button colour layout, symmetric about the
+// red centre: white, yellow, green, blue, RED, blue, green, yellow, white. (An
+// earlier reconstruction mislabelled these NUM_00..08 -- those frames do not exist
+// in arcade_viewer.idx, so drawing them with POP-KUN off crashed on a null
+// texture. arcade_viewer.idx carries POPN_WHITE/YELLOW/GREEN/BLUE/RED.)
+constexpr const char *const kAcvFrmNames[9] = {"POPN_WHITE",
+                                               "POPN_YELLOW",
+                                               "POPN_GREEN",
+                                               "POPN_BLUE",
+                                               "POPN_RED",
+                                               "POPN_BLUE",
+                                               "POPN_GREEN",
+                                               "POPN_YELLOW",
+                                               "POPN_WHITE"};
 // Difficulty -> BAR_* time-line frame (Ghidra: PTR_s_BAR_EASY_00130be0).
 constexpr const char *const kAcvBarFrm[4] = {"BAR_EASY", "BAR_NORMAL", "BAR_HYPER", "BAR_EX"};
 
