@@ -664,10 +664,22 @@ static void MainDismissContainerVC(UIViewController *child) {
         MainPresentContainerVC(self, _acViewerNaviCtrl);
         [content startOpenAnimation];
         [self PauseLoop];
-    } else if (_acViewerViewCtrl == nil) {
-        AcViewerSplitViewController *split = [[AcViewerSplitViewController alloc] init];
-        _acViewerViewCtrl = split;
-        MainPresentContainerVC(self, split);
+    } else {
+        // The binary (GotoAcViewer @ 0xdb24) creates and contains the split VC only
+        // once, but calls startOpenAnimation on EVERY entry -- the split's view stays
+        // in the hierarchy for the life of the arcade viewer and is re-opened each
+        // time. The arcade-viewer pause path (AcViewerTask ACST_PAUSE_MENU_OPEN)
+        // re-enters here while _acViewerViewCtrl is already set, then waits for
+        // acMusicSelViewing to clear; only re-opening the overlay unconditionally lets
+        // the song-select come back up so the MENU button pauses instead of trapping
+        // the task in ACST_PAUSE_MENU_INPUT.
+        AcViewerSplitViewController *split =
+            static_cast<AcViewerSplitViewController *>(_acViewerViewCtrl);
+        if (split == nil) {
+            split = [[AcViewerSplitViewController alloc] init];
+            _acViewerViewCtrl = split;
+            MainPresentContainerVC(self, split);
+        }
         [split startOpenAnimation];
     }
 }
