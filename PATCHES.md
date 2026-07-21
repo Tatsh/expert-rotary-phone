@@ -110,6 +110,15 @@ UUID string, so each blob only decrypts on the device it was created on. The pat
 fixed value, making the key device-independent: the lists can be generated once offline against that
 UUID and then decrypt on any device running the build, without per-device regeneration.
 
+### Arcade viewer keep-awake
+
+**File:** `Project/System/src/Task/AcViewerTask.mm` — `update()` / `cleanup()`.
+
+The iOS 8 binary does not touch the system idle timer. The patch disables auto-lock / auto-dim only
+while a chart is actually playing (`m_state == kAcvPlaying`) and restores it the moment the player
+pauses, scrubs, opens the pause menu, or leaves the viewer, so the screen does not sleep mid-song but
+power saving resumes as soon as play stops.
+
 ### Empty arcade catalog
 
 **Files:** `Project/AcViewerMusicViewController.mm` — `-initWithData:`,

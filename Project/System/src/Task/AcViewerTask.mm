@@ -275,6 +275,16 @@ void AcViewerTask::setup() {
     // m_noteFieldX (+0x124) = m_noteClipTop (+0x120) + m_noteFieldY (+0x128).
     m_noteFieldX = m_noteClipTop + m_noteFieldY;
 
+    // Anchor the PAUSE_LOOP overlay to the same vertical offset the pause-menu band
+    // hit-test uses. The binary sets pPauseLyrCtrl->nOriginX = 0 and nOriginY =
+    // uiVerticalBase / 2 (Ghidra acMainTaskSetup 0x2230c); uiVerticalBase is
+    // m_pauseBtnHeight here, and the ACST_PAUSE_MENU_INPUT band test offsets each
+    // button anchor by h = m_pauseBtnHeight / 2. Skipping this left the visible
+    // buttons ~88 px below their hit bands on the non-tall phone (m_pauseBtnHeight
+    // = -176), so taps on the buttons missed. setRouletteAnchor stores exactly
+    // {nOriginX = 0, nOriginY = value}.
+    m_pauseLayer->setRouletteAnchor(m_pauseBtnHeight / 2);
+
     AepLyrCtrl *topLayer = new AepLyrCtrl();
     m_topLayer = topLayer;
     topLayer->init(kAcvGroup, topName, this, 15); // draw order 15
@@ -635,6 +645,12 @@ void AcViewerTask::drawLifeGauge() {
 void AcViewerTask::cleanup() {
     AepManager &aep = AepManager::shared();
     AudioManager *audio = [AudioManager sharedManager];
+
+#ifdef ENABLE_PATCHES
+    // Restore the system idle timer on teardown (the per-frame update disables it
+    // while playing); leaving the arcade viewer must not leave auto-lock suppressed.
+    UIApplication.sharedApplication.idleTimerDisabled = NO;
+#endif
 
     // The play-state sub-task (@ +0x28, the first word of the play-data block):
     // delete it through its virtual destructor. (Modelled as a ne::C_TASK sub-object;
@@ -1176,6 +1192,15 @@ void AcViewerTask::update(int /*deltaMs*/) {
         break;
     }
     m_state = next;
+
+#ifdef ENABLE_PATCHES
+    // Keep the screen awake only while a song is actually playing; restore the
+    // system idle timer (auto-lock / auto-dim) the moment play is paused, in the
+    // pause menu, scrubbing, or exiting. Not in the iOS 8 binary -- a modern-device
+    // quality-of-life addition so the screen does not lock mid-chart but power
+    // saving resumes as soon as the player pauses.
+    UIApplication.sharedApplication.idleTimerDisabled = (m_state == kAcvPlaying);
+#endif
 
     // Draw tail: update+draw all Aep layers, then (once the HUD is up and armed)
     // the note field and life gauge.
