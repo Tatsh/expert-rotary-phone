@@ -46,7 +46,14 @@
 
     UIImageView *baseImg = [[UIImageView alloc] initWithFrame:self.bounds];
     NSString *baseName;
+#ifdef ENABLE_PATCHES
+    // Preservation build: an empty (non-nil) bucket -- possible only when zero .acv
+    // songs exist at all -- falls back to the "all" base instead of throwing
+    // NSRangeException on the first-song read.
+    if (dataList.count == 0) {
+#else
     if (dataList == nil) {
+#endif
         baseName = @"ppc_cate_base_all";
     } else {
         AcMusicData *first = [dataList objectAtIndexedSubscript:0];

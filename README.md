@@ -84,7 +84,6 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 ### Arcade viewer
 
--
 - iPhone: pause menu displays but tapping the buttons does nothing.
 
 ### iPhone support

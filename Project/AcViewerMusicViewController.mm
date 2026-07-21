@@ -67,10 +67,22 @@ static NSString *const kCategoryBanner[] = {
     self.tableView.backgroundColor = [UIColor clearColor];
 
     // --- Custom header: the genre-category banner of the first listed song ---
+#ifdef ENABLE_PATCHES
+    // Preservation build: tolerate an empty arcade catalog (no .acv bundled and none
+    // downloaded). The binary always ships the three default .acv and never opens
+    // this screen empty, so it reads the first song's category unconditionally;
+    // guard the subscript so an empty, non-nil array shows the "all" banner instead
+    // of throwing NSRangeException. (A nil array already messages to 0.)
+    NSString *bannerName =
+        (acMusicDataArray.count == 0) ?
+            @"ppc_mlist_header_all" :
+            kCategoryBanner[static_cast<short>([(AcMusicData *)acMusicDataArray[0] category])];
+#else
     int category = [(AcMusicData *)[acMusicDataArray objectAtIndexedSubscript:0] category];
     NSString *bannerName = (acMusicDataArray == nil) ?
                                @"ppc_mlist_header_all" :
                                kCategoryBanner[static_cast<short>(category)];
+#endif
     UIImage *bannerImg = [UIImage imageNamed:bannerName];
     UIImageView *bannerView = [[UIImageView alloc] initWithImage:bannerImg];
     bannerView.frame = CGRectMake(0.0f, 17.0f, bannerImg.size.width, bannerImg.size.height);

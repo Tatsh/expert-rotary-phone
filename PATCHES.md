@@ -110,6 +110,18 @@ UUID string, so each blob only decrypts on the device it was created on. The pat
 fixed value, making the key device-independent: the lists can be generated once offline against that
 UUID and then decrypt on any device running the build, without per-device regeneration.
 
+### Empty arcade catalog
+
+**Files:** `Project/AcViewerMusicViewController.mm` — `-initWithData:`,
+`Project/AcViewerCategoryCell.mm` — cell configuration.
+
+The binary always ships three default arcade (`.acv`) songs, so the arcade-viewer
+category/music screens never open with an empty catalog and read the first song's category
+unconditionally (`array[0]`). The patch guards those subscripts on an empty (non-nil) array,
+falling back to the "all" banner/base, so a build that ships **zero** `.acv` files (none bundled and
+none downloaded) shows an empty arcade viewer instead of throwing `NSRangeException`. A faithful
+build keeps the original unconditional read.
+
 ### 64-bit struct-layout trimming
 
 **Files:** `Project/System/src/Task/MainTask.h`, `Project/System/src/Task/AcViewerTask.h`,
