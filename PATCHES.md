@@ -158,8 +158,9 @@ Support and Documents. This patch lets a self-contained build ship that content 
   Application Support that is not already listed, and persists the result back to Documents when it
   changed. So dropping a chart into Application Support (or into `assets/` on a jailbroken device)
   makes it appear next boot, and duplicates can never occur.
-- **Level overrides** (`rhythmin_lv`) load from `assets/` only via `+appAssetsPath:`, with no
-  fallback.
+- **Level overrides** (`rhythmin_lv`) and the App Support **BGM tracks** (`bgm01_modesel`,
+  `bgm02_musicsel`, `bgm03_result`, `bgm04_tre_*`) load from `assets/` only via `+appAssetsPath:`,
+  with no fallback. The bundle-native title track (`bgm00_title`) keeps loading from the bundle.
 
 A faithful build keeps the original Application Support / Documents paths and the real unlock gates.
 

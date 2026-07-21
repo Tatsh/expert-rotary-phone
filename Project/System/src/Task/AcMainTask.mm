@@ -835,8 +835,12 @@ void AcMainTask::setupScene() {
 
     // Prime the mode-select BGM (Ghidra: appAppSupportDirectory +
     // bgm01_modesel.m4a).
+#ifdef ENABLE_PATCHES
+    NSString *bgmPath = [AppDelegate appAssetsPath:@"bgm01_modesel.m4a"];
+#else
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm01_modesel.m4a"];
+#endif
     if ([audio isPushBgm]) {
         [audio popBgm];
     }
@@ -1268,8 +1272,12 @@ void AcMainTask::loadTreasureMap() {
     AudioManager *audio = [AudioManager sharedManager];
     NSString *bgmName =
         [NSString stringWithFormat:@"bgm04_tre_%02d.m4a", static_cast<int>(kMapBgmNumber[bgIndex])];
+#ifdef ENABLE_PATCHES
+    NSString *bgmPath = [AppDelegate appAssetsPath:bgmName];
+#else
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:bgmName];
+#endif
     [audio pushBgm];
     [audio loadBgm:bgmPath isLoop:YES];
     m_boardBgmLoaded = 0xff;

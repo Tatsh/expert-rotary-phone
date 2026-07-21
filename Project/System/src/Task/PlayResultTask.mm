@@ -567,8 +567,12 @@ void PlayResultTask::resultSetup() {
         m_rankSe[i] = (uint32_t)[audio loadSe:sePath isLoop:NO callName:nil group:1];
     }
 
+#ifdef ENABLE_PATCHES
+    NSString *bgmPath = [AppDelegate appAssetsPath:@"bgm03_result.m4a"];
+#else
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm03_result.m4a"];
+#endif
     [audio loadBgm:bgmPath isLoop:YES];
     [audio setBgmVolume:[UserSettingData bgmVolume]];
 }

@@ -130,8 +130,12 @@ static UIViewController *RootVC() {
     if (!neSceneManager::isPadDisplay()) {
         AudioManager *audio = [AudioManager sharedManager];
         if (![audio isPlayingBgm]) {
+#ifdef ENABLE_PATCHES
+            NSString *path = [AppDelegate appAssetsPath:@"bgm01_modesel.m4a"];
+#else
             NSString *path = [[AppDelegate appAppSupportDirectory]
                 stringByAppendingPathComponent:@"bgm01_modesel.m4a"];
+#endif
             [audio loadBgm:path isLoop:YES];
             [audio setBgmVolume:[UserSettingData bgmVolume]];
             [audio playBgm:0.0f];

@@ -229,8 +229,12 @@ void MenuMainTask::setup() {
     m_warnTexture->load([warnPath UTF8String]);
 
     // Menu BGM (looping) at the saved volume.
+#ifdef ENABLE_PATCHES
+    NSString *bgmPath = [AppDelegate appAssetsPath:@"bgm01_modesel.m4a"];
+#else
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm01_modesel.m4a"];
+#endif
     [audio loadBgm:bgmPath isLoop:YES];
     [audio setBgmVolume:[UserSettingData bgmVolume]];
 

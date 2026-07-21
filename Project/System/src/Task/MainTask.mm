@@ -1066,8 +1066,12 @@ void MainTask::Setup() {
     // prior reconstruction never set (so it played nothing). It is the "HERE WE GO!"
     // voice = v11 = m_seId[3].
     m_sel.selectSeId = m_seId[3];
+#ifdef ENABLE_PATCHES
+    NSString *bgmPath = [AppDelegate appAssetsPath:@"bgm02_musicsel.m4a"];
+#else
     NSString *bgmPath =
         [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:@"bgm02_musicsel.m4a"];
+#endif
     [audio loadBgm:bgmPath isLoop:YES];
 
     // First-play tutorial is offered until the player has cleared it once.
