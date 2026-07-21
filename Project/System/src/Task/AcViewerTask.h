@@ -150,7 +150,8 @@ private:
     int m_timeLineFrm = 0;     // +0x88 TIME_LINE sweep marker frame
     int m_beatWhiteFrm = 0;    // +0x8c BEAT_POPN_WHITE note frame
     int m_beatBlueFrm = 0;     // +0x90 BEAT_POPN_BLUE note frame
-    int m_numFrm[9] = {};      // +0x94 NUM_00..NUM_08 digit frames
+    int m_numFrm[9] =
+        {}; // +0x94 NUM_00..NUM_08 per-lane note sprites (binary frmNumbers; POP-KUN-off graphic)
     int m_usrNo[7] = {};       // +0xb8 HUD layer user numbers (draw dispatch)
     int m_readySeId = 0;       // +0xd4 arcade timing-SE source id
     int m_readySeInst = 0;     // +0xd8 ready-SE playing instance

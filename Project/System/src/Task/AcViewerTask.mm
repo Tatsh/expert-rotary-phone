@@ -387,13 +387,8 @@ void AcViewerTask::loadChart() {
 // note at its lane/scroll position, count the ones that reached the judge line
 // into the combo/gauge, then blit the moving time-line marker.
 //
-// DEVIATION: two mismatches against the binary remain.
-//   1. Approaching-note sprite: the binary branches on the POP-KUN option
-//      (m_popKun @ +0x1f8, Ghidra 0x22ea0..0x22eca) and blits a different
-//      sprite/frame table when POP-KUN is on; this reconstruction always uses the
-//      BEAT_POPN_WHITE/BLUE frames regardless, so the POP-KUN draw path is not
-//      reconstructed.
-//   2. Time-line denominator: the binary reads the runtime global at 0x16ebd8
+// DEVIATION: one mismatch against the binary remains.
+//   1. Time-line denominator: the binary reads the runtime global at 0x16ebd8
 //      (ldr [.., #0xfa28], Ghidra 0x22f80) for `total`; the reconstruction instead
 //      uses the literal 0x16ebd8 (the address, not its contents), which is wrong --
 //      `total` should be the value of that global (a zero-initialised engine
@@ -481,7 +476,15 @@ void AcViewerTask::drawActiveNotes() {
                 hidden = true;
             }
             if (!hidden) {
-                const int frm = (n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm; // blue / white
+                // POP-KUN option (m_popKun, UserSettingData acvPopKun). The binary
+                // (drawActiveNotes 0x22ea0..0x22eca) branches: POP-KUN off uses the
+                // per-lane pop'n note sprite frmNumbers[lane] (== m_numFrm[lane], the
+                // NUM_00..NUM_08 frames -- the default multi-colour graphic, one per
+                // lane); POP-KUN on uses the 2-graphic beat mode (white on even lanes,
+                // blue on odd). This reconstruction previously always used the beat
+                // white/blue frames, ignoring the option.
+                const int frm =
+                    m_popKun ? ((n.lane & 1) ? m_beatBlueFrm : m_beatWhiteFrm) : m_numFrm[n.lane];
                 // drawAepFrameEx (AepDrawSpriteHandle takes an int percentage scale,
                 // so 100, not the 0x42c80000 float bits the binary pushes): x =
                 // per-lane frame, y = noteY, scale 100/100, color 100, blend 0x20,
