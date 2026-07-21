@@ -213,6 +213,10 @@ struct SeVoiceSlot {
     NSURL *url = [NSURL fileURLWithPath:path];
     NSError *error = nil;
     m_bgmPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+    neDebugLog("loadBgm file=%s ok=%d err=%s",
+               path.lastPathComponent.UTF8String,
+               error == nil && m_bgmPlayer != nil,
+               error ? error.localizedDescription.UTF8String : "-");
     if (error != nil) {
         return NO;
     }
@@ -262,6 +266,12 @@ struct SeVoiceSlot {
 
 // Start the BGM, instantly or via a fade-in timer.
 - (BOOL)playBgm:(float)fadeSeconds {
+    neDebugLog("playBgm fade=%d/100 player=%d interrupt=%d vol=%d/100 playing=%d",
+               static_cast<int>(fadeSeconds * 100.0f),
+               m_bgmPlayer != nil,
+               m_isInterruption,
+               static_cast<int>(m_bgmSettingVolume * 100.0f),
+               m_bgmPlayer != nil ? [m_bgmPlayer isPlaying] : -1);
     if (m_bgmPlayer == nil) {
         return NO;
     }
