@@ -1,21 +1,31 @@
 #!/usr/bin/env bash
 #
-# repack-ipa.sh — fetch the latest CI-built .ipa, merge it over an asset directory,
-# repack it into a new .ipa, sign it with your Apple ID (plumesign sign), then install
-# it to the device (plumesign device --install) as a separate step.
+# repack-ipa.sh — fetch the latest CI-built .ipa, merge it over a bundle directory,
+# stage the game assets into the app's assets/ folder, repack it into a new .ipa,
+# sign it with your Apple ID (plumesign sign), then install it to the device
+# (plumesign device --install) as a separate step.
 #
 # The CI build produces an .ipa that has the freshly-built binary but NOT the game
-# assets (they aren't in the repo). This script overlays that build onto a directory
-# that DOES have the assets (its Payload/…/*.app), overwriting the binary + built
-# resources while keeping every asset, repacks it into an .ipa, then signs it.
+# assets (they aren't in the repo). This script overlays that build onto a bundle
+# directory (its Payload/…/*.app) that carries the bundle-native files the build
+# lacks, copies the game's Application Support contents into <App>.app/assets/, then
+# repacks it into an .ipa and signs it.
 #
 # Usage:
-#   ./repack-ipa.sh <merge-dir> [output.ipa]
+#   ./repack-ipa.sh <merge-dir> <asset-dir> [output.ipa]
 #
-#   <merge-dir>  Directory that contains the game assets laid out as an IPA root
-#                (i.e. it contains a "Payload/<App>.app/…"). The freshly-built app
-#                is copied in over the top; files already there are overwritten,
-#                assets not in the build are kept. THIS DIRECTORY IS MODIFIED.
+#   <merge-dir>  Directory that contains the app laid out as an IPA root (i.e. it
+#                contains a "Payload/<App>.app/…") with the bundle-native files the
+#                build lacks (icons, launch images, and any bundle-loaded audio/art).
+#                The freshly-built app is copied in over the top; files already there
+#                are overwritten, files not in the build are kept. THIS DIRECTORY IS
+#                MODIFIED.
+#   <asset-dir>  The game's "Application Support" directory: the charts (*.orb /
+#                ac*.acv), BGM tracks (bgm*.m4a), character data (chara_*.chr), the
+#                downloaded *.png art, the level overrides (rhythmin_lv), and the
+#                mulist / acmulist lists. Its contents are copied into the app
+#                bundle's assets/ folder. Required — the preservation build loads
+#                these from <App>.app/assets/.
 #   [output.ipa] Output path for the final (signed) IPA. Default: ./PopnRhythmin-signed.ipa
 #
 # Environment overrides:
@@ -41,11 +51,13 @@ UDID="${UDID:-1}"
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-[ $# -ge 1 ] || die "usage: $0 <merge-dir> [output.ipa]"
+[ $# -ge 2 ] || die "usage: $0 <merge-dir> <asset-dir> [output.ipa]"
 MERGE_DIR="$1"
-OUT_IPA="${2:-$PWD/PopnRhythmin-signed.ipa}"
+ASSET_DIR="$2"
+OUT_IPA="${3:-$PWD/PopnRhythmin-signed.ipa}"
 
 [ -d "$MERGE_DIR" ] || die "merge dir does not exist: $MERGE_DIR"
+[ -d "$ASSET_DIR" ] || die "asset dir does not exist: $ASSET_DIR"
 command -v gh    >/dev/null || die "gh not found"
 command -v unzip >/dev/null || die "unzip not found"
 command -v zip   >/dev/null || die "zip not found"
@@ -62,6 +74,7 @@ fi
 
 # Resolve to absolute paths (we cd around later).
 MERGE_DIR="$(cd "$MERGE_DIR" && pwd)"
+ASSET_DIR="$(cd "$ASSET_DIR" && pwd)"
 case "$OUT_IPA" in /*) : ;; *) OUT_IPA="$PWD/$OUT_IPA" ;; esac
 
 # Scratch space, always cleaned up.
@@ -101,6 +114,15 @@ unzip -q -o "$IPA" -d "$EXTRACT"
 #    (assets already in the merge dir that the build lacks are preserved).
 echo ">> merging fresh build into: $MERGE_DIR"
 cp -Rf "$EXTRACT"/. "$MERGE_DIR"/
+
+# 5.5) Populate the app bundle's assets/ folder from the asset dir. The
+#      preservation build loads its charts, lists, BGM, character data, and art
+#      from <App>.app/assets/, so this directory is required.
+APP="$(find "$MERGE_DIR/Payload" -maxdepth 1 -type d -name '*.app' | head -1 || true)"
+[ -n "$APP" ] || die "no .app found under $MERGE_DIR/Payload"
+echo ">> populating assets/ in: $(basename "$APP")"
+mkdir -p "$APP/assets"
+cp -Rf "$ASSET_DIR"/. "$APP/assets"/
 
 # 6) Zip the merge dir into an (unsigned) .ipa (Payload/ at the archive root).
 UNSIGNED="$WORK/unsigned.ipa"
