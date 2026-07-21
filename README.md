@@ -73,16 +73,14 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 - Unusual rendering when moving to a page on the left (song titles show but no border or cover for a
   visible number of frames).
-- Pagination rubber-band mechanics is imperfect.
-- Patches are used that are not faithful to the original game.
+- Pagination rubber-band mechanics are imperfect.
+- Patches are used that are not faithful to the original game for this screen, but the original game
+  seems to not have the same above issues so theoretically the patches are unnecessary.
 
 #### Picked song overlay
 
-- Inaccurate animation: it shows the overlay but then moves and fades in a copy downward.
-
-### Main menu
-
-- Treasure Mode goes to a black screen.
+- Inaccurate animation: it shows the overlay but then a copy behind that loads translucent slightly
+  above the opaque one, and it moves down behind it.
 
 ### Arcade viewer
 
