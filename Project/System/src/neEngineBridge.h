@@ -272,6 +272,12 @@ public:
     unsigned char demoPlayFlag() const {
         return m_resultExt.demoPlayFlag;
     }
+    // The tutorial launch sets this (+0x33) before spawning the guided PlayTask so
+    // PlayTask_init copies it into m_isDemoPlay (Ghidra: strb #1,[ec,#0x33] at
+    // MainTask::update 0x36d58).
+    void setDemoPlayFlag(unsigned char flag) {
+        m_resultExt.demoPlayFlag = flag;
+    }
 
     // The play task writes the finished play's rank (+0x14, 2-byte) and max combo
     // (+0x18, 4-byte) directly after recordPlayResult so the result screen can

@@ -414,6 +414,11 @@ void MainTask::update(int /*deltaMs*/) {
                                                          resourceId:m_sel.selectSeId]);
                 neAppEventCenter::shared().setGuestNoSaveMode(
                     true); // guided first play: don't save
+                // The tutorial is a bundled-demo play: set the demo-play flag so
+                // PlayTask_init drives the bundled-song path (getPathFromBundle:0)
+                // instead of the normal branch, which needs the music list and
+                // returned nil music -> crash. Ghidra: strb #1,[ec,#0x33] @ 0x36d58.
+                neAppEventCenter::shared().setDemoPlayFlag(1);
                 [UserSettingData saveIsTutorialPlayed:YES];
                 m_spawnedTask = PlayTaskCreate(); // first-play guided play
                 m_state = kSelFadeOut;
@@ -586,6 +591,11 @@ void MainTask::update(int /*deltaMs*/) {
         if (hitButton(tapX, tapY, kBtnPlay)) {
             [audio popBgm];
             m_sel.selectSeInst = static_cast<int>([audio playSe:nil resourceId:m_sel.selectSeId]);
+            // A normal song play is never a demo: clear the flag the tutorial sets
+            // (PlayTask_init copies it into m_isDemoPlay every launch), so a play
+            // started after the first-run tutorial loads the selected song rather
+            // than the bundled demo chart.
+            neAppEventCenter::shared().setDemoPlayFlag(0);
             m_spawnedTask = PlayTaskCreate();
             [[AppDelegate appDelegate] setMainTask:static_cast<MainTask *>(m_spawnedTask)];
             m_state = kSelPlayLaunch; // -> play-launch handoff (0xc -> 0xd -> 0xe)
