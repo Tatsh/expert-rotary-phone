@@ -13,7 +13,9 @@ neither flag defined) stays as close to the original as possible.
 Not every deviation is gated by these flags. Changes tied to a known iOS version are guarded at
 runtime with `@available`/`__builtin_available` and marked `@newCode`, and remain active in a
 faithful build; those are noted below where they work together with a flagged patch but are not
-listed as patches themselves.
+listed as patches themselves. Bundle metadata is not gated either, because `Info.plist` is not
+compiled; the metadata changes that alter behaviour are listed under
+[Bundle metadata](#bundle-metadata).
 
 ## `ENABLE_PATCHES`
 
@@ -188,3 +190,25 @@ The original registration server issued the numeric PlayerId and can no longer b
 saves the chosen name locally with a stable seven-digit id synthesised from the device UUID (matching
 the server's short numeric IDs) and continues down the success path, so a new player can be created
 offline.
+
+## Bundle metadata
+
+### Portrait-only interface orientations
+
+**Files:** `Info.plist.in`, `theos/Resources/Info.plist` — `UISupportedInterfaceOrientations` and
+`UISupportedInterfaceOrientations~ipad`.
+
+The original bundle declares both landscape orientations on top of portrait, on iPhone and iPad
+alike. Nothing in the game is authored for landscape: every sprite atlas and the render canvas are
+fixed to the portrait 640x960 / 640x1136 / 1536x2048 sizes, and the view controllers that do express
+an opinion (`PolicyView`, `SoundSettingView`, `ConversionView`, `InputNameViewCtrl`, and
+`StoreViewController` on iPad) already return portrait-only from
+`-shouldAutorotateToInterfaceOrientation:`. That method has been ignored since iOS 6, so on a modern
+build the declared orientations were the only thing left deciding rotation and the whole game
+rotated into a stretched landscape.
+
+The declarations are now portrait only on iPhone, and portrait plus upside-down portrait on iPad.
+UIKit intersects a view controller's `-supportedInterfaceOrientations` with this bundle-level set,
+so the one controller that returns `UIInterfaceOrientationMaskAll`
+(`RewardNetworkWebViewController`, from the bundled reward SDK) is confined to portrait as well, and
+the reconstructed rotation methods are left untouched.

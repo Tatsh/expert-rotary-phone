@@ -15,6 +15,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   arcade-finder map's user-location display and the result-screenshot save to
   the camera roll work on modern iOS.
 
+### Changed
+
+- The app is now portrait only. `Info.plist` no longer declares the landscape
+  orientations, which the game was never authored for: iPhone is locked to
+  portrait, and iPad allows portrait and upside-down portrait. See
+  [PATCHES.md](PATCHES.md) for the details.
+
 ### Fixed
 
 - Saving a result screenshot no longer crashes on iOS 11 and later: the required
