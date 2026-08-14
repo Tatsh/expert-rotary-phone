@@ -41,7 +41,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `tools/extract_sugoroku_dialogue.py` offline data-file tools. They are asset extractors rather
   than part of the reconstruction, and now live in [destin](https://github.com/Tatsh/destin) as
   `destin rhythmin dump-chara`, `dump-idx`, `dump-map`, `dump-sheet` and `extract-dialogue`.
-  `tools/repack_ipa.py` stays, since it packages this project's own output.
+- `tools/repack_ipa.py`. Nothing in it was specific to this project, so it now lives in
+  [recon-tools](https://github.com/Tatsh/recon-tools) as `rctool ipa repack`, which reads the
+  repository from this working tree's GitHub remote instead of carrying it as a default:
+
+  <!-- prettier-ignore -->
+  ```shell
+  rctool ipa repack -a PopnRhythmin-adhoc-ipa -A <assets> <bundle-dir> PopnRhythmin-signed.ipa
+  ```
 
 ## [0.0.1] - 2026-00-00
 
