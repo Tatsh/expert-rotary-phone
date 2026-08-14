@@ -450,10 +450,12 @@ quize
 ranknum
 ranmir
 rbplus
+rctool
 rdparty
 recenter
 recenters
 recolored
+recon
 recpack
 rect
 reflec
