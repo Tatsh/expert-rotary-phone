@@ -17,6 +17,17 @@ On a 2017 MacBook Pro the two practical routes are **Theos** (easiest for legacy
 and **Xcode 10.1–11** (last versions that still emit armv7). Override the slice set with
 `-DIOS_ARCHS="arm64"` (CMake) or `ARCHS="arm64"` (Theos) to match what you have.
 
+Embedding the sugoroku board dialogue from an owned app binary (`POPNRHYTHMIN_BINARY`, see below)
+needs [destin](https://github.com/Tatsh/destin) on `PATH`, since both build systems shell out to
+`destin rhythmin extract-dialogue` at configure time:
+
+```sh
+pip install destin
+```
+
+Without it the tables are generated empty and the board messages render blank; nothing else in the
+build depends on it.
+
 There are two independent build systems:
 
 - **Theos** — a fixed, hand-maintained Theos application project at [`theos/Makefile`](theos/Makefile).

@@ -17,6 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Both build systems now run `destin rhythmin extract-dialogue` at configure time to generate the
+  sugoroku dialogue tables, so `destin` on `PATH` replaces `python3` plus the in-tree script. With
+  neither, the tables are still generated empty, as before.
 - The app is now portrait only. `Info.plist` no longer declares the landscape
   orientations, which the game was never authored for: iPhone is locked to
   portrait, and iPad allows portrait and upside-down portrait. See
@@ -31,6 +34,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   edge-array pointer was stored in a 32-bit `int` field (in `TreasureMap` and the
   arcade play data), which corrupted it on arm64 and garbled or crashed the
   sugoroku map's edge drawing; it is now a real typed pointer.
+
+### Removed
+
+- The `tools/chr_dump.py`, `tools/idx_dump.py`, `tools/map_dump.py`, `tools/sheet_dump.py` and
+  `tools/extract_sugoroku_dialogue.py` offline data-file tools. They are asset extractors rather
+  than part of the reconstruction, and now live in [destin](https://github.com/Tatsh/destin) as
+  `destin rhythmin dump-chara`, `dump-idx`, `dump-map`, `dump-sheet` and `extract-dialogue`.
+  `tools/repack_ipa.py` stays, since it packages this project's own output.
 
 ## [0.0.1] - 2026-00-00
 

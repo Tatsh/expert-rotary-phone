@@ -574,7 +574,7 @@ static const int kAcDefaultMusicIds[4] = {1, 2, 3, 300000000};
     // Discover: register any chart present in assets/ (a jailbroken drop into the
     // bundle) or Application Support that is not already listed and not excluded.
     for (NSString *directory in
-         @[[AppDelegate appAssetsDirectory], [AppDelegate appAppSupportDirectory]]) {
+         @[ [AppDelegate appAssetsDirectory], [AppDelegate appAppSupportDirectory] ]) {
         for (NSString *entryName in [fileManager contentsOfDirectoryAtPath:directory error:nil]) {
             if (![entryName hasPrefix:prefix] || ![entryName hasSuffix:suffix]) {
                 continue;

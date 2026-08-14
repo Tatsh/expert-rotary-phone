@@ -325,7 +325,7 @@ constexpr int32_t kAssetCountsGroup8[3] = {64, 72, 71}; // DAT_0012fb9c
 // In the binary these are six static `const char *` tables of ~330 UTF-8
 // Japanese board-dialogue strings (~66 KB). That dialogue is copyrighted game
 // content and is NOT present in this source tree. Instead the CMake configure
-// step runs tools/extract_sugoroku_dialogue.py against an owned copy of the app
+// step runs `destin rhythmin extract-dialogue` against an owned copy of the app
 // binary (set -DPOPNRHYTHMIN_BINARY=...) to generate the six tables into the
 // build directory, and this TU #includes them — reproducing the binary's exact
 // static-table mechanism with the content supplied from your own binary. When

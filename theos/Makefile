@@ -3,14 +3,14 @@ PROJECT_ROOT       := $(patsubst %/,%,$(dir $(THEOS_MAKEFILE_DIR)))
 
 SUGO_GEN_DIR := $(THEOS_MAKEFILE_DIR)/generated
 SUGO_GEN_INC := $(SUGO_GEN_DIR)/sugoroku_chara_msg.generated.inc
-SUGO_SCRIPT  := $(PROJECT_ROOT)/tools/extract_sugoroku_dialogue.py
-PYTHON3      ?= python3
+DESTIN       ?= destin
 _sugo := $(shell mkdir -p "$(SUGO_GEN_DIR)"; \
     if [ -n "$(POPNRHYTHMIN_BINARY)" ] && [ -f "$(POPNRHYTHMIN_BINARY)" ]; then \
-        "$(PYTHON3)" "$(SUGO_SCRIPT)" --format c "$(POPNRHYTHMIN_BINARY)" "$(SUGO_GEN_INC)" \
-            || "$(PYTHON3)" "$(SUGO_SCRIPT)" --emit-empty "$(SUGO_GEN_INC)"; \
+        "$(DESTIN)" rhythmin extract-dialogue "$(SUGO_GEN_INC)" \
+                --binary "$(POPNRHYTHMIN_BINARY)" --format c \
+            || "$(DESTIN)" rhythmin extract-dialogue "$(SUGO_GEN_INC)"; \
     elif [ ! -f "$(SUGO_GEN_INC)" ]; then \
-        "$(PYTHON3)" "$(SUGO_SCRIPT)" --emit-empty "$(SUGO_GEN_INC)"; \
+        "$(DESTIN)" rhythmin extract-dialogue "$(SUGO_GEN_INC)"; \
     fi)
 
 export ARCHS  = armv7 armv7s arm64 arm64e
