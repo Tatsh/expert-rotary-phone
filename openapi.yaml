@@ -1,0 +1,2307 @@
+components:
+  parameters:
+    Music:
+      description: 'The song identifier.'
+      in: 'query'
+      name: 'music'
+      required: true
+      schema:
+        type: 'integer'
+    Target:
+      description: 'The region code. Every endpoint that takes a query carries it.'
+      in: 'query'
+      name: 'target'
+      required: true
+      schema:
+        $ref: '#/components/schemas/RegionCode'
+    UserInfoDevice:
+      in: 'query'
+      name: 'device'
+      required: true
+      schema:
+        $ref: '#/components/schemas/DeviceName'
+    UserInfoDeviceOptional:
+      description: 'Sent only for a user-initiated request.'
+      in: 'query'
+      name: 'device'
+      required: false
+      schema:
+        $ref: '#/components/schemas/DeviceName'
+    UserInfoLocale:
+      in: 'query'
+      name: 'locale'
+      required: true
+      schema:
+        $ref: '#/components/schemas/Locale'
+    UserInfoLocaleOptional:
+      description: 'Sent only for a user-initiated request.'
+      in: 'query'
+      name: 'locale'
+      required: false
+      schema:
+        $ref: '#/components/schemas/Locale'
+    UserInfoOs:
+      in: 'query'
+      name: 'os'
+      required: true
+      schema:
+        $ref: '#/components/schemas/SystemVersion'
+    UserInfoOsOptional:
+      description: 'Sent only for a user-initiated request.'
+      in: 'query'
+      name: 'os'
+      required: false
+      schema:
+        $ref: '#/components/schemas/SystemVersion'
+    UserInfoUuid:
+      in: 'query'
+      name: 'uuid'
+      required: true
+      schema:
+        $ref: '#/components/schemas/IdentifierParams'
+    UserInfoUuidOptional:
+      description: 'Sent only for a user-initiated request.'
+      in: 'query'
+      name: 'uuid'
+      required: false
+      schema:
+        $ref: '#/components/schemas/IdentifierParams'
+    UserInfoVersion:
+      in: 'query'
+      name: 'version'
+      required: true
+      schema:
+        $ref: '#/components/schemas/AppVersion'
+    UserInfoVersionOptional:
+      description: 'Sent only for a user-initiated request.'
+      in: 'query'
+      name: 'version'
+      required: false
+      schema:
+        $ref: '#/components/schemas/AppVersion'
+  schemas:
+    AcMusicEntry:
+      description: |
+        One arcade-viewer chart. An entry whose `ID` is not positive is discarded, so a pack whose
+        arcade list is entirely malformed simply shows none.
+      properties:
+        Genre:
+          type: 'string'
+        ID:
+          type: 'integer'
+        ItemURL:
+          description: 'Where the `.acv` chart archive is downloaded from.'
+          format: 'uri'
+          type: 'string'
+        SampleURL:
+          description: 'The preview clip. Stored verbatim, without the URL check the store applies.'
+          format: 'uri'
+          type: 'string'
+        Title:
+          type: 'string'
+      required:
+        - 'ID'
+      type: 'object'
+    AppVersion:
+      description: 'The bundle version, `2.0.3` in the shipped build.'
+      examples:
+        - '2.0.3'
+      type: 'string'
+    ArcadeLocation:
+      description: |
+        One arcade. An entry is dropped unless `ID`, `Lat`, and `Long` are numbers, `Name` and
+        `Open` are strings, and `Model` is a non-empty array.
+      properties:
+        ID:
+          type: 'integer'
+        Lat:
+          format: 'double'
+          type: 'number'
+        Long:
+          format: 'double'
+          type: 'number'
+        Model:
+          description: |
+            The cabinets on site, named as the master data names them. The pin uses whichever of
+            them the master data orders first, so a name absent from it draws the arcade's own
+            first model instead.
+          items:
+            type: 'string'
+          type: 'array'
+        Name:
+          type: 'string'
+        Open:
+          description: 'The opening hours, as free text. Shown as the pin subtitle.'
+          type: 'string'
+      required:
+        - 'ID'
+        - 'Lat'
+        - 'Long'
+        - 'Model'
+        - 'Name'
+        - 'Open'
+      type: 'object'
+    ArcadeMasterResponse:
+      description: |
+        Master data for the arcade map. `Version` gates the whole feature: a build below it draws
+        an empty error banner instead of the map, so raising it withdraws the map from older
+        builds.
+      properties:
+        Info:
+          description: |
+            The banner image above the map. An empty string skips the banner and goes straight to
+            the per-model marker images.
+          type: 'string'
+        Mark:
+          description: |
+            The cabinet models, in pin precedence order. An entry whose four fields are not all
+            strings is discarded, including `Order`, which is a string rather than a number.
+          items:
+            properties:
+              Image:
+                description: 'The pin image for this model.'
+                format: 'uri'
+                type: 'string'
+              Model:
+                type: 'string'
+              Name:
+                type: 'string'
+              Order:
+                description: 'The precedence, as a string rather than a number.'
+                type: 'string'
+            type: 'object'
+          type: 'array'
+        Version:
+          description: 'The minimum app version, compared numerically against the build version.'
+          type: 'string'
+      type: 'object'
+    ArcadeScoreEntry:
+      description: |
+        One song's arcade ranking. A record without `MusicNo` is dropped; every other field is
+        merged into the local store as-is. Scores come in four difficulties, and each carries the
+        site-wide best, the site-wide mean, and this player's own.
+      properties:
+        Category:
+          description: 'The folder the song is filed under, 0 to 23.'
+          type: 'integer'
+        Genre:
+          type: 'string'
+        MeanEs:
+          type: 'integer'
+        MeanEx:
+          type: 'integer'
+        MeanH:
+          type: 'integer'
+        MeanN:
+          type: 'integer'
+        MusicNo:
+          description: 'The arcade song number. A record without it is discarded.'
+          type: 'integer'
+        MyEs:
+          type: 'integer'
+        MyEx:
+          type: 'integer'
+        MyH:
+          type: 'integer'
+        MyN:
+          type: 'integer'
+        Title:
+          type: 'string'
+        TopEs:
+          type: 'integer'
+        TopEx:
+          type: 'integer'
+        TopH:
+          type: 'integer'
+        TopN:
+          type: 'integer'
+        TopNameEs:
+          type: 'string'
+        TopNameEx:
+          type: 'string'
+        TopNameH:
+          type: 'string'
+        TopNameN:
+          type: 'string'
+      required:
+        - 'MusicNo'
+      type: 'object'
+    DeviceName:
+      description: 'The interface idiom. Anything that is not a phone reports as a tablet.'
+      enum:
+        - 'iphone'
+        - 'ipad'
+      type: 'string'
+    ErrorCode:
+      description: |
+        The failure code. Its presence alone is what most callers test: a response carrying it is
+        treated as a failure whatever the value, and the rest of the body is ignored.
+      type: 'integer'
+    FriendEntry:
+      description: |
+        One friend and their lifetime tallies. The per-difficulty keys are spelled with the
+        difficulty in the key name rather than nested, so the same fifteen rank counters and six
+        medal counters repeat for Normal, Hyper, and Ex.
+      properties:
+        BestScore:
+          type: 'integer'
+        CharaId:
+          type: 'integer'
+        FriendShip:
+          description: |
+            The friendship level, clamped to 100 on the way in. Absent from the recommended-friend
+            list, where it reads as zero.
+          maximum: 100
+          type: 'integer'
+        FullComboEx:
+          description: |
+            Full combos including perfects. The display subtracts `PerfectEx` from it, so a value
+            below the perfect count shows as no full-combo-only clears rather than a negative.
+          type: 'integer'
+        FullComboH:
+          type: 'integer'
+        FullComboN:
+          type: 'integer'
+        Name:
+          type: 'string'
+        PerfectEx:
+          type: 'integer'
+        PerfectH:
+          type: 'integer'
+        PerfectN:
+          type: 'integer'
+        PlayerId:
+          type: 'string'
+        RankExA:
+          type: 'integer'
+        RankExAA:
+          type: 'integer'
+        RankExAAA:
+          type: 'integer'
+        RankExB:
+          type: 'integer'
+        RankExS:
+          type: 'integer'
+        RankHA:
+          type: 'integer'
+        RankHAA:
+          type: 'integer'
+        RankHAAA:
+          type: 'integer'
+        RankHB:
+          type: 'integer'
+        RankHS:
+          type: 'integer'
+        RankNA:
+          type: 'integer'
+        RankNAA:
+          type: 'integer'
+        RankNAAA:
+          type: 'integer'
+        RankNB:
+          type: 'integer'
+        RankNS:
+          type: 'integer'
+        TotalScore:
+          type: 'integer'
+      type: 'object'
+    IdentifierParams:
+      description: |
+        The anonymised device token: the MD5 hex of the device UUID with `STORE` appended. This is
+        what the query fragment carries; a POST body's `uuid` is the raw device UUID instead.
+      examples:
+        - '9e107d9d372bb6826bd81d3542a419d6'
+      type: 'string'
+    Locale:
+      description: 'The device locale identifier.'
+      examples:
+        - 'ja_JP'
+      type: 'string'
+    MusicEntry:
+      description: |
+        One purchasable song. An entry whose `ID` is below 1 is discarded. The three URL fields are
+        each dropped unless they parse as an `http` or `https` URL, so a malformed one costs only
+        that field.
+      properties:
+        Artist:
+          type: 'string'
+        ArtworkURL:
+          format: 'uri'
+          type: 'string'
+        ID:
+          type: 'integer'
+        ItemURL:
+          description: 'Where the song file is downloaded from. Not URL-checked.'
+          format: 'uri'
+          type: 'string'
+        Level:
+          description: |
+            The difficulty triple, in order: basic, medium, hard. Read only when at least three
+            entries are present. Basic and medium clamp to 1-10, hard to 1-11.
+          examples:
+            - [3, 6, 9]
+          items:
+            type: 'integer'
+          type: 'array'
+        Name:
+          type: 'string'
+        SampleURL:
+          description: 'The preview clip played from the pack detail screen.'
+          format: 'uri'
+          type: 'string'
+        iTunesURL:
+          description: 'The store page for the original release.'
+          format: 'uri'
+          type: 'string'
+      required:
+        - 'ID'
+      type: 'object'
+    PackEntry:
+      description: |
+        One store pack. `ID` must match the pack being filled in or the whole entry is rejected,
+        and the pack is only usable once StoreKit resolves `rhythmin_pack<ID padded to four
+        digits>`. `MusicList` is capped at four songs on display; `AcvMusicList` is not.
+      properties:
+        AcvMusicList:
+          items:
+            $ref: '#/components/schemas/AcMusicEntry'
+          type: 'array'
+        AcvNum:
+          description: 'How many arcade-viewer charts the pack carries. Zero when absent.'
+          type: 'integer'
+        ArtistBunnerURL:
+          description: 'The artist banner. Dropped unless it is a string and parses as a URL.'
+          format: 'uri'
+          type: 'string'
+        ArtistURL:
+          description: 'The artist page. Dropped unless it is a string and parses as a URL.'
+          format: 'uri'
+          type: 'string'
+        ArtworkURL:
+          format: 'uri'
+          type: 'string'
+        Comment:
+          description: 'The full blurb on the pack detail screen.'
+          type: 'string'
+        Copyright:
+          type: 'string'
+        ID:
+          type: 'integer'
+        IsNew:
+          type: 'boolean'
+        MusicList:
+          items:
+            $ref: '#/components/schemas/MusicEntry'
+          type: 'array'
+        Name:
+          type: 'string'
+        ShortComment:
+          description: 'The one-line blurb in the pack list.'
+          type: 'string'
+      required:
+        - 'ID'
+      type: 'object'
+    RegionCode:
+      description: 'The store region. The shipped build only ever sends the Japanese store.'
+      enum:
+        - 'JP'
+      type: 'string'
+    ServerError:
+      description: |
+        The failure shape. Most endpoints answer with this instead of their success body, and the
+        client only checks whether `ErrorCode` is present.
+      properties:
+        ErrorCode:
+          $ref: '#/components/schemas/ErrorCode'
+      required:
+        - 'ErrorCode'
+      type: 'object'
+    SystemVersion:
+      description: 'The operating system version.'
+      examples:
+        - '8.4'
+      type: 'string'
+    TreasureRestoreEntry:
+      description: 'One treasure-map cell, as restored onto a new device.'
+      properties:
+        CharaTicket:
+          type: 'integer'
+        ClearCnt:
+          type: 'integer'
+        FastRecord:
+          type: 'integer'
+        FriendMeetCnt:
+          type: 'integer'
+        MainMapId:
+          type: 'integer'
+        MusicPiece:
+          type: 'integer'
+        SubMapId:
+          type: 'integer'
+        TouchSound:
+          description: |
+            Non-zero grants this map's touch sound. The restored flags are folded into one bitmask
+            keyed by `MainMapId`, so only maps 0 to 8 contribute.
+          type: 'integer'
+        WallPiece:
+          type: 'integer'
+      type: 'object'
+info:
+  description: |
+    pop'n rhythmin API.
+
+    Every endpoint answers with JSON. A response the client cannot parse as JSON is not
+    necessarily a failure: several endpoints treat an empty body as the success case and a JSON
+    body as the failure, so returning `{}` where the client expects nothing will be read as an
+    error.
+
+    Request bodies are `application/x-www-form-urlencoded` despite what the request headers say.
+    The client sets the content type on a header named `Context-Type`, not `Content-Type`, so the
+    declared type never reaches the server as a content type at all and no `Content-Type` header
+    is sent. `/verify_receipt/index.jsp` is the one endpoint whose body really is JSON.
+
+    Two different values travel under the name `uuid`. In a query string it is the MD5 hex of the
+    device UUID with `STORE` appended; in a POST body it is the raw device UUID.
+  license:
+    name: 'MIT'
+    url: 'https://github.com/Tatsh/expert-rotary-phone/blob/master/LICENSE.txt'
+  summary: "The HTTP API that pop'n rhythmin 2.0.3 (jp.konami.popnmusic) uses."
+  title: "pop'n rhythmin server API"
+  version: '2.0.3'
+openapi: '3.1.0'
+paths:
+  /acv_musicinfo/index.jsp:
+    get:
+      description: |
+        Called when a purchased arcade chart is missing from disk, to refresh its metadata before
+        re-downloading the file.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - $ref: '#/components/parameters/Music'
+        - $ref: '#/components/parameters/UserInfoUuid'
+        - $ref: '#/components/parameters/UserInfoVersion'
+        - $ref: '#/components/parameters/UserInfoDevice'
+        - $ref: '#/components/parameters/UserInfoOs'
+        - $ref: '#/components/parameters/UserInfoLocale'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcMusicEntry'
+          description: 'The arcade chart. A body without a positive `ID` is discarded silently.'
+      summary: 'Fetch one arcade-viewer chart.'
+      tags:
+        - 'store'
+  /add_blocklist/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                player_id:
+                  description: 'Who to block. Blocking yourself is refused before the request.'
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'player_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: |
+            The result is not acted on. The client reads `ErrorCode` and discards it, so a failure
+            here is silent.
+      summary: 'Block a player.'
+      tags:
+        - 'friends'
+  /cancel_friend/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                player_id:
+                  description: 'The player the outbound request was sent to.'
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'player_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: |
+            An empty body is the success case. Any JSON body at all is reported to the caller as a
+            failure, whatever it contains.
+      summary: 'Withdraw an outbound friend request.'
+      tags:
+        - 'friends'
+  /convert/index.jsp:
+    post:
+      description: |
+        The other half of the device transfer. The whole save is returned and written over the
+        local one, which is wiped first, so a partial response leaves the player with a partial
+        save rather than the old one.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                convert_code:
+                  description: |
+                    The transfer pass, digits only, sent without the leading zeros the player was
+                    shown.
+                  type: 'string'
+                player_id:
+                  description: 'The player identifier being transferred, letters and digits only.'
+                  type: 'string'
+                uuid:
+                  description: 'The new device.'
+                  type: 'string'
+              required:
+                - 'convert_code'
+                - 'player_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      CharaId:
+                        type: 'integer'
+                      CharaTicketCnt:
+                        type: 'integer'
+                      ConsecutiveCorrectQuiz:
+                        type: 'integer'
+                      GotChara:
+                        description: |
+                          The owned characters as a bitmap in 32-bit words: each set bit of `Data`
+                          grants character `Idx * 32 + bit`.
+                        items:
+                          properties:
+                            Data:
+                              type: 'integer'
+                            Idx:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                      InviteCnt:
+                        description: |
+                          How many players were invited. The invite reward tier is re-derived from
+                          it locally at 3, 5, and 7, so the tier itself is not sent.
+                        type: 'integer'
+                      IsInvited:
+                        description: 'Non-zero once an invite code has been redeemed.'
+                        type: 'integer'
+                      LastAnswerQuizId:
+                        type: 'integer'
+                      LastUpdateSumPurchase:
+                        description: |
+                          When the monthly spending total was last touched, as `yyyy-MM-dd
+                          HH:mm:ss`. Drives the youth spending limit, which resets when the stored
+                          month is not the current one.
+                        type: 'string'
+                      LocalLoginBonusCnt:
+                        type: 'integer'
+                      Music:
+                        description: |
+                          Per-song bests. A song is only written when a `PlayCnt` row shares its
+                          `Id`, so a song missing from `PlayCnt` is dropped entirely.
+                        items:
+                          properties:
+                            Flag:
+                              description: |
+                                Medals as a bitfield: bits 0-2 are full combo for Normal, Hyper,
+                                and Ex; bits 3-5 are perfect for the same three.
+                              type: 'integer'
+                            Id:
+                              type: 'integer'
+                            ScoreEx:
+                              description: 'A negative value leaves the difficulty unset.'
+                              type: 'integer'
+                            ScoreH:
+                              type: 'integer'
+                            ScoreN:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                      OpenedLoginBonusId:
+                        type: 'integer'
+                      PackCharaTicket:
+                        description: 'The purchased character tickets, by product identifier.'
+                        items:
+                          properties:
+                            ProductId:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                      PlayCnt:
+                        description: 'Play counts, matched to `Music` by `Id`.'
+                        items:
+                          properties:
+                            CntEx:
+                              type: 'integer'
+                            CntH:
+                              type: 'integer'
+                            CntN:
+                              type: 'integer'
+                            Id:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                      PlayerId:
+                        type: 'string'
+                      PlayerName:
+                        type: 'string'
+                      SpPresentFlag:
+                        description: |
+                          Bit 0 re-opens the collaboration songs; bit 1 marks the follow bonus as
+                          taken.
+                        type: 'integer'
+                      SumPurchase:
+                        description: "This month's spending total, in yen."
+                        type: 'integer'
+                      Treasure:
+                        items:
+                          $ref: '#/components/schemas/TreasureRestoreEntry'
+                        type: 'array'
+                      TreasurePoint:
+                        type: 'integer'
+                      TotalCorrectQuiz:
+                        type: 'integer'
+                      TotalInCorrectQuiz:
+                        type: 'integer'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The restored save.'
+      summary: 'Restore a save onto a new device.'
+      tags:
+        - 'session'
+  /del_blocklist/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                player_id:
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'player_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: 'The result is read and discarded, as with blocking.'
+      summary: 'Unblock a player.'
+      tags:
+        - 'friends'
+  /gamecenter/index.jsp:
+    post:
+      description: |
+        Re-queried as the map is panned, but only inside Japan and only after moving far enough.
+        Arcades already on the map are skipped by `ID`, so a repeat of one already returned costs
+        nothing.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                lat:
+                  description: 'The centre latitude of the visible region, to six decimal places.'
+                  format: 'double'
+                  type: 'number'
+                long:
+                  description: 'The centre longitude of the visible region.'
+                  format: 'double'
+                  type: 'number'
+                range:
+                  description: 'The latitude span of the visible region, in degrees.'
+                  format: 'double'
+                  type: 'number'
+              required:
+                - 'lat'
+                - 'long'
+                - 'range'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  GameCenterList:
+                    items:
+                      $ref: '#/components/schemas/ArcadeLocation'
+                    type: 'array'
+                type: 'object'
+          description: 'The arcades in the region. Anything but an array is ignored.'
+      summary: 'Search arcades in a map region.'
+      tags:
+        - 'social'
+  /get_arcade_score/index.jsp:
+    post:
+      description: |
+        The only endpoint authenticated with the KONAMI ID rather than the device UUID. The one
+        error code with its own message is 3, which means the account has no arcade play data;
+        every other code, and an empty list, reports a connection failure.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                konami_id:
+                  type: 'string'
+                otp:
+                  description: 'The one-time password. Empty when the account does not need one.'
+                  type: 'string'
+                password:
+                  type: 'string'
+              required:
+                - 'konami_id'
+                - 'otp'
+                - 'password'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      List:
+                        items:
+                          $ref: '#/components/schemas/ArcadeScoreEntry'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The arcade rankings.'
+      summary: 'Fetch arcade scores for a linked KONAMI ID.'
+      tags:
+        - 'scores'
+  /get_blocklist/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Block:
+                        description: |
+                          An entry missing either field is dropped, keeping the two lists the
+                          client splits this into the same length.
+                        items:
+                          properties:
+                            Name:
+                              type: 'string'
+                            PlayerId:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The blocked players.'
+      summary: 'Fetch the block list.'
+      tags:
+        - 'friends'
+  /get_convert_code/index.jsp:
+    post:
+      description: |
+        Issues the pass that `/convert/index.jsp` later redeems. The whole local save is uploaded
+        with it, so the pass is what the transfer restores rather than a lookup key into anything
+        the server already holds.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                param:
+                  description: |
+                    The entire local save, as a JSON document in one form field: `uuid`,
+                    `sum_purchase`, `last_update_sum_purchase`, `chara_ticket_cnt`,
+                    `treasure_point`, `sp_present_flag`, `opened_login_bonus_id`,
+                    `local_login_bonus_cnt`, and the arrays `got_chara`, `music`, `treasure`, and
+                    `chara_ticket`.
+                  type: 'string'
+              required:
+                - 'param'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      ConvertCode:
+                        description: |
+                          The transfer pass as a number. It is shown, stored, and mailed padded to
+                          six digits, so a shorter value gains leading zeros the player must type
+                          back.
+                        type: 'integer'
+                    required:
+                      - 'ConvertCode'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The issued transfer pass.'
+      summary: 'Upload the save and issue a device-transfer pass.'
+      tags:
+        - 'session'
+  /get_dl_file_list/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                client_ver:
+                  description: 'The build version as a number.'
+                  type: 'integer'
+                file_id:
+                  description: 'Which file set to list.'
+                  type: 'integer'
+                target:
+                  $ref: '#/components/schemas/RegionCode'
+              required:
+                - 'client_ver'
+                - 'file_id'
+                - 'target'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      List:
+                        items:
+                          properties:
+                            Id:
+                              type: 'integer'
+                            Size:
+                              description: 'The expected size in bytes.'
+                              type: 'integer'
+                            Url:
+                              format: 'uri'
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The downloadable files.'
+      summary: 'List the downloadable data files.'
+      tags:
+        - 'session'
+  /get_event_info/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                client_ver:
+                  type: 'integer'
+              required:
+                - 'client_ver'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      GamePlay:
+                        description: 'The play-driven events currently running.'
+                        items:
+                          properties:
+                            EventId:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                      Treasure:
+                        description: 'The treasure-map events currently running.'
+                        items:
+                          properties:
+                            EventId:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: |
+            The active events. Omitting either array clears that list rather than leaving the
+            previous one in place.
+      summary: 'Fetch the running events.'
+      tags:
+        - 'session'
+  /get_friend_list/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Friend:
+                        items:
+                          $ref: '#/components/schemas/FriendEntry'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: |
+            The friends. The order matters beyond display: `/get_friend_score/index.jsp` results
+            are re-sorted to match it.
+      summary: 'Fetch the friend list.'
+      tags:
+        - 'friends'
+  /get_friend_request/index.jsp:
+    post:
+      description: |
+        Serves both request screens. The inbound screen reads `Receive` and the outbound one reads
+        `Send`, from the same response.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Receive:
+                        description: |
+                          Inbound requests. An entry without an identifier, name, or message is
+                          dropped; the count of what survives becomes the badge on the friend hub.
+                        items:
+                          properties:
+                            CharaId:
+                              type: 'integer'
+                            Date:
+                              type: 'integer'
+                            Message:
+                              type: 'string'
+                            Name:
+                              type: 'string'
+                            PlayerId:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                      Send:
+                        description: |
+                          Outbound requests still awaiting an answer. Here `Date` is a string,
+                          unlike the inbound list, and an entry without it is dropped.
+                        items:
+                          properties:
+                            CharaId:
+                              type: 'integer'
+                            Date:
+                              type: 'string'
+                            Name:
+                              type: 'string'
+                            PlayerId:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The pending requests in both directions.'
+      summary: 'Fetch pending friend requests.'
+      tags:
+        - 'friends'
+  /get_friend_score/index.jsp:
+    post:
+      description: |
+        Powers the per-song ranking board. The player's own record is reconciled against the local
+        score store and any new best is written back, so this endpoint can raise a local score.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                client_ver:
+                  type: 'integer'
+                music:
+                  description: 'The song identifier, zero-padded to nine digits.'
+                  examples:
+                    - '000000123'
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'client_ver'
+                - 'music'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Friend:
+                        description: |
+                          One row per friend. A row missing any of the five fields is dropped, and
+                          a friend absent from the response is shown with no score rather than
+                          omitted.
+                        items:
+                          properties:
+                            Flag:
+                              description: |
+                                Medals as a bitfield: bits 0-2 are full combo for Normal, Hyper,
+                                and Ex; bits 3-5 are perfect for the same three.
+                              type: 'integer'
+                            PlayerId:
+                              type: 'string'
+                            ScoreEx:
+                              type: 'integer'
+                            ScoreH:
+                              type: 'integer'
+                            ScoreN:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                      Me:
+                        description: |
+                          The player's own record, in the same shape. A score here that beats the
+                          local one, or a medal the local record lacks, is persisted locally.
+                        properties:
+                          Flag:
+                            type: 'integer'
+                          ScoreEx:
+                            type: 'integer'
+                          ScoreH:
+                            type: 'integer'
+                          ScoreN:
+                            type: 'integer'
+                        type: 'object'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The ranking board for one song.'
+      summary: 'Fetch friend scores for one song.'
+      tags:
+        - 'scores'
+  /get_over_score_log/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Over:
+                        items:
+                          properties:
+                            FriendName:
+                              type: 'string'
+                            FriendScore:
+                              type: 'integer'
+                            MusicId:
+                              type: 'integer'
+                            MusicName:
+                              type: 'string'
+                            MyScore:
+                              type: 'integer'
+                            Sheet:
+                              description: 'The difficulty: 0 Normal, 1 Hyper, 2 Ex.'
+                              type: 'integer'
+                            UpdateDate:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The log of friends who overtook the player.'
+      summary: 'Fetch the overtaken-score log.'
+      tags:
+        - 'scores'
+  /get_player/index.jsp:
+    post:
+      description: |
+        The login call. Every one of its eight typed fields must have the expected type or the
+        whole response is treated as an error, and a body without `ErrorCode` that still fails the
+        type check reports as code 99. Success is also what triggers the push-notification
+        permission prompt, once per launch.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                client_ver:
+                  type: 'integer'
+                uuid:
+                  description: 'The raw device UUID, percent-encoded.'
+                  type: 'string'
+              required:
+                - 'client_ver'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      ArcadePt:
+                        type: 'integer'
+                      FriendRequested:
+                        description: 'How many inbound friend requests are pending.'
+                        type: 'integer'
+                      InviteCnt:
+                        type: 'integer'
+                      Login:
+                        description: |
+                          True on the session's first login of the day. It forces the bonus and
+                          count below to be taken; false keeps whatever was taken earlier this
+                          session.
+                        type: 'boolean'
+                      LoginBonusId:
+                        type: 'integer'
+                      LoginCount:
+                        type: 'integer'
+                      PlayerId:
+                        description: 'Must be a string, or the whole response is treated as an error.'
+                        type: 'string'
+                      PlayerName:
+                        description: 'Stored without a type check, unlike the fields around it.'
+                        type: 'string'
+                      UpdateDate:
+                        type: 'string'
+                    required:
+                      - 'ArcadePt'
+                      - 'FriendRequested'
+                      - 'InviteCnt'
+                      - 'Login'
+                      - 'LoginBonusId'
+                      - 'LoginCount'
+                      - 'PlayerId'
+                      - 'UpdateDate'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The player profile.'
+      summary: 'Log in and fetch the player profile.'
+      tags:
+        - 'session'
+  /get_present/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                present_id:
+                  type: 'integer'
+                uuid:
+                  type: 'string'
+              required:
+                - 'present_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: |
+            An empty body is the success case. Any JSON body, including one without `ErrorCode`,
+            is reported as a failure.
+      summary: 'Claim one present.'
+      tags:
+        - 'treasure'
+  /get_present_list/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      PresentList:
+                        description: |
+                          The present box. An empty array still counts as success; omitting the
+                          key entirely does not.
+                        items:
+                          properties:
+                            Info:
+                              description: 'The description shown beside the present.'
+                              type: 'string'
+                            ItemId:
+                              type: 'integer'
+                            ItemNum:
+                              type: 'integer'
+                            PresentId:
+                              type: 'integer'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The unclaimed presents.'
+      summary: 'Fetch the present box.'
+      tags:
+        - 'treasure'
+  /get_quiz/index.jsp:
+    get:
+      description: |
+        The daily quiz. Code 1 means the quiz has already been answered and sends the player
+        straight to the result board; code 99 is ignored entirely; code 0 and a missing question
+        or answer both surface a connection failure.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      AnsList:
+                        description: |
+                          The choices, in order. An entry without `Text` is skipped, which shifts
+                          the remaining choices and so changes which index `RightAns` names.
+                        items:
+                          properties:
+                            Text:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                      Question:
+                        description: 'The question. `<br>` and `<BR>` become line breaks.'
+                        type: 'string'
+                      QuizId:
+                        description: |
+                          Increasing identifier. A value not greater than the last answered one
+                          shows the result board instead of the question.
+                        type: 'integer'
+                      RightAns:
+                        description: 'The index into `AnsList` that counts as correct.'
+                        type: 'integer'
+                    required:
+                      - 'AnsList'
+                      - 'Question'
+                      - 'RightAns'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: "Today's quiz."
+      summary: 'Fetch the daily quiz.'
+      tags:
+        - 'quiz'
+  /get_recommend_friend/index.jsp:
+    post:
+      description: |
+        Suggested players to send a request to. The rows are shaped like the friend list but
+        arrive under `List`, and no friendship level is read.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  List:
+                    items:
+                      $ref: '#/components/schemas/FriendEntry'
+                    type: 'array'
+                type: 'object'
+          description: |
+            The suggestions. Only a body that is not JSON at all surfaces an error; an `ErrorCode`
+            here is read and discarded.
+      summary: 'Fetch suggested friends.'
+      tags:
+        - 'friends'
+  /get_recommend_list/index.jsp:
+    post:
+      description: |
+        Two unrelated feeds in one response: the packs friends recommend, and the songs on which a
+        friend has overtaken the player. The second is merged into the local store, one record per
+        song and difficulty.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      List:
+                        description: 'Recommended packs, sorted for display by `UpdateDate`.'
+                        items:
+                          properties:
+                            Name:
+                              description: 'Who recommended it.'
+                              type: 'string'
+                            PackId:
+                              type: 'integer'
+                            PackName:
+                              type: 'string'
+                            UpdateDate:
+                              type: 'string'
+                            Url:
+                              format: 'uri'
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                      Over:
+                        description: 'Songs where a friend has passed the player since last time.'
+                        items:
+                          properties:
+                            Music:
+                              type: 'integer'
+                            PlayerId:
+                              type: 'string'
+                            Sheet:
+                              type: 'integer'
+                            UpdateDate:
+                              type: 'string'
+                          type: 'object'
+                        type: 'array'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The recommended packs and overtaken songs.'
+      summary: 'Fetch recommended packs and overtaken scores.'
+      tags:
+        - 'scores'
+  /get_reward_login_token/index.jsp:
+    get:
+      description: |
+        Handed to the bundled reward (applilink) SDK as its session URL rather than called
+        directly, together with an `env` parameter and the reward application and player
+        identifiers.
+      parameters:
+        - description: 'The reward environment selector. The shipped build always sends `0`.'
+          in: 'query'
+          name: 'env'
+          required: false
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: 'The reward session token, consumed by the reward SDK.'
+      summary: 'Fetch a reward-network login token.'
+      tags:
+        - 'session'
+  /get_visitor/index.jsp:
+    post:
+      description: |
+        Draws the friend who appears on a treasure-map cell. All of the identifier, name,
+        character, and both piece counts must be present or the visit does not happen; only
+        `Friendship` may be missing, and reads as zero.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                map_id:
+                  description: 'The map cell, encoding the main map and sub-map as `main * 10 + sub`.'
+                  type: 'integer'
+                type:
+                  type: 'integer'
+                uuid:
+                  type: 'string'
+              required:
+                - 'map_id'
+                - 'type'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      CharaId:
+                        type: 'integer'
+                      Friendship:
+                        type: 'integer'
+                      MusicPiece:
+                        type: 'integer'
+                      Name:
+                        description: 'Truncated to fit the fixed-width field it is stored in.'
+                        type: 'string'
+                      PlayerId:
+                        type: 'string'
+                      WallPiece:
+                        type: 'integer'
+                    required:
+                      - 'CharaId'
+                      - 'MusicPiece'
+                      - 'Name'
+                      - 'PlayerId'
+                      - 'WallPiece'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The visiting friend.'
+      summary: 'Fetch the visitor for a treasure-map cell.'
+      tags:
+        - 'treasure'
+  /invited/index.jsp:
+    post:
+      description: |
+        Redeems another player's invite code. Code 4 means the player has already redeemed one and
+        marks the local save accordingly; codes 1 and 2 mean the code is wrong.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                player_id:
+                  description: 'The inviting player, percent-encoded.'
+                  type: 'string'
+                uuid:
+                  description: 'The redeeming device, percent-encoded.'
+                  type: 'string'
+              required:
+                - 'player_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: |
+            An empty body is the success case, and grants five character tickets locally. Any JSON
+            body is a failure.
+      summary: 'Redeem an invite code.'
+      tags:
+        - 'session'
+  /link_kid/index.jsp:
+    post:
+      description: |
+        Links a KONAMI ID so arcade scores can be fetched. Three outcomes share one shape: a
+        non-empty `RefId` is success, an empty `RefId` means the account has no active e-AMUSEMENT
+        PASS, and code 4 means the credentials are wrong.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                konami_id:
+                  type: 'string'
+                otp:
+                  description: 'Empty unless the player typed a one-time password.'
+                  type: 'string'
+                password:
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'konami_id'
+                - 'otp'
+                - 'password'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      RefId:
+                        description: |
+                          The linked card reference. It keys the stored arcade scores, so a
+                          changed value hides the previously synced ones.
+                        type: 'string'
+                    required:
+                      - 'RefId'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The link result.'
+      summary: 'Link a KONAMI ID.'
+      tags:
+        - 'session'
+  /log_acv_play/index.jsp:
+    post:
+      description: 'Fire and forget: the response is never read, and a failure is never surfaced.'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                uuid:
+                  type: 'string'
+              required:
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          description: 'Ignored.'
+      summary: 'Report that an arcade-viewer play started.'
+      tags:
+        - 'telemetry'
+  /log_chara_kuji/index.jsp:
+    post:
+      description: |
+        The character-lottery play log. The client builds the URL but never sends it, so nothing
+        is known about its request or response beyond the endpoint existing.
+      responses:
+        '200':
+          description: 'Never read.'
+      summary: 'Report a character-lottery draw.'
+      tags:
+        - 'telemetry'
+  /musicinfo/index.jsp:
+    get:
+      description: |
+        Called when a purchased song is missing from disk, to refresh its metadata before
+        re-downloading the file.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - $ref: '#/components/parameters/Music'
+        - $ref: '#/components/parameters/UserInfoUuid'
+        - $ref: '#/components/parameters/UserInfoVersion'
+        - $ref: '#/components/parameters/UserInfoDevice'
+        - $ref: '#/components/parameters/UserInfoOs'
+        - $ref: '#/components/parameters/UserInfoLocale'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MusicEntry'
+          description: 'The song. A body without an `ID` of 1 or more is discarded silently.'
+      summary: 'Fetch one song.'
+      tags:
+        - 'store'
+  /new/index.jsp:
+    post:
+      description: |
+        The news feed behind the mode-select screen: the server clock, the store freshness stamp,
+        the scrolling ticker, and the information posts. Carries both a query string and a body.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - $ref: '#/components/parameters/UserInfoUuid'
+        - $ref: '#/components/parameters/UserInfoVersion'
+        - $ref: '#/components/parameters/UserInfoDevice'
+        - $ref: '#/components/parameters/UserInfoOs'
+        - $ref: '#/components/parameters/UserInfoLocale'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                info_id:
+                  description: 'The newest information post already seen.'
+                  type: 'integer'
+              required:
+                - 'info_id'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  Information:
+                    description: |
+                      The information posts. `&quot;`, `&lt;`, `&gt;`, and `&amp;` are unescaped in
+                      both fields, and `<br>` or `<BR>` become line breaks in the body.
+                    items:
+                      properties:
+                        Body:
+                          type: 'string'
+                        Id:
+                          type: 'integer'
+                        Title:
+                          type: 'string'
+                      type: 'object'
+                    type: 'array'
+                  Time:
+                    description: |
+                      The server clock as `Y-M-D H:M:S`, split on the space, then on hyphens and
+                      colons. A malformed half leaves those components at zero rather than
+                      failing.
+                    examples:
+                      - '2013-07-24 18:30:00'
+                    type: 'string'
+                  UpdateText:
+                    description: |
+                      The ticker lines. A line may carry a tap target after the literal
+                      `@NEWSLINK=` separator; without one the line is not tappable.
+                    items:
+                      type: 'string'
+                    type: 'array'
+                  UpdateTime:
+                    description: |
+                      When the store last changed. Compared numerically against the last time the
+                      store was opened, and a later value lights the new-pack badge.
+                    type: 'string'
+                type: 'object'
+          description: |
+            The news payload. No error shape is checked here: a body without the keys simply
+            leaves the ticker empty.
+      summary: 'Fetch news, the ticker, and the server clock.'
+      tags:
+        - 'session'
+  /new_player/index.jsp:
+    post:
+      description: |
+        Registers a chosen name and returns the identifier the rest of the API is keyed on. The
+        name is restricted to letters, digits, and `@+-/!#%?$&_` before it is sent.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                client_ver:
+                  type: 'integer'
+                name:
+                  description: 'The chosen player name, percent-encoded.'
+                  type: 'string'
+                uuid:
+                  description: 'The raw device UUID, percent-encoded.'
+                  type: 'string'
+              required:
+                - 'client_ver'
+                - 'name'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      PlayerId:
+                        description: |
+                          The new identifier. It must be a string: a number here is treated as a
+                          failure. Short numeric values are expected, since the login-bonus screen
+                          seeds its shuffle from it.
+                        type: 'string'
+                    required:
+                      - 'PlayerId'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The registered player.'
+      summary: 'Register a new player.'
+      tags:
+        - 'session'
+  /pack_recommend/index.jsp:
+    post:
+      description: |
+        Recommends an owned pack to friends. Success also grants 300 treasure points locally, so a
+        response the client reads as success has a side effect beyond the recommendation.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                pack_id:
+                  type: 'integer'
+                uuid:
+                  type: 'string'
+              required:
+                - 'pack_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: 'Anything without `ErrorCode`, including an empty body, is success.'
+      summary: 'Recommend a pack.'
+      tags:
+        - 'store'
+  /packinfo/index.jsp:
+    get:
+      description: |
+        The pack detail. The client-info fragment is attached only when the player opened the
+        pack themselves, which is the one way this endpoint can tell a browse from a refresh.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - description: 'The pack identifier.'
+          in: 'query'
+          name: 'pack'
+          required: true
+          schema:
+            type: 'integer'
+        - $ref: '#/components/parameters/UserInfoUuidOptional'
+        - $ref: '#/components/parameters/UserInfoVersionOptional'
+        - $ref: '#/components/parameters/UserInfoDeviceOptional'
+        - $ref: '#/components/parameters/UserInfoOsOptional'
+        - $ref: '#/components/parameters/UserInfoLocaleOptional'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackEntry'
+          description: |
+            The pack. An `ID` that does not match the pack being filled in rejects the whole
+            body.
+      summary: 'Fetch one pack in detail.'
+      tags:
+        - 'store'
+  /packlist/index.jsp:
+    get:
+      description: |
+        One page of the store, eight packs at a time. `Version` gates the whole store: a build
+        below it gets a version-mismatch message instead of the list. Each pack is only shown once
+        StoreKit resolves its product identifier, so a pack the App Store does not know is
+        silently absent.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - description: 'The one-based index of the first pack on this page.'
+          in: 'query'
+          name: 'head'
+          required: true
+          schema:
+            type: 'integer'
+        - description: 'How many packs to return. The client always asks for eight.'
+          in: 'query'
+          name: 'limit'
+          required: true
+          schema:
+            type: 'integer'
+        - description: 'Seeds the page with one specific pack. Omitted when not positive.'
+          in: 'query'
+          name: 'pack_id'
+          required: false
+          schema:
+            type: 'integer'
+        - $ref: '#/components/parameters/UserInfoUuid'
+        - $ref: '#/components/parameters/UserInfoVersion'
+        - $ref: '#/components/parameters/UserInfoDevice'
+        - $ref: '#/components/parameters/UserInfoOs'
+        - $ref: '#/components/parameters/UserInfoLocale'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  Error:
+                    description: |
+                      Shown verbatim when `PackList` is empty. Without it the generic server-error
+                      message is used instead.
+                    type: 'string'
+                  HasNext:
+                    description: 'Whether another page follows.'
+                    type: 'boolean'
+                  PackList:
+                    items:
+                      $ref: '#/components/schemas/PackEntry'
+                    type: 'array'
+                  Promotion:
+                    description: |
+                      Featured packs, in the same shape. Kept from the first page only; later
+                      pages' promotions are ignored.
+                    items:
+                      $ref: '#/components/schemas/PackEntry'
+                    type: 'array'
+                  Version:
+                    description: |
+                      The minimum app version, compared numerically. Every page is gated, not just
+                      the first.
+                    type: 'string'
+                type: 'object'
+          description: 'One page of packs.'
+      summary: 'List store packs.'
+      tags:
+        - 'store'
+  /purchase/index.jsp:
+    get:
+      description: |
+        Reports a completed purchase, signed with `key`. The client builds this URL but never
+        reads what comes back.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - description: 'The purchased pack identifier.'
+          in: 'query'
+          name: 'pid'
+          required: true
+          schema:
+            type: 'integer'
+        - $ref: '#/components/parameters/UserInfoUuid'
+        - $ref: '#/components/parameters/UserInfoVersion'
+        - $ref: '#/components/parameters/UserInfoDevice'
+        - $ref: '#/components/parameters/UserInfoOs'
+        - $ref: '#/components/parameters/UserInfoLocale'
+        - description: |
+            The SHA-256 hex of the preceding query string, from `target=` up to but not including
+            `&key=`, with an embedded salt appended.
+          in: 'query'
+          name: 'key'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: 'Never read.'
+      summary: 'Report a completed purchase.'
+      tags:
+        - 'store'
+  /remove_friend/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                player_id:
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'player_id'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: |
+            Inverted from its siblings: a JSON body is the success case here, and only a body that
+            is not JSON reports a failure. `ErrorCode` is read and discarded.
+      summary: 'Remove a friend.'
+      tags:
+        - 'friends'
+  /reply_friend/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                player_id:
+                  description: 'Who sent the request being answered.'
+                  type: 'string'
+                reply:
+                  description: 'One accepts, zero rejects.'
+                  enum:
+                    - 0
+                    - 1
+                  type: 'integer'
+                uuid:
+                  type: 'string'
+              required:
+                - 'player_id'
+                - 'reply'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+          description: |
+            An empty body is the success case and removes the answered row. Any JSON body is
+            reported as a failure.
+      summary: 'Accept or reject a friend request.'
+      tags:
+        - 'friends'
+  /reply_quiz/index.jsp:
+    post:
+      description: |
+        The running totals come back from the server rather than being counted locally, and are
+        saved as sent. Every fifth correct answer grants a character ticket locally.
+      parameters:
+        - $ref: '#/components/parameters/Target'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                id:
+                  description: 'The quiz being answered.'
+                  type: 'integer'
+                is_correct:
+                  description: 'One when the pick matched the quiz answer, zero otherwise.'
+                  enum:
+                    - 0
+                    - 1
+                  type: 'integer'
+                uuid:
+                  description: 'The raw device UUID, percent-encoded.'
+                  type: 'string'
+              required:
+                - 'id'
+                - 'is_correct'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Consecutive:
+                        description: 'The current correct streak.'
+                        type: 'integer'
+                      TotalCorrect:
+                        type: 'integer'
+                      TotalIncorrect:
+                        type: 'integer'
+                    required:
+                      - 'Consecutive'
+                      - 'TotalCorrect'
+                      - 'TotalIncorrect'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: |
+            The updated totals. All three must be present, or the answer is treated as not having
+            gone through and can be retried.
+      summary: 'Submit a quiz answer.'
+      tags:
+        - 'quiz'
+  /save_apns_token/index.jsp:
+    post:
+      description: 'Fire and forget: the response is never read.'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                token:
+                  description: 'The device token in hex, with the angle brackets and spaces stripped.'
+                  type: 'string'
+                uuid:
+                  type: 'string'
+              required:
+                - 'token'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          description: 'Ignored.'
+      summary: 'Register the push-notification token.'
+      tags:
+        - 'session'
+  /save_score/index.jsp:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                charaId:
+                  description: 'The character in use. The one body field in camel case.'
+                  type: 'integer'
+                medal:
+                  type: 'integer'
+                music:
+                  description: 'The song identifier, zero-padded to nine digits.'
+                  examples:
+                    - '000000123'
+                  type: 'string'
+                score:
+                  type: 'integer'
+                sheet:
+                  description: 'The difficulty: 0 Normal, 1 Hyper, 2 Ex.'
+                  type: 'integer'
+                uuid:
+                  type: 'string'
+              required:
+                - 'charaId'
+                - 'medal'
+                - 'music'
+                - 'score'
+                - 'sheet'
+                - 'uuid'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - properties:
+                      Update:
+                        description: |
+                          Any number here clears the local unsent mark for the song. Its value is
+                          not read, only its type: a string would leave the score queued for
+                          re-upload.
+                        type: 'integer'
+                    required:
+                      - 'Update'
+                    type: 'object'
+                  - $ref: '#/components/schemas/ServerError'
+          description: 'The upload result.'
+      summary: 'Upload a play result.'
+      tags:
+        - 'scores'
+  /save_treasure/index.jsp:
+    post:
+      description: 'The response is discarded; the local record is not reconciled against it.'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                chara_id:
+                  type: 'integer'
+                friendship:
+                  type: 'integer'
+                map_id:
+                  description: 'The map cell, encoding the main map and sub-map as `main * 10 + sub`.'
+                  type: 'integer'
+                music_piece:
+                  type: 'integer'
+                uuid:
+                  type: 'string'
+                visitor:
+                  description: 'The friend met on this cell.'
+                  type: 'string'
+                wall_piece:
+                  type: 'integer'
+              required:
+                - 'chara_id'
+                - 'friendship'
+                - 'map_id'
+                - 'music_piece'
+                - 'uuid'
+                - 'visitor'
+                - 'wall_piece'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          description: 'Ignored.'
+      summary: 'Upload treasure-map progress for one cell.'
+      tags:
+        - 'treasure'
+  /search_master/index.jsp:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/Target'
+        - $ref: '#/components/parameters/UserInfoUuid'
+        - $ref: '#/components/parameters/UserInfoVersion'
+        - $ref: '#/components/parameters/UserInfoDevice'
+        - $ref: '#/components/parameters/UserInfoOs'
+        - $ref: '#/components/parameters/UserInfoLocale'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArcadeMasterResponse'
+          description: |
+            The master data. It must arrive before any region query runs, so a failure here leaves
+            the map empty rather than degraded.
+      summary: 'Fetch the arcade-map master data.'
+      tags:
+        - 'social'
+  /verify_receipt/index.jsp:
+    post:
+      description: |
+        Re-validates an App Store receipt server-side. The one endpoint whose request body really
+        is JSON, and the only one whose response is checked against a value the client computed
+        first.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                client_info:
+                  properties:
+                    device:
+                      $ref: '#/components/schemas/DeviceName'
+                    locale:
+                      $ref: '#/components/schemas/Locale'
+                    os:
+                      $ref: '#/components/schemas/SystemVersion'
+                    uuid:
+                      $ref: '#/components/schemas/IdentifierParams'
+                    version:
+                      $ref: '#/components/schemas/AppVersion'
+                  type: 'object'
+                receipt_data:
+                  description: 'The App Store receipt, base64 encoded.'
+                  type: 'string'
+              required:
+                - 'client_info'
+                - 'receipt_data'
+              type: 'object'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: |
+                      Must equal the SHA-256 hex of an embedded salt followed by the exact request
+                      body. Anything else fails the purchase, and during a restore it abandons the
+                      whole restore.
+                    type: 'string'
+                  status:
+                    description: 'Zero, and only zero, allows the digest below to be checked at all.'
+                    examples:
+                      - 0
+                    type: 'integer'
+                required:
+                  - 'code'
+                  - 'status'
+                type: 'object'
+          description: 'The verification result.'
+      summary: 'Verify an App Store receipt.'
+      tags:
+        - 'store'
+servers:
+  - description: |
+      The shipped endpoint. The scheme is fixed at `https`; the host is the `APR_SECURE_HOST`
+      build option, and can also be overridden at runtime through the `AprSecureHost` preference
+      in a build compiled with `ENABLE_PATCHES`.
+    url: 'https://{host}{basePath}'
+    variables:
+      basePath:
+        default: '/apr/main/cgi/'
+        description: 'The shared base every path below is relative to.'
+      host:
+        default: 'apr.s.konaminet.jp'
+        description: 'The `APR_SECURE_HOST` build option.'
+tags:
+  - description: 'Login, registration, news, device transfer, and account linking.'
+    name: 'session'
+  - description: 'The in-app catalogue: packs, songs, purchases, and receipts.'
+    name: 'store'
+  - description: 'Friends, requests, and the block list.'
+    name: 'friends'
+  - description: 'Score upload, rankings, and recommendations.'
+    name: 'scores'
+  - description: 'The treasure map, its visitors, and the present box.'
+    name: 'treasure'
+  - description: 'The daily quiz.'
+    name: 'quiz'
+  - description: 'Arcade location search.'
+    name: 'social'
+  - description: 'Play logs that are sent and never read back.'
+    name: 'telemetry'

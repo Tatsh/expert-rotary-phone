@@ -177,6 +177,7 @@ gojuon
 gokusotsu
 gradeable
 graphviz
+haaa
 hanamaru
 handakuten
 handoff
@@ -288,6 +289,7 @@ multisample
 musicinfo
 musicsel
 mypy
+naaa
 nakaji
 navbars
 navc
@@ -348,6 +350,7 @@ pyinstaller
 pylock
 pyproject
 quize
+quot
 ranknum
 ranmir
 rbplus
