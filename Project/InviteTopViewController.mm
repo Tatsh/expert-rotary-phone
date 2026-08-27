@@ -21,12 +21,27 @@
 #import "neEngineBridge.h"             // neEngine::playSystemSe, neSceneManager::rootViewController
 
 // Own privates (selectors wired up by initAtNavigationController).
+/**
+ * @brief The invite top screen's private button actions and animation callbacks.
+ */
 @interface InviteTopViewController ()
+/**
+ * @brief The invite button was tapped: share the player's own code.
+ * @param sender The tapped button.
+ */
 - (void)touchedInviteButton:(id)sender;
+/**
+ * @brief The input button was tapped: push the code-entry screen.
+ * @param sender The tapped button.
+ */
 - (void)touchedInputButton:(id)sender;
+/** @brief The back-button action. */
 - (void)touchedBackButton;
+/** @brief The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief Fade the screen out. */
 - (void)startCloseAnimation;
+/** @brief The close fade finished; tear the screen down. */
 - (void)endCloseAnimation;
 @end
 

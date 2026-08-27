@@ -37,6 +37,10 @@ class AepManager;
 class AepLyrCtrl;
 class neTextureForiOS;
 
+/**
+ * @brief The mode-select menu task: the hub screen whose buttons launch play, the store, friend
+ * management, the arcade modes and pop'n link.
+ */
 class MenuMainTask : public ne::C_TASK {
 public:
     MenuMainTask();                    // Ghidra: MenuMainTask_ctor (FUN_0006aba0)
@@ -47,33 +51,34 @@ public:
     // MenuMainTask_setInfoFlag (FUN_0006d194) @ +0x1ac.
     void setInfoFlag(bool shown);
 
-    // One menu button's on-screen rectangle, in the engine hit-test's field order
-    // (x, y, w, h). pointInRect (FUN_0002d974) tests x in [x, x+w], y in [y,
-    // y+h].
-    struct ButtonRect { // 0x10 bytes
-        int x;
-        int y;
-        int w;
-        int h;
+    /**
+     * @brief One menu button's on-screen rectangle, in the engine hit-test's field order.
+     *
+     * pointInRect (FUN_0002d974) tests x in [x, x+w] and y in [y, y+h]. 0x10 bytes.
+     */
+    struct ButtonRect {
+        int x; /**< Left edge, in screen pixels. */
+        int y; /**< Top edge, in screen pixels. */
+        int w; /**< Width, in screen pixels. */
+        int h; /**< Height, in screen pixels. */
     };
 
-    // The eight array-laid-out mode buttons hit-tested in state 0xc
-    // (+0x128..+0x1a4). Roles are the binary's FUN_0006ad88 dispatch by offset
-    // (present box / settings / reward live in the separate packed top cluster @
-    // +0x94..+0xa0, not this array).
+    /**
+     * @brief The eight array-laid-out mode buttons hit-tested in state 0xc (+0x128..+0x1a4).
+     *
+     * Roles are the binary's FUN_0006ad88 dispatch by offset. Present box, settings and reward
+     * live in the separate packed top cluster @ +0x94..+0xa0, not this array.
+     */
     enum Button {
-        kBtnPlay,         // +0x128 standard play (tutorial on first play) ->
-                          // PlayTask/MainTask
-        kBtnStore,        // +0x138 store
-        kBtnFriend,       // +0x148 friend management
-        kBtnArcade,       // +0x158 arcade select+play -> AcMainTask (treasure/sugoroku
-                          // board)
-        kBtnAcViewer,     // +0x168 arcade viewer -> AcViewerTask (iPad seeds a default
-                          // sel)
-        kBtnPopnLink,     // +0x178 pop'n link
-        kBtnInvite,       // +0x188 invite code (only when a player record exists)
-        kBtnArcadeSearch, // +0x198 arcade search
-        kBtnCount,
+        kBtnPlay,     /**< +0x128 Standard play (tutorial on first play) -> PlayTask/MainTask. */
+        kBtnStore,    /**< +0x138 Store. */
+        kBtnFriend,   /**< +0x148 Friend management. */
+        kBtnArcade,   /**< +0x158 Arcade select and play -> AcMainTask (treasure/sugoroku board). */
+        kBtnAcViewer, /**< +0x168 Arcade viewer -> AcViewerTask (iPad seeds a default selection). */
+        kBtnPopnLink, /**< +0x178 pop'n link. */
+        kBtnInvite,   /**< +0x188 Invite code; only when a player record exists. */
+        kBtnArcadeSearch, /**< +0x198 Arcade search. */
+        kBtnCount,        /**< The number of array-laid-out mode buttons. */
     };
 
 private:

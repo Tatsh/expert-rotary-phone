@@ -21,38 +21,56 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief The parsed sugoroku (board-game) map: a table of board squares plus a few header fields,
+ * loaded from a bundled "map_%03d.map" blob.
+ */
 class TreasureMap {
 public:
-    // Ghidra: FUN_000ce2b0 — zero-inits the 0x60-byte object (the member
-    // initialisers below reproduce the five zeroed 16-byte stores).
+    /**
+     * @brief Zero-initialise the 0x60-byte object; the member initialisers reproduce the five
+     * zeroed 16-byte stores.
+     * @ghidraAddress 0xce2b0
+     */
     TreasureMap() = default;
-    // Ghidra: FUN_000ce330 (+ pre-step FUN_000ce2e4); `delete` frees it. Kept as
-    // a declared seam (the parser module owns the definition).
+    /**
+     * @brief Free the node and edge tables. Kept as a declared seam; the parser module owns the
+     * definition. The pre-step is FUN_000ce2e4.
+     * @ghidraAddress 0xce330
+     */
     ~TreasureMap();
 
-    // Parse "<path>" (a bundled ".map" blob) into the node table + header fields.
-    // Large binary parser kept as a declared seam. Ghidra: FUN_000ce340.
+    /**
+     * @brief Parse a bundled ".map" blob into the node table and header fields. The large binary
+     * parser is kept as a declared seam.
+     * @param path The ".map" file path.
+     * @ghidraAddress 0xce340
+     */
     void load(const char *path);
 
-    // Board-square kind, stored in Node::type (+0x06) and read straight from the
-    // ".map" file. Ghidra-verified across the map loader (FUN_000ce340) and both
-    // draw passes (drawSquareText FUN_000a1bb4, drawSquare FUN_000a4eb4). The
-    // loader rewrites every non-chosen bonus-treasure candidate
-    // (kSquareBonusTreasure) to kSquareDeactivatedBonus and clears its text, so a
-    // deactivated bonus then renders as an ordinary board-story message square.
+    /**
+     * @brief The board-square kind, stored in Node::type (+0x06) and read straight from the ".map"
+     * file.
+     *
+     * Ghidra-verified across the map loader (FUN_000ce340) and both draw passes (drawSquareText
+     * FUN_000a1bb4, drawSquare FUN_000a4eb4). The loader rewrites every non-chosen bonus-treasure
+     * candidate (kSquareBonusTreasure) to kSquareDeactivatedBonus and clears its text, so a
+     * deactivated bonus then renders as an ordinary board-story message square.
+     */
     enum SquareKind : int16_t {
-        kSquareInvalid = -1,         // corrupt square; load() asserts
-        kSquareStart = 0,            // board start square (recorded in *(+0x54))
-        kSquarePlayerStart = 1,      // player spawn square
-        kSquareDeactivatedBonus = 2, // board-story message / deactivated bonus square
-        kSquareBonus = 3,            // bonus square (live when roulette 0x12 or HUD state 2)
-        kSquareTreasure = 4,         // treasure square (live when roulette 0x12 or HUD state 3)
-        kSquareSubMapFlag = 5,       // sub-map flag square (label keyed to the HUD state)
-        kSquareWallpaperPiece = 6,   // wallpaper-piece square (unlock grid @ +0x748)
-        kSquareMusicPiece = 7,       // music-piece square (unlock grid @ +0x6dc)
-        kSquareWarp = 8,             // warp square (paired with another by slotId)
-        kSquareGoalLock = 9,         // goal-lock square (message once the goal clears, HUD state 4)
-        kSquareBonusTreasure = 10,   // active bonus-treasure / friend-meet goal square
+        kSquareInvalid = -1,         /**< A corrupt square; load() asserts on it. */
+        kSquareStart = 0,            /**< The board start square, recorded in *(+0x54). */
+        kSquarePlayerStart = 1,      /**< The player spawn square. */
+        kSquareDeactivatedBonus = 2, /**< A board-story message or deactivated bonus square. */
+        kSquareBonus = 3,            /**< A bonus square; live at roulette 0x12 or HUD state 2. */
+        kSquareTreasure = 4,       /**< A treasure square; live at roulette 0x12 or HUD state 3. */
+        kSquareSubMapFlag = 5,     /**< A sub-map flag square, labelled from the HUD state. */
+        kSquareWallpaperPiece = 6, /**< A wallpaper-piece square; unlock grid @ +0x748. */
+        kSquareMusicPiece = 7,     /**< A music-piece square; unlock grid @ +0x6dc. */
+        kSquareWarp = 8,           /**< A warp square, paired with another by slotId. */
+        /** A goal-lock square, which shows its message once the goal clears at HUD state 4. */
+        kSquareGoalLock = 9,
+        kSquareBonusTreasure = 10, /**< An active bonus-treasure or friend-meet goal square. */
     };
 
     // One board square. id is the sub-map id; x / y are the board column / row in
@@ -68,39 +86,61 @@ public:
     // target, which is what keeps the 0x120 stride exact — the same assumption
     // the enclosing class layout (m_nodes @ +0x50, m_startSubId @ +0x54, ...)
     // already relies on.
+    /**
+     * @brief One board square. The binary's Objective-C value-type name for this record is
+     * "SquareStruct".
+     */
     struct Node {
-        int16_t id;       // +0x00 sub-map id
-        int16_t x;        // +0x02 board column (tile units)
-        int16_t y;        // +0x04 board row (tile units)
-        int16_t type;     // +0x06 square kind (SquareKind)
-        int16_t slotId;   // +0x08 per-square slot id (0..14; from the file record). Doubles as the
-                          // warp-pair key and the wall/music piece-table index.
-        int16_t _pad0a;   // +0x0a (zeroed; file neighbour ids are not stored here)
-        Node *backLink;   // +0x0c neighbour resolved from file record +0x0a
-        Node *links[3];   // +0x10 neighbours resolved from file record +0x0c/0e/10
-        char text[0x100]; // +0x1c ShiftJIS->UTF8 message ("<br>" -> newline)
-        uint8_t _rest[4]; // +0x11c pad to the 0x120 stride
+        int16_t id;   /**< +0x00 The sub-map id. */
+        int16_t x;    /**< +0x02 The board column, in tile units. */
+        int16_t y;    /**< +0x04 The board row, in tile units. */
+        int16_t type; /**< +0x06 The square kind, a SquareKind. */
+        /** +0x08 The per-square slot id, 0..14, from the file record. It doubles as the warp-pair
+         * key and the wall/music piece-table index. */
+        int16_t slotId;
+        int16_t _pad0a;   /**< +0x0a Zeroed; the file's neighbour ids are not stored here. */
+        Node *backLink;   /**< +0x0c The neighbour resolved from file record +0x0a. */
+        Node *links[3];   /**< +0x10 The neighbours resolved from file record +0x0c, +0x0e and
+                               +0x10. */
+        char text[0x100]; /**< +0x1c The message, Shift-JIS decoded to UTF-8 with "<br>" turned
+                               into a newline. */
+        uint8_t _rest[4]; /**< +0x11c Padding out to the 0x120 stride. */
     };
 
-    // A resolved board edge between two squares. Built into the +0x58 array by
-    // load(); the binary boxes it in NSValue with the ObjC type encoding
-    // "{ConnectStruct=^{SquareStruct}^{SquareStruct}B}" (12 bytes: two Node* + a
-    // BOOL).
+    /**
+     * @brief A resolved board edge between two squares.
+     *
+     * Built into the +0x58 array by load(); the binary boxes it in an NSValue with the Objective-C
+     * type encoding "{ConnectStruct=^{SquareStruct}^{SquareStruct}B}" — 12 bytes: two Node* and a
+     * BOOL.
+     */
     struct ConnectStruct {
-        Node *a;      // +0x00
-        Node *b;      // +0x04
-        bool sameRow; // +0x08 a->y == b->y
+        Node *a;      /**< +0x00 One end of the edge. */
+        Node *b;      /**< +0x04 The other end of the edge. */
+        bool sameRow; /**< +0x08 Whether both ends share a board row. */
     };
 
+    /**
+     * @brief The number of board squares (binary field @ +0x02).
+     * @return The node count.
+     */
     int nodeCount() const {
         return m_count;
-    } // +0x02
+    }
+    /**
+     * @brief The board-square table (binary field @ +0x50).
+     * @return The node array, or nullptr before load().
+     */
     const Node *nodes() const {
         return m_nodes;
-    } // +0x50
+    }
 
-    // The node whose id matches subId, scanning the whole table, or null. Ghidra:
-    // FUN_000ce934 (null when subId >= count or count < 1).
+    /**
+     * @brief The node whose id matches @p subId, scanning the whole table.
+     * @param subId The sub-map id to find.
+     * @return The node, or nullptr when @p subId is out of range or the table is empty.
+     * @ghidraAddress 0xce934
+     */
     const Node *findArea(int subId) const {
         if (!m_nodes) {
             return nullptr;
@@ -118,30 +158,50 @@ public:
         return nullptr;
     }
 
+    /**
+     * @brief The board's start square id (binary field @ *(+0x54)).
+     * @return The start sub-map id, or 0 when none is recorded.
+     */
     int16_t startSubId() const {
         return m_startSubId ? *m_startSubId : 0;
-    } // *(+0x54)
-    // +0x58 is the malloc'd ConnectStruct edge array; +0x5c is its element count
-    // (both copied into the arcade play data). The 32-bit binary held the array
-    // pointer in a 4-byte int slot at +0x58; a 64-bit pointer does not fit, so the
-    // reconstruction stores a real ConnectStruct* (m_edges), matching how m_nodes
-    // (+0x50) is already a real pointer.
+    }
+    // +0x58 is the malloc'd ConnectStruct edge array; +0x5c is its element count, and both are
+    // copied into the arcade play data. The 32-bit binary held the array pointer in a 4-byte int
+    // slot at +0x58; a 64-bit pointer does not fit, so the reconstruction stores a real
+    // ConnectStruct* (m_edges), matching how m_nodes (+0x50) is already a real pointer.
+
+    /**
+     * @brief The resolved board-edge table.
+     * @return The edge array, or nullptr before load().
+     */
     const ConnectStruct *edges() const {
         return m_edges;
     }
+    /**
+     * @brief The number of board edges.
+     * @return The edge count.
+     */
     int edgeCount() const {
         return m_edgeCount;
     }
 
-    // Ghidra: FUN_000ce96c (SugorokuMap::GetWarpSquare). Asserts node is a warp
-    // square (kSquareWarp), then returns the partner warp square sharing its
-    // slotId (warp-pair id), or null.
+    /**
+     * @brief The partner warp square sharing @p node 's slotId (its warp-pair id).
+     * @param node The warp square; the call asserts its type is kSquareWarp.
+     * @return The partner square, or nullptr when there is none.
+     * @ghidraAddress 0xce96c
+     */
     Node *getWarpSquare(Node *node);
 
-    // Ghidra: FUN_000ce9d4 (SugorokuMap::GetButtobiSquare). Picks a random
-    // destination node that is not a warp, not a player-start, and not
-    // currentNode, walking the links[0] chain if the first pick is unsuitable;
-    // falls back to the start node.
+    /**
+     * @brief Pick a random "buttobi" (fly-to) destination square.
+     *
+     * The pick is a node that is not a warp, not a player-start, and not @p currentNode, walking
+     * the links[0] chain when the first pick is unsuitable.
+     * @param currentNode The square the player is on.
+     * @return The destination square, falling back to the start node.
+     * @ghidraAddress 0xce9d4
+     */
     Node *getButtobiSquare(const Node *currentNode);
 
 private:

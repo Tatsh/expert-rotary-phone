@@ -36,25 +36,66 @@
 // Private methods reconstructed alongside the content-load flow.
 // Delegate for the pack-info/image downloaders and the common alert (callbacks
 // implemented below).
+/**
+ * @brief The detail screen's private download callbacks and buy-button state helpers.
+ */
 @interface StoreDetailViewController () <DownloaderDelegate,
                                          ImageDownloaderDelegate,
                                          CommonAlertViewDelegate>
+/** @brief Choose the buy button's label for the current ownership and download state. */
 - (void)selfCheckButtonText;
+/**
+ * @brief The pack-detail fetch completed.
+ * @param downloader The finished StorePackInfoDownloader.
+ */
 - (void)storePackInfoDownloaderFinished:(id)downloader;
+/**
+ * @brief The pack-detail fetch failed.
+ * @param downloader The failed StorePackInfoDownloader.
+ */
 - (void)storePackInfoDownloaderError:(id)downloader;
+/** @brief The age gate closed; re-run the spending-limit check. */
 - (void)birthDayViewClose;
-- (void)setButtonTextInstalledForce;
+/**
+ * @brief A preview clip or recommend POST finished.
+ * @param downloader The finished Downloader.
+ */
 - (void)downloaderFinished:(id)downloader;
+/**
+ * @brief A preview clip or recommend POST failed.
+ * @param downloader The failed Downloader.
+ */
 - (void)downloaderError:(id)downloader;
+/**
+ * @brief A preview clip made progress.
+ * @param downloader The Downloader in progress.
+ */
 - (void)downloaderProceed:(id)downloader;
+/**
+ * @brief A jacket image finished downloading.
+ * @param downloader The finished downloader.
+ * @param indexPath The row to refresh.
+ */
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath;
+/**
+ * @brief A jacket image failed to download.
+ * @param downloader The failed downloader.
+ * @param indexPath The row that was waiting on it.
+ */
 - (void)imageDownloaderDidFail:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath;
+/** @brief Cancel every in-flight jacket download. */
 - (void)stopDownloadArtworks;
+/** @brief Set the buy button to its "buy (price)" state. */
 - (void)setButtonTextBuy;
+/** @brief Set the buy button to its "INSTALL" state. */
 - (void)setButtonTextInstall;
+/** @brief Set the buy button to its disabled "INSTALLING" state. */
 - (void)setButtonTextInstalling;
+/** @brief Set the buy button to its "INSTALLED" state. */
 - (void)setButtonTextInstalled;
+/** @brief Force the buy button to its greyed "INSTALLED" state, skipping the recommend check. */
 - (void)setButtonTextInstalledForce;
+/** @brief Set the buy button to its tappable "recommend to a friend" state. */
 - (void)setButtonTextRecommend;
 @end
 

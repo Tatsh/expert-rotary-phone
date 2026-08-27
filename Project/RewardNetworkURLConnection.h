@@ -17,45 +17,59 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief One reward-SDK HTTP request, with a watchdog timer and retry counter.
+ */
 @interface RewardNetworkURLConnection : NSObject <NSURLConnectionDataDelegate> {
-    int retryCount; // attempt counter (zeroed by -init @ 0xff9d0); accessed
-                    // directly
+    /** The attempt counter, zeroed by -init and accessed directly. */
+    int retryCount;
 }
 
-// @ 0x1004bc / setRequest: @ 0x1004cc — the in-flight request.
+/** The in-flight request. Getter @ 0x1004bc, setter @ 0x1004cc. */
 @property(nonatomic, retain) NSURLRequest *request;
 
-// @ 0x1004f4 / setConnection: @ 0x100504 — the backing NSURLConnection.
+/** The backing NSURLConnection. Getter @ 0x1004f4, setter @ 0x100504. */
 @property(nonatomic, retain) NSURLConnection *connection;
 
-// @ 0x10052c / setApplilinkFailedBlock: @ 0x100540 — failure callback.
+/** The failure callback. Getter @ 0x10052c, setter @ 0x100540. */
 @property(nonatomic, copy) void (^ApplilinkFailedBlock)(NSURLRequest *request, NSError *error);
 
-// @ 0x100564 / setReceiveData: @ 0x100574 — accumulated response body.
+/** The accumulated response body. Getter @ 0x100564, setter @ 0x100574. */
 @property(nonatomic, retain) NSMutableData *receiveData;
 
-// @ 0x10059c / setIsConnection: @ 0x1005ac — YES while a request is in flight.
+/** Whether a request is in flight. Getter @ 0x10059c, setter @ 0x1005ac. */
 @property(nonatomic, assign) BOOL isConnection;
 
-// @ 0x1005bc / setTimer: @ 0x1005cc — the 10s watchdog timer.
+/** The 10-second watchdog timer. Getter @ 0x1005bc, setter @ 0x1005cc. */
 @property(nonatomic, retain) NSTimer *timer;
 
-// @ 0x1005f4 / setUrl: @ 0x100604 — the target URL string.
+/** The target URL string. Getter @ 0x1005f4, setter @ 0x100604. */
 @property(nonatomic, retain) NSString *url;
 
-// @ 0x10062c / setApplilinkFinishedBlock: @ 0x100640 — success callback. Typed
-// to match +[RewardNetworkWebAPI responseFromContentsServer:...finishedBlock:]
-// (both args id); -connectionDidFinishLoading: invokes it as block(request,
-// jsonObject).
+/** The success callback, typed to match
+ * +[RewardNetworkWebAPI responseFromContentsServer:request:data:finishedBlock:failedBlock:], whose
+ * two arguments are both `id`. -connectionDidFinishLoading: invokes it as
+ * `block(request, jsonObject)`. Getter @ 0x10062c, setter @ 0x100640. */
 @property(nonatomic, copy) void (^ApplilinkFinishedBlock)(id response, id userInfo);
 
-// @ 0xff9d0 — designated initializer (zeroes retryCount, nils the blocks / url
-// / request).
+/**
+ * @brief The designated initialiser: it zeroes retryCount and nils the blocks, URL and request.
+ * @return The initialised connection.
+ * @ghidraAddress 0xff9d0
+ */
 - (instancetype)init;
 
-// @ 0xffa6c — start `request` against `url`; installs the callbacks (kept if a
-// passed block is nil), the 10s watchdog and a fresh receive buffer, then
-// starts the connection on the main queue.
+/**
+ * @brief Start a request.
+ *
+ * It installs the callbacks — keeping the existing one when a passed block is nil — the
+ * 10-second watchdog and a fresh receive buffer, then starts the connection on the main queue.
+ * @param url The target URL string.
+ * @param request The request to send.
+ * @param finishedBlock Fired with the response payload.
+ * @param failedBlock Fired with the request and error.
+ * @ghidraAddress 0xffa6c
+ */
 - (void)requestAsynchronousWithURL:(NSString *)url
                            request:(NSURLRequest *)request
                      finishedBlock:(void (^)(id response, id userInfo))finishedBlock

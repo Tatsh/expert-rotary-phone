@@ -27,13 +27,35 @@
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController / isPadDisplay
 
 // Own privates (selectors wired up by init).
+/**
+ * @brief The terms-acceptance card's private button actions and animation callbacks.
+ */
 @interface AcceptPolicyViewController ()
+/**
+ * @brief The accept button was tapped: record the agreement and close.
+ * @param sender The tapped button.
+ */
 - (void)onYesBtn:(id)sender;
+/**
+ * @brief The reject button was tapped.
+ * @param sender The tapped button.
+ */
 - (void)onNoBtn:(id)sender;
+/**
+ * @brief The detail button was tapped: show the full terms.
+ * @param sender The tapped button.
+ */
 - (void)onDetailBtn:(id)sender;
+/**
+ * @brief The back button was tapped: leave the full terms.
+ * @param sender The tapped button.
+ */
 - (void)onBackBtn:(id)sender;
+/** @brief The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief Fade the card out. */
 - (void)startCloseAnimation;
+/** @brief The close fade finished; tear the card down. */
 - (void)endCloseAnimation;
 @end
 

@@ -19,26 +19,45 @@
 static RecommendCore *g_pRecommendCoreInstance = nil; // @ g_pRecommendCoreInstance
 static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("RewardCore")
 
+/**
+ * @brief The recommend core's private state, backing properties and helpers.
+ */
 @interface RecommendCore () <RewardNetworkWebViewDelegate> {
-    BOOL navigationBarHidden; // hide the app-list navigation bar
+    BOOL navigationBarHidden; /**< Hide the app-list navigation bar. */
 }
 
-@property(nonatomic, copy)
-    RecommendOpenAppliListCallback callbackForOpenAppliList;                // @ 0xfe660 / 0xfe674
-@property(nonatomic, strong) NSString *categoryId;                          // @ 0xfe698 / 0xfe6a8
-@property(nonatomic, strong) NSError *lastErrorForOpenAppliList;            // @ 0xfe6d0 / 0xfe6e0
-@property(nonatomic, strong) RecommendWebViewController *webViewController; // @ 0xfe708 / 0xfe718
-@property(nonatomic, assign) int initializeFlg;                             // @ 0xfe740 / 0xfe750
-@property(nonatomic, strong) NSString *countryCode;                         // @ 0xfe760 / 0xfe770
+/** The stored open-app-list completion. Getter @ 0xfe660, setter @ 0xfe674. */
+@property(nonatomic, copy) RecommendOpenAppliListCallback callbackForOpenAppliList;
+/** The configured category id. Getter @ 0xfe698, setter @ 0xfe6a8. */
+@property(nonatomic, strong) NSString *categoryId;
+/** The last open-app-list error. Getter @ 0xfe6d0, setter @ 0xfe6e0. */
+@property(nonatomic, strong) NSError *lastErrorForOpenAppliList;
+/** The lazily-created app-list web-view controller. Getter @ 0xfe708, setter @ 0xfe718. */
+@property(nonatomic, strong) RecommendWebViewController *webViewController;
+/** The SDK initialisation state. Getter @ 0xfe740, setter @ 0xfe750. */
+@property(nonatomic, assign) int initializeFlg;
+/** The configured country code. Getter @ 0xfe760, setter @ 0xfe770. */
+@property(nonatomic, strong) NSString *countryCode;
 
-// POST the install record to /ad/external/app/install/regist.php (impl below).
+/**
+ * @brief POST the install record to /ad/external/app/install/regist.php.
+ * @param adIdFrom The advertising id's origin.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param adType The advertisement type.
+ * @param callback Fired with the report error, or nil.
+ */
 - (void)postApplicationInstallWithAdIdFrom:(NSString *)adIdFrom
                                countryCode:(NSString *)countryCode
                                 categoryId:(NSString *)categoryId
                                     adType:(NSString *)adType
                                   callback:(RecommendOpenAppliListCallback)callback;
 
-// Map a server response's error_code/kind to a localized RewardNetworkError.
+/**
+ * @brief Map a server response's error_code and kind to a localised RewardNetworkError.
+ * @param response The parsed server response.
+ * @return The error, or nil when the response reports success.
+ */
 - (NSError *)appliListErrorFromResponse:(NSDictionary *)response;
 
 @end

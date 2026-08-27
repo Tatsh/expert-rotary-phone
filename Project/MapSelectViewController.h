@@ -19,73 +19,104 @@
 
 @class MapSelectViewController;
 
-// One bundled sugoroku map header (0x50 bytes; Ghidra ObjC-encoding
-// "{MapFileHead=ss[24c][40c]s[10c]}").
+/**
+ * @brief One bundled sugoroku map header.
+ *
+ * 0x50 bytes; the Ghidra Objective-C encoding is "{MapFileHead=ss[24c][40c]s[10c]}".
+ */
 typedef struct MapFileHead {
-    int16_t mapId;       // +0x00
-    int16_t squareCount; // +0x02
-    char name[24];       // +0x04 map display name
-    char detail[40];     // +0x1c map detail / theme
-    int16_t eventId;     // +0x44 associated event id
-    char reserved[10];   // +0x46
+    int16_t mapId;       /**< +0x00 The map id. */
+    int16_t squareCount; /**< +0x02 The number of board squares. */
+    char name[24];       /**< +0x04 The map display name. */
+    char detail[40];     /**< +0x1c The map detail or theme text. */
+    int16_t eventId;     /**< +0x44 The associated event id. */
+    char reserved[10];   /**< +0x46 Reserved bytes. */
 } MapFileHead;
 
-// Load every bundled "map_%02d_%d.map" header into an NSArray of
-// NSValue-wrapped MapFileHead, in the fixed display order (Ghidra:
-// loadAllTreasureMapHeaders @ 0xcdee0). Sugoroku map layer.
+/**
+ * @brief Load every bundled "map_%02d_%d.map" header, in the fixed display order.
+ * @return An NSArray of NSValue-wrapped MapFileHead.
+ * @ghidraAddress 0xcdee0
+ */
 NSArray *loadAllTreasureMapHeaders(void);
 
-// True when `index` is a valid event id (< 12). Ghidra: isIndexInRange12 @
-// 0xe2c3c.
+/**
+ * @brief Whether an index is a valid event id.
+ * @param index The index to test.
+ * @return true when @p index is below 12.
+ * @ghidraAddress 0xe2c3c
+ */
 bool isIndexInRange12(unsigned int index);
 
-// Sent to the pad overlay owner (MapSelectSplitViewController) that embeds this
-// list.
+/**
+ * @brief Sent to the iPad overlay owner (MapSelectSplitViewController) that embeds this list.
+ */
 @protocol MapSelectViewControllerDelegate <NSObject>
-// Remember which row is highlighted (pad: the map whose areas fill the right
-// pane).
+/**
+ * @brief Remember which row is highlighted: on iPad, the map whose areas fill the right pane.
+ * @param selectIndexPath The highlighted row.
+ */
 - (void)setSelectIndexPath:(NSIndexPath *)selectIndexPath;
-// A main map was chosen: rebuild the right-pane area list for `mainMapId` from
-// the freshly snapshotted `treasureData` / `mapHeadArray`.
+/**
+ * @brief A main map was chosen: rebuild the right-pane area list from the freshly snapshotted
+ * data.
+ * @param treasureData The sugoroku save table snapshot.
+ * @param mapHeadArray The bundled map-head records.
+ * @param mainMapId The chosen main map.
+ */
 - (void)touchWithTreasureData:(NSArray *)treasureData
                  mapHeadArray:(NSArray *)mapHeadArray
                     mainMapId:(short)mainMapId;
-// Mirror the list's scroll offset into the overlay (keeps both panes aligned).
+/**
+ * @brief Mirror the list's scroll offset into the overlay, keeping both panes aligned.
+ * @param scrollView The list that scrolled.
+ */
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView;
 @end
 
-// NSValue payload for one visible main-map row (the elements of -mapDataArray).
-// Obj-C type-encoding "{MainMapData=s@}". Owned by this controller; the pad
-// split-view host reads it back to label its header banner.
+/**
+ * @brief The NSValue payload for one visible main-map row: the elements of -mapDataArray.
+ *
+ * The Objective-C type-encoding is "{MainMapData=s@}". It is owned by this controller; the iPad
+ * split-view host reads it back to label its header banner.
+ */
 typedef struct MainMapData {
-    short mainMapId;
-    NSString *__unsafe_unretained name; // map name (Shift-JIS decoded)
+    short mainMapId;                    /**< The main map id. */
+    NSString *__unsafe_unretained name; /**< The map name, Shift-JIS decoded. */
 } MainMapData;
 
+/**
+ * @brief The sugoroku main-map list.
+ */
 @interface MapSelectViewController : UITableViewController
 
-// Wrap self in a UINavigationController (with the custom back button); on
-// first-ever entry also push a two-page how-to overlay. Returns that navigation
-// controller (the phone nav host). Ghidra: @ 0xbf498.
+/**
+ * @brief Wrap self in a UINavigationController with the custom back button; on the first-ever
+ * entry it also pushes a two-page how-to overlay.
+ * @return The navigation controller: the phone navigation host.
+ * @ghidraAddress 0xbf498
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Cross-fade the nav host in. Called by the root MainViewController after it
-// adds the host. Ghidra: @ 0xbfa38.
+/**
+ * @brief Cross-fade the navigation host in. The root MainViewController calls it after adding the
+ * host.
+ * @ghidraAddress 0xbfa38
+ */
 - (void)startOpenAnimation;
 
-// The pad overlay owner the selection is forwarded to (nil on phone). Ghidra:
-// getter
-// @ 0xc0768 / setter @ 0xc0778.
+/** The iPad overlay owner the selection is forwarded to; nil on phone. Getter @ 0xc0768, setter @
+ * 0xc0778. */
 @property(nonatomic, assign) id<MapSelectViewControllerDelegate> mapSelectDelegate;
 
-// The sugoroku save table (NSArray of TreasureData) snapshotted at init.
-// Barriered getter (Ghidra @ 0xc0788).
+/** The sugoroku save table, an NSArray of TreasureData, snapshotted at init. The getter is
+ * barriered. Getter @ 0xc0788. */
 @property(atomic, strong, readonly) NSArray *treasureDataArray;
-// All bundled map-head records (NSArray of NSValue-wrapped MapFileHead).
-// Barriered getter (Ghidra @ 0xc079c).
+/** All bundled map-head records, as NSValue-wrapped MapFileHead. The getter is barriered. Getter @
+ * 0xc079c. */
 @property(atomic, strong, readonly) NSArray *mapHeadArray;
-// The visible main-map rows (NSArray of NSValue-wrapped MainMapData). Barriered
-// getter (Ghidra @ 0xc07b0).
+/** The visible main-map rows, as NSValue-wrapped MainMapData. The getter is barriered. Getter @
+ * 0xc07b0. */
 @property(atomic, strong, readonly) NSArray *mapDataArray;
 
 @end

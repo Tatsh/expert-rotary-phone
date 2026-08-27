@@ -12,11 +12,14 @@
  * @brief The first-run "accept the terms of use" modal card.
  */
 @interface AcceptPolicyViewController : UIViewController {
-    BOOL isAnimationing;                 // an open/close fade is running (guards re-entry)
-    UIView *_topView;                    // the card's primary content view
-    UIImageView *_detailView;            // detail overlay (toggled by the back button)
-    UINavigationController *_policyView; // lazily-built full-terms overlay (PolicyView host)
-    UINavigationController *_naviCtrl;   // the card's embedded content navigation controller
+    /** An open or close fade is running; it guards against re-entry. */
+    BOOL isAnimationing;
+    UIView *_topView;         /**< The card's primary content view. */
+    UIImageView *_detailView; /**< The detail overlay, toggled by the back button. */
+    /** The lazily-built full-terms overlay, hosting a PolicyView. */
+    UINavigationController *_policyView;
+    /** The card's embedded content navigation controller. */
+    UINavigationController *_naviCtrl;
 }
 
 /**

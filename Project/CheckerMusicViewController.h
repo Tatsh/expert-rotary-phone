@@ -10,12 +10,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The music-checker song list for one arcade category.
+ */
 @interface CheckerMusicViewController : UITableViewController
 
-// Build the list for one music-checker category: `scoreDataArray` is the array
-// of ArcadeScoreData records to show; `category` (0 = etc, 1 = TV, 2..23 =
-// p01..p22,
-// >=24 = "near") picks the list-header banner image.
+/**
+ * @brief Build the list for one music-checker category.
+ * @param scoreDataArray The ArcadeScoreData records to show.
+ * @param category 0 for etc, 1 for TV, 2..23 for p01..p22, and 24 or above for "near". It picks
+ * the list-header banner image.
+ * @return The initialised controller.
+ */
 - (instancetype)initWithScoreData:(NSArray *)scoreDataArray category:(short)category;
 
 @end

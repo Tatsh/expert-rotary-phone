@@ -69,18 +69,30 @@
 #import "UserSettingData.h"          // treasure snapshot
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
-// NSValue payload for one visible area row. Obj-C type-encoding
-// "{SubMapData=ss@@}".
+/**
+ * @brief The NSValue payload for one visible area row.
+ *
+ * Its Objective-C type encoding is `{SubMapData=ss@@}`.
+ */
 typedef struct SubMapData {
-    short mainMapId;
-    short subMapId;
-    NSString *__unsafe_unretained name;  // area name (Shift-JIS decoded)
-    NSString *__unsafe_unretained name2; // identical copy the binary also allocates
+    short mainMapId;                     /**< The owning map's identifier. */
+    short subMapId;                      /**< The area's identifier within that map. */
+    NSString *__unsafe_unretained name;  /**< The area name, Shift-JIS decoded. */
+    NSString *__unsafe_unretained name2; /**< An identical copy the binary also allocates. */
 } SubMapData;
 
+/**
+ * @brief The area list's private gesture and close helpers.
+ */
 @interface SubMapSelectViewController () <DownloadMainDelegate>
+/**
+ * @brief The edge-pan gesture moved; drive the interactive close.
+ * @param recognizer The pan recogniser.
+ */
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer;
+/** @brief Close the list, deferring to the iPad overlay owner when one is set. */
 - (void)startCloseAnimation;
+/** @brief The back-button action. */
 - (void)backButtonFunc;
 @end
 

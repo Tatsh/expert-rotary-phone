@@ -16,57 +16,100 @@
 @class StoreMusicInfo;
 @class StoreImageView;
 
+/**
+ * @brief One song row inside a store pack's detail card.
+ */
 @interface StorePackMusicView : UIView {
-    UIImageView *m_BG;                        // full-bounds background
-    StoreImageView *artworkView;              // async jacket (shadowed)
-    UILabel *labelName;                       // song title
-    UILabel *labelArtist;                     // artist
-    UILabel *labelLevels;                     // "LEVEL:  b / m / h"
-    UIButton *buttonSample;                   // play/stop the preview clip
-    UIButton *buttonLink;                     // open the iTunes page
-    UIActivityIndicatorView *indicatorSample; // shown over buttonSample while buffering
-    UIImageView *arcadeViewer;                // "playable in arcade" badge (hidden by default)
+    UIImageView *m_BG;           /**< The full-bounds background. */
+    StoreImageView *artworkView; /**< The asynchronously-loaded, shadowed jacket. */
+    UILabel *labelName;          /**< The song title. */
+    UILabel *labelArtist;        /**< The artist. */
+    UILabel *labelLevels;        /**< The "LEVEL: b / m / h" line. */
+    UIButton *buttonSample;      /**< Plays or stops the preview clip. */
+    UIButton *buttonLink;        /**< Opens the iTunes page. */
+    /** Shown over buttonSample while the clip buffers. */
+    UIActivityIndicatorView *indicatorSample;
+    UIImageView *arcadeViewer; /**< The "playable in arcade" badge; hidden by default. */
 }
 
-// Bind the row to a song, or clear it (title/artist/levels blanked, placeholder
-// jacket, sample/link buttons hidden) when info is nil. Ghidra: setInfo: @
-// 0x51408.
+/**
+ * @brief Bind the row to a song, or clear it.
+ * @param info The song to show; nil blanks the title, artist and levels, shows a placeholder
+ * jacket, and hides the sample and link buttons.
+ * @ghidraAddress 0x51408
+ */
 - (void)setInfo:(StoreMusicInfo *)info;
 
-// Show/hide the arcade-availability badge (shown iff the song exists in the
-// arcade). Ghidra: setIsExistAcv: @ 0x5171c.
+/**
+ * @brief Show or hide the arcade-availability badge.
+ * @param isExistAcv YES when the song also exists in the arcade.
+ * @ghidraAddress 0x5171c
+ */
 - (void)setIsExistAcv:(BOOL)isExistAcv;
 
-// Reset the sample button to its idle image and stop its spinner. Ghidra: @
-// 0x51748.
+/**
+ * @brief Reset the sample button to its idle image and stop its spinner.
+ * @ghidraAddress 0x51748
+ */
 - (void)sampleStop;
 
-// Buffering: start the spinner, keep the idle sample glyph. Ghidra: @ 0x517bc.
+/**
+ * @brief Enter the buffering state: start the spinner and keep the idle sample glyph.
+ * @ghidraAddress 0x517bc
+ */
 - (void)sampleDownloading;
 
-// Now playing: stop the spinner, switch to the "stop" sample glyph. Ghidra: @
-// 0x51830.
+/**
+ * @brief Enter the playing state: stop the spinner and switch to the "stop" sample glyph.
+ * @ghidraAddress 0x51830
+ */
 - (void)samplePlaying;
 
-// The sample button (the parent compares it against a tapped control). Ghidra:
-// @ 0x51a24.
+/**
+ * @brief The sample button; the parent compares it against a tapped control.
+ * @return The button.
+ * @ghidraAddress 0x51a24
+ */
 - (UIButton *)buttonSample;
 
-// Pick the row background variant (0 or 1, clamped): the parent alternates it
-// so stacked rows read as distinct panels. Ghidra: @ 0x518a4. The sample/link
-// buttons are exposed via -buttonSample / -buttonLink so the parent can wire
-// their taps.
+/**
+ * @brief Pick the row background variant; the parent alternates it so stacked rows read as
+ * distinct panels.
+ * @param index 0 or 1; the value is clamped.
+ * @ghidraAddress 0x518a4
+ */
 - (void)setBG:(int)index;
 
-// The iTunes-link button (parent wires its tap to -handleLink:). Ghidra: @
-// 0x51a34.
+/**
+ * @brief The iTunes-link button; the parent wires its tap to -handleLink:.
+ * @return The button.
+ * @ghidraAddress 0x51a34
+ */
 - (UIButton *)buttonLink;
 
-// Plain subview accessors the parent reads. Ghidra: artworkView @ 0x519e4,
-// labelName @ 0x519f4, labelArtist @ 0x51a04, labelLevels @ 0x51a14.
+/**
+ * @brief The jacket view.
+ * @return The image view.
+ * @ghidraAddress 0x519e4
+ */
 - (StoreImageView *)artworkView;
+/**
+ * @brief The song-title label.
+ * @return The label.
+ * @ghidraAddress 0x519f4
+ */
 - (UILabel *)labelName;
+/**
+ * @brief The artist label.
+ * @return The label.
+ * @ghidraAddress 0x51a04
+ */
 - (UILabel *)labelArtist;
+/**
+ * @brief The difficulty-levels label.
+ * @return The label.
+ * @ghidraAddress 0x51a14
+ */
 - (UILabel *)labelLevels;
 
 @end

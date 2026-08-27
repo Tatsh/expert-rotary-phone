@@ -12,11 +12,26 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief A wrapper around an NSData blob that is already serialized JSON; CJSONDataSerializer
+ * emits it verbatim instead of re-encoding it.
+ */
 @interface CSerializedJSONData : NSObject {
-    NSData *data;
+    NSData *data; /**< The already-serialized JSON bytes. */
 }
 
+/**
+ * @brief Wrap already-serialized JSON bytes.
+ * @param inData The JSON bytes.
+ * @return The initialised wrapper.
+ * @ghidraAddress 0x6a4c4
+ */
 - (id)initWithData:(NSData *)inData;
+/**
+ * @brief The wrapped JSON bytes.
+ * @return The bytes, emitted verbatim by the serializer.
+ * @ghidraAddress 0x6a540
+ */
 - (NSData *)data;
 
 @end

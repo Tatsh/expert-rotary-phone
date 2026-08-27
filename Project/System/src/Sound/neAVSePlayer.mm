@@ -15,18 +15,30 @@
 
 #import "AVBus.h"
 
-// A loaded source held by the SE table: owns the URL / data (soundSourceInit
-// copies the URL; soundSourceRelease releases it) and vends a stable AVSource
-// the voices point at. The AVSource's url/data are __unsafe_unretained, so this
-// object must outlive any voice using it: the source table (m_sources) keeps it
-// alive until the slot is freed.
+/**
+ * @brief A loaded source held by the SE table.
+ *
+ * It owns the URL or data (soundSourceInit copies the URL; soundSourceRelease releases it) and
+ * vends a stable AVSource the voices point at. The AVSource's url and data are
+ * __unsafe_unretained, so this object must outlive any voice using it: the source table
+ * (m_sources) keeps it alive until the slot is freed.
+ */
 @interface neSeSource : NSObject {
 @public
-    AVSource av; // av.url / av.data alias the strong properties below; av.loop is
-                 // the loop flag
+    /** The vended source. Its url and data alias the strong properties below; av.loop is the
+     * loop flag. */
+    AVSource av;
 }
+/** The owned source URL, aliased by `av.url`. */
 @property(nonatomic, strong) NSURL *url;
+/** The owned source data, aliased by `av.data`. */
 @property(nonatomic, strong) NSData *data;
+/**
+ * @brief Copy the source's URL and record its loop flag; the data slot stays nil.
+ * @param url The sound file URL.
+ * @param loop Whether the voice should loop indefinitely.
+ * @return The initialised source.
+ */
 - (instancetype)initWithURL:(NSURL *)url loop:(BOOL)loop;
 @end
 @implementation neSeSource

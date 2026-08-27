@@ -12,16 +12,30 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief One entry of a StoreDownloadManager queue: a remote source, a local destination and a
+ * caller-supplied context object.
+ */
 @interface StoreDownloadTask : NSObject {
-    NSString *m_FileURL;  // remote source
-    NSString *m_FilePath; // local destination
-    id m_AddObject;       // object queued/handed back on completion
+    NSString *m_FileURL;  /**< The remote source. */
+    NSString *m_FilePath; /**< The local destination. */
+    id m_AddObject;       /**< The object queued and handed back on completion. */
 }
 
-@property(nonatomic, readonly) NSString *fileURL;  // m_FileURL, getter @ 0x42854
-@property(nonatomic, readonly) NSString *filePath; // m_FilePath, getter @ 0x42864
-@property(nonatomic, readonly) id addObject;       // m_AddObject, getter @ 0x42874
+/** The remote source. Getter @ 0x42854. */
+@property(nonatomic, readonly) NSString *fileURL;
+/** The local destination. Getter @ 0x42864. */
+@property(nonatomic, readonly) NSString *filePath;
+/** The object handed back on completion. Getter @ 0x42874. */
+@property(nonatomic, readonly) id addObject;
 
+/**
+ * @brief Build a download task.
+ * @param url The remote source.
+ * @param path The local destination.
+ * @param object The context object to hand back on completion.
+ * @return The initialised task.
+ */
 - (instancetype)initWithURL:(NSString *)url path:(NSString *)path AddObject:(id)object;
 
 @end

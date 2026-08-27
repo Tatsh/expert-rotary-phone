@@ -24,33 +24,49 @@
 // header is ObjC++ (every includer is .mm).
 class MainTask;
 
+/**
+ * @brief The sort-select modal: the six song-list sort orders.
+ */
 @interface SortSelectViewController : UITableViewController
 
-// The owning C++ music-select task. Atomic raw pointer: the binary brackets
-// both the getter
-// (@ 0xc7028) and setter (@ 0xc703c) with a DataMemoryBarrier and stores the
-// pointer without retaining it (assign).
+/** The owning C++ music-select task. It is an atomic raw pointer: the binary brackets both
+ * accessors with a DataMemoryBarrier and stores the pointer without retaining it. Getter @
+ * 0xc7028, setter @ 0xc703c. */
 @property(atomic, assign) MainTask *musicSelTask;
 
-// Build the sort list (six SortData rows, the current sort checked) as a
-// transparent table with a "loading" overlay. `style` is forwarded to
-// UITableViewController. Ghidra: @ 0xc5988.
+/**
+ * @brief Build the sort list — six rows, with the current sort checked — as a transparent table
+ * with a "loading" overlay.
+ * @param style Forwarded to UITableViewController.
+ * @return The initialised controller.
+ * @ghidraAddress 0xc5988
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
-// Keep the C++ task pointer, (re)build the table, wrap self in a
-// UINavigationController (with a back button on phone) and return that
-// navigation controller. Ghidra: @ 0xc6018. Factory named with an 'init' prefix
-// but returns a *nav controller*, not self; opt out of the ARC init method
-// family (AVBus.h convention) so the unrelated return type is allowed.
+/**
+ * @brief Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
+ * with a back button on phone.
+ *
+ * The name carries an "init" prefix but the method returns a navigation controller rather than
+ * self, so it opts out of the ARC init method family — the AVBus.h convention.
+ * @param musicSelTask The owning music-select task.
+ * @return The navigation controller.
+ * @ghidraAddress 0xc6018
+ */
 - (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none)));
 
-// Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @
-// 0xc6288.
+/**
+ * @brief Fade the panel in on phone, or slide it in on iPad.
+ * @ghidraAddress 0xc6288
+ */
 - (void)startOpenAnimation;
 
-// Re-sort the task's list if the sort changed, then fade (phone) / slide (iPad)
-// the panel closed. Ghidra: startCloseAnimation @ 0xc6750.
+/**
+ * @brief Re-sort the task's list when the sort changed, then fade the panel closed on phone, or
+ * slide it closed on iPad.
+ * @ghidraAddress 0xc6750
+ */
 - (void)startCloseAnimation;
 
 @end

@@ -11,26 +11,33 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The phone how-to overlay: a paging scroll view of full-page images with page dots.
+ */
 @interface HowToViewCtrl : UIViewController <UIScrollViewDelegate> {
-    NSArray *_fileNameArray;    // image names, one per page
-    UIScrollView *_scrollView;  // the paging container
-    UIPageControl *_pageCtrl;   // page dots
-    UIButton *_closeBtn;        // right-bar close button (when enabled)
-    BOOL _isCloseButtonEnable;  // show a close button instead of only "back"
-    UIImage *_fromNaviBarImage; // saved navbar bg image to restore on close
-    UIImage *_backGroundImage;  // optional strip background
+    NSArray *_fileNameArray;    /**< The image names, one per page. */
+    UIScrollView *_scrollView;  /**< The paging container. */
+    UIPageControl *_pageCtrl;   /**< The page dots. */
+    UIButton *_closeBtn;        /**< The right-bar close button, when enabled. */
+    BOOL _isCloseButtonEnable;  /**< Show a close button instead of only "back". */
+    UIImage *_fromNaviBarImage; /**< The saved nav-bar background to restore on close. */
+    UIImage *_backGroundImage;  /**< The optional strip background. */
 }
 
-// Retain the ordered list of image names to page through. Ghidra: @ 0x82e5c.
+/**
+ * @brief Retain the ordered list of image names to page through.
+ * @param fileNameArray The page image names.
+ * @return The initialised controller.
+ * @ghidraAddress 0x82e5c
+ */
 - (instancetype)initWithFileNameArray:(NSArray *)fileNameArray;
 
-@property(nonatomic, assign) BOOL isCloseButtonEnable;  // isCloseButtonEnable @ 0x838a4 ;
-                                                        // setIsCloseButtonEnable: @ 0x838bc
-@property(nonatomic, retain) UIImage *fromNaviBarImage; // fromNaviBarImage @ 0x8385c ;
-                                                        // setFromNaviBarImage: @ 0x83870
-@property(nonatomic, retain)
-    UIImage *backGroundImage; // backGroundImage @ 0x83880 ; setBackGroundImage:
-                              // @ 0x83894
+/** Whether to show a close button instead of only "back". Getter @ 0x838a4, setter @ 0x838bc. */
+@property(nonatomic, assign) BOOL isCloseButtonEnable;
+/** The saved nav-bar background image, restored on close. Getter @ 0x8385c, setter @ 0x83870. */
+@property(nonatomic, retain) UIImage *fromNaviBarImage;
+/** The optional strip background. Getter @ 0x83880, setter @ 0x83894. */
+@property(nonatomic, retain) UIImage *backGroundImage;
 
 @end
 

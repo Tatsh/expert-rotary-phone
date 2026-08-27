@@ -1,49 +1,80 @@
-//
-//  ScoreData+Store.h
-//  pop'n rhythmin
-//
-//  Fetch / insert / integrity class methods on the ScoreData entity.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  The score record carries an MD5 tamper-check (`chksco`) computed over the
-//  music id and the three difficulty scores; `checkScore:` validates it and the
-//  caller resets the record if it fails.
-//
+/** @file
+ * Fetch, insert and integrity class methods on the ScoreData entity. Reconstructed from Ghidra
+ * project rb420, program PopnRhythmin.
+ *
+ * The score record carries an MD5 tamper-check (`chksco`) computed over the music id and the three
+ * difficulty scores; checkScore: validates it and the caller resets the record if it fails.
+ */
 
 #import <CoreData/CoreData.h>
 
 #import "ScoreData.h"
 
+/**
+ * @brief Fetch, insert and integrity helpers for the ScoreData entity.
+ */
 @interface ScoreData (Store)
 
-// Fetch the record for `musicId`, creating a fresh (reset) one if absent.
-// If an existing record fails its integrity check it is reset in place.
-// Ghidra: +[ScoreData getScoreData:inManagedObjectContext:] @ 0x6da30
+/**
+ * @brief Fetch the record for @p musicId, creating a fresh (reset) one if absent. An existing
+ * record that fails its integrity check is reset in place.
+ * @param musicId The music track to fetch.
+ * @param context The managed object context to fetch from.
+ * @return The record.
+ * @ghidraAddress 0x6da30
+ */
 + (ScoreData *)getScoreData:(int)musicId inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// Insert a new record for `musicId`, reset it to defaults, and save.
-// Ghidra: +[ScoreData recordWithMusicId:inManagedObjectContext:] @ 0x6ded0
+/**
+ * @brief Insert a new record for @p musicId, reset it to defaults, and save.
+ * @param musicId The music track to insert.
+ * @param context The managed object context to insert into.
+ * @return The new record.
+ * @ghidraAddress 0x6ded0
+ */
 + (ScoreData *)recordWithMusicId:(int)musicId
           inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// Fetch every ScoreData row.
-// Ghidra: +[ScoreData getAllScoreData:] @ 0x6dca4
+/**
+ * @brief Fetch every ScoreData row.
+ * @param context The managed object context to fetch from.
+ * @return An array of ScoreData.
+ * @ghidraAddress 0x6dca4
+ */
 + (NSArray *)getAllScoreData:(NSManagedObjectContext *)context;
 
-// Reset a record to default/empty values and re-stamp its checksum.
-// Ghidra: +[ScoreData reset:] @ 0x6df80
+/**
+ * @brief Reset a record to default and empty values, then re-stamp its checksum.
+ * @param record The record to reset.
+ * @ghidraAddress 0x6df80
+ */
 + (void)reset:(ScoreData *)record;
 
-// YES if `record`'s stored checksum matches a freshly computed one.
-// Ghidra: +[ScoreData checkScore:] @ 0x6e354
+/**
+ * @brief Validate a record's stored checksum against a freshly computed one.
+ * @param record The record to check.
+ * @return YES when the checksums match.
+ * @ghidraAddress 0x6e354
+ */
 + (BOOL)checkScore:(ScoreData *)record;
 
-// Compute the MD5 checksum NSData for a record's current scores.
-// Ghidra: +[ScoreData hashScore:] @ 0x6e260
+/**
+ * @brief Compute the MD5 checksum for a record's current scores.
+ * @param record The record to hash.
+ * @return The 16-byte digest.
+ * @ghidraAddress 0x6e260
+ */
 + (NSData *)hashScore:(ScoreData *)record;
 
-// Compute the raw 16-byte checksum for explicit score values.
-// Ghidra: +[ScoreData hashScoreForTune:Normal:Hyper:Ex:Hash:] @ 0x6e20c
+/**
+ * @brief Compute the raw 16-byte checksum for explicit score values.
+ * @param musicId The music track.
+ * @param scoreN The Normal-difficulty score.
+ * @param scoreH The Hyper-difficulty score.
+ * @param scoreEx The EX-difficulty score.
+ * @param outDigest16 Receives the 16-byte digest.
+ * @ghidraAddress 0x6e20c
+ */
 + (void)hashScoreForTune:(int)musicId
                   Normal:(int)scoreN
                    Hyper:(int)scoreH

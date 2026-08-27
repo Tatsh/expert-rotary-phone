@@ -12,15 +12,29 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The character and skill info popup shown when tapping the portrait inside a
+ * FriendListDetail.
+ */
 @interface FriendListDetailChara : UIImageView
 
-// `friendData` is an NSValue-wrapped FriendListData; only its charaId is used
-// (to look up the character's name, skill and art). `frame` positions the popup
-// over the tapped portrait.
+/**
+ * @brief Build the popup for one friend's character.
+ * @param frame The frame positioning the popup over the tapped portrait.
+ * @param friendData An NSValue-wrapped FriendListData; only its charaId is used, to look up the
+ * character's name, skill and art.
+ * @return The initialised popup.
+ * @ghidraAddress 0xbac58
+ */
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData;
 
-// Fade the popup in (0.3s) / out (0.3s, then remove from its superview).
+/**
+ * @brief Fade the popup in over 0.3 s.
+ */
 - (void)startOpenAnimation;
+/**
+ * @brief Fade the popup out over 0.3 s, then remove it from its superview.
+ */
 - (void)startCloseAnimation;
 
 @end

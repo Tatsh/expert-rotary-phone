@@ -72,29 +72,59 @@ enum AcViewerState : int {
     kAcvDone = 17,           // ACST_DONE
 };
 
+/**
+ * @brief The arcade-viewer play task: it drives arcade chart playback, the pause menu and the
+ * option sheet.
+ */
 class AcViewerTask : public ne::C_TASK {
 public:
-    // Constructed by the engine when the arcade viewer starts play (its
-    // ctor/vtable live @ 0x130bb8; not part of this reconstruction batch).
+    /**
+     * @brief Construct the task. The engine builds it when the arcade viewer starts play (its
+     * constructor and vtable live @ 0x130bb8; not part of this reconstruction batch).
+     */
     AcViewerTask();
-    ~AcViewerTask() override;          // @ 0x215d8 (task_delete deleting-dtor: base + delete)
-    void update(int deltaMs) override; // @ 0x21678  acMainTaskUpdate
+    /**
+     * @brief Tear the task down.
+     * @ghidraAddress 0x215d8
+     */
+    ~AcViewerTask() override;
+    /**
+     * @brief Per-frame arcade-viewer tick: advance the play-state machine and the note stream.
+     * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
+     * @ghidraAddress 0x21678
+     */
+    void update(int deltaMs) override;
 
-    // Apply the arcade-viewer option sheet's selections (hi-speed / pop-kun /
-    // hid-sud / ran-mir) to this task, rebuilding the lane map and re-seeking the
-    // note stream when they change. The options view controller reaches it through
-    // the neEngine::acMainApplyGameplaySettings forwarder. Ghidra: FUN_00023850.
+    /**
+     * @brief Apply the arcade-viewer option sheet's selections (hi-speed, pop-kun, hid-sud,
+     * ran-mir) to this task, rebuilding the lane map and re-seeking the note stream when they
+     * change.
+     *
+     * The options view controller reaches it through the
+     * neEngine::acMainApplyGameplaySettings forwarder.
+     * @ghidraAddress 0x23850
+     */
     void applyGameplaySettings();
 
-    // Play-state + board-up accessors for the app-lifecycle bridge
-    // (neEngine::stopAcMainTask / acMainRequestGameExit). m_state @+0x20c is the
-    // play-state machine; m_padBoardUp @+0x1d9 marks the pad board as already up.
+    /**
+     * @brief The current play-state machine value (binary field @ +0x20c).
+     * @return The play state.
+     */
     AcViewerState playState() const {
         return m_state;
     }
+    /**
+     * @brief Force the play-state machine to @p state, used by the app-lifecycle bridge
+     * (neEngine::stopAcMainTask / acMainRequestGameExit).
+     * @param state The new play state.
+     */
     void setPlayState(AcViewerState state) {
         m_state = state;
     }
+    /**
+     * @brief Mark the pad board as already up (binary field @ +0x1d9).
+     * @param up YES when the pad board is up.
+     */
     void setPadBoardUp(bool up) {
         m_padBoardUp = up ? 1 : 0;
     }

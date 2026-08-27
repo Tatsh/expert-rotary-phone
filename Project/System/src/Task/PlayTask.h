@@ -139,24 +139,47 @@ enum PlayState {
 // in scoreToRank. Ghidra compares against 0x1116f (69999) with a signed bgt.
 inline constexpr int kScoreClearThreshold = 70000;
 
+/**
+ * @brief The standard-mode note-play task: the play scene's state machine, HUD and judge pass.
+ *
+ * This class is also the flat engine work area the whole play scene shares.
+ */
 class PlayTask : public ne::C_TASK {
 public:
-    PlayTask();                        // Ghidra: MainTask spawns this; PlayTask_init
-    ~PlayTask() override;              // @ 0x2db74 (taskNode_deleteB deleting-dtor: base + delete)
-    void update(int deltaMs) override; // Ghidra: PlayTask_update (FUN_0002dc14)
+    /**
+     * @brief Construct the play task. MainTask spawns it (Ghidra: PlayTask_init).
+     */
+    PlayTask();
+    /**
+     * @brief Tear the play task down.
+     * @ghidraAddress 0x2db74
+     */
+    ~PlayTask() override;
+    /**
+     * @brief Per-frame play tick: advance the play-state machine, run the judge pass and draw the
+     * HUD.
+     * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
+     * @ghidraAddress 0x2dc14
+     */
+    void update(int deltaMs) override;
 
-    // Reset the play scene for a fresh attempt: reload the chart, reset the
-    // animated layers, zero the 0x3c-entry judge pool (@ +0x3c8, stride 0x18)
-    // with sequential indices + -1 sentinels, and reset the gauge/score scalars
-    // (@ +0x9ac..+0x9dc). Ghidra: playTaskResetState (FUN_0002fed8).
-    void resetState(); // @ 0x2fed8
+    /**
+     * @brief Reset the play scene for a fresh attempt.
+     *
+     * Reloads the chart, resets the animated layers, zeroes the 0x3c-entry judge pool (@ +0x3c8,
+     * stride 0x18) with sequential indices and -1 sentinels, and resets the gauge and score
+     * scalars (@ +0x9ac..+0x9dc).
+     * @ghidraAddress 0x2fed8
+     */
+    void resetState();
 
-    // Nudge the life gauge (@ +0x9c0, clamped to [0, 0x400]) by the per-mode
-    // delta: mode 0 = miss/down (+0x9d4, also sets the "damaged" flag @ +0x9dc),
-    // 1 = good
-    // (+0x9d0), 2/3 = great/perfect (+0x9cc). Ghidra: updateGaugeValue
-    // (FUN_000312cc).
-    void updateGauge(int mode); // @ 0x312cc
+    /**
+     * @brief Nudge the life gauge (@ +0x9c0, clamped to [0, 0x400]) by the per-mode delta.
+     * @param mode 0 for miss/down (+0x9d4, which also sets the "damaged" flag @ +0x9dc), 1 for
+     * good (+0x9d0), 2 or 3 for great/perfect (+0x9cc).
+     * @ghidraAddress 0x312cc
+     */
+    void updateGauge(int mode);
 
 private:
     // Reload the chart into the play data (restart = the arg the reset path
@@ -210,132 +233,142 @@ public:
     // +0x28 scene textures (neTextureForiOS*), allocated by PlayLoadCharaTextures
     // and freed in PlayTaskGotoResult. Slot 1 of the first pair is the demo
     // window frame (t_window @ +0x2c).
-    std::unique_ptr<neTextureForiOS> m_windowTex[2];   // +0x28 window-frame texture pair
-    std::unique_ptr<neTextureForiOS> m_charaTex[8];    // +0x30 character portrait textures
-    std::unique_ptr<neTextureForiOS> m_textPanels[13]; // +0x50 demo text-panel textures
+    std::unique_ptr<neTextureForiOS> m_windowTex[2];   /**< +0x28 Window-frame texture pair. */
+    std::unique_ptr<neTextureForiOS> m_charaTex[8];    /**< +0x30 Character portrait textures. */
+    std::unique_ptr<neTextureForiOS> m_textPanels[13]; /**< +0x50 Demo text-panel textures. */
 
     // The two animated AepLyrCtrl layer banks: PlayTask_init operator_new's +
     // AepLyrCtrl::init's each element; resetState() rewinds every non-null layer.
     // update() cues the combo-milestone SEs off m_sceneLayers[4..10].
-    std::unique_ptr<AepLyrCtrl> m_comboLayers[5];  // +0x84 EFF_COM* combo-effect transports
-    std::unique_ptr<AepLyrCtrl> m_sceneLayers[11]; // +0x98 scene / HUD / combo-cue transports
+    std::unique_ptr<AepLyrCtrl> m_comboLayers[5]; /**< +0x84 EFF_COM* combo-effect transports. */
+    /** +0x98 Scene / HUD / combo-cue transports. */
+    std::unique_ptr<AepLyrCtrl> m_sceneLayers[11];
 
     // +0xc4 resolved Aep layer-no / frame-count / user-no tables.
     // PlayBuildFieldLayers fills them (AepManager getLyrNo / layerFrameCount /
     // getFrmNo / getUsrNo); PlayTaskDraw reads them to pick each note / digit /
     // tone / chara sprite. Names track the getLyrNo/getFrmNo tables.
-    int m_toneJudgeLyr[4] = {};    // +0xc4  TONE_DEFAULT/NEAR/OUT_0/OUT_1 lyr handles
-    int m_toneJudgeFrames[4] = {}; // +0xd4  ...their frame counts
-    int m_effectStateLyr[14] = {}; // +0xe4  GG_HANTEI..EFF_HIT lyr handles;
-                                   //        [6]/[7]=FRAME_SIDEMT_BARSTAR0/1 @+0xfc/+0x100,
-    //        [8]=FRAME_SIDEMT_BAR @+0x104, [11]=BGMT_CD_COLOR @+0x110
-    int m_effectStateFrames[14] = {}; // +0x11c ...frame counts ([8]=BAR length @+0x13c)
-    int m_scoreBpmLyr[5] = {};        // +0x154 BPM / score lyr handles
-    int m_scoreBpmFrames[5] = {};     // +0x168 ...frame counts
-    int m_charaJumpLyr[8] = {};       // +0x17c BGMTBPM1_CHARAn_JUMP lyr handles
+    int m_toneJudgeLyr[4] = {};    /**< +0xc4 TONE_DEFAULT/NEAR/OUT_0/OUT_1 layer handles. */
+    int m_toneJudgeFrames[4] = {}; /**< +0xd4 Frame counts of the m_toneJudgeLyr layers. */
+    /**
+     * +0xe4 GG_HANTEI..EFF_HIT layer handles. [6] and [7] are FRAME_SIDEMT_BARSTAR0/1 (@ +0xfc
+     * and +0x100), [8] is FRAME_SIDEMT_BAR (@ +0x104) and [11] is BGMT_CD_COLOR (@ +0x110).
+     */
+    int m_effectStateLyr[14] = {};
+    /** +0x11c Frame counts of the m_effectStateLyr layers; [8] is the bar length (@ +0x13c). */
+    int m_effectStateFrames[14] = {};
+    int m_scoreBpmLyr[5] = {};    /**< +0x154 BPM / score layer handles. */
+    int m_scoreBpmFrames[5] = {}; /**< +0x168 Frame counts of the m_scoreBpmLyr layers. */
+    int m_charaJumpLyr[8] = {};   /**< +0x17c BGMTBPM1_CHARAn_JUMP layer handles. */
     // +0x19c a 64-byte gap in the chara-jump tables. A program-wide instruction
     // search finds no PlayTask access to this offset (every #0x19c reference
     // belongs to another task / struct, or is a stack / literal-pool slot), so it
     // is a dead gap rather than a live per-chara table.
 #ifndef ENABLE_PATCHES
-    uint8_t unused_19c[0x1dc - 0x19c] =
-        {}; // +0x19c unused 64-byte gap (Ghidra: no PlayTask access)
+    /** +0x19c Unused 64-byte gap (Ghidra: no PlayTask access). */
+    uint8_t unused_19c[0x1dc - 0x19c] = {};
 #endif
-    int m_charaJumpFrames[8] = {}; // +0x1dc ...chara-jump layer frame counts
-    int m_pauseEyeToneFrm[8] = {}; // +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame nos
-    int m_barSegFrame = 0;         // +0x21c long-note connecting-bar segment frame
-                                   //        (getFrmNo; judge draws it via drawAepFrameEx)
-    int m_scoreDigitFrm[10] = {};  // +0x220 SCO_0..9 frame nos
-    int m_comboDigitFrm[10] = {};  // +0x248 EFF_C_NUM0..9 frame nos
-    int m_gaugeFlashFrm[4] = {};   // +0x270 GG_IFL_* frame nos
-    int m_tone08Frm[5] = {};       // +0x280 TONE_08_1.. frame nos
-    int m_tone08NumFrm[5] = {};    // +0x294 TONE_08_NUM2.. frame nos
-    int m_toneNumberFrm[10] = {};  // +0x2a8 tone-number frame nos
-    int m_toneSameFrm[10] = {};    // +0x2d0 tone-same frame nos
-    int m_userSprite[15] = {};     // +0x2f8 GG_IFL..EFF_C_NUM100 user nos (indices
-                                   //        map to the CMD_PAUSE/TONE/ORB/FRAME reads)
-    int m_numComboUser[3] = {};    // +0x334 NUM_COMBO_* user nos
-    int m_scoreNumUser[6] = {};    // +0x340 SCO_0000NN user nos
-    int m_charaUser[8] = {};       // +0x358 CHARAn user nos
-    int m_charaAnmUser[8] = {};    // +0x378 CHARAn_ANM user nos
+    int m_charaJumpFrames[8] = {}; /**< +0x1dc Frame counts of the chara-jump layers. */
+    /** +0x1fc CMD_PAUSE_1_F / ORB_EYES / TONE_L1_2 frame numbers. */
+    int m_pauseEyeToneFrm[8] = {};
+    /** +0x21c Long-note connecting-bar segment frame; the judge draws it via drawAepFrameEx. */
+    int m_barSegFrame = 0;
+    int m_scoreDigitFrm[10] = {}; /**< +0x220 SCO_0..9 frame numbers. */
+    int m_comboDigitFrm[10] = {}; /**< +0x248 EFF_C_NUM0..9 frame numbers. */
+    int m_gaugeFlashFrm[4] = {};  /**< +0x270 GG_IFL_* frame numbers. */
+    int m_tone08Frm[5] = {};      /**< +0x280 TONE_08_1.. frame numbers. */
+    int m_tone08NumFrm[5] = {};   /**< +0x294 TONE_08_NUM2.. frame numbers. */
+    int m_toneNumberFrm[10] = {}; /**< +0x2a8 Tone-number frame numbers. */
+    int m_toneSameFrm[10] = {};   /**< +0x2d0 Tone-same frame numbers. */
+    /** +0x2f8 GG_IFL..EFF_C_NUM100 user numbers; indices map to the
+     * CMD_PAUSE/TONE/ORB/FRAME reads. */
+    int m_userSprite[15] = {};
+    int m_numComboUser[3] = {}; /**< +0x334 NUM_COMBO_* user numbers. */
+    int m_scoreNumUser[6] = {}; /**< +0x340 SCO_0000NN user numbers. */
+    int m_charaUser[8] = {};    /**< +0x358 CHARAn user numbers. */
+    int m_charaAnmUser[8] = {}; /**< +0x378 CHARAn_ANM user numbers. */
 
-    int m_hitSeId = 0;          // +0x398 per-tap hit-SE source id (reloadChart loadSe)
-    int m_gaugeSeId = 0;        // +0x39c second gauge/tap SE source id (freed in gotoResult)
-    int m_timingSeInst[2] = {}; // +0x3a0 timing-SE playing instances (-1 idle,
-                                //        reaped each frame in update)
-    int m_playSeIds[3] = {};    // +0x3a8 v12/v29/v30 play-SE source ids
-    uint8_t _pad_3b4[0x3b8 - 0x3b4] = {}; // +0x3b4 4-byte gap; no play-task access (only
-                                          //        pc-relative literals alias this offset)
-    int m_scrubBarFrame = 0;              // +0x3b8 gauge/scrub-bar eased frame (DrawHud)
-    int m_cdColorFrame = 0;               // +0x3bc BGMT_CD_COLOR anim frame / HUD fever-loop frame
-    int m_barStarFrame = 0;               // +0x3c0 FRAME_SIDEMT_BARSTAR1 anim frame (update wraps)
-    int m_cdFrame = 0;                    // +0x3c4 BGMT_CD anim frame (update wraps)
-    NoteJudgeState m_judgePool[60] = {};  // +0x3c8 per-note judge slots (stride 0x18)
-    neAppEventCenter *m_eventCenter = nullptr; // +0x968 picked {musicId, sheet} carrier
-    int m_screenWidth = 0;                     // +0x96c aep screen width
-    int m_screenHeight = 0;                    // +0x970 aep screen height
-    float m_uiScale = 0.0f;                    // +0x974 UI scale (g_uiScale; the judge and the
-    //        note draw read it directly as a float)
-    int m_pauseOriginX = 0; // +0x978 pause-menu layout x origin
+    int m_hitSeId = 0;   /**< +0x398 Per-tap hit-SE source id, loaded by reloadChart. */
+    int m_gaugeSeId = 0; /**< +0x39c Second gauge/tap SE source id, freed in gotoResult. */
+    /** +0x3a0 Timing-SE playing instances; -1 when idle, reaped each frame in update(). */
+    int m_timingSeInst[2] = {};
+    int m_playSeIds[3] = {}; /**< +0x3a8 The v12/v29/v30 play-SE source ids. */
+    /** +0x3b4 4-byte gap; no play-task access (only pc-relative literals alias this offset). */
+    uint8_t _pad_3b4[0x3b8 - 0x3b4] = {};
+    int m_scrubBarFrame = 0; /**< +0x3b8 Gauge/scrub-bar eased frame, driven by DrawHud(). */
+    int m_cdColorFrame = 0;  /**< +0x3bc BGMT_CD_COLOR animation / HUD fever-loop frame. */
+    /** +0x3c0 FRAME_SIDEMT_BARSTAR1 animation frame; update() wraps it. */
+    int m_barStarFrame = 0;
+    int m_cdFrame = 0;                   /**< +0x3c4 BGMT_CD animation frame; update() wraps it. */
+    NoteJudgeState m_judgePool[60] = {}; /**< +0x3c8 Per-note judge slots (stride 0x18). */
+    neAppEventCenter *m_eventCenter = nullptr; /**< +0x968 Picked {musicId, sheet} carrier. */
+    int m_screenWidth = 0;                     /**< +0x96c Aep screen width. */
+    int m_screenHeight = 0;                    /**< +0x970 Aep screen height. */
+    /** +0x974 UI scale (g_uiScale); the judge and the note draw read it directly as a float. */
+    float m_uiScale = 0.0f;
+    int m_pauseOriginX = 0; /**< +0x978 Pause-menu layout x origin. */
     // +0x97c device-branched pause-menu + note-field geometry (phone/pad
     // constants). The pause fields are verified against the state-5/6 hit tests
     // in PlayTask_update; the note-field fields are consumed by the delegated
     // note-quad draw.
-    int m_pauseBtnResumeX = 0; // +0x97c pause button 0 (resume) x
-    int m_pauseBtnRetryX = 0;  // +0x980 pause button 1 (retry) x
-    int m_pauseBtnQuitX = 0;   // +0x984 pause button 2 (quit) x
-    int m_pauseBtnWidth = 0;   // +0x988 pause-menu button hit width
-    int m_pauseTapCenterX = 0; // +0x98c in-play pause-tap hit-circle center x
-    int m_pauseTapCenterY = 0; // +0x990 in-play pause-tap hit-circle center y
-    int m_pauseTapRadius = 0;  // +0x994 in-play pause-tap hit-circle radius
+    int m_pauseBtnResumeX = 0; /**< +0x97c Pause button 0 (resume) x. */
+    int m_pauseBtnRetryX = 0;  /**< +0x980 Pause button 1 (retry) x. */
+    int m_pauseBtnQuitX = 0;   /**< +0x984 Pause button 2 (quit) x. */
+    int m_pauseBtnWidth = 0;   /**< +0x988 Pause-menu button hit width. */
+    int m_pauseTapCenterX = 0; /**< +0x98c In-play pause-tap hit-circle centre x. */
+    int m_pauseTapCenterY = 0; /**< +0x990 In-play pause-tap hit-circle centre y. */
+    int m_pauseTapRadius = 0;  /**< +0x994 In-play pause-tap hit-circle radius. */
     // Long-note connecting-bar geometry (judge FUN_0002f1f8: len = fade*scale +
     // base, drawn along the head->target angle; priority halved into the anchor).
-    int m_barLenScale = 0;                // +0x998 bar length gain per fade
-    int m_barSegLyr1 = 0;                 // +0x99c second bar-segment layer id
-    int m_barPriority = 0;                // +0x9a0 bar draw priority (halved)
-    int m_barLenBase = 0;                 // +0x9a4 bar length base
-    int m_charaDrawSize = 0;              // +0x9a8 chara portrait draw size (PlayTaskDraw)
-    int16_t m_gaugeBase = 0;              // +0x9ac default life-gauge base (g_wPlayDefaultGauge)
-    uint8_t _pad_9ae[0x9b0 - 0x9ae] = {}; // +0x9ae alignment before m_score (no access)
-    int m_score = 0;                      // +0x9b0 running score readout (PlayCurrentScore)
-    int16_t m_seVolume = 0;               // +0x9b4 touch-sound volume (UserSettingData)
-    uint8_t _pad_9b6[0x9b8 - 0x9b6] = {}; // +0x9b6 alignment before m_hitRadius (no access)
-    float m_hitRadius = 0.0f; // +0x9b8 note hit-test radius (read as float by PlayJudge)
-    int m_popkunSize = 0;     // +0x9bc note ("popkun") size (float truncated to int, 0x2e418)
-    int16_t m_gaugeValue = 0; // +0x9c0 life-gauge value (0..0x400)
+    int m_barLenScale = 0;   /**< +0x998 Bar length gain per fade. */
+    int m_barSegLyr1 = 0;    /**< +0x99c Second bar-segment layer id. */
+    int m_barPriority = 0;   /**< +0x9a0 Bar draw priority, halved into the anchor. */
+    int m_barLenBase = 0;    /**< +0x9a4 Bar length base. */
+    int m_charaDrawSize = 0; /**< +0x9a8 Character portrait draw size (PlayTaskDraw). */
+    int16_t m_gaugeBase = 0; /**< +0x9ac Default life-gauge base (g_wPlayDefaultGauge). */
+    uint8_t _pad_9ae[0x9b0 - 0x9ae] = {}; /**< +0x9ae Alignment before m_score. */
+    int m_score = 0;                      /**< +0x9b0 Running score readout (PlayCurrentScore). */
+    int16_t m_seVolume = 0;               /**< +0x9b4 Touch-sound volume (UserSettingData). */
+    uint8_t _pad_9b6[0x9b8 - 0x9b6] = {}; /**< +0x9b6 Alignment before m_hitRadius. */
+    /** +0x9b8 Note hit-test radius; PlayJudge reads it as a float. */
+    float m_hitRadius = 0.0f;
+    /** +0x9bc Note ("popkun") size; a float truncated to int @ 0x2e418. */
+    int m_popkunSize = 0;
+    int16_t m_gaugeValue = 0; /**< +0x9c0 Life-gauge value (0..0x400). */
     // +0x9c2 combo-milestone re-trigger guard: the judge sets it to the current
     // combo count each frame and compares it against the 25 / 50 / every-50 past
     // 100 thresholds to fire each milestone burst once.
-    int16_t m_comboMilestoneGuard = 0; // +0x9c2 previous combo count (milestone guard)
+    int16_t m_comboMilestoneGuard = 0; /**< +0x9c2 Previous combo count (milestone guard). */
     // +0x9c4 the combo milestone just celebrated (25 / 50 / 100+): the judge
     // records the crossed value here as it stops the matching burst layer.
-    int16_t m_comboMilestoneShown = 0;    // +0x9c4 last combo milestone celebrated
-    bool m_bgmReady = false;              // +0x9c6 async BGM decode finished (state-2 gate)
-    bool m_suppressHud = false;           // +0x9c7 hide the HUD (teardown)
-    bool m_endSeFired = false;            // +0x9c8 one-shot song-end clear/rank-SE latch
-    bool m_isDemoPlay = false;            // +0x9c9 tutorial / auto-demo flag
-                                          //        (init from event-center +0x33)
-    bool m_isPadDisplay = false;          // +0x9ca pad-class display (g_bIsPadDisplay)
-    uint8_t _pad_9cb[0x9cc - 0x9cb] = {}; // +0x9cb alignment before the gauge floats (no access)
-    float m_gaugeGainGreat = 0.0f;        // +0x9cc great / perfect gauge delta
-    float m_gaugeGainGood = 0.0f;         // +0x9d0 good gauge delta (1.0)
-    float m_gaugeLossMiss = 0.0f;         // +0x9d4 miss / down gauge delta (negative)
-    int m_damageAccum = 0;                // +0x9d8 damage accumulator (reset 0)
-    bool m_damagedThisFrame = false;      // +0x9dc took damage this frame (updateGauge)
-    uint8_t _pad_9dd[0x9e0 - 0x9dd] = {}; // +0x9dd alignment before m_hitEffectScale (no access)
-    int m_hitEffectScale = 0;             // +0x9e0 note hit-effect extent (init 500/1000); the
-                                          //        judge passes its half (/2) as the draw scale
-    bool m_optSimpleMode = false;         // +0x9e4 UserSettingData isSimpleMode
-    bool m_optEffectOn = false;           // +0x9e5 UserSettingData isEffectOn
-    bool m_optLongNoteEffect = false;     // +0x9e6 UserSettingData isLongNotesEffectOn
-    bool m_optOldHardware = false;        // +0x9e7 AppDelegate isOldHardware
-    bool m_stopped = false;               // +0x9e8 audio stopped (quit path)
-    uint8_t _pad_9e9[0x9ec - 0x9e9] = {}; // +0x9e9 alignment before m_backTouchId (no access)
-    int m_backTouchId = -1;               // +0x9ec held back-tap touch id (-1 none)
-    int m_backTouchTime = 0;              // +0x9f0 getTimeMillis at back-tap start
-    int m_beatPulse = 0;                  // +0x9f4 demo chara-window beat pulse (0..100)
-    int m_endPos = 0;                     // +0x9f8 NoteMng position latched at song end
-    PlayState m_state = kPlayStateInit;   // +0x9fc play state-machine field
+    int16_t m_comboMilestoneShown = 0; /**< +0x9c4 Last combo milestone celebrated. */
+    bool m_bgmReady = false;           /**< +0x9c6 Async BGM decode finished; the state-2 gate. */
+    bool m_suppressHud = false;        /**< +0x9c7 Hide the HUD during teardown. */
+    bool m_endSeFired = false;         /**< +0x9c8 One-shot song-end clear/rank-SE latch. */
+    /** +0x9c9 Tutorial / auto-demo flag, from event-centre +0x33. */
+    bool m_isDemoPlay = false;
+    bool m_isPadDisplay = false;          /**< +0x9ca Pad-class display (g_bIsPadDisplay). */
+    uint8_t _pad_9cb[0x9cc - 0x9cb] = {}; /**< +0x9cb Alignment before the gauge floats. */
+    float m_gaugeGainGreat = 0.0f;        /**< +0x9cc Great / perfect gauge delta. */
+    float m_gaugeGainGood = 0.0f;         /**< +0x9d0 Good gauge delta (1.0). */
+    float m_gaugeLossMiss = 0.0f;         /**< +0x9d4 Miss / down gauge delta; negative. */
+    int m_damageAccum = 0;                /**< +0x9d8 Damage accumulator; reset to 0. */
+    bool m_damagedThisFrame = false;      /**< +0x9dc Took damage this frame (updateGauge). */
+    uint8_t _pad_9dd[0x9e0 - 0x9dd] = {}; /**< +0x9dd Alignment before m_hitEffectScale. */
+    /** +0x9e0 Note hit-effect extent (initialised to 500 or 1000); the judge passes half of it
+     * as the draw scale. */
+    int m_hitEffectScale = 0;
+    bool m_optSimpleMode = false;         /**< +0x9e4 UserSettingData isSimpleMode. */
+    bool m_optEffectOn = false;           /**< +0x9e5 UserSettingData isEffectOn. */
+    bool m_optLongNoteEffect = false;     /**< +0x9e6 UserSettingData isLongNotesEffectOn. */
+    bool m_optOldHardware = false;        /**< +0x9e7 AppDelegate isOldHardware. */
+    bool m_stopped = false;               /**< +0x9e8 Audio stopped; the quit path. */
+    uint8_t _pad_9e9[0x9ec - 0x9e9] = {}; /**< +0x9e9 Alignment before m_backTouchId. */
+    int m_backTouchId = -1;               /**< +0x9ec Held back-tap touch id; -1 when none. */
+    int m_backTouchTime = 0;              /**< +0x9f0 getTimeMillis at back-tap start. */
+    int m_beatPulse = 0;                  /**< +0x9f4 Demo character-window beat pulse (0..100). */
+    int m_endPos = 0;                     /**< +0x9f8 NoteMng position latched at song end. */
+    PlayState m_state = kPlayStateInit;   /**< +0x9fc Play state-machine field. */
 };
 
 // Play-scene lifecycle seams operating on the play-data block.

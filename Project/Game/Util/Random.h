@@ -21,22 +21,41 @@
 
 #include <cstdint>
 
+/**
+ * @brief A Marsaglia xorshift128 pseudo-random generator.
+ */
 class Random {
 public:
-    // Seed with the canonical xorshift128 constants. Ghidra: FUN_00062b20.
+    /**
+     * @brief Seed the state with the canonical xorshift128 constants.
+     * @ghidraAddress 0x62b20
+     */
     Random();
 
-    // The class is polymorphic in the binary (single vtable slot: an empty dtor).
-    // Ghidra: FUN_00062b54.
+    /**
+     * @brief Destroy the generator. The class is polymorphic in the binary, whose single vtable
+     * slot is this empty destructor.
+     * @ghidraAddress 0x62b54
+     */
     virtual ~Random();
 
-    // Reset x/y/z to the canonical constants and take `seed` as the w word (the
-    // game seeds this with time() before a shuffle). Ghidra: FUN_00062b5c.
+    /**
+     * @brief Reset x, y and z to the canonical constants and take @p seed as the w word.
+     *
+     * The game seeds this with time() before a shuffle.
+     * @param seed The new w word.
+     * @ghidraAddress 0x62b5c
+     */
     void setSeed(uint32_t seed);
 
-    // A uniformly-distributed integer in [0, max). Asserts max >= 0. Ghidra:
-    // FUN_00062be0 (GetRandRangeInt): advances the generator and reduces the low
-    // 31 bits modulo max.
+    /**
+     * @brief A uniformly-distributed integer below @p max.
+     *
+     * Advances the generator and reduces the low 31 bits modulo @p max.
+     * @param max The exclusive upper bound; asserts it is 0 or above.
+     * @return An integer in [0, @p max).
+     * @ghidraAddress 0x62be0
+     */
     int getRandRangeInt(int max);
 
 private:

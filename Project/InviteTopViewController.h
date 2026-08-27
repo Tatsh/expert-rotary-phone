@@ -15,16 +15,25 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The invite-code top screen.
+ */
 @interface InviteTopViewController : UIViewController {
-    BOOL isAnimationing; // an open/close fade is running (guards re-entry)
+    BOOL isAnimationing; /**< An open or close fade is running; it guards re-entry. */
 }
 
-// Build the top view + its navigation controller (custom back button, nav-bar
-// art, the two panels) and return the navigation controller. Ghidra: @ 0xe6f88.
+/**
+ * @brief Build the top view and its navigation controller — the custom back button, nav-bar art
+ * and the two panels.
+ * @return The navigation controller.
+ * @ghidraAddress 0xe6f88
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Fade the view (and its nav view) in over 0.3 s. Ghidra: startOpenAnimation @
-// 0xe7a38.
+/**
+ * @brief Fade the view and its navigation view in over 0.3 s.
+ * @ghidraAddress 0xe7a38
+ */
 - (void)startOpenAnimation;
 
 @end

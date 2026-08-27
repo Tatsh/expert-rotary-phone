@@ -28,31 +28,46 @@
 // header is ObjC++ (every includer is .mm).
 class MainTask;
 
+/**
+ * @brief The over-score log: the songs on which friends have beaten your score.
+ */
 @interface OverScoreLogViewController : UITableViewController <DownloadMainDelegate>
 
-// The owning C++ music-select task. Atomic raw pointer: the binary brackets
-// both the getter
-// (@ 0x2af2c) and setter (@ 0x2af40) with a DataMemoryBarrier and stores the
-// pointer without retaining it (assign).
+/** The owning C++ music-select task. It is an atomic raw pointer: the binary brackets both
+ * accessors with a DataMemoryBarrier and stores the pointer without retaining it. Getter @
+ * 0x2af2c, setter @ 0x2af40. */
 @property(atomic, assign) MainTask *musicSelTask;
 
-// Build the transparent, separator-less table (a clear spacer header, the
-// "friman" backdrop on phone, and a hidden dimmed spinner overlay). `style` is
-// forwarded to UITableViewController. Ghidra: @ 0x29928.
+/**
+ * @brief Build the transparent, separator-less table: a clear spacer header, the "friman" backdrop
+ * on phone, and a hidden dimmed spinner overlay.
+ * @param style Forwarded to UITableViewController.
+ * @return The initialised controller.
+ * @ghidraAddress 0x29928
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
-// Keep the C++ task pointer, (re)build the table, wrap self in a
-// UINavigationController (with a back button on phone) and return that
-// navigation controller. Ghidra: @ 0x29e24.
+/**
+ * @brief Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
+ * with a back button on phone.
+ * @param musicSelTask The owning music-select task.
+ * @return The navigation controller.
+ * @ghidraAddress 0x29e24
+ */
 - (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none)));
 
-// Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @
-// 0x2a1b0.
+/**
+ * @brief Fade the panel in on phone, or slide it in on iPad.
+ * @ghidraAddress 0x2a1b0
+ */
 - (void)startOpenAnimation;
 
-// Fade (phone) / slide (iPad) the panel closed; the completion launches the
-// selected play. Ghidra: startCloseAnimation @ 0x2a678.
+/**
+ * @brief Fade the panel closed on phone, or slide it closed on iPad; the completion launches the
+ * selected play.
+ * @ghidraAddress 0x2a678
+ */
 - (void)startCloseAnimation;
 
 @end

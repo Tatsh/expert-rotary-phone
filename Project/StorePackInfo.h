@@ -23,63 +23,159 @@
 
 @class SKProduct;
 
+/**
+ * @brief One purchasable music pack: its metadata, its StoreKit product and its song lists.
+ */
 @interface StorePackInfo : NSObject {
-    int m_PackID;                // numeric pack identifier (server-assigned)
-    SKProduct *m_Product;        // resolved StoreKit product (bound once, see setProduct:)
-    NSString *m_PackName;        // display name (dict "Name")
-    NSString *m_Comment;         // full description (dict "Comment")
-    NSString *m_ShortComment;    // one-line blurb (dict "ShortComment")
-    BOOL m_IsNew;                // shows the "new" marker (dict "IsNew")
-    NSString *m_Copyright;       // copyright line (dict "Copyright")
-    NSString *m_ArtworkURL;      // pack jacket URL (validated; dict "ArtworkURL")
-    NSString *m_ArtistURL;       // artist page URL (validated; dict "ArtistURL")
-    NSString *m_ArtistBunnerURL; // artist banner URL (validated; dict
-                                 // "ArtistBunnerURL", sic)
-    int m_AcvNum;                // arcade-viewer song count (dict "AcvNum")
-    NSArray *m_MusicInfos;       // up to 4 StoreMusicInfo (dict "MusicList")
-    NSArray *m_AcvMusicInfos;    // StoreAcMusicInfo list (dict "AcvMusicList")
+    int m_PackID;             /**< The server-assigned numeric pack identifier. */
+    SKProduct *m_Product;     /**< The resolved StoreKit product; bound once, see -setProduct:. */
+    NSString *m_PackName;     /**< The display name, from the dictionary key "Name". */
+    NSString *m_Comment;      /**< The full description, from "Comment". */
+    NSString *m_ShortComment; /**< The one-line blurb, from "ShortComment". */
+    BOOL m_IsNew;             /**< Whether to show the "new" marker, from "IsNew". */
+    NSString *m_Copyright;    /**< The copyright line, from "Copyright". */
+    NSString *m_ArtworkURL;   /**< The pack jacket URL, validated, from "ArtworkURL". */
+    NSString *m_ArtistURL;    /**< The artist page URL, validated, from "ArtistURL". */
+    /** The artist banner URL, validated, from "ArtistBunnerURL"; the key's spelling is the
+     * server's. */
+    NSString *m_ArtistBunnerURL;
+    int m_AcvNum;             /**< The arcade-viewer song count, from "AcvNum". */
+    NSArray *m_MusicInfos;    /**< Up to four StoreMusicInfo, from "MusicList". */
+    NSArray *m_AcvMusicInfos; /**< The StoreAcMusicInfo list, from "AcvMusicList". */
 }
 
-// Designated initialisers: by pack id (product bound later), or straight from a
-// resolved SKProduct (the pack id is derived from its product identifier).
+/**
+ * @brief Build a pack by id; the StoreKit product is bound later.
+ * @param packID The pack id.
+ * @return The initialised pack.
+ */
 - (instancetype)initWithPackID:(int)packID;
+/**
+ * @brief Build a pack straight from a resolved StoreKit product; the pack id is derived from its
+ * product identifier.
+ * @param product The StoreKit product.
+ * @return The initialised pack.
+ */
 - (instancetype)initWithProduct:(SKProduct *)product;
 
+/**
+ * @brief The pack id.
+ * @return The id.
+ */
 - (int)packID;
+/**
+ * @brief Set the pack id.
+ * @param packID The id.
+ */
 - (void)setPackID:(int)packID;
 
+/**
+ * @brief The bound StoreKit product.
+ * @return The product, or nil before one is bound.
+ */
 - (SKProduct *)product;
-// Set-once binder: assigns/retains only while no product is bound yet and a
-// non-nil product is supplied. Returns YES if this call performed the binding.
+/**
+ * @brief The set-once product binder: it assigns and retains only while no product is bound yet
+ * and a non-nil product is supplied.
+ * @param product The product to bind.
+ * @return YES when this call performed the binding.
+ */
 - (BOOL)setProduct:(SKProduct *)product;
 
-// Populate the descriptive fields + song lists from a server pack dictionary.
-// No-op (returns NO) unless dict["ID"] matches this pack's id.
+/**
+ * @brief Populate the descriptive fields and song lists from a server pack dictionary.
+ * @param dictionary The server pack dictionary.
+ * @return NO, doing nothing, unless `dictionary["ID"]` matches this pack's id.
+ */
 - (BOOL)setDictionary:(NSDictionary *)dictionary;
-- (BOOL)setMusicInfo:(NSArray *)musicList; // caps at 4 StoreMusicInfo
+/**
+ * @brief Set the standard song list.
+ * @param musicList The StoreMusicInfo list; it is capped at four entries.
+ * @return YES when the list was stored.
+ */
+- (BOOL)setMusicInfo:(NSArray *)musicList;
+/**
+ * @brief Set the arcade song list.
+ * @param acvMusicList The StoreAcMusicInfo list.
+ * @return YES when the list was stored.
+ */
 - (BOOL)setAcvMusicInfo:(NSArray *)acvMusicList;
 
+/**
+ * @brief The pack's display name.
+ * @return The name.
+ */
 - (NSString *)packName;
-- (NSString *)comment;   // full description
-- (NSString *)s_comment; // short blurb (Ghidra selector "s_comment")
+/**
+ * @brief The pack's full description.
+ * @return The description.
+ */
+- (NSString *)comment;
+/**
+ * @brief The pack's one-line blurb. The selector's spelling is the binary's.
+ * @return The blurb.
+ */
+- (NSString *)s_comment;
+/**
+ * @brief Whether to show the "new" marker.
+ * @return YES for a new pack.
+ */
 - (BOOL)isNew;
+/**
+ * @brief The pack's copyright line.
+ * @return The copyright text.
+ */
 - (NSString *)copyright;
+/**
+ * @brief The pack jacket URL.
+ * @return The URL string.
+ */
 - (NSString *)artworkURL;
+/**
+ * @brief The artist page URL.
+ * @return The URL string.
+ */
 - (NSString *)artistURL;
+/**
+ * @brief The artist banner URL. The selector's spelling is the binary's.
+ * @return The URL string.
+ */
 - (NSString *)artistBunnerURL;
+/**
+ * @brief The arcade-viewer song count.
+ * @return The count.
+ */
 - (int)acvNum;
+/**
+ * @brief The standard song list.
+ * @return An array of StoreMusicInfo.
+ */
 - (NSArray *)musicInfos;
+/**
+ * @brief The arcade song list.
+ * @return An array of StoreAcMusicInfo.
+ */
 - (NSArray *)acvMusicInfos;
 
-// Localised price text, derived live from the bound SKProduct (StoreUtil).
+/**
+ * @brief The localised price text, derived live from the bound StoreKit product via StoreUtil.
+ * @return The price string.
+ */
 - (NSString *)priceString;
 
-// YES while the pack still needs its detail info fetched (the song lists aren't
-// built yet, so setDictionary: hasn't run). Ghidra: @ 0x571e4.
+/**
+ * @brief Whether the pack still needs its detail info fetched: the song lists are not built yet,
+ * so -setDictionary: has not run.
+ * @return YES while the detail is missing.
+ * @ghidraAddress 0x571e4
+ */
 - (BOOL)downloadDetailInfo;
 
-// YES if every song in the pack (standard + arcade) is downloaded. Ghidra: @
-// 0x571fc.
+/**
+ * @brief Whether every song in the pack, standard and arcade, is downloaded.
+ * @return YES when the pack is fully installed.
+ * @ghidraAddress 0x571fc
+ */
 - (BOOL)allDownloaded;
 
 @end

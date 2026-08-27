@@ -24,39 +24,70 @@
 
 @class CustomAlertView;
 
-// Background-art style (drives which image + label/button layout is used).
+/**
+ * @brief The background-art style, which drives the image and the label and button layout.
+ */
 typedef NS_ENUM(NSInteger, CustomAlertViewType) {
-    CustomAlertViewTypeInfo = 0, // "info_bg" background
-    CustomAlertViewTypeGift = 1, // "gift_bg" background
+    CustomAlertViewTypeInfo = 0, /**< The "info_bg" background. */
+    CustomAlertViewTypeGift = 1, /**< The "gift_bg" background. */
 };
 
-// Open / close animation style (set via -setOpenAnimeType: /
-// -setCloseAnimeType:).
+/**
+ * @brief The open and close animation style, set via -setOpenAnimeType: and -setCloseAnimeType:.
+ */
 typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
-    CustomAlertViewAnimeTypeFade = 0,  // alpha fade
-    CustomAlertViewAnimeTypeScale = 1, // scale bounce
+    CustomAlertViewAnimeTypeFade = 0,  /**< An alpha fade. */
+    CustomAlertViewAnimeTypeScale = 1, /**< A scale bounce. */
 };
 
+/**
+ * @brief Receives the alert's button taps.
+ */
 @protocol CustomAlertViewDelegate <NSObject>
-// index 0 = no / cancel button, 1 = yes / other button.
+/**
+ * @brief A button was tapped.
+ * @param alertView The alert that was dismissed.
+ * @param index 0 for the no or cancel button, 1 for the yes or other button.
+ */
 - (void)customAlertView:(CustomAlertView *)alertView clickedButtonAtIndex:(NSInteger)index;
 @end
 
+/**
+ * @brief A modal alert built around a fixed piece of background art rather than a drawn gradient
+ * card.
+ */
 @interface CustomAlertView : UIImageView
 
-// Synthesized accessors: delegate @ 0x27b8c, setDelegate: @ 0x27b9c.
+/** The button-tap delegate. Getter @ 0x27b8c, setter @ 0x27b9c. */
 @property(nonatomic, weak) id<CustomAlertViewDelegate> delegate;
 
-// Installs into the root scene view
-// (neSceneManager::rootViewController().view), centred on it. Ghidra: @ 0x269c4
+/**
+ * @brief Install the alert into the root scene view, centred on it.
+ * @param type The background-art style.
+ * @param title The alert title.
+ * @param message The alert body.
+ * @param cancelButtonTitle The no or cancel button's title.
+ * @param otherButtonTitle The yes or other button's title, or nil for a one-button alert.
+ * @return The initialised alert.
+ * @ghidraAddress 0x269c4
+ */
 - (instancetype)initWithType:(CustomAlertViewType)type
                        title:(NSString *)title
                      message:(NSString *)message
            cancelButtonTitle:(NSString *)cancelButtonTitle
             otherButtonTitle:(NSString *)otherButtonTitle;
 
-// Installs into `view`, centred on it (CGPointZero center -> use view centre).
-// Ghidra: @ 0x26a60
+/**
+ * @brief Install the alert into @p view, centred on it.
+ * @param view The host view.
+ * @param type The background-art style.
+ * @param title The alert title.
+ * @param message The alert body.
+ * @param cancelButtonTitle The no or cancel button's title.
+ * @param otherButtonTitle The yes or other button's title, or nil for a one-button alert.
+ * @return The initialised alert.
+ * @ghidraAddress 0x26a60
+ */
 - (instancetype)initWithView:(UIView *)view
                         type:(CustomAlertViewType)type
                        title:(NSString *)title
@@ -64,7 +95,18 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
            cancelButtonTitle:(NSString *)cancelButtonTitle
             otherButtonTitle:(NSString *)otherButtonTitle;
 
-// Designated initializer. Ghidra: @ 0x26abc
+/**
+ * @brief The designated initialiser.
+ * @param view The host view.
+ * @param center Where to place the alert; CGPointZero uses the host view's centre.
+ * @param type The background-art style.
+ * @param title The alert title.
+ * @param message The alert body.
+ * @param cancelButtonTitle The no or cancel button's title.
+ * @param otherButtonTitle The yes or other button's title, or nil for a one-button alert.
+ * @return The initialised alert.
+ * @ghidraAddress 0x26abc
+ */
 - (instancetype)initWithView:(UIView *)view
                       center:(CGPoint)center
                         type:(CustomAlertViewType)type
@@ -73,18 +115,55 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
            cancelButtonTitle:(NSString *)cancelButtonTitle
             otherButtonTitle:(NSString *)otherButtonTitle;
 
-- (void)show;       // reveal + open animation.   Ghidra: @ 0x274fc
-- (void)removeView; // dismiss + close animation.  Ghidra: @ 0x277b8
+/**
+ * @brief Reveal the alert and run its open animation.
+ * @ghidraAddress 0x274fc
+ */
+- (void)show;
+/**
+ * @brief Dismiss the alert and run its close animation.
+ * @ghidraAddress 0x277b8
+ */
+- (void)removeView;
 
-// Runtime restyling of the (already-built) title / message widgets.
-- (void)setTitleColor:(UIColor *)color; // Ghidra: @ 0x268ac
-- (void)setTextColor:(UIColor *)color;  // Ghidra: @ 0x268cc
-- (void)setTitleFontSize:(CGFloat)size; // Ghidra: @ 0x268ec
-- (void)setTextFontSize:(CGFloat)size;  // Ghidra: @ 0x26940
+// Runtime restyling of the already-built title and message widgets.
 
-// Select the open / close animation (clamped to 0..1). Ghidra: @ 0x26994 / @
-// 0x269ac
+/**
+ * @brief Restyle the title colour.
+ * @param color The new title colour.
+ * @ghidraAddress 0x268ac
+ */
+- (void)setTitleColor:(UIColor *)color;
+/**
+ * @brief Restyle the message colour.
+ * @param color The new message colour.
+ * @ghidraAddress 0x268cc
+ */
+- (void)setTextColor:(UIColor *)color;
+/**
+ * @brief Restyle the title font size.
+ * @param size The new point size.
+ * @ghidraAddress 0x268ec
+ */
+- (void)setTitleFontSize:(CGFloat)size;
+/**
+ * @brief Restyle the message font size.
+ * @param size The new point size.
+ * @ghidraAddress 0x26940
+ */
+- (void)setTextFontSize:(CGFloat)size;
+
+/**
+ * @brief Select the open animation.
+ * @param type The animation style; clamped to 0..1.
+ * @ghidraAddress 0x26994
+ */
 - (void)setOpenAnimeType:(CustomAlertViewAnimeType)type;
+/**
+ * @brief Select the close animation.
+ * @param type The animation style; clamped to 0..1.
+ * @ghidraAddress 0x269ac
+ */
 - (void)setCloseAnimeType:(CustomAlertViewAnimeType)type;
 
 @end

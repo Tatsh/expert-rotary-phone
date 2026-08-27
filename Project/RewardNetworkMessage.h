@@ -11,9 +11,17 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief Looks up the reward SDK's localised strings.
+ */
 @interface RewardNetworkMessage : NSObject
 
-// @ 0xf5904 — look up `key` in the SDK bundle's localized "Message" table.
+/**
+ * @brief Look up a key in the SDK bundle's localised "Message" table.
+ * @param key The message key.
+ * @return The localised message.
+ * @ghidraAddress 0xf5904
+ */
 + (NSString *)localizedMessage:(NSString *)key;
 
 @end

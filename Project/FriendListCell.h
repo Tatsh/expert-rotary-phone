@@ -10,11 +10,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One friend-list ranking row.
+ */
 @interface FriendListCell : UITableViewCell
 
-// Populate the row from an NSValue-wrapped FriendListData. `rank` is the
-// 0-based row index (0 == 1st place); `isBestScoreSort` picks the best-score
-// vs. total-score plaque and value.
+/**
+ * @brief Populate the row from a friend record.
+ * @param friendData An NSValue-wrapped FriendListData.
+ * @param rank The 0-based row index; 0 is first place.
+ * @param isBestScoreSort YES to show the best-score plaque and value, NO for the total-score one.
+ * @ghidraAddress 0xb34c0
+ */
 - (void)setFriendData:(NSValue *)friendData rank:(int)rank isBestScoreSort:(BOOL)isBestScoreSort;
 
 @end

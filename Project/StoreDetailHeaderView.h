@@ -13,22 +13,42 @@
 
 @class StorePackInfo;
 
+/**
+ * @brief The pack-detail table header: the jacket, name, description and buy button.
+ */
 @interface StoreDetailHeaderView : UIView
 
-// The buy / "INSTALLED" button the detail controller titles + wires to
-// -onPurchaseButton:.
+/**
+ * @brief The buy or "INSTALLED" button; the detail controller titles it and wires it to
+ * -onPurchaseButton:.
+ * @return The button.
+ */
 - (UIButton *)buttonPurchase;
 
-// The pack name / description labels (the controller reads them back). Ghidra:
-// labelName @ 0x74544, labelComment @ 0x74554.
+/**
+ * @brief The pack-name label.
+ * @return The label.
+ * @ghidraAddress 0x74544
+ */
 - (UILabel *)labelName;
+/**
+ * @brief The pack-description label.
+ * @return The label.
+ * @ghidraAddress 0x74554
+ */
 - (UILabel *)labelComment;
 
-// Fill the header (jacket / name / copyright) from the pack. Ghidra:
-// loadPackInfo: @ 0x718b8.
+/**
+ * @brief Fill the header — the jacket, name and copyright — from a pack.
+ * @param packInfo The pack to show.
+ * @ghidraAddress 0x718b8
+ */
 - (void)loadPackInfo:(StorePackInfo *)packInfo;
 
-// Set the pack jacket once its async download completes. Ghidra: setArtwork:.
+/**
+ * @brief Set the pack jacket once its asynchronous download completes.
+ * @param image The downloaded jacket.
+ */
 - (void)setArtwork:(UIImage *)image;
 
 @end

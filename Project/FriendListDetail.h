@@ -16,17 +16,34 @@
 #import "CommonAlertView.h" // CommonAlertViewDelegate (confirm / result alerts)
 #import "Downloader.h"      // DownloaderDelegate (the unfriend POST)
 
+/**
+ * @brief The friend detail overlay pushed when a friend-list row is tapped.
+ */
 @interface FriendListDetail : UIView <DownloaderDelegate, CommonAlertViewDelegate>
 
-// `friendData` is an NSValue-wrapped FriendListData. `frame` covers the
-// presenting view; the window itself is centred within it.
+/**
+ * @brief Build the overlay for one friend.
+ * @param frame The frame covering the presenting view; the window itself is centred within it.
+ * @param friendData An NSValue-wrapped FriendListData.
+ * @return The initialised overlay.
+ * @ghidraAddress 0xb4280
+ */
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData;
 
-// Fade in (0.3s) / out (0.3s, then remove from superview).
+/**
+ * @brief Fade the overlay in over 0.3 s.
+ */
 - (void)startOpenAnimation;
+/**
+ * @brief Fade the overlay out over 0.3 s, then remove it from its superview.
+ */
 - (void)startCloseAnimation;
 
-// YES while presented (drives the list VC's tap/back guards). @ 0xb5c98.
+/**
+ * @brief Whether the overlay is presented; it drives the list controller's tap and back guards.
+ * @return YES while presented.
+ * @ghidraAddress 0xb5c98
+ */
 - (BOOL)isEnabled;
 
 @end

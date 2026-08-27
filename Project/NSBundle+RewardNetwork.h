@@ -16,9 +16,16 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief Locates the reward-network resource bundle.
+ */
 @interface NSBundle (RewardNetwork)
 
-// The cached RewardNetworkResources.bundle (dispatch_once). @ 0xfc0cc
+/**
+ * @brief The cached RewardNetworkResources.bundle, resolved once via dispatch_once.
+ * @return The resource bundle.
+ * @ghidraAddress 0xfc0cc
+ */
 + (NSBundle *)rewardBundle;
 
 @end

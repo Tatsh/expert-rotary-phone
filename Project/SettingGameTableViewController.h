@@ -19,14 +19,28 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The gameplay settings list.
+ */
 @interface SettingGameTableViewController : UITableViewController
 
-// Wrap self in a fresh navigation controller and return it (the phone layout).
-- (UINavigationController *)initAtNavigationController
-    __attribute__((objc_method_family(none))); // @ 0x88d7c
+/**
+ * @brief Wrap self in a fresh navigation controller; the phone layout.
+ * @return The navigation controller.
+ * @ghidraAddress 0x88d7c
+ */
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0x89074
-- (void)startCloseAnimation; // @ 0x891b8
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0x89074
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the screen out.
+ * @ghidraAddress 0x891b8
+ */
+- (void)startCloseAnimation;
 
 @end
 

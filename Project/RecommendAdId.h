@@ -28,27 +28,52 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief The advertising-id record stored on a named pasteboard, keyed by country and category.
+ */
 @interface RecommendAdId : NSObject
 
-// Build the named-pasteboard service key
-// "ApplilinkRecommend.AdId_<country>_<category>".
+/**
+ * @brief Build the named-pasteboard service key "ApplilinkRecommend.AdId_<country>_<category>".
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @return The initialised record accessor.
+ */
 - (instancetype)initWithCountryCode:(NSString *)countryCode categoryId:(NSString *)categoryId;
 
-// Fetch the stored advertising-id record, or nil (with *error set) on failure.
+/**
+ * @brief Fetch the stored advertising-id record.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param error Receives the failure reason; may be NULL.
+ * @return The record, or nil on failure.
+ */
 - (id)getWithCountryCode:(NSString *)countryCode
               categoryId:(NSString *)categoryId
                    error:(NSError **)error;
 
-// Store an advertising-id record and return the plaintext record, or nil (with
-// *error) on failure.
+/**
+ * @brief Store an advertising-id record.
+ * @param adIdFrom The advertising id's origin.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param adType The advertisement type.
+ * @param error Receives the failure reason; may be NULL.
+ * @return The plaintext record, or nil on failure.
+ */
 - (id)setWithAdIdFrom:(NSString *)adIdFrom
           countryCode:(NSString *)countryCode
            categoryId:(NSString *)categoryId
                adType:(NSString *)adType
                 error:(NSError **)error;
 
-// Delete the stored advertising-id record. Returns NO (with *error set) on
-// failure.
+/**
+ * @brief Delete the stored advertising-id record.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param error Receives the failure reason; may be NULL.
+ * @return NO on failure.
+ */
 - (BOOL)deleteWithCountryCode:(NSString *)countryCode
                    categoryId:(NSString *)categoryId
                         error:(NSError **)error;

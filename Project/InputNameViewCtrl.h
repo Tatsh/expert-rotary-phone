@@ -23,22 +23,33 @@
 
 #import "Downloader.h" // DownloaderDelegate
 
+/**
+ * @brief The player-name entry screen.
+ */
 @interface InputNameViewCtrl : UIViewController <UITextFieldDelegate, DownloaderDelegate> {
-    UITextField *_nameField;             // the player-name entry field (<= 12 ASCII chars)
-    UIActivityIndicatorView *_indicator; // in-flight spinner (hidesWhenStopped)
-    Downloader *_downloader;             // the in-flight "new player" POST (nil when idle)
-    BOOL m_IsAnimationing;               // open/close fade guard (binary spelling kept)
+    UITextField *_nameField;             /**< The player-name entry; at most 12 ASCII characters. */
+    UIActivityIndicatorView *_indicator; /**< The in-flight spinner; it hides when stopped. */
+    Downloader *_downloader;             /**< The in-flight "new player" POST; nil when idle. */
+    BOOL m_IsAnimationing;               /**< The open and close fade guard. */
 }
 
-// Wrap a freshly-built InputNameViewCtrl in a UINavigationController (back
-// button hidden, "inputname_navbar" bar background). Ghidra:
-// initAtNavigationController
-// @ 0x90668.
+/**
+ * @brief Wrap a freshly-built controller in a UINavigationController, with the back button hidden
+ * and the "inputname_navbar" bar background.
+ * @return The navigation host.
+ * @ghidraAddress 0x90668
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Fade the panel (and its nav view) in / out; guarded by m_IsAnimationing.
-// Ghidra: startOpenAnimation @ 0x90740 / startCloseAnimation @ 0x90890.
+/**
+ * @brief Fade the panel and its navigation view in; guarded by m_IsAnimationing.
+ * @ghidraAddress 0x90740
+ */
 - (void)startOpenAnimation;
+/**
+ * @brief Fade the panel and its navigation view out; guarded by m_IsAnimationing.
+ * @ghidraAddress 0x90890
+ */
 - (void)startCloseAnimation;
 
 @end

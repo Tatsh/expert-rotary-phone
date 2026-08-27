@@ -19,34 +19,55 @@
 
 @class StoreViewController;
 
+/**
+ * @brief The purchased-music manager tab: it lists owned songs and lets each be deleted or
+ * re-downloaded.
+ */
 @interface StoreManageViewController : UIViewController <UITableViewDataSource,
                                                          UITableViewDelegate,
                                                          DownloaderDelegate,
                                                          StoreDownloadManagerDelegate,
                                                          CommonAlertViewDelegate> {
-    __weak StoreViewController *m_StoreViewCtrl; // owning tab host (not retained)
-    int m_WorkingIndex;                          // row currently acting (-1 = none)
-    UIImage *m_ImgDelete;                        // "manage_delete" action icon
-    UIImage *m_ImgDownload;                      // "manage_download" action icon
-    BOOL m_IsPad;
-    UITableView *m_TableView;           // the manage list, built in -loadView
-    Downloader *m_InfoDownloader;       // re-download step 1: fetch StoreMusicInfo JSON
-    StoreDownloadManager *m_DlManager;  // re-download step 2: the audio-file queue
-    CommonAlertView *m_DeleteAlertView; // "delete this song?" confirmation
+    __weak StoreViewController *m_StoreViewCtrl; /**< The owning tab host; not retained. */
+    int m_WorkingIndex;                          /**< The row currently acting; -1 when none. */
+    UIImage *m_ImgDelete;                        /**< The "manage_delete" action icon. */
+    UIImage *m_ImgDownload;                      /**< The "manage_download" action icon. */
+    BOOL m_IsPad;                                /**< Whether this is the iPad layout. */
+    UITableView *m_TableView;                    /**< The manage list, built in -loadView. */
+    /** Re-download step 1: fetch the StoreMusicInfo JSON. */
+    Downloader *m_InfoDownloader;
+    /** Re-download step 2: the audio-file queue. */
+    StoreDownloadManager *m_DlManager;
+    CommonAlertView *m_DeleteAlertView; /**< The "delete this song?" confirmation. */
 }
 
+/**
+ * @brief Build the manager for a tab host.
+ * @param parent The owning store view controller.
+ * @return The initialised controller.
+ */
 - (instancetype)initWithParent:(StoreViewController *)parent;
 
-// Re-download the audio file for the row at m_WorkingIndex (after its
-// StoreMusicInfo was refreshed). Ghidra: startDownloadMusic @ 0x4d1ec.
+/**
+ * @brief Re-download the audio file for the row at m_WorkingIndex, after its StoreMusicInfo was
+ * refreshed.
+ * @ghidraAddress 0x4d1ec
+ */
 - (void)startDownloadMusic;
 
-// Per-row action button (tag 0xE01F) target: download a missing song or confirm
-// delete. Ghidra: pushCellButton: @ 0x4ce28.
+/**
+ * @brief The per-row action button's target, tag 0xE01F: download a missing song, or confirm a
+ * delete.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x4ce28
+ */
 - (void)pushCellButton:(id)sender;
 
-// Abort button of the store's shared modal progress dialog. Ghidra:
-// storeDialogCancel: @ 0x4d4b8.
+/**
+ * @brief The abort button of the store's shared modal progress dialog.
+ * @param sender The tapped control.
+ * @ghidraAddress 0x4d4b8
+ */
 - (void)storeDialogCancel:(id)sender;
 
 @end

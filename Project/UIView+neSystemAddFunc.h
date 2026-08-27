@@ -17,34 +17,67 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The engine's small geometry and layer-animation helpers on UIView. The "Harf" spellings
+ * are the binary's.
+ */
 @interface UIView (neSystemAddFunc)
 
-// @ 0x7dc90 — halve the receiver's bounds size (origin kept).
+/**
+ * @brief Halve the receiver's bounds size, keeping its origin.
+ * @ghidraAddress 0x7dc90
+ */
 - (void)setHarfSize;
-// @ 0x7dd08 — halve the receiver's frame origin (size kept).
+/**
+ * @brief Halve the receiver's frame origin, keeping its size.
+ * @ghidraAddress 0x7dd08
+ */
 - (void)setHarfOrigin;
-// @ 0x7dd88 — halve every component of the receiver's frame.
+/**
+ * @brief Halve every component of the receiver's frame.
+ * @ghidraAddress 0x7dd88
+ */
 - (void)setHarfSizeAndOrigin;
 
-// @ 0x7de20 — add a repeating, auto-reversing "opacity" CABasicAnimation (key
-// "FLUSH_ANIM") flashing from `startOpacity` to `endOpacity` over `duration`
-// seconds.
+/**
+ * @brief Add a repeating, auto-reversing "opacity" CABasicAnimation under the key "FLUSH_ANIM".
+ * @param duration The half-cycle duration, in seconds.
+ * @param startOpacity The opacity to flash from.
+ * @param endOpacity The opacity to flash to.
+ * @ghidraAddress 0x7de20
+ */
 - (void)SetFlashEffectDuration:(float)duration Start:(float)startOpacity End:(float)endOpacity;
-// @ 0x7dfd0 — start the flash effect with the default fast preset (1/3 s, 1.0
-// -> 0.2).
+/**
+ * @brief Start the flash effect with the default fast preset: one third of a second, 1.0 to 0.2.
+ * @ghidraAddress 0x7dfd0
+ */
 - (void)SetFlashEffectFast;
 
-// @ 0x7e160 — add a repeating "position" CAKeyframeAnimation (key "PopAnim")
-// bouncing the view up from (baseX, baseY) with decreasing amplitude.
+/**
+ * @brief Add a repeating "position" CAKeyframeAnimation under the key "PopAnim", bouncing the view
+ * up with decreasing amplitude.
+ * @param baseX The resting x the bounce returns to.
+ * @param baseY The resting y the bounce returns to.
+ * @ghidraAddress 0x7e160
+ */
 - (void)SetJumpEffectBaseX:(float)baseX BaseY:(float)baseY;
 
-// @ 0x7e3c4 — add a "transform" scale-bounce CAKeyframeAnimation (key
-// "transAnimation": 0 -> 1.2 -> 0.9 -> 1.0) for a pop-in appearance.
+/**
+ * @brief Add a "transform" scale-bounce CAKeyframeAnimation under the key "transAnimation" —
+ * 0, 1.2, 0.9, 1.0 — for a pop-in appearance.
+ * @ghidraAddress 0x7e3c4
+ */
 - (void)setPopupEffect;
 
-// @ 0x7df9c — remove the flash ("FLUSH_ANIM") animation from the layer.
+/**
+ * @brief Remove the "FLUSH_ANIM" flash animation from the layer.
+ * @ghidraAddress 0x7df9c
+ */
 - (void)RemoveFlashEffect;
-// @ 0x7eac0 — remove the popup ("transAnimation") animation from the layer.
+/**
+ * @brief Remove the "transAnimation" popup animation from the layer.
+ * @ghidraAddress 0x7eac0
+ */
 - (void)removePopupEffect;
 
 @end

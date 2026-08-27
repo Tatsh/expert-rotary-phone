@@ -19,17 +19,34 @@
 // FriendRequestDataStruct), and the producing controller
 // (FreeRequestListViewController / FreeRequestDetail) is not part of the
 // reconstructed set, so the exact struct tail is unknown.
+/**
+ * @brief One record, as wrapped in the NSValue passed to -setFriendData:rank:.
+ *
+ * Only the name, character id and score are read by the cell; the leading word is not touched
+ * here, so its name is best-effort by analogy with the sibling FriendRequestDataStruct. The
+ * producing controller is not part of the reconstructed set, so the exact struct tail is unknown.
+ */
 typedef struct {
-    NSString *__unsafe_unretained playerId; // @0x0  not read by the cell (best-effort name)
-    NSString *__unsafe_unretained name;     // @0x4  player name label
-    short charaId;                          // @0x8  chara icon id (>= 30 => app-support dir)
-    int score;                              // @0xc  score value
+    /** +0x0 Not read by the cell; the name is best-effort. */
+    NSString *__unsafe_unretained playerId;
+    NSString *__unsafe_unretained name; /**< +0x4 The player name label's text. */
+    short charaId; /**< +0x8 The character icon id; 30 or above resolves under Application
+                        Support. */
+    int score;     /**< +0xc The score value. */
 } FreeRequestDataStruct;
 
+/**
+ * @brief One row in the "free request" friend list: a plate carrying a character icon, the
+ * player's name and their score.
+ */
 @interface FreeRequestListCell : UITableViewCell
 
-// Rebuild the row from an NSValue-wrapped FreeRequestDataStruct. `rank` is
-// accepted but is not used by the decompiled body.
+/**
+ * @brief Rebuild the row from a record.
+ * @param friendData An NSValue-wrapped FreeRequestDataStruct.
+ * @param rank Accepted but unused by the decompiled body.
+ * @ghidraAddress 0xe4b60
+ */
 - (void)setFriendData:(NSValue *)friendData rank:(int)rank;
 
 @end

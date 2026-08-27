@@ -11,25 +11,40 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief One arcade song listed inside a store pack.
+ */
 @interface StoreAcMusicInfo : NSObject {
-    int m_AcMusicId;
-    NSString *m_Title;
-    NSString *m_Genre;
-    NSString *m_ItemURL;
-    NSString *m_SampleURL;
+    int m_AcMusicId;       /**< The arcade song id. */
+    NSString *m_Title;     /**< The song title. */
+    NSString *m_Genre;     /**< The genre name. */
+    NSString *m_ItemURL;   /**< The pack or product link. */
+    NSString *m_SampleURL; /**< The preview clip URL. */
 }
 
-// Returns nil if the dictionary has no positive "ID".
+/**
+ * @brief Build an arcade song from a server dictionary.
+ * @param dictionary The server song dictionary.
+ * @return The initialised song, or nil when the dictionary has no positive "ID".
+ */
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary;
 
+/** The arcade song id. */
 @property(nonatomic, readonly) int acMusicId;
+/** The song title. */
 @property(nonatomic, readonly) NSString *title;
+/** The genre name. */
 @property(nonatomic, readonly) NSString *genre;
+/** The pack or product link. */
 @property(nonatomic, readonly) NSString *itemURL;
+/** The preview clip URL. */
 @property(nonatomic, readonly) NSString *sampleURL;
 
-// YES if this arcade song's purchased file is already on disk. Ghidra: @
-// 0x85418.
+/**
+ * @brief Whether this arcade song's purchased file is already on disk.
+ * @return YES when the file exists.
+ * @ghidraAddress 0x85418
+ */
 - (BOOL)fileExist;
 
 @end

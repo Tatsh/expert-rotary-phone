@@ -24,18 +24,24 @@
 
 @class AcMusicData;
 
+/**
+ * @brief The arcade viewer's song list.
+ */
 @interface AcViewerMusicViewController : UITableViewController
 
-// Synthesized accessors: delegate getter @ 0xcca24, setDelegate: @ 0xcca34
-// (assign — the binary stores the pointer raw, with no retain).
-// @ 0xcca24
-// @ 0xcca34
+/** The host that hides the split panel. The binary stores the pointer raw, with no retain. Getter
+ * @ 0xcca24, setter @ 0xcca34. */
 @property(nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
-// Build the list from an array of AcMusicData (nil -> the full MusicManager AC
-// array). The rows are sorted by song name or genre name per
-// UserSettingData.isAcvGenreName, and the header banner is keyed to the first
-// song's genre category. Ghidra: initWithData: @ 0xcba44.
+/**
+ * @brief Build the list from an array of arcade songs.
+ *
+ * The rows are sorted by song name or genre name per UserSettingData.isAcvGenreName, and the
+ * header banner is keyed to the first song's genre category.
+ * @param acMusicDataArray The songs to list, or nil for the full MusicManager arcade array.
+ * @return The initialised controller.
+ * @ghidraAddress 0xcba44
+ */
 - (instancetype)initWithData:(NSArray *)acMusicDataArray;
 
 @end

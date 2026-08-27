@@ -18,9 +18,18 @@
 
 // Private methods, declared up here so the file-static block-invoke helpers
 // below (which run before @implementation) can send them to self.
+/**
+ * @brief The recommend list's private transition completions and back action.
+ */
 @interface RecommendViewController ()
+/** @brief The open transition finished: clear the re-entry guard. */
 - (void)endOpenAnimation;
+/** @brief The close transition finished: detach the view and notify the owner. */
 - (void)endCloseAnimation;
+/**
+ * @brief The back-button action.
+ * @param sender The tapped button.
+ */
 - (void)touchedBackButton:(id)sender;
 @end
 

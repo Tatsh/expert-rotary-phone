@@ -20,121 +20,179 @@
 @class BirthDayViewController;
 @class StoreImageView;
 
+/**
+ * @brief Receives the iPad detail card's purchase and close requests.
+ */
 @protocol StorePackDetailViewPadDelegate <NSObject>
 @optional
+/**
+ * @brief The card's buy button was tapped.
+ * @param view The detail card.
+ * @param packInfo The pack to purchase.
+ */
 - (void)packDetailViewPad:(StorePackDetailViewPad *)view
         didSelectPurchase:(StorePackInfo *)packInfo;
+/**
+ * @brief The card asked to close.
+ * @param view The detail card.
+ */
 - (void)packDetailViewPadDidClose:(StorePackDetailViewPad *)view;
 @end
 
+/**
+ * @brief The iPad in-place pack detail card: the jacket, description, song rows and buy button.
+ */
 @interface StorePackDetailViewPad : UIView {
-    StorePackInfo *m_PackInfo;
-    __weak id<StorePackDetailViewPadDelegate> m_Delegate;
-    StorePackInfoDownloader *m_StorePackInfoDownloader; // in-flight detail fetch (retained)
-    StorePackMusicView *musicView[4];                   // the up-to-4 song rows
-    Downloader *m_SampleDownloader;                     // in-flight preview clip (retained)
-    int samplePlaying;                                  // row index currently sampling, or -1
-    NSArray *recommendPackIdArr;                        // cached recommended-pack ids (retained)
-    BirthDayViewController *m_BirthDayView;             // age-gate modal (retained while shown)
-    Downloader *recommendDownloader;    // in-flight "register recommended pack" POST
-    UIViewController *dummyView;        // cover host shown during the recommend POST
-    UIButton *buttonPurchase;           // the "buy" / "INSTALLED" button (built in
-                                        // initWithFrame:)
-    UILabel *labelPackName;             // pack title
-    UILabel *labelComment;              // pack description
-    UITextView *copyrightView;          // copyright text
-    StoreImageView *packArtworkView;    // pack jacket (async)
-    UIView *packView;                   // the pack-info container panel
-    UIButton *m_ArtistSiteButton;       // "web" button opening the artist site
-    UIActivityIndicatorView *indicator; // loading spinner
-    UILabel *labelLoading;              // "loading" caption
-    BOOL isInfoLoaded;                  // detail fully fetched + shown
+    StorePackInfo *m_PackInfo;                            /**< The displayed pack. */
+    __weak id<StorePackDetailViewPadDelegate> m_Delegate; /**< The purchase and close delegate. */
+    StorePackInfoDownloader *m_StorePackInfoDownloader;   /**< The in-flight detail fetch. */
+    StorePackMusicView *musicView[4];                     /**< The up-to-four song rows. */
+    Downloader *m_SampleDownloader;                       /**< The in-flight preview clip. */
+    int samplePlaying;                      /**< The row index currently sampling, or -1. */
+    NSArray *recommendPackIdArr;            /**< The cached recommended-pack ids. */
+    BirthDayViewController *m_BirthDayView; /**< The age-gate modal, retained while shown. */
+    Downloader *recommendDownloader;        /**< The in-flight "register recommended pack" POST. */
+    UIViewController *dummyView;            /**< The cover host shown during the recommend POST. */
+    UIButton *buttonPurchase;  /**< The buy or "INSTALLED" button, built in -initWithFrame:. */
+    UILabel *labelPackName;    /**< The pack title. */
+    UILabel *labelComment;     /**< The pack description. */
+    UITextView *copyrightView; /**< The copyright text. */
+    StoreImageView *packArtworkView;    /**< The pack jacket, loaded asynchronously. */
+    UIView *packView;                   /**< The pack-info container panel. */
+    UIButton *m_ArtistSiteButton;       /**< The "web" button that opens the artist site. */
+    UIActivityIndicatorView *indicator; /**< The loading spinner. */
+    UILabel *labelLoading;              /**< The "loading" caption. */
+    BOOL isInfoLoaded;                  /**< The detail has been fully fetched and shown. */
 }
 
-@property(nonatomic, retain) StorePackInfo *packInfo; // getter @ 0x50b48, setter @ 0x50b58
-@property(nonatomic, weak) id<StorePackDetailViewPadDelegate>
-    delegate; // getter @ 0x50b68, setter @ 0x50b78
+/** The displayed pack. Getter @ 0x50b48, setter @ 0x50b58. */
+@property(nonatomic, retain) StorePackInfo *packInfo;
+/** The purchase and close delegate. Getter @ 0x50b68, setter @ 0x50b78. */
+@property(nonatomic, weak) id<StorePackDetailViewPadDelegate> delegate;
 
-// Kick the pack-detail download: if the pack already has its song list, tint +
-// show the card; otherwise grey it, spin the loading indicator and start a
-// StorePackInfoDownloader. Ghidra:
-// @ 0x4f680.
+/**
+ * @brief Kick the pack-detail download: if the pack already has its song list, tint and show the
+ * card; otherwise grey it, spin the loading indicator and start a StorePackInfoDownloader.
+ * @ghidraAddress 0x4f680
+ */
 - (void)loadInfo;
-- (void)removePackInfo; // tear the bound pack down (iPad detail-close path);
-                        // impl in .m
+/**
+ * @brief Tear the bound pack down; the iPad detail-close path.
+ */
+- (void)removePackInfo;
 
-// Populate the detail card from the bound pack (name, comment, copyright,
-// jacket, buy button, the up-to-4 song rows and their .acv/artwork state); runs
-// once (guarded by isInfoLoaded). Ghidra:
-// @ 0x4f318.
+/**
+ * @brief Populate the detail card from the bound pack: the name, comment, copyright, jacket, buy
+ * button, and the up-to-four song rows with their .acv and artwork state. It runs once, guarded by
+ * isInfoLoaded.
+ * @ghidraAddress 0x4f318
+ */
 - (void)showPackInfo;
 
-// Choose the purchase button's label for the current ownership/download state.
-// Ghidra: @ 0x4ef54.
+/**
+ * @brief Choose the purchase button's label for the current ownership and download state.
+ * @ghidraAddress 0x4ef54
+ */
 - (void)selfCheckButtonText;
 
-// Set the purchase button to its "buy (price)" state (enabled). Ghidra: @
-// 0x4f024.
+/**
+ * @brief Set the purchase button to its enabled "buy (price)" state.
+ * @ghidraAddress 0x4f024
+ */
 - (void)setButtonTextBuy;
 
-// Set the purchase button to its localized "INSTALL" state (enabled). Ghidra: @
-// 0x4f0b8.
+/**
+ * @brief Set the purchase button to its enabled, localised "INSTALL" state.
+ * @ghidraAddress 0x4f0b8
+ */
 - (void)setButtonTextInstall;
 
-// Set the purchase button to its localized "INSTALLING" state (disabled).
-// Ghidra: @ 0x4f144.
+/**
+ * @brief Set the purchase button to its disabled, localised "INSTALLING" state.
+ * @ghidraAddress 0x4f144
+ */
 - (void)setButtonTextInstalling;
 
-// Set the purchase button to its "installed" state: greyed "INSTALLED" if
-// already recommended, otherwise the tappable "友達に勧める" (recommend) label.
-// Ghidra: @ 0x4f1d0.
+/**
+ * @brief Set the purchase button to its installed state: a greyed "INSTALLED" once the pack has
+ * been recommended, otherwise the tappable "友達に勧める" (recommend) label.
+ * @ghidraAddress 0x4f1d0
+ */
 - (void)setButtonTextInstalled;
 
-// Abort a pending pack-detail fetch (called when the panel is dismissed).
-// Ghidra:
-// @ 0x4ecd0.
+/**
+ * @brief Abort a pending pack-detail fetch; called when the panel is dismissed.
+ * @ghidraAddress 0x4ecd0
+ */
 - (void)cancelLoading;
 
-// Stop the preview clip: cancel the in-flight download, reset every song row's
-// button, and mark nothing playing. Ghidra: @ 0x4ed28.
+/**
+ * @brief Stop the preview clip: cancel the in-flight download, reset every song row's button, and
+ * mark nothing playing.
+ * @ghidraAddress 0x4ed28
+ */
 - (void)stopSample;
 
-// A song row's sample button was tapped: toggle its preview. Tapping the row
-// that is already sampling stops it; tapping another row stops that one and
-// starts fetching the new clip (played on completion by the Downloader
-// callback). Ghidra: @ 0x4fdf0.
+/**
+ * @brief A song row's sample button was tapped: toggle its preview.
+ *
+ * Tapping the row that is already sampling stops it; tapping another row stops that one and starts
+ * fetching the new clip, which the Downloader callback plays on completion.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x4fdf0
+ */
 - (void)handleSample:(id)sender;
 
-// A song row's iTunes button was tapped: open that song's iTunes page. Ghidra:
-// @ 0x4fd04.
+/**
+ * @brief A song row's iTunes button was tapped: open that song's iTunes page.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x4fd04
+ */
 - (void)handleLink:(id)sender;
 
-// The artist-site button was tapped: open the pack's artist URL. Ghidra: @
-// 0x50080.
+/**
+ * @brief The artist-site button was tapped: open the pack's artist URL.
+ * @ghidraAddress 0x50080
+ */
 - (void)selectWebButton;
 
-// Hand the purchase off to the delegate (which drives StoreKit). Ghidra: @
-// 0x4fca4.
+/**
+ * @brief Hand the purchase off to the delegate, which drives StoreKit.
+ * @ghidraAddress 0x4fca4
+ */
 - (void)doPurchase;
 
-// YES if the displayed pack has songs and all of them are already downloaded
-// (used by the purchase dispatcher to offer a re-download instead of a buy).
-// Ghidra: @ 0x4edb8.
+/**
+ * @brief Whether the displayed pack has songs and all of them are already downloaded; the purchase
+ * dispatcher uses it to offer a re-download instead of a buy.
+ * @return YES when the pack is fully installed.
+ * @ghidraAddress 0x4edb8
+ */
 - (BOOL)allDownloaded;
 
-// YES if this pack is one of the recommended packs (its id is in the decoded
-// recommend list, fetched + cached lazily). Ghidra: @ 0x4ee14.
+/**
+ * @brief Whether this pack is one of the recommended packs: its id is in the decoded recommend
+ * list, which is fetched and cached lazily.
+ * @return YES when the pack is recommended.
+ * @ghidraAddress 0x4ee14
+ */
 - (BOOL)isRecommended;
 
-// The age-gate modal reported the entered birthday: drop it and, now that an
-// age is on record, re-run the spending-limit check (proceed to buy, or show
-// the "over limit" alert). Ghidra: @ 0x50154 (the BirthDayViewController
-// delegate callback).
+/**
+ * @brief The age-gate modal reported the entered birthday: drop it and, now that an age is on
+ * record, re-run the spending-limit check — either proceeding to buy or showing the "over limit"
+ * alert.
+ * @ghidraAddress 0x50154
+ */
 - (void)birthDayViewClose;
 
-// The pack purchase button: the full decision tree — already owned (re-download
-// or register as recommended), or not owned (spending-limit check -> buy, or
-// show the age gate). Ghidra: doPurchase: @ 0x4f828.
+/**
+ * @brief The pack purchase button's full decision tree: when the pack is already owned, re-download
+ * it or register it as recommended; when it is not, run the spending-limit check and either buy or
+ * show the age gate.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x4f828
+ */
 - (void)doPurchase:(id)sender;
 
 @end

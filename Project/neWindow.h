@@ -16,9 +16,17 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The app's UIWindow subclass.
+ */
 @interface neWindow : UIWindow
 
-// @ 0x28a00 — designated init, forwards straight to UIWindow.
+/**
+ * @brief The designated initialiser; it forwards straight to UIWindow.
+ * @param frame The window frame.
+ * @return The initialised window.
+ * @ghidraAddress 0x28a00
+ */
 - (instancetype)initWithFrame:(CGRect)frame;
 
 @end

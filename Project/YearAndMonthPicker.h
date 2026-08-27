@@ -15,16 +15,26 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A two-wheel year and month picker.
+ */
 @interface YearAndMonthPicker : UIPickerView <UIPickerViewDataSource, UIPickerViewDelegate> {
-    int _year;         // selected year (row + 1900)
-    int _month;        // selected month (1..12)
-    NSArray *monthArr; // the month-wheel row titles (built, pre-repeated for
-                       // wrapping, in -init)
+    int _year;  /**< The selected year, the row index plus 1900. */
+    int _month; /**< The selected month, 1..12. */
+    /** The month-wheel row titles, built in -init and pre-repeated so the wheel wraps. */
+    NSArray *monthArr;
 }
 
-// The currently selected year / month. Ghidra: year @ 0x8f410 (and its sibling
-// month getter).
+/**
+ * @brief The currently selected year.
+ * @return The year.
+ * @ghidraAddress 0x8f410
+ */
 - (int)year;
+/**
+ * @brief The currently selected month.
+ * @return The month, 1..12.
+ */
 - (int)month;
 
 @end

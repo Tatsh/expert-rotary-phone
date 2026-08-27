@@ -9,9 +9,13 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The pack-detail table's copyright footer row.
+ */
 @interface StoreDetailCopyrightCell : UITableViewCell
 
-@property(nonatomic, retain) UILabel *labelCopyright; // word-wrapped, grey
+/** The word-wrapped, grey copyright label. */
+@property(nonatomic, retain) UILabel *labelCopyright;
 
 @end
 

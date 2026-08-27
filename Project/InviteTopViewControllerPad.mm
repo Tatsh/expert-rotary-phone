@@ -24,14 +24,29 @@
 #import "neEngineBridge.h"           // neEngine::playSystemSe, neSceneManager::rootViewController
 
 // Own privates + adopted delegates.
+/**
+ * @brief The iPad invite screen's private actions and request helper.
+ */
 @interface InviteTopViewControllerPad () <UITextFieldDelegate,
                                           DownloaderDelegate,
                                           CommonAlertViewDelegate>
+/**
+ * @brief The decide button was tapped: validate the code, then POST it.
+ * @param sender The tapped button.
+ */
 - (void)touchedDecideButton:(id)sender;
+/** @brief The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief Fade the screen out. */
 - (void)startCloseAnimation;
+/** @brief The close fade finished; tear the screen down. */
 - (void)endCloseAnimation;
+/**
+ * @brief POST the invite-code redemption.
+ * @param code The entered invite code.
+ */
 - (void)startInviteHttp:(NSString *)code;
+/** @brief The tweet button was tapped: share the player's own invite code. */
 - (void)onTweetButton;
 @end
 

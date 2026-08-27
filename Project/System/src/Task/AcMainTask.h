@@ -114,20 +114,31 @@ enum BoardFrame {
     kBoardFrameDefense0303 = 25,     // DEFENSE_03_03
 };
 
-// A resolved Aep layer handle paired with its frame count; the setup pass always
-// resolves the two together (getLyrNo then layerFrameCount).
+/**
+ * @brief A resolved Aep layer handle paired with its frame count; the setup pass always resolves
+ * the two together (getLyrNo then layerFrameCount).
+ */
 struct AcLayerRef {
-    int lyr = 0;        // getLyrNo handle
-    int frameCount = 0; // layerFrameCount(lyr)
+    int lyr = 0;        /**< The getLyrNo handle. */
+    int frameCount = 0; /**< layerFrameCount(lyr). */
 };
 
-// An integer (x, y) board-panel anchor position (a grid cell's top-left after
-// the per-cell anchor offset).
+/**
+ * @brief An integer (x, y) board-panel anchor position (a grid cell's top-left after the per-cell
+ * anchor offset).
+ */
 struct AcAnchor {
-    int x = 0;
-    int y = 0;
+    int x = 0; /**< Anchor x in board space. */
+    int y = 0; /**< Anchor y in board space. */
 };
 
+/**
+ * @brief The arcade-mode task: arcade song select, the sugoroku treasure map, option select and
+ * note play.
+ *
+ * This class is also the ~0xa00-byte play-data work area the binary's one megafunction dispatches
+ * over.
+ */
 class AcMainTask : public ne::C_TASK {
 public:
     // The binary ctor/dtor (FUN_00099ab0 / 0x99ba4) are just the compiler-emitted
@@ -138,7 +149,13 @@ public:
     // forward-declares them).
     AcMainTask();
     ~AcMainTask() override;
-    void update(int deltaMs) override; // Ghidra: AcMainTask_update (FUN_00099d18)
+    /**
+     * @brief Per-frame arcade-mode tick: the touch/SE preamble, then a dispatch over the play-data
+     * state into one handler method per state.
+     * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
+     * @ghidraAddress 0x99d18
+     */
+    void update(int deltaMs) override;
 
 private:
     // Per-state handlers, lifted from AcMainTask_update's inlined switch cases.

@@ -12,13 +12,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One present-box row.
+ */
 @interface PresentBoxCell : UITableViewCell
 
-// The "acquire" button; the hosting controller wires its target/action.
+/** The "acquire" button; the hosting controller wires its target and action. */
 @property(readonly, strong) UIButton *getBtn;
 
-// Bind an NSValue-wrapped present record (see PresentData in the .m) and
-// rebuild the row.
+/**
+ * @brief Bind a present record and rebuild the row.
+ * @param presentData An NSValue-wrapped PresentData; see the .m.
+ */
 - (void)setPresentData:(NSValue *)presentData;
 
 @end

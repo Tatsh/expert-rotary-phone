@@ -18,17 +18,32 @@
 // producing controller is not part of the reconstructed set, so the exact tail
 // of the struct (if any) is unknown. Best-effort Obj-C type-encoding
 // "{FriendRequestDataStruct=@@@s}".
+/**
+ * @brief One outbound request record, as wrapped in the NSValue passed to -setFriendData:.
+ *
+ * Only these fields are read by the cell. The producing controller is not part of the
+ * reconstructed set, so the exact tail of the struct, if any, is unknown. The best-effort
+ * Objective-C type-encoding is "{FriendRequestDataStruct=@@@s}".
+ */
 typedef struct {
-    NSString *__unsafe_unretained playerId; // @0x0  requester id (kept for the cancel request)
-    NSString *__unsafe_unretained name;     // @0x4  requester name label
-    NSString *__unsafe_unretained date;     // @0x8  request date label
-    short charaId;                          // @0xc  chara icon id (>= 30 => downloaded from the
-                                            // app-support dir)
+    /** +0x0 The requester's id, kept for the cancel request. */
+    NSString *__unsafe_unretained playerId;
+    NSString *__unsafe_unretained name; /**< +0x4 The requester name label's text. */
+    NSString *__unsafe_unretained date; /**< +0x8 The request date label's text. */
+    /** +0xc The character icon id; 30 or above is downloaded into the Application Support
+     * directory. */
+    short charaId;
 } FriendRequestDataStruct;
 
+/**
+ * @brief One row of the sent-friend-requests list.
+ */
 @interface FriendRequestCell : UITableViewCell
 
-// Populate the row from an NSValue-wrapped FriendRequestDataStruct.
+/**
+ * @brief Populate the row from a request record.
+ * @param friendData An NSValue-wrapped FriendRequestDataStruct.
+ */
 - (void)setFriendData:(NSValue *)friendData;
 
 @end

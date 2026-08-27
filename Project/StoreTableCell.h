@@ -11,10 +11,15 @@
 
 @class StorePackView;
 
+/**
+ * @brief One catalogue row holding a pair of side-by-side pack tiles.
+ */
 @interface StoreTableCell : UITableViewCell
 
-@property(nonatomic, retain) StorePackView *leftPackView;  // synthesized getter @ 0x529e4
-@property(nonatomic, retain) StorePackView *rightPackView; // synthesized getter @ 0x529f4
+/** The left pack tile. Getter @ 0x529e4. */
+@property(nonatomic, retain) StorePackView *leftPackView;
+/** The right pack tile. Getter @ 0x529f4. */
+@property(nonatomic, retain) StorePackView *rightPackView;
 
 @end
 

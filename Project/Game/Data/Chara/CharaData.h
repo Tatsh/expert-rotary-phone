@@ -10,13 +10,15 @@
 
 #import <Foundation/Foundation.h>
 
-// One built-in character record (Ghidra: 16-byte struct, table @ 0x133298).
+/**
+ * @brief One built-in character record. Ghidra: a 16-byte struct, table @ 0x133298.
+ */
 struct CharaDataStruct {
-    NSString *name;      // +0x00
-    NSString *info;      // +0x04
-    NSString *skillName; // +0x08
-    short skillId;       // +0x0c
-    short rarity;        // +0x0e
+    NSString *name;      /**< +0x00 The character's display name. */
+    NSString *info;      /**< +0x04 The character's description text. */
+    NSString *skillName; /**< +0x08 The skill's display name. */
+    short skillId;       /**< +0x0c The id of the character's sugoroku skill. */
+    short rarity;        /**< +0x0e The character's rarity tier. */
 };
 
 /**

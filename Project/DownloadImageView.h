@@ -18,15 +18,32 @@
 
 #import "ImageDownloader.h" // ImageDownloader + <ImageDownloaderDelegate>
 
+/**
+ * @brief A UIImageView that lazily fetches its image from a URL, showing a spinner until the
+ * decoded image swaps in.
+ */
 @interface DownloadImageView : UIImageView <ImageDownloaderDelegate>
 
-// Empty image view bound to `urlString`; the fetch is started later via
-// -startDownload.
+/**
+ * @brief Build an empty image view bound to a URL; the fetch starts later, via -startDownload.
+ * @param urlString The image URL.
+ * @return The initialised view.
+ * @ghidraAddress 0x62be8
+ */
 - (id)initWithURLString:(NSString *)urlString;
-// As above, but showing `image` as a placeholder until the download completes.
+/**
+ * @brief Build an image view bound to a URL, showing a placeholder until the download completes.
+ * @param urlString The image URL.
+ * @param image The placeholder image.
+ * @return The initialised view.
+ * @ghidraAddress 0x62c5c
+ */
 - (id)initWithURLString:(NSString *)urlString withImage:(UIImage *)image;
 
-// Create the ImageDownloader (once) and begin the deferred fetch.
+/**
+ * @brief Create the ImageDownloader, once, and begin the deferred fetch.
+ * @ghidraAddress 0x62e24
+ */
 - (void)startDownload;
 
 @end

@@ -1,396 +1,1028 @@
-//
-//  UserSettingData.h
-//  pop'n rhythmin
-//
-//  Global user-settings / progress store. Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin. All methods are class methods.
-//
-//  Two storage tiers:
-//   * Plaintext NSUserDefaults (effects, last music/sheet).
-//   * An AES-128-CBC-encrypted 36-byte "Crypt109" blob under key "c" holding
-//     player progress, plus an encrypted archived owned-characters array under
-//     key "d". This replaced the v108 layout, which stored each field as a
-//     separate plaintext PascalCase key; loadSettingData migrates v108 -> v109.
-//
+/** @file
+ * Global user-settings and progress store. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin. All methods are class methods.
+ *
+ * Two storage tiers:
+ * - Plaintext NSUserDefaults (effects, last music and sheet).
+ * - An AES-128-CBC-encrypted 36-byte "Crypt109" blob under key "c" holding player progress, plus
+ *   an encrypted archived owned-characters array under key "d". This replaced the v108 layout,
+ *   which stored each field as a separate plaintext PascalCase key; loadSettingData migrates v108
+ *   to v109.
+ */
 
 #import <Foundation/Foundation.h>
 
 #import "TreasureTmpData.h"
 
-// The four AC-viewer custom options, in row order. The value is both the option
-// group index and which sub-setting the row edits (acvHiSpeed / acvPopKun /
-// acvHidSud / acvRanMir). Shared here because the option-list controller and
-// both of its cells key off it.
+/**
+ * @brief The four AC-viewer custom options, in row order.
+ *
+ * The value is both the option group index and which sub-setting the row edits (acvHiSpeed,
+ * acvPopKun, acvHidSud or acvRanMir). It is shared here because the option-list controller and
+ * both of its cells key off it.
+ */
 typedef NS_ENUM(NSInteger, AcvOptionRow) {
-    AcvOptionRowHiSpeed = 0, // AcViewerHiSpeedViewController
-    AcvOptionRowPopKun = 1,  // AcViewerPopKunViewController
-    AcvOptionRowHidSud = 2,  // AcViewerHidSudViewController
-    AcvOptionRowRanMir = 3,  // AcViewerRanMirViewController
-    AcvOptionRowCount = 4,
+    AcvOptionRowHiSpeed = 0, /**< AcViewerHiSpeedViewController. */
+    AcvOptionRowPopKun = 1,  /**< AcViewerPopKunViewController. */
+    AcvOptionRowHidSud = 2,  /**< AcViewerHidSudViewController. */
+    AcvOptionRowRanMir = 3,  /**< AcViewerRanMirViewController. */
+    AcvOptionRowCount = 4,   /**< The number of option rows. */
 };
 
-// Player-progress blob, version 109. Serialized as exactly 36 bytes (0x24),
-// AES-128-CBC encrypted, and stored under NSUserDefaults key "c".
-// Field offsets/types recovered from -[UserSettingData crypt109Data:] @
-// 0x615b4.
+/**
+ * @brief The player-progress blob, version 109.
+ *
+ * Serialised as exactly 36 bytes (0x24), AES-128-CBC encrypted, and stored under NSUserDefaults
+ * key "c". Field offsets and types were recovered from -[UserSettingData crypt109Data:] @
+ * 0x615b4.
+ */
 typedef struct Crypt109Data {
-    int32_t inviteCnt;             // 0x00
-    int32_t invitePresent;         // 0x04
-    int16_t charaTicket;           // 0x08
-    int16_t treasurePoint;         // 0x0a
-    int32_t openedLoginBonusId;    // 0x0c
-    int32_t loginBonusCnt;         // 0x10
-    int16_t charaId;               // 0x14
-    int16_t charaIdServer;         // 0x16
-    int32_t touchSoundKind;        // 0x18
-    int32_t haveTouchSoundFlg;     // 0x1c  (bitmask, 7 bits used)
-    uint8_t isBemaniCollaboOpened; // 0x20
-    uint8_t _pad[3];               // 0x21..0x23
-} Crypt109Data;                    // sizeof == 0x24 (36)
+    int32_t inviteCnt;             /**< 0x00 Invite codes redeemed. */
+    int32_t invitePresent;         /**< 0x04 Invite presents outstanding. */
+    int16_t charaTicket;           /**< 0x08 Owned character tickets. */
+    int16_t treasurePoint;         /**< 0x0a Treasure-point balance. */
+    int32_t openedLoginBonusId;    /**< 0x0c The login-bonus id most recently opened. */
+    int32_t loginBonusCnt;         /**< 0x10 Login-bonus claim count. */
+    int16_t charaId;               /**< 0x14 The locally-selected character id. */
+    int16_t charaIdServer;         /**< 0x16 The character id the server last acknowledged. */
+    int32_t touchSoundKind;        /**< 0x18 The selected touch-sound kind. */
+    int32_t haveTouchSoundFlg;     /**< 0x1c Owned touch-sound bitmask; seven bits used. */
+    uint8_t isBemaniCollaboOpened; /**< 0x20 Whether the BEMANI collaboration is unlocked. */
+    uint8_t _pad[3];               /**< 0x21 Padding out to 0x24. */
+} Crypt109Data;
 
+/**
+ * @brief The global user-settings and progress store. Every method is a class method.
+ */
 @interface UserSettingData : NSObject
 
 #pragma mark NSUserDefaults primitives
+
+/**
+ * @brief Read a plaintext integer default.
+ * @param key The defaults key.
+ * @return The stored value, or 0 when absent.
+ */
 + (int)getInt:(NSString *)key;
+/**
+ * @brief Write a plaintext integer default.
+ * @param value The value to store.
+ * @param key The defaults key.
+ */
 + (void)saveInt:(int)value Key:(NSString *)key;
-+ (id)getDate:(NSString *)key; // @ 0x5f990 (stored NSDate)
+/**
+ * @brief Read a plaintext NSDate default.
+ * @param key The defaults key.
+ * @return The stored NSDate, or nil when absent.
+ * @ghidraAddress 0x5f990
+ */
++ (id)getDate:(NSString *)key;
+/**
+ * @brief Write a plaintext NSDate default.
+ * @param value The date to store.
+ * @param key The defaults key.
+ */
 + (void)saveDate:(id)value Key:(NSString *)key;
+/**
+ * @brief Read a plaintext float default.
+ * @param key The defaults key.
+ * @return The stored value, or 0 when absent.
+ */
 + (float)getFloat:(NSString *)key;
+/**
+ * @brief Write a plaintext float default.
+ * @param value The value to store.
+ * @param key The defaults key.
+ */
 + (void)saveFloat:(float)value Key:(NSString *)key;
+/**
+ * @brief Read a plaintext string default.
+ * @param key The defaults key.
+ * @return The stored string, or nil when absent.
+ */
 + (NSString *)getString:(NSString *)key;
+/**
+ * @brief Write a plaintext string default.
+ * @param value The string to store.
+ * @param key The defaults key.
+ */
 + (void)saveString:(NSString *)value Key:(NSString *)key;
+/**
+ * @brief Read a plaintext boolean default.
+ * @param key The defaults key.
+ * @return The stored value, or NO when absent.
+ */
 + (BOOL)getBOOL:(NSString *)key;
+/**
+ * @brief Write a plaintext boolean default.
+ * @param value The value to store.
+ * @param key The defaults key.
+ */
 + (void)saveBOOL:(BOOL)value Key:(NSString *)key;
+/**
+ * @brief Read a plaintext data default.
+ * @param key The defaults key.
+ * @return The stored data, or nil when absent.
+ */
 + (NSData *)getData:(NSString *)key;
+/**
+ * @brief Write a plaintext data default.
+ * @param value The data to store.
+ * @param key The defaults key.
+ */
 + (void)saveData:(NSData *)value Key:(NSString *)key;
 
 #pragma mark Purchase / age-gate (youth spending limit)
-+ (NSDate *)birthDay;                          // @ 0x607fc
-+ (void)saveBirthDay:(NSDate *)date;           // @ 0x60824
-+ (BOOL)isBirthDayCanceled;                    // @ 0x6084c
-+ (void)saveIsBirthDayCanceled:(BOOL)canceled; // @ 0x60874
-+ (BOOL)isFriendSelected;                      // @ 0x5ffc8 (friend how-to seen)
-+ (void)saveIsFriendSelected:(BOOL)selected;   // @ 0x5fff0
-+ (NSDate *)lastUpdateSumPurchase;             // @ 0x6089c
-+ (int)sumPurchase;                            // @ 0x608ec (yen spent this month, clamped >= 0)
+
+/**
+ * @brief The stored birth date used by the youth spending limit.
+ * @return The birth date, or nil when unset.
+ * @ghidraAddress 0x607fc
+ */
++ (NSDate *)birthDay;
+/**
+ * @brief Store the birth date used by the youth spending limit.
+ * @param date The birth date.
+ * @ghidraAddress 0x60824
+ */
++ (void)saveBirthDay:(NSDate *)date;
+/**
+ * @brief Whether the player dismissed the birth-date prompt.
+ * @return YES when the prompt was cancelled.
+ * @ghidraAddress 0x6084c
+ */
++ (BOOL)isBirthDayCanceled;
+/**
+ * @brief Record whether the player dismissed the birth-date prompt.
+ * @param canceled YES when the prompt was cancelled.
+ * @ghidraAddress 0x60874
+ */
++ (void)saveIsBirthDayCanceled:(BOOL)canceled;
+/**
+ * @brief Whether the friend how-to has been seen.
+ * @return YES once the how-to has been shown.
+ * @ghidraAddress 0x5ffc8
+ */
++ (BOOL)isFriendSelected;
+/**
+ * @brief Record that the friend how-to has been seen.
+ * @param selected YES once the how-to has been shown.
+ * @ghidraAddress 0x5fff0
+ */
++ (void)saveIsFriendSelected:(BOOL)selected;
+/**
+ * @brief When the monthly purchase total was last rolled over.
+ * @return The rollover date, or nil when unset.
+ * @ghidraAddress 0x6089c
+ */
++ (NSDate *)lastUpdateSumPurchase;
+/**
+ * @brief The amount spent this month, in yen.
+ * @return The total, clamped to 0 or above.
+ * @ghidraAddress 0x608ec
+ */
++ (int)sumPurchase;
 
 #pragma mark Lifecycle
-+ (void)loadSettingData; // @ 0x5efb4
-+ (void)saveSettingData; // @ 0x5f66c
+
+/**
+ * @brief Load the settings store, migrating a v108 layout to v109 when one is found.
+ * @ghidraAddress 0x5efb4
+ */
++ (void)loadSettingData;
+/**
+ * @brief Write the settings store back out.
+ * @ghidraAddress 0x5f66c
+ */
++ (void)saveSettingData;
 
 #pragma mark Identity (plaintext)
-+ (NSString *)playerId;   // @ 0x60260  (key "PlayerId")
-+ (NSString *)playerName; // @ 0x60210  (key "PlayerName")
-+ (NSString *)konamiId;   // @ 0x602b0  (key "KonamiId")
+
+/**
+ * @brief The player id (key "PlayerId").
+ * @return The player id, or nil when unset.
+ * @ghidraAddress 0x60260
+ */
++ (NSString *)playerId;
+/**
+ * @brief The player name (key "PlayerName").
+ * @return The player name, or nil when unset.
+ * @ghidraAddress 0x60210
+ */
++ (NSString *)playerName;
+/**
+ * @brief The e-AMUSEMENT KONAMI ID (key "KonamiId").
+ * @return The KONAMI ID, or nil when unset.
+ * @ghidraAddress 0x602b0
+ */
++ (NSString *)konamiId;
 
 #pragma mark Friend list (plaintext)
-+ (BOOL)isBestScoreSort;                // @ 0x607ac  (key "IsBestScoreSort")
-+ (void)saveIsBestScoreSort:(BOOL)best; // @ 0x607d4
+
+/**
+ * @brief Whether the friend list sorts by best score (key "IsBestScoreSort").
+ * @return YES to sort by best score.
+ * @ghidraAddress 0x607ac
+ */
++ (BOOL)isBestScoreSort;
+/**
+ * @brief Set whether the friend list sorts by best score.
+ * @param best YES to sort by best score.
+ * @ghidraAddress 0x607d4
+ */
++ (void)saveIsBestScoreSort:(BOOL)best;
 
 #pragma mark Effects (plaintext)
-+ (BOOL)isEffectOn;                       // @ 0x606bc  (key "IsEffectOn")
-+ (void)saveIsEffectOn:(BOOL)on;          // @ 0x606e4
-+ (BOOL)isLongNotesEffectOn;              // @ 0x6070c  (key "IsLongNotesEffectOn")
-+ (void)saveIsLongNotesEffectOn:(BOOL)on; // @ 0x60734
+
+/**
+ * @brief Whether note effects are enabled (key "IsEffectOn").
+ * @return YES when effects are on.
+ * @ghidraAddress 0x606bc
+ */
++ (BOOL)isEffectOn;
+/**
+ * @brief Enable or disable note effects.
+ * @param on YES to enable effects.
+ * @ghidraAddress 0x606e4
+ */
++ (void)saveIsEffectOn:(BOOL)on;
+/**
+ * @brief Whether long-note effects are enabled (key "IsLongNotesEffectOn").
+ * @return YES when long-note effects are on.
+ * @ghidraAddress 0x6070c
+ */
++ (BOOL)isLongNotesEffectOn;
+/**
+ * @brief Enable or disable long-note effects.
+ * @param on YES to enable long-note effects.
+ * @ghidraAddress 0x60734
+ */
++ (void)saveIsLongNotesEffectOn:(BOOL)on;
 
 // Play-scene settings read by PlayTaskInit (Ghidra: FUN_0002e2d8).
-// touchSoundVolume is the per-tap SE volume (stored at play data +0x9b4);
-// isSimpleMode selects the simplified note field (+0x9e4); popkunSize is the
-// note ("popkun") size, truncated from float to a plain int at +0x9bc.
-+ (short)touchSoundVolume; // -[UserSettingData touchSoundVolume]
-+ (BOOL)isSimpleMode;      // -[UserSettingData isSimpleMode]
-+ (float)popkunSize;       // -[UserSettingData popkunSize]
+
+/**
+ * @brief The per-tap SE volume, stored at play data +0x9b4.
+ * @return The touch-sound volume.
+ */
++ (short)touchSoundVolume;
+/**
+ * @brief Whether the simplified note field is selected, stored at play data +0x9e4.
+ * @return YES for simple mode.
+ */
++ (BOOL)isSimpleMode;
+/**
+ * @brief The note ("popkun") size, truncated from float to a plain int at play data +0x9bc.
+ * @return The note size.
+ */
++ (float)popkunSize;
 
 #pragma mark Treasure (sugoroku pending-goal snapshot)
-// Read back the "pending treasure" record stored under the key
-// "TreasureTmpData": the goal the player just reached on the sugoroku board,
-// carried across the arcade launch. When no record is stored, returns a default
-// whose subMapId is -1 ("nothing pending"). The arcade task polls this to know
-// when to load a map and start play. Ghidra: -[UserSettingData treasureTmp:] @
-// 0x61448.
+
+/**
+ * @brief Read back the "pending treasure" record stored under the key "TreasureTmpData": the goal
+ * the player just reached on the sugoroku board, carried across the arcade launch.
+ *
+ * The arcade task polls this to know when to load a map and start play.
+ * @return The stored record, or a default whose subMapId is -1 ("nothing pending").
+ * @ghidraAddress 0x61448
+ */
 + (TreasureTmpData)treasureTmp;
 
-// Persist the "pending treasure" record back under the key "TreasureTmpData"
-// (the raw memory image is memcpy'd straight into the stored NSData blob). The
-// sugoroku map parser uses this to persist which bonus square it randomly
-// picked as the session's treasure. Ghidra: -[UserSettingData saveTreasureTmp:]
-// @ 0x614f0.
+/**
+ * @brief Persist the "pending treasure" record back under the key "TreasureTmpData"; the raw
+ * memory image is memcpy'd straight into the stored NSData blob.
+ *
+ * The sugoroku map parser uses this to persist which bonus square it randomly picked as the
+ * session's treasure.
+ * @param data The record to store.
+ * @ghidraAddress 0x614f0
+ */
 + (void)saveTreasureTmp:(TreasureTmpData)data;
 
-// The main-map id whose sugoroku map-select/area screen is currently being
-// shown, backed by the plaintext int key "SelectedMapId". The pad map-select
-// hub reads it to know which map to build. Ghidra: treasureSelectedMapId @
-// 0x6209c / saveTreasureSelectedMapId: @ 0x620cc.
+/**
+ * @brief The main-map id whose sugoroku map-select / area screen is currently being shown, backed
+ * by the plaintext int key "SelectedMapId". The pad map-select hub reads it to know which map to
+ * build.
+ * @return The selected map id.
+ * @ghidraAddress 0x6209c
+ */
 + (short)treasureSelectedMapId;
+/**
+ * @brief Set the currently-shown sugoroku main-map id.
+ * @param mapId The map id.
+ * @ghidraAddress 0x620cc
+ */
 + (void)saveTreasureSelectedMapId:(short)mapId;
 
-// Remembers whether the sugoroku "treasure" first-run how-to has been shown (so
-// the two-page how-to only appears once), backed by a plaintext BOOL key.
-// Ghidra: isTreasureSelected @ 0x60018 / saveIsTreasureSelected: @ 0x60040.
+/**
+ * @brief Whether the sugoroku "treasure" first-run how-to has been shown, so the two-page how-to
+ * only appears once. Backed by a plaintext BOOL key.
+ * @return YES once the how-to has been shown.
+ * @ghidraAddress 0x60018
+ */
 + (BOOL)isTreasureSelected;
+/**
+ * @brief Record that the sugoroku "treasure" first-run how-to has been shown.
+ * @param selected YES once the how-to has been shown.
+ * @ghidraAddress 0x60040
+ */
 + (void)saveIsTreasureSelected:(BOOL)selected;
 
-// The persisted "treasure read" progress index for a sugoroku sub-map (how far
-// the player has advanced its board story), or a negative sentinel when unread.
-// The arcade map loader reads it to resume the board. Ghidra: -[UserSettingData
-// treasureReadNo:] (selector PTR_s_treasureReadNo__ @ 0x15b6c8).
+/**
+ * @brief The persisted "treasure read" progress index for a sugoroku sub-map: how far the player
+ * has advanced its board story. The arcade map loader reads it to resume the board.
+ *
+ * Ghidra: -[UserSettingData treasureReadNo:] (selector PTR_s_treasureReadNo__ @ 0x15b6c8).
+ * @param subMapId The sub-map id.
+ * @return The read progress index, or a negative sentinel when unread.
+ */
 + (int)treasureReadNo:(short)subMapId;
 
-// The consumed sugoroku "treasure point" total, clamped to [0, 9999] on save
-// and to >= 0 on read. Backed by the plaintext int key "ConsumedTreasurePoint".
-// Ghidra: consumedTreasurePoint @ 0x61378 / saveConsumedTreasurePoint: @
-// 0x613b0.
+/**
+ * @brief The consumed sugoroku treasure-point total, backed by the plaintext int key
+ * "ConsumedTreasurePoint".
+ * @return The total, clamped to 0 or above.
+ * @ghidraAddress 0x61378
+ */
 + (short)consumedTreasurePoint;
+/**
+ * @brief Set the consumed sugoroku treasure-point total.
+ * @param value The total; clamped to [0, 9999] on save.
+ * @ghidraAddress 0x613b0
+ */
 + (void)saveConsumedTreasurePoint:(short)value;
 
 #pragma mark Crypt109 blob (key "c")
-+ (void)crypt109Data:(Crypt109Data *)out;            // @ 0x615b4 (read+decrypt)
-+ (void)saveCrypt109Data:(const Crypt109Data *)data; // @ 0x61650 (encrypt+write)
+
+/**
+ * @brief Read and decrypt the player-progress blob.
+ * @param out Receives the decrypted blob.
+ * @ghidraAddress 0x615b4
+ */
++ (void)crypt109Data:(Crypt109Data *)out;
+/**
+ * @brief Encrypt and write the player-progress blob.
+ * @param data The blob to store.
+ * @ghidraAddress 0x61650
+ */
++ (void)saveCrypt109Data:(const Crypt109Data *)data;
 
 #pragma mark Crypt109 field accessors
-// Getters read the decrypted blob; setters read-modify-write it. Verified:
-// inviteCnt @ 0x60950, charaTicket @ 0x61238, haveTouchSoundFlg getter/setter.
-// The remaining selector names follow the observed convention (getters = field
-// name, save<Field>: setters; loginBonus getters keep the "get" prefix).
+
+// Getters read the decrypted blob; setters read-modify-write it. Verified: inviteCnt @ 0x60950,
+// charaTicket @ 0x61238, and the haveTouchSoundFlg getter and setter. The remaining selector names
+// follow the observed convention (getters are the field name, setters are save<Field>:; the
+// login-bonus getters keep the "get" prefix).
+
+/**
+ * @brief The number of invite codes redeemed.
+ * @return The invite count.
+ */
 + (int)inviteCnt;
+/**
+ * @brief Set the number of invite codes redeemed.
+ * @param v The invite count.
+ */
 + (void)saveInviteCnt:(int)v;
+/**
+ * @brief The number of invite presents outstanding.
+ * @return The invite-present count.
+ */
 + (int)invitePresent;
+/**
+ * @brief Set the number of invite presents outstanding.
+ * @param v The invite-present count.
+ */
 + (void)saveInvitePresent:(int)v;
+/**
+ * @brief The number of owned character tickets.
+ * @return The ticket count.
+ */
 + (short)charaTicket;
+/**
+ * @brief Set the number of owned character tickets.
+ * @param v The ticket count.
+ */
 + (void)saveCharaTicket:(short)v;
+/**
+ * @brief The treasure-point balance.
+ * @return The balance.
+ */
 + (short)treasurePoint;
+/**
+ * @brief Set the treasure-point balance.
+ * @param v The balance.
+ */
 + (void)saveTreasurePoint:(short)v;
+/**
+ * @brief The login-bonus id most recently opened.
+ * @return The login-bonus id.
+ */
 + (int)getOpenedLoginBonusId;
+/**
+ * @brief Set the login-bonus id most recently opened.
+ * @param v The login-bonus id.
+ */
 + (void)saveOpenedLoginBonusId:(int)v;
+/**
+ * @brief The login-bonus claim count.
+ * @return The claim count.
+ */
 + (int)getLoginBonusCnt;
+/**
+ * @brief Set the login-bonus claim count.
+ * @param v The claim count.
+ */
 + (void)saveLoginBonusCnt:(int)v;
+/**
+ * @brief The locally-selected character id.
+ * @return The character id.
+ */
 + (short)charaId;
+/**
+ * @brief Set the locally-selected character id.
+ * @param v The character id.
+ */
 + (void)saveCharaId:(short)v;
+/**
+ * @brief The character id the server last acknowledged.
+ * @return The character id.
+ */
 + (short)charaIdServer;
+/**
+ * @brief Set the character id the server last acknowledged.
+ * @param v The character id.
+ */
 + (void)saveCharaIdServer:(short)v;
+/**
+ * @brief The selected touch-sound kind.
+ * @return The touch-sound kind index.
+ */
 + (int)touchSoundKind;
+/**
+ * @brief Set the selected touch-sound kind.
+ * @param v The touch-sound kind index.
+ */
 + (void)saveTouchSoundKind:(int)v;
 #ifdef ENABLE_PATCHES
-// @newCode — persist the last difficulty (sheet 0/1/2 = Normal/Hyper/Ex) the
-// player picked in the song-select overlay, so the overlay re-opens on it instead
-// of always defaulting to Normal. Backed by a plain NSUserDefaults key (which
-// caches in memory and is flushed by the OS at an opportune time).
+/**
+ * @brief The last difficulty the player picked in the song-select overlay, so the overlay re-opens
+ * on it instead of always defaulting to Normal.
+ *
+ * Backed by a plain NSUserDefaults key, which caches in memory and is flushed by the OS at an
+ * opportune time.
+ * @return The sheet index: 0 Normal, 1 Hyper, 2 Ex.
+ * @newCode
+ */
 + (int)lastPickedDifficulty;
+/**
+ * @brief Set the last difficulty the player picked in the song-select overlay.
+ * @param v The sheet index: 0 Normal, 1 Hyper, 2 Ex.
+ * @newCode
+ */
 + (void)saveLastPickedDifficulty:(int)v;
 #endif
+/**
+ * @brief The owned touch-sound bitmask.
+ * @return The bitmask; seven bits are used.
+ */
 + (int)haveTouchSoundFlg;
+/**
+ * @brief Set the owned touch-sound bitmask.
+ * @param v The bitmask.
+ */
 + (void)saveHaveTouchSoundFlg:(int)v;
+/**
+ * @brief Whether the BEMANI collaboration is unlocked.
+ * @return YES when unlocked.
+ */
 + (BOOL)isBemaniCollaboOpened;
+/**
+ * @brief Set whether the BEMANI collaboration is unlocked.
+ * @param v YES when unlocked.
+ */
 + (void)saveIsBemaniCollaboOpened:(BOOL)v;
 
 #pragma mark Owned characters
-+ (int)gotChara;                             // @ 0x60f24  ("GotChara" int, bits 0/1 forced on)
-+ (NSArray *)gotCharaArray;                  // @ 0x60f54  (encrypted archived array, key "d")
-+ (void)saveGotCharaArray:(short)charaIndex; // @ 0x610a0
+
+/**
+ * @brief The owned-character bitmask (the "GotChara" int), with bits 0 and 1 forced on.
+ * @return The bitmask.
+ * @ghidraAddress 0x60f24
+ */
++ (int)gotChara;
+/**
+ * @brief The owned-character list: an encrypted archived array under key "d".
+ * @return The archived array, or nil when none is stored.
+ * @ghidraAddress 0x60f54
+ */
++ (NSArray *)gotCharaArray;
+/**
+ * @brief Append a character to the owned-character list.
+ * @param charaIndex The character index to add.
+ * @ghidraAddress 0x610a0
+ */
++ (void)saveGotCharaArray:(short)charaIndex;
 
 #pragma mark Uncomplete score-save queue
-// When a finished play cannot be uploaded immediately (score improved but the
-// HTTP save is deferred), the result screen queues the music/sheet here and
-// flushes the pending entry on a later result. The two getters return parallel
-// NSArrays of NSNumber (music ids / sheet indices). Referenced by
-// PlayResultTask::resultSetup (Ghidra FUN_0003dfe0 @ 0x3e246 / 0x3e482 /
-// 0x3e49c).
-+ (void)addUncompleteSaveMusic:(int)music sheet:(short)sheet; // selector @ 0x15a8e0
-+ (NSArray *)uncompleteSaveMusic;                             // selector @ 0x15a8e8
-+ (NSArray *)uncompleteSaveSheet;                             // selector @ 0x15a8ec
+
+// When a finished play cannot be uploaded immediately (the score improved but the HTTP save is
+// deferred), the result screen queues the music and sheet here and flushes the pending entry on a
+// later result. Referenced by PlayResultTask::resultSetup (Ghidra FUN_0003dfe0 @ 0x3e246, 0x3e482
+// and 0x3e49c).
+
+/**
+ * @brief Queue a deferred score upload.
+ * @param music The music id.
+ * @param sheet The sheet index.
+ */
++ (void)addUncompleteSaveMusic:(int)music sheet:(short)sheet;
+/**
+ * @brief The queued music ids awaiting upload.
+ * @return An NSArray of NSNumber, parallel to +uncompleteSaveSheet.
+ */
++ (NSArray *)uncompleteSaveMusic;
+/**
+ * @brief The queued sheet indices awaiting upload.
+ * @return An NSArray of NSNumber, parallel to +uncompleteSaveMusic.
+ */
++ (NSArray *)uncompleteSaveSheet;
 
 #pragma mark Audio volumes (plaintext)
-// BGM master volume used when a scene (re)loads its BGM. Ghidra:
-// -[UserSettingData bgmVolume] (selector PTR_s_bgmVolume_0015a754), read by
-// PlayResultTask::resultSetup
-// @ 0x3f0ac before -[AudioManager setBgmVolume:].
+
+/**
+ * @brief The BGM master volume used when a scene (re)loads its BGM.
+ *
+ * Read by PlayResultTask::resultSetup @ 0x3f0ac before -[AudioManager setBgmVolume:].
+ * @return The BGM volume.
+ */
 + (float)bgmVolume;
-// Paired setter for +bgmVolume. Ghidra: -[UserSettingData saveBgmVolume:]
-// (PTR_s_saveBgmVolume__0015afc0), written by -[SoundSettingView dealloc] and
-// -[SoundSettingView bgmSliderValChanged:] (iPad).
+/**
+ * @brief Set the BGM master volume; written by -[SoundSettingView dealloc] and
+ * -[SoundSettingView bgmSliderValChanged:] on iPad.
+ * @param volume The BGM volume.
+ */
 + (void)saveBgmVolume:(float)volume;
 
-// SE master volume, stored as a plain short (0..127). Read by
-// SoundSettingView to seed its SE slider. Ghidra: -[UserSettingData seVolume]
-// (PTR_s_seVolume_0015a758) / -[UserSettingData saveSeVolume:]
-// (PTR_s_saveSeVolume__0015afbc).
+/**
+ * @brief The SE master volume, stored as a plain short. Read by SoundSettingView to seed its SE
+ * slider.
+ * @return The SE volume, 0..127.
+ */
 + (short)seVolume;
+/**
+ * @brief Set the SE master volume.
+ * @param volume The SE volume, 0..127.
+ */
 + (void)saveSeVolume:(short)volume;
 
-// Paired setter for +touchSoundVolume (declared under "Effects" above). Ghidra:
-// -[UserSettingData saveTouchSoundVolume:]
-// (PTR_s_saveTouchSoundVolume__0015afc4), written by SoundSettingView.
+/**
+ * @brief Set the per-tap SE volume; the setter paired with +touchSoundVolume. Written by
+ * SoundSettingView.
+ * @param volume The touch-sound volume.
+ */
 + (void)saveTouchSoundVolume:(short)volume;
 
 #pragma mark Legacy v108 readers (plaintext PascalCase keys; used by migration)
-+ (int)inviteCnt108;              // key "InviteCnt"          @ 0x5fc5c
-+ (int)invitePresent108;          // key "InvitePresent"      @ 0x5fc90
-+ (short)charaTicket108;          // key "CharaTicket"        @ 0x5fcc4
-+ (short)treasurePoint108;        // key "TreasurePoint"      @ 0x5fcfc
-+ (int)getOpenedLoginBonusId108;  // key "OpenedLoginBonusId" @ 0x5fd34
-+ (int)getLoginBonusCnt108;       // key "LoginBonusCnt"      @ 0x5fd64
-+ (short)charaId108;              // key "CharaId"            @ 0x5fd8c
-+ (short)charaIdServer108;        // key "CharaIdServer"      @ 0x5fdbc
-+ (int)touchSoundKind108;         // key "TouchSoundKind"     @ 0x5fdec
-+ (int)haveTouchSoundFlg108;      // key "HaveTouchSoundFlg"  @ 0x5fe2c
-+ (BOOL)isBemaniCollaboOpened108; // key "IsBemaniCollaboOpened" @ 0x5fe60
+
+/**
+ * @brief The v108 invite count (key "InviteCnt").
+ * @return The stored value.
+ * @ghidraAddress 0x5fc5c
+ */
++ (int)inviteCnt108;
+/**
+ * @brief The v108 invite-present count (key "InvitePresent").
+ * @return The stored value.
+ * @ghidraAddress 0x5fc90
+ */
++ (int)invitePresent108;
+/**
+ * @brief The v108 character-ticket count (key "CharaTicket").
+ * @return The stored value.
+ * @ghidraAddress 0x5fcc4
+ */
++ (short)charaTicket108;
+/**
+ * @brief The v108 treasure-point balance (key "TreasurePoint").
+ * @return The stored value.
+ * @ghidraAddress 0x5fcfc
+ */
++ (short)treasurePoint108;
+/**
+ * @brief The v108 opened login-bonus id (key "OpenedLoginBonusId").
+ * @return The stored value.
+ * @ghidraAddress 0x5fd34
+ */
++ (int)getOpenedLoginBonusId108;
+/**
+ * @brief The v108 login-bonus count (key "LoginBonusCnt").
+ * @return The stored value.
+ * @ghidraAddress 0x5fd64
+ */
++ (int)getLoginBonusCnt108;
+/**
+ * @brief The v108 character id (key "CharaId").
+ * @return The stored value.
+ * @ghidraAddress 0x5fd8c
+ */
++ (short)charaId108;
+/**
+ * @brief The v108 server character id (key "CharaIdServer").
+ * @return The stored value.
+ * @ghidraAddress 0x5fdbc
+ */
++ (short)charaIdServer108;
+/**
+ * @brief The v108 touch-sound kind (key "TouchSoundKind").
+ * @return The stored value.
+ * @ghidraAddress 0x5fdec
+ */
++ (int)touchSoundKind108;
+/**
+ * @brief The v108 owned touch-sound bitmask (key "HaveTouchSoundFlg").
+ * @return The stored value.
+ * @ghidraAddress 0x5fe2c
+ */
++ (int)haveTouchSoundFlg108;
+/**
+ * @brief The v108 BEMANI-collaboration flag (key "IsBemaniCollaboOpened").
+ * @return The stored value.
+ * @ghidraAddress 0x5fe60
+ */
++ (BOOL)isBemaniCollaboOpened108;
 
 #pragma mark Recovered selectors
-// Recovered from call sites (previously declared as local extern/category
-// seams).
 
-// Arcade-viewer play options (stored index per option kind).
+// Recovered from call sites; previously declared as local extern or category seams.
+
+/**
+ * @brief The arcade-viewer hi-speed option index.
+ * @return The stored index.
+ */
 + (int)acvHiSpeed;
+/**
+ * @brief The arcade-viewer pop-kun option index.
+ * @return The stored index.
+ */
 + (int)acvPopKun;
+/**
+ * @brief The arcade-viewer hidden/sudden option index.
+ * @return The stored index.
+ */
 + (int)acvHidSud;
+/**
+ * @brief The arcade-viewer random/mirror option index.
+ * @return The stored index.
+ */
 + (int)acvRanMir;
-// Paired setters for the arcade-viewer play options, written by the per-option
-// detail screens (AcViewerHiSpeed/PopKun/HidSud/RanMirViewController) when a
-// row is selected. Ghidra selector pointers: -[UserSettingData saveAcvHiSpeed:]
-// (PTR_s_saveAcvHiSpeed__0015a764), saveAcvPopKun:
-// (PTR_s_saveAcvPopKun__0015b390), saveAcvHidSud:
-// (PTR_s_saveAcvHidSud__0015a3c0), saveAcvRanMir:
-// (PTR_s_saveAcvRanMir__0015b6f8).
+
+// Paired setters for the arcade-viewer play options, written by the per-option detail screens
+// (AcViewerHiSpeed/PopKun/HidSud/RanMirViewController) when a row is selected.
+
+/**
+ * @brief Set the arcade-viewer hi-speed option index.
+ * @param value The index to store.
+ */
 + (void)saveAcvHiSpeed:(int)value;
+/**
+ * @brief Set the arcade-viewer pop-kun option index.
+ * @param value The index to store.
+ */
 + (void)saveAcvPopKun:(int)value;
+/**
+ * @brief Set the arcade-viewer hidden/sudden option index.
+ * @param value The index to store.
+ */
 + (void)saveAcvHidSud:(int)value;
+/**
+ * @brief Set the arcade-viewer random/mirror option index.
+ * @param value The index to store.
+ */
 + (void)saveAcvRanMir:(int)value;
-// YES if the arcade viewer shows the genre name instead of the song name.
+/**
+ * @brief Whether the arcade viewer shows the genre name instead of the song name.
+ * @return YES to show the genre name.
+ */
 + (BOOL)isAcvGenreName;
-// Toggle the arcade-viewer genre/song-name mode (written by the AC-viewer song
-// list's change button). Ghidra: saveIsAcvGenreName: @ 0x61a0c (key
-// "AcViewerIsGenreName").
+/**
+ * @brief Toggle the arcade-viewer genre versus song-name mode; written by the AC-viewer song
+ * list's change button. Key "AcViewerIsGenreName".
+ * @param genreName YES to show the genre name.
+ * @ghidraAddress 0x61a0c
+ */
 + (void)saveIsAcvGenreName:(BOOL)genreName;
 
-// Music-list sort mode (0 title / 1 artist / 2 Lv N / 3 Lv H / 4 Lv EX / 5
-// best-score), clamped to 0..5. Read/written by the sort-select screen. Ghidra:
-// musicSort @ 0x60dd0 / saveMusicSort: @ 0x60e10 (key "MusicSort").
+/**
+ * @brief The music-list sort mode, read and written by the sort-select screen. Key "MusicSort".
+ * @return 0 title, 1 artist, 2 level N, 3 level H, 4 level EX, 5 best score; clamped to 0..5.
+ * @ghidraAddress 0x60dd0
+ */
 + (short)musicSort;
+/**
+ * @brief Set the music-list sort mode.
+ * @param sort The sort mode, clamped to 0..5.
+ * @ghidraAddress 0x60e10
+ */
 + (void)saveMusicSort:(short)sort;
 
-// Arcade convert-code (links the app to an arcade eAmusement account).
+/**
+ * @brief The arcade convert-code linking the app to an arcade e-AMUSEMENT account.
+ * @return The convert code, or nil when unset.
+ */
 + (NSString *)convertCode;
+/**
+ * @brief Set the arcade convert-code.
+ * @param code The convert code.
+ */
 + (void)saveConvertCode:(NSString *)code;
-// One-shot "follow bonus" (Twitter follow reward) claimed flag.
+/**
+ * @brief Whether the one-shot "follow bonus" (Twitter follow reward) has been claimed.
+ * @return YES once claimed.
+ */
 + (BOOL)isFollowBonusGet;
+/**
+ * @brief Record that the one-shot "follow bonus" has been claimed.
+ * @param got YES once claimed.
+ */
 + (void)saveIsFollowBonusGet:(BOOL)got;
-// Reset the convert-code / follow-bonus state.
+/**
+ * @brief Reset the convert-code and follow-bonus state.
+ */
 + (void)initForConvert;
-// Client version that last completed the device-change flow; policy-accepted
-// flag.
+/**
+ * @brief The client version that last completed the device-change flow.
+ * @return The client version.
+ */
 + (int)lastCompletedClientVer;
+/**
+ * @brief Set the client version that last completed the device-change flow.
+ * @param ver The client version.
+ */
 + (void)saveLastCompletedClientVer:(int)ver;
+/**
+ * @brief Record whether the privacy policy and terms have been accepted.
+ * @param accepted YES once accepted.
+ */
 + (void)saveIsPolicyAccepted:(BOOL)accepted;
 
-// Whether the player has already redeemed an invite code (a code may be entered
-// only once). Backed by the plaintext BOOL key "IsInputInviteCode".
-// Ghidra: isInputInviteCode @ 0x60a40 / saveIsInputInviteCode: @ 0x60a68.
+/**
+ * @brief Whether the player has already redeemed an invite code; a code may be entered only once.
+ * Backed by the plaintext BOOL key "IsInputInviteCode".
+ * @return YES once a code has been redeemed.
+ * @ghidraAddress 0x60a40
+ */
 + (BOOL)isInputInviteCode;
+/**
+ * @brief Record that an invite code has been redeemed.
+ * @param v YES once a code has been redeemed.
+ * @ghidraAddress 0x60a68
+ */
 + (void)saveIsInputInviteCode:(BOOL)v;
 
-// Whether the pop'n-link first-run how-to has already been shown. The
-// pop'n-link top screen sets it the first time the KID-input screen is pushed
-// (so the "firstplay_popnlink" how-to only appears once). Backed by a plaintext
-// BOOL key. Ghidra: isPopnLinkSelected / saveIsPopnLinkSelected: (read/written
-// by PopnLinkTopViewController startOpenAnimation @ 0xcd5a8).
+/**
+ * @brief Whether the pop'n-link first-run how-to has already been shown.
+ *
+ * The pop'n-link top screen sets it the first time the KID-input screen is pushed, so the
+ * "firstplay_popnlink" how-to only appears once. Backed by a plaintext BOOL key; read and written
+ * by -[PopnLinkTopViewController startOpenAnimation] @ 0xcd5a8.
+ * @return YES once the how-to has been shown.
+ */
 + (BOOL)isPopnLinkSelected;
+/**
+ * @brief Record that the pop'n-link first-run how-to has been shown.
+ * @param selected YES once the how-to has been shown.
+ */
 + (void)saveIsPopnLinkSelected:(BOOL)selected;
 
-// Last-seen store information banner id and last store-view timestamp string.
+/**
+ * @brief The last-seen store information banner id.
+ * @return The banner id.
+ */
 + (int)lastInformationId;
+/**
+ * @brief The timestamp string of the last store view.
+ * @return The timestamp string, or nil when unset.
+ */
 + (NSString *)lastStoreViewTimeString;
 
-// Identity setters (paired with +playerId / +playerName getters above).
+/**
+ * @brief Set the player id; paired with +playerId.
+ * @param playerId The player id.
+ */
 + (void)savePlayerId:(NSString *)playerId;
+/**
+ * @brief Set the player name; paired with +playerName.
+ * @param name The player name.
+ */
 + (void)savePlayerName:(NSString *)name;
-// Store the e-AMUSEMENT KONAMI ID (key "KonamiId"), written when the KID-input
-// screen's decide button starts the pop'n-link. Ghidra: saveKonamiId: @
-// 0x602d8.
+/**
+ * @brief Store the e-AMUSEMENT KONAMI ID (key "KonamiId"), written when the KID-input screen's
+ * decide button starts the pop'n-link.
+ * @param konamiId The KONAMI ID.
+ * @ghidraAddress 0x602d8
+ */
 + (void)saveKonamiId:(NSString *)konamiId;
 
-// Remove a queued uncomplete score-save entry (paired with
-// addUncompleteSaveMusic:sheet:).
+/**
+ * @brief Remove a queued uncomplete score-save entry; paired with
+ * +addUncompleteSaveMusic:sheet:.
+ * @param music The music id.
+ * @param sheet The sheet index.
+ */
 + (void)subUncompleteSaveMusic:(int)music sheet:(short)sheet;
 
-// Clear the pending-treasure snapshot.
+/**
+ * @brief Clear the pending-treasure snapshot.
+ */
 + (void)initTreasureTmp;
-// Setter paired with +isSimpleMode.
+/**
+ * @brief Set the simple-mode flag; paired with +isSimpleMode.
+ * @param on YES for simple mode.
+ */
 + (void)saveIsSimpleMode:(BOOL)on;
 
-// Quiz progress counters (plaintext NSUserDefaults ints, via
-// getInt:/saveInt:Key:). Ghidra: lastAnswerQuizId @ 0x616c4 /
-// saveLastAnswerQuizId: @ 0x616ec (key "LastAnswerQuizId"), totalCorrectQuiz @
-// 0x61714 / saveTotalCorrectQuiz: @ 0x6173c (key "TotalCorrectQuiz"),
-// totalInCorrectQuiz @ 0x61764 / saveTotalInCorrectQuiz:
-// @ 0x6178c (key "TotalInCorrectQuiz"), consecutiveCorrectQuiz @ 0x617b4 /
-// saveConsecutiveQuiz: @ 0x617dc (key "ConsecutiveCorrectQuiz"). Read/written
-// by QuizMainViewController.
+// Quiz progress counters: plaintext NSUserDefaults ints via +getInt: and +saveInt:Key:, read and
+// written by QuizMainViewController.
+
+/**
+ * @brief The id of the last quiz answered (key "LastAnswerQuizId").
+ * @return The quiz id.
+ * @ghidraAddress 0x616c4
+ */
 + (int)lastAnswerQuizId;
+/**
+ * @brief Set the id of the last quiz answered.
+ * @param v The quiz id.
+ * @ghidraAddress 0x616ec
+ */
 + (void)saveLastAnswerQuizId:(int)v;
+/**
+ * @brief The total number of quizzes answered correctly (key "TotalCorrectQuiz").
+ * @return The total.
+ * @ghidraAddress 0x61714
+ */
 + (int)totalCorrectQuiz;
+/**
+ * @brief Set the total number of quizzes answered correctly.
+ * @param v The total.
+ * @ghidraAddress 0x6173c
+ */
 + (void)saveTotalCorrectQuiz:(int)v;
+/**
+ * @brief The total number of quizzes answered incorrectly (key "TotalInCorrectQuiz").
+ * @return The total.
+ * @ghidraAddress 0x61764
+ */
 + (int)totalInCorrectQuiz;
+/**
+ * @brief Set the total number of quizzes answered incorrectly.
+ * @param v The total.
+ * @ghidraAddress 0x6178c
+ */
 + (void)saveTotalInCorrectQuiz:(int)v;
+/**
+ * @brief The current run of consecutive correct quiz answers (key "ConsecutiveCorrectQuiz").
+ * @return The run length.
+ * @ghidraAddress 0x617b4
+ */
 + (int)consecutiveCorrectQuiz;
+/**
+ * @brief Set the current run of consecutive correct quiz answers.
+ * @param v The run length.
+ * @ghidraAddress 0x617dc
+ */
 + (void)saveConsecutiveQuiz:(int)v;
 
-// Grant character tickets (Crypt109 charaTicket += count).
+/**
+ * @brief Grant character tickets, adding to the Crypt109 charaTicket field.
+ * @param count The number of tickets to grant.
+ */
 + (void)addCharaTicket:(int)count;
-// Setters paired with +lastUpdateSumPurchase / +sumPurchase (age-gate spending
-// totals).
+/**
+ * @brief Set when the monthly purchase total was last rolled over; paired with
+ * +lastUpdateSumPurchase.
+ * @param date The rollover date.
+ */
 + (void)saveLastUpdateSumPurchase:(NSDate *)date;
+/**
+ * @brief Set the amount spent this month; paired with +sumPurchase.
+ * @param sum The total, in yen.
+ */
 + (void)saveSumPurchase:(int)sum;
 
 #pragma mark Store / recommend view timestamps
-// Setter paired with +lastStoreViewTimeString (both back the key
-// "LastUpdateTime"). Ghidra: saveLastStoreViewTimeString: @ 0x5feb0.
+
+/**
+ * @brief Set the timestamp string of the last store view; paired with +lastStoreViewTimeString.
+ * Both back the key "LastUpdateTime".
+ * @param time The timestamp string.
+ * @ghidraAddress 0x5feb0
+ */
 + (void)saveLastStoreViewTimeString:(NSString *)time;
-// Timestamp string of the last store-recommend view (key
-// "LastRecommendViewTime"). Ghidra: lastRecommendViewTimeString @ 0x5fed8 /
-// saveLastRecommendViewTimeString: @ 0x5ff00.
+/**
+ * @brief The timestamp string of the last store-recommend view (key "LastRecommendViewTime").
+ * @return The timestamp string, or nil when unset.
+ * @ghidraAddress 0x5fed8
+ */
 + (NSString *)lastRecommendViewTimeString;
+/**
+ * @brief Set the timestamp string of the last store-recommend view.
+ * @param time The timestamp string.
+ * @ghidraAddress 0x5ff00
+ */
 + (void)saveLastRecommendViewTimeString:(NSString *)time;
 
 #pragma mark Tutorial / policy
-// Whether the first-run tutorial has already been played (key
-// "IsTutorialPlayed"). Ghidra: isTutorialPlayed @ 0x5ff28 /
-// saveIsTutorialPlayed: @ 0x5ff50.
+
+/**
+ * @brief Whether the first-run tutorial has already been played (key "IsTutorialPlayed").
+ * @return YES once played.
+ * @ghidraAddress 0x5ff28
+ */
 + (BOOL)isTutorialPlayed;
+/**
+ * @brief Record that the first-run tutorial has been played.
+ * @param played YES once played.
+ * @ghidraAddress 0x5ff50
+ */
 + (void)saveIsTutorialPlayed:(BOOL)played;
-// Getter paired with +saveIsPolicyAccepted: (privacy policy / terms
-// acceptance). Ghidra: isPolicyAccepted @ 0x60068.
+/**
+ * @brief Whether the privacy policy and terms have been accepted; paired with
+ * +saveIsPolicyAccepted:.
+ * @return YES once accepted.
+ * @ghidraAddress 0x60068
+ */
 + (BOOL)isPolicyAccepted;
 
 #pragma mark Touch radius / popkun setter
-// Note ("popkun") touch radius. In the binary the getter is a hardcoded
-// constant (68.0), independent of the stored value; the setter clamps to [40,
-// 148] before persisting (key "TouchRadius"). Ghidra: touchRadius @ 0x605a4 /
-// saveTouchRadius: @ 0x605ac.
+
+/**
+ * @brief The note ("popkun") touch radius.
+ *
+ * In the binary this getter is a hardcoded constant, 68.0, independent of the stored value.
+ * @return The touch radius.
+ * @ghidraAddress 0x605a4
+ */
 + (float)touchRadius;
+/**
+ * @brief Set the note touch radius (key "TouchRadius").
+ * @param radius The radius; clamped to [40, 148] before persisting.
+ * @ghidraAddress 0x605ac
+ */
 + (void)saveTouchRadius:(float)radius;
-// Setter paired with +popkunSize (key "b"); clamps to [50, 100].
-// Ghidra: savePopkunSize: @ 0x60668.
+/**
+ * @brief Set the note size (key "b"); paired with +popkunSize.
+ * @param size The note size; clamped to [50, 100].
+ * @ghidraAddress 0x60668
+ */
 + (void)savePopkunSize:(float)size;
 
 #pragma mark Store information banner
-// Setter paired with +lastInformationId (note the original key's typo
-// "LastInfomationId"). Ghidra: saveLastInformationId: @ 0x6187c.
+
+/**
+ * @brief Set the last-seen store information banner id; paired with +lastInformationId. Note the
+ * original key's typo, "LastInfomationId".
+ * @param informationId The banner id.
+ * @ghidraAddress 0x6187c
+ */
 + (void)saveLastInformationId:(int)informationId;
-// The day (NSDate) the store information banner was last viewed (key
-// "InfoViewDay"). isEqualToInfoViewDay: compares against the stored day at
-// yyyy/MM/dd granularity. Ghidra: getInfoViewDay @ 0x61b44 / saveInfoViewDay: @
-// 0x61b6c / isEqualToInfoViewDay: @ 0x61b94.
+/**
+ * @brief The day the store information banner was last viewed (key "InfoViewDay").
+ * @return The stored day, or nil when unset.
+ * @ghidraAddress 0x61b44
+ */
 + (NSDate *)getInfoViewDay;
+/**
+ * @brief Set the day the store information banner was last viewed.
+ * @param day The day to store.
+ * @ghidraAddress 0x61b6c
+ */
 + (void)saveInfoViewDay:(NSDate *)day;
+/**
+ * @brief Compare @p day against the stored information-view day at yyyy/MM/dd granularity.
+ * @param day The day to compare.
+ * @return YES when the two fall on the same day.
+ * @ghidraAddress 0x61b94
+ */
 + (BOOL)isEqualToInfoViewDay:(NSDate *)day;
 
 #pragma mark Treasure (consumed points / read progress)
-// Add to the consumed sugoroku "treasure point" total, clamped to [0, 9999]
-// (key "ConsumedTreasurePoint"). Ghidra: addConsumedTreasurePoint: @ 0x613ec.
+
+/**
+ * @brief Add to the consumed sugoroku treasure-point total (key "ConsumedTreasurePoint").
+ * @param value The amount to add; the total is clamped to [0, 9999].
+ * @ghidraAddress 0x613ec
+ */
 + (void)addConsumedTreasurePoint:(short)value;
-// Persist the "treasure read" progress index for a sugoroku sub-map into the
-// "e" array of {mapid, readno} dictionaries (update the matching entry, or
-// append a new one). Ghidra: saveTreasureReadNo:no: @ 0x61dc0.
+/**
+ * @brief Persist the "treasure read" progress index for a sugoroku sub-map into the "e" array of
+ * {mapid, readno} dictionaries, updating the matching entry or appending a new one.
+ * @param subMapId The sub-map id.
+ * @param no The read progress index.
+ * @ghidraAddress 0x61dc0
+ */
 + (void)saveTreasureReadNo:(short)subMapId no:(int)no;
 
 @end

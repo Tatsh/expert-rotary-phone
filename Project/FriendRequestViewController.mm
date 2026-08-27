@@ -55,10 +55,26 @@
 #import "UserSettingData.h"               // +playerId (own id)
 #import "neEngineBridge.h"                // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
+/**
+ * @brief The friend-request screen's private actions and request helper.
+ */
 @interface FriendRequestViewController () <DownloadMainDelegate>
+/**
+ * @brief The request button was tapped: send a request to the entered player id.
+ * @param sender The tapped button.
+ */
 - (void)touchedRequestButton:(id)sender;
+/**
+ * @brief The free-request button was tapped: open the recommended-friend list.
+ * @param sender The tapped button.
+ */
 - (void)touchedFreeRequestButton:(id)sender;
+/**
+ * @brief POST a friend request.
+ * @param playerId The player to request.
+ */
 - (void)startFriendRequestHttp:(NSString *)playerId;
+/** @brief The back-button action. */
 - (void)backButtonFunc;
 @end
 

@@ -15,12 +15,17 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief Sets a navigation bar's header background consistently across iOS versions.
+ */
 @interface UINavigationBar (RHHeader)
 
-/// Set @c image as the bar's header background on every iOS version: the legacy
-/// bar-metrics background for iOS 12 and earlier, mirrored into the iOS 13+
-/// appearance (opaque background, no shadow line) so it is not dropped at the
-/// transparent scroll edge.
+/**
+ * @brief Set @p image as the bar's header background on every iOS version: the legacy
+ * bar-metrics background for iOS 12 and earlier, mirrored into the iOS 13+ appearance (opaque
+ * background, no shadow line) so it is not dropped at the transparent scroll edge.
+ * @param image The header background image.
+ */
 - (void)setBackgroundImageModern:(UIImage *)image;
 
 @end

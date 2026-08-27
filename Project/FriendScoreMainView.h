@@ -20,25 +20,34 @@
 
 #import "Downloader.h" // DownloaderDelegate
 
+/**
+ * @brief The friend-score screen: your friends' scores on one song.
+ */
 @interface FriendScoreMainView : UIViewController <UITabBarControllerDelegate, DownloaderDelegate>
 
-// Build the whole friend-score screen for `musicId`, wrap self in a
-// UINavigationController (with the custom back button + nav-bar art) and return
-// that navigation controller — the phone nav host the root MainViewController
-// adds over the GL view. Ghidra: @ 0xa9df0.
+/**
+ * @brief Build the whole friend-score screen for a song and wrap self in a UINavigationController
+ * with the custom back button and nav-bar art.
+ * @param musicId The song to show scores for.
+ * @return The navigation host the root MainViewController adds over the GL view.
+ * @ghidraAddress 0xa9df0
+ */
 - (UINavigationController *)initAtNavigationControllerWithMusicId:(unsigned int)musicId
     __attribute__((objc_method_family(none)));
 
-// The song whose friend scores are shown. Synthesized atomic accessors
-// (getter @ 0xae040 / setter @ 0xae054).
+/** The song whose friend scores are shown. The accessors are atomic. Getter @ 0xae040, setter @
+ * 0xae054. */
 @property(atomic, assign) unsigned int musicId;
 
-// YES while the open/close cross-fade is running (guards re-entry). Synthesized
-// atomic getter @ 0xae028; set internally (no public setter).
+/** Whether the open or close cross-fade is running; it guards re-entry. Set internally, with no
+ * public setter. Getter @ 0xae028. */
 @property(atomic, assign, readonly) BOOL isAnimationing;
 
-// Cross-fade the nav host in (and pause the render loop). Called by the root
-// MainViewController right after it adds the nav host. Ghidra: @ 0xabfc8.
+/**
+ * @brief Cross-fade the navigation host in and pause the render loop. The root MainViewController
+ * calls it right after adding the host.
+ * @ghidraAddress 0xabfc8
+ */
 - (void)startOpenAnimation;
 
 @end

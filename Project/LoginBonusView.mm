@@ -43,10 +43,14 @@
 // identically and mapped in if a multi-campaign build is ever needed. (Not a
 // code dependency — pure baked asset data.)
 // ---------------------------------------------------------------------------
+/**
+ * @brief One row of a login-bonus reward table.
+ */
 typedef struct {
-    int requiredLoginCnt;                // login count at which this reward unlocks
-    int type;                            // 0 = treasure point, 1 = music unlock, 2 = terminator
-    NSString *__unsafe_unretained value; // type 0: treasure amount as text (read via -intValue)
+    int requiredLoginCnt; /**< The login count at which this reward unlocks. */
+    int type;             /**< 0 = treasure point, 1 = music unlock, 2 = terminator. */
+    /** For type 0, the treasure amount as text, read with -intValue. */
+    NSString *__unsafe_unretained value;
 } LoginBonusRewardEntry;
 
 enum {
@@ -55,15 +59,28 @@ enum {
     kLoginBonusRewardEnd = 2,
 };
 
+/**
+ * @brief The login-bonus board's private state and helpers.
+ */
 @interface LoginBonusView () {
-    UIImageView *m_BgImgView; // the "login_board" background (stamps are its subviews)
-    int m_OldLoginCnt;        // login count already acknowledged on this board
-    BOOL m_IsTouch;           // guard so the "stamp today" tap only fires once
+    /** The "login_board" background; the stamps are its subviews. */
+    UIImageView *m_BgImgView;
+    int m_OldLoginCnt; /**< The login count already acknowledged on this board. */
+    BOOL m_IsTouch;    /**< Guards so the "stamp today" tap only fires once. */
 }
+/**
+ * @brief A tap landed on the board.
+ * @param sender The tap recogniser.
+ */
 - (void)touchEvent:(id)sender;
+/** @brief Show the reward alert. */
 - (void)showAlertView;
-+ (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:
-    (int)loginBonusId; // inlined at every call site; see note
+/**
+ * @brief The reward table for a login-bonus id. The binary inlines this at every call site.
+ * @param loginBonusId The login-bonus id.
+ * @return The reward table, terminated by a sentinel entry.
+ */
++ (const LoginBonusRewardEntry *)rewardTableForLoginBonusId:(int)loginBonusId;
 @end
 
 // loginBonusId 0 — the default row used when no server campaign is active —

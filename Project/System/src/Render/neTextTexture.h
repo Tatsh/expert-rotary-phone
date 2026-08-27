@@ -1,14 +1,9 @@
-//
-//  neTextTexture.h
-//  pop'n rhythmin
-//
-//  The dynamic text/glyph subsystem: a singleton manager owning a cache of
-//  rendered glyphs and a list of 256x256 grayscale atlas textures they are
-//  packed into, plus the string layout + draw entry point neDrawText.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (original
-//  tree:
-//  .../Project/System/src/Render/neTextTexture.mm).
-//
+/** @file
+ * The dynamic text and glyph subsystem: a singleton manager owning a cache of rendered glyphs and
+ * a list of 256x256 grayscale atlas textures they are packed into, plus the string layout and draw
+ * entry point neDrawText. Reconstructed from Ghidra project rb420, program PopnRhythmin (original
+ * tree: .../Project/System/src/Render/neTextTexture.mm).
+ */
 
 #pragma once
 
@@ -17,86 +12,156 @@
 
 #import <Foundation/Foundation.h>
 
-// One glyph atlas: a 256x256 GL_ALPHA texture (created via
-// neCreateTextureFromData) plus the CPU-side pixel buffer it was uploaded from.
-// Ghidra: CreateNewTextTexture (FUN_00017b28) fills these; the destructor is
-// FUN_000180a4.
+/**
+ * @brief One glyph atlas: a 256x256 GL_ALPHA texture (created via neCreateTextureFromData) plus
+ * the CPU-side pixel buffer it was uploaded from.
+ *
+ * Ghidra: CreateNewTextTexture (FUN_00017b28) fills these.
+ */
 class neTextTexture {
 public:
-    ~neTextTexture(); // Ghidra: FUN_000180a4
+    /**
+     * @brief Release the GL texture and free the pixel buffer.
+     * @ghidraAddress 0x180a4
+     */
+    ~neTextTexture();
 
-    int32_t index = 0;                 // +0x00 atlas index (its slot in the manager's list)
-    void *texture = nullptr;           // +0x04 ne::C_TEXTURE* (released on destroy)
-    int32_t penX = 0;                  // +0x08 current pack cursor X
-    int32_t penY = 0;                  // +0x0c current pack cursor Y
-    int32_t rowHeight = 0;             // +0x10 tallest glyph in the current row
-    std::unique_ptr<uint8_t[]> pixels; // +0x14 CPU pixel buffer
-    neTextTexture *next = nullptr;     // +0x18 manager list link
+    int32_t index = 0;                 /**< +0x00 Atlas index: its slot in the manager's list. */
+    void *texture = nullptr;           /**< +0x04 The ne::C_TEXTURE*, released on destroy. */
+    int32_t penX = 0;                  /**< +0x08 Current pack cursor x. */
+    int32_t penY = 0;                  /**< +0x0c Current pack cursor y. */
+    int32_t rowHeight = 0;             /**< +0x10 Height of the tallest glyph in the current row. */
+    std::unique_ptr<uint8_t[]> pixels; /**< +0x14 The CPU-side pixel buffer. */
+    neTextTexture *next = nullptr;     /**< +0x18 Next node in the manager's atlas list. */
 };
 
-// One cached glyph record (defined in neTextTexture.mm).
+/** One cached glyph record; defined in neTextTexture.mm. */
 struct neGlyph;
 
 #ifdef __OBJC__
 @class UILabel; // renderGlyphToAtlas rasterizes a glyph through a UILabel
 #endif
 
-// The text-texture manager (Ghidra: the singleton at DAT_0018845c). Owns the
-// glyph cache list (+0x04) and the atlas node list (+0x0c); +0x00 is the
-// content-scale shift applied to point sizes, +0x08 the atlas count. The members
-// below are the class methods Ghidra records — each was a free function taking
-// this manager as its receiver.
+/**
+ * @brief The text-texture manager (Ghidra: the singleton at DAT_0018845c).
+ *
+ * Owns the glyph cache list (+0x04) and the atlas node list (+0x0c); +0x00 is the content-scale
+ * shift applied to point sizes and +0x08 the atlas count. The members below are the class methods
+ * Ghidra records — each was a free function taking this manager as its receiver.
+ */
 class neTextTextureMgr {
 public:
-    // Free every cached glyph and destroy every atlas texture. Ghidra:
-    // FUN_000179a8. The binary also invokes it explicitly to evict the atlas cache
-    // once it grows past 4 textures, after which the emptied manager keeps being
-    // used.
+    /**
+     * @brief Free every cached glyph and destroy every atlas texture.
+     *
+     * The binary also invokes this explicitly to evict the atlas cache once it grows past four
+     * textures, after which the emptied manager keeps being used.
+     * @ghidraAddress 0x179a8
+     */
     ~neTextTextureMgr();
 
-    // Linear search of the glyph cache for the first UTF-8 char of `utf8` at
-    // `pointSize`; null when not cached. Ghidra: FUN_00017ad4.
+    /**
+     * @brief Linear search of the glyph cache for the first UTF-8 character of @p utf8 at
+     * @p pointSize.
+     * @param utf8 The string whose first character to look up.
+     * @param pointSize The rendered point size.
+     * @return The cached glyph, or nullptr when it is not cached.
+     * @ghidraAddress 0x17ad4
+     */
     neGlyph *findCachedGlyph(const char *utf8, int pointSize);
 
-    // Find the atlas whose index is `atlasId`. Ghidra: FUN_00017b10.
+    /**
+     * @brief Find the atlas whose index is @p atlasId.
+     * @param atlasId The atlas index.
+     * @return The atlas, or nullptr when there is no such index.
+     * @ghidraAddress 0x17b10
+     */
     neTextTexture *findTextTextureById(int atlasId);
 
-    // Allocate a fresh 256x256 GL_ALPHA atlas and link it in. Ghidra: FUN_00017b28.
+    /**
+     * @brief Allocate a fresh 256x256 GL_ALPHA atlas and link it into the manager's list.
+     * @ghidraAddress 0x17b28
+     */
     void createNewTextTexture();
 
-    // Reserve a `w`x`h` cell in the current atlas, wrapping/opening a new atlas
-    // when full. Ghidra: FUN_00017bb4.
+    /**
+     * @brief Reserve a @p w by @p h cell in the current atlas, wrapping to a new row or opening a
+     * new atlas when the current one is full.
+     * @param w Cell width, in texels.
+     * @param h Cell height, in texels.
+     * @param outX Receives the reserved cell's x origin.
+     * @param outY Receives the reserved cell's y origin.
+     * @return true when a cell was reserved.
+     * @ghidraAddress 0x17bb4
+     */
     bool allocGlyphAtlasSlot(int w, int h, int *outX, int *outY);
 
-    // Allocate a glyph record for the first UTF-8 char of `utf8`, rasterize it into
-    // an atlas, and cache it. Ghidra: FUN_00017ecc.
+    /**
+     * @brief Allocate a glyph record for the first UTF-8 character of @p utf8, rasterise it into
+     * an atlas, and cache it.
+     * @param utf8 The string whose first character to render.
+     * @param fontName The font to render with.
+     * @param pointSize The point size to render at.
+     * @return The new cached glyph, or nullptr on failure.
+     * @ghidraAddress 0x17ecc
+     */
     neGlyph *createTextGlyphEntry(const char *utf8, const char *fontName, int pointSize);
 
 #ifdef __OBJC__
-    // Rasterize `utf8` through `label` into the reserved atlas cell and fill the
-    // glyph's placement. Ghidra: FUN_00017c44.
+    /**
+     * @brief Rasterise @p utf8 through @p label into the reserved atlas cell and fill the glyph's
+     * placement.
+     * @param utf8 The string whose first character to rasterise.
+     * @param label The label configured with the target font and point size.
+     * @param glyph The glyph record to fill.
+     * @return Non-zero on success.
+     * @ghidraAddress 0x17c44
+     */
     int renderGlyphToAtlas(const char *utf8, UILabel *label, neGlyph *glyph);
 #endif
 
-    int8_t scaleShift = 0;            // +0x00 log2 content scale (glyph sizes << by this)
-    int8_t _pad[3] = {0, 0, 0};       // +0x01
-    void *glyphList = nullptr;        // +0x04 rendered-glyph cache (data +0x00, next +0x08)
-    int32_t atlasCount = 0;           // +0x08
-    neTextTexture *atlases = nullptr; // +0x0c atlas list (linked via neTextTexture::next)
+    int8_t scaleShift = 0; /**< +0x00 log2 of the content scale; glyph sizes shift left by it. */
+    int8_t _pad[3] = {0, 0, 0}; /**< +0x01 Alignment padding. */
+    /** +0x04 The rendered-glyph cache (data at +0x00, next at +0x08). */
+    void *glyphList = nullptr;
+    int32_t atlasCount = 0;           /**< +0x08 The number of live atlases. */
+    neTextTexture *atlases = nullptr; /**< +0x0c Atlas list, linked via neTextTexture::next. */
 };
 
-// The manager singleton. Ghidra: FUN_00017998 returns DAT_0018845c.
+/**
+ * @brief The manager singleton (Ghidra: returns DAT_0018845c).
+ * @return The text-texture manager.
+ * @ghidraAddress 0x17998
+ */
 neTextTextureMgr *neGetTextTextureMgr(void);
 
-// Byte length (1..6) of the UTF-8 sequence led by *s, or -1 on an invalid lead
-// byte, 0 on a stray continuation byte. Ghidra: FUN_00017a84.
+/**
+ * @brief The byte length of the UTF-8 sequence led by `*s`.
+ * @param mgr The manager; the receiver in the binary, unused by the decode itself.
+ * @param s The string to inspect.
+ * @return 1..6 for a valid lead byte, -1 on an invalid lead byte, 0 on a stray continuation byte.
+ * @ghidraAddress 0x17a84
+ */
 int utf8CharLen(neTextTextureMgr *mgr, const char *s);
 
-// Draw `text` at (x,y). `size` is the point size, `align` picks
-// left/center/right, and (alpha,red,green,blue) tint the glyphs; `clipRect` (or
-// null) installs clip planes. Glyphs are laid out through the atlas cache and
-// rendered as batched textured quads via the current renderer. Ghidra:
-// FUN_0001551c.
+/**
+ * @brief Draw @p text at (@p x, @p y).
+ *
+ * Glyphs are laid out through the atlas cache and rendered as batched textured quads via the
+ * current renderer.
+ * @param text The string to draw.
+ * @param font The font name.
+ * @param size The point size.
+ * @param x Draw origin x, in pixels.
+ * @param y Draw origin y, in pixels.
+ * @param align Picks left, centre or right alignment.
+ * @param alpha Alpha, 0..255.
+ * @param red Red, 0..255.
+ * @param green Green, 0..255.
+ * @param blue Blue, 0..255.
+ * @param clipRect Clip-plane values, or nullptr to leave the text unclipped.
+ * @ghidraAddress 0x1551c
+ */
 void neDrawText(const char *text,
                 const char *font,
                 int size,

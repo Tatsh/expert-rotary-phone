@@ -12,11 +12,16 @@
 
 @class ArcadeScoreData;
 
+/**
+ * @brief One music-checker song row.
+ */
 @interface CheckerMusicCell : UITableViewCell
 
-// Bind the row to one arcade song record: its update date (formatted
-// yyyy/MM/dd), title and genre are drawn into three labels over the list
-// banner.
+/**
+ * @brief Bind the row to one arcade song record: its update date (formatted yyyy/MM/dd), title and
+ * genre are drawn into three labels over the list banner.
+ * @param scoreData The record to bind.
+ */
 - (void)setData:(ArcadeScoreData *)scoreData;
 
 @end

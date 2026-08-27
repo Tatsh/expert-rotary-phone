@@ -101,13 +101,34 @@ static void setNavViewFrameFromSubview(PresentBoxViewController *self,
     self.navigationController.view.frame = f;
 }
 
+/**
+ * @brief The present box's private actions and claim helpers.
+ */
 @interface PresentBoxViewController () <DownloadMainDelegate>
+/** @brief The open transition finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief The close transition finished; tear the box down. */
 - (void)endCloseAnimation;
+/** @brief The back-button action. */
 - (void)backButtonFunc;
+/** @brief Claim every present in the box. */
 - (void)allGetFunc;
+/**
+ * @brief The table row a control event landed in.
+ * @param event The touch event.
+ * @return The row's index path, or nil when the touch missed every row.
+ */
 - (NSIndexPath *)indexPathForControlEvent:(UIEvent *)event;
+/**
+ * @brief A row's acquire button was tapped: claim that present.
+ * @param sender The tapped button.
+ * @param event The touch event, used to resolve the row.
+ */
 - (void)touchedGetButton:(id)sender event:(UIEvent *)event;
+/**
+ * @brief The present-list or present-claim request completed.
+ * @param result An NSNumber wrapping a BOOL indicating success.
+ */
 - (void)downloadMainFinished:(NSNumber *)result;
 @end
 

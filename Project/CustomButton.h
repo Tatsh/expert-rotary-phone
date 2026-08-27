@@ -11,11 +11,15 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A UIButton whose hit-test area is grown or shrunk by tappableInsets, so a small on-screen
+ * button can still be comfortably tapped.
+ */
 @interface CustomButton : UIButton
 
-// Applied to the bounds before hit-testing (UIEdgeInsetsInsetRect); negative
-// values expand the tappable area. Synthesized atomic property — the recovered
-// setter uses an atomic objc_copyStruct (@ 0xdd0f8 getter / 0xdd11c setter).
+/** Applied to the bounds before hit-testing, via UIEdgeInsetsInsetRect; negative values expand the
+ * tappable area. The recovered setter uses an atomic objc_copyStruct. Getter @ 0xdd0f8, setter @
+ * 0xdd11c. */
 @property(atomic) UIEdgeInsets tappableInsets;
 
 @end

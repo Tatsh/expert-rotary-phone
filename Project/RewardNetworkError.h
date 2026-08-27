@@ -16,16 +16,34 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief Builds localised NSErrors for the reward SDK.
+ */
 @interface RewardNetworkError : NSObject
 
-// @ 0xf3f00
+/**
+ * @brief Build a localised reward-network error.
+ * @param code The error code.
+ * @param userInfo Extra user info to attach; may be nil.
+ * @return The error.
+ * @ghidraAddress 0xf3f00
+ */
 + (NSError *)localizedRewardNetworkErrorWithCode:(NSInteger)code userInfo:(NSDictionary *)userInfo;
 
-// @ 0xf58e4 — convenience: forwards to the above with a nil userInfo.
+/**
+ * @brief Build a localised Applilink error, forwarding to
+ * +localizedRewardNetworkErrorWithCode:userInfo: with a nil userInfo.
+ * @param code The error code.
+ * @return The error.
+ * @ghidraAddress 0xf58e4
+ */
 + (NSError *)localizedApplilinkErrorWithCode:(NSInteger)code;
 
-// Convenience: -localizedRewardNetworkErrorWithCode:userInfo: with a nil
-// userInfo.
+/**
+ * @brief Build a localised reward-network error with a nil userInfo.
+ * @param code The error code.
+ * @return The error.
+ */
 + (NSError *)localizedRewardNetworkErrorWithCode:(NSInteger)code;
 
 @end

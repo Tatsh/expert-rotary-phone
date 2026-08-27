@@ -14,12 +14,14 @@
 #import "TreasureMap.h"
 #import "neEngineBridge.h"
 
-// The NSValue payload getValue: fills for a sub-map (area) row.
+/**
+ * @brief The NSValue payload -getValue: fills for a sub-map (area) row.
+ */
 typedef struct {
-    short mainMapId;
-    short subMapId;
-    int reserved;
-    NSString *__unsafe_unretained name;
+    short mainMapId;                    /**< The owning map's identifier. */
+    short subMapId;                     /**< The area's identifier within that map. */
+    int reserved;                       /**< Padding to the pointer field; unused. */
+    NSString *__unsafe_unretained name; /**< The area name. */
 } SubMapListRowValue;
 
 // Small right-of-icon count label ("%d" of collected pieces), shared style.

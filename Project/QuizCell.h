@@ -10,13 +10,20 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One answer-choice row of the quiz.
+ */
 @interface QuizCell : UITableViewCell
 
-// Bind the row to one answer choice. `text` is the answer text; `answerId` is
-// this row's answer index; `rightId` is the correct answer's index; `selectId`
-// is the answer the player chose (< 0 = not yet answered). The base image,
-// label tint and number badge all key off the relationship between these three
-// ids.
+/**
+ * @brief Bind the row to one answer choice.
+ *
+ * The base image, label tint and number badge all key off the relationship between the three ids.
+ * @param text The answer text.
+ * @param answerId This row's answer index.
+ * @param rightId The correct answer's index.
+ * @param selectId The answer the player chose; negative when unanswered.
+ */
 - (void)setData:(NSString *)text answerId:(int)answerId rightId:(int)rightId selectId:(int)selectId;
 
 @end

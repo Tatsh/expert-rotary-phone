@@ -27,25 +27,36 @@
 
 @class TouchableScrollView;
 
-@interface InputKIDViewCtrl
-    : UIViewController <UITextFieldDelegate, DownloaderDelegate, CommonAlertViewDelegate> {
-    TouchableScrollView *_scrollView; // tap-through form host (scrolls up for the keyboard)
-    UITextField *_kidField;           // KONAMI ID entry (<= 256 chars, pre-filled)
-    UITextField *_passField;          // secure PASSWORD entry (<= 32 chars, pre-filled)
-    UITextField *_otpField;           // secure one-time-password entry (<= 16 chars)
-    UIViewController *_dummyView;     // dimmed cover + spinner (owned; released in dealloc)
-    Downloader *_downloader;          // the in-flight link POST (nil when idle)
-    NSString *oldKonamiId;            // last saved KONAMI ID, used to pre-fill _kidField
-    NSString *oldPassword;            // last entered password, used to pre-fill _passField
-    float _scrollOffset;              // keyboard scroll offset (90 on 3.5", 0 on 4")
-    BOOL _isAninationing;             // animation guard (binary spelling kept)
-    id<PopnLinkTopSplitViewControllerDelegate> __unsafe_unretained
-        _delegate; // owning split controller (assign)
+/**
+ * @brief The pop'n-link KONAMI ID entry screen: id, password and one-time password.
+ */
+// Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
+// follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the
+// protocol list instead parses correctly, so the formatter is held off here.
+// clang-format off
+@interface InputKIDViewCtrl : UIViewController <UITextFieldDelegate,
+                                                DownloaderDelegate,
+                                                CommonAlertViewDelegate> {
+    /** The tap-through form host; it scrolls up for the keyboard. */
+    TouchableScrollView *_scrollView;
+    UITextField *_kidField;  /**< The KONAMI ID entry; at most 256 characters, pre-filled. */
+    UITextField *_passField; /**< The secure password entry; at most 32 characters, pre-filled. */
+    UITextField *_otpField;  /**< The secure one-time-password entry; at most 16 characters. */
+    /** The dimmed cover and spinner; owned, and released in -dealloc. */
+    UIViewController *_dummyView;
+    Downloader *_downloader; /**< The in-flight link POST; nil when idle. */
+    NSString *oldKonamiId;   /**< The last saved KONAMI ID, used to pre-fill _kidField. */
+    NSString *oldPassword;   /**< The last entered password, used to pre-fill _passField. */
+    float _scrollOffset;     /**< The keyboard scroll offset: 90 on 3.5-inch, 0 on 4-inch. */
+    BOOL _isAninationing;    /**< The animation guard; the binary's spelling is kept. */
+    /** The owning split controller; a plain assign. */
+    id<PopnLinkTopSplitViewControllerDelegate> __unsafe_unretained _delegate;
 }
+// clang-format on
 
-// The owning pop'n-link split controller (pad); notified to re-enter the score
-// checker after a successful link. Plain assign (unsafe_unretained) — Ghidra
-// getter @ 0xd73f4 / setter @ 0xd7404 are a raw pointer load / store.
+/** The owning pop'n-link split controller on iPad, notified to re-enter the score checker after a
+ * successful link. The accessors are a raw pointer load and store. Getter @ 0xd73f4, setter @
+ * 0xd7404. */
 @property(nonatomic, assign) id<PopnLinkTopSplitViewControllerDelegate> delegate;
 
 @end

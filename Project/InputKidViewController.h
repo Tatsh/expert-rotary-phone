@@ -18,12 +18,21 @@
 #import "CommonAlertView.h" // CommonAlertViewDelegate
 #import "Downloader.h"      // DownloaderDelegate
 
-@interface InputKidViewController
-    : UIViewController <UITextFieldDelegate, DownloaderDelegate, CommonAlertViewDelegate> {
-    UITextField *_codeField;             // the 8-char invite-code entry field
-    UIActivityIndicatorView *_indicator; // in-flight spinner (hidesWhenStopped)
-    Downloader *_downloader;             // the in-flight invite POST (nil when idle)
+/**
+ * @brief The invite-code entry screen.
+ */
+// Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
+// follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the
+// protocol list instead parses correctly, so the formatter is held off here.
+// clang-format off
+@interface InputKidViewController : UIViewController <UITextFieldDelegate,
+                                                      DownloaderDelegate,
+                                                      CommonAlertViewDelegate> {
+    UITextField *_codeField;             /**< The 8-character invite-code entry field. */
+    UIActivityIndicatorView *_indicator; /**< The in-flight spinner; it hides when stopped. */
+    Downloader *_downloader;             /**< The in-flight invite POST; nil when idle. */
 }
+// clang-format on
 
 @end
 

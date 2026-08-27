@@ -35,7 +35,14 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
     self.navigationController.view.frame = CGRectMake(385.0f, 250.0f, 320.0f, 530.0f);
 }
 
+/**
+ * @brief The music-checker song list's private back action.
+ */
 @interface CheckerMusicViewController ()
+/**
+ * @brief The back-button action.
+ * @param sender The tapped button.
+ */
 - (void)touchedBackButton:(id)sender;
 @end
 

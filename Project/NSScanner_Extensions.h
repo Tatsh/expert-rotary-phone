@@ -16,17 +16,51 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief TouchJSON's character-level scanning helpers on NSScanner.
+ */
 @interface NSScanner (Extensions)
 
+/**
+ * @brief The string from the scan location to the end.
+ * @return The remaining text.
+ */
 - (NSString *)remainingString;
 
+/**
+ * @brief The character at the scan location, without advancing it.
+ * @return The character, or 0 at the end.
+ */
 - (unichar)currentCharacter;
+/**
+ * @brief Consume and return the character at the scan location.
+ * @return The character, or 0 at the end.
+ */
 - (unichar)scanCharacter;
+/**
+ * @brief Consume the character at the scan location if it matches.
+ * @param inCharacter The character to match.
+ * @return YES when the character matched and was consumed.
+ */
 - (BOOL)scanCharacter:(unichar)inCharacter;
 
+/**
+ * @brief Move the scan location back.
+ * @param inCount How many characters to rewind.
+ */
 - (void)backtrack:(NSUInteger)inCount;
 
+/**
+ * @brief Consume a C-style block comment.
+ * @param outComment Receives the comment text; may be NULL.
+ * @return YES when a comment was consumed.
+ */
 - (BOOL)scanCStyleComment:(NSString **)outComment;
+/**
+ * @brief Consume a C++-style line comment.
+ * @param outComment Receives the comment text; may be NULL.
+ * @return YES when a comment was consumed.
+ */
 - (BOOL)scanCPlusPlusStyleComment:(NSString **)outComment;
 
 @end

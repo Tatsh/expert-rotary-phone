@@ -9,10 +9,18 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief Percent-unescaping on NSString.
+ */
 @interface NSString (URLDecode)
 
-// Percent-unescape the receiver (UTF-8). Ghidra: urlDecodeString @ 0xfc218 (the
-// decompiler labelled this category method as a free function).
+/**
+ * @brief Percent-unescape the receiver as UTF-8.
+ *
+ * The decompiler labelled this category method as a free function, urlDecodeString.
+ * @return The decoded string.
+ * @ghidraAddress 0xfc218
+ */
 - (NSString *)URLDecodedString;
 
 @end

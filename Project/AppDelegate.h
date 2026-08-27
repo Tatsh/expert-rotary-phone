@@ -19,12 +19,12 @@
  * device family.
  */
 typedef NS_ENUM(NSInteger, DisplayType) {
-    DisplayTypePhoneNonRetina = 0,  ///< 320x480 iPhone / iPod (1x)
-    DisplayTypePhoneRetina = 1,     ///< 640x960 iPhone / iPod, 3.5" (2x)
-    DisplayTypePhoneRetinaTall = 2, ///< 640x1136+ iPhone / iPod, 4"+ (2x tall)
-    DisplayTypePadNonRetina = 3,    ///< 1024x768 iPad (1x)
-    DisplayTypePadRetina = 4,       ///< 2048x1536 iPad (2x)
-    DisplayTypeUnknown = 5,         ///< unrecognised model / simulator
+    DisplayTypePhoneNonRetina = 0,  /**< 320x480 iPhone / iPod (1x). */
+    DisplayTypePhoneRetina = 1,     /**< 640x960 iPhone / iPod, 3.5" (2x). */
+    DisplayTypePhoneRetinaTall = 2, /**< 640x1136+ iPhone / iPod, 4"+ (2x tall). */
+    DisplayTypePadNonRetina = 3,    /**< 1024x768 iPad (1x). */
+    DisplayTypePadRetina = 4,       /**< 2048x1536 iPad (2x). */
+    DisplayTypeUnknown = 5,         /**< Unrecognised model or simulator. */
 };
 
 /**
@@ -108,18 +108,21 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 
 /**
  * @brief The shared app delegate.
+ * @return The delegate.
  * @ghidraAddress 0x89a0
  */
 + (instancetype)appDelegate;
 
 /**
  * @brief The app's Documents directory.
+ * @return The directory path.
  * @ghidraAddress 0x89d4
  */
 + (NSString *)appDocumentsDirectory;
 
 /**
  * @brief The app's Application Support directory, lazily created and marked excluded from backup.
+ * @return The directory path.
  * @ghidraAddress 0x8a1c
  */
 + (NSString *)appAppSupportDirectory;
@@ -153,18 +156,21 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 /**
  * @brief Mark the item at @p URL as excluded from iCloud/iTunes backup.
  * @param URL The file URL to flag.
+ * @return YES when the attribute was set.
  * @ghidraAddress 0x8af8
  */
 + (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL;
 
 /**
  * @brief The app's Caches directory.
+ * @return The directory path.
  * @ghidraAddress 0x89f8
  */
 + (NSString *)appCachesDirectory;
 
 /**
  * @brief The number of free bytes on the file system backing the Documents directory.
+ * @return The free byte count.
  * @ghidraAddress 0x8be8
  */
 + (unsigned long long)freeFileSystemSize;
@@ -177,18 +183,21 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 
 /**
  * @brief Whether the device is a low-spec model that should disable effects.
+ * @return YES on a low-spec device.
  * @ghidraAddress 0xad5c
  */
 - (BOOL)isOldHardware;
 
 /**
  * @brief The cached device-model hardware-type enum.
+ * @return The hardware type.
  * @ghidraAddress 0xb13c
  */
 - (int)hardwareType;
 
 /**
  * @brief Read, or mint and Keychain-store, the persistent device UUID.
+ * @return The device UUID.
  * @ghidraAddress 0x9890
  */
 - (NSString *)uuId;
@@ -207,7 +216,8 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 - (void)setUsersettingVer:(NSString *)ver;
 
 /**
- * @brief Read the setting-version record, returning @c "0" when absent.
+ * @brief Read the setting-version record.
+ * @return The stored version, or @c "0" when absent.
  * @ghidraAddress 0xa044
  */
 - (NSString *)getUsersettingVer;
@@ -220,6 +230,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 
 /**
  * @brief The Info.plist @c CFBundleVersion with its dots stripped, as an integer.
+ * @return The numeric version.
  * @ghidraAddress 0xa458
  */
 - (int)appVersionNum;
@@ -234,6 +245,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 /**
  * @brief Linear-search the cached StoreKit products for a matching product identifier.
  * @param productId The product identifier to match.
+ * @return The matching product, or nil when it is not cached.
  * @ghidraAddress 0xacac
  */
 - (SKProduct *)getProduct:(NSString *)productId;
@@ -261,30 +273,35 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 
 /**
  * @brief The Info.plist @c CFBundleVersion string.
+ * @return The version string.
  * @ghidraAddress 0xa408
  */
 - (NSString *)appVersion;
 
 /**
  * @brief The device system version.
+ * @return The system version string.
  * @ghidraAddress 0xa3d4
  */
 - (NSString *)osVersion;
 
 /**
  * @brief The current locale's language code.
+ * @return The language code.
  * @ghidraAddress 0xa548
  */
 - (NSString *)localeLanguage;
 
 /**
  * @brief The current locale's country code.
+ * @return The country code.
  * @ghidraAddress 0xa504
  */
 - (NSString *)localeCountry;
 
 /**
  * @brief The current locale as @c "language_country".
+ * @return The locale string.
  * @ghidraAddress 0xa4a4
  */
 - (NSString *)localeString;

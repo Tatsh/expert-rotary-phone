@@ -21,23 +21,33 @@
 
 @class StoreViewController;
 
+/**
+ * @brief The arcade-viewer song manager tab: it lists owned arcade songs and lets each be deleted
+ * or re-downloaded.
+ */
 @interface StoreAcvManageViewController : UIViewController <UITableViewDataSource,
                                                             UITableViewDelegate,
                                                             DownloaderDelegate,
                                                             StoreDownloadManagerDelegate,
                                                             CommonAlertViewDelegate> {
-    __weak StoreViewController *m_StoreViewCtrl; // owning tab host (not retained)
-    int m_WorkingIndex;                          // row currently acting (-1 = none)
-    UIImage *m_ImgDelete;                        // "manage_delete" action icon
-    UIImage *m_ImgDownload;                      // "manage_download" action icon
-    BOOL m_IsPad;
-    UITableView *m_TableView;           // the manage list
-    NSMutableArray *m_CheckMusicIds;    // owned-music ids still needing an AC-info fetch
-    CommonAlertView *m_DeleteAlertView; // delete-confirm alert
-    StoreDownloadManager *m_DlManager;  // active file download (nil when idle)
-    Downloader *m_InfoDownloader;       // AC-info fetch / integrity check (nil when idle)
+    __weak StoreViewController *m_StoreViewCtrl; /**< The owning tab host; not retained. */
+    int m_WorkingIndex;                          /**< The row currently acting; -1 when none. */
+    UIImage *m_ImgDelete;                        /**< The "manage_delete" action icon. */
+    UIImage *m_ImgDownload;                      /**< The "manage_download" action icon. */
+    BOOL m_IsPad;                                /**< Whether this is the iPad layout. */
+    UITableView *m_TableView;                    /**< The manage list. */
+    NSMutableArray *m_CheckMusicIds;    /**< Owned-music ids still needing an arcade-info fetch. */
+    CommonAlertView *m_DeleteAlertView; /**< The delete-confirm alert. */
+    StoreDownloadManager *m_DlManager;  /**< The active file download; nil when idle. */
+    /** The arcade-info fetch and integrity check; nil when idle. */
+    Downloader *m_InfoDownloader;
 }
 
+/**
+ * @brief Build the manager for a tab host.
+ * @param parent The owning store view controller.
+ * @return The initialised controller.
+ */
 - (instancetype)initWithParent:(StoreViewController *)parent;
 
 @end

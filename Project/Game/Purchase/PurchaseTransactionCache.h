@@ -10,24 +10,37 @@
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>
 
+/**
+ * @brief A snapshot of a completed StoreKit transaction, kept for server-side receipt
+ * verification.
+ */
 @interface PurchaseTransactionCache : NSObject
 
-// Ghidra: initWithTransaction: @ 0x56168
+/**
+ * @brief Snapshot a completed transaction.
+ * @param transaction The transaction to snapshot.
+ * @return The initialised cache entry.
+ * @ghidraAddress 0x56168
+ */
 - (instancetype)initWithTransaction:(SKPaymentTransaction *)transaction;
 
-// Snapshot fields captured at init; read-only to callers.
-// Synthesized getters (plain ivar reads):
-@property(nonatomic, copy, readonly) NSString *productID; // payment.productIdentifier // @ 0x56338
-@property(nonatomic, copy, readonly)
-    NSData *receiptData; // transactionReceipt (legacy) // @ 0x56348
-@property(nonatomic, copy, readonly) NSString *transactionID; // transactionIdentifier // @ 0x56358
-@property(nonatomic, copy, readonly) NSDate *transactionDate; // transactionDate // @ 0x56368
+// Snapshot fields captured at init; read-only to callers, with synthesised getters that are plain
+// ivar reads.
 
-// SHA-256 digest of the receipt-check request, set by PurchaseManager
-// checkNextReceipt and matched against the server's echoed "code".
-// Call sites: setDigestString: used @ 0x54fdc, digestString read @ 0x55a50.
-// Synthesized: digestString @ 0x56378 (getter) / setDigestString: @ 0x56388
-// (objc_setProperty copy).
+/** The transaction's payment.productIdentifier. Getter @ 0x56338. */
+@property(nonatomic, copy, readonly) NSString *productID;
+/** The legacy transactionReceipt bytes. Getter @ 0x56348. */
+@property(nonatomic, copy, readonly) NSData *receiptData;
+/** The transactionIdentifier. Getter @ 0x56358. */
+@property(nonatomic, copy, readonly) NSString *transactionID;
+/** The transactionDate. Getter @ 0x56368. */
+@property(nonatomic, copy, readonly) NSDate *transactionDate;
+
+/**
+ * The SHA-256 digest of the receipt-check request, set by -[PurchaseManager checkNextReceipt] @
+ * 0x54fdc and matched against the server's echoed "code" @ 0x55a50. Getter @ 0x56378, setter @
+ * 0x56388.
+ */
 @property(nonatomic, copy) NSString *digestString;
 
 @end

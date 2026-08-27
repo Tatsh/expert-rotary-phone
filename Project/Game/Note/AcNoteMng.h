@@ -1,13 +1,9 @@
-//
-//  AcNoteMng.h
-//  pop'n rhythmin
-//
-//  The arcade note manager: parses an arcade chart (a "sheet_*" entry of an
-//  ac%09d.acv, provided by AcMusicData) and drives arcade-mode play. It
-//  parallels the standard NoteMng but uses a different, more compact chart
-//  format. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (Project/Game/Note/AcNoteMng.mm; InitPlayData FUN_0007a774).
-//
+/** @file
+ * The arcade note manager: parses an arcade chart (a "sheet_*" entry of an ac%09d.acv, provided by
+ * AcMusicData) and drives arcade-mode play. It parallels the standard NoteMng but uses a
+ * different, more compact chart format. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (Project/Game/Note/AcNoteMng.mm; InitPlayData FUN_0007a774).
+ */
 
 #pragma once
 
@@ -21,219 +17,319 @@
 @class NSData;
 #endif
 
-// Arcade chart: an 8-byte header (magic 'E' at offset +4) then N 8-byte note
-// records, N = (size / 8) - 2. Each record's type byte is at +0x4, its value
-// (lane/BPM) at +0x6.
-// NOTE: the names below are historical; the binary's semantics (from
-// InitPlayData / the update closure) are: type 3 = BGM-start / drift-sync
-// anchor (its tick -> the sync reference time), type 6 = the true end-of-chart
-// marker (its tick -> the end value, and the appended terminator is stamped
-// type 6 so update() can raise the end flag).
+// Arcade chart: an 8-byte header (magic 'E' at offset +4) then N 8-byte note records, where
+// N = (size / 8) - 2. Each record's type byte is at +0x4 and its value (lane or BPM) at +0x6.
+
+/**
+ * @brief The arcade chart record kind, stored in AcNoteRecord::type.
+ *
+ * The names are historical; the semantics below are the binary's, taken from InitPlayData and the
+ * update closure.
+ */
 enum AcNoteType : uint8_t {
-    AC_NOTE_TAP = 1,       // playable note (counted per lane)
-    AC_NOTE_END = 3,       // BGM-start / drift-sync anchor (NOT the chart end)
-    AC_NOTE_TEMPO = 4,     // tempo/BPM event (min/max tracked)
-    AC_NOTE_EVENT = 6,     // the real end-of-chart marker
-    AC_NOTE_MEASURE = 0xa, // measure boundary (advances the bar counter)
-    AC_NOTE_BEAT = 0xb,    // beat boundary (advances the beat counter)
-    AC_NOTE_ADJUST = 0xf,  // synthesised BGM drift-sync adjust event (applyBgmSync)
+    AC_NOTE_TAP = 1, /**< A playable note, counted per lane. */
+    /** The BGM-start / drift-sync anchor — NOT the chart end; its tick becomes the sync
+     * reference time. */
+    AC_NOTE_END = 3,
+    AC_NOTE_TEMPO = 4, /**< A tempo/BPM event; its minimum and maximum are tracked. */
+    /** The real end-of-chart marker; its tick becomes the end value, and the appended terminator
+     * is stamped with this type so update() can raise the end flag. */
+    AC_NOTE_EVENT = 6,
+    AC_NOTE_MEASURE = 0xa, /**< A measure boundary, advancing the bar counter. */
+    AC_NOTE_BEAT = 0xb,    /**< A beat boundary, advancing the beat counter. */
+    AC_NOTE_ADJUST = 0xf,  /**< A synthesised BGM drift-sync adjust event (applyBgmSync). */
 };
 
-// Playback state machine (m_state @ +0xfd50): idle before play, then playing,
-// briefly seeking on a mid-play jump, ending once the chart-end marker is hit,
-// and finished once the field has drained.
+/**
+ * @brief The playback state machine (m_state @ +0xfd50).
+ */
 enum AcNoteMngState {
-    AC_NOTE_STATE_IDLE = 0,     // before playback starts / after a reset
-    AC_NOTE_STATE_PLAYING = 1,  // notes scrolling and being spawned
-    AC_NOTE_STATE_SEEKING = 2,  // seeking to a new position
-    AC_NOTE_STATE_ENDING = 3,   // chart-end marker reached; draining the field
-    AC_NOTE_STATE_FINISHED = 4, // playback complete
+    AC_NOTE_STATE_IDLE = 0,     /**< Before playback starts, or after a reset. */
+    AC_NOTE_STATE_PLAYING = 1,  /**< Notes are scrolling and being spawned. */
+    AC_NOTE_STATE_SEEKING = 2,  /**< Seeking to a new position. */
+    AC_NOTE_STATE_ENDING = 3,   /**< The chart-end marker was reached; draining the field. */
+    AC_NOTE_STATE_FINISHED = 4, /**< Playback is complete. */
 };
 
-// One 8-byte arcade chart record.
+/**
+ * @brief One 8-byte arcade chart record.
+ */
 struct AcNoteRecord {
-    uint32_t tick;     // +0x0  timing position
-    uint8_t type;      // +0x4  AcNoteType
-    uint8_t reserved5; // +0x5
-    uint16_t value;    // +0x6  lane (low nibble) / BPM
+    uint32_t tick;     /**< +0x0 Timing position, in chart ticks. */
+    uint8_t type;      /**< +0x4 The record kind, an AcNoteType. */
+    uint8_t reserved5; /**< +0x5 Padding. */
+    uint16_t value;    /**< +0x6 The lane, in the low nibble, or the BPM. */
 };
 static_assert(sizeof(AcNoteRecord) == 8, "arcade note record is 8 bytes");
 
-// AcActiveNote::flags bits. The arcade viewer (a non-scored preview) only ever
-// sets bits 0, 2, and 5; the two guard masks below are over-broad — they also
-// cover bits 1/3 and 4 that the fuller standard-engine flag scheme (NoteFlag in
-// NoteMng.h) uses but this preview never sets — so in practice they test
-// COUNTED and HANDLED respectively.
+/**
+ * @brief AcActiveNote::flags bits.
+ *
+ * The arcade viewer, a non-scored preview, only ever sets bits 0, 2 and 5. The two guard masks
+ * below are over-broad — they also cover bits 1, 3 and 4 that the fuller standard-engine flag
+ * scheme (NoteFlag in NoteMng.h) uses but this preview never sets — so in practice they test
+ * AC_NOTE_FLAG_COUNTED and AC_NOTE_FLAG_HANDLED respectively.
+ */
 enum AcNoteFlag : uint16_t {
-    AC_NOTE_FLAG_COUNTED = 0x1,     // bit 0: counted into the per-lane tally
-    AC_NOTE_FLAG_JUDGED = 0x4,      // bit 2: head has scrolled past the judge line
-    AC_NOTE_FLAG_HANDLED = 0x20,    // bit 5: the note's event fired / it is resolved
-    AC_NOTE_FLAG_COUNT_GUARD = 0xb, // bits 0,1,3: "already counted" retire/skip guard
-    AC_NOTE_FLAG_RETIRE = 0x30,     // bits 4,5: "resolved" retire guard
+    AC_NOTE_FLAG_COUNTED = 0x1,     /**< Bit 0: counted into the per-lane tally. */
+    AC_NOTE_FLAG_JUDGED = 0x4,      /**< Bit 2: the head has scrolled past the judge line. */
+    AC_NOTE_FLAG_HANDLED = 0x20,    /**< Bit 5: the note's event fired, or it is resolved. */
+    AC_NOTE_FLAG_COUNT_GUARD = 0xb, /**< Bits 0, 1 and 3: the "already counted" retire/skip
+                                         guard. */
+    AC_NOTE_FLAG_RETIRE = 0x30,     /**< Bits 4 and 5: the "resolved" retire guard. */
 };
 
-// One active (on-screen / in-flight) note. A fixed pool is threaded onto either
-// the free list or the active list; play never allocates. Layout mirrors the
-// binary's node: next@0x0, record@0x4, tick@0x8, drawY@0xc, lane@0x10,
-// flags@0x12.
+/**
+ * @brief One active (on-screen or in-flight) note.
+ *
+ * A fixed pool is threaded onto either the free list or the active list; play never allocates. The
+ * layout mirrors the binary's node: next @ 0x0, record @ 0x4, tick @ 0x8, drawY @ 0xc, lane @
+ * 0x10, flags @ 0x12.
+ */
 struct AcActiveNote {
-    AcActiveNote *next = nullptr;         // +0x00 free/active list link
-    const AcNoteRecord *record = nullptr; // +0x04 source chart record
-    uint32_t tick = 0;                    // +0x08 timing (copied from the record)
-    float drawY = 0.0f;                   // +0x0c on-screen scroll position (init 1024.0)
-    uint8_t lane = 0;                     // +0x10 lane 0..8, or 9 = non-playable event
-    uint8_t _pad11 = 0;                   // +0x11
-    uint16_t flags = 0;                   // +0x12 bit0=counted, bit2=judged, bit5=handled
+    AcActiveNote *next = nullptr;         /**< +0x00 Free or active list link. */
+    const AcNoteRecord *record = nullptr; /**< +0x04 The source chart record. */
+    uint32_t tick = 0;                    /**< +0x08 Timing, copied from the record. */
+    float drawY = 0.0f; /**< +0x0c On-screen scroll position; initialised to 1024.0. */
+    uint8_t lane = 0;   /**< +0x10 Lane 0..8, or 9 for a non-playable event. */
+    uint8_t _pad11 = 0; /**< +0x11 Padding. */
+    uint16_t flags = 0; /**< +0x12 AcNoteFlag bits. */
 };
 
-// The render descriptor GetNoteObject copies out for one active arcade note:
-// its tick, lane, flags and current on-screen scroll position. Ghidra: the
-// 12-byte struct acNoteGetNoteObject (@ 0x7b968) fills — tick@+0x0, lane@+0x4,
-// flags@+0x6, drawY@+0x8.
+/**
+ * @brief The render descriptor getNoteObject() copies out for one active arcade note.
+ *
+ * Ghidra: the 12-byte struct acNoteGetNoteObject (@ 0x7b968) fills — tick @ +0x0, lane @ +0x4,
+ * flags @ +0x6, drawY @ +0x8.
+ */
 struct AcNoteObject {
-    uint32_t tick;  // +0x0  timing (copied from the node)
-    uint8_t lane;   // +0x4  lane 0..8
-    uint8_t _pad5;  // +0x5
-    uint16_t flags; // +0x6  node flags
-    float drawY;    // +0x8  on-screen scroll position
+    uint32_t tick;  /**< +0x0 Timing, copied from the node. */
+    uint8_t lane;   /**< +0x4 Lane 0..8. */
+    uint8_t _pad5;  /**< +0x5 Padding. */
+    uint16_t flags; /**< +0x6 The node's AcNoteFlag bits. */
+    float drawY;    /**< +0x8 On-screen scroll position. */
 };
 
-// One scroll/tempo segment (the binary's 0xc-byte record at +0xfa4c, stride
-// 0xc): a scroll speed (bpm * 1024 / 480000), the tick it starts at, and the
-// raw BPM. The segment array is kept sorted by startTick; changeTempo() pops
-// the front as play passes each boundary.
+/**
+ * @brief One scroll/tempo segment: the binary's 0xc-byte record at +0xfa4c, stride 0xc.
+ *
+ * The segment array is kept sorted by startTick; changeTempo() pops the front as play passes each
+ * boundary.
+ */
 struct AcScrollSegment {
-    float speed = 0.0f;              // +0x0  units/ms (0 until registered)
-    uint32_t startTick = 0xffffffff; // +0x4  sentinel -1 until registered
-    int16_t bpm = -1;                // +0x8  sentinel -1 until registered
+    float speed = 0.0f; /**< +0x0 Scroll speed in units/ms, bpm * 1024 / 480000; 0 until
+                             registered. */
+    uint32_t startTick = 0xffffffff; /**< +0x4 The tick the segment starts at; -1 until
+                                          registered. */
+    int16_t bpm = -1;                /**< +0x8 The raw BPM; -1 until registered. */
 };
 
-// Arcade layout lane count (the per-lane tap counters at play-data +0xfa14).
+/**
+ * @brief The arcade layout lane count (the per-lane tap counters at play-data +0xfa14).
+ */
 constexpr int kAcLaneCount = 16;
 
-// Maximum simultaneously-active note slots (the 1000-entry free list).
+/**
+ * @brief The maximum number of simultaneously-active note slots: the 1000-entry free list.
+ */
 constexpr int kAcMaxActiveNotes = 1000;
 
-// Number of hi-speed steps selectable at play start (difficulty 0..10).
+/**
+ * @brief The number of hi-speed steps selectable at play start, difficulty 0..10.
+ */
 constexpr int kAcHiSpeedCount = 11;
 
+/**
+ * @brief The arcade note manager: arcade chart parsing, the tempo map, note spawning and the
+ * arcade-viewer play clock.
+ */
 class AcNoteMng {
 public:
-    // Parse a decoded arcade chart into the play timeline, selecting the hi-speed
-    // multiplier for `hiSpeedLevel` (the acvHiSpeed setting, 0..10 -> 1.2x ..
-    // 6.0x). Returns 0 on success, -3 if the magic byte is not 'E'. Ghidra:
-    // InitPlayData FUN_0007a774.
+    /**
+     * @brief Parse a decoded arcade chart into the play timeline.
+     * @param data The whole chart payload.
+     * @param hiSpeedLevel The acvHiSpeed setting, 0..10, selecting a 1.2x to 6.0x multiplier.
+     * @return 0 on success, or -3 if the magic byte is not 'E'.
+     * @ghidraAddress 0x7a774
+     */
     int initPlayData(std::span<const std::byte> data, int hiSpeedLevel);
 
 #ifdef __OBJC__
+    /**
+     * @brief Parse an arcade chart straight from an NSData; the bytes and length are forwarded to
+     * initPlayData().
+     * @param data The sheet the play loader selected.
+     * @param hiSpeedLevel The acvHiSpeed setting, 0..10.
+     * @return 0 on success, or -3 if the magic byte is not 'E'.
+     */
     int initPlayDataWithData(NSData *data, int hiSpeedLevel);
 #endif
 
-    // Register tempo events / convert ticks to ms (arcade tempo map). Ghidra:
-    // FUN_0007aa90 / FUN_0007aaf8. registerTempoEvents walks the chart and
-    // inserts a scroll segment per tempo event; changeTempo pops the front
-    // segment once play passes it and recomputes the spawn look-ahead, returning
-    // non-zero while a segment was retired.
+    /**
+     * @brief Walk the chart and insert a scroll segment per tempo event.
+     * @ghidraAddress 0x7aa90
+     */
     void registerTempoEvents();
+    /**
+     * @brief Pop the front scroll segment once play passes it and recompute the spawn look-ahead.
+     * @param tick The current chart position.
+     * @return Non-zero while a segment was retired.
+     * @ghidraAddress 0x7aaf8
+     */
     int changeTempo(uint32_t tick);
 
-    // Seek / fast-forward the internal play clock to the target tick `pos` (in
-    // ms). No-op if the current offset and the requested position are both
-    // already at/past the chart end, or the target is not ahead of the current
-    // offset. Otherwise: enter the seeking state (m_state = 2), clear the
-    // frozen-elapsed / hold / start-threshold fields, freeze the clock
-    // (m_holdFlags = 1), clamp+store the target as the play offset, restamp the
-    // wall clock, settle every tempo segment up to the new position, then prime
-    // one frame so the active-note cursor is rebuilt at the seek target. // @
-    // 0x7b86c (acNoteSeekTo)
+    /**
+     * @brief Seek or fast-forward the internal play clock to a target position.
+     *
+     * A no-op if the current offset and the requested position are both already at or past the
+     * chart end, or if the target is not ahead of the current offset. Otherwise it enters the
+     * seeking state (m_state = 2), clears the frozen-elapsed, hold and start-threshold fields,
+     * freezes the clock (m_holdFlags = 1), clamps and stores the target as the play offset,
+     * restamps the wall clock, settles every tempo segment up to the new position, then primes one
+     * frame so the active-note cursor is rebuilt at the seek target.
+     * @param pos The target position, in milliseconds.
+     * @ghidraAddress 0x7b86c
+     */
     void seekTo(uint32_t pos);
 
-    // --- Play clock --------------------------------------------------------
-    // Wall-clock ms since play start (gettimeofday delta; 0 before the clock is
-    // armed). Ghidra: FUN_0007b5e0.
+    /**
+     * @brief Wall-clock milliseconds since play start, as a gettimeofday delta.
+     * @return The elapsed milliseconds, or 0 before the clock is armed.
+     * @ghidraAddress 0x7b5e0
+     */
     int getElapsedTimeMs() const;
 
-    // The current chart position the arcade note update judges + scrolls against:
-    // the elapsed time (frozen while the hold bit is set) plus the per-play
-    // offset, added onto the smoothed scroll base once it passes the start
-    // threshold. Ghidra: FUN_0007aeb4. (The offset / threshold / scroll-base
-    // fields are driven by the arcade per-frame update -update(), below; until
-    // play starts they are 0, so this returns the scroll base like the standard
-    // engine's lead-in path.)
+    /**
+     * @brief The current chart position the arcade note update judges and scrolls against.
+     *
+     * The elapsed time (frozen while the hold bit is set) plus the per-play offset, added onto the
+     * smoothed scroll base once it passes the start threshold. The offset, threshold and
+     * scroll-base fields are driven by update(); until play starts they are 0, so this returns the
+     * scroll base like the standard engine's lead-in path.
+     * @return The chart position, in milliseconds.
+     * @ghidraAddress 0x7aeb4
+     */
     int getCurrentPosition();
 
-    // Arcade per-frame update: smooth the scroll base one step toward its target,
-    // spawn every chart record now due, judge + retire the active notes, advance
-    // the tempo, then refresh each note's scroll position and the per-lane
-    // "nearest note" table that input resolves against. Ghidra: FUN_0007ac00.
+    /**
+     * @brief The arcade per-frame update.
+     *
+     * Smooths the scroll base one step toward its target, spawns every chart record now due,
+     * judges and retires the active notes, advances the tempo, then refreshes each note's scroll
+     * position and the per-lane "nearest note" table that input resolves against.
+     * @ghidraAddress 0x7ac00
+     */
     void update();
 
-    // --- Pause / resume (input-driven, mirrors NoteMng::togglePause) -------
-    // Pause play: stop the BGM and stamp the pause time, then set the freeze bit
-    // so the play clock stops advancing. No-op if already held. Ghidra:
-    // AcNoteMng::Pause @ 0x7b638.
+    /**
+     * @brief Pause play: stop the BGM, stamp the pause time, then set the freeze bit so the play
+     * clock stops advancing. A no-op if already held.
+     * @ghidraAddress 0x7b638
+     */
     void Pause();
-    // Resume play: fold the paused span into the start threshold, clear the
-    // freeze bit, re-seek + restart the BGM at the current position and arm a
-    // drift-sync adjust event. No-op unless currently held. Ghidra: acNoteResume
-    // @ 0x7b698.
+    /**
+     * @brief Resume play: fold the paused span into the start threshold, clear the freeze bit,
+     * re-seek and restart the BGM at the current position, and arm a drift-sync adjust event. A
+     * no-op unless currently held.
+     * @ghidraAddress 0x7b698
+     */
     void resume();
 
-    // Arm the play clock from now (gettimeofday baseline), clear the pause/offset
-    // fields and set state = playing. A lighter clock-start than seekTo().
-    // Ghidra: acNoteStartPlayback
-    // @ 0x7b5a0.
+    /**
+     * @brief Arm the play clock from now (a gettimeofday baseline), clear the pause and offset
+     * fields, and set the state to playing. A lighter clock start than seekTo().
+     * @ghidraAddress 0x7b5a0
+     */
     void startPlayback();
 
-    // Clear the per-play "playing" flag (Ghidra: the byte @ +0x14cc2, cleared on
-    // teardown). Ghidra: acNoteResetPlayFlag @ 0x7aea4.
+    /**
+     * @brief Clear the per-play "playing" flag (the byte @ +0x14cc2), on teardown.
+     * @ghidraAddress 0x7aea4
+     */
     void resetPlayFlag();
 
-    // Read the per-play "playing" flag (m_playFlag @ +0x14cc2). Gates the
-    // on-resign arcade pause (AppDelegate applicationWillResignActive @ 0x95a8
-    // reads AcNoteMng+0x14cc2).
+    /**
+     * @brief The per-play "playing" flag (m_playFlag @ +0x14cc2).
+     *
+     * It gates the on-resign arcade pause; -[AppDelegate applicationWillResignActive] @ 0x95a8
+     * reads AcNoteMng+0x14cc2.
+     * @return true while a play is running.
+     */
     bool isPlaying() const {
         return m_playFlag;
     }
 
-    // Build the logical-lane -> display-lane table for the selected lane option:
-    // 1/3 = random (a time-seeded derangement of lanes 0..8, retried until no
-    // lane maps to itself), 2 = mirror (lane i -> 8-i), anything else = identity.
-    // Ghidra: acNoteSetupLaneMapping @ 0x7ad14.
+    /**
+     * @brief Build the logical-lane to display-lane table for the selected lane option.
+     * @param mode 1 or 3 for random (a time-seeded derangement of lanes 0..8, retried until no
+     * lane maps to itself), 2 for mirror (lane i maps to 8-i), anything else for identity.
+     * @ghidraAddress 0x7ad14
+     */
     void setupLaneMapping(int mode);
 
-    // --- Play-state queries the draw / result passes read --------------------
-    // The chart's total playable-note count (sum of the 9 per-lane tap counters).
-    // Ghidra: acNoteGetTotalNoteCount @ 0x7b8ec.
+    /**
+     * @brief The chart's total playable-note count: the sum of the nine per-lane tap counters.
+     * @return The playable-note total.
+     * @ghidraAddress 0x7b8ec
+     */
     int getTotalNoteCount() const;
-    // The chart's end tick (the type-6 end marker's tick, +0xfe18 nPlayheadMs):
-    // the denominator for the play-progress time-line bar.
+    /**
+     * @brief The chart's end tick: the type-6 end marker's tick (+0xfe18 nPlayheadMs), the
+     * denominator for the play-progress timeline bar.
+     * @return The end tick, in milliseconds.
+     */
     uint32_t playheadMs() const {
         return m_endValue;
     }
-    // True once the type-6 end note has passed the judge line (binary: the
-    // g_abAcNoteMng.bBgmMuted field, read by the arcade viewer as DAT_00173e70 to
-    // detect chart completion and return to the song menu).
+    /**
+     * @brief Whether the type-6 end note has passed the judge line.
+     *
+     * In the binary this is the g_abAcNoteMng.bBgmMuted field, read by the arcade viewer as
+     * DAT_00173e70 to detect chart completion and return to the song menu.
+     * @return true once the chart has ended.
+     */
     bool isFinished() const {
         return m_endFlag;
     }
-    // The running judged-note total: the sum of the 9x4 per-lane score/judge
-    // table (low 16 bits). Ghidra: acNoteGetJudgeTotal @ 0x7b908.
+    /**
+     * @brief The running judged-note total: the sum of the 9x4 per-lane score/judge table, low 16
+     * bits.
+     * @return The judged-note total.
+     * @ghidraAddress 0x7b908
+     */
     int getJudgeTotal() const;
-    // The number of still-unresolved on-screen notes (lane < 9, "handled" bit 5
-    // clear). Ghidra: acNoteCountActiveNotes @ 0x7b93c.
+    /**
+     * @brief The number of still-unresolved on-screen notes: lane below 9 with the "handled" bit 5
+     * clear.
+     * @return The unresolved note count.
+     * @ghidraAddress 0x7b93c
+     */
     int countActiveNotes() const;
-    // Copy the `index`-th still-unresolved on-screen note (lane < 9, bit 5 clear)
-    // into `out`; asserts on a null out or an out-of-range index. Ghidra:
-    // acNoteGetNoteObject @ 0x7b968.
+    /**
+     * @brief Copy the @p index -th still-unresolved on-screen note (lane below 9, bit 5 clear)
+     * into @p out. Asserts on a null @p out or an out-of-range @p index.
+     * @param out Receives the note's render descriptor.
+     * @param index The index among the still-unresolved notes.
+     * @ghidraAddress 0x7b968
+     */
     void getNoteObject(AcNoteObject *out, int index) const;
-    // OR `flags` into the `index`-th still-unresolved on-screen note (input marks
-    // a note hit). Ghidra: acNoteSetNoteFlag @ 0x7b9fc.
+    /**
+     * @brief OR @p flags into the @p index -th still-unresolved on-screen note; input marks a note
+     * hit this way.
+     * @param index The index among the still-unresolved notes.
+     * @param flags The AcNoteFlag bits to set.
+     * @ghidraAddress 0x7b9fc
+     */
     void setNoteFlag(int index, uint16_t flags);
 
-    // The engine keeps one global arcade manager (Ghidra: DAT_0015f1b0), reached
-    // through a ___cxa_guard'd lazy accessor. Ghidra: AcNoteMng_shared
-    // (FUN_0000b35c), which constructs it once via AcNoteMng_init (FUN_0007a744).
+    /**
+     * @brief The one global arcade manager (Ghidra: DAT_0015f1b0), reached through a
+     * ___cxa_guard'd lazy accessor.
+     *
+     * Ghidra: AcNoteMng_shared (FUN_0000b35c), which constructs it once via AcNoteMng_init
+     * (FUN_0007a744).
+     * @return The manager.
+     */
     static AcNoteMng &shared();
 
 private:
@@ -333,12 +429,14 @@ private:
     NearestNote m_nearest[9];
 };
 
-// Arcade-viewer judge-result globals read by the HUD draw callback (Ghidra:
-// g_dwAcCoolCount / g_dwAcGreatCount @ DAT_0016ebe0 / DAT_0016ebe4).
-// Xref-verified: the binary ONLY reads them (aepHudDrawCallback), never writes
-// them, and their baked value is 0 — the non-scored arcade preview shows 0 for
-// COOL/GREAT. The init-0-and-read model is exact.
+// Arcade-viewer judge-result globals read by the HUD draw callback (Ghidra: g_dwAcCoolCount /
+// g_dwAcGreatCount @ DAT_0016ebe0 / DAT_0016ebe4). Xref-verified: the binary only reads them
+// (aepHudDrawCallback), never writes them, and their baked value is 0 — the non-scored arcade
+// preview shows 0 for COOL and GREAT. The init-0-and-read model is exact.
+
+/** @brief The arcade-viewer COOL count the HUD draw callback reads; always 0. */
 extern int g_dwAcCoolCount;
+/** @brief The arcade-viewer GREAT count the HUD draw callback reads; always 0. */
 extern int g_dwAcGreatCount;
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

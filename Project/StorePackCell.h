@@ -13,28 +13,49 @@
 
 @class StorePackInfo;
 
+/**
+ * @brief One pack row of the store catalogue table.
+ */
 @interface StorePackCell : UITableViewCell
 
+/** The row background. */
 @property(nonatomic, retain) UIImageView *bgView;
-@property(nonatomic, retain) UIImageView *artworkView; // getter @ 0x6f8b0
+/** The pack jacket. Getter @ 0x6f8b0. */
+@property(nonatomic, retain) UIImageView *artworkView;
+/** The pack name. */
 @property(nonatomic, retain) UILabel *labelName;
+/** The localised price. */
 @property(nonatomic, retain) UILabel *labelPrice;
+/** The "purchased" label, whose visibility backs isPurchased. */
 @property(nonatomic, retain) UILabel *labelPurchased;
+/** The "new" badge. */
 @property(nonatomic, retain) UIImageView *newMarker;
-// 'newMarker' begins with the ARC 'new' method family (would imply a +1 owned
-// getter); opt the getter out, matching the objc_method_family(none) convention
-// in AVBus.h.
+/**
+ * @brief The "new" badge.
+ *
+ * The name begins with the ARC `new` method family, which would imply a +1 owned getter, so the
+ * getter opts out — matching the objc_method_family(none) convention in AVBus.h.
+ * @return The badge image view.
+ */
 - (UIImageView *)newMarker __attribute__((objc_method_family(none)));
+/** The arcade-availability badge. */
 @property(nonatomic, retain) UIImageView *arcadeViewer;
+/** The character-ticket badge. */
 @property(nonatomic, retain) UIImageView *charaTicket;
 
-// Purchased state, backed by the "purchased" label's visibility.
+/** Whether the pack is shown as purchased; backed by the "purchased" label's visibility. */
 @property(nonatomic) BOOL isPurchased;
 
-// Bind a pack model: name / price / markers and the live purchased state.
+/**
+ * @brief Bind a pack model: the name, price, badges and the live purchased state.
+ * @param packInfo The pack to show.
+ */
 - (void)loadPackInfo:(StorePackInfo *)packInfo;
 
-// Replace the row's background image.
+/**
+ * @brief Replace the row's background image.
+ * @param image The new image.
+ */
 - (void)setBgImage:(UIImage *)image;
 
 @end

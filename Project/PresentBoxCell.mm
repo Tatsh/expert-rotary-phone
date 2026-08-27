@@ -10,14 +10,18 @@
 #import "AppFont.h"        // AppFontName / AppMaruFontName
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay
 
-// The NSValue payload getValue: fills for a present row. The leading id is
-// unused by the cell; the type selects the icon/format, num is the quantity and
-// info is the blurb.
+/**
+ * @brief The NSValue payload -getValue: fills for a present row.
+ *
+ * The leading id is unused by the cell; the type selects the icon and format, num is the quantity
+ * and info is the blurb.
+ */
 typedef struct {
-    int presentId;                      // +0  server present id (unused by the cell)
-    int type;                           // +4  0 = treasure point, 1 = character ticket
-    int num;                            // +8  quantity
-    NSString *__unsafe_unretained info; // +0xc one-line description shown in _lblInfo
+    int presentId; /**< +0 The server present id; unused by the cell. */
+    int type;      /**< +4 0 = treasure point, 1 = character ticket. */
+    int num;       /**< +8 The quantity. */
+    /** +0xc The one-line description shown in _lblInfo. */
+    NSString *__unsafe_unretained info;
 } PresentData;
 
 @implementation PresentBoxCell {

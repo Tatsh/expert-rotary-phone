@@ -19,22 +19,31 @@
 #import "CommonAlertView.h" // CommonAlertViewDelegate (result / error alerts)
 #import "Downloader.h"      // Downloader + DownloaderDelegate
 
+/**
+ * @brief The "free request" friend-request confirm overlay.
+ */
 @interface FreeRequestDetail : UIView <DownloaderDelegate, CommonAlertViewDelegate>
 
-// Build the overlay for one recommended-friend row. `frame` is the host
-// superview's frame (full screen); `friendData` is the NSValue-wrapped
-// FriendListData (see DownloadMain.h) whose playerId / name / charaId / rank
-// tallies drive the card. Ghidra: @ 0xe3170.
+/**
+ * @brief Build the overlay for one recommended-friend row.
+ * @param frame The host superview's frame; full screen.
+ * @param friendData The NSValue-wrapped FriendListData (see DownloadMain.h) whose player id,
+ * name, character id and rank tallies drive the card.
+ * @return The initialised overlay.
+ * @ghidraAddress 0xe3170
+ */
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData;
 
-// Fade the card in (alpha 0 -> 1 over 0.3s); marks the overlay enabled +
-// animating. Ghidra: @ 0xe42f8.
+/**
+ * @brief Fade the card in, alpha 0 to 1 over 0.3 s, marking the overlay enabled and animating.
+ * @ghidraAddress 0xe42f8
+ */
 - (void)startOpenAnimation;
 
-// YES while an open/close animation is running. Ghidra: @ 0xe4994.
+/** Whether an open or close animation is running. Getter @ 0xe4994. */
 @property(nonatomic, readonly, getter=isAnimationing) BOOL animationing;
-// YES while the overlay is on screen and interactive (the owning list blocks
-// its own back button while this is set). Ghidra: @ 0xe49ac.
+/** Whether the overlay is on screen and interactive; the owning list blocks its own back button
+ * while this is set. Getter @ 0xe49ac. */
 @property(nonatomic, readonly, getter=isEnabled) BOOL enabled;
 
 @end

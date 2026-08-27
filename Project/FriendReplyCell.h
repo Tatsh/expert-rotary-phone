@@ -15,28 +15,47 @@
 // One request record, Obj-C type-encoding "{ReplyDataStruct=@@@@s[7i]}" (from
 // getFriendRequestFinished's NSValue wrapping). The four NSString* fields are
 // retained; the trailing int[7] is unused on this screen (left zero).
+/**
+ * @brief One inbound request record.
+ *
+ * Objective-C type-encoding "{ReplyDataStruct=@@@@s[7i]}", from getFriendRequestFinished's NSValue
+ * wrapping. The four NSString * fields are retained; the trailing int[7] is unused on this screen
+ * and left zeroed.
+ */
 typedef struct {
-    NSString *__unsafe_unretained playerId; // JSON "PlayerId"  (retained)  @0x0
-    NSString *__unsafe_unretained name;     // JSON "Name"      (retained)  @0x4
-    NSString *__unsafe_unretained message;  // JSON "Message"   (retained)  @0x8
-    NSString *__unsafe_unretained date;     // JSON "Date"      (retained)  @0xc
-    short charaId;                          // JSON "CharaId"                @0x10
-    int rank[7];                            // unused on the reply screen    @0x14
+    NSString *__unsafe_unretained playerId; /**< +0x0 JSON "PlayerId"; retained. */
+    NSString *__unsafe_unretained name;     /**< +0x4 JSON "Name"; retained. */
+    NSString *__unsafe_unretained message;  /**< +0x8 JSON "Message"; retained. */
+    NSString *__unsafe_unretained date;     /**< +0xc JSON "Date"; retained. */
+    short charaId;                          /**< +0x10 JSON "CharaId". */
+    int rank[7];                            /**< +0x14 Unused on the reply screen. */
 } ReplyDataStruct;
 
+/**
+ * @brief Receives the row's accept and reject taps.
+ */
 @protocol FriendReplyCellDelegate <NSObject>
-// Sent when OK (reply == 1, accept) or NG (reply == 0, reject) is tapped for
-// `playerId`.
+/**
+ * @brief OK or NG was tapped for a requester.
+ * @param playerId The requester's player id.
+ * @param reply 1 to accept, 0 to reject.
+ */
 - (void)startReplyFriendHttp:(NSString *)playerId reply:(int)reply;
 @end
 
+/**
+ * @brief One row of the received-friend-requests list, with accept and reject buttons.
+ */
 @interface FriendReplyCell : UITableViewCell
 
-// Synthesized accessors: delegate @ 0xa9dc0, setDelegate: @ 0xa9dd4
-// (DMB-guarded pointer store).
+/** The accept and reject delegate; the store is DMB-guarded. Getter @ 0xa9dc0, setter @
+ * 0xa9dd4. */
 @property(nonatomic, weak) id<FriendReplyCellDelegate> delegate;
 
-// Populate the row from an NSValue-wrapped ReplyDataStruct.
+/**
+ * @brief Populate the row from a request record.
+ * @param replyData An NSValue-wrapped ReplyDataStruct.
+ */
 - (void)setReplyData:(NSValue *)replyData;
 
 @end

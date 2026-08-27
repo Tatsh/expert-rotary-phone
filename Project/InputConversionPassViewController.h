@@ -55,23 +55,37 @@
 #import "CommonAlertView.h" // CommonAlertViewDelegate
 #import "Downloader.h"      // DownloaderDelegate + Downloader ivar type
 
-@interface InputConversionPassViewController
-    : UIViewController <UITextFieldDelegate, DownloaderDelegate, CommonAlertViewDelegate> {
-    UITextField *_idField;               // player-id entry (max 7 chars, alnum)
-    UITextField *_passField;             // convert-pass entry (max 6 chars, digits)
-    UIActivityIndicatorView *_indicator; // spinner shown while the POST is in flight
-    Downloader *_downloader;             // in-flight convert POST (nil when idle)
-    BOOL m_IsAnimationing;               // an open/close fade is running (guards re-entry)
-    UIView *_coverView;                  // pad-only dimmed backdrop; tap dismisses
+/**
+ * @brief The device-change pass-entry screen: player id plus convert pass.
+ */
+// Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
+// follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the
+// protocol list instead parses correctly, so the formatter is held off here.
+// clang-format off
+@interface InputConversionPassViewController : UIViewController <UITextFieldDelegate,
+                                                                 DownloaderDelegate,
+                                                                 CommonAlertViewDelegate> {
+    UITextField *_idField;   /**< The player-id entry; at most 7 alphanumeric characters. */
+    UITextField *_passField; /**< The convert-pass entry; at most 6 digits. */
+    UIActivityIndicatorView *_indicator; /**< The spinner shown while the POST is in flight. */
+    Downloader *_downloader; /**< The in-flight convert POST; nil when idle. */
+    BOOL m_IsAnimationing;   /**< An open or close fade is running; it guards re-entry. */
+    UIView *_coverView;      /**< The pad-only dimmed backdrop; a tap dismisses it. */
 }
+// clang-format on
 
-// Build the controller, wrap it in a fresh UINavigationController with a custom
-// back button and return that host (the value the menu adds to the scene, phone
-// only). Ghidra: @ 0x91e84.
+/**
+ * @brief Build the controller and wrap it in a fresh UINavigationController with a custom back
+ * button.
+ * @return The navigation host the menu adds to the scene; phone only.
+ * @ghidraAddress 0x91e84
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Fade the panel (and, on phone, its embedded nav view) in over 0.3 s. Ghidra:
-// @ 0x920e8.
+/**
+ * @brief Fade the panel in over 0.3 s, along with its embedded navigation view on phone.
+ * @ghidraAddress 0x920e8
+ */
 - (void)startOpenAnimation;
 
 @end

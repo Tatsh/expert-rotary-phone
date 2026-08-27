@@ -1,27 +1,30 @@
-//
-//  AcViewerDetailCell.h
-//  pop'n rhythmin
-//
-//  An arcade-viewer detail row (content set by the VC on bind). Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0x5b620).
-//
+/** @file
+ * An arcade-viewer detail row, whose content the view controller sets on bind. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x5b620).
+ */
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One value row of an arcade-viewer option list.
+ */
 @interface AcViewerDetailCell : UITableViewCell
 
-// The option this row belongs to (0 = HI-SPEED, 1 = POP-KUN, 2 = HID-SUD, 3 =
-// RAN-MIR) and the label shown for this particular value; the VC sets both
-// before -setData:. Ghidra: optionName getter @ 0x5bbb8 / setter @ 0x5bbc8;
-// optionKind getter @ 0x5bbd8 / setter @ 0x5bbec.
+/** The label shown for this particular value; the view controller sets it before -setData:.
+ * Getter @ 0x5bbb8, setter @ 0x5bbc8. */
 @property(nonatomic, copy) NSString *optionName;
-@property(atomic) int optionKind; // accessors are atomic (DataMemoryBarrier in the binary)
+/** The option this row belongs to: 0 HI-SPEED, 1 POP-KUN, 2 HID-SUD, 3 RAN-MIR. The accessors are
+ * atomic, using a DataMemoryBarrier in the binary. Getter @ 0x5bbd8, setter @ 0x5bbec. */
+@property(atomic) int optionKind;
 
-// Bind the row to value index within its option kind: draws the grouped-list
-// background slice (top / bar / under), the option name on the left, and a
-// check mark on the right of the row that matches the player's current
-// UserSettingData value. Ghidra: setData: @ 0x5b694.
+/**
+ * @brief Bind the row to a value index within its option kind.
+ *
+ * It draws the grouped-list background slice (top, bar or under), the option name on the left, and
+ * a check mark on the right of the row that matches the player's current UserSettingData value.
+ * @param index The value index within the option kind.
+ * @ghidraAddress 0x5b694
+ */
 - (void)setData:(int)index;
 
 @end

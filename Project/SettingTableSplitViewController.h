@@ -27,10 +27,21 @@
 
 #import "SettingTopViewController.h" // SettingTopViewControllerDalegate + the left column type
 
+/**
+ * @brief The iPad settings hub: a section column beside a detail pane.
+ */
 @interface SettingTableSplitViewController : UIViewController <SettingTopViewControllerDalegate>
 
-- (void)startOpenAnimation;  // @ 0xb66dc
-- (void)startCloseAnimation; // @ 0xb6820
+/**
+ * @brief Fade the hub in.
+ * @ghidraAddress 0xb66dc
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the hub out.
+ * @ghidraAddress 0xb6820
+ */
+- (void)startCloseAnimation;
 
 @end
 

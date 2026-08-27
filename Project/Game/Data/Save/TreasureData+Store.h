@@ -1,35 +1,58 @@
-//
-//  TreasureData+Store.h
-//  pop'n rhythmin
-//
-//  Fetch / insert / query / reset methods on the TreasureData entity (sugoroku
-//  board progress). Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin.
-//
+/** @file
+ * Fetch, insert, query and reset methods on the TreasureData entity (sugoroku board progress).
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ */
 
 #import <CoreData/CoreData.h>
 
 #import "TreasureData.h"
 
+/**
+ * @brief Fetch, insert, query and reset helpers for the TreasureData entity.
+ */
 @interface TreasureData (Store)
 
-// Record for a main-map + sub-map cell (last match, or nil).  Ghidra: @ 0xc088c
+/**
+ * @brief The record for a main-map and sub-map cell.
+ * @param mainMapId The main map id.
+ * @param subMapId The sub map id.
+ * @param context The managed object context to fetch from.
+ * @return The last matching record, or nil when there is none.
+ * @ghidraAddress 0xc088c
+ */
 + (TreasureData *)getTreasureData:(short)mainMapId
                          subMapId:(short)subMapId
            inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// Insert a fresh (reset) record for main-map + sub-map and save.  Ghidra: @
-// 0xc0bd0
+/**
+ * @brief Insert a fresh (reset) record for a main-map and sub-map cell, then save.
+ * @param mainMapId The main map id.
+ * @param subMapId The sub map id.
+ * @param context The managed object context to insert into.
+ * @return The new record.
+ * @ghidraAddress 0xc0bd0
+ */
 + (TreasureData *)addRecordWithMainMapId:(short)mainMapId
                                 subMapId:(short)subMapId
                   inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// YES once enough music-piece fragments (>8 of the low-3-bit flags summed over
-// every sub-map row of `mainMapId`) have been collected.  Ghidra: @ 0xc0d90
+/**
+ * @brief Whether enough music-piece fragments have been collected on a map to unlock its song.
+ *
+ * The test is more than 8 of the low-three-bit flags summed over every sub-map row of
+ * @p mainMapId.
+ * @param mainMapId The main map id.
+ * @param context The managed object context to fetch from.
+ * @return YES once the song is unlocked.
+ * @ghidraAddress 0xc0d90
+ */
 + (BOOL)isOpenMusic:(short)mainMapId inManagedObjectContext:(NSManagedObjectContext *)context;
 
-// Clear collectible/progress fields to defaults (map ids preserved; fastRecord
-// reset to -1).  Ghidra: -[TreasureData reset] @ 0xc0c9c
+/**
+ * @brief Clear the collectible and progress fields to their defaults; the map ids are preserved
+ * and fastRecord is reset to -1.
+ * @ghidraAddress 0xc0c9c
+ */
 - (void)reset;
 
 @end

@@ -20,16 +20,27 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The music-checker's genre-category list.
+ */
 @interface CheckerCategoryViewController : UITableViewController
 
-// Build the transparent grouped table, the header "get data" button + spinner
-// cover, and load the locally-cached arcade scores into 25 per-category buckets
-// (24 genres + a "latest 10" bucket). Ghidra: initWithStyle: @ 0xcfb88.
+/**
+ * @brief Build the transparent grouped table and the header "get data" button and spinner cover,
+ * then load the locally-cached arcade scores into 25 per-category buckets: 24 genres plus a
+ * "latest 10" bucket.
+ * @param style The table style.
+ * @return The initialised controller.
+ * @ghidraAddress 0xcfb88
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
-// Kick off the arcade-score HTTP sync, POSTing the konami-id / password /
-// one-time password (`otp` may be nil). Called back by the OTP-input screen
-// once the code is entered. Ghidra: startGetArcadeScoreHttpWithOtp: @ 0xd06b4.
+/**
+ * @brief Kick off the arcade-score HTTP sync, posting the KONAMI ID, password and one-time
+ * password. The OTP-input screen calls it back once the code is entered.
+ * @param otp The one-time password, or nil when none is required.
+ * @ghidraAddress 0xd06b4
+ */
 - (void)startGetArcadeScoreHttpWithOtp:(NSString *)otp;
 
 @end

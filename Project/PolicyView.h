@@ -22,13 +22,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The full terms-of-use screen.
+ */
 @interface PolicyView : UIViewController <NSLayoutManagerDelegate> {
-    UITextView *_textView; // @0xa4  the scrollable, read-only agreement text
+    UITextView *_textView; /**< +0xa4 The scrollable, read-only agreement text. */
 }
 
-// Back-button action: plays the cancel SE, then pops (phone, when embedded in a
-// nav stack) or removes the nav view from its superview (pad / root). @
-// 0x5303c.
+/**
+ * @brief The back-button action: play the cancel SE, then pop on phone when embedded in a
+ * navigation stack, or remove the navigation view from its superview on iPad and at the root.
+ * @ghidraAddress 0x5303c
+ */
 - (void)backButtonFunc;
 
 @end

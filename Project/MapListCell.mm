@@ -16,11 +16,13 @@
 // binary (cf_DFSoGei_W5_WIN_RKSJ_H); identical to AppFontName().
 static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
-// The NSValue payload getValue: fills for a main-map row.
+/**
+ * @brief The NSValue payload -getValue: fills for a main-map row.
+ */
 typedef struct {
-    short mapId;
-    short reserved;
-    NSString *__unsafe_unretained name;
+    short mapId;                        /**< The map's identifier. */
+    short reserved;                     /**< Padding to the pointer field; unused. */
+    NSString *__unsafe_unretained name; /**< The map name. */
 } MapListRowValue;
 
 // @ 0xbe270 — plain non-selectable cell; content bound by the VC on reuse.

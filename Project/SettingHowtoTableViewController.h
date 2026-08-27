@@ -24,16 +24,34 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The how-to settings list.
+ */
 @interface SettingHowtoTableViewController : UITableViewController
 
-// Wrap self in a fresh navigation controller and return it (the phone layout).
-// Also builds the nav-bar back button (targets -settingClose). Ghidra: @
-// 0x80488.
+/**
+ * @brief Wrap self in a fresh navigation controller and build the nav-bar back button, which
+ * targets -settingClose; the phone layout.
+ * @return The navigation controller.
+ * @ghidraAddress 0x80488
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0x806ec
-- (void)startCloseAnimation; // @ 0x80830 — plays the cancel SE, fades out
-- (void)settingClose;        // @ 0x811b8 — back-button action, calls -startCloseAnimation
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0x806ec
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Play the cancel SE and fade the screen out.
+ * @ghidraAddress 0x80830
+ */
+- (void)startCloseAnimation;
+/**
+ * @brief The back-button action; it calls -startCloseAnimation.
+ * @ghidraAddress 0x811b8
+ */
+- (void)settingClose;
 
 @end
 

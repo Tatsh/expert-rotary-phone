@@ -53,13 +53,22 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // StoreMainViewController is the delegate for the pack views, the detail
 // controllers and the purchase manager (it implements their callbacks below);
 // declare the conformances privately.
+/**
+ * @brief The store's private delegate conformances and lazy jacket loader.
+ */
 @interface StoreMainViewController () <StorePackViewDelegate,
                                        StorePackDetailViewPadDelegate,
                                        StoreDetailViewControllerDelegate,
                                        PurchaseManagerMusicDelegate>
-// Inlined lazy-jacket loader used by tableView:cellForRowAtIndexPath:; it has no
-// distinct address in the binary (the loader is inlined into each cell path).
-// The reconstructed body is defined below.
+/**
+ * @brief The lazy jacket loader used by -tableView:cellForRowAtIndexPath:.
+ *
+ * It has no distinct address in the binary; the loader is inlined into each cell path.
+ *
+ * @param info The pack whose artwork is wanted.
+ * @param indexPath The row the artwork belongs to, used to key the download.
+ * @return The cached jacket, or the placeholder while a download is in flight.
+ */
 - (UIImage *)artworkForInfo:(StorePackInfo *)info atIndexPath:(NSIndexPath *)indexPath;
 @end
 

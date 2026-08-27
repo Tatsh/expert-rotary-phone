@@ -18,19 +18,29 @@
 
 @class Downloader;
 
+/**
+ * @brief The iPad invite screen, combining the code display and the guest code entry.
+ */
 @interface InviteTopViewControllerPad : UIViewController {
-    BOOL isAnimationing;                 // an open/close fade is running (guards re-entry)
-    UITextField *_codeField;             // guest invite-code entry field
-    UIActivityIndicatorView *_indicator; // in-flight spinner (never instantiated in the binary)
-    Downloader *_downloader;             // the invite POST (nil when idle)
-    UIScrollView *_scrollView;           // scrolls the panels up when the keyboard shows
+    BOOL isAnimationing;     /**< An open or close fade is running; it guards re-entry. */
+    UITextField *_codeField; /**< The guest invite-code entry field. */
+    /** The in-flight spinner; the binary never instantiates it. */
+    UIActivityIndicatorView *_indicator;
+    Downloader *_downloader;   /**< The invite POST; nil when idle. */
+    UIScrollView *_scrollView; /**< Scrolls the panels up when the keyboard shows. */
 }
 
-// Build the combined invite screen + wrap it in a navigation controller, which
-// is returned. Ghidra: @ 0x5c638.
+/**
+ * @brief Build the combined invite screen and wrap it in a navigation controller.
+ * @return The navigation controller.
+ * @ghidraAddress 0x5c638
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Fade the view (and its nav view) in over 0.3 s. Ghidra: @ 0x5d350.
+/**
+ * @brief Fade the view and its navigation view in over 0.3 s.
+ * @ghidraAddress 0x5d350
+ */
 - (void)startOpenAnimation;
 
 @end

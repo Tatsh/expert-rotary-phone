@@ -8,12 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One row of the over-score log: a friend who beat your score on a song.
+ */
 @interface OverScoreLogCell : UITableViewCell
 
-// Rebuild the row's labels/banner from one element of the owning view
-// controller's log-data array (an NSValue boxing the OverScoreLogData struct;
-// -getValue: unboxes it). Ghidra: -[OverScoreLogCell setOverScoreLogData:] @
-// 0x69804.
+/**
+ * @brief Rebuild the row's labels and banner from one log entry.
+ * @param overScoreLogData An NSValue boxing an OverScoreLogData; -getValue: unboxes it.
+ * @ghidraAddress 0x69804
+ */
 - (void)setOverScoreLogData:(NSValue *)overScoreLogData;
 
 @end

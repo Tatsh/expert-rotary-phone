@@ -11,15 +11,24 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The reward SDK's busy-indicator overlay.
+ */
 @interface RewardNetworkIndicator : UIView
 
-// _indicator ivar / accessors @ 0xf3eb4 (getter) / 0xf3ec4 (setter).
+/** The hosted spinner, backed by the _indicator ivar. Getter @ 0xf3eb4, setter @ 0xf3ec4. */
 @property(nonatomic, strong) UIActivityIndicatorView *indicator;
 
-// @ 0xf3e14 — unhide and start the spinner.
+/**
+ * @brief Unhide the overlay and start the spinner.
+ * @ghidraAddress 0xf3e14
+ */
 - (void)show;
 
-// @ 0xf3e64 — hide and stop the spinner.
+/**
+ * @brief Hide the overlay and stop the spinner.
+ * @ghidraAddress 0xf3e64
+ */
 - (void)close;
 
 @end

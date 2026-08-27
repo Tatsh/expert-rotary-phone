@@ -17,6 +17,7 @@
 
 /**
  * @brief The shared singleton.
+ * @return The manager.
  * @ghidraAddress 0xc7dd8
  */
 + (instancetype)getInstance;
@@ -25,18 +26,21 @@
 
 /**
  * @brief The cached playable local-song array, rebuilt when its dirty flag is set.
+ * @return An array of MusicData.
  * @ghidraAddress 0xcae40
  */
 - (NSArray *)getMusicDataArray;
 
 /**
  * @brief The cached arcade-song array, rebuilt when its dirty flag is set.
+ * @return An array of AcMusicData.
  * @ghidraAddress 0xcae84
  */
 - (NSArray *)getAcMusicDataArray;
 
 /**
  * @brief Every treasure song bundled with the app, one per main map.
+ * @return An array of MusicData.
  * @ghidraAddress 0xcaec8
  */
 - (NSArray *)getTreasureMusicDataArray;
@@ -44,6 +48,7 @@
 /**
  * @brief Linear-search the cached local-song array by its @c MusicID.
  * @param musicId The song id to match.
+ * @return The matching record, or nil when the song is not in the array.
  * @ghidraAddress 0xcb080
  */
 - (MusicData *)getMusicData:(int)musicId;
@@ -51,6 +56,7 @@
 /**
  * @brief Linear-search the cached arcade-song array by its @c acMusicId.
  * @param acMusicId The arcade-song id to match.
+ * @return The matching record, or nil when the song is not in the array.
  * @ghidraAddress 0xcb154
  */
 - (AcMusicData *)getAcMusicData:(int)acMusicId;
@@ -58,6 +64,7 @@
 /**
  * @brief Build the @c %09d.orb data-file name for a local song. Class method: stateless.
  * @param musicId The song id.
+ * @return The data-file name.
  * @ghidraAddress 0xc7e20
  */
 + (NSString *)getMusicDataFilename:(int)musicId;
@@ -65,6 +72,7 @@
 /**
  * @brief Build the @c ac%09d.acv data-file name for an arcade song.
  * @param acMusicId The arcade-song id.
+ * @return The data-file name.
  * @ghidraAddress 0xc7e50
  */
 - (NSString *)getAcMusicDataFilename:(int)acMusicId;
@@ -138,12 +146,14 @@
 
 /**
  * @brief The in-memory purchased local-song list.
+ * @return The purchased-song dictionaries.
  * @ghidraAddress 0xc8f28
  */
 - (NSMutableArray *)getPurchasedMusicDictionaris;
 
 /**
  * @brief The in-memory purchased arcade-song list.
+ * @return The purchased arcade-song dictionaries.
  * @ghidraAddress 0xc8f38
  */
 - (NSMutableArray *)getPurchasedAcMusicDictionaris;
@@ -183,6 +193,7 @@
 /**
  * @brief Whether @p packID appears in the encrypted @c recpack recommended list.
  * @param packID The pack id to look up.
+ * @return @c YES when the pack is recommended.
  * @ghidraAddress 0xc9990
  */
 - (BOOL)isRecommendedPack:(int)packID;
@@ -213,18 +224,21 @@
 
 /**
  * @brief A flat list of all currently-available local song IDs (default, purchased, and treasure).
+ * @return The song ids, as NSNumber.
  * @ghidraAddress 0xcb24c
  */
 - (NSMutableArray *)getMusicIDs;
 
 /**
  * @brief A flat list of all currently-available arcade song IDs (arcade-default and purchased-ac).
+ * @return The arcade-song ids, as NSNumber.
  * @ghidraAddress 0xcb474
  */
 - (NSMutableArray *)getAcMusicIDs;
 
 /**
- * @brief The loaded level-patch records (@c rhythmin.lv), or @c nil.
+ * @brief The loaded level-patch records (@c rhythmin.lv).
+ * @return An array of MusicPatch, or @c nil when none is loaded.
  * @ghidraAddress 0xcb948
  */
 - (NSArray *)getMusicPatchArray;
@@ -252,6 +266,7 @@
  * state, so the init-time open-song predicates do not re-enter @c getInstance (see the recursion fix
  * in the implementation).
  * @param musicId The song id to resolve.
+ * @return The @c .orb path, or @c nil when the song is not present.
  * @ghidraAddress 0xc7e80
  */
 + (NSString *)getPathFromBundle:(int)musicId;
@@ -259,6 +274,7 @@
 /**
  * @brief Resolve a purchased local song id to its @c .orb path under Application Support.
  * @param musicId The song id to resolve.
+ * @return The @c .orb path, or @c nil when the song is not purchased.
  * @ghidraAddress 0xc7edc
  */
 - (NSString *)getPathFromPurchased:(int)musicId;
@@ -266,6 +282,7 @@
 /**
  * @brief Resolve a purchased arcade song id to its @c .acv path under Application Support.
  * @param acMusicId The arcade-song id to resolve.
+ * @return The @c .acv path, or @c nil when the song is not purchased.
  * @ghidraAddress 0xc7f38
  */
 - (NSString *)getAcPathFromPurchased:(int)acMusicId;
@@ -330,6 +347,7 @@
 
 /**
  * @brief The recommended-pack id list, decoded from the encrypted @c recpack file.
+ * @return The pack ids, as NSNumber.
  * @ghidraAddress 0xc9bd0
  */
 - (NSArray *)getRecommendPackArray;
@@ -349,24 +367,28 @@
 /**
  * @brief Whether the invite-reward song is open for the given reward tier.
  * @param index The reward tier to test.
+ * @return @c YES when the song is unlocked.
  */
 + (BOOL)isOpenInviteMusic:(int)index;
 
 /**
  * @brief Whether @p musicId is the invite-reward song. @c YES if id == 4.
  * @param musicId The song id to test.
+ * @return @c YES for the invite-reward song.
  * @ghidraAddress 0xc7fd4
  */
 + (BOOL)isInviteMusic:(int)musicId;
 
 /**
  * @brief Whether the BEMANI-collabo song is open.
+ * @return @c YES when the song is unlocked.
  */
 + (BOOL)isOpenBemaniCollaboMusic;
 
 /**
  * @brief Whether the login-bonus song is open for the given reward tier.
  * @param index The reward tier to test.
+ * @return @c YES when the song is unlocked.
  */
 + (BOOL)isOpenLoginBonusMusic:(int)index;
 

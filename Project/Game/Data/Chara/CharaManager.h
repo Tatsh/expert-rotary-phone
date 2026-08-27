@@ -23,22 +23,41 @@
 
 @class CharaInfo;
 
+/**
+ * @brief Owns the three character lists the game builds at startup and after any download:
+ * preferred sets, limited sets, and the filtered list currently available to the player.
+ */
 class CharaManager {
 public:
-    // Rebuild all three lists: the 30 hard-coded characters plus every character
-    // and preferred/limited set found in the downloaded chara_%03d.chr files.
+    /**
+     * @brief Rebuild all three lists: the 30 hard-coded characters plus every character and
+     * preferred or limited set found in the downloaded chara_%03d.chr files.
+     * @ghidraAddress 0xb85bc
+     */
     void reload();
 
-    // The characters currently available to the player (member +0x8).
+    /**
+     * @brief The characters currently available to the player (member +0x8).
+     * @return An NSArray of CharaInfo.
+     * @ghidraAddress 0xb9304
+     */
     NSArray *availableInfos() const {
         return _available;
     }
 
-    // The available CharaInfo whose charaId matches, or nil.
+    /**
+     * @brief The available character with a matching id.
+     * @param charaId The character id to find.
+     * @return The CharaInfo, or nil when the character is not available.
+     * @ghidraAddress 0xb9308
+     */
     CharaInfo *availableInfoForCharaId(short charaId) const;
 
-    // Walk the preferred sets, mark any whose unlock condition is now met, and
-    // return the character ids that just became unlocked (for reveal effects).
+    /**
+     * @brief Walk the preferred sets and mark any whose unlock condition is now met.
+     * @return The character ids that just became unlocked, for the reveal effects.
+     * @ghidraAddress 0xb93d0
+     */
     NSArray *collectUnlockedCharaIds();
 
 private:
@@ -51,12 +70,18 @@ private:
     NSArray *_available = nil; // +0x8  CharaInfo objects (player-available)
 };
 
-// The single global instance (Ghidra: DAT_00187d98).
+/**
+ * @brief The single global instance (Ghidra: DAT_00187d98).
+ */
 extern CharaManager gCharaManager;
 
-// Ensure the global chara lists are built exactly once (lazy first-use guard),
-// then return the instance. Ghidra: FUN_0002980c — a ___cxa_guard-protected
-// one-shot around gCharaManager.reload() (FUN_000b85b8).
+/**
+ * @brief Ensure the global character lists are built exactly once, behind a lazy first-use guard.
+ *
+ * Ghidra: FUN_0002980c, a ___cxa_guard-protected one-shot around gCharaManager.reload()
+ * (FUN_000b85b8).
+ * @return The global instance.
+ */
 CharaManager &CharaManagerShared();
 
 // ---------------------------------------------------------------------------
@@ -75,12 +100,15 @@ class AcMainTask;
 // AcMainTask methods; they are declared on AcMainTask and defined in
 // CharaManager.mm.
 
-// Popcount all 32-bit words in `gotCharaArray` (the NSArray of NSNumber
-// produced by [UserSettingData gotCharaArray]) and return 1 when the total
-// number of set bits (owned characters) is >= [gCharaManager.availableInfos()
-// count] — i.e. the player owns all currently available characters.  Returns
-// 0 when there are still characters to collect.
-// Ghidra: countAvailableCharacters @ 0x28b10 (4 xrefs).
+/**
+ * @brief Whether the player owns every currently-available character.
+ *
+ * Popcounts all 32-bit words in @p gotCharaArray and compares the total number of set bits (owned
+ * characters) against `[gCharaManager.availableInfos() count]`.
+ * @param gotCharaArray The NSArray of NSNumber produced by +[UserSettingData gotCharaArray].
+ * @return 1 when every available character is owned, 0 when there are still some to collect.
+ * @ghidraAddress 0x28b10
+ */
 int countAvailableCharacters(NSArray *gotCharaArray);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

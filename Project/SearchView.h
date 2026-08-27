@@ -21,57 +21,56 @@
 #import "Downloader.h"      // DownloaderDelegate + Downloader ivars
 #import "ImageDownloader.h" // ImageDownloaderDelegate + ImageDownloader ivar
 
+/**
+ * @brief The arcade-search map: the user's location plus pins for nearby arcades.
+ */
 @interface SearchView : UIViewController <MKMapViewDelegate,
                                           DownloaderDelegate,
                                           ImageDownloaderDelegate,
                                           CommonAlertViewDelegate> {
-    // The map filling the screen; user-location dot + arcade pins are drawn on
-    // it.
+    /** The map filling the screen; the user-location dot and arcade pins are drawn on it. */
     MKMapView *m_Map;
-    // A small spinner shown while any download is in flight (ref-counted by
-    // m_IndicatorCount).
+    /** A small spinner shown while any download is in flight; m_IndicatorCount ref-counts it. */
     UIActivityIndicatorView *m_Indicator;
-    int m_IndicatorCount;
-    // Rounded translucent label shown when the map is zoomed out too far to
-    // search.
+    int m_IndicatorCount; /**< How many downloads are keeping the spinner up. */
+    /** The rounded translucent label shown when the map is zoomed out too far to search. */
     UILabel *m_MessageLabel;
-    // Rounded translucent label used to surface network / server errors (fades
-    // in).
+    /** The rounded translucent label that fades in to surface network and server errors. */
     UILabel *m_ErrorLabel;
-    // The two request helpers: the master feed and the per-region arcade query.
-    Downloader *m_MasterDownloader;
-    Downloader *m_ListDownloader;
-    // Loads the master + per-model marker images one at a time.
+    Downloader *m_MasterDownloader; /**< The master-feed request. */
+    Downloader *m_ListDownloader;   /**< The per-region arcade query. */
+    /** Loads the master and per-model marker images, one at a time. */
     ImageDownloader *m_ImageDownloader;
-    // Master feed's top-level info (holds the master marker image URL + decoded
-    // image).
+    /** The master feed's top-level info: the master marker image URL and its decoded image. */
     NSMutableDictionary *m_Info;
-    // Per-model marker metadata array ({Order,Model,Name,Image,IMAGE_OBJECT}).
+    /** The per-model marker metadata: {Order, Model, Name, Image, IMAGE_OBJECT}. */
     NSMutableArray *m_Models;
-    // modelName -> index into m_Models (drives per-pin marker image lookup).
+    /** Maps a model name to its index in m_Models, driving the per-pin marker image lookup. */
     NSMutableDictionary *m_ModelNameForArrayIndex;
-    // The region last sent to the server (used to decide when to re-query on
-    // pan).
+    /** The region last sent to the server; it decides when to re-query on a pan. */
     MKCoordinateRegion m_LastRegion;
-    // arcade ID -> MapAnnotation for every arcade seen so far.
+    /** Maps an arcade id to its MapAnnotation, for every arcade seen so far. */
     NSMutableDictionary *m_DictSpot;
-    // The Maps-app URL built for the pin whose callout was tapped.
+    /** The Maps-app URL built for the pin whose callout was tapped. */
     NSString *m_GoogleMapURL;
-    // Master feed loaded / all marker images loaded / open|close animation
-    // running.
-    BOOL m_LoadedMaster;
-    BOOL m_LoadedImages;
-    BOOL m_IsAnimationing;
+    BOOL m_LoadedMaster;   /**< The master feed has loaded. */
+    BOOL m_LoadedImages;   /**< Every marker image has loaded. */
+    BOOL m_IsAnimationing; /**< An open or close animation is running. */
 }
 
-// Designated entry point used by MainViewController -GotoArcadeSearch: runs
-// [super init], wraps the receiver in a UINavigationController (styled nav bar
-// + back / current-position bar buttons) and returns that navigation
-// controller. Ghidra: @ 0x85538.
-- (id)initAtNavigationController
-    __attribute__((objc_method_family(none))); // returns a nav controller, not self
+/**
+ * @brief The entry point MainViewController's -GotoArcadeSearch uses: run [super init], then wrap
+ * the receiver in a UINavigationController with a styled nav bar and back and current-position bar
+ * buttons.
+ * @return The navigation controller, not self.
+ * @ghidraAddress 0x85538
+ */
+- (id)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Fade the screen (and nav bar) in over the GL scene. Ghidra: @ 0x88838.
+/**
+ * @brief Fade the screen and its nav bar in over the GL scene.
+ * @ghidraAddress 0x88838
+ */
 - (void)startOpenAnimation;
 
 @end

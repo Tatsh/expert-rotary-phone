@@ -14,12 +14,18 @@
 // The NSValue payload getValue: fills for a recommend row. The leading record
 // id is unused by the cell; the four object fields drive the thumbnail, name,
 // date and player.
+/**
+ * @brief The NSValue payload -getValue: fills for a recommend row.
+ *
+ * The leading record id is unused by the cell; the four object fields drive the thumbnail, name,
+ * date and player.
+ */
 typedef struct {
-    int recordId;
-    NSString *__unsafe_unretained imageURL; // pack thumbnail source
-    NSString *__unsafe_unretained packName;
-    NSString *__unsafe_unretained dateString;
-    NSString *__unsafe_unretained playerName;
+    int recordId;                             /**< The record id; unused by the cell. */
+    NSString *__unsafe_unretained imageURL;   /**< The pack thumbnail's source URL. */
+    NSString *__unsafe_unretained packName;   /**< The pack name. */
+    NSString *__unsafe_unretained dateString; /**< When the pack was recommended. */
+    NSString *__unsafe_unretained playerName; /**< Who recommended it. */
 } RecommendRowValue;
 
 @implementation RecommendListCell {

@@ -55,19 +55,32 @@
 // definition.
 @protocol ViewCmnProtocol;
 
+/**
+ * @brief The "Other" settings list, which embeds the device-change panel.
+ */
 @interface SettingOtherTableViewController : UITableViewController <CommonAlertViewDelegate>
 
-// The common "view delegate" handed down to the embedded ConversionView. Ivar @
-// +0xac.
+/** The common "view delegate" handed down to the embedded ConversionView; the ivar is at
+ * +0xac. */
 @property(nonatomic, assign) id<ViewCmnProtocol> viewCmnDelegate;
 
-// Wrap self in a fresh navigation controller (with the back button) and return
-// it.
-- (UINavigationController *)initAtNavigationController
-    __attribute__((objc_method_family(none))); // @ 0xd4398
+/**
+ * @brief Wrap self in a fresh navigation controller with the back button.
+ * @return The navigation controller.
+ * @ghidraAddress 0xd4398
+ */
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0xd45ec
-- (void)startCloseAnimation; // @ 0xd4730 (also plays the cancel SE)
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0xd45ec
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Play the cancel SE and fade the screen out.
+ * @ghidraAddress 0xd4730
+ */
+- (void)startCloseAnimation;
 
 @end
 

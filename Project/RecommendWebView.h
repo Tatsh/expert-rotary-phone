@@ -34,49 +34,78 @@
 #import <WebKit/WebKit.h>
 #endif
 
-// Completion for a hosted recommend/app-list load: invoked with the load error
-// (or nil).
+/**
+ * @brief The completion for a hosted recommend or app-list load.
+ * @param error The load error, or nil on success.
+ */
 typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
 
+/**
+ * @brief The web view that renders the recommend and app-list pages.
+ */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 @interface RecommendWebView : WKWebView <WKNavigationDelegate>
 #else
 @interface RecommendWebView : UIWebView <UIWebViewDelegate>
 #endif
 
-// _callbackForOpenAppliList ivar (block, copied) — accessors @ 0xff904 /
-// 0xff918.
+/** The stored completion block, backed by the _callbackForOpenAppliList ivar. Getter @ 0xff904,
+ * setter @ 0xff918. */
 @property(nonatomic, copy) RecommendWebViewOpenAppliListCallback callbackForOpenAppliList;
 
-// _lastErrorForOpenAppliList ivar — accessors @ 0xff93c / 0xff94c.
+/** The last load error, backed by the _lastErrorForOpenAppliList ivar. Getter @ 0xff93c, setter @
+ * 0xff94c. */
 @property(nonatomic, strong) NSError *lastErrorForOpenAppliList;
 
-// @ 0xfe970 — hop to the main queue and fetch/render the recommend app list.
-// `callback` is stored and later fired (with the load error, or nil) once the
-// panel is dismissed.
+/**
+ * @brief Hop to the main queue and fetch and render the recommend app list.
+ * @param callback Stored, and fired with the load error or nil once the panel is dismissed.
+ * @ghidraAddress 0xfe970
+ */
 - (void)loadRequestWithCallback:(RecommendWebViewOpenAppliListCallback)callback;
 
-// @ 0xff354 — build the parameterised request, show the indicator, and start
-// loading. The web view always makes itself the delegate; `delegate` is
-// accepted but unused.
+/**
+ * @brief Build the parameterised request, show the indicator, and start loading.
+ * @param url The page URL.
+ * @param parameters The query parameters.
+ * @param delegate Accepted but unused; the web view always makes itself the delegate.
+ * @ghidraAddress 0xff354
+ */
 - (void)loadRequestWithURL:(NSString *)url
                 parameters:(NSDictionary *)parameters
                   delegate:(id)delegate;
 
-// @ 0xff0a8 — stop an in-flight load.
+/**
+ * @brief Stop an in-flight load.
+ * @ghidraAddress 0xff0a8
+ */
 - (void)cancelRequest;
 
-// @ 0xff098 — tear the panel down (forwards to -appliListClosed).
+/**
+ * @brief Tear the panel down; it forwards to -appliListClosed.
+ * @ghidraAddress 0xff098
+ */
 - (void)closeList;
 
-// @ 0xff0e0 — enable/disable the busy-indicator overlay.
+/**
+ * @brief Enable or disable the busy-indicator overlay.
+ * @param enable YES to show the indicator.
+ * @ghidraAddress 0xff0e0
+ */
 - (void)setIndicatorwithEnable:(BOOL)enable;
 
-// @ 0xff0f0 — select the ad layout (0/1/2/3 → ad_type + is_banner_wide query
-// values).
+/**
+ * @brief Select the ad layout, which picks the ad_type and is_banner_wide query values.
+ * @param viewType The layout: 0, 1, 2 or 3.
+ * @ghidraAddress 0xff0f0
+ */
 - (void)setViewType:(int)viewType;
 
-// @ 0xff100 — toggle scrolling/bouncing on the hosted UIScrollView subviews.
+/**
+ * @brief Toggle scrolling and bouncing on the hosted UIScrollView subviews.
+ * @param enabled YES to allow scrolling.
+ * @ghidraAddress 0xff100
+ */
 - (void)setScrollEnabled:(BOOL)enabled;
 
 @end

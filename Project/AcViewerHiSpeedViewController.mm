@@ -21,8 +21,19 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
+/**
+ * @brief The hi-speed viewer's private gesture handler and back action.
+ */
 @interface AcViewerHiSpeedViewController ()
+/**
+ * @brief A pan on the speed slider: track the drag and update the preview.
+ * @param recognizer The pan recogniser driving the value.
+ */
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer;
+/**
+ * @brief The back-button action.
+ * @param sender The tapped button.
+ */
 - (void)touchedBackButton:(id)sender;
 @end
 

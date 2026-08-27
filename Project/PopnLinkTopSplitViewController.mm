@@ -20,10 +20,16 @@
 #import "neEngineBridge.h" // neAppEventCenter::linkButtonsEnabled, neEngine::playSystemSe,
                            //   neSceneManager::rootViewController
 
+/**
+ * @brief The PopnLink split screen's private transition completions and cover-tap handler.
+ */
 @interface PopnLinkTopSplitViewController () <PopnLinkTopViewControllerDelegate,
                                               PopnLinkTopSplitViewControllerDelegate>
+/** @brief The open transition finished: clear the re-entry guard. */
 - (void)endOpenAnimation;
+/** @brief The close transition finished: detach the view and notify the owner. */
 - (void)endCloseAnimation;
+/** @brief A tap on the dimmed cover behind the panes: dismiss the screen. */
 - (void)handleTapCoverView;
 @end
 

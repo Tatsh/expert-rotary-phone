@@ -26,10 +26,13 @@ constexpr int kSeVoiceCount = 8; // onStartPlayer starts each backend with 8 voi
 // 8 (stopSeAll reads group at [entry+0x8], stride 0xc), leaving a reserved word
 // at offset 4, so group must sit at +8 rather than +4.
 static const RSND_INSTANCE_ID kFreeInstance = static_cast<RSND_INSTANCE_ID>(-1);
+/**
+ * @brief One entry of the general SE instance table.
+ */
 struct SeInstance {
-    RSND_INSTANCE_ID handle;
-    int reserved;
-    int group; // 0 = caplayer, else AVFoundation
+    RSND_INSTANCE_ID handle; /**< +0x00 The playing instance, or kFreeInstance when idle. */
+    int reserved;            /**< +0x04 Reserved word; the binary leaves it unread. */
+    int group;               /**< +0x08 0 for the caplayer, anything else for AVFoundation. */
 };
 
 // The caplayer-only "SetGroup" SE pool (the seManageId 2-D array, 2 banks of 8
@@ -39,10 +42,13 @@ struct SeInstance {
 // an idle slot.
 constexpr int kSeSetGroupCount = 2;
 constexpr int kSeSetGroupVoices = 8;
+/**
+ * @brief One slot of the caplayer-only "SetGroup" SE pool, owning a fixed voice for its lifetime.
+ */
 struct SeVoiceSlot {
-    RSND_INSTANCE_ID handle;
-    int voiceIndex;
-    int reserved;
+    RSND_INSTANCE_ID handle; /**< The playing instance; kFreeInstance marks an idle slot. */
+    int voiceIndex;          /**< The caplayer voice this slot permanently owns. */
+    int reserved;            /**< Reserved word; the binary leaves it unread. */
 };
 
 @implementation AudioManager {

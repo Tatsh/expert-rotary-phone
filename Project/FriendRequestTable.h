@@ -16,16 +16,26 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The sent-friend-requests table.
+ */
 @interface FriendRequestTable : UITableViewController
 
-// Grouped-style table: a "fripre_table" background plate, a dimmed dummy
-// overlay carrying a centred activity indicator, and a custom back button in
-// the nav item. Ghidra: @ 0xb7148.
+/**
+ * @brief Build the grouped-style table: a "fripre_table" background plate, a dimmed dummy overlay
+ * carrying a centred activity indicator, and a custom back button in the navigation item.
+ * @param style The table style.
+ * @return The initialised controller.
+ * @ghidraAddress 0xb7148
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
-// (Re)fetch the list of friend requests you have sent. No-op while a fetch is
-// in flight. Called by the owning FriendRequestViewController after a request
-// is sent or cancelled. Ghidra: @ 0xb7a54.
+/**
+ * @brief Re-fetch the list of friend requests you have sent; a no-op while a fetch is in flight.
+ *
+ * The owning FriendRequestViewController calls it after a request is sent or cancelled.
+ * @ghidraAddress 0xb7a54
+ */
 - (void)reDownloadGetFriendRequest;
 
 @end

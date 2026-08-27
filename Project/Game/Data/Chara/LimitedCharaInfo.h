@@ -1,20 +1,20 @@
-//
-//  LimitedCharaInfo.h
-//  pop'n rhythmin
-//
-//  Set of character ids available for a limited time. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin.
-//
+/** @file
+ * A set of character ids available for a limited time. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin.
+ */
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief One limited-time character set: the music that unlocks it and the characters it grants.
+ */
 @interface LimitedCharaInfo : NSObject
 
-// Synthesized: musicIds @ 0x6434c, setMusicIds: @ 0x6435c.
+/** The music ids whose purchase unlocks this set. Getter @ 0x6434c, setter @ 0x6435c. */
 @property(nonatomic, strong) NSArray *musicIds;
-// Synthesized: charaIds @ 0x6436c, setCharaIds: @ 0x6437c.
+/** The character ids this set grants. Getter @ 0x6436c, setter @ 0x6437c. */
 @property(nonatomic, strong) NSArray *charaIds;
-// Synthesized: getFlg @ 0x6438c, setGetFlg: @ 0x643a4 (atomic unlock flag).
+/** Whether the set has been unlocked. Getter @ 0x6438c, setter @ 0x643a4. */
 @property(atomic) BOOL getFlg;
 
 @end

@@ -1,20 +1,20 @@
-//
-//  NSData+Crypt.h
-//  pop'n rhythmin
-//
-//  AES-128-CBC helpers used to protect the user's save data.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Both public
-//  wrappers are thin: they forward to the shared core
-//  -mainOperation:key:initVector: with kCCEncrypt / kCCDecrypt. Key/IV are
-//  16-char NSStrings copied to C via -getCString:maxLength:encoding: (key
-//  "4ZMw025eJIOTx26f", IV "13U4RnAI73EdVMXB") and the cipher is AES-128-CBC
-//  with PKCS#7 padding (kCCOptionPKCS7Padding).
-//
+/** @file
+ * AES-128-CBC helpers used to protect the user's save data.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. Both public wrappers are thin:
+ * they forward to the shared core -mainOperation:key:initVector: with kCCEncrypt / kCCDecrypt.
+ * Key and initialisation vector are 16-character NSStrings copied to C via
+ * -getCString:maxLength:encoding: (key "4ZMw025eJIOTx26f", initialisation vector
+ * "13U4RnAI73EdVMXB") and the cipher is AES-128-CBC with PKCS#7 padding
+ * (kCCOptionPKCS7Padding).
+ */
 
 #import <CommonCrypto/CommonCryptor.h>
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief AES-128-CBC encryption and decryption helpers for save data.
+ */
 @interface NSData (Crypt)
 /**
  * @brief Encrypts the receiver using AES-128-CBC with the provided key and initialization vector.

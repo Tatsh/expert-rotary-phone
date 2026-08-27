@@ -22,37 +22,58 @@
 
 #import "StoreDialogView.h"
 
+/**
+ * @brief The store's tab host: the pack catalogue, the purchased-music manager and the
+ * arcade-viewer manager, plus the shared modal progress dialog.
+ */
 @interface StoreViewController : UITabBarController {
-    UINavigationController *m_MainNavCtrl;      // pack store tab
-    UINavigationController *m_ManageNavCtrl;    // purchased-music manager tab
-    UINavigationController *m_AcvManageNavCtrl; // arcade-viewer manager tab
-    BOOL m_Animation;                           // a fade is in progress
-    UIView *m_CoverView;                        // dimming backdrop behind the modal dialog
-    StoreDialogView *m_ModalDialog;             // the shared "please wait / abort" dialog
-    BOOL m_IsModalDialogAnimation;              // a modal-dialog fade is in progress
+    UINavigationController *m_MainNavCtrl;      /**< The pack store tab. */
+    UINavigationController *m_ManageNavCtrl;    /**< The purchased-music manager tab. */
+    UINavigationController *m_AcvManageNavCtrl; /**< The arcade-viewer manager tab. */
+    BOOL m_Animation;                           /**< A fade is in progress. */
+    UIView *m_CoverView;            /**< The dimming backdrop behind the modal dialog. */
+    StoreDialogView *m_ModalDialog; /**< The shared "please wait / abort" dialog. */
+    BOOL m_IsModalDialogAnimation;  /**< A modal-dialog fade is in progress. */
 }
 
-// Present opened for a specific recommended pack id (0/negative = the plain
-// store).
+/** The recommended pack to open on; 0 or negative opens the plain store. */
 @property(nonatomic, assign) int recommendPackId;
 
-// The shared modal "please wait / abort" dialog built in -loadView. Ghidra:
-// modalDialog @ 0x54414.
+/** The shared "please wait / abort" dialog, built in -loadView. Getter @ 0x54414. */
 @property(nonatomic, readonly) StoreDialogView *modalDialog;
 
+/**
+ * @brief Build the store, optionally opening on a recommended pack.
+ * @param recommendPackId The pack to open on; 0 or negative for the plain store.
+ * @return The initialised controller.
+ */
 - (instancetype)initWithRecommendPackId:(int)recommendPackId;
 
-// Cross-fade the store in / out.
+/**
+ * @brief Cross-fade the store in.
+ */
 - (void)showAnimation;
+/**
+ * @brief Cross-fade the store out.
+ */
 - (void)hideAnimation;
 
-// Fade the modal dialog / dimming cover in (with delegate) and out. Both return
-// whether the requested transition started (showModalDialog: is a no-op while a
-// fade is already running).
+/**
+ * @brief Fade the modal dialog and its dimming cover in.
+ * @param delegate The abort delegate for the dialog.
+ * @return YES when the transition started; it is a no-op while a fade is already running.
+ */
 - (BOOL)showModalDialog:(id)delegate;
+/**
+ * @brief Fade the modal dialog and its dimming cover out.
+ * @return YES when the transition started.
+ */
 - (BOOL)hideModalDialog;
 
-// Nav-bar back button target.
+/**
+ * @brief The nav-bar back button's target.
+ * @param sender The tapped button.
+ */
 - (void)pushBarBtnBack:(id)sender;
 
 @end

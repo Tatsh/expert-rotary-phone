@@ -1,37 +1,50 @@
-//
-//  BFCodec.h
-//  pop'n rhythmin
-//
-//  Blowfish (CBC) codec used to protect the purchased-song lists
-//  ("mulist"/"acmulist"). Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin.
-//
-//  Wire format (produced by -encipher:, consumed by -decipher:):
-//    [ ciphertext (paddedLen bytes) ][ origLen : uint32 BE ][ paddedLen :
-//    uint32 BE ]
-//  where paddedLen == (origLen + 7) & ~7. The CBC IV is a fixed 8-byte
-//  constant.
-//
+/** @file
+ * Blowfish (CBC) codec used to protect the purchased-song lists ("mulist"/"acmulist").
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * Wire format (produced by -encipher:, consumed by -decipher:):
+ * `[ ciphertext (paddedLen bytes) ][ origLen : uint32 BE ][ paddedLen : uint32 BE ]`
+ * where `paddedLen == (origLen + 7) & ~7`. The CBC initialisation vector is a fixed 8-byte
+ * constant.
+ */
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief Blowfish (CBC) codec protecting the purchased-song lists.
+ */
 @interface BFCodec : NSObject
 
-// Initialize the cipher key schedule from an NSData key.
-// Ghidra: -[BFCodec cipherInit:] @ 0x5ad64
+/**
+ * @brief Initialise the cipher key schedule from an NSData key.
+ * @param key The key material.
+ * @ghidraAddress 0x5ad64
+ */
 - (void)cipherInit:(NSData *)key;
 
-// Initialize from a raw key buffer. Ghidra: -[BFCodec cipherInit:keyLength:] @
-// 0x5ad0c
+/**
+ * @brief Initialise the cipher key schedule from a raw key buffer.
+ * @param key The key material.
+ * @param length Length of @p key in bytes.
+ * @ghidraAddress 0x5ad0c
+ */
 - (void)cipherInit:(const char *)key keyLength:(int)length;
 
-// Encrypt `data` in place (CBC), appending the 8-byte length trailer.
-// Returns the padded ciphertext length. Ghidra: -[BFCodec encipher:] @ 0x5adb4
+/**
+ * @brief Encrypt @p data in place (CBC), appending the 8-byte length trailer.
+ * @param data The plaintext, replaced by the ciphertext plus trailer.
+ * @return The padded ciphertext length in bytes.
+ * @ghidraAddress 0x5adb4
+ */
 - (unsigned int)encipher:(NSMutableData *)data;
 
-// Decrypt `data` in place (CBC), validating + stripping the trailer and
-// truncating to the original length. Returns NO on a malformed blob.
-// Ghidra: -[BFCodec decipher:] @ 0x5af78
+/**
+ * @brief Decrypt @p data in place (CBC), validating and stripping the trailer and truncating to
+ * the original length.
+ * @param data The ciphertext, replaced by the plaintext.
+ * @return NO on a malformed blob, YES otherwise.
+ * @ghidraAddress 0x5af78
+ */
 - (BOOL)decipher:(NSMutableData *)data;
 
 @end

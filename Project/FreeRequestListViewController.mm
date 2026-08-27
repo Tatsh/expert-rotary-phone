@@ -60,9 +60,15 @@
 #import "UINavigationBar+RHHeader.h" // setBackgroundImageModern:
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
+/**
+ * @brief The recommended-friend list's private teardown, request, and back helpers.
+ */
 @interface FreeRequestListViewController () <DownloaderDelegate>
+/** @brief Drop the parsed row array. */
 - (void)releaseFriendList;
+/** @brief GET the recommended-friend list. */
 - (void)startGetRecommendFriendHttp;
+/** @brief The back-button action. */
 - (void)backButtonFunc;
 @end
 

@@ -11,8 +11,15 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief TouchJSON's extra character sets.
+ */
 @interface NSCharacterSet (Extensions)
 
+/**
+ * @brief The set of line-break characters.
+ * @return The character set.
+ */
 + (NSCharacterSet *)linebreaksCharacterSet;
 
 @end

@@ -33,63 +33,130 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-// Completion for a modal open-app-list / install request: fired with the error
-// (or nil).
+/**
+ * @brief The completion for a modal open-app-list or install request.
+ * @param error What went wrong, or nil on success.
+ */
 typedef void (^RecommendOpenAppliListCallback)(NSError *error);
 
-// Completion for the raw app-list fetch: the app-list payload plus an error
-// (either may be nil).
+/**
+ * @brief The completion for the raw app-list fetch.
+ * @param appliList The app-list payload, or nil on failure.
+ * @param error What went wrong, or nil on success.
+ */
 typedef void (^RecommendAppliListCallback)(NSArray *appliList, NSError *error);
 
+/**
+ * @brief The Applilink recommend core: the app-list fetch, the modal list and the install record.
+ */
 @interface RecommendCore : NSObject
 
-// @ 0xfc47c — the process-wide shared core.
+/**
+ * @brief The process-wide shared core.
+ * @return The singleton.
+ * @ghidraAddress 0xfc47c
+ */
 + (instancetype)sharedInstance;
 
-// @ 0xfc50c — the SSL base URL for the current "ApplilinkRecommend.env"
-// environment.
+/**
+ * @brief The SSL base URL for the current "ApplilinkRecommend.env" environment.
+ * @return The base URL.
+ * @ghidraAddress 0xfc50c
+ */
 + (NSString *)baseUrlSsl;
 
-// @ 0xfc628 / 0xfc638 — the stored country code / category id.
+/**
+ * @brief The stored country code.
+ * @return The country code.
+ * @ghidraAddress 0xfc628
+ */
 - (NSString *)getCountryCode;
+/**
+ * @brief The stored category id.
+ * @return The category id.
+ * @ghidraAddress 0xfc638
+ */
 - (NSString *)getCategoryId;
 
-// @ 0xfc648 — YES once -startWithCountryCode:... has completed initialisation.
+/**
+ * @brief Whether -startWithCountryCode:categoryId:env:callback: has completed initialisation.
+ * @return YES once initialised.
+ * @ghidraAddress 0xfc648
+ */
 - (BOOL)isInitialized;
 
-// @ 0xfc664 — YES if an app that answers `scheme://` is installed.
+/**
+ * @brief Whether an app answering a URL scheme is installed.
+ * @param scheme The scheme to probe, without the "://".
+ * @return YES when such an app is installed.
+ * @ghidraAddress 0xfc664
+ */
 - (BOOL)isInstalledAppliWithScheme:(NSString *)scheme;
 
-// @ 0xfc734 — record the country/category/env and, on first launch, post the
-// install record.
+/**
+ * @brief Record the country, category and environment and, on first launch, post the install
+ * record.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param env The environment name.
+ * @param callback Fired when initialisation finishes.
+ * @ghidraAddress 0xfc734
+ */
 - (void)startWithCountryCode:(NSString *)countryCode
                   categoryId:(NSString *)categoryId
                          env:(NSString *)env
                     callback:(RecommendOpenAppliListCallback)callback;
 
-// @ 0xfcc0c — present the modal recommend app list.
+/**
+ * @brief Present the modal recommend app list.
+ * @param callback Fired when the list is dismissed.
+ * @ghidraAddress 0xfcc0c
+ */
 - (void)openAppliListWithCallback:(RecommendOpenAppliListCallback)callback;
 
-// @ 0xfd1c8 — fetch the raw app list (GET /ad/external/adid/index.php) and
-// deliver it.
+/**
+ * @brief Fetch the raw app list via GET /ad/external/adid/index.php and deliver it.
+ * @param callback Fired with the payload or the error.
+ * @ghidraAddress 0xfd1c8
+ */
 - (void)appliListWithCallBack:(RecommendAppliListCallback)callback;
 
-// @ 0xfd630 — dismiss the modal recommend app list.
+/**
+ * @brief Dismiss the modal recommend app list.
+ * @ghidraAddress 0xfd630
+ */
 - (void)closeAppliList;
 
-// @ 0xfdb28 — lazily create the web-view controller and attach a parent view /
-// delegate.
+/**
+ * @brief Lazily create the web-view controller and attach a parent view and delegate.
+ * @param parentView The host view.
+ * @param delegate The controller delegate.
+ * @ghidraAddress 0xfdb28
+ */
 - (void)setParentView:(UIView *)parentView delegate:(id)delegate;
 
-// @ 0xfdc1c — hide/show the app-list navigation bar.
+/**
+ * @brief Hide or show the app-list navigation bar.
+ * @param hidden YES to hide the bar.
+ * @ghidraAddress 0xfdc1c
+ */
 - (void)setNavigationBarHidden:(BOOL)hidden;
 
-// @ 0xfdc2c — handle an applilink://ext-app:80/... redirect. Returns NO if it
-// consumed the request (launched a companion app), YES to let the web view
-// proceed.
+/**
+ * @brief Handle an `applilink://ext-app:80/...` redirect.
+ * @param request The request the web view is about to load.
+ * @return NO when the redirect was consumed by launching a companion app, YES to let the web view
+ * proceed.
+ * @ghidraAddress 0xfdc2c
+ */
 - (BOOL)redirectWithRequest:(NSURLRequest *)request;
 
-// @ 0xfe4e4 — forward a rotation to the hosted app-list controller.
+/**
+ * @brief Forward a rotation to the hosted app-list controller.
+ * @param orientation The new interface orientation.
+ * @param duration The rotation duration.
+ * @ghidraAddress 0xfe4e4
+ */
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration;
 

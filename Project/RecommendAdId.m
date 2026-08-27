@@ -20,34 +20,82 @@
 // base used by the external-pasteboard web calls.
 #import "RecommendCore.h"
 
+/**
+ * @brief The advertising-id store's private transport and crypto helpers.
+ */
 @interface RecommendAdId () {
-    NSString *_serviceName;
+    NSString *_serviceName; /**< The pasteboard service name. */
 }
 
-// Applilink server-side external-pasteboard transport (iOS 7+ backend).
+// The Applilink server-side external-pasteboard transport; the iOS 7 and later backend.
+
+/**
+ * @brief Read the server-side pasteboard record.
+ * @param udid The device UDID.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param error Receives the failure reason; may be NULL.
+ * @return The record, or nil on failure.
+ */
 - (id)getPasteboardWithUdid:(NSString *)udid
                 countryCode:(NSString *)countryCode
                  categoryId:(NSString *)categoryId
                       error:(NSError **)error;
+/**
+ * @brief Write the server-side pasteboard record.
+ * @param udid The device UDID.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param adIdFrom The advertising id's origin.
+ * @param adType The advertisement type.
+ * @param error Receives the failure reason; may be NULL.
+ */
 - (void)setPasteboardWithUdid:(NSString *)udid
                   countryCode:(NSString *)countryCode
                    categoryId:(NSString *)categoryId
                      adIdFrom:(NSString *)adIdFrom
                        adType:(NSString *)adType
                         error:(NSError **)error;
+/**
+ * @brief Delete the server-side pasteboard record.
+ * @param udid The device UDID.
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param error Receives the failure reason; may be NULL.
+ */
 - (void)deletePasteboardWithUdid:(NSString *)udid
                      countryCode:(NSString *)countryCode
                       categoryId:(NSString *)categoryId
                            error:(NSError **)error;
 
-// Decrypt an archived local-pasteboard record's fields back to plaintext
-// strings.
+/**
+ * @brief Decrypt an archived local-pasteboard record's fields back to plaintext strings.
+ * @param dict The archived record.
+ * @return The decrypted record.
+ */
 - (NSDictionary *)convertToData:(NSDictionary *)dict;
 
-// Crypto helpers (class methods on RecommendAdId). Their implementations below
-// carry the Ghidra address citations.
+// Crypto helpers; their implementations below carry the Ghidra address citations.
+
+/**
+ * @brief The hexadecimal SHA-1 of a string.
+ * @param string The string to hash.
+ * @return The digest.
+ */
 + (NSString *)sha1:(NSString *)string;
+/**
+ * @brief The SHA-1 of a data blob, used to derive the per-record AES key.
+ * @param data The data to hash.
+ * @return The digest.
+ */
 + (NSData *)createHash:(NSData *)data;
+/**
+ * @brief AES-128 with PKCS#7 padding, in either direction.
+ * @param operation kCCEncrypt or kCCDecrypt.
+ * @param value The data to transform.
+ * @param key The AES key.
+ * @return The transformed data, or nil on failure.
+ */
 + (NSData *)cryptorToData:(uint)operation value:(NSData *)value key:(NSData *)key;
 
 @end

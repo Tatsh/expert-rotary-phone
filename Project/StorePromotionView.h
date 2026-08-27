@@ -22,34 +22,69 @@
 
 @class StorePromotionView;
 
+/**
+ * @brief Receives the promotion banner's tap.
+ */
 @protocol StorePromotionViewDelegate <NSObject>
+/**
+ * @brief The banner was tapped.
+ * @param view The banner.
+ * @param packID The pack the visible promo advertises.
+ */
 - (void)storePromotionViewTaped:(StorePromotionView *)view PackID:(int)packID;
 @end
 
+/**
+ * @brief The store's promotion banner: a cross-fading rotation of promo images.
+ */
 @interface StorePromotionView : UIView <ImageDownloaderDelegate> {
-    UIActivityIndicatorView *m_Indicator; // shown until the first image loads
-    UIImageView *m_FrontImageView;        // currently visible promo
-    UIImageView *m_NextImageView;         // fades in on top during a transition
-    NSMutableArray *m_PromotionDataArray; // dicts { ID, ImageURL, image }
-    int m_Index;                          // current promo index (-1 = none yet)
-    NSMutableArray *m_ImageDownloader;    // in-flight ImageDownloaders
-    NSTimer *m_Timer;                     // 2.5s rotation timer
-    __weak id<StorePromotionViewDelegate> m_Delegate;
+    UIActivityIndicatorView *m_Indicator; /**< Shown until the first image loads. */
+    UIImageView *m_FrontImageView;        /**< The currently visible promo. */
+    UIImageView *m_NextImageView;         /**< Fades in on top during a transition. */
+    /** The promo records: dictionaries of ID, ImageURL and image. */
+    NSMutableArray *m_PromotionDataArray;
+    int m_Index;                       /**< The current promo index; -1 before the first. */
+    NSMutableArray *m_ImageDownloader; /**< The in-flight ImageDownloaders. */
+    NSTimer *m_Timer;                  /**< The 2.5-second rotation timer. */
+    __weak id<StorePromotionViewDelegate> m_Delegate; /**< The tap delegate. */
 }
 
+/** The tap delegate. */
 @property(nonatomic, weak) id<StorePromotionViewDelegate> delegate;
 
-// Recovered accessors/controls (impls in .mm; read by StoreMainViewController).
-- (int)getImageCount;  // @ 0x7a2c4
-- (void)stopAnimation; // @ 0x7a6ac — stop the rotation timer
-- (int)getPackID;      // @ 0x79f84 — the currently-shown promo's pack id
+// Recovered accessors and controls, implemented in the .mm and read by StoreMainViewController.
 
-// Resize both banner image views.
+/**
+ * @brief How many promo images are loaded.
+ * @return The image count.
+ * @ghidraAddress 0x7a2c4
+ */
+- (int)getImageCount;
+/**
+ * @brief Stop the rotation timer.
+ * @ghidraAddress 0x7a6ac
+ */
+- (void)stopAnimation;
+/**
+ * @brief The currently-shown promo's pack id.
+ * @return The pack id.
+ * @ghidraAddress 0x79f84
+ */
+- (int)getPackID;
+
+/**
+ * @brief Resize both banner image views.
+ * @param size The new size.
+ */
 - (void)setImageViewSize:(CGSize)size;
-// Begin loading the promo images described by an array of { ID, ImageURL }
-// dicts.
+/**
+ * @brief Begin loading the promo images.
+ * @param promotionData An array of dictionaries carrying ID and ImageURL.
+ */
 - (void)setImageURLs:(NSArray *)promotionData;
-// Stop timers and cancel in-flight downloads.
+/**
+ * @brief Stop the timers and cancel every in-flight download.
+ */
 - (void)cancel;
 
 @end

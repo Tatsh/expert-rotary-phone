@@ -11,23 +11,32 @@
 #import "RewardNetworkIndicator.h"
 #import "RewardNetworkUtilities.h"
 
+/**
+ * @brief The recommend web view's private overlay state and helpers.
+ */
 @interface RecommendWebView () {
-    UIView *parentView;                 // host view for the indicator overlay (retained)
-    RewardNetworkIndicator *_indicator; // busy-spinner overlay
-    BOOL isIndicator;                   // YES if the overlay is enabled
-    BOOL nowHidden;                     // last value passed through -setHidden:
-    int _viewType;                      // ad layout selector
+    UIView *parentView;                 /**< The host view for the indicator overlay. */
+    RewardNetworkIndicator *_indicator; /**< The busy-spinner overlay. */
+    BOOL isIndicator;                   /**< Whether the overlay is enabled. */
+    BOOL nowHidden;                     /**< The last value passed through -setHidden:. */
+    int _viewType;                      /**< The ad layout selector. */
 }
 
-// Create and attach the indicator overlay if enabled (impl below).
+/** @brief Create and attach the indicator overlay when it is enabled. */
 - (void)loadRecommendView;
-// Detach and drop the indicator overlay (impl below).
+/** @brief Detach and drop the indicator overlay. */
 - (void)unloadRecommendView;
-// Show/close the indicator overlay (impl below).
+/**
+ * @brief Show or close the indicator overlay.
+ * @param show YES to show it.
+ */
 - (void)updateIndicator:(BOOL)show;
-// Unload the overlay, remove from superview, drop the delegate (impl below).
+/** @brief Unload the overlay, remove the view from its superview and drop the delegate. */
 - (void)appliListClosed;
-// Shared load-failure handler for both web-view backends (impl below).
+/**
+ * @brief The shared load-failure handler for both web-view backends.
+ * @param error What went wrong.
+ */
 - (void)handleNavigationFailWithError:(NSError *)error;
 
 @end

@@ -18,38 +18,53 @@
 
 #import <UIKit/UIKit.h>
 
-// Host that owns the split panel behind this options screen. When the player
-// picks a song to play (or resumes an in-progress AC play), the options screen
-// asks its delegate to hide the panel so the GL play scene shows through.
-// Ghidra: the _delegate ivar is typed id<AcViewerViewControllerDelegate> and is
-// sent -startHiddenAnimation:.
+/**
+ * @brief The host that owns the split panel behind the options screen.
+ *
+ * When the player picks a song to play, or resumes an in-progress arcade play, the options screen
+ * asks its delegate to hide the panel so the GL play scene shows through. In the binary the
+ * _delegate ivar is typed id<AcViewerViewControllerDelegate> and is sent -startHiddenAnimation:.
+ */
 @protocol AcViewerViewControllerDelegate <NSObject>
+/**
+ * @brief Hide the split panel so the play scene shows through.
+ * @param animated YES to fade the panel out, NO to hide it after a short delay.
+ */
 - (void)startHiddenAnimation:(BOOL)animated;
 @end
 
+/**
+ * @brief The arcade viewer's per-song options screen.
+ */
 @interface AcViewerOptionViewController : UITableViewController
 
-// Synthesized accessors: delegate getter @ 0xe0b20, setDelegate: @ 0xe0b30
-// (assign — the binary stores the pointer raw, with no retain).
-// @ 0xe0b20
-// @ 0xe0b30
+/** The host that hides the split panel. The binary stores the pointer raw, with no retain. Getter
+ * @ 0xe0b20, setter @ 0xe0b30. */
 @property(nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
-// Build the options screen for the AC-main (in-game) flow: sets _forAcMain,
-// keeps the C++ AcViewerTask pointer, wraps itself in its own
-// UINavigationController and installs a back button. `acMain` is the C++
-// AcViewerTask* (opaque here). Ghidra: initForAcMain: @ 0xdfc0c.
-class AcViewerTask; // C++ task (System/src/Task/AcViewerTask.h); this header is
-                    // ObjC++
+class AcViewerTask; // C++ task (System/src/Task/AcViewerTask.h); this header is ObjC++
+/**
+ * @brief Build the options screen for the arcade-main (in-game) flow.
+ *
+ * It sets _forAcMain, keeps the C++ task pointer, wraps itself in its own UINavigationController
+ * and installs a back button.
+ * @param acMain The C++ AcViewerTask, opaque here.
+ * @return The initialised controller.
+ * @ghidraAddress 0xdfc0c
+ */
 - (instancetype)initForAcMain:(AcViewerTask *)acMain;
 
-// Fade the AC-main nav controller's view in over 0.3 s. Ghidra:
-// startOpenAnimationForAcMain @ 0xe0820.
+/**
+ * @brief Fade the arcade-main navigation controller's view in over 0.3 s.
+ * @ghidraAddress 0xe0820
+ */
 - (void)startOpenAnimationForAcMain;
 
-// Fade the panel out over 0.3 s; on didStop tears down (endCloseAnimation, or,
-// on the AC-main flow, endCloseAnimationForAcMain). Ghidra: startCloseAnimation
-// @ 0xe0960.
+/**
+ * @brief Fade the panel out over 0.3 s; on didStop it tears down via endCloseAnimation, or
+ * endCloseAnimationForAcMain on the arcade-main flow.
+ * @ghidraAddress 0xe0960
+ */
 - (void)startCloseAnimation;
 
 @end

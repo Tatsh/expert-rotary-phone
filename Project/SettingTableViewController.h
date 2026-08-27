@@ -53,15 +53,28 @@
 
 #import "CommonAlertView.h" // CommonAlertViewDelegate (retire-confirm callback)
 
+/**
+ * @brief The account settings list, including the retire flow.
+ */
 @interface SettingTableViewController : UITableViewController <CommonAlertViewDelegate>
 
-// Wrap self in a fresh navigation controller (with the phone back button) and
-// return it.
-- (UINavigationController *)initAtNavigationController
-    __attribute__((objc_method_family(none))); // @ 0x7ed98
+/**
+ * @brief Wrap self in a fresh navigation controller with the phone back button.
+ * @return The navigation controller.
+ * @ghidraAddress 0x7ed98
+ */
+- (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0x7efec
-- (void)startCloseAnimation; // @ 0x7f130
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0x7efec
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the screen out.
+ * @ghidraAddress 0x7f130
+ */
+- (void)startCloseAnimation;
 
 @end
 

@@ -8,12 +8,19 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One sugoroku main-map row.
+ */
 @interface MapListCell : UITableViewCell
 
-// Bind the row to a sugoroku main-map entry. `mapValue` is an NSValue wrapping
-// the row struct { short mapId; short; NSString *name; }; `isSelect` picks the
-// highlighted banner. Draws the banner, the map icon, the name label, and —
-// when all three sub-maps are cleared — a "cleared" badge.
+/**
+ * @brief Bind the row to a sugoroku main-map entry.
+ *
+ * It draws the banner, the map icon, the name label, and — once all three sub-maps are cleared —
+ * a "cleared" badge.
+ * @param mapValue An NSValue wrapping the row struct `{ short mapId; short; NSString *name; }`.
+ * @param isSelect YES to draw the highlighted banner.
+ */
 - (void)setMapData:(NSValue *)mapValue isSelect:(BOOL)isSelect;
 
 @end

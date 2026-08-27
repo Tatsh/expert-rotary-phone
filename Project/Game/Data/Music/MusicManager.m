@@ -21,9 +21,15 @@
 #import "TreasureData+Store.h" // +isOpenMusic:inManagedObjectContext:
 #import "UserSettingData.h"    // inviteCnt / getOpenedLoginBonusId / isBemaniCollaboOpened
 
-// LoginBonusView is a UI class without a project header in this reconstruction;
-// only its +getRewardMaxCnt class method is referenced from here.
+/**
+ * @brief A UI class without a project header in this reconstruction; only its +getRewardMaxCnt
+ * class method is referenced from here.
+ */
 @interface LoginBonusView : NSObject
+/**
+ * @brief The number of login-bonus rewards on offer.
+ * @return The reward count.
+ */
 + (int)getRewardMaxCnt;
 @end
 

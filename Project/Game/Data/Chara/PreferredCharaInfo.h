@@ -1,20 +1,20 @@
-//
-//  PreferredCharaInfo.h
-//  pop'n rhythmin
-//
-//  Set of the player's preferred/favorite character ids. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin.
-//
+/** @file
+ * A set of the player's preferred character ids. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin.
+ */
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief One preferred-character set: the music that unlocks it and the characters it grants.
+ */
 @interface PreferredCharaInfo : NSObject
 
-// Synthesized: musicIds @ 0x64278, setMusicIds: @ 0x64288.
+/** The music ids whose purchase unlocks this set. Getter @ 0x64278, setter @ 0x64288. */
 @property(nonatomic, strong) NSArray *musicIds;
-// Synthesized: charaIds @ 0x64298, setCharaIds: @ 0x642a8.
+/** The character ids this set grants. Getter @ 0x64298, setter @ 0x642a8. */
 @property(nonatomic, strong) NSArray *charaIds;
-// Synthesized: getFlg @ 0x642b8, setGetFlg: @ 0x642d0 (atomic unlock flag).
+/** Whether the set has been unlocked. Getter @ 0x642b8, setter @ 0x642d0. */
 @property(atomic) BOOL getFlg;
 
 @end

@@ -19,9 +19,12 @@
 
 #import "BFCodec.h"
 
+/**
+ * @brief The Blowfish key schedule: the P-array and the four S-boxes.
+ */
 typedef struct {
-    uint32_t P[18];
-    uint32_t S[4][256];
+    uint32_t P[18];     /**< The 18-entry P-array (subkeys). */
+    uint32_t S[4][256]; /**< The four 256-entry S-boxes. */
 } BlowfishCtx;
 
 // Zero the entire Blowfish context (P-array + S-boxes), wiping any key

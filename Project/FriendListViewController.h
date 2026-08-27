@@ -14,10 +14,16 @@
 
 #import "DownloadMain.h" // DownloadMainDelegate (friend-list completion)
 
+/**
+ * @brief The friend ranking list, pushed by the friend hub's "list" button.
+ */
 @interface FriendListViewController : UITableViewController <DownloadMainDelegate>
 
-// The friend-list request completed; the object is an NSNumber BOOL (success).
-// Sent by DownloadMain via performSelector: (DownloadMainDelegate). @ 0xb15ec.
+/**
+ * @brief The friend-list request completed. DownloadMain sends this via performSelector:.
+ * @param result An NSNumber wrapping a BOOL indicating success.
+ * @ghidraAddress 0xb15ec
+ */
 - (void)downloadMainFinished:(NSNumber *)result;
 
 @end

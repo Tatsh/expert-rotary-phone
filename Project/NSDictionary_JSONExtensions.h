@@ -12,7 +12,22 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief TouchJSON convenience constructors that parse JSON into a dictionary.
+ */
 @interface NSDictionary (NSDictionary_JSONExtensions)
+/**
+ * @brief Parse JSON bytes into a dictionary.
+ * @param inData The JSON bytes.
+ * @param outError Receives the parse error; may be NULL.
+ * @return The parsed dictionary, or nil on failure.
+ */
 + (NSDictionary *)dictionaryWithJSONData:(NSData *)inData error:(NSError **)outError;
+/**
+ * @brief Parse a JSON string into a dictionary.
+ * @param inString The JSON text.
+ * @param outError Receives the parse error; may be NULL.
+ * @return The parsed dictionary, or nil on failure.
+ */
 + (NSDictionary *)dictionaryWithJSONString:(NSString *)inString error:(NSError **)outError;
 @end

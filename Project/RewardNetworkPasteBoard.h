@@ -14,41 +14,88 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief Cross-app record storage backed by named pasteboards, one per storage slot.
+ */
 @interface RewardNetworkPasteBoard : NSObject
 
-// @ 0xf5988 — designated initializer; copies the service name and pasteboard
-// data type (UTI) into _serviceName / _dataType.
+/**
+ * @brief The designated initialiser; it copies the service name and pasteboard data type into
+ * _serviceName and _dataType.
+ * @param serviceName The pasteboard service name.
+ * @param dataType The pasteboard data type (a UTI).
+ * @return The initialised store.
+ * @ghidraAddress 0xf5988
+ */
 - (instancetype)initWithServiceName:(NSString *)serviceName dataType:(NSString *)dataType;
 
-// @ 0xf5a60 — first decoded record found by scanning all storage slots.
+/**
+ * @brief The first decoded record found by scanning every storage slot.
+ * @return The record, or nil when no slot holds one.
+ * @ghidraAddress 0xf5a60
+ */
 - (NSDictionary *)storageData;
 
-// @ 0xf5bb8 — decoded record at `storageIndex`, or nil (+ error) on
-// miss/corruption.
+/**
+ * @brief The decoded record at one slot.
+ * @param storageIndex The slot index.
+ * @param error Receives the failure reason; may be NULL.
+ * @return The record, or nil on a miss or corruption.
+ * @ghidraAddress 0xf5bb8
+ */
 - (NSDictionary *)storageDataWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error;
 
-// @ 0xf604c — write `data` into the first free slot; returns the decoded
-// record.
+/**
+ * @brief Write a value into the first free slot.
+ * @param data The value to store.
+ * @param error Receives the failure reason; may be NULL.
+ * @return The decoded record, or nil on failure.
+ * @ghidraAddress 0xf604c
+ */
 - (NSDictionary *)writeStorageData:(NSString *)data error:(NSError **)error;
 
-// @ 0xf6214 — write `data` into slot `storageIndex`; returns the decoded
-// record.
+/**
+ * @brief Write a value into one slot.
+ * @param data The value to store.
+ * @param storageIndex The slot index.
+ * @param error Receives the failure reason; may be NULL.
+ * @return The decoded record, or nil on failure.
+ * @ghidraAddress 0xf6214
+ */
 - (NSDictionary *)writeStorageData:(NSString *)data
                       storageIndex:(NSInteger)storageIndex
                              error:(NSError **)error;
 
-// @ 0xf6560 — remove the record (and its pasteboard) at `storageIndex`.
+/**
+ * @brief Remove the record, and its pasteboard, at one slot.
+ * @param storageIndex The slot index.
+ * @param error Receives the failure reason; may be NULL.
+ * @return YES on success.
+ * @ghidraAddress 0xf6560
+ */
 - (BOOL)deleteWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error;
 
-// @ 0xf6b90 — decode a stored record: add StorageIndex and decrypt Value to a
-// string.
+/**
+ * @brief Decode a stored record: add its StorageIndex and decrypt its Value to a string.
+ * @param data The raw stored record.
+ * @param storageIndex The slot the record came from.
+ * @return The decoded record.
+ * @ghidraAddress 0xf6b90
+ */
 - (NSDictionary *)convertToData:(NSDictionary *)data storageIndex:(NSInteger)storageIndex;
 
-// @ 0xf6d64 — the effective service name, prefixed with the reward environment
-// when one other than "0" is configured.
+/**
+ * @brief The effective service name, prefixed with the reward environment when one other than "0"
+ * is configured.
+ * @return The service name.
+ * @ghidraAddress 0xf6d64
+ */
 - (NSString *)getServiceName;
 
-// @ 0xf6e48 — scan every slot, reading its decoded Value (debug helper).
+/**
+ * @brief Scan every slot, reading its decoded value; a debug helper.
+ * @ghidraAddress 0xf6e48
+ */
 - (void)debugLog;
 
 @end

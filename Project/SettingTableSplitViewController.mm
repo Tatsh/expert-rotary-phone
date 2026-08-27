@@ -33,21 +33,31 @@ static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
+/**
+ * @brief The settings hub's private state and helpers.
+ */
 @interface SettingTableSplitViewController () {
 @public // the de-inlined static helpers (settingTableSyncRightViewFrame etc.)
     // reach these via self->, matching the binary's by-offset access from
     // standalone functions.
-    BOOL _isAnimationing;
-    SettingTopViewController *_leftViewCtrl; // the four-button left column
-    UINavigationController *_rightViewCtrl;  // the detail pane (swapped per tab)
-    UIImageView *_arrowImageView;            // selection arrow (slides between rows)
-    int _selectedIndex;                      // current SettingPane (0 game .. 3 other)
-    CGRect _viewFrm[4];                      // right-pane frame per tab
-    CGRect _arrowFrm[4];                     // arrow frame per tab
+    BOOL _isAnimationing; /**< An open, close or pane-swap animation is running. */
+    SettingTopViewController *_leftViewCtrl; /**< The four-button left column. */
+    UINavigationController *_rightViewCtrl;  /**< The detail pane, swapped per tab. */
+    UIImageView *_arrowImageView;            /**< The selection arrow; it slides between rows. */
+    int _selectedIndex;                      /**< The current SettingPane: 0 game to 3 other. */
+    CGRect _viewFrm[4];                      /**< The right-pane frame, per tab. */
+    CGRect _arrowFrm[4];                     /**< The arrow frame, per tab. */
 }
+/** @brief The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief The close fade finished; tear the hub down. */
 - (void)endCloseAnimation;
+/**
+ * @brief Slide the arrow to a section and cross-fade the right pane to it.
+ * @param index The section to show.
+ */
 - (void)startViewAnimation:(SettingPane)index;
+/** @brief The dim cover was tapped; close the hub. */
 - (void)handleTapCoverView;
 @end
 

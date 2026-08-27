@@ -26,21 +26,30 @@ class AepManager;
 class AepLyrCtrl; // the title screen's animated sprite layer (Ghidra ctor
                   // FUN_0002c7d8)
 
+/**
+ * @brief The title / first-run task: the animated title screen and the first-run setup flow it
+ * gates.
+ */
 class TitleTask : public ne::C_TASK {
 public:
-    /// @brief Construct the title / first-run task (spawned by BootLogoTask::finish).
-    /// @note Ghidra: TitleTask::TitleTask (FUN_0002b678).
+    /**
+     * @brief Construct the title / first-run task (spawned by BootLogoTask::finish).
+     * @ghidraAddress 0x2b678
+     */
     TitleTask();
 
-    /// @brief Detach the conversion button from its superview, then run the base
-    ///        task teardown.
-    /// @note Ghidra: TitleTask::~TitleTask (FUN_0002b6b0).
+    /**
+     * @brief Detach the conversion button from its superview, then run the base task teardown.
+     * @ghidraAddress 0x2b6b0
+     */
     ~TitleTask() override;
 
-    /// @brief Per-frame tick: drive the 10-state title / first-run machine, then
-    ///        advance and draw the title AEP layers and the version label.
-    /// @param deltaMs Frame delta (unused by this task; passed by the base scheduler).
-    /// @note Ghidra: TitleTask::update (FUN_0002b838).
+    /**
+     * @brief Per-frame tick: drive the 10-state title / first-run machine, then advance and draw
+     * the title AEP layers and the version label.
+     * @param deltaMs Frame delta; unused by this task, and passed by the base scheduler.
+     * @ghidraAddress 0x2b838
+     */
     void update(int deltaMs) override;
 
 private:

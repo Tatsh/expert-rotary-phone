@@ -33,18 +33,19 @@ static neTextTextureMgr *g_pTextTextureMgr = nullptr;
 // (0x400 vertices / 0x600 indices).
 static unsigned g_pTextQuadIndexBuffer = 0;
 
-// One cached glyph record (Ghidra: the 0x20-byte node allocated by
-// createTextGlyphEntry and filled by renderGlyphToAtlas). Keyed by its UTF-8
-// bytes + scaled point size.
+/**
+ * @brief One cached glyph record: the 0x20-byte node allocated by createTextGlyphEntry and filled
+ * by renderGlyphToAtlas, keyed by its UTF-8 bytes and scaled point size.
+ */
 struct neGlyph {
-    char *key = nullptr;     // +0x00 UTF-8 bytes of the glyph (nul-terminated) — cache key
-    int32_t pointSize = 0;   // +0x04 scaled point size — second half of the cache key
-    neGlyph *next = nullptr; // +0x08 cache list link
-    int32_t atlasId = 0;     // +0x0c atlas index the glyph packed into
-    int32_t advance = 0;     // +0x10 glyph cell width / horizontal advance
-    int32_t height = 0;      // +0x14 glyph cell height
-    int32_t cellX = 0;       // +0x18 cell origin in the atlas
-    int32_t cellY = 0;       // +0x1c
+    char *key = nullptr;     /**< +0x00 Nul-terminated UTF-8 bytes of the glyph; the cache key. */
+    int32_t pointSize = 0;   /**< +0x04 Scaled point size; the second half of the cache key. */
+    neGlyph *next = nullptr; /**< +0x08 Next node in the cache list. */
+    int32_t atlasId = 0;     /**< +0x0c Index of the atlas the glyph packed into. */
+    int32_t advance = 0;     /**< +0x10 Glyph cell width, and the horizontal advance. */
+    int32_t height = 0;      /**< +0x14 Glyph cell height. */
+    int32_t cellX = 0;       /**< +0x18 Cell origin x within the atlas. */
+    int32_t cellY = 0;       /**< +0x1c Cell origin y within the atlas. */
 };
 
 // Ghidra: FUN_00017998.
@@ -181,16 +182,20 @@ void neTextTextureMgr::createNewTextTexture() {
     atlases = atlas;
 }
 
-// One textured glyph vertex (16 bytes): GL_FLOAT position, GL_SHORT UV, premult
-// RGBA8. The backend specifies the position array as GL_FLOAT (0x1406, verified
-// in FUN_0001342c), so the positions must be stored as floats — integer bytes
-// would be reinterpreted as near-zero denormals and collapse every glyph quad.
+/**
+ * @brief One textured glyph vertex (16 bytes): GL_FLOAT position, GL_SHORT UV, premultiplied
+ * RGBA8.
+ *
+ * The backend specifies the position array as GL_FLOAT (0x1406, verified in FUN_0001342c), so the
+ * positions must be stored as floats — integer bytes would be reinterpreted as near-zero denormals
+ * and collapse every glyph quad.
+ */
 struct neGlyphVertex {
-    float x;
-    float y;
-    int16_t u;
-    int16_t v;
-    uint8_t rgba[4];
+    float x;         /**< Position x, in pixels. */
+    float y;         /**< Position y, in pixels. */
+    int16_t u;       /**< Normalised texture u, 0..32767. */
+    int16_t v;       /**< Normalised texture v, 0..32767. */
+    uint8_t rgba[4]; /**< Premultiplied colour, in R, G, B, A order. */
 };
 
 // @ 0x17ad4

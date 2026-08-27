@@ -10,11 +10,17 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One row of the friend-score list.
+ */
 @interface FriendScoreTableCell : UITableViewCell
 
-// Populate the row from an NSValue-wrapped ScoreDataStruct (see the .m).
-// Rebuilt on every reuse; the local player's own row (nil name) gets the "you"
-// marker. @ 0xae288.
+/**
+ * @brief Populate the row from a score record; it is rebuilt on every reuse.
+ * @param scoreData An NSValue-wrapped ScoreDataStruct (see the .m). A nil name marks the local
+ * player's own row, which gets the "you" marker.
+ * @ghidraAddress 0xae288
+ */
 - (void)setScoreData:(NSValue *)scoreData;
 
 @end

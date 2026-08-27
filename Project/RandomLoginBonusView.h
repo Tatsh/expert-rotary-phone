@@ -20,10 +20,15 @@
 
 #import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 
+/**
+ * @brief The randomised login-bonus reveal.
+ */
 @interface RandomLoginBonusView : UIView <CustomAlertViewDelegate>
 
-// Install into the root scene view, credit the bonus and start the open
-// animation. Ghidra: @ 0x19960
+/**
+ * @brief Install into the root scene view, credit the bonus and start the open animation.
+ * @ghidraAddress 0x19960
+ */
 - (void)show;
 
 @end

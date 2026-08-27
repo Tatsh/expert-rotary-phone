@@ -16,10 +16,15 @@
 
 #import "ImageDownloader.h"
 
+/**
+ * @brief One recommended-pack row, which downloads its own thumbnail.
+ */
 @interface RecommendListCell : UITableViewCell <ImageDownloaderDelegate>
 
-// Rebuild the row from an NSValue-wrapped recommend record and kick off the
-// pack thumbnail download.
+/**
+ * @brief Rebuild the row from a recommend record and kick off the pack thumbnail download.
+ * @param recommendValue An NSValue-wrapped RecommendData.
+ */
 - (void)setRecommendData:(NSValue *)recommendValue;
 
 @end

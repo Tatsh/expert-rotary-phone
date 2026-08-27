@@ -9,10 +9,12 @@
 
 #import "neEngineBridge.h"
 
-// The NSValue payload getValue: fills for a sort-option row.
+/**
+ * @brief The NSValue payload -getValue: fills for a sort-option row.
+ */
 typedef struct {
-    short sortType;
-    unsigned char isChecked;
+    short sortType;          /**< The sort order this row selects. */
+    unsigned char isChecked; /**< Non-zero when this row is the active sort order. */
 } SortRowValue;
 
 // @ 0xc5418 — plain non-selectable cell; content bound by the VC on reuse.

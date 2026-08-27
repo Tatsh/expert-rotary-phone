@@ -42,9 +42,15 @@ static NSArray *BuildSortDataArray(short currentSort) {
     return [NSArray arrayWithArray:rows];
 }
 
+/**
+ * @brief The sort-option picker's private transition completions and back helper.
+ */
 @interface SortSelectViewController ()
+/** @brief The open transition finished: clear the re-entry guard. */
 - (void)endOpenAnimation;
+/** @brief The close transition finished: detach the view and notify the owner. */
 - (void)endCloseAnimation;
+/** @brief The back-button action. */
 - (void)backButtonFunc;
 @end
 

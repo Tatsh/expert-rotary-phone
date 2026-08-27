@@ -63,10 +63,23 @@
 #import "StoreUtil.h"      // +requestFriendURL
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
+/**
+ * @brief The free-request confirm overlay's private layout and request helpers.
+ */
 @interface FreeRequestDetail ()
+/**
+ * @brief Draw one clear-count number onto the medal sheet.
+ * @param count The count to draw.
+ * @param sheet The difficulty sheet the count belongs to.
+ * @param y The row's y offset.
+ * @param view The view to add the digits to.
+ */
 - (void)addCntNum:(int)count sheet:(int)sheet y:(int)y view:(UIView *)view;
+/** @brief Fade the card out. */
 - (void)startCloseAnimation;
+/** @brief POST the friend request for the shown player. */
 - (void)startRequestFriendHttp;
+/** @brief The cancel button was tapped. */
 - (void)touchedCancel;
 @end
 

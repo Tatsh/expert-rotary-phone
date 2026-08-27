@@ -27,58 +27,109 @@
 #import "RecommendCore.h"    // RecommendCore singleton + RecommendOpenAppliListCallback
 #import "RecommendWebView.h" // RecommendWebView + RecommendWebViewOpenAppliListCallback
 
+/**
+ * @brief The public facade over RecommendCore and RecommendWebView.
+ */
 @interface RecommendNetwork : NSObject
 
-// Backed by the int `_initializeFlg` ivar; cleared to 0 when the shared
-// instance is allocated.
+/** Backed by the int `_initializeFlg` ivar; cleared to 0 when the shared instance is allocated. */
 @property(nonatomic, assign) int initializeFlg;
 
-// @ 0xebbb4 — the process-wide shared RecommendNetwork facade.
+/**
+ * @brief The process-wide shared facade.
+ * @return The singleton.
+ * @ghidraAddress 0xebbb4
+ */
 + (instancetype)sharedInstance;
 
-// @ 0xebc44 — allocate the singleton: create the "RewardNetwork" serial queue
-// and, on the first call, allocate the shared instance via [super
-// allocWithZone:] and clear its initializeFlg.
+/**
+ * @brief Allocate the singleton: create the "RewardNetwork" serial queue and, on the first call,
+ * allocate the shared instance via [super allocWithZone:] and clear its initializeFlg.
+ * @param zone The zone to allocate in.
+ * @return The shared instance.
+ * @ghidraAddress 0xebc44
+ */
 + (id)allocWithZone:(NSZone *)zone;
 
-// @ 0xebd24 — forward to [RecommendCore sharedInstance]: record
-// country/category/env and start.
+/**
+ * @brief Record the country, category and environment and start, by forwarding to
+ * [RecommendCore sharedInstance].
+ * @param countryCode The country code.
+ * @param categoryId The category id.
+ * @param env The environment name.
+ * @param callback Fired when initialisation finishes.
+ * @ghidraAddress 0xebd24
+ */
 - (void)startWithCountryCode:(NSString *)countryCode
                   categoryId:(NSString *)categoryId
                          env:(NSString *)env
                     callback:(RecommendOpenAppliListCallback)callback;
 
-// @ 0xebdbc — show the modal app list with the navigation bar visible.
+/**
+ * @brief Show the modal app list with the navigation bar visible.
+ * @param callback Fired when the list is dismissed.
+ * @ghidraAddress 0xebdbc
+ */
 - (void)openAppliListWithCallback:(RecommendOpenAppliListCallback)callback;
 
-// @ 0xebe4c — host the app list inside parentView (nav bar hidden when
-// embedded), no callback.
+/**
+ * @brief Host the app list inside a parent view, with the navigation bar hidden while embedded.
+ * @param parentView The host view.
+ * @param delegate The controller delegate.
+ * @ghidraAddress 0xebe4c
+ */
 - (void)openAppliListWithParentView:(UIView *)parentView delegate:(id)delegate;
 
-// @ 0xebf24 — host the app list inside parentView (nav bar hidden when
-// embedded) with callback.
+/**
+ * @brief Host the app list inside a parent view, with the navigation bar hidden while embedded,
+ * and report completion.
+ * @param parentView The host view.
+ * @param callback Fired when the list is dismissed.
+ * @ghidraAddress 0xebf24
+ */
 - (void)openAppliListWithParentView:(UIView *)parentView
                            callback:(RecommendOpenAppliListCallback)callback;
 
-// @ 0xec000 — dismiss the modal app list.
+/**
+ * @brief Dismiss the modal app list.
+ * @ghidraAddress 0xec000
+ */
 - (void)closeAppliList;
 
-// @ 0xec044 — create a RecommendWebView with the given frame/viewType, add it
-// to parent (or the key window when parent is nil) and load the recommend page.
+/**
+ * @brief Create a RecommendWebView, add it to a parent, and load the recommend page.
+ * @param rect The web view's frame.
+ * @param parent The host view, or nil to use the key window.
+ * @param viewType The ad layout: 0..3.
+ * @param callback Fired with the load error, or nil.
+ * @ghidraAddress 0xec044
+ */
 - (void)openRecommendPageWithCreateWebViewRect:(CGRect)rect
                                         parent:(UIView *)parent
                                       viewType:(int)viewType
                                       callback:(RecommendWebViewOpenAppliListCallback)callback;
 
-// @ 0xec170 — remove every RecommendWebView from parentView (or the key window
-// when nil).
+/**
+ * @brief Remove every RecommendWebView from a parent view.
+ * @param parentView The host view, or nil to use the key window.
+ * @ghidraAddress 0xec170
+ */
 - (void)closeRecommendPageWithParentView:(UIView *)parentView;
 
-// @ 0xec2dc — hide/show every RecommendWebView under parentView (or the key
-// window when nil).
+/**
+ * @brief Hide or show every RecommendWebView under a parent view.
+ * @param parentView The host view, or nil to use the key window.
+ * @param flag YES to show the views, NO to hide them.
+ * @ghidraAddress 0xec2dc
+ */
 - (void)setRecommendPageVisibleWithParentView:(UIView *)parentView flag:(BOOL)flag;
 
-// @ 0xec460 — forward a rotation to the hosted app-list controller.
+/**
+ * @brief Forward a rotation to the hosted app-list controller.
+ * @param orientation The new interface orientation.
+ * @param duration The rotation duration.
+ * @ghidraAddress 0xec460
+ */
 - (void)rotateAppliListWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                        duration:(NSTimeInterval)duration;
 

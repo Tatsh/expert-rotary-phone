@@ -23,18 +23,35 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The customer-support settings list.
+ */
 @interface SettingCustomerTableViewController : UITableViewController
 
-// Wrap self in a fresh navigation controller (with a back button) and return it
-// (the phone layout). Ghidra: initAtNavigationController @ 0xd3460.
+/**
+ * @brief Wrap self in a fresh navigation controller with a back button; the phone layout.
+ * @return The navigation controller.
+ * @ghidraAddress 0xd3460
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0xd36ec
-- (void)startCloseAnimation; // @ 0xd3830
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0xd36ec
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the screen out.
+ * @ghidraAddress 0xd3830
+ */
+- (void)startCloseAnimation;
 
-// Back-button action wired up by initAtNavigationController (->
-// startCloseAnimation).
-- (void)settingClose; // @ 0xd4170
+/**
+ * @brief The back-button action wired up by -initAtNavigationController; it calls
+ * -startCloseAnimation.
+ * @ghidraAddress 0xd4170
+ */
+- (void)settingClose;
 
 @end
 

@@ -23,19 +23,30 @@
 
 #import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 
+/**
+ * @brief The login-bonus reward board.
+ */
 @interface LoginBonusView : UIImageView <CustomAlertViewDelegate>
 
-// Reveal the board, grant rewards and start the open animation. Ghidra: @
-// 0x7c728
+/**
+ * @brief Reveal the board, grant the rewards and start the open animation.
+ * @ghidraAddress 0x7c728
+ */
 - (void)show;
 
-// Grant every login-bonus reward whose unlock threshold was crossed since the
-// last time the board was shown (treasure points / music unlock). Ghidra: @
-// 0x7c594
+/**
+ * @brief Grant every login-bonus reward whose unlock threshold was crossed since the board was
+ * last shown: treasure points and music unlocks.
+ * @ghidraAddress 0x7c594
+ */
 - (void)getReward;
 
-// Number of reward rows defined for the active login-bonus id (table terminator
-// scan). Used by this class and elsewhere. Ghidra: @ 0x7bf70
+/**
+ * @brief The number of reward rows defined for the active login-bonus id, found by scanning to the
+ * table terminator.
+ * @return The reward count.
+ * @ghidraAddress 0x7bf70
+ */
 + (int)getRewardMaxCnt;
 
 @end

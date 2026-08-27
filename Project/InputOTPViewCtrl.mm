@@ -18,10 +18,29 @@
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController
 
 // Own privates (button targets wired up by -initWithCategoryView:).
+/**
+ * @brief The OTP entry screen's private actions and keyboard observers.
+ */
 @interface InputOTPViewCtrl ()
+/**
+ * @brief The decide button was tapped: hand the entered code back to the owner.
+ * @param sender The tapped button.
+ */
 - (void)touchedDecideButton:(id)sender;
+/**
+ * @brief The back-button action.
+ * @param sender The tapped button.
+ */
 - (void)touchedBackButton:(id)sender;
+/**
+ * @brief The keyboard appeared: scroll the form up.
+ * @param notification The UIKeyboardDidShow notification.
+ */
 - (void)keyboardWasShown:(NSNotification *)notification;
+/**
+ * @brief The keyboard is about to hide: scroll the form back down.
+ * @param notification The UIKeyboardWillHide notification.
+ */
 - (void)keyboardWillBeHidden:(NSNotification *)notification;
 @end
 

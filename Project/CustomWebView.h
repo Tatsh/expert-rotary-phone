@@ -28,46 +28,66 @@
 #import <WebKit/WebKit.h>
 #endif
 
-// C close-callback: invoked (with its opaque param) from the close animation's
-// completion block. Modelled as a non-object C function pointer to match the
-// binary (the two ivars below are stored as raw pointers and are NOT
-// ARC-managed).
+/**
+ * @brief The C close callback, invoked with its opaque parameter from the close animation's
+ * completion block.
+ *
+ * It is modelled as a non-object C function pointer to match the binary; the two ivars below are
+ * stored as raw pointers and are not ARC-managed.
+ * @param param The opaque parameter registered alongside the callback.
+ */
 typedef void (*CustomWebViewCloseCallback)(void *param);
 
+/**
+ * @brief An in-app web panel — a UIView, not a view controller — hosting a web view over the app's
+ * root scene view.
+ */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 @interface CustomWebView : UIView <WKNavigationDelegate> {
 #else
 @interface CustomWebView : UIView <UIWebViewDelegate> {
 #endif
-    // C close callback + its opaque param (raw pointers, not ARC-managed
-    // objects).
+    /** The C close callback; a raw pointer, not an ARC-managed object. */
     CustomWebViewCloseCallback m_AlertViewCallback;
+    /** The close callback's opaque parameter; a raw pointer, not ARC-managed. */
     void *m_AlertViewCallbackParam;
 
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
-    WKWebView *_webView; // hosted web view (navigation delegate == self)
+    WKWebView *_webView; /**< The hosted web view; its navigation delegate is self. */
 #else
-    UIWebView *_webView; // hosted web view (delegate == self)
+    UIWebView *_webView; /**< The hosted web view; its delegate is self. */
 #endif
-    UIButton *_closeBtnSmall;            // top-right close button (hidden until first load done)
-    UIButton *_closeBtnBig;              // bottom-of-content close button (revealed via KVO)
-    UIActivityIndicatorView *_indicator; // centred loading spinner
-    NSString *_errorTitle;               // title for the load-failure alert
-    NSString *_errorText;                // message for the load-failure alert
-    CGRect webViewFrm;                   // cached web-view frame (origin-zeroed panel bounds)
-    CGRect smallBtnFrm;                  // cached small close-button frame
+    UIButton *_closeBtnSmall; /**< The top-right close button, hidden until the first load ends. */
+    UIButton *_closeBtnBig;   /**< The bottom-of-content close button, revealed via KVO. */
+    UIActivityIndicatorView *_indicator; /**< The centred loading spinner. */
+    NSString *_errorTitle;               /**< The title for the load-failure alert. */
+    NSString *_errorText;                /**< The message for the load-failure alert. */
+    CGRect webViewFrm;  /**< The cached web-view frame: the origin-zeroed panel bounds. */
+    CGRect smallBtnFrm; /**< The cached small close-button frame. */
 }
 
-// Build the panel over the root scene view and start loading `url`. Ghidra: @
-// 0x5dfec.
+/**
+ * @brief Build the panel over the root scene view and start loading a URL.
+ * @param url The page to load.
+ * @return The initialised panel.
+ * @ghidraAddress 0x5dfec
+ */
 - (instancetype)initWithURL:(NSURL *)url;
 
-// Set the title/message shown by -showErrorAlert when a load fails. Ghidra: @
-// 0x5df50.
+/**
+ * @brief Set the title and message -showErrorAlert uses when a load fails.
+ * @param errorMsg The alert title.
+ * @param text The alert message.
+ * @ghidraAddress 0x5df50
+ */
 - (void)setErrorMsg:(NSString *)errorMsg text:(NSString *)text;
 
-// Register a C callback (and opaque param) fired when the panel finishes
-// closing. Ghidra: @ 0x5ed7c.
+/**
+ * @brief Register a C callback fired when the panel finishes closing.
+ * @param callback The function to call.
+ * @param param The opaque parameter to pass it.
+ * @ghidraAddress 0x5ed7c
+ */
 - (void)SetCloseCallback:(CustomWebViewCloseCallback)callback param:(void *)param;
 
 @end

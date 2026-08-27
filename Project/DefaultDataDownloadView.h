@@ -21,31 +21,41 @@
 @class DownloadProgresView;
 @class Downloader;
 
+/**
+ * @brief The launch-time "default data" downloader screen.
+ */
 @interface DefaultDataDownloadView : UIViewController {
-    DownloadProgresView *_downloadView; // the progress dialog (spinner + bar + label)
-    NSArray *_dlFileListDataArray;      // NSValue-wrapped DlFileListData entries to fetch
-    Downloader *_downloader;            // the in-flight HTTP fetch (nil when idle)
-    int _downloadingIdx;                // index of the file currently being fetched
-    NSString *_filePath;                // local destination path of the current file
-    int _fileSize;                      // expected size of the current file
-    int _totalFileSize;                 // sum of every file's size (progress denominator)
-    int _downloadedFileSize;            // bytes committed so far (progress numerator)
-    BOOL _isFailed;                     // a fetch/verify/write failed (backs -isFailed)
-    BOOL _isAnimationing;               // an open/close fade is running (guards re-entry)
-    int _tryCnt;                        // retry counter for the current file (max 3)
+    /** The progress dialog: spinner, bar and label. */
+    DownloadProgresView *_downloadView;
+    NSArray *_dlFileListDataArray; /**< The NSValue-wrapped DlFileListData entries to fetch. */
+    Downloader *_downloader;       /**< The in-flight HTTP fetch; nil when idle. */
+    int _downloadingIdx;           /**< The index of the file currently being fetched. */
+    NSString *_filePath;           /**< The local destination path of the current file. */
+    int _fileSize;                 /**< The expected size of the current file. */
+    int _totalFileSize;            /**< The sum of every file's size: the progress denominator. */
+    int _downloadedFileSize;       /**< The bytes committed so far: the progress numerator. */
+    BOOL _isFailed;                /**< A fetch, verify or write failed; it backs -isFailed. */
+    BOOL _isAnimationing;          /**< An open or close fade is running; it guards re-entry. */
+    int _tryCnt;                   /**< The retry counter for the current file; the cap is 3. */
 }
 
-// Take the DownloadMain file list (NSArray of NSValue-wrapped DlFileListData),
-// sum the total size and build the progress dialog. Ghidra: @ 0xdd158.
+/**
+ * @brief Take the DownloadMain file list, sum the total size and build the progress dialog.
+ * @param fileDataArray An NSArray of NSValue-wrapped DlFileListData.
+ * @return The initialised controller.
+ * @ghidraAddress 0xdd158
+ */
 - (instancetype)initWithFileDataArray:(NSArray *)fileDataArray;
 
-// Fade the view in over 0.3 s; endOpenAnimation then kicks off the first
-// download. Ghidra: @ 0xddbe8.
+/**
+ * @brief Fade the view in over 0.3 s; endOpenAnimation then kicks off the first download.
+ * @ghidraAddress 0xddbe8
+ */
 - (void)startOpenAnimation;
 
-// Set once any file's download / verify / write fails; MainViewController reads
-// it back after the screen closes. Atomic synthesized accessors — getter @
-// 0xde1a0 (isFailed), setter @ 0xde1b8 (setIsFailed:); ivar _isFailed.
+/** Set once any file's download, verify or write fails; MainViewController reads it back after
+ * the screen closes. The accessors are atomic over the _isFailed ivar. Getter @ 0xde1a0, setter @
+ * 0xde1b8. */
 @property(assign) BOOL isFailed;
 
 @end

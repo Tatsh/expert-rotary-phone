@@ -15,10 +15,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief Shared view-construction helpers.
+ */
 @interface ViewUtility : NSObject
 
-// @ 0x64f2c — build the shared rounded gradient "banner" background view sized
-// to `frame`, with a 3pt-inset inner tiled-pattern panel added as a subview.
+/**
+ * @brief Build the shared rounded gradient "banner" background view, with a 3 pt-inset inner
+ * tiled-pattern panel added as a subview.
+ * @param frame The banner frame.
+ * @return The background view.
+ * @ghidraAddress 0x64f2c
+ */
 + (UIView *)getCommonBannerBg:(CGRect)frame;
 
 @end

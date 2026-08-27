@@ -10,40 +10,92 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The reward SDK's small helpers: user agent, device info, URL building and locale.
+ */
 @interface RewardNetworkUtilities : NSObject
 
-// @ 0xf9874 — merge two dictionaries (values in `b` win) into a new mutable
-// one.
+/**
+ * @brief Merge two dictionaries into a new mutable one.
+ * @param a The base dictionary.
+ * @param b The overriding dictionary; its values win.
+ * @return The merged dictionary.
+ * @ghidraAddress 0xf9874
+ */
 + (NSMutableDictionary *)joinDictionary:(NSDictionary *)a withDictionary:(NSDictionary *)b;
 
-// @ 0xf9910 — build the SDK User-Agent string.
+/**
+ * @brief Build the SDK User-Agent string.
+ * @return The User-Agent.
+ * @ghidraAddress 0xf9910
+ */
 + (NSString *)userAgent;
 
-// @ 0xf9af8 — build the User-Agent as a query-parameter dictionary (ua_* keys).
+/**
+ * @brief Build the User-Agent as a query-parameter dictionary, using ua_* keys.
+ * @return The parameter dictionary.
+ * @ghidraAddress 0xf9af8
+ */
 + (NSMutableDictionary *)userAgentParameters;
 
-// @ 0xf9e58 — hardware model identifier (e.g. "iPhone7,2"), cached per process.
+/**
+ * @brief The hardware model identifier, such as "iPhone7,2"; cached per process.
+ * @return The model identifier.
+ * @ghidraAddress 0xf9e58
+ */
 + (NSString *)deviceName;
 
-// @ 0xfa100 — append a parameter dictionary to `url` as a URL query string.
+/**
+ * @brief Append a parameter dictionary to a URL as a query string.
+ * @param url The base URL.
+ * @param parameters The query parameters.
+ * @return The full URL.
+ * @ghidraAddress 0xfa100
+ */
 + (NSString *)appendParametersToURL:(NSString *)url parameters:(NSDictionary *)parameters;
 
-// @ 0xfa464 — preferred language code (falls back to "ja").
+/**
+ * @brief The preferred language code.
+ * @return The language code, falling back to "ja".
+ * @ghidraAddress 0xfa464
+ */
 + (NSString *)localeString;
 
-// @ 0xfa4dc — country code from the current locale (falls back to "JP").
+/**
+ * @brief The country code from the current locale.
+ * @return The country code, falling back to "JP".
+ * @ghidraAddress 0xfa4dc
+ */
 + (NSString *)countryCodeString;
 
-// @ 0xfa560 — YES if `responder` sits under a window/app/view/view-controller.
+/**
+ * @brief Whether a responder sits under a window, application, view or view controller.
+ * @param responder The responder to walk from.
+ * @return YES when a host was found.
+ * @ghidraAddress 0xfa560
+ */
 + (BOOL)hasParentViewController:(id)responder;
 
-// @ 0xfa660 — YES on iOS 5.0 or later.
+/**
+ * @brief Whether the SDK can run on this OS.
+ * @return YES on iOS 5.0 or later.
+ * @ghidraAddress 0xfa660
+ */
 + (BOOL)canUseRewardSdk;
 
-// @ 0xfa6e4 — the SDK version string ("1.0.31").
+/**
+ * @brief The SDK version string.
+ * @return "1.0.31".
+ * @ghidraAddress 0xfa6e4
+ */
 + (NSString *)getSdkVersion;
 
-// @ 0xfa6fc — percent-escape a string for use in a URL query.
+/**
+ * @brief Percent-escape a string for use in a URL query.
+ * @param string The string to escape.
+ * @return The escaped string.
+ * @ghidraAddress 0xfa6fc
+ */
 + (NSString *)URLEncodedString:(NSString *)string;
 
 @end

@@ -12,6 +12,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A share-sheet host presented over the root view controller to post text and an image.
+ */
 @interface TwitterUtil : UIViewController
 /**
  * @brief The text to be tweeted.

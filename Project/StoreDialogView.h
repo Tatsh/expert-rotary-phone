@@ -29,50 +29,77 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief Receives the store dialog's abort tap.
+ */
 @protocol StoreDialogViewDelegate <NSObject>
 @optional
-// Sent when the abort button is tapped. The passed object is the dialog itself.
-// Invoked from -btnAbort: @ 0x41f38 via -performSelector:withObject:.
+/**
+ * @brief The abort button was tapped. -btnAbort: sends it via -performSelector:withObject:.
+ * @param sender The dialog itself.
+ */
 - (void)storeDialogCancel:(id)sender;
 @end
 
+/**
+ * @brief The store's progress dialog: a spinner, a status message, a progress bar and an optional
+ * abort button.
+ */
 @interface StoreDialogView : UIView {
-    UIActivityIndicatorView *m_IndicatorView; // spinner
-    UILabel *m_LabelMessage;                  // centered status message
-    UIProgressView *m_ProgressView;           // horizontal progress bar
-    UIButton *m_ButtonAbort;                  // "中止" button (only when abortable)
-    id __unsafe_unretained delegate;          // informal delegate (assign)
+    UIActivityIndicatorView *m_IndicatorView; /**< The spinner. */
+    UILabel *m_LabelMessage;                  /**< The centred status message. */
+    UIProgressView *m_ProgressView;           /**< The horizontal progress bar. */
+    UIButton *m_ButtonAbort;                  /**< The "中止" button, only when abortable. */
+    id __unsafe_unretained delegate;          /**< The informal delegate; a plain assign. */
 }
 
-// Convenience initializer: forwards to -initWithFrame:abortable: with abortable
-// = YES (mov lr,#1 pushed to the abortable arg slot). Ghidra: @ 0x416dc.
+/**
+ * @brief The convenience initialiser, forwarding to -initWithFrame:abortable: with abortable set.
+ * @param frame The dialog frame.
+ * @return The initialised dialog.
+ * @ghidraAddress 0x416dc
+ */
 - (instancetype)initWithFrame:(CGRect)frame;
 
-// Designated initializer. Builds the rounded/shadowed card, the spinner, the
-// message label and the progress bar; when abortable is YES also builds the
-// "中止" button wired to -btnAbort:. Ghidra: @ 0x41708.
+/**
+ * @brief The designated initialiser: build the rounded, shadowed card, the spinner, the message
+ * label and the progress bar.
+ * @param frame The dialog frame.
+ * @param abortable YES to also build the "中止" button, wired to -btnAbort:.
+ * @return The initialised dialog.
+ * @ghidraAddress 0x41708
+ */
 - (instancetype)initWithFrame:(CGRect)frame abortable:(BOOL)abortable;
 
-// Toggle the progress bar + abort button and recenter the message label. When
-// hideControls is NO the progress bar and abort button are shown and the label
-// sits 10pt above the card center; when YES they are hidden and the label sits
-// 10pt below center. Ghidra: @ 0x41e4c.
+/**
+ * @brief Toggle the progress bar and abort button, and recentre the message label.
+ * @param hideControls NO shows the progress bar and abort button and puts the label 10 pt above
+ * the card centre; YES hides them and puts the label 10 pt below centre.
+ * @ghidraAddress 0x41e4c
+ */
 - (void)layout:(BOOL)hideControls;
 
-// Abort button action: forwards -storeDialogCancel: to the delegate if it
-// responds. Ghidra: @ 0x41f38.
+/**
+ * @brief The abort button's action: forward -storeDialogCancel: to the delegate when it responds.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x41f38
+ */
 - (void)btnAbort:(id)sender;
 
-// Informal delegate; raw assign (unsafe_unretained under ARC). getter @
-// 0x41f8c, setter @ 0x41f9c.
+/** The abort delegate; a raw assign, unsafe-unretained under ARC. Getter @ 0x41f8c, setter @
+ * 0x41f9c. */
 @property(nonatomic, assign) id<StoreDialogViewDelegate> delegate;
 
-// Read-only accessors for the subviews (synthesized). Callers drive these via
-// -performSelector:.
-@property(nonatomic, readonly) UIActivityIndicatorView *indicatorView; // @ 0x41fac
-@property(nonatomic, readonly) UILabel *labelMessage;                  // @ 0x41fbc
-@property(nonatomic, readonly) UIProgressView *progressView;           // @ 0x41fcc
-@property(nonatomic, readonly) UIButton *buttonAbort;                  // @ 0x41fdc
+// Read-only subview accessors; callers drive these via -performSelector:.
+
+/** The spinner. Getter @ 0x41fac. */
+@property(nonatomic, readonly) UIActivityIndicatorView *indicatorView;
+/** The status message label. Getter @ 0x41fbc. */
+@property(nonatomic, readonly) UILabel *labelMessage;
+/** The progress bar. Getter @ 0x41fcc. */
+@property(nonatomic, readonly) UIProgressView *progressView;
+/** The abort button. Getter @ 0x41fdc. */
+@property(nonatomic, readonly) UIButton *buttonAbort;
 
 @end
 

@@ -15,19 +15,33 @@
 //                          didStop -> endOpenAnimation (clears isAnimationing)
 //    startCloseAnimation — fade 1 -> 0; didStop -> endCloseAnimation
 //    endCloseAnimation   — removeFromSuperview + [rootVC <Screen>EndCallBack]
-//  (iPad variants sometimes slide/фade a "black board" instead; guarded by an
+//  (iPad variants sometimes slide or fade a "black board" instead; guarded by an
 //  isAnimationing flag so a transition never overlaps.)
 //
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The iPad layout of the arcade viewer: a floating split panel over a dimmed backdrop.
+ */
 @interface AcViewerSplitViewController : UIViewController
 
-- (void)startOpenAnimation;  // @ 0x3272c
-- (void)startCloseAnimation; // @ 0x32870
+/**
+ * @brief Fade the panel and its navigation controller in.
+ * @ghidraAddress 0x3272c
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the panel out, tearing it down on didStop.
+ * @ghidraAddress 0x32870
+ */
+- (void)startCloseAnimation;
 
-// Fade the panel out (or, non-animated, after a short delay) and swap the right
-// pane to the AcViewer option screen. Ghidra: startHiddenAnimation: @ 0x32a80.
+/**
+ * @brief Fade the panel out and swap the right pane to the arcade-viewer option screen.
+ * @param animated YES to fade, NO to swap after a short delay.
+ * @ghidraAddress 0x32a80
+ */
 - (void)startHiddenAnimation:(BOOL)animated;
 
 @end

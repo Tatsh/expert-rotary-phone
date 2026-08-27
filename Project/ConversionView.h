@@ -26,16 +26,24 @@
 // protocol's canonical declaration; SettingOtherTableViewController.h
 // forward-declares it (@protocol ViewCmnProtocol;) and pulls in this header
 // from its .mm.
+/**
+ * @brief The container an embedded settings panel asks to close the whole settings overlay.
+ */
 @protocol ViewCmnProtocol <NSObject>
+/**
+ * @brief Close the containing overlay.
+ */
 - (void)startCloseAnimation;
 @end
 
+/**
+ * @brief The "device change" (data-transfer) panel embedded into the "Other" settings screen.
+ */
 @interface ConversionView : UIViewController <CommonAlertViewDelegate, DownloaderDelegate>
 
-// The container ("view common") delegate. The accessors are a plain pointer
-// load/store in the binary (no objc_storeWeak / retain), i.e.
-// unsafe-unretained, matching CommonAlertView's delegate. Ghidra: -delegate @
-// 0x1de7c, -setDelegate: @ 0x1de8c.
+/** The container ("view common") delegate. The accessors are a plain pointer load and store in
+ * the binary, with no objc_storeWeak or retain, matching CommonAlertView's delegate. Getter @
+ * 0x1de7c, setter @ 0x1de8c. */
 @property(nonatomic, assign) id<ViewCmnProtocol> delegate;
 
 @end

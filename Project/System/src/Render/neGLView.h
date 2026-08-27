@@ -1,42 +1,80 @@
-//
-//  neGLView.h
-//  pop'n rhythmin
-//
-//  The CAEAGLLayer-backed OpenGL ES view. It presents the engine's rendered
-//  frames and forwards UIKit touches into the C++ task/input system.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
+/** @file
+ * The CAEAGLLayer-backed OpenGL ES view. It presents the engine's rendered frames and forwards
+ * UIKit touches into the C++ task and input system. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin.
+ */
 
 #import <UIKit/UIKit.h>
 
 @class neGLView;
 
-// The view tells its delegate when the drawable (and thus the framebuffer size)
-// has changed. Ghidra: -[delegate LayoutedGLView:] in layoutSubviews (0x28428).
+/**
+ * @brief Receives notice when the view's drawable, and thus the framebuffer size, has changed.
+ */
 @protocol neGLViewDelegate <NSObject>
+/**
+ * @brief The view's drawable was resized by -layoutSubviews.
+ * @param view The view whose drawable changed.
+ * @ghidraAddress 0x28428
+ */
 - (void)LayoutedGLView:(neGLView *)view;
 @end
 
+/**
+ * @brief The CAEAGLLayer-backed OpenGL ES view that presents each rendered frame.
+ */
 @interface neGLView : UIView
 
-// The live view instance (raw global set on init, cleared on dealloc). Ghidra:
-// @ 0x280d4
+/**
+ * @brief The live view instance: a raw global set on init and cleared on dealloc.
+ * @return The view, or nil before init or after dealloc.
+ * @ghidraAddress 0x280d4
+ */
 + (neGLView *)GetInstance;
 
-// Ghidra: -delegate/-setDelegate: are atomic accessors (DataMemoryBarrier
-// around a plain pointer store — assign, not ARC weak). Addresses annotated in
-// the .mm.
+/**
+ * @brief The layout delegate.
+ *
+ * The binary's -delegate and -setDelegate: are atomic accessors: a DataMemoryBarrier around a
+ * plain pointer store, so this is assign, not ARC weak. Addresses are annotated in the .mm.
+ */
 @property(atomic, assign) id<neGLViewDelegate> delegate;
 
-// The GL drawable size, updated by -layoutSubviews from the renderbuffer.
-- (int)GetFrontBufferWidth;  // Ghidra: @ 0x28524
-- (int)GetFrontBufferHeight; // Ghidra: @ 0x28534
+/**
+ * @brief The GL drawable width, updated by -layoutSubviews from the renderbuffer.
+ * @return The width, in pixels.
+ * @ghidraAddress 0x28524
+ */
+- (int)GetFrontBufferWidth;
+/**
+ * @brief The GL drawable height, updated by -layoutSubviews from the renderbuffer.
+ * @return The height, in pixels.
+ * @ghidraAddress 0x28534
+ */
+- (int)GetFrontBufferHeight;
 
-// Render surface control, called each frame by MainViewController -draw.
-- (BOOL)BeginRender;           // make the GL context current. Ghidra: @ 0x28544
-- (void)SetDefaultFrameBuffer; // bind the default framebuffer.  Ghidra: @ 0x28570
-- (void)SetDefaultColorBuffer; // bind the colour renderbuffer.  Ghidra: @ 0x28594
-- (BOOL)Present;               // present the renderbuffer (swap). Ghidra: @ 0x285b8
+/**
+ * @brief Make the GL context current. Called each frame by -[MainViewController draw].
+ * @return YES when the context was made current.
+ * @ghidraAddress 0x28544
+ */
+- (BOOL)BeginRender;
+/**
+ * @brief Bind the default framebuffer.
+ * @ghidraAddress 0x28570
+ */
+- (void)SetDefaultFrameBuffer;
+/**
+ * @brief Bind the colour renderbuffer.
+ * @ghidraAddress 0x28594
+ */
+- (void)SetDefaultColorBuffer;
+/**
+ * @brief Present the renderbuffer (swap).
+ * @return YES when the swap succeeded.
+ * @ghidraAddress 0x285b8
+ */
+- (BOOL)Present;
 
 @end
 

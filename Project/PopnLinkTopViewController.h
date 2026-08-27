@@ -26,37 +26,78 @@
 
 // The pad-layout host (the pop'n-link split/detail owner) receives the button
 // taps and the close request so it can drive its own detail pane.
+/**
+ * @brief The iPad-layout host, the pop'n-link split or detail owner, which receives the button
+ * taps and the close request so it can drive its own detail pane.
+ */
 @protocol PopnLinkTopViewControllerDelegate <NSObject>
-- (void)onInKidButtonTouched:(id)sender;        // @ 0xcdad4 (pad) forwards here
-- (void)onScoreCheckerButtonTouched:(id)sender; // @ 0xcdc18 (pad) forwards here
-- (void)onQuizButtonTouched:(id)sender;         // @ 0xcdd5c (pad) forwards here
-- (void)startCloseAnimation;                    // @ 0xcd908 (pad) forwards here
+/**
+ * @brief The KONAMI-ID input button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xcdad4
+ */
+- (void)onInKidButtonTouched:(id)sender;
+/**
+ * @brief The score-checker button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xcdc18
+ */
+- (void)onScoreCheckerButtonTouched:(id)sender;
+/**
+ * @brief The quiz button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xcdd5c
+ */
+- (void)onQuizButtonTouched:(id)sender;
+/**
+ * @brief Close the hub.
+ * @ghidraAddress 0xcd908
+ */
+- (void)startCloseAnimation;
 @end
 
+/**
+ * @brief The pop'n-link top screen: the KONAMI-ID input, score-checker and quiz buttons.
+ */
 @interface PopnLinkTopViewController : UIViewController
 
-// Lay out the three buttons + caption images (phone: over friman_bg; pad: over
-// a clear view) and seed the checker / quiz enabled state. Ghidra: init @
-// 0xccacc.
+/**
+ * @brief Lay out the three buttons and caption images — over friman_bg on phone, over a clear view
+ * on iPad — and seed the checker and quiz enabled state.
+ * @return The initialised controller.
+ * @ghidraAddress 0xccacc
+ */
 - (instancetype)init;
 
-// Build self, wrap it in a fresh navigation controller (back button + nav-bar
-// art) and return that controller (the phone layout). Ghidra:
-// initAtNavigationController @ 0xcd2e0.
+/**
+ * @brief Build self and wrap it in a fresh navigation controller with a back button and nav-bar
+ * art; the phone layout.
+ * @return The navigation controller.
+ * @ghidraAddress 0xcd2e0
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0xcd5a8
-- (void)startCloseAnimation; // @ 0xcd908 (also the back-button action / cancel SE)
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0xcd5a8
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the screen out; this is also the back-button action, which plays the cancel SE.
+ * @ghidraAddress 0xcd908
+ */
+- (void)startCloseAnimation;
 
-// Re-apply the checker / quiz enabled state from the link flag. Ghidra:
-// updateButtonEnable @ 0xcca48.
+/**
+ * @brief Re-apply the checker and quiz enabled state from the link flag.
+ * @ghidraAddress 0xcca48
+ */
 - (void)updateButtonEnable;
 
-// The pad-layout tap target. Synthesized assign accessors: getter @ 0xcdea0,
-// setter @ 0xcdeb0.
+/** The iPad-layout tap target. Getter @ 0xcdea0, setter @ 0xcdeb0. */
 @property(nonatomic, assign) id<PopnLinkTopViewControllerDelegate> delegate;
 
-// Synthesized assign accessors: getter @ 0xcdec0, setter @ 0xcded0.
+/** The scroll view hosting the buttons. Getter @ 0xcdec0, setter @ 0xcded0. */
 @property(nonatomic, assign) UIScrollView *scrollView;
 
 @end

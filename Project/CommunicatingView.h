@@ -19,27 +19,42 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A modal "communicating…" network-activity overlay.
+ */
 @interface CommunicatingView : UIViewController {
-    UIImageView *communicatingView;         // @0xa4  "communicating" caption (mes_loading)
-    UIImageView *communicateFailedView;     // @0xa8  "failed" caption (mes_loadingerror)
-    UIActivityIndicatorView *indicatorView; // @0xac  spinner
-    BOOL _isAnimationing;                   // @0xb0  a fade animation is in flight
-    BOOL _isCloseReserve;                   // @0xb1  a close was requested mid-animation
+    UIImageView *communicatingView;         /**< +0xa4 The "communicating" caption (mes_loading). */
+    UIImageView *communicateFailedView;     /**< +0xa8 The "failed" caption (mes_loadingerror). */
+    UIActivityIndicatorView *indicatorView; /**< +0xac The spinner. */
+    BOOL _isAnimationing;                   /**< +0xb0 A fade animation is in flight. */
+    BOOL _isCloseReserve;                   /**< +0xb1 A close was requested mid-animation. */
 }
 
-// Switch the overlay to its "communication failed" state: hide the spinner and
-// "communicating" caption, reveal the "failed" caption. Ghidra: @ 0xdecb4.
+/**
+ * @brief Switch the overlay to its "communication failed" state: hide the spinner and the
+ * "communicating" caption, and reveal the "failed" caption.
+ * @ghidraAddress 0xdecb4
+ */
 - (void)failed;
 
-// Fade the overlay in (alpha 0 -> 1 over 0.3s). Ghidra: @ 0xded10.
+/**
+ * @brief Fade the overlay in, alpha 0 to 1 over 0.3 s.
+ * @ghidraAddress 0xded10
+ */
 - (void)startOpenAnimation;
 
-// Fade the overlay out (alpha 1 -> 0 over 0.3s), then tear down. If a fade is
-// already running the close is deferred (see _isCloseReserve). Ghidra: @
-// 0xdee48.
+/**
+ * @brief Fade the overlay out, alpha 1 to 0 over 0.3 s, then tear it down. If a fade is already
+ * running the close is deferred; see _isCloseReserve.
+ * @ghidraAddress 0xdee48
+ */
 - (void)startCloseAnimation;
 
-// YES while a fade animation is running. Ghidra: @ 0xdefd8 (atomic read).
+/**
+ * @brief Whether a fade animation is running. The read is atomic.
+ * @return YES while a fade is in flight.
+ * @ghidraAddress 0xdefd8
+ */
 - (BOOL)isAnimationing;
 
 @end

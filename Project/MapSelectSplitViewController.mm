@@ -88,37 +88,51 @@
 #import "UserSettingData.h"            // treasureSelectedMapId / isTreasureSelected / charaId
 #import "neEngineBridge.h"             // neSceneManager::rootViewController, neEngine::playSystemSe
 
+/**
+ * @brief The hub's private state and helpers.
+ */
 @interface MapSelectSplitViewController () <DownloadMainDelegate, MapSelectViewControllerDelegate> {
 @public // de-inlined static helpers reach these via self-> (binary by-offset
     // access)
-    BOOL _isAnimationing;
-    UIImageView *_markView;        // friend-request badge (toggled in viewWillAppear:)
-    NSIndexPath *_selectIndexPath; // pending area row the arrow points at
-    MapSelectViewController *_mapSelectViewCtrl;       // left: main-map list
-    SubMapSelectViewController *_subMapSelectViewCtrl; // right: area list
-    UIImageView *_arrowImageView;                      // slides to the selected row
-    CGRect _arrowFrm;                                  // arrow home frame (x,y,w,h)
-    UIImageView *_rightImageView;                      // right "area select" backing image
-    UIView *_rightDummyView;             // right area clip (hosts _subMapSelectViewCtrl)
-    UIImageView *_rightHeaderImageView;  // per-map icon on the header banner
-    UILabel *_rightHeaderLabel;          // map name on the header banner
-    UIView *_rightHeaderDummyView;       // header banner clip
-    UIImageView *_rightEmptyImageView;   // "no area" placeholder (hidden until empty)
-    UIImageView *_eventImageView;        // bottom event banner backing image
-    UIView *_eventDummyView;             // bottom event banner clip
-    UIScrollView *_scrollView;           // event-banner carousel
-    UIPageControl *_pageCtrl;            // carousel page dots (kept hidden)
-    BOOL _eventViewing;                  // carousel is currently built/visible
-    BOOL _autoScroll;                    // carousel auto-advance armed
-    HowToViewCtrlPad *_howtoViewCtrlPad; // first-run treasure how-to overlay
+    BOOL _isAnimationing;          /**< An open, close or arrow-move animation is running. */
+    UIImageView *_markView;        /**< The friend-request badge, toggled in -viewWillAppear:. */
+    NSIndexPath *_selectIndexPath; /**< The pending area row the arrow points at. */
+    MapSelectViewController *_mapSelectViewCtrl;       /**< Left pane: the main-map list. */
+    SubMapSelectViewController *_subMapSelectViewCtrl; /**< Right pane: the area list. */
+    UIImageView *_arrowImageView;                      /**< Slides to the selected row. */
+    CGRect _arrowFrm;                                  /**< The arrow's home frame. */
+    UIImageView *_rightImageView;        /**< The right "area select" backing image. */
+    UIView *_rightDummyView;             /**< The right area clip, hosting the sub-map list. */
+    UIImageView *_rightHeaderImageView;  /**< The per-map icon on the header banner. */
+    UILabel *_rightHeaderLabel;          /**< The map name on the header banner. */
+    UIView *_rightHeaderDummyView;       /**< The header banner clip. */
+    UIImageView *_rightEmptyImageView;   /**< The "no area" placeholder, hidden until empty. */
+    UIImageView *_eventImageView;        /**< The bottom event banner's backing image. */
+    UIView *_eventDummyView;             /**< The bottom event banner clip. */
+    UIScrollView *_scrollView;           /**< The event-banner carousel. */
+    UIPageControl *_pageCtrl;            /**< The carousel page dots; kept hidden. */
+    BOOL _eventViewing;                  /**< The carousel is built and visible. */
+    BOOL _autoScroll;                    /**< The carousel's auto-advance is armed. */
+    HowToViewCtrlPad *_howtoViewCtrlPad; /**< The first-run treasure how-to overlay. */
 }
+/** @brief The open animation finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief The close animation finished; tear the hub down. */
 - (void)endCloseAnimation;
+/** @brief The back-button action. */
 - (void)backButtonFunc;
+/** @brief Re-arm the carousel's auto-advance immediately. */
 - (void)restartAutoScroll;
+/** @brief Re-arm the carousel's auto-advance after a short delay. */
 - (void)restartAutoScrollAfterDelay;
+/** @brief Advance the carousel one page. */
 - (void)autoScroll;
+/** @brief Rebuild the event banner from the latest event info. */
 - (void)updateEventInfo;
+/**
+ * @brief The carousel's page dots changed.
+ * @param pageControl The page control that changed.
+ */
 - (void)pageControlDidChanged:(UIPageControl *)pageControl;
 @end
 

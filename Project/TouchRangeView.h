@@ -17,21 +17,38 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The touch-radius preview note: it paints one of two pop-kun images depending on whether
+ * the range is being touched.
+ */
 @interface TouchRangeView : UIView
 
-// Build with two bundled image names: the pop-kun shown when the range is not
-// being touched and the one shown while it is. The view's background is cleared
-// so only the pop-kun art is visible.
-- (instancetype)initWithFilename:(NSString *)filename touched:(NSString *)touched; // @ 0x8b20c
+/**
+ * @brief Build the view from two bundled image names. The background is cleared so only the
+ * pop-kun art is visible.
+ * @param filename The image shown when the range is not being touched.
+ * @param touched The image shown while it is.
+ * @return The initialised view.
+ * @ghidraAddress 0x8b20c
+ */
+- (instancetype)initWithFilename:(NSString *)filename touched:(NSString *)touched;
 
-// Natural size of the (untouched) pop-kun art; 0 when the image is missing.
-- (CGFloat)getImageWidth;  // @ 0x8b364
-- (CGFloat)getImageHeight; // @ 0x8b3a4
+/**
+ * @brief The natural width of the untouched pop-kun art.
+ * @return The width, or 0 when the image is missing.
+ * @ghidraAddress 0x8b364
+ */
+- (CGFloat)getImageWidth;
+/**
+ * @brief The natural height of the untouched pop-kun art.
+ * @return The height, or 0 when the image is missing.
+ * @ghidraAddress 0x8b3a4
+ */
+- (CGFloat)getImageHeight;
 
-// Which pop-kun art -drawRect: paints. Backed by _isTouched @0x3c; the binary
-// emits data-memory-barrier'd accessors (isTouched @ 0x8b3e4, setIsTouched: @
-// 0x8b3fc), so this is modelled as an atomic property whose synthesized
-// accessors match them.
+/** Which pop-kun art -drawRect: paints, backed by _isTouched @ +0x3c. The binary emits
+ * data-memory-barrier'd accessors, so this is modelled as an atomic property whose synthesised
+ * accessors match them. Getter @ 0x8b3e4, setter @ 0x8b3fc. */
 @property(atomic, assign) BOOL isTouched;
 
 @end

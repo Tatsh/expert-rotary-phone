@@ -15,22 +15,35 @@
 #import <Foundation/Foundation.h>
 #import <MapKit/MapKit.h>
 
+/**
+ * @brief One arcade-search map pin.
+ */
 @interface MapAnnotation : NSObject <MKAnnotation>
 
-// Store the coordinate (copied by value) and copies of the title / subtitle /
-// model strings.
+/**
+ * @brief Store the coordinate by value, and copies of the title, subtitle and model strings.
+ * @param coordinate The pin's location.
+ * @param title The callout title.
+ * @param subtitle The callout subtitle.
+ * @param model The arcade's cabinet model name.
+ * @return The initialised annotation.
+ */
 - (id)initWithCoordinate:(CLLocationCoordinate2D)coordinate
                    Title:(NSString *)title
                 SubTitle:(NSString *)subtitle
                    Model:(NSString *)model;
 
-// MKAnnotation accessors. `coordinate` is read/write here (the class ships
-// -setCoordinate:).
+/** The pin's location. It is read/write here, since the class ships -setCoordinate:. */
 @property(nonatomic) CLLocationCoordinate2D coordinate;
+/** The callout title. */
 @property(nonatomic, readonly, copy) NSString *title;
+/** The callout subtitle. */
 @property(nonatomic, readonly, copy) NSString *subtitle;
 
-// The arcade's model name (extra, non-protocol accessor).
+/**
+ * @brief The arcade's cabinet model name; an extra accessor outside MKAnnotation.
+ * @return The model name.
+ */
 - (NSString *)modelName;
 
 @end

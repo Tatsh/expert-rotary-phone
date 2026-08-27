@@ -15,18 +15,36 @@
 // Slots are named "<service>-<index>" for index in 0..518 (< 0x207).
 static const NSInteger kRewardStorageIndexLimit = 0x207;
 
+/**
+ * @brief The pasteboard store's private state and crypto helpers.
+ */
 @interface RewardNetworkPasteBoard () {
-    NSString *_serviceName;
-    NSString *_dataType;
+    NSString *_serviceName; /**< The pasteboard service name. */
+    NSString *_dataType;    /**< The pasteboard data type, a UTI. */
 }
 
-// SHA-1 of a data blob (used to derive the per-record AES key).
+/**
+ * @brief The SHA-1 of a data blob, used to derive the per-record AES key.
+ * @param data The data to hash.
+ * @return The digest.
+ */
 + (NSData *)createHash:(NSData *)data;
 
-// AES-128/PKCS7 encrypt (kCCEncrypt) or decrypt (kCCDecrypt) `value`.
+/**
+ * @brief AES-128 with PKCS#7 padding, in either direction.
+ * @param operation kCCEncrypt or kCCDecrypt.
+ * @param value The data to transform.
+ * @param key The AES key.
+ * @return The transformed data, or nil on failure.
+ */
 + (NSData *)cryptorToData:(CCOperation)operation value:(NSData *)value key:(NSData *)key;
 
-// Ensure a decoded record dictionary carries the required keys.
+/**
+ * @brief Ensure a decoded record dictionary carries the required keys.
+ * @param data The decoded record.
+ * @param error Receives the failure reason; may be NULL.
+ * @return YES when the record is well-formed.
+ */
 + (BOOL)validate:(NSDictionary *)data error:(NSError **)error;
 
 @end

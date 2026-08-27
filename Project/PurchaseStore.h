@@ -19,13 +19,16 @@
 
 #import "PurchaseManager.h" // <PurchaseManagerDelegate>
 
+/**
+ * @brief The direct-purchase delegate: it tracks whether a purchase is in flight.
+ */
 @interface PurchaseStore : NSObject <PurchaseManagerDelegate>
 
-// YES while a purchase is being processed (set on begin, cleared on
-// success/failure). Atomic in the binary (accessors emit memory barriers), so
-// kept atomic here; the synthesized ivar is named `nowPurchasing` (not
-// `_nowPurchasing`), matching the metadata.
-@property(atomic, assign) BOOL nowPurchasing; // getter @ 0x8393c / setter @ 0x83954
+/** Whether a purchase is being processed; set on begin and cleared on success or failure. The
+ * accessors are atomic, emitting memory barriers, and the synthesised ivar is named
+ * `nowPurchasing` rather than `_nowPurchasing`, matching the metadata. Getter @ 0x8393c, setter @
+ * 0x83954. */
+@property(atomic, assign) BOOL nowPurchasing;
 
 @end
 

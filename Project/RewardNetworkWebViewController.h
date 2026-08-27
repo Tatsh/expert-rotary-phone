@@ -32,64 +32,141 @@
 // Notifications the panel sends back to whoever opened it. All optional; each
 // call site guards with -respondsToSelector: (Ghidra @ 0xecb28 / 0xecbd8 /
 // 0xecd24).
+/**
+ * @brief The notifications the panel sends back to whoever opened it.
+ *
+ * All are optional; each call site guards with -respondsToSelector: (Ghidra @ 0xecb28, 0xecbd8 and
+ * 0xecd24).
+ */
 @protocol RewardNetworkWebViewDelegate <NSObject>
 @optional
-- (void)appListDidAppear;                          // page finished loading
-- (void)appListDidDisappear;                       // panel dismissed
-- (void)appListFailLoadWithError:(NSError *)error; // load failed
+/**
+ * @brief The page finished loading.
+ */
+- (void)appListDidAppear;
+/**
+ * @brief The panel was dismissed.
+ */
+- (void)appListDidDisappear;
+/**
+ * @brief The page failed to load.
+ * @param error What went wrong.
+ */
+- (void)appListFailLoadWithError:(NSError *)error;
 @end
 
+/**
+ * @brief The Applilink reward web-view panel: the app list, its navigation bar and its loading
+ * indicator.
+ */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 @interface RewardNetworkWebViewController : UIViewController <WKNavigationDelegate> {
-    WKWebView *_webView; // hosted web view (navigation delegate == self)
+    WKWebView *_webView; /**< The hosted web view; its navigation delegate is self. */
 #else
 @interface RewardNetworkWebViewController : UIViewController <UIWebViewDelegate> {
-    UIWebView *_webView; // hosted web view (delegate == self)
+    UIWebView *_webView; /**< The hosted web view; its delegate is self. */
 #endif
-    UINavigationBar *_navigationBar;    // top bar with the close button
-    RewardNetworkIndicator *_indicator; // centred loading spinner
-    __unsafe_unretained id<RewardNetworkWebViewDelegate>
-        _delegate;               // assigned, NOT retained (see -setDelegate:)
-    BOOL _isNavigationBarHidden; // hide the top bar (scheme-launch mode)
-    UIView *_parentView;         // container the panel is added onto (retained)
+    UINavigationBar *_navigationBar;    /**< The top bar carrying the close button. */
+    RewardNetworkIndicator *_indicator; /**< The centred loading spinner. */
+    /** The panel delegate; assigned, not retained. See -setDelegate:. */
+    __unsafe_unretained id<RewardNetworkWebViewDelegate> _delegate;
+    BOOL _isNavigationBarHidden; /**< Hide the top bar, for the scheme-launch mode. */
+    UIView *_parentView;         /**< The container the panel is added onto; retained. */
 }
 
-// Manual accessors (implemented, not @synthesized — they mirror the binary
-// exactly).
-- (id<RewardNetworkWebViewDelegate>)delegate;                   // @ 0xee120
-- (void)setDelegate:(id<RewardNetworkWebViewDelegate>)delegate; // @ 0xee130 (non-retaining)
-- (BOOL)isNavigationBarHidden;                                  // @ 0xee100
-- (void)setIsNavigationBarHidden:(BOOL)hidden;                  // @ 0xee110
-- (UIView *)parentView;                                         // @ 0xee140
-- (void)setParentView:(UIView *)parentView;                     // @ 0xee150 (retaining)
+// Manual accessors: implemented rather than @synthesized, mirroring the binary exactly.
 
-// Hide/show the top navigation bar. Forwards to -setIsNavigationBarHidden:. @
-// 0xec8a8
+/**
+ * @brief The panel delegate.
+ * @return The delegate.
+ * @ghidraAddress 0xee120
+ */
+- (id<RewardNetworkWebViewDelegate>)delegate;
+/**
+ * @brief Set the panel delegate, without retaining it.
+ * @param delegate The delegate.
+ * @ghidraAddress 0xee130
+ */
+- (void)setDelegate:(id<RewardNetworkWebViewDelegate>)delegate;
+/**
+ * @brief Whether the top navigation bar is hidden.
+ * @return YES when hidden.
+ * @ghidraAddress 0xee100
+ */
+- (BOOL)isNavigationBarHidden;
+/**
+ * @brief Set whether the top navigation bar is hidden.
+ * @param hidden YES to hide the bar.
+ * @ghidraAddress 0xee110
+ */
+- (void)setIsNavigationBarHidden:(BOOL)hidden;
+/**
+ * @brief The container the panel is added onto.
+ * @return The parent view.
+ * @ghidraAddress 0xee140
+ */
+- (UIView *)parentView;
+/**
+ * @brief Set the container the panel is added onto, retaining it.
+ * @param parentView The parent view.
+ * @ghidraAddress 0xee150
+ */
+- (void)setParentView:(UIView *)parentView;
+
+/**
+ * @brief Hide or show the top navigation bar; it forwards to -setIsNavigationBarHidden:.
+ * @param hidden YES to hide the bar.
+ * @ghidraAddress 0xec8a8
+ */
 - (void)setNavigationBarHidden:(BOOL)hidden;
 
-// Build the request (url + query parameters), attach the panel over parentView
-// (or the key window), and start loading. @ 0xec8b8
+/**
+ * @brief Build the request from a URL and query parameters, attach the panel over the parent view
+ * or the key window, and start loading.
+ * @param url The page URL.
+ * @param parameters The query parameters.
+ * @param delegate The panel delegate.
+ * @ghidraAddress 0xec8b8
+ */
 - (void)loadRequestWithURL:(NSURL *)url
                 parameters:(NSDictionary *)parameters
                   delegate:(id<RewardNetworkWebViewDelegate>)delegate;
 
-// Re-lay out the hosted views for the given interface orientation, animated
-// over `duration`.
-// @ 0xed6cc
+/**
+ * @brief Re-lay out the hosted views for a new interface orientation.
+ * @param orientation The new interface orientation.
+ * @param duration The animation duration.
+ * @ghidraAddress 0xed6cc
+ */
 - (void)rotateWebViewWithInterfaceOrientation:(UIInterfaceOrientation)orientation
                                      duration:(NSTimeInterval)duration;
 
-// Tear the panel down (remove the hosted views, drop the parent). @ 0xece74
+/**
+ * @brief Tear the panel down: remove the hosted views and drop the parent.
+ * @ghidraAddress 0xece74
+ */
 - (void)appliListClosed;
 
-// Show (YES) or hide (NO) the loading indicator. @ 0xecf50
+/**
+ * @brief Show or hide the loading indicator.
+ * @param show YES to show the indicator.
+ * @ghidraAddress 0xecf50
+ */
 - (void)updateIndicator:(BOOL)show;
 
-// Close-button action. Forwards to -appliListClosed. @ 0xece64
+/**
+ * @brief The close-button action; it forwards to -appliListClosed.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xece64
+ */
 - (void)btnCloseClicked:(id)sender;
 
-// Walk the responder chain of `responder` looking for a hosting view
-// controller. @ 0xee000
+/**
+ * @brief Walk a responder chain looking for a hosting view controller.
+ * @param responder The responder to walk from.
+ * @return YES when a host was found.
+ * @ghidraAddress 0xee000
+ */
 - (BOOL)hasParentViewController:(id)responder;
 
 @end

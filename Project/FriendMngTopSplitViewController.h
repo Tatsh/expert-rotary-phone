@@ -26,19 +26,43 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The iPad friend-management hub: a split panel whose left column selects the right pane's
+ * section.
+ */
 @interface FriendMngTopSplitViewController : UIViewController
 
-// Fade the panel (and its nav view) in / out. Ghidra: startOpenAnimation @
-// 0xc3d08 / startCloseAnimation @ 0xc3f68.
+/**
+ * @brief Fade the panel and its navigation view in.
+ * @ghidraAddress 0xc3d08
+ */
 - (void)startOpenAnimation;
+/**
+ * @brief Fade the panel and its navigation view out.
+ * @ghidraAddress 0xc3f68
+ */
 - (void)startCloseAnimation;
 
-// Section buttons, driven by the left column (FriendMngTopViewController) via
-// its delegate: swap the right pane's top controller and slide the selection
-// arrow. Ghidra: onListButtonTouched: @ 0xc40d0 / onRequestButtonTouched: @
-// 0xc4760 / onReplyButtonTouched: @ 0xc4df0.
+// Section buttons, driven by the left column (FriendMngTopViewController) through its delegate:
+// they swap the right pane's top controller and slide the selection arrow.
+
+/**
+ * @brief Show the friend list in the right pane.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xc40d0
+ */
 - (void)onListButtonTouched:(id)sender;
+/**
+ * @brief Show the sent friend requests in the right pane.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xc4760
+ */
 - (void)onRequestButtonTouched:(id)sender;
+/**
+ * @brief Show the received friend requests in the right pane.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xc4df0
+ */
 - (void)onReplyButtonTouched:(id)sender;
 
 @end

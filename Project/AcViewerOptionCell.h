@@ -9,12 +9,17 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One row of the arcade-viewer option list.
+ */
 @interface AcViewerOptionCell : UITableViewCell
 
-// Bind the row to one of the arcade-viewer option kinds and rebuild its labels:
-//   0 = HI-SPEED, 1 = POP-KUN, 2 = HID-SUD, 3 = RAN-MIR.
-// The detail label shows the player's current UserSettingData value for that
-// kind.
+/**
+ * @brief Bind the row to one of the arcade-viewer option kinds and rebuild its labels.
+ *
+ * The detail label shows the player's current UserSettingData value for that kind.
+ * @param optionKind 0 HI-SPEED, 1 POP-KUN, 2 HID-SUD, 3 RAN-MIR.
+ */
 - (void)setData:(int)optionKind;
 
 @end

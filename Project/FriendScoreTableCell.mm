@@ -12,19 +12,23 @@
 #import "Game/Data/Save/UserSettingData.h" // +playerName (self row)
 #import "neEngineBridge.h"                 // neSceneManager::isPadDisplay
 
-// One friend-score row, as wrapped in the NSValue passed to -setScoreData:.
-// Obj-C type-encoding "{ScoreDataStruct=@@iBBcsB}" (verified in
-// FriendScoreMainView's -tableView:cellForRowAtIndexPath:).
+/**
+ * @brief One friend-score row, as wrapped in the NSValue passed to -setScoreData:.
+ *
+ * The Objective-C type-encoding is "{ScoreDataStruct=@@iBBcsB}", verified in FriendScoreMainView's
+ * -tableView:cellForRowAtIndexPath:.
+ */
 typedef struct {
-    NSString *__unsafe_unretained playerId; // @  nil => empty slot; non-nil with
-                                            // a nil name => the local player
-    NSString *__unsafe_unretained name;     // @  nil on the self row (filled from UserSettingData)
-    int score;                              // i  -1 => no score recorded
-    BOOL isPerfect;                         // B
-    BOOL isFullCombo;                       // B
-    char rank;                              // c  0-based finishing place
-    short charaId;                          // s
-    BOOL isNotice;                          // B  event/notice row
+    /** nil marks an empty slot; non-nil with a nil name marks the local player. */
+    NSString *__unsafe_unretained playerId;
+    /** nil on the self row, where the name is filled from UserSettingData. */
+    NSString *__unsafe_unretained name;
+    int score;        /**< The score; -1 when none is recorded. */
+    BOOL isPerfect;   /**< Whether the play was perfect. */
+    BOOL isFullCombo; /**< Whether the play was a full combo. */
+    char rank;        /**< The 0-based finishing place. */
+    short charaId;    /**< The player's character id. */
+    BOOL isNotice;    /**< Whether this is an event or notice row. */
 } ScoreDataStruct;
 
 // Rank "place" badges (1st..9th) for rows 0..8; two-digit rows compose digit

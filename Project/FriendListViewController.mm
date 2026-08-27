@@ -30,12 +30,18 @@
 // FUN_00029644 fills (0x74 bytes). The trailing three arrays mirror the tail of
 // FriendListData ([3[7i]][3i][3i]), so downloadMainFinished: can copy them
 // across.
+/**
+ * @brief The aggregated tallies over every saved ScoreData row.
+ *
+ * The layout is the one FUN_00029644 fills, 0x74 bytes. The trailing three arrays mirror the tail
+ * of FriendListData ([3[7i]][3i][3i]), so -downloadMainFinished: can copy them across.
+ */
 typedef struct {
-    int totalScore;   // +0x00 sum of every positive difficulty score
-    int bestScore;    // +0x04 highest single difficulty score
-    int rank[3][7];   // +0x08 per-difficulty rank tally, indexed by rank 0..6
-    int fullCombo[3]; // +0x5c per-difficulty full-combo count
-    int perfect[3];   // +0x68 per-difficulty perfect count
+    int totalScore;   /**< +0x00 The sum of every positive difficulty score. */
+    int bestScore;    /**< +0x04 The highest single difficulty score. */
+    int rank[3][7];   /**< +0x08 The per-difficulty rank tally, indexed by rank 0..6. */
+    int fullCombo[3]; /**< +0x5c The per-difficulty full-combo count. */
+    int perfect[3];   /**< +0x68 The per-difficulty perfect count. */
 } ScoreStats;
 
 // Ghidra: aggregateScoreStats (FUN_00029644) @ 0x29644 — walk every saved

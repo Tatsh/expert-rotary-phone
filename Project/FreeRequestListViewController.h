@@ -15,11 +15,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The "free request" recommended-friend list.
+ */
 @interface FreeRequestListViewController : UITableViewController
 
-// Grouped-style table: a "fpl_text" header plate, a dimmed dummy overlay
-// carrying a centred activity indicator, and a custom back button in the nav
-// item. Ghidra: @ 0xe5430.
+/**
+ * @brief Build the grouped-style table: an "fpl_text" header plate, a dimmed dummy overlay
+ * carrying a centred activity indicator, and a custom back button in the navigation item.
+ * @param style The table style.
+ * @return The initialised controller.
+ * @ghidraAddress 0xe5430
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 @end

@@ -13,25 +13,48 @@
 #import "UserSettingData.h" // +treasurePoint / +saveTreasurePoint:
 #import "neEngineBridge.h" // neSceneManager::rootViewController(), neSceneManager::isPadDisplay(), neEngine::playSystemSe(int)
 
+/**
+ * @brief The bonus reveal's private state and helpers.
+ */
 @interface RandomLoginBonusView () {
-    int _bonus;                   // rolled treasure-point bonus (0..9999)
-    UIImageView *_numImgView1000; // thousands reel
-    UIImageView *_numImgView0100; // hundreds reel
-    UIImageView *_numImgView0010; // tens reel
-    UIImageView *_numImgView0001; // ones reel
-    int _seRscId[3];              // loaded SE resource ids: 0 roll(loop), 1 fail, 2 close
-    int _seInstId[3];             // playing SE instance ids
-    BOOL _isAnimationing;         // guard while an open/close/lock animation runs
-    int _state;                   // 0 = reels spinning, 1 = locked / awaiting dismiss
+    int _bonus;                   /**< The rolled treasure-point bonus, 0..9999. */
+    UIImageView *_numImgView1000; /**< The thousands reel. */
+    UIImageView *_numImgView0100; /**< The hundreds reel. */
+    UIImageView *_numImgView0010; /**< The tens reel. */
+    UIImageView *_numImgView0001; /**< The ones reel. */
+    /** The loaded SE resource ids: 0 the looping roll, 1 fail, 2 close. */
+    int _seRscId[3];
+    int _seInstId[3];     /**< The playing SE instance ids. */
+    BOOL _isAnimationing; /**< Guards while an open, close or lock animation runs. */
+    int _state;           /**< 0 while the reels spin, 1 once locked and awaiting dismissal. */
 }
+/** @brief Roll the treasure-point bonus and credit it. */
 - (void)getBonus;
+/**
+ * @brief A tap landed on the board.
+ * @param sender The tap recogniser.
+ */
 - (void)touchEvent:(id)sender;
+/** @brief Fade the board out. */
 - (void)startCloseAnimation;
+/** @brief The close animation finished; remove the board. */
 - (void)endCloseAnimation;
+/** @brief Show the bonus-result alert. */
 - (void)showAlertView;
+/**
+ * @brief Build one spinning digit reel.
+ * @param digit The value the reel settles on.
+ * @param images The reel's animation frames.
+ * @param hiddenLeadingZero YES to hide the reel when it would show a leading zero.
+ * @return The reel view.
+ */
 - (UIImageView *)makeDigitReelForValue:(int)digit
                        animationImages:(NSArray *)images
                                 hidden:(BOOL)hiddenLeadingZero;
+/**
+ * @brief The designated initialiser; it builds the board and its reels.
+ * @return The initialised view.
+ */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 @end
 

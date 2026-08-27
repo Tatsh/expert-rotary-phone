@@ -29,11 +29,16 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The game-effect settings list.
+ */
 @interface GameEffectView : UITableViewController
 
-// Custom nav-bar back button action (@ 0x737d8): plays the cancel SE, restores
-// the "settings_navbar" bar background, pops self, then re-applies the stored
-// SE volume.
+/**
+ * @brief The custom nav-bar back button action: play the cancel SE, restore the "settings_navbar"
+ * bar background, pop self, then re-apply the stored SE volume.
+ * @ghidraAddress 0x737d8
+ */
 - (void)backButtonFunc;
 
 @end

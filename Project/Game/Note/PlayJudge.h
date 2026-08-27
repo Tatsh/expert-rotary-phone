@@ -34,21 +34,26 @@
 // dependency runs one way: task -> note engine.
 class PlayTask;
 
-// Per-note judge state. The play data owns a fixed pool of 60 of these at
-// +0x3c8 (each 24 bytes); FUN_0003126c looks one up by note id, allocating a
-// free slot (id < 0) on first touch. Ghidra: FUN_0003126c.
+/**
+ * @brief Per-note judge state.
+ *
+ * The play data owns a fixed pool of 60 of these at +0x3c8, each 24 bytes; FUN_0003126c looks one
+ * up by note id, allocating a free slot (id below 0) on first touch.
+ */
 struct NoteJudgeState {
-    int layerId;     // +0x00 the note's sprite/layer id (draw arg)
-    uint32_t noteId; // +0x04 owning note's pool id (0xffffffff when the slot is
-                     //       free; judgeStateFor claims a slot whose noteId, as a
-                     //       signed int, is < 0). The judge pass feeds this back
-                     //       to NoteMng::setLaneFlag on retire, and the play draw
-                     //       reads it as the raw tone note id. Ghidra: nNoteId @ +4.
-    int phase;       // +0x08 visual phase: 0 pending, 1 active, 2/3 resolved
-    int result;      // +0x0c judged tier: -1 unjudged, else NoteJudge 0..3
-                     //       (0 = BAD/worst .. 3 = COOL/best)
-    int timestamp;   // +0x10 position when the phase/result last changed
-    int touchId;     // +0x14 bound neGraphics touch id (-1 = none)
+    int layerId; /**< +0x00 The note's sprite/layer id, a draw argument. */
+    /**
+     * +0x04 The owning note's pool id; 0xffffffff when the slot is free, since judgeStateFor
+     * claims a slot whose noteId, read as a signed int, is below 0. The judge pass feeds this back
+     * to NoteMng::setLaneFlag() on retire, and the play draw reads it as the raw tone note id.
+     * Ghidra: nNoteId @ +4.
+     */
+    uint32_t noteId;
+    int phase; /**< +0x08 Visual phase: 0 pending, 1 active, 2 or 3 resolved. */
+    /** +0x0c The judged tier: -1 unjudged, otherwise a NoteJudge 0..3, worst to best. */
+    int result;
+    int timestamp; /**< +0x10 The position when the phase or result last changed. */
+    int touchId;   /**< +0x14 The bound neGraphics touch id; -1 when none. */
 };
 
 // (The play-data struct itself is PlayTask, defined in
@@ -62,12 +67,16 @@ struct NoteJudgeState {
 // they are declared on the class in PlayTask.h. Only the miss callback below,
 // which NoteMng invokes through a function pointer, stays a free function.
 
-// The note engine's miss callback: apply the BAD/miss gauge penalty to the play
-// data (raise the missed flag, subtract gaugeLossMiss, clamp [0, 0x400]). The
-// play scene registers this into NoteMng at chart load (initPlayDataWithData);
-// detectMiss fires it when a note scrolls past un-tapped, so the life gauge
-// drains on missed notes just as it does on a tapped BAD. `playData` is the
-// owning PlayTask (passed as the callback arg). Ghidra: FUN_0003122c.
+/**
+ * @brief The note engine's miss callback: apply the BAD/miss gauge penalty to the play data.
+ *
+ * It raises the missed flag, subtracts gaugeLossMiss and clamps the gauge to [0, 0x400]. The play
+ * scene registers this into NoteMng at chart load (initPlayDataWithData); detectMiss fires it when
+ * a note scrolls past un-tapped, so the life gauge drains on missed notes just as it does on a
+ * tapped BAD.
+ * @param playData The owning PlayTask, passed as the callback argument.
+ * @ghidraAddress 0x3122c
+ */
 void PlayApplyMissGauge(void *playData);
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

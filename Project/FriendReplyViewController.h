@@ -14,6 +14,10 @@
 #import "Downloader.h"      // DownloaderDelegate (request fetch + reply POST)
 #import "FriendReplyCell.h" // FriendReplyCellDelegate (accept/reject callback)
 
+/**
+ * @brief The received-friend-requests list, which fetches the pending requests and posts each
+ * accept or reject.
+ */
 @interface FriendReplyViewController
     : UITableViewController <DownloaderDelegate, FriendReplyCellDelegate>
 @end

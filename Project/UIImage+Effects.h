@@ -18,18 +18,35 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief Small redraw effects on UIImage.
+ */
 @interface UIImage (Effects)
 
-// @ 0x7bba0 — redraw into a new same-size context; when `flip` is NO the CTM is
-// translated by (w,h) and scaled (-1,-1) to reverse the image, then drawn.
+/**
+ * @brief Redraw into a new same-size context, optionally reversing the image.
+ * @param flip NO translates the CTM by (w, h) and scales it by (-1, -1) before drawing, reversing
+ * the image; YES draws it as-is.
+ * @return The redrawn image.
+ * @ghidraAddress 0x7bba0
+ */
 - (UIImage *)createReverseImage:(BOOL)flip;
 
-// @ 0x7bcc4 — draw into a matching bitmap context and halve each RGB channel
-// (>>1), leaving alpha intact, to produce a darkened copy.
+/**
+ * @brief Draw into a matching bitmap context and halve each RGB channel, leaving alpha intact, to
+ * produce a darkened copy. The selector's spelling is the binary's.
+ * @return The darkened image.
+ * @ghidraAddress 0x7bcc4
+ */
 - (UIImage *)createImageHarfBlightness;
 
-// @ 0x7be1c — draw the image, vertically flipped, into a `rect`-sized context
-// offset by -rect.origin, i.e. crop out the given sub-rectangle.
+/**
+ * @brief Crop out a sub-rectangle by drawing the image, vertically flipped, into a
+ * @p rect -sized context offset by its negated origin.
+ * @param rect The sub-rectangle to crop.
+ * @return The cropped image.
+ * @ghidraAddress 0x7be1c
+ */
 - (UIImage *)createImagefromRect:(CGRect)rect;
 
 @end

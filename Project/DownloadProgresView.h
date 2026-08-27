@@ -16,24 +16,29 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A small download-progress dialog: a "cmn_window" frame around a spinner, a message label
+ * and a progress bar.
+ */
 @interface DownloadProgresView : UIView
 
-// The centered spinner shown while the download is in flight.
-// Synthesized getter — Ghidra: @ 0xde708 (ivar _indicatorView @ 0x34).
+/** The centred spinner shown while the download is in flight; the ivar is _indicatorView @ +0x34.
+ * Getter @ 0xde708. */
 @property(nonatomic, strong, readonly) UIActivityIndicatorView *indicatorView;
 
-// The single-line status/message label. Synthesized getter — Ghidra: @ 0xde718
-// (ivar _labelMessage @ 0x38).
+/** The single-line status message label; the ivar is _labelMessage @ +0x38. Getter @ 0xde718. */
 @property(nonatomic, strong, readonly) UILabel *labelMessage;
 
-// The determinate download progress bar. Synthesized getter — Ghidra: @ 0xde728
-// (ivar _progressView @ 0x3c).
+/** The determinate download progress bar; the ivar is _progressView @ +0x3c. Getter @
+ * 0xde728. */
 @property(nonatomic, strong, readonly) UIProgressView *progressView;
 
-// Re-lay the message label for the current mode and toggle the progress bar.
-// hidden == NO  -> show the progress bar, label sits at dialog center + 5pt.
-// hidden == YES -> hide the progress bar, label sits at dialog center + 10pt.
-// Ghidra: @ 0xde65c.
+/**
+ * @brief Re-lay the message label for the current mode and toggle the progress bar.
+ * @param hidden NO shows the progress bar and puts the label 5 pt below the dialog centre; YES
+ * hides the bar and puts the label 10 pt below the centre.
+ * @ghidraAddress 0xde65c
+ */
 - (void)layout:(BOOL)hidden;
 
 @end

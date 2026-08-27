@@ -1,152 +1,468 @@
-//
-//  MainViewController.h
-//  pop'n rhythmin
-//
-//  The root view controller and the bridge between UIKit and the C++ engine:
-//  it hosts the GL view + AepManager scene and drives the render loop via a
-//  CADisplayLink. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin.
-//
+/** @file
+ * The root view controller and the bridge between UIKit and the C++ engine: it hosts the GL view
+ * and the AepManager scene, and drives the render loop via a CADisplayLink. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin.
+ */
 
 #import <UIKit/UIKit.h>
 
 @class neGLView;
 
+/**
+ * @brief The root view controller: the render-loop host and the app's modal navigation host.
+ */
 @interface MainViewController : UIViewController
 
-// Loop control (driven from AppDelegate lifecycle callbacks).
-- (void)SetLoopInterval:(int)interval; // @ 0xc054
-- (void)StartLoop;                     // @ 0xbeb0
-- (void)PauseLoop;                     // @ 0xbef0
-- (void)ResumeLoop;                    // @ 0xbf10
-- (void)CreateTimer;                   // @ 0xbf30
-- (void)RemoveTimer;                   // @ 0xc024
-- (void)StopLoop;                      // @ 0xbed0 — stop for good (clear loop flag + drop timer)
+// Loop control, driven from the AppDelegate lifecycle callbacks.
 
-// The hosted GL surface (the C++ scene renders into it).
-- (neGLView *)GetGlView; // @ 0xc150
+/**
+ * @brief Set the CADisplayLink frame interval.
+ * @param interval The frame interval.
+ * @ghidraAddress 0xc054
+ */
+- (void)SetLoopInterval:(int)interval;
+/**
+ * @brief Start the render loop.
+ * @ghidraAddress 0xbeb0
+ */
+- (void)StartLoop;
+/**
+ * @brief Pause the render loop, leaving the timer in place.
+ * @ghidraAddress 0xbef0
+ */
+- (void)PauseLoop;
+/**
+ * @brief Resume a paused render loop.
+ * @ghidraAddress 0xbf10
+ */
+- (void)ResumeLoop;
+/**
+ * @brief Create the CADisplayLink timer.
+ * @ghidraAddress 0xbf30
+ */
+- (void)CreateTimer;
+/**
+ * @brief Invalidate and drop the CADisplayLink timer.
+ * @ghidraAddress 0xc024
+ */
+- (void)RemoveTimer;
+/**
+ * @brief Stop the render loop for good: clear the loop flag and drop the timer.
+ * @ghidraAddress 0xbed0
+ */
+- (void)StopLoop;
 
-// One frame: advance tasks then render. Called by the CADisplayLink.
-- (void)mainLoop; // @ 0xbe80
-- (void)task;     // @ 0xbb5c
-- (void)draw;     // @ 0xbd30
+/**
+ * @brief The hosted GL surface the C++ scene renders into.
+ * @return The GL view.
+ * @ghidraAddress 0xc150
+ */
+- (neGLView *)GetGlView;
 
-- (BOOL)isPause; // @ 0xf148
-- (BOOL)isLoop;  // @ 0xf160
+/**
+ * @brief One frame: advance the tasks, then render. The CADisplayLink calls it.
+ * @ghidraAddress 0xbe80
+ */
+- (void)mainLoop;
+/**
+ * @brief Advance the engine's task list by one frame.
+ * @ghidraAddress 0xbb5c
+ */
+- (void)task;
+/**
+ * @brief Render one frame, capturing a screenshot first when one has been armed.
+ * @ghidraAddress 0xbd30
+ */
+- (void)draw;
 
-// Screen navigation. Each Goto* presents a modal child view controller over the
-// GL view (with its open animation) and pauses the render loop; the matching
-// *EndCallBack tears it down and resumes. This is the app's nav host that the
-// title/menu tasks drive via neSceneManager::rootViewController.
-- (void)GotoAcceptPolicy;                      // @ 0xda40
-- (void)GotoSetting;                           // @ 0xc160
-- (void)GotoMapSelect;                         // @ 0xc7d8
-- (void)GotoFriendManage;                      // @ 0xcdc8
-- (void)GotoDefaultDownload;                   // @ 0xd560
-- (void)GotoInConversionPass;                  // @ 0xe53c
-- (void)GotoPopnLink;                          // @ 0xd074
-- (void)GotoInPlayerName;                      // @ 0xd248
-- (void)GotoInviteCode;                        // @ 0xd7f4
-- (void)GotoArcadeSearch;                      // @ 0xd930
-- (void)GotoFriendScore:(unsigned int)musicId; // @ 0xcf9c
-- (void)GotoReviewPage;                        // @ 0xe830
-- (void)GotoRecommend:(void *)context;         // @ 0xc374
-- (void)GotoSortSelect:(void *)context;        // @ 0xc9dc
-- (void)GotoOverScoreLog:(void *)context;      // @ 0xe170
-- (void)GotoPresentBox;                        // @ 0xdd8c
-- (void)GotoStoreButton;                       // @ 0xd3d4
-- (void)GotoAcViewer;                          // @ 0xdb24
-- (void)GotoMailWithText:(NSString *)body;     // @ 0xe890
+/**
+ * @brief Whether the render loop is paused.
+ * @return YES while paused.
+ * @ghidraAddress 0xf148
+ */
+- (BOOL)isPause;
+/**
+ * @brief Whether the render loop is running.
+ * @return YES while looping.
+ * @ghidraAddress 0xf160
+ */
+- (BOOL)isLoop;
 
-// Modal teardowns (invoked by each screen when it closes): release the
-// controller and resume the render loop.
-- (void)AcceptPolicyEndCallBack;     // @ 0xdae4
-- (void)SettingEndCallBack;          // @ 0xc300
-- (void)MapSelectEndCallBack;        // @ 0xc978
-- (void)FriendManageEndCallBack;     // @ 0xcf0c
-- (void)DefaultDownloadEndCallBack;  // @ 0xd640
-- (void)InConversionPassEndCallBack; // @ 0xe67c
-- (void)PopnLinkEndCallBack;         // @ 0xd1b8
-- (void)InPlayerNameEndCallBack;     // @ 0xd370
-- (void)InviteCodeEndCallBack;       // @ 0xd8d8
-- (void)ArcadeSearchEndCallBack;     // @ 0xd9e8
-- (void)FriendScoreEndCallBack;      // @ 0xd044
-- (void)RecommendEndCallBack;        // @ 0xc754
-- (void)SortSelectEndCallBack;       // @ 0xcd44
-- (void)OverScoreLogEndCallBack;     // @ 0xe4b8
-- (void)PresentBoxEndCallBack;       // @ 0xe0d4
-- (void)StoreEndCallBack;            // @ 0xd518
-- (void)AcViewerEndCallBack;         // @ 0xdcd4
+// Screen navigation. Each Goto* presents a modal child view controller over the GL view, with its
+// open animation, and pauses the render loop; the matching *EndCallBack tears it down and resumes.
+// This is the app's navigation host that the title and menu tasks drive via
+// neSceneManager::rootViewController.
 
-// Synthesized state flags (atomic in the binary). Some are written internally
-// via the backing ivar directly (readonly here); the read/write ones expose an
-// atomic setter.
-@property(atomic, readonly) BOOL settingViewing;   // @ 0xf0d0 — a settings modal is up
-@property(atomic, readonly) BOOL cameraRollSaving; // @ 0xf0e8 — a camera-roll save is in flight
-@property(atomic, readonly)
-    BOOL isDefaultDlFailed;               // @ 0xf100 — the initial download failed (read by
-                                          // TitleTask)
-@property(atomic) BOOL rewardListViweing; // getter @ 0xf118, setter @ 0xf130 (name typo is real)
-@property(atomic) BOOL isGotoTitle;       // getter @ 0xf178, setter @ 0xf190
-@property(atomic) BOOL acMusicSelViewing; // getter @ 0xf1a8, setter @ 0xf1c0
-@property(nonatomic, readonly) NSError *cameraRollError; // @ 0xf1d8 — last camera-roll save error
+/**
+ * @brief Present the first-run terms-acceptance modal.
+ * @ghidraAddress 0xda40
+ */
+- (void)GotoAcceptPolicy;
+/**
+ * @brief Present the settings screen.
+ * @ghidraAddress 0xc160
+ */
+- (void)GotoSetting;
+/**
+ * @brief Present the sugoroku map-select screen.
+ * @ghidraAddress 0xc7d8
+ */
+- (void)GotoMapSelect;
+/**
+ * @brief Present the friend-management hub.
+ * @ghidraAddress 0xcdc8
+ */
+- (void)GotoFriendManage;
+/**
+ * @brief Present the launch-time default-data downloader.
+ * @ghidraAddress 0xd560
+ */
+- (void)GotoDefaultDownload;
+/**
+ * @brief Present the device-change pass-entry screen.
+ * @ghidraAddress 0xe53c
+ */
+- (void)GotoInConversionPass;
+/**
+ * @brief Present the pop'n-link top screen.
+ * @ghidraAddress 0xd074
+ */
+- (void)GotoPopnLink;
+/**
+ * @brief Present the player-name entry screen.
+ * @ghidraAddress 0xd248
+ */
+- (void)GotoInPlayerName;
+/**
+ * @brief Present the invite-code screen.
+ * @ghidraAddress 0xd7f4
+ */
+- (void)GotoInviteCode;
+/**
+ * @brief Present the arcade-search screen.
+ * @ghidraAddress 0xd930
+ */
+- (void)GotoArcadeSearch;
+/**
+ * @brief Present the friend-score screen for one song.
+ * @param musicId The song to show scores for.
+ * @ghidraAddress 0xcf9c
+ */
+- (void)GotoFriendScore:(unsigned int)musicId;
+/**
+ * @brief Open the App Store review page.
+ * @ghidraAddress 0xe830
+ */
+- (void)GotoReviewPage;
+/**
+ * @brief Present the recommendations screen.
+ * @param context The opaque caller context threaded back on close.
+ * @ghidraAddress 0xc374
+ */
+- (void)GotoRecommend:(void *)context;
+/**
+ * @brief Present the sort-select modal.
+ * @param context The opaque caller context threaded back on close.
+ * @ghidraAddress 0xc9dc
+ */
+- (void)GotoSortSelect:(void *)context;
+/**
+ * @brief Present the over-score log.
+ * @param context The opaque caller context threaded back on close.
+ * @ghidraAddress 0xe170
+ */
+- (void)GotoOverScoreLog:(void *)context;
+/**
+ * @brief Present the present box.
+ * @ghidraAddress 0xdd8c
+ */
+- (void)GotoPresentBox;
+/**
+ * @brief Present the store screen.
+ * @ghidraAddress 0xd3d4
+ */
+- (void)GotoStoreButton;
+/**
+ * @brief Present the arcade viewer.
+ * @ghidraAddress 0xdb24
+ */
+- (void)GotoAcViewer;
+/**
+ * @brief Present the mail composer with a pre-filled body.
+ * @param body The message body.
+ * @ghidraAddress 0xe890
+ */
+- (void)GotoMailWithText:(NSString *)body;
 
-// The GL view's last captured frame, kept behind a modal so the render loop can
-// pause; the result screen reads it (to know the backdrop is ready) then
-// releases it once its own scene is up. Ghidra: getCapturedImage @ 0xbbac,
-// releaseCapturedImage @ 0xbbbc.
+// Modal teardowns, invoked by each screen when it closes: they release the controller and resume
+// the render loop.
+
+/**
+ * @brief The terms-acceptance modal closed.
+ * @ghidraAddress 0xdae4
+ */
+- (void)AcceptPolicyEndCallBack;
+/**
+ * @brief The settings screen closed.
+ * @ghidraAddress 0xc300
+ */
+- (void)SettingEndCallBack;
+/**
+ * @brief The map-select screen closed.
+ * @ghidraAddress 0xc978
+ */
+- (void)MapSelectEndCallBack;
+/**
+ * @brief The friend-management hub closed.
+ * @ghidraAddress 0xcf0c
+ */
+- (void)FriendManageEndCallBack;
+/**
+ * @brief The default-data downloader closed.
+ * @ghidraAddress 0xd640
+ */
+- (void)DefaultDownloadEndCallBack;
+/**
+ * @brief The device-change pass-entry screen closed.
+ * @ghidraAddress 0xe67c
+ */
+- (void)InConversionPassEndCallBack;
+/**
+ * @brief The pop'n-link top screen closed.
+ * @ghidraAddress 0xd1b8
+ */
+- (void)PopnLinkEndCallBack;
+/**
+ * @brief The player-name entry screen closed.
+ * @ghidraAddress 0xd370
+ */
+- (void)InPlayerNameEndCallBack;
+/**
+ * @brief The invite-code screen closed.
+ * @ghidraAddress 0xd8d8
+ */
+- (void)InviteCodeEndCallBack;
+/**
+ * @brief The arcade-search screen closed.
+ * @ghidraAddress 0xd9e8
+ */
+- (void)ArcadeSearchEndCallBack;
+/**
+ * @brief The friend-score screen closed.
+ * @ghidraAddress 0xd044
+ */
+- (void)FriendScoreEndCallBack;
+/**
+ * @brief The recommendations screen closed.
+ * @ghidraAddress 0xc754
+ */
+- (void)RecommendEndCallBack;
+/**
+ * @brief The sort-select modal closed.
+ * @ghidraAddress 0xcd44
+ */
+- (void)SortSelectEndCallBack;
+/**
+ * @brief The over-score log closed.
+ * @ghidraAddress 0xe4b8
+ */
+- (void)OverScoreLogEndCallBack;
+/**
+ * @brief The present box closed.
+ * @ghidraAddress 0xe0d4
+ */
+- (void)PresentBoxEndCallBack;
+/**
+ * @brief The store screen closed.
+ * @ghidraAddress 0xd518
+ */
+- (void)StoreEndCallBack;
+/**
+ * @brief The arcade viewer closed.
+ * @ghidraAddress 0xdcd4
+ */
+- (void)AcViewerEndCallBack;
+
+// Synthesized state flags, atomic in the binary. Some are written internally through the backing
+// ivar directly and are readonly here; the read/write ones expose an atomic setter.
+
+/** Whether a settings modal is up. Getter @ 0xf0d0. */
+@property(atomic, readonly) BOOL settingViewing;
+/** Whether a camera-roll save is in flight. Getter @ 0xf0e8. */
+@property(atomic, readonly) BOOL cameraRollSaving;
+/** Whether the initial download failed; TitleTask reads it. Getter @ 0xf100. */
+@property(atomic, readonly) BOOL isDefaultDlFailed;
+/** Whether the reward app list is on screen. The name's typo is in the binary. Getter @ 0xf118,
+ * setter @ 0xf130. */
+@property(atomic) BOOL rewardListViweing;
+/** Whether the app is returning to the title screen. Getter @ 0xf178, setter @ 0xf190. */
+@property(atomic) BOOL isGotoTitle;
+/** Whether the arcade music-select screen is up. Getter @ 0xf1a8, setter @ 0xf1c0. */
+@property(atomic) BOOL acMusicSelViewing;
+/** The last camera-roll save error. Getter @ 0xf1d8. */
+@property(nonatomic, readonly) NSError *cameraRollError;
+
+/**
+ * @brief The GL view's last captured frame, kept behind a modal so the render loop can pause.
+ *
+ * The result screen reads it to know the backdrop is ready, then releases it once its own scene is
+ * up.
+ * @return The captured frame, or nil when none is armed.
+ * @ghidraAddress 0xbbac
+ */
 - (UIImage *)getCapturedImage;
+/**
+ * @brief Release the captured frame.
+ * @ghidraAddress 0xbbbc
+ */
 - (void)releaseCapturedImage;
 
-// Capture the GL view's current frame into the backing store getCapturedImage
-// reads. The result screen's per-frame draw fires this once, on the last frame
-// of its intro effect, so the backdrop is frozen before the modal goes up.
-// Ghidra: the "screenshot" selector (PTR_s_screenshot_0015a8fc) sent from
-// FUN_0003f5f0.
+/**
+ * @brief Capture the GL view's current frame into the backing store -getCapturedImage reads.
+ *
+ * The result screen's per-frame draw fires this once, on the last frame of its intro effect, so
+ * the backdrop is frozen before the modal goes up. Ghidra: the "screenshot" selector
+ * (PTR_s_screenshot_0015a8fc) sent from FUN_0003f5f0.
+ */
 - (void)screenshot;
 
-// Snapshot the GL view's current renderbuffer into an upright UIImage (used by
-// -draw when a screenshot has been armed).
-+ (UIImage *)capture:(neGLView *)glView; // @ 0xbbec
+/**
+ * @brief Snapshot the GL view's current renderbuffer into an upright UIImage; -draw uses it when a
+ * screenshot has been armed.
+ * @param glView The view to snapshot.
+ * @return The captured image.
+ * @ghidraAddress 0xbbec
+ */
++ (UIImage *)capture:(neGLView *)glView;
 
-// Show / hide the "communicating..." overlay while a network save is in flight
-// (the result screen raises it around the score upload). Ghidra:
-// InsertCommunicating @ 0xd6a8, DeleteCommunicating @ 0xd744.
+// Show and hide the "communicating…" overlay while a network save is in flight; the result screen
+// raises it around the score upload.
+
+/**
+ * @brief Raise the "communicating…" overlay.
+ * @ghidraAddress 0xd6a8
+ */
 - (void)InsertCommunicating;
+/**
+ * @brief Dismiss the "communicating…" overlay.
+ * @ghidraAddress 0xd744
+ */
 - (void)DeleteCommunicating;
-- (BOOL)IsCommunicatingEnable;       // @ 0xd790 — the overlay is present
-- (BOOL)IsCommunicatingAnimationing; // @ 0xd764 — the overlay is mid-fade
-- (void)CommunicatingFailed;         // @ 0xd7a8 — switch to the "failed" caption
-- (void)CommunicatingEndCallBack;    // @ 0xd7c8 — the overlay finished closing;
-                                     // drop it
+/**
+ * @brief Whether the overlay is present.
+ * @return YES while the overlay exists.
+ * @ghidraAddress 0xd790
+ */
+- (BOOL)IsCommunicatingEnable;
+/**
+ * @brief Whether the overlay is mid-fade.
+ * @return YES while a fade is running.
+ * @ghidraAddress 0xd764
+ */
+- (BOOL)IsCommunicatingAnimationing;
+/**
+ * @brief Switch the overlay to its "failed" caption.
+ * @ghidraAddress 0xd7a8
+ */
+- (void)CommunicatingFailed;
+/**
+ * @brief The overlay finished closing; drop it.
+ * @ghidraAddress 0xd7c8
+ */
+- (void)CommunicatingEndCallBack;
 
-// Feature-button gates the menu task reads before opening a screen: YES while
-// the matching modal is already up.
-- (BOOL)IsFriendManageEnable; // @ 0xcf70
-- (BOOL)IsPopnLinkEnable;     // @ 0xd21c
-- (BOOL)IsStoreEnable;        // @ 0xd548
-- (BOOL)IsInviteCodeEnable;   // @ 0xd918
-- (BOOL)IsArcadeSearchEnable; // @ 0xda28
-- (BOOL)IsPresentBoxEnable;   // @ 0xe158
+// Feature-button gates the menu task reads before opening a screen: each is YES while the matching
+// modal is already up.
 
-// Save a captured screenshot (stored under the app-support dir as `fileName`)
-// into the camera roll; cameraRollSaving is YES until the async save completes.
-- (void)SaveToCameraRoll:(NSString *)fileName; // @ 0xe704
+/**
+ * @brief Whether the friend-management hub is already up.
+ * @return YES when the modal exists.
+ * @ghidraAddress 0xcf70
+ */
+- (BOOL)IsFriendManageEnable;
+/**
+ * @brief Whether the pop'n-link screen is already up.
+ * @return YES when the modal exists.
+ * @ghidraAddress 0xd21c
+ */
+- (BOOL)IsPopnLinkEnable;
+/**
+ * @brief Whether the store screen is already up.
+ * @return YES when the modal exists.
+ * @ghidraAddress 0xd548
+ */
+- (BOOL)IsStoreEnable;
+/**
+ * @brief Whether the invite-code screen is already up.
+ * @return YES when the modal exists.
+ * @ghidraAddress 0xd918
+ */
+- (BOOL)IsInviteCodeEnable;
+/**
+ * @brief Whether the arcade-search screen is already up.
+ * @return YES when the modal exists.
+ * @ghidraAddress 0xda28
+ */
+- (BOOL)IsArcadeSearchEnable;
+/**
+ * @brief Whether the present box is already up.
+ * @return YES when the modal exists.
+ * @ghidraAddress 0xe158
+ */
+- (BOOL)IsPresentBoxEnable;
 
-// Install a one-shot C confirm callback fired by the common/custom alert
-// delegates.
-- (void)SetAlertViewCallback:(void (*)(void *))callback param:(void *)param; // @ 0xe810
+/**
+ * @brief Save a captured screenshot into the camera roll; cameraRollSaving stays YES until the
+ * async save completes.
+ * @param fileName The file, stored under the Application Support directory.
+ * @ghidraAddress 0xe704
+ */
+- (void)SaveToCameraRoll:(NSString *)fileName;
 
-// The fade-to-black scrim over the whole view (used on scene transitions).
-- (void)InsertBlackBoard;  // @ 0xeca4 — snap on, opaque, on top
-- (void)FadeInBlackBoard;  // @ 0xede8 — fade in over 0.3s
-- (void)FadeOutBlackBoard; // @ 0xefdc — fade out over 0.5s
+/**
+ * @brief Install a one-shot C confirm callback fired by the common and custom alert delegates.
+ * @param callback The function to call.
+ * @param param The opaque parameter to pass it.
+ * @ghidraAddress 0xe810
+ */
+- (void)SetAlertViewCallback:(void (*)(void *))callback param:(void *)param;
 
-// Reward app-list (offer wall) delegate callbacks; rewardListViweing tracks
-// visibility.
-- (void)appListDidAppear;                          // @ 0xeaec
-- (void)appListDidDisappear;                       // @ 0xeaf0
-- (void)appListFailLoadWithError:(NSError *)error; // @ 0xeb1c
+// The fade-to-black scrim over the whole view, used on scene transitions.
+
+/**
+ * @brief Snap the scrim on, opaque and on top.
+ * @ghidraAddress 0xeca4
+ */
+- (void)InsertBlackBoard;
+/**
+ * @brief Fade the scrim in over 0.3 s.
+ * @ghidraAddress 0xede8
+ */
+- (void)FadeInBlackBoard;
+/**
+ * @brief Fade the scrim out over 0.5 s.
+ * @ghidraAddress 0xefdc
+ */
+- (void)FadeOutBlackBoard;
+
+// Reward app-list (offer wall) delegate callbacks; rewardListViweing tracks visibility.
+
+/**
+ * @brief The reward app list appeared.
+ * @ghidraAddress 0xeaec
+ */
+- (void)appListDidAppear;
+/**
+ * @brief The reward app list disappeared.
+ * @ghidraAddress 0xeaf0
+ */
+- (void)appListDidDisappear;
+/**
+ * @brief The reward app list failed to load.
+ * @param error What went wrong.
+ * @ghidraAddress 0xeb1c
+ */
+- (void)appListFailLoadWithError:(NSError *)error;
 
 @end
 

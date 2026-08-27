@@ -10,10 +10,18 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The paged how-to strip: a row of page images over a shared background.
+ */
 @interface HowToView : UIView
 
-// Lay `imageList` (UIImage*) side by side, `frame` wide per page, over
-// `backGroundImg`.
+/**
+ * @brief Lay the images side by side, one page wide each, over a background image.
+ * @param imageList The page images, as UIImage.
+ * @param frame The per-page frame; its width is the page stride.
+ * @param backGroundImg The background drawn behind every page.
+ * @return The initialised view.
+ */
 - (instancetype)initWithImageList:(NSArray *)imageList
                             frame:(CGRect)frame
                     backGroundImg:(UIImage *)backGroundImg;

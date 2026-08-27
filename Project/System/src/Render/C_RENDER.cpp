@@ -223,15 +223,18 @@ void neApplyViewport(ne::C_RENDER *r, neViewport *vp) {
 // Render state + immediate-mode primitives.
 // ---------------------------------------------------------------------------
 
-// One interleaved vertex: GL_FLOAT position + premultiplied RGBA8.
-// Stride 12, position size 2 (glVertexPointer), colour at +8 (glColorPointer).
-// Ghidra: built inline on the stack by each neDraw* primitive. Positions are
-// GL_FLOAT (the backend's glVertexPointer uses type 0x1406); each primitive
-// receives already-scaled float coordinates and stores them verbatim.
+/**
+ * @brief One interleaved vertex: GL_FLOAT position plus premultiplied RGBA8.
+ *
+ * Stride 12, position size 2 (glVertexPointer), colour at +8 (glColorPointer). Ghidra: built
+ * inline on the stack by each neDraw* primitive. Positions are GL_FLOAT (the backend's
+ * glVertexPointer uses type 0x1406); each primitive receives already-scaled float coordinates and
+ * stores them verbatim.
+ */
 struct neColorVertex {
-    float x;
-    float y;
-    uint32_t rgba;
+    float x;       /**< Position x, in pixels. */
+    float y;       /**< Position y, in pixels. */
+    uint32_t rgba; /**< Premultiplied colour, stored [R, G, B, A]. */
 };
 
 // Ghidra: colours arrive as 0..255 (a,r,g,b); rgb is premultiplied by alpha/255
@@ -362,27 +365,32 @@ void setTexParamCached(void *tex, ne::C_RENDER *r, int type, int value) {
 // Textured sprite blit.
 // ---------------------------------------------------------------------------
 
-// One textured vertex: GL_FLOAT position, GL_SHORT-normalized UV, premult RGBA8.
-// Stride 16; position size 2 (+0x00), UV (+0x08), colour (+0x0c). Ghidra: built
-// on the stack (local_a4 block) by FUN_00015fb8; the backend specifies the
-// position array as GL_FLOAT (0x1406), so the corners must be stored as floats —
-// storing ints here would be reinterpreted as near-zero denormals and collapse
-// every quad to the origin.
+/**
+ * @brief One textured vertex: GL_FLOAT position, GL_SHORT-normalised UV, premultiplied RGBA8.
+ *
+ * Stride 16; position size 2 (+0x00), UV (+0x08), colour (+0x0c). Ghidra: built on the stack (the
+ * local_a4 block) by FUN_00015fb8; the backend specifies the position array as GL_FLOAT (0x1406),
+ * so the corners must be stored as floats — storing ints here would be reinterpreted as near-zero
+ * denormals and collapse every quad to the origin.
+ */
 struct neTexVertex {
-    float x;
-    float y;
-    int16_t u;
-    int16_t v;
-    uint32_t rgba;
+    float x;       /**< Position x, in pixels. */
+    float y;       /**< Position y, in pixels. */
+    int16_t u;     /**< Normalised texture u, 0..32767. */
+    int16_t v;     /**< Normalised texture v, 0..32767. */
+    uint32_t rgba; /**< Premultiplied colour, stored [R, G, B, A]. */
 };
 
-// View of the sprite command the blit reads: refcount (+0x00), the ne::C_TEXTURE
-// (+0x04, null => untextured), and the 4 tex-param values (+0x08). Ghidra:
-// fields at param_1+4/+8.
+/**
+ * @brief A view of the sprite command the blit reads.
+ *
+ * Ghidra: the fields at param_1+4 and param_1+8.
+ */
 struct neSpriteView {
-    int32_t refCount;     // +0x00
-    void *texture;        // +0x04 ne::C_TEXTURE* (GL name at texture+0x18)
-    int32_t texParams[4]; // +0x08 mag/min/wrapS/wrapT
+    int32_t refCount;     /**< +0x00 Outstanding references. */
+    void *texture;        /**< +0x04 The ne::C_TEXTURE*, whose GL name is at +0x18; null when
+                               the sprite is untextured. */
+    int32_t texParams[4]; /**< +0x08 The mag, min, wrap-S and wrap-T parameter values. */
 };
 
 static int16_t neNormUV(float t) {

@@ -196,6 +196,8 @@ void BootLogoTask::finish() {
  * Ghidra: BootLogoTask_update (FUN_0002b02c) — the 10-state splash machine.
  * Each screen fades in, holds ~kHoldFrames (or until a tap), then fades out;
  * the three logos are shown in the order 0, 2, 1.
+ * @param deltaMs Milliseconds elapsed since the previous tick; the splash machine paces itself
+ * off its own frame counters and ignores it.
  */
 void BootLogoTask::update(int /*deltaMs*/) {
     const bool skip = skipRequested();

@@ -12,19 +12,27 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A view that holds an image and builds its UIImageView off the main path, so a batch of
+ * image work does not block.
+ */
 @interface DelayImageView : UIView
 
-// The image to display. Backed by the `image` ivar @ +0x52; accessors are
-// synthesized (the getter returns the ivar directly, the setter is the
-// retaining property setter).
+/** The image to display, backed by the `image` ivar @ +0x52. The getter returns the ivar directly
+ * and the setter is the retaining property setter. */
 @property(nonatomic, retain) UIImage *image;
 
-// Build a DelayImageView for `image` with a spinner overlay and start
-// -threadFunc off-thread.
-+ (instancetype)allocWithImage:(UIImage *)image; // @ 0x8690
+/**
+ * @brief Build a view for an image with a spinner overlay and start -threadFunc off-thread.
+ * @param image The image to display.
+ * @return The new view.
+ * @ghidraAddress 0x8690
+ */
++ (instancetype)allocWithImage:(UIImage *)image;
 
-// Build a UIImageView from `image`, size it to the image, and add it as a
-// subview.
+/**
+ * @brief Build a UIImageView from the held image, size it to the image, and add it as a subview.
+ */
 - (void)threadFunc;
 
 @end

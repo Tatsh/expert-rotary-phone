@@ -19,6 +19,10 @@
 class AepManager;
 class neTextureForiOS;
 
+/**
+ * @brief The boot splash task: a ten-state machine that fades the three startup logos in and out
+ * before handing off to TitleTask.
+ */
 class BootLogoTask : public ne::C_TASK {
 public:
     BootLogoTask();                    // Ghidra: BootLogoTask_ctor (FUN_0002af58)

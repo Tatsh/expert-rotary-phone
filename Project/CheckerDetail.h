@@ -14,12 +14,24 @@
 
 @class ArcadeScoreData;
 
+/**
+ * @brief The music-checker score detail screen: a per-song graph of the venue top, venue mean and
+ * personal-best scores.
+ */
 @interface CheckerDetail : UIViewController
 
-// Build the detail graph for one arcade song record.
+/**
+ * @brief Build the detail graph for one arcade song record.
+ * @param scoreData The record to graph.
+ * @return The initialised controller.
+ */
 - (instancetype)initWithScoreData:(ArcadeScoreData *)scoreData;
 
-// Return a grayscale copy of `image` (device-gray bitmap context redraw).
+/**
+ * @brief Redraw an image into a device-gray bitmap context.
+ * @param image The image to convert.
+ * @return A greyscale copy.
+ */
 - (UIImage *)convertGrayScaleImage:(UIImage *)image;
 
 @end

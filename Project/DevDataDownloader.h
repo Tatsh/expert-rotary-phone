@@ -22,32 +22,57 @@
 
 @class DevDataDownloader;
 
-// Only the two selectors the binary actually sends to m_Delegate.
+/**
+ * @brief Receives the dev-data fetch result. These are the only two selectors the binary sends to
+ * m_Delegate.
+ */
 @protocol DevDataDownloaderDelegate <NSObject>
 @optional
-- (void)devDownloadSucceeded:(NSString *)fileName; // sent from downloaderFinished: on write success
-- (void)devDownloadFailed:(NSString *)message; // sent from downloaderFinished: / downloaderError:
+/**
+ * @brief The file was fetched and written, sent from downloaderFinished:.
+ * @param fileName The file that was written.
+ */
+- (void)devDownloadSucceeded:(NSString *)fileName;
+/**
+ * @brief The fetch failed, sent from downloaderFinished: or downloaderError:.
+ * @param message The formatted error string.
+ */
+- (void)devDownloadFailed:(NSString *)message;
 @end
 
+/**
+ * @brief Fetches a single "dev data" file from the development host into the app Caches directory.
+ */
 @interface DevDataDownloader : NSObject <DownloaderDelegate> {
-    Downloader *m_Downloader; // in-flight request (retained)
-    NSString *m_Title;        // dev-data title (path component, retained)
-    NSString *m_FileName;     // dev-data file name (retained)
-    BOOL m_IsOld;             // pick the dev_data_old/ subtree
+    Downloader *m_Downloader; /**< The in-flight request; retained. */
+    NSString *m_Title;        /**< The dev-data title, a path component; retained. */
+    NSString *m_FileName;     /**< The dev-data file name; retained. */
+    BOOL m_IsOld;             /**< Pick the dev_data_old/ subtree. */
+    /** The result delegate; not retained. */
     __unsafe_unretained id<DevDataDownloaderDelegate> m_Delegate;
-    BOOL isAcv; // title has the "acv_" prefix -> acvdevdata/ subtree
+    BOOL isAcv; /**< The title has the "acv_" prefix, so the acvdevdata/ subtree is used. */
 }
 
-// getter @ 0x8ee00 / setter @ 0x8ee10 (plain pointer assign, nonatomic)
+/** The result delegate; a plain nonatomic pointer assign. Getter @ 0x8ee00, setter @ 0x8ee10. */
 @property(nonatomic, assign) id<DevDataDownloaderDelegate> delegate;
-// getter @ 0x8ee20 / setter @ 0x8ee38 (atomic, DataMemoryBarrier)
+/** Whether to pick the dev_data_old/ subtree. The accessors are atomic, using a
+ * DataMemoryBarrier. Getter @ 0x8ee20, setter @ 0x8ee38. */
 @property(assign) BOOL isOld;
 
-// Shared instance (resets isOld to NO on every access). Ghidra: @ 0x8e894.
+/**
+ * @brief The shared instance. Every access resets isOld to NO.
+ * @return The downloader.
+ * @ghidraAddress 0x8e894
+ */
 + (instancetype)getInstance;
 
-// Build the Downloader for <title>/<fileName> and start it. Returns NO if a
-// request is already in flight. Ghidra: @ 0x8e984.
+/**
+ * @brief Build the Downloader for `<title>/<fileName>` and start it.
+ * @param title The dev-data title.
+ * @param fileName The dev-data file name.
+ * @return NO if a request is already in flight.
+ * @ghidraAddress 0x8e984
+ */
 - (BOOL)startDownload:(NSString *)title file:(NSString *)fileName;
 
 @end

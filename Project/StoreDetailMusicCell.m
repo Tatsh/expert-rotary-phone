@@ -15,9 +15,13 @@
 
 static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
+/**
+ * @brief The song row's private link state.
+ */
 @interface StoreDetailMusicCell ()
-// The resolved iTunes URL (nil hides buttonLink). Backed by the `linkURL` ivar.
-@property(nonatomic, retain) NSURL *linkURL; // getter @ 0x752f4, setter @ 0x75304
+/** The resolved iTunes URL, backed by the `linkURL` ivar; nil hides the link button. Getter @
+ * 0x752f4, setter @ 0x75304. */
+@property(nonatomic, retain) NSURL *linkURL;
 @end
 
 @implementation StoreDetailMusicCell {

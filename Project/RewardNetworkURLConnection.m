@@ -13,12 +13,20 @@
 #import "RewardNetworkWebAPI.h" // +responseFromContentsServer:request:data:finishedBlock:failedBlock:
 
 // Own privates (the watchdog callback and the retry driver).
+/**
+ * @brief The connection's private task handle and retry helpers.
+ */
 @interface RewardNetworkURLConnection () {
 #if defined(__IPHONE_7_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_7_0
-    NSURLSessionDataTask *_task; // modern-SDK replacement for the connection
+    NSURLSessionDataTask *_task; /**< The modern-SDK replacement for the connection. */
 #endif
 }
+/**
+ * @brief The watchdog fired; abandon or retry the request.
+ * @param timer The watchdog timer.
+ */
 - (void)connectionTimeout:(NSTimer *)timer;
+/** @brief Re-issue the request after a back-off. */
 - (void)retryConnection;
 @end
 

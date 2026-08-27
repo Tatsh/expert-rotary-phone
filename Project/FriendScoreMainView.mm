@@ -86,18 +86,22 @@
 #import "UserSettingData.h"          // local player id / chara
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
-// NSValue payload for one friend-score row, shared with FriendScoreTableCell
-// (type-encoding "{ScoreDataStruct=@@iBBcsB}").
+/**
+ * @brief The NSValue payload for one friend-score row, shared with FriendScoreTableCell.
+ *
+ * The Objective-C type-encoding is "{ScoreDataStruct=@@iBBcsB}".
+ */
 typedef struct {
-    NSString *__unsafe_unretained
-        playerId;                       // @  nil => empty slot; non-nil + nil name => local player
-    NSString *__unsafe_unretained name; // @  friend display name; nil on the local player's row
-    int score;                          // i  -1 => no score recorded
-    BOOL isPerfect;                     // B
-    BOOL isFullCombo;                   // B
-    char rank;                          // c  0-based finishing place
-    short charaId;                      // s
-    BOOL isNotice;                      // B  a rival beat this player's score
+    /** nil marks an empty slot; non-nil with a nil name marks the local player. */
+    NSString *__unsafe_unretained playerId;
+    /** The friend's display name; nil on the local player's row. */
+    NSString *__unsafe_unretained name;
+    int score;        /**< The score; -1 when none is recorded. */
+    BOOL isPerfect;   /**< Whether the play was perfect. */
+    BOOL isFullCombo; /**< Whether the play was a full combo. */
+    char rank;        /**< The 0-based finishing place. */
+    short charaId;    /**< The player's character id. */
+    BOOL isNotice;    /**< A rival beat this player's score. */
 } ScoreDataStruct;
 
 // Score -> rank index (0 best .. 6 worst). Shared routine (Ghidra FUN_00028a40,
@@ -124,12 +128,21 @@ static int scoreToRank(int score) {
     return 6;
 }
 
+/**
+ * @brief The friend-score screen's private table and fetch helpers.
+ */
 @interface FriendScoreMainView () <UITableViewDataSource, UITableViewDelegate, DownloadMainDelegate>
+/** @brief The open cross-fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief Cross-fade the screen out. */
 - (void)startCloseAnimation;
+/** @brief The close cross-fade finished; tear the screen down. */
 - (void)endCloseAnimation;
+/** @brief The back-button action. */
 - (void)onBackButtonTouched;
+/** @brief Release the fetched friend-score rows and their retained strings. */
 - (void)releaseFriendScore;
+/** @brief POST the friend-score request for the shown song. */
 - (void)startGetFriendScoreHttp;
 @end
 

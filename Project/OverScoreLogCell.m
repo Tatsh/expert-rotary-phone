@@ -20,14 +20,20 @@
 // named; pointers are
 // __unsafe_unretained because the element owns the objects, the cell only
 // borrows them.
+/**
+ * @brief The plain C struct the data element writes into; the Ghidra ivar is m_overScoreLogData.
+ *
+ * Only the fields this cell reads are named. The pointers are __unsafe_unretained because the
+ * element owns the objects and the cell only borrows them.
+ */
 typedef struct OverScoreLogData {
-    int32_t reserved0;                        // +0x00 — not read by this cell
-    __unsafe_unretained NSString *musicName;  // +0x04
-    int32_t sheetType;                        // +0x08 — 0 normal, 1 helper, 2 ex
-    __unsafe_unretained NSString *friendName; // +0x0c
-    __unsafe_unretained NSString *updateDate; // +0x10
-    int32_t myScore;                          // +0x14
-    int32_t friendScore;                      // +0x18
+    int32_t reserved0;                        /**< +0x00 Not read by this cell. */
+    __unsafe_unretained NSString *musicName;  /**< +0x04 The song title. */
+    int32_t sheetType;                        /**< +0x08 0 normal, 1 hyper, 2 EX. */
+    __unsafe_unretained NSString *friendName; /**< +0x0c The friend who beat the score. */
+    __unsafe_unretained NSString *updateDate; /**< +0x10 When they beat it. */
+    int32_t myScore;                          /**< +0x14 The local player's score. */
+    int32_t friendScore;                      /**< +0x18 The friend's score. */
 } OverScoreLogData;
 
 @implementation OverScoreLogCell {

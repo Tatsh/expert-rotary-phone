@@ -104,7 +104,8 @@ struct AepOtSpriteCmd {
         };
         int16_t srcRect[4]; /*!< Type-0 sprite: packed {u, v, w, h}. */
     };
-    int32_t nPosX, nPosY; /*!< Screen position (+0x14/+0x18). */
+    int32_t nPosX; /*!< Screen x position (+0x14). */
+    int32_t nPosY; /*!< Screen y position (+0x18). */
     /**
      * @brief Slot at +0x1c, read as int for cases 1-5 and as float for case 0.
      *
@@ -143,7 +144,8 @@ struct AepOtSpriteCmd {
         float nColorAF;  /*!< Float view (case 1: stretched-sprite Y scale). */
     };
     int32_t nColorMul;    /*!< Colour multiplier, int slot (+0x30). */
-    int16_t nUKey, nVKey; /*!< UV keys; nVKey also carries the blend flags (+0x34/+0x36). */
+    int16_t nUKey;        /*!< U key (+0x34). */
+    int16_t nVKey;        /*!< V key; also carries the blend flags (+0x36). */
     int32_t nBlendFlags;  /*!< Blend flags (+0x38). */
     int32_t nColorRGB;    /*!< Packed 0x00RRGGBB colour (+0x3c). */
     AepClipRect clipRect; /*!< Clip rectangle; defaults to screen bounds (+0x40..0x4f). */

@@ -8,13 +8,19 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One sugoroku sub-map (area) row.
+ */
 @interface SubMapListCell : UITableViewCell
 
-// Bind the row to a sugoroku sub-map (area) entry. `mapValue` is an NSValue
-// wrapping the struct { short mainMapId; short subMapId; int; NSString *name;
-// }. Draws the area banner, name, collected-piece counts (kakera / ticket), the
-// difficulty/item headers, the earned-star row, an optional goal "daon" icon,
-// and a "cleared" badge.
+/**
+ * @brief Bind the row to a sub-map entry.
+ *
+ * It draws the area banner, the name, the collected-piece counts (kakera and ticket), the
+ * difficulty and item headers, the earned-star row, an optional goal "daon" icon, and a "cleared"
+ * badge.
+ * @param mapValue An NSValue wrapping `{ short mainMapId; short subMapId; int; NSString *name; }`.
+ */
 - (void)setMapData:(NSValue *)mapValue;
 
 @end

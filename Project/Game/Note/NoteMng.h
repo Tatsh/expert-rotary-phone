@@ -1,26 +1,18 @@
-//
-//  NoteMng.h
-//  pop'n rhythmin
-//
-//  The standard-mode note manager: it parses a decoded chart (the "info" entry
-//  of a %09d.orb file), builds the play-data timeline, converts chart ticks to
-//  milliseconds via the tempo map, and drives note judgement during play.
-//  (Arcade charts, ac%09d.acv, are handled by the parallel AcNoteMng.)
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (Project/Game/Note/NoteMng.mm). The .orb/.acv container is a ZIP whose
-//  "info" entry is BFCodec-encrypted; MusicManager decrypts it, and the
-//  plaintext is the chart described below.
-//
-
-//  Chart-load flow: a %09d.orb / ac%09d.acv file (ZIP + BFCodec-encrypted
-//  entries) is decoded into an (Ac)MusicData object; the play loader picks the
-//  sheet for the chosen difficulty (-[AcMusicData
-//  sheetEasy/sheetNormal/sheetHyper/sheetEx], the "sheet_es/n/h/ex" ZIP
-//  entries) and passes it to
-//  -[NoteMng initPlayDataWithData:] on the global manager (Ghidra:
-//  DAT_00173ea4).
-//
+/** @file
+ * The standard-mode note manager: it parses a decoded chart (the "info" entry of a %09d.orb
+ * file), builds the play-data timeline, converts chart ticks to milliseconds via the tempo map,
+ * and drives note judgement during play. Arcade charts, ac%09d.acv, are handled by the parallel
+ * AcNoteMng.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (Project/Game/Note/NoteMng.mm). The .orb/.acv container is a ZIP whose "info" entry is
+ * BFCodec-encrypted; MusicManager decrypts it, and the plaintext is the chart described below.
+ *
+ * Chart-load flow: a %09d.orb / ac%09d.acv file (ZIP plus BFCodec-encrypted entries) is decoded
+ * into an (Ac)MusicData object; the play loader picks the sheet for the chosen difficulty
+ * (-[AcMusicData sheetEasy/sheetNormal/sheetHyper/sheetEx], the "sheet_es/n/h/ex" ZIP entries) and
+ * passes it to -[NoteMng initPlayDataWithData:] on the global manager (Ghidra: DAT_00173ea4).
+ */
 
 #pragma once
 
@@ -34,87 +26,104 @@
 @class NSData;
 #endif
 
-// ---------------------------------------------------------------------------
-// Chart format (decoded "info" payload)
-// ---------------------------------------------------------------------------
-// Layout: a 4-byte header — a little-endian float32, the chart's base
-// hi-speed / scroll multiplier, stored into m_hiSpeed (Ghidra: InitPlayData
-// 0x335fc stores it to +0x13cc0; computeScrollY reads it back as a float @
-// 0x34d1e) — then N note records of 20 bytes each, where
-//   N = (payloadSize - 4) / 20   (Ghidra: InitPlayData @ 0x335a4).
-// The record `type` byte at +0x8 selects how the other fields are read.
+// Chart format (decoded "info" payload). Layout: a 4-byte header — a little-endian float32, the
+// chart's base hi-speed / scroll multiplier, stored into m_hiSpeed (Ghidra: InitPlayData 0x335fc
+// stores it to +0x13cc0; computeScrollY reads it back as a float @ 0x34d1e) — then N note records
+// of 20 bytes each, where N = (payloadSize - 4) / 20 (Ghidra: InitPlayData @ 0x335a4). The record
+// `type` byte at +0x8 selects how the other fields are read.
+
+/**
+ * @brief The chart record kind, stored in NoteRecord::type, selecting how the other fields are
+ * read.
+ */
 enum NoteType : uint8_t {
-    NOTE_TYPE_NORMAL = 0, // a playable tap note (counted into the note total)
-    NOTE_TYPE_MARK = 1,   // stores its `tick` into a play-data field (start/marker)
-    NOTE_TYPE_TEMPO = 2,  // tempo/BPM event: `value` (+0xc) is the BPM, `tick` the position
-    NOTE_TYPE_END = 3,    // end-of-chart terminator
-    NOTE_TYPE_BAR = 4,    // measure bar line (counted by registerTempoEvents)
+    NOTE_TYPE_NORMAL = 0, /**< A playable tap note, counted into the note total. */
+    NOTE_TYPE_MARK = 1,   /**< Stores its tick into a play-data field: a start or marker. */
+    NOTE_TYPE_TEMPO = 2,  /**< A tempo/BPM event: `value` (+0xc) is the BPM, `tick` the position. */
+    NOTE_TYPE_END = 3,    /**< The end-of-chart terminator. */
+    NOTE_TYPE_BAR = 4,    /**< A measure bar line, counted by registerTempoEvents(). */
 };
 
-// One 20-byte chart record. Verified fields: `tick` (+0x0), `type` (+0x8),
-// `value` (+0xc, the BPM for NOTE_TYPE_TEMPO; its min/max across the chart are
-// tracked at InitPlayData time). The remaining words are type-dependent and are
-// copied verbatim into the runtime note slot.
+/**
+ * @brief One 20-byte chart record.
+ *
+ * Verified fields: `tick` (+0x0), `type` (+0x8) and `value` (+0xc, the BPM for NOTE_TYPE_TEMPO,
+ * whose minimum and maximum across the chart are tracked at InitPlayData time). The remaining
+ * words are type-dependent and are copied verbatim into the runtime note slot.
+ */
 struct NoteRecord {
-    uint32_t tick;       // +0x0  timing position, in chart ticks
-    uint32_t param;      // +0x4  type-dependent
-    uint8_t type;        // +0x8  NoteType
-    uint8_t reserved[3]; // +0x9
-    uint16_t value;      // +0xc  NOTE_TYPE_TEMPO: BPM
-    uint16_t value2;     // +0xe  type-dependent
-    uint32_t extra;      // +0x10 type-dependent
+    uint32_t tick;       /**< +0x0 Timing position, in chart ticks. */
+    uint32_t param;      /**< +0x4 Type-dependent parameter. */
+    uint8_t type;        /**< +0x8 The record kind, a NoteType. */
+    uint8_t reserved[3]; /**< +0x9 Padding. */
+    uint16_t value;      /**< +0xc The BPM for NOTE_TYPE_TEMPO; otherwise type-dependent. */
+    uint16_t value2;     /**< +0xe Type-dependent. */
+    uint32_t extra;      /**< +0x10 Type-dependent. */
 };
 static_assert(sizeof(NoteRecord) == 20, "chart note record is 20 bytes");
 
-// Maximum simultaneously-active note slots the manager pools (Ghidra: the 1000
-// entry free list built in InitPlayData, stride 0x3c).
+/**
+ * @brief The maximum number of simultaneously-active note slots the manager pools.
+ *
+ * Ghidra: the 1000-entry free list built in InitPlayData, stride 0x3c.
+ */
 constexpr int kMaxActiveNotes = 1000;
 
-// Render kind, recomputed into a NoteRenderData by copyNoteRenderData (@
-// 0x34758): 1 for a special chart kind (6..9), 2 for a long/hold note (start <
-// end), else 0.
+/**
+ * @brief The render kind, recomputed into a NoteRenderData by copyNoteRenderData (@ 0x34758).
+ */
 enum NoteRenderKind : uint8_t {
-    NOTE_RENDER_NORMAL = 0,
-    NOTE_RENDER_SPECIAL = 1,
-    NOTE_RENDER_LONG = 2,
+    NOTE_RENDER_NORMAL = 0,  /**< An ordinary note. */
+    NOTE_RENDER_SPECIAL = 1, /**< A special chart kind, 6..9. */
+    NOTE_RENDER_LONG = 2,    /**< A long / hold note: start tick is before end tick. */
 };
 
-// A live note object, pooled in the free/active singly-linked lists. 60 bytes,
-// laid out from the decompiled slot (makeNote @ 0x341a4). makeNote fills the
-// screen position from the chart record's lane/position bytes scaled by the
-// live screen size; makeEvent (@ 0x343c8) spawns non-note events with kind 10.
+/**
+ * @brief A live note object, pooled in the free and active singly-linked lists.
+ *
+ * 60 bytes, laid out from the decompiled slot (makeNote @ 0x341a4). makeNote fills the screen
+ * position from the chart record's lane and position bytes scaled by the live screen size;
+ * makeEvent (@ 0x343c8) spawns non-note events with kind 10.
+ */
 struct ActiveNote {
-    ActiveNote *next;      // +0x00  free/active list link
-    const NoteRecord *rec; // +0x04  source chart record
-    uint32_t poolId;       // +0x08  this slot's permanent pool index (0..999),
-                           //        stamped once at initPlayData. The judge pass
-                           //        reads it out (copyNoteRenderData) and passes it
-                           //        back to judgeNoteHit / judgeHold / updateLongNote
-                           //        / setLaneFlag, all of which index m_notePool by
-                           //        it. Ghidra: Note+0x8 (pReserved8).
-    uint32_t startTick;    // +0x0c
-    uint32_t endTick;      // +0x10  == startTick for taps, later for holds
-    float scrollStart;     // +0x14  head scroll position (Ghidra flScrollStart;
-                           //         default 1024.0, updated by updateDrawPos)
-    float scrollEnd;       // +0x18  tail scroll position (Ghidra flScrollEnd;
-                           //         default 1024.0)
-    uint8_t kind;          // +0x1c  note kind (>= 10 marks an event)
-    uint8_t kindHi;        // +0x1d
-    uint8_t reserved1e[2]; // +0x1e
-    float hitX;            // +0x20  the intersection the two buttons converge on --
-    float hitY;            // +0x24  the hit target. Chart byte[0xe]/[0xf] as a plain
-                           //         percentage of the base (no +150/-75), so it
-                           //         always lands on-screen. Taps and judge-line
-                           //         effects test against this point.
-    float buttonAX;        // +0x28  incoming button A start (chart byte[0x10]/[0x11];
-    float buttonAY;        // +0x2c  base+150 then -75, so it can start off the edge)
-    float buttonBX;        // +0x30  incoming button B start (chart byte[0x12]/[0x13];
-    float buttonBY;        // +0x34  same off-edge offset). Both buttons interpolate
-                           //         toward (hitX, hitY). copyNoteRenderData 0x34758
-                           //         reorders these six floats in the descriptor.
-    uint16_t flags;        // +0x38  bit 0x80 = judged / inactive
-    uint8_t spawnKind;     // +0x3a  1..5 (from the type-6..9 table, else 1)
-    uint8_t reserved3b;    // +0x3b
+    ActiveNote *next;      /**< +0x00 Free or active list link. */
+    const NoteRecord *rec; /**< +0x04 The source chart record. */
+    /**
+     * +0x08 This slot's permanent pool index, 0..999, stamped once at initPlayData. The judge pass
+     * reads it out (copyNoteRenderData) and passes it back to judgeNoteHit(), judgeHold(),
+     * updateLongNote() and setLaneFlag(), all of which index m_notePool by it. Ghidra: Note+0x8
+     * (pReserved8).
+     */
+    uint32_t poolId;
+    uint32_t startTick; /**< +0x0c The note's start position, in chart ticks. */
+    uint32_t endTick;   /**< +0x10 The note's end tick; equal to startTick for taps, later for
+                             holds. */
+    /** +0x14 Head scroll position (Ghidra flScrollStart); defaults to 1024.0 and is updated by
+     * updateDrawPos. */
+    float scrollStart;
+    float scrollEnd;       /**< +0x18 Tail scroll position (Ghidra flScrollEnd); defaults to
+                                1024.0. */
+    uint8_t kind;          /**< +0x1c The note kind; 10 or above marks an event. */
+    uint8_t kindHi;        /**< +0x1d The note sub-kind. */
+    uint8_t reserved1e[2]; /**< +0x1e Padding. */
+    /**
+     * +0x20 The x of the intersection the two buttons converge on — the hit target. Chart
+     * byte[0xe] as a plain percentage of the base (no +150/-75), so it always lands on-screen.
+     * Taps and judge-line effects test against this point.
+     */
+    float hitX;
+    float hitY; /**< +0x24 The y of the hit target; chart byte[0xf], same encoding as hitX. */
+    /** +0x28 Incoming button A start x; chart byte[0x10], base+150 then -75, so it can start off
+     * the edge. */
+    float buttonAX;
+    float buttonAY; /**< +0x2c Incoming button A start y; chart byte[0x11]. */
+    float buttonBX; /**< +0x30 Incoming button B start x; chart byte[0x12], same off-edge offset. */
+    /** +0x34 Incoming button B start y; chart byte[0x13]. Both buttons interpolate toward (hitX,
+     * hitY); copyNoteRenderData @ 0x34758 reorders these six floats in the descriptor. */
+    float buttonBY;
+    uint16_t flags;     /**< +0x38 NoteFlag bits; 0x80 marks the note judged or inactive. */
+    uint8_t spawnKind;  /**< +0x3a 1..5, from the type-6..9 table; otherwise 1. */
+    uint8_t reserved3b; /**< +0x3b Padding. */
 };
 // The original armv7 slot was 60 bytes (stride 0x3c); the two pointers widen it
 // on the 64-bit rebuild target, so only assert the packed size on 32-bit.
@@ -122,263 +131,408 @@ struct ActiveNote {
 static_assert(sizeof(ActiveNote) == 60, "active note slot is 60 bytes on armv7");
 #endif
 
-// Judgement tiers. The numeric value doubles as the per-kind hit-tally column
-// index: the tally lives at NoteMng + 0x5164 + kind*0x10 + tier*4 (abs 0x179008
-// + ... when the singleton is at 0x173ea4), and judgeNoteHit stores each hit in
-// the column matching the note flag it sets. Ordered worst -> best to match
-// that layout, which is also the order the scorer weights the columns
-// (FUN_0002ff7c multiplies them by 0 / 0.4 / 0.7 / 1.0). Ghidra: judgeNoteHit @
-// 0x347e8.
+/**
+ * @brief The judgement tiers.
+ *
+ * The numeric value doubles as the per-kind hit-tally column index: the tally lives at NoteMng +
+ * 0x5164 + kind*0x10 + tier*4 (absolute 0x179008 + ... when the singleton is at 0x173ea4), and
+ * judgeNoteHit() stores each hit in the column matching the note flag it sets. Ordered worst to
+ * best to match that layout, which is also the order the scorer weights the columns (FUN_0002ff7c
+ * multiplies them by 0, 0.4, 0.7 and 1.0). Ghidra: judgeNoteHit @ 0x347e8.
+ */
 enum NoteJudge {
-    NOTE_JUDGE_BAD = 0,   // note flag 8 (col +0x5164): pressed outside the scored
-                          //   windows; breaks combo; no score weight
-    NOTE_JUDGE_GOOD = 1,  // note flag 1 (col +0x5168): score weight 0.4
-    NOTE_JUDGE_GREAT = 2, // note flag 2 (col +0x516c): score weight 0.7
-    NOTE_JUDGE_COOL = 3,  // note flag 4 (col +0x5170): central band |delta| < 50,
-                          //   score weight 1.0 (the tightest, best hit)
-    NOTE_JUDGE_MISS = -1, // no note in any window (judgeNoteHit found nothing to grade)
-    NOTE_JUDGE_TIER_COUNT = 4,
+    /** Note flag 8 (column +0x5164): pressed outside the scored windows; breaks combo, no score
+     * weight. */
+    NOTE_JUDGE_BAD = 0,
+    NOTE_JUDGE_GOOD = 1,  /**< Note flag 1 (column +0x5168): score weight 0.4. */
+    NOTE_JUDGE_GREAT = 2, /**< Note flag 2 (column +0x516c): score weight 0.7. */
+    /** Note flag 4 (column +0x5170): the central band, |delta| < 50 — the tightest and best hit,
+     * score weight 1.0. */
+    NOTE_JUDGE_COOL = 3,
+    NOTE_JUDGE_MISS = -1,      /**< No note in any window; judgeNoteHit found nothing to grade. */
+    NOTE_JUDGE_TIER_COUNT = 4, /**< The number of scored tiers. */
 };
 
-// The engine distinguishes this many note "kinds" (each keeps its own hit
-// tally).
+/**
+ * @brief The number of note "kinds" the engine distinguishes; each keeps its own hit tally.
+ */
 constexpr int kNoteKindCount = 10;
 
-// ActiveNote::flags bits (verified against the judge / miss / retire / draw
-// passes and the binary's NOTE_FLAGS_LONG_* debug strings). Bits 0..3 are the
-// judge-result flags the judge OR-sets, one per tier (see NoteJudge above).
+/**
+ * @brief ActiveNote::flags bits, verified against the judge, miss, retire and draw passes and the
+ * binary's NOTE_FLAGS_LONG_* debug strings.
+ *
+ * Bits 0..3 are the judge-result flags the judge OR-sets, one per tier (see NoteJudge).
+ */
 enum NoteFlag : uint16_t {
-    NOTE_FLAG_GOOD = 0x1,           // bit 0: graded GOOD
-    NOTE_FLAG_GREAT = 0x2,          // bit 1: graded GREAT
-    NOTE_FLAG_COOL = 0x4,           // bit 2: graded COOL (tightest tier)
-    NOTE_FLAG_BAD = 0x8,            // bit 3: graded BAD (hit in the bad window)
-    NOTE_FLAG_HEAD_SCROLLED = 0x10, // bit 4: head has passed the judge line
-    NOTE_FLAG_MISSED = 0x20,        // bit 5: scrolled past un-hit (auto-BAD miss)
-    NOTE_FLAG_LANE_HELD = 0x40,     // bit 6: a finger is on this note's lane
-    NOTE_FLAG_HANDLED = 0x80,       // bit 7: event fired / retire-eligible / inactive
-    NOTE_FLAG_LONG_SUCCESS = 0x100, // bit 8: hold tail completed
-    NOTE_FLAG_LONG_FAILED = 0x200,  // bit 9: hold tail failed
-    // Composite masks the passes test against:
-    NOTE_FLAG_RESOLVED = 0x2f,   // GOOD|GREAT|COOL|BAD|MISSED: any grade result
-    NOTE_FLAG_RETIRE = 0xc0,     // LANE_HELD|HANDLED: retire-eligible
-    NOTE_FLAG_LONG_DONE = 0x300, // LONG_SUCCESS|LONG_FAILED: hold resolved
+    NOTE_FLAG_GOOD = 0x1,           /**< Bit 0: graded GOOD. */
+    NOTE_FLAG_GREAT = 0x2,          /**< Bit 1: graded GREAT. */
+    NOTE_FLAG_COOL = 0x4,           /**< Bit 2: graded COOL, the tightest tier. */
+    NOTE_FLAG_BAD = 0x8,            /**< Bit 3: graded BAD, hit in the bad window. */
+    NOTE_FLAG_HEAD_SCROLLED = 0x10, /**< Bit 4: the head has passed the judge line. */
+    NOTE_FLAG_MISSED = 0x20,        /**< Bit 5: scrolled past un-hit, an auto-BAD miss. */
+    NOTE_FLAG_LANE_HELD = 0x40,     /**< Bit 6: a finger is on this note's lane. */
+    NOTE_FLAG_HANDLED = 0x80,       /**< Bit 7: event fired, retire-eligible or inactive. */
+    NOTE_FLAG_LONG_SUCCESS = 0x100, /**< Bit 8: the hold tail completed. */
+    NOTE_FLAG_LONG_FAILED = 0x200,  /**< Bit 9: the hold tail failed. */
+    /** GOOD|GREAT|COOL|BAD|MISSED: any grade result. */
+    NOTE_FLAG_RESOLVED = 0x2f,
+    NOTE_FLAG_RETIRE = 0xc0,     /**< LANE_HELD|HANDLED: retire-eligible. */
+    NOTE_FLAG_LONG_DONE = 0x300, /**< LONG_SUCCESS|LONG_FAILED: the hold resolved. */
 };
 
-// Playback state machine (m_state @ +0x5158): advances once the end (type 3)
-// note is spawned, then once every note has been retired.
+/**
+ * @brief The playback state machine (m_state @ +0x5158).
+ *
+ * It advances once the end (type 3) note is spawned, then once every note has been retired.
+ */
 enum NoteMngState {
-    NOTE_STATE_PLAYING = 0,     // notes still scrolling / being spawned
-    NOTE_STATE_END_SPAWNED = 1, // the end note has been spawned; draining the field
-    NOTE_STATE_FINISHED = 2,    // every note retired; playback complete
+    NOTE_STATE_PLAYING = 0,     /**< Notes are still scrolling or being spawned. */
+    NOTE_STATE_END_SPAWNED = 1, /**< The end note has been spawned; draining the field. */
+    NOTE_STATE_FINISHED = 2,    /**< Every note has retired; playback is complete. */
 };
 
-// Per-note render descriptor the renderer receives from getNoteObject: the
-// ticks, kind, scale and positions copied out of the ActiveNote plus a
-// freshly-computed NoteRenderKind. Ghidra: copyNoteRenderData @ 0x34758.
+/**
+ * @brief The per-note render descriptor the renderer receives from getNoteObject().
+ *
+ * The ticks, kind, scale and positions copied out of the ActiveNote plus a freshly-computed
+ * NoteRenderKind. Ghidra: copyNoteRenderData @ 0x34758.
+ */
 struct NoteRenderData {
-    uint32_t noteId; // +0x00 the note's pool id (copied from ActiveNote::poolId);
-                     //       the judge pass keys its judge slot on this and passes
-                     //       it to judgeNoteHit / judgeHold / updateLongNote /
-                     //       setLaneFlag. Ghidra: nField0 = *(int *)Note+0x8.
-    uint32_t startTick;
-    uint32_t endTick;
-    uint8_t kind;
-    uint8_t kindHi;
-    uint16_t flags;
-    NoteRenderKind renderKind;
-    float scrollStart; // Ghidra flScrollStart (head scroll position)
-    float scrollEnd;   // Ghidra flScrollEnd (tail scroll position)
-    uint8_t spawnKind;
-    float hitX; // the intersection both buttons converge on -- the hit target
-    float hitY;
-    float buttonAX; // incoming button A start
-    float buttonAY;
-    float buttonBX; // incoming button B start
-    float buttonBY;
+    /**
+     * +0x00 The note's pool id, copied from ActiveNote::poolId. The judge pass keys its judge slot
+     * on this and passes it to judgeNoteHit(), judgeHold(), updateLongNote() and setLaneFlag().
+     * Ghidra: nField0 = *(int *)Note+0x8.
+     */
+    uint32_t noteId;
+    uint32_t startTick;        /**< The note's start position, in chart ticks. */
+    uint32_t endTick;          /**< The note's end position, in chart ticks. */
+    uint8_t kind;              /**< The note kind. */
+    uint8_t kindHi;            /**< The note sub-kind. */
+    uint16_t flags;            /**< The note's NoteFlag bits. */
+    NoteRenderKind renderKind; /**< The freshly-computed render kind. */
+    float scrollStart;         /**< Head scroll position (Ghidra flScrollStart). */
+    float scrollEnd;           /**< Tail scroll position (Ghidra flScrollEnd). */
+    uint8_t spawnKind;         /**< The spawn kind, 1..5. */
+    float hitX;                /**< The x of the intersection both buttons converge on. */
+    float hitY;                /**< The y of the intersection both buttons converge on. */
+    float buttonAX;            /**< Incoming button A start x. */
+    float buttonAY;            /**< Incoming button A start y. */
+    float buttonBX;            /**< Incoming button B start x. */
+    float buttonBY;            /**< Incoming button B start y. */
 };
 
+/**
+ * @brief The standard-mode note manager: chart parsing, the tempo map, note spawning and note
+ * judgement.
+ */
 class NoteMng {
 public:
-    // Parse a decoded chart into the play-data timeline. `data` points at the
-    // 4-byte header; `size` is the whole payload length. `missCallback` (with
-    // `missCallbackArg`, the owning play data) is stored as the miss hook that
-    // detectMiss fires when a note scrolls past un-tapped — the play scene passes
-    // its gauge-penalty function here. Ghidra: InitPlayData @ 0x335a4 (asserts
-    // size validity at NoteMng.mm:0x45/0x59; arg4/arg5 -> +0x104/+0x108).
+    /**
+     * @brief Parse a decoded chart into the play-data timeline.
+     *
+     * @p missCallback (with @p missCallbackArg, the owning play data) is stored as the miss hook
+     * that detectMiss fires when a note scrolls past un-tapped — the play scene passes its
+     * gauge-penalty function here. Ghidra: InitPlayData @ 0x335a4, which asserts size validity at
+     * NoteMng.mm:0x45 and :0x59 and maps arg4/arg5 to +0x104/+0x108.
+     * @param data The whole payload, starting at the 4-byte header.
+     * @param missCallback Fired when a note scrolls past un-tapped.
+     * @param missCallbackArg Passed to @p missCallback; the owning play data.
+     * @return Non-zero on success.
+     */
     int initPlayData(std::span<const std::byte> data,
                      void (*missCallback)(void *),
                      void *missCallbackArg);
 
 #ifdef __OBJC__
-    // Parse a chart straight from an NSData (bytes + length -> initPlayData); the
-    // sheet the play loader selected for the difficulty, plus the miss callback +
-    // its owning play data. Ghidra: @ 0x33550.
+    /**
+     * @brief Parse a chart straight from an NSData: the bytes and length are forwarded to
+     * initPlayData().
+     * @param data The sheet the play loader selected for the difficulty.
+     * @param missCallback Fired when a note scrolls past un-tapped.
+     * @param missCallbackArg Passed to @p missCallback; the owning play data.
+     * @return Non-zero on success.
+     * @ghidraAddress 0x33550
+     */
     int initPlayDataWithData(NSData *data, void (*missCallback)(void *), void *missCallbackArg);
 #endif
 
-    // Walk the parsed records and register every tempo (type 2) event into the
-    // tempo map, counting bar lines (type 4). Ghidra: @ 0x337e0.
+    /**
+     * @brief Walk the parsed records and register every tempo (type 2) event into the tempo map,
+     * counting bar lines (type 4).
+     * @ghidraAddress 0x337e0
+     */
     void registerTempoEvents();
 
-    // Convert a chart position `tick` to elapsed milliseconds by accumulating
-    // 60000/BPM across the tempo segments up to it. Ghidra: ChangeTempo @
-    // 0x33864.
+    /**
+     * @brief Convert a chart position to elapsed milliseconds by accumulating 60000/BPM across the
+     * tempo segments up to it.
+     * @param tick The chart position to convert.
+     * @ghidraAddress 0x33864
+     */
     void changeTempo(uint32_t tick);
 
-    // Register one tempo segment (bpm, at tick) into the tempo map. Ghidra:
-    // AdvanceRegisterEvent @ 0x34bf0.
+    /**
+     * @brief Register one tempo segment into the tempo map.
+     * @param bpm The segment's BPM.
+     * @param tick The chart tick the segment starts at.
+     * @return Non-zero on success.
+     * @ghidraAddress 0x34bf0
+     */
     int advanceRegisterEvent(int bpm, uint32_t tick);
 
-    // Spawn a live note from a chart record: take a free slot, copy the ticks,
-    // compute the on-screen position, and move it to the active list. Ghidra:
-    // MakeNote @ 0x341a4.
+    /**
+     * @brief Spawn a live note from a chart record: take a free slot, copy the ticks, compute the
+     * on-screen position, and move it to the active list.
+     * @param rec The chart record to spawn from.
+     * @ghidraAddress 0x341a4
+     */
     void makeNote(const NoteRecord *rec);
 
-    // Spawn a non-note event (kind 10) from a chart record. Ghidra: MakeEvent @
-    // 0x343c8.
+    /**
+     * @brief Spawn a non-note event (kind 10) from a chart record.
+     * @param rec The chart record to spawn from.
+     * @ghidraAddress 0x343c8
+     */
     void makeEvent(const NoteRecord *rec);
 
-    // Spawn every chart record now due (its tick within the spawn look-ahead of
-    // `pos`): notes via makeNote, mark/bar/end via makeEvent (the end record is a
-    // one-shot that advances the play state). Ghidra: FUN_000339a0. Driven each
-    // frame by the per-frame update.
+    /**
+     * @brief Spawn every chart record now due: notes via makeNote(), and mark, bar and end records
+     * via makeEvent().
+     *
+     * The end record is a one-shot that advances the play state. Driven each frame by the
+     * per-frame update. Ghidra: FUN_000339a0.
+     * @param pos The current chart position; a record is due when its tick falls within the spawn
+     * look-ahead of it.
+     */
     void spawnNotes(uint32_t pos);
 
-    // Milliseconds elapsed since play start (gettimeofday minus the stored start
-    // time; 0 before the clock is armed). Ghidra: @ 0x33c04.
+    /**
+     * @brief Milliseconds elapsed since play start: gettimeofday minus the stored start time.
+     * @return The elapsed milliseconds, or 0 before the clock is armed.
+     * @ghidraAddress 0x33c04
+     */
     int getElapsedTimeMs() const;
 
-    // The current chart scroll position, derived from getElapsedTimeMs() plus the
-    // per-play offsets — the time base every note is judged and drawn against.
-    // Ghidra: @ 0x34164 (used pervasively: 12 call sites).
+    /**
+     * @brief The current chart scroll position, derived from getElapsedTimeMs() plus the per-play
+     * offsets — the time base every note is judged and drawn against.
+     * @return The chart position.
+     * @ghidraAddress 0x34164
+     */
     int getCurrentPosition() const;
 
-    // The number of playable notes still awaiting judgement (note total minus
-    // every hit tally, clamped to >= 0). Ghidra: FUN_0003181c.
+    /**
+     * @brief The number of playable notes still awaiting judgement: the note total minus every hit
+     * tally, clamped at 0. Ghidra: FUN_0003181c.
+     * @return The remaining note count.
+     */
     int remainingNoteCount() const;
 
-    // YES once no playable notes remain to be judged (remainingNoteCount() == 0);
-    // the play-loop watches this to end the song. Ghidra: FUN_0003181c tested == 0.
+    /**
+     * @brief Whether no playable notes remain to be judged; the play loop watches this to end the
+     * song. Ghidra: FUN_0003181c tested against 0.
+     * @return true once remainingNoteCount() reaches 0.
+     */
     bool isFinished() const;
 
-    // Standard-mode per-frame update: read the position, spawn due records, judge
-    // + retire the active notes (marking the end), advance the tempo, then run
-    // the miss/auto-grade passes and refresh each note's scroll position. Ghidra:
-    // FUN_00033ae4 (used by the pause state).
+    /**
+     * @brief The standard-mode per-frame update.
+     *
+     * Reads the position, spawns due records, judges and retires the active notes (marking the
+     * end), advances the tempo, then runs the miss and auto-grade passes and refreshes each note's
+     * scroll position. Ghidra: FUN_00033ae4, used by the pause state.
+     */
     void update();
 
-    // Bring-up pass (play state 1): spawn the lead-in records, settle the tempo,
-    // and position every note, all at position 0. Ghidra: FUN_0003396c.
+    /**
+     * @brief The bring-up pass (play state 1): spawn the lead-in records, settle the tempo, and
+     * position every note, all at position 0. Ghidra: FUN_0003396c.
+     */
     void primePlay();
 
-    // The playing-state per-frame update (play state 6): like update() but skips
-    // while held and, once, syncs the scroll to the BGM playhead. Ghidra:
-    // FUN_00033fc0.
+    /**
+     * @brief The playing-state per-frame update (play state 6): like update(), but it skips while
+     * held and, once, syncs the scroll to the BGM playhead. Ghidra: FUN_00033fc0.
+     */
     void updatePlaying();
 
-    // Arm the play clock (play state 4 -> 6): stamp the start time and clear the
-    // per-play offsets, hold/sync flags and state. Ghidra: FUN_000344c4.
+    /**
+     * @brief Arm the play clock (play state 4 to 6): stamp the start time and clear the per-play
+     * offsets, hold/sync flags and state. Ghidra: FUN_000344c4.
+     */
     void startClock();
 
-    // Fill `out` with the render data of the `index`-th still-judgeable active
-    // note (kind < 10, not flagged 0x80). Ghidra: GetNoteObject @ 0x346c0, which
-    // delegates the field copy to copyNoteRenderData (@ 0x34758).
+    /**
+     * @brief Fill @p out with the render data of the @p index -th still-judgeable active note
+     * (kind below 10, not flagged 0x80).
+     *
+     * Ghidra: GetNoteObject @ 0x346c0, which delegates the field copy to copyNoteRenderData
+     * (@ 0x34758).
+     * @param out Receives the note's render descriptor.
+     * @param index The index among the still-judgeable active notes.
+     */
     void getNoteObject(NoteRenderData *out, int index);
 
-    // Number of active notes still awaiting judgement (kind < 10, flag 0x80
-    // clear). Ghidra: @ 0x34694.
+    /**
+     * @brief The number of active notes still awaiting judgement: kind below 10 with flag 0x80
+     * clear.
+     * @return The judgeable active-note count.
+     * @ghidraAddress 0x34694
+     */
     int getActiveNoteCount() const;
 
-    // --- Judgement ---------------------------------------------------------
-    // Grade a tap against the pool note `noteId` (a raw pool slot id, 0..999 —
-    // NOT an active-list index; the binary indexes m_notePool by it directly,
-    // bounded by (noteId >> 3) < 0x7d): delta = noteTick - getCurrentPosition is
-    // bucketed against the six timing windows (Ghidra: g_noteJudgeWindows @
-    // 0x12e64c = {-280,-280,-120,+120,+280,+280} ms, copied into the play data at
-    // InitPlayData). The tightest central band (|delta| within ~50 ms of the
-    // -120..+120 window) is the best tier; then the ±120 and ±280 bands; a delta
-    // outside ±280 misses (returns -1). Returns a tier 0..3 that also indexes the
-    // per-note-kind hit tally, sets the note's judged flags, and updates the
-    // current/max combo. Ghidra: judgeNoteHit @ 0x347e8.
+    /**
+     * @brief Grade a tap against a pooled note.
+     *
+     * delta = noteTick - getCurrentPosition() is bucketed against the six timing windows (Ghidra:
+     * g_noteJudgeWindows @ 0x12e64c = {-280, -280, -120, +120, +280, +280} ms, copied into the
+     * play data at InitPlayData). The tightest central band (|delta| within ~50 ms of the
+     * -120..+120 window) is the best tier; then the +/-120 and +/-280 bands. The call also sets
+     * the note's judged flags and updates the current and max combo.
+     * @param noteId A raw pool slot id, 0..999 — not an active-list index; the binary indexes
+     * m_notePool by it directly, bounded by (noteId >> 3) < 0x7d.
+     * @return A tier 0..3, which also indexes the per-note-kind hit tally, or -1 when the delta
+     * falls outside +/-280 ms.
+     * @ghidraAddress 0x347e8
+     */
     int judgeNoteHit(unsigned noteId);
 
-    // Resolve a long/hold note once its tail passes: if released too late
-    // (delta < -60 ms) the hold fails (flag 0x200, "NOTE_FLAGS_LONG_FAILED"),
-    // otherwise it succeeds (flag 0x100, "NOTE_FLAGS_LONG_SUCCESS") and counts
-    // toward the combo + tally. Ghidra: @ 0x34a78.
+    /**
+     * @brief Resolve a long / hold note once its tail passes.
+     *
+     * Released too late (delta below -60 ms) fails the hold (flag 0x200,
+     * "NOTE_FLAGS_LONG_FAILED"); otherwise it succeeds (flag 0x100, "NOTE_FLAGS_LONG_SUCCESS") and
+     * counts toward the combo and tally.
+     * @param index The pool slot id of the hold note.
+     * @return Non-zero when the hold succeeded.
+     * @ghidraAddress 0x34a78
+     */
     int updateLongNote(unsigned index);
 
-    // Per-frame hold-note tick judge (long note held down): counts down the note
-    // pool slot's hold-segment counter; if the head has scrolled too far past the
-    // note the hold breaks and the combo resets, otherwise once the counter
-    // reaches zero the hold completes and the combo
-    // + per-kind tally advance. `tier` (0..3) selects the tally column. Returns
-    // the remaining count. Ghidra: noteMngJudgeHold @ 0x34964.
+    /**
+     * @brief The per-frame hold-note tick judge, for a long note held down.
+     *
+     * Counts down the note pool slot's hold-segment counter; if the head has scrolled too far past
+     * the note the hold breaks and the combo resets, otherwise once the counter reaches zero the
+     * hold completes and the combo and per-kind tally advance.
+     * @param noteId The pool slot id of the hold note.
+     * @param tier The tally column to credit, 0..3.
+     * @return The remaining hold-segment count.
+     * @ghidraAddress 0x34964
+     */
     int judgeHold(unsigned noteId, unsigned tier);
 
-    // Mark the note pool slot `noteId` with the "long-note lane held" flag
-    // (0x40). Input sets this while a lane is held. Ghidra: noteMngSetLaneFlag @
-    // 0x347c8.
+    /**
+     * @brief Mark a note pool slot with the "long-note lane held" flag (0x40). Input sets this
+     * while a lane is held.
+     * @param noteId The pool slot id.
+     * @ghidraAddress 0x347c8
+     */
     void setLaneFlag(unsigned noteId);
 
-    // Resume play from a pause (the standard-mode twin of AcNoteMng::resume):
-    // fold the paused span into the lead-in, clear the freeze bit, re-seek +
-    // restart the BGM at the current position. Only acts while currently held.
-    // Ghidra: noteMngTogglePause @ 0x34570.
+    /**
+     * @brief Resume play from a pause: the standard-mode twin of AcNoteMng::resume().
+     *
+     * Folds the paused span into the lead-in, clears the freeze bit, and re-seeks and restarts the
+     * BGM at the current position. It only acts while play is currently held.
+     * @ghidraAddress 0x34570
+     */
     void togglePause();
 
+    /**
+     * @brief The live combo count.
+     * @return The current combo.
+     */
     int combo() const {
         return m_combo;
     }
+    /**
+     * @brief The best combo reached this play.
+     * @return The max combo.
+     */
     int maxCombo() const {
         return m_maxCombo;
     }
+    /**
+     * @brief The hit tally for one note kind and judgement tier.
+     * @param kind The note kind, 0..kNoteKindCount-1.
+     * @param tier The judgement tier.
+     * @return The number of hits recorded in that column.
+     */
     int judgeCount(int kind, NoteJudge tier) const {
         return m_tally[kind][tier];
     }
 
-    // The "a note-play session owns the manager" flag (Ghidra @ +0x13cb6). Read
-    // by
-    // -[AppDelegate applicationWillResignActive] to auto-pause play when the app
-    // is backgrounded; the play scene clears it on teardown (Ghidra:
-    // FUN_0003395c, via PlayNoteMngDetach).
+    /**
+     * @brief The "a note-play session owns the manager" flag (Ghidra @ +0x13cb6).
+     *
+     * Read by -[AppDelegate applicationWillResignActive] to auto-pause play when the app is
+     * backgrounded; the play scene clears it on teardown (Ghidra: FUN_0003395c, via
+     * PlayNoteMngDetach).
+     * @return true while a play session owns the manager.
+     */
     bool isPlayActive() const {
         return m_playActive;
     }
+    /**
+     * @brief Set the play-active flag.
+     * @param active true while a play session owns the manager.
+     */
     void setPlayActive(bool active) {
         m_playActive = active;
     }
 
-    // The chart's total playable-note count, fixed once the chart is parsed at
-    // initPlayData (the count of NOTE_TYPE_NORMAL records): the running score's
-    // denominator (PlayCurrentScore) and the full-combo / all-perfect threshold
-    // the song-clear jingles test. Ghidra: DAT_00178ccc.
+    /**
+     * @brief The chart's total playable-note count, fixed once the chart is parsed at
+     * initPlayData() as the count of NOTE_TYPE_NORMAL records.
+     *
+     * This is the running score's denominator (PlayCurrentScore) and the full-combo /
+     * all-perfect threshold the song-clear jingles test. Ghidra: DAT_00178ccc.
+     * @return The playable-note total.
+     */
     int totalNoteCount() const {
         return m_totalNotes;
     }
 
-    // Backing for the free tone-graphic accessors below. The play draw pass
-    // queries a note by raw pool id (0..999); the tone
-    // "graphic/flags/count/state" it wants are just fields of that pooled slot
-    // (kind / kindHi / spawnKind / start vs end tick).
+    /**
+     * @brief The pooled slot backing the free tone-graphic accessors below.
+     *
+     * The play draw pass queries a note by raw pool id (0..999); the tone graphic, flags, count and
+     * state it wants are just fields of that pooled slot (kind, kindHi, spawnKind, and start
+     * versus end tick).
+     * @param noteId The pool slot id, 0..999.
+     * @return The pooled note slot.
+     */
     const ActiveNote &toneSlot(unsigned noteId) const {
         return m_notePool[noteId];
     }
 
-    // The armed beat-tempo BPM (Ghidra +0x4e5c) — this is simply the BPM of the
-    // front scroll segment; NoteBeatIntervalMs divides 60000 by it.
+    /**
+     * @brief The armed beat-tempo BPM (Ghidra +0x4e5c) — simply the BPM of the front scroll
+     * segment. NoteBeatIntervalMs() divides 60000 by it.
+     * @return The BPM.
+     */
     int beatTempoValue() const {
         return m_scrollMap[0].bpm;
     }
 
-    // The engine keeps one global standard-mode manager (Ghidra: DAT_00173ea4),
-    // reached through a ___cxa_guard'd lazy accessor. Ghidra: NoteMng_shared
-    // (FUN_0000b278), which constructs it once via NoteMng_init (FUN_00033514).
+    /**
+     * @brief The one global standard-mode manager (Ghidra: DAT_00173ea4), reached through a
+     * ___cxa_guard'd lazy accessor.
+     *
+     * Ghidra: NoteMng_shared (FUN_0000b278), which constructs it once via NoteMng_init
+     * (FUN_00033514).
+     * @return The manager.
+     */
     static NoteMng &shared();
 
-    // Resign/suspend hook (app resigns active): stop the BGM and remember the
-    // current play position so it can resume, guarded to run once. Ghidra:
-    // NEEngine_onResignActivePushHook (FUN_00034510), invoked on the global.
+    /**
+     * @brief The resign / suspend hook, run when the app resigns active: stop the BGM and remember
+     * the current play position so it can resume. Guarded to run once.
+     *
+     * Ghidra: NEEngine_onResignActivePushHook (FUN_00034510), invoked on the global.
+     */
     void onResignActivePushHook();
 
 private:
@@ -484,26 +638,58 @@ private:
                                 // (a pause or a resign); folded back by togglePause.
 };
 
-// --- Per-note tone-graphic state accessors
-// ----------------------------------------- The play-scene per-frame draw pass
-// (PlayTaskDraw) reads these to choose the tone sprite for a note. They index
-// the standard manager's note pool directly by note id (Ghidra: singleton +
-// 0x522C + noteId*0x3c, i.e. m_notePool[noteId]; guarded by (noteId >> 3) <
-// 0x7d, so noteId < 1000 = kMaxActiveNotes). The disassembly resolves their raw
-// offsets to pooled-slot fields (verified against makeNote @ 0x341a4):
+// Per-note tone-graphic state accessors. The play-scene per-frame draw pass (PlayTaskDraw) reads
+// these to choose the tone sprite for a note. They index the standard manager's note pool directly
+// by note id (Ghidra: singleton + 0x522C + noteId*0x3c, that is m_notePool[noteId]; guarded by
+// (noteId >> 3) < 0x7d, so noteId < 1000 = kMaxActiveNotes). The disassembly resolves their raw
+// offsets to pooled-slot fields, verified against makeNote @ 0x341a4:
 //   +0x5248 -> slot +0x1c = kind      (NoteToneGraphic)
 //   +0x5249 -> slot +0x1d = kindHi    (NoteToneFlags)
 //   +0x5266 -> slot +0x3a = spawnKind (NoteToneCount)
 //   +0x5238/+0x523c -> slot +0x0c/+0x10 = startTick/endTick (NoteToneState)
-int NoteToneGraphic(int noteId);      // Ghidra: FUN_00034bb4  (slot kind)
-int NoteToneFlags(int noteId);        // Ghidra: FUN_00034b98  (slot kindHi)
-int NoteToneState(int noteId);        // Ghidra: FUN_00034b5c  (1 special / 2 long / 0 normal)
-int NoteToneDefaultGraphic(int type); // Ghidra: FUN_00034a5c  (type 6..9 -> 2..5, else 1)
-int NoteToneCount(int noteId);        // Ghidra: FUN_00034bd0  (slot spawnKind)
 
-// Current beat interval in milliseconds (60000 / the armed beat tempo; 0 when
-// that word is not positive). Ghidra: FUN_00034664 (signed short @ mgr+0x4e5c;
-// DAT_00034690 = 60000.0f).
+/**
+ * @brief The tone graphic of a pooled note: its slot kind.
+ * @param noteId The pool slot id, 0..999.
+ * @return The slot's kind field.
+ * @ghidraAddress 0x34bb4
+ */
+int NoteToneGraphic(int noteId);
+/**
+ * @brief The tone flags of a pooled note: its slot sub-kind.
+ * @param noteId The pool slot id, 0..999.
+ * @return The slot's kindHi field.
+ * @ghidraAddress 0x34b98
+ */
+int NoteToneFlags(int noteId);
+/**
+ * @brief The tone state of a pooled note.
+ * @param noteId The pool slot id, 0..999.
+ * @return 1 for a special note, 2 for a long note, 0 for a normal one.
+ * @ghidraAddress 0x34b5c
+ */
+int NoteToneState(int noteId);
+/**
+ * @brief The default tone graphic for a chart record type.
+ * @param type The chart record type.
+ * @return 2..5 for types 6..9, otherwise 1.
+ * @ghidraAddress 0x34a5c
+ */
+int NoteToneDefaultGraphic(int type);
+/**
+ * @brief The tone count of a pooled note: its spawn kind.
+ * @param noteId The pool slot id, 0..999.
+ * @return The slot's spawnKind field.
+ * @ghidraAddress 0x34bd0
+ */
+int NoteToneCount(int noteId);
+
+/**
+ * @brief The current beat interval: 60000 divided by the armed beat tempo.
+ *
+ * Ghidra: FUN_00034664 reads the signed short @ mgr+0x4e5c; DAT_00034690 = 60000.0f.
+ * @return The beat interval in milliseconds, or 0 when the tempo word is not positive.
+ */
 float NoteBeatIntervalMs();
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

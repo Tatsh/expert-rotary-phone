@@ -18,21 +18,43 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A custom iPad-style split container: a fixed-width left view controller docked against a
+ * right view controller that fills the remaining width.
+ */
 @interface CustomSplitViewController : UIViewController
 
-@property(nonatomic, strong)
-    UIViewController *leftViewCtrl; // getter @ 0x5def8 / setter @ 0x5df0c (m_leftViewCtrl @ 0xa4)
-@property(nonatomic, strong) UIViewController *rightViewCtrl; // getter @ 0x5df24 / setter @ 0x5df38
-                                                              // (m_rightViewCtrl @ 0xa8)
+/** The fixed-width left child (m_leftViewCtrl @ +0xa4). Getter @ 0x5def8, setter @ 0x5df0c. */
+@property(nonatomic, strong) UIViewController *leftViewCtrl;
+/** The right child that fills the remaining width (m_rightViewCtrl @ +0xa8). Getter @ 0x5df24,
+ * setter @ 0x5df38. */
+@property(nonatomic, strong) UIViewController *rightViewCtrl;
 
+/**
+ * @brief Lay the two children side by side inside an explicit frame.
+ * @param frame The container frame; CGRectZero uses the container view's own frame.
+ * @param leftViewWidth The left column's width, in points.
+ * @param leftViewController The left child.
+ * @param rightView The right child.
+ * @return The initialised container.
+ * @ghidraAddress 0x5dbc0
+ */
 - (id)initWithFrame:(CGRect)frame
          leftViewWidth:(int)leftViewWidth
     leftViewController:(UIViewController *)leftViewController
-             rightView:(UIViewController *)rightView; // @ 0x5dbc0
+             rightView:(UIViewController *)rightView;
 
+/**
+ * @brief Lay the two children side by side inside the container view's own frame.
+ * @param leftViewWidth The left column's width, in points.
+ * @param leftViewController The left child.
+ * @param rightView The right child.
+ * @return The initialised container.
+ * @ghidraAddress 0x5dde0
+ */
 - (id)initWithLeftViewWidth:(int)leftViewWidth
          leftViewController:(UIViewController *)leftViewController
-                  rightView:(UIViewController *)rightView; // @ 0x5dde0
+                  rightView:(UIViewController *)rightView;
 
 @end
 

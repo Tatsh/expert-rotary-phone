@@ -126,11 +126,19 @@ bool isIndexInRange12(unsigned int index) {
 // MainMapData (the NSValue payload of -mapDataArray) is declared in
 // MapSelectViewController.h.
 
+/**
+ * @brief The main-map list's private actions and animation callbacks.
+ */
 @interface MapSelectViewController () <DownloadMainDelegate>
+/** @brief The back-button action. */
 - (void)backButtonFunc;
+/** @brief Cross-fade the screen out. */
 - (void)startCloseAnimation;
+/** @brief The close cross-fade finished; tear the screen down. */
 - (void)endCloseAnimation;
+/** @brief The open cross-fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
+/** @brief Rebuild the event banner from the latest event info. */
 - (void)updateEventInfo;
 @end
 

@@ -8,12 +8,17 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One row of the sort-select list.
+ */
 @interface SortCell : UITableViewCell
 
-// Bind the row to a sort option. `sortValue` is an NSValue wrapping the struct
-// { short sortType; char isChecked; }: `sortType` (0..5) picks the title art
-// (Title / Artist / Lv N / Lv H / Lv EX / no-data) and `isChecked` picks the
-// check-mark image.
+/**
+ * @brief Bind the row to a sort option.
+ * @param sortValue An NSValue wrapping `{ short sortType; char isChecked; }`. `sortType`, 0..5,
+ * picks the title art — Title, Artist, level N, level H, level EX or no-data — and `isChecked`
+ * picks the check-mark image.
+ */
 - (void)setSortData:(NSValue *)sortValue;
 
 @end

@@ -1,22 +1,17 @@
-//
-//  TreasureTmpData.h
-//  pop'n rhythmin
-//
-//  The "pending treasure" snapshot: a flat, byte-serialized record persisted
-//  under the NSUserDefaults key "TreasureTmpData" and read back by
-//  +[UserSettingData treasureTmp]. It carries the goal the player just reached
-//  on the sugoroku board across the arcade launch: the arcade task (AcMainTask,
-//  case 2) reads it each frame and, when a sub-map id is present (>= 0), loads
-//  that map and starts play; a value of -1 means "nothing pending".
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (-[UserSettingData treasureTmp:] @ 0x61448). The record is a raw memory
-//  image (memcpy'd straight in/out of the NSData blob), so the layout below is
-//  byte-exact and the struct is packed to alignment 1. Field names are recovered
-//  from the call sites (DownloadMain visitor JSON, SubMapSelectViewController
-//  defaults, AcMainTask goal-apply, TreasureMap bonus pick); the few whose role
-//  no call site pins down keep an offset name. Total size: 83 (0x53) bytes.
-//
+/** @file
+ * The "pending treasure" snapshot: a flat, byte-serialised record persisted under the
+ * NSUserDefaults key "TreasureTmpData" and read back by +[UserSettingData treasureTmp]. It carries
+ * the goal the player just reached on the sugoroku board across the arcade launch: the arcade task
+ * (AcMainTask, case 2) reads it each frame and, when a sub-map id is present (0 or above), loads
+ * that map and starts play; a value of -1 means "nothing pending".
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (-[UserSettingData treasureTmp:] @
+ * 0x61448). The record is a raw memory image, memcpy'd straight in and out of the NSData blob, so
+ * the layout below is byte-exact and the struct is packed to alignment 1. Field names are recovered
+ * from the call sites (DownloadMain visitor JSON, SubMapSelectViewController defaults, AcMainTask
+ * goal-apply, TreasureMap bonus pick); the few whose role no call site pins down keep an offset
+ * name. The total size is 83 (0x53) bytes.
+ */
 
 #pragma once
 
@@ -24,37 +19,47 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ * @brief The byte-exact "pending treasure" save record carried across an arcade launch.
+ */
 typedef struct __attribute__((packed)) TreasureTmpData {
-    int16_t mainMapId;   // +0x00 main map id (parallels TreasureData.mainMapId)
-    int16_t subMapId;    // +0x02 goal sub-map id (main*10+sub); -1 == nothing pending
-    int16_t curSubMapId; // +0x04 current board node id; out of range -> reset to the start square
-    int16_t
-        lastBranchNodeId; // +0x06 last junction (>1 forward link) board node id; -1 in the default record
-    int32_t musicPieceMask; // +0x08 music-piece bits earned at this goal (OR'd into the collection)
-    int32_t wallPieceMask;  // +0x0c wallpaper-piece bits earned at this goal
-    int16_t boardMoveState; // +0x10 board move / warp state (== 2 gate)
-    int16_t goalCharaId;    // +0x12 goal character id (loads sugo_chara%03d)
-    int32_t musicPiece;     // +0x14 downloaded goal music-piece reward (visitor JSON MusicPiece)
-    int32_t wallPaperPiece; // +0x18 downloaded goal wallpaper-piece reward (WallPiece)
-    int32_t friendship;     // +0x1c downloaded goal friendship value (Friendship)
-    char friendPlayerId[8]; // +0x20 visiting friend's player id (NUL-terminated; PlayerId)
-    char goalName[13];      // +0x28 goal / friend name (NUL-terminated; Name)
-    int8_t boardSquareState[15]; // +0x35 per-square animation/event state (see
-                                 // AcMainTask::BoardSquareState); copied to/from
-                                 // m_boardSquareState
-    int16_t
-        rouletteMode; // +0x44 roulette mode / result; -1 in the default record (-> m_rouletteMode)
-    uint8_t bonusSquareIndex;  // +0x46 1-based chosen bonus-treasure square (rand % bonusCount + 1)
-    uint8_t visitorFetchCount; // +0x47 get-visitor request counter; incremented before each
-                               // startGetVisitorHttp (AcMainTask update state 0x11) and persisted
-    uint8_t bonusRoll;         // +0x48 random 0..99 roll (getRandRangeInt(100))
-    uint8_t unused49[3];       // +0x49 alignment padding before fastRecord; no access
-    int32_t
-        fastRecord; // +0x4c best (minimum) fast-clear score (misaligned int in the packed record)
-    uint8_t
-        friendMeetFlag; // +0x50 non-zero -> a friend was met at this goal (bumps TreasureData.friendMeetCnt)
-    uint8_t treasureProgress; // +0x51 treasure progress counter (-> m_treasureProgress)
-    uint8_t listHalveCount;   // +0x52 list-halve counter (-> m_listHalveCount)
+    int16_t mainMapId; /**< +0x00 Main map id; parallels TreasureData.mainMapId. */
+    int16_t subMapId;  /**< +0x02 Goal sub-map id (main*10+sub); -1 means nothing pending. */
+    /** +0x04 Current board node id; out of range resets to the start square. */
+    int16_t curSubMapId;
+    /** +0x06 Last junction (more than one forward link) board node id; -1 in the default
+     * record. */
+    int16_t lastBranchNodeId;
+    /** +0x08 Music-piece bits earned at this goal, OR'd into the collection. */
+    int32_t musicPieceMask;
+    int32_t wallPieceMask;  /**< +0x0c Wallpaper-piece bits earned at this goal. */
+    int16_t boardMoveState; /**< +0x10 Board move / warp state; 2 is the gate value. */
+    int16_t goalCharaId;    /**< +0x12 Goal character id, which loads sugo_chara%03d. */
+    /** +0x14 Downloaded goal music-piece reward (visitor JSON MusicPiece). */
+    int32_t musicPiece;
+    int32_t wallPaperPiece; /**< +0x18 Downloaded goal wallpaper-piece reward (WallPiece). */
+    int32_t friendship;     /**< +0x1c Downloaded goal friendship value (Friendship). */
+    char friendPlayerId[8]; /**< +0x20 Visiting friend's player id; nul-terminated (PlayerId). */
+    char goalName[13];      /**< +0x28 Goal or friend name; nul-terminated (Name). */
+    /** +0x35 Per-square animation and event state (see AcMainTask::BoardSquareState); copied to
+     * and from m_boardSquareState. */
+    int8_t boardSquareState[15];
+    /** +0x44 Roulette mode / result; -1 in the default record, feeding m_rouletteMode. */
+    int16_t rouletteMode;
+    /** +0x46 The 1-based chosen bonus-treasure square, `rand % bonusCount + 1`. */
+    uint8_t bonusSquareIndex;
+    /** +0x47 Get-visitor request counter, incremented before each startGetVisitorHttp (AcMainTask
+     * update state 0x11) and persisted. */
+    uint8_t visitorFetchCount;
+    uint8_t bonusRoll;   /**< +0x48 A random 0..99 roll, `getRandRangeInt(100)`. */
+    uint8_t unused49[3]; /**< +0x49 Alignment padding before fastRecord; no access. */
+    /** +0x4c Best (minimum) fast-clear score; a misaligned int in the packed record. */
+    int32_t fastRecord;
+    /** +0x50 Non-zero when a friend was met at this goal, which bumps
+     * TreasureData.friendMeetCnt. */
+    uint8_t friendMeetFlag;
+    uint8_t treasureProgress; /**< +0x51 Treasure progress counter, feeding m_treasureProgress. */
+    uint8_t listHalveCount;   /**< +0x52 List-halve counter, feeding m_listHalveCount. */
 } TreasureTmpData;
 
 static_assert(sizeof(TreasureTmpData) == 0x53,

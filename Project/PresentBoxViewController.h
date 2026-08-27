@@ -39,21 +39,35 @@
 
 #import "CustomAlertView.h" // CustomAlertViewDelegate
 
+/**
+ * @brief The present box: the list of unclaimed gifts.
+ */
 @interface PresentBoxViewController : UITableViewController <CustomAlertViewDelegate>
 
-// Build the controller, wrap it in a fresh UINavigationController (portrait
-// style) and return that host (the value the menu pushes into the scene).
-// Ghidra: @ 0x24938.
+/**
+ * @brief Build the controller and wrap it in a fresh portrait-style UINavigationController.
+ * @return The navigation host the menu pushes into the scene.
+ * @ghidraAddress 0x24938
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-// Slide / fade the box in and out. The host (MainViewController) drives these
-// when showing / dismissing the present box and polls -isAnimationing to gate
-// input while a transition is running. Ghidra: @ 0x24c98 / @ 0x25160.
+/**
+ * @brief Slide or fade the box in. MainViewController drives it when showing the present box.
+ * @ghidraAddress 0x24c98
+ */
 - (void)startOpenAnimation;
+/**
+ * @brief Slide or fade the box out. MainViewController drives it when dismissing the present box.
+ * @ghidraAddress 0x25160
+ */
 - (void)startCloseAnimation;
 
-// YES while an open/close animation is in flight (atomic read). Ghidra: @
-// 0x26144.
+/**
+ * @brief Whether an open or close animation is in flight; the host polls it to gate input. The
+ * read is atomic.
+ * @return YES while a transition is running.
+ * @ghidraAddress 0x26144
+ */
 - (BOOL)isAnimationing;
 
 @end

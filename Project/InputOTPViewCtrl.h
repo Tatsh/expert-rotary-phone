@@ -24,17 +24,26 @@
 @class CheckerCategoryViewController;
 @class TouchableScrollView;
 
+/**
+ * @brief The one-time-password entry screen for the arcade-score sync.
+ */
 @interface InputOTPViewCtrl : UIViewController <UITextFieldDelegate> {
-    CheckerCategoryViewController
-        *_categoryView;               // owner; receives -startGetArcadeScoreHttpWithOtp:
-    TouchableScrollView *_scrollView; // form host (taps pass through to content)
-    UITextField *_otpField;           // secure OTP entry (<= 16 chars)
-    UIViewController *_dummyView;     // dimmed cover + spinner (owned; released in dealloc)
-    float _scrollOffset;              // keyboard scroll offset (90 on 3.5", 0 on 4")
+    /** The owner, which receives -startGetArcadeScoreHttpWithOtp:. */
+    CheckerCategoryViewController *_categoryView;
+    /** The form host; taps pass through to the content. */
+    TouchableScrollView *_scrollView;
+    UITextField *_otpField; /**< The secure OTP entry; at most 16 characters. */
+    /** The dimmed cover and spinner; owned, and released in -dealloc. */
+    UIViewController *_dummyView;
+    float _scrollOffset; /**< The keyboard scroll offset: 90 on 3.5-inch, 0 on 4-inch. */
 }
 
-// Build the OTP form for `categoryView` and register the keyboard-notification
-// observers. Ghidra: initWithCategoryView: @ 0x78d18.
+/**
+ * @brief Build the OTP form for an owner and register the keyboard-notification observers.
+ * @param categoryView The owner to call back with the entered code.
+ * @return The initialised controller.
+ * @ghidraAddress 0x78d18
+ */
 - (instancetype)initWithCategoryView:(CheckerCategoryViewController *)categoryView;
 
 @end

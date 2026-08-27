@@ -19,92 +19,137 @@
 @class StoreDetailViewController;
 @class StoreDetailHeaderView;
 
+/**
+ * @brief Receives the phone detail screen's purchase, re-download and close requests.
+ */
 @protocol StoreDetailViewControllerDelegate <NSObject>
 @optional
-// Start the StoreKit purchase for `packInfo` (buy button, not-owned path).
-// Ghidra selector detailViewStartPurchase:.
+/**
+ * @brief Start the StoreKit purchase; the buy button's not-owned path.
+ * @param packInfo The pack to purchase.
+ */
 - (void)detailViewStartPurchase:(StorePackInfo *)packInfo;
-// Re-download an already-owned pack's songs (buy button, owned-but-missing
-// path). Ghidra selector reDownloadPackMusics:.
+/**
+ * @brief Re-download an already-owned pack's songs; the buy button's owned-but-missing path.
+ * @param packInfo The pack to re-download.
+ */
 - (void)reDownloadPackMusics:(StorePackInfo *)packInfo;
-// The detail screen dismissed an alert and should be closed. Ghidra selector
-// detailViewClose.
+/**
+ * @brief The detail screen dismissed an alert and should be closed.
+ */
 - (void)detailViewClose;
 @end
 
-@interface StoreDetailViewController
-    : UIViewController <UITableViewDataSource, UITableViewDelegate> {
-    StorePackInfo *packInfo; // the displayed pack (synthesized setter @ 0x72d1c)
-    __weak id<StoreDetailViewControllerDelegate> delegate; // the store main VC
-    NSArray *recommendPackIdArr;         // cached recommended-pack ids (from MusicManager)
-    UITableView *m_PackTableView;        // the song list
-    StoreDetailHeaderView *m_HeaderView; // table header: jacket + name + buy button
-    UILabel *m_AccessingLabel;           // "読み込み中..." while the detail loads
-    UIActivityIndicatorView *m_AccessingIndicator; // spinner over the accessing label
-    UIImage *packBgImage0;                         // store_pack_bg_0 (stretchable) for even rows
-    UIImage *packBgImage1;                         // store_pack_bg_1 (stretchable) for odd rows
-    NSMutableDictionary *artworkDownloaders;       // in-flight per-row jacket downloads
-    UIViewController *dummyView;  // transparent cover host shown during purchase work
-    int rowSamplePlayed;          // row index currently sampling, or -1
-    id m_StorePackInfoDownloader; // in-flight pack-detail fetch
-                                  // (StorePackInfoDownloader)
-    id sampleDownloader;          // in-flight preview clip (Downloader)
-    id m_BirthDayView;            // age-gate modal (BirthDayViewController), retained while
-                                  // shown
-    id recommendDownloader;       // in-flight "register recommended pack" POST
-                                  // (Downloader)
-    BOOL isDownloadingSample;     // the sampling row's clip is still buffering
+/**
+ * @brief The phone pack detail screen: the header card over the pack's song list.
+ */
+// Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
+// follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the
+// protocol list instead parses correctly, so the formatter is held off here.
+// clang-format off
+@interface StoreDetailViewController : UIViewController <UITableViewDataSource,
+                                                         UITableViewDelegate> {
+    StorePackInfo *packInfo; /**< The displayed pack; the synthesised setter is @ 0x72d1c. */
+    __weak id<StoreDetailViewControllerDelegate> delegate; /**< The store main view controller. */
+    NSArray *recommendPackIdArr;  /**< The cached recommended-pack ids, from MusicManager. */
+    UITableView *m_PackTableView; /**< The song list. */
+    /** The table header: the jacket, name and buy button. */
+    StoreDetailHeaderView *m_HeaderView;
+    UILabel *m_AccessingLabel; /**< The "読み込み中..." caption shown while the detail loads. */
+    UIActivityIndicatorView *m_AccessingIndicator; /**< The spinner over the accessing label. */
+    UIImage *packBgImage0; /**< The stretchable store_pack_bg_0 for even rows. */
+    UIImage *packBgImage1; /**< The stretchable store_pack_bg_1 for odd rows. */
+    NSMutableDictionary *artworkDownloaders; /**< The in-flight per-row jacket downloads. */
+    /** The transparent cover host shown during purchase work. */
+    UIViewController *dummyView;
+    int rowSamplePlayed;          /**< The row index currently sampling, or -1. */
+    id m_StorePackInfoDownloader; /**< The in-flight StorePackInfoDownloader. */
+    id sampleDownloader;          /**< The in-flight preview-clip Downloader. */
+    /** The BirthDayViewController age-gate modal, retained while shown. */
+    id m_BirthDayView;
+    /** The in-flight "register recommended pack" POST Downloader. */
+    id recommendDownloader;
+    BOOL isDownloadingSample; /**< The sampling row's clip is still buffering. */
 }
+// clang-format on
 
+/** The displayed pack. */
 @property(nonatomic, retain) StorePackInfo *packInfo;
+/** The purchase, re-download and close delegate. */
 @property(nonatomic, weak) id<StoreDetailViewControllerDelegate> delegate;
 
-// Build the view tree: the song table, the StoreDetailHeaderView, the loading
-// overlay, the stretchable row backgrounds, the artwork-downloader map and the
-// dummy cover. Ghidra: loadView
-// @ 0x6fa3c.
+/**
+ * @brief Build the view tree: the song table, the header view, the loading overlay, the
+ * stretchable row backgrounds, the artwork-downloader map and the dummy cover.
+ * @ghidraAddress 0x6fa3c
+ */
 - (void)loadView;
 
-// The nav-bar back button: pop this detail screen. Ghidra: selector
-// backButtonFunc.
+/**
+ * @brief The nav-bar back button: pop this detail screen.
+ */
 - (void)backButtonFunc;
 
-// The header's buy button was tapped: hand the purchase to the delegate.
-// Ghidra: selector onPurchaseButton:.
+/**
+ * @brief The header's buy button was tapped: hand the purchase to the delegate.
+ * @param sender The tapped button.
+ */
 - (void)onPurchaseButton:(id)sender;
 
-// Kick off the detail load: show immediately if the songs are already present,
-// else fetch them via a StorePackInfoDownloader. Ghidra: loadInfo @ 0x7048c.
+/**
+ * @brief Kick off the detail load: show immediately when the songs are already present, otherwise
+ * fetch them via a StorePackInfoDownloader.
+ * @ghidraAddress 0x7048c
+ */
 - (void)loadInfo;
 
-// Detail arrived: size + fill the header, refresh the buy button, install it as
-// the table header, start the jacket download, and reveal + reload the table.
-// Ghidra: showPackInfo @ 0x702bc.
+/**
+ * @brief The detail arrived: size and fill the header, refresh the buy button, install the header
+ * on the table, start the jacket download, then reveal and reload the table.
+ * @ghidraAddress 0x702bc
+ */
 - (void)showPackInfo;
 
-// Stop the preview clip: fade the BGM, cancel + drop the sample download, and
-// reload. Ghidra: stopSample @ 0x70550.
+/**
+ * @brief Stop the preview clip: fade the BGM, cancel and drop the sample download, then reload.
+ * @ghidraAddress 0x70550
+ */
 - (void)stopSample;
 
-// The preview clip finished: stop the sampling row's cell and clear the
-// sampling index. Ghidra: finishBgm: @ 0x70600.
+/**
+ * @brief The preview clip finished: stop the sampling row's cell and clear the sampling index.
+ * @param sender The player that finished.
+ * @ghidraAddress 0x70600
+ */
 - (void)finishBgm:(id)sender;
 
-// Not-owned purchase: hand the pack to the delegate's StoreKit purchase.
-// Ghidra: doPurchase @ 0x70af4.
+/**
+ * @brief The not-owned purchase path: hand the pack to the delegate's StoreKit purchase.
+ * @ghidraAddress 0x70af4
+ */
 - (void)doPurchase;
 
-// YES if the pack has songs and they are all downloaded (used by the buy button
-// to offer a re-download instead of a purchase). Ghidra: allDownloaded @
-// 0x70b9c.
+/**
+ * @brief Whether the pack has songs and all of them are downloaded; the buy button uses it to
+ * offer a re-download instead of a purchase.
+ * @return YES when the pack is fully installed.
+ * @ghidraAddress 0x70b9c
+ */
 - (BOOL)allDownloaded;
 
-// YES if this pack's id is in the recommended-pack list (fetched + cached
-// lazily). Ghidra: isRecommended @ 0x70c14.
+/**
+ * @brief Whether this pack's id is in the recommended-pack list, which is fetched and cached
+ * lazily.
+ * @return YES when the pack is recommended.
+ * @ghidraAddress 0x70c14
+ */
 - (BOOL)isRecommended;
 
-// Enable/disable the buy button for the owned state (owned -> disabled).
-// Ghidra: setPurchaseState: @ 0x70b54.
+/**
+ * @brief Enable or disable the buy button for the ownership state.
+ * @param owned YES to disable the button, because the pack is already owned.
+ * @ghidraAddress 0x70b54
+ */
 - (void)setPurchaseState:(BOOL)owned;
 
 @end

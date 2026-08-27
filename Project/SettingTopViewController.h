@@ -24,29 +24,72 @@
 // The pad-layout host (the settings split/detail owner) receives the button
 // taps so it can swap its own detail pane. NB: the binary spells the protocol
 // "Dalegate" (typo preserved).
+/**
+ * @brief The iPad-layout host, the settings split or detail owner, which receives the section
+ * button taps so it can swap its own detail pane.
+ *
+ * The binary spells the protocol "Dalegate"; the typo is preserved.
+ */
 @protocol SettingTopViewControllerDalegate <NSObject>
-- (void)onGameButtonTouched:(id)sender;     // @ 0x14964 (pad) forwards here
-- (void)onHowtoButtonTouched:(id)sender;    // @ 0x14a90 (pad) forwards here
-- (void)onCustomerButtonTouched:(id)sender; // @ 0x14ae0 (pad) forwards here
-- (void)onOtherButtonTouched:(id)sender;    // @ 0x14b30 (pad) forwards here
+/**
+ * @brief The gameplay-settings button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x14964
+ */
+- (void)onGameButtonTouched:(id)sender;
+/**
+ * @brief The how-to button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x14a90
+ */
+- (void)onHowtoButtonTouched:(id)sender;
+/**
+ * @brief The customer-support button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x14ae0
+ */
+- (void)onCustomerButtonTouched:(id)sender;
+/**
+ * @brief The "Other" button was tapped.
+ * @param sender The tapped button.
+ * @ghidraAddress 0x14b30
+ */
+- (void)onOtherButtonTouched:(id)sender;
 @end
 
+/**
+ * @brief The settings top screen: the four section buttons.
+ */
 @interface SettingTopViewController : UIViewController
 
-// Lay out the four custom buttons over a "friman_bg" backdrop (phone) or a
-// clear view (pad). Ghidra: init @ 0x13fe8.
+/**
+ * @brief Lay out the four custom buttons over a "friman_bg" backdrop on phone, or a clear view on
+ * iPad.
+ * @return The initialised controller.
+ * @ghidraAddress 0x13fe8
+ */
 - (instancetype)init;
 
-// Build self, wrap it in a fresh navigation controller (with a back button +
-// nav-bar art) and return that controller (the phone layout). Ghidra:
-// initAtNavigationController @ 0x14464.
+/**
+ * @brief Build self and wrap it in a fresh navigation controller with a back button and nav-bar
+ * art; the phone layout.
+ * @return The navigation controller.
+ * @ghidraAddress 0x14464
+ */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
-- (void)startOpenAnimation;  // @ 0x14694
-- (void)startCloseAnimation; // @ 0x147d8 (also the back-button action)
+/**
+ * @brief Fade the screen in.
+ * @ghidraAddress 0x14694
+ */
+- (void)startOpenAnimation;
+/**
+ * @brief Fade the screen out; this is also the back-button action.
+ * @ghidraAddress 0x147d8
+ */
+- (void)startCloseAnimation;
 
-// The pad-layout tap target. Synthesized assign accessors: getter @ 0x14b80,
-// setter @ 0x14b90.
+/** The iPad-layout tap target. Getter @ 0x14b80, setter @ 0x14b90. */
 @property(nonatomic, assign) id<SettingTopViewControllerDalegate> settingTopDelegate;
 
 @end

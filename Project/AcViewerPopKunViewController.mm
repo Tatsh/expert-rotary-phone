@@ -20,7 +20,14 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
+/**
+ * @brief The pop-kun viewer's private back action.
+ */
 @interface AcViewerPopKunViewController ()
+/**
+ * @brief The back-button action.
+ * @param sender The tapped button.
+ */
 - (void)touchedBackButton:(id)sender;
 @end
 

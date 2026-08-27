@@ -12,28 +12,52 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One song row of the phone pack-detail screen.
+ */
 @interface StoreDetailMusicCell : UITableViewCell
 
-@property(nonatomic, retain) UILabel *labelName;       // song title — getter @ 0x752c4
-@property(nonatomic, retain) UILabel *labelArtist;     // artist — getter @ 0x752d4
-@property(nonatomic, retain) UILabel *labelLevels;     // "LEVEL b/m/h" — getter @ 0x752e4
-@property(nonatomic, retain) UIImageView *artworkView; // jacket — getter @ 0x752b4
-@property(nonatomic, retain) UIView *arcadeViewer;     // arcade-chart badge — getter @ 0x75314
+/** The song title. Getter @ 0x752c4. */
+@property(nonatomic, retain) UILabel *labelName;
+/** The artist. Getter @ 0x752d4. */
+@property(nonatomic, retain) UILabel *labelArtist;
+/** The "LEVEL b/m/h" line. Getter @ 0x752e4. */
+@property(nonatomic, retain) UILabel *labelLevels;
+/** The jacket. Getter @ 0x752b4. */
+@property(nonatomic, retain) UIImageView *artworkView;
+/** The arcade-chart badge. Getter @ 0x75314. */
+@property(nonatomic, retain) UIView *arcadeViewer;
 
-// The fixed content height of a song cell (the row height adds padding).
-// Ghidra: +cellHeight.
+/**
+ * @brief The fixed content height of a song cell; the row height adds padding.
+ * @return The content height.
+ */
 + (CGFloat)cellHeight;
 
-// The row's stretchable background (even/odd alternates packBgImage0/1).
-// Ghidra: setBgImage:.
+/**
+ * @brief Set the row's stretchable background; the caller alternates packBgImage0 and
+ * packBgImage1.
+ * @param image The background image.
+ */
 - (void)setBgImage:(UIImage *)image;
 
-// The song's iTunes page URL (the sample/link button opens it).
+/**
+ * @brief Set the song's iTunes page URL, which the link button opens.
+ * @param url The iTunes URL.
+ */
 - (void)setLink:(NSString *)url;
 
-// Sample-button state: idle, buffering the clip, or playing it.
+/**
+ * @brief Put the sample button in its idle state.
+ */
 - (void)sampleStop;
+/**
+ * @brief Put the sample button in its buffering state.
+ */
 - (void)sampleDownloading;
+/**
+ * @brief Put the sample button in its playing state.
+ */
 - (void)samplePlaying;
 
 @end

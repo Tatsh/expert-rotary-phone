@@ -28,36 +28,51 @@
 // header is ObjC++ (every includer is .mm).
 class MainTask;
 
+/**
+ * @brief The recommendations list of purchasable music packs.
+ */
 @interface RecommendViewController : UITableViewController
 
-// The owning C++ music-select task. Atomic raw pointer: the binary brackets
-// both the getter
-// (@ 0xbd3d4) and setter (@ 0xbd3e8) with a DataMemoryBarrier and stores the
-// pointer without retaining it (assign).
+/** The owning C++ music-select task. It is an atomic raw pointer: the binary brackets both
+ * accessors with a DataMemoryBarrier and stores the pointer without retaining it. Getter @
+ * 0xbd3d4, setter @ 0xbd3e8. */
 @property(atomic, assign) MainTask *musicSelTask;
 
-// YES while an open/close animation is in flight. Atomic
-// (DataMemoryBarrier-bracketed) getter. Ghidra: isAnimationing @ 0xbd400.
+/** Whether an open or close animation is in flight. The getter is atomic, bracketed by a
+ * DataMemoryBarrier. Getter @ 0xbd400. */
 @property(atomic, assign, readonly, getter=isAnimationing) BOOL animationing;
 
-// Build the transparent, separator-less recommend table (a clear spacer header,
-// the "friman" backdrop on phone, a hidden dimmed spinner overlay) and load +
-// date-sort the recommend list. `style` is forwarded to UITableViewController.
-// Ghidra: @ 0xbbd68.
+/**
+ * @brief Build the transparent, separator-less recommend table — a clear spacer header, the
+ * "friman" backdrop on phone, and a hidden dimmed spinner overlay — then load and date-sort the
+ * recommend list.
+ * @param style Forwarded to UITableViewController.
+ * @return The initialised controller.
+ * @ghidraAddress 0xbbd68
+ */
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
-// Keep the C++ task pointer, (re)build the table, wrap self in a
-// UINavigationController (with a back button on phone) and return that
-// navigation controller. Ghidra: @ 0xbc30c.
+/**
+ * @brief Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
+ * with a back button on phone.
+ * @param musicSelTask The owning music-select task.
+ * @return The navigation controller.
+ * @ghidraAddress 0xbc30c
+ */
 - (UINavigationController *)initAtNavigationController:(MainTask *)musicSelTask
     __attribute__((objc_method_family(none)));
 
-// Fade (phone) / slide (iPad) the panel in. Ghidra: startOpenAnimation @
-// 0xbc5e0.
+/**
+ * @brief Fade the panel in on phone, or slide it in on iPad.
+ * @ghidraAddress 0xbc5e0
+ */
 - (void)startOpenAnimation;
 
-// If a store was opened, re-sort the task's list, then fade (phone) / slide
-// (iPad) the panel closed. Ghidra: startCloseAnimation @ 0xbcaa8.
+/**
+ * @brief Re-sort the task's list when a store was opened, then fade the panel closed on phone, or
+ * slide it closed on iPad.
+ * @ghidraAddress 0xbcaa8
+ */
 - (void)startCloseAnimation;
 
 @end

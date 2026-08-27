@@ -49,11 +49,27 @@
 class AepLyrCtrl;
 class neTextureForiOS;
 
+/**
+ * @brief The post-play results task: the score, judgement tallies and reward presentation shown
+ * once a song ends.
+ */
 class PlayResultTask : public ne::C_TASK {
 public:
-    PlayResultTask();                  // Ghidra: FUN_0003d5bc
-    ~PlayResultTask() override;        // out-of-line: unique_ptr members are incomplete here
-    void update(int deltaMs) override; // Ghidra: FUN_0003d690
+    /**
+     * @brief Construct the results task.
+     * @ghidraAddress 0x3d5bc
+     */
+    PlayResultTask();
+    /**
+     * @brief Tear the task down. Defined out-of-line: the unique_ptr members are incomplete here.
+     */
+    ~PlayResultTask() override;
+    /**
+     * @brief Per-frame results tick: advance the presentation state machine.
+     * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
+     * @ghidraAddress 0x3d690
+     */
+    void update(int deltaMs) override;
 
 private:
     // Intricate sub-bodies lifted out of update()'s switch as their own

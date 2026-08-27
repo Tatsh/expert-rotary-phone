@@ -21,7 +21,14 @@
 #import "UserSettingData.h"
 #import "neEngineBridge.h"
 
+/**
+ * @brief The random/mirror viewer's private back action.
+ */
 @interface AcViewerRanMirViewController ()
+/**
+ * @brief The back-button action.
+ * @param sender The tapped button.
+ */
 - (void)touchedBackButton:(id)sender;
 @end
 

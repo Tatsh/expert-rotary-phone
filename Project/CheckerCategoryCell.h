@@ -9,13 +9,19 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief One music-checker category row.
+ */
 @interface CheckerCategoryCell : UITableViewCell
 
-// Bind the row to a music-checker category: `category` (0 = etc, 1 = TV, 2..23
-// = p01..p22,
-// >=24 = "near") picks the base banner image, and `playedList`'s count drives
-// the small "played" digit badge. Layout offsets come from the init-computed
-// device/OS ivars.
+/**
+ * @brief Bind the row to a music-checker category. The layout offsets come from the init-computed
+ * device and OS ivars.
+ * @param playedList The played songs in this category; its count drives the small "played" digit
+ * badge.
+ * @param category 0 for etc, 1 for TV, 2..23 for p01..p22, and 24 or above for "near". It picks
+ * the base banner image.
+ */
 - (void)setData:(NSArray *)playedList category:(short)category;
 
 @end

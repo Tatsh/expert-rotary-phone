@@ -16,21 +16,29 @@
 
 #import "ImageDownloader.h"
 
+/**
+ * @brief A UIImageView that fetches its image from a URL on demand.
+ */
 @interface StoreImageView : UIImageView <ImageDownloaderDelegate> {
-    NSString *m_ImageURL;               // source URL string
-    ImageDownloader *m_ImageDownloader; // in-flight fetch (retained; nil when idle)
+    NSString *m_ImageURL;               /**< The source URL string. */
+    ImageDownloader *m_ImageDownloader; /**< The in-flight fetch; nil when idle. */
 }
 
-// The image source. Set it, then call -startDownloadImage. Ghidra: setter @
-// 0x42b30.
+/** The image source. Set it, then call -startDownloadImage. Setter @ 0x42b30. */
 @property(nonatomic, retain) NSString *imageURL;
 
-// Start the fetch for the current -imageURL. No-op if the URL is unset or a
-// fetch is already running. Ghidra: @ 0x42884.
+/**
+ * @brief Start the fetch for the current imageURL; a no-op when the URL is unset or a fetch is
+ * already running.
+ * @ghidraAddress 0x42884
+ */
 - (void)startDownloadImage;
 
-// Cancel any in-flight fetch and set the view's image to the supplied one (pass
-// nil to clear it). Ghidra: @ 0x42928.
+/**
+ * @brief Cancel any in-flight fetch and set the view's image.
+ * @param image The image to show, or nil to clear it.
+ * @ghidraAddress 0x42928
+ */
 - (void)unloadImage:(UIImage *)image;
 
 @end

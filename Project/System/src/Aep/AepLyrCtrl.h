@@ -253,30 +253,30 @@ protected:
     // (0x2c924) disassembly (ldr/ldm = int, ldrsh = short, vldr/vcvt = float),
     // which is authoritative over the NEON-mangled ctor decompile. +0x04..0x08
     // intrusive list links.
-    AepLyrCtrl *m_prev; // +0x04  pPrev
-    AepLyrCtrl *m_next; // +0x08  pNext
-    int m_group;        // +0x0c  nGroup (-1 = unassigned, sentinel)
-    void *m_owner;      // +0x10  nArg4: owning task/context (threaded to drawLayer)
-    int m_order;        // +0x14  nArg5: ordering-priority word (drawLayer p17)
-    int m_originX;      // +0x18  nOriginX (int draw x, not float)
-    int m_originY;      // +0x1c  nOriginY (int draw y, not float)
-    int m_posX;         // +0x20  nPosX: scale x (default 100)
-    int m_posY;         // +0x24  nPosY: scale y (default 100)
-    int16_t m_rotation; // +0x28  packed rotation (read as signed short; pReserved28)
-    int16_t m_pad2a;    // +0x2a
-    int m_anchorX;      // +0x2c  drawLayer anchorX (pivot X offset)
-    int m_anchorY;      // +0x30  drawLayer anchorY (pivot Y offset)
-    int m_renderMode;   // +0x34  nRenderMode (blend mode; default 0x20, low 16 bits read)
-    int m_lyr;          // +0x38  nLyr: resolved layer handle (AepManager::getLyrNo)
-    int m_frameCount;   // +0x3c  nFrameCount: layer length (AepManager::layerFrameCount)
-    float m_curFrame;   // +0x40  flCurFrame: current play head
-    float m_playSpeed;  // +0x44  flPlaySpeed: signed frame-advance rate (default 1.0)
-    int m_clipRect[4];  // +0x48  pReserved48 (0x50/0x54 double as >0 gate words)
-    AnimState m_state;  // +0x58  nState animation play-state
-    bool m_visible;     // +0x59
-    uint8_t m_pad5a[2]; // +0x5a
-    bool m_finished;    // +0x5c  bFlag59: animation-completed flag (set at end of travel)
-    uint8_t m_pad5d[3]; // +0x5d  -> 0x60
+    AepLyrCtrl *m_prev; /**< +0x04 pPrev: previous node in the intrusive layer list. */
+    AepLyrCtrl *m_next; /**< +0x08 pNext: next node in the intrusive layer list. */
+    int m_group;        /**< +0x0c nGroup; -1 is the "unassigned" sentinel. */
+    void *m_owner;      /**< +0x10 nArg4: the owning task or context, threaded to drawLayer. */
+    int m_order;        /**< +0x14 nArg5: the ordering-priority word (drawLayer p17). */
+    int m_originX;      /**< +0x18 nOriginX: integer draw x, not a float. */
+    int m_originY;      /**< +0x1c nOriginY: integer draw y, not a float. */
+    int m_posX;         /**< +0x20 nPosX: scale x; defaults to 100. */
+    int m_posY;         /**< +0x24 nPosY: scale y; defaults to 100. */
+    int16_t m_rotation; /**< +0x28 Packed rotation, read as a signed short (pReserved28). */
+    int16_t m_pad2a;    /**< +0x2a Alignment padding. */
+    int m_anchorX;      /**< +0x2c drawLayer anchorX: the pivot x offset. */
+    int m_anchorY;      /**< +0x30 drawLayer anchorY: the pivot y offset. */
+    int m_renderMode;   /**< +0x34 nRenderMode: blend mode; defaults to 0x20, low 16 bits read. */
+    int m_lyr;          /**< +0x38 nLyr: the resolved layer handle (AepManager::getLyrNo). */
+    int m_frameCount;   /**< +0x3c nFrameCount: layer length (AepManager::layerFrameCount). */
+    float m_curFrame;   /**< +0x40 flCurFrame: the current play head. */
+    float m_playSpeed;  /**< +0x44 flPlaySpeed: signed frame-advance rate; defaults to 1.0. */
+    int m_clipRect[4];  /**< +0x48 pReserved48; 0x50 and 0x54 double as "> 0" gate words. */
+    AnimState m_state;  /**< +0x58 nState: the animation play state. */
+    bool m_visible;     /**< +0x59 Whether the layer is drawn. */
+    uint8_t m_pad5a[2]; /**< +0x5a Alignment padding. */
+    bool m_finished;    /**< +0x5c bFlag59: animation-completed flag, set at the end of travel. */
+    uint8_t m_pad5d[3]; /**< +0x5d Alignment padding out to 0x60. */
 };
 
 // kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;

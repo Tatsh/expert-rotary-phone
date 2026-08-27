@@ -16,19 +16,27 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The sugoroku sub-map (area) list for one main map.
+ */
 @interface SubMapSelectViewController : UITableViewController
 
-// Build the area list for `mainMapId`. `treasureData` is an NSArray of
-// TreasureData records (the sugoroku save table) and `mapHeadArray` an NSArray
-// of NSValue-wrapped map-head entries; the initializer cross-references them to
-// produce the visible sub-map rows. Ghidra: @ 0xc1ea0.
+/**
+ * @brief Build the area list for a main map; the initialiser cross-references the two arrays to
+ * produce the visible sub-map rows.
+ * @param treasureData An NSArray of TreasureData records: the sugoroku save table.
+ * @param mapHeadArray An NSArray of NSValue-wrapped map-head entries.
+ * @param mainMapId The main map to list.
+ * @return The initialised controller.
+ * @ghidraAddress 0xc1ea0
+ */
 - (instancetype)initWithTreasureData:(NSArray *)treasureData
                         mapHeadArray:(NSArray *)mapHeadArray
                            mainMapId:(short)mainMapId;
 
-// Optional overlay owner (pad map-select overlay). When set and animating, row
-// taps are swallowed and -startCloseAnimation defers closing to it. Ghidra:
-// getter @ 0xc3334 / setter @ 0xc3344.
+/** The optional iPad map-select overlay owner. While it is set and animating, row taps are
+ * swallowed and -startCloseAnimation defers closing to it. Getter @ 0xc3334, setter @
+ * 0xc3344. */
 @property(nonatomic, assign) id delegate;
 
 @end

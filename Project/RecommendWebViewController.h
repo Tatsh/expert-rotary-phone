@@ -26,14 +26,19 @@
 // the UIViewController/UIWebView plumbing chained up to below.
 #import "RewardNetworkWebViewController.h"
 
+/**
+ * @brief The recommend app-list web-view controller.
+ */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 @interface RecommendWebViewController : RewardNetworkWebViewController <WKNavigationDelegate>
 #else
 @interface RecommendWebViewController : RewardNetworkWebViewController <UIWebViewDelegate>
 #endif
 
-// Detach the web view delegate (invoked by the hosting controller when tearing
-// the view down).
+/**
+ * @brief Detach the web view delegate. The hosting controller invokes it when tearing the view
+ * down.
+ */
 - (void)removeFromSuperview;
 
 @end

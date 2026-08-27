@@ -31,30 +31,66 @@
 // PopnLinkTopSplitViewController conforms via its own -reloadLeftView /
 // -onScoreCheckerButtonTouched: below. Ghidra: sent from InputKIDViewCtrl
 // -commonAlertView:clickedButtonAtIndex: @ 0xd7284.
+/**
+ * @brief The callback interface the KID-input screen sends to its owning split controller once the
+ * pop'n-link succeeds on iPad.
+ */
 @protocol PopnLinkTopSplitViewControllerDelegate <NSObject>
+/**
+ * @brief Rebuild the left column's inputs after a link state change.
+ */
 - (void)reloadLeftView;
+/**
+ * @brief Re-enter the score-checker section.
+ * @param sender The originating control.
+ */
 - (void)onScoreCheckerButtonTouched:(id)sender;
 @end
 
+/**
+ * @brief The iPad pop'n-link hub: a section column beside a detail pane.
+ */
 @interface PopnLinkTopSplitViewController : UIViewController
 
-// Fade the panel (and its nav view) in / out. Ghidra: startOpenAnimation @
-// 0xe1538 / startCloseAnimation @ 0xe1858.
+/**
+ * @brief Fade the panel and its navigation view in.
+ * @ghidraAddress 0xe1538
+ */
 - (void)startOpenAnimation;
+/**
+ * @brief Fade the panel and its navigation view out.
+ * @ghidraAddress 0xe1858
+ */
 - (void)startCloseAnimation;
 
-// Rebuild the left column's inputs and re-evaluate its button-enabled state
-// (called back after a link state change). Ghidra: reloadLeftView @ 0xe2bb8.
+/**
+ * @brief Rebuild the left column's inputs and re-evaluate its button-enabled state, called back
+ * after a link state change.
+ * @ghidraAddress 0xe2bb8
+ */
 - (void)reloadLeftView;
 
-// Section buttons, driven by the left column (PopnLinkTopViewController) via
-// its delegate: swap the right pane's top controller and slide the selection
-// arrow. Checker / quiz fall back to the KONAMI-ID input while the player is
-// not linked. Ghidra: onInKidButtonTouched:
-// @ 0xe19c0 / onScoreCheckerButtonTouched: @ 0xe1fa8 / onQuizButtonTouched: @
-// 0xe25b0.
+// Section buttons, driven by the left column (PopnLinkTopViewController) through its delegate:
+// they swap the right pane's top controller and slide the selection arrow. Checker and quiz fall
+// back to the KONAMI-ID input while the player is not linked.
+
+/**
+ * @brief Show the KONAMI-ID input in the right pane.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xe19c0
+ */
 - (void)onInKidButtonTouched:(id)sender;
+/**
+ * @brief Show the score checker in the right pane.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xe1fa8
+ */
 - (void)onScoreCheckerButtonTouched:(id)sender;
+/**
+ * @brief Show the quiz in the right pane.
+ * @param sender The tapped button.
+ * @ghidraAddress 0xe25b0
+ */
 - (void)onQuizButtonTouched:(id)sender;
 
 @end

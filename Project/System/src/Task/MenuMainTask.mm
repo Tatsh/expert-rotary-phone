@@ -85,6 +85,7 @@ MenuMainTask::~MenuMainTask() {
 /**
  * MenuMainTask_setInfoFlag — set the menu's info/notification flag (+0x1ac),
  * guarded against a redundant write (the binary only stores on a change).
+ * @param shown YES once the info screen has been shown.
  * @ghidraAddress 0x6d194
  */
 void MenuMainTask::setInfoFlag(bool shown) {
@@ -297,6 +298,8 @@ void MenuMainTask::setup() {
  * await the player record + name check; 3 name entry; 4 reward session; 5 intro
  * hand-off; 6 unlock gates; 8 daily info; 10 login bonus; 0xc INTERACTIVE menu;
  * 0xd..0x14 the sub-task spawn + fade-out + teardown.
+ * @param deltaMs Milliseconds elapsed since the previous tick; the hub paces itself off its own
+ * frame counters and ignores it.
  * @ghidraAddress 0x6ad88
  */
 void MenuMainTask::update(int /*deltaMs*/) {
@@ -1013,6 +1016,7 @@ draw:
  * none yet); then it snapshots the news-text array and resets the ticker to line
  * 0. The binary's manual retain/release around the array / timestamp is ARC
  * bookkeeping here.
+ * @param hasNews YES when the fetch actually returned news.
  * @ghidraAddress 0x6d8cc
  */
 void MenuMainTask::refreshNews(bool hasNews) {

@@ -2162,6 +2162,21 @@ void MainTask::MusicSelLoadColumnPrev(int column) {
  * VFP transform args are __stdcall_softfp lanes the decompiler cannot bind, so
  * they are sourced from the Setup()-filled layout/element data — the maximum
  * fidelity the decompile permits.
+ * @param child The drawn element's resolved user tag, dispatched on to pick the scene element.
+ * @param frame The element's current animation frame.
+ * @param x The element's draw x, in screen pixels.
+ * @param y The element's draw y, in screen pixels.
+ * @param scaleX The element's horizontal scale.
+ * @param scaleY The element's vertical scale.
+ * @param anchorX The element's anchor x.
+ * @param anchorY The element's anchor y.
+ * @param color The element's modulate colour.
+ * @param alpha The element's opacity.
+ * @param rotation The element's rotation.
+ * @param blend The element's blend mode.
+ * @param clipRect The element's clip rectangle, or nullptr when unclipped.
+ * @param priority The element's draw priority.
+ * @param context The owning MainTask.
  */
 void MainTask::AepDrawCallback(int child,
                                int frame,

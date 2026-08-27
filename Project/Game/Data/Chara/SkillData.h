@@ -16,17 +16,25 @@
 
 #import <Foundation/Foundation.h>
 
-// One built-in skill: its description and its random-selection weight.
+/**
+ * @brief One built-in skill: its description and its random-selection weight.
+ */
 struct SkillDataStruct {
-    NSString *description; // +0x0  (constant NSString, Japanese)
-    int weight;            // +0x4  (100/80/70/60/50/30/20)
+    NSString *description; /**< +0x0 The description, a constant Japanese NSString. */
+    int weight;            /**< +0x4 The random-selection weight: 100, 80, 70, 60, 50, 30 or 20. */
 };
 
-// Number of built-in skills (Ghidra: bound checked as index < 0x1e).
+/**
+ * @brief The number of built-in skills. Ghidra bound-checks this as `index < 0x1e`.
+ */
 constexpr int kSkillCount = 30;
 
-// Bounds-checked accessor for the 30 built-in skills (asserts index < 30).
-// Ghidra: GetSkillDataStruct @ FUN_000cb9d0.
+/**
+ * @brief Bounds-checked accessor for the built-in skills.
+ * @param index The skill index; asserts it is below kSkillCount.
+ * @return The skill record.
+ * @ghidraAddress 0xcb9d0
+ */
 const SkillDataStruct *GetSkillDataStruct(int index);
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
