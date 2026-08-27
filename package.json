@@ -1,8 +1,8 @@
 {
   "_wiswa": {
     "commandLine": "wiswa -d",
-    "lastRun": "2026-07-15T17:58:38Z",
-    "version": "d793b2a"
+    "lastRun": "2026-08-25T15:50:35Z",
+    "version": "65a1e3c"
   },
   "contributors": ["Andrew Udvare <audvare@gmail.com>"],
   "cspell": {
@@ -29,9 +29,9 @@
       ".vscode/extensions.json",
       "dist/**",
       "man/**",
-      "3rdparty/",
       "*.pbxproj",
-      "*.xc*"
+      "*.xc*",
+      "3rdparty/"
     ],
     "language": "en-GB",
     "languageSettings": [
@@ -77,7 +77,7 @@
     "showFound": true
   },
   "name": "expert-rotary-phone",
-  "packageManager": "yarn@4.17.1",
+  "packageManager": "yarn@4.18.0",
   "prettier": {
     "endOfLine": "lf",
     "iniSpaceAroundEquals": true,

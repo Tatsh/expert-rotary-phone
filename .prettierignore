@@ -22,6 +22,7 @@
 .*.swp
 .*_cache/
 .DS_Store*
+.arm64-dbg/
 .coverage
 .cspellcache
 .decompile/
@@ -29,6 +30,7 @@
 .eslintignore
 .pnp.*
 .shellcheckrc
+.venv/
 /.audit/
 /.bash_profile
 /.bashrc
@@ -63,12 +65,15 @@
 /Project/.audit/
 /build/
 /dist/
+/logs/
+/screenshots/
 /session-recover.yaml
 /theos/.theos/
 /theos/obj/
 /theos/packages/
 CMakeCache.txt
 Makefile
+__pycache__/
 control
 node_modules/
 pylock*.toml

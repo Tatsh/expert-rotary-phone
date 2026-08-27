@@ -50,7 +50,11 @@ with the changelog.
 
 1. **Run `cz bump --files-only --increment {MAJOR,MINOR,PATCH}`** with the appropriate increment.
    This only updates version strings in files without committing or tagging. Never pass
-   `--changelog` or `-ch` to `cz bump`. If `cz bump` fails for any reason:
+   `--changelog` or `-ch` to `cz bump`. When the repository has **no existing tags** (the first
+   release), also pass `--yes`: with no tag to compare against, cz asks "Is this the first tag
+   created?" interactively, and a non-interactive shell aborts with `EOFError` before writing
+   anything. `--yes` answers that prompt truthfully and changes nothing else about the
+   substitution. If `cz bump` fails for any other reason:
    1. **Restore the repository** to the pre-bump state: `git checkout -- .`
    1. **Stop work immediately and alert the user.** Do not attempt to work around the failure.
 
