@@ -34,6 +34,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   edge-array pointer was stored in a 32-bit `int` field (in `TreasureMap` and the
   arcade play data), which corrupted it on arm64 and garbled or crashed the
   sugoroku map's edge drawing; it is now a real typed pointer.
+- The result screen's share button now works. It posted the score through the Social framework's
+  Twitter service, which iOS 11 removed, so the button accepted a tap and did nothing. Patched
+  builds now present the system share sheet with the same score text and the result screenshot,
+  reaching any installed share extension; the shared text also drops the dead campaign short link.
+  See [PATCHES.md](PATCHES.md) for the details.
 
 ### Removed
 

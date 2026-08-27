@@ -93,6 +93,21 @@ The binary sizes the subtitle label at exactly the font height, which clips the 
 full-width parentheses under modern text rendering. The patch gives the label a few points of
 vertical headroom while keeping its visual centre.
 
+### Result-screen share sheet
+
+**Files:** `Project/Game/Util/TwitterUtil.{h,mm}` — `-share:` and `PresentShareSheet`;
+`Project/System/src/Task/PlayResultTask.mm` — `PlayResultTask::buildShareButton`
+
+The result screen's share button posts the score through an `SLComposeViewController` for
+`SLServiceTypeTwitter`, a Social framework service iOS 11 removed. `TwitterUtil` already compiles
+that path away against a modern SDK, so the button bounces in, accepts a tap, and does nothing at
+all. The patch adds a `-share:` action that presents a `UIActivityViewController` carrying the same
+score text plus the captured result screenshot, reaching any installed share extension, and points
+the button at that action instead. The button doubles as the popover source view, because a popover
+presented without one raises an exception on iPad. The shared text also drops the short link the
+binary embeds, as the campaign page behind it no longer resolves. A faithful build keeps the compose
+sheet, the `-tweet` target, and the original text including the link.
+
 ### Server host overrides
 
 **File:** `Project/StoreUtil.m` — `ResolveHost`

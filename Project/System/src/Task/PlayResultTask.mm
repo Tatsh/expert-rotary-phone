@@ -740,11 +740,21 @@ void PlayResultTask::buildShareButton(int displayType) {
     // Rank-letter table (PTR_cf_S_00131884): index by the play rank (0 best .. 6
     // fail).
     static NSString *const kRankLetter[7] = {@"S", @"AAA", @"AA", @"A", @"B", @"C", @"D"};
+#ifdef ENABLE_PATCHES
+    // The bit.ly short link the binary embeds points at a Konami campaign page that
+    // no longer resolves, so it is dropped from the shared text.
+    NSString *tweetText =
+        [NSString stringWithFormat:@"%@をプレイしたよ！スコア:%d ランク:%@ #リズミン",
+                                   [md musicName],
+                                   m_score,
+                                   kRankLetter[m_rank]];
+#else
     NSString *tweetText = [NSString stringWithFormat:@"%@をプレイしたよ！スコア:%d ランク:%@ "
                                                      @"http://bit.ly/188OxQr #リズミン",
                                                      [md musicName],
                                                      m_score,
                                                      kRankLetter[m_rank]];
+#endif
 
     AepManager &aep = AepManager::shared();
     neSceneManager::shared(); // ensure the scene singleton (pad flag) is live
@@ -782,7 +792,16 @@ void PlayResultTask::buildShareButton(int displayType) {
     // below).
     button.userInteractionEnabled = NO;
     [button setBackgroundImage:btImage forState:UIControlStateNormal];
+#ifdef ENABLE_PATCHES
+    // -tweet reaches the Twitter service Social.framework dropped in iOS 11, so the
+    // button opens the system share sheet instead. The button doubles as the popover
+    // anchor on iPad, hence the sender-taking selector.
+    [button addTarget:tweeter
+                  action:@selector(share:)
+        forControlEvents:UIControlEventTouchUpInside];
+#else
     [button addTarget:tweeter action:@selector(tweet) forControlEvents:UIControlEventTouchUpInside];
+#endif
     [[RootVC() view] addSubview:button];
 
     // Bounce-in (Ghidra: FUN_0003f19c / FUN_0003f1d0 / FUN_0003f278 + its

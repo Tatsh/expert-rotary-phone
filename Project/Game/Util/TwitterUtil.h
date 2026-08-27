@@ -50,6 +50,14 @@
  * @ghidraAddress 0x78bb8
  */
 + (void)tweetWithText:(NSString *)text image:(UIImage *)image;
+#ifdef ENABLE_PATCHES
+/**
+ * @brief Presents the system share sheet with the instance's text and image.
+ * @param sender The control that triggered the action, used as the popover anchor on iPad.
+ * @newCode
+ */
+- (void)share:(id)sender;
+#endif
 @end
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;

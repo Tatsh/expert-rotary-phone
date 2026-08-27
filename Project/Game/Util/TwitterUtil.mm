@@ -60,6 +60,53 @@ static void PresentTweet(NSString *text, UIImage *image) {
 #endif
 }
 
+#ifdef ENABLE_PATCHES
+// The Social-framework Twitter service this class was built around was removed in
+// iOS 11, so PresentTweet above compiles to nothing and the result screen's share
+// button is inert on every supported device. Offer the system share sheet instead,
+// which reaches any installed share extension. `anchor` is the control that was
+// tapped; on iPad the sheet is presented as a popover and raises
+// NSInvalidArgumentException unless it is given a source view.
+static void PresentShareSheet(NSString *text, UIImage *image, UIView *anchor) {
+    UIViewController *root = neSceneManager::rootViewController();
+    if (root == nil) {
+        return;
+    }
+    NSMutableArray *items = [NSMutableArray arrayWithCapacity:2];
+    if (text.length > 0) {
+        [items addObject:text];
+    }
+    if (image != nil) {
+        [items addObject:image];
+    }
+    if (items.count == 0) {
+        return;
+    }
+    UIActivityViewController *sheet = [[UIActivityViewController alloc] initWithActivityItems:items
+                                                                        applicationActivities:nil];
+    UIPopoverPresentationController *popover = sheet.popoverPresentationController;
+    if (popover != nil) {
+        UIView *source = (anchor != nil) ? anchor : root.view;
+        popover.sourceView = source;
+        popover.sourceRect = source.bounds;
+    }
+    // Values rather than `self` are captured because the result task releases the
+    // TwitterUtil in resultGotoNext while the sheet may still be on screen. Unlike
+    // SLComposeViewController the sheet dismisses itself, so nothing to do on success.
+    sheet.completionWithItemsHandler = ^(NSString *, BOOL, NSArray *, NSError *activityError) {
+      if (activityError != nil) {
+          CommonAlertView *alert = [[CommonAlertView alloc] initWithTitle:nil
+                                                                  message:@"投稿に失敗しました。"
+                                                                 delegate:nil
+                                                        cancelButtonTitle:nil
+                                                        otherButtonTitles:@"OK"];
+          [alert show];
+      }
+    };
+    [root presentViewController:sheet animated:YES completion:nil];
+}
+#endif
+
 @implementation TwitterUtil
 
 // dealloc @ 0x788d0 — ARC-omitted (the recovered body only releases the
@@ -97,5 +144,15 @@ static void PresentTweet(NSString *text, UIImage *image) {
 + (void)tweetWithText:(NSString *)text image:(UIImage *)image {
     PresentTweet(text, image);
 }
+
+#ifdef ENABLE_PATCHES
+- (void)share:(id)sender {
+    UIView *anchor = nil;
+    if ([sender isKindOfClass:[UIView class]]) {
+        anchor = sender;
+    }
+    PresentShareSheet(self.text, self.image, anchor);
+}
+#endif
 
 @end
