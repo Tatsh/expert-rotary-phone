@@ -25,6 +25,13 @@ and iOS 11+.
 No copyrighted material is in this repository. You must provide your own IPA with the game assets.
 Building this source alone will not result in a playable game.
 
+## Server API
+
+The server API the app speaks is described in [openapi.yaml](openapi.yaml). A response schema
+there is a lower bound, since the client ignores any field it does not need. It is browsable at
+[tatsh.github.io/expert-rotary-phone/api/](https://tatsh.github.io/expert-rotary-phone/api/), which
+shows each endpoint as a cURL, fetch, or other client call and can send the request.
+
 ## Bundled third-party libraries
 
 | Import as                                                       | Library                                         | How identified                                                                                  |

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      The reference bundle asks api.scalar.com for its document registry on load, whatever the
+      configuration below says, so the page is confined to its own origin instead. Sending a
+      request from the page reaches the documented server and nothing else; point connect-src at
+      another host to try a replacement server from here.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://apr.s.konaminet.jp; worker-src 'self' blob:;"
+    />
+    <title>pop'n rhythmin server API</title>
+    <style>
+      /* The buttons behind these open Scalar's own services, which the policy above blocks. */
+      .scalar-mcp-layer,
+      .agent-button-container {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="./scalar/standalone.js"></script>
+    <script>
+      Scalar.createApiReference('#app', {
+        defaultHttpClient: { clientKey: 'curl', targetKey: 'shell' },
+        // Both default the other way: telemetry is on, and a sent request is routed through
+        // https://proxy.scalar.com to dodge CORS. A request from here goes to the server it names.
+        proxyUrl: '',
+        showDeveloperTools: 'never',
+        telemetry: false,
+        url: './openapi.yaml',
+        withDefaultFonts: false,
+      });
+    </script>
+  </body>
+</html>
