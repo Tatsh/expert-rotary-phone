@@ -46,15 +46,33 @@ endif()
 # ---------------------------------------------------------------------------
 # Documentation (Doxygen). The ghidraAddress alias implements this project's
 # custom @ghidraAddress tag, which ties a reconstructed routine to its function
-# in the original binary (address relative to the program's image base).
-# DOXYGEN_VERBATIM_VARS stops CMake re-quoting the alias, so the embedded
+# in the original binary (address relative to the program's image base). The
+# newCode alias marks a declaration that has no counterpart in the binary.
+# DOXYGEN_VERBATIM_VARS stops CMake re-quoting the aliases, so the embedded
 # Doxygen-side quoting reaches the Doxyfile intact.
+#
+# The PREDEFINED entries teach Doxygen the three Objective-C spellings its
+# parser otherwise mistakes for declarations: NS_ENUM / NS_OPTIONS read as a
+# function named NS_ENUM, and a trailing __attribute__((...)) reads as an extra
+# method parameter. __OBJC__ is defined so the Objective-C-only declarations
+# guarded by it are seen; without it their .mm definitions document a symbol
+# Doxygen never saw declared. EXPAND_ONLY_PREDEF keeps every other macro
+# unexpanded.
 # ---------------------------------------------------------------------------
 if(BUILD_DOCS OR BUILD_DOCS_ONLY)
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
     set(DOXYGEN_GENERATE_HTML YES)
     set(DOXYGEN_VERBATIM_VARS DOXYGEN_ALIASES)
-    set(DOXYGEN_ALIASES [[ghidraAddress="\par Ghidra address:^^"]])
+    set(DOXYGEN_ALIASES
+        [[ghidraAddress="\par Ghidra address:^^"]]
+        [[newCode="\par Not in the original binary.^^"]])
+    set(DOXYGEN_MACRO_EXPANSION YES)
+    set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
+    set(DOXYGEN_PREDEFINED
+        "NS_ENUM(_type,_name)=enum _name : _type"
+        "NS_OPTIONS(_type,_name)=enum _name : _type"
+        "__attribute__(x)="
+        "__OBJC__=1")
     find_package(Doxygen REQUIRED)
     doxygen_add_docs(docs README.md Project ALL)
 endif()
