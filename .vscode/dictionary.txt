@@ -140,6 +140,7 @@ easyyou
 elif
 endforeach
 eors
+errno
 esac
 esbenp
 etop
