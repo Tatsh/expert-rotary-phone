@@ -564,13 +564,9 @@
 
         recommendPackIdArr = nil;
 
-        // NOTE: the success message is a treasure-bonus notice with the awarded
-        // amount (300); the exact CFString (Ghidra cf_000000000, UTF-16) resisted
-        // clean extraction, so the body here is best-effort. Title "成功" and the
-        // "OK" button are byte-verified.
         alert = [[CommonAlertView alloc]
                 initWithTitle:@"成功"
-                      message:[NSString stringWithFormat:@"宝箱ポイントを%dP獲得しました。", 300]
+                      message:[NSString stringWithFormat:@"トレジャーポイント %d pt 獲得", 300]
                      delegate:nil
             cancelButtonTitle:nil
             otherButtonTitles:@"OK"];

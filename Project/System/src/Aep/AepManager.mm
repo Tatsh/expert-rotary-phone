@@ -491,14 +491,16 @@ static int buildAepNameHashTable(const char **cursor, AepManager::NameHashTable 
     return count;
 }
 
-// `basePath` is the bundle path, copied alongside `dataPath` (the texture root =
-// baseDir). The binary memsets the per-group frame/sprite tables and seeds the
+// `basePath` is the download-era texture root the binary parks in the buffer at
+// this+0 and never reads back; `dataPath` is the AEP data root that lands in
+// baseDir (this+0x100), which loadAepDataDefaultPath fopens "<baseDir>/<name>.idx"
+// from. The binary memsets the per-group frame/sprite tables and seeds the
 // transform-matrix stacks — here those are the members' zero-initialised state.
 // It then hands the screen extents + render scale to the ordering table and
 // seeds the transition defaults (total = 30 frames).
 void AepManager::init(
     const char *basePath, const char *dataPath, int screenW, int screenH, float scale) {
-    static_cast<void>(basePath); // the bundle-path buffer at this+0 is not separately modelled
+    static_cast<void>(basePath); // the this+0 buffer is written and never read
     if (dataPath != nullptr) {
         std::strncpy(m_baseDir, dataPath, sizeof(m_baseDir) - 1);
         m_baseDir[sizeof(m_baseDir) - 1] = '\0';

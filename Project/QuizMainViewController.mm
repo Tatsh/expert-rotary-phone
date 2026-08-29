@@ -668,7 +668,7 @@ static int QuizCountDigits(int value) {
 // @ 0xdca68 — a tap on the graded board: draw the result (first time), then
 // toggle the present-reward popup in (state 1) / out (state 2). The present-num
 // digits are drawn from a 10-entry image-name table in the binary; the
-// stringWithFormat:@"pq_present_num%d_2x" reconstruction produces identical names.
+// stringWithFormat:@"pq_present_num%d@2x" reconstruction produces identical names.
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     if (_finaleAnswer < 0) {
         return;
@@ -706,7 +706,7 @@ static int QuizCountDigits(int value) {
             int x = digits * 9 + 0x96;
             do {
                 UIImage *digitImg = [UIImage
-                    imageNamed:[NSString stringWithFormat:@"pq_present_num%d_2x", value % 10]];
+                    imageNamed:[NSString stringWithFormat:@"pq_present_num%d@2x", value % 10]];
                 UIImageView *digitView = [[UIImageView alloc] initWithImage:digitImg];
                 digitView.frame = CGRectMake(
                     (CGFloat)x, 95.0f, digitImg.size.width * 0.5f, digitImg.size.height * 0.5f);

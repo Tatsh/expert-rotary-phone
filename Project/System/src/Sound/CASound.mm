@@ -72,7 +72,7 @@ bool CASound::load(const char *path, bool loop) {
     CFURLRef url = CFURLCreateFromFileSystemRepresentation(
         kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(path), strlen(path), false);
     if (url == nullptr) {
-        NSLog(@"CASource load failed: CFURLCreateFromFileSystemRepresentation(%s)", path);
+        NSLog(@"CASource load Failed: CFURLCreateFromFileSystemRepresentation(%s)", path);
         return false;
     }
     bool ok = loadURL(url);
@@ -85,12 +85,12 @@ bool CASound::load(const char *path, bool loop) {
 bool CASound::loadURL(CFURLRef url) {
     ExtAudioFileRef file = nullptr;
     if (ExtAudioFileOpenURL(url, &file) != noErr) {
-        NSLog(@"CASource load error");
+        NSLog(@"CASource load error!!");
         return false;
     }
     bool ok = configureFormat(file) && readFrames(file);
     if (ExtAudioFileDispose(file) != noErr) {
-        NSLog(@"CASource load file close error");
+        NSLog(@"CASource load file close error!!");
     }
     return ok;
 }
@@ -102,7 +102,7 @@ bool CASound::configureFormat(ExtAudioFileRef file) {
     UInt32 size = sizeof(fileFormat);
     if (ExtAudioFileGetProperty(file, kExtAudioFileProperty_FileDataFormat, &size, &fileFormat) !=
         noErr) {
-        NSLog(@"ExtFileDecoder init failed: kExtAudioFileProperty_FileDataFormat");
+        NSLog(@"ExtFileDecoder init Failed: ExtAudioFileGetProperty FileDataFormat");
         return false;
     }
 
@@ -110,7 +110,7 @@ bool CASound::configureFormat(ExtAudioFileRef file) {
     size = sizeof(lengthFrames);
     if (ExtAudioFileGetProperty(
             file, kExtAudioFileProperty_FileLengthFrames, &size, &lengthFrames) != noErr) {
-        NSLog(@"ExtFileDecoder init failed: kExtAudioFileProperty_FileLengthFrames");
+        NSLog(@"ExtFileDecoder init Failed: ExtAudioFileGetProperty FileLengthFrames");
         return false;
     }
 
@@ -145,8 +145,8 @@ bool CASound::readFrames(ExtAudioFileRef file) {
 
     if (ExtAudioFileSetProperty(
             file, kExtAudioFileProperty_ClientDataFormat, sizeof(m_format), &m_format) != noErr) {
-        NSLog(@"ExtFileDecoder init memory decoder failed: "
-              @"kExtAudioFileProperty_ClientDataFormat");
+        NSLog(@"ExtFileDecoder initMemoryDecoder Failed: "
+              @"ExtAudioFileSetProperty ClientDataFormat");
         return false;
     }
 
@@ -162,7 +162,7 @@ bool CASound::readFrames(ExtAudioFileRef file) {
 
         UInt32 frames = remaining / bytesPerFrame;
         if (ExtAudioFileRead(file, &frames, &list) != noErr) {
-            NSLog(@"ExtFileDecoder init memory decoder failed: ExtAudioFileRead");
+            NSLog(@"ExtFileDecoder initMemoryDecoder faile, ExtAudioFileRead.");
             return false;
         }
         if (frames == 0) {

@@ -2251,7 +2251,7 @@ void AcMainTask::sugorokuLoadWallTextures(int page) {
     for (int i = 0; i < 9; i++) {
         short idx = findTreasureMapIndexById(base + i);
         m_wallNailTex[i] = std::make_unique<neTextureForiOS>();
-        NSString *name = [NSString stringWithFormat:@"sugo_wall_nail_%02d", static_cast<int>(idx)];
+        NSString *name = [NSString stringWithFormat:@"sugo_wall_nail%02d", static_cast<int>(idx)];
         NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"png"];
         if (path) {
             m_wallNailTex[i]->load([path UTF8String]);

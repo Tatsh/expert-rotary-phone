@@ -120,6 +120,52 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reload sites, the title hand-off and the arcade task, are already reconstructed. The spurious
   reload re-created the character records just after the title screen had built them, which also
   left a cached pointer in the arcade task dangling.
+- Text the reconstruction had left blank or filled with placeholders now carries the binary's own
+  literals. Every CFString in the shipped image was compared against this tree; the differences the
+  player can see are:
+  - The low-storage warning shown at launch carries its title, the warning that the game may not
+    run correctly with so little space free, and an OK button. All three were nil, so the player
+    saw an empty card, and the missing button label also made the alert build its unlabelled 'yes'
+    button in place of the OK button.
+  - The terms-of-service text on the acceptance screen is the original's request to read the terms
+    and press 'agree' before playing rather than placeholder text.
+  - The store's delete-pack confirmation, pack-download progress message, restore-purchases
+    confirmation, and install-all prompt carry the original wording, and the treasure-point reward
+    notice shown after a recommended pack is added carries the original message rather than
+    invented text.
+  - The friend-removal screen shows the right message for each outcome. An empty response body is
+    the success case and a JSON body carries an error code, but the success text and the original
+    communication-failure text sat on opposite branches.
+  - The arcade-finder map's prompt to zoom in before shops are listed is the original text rather
+    than a placeholder constant.
+  - The age-verification dialogue regains the indentation on its spending-limit figures and the
+    blank line between two of the tiers.
+  - The store's price fallback shows the full-width yen sign the original uses rather than the
+    half-width one.
+  - Three small labels were blank or wrong: the trailing chevron on an arcade-viewer option cell,
+    the multiplication-sign prefix on the sub-map list's collected counts, and the dash the
+    friend-score list shows in place of a missing score.
+  - The policy view pads the loaded text with the original's seven trailing line breaks rather
+    than one.
+  - The default-data download screen's progress label reads 'File check...', with the space the
+    original has.
+  - The name-display character table maps the full-width reverse solidus rather than the
+    full-width less-than sign, so the character the original replaces in displayed names is the
+    one that is now replaced.
+- Resource names that silently failed to load now match the binary:
+  - Character data is read as `chara%03d.chr` rather than `chara_%03d.chr`.
+  - The sugoroku wall-nail texture is `sugo_wall_nail%02d`, the quiz answer-base image is
+    `pq_ansbase_top%d`, and the quiz present-number digits are `pq_present_num%d@2x`. Each carried
+    an extra underscore or the wrong suffix.
+  - The StoreKit pack product identifier prefix is `rhythmin.pack` rather than `rhythmin_pack`.
+    The same identifier is corrected in [openapi.yaml](openapi.yaml).
+- The CoreAudio graph's mixer-gain set and both of its `AUGraphUpdate` calls are checked and logged
+  as the binary does rather than having their return values discarded.
+- The reward network installs its UDID pasteboard under the service name and data type the binary
+  registers. It was never created, so nothing could be written to it or read back from it.
+- The reward network's user-agent string no longer carries a slash the binary does not have.
+- The half-width character test that measures text for layout uses the binary's literal yen signs
+  rather than backslash escapes, which changes which characters count as one column.
 
 ### Removed
 

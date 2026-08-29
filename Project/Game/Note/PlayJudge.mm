@@ -192,6 +192,7 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
 
         NoteJudgeState *st = judgeStateFor(this, note.noteId);
         if (st == nullptr) {
+            NSLog(@"オーブの同時描画可能数をオーバーした!!!!!!");
             continue; // pool full (should not happen once the pool is freed at init)
         }
 

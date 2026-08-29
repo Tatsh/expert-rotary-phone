@@ -135,8 +135,7 @@
         break;
     }
     }
-    // A trailing space pads the right-aligned value away from the rounded edge.
-    _optionDetailLbl.text = [value stringByAppendingString:@" "];
+    _optionDetailLbl.text = [value stringByAppendingString:@" ＞"];
 }
 
 @end

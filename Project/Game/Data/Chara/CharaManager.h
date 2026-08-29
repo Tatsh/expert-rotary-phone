@@ -31,7 +31,7 @@ class CharaManager {
 public:
     /**
      * Rebuild all three lists: the 30 hard-coded characters plus every character and
-     * preferred or limited set found in the downloaded chara_%03d.chr files.
+     * preferred or limited set found in the downloaded chara%03d.chr files.
      * @ghidraAddress 0xb85bc
      */
     void reload();

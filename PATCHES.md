@@ -169,7 +169,7 @@ Support and Documents. This patch lets a self-contained build ship that content 
   makes it appear next boot, and duplicates can never occur.
 - **Downloaded data** loads from `assets/` only via `+appAssetsPath:`, with no fallback: the level
   overrides (`rhythmin_lv`), the BGM tracks (`bgm01_modesel`, `bgm02_musicsel`, `bgm03_result`,
-  `bgm04_tre_*`), the character data (`chara_*.chr`), and the downloaded PNG families (`sgc_icon_*`,
+  `bgm04_tre_*`), the character data (`chara*.chr`), and the downloaded PNG families (`sgc_icon_*`,
   `open_chara*`, `lock_chara*`, `sugo_chara*`, `result_chara*` / `@2x`). Only the Application Support
   branch is redirected; bundle-native assets (the title track `bgm00_title`, and the built-in
   icons/art loaded through `pathForResource:` / `imageNamed:`) keep loading from the bundle.

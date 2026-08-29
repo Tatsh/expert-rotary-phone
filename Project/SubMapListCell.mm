@@ -24,7 +24,7 @@ typedef struct {
     NSString *__unsafe_unretained name; /**< The area name. */
 } SubMapListRowValue;
 
-// Small right-of-icon count label ("%d" of collected pieces), shared style.
+// Small right-of-icon count label ("× %02d" of collected pieces), shared style.
 static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
     UILabel *lbl = [[UILabel alloc] init];
     lbl.backgroundColor = [UIColor clearColor];
@@ -127,7 +127,7 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
         initWithFrame:CGRectMake(col2 + 105, 77.0f, kakeraImg.size.width, kakeraImg.size.height)];
     [kakeraView setImage:kakeraImg];
     [host addSubview:kakeraView];
-    [host addSubview:SubMapCountLabel([NSString stringWithFormat:@"%d", pieceCount],
+    [host addSubview:SubMapCountLabel([NSString stringWithFormat:@"× %02d", pieceCount],
                                       CGRectMake(col2 + 130, 80.0f, 100.0f, 20.0f))];
 
     // Collected chara-ticket count.
@@ -137,7 +137,7 @@ static UILabel *SubMapCountLabel(NSString *text, CGRect frame) {
         initWithFrame:CGRectMake(col2 + 184, 77.0f, ticketImg.size.width, ticketImg.size.height)];
     [ticketView setImage:ticketImg];
     [host addSubview:ticketView];
-    [host addSubview:SubMapCountLabel([NSString stringWithFormat:@"%d", ticketCount],
+    [host addSubview:SubMapCountLabel([NSString stringWithFormat:@"× %02d", ticketCount],
                                       CGRectMake(col2 + 207, 80.0f, 100.0f, 20.0f))];
 
     // Goal areas (subMapId == 2) show the "daon" touch-sound reward icon.

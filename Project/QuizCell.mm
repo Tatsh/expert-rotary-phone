@@ -100,7 +100,7 @@
     // rows, otherwise the neutral "non" glyph.
     NSString *idName;
     if (selectId < 0 || selectId == answerId) {
-        idName = [NSString stringWithFormat:@"pq_ansbase_top_%d", answerId + 1];
+        idName = [NSString stringWithFormat:@"pq_ansbase_top%d", answerId + 1];
     } else {
         idName = [NSString stringWithFormat:@"pq_ansbase_non"];
     }

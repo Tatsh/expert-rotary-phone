@@ -182,11 +182,13 @@
     [self.viewController SetLoopInterval:1];
     [self.viewController StartLoop];
 
-    self.strageAlert = [[CommonAlertView alloc] initWithTitle:nil
-                                                      message:nil
-                                                     delegate:nil
-                                            cancelButtonTitle:nil
-                                            otherButtonTitles:nil];
+    self.strageAlert = [[CommonAlertView alloc]
+            initWithTitle:@"注意"
+                  message:@"記憶領域の空き容量が少なくなっています。\n"
+                          @"このままゲームをプレイした場合正常に動作しない場合があります。"
+                 delegate:nil
+        cancelButtonTitle:@"OK"
+        otherButtonTitles:nil];
 
     if (launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey]) {
         neAppEventCenter::shared().setRemoteNotifyPending(true);

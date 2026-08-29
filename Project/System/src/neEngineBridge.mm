@@ -803,10 +803,11 @@ int aepContentHeight() {
 // halfwidth matcher: the binary tests each glyph with
 // `-rangeOfString:options:NSRegularExpressionSearch` (options 0x400) against a
 // regex constant, and a glyph that does NOT match counts as 2 columns.
-// kHalfWidthPattern is a best-effort recovery of that regex constant (the
-// binary's cf__ string): printable ASCII plus the halfwidth-katakana range.
+// The separators in kHalfWidthPattern are U+00A5 YEN SIGN, not backslashes, so
+// ICU reads them as literals: the class collapses to U+0030-U+00A5, and space,
+// U+0021-U+002F punctuation, and halfwidth katakana all score two columns.
 int findCharIndexForColumn(NSString *text, int columnWidth) {
-    static NSString *const kHalfWidthPattern = @"[\\x01-\\x7e\\uff61-\\uffdc\\uffe8-\\uffee]";
+    static NSString *const kHalfWidthPattern = @"[¥x20-¥x7E¥xA1-¥xDF]";
     NSUInteger length = [text length];
     int width = 0;
     for (NSUInteger i = 0; i < length; i++) {

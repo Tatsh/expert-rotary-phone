@@ -59,7 +59,7 @@ static NSString *const kRewardSdkVersion = @"1.0.31";
         URLEncodedString:[NSString
                              stringWithFormat:@"%@ %@", device.systemName, device.systemVersion]];
     params[@"ua_sdk"] =
-        [self URLEncodedString:[NSString stringWithFormat:@"RewardNetwork/%@", kRewardSdkVersion]];
+        [self URLEncodedString:[NSString stringWithFormat:@"RewardNetwork%@", kRewardSdkVersion]];
 
     if (bundleVersion != nil) {
         params[@"ua_appli_ver"] = [self URLEncodedString:bundleVersion];

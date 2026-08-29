@@ -219,13 +219,13 @@
 /**
  * The localised currency string for a product's price.
  * @param product The StoreKit product.
- * @return The price string, or an empty string when @p product is nil.
+ * @return The price string, or the placeholder "￥573" when @p product is nil.
  * @ghidraAddress 0x5a16c
  */
 + (NSString *)priceString:(SKProduct *)product;
 
 /**
- * The StoreKit product identifier for a pack, formatted "rhythmin_pack%04d".
+ * The StoreKit product identifier for a pack, formatted "rhythmin.pack%04d".
  * @param packID The pack id.
  * @return The identifier, or nil when @p packID is below 1.
  * @ghidraAddress 0x5a088
@@ -236,7 +236,7 @@
  * The inverse of +productIDForPackID:: parse the numeric pack id out of a product
  * identifier.
  * @param productID The product identifier.
- * @return The pack id, or -1 when it lacks the "rhythmin_pack" prefix or is not positive.
+ * @return The pack id, or -1 when it lacks the "rhythmin.pack" prefix or is not positive.
  * @ghidraAddress 0x5a0d0
  */
 + (int)packIDForProductID:(NSString *)productID;

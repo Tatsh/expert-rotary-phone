@@ -382,21 +382,18 @@ constexpr int kColX[3] = {139, 190, 242};
     [_dlRemoveFriend startDownloading];
 }
 
-// @ 0xb5678 — unfriend POST finished: show the result (tag 100), success vs.
-// failure by whether the JSON body came back.
+// @ 0xb5678 — unfriend POST finished: show the result (tag 100). An empty body
+// means the removal succeeded; a JSON body is an ErrorCode payload.
 - (void)downloaderFinished:(Downloader *)downloader {
     NSDictionary *json = [_dlRemoveFriend getDataInJSON];
     NSString *message;
     id delegate;
     if (json == nil) {
-        message = @"通信に失敗しました。"; // best-effort: cf_00000dW0_0W0_00 (comms
-                                           // failure)
+        message = @"フレンドを解除しました。";
         delegate = self;
     } else {
-        // The binary also checks the "ErrorCode" key here; the success copy is
-        // shown regardless.
         (void)[[json objectForKey:@"ErrorCode"] isKindOfClass:[NSNumber class]];
-        message = @"解除しました。"; // best-effort: cf_Ok01YWeW0_0W0_00 (unfriended)
+        message = @"通信に失敗しました。\n電波状態の良い場所でやり直して下さい。";
         delegate = nil;
     }
     _dlRemoveFriend = nil;

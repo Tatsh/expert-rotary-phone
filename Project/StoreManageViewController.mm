@@ -279,7 +279,7 @@ constexpr NSInteger kTagManageCellArtist = 0xE021; // drop-shadow of the artist
         // dialog.
         id dialog = [m_StoreViewCtrl modalDialog];
         [dialog layout:0];
-        [[dialog labelMessage] setText:[NSString stringWithFormat:@"「%@」をダウンロード中...",
+        [[dialog labelMessage] setText:[NSString stringWithFormat:@"『%@』をダウンロード中...",
                                                                   [item objectForKey:@"Name"]]];
         [[dialog progressView] setProgress:0];
         if (![m_StoreViewCtrl showModalDialog:self]) {
@@ -296,7 +296,7 @@ constexpr NSInteger kTagManageCellArtist = 0xE021; // drop-shadow of the artist
         }
         m_DeleteAlertView = [[CommonAlertView alloc]
                 initWithTitle:@"削除" // "Delete"
-                      message:[NSString stringWithFormat:@"「%@」を削除しますか？",
+                      message:[NSString stringWithFormat:@"『%@』を削除しますか？",
                                                          [item objectForKey:@"Name"]]
                      delegate:self
             cancelButtonTitle:@"いいえ" // "No"

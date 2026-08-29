@@ -72,17 +72,10 @@ static NSString *const kOpenInMapsMessage = @"この場所を\n『マップ』�
 static NSString *const kLocationDisabledTitle = @"Information";                     // 0x1388a8
 static NSString *const kLocationDisabledText =
     @"現在位置を表示するには\n「設定」アプリより\n位置情報サービスを\n『オン』"
-    @"にしてください"; // 0x1388b8
-// These two localized UTF-16 CFStrings are now located and characterized
-// (encoding + length verified via read_memory): the zoom prompt is the
-// cfstringStruct @ 0x138868 (flags 0x7d0 = UTF-16, dataPtr 0x12c978, len 20)
-// that viewDidLoad @ 0x85a58 sets on m_MessageLabel; the data error is
-// cf_000k0c_g0M0_0_000, passed to -showError: on the master-feed parse-failure
-// path
-// @ 0x875a0. The literals below are faithful-meaning reconstructions of that
-// functional UI text (2-line zoom-to-search hint / data-fetch-failure notice)
-// and match the verified 20-unit length.
-static NSString *const kZoomInPrompt = @"地図を拡大すると\nゲームセンターを検索します";
+    @"にしてください";                                                              // 0x1388b8
+static NSString *const kZoomInPrompt = @"店舗を表示するには\n地図を拡大して下さい"; // 0x138868
+// Reconstructed text; the binary's literal reaches -showError: from 0x875a0 and is not yet
+// byte-verified.
 static NSString *const kDataErrorMessage = @"データの取得に失敗しました。";
 
 // Private + class helpers not exposed in the header.

@@ -409,7 +409,7 @@ static int scoreToRank(int score) {
         _scoreLbl.highlightedTextColor = [UIColor whiteColor];
         _scoreLbl.font = [UIFont fontWithName:AppFontName() size:18.0f];
         _scoreLbl.textAlignment = NSTextAlignmentRight;
-        _scoreLbl.text = (data.score < 0) ? @"" : [NSString stringWithFormat:@"%d", data.score];
+        _scoreLbl.text = (data.score < 0) ? @"-   " : [NSString stringWithFormat:@"%d", data.score];
         [_bgImgView addSubview:_scoreLbl];
     }
 

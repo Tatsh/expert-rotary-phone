@@ -55,7 +55,7 @@
 // @ 0xdd158 — take the file list, sum the total size, build the progress
 // dialog.
 // Disassembly-verified: the enumeration accumulates each entry's size field
-// (state buffer offset 0x30) into _totalFileSize, and the "Filecheck..." label
+// (state buffer offset 0x30) into _totalFileSize, and the "File check..." label
 // is set before addSubview.
 - (instancetype)initWithFileDataArray:(NSArray *)fileDataArray {
     self = [super init];
@@ -71,7 +71,7 @@
         [_downloadView layout:NO];
         [_downloadView.progressView setProgress:0];
         [_downloadView.indicatorView startAnimating];
-        [_downloadView.labelMessage setText:@"Filecheck..."];
+        [_downloadView.labelMessage setText:@"File check..."];
         [self.view addSubview:_downloadView];
     }
     return self;

@@ -88,31 +88,31 @@ bool CAComponent::prepareGraph() {
         kAudioUnitType_Mixer, kAudioUnitSubType_SpatialMixer, kAudioUnitManufacturer_Apple, 0, 0};
 
     if (NewAUGraph(&m_graph) != noErr) {
-        NSLog(@"CAComponent prepareGraph: NewAUGraph failed");
+        NSLog(@"CAComponent prepareGraph: NewAUGraph failed.");
         return false;
     }
     if (AUGraphAddNode(m_graph, &outDesc, &m_ioNode) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphAddNode remoteIO failed");
+        NSLog(@"CAComponent prepareGraph: AUGraphAddNode remoteIO failed.");
         return false;
     }
     if (AUGraphAddNode(m_graph, &mixDesc, &m_mixerNode) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphAddNode mixer failed");
+        NSLog(@"CAComponent prepareGraph: AUGraphAddNode mixer failed.");
         return false;
     }
     if (AUGraphConnectNodeInput(m_graph, m_mixerNode, 0, m_ioNode, 0) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphConnectNodeInput failed");
+        NSLog(@"CAComponent prepareGraph: AUGraphConnectNodeInput failed.");
         return false;
     }
     if (AUGraphOpen(m_graph) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphOpen failed");
+        NSLog(@"CAComponent prepareGraph: AUGraphOpen failed.");
         return false;
     }
     if (AUGraphNodeInfo(m_graph, m_ioNode, nullptr, &m_ioUnit) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo remoteIO failed");
+        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo mRemoteNode failed.");
         return false;
     }
     if (AUGraphNodeInfo(m_graph, m_mixerNode, nullptr, &m_mixerUnit) != noErr) {
-        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo mixer failed");
+        NSLog(@"CAComponent prepareGraph: AUGraphNodeInfo mMixerNode failed.");
         return false;
     }
     return true;
@@ -133,7 +133,7 @@ bool CAComponent::initGraph(int voices) {
                              0,
                              &count,
                              sizeof(count)) != noErr) {
-        NSLog(@"CAComponent initGraph: ElementCount failed");
+        NSLog(@"CAComponent initGraph: AudioUnitSetProperty Mixer ElementCount failed.");
         m_voiceCount = 0;
         return false;
     }
@@ -160,24 +160,34 @@ bool CAComponent::initGraph(int voices) {
                              0,
                              &out,
                              sizeof(out)) != noErr) {
-        NSLog(@"CAComponent initGraph: RemoteIO stream format failed");
+        NSLog(@"CAComponent initGraph: AudioUnitSetProperty RemoteIO StreamFormat failed.");
         return false;
     }
-    AudioUnitSetParameter(m_mixerUnit, 3 /* gain */, kAudioUnitScope_Output, 0, 0, 0);
+    if (AudioUnitSetParameter(m_mixerUnit, 3 /* gain */, kAudioUnitScope_Output, 0, 0, 0) !=
+        noErr) {
+        NSLog(@"CAComponent initGraph: AudioUnitSetParameter MixerGain failed.");
+        return false;
+    }
 
-    AUGraphUpdate(m_graph, nullptr);
-    if (AUGraphInitialize(m_graph) != noErr) {
-        NSLog(@"CAComponent initGraph: AUGraphInitialize failed");
+    if (AUGraphUpdate(m_graph, nullptr) != noErr) {
+        NSLog(@"CAComponent initAUGraph: AUGraphUpdate failed.");
         return false;
     }
-    AUGraphUpdate(m_graph, nullptr);
+    if (AUGraphInitialize(m_graph) != noErr) {
+        NSLog(@"CAComponent initAUGraph: AUGraphInitialize failed.");
+        return false;
+    }
+    if (AUGraphUpdate(m_graph, nullptr) != noErr) {
+        NSLog(@"CAComponent initAUGraph: AUGraphUpdate failed.");
+        return false;
+    }
     return true;
 }
 
 void CAComponent::start() {
     if (!m_running) {
         if (AUGraphStart(m_graph) != noErr) {
-            NSLog(@"CAComponent start: AUGraphStart failed");
+            NSLog(@"CAComponent start: AUGraphStart failed.");
             return;
         }
         m_running = true;
@@ -189,7 +199,7 @@ void CAComponent::start() {
 void CAComponent::stop() {
     if (m_running) {
         if (AUGraphStop(m_graph) != noErr) {
-            NSLog(@"CAComponent suspend: AUGraphStop failed");
+            NSLog(@"CAComponent suspend: AUGraphStop failed.");
             return;
         }
         m_running = false;
@@ -204,7 +214,7 @@ uint32_t CAComponent::reserveVoice(CASound *source, int volumeIndex) {
             return static_cast<uint32_t>(preparePlayer(source, i, volumeIndex));
         }
     }
-    NSLog(@"CAComponent: no free voice");
+    NSLog(@"CAComponent prepare:使用できるCABusがありません");
     return 0xffffffff;
 }
 
@@ -232,7 +242,7 @@ int CAComponent::preparePlayer(CASound *source, int voice, int volumeIndex) {
                              voice,
                              &in,
                              sizeof(in)) != noErr) {
-        NSLog(@"CAComponent preparePlayer: input stream format failed");
+        NSLog(@"CAComponent preparePlayer: AudioUnitSetProperty StreamFormat failed.");
         return -1;
     }
 
@@ -260,7 +270,7 @@ void CAComponent::setRenderCallback(int voice) {
                              sizeof(cb)) == noErr) {
         m_voices[voice]->callbackSet = true;
     } else {
-        NSLog(@"CAComponent setRenderCallback: SetRenderCallback failed");
+        NSLog(@"CAComponent setRenderCallback:AudioPunitSetProperty SetRenderCallback failed.");
     }
 }
 
@@ -278,7 +288,7 @@ bool CAComponent::setPlayerVolume(int volumeIndex, int voice) {
     if (AudioUnitSetParameter(
             m_mixerUnit, 3 /* gain */, kAudioUnitScope_Output, 0, caGainForLevel(volumeIndex), 0) !=
         noErr) {
-        NSLog(@"CAComponent setPlayerVolume: gain failed");
+        NSLog(@"CAComponent setPlayerVolume: AudioUnitSetParameter Gain failed.");
         return false;
     }
     return true;

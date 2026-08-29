@@ -513,7 +513,7 @@ static NSString *const kMsgNoPlayData =
 // characters.
 - (NSString *)convertReplaceChara:(NSString *)string {
     NSString *s = string;
-    s = [s stringByReplacingOccurrencesOfString:@"＜" withString:@"〜"]; // U+FF3C -> U+301C
+    s = [s stringByReplacingOccurrencesOfString:@"＼" withString:@"〜"]; // U+FF3C -> U+301C
     s = [s stringByReplacingOccurrencesOfString:@"→" withString:@"ー"];  // U+2192 -> U+30FC
     s = [s stringByReplacingOccurrencesOfString:@"&hearts;" withString:@"♡"];
     s = [s stringByReplacingOccurrencesOfString:@"&agrave;" withString:@"à"];

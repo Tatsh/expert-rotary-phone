@@ -903,15 +903,14 @@ static void MainDismissContainerVC(UIViewController *child) {
     _glView.delegate = self;
     [self.view addSubview:_glView];
 
-    // AEP data root (baseDir): the binary reads "<baseDir>/<name>.idx" via fopen
-    // from <Documents>/data/tex/, which the original POPULATED by a first-launch
-    // server download (Ghidra NSSearchPathForDirectoriesInDomains(9,1,1) ->
-    // Documents/data/tex/). That server is gone and this build ships every .idx
-    // at the .app bundle root, so point baseDir at the bundle resource path --
-    // the .idx files fopen straight from there, and the tile PNGs already resolve
-    // via [NSBundle pathForResource:] regardless of baseDir
-    // (ne::C_TEXTURE::decodeAndUpload).
-    NSString *texDir = NSBundle.mainBundle.resourcePath;
+    // texDir is the original's download-era texture root (Ghidra
+    // NSSearchPathForDirectoriesInDomains(9,1,1) -> Documents/data/tex/); the
+    // binary parks it in the buffer at this+0 and never reads it back. The AEP
+    // data root (baseDir, this+0x100) is the second argument: the binary passes
+    // the bundle path there and loadAepDataDefaultPath fopens
+    // "<baseDir>/<name>.idx" straight from the .app root.
+    NSString *texDir =
+        [NSString stringWithFormat:@"%@/data/tex/", [AppDelegate appDocumentsDirectory]];
     NSString *bundlePath = NSBundle.mainBundle.bundlePath;
     AepManager &aep = AepManager::shared();
     CGFloat scale = UIScreen.mainScreen.scale;
@@ -939,7 +938,7 @@ static void MainDismissContainerVC(UIViewController *child) {
     // the same factor published as g_uiScale below. Passing the raw scale doubled
     // m_renderScale and every AEP sprite-path draw (flDstW = srcW * renderScale *
     // scaleX / 100), so the wide hold bar ran ~2x off-screen.
-    aep.init(bundlePath.UTF8String, texDir.UTF8String, contentW, contentH, scale * 0.5f);
+    aep.init(texDir.UTF8String, bundlePath.UTF8String, contentW, contentH, scale * 0.5f);
     neSceneManager::shared(); // force scene-manager lazy init
     g_uiScale = scale * 0.5f; // publish UI scale (binary @0xb51c)
 

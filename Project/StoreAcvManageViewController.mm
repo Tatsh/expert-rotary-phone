@@ -313,7 +313,8 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
         id dialog = m_StoreViewCtrl.modalDialog;
         [dialog performSelector:@selector(layout:) withObject:nil];
         UILabel *message = [dialog performSelector:@selector(labelMessage)];
-        message.text = [NSString stringWithFormat:@"%@", [item objectForKey:@"Title"]];
+        message.text =
+            [NSString stringWithFormat:@"『%@』をダウンロード中...", [item objectForKey:@"Title"]];
         [(UIProgressView *)[dialog performSelector:@selector(progressView)] setProgress:0.0f];
         if (![m_StoreViewCtrl showModalDialog:self]) {
             m_WorkingIndex = -1;
@@ -330,7 +331,8 @@ constexpr NSInteger kTagAcvManageCellGenre = 0xE021;  // drop-shadow of the genr
         }
         m_DeleteAlertView = [[CommonAlertView alloc]
                 initWithTitle:@"削除"
-                      message:[NSString stringWithFormat:@"%@", [item objectForKey:@"Title"]]
+                      message:[NSString stringWithFormat:@"『%@』を削除しますか？",
+                                                         [item objectForKey:@"Title"]]
                      delegate:self
             cancelButtonTitle:@"いいえ"
             otherButtonTitles:@"はい"];

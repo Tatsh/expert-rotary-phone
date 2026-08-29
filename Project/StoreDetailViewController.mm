@@ -627,10 +627,7 @@
         if ([json objectForKey:@"ErrorCode"] == nil) {
             [[MusicManager getInstance] saveRecommendedPack:[packInfo packID]];
             [self setButtonTextInstalledForce];
-            // The treasure-bonus body (cf_000000000, UTF-16) resisted extraction;
-            // best-effort text.
-            NSString *msg = [NSString
-                stringWithFormat:@"おすすめに追加しました。\nトレジャーを%dP獲得しました。", 300];
+            NSString *msg = [NSString stringWithFormat:@"トレジャーポイント %d pt 獲得", 300];
             alert = [[CommonAlertView alloc] initWithTitle:@"成功"
                                                    message:msg
                                                   delegate:nil

@@ -4,7 +4,7 @@
 //
 //  Reconstructed from Ghidra project rb420, program PopnRhythmin.
 //  Builds and queries the player's character lists. The hard-coded 30 come from
-//  GetHardCodeCharaDataStruct; the rest are downloaded as chara_%03d.chr files
+//  GetHardCodeCharaDataStruct; the rest are downloaded as chara%03d.chr files
 //  (BFCodec-encrypted JSON, same "Popn Orbit Note." key scheme as the .orb
 //  data).
 //
@@ -115,12 +115,12 @@ void CharaManager::reload() {
         [allChara addObject:info];
     }
 
-    // Every downloaded chara_%03d.chr (numbered 0..999, stop at the first gap).
+    // Every downloaded chara%03d.chr (numbered 0..999, stop at the first gap).
 #ifndef ENABLE_PATCHES
     NSString *supportDir = [AppDelegate appAppSupportDirectory];
 #endif
     for (int n = 0; n < 1000; n++) {
-        NSString *name = [NSString stringWithFormat:@"chara_%03d.chr", n];
+        NSString *name = [NSString stringWithFormat:@"chara%03d.chr", n];
 #ifdef ENABLE_PATCHES
         NSString *path = [AppDelegate appAssetsPath:name];
 #else

@@ -90,12 +90,15 @@ static dispatch_queue_t g_pApplilinkUdidQueue = NULL;
     return g_sharedInstance;
 }
 
-// @ 0xf7200 — the shared instance, created once (block @ 0x134508 does
-// `[[RewardNetworkUdid alloc] init]`).
+// @ 0xf7200 — the shared instance, created once (block @ 0x134508, body @ 0xf7234, allocs the
+// singleton and installs its "ApplilinkUdid" / "applilink.udid" pasteboard store).
 + (instancetype)sharedInstance {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
       g_sharedInstance = [[RewardNetworkUdid alloc] init];
+      g_sharedInstance.pasteBoard =
+          [[RewardNetworkPasteBoard alloc] initWithServiceName:@"ApplilinkUdid"
+                                                      dataType:@"applilink.udid"];
     });
     return g_sharedInstance;
 }

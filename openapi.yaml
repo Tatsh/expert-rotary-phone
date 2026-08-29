@@ -359,7 +359,7 @@ components:
     PackEntry:
       description: |
         One store pack. `ID` must match the pack being filled in or the whole entry is rejected,
-        and the pack is only usable once StoreKit resolves `rhythmin_pack<ID padded to four
+        and the pack is only usable once StoreKit resolves `rhythmin.pack<ID padded to four
         digits>`. `MusicList` is capped at four songs on display; `AcvMusicList` is not.
       properties:
         AcvMusicList:

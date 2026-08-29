@@ -654,7 +654,7 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
     neEngine::playSystemSe(1); // decide SE
     CommonAlertView *alert =
         [[CommonAlertView alloc] initWithTitle:@"購入情報の復元"
-                                       message:@"購入済パックの情報を復元しますか？"
+                                       message:@"購入済みパックの情報を復元しますか？"
                                       delegate:self
                              cancelButtonTitle:@"Cancel"
                              otherButtonTitles:@"OK"];
@@ -1144,7 +1144,7 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
     if (missing > 0) {
         CommonAlertView *alert =
             [[CommonAlertView alloc] initWithTitle:@"パックの再インストール"
-                                           message:@"復元されたパックをすべてインストールしますか？"
+                                           message:@"復元されたパックをすべてインストールしますか。"
                                           delegate:self
                                  cancelButtonTitle:@"Cancel"
                                  otherButtonTitles:@"OK"];

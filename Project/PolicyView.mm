@@ -25,9 +25,8 @@
 //     -[NSData dataWithContentsOfFile:] + -[NSString initWithData:encoding:]
 //     with encoding 4 (NSUTF8StringEncoding). The ASCII CFStrings "policy",
 //     "txt", "navi_btn_back" and "settings_navbar" are exact byte decodes.
-//   - On iOS 7+, a single "\n" is appended to the loaded text (a workaround for
-//     the trailing-line clipping in the taller UITextView); exact from the
-//     decomp.
+//   - On iOS 7+, seven "\n" are appended to the loaded text (CFString @
+//     0x136c18, length field 7); exact byte decode.
 //   - All colour/geometry constants are exact float-hex decodes:
 //       bg grey 0.953 (0x3f73f3f4, ~243/255), text grey 0.3 (0x3e99999a),
 //       bold font 12pt (0x41400000), top content inset 10pt (0x41200000),
@@ -82,7 +81,7 @@
     NSData *data = [NSData dataWithContentsOfFile:path];
     NSString *text = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     if ([UIDevice currentDevice].systemVersion.floatValue >= 7.0f) {
-        text = [text stringByAppendingString:@"\n"];
+        text = [text stringByAppendingString:@"\n\n\n\n\n\n\n"];
     }
 
     textView.backgroundColor = [UIColor clearColor];

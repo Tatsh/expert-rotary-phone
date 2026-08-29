@@ -492,11 +492,11 @@ public:
 
     /**
      * Initialise the manager against its resource paths and screen surface.
-     * @details Copies the base and data paths, seeds the identity transforms, and hands the screen
-     *          extents and device scale to the ordering table. Called once from
+     * @details Copies the data path into baseDir, seeds the identity transforms, and hands the
+     *          screen extents and device scale to the ordering table. Called once from
      *          MainViewController -loadView.
-     * @param basePath The bundle path.
-     * @param dataPath The texture-root data path (baseDir).
+     * @param basePath The download-era texture root; stored and never read back.
+     * @param dataPath The AEP data root (baseDir), which the .idx loads resolve against.
      * @param screenW The screen width in pixels.
      * @param screenH The screen height in pixels.
      * @param scale The device render scale.

@@ -14,8 +14,8 @@
 #import "RhUtil.h"
 #import "UserSettingData.h"
 
-// StoreKit product-identifier prefix (Ghidra: CFString cf_rhythmin_pack).
-static NSString *const kPackProductPrefix = @"rhythmin_pack";
+// StoreKit product-identifier prefix (CFString @ 0x136f48).
+static NSString *const kPackProductPrefix = @"rhythmin.pack";
 
 // Embedded digest salt — the game's internal codename. The digest slices
 // characters [2, 27) out of it (Ghidra CFString @ 0x1065a3,
@@ -265,12 +265,9 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
 
 // @ 0x5a16c — currency-formatted price via NSNumberFormatter using the
 // product's own priceLocale. Behavior 10.4, NSNumberFormatterCurrencyStyle.
-// The nil-product fallback is the placeholder CFString @ 0x136f58, a UTF-16
-// constant byte-verified as "¥573" (U+FFE5 fullwidth yen sign followed by
-// "573"), not an empty string.
 + (NSString *)priceString:(SKProduct *)product {
     if (product == nil) {
-        return @"¥573";
+        return @"￥573";
     }
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     [formatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
@@ -280,7 +277,7 @@ static NSString *ResolveHost(NSString *compileDefault, NSString *prefsKey) {
     return result;
 }
 
-// @ 0x5a088 — "rhythmin_pack" + zero-padded 4-digit id; nil for non-positive
+// @ 0x5a088 — "rhythmin.pack" + zero-padded 4-digit id; nil for non-positive
 // ids.
 + (NSString *)productIDForPackID:(int)packID {
     if (packID < 1) {

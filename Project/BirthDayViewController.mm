@@ -118,8 +118,8 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
     textView.text = @"◆年齢確認◆\n\n有料サービスのご利用にあたり、生年月の設定をお願いしてお"
                     @"ります。\n"
                      "ご入力頂いた情報は課金上限の設定にのみ使用いたします。\n\n"
-                     "[15歳以下]\n 5000円/月制限\n[18歳未満]\n 10000円/月制限\n\n"
-                     "[18歳以上]\n 無制限\n\n\n"
+                     "[15歳以下]\n  5000円/月制限\n\n[18歳未満]\n  10000円/月制限\n\n"
+                     "[18歳以上]\n  無制限\n\n\n"
                      "※一度ご入力頂いた情報は変更できません。\n"
                      "また、キャンセルした場合は、15歳以下と同等の課金上限となります。";
     textView.font = [UIFont fontWithName:@"DFSoGei-W5-WIN-RKSJ-H" size:15.0f];

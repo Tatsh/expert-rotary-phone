@@ -88,16 +88,19 @@ uint32_t neAVCAPlayer::load(const char *path, bool loop) {
     return addSource(source);
 }
 
-// The binary also NSLogs the JP CFStrings "…filePathが指定されていません" (null path)
-// and "…指定された名前は既に登録済みです。" (name already
-// registered); those are bare debug logs and are elided here.
 uint32_t neAVCAPlayer::loadNamed(const char *path, const char *callName, bool loop) {
+    if (path == nullptr) {
+        NSLog(@"CAPlayer load: filePathが指定されていません");
+        return 0;
+    }
     NSString *key = @(callName);
     if (m_nameMap[key] != nil) {
+        NSLog(@"CAPlayer load: 指定された名前は既に登録済みです。");
         return 0;
     }
     CASound *source = new CASound();
     if (!source->load(path, loop)) {
+        NSLog(@"CAPlayer load ファイルが音楽ファイルではありません。:%s", path);
         delete source;
         return 0;
     }

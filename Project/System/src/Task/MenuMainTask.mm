@@ -337,7 +337,7 @@ void MenuMainTask::update(int /*deltaMs*/) {
             tapX = static_cast<int>(static_cast<float>(t->x) / uiScale);
             tapY = static_cast<int>(static_cast<float>(t->y) / uiScale);
             neDebugLog("MenuMain tap=(%d,%d) state=%d", tapX, tapY, m_state);
-            NSLog(@"%d %d", tapX, tapY);
+            NSLog(@"%d, %d", tapX, tapY);
             haveTap = true;
             break;
         }

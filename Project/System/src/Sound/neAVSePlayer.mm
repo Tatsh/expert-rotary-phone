@@ -104,7 +104,7 @@ int neAVSePlayer::allocSoundSlot() {
 
 int neAVSePlayer::load(NSURL *url, bool loop) {
     if (url == nil) {
-        NSLog(@"AVSePlayer load: null url");
+        NSLog(@"AVPlayer load: urlが指定されていません");
         return -1;
     }
     return addSource(url, loop);
@@ -115,7 +115,7 @@ int neAVSePlayer::load(NSURL *url, bool loop) {
 // the redundant pre-init is omitted.
 int neAVSePlayer::loadNamed(NSURL *url, NSString *callName, bool loop) {
     if (m_nameMap[callName] != nil) {
-        NSLog(@"AVSePlayer loadNamed: already registered");
+        NSLog(@"AVPlayer load:指定された名前は既に登録済みです。");
         return 0;
     }
     int rid = load(url, loop);

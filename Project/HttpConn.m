@@ -24,7 +24,7 @@
 // @ 0x6a58c
 - (void)get:(NSString *)urlString {
     if (status != HttpConnStatusReady) {
-        NSLog(@"Http Util is not READY.");
+        NSLog(@"HttpUtil is not READY.");
         return;
     }
     receivedData = [[NSMutableData alloc] initWithLength:0];
@@ -48,7 +48,7 @@
 // @ 0x6a6c4
 - (void)post:(NSString *)urlString paramString:(NSString *)paramString {
     if (status != HttpConnStatusReady) {
-        NSLog(@"Http Util is not READY.");
+        NSLog(@"HttpUtil is not READY.");
         return;
     }
     receivedData = [[NSMutableData alloc] initWithLength:0];
@@ -90,19 +90,19 @@
 }
 
 - (void)handleData:(NSData *)data {
-    NSLog(@"data receive %lu byte.", (unsigned long)[data length]);
+    NSLog(@"data receive %lu (byte)", (unsigned long)[data length]);
     [receivedData appendData:data];
 }
 
 - (void)handleFailWithError:(NSError *)error {
-    NSLog(@"connection error:%@", error);
+    NSLog(@"connection error.%@", error);
     conn = nil;
     receivedData = nil;
     status = HttpConnStatusError;
 }
 
 - (void)handleFinish {
-    NSLog(@"data receive finished. total %lu byte.", (unsigned long)[receivedData length]);
+    NSLog(@"data receive finished. total %lu (byte)", (unsigned long)[receivedData length]);
     receivedString = [[NSString alloc] initWithData:receivedData encoding:encoding];
     if (statusCode < 400) {
         if (receivedString == nil) {
@@ -112,7 +112,7 @@
             status = HttpConnStatusSuccess;
         }
     } else {
-        NSLog(@"http error:%d", statusCode);
+        NSLog(@"http error. %d", statusCode);
         status = HttpConnStatusError;
     }
     conn = nil;

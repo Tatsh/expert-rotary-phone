@@ -116,9 +116,11 @@
                                                          navFrame.size.height - 20.0f)];
     textView.backgroundColor = [UIColor clearColor];
     textView.editable = NO;
-    // UTF-16 CFString @ 0x13abc8 -> chars @ 0x12dc9e (9 units): 3010 6697 95C7
-    // 3092 89E3 9664 3059 308B 3011.
-    textView.text = @"【暗闇を解除する】";
+    // UTF-16 CFString @ 0x139bc8 -> chars @ 0x12cc32 (82 units); both quote
+    // marks are U+201D and both spaces are U+0020.
+    textView.text = @"”ポップン リズミン” をご利用頂くには「利用規約」に同意して頂く必要が"
+                    @"あります。\n「利用規約」をご確認のうえ、「同意する」ボタンを押して、"
+                    @"ゲームをお楽しみ下さい。";
     textView.font = [UIFont fontWithName:AppFontName() size:15.0f];
     textView.userInteractionEnabled = YES;
     textView.scrollEnabled = NO;

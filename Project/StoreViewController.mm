@@ -162,7 +162,7 @@
     }
     m_Animation = YES;
     self.view.alpha = 0.0f;
-    [UIView beginAnimations:@"MusicViewAlpha" context:NULL];
+    [UIView beginAnimations:@"MusicView Alpha" context:NULL];
     // Duration is 0.5f (vmov.f64 d16,#0.5 @ 0x53f62), not 0.75.
     [UIView setAnimationDuration:0.5];
     [UIView setAnimationDelegate:self];
