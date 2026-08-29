@@ -3081,10 +3081,12 @@ void AcMainTask::sugorokuDrawFriendMeet() {
     }
 
     // Fade out (0xa5986-0xa5998), re-reading the member as the binary does rather
-    // than reusing the value cached on entry. Opacity 100 is the load-time hold,
-    // which the update state machine breaks by writing 95; that store is in a
-    // state this reconstruction has not reached yet, so the portrait currently
-    // holds instead of fading.
+    // than reusing the value cached on entry. 100 is the load-time hold, which the
+    // update state machine breaks by storing 95: conditionally at 0x9a868/0x9a86e
+    // (95 when the byte at sp+0x1dc is zero, else 0) and unconditionally at
+    // 0x9efce/0x9efd0, where the same block also sets m_rankBadgeType. Neither
+    // owning RealUpdate state is lifted yet, and m_rankBadgeType is likewise read
+    // but never written, so lifting them arms both at once.
     if (m_friendOpacity <= 99) {
         int v = m_friendOpacity - 5;
         m_friendOpacity = (v <= 0) ? 0 : v;

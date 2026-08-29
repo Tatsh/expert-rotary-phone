@@ -115,6 +115,58 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - The reward-network session parameters carry the reward application id and the player id
     alongside the environment pair, as the binary stores them. They are archived to disk and read
     back by later token requests.
+- The gameplay screen now behaves as the original binary does in the places where the reconstruction
+  had diverged:
+  - The song fades to the result screen when the chart's END marker passes rather than three seconds
+    after the last note, so a chart's outro is no longer cut short. A debug global that nothing ever
+    assigned had turned the binary's either/or into two blocks that both ran.
+  - Holding pause while a finished song plays out its outro no longer strands the game on the pause
+    menu.
+  - A previous chart's tempo and scroll segments no longer survive into the next play, which was
+    corrupting note timing on the second and later songs of a session.
+  - Three play voice clips load into the sound group the binary loads them into, and the
+    tap-feedback sounds are resolved through the binary's ten-entry table rather than a generated
+    name, so a tap sound that previously resolved to nothing now plays.
+  - The score star and the life gauge draw at the depth their callers ask for rather than a
+    hardcoded one.
+  - Several heads-up display draws regain the blend, visibility, and colour arguments the binary
+    passes.
+  - The life gauge truncates each note's gain or loss rather than rounding it, as the original does.
+  - The long-note bar body dims while the bar is not being pressed instead of always drawing at
+    full brightness.
+- The arcade treasure board now behaves as the original binary does in the places where the
+  reconstruction had diverged:
+  - The board can be panned more than once. The drag handler returned without committing the
+    release, so the scroll base was never folded in and no drag after the first one moved the board.
+  - The dim overlay fades back out instead of staying on screen for the rest of the session.
+  - The player token and the friend portrait draw with the pivot the binary passes rather than none.
+  - The friend nameplate and the rank badge are no longer tinted black.
+  - The friend-meet bounce uses the half-pi its literal pool holds rather than pi.
+  - The dialogue panel now draws, and its button hit-test no longer reports a miss as a hit on
+    button two.
+  - The skill panel's treasure-point cost caption and the character-select skill label carry the
+    original's Japanese text.
+  - A treasure save record is the binary's 84 bytes rather than 83, so saving no longer reads past
+    the end of the structure.
+  - Tearing the board down no longer leaks an `NSString` and two other bridged objects.
+- The map-select screen now behaves as the original binary does in the places where the
+  reconstruction had diverged:
+  - The map list can be scrolled again after a map is tapped. Scrolling was disabled for the
+    selection transition and nothing ever re-enabled it.
+  - Selecting a different map updates the right pane's header icon, its label, and its empty-state
+    placeholder.
+  - Scrolling the map list tears the right pane down, as the original does.
+- The arcade viewer's life gauge reaches the top of its range and lands on the right notch. Its
+  quantiser stepped by 42.5 where the binary steps by 42.625, and twenty-four steps of 42.625 are
+  exactly the full range, so the ramp stopped short of the top and snapped to a visibly lower notch
+  at five of the twenty-four stops.
+- The settings modal closes over 0.3 s rather than 0.5 s. Its opening and closing animations had
+  been sharing one duration.
+- A friend-list close button, two friend-score layouts, and two labels sit where the original puts
+  them.
+- A sprite drawn at the natural 100% scale takes the original's unclipped path, so it is filtered
+  linearly rather than by nearest neighbour. The test compared the scaled operands against zero
+  where the binary compares them against 100.
 - `CharaManagerShared` no longer reloads every character record on first use. In the binary, that
   accessor builds nothing: it is an empty constructor behind a one-shot guard, and the two real
   reload sites, the title hand-off and the arcade task, are already reconstructed. The spurious
@@ -157,6 +209,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - The sugoroku wall-nail texture is `sugo_wall_nail%02d`, the quiz answer-base image is
     `pq_ansbase_top%d`, and the quiz present-number digits are `pq_present_num%d@2x`. Each carried
     an extra underscore or the wrong suffix.
+  - The map-select header icon is `map_icon%02d` rather than `map_icon_%02d`, another extra
+    underscore.
   - The StoreKit pack product identifier prefix is `rhythmin.pack` rather than `rhythmin_pack`.
     The same identifier is corrected in [openapi.yaml](openapi.yaml).
 - The CoreAudio graph's mixer-gain set and both of its `AUGraphUpdate` calls are checked and logged

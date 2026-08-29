@@ -716,10 +716,13 @@ void AepOrderingTable::drawAepOtSpriteStretch(neTextureForiOS *pFrames,
     const float ox = nOfsX * hs;
     const float oy = nOfsY * hs;
 
-    // Visibility / clip gate: a plain (nBlendFlag==1) copy with zero scaled offsets
-    // and an empty colour mask draws unclipped.
+    // Visibility / clip gate: a plain (nBlendFlag==1) copy drawn at the natural
+    // 100% scale with an empty colour mask draws unclipped. 0x10e76 loads the
+    // value it compares against from the pool at 0x10f94, which reads 100.0f, and
+    // 0x10e80/0x10e8a compare both scaled operands against it before 0x10e9a ands
+    // the two results.
     int useClip = (nBlendFlag != 0) ? 1 : 0;
-    if (nBlendFlag == 1 && ox == 0.0f && oy == 0.0f && (nColorA2 & 0xffff) == 0) {
+    if (nBlendFlag == 1 && ox == 100.0f && oy == 100.0f && (nColorA2 & 0xffff) == 0) {
         useClip = 0;
     }
 
