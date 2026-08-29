@@ -6,6 +6,7 @@
 *.cpp
 *.desktop
 *.h
+*.inc
 *.ipa
 *.ips
 *.j2

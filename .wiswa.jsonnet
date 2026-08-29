@@ -35,6 +35,7 @@
     '*.cmake',
     '*.cpp',
     '*.h',
+    '*.inc',
     '*.m',
     '*.mm',
     '*.strings',
@@ -48,6 +49,15 @@
         '*.pbxproj',
         '*.xc*',
         '3rdparty/',
+      ],
+      // The .mm.inc fragments are Objective-C++ bodies. Without this cspell cannot infer the
+      // language from the extension, so it drops the C and C++ dictionaries and flags ordinary
+      // identifier fragments that pass in the .mm that includes them.
+      overrides+: [
+        {
+          filename: '**/*.mm.inc',
+          languageId: 'cpp',
+        },
       ],
     },
     prettier+: {
@@ -95,14 +105,14 @@
       'cmake %s' % std.join(' ', cmake_build_args),
     ] + cmake_package_ipa_commands,
     local check_formatting_commands = [
-      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' > .to-format.txt",
+      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.mm.inc' > .to-format.txt",
       'clang-format --dry-run --Werror --files=.to-format.txt',
       'rm -f .to-format.txt',
       'prettier --check .',
       'markdownlint-cli2 --config package.json --configPointer /markdownlint-cli2',
     ],
     local format_commands = [
-      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' > .to-format.txt",
+      "find -iname '*.m' -o -iname '*.mm' -o -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.mm.inc' > .to-format.txt",
       'clang-format -i --files=.to-format.txt',
       'rm -f .to-format.txt',
       'prettier -w .',
@@ -136,6 +146,11 @@
       '[objective-cpp]': {
         'editor.indentSize': 'tabSize',
         'editor.tabSize': 4,
+      },
+      // The .mm.inc fragments are Objective-C++ bodies included into one translation unit; the
+      // extension does not reveal that, so tell the editor explicitly.
+      'files.associations'+: {
+        '*.mm.inc': 'objective-cpp',
       },
     },
   },

@@ -35,7 +35,8 @@
   "editor.tabSize": 2,
   "editor.wordWrapColumn": 100,
   "files.associations": {
-    "*.json.dist": "json"
+    "*.json.dist": "json",
+    "*.mm.inc": "objective-cpp"
   },
   "files.eol": "\n",
   "files.insertFinalNewline": true,
