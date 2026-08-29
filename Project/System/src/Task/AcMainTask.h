@@ -174,6 +174,8 @@ private:
     void stateSquareArrive();             // case 0x0d (the token settles on a square)
     void stateShowArrows();               // case 0x0f (light the directions the square opens on)
     void stateSquareLabelWait();          // case 0x0e (hold the label, then route the tap)
+    void stateGoalAward();                // case 0x11 (roll and hand out the goal reward)
+    void stateGoalRewardShow();           // case 0x12 (play the matching goal board)
     void stateMusicCompleteShow();        // case 0x13 (the music-collection reveal)
     void stateWallCompleteShow();         // case 0x14 (the wallpaper-collection reveal)
     void stateNewMapShow();               // case 0x15 (the new-area reveal, else arm the fade)

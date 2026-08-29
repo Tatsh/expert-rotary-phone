@@ -148,6 +148,12 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateSquareMessage:
         stateSquareLabelWait();
         break;
+    case kAcMainStateGoalAward:
+        stateGoalAward();
+        break;
+    case kAcMainStateGoalRewardShow:
+        stateGoalRewardShow();
+        break;
     case kAcMainStateMusicCompleteShow:
         stateMusicCompleteShow();
         break;
@@ -322,6 +328,7 @@ constexpr int kRouletteLayerLoopEvent = 3;    // ROULETTE_START_ROOP_EVENT
 constexpr int kRouletteLayerEff = 4;          // ROULETTE_EFF
 constexpr int kRouletteLayerCommentBoard = 7; // SUGO_COMMENT_BOARD
 constexpr int kRouletteLayerSkillKouka = 16;  // EFF_SKILL_KOUKA2
+constexpr int kRouletteGoalOpen = 10;         // GOAL_OPEN
 constexpr int kRouletteLayerLiftMusic = 19;   // LIFTING_MUSIC
 constexpr int kRouletteLayerLiftWall = 20;    // LIFTING_WALL
 constexpr int kRouletteLayerLiftMap = 21;     // LIFTING_MAP
@@ -333,6 +340,7 @@ constexpr int kRouletteGoalBoard[3] = {23, 24, 25};
 constexpr int kRouletteSeOpen = 0;   // se11_roulapp
 constexpr int kRouletteSeStop = 2;   // se13_roulstop
 constexpr int kRouletteSeMove = 3;   // se14_move
+constexpr int kRouletteSeGoal = 12;  // se22_goal
 constexpr int kRouletteSeTrap = 5;   // se16_wana
 constexpr int kRouletteSeShield = 8; // se18_shield
 constexpr int kRouletteSePiece = 9;  // se19_peace
@@ -340,6 +348,19 @@ constexpr int kRouletteSeQuiz = 14;  // se25_quiz_x
 
 // The m_boardSquareState slot a warp square checks before it will fire.
 constexpr int kWarpGateSquareSlot = 10;
+// The m_boardSquareState slot whose gimmick scales the goal's treasure-point award.
+constexpr int kTreasurePointBoostSquareSlot = 13;
+// The treasure-point balance saturates here.
+constexpr int kMaxTreasurePoint = 9999;
+
+// Maps a sugoroku main-map id (0..8) to its touch-sound bit index. Ghidra: FUN_000a218c. The tree
+// already carries this as a file-local static in UserSettingData.mm and
+// InputConversionPassViewController.mm; the goal payout needs a third.
+static int neSugorokuTouchSoundBit(int mainMapId) {
+    static constexpr int kBits[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    const unsigned id = static_cast<unsigned>(mainMapId) & 0xffff;
+    return id < 9 ? kBits[id] : 0;
+}
 
 // The square message board parks a fixed distance from the token, picking the nearer offset once
 // the token is far enough down the transition overlay (0x9c898 vcmpe against 420.0f, then the
@@ -726,6 +747,229 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
         static_cast<int>((playerY - scrollY) + static_cast<float>(halfH))); // 0x9ecd6
     m_squareAnimActive = true;                                              // 0x9ecde
     m_rankBadgeType = 1;                                                    // 0x9ece2
+}
+
+// case 0x11 — the goal square was tapped. Play the goal SE, arm the friend-meet fade, roll and
+// hand out the goal reward, flush the record, detect a just-completed collection, upload the goal
+// and create the next area's record. Ghidra: 0x9a790 with its arms at 0x9c966, 0x9ca06, 0x9cc84,
+// 0x9ccc6 and the collection recount at 0x9d926.
+void AcMainTask::stateGoalAward() {
+    AudioManager *audio = [AudioManager sharedManager];
+    [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeGoal]]; // 0x9a7a4 / 0x9a7b2
+
+    const short subMapId = static_cast<short>(m_subMapId);
+    const short mainMapId = static_cast<short>(subMapId / 10);
+    const short areaId = static_cast<short>(subMapId % 10);
+
+    NSManagedObjectContext *ctx = [[AppDelegate appDelegate] managedObjectContext];
+    TreasureData *record = [TreasureData getTreasureData:mainMapId
+                                                subMapId:areaId
+                                  inManagedObjectContext:ctx];
+
+    // A goal whose friend meet is already recorded shows nothing; a fresh one shows the portrait
+    // at 95 and lets sugorokuDrawFriendMeet fade it out. Ghidra: 0x9a85e..0x9a86e.
+    TreasureTmpData tmp = [UserSettingData treasureTmp];
+    m_friendOpacity = tmp.friendMeetFlag ? 0 : 95;
+
+    const int touchSoundOwned = [[record goalTouchSound] intValue]; // 0x9a874 / 0x9a888
+
+    // Reward roll. The chara-ticket window is the treasure progress scaled to a percentage; the
+    // touch-sound window sits below it and doubles while treasure event 10 is running and the
+    // sound is still unowned. The two together are capped at 100, with the ticket window taking
+    // priority. Ghidra: 0x9a89a..0x9a8c6 and 0x9c966..0x9c976.
+    int ticketWindow = (m_treasureProgress * 5) + 25;
+    if (ticketWindow > 100) {
+        ticketWindow = 100;
+    }
+    int soundWindow = 15;
+    if (m_hudState == 10) {
+        soundWindow = (touchSoundOwned > 0) ? 15 : 30;
+    }
+    if ((soundWindow + ticketWindow) > 100) {
+        soundWindow = 100 - ticketWindow;
+        if (soundWindow < 0) {
+            soundWindow = 0;
+        }
+    }
+
+    const int roll = static_cast<int8_t>(tmp.bonusRoll);
+    uint8_t goalType = 0;
+    if (roll < soundWindow) {
+        // The touch sound is only ever awarded on a map's third area, and only while it is still
+        // unowned. Ghidra: 0x9c980..0x9c98c.
+        if ((areaId == 2) && (touchSoundOwned <= 0)) {
+            goalType = 2;
+        }
+    } else if (roll < (soundWindow + ticketWindow)) {
+        if ([[record goalCharaTicket] intValue] <= 2) { // 0x9c9b4..0x9c9e0
+            goalType = 1;
+        }
+    }
+    m_goalType = goalType;
+    sugorokuSaveTreasureProgress(); // 0x9c9f2, which copies the goal type into the record
+
+    switch (m_goalType) {
+    case 2: {
+        // Ghidra: 0x9cc84..0x9ccbc, then the shared save at 0x9d8fa.
+        const int owned = [UserSettingData haveTouchSoundFlg];
+        const int bit = neSugorokuTouchSoundBit(mainMapId);
+        [UserSettingData saveHaveTouchSoundFlg:(owned | (1 << bit))];
+        break;
+    }
+    case 1:
+        m_charaTicket = static_cast<int16_t>(m_charaTicket + 1); // 0x9ca06..0x9ca30
+        [UserSettingData saveCharaTicket:m_charaTicket];
+        break;
+    default: {
+        // Treasure points: a flat per-area award, scaled by the square-13 gimmick and then capped
+        // by what the player has already spent, which the award refunds. Ghidra: 0x9ccc6..0x9cd9c.
+        int points = (((mainMapId * 3) + areaId) * 25) + 100;
+        if (points >= 200) {
+            points = 200;
+        }
+        m_rouletteDigit = static_cast<int16_t>(points);
+        if (m_boardSquareState[kTreasurePointBoostSquareSlot] <= kBoardSquareEventPending) {
+            // ldexp(1.0, state) @ 0x9ccfa: the gimmick byte is the power-of-two exponent, so the
+            // -1 sentinel halves the award.
+            int scaled = static_cast<int>(
+                static_cast<double>(m_rouletteDigit) *
+                std::ldexp(1.0, m_boardSquareState[kTreasurePointBoostSquareSlot]));
+            if (scaled < 50) {
+                scaled = 50;
+            }
+            if (static_cast<int16_t>(scaled) >= 300) {
+                scaled = 300;
+            }
+            m_rouletteDigit = static_cast<int16_t>(scaled);
+        }
+        const int spent = [UserSettingData consumedTreasurePoint];
+        if (spent < m_rouletteDigit) {
+            m_rouletteDigit = static_cast<int16_t>(spent);
+        }
+        int balance = m_treasurePoint + m_rouletteDigit;
+        if (balance >= kMaxTreasurePoint) {
+            balance = kMaxTreasurePoint;
+        }
+        m_treasurePoint = balance;
+        [UserSettingData saveTreasurePoint:static_cast<short>(balance)];
+        [UserSettingData saveConsumedTreasurePoint:0];
+        break;
+    }
+    }
+
+    // Recount this map's nine music and nine wallpaper pieces, the live grids against the pre-goal
+    // duplicates: a grid that has just reached all nine arms its reveal state.
+    // Ghidra: 0x9d926..0x9d9b4 and 0x9dab8..0x9dac0.
+    int musicNow = 0;
+    int musicBefore = 0;
+    int wallNow = 0;
+    int wallBefore = 0;
+    for (int area = 0; area < 3; area++) {
+        const int cell = (mainMapId * 3) + area;
+        for (int bit = 0; bit < 3; bit++) {
+            const uint32_t mask = 1u << bit;
+            if (m_musicPieceTableDup[cell] & mask) {
+                musicBefore++;
+            }
+            if (m_musicPieceTable[cell] & mask) {
+                musicNow++;
+            }
+            if (m_wallPieceTableDup[cell] & mask) {
+                wallBefore++;
+            }
+            if (m_wallPieceTable[cell] & mask) {
+                wallNow++;
+            }
+        }
+    }
+
+    if ((musicNow == 9) && (musicBefore <= 8)) {
+        // Ghidra: 0x9d9b8..0x9dab4. 0x9da0c builds a texture into +0xf4 that nothing reads before
+        // 0x9da82 overwrites it with a second one, so only the second is ever loaded; the binary
+        // leaks the first, the unique_ptr here frees it.
+        [[MusicManager getInstance] openTreasureMusic];
+        NSArray<MusicData *> *treasureMusic =
+            [[MusicManager getInstance] getTreasureMusicDataArray];
+        NSData *artwork = [treasureMusic[mainMapId] artwork2xData];
+        m_reserveTex[3] = std::make_unique<neTextureForiOS>();
+        m_reserveTex[3]->loadFromImageData((__bridge const void *)artwork);
+        m_musicCompleteReveal = true;
+    }
+
+    if ((wallNow == 9) && (wallBefore <= 8)) {
+        // Ghidra: 0x9dac2..0x9db8a.
+        m_reserveTex[4] = std::make_unique<neTextureForiOS>();
+        NSString *wallFile =
+            [NSString stringWithFormat:@"sugo_wall%02d_960.png", static_cast<int>(mainMapId)];
+#ifdef ENABLE_PATCHES
+        NSString *wallPath = [AppDelegate appAssetsPath:wallFile];
+#else
+        NSString *wallPath =
+            [[AppDelegate appAppSupportDirectory] stringByAppendingPathComponent:wallFile];
+#endif
+        m_reserveTex[4]->load([wallPath UTF8String]);
+        m_wallCompleteReveal = true;
+    }
+
+    // Upload the goal, then make sure the next area already has a record so the board can open it.
+    // Ghidra: 0x9db8e..0x9dcea.
+    TreasureTmpData saved = [UserSettingData treasureTmp];
+    NSString *visitor = [NSString stringWithCString:saved.friendPlayerId
+                                           encoding:NSUTF8StringEncoding];
+    const int friendship = (m_rouletteMode == 16) ? 2 : 1; // 0x9dbc0 / 0x9dc0c
+    [[DownloadMain getInstance] startSaveTreasureHttp:subMapId
+                                              visitor:visitor
+                                           friendship:friendship];
+
+    const short nextArea = static_cast<short>((areaId + 1) % 3);
+    short nextMap = mainMapId;
+    if (nextArea == 0) {
+        nextMap = static_cast<short>(getTreasureMapValue_fb30(mainMapId)); // 0xce198
+    }
+    if (static_cast<uint16_t>(nextMap) <= 8) {
+        NSManagedObjectContext *nextCtx = [[AppDelegate appDelegate] managedObjectContext];
+        if (![TreasureData getTreasureData:nextMap
+                                  subMapId:nextArea
+                    inManagedObjectContext:nextCtx]) {
+            [TreasureData addRecordWithMainMapId:nextMap
+                                        subMapId:nextArea
+                          inManagedObjectContext:nextCtx];
+            m_newMapReveal = true;
+        }
+    }
+
+    [UserSettingData initTreasureTmp];
+    m_rouletteLayers[kRouletteGoalOpen]->stop(1); // 0x9dd14 / 0x9dd1a
+    m_state = kAcMainStateGoalRewardShow;
+}
+
+// case 0x12 — wait for GOAL_OPEN to finish, kick the goal board matching the reward that was just
+// handed out, then hold until it has played out and the player taps. Ghidra: 0x9a8ca.
+void AcMainTask::stateGoalRewardShow() {
+    if (m_rouletteLayers[kRouletteGoalOpen]->isAnimating()) { // 0x9a8d4
+        return;
+    }
+
+    // 0x9a8de / 0x9a8ee / 0x9a902: a board already running suppresses the kick.
+    if (!m_rouletteLayers[kRouletteGoalBoard[0]]->isActive() &&
+        !m_rouletteLayers[kRouletteGoalBoard[1]]->isActive() &&
+        !m_rouletteLayers[kRouletteGoalBoard[2]]->isActive()) {
+        int board = 0; // 0x9ed1e
+        if (m_goalType == 2) {
+            board = 2; // 0x9ed16
+        } else if (m_goalType == 1) {
+            board = 1; // 0x9a922
+        }
+        m_rouletteLayers[kRouletteGoalBoard[board]]->playOnce(); // 0x9ed28
+    }
+
+    // 0x9ed2c / 0x9ed40 / 0x9ed50, then the tap flag at 0x9ed62.
+    if (m_rouletteLayers[kRouletteGoalBoard[0]]->isAnimating() ||
+        m_rouletteLayers[kRouletteGoalBoard[1]]->isAnimating() ||
+        m_rouletteLayers[kRouletteGoalBoard[2]]->isAnimating() || !m_frameTapped) {
+        return;
+    }
+    m_state = kAcMainStateMusicCompleteShow; // 0x9ed6c
 }
 
 // case 0x13 — if this goal completed the map's nine music pieces, play LIFTING_MUSIC once and
