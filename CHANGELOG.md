@@ -61,17 +61,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     extra vertical-slop gate the original does not have no longer rejects taps.
   - The numeric-level display toggle, the small sub-rect on each jacket cell, toggles the level and
     rank display instead of doing nothing.
-  - The "new recommend" badge is cleared once the Recommend screen has been opened.
+  - The 'new recommend' badge is cleared once the Recommend screen has been opened.
   - Backing out to the mode menu discards the selection state the original discards, and can no
     longer pop the once-a-day official-info web view that belongs only to the boot and title path.
   - The friend-score panel can again be opened by tapping the over-score badge strip above the
     button, which the original also accepts once the song has an over-score entry.
   - With the numeric-level display on, a cell with no chart at a difficulty no longer draws a stray
-    "0".
+    '0'.
   - The over-score dictionary is held with a strong reference, as the binary retains it. It could
     previously be deallocated and then dereferenced by the per-frame badge draws.
   - The teardown hand-off polls the select sound effect's own instance, so the select voice is no
     longer cut off and the hand-off no longer stalls.
+  - The friend-score badge on the picked-song overlay reflects whether the song actually has an
+    over-score entry. The chosen song's id was written to a field the draw callback does not read,
+    so the badge always drew its 'untouched' artwork and the friend-update bar never appeared.
 
 ### Removed
 

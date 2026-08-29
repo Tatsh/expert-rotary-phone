@@ -363,13 +363,12 @@ public:
             uint8_t hyper;  /**< Hyper-difficulty medal. */
             uint8_t ex;     /**< EX-difficulty medal. */
         } perfect;
-        uint8_t _pad0[3]; /**< Alignment padding. */
-        unsigned musicId; /**< Current song id. */
         // Everything else the select flow needs lives in a real field outside this seam: the
-        // selected difficulty in m_resultSheet (+0x904), the three levels in m_diffLevel
-        // (+0x908), the select SE in m_seId[3] / m_seInst[3] (+0x8d0 / +0x8e4), and the
-        // fade-out handoff waits on m_loaderCursor (+0xa8c). The six words that used to
-        // trail this field were never read.
+        // chosen song id in m_chosenMusicId (+0x900) -- which is the field the draw callback's
+        // over-score lookup reads, so a seam copy of it was always stale -- the selected
+        // difficulty in m_resultSheet (+0x904), the three levels in m_diffLevel (+0x908), the
+        // select SE in m_seId[3] / m_seInst[3] (+0x8d0 / +0x8e4), and the fade-out handoff
+        // waits on m_loaderCursor (+0xa8c).
     };
 
     // ---- work-area layout (offsets are binary-exact) ----

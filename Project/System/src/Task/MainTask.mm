@@ -248,7 +248,7 @@ inline void MainTask::refreshScoreRows() {
     }
     // fetchScoreDataForMusic (neEngineBridge.h) is reconstructed; drive it per
     // difficulty.
-    loadCellScoreRows(m_cells[cell], m_sel.musicId);
+    loadCellScoreRows(m_cells[cell], static_cast<unsigned>(m_chosenMusicId));
 }
 
 /**
@@ -509,7 +509,9 @@ void MainTask::update(int /*deltaMs*/) {
         // cell was tapped (state 2); the binary subscripts m_musicList with it.
         MusicData *info = [m_musicList objectAtIndexedSubscript:m_chosenIndex];
         unsigned musicId = static_cast<unsigned>([info MusicID]);
-        m_sel.musicId = musicId;
+        // 0x35d4a parks the id in the real +0x900 field, which is what the draw
+        // callback's over-score lookup and the friend-score handoff both read.
+        m_chosenMusicId = static_cast<int>(musicId);
 
         // Invite songs are only playable while their invite window is open.
         bool inviteOpen;
@@ -626,7 +628,7 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // Whether this song already has an over-score (friend-score) entry.
-        NSString *idStr = [@(m_sel.musicId) stringValue];
+        NSString *idStr = [@(m_chosenMusicId) stringValue];
         NSMutableDictionary *overDict = m_overScoreDict;
         bool hasOverScore = [[overDict allKeys] containsObject:idStr];
 
@@ -668,7 +670,7 @@ void MainTask::update(int /*deltaMs*/) {
             if (hasOverScore) {
                 [overDict removeObjectForKey:idStr];
             }
-            [RootVC() GotoFriendScore:m_sel.musicId];
+            [RootVC() GotoFriendScore:static_cast<unsigned>(m_chosenMusicId)];
             break;
         }
 
