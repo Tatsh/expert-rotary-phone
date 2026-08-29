@@ -1,17 +1,16 @@
-//
-//  UINavigationBar+RHHeader.h
-//  pop'n rhythmin
-//
-//  Modern-iOS compatibility helper (not a binary reconstruction). On iOS 13 and
-//  later the navigation bar resolves its background through
-//  UINavigationBarAppearance, and the legacy -setBackgroundImage:forBarMetrics:
-//  is ignored at the transparent scroll edge — which dropped the custom header
-//  art on every nav-hosted screen. This category sets the legacy image (for
-//  earlier iOS) and mirrors it into the standard, scroll-edge, and
-//  compact-scroll-edge appearances so the header shows on every OS version. Use
-//  it in place of a bare -setBackgroundImage:forBarMetrics: for a header
-//  background image.
-//
+/**
+ * @file
+ * @brief A modern-iOS compatibility helper for the navigation bar's header art.
+ *
+ * @newCode
+ *
+ * On iOS 13 and later the navigation bar resolves its background through
+ * UINavigationBarAppearance, and the legacy -setBackgroundImage:forBarMetrics: is ignored at the
+ * transparent scroll edge, which dropped the custom header art on every nav-hosted screen. This
+ * category sets the legacy image, for earlier iOS, and mirrors it into the standard, scroll-edge,
+ * and compact-scroll-edge appearances so the header shows on every OS version. Use it in place of
+ * a bare -setBackgroundImage:forBarMetrics: for a header background image.
+ */
 
 #import <UIKit/UIKit.h>
 

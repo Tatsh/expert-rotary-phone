@@ -1,23 +1,20 @@
-//
-//  StorePackInfo.h
-//  pop'n rhythmin
-//
-//  In-memory model of one purchasable song pack in the store: its numeric pack
-//  id, the resolved StoreKit product, and the descriptive fields fetched from
-//  the pack list server (name, comments, copyright, artwork/artist URLs, and
-//  the contained music + arcade-viewer song lists). Price text is derived on
-//  demand from the bound SKProduct via StoreUtil.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithPackID:  @ 0x568ac   initWithProduct: @ 0x5680c   setDictionary: @
-//    0x5693c packID @ 0x57370  setPackID: @ 0x5692c   product @ 0x573b0
-//    setProduct: @ 0x568f4 packName @ 0x573a0  comment @ 0x573d0  s_comment @
-//    0x573c0  isNew @ 0x57380 copyright @ 0x573e0  artworkURL @ 0x57390  acvNum
-//    @ 0x57430  priceString @ 0x56d50 setMusicInfo: @ 0x56d7c  setAcvMusicInfo:
-//    @ 0x56f40
-//  Built/cached by StorePackListController (addPackInfoFromID: @ 0x57b28,
-//  getPackInfo: @ 0x57a54).
-//
+/**
+ * @file
+ * @brief The in-memory model of one purchasable song pack in the store.
+ *
+ * It carries the numeric pack id, the resolved StoreKit product, and the descriptive fields
+ * fetched from the pack list server: name, comments, copyright, artwork and artist URLs, and the
+ * contained music and arcade-viewer song lists. Price text is derived on demand from the bound
+ * SKProduct via StoreUtil.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: initWithPackID: @ 0x568ac,
+ * initWithProduct: @ 0x5680c, setDictionary: @ 0x5693c, packID @ 0x57370, setPackID: @ 0x5692c,
+ * product @ 0x573b0, setProduct: @ 0x568f4, packName @ 0x573a0, comment @ 0x573d0, s_comment @
+ * 0x573c0, isNew @ 0x57380, copyright @ 0x573e0, artworkURL @ 0x57390, acvNum @ 0x57430,
+ * priceString @ 0x56d50, setMusicInfo: @ 0x56d7c, and setAcvMusicInfo: @ 0x56f40.
+ * StorePackListController builds and caches it (addPackInfoFromID: @ 0x57b28, getPackInfo: @
+ * 0x57a54).
+ */
 
 #import <Foundation/Foundation.h>
 

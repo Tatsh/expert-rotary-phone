@@ -1,12 +1,10 @@
-//
-//  TouchableTableView.h
-//  pop'n rhythmin
-//
-//  A UITableView subclass that forwards began-touch events up the responder
-//  chain so taps pass through to the content behind the table. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin
-//  (touchesBegan:withEvent: @ 0xe9750).
-//
+/**
+ * @file
+ * @brief A UITableView subclass that forwards began-touch events up the responder chain.
+ *
+ * Taps therefore pass through to the content behind the table. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin (touchesBegan:withEvent: @ 0xe9750).
+ */
 
 #import <UIKit/UIKit.h>
 

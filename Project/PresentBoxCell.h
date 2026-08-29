@@ -1,14 +1,11 @@
-//
-//  PresentBoxCell.h
-//  pop'n rhythmin
-//
-//  A present-box (gift) row on a clear background: a full-width banner, a
-//  treasure / character icon, an amount label, a one-line info label and an
-//  "acquire" button. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin:
-//    initWithStyle:reuseIdentifier: @ 0x6e3ac   setPresentData: @ 0x6e494
-//    getBtn @ 0x6ed34
-//
+/**
+ * @file
+ * @brief A present-box, or gift, row on a clear background.
+ *
+ * A full-width banner, a treasure or character icon, an amount label, a one-line info label, and
+ * an "acquire" button. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithStyle:reuseIdentifier: @ 0x6e3ac, setPresentData: @ 0x6e494, getBtn @ 0x6ed34).
+ */
 
 #import <UIKit/UIKit.h>
 

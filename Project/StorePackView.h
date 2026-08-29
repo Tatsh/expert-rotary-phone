@@ -1,18 +1,15 @@
-//
-//  StorePackView.h
-//  pop'n rhythmin
-//
-//  A single tappable song-pack tile shown in the store list: a framed jacket
-//  with a drop shadow, name / one-line comment / price labels, a disabled
-//  "purchased" button, and new / arcade-viewer / chara-ticket marker icons. A
-//  whole-tile tap gesture plays a decide SE and notifies the delegate.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithFrame:      @ 0x51a44   loadPackInfo:index: @ 0x5258c
-//    isPurchased         @ 0x52530   handleTap:          @ 0x524c8
-//    setArtwork:         @ 0x524a8   setBgImage:         @ 0x52488
-//    setIsPurchased:     @ 0x52560   index               @ 0x527a4
-//
+/**
+ * @file
+ * @brief A single tappable song-pack tile shown in the store list.
+ *
+ * A framed jacket with a drop shadow, name, one-line comment, and price labels, a disabled
+ * "purchased" button, and the new, arcade-viewer, and chara-ticket marker icons. A whole-tile tap
+ * gesture plays a decide SE and notifies the delegate.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: initWithFrame: @ 0x51a44,
+ * loadPackInfo:index: @ 0x5258c, isPurchased @ 0x52530, handleTap: @ 0x524c8, setArtwork: @
+ * 0x524a8, setBgImage: @ 0x52488, setIsPurchased: @ 0x52560, and index @ 0x527a4.
+ */
 
 #import <UIKit/UIKit.h>
 

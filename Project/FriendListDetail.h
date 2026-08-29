@@ -1,15 +1,13 @@
-//
-//  FriendListDetail.h
-//  pop'n rhythmin
-//
-//  The friend detail overlay pushed when a friend-list row is tapped: a
-//  translucent backdrop behind a window that shows the friend's portrait (tap
-//  it for the FriendListDetailChara skill card), name, player id, friendship
-//  value and a 3-difficulty x 6-row clear-count grid, plus an unfriend button.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithFrame:friendData: @ 0xb4280 and 14 more methods). Built in
-//  FriendListDetail.mm.
-//
+/**
+ * @file
+ * @brief The friend detail overlay pushed when a friend-list row is tapped.
+ *
+ * A translucent backdrop behind a window that shows the friend's portrait (tap it for the
+ * FriendListDetailChara skill card), name, player id, friendship value, and a 3-difficulty by
+ * 6-row clear-count grid, plus an unfriend button. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin (initWithFrame:friendData: @ 0xb4280 and 14 more methods). Built in
+ * FriendListDetail.mm.
+ */
 
 #import <UIKit/UIKit.h>
 

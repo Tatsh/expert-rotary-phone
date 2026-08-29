@@ -1,18 +1,16 @@
-//
-//  InviteTopViewControllerPad.h
-//  pop'n rhythmin
-//
-//  The invite-code top screen, iPad variant (the iPhone uses
-//  InviteTopViewController). Chosen by MainViewController -GotoInviteTop when
-//  neSceneManager::isPadDisplay() is true, wrapped in its own navigation
-//  controller. Unlike the phone version this is a single combined screen: it
-//  shows my own invite code (with a "tweet it" button) and, below it, either
-//  the guest-code entry field + decide button or an "already redeemed" banner.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initAtNavigationController @ 0x5c638, startOpenAnimation @ 0x5d350). Built
-//  in InviteTopViewControllerPad.mm (Objective-C++: the neEngine /
-//  neSceneManager singletons drive the system SE and the root-VC end callback).
-//
+/**
+ * @file
+ * @brief The iPad variant of the invite-code top screen; the iPhone uses
+ * InviteTopViewController.
+ *
+ * MainViewController -GotoInviteTop chooses it when neSceneManager::isPadDisplay() is true,
+ * wrapped in its own navigation controller. Unlike the phone version this is a single combined
+ * screen: it shows my own invite code, with a "tweet it" button, and below it either the
+ * guest-code entry field and decide button or an "already redeemed" banner. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initAtNavigationController @ 0x5c638,
+ * startOpenAnimation @ 0x5d350). Built in InviteTopViewControllerPad.mm, where the neEngine and
+ * neSceneManager singletons drive the system SE and the root-VC end callback.
+ */
 
 #import <UIKit/UIKit.h>
 

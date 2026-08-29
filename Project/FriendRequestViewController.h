@@ -1,17 +1,14 @@
-//
-//  FriendRequestViewController.h
-//  pop'n rhythmin
-//
-//  The "send a friend request" screen (pushed from the friend hub). Shows the
-//  player's own ID, a text field to type the target player's ID (max 7 chars,
-//  uppercased), a "request" button that POSTs the request, and a right-bar
-//  button that opens the recommended-friend list
-//  (FreeRequestListViewController). Below the form it embeds a
-//  FriendRequestTable listing the requests you have already sent. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (init @ 0xb1c08 and 13 more
-//  methods). Built in FriendRequestViewController.mm (Objective-C++: drives the
-//  C++ neSceneManager / neEngine singletons).
-//
+/**
+ * @file
+ * @brief The "send a friend request" screen, pushed from the friend hub.
+ *
+ * It shows the player's own id, a text field for the target player's id (at most 7 characters,
+ * uppercased), a "request" button that POSTs the request, and a right-bar button that opens the
+ * recommended-friend list (FreeRequestListViewController). Below the form it embeds a
+ * FriendRequestTable listing the requests you have already sent. Reconstructed from Ghidra
+ * project rb420, program PopnRhythmin (init @ 0xb1c08 and 13 more methods). Built in
+ * FriendRequestViewController.mm, which drives the C++ neSceneManager and neEngine singletons.
+ */
 
 #import <UIKit/UIKit.h>
 

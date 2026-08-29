@@ -1,6 +1,9 @@
-/** @file
- * Fetch and insert class methods on the CharaTicketData entity (owned character in-app-purchase
- * tickets). Reconstructed from Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief Fetch and insert class methods on the CharaTicketData entity, the owned character
+ * in-app-purchase tickets.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <CoreData/CoreData.h>

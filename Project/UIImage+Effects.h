@@ -1,20 +1,17 @@
-//
-//  UIImage+Effects.h
-//  pop'n rhythmin
-//
-//  UIImage image-processing helpers reconstructed from Ghidra project rb420,
-//  program PopnRhythmin. These three methods form the instance method_list of a
-//  category on the framework class UIImage (category name "neSystemAddFunc" in
-//  the binary; cls slot points to the external _OBJC_CLASS_$_UIImage). A
-//  framework-class category is legitimate here.
-//
-//  Method list @ 0x14ab40 (entsize 12, count 3), selectors:
-//    -createReverseImage:       @ 0x7bba0  type "@12@0:4c8"
-//    -createImageHarfBlightness @ 0x7bcc4  type "@8@0:4"
-//    -createImagefromRect:      @ 0x7be1c  type "@24@0:4{CGRect=...}8"
-//  (Selector spellings — "Harf"/"Blightness"/"fromRect" — are the original
-//  binary's.)
-//
+/**
+ * @file
+ * @brief UIImage image-processing helpers.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. These three methods form the
+ * instance method_list of a category on the framework class UIImage; the category name is
+ * "neSystemAddFunc" in the binary, and the cls slot points to the external _OBJC_CLASS_$_UIImage.
+ * A framework-class category is legitimate here.
+ *
+ * The method list @ 0x14ab40 (entsize 12, count 3) holds the selectors -createReverseImage: @
+ * 0x7bba0, type "@12@0:4c8"; -createImageHarfBlightness @ 0x7bcc4, type "@8@0:4"; and
+ * -createImagefromRect: @ 0x7be1c, type "@24@0:4{CGRect=...}8". The selector spellings "Harf",
+ * "Blightness", and "fromRect" are the original binary's.
+ */
 
 #import <UIKit/UIKit.h>
 

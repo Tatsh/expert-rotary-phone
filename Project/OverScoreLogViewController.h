@@ -1,22 +1,19 @@
-//
-//  OverScoreLogViewController.h
-//  pop'n rhythmin
-//
-//  The "friend over-score" log screen: a grouped-style UITableViewController
-//  that downloads the list of songs on which a friend has beaten your score
-//  (via DownloadMain) and shows one OverScoreLogCell per entry over a dimmed
-//  spinner overlay. Picking a row closes the panel and, in the close-animation
-//  completion, drives the owning C++ MainTask straight into a play of that
-//  song (or raises a "song not installed" alert). Wrapped in its own
-//  UINavigationController (with a back button on phone) and driven by the
-//  shared fade/slide open/close lifecycle. Pushed by
-//  MainViewController.GotoOverScoreLog:.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0x29928, initAtNavigationController: @ 0x29e24, the table
-//  data source / delegate, the DownloadMain callback, the open/close animations
-//  and the musicSelTask accessors).
-//
+/**
+ * @file
+ * @brief The "friend over-score" log screen.
+ *
+ * A grouped-style UITableViewController that downloads, via DownloadMain, the list of songs on
+ * which a friend has beaten your score, and shows one OverScoreLogCell per entry over a dimmed
+ * spinner overlay. Picking a row closes the panel and, in the close-animation completion, drives
+ * the owning C++ MainTask straight into a play of that song, or raises a "song not installed"
+ * alert. It is wrapped in its own UINavigationController, with a back button on phone, and driven
+ * by the shared fade and slide open and close lifecycle. MainViewController.GotoOverScoreLog:
+ * pushes it.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0x29928,
+ * initAtNavigationController: @ 0x29e24, the table data source and delegate, the DownloadMain
+ * callback, the open and close animations, and the musicSelTask accessors).
+ */
 
 #import <UIKit/UIKit.h>
 

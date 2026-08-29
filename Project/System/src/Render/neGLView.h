@@ -1,7 +1,9 @@
-/** @file
- * The CAEAGLLayer-backed OpenGL ES view. It presents the engine's rendered frames and forwards
- * UIKit touches into the C++ task and input system. Reconstructed from Ghidra project rb420,
- * program PopnRhythmin.
+/**
+ * @file
+ * @brief The CAEAGLLayer-backed OpenGL ES view.
+ *
+ * It presents the engine's rendered frames and forwards UIKit touches into the C++ task and input
+ * system. Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <UIKit/UIKit.h>

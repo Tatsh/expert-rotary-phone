@@ -1,14 +1,13 @@
-//
-//  StorePackDetailViewPad.h
-//  pop'n rhythmin
-//
-//  The iPad in-place pack-detail panel: an embedded view (shown over a dimmed
-//  cover) that displays a StorePackInfo — jacket, name, price, song list, and
-//  the purchase button — without pushing a new screen. Bound via setPackInfo:.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (setPackInfo: @ 0x50b58).
-//
+/**
+ * @file
+ * @brief The iPad in-place pack-detail panel.
+ *
+ * An embedded view, shown over a dimmed cover, that displays a StorePackInfo — jacket, name,
+ * price, song list, and the purchase button — without pushing a new screen. It is bound via
+ * setPackInfo:.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (setPackInfo: @ 0x50b58).
+ */
 
 #import <UIKit/UIKit.h>
 

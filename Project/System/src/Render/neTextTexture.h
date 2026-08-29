@@ -1,8 +1,11 @@
-/** @file
- * The dynamic text and glyph subsystem: a singleton manager owning a cache of rendered glyphs and
- * a list of 256x256 grayscale atlas textures they are packed into, plus the string layout and draw
- * entry point neDrawText. Reconstructed from Ghidra project rb420, program PopnRhythmin (original
- * tree: .../Project/System/src/Render/neTextTexture.mm).
+/**
+ * @file
+ * @brief The dynamic text and glyph subsystem.
+ *
+ * A singleton manager owning a cache of rendered glyphs and a list of 256x256 grayscale atlas
+ * textures they are packed into, plus the string layout and draw entry point neDrawText.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (original tree:
+ * .../Project/System/src/Render/neTextTexture.mm).
  */
 
 #pragma once

@@ -1,13 +1,11 @@
-//
-//  StoreDownloadManager.h
-//  pop'n rhythmin
-//
-//  Downloads a list of purchased/updated files sequentially, writing each to
-//  its destination path and marking the music library dirty, then reports
-//  progress to its delegate. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithTasks:delegate: @ 0x41fec, start @ 0x42140,
-//  downloaderFinished: @ 0x42314).
-//
+/**
+ * @file
+ * @brief The sequential downloader for a list of purchased or updated files.
+ *
+ * It writes each file to its destination path, marks the music library dirty, and reports progress
+ * to its delegate. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithTasks:delegate: @ 0x41fec, start @ 0x42140, downloaderFinished: @ 0x42314).
+ */
 
 #import <Foundation/Foundation.h>
 

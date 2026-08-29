@@ -1,11 +1,10 @@
-//
-//  PurchaseTransactionCache.h
-//  pop'n rhythmin
-//
-//  Snapshot of a completed StoreKit transaction (product id + receipt + id +
-//  date), kept for server-side receipt verification. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin.
-//
+/**
+ * @file
+ * @brief A snapshot of a completed StoreKit transaction: product id, receipt, id, and date.
+ *
+ * It is kept for server-side receipt verification. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin.
+ */
 
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>

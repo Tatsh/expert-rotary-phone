@@ -1,19 +1,18 @@
-//
-//  RewardNetworkURLConnection.h
-//  pop'n rhythmin
-//
-//  A single asynchronous HTTP request for the bundled Konami "RewardNetwork"
-//  (applilink) SDK, wrapping NSURLConnection with a 10-second watchdog timer
-//  and a two-attempt retry/back-off. On finish the body is post-processed by
-//  +[RewardNetworkWebAPI responseFromContentsServer:...] and, when it parses to
-//  a JSON dictionary, delivered through the finished block; parse failures,
-//  HTTP 4xx/5xx responses, transport errors and timeouts are reported through
-//  the failed block as an ApplilinkErrorDomain / NSURLErrorDomain NSError.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (init @ 0xff9d0 .. setApplilinkFinishedBlock: @ 0x100640). Superclass is
-//  NSObject (Ghidra: -init chains to [NSObject init]).
-//
+/**
+ * @file
+ * @brief A single asynchronous HTTP request for the bundled Konami "RewardNetwork" (applilink)
+ * SDK.
+ *
+ * It wraps NSURLConnection with a 10-second watchdog timer and a two-attempt retry and back-off.
+ * On finish the body is post-processed by +[RewardNetworkWebAPI responseFromContentsServer:...]
+ * and, when it parses to a JSON dictionary, delivered through the finished block; parse failures,
+ * HTTP 4xx and 5xx responses, transport errors, and timeouts are reported through the failed block
+ * as an ApplilinkErrorDomain or NSURLErrorDomain NSError.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0xff9d0 through
+ * setApplilinkFinishedBlock: @ 0x100640). The superclass is NSObject; in Ghidra, -init chains to
+ * [NSObject init].
+ */
 
 #import <Foundation/Foundation.h>
 

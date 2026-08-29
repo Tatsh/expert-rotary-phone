@@ -1,23 +1,20 @@
-//
-//  LoginBonusView.h
-//  pop'n rhythmin
-//
-//  Login-bonus "stamp board" reward popup. A full-screen, initially-hidden
-//  UIImageView overlay carrying a "login_board" background image and a grid of
-//  "login_popn%02d" stamp icons (one per consumed login day). Tapping the board
-//  stamps the current day, grants any newly-unlocked reward (treasure points or
-//  a music unlock) via -getReward, and walks the player through each reward
-//  with a CustomAlertView (type gift). Installed into the root scene view on
-//  init.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  NOTE ON SUPERCLASS: the binary builds `self` with -[UIView initWithFrame:]
-//  but tears it down with -[UIView dealloc], creates itself from a
-//  "login_board" UIImage-backed hierarchy and lives as an image overlay;
-//  init/dealloc dispatch through the UIView layer of UIImageView. Recovered
-//  superclass: UIImageView.
-//
+/**
+ * @file
+ * @brief The login-bonus "stamp board" reward popup.
+ *
+ * A full-screen, initially-hidden UIImageView overlay carrying a "login_board" background image
+ * and a grid of "login_popn%02d" stamp icons, one per consumed login day. Tapping the board stamps
+ * the current day, grants any newly-unlocked reward (treasure points or a music unlock) via
+ * -getReward, and walks the player through each reward with a CustomAlertView of type gift. It is
+ * installed into the root scene view on init.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * On the superclass: the binary builds `self` with -[UIView initWithFrame:] but tears it down with
+ * -[UIView dealloc], creates itself from a "login_board" UIImage-backed hierarchy, and lives as an
+ * image overlay; init and dealloc dispatch through the UIView layer of UIImageView. The recovered
+ * superclass is UIImageView.
+ */
 
 #import <UIKit/UIKit.h>
 

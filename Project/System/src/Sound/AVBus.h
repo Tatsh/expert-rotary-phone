@@ -1,7 +1,9 @@
-/** @file
- * A single AVAudioPlayer-backed audio "bus"/voice in the sound engine. Wraps one
- * AVAudioPlayer, tracks a small playback state machine, and acts as the player's delegate so
- * end-of-play and audio-session interruptions update that state.
+/**
+ * @file
+ * @brief A single AVAudioPlayer-backed audio bus, or voice, in the sound engine.
+ *
+ * It wraps one AVAudioPlayer, tracks a small playback state machine, and acts as the player's
+ * delegate so end-of-play and audio-session interruptions update that state.
  */
 
 #pragma once

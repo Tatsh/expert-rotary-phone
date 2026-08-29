@@ -1,14 +1,13 @@
-//
-//  Downloader.h
-//  pop'n rhythmin
-//
-//  A one-shot HTTP request helper: wraps an NSURLConnection, buffers the
-//  response, attaches the app's User-Agent + Accept-Language headers, and
-//  notifies its delegate on progress / completion / failure. The whole app's
-//  networking (DownloadMain, store, friend, recommend) goes through this.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (Downloader @
-//  0x620f4..0x62948).
-//
+/**
+ * @file
+ * @brief A one-shot HTTP request helper.
+ *
+ * It wraps an NSURLConnection, buffers the response, attaches the app's User-Agent and
+ * Accept-Language headers, and notifies its delegate on progress, completion, and failure. The
+ * whole app's networking (DownloadMain, store, friend, recommend) goes through this.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (Downloader @
+ * 0x620f4..0x62948).
+ */
 
 #import <Foundation/Foundation.h>
 

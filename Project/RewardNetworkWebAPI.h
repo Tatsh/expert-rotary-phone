@@ -1,24 +1,21 @@
-//
-//  RewardNetworkWebAPI.h
-//  pop'n rhythmin
-//
-//  HTTP request builder / transport for the bundled Konami **RewardNetwork**
-//  ("applilink") ad/reward SDK. Builds GET (query-string) and POST
-//  (x-www-form-urlencoded) NSURLRequests, merges in the SDK "common"
-//  parameters, and issues them synchronously (with a small retry/back-off) or
-//  asynchronously (via NSURLConnection with a 10s watchdog + retry).
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (RewardNetworkWebAPI methods @ 0xfa744..0xfc048). Superclass is NSObject
-//  (Ghidra: -init chains to [NSObject init]).
-//
-//  Dispatch note: every request helper below is invoked on the CLASS object in
-//  the binary (Ghidra: sent to the RewardNetworkWebAPI classref), so they are
-//  class (+) methods. The retry counter the binary stores at `self+retryCount`
-//  is likewise on the class object; it is modelled here as a file-static in the
-//  .m. -init is a genuine instance initializer (Ghidra @ 0xfa744) that zeroes
-//  the declared `retryCount` ivar.
-//
+/**
+ * @file
+ * @brief The HTTP request builder and transport for the bundled Konami RewardNetwork
+ * ("applilink") ad and reward SDK.
+ *
+ * It builds GET (query-string) and POST (x-www-form-urlencoded) NSURLRequests, merges in the SDK
+ * "common" parameters, and issues them synchronously, with a small retry and back-off, or
+ * asynchronously via NSURLConnection with a 10-second watchdog and retry.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (RewardNetworkWebAPI methods @
+ * 0xfa744..0xfc048). The superclass is NSObject; in Ghidra, -init chains to [NSObject init].
+ *
+ * On dispatch: every request helper below is invoked on the class object in the binary (Ghidra
+ * shows them sent to the RewardNetworkWebAPI classref), so they are class methods. The retry
+ * counter the binary stores at `self+retryCount` is likewise on the class object; it is modelled
+ * here as a file-static in the .m. -init is a genuine instance initialiser (Ghidra @ 0xfa744) that
+ * zeroes the declared `retryCount` ivar.
+ */
 
 #import <Foundation/Foundation.h>
 

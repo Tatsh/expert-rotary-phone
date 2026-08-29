@@ -1,15 +1,13 @@
-//
-//  FriendMngTopViewController.h
-//  pop'n rhythmin
-//
-//  The friend-management hub (iPhone; the iPad uses
-//  FriendMngTopSplitViewController). Pushed by MainViewController
-//  -GotoFriendManage: over the game view, wrapped in its own navigation
-//  controller. Offers three sections — friend list, "presenting" (requests you
-//  sent), and replies (requests to you, with a "new" warning badge).
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initAtNavigationController @ 0xa59f0, startOpenAnimation @ 0xa6590).
-//
+/**
+ * @file
+ * @brief The iPhone friend-management hub; the iPad uses FriendMngTopSplitViewController.
+ *
+ * MainViewController -GotoFriendManage: pushes it over the game view, wrapped in its own
+ * navigation controller. It offers three sections: the friend list, "presenting" (requests you
+ * sent), and replies (requests to you, with a "new" warning badge). Reconstructed from Ghidra
+ * project rb420, program PopnRhythmin (initAtNavigationController @ 0xa59f0, startOpenAnimation @
+ * 0xa6590).
+ */
 
 #import <UIKit/UIKit.h>
 

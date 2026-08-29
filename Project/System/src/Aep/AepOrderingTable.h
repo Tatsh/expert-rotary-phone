@@ -1,5 +1,8 @@
-/** @file
- * The Aep ordering table: a per-frame sprite command buffer. Each frame the scene fills the
+/**
+ * @file
+ * @brief The Aep ordering table, a per-frame sprite command buffer.
+ *
+ * Each frame the scene fills the
  * buffer with textured-quad draw commands (drawLayer -> allocEntry), bucketed by priority; the
  * flush then walks the buckets high-priority-first and emits a GL quad per command through
  * neGLES_11. OT_REGIST_MAX = 2047 entries, OT_PRI_MAX = 50 priorities.
@@ -504,7 +507,3 @@ void drawAepSpriteClipped(neTextureForiOS *pFrames,
                           const int *pClipRect,
                           int nUseClip,
                           uint32_t nColor);
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

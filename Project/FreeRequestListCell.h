@@ -1,15 +1,13 @@
-//
-//  FreeRequestListCell.h
-//  pop'n rhythmin
-//
-//  One row in the "free request" friend list: a background plate carrying a
-//  chara icon, the player's name and that player's score. The subview
-//  x-positions shift between iOS 6/7 and phone/pad (the offsets are computed in
-//  init; the row content is rebuilt by -setFriendData:rank:). Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xe49c4, dealloc @ 0xe4b34,
-//  setFriendData:rank: @ 0xe4b60).
-//
+/**
+ * @file
+ * @brief One row in the "free request" friend list.
+ *
+ * A background plate carrying a chara icon, the player's name, and that player's score. The
+ * subview x-positions shift between iOS 6 and 7 and between phone and pad; the offsets are
+ * computed in init, and the row content is rebuilt by -setFriendData:rank:. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xe49c4, dealloc @
+ * 0xe4b34, setFriendData:rank: @ 0xe4b60).
+ */
 
 #import <UIKit/UIKit.h>
 

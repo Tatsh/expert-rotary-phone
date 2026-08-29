@@ -1,11 +1,10 @@
-//
-//  NSString+URLDecode.h
-//  pop'n rhythmin
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//  The ApplilinkReward SDK's NSString percent-decode category, used by the
-//  reward web-view controller and the recommend core to unescape query values.
-//
+/**
+ * @file
+ * @brief The ApplilinkReward SDK's NSString percent-decode category.
+ *
+ * The reward web-view controller and the recommend core use it to unescape query values.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ */
 
 #import <Foundation/Foundation.h>
 
@@ -27,3 +26,4 @@
 
 // kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objc sw=4 ts=4 et :
+// code: language=Objective-C insertSpaces=true tabSize=4

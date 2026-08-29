@@ -1,12 +1,10 @@
-//
-//  FriendScoreTableCell.h
-//  pop'n rhythmin
-//
-//  A friend-score ranking row (order / chara / name / score / rank /
-//  full-combo); subview x-offsets shift on iOS 7. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
-//  0xae06c).
-//
+/**
+ * @file
+ * @brief A friend-score ranking row: order, chara, name, score, rank, and full-combo.
+ *
+ * Its subview x-offsets shift on iOS 7. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xae06c).
+ */
 
 #import <UIKit/UIKit.h>
 

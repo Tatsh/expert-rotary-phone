@@ -1,20 +1,17 @@
-//
-//  CustomSplitViewController.h
-//  pop'n rhythmin
-//
-//  A custom iPad-style split container: a fixed-width left view controller
-//  docked against a right view controller that fills the remaining width. This
-//  is the BASE class that the app's concrete split hubs (e.g.
-//  AcViewerSplitViewController) build on. Given a frame (or, when passed
-//  CGRectZero, the container view's own frame) and a left-column width, it lays
-//  the two children side by side and adds their views as subviews of its own
-//  view.
-//
-//  Reconstructed from Ghidra program PopnRhythmin (32-bit armv7 iOS). Layout:
-//    m_leftViewCtrl  UIViewController* @ 0xa4
-//    m_rightViewCtrl UIViewController* @ 0xa8
-//    m_leftViewWidth int              @ 0xac
-//
+/**
+ * @file
+ * @brief A custom iPad-style split container.
+ *
+ * A fixed-width left view controller docked against a right view controller that fills the
+ * remaining width. This is the base class the app's concrete split hubs (for example
+ * AcViewerSplitViewController) build on. Given a frame (or, when passed CGRectZero, the container
+ * view's own frame) and a left-column width, it lays the two children side by side and adds their
+ * views as subviews of its own view.
+ *
+ * Reconstructed from Ghidra program PopnRhythmin (32-bit armv7 iOS). The layout is
+ * `m_leftViewCtrl` (UIViewController *) @ 0xa4, `m_rightViewCtrl` (UIViewController *) @ 0xa8,
+ * and `m_leftViewWidth` (int) @ 0xac.
+ */
 
 #import <UIKit/UIKit.h>
 

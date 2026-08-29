@@ -1,6 +1,9 @@
-/** @file
- * An arcade-viewer detail row, whose content the view controller sets on bind. Reconstructed from
- * Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x5b620).
+/**
+ * @file
+ * @brief An arcade-viewer detail row, whose content the view controller sets on bind.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0x5b620).
  */
 
 #import <UIKit/UIKit.h>

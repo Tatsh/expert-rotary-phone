@@ -1,21 +1,19 @@
-//
-//  neEngineBridge.h
-//  pop'n rhythmin
-//
-//  C++ interface to the "ne" (System-layer) engine singletons that the
-//  Objective-C layer drives at launch and across lifecycle transitions. The
-//  engine is C++ (guarded lazy-init singletons, operator_new), so these are
-//  modelled as C++ classes; any Objective-C file that calls them is compiled as
-//  Objective-C++ (.mm) — e.g. Project/AppDelegate.mm.
-//
-//  PROVISIONAL: these three singletons are real C++ objects (globals
-//  DAT_00187bb8 / DAT_00187b74 / DAT_00188384) whose *exact* class names have
-//  not yet been recovered from RTTI / debug strings, so the names below are
-//  best-effort and follow the System-layer lowercase "ne" convention (cf.
-//  neIGLES, neTextTexture). Each member cites the Ghidra symbol it maps to
-//  (project rb420, program PopnRhythmin). Replace with the true class names as
-//  they are recovered (see HANDOFF.md — Engine).
-//
+/**
+ * @file
+ * @brief The C++ interface to the "ne" System-layer engine singletons.
+ *
+ * The Objective-C layer drives them at launch and across lifecycle transitions. The engine is
+ * C++ (guarded lazy-init singletons, operator_new), so these are modelled as C++ classes; any
+ * Objective-C file that calls them is compiled as Objective-C++ (.mm), for example
+ * Project/AppDelegate.mm.
+ *
+ * PROVISIONAL: these three singletons are real C++ objects (globals DAT_00187bb8 /
+ * DAT_00187b74 / DAT_00188384) whose *exact* class names have not yet been recovered from RTTI
+ * or debug strings, so the names below are best-effort and follow the System-layer lowercase
+ * "ne" convention (cf. neIGLES, neTextTexture). Each member cites the Ghidra symbol it maps to
+ * (project rb420, program PopnRhythmin). Replace with the true class names as they are
+ * recovered (see HANDOFF.md — Engine).
+ */
 
 #pragma once
 
@@ -31,16 +29,22 @@ class PlayTask;     // System/src/Task/PlayTask.h    (: ne::C_TASK)
 class AcViewerTask; // System/src/Task/AcViewerTask.h (: ne::C_TASK) — the arcade
                     // note-play task (AppDelegate's acMainTask slot)
 
-// Persisted score difficulty tier — the sheet index held in PlayScore::difficulty
-// that selects which ScoreData N/H/Ex field group a play reads or writes. This is
-// the three-tier save scheme (Normal/Hyper/Ex), distinct from the arcade viewer's
-// four-tier AcvDifficulty. Ghidra: readScoreDataFields (0x29438) and saveScoreData
-// (0x28ca0) branch on these values. Pinned to int so an out-of-range sheet index
-// (which readScoreDataFields guards with its default arm) casts cleanly.
+/**
+ * @brief The persisted score difficulty tier.
+ *
+ * It is the sheet index held in PlayScore::difficulty that selects which ScoreData N, H, or Ex
+ * field group a play reads or writes. This is the three-tier save scheme, distinct from the
+ * arcade viewer's four-tier AcvDifficulty. readScoreDataFields (0x29438) and saveScoreData
+ * (0x28ca0) branch on these values. It is pinned to int so an out-of-range sheet index, which
+ * readScoreDataFields guards with its default arm, casts cleanly.
+ */
 enum ScoreDifficulty : int {
-    kScoreDiffNormal = 0, // ScoreData scoreN / rankN / playCntN / fullComboN / perfectN
-    kScoreDiffHyper = 1,  // ScoreData scoreH / rankH / playCntH / fullComboH / perfectH
-    kScoreDiffEx = 2,     // ScoreData scoreEx / rankEx / playCntEx / fullComboEx / perfectEx
+    /** The ScoreData scoreN, rankN, playCntN, fullComboN, and perfectN fields. */
+    kScoreDiffNormal = 0,
+    /** The ScoreData scoreH, rankH, playCntH, fullComboH, and perfectH fields. */
+    kScoreDiffHyper = 1,
+    /** The ScoreData scoreEx, rankEx, playCntEx, fullComboEx, and perfectEx fields. */
+    kScoreDiffEx = 2,
 };
 
 /**
@@ -72,10 +76,20 @@ struct PlayScore {
 // calls directly on the app-event-center singleton. Reconstructed in
 // neEngineBridge.mm. =====
 
-// Read the player's stored local best for (musicId, difficulty) out of the
-// ScoreData entity. `center` is the app-event-center pointer the binary passes
-// as the first argument; it is vestigial (unused). Out-params may be null
-// (guarded). Ghidra: fetchScoreDataForMusic @ 0x293c4.
+/**
+ * @brief Read the player's stored local best for a music id and difficulty out of the ScoreData
+ * entity.
+ *
+ * @param center The app-event-center pointer the binary passes first; it is vestigial and unused.
+ * @param outScore Receives the stored score; may be null.
+ * @param outRank Receives the stored rank; may be null.
+ * @param outPlayCnt Receives the play count; may be null.
+ * @param outFullCombo Receives the full-combo flag; may be null.
+ * @param outPerfect Receives the perfect flag; may be null.
+ * @param musicId The music to read.
+ * @param difficulty The ScoreDifficulty tier to read.
+ * @ghidraAddress 0x293c4
+ */
 void fetchScoreDataForMusic(void *center,
                             int *outScore,
                             short *outRank,
@@ -85,10 +99,20 @@ void fetchScoreDataForMusic(void *center,
                             unsigned musicId,
                             int difficulty);
 
-// Read the score/rank/playCnt/fullCombo/perfect fields for `difficulty` (0 N /
-// 1 H / 2 EX) out of a fetched ScoreData record. `rec` and `recDup` are the
-// same object (the binary passes it twice). Ghidra: readScoreDataFields @
-// 0x29438.
+/**
+ * @brief Read the score, rank, play-count, full-combo, and perfect fields for one difficulty out
+ * of a fetched ScoreData record.
+ *
+ * @param rec The fetched record.
+ * @param outScore Receives the score; may be null.
+ * @param outRank Receives the rank; may be null.
+ * @param outPlayCnt Receives the play count; may be null.
+ * @param outFullCombo Receives the full-combo flag; may be null.
+ * @param outPerfect Receives the perfect flag; may be null.
+ * @param recDup The same object as @p rec; the binary passes it twice.
+ * @param difficulty The ScoreDifficulty tier to read.
+ * @ghidraAddress 0x29438
+ */
 void readScoreDataFields(ScoreData *rec,
                          int *outScore,
                          short *outRank,
@@ -98,15 +122,33 @@ void readScoreDataFields(ScoreData *rec,
                          ScoreData *recDup,
                          int difficulty);
 
-// Commit a finished play (`s`) into the local Core Data ScoreData store:
-// full-combo / perfect / rank / score / play-count for its difficulty, re-hash
-// the checksum, stamp the play date, save. Ghidra: saveScoreData @ 0x28ca0.
+/**
+ * @brief Commit a finished play into the local Core Data ScoreData store.
+ *
+ * It writes the full-combo, perfect, rank, score, and play-count fields for the play's
+ * difficulty, re-hashes the checksum, stamps the play date, and saves.
+ *
+ * @param s The finished play.
+ * @ghidraAddress 0x28ca0
+ */
 void saveScoreData(PlayScore *s);
 
-// Pre-save "did we beat the record" check: read the current stored best for
-// `s`, set s->isNewHighScore (return YES) when the stored score is lower than
-// `newScore`, then write the passed tallies/score/full-combo into `s`. Ghidra:
-// updateHighScore @ 0x2930c.
+/**
+ * @brief The pre-save "did we beat the record" check.
+ *
+ * It reads the current stored best for @p s, then writes the passed tallies, score, and
+ * full-combo flag into @p s.
+ *
+ * @param s The play to update; its isNewHighScore is set alongside the return value.
+ * @param newScore The score just achieved.
+ * @param cool The COOL tally.
+ * @param great The GREAT tally.
+ * @param good The GOOD tally.
+ * @param bad The BAD tally.
+ * @param fullCombo Non-zero when the play was a full combo.
+ * @return YES when the stored score is lower than @p newScore.
+ * @ghidraAddress 0x2930c
+ */
 BOOL updateHighScore(PlayScore *s,
                      unsigned newScore,
                      short cool,
@@ -640,63 +682,132 @@ private:
 // classes rather than here. The actual resign work is
 // NoteMng::onResignActivePushHook (FUN_00034510).
 namespace neEngine {
-void bootstrapB();           // Ghidra: NEEngine_bootstrapB (FUN_0001ba2c)
-void bootstrapC(int flag);   // Ghidra: NEEngine_bootstrapC (FUN_0001796c)
-void onDidEnterBackground(); // Ghidra: NEEngine_onDidEnterBackground
-                             // (FUN_0001bdf8)
+/**
+ * @brief Bring up the shared texture cache at launch.
+ * @ghidraAddress 0x1ba2c
+ */
+void bootstrapB();
+/**
+ * @brief Bring up the text and glyph subsystem at launch.
+ * @param flag The bootstrap mode the caller selects.
+ * @ghidraAddress 0x1796c
+ */
+void bootstrapC(int flag);
+/**
+ * @brief Free every cached texture's GL name when the app enters the background.
+ * @ghidraAddress 0x1bdf8
+ */
+void onDidEnterBackground();
 
-// Nudge the running play / arcade task toward its stop state. The task pointer
-// is passed in by the caller (AppDelegate's _mainTask / _acMainTask); the
-// foreground "main task" during play is a PlayTask (PlayTask::m_state), and the
-// "acMainTask" slot holds the arcade AcViewerTask (AcViewerTask::m_state).
-void stopMainTask(PlayTask *playTask);           // Ghidra: NEEngine_stopMainTask   (FUN_00030710)
-void stopAcMainTask(AcViewerTask *acViewerTask); // Ghidra: NEEngine_stopAcMainTask (FUN_0002314c)
+/**
+ * @brief Nudge the running play task toward its stop state.
+ *
+ * The caller passes the task pointer in, from AppDelegate's _mainTask. The foreground "main task"
+ * during play is a PlayTask, so the field poked is PlayTask::m_state.
+ *
+ * @param playTask The running play task.
+ * @ghidraAddress 0x30710
+ */
+void stopMainTask(PlayTask *playTask);
+/**
+ * @brief Nudge the running arcade task toward its stop state.
+ *
+ * The caller passes the task pointer in, from AppDelegate's _acMainTask. That slot holds the
+ * arcade AcViewerTask, so the field poked is AcViewerTask::m_state.
+ *
+ * @param acViewerTask The running arcade-viewer task.
+ * @ghidraAddress 0x2314c
+ */
+void stopAcMainTask(AcViewerTask *acViewerTask);
 
-// Ask the running arcade AcViewerTask to leave play and exit back to the menu
-// (sets its play state @ +0x20c := 8 and the board-up flag @ +0x1d9 := 1).
-// Ghidra: requestGameExit (FUN_0002315c).
+/**
+ * @brief Ask the running arcade AcViewerTask to leave play and exit back to the menu.
+ *
+ * It sets the play state @ +0x20c to 8 and the board-up flag @ +0x1d9 to 1.
+ *
+ * @param acViewerTask The running arcade-viewer task.
+ * @ghidraAddress 0x2315c
+ */
 void acMainRequestGameExit(AcViewerTask *acViewerTask);
-// Push the arcade-viewer option selections (hi-speed / pop-kun / hid-sud /
-// ran-mir) into the live AcViewerTask (the arcade note-play task AppDelegate
-// holds in its acMainTask property), re-seek its note stream and resume the
-// render loop. Ghidra: applyGameplaySettings (FUN_00023850).
+/**
+ * @brief Push the arcade-viewer option selections into the live AcViewerTask.
+ *
+ * The options are hi-speed, pop-kun, hid-sud, and ran-mir, and the task is the arcade note-play
+ * task AppDelegate holds in its acMainTask property. It re-seeks the note stream and resumes the
+ * render loop.
+ *
+ * @param task The running arcade-viewer task.
+ * @ghidraAddress 0x23850
+ */
 void acMainApplyGameplaySettings(AcViewerTask *task);
 
-// Create + register the app's boot task at priority 3.
-void startBootTask(); // Ghidra: operator_new(0x4c) + FUN_0002af58 +
-                      // FUN_00027f08(_,3)
-// Notify every foreground observer (observer list head @ DAT_00188464).
-void notifyEnterForeground(); // Ghidra: FUN_000188ac walk
+/**
+ * @brief Create and register the app's boot task at priority 3.
+ *
+ * Ghidra: operator_new(0x4c), then FUN_0002af58, then FUN_00027f08(_, 3).
+ */
+void startBootTask();
+/**
+ * @brief Notify every foreground observer; the observer list head is DAT_00188464.
+ * @ghidraAddress 0x188ac
+ */
+void notifyEnterForeground();
 
-// Play a short UI system sound effect and cache its instance handle in slot
-// `slot` of the scene manager's SE-handle table (so it can be stopped later).
-// Slot 1 is the decide/confirm SE, slot 2 the cancel/back SE.
-// Ghidra: SysSePlayIntoSlot (FUN_0002c724) — [[AudioManager sharedManager]
-// playSe:resourceId:] storing the handle at the scene-manager global + 0x28.
+/**
+ * @brief Play a short UI system sound effect and cache its instance handle so it can be stopped
+ * later.
+ *
+ * The handle is cached in the given slot of the scene manager's SE-handle table, at the
+ * scene-manager global + 0x28. Ghidra names it SysSePlayIntoSlot; it calls [[AudioManager
+ * sharedManager] playSe:resourceId:].
+ *
+ * @param slot The SE slot: 1 is the decide or confirm SE, 2 the cancel or back SE.
+ * @ghidraAddress 0x2c724
+ */
 void playSystemSe(int slot);
 
-// Menu button hit-test: true when the active touch `touchId` in the render
-// manager `gfx` lies inside `rect` (x,y,w,h) and `enable[0]` is set.
-// Ghidra: FUN_0002d974.
+/**
+ * @brief The menu button hit-test.
+ *
+ * @param gfx The render manager holding the touch pool.
+ * @param touchId The active touch to test.
+ * @param rect The button rect as x, y, w, h.
+ * @param enable The enable flag; the button is live when enable[0] is set.
+ * @return true when the touch lies inside the rect and the button is enabled.
+ * @ghidraAddress 0x2d974
+ */
 bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable);
 
-// True while the scene manager's system-SE slot `slot` is still sounding (slot
-// 2 is the cancel/back SE the music-select teardown waits on). Ghidra:
-// isSePlaying (FUN_0002c764), which probes the SE-handle table on the scene
-// manager global.
+/**
+ * @brief Report whether the scene manager's system-SE slot is still sounding.
+ *
+ * It probes the SE-handle table on the scene-manager global.
+ *
+ * @param slot The SE slot; slot 2 is the cancel or back SE the music-select teardown waits on.
+ * @return true while that slot is still audible.
+ * @ghidraAddress 0x2c764
+ */
 bool isSePlaying(int slot);
 
-// Height (in points) of the AEP-rendered content area, used to place UIKit
-// overlays below the GL scene. Ghidra: neAepContentHeight.
+/**
+ * @brief The height of the AEP-rendered content area, in points.
+ *
+ * It is used to place UIKit overlays below the GL scene. Ghidra: neAepContentHeight.
+ *
+ * @return The content height.
+ */
 int aepContentHeight();
 } // namespace neEngine
 
-// The UI scale = screenScale * 0.5, published by MainViewController::loadView
-// (@0xb51c) and read back as a float by the tap hit-tests (binary: vldr.32,
-// e.g. the menu update @0x6ae30). Ghidra: DAT_00187b80 (g_dwUiScale) — the `dw`
-// name reflects only the 4-byte storage slot; the slot is semantically a float,
-// so it is typed as one here and the readers do float maths directly rather
-// than reinterpreting an int slot.
+/**
+ * @brief The UI scale, screenScale * 0.5.
+ *
+ * MainViewController::loadView (@ 0xb51c) publishes it, and the tap hit-tests read it back as a
+ * float (the binary uses vldr.32, for example in the menu update @ 0x6ae30). Ghidra names it
+ * DAT_00187b80 (g_dwUiScale); the `dw` reflects only the 4-byte storage slot. The slot is
+ * semantically a float, so it is typed as one here and the readers do float maths directly rather
+ * than reinterpreting an int slot.
+ */
 extern float g_uiScale;
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

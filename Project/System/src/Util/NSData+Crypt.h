@@ -1,5 +1,6 @@
-/** @file
- * AES-128-CBC helpers used to protect the user's save data.
+/**
+ * @file
+ * @brief AES-128-CBC helpers used to protect the user's save data.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. Both public wrappers are thin:
  * they forward to the shared core -mainOperation:key:initVector: with kCCEncrypt / kCCDecrypt.

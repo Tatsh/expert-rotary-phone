@@ -1,14 +1,11 @@
-//
-//  CJSONSerializer.h
-//  pop'n rhythmin
-//
-//  TouchJSON front-end that serializes a Foundation object graph to an NSString
-//  of JSON. It wraps a CJSONDataSerializer (which produces the raw UTF-8
-//  NSData) and decodes the result back into a string.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//  (init @ 0x6a2d8, serializeObject: @ 0x6a38c).
-//
+/**
+ * @file
+ * @brief The TouchJSON front-end that serializes a Foundation object graph to an NSString of JSON.
+ *
+ * It wraps a CJSONDataSerializer (which produces the raw UTF-8 NSData) and decodes the result
+ * back into a string. Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON;
+ * init @ 0x6a2d8, serializeObject: @ 0x6a38c).
+ */
 
 #import <Foundation/Foundation.h>
 

@@ -1,6 +1,9 @@
-/** @file
- * ne::C_SINGLE_SPRITE — a single sprite / texture tile: a refcounted bound texture plus four
- * metadata ints (the two per-frame render-state slots and the tile's default 7x7 span).
+/**
+ * @file
+ * @brief ne::C_SINGLE_SPRITE, a single sprite or texture tile.
+ *
+ * It is a refcounted bound texture plus four metadata ints (the two per-frame render-state slots
+ * and the tile's default 7x7 span).
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (RTTI N2ne15C_SINGLE_SPRITEE;
  * vtable @ 0x130884, constructor FUN_00015eb4, destructor FUN_00015edc, deleting destructor
  * FUN_00015f00). neTextureFrames stores these contiguously as its per-frame records, and a
@@ -80,7 +83,3 @@ public:
     /** +0x14 Per-frame sprite records. */
     std::unique_ptr<ne::C_SINGLE_SPRITE[]> frames;
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

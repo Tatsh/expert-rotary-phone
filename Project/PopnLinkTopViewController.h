@@ -1,26 +1,22 @@
-//
-//  PopnLinkTopViewController.h
-//  pop'n rhythmin
-//
-//  The "pop'n link" top menu: three stacked buttons over a "friman_bg" backdrop
-//  (phone) or a clear view inside the pad split panel — KID info (onInKid),
-//  score checker (onScoreChecker) and quiz (onQuiz), each with a "ps_*" caption
-//  image. The checker / quiz buttons are enabled only once the player has
-//  linked their pop'n-link (e-AMUSEMENT KID); until then the screen forces the
-//  KID-input flow. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (init @ 0xccacc and 15 more methods). Built in
-//  PopnLinkTopViewController.mm (Objective-C++: drives the C++ neSceneManager /
-//  neAppEventCenter singletons for the pad flag, SE playback and the
-//  link-enabled flag).
-//
-//  On the phone each button pushes the matching sub-screen onto its own
-//  navigation controller; on the pad it forwards the tap to a delegate (the pad
-//  split host owns the detail pane) — see PopnLinkTopViewControllerDelegate.
-//  Follows the app-wide modal-VC lifecycle: startOpenAnimation fades the view +
-//  nav view 0 -> 1; startCloseAnimation fades 1 -> 0 (or forwards to the
-//  delegate on the pad); endCloseAnimation removes the nav view and notifies
-//  the host via -[MainViewController PopnLinkEndCallBack].
-//
+/**
+ * @file
+ * @brief The "pop'n link" top menu.
+ *
+ * Three stacked buttons over a "friman_bg" backdrop on phone, or a clear view inside the pad split
+ * panel: KID info (onInKid), score checker (onScoreChecker), and quiz (onQuiz), each with a "ps_*"
+ * caption image. The checker and quiz buttons are enabled only once the player has linked their
+ * pop'n-link (e-AMUSEMENT KID); until then the screen forces the KID-input flow. Reconstructed
+ * from Ghidra project rb420, program PopnRhythmin (init @ 0xccacc and 15 more methods). Built in
+ * PopnLinkTopViewController.mm, which drives the C++ neSceneManager and neAppEventCenter
+ * singletons for the pad flag, SE playback, and the link-enabled flag.
+ *
+ * On the phone each button pushes the matching sub-screen onto its own navigation controller; on
+ * the pad it forwards the tap to a delegate, since the pad split host owns the detail pane; see
+ * PopnLinkTopViewControllerDelegate. It follows the app-wide modal view-controller lifecycle:
+ * startOpenAnimation fades the view and nav view 0 -> 1; startCloseAnimation fades 1 -> 0, or
+ * forwards to the delegate on the pad; endCloseAnimation removes the nav view and notifies the
+ * host via -[MainViewController PopnLinkEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

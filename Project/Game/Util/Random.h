@@ -1,21 +1,19 @@
-//
-//  Random.h
-//  pop'n rhythmin
-//
-//  Marsaglia xorshift128 pseudo-random generator. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin; the original translation unit is named
-//  in an assert string baked into the binary:
-//    /Users/usr10013727/Documents/Project/Rhythmin/branches/v203/Project/Game/Util/Random.cpp
-//  and the range method there is GetRandRangeInt (assert at Random.cpp:0x77).
-//
-//  The state is the classic 4-word xorshift128 vector seeded with Marsaglia's
-//  canonical constants. The object carries a vtable (its only virtual is an
-//  empty destructor), so its layout is { vptr, x, y, z, w } — matching the
-//  arcade task, which embeds one at this+0x4f4.
-//
-//  Ghidra: ctor FUN_00062b20, dtor FUN_00062b54, setSeed FUN_00062b5c,
-//  getRandRangeInt FUN_00062be0.
-//
+/**
+ * @file
+ * @brief The Marsaglia xorshift128 pseudo-random generator.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. The original translation unit is
+ * named in an assert string baked into the binary,
+ * `/Users/usr10013727/Documents/Project/Rhythmin/branches/v203/Project/Game/Util/Random.cpp`, and
+ * the range method there is GetRandRangeInt (assert at Random.cpp:0x77).
+ *
+ * The state is the classic 4-word xorshift128 vector seeded with Marsaglia's canonical constants.
+ * The object carries a vtable (its only virtual is an empty destructor), so its layout is
+ * `{ vptr, x, y, z, w }`, matching the arcade task, which embeds one at this+0x4f4.
+ *
+ * Ghidra: ctor FUN_00062b20, dtor FUN_00062b54, setSeed FUN_00062b5c, getRandRangeInt
+ * FUN_00062be0.
+ */
 
 #pragma once
 
@@ -67,7 +65,3 @@ private:
     uint32_t m_z; // +0x0c
     uint32_t m_w; // +0x10
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

@@ -1,14 +1,12 @@
-//
-//  NSDictionary_JSONExtensions.h
-//  pop'n rhythmin (reconstructed TouchJSON category)
-//
-//  TouchJSON convenience category: build an NSDictionary from JSON data/string
-//  through CJSONDeserializer. The binary's Downloader::getDataInJSON (@
-//  0x62948) calls +[NSDictionary dictionaryWithJSONData:error:] as its
-//  pre-iOS-5 (NSJSONSerialization-absent) fallback; provided here to keep that
-//  call site faithful. On the iOS 12 target NSJSONSerialization is always
-//  present, so this path compiles but never runs.
-//
+/**
+ * @file
+ * @brief The TouchJSON convenience category building an NSDictionary from JSON data or a string.
+ *
+ * It goes through CJSONDeserializer. The binary's Downloader::getDataInJSON (@ 0x62948) calls
+ * +[NSDictionary dictionaryWithJSONData:error:] as its pre-iOS 5 fallback, for when
+ * NSJSONSerialization is absent; it is provided here to keep that call site faithful. On the iOS
+ * 12 target NSJSONSerialization is always present, so this path compiles but never runs.
+ */
 
 #import <Foundation/Foundation.h>
 

@@ -1,8 +1,11 @@
-/** @file
- * A single drawable layer or sprite in the Aep 2D scene: its position, size, colour, alpha, a
- * texture reference, and its slot in the ordering table. Reconstructed from Ghidra project rb420,
- * program PopnRhythmin. The layout is derived from the constructor (0x60 bytes); several vec3
- * groups are transform or colour channels whose exact roles are still being pinned down.
+/**
+ * @file
+ * @brief A single drawable layer or sprite in the Aep 2D scene.
+ *
+ * It carries its position, size, colour, alpha, a texture reference, and its slot in the ordering
+ * table. Reconstructed from Ghidra project rb420, program PopnRhythmin. The layout is derived from
+ * the constructor (0x60 bytes); several vec3 groups are transform or colour channels whose exact
+ * roles are still being pinned down.
  */
 
 #pragma once
@@ -278,7 +281,3 @@ protected:
     bool m_finished;    /**< +0x5c bFlag59: animation-completed flag, set at the end of travel. */
     uint8_t m_pad5d[3]; /**< +0x5d Alignment padding out to 0x60. */
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

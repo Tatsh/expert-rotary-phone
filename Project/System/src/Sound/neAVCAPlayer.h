@@ -1,7 +1,10 @@
-/** @file
- * Low-latency sound-effect backend built on CoreAudio (the caplayer / lib_rsnd layer described in
- * the bundle's readme.txt). It owns a pool of CASound slots; a play handle packs the slot index and
- * a generation counter so a stale handle cannot restart a recycled slot.
+/**
+ * @file
+ * @brief The low-latency sound-effect backend built on CoreAudio.
+ *
+ * This is the caplayer / lib_rsnd layer described in the bundle's readme.txt. It owns a pool of
+ * CASound slots; a play handle packs the slot index and a generation counter so a stale handle
+ * cannot restart a recycled slot.
  */
 
 #pragma once

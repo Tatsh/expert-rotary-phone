@@ -1,18 +1,15 @@
-//
-//  DownloadProgresView.h
-//  pop'n rhythmin
-//
-//  A small download-progress dialog view. It draws a "cmn_window" dialog frame
-//  and lays out, inside it, a spinning activity indicator, a single-line
-//  message label and a horizontal progress bar. -layout: recenters the message
-//  label and shows/hides the progress bar depending on whether a determinate
-//  progress bar is wanted.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithFrame: @ 0xde1d0, dealloc @ 0xde630 [release-only, omitted under
-//  ARC], layout: @ 0xde65c, indicatorView @ 0xde708, labelMessage @ 0xde718,
-//  progressView @ 0xde728).
-//
+/**
+ * @file
+ * @brief A small download-progress dialog view.
+ *
+ * It draws a "cmn_window" dialog frame and lays out, inside it, a spinning activity indicator, a
+ * single-line message label, and a horizontal progress bar. -layout: recentres the message label
+ * and shows or hides the progress bar depending on whether a determinate progress bar is wanted.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithFrame: @ 0xde1d0,
+ * dealloc @ 0xde630 (release-only, omitted under ARC), layout: @ 0xde65c, indicatorView @
+ * 0xde708, labelMessage @ 0xde718, progressView @ 0xde728).
+ */
 
 #import <UIKit/UIKit.h>
 

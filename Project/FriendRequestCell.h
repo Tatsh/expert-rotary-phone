@@ -1,15 +1,12 @@
-//
-//  FriendRequestCell.h
-//  pop'n rhythmin
-//
-//  One outgoing friend-request row (a request you sent, each with a Cancel
-//  button). Its subview x-positions shift between iOS 6 and 7 (the layout
-//  offsets are computed in init; the row content is filled by -setFriendData:).
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xb9740, setFriendData: @ 0xb987c,
-//  onTouchedCancelButton
-//  @ 0xba048).
-//
+/**
+ * @file
+ * @brief One outgoing friend-request row: a request you sent, with a Cancel button.
+ *
+ * Its subview x-positions shift between iOS 6 and 7; the layout offsets are computed in init, and
+ * the row content is filled by -setFriendData:. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xb9740, setFriendData: @ 0xb987c,
+ * onTouchedCancelButton @ 0xba048).
+ */
 
 #import <UIKit/UIKit.h>
 

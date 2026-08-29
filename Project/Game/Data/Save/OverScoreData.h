@@ -1,6 +1,9 @@
-/** @file
- * Core Data managed object — added in model version v2. Reconstructed from
- * ScoreData.momd/ScoreData_v2.mom (entity "OverScoreData").
+/**
+ * @file
+ * @brief The OverScoreData Core Data managed object: online rival scores, added in model version
+ * v2.
+ *
+ * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "OverScoreData").
  *
  * Tracks online / cross-player ("over") scores keyed by remote playerId, per music and sheet
  * (difficulty index). `isTouched` flags whether the local user has viewed or acknowledged this

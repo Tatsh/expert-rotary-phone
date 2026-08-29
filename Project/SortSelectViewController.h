@@ -1,20 +1,18 @@
-//
-//  SortSelectViewController.h
-//  pop'n rhythmin
-//
-//  The music-list sort-select screen: a transparent, separator-less UITableView
-//  of six SortCells (Title / Artist / Lv N / Lv H / Lv EX / best-score), the
-//  current sort marked with a check. Picking a new sort saves it, shows a
-//  dimmed "loading" overlay, re-sorts the owning C++ MainTask's song list
-//  and fades the panel closed. Wrapped in its own UINavigationController (with
-//  a back button on phone) and driven by the shared fade/slide open/close
-//  lifecycle. Pushed by MainViewController.GotoSortSelect:.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0xc5988, initAtNavigationController: @ 0xc6018, the table
-//  data source / delegate, the open/close animations and the musicSelTask
-//  accessors).
-//
+/**
+ * @file
+ * @brief The music-list sort-select screen.
+ *
+ * A transparent, separator-less UITableView of six SortCells (Title, Artist, Lv N, Lv H, Lv EX,
+ * and best score), with the current sort marked by a check. Picking a new sort saves it, shows a
+ * dimmed "loading" overlay, re-sorts the owning C++ MainTask's song list, and fades the panel
+ * closed. It is wrapped in its own UINavigationController, with a back button on phone, and driven
+ * by the shared fade and slide open and close lifecycle. MainViewController.GotoSortSelect: pushes
+ * it.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xc5988,
+ * initAtNavigationController: @ 0xc6018, the table data source and delegate, the open and close
+ * animations, and the musicSelTask accessors).
+ */
 
 #import <UIKit/UIKit.h>
 

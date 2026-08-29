@@ -1,5 +1,8 @@
-/** @file
- * The application delegate: owns the main window and root view controller, brings up the game
+/**
+ * @file
+ * @brief The application delegate.
+ *
+ * It owns the main window and root view controller, brings up the game
  * engine at launch, drives the app lifecycle (resign/foreground/background/terminate), classifies
  * the device hardware and display class, manages the persistent device UUID and setting-version
  * Keychain records, bridges StoreKit purchases and Game Center, and builds the Core Data stack.

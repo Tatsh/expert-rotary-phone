@@ -1,21 +1,19 @@
-//
-//  SettingTopViewController.h
-//  pop'n rhythmin
-//
-//  The top-level "settings" menu (the four-button カスタム screen): ゲーム
-//  (Game), 遊び方 (How-to), お問い合わせ (Customer/inquiry) and その他 (Other).
-//  On the phone each button pushes the matching sub-screen onto its own
-//  navigation controller; on the pad it forwards the tap to a delegate (the
-//  iPad settings host owns the detail pane). Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin (init @ 0x13fe8 and 11 more methods). Built in
-//  SettingTopViewController.mm (Objective-C++: drives the C++ neSceneManager /
-//  neEngine singletons).
-//
-//  Follows the app-wide modal-VC lifecycle (see SettingTableViewController.h):
-//  initAtNavigationController wraps self in a UINavigationController;
-//  startOpen/ startCloseAnimation fade the view + nav view; endCloseAnimation
-//  notifies the host via -[MainViewController SettingEndCallBack].
-//
+/**
+ * @file
+ * @brief The top-level "settings" menu: the four-button カスタム screen.
+ *
+ * The buttons are ゲーム (Game), 遊び方 (How-to), お問い合わせ (Customer inquiry), and その他
+ * (Other). On the phone each button pushes the matching sub-screen onto its own navigation
+ * controller; on the pad it forwards the tap to a delegate, since the iPad settings host owns the
+ * detail pane. Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0x13fe8 and
+ * 11 more methods). Built in SettingTopViewController.mm, which drives the C++ neSceneManager and
+ * neEngine singletons.
+ *
+ * It follows the app-wide modal view-controller lifecycle (see SettingTableViewController.h):
+ * initAtNavigationController wraps self in a UINavigationController; startOpenAnimation and
+ * startCloseAnimation fade the view and nav view; endCloseAnimation notifies the host via
+ * -[MainViewController SettingEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

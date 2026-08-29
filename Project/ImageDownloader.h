@@ -1,14 +1,12 @@
-//
-//  ImageDownloader.h
-//  pop'n rhythmin
-//
-//  Lazily loads one remote image for a table-view cell: it downloads over its
-//  own NSURLConnection, decodes the result as a (Retina-aware) UIImage, and
-//  calls back with the cell's index path so the table can refresh just that
-//  row. Reconstructed from Ghidra project rb420, program PopnRhythmin (the
-//  connection delegate methods
-//  @ 0x5a854/0x5a8e0/0x5a880, cancelDownload @ 0x5a724).
-//
+/**
+ * @file
+ * @brief A lazy loader for one remote image belonging to a table-view cell.
+ *
+ * It downloads over its own NSURLConnection, decodes the result as a Retina-aware UIImage, and
+ * calls back with the cell's index path so the table can refresh just that row. Reconstructed
+ * from Ghidra project rb420, program PopnRhythmin (the connection delegate methods @ 0x5a854,
+ * 0x5a8e0, and 0x5a880, cancelDownload @ 0x5a724).
+ */
 
 #import <UIKit/UIKit.h>
 

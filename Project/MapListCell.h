@@ -1,10 +1,10 @@
-//
-//  MapListCell.h
-//  pop'n rhythmin
-//
-//  A sugoroku map-list row. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xbe270).
-//
+/**
+ * @file
+ * @brief A sugoroku map-list row.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0xbe270).
+ */
 
 #import <UIKit/UIKit.h>
 

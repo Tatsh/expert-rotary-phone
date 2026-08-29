@@ -1,11 +1,10 @@
-//
-//  AcViewerOptionCell.h
-//  pop'n rhythmin
-//
-//  An arcade-viewer option row (content bound by the VC). Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
-//  0x65480).
-//
+/**
+ * @file
+ * @brief An arcade-viewer option row, whose content the view controller binds.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0x65480).
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,17 +1,15 @@
-//
-//  StoreAcvManageViewController.h
-//  pop'n rhythmin
-//
-//  The store's arcade-viewer manager tab: the sibling of
-//  StoreManageViewController for arcade-viewer content (delete / re-download).
-//  Lists the purchased arcade- viewer songs, offers a per-row delete /
-//  re-download button, runs an integrity "check" pass (fetching missing
-//  arcade-song info) on load, and drives the file download through
-//  StoreDownloadManager with the shared store modal dialog.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithParent: @ 0x8c630, loadView @ 0x8c7f0, dealloc @ 0x8e748).
-//
+/**
+ * @file
+ * @brief The store's arcade-viewer manager tab.
+ *
+ * It is the sibling of StoreManageViewController for arcade-viewer content, handling deletion and
+ * re-download. It lists the purchased arcade-viewer songs, offers a per-row delete and re-download
+ * button, runs an integrity "check" pass on load that fetches missing arcade-song info, and drives
+ * the file download through StoreDownloadManager with the shared store modal dialog.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithParent: @ 0x8c630,
+ * loadView @ 0x8c7f0, dealloc @ 0x8e748).
+ */
 
 #import <UIKit/UIKit.h>
 

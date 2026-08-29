@@ -1,7 +1,9 @@
-/** @file
- * The root view controller and the bridge between UIKit and the C++ engine: it hosts the GL view
- * and the AepManager scene, and drives the render loop via a CADisplayLink. Reconstructed from
- * Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief The root view controller and the bridge between UIKit and the C++ engine.
+ *
+ * It hosts the GL view and the AepManager scene, and drives the render loop via a CADisplayLink.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <UIKit/UIKit.h>

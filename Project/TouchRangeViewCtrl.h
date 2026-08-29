@@ -1,24 +1,21 @@
-//
-//  TouchRangeViewCtrl.h
-//  pop'n rhythmin
-//
-//  The "touch range" adjustment sub-screen, pushed from the game settings. A
-//  UISlider (40-148pt) sets the radius of the circular area around the preview
-//  pop-kun within which a tap counts as a hit; dragging a finger inside that
-//  circle lights up the embedded TouchRangeView (its "touched" art), and a
-//  reset button restores the default radius (68pt). The chosen radius persists
-//  through UserSettingData and is applied at play time (see -[UserSettingData
-//  touchRadius]).
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (viewDidLoad @
-//  0x8a360, didReceiveMemoryWarning @ 0x8a9d0, viewWillDisappear: @ 0x8a9fc,
-//  sliderValChanged: @ 0x8aa9c, touchedResetButton: @ 0x8aad0, isEnablePoint: @
-//  0x8ab04, touchesBegan:withEvent: @ 0x8abd0, touchesMoved:withEvent: @
-//  0x8ad0c, touchesEnded:withEvent: @ 0x8af28, touchesCancelled:withEvent: @
-//  0x8b15c, backButtonFunc @ 0x8b16c; the compiler-emitted .cxx_construct @
-//  0x8b208 is not reproduced). Built in TouchRangeViewCtrl.mm (Objective-C++:
-//  -backButtonFunc drives the neEngine C++ bridge for the system "cancel" SE).
-//
+/**
+ * @file
+ * @brief The "touch range" adjustment sub-screen, pushed from the game settings.
+ *
+ * A UISlider covering 40-148pt sets the radius of the circular area around the preview pop-kun
+ * within which a tap counts as a hit; dragging a finger inside that circle lights up the embedded
+ * TouchRangeView with its "touched" art, and a reset button restores the default radius of 68pt.
+ * The chosen radius persists through UserSettingData and is applied at play time; see
+ * -[UserSettingData touchRadius].
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (viewDidLoad @ 0x8a360,
+ * didReceiveMemoryWarning @ 0x8a9d0, viewWillDisappear: @ 0x8a9fc, sliderValChanged: @ 0x8aa9c,
+ * touchedResetButton: @ 0x8aad0, isEnablePoint: @ 0x8ab04, touchesBegan:withEvent: @ 0x8abd0,
+ * touchesMoved:withEvent: @ 0x8ad0c, touchesEnded:withEvent: @ 0x8af28,
+ * touchesCancelled:withEvent: @ 0x8b15c, backButtonFunc @ 0x8b16c; the compiler-emitted
+ * .cxx_construct @ 0x8b208 is not reproduced). Built in TouchRangeViewCtrl.mm, where
+ * -backButtonFunc drives the neEngine C++ bridge for the system "cancel" SE.
+ */
 
 #import <UIKit/UIKit.h>
 

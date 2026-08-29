@@ -1,23 +1,24 @@
-//
-//  AcViewerSplitViewController.h
-//  pop'n rhythmin
-//
-//  The iPad layout of the arcade (AC) viewer: a floating split panel over a
-//  dimmed backdrop — a left column of category/music-name/genre buttons and a
-//  right navigation pane that hosts the AcViewerCategoryViewController list.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
-//  0x318e8, initForLeftView
-//  @ 0x322c4, the shared open/close fade animations,
-//  onButtonTouched:/onBackButtonTouched:).
-//
-//  All the app's modal view controllers share this animation lifecycle:
-//    startOpenAnimation  — fade the view (+ its nav controller view) 0 -> 1;
-//                          didStop -> endOpenAnimation (clears isAnimationing)
-//    startCloseAnimation — fade 1 -> 0; didStop -> endCloseAnimation
-//    endCloseAnimation   — removeFromSuperview + [rootVC <Screen>EndCallBack]
-//  (iPad variants sometimes slide or fade a "black board" instead; guarded by an
-//  isAnimationing flag so a transition never overlaps.)
-//
+/**
+ * @file
+ * @brief The iPad layout of the arcade (AC) viewer.
+ *
+ * A floating split panel over a dimmed backdrop: a left column of category, music-name, and genre
+ * buttons and a right navigation pane that hosts the AcViewerCategoryViewController list.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0x318e8, initForLeftView @
+ * 0x322c4, the shared open and close fade animations, onButtonTouched: and
+ * onBackButtonTouched:).
+ *
+ * All the app's modal view controllers share this animation lifecycle:
+ *
+ * - startOpenAnimation fades the view, and its nav controller view, 0 -> 1; didStop reaches
+ *   endOpenAnimation, which clears isAnimationing.
+ * - startCloseAnimation fades 1 -> 0; didStop reaches endCloseAnimation.
+ * - endCloseAnimation removes the view from its superview and calls
+ *   `[rootVC <Screen>EndCallBack]`.
+ *
+ * iPad variants sometimes slide or fade a "black board" instead; an isAnimationing flag guards
+ * against overlapping transitions.
+ */
 
 #import <UIKit/UIKit.h>
 

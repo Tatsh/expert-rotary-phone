@@ -666,7 +666,3 @@ void neDrawText(const char *text,
         mgr->~neTextTextureMgr();
     }
 }
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

@@ -1,11 +1,10 @@
-//
-//  CustomTextView.h
-//  pop'n rhythmin
-//
-//  A display-only UITextView: no text selection, no edit menu, never becomes
-//  first responder. Used for message bodies (e.g. in CommonAlertView).
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
+/**
+ * @file
+ * @brief A display-only UITextView: no text selection, no edit menu, and never first responder.
+ *
+ * It is used for message bodies, for example in CommonAlertView. Reconstructed from Ghidra
+ * project rb420, program PopnRhythmin.
+ */
 
 #import <UIKit/UIKit.h>
 

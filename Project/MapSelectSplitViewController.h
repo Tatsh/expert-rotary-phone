@@ -1,23 +1,20 @@
-//
-//  MapSelectSplitViewController.h
-//  pop'n rhythmin
-//
-//  The iPad sugoroku "map select" split hub: a full-screen UIViewController
-//  that hosts the two halves of the map-select flow side by side — the left map
-//  list (MapSelectViewController, a grouped table of main maps) and the right
-//  area panel (SubMapSelectViewController) — joined by an animated arrow that
-//  slides to the selected row. It also carries the top banner, the per-map
-//  header label/icon, an "empty area" placeholder, and a bottom auto-scrolling
-//  event banner carousel (a UIScrollView + UIPageControl) whose contents come
-//  from DownloadMain's live event list. The custom back button and the
-//  open/close cross-fades drive the parent navigation controller and hand
-//  control back to the app root (MainViewController) via the C++ neSceneManager
-//  singleton.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
-//  0x754d8 and 24 more methods). Built in MapSelectSplitViewController.mm
-//  (Objective-C++: drives the C++ neSceneManager / neEngine bridge). ARC.
-//
+/**
+ * @file
+ * @brief The iPad sugoroku "map select" split hub.
+ *
+ * A full-screen UIViewController hosting the two halves of the map-select flow side by side: the
+ * left map list (MapSelectViewController, a grouped table of main maps) and the right area panel
+ * (SubMapSelectViewController), joined by an animated arrow that slides to the selected row. It
+ * also carries the top banner, the per-map header label and icon, an "empty area" placeholder,
+ * and a bottom auto-scrolling event banner carousel (a UIScrollView with a UIPageControl) whose
+ * contents come from DownloadMain's live event list. The custom back button and the open and
+ * close cross-fades drive the parent navigation controller and hand control back to the app root
+ * (MainViewController) via the C++ neSceneManager singleton.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0x754d8 and 24 more
+ * methods). Built in MapSelectSplitViewController.mm, which drives the C++ neSceneManager and
+ * neEngine bridge, under ARC.
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,14 +1,11 @@
-//
-//  CSerializedJSONData.h
-//  pop'n rhythmin
-//
-//  TouchJSON helper: a wrapper around an NSData blob that is already-serialized
-//  JSON. When handed to CJSONDataSerializer it is emitted verbatim instead of
-//  being re-encoded.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//  (initWithData: @ 0x6a4c4, data @ 0x6a540).
-//
+/**
+ * @file
+ * @brief A TouchJSON wrapper around an NSData blob that is already-serialized JSON.
+ *
+ * When handed to CJSONDataSerializer it is emitted verbatim instead of being re-encoded.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON; initWithData: @
+ * 0x6a4c4, data @ 0x6a540).
+ */
 
 #import <Foundation/Foundation.h>
 

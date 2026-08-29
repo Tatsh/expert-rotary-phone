@@ -1,6 +1,8 @@
-/** @file
- * The app's shared UI typeface names. C-linkage (defined in AppFont.m) so the C++ (.mm) callers
- * resolve the unmangled symbols.
+/**
+ * @file
+ * @brief The app's shared UI typeface names.
+ *
+ * C-linkage (defined in AppFont.m) so the C++ (.mm) callers resolve the unmangled symbols.
  */
 
 #import <Foundation/Foundation.h>

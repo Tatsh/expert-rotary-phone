@@ -1,29 +1,24 @@
-//
-//  CDataScanner.h
-//  pop'n rhythmin
-//
-//  TouchJSON raw byte-cursor scanner over an NSData. It walks a UTF-8 byte
-//  buffer with three `const char *` cursors (start/end/current) and provides
-//  the low-level scanning primitives (scan a literal string, scan characters
-//  from a set, scan up to a string/set, scan a number, skip whitespace, scan
-//  C / C++ style comments). CJSONScanner is a subclass that layers the JSON
-//  grammar on top and reads the @protected `current`/`end` cursors directly.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//
-//  Superclass determined from Ghidra: init/dealloc chain up to NSObject
-//  (class_ro superclass = NSObject); init/dealloc call NSObject::init /
-//  NSObject::dealloc.
-//
-//  ivars decoded from Ghidra (setData: @ 0x648a0):
-//    data             NSData*          — retained backing data
-//    start            const char*      — data.bytes (buffer origin)
-//    end              const char*      — start + data.length (one past last)
-//    current          const char*      — the moving byte cursor
-//    length           unsigned         — data.length
-//    doubleCharacters NSCharacterSet*  — set of characters valid in a number
-//  NOTE: start/end/current are byte POINTERS into data.bytes, not char values.
-//
+/**
+ * @file
+ * @brief The TouchJSON raw byte-cursor scanner over an NSData.
+ *
+ * It walks a UTF-8 byte buffer with three `const char *` cursors (start, end, current) and
+ * provides the low-level scanning primitives: scan a literal string, scan characters from a set,
+ * scan up to a string or set, scan a number, skip whitespace, and scan C or C++ style comments.
+ * CJSONScanner is a subclass that layers the JSON grammar on top and reads the @protected
+ * `current` and `end` cursors directly.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
+ *
+ * The superclass is determined from Ghidra: the init and dealloc chain reaches NSObject (class_ro
+ * superclass = NSObject), and init and dealloc call NSObject::init and NSObject::dealloc.
+ *
+ * The ivars are decoded from Ghidra (setData: @ 0x648a0): `data` is the retained backing NSData,
+ * `start` is data.bytes (the buffer origin), `end` is start + data.length (one past the last
+ * byte), `current` is the moving byte cursor, `length` is data.length, and `doubleCharacters` is
+ * the set of characters valid in a number. Note that start, end, and current are byte POINTERS
+ * into data.bytes, not char values.
+ */
 
 #import <Foundation/Foundation.h>
 

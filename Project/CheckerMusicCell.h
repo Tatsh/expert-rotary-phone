@@ -1,12 +1,11 @@
-//
-//  CheckerMusicCell.h
-//  pop'n rhythmin
-//
-//  A music-checker song row: banner background plus update-date, title and
-//  genre labels. Layout x-offsets vary by iPad + iOS version (computed in
-//  init). Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xd1d28).
-//
+/**
+ * @file
+ * @brief A music-checker song row.
+ *
+ * A banner background plus update-date, title, and genre labels. Layout x-offsets vary by iPad
+ * and iOS version, computed in init. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithStyle:reuseIdentifier: @ 0xd1d28).
+ */
 
 #import <UIKit/UIKit.h>
 

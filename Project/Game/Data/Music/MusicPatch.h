@@ -1,7 +1,10 @@
-/** @file
- * A downloadable per-song difficulty override applied by MusicManager after building the
- * catalogue. Reconstructed from Ghidra project rb420, program PopnRhythmin. It is a plain scalar
- * record with atomic accessors.
+/**
+ * @file
+ * @brief A downloadable per-song difficulty override, applied by MusicManager after building the
+ * catalogue.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. It is a plain scalar record with
+ * atomic accessors.
  */
 
 #import <Foundation/Foundation.h>

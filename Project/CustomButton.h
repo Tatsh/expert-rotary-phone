@@ -1,13 +1,12 @@
-//
-//  CustomButton.h
-//  pop'n rhythmin
-//
-//  A UIButton whose hit-test area is grown (or shrunk) by `tappableInsets`:
-//  negative insets enlarge the tappable region beyond the button's bounds, so a
-//  small on-screen button can still be comfortably tapped. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (pointInside:withEvent: @
-//  0xdcfc0, tappableInsets / setTappableInsets: @ 0xdd0f8 / 0xdd11c).
-//
+/**
+ * @file
+ * @brief A UIButton whose hit-test area is grown, or shrunk, by `tappableInsets`.
+ *
+ * Negative insets enlarge the tappable region beyond the button's bounds, so a small on-screen
+ * button can still be comfortably tapped. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (pointInside:withEvent: @ 0xdcfc0, tappableInsets and setTappableInsets: @ 0xdd0f8
+ * and 0xdd11c).
+ */
 
 #import <UIKit/UIKit.h>
 

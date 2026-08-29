@@ -1,24 +1,20 @@
-//
-//  CustomAlertView.h
-//  pop'n rhythmin
-//
-//  A second custom modal alert (sibling of CommonAlertView) built around a
-//  fixed piece of background art ("info_bg" / "gift_bg") rather than a drawn
-//  gradient card. It hangs a title UILabel, a display-only CustomTextView
-//  message and up to two image-backed buttons (yes / no) off that background
-//  image view, then shows and hides itself with a selectable open/close
-//  animation (fade or scale bounce). The host installs it into a passed view
-//  (or the root scene view) and receives the button result through a weak
-//  delegate.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  NOTE ON SUPERCLASS: the binary builds `self` with -[UIImageView
-//  initWithFrame:], tears it down with -[UIImageView dealloc] and explicitly
-//  re-enables userInteraction (which UIImageView disables by default), so the
-//  recovered superclass is UIImageView (itself a UIView subclass).
-//  Reconstructed as such.
-//
+/**
+ * @file
+ * @brief A second custom modal alert, the sibling of CommonAlertView.
+ *
+ * It is built around a fixed piece of background art ("info_bg" or "gift_bg") rather than a drawn
+ * gradient card. It hangs a title UILabel, a display-only CustomTextView message, and up to two
+ * image-backed buttons (yes and no) off that background image view, then shows and hides itself
+ * with a selectable open and close animation (fade or scale bounce). The host installs it into a
+ * passed view, or the root scene view, and receives the button result through a weak delegate.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * On the superclass: the binary builds `self` with -[UIImageView initWithFrame:], tears it down
+ * with -[UIImageView dealloc], and explicitly re-enables userInteraction (which UIImageView
+ * disables by default), so the recovered superclass is UIImageView, itself a UIView subclass, and
+ * it is reconstructed as such.
+ */
 
 #import <UIKit/UIKit.h>
 

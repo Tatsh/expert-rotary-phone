@@ -1,6 +1,8 @@
-/** @file
- * A set of the player's preferred character ids. Reconstructed from Ghidra project rb420, program
- * PopnRhythmin.
+/**
+ * @file
+ * @brief A set of the player's preferred character ids.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <Foundation/Foundation.h>

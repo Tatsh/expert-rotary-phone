@@ -1,34 +1,29 @@
-//
-//  AcMainTask.h
-//  pop'n rhythmin
-//
-//  The ARCADE-mode task: arcade song select + sugoroku treasure map + option
-//  select + note play, driving the arcade note engine (AcNoteMng, already
-//  reconstructed). Launched by the mode menu (MenuMainTask). Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (ctor AcMainTask_ctor
-//  FUN_00099ab0, update AcMainTask_update FUN_00099d18).
-//
-//  AcMainTask_update is the app's largest function (~24 KB / ~4300 decompiled
-//  lines, heavily inlined). It is reconstructed in pieces from the on-disk
-//  decompile
-//  (.decompile/AcMainTask_update.c): update() is the touch/SE preamble + a
-//  dispatch over the play-data state (@ +0x9f8) into one handler method per
-//  state; each state's inlined body is lifted into its own method. Progress
-//  tracked in STUBS.md.
-//
-//  ---- work area (this class IS the ~0xa00-byte play-data struct) ----
-//  This is a runtime-only struct (never serialised to/from a file), so its exact
-//  byte layout is NOT preserved: the `// +0xNN` comments cross-reference each
-//  field's binary offset, but unused gaps are dropped (noted inline) rather than
-//  padded, and members are reached by name, not raw offset. A
-//  few device-branched select/dialog layout regions (m_selSceneLayout,
-//  m_dlgLayoutA/B, m_dlgLayout954) are pure coordinate constants the setup pass
-//  writes and only the not-yet-reconstructed select/option draw states read;
-//  they are kept as documented write-only arrays (their interior roles are
-//  best-effort). The play state @ +0x9f8 is what update() dispatches on; the
-//  embedded arcade RNG @ +0x4f4 is a real Random member (auto-constructed and
-//  destroyed).
-//
+/**
+ * @file
+ * @brief The ARCADE-mode task: arcade song select, sugoroku treasure map, option select, and
+ * note play.
+ *
+ * It drives the arcade note engine (AcNoteMng) and is launched by the mode menu (MenuMainTask).
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor AcMainTask_ctor
+ * FUN_00099ab0, update AcMainTask_update FUN_00099d18).
+ *
+ * AcMainTask_update is the app's largest function (~24 KB / ~4300 decompiled lines, heavily
+ * inlined). It is reconstructed in pieces from the on-disk decompile
+ * (.decompile/AcMainTask_update.c): update() is the touch/SE preamble plus a dispatch over the
+ * play-data state (@ +0x9f8) into one handler method per state; each state's inlined body is
+ * lifted into its own method. Progress tracked in STUBS.md.
+ *
+ * Work area (this class IS the ~0xa00-byte play-data struct): it is runtime-only, never
+ * serialised to or from a file, so its exact byte layout is NOT preserved. The `// +0xNN`
+ * comments cross-reference each field's binary offset, but unused gaps are dropped (noted
+ * inline) rather than padded, and members are reached by name, not raw offset. A few
+ * device-branched select and dialog layout regions (m_selSceneLayout, m_dlgLayoutA/B,
+ * m_dlgLayout954) are pure coordinate constants the setup pass writes and only the
+ * not-yet-reconstructed select and option draw states read; they are kept as documented
+ * write-only arrays, and their interior roles are best-effort. The play state @ +0x9f8 is what
+ * update() dispatches on; the embedded arcade RNG @ +0x4f4 is a real Random member,
+ * auto-constructed and destroyed.
+ */
 
 #pragma once
 
@@ -48,70 +43,75 @@ struct SkillDataStruct; // System/../SkillData.h (pointer member only)
 struct neTouchPoint;    // System/src/Render/neGraphics.h (touch pool record)
 class neGraphics;       // System/src/Render/neGraphics.h (applyDragScroll parameter)
 
-// Draw-dispatch keys into m_boardUserNo: each entry is a getUserNo element id
-// that the group-5 board draw callback (AcMainSugorokuDraw) matches the drawn
-// `child` against to render one sugoroku / chara-select board element. Names are
-// from the callback's per-element branches.
+/**
+ * @brief Draw-dispatch keys into m_boardUserNo.
+ *
+ * Each entry is a getUserNo element id that the group-5 board draw callback (AcMainSugorokuDraw)
+ * matches the drawn `child` against to render one sugoroku or chara-select board element. The
+ * names come from the callback's per-element branches.
+ */
 enum BoardElem {
-    kBoardTreasurePoint = 0,    // treasure-point 4-digit counter
-    kBoardCharaColRightA = 1,   // chara-select right column (paired with RightB)
-    kBoardCharaColLeftA = 2,    // chara-select left column (paired with LeftB)
-    kBoardCharaBacking = 3,     // chara backing panel
-    kBoardCharaColLeftB = 4,    // chara-select left column (paired with LeftA)
-    kBoardCharaColRightB = 5,   // chara-select right column (paired with RightA)
-    kBoardCharaName = 6,        // selected chara name
-    kBoardSkillText = 7,        // skill name / id / description
-    kBoardMusicPieceGrid = 8,   // music-piece unlock grid
-    kBoardMusicPanel = 9,       // music-panel grid (music anchors)
-    kBoardSmallPanel = 10,      // small chara panel
-    kBoardMusicReveal = 11,     // music-piece reveal overlay
-    kBoardWallPieceGrid = 12,   // wallpaper-piece unlock grid
-    kBoardWallPanel = 13,       // wall-panel grid (wall anchors)
-    kBoardWallReveal = 14,      // wall-piece reveal overlay
-    kBoardFullBg = 15,          // full-board background panel
-    kBoardStepValue = 16,       // per-skill roulette step-value digits
-    kBoardNewCharaButton = 17,  // "new chara available" button
-    kBoardListPanel = 18,       // chara list panel
-    kBoardListScrollBar = 19,   // chara list scroll bar
-    kBoardCompleteBadge = 20,   // collection-complete badge (pulsing)
-    kBoardCharaTickets = 21,    // owned chara-ticket count (<= 99)
-    kBoardRouletteDigit = 22,   // roulette-result digit
-    kBoardBonusCount = 23,      // bonus count (ticket glyphs)
-    kBoardRouletteIcon = 24,    // roulette-result event icon
-    kBoardRouletteCaption = 25, // roulette-result caption text
+    kBoardTreasurePoint = 0,    /**< The treasure-point 4-digit counter. */
+    kBoardCharaColRightA = 1,   /**< Chara-select right column, paired with RightB. */
+    kBoardCharaColLeftA = 2,    /**< Chara-select left column, paired with LeftB. */
+    kBoardCharaBacking = 3,     /**< The chara backing panel. */
+    kBoardCharaColLeftB = 4,    /**< Chara-select left column, paired with LeftA. */
+    kBoardCharaColRightB = 5,   /**< Chara-select right column, paired with RightA. */
+    kBoardCharaName = 6,        /**< The selected chara's name. */
+    kBoardSkillText = 7,        /**< The skill name, id, and description. */
+    kBoardMusicPieceGrid = 8,   /**< The music-piece unlock grid. */
+    kBoardMusicPanel = 9,       /**< The music-panel grid, holding the music anchors. */
+    kBoardSmallPanel = 10,      /**< The small chara panel. */
+    kBoardMusicReveal = 11,     /**< The music-piece reveal overlay. */
+    kBoardWallPieceGrid = 12,   /**< The wallpaper-piece unlock grid. */
+    kBoardWallPanel = 13,       /**< The wall-panel grid, holding the wall anchors. */
+    kBoardWallReveal = 14,      /**< The wall-piece reveal overlay. */
+    kBoardFullBg = 15,          /**< The full-board background panel. */
+    kBoardStepValue = 16,       /**< The per-skill roulette step-value digits. */
+    kBoardNewCharaButton = 17,  /**< The "new chara available" button. */
+    kBoardListPanel = 18,       /**< The chara list panel. */
+    kBoardListScrollBar = 19,   /**< The chara list scroll bar. */
+    kBoardCompleteBadge = 20,   /**< The pulsing collection-complete badge. */
+    kBoardCharaTickets = 21,    /**< The owned chara-ticket count, at most 99. */
+    kBoardRouletteDigit = 22,   /**< A roulette-result digit. */
+    kBoardBonusCount = 23,      /**< The bonus count, drawn as ticket glyphs. */
+    kBoardRouletteIcon = 24,    /**< The roulette-result event icon. */
+    kBoardRouletteCaption = 25, /**< The roulette-result caption text. */
 };
 
-// Frame handles into m_boardFrame, resolved in setup from getFrameNo(5,
-// kFrmBoard[i]); each entry is named after its board frame asset. The DEFENSE_*
-// / SQUARE frames are the roulette-result event frames the result switch selects
-// by outcome mode.
+/**
+ * @brief Frame handles into m_boardFrame, resolved in setup from getFrameNo(5, kFrmBoard[i]).
+ *
+ * Each entry is named after its board frame asset. The DEFENSE_* and SQUARE frames are the
+ * roulette-result event frames the result switch selects by outcome mode.
+ */
 enum BoardFrame {
-    kBoardFrameCharaKoma = 0,        // CHARA_KOMA00
-    kBoardFrameMusicPeaceBoardS = 1, // MUSIC_PEACE_BOARD_S
-    kBoardFrameJacketQuestion = 2,   // JACKET_QUESTION
-    kBoardFrameJacketDiscovery = 3,  // JACKET_DISCOVERY
-    kBoardFrameRoulette = 4,         // BT_ROULETTE
-    kBoardFrameRouletteNo = 5,       // BT_ROULETTE_NO
-    kBoardFrameRouletteEvent = 6,    // BT_ROULETTE_EVENT
-    kBoardFrameRouletteEventNo = 7,  // BT_ROULETTE_EVENT_NO
-    kBoardFrameGatya = 8,            // BT_GATYA
-    kBoardFrameGatya01 = 9,          // BT_GATYA01
-    kBoardFramePageBefore = 10,      // PAGE_BEFORE
-    kBoardFramePageNext = 11,        // PAGE_NEXT
-    kBoardFrameWarning = 12,         // WARNING
-    kBoardFrameWallSave = 13,        // BT_WALL_SAVE
-    kBoardFrameDefense0100 = 14,     // DEFENSE_01_00
-    kBoardFrameDefense0101 = 15,     // DEFENSE_01_01
-    kBoardFrameDefense0102 = 16,     // DEFENSE_01_02
-    kBoardFrameDefense0103 = 17,     // DEFENSE_01_03
-    kBoardFrameDefense0104 = 18,     // DEFENSE_01_04
-    kBoardFrameDefense00 = 19,       // DEFENSE_00
-    kBoardFrameDefense02 = 20,       // DEFENSE_02
-    kBoardFrameSquare0100 = 21,      // BT_SQUARE01_00
-    kBoardFrameDefense0300 = 22,     // DEFENSE_03_00
-    kBoardFrameDefense0301 = 23,     // DEFENSE_03_01
-    kBoardFrameDefense0302 = 24,     // DEFENSE_03_02
-    kBoardFrameDefense0303 = 25,     // DEFENSE_03_03
+    kBoardFrameCharaKoma = 0,        /**< CHARA_KOMA00. */
+    kBoardFrameMusicPeaceBoardS = 1, /**< MUSIC_PEACE_BOARD_S. */
+    kBoardFrameJacketQuestion = 2,   /**< JACKET_QUESTION. */
+    kBoardFrameJacketDiscovery = 3,  /**< JACKET_DISCOVERY. */
+    kBoardFrameRoulette = 4,         /**< BT_ROULETTE. */
+    kBoardFrameRouletteNo = 5,       /**< BT_ROULETTE_NO. */
+    kBoardFrameRouletteEvent = 6,    /**< BT_ROULETTE_EVENT. */
+    kBoardFrameRouletteEventNo = 7,  /**< BT_ROULETTE_EVENT_NO. */
+    kBoardFrameGatya = 8,            /**< BT_GATYA. */
+    kBoardFrameGatya01 = 9,          /**< BT_GATYA01. */
+    kBoardFramePageBefore = 10,      /**< PAGE_BEFORE. */
+    kBoardFramePageNext = 11,        /**< PAGE_NEXT. */
+    kBoardFrameWarning = 12,         /**< WARNING. */
+    kBoardFrameWallSave = 13,        /**< BT_WALL_SAVE. */
+    kBoardFrameDefense0100 = 14,     /**< DEFENSE_01_00. */
+    kBoardFrameDefense0101 = 15,     /**< DEFENSE_01_01. */
+    kBoardFrameDefense0102 = 16,     /**< DEFENSE_01_02. */
+    kBoardFrameDefense0103 = 17,     /**< DEFENSE_01_03. */
+    kBoardFrameDefense0104 = 18,     /**< DEFENSE_01_04. */
+    kBoardFrameDefense00 = 19,       /**< DEFENSE_00. */
+    kBoardFrameDefense02 = 20,       /**< DEFENSE_02. */
+    kBoardFrameSquare0100 = 21,      /**< BT_SQUARE01_00. */
+    kBoardFrameDefense0300 = 22,     /**< DEFENSE_03_00. */
+    kBoardFrameDefense0301 = 23,     /**< DEFENSE_03_01. */
+    kBoardFrameDefense0302 = 24,     /**< DEFENSE_03_02. */
+    kBoardFrameDefense0303 = 25,     /**< DEFENSE_03_03. */
 };
 
 /**
@@ -496,11 +496,29 @@ private:
     const neTouchPoint *m_frameTapTouch = nullptr; // the tapped touch (when m_frameTapped)
 };
 
-// The group-5 sugoroku per-frame render pass the scene installs as its draw
-// callback, invoked by AepDrawLayer's type-3 dispatch with the full per-frame
-// draw args (AepGroupDrawFn); the trailing `context` is the owning AcMainTask.
-// (Ghidra: FUN_000a3724 @ 0xa3724 — a ~5.8 KB draw routine, reconstructed
-// separately.)
+/**
+ * @brief The group-5 sugoroku per-frame render pass the scene installs as its draw callback.
+ *
+ * AepDrawLayer's type-3 dispatch invokes it with the full per-frame draw arguments, matching
+ * AepGroupDrawFn. It is a ~5.8 KB draw routine, reconstructed separately.
+ *
+ * @param child The board element id to render; see BoardElem.
+ * @param frame The remapped child frame.
+ * @param x Composed translation x.
+ * @param y Composed translation y.
+ * @param scaleX Composed scale x as a percentage.
+ * @param scaleY Composed scale y as a percentage.
+ * @param anchorX Pivot x.
+ * @param anchorY Pivot y.
+ * @param color Colour (brightness) channel value.
+ * @param alpha Alpha channel value.
+ * @param rotation Composed rotation.
+ * @param blend Composed blend word.
+ * @param clipRect The four-int clip rect.
+ * @param priority Ordering-table priority.
+ * @param context The owning AcMainTask.
+ * @ghidraAddress 0xa3724
+ */
 void AcMainSugorokuDraw(int child,
                         int frame,
                         int x,
@@ -517,11 +535,12 @@ void AcMainSugorokuDraw(int child,
                         uint32_t priority,
                         void *context);
 
-// Unlock the board-8 bonus treasure record when its prerequisite purchased
-// songs are present on disk (Ghidra: FUN_000a345c; uses TreasureData +
-// MusicManager). No args.
+/**
+ * @brief Unlock the board-8 bonus treasure record when its prerequisite purchased songs are
+ * present on disk.
+ *
+ * It goes through TreasureData and MusicManager.
+ *
+ * @ghidraAddress 0xa345c
+ */
 void AcMainUnlockBonusTreasure();
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

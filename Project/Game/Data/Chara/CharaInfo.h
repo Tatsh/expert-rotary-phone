@@ -1,6 +1,8 @@
-/** @file
- * A character display record: id, name and its skill. Reconstructed from Ghidra project rb420,
- * program PopnRhythmin.
+/**
+ * @file
+ * @brief A character display record: id, name and its skill.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <Foundation/Foundation.h>

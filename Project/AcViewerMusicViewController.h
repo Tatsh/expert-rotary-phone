@@ -1,19 +1,17 @@
-//
-//  AcViewerMusicViewController.h
-//  pop'n rhythmin
-//
-//  The arcade (AC) viewer's song list: a transparent, separator-less
-//  UITableView whose rows are AcViewerMusicCells (four difficulty buttons
-//  each). A custom header shows the genre-category banner of the first listed
-//  song; the right nav-bar button toggles the list between song-name and
-//  genre-name ordering. Tapping a difficulty button seeds the AC-viewer's
-//  current selection (music id / difficulty) and pushes the per-song option
-//  screen.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithData:
-//  @ 0xcba44, the table data source / delegate, the change / back /
-//  difficulty-button actions and the DownloadMain visitor cleanup in dealloc).
-//
+/**
+ * @file
+ * @brief The arcade (AC) viewer's song list.
+ *
+ * A transparent, separator-less UITableView whose rows are AcViewerMusicCells (four difficulty
+ * buttons each). A custom header shows the genre-category banner of the first listed song; the
+ * right nav-bar button toggles the list between song-name and genre-name ordering. Tapping a
+ * difficulty button seeds the AC-viewer's current selection (music id and difficulty) and pushes
+ * the per-song option screen.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithData: @ 0xcba44, the
+ * table data source and delegate, the change, back, and difficulty-button actions, and the
+ * DownloadMain visitor cleanup in dealloc).
+ */
 
 #import <UIKit/UIKit.h>
 

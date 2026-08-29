@@ -1,26 +1,23 @@
-//
-//  RewardNetworkWebViewController.h
-//  pop'n rhythmin
-//
-//  Full-screen web panel used by the bundled Konami **RewardNetwork**
-//  ("applilink") ad/reward SDK to present the reward app-list. A
-//  UIViewController that manually hosts a web view, a UINavigationBar (with a
-//  single "close" button) and a loading indicator, and re-lays them out for
-//  interface-orientation changes. It intercepts `applilink://` navigations
-//  (scheme launches / close commands) in the navigation-delegate callbacks.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (RewardNetworkWebViewController methods @ 0xec4d8..0xee150). Superclass is
-//  UIViewController (Ghidra shows -init/-loadView/-didReceiveMemoryWarning
-//  chaining to UIViewController, and the class object's superclass is
-//  UIViewController).
-//
-//  Six instance variables (types recovered from the decompiled ivar accesses):
-//    _webView (web view), _navigationBar (UINavigationBar*),
-//    _indicator (RewardNetworkIndicator*, an app-provided spinner view),
-//    _delegate (assigned, not retained), _isNavigationBarHidden (BOOL),
-//    _parentView (UIView*, retained).
-//
+/**
+ * @file
+ * @brief The full-screen web panel the bundled Konami RewardNetwork ("applilink") ad and reward
+ * SDK presents its app-list in.
+ *
+ * A UIViewController that manually hosts a web view, a UINavigationBar with a single "close"
+ * button, and a loading indicator, and re-lays them out for interface-orientation changes. It
+ * intercepts `applilink://` navigations, both scheme launches and close commands, in the
+ * navigation-delegate callbacks.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (RewardNetworkWebViewController
+ * methods @ 0xec4d8..0xee150). The superclass is UIViewController: Ghidra shows -init, -loadView,
+ * and -didReceiveMemoryWarning chaining to UIViewController, and the class object's superclass is
+ * UIViewController.
+ *
+ * There are six instance variables, with types recovered from the decompiled ivar accesses:
+ * _webView (the web view), _navigationBar (UINavigationBar *), _indicator
+ * (RewardNetworkIndicator *, an app-provided spinner view), _delegate (assigned, not retained),
+ * _isNavigationBarHidden (BOOL), and _parentView (UIView *, retained).
+ */
 
 #import <UIKit/UIKit.h>
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0

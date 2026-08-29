@@ -1,14 +1,13 @@
-//
-//  PurchaseManager.h
-//  pop'n rhythmin
-//
-//  StoreKit in-app-purchase manager: the payment-queue transaction observer and
-//  products-request delegate. Purchased products are re-validated against the
-//  Konami verify endpoint (SHA-256 digest bound to an embedded salt) before
-//  being unlocked, and the owned list is persisted Blowfish-encrypted (keyed by
-//  the device UUID), like the music lists. Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin.
-//
+/**
+ * @file
+ * @brief The StoreKit in-app-purchase manager: the payment-queue transaction observer and
+ * products-request delegate.
+ *
+ * Purchased products are re-validated against the Konami verify endpoint (SHA-256 digest bound to
+ * an embedded salt) before being unlocked, and the owned list is persisted Blowfish-encrypted
+ * (keyed by the device UUID), like the music lists. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin.
+ */
 
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>

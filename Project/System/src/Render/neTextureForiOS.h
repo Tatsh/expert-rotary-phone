@@ -1,13 +1,12 @@
-//
-//  neTextureForiOS.h
-//  pop'n rhythmin
-//
-//  A drawable sprite backed by a cached ne::C_TEXTURE. A bundled PNG is loaded
-//  through the shared texture cache (large images may be split into GL-max-size
-//  tiles), and the sprite is drawn straight into the ordering table as a
-//  textured quad. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (ctor FUN_00011818, load FUN_00011a2c, draw FUN_00011468).
-//
+/**
+ * @file
+ * @brief A drawable sprite backed by a cached ne::C_TEXTURE.
+ *
+ * A bundled PNG is loaded through the shared texture cache (large images may be split into
+ * GL-max-size tiles), and the sprite is drawn straight into the ordering table as a textured
+ * quad. Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor FUN_00011818, load
+ * FUN_00011a2c, draw FUN_00011468).
+ */
 
 #pragma once
 
@@ -30,16 +29,27 @@ class C_TEXTURE;
 class AepOrderingTable;
 class AepManager;
 
-// Acquire (ref-counted) the cached ne::C_TEXTURE for a bundled image path, loading
-// + uploading it on first use; returns null on load failure. Ghidra:
-// FUN_0001bbf0 (the shared texture cache, head list DAT_00188464). Implemented
-// in C_TEXTURE.mm.
+/**
+ * @brief Acquire, ref-counted, the cached ne::C_TEXTURE for a bundled image path.
+ *
+ * It loads and uploads the texture on first use. This is the shared texture cache, whose head
+ * list is DAT_00188464; it is implemented in C_TEXTURE.mm.
+ *
+ * @param path The bundled image path.
+ * @return The cached texture, or null on load failure.
+ * @ghidraAddress 0x1bbf0
+ */
 ne::C_TEXTURE *AepTextureCacheAcquire(const char *path);
 
-// Rebind a tile to a texture: release the tile's previously-bound texture and
-// retain the new one. Ghidra: FUN_000166ec (the decompiler drops the 2nd arg at
-// the call site, but it is a real incoming ne::C_TEXTURE* — verified in
-// disassembly).
+/**
+ * @brief Rebind a tile to a texture, releasing the tile's previously-bound texture and retaining
+ * the new one.
+ *
+ * @param tile The tile to rebind.
+ * @param tex The texture to bind. The decompiler drops this argument at the call site, but it is
+ * a real incoming ne::C_TEXTURE *, verified in disassembly.
+ * @ghidraAddress 0x166ec
+ */
 void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, ne::C_TEXTURE *tex);
 
 /**
@@ -213,9 +223,34 @@ private:
     std::unique_ptr<ne::C_SINGLE_SPRITE[]> m_tileRects; // +0x14 per-tile upload records
 };
 
-// Flat-argument sprite-draw wrapper the task draw passes call (Ghidra:
-// FUN_0000fbcc). Packs the args into a neSpriteDrawParams and emits `tex` into
-// aep's ordering table via tex->draw().
+/**
+ * @brief The flat-argument sprite-draw wrapper the task draw passes call.
+ *
+ * It packs the arguments into a neSpriteDrawParams and emits @p tex into @p aep's ordering table
+ * via tex->draw().
+ *
+ * @param aep The manager owning the ordering table.
+ * @param tex The sprite to draw.
+ * @param u Source rect left, in texels.
+ * @param v Source rect top, in texels.
+ * @param w Source rect width, in texels.
+ * @param h Source rect height, in texels.
+ * @param x Screen position x.
+ * @param y Screen position y.
+ * @param sx Scale x as a percentage.
+ * @param sy Scale y as a percentage.
+ * @param rotation Packed rotation word.
+ * @param ex Pivot x.
+ * @param ey Pivot y.
+ * @param color Colour (brightness) channel value.
+ * @param alpha Alpha channel value.
+ * @param blend0 Packed blend word.
+ * @param colorMul Packed 0x00RRGGBB colour multiplier.
+ * @param extra The four-int clip rect, or nullptr for the full screen.
+ * @param priority Ordering-table priority.
+ * @param layer The ordering-table layer.
+ * @ghidraAddress 0xfbcc
+ */
 void neTextureForiOS_draw(AepManager *aep,
                           neTextureForiOS *tex,
                           int u,

@@ -1,27 +1,24 @@
-//
-//  PopnLinkTopSplitViewController.h
-//  pop'n rhythmin
-//
-//  The iPad pop'n-link hub: a floating master/detail split panel over a dimmed
-//  backdrop. The left pane is a PopnLinkTopViewController (the section-button
-//  column); the right pane is a UINavigationController whose top controller is
-//  swapped between the KONAMI-ID input / score-checker / quiz sections by the
-//  left column's buttons (forwarded here through the left VC's delegate). While
-//  the player has not yet linked their pop'n-link (e-AMUSEMENT KID) the checker
-//  / quiz buttons instead route to the KONAMI-ID input screen
-//  (neAppEventCenter::linkButtonsEnabled()). Section swaps are block-based flip
-//  transitions; a selection arrow tracks the active row. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (init @ 0xe0b40, the shared
-//  open/close fade animations, the section handlers
-//  onInKidButtonTouched:/onScoreCheckerButtonTouched:/onQuizButtonTouched:).
-//
-//  Animation lifecycle (shared modal-VC pattern):
-//    startOpenAnimation  — fade the view (+ its nav view) 0 -> 1 over 0.5s;
-//    didStop ->
-//                          endOpenAnimation (clears the guard)
-//    startCloseAnimation — fade 1 -> 0 over 0.3s; didStop -> endCloseAnimation
-//    endCloseAnimation   — removeFromSuperview + [rootVC PopnLinkEndCallBack]
-//
+/**
+ * @file
+ * @brief The iPad pop'n-link hub: a floating master-detail split panel over a dimmed backdrop.
+ *
+ * The left pane is a PopnLinkTopViewController (the section-button column); the right pane is a
+ * UINavigationController whose top controller is swapped between the KONAMI-ID input,
+ * score-checker, and quiz sections by the left column's buttons, forwarded here through the left
+ * view controller's delegate. While the player has not yet linked their pop'n-link (e-AMUSEMENT
+ * KID) the checker and quiz buttons instead route to the KONAMI-ID input screen; see
+ * neAppEventCenter::linkButtonsEnabled(). Section swaps are block-based flip transitions; a
+ * selection arrow tracks the active row. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (init @ 0xe0b40, the shared open and close fade animations, and the section
+ * handlers onInKidButtonTouched:, onScoreCheckerButtonTouched:, and onQuizButtonTouched:).
+ *
+ * The animation lifecycle follows the shared modal view-controller pattern:
+ *
+ * - startOpenAnimation fades the view, and its nav view, 0 -> 1 over 0.5s; didStop reaches
+ *   endOpenAnimation, which clears the guard.
+ * - startCloseAnimation fades 1 -> 0 over 0.3s; didStop reaches endCloseAnimation.
+ * - endCloseAnimation removes the view from its superview and calls [rootVC PopnLinkEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

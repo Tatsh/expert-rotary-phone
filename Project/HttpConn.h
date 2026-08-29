@@ -1,19 +1,17 @@
-//
-//  HttpConn.h
-//  pop'n rhythmin
-//
-//  A small synchronous-style HTTP helper built directly on NSURLConnection (as
-//  an async delegate). Buffers the response into an NSMutableData, tracks the
-//  HTTP status code and the response text encoding (Shift-JIS vs UTF-8), and
-//  exposes the decoded body plus a coarse state machine via -status.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    init @ 0x6a550   get: @ 0x6a58c   post:paramString: @ 0x6a6c4
-//    connection:didReceiveResponse: @ 0x6a8c0   connection:didReceiveData: @
-//    0x6a978 connection:didFailWithError: @ 0x6a9c8 connectionDidFinishLoading:
-//    @ 0x6aa38 receivedString @ 0x6ab60   status @ 0x6ab74   setStatus: @
-//    0x6ab88
-//
+/**
+ * @file
+ * @brief A small synchronous-style HTTP helper built directly on NSURLConnection.
+ *
+ * It acts as an async delegate, buffers the response into an NSMutableData, tracks the HTTP
+ * status code and the response text encoding (Shift-JIS versus UTF-8), and exposes the decoded
+ * body plus a coarse state machine via -status.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: init @ 0x6a550, get: @ 0x6a58c,
+ * post:paramString: @ 0x6a6c4, connection:didReceiveResponse: @ 0x6a8c0,
+ * connection:didReceiveData: @ 0x6a978, connection:didFailWithError: @ 0x6a9c8,
+ * connectionDidFinishLoading: @ 0x6aa38, receivedString @ 0x6ab60, status @ 0x6ab74, and
+ * setStatus: @ 0x6ab88.
+ */
 
 #import <Foundation/Foundation.h>
 

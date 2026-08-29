@@ -1,22 +1,19 @@
-//
-//  RecommendViewController.h
-//  pop'n rhythmin
-//
-//  The "friend recommend" list: a grouped-style, separator-less
-//  UITableViewController of RecommendListCells, one per recommended music pack
-//  (from DownloadMain.recommendDataArray, sorted by update date, newest first).
-//  Tapping a row opens the in-app StoreViewController on that recommended pack;
-//  the back button re-sorts the owning C++ MainTask's song list (when a
-//  store was opened) and fades the panel closed. Wrapped in its own
-//  UINavigationController (with a back button on phone) and driven by the
-//  shared fade/slide open/close lifecycle. Pushed by
-//  MainViewController.GotoRecommend:.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0xbbd68, initAtNavigationController: @ 0xbc30c, the table
-//  data source / delegate, the open/close animations and the musicSelTask /
-//  isAnimationing accessors).
-//
+/**
+ * @file
+ * @brief The "friend recommend" list.
+ *
+ * A grouped-style, separator-less UITableViewController of RecommendListCells, one per recommended
+ * music pack, taken from DownloadMain.recommendDataArray and sorted by update date, newest first.
+ * Tapping a row opens the in-app StoreViewController on that recommended pack; the back button
+ * re-sorts the owning C++ MainTask's song list, when a store was opened, and fades the panel
+ * closed. It is wrapped in its own UINavigationController, with a back button on phone, and driven
+ * by the shared fade and slide open and close lifecycle. MainViewController.GotoRecommend: pushes
+ * it.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xbbd68,
+ * initAtNavigationController: @ 0xbc30c, the table data source and delegate, the open and close
+ * animations, and the musicSelTask and isAnimationing accessors).
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -9,6 +9,9 @@
 - By default use decimal integer literals unless hex is required for bitwise operations or when it
   genuinely aids readability.
 - Use `.h` extension for all headers regardless of language.
+- Editor modelines belong only at the end of an Objective-C or Objective-C++ header, where the
+  `.h` extension does not reveal the language (see the Objective-C section for the exact block).
+  C and C++ headers and implementation files of every language carry none.
 - Include grouping: the file's own header first, then system, first party (Apple, etc), third party,
   and ours (in double quotes). Each group is separated by a single blank line:
 
@@ -120,7 +123,7 @@ reconstructed code faithful to the original.
 - Create constants with k-prefixes for global constants and static const for file-level constants.
   Use `NSString *const` for string constants.
 - Use `@available()` to check for API availability. Prefer runtime checks over compile-time.
-- Headers: always add modelines to the end of the file:
+- Headers: Objective-C and Objective-C++ headers always end with modelines:
 
   ```objc
   // code: language=Objective-C

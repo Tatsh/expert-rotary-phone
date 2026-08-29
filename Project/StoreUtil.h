@@ -1,12 +1,11 @@
-//
-//  StoreUtil.h
-//  pop'n rhythmin
-//
-//  Server configuration + URL builder for the app's web APIs. All endpoints are
-//  built through three base URLs (the game API over http/https, and the
-//  official eAmusement site) and a per-endpoint path. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (StoreUtil @ 0x58904..0x5a060).
-//
+/**
+ * @file
+ * @brief The server configuration and URL builder for the app's web APIs.
+ *
+ * Every endpoint is built through three base URLs — the game API over HTTP and HTTPS, and the
+ * official eAmusement site — plus a per-endpoint path. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin (StoreUtil @ 0x58904..0x5a060).
+ */
 
 #import <Foundation/Foundation.h>
 

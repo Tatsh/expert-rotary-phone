@@ -1,17 +1,16 @@
-//
-//  StoreDetailViewController.h
-//  pop'n rhythmin
-//
-//  The iPhone-side pack-detail screen: a pushed UIViewController (custom back
-//  button in the nav bar) showing a StorePackInfo — a table of songs under a
-//  StoreDetailHeaderView (jacket + name + price/buy button), with a loading
-//  overlay and a dummy cover for in-flight work. The iPad counterpart is the
-//  embedded StorePackDetailViewPad.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
-//  0x6f8c0, loadView @ 0x6fa3c, setPackInfo: @ 0x72d1c, setDelegate: @ 0x72d3c;
-//  built by StoreMainViewController -showDetailViewForPhone: @ 0x4934c).
-//
+/**
+ * @file
+ * @brief The iPhone-side pack-detail screen.
+ *
+ * A pushed UIViewController, with a custom back button in the nav bar, showing a StorePackInfo: a
+ * table of songs under a StoreDetailHeaderView carrying the jacket, name, and price or buy button,
+ * with a loading overlay and a dummy cover for in-flight work. The iPad counterpart is the
+ * embedded StorePackDetailViewPad.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0x6f8c0, loadView @
+ * 0x6fa3c, setPackInfo: @ 0x72d1c, setDelegate: @ 0x72d3c; built by StoreMainViewController
+ * -showDetailViewForPhone: @ 0x4934c).
+ */
 
 #import <UIKit/UIKit.h>
 

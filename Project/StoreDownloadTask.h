@@ -1,14 +1,13 @@
-//
-//  StoreDownloadTask.h
-//  pop'n rhythmin
-//
-//  One file in a store download: its remote source URL, local destination path,
-//  and an arbitrary object to hand back / queue when the download completes.
-//  Consumed by StoreDownloadManager. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (initWithURL:path:AddObject: @ 0x42700, dealloc @
-//  0x427dc, and the synthesized getters fileURL @ 0x42854, filePath @ 0x42864,
-//  addObject @ 0x42874).
-//
+/**
+ * @file
+ * @brief One file in a store download.
+ *
+ * It carries the remote source URL, the local destination path, and an arbitrary object to hand
+ * back or queue when the download completes. StoreDownloadManager consumes it. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initWithURL:path:AddObject: @ 0x42700, dealloc @
+ * 0x427dc, and the synthesised getters fileURL @ 0x42854, filePath @ 0x42864, and addObject @
+ * 0x42874).
+ */
 
 #import <Foundation/Foundation.h>
 

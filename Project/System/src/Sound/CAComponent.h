@@ -1,6 +1,8 @@
-/** @file
- * The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output. Each
- * mixer input ("voice") streams one CASound's PCM through a render callback. This is the
+/**
+ * @file
+ * @brief The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output.
+ *
+ * Each mixer input ("voice") streams one CASound's PCM through a render callback. This is the
  * lib_rsnd / caplayer engine, reconstructed rather than imported.
  */
 
@@ -199,7 +201,3 @@ private:
     int m_voiceCount = 0;                           // +0x18
     std::vector<std::unique_ptr<CAVoice>> m_voices; // +0x1c
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

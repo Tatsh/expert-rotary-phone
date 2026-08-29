@@ -1,41 +1,32 @@
-//
-//  PlayResultTask.h
-//  pop'n rhythmin
-//
-//  The note-play result screen, spawned by the play task on a completed normal
-//  play (PlayTaskGotoResult -> PlayResultCreateTask). Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (ctor FUN_0003d5bc, update
-//  FUN_0003d690).
-//
-//  Like AcMainTask, update() is a state machine reached by byte offset into a
-//  flat data block; it is reconstructed in pieces. The screen: fade/BGM in
-//  (0-1), present the score + a Twitter share button and run the rank jingle
-//  (2), count the score up with a tick SE (3-6), wait for a dismiss tap (7),
-//  show the "communicating" overlay while the score upload finishes (8-9), then
-//  fade out and hand off (10-0xc). The animation layers it drives (m_layers @
-//  +0x214..+0x228) are AepLyrCtrl overlays that the intro/score cues also drive
-//  as one-shot SE cues (the SeInstance.h helpers are AepLyrCtrl methods). Progress
-//  tracked in STUBS.md.
-//
-//  ---- work area (this class IS the 0x3a0-byte result-data struct) ----
-//  ne::C_TASK's base is exactly 0x28 bytes, so the members below land at their true
-//  binary offsets. The whole body is memset 0 by the ctor (FUN_0003d5bc: memset
-//  +0x28..+0x3a0
-//  == 0x378 bytes). Every offset the reconstructed methods (resultSetup / the
-//  update state machine / loadNumberTextures / resultGotoNext / the draw
-//  callback) reach by flat
-//  `*(T*)(this+off)` in the binary is named at its exact offset (with a `//
-//  +0xNN` comment). Gaps verified against Ghidra are named for what they are:
-//  `_pad_NN` for alignment padding before a wider field, `unused_NN` for dead
-//  allocation gaps no reconstructed method reaches. The two interior gaps
-//  (+0x310..+0x32b and +0x330..+0x33b) are the latter: a program-wide instruction
-//  search finds no resultTask access to those offsets (only stack frames, literal
-//  pools, and other classes' objects), so they are kept as `unused_NN`.
-//
-//  NOTE (target ABI): offsets assume the 32-bit ARMv7 target (pointers and
-//  `unsigned long` are 4 bytes), matching the reference reworks; this header is
-//  documentary and is not host-compiled.
-//
+/**
+ * @file
+ * @brief The note-play result screen, spawned by the play task on a completed normal play.
+ *
+ * Reached through PlayTaskGotoResult and PlayResultCreateTask. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin (ctor FUN_0003d5bc, update FUN_0003d690).
+ *
+ * Like AcMainTask, update() is a state machine reached by byte offset into a flat data block; it
+ * is reconstructed in pieces. The screen fades the BGM in (0-1), presents the score and a Twitter
+ * share button and runs the rank jingle (2), counts the score up with a tick SE (3-6), waits for
+ * a dismiss tap (7), shows the "communicating" overlay while the score upload finishes (8-9),
+ * then fades out and hands off (10-0xc). The animation layers it drives (m_layers @
+ * +0x214..+0x228) are AepLyrCtrl overlays that the intro and score cues also drive as one-shot SE
+ * cues (the SeInstance.h helpers are AepLyrCtrl methods). Progress tracked in STUBS.md.
+ *
+ * Work area (this class IS the 0x3a0-byte result-data struct): ne::C_TASK's base is exactly 0x28
+ * bytes, so the members below land at their true binary offsets. The whole body is memset 0 by
+ * the ctor (FUN_0003d5bc: memset +0x28..+0x3a0, 0x378 bytes). Every offset the reconstructed
+ * methods (resultSetup, the update state machine, loadNumberTextures, resultGotoNext, and the
+ * draw callback) reach by flat `*(T*)(this+off)` in the binary is named at its exact offset (with
+ * a `// +0xNN` comment). Gaps verified against Ghidra are named for what they are: `_pad_NN` for
+ * alignment padding before a wider field, `unused_NN` for dead allocation gaps no reconstructed
+ * method reaches. The two interior gaps (+0x310..+0x32b and +0x330..+0x33b) are the latter: a
+ * program-wide instruction search finds no resultTask access to those offsets (only stack frames,
+ * literal pools, and other classes' objects), so they are kept as `unused_NN`.
+ *
+ * Target ABI: offsets assume the 32-bit ARMv7 target (pointers and `unsigned long` are 4 bytes),
+ * matching the reference reworks; this header is documentary and is not host-compiled.
+ */
 
 #pragma once
 
@@ -243,7 +234,3 @@ private:
     void *m_tweeter = nullptr;               // +0x39c TwitterUtil (unmanaged +1)
                                              // object end +0x3a0
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

@@ -1,23 +1,18 @@
-//
-//  RecommendWebViewController.h
-//  pop'n rhythmin
-//
-//  Konami "Applilink" Recommend ad SDK — the in-app web view that hosts the
-//  recommend/ad content. It is a thin subclass of
-//  RewardNetworkWebViewController that (a) tears the web view out of its
-//  superview on unload/close and (b) lets RecommendCore intercept
-//  "applilink://" redirect requests, closing the applist when a plain link is
-//  tapped.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Superclass
-//  determined from the Objective-C class_t metadata (superclass name
-//  "RewardNetworkWebViewController"); the
-//  viewDidLoad/didReceiveMemoryWarning/viewDidUnload/appliListClosed bodies
-//  chain up to it.
-//    viewDidLoad @ 0xe97ac   didReceiveMemoryWarning @ 0xe97d8   viewDidUnload
-//    @ 0xe9804 removeFromSuperview @ 0xe9878   appliListClosed @ 0xe988c
-//    webView:shouldStartLoadWithRequest:navigationType: @ 0xe98ec
-//
+/**
+ * @file
+ * @brief The in-app web view hosting the Konami "Applilink" Recommend ad SDK's content.
+ *
+ * A thin subclass of RewardNetworkWebViewController that tears the web view out of its superview
+ * on unload or close, and lets RecommendCore intercept "applilink://" redirect requests, closing
+ * the applist when a plain link is tapped.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. The superclass is determined from
+ * the Objective-C class_t metadata, whose superclass name is "RewardNetworkWebViewController"; the
+ * viewDidLoad, didReceiveMemoryWarning, viewDidUnload, and appliListClosed bodies chain up to it:
+ * viewDidLoad @ 0xe97ac, didReceiveMemoryWarning @ 0xe97d8, viewDidUnload @ 0xe9804,
+ * removeFromSuperview @ 0xe9878, appliListClosed @ 0xe988c, and
+ * webView:shouldStartLoadWithRequest:navigationType: @ 0xe98ec.
+ */
 
 #import <UIKit/UIKit.h>
 

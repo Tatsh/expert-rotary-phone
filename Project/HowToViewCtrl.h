@@ -1,13 +1,12 @@
-//
-//  HowToViewCtrl.h
-//  pop'n rhythmin
-//
-//  A shared tutorial overlay: a horizontally-paged strip of how-to images (a
-//  HowToView) with a UIPageControl and a nav-bar back / close button. Used on
-//  first entry to several screens (e.g. the friend hub pushes it with
-//  "firstplay_friend"). Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithFileNameArray: @ 0x82e5c, viewDidLoad @ 0x82eb0).
-//
+/**
+ * @file
+ * @brief A shared tutorial overlay.
+ *
+ * A horizontally-paged strip of how-to images (a HowToView) with a UIPageControl and a nav-bar
+ * back or close button. It is used on first entry to several screens; the friend hub, for
+ * example, pushes it with "firstplay_friend". Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithFileNameArray: @ 0x82e5c, viewDidLoad @ 0x82eb0).
+ */
 
 #import <UIKit/UIKit.h>
 

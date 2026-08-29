@@ -1,6 +1,9 @@
-/** @file
- * Fetch, insert and reset methods on the ArcadeScoreData entity (the arcade-machine score
- * mirror). Reconstructed from Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief Fetch, insert and reset methods on the ArcadeScoreData entity, the arcade-machine score
+ * mirror.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <CoreData/CoreData.h>

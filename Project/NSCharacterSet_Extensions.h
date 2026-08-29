@@ -1,13 +1,12 @@
-//
-//  NSCharacterSet_Extensions.h
-//  pop'n rhythmin
-//
-//  TouchJSON category on Foundation's NSCharacterSet. Provides the set of
-//  Unicode line-break characters used by the comment/line scanners
-//  (LF, FF, CR, NEL, LINE SEPARATOR, PARAGRAPH SEPARATOR).
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//
+/**
+ * @file
+ * @brief The TouchJSON category on Foundation's NSCharacterSet.
+ *
+ * It provides the set of Unicode line-break characters the comment and line scanners use: LF, FF,
+ * CR, NEL, LINE SEPARATOR, and PARAGRAPH SEPARATOR.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
+ */
 
 #import <Foundation/Foundation.h>
 

@@ -1,21 +1,21 @@
-//
-//  CharaManager.h
-//  pop'n rhythmin
-//
-//  Owns the three character lists the game builds at startup and after any
-//  download. Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  In the binary this is a global 12-byte struct at DAT_00187d98 (three ObjC
-//  array pointers) operated on by free functions that take its address; modeled
-//  here as a C++ class with a single global instance (gCharaManager). The three
-//  members are, in order: preferred sets, limited sets, and the filtered list
-//  of characters currently available to the player.
-//    * reload()                      = FUN_000b85bc
-//    * isCharaAvailable()            = FUN_000b9048 (private helper)
-//    * availableInfos()              = FUN_000b9304
-//    * availableInfoForCharaId()     = FUN_000b9308
-//    * collectUnlockedCharaIds()     = FUN_000b93d0
-//
+/**
+ * @file
+ * @brief The owner of the three character lists the game builds at startup and after any
+ * download.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * In the binary this is a global 12-byte struct at DAT_00187d98 (three Objective-C array
+ * pointers) operated on by free functions that take its address; it is modelled here as a C++
+ * class with a single global instance (gCharaManager). The three members are, in order: preferred
+ * sets, limited sets, and the filtered list of characters currently available to the player.
+ *
+ * - reload() = FUN_000b85bc
+ * - isCharaAvailable() = FUN_000b9048 (private helper)
+ * - availableInfos() = FUN_000b9304
+ * - availableInfoForCharaId() = FUN_000b9308
+ * - collectUnlockedCharaIds() = FUN_000b93d0
+ */
 
 #pragma once
 
@@ -111,6 +111,6 @@ class AcMainTask;
  */
 int countAvailableCharacters(NSArray *gotCharaArray);
 
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
+// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4

@@ -1,12 +1,11 @@
-//
-//  QuizCell.h
-//  pop'n rhythmin
-//
-//  A quiz answer row: an answer-base image (default / cover / ok / ng) behind a
-//  centered answer label, plus a small answer-number badge on the side.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xd9bac).
-//
+/**
+ * @file
+ * @brief A quiz answer row.
+ *
+ * An answer-base image (default, cover, ok, or ng) behind a centred answer label, plus a small
+ * answer-number badge on the side. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithStyle:reuseIdentifier: @ 0xd9bac).
+ */
 
 #import <UIKit/UIKit.h>
 

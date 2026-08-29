@@ -1,8 +1,11 @@
-/** @file
- * The engine-side renderer facade: the abstract renderer interface, the global "current
- * renderer", the immediate drawing primitives (line, triangle, rect, quad and textured quad), the
- * 4x4 matrix helpers, the orthographic viewport object and the scene-graph transform node.
- * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief The engine-side renderer facade.
+ *
+ * It covers the abstract renderer interface, the global "current renderer", the immediate drawing
+ * primitives (line, triangle, rect, quad and textured quad), the 4x4 matrix helpers, the
+ * orthographic viewport object and the scene-graph transform node. Reconstructed from Ghidra
+ * project rb420, program PopnRhythmin.
  *
  * Every primitive funnels through a single polymorphic renderer created by neEnsureRenderer().
  * ne::C_RENDER is the abstract interface those primitives call; the concrete backend is
@@ -483,7 +486,3 @@ public:
     neMatrix4 worldMatrix{};                /**< +0x70 The cached world transform. */
     bool visible = true;                    /**< +0xb1 Whether the node and its subtree draw. */
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

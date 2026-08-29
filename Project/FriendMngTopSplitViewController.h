@@ -1,28 +1,25 @@
-//
-//  FriendMngTopSplitViewController.h
-//  pop'n rhythmin
-//
-//  The iPad friend-management hub: a floating master/detail split panel over a
-//  dimmed backdrop. The left pane is a FriendMngTopViewController (the
-//  section-button column); the right pane is a UINavigationController whose top
-//  controller is swapped between the friend list / "presenting" (requests you
-//  sent) / reply sections by the left column's buttons (forwarded here through
-//  the left VC's delegate). Section swaps are block-based flip transitions; a
-//  selection arrow tracks the active row. The iPhone sibling is
-//  FriendMngTopViewController itself. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (init @ 0xc3358, the shared open/close fade animations,
-//  the section handlers
-//  onListButtonTouched:/onRequestButtonTouched:/onReplyButtonTouched:).
-//
-//  All the app's modal view controllers share this animation lifecycle:
-//    startOpenAnimation  — fade the view (+ its nav controller view) 0 -> 1
-//    over 0.5s;
-//                          didStop -> endOpenAnimation (clears the guard, shows
-//                          the first-play how-to once)
-//    startCloseAnimation — fade 1 -> 0 over 0.3s; didStop -> endCloseAnimation
-//    endCloseAnimation   — removeFromSuperview + [rootVC
-//    FriendManageEndCallBack]
-//
+/**
+ * @file
+ * @brief The iPad friend-management hub: a floating master-detail split panel over a dimmed
+ * backdrop.
+ *
+ * The left pane is a FriendMngTopViewController (the section-button column); the right pane is a
+ * UINavigationController whose top controller is swapped between the friend list, "presenting"
+ * (requests you sent), and reply sections by the left column's buttons, forwarded here through
+ * the left view controller's delegate. Section swaps are block-based flip transitions; a
+ * selection arrow tracks the active row. The iPhone sibling is FriendMngTopViewController itself.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0xc3358, the shared open
+ * and close fade animations, and the section handlers onListButtonTouched:,
+ * onRequestButtonTouched:, and onReplyButtonTouched:).
+ *
+ * All the app's modal view controllers share this animation lifecycle:
+ *
+ * - startOpenAnimation fades the view, and its nav controller view, 0 -> 1 over 0.5s; didStop
+ *   reaches endOpenAnimation, which clears the guard and shows the first-play how-to once.
+ * - startCloseAnimation fades 1 -> 0 over 0.3s; didStop reaches endCloseAnimation.
+ * - endCloseAnimation removes the view from its superview and calls [rootVC
+ *   FriendManageEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

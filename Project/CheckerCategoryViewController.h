@@ -1,22 +1,18 @@
-//
-//  CheckerCategoryViewController.h
-//  pop'n rhythmin
-//
-//  The music-checker's genre-category list: a transparent, separator-less
-//  grouped UITableView (one CheckerCategoryCell per non-empty category) with a
-//  "get data" button in its header that syncs the player's arcade scores over
-//  HTTP. Selecting a row pushes the CheckerMusicViewController song list for
-//  that category. A dimmed "dummy" cover view + spinner is shown while a sync
-//  is in flight.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0xcfb88, the score-sync download flow, the table data
-//  source / delegate and the header actions).
-//
-//  .mm because it drives the C++ "ne" engine singletons via neEngineBridge
-//  (scene- manager pad flag, the system-SE hooks and the e-AMUSEMENT login
-//  context).
-//
+/**
+ * @file
+ * @brief The music-checker's genre-category list.
+ *
+ * A transparent, separator-less grouped UITableView (one CheckerCategoryCell per non-empty
+ * category) with a "get data" button in its header that syncs the player's arcade scores over
+ * HTTP. Selecting a row pushes the CheckerMusicViewController song list for that category. A
+ * dimmed "dummy" cover view and spinner are shown while a sync is in flight.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xcfb88, the
+ * score-sync download flow, the table data source and delegate, and the header actions).
+ *
+ * The implementation is .mm because it drives the C++ "ne" engine singletons via neEngineBridge:
+ * the scene-manager pad flag, the system-SE hooks, and the e-AMUSEMENT login context.
+ */
 
 #import <UIKit/UIKit.h>
 

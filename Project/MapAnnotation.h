@@ -1,16 +1,14 @@
-//
-//  MapAnnotation.h
-//  pop'n rhythmin
-//
-//  A map pin for the arcade-locator map: an MKAnnotation carrying a coordinate,
-//  a title/subtitle and the arcade's model name. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin
-//  (initWithCoordinate:Title:SubTitle:Model: @ 0x850e4, dealloc @ 0x851c8,
-//  setCoordinate: @ 0x85264, modelName @ 0x85288, coordinate @ 0x85298, title @
-//  0x852b0, subtitle @ 0x852c4).
-//
-//  Binary Objective-C metadata: superclass NSObject, adopts <MKAnnotation>.
-//
+/**
+ * @file
+ * @brief A map pin for the arcade-locator map.
+ *
+ * An MKAnnotation carrying a coordinate, a title and subtitle, and the arcade's model name.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithCoordinate:Title:SubTitle:Model: @ 0x850e4, dealloc @ 0x851c8, setCoordinate: @
+ * 0x85264, modelName @ 0x85288, coordinate @ 0x85298, title @ 0x852b0, subtitle @ 0x852c4).
+ *
+ * The binary's Objective-C metadata gives the superclass as NSObject, adopting `<MKAnnotation>`.
+ */
 
 #import <Foundation/Foundation.h>
 #import <MapKit/MapKit.h>

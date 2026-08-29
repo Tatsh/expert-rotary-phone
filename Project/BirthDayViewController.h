@@ -1,17 +1,15 @@
-//
-//  BirthDayViewController.h
-//  pop'n rhythmin
-//
-//  The age-gate modal shown before a purchase when no birthday is on record
-//  (Japan's youth spending-limit compliance): a rounded, gradient-bordered
-//  panel that slides in over a dimmed backdrop, showing an instruction text
-//  view, a YearAndMonthPicker, and OK / Cancel / Decide buttons. Entering a
-//  birthday saves it and notifies the delegate so the purchase flow can
-//  re-evaluate the limit. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (init @ 0x8396c, onOkBtn: @ 0x848d4, onDecideBtn: @ 0x84af0,
-//  onCancelBtn: @ 0x84c30, startOpenAnimation @ 0x84c80, endOpenAnimation @
-//  0x84e70, startCloseAnimation @ 0x84e84, endCloseAnimation @ 0x84fec).
-//
+/**
+ * @file
+ * @brief The age-gate modal shown before a purchase when no birthday is on record.
+ *
+ * This is Japan's youth spending-limit compliance: a rounded, gradient-bordered panel that slides
+ * in over a dimmed backdrop, showing an instruction text view, a YearAndMonthPicker, and OK,
+ * Cancel, and Decide buttons. Entering a birthday saves it and notifies the delegate so the
+ * purchase flow can re-evaluate the limit. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (init @ 0x8396c, onOkBtn: @ 0x848d4, onDecideBtn: @ 0x84af0, onCancelBtn: @
+ * 0x84c30, startOpenAnimation @ 0x84c80, endOpenAnimation @ 0x84e70, startCloseAnimation @
+ * 0x84e84, endCloseAnimation @ 0x84fec).
+ */
 
 #import <UIKit/UIKit.h>
 

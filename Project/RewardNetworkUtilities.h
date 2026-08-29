@@ -1,12 +1,11 @@
-//
-//  RewardNetworkUtilities.h
-//  pop'n rhythmin
-//
-//  Konami "RewardNetwork" (Applilink) ad-SDK grab-bag of stateless helpers.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. No instance
-//  state (instanceSize 4 == isa only, no ivars, no instance methods); the 11
-//  helpers below all live on the metaclass.
-//
+/**
+ * @file
+ * @brief The Konami "RewardNetwork" (Applilink) ad-SDK grab-bag of stateless helpers.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. It holds no instance state
+ * (instanceSize 4, isa only, no ivars, no instance methods); the 11 helpers below all live on the
+ * metaclass.
+ */
 
 #import <UIKit/UIKit.h>
 

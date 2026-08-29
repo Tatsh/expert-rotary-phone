@@ -1,5 +1,8 @@
-/** @file
- * Fetch, insert, query and reset methods on the TreasureData entity (sugoroku board progress).
+/**
+ * @file
+ * @brief Fetch, insert, query and reset methods on the TreasureData entity, the sugoroku board
+ * progress.
+ *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 

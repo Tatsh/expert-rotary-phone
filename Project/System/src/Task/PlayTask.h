@@ -1,38 +1,31 @@
-//
-//  PlayTask.h
-//  pop'n rhythmin
-//
-//  The standard-mode NOTE-PLAY task: the actual gameplay screen. It runs the
-//  play clock, drives the per-frame note judge/render pass (playJudgeUpdate /
-//  NoteMng), handles the pause menu, fires combo SEs, watches the gauge + song
-//  end, and hands off to the result screen. Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin (init PlayTask_init FUN_0002e2d8, update
-//  PlayTask_update FUN_0002dc14).
-//
-//  This task's storage IS the play data the judge pass operates on (state @
-//  +0x9fc, judge-state pool @ +0x3c8, scale/radius @ +0x974/+0x9b8). The judge
-//  pass is the member playJudgeUpdate() (its body lives in the note engine,
-//  Game/Note/PlayJudge.mm); PlayJudge.h only declares the NoteJudgeState pool
-//  element. The heavy per-state screen geometry is delegated to the note draw +
-//  pause-menu units.
-//
-//  ---- work area (this class IS the 0xa00-byte play-data struct) ----
-//  ne::C_TASK's base is exactly 0x28 bytes, so the members below land at their true
-//  binary offsets. The whole body is memset 0 by playTask_ctor (@ 0x2db2c:
-//  memset +0x28..+0x9fc
-//  == 0x9d4 bytes, then m_state @ +0x9fc). Every offset the reconstructed
-//  methods (resetState / reloadChart / updateGauge / update) reach by flat
-//  `*(T*)(this+off)` is named at its exact offset (with a `// +0xNN` comment);
-//  genuine gaps are `_rsvd_NN[]` fillers. The device-branched HUD/layout tables
-//  that PlayTask_init fills by name (scene textures @ +0x28, resolved Aep
-//  layer/frame/user-number tables @ +0xc4, pause- menu + note-field + popkun
-//  geometry @ +0x978) are the members the play-scene lifecycle seams
-//  (PlayScene.mm: PlayTaskInit / PlayBuildFieldLayers / PlayTaskDraw /
-//  PlayTaskGotoResult) fill and read, so they are named here at their exact
-//  offsets; the few sub-regions no reconstructed function reaches stay
-//  documented `_rsvd_NN[]` fillers. The per-note judge pool @ +0x3c8 is the
-//  real NoteJudgeState[60] array PlayJudge.h defines.
-//
+/**
+ * @file
+ * @brief The standard-mode note-play task: the gameplay screen itself.
+ *
+ * It runs the play clock, drives the per-frame note judge and render pass (playJudgeUpdate,
+ * NoteMng), handles the pause menu, fires combo SEs, watches the gauge and song end, and hands
+ * off to the result screen. Reconstructed from Ghidra project rb420, program PopnRhythmin (init
+ * PlayTask_init FUN_0002e2d8, update PlayTask_update FUN_0002dc14).
+ *
+ * This task's storage IS the play data the judge pass operates on (state @ +0x9fc, judge-state
+ * pool @ +0x3c8, scale and radius @ +0x974/+0x9b8). The judge pass is the member
+ * playJudgeUpdate(), whose body lives in the note engine (Game/Note/PlayJudge.mm); PlayJudge.h
+ * only declares the NoteJudgeState pool element. The heavy per-state screen geometry is delegated
+ * to the note draw and pause-menu units.
+ *
+ * Work area (this class IS the 0xa00-byte play-data struct): ne::C_TASK's base is exactly 0x28
+ * bytes, so the members below land at their true binary offsets. The whole body is memset 0 by
+ * playTask_ctor (@ 0x2db2c: memset +0x28..+0x9fc, 0x9d4 bytes, then m_state @ +0x9fc). Every
+ * offset the reconstructed methods (resetState, reloadChart, updateGauge, update) reach by flat
+ * `*(T*)(this+off)` is named at its exact offset (with a `// +0xNN` comment); genuine gaps are
+ * `_rsvd_NN[]` fillers. The device-branched HUD and layout tables that PlayTask_init fills by
+ * name (scene textures @ +0x28, resolved Aep layer, frame, and user-number tables @ +0xc4,
+ * pause-menu, note-field, and popkun geometry @ +0x978) are the members the play-scene lifecycle
+ * seams (PlayScene.mm: PlayTaskInit, PlayBuildFieldLayers, PlayTaskDraw, PlayTaskGotoResult) fill
+ * and read, so they are named here at their exact offsets; the few sub-regions no reconstructed
+ * function reaches stay documented `_rsvd_NN[]` fillers. The per-note judge pool @ +0x3c8 is the
+ * real NoteJudgeState[60] array PlayJudge.h defines.
+ */
 
 #pragma once
 
@@ -49,94 +42,119 @@ class AepLyrCtrl;
 class neAppEventCenter;
 class neTextureForiOS;
 
-// Indices into PlayTask::m_sceneLayers (the +0x98 bank of AepLyrCtrl layers, some
-// driven as one-shot SE cues). [0..2] are the sustained combo-milestone effect
-// tiers (the judge holds the crossed tier paused and resets the others); [4..10]
-// are the song-clear rank jingles fired by playEndResultSe.
+/**
+ * @brief Indices into PlayTask::m_sceneLayers, the +0x98 bank of AepLyrCtrl layers, some driven
+ * as one-shot SE cues.
+ *
+ * Slots 0..2 are the sustained combo-milestone effect tiers; the judge holds the crossed tier
+ * paused and resets the others. Slots 4..10 are the song-clear rank jingles playEndResultSe
+ * fires.
+ */
 enum SceneLayer {
-    kSceneComboTier5 = 0,       // sustained combo effect for combo band 5..9
-    kSceneComboTier10 = 1,      // ...10..99
-    kSceneComboTier100 = 2,     // ...100+
-    kSceneLayer3 = 3,           // paused at song end (Ghidra: Pause(pAepLyrSub[3]))
-    kSceneRankClearMiss = 4,    // score >= 70000, some GOOD/BAD, combo broken
-    kSceneRankClearFC = 5,      // score >= 70000, some GOOD/BAD, full combo
-    kSceneRankPerfectGreat = 6, // score >= 70000, no GOOD/BAD, at least one GREAT
-    kSceneRankPerfectCool = 7,  // score >= 70000, no GOOD/BAD, all COOL
-    kSceneRankFailMiss = 8,     // score < 70000, combo broken
-    kSceneRankFailFC = 9,       // score < 70000, full combo
-    kSceneRankFanfare = 10,     // clear fanfare, layered over the chosen rank jingle
+    kSceneComboTier5 = 0,   /**< Sustained combo effect for the combo band 5..9. */
+    kSceneComboTier10 = 1,  /**< Sustained combo effect for the combo band 10..99. */
+    kSceneComboTier100 = 2, /**< Sustained combo effect for combos of 100 or more. */
+    /** Paused at song end (Ghidra: Pause(pAepLyrSub[3])). */
+    kSceneLayer3 = 3,
+    kSceneRankClearMiss = 4,    /**< Score 70000 or above, some GOOD or BAD, combo broken. */
+    kSceneRankClearFC = 5,      /**< Score 70000 or above, some GOOD or BAD, full combo. */
+    kSceneRankPerfectGreat = 6, /**< Score 70000 or above, no GOOD or BAD, at least one GREAT. */
+    kSceneRankPerfectCool = 7,  /**< Score 70000 or above, no GOOD or BAD, all COOL. */
+    kSceneRankFailMiss = 8,     /**< Score below 70000, combo broken. */
+    kSceneRankFailFC = 9,       /**< Score below 70000, full combo. */
+    kSceneRankFanfare = 10,     /**< Clear fanfare, layered over the chosen rank jingle. */
 };
 
-// Indices into PlayTask::m_scoreBpmLyr / m_scoreBpmFrames (the +0x154 / +0x168
-// handle + frame-count tables). Names from the getLyrNo source layer names.
+/**
+ * @brief Indices into PlayTask::m_scoreBpmLyr and m_scoreBpmFrames, the +0x154 and +0x168 handle
+ * and frame-count tables.
+ *
+ * The names come from the getLyrNo source layer names.
+ */
 enum ScoreBpmLayer {
-    kScoreBpmScoreGauge = 0, // BG_*_BPM2SCORE — score gauge (skipped in the auto-demo)
-    kScoreBpmBestGauge = 1,  // BG_*_BPM0 — best gauge (effects-on only)
-    kScoreBpmComboGauge = 2, // BG_*_BPM1 — combo gauge (always drawn)
-    kScoreBpmFeverLo = 3,    // BGMTSCO_TW0_* — fever gauge, score < 70000
-    kScoreBpmFeverHi = 4,    // BGMTSCO_TW1_* — fever gauge, score >= 70000
+    kScoreBpmScoreGauge = 0, /**< BG_*_BPM2SCORE, the score gauge; skipped in the auto-demo. */
+    kScoreBpmBestGauge = 1,  /**< BG_*_BPM0, the best gauge; effects-on only. */
+    kScoreBpmComboGauge = 2, /**< BG_*_BPM1, the combo gauge; always drawn. */
+    kScoreBpmFeverLo = 3,    /**< BGMTSCO_TW0_*, the fever gauge for a score below 70000. */
+    kScoreBpmFeverHi = 4,    /**< BGMTSCO_TW1_*, the fever gauge for a score of 70000 or above. */
 };
 
-// Indices into PlayTask::m_effectStateLyr / m_effectStateFrames (the +0xe4 /
-// +0x11c tables), in the order kEffectStateNames resolves them.
+/**
+ * @brief Indices into PlayTask::m_effectStateLyr and m_effectStateFrames, the +0xe4 and +0x11c
+ * tables, in the order kEffectStateNames resolves them.
+ */
 enum EffectStateLayer {
-    kEffectStateGgHantei = 0,    // GG_HANTEI (judge-ground flash)
-    kEffectStateNearUnder = 1,   // EFF_NEAR_UNDER
-    kEffectStateHitOver = 2,     // EFF_HIT_OVER
-    kEffectStateHitOver2 = 3,    // EFF_HIT_OVER2
-    kEffectStateHitOverMore = 4, // EFF_HIT_OVER_MORE
-    kEffectStatePauseLoop = 5,   // PAUSE_LOOP (the pause-menu overlay layer)
-    kEffectStateBarStar0 = 6,    // FRAME_SIDEMT_BARSTAR0
-    kEffectStateBarStar1 = 7,    // FRAME_SIDEMT_BARSTAR1
-    kEffectStateBar = 8,         // FRAME_SIDEMT_BAR (fever bar; [8] frame count = its length)
-    kEffectStateTwl0Start = 9,   // BGMTSCO_TWL0_START
-    kEffectStateCd = 10,         // BGMT_CD
-    kEffectStateCdColor = 11,    // BGMT_CD_COLOR
-    kEffectStateHitLong = 12,    // EFF_HIT_LONG ([12] frame count = CD-jacket length)
-    kEffectStateHit = 13,        // EFF_HIT
+    kEffectStateGgHantei = 0,    /**< GG_HANTEI, the judge-ground flash. */
+    kEffectStateNearUnder = 1,   /**< EFF_NEAR_UNDER. */
+    kEffectStateHitOver = 2,     /**< EFF_HIT_OVER. */
+    kEffectStateHitOver2 = 3,    /**< EFF_HIT_OVER2. */
+    kEffectStateHitOverMore = 4, /**< EFF_HIT_OVER_MORE. */
+    kEffectStatePauseLoop = 5,   /**< PAUSE_LOOP, the pause-menu overlay layer. */
+    kEffectStateBarStar0 = 6,    /**< FRAME_SIDEMT_BARSTAR0. */
+    kEffectStateBarStar1 = 7,    /**< FRAME_SIDEMT_BARSTAR1. */
+    /** FRAME_SIDEMT_BAR, the fever bar; slot 8's frame count is its length. */
+    kEffectStateBar = 8,
+    kEffectStateTwl0Start = 9, /**< BGMTSCO_TWL0_START. */
+    kEffectStateCd = 10,       /**< BGMT_CD. */
+    kEffectStateCdColor = 11,  /**< BGMT_CD_COLOR. */
+    /** EFF_HIT_LONG; slot 12's frame count is the CD-jacket length. */
+    kEffectStateHitLong = 12,
+    kEffectStateHit = 13, /**< EFF_HIT. */
 };
 
-// Indices into PlayTask::m_userSprite (the +0x2f8 user-no table). PlayTaskDraw
-// dispatches on the AEP callback's `child` id by matching it against each slot,
-// so these name the sprite each slot drives (verified against FUN_00030944).
+/**
+ * @brief Indices into PlayTask::m_userSprite, the +0x2f8 user-no table.
+ *
+ * PlayTaskDraw dispatches on the AEP callback's `child` id by matching it against each slot, so
+ * these name the sprite each slot drives (verified against FUN_00030944).
+ */
 enum UserSprite {
-    kUserSpriteGaugeFlash = 0, // GG_IFL gauge-flash frames
-    kUserSpritePauseCmd = 1,   // CMD_PAUSE_1 pause command icon
-    kUserSpriteToneLane = 2,   // TONE_1 tone-lane graphic
-    kUserSpriteToneNumber = 3, // TONE_08_NUM tone-number overlay
-    kUserSpritePauseEye0 = 4,  // ORB_EYES_* pause-eye tone frames [4..8]
-    kUserSpritePauseEye1 = 5,
-    kUserSpritePauseEye2 = 6,
-    kUserSpritePauseEye3 = 7,
-    kUserSpritePauseEye4 = 8,
-    kUserSpriteBgColor = 9,       // BG_CL_COLOR background colour layer
-    kUserSpriteScoreStar = 10,    // FRAME_STAR score-star badge
-    kUserSpriteGaugeSideBar = 11, // FRAME_SIDEBAR gauge side bar
-    kUserSpriteComboDigit1 = 12,  // EFF_C_NUM001/010/100 on-field combo digits
-    kUserSpriteComboDigit10 = 13,
+    kUserSpriteGaugeFlash = 0,    /**< GG_IFL gauge-flash frames. */
+    kUserSpritePauseCmd = 1,      /**< CMD_PAUSE_1, the pause command icon. */
+    kUserSpriteToneLane = 2,      /**< TONE_1, the tone-lane graphic. */
+    kUserSpriteToneNumber = 3,    /**< TONE_08_NUM, the tone-number overlay. */
+    kUserSpritePauseEye0 = 4,     /**< First of the ORB_EYES_* pause-eye tone frames. */
+    kUserSpritePauseEye1 = 5,     /**< Second ORB_EYES_* pause-eye tone frame. */
+    kUserSpritePauseEye2 = 6,     /**< Third ORB_EYES_* pause-eye tone frame. */
+    kUserSpritePauseEye3 = 7,     /**< Fourth ORB_EYES_* pause-eye tone frame. */
+    kUserSpritePauseEye4 = 8,     /**< Fifth ORB_EYES_* pause-eye tone frame. */
+    kUserSpriteBgColor = 9,       /**< BG_CL_COLOR, the background colour layer. */
+    kUserSpriteScoreStar = 10,    /**< FRAME_STAR, the score-star badge. */
+    kUserSpriteGaugeSideBar = 11, /**< FRAME_SIDEBAR, the gauge side bar. */
+    kUserSpriteComboDigit1 = 12,  /**< EFF_C_NUM001, the on-field combo units digit. */
+    kUserSpriteComboDigit10 = 13, /**< EFF_C_NUM010, the on-field combo tens digit. */
+    /** EFF_C_NUM100, the on-field combo hundreds digit. */
     kUserSpriteComboDigit100 = 14,
 };
 
-// PlayTask::m_state (+0x9fc) play state-machine values, in the order update()
-// walks them (Ghidra: FUN_0002dc14).
+/**
+ * @brief PlayTask::m_state (+0x9fc) play state-machine values, in the order update() walks them.
+ *
+ * Ghidra: FUN_0002dc14.
+ */
 enum PlayState {
-    kPlayStateInit = 0,        // allocate the play scene, then fall through
-    kPlayStateBringUp = 1,     // NoteMng bring-up, fade in, pause the intro layers
-    kPlayStateReady = 2,       // draw the field; on BGM-ready cue the "go" voice
-    kPlayStateRetry = 3,       // after a fade, rebuild the play and restart
-    kPlayStateWaitIntro = 4,   // wait for the intro layer, then start the clock
-    kPlayStatePauseMenu = 5,   // hit-test resume/retry/quit, draw the menu + field
-    kPlayStatePlaying = 6,     // drive the note engine: judge, gauge, song-end
-    kPlayStateQuit = 7,        // stop all audio, latch stopped, fall into fade-out
-    kPlayStateFadeOut = 8,     // start the fade-out transition
-    kPlayStateWaitFade = 9,    // wait for the fade-out to finish
-    kPlayStateGotoResult = 10, // hand off to the result screen
+    kPlayStateInit = 0,      /**< Allocate the play scene, then fall through. */
+    kPlayStateBringUp = 1,   /**< NoteMng bring-up, fade in, pause the intro layers. */
+    kPlayStateReady = 2,     /**< Draw the field; on the BGM-ready cue, play the "go" voice. */
+    kPlayStateRetry = 3,     /**< After a fade, rebuild the play and restart. */
+    kPlayStateWaitIntro = 4, /**< Wait for the intro layer, then start the clock. */
+    /** Hit-test resume, retry, and quit, and draw the menu over the field. */
+    kPlayStatePauseMenu = 5,
+    kPlayStatePlaying = 6,     /**< Drive the note engine: judge, gauge, and song end. */
+    kPlayStateQuit = 7,        /**< Stop all audio, latch stopped, and fall into the fade-out. */
+    kPlayStateFadeOut = 8,     /**< Start the fade-out transition. */
+    kPlayStateWaitFade = 9,    /**< Wait for the fade-out to finish. */
+    kPlayStateGotoResult = 10, /**< Hand off to the result screen. */
 };
 
-// The clear/fail score boundary. A score at or above this is the "clear" tier
-// (hi fever-gauge layer, high end-of-song voice, lit score star, clear rank
-// jingles); below it is the "fail" tier. The same line is rank 5's lower bound
-// in scoreToRank. Ghidra compares against 0x1116f (69999) with a signed bgt.
+/**
+ * @brief The clear and fail score boundary.
+ *
+ * A score at or above this is the "clear" tier: the hi fever-gauge layer, the high end-of-song
+ * voice, a lit score star, and the clear rank jingles. Below it is the "fail" tier. The same line
+ * is rank 5's lower bound in scoreToRank. Ghidra compares against 0x1116f (69999) with a signed
+ * bgt.
+ */
 inline constexpr int kScoreClearThreshold = 70000;
 
 /**
@@ -371,13 +389,22 @@ public:
     PlayState m_state = kPlayStateInit;   /**< +0x9fc Play state-machine field. */
 };
 
-// Play-scene lifecycle seams operating on the play-data block.
-void PlayTaskInit(void *playData);       // Ghidra: FUN_0002e2d8 (allocate the scene)
-void PlayTaskGotoResult(void *playData); // Ghidra: FUN_0003003c (transition to results)
+/**
+ * @brief Allocate the play scene for a play-data block.
+ * @param playData The play-data block, a PlayTask.
+ * @ghidraAddress 0x2e2d8
+ */
+void PlayTaskInit(void *playData);
+/**
+ * @brief Transition a play-data block to the result screen.
+ * @param playData The play-data block, a PlayTask.
+ * @ghidraAddress 0x3003c
+ */
+void PlayTaskGotoResult(void *playData);
 
-// The current running score/gauge value used for end-of-song rank SEs.
-int PlayCurrentScore(); // Ghidra: FUN_0002ff7c
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4
+/**
+ * @brief The current running score, or gauge value, used for the end-of-song rank SEs.
+ * @return The current score.
+ * @ghidraAddress 0x2ff7c
+ */
+int PlayCurrentScore();

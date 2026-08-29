@@ -1,11 +1,10 @@
-//
-//  StoreTableCell.h
-//  pop'n rhythmin
-//
-//  A store list row that shows two song packs side by side. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
-//  0x527b4).
-//
+/**
+ * @file
+ * @brief A store list row showing two song packs side by side.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0x527b4).
+ */
 
 #import <UIKit/UIKit.h>
 

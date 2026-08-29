@@ -1,5 +1,8 @@
-/** @file
- * The music-catalogue singleton: builds and caches the arrays of playable @c MusicData (local) and
+/**
+ * @file
+ * @brief The music-catalogue singleton.
+ *
+ * It builds and caches the arrays of playable @c MusicData (local) and
  * @c AcMusicData (arcade) records, assembles the built-in song tables from unlock gates, loads and
  * saves the Blowfish-encrypted purchased-song lists, applies downloadable level patches, and
  * resolves song IDs to their bundled or purchased chart-file paths. Song data files are @c %09d.orb

@@ -1,6 +1,8 @@
-/** @file
- * Core Data managed object. Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity
- * "ArcadeScoreData").
+/**
+ * @file
+ * @brief The ArcadeScoreData Core Data managed object: the arcade-machine score mirror.
+ *
+ * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "ArcadeScoreData").
  *
  * A mirror of arcade-machine ("AC") song records fetched from the network: per-song personal best
  * (my*), venue mean (mean*) and venue top (top*) scores across four arcade difficulties — Easy

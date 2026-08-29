@@ -1,23 +1,19 @@
-//
-//  StorePackListController.h
-//  pop'n rhythmin
-//
-//  Fetches and caches the store's song-pack catalogue. It downloads the
-//  pack-list JSON, resolves the StoreKit products for any packs it does not yet
-//  know, then builds/updates StorePackInfo models and notifies its delegate.
-//  Also holds the promotion banner list and paginates ("continued") through the
-//  catalogue.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    init @ 0x577dc   isFetching @ 0x579f8   cancelFetching @ 0x5796c
-//    startFetchingPack: @ 0x57888   getPackInfo: @ 0x57a54   addPackInfoFromID:
-//    @ 0x57b28 packIDList @ 0x57a34   promotionList @ 0x57a44 packlistContinued
-//    @ 0x58820 downloaderFinished: @ 0x57f48   downloaderError: @ 0x584ec
-//    productsRequest:didReceiveResponse: @ 0x58544
-//    updatePackInfo:SKProductsResponse: @ 0x57bac   packInfos @ 0x57a24
-//    downloaderProceed: @ 0x58540   request:didFailWithError: @ 0x58698
-//    dealloc @ 0x58714   delegate @ 0x58800 / setDelegate: @ 0x58810
-//
+/**
+ * @file
+ * @brief The fetcher and cache for the store's song-pack catalogue.
+ *
+ * It downloads the pack-list JSON, resolves the StoreKit products for any packs it does not yet
+ * know, then builds or updates StorePackInfo models and notifies its delegate. It also holds the
+ * promotion banner list and paginates ("continued") through the catalogue.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: init @ 0x577dc, isFetching @
+ * 0x579f8, cancelFetching @ 0x5796c, startFetchingPack: @ 0x57888, getPackInfo: @ 0x57a54,
+ * addPackInfoFromID: @ 0x57b28, packIDList @ 0x57a34, promotionList @ 0x57a44, packlistContinued @
+ * 0x58820, downloaderFinished: @ 0x57f48, downloaderError: @ 0x584ec,
+ * productsRequest:didReceiveResponse: @ 0x58544, updatePackInfo:SKProductsResponse: @ 0x57bac,
+ * packInfos @ 0x57a24, downloaderProceed: @ 0x58540, request:didFailWithError: @ 0x58698, dealloc
+ * @ 0x58714, and delegate @ 0x58800 with setDelegate: @ 0x58810.
+ */
 
 #import <Foundation/Foundation.h>
 #import <StoreKit/StoreKit.h>

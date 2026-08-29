@@ -1,15 +1,13 @@
-//
-//  StoreManageViewController.h
-//  pop'n rhythmin
-//
-//  The store's purchased-music manager tab: lists owned packs/songs with delete
-//  and re-download actions. Grown incrementally; the constructor lands first.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithParent: @ 0x4bc40, loadView @ 0x4be00, and the table/download
-//  machinery
-//  @ 0x4c308..0x4d9b0).
-//
+/**
+ * @file
+ * @brief The store's purchased-music manager tab.
+ *
+ * It lists owned packs and songs with delete and re-download actions, and is grown incrementally;
+ * the constructor lands first.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithParent: @ 0x4bc40,
+ * loadView @ 0x4be00, and the table and download machinery @ 0x4c308..0x4d9b0).
+ */
 
 #import <UIKit/UIKit.h>
 

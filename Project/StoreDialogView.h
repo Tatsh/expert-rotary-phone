@@ -1,31 +1,26 @@
-//
-//  StoreDialogView.h
-//  pop'n rhythmin
-//
-//  A modal progress dialog shown over the store view (StoreViewController /
-//  StoreMainViewController): a rounded, shadowed, translucent-black card that
-//  owns a spinner, a centered message label, a horizontal progress bar and —
-//  when constructed abortable — a "中止" (abort) button. -layout: toggles the
-//  progress bar / abort button and recenters the message label; the abort
-//  button routes to the delegate's -storeDialogCancel:.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithFrame: @ 0x416dc, initWithFrame:abortable: @ 0x41708, dealloc @
-//  0x41dc0, layout: @ 0x41e4c, btnAbort: @ 0x41f38).
-//
-//  Superclass is UIView (the card itself is the styled background; the
-//  spinner/label/progress/ button are direct subviews). Written for ARC: no
-//  manual retain/release/autorelease; the binary's -dealloc only release-chains
-//  the object ivars and is omitted.
-//
-//  Delegate note: the binary carries NO StoreDialogViewDelegate protocol
-//  metadata — the abort callback is an informal, respondsToSelector:-gated
-//  delegate (see -btnAbort: @ 0x41f38, which does
-//  -performSelector:@selector(storeDialogCancel:) withObject:self). The
-//  protocol below is a reconstruction convenience so the callback is typed and
-//  discoverable; the selector matches the -storeDialogCancel: implemented by
-//  StoreMainViewController.
-//
+/**
+ * @file
+ * @brief A modal progress dialog shown over the store view.
+ *
+ * StoreViewController and StoreMainViewController raise it: a rounded, shadowed, translucent-black
+ * card owning a spinner, a centred message label, a horizontal progress bar, and, when constructed
+ * abortable, a 中止 (abort) button. -layout: toggles the progress bar and abort button and
+ * recentres the message label; the abort button routes to the delegate's -storeDialogCancel:.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithFrame: @ 0x416dc,
+ * initWithFrame:abortable: @ 0x41708, dealloc @ 0x41dc0, layout: @ 0x41e4c, btnAbort: @ 0x41f38).
+ *
+ * The superclass is UIView: the card itself is the styled background, and the spinner, label,
+ * progress bar, and button are direct subviews. It is written for ARC, with no manual retain,
+ * release, or autorelease; the binary's -dealloc only release-chains the object ivars and is
+ * omitted.
+ *
+ * On the delegate: the binary carries no StoreDialogViewDelegate protocol metadata. The abort
+ * callback is an informal, respondsToSelector:-gated delegate; see -btnAbort: @ 0x41f38, which
+ * does `-performSelector:@selector(storeDialogCancel:) withObject:self`. The protocol below is a
+ * reconstruction convenience so the callback is typed and discoverable; the selector matches the
+ * -storeDialogCancel: implemented by StoreMainViewController.
+ */
 
 #import <UIKit/UIKit.h>
 

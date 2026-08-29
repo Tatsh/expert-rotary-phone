@@ -1,5 +1,8 @@
-/** @file
- * The arcade (AC) viewer's genre-category list: a transparent, separator-less UITableView. Row 0 is
+/**
+ * @file
+ * @brief The arcade (AC) viewer's genre-category list.
+ *
+ * A transparent, separator-less UITableView. Row 0 is
  * the "all songs" banner; the remaining rows are the non-empty genre categories (each an
  * AcViewerCategoryCell). Selecting a row pushes the AcViewerMusicViewController song list for that
  * category. On phone the whole screen fades in and out via the open/close animations; the iPad flow

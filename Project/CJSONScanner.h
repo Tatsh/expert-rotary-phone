@@ -1,23 +1,21 @@
-//
-//  CJSONScanner.h
-//  pop'n rhythmin
-//
-//  TouchJSON recursive-descent JSON parser. It is a subclass of CDataScanner
-//  (the raw byte-cursor scanner over an NSData) and adds the JSON grammar:
-//  objects, dictionaries, arrays, string constants (with escape handling) and
-//  number constants.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//  (scanJSONObject:error: @ 0x678d0, setData: @ 0x677cc).
-//
-//  Superclass determined from Ghidra: init/dealloc/setData: chain up to
-//  CDataScanner, and scanNotQuoteCharactersIntoString: reads CDataScanner's
-//  `current`/`end` byte-cursor ivars directly. CDataScanner (see
-//  CDataScanner.h) supplies scannerWithData:, skipWhitespace,
-//  currentCharacter, scanCharacter, scanCharacter:, scanLocation,
-//  setScanLocation:, scanNumber:, scanUTF8String:intoString: and the
-//  protected `current`/`end` ivars used below.
-//
+/**
+ * @file
+ * @brief The TouchJSON recursive-descent JSON parser.
+ *
+ * It is a subclass of CDataScanner (the raw byte-cursor scanner over an NSData) and adds the JSON
+ * grammar: objects, dictionaries, arrays, string constants (with escape handling), and number
+ * constants.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON;
+ * scanJSONObject:error: @ 0x678d0, setData: @ 0x677cc).
+ *
+ * The superclass is determined from Ghidra: the init, dealloc, and setData: chain reaches
+ * CDataScanner, and scanNotQuoteCharactersIntoString: reads CDataScanner's `current` and `end`
+ * byte-cursor ivars directly. CDataScanner (see CDataScanner.h) supplies scannerWithData:,
+ * skipWhitespace, currentCharacter, scanCharacter, scanCharacter:, scanLocation,
+ * setScanLocation:, scanNumber:, scanUTF8String:intoString:, and the protected `current` and
+ * `end` ivars used below.
+ */
 
 #import <Foundation/Foundation.h>
 

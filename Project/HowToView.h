@@ -1,12 +1,11 @@
-//
-//  HowToView.h
-//  pop'n rhythmin
-//
-//  The scrolling image strip inside a HowToViewCtrl tutorial: the how-to images
-//  laid out side by side over an optional background. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (initWithImageList:frame:backGroundImg:
-//  @ 0xe9230, drawRect: @ 0xe9368). The build lives in HowToView.mm.
-//
+/**
+ * @file
+ * @brief The scrolling image strip inside a HowToViewCtrl tutorial.
+ *
+ * The how-to images are laid out side by side over an optional background. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initWithImageList:frame:backGroundImg: @ 0xe9230,
+ * drawRect: @ 0xe9368). The build lives in HowToView.mm.
+ */
 
 #import <UIKit/UIKit.h>
 

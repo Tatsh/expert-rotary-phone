@@ -1,38 +1,31 @@
-//
-//  AcViewerTask.h
-//  pop'n rhythmin
-//
-//  The ARCADE-VIEWER NOTE-PLAY task: the actual pop'n-style rhythm gameplay
-//  screen reached from the "arcade viewer" (GotoAcViewer). It loads the chosen
-//  ac chart, builds the group-7 "arcade_viewer" HUD, runs the touch/flick input
-//  + play-state machine, and each frame drives the arcade note engine
-//  (AcNoteMng) plus the note / life-gauge / HUD-digit draw passes.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  NAMING NOTE: Ghidra labels this class's methods acMainTask* (setup
-//  FUN_0002230c, update FUN_00021678, dtor thunk task_delete FUN_000215d8)
-//  because AppDelegate holds it in its `acMainTask` property (setAcMainTask:).
-//  It is NOT the same class as the repo's existing AcMainTask (the arcade
-//  sugoroku/treasure SELECT scene, ctor FUN_00099ab0, state @ +0x9f8, embedded
-//  RNG @ +0x4f4): this task has a distinct vtable (@ 0x130bb8), its play state
-//  lives @ +0x20c, and it drives AcNoteMng rather than the sugoroku map. It is
-//  kept in its own file to avoid clobbering that class.
-//
-//  ---- work area (this class IS the ~0x214-byte play-data struct) ----
-//  ne::C_TASK's base is exactly 0x28 bytes, so the members below land at their true
-//  binary offsets. Every scalar the setup / draw / HUD passes reach by flat
-//  `*(T*)(this+off)` in the binary is named and placed at its exact offset
-//  (with a `// +0xNN` comment); genuine gaps are `_rsvd_NN[]` fillers. The
-//  device-branched HUD layout block
-//  (+0x110..+0x1c4 — pure-constant coordinate stores from DAT_0012e370 phone /
-//  DAT_0012e394 pad) is fully reconstructed by setup() for all three form
-//  factors; a handful of interior slots (+0x110/+0x134/+0x138/+0x140/+0x144)
-//  are written but never read by any object in the image, so they carry
-//  provisional names and a write-only note. The whole object is wiped
-//  +0x28..+0x20c by
-//  cleanup() (memset of 0x1e4 bytes); the play state
-//  @ +0x20c survives.
-//
+/**
+ * @file
+ * @brief The arcade-viewer note-play task: the pop'n-style rhythm gameplay screen reached from
+ * the arcade viewer.
+ *
+ * Reached through GotoAcViewer. It loads the chosen ac chart, builds the group-7 "arcade_viewer"
+ * HUD, runs the touch and flick input plus the play-state machine, and each frame drives the
+ * arcade note engine (AcNoteMng) plus the note, life-gauge, and HUD-digit draw passes.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * Naming note: Ghidra labels this class's methods acMainTask* (setup FUN_0002230c, update
+ * FUN_00021678, dtor thunk task_delete FUN_000215d8) because AppDelegate holds it in its
+ * `acMainTask` property (setAcMainTask:). It is NOT the same class as the repo's existing
+ * AcMainTask (the arcade sugoroku and treasure select scene, ctor FUN_00099ab0, state @ +0x9f8,
+ * embedded RNG @ +0x4f4): this task has a distinct vtable (@ 0x130bb8), its play state lives @
+ * +0x20c, and it drives AcNoteMng rather than the sugoroku map. It is kept in its own file to
+ * avoid clobbering that class.
+ *
+ * Work area (this class IS the ~0x214-byte play-data struct): ne::C_TASK's base is exactly 0x28
+ * bytes, so the members below land at their true binary offsets. Every scalar the setup, draw,
+ * and HUD passes reach by flat `*(T*)(this+off)` in the binary is named and placed at its exact
+ * offset (with a `// +0xNN` comment); genuine gaps are `_rsvd_NN[]` fillers. The device-branched
+ * HUD layout block (+0x110..+0x1c4, pure-constant coordinate stores from DAT_0012e370 phone /
+ * DAT_0012e394 pad) is fully reconstructed by setup() for all three form factors; a handful of
+ * interior slots (+0x110/+0x134/+0x138/+0x140/+0x144) are written but never read by any object
+ * in the image, so they carry provisional names and a write-only note. The whole object is wiped
+ * +0x28..+0x20c by cleanup() (memset of 0x1e4 bytes); the play state @ +0x20c survives.
+ */
 
 #pragma once
 
@@ -46,30 +39,34 @@ class AepLyrCtrl;
 class neTextureForiOS;
 
 // AcViewerTask::update play-state machine (m_state @+0x20c). Values and names are
-// Ghidra's AcMainTaskState (ACST_*). The app-lifecycle bridge acts on three of
-// them: stopAcMainTask (resign) sends Playing -> PauseMenuOpen (i.e. pauses the
-// game), and requestGameExit sends it to ExitTransition. (The bridge's
-// "AcMainTask" naming is a misnomer: AppDelegate's acMainTask slot holds the
-// running AcViewerTask, which registers itself via setAcMainTask:self.)
+/**
+ * @brief Ghidra's AcMainTaskState (the ACST_* values).
+ *
+ * The app-lifecycle bridge acts on three of them: stopAcMainTask, on resign, sends Playing to
+ * PauseMenuOpen, pausing the game, and requestGameExit sends it to ExitTransition. The bridge's
+ * "AcMainTask" naming is a misnomer: AppDelegate's acMainTask slot holds the running
+ * AcViewerTask, which registers itself via setAcMainTask:self.
+ */
 enum AcViewerState : int {
-    kAcvInit = 0,            // ACST_INIT: enter viewer, insert pad board, register task
-    kAcvWaitMusicId = 1,     // ACST_WAIT_MUSIC_ID
-    kAcvSetup = 2,           // ACST_SETUP
-    kAcvStartTransition = 3, // ACST_START_TRANSITION
-    kAcvWaitTransition = 4,  // ACST_WAIT_TRANSITION
-    kAcvWaitSe = 5,          // ACST_WAIT_SE
-    kAcvPlaying = 6,         // ACST_PLAYING
-    kAcvPauseDelay = 7,      // ACST_PAUSE_DELAY
-    kAcvExitTransition = 8,  // ACST_EXIT_TRANSITION (requestGameExit target)
-    kAcvWaitExit = 9,        // ACST_WAIT_EXIT
-    kAcvPause = 10,          // ACST_PAUSE
-    kAcvScrub = 11,          // ACST_SCRUB
-    kAcvPauseMenuOpen = 12,  // ACST_PAUSE_MENU_OPEN (stopAcMainTask target)
-    kAcvPauseMenuInput = 13, // ACST_PAUSE_MENU_INPUT
-    kAcvOptionOpen = 14,     // ACST_OPTION_OPEN
-    kAcvOptionActive = 15,   // ACST_OPTION_ACTIVE
-    kAcvExitToMenu = 16,     // ACST_EXIT_TO_MENU
-    kAcvDone = 17,           // ACST_DONE
+    /** ACST_INIT: enter the viewer, insert the pad board, and register the task. */
+    kAcvInit = 0,
+    kAcvWaitMusicId = 1,     /**< ACST_WAIT_MUSIC_ID. */
+    kAcvSetup = 2,           /**< ACST_SETUP. */
+    kAcvStartTransition = 3, /**< ACST_START_TRANSITION. */
+    kAcvWaitTransition = 4,  /**< ACST_WAIT_TRANSITION. */
+    kAcvWaitSe = 5,          /**< ACST_WAIT_SE. */
+    kAcvPlaying = 6,         /**< ACST_PLAYING. */
+    kAcvPauseDelay = 7,      /**< ACST_PAUSE_DELAY. */
+    kAcvExitTransition = 8,  /**< ACST_EXIT_TRANSITION, the requestGameExit target. */
+    kAcvWaitExit = 9,        /**< ACST_WAIT_EXIT. */
+    kAcvPause = 10,          /**< ACST_PAUSE. */
+    kAcvScrub = 11,          /**< ACST_SCRUB. */
+    kAcvPauseMenuOpen = 12,  /**< ACST_PAUSE_MENU_OPEN, the stopAcMainTask target. */
+    kAcvPauseMenuInput = 13, /**< ACST_PAUSE_MENU_INPUT. */
+    kAcvOptionOpen = 14,     /**< ACST_OPTION_OPEN. */
+    kAcvOptionActive = 15,   /**< ACST_OPTION_ACTIVE. */
+    kAcvExitToMenu = 16,     /**< ACST_EXIT_TO_MENU. */
+    kAcvDone = 17,           /**< ACST_DONE. */
 };
 
 /**

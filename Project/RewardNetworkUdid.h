@@ -1,16 +1,15 @@
-//
-//  RewardNetworkUdid.h
-//  pop'n rhythmin
-//
-//  Konami "RewardNetwork" (Applilink) ad-SDK per-device identifier helper.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (instanceSize
-//  8: isa + the single `_pasteBoard` object ivar, NSObject superclass).
-//
-//  The metaclass carries the UDID generation/keychain API (allocWithZone:/
-//  sharedInstance singleton, keychain storage via SecItem, advertising-id MD5,
-//  and the RewardNetwork udid/ad_udid/old_udid plumbing); all of it is
-//  reconstructed below as class (+) methods.
-//
+/**
+ * @file
+ * @brief The Konami "RewardNetwork" (Applilink) ad-SDK per-device identifier helper.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (instanceSize 8: isa plus the
+ * single `_pasteBoard` object ivar, with an NSObject superclass).
+ *
+ * The metaclass carries the UDID generation and keychain API: the allocWithZone: and
+ * sharedInstance singleton, keychain storage via SecItem, the advertising-id MD5, and the
+ * RewardNetwork udid, ad_udid, and old_udid plumbing. All of it is reconstructed below as class
+ * methods.
+ */
 
 #import <Foundation/Foundation.h>
 

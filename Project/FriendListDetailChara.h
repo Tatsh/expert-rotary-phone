@@ -1,14 +1,13 @@
-//
-//  FriendListDetailChara.h
-//  pop'n rhythmin
-//
-//  The character/skill info popup shown when tapping the portrait inside a
-//  FriendListDetail. A framed "skill card" over a window backdrop: the friend's
-//  chara portrait, a rounded card carrying the chara icon, chara name, a speech
-//  bubble with the skill name, the skill description, and the sugoroku chara
-//  art. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithFrame:friendData: @ 0xbac58). Built in FriendListDetailChara.mm.
-//
+/**
+ * @file
+ * @brief The character and skill info popup shown when tapping the portrait in a
+ * FriendListDetail.
+ *
+ * A framed "skill card" over a window backdrop: the friend's chara portrait, a rounded card
+ * carrying the chara icon, the chara name, a speech bubble with the skill name, the skill
+ * description, and the sugoroku chara art. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithFrame:friendData: @ 0xbac58). Built in FriendListDetailChara.mm.
+ */
 
 #import <UIKit/UIKit.h>
 

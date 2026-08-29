@@ -1,22 +1,19 @@
-//
-//  StoreViewController.h
-//  pop'n rhythmin
-//
-//  The store's modal host: a UITabBarController with three tabs — the pack
-//  store, the purchased-music manager, and the arcade-viewer manager — each
-//  wrapped in a navigation controller with a custom back button and navbar
-//  image. Presented with a cross-fade over the running GL scene; on close it
-//  pushes/pops the menu BGM and calls back to the root view controller (unless
-//  it was opened for a specific recommended pack).
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithRecommendPackId: @ 0x53140   loadView @ 0x537d8   showAnimation @
-//    0x53e88 showAnimationEnd @ 0x54030   hideAnimation @ 0x540b0
-//    hideAnimationEnd @ 0x54178 pushBarBtnBack: @ 0x541e0   recommendPackId @
-//    0x54424   setRecommendPackId: @ 0x54438 showModalDialog: @ 0x53b10
-//    hideModalDialog @ 0x53cd8   modalDialog @ 0x54414
-//    shouldAutorotateToInterfaceOrientation: @ 0x53e58   dealloc @ 0x53708
-//
+/**
+ * @file
+ * @brief The store's modal host.
+ *
+ * A UITabBarController with three tabs — the pack store, the purchased-music manager, and the
+ * arcade-viewer manager — each wrapped in a navigation controller with a custom back button and
+ * navbar image. It is presented with a cross-fade over the running GL scene; on close it pushes
+ * and pops the menu BGM and calls back to the root view controller, unless it was opened for a
+ * specific recommended pack.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: initWithRecommendPackId: @
+ * 0x53140, loadView @ 0x537d8, showAnimation @ 0x53e88, showAnimationEnd @ 0x54030, hideAnimation
+ * @ 0x540b0, hideAnimationEnd @ 0x54178, pushBarBtnBack: @ 0x541e0, recommendPackId @ 0x54424,
+ * setRecommendPackId: @ 0x54438, showModalDialog: @ 0x53b10, hideModalDialog @ 0x53cd8,
+ * modalDialog @ 0x54414, shouldAutorotateToInterfaceOrientation: @ 0x53e58, and dealloc @ 0x53708.
+ */
 
 #import <UIKit/UIKit.h>
 

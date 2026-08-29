@@ -1,11 +1,10 @@
-//
-//  CheckerCategoryCell.h
-//  pop'n rhythmin
-//
-//  A music-checker category row; layout offsets vary by iPad + iOS version.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xcf49c).
-//
+/**
+ * @file
+ * @brief A music-checker category row.
+ *
+ * Its layout offsets vary by iPad and iOS version. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xcf49c).
+ */
 
 #import <UIKit/UIKit.h>
 

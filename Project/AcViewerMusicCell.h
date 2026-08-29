@@ -1,7 +1,10 @@
-/** @file
- * An arcade-viewer song row: four difficulty buttons (easy, normal, hyper and ex) laid out
- * horizontally, tagged 100..103 so the table can tell which was tapped. Reconstructed from Ghidra
- * project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x40430).
+/**
+ * @file
+ * @brief An arcade-viewer song row.
+ *
+ * Four difficulty buttons (easy, normal, hyper and ex) laid out horizontally, tagged 100..103 so
+ * the table can tell which was tapped. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x40430).
  */
 
 #import <UIKit/UIKit.h>

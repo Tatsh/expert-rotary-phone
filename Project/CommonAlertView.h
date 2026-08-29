@@ -1,13 +1,11 @@
-//
-//  CommonAlertView.h
-//  pop'n rhythmin
-//
-//  A custom modal alert (styled replacement for UIAlertView, used ~99 places).
-//  A gradient-backed rounded card with a message text view, an optional title,
-//  and up to two buttons (cancel / other), shown over the root scene view with
-//  an open animation. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin.
-//
+/**
+ * @file
+ * @brief A custom modal alert: the styled replacement for UIAlertView, used in around 99 places.
+ *
+ * A gradient-backed rounded card with a message text view, an optional title, and up to two
+ * buttons (cancel and other), shown over the root scene view with an open animation.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ */
 
 #import <UIKit/UIKit.h>
 

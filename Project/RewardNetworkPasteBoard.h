@@ -1,16 +1,16 @@
-//
-//  RewardNetworkPasteBoard.h
-//  pop'n rhythmin
-//
-//  Konami "RewardNetwork" (Applilink) ad-SDK persistent storage backed by named
-//  UIPasteboards. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (NSObject superclass; ivars _serviceName / _dataType, both NSString*).
-//
-//  Each record lives in its own persistent UIPasteboard named
-//  "<service>-<index>" (index 0..518). The stored payload is a keyed-archived
-//  dictionary with keys Value / EntryDate / LastAccess / Version; the Value is
-//  AES-encrypted with a key derived (SHA-1) from the pasteboard name.
-//
+/**
+ * @file
+ * @brief The Konami "RewardNetwork" (Applilink) ad-SDK persistent storage, backed by named
+ * UIPasteboards.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin, with an NSObject superclass and
+ * the ivars _serviceName and _dataType, both NSString *.
+ *
+ * Each record lives in its own persistent UIPasteboard named "<service>-<index>", for an index in
+ * 0..518. The stored payload is a keyed-archived dictionary with the keys Value, EntryDate,
+ * LastAccess, and Version; the Value is AES-encrypted with a key derived by SHA-1 from the
+ * pasteboard name.
+ */
 
 #import <Foundation/Foundation.h>
 

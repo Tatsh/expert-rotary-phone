@@ -1,20 +1,18 @@
-//
-//  DefaultDataDownloadView.h
-//  pop'n rhythmin
-//
-//  The launch-time "default data" downloader screen. MainViewController
-//  presents it (as _defaultDlViewController) when DownloadMain's file list
-//  contains bundled data files that are missing / stale on disk; it downloads
-//  them one by one behind a DownloadProgresView dialog, then notifies the root
-//  scene (DefaultDownloadEndCallBack).
-//
-//  Despite the "View" name this is a UIViewController subclass (verified from
-//  the ObjC class metadata — superclass slot points at UIViewController, and
-//  callers use its .view / -isFailed). Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (initWithFileDataArray: @ 0xdd158, startOpenAnimation @
-//  0xddbe8). Built in DefaultDataDownloadView.mm (Objective-C++: the
-//  neSceneManager singleton drives the root-VC end callback).
-//
+/**
+ * @file
+ * @brief The launch-time "default data" downloader screen.
+ *
+ * MainViewController presents it (as _defaultDlViewController) when DownloadMain's file list
+ * contains bundled data files that are missing or stale on disk; it downloads them one by one
+ * behind a DownloadProgresView dialog, then notifies the root scene
+ * (DefaultDownloadEndCallBack).
+ *
+ * Despite the "View" name this is a UIViewController subclass, verified from the Objective-C
+ * class metadata: the superclass slot points at UIViewController, and callers use its .view and
+ * -isFailed. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithFileDataArray: @ 0xdd158, startOpenAnimation @ 0xddbe8). Built in
+ * DefaultDataDownloadView.mm, since the neSceneManager singleton drives the root-VC end callback.
+ */
 
 #import <UIKit/UIKit.h>
 

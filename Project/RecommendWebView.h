@@ -1,32 +1,26 @@
-//
-//  RecommendWebView.h
-//  pop'n rhythmin
-//
-//  Konami "Applilink" Recommend ad SDK — the raw web view that renders the
-//  recommend/app-list content. It is a web-view subclass that acts as its own
-//  navigation delegate: it hides itself until content is ready, optionally
-//  overlays a RewardNetworkIndicator busy spinner on its parent view, fetches
-//  the app list through RecommendCore, then loads /ad/external/index.php.
-//  Applilink redirects (applilink://ext-app:80/...) are handed to
-//  RecommendCore.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. The
-//  superclass is UIWebView (the -init/-setHidden: bodies message the superclass
-//  through objc_msgSendSuper2, resolved to UIWebView, and the instance responds
-//  to -loadRequest:/-isLoading/-stopLoading/-setDelegate:).
-//    init @ 0xfe808   removeFromSuperview @ 0xfe8a4   loadRequestWithCallback:
-//    @ 0xfe970 closeList @ 0xff098   cancelRequest @ 0xff0a8
-//    setIndicatorwithEnable: @ 0xff0e0 setViewType: @ 0xff0f0 setScrollEnabled:
-//    @ 0xff100   loadRecommendView @ 0xff268 unloadRecommendView @ 0xff30c
-//    webViewDidStartLoad: @ 0xff340 loadRequestWithURL:parameters:delegate: @
-//    0xff354   viewDidDisappear: @ 0xff494 webViewDidFinishLoad: @ 0xff574
-//    setHidden: @ 0xff6bc webView:didFailLoadWithError: @ 0xff6fc
-//    appliListClosed @ 0xff828 updateIndicator: @ 0xff86c
-//    webView:shouldStartLoadWithRequest:navigationType: @ 0xff8a8
-//    callbackForOpenAppliList @ 0xff904 / setCallbackForOpenAppliList: @
-//    0xff918 lastErrorForOpenAppliList @ 0xff93c /
-//    setLastErrorForOpenAppliList: @ 0xff94c
-//
+/**
+ * @file
+ * @brief The raw web view rendering the Konami "Applilink" Recommend ad SDK's app-list content.
+ *
+ * A web-view subclass acting as its own navigation delegate: it hides itself until content is
+ * ready, optionally overlays a RewardNetworkIndicator busy spinner on its parent view, fetches the
+ * app list through RecommendCore, then loads /ad/external/index.php. Applilink redirects
+ * (applilink://ext-app:80/...) are handed to RecommendCore.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. The superclass is UIWebView: the
+ * -init and -setHidden: bodies message the superclass through objc_msgSendSuper2, resolved to
+ * UIWebView, and the instance responds to -loadRequest:, -isLoading, -stopLoading, and
+ * -setDelegate:. init @ 0xfe808, removeFromSuperview @ 0xfe8a4, loadRequestWithCallback: @
+ * 0xfe970, closeList @ 0xff098, cancelRequest @ 0xff0a8, setIndicatorwithEnable: @ 0xff0e0,
+ * setViewType: @ 0xff0f0, setScrollEnabled: @ 0xff100, loadRecommendView @ 0xff268,
+ * unloadRecommendView @ 0xff30c, webViewDidStartLoad: @ 0xff340,
+ * loadRequestWithURL:parameters:delegate: @ 0xff354, viewDidDisappear: @ 0xff494,
+ * webViewDidFinishLoad: @ 0xff574, setHidden: @ 0xff6bc, webView:didFailLoadWithError: @ 0xff6fc,
+ * appliListClosed @ 0xff828, updateIndicator: @ 0xff86c,
+ * webView:shouldStartLoadWithRequest:navigationType: @ 0xff8a8, callbackForOpenAppliList @ 0xff904
+ * with setCallbackForOpenAppliList: @ 0xff918, and lastErrorForOpenAppliList @ 0xff93c with
+ * setLastErrorForOpenAppliList: @ 0xff94c.
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,9 +1,12 @@
-/** @file
- * The Aep animated frame-tree renderer. For the current frame it walks a layer's frame-entry
- * chain, interpolates every keyframe channel (position, scale, colour/alpha, rotation) in the
- * engine's integer fixed-point form, composes the parent transform and blend flags, clips against
- * the active clip rect, and then per entry type emits a sprite command into the ordering table,
- * recurses into a child layer, or invokes the group draw callback.
+/**
+ * @file
+ * @brief The Aep animated frame-tree renderer.
+ *
+ * For the current frame it walks a layer's frame-entry chain, interpolates every keyframe channel
+ * (position, scale, colour/alpha, rotation) in the engine's integer fixed-point form, composes the
+ * parent transform and blend flags, clips against the active clip rect, and then per entry type
+ * emits a sprite command into the ordering table, recurses into a child layer, or invokes the
+ * group draw callback.
  */
 
 #pragma once
@@ -264,7 +267,3 @@ void AepDrawLayer(AepManager *mgr,
                   uint32_t priority,
                   void *context,
                   uint32_t visFlag);
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

@@ -1,5 +1,8 @@
-/** @file
- * A wall-clock stopwatch: an 8-byte {sec, usec} snapshot taken at reset(), read back as elapsed
+/**
+ * @file
+ * @brief A wall-clock stopwatch.
+ *
+ * An 8-byte {sec, usec} snapshot taken at reset(), read back as elapsed
  * milliseconds. Used by MainViewController to pace the task update and render steps.
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (reset FUN_00028084, elapsed
  * FUN_0002808c). Header-only: the two methods are small and inline.
@@ -46,7 +49,3 @@ private:
     long m_sec = 0;  // +0x00
     long m_usec = 0; // +0x04
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

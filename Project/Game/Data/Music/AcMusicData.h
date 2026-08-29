@@ -1,6 +1,8 @@
-/** @file
- * A single arcade ("AC") song record, decoded from its zipped JSON .orb file. Reconstructed from
- * Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief A single arcade ("AC") song record, decoded from its zipped JSON .orb file.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
  * JSON keys: ID, MusicName, MusicNameKana, GenreName, GenreNameKana, Easy, Normal, Hyper, Ex,
  * BpmEs, BpmN, BpmH, BpmEx and Category. BPM values are kept as strings, since they may be ranges

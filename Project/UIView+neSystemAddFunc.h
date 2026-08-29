@@ -1,19 +1,15 @@
-//
-//  UIView+neSystemAddFunc.h
-//  pop'n rhythmin
-//
-//  View sizing / flash / jump / popup animation helpers reconstructed from
-//  Ghidra project rb420, program PopnRhythmin. These are entries in the
-//  instance method_list @ 0x14af3c (entsize 12, count 16) of a category named
-//  "neSystemAddFunc" on the framework class UIView (cls slot @ 0x14b008 ->
-//  external _OBJC_CLASS_$_UIView, same ref as
-//  PTR__OBJC_CLASS___UIView_0015bde8). A framework-class category is legitimate
-//  here.
-//
-//  Selector spellings ("Harf", "SetFlash…") are the original binary's. This
-//  header declares the seven helpers from the task address list plus the two
-//  RemoveX helpers they call.
-//
+/**
+ * @file
+ * @brief View sizing, flash, jump, and popup animation helpers.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. These are entries in the instance
+ * method_list @ 0x14af3c (entsize 12, count 16) of a category named "neSystemAddFunc" on the
+ * framework class UIView; the cls slot @ 0x14b008 points to the external _OBJC_CLASS_$_UIView, the
+ * same ref as PTR__OBJC_CLASS___UIView_0015bde8. A framework-class category is legitimate here.
+ *
+ * The selector spellings ("Harf", "SetFlash…") are the original binary's. This header declares the
+ * seven helpers from the task address list plus the two RemoveX helpers they call.
+ */
 
 #import <UIKit/UIKit.h>
 

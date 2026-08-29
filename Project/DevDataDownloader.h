@@ -1,20 +1,16 @@
-//
-//  DevDataDownloader.h
-//  pop'n rhythmin
-//
-//  Fetches a single "dev data" file from the development host
-//  (http://dev.apr.konaminet.jp/apr/dev_data[_old]/<title>/<file>), writes it
-//  into the app Caches directory (devdata / acvdevdata subtree), and reports
-//  success or a formatted error string to its delegate. Thin wrapper around
-//  Downloader.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    dealloc @ 0x8e8ec   startDownload:file: @ 0x8e984
-//    downloaderFinished: @ 0x8eb1c   downloaderProceed: @ 0x8ed78
-//    downloaderError: @ 0x8ed7c
-//    delegate @ 0x8ee00  setDelegate: @ 0x8ee10  isOld @ 0x8ee20  setIsOld: @
-//    0x8ee38
-//
+/**
+ * @file
+ * @brief A fetcher for a single "dev data" file from the development host.
+ *
+ * It reads `http://dev.apr.konaminet.jp/apr/dev_data[_old]/<title>/<file>`, writes it into the app
+ * Caches directory (the devdata or acvdevdata subtree), and reports success or a formatted error
+ * string to its delegate. It is a thin wrapper around Downloader.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: dealloc @ 0x8e8ec,
+ * startDownload:file: @ 0x8e984, downloaderFinished: @ 0x8eb1c, downloaderProceed: @ 0x8ed78,
+ * downloaderError: @ 0x8ed7c, delegate @ 0x8ee00, setDelegate: @ 0x8ee10, isOld @ 0x8ee20, and
+ * setIsOld: @ 0x8ee38.
+ */
 
 #import <Foundation/Foundation.h>
 

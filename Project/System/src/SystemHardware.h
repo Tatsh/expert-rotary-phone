@@ -1,6 +1,9 @@
-/** @file
- * Lazily-detected device model (engine-side, coarser 14-entry table than the AppDelegate
- * variant). Reconstructed from Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief The lazily-detected device model, engine-side.
+ *
+ * It uses a coarser 14-entry table than the AppDelegate variant. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin.
  */
 
 #import <Foundation/Foundation.h>

@@ -1,5 +1,8 @@
-/** @file
- * Standard-mode music-select task (launched by MenuMainTask), reconstructed from Ghidra project
+/**
+ * @file
+ * @brief The standard-mode music-select task, launched by MenuMainTask.
+ *
+ * Reconstructed from Ghidra project
  * rb420, program PopnRhythmin. A ne::C_TASK subclass allocated at 0xaa8 bytes
  * (operator_new(0xaa8) in MenuMainTask::update and the post-play Finish). ne::C_TASK's base is
  * 0x28 bytes, so the members land at their true 32-bit binary offsets (documented for reference;

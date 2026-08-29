@@ -1,24 +1,19 @@
-//
-//  PlayJudge.h
-//  pop'n rhythmin
-//
-//  The per-frame play/judge pass of the standard-mode main task: it walks the
-//  active notes, hit-tests the current touches against each, dispatches hits to
-//  NoteMng's judgement, auto-judges in demo mode, resolves holds, draws each
-//  note
-//  + its effects, and fires the combo-milestone sound effects. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (FUN_0002f1f8, the play
-//  megafunction).
-//
-//  The play data (param_1) is the standard-mode play task, PlayTask, a large
-//  task struct whose full 0xa00-byte layout is owned by the task layer
-//  (System/src/Task/PlayTask.h). The judge functions here take it by pointer and
-//  reach its named members; this header only forward-declares the class.
-//  The per-note sprite/effect geometry (plain float / NEON in the original:
-//  FUN_0000fd64 note quad, FUN_0000fcd0 hit effect) is a separate draw unit —
-//  this file carries the verified judge control flow and delegates the pixel
-//  math to those helpers.
-//
+/**
+ * @file
+ * @brief The per-frame play and judge pass of the standard-mode main task.
+ *
+ * It walks the active notes, hit-tests the current touches against each, dispatches hits to
+ * NoteMng's judgement, auto-judges in demo mode, resolves holds, draws each note and its effects,
+ * and fires the combo-milestone sound effects. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (FUN_0002f1f8, the play megafunction).
+ *
+ * The play data (param_1) is the standard-mode play task, PlayTask, a large task struct whose
+ * full 0xa00-byte layout is owned by the task layer (System/src/Task/PlayTask.h). The judge
+ * functions here take it by pointer and reach its named members; this header only forward-declares
+ * the class. The per-note sprite and effect geometry (plain float or NEON in the original:
+ * FUN_0000fd64 note quad, FUN_0000fcd0 hit effect) is a separate draw unit; this file carries the
+ * verified judge control flow and delegates the pixel maths to those helpers.
+ */
 
 #pragma once
 
@@ -78,7 +73,3 @@ struct NoteJudgeState {
  * @ghidraAddress 0x3122c
  */
 void PlayApplyMissGauge(void *playData);
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

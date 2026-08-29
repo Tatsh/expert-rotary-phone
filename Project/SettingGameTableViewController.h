@@ -1,21 +1,18 @@
-//
-//  SettingGameTableViewController.h
-//  pop'n rhythmin
-//
-//  The "Game" sub-settings screen (opened from row 0 of
-//  SettingTableViewController). A grouped table of three category header rows
-//  -- サウンド (Sound), ゲーム演出 (Game effects) and ポップ君サイズ (Pop-kun
-//  size) -- each of which expands an in-line detail row hosting a dedicated
-//  sub-controller's view (SoundSettingView, GameEffectView,
-//  PopkunSizeViewCtrl). Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithStyle: @ 0x88b08 and 16 more methods). Built in
-//  SettingGameTableViewController.mm.
-//
-//  Follows the app-wide modal-VC lifecycle (see SettingTableViewController.h):
-//  initAtNavigationController wraps self in a UINavigationController;
-//  startOpen/ startCloseAnimation fade the view + nav view; endCloseAnimation
-//  notifies the host via -[MainViewController SettingEndCallBack].
-//
+/**
+ * @file
+ * @brief The "Game" sub-settings screen, opened from row 0 of SettingTableViewController.
+ *
+ * A grouped table of three category header rows — サウンド (Sound), ゲーム演出 (Game effects), and
+ * ポップ君サイズ (Pop-kun size) — each of which expands an in-line detail row hosting a dedicated
+ * sub-controller's view: SoundSettingView, GameEffectView, and PopkunSizeViewCtrl. Reconstructed
+ * from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0x88b08 and 16 more methods).
+ * Built in SettingGameTableViewController.mm.
+ *
+ * It follows the app-wide modal view-controller lifecycle (see SettingTableViewController.h):
+ * initAtNavigationController wraps self in a UINavigationController; startOpenAnimation and
+ * startCloseAnimation fade the view and nav view; endCloseAnimation notifies the host via
+ * -[MainViewController SettingEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

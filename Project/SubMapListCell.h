@@ -1,10 +1,10 @@
-//
-//  SubMapListCell.h
-//  pop'n rhythmin
-//
-//  A sub-map list row (sugoroku map select). Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xc0f8c).
-//
+/**
+ * @file
+ * @brief A sub-map list row in the sugoroku map select.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0xc0f8c).
+ */
 
 #import <UIKit/UIKit.h>
 

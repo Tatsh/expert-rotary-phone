@@ -1,18 +1,15 @@
-//
-//  FreeRequestDetail.h
-//  pop'n rhythmin
-//
-//  The "free request" friend-request confirm overlay raised by
-//  FreeRequestListViewController when a recommended-friend row is tapped. A
-//  full-screen dimmed UIView carrying a "frilis_window" card: the friend's
-//  character art, name and player-id, a per-difficulty clear-medal / perfect /
-//  full-combo count sheet, and (when the row carries a player id) "request" +
-//  "cancel" buttons. Confirming POSTs the friend request through Downloader;
-//  the result is reported via a CommonAlertView. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (initWithFrame:friendData: @ 0xe3170 and
-//  14 more methods). Built in FreeRequestDetail.mm (Objective-C++: drives the
-//  C++ neSceneManager / neEngine singletons).
-//
+/**
+ * @file
+ * @brief The "free request" friend-request confirm overlay.
+ *
+ * FreeRequestListViewController raises it when a recommended-friend row is tapped. A full-screen
+ * dimmed UIView carrying a "frilis_window" card: the friend's character art, name, and player id,
+ * a per-difficulty clear-medal, perfect, and full-combo count sheet, and, when the row carries a
+ * player id, "request" and "cancel" buttons. Confirming POSTs the friend request through
+ * Downloader; the result is reported via a CommonAlertView. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin (initWithFrame:friendData: @ 0xe3170 and 14 more methods). Built in
+ * FreeRequestDetail.mm, which drives the C++ neSceneManager and neEngine singletons.
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,11 +1,10 @@
-//
-//  StoreDetailCopyrightCell.h
-//  pop'n rhythmin
-//
-//  A store song-detail footer row showing the multi-line copyright text.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0x75324).
-//
+/**
+ * @file
+ * @brief A store song-detail footer row showing the multi-line copyright text.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0x75324).
+ */
 
 #import <UIKit/UIKit.h>
 

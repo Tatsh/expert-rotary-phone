@@ -1,17 +1,15 @@
-//
-//  HowToViewCtrlPad.h
-//  pop'n rhythmin
-//
-//  The iPad how-to overlay: a dimmed full-screen cover view with a centred,
-//  horizontally-paged strip of how-to images (a HowToView), a hidden
-//  UIPageControl driving a custom dot strip
-//  (_pageImgs, built from howto_page_on / howto_page_off), and open / close
-//  fade animations. The sibling of the phone variant HowToViewCtrl. Pushed by
-//  the setting / friend screens via -initWithFileNameArray: (e.g.
-//  SettingHowtoTableViewController, SettingTableViewController). Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (initWithFileNameArray: @
-//  0x16718, viewDidAppear: @ 0x16b40).
-//
+/**
+ * @file
+ * @brief The iPad how-to overlay.
+ *
+ * A dimmed full-screen cover view with a centred, horizontally-paged strip of how-to images (a
+ * HowToView), a hidden UIPageControl driving a custom dot strip (_pageImgs, built from
+ * howto_page_on and howto_page_off), and open and close fade animations. It is the sibling of the
+ * phone variant HowToViewCtrl, pushed by the setting and friend screens via
+ * -initWithFileNameArray: (for example SettingHowtoTableViewController and
+ * SettingTableViewController). Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithFileNameArray: @ 0x16718, viewDidAppear: @ 0x16b40).
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,5 +1,8 @@
-/** @file
- * The play scene's "SE-instance" cue controllers are not a distinct type: they are AepLyrCtrl
+/**
+ * @file
+ * @brief The play scene's "SE-instance" one-shot sound cues.
+ *
+ * They are not a distinct type: they are AepLyrCtrl
  * animation layers driven as one-shot sound cues. The combo milestone jingles (PlayJudge) and
  * the song-clear rank jingles (PlayScore) fire a handful of layers this way, and
  * PlayResultTask does the same with its result overlay layers (m_layers, AepLyrCtrl*).
@@ -81,7 +84,3 @@ inline bool SeInstanceIsPlaying(AepLyrCtrl *inst) {
 inline void SeInstanceStop(AepLyrCtrl *inst) {
     inst->reset();
 }
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

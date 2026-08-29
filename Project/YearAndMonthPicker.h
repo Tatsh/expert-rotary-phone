@@ -1,17 +1,14 @@
-//
-//  YearAndMonthPicker.h
-//  pop'n rhythmin
-//
-//  A UIPickerView subclass with two wheels — a year wheel (1900 + row) and a
-//  wrapping month wheel — used by the birthday age gate. It is its own data
-//  source + delegate; -year / -month return the currently selected values.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (year @
-//  0x8f410, numberOfComponentsInPickerView:
-//  @ 0x8f030, pickerView:numberOfRowsInComponent: @ 0x8f034,
-//  pickerView:widthForComponent:
-//  @ 0x8f064, pickerView:didSelectRow:inComponent: @ 0x8f0e4,
-//  pickerView:viewForRow:forComponent:reusingView: @ 0x8f180).
-//
+/**
+ * @file
+ * @brief A UIPickerView subclass with two wheels, used by the birthday age gate.
+ *
+ * The wheels are a year wheel (1900 plus the row) and a wrapping month wheel. It is its own data
+ * source and delegate; -year and -month return the currently selected values. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (year @ 0x8f410, numberOfComponentsInPickerView: @
+ * 0x8f030, pickerView:numberOfRowsInComponent: @ 0x8f034, pickerView:widthForComponent: @ 0x8f064,
+ * pickerView:didSelectRow:inComponent: @ 0x8f0e4, and
+ * pickerView:viewForRow:forComponent:reusingView: @ 0x8f180).
+ */
 
 #import <UIKit/UIKit.h>
 

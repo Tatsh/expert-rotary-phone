@@ -1,20 +1,17 @@
-//
-//  FriendScoreMainView.h
-//  pop'n rhythmin
-//
-//  The friend-score ranking screen for one song: a UIViewController that hosts
-//  three friend-score tables (Normal / Hyper / Ex). On phone the three tables
-//  are the pages of a UITabBarController (custom tab art, iOS-7 rendering-mode
-//  handling); on pad they are laid out side by side. This controller is the
-//  shared data source / delegate of all three UITableViewControllers and
-//  renders FriendScoreTableCell rows. It POSTs the friend-score request through
-//  the Downloader HTTP helper and also listens for the DownloadMain friend-list
-//  refresh so it can re-order the rows to match the local friend list.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initAtNavigationControllerWithMusicId: @ 0xa9df0 and 24 more methods).
-//  Built in FriendScoreMainView.mm (Objective-C++: drives the C++
-//  neSceneManager singleton).
-//
+/**
+ * @file
+ * @brief The friend-score ranking screen for one song.
+ *
+ * A UIViewController hosting three friend-score tables (Normal, Hyper, Ex). On phone the three
+ * tables are the pages of a UITabBarController, with custom tab art and iOS 7 rendering-mode
+ * handling; on pad they are laid out side by side. This controller is the shared data source and
+ * delegate of all three UITableViewControllers and renders FriendScoreTableCell rows. It POSTs
+ * the friend-score request through the Downloader HTTP helper and also listens for the
+ * DownloadMain friend-list refresh so it can re-order the rows to match the local friend list.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initAtNavigationControllerWithMusicId: @ 0xa9df0 and 24 more methods). Built in
+ * FriendScoreMainView.mm, which drives the C++ neSceneManager singleton.
+ */
 
 #import <UIKit/UIKit.h>
 

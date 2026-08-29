@@ -1,15 +1,13 @@
-//
-//  StorePackMusicView.h
-//  pop'n rhythmin
-//
-//  One song row inside the iPad pack-detail panel: a jacket (async
-//  StoreImageView with a drop shadow), the title + artist labels, a "LEVEL: b /
-//  m / h" line, a sample-preview button with a spinner, an iTunes-link button,
-//  and a hidden arcade-availability badge. Four of these stack inside a
-//  StorePackDetailViewPad. Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithFrame: @ 0x50b88, setInfo: @ 0x51408, sampleStop @
-//  0x51748).
-//
+/**
+ * @file
+ * @brief One song row inside the iPad pack-detail panel.
+ *
+ * A jacket (an async StoreImageView with a drop shadow), the title and artist labels, a
+ * "LEVEL: b / m / h" line, a sample-preview button with a spinner, an iTunes-link button, and a
+ * hidden arcade-availability badge. Four of these stack inside a StorePackDetailViewPad.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithFrame: @ 0x50b88,
+ * setInfo: @ 0x51408, sampleStop @ 0x51748).
+ */
 
 #import <UIKit/UIKit.h>
 

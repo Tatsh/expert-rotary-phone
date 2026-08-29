@@ -1,7 +1,10 @@
-/** @file
- * The first-run "accept the terms of use" modal: a rounded, gradient-filled card centred over the
- * game view. It holds a scrolling terms summary (a read-only CustomTextView inside an embedded
- * navigation controller) and three buttons: show the full PolicyView, reject, and accept.
+/**
+ * @file
+ * @brief The first-run "accept the terms of use" modal.
+ *
+ * A rounded, gradient-filled card centred over the game view. It holds a scrolling terms summary
+ * (a read-only CustomTextView inside an embedded navigation controller) and three buttons: show
+ * the full PolicyView, reject, and accept.
  * Accepting records the agreement through UserSettingData. MainViewController's GotoAcceptPolicy
  * adds the view over the root and calls startOpenAnimation.
  */

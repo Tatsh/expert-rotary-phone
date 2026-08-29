@@ -1,6 +1,8 @@
-/** @file
- * Fetch, insert and integrity class methods on the ScoreData entity. Reconstructed from Ghidra
- * project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief Fetch, insert and integrity class methods on the ScoreData entity.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
  * The score record carries an MD5 tamper-check (`chksco`) computed over the music id and the three
  * difficulty scores; checkScore: validates it and the caller resets the record if it fails.

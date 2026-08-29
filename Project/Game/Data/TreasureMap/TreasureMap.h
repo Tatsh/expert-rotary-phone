@@ -1,19 +1,17 @@
-//
-//  TreasureMap.h
-//  pop'n rhythmin
-//
-//  The parsed sugoroku (board-game) map: a table of board squares
-//  ("nodes"/areas) plus a few header fields, loaded from a bundled
-//  "map_%03d.map" blob. The arcade task (AcMainTask::loadTreasureMap, Ghidra
-//  charaSelectReloadData @ 0xa0b58) news one of these per goal, loads it, then
-//  reads its node bounding box to place + clamp the scroll.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (ctor FUN_000ce2b0 zeroes 0x60 bytes; parser FUN_000ce340; area lookup
-//  FUN_000ce934; destructor FUN_000ce330). Only the offsets the arcade scene
-//  reads are byte-verified and named; the rest of the 0x60-byte object is kept
-//  as padding.
-//
+/**
+ * @file
+ * @brief The parsed sugoroku (board-game) map.
+ *
+ * A table of board squares (nodes, or areas) plus a few header fields, loaded from a bundled
+ * "map_%03d.map" blob. The arcade task (AcMainTask::loadTreasureMap, Ghidra charaSelectReloadData
+ * @ 0xa0b58) news one of these per goal, loads it, then reads its node bounding box to place and
+ * clamp the scroll.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor FUN_000ce2b0 zeroes 0x60
+ * bytes; parser FUN_000ce340; area lookup FUN_000ce934; destructor FUN_000ce330). Only the
+ * offsets the arcade scene reads are byte-verified and named; the rest of the 0x60-byte object is
+ * kept as padding.
+ */
 
 #pragma once
 
@@ -233,57 +231,96 @@ private:
 // TreasureMap.mm).
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Ghidra: FUN_000ce0ec
-// If checkBackLink != 0: returns 1 when node->backLink is non-null, else 0.
-// If checkBackLink == 0: counts non-null slots in node->links[0..2] (stop at
-// first null).
+/**
+ * @brief Count a board node's links.
+ *
+ * @param node The node to inspect.
+ * @param checkBackLink When non-zero, return 1 if node->backLink is non-null and 0 otherwise;
+ * when zero, count the non-null slots in node->links[0..2], stopping at the first null.
+ * @return The count described above.
+ * @ghidraAddress 0xce0ec
+ */
 unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink);
 
-// Cardinal search direction for findAdjacentSquareIndex. The geometry is fixed
-// by the board's screen coordinates: a lower x is further left, a lower y is
-// further up (Ghidra-verified in FUN_000ce114, whose case arms compare exactly
-// these axes). The perpendicular axis must match for a link to qualify.
+/**
+ * @brief The cardinal search direction for findAdjacentSquareIndex.
+ *
+ * The geometry is fixed by the board's screen coordinates: a lower x is further left and a lower y
+ * is further up, verified in Ghidra's FUN_000ce114, whose case arms compare exactly these axes.
+ * The perpendicular axis must match for a link to qualify.
+ */
 enum TreasureMapDirection : int {
-    kTreasureDirLeft = 0,  // neighbour with link->x < node->x, same row (y)
-    kTreasureDirRight = 1, // neighbour with link->x > node->x, same row (y)
-    kTreasureDirUp = 2,    // neighbour with link->y < node->y, same column (x)
-    kTreasureDirDown = 3,  // neighbour with link->y > node->y, same column (x)
+    kTreasureDirLeft = 0,  /**< A neighbour with link->x below node->x, in the same row. */
+    kTreasureDirRight = 1, /**< A neighbour with link->x above node->x, in the same row. */
+    kTreasureDirUp = 2,    /**< A neighbour with link->y below node->y, in the same column. */
+    kTreasureDirDown = 3,  /**< A neighbour with link->y above node->y, in the same column. */
 };
 
-// Ghidra: FUN_000ce114
-// Searches node->links[0..2] for a neighbour that lies in the given cardinal
-// direction relative to node (same-axis coordinate must match). Returns the
-// slot index (0..2) of the matching link, or -1 if not found.
+/**
+ * @brief Find the link slot holding the neighbour in a given cardinal direction.
+ *
+ * It searches node->links[0..2] for a neighbour lying in that direction relative to node; the
+ * same-axis coordinate must match.
+ *
+ * @param node The node to search from.
+ * @param direction The cardinal direction to search in.
+ * @return The slot index, 0 to 2, of the matching link, or -1 when there is none.
+ * @ghidraAddress 0xce114
+ */
 int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection direction);
 
-// Ghidra: FUN_000ce180
-// Indexes kTreasureMapTable[mainMapId][subMapId] (DAT_0012fac4, row stride
-// 0xc). Returns the earned goal-star count for the given map/area pair.
+/**
+ * @brief The earned goal-star count for one map and area pair.
+ *
+ * It indexes kTreasureMapTable[mainMapId][subMapId] (DAT_0012fac4, row stride 0xc).
+ *
+ * @param mainMapId The main map id.
+ * @param subMapId The area id within that map.
+ * @return The earned goal-star count.
+ * @ghidraAddress 0xce180
+ */
 int getTreasureMapTableEntry(int mainMapId, int subMapId);
 
-// Ghidra: FUN_000ce198
-// Returns kParentMapTable[mapId] (DAT_0012fb30) — parent main-map id, -1 for
-// roots.
+/**
+ * @brief The parent main-map id of a map, from kParentMapTable (DAT_0012fb30).
+ * @param mapId The map id.
+ * @return The parent main-map id, or -1 for a root.
+ * @ghidraAddress 0xce198
+ */
 int getTreasureMapValue_fb30(int mapId);
 
-// Ghidra: getCharacterAssetCount @ 0xce1a8 (address-sweep fix: 0xce1c8 was
-// mid-body) Returns the number of character message strings for the given
-// character id. characterId encodes: group = id/10 (valid: 6, 8), slot = id%10
-// (valid: 0..2). Called by both getCharacterAssetName and
-// charaSelectReloadData.
+/**
+ * @brief The number of character message strings for a character id.
+ *
+ * The id encodes a group as `id / 10`, valid for 6 and 8, and a slot as `id % 10`, valid for 0 to
+ * 2. Both getCharacterAssetName and charaSelectReloadData call it. The address is an
+ * address-sweep fix: 0xce1c8 was mid-body.
+ *
+ * @param characterId The encoded character id.
+ * @return The number of message strings.
+ * @ghidraAddress 0xce1a8
+ */
 int getCharacterAssetCount(int characterId);
 
-// Ghidra: FUN_000ce200
-// Returns a UTF-8 character message string from the baked pool for the given
-// (characterId, slotIndex). slotIndex must be in [0,
-// getCharacterAssetCount(characterId)). Returns null for out-of-range or
-// unrecognised ids.
+/**
+ * @brief A UTF-8 character message string from the baked pool.
+ *
+ * @param characterId The encoded character id.
+ * @param slotIndex The message slot, which must lie in [0, getCharacterAssetCount(characterId)).
+ * @return The string, or null for an out-of-range or unrecognised id.
+ * @ghidraAddress 0xce200
+ */
 const char *getCharacterAssetName(int characterId, int slotIndex);
 
-// Ghidra: FUN_000cea50
-// Returns kSubMapFlagTable[mapId] (DAT_0012fb54). The first argument is ignored
-// by the binary (matches the undefined4 Ghidra type; preserved for ABI
-// fidelity).
+/**
+ * @brief The sub-map flag for a map, from kSubMapFlagTable (DAT_0012fb54).
+ *
+ * @param unused Ignored by the binary; it matches the undefined4 Ghidra type and is preserved for
+ * ABI fidelity.
+ * @param mapId The map id.
+ * @return The table entry.
+ * @ghidraAddress 0xcea50
+ */
 int getTreasureMapValue_fb54(int unused, int mapId);
 
 // code: language=Objective-C++ insertSpaces=true tabSize=4

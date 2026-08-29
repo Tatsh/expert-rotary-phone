@@ -1,8 +1,10 @@
-/** @file
- * Reconstructed from Ghidra project rb420, program PopnRhythmin. The render/input manager
- * singleton (@ DAT_00188384, operator_new(0x8c)): it owns the device content scale and the pool of
- * live touch points. The GL view (neGLView) feeds touches in; the play-judge loop reads them back
- * out.
+/**
+ * @file
+ * @brief The render and input manager singleton.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (@ DAT_00188384,
+ * operator_new(0x8c)). It owns the device content scale and the pool of live touch points. The GL
+ * view (neGLView) feeds touches in; the play-judge loop reads them back out.
  *
  * Provisional name: the exact class name is not recovered from RTTI, so this keeps the
  * System-layer "ne" convention. The bridge accessor FUN_00012358 simply returns the DAT_00188384
@@ -238,7 +240,3 @@ bool isWithinRange2D(
  */
 int findCharIndexForColumn(NSString *text, int columnWidth);
 #endif
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

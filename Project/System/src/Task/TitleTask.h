@@ -1,19 +1,15 @@
-//
-//  TitleTask.h
-//  pop'n rhythmin
-//
-//  The title screen + first-run flow task, spawned by BootLogoTask after the
-//  logo splash. Plays the title BGM, shows the version, and drives the
-//  first-run gate (policy acceptance -> conversion code -> DL file-list check
-//  -> default download
-//  -> version-update check) before handing off to the main-menu task.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor
-//  TitleTask_ctor FUN_0002b678, update FUN_0002b838, setup FUN_0002c084, finish
-//  FUN_0002c3d0).
-//
-//  Objective-C++ (ARC-off, matching the engine): drives UIKit through the
-//  bridged root view controller. Compiled only via TitleTask.mm.
-//
+/**
+ * @file
+ * @brief The title screen and first-run flow task, spawned by BootLogoTask after the logo splash.
+ *
+ * It plays the title BGM, shows the version, and drives the first-run gate (policy acceptance,
+ * conversion code, DL file-list check, default download, version-update check) before handing off
+ * to the main-menu task. Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor
+ * TitleTask_ctor FUN_0002b678, update FUN_0002b838, setup FUN_0002c084, finish FUN_0002c3d0).
+ *
+ * Objective-C++ (ARC-off, matching the engine): it drives UIKit through the bridged root view
+ * controller. Compiled only via TitleTask.mm.
+ */
 
 #pragma once
 

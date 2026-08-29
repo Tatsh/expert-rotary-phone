@@ -258,7 +258,3 @@
 // .cxx_destruct @ 0x100664 — compiler-emitted ARC teardown; not hand-written.
 
 @end
-
-// kate: hl Objective-C; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objc sw=4 ts=4 et :
-// code: language=Objective-C insertSpaces=true tabSize=4

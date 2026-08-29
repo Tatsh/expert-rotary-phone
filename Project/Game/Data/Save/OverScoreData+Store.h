@@ -1,6 +1,9 @@
-/** @file
- * Fetch, insert, update and delete class methods on the OverScoreData entity (online rival
- * scores). Reconstructed from Ghidra project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief Fetch, insert, update and delete class methods on the OverScoreData entity, the online
+ * rival scores.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <CoreData/CoreData.h>

@@ -1,26 +1,22 @@
-//
-//  CustomWebView.h
-//  pop'n rhythmin
-//
-//  An in-app web panel (a UIView, not a view controller) that hosts a web view
-//  over the app's root scene view. Used by the Setting screens (SettingOther /
-//  SettingTable) to show the official "app info / お知らせ" page: -initWithURL:
-//  builds the panel, attaches itself over the root view, starts loading the URL
-//  and shows a centred spinner; a small close button (top-right) and a big
-//  close button (pinned to the bottom of the scrolled content, revealed via a
-//  contentSize KVO observer) both dismiss it with a fade animation. On a
-//  successful load, if the Twitter-follow bonus has not yet been claimed it
-//  adds a "follow us" button that awards treasure points.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (CustomWebView methods @ 0x5df50..0x5ee38). Superclass is UIView (Ghidra
-//  shows the ivars are laid out after UIView and the initializer / dealloc
-//  chain to UIView).
-//
-//  The panel-close notification is delivered through a plain C function pointer
-//  (m_AlertViewCallback) rather than a delegate/target — see
-//  -SetCloseCallback:param:.
-//
+/**
+ * @file
+ * @brief An in-app web panel, a UIView rather than a view controller, hosting a web view over the
+ * app's root scene view.
+ *
+ * The Setting screens (SettingOther and SettingTable) use it to show the official "app info /
+ * お知らせ" page. -initWithURL: builds the panel, attaches itself over the root view, starts
+ * loading the URL, and shows a centred spinner; a small close button (top-right) and a big close
+ * button (pinned to the bottom of the scrolled content, revealed via a contentSize KVO observer)
+ * both dismiss it with a fade animation. On a successful load, if the Twitter-follow bonus has not
+ * yet been claimed it adds a "follow us" button that awards treasure points.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (CustomWebView methods @
+ * 0x5df50..0x5ee38). The superclass is UIView: Ghidra shows the ivars are laid out after UIView
+ * and the initializer and dealloc chain to UIView.
+ *
+ * The panel-close notification is delivered through a plain C function pointer
+ * (m_AlertViewCallback) rather than a delegate or target; see -SetCloseCallback:param:.
+ */
 
 #import <UIKit/UIKit.h>
 

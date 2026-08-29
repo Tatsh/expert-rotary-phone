@@ -1,5 +1,8 @@
-/** @file
- * Base class of the engine's task/scene framework. Every gameplay and animated screen (MainTask,
+/**
+ * @file
+ * @brief The base class of the engine's task and scene framework.
+ *
+ * Every gameplay and animated screen (MainTask,
  * TitleTask, AcMainTask, PlayResultTask, AcViewerTask, ...) derives from C_TASK. Reconstructed
  * from Ghidra project rb420, program PopnRhythmin (Objective-C type-encoding:
  * "{C_TASK=^^?^{C_TASK}^{C_TASK}i...}").
@@ -102,7 +105,3 @@ protected:
 };
 
 } // namespace ne
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

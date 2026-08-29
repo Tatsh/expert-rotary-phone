@@ -1,19 +1,16 @@
-//
-//  MapSelectViewController.h
-//  pop'n rhythmin
-//
-//  The sugoroku "main map" select screen: a grouped UITableViewController
-//  listing every main map the player has a save record for, one MapListCell per
-//  map. On phone selecting a map pushes the SubMapSelectViewController (area
-//  list); on pad the screen is embedded in a MapSelectSplitViewController and
-//  forwards the selection to that overlay owner (mapSelectDelegate) instead. A
-//  scrolling event banner is shown above the list when a treasure event is
-//  running (kept refreshed off DownloadMain's event-info push). Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xbec60,
-//  initAtNavigationController @ 0xbf498 and 17 more methods). Built in
-//  MapSelectViewController.mm (Objective-C++: drives the C++ neSceneManager
-//  singleton).
-//
+/**
+ * @file
+ * @brief The sugoroku "main map" select screen.
+ *
+ * A grouped UITableViewController listing every main map the player has a save record for, one
+ * MapListCell per map. On phone, selecting a map pushes the SubMapSelectViewController area list;
+ * on pad the screen is embedded in a MapSelectSplitViewController and forwards the selection to
+ * that overlay owner (mapSelectDelegate) instead. A scrolling event banner is shown above the list
+ * when a treasure event is running, kept refreshed off DownloadMain's event-info push.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xbec60,
+ * initAtNavigationController @ 0xbf498, and 17 more methods). Built in MapSelectViewController.mm,
+ * which drives the C++ neSceneManager singleton.
+ */
 
 #import <UIKit/UIKit.h>
 

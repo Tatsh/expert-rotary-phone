@@ -1,27 +1,25 @@
-//
-//  SettingTableSplitViewController.h
-//  pop'n rhythmin
-//
-//  The iPad layout of the settings menu: a floating split panel over a dimmed,
-//  tappable backdrop — a left column that is a SettingTopViewController (the
-//  four custom buttons: ゲーム / 遊び方 / お問い合わせ / その他) and a right
-//  rounded, bordered UINavigationController pane that hosts the matching
-//  settings sub-table. A selection arrow slides between the four rows.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
-//  0xb5cb0 and 12 more methods). Built in SettingTableSplitViewController.mm
-//  (Objective-C++: drives the C++ neSceneManager / neEngine singletons for SE
-//  playback + the root-VC close callback).
-//
-//  This controller is the SettingTopViewController's pad split delegate: it
-//  adopts SettingTopViewControllerDalegate (typo preserved from the binary) so
-//  the left column forwards its four button taps here, and it swaps the right
-//  pane / moves the arrow in response (startViewAnimation:).
-//
-//  Follows the app-wide modal-VC lifecycle (see SettingTableViewController.h):
-//  startOpenAnimation fades the view + nav view 0 -> 1; startCloseAnimation
-//  fades 1 -> 0; endCloseAnimation removes the view and notifies the host via
-//  -[MainViewController SettingEndCallBack].
-//
+/**
+ * @file
+ * @brief The iPad layout of the settings menu.
+ *
+ * A floating split panel over a dimmed, tappable backdrop: a left column that is a
+ * SettingTopViewController, carrying the four custom buttons ゲーム, 遊び方, お問い合わせ, and
+ * その他, and a right rounded, bordered UINavigationController pane hosting the matching settings
+ * sub-table. A selection arrow slides between the four rows. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin (init @ 0xb5cb0 and 12 more methods). Built in
+ * SettingTableSplitViewController.mm, which drives the C++ neSceneManager and neEngine singletons
+ * for SE playback and the root-VC close callback.
+ *
+ * This controller is the SettingTopViewController's pad split delegate: it adopts
+ * SettingTopViewControllerDalegate (the typo is preserved from the binary) so the left column
+ * forwards its four button taps here, and it swaps the right pane and moves the arrow in response
+ * through startViewAnimation:.
+ *
+ * It follows the app-wide modal view-controller lifecycle (see SettingTableViewController.h):
+ * startOpenAnimation fades the view and nav view 0 -> 1; startCloseAnimation fades 1 -> 0;
+ * endCloseAnimation removes the view and notifies the host via -[MainViewController
+ * SettingEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

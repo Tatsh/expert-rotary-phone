@@ -1,5 +1,7 @@
-/** @file
- * Blowfish (CBC) codec used to protect the purchased-song lists ("mulist"/"acmulist").
+/**
+ * @file
+ * @brief The Blowfish (CBC) codec protecting the purchased-song lists ("mulist"/"acmulist").
+ *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
  * Wire format (produced by -encipher:, consumed by -decipher:):

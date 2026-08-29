@@ -1,15 +1,13 @@
-//
-//  StoreMusicInfo.h
-//  pop'n rhythmin
-//
-//  One playable song listed inside a store pack: id, title/artist, purchase +
-//  sample + artwork + iTunes links, and the three difficulty levels (Basic /
-//  Medium / Hard, each clamped to a valid range). Built from a server
-//  dictionary.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithDictionary: @ 0x56398).
-//
+/**
+ * @file
+ * @brief One playable song listed inside a store pack.
+ *
+ * It carries the id, title and artist, the purchase, sample, artwork, and iTunes links, and the
+ * three difficulty levels (Basic, Medium, and Hard, each clamped to a valid range). It is built
+ * from a server dictionary.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithDictionary: @ 0x56398).
+ */
 
 #import <Foundation/Foundation.h>
 

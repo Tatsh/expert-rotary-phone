@@ -1,17 +1,14 @@
-//
-//  InputKidViewController.h
-//  pop'n rhythmin
-//
-//  The "enter an invite code" screen, pushed by InviteTopViewController's guest
-//  panel. An 8-char code field, a decide button that POSTs the code (with the
-//  device uuid) to the invite endpoint, and a translucent activity spinner
-//  while the request is in flight. On success it grants 5 character tickets and
-//  marks the code as redeemed (a code may be entered only once). Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin (init @ 0xe7cec,
-//  startInviteHttp:
-//  @ 0xe8b5c). Built in InputKidViewController.mm (Objective-C++: the SE /
-//  scene bridge drives the C++ neEngine singletons).
-//
+/**
+ * @file
+ * @brief The "enter an invite code" screen, pushed by InviteTopViewController's guest panel.
+ *
+ * An 8-character code field, a decide button that POSTs the code, with the device uuid, to the
+ * invite endpoint, and a translucent activity spinner while the request is in flight. On success
+ * it grants 5 character tickets and marks the code as redeemed; a code may be entered only once.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0xe7cec, startInviteHttp:
+ * @ 0xe8b5c). Built in InputKidViewController.mm, where the SE and scene bridge drives the C++
+ * neEngine singletons.
+ */
 
 #import <UIKit/UIKit.h>
 

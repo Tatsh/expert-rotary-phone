@@ -1,13 +1,11 @@
-//
-//  RewardNetworkMessage.h
-//  pop'n rhythmin
-//
-//  Konami "RewardNetwork" (Applilink) ad-SDK localized-message lookup.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. No instance
-//  state (instanceSize 4
-//  == isa only, no ivars, no instance methods); the single factory lives on the
-//  metaclass.
-//
+/**
+ * @file
+ * @brief The Konami "RewardNetwork" (Applilink) ad-SDK localised-message lookup.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. It holds no instance state
+ * (instanceSize 4, isa only, no ivars, no instance methods); the single factory lives on the
+ * metaclass.
+ */
 
 #import <Foundation/Foundation.h>
 

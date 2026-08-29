@@ -1,19 +1,17 @@
-//
-//  ConversionView.h
-//  pop'n rhythmin
-//
-//  The "device change" (kishu henkou / data-transfer) panel embedded into the
-//  "Other" settings screen (SettingOtherTableViewController, section 2 row 1).
-//  It shows a caution notice and a how-to, and — when the user confirms — POSTs
-//  the player's full local save (purchases, got characters, per-music scores,
-//  treasure progress, chara tickets) to the convert-code endpoint via
-//  Downloader. On success it shows the issued "device change pass", offers to
-//  mail it or wipe-and-return to the title. Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin (ConversionView @ 0x1be48..0x1de8c).
-//
-//  .mm because it drives the C++ neEngine / neSceneManager singletons (system
-//  SE, root view controller) and goes through the Downloader bridge.
-//
+/**
+ * @file
+ * @brief The "device change" (kishu henkou, or data-transfer) panel.
+ *
+ * It is embedded into the "Other" settings screen (SettingOtherTableViewController, section 2 row
+ * 1). It shows a caution notice and a how-to, and, when the user confirms, POSTs the player's
+ * full local save (purchases, got characters, per-music scores, treasure progress, chara tickets)
+ * to the convert-code endpoint via Downloader. On success it shows the issued "device change
+ * pass" and offers to mail it or wipe and return to the title. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin (ConversionView @ 0x1be48..0x1de8c).
+ *
+ * The implementation is .mm because it drives the C++ neEngine and neSceneManager singletons (the
+ * system SE and the root view controller) and goes through the Downloader bridge.
+ */
 
 #import <UIKit/UIKit.h>
 

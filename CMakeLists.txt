@@ -73,6 +73,7 @@ if(BUILD_DOCS OR BUILD_DOCS_ONLY)
         "NS_OPTIONS(_type,_name)=enum _name : _type"
         "__attribute__(x)="
         "__OBJC__=1")
+    set(DOXYGEN_EXCLUDE "${CMAKE_SOURCE_DIR}/Project/System/src/Util/bf_init_bytes.inc")
     find_package(Doxygen REQUIRED)
     doxygen_add_docs(docs README.md Project ALL)
 endif()

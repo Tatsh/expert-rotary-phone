@@ -1,18 +1,15 @@
-//
-//  FriendRequestTable.h
-//  pop'n rhythmin
-//
-//  The list of friend requests *you have sent* (the lower table embedded in
-//  FriendRequestViewController). A grouped-style UITableViewController with a
-//  "fripre_table" background plate, a dimmed dummy overlay carrying a spinner
-//  while the sent-request list downloads, and one FriendRequestCell per
-//  outstanding request (each with its own Cancel button). When the list comes
-//  back empty it shows a "fripre_empty" placeholder and disables scrolling.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0xb7148 and 14 more methods). Built in
-//  FriendRequestTable.mm (Objective-C++: drives the C++ neSceneManager /
-//  neEngine singletons).
-//
+/**
+ * @file
+ * @brief The list of friend requests you have sent, the lower table embedded in
+ * FriendRequestViewController.
+ *
+ * A grouped-style UITableViewController with a "fripre_table" background plate, a dimmed dummy
+ * overlay carrying a spinner while the sent-request list downloads, and one FriendRequestCell per
+ * outstanding request, each with its own Cancel button. When the list comes back empty it shows a
+ * "fripre_empty" placeholder and disables scrolling. Reconstructed from Ghidra project rb420,
+ * program PopnRhythmin (initWithStyle: @ 0xb7148 and 14 more methods). Built in
+ * FriendRequestTable.mm, which drives the C++ neSceneManager and neEngine singletons.
+ */
 
 #import <UIKit/UIKit.h>
 

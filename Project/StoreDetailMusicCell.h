@@ -1,14 +1,12 @@
-//
-//  StoreDetailMusicCell.h
-//  pop'n rhythmin
-//
-//  One song row in the iPhone StoreDetailViewController table: jacket + name +
-//  artist + a "LEVEL b/m/h" line, an optional arcade-viewer badge, an iTunes
-//  link, and a sample-play button with buffering / playing states.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0x7457c, setLink: @ 0x7501c, sampleStop @
-//  0x75094). The view build lives in StoreDetailMusicCell.m.
-//
+/**
+ * @file
+ * @brief One song row in the iPhone StoreDetailViewController table.
+ *
+ * It carries the jacket, name, artist, and a "LEVEL b/m/h" line, an optional arcade-viewer badge,
+ * an iTunes link, and a sample-play button with buffering and playing states. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x7457c, setLink: @
+ * 0x7501c, sampleStop @ 0x75094). The view build lives in StoreDetailMusicCell.m.
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,19 +1,16 @@
-//
-//  StoreMainViewController.h
-//  pop'n rhythmin
-//
-//  The store's main tab: browses the song-pack catalogue in a table, drives two
-//  StorePackListControllers (the normal list and the recommend list), lazily
-//  loads jacket artwork, and pushes pack-detail screens. This file is grown
-//  incrementally from the decompilation; the constructor + the methods the host
-//  calls land first, the table datasource / download callbacks / detail
-//  navigation follow.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithParent: @ 0x42b40   startStoreClose @ 0x4a2d8   isAlertViewShowing
-//    @ 0x4a2ec packListDownloadSuccess: @ 0x449e0 (reconstructed alongside the
-//    table methods)
-//
+/**
+ * @file
+ * @brief The store's main tab.
+ *
+ * It browses the song-pack catalogue in a table, drives two StorePackListControllers (the normal
+ * list and the recommend list), lazily loads jacket artwork, and pushes pack-detail screens. This
+ * file is grown incrementally from the decompilation: the constructor and the methods the host
+ * calls land first, and the table data source, download callbacks, and detail navigation follow.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: initWithParent: @ 0x42b40,
+ * startStoreClose @ 0x4a2d8, isAlertViewShowing @ 0x4a2ec, and packListDownloadSuccess: @ 0x449e0,
+ * reconstructed alongside the table methods.
+ */
 
 #import <UIKit/UIKit.h>
 

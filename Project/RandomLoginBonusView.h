@@ -1,20 +1,19 @@
-//
-//  RandomLoginBonusView.h
-//  pop'n rhythmin
-//
-//  Random login-bonus "slot machine" reward popup. A full-screen dimming UIView
-//  overlay carrying a "login_board_02" panel and a four-digit number display
-//  (num_logb_* reels). On show it credits the rolled bonus to the player's
-//  treasure points; the reels spin until the board is tapped, at which point
-//  each digit locks with a bounce and a gift-styled CustomAlertView reports the
-//  amount. Loads/plays/releases its SE through AudioManager.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin.
-//
-//  NOTE ON SUPERCLASS: the binary builds `self` with -[UIView initWithFrame:],
-//  tears it down with -[UIView dealloc], and gives itself a semi-transparent
-//  black backgroundColor as a modal dimmer. Recovered superclass: UIView.
-//
+/**
+ * @file
+ * @brief The random login-bonus "slot machine" reward popup.
+ *
+ * A full-screen dimming UIView overlay carrying a "login_board_02" panel and a four-digit number
+ * display of num_logb_* reels. On show it credits the rolled bonus to the player's treasure
+ * points; the reels spin until the board is tapped, at which point each digit locks with a bounce
+ * and a gift-styled CustomAlertView reports the amount. It loads, plays, and releases its SE
+ * through AudioManager.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * On the superclass: the binary builds `self` with -[UIView initWithFrame:], tears it down with
+ * -[UIView dealloc], and gives itself a semi-transparent black backgroundColor as a modal dimmer.
+ * The recovered superclass is UIView.
+ */
 
 #import <UIKit/UIKit.h>
 

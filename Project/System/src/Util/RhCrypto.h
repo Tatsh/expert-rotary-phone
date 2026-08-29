@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file
+ * @brief Small C hashing and digest helpers shared by the reconstruction.
+ */
+
 #ifndef RHCRYPTO_H
 #define RHCRYPTO_H
 

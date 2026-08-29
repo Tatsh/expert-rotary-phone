@@ -1,6 +1,8 @@
-/** @file
- * Global user-settings and progress store. Reconstructed from Ghidra project rb420, program
- * PopnRhythmin. All methods are class methods.
+/**
+ * @file
+ * @brief The global user-settings and progress store.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. All methods are class methods.
  *
  * Two storage tiers:
  * - Plaintext NSUserDefaults (effects, last music and sheet).

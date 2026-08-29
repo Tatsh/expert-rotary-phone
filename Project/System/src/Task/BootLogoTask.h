@@ -1,14 +1,12 @@
-//
-//  BootLogoTask.h
-//  pop'n rhythmin
-//
-//  The boot "logo / warning" splash task, created by startBootTask at
-//  priority 3. It shows three branding screens (each faded in, held ~2s or
-//  until tapped, then faded out), logs into Game Center, and hands off to the
-//  next task. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (ctor BootLogoTask_ctor FUN_0002af58, update FUN_0002b02c, setup
-//  FUN_0002b1f4, finish FUN_0002b554).
-//
+/**
+ * @file
+ * @brief The boot "logo / warning" splash task, created by startBootTask at priority 3.
+ *
+ * It shows three branding screens (each faded in, held ~2s or until tapped, then faded out),
+ * logs into Game Center, and hands off to the next task. Reconstructed from Ghidra project
+ * rb420, program PopnRhythmin (ctor BootLogoTask_ctor FUN_0002af58, update FUN_0002b02c, setup
+ * FUN_0002b1f4, finish FUN_0002b554).
+ */
 
 #pragma once
 
@@ -64,7 +62,3 @@ private:
     };
     BootState m_state = kBootStateSetup; // +0x48 state machine
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

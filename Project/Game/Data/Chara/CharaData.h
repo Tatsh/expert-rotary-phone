@@ -1,10 +1,10 @@
-//
-//  CharaData.h
-//  pop'n rhythmin
-//
-//  Hardcoded table of the 30 built-in characters. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (Objective-C++: entries hold NSStrings).
-//
+/**
+ * @file
+ * @brief The hardcoded table of the 30 built-in characters.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (Objective-C++: entries hold
+ * NSStrings).
+ */
 
 #pragma once
 

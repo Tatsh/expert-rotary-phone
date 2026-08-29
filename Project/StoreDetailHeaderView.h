@@ -1,13 +1,12 @@
-//
-//  StoreDetailHeaderView.h
-//  pop'n rhythmin
-//
-//  The table header of the iPhone StoreDetailViewController: the pack jacket,
-//  name, copyright and the buy / "INSTALLED" button. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (initWithFrame: @ 0x73a0c, loadPackInfo:
-//  @ 0x740d4, setArtwork: @ 0x74400, buttonPurchase @ 0x74564). The view build
-//  lives in StoreDetailHeaderView.m.
-//
+/**
+ * @file
+ * @brief The table header of the iPhone StoreDetailViewController.
+ *
+ * It carries the pack jacket, name, copyright, and the buy or "INSTALLED" button. Reconstructed
+ * from Ghidra project rb420, program PopnRhythmin (initWithFrame: @ 0x73a0c, loadPackInfo: @
+ * 0x740d4, setArtwork: @ 0x74400, buttonPurchase @ 0x74564). The view build lives in
+ * StoreDetailHeaderView.m.
+ */
 
 #import <UIKit/UIKit.h>
 

@@ -1,26 +1,22 @@
-//
-//  RecommendNetwork.h
-//  pop'n rhythmin
-//
-//  Konami "Applilink" Recommend ad SDK — the public facade the game talks to. A
-//  singleton whose designated initialiser runs [super init] on the shared
-//  "RewardNetwork" serial dispatch queue (so instance creation is serialised
-//  against the rest of the SDK's networking) and whose methods thinly forward
-//  to the RecommendCore singleton or drive a RecommendWebView directly.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Superclass
-//  (NSObject) and the int `_initializeFlg` ivar come from the Objective-C
-//  class_t metadata.
-//    +sharedInstance @ 0xebbb4   +allocWithZone: @ 0xebc44   init @ 0xeba74
-//    startWithCountryCode:categoryId:env:callback: @ 0xebd24
-//    openAppliListWithCallback: @ 0xebdbc openAppliListWithParentView:delegate:
-//    @ 0xebe4c openAppliListWithParentView:callback: @ 0xebf24   closeAppliList
-//    @ 0xec000 openRecommendPageWithCreateWebViewRect:parent:viewType:callback:
-//    @ 0xec044 closeRecommendPageWithParentView: @ 0xec170
-//    setRecommendPageVisibleWithParentView:flag: @ 0xec2dc
-//    rotateAppliListWithInterfaceOrientation:duration: @ 0xec460
-//    initializeFlg @ 0xec4b4   setInitializeFlg: @ 0xec4c4
-//
+/**
+ * @file
+ * @brief The public facade of the Konami "Applilink" Recommend ad SDK that the game talks to.
+ *
+ * A singleton whose designated initialiser runs [super init] on the shared "RewardNetwork" serial
+ * dispatch queue, so instance creation is serialised against the rest of the SDK's networking, and
+ * whose methods thinly forward to the RecommendCore singleton or drive a RecommendWebView
+ * directly.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. The superclass (NSObject) and the
+ * int `_initializeFlg` ivar come from the Objective-C class_t metadata: +sharedInstance @ 0xebbb4,
+ * +allocWithZone: @ 0xebc44, init @ 0xeba74, startWithCountryCode:categoryId:env:callback: @
+ * 0xebd24, openAppliListWithCallback: @ 0xebdbc, openAppliListWithParentView:delegate: @ 0xebe4c,
+ * openAppliListWithParentView:callback: @ 0xebf24, closeAppliList @ 0xec000,
+ * openRecommendPageWithCreateWebViewRect:parent:viewType:callback: @ 0xec044,
+ * closeRecommendPageWithParentView: @ 0xec170, setRecommendPageVisibleWithParentView:flag: @
+ * 0xec2dc, rotateAppliListWithInterfaceOrientation:duration: @ 0xec460, initializeFlg @ 0xec4b4,
+ * and setInitializeFlg: @ 0xec4c4.
+ */
 
 #import <Foundation/Foundation.h>
 

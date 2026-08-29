@@ -1,13 +1,11 @@
-//
-//  FriendReplyViewController.h
-//  pop'n rhythmin
-//
-//  The incoming-friend-requests screen (pushed by the friend hub's "reply"
-//  button): a table of FriendReplyCell rows, each an incoming request with
-//  accept (OK) / reject (NG) buttons that fire a reply POST. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (initWithStyle:
-//  @ 0xa7854 and 16 more methods). Built in FriendReplyViewController.mm.
-//
+/**
+ * @file
+ * @brief The incoming-friend-requests screen, pushed by the friend hub's "reply" button.
+ *
+ * A table of FriendReplyCell rows, each an incoming request with accept (OK) and reject (NG)
+ * buttons that fire a reply POST. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithStyle: @ 0xa7854 and 16 more methods). Built in FriendReplyViewController.mm.
+ */
 
 #import <UIKit/UIKit.h>
 

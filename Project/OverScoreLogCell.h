@@ -1,10 +1,10 @@
-//
-//  OverScoreLogCell.h
-//  pop'n rhythmin
-//
-//  An over-score (friend score) log row. Reconstructed from Ghidra project
-//  rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x69760).
-//
+/**
+ * @file
+ * @brief An over-score, or friend-score, log row.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0x69760).
+ */
 
 #import <UIKit/UIKit.h>
 

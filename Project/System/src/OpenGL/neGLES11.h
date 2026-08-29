@@ -1,6 +1,7 @@
-/** @file
- * OpenGL ES 1.1 rendering abstraction: the interface every on-screen sprite, texture, and
- * primitive is drawn through.
+/**
+ * @file
+ * @brief The OpenGL ES 1.1 rendering abstraction: the interface every on-screen sprite, texture,
+ * and primitive is drawn through.
  *
  * `neIGLES` is the abstract GL interface (it holds the enum vocabulary); `neGLES_11` is the GL ES
  * 1.1 backend. `neIGLES` derives from the engine's abstract `ne::C_RENDER`
@@ -804,7 +805,3 @@ private:
 };
 
 } // namespace ne
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

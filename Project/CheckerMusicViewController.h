@@ -1,12 +1,11 @@
-//
-//  CheckerMusicViewController.h
-//  pop'n rhythmin
-//
-//  Music-checker song list: a grouped table of one arcade category's songs,
-//  each row a CheckerMusicCell; selecting a row pushes a CheckerDetail score
-//  graph. Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithScoreData:category: @ 0xd27b8).
-//
+/**
+ * @file
+ * @brief The music-checker song list.
+ *
+ * A grouped table of one arcade category's songs, each row a CheckerMusicCell; selecting a row
+ * pushes a CheckerDetail score graph. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithScoreData:category: @ 0xd27b8).
+ */
 
 #import <UIKit/UIKit.h>
 

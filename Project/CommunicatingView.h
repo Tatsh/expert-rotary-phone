@@ -1,21 +1,17 @@
-//
-//  CommunicatingView.h
-//  pop'n rhythmin
-//
-//  A modal "communicating…" network-activity overlay: a centred window backdrop
-//  (cmn_window) with a spinning UIActivityIndicatorView and a "communicating"
-//  caption (mes_loading), plus a "communication failed" caption
-//  (mes_loadingerror) that is revealed by -failed. It fades itself in
-//  (-startOpenAnimation) and out (-startCloseAnimation), and while the failure
-//  caption is visible a tap dismisses it. On close it removes its view and
-//  calls -CommunicatingEndCallBack on the scene manager's root view controller.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (-init @
-//  0xde740, -viewDidLoad @ 0xdec30).
-//
-//  Despite the "View" name this is a UIViewController subclass (it overrides
-//  -viewDidLoad / -didReceiveMemoryWarning and builds its hierarchy under
-//  self.view).
-//
+/**
+ * @file
+ * @brief The modal "communicating…" network-activity overlay.
+ *
+ * A centred window backdrop (cmn_window) with a spinning UIActivityIndicatorView and a
+ * "communicating" caption (mes_loading), plus a "communication failed" caption (mes_loadingerror)
+ * that -failed reveals. It fades itself in (-startOpenAnimation) and out (-startCloseAnimation),
+ * and while the failure caption is visible a tap dismisses it. On close it removes its view and
+ * calls -CommunicatingEndCallBack on the scene manager's root view controller. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (-init @ 0xde740, -viewDidLoad @ 0xdec30).
+ *
+ * Despite the "View" name this is a UIViewController subclass: it overrides -viewDidLoad and
+ * -didReceiveMemoryWarning and builds its hierarchy under self.view.
+ */
 
 #import <UIKit/UIKit.h>
 

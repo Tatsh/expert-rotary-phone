@@ -1,6 +1,8 @@
-/** @file
- * Core Data managed object — per-song play records. Reconstructed from
- * ScoreData.momd/ScoreData_v2.mom (entity "ScoreData").
+/**
+ * @file
+ * @brief The ScoreData Core Data managed object: per-song play records.
+ *
+ * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "ScoreData").
  *
  * One row per music track. Scores, ranks and flags are tracked independently for the three local
  * difficulties Normal (N), Hyper (H) and EX. `chksco` is a binary integrity blob used to detect

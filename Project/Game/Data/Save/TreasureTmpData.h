@@ -1,5 +1,8 @@
-/** @file
- * The "pending treasure" snapshot: a flat, byte-serialised record persisted under the
+/**
+ * @file
+ * @brief The "pending treasure" snapshot.
+ *
+ * A flat, byte-serialised record persisted under the
  * NSUserDefaults key "TreasureTmpData" and read back by +[UserSettingData treasureTmp]. It carries
  * the goal the player just reached on the sugoroku board across the arcade launch: the arcade task
  * (AcMainTask, case 2) reads it each frame and, when a sub-map id is present (0 or above), loads
@@ -64,7 +67,3 @@ typedef struct __attribute__((packed)) TreasureTmpData {
 
 static_assert(sizeof(TreasureTmpData) == 0x53,
               "TreasureTmpData must stay 83 bytes: it is a byte-exact serialized save record");
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

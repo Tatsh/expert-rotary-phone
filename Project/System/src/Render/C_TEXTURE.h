@@ -1,6 +1,9 @@
-/** @file
- * A GL texture decoded from an image file, referenced by AepLyrCtrl layers and shared (refcounted,
- * keyed by path) through the engine's texture cache. On a GL context loss the name is freed and
+/**
+ * @file
+ * @brief A GL texture decoded from an image file.
+ *
+ * It is referenced by AepLyrCtrl layers and shared (refcounted, keyed by path) through the
+ * engine's texture cache. On a GL context loss the name is freed and
  * re-uploaded on return to foreground. Reconstructed from Ghidra project rb420, program
  * PopnRhythmin (RTTI type ne::C_TEXTURE, type_info @ 0x12e308; vtable @ 0x13089c; constructor
  * FUN_000180c4, load FUN_00018218, upload FUN_000185a0, releaseGL FUN_00018884, reload
@@ -263,7 +266,3 @@ void neTextureRebind(ne::C_TEXTURE *tex, const void *pixels);
  */
 ne::C_TEXTURE *
 neCreateTextureFromData(int width, int height, int format, const void *pixels, int texW, int texH);
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

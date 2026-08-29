@@ -1,13 +1,12 @@
-//
-//  StoreAcMusicInfo.h
-//  pop'n rhythmin
-//
-//  One arcade-viewer song listed inside a store pack: id, title, genre, and the
-//  purchase + sample links. Built from a server dictionary.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithDictionary: @ 0x852dc).
-//
+/**
+ * @file
+ * @brief One arcade-viewer song listed inside a store pack.
+ *
+ * It carries the id, title, genre, and the purchase and sample links, and is built from a server
+ * dictionary.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithDictionary: @ 0x852dc).
+ */
 
 #import <Foundation/Foundation.h>
 

@@ -1,20 +1,17 @@
-//
-//  AcViewerOptionViewController.h
-//  pop'n rhythmin
-//
-//  The arcade (AC) viewer's per-song options screen: a small UITableView-backed
-//  list of four gameplay-option rows (HI-SPEED / POP-KUN / HID-SUD / RAN-MIR),
-//  a custom header showing the chosen song's banner, difficulty banner and BPM,
-//  and — off the AC-main flow — PLAY / CONTINUE buttons plus a back button. It
-//  is pushed into the AC-viewer split panel's right navigation pane by
-//  AcViewerSplitViewController.endHiddenAnimation (which sets itself as the
-//  delegate), and drives the shared fade open/close lifecycle.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
-//  0xdeff0, initForAcMain: @ 0xdfc0c, the table data source / delegate, the
-//  play/resume/back actions, the sendLog analytics POST, and the open/close
-//  fade animations).
-//
+/**
+ * @file
+ * @brief The arcade (AC) viewer's per-song options screen.
+ *
+ * A small UITableView-backed list of four gameplay-option rows (HI-SPEED, POP-KUN, HID-SUD,
+ * RAN-MIR), a custom header showing the chosen song's banner, difficulty banner and BPM, and, off
+ * the AC-main flow, PLAY and CONTINUE buttons plus a back button. It is pushed into the AC-viewer
+ * split panel's right navigation pane by AcViewerSplitViewController.endHiddenAnimation (which
+ * sets itself as the delegate), and drives the shared fade open and close lifecycle.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0xdeff0, initForAcMain: @
+ * 0xdfc0c, the table data source and delegate, the play, resume, and back actions, the sendLog
+ * analytics POST, and the open and close fade animations).
+ */
 
 #import <UIKit/UIKit.h>
 

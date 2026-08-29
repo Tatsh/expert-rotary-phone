@@ -1,6 +1,8 @@
-/** @file
- * A set of character ids available for a limited time. Reconstructed from Ghidra project rb420,
- * program PopnRhythmin.
+/**
+ * @file
+ * @brief A set of character ids available for a limited time.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
 
 #import <Foundation/Foundation.h>

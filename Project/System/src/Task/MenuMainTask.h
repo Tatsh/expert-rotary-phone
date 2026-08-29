@@ -1,28 +1,24 @@
-//
-//  MenuMainTask.h
-//  pop'n rhythmin
-//
-//  The central mode-select hub task, spawned by TitleTask after the title
-//  screen. It fetches news + player data, runs the daily/login-bonus/unlock
-//  gates, then drives the interactive main menu: hit-testing the mode buttons
-//  to spawn the play / tutorial / arcade tasks or navigate to Store / Friend /
-//  PopnLink / Invite / PresentBox / ArcadeSearch / Settings. Reconstructed from
-//  Ghidra project rb420, program PopnRhythmin (ctor MenuMainTask_ctor
-//  FUN_0006aba0, update MenuMainTask_update FUN_0006ad88, ~0x1b0-byte task).
-//
-//  This is the single largest, most-connected task in the app; the verified
-//  state machine + button dispatch are reconstructed here, with the per-button
-//  screen rectangles recovered as real members (below).
-//
-//  ---- work area (this class IS the 0x1b0-byte MenuMainTask struct) ----
-//  ne::C_TASK's base is exactly 0x28 bytes, and MenuMainTask_ctor does
-//  memset(this + 0x28, 0, 0x185) — i.e. every field from +0x28..+0x1ad is
-//  zero-initialised — so the members below (default-initialised to 0) land at
-//  their true binary offsets. Offsets that setup()/update()/drawOverlay() reach
-//  in the binary are named; the two write-only sub-blocks that do not decompile
-//  into distinct scalars (the news-cache copy and the NEWS-ticker draw params)
-//  are kept as documented named blocks.
-//
+/**
+ * @file
+ * @brief The central mode-select hub task, spawned by TitleTask after the title screen.
+ *
+ * It fetches news and player data, runs the daily, login-bonus, and unlock gates, then drives
+ * the interactive main menu: hit-testing the mode buttons to spawn the play, tutorial, and
+ * arcade tasks or navigate to Store, Friend, PopnLink, Invite, PresentBox, ArcadeSearch, or
+ * Settings. Reconstructed from Ghidra project rb420, program PopnRhythmin (ctor MenuMainTask_ctor
+ * FUN_0006aba0, update MenuMainTask_update FUN_0006ad88, ~0x1b0-byte task).
+ *
+ * This is the single largest, most-connected task in the app; the verified state machine and
+ * button dispatch are reconstructed here, with the per-button screen rectangles recovered as real
+ * members.
+ *
+ * Work area (this class IS the 0x1b0-byte MenuMainTask struct): ne::C_TASK's base is exactly 0x28
+ * bytes, and MenuMainTask_ctor does memset(this + 0x28, 0, 0x185), so every field from
+ * +0x28..+0x1ad is zero-initialised and the members below (default-initialised to 0) land at
+ * their true binary offsets. Offsets that setup(), update(), and drawOverlay() reach in the
+ * binary are named; the two write-only sub-blocks that do not decompile into distinct scalars
+ * (the news-cache copy and the NEWS-ticker draw params) are kept as documented named blocks.
+ */
 
 #pragma once
 
@@ -224,7 +220,3 @@ private:
     bool m_infoFlag = false;                     // +0x1ac daily-info screen already shown
     [[maybe_unused]] uint8_t m_pad_tail[3] = {}; // +0x1ad..+0x1b0 tail padding
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

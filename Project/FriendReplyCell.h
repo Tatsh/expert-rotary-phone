@@ -1,14 +1,12 @@
-//
-//  FriendReplyCell.h
-//  pop'n rhythmin
-//
-//  One incoming friend-request row in FriendReplyViewController: chara icon,
-//  requester name and date, and OK / NG (accept / reject) buttons that call
-//  back to the controller. Its subview x-offsets shift between iOS 6 and 7.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:reuseIdentifier: @ 0xa9150, setReplyData: @ 0xa92ac,
-//  onTouchedOkButton @ 0xa9cf0, onTouchedNgButton @ 0xa9d58).
-//
+/**
+ * @file
+ * @brief One incoming friend-request row in FriendReplyViewController.
+ *
+ * It carries a chara icon, the requester's name and date, and OK and NG (accept and reject)
+ * buttons that call back to the controller. Its subview x-offsets shift between iOS 6 and 7.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0xa9150, setReplyData: @ 0xa92ac, onTouchedOkButton @ 0xa9cf0, onTouchedNgButton @ 0xa9d58).
+ */
 
 #import <UIKit/UIKit.h>
 

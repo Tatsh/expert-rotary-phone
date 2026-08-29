@@ -1,25 +1,20 @@
-//
-//  RewardNetwork.h
-//  pop'n rhythmin
-//
-//  Public facade of the bundled Konami **RewardNetwork** ("applilink")
-//  ad/reward SDK: opens the reward app-list web panel, queries the reward app
-//  index, reports installs, and keeps a small expiring key/value cache in
-//  NSUserDefaults. Requests go through
-//  +[RewardNetworkWebAPI requestAsynchronousWithURL:...]; the panel is a
-//  RewardNetworkWebViewController.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (RewardNetwork methods @ 0xee3f8..0xf3bf4, plus the helpers +baseUrlSsl @
-//  0xf1e88 and +startWithBlock: @ 0xef058 that the listed methods call).
-//  Superclass is NSObject.
-//
-//  Two instance variables: _webViewController
-//  (RewardNetworkWebViewController*), _initializeFlg (int).
-//
-//  NOTE: the project also ships a neutralized Stubs/RewardNetwork.h used by
-//  AppDelegate; this file is the faithful reconstruction of the real class.
-//
+/**
+ * @file
+ * @brief The public facade of the bundled Konami RewardNetwork ("applilink") ad and reward SDK.
+ *
+ * It opens the reward app-list web panel, queries the reward app index, reports installs, and
+ * keeps a small expiring key-value cache in NSUserDefaults. Requests go through
+ * +[RewardNetworkWebAPI requestAsynchronousWithURL:...]; the panel is a
+ * RewardNetworkWebViewController.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (RewardNetwork methods @
+ * 0xee3f8..0xf3bf4, plus the helpers +baseUrlSsl @ 0xf1e88 and +startWithBlock: @ 0xef058 that the
+ * listed methods call). The superclass is NSObject, with two instance variables:
+ * _webViewController (RewardNetworkWebViewController *) and _initializeFlg (int).
+ *
+ * The project also ships a neutralised Stubs/RewardNetwork.h used by AppDelegate; this file is the
+ * faithful reconstruction of the real class.
+ */
 
 #import <Foundation/Foundation.h>
 

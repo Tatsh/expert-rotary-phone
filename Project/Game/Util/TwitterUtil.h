@@ -1,14 +1,12 @@
-//
-//  TwitterUtil.h
-//  pop'n rhythmin
-//
-//  The result screen's "tweet this score" helper. Reconstructed from Ghidra
-//  project rb420, program PopnRhythmin (initWithText:image: @ 0x78948, tweet @
-//  0x78a4c, tweetWithText:image: @ 0x78bb8). It is a UIViewController subclass
-//  only so it can be wired as a UIButton target; the actual share is an
-//  SLComposeViewController (Social.framework) for the Twitter service,
-//  presented over the root view controller.
-//
+/**
+ * @file
+ * @brief The result screen's "tweet this score" helper.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithText:image: @ 0x78948,
+ * tweet @ 0x78a4c, tweetWithText:image: @ 0x78bb8). It is a UIViewController subclass only so it
+ * can be wired as a UIButton target; the actual share is an SLComposeViewController
+ * (Social.framework) for the Twitter service, presented over the root view controller.
+ */
 
 #import <UIKit/UIKit.h>
 

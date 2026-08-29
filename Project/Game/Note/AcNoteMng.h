@@ -1,8 +1,11 @@
-/** @file
- * The arcade note manager: parses an arcade chart (a "sheet_*" entry of an ac%09d.acv, provided by
- * AcMusicData) and drives arcade-mode play. It parallels the standard NoteMng but uses a
- * different, more compact chart format. Reconstructed from Ghidra project rb420, program
- * PopnRhythmin (Project/Game/Note/AcNoteMng.mm; InitPlayData FUN_0007a774).
+/**
+ * @file
+ * @brief The arcade note manager.
+ *
+ * It parses an arcade chart (a "sheet_*" entry of an ac%09d.acv, provided by AcMusicData) and
+ * drives arcade-mode play. It parallels the standard NoteMng but uses a different, more compact
+ * chart format. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (Project/Game/Note/AcNoteMng.mm; InitPlayData FUN_0007a774).
  */
 
 #pragma once

@@ -1,23 +1,20 @@
-//
-//  InputKIDViewCtrl.h
-//  pop'n rhythmin
-//
-//  The e-AMUSEMENT "pop'n-link" (KONAMI ID) linking screen, pushed by the
-//  pop'n-link top screen while the player has not yet linked their account. A
-//  scrollable form over "friman_bg" (KONAMI ID field <= 256, secure PASSWORD
-//  field <= 32, secure OTP field <= 16, a decide button, caption images and a
-//  tappable "input_kid_link" banner that opens the quick-entry web page), plus
-//  a dimmed cover + spinner shown while the link POST is in flight. The KID /
-//  password are pre-filled from the last saved values. Submitting POSTs
-//  "uuid&konami_id&password&otp" to StoreUtil +linkKidURL; a successful link
-//  stores the returned RefId, enables the checker / quiz buttons and (on pad)
-//  tells the owning split controller to re-enter the score-checker section.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (init @
-//  0xd5888, startLinkKidHttp @ 0xd7088). Built in Objective-C++ (the SE / scene
-//  / login-context bridge drives the C++ neEngine / neSceneManager /
-//  neAppEventCenter singletons).
-//
+/**
+ * @file
+ * @brief The e-AMUSEMENT "pop'n-link" (KONAMI ID) linking screen.
+ *
+ * The pop'n-link top screen pushes it while the player has not yet linked their account. It is a
+ * scrollable form over "friman_bg" with a KONAMI ID field of at most 256 characters, a secure
+ * PASSWORD field of at most 32, a secure OTP field of at most 16, a decide button, caption images,
+ * and a tappable "input_kid_link" banner that opens the quick-entry web page, plus a dimmed cover
+ * and spinner shown while the link POST is in flight. The KID and password are pre-filled from the
+ * last saved values. Submitting POSTs "uuid&konami_id&password&otp" to StoreUtil +linkKidURL; a
+ * successful link stores the returned RefId, enables the checker and quiz buttons, and, on pad,
+ * tells the owning split controller to re-enter the score-checker section.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0xd5888, startLinkKidHttp
+ * @ 0xd7088). Built in Objective-C++, where the SE, scene, and login-context bridge drives the C++
+ * neEngine, neSceneManager, and neAppEventCenter singletons.
+ */
 
 #import <UIKit/UIKit.h>
 

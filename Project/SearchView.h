@@ -1,18 +1,16 @@
-//
-//  SearchView.h
-//  pop'n rhythmin
-//
-//  The arcade-locator ("game center" search) screen: a full-screen MKMapView
-//  that drops a pin for every nearby arcade. It first downloads a "master" feed
-//  (the pin marker images + per-model metadata), then, as the visible region
-//  changes, POSTs the current lat/long/range to the server and adds/removes
-//  annotations for the arcades in view. Tapping a pin's callout offers to open
-//  the location in the Maps app. Hosted inside its own UINavigationController,
-//  presented over the GL scene by MainViewController -GotoArcadeSearch.
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (SearchView @
-//  0x85538..0x88a98, class methods +mapRectForCoordinateRegion: @ 0x86250 /
-//  +currentLocationEnabled @ 0x86330).
-//
+/**
+ * @file
+ * @brief The arcade-locator ("game center" search) screen.
+ *
+ * A full-screen MKMapView that drops a pin for every nearby arcade. It first downloads a "master"
+ * feed of the pin marker images and per-model metadata, then, as the visible region changes, POSTs
+ * the current latitude, longitude, and range to the server and adds or removes annotations for the
+ * arcades in view. Tapping a pin's callout offers to open the location in the Maps app. It is
+ * hosted inside its own UINavigationController and presented over the GL scene by
+ * MainViewController -GotoArcadeSearch. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (SearchView @ 0x85538..0x88a98, class methods +mapRectForCoordinateRegion: @
+ * 0x86250 and +currentLocationEnabled @ 0x86330).
+ */
 
 #import <MapKit/MapKit.h>
 #import <UIKit/UIKit.h>

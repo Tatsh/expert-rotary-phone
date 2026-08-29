@@ -1,25 +1,19 @@
-//
-//  SettingCustomerTableViewController.h
-//  pop'n rhythmin
-//
-//  The "customer support" sub-settings screen (pushed by
-//  SettingTableViewController's row 2). A three-row grouped table of rounded,
-//  colour-bordered buttons:
-//    row 0  お問い合わせ                 -> opens the FAQ page in Safari
-//    row 1  特定商取引法に基づく表示     -> opens the KONAMI TOKUSHO (SCTA)
-//    page in Safari row 2  利用規約                     -> shows the in-app
-//    Terms-of-Use (PolicyView) overlay
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle:
-//  @ 0xd32b8 and 13 more methods). Built in
-//  SettingCustomerTableViewController.mm (Objective-C++: drives the C++
-//  neSceneManager / neEngine singletons).
-//
-//  Follows the app-wide modal-VC lifecycle (see SettingTableViewController.h):
-//  initAtNavigationController wraps self in a UINavigationController;
-//  startOpen/ startCloseAnimation fade the view + nav view; endCloseAnimation
-//  notifies the host via -[MainViewController SettingEndCallBack].
-//
+/**
+ * @file
+ * @brief The "customer support" sub-settings screen, pushed by SettingTableViewController's row 2.
+ *
+ * A three-row grouped table of rounded, colour-bordered buttons: row 0 (お問い合わせ) opens the
+ * FAQ page in Safari, row 1 (特定商取引法に基づく表示) opens the KONAMI TOKUSHO (SCTA) page in
+ * Safari, and row 2 (利用規約) shows the in-app terms-of-use PolicyView overlay. Reconstructed from
+ * Ghidra project rb420, program PopnRhythmin (initWithStyle: @ 0xd32b8 and 13 more methods). Built
+ * in SettingCustomerTableViewController.mm, which drives the C++ neSceneManager and neEngine
+ * singletons.
+ *
+ * It follows the app-wide modal view-controller lifecycle (see SettingTableViewController.h):
+ * initAtNavigationController wraps self in a UINavigationController; startOpenAnimation and
+ * startCloseAnimation fade the view and nav view; endCloseAnimation notifies the host via
+ * -[MainViewController SettingEndCallBack].
+ */
 
 #import <UIKit/UIKit.h>
 

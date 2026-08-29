@@ -1,13 +1,10 @@
-//
-//  CJSONDeserializer.h
-//  pop'n rhythmin
-//
-//  TouchJSON front-end for parsing JSON NSData into a Foundation object graph.
-//  Each entry point wraps a fresh CJSONScanner over the supplied data.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//  (deserialize:error: @ 0x67588).
-//
+/**
+ * @file
+ * @brief The TouchJSON front-end for parsing JSON NSData into a Foundation object graph.
+ *
+ * Each entry point wraps a fresh CJSONScanner over the supplied data. Reconstructed from Ghidra
+ * project rb420, program PopnRhythmin (TouchJSON; deserialize:error: @ 0x67588).
+ */
 
 #import <Foundation/Foundation.h>
 

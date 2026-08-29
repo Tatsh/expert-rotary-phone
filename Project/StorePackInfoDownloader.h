@@ -1,17 +1,14 @@
-//
-//  StorePackInfoDownloader.h
-//  pop'n rhythmin
-//
-//  Fetches the detail JSON for a single store pack and folds it into the pack's
-//  StorePackInfo (via -setDictionary:), then notifies its delegate. Used by the
-//  pack detail screens to lazily load full descriptions / song lists.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithStorePackInfo: @ 0x57440   downloadDetail: @ 0x574f4
-//    downloaderFinished: @ 0x575fc   downloaderError: @ 0x576d8
-//    packInfo @ 0x57734   setPackInfo: @ 0x57754   setDownloader: @ 0x577a0
-//    dealloc @ 0x57488
-//
+/**
+ * @file
+ * @brief The fetcher for a single store pack's detail JSON.
+ *
+ * It folds the result into the pack's StorePackInfo via -setDictionary:, then notifies its
+ * delegate. The pack detail screens use it to lazily load full descriptions and song lists.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: initWithStorePackInfo: @ 0x57440,
+ * downloadDetail: @ 0x574f4, downloaderFinished: @ 0x575fc, downloaderError: @ 0x576d8, packInfo @
+ * 0x57734, setPackInfo: @ 0x57754, setDownloader: @ 0x577a0, and dealloc @ 0x57488.
+ */
 
 #import <Foundation/Foundation.h>
 

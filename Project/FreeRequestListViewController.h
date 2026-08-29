@@ -1,17 +1,14 @@
-//
-//  FreeRequestListViewController.h
-//  pop'n rhythmin
-//
-//  The "free request" recommended-friend list. A grouped-style
-//  UITableViewController showing a header plate ("fpl_text"), a spinning
-//  activity indicator over a dimmed dummy overlay while the recommend-friend
-//  list downloads, and one FreeRequestListCell per returned player. Tapping a
-//  row raises a FreeRequestDetail overlay (the friend-request confirm screen).
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (initWithStyle: @ 0xe5430 and 13 more methods). Built in
-//  FreeRequestListViewController.mm (Objective-C++: drives the C++
-//  neSceneManager / neEngine singletons).
-//
+/**
+ * @file
+ * @brief The "free request" recommended-friend list.
+ *
+ * A grouped-style UITableViewController showing a header plate ("fpl_text"), a spinning activity
+ * indicator over a dimmed dummy overlay while the recommend-friend list downloads, and one
+ * FreeRequestListCell per returned player. Tapping a row raises a FreeRequestDetail overlay, the
+ * friend-request confirm screen. Reconstructed from Ghidra project rb420, program PopnRhythmin
+ * (initWithStyle: @ 0xe5430 and 13 more methods). Built in FreeRequestListViewController.mm,
+ * which drives the C++ neSceneManager and neEngine singletons.
+ */
 
 #import <UIKit/UIKit.h>
 

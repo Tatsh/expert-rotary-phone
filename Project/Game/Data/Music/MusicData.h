@@ -1,6 +1,8 @@
-/** @file
- * A single local (pop'n) song record, decoded from its "%09d.orb" file. Reconstructed from Ghidra
- * project rb420, program PopnRhythmin.
+/**
+ * @file
+ * @brief A single local (pop'n) song record, decoded from its "%09d.orb" file.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
  * The .orb is a zipped JSON dict with the keys ID, MusicName, MusicNameHira, ArtistName,
  * ArtistNameHira, Normal, Hyper, Ex, BpmMin and BpmMax. Sort initials (kana "yomi") are derived

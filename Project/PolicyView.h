@@ -1,24 +1,20 @@
-//
-//  PolicyView.h
-//  pop'n rhythmin
-//
-//  The in-app Terms-of-Use / agreement overlay: a full-screen, non-editable
-//  UITextView that renders the bundled "policy.txt" (UTF-8) on a light-grey
-//  background, with a nav-bar back button. Pushed by
-//  SettingCustomerTableViewController's row 2 (利用規約), which imports this
-//  header and instantiates PolicyView directly.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin
-//  (init @ 0x52a04, viewDidLoad @ 0x52a8c and 9 more methods). Built in
-//  PolicyView.mm (Objective-C++: -backButtonFunc drives the C++ neEngine /
-//  neSceneManager singletons).
-//
-//  The class is declared as the text view's NSLayoutManagerDelegate: it
-//  implements -layoutManager:lineSpacingAfterGlyphAtIndex:withProposedLine-
-//  FragmentRect: to force a constant 3.8pt spacing after every glyph. (Note:
-//  the decompiled -viewDidLoad does not itself assign
-//  self.textView.layoutManager.delegate = self — see PolicyView.mm.)
-//
+/**
+ * @file
+ * @brief The in-app terms-of-use agreement overlay.
+ *
+ * A full-screen, non-editable UITextView that renders the bundled "policy.txt" (UTF-8) on a
+ * light-grey background, with a nav-bar back button. SettingCustomerTableViewController's row 2
+ * (利用規約) pushes it, importing this header and instantiating PolicyView directly.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (init @ 0x52a04, viewDidLoad @
+ * 0x52a8c, and 9 more methods). Built in PolicyView.mm, where -backButtonFunc drives the C++
+ * neEngine and neSceneManager singletons.
+ *
+ * The class is declared as the text view's NSLayoutManagerDelegate: it implements
+ * -layoutManager:lineSpacingAfterGlyphAtIndex:withProposedLineFragmentRect: to force a constant
+ * 3.8pt spacing after every glyph. The decompiled -viewDidLoad does not itself assign
+ * self.textView.layoutManager.delegate = self; see PolicyView.mm.
+ */
 
 #import <UIKit/UIKit.h>
 

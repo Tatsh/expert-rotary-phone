@@ -1,7 +1,10 @@
-/** @file
- * One decoded sound effect: an audio file (m4a, caf, or similar) read into an interleaved 16-bit
- * LPCM buffer via ExtAudioFile, ready to be handed to the CAComponent mixer. Part of the
- * lib_rsnd / caplayer sound engine.
+/**
+ * @file
+ * @brief One decoded sound effect.
+ *
+ * An audio file (m4a, caf, or similar) read into an interleaved 16-bit LPCM buffer via
+ * ExtAudioFile, ready to be handed to the CAComponent mixer. Part of the lib_rsnd / caplayer sound
+ * engine.
  */
 
 #pragma once
@@ -114,7 +117,3 @@ private:
     void *m_buffer = nullptr;
     UInt32 m_bufferSize = 0;
 };
-
-// kate: hl C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

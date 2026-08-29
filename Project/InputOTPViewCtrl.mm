@@ -235,7 +235,3 @@
 //   0x79614, viewWillDisappear: @ 0x79640, viewDidDisappear: @ 0x7966c.
 
 @end
-
-// kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
-// vim: set ft=objcpp sw=4 ts=4 et :
-// code: language=Objective-C++ insertSpaces=true tabSize=4

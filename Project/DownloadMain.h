@@ -1,6 +1,9 @@
-/** @file
- * The app's download manager: a thread-safe singleton that fetches the server's
- * downloadable-file list and drives file downloads through the Downloader HTTP helper.
+/**
+ * @file
+ * @brief The app's download manager.
+ *
+ * A thread-safe singleton that fetches the server's downloadable-file list and drives file
+ * downloads through the Downloader HTTP helper.
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (getInstance @ 0x93dd4,
  * startGetDlFileListHttp: @ 0x978ac, getDlFileListFinished @ 0x97af4, isGetDlFileListDownLoading @
  * 0x979d8, dlFileListDataArray @ 0x999e8).

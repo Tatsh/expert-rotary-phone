@@ -1,30 +1,23 @@
-//
-//  RecommendAdId.h
-//  pop'n rhythmin
-//
-//  Konami "Applilink" Recommend ad SDK — cross-app advertising-id record for
-//  the recommend feature. It stores/loads/deletes a small {AdIdFrom,
-//  CountryCode, CategoryId, AdType, EntryDate} record keyed by the device's
-//  advertising id.
-//
-//  Two storage backends are chosen by OS version:
-//    * iOS 7+  : the record is round-tripped through the Applilink server-side
-//    external
-//                pasteboard (/ad/external/pasteboard/{get,set,delete}.php),
-//                keyed by a SHA-1 of the ASIdentifierManager advertising UUID.
-//                Requires ad tracking enabled.
-//    * iOS < 7 : the record is AES-encrypted (key = SHA-1 of the service name)
-//    and kept in a
-//                named UIPasteboard ("applilink.adid" type).
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Superclass
-//  (NSObject) and the NSString *_serviceName ivar come from the Objective-C
-//  class_t metadata.
-//    initWithCountryCode:categoryId: @ 0xe997c
-//    getWithCountryCode:categoryId:error: @ 0xe9a34
-//    setWithAdIdFrom:countryCode:categoryId:adType:error: @ 0xe9eb8
-//    deleteWithCountryCode:categoryId:error: @ 0xea49c
-//
+/**
+ * @file
+ * @brief The Konami "Applilink" Recommend ad SDK's cross-app advertising-id record.
+ *
+ * It stores, loads, and deletes a small record of AdIdFrom, CountryCode, CategoryId, AdType, and
+ * EntryDate, keyed by the device's advertising id.
+ *
+ * Two storage backends are chosen by OS version. On iOS 7 and later the record is round-tripped
+ * through the Applilink server-side external pasteboard
+ * (/ad/external/pasteboard/{get,set,delete}.php), keyed by a SHA-1 of the ASIdentifierManager
+ * advertising UUID, and requires ad tracking to be enabled. Before iOS 7 the record is
+ * AES-encrypted, with a key that is the SHA-1 of the service name, and kept in a named
+ * UIPasteboard of type "applilink.adid".
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. The superclass (NSObject) and the
+ * NSString *_serviceName ivar come from the Objective-C class_t metadata:
+ * initWithCountryCode:categoryId: @ 0xe997c, getWithCountryCode:categoryId:error: @ 0xe9a34,
+ * setWithAdIdFrom:countryCode:categoryId:adType:error: @ 0xe9eb8, and
+ * deleteWithCountryCode:categoryId:error: @ 0xea49c.
+ */
 
 #import <Foundation/Foundation.h>
 

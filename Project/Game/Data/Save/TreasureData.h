@@ -1,6 +1,8 @@
-/** @file
- * Core Data managed object. Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity
- * "TreasureData").
+/**
+ * @file
+ * @brief The TreasureData Core Data managed object: sugoroku board progress.
+ *
+ * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "TreasureData").
  *
  * Progress on the "sugoroku" (board-game) meta-mode: which main and sub map the player is on,
  * collectible counts (music pieces, wallpaper pieces, character tickets earned by reaching goals),

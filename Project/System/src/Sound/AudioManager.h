@@ -1,5 +1,8 @@
-/** @file
- * The app-wide sound singleton. BGM plays through AVAudioPlayer with a push/pop stack (so a screen
+/**
+ * @file
+ * @brief The app-wide sound singleton.
+ *
+ * BGM plays through AVAudioPlayer with a push/pop stack (so a screen
  * can duck the current BGM and restore it); VOICE is a second BGM-like channel; sound effects go
  * through a low-latency C++ CoreAudio player (caplayer / lib_rsnd, group 0) or an AVFoundation
  * player (other groups). The class is REFLEC-derived, modelled on jubeat's AudioManager, with SE

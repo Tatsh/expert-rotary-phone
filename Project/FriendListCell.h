@@ -1,12 +1,11 @@
-//
-//  FriendListCell.h
-//  pop'n rhythmin
-//
-//  A friend-list ranking row; subview x-offsets have three layouts (phone iOS
-//  6, phone iOS 7, iPad). Reconstructed from Ghidra project rb420, program
-//  PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xb3234,
-//  setFriendData:rank:isBestScoreSort: @ 0xb34c0).
-//
+/**
+ * @file
+ * @brief A friend-list ranking row.
+ *
+ * Its subview x-offsets have three layouts: phone on iOS 6, phone on iOS 7, and iPad.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
+ * 0xb3234, setFriendData:rank:isBestScoreSort: @ 0xb34c0).
+ */
 
 #import <UIKit/UIKit.h>
 

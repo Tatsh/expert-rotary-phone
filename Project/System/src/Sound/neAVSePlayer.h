@@ -1,6 +1,9 @@
-/** @file
- * Sound-effect backend built on AVFoundation, used for the SE groups the low-latency CoreAudio
- * backend (neAVCAPlayer) does not serve. It owns a pool of AVBus voices (each wrapping one
+/**
+ * @file
+ * @brief The sound-effect backend built on AVFoundation.
+ *
+ * It serves the SE groups the low-latency CoreAudio
+ * backend (neAVCAPlayer) does not. It owns a pool of AVBus voices (each wrapping one
  * AVAudioPlayer) and a table of loaded sources; a play handle packs the voice index and a per-voice
  * generation so a stale handle cannot restart a recycled voice.
  */

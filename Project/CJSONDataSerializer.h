@@ -1,14 +1,12 @@
-//
-//  CJSONDataSerializer.h
-//  pop'n rhythmin
-//
-//  TouchJSON serializer that turns a Foundation object graph (NSNull, NSNumber,
-//  NSString, NSArray, NSDictionary, NSData, CSerializedJSONData) into UTF-8
-//  encoded JSON NSData.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON).
-//  (serializeObject: @ 0x66e00).
-//
+/**
+ * @file
+ * @brief The TouchJSON serializer that turns a Foundation object graph into UTF-8 encoded JSON
+ * NSData.
+ *
+ * It handles NSNull, NSNumber, NSString, NSArray, NSDictionary, NSData, and CSerializedJSONData.
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON; serializeObject: @
+ * 0x66e00).
+ */
 
 #import <Foundation/Foundation.h>
 

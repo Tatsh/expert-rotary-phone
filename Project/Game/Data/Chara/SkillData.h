@@ -1,16 +1,13 @@
-//
-//  SkillData.h
-//  pop'n rhythmin
-//
-//  The 30 built-in Sugoroku (board-game mode) skill descriptions. Reconstructed
-//  from Ghidra project rb420, program PopnRhythmin.
-//
-//  Table @ 0x133478 — 30 x 8 bytes: { NSString *description; int weight; }.
-//  Each description is a constant NSString (isa =
-//  ___CFConstantStringClassReference at the load-bound 0x1a7800; UTF-16
-//  payload). GetSkillDataStruct (FUN_000cb9d0) returns &table[index] and
-//  asserts index < 30.
-//
+/**
+ * @file
+ * @brief The 30 built-in sugoroku (board-game mode) skill descriptions.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin.
+ *
+ * Table @ 0x133478, 30 x 8 bytes: `{ NSString *description; int weight; }`. Each description is a
+ * constant NSString (isa = ___CFConstantStringClassReference at the load-bound 0x1a7800, UTF-16
+ * payload). GetSkillDataStruct (FUN_000cb9d0) returns &table[index] and asserts index < 30.
+ */
 
 #pragma once
 

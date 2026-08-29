@@ -1,13 +1,12 @@
-//
-//  StorePackCell.h
-//  pop'n rhythmin
-//
-//  A store song-pack row: jacket artwork (with a drop shadow), pack name +
-//  price + "purchased" labels, and new / arcade-viewer / chara-ticket marker
-//  icons. Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithStyle:reuseIdentifier: @ 0x6ed4c   loadPackInfo: @ 0x6f604
-//    setBgImage: @ 0x6f7b4   isPurchased @ 0x6f5a8 / setIsPurchased: @ 0x6f5d8
-//
+/**
+ * @file
+ * @brief A store song-pack row.
+ *
+ * Jacket artwork with a drop shadow, pack name, price, and "purchased" labels, and the new,
+ * arcade-viewer, and chara-ticket marker icons. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithStyle:reuseIdentifier: @ 0x6ed4c, loadPackInfo: @ 0x6f604, setBgImage: @
+ * 0x6f7b4, isPurchased @ 0x6f5a8 with setIsPurchased: @ 0x6f5d8).
+ */
 
 #import <UIKit/UIKit.h>
 

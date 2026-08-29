@@ -1,6 +1,8 @@
-/** @file
- * Core Data managed object. Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity
- * "CharaTicketData").
+/**
+ * @file
+ * @brief The CharaTicketData Core Data managed object: character-unlock tickets.
+ *
+ * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "CharaTicketData").
  *
  * Records character-unlock "tickets" tied to a StoreKit in-app-purchase productId. There is one
  * row per owned or consumed character-ticket product.

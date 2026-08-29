@@ -1,18 +1,16 @@
-//
-//  DownloadImageView.h
-//  pop'n rhythmin
-//
-//  A UIImageView that lazily fetches its image from a URL: it shows a spinner,
-//  kicks off an ImageDownloader (after a 1s delay) and swaps in the decoded
-//  image when the download finishes. Reconstructed from Ghidra project rb420,
-//  program PopnRhythmin (initWithURLString: @ 0x62be8,
-//  initWithURLString:withImage: @ 0x62c5c, dealloc @ 0x62cd0, SetupView @
-//  0x62d30, startDownload @ 0x62e24, imageDownloader:didLoad: @ 0x62ef0,
-//  imageDownloaderDidFail:didLoad: @ 0x62f60).
-//
-//  Binary Objective-C metadata: superclass UIImageView, adopts
-//  <ImageDownloaderDelegate>.
-//
+/**
+ * @file
+ * @brief A UIImageView that lazily fetches its image from a URL.
+ *
+ * It shows a spinner, kicks off an ImageDownloader after a one-second delay, and swaps in the
+ * decoded image when the download finishes. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin (initWithURLString: @ 0x62be8, initWithURLString:withImage: @ 0x62c5c, dealloc @
+ * 0x62cd0, SetupView @ 0x62d30, startDownload @ 0x62e24, imageDownloader:didLoad: @ 0x62ef0,
+ * imageDownloaderDidFail:didLoad: @ 0x62f60).
+ *
+ * The binary's Objective-C metadata gives the superclass as UIImageView, adopting
+ * `<ImageDownloaderDelegate>`.
+ */
 
 #import <UIKit/UIKit.h>
 

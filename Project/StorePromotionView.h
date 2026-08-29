@@ -1,20 +1,17 @@
-//
-//  StorePromotionView.h
-//  pop'n rhythmin
-//
-//  The store's promotion banner: a cross-fading image carousel. It downloads a
-//  set of promo images (one ImageDownloader each), then rotates through them on
-//  a timer with a fade transition. Tapping it reports the current promo's pack
-//  id to the delegate so the store can jump to that pack.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin:
-//    initWithFrame: @ 0x79900   SetupView @ 0x79c2c   setImageViewSize: @
-//    0x79f28 setImageURLs: @ 0x7a008    setImage:Index: @ 0x7a4b4
-//    imageDownloader:didLoad: @ 0x7a230 setNext @ 0x7a2e4  nextShowEnd @
-//    0x7a454  startAnimation @ 0x7a628 stopAnimation @ 0x7a6ac  getImageCount @
-//    0x7a2c4  getPackID @ 0x79f84 handleTapPromotionView: @ 0x7a6dc  cancel @
-//    0x79af8  dealloc @ 0x79994
-//
+/**
+ * @file
+ * @brief The store's promotion banner: a cross-fading image carousel.
+ *
+ * It downloads a set of promo images, one ImageDownloader each, then rotates through them on a
+ * timer with a fade transition. Tapping it reports the current promo's pack id to the delegate so
+ * the store can jump to that pack.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin: initWithFrame: @ 0x79900,
+ * SetupView @ 0x79c2c, setImageViewSize: @ 0x79f28, setImageURLs: @ 0x7a008, setImage:Index: @
+ * 0x7a4b4, imageDownloader:didLoad: @ 0x7a230, setNext @ 0x7a2e4, nextShowEnd @ 0x7a454,
+ * startAnimation @ 0x7a628, stopAnimation @ 0x7a6ac, getImageCount @ 0x7a2c4, getPackID @ 0x79f84,
+ * handleTapPromotionView: @ 0x7a6dc, cancel @ 0x79af8, and dealloc @ 0x79994.
+ */
 
 #import <UIKit/UIKit.h>
 

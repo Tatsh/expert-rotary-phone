@@ -1,29 +1,31 @@
-//
-//  neDebugLog.h
-//  pop'n rhythmin
-//
-//  Optional render-pipeline diagnostics. Emits os_log lines tagged "RHYDBG" so
-//  they can be captured on device with:  idevicesyslog | grep RHYDBG
-//
-//  This code is NOT part of the original binary. It is compiled in only when the
-//  build defines RHYDBG (see the RHYDBG CMake option, which is enable-able in any
-//  build configuration and is turned on in CI). With RHYDBG off the helpers below
-//  collapse to no-ops, so every translation unit that only logs matches the
-//  reconstructed original exactly -- WITHOUT any `#if RHYDBG` at the call site:
-//
-//    * neDebugLog(...) becomes an empty inline, so a bare log call vanishes.
-//    * NE_DBG_FIRST(n) becomes `(false)`, so an `if (NE_DBG_FIRST(n)) { ... }`
-//      block turns into `if (false) { ... }` and is dead-code-eliminated;
-//      debug-only locals declared inside the block stay "used" within it, so
-//      -Werror stays quiet. Put all diagnostic work inside that block.
-//    * NE_DBG(...) wraps debug statements that have real side effects we must NOT
-//      run in the faithful build (e.g. glGetError(), which clears GL error state).
-//      It expands to the statements when RHYDBG is on and to nothing otherwise.
-//
+/**
+ * @file
+ * @brief Optional render-pipeline diagnostics.
+ *
+ * @newCode
+ *
+ * It emits os_log lines tagged "RHYDBG" so they can be captured on device with
+ * `idevicesyslog | grep RHYDBG`.
+ *
+ * This code is compiled in only when the build defines RHYDBG (see the RHYDBG CMake option,
+ * which is enable-able in any build configuration and is turned on in CI). With RHYDBG off the
+ * helpers below collapse to no-ops, so every translation unit that only logs matches the
+ * reconstructed original exactly, WITHOUT any `#if RHYDBG` at the call site:
+ *
+ * - neDebugLog(...) becomes an empty inline, so a bare log call vanishes.
+ * - NE_DBG_FIRST(n) becomes `(false)`, so an `if (NE_DBG_FIRST(n)) { ... }` block turns into
+ *   `if (false) { ... }` and is dead-code-eliminated; debug-only locals declared inside the
+ *   block stay "used" within it, so -Werror stays quiet. Put all diagnostic work inside that
+ *   block.
+ * - NE_DBG(...) wraps debug statements that have real side effects we must NOT run in the
+ *   faithful build (for example glGetError(), which clears GL error state). It expands to the
+ *   statements when RHYDBG is on and to nothing otherwise.
+ */
 
 #pragma once
 
 #ifndef RHYDBG
+/** @brief Set to 1 by the build to compile the diagnostics in; 0 leaves them as no-ops. */
 #define RHYDBG 0
 #endif
 
@@ -67,17 +69,21 @@ static inline void neDebugLog(const char *fmt, ...) {
 // code that the optimiser drops.
 static inline void neDebugLog(const char *, ...) {
 }
+/**
+ * @brief Gate a diagnostic block to the first @p limit occurrences; always false with RHYDBG off.
+ */
 #define NE_DBG_FIRST(limit) (false)
+/** @brief Wrap statements with real side effects; they vanish with RHYDBG off. */
 #define NE_DBG(...) ((void)0)
 
 #endif
 
-// The build's git SHA (set by CMake at configure time). Logged once at startup
-// under RHYDBG so a captured os_log identifies exactly which build produced it.
 #ifndef RHYDBG_BUILD_SHA
+/**
+ * @brief The build's git SHA, set by CMake at configure time.
+ *
+ * It is logged once at startup under RHYDBG so a captured os_log identifies exactly which build
+ * produced it.
+ */
 #define RHYDBG_BUILD_SHA "unknown"
 #endif
-
-// kate: hl C++;
-// vim: set ft=cpp sw=4 ts=4 et :
-// code: language=cpp insertSpaces=true tabSize=4

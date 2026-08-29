@@ -1,34 +1,25 @@
-//
-//  RecommendCore.h
-//  pop'n rhythmin
-//
-//  Konami "Applilink" Recommend ad SDK — the SDK core / facade. A shared
-//  singleton that:
-//    * remembers the caller's country code, category id and environment,
-//    * on first start posts a one-shot "application install" record
-//    (advertising-id backed),
-//    * presents the recommend app list in a RecommendWebViewController, and
-//    * intercepts applilink://ext-app:80/... redirects to launch installed
-//    companion apps.
-//
-//  Reconstructed from Ghidra project rb420, program PopnRhythmin. Superclass
-//  (NSObject) and the ivars (navigationBarHidden:BOOL,
-//  _callbackForOpenAppliList:block, _categoryId:NSString*,
-//  _lastErrorForOpenAppliList:NSError*,
-//  _webViewController:RecommendWebViewController*, _initializeFlg:int,
-//  _countryCode:NSString*) come from the Objective-C class_t metadata.
-//    +sharedInstance @ 0xfc47c   init @ 0xfc33c   +baseUrlSsl @ 0xfc50c
-//    getCountryCode @ 0xfc628   getCategoryId @ 0xfc638   isInitialized @
-//    0xfc648 isInstalledAppliWithScheme: @ 0xfc664
-//    startWithCountryCode:categoryId:env:callback: @ 0xfc734
-//    openAppliListWithCallback: @ 0xfcc0c   appliListWithCallBack: @ 0xfd1c8
-//    closeAppliList @ 0xfd630   postApplicationInstallWithAdIdFrom:... @
-//    0xfd688 setParentView:delegate: @ 0xfdb28   setNavigationBarHidden: @
-//    0xfdc1c redirectWithRequest: @ 0xfdc2c
-//    rotateAppliListWithInterfaceOrientation:duration: @ 0xfe4e4
-//    appListDidAppear @ 0xfe56c   appListDidDisappear @ 0xfe570
-//    appListFailLoadWithError: @ 0xfe610
-//
+/**
+ * @file
+ * @brief The Konami "Applilink" Recommend ad SDK's core facade.
+ *
+ * A shared singleton that remembers the caller's country code, category id, and environment; on
+ * first start posts a one-shot, advertising-id backed "application install" record; presents the
+ * recommend app list in a RecommendWebViewController; and intercepts applilink://ext-app:80/...
+ * redirects to launch installed companion apps.
+ *
+ * Reconstructed from Ghidra project rb420, program PopnRhythmin. The superclass (NSObject) and the
+ * ivars (navigationBarHidden as BOOL, _callbackForOpenAppliList as a block, _categoryId as
+ * NSString *, _lastErrorForOpenAppliList as NSError *, _webViewController as
+ * RecommendWebViewController *, _initializeFlg as int, and _countryCode as NSString *) come from
+ * the Objective-C class_t metadata: +sharedInstance @ 0xfc47c, init @ 0xfc33c, +baseUrlSsl @
+ * 0xfc50c, getCountryCode @ 0xfc628, getCategoryId @ 0xfc638, isInitialized @ 0xfc648,
+ * isInstalledAppliWithScheme: @ 0xfc664, startWithCountryCode:categoryId:env:callback: @ 0xfc734,
+ * openAppliListWithCallback: @ 0xfcc0c, appliListWithCallBack: @ 0xfd1c8, closeAppliList @
+ * 0xfd630, postApplicationInstallWithAdIdFrom:... @ 0xfd688, setParentView:delegate: @ 0xfdb28,
+ * setNavigationBarHidden: @ 0xfdc1c, redirectWithRequest: @ 0xfdc2c,
+ * rotateAppliListWithInterfaceOrientation:duration: @ 0xfe4e4, appListDidAppear @ 0xfe56c,
+ * appListDidDisappear @ 0xfe570, and appListFailLoadWithError: @ 0xfe610.
+ */
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>

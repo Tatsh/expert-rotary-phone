@@ -1,9 +1,12 @@
-/** @file
- * The Aep 2D scene manager: owns the ordering table, drives screen-transition fades, and is the
- * sprite/texture factory the graphics manager creates through. Reconstructed from Ghidra project
- * rb420, program PopnRhythmin. The concrete object is very large: it embeds the ordering table and
- * the full set of texture/sprite slots, so it behaves as the global scene. Only the public surface
- * is modelled here; the storage arrays are reconstructed progressively.
+/**
+ * @file
+ * @brief The Aep 2D scene manager.
+ *
+ * It owns the ordering table, drives screen-transition fades, and is the sprite/texture factory
+ * the graphics manager creates through. Reconstructed from Ghidra project rb420, program
+ * PopnRhythmin. The concrete object is very large: it embeds the ordering table and the full set
+ * of texture/sprite slots, so it behaves as the global scene. Only the public surface is modelled
+ * here; the storage arrays are reconstructed progressively.
  */
 
 #pragma once

@@ -1,8 +1,10 @@
-/** @file
- * The standard-mode note manager: it parses a decoded chart (the "info" entry of a %09d.orb
- * file), builds the play-data timeline, converts chart ticks to milliseconds via the tempo map,
- * and drives note judgement during play. Arcade charts, ac%09d.acv, are handled by the parallel
- * AcNoteMng.
+/**
+ * @file
+ * @brief The standard-mode note manager.
+ *
+ * It parses a decoded chart (the "info" entry of a %09d.orb file), builds the play-data timeline,
+ * converts chart ticks to milliseconds via the tempo map, and drives note judgement during play.
+ * Arcade charts, ac%09d.acv, are handled by the parallel AcNoteMng.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin
  * (Project/Game/Note/NoteMng.mm). The .orb/.acv container is a ZIP whose "info" entry is
