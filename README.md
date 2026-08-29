@@ -71,23 +71,7 @@ Identifiers are recovered from embedded debug/assert strings and C++ RTTI wherev
 
 ## Status
 
-- Items that require online services are obviously non-functional.
-- Taps on the main menu and song selection screen can be less than ideal in terms of
-  accuracy/timing/lag. This looks like it may have been an issue in the original version, at least
-  slightly.
-
-### Song selection screen
-
-- Unusual rendering when moving to a page on the left (song titles show but no border or cover for a
-  visible number of frames).
-- Pagination rubber-band mechanics are imperfect.
-- Patches are used that are not faithful to the original game for this screen, but the original game
-  seems to not have the same above issues so theoretically the patches are unnecessary.
-
-#### Picked song overlay
-
-- Inaccurate animation: it shows the overlay but then a copy behind that loads translucent slightly
-  above the opaque one, and it moves down behind it.
+- Items that require online services are non-functional.
 
 ### iPhone support
 
