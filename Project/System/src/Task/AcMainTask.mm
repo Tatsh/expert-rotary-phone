@@ -145,6 +145,9 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateSquareArrive:
         stateSquareArrive();
         break;
+    case kAcMainStateSquareMessage:
+        stateSquareLabelWait();
+        break;
     case kAcMainStateShowArrows:
         stateShowArrows();
         break;
@@ -705,6 +708,163 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
         static_cast<int>((playerY - scrollY) + static_cast<float>(halfH))); // 0x9ecd6
     m_squareAnimActive = true;                                              // 0x9ecde
     m_rankBadgeType = 1;                                                    // 0x9ece2
+}
+
+// case 0x0e — the arrived square's label is on screen. It is redrawn every frame; the moment it
+// has nothing left to draw, or a finger is lifted, the square's own handler is chosen. The
+// comment layer is loaded here (0x9a666) but reset inside the router, which both branches enter
+// with it already in r0. Ghidra: 0x9a658.
+void AcMainTask::stateSquareLabelWait() {
+    const bool drew = sugorokuDrawSquareText(); // 0x9a660
+    if (m_frameReleasedTouch || !drew) {        // 0x9a66a / 0x9a674
+        sugorokuRouteSquareTap();
+        return;
+    }
+    m_rouletteLayers[kRouletteLayerCommentBoard]->pause(); // 0x9a680
+}
+
+// Advance the board-story page counter for the tapped square and persist it. The board always
+// returns to the reveal state; the page counter only moves when the square actually has story
+// pages. Ghidra: 0x9f198.
+void AcMainTask::sugorokuAdvanceSquareStory() {
+    m_state = kAcMainStateBoardReveal;                               // 0x9f19c movs 3
+    if (m_readCount > 0) {                                           // 0x9f198 / 0x9f1a2
+        ++m_readNo;                                                  // 0x9f1b0 / 0x9f1be / 0x9f1c2
+        [UserSettingData saveTreasureReadNo:m_subMapId no:m_readNo]; // 0x9f1ce / 0x9f1d4
+    }
+}
+
+// Hand the board to the state that owns the tapped square's kind. Entered from case 0x0e when a
+// tap landed this frame (0x9a66a) or when the square-text pass drew no label (0x9a670). The
+// eleven-way table at 0x9c94a is indexed by Node::type directly, and the unsigned range check at
+// 0x9c940 sends anything past kind 10 to the same default the kind-0 entry uses.
+// Ghidra: 0x9c932.
+void AcMainTask::sugorokuRouteSquareTap() {
+    m_rouletteLayers[kRouletteLayerCommentBoard]->reset(); // 0x9c934
+
+    const TreasureMap::Node *node = m_curNode; // 0x9c938
+    switch (node->type) {                      // 0x9c93c ldrsh, 0x9c946 tbh
+    case TreasureMap::kSquarePlayerStart:
+        m_state = kAcMainStateGoalAward; // 0x9c960 movs 0x11
+        break;
+
+    case TreasureMap::kSquareDeactivatedBonus:
+        // 0x9edd0, a verbatim inline copy of the story tail at 0x9f198.
+        sugorokuAdvanceSquareStory();
+        break;
+
+    case TreasureMap::kSquareBonus:
+        // 0x9ede4
+        if (m_rouletteMode == 0x12) {
+            if (m_hudState != 2) {
+                m_rouletteMode = -1; // 0x9ee0e strh 0xffff
+            }
+            sugorokuAdvanceSquareStory(); // 0x9edf4 / 0x9ee16
+            break;
+        }
+        if (m_hudState == 2) { // 0x9f172
+            sugorokuAdvanceSquareStory();
+            break;
+        }
+        if (m_activeType3SquareId == node->id) { // 0x9f176
+            m_activeType3SquareId = -1;          // 0x9f18a
+            m_state = kAcMainStateBoardReveal;   // 0x9f18e
+            break;
+        }
+        if (m_activeType3SquareId == -1) { // 0x9f750
+            m_activeType3SquareId = node->id;
+        }
+        m_bonusCount = node->slotId; // 0x9f75a / 0x9f75e
+        if (m_boardMoveState == 2) { // 0x9f762
+            m_boardMoveState = 1;    // 0x9f76c
+        }
+        m_state = kAcMainStateBoardIdleBonus; // 0x9faa4 movs 9
+        break;
+
+    case TreasureMap::kSquareTreasure:
+        // 0x9edfa
+        if (m_rouletteMode == 0x12) {
+            if (m_hudState != 3) {
+                m_rouletteMode = -1; // 0x9ee0e
+            }
+            sugorokuAdvanceSquareStory(); // 0x9ee0a / 0x9ee16
+            break;
+        }
+        if (m_hudState == 3) { // 0x9f192
+            sugorokuAdvanceSquareStory();
+            break;
+        }
+        if (m_activeType4SquareId == node->id) { // 0x9f770
+            m_activeType4SquareId = -1;          // 0x9f784
+            m_state = kAcMainStateBoardReveal;   // 0x9f788
+            break;
+        }
+        if (m_activeType4SquareId == -1) { // 0x9f966
+            m_activeType4SquareId = node->id;
+        }
+        m_bonusCount = node->slotId;        // 0x9f970 / 0x9f974
+        if (m_boardMoveState == 1) {        // 0x9f97c
+            m_boardMoveState = 2;           // 0x9f982
+        } else if (m_boardMoveState == 0) { // 0x9fa9c cbnz
+            m_boardMoveState = 3;           // 0x9fa9e
+        }
+        m_state = kAcMainStateBoardIdleBonus; // 0x9faa4 movs 9
+        break;
+
+    case TreasureMap::kSquareSubMapFlag: {
+        // 0x9ee18: the flag must agree with the HUD state, the same test
+        // sugorokuDrawSquareText makes before it shows the message.
+        const int flag = getTreasureMapValue_fb54(0, node->slotId); // 0x9ee18 / 0x9ee26
+        const int st = m_hudState;                                  // 0x9ee2a
+        const bool matched = (st == 6 && flag == 0) || (st == 7 && flag == 1) ||
+                             (st == 8 && flag == 2) || (st == 9 && flag == 3) || (st == 5);
+        if (matched) {
+            sugorokuAdvanceSquareStory();
+        } else {
+            m_state = kAcMainStateSquareApply; // 0x9ee6e movs 0x22
+        }
+        break;
+    }
+
+    case TreasureMap::kSquareWallpaperPiece:
+        m_state = kAcMainStateWallPieceGet; // 0x9ee74 movs 0x17
+        break;
+
+    case TreasureMap::kSquareMusicPiece:
+        m_state = kAcMainStateMusicPieceGrant; // 0x9ee7a movs 0x19
+        break;
+
+    case TreasureMap::kSquareWarp:
+        m_state = kAcMainStateWarpBegin; // 0x9ee80 movs 0x1d
+        break;
+
+    case TreasureMap::kSquareGoalLock:
+        // 0x9ee86
+        if (m_hudState == 4) {
+            sugorokuAdvanceSquareStory();
+            break;
+        }
+        m_bonusCount = 0;                  // 0x9ee92
+        m_state = kAcMainStateBoardReveal; // 0x9ee96
+        break;
+
+    case TreasureMap::kSquareBonusTreasure: {
+        // 0x9ee9a: the friend-meet goal square only opens while the portrait is loaded and the
+        // meet has not been consumed yet.
+        TreasureTmpData tmp = [UserSettingData treasureTmp]; // 0x9eeba
+        if (m_goalCharaTex && tmp.friendMeetFlag == 0) {     // 0x9eebe / 0x9eec4
+            m_state = kAcMainStateGoalReward;                // 0x9f4bc movs 0x1b
+        } else {
+            m_state = kAcMainStateBoardReveal; // 0x9eed0 movs 3
+        }
+        break;
+    }
+
+    case TreasureMap::kSquareStart:
+    default:
+        m_state = kAcMainStateBoardReveal;
+        break;
+    }
 }
 
 // case 0x0f — light the direction arrows the current square can leave by, then hand over to the
@@ -2541,13 +2701,13 @@ static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex
 // and the text draw (m_squareTextY - 31.0f, constants 0x1b / 0x2e / 0x615245 /
 // 0x18 / 100) were verified faithful. The getTreasureMapValue_fb54(0, ...) call
 // is fine: the binary passes m_map (@ +0x4b0) but FUN_000cea50 ignores it.
-void AcMainTask::sugorokuDrawSquareText() {
+bool AcMainTask::sugorokuDrawSquareText() {
     if (m_squareAnimActive) {
-        return; // hide the square label while the select animation runs (+0x5f3)
+        return false; // hide the square label while the select animation runs (+0x5f3)
     }
     const TreasureMap::Node *node = m_curNode;
     if (!node) {
-        return;
+        return false;
     }
 
     // +0x88c is a float slot; the binary truncates it to int (vcvt.s32.f32 @
@@ -2612,29 +2772,30 @@ void AcMainTask::sugorokuDrawSquareText() {
         // progress counter, not the text x that r8 carries.
         text = getCharacterAssetName(static_cast<int>(m_subMapId), m_readNo);
         if (!text) {
-            return; // content asset absent in this build
+            return false; // content asset absent in this build
         }
         iVar8 -= 0xe6;
         style = 0;
     } else if (pick == kNodeText) {
         if (node->text[0] == '\0') {
-            return; // empty label -> nothing to draw
+            return false; // empty label -> nothing to draw
         }
         text = node->text;
         style = 1;
     } else {
-        return;
+        return false;
     }
 
     drawAepTextMultiline(text,
                          iVar8,
-                         static_cast<int>(m_squareTextY - 31.0f),
+                         static_cast<int>(m_squareTextY - kSquareMessageTextRise),
                          style,
                          0x1b,
                          0x2e,
                          0x615245,
                          0x18,
                          100);
+    return true;
 }
 
 // ════════════════════════════════════════════════════════════════════════════

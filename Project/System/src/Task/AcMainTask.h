@@ -173,8 +173,13 @@ private:
     void stateSquareMessageRead();        // case 0x0c (hold the message until a tap)
     void stateSquareArrive();             // case 0x0d (the token settles on a square)
     void stateShowArrows();               // case 0x0f (light the directions the square opens on)
+    void stateSquareLabelWait();          // case 0x0e (hold the label, then route the tap)
     /** Park the square message board over the token and publish its text anchor. */
     void sugorokuPositionSquareMessage();
+    /** Advance and persist the tapped square's board-story page counter. */
+    void sugorokuAdvanceSquareStory();
+    /** Hand the board to the state that owns the tapped square's kind. */
+    void sugorokuRouteSquareTap();
     /** The sub-map-flag arm of the arrival routing. */
     void sugorokuArriveSubMapFlag();
     /** Advance the roulette step cursor, wrapping the sub-tick on m_stepSubTickLen. */
@@ -227,11 +232,16 @@ private:
     // operate on this task's work area, so they are real members (the
     // "SugorokuMainTask" a prior agent invented was a mis-attribution). The
     // group-5 draw callback drives them.
-    int sugorokuDrawSkillPanel();            // FUN_000a14a0
-    int sugorokuDrawButtonHitTest();         // FUN_000a178c
-    bool sugorokuEasePositionPairA();        // FUN_000a19dc
-    bool sugorokuEasePositionPairB();        // FUN_000a1ac8
-    void sugorokuDrawSquareText();           // FUN_000a1bb4
+    int sugorokuDrawSkillPanel();     // FUN_000a14a0
+    int sugorokuDrawButtonHitTest();  // FUN_000a178c
+    bool sugorokuEasePositionPairA(); // FUN_000a19dc
+    bool sugorokuEasePositionPairB(); // FUN_000a1ac8
+    /**
+     * Draw the current square's label, if it has one to show.
+     * @return Whether anything was drawn; state 0x0e routes the tap the frame this goes false.
+     * @ghidraAddress 0xa1bb4
+     */
+    bool sugorokuDrawSquareText();
     void sugorokuSaveTreasureProgress();     // FUN_000a1ddc
     void sugorokuSetupScrollBounds();        // FUN_000a2544
     void sugorokuLoadWallTextures(int page); // FUN_000a2b64
