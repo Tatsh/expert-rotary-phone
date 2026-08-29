@@ -174,8 +174,18 @@ private:
     void stateSquareArrive();             // case 0x0d (the token settles on a square)
     void stateShowArrows();               // case 0x0f (light the directions the square opens on)
     void stateSquareLabelWait();          // case 0x0e (hold the label, then route the tap)
-    void stateWallPieceGet();             // case 0x17 (bank a wallpaper piece, arm GET_WALL)
-    void stateMusicPieceGrant();          // case 0x19 (bank a music piece, arm GET_MUSIC)
+    void stateWarpBegin();                // case 0x1d (resolve the warp partner square)
+    void stateWarpEffect();               // case 0x1e (warp SE, park EFF_WARP_3, arm the squish)
+    void stateWarpArrive();               // case 0x1f (commit the partner square)
+    void stateWarpScroll();               // case 0x20 (ease to the destination, rewind the fx)
+    void stateWarpInWait();               // case 0x21 (wait out the overlay, drop the gate)
+    /**
+     * Park an overlay over the player token in screen space.
+     * @param layer The layer to position.
+     */
+    void parkLayerOverToken(AepLyrCtrl *layer);
+    void stateWallPieceGet();    // case 0x17 (bank a wallpaper piece, arm GET_WALL)
+    void stateMusicPieceGrant(); // case 0x19 (bank a music piece, arm GET_MUSIC)
     /**
      * Cases 0x18 and 0x1a: hold while a piece-reveal overlay plays out.
      * @param layerIndex The m_rouletteLayers slot to poll, GET_WALL or GET_MUSIC.

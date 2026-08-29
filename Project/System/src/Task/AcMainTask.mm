@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <ctime>
 #include <memory>
@@ -147,6 +148,21 @@ void AcMainTask::update(int /*deltaMs*/) {
         break;
     case kAcMainStateSquareMessage:
         stateSquareLabelWait();
+        break;
+    case kAcMainStateWarpBegin:
+        stateWarpBegin();
+        break;
+    case kAcMainStateWarpEffect:
+        stateWarpEffect();
+        break;
+    case kAcMainStateWarpArrive:
+        stateWarpArrive();
+        break;
+    case kAcMainStateWarpScroll:
+        stateWarpScroll();
+        break;
+    case kAcMainStateWarpInWait:
+        stateWarpInWait();
         break;
     case kAcMainStateWallPieceGet:
         stateWallPieceGet();
@@ -340,6 +356,7 @@ constexpr int kRouletteLayerLoopEvent = 3;    // ROULETTE_START_ROOP_EVENT
 constexpr int kRouletteLayerEff = 4;          // ROULETTE_EFF
 constexpr int kRouletteLayerCommentBoard = 7; // SUGO_COMMENT_BOARD
 constexpr int kRouletteLayerSkillKouka = 16;  // EFF_SKILL_KOUKA2
+constexpr int kRouletteLayerWarp = 17;        // EFF_WARP_3
 constexpr int kRouletteGoalOpen = 10;         // GOAL_OPEN
 constexpr int kRouletteLayerGetMusic = 11;    // GET_MUSIC
 constexpr int kRouletteLayerGetWall = 12;     // GET_WALL
@@ -357,6 +374,8 @@ constexpr int kRouletteSeMove = 3;     // se14_move
 constexpr int kRouletteSeGoal = 12;    // se22_goal
 constexpr int kRouletteSeItemGet = 11; // se21_itemget
 constexpr int kRouletteSeTrap = 5;     // se16_wana
+constexpr int kRouletteSeWarp = 6;     // se17_warp
+constexpr int kRouletteSeWarpIn = 7;   // se17b_warp
 constexpr int kRouletteSeShield = 8;   // se18_shield
 constexpr int kRouletteSePiece = 9;    // se19_peace
 constexpr int kRouletteSeQuiz = 14;    // se25_quiz_x
@@ -367,6 +386,9 @@ constexpr int kWarpGateSquareSlot = 10;
 constexpr int kTreasurePointBoostSquareSlot = 13;
 // The treasure-point balance saturates here.
 constexpr int kMaxTreasurePoint = 9999;
+// Half a board tile. Anything parked over the player token carries this on x only; the same bias
+// refreshMapScroll applies (pool 0x9ac24).
+constexpr float kBoardHalfTileBias = 52.0f;
 
 // Defined below with the other sugoroku draw helpers; the piece-award states run before it.
 static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex);
@@ -751,20 +773,99 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
     }
     m_rouletteMode = -1; // 0x9ec64
 
-    const float playerX = m_playerX; // 0x9ec70
-    const float playerY = m_playerY; // 0x9ec7e
-    const float scrollX = m_scrollX; // 0x9ec8a
-    const float scrollY = m_scrollY; // 0x9ec74
-    const int halfW = m_overlayW / 2;
-    const int halfH = m_overlayH / 2;
-
     AepLyrCtrl *flagLayer = m_rouletteLayers[kRouletteLayerSkillKouka].get();
-    flagLayer->stop(1); // 0x9ec92
-    flagLayer->setPosition(
-        static_cast<int>((playerX - scrollX) + static_cast<float>(halfW) + 52.0f),
-        static_cast<int>((playerY - scrollY) + static_cast<float>(halfH))); // 0x9ecd6
-    m_squareAnimActive = true;                                              // 0x9ecde
-    m_rankBadgeType = 1;                                                    // 0x9ece2
+    flagLayer->stop(1);            // 0x9ec92
+    parkLayerOverToken(flagLayer); // 0x9ec70..0x9ecd6
+    m_squareAnimActive = true;     // 0x9ecde
+    m_rankBadgeType = 1;           // 0x9ece2
+}
+
+// Park an overlay over the player token in screen space. The binary inlines this at each site
+// (0x9ecd6, 0x9aeac..0x9aef0 and 0x9af92..0x9b012), and all three compute the same thing.
+void AcMainTask::parkLayerOverToken(AepLyrCtrl *layer) {
+    layer->setPosition(
+        static_cast<int>((m_playerX - m_scrollX) + static_cast<float>(m_overlayW / 2) +
+                         kBoardHalfTileBias),
+        static_cast<int>((m_playerY - m_scrollY) + static_cast<float>(m_overlayH / 2)));
+}
+
+// case 0x1d — a warp square was landed on. The warp is suppressed while the slot-10 gimmick is
+// still counting down; otherwise the partner square is resolved. Ghidra: 0x9ae04.
+void AcMainTask::stateWarpBegin() {
+    if (m_boardSquareState[kWarpGateSquareSlot] >= 1) { // 0x9ae04 ldrsb +0x89e, 0x9ae0a bge
+        m_state = kAcMainStateBoardReveal;              // 0x9dda8
+        return;
+    }
+
+    // 0x9ae0e / 0x9ae16 / 0x9ae1c: getWarpSquare(m_map, m_curNode) -> +0x4c0.
+    m_targetNode = m_map->getWarpSquare(const_cast<TreasureMap::Node *>(m_curNode));
+    if (!m_targetNode) {
+        // The original aborts here; 0x9ae2e passes line 0x8f5 to __assert_rtn at 0x9ae4e.
+        assert(0 && "getWarpSquare");
+        return;
+    }
+
+    m_state = kAcMainStateWarpEffect; // 0x9ae26 bne 0x9b086
+}
+
+// case 0x1e — play the warp SE, park EFF_WARP_3 over the token, arm it and raise the squish flag.
+// Ghidra: 0x9ae52.
+void AcMainTask::stateWarpEffect() {
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeWarp]]; // 0x9ae6c
+
+    AepLyrCtrl *warp = m_rouletteLayers[kRouletteLayerWarp].get();
+    warp->playSpeed() = 1.0f; // 0x9aea0
+    warp->stop(true);         // 0x9aea8
+    parkLayerOverToken(warp); // 0x9aeac..0x9aef0
+
+    m_warpAnim = true;                // 0x9aef6
+    m_state = kAcMainStateWarpArrive; // 0x9aef4
+}
+
+// case 0x1f — the warp lands. Once EFF_WARP_3 is done the partner square becomes the current one,
+// the scroll bounds are refitted and the flash is raised. Ghidra: 0x9af02.
+void AcMainTask::stateWarpArrive() {
+    if (m_rouletteLayers[kRouletteLayerWarp]->isAnimating()) {
+        return; // 0x9af0c / 0x9af12
+    }
+
+    // 0xa2544 reads m_curNode, so the commit must come first.
+    m_curNode = m_targetNode;    // 0x9af16 / 0x9af1a
+    sugorokuSetupScrollBounds(); // 0x9af20
+    m_warpFlash = true;          // 0x9af26
+
+    m_state = kAcMainStateWarpScroll; // 0x9af2a movs 0x20
+}
+
+// case 0x20 — ease the map scroll to the warp destination; when it settles, play the arrival
+// sting, rewind the overlay over the token and wait for it. Ghidra: 0x9af30.
+void AcMainTask::stateWarpScroll() {
+    m_scrollVelX += m_scrollAccumX; // 0x9af30..0x9af5c
+    m_scrollVelY += m_scrollAccumY;
+    if (sugorokuEasePositionPairA()) { // 0x9af66 / 0x9af6c
+        return;
+    }
+
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeWarpIn]];
+
+    // 0x9afc4 / 0x9afca: rewind EFF_WARP_3 and re-arm its one-shot, then re-anchor it.
+    AepLyrCtrl *warp = m_rouletteLayers[kRouletteLayerWarp].get();
+    warp->playSpeed() = -1.0f;
+    warp->stop(true);
+    parkLayerOverToken(warp); // 0x9af92..0x9b012
+
+    m_warpFlash = false; // 0x9b018
+    m_state = kAcMainStateWarpInWait;
+}
+
+// case 0x21 — hold until the warp overlay has played back, then drop the animation gate.
+// Ghidra: 0x9b024.
+void AcMainTask::stateWarpInWait() {
+    if (m_rouletteLayers[kRouletteLayerWarp]->isAnimating()) {
+        return;
+    }
+    m_warpAnim = false;
+    m_state = kAcMainStateBoardReveal;
 }
 
 // case 0x17 — a wallpaper-piece square was tapped. An already-owned piece drops straight back to
