@@ -1017,7 +1017,8 @@ void AcViewerTask::update(int /*deltaMs*/) {
             if (m_dragStartY >= static_cast<float>(m_scrubZoneTopY)) {
                 if (m_dragStartY >= static_cast<float>(m_seekGaugeSplitY)) {
                     // (C) gauge quantize: v -> 0..24 steps (v*24/1023, magic 0x80200803),
-                    // each 42.5 units, capped at 1023 (constants byte-verified).
+                    // each 42.625 units (0x422A8000 @ 0x22304), capped at 1023.0f
+                    // (0x447FC000 @ 0x22300).
                     int v =
                         static_cast<uint16_t>(m_gaugeBase) + static_cast<uint16_t>(m_gaugeValue);
                     if (v & 0x8000) {
@@ -1030,7 +1031,7 @@ void AcViewerTask::update(int /*deltaMs*/) {
                     } else if (q > 24) {
                         q = 24;
                     }
-                    const float f = (q < 24) ? static_cast<float>(q) * 42.5f : 1023.0f;
+                    const float f = (q < 24) ? static_cast<float>(q) * 42.625f : 1023.0f;
                     m_gaugeValue = static_cast<int16_t>(static_cast<int>(std::ceil(f)));
                     m_gaugeBase = 0;
                 } else {

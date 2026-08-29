@@ -81,9 +81,10 @@ static UIViewController *RootVC() {
     return neSceneManager::rootViewController();
 }
 
-// The modal open/close (fade) transition duration, shared by
-// startOpenAnimation / startCloseAnimation.
-constexpr NSTimeInterval kModalAnimationDuration = 0.5;
+// The modal fade transition durations. The close constant is spelt as a float
+// because the binary's pool word is the float 0.3f widened to double.
+constexpr NSTimeInterval kModalOpenAnimationDuration = 0.5;
+constexpr NSTimeInterval kModalCloseAnimationDuration = 0.3f;
 
 @implementation SettingTableViewController {
     BOOL _isAnimationing;                // open/close animation guard
@@ -156,7 +157,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
     self.view.alpha = 0;
     self.navigationController.view.alpha = 0;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:kModalAnimationDuration];
+    [UIView setAnimationDuration:kModalOpenAnimationDuration];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endOpenAnimation)];
     self.view.alpha = 1;
@@ -176,7 +177,7 @@ constexpr NSTimeInterval kModalAnimationDuration = 0.5;
     }
     _isAnimationing = YES;
     [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:kModalAnimationDuration];
+    [UIView setAnimationDuration:kModalCloseAnimationDuration];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(endCloseAnimation)];
     self.view.alpha = 0;

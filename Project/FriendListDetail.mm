@@ -147,7 +147,9 @@ constexpr int kColX[3] = {139, 190, 242};
     // Close button (top-right of the window).
     UIImage *closeImg = [UIImage imageNamed:@"frilis_btn_close"];
     UIButton *closeBtn = [[UIButton alloc] init];
-    [closeBtn setFrame:CGRectMake(347.0f * s, 8.0f * s, closeImg.size.width, closeImg.size.height)];
+    // x = DAT_000b4a8c (237.0), matching FriendListDetailChara.mm's copy of the
+    // same control.
+    [closeBtn setFrame:CGRectMake(237.0f * s, 8.0f * s, closeImg.size.width, closeImg.size.height)];
     [closeBtn setImage:closeImg forState:UIControlStateNormal];
     [closeBtn addTarget:self
                   action:@selector(startCloseAnimation)
@@ -241,8 +243,19 @@ constexpr int kColX[3] = {139, 190, 242};
     playerIdLabel.adjustsFontSizeToFitWidth = YES;
     playerIdLabel.textAlignment = NSTextAlignmentCenter;
     [playerIdLabel sizeToFit];
-    // Centre placement (parent-relative in the binary); best-effort origin.
-    playerIdLabel.center = CGPointMake(windowImg.size.width * 0.5f, 60.0f * s);
+    // Frame @ 0xb4e34: the measured text is placed with its TOP at 60.0 * scale
+    // (DAT_000b4aac) and horizontally centred on the window.
+    const CGSize playerIdSize = playerIdLabel.frame.size;
+    [playerIdLabel setFrame:CGRectMake((windowImg.size.width - playerIdSize.width) * 0.5f,
+                                       60.0f * s,
+                                       playerIdSize.width,
+                                       playerIdSize.height)];
+    if (isPad) {
+        // 0xb4ed8: the pad layout nudges the label 5 pt down afterwards.
+        const CGRect playerIdFrame = playerIdLabel.frame;
+        playerIdLabel.center =
+            CGPointMake(CGRectGetMidX(playerIdFrame), CGRectGetMidY(playerIdFrame) + 5.0f);
+    }
     [window addSubview:playerIdLabel];
 
     // Friendship value (friends only).
@@ -254,7 +267,19 @@ constexpr int kColX[3] = {139, 190, 242};
     friendshipLabel.font = [UIFont fontWithName:AppFontName() size:(isPad ? 15.0f * s : 15.0f)];
     friendshipLabel.textAlignment = NSTextAlignmentCenter;
     [friendshipLabel sizeToFit];
-    friendshipLabel.center = CGPointMake(windowImg.size.width * 0.5f, 80.0f * s);
+    // Frame @ 0xb5096: the measured text is placed with its TOP at 81.0 * scale
+    // (DAT_000b522c) and horizontally centred on the window.
+    const CGSize friendshipSize = friendshipLabel.frame.size;
+    [friendshipLabel setFrame:CGRectMake((windowImg.size.width - friendshipSize.width) * 0.5f,
+                                         81.0f * s,
+                                         friendshipSize.width,
+                                         friendshipSize.height)];
+    if (isPad) {
+        // 0xb5136: the pad layout nudges the label 5 pt down afterwards.
+        const CGRect friendshipFrame = friendshipLabel.frame;
+        friendshipLabel.center =
+            CGPointMake(CGRectGetMidX(friendshipFrame), CGRectGetMidY(friendshipFrame) + 5.0f);
+    }
     [window addSubview:friendshipLabel];
 
     // Clear-count grid: 3 difficulty columns; rank tiers 0-3, then perfect, then

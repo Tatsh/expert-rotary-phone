@@ -104,6 +104,12 @@ typedef struct {
     BOOL isNotice;    /**< A rival beat this player's score. */
 } ScoreDataStruct;
 
+static const CGFloat kTabBarYOffsetOS7 = 15.0f;     // 0xaafac
+static const CGFloat kTabBarYOffsetLegacy = -34.0f; // pool 0xab09c
+static const CGFloat kTabBarHeight = 34.0f;         // 0xab00a/0xab010
+// The gap the pad layout leaves between the banner row and the score table.
+static const CGFloat kFriendScoreTableTopInset = 70.0f; // pool 0xab094 / -0xab098
+
 // Score -> rank index (0 best .. 6 worst). Shared routine (Ghidra FUN_00028a40,
 // also reconstructed file-local in PlayScene.mm / FriendScoreTableCell.mm).
 static int scoreToRank(int score) {
@@ -228,9 +234,7 @@ static int scoreToRank(int score) {
 
     if (isPad) {
         // Pad: the three tables laid out side by side (thirds of the width), each
-        // under its own header banner, with a clear table header. Exact origins
-        // approximated from the decompiler's inlined third-width math (see honesty
-        // note).
+        // under its own header banner, with a clear table header.
         UIView *emptyHeader = [[UIView alloc] init];
         [emptyHeader setFrame:CGRectZero];
         for (int i = 0; i < 3; i++) {
@@ -243,15 +247,19 @@ static int scoreToRank(int score) {
         // sp+0x270), NOT the table VC's frame (which the binary never reads here).
         // Divisor 3.0f, truncated.
         CGFloat third = static_cast<CGFloat>(static_cast<int>(viewFrame.size.width / 3.0f));
+        const CGFloat bgH = bgImg.size.height;
+        const CGFloat tblH = tblFrame.size.height;
         NSString *const banner[3] = {@"frisco_table_no", @"frisco_table_hy", @"frisco_table_ex"};
         for (int i = 0; i < 3; i++) {
             UIImageView *hdr = [[UIImageView alloc] initWithImage:[UIImage imageNamed:banner[i]]];
-            hdr.frame = CGRectMake(0, third * i, tblFrame.size.width - bgImg.size.width, third);
+            hdr.frame = CGRectMake(third * i, bgH, third, tblH - bgH);
             [self.view addSubview:hdr];
         }
         for (int i = 0; i < 3; i++) {
-            tables[i].view.frame = CGRectMake(
-                bgImg.size.width, third * i, tblFrame.size.width - bgImg.size.width, third);
+            tables[i].view.frame = CGRectMake(third * i,
+                                              bgH + kFriendScoreTableTopInset,
+                                              third,
+                                              tblH - bgH - kFriendScoreTableTopInset);
             [self.view addSubview:tables[i].view];
         }
     } else {
@@ -295,7 +303,10 @@ static int scoreToRank(int score) {
         _tabCtrl.view.frame = CGRectMake(0, 0, viewFrame.size.width, viewFrame.size.height);
         CGRect barFrame = _tabCtrl.tabBar.frame;
         _tabCtrl.tabBar.frame =
-            CGRectMake(barFrame.origin.x, barFrame.origin.y, viewFrame.size.width, 34.0f);
+            CGRectMake(barFrame.origin.x,
+                       barFrame.origin.y + (isOS7 ? kTabBarYOffsetOS7 : kTabBarYOffsetLegacy),
+                       viewFrame.size.width,
+                       kTabBarHeight);
         _tabCtrl.tabBar.clipsToBounds = YES;
 
         UIEdgeInsets imgInsets =

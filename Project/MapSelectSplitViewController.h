@@ -32,7 +32,7 @@
 @interface MapSelectSplitViewController : UIViewController <UIScrollViewDelegate>
 
 /**
- * Whether an open, close or arrow-move cross-fade is running; taps and the back button are
+ * Whether an open, close or arrow-move animation is running; taps and the back button are
  * swallowed until it clears. Exposed read-only for the flow controller.
  * @return YES while an animation is running.
  * @ghidraAddress 0x787d8
@@ -47,7 +47,7 @@
 - (void)setSelectIndexPath:(NSIndexPath *)selectIndexPath;
 
 /**
- * Slide the arrow to -setSelectIndexPath:'s row and cross-fade the right area panel to the
+ * Slide the arrow to -setSelectIndexPath:'s row and swap the right area panel to the
  * freshly-built data for one main map.
  * @param treasureData The sugoroku save table snapshot.
  * @param mapHeadArray The bundled map-head records.

@@ -236,8 +236,8 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         self.navigationController.view.alpha = 1.0f;
     } else {
         // iPad: park the nav view below the root scene, then two-phase slide into
-        // place. Phase 1 (~1/6 s): slide to y = 420 (setNavViewFrameD @ 0x2a458).
-        // Phase 2 (~1/6 s): settle to y = 470 (setNavViewFrameE @ 0x2a590), then
+        // place. Phase 1 (1/6 s): slide to y = 420 (setNavViewFrameD @ 0x2a458).
+        // Phase 2 (0.25 s): settle to y = 470 (setNavViewFrameE @ 0x2a590), then
         //   call -endOpenAnimation.
         UIViewController *root = RootVC();
         CGRect f = self.navigationController.view.frame;
@@ -245,14 +245,14 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         self.navigationController.view.frame = f;
         [UIView animateWithDuration:(1.0f / 6.0f)
             delay:0.0
-            options:UIViewAnimationOptionLayoutSubviews
+            options:UIViewAnimationOptionAllowUserInteraction
             animations:^{
               setNavViewFrameD(self); // Ghidra: setNavViewFrameD @ 0x2a458
             }
             completion:^(BOOL finished) {
-              [UIView animateWithDuration:(1.0f / 6.0f)
+              [UIView animateWithDuration:0.25
                   delay:0.0
-                  options:UIViewAnimationOptionLayoutSubviews
+                  options:UIViewAnimationOptionAllowUserInteraction
                   animations:^{
                     setNavViewFrameE(self); // Ghidra: setNavViewFrameE @ 0x2a590
                   }
@@ -286,21 +286,21 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
         self.navigationController.view.alpha = 0.0f;
     } else {
         // iPad: two-phase slide out.
-        // Phase 1 (~1/6 s): slide from y = 470 back to y = 420 (setNavViewFrameF @
-        // 0x2a838). Phase 2 (~1/6 s): park below the root view
+        // Phase 1 (1/6 s): slide from y = 470 back to y = 420 (setNavViewFrameF @
+        // 0x2a838). Phase 2 (0.25 s): park below the root view
         // (setNavViewFrameFromSubview2 @ 0x2a978),
         //   then call -endCloseAnimation.
         UIViewController *root = RootVC();
         [UIView animateWithDuration:(1.0f / 6.0f)
             delay:0.0
-            options:UIViewAnimationOptionLayoutSubviews
+            options:UIViewAnimationOptionAllowUserInteraction
             animations:^{
               setNavViewFrameF(self); // Ghidra: setNavViewFrameF @ 0x2a838
             }
             completion:^(BOOL finished) {
-              [UIView animateWithDuration:(1.0f / 6.0f)
+              [UIView animateWithDuration:0.25
                   delay:0.0
-                  options:UIViewAnimationOptionLayoutSubviews
+                  options:UIViewAnimationOptionAllowUserInteraction
                   animations:^{
                     // Ghidra: setNavViewFrameFromSubview2 @ 0x2a978
                     setNavViewFrameFromSubview2(self, root);

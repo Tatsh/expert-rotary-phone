@@ -35,6 +35,11 @@
 //    mapSelectAdvanceArrowFrameAlt                @ 0x77a98
 //    mapSelectSetRightDummyWidthAlt               @ 0x77de8
 //    mapSelectSyncScrollToPage                    @ 0x780d0
+//  Completion block invokes, reconstructed inline at their call sites:
+//    mapSelectEnableScrollBlock                   @ 0x77110
+//    mapSelectShowSubMapBlock                     @ 0x772f8
+//    mapSelectEnableScrollBlock2                  @ 0x776b4
+//    mapSelectShowSubMapBlockAlt                  @ 0x77c8c
 //  Objective-C++ for the C++ neSceneManager singleton / neEngine SE bridge.
 //  ARC.
 //
@@ -147,7 +152,7 @@
 // _arrowFrm.origin.x while leaving origin.y/size unchanged. Used in
 // -touchWithTreasureData:… as the animations block when the arrow is already
 // displaced (origin.x != _arrowFrm.origin.x) AND the target row falls inside
-// the guard band [130, 520] — 0.5 s cross-dissolve slides the arrow back to
+// the guard band [130, 520] — a 0.5 s linear animation slides the arrow back to
 // home x.
 static void mapSelectResetArrowFrame(MapSelectSplitViewController *self) {
     CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
@@ -160,7 +165,7 @@ static void mapSelectResetArrowFrame(MapSelectSplitViewController *self) {
 // frame.size.width, displacing the arrow off the left panel. Used in
 // -touchWithTreasureData:… as the animations block when the arrow is at rest
 // (origin.x == _arrowFrm.origin.x) AND the target row falls OUTSIDE the guard
-// band — quick 0.1 s cross-dissolve.
+// band — a quick 0.1 s linear animation.
 static void mapSelectAdvanceArrowFrame(MapSelectSplitViewController *self) {
     CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
     f.origin.x += f.size.width;
@@ -170,8 +175,8 @@ static void mapSelectAdvanceArrowFrame(MapSelectSplitViewController *self) {
 // Ghidra: mapSelectLayoutRightDummyViews @ 0x77208
 // Block invoke body: collapse _rightDummyView and _rightHeaderDummyView to
 // width 10.0 (0x41200000); origin and height are preserved from the views'
-// current frames. Used as the animations block of the right-panel
-// cross-dissolve in both -touchWithTreasureData:… and -scrollViewDidScroll:.
+// current frames. Used as the animations block of the right-panel collapse in
+// both -touchWithTreasureData:… and -scrollViewDidScroll:.
 static void mapSelectLayoutRightDummyViews(MapSelectSplitViewController *self) {
     if (self->_rightDummyView) {
         CGRect f = self->_rightDummyView.frame;
@@ -190,8 +195,8 @@ static void mapSelectLayoutRightDummyViews(MapSelectSplitViewController *self) {
 // from values captured before the collapsing animation (stored as int32_t via
 // vcvt.s32.f32 in the binary's block captures; recovered by vcvt.f32.s32).
 // In the ObjC++ reconstruction the widths are captured directly as CGFloat.
-// Used as the (nested) completion block in -touchWithTreasureData:…'s
-// right-panel cross-dissolve (LAB_000772f8_1 → nested block invoke).
+// Used as the animations block of the nested width-restore transition that
+// mapSelectShowSubMapBlock (@ 0x772f8) starts in -touchWithTreasureData:….
 static void mapSelectSetRightDummyWidth(MapSelectSplitViewController *self,
                                         CGFloat rightDummyWidth,
                                         CGFloat rightHeaderDummyWidth) {
@@ -211,7 +216,7 @@ static void mapSelectSetRightDummyWidth(MapSelectSplitViewController *self,
 // Block invoke body: identical logic to mapSelectAdvanceArrowFrame; a separate
 // compiled block literal at the -scrollViewDidScroll: call site.
 // Used when the map list is scrolled and the arrow is at home x — the arrow is
-// displaced off-panel (0.1 s cross-dissolve, duration DAT_00077a90).
+// displaced off-panel (0.1 s linear animation, duration DAT_00077a90).
 static void mapSelectAdvanceArrowFrameAlt(MapSelectSplitViewController *self) {
     CGRect f = self->_arrowImageView ? self->_arrowImageView.frame : CGRectZero;
     f.origin.x += f.size.width;
@@ -220,9 +225,9 @@ static void mapSelectAdvanceArrowFrameAlt(MapSelectSplitViewController *self) {
 
 // Ghidra: mapSelectSetRightDummyWidthAlt @ 0x77de8
 // Block invoke body: identical logic to mapSelectSetRightDummyWidth; separate
-// compiled instance for -scrollViewDidScroll:'s right-panel cross-dissolve
-// completion block (LAB_00077c8c_1 captures self + int32_t widths at
-// +0x18/+0x1c).
+// compiled instance for the nested width-restore transition that
+// mapSelectShowSubMapBlockAlt (@ 0x77c8c) starts in -scrollViewDidScroll:
+// (its block captures self + int32_t widths at +0x18/+0x1c).
 static void mapSelectSetRightDummyWidthAlt(MapSelectSplitViewController *self,
                                            CGFloat rightDummyWidth,
                                            CGFloat rightHeaderDummyWidth) {
@@ -241,7 +246,7 @@ static void mapSelectSetRightDummyWidthAlt(MapSelectSplitViewController *self,
 // Ghidra: mapSelectSyncScrollToPage @ 0x780d0
 // Block invoke body: set _scrollView.contentOffset.x = frame.size.width *
 // _pageCtrl.currentPage, preserving the current contentOffset.y.
-// Used as the animations block in -autoScroll's cross-dissolve page transition.
+// Used as the animations block in -autoScroll's page transition.
 static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     CGFloat pageWidth = self->_scrollView ? self->_scrollView.frame.size.width : 0.0f;
     NSInteger page = [self->_pageCtrl currentPage];
@@ -381,7 +386,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         [_rightHeaderDummyView addSubview:banner];
 
         UIImage *mapIcon = [UIImage
-            imageNamed:[NSString stringWithFormat:@"map_icon_%02d", static_cast<int>(mainMapId)]];
+            imageNamed:[NSString stringWithFormat:@"map_icon%02d", static_cast<int>(mainMapId)]];
         _rightHeaderImageView = [[UIImageView alloc]
             initWithFrame:CGRectMake(23.0f, 7.0f, mapIcon.size.width, mapIcon.size.height)];
         _rightHeaderImageView.image = mapIcon;
@@ -538,8 +543,8 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     _isAnimationing = NO;
 }
 
-// @ 0x76b40 — slide the arrow to the selected row and cross-fade the right
-// panel to the new area.
+// @ 0x76b40 — slide the arrow to the selected row and swap the right panel to
+// the new area.
 - (void)touchWithTreasureData:(NSArray *)treasureData
                  mapHeadArray:(NSArray *)mapHeadArray
                     mainMapId:(int)mainMapId {
@@ -556,22 +561,26 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     targetY -= _mapSelectViewCtrl.tableView.contentOffset.y;
 
     if (_arrowImageView.frame.origin.x == _arrowFrm.origin.x) {
-        // Arrow at rest: cross-dissolve it to the new Y.  Inside the guard band
-        // [130, 520] the slide is a slow 0.5 s dissolve to the target row; outside
-        // it, a quick 0.1 s snap that displaces the arrow off the panel
-        // (mapSelectAdvanceArrowFrame @ 0x7706c).
+        // Arrow at rest: animate it to the new Y. Inside the guard band [130, 520]
+        // the slide is a slow 0.5 s move to the target row; outside it, a quick
+        // 0.1 s snap that displaces the arrow off the panel
+        // (mapSelectAdvanceArrowFrame @ 0x7706c) and re-enables the map list.
         if (targetY < 130.0f || 520.0f < targetY) { // DAT_00076fc0 / DAT_00076fc4
             [UIView transitionWithView:_arrowImageView
-                              duration:0.1 // DAT_00076fb8
-                               options:UIViewAnimationOptionTransitionCrossDissolve
-                            animations:^{
-                              mapSelectAdvanceArrowFrame(self); // Ghidra: @ 0x7706c
-                            }
-                            completion:nil];
+                duration:0.1 // DAT_00076fb8
+                options:UIViewAnimationOptionCurveLinear
+                animations:^{
+                  mapSelectAdvanceArrowFrame(self); // Ghidra: @ 0x7706c
+                }
+                completion:^(BOOL finished) {
+                  /** @ghidraAddress 0x77110 */
+                  self->_mapSelectViewCtrl.tableView.scrollEnabled = YES;
+                  self->_isAnimationing = NO;
+                }];
         } else {
             [UIView transitionWithView:_arrowImageView
                               duration:0.5
-                               options:UIViewAnimationOptionTransitionCrossDissolve
+                               options:UIViewAnimationOptionCurveLinear
                             animations:^{
                               CGRect f = self->_arrowImageView.frame;
                               f.origin.y = targetY;
@@ -581,7 +590,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         }
     } else {
         // Arrow already displaced: place it directly at the target Y, then (if the
-        // target is inside the guard band) dissolve the x back to home
+        // target is inside the guard band) slide the x back to home
         // (mapSelectResetArrowFrame
         // @ 0x76fc8).
         CGRect f = _arrowImageView.frame;
@@ -590,7 +599,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         if (130.0f <= targetY && targetY <= 520.0f) {
             [UIView transitionWithView:_arrowImageView
                               duration:0.5
-                               options:UIViewAnimationOptionTransitionCrossDissolve
+                               options:UIViewAnimationOptionCurveLinear
                             animations:^{
                               mapSelectResetArrowFrame(self); // Ghidra: @ 0x76fc8
                             }
@@ -598,25 +607,25 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         }
     }
 
-    // Cross-fade the right area panel.
+    // Collapse and re-open the right area panel.
     // animations (mapSelectLayoutRightDummyViews @ 0x77208): collapse both clips
-    // to width 10. completion (LAB_000772f8_1): swap in the new
-    // SubMapSelectViewController, clear the
-    //   animating guard, then restore the original clip widths via
-    //   mapSelectSetRightDummyWidth
-    //   (@ 0x775b4, a nested block invoke created inside the completion with the
-    //   pre-animation widths captured as int32_t via vcvt.s32.f32 in the binary).
+    // to width 10. completion (mapSelectShowSubMapBlock @ 0x772f8): swap in the
+    //   new SubMapSelectViewController, refresh the header banner, then restore
+    //   the original clip widths via mapSelectSetRightDummyWidth (@ 0x775b4, a
+    //   nested block invoke created inside the completion with the pre-animation
+    //   widths captured as int32_t via vcvt.s32.f32 in the binary). The guard is
+    //   released only by that nested transition's own completion.
     CGFloat origDummyW = _rightDummyView ? _rightDummyView.frame.size.width : 0.0f;
     CGFloat origHeaderW = _rightHeaderDummyView ? _rightHeaderDummyView.frame.size.width : 0.0f;
     [UIView transitionWithView:_rightDummyView
         duration:0.25
-        options:UIViewAnimationOptionTransitionCrossDissolve
+        options:UIViewAnimationOptionCurveLinear
         animations:^{
           mapSelectLayoutRightDummyViews(self); // Ghidra: @ 0x77208
         }
         completion:^(BOOL finished) {
-          // Ghidra: LAB_000772f8_1 — swap SubMapSelectViewController,
-          // release animating guard, restore panel widths.
+          /** @ghidraAddress 0x772f8 */
+          self->_rightEmptyImageView.hidden = YES;
           [self->_subMapSelectViewCtrl.view removeFromSuperview];
           self->_subMapSelectViewCtrl = [[SubMapSelectViewController alloc]
               initWithTreasureData:treasureData
@@ -624,9 +633,26 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
                          mainMapId:static_cast<short>(mainMapId)];
           [self->_subMapSelectViewCtrl setDelegate:self];
           [self->_rightDummyView addSubview:self->_subMapSelectViewCtrl.view];
-          self->_isAnimationing = NO;
-          mapSelectSetRightDummyWidth(self, origDummyW,
-                                      origHeaderW); // Ghidra: @ 0x775b4
+          self->_rightHeaderDummyView.hidden = NO;
+          self->_rightHeaderImageView.image =
+              [UIImage imageNamed:[NSString stringWithFormat:@"map_icon%02d", mainMapId]];
+          // The banner name comes from the tapped row, not from a search by id.
+          MainMapData record;
+          [[[self->_mapSelectViewCtrl mapDataArray] objectAtIndex:self->_selectIndexPath.row]
+              getValue:&record];
+          self->_rightHeaderLabel.text = record.name;
+          [UIView transitionWithView:self->_rightDummyView
+              duration:0.25
+              options:UIViewAnimationOptionAllowUserInteraction
+              animations:^{
+                mapSelectSetRightDummyWidth(self, origDummyW,
+                                            origHeaderW); // Ghidra: @ 0x775b4
+              }
+              completion:^(BOOL restored) {
+                /** @ghidraAddress 0x776b4 */
+                self->_mapSelectViewCtrl.tableView.scrollEnabled = YES;
+                self->_isAnimationing = NO;
+              }];
         }];
 }
 
@@ -654,7 +680,7 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
         // the mirror of startOpenAnimation).
         [UIView transitionWithView:_arrowImageView
             duration:0.1 // DAT_00077a90
-            options:UIViewAnimationOptionTransitionCrossDissolve
+            options:UIViewAnimationOptionCurveLinear
             animations:^{
               mapSelectAdvanceArrowFrameAlt(self); // Ghidra: @ 0x77a98
             }
@@ -662,22 +688,38 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
               self->_mapSelectViewCtrl.tableView.scrollEnabled = YES;
               self->_isAnimationing = NO;
             }];
-        // Collapse right clips, then restore widths (mapSelectSetRightDummyWidthAlt
-        // @ 0x77de8, LAB_00077c8c_1).  animations body at LAB_00077b9c_1 is the
-        // same collapse logic as mapSelectLayoutRightDummyViews (separate compiled
-        // instance in the binary).
+        // Collapse the right clips, tear the area pane down
+        // (mapSelectShowSubMapBlockAlt @ 0x77c8c), then restore the widths
+        // (mapSelectSetRightDummyWidthAlt @ 0x77de8). The animations body at
+        // LAB_00077b9c_1 is the same collapse logic as
+        // mapSelectLayoutRightDummyViews (separate compiled instance in the
+        // binary).
         CGFloat origDummyW = _rightDummyView ? _rightDummyView.frame.size.width : 0.0f;
         CGFloat origHeaderW = _rightHeaderDummyView ? _rightHeaderDummyView.frame.size.width : 0.0f;
         [UIView transitionWithView:_rightDummyView
             duration:0.25
-            options:UIViewAnimationOptionTransitionCrossDissolve
+            options:UIViewAnimationOptionCurveLinear
             animations:^{
               mapSelectLayoutRightDummyViews(
                   self); // Ghidra: @ 0x77208 (same logic as LAB_00077b9c_1)
             }
             completion:^(BOOL finished) {
-              mapSelectSetRightDummyWidthAlt(self, origDummyW,
-                                             origHeaderW); // Ghidra: @ 0x77de8
+              /** @ghidraAddress 0x77c8c */
+              if (self->_subMapSelectViewCtrl) {
+                  [self->_subMapSelectViewCtrl.view removeFromSuperview];
+                  self->_subMapSelectViewCtrl = nil;
+              }
+              self->_rightHeaderDummyView.hidden = YES;
+              self->_rightEmptyImageView.hidden = NO;
+              [UIView transitionWithView:self->_rightDummyView
+                                duration:0.25
+                                 options:UIViewAnimationOptionAllowUserInteraction
+                              animations:^{
+                                mapSelectSetRightDummyWidthAlt(self,
+                                                               origDummyW,
+                                                               origHeaderW); // Ghidra: @ 0x77de8
+                              }
+                              completion:nil];
             }];
         return;
     }
@@ -736,12 +778,12 @@ static void mapSelectSyncScrollToPage(MapSelectSplitViewController *self) {
     NSInteger pages = _pageCtrl.numberOfPages;
     NSInteger next = (current == pages - 1) ? 0 : current + 1;
     _pageCtrl.currentPage = next;
-    // Cross-dissolve the carousel to the new page; the animations block syncs the
-    // scroll offset to _pageCtrl.currentPage (already set to `next` above).
+    // Scroll the carousel to the new page; the animations block syncs the scroll
+    // offset to _pageCtrl.currentPage (already set to `next` above).
     // Ghidra: mapSelectSyncScrollToPage @ 0x780d0 as the animations block invoke.
     [UIView transitionWithView:_scrollView
                       duration:0.25
-                       options:UIViewAnimationOptionTransitionCrossDissolve
+                       options:UIViewAnimationOptionCurveLinear
                     animations:^{
                       mapSelectSyncScrollToPage(self); // Ghidra: @ 0x780d0
                     }

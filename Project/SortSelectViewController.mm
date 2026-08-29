@@ -193,16 +193,16 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
         CGRect rootFrame = root.view.frame;
         self.navigationController.view.frame = CGRectMake(
             navFrame.origin.x, rootFrame.size.height, navFrame.size.width, navFrame.size.height);
-        [UIView animateWithDuration:(1.0 / 6.0)
+        [UIView animateWithDuration:(1.0f / 6.0f)
             delay:0.0
-            options:UIViewAnimationOptionLayoutSubviews
+            options:UIViewAnimationOptionAllowUserInteraction
             animations:^{
               friendNavSetFrameA(self);
             }
             completion:^(BOOL f1) {
-              [UIView animateWithDuration:(1.0 / 6.0)
+              [UIView animateWithDuration:0.25
                   delay:0.0
-                  options:UIViewAnimationOptionLayoutSubviews
+                  options:UIViewAnimationOptionAllowUserInteraction
                   animations:^{
                     friendNavSetFrameB(self);
                   }
@@ -226,7 +226,7 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
 //
 // Verified: the re-sort test compares musicSort against MainTask+0x8fc
 // (appliedSort()); on a change it calls rebuildList() (FUN_0003835c) and hides
-// the overlay; phone fade uses duration 0.0; iPad slides 1/6 s each.
+// the overlay; phone fade uses duration 0.0; iPad slides 1/6 s then 0.25 s.
 - (void)startCloseAnimation {
     if (_isAnimationing) {
         return;
@@ -250,16 +250,16 @@ static void friendNavSetFrameFromView(SortSelectViewController *, UIViewControll
         // y = rootVC.view.height (friendNavSetFrameFromView @ 0xc6ab0 — two
         // captures: self at +0x14, rootVC at +0x18 in the binary block struct).
         UIViewController *root = RootVC();
-        [UIView animateWithDuration:(1.0 / 6.0)
+        [UIView animateWithDuration:(1.0f / 6.0f)
             delay:0.0
-            options:UIViewAnimationOptionLayoutSubviews
+            options:UIViewAnimationOptionAllowUserInteraction
             animations:^{
               friendNavSetFrameC(self);
             }
             completion:^(BOOL f1) {
-              [UIView animateWithDuration:(1.0 / 6.0)
+              [UIView animateWithDuration:0.25
                   delay:0.0
-                  options:UIViewAnimationOptionLayoutSubviews
+                  options:UIViewAnimationOptionAllowUserInteraction
                   animations:^{
                     friendNavSetFrameFromView(self, root);
                   }
