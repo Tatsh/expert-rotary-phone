@@ -70,6 +70,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     '0'.
   - The over-score dictionary is held with a strong reference, as the binary retains it. It could
     previously be deallocated and then dereferenced by the per-frame badge draws.
+  - Returning from the friend-score panel refreshes the previewed song's scores rather than a song
+    in another column. The refresh addressed the jacket cell by its position within the column and
+    left out the column's own row base, so two times in three it rewrote an off-screen cell and left
+    the previewed song showing stale scores.
   - The teardown hand-off polls the select sound effect's own instance, so the select voice is no
     longer cut off and the hand-off no longer stalls.
   - The friend-score badge on the picked-song overlay reflects whether the song actually has an
