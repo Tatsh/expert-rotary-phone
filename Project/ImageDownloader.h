@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A lazy loader for one remote image belonging to a table-view cell.
+ * A lazy loader for one remote image belonging to a table-view cell.
  *
  * It downloads over its own NSURLConnection, decodes the result as a Retina-aware UIImage, and
  * calls back with the cell's index path so the table can refresh just that row. Reconstructed
@@ -13,19 +13,19 @@
 @class ImageDownloader;
 
 /**
- * @brief Receives an ImageDownloader's completion and failure notices.
+ * Receives an ImageDownloader's completion and failure notices.
  */
 @protocol ImageDownloaderDelegate <NSObject>
 @optional
 /**
- * @brief The image finished downloading and decoding.
+ * The image finished downloading and decoding.
  * @param downloader The finished downloader.
  * @param indexPath The table row to refresh.
  * @ghidraAddress 0x5a8e0
  */
 - (void)imageDownloader:(ImageDownloader *)downloader didLoad:(NSIndexPath *)indexPath;
 /**
- * @brief The image failed to download or decode.
+ * The image failed to download or decode.
  * @param downloader The failed downloader.
  * @param indexPath The table row that was waiting on it.
  * @ghidraAddress 0x5a880
@@ -34,7 +34,7 @@
 @end
 
 /**
- * @brief Fetches and decodes one image for a table row.
+ * Fetches and decodes one image for a table row.
  */
 @interface ImageDownloader : NSObject
 
@@ -52,17 +52,17 @@
 @property(nonatomic, retain) NSIndexPath *indexPathInTableView;
 
 /**
- * @brief Open the connection using imageURL.
+ * Open the connection using imageURL.
  * @ghidraAddress 0x5a63c
  */
 - (void)startDownload;
 /**
- * @brief Cancel the in-flight connection.
+ * Cancel the in-flight connection.
  * @ghidraAddress 0x5a724
  */
 - (void)cancelDownload;
 /**
- * @brief The decoded result.
+ * The decoded result.
  * @return The image, or nil before the download finishes.
  * @ghidraAddress 0x5a78c
  */

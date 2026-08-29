@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A display-only UITextView: no text selection, no edit menu, and never first responder.
+ * A display-only UITextView: no text selection, no edit menu, and never first responder.
  *
  * It is used for message bodies, for example in CommonAlertView. Reconstructed from Ghidra
  * project rb420, program PopnRhythmin.
@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A display-only UITextView used for message bodies.
+ * A display-only UITextView used for message bodies.
  */
 @interface CustomTextView : UITextView
 @end

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output.
+ * The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output.
  *
  * Each mixer input ("voice") streams one CASound's PCM through a render callback. This is the
  * lib_rsnd / caplayer engine, reconstructed rather than imported.
@@ -16,7 +16,7 @@
 class CASound;
 
 /**
- * @brief The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output.
+ * The low-latency SE mixer: an AUGraph of a 3D-mixer AudioUnit feeding a RemoteIO output.
  *
  * Each mixer input ("voice") streams one CASound's PCM through a render callback. This is the
  * lib_rsnd / caplayer engine, reconstructed rather than imported.
@@ -24,30 +24,30 @@ class CASound;
 class CAComponent {
 public:
     /**
-     * @brief Build the AUGraph and, if that succeeds, size and initialise the mixer.
+     * Build the AUGraph and, if that succeeds, size and initialise the mixer.
      * @param voices Number of mixer inputs (voices) to allocate.
      */
     explicit CAComponent(int voices);
 
     /**
-     * @brief Tear the AUGraph down and free the voice pool via terminate().
+     * Tear the AUGraph down and free the voice pool via terminate().
      */
     ~CAComponent();
 
     /**
-     * @brief Start the graph and unmute it.
+     * Start the graph and unmute it.
      * @ghidraAddress 0x23ccc
      */
     void start();
 
     /**
-     * @brief Stop the graph.
+     * Stop the graph.
      * @ghidraAddress 0x23d0c
      */
     void stop();
 
     /**
-     * @brief Report whether the graph is currently running.
+     * Report whether the graph is currently running.
      * @return True while the graph is started, false otherwise.
      */
     bool isRunning() const {
@@ -55,7 +55,7 @@ public:
     }
 
     /**
-     * @brief Reserve a free voice for a source, wire it up, and return its play handle.
+     * Reserve a free voice for a source, wire it up, and return its play handle.
      * @details Finds a voice in the free (state -1) or finished (state 4) state, wires its stream
      * format and render callback, and returns the play handle (generation | voice << 16), or
      * 0xffffffff when the mixer is full.
@@ -67,7 +67,7 @@ public:
     uint32_t reserveVoice(CASound *source, int volumeIndex);
 
     /**
-     * @brief Set a voice's mixer gain from the volume-level table.
+     * Set a voice's mixer gain from the volume-level table.
      * @param volumeIndex Index into the volume-level table.
      * @param voice The voice to set the gain for.
      * @return True on success, false when the voice index is out of range or the set fails.
@@ -76,7 +76,7 @@ public:
     bool setPlayerVolume(int volumeIndex, int voice);
 
     /**
-     * @brief Resume or start a voice named by a raw packed play handle.
+     * Resume or start a voice named by a raw packed play handle.
      * @details Extracts voice = handle >> 16, bounds-checks it, and verifies
      * generation = handle & 0xffff against the voice's stored generation so a stale handle is
      * rejected. Moves a prepared (1) or paused (3) voice to playing (2).
@@ -87,7 +87,7 @@ public:
     bool startVoice(int handle);
 
     /**
-     * @brief Stop a voice named by a raw packed play handle, marking it finished (4).
+     * Stop a voice named by a raw packed play handle, marking it finished (4).
      * @details Extracts voice = handle >> 16, bounds-checks it, and verifies
      * generation = handle & 0xffff against the voice's stored generation so a stale handle is
      * rejected.
@@ -98,7 +98,7 @@ public:
     bool stopVoice(int handle);
 
     /**
-     * @brief Query the state of a voice named by a raw packed play handle.
+     * Query the state of a voice named by a raw packed play handle.
      * @details Extracts voice = handle >> 16, bounds-checks it, and verifies
      * generation = handle & 0xffff against the voice's stored generation so a stale handle is
      * rejected.
@@ -109,7 +109,7 @@ public:
     int voiceState(int handle) const;
 
     /**
-     * @brief Set the mixer's master gain from the volume-level table.
+     * Set the mixer's master gain from the volume-level table.
      * @details Forwards to setPlayerVolume(volumeIndex, 0), which writes the master output-scope
      * gain.
      * @param volumeIndex Index into the volume-level table.
@@ -118,7 +118,7 @@ public:
     void setAllVolume(int volumeIndex);
 
     /**
-     * @brief Detach a source from any voice still referencing it.
+     * Detach a source from any voice still referencing it.
      * @details Called when the source is unloaded so no voice keeps a dangling back-pointer.
      * @param source The sound to detach from the voices.
      * @ghidraAddress 0x24014
@@ -126,7 +126,7 @@ public:
     void clearSourceRef(CASound *source);
 
     /**
-     * @brief Pause a voice named by a raw packed play handle, setting state 3.
+     * Pause a voice named by a raw packed play handle, setting state 3.
      * @details Extracts voice = handle >> 16 and generation = handle & 0xffff; a stale handle is
      * ignored.
      * @param handle The raw packed play handle (voice << 16 | generation).
@@ -136,7 +136,7 @@ public:
     bool pauseVoice(int handle);
 
     /**
-     * @brief Stop and clear a voice named by a raw packed play handle.
+     * Stop and clear a voice named by a raw packed play handle.
      * @details Frees the voice (state 4 and drops the source) so reserveVoice can recycle it.
      * Extracts voice = handle >> 16 and generation = handle & 0xffff; a stale handle is ignored.
      * @param handle The raw packed play handle (voice << 16 | generation).
@@ -145,7 +145,7 @@ public:
     void stopAndClearVoice(int handle);
 
     /**
-     * @brief Prepare a specific voice for a source (the fixed-voice SetGroup path).
+     * Prepare a specific voice for a source (the fixed-voice SetGroup path).
      * @details Wires the voice's stream format and render callback, sets its volume, marks it
      * playing, and returns the play handle (generation | voice << 16), or -1 if the voice is busy.
      * @param source The sound whose PCM the voice will stream.
@@ -157,7 +157,7 @@ public:
     int preparePlayer(CASound *source, int voice, int volumeIndex);
 
     /**
-     * @brief Tear the AUGraph down and free the voices (idempotent).
+     * Tear the AUGraph down and free the voices (idempotent).
      * @ghidraAddress 0x23d40
      */
     void terminate();

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Fetch and insert class methods on the CharaTicketData entity, the owned character
+ * Fetch and insert class methods on the CharaTicketData entity, the owned character
  * in-app-purchase tickets.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
@@ -11,12 +11,12 @@
 #import "CharaTicketData.h"
 
 /**
- * @brief Fetch and insert helpers for the CharaTicketData entity.
+ * Fetch and insert helpers for the CharaTicketData entity.
  */
 @interface CharaTicketData (Store)
 
 /**
- * @brief Whether a ticket row exists for @p productId.
+ * Whether a ticket row exists for @p productId.
  * @param productId The StoreKit product identifier.
  * @param context The managed object context to fetch from.
  * @return YES when a row exists.
@@ -25,7 +25,7 @@
 + (BOOL)isExistData:(NSString *)productId inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief The ticket row for @p productId.
+ * The ticket row for @p productId.
  * @param productId The StoreKit product identifier.
  * @param context The managed object context to fetch from.
  * @return The last matching record, or nil when there is none.
@@ -35,7 +35,7 @@
                    inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Insert a ticket row for @p productId if one does not already exist.
+ * Insert a ticket row for @p productId if one does not already exist.
  * @param productId The StoreKit product identifier.
  * @param context The managed object context to insert into.
  * @ghidraAddress 0xe3048

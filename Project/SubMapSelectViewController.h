@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The sugoroku sub-map, or area, select screen.
+ * The sugoroku sub-map, or area, select screen.
  *
  * A grouped UITableViewController listing the sub-maps of one main map, one SubMapListCell per
  * area. Selecting an area snapshots a pending "treasure" record through UserSettingData, asks
@@ -14,12 +14,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The sugoroku sub-map (area) list for one main map.
+ * The sugoroku sub-map (area) list for one main map.
  */
 @interface SubMapSelectViewController : UITableViewController
 
 /**
- * @brief Build the area list for a main map; the initialiser cross-references the two arrays to
+ * Build the area list for a main map; the initialiser cross-references the two arrays to
  * produce the visible sub-map rows.
  * @param treasureData An NSArray of TreasureData records: the sugoroku save table.
  * @param mapHeadArray An NSArray of NSValue-wrapped map-head entries.

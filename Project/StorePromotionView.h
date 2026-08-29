@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The store's promotion banner: a cross-fading image carousel.
+ * The store's promotion banner: a cross-fading image carousel.
  *
  * It downloads a set of promo images, one ImageDownloader each, then rotates through them on a
  * timer with a fade transition. Tapping it reports the current promo's pack id to the delegate so
@@ -20,11 +20,11 @@
 @class StorePromotionView;
 
 /**
- * @brief Receives the promotion banner's tap.
+ * Receives the promotion banner's tap.
  */
 @protocol StorePromotionViewDelegate <NSObject>
 /**
- * @brief The banner was tapped.
+ * The banner was tapped.
  * @param view The banner.
  * @param packID The pack the visible promo advertises.
  */
@@ -32,7 +32,7 @@
 @end
 
 /**
- * @brief The store's promotion banner: a cross-fading rotation of promo images.
+ * The store's promotion banner: a cross-fading rotation of promo images.
  */
 @interface StorePromotionView : UIView <ImageDownloaderDelegate> {
     UIActivityIndicatorView *m_Indicator; /**< Shown until the first image loads. */
@@ -52,35 +52,35 @@
 // Recovered accessors and controls, implemented in the .mm and read by StoreMainViewController.
 
 /**
- * @brief How many promo images are loaded.
+ * How many promo images are loaded.
  * @return The image count.
  * @ghidraAddress 0x7a2c4
  */
 - (int)getImageCount;
 /**
- * @brief Stop the rotation timer.
+ * Stop the rotation timer.
  * @ghidraAddress 0x7a6ac
  */
 - (void)stopAnimation;
 /**
- * @brief The currently-shown promo's pack id.
+ * The currently-shown promo's pack id.
  * @return The pack id.
  * @ghidraAddress 0x79f84
  */
 - (int)getPackID;
 
 /**
- * @brief Resize both banner image views.
+ * Resize both banner image views.
  * @param size The new size.
  */
 - (void)setImageViewSize:(CGSize)size;
 /**
- * @brief Begin loading the promo images.
+ * Begin loading the promo images.
  * @param promotionData An array of dictionaries carrying ID and ImageURL.
  */
 - (void)setImageURLs:(NSArray *)promotionData;
 /**
- * @brief Stop the timers and cancel every in-flight download.
+ * Stop the timers and cancel every in-flight download.
  */
 - (void)cancel;
 

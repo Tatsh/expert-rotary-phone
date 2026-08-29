@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "register a player name" entry screen.
+ * The "register a player name" entry screen.
  *
  * On phone it is a full-screen "friman_bg" form: an ASCII name field of at most 12 characters, a
  * decide button, and the "inputname_text_*" caption images. On pad
@@ -22,7 +22,7 @@
 #import "Downloader.h" // DownloaderDelegate
 
 /**
- * @brief The player-name entry screen.
+ * The player-name entry screen.
  */
 @interface InputNameViewCtrl : UIViewController <UITextFieldDelegate, DownloaderDelegate> {
     UITextField *_nameField;             /**< The player-name entry; at most 12 ASCII characters. */
@@ -32,7 +32,7 @@
 }
 
 /**
- * @brief Wrap a freshly-built controller in a UINavigationController, with the back button hidden
+ * Wrap a freshly-built controller in a UINavigationController, with the back button hidden
  * and the "inputname_navbar" bar background.
  * @return The navigation host.
  * @ghidraAddress 0x90668
@@ -40,12 +40,12 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the panel and its navigation view in; guarded by m_IsAnimationing.
+ * Fade the panel and its navigation view in; guarded by m_IsAnimationing.
  * @ghidraAddress 0x90740
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the panel and its navigation view out; guarded by m_IsAnimationing.
+ * Fade the panel and its navigation view out; guarded by m_IsAnimationing.
  * @ghidraAddress 0x90890
  */
 - (void)startCloseAnimation;

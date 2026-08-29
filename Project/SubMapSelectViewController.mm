@@ -70,7 +70,7 @@
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 /**
- * @brief The NSValue payload for one visible area row.
+ * The NSValue payload for one visible area row.
  *
  * Its Objective-C type encoding is `{SubMapData=ss@@}`.
  */
@@ -82,17 +82,17 @@ typedef struct SubMapData {
 } SubMapData;
 
 /**
- * @brief The area list's private gesture and close helpers.
+ * The area list's private gesture and close helpers.
  */
 @interface SubMapSelectViewController () <DownloadMainDelegate>
 /**
- * @brief The edge-pan gesture moved; drive the interactive close.
+ * The edge-pan gesture moved; drive the interactive close.
  * @param recognizer The pan recogniser.
  */
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer;
-/** @brief Close the list, deferring to the iPad overlay owner when one is set. */
+/** Close the list, deferring to the iPad overlay owner when one is set. */
 - (void)startCloseAnimation;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)backButtonFunc;
 @end
 

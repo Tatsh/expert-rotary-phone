@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The hardcoded table of the 30 built-in characters.
+ * The hardcoded table of the 30 built-in characters.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (Objective-C++: entries hold
  * NSStrings).
@@ -11,7 +11,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One built-in character record. Ghidra: a 16-byte struct, table @ 0x133298.
+ * One built-in character record. Ghidra: a 16-byte struct, table @ 0x133298.
  */
 struct CharaDataStruct {
     NSString *name;      /**< +0x00 The character's display name. */
@@ -22,7 +22,7 @@ struct CharaDataStruct {
 };
 
 /**
- * @brief Get the built-in character data for the given index (0..29).
+ * Get the built-in character data for the given index (0..29).
  * @param index 0-based index of the built-in character (0..29).
  * @return Pointer to the CharaDataStruct for the built-in character at the given index.
  * @ghidraAddress 0xcb958

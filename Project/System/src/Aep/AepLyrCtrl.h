@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A single drawable layer or sprite in the Aep 2D scene.
+ * A single drawable layer or sprite in the Aep 2D scene.
  *
  * It carries its position, size, colour, alpha, a texture reference, and its slot in the ordering
  * table. Reconstructed from Ghidra project rb420, program PopnRhythmin. The layout is derived from
@@ -17,7 +17,7 @@ class C_TEXTURE;
 }
 
 /**
- * @brief A single drawable layer or sprite in the Aep 2D scene.
+ * A single drawable layer or sprite in the Aep 2D scene.
  *
  * Holds a layer's position, size, colour, alpha, animation play-state, a resolved texture or layer
  * reference, and its slot in the ordering table.
@@ -25,23 +25,23 @@ class C_TEXTURE;
 class AepLyrCtrl {
 public:
     /**
-     * @brief Construct an empty layer with default transform and play-state.
+     * Construct an empty layer with default transform and play-state.
      * @ghidraAddress 0x2c7d8
      */
     AepLyrCtrl();
 
     /**
-     * @brief Destroy the layer, splicing it out of the global active-layer list.
+     * Destroy the layer, splicing it out of the global active-layer list.
      */
     virtual ~AepLyrCtrl();
 
     /**
-     * @brief Draw the base layer; overridden by concrete sprite subclasses.
+     * Draw the base layer; overridden by concrete sprite subclasses.
      */
     virtual void draw();
 
     /**
-     * @brief Bind a texture or named resource to this layer.
+     * Bind a texture or named resource to this layer.
      *
      * Resolves the layer via AepManager::getLyrNo and layerFrameCount, then links it into the
      * active-layer list. Simplified reconstruction used by scenes that pass neither owner nor
@@ -53,7 +53,7 @@ public:
     void init(int group, const char *name);
 
     /**
-     * @brief Bind a texture or named resource to this layer, with owner and order.
+     * Bind a texture or named resource to this layer, with owner and order.
      *
      * Full four-parameter form the binary actually exports. Resolves the layer via AepManager and
      * links it into the active-layer list.
@@ -67,7 +67,7 @@ public:
     void init(int group, const char *name, void *owner, int order);
 
     /**
-     * @brief Splice this layer out of the global active-layer list.
+     * Splice this layer out of the global active-layer list.
      *
      * Removes the layer without destroying it; the owner then deletes it. Standard doubly-linked
      * removal that patches the neighbours and advances the head when this layer was the head.
@@ -76,7 +76,7 @@ public:
     void unlink();
 
     /**
-     * @brief Start playing the layer's animation in the looping mode.
+     * Start playing the layer's animation in the looping mode.
      *
      * Enters play-state 2. A fully-faded layer seeks to its last frame, else frame 0. On reaching
      * the end the play head wraps, so the layer animates forever until stopped.
@@ -85,7 +85,7 @@ public:
     void play();
 
     /**
-     * @brief Start playing the layer's animation once.
+     * Start playing the layer's animation once.
      *
      * Enters play-state 1. Defaults the rate to 1.0 when unset, then seeks (frame 0 forward, last
      * frame in reverse). On reaching the end the play head holds at the last frame and the layer
@@ -96,7 +96,7 @@ public:
     void playOnce();
 
     /**
-     * @brief Animation play-state values held in m_state.
+     * Animation play-state values held in m_state.
      */
     enum AnimState {
         kAnimIdle = 0,     /*!< Not playing. */
@@ -107,7 +107,7 @@ public:
     };
 
     /**
-     * @brief Report whether the layer is currently visible.
+     * Report whether the layer is currently visible.
      * @return True when the layer is drawn.
      */
     bool isVisible() const {
@@ -115,7 +115,7 @@ public:
     }
 
     /**
-     * @brief Report whether the layer is in any non-idle play-state.
+     * Report whether the layer is in any non-idle play-state.
      *
      * The play scene drives some layers as one-shot SE cues and gates a new cue on this, since idle
      * means the previous cue finished.
@@ -127,7 +127,7 @@ public:
     }
 
     /**
-     * @brief Report whether the layer is still mid-animation.
+     * Report whether the layer is still mid-animation.
      *
      * False when idle or held, otherwise true while the play head has not reached the end of its
      * travel (0..m_frameCount for a forward rate, >0 for a reverse rate). The play and result draw
@@ -139,7 +139,7 @@ public:
     bool isAnimating() const;
 
     /**
-     * @brief Mutable access to the resolved layer length.
+     * Mutable access to the resolved layer length.
      *
      * The sugoroku scene builder trims two of its roulette layers by hand after resolving them.
      * @return Reference to the frame count.
@@ -149,7 +149,7 @@ public:
     } // +0x3c
 
     /**
-     * @brief Mutable access to the current play head.
+     * Mutable access to the current play head.
      *
      * The sugoroku warp-bounce reads it as a float.
      * @return Reference to the current frame.
@@ -159,7 +159,7 @@ public:
     } // +0x40
 
     /**
-     * @brief Mutable access to the frame-advance rate.
+     * Mutable access to the frame-advance rate.
      * @return Reference to the play speed.
      */
     float &playSpeed() {
@@ -167,7 +167,7 @@ public:
     } // +0x44
 
     /**
-     * @brief Mutable access to the render mode, which encodes the blend.
+     * Mutable access to the render mode, which encodes the blend.
      *
      * The play scene forces its three additive field layers to 0x200 after building them.
      * @return Reference to the render mode.
@@ -177,7 +177,7 @@ public:
     } // +0x34
 
     /**
-     * @brief Stop this layer's animation without unlinking it.
+     * Stop this layer's animation without unlinking it.
      *
      * Clears the play-state field; the arcade map reload calls it on every scene layer before
      * rebuilding.
@@ -188,7 +188,7 @@ public:
     }
 
     /**
-     * @brief Freeze this layer on its current frame without unlinking or hiding it.
+     * Freeze this layer on its current frame without unlinking or hiding it.
      *
      * Enters the held play-state. isAnimating() treats the held state as done, and
      * updateAndDrawAepLayers keeps drawing the held frame but stops advancing it. The music-select
@@ -200,7 +200,7 @@ public:
     }
 
     /**
-     * @brief Stop this layer, optionally leaving it drawn at its current frame.
+     * Stop this layer, optionally leaving it drawn at its current frame.
      *
      * The music-select preview transitions call it with keepVisible = 1 to freeze the preview layer
      * on screen.
@@ -211,7 +211,7 @@ public:
     void stop(int keepVisible);
 
     /**
-     * @brief Rewind this layer's play head to frame 0 without unlinking.
+     * Rewind this layer's play head to frame 0 without unlinking.
      *
      * Used when backing out of a song preview.
      * @ghidraAddress 0x2cb5c
@@ -219,7 +219,7 @@ public:
     void reset();
 
     /**
-     * @brief Set the sugoroku roulette-layer anchor.
+     * Set the sugoroku roulette-layer anchor.
      *
      * Clears the draw-x slot and stores the raw integer into the draw-y slot.
      * @param value Raw draw-y value to store.
@@ -230,7 +230,7 @@ public:
     }
 
     /**
-     * @brief Position the layer's on-screen anchor.
+     * Position the layer's on-screen anchor.
      *
      * Sets the integer draw x/y that updateAndDrawAepLayers reads. The arcade hit-flash arrows
      * re-anchor this every frame.
@@ -243,7 +243,7 @@ public:
     }
 
     /**
-     * @brief Advance and draw every live AEP layer for the frame.
+     * Advance and draw every live AEP layer for the frame.
      *
      * Walks the global live-layer list and reaches each layer's members directly.
      * @param drawOnly When non-zero, redraw the held frame without advancing time.

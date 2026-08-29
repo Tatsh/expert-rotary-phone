@@ -9,10 +9,10 @@
 #import "DownloadImageView.h"
 
 /**
- * @brief The image view's private setup helper.
+ * The image view's private setup helper.
  */
 @interface DownloadImageView ()
-/** @brief Build the spinner; the initialisers call it. The name matches the binary's selector. */
+/** Build the spinner; the initialisers call it. The name matches the binary's selector. */
 - (void)SetupView;
 @end
 

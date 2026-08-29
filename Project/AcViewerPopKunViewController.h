@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's POP-KUN option list.
+ * The arcade (AC) viewer's POP-KUN option list.
  *
  * A UITableView of two values (OFF, BEAT POP). Pushed by AcViewerOptionViewController when the
  * POP-KUN row is tapped; selecting a value stores it into UserSettingData (saveAcvPopKun:) and
@@ -13,7 +13,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The arcade viewer's POP-KUN option list.
+ * The arcade viewer's POP-KUN option list.
  */
 @interface AcViewerPopKunViewController : UITableViewController
 @end

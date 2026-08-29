@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The sequential downloader for a list of purchased or updated files.
+ * The sequential downloader for a list of purchased or updated files.
  *
  * It writes each file to its destination path, marks the music library dirty, and reports progress
  * to its delegate. Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -14,34 +14,34 @@
 @class StoreDownloadManager;
 
 /**
- * @brief Receives the download queue's progress and outcome.
+ * Receives the download queue's progress and outcome.
  */
 @protocol StoreDownloadManagerDelegate <NSObject>
 @optional
 /**
- * @brief The next file started downloading.
+ * The next file started downloading.
  * @param manager The download manager.
  */
 - (void)downloadManagerStartTask:(StoreDownloadManager *)manager;
 /**
- * @brief The current download made progress.
+ * The current download made progress.
  * @param manager The download manager.
  */
 - (void)downloadManagerProceed:(StoreDownloadManager *)manager;
 /**
- * @brief Every file finished.
+ * Every file finished.
  * @param manager The download manager.
  */
 - (void)downloadManagerCompleted:(StoreDownloadManager *)manager;
 /**
- * @brief A download or write failed.
+ * A download or write failed.
  * @param manager The download manager.
  */
 - (void)downloadManagerFailed:(StoreDownloadManager *)manager;
 @end
 
 /**
- * @brief Downloads a queue of files one at a time, reporting per-file and overall progress.
+ * Downloads a queue of files one at a time, reporting per-file and overall progress.
  */
 @interface StoreDownloadManager : NSObject <DownloaderDelegate>
 
@@ -61,7 +61,7 @@
 @property(nonatomic, readonly) float overallProgress;
 
 /**
- * @brief Create a manager for a list of downloads. The list is copied.
+ * Create a manager for a list of downloads. The list is copied.
  * @param tasks The StoreDownloadTask list, each carrying a file URL and a local path.
  * @param delegate The progress and outcome delegate.
  * @return The initialised manager, or nil when @p tasks is nil.
@@ -70,13 +70,13 @@
 - (instancetype)initWithTasks:(NSArray *)tasks delegate:(id<StoreDownloadManagerDelegate>)delegate;
 
 /**
- * @brief Begin the queue, once: disable the idle timer and download the first file.
+ * Begin the queue, once: disable the idle timer and download the first file.
  * @ghidraAddress 0x42140
  */
 - (void)start;
 
 /**
- * @brief Abort the in-flight download and re-enable the idle timer.
+ * Abort the in-flight download and re-enable the idle timer.
  * @ghidraAddress 0x422a0
  */
 - (void)cancel;

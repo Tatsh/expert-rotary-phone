@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A wall-clock stopwatch.
+ * A wall-clock stopwatch.
  *
  * An 8-byte {sec, usec} snapshot taken at reset(), read back as elapsed
  * milliseconds. Used by MainViewController to pace the task update and render steps.
@@ -13,12 +13,12 @@
 #include <sys/time.h>
 
 /**
- * @brief A wall-clock stopwatch reading back elapsed milliseconds since its last reset.
+ * A wall-clock stopwatch reading back elapsed milliseconds since its last reset.
  */
 class neFrameTimer {
 public:
     /**
-     * @brief Snapshot the current time as the new zero point.
+     * Snapshot the current time as the new zero point.
      * @ghidraAddress 0x28084
      */
     void reset() {
@@ -29,7 +29,7 @@ public:
     }
 
     /**
-     * @brief Time elapsed since the last reset().
+     * Time elapsed since the last reset().
      *
      * The binary computes `sec_delta * 1000 + usec_delta / 1000` (both NEON vcvt.f32.s32,
      * divisor/scale DAT_000280d0 = 1000.0). Both consumers — the ne::C_TASK::updateAll delta and

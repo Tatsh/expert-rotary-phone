@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A store song-detail footer row showing the multi-line copyright text.
+ * A store song-detail footer row showing the multi-line copyright text.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0x75324).
@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The pack-detail table's copyright footer row.
+ * The pack-detail table's copyright footer row.
  */
 @interface StoreDetailCopyrightCell : UITableViewCell
 

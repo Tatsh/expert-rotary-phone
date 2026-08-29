@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The CharaTicketData Core Data managed object: character-unlock tickets.
+ * The CharaTicketData Core Data managed object: character-unlock tickets.
  *
  * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "CharaTicketData").
  *
@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One owned or consumed character-ticket in-app purchase.
+ * One owned or consumed character-ticket in-app purchase.
  */
 @interface CharaTicketData : NSManagedObject
 
@@ -20,14 +20,14 @@
 @property(nonatomic, retain) NSString *productId;
 
 /**
- * @brief Delete every persisted CharaTicketData record; the device-change and initForConvert
+ * Delete every persisted CharaTicketData record; the device-change and initForConvert
  * reset.
  * @param context The managed object context to delete from.
  */
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
 /**
- * @brief Fetch every persisted CharaTicketData record, for the device-change conversion payload.
+ * Fetch every persisted CharaTicketData record, for the device-change conversion payload.
  * @param context The managed object context to fetch from.
  * @return An array of CharaTicketData.
  */

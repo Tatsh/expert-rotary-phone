@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "pending treasure" snapshot.
+ * The "pending treasure" snapshot.
  *
  * A flat, byte-serialised record persisted under the
  * NSUserDefaults key "TreasureTmpData" and read back by +[UserSettingData treasureTmp]. It carries
@@ -23,7 +23,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The byte-exact "pending treasure" save record carried across an arcade launch.
+ * The byte-exact "pending treasure" save record carried across an arcade launch.
  */
 typedef struct __attribute__((packed)) TreasureTmpData {
     int16_t mainMapId; /**< +0x00 Main map id; parallels TreasureData.mainMapId. */

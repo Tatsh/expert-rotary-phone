@@ -89,7 +89,7 @@
 #import "neEngineBridge.h"             // neSceneManager::rootViewController, neEngine::playSystemSe
 
 /**
- * @brief The hub's private state and helpers.
+ * The hub's private state and helpers.
  */
 @interface MapSelectSplitViewController () <DownloadMainDelegate, MapSelectViewControllerDelegate> {
 @public // de-inlined static helpers reach these via self-> (binary by-offset
@@ -115,22 +115,22 @@
     BOOL _autoScroll;                    /**< The carousel's auto-advance is armed. */
     HowToViewCtrlPad *_howtoViewCtrlPad; /**< The first-run treasure how-to overlay. */
 }
-/** @brief The open animation finished; clear the animation guard. */
+/** The open animation finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief The close animation finished; tear the hub down. */
+/** The close animation finished; tear the hub down. */
 - (void)endCloseAnimation;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)backButtonFunc;
-/** @brief Re-arm the carousel's auto-advance immediately. */
+/** Re-arm the carousel's auto-advance immediately. */
 - (void)restartAutoScroll;
-/** @brief Re-arm the carousel's auto-advance after a short delay. */
+/** Re-arm the carousel's auto-advance after a short delay. */
 - (void)restartAutoScrollAfterDelay;
-/** @brief Advance the carousel one page. */
+/** Advance the carousel one page. */
 - (void)autoScroll;
-/** @brief Rebuild the event banner from the latest event info. */
+/** Rebuild the event banner from the latest event info. */
 - (void)updateEventInfo;
 /**
- * @brief The carousel's page dots changed.
+ * The carousel's page dots changed.
  * @param pageControl The page control that changed.
  */
 - (void)pageControlDidChanged:(UIPageControl *)pageControl;

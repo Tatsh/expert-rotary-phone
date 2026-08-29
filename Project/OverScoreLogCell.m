@@ -21,7 +21,7 @@
 // __unsafe_unretained because the element owns the objects, the cell only
 // borrows them.
 /**
- * @brief The plain C struct the data element writes into; the Ghidra ivar is m_overScoreLogData.
+ * The plain C struct the data element writes into; the Ghidra ivar is m_overScoreLogData.
  *
  * Only the fields this cell reads are named. The pointers are __unsafe_unretained because the
  * element owns the objects and the cell only borrows them.

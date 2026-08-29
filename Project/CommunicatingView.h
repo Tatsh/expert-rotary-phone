@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The modal "communicating…" network-activity overlay.
+ * The modal "communicating…" network-activity overlay.
  *
  * A centred window backdrop (cmn_window) with a spinning UIActivityIndicatorView and a
  * "communicating" caption (mes_loading), plus a "communication failed" caption (mes_loadingerror)
@@ -16,7 +16,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A modal "communicating…" network-activity overlay.
+ * A modal "communicating…" network-activity overlay.
  */
 @interface CommunicatingView : UIViewController {
     UIImageView *communicatingView;         /**< +0xa4 The "communicating" caption (mes_loading). */
@@ -27,27 +27,27 @@
 }
 
 /**
- * @brief Switch the overlay to its "communication failed" state: hide the spinner and the
+ * Switch the overlay to its "communication failed" state: hide the spinner and the
  * "communicating" caption, and reveal the "failed" caption.
  * @ghidraAddress 0xdecb4
  */
 - (void)failed;
 
 /**
- * @brief Fade the overlay in, alpha 0 to 1 over 0.3 s.
+ * Fade the overlay in, alpha 0 to 1 over 0.3 s.
  * @ghidraAddress 0xded10
  */
 - (void)startOpenAnimation;
 
 /**
- * @brief Fade the overlay out, alpha 1 to 0 over 0.3 s, then tear it down. If a fade is already
+ * Fade the overlay out, alpha 1 to 0 over 0.3 s, then tear it down. If a fade is already
  * running the close is deferred; see _isCloseReserve.
  * @ghidraAddress 0xdee48
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Whether a fade animation is running. The read is atomic.
+ * Whether a fade animation is running. The read is atomic.
  * @return YES while a fade is in flight.
  * @ghidraAddress 0xdefd8
  */

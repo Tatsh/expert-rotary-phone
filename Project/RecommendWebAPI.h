@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Recommend-specific web-API entry point of the Konami "Applilink" Recommend ad SDK.
+ * The Recommend-specific web-API entry point of the Konami "Applilink" Recommend ad SDK.
  *
  * A behaviourless subclass of RewardNetworkWebAPI: Ghidra shows an empty class body and an empty
  * metaclass, so it adds no methods or ivars of its own. It exists only so the Recommend feature
@@ -18,7 +18,7 @@
 #import "RewardNetworkWebAPI.h"
 
 /**
- * @brief The Recommend feature's web-API entry point, a behaviourless RewardNetworkWebAPI
+ * The Recommend feature's web-API entry point, a behaviourless RewardNetworkWebAPI
  * subclass.
  */
 @interface RecommendWebAPI : RewardNetworkWebAPI

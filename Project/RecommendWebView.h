@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The raw web view rendering the Konami "Applilink" Recommend ad SDK's app-list content.
+ * The raw web view rendering the Konami "Applilink" Recommend ad SDK's app-list content.
  *
  * A web-view subclass acting as its own navigation delegate: it hides itself until content is
  * ready, optionally overlays a RewardNetworkIndicator busy spinner on its parent view, fetches the
@@ -29,13 +29,13 @@
 #endif
 
 /**
- * @brief The completion for a hosted recommend or app-list load.
+ * The completion for a hosted recommend or app-list load.
  * @param error The load error, or nil on success.
  */
 typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
 
 /**
- * @brief The web view that renders the recommend and app-list pages.
+ * The web view that renders the recommend and app-list pages.
  */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 @interface RecommendWebView : WKWebView <WKNavigationDelegate>
@@ -52,14 +52,14 @@ typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
 @property(nonatomic, strong) NSError *lastErrorForOpenAppliList;
 
 /**
- * @brief Hop to the main queue and fetch and render the recommend app list.
+ * Hop to the main queue and fetch and render the recommend app list.
  * @param callback Stored, and fired with the load error or nil once the panel is dismissed.
  * @ghidraAddress 0xfe970
  */
 - (void)loadRequestWithCallback:(RecommendWebViewOpenAppliListCallback)callback;
 
 /**
- * @brief Build the parameterised request, show the indicator, and start loading.
+ * Build the parameterised request, show the indicator, and start loading.
  * @param url The page URL.
  * @param parameters The query parameters.
  * @param delegate Accepted but unused; the web view always makes itself the delegate.
@@ -70,33 +70,33 @@ typedef void (^RecommendWebViewOpenAppliListCallback)(NSError *error);
                   delegate:(id)delegate;
 
 /**
- * @brief Stop an in-flight load.
+ * Stop an in-flight load.
  * @ghidraAddress 0xff0a8
  */
 - (void)cancelRequest;
 
 /**
- * @brief Tear the panel down; it forwards to -appliListClosed.
+ * Tear the panel down; it forwards to -appliListClosed.
  * @ghidraAddress 0xff098
  */
 - (void)closeList;
 
 /**
- * @brief Enable or disable the busy-indicator overlay.
+ * Enable or disable the busy-indicator overlay.
  * @param enable YES to show the indicator.
  * @ghidraAddress 0xff0e0
  */
 - (void)setIndicatorwithEnable:(BOOL)enable;
 
 /**
- * @brief Select the ad layout, which picks the ad_type and is_banner_wide query values.
+ * Select the ad layout, which picks the ad_type and is_banner_wide query values.
  * @param viewType The layout: 0, 1, 2 or 3.
  * @ghidraAddress 0xff0f0
  */
 - (void)setViewType:(int)viewType;
 
 /**
- * @brief Toggle scrolling and bouncing on the hosted UIScrollView subviews.
+ * Toggle scrolling and bouncing on the hosted UIScrollView subviews.
  * @param enabled YES to allow scrolling.
  * @ghidraAddress 0xff100
  */

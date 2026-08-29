@@ -28,7 +28,7 @@ static UIViewController *RootVC() {
 }
 
 /**
- * @brief The pop'n-link top screen's private buttons and helpers.
+ * The pop'n-link top screen's private buttons and helpers.
  */
 @interface PopnLinkTopViewController () {
     BOOL _isAnimationing;  /**< An open or close fade is running. */
@@ -36,22 +36,22 @@ static UIViewController *RootVC() {
     UIButton *_btnChecker; /**< The score-checker button; gated on being linked. */
     UIButton *_btnQuiz;    /**< The quiz button; gated on being linked. */
 }
-/** @brief The open fade finished; clear the animation guard. */
+/** The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief The close fade finished; tear the screen down. */
+/** The close fade finished; tear the screen down. */
 - (void)endCloseAnimation;
 /**
- * @brief The KONAMI ID button was tapped.
+ * The KONAMI ID button was tapped.
  * @param sender The tapped button.
  */
 - (void)onInKidButtonTouched:(id)sender;
 /**
- * @brief The score-checker button was tapped.
+ * The score-checker button was tapped.
  * @param sender The tapped button.
  */
 - (void)onScoreCheckerButtonTouched:(id)sender;
 /**
- * @brief The quiz button was tapped.
+ * The quiz button was tapped.
  * @param sender The tapped button.
  */
 - (void)onQuizButtonTouched:(id)sender;

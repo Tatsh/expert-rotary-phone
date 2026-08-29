@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A UIButton whose hit-test area is grown, or shrunk, by `tappableInsets`.
+ * A UIButton whose hit-test area is grown, or shrunk, by `tappableInsets`.
  *
  * Negative insets enlarge the tappable region beyond the button's bounds, so a small on-screen
  * button can still be comfortably tapped. Reconstructed from Ghidra project rb420, program
@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A UIButton whose hit-test area is grown or shrunk by tappableInsets, so a small on-screen
+ * A UIButton whose hit-test area is grown or shrunk by tappableInsets, so a small on-screen
  * button can still be comfortably tapped.
  */
 @interface CustomButton : UIButton

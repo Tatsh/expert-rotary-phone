@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief An arcade-viewer detail row, whose content the view controller sets on bind.
+ * An arcade-viewer detail row, whose content the view controller sets on bind.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0x5b620).
@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One value row of an arcade-viewer option list.
+ * One value row of an arcade-viewer option list.
  */
 @interface AcViewerDetailCell : UITableViewCell
 
@@ -21,7 +21,7 @@
 @property(atomic) int optionKind;
 
 /**
- * @brief Bind the row to a value index within its option kind.
+ * Bind the row to a value index within its option kind.
  *
  * It draws the grouped-list background slice (top, bar or under), the option name on the left, and
  * a check mark on the right of the row that matches the player's current UserSettingData value.

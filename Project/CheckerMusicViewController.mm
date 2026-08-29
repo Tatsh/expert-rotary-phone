@@ -36,11 +36,11 @@ static void setNavControllerViewFrameShort(CheckerMusicViewController *self) {
 }
 
 /**
- * @brief The music-checker song list's private back action.
+ * The music-checker song list's private back action.
  */
 @interface CheckerMusicViewController ()
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;

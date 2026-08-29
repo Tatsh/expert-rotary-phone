@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPhone friend-management hub; the iPad uses FriendMngTopSplitViewController.
+ * The iPhone friend-management hub; the iPad uses FriendMngTopSplitViewController.
  *
  * MainViewController -GotoFriendManage: pushes it over the game view, wrapped in its own
  * navigation controller. It offers three sections: the friend list, "presenting" (requests you
@@ -12,7 +12,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The friend-management hub screen: the section buttons that open the list, request and
+ * The friend-management hub screen: the section buttons that open the list, request and
  * reply screens.
  */
 @interface FriendMngTopViewController : UIViewController {
@@ -27,7 +27,7 @@
 @property(nonatomic, assign) id delegate;
 
 /**
- * @brief Build the hub view and its navigation controller, with a custom back button and the
+ * Build the hub view and its navigation controller, with a custom back button and the
  * section buttons.
  * @return The navigation controller.
  * @ghidraAddress 0xa59f0
@@ -35,27 +35,27 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the hub and its navigation view in over 0.5 s.
+ * Fade the hub and its navigation view in over 0.5 s.
  * @ghidraAddress 0xa6590
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the hub and its navigation view out over 0.5 s.
+ * Fade the hub and its navigation view out over 0.5 s.
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Open the friend list.
+ * Open the friend list.
  * @param sender The tapped button.
  */
 - (void)onListButtonTouched:(id)sender;
 /**
- * @brief Open the sent friend requests.
+ * Open the sent friend requests.
  * @param sender The tapped button.
  */
 - (void)onRequestButtonTouched:(id)sender;
 /**
- * @brief Open the received friend requests.
+ * Open the received friend requests.
  * @param sender The tapped button.
  */
 - (void)onReplyButtonTouched:(id)sender;

@@ -25,21 +25,21 @@
 
 // Own privates (button target + the name-registration POST wired up by -init).
 /**
- * @brief The player-name form's private action, registration POST, and name validator.
+ * The player-name form's private action, registration POST, and name validator.
  */
 @interface InputNameViewCtrl ()
 /**
- * @brief The decide button was tapped: validate the name and register it.
+ * The decide button was tapped: validate the name and register it.
  * @param sender The tapped button.
  */
 - (void)touchedDecideButton:(id)sender;
 /**
- * @brief POST the new player registration.
+ * POST the new player registration.
  * @param name The chosen player name.
  */
 - (void)startPlayerNewHttp:(NSString *)name;
 /**
- * @brief Check that a name uses only characters the server accepts.
+ * Check that a name uses only characters the server accepts.
  * @param name The candidate name.
  * @return YES when every character is usable.
  */

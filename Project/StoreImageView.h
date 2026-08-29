@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A remote-image UIImageView used throughout the store UI.
+ * A remote-image UIImageView used throughout the store UI.
  *
  * It backs pack jackets, song-row artwork, and promotion thumbnails: assign -imageURL, then call
  * -startDownloadImage, and it fetches the bytes through an ImageDownloader, decodes them into a
@@ -14,7 +14,7 @@
 #import "ImageDownloader.h"
 
 /**
- * @brief A UIImageView that fetches its image from a URL on demand.
+ * A UIImageView that fetches its image from a URL on demand.
  */
 @interface StoreImageView : UIImageView <ImageDownloaderDelegate> {
     NSString *m_ImageURL;               /**< The source URL string. */
@@ -25,14 +25,14 @@
 @property(nonatomic, retain) NSString *imageURL;
 
 /**
- * @brief Start the fetch for the current imageURL; a no-op when the URL is unset or a fetch is
+ * Start the fetch for the current imageURL; a no-op when the URL is unset or a fetch is
  * already running.
  * @ghidraAddress 0x42884
  */
 - (void)startDownloadImage;
 
 /**
- * @brief Cancel any in-flight fetch and set the view's image.
+ * Cancel any in-flight fetch and set the view's image.
  * @param image The image to show, or nil to clear it.
  * @ghidraAddress 0x42928
  */

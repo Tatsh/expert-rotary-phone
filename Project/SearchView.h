@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade-locator ("game center" search) screen.
+ * The arcade-locator ("game center" search) screen.
  *
  * A full-screen MKMapView that drops a pin for every nearby arcade. It first downloads a "master"
  * feed of the pin marker images and per-model metadata, then, as the visible region changes, POSTs
@@ -20,7 +20,7 @@
 #import "ImageDownloader.h" // ImageDownloaderDelegate + ImageDownloader ivar
 
 /**
- * @brief The arcade-search map: the user's location plus pins for nearby arcades.
+ * The arcade-search map: the user's location plus pins for nearby arcades.
  */
 @interface SearchView : UIViewController <MKMapViewDelegate,
                                           DownloaderDelegate,
@@ -57,7 +57,7 @@
 }
 
 /**
- * @brief The entry point MainViewController's -GotoArcadeSearch uses: run [super init], then wrap
+ * The entry point MainViewController's -GotoArcadeSearch uses: run [super init], then wrap
  * the receiver in a UINavigationController with a styled nav bar and back and current-position bar
  * buttons.
  * @return The navigation controller, not self.
@@ -66,7 +66,7 @@
 - (id)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen and its nav bar in over the GL scene.
+ * Fade the screen and its nav bar in over the GL scene.
  * @ghidraAddress 0x88838
  */
 - (void)startOpenAnimation;

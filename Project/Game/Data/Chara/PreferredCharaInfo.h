@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A set of the player's preferred character ids.
+ * A set of the player's preferred character ids.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One preferred-character set: the music that unlocks it and the characters it grants.
+ * One preferred-character set: the music that unlocks it and the characters it grants.
  */
 @interface PreferredCharaInfo : NSObject
 

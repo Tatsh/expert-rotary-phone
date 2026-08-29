@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "Other" (その他) settings sub-screen.
+ * The "Other" (その他) settings sub-screen.
  *
  * -[SettingTableViewController tableView:didSelectRowAtIndexPath:] pushes it from row 3. It is a
  * grouped table with three sections. Section 0 (お知らせ, News) has one row that opens the
@@ -43,7 +43,7 @@
 @protocol ViewCmnProtocol;
 
 /**
- * @brief The "Other" settings list, which embeds the device-change panel.
+ * The "Other" settings list, which embeds the device-change panel.
  */
 @interface SettingOtherTableViewController : UITableViewController <CommonAlertViewDelegate>
 
@@ -52,19 +52,19 @@
 @property(nonatomic, assign) id<ViewCmnProtocol> viewCmnDelegate;
 
 /**
- * @brief Wrap self in a fresh navigation controller with the back button.
+ * Wrap self in a fresh navigation controller with the back button.
  * @return The navigation controller.
  * @ghidraAddress 0xd4398
  */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0xd45ec
  */
 - (void)startOpenAnimation;
 /**
- * @brief Play the cancel SE and fade the screen out.
+ * Play the cancel SE and fade the screen out.
  * @ghidraAddress 0xd4730
  */
 - (void)startCloseAnimation;

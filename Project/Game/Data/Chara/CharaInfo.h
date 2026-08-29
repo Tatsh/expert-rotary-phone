@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A character display record: id, name and its skill.
+ * A character display record: id, name and its skill.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One character's display record: its id, names, description, skill and rarity.
+ * One character's display record: its id, names, description, skill and rarity.
  */
 @interface CharaInfo : NSObject
 

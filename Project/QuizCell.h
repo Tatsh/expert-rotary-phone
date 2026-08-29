@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A quiz answer row.
+ * A quiz answer row.
  *
  * An answer-base image (default, cover, ok, or ng) behind a centred answer label, plus a small
  * answer-number badge on the side. Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -10,12 +10,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One answer-choice row of the quiz.
+ * One answer-choice row of the quiz.
  */
 @interface QuizCell : UITableViewCell
 
 /**
- * @brief Bind the row to one answer choice.
+ * Bind the row to one answer choice.
  *
  * The base image, label tint and number badge all key off the relationship between the three ids.
  * @param text The answer text.

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A friend-list ranking row.
+ * A friend-list ranking row.
  *
  * Its subview x-offsets have three layouts: phone on iOS 6, phone on iOS 7, and iPad.
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
@@ -10,12 +10,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One friend-list ranking row.
+ * One friend-list ranking row.
  */
 @interface FriendListCell : UITableViewCell
 
 /**
- * @brief Populate the row from a friend record.
+ * Populate the row from a friend record.
  * @param friendData An NSValue-wrapped FriendListData.
  * @param rank The 0-based row index; 0 is first place.
  * @param isBestScoreSort YES to show the best-score plaque and value, NO for the total-score one.

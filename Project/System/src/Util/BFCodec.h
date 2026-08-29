@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Blowfish (CBC) codec protecting the purchased-song lists ("mulist"/"acmulist").
+ * The Blowfish (CBC) codec protecting the purchased-song lists ("mulist"/"acmulist").
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
@@ -13,19 +13,19 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief Blowfish (CBC) codec protecting the purchased-song lists.
+ * Blowfish (CBC) codec protecting the purchased-song lists.
  */
 @interface BFCodec : NSObject
 
 /**
- * @brief Initialise the cipher key schedule from an NSData key.
+ * Initialise the cipher key schedule from an NSData key.
  * @param key The key material.
  * @ghidraAddress 0x5ad64
  */
 - (void)cipherInit:(NSData *)key;
 
 /**
- * @brief Initialise the cipher key schedule from a raw key buffer.
+ * Initialise the cipher key schedule from a raw key buffer.
  * @param key The key material.
  * @param length Length of @p key in bytes.
  * @ghidraAddress 0x5ad0c
@@ -33,7 +33,7 @@
 - (void)cipherInit:(const char *)key keyLength:(int)length;
 
 /**
- * @brief Encrypt @p data in place (CBC), appending the 8-byte length trailer.
+ * Encrypt @p data in place (CBC), appending the 8-byte length trailer.
  * @param data The plaintext, replaced by the ciphertext plus trailer.
  * @return The padded ciphertext length in bytes.
  * @ghidraAddress 0x5adb4
@@ -41,7 +41,7 @@
 - (unsigned int)encipher:(NSMutableData *)data;
 
 /**
- * @brief Decrypt @p data in place (CBC), validating and stripping the trailer and truncating to
+ * Decrypt @p data in place (CBC), validating and stripping the trailer and truncating to
  * the original length.
  * @param data The ciphertext, replaced by the plaintext.
  * @return NO on a malformed blob, YES otherwise.

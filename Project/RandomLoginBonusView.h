@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The random login-bonus "slot machine" reward popup.
+ * The random login-bonus "slot machine" reward popup.
  *
  * A full-screen dimming UIView overlay carrying a "login_board_02" panel and a four-digit number
  * display of num_logb_* reels. On show it credits the rolled bonus to the player's treasure
@@ -20,12 +20,12 @@
 #import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 
 /**
- * @brief The randomised login-bonus reveal.
+ * The randomised login-bonus reveal.
  */
 @interface RandomLoginBonusView : UIView <CustomAlertViewDelegate>
 
 /**
- * @brief Install into the root scene view, credit the bonus and start the open animation.
+ * Install into the root scene view, credit the bonus and start the open animation.
  * @ghidraAddress 0x19960
  */
 - (void)show;

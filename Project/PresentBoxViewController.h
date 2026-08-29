@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "present box", or gift inbox, modal.
+ * The "present box", or gift inbox, modal.
  *
  * A UITableViewController listing the player's pending server presents, one PresentBoxCell per
  * row, plus an "acquire all" button and an empty-state banner. It is raised over the main menu
@@ -24,30 +24,30 @@
 #import "CustomAlertView.h" // CustomAlertViewDelegate
 
 /**
- * @brief The present box: the list of unclaimed gifts.
+ * The present box: the list of unclaimed gifts.
  */
 @interface PresentBoxViewController : UITableViewController <CustomAlertViewDelegate>
 
 /**
- * @brief Build the controller and wrap it in a fresh portrait-style UINavigationController.
+ * Build the controller and wrap it in a fresh portrait-style UINavigationController.
  * @return The navigation host the menu pushes into the scene.
  * @ghidraAddress 0x24938
  */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Slide or fade the box in. MainViewController drives it when showing the present box.
+ * Slide or fade the box in. MainViewController drives it when showing the present box.
  * @ghidraAddress 0x24c98
  */
 - (void)startOpenAnimation;
 /**
- * @brief Slide or fade the box out. MainViewController drives it when dismissing the present box.
+ * Slide or fade the box out. MainViewController drives it when dismissing the present box.
  * @ghidraAddress 0x25160
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Whether an open or close animation is in flight; the host polls it to gate input. The
+ * Whether an open or close animation is in flight; the host polls it to gate input. The
  * read is atomic.
  * @return YES while a transition is running.
  * @ghidraAddress 0x26144

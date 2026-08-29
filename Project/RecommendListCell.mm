@@ -15,7 +15,7 @@
 // id is unused by the cell; the four object fields drive the thumbnail, name,
 // date and player.
 /**
- * @brief The NSValue payload -getValue: fills for a recommend row.
+ * The NSValue payload -getValue: fills for a recommend row.
  *
  * The leading record id is unused by the cell; the four object fields drive the thumbnail, name,
  * date and player.

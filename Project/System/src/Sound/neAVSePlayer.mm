@@ -16,7 +16,7 @@
 #import "AVBus.h"
 
 /**
- * @brief A loaded source held by the SE table.
+ * A loaded source held by the SE table.
  *
  * It owns the URL or data (soundSourceInit copies the URL; soundSourceRelease releases it) and
  * vends a stable AVSource the voices point at. The AVSource's url and data are
@@ -34,7 +34,7 @@
 /** The owned source data, aliased by `av.data`. */
 @property(nonatomic, strong) NSData *data;
 /**
- * @brief Copy the source's URL and record its loop flag; the data slot stays nil.
+ * Copy the source's URL and record its loop flag; the data slot stays nil.
  * @param url The sound file URL.
  * @param loop Whether the voice should loop indefinitely.
  * @return The initialised source.

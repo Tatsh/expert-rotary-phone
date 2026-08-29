@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The in-app terms-of-use agreement overlay.
+ * The in-app terms-of-use agreement overlay.
  *
  * A full-screen, non-editable UITextView that renders the bundled "policy.txt" (UTF-8) on a
  * light-grey background, with a nav-bar back button. SettingCustomerTableViewController's row 2
@@ -19,14 +19,14 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The full terms-of-use screen.
+ * The full terms-of-use screen.
  */
 @interface PolicyView : UIViewController <NSLayoutManagerDelegate> {
     UITextView *_textView; /**< +0xa4 The scrollable, read-only agreement text. */
 }
 
 /**
- * @brief The back-button action: play the cancel SE, then pop on phone when embedded in a
+ * The back-button action: play the cancel SE, then pop on phone when embedded in a
  * navigation stack, or remove the navigation view from its superview on iPad and at the root.
  * @ghidraAddress 0x5303c
  */

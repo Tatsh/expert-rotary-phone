@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The music-list sort-select screen.
+ * The music-list sort-select screen.
  *
  * A transparent, separator-less UITableView of six SortCells (Title, Artist, Lv N, Lv H, Lv EX,
  * and best score), with the current sort marked by a check. Picking a new sort saves it, shows a
@@ -23,7 +23,7 @@
 class MainTask;
 
 /**
- * @brief The sort-select modal: the six song-list sort orders.
+ * The sort-select modal: the six song-list sort orders.
  */
 @interface SortSelectViewController : UITableViewController
 
@@ -33,7 +33,7 @@ class MainTask;
 @property(atomic, assign) MainTask *musicSelTask;
 
 /**
- * @brief Build the sort list — six rows, with the current sort checked — as a transparent table
+ * Build the sort list — six rows, with the current sort checked — as a transparent table
  * with a "loading" overlay.
  * @param style Forwarded to UITableViewController.
  * @return The initialised controller.
@@ -42,7 +42,7 @@ class MainTask;
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 /**
- * @brief Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
+ * Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
  * with a back button on phone.
  *
  * The name carries an "init" prefix but the method returns a navigation controller rather than
@@ -55,13 +55,13 @@ class MainTask;
     __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the panel in on phone, or slide it in on iPad.
+ * Fade the panel in on phone, or slide it in on iPad.
  * @ghidraAddress 0xc6288
  */
 - (void)startOpenAnimation;
 
 /**
- * @brief Re-sort the task's list when the sort changed, then fade the panel closed on phone, or
+ * Re-sort the task's list when the sort changed, then fade the panel closed on phone, or
  * slide it closed on iPad.
  * @ghidraAddress 0xc6750
  */

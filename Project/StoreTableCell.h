@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A store list row showing two song packs side by side.
+ * A store list row showing two song packs side by side.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0x527b4).
@@ -11,7 +11,7 @@
 @class StorePackView;
 
 /**
- * @brief One catalogue row holding a pair of side-by-side pack tiles.
+ * One catalogue row holding a pair of side-by-side pack tiles.
  */
 @interface StoreTableCell : UITableViewCell
 

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade-viewer note-play task: the pop'n-style rhythm gameplay screen reached from
+ * The arcade-viewer note-play task: the pop'n-style rhythm gameplay screen reached from
  * the arcade viewer.
  *
  * Reached through GotoAcViewer. It loads the chosen ac chart, builds the group-7 "arcade_viewer"
@@ -40,7 +40,7 @@ class neTextureForiOS;
 
 // AcViewerTask::update play-state machine (m_state @+0x20c). Values and names are
 /**
- * @brief Ghidra's AcMainTaskState (the ACST_* values).
+ * Ghidra's AcMainTaskState (the ACST_* values).
  *
  * The app-lifecycle bridge acts on three of them: stopAcMainTask, on resign, sends Playing to
  * PauseMenuOpen, pausing the game, and requestGameExit sends it to ExitTransition. The bridge's
@@ -70,30 +70,30 @@ enum AcViewerState : int {
 };
 
 /**
- * @brief The arcade-viewer play task: it drives arcade chart playback, the pause menu and the
+ * The arcade-viewer play task: it drives arcade chart playback, the pause menu and the
  * option sheet.
  */
 class AcViewerTask : public ne::C_TASK {
 public:
     /**
-     * @brief Construct the task. The engine builds it when the arcade viewer starts play (its
+     * Construct the task. The engine builds it when the arcade viewer starts play (its
      * constructor and vtable live @ 0x130bb8; not part of this reconstruction batch).
      */
     AcViewerTask();
     /**
-     * @brief Tear the task down.
+     * Tear the task down.
      * @ghidraAddress 0x215d8
      */
     ~AcViewerTask() override;
     /**
-     * @brief Per-frame arcade-viewer tick: advance the play-state machine and the note stream.
+     * Per-frame arcade-viewer tick: advance the play-state machine and the note stream.
      * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
      * @ghidraAddress 0x21678
      */
     void update(int deltaMs) override;
 
     /**
-     * @brief Apply the arcade-viewer option sheet's selections (hi-speed, pop-kun, hid-sud,
+     * Apply the arcade-viewer option sheet's selections (hi-speed, pop-kun, hid-sud,
      * ran-mir) to this task, rebuilding the lane map and re-seeking the note stream when they
      * change.
      *
@@ -104,14 +104,14 @@ public:
     void applyGameplaySettings();
 
     /**
-     * @brief The current play-state machine value (binary field @ +0x20c).
+     * The current play-state machine value (binary field @ +0x20c).
      * @return The play state.
      */
     AcViewerState playState() const {
         return m_state;
     }
     /**
-     * @brief Force the play-state machine to @p state, used by the app-lifecycle bridge
+     * Force the play-state machine to @p state, used by the app-lifecycle bridge
      * (neEngine::stopAcMainTask / acMainRequestGameExit).
      * @param state The new play state.
      */
@@ -119,7 +119,7 @@ public:
         m_state = state;
     }
     /**
-     * @brief Mark the pad board as already up (binary field @ +0x1d9).
+     * Mark the pad board as already up (binary field @ +0x1d9).
      * @param up YES when the pad board is up.
      */
     void setPadBoardUp(bool up) {

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The render and input manager singleton.
+ * The render and input manager singleton.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (@ DAT_00188384,
  * operator_new(0x8c)). It owns the device content scale and the pool of live touch points. The GL
@@ -18,7 +18,7 @@
 #endif
 
 /**
- * @brief One tracked touch.
+ * One tracked touch.
  *
  * The manager pre-allocates a fixed pool of these (operator_new(0x30) = 48 bytes each) at init and
  * mutates them in place as touches begin, move and end; slots are never freed. All coordinates are
@@ -47,14 +47,14 @@ struct neTouchPoint {
 // C-linkage functions.
 class neGraphics;
 /**
- * @brief The number of touches recorded this frame, read from the manager's +0x80 field.
+ * The number of touches recorded this frame, read from the manager's +0x80 field.
  * @param g The manager.
  * @return The live touch count.
  * @ghidraAddress 0x124bc
  */
 extern "C" int NEGraphics_activeTouchCount(const neGraphics *g);
 /**
- * @brief The @p i -th touch in the manager's +0x00 pool array.
+ * The @p i -th touch in the manager's +0x00 pool array.
  * @param g The manager.
  * @param i The pool index.
  * @return The touch record.
@@ -63,19 +63,19 @@ extern "C" int NEGraphics_activeTouchCount(const neGraphics *g);
 extern "C" const neTouchPoint *NEGraphics_touchAt(const neGraphics *g, int i);
 
 /**
- * @brief The render and input manager: a singleton created lazily by configure() at launch, owning
+ * The render and input manager: a singleton created lazily by configure() at launch, owning
  * the device content scale and the live touch pool.
  */
 class neGraphics {
 public:
     /**
-     * @brief The singleton instance (Ghidra: returns DAT_00188384).
+     * The singleton instance (Ghidra: returns DAT_00188384).
      * @return The manager.
      * @ghidraAddress 0x12358
      */
     static neGraphics &shared();
     /**
-     * @brief Create the singleton and record the device content scale.
+     * Create the singleton and record the device content scale.
      * @param contentScale The device content scale.
      * @ghidraAddress 0x12368
      */
@@ -86,7 +86,7 @@ public:
     // reads the pool back via shared().
 
     /**
-     * @brief Record a new touch, allocating it a pool slot and a rolling id.
+     * Record a new touch, allocating it a pool slot and a rolling id.
      * @param x Touch x, in UIKit points.
      * @param y Touch y, in UIKit points.
      * @param width View width at the time of the touch.
@@ -95,7 +95,7 @@ public:
      */
     void touchBegan(int x, int y, int width, int height);
     /**
-     * @brief Update the pool slot whose current point matches (@p prevX, @p prevY).
+     * Update the pool slot whose current point matches (@p prevX, @p prevY).
      * @param x New touch x, in UIKit points.
      * @param y New touch y, in UIKit points.
      * @param prevX Previous touch x, the match key.
@@ -104,7 +104,7 @@ public:
      */
     void touchMoved(int x, int y, int prevX, int prevY);
     /**
-     * @brief Flag the matching pool slot released; endFrame() reaps it.
+     * Flag the matching pool slot released; endFrame() reaps it.
      * @param x Final touch x, in UIKit points.
      * @param y Final touch y, in UIKit points.
      * @param prevX Previous touch x, the match key.
@@ -113,13 +113,13 @@ public:
      */
     void touchEnded(int x, int y, int prevX, int prevY);
     /**
-     * @brief Release every recorded touch.
+     * Release every recorded touch.
      * @ghidraAddress 0x12698
      */
     void clearTouches();
 
     /**
-     * @brief Per-frame touch-pool upkeep, run once at the end of each task tick.
+     * Per-frame touch-pool upkeep, run once at the end of each task tick.
      *
      * For every recorded touch it clears the +0x2c frame marker and latches the current point
      * (+0x0c/+0x10) into the down-point copy (+0x1c/+0x20), then swap-removes any slot flagged
@@ -131,14 +131,14 @@ public:
     void endFrame();
 
     /**
-     * @brief The number of touches recorded this frame (binary field @ +0x80).
+     * The number of touches recorded this frame (binary field @ +0x80).
      * @return The live touch count.
      */
     int activeTouchCount() const {
         return m_touchCount;
     }
     /**
-     * @brief The @p i -th recorded touch.
+     * The @p i -th recorded touch.
      * @param i The pool index; must be below activeTouchCount().
      * @return The touch record.
      */
@@ -146,7 +146,7 @@ public:
         return m_touches[i];
     }
     /**
-     * @brief The device content scale (binary field @ +0x88).
+     * The device content scale (binary field @ +0x88).
      * @return The content scale.
      */
     float contentScale() const {
@@ -154,7 +154,7 @@ public:
     }
 
     /**
-     * @brief Find a recorded touch by its rolling id.
+     * Find a recorded touch by its rolling id.
      *
      * The play-judge loop uses this to tell whether the finger that started a hold is still down.
      * @param id The rolling touch id.
@@ -164,7 +164,7 @@ public:
     const neTouchPoint *findTouchById(int id) const;
 
     /**
-     * @brief Point-in-rect test primitive.
+     * Point-in-rect test primitive.
      *
      * The same primitive the bridge's higher-level neEngine::menuButtonHit(gfx, touchId, rect,
      * enable) wraps; the music-select task calls it directly with pre-scaled corners.
@@ -197,7 +197,7 @@ private:
 // primitive as the engine's small layout helpers.
 
 /**
- * @brief Count the newline-separated lines in a C string.
+ * Count the newline-separated lines in a C string.
  *
  * An empty string counts as 0; a trailing newline is not counted as an extra empty line.
  * @param text The string to measure.
@@ -207,7 +207,7 @@ private:
 int countLines(const char *text);
 
 /**
- * @brief 2D range containment over eight floats.
+ * 2D range containment over eight floats.
  *
  * The recovered predicate is true when the pair (@p x1, @p x2) is at or under the upper bounds
  * (@p xMax1, @p xMax2) and the pair (@p y1, @p y2) is at or above the lower bounds (@p yMin1,
@@ -228,7 +228,7 @@ bool isWithinRange2D(
 
 #ifdef __OBJC__
 /**
- * @brief The character index at which @p text first fills @p columnWidth display columns.
+ * The character index at which @p text first fills @p columnWidth display columns.
  *
  * A full-width (CJK or non-halfwidth) glyph counts as 2 columns and a halfwidth glyph as 1. Used
  * to ellipsis-truncate song and artist names to a fixed banner width. A sibling engine text

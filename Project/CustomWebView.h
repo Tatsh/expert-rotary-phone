@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief An in-app web panel, a UIView rather than a view controller, hosting a web view over the
+ * An in-app web panel, a UIView rather than a view controller, hosting a web view over the
  * app's root scene view.
  *
  * The Setting screens (SettingOther and SettingTable) use it to show the official "app info /
@@ -25,7 +25,7 @@
 #endif
 
 /**
- * @brief The C close callback, invoked with its opaque parameter from the close animation's
+ * The C close callback, invoked with its opaque parameter from the close animation's
  * completion block.
  *
  * It is modelled as a non-object C function pointer to match the binary; the two ivars below are
@@ -35,7 +35,7 @@
 typedef void (*CustomWebViewCloseCallback)(void *param);
 
 /**
- * @brief An in-app web panel — a UIView, not a view controller — hosting a web view over the app's
+ * An in-app web panel — a UIView, not a view controller — hosting a web view over the app's
  * root scene view.
  */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
@@ -63,7 +63,7 @@ typedef void (*CustomWebViewCloseCallback)(void *param);
 }
 
 /**
- * @brief Build the panel over the root scene view and start loading a URL.
+ * Build the panel over the root scene view and start loading a URL.
  * @param url The page to load.
  * @return The initialised panel.
  * @ghidraAddress 0x5dfec
@@ -71,7 +71,7 @@ typedef void (*CustomWebViewCloseCallback)(void *param);
 - (instancetype)initWithURL:(NSURL *)url;
 
 /**
- * @brief Set the title and message -showErrorAlert uses when a load fails.
+ * Set the title and message -showErrorAlert uses when a load fails.
  * @param errorMsg The alert title.
  * @param text The alert message.
  * @ghidraAddress 0x5df50
@@ -79,7 +79,7 @@ typedef void (*CustomWebViewCloseCallback)(void *param);
 - (void)setErrorMsg:(NSString *)errorMsg text:(NSString *)text;
 
 /**
- * @brief Register a C callback fired when the panel finishes closing.
+ * Register a C callback fired when the panel finishes closing.
  * @param callback The function to call.
  * @param param The opaque parameter to pass it.
  * @ghidraAddress 0x5ed7c

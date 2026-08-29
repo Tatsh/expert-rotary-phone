@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The incoming-friend-requests screen, pushed by the friend hub's "reply" button.
+ * The incoming-friend-requests screen, pushed by the friend hub's "reply" button.
  *
  * A table of FriendReplyCell rows, each an incoming request with accept (OK) and reject (NG)
  * buttons that fire a reply POST. Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -13,7 +13,7 @@
 #import "FriendReplyCell.h" // FriendReplyCellDelegate (accept/reject callback)
 
 /**
- * @brief The received-friend-requests list, which fetches the pending requests and posts each
+ * The received-friend-requests list, which fetches the pending requests and posts each
  * accept or reject.
  */
 @interface FriendReplyViewController

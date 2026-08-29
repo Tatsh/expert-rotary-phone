@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A sugoroku map-list row.
+ * A sugoroku map-list row.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0xbe270).
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One sugoroku main-map row.
+ * One sugoroku main-map row.
  */
 @interface MapListCell : UITableViewCell
 
 /**
- * @brief Bind the row to a sugoroku main-map entry.
+ * Bind the row to a sugoroku main-map entry.
  *
  * It draws the banner, the map icon, the name label, and — once all three sub-maps are cleared —
  * a "cleared" badge.

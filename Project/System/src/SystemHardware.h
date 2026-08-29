@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The lazily-detected device model, engine-side.
+ * The lazily-detected device model, engine-side.
  *
  * It uses a coarser 14-entry table than the AppDelegate variant. Reconstructed from Ghidra project
  * rb420, program PopnRhythmin.
@@ -9,32 +9,32 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The engine-side device-model probe, resolved lazily from `hw.machine`.
+ * The engine-side device-model probe, resolved lazily from `hw.machine`.
  */
 @interface SystemHardware : NSObject
 
 /**
- * @brief The lazily-created shared instance.
+ * The lazily-created shared instance.
  * @return The singleton.
  * @ghidraAddress 0x127ac
  */
 + (instancetype)getInstance;
 
 /**
- * @brief Detect the model via `hw.machine`. A no-op once the model has been detected.
+ * Detect the model via `hw.machine`. A no-op once the model has been detected.
  * @ghidraAddress 0x127f4
  */
 - (void)initHardware;
 
 /**
- * @brief Lazily detect the model, then report its table index.
+ * Lazily detect the model, then report its table index.
  * @return The model index; 14 for an unknown device.
  * @ghidraAddress 0x128e8
  */
 - (int)getHardwareType;
 
 /**
- * @brief Lazily detect the model, then report its raw name.
+ * Lazily detect the model, then report its raw name.
  * @return The `hw.machine` string.
  * @ghidraAddress 0x1291c
  */

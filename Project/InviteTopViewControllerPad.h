@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad variant of the invite-code top screen; the iPhone uses
+ * The iPad variant of the invite-code top screen; the iPhone uses
  * InviteTopViewController.
  *
  * MainViewController -GotoInviteTop chooses it when neSceneManager::isPadDisplay() is true,
@@ -17,7 +17,7 @@
 @class Downloader;
 
 /**
- * @brief The iPad invite screen, combining the code display and the guest code entry.
+ * The iPad invite screen, combining the code display and the guest code entry.
  */
 @interface InviteTopViewControllerPad : UIViewController {
     BOOL isAnimationing;     /**< An open or close fade is running; it guards re-entry. */
@@ -29,14 +29,14 @@
 }
 
 /**
- * @brief Build the combined invite screen and wrap it in a navigation controller.
+ * Build the combined invite screen and wrap it in a navigation controller.
  * @return The navigation controller.
  * @ghidraAddress 0x5c638
  */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the view and its navigation view in over 0.3 s.
+ * Fade the view and its navigation view in over 0.3 s.
  * @ghidraAddress 0x5d350
  */
 - (void)startOpenAnimation;

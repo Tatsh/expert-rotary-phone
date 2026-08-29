@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A UITableView subclass that forwards began-touch events up the responder chain.
+ * A UITableView subclass that forwards began-touch events up the responder chain.
  *
  * Taps therefore pass through to the content behind the table. Reconstructed from Ghidra project
  * rb420, program PopnRhythmin (touchesBegan:withEvent: @ 0xe9750).
@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A UITableView that lets began-touch events through to the content behind it.
+ * A UITableView that lets began-touch events through to the content behind it.
  */
 @interface TouchableTableView : UITableView
 

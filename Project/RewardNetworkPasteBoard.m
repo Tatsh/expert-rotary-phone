@@ -16,7 +16,7 @@
 static const NSInteger kRewardStorageIndexLimit = 0x207;
 
 /**
- * @brief The pasteboard store's private state and crypto helpers.
+ * The pasteboard store's private state and crypto helpers.
  */
 @interface RewardNetworkPasteBoard () {
     NSString *_serviceName; /**< The pasteboard service name. */
@@ -24,14 +24,14 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 }
 
 /**
- * @brief The SHA-1 of a data blob, used to derive the per-record AES key.
+ * The SHA-1 of a data blob, used to derive the per-record AES key.
  * @param data The data to hash.
  * @return The digest.
  */
 + (NSData *)createHash:(NSData *)data;
 
 /**
- * @brief AES-128 with PKCS#7 padding, in either direction.
+ * AES-128 with PKCS#7 padding, in either direction.
  * @param operation kCCEncrypt or kCCDecrypt.
  * @param value The data to transform.
  * @param key The AES key.
@@ -40,7 +40,7 @@ static const NSInteger kRewardStorageIndexLimit = 0x207;
 + (NSData *)cryptorToData:(CCOperation)operation value:(NSData *)value key:(NSData *)key;
 
 /**
- * @brief Ensure a decoded record dictionary carries the required keys.
+ * Ensure a decoded record dictionary carries the required keys.
  * @param data The decoded record.
  * @param error Receives the failure reason; may be NULL.
  * @return YES when the record is well-formed.

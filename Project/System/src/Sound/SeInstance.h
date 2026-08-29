@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The play scene's "SE-instance" one-shot sound cues.
+ * The play scene's "SE-instance" one-shot sound cues.
  *
  * They are not a distinct type: they are AepLyrCtrl
  * animation layers driven as one-shot sound cues. The combo milestone jingles (PlayJudge) and
@@ -32,7 +32,7 @@
 #include "AepLyrCtrl.h"
 
 /**
- * @brief Whether a cue is still pending (play-state is not idle).
+ * Whether a cue is still pending (play-state is not idle).
  * @details Callers only fire a new jingle when the controller is idle.
  * @param inst The controller to query.
  * @return true while the cue is still pending, false when idle.
@@ -43,7 +43,7 @@ inline bool SeInstanceIsBusy(AepLyrCtrl *inst) {
 }
 
 /**
- * @brief Arm one-shot playback and rewind the cursor to the head.
+ * Arm one-shot playback and rewind the cursor to the head.
  * @details Arms forward (or, for a reverse-rate controller, backward) playback and rewinds the
  * cursor to the head (or tail). A zero rate is normalised to 1.0.
  * @param inst The controller to play.
@@ -54,7 +54,7 @@ inline void SeInstancePlay(AepLyrCtrl *inst) {
 }
 
 /**
- * @brief Issue the "stop" command (play-state 3), optionally rewinding the cursor.
+ * Issue the "stop" command (play-state 3), optionally rewinding the cursor.
  * @details With mode == 1 the cursor is also rewound: to the head for a forward rate, or to the
  * last frame when the rate runs backwards.
  * @param inst The controller to stop.
@@ -66,7 +66,7 @@ inline void SeInstancePlayMode(AepLyrCtrl *inst, int mode) {
 }
 
 /**
- * @brief Whether the controller is still running its cursor.
+ * Whether the controller is still running its cursor.
  * @param inst The controller to query.
  * @return true while the cursor is still running, false otherwise.
  * @ghidraAddress 0x2cb64
@@ -76,7 +76,7 @@ inline bool SeInstanceIsPlaying(AepLyrCtrl *inst) {
 }
 
 /**
- * @brief Stop the controller by clearing its play-state.
+ * Stop the controller by clearing its play-state.
  * @details Clears the play-state so the per-frame tick skips the controller.
  * @param inst The controller to stop.
  * @ghidraAddress 0x2cb5c

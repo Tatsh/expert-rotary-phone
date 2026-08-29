@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "free request" recommended-friend list.
+ * The "free request" recommended-friend list.
  *
  * A grouped-style UITableViewController showing a header plate ("fpl_text"), a spinning activity
  * indicator over a dimmed dummy overlay while the recommend-friend list downloads, and one
@@ -13,12 +13,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The "free request" recommended-friend list.
+ * The "free request" recommended-friend list.
  */
 @interface FreeRequestListViewController : UITableViewController
 
 /**
- * @brief Build the grouped-style table: an "fpl_text" header plate, a dimmed dummy overlay
+ * Build the grouped-style table: an "fpl_text" header plate, a dimmed dummy overlay
  * carrying a centred activity indicator, and a custom back button in the navigation item.
  * @param style The table style.
  * @return The initialised controller.

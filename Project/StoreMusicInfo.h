@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One playable song listed inside a store pack.
+ * One playable song listed inside a store pack.
  *
  * It carries the id, title and artist, the purchase, sample, artwork, and iTunes links, and the
  * three difficulty levels (Basic, Medium, and Hard, each clamped to a valid range). It is built
@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One song listed inside a store pack.
+ * One song listed inside a store pack.
  */
 @interface StoreMusicInfo : NSObject {
     int m_MusicID;          /**< The song id. */
@@ -28,7 +28,7 @@
 }
 
 /**
- * @brief Build a song from a server dictionary.
+ * Build a song from a server dictionary.
  * @param dictionary The server song dictionary.
  * @return The initialised song, or nil when the dictionary has no positive "ID".
  */
@@ -56,7 +56,7 @@
 @property(nonatomic, readonly) int lvHard;
 
 /**
- * @brief Whether this song's purchased file is already on disk.
+ * Whether this song's purchased file is already on disk.
  * @return YES when the file exists.
  * @ghidraAddress 0x56678
  */

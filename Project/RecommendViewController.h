@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "friend recommend" list.
+ * The "friend recommend" list.
  *
  * A grouped-style, separator-less UITableViewController of RecommendListCells, one per recommended
  * music pack, taken from DownloadMain.recommendDataArray and sorted by update date, newest first.
@@ -26,7 +26,7 @@
 class MainTask;
 
 /**
- * @brief The recommendations list of purchasable music packs.
+ * The recommendations list of purchasable music packs.
  */
 @interface RecommendViewController : UITableViewController
 
@@ -40,7 +40,7 @@ class MainTask;
 @property(atomic, assign, readonly, getter=isAnimationing) BOOL animationing;
 
 /**
- * @brief Build the transparent, separator-less recommend table — a clear spacer header, the
+ * Build the transparent, separator-less recommend table — a clear spacer header, the
  * "friman" backdrop on phone, and a hidden dimmed spinner overlay — then load and date-sort the
  * recommend list.
  * @param style Forwarded to UITableViewController.
@@ -50,7 +50,7 @@ class MainTask;
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 /**
- * @brief Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
+ * Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
  * with a back button on phone.
  * @param musicSelTask The owning music-select task.
  * @return The navigation controller.
@@ -60,13 +60,13 @@ class MainTask;
     __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the panel in on phone, or slide it in on iPad.
+ * Fade the panel in on phone, or slide it in on iPad.
  * @ghidraAddress 0xbc5e0
  */
 - (void)startOpenAnimation;
 
 /**
- * @brief Re-sort the task's list when a store was opened, then fade the panel closed on phone, or
+ * Re-sort the task's list when a store was opened, then fade the panel closed on phone, or
  * slide it closed on iPad.
  * @ghidraAddress 0xbcaa8
  */

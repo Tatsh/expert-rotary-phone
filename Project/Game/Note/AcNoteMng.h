@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade note manager.
+ * The arcade note manager.
  *
  * It parses an arcade chart (a "sheet_*" entry of an ac%09d.acv, provided by AcMusicData) and
  * drives arcade-mode play. It parallels the standard NoteMng but uses a different, more compact
@@ -24,7 +24,7 @@
 // N = (size / 8) - 2. Each record's type byte is at +0x4 and its value (lane or BPM) at +0x6.
 
 /**
- * @brief The arcade chart record kind, stored in AcNoteRecord::type.
+ * The arcade chart record kind, stored in AcNoteRecord::type.
  *
  * The names are historical; the semantics below are the binary's, taken from InitPlayData and the
  * update closure.
@@ -44,7 +44,7 @@ enum AcNoteType : uint8_t {
 };
 
 /**
- * @brief The playback state machine (m_state @ +0xfd50).
+ * The playback state machine (m_state @ +0xfd50).
  */
 enum AcNoteMngState {
     AC_NOTE_STATE_IDLE = 0,     /**< Before playback starts, or after a reset. */
@@ -55,7 +55,7 @@ enum AcNoteMngState {
 };
 
 /**
- * @brief One 8-byte arcade chart record.
+ * One 8-byte arcade chart record.
  */
 struct AcNoteRecord {
     uint32_t tick;     /**< +0x0 Timing position, in chart ticks. */
@@ -66,7 +66,7 @@ struct AcNoteRecord {
 static_assert(sizeof(AcNoteRecord) == 8, "arcade note record is 8 bytes");
 
 /**
- * @brief AcActiveNote::flags bits.
+ * AcActiveNote::flags bits.
  *
  * The arcade viewer, a non-scored preview, only ever sets bits 0, 2 and 5. The two guard masks
  * below are over-broad — they also cover bits 1, 3 and 4 that the fuller standard-engine flag
@@ -83,7 +83,7 @@ enum AcNoteFlag : uint16_t {
 };
 
 /**
- * @brief One active (on-screen or in-flight) note.
+ * One active (on-screen or in-flight) note.
  *
  * A fixed pool is threaded onto either the free list or the active list; play never allocates. The
  * layout mirrors the binary's node: next @ 0x0, record @ 0x4, tick @ 0x8, drawY @ 0xc, lane @
@@ -100,7 +100,7 @@ struct AcActiveNote {
 };
 
 /**
- * @brief The render descriptor getNoteObject() copies out for one active arcade note.
+ * The render descriptor getNoteObject() copies out for one active arcade note.
  *
  * Ghidra: the 12-byte struct acNoteGetNoteObject (@ 0x7b968) fills — tick @ +0x0, lane @ +0x4,
  * flags @ +0x6, drawY @ +0x8.
@@ -114,7 +114,7 @@ struct AcNoteObject {
 };
 
 /**
- * @brief One scroll/tempo segment: the binary's 0xc-byte record at +0xfa4c, stride 0xc.
+ * One scroll/tempo segment: the binary's 0xc-byte record at +0xfa4c, stride 0xc.
  *
  * The segment array is kept sorted by startTick; changeTempo() pops the front as play passes each
  * boundary.
@@ -128,28 +128,28 @@ struct AcScrollSegment {
 };
 
 /**
- * @brief The arcade layout lane count (the per-lane tap counters at play-data +0xfa14).
+ * The arcade layout lane count (the per-lane tap counters at play-data +0xfa14).
  */
 constexpr int kAcLaneCount = 16;
 
 /**
- * @brief The maximum number of simultaneously-active note slots: the 1000-entry free list.
+ * The maximum number of simultaneously-active note slots: the 1000-entry free list.
  */
 constexpr int kAcMaxActiveNotes = 1000;
 
 /**
- * @brief The number of hi-speed steps selectable at play start, difficulty 0..10.
+ * The number of hi-speed steps selectable at play start, difficulty 0..10.
  */
 constexpr int kAcHiSpeedCount = 11;
 
 /**
- * @brief The arcade note manager: arcade chart parsing, the tempo map, note spawning and the
+ * The arcade note manager: arcade chart parsing, the tempo map, note spawning and the
  * arcade-viewer play clock.
  */
 class AcNoteMng {
 public:
     /**
-     * @brief Parse a decoded arcade chart into the play timeline.
+     * Parse a decoded arcade chart into the play timeline.
      * @param data The whole chart payload.
      * @param hiSpeedLevel The acvHiSpeed setting, 0..10, selecting a 1.2x to 6.0x multiplier.
      * @return 0 on success, or -3 if the magic byte is not 'E'.
@@ -159,7 +159,7 @@ public:
 
 #ifdef __OBJC__
     /**
-     * @brief Parse an arcade chart straight from an NSData; the bytes and length are forwarded to
+     * Parse an arcade chart straight from an NSData; the bytes and length are forwarded to
      * initPlayData().
      * @param data The sheet the play loader selected.
      * @param hiSpeedLevel The acvHiSpeed setting, 0..10.
@@ -169,12 +169,12 @@ public:
 #endif
 
     /**
-     * @brief Walk the chart and insert a scroll segment per tempo event.
+     * Walk the chart and insert a scroll segment per tempo event.
      * @ghidraAddress 0x7aa90
      */
     void registerTempoEvents();
     /**
-     * @brief Pop the front scroll segment once play passes it and recompute the spawn look-ahead.
+     * Pop the front scroll segment once play passes it and recompute the spawn look-ahead.
      * @param tick The current chart position.
      * @return Non-zero while a segment was retired.
      * @ghidraAddress 0x7aaf8
@@ -182,7 +182,7 @@ public:
     int changeTempo(uint32_t tick);
 
     /**
-     * @brief Seek or fast-forward the internal play clock to a target position.
+     * Seek or fast-forward the internal play clock to a target position.
      *
      * A no-op if the current offset and the requested position are both already at or past the
      * chart end, or if the target is not ahead of the current offset. Otherwise it enters the
@@ -196,14 +196,14 @@ public:
     void seekTo(uint32_t pos);
 
     /**
-     * @brief Wall-clock milliseconds since play start, as a gettimeofday delta.
+     * Wall-clock milliseconds since play start, as a gettimeofday delta.
      * @return The elapsed milliseconds, or 0 before the clock is armed.
      * @ghidraAddress 0x7b5e0
      */
     int getElapsedTimeMs() const;
 
     /**
-     * @brief The current chart position the arcade note update judges and scrolls against.
+     * The current chart position the arcade note update judges and scrolls against.
      *
      * The elapsed time (frozen while the hold bit is set) plus the per-play offset, added onto the
      * smoothed scroll base once it passes the start threshold. The offset, threshold and
@@ -215,7 +215,7 @@ public:
     int getCurrentPosition();
 
     /**
-     * @brief The arcade per-frame update.
+     * The arcade per-frame update.
      *
      * Smooths the scroll base one step toward its target, spawns every chart record now due,
      * judges and retires the active notes, advances the tempo, then refreshes each note's scroll
@@ -225,13 +225,13 @@ public:
     void update();
 
     /**
-     * @brief Pause play: stop the BGM, stamp the pause time, then set the freeze bit so the play
+     * Pause play: stop the BGM, stamp the pause time, then set the freeze bit so the play
      * clock stops advancing. A no-op if already held.
      * @ghidraAddress 0x7b638
      */
     void Pause();
     /**
-     * @brief Resume play: fold the paused span into the start threshold, clear the freeze bit,
+     * Resume play: fold the paused span into the start threshold, clear the freeze bit,
      * re-seek and restart the BGM at the current position, and arm a drift-sync adjust event. A
      * no-op unless currently held.
      * @ghidraAddress 0x7b698
@@ -239,20 +239,20 @@ public:
     void resume();
 
     /**
-     * @brief Arm the play clock from now (a gettimeofday baseline), clear the pause and offset
+     * Arm the play clock from now (a gettimeofday baseline), clear the pause and offset
      * fields, and set the state to playing. A lighter clock start than seekTo().
      * @ghidraAddress 0x7b5a0
      */
     void startPlayback();
 
     /**
-     * @brief Clear the per-play "playing" flag (the byte @ +0x14cc2), on teardown.
+     * Clear the per-play "playing" flag (the byte @ +0x14cc2), on teardown.
      * @ghidraAddress 0x7aea4
      */
     void resetPlayFlag();
 
     /**
-     * @brief The per-play "playing" flag (m_playFlag @ +0x14cc2).
+     * The per-play "playing" flag (m_playFlag @ +0x14cc2).
      *
      * It gates the on-resign arcade pause; -[AppDelegate applicationWillResignActive] @ 0x95a8
      * reads AcNoteMng+0x14cc2.
@@ -263,7 +263,7 @@ public:
     }
 
     /**
-     * @brief Build the logical-lane to display-lane table for the selected lane option.
+     * Build the logical-lane to display-lane table for the selected lane option.
      * @param mode 1 or 3 for random (a time-seeded derangement of lanes 0..8, retried until no
      * lane maps to itself), 2 for mirror (lane i maps to 8-i), anything else for identity.
      * @ghidraAddress 0x7ad14
@@ -271,13 +271,13 @@ public:
     void setupLaneMapping(int mode);
 
     /**
-     * @brief The chart's total playable-note count: the sum of the nine per-lane tap counters.
+     * The chart's total playable-note count: the sum of the nine per-lane tap counters.
      * @return The playable-note total.
      * @ghidraAddress 0x7b8ec
      */
     int getTotalNoteCount() const;
     /**
-     * @brief The chart's end tick: the type-6 end marker's tick (+0xfe18 nPlayheadMs), the
+     * The chart's end tick: the type-6 end marker's tick (+0xfe18 nPlayheadMs), the
      * denominator for the play-progress timeline bar.
      * @return The end tick, in milliseconds.
      */
@@ -285,7 +285,7 @@ public:
         return m_endValue;
     }
     /**
-     * @brief Whether the type-6 end note has passed the judge line.
+     * Whether the type-6 end note has passed the judge line.
      *
      * In the binary this is the g_abAcNoteMng.bBgmMuted field, read by the arcade viewer as
      * DAT_00173e70 to detect chart completion and return to the song menu.
@@ -295,21 +295,21 @@ public:
         return m_endFlag;
     }
     /**
-     * @brief The running judged-note total: the sum of the 9x4 per-lane score/judge table, low 16
+     * The running judged-note total: the sum of the 9x4 per-lane score/judge table, low 16
      * bits.
      * @return The judged-note total.
      * @ghidraAddress 0x7b908
      */
     int getJudgeTotal() const;
     /**
-     * @brief The number of still-unresolved on-screen notes: lane below 9 with the "handled" bit 5
+     * The number of still-unresolved on-screen notes: lane below 9 with the "handled" bit 5
      * clear.
      * @return The unresolved note count.
      * @ghidraAddress 0x7b93c
      */
     int countActiveNotes() const;
     /**
-     * @brief Copy the @p index -th still-unresolved on-screen note (lane below 9, bit 5 clear)
+     * Copy the @p index -th still-unresolved on-screen note (lane below 9, bit 5 clear)
      * into @p out. Asserts on a null @p out or an out-of-range @p index.
      * @param out Receives the note's render descriptor.
      * @param index The index among the still-unresolved notes.
@@ -317,7 +317,7 @@ public:
      */
     void getNoteObject(AcNoteObject *out, int index) const;
     /**
-     * @brief OR @p flags into the @p index -th still-unresolved on-screen note; input marks a note
+     * OR @p flags into the @p index -th still-unresolved on-screen note; input marks a note
      * hit this way.
      * @param index The index among the still-unresolved notes.
      * @param flags The AcNoteFlag bits to set.
@@ -326,7 +326,7 @@ public:
     void setNoteFlag(int index, uint16_t flags);
 
     /**
-     * @brief The one global arcade manager (Ghidra: DAT_0015f1b0), reached through a
+     * The one global arcade manager (Ghidra: DAT_0015f1b0), reached through a
      * ___cxa_guard'd lazy accessor.
      *
      * Ghidra: AcNoteMng_shared (FUN_0000b35c), which constructs it once via AcNoteMng_init
@@ -437,9 +437,9 @@ private:
 // (aepHudDrawCallback), never writes them, and their baked value is 0 — the non-scored arcade
 // preview shows 0 for COOL and GREAT. The init-0-and-read model is exact.
 
-/** @brief The arcade-viewer COOL count the HUD draw callback reads; always 0. */
+/** The arcade-viewer COOL count the HUD draw callback reads; always 0. */
 extern int g_dwAcCoolCount;
-/** @brief The arcade-viewer GREAT count the HUD draw callback reads; always 0. */
+/** The arcade-viewer GREAT count the HUD draw callback reads; always 0. */
 extern int g_dwAcGreatCount;
 
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;

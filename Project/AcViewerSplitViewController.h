@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad layout of the arcade (AC) viewer.
+ * The iPad layout of the arcade (AC) viewer.
  *
  * A floating split panel over a dimmed backdrop: a left column of category, music-name, and genre
  * buttons and a right navigation pane that hosts the AcViewerCategoryViewController list.
@@ -23,23 +23,23 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The iPad layout of the arcade viewer: a floating split panel over a dimmed backdrop.
+ * The iPad layout of the arcade viewer: a floating split panel over a dimmed backdrop.
  */
 @interface AcViewerSplitViewController : UIViewController
 
 /**
- * @brief Fade the panel and its navigation controller in.
+ * Fade the panel and its navigation controller in.
  * @ghidraAddress 0x3272c
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the panel out, tearing it down on didStop.
+ * Fade the panel out, tearing it down on didStop.
  * @ghidraAddress 0x32870
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Fade the panel out and swap the right pane to the arcade-viewer option screen.
+ * Fade the panel out and swap the right pane to the arcade-viewer option screen.
  * @param animated YES to fade, NO to swap after a short delay.
  * @ghidraAddress 0x32a80
  */

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Aep 2D scene manager.
+ * The Aep 2D scene manager.
  *
  * It owns the ordering table, drives screen-transition fades, and is the sprite/texture factory
  * the graphics manager creates through. Reconstructed from Ghidra project rb420, program
@@ -20,7 +20,7 @@ class neTextureForiOS; // Render/neTextureForiOS.h; only pointers held here (see
                        // m_groupTexture)
 
 /**
- * @brief The .idx index-file header, stamped and relocated by the loader.
+ * The .idx index-file header, stamped and relocated by the loader.
  * @details Stamped by readIndexFile and relocated by relocateAepData: the loader walks it from the
  *          index base. The name-block words are byte offsets from the index base on disk;
  *          relocateAepData resolves each to a live pointer (advanced past its name table and the
@@ -42,7 +42,7 @@ struct AepIndexHeader {
 };
 
 /**
- * @brief The Aep 2D scene manager: ordering table, screen-transition fades, and sprite factory.
+ * The Aep 2D scene manager: ordering table, screen-transition fades, and sprite factory.
  *
  * Owns the ordering table, drives the screen-transition fades, and is the sprite/texture factory
  * the graphics manager creates through. A single, very large global object.
@@ -50,7 +50,7 @@ struct AepIndexHeader {
 class AepManager {
 public:
     /**
-     * @brief Access the single global scene manager.
+     * Access the single global scene manager.
      * @details The engine keeps one global scene manager (an ~8 MB object with the ordering table
      *          embedded), reached through this lazy accessor that constructs it once on first use.
      * @return Reference to the shared manager.
@@ -59,7 +59,7 @@ public:
     static AepManager &shared();
 
     /**
-     * @brief Load an .aep animation/scene resource into a group slot.
+     * Load an .aep animation/scene resource into a group slot.
      * @details Reads the index, uploads the texture, and copies the frame tables in. `single` picks
      *          the "<dir>/<name>.idx" layout (true) versus "<dir>/<name>/<name>.idx" (false,
      *          subdirectory named after the resource).
@@ -73,7 +73,7 @@ public:
     bool loadAepData(int group, const char *dir, const char *name, bool single);
 
     /**
-     * @brief Load an .aep resource group from the manager's base directory.
+     * Load an .aep resource group from the manager's base directory.
      * @details Convenience form of loadAepData using baseDir() and the single-file
      *          "<baseDir>/<name>.idx" layout.
      * @param group Destination group slot.
@@ -83,21 +83,21 @@ public:
     void loadAepDataDefaultPath(int group, const char *name);
 
     /**
-     * @brief Render one frame.
+     * Render one frame.
      * @details Advances the active screen transition (a fade in or out over a timer), then draws
      *          the ordering table.
      * @ghidraAddress 0x1058c
      */
     void draw();
 
-    /** @brief Frame-clamp flags passed in a layer's high-level draw call. */
+    /** Frame-clamp flags passed in a layer's high-level draw call. */
     enum DrawFlags {
         kDrawLoop = 0x01,      /*!< Wrap the frame index modulo the layer length. */
         kDrawClampLast = 0x10, /*!< Clamp past-the-end to the last frame (else skip). */
     };
 
     /**
-     * @brief Resolve a layer name within a group to an encoded `lyr` value.
+     * Resolve a layer name within a group to an encoded `lyr` value.
      * @details Produces the value drawLayer consumes: the group slot in the high 16 bits and the
      *          layer index in the low 16 bits. Asserts the name exists.
      * @param group Group slot to search.
@@ -108,7 +108,7 @@ public:
     int getLyrNo(int group, const char *name) const;
 
     /**
-     * @brief The number of frames in a layer.
+     * The number of frames in a layer.
      * @details Returns the layer's entry-chain frameEnd (its length).
      * @param lyr Encoded layer handle.
      * @return The frame count.
@@ -117,7 +117,7 @@ public:
     int layerFrameCount(int lyr) const;
 
     /**
-     * @brief Resolve a frame resource name within a group to an encoded handle.
+     * Resolve a frame resource name within a group to an encoded handle.
      * @details The result carries the frame index in the low 16 bits and the slot byte in bits
      *          16..23. Asserts the name exists.
      * @param group Group slot to search.
@@ -128,7 +128,7 @@ public:
     int getFrameNo(int group, const char *name) const;
 
     /**
-     * @brief Resolve a user/sprite resource name within a group to its index.
+     * Resolve a user/sprite resource name within a group to its index.
      * @details Looks the name up in the group's user-frame table. Asserts the name exists.
      * @param group Group slot to search.
      * @param name User resource name to resolve.
@@ -138,7 +138,7 @@ public:
     int getUserNo(int group, const char *name) const;
 
     /**
-     * @brief Start a screen transition (fade).
+     * Start a screen transition (fade).
      * @details The fade colour is the overlay colour the screen dips to.
      * @param mode 1 = fade in, 2 = fade out; 0 or >=3 clears the transition.
      * @param frames The transition length in frames.
@@ -148,7 +148,7 @@ public:
     void playTransition(int mode, int frames, int color);
 
     /**
-     * @brief Arm a screen transition with the standard fixed 30-frame duration.
+     * Arm a screen transition with the standard fixed 30-frame duration.
      * @details A fixed-length counterpart to playTransition used by most scenes: a valid mode
      *          (0..2) sets the mode, resets both frame counters to 30, and clears the fade colour
      *          to black; an invalid mode (>=3) disables the transition (mode and frames set to 0).
@@ -158,7 +158,7 @@ public:
     void setAepTransitionMode(int mode);
 
     /**
-     * @brief Scrub the current transition frame counter.
+     * Scrub the current transition frame counter.
      * @details Sets the counter to `frame`, clamped to [0, total]. This does not change the mode or
      *          total set by playTransition; it just moves the fade to a given point (e.g. frame 0
      *          is fully-faded for a fade-out, since draw() derives alpha from frames/total).
@@ -168,7 +168,7 @@ public:
     void setTransitionFrame(int frame);
 
     /**
-     * @brief Whether the active transition has finished.
+     * Whether the active transition has finished.
      * @details True when no frames remain, or no transition is active.
      * @return True if the transition is done.
      * @ghidraAddress 0x10730
@@ -176,7 +176,7 @@ public:
     bool isTransitionDone() const;
 
     /**
-     * @brief The active transition mode word.
+     * The active transition mode word.
      * @details Scenes poll it to gate input during a fade.
      * @return 0 for none, 1 for fade in, or 2 for fade out.
      */
@@ -185,7 +185,7 @@ public:
     }
 
     /**
-     * @brief Draw one animated layer (the full form).
+     * Draw one animated layer (the full form).
      * @details `frame` is clamped or looped to the layer's length by `loopFlags` (bit 0 = loop,
      *          bit 4 = clampLast); the remaining arguments are the root transform, colour, alpha,
      *          rotation, blend, and clip threaded into the frame-tree fill. The argument order
@@ -232,7 +232,7 @@ public:
                    uint32_t visFlag);
 
     /**
-     * @brief Compatibility overload driving a layer from a resolved transform.
+     * Compatibility overload driving a layer from a resolved transform.
      * @details The scenes (MenuMainTask, PlayTask, and AepLyrCtrl) drive layers with just a
      *          resolved transform and the loop flags. It maps the transform's x, y, sx, sy,
      *          rotation, and priority into the full form (colour and alpha fully opaque, no clip
@@ -245,7 +245,7 @@ public:
     void drawLayer(int lyr, int frame, const AepTransform &root, uint32_t flags);
 
     /**
-     * @brief Queue a single-line text draw through the ordering table.
+     * Queue a single-line text draw through the ordering table.
      * @details Forwards the string and the six glyph-run words to the ordering table's text command
      *          (type 6) with no clip rect. The first word is the glyph point size, not a position;
      *          drawAepOtText reads them back as neDrawText(pointSize, posX, posY).
@@ -269,7 +269,7 @@ public:
                   int priority);
 
     /**
-     * @brief Queue a single-line text draw with an explicit clip rectangle.
+     * Queue a single-line text draw with an explicit clip rectangle.
      * @details As DrawText, but threads the caller-supplied clip rect straight through to the
      *          ordering-table text command.
      * @param text Null-terminated string to draw.
@@ -294,7 +294,7 @@ public:
                          int priority);
 
     /**
-     * @brief The ordering table (z-sorted draw list).
+     * The ordering table (z-sorted draw list).
      * @return Pointer to the ordering table.
      */
     AepOrderingTable *orderingTable() {
@@ -302,7 +302,7 @@ public:
     }
 
     /**
-     * @brief The frame-entry array for a resolved group slot.
+     * The frame-entry array for a resolved group slot.
      * @details Used by AepDrawLayer to reach the per-group storage by slot.
      * @param slot Resolved group slot.
      * @return Pointer to the group's frame-entry array.
@@ -312,7 +312,7 @@ public:
     } // +0x7f39c8
 
     /**
-     * @brief The keyframe-channel base pointer for a resolved group slot.
+     * The keyframe-channel base pointer for a resolved group slot.
      * @details The keyframe-channel offsets stored in each AepFrameEntry are relative to idxBase,
      *          the index proper at file + 4 (readIndexFile skips the 4-byte header). The binary
      *          adds the channel offsets to that idxBase pointer; returning the bare file start
@@ -326,7 +326,7 @@ public:
     } // +0x7274d4
 
     /**
-     * @brief A frame-position sprite record within a group slot.
+     * A frame-position sprite record within a group slot.
      * @param slot Resolved group slot.
      * @param idx Sprite record index.
      * @return Pointer to the record's first int16 (stride 8).
@@ -336,7 +336,7 @@ public:
     } // +0x7c1962 (stride 8)
 
     /**
-     * @brief The cached screen width (fade-quad width slot).
+     * The cached screen width (fade-quad width slot).
      * @return The screen width in pixels.
      */
     int screenWidth() const {
@@ -344,7 +344,7 @@ public:
     } // +0x7f3afc
 
     /**
-     * @brief The cached screen height (fade-quad height slot).
+     * The cached screen height (fade-quad height slot).
      * @return The screen height in pixels.
      */
     int screenHeight() const {
@@ -352,7 +352,7 @@ public:
     } // +0x7f3b00
 
     /**
-     * @brief The per-frame draw callback registered for a group slot.
+     * The per-frame draw callback registered for a group slot.
      * @param slot Group slot.
      * @return The group's draw callback.
      */
@@ -361,7 +361,7 @@ public:
     } // +0x7f3a2c
 
     /**
-     * @brief The context registered alongside a group's draw callback.
+     * The context registered alongside a group's draw callback.
      * @param slot Group slot.
      * @return The group's callback context.
      */
@@ -370,7 +370,7 @@ public:
     } // +0x7f3a90
 
     /**
-     * @brief Resolve the group slot a sprite/layer handle addresses.
+     * Resolve the group slot a sprite/layer handle addresses.
      * @details The high 16 bits index the byte group table.
      * @param handle Sprite/layer handle.
      * @return The group slot.
@@ -380,7 +380,7 @@ public:
     }
 
     /**
-     * @brief The base resource directory the single-file loaders resolve against.
+     * The base resource directory the single-file loaders resolve against.
      * @return The base directory path.
      */
     const char *baseDir() const {
@@ -388,7 +388,7 @@ public:
     }
 
     /**
-     * @brief Release a group's loaded texture.
+     * Release a group's loaded texture.
      * @details The texture's destructor drops the tiles.
      * @param group Group slot to free.
      * @ghidraAddress 0xf988
@@ -396,7 +396,7 @@ public:
     void releaseAepTexture(int group);
 
     /**
-     * @brief The cached fade-quad width extent.
+     * The cached fade-quad width extent.
      * @details One of the two screen-quad extents cached from the transition-overlay region. The
      *          play scene reads them into its play data at build.
      * @return The fade quad's width.
@@ -405,7 +405,7 @@ public:
     int transitionOverlayWidth() const;
 
     /**
-     * @brief The cached fade-quad height extent.
+     * The cached fade-quad height extent.
      * @details One of the two screen-quad extents cached from the transition-overlay region. The
      *          play scene reads them into its play data at build.
      * @return The fade quad's height.
@@ -414,7 +414,7 @@ public:
     int transitionOverlayHeight() const;
 
     /**
-     * @brief Register a per-frame draw callback for a group.
+     * Register a per-frame draw callback for a group.
      * @details The play scene installs its note-field render pass here at build time; the manager
      *          invokes it (with the stored context) while drawing.
      * @param slot Group slot.
@@ -484,14 +484,14 @@ private:
     // the per-group table instances below stay private.
 public:
     /**
-     * @brief Queue the full-screen fade quad at the given opacity.
+     * Queue the full-screen fade quad at the given opacity.
      * @param alpha The overlay opacity (0..100).
      * @ghidraAddress 0x1151c
      */
     void drawTransitionOverlay(int alpha);
 
     /**
-     * @brief Initialise the manager against its resource paths and screen surface.
+     * Initialise the manager against its resource paths and screen surface.
      * @details Copies the base and data paths, seeds the identity transforms, and hands the screen
      *          extents and device scale to the ordering table. Called once from
      *          MainViewController -loadView.
@@ -505,7 +505,7 @@ public:
     void init(const char *basePath, const char *dataPath, int screenW, int screenH, float scale);
 
     /**
-     * @brief Per-group open-addressing name-to-index hash table.
+     * Per-group open-addressing name-to-index hash table.
      * @details Filled by the loader and probed by the name resolvers.
      */
     struct NameHashTable {
@@ -539,7 +539,7 @@ private:
 };
 
 /**
- * @brief The active transition mode (free-function form of transitionMode()).
+ * The active transition mode (free-function form of transitionMode()).
  * @param mgr The manager to query.
  * @return 0 for none, 1 for fade in, or 2 for fade out.
  * @ghidraAddress 0x10724
@@ -547,7 +547,7 @@ private:
 int getAepTransitionMode(const AepManager *mgr);
 
 /**
- * @brief Draw a multi-line ('\n'-separated) string vertically centred about `y`.
+ * Draw a multi-line ('\n'-separated) string vertically centred about `y`.
  * @details Emits one text command per line, spaced `lineHeight` apart.
  * @param text Null-terminated, newline-separated string to draw.
  * @param a0 Pen x position forwarded to each line.

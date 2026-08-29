@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One outgoing friend-request row: a request you sent, with a Cancel button.
+ * One outgoing friend-request row: a request you sent, with a Cancel button.
  *
  * Its subview x-positions shift between iOS 6 and 7; the layout offsets are computed in init, and
  * the row content is filled by -setFriendData:. Reconstructed from Ghidra project rb420, program
@@ -16,7 +16,7 @@
 // of the struct (if any) is unknown. Best-effort Obj-C type-encoding
 // "{FriendRequestDataStruct=@@@s}".
 /**
- * @brief One outbound request record, as wrapped in the NSValue passed to -setFriendData:.
+ * One outbound request record, as wrapped in the NSValue passed to -setFriendData:.
  *
  * Only these fields are read by the cell. The producing controller is not part of the
  * reconstructed set, so the exact tail of the struct, if any, is unknown. The best-effort
@@ -33,12 +33,12 @@ typedef struct {
 } FriendRequestDataStruct;
 
 /**
- * @brief One row of the sent-friend-requests list.
+ * One row of the sent-friend-requests list.
  */
 @interface FriendRequestCell : UITableViewCell
 
 /**
- * @brief Populate the row from a request record.
+ * Populate the row from a request record.
  * @param friendData An NSValue-wrapped FriendRequestDataStruct.
  */
 - (void)setFriendData:(NSValue *)friendData;

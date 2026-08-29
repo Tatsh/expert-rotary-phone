@@ -29,23 +29,23 @@ static UIViewController *RootVC() {
 }
 
 /**
- * @brief The arcade category list's private lookup and animation helpers.
+ * The arcade category list's private lookup and animation helpers.
  */
 @interface AcViewerCategoryViewController ()
 /**
- * @brief The arcade songs in one category row.
+ * The arcade songs in one category row.
  * @param index The category row index.
  * @return An array of AcMusicData.
  */
 - (NSArray *)getAcMusicData:(int)index;
-/** @brief The open fade finished; clear the animation guard. */
+/** The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief Fade the list out. */
+/** Fade the list out. */
 - (void)startCloseAnimation;
-/** @brief The close fade finished; tear the list down. */
+/** The close fade finished; tear the list down. */
 - (void)endCloseAnimation;
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;

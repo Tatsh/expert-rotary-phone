@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "customer support" sub-settings screen, pushed by SettingTableViewController's row 2.
+ * The "customer support" sub-settings screen, pushed by SettingTableViewController's row 2.
  *
  * A three-row grouped table of rounded, colour-bordered buttons: row 0 (お問い合わせ) opens the
  * FAQ page in Safari, row 1 (特定商取引法に基づく表示) opens the KONAMI TOKUSHO (SCTA) page in
@@ -18,30 +18,30 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The customer-support settings list.
+ * The customer-support settings list.
  */
 @interface SettingCustomerTableViewController : UITableViewController
 
 /**
- * @brief Wrap self in a fresh navigation controller with a back button; the phone layout.
+ * Wrap self in a fresh navigation controller with a back button; the phone layout.
  * @return The navigation controller.
  * @ghidraAddress 0xd3460
  */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0xd36ec
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the screen out.
+ * Fade the screen out.
  * @ghidraAddress 0xd3830
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief The back-button action wired up by -initAtNavigationController; it calls
+ * The back-button action wired up by -initAtNavigationController; it calls
  * -startCloseAnimation.
  * @ghidraAddress 0xd4170
  */

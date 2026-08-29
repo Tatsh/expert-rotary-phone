@@ -87,7 +87,7 @@
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay / rootViewController, neEngine::playSystemSe
 
 /**
- * @brief The NSValue payload for one friend-score row, shared with FriendScoreTableCell.
+ * The NSValue payload for one friend-score row, shared with FriendScoreTableCell.
  *
  * The Objective-C type-encoding is `{ScoreDataStruct=@@iBBcsB}`.
  */
@@ -129,20 +129,20 @@ static int scoreToRank(int score) {
 }
 
 /**
- * @brief The friend-score screen's private table and fetch helpers.
+ * The friend-score screen's private table and fetch helpers.
  */
 @interface FriendScoreMainView () <UITableViewDataSource, UITableViewDelegate, DownloadMainDelegate>
-/** @brief The open cross-fade finished; clear the animation guard. */
+/** The open cross-fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief Cross-fade the screen out. */
+/** Cross-fade the screen out. */
 - (void)startCloseAnimation;
-/** @brief The close cross-fade finished; tear the screen down. */
+/** The close cross-fade finished; tear the screen down. */
 - (void)endCloseAnimation;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)onBackButtonTouched;
-/** @brief Release the fetched friend-score rows and their retained strings. */
+/** Release the fetched friend-score rows and their retained strings. */
 - (void)releaseFriendScore;
-/** @brief POST the friend-score request for the shown song. */
+/** POST the friend-score request for the shown song. */
 - (void)startGetFriendScoreHttp;
 @end
 

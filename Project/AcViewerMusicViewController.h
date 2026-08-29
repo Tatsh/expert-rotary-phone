@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's song list.
+ * The arcade (AC) viewer's song list.
  *
  * A transparent, separator-less UITableView whose rows are AcViewerMusicCells (four difficulty
  * buttons each). A custom header shows the genre-category banner of the first listed song; the
@@ -23,7 +23,7 @@
 @class AcMusicData;
 
 /**
- * @brief The arcade viewer's song list.
+ * The arcade viewer's song list.
  */
 @interface AcViewerMusicViewController : UITableViewController
 
@@ -32,7 +32,7 @@
 @property(nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
 /**
- * @brief Build the list from an array of arcade songs.
+ * Build the list from an array of arcade songs.
  *
  * The rows are sorted by song name or genre name per UserSettingData.isAcvGenreName, and the
  * header banner is keyed to the first song's genre category.

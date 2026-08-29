@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's HID-SUD option list.
+ * The arcade (AC) viewer's HID-SUD option list.
  *
  * A UITableView of four values (OFF, HIDDEN, SUDDEN, HID-SUD). Pushed by
  * AcViewerOptionViewController when the HID-SUD row is tapped; selecting a value stores it into
@@ -13,7 +13,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The arcade viewer's HID-SUD option list.
+ * The arcade viewer's HID-SUD option list.
  */
 @interface AcViewerHidSudViewController : UITableViewController
 @end

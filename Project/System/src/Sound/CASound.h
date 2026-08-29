@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One decoded sound effect.
+ * One decoded sound effect.
  *
  * An audio file (m4a, caf, or similar) read into an interleaved 16-bit LPCM buffer via
  * ExtAudioFile, ready to be handed to the CAComponent mixer. Part of the lib_rsnd / caplayer sound
@@ -12,7 +12,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 /**
- * @brief One decoded sound effect read into an interleaved 16-bit LPCM buffer.
+ * One decoded sound effect read into an interleaved 16-bit LPCM buffer.
  *
  * Loads an audio file via ExtAudioFile, ready to be handed to the CAComponent mixer. Part of the
  * lib_rsnd / caplayer sound engine.
@@ -20,19 +20,19 @@
 class CASound {
 public:
     /**
-     * @brief Construct an empty sound with no decoded buffer.
+     * Construct an empty sound with no decoded buffer.
      * @ghidraAddress 0x27bac
      */
     CASound();
 
     /**
-     * @brief Free the decoded buffer and destroy the sound.
+     * Free the decoded buffer and destroy the sound.
      * @ghidraAddress 0x27bdc
      */
     ~CASound();
 
     /**
-     * @brief Decode an audio file into the PCM buffer.
+     * Decode an audio file into the PCM buffer.
      * @details Reads @p path via ExtAudioFile into the interleaved 16-bit LPCM buffer. The @p loop
      * flag marks the sound for looped playback so that read() wraps to the start rather than
      * stopping. Returns false on any ExtAudioFile error.
@@ -44,7 +44,7 @@ public:
     bool load(const char *path, bool loop);
 
     /**
-     * @brief Pointer to the decoded interleaved 16-bit LPCM buffer.
+     * Pointer to the decoded interleaved 16-bit LPCM buffer.
      * @return The PCM buffer, or null when nothing is loaded.
      */
     const void *buffer() const {
@@ -52,7 +52,7 @@ public:
     }
 
     /**
-     * @brief Size of the decoded PCM buffer in bytes.
+     * Size of the decoded PCM buffer in bytes.
      * @return The buffer size in bytes.
      */
     UInt32 bufferSize() const {
@@ -60,7 +60,7 @@ public:
     }
 
     /**
-     * @brief Number of frames represented by the decoded buffer.
+     * Number of frames represented by the decoded buffer.
      * @return The frame count.
      */
     UInt32 frameCount() const {
@@ -68,7 +68,7 @@ public:
     }
 
     /**
-     * @brief Client (LPCM) audio format the buffer was decoded into.
+     * Client (LPCM) audio format the buffer was decoded into.
      * @return A reference to the stream format description.
      */
     const AudioStreamBasicDescription &format() const {
@@ -76,7 +76,7 @@ public:
     }
 
     /**
-     * @brief Whether the sound is marked for looped playback.
+     * Whether the sound is marked for looped playback.
      * @return True if looped, false for a one-shot source.
      */
     bool isLoop() const {
@@ -84,7 +84,7 @@ public:
     }
 
     /**
-     * @brief Copy PCM from the play cursor into a destination buffer.
+     * Copy PCM from the play cursor into a destination buffer.
      * @details Copies @p bytes of PCM starting at the play cursor @p pos (a byte offset) into
      * @p dst. When a non-looped source runs out it stops at the end; a looped source restarts from
      * the top of the buffer and resets @p total. @p total accumulates the bytes played for the
@@ -101,7 +101,7 @@ public:
     size_t read(void *dst, size_t bytes, UInt32 *total, UInt32 *pos) const;
 
     /**
-     * @brief Free the decoded PCM buffer and null it, leaving the object reusable.
+     * Free the decoded PCM buffer and null it, leaving the object reusable.
      * @ghidraAddress 0x27bc0
      */
     void freeBuffer();

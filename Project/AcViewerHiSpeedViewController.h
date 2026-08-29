@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's HI-SPEED option list.
+ * The arcade (AC) viewer's HI-SPEED option list.
  *
  * A UITableView of eleven values (OFF, HI-SP 1.5 .. HI-SP 6.0). Pushed by
  * AcViewerOptionViewController when the HI-SPEED row is tapped; selecting a value stores it into
@@ -14,7 +14,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The arcade viewer's HI-SPEED option list.
+ * The arcade viewer's HI-SPEED option list.
  */
 @interface AcViewerHiSpeedViewController : UITableViewController
 @end

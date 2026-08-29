@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A single AVAudioPlayer-backed audio bus, or voice, in the sound engine.
+ * A single AVAudioPlayer-backed audio bus, or voice, in the sound engine.
  *
  * It wraps one AVAudioPlayer, tracks a small playback state machine, and acts as the player's
  * delegate so end-of-play and audio-session interruptions update that state.
@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief A loaded sound-source descriptor.
+ * A loaded sound-source descriptor.
  * @details Exactly one of url or data selects how the voice is (re)loaded; loop drives
  * AVAudioPlayer.numberOfLoops (-1 vs 0). The bus stores a non-owning pointer to one of these.
  */
@@ -23,7 +23,7 @@ typedef struct AVSource {
 } AVSource;
 
 /**
- * @brief Playback state kept in mStatus.
+ * Playback state kept in mStatus.
  * @details The raw values are the ones the binary stores.
  */
 typedef NS_ENUM(int, AVBusStatus) {
@@ -35,7 +35,7 @@ typedef NS_ENUM(int, AVBusStatus) {
 };
 
 /**
- * @brief A single AVAudioPlayer-backed audio bus or voice.
+ * A single AVAudioPlayer-backed audio bus or voice.
  *
  * Wraps one AVAudioPlayer, tracks a small playback state machine, and acts as its delegate so
  * end-of-play and audio-session interruptions update that state.
@@ -43,14 +43,14 @@ typedef NS_ENUM(int, AVBusStatus) {
 @interface AVBus : NSObject <AVAudioPlayerDelegate>
 
 /**
- * @brief Initialise an empty bus with no loaded source.
+ * Initialise an empty bus with no loaded source.
  * @return The initialised bus, or nil on failure.
  * @ghidraAddress 0x207a4
  */
 - (instancetype)init;
 
 /**
- * @brief (Re)load this voice from a URL.
+ * (Re)load this voice from a URL.
  * @details This is NOT part of the ARC init family: it returns a BOOL success flag and may be
  * called repeatedly on an already-initialised bus, so it opts out via
  * objc_method_family(none).
@@ -62,7 +62,7 @@ typedef NS_ENUM(int, AVBusStatus) {
 - (BOOL)initWithContentsOfURL:(NSURL *)url
                        isLoop:(BOOL)loop __attribute__((objc_method_family(none)));
 /**
- * @brief (Re)load this voice from in-memory data.
+ * (Re)load this voice from in-memory data.
  * @details This is NOT part of the ARC init family: it returns a BOOL success flag and may be
  * called repeatedly on an already-initialised bus, so it opts out via
  * objc_method_family(none).
@@ -75,7 +75,7 @@ typedef NS_ENUM(int, AVBusStatus) {
                         isLoop:(BOOL)loop __attribute__((objc_method_family(none)));
 
 /**
- * @brief Set the current source descriptor and (re)load the voice from it.
+ * Set the current source descriptor and (re)load the voice from it.
  * @details Loads from the source's data when its url is nil, otherwise from the url.
  * @param source The source descriptor to adopt; stored as a non-owning pointer.
  * @return The current generation ID after loading.
@@ -83,72 +83,72 @@ typedef NS_ENUM(int, AVBusStatus) {
  */
 - (uint16_t)setSource:(AVSource *)source;
 /**
- * @brief Clear the current source, bump the generation ID, and release the player.
+ * Clear the current source, bump the generation ID, and release the player.
  * @return YES if a player was loaded and released, NO otherwise.
  * @ghidraAddress 0x209e0
  */
 - (BOOL)removeSource;
 
 /**
- * @brief Prepare the loaded voice for playback.
+ * Prepare the loaded voice for playback.
  * @return YES if preparation was issued, NO if there is no player or it is already playing.
  * @ghidraAddress 0x20a30
  */
 - (BOOL)prepare;
 /**
- * @brief Start playback when prepared or paused.
+ * Start playback when prepared or paused.
  * @return YES if playback started, NO otherwise.
  * @ghidraAddress 0x20a84
  */
 - (BOOL)play;
 /**
- * @brief Stop playback.
+ * Stop playback.
  * @return YES if a player was present and stopped, NO otherwise.
  * @ghidraAddress 0x20acc
  */
 - (BOOL)stop;
 /**
- * @brief Pause playback, keeping the voice resumable via offPause.
+ * Pause playback, keeping the voice resumable via offPause.
  * @return YES if a player was present, NO otherwise.
  * @ghidraAddress 0x20b0c
  */
 - (BOOL)pause;
 /**
- * @brief Resume a paused voice.
+ * Resume a paused voice.
  * @return YES if a paused player was resumed, NO otherwise.
  * @ghidraAddress 0x20b74
  */
 - (BOOL)offPause;
 
 /**
- * @brief Set the playback volume.
+ * Set the playback volume.
  * @param volume The volume to apply to the player.
  * @return YES if a player was present, NO otherwise.
  * @ghidraAddress 0x20bb8
  */
 - (BOOL)setVolume:(float)volume;
 /**
- * @brief Get the current playback volume.
+ * Get the current playback volume.
  * @return The player's volume, or 1.0 (full volume) when no player is loaded.
  * @ghidraAddress 0x20bf0
  */
 - (float)volume;
 /**
- * @brief Get the current playback state.
+ * Get the current playback state.
  * @return The current AVBusStatus value.
  * @ghidraAddress 0x20c18
  */
 - (int)status;
 
 /**
- * @brief Test whether a descriptor is the bus's current source.
+ * Test whether a descriptor is the bus's current source.
  * @param source The source descriptor to compare against.
  * @return YES if it is the same descriptor pointer, NO otherwise.
  * @ghidraAddress 0x20cf4
  */
 - (BOOL)isSameSource:(AVSource *)source;
 /**
- * @brief Get the current generation ID, bumped on each removeSource.
+ * Get the current generation ID, bumped on each removeSource.
  * @return The current generation ID.
  * @ghidraAddress 0x20d0c
  */

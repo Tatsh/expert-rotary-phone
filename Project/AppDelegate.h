@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The application delegate.
+ * The application delegate.
  *
  * It owns the main window and root view controller, brings up the game
  * engine at launch, drives the app lifecycle (resign/foreground/background/terminate), classifies
@@ -17,7 +17,7 @@
 @class MainViewController, neWindow, CommonAlertView, SKProduct;
 
 /**
- * @brief The device display class the app lays out against, derived from the hardware model in
+ * The device display class the app lays out against, derived from the hardware model in
  * -initHardware and returned by the -displayType property. Ordered by screen class, not by iOS
  * device family.
  */
@@ -31,7 +31,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 };
 
 /**
- * @brief The application delegate for pop'n rhythmin.
+ * The application delegate for pop'n rhythmin.
  */
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
 @interface AppDelegate : UIResponder <UIApplicationDelegate, UNUserNotificationCenterDelegate>
@@ -40,91 +40,91 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 #endif
 
 /**
- * @brief The main window that hosts the game engine's render surface.
+ * The main window that hosts the game engine's render surface.
  */
 @property(nonatomic, strong) neWindow *mainWindow;
 /**
- * @brief The root view controller driving the game's screens.
+ * The root view controller driving the game's screens.
  */
 @property(nonatomic, strong) MainViewController *viewController;
 /**
- * @brief The HTTP user-agent string sent with the app's network requests.
+ * The HTTP user-agent string sent with the app's network requests.
  * @ghidraAddress 0xa3a8
  */
 @property(nonatomic, strong) NSString *userAgent;
 /**
- * @brief The human-readable device hardware model name.
+ * The human-readable device hardware model name.
  */
 @property(nonatomic, strong) NSString *hardwareName;
 /**
- * @brief The alert shown when the device is low on storage. The name retains the binary's
+ * The alert shown when the device is low on storage. The name retains the binary's
  * misspelling of "storage" as it appears in the original binary.
  */
 @property(nonatomic, strong) CommonAlertView *strageAlert;
 /**
- * @brief The timer that periodically polls for event information.
+ * The timer that periodically polls for event information.
  */
 @property(nonatomic, strong) NSTimer *getEventInfoTimer;
 /**
- * @brief The cached StoreKit products received from a products request.
+ * The cached StoreKit products received from a products request.
  * @ghidraAddress 0xb0bc
  */
 @property(atomic, strong, readonly) NSArray *products;
 /**
- * @brief The identifier of the reward app used for cross-promotion.
+ * The identifier of the reward app used for cross-promotion.
  * @ghidraAddress 0xb128
  */
 @property(atomic, strong, readonly) NSString *rewardAppId;
 /**
- * @brief The active main game task.
+ * The active main game task.
  * @ghidraAddress 0xb0d0 (getter)
  * @ghidraAddress 0xb0e4 (setter)
  */
 @property(atomic, assign) void *mainTask;
 /**
- * @brief The active AC-viewer main task.
+ * The active AC-viewer main task.
  * @ghidraAddress 0xb0fc (getter)
  * @ghidraAddress 0xb110 (setter)
  */
 @property(atomic, assign) void *acMainTask;
 /**
- * @brief The primary Core Data managed object context.
+ * The primary Core Data managed object context.
  */
 @property(nonatomic, strong, readonly) NSManagedObjectContext *managedObjectContext;
 /**
- * @brief The secondary Core Data managed object context.
+ * The secondary Core Data managed object context.
  */
 @property(nonatomic, strong, readonly) NSManagedObjectContext *managedObjectContextSub;
 /**
- * @brief The Core Data managed object model.
+ * The Core Data managed object model.
  */
 @property(nonatomic, strong, readonly) NSManagedObjectModel *managedObjectModel;
 /**
- * @brief The Core Data persistent store coordinator.
+ * The Core Data persistent store coordinator.
  */
 @property(nonatomic, strong, readonly) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 /**
- * @brief The classified device display type derived from the hardware model.
+ * The classified device display type derived from the hardware model.
  * @ghidraAddress 0xb0a8
  */
 @property(atomic, assign, readonly) int displayType;
 
 /**
- * @brief The shared app delegate.
+ * The shared app delegate.
  * @return The delegate.
  * @ghidraAddress 0x89a0
  */
 + (instancetype)appDelegate;
 
 /**
- * @brief The app's Documents directory.
+ * The app's Documents directory.
  * @return The directory path.
  * @ghidraAddress 0x89d4
  */
 + (NSString *)appDocumentsDirectory;
 
 /**
- * @brief The app's Application Support directory, lazily created and marked excluded from backup.
+ * The app's Application Support directory, lazily created and marked excluded from backup.
  * @return The directory path.
  * @ghidraAddress 0x8a1c
  */
@@ -143,7 +143,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 + (NSString *)appAssetsDirectory;
 
 /**
- * @brief Build a path to a file inside the bundled @c assets/ subdirectory.
+ * Build a path to a file inside the bundled @c assets/ subdirectory.
  *
  * Preservation build only, and deliberately with no fallback: assets loaded through this
  * (@c bgm*.m4a, @c chara*.chr, @c rhythmin_lv, and the @c lock* / @c open* / @c result* / @c sgc_* /
@@ -157,7 +157,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 #endif
 
 /**
- * @brief Mark the item at @p URL as excluded from iCloud/iTunes backup.
+ * Mark the item at @p URL as excluded from iCloud/iTunes backup.
  * @param URL The file URL to flag.
  * @return YES when the attribute was set.
  * @ghidraAddress 0x8af8
@@ -165,88 +165,88 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 + (BOOL)addSkipBackupAttributeToItemAtURL:(NSURL *)URL;
 
 /**
- * @brief The app's Caches directory.
+ * The app's Caches directory.
  * @return The directory path.
  * @ghidraAddress 0x89f8
  */
 + (NSString *)appCachesDirectory;
 
 /**
- * @brief The number of free bytes on the file system backing the Documents directory.
+ * The number of free bytes on the file system backing the Documents directory.
  * @return The free byte count.
  * @ghidraAddress 0x8be8
  */
 + (unsigned long long)freeFileSystemSize;
 
 /**
- * @brief Classify the device via sysctl @c hw.machine into the hardware-type and display-type tiers.
+ * Classify the device via sysctl @c hw.machine into the hardware-type and display-type tiers.
  * @ghidraAddress 0xa58c
  */
 - (void)initHardware;
 
 /**
- * @brief Whether the device is a low-spec model that should disable effects.
+ * Whether the device is a low-spec model that should disable effects.
  * @return YES on a low-spec device.
  * @ghidraAddress 0xad5c
  */
 - (BOOL)isOldHardware;
 
 /**
- * @brief The cached device-model hardware-type enum.
+ * The cached device-model hardware-type enum.
  * @return The hardware type.
  * @ghidraAddress 0xb13c
  */
 - (int)hardwareType;
 
 /**
- * @brief Read, or mint and Keychain-store, the persistent device UUID.
+ * Read, or mint and Keychain-store, the persistent device UUID.
  * @return The device UUID.
  * @ghidraAddress 0x9890
  */
 - (NSString *)uuId;
 
 /**
- * @brief Remove the stored device UUID.
+ * Remove the stored device UUID.
  * @ghidraAddress 0x9c20
  */
 - (void)deleteUuid;
 
 /**
- * @brief Keychain add-or-update the setting-version record.
+ * Keychain add-or-update the setting-version record.
  * @param ver The setting version string to store.
  * @ghidraAddress 0x9d58
  */
 - (void)setUsersettingVer:(NSString *)ver;
 
 /**
- * @brief Read the setting-version record.
+ * Read the setting-version record.
  * @return The stored version, or `"0"` when absent.
  * @ghidraAddress 0xa044
  */
 - (NSString *)getUsersettingVer;
 
 /**
- * @brief Remove the setting-version Keychain item.
+ * Remove the setting-version Keychain item.
  * @ghidraAddress 0xa270
  */
 - (void)deleteUsersettingVer;
 
 /**
- * @brief The Info.plist @c CFBundleVersion with its dots stripped, as an integer.
+ * The Info.plist @c CFBundleVersion with its dots stripped, as an integer.
  * @return The numeric version.
  * @ghidraAddress 0xa458
  */
 - (int)appVersionNum;
 
 /**
- * @brief Retain the StoreKit products array received from a products request.
+ * Retain the StoreKit products array received from a products request.
  * @param products The received StoreKit products.
  * @ghidraAddress 0xab44
  */
 - (void)finishRequest:(NSArray *)products;
 
 /**
- * @brief Linear-search the cached StoreKit products for a matching product identifier.
+ * Linear-search the cached StoreKit products for a matching product identifier.
  * @param productId The product identifier to match.
  * @return The matching product, or nil when it is not cached.
  * @ghidraAddress 0xacac
@@ -254,14 +254,14 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 - (SKProduct *)getProduct:(NSString *)productId;
 
 /**
- * @brief Show the global "purchase completed" confirmation alert.
+ * Show the global "purchase completed" confirmation alert.
  * @param transaction The completed transaction.
  * @ghidraAddress 0xab9c
  */
 - (void)purchaseSucceeded:(id)transaction;
 
 /**
- * @brief Show the global "purchase failed" alert.
+ * Show the global "purchase failed" alert.
  * @param transaction The failed transaction.
  * @param error The failure error.
  * @ghidraAddress 0xac24
@@ -269,41 +269,41 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 - (void)purchaseFailed:(id)transaction error:(NSError *)error;
 
 /**
- * @brief Install the Game Center authenticate handler, presenting its login view controller.
+ * Install the Game Center authenticate handler, presenting its login view controller.
  * @ghidraAddress 0xb00c
  */
 - (void)loginGameCenter;
 
 /**
- * @brief The Info.plist @c CFBundleVersion string.
+ * The Info.plist @c CFBundleVersion string.
  * @return The version string.
  * @ghidraAddress 0xa408
  */
 - (NSString *)appVersion;
 
 /**
- * @brief The device system version.
+ * The device system version.
  * @return The system version string.
  * @ghidraAddress 0xa3d4
  */
 - (NSString *)osVersion;
 
 /**
- * @brief The current locale's language code.
+ * The current locale's language code.
  * @return The language code.
  * @ghidraAddress 0xa548
  */
 - (NSString *)localeLanguage;
 
 /**
- * @brief The current locale's country code.
+ * The current locale's country code.
  * @return The country code.
  * @ghidraAddress 0xa504
  */
 - (NSString *)localeCountry;
 
 /**
- * @brief The current locale as `"language_country"`.
+ * The current locale as `"language_country"`.
  * @return The locale string.
  * @ghidraAddress 0xa4a4
  */

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A drawable sprite backed by a cached ne::C_TEXTURE.
+ * A drawable sprite backed by a cached ne::C_TEXTURE.
  *
  * A bundled PNG is loaded through the shared texture cache (large images may be split into
  * GL-max-size tiles), and the sprite is drawn straight into the ordering table as a textured
@@ -30,7 +30,7 @@ class AepOrderingTable;
 class AepManager;
 
 /**
- * @brief Acquire, ref-counted, the cached ne::C_TEXTURE for a bundled image path.
+ * Acquire, ref-counted, the cached ne::C_TEXTURE for a bundled image path.
  *
  * It loads and uploads the texture on first use. This is the shared texture cache, whose head
  * list is DAT_00188464; it is implemented in C_TEXTURE.mm.
@@ -42,7 +42,7 @@ class AepManager;
 ne::C_TEXTURE *AepTextureCacheAcquire(const char *path);
 
 /**
- * @brief Rebind a tile to a texture, releasing the tile's previously-bound texture and retaining
+ * Rebind a tile to a texture, releasing the tile's previously-bound texture and retaining
  * the new one.
  *
  * @param tile The tile to rebind.
@@ -53,7 +53,7 @@ ne::C_TEXTURE *AepTextureCacheAcquire(const char *path);
 void AepTextureUploadTiles(ne::C_SINGLE_SPRITE *tile, ne::C_TEXTURE *tex);
 
 /**
- * @brief The geometry and appearance of one sprite draw.
+ * The geometry and appearance of one sprite draw.
  *
  * Mirrors the fields FUN_00011468 fills into an AepSpriteCommand (offsets noted per field), and is
  * zero-defaulted like a fresh quad.
@@ -82,23 +82,23 @@ struct neSpriteDrawParams {
 };
 
 /**
- * @brief An iOS sprite texture: one or more cache-shared GL tiles plus the draw call that emits
+ * An iOS sprite texture: one or more cache-shared GL tiles plus the draw call that emits
  * them into an ordering table.
  */
 class neTextureForiOS {
 public:
     /**
-     * @brief Construct an empty sprite with no tiles.
+     * Construct an empty sprite with no tiles.
      * @ghidraAddress 0x11818
      */
     neTextureForiOS();
     /**
-     * @brief Cache-release every tile.
+     * Cache-release every tile.
      */
     ~neTextureForiOS();
 
     /**
-     * @brief Load @p path (lowercased) through the shared texture cache.
+     * Load @p path (lowercased) through the shared texture cache.
      *
      * Fills the source width and height from the resolved ne::C_TEXTURE.
      * @param path The bundle-relative image path.
@@ -108,7 +108,7 @@ public:
     int load(const char *path);
 
     /**
-     * @brief Upload an already-decoded, in-memory image as a single-tile texture.
+     * Upload an already-decoded, in-memory image as a single-tile texture.
      *
      * Used for artwork and name images the song record carries in memory rather than as a bundled
      * file.
@@ -119,7 +119,7 @@ public:
     int loadFromImageData(const void *imageData);
 
     /**
-     * @brief Load an index-driven set of tiles.
+     * Load an index-driven set of tiles.
      *
      * @p indexBase is a bundled .idx blob whose tile count is a uint16 at +2; each tile i loads
      * "<dir>/<name>_<i>.png" (or "<name>_<i>.png" when @p dir is null) through the shared texture
@@ -134,7 +134,7 @@ public:
 
 #ifdef __OBJC__
     /**
-     * @brief Decode a single PNG into one padded power-of-two RGBA GL texture.
+     * Decode a single PNG into one padded power-of-two RGBA GL texture.
      *
      * The source is drawn Y-flipped into a power-of-two RGBA8 bitmap, then handed to
      * neCreateTextureFromData(). This is the Objective-C-dispatched class helper the in-memory
@@ -147,14 +147,14 @@ public:
 #endif
 
     /**
-     * @brief The first tile's padded width (binary field @ +0x08).
+     * The first tile's padded width (binary field @ +0x08).
      * @return The width in texels, or 0 when no tile is loaded.
      */
     int width() const {
         return m_tileWidths ? m_tileWidths[0] : 0;
     }
     /**
-     * @brief The first tile's padded height (binary field @ +0x0c).
+     * The first tile's padded height (binary field @ +0x0c).
      * @return The height in texels, or 0 when no tile is loaded.
      */
     int height() const {
@@ -162,7 +162,7 @@ public:
     }
 
     /**
-     * @brief Emit one textured-quad command for this sprite into @p ot.
+     * Emit one textured-quad command for this sprite into @p ot.
      *
      * Ghidra: the wrapper neTextureForiOS_draw (FUN_0000fbcc) calls
      * AepOrderingTable_drawSprite (FUN_00011468).
@@ -178,7 +178,7 @@ public:
     // field reads; the accessors exist only to avoid the offset arithmetic.
 
     /**
-     * @brief The number of loaded tiles.
+     * The number of loaded tiles.
      * @return The tile count.
      * @newCode
      */
@@ -186,7 +186,7 @@ public:
         return m_tileCount;
     }
     /**
-     * @brief The per-tile padded widths.
+     * The per-tile padded widths.
      * @return An array tileCount() long, or nullptr when no tile is loaded.
      * @newCode
      */
@@ -194,7 +194,7 @@ public:
         return m_tileWidths.get();
     }
     /**
-     * @brief The per-tile padded heights.
+     * The per-tile padded heights.
      * @return An array tileCount() long, or nullptr when no tile is loaded.
      * @newCode
      */
@@ -202,7 +202,7 @@ public:
         return m_tileHeights.get();
     }
     /**
-     * @brief The per-tile sprite records, which double as the render-state slots.
+     * The per-tile sprite records, which double as the render-state slots.
      * @return An array tileCount() long, or nullptr when no tile is loaded.
      * @newCode
      */
@@ -224,7 +224,7 @@ private:
 };
 
 /**
- * @brief The flat-argument sprite-draw wrapper the task draw passes call.
+ * The flat-argument sprite-draw wrapper the task draw passes call.
  *
  * It packs the arguments into a neSpriteDrawParams and emits @p tex into @p aep's ordering table
  * via tex->draw().

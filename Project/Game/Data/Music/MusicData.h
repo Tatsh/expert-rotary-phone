@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A single local (pop'n) song record, decoded from its "%09d.orb" file.
+ * A single local (pop'n) song record, decoded from its "%09d.orb" file.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One local song's metadata, charts, BGM and artwork.
+ * One local song's metadata, charts, BGM and artwork.
  */
 @interface MusicData : NSObject
 
@@ -53,7 +53,7 @@
 @property(nonatomic, copy) NSString *artistNameInitial;
 
 /**
- * @brief Decode and validate a song record from its .orb path.
+ * Decode and validate a song record from its .orb path.
  * @param path The .orb file path.
  * @param musicId The expected music id.
  * @return The decoded record, or nil when the id does not match or a level is out of range.
@@ -62,7 +62,7 @@
 + (instancetype)dataWithPath:(NSString *)path ID:(int)musicId;
 
 /**
- * @brief Override the three difficulty levels; used by MusicManager level patches.
+ * Override the three difficulty levels; used by MusicManager level patches.
  * @param n The Normal level.
  * @param h The Hyper level.
  * @param ex The EX level.
@@ -74,31 +74,31 @@
 // `music` as the BGM and one of the three sheets as the note chart, per the chosen difficulty.
 
 /**
- * @brief The full BGM, from the "bgm" ZIP entry.
+ * The full BGM, from the "bgm" ZIP entry.
  * @return The decrypted audio.
  * @ghidraAddress 0xc78d8
  */
 - (NSData *)music;
 /**
- * @brief The preview clip, from the "pre" ZIP entry.
+ * The preview clip, from the "pre" ZIP entry.
  * @return The decrypted audio.
  * @ghidraAddress 0xc78f4
  */
 - (NSData *)musicPre;
 /**
- * @brief The Normal note chart, from the "sheet_n" ZIP entry.
+ * The Normal note chart, from the "sheet_n" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0xc7910
  */
 - (NSData *)sheetNormal;
 /**
- * @brief The Hyper note chart, from the "sheet_h" ZIP entry.
+ * The Hyper note chart, from the "sheet_h" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0xc792c
  */
 - (NSData *)sheetHyper;
 /**
- * @brief The EX note chart, from the "sheet_ex" ZIP entry.
+ * The EX note chart, from the "sheet_ex" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0xc7948
  */
@@ -109,19 +109,19 @@
 // into GPU textures.
 
 /**
- * @brief The @2x jacket artwork, from the "artwork2x" ZIP entry.
+ * The @2x jacket artwork, from the "artwork2x" ZIP entry.
  * @return The decrypted PNG bytes.
  * @ghidraAddress 0xc7964
  */
 - (NSData *)artwork2xData;
 /**
- * @brief The @2x song-title image, from the "title_2x" ZIP entry.
+ * The @2x song-title image, from the "title_2x" ZIP entry.
  * @return The decrypted PNG bytes.
  * @ghidraAddress 0xc7980
  */
 - (NSData *)musicNameImage2xData;
 /**
- * @brief The @2x artist-name image, from the "artist_2x" ZIP entry.
+ * The @2x artist-name image, from the "artist_2x" ZIP entry.
  * @return The decrypted PNG bytes.
  * @ghidraAddress 0xc799c
  */
@@ -130,63 +130,63 @@
 // Sort comparators used by MusicManager to order the song list.
 
 /**
- * @brief The default comparator, by musicNameHira with the shorter reading first.
+ * The default comparator, by musicNameHira with the shorter reading first.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc79b8
  */
 - (NSComparisonResult)compare:(MusicData *)other;
 /**
- * @brief Compare by music id.
+ * Compare by music id.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7a28
  */
 - (NSComparisonResult)compareMusicID:(MusicData *)other;
 /**
- * @brief Compare by the custom song-name sort key.
+ * Compare by the custom song-name sort key.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7a60
  */
 - (NSComparisonResult)compareMusicNameCustom:(MusicData *)other;
 /**
- * @brief Compare by the custom artist-name sort key, falling back to the song name on a tie.
+ * Compare by the custom artist-name sort key, falling back to the song name on a tie.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7ad4
  */
 - (NSComparisonResult)compareArtistNameCustom:(MusicData *)other;
 /**
- * @brief Compare by the song name's hiragana reading.
+ * Compare by the song name's hiragana reading.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7b3c
  */
 - (NSComparisonResult)compareMusicNameHira:(MusicData *)other;
 /**
- * @brief Compare by the artist name's hiragana reading, falling back to the song name on a tie.
+ * Compare by the artist name's hiragana reading, falling back to the song name on a tie.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7bb0
  */
 - (NSComparisonResult)compareArtistNameHira:(MusicData *)other;
 /**
- * @brief Compare by Normal level.
+ * Compare by Normal level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7c18
  */
 - (NSComparisonResult)compareDifficultyNormal:(MusicData *)other;
 /**
- * @brief Compare by Hyper level.
+ * Compare by Hyper level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7c50
  */
 - (NSComparisonResult)compareDifficultyHyper:(MusicData *)other;
 /**
- * @brief Compare by EX level.
+ * Compare by EX level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0xc7c88

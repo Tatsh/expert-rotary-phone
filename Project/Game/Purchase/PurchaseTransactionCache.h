@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A snapshot of a completed StoreKit transaction: product id, receipt, id, and date.
+ * A snapshot of a completed StoreKit transaction: product id, receipt, id, and date.
  *
  * It is kept for server-side receipt verification. Reconstructed from Ghidra project rb420,
  * program PopnRhythmin.
@@ -10,13 +10,13 @@
 #import <StoreKit/StoreKit.h>
 
 /**
- * @brief A snapshot of a completed StoreKit transaction, kept for server-side receipt
+ * A snapshot of a completed StoreKit transaction, kept for server-side receipt
  * verification.
  */
 @interface PurchaseTransactionCache : NSObject
 
 /**
- * @brief Snapshot a completed transaction.
+ * Snapshot a completed transaction.
  * @param transaction The transaction to snapshot.
  * @return The initialised cache entry.
  * @ghidraAddress 0x56168

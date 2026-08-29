@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Konami "Applilink" Recommend ad SDK's cross-app advertising-id record.
+ * The Konami "Applilink" Recommend ad SDK's cross-app advertising-id record.
  *
  * It stores, loads, and deletes a small record of AdIdFrom, CountryCode, CategoryId, AdType, and
  * EntryDate, keyed by the device's advertising id.
@@ -22,12 +22,12 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The advertising-id record stored on a named pasteboard, keyed by country and category.
+ * The advertising-id record stored on a named pasteboard, keyed by country and category.
  */
 @interface RecommendAdId : NSObject
 
 /**
- * @brief Build the named-pasteboard service key "ApplilinkRecommend.AdId_<country>_<category>".
+ * Build the named-pasteboard service key "ApplilinkRecommend.AdId_<country>_<category>".
  * @param countryCode The country code.
  * @param categoryId The category id.
  * @return The initialised record accessor.
@@ -35,7 +35,7 @@
 - (instancetype)initWithCountryCode:(NSString *)countryCode categoryId:(NSString *)categoryId;
 
 /**
- * @brief Fetch the stored advertising-id record.
+ * Fetch the stored advertising-id record.
  * @param countryCode The country code.
  * @param categoryId The category id.
  * @param error Receives the failure reason; may be NULL.
@@ -46,7 +46,7 @@
                    error:(NSError **)error;
 
 /**
- * @brief Store an advertising-id record.
+ * Store an advertising-id record.
  * @param adIdFrom The advertising id's origin.
  * @param countryCode The country code.
  * @param categoryId The category id.
@@ -61,7 +61,7 @@
                 error:(NSError **)error;
 
 /**
- * @brief Delete the stored advertising-id record.
+ * Delete the stored advertising-id record.
  * @param countryCode The country code.
  * @param categoryId The category id.
  * @param error Receives the failure reason; may be NULL.

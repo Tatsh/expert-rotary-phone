@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The store's modal host.
+ * The store's modal host.
  *
  * A UITabBarController with three tabs — the pack store, the purchased-music manager, and the
  * arcade-viewer manager — each wrapped in a navigation controller with a custom back button and
@@ -20,7 +20,7 @@
 #import "StoreDialogView.h"
 
 /**
- * @brief The store's tab host: the pack catalogue, the purchased-music manager and the
+ * The store's tab host: the pack catalogue, the purchased-music manager and the
  * arcade-viewer manager, plus the shared modal progress dialog.
  */
 @interface StoreViewController : UITabBarController {
@@ -40,35 +40,35 @@
 @property(nonatomic, readonly) StoreDialogView *modalDialog;
 
 /**
- * @brief Build the store, optionally opening on a recommended pack.
+ * Build the store, optionally opening on a recommended pack.
  * @param recommendPackId The pack to open on; 0 or negative for the plain store.
  * @return The initialised controller.
  */
 - (instancetype)initWithRecommendPackId:(int)recommendPackId;
 
 /**
- * @brief Cross-fade the store in.
+ * Cross-fade the store in.
  */
 - (void)showAnimation;
 /**
- * @brief Cross-fade the store out.
+ * Cross-fade the store out.
  */
 - (void)hideAnimation;
 
 /**
- * @brief Fade the modal dialog and its dimming cover in.
+ * Fade the modal dialog and its dimming cover in.
  * @param delegate The abort delegate for the dialog.
  * @return YES when the transition started; it is a no-op while a fade is already running.
  */
 - (BOOL)showModalDialog:(id)delegate;
 /**
- * @brief Fade the modal dialog and its dimming cover out.
+ * Fade the modal dialog and its dimming cover out.
  * @return YES when the transition started.
  */
 - (BOOL)hideModalDialog;
 
 /**
- * @brief The nav-bar back button's target.
+ * The nav-bar back button's target.
  * @param sender The tapped button.
  */
 - (void)pushBarBtnBack:(id)sender;

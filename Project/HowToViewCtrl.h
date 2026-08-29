@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A shared tutorial overlay.
+ * A shared tutorial overlay.
  *
  * A horizontally-paged strip of how-to images (a HowToView) with a UIPageControl and a nav-bar
  * back or close button. It is used on first entry to several screens; the friend hub, for
@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The phone how-to overlay: a paging scroll view of full-page images with page dots.
+ * The phone how-to overlay: a paging scroll view of full-page images with page dots.
  */
 @interface HowToViewCtrl : UIViewController <UIScrollViewDelegate> {
     NSArray *_fileNameArray;    /**< The image names, one per page. */
@@ -24,7 +24,7 @@
 }
 
 /**
- * @brief Retain the ordered list of image names to page through.
+ * Retain the ordered list of image names to page through.
  * @param fileNameArray The page image names.
  * @return The initialised controller.
  * @ghidraAddress 0x82e5c

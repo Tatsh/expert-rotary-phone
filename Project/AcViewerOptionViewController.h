@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's per-song options screen.
+ * The arcade (AC) viewer's per-song options screen.
  *
  * A small UITableView-backed list of four gameplay-option rows (HI-SPEED, POP-KUN, HID-SUD,
  * RAN-MIR), a custom header showing the chosen song's banner, difficulty banner and BPM, and, off
@@ -16,7 +16,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The host that owns the split panel behind the options screen.
+ * The host that owns the split panel behind the options screen.
  *
  * When the player picks a song to play, or resumes an in-progress arcade play, the options screen
  * asks its delegate to hide the panel so the GL play scene shows through. In the binary the
@@ -24,14 +24,14 @@
  */
 @protocol AcViewerViewControllerDelegate <NSObject>
 /**
- * @brief Hide the split panel so the play scene shows through.
+ * Hide the split panel so the play scene shows through.
  * @param animated YES to fade the panel out, NO to hide it after a short delay.
  */
 - (void)startHiddenAnimation:(BOOL)animated;
 @end
 
 /**
- * @brief The arcade viewer's per-song options screen.
+ * The arcade viewer's per-song options screen.
  */
 @interface AcViewerOptionViewController : UITableViewController
 
@@ -41,7 +41,7 @@
 
 class AcViewerTask; // C++ task (System/src/Task/AcViewerTask.h); this header is ObjC++
 /**
- * @brief Build the options screen for the arcade-main (in-game) flow.
+ * Build the options screen for the arcade-main (in-game) flow.
  *
  * It sets _forAcMain, keeps the C++ task pointer, wraps itself in its own UINavigationController
  * and installs a back button.
@@ -52,13 +52,13 @@ class AcViewerTask; // C++ task (System/src/Task/AcViewerTask.h); this header is
 - (instancetype)initForAcMain:(AcViewerTask *)acMain;
 
 /**
- * @brief Fade the arcade-main navigation controller's view in over 0.3 s.
+ * Fade the arcade-main navigation controller's view in over 0.3 s.
  * @ghidraAddress 0xe0820
  */
 - (void)startOpenAnimationForAcMain;
 
 /**
- * @brief Fade the panel out over 0.3 s; on didStop it tears down via endCloseAnimation, or
+ * Fade the panel out over 0.3 s; on didStop it tears down via endCloseAnimation, or
  * endCloseAnimationForAcMain on the arcade-main flow.
  * @ghidraAddress 0xe0960
  */

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A single asynchronous HTTP request for the bundled Konami "RewardNetwork" (applilink)
+ * A single asynchronous HTTP request for the bundled Konami "RewardNetwork" (applilink)
  * SDK.
  *
  * It wraps NSURLConnection with a 10-second watchdog timer and a two-attempt retry and back-off.
@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One reward-SDK HTTP request, with a watchdog timer and retry counter.
+ * One reward-SDK HTTP request, with a watchdog timer and retry counter.
  */
 @interface RewardNetworkURLConnection : NSObject <NSURLConnectionDataDelegate> {
     /** The attempt counter, zeroed by -init and accessed directly. */
@@ -52,14 +52,14 @@
 @property(nonatomic, copy) void (^ApplilinkFinishedBlock)(id response, id userInfo);
 
 /**
- * @brief The designated initialiser: it zeroes retryCount and nils the blocks, URL and request.
+ * The designated initialiser: it zeroes retryCount and nils the blocks, URL and request.
  * @return The initialised connection.
  * @ghidraAddress 0xff9d0
  */
 - (instancetype)init;
 
 /**
- * @brief Start a request.
+ * Start a request.
  *
  * It installs the callbacks — keeping the existing one when a passed block is nil — the
  * 10-second watchdog and a fresh receive buffer, then starts the connection on the main queue.

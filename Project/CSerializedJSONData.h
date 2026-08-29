@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A TouchJSON wrapper around an NSData blob that is already-serialized JSON.
+ * A TouchJSON wrapper around an NSData blob that is already-serialized JSON.
  *
  * When handed to CJSONDataSerializer it is emitted verbatim instead of being re-encoded.
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (TouchJSON; initWithData: @
@@ -10,7 +10,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief A wrapper around an NSData blob that is already serialized JSON; CJSONDataSerializer
+ * A wrapper around an NSData blob that is already serialized JSON; CJSONDataSerializer
  * emits it verbatim instead of re-encoding it.
  */
 @interface CSerializedJSONData : NSObject {
@@ -18,14 +18,14 @@
 }
 
 /**
- * @brief Wrap already-serialized JSON bytes.
+ * Wrap already-serialized JSON bytes.
  * @param inData The JSON bytes.
  * @return The initialised wrapper.
  * @ghidraAddress 0x6a4c4
  */
 - (id)initWithData:(NSData *)inData;
 /**
- * @brief The wrapped JSON bytes.
+ * The wrapped JSON bytes.
  * @return The bytes, emitted verbatim by the serializer.
  * @ghidraAddress 0x6a540
  */

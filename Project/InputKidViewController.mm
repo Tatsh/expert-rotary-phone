@@ -21,18 +21,18 @@
 
 // Own privates (selectors wired up by init).
 /**
- * @brief The invite-code screen's private actions and invite POST.
+ * The invite-code screen's private actions and invite POST.
  */
 @interface InputKidViewController ()
 /**
- * @brief The decide button was tapped: redeem the entered code.
+ * The decide button was tapped: redeem the entered code.
  * @param sender The tapped button.
  */
 - (void)touchedDecideButton:(id)sender;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)touchedBackButton;
 /**
- * @brief POST the invite-code redemption.
+ * POST the invite-code redemption.
  * @param code The 8-character invite code.
  */
 - (void)startInviteHttp:(NSString *)code;

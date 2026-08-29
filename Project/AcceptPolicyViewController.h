@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The first-run "accept the terms of use" modal.
+ * The first-run "accept the terms of use" modal.
  *
  * A rounded, gradient-filled card centred over the game view. It holds a scrolling terms summary
  * (a read-only CustomTextView inside an embedded navigation controller) and three buttons: show
@@ -12,7 +12,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The first-run "accept the terms of use" modal card.
+ * The first-run "accept the terms of use" modal card.
  */
 @interface AcceptPolicyViewController : UIViewController {
     /** An open or close fade is running; it guards against re-entry. */
@@ -26,7 +26,7 @@
 }
 
 /**
- * @brief Fade the card in over 0.3 s.
+ * Fade the card in over 0.3 s.
  * @ghidraAddress 0xb0540
  */
 - (void)startOpenAnimation;

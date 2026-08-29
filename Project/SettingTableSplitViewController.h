@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad layout of the settings menu.
+ * The iPad layout of the settings menu.
  *
  * A floating split panel over a dimmed, tappable backdrop: a left column that is a
  * SettingTopViewController, carrying the four custom buttons ゲーム, 遊び方, お問い合わせ, and
@@ -26,17 +26,17 @@
 #import "SettingTopViewController.h" // SettingTopViewControllerDalegate + the left column type
 
 /**
- * @brief The iPad settings hub: a section column beside a detail pane.
+ * The iPad settings hub: a section column beside a detail pane.
  */
 @interface SettingTableSplitViewController : UIViewController <SettingTopViewControllerDalegate>
 
 /**
- * @brief Fade the hub in.
+ * Fade the hub in.
  * @ghidraAddress 0xb66dc
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the hub out.
+ * Fade the hub out.
  * @ghidraAddress 0xb6820
  */
 - (void)startCloseAnimation;

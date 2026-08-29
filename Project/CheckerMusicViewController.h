@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The music-checker song list.
+ * The music-checker song list.
  *
  * A grouped table of one arcade category's songs, each row a CheckerMusicCell; selecting a row
  * pushes a CheckerDetail score graph. Reconstructed from Ghidra project rb420, program
@@ -10,12 +10,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The music-checker song list for one arcade category.
+ * The music-checker song list for one arcade category.
  */
 @interface CheckerMusicViewController : UITableViewController
 
 /**
- * @brief Build the list for one music-checker category.
+ * Build the list for one music-checker category.
  * @param scoreDataArray The ArcadeScoreData records to show.
  * @param category 0 for etc, 1 for TV, 2..23 for p01..p22, and 24 or above for "near". It picks
  * the list-header banner image.

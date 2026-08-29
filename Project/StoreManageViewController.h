@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The store's purchased-music manager tab.
+ * The store's purchased-music manager tab.
  *
  * It lists owned packs and songs with delete and re-download actions, and is grown incrementally;
  * the constructor lands first.
@@ -18,7 +18,7 @@
 @class StoreViewController;
 
 /**
- * @brief The purchased-music manager tab: it lists owned songs and lets each be deleted or
+ * The purchased-music manager tab: it lists owned songs and lets each be deleted or
  * re-downloaded.
  */
 @interface StoreManageViewController : UIViewController <UITableViewDataSource,
@@ -40,21 +40,21 @@
 }
 
 /**
- * @brief Build the manager for a tab host.
+ * Build the manager for a tab host.
  * @param parent The owning store view controller.
  * @return The initialised controller.
  */
 - (instancetype)initWithParent:(StoreViewController *)parent;
 
 /**
- * @brief Re-download the audio file for the row at m_WorkingIndex, after its StoreMusicInfo was
+ * Re-download the audio file for the row at m_WorkingIndex, after its StoreMusicInfo was
  * refreshed.
  * @ghidraAddress 0x4d1ec
  */
 - (void)startDownloadMusic;
 
 /**
- * @brief The per-row action button's target, tag 0xE01F: download a missing song, or confirm a
+ * The per-row action button's target, tag 0xE01F: download a missing song, or confirm a
  * delete.
  * @param sender The tapped button.
  * @ghidraAddress 0x4ce28
@@ -62,7 +62,7 @@
 - (void)pushCellButton:(id)sender;
 
 /**
- * @brief The abort button of the store's shared modal progress dialog.
+ * The abort button of the store's shared modal progress dialog.
  * @param sender The tapped control.
  * @ghidraAddress 0x4d4b8
  */

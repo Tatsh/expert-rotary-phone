@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The central mode-select hub task, spawned by TitleTask after the title screen.
+ * The central mode-select hub task, spawned by TitleTask after the title screen.
  *
  * It fetches news and player data, runs the daily, login-bonus, and unlock gates, then drives
  * the interactive main menu: hit-testing the mode buttons to spawn the play, tutorial, and
@@ -34,7 +34,7 @@ class AepLyrCtrl;
 class neTextureForiOS;
 
 /**
- * @brief The mode-select menu task: the hub screen whose buttons launch play, the store, friend
+ * The mode-select menu task: the hub screen whose buttons launch play, the store, friend
  * management, the arcade modes and pop'n link.
  */
 class MenuMainTask : public ne::C_TASK {
@@ -48,7 +48,7 @@ public:
     void setInfoFlag(bool shown);
 
     /**
-     * @brief One menu button's on-screen rectangle, in the engine hit-test's field order.
+     * One menu button's on-screen rectangle, in the engine hit-test's field order.
      *
      * pointInRect (FUN_0002d974) tests x in [x, x+w] and y in [y, y+h]. 0x10 bytes.
      */
@@ -60,7 +60,7 @@ public:
     };
 
     /**
-     * @brief The eight array-laid-out mode buttons hit-tested in state 0xc (+0x128..+0x1a4).
+     * The eight array-laid-out mode buttons hit-tested in state 0xc (+0x128..+0x1a4).
      *
      * Roles are the binary's FUN_0006ad88 dispatch by offset. Present box, settings and reward
      * live in the separate packed top cluster @ +0x94..+0xa0, not this array.

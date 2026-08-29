@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One song row inside the iPad pack-detail panel.
+ * One song row inside the iPad pack-detail panel.
  *
  * A jacket (an async StoreImageView with a drop shadow), the title and artist labels, a
  * "LEVEL: b / m / h" line, a sample-preview button with a spinner, an iTunes-link button, and a
@@ -15,7 +15,7 @@
 @class StoreImageView;
 
 /**
- * @brief One song row inside a store pack's detail card.
+ * One song row inside a store pack's detail card.
  */
 @interface StorePackMusicView : UIView {
     UIImageView *m_BG;           /**< The full-bounds background. */
@@ -31,7 +31,7 @@
 }
 
 /**
- * @brief Bind the row to a song, or clear it.
+ * Bind the row to a song, or clear it.
  * @param info The song to show; nil blanks the title, artist and levels, shows a placeholder
  * jacket, and hides the sample and link buttons.
  * @ghidraAddress 0x51408
@@ -39,39 +39,39 @@
 - (void)setInfo:(StoreMusicInfo *)info;
 
 /**
- * @brief Show or hide the arcade-availability badge.
+ * Show or hide the arcade-availability badge.
  * @param isExistAcv YES when the song also exists in the arcade.
  * @ghidraAddress 0x5171c
  */
 - (void)setIsExistAcv:(BOOL)isExistAcv;
 
 /**
- * @brief Reset the sample button to its idle image and stop its spinner.
+ * Reset the sample button to its idle image and stop its spinner.
  * @ghidraAddress 0x51748
  */
 - (void)sampleStop;
 
 /**
- * @brief Enter the buffering state: start the spinner and keep the idle sample glyph.
+ * Enter the buffering state: start the spinner and keep the idle sample glyph.
  * @ghidraAddress 0x517bc
  */
 - (void)sampleDownloading;
 
 /**
- * @brief Enter the playing state: stop the spinner and switch to the "stop" sample glyph.
+ * Enter the playing state: stop the spinner and switch to the "stop" sample glyph.
  * @ghidraAddress 0x51830
  */
 - (void)samplePlaying;
 
 /**
- * @brief The sample button; the parent compares it against a tapped control.
+ * The sample button; the parent compares it against a tapped control.
  * @return The button.
  * @ghidraAddress 0x51a24
  */
 - (UIButton *)buttonSample;
 
 /**
- * @brief Pick the row background variant; the parent alternates it so stacked rows read as
+ * Pick the row background variant; the parent alternates it so stacked rows read as
  * distinct panels.
  * @param index 0 or 1; the value is clamped.
  * @ghidraAddress 0x518a4
@@ -79,32 +79,32 @@
 - (void)setBG:(int)index;
 
 /**
- * @brief The iTunes-link button; the parent wires its tap to -handleLink:.
+ * The iTunes-link button; the parent wires its tap to -handleLink:.
  * @return The button.
  * @ghidraAddress 0x51a34
  */
 - (UIButton *)buttonLink;
 
 /**
- * @brief The jacket view.
+ * The jacket view.
  * @return The image view.
  * @ghidraAddress 0x519e4
  */
 - (StoreImageView *)artworkView;
 /**
- * @brief The song-title label.
+ * The song-title label.
  * @return The label.
  * @ghidraAddress 0x519f4
  */
 - (UILabel *)labelName;
 /**
- * @brief The artist label.
+ * The artist label.
  * @return The label.
  * @ghidraAddress 0x51a04
  */
 - (UILabel *)labelArtist;
 /**
- * @brief The difficulty-levels label.
+ * The difficulty-levels label.
  * @return The label.
  * @ghidraAddress 0x51a14
  */

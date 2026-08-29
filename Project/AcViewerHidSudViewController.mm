@@ -22,11 +22,11 @@
 #import "neEngineBridge.h"
 
 /**
- * @brief The hidden/sudden viewer's private back action.
+ * The hidden/sudden viewer's private back action.
  */
 @interface AcViewerHidSudViewController ()
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;

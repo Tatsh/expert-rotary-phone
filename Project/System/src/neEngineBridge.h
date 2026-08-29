@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The C++ interface to the "ne" System-layer engine singletons.
+ * The C++ interface to the "ne" System-layer engine singletons.
  *
  * The Objective-C layer drives them at launch and across lifecycle transitions. The engine is
  * C++ (guarded lazy-init singletons, operator_new), so these are modelled as C++ classes; any
@@ -30,7 +30,7 @@ class AcViewerTask; // System/src/Task/AcViewerTask.h (: ne::C_TASK) — the arc
                     // note-play task (AppDelegate's acMainTask slot)
 
 /**
- * @brief The persisted score difficulty tier.
+ * The persisted score difficulty tier.
  *
  * It is the sheet index held in PlayScore::difficulty that selects which ScoreData N, H, or Ex
  * field group a play reads or writes. This is the three-tier save scheme, distinct from the
@@ -48,7 +48,7 @@ enum ScoreDifficulty : int {
 };
 
 /**
- * @brief The store DTO for one (musicId, difficulty) result: the tallies, score, rank and flags
+ * The store DTO for one (musicId, difficulty) result: the tallies, score, rank and flags
  * that saveScoreData() and updateHighScore() read and write.
  *
  * The binary overlaid this record on the event-center singleton's result region (the free store
@@ -77,7 +77,7 @@ struct PlayScore {
 // neEngineBridge.mm. =====
 
 /**
- * @brief Read the player's stored local best for a music id and difficulty out of the ScoreData
+ * Read the player's stored local best for a music id and difficulty out of the ScoreData
  * entity.
  *
  * @param center The app-event-center pointer the binary passes first; it is vestigial and unused.
@@ -100,7 +100,7 @@ void fetchScoreDataForMusic(void *center,
                             int difficulty);
 
 /**
- * @brief Read the score, rank, play-count, full-combo, and perfect fields for one difficulty out
+ * Read the score, rank, play-count, full-combo, and perfect fields for one difficulty out
  * of a fetched ScoreData record.
  *
  * @param rec The fetched record.
@@ -123,7 +123,7 @@ void readScoreDataFields(ScoreData *rec,
                          int difficulty);
 
 /**
- * @brief Commit a finished play into the local Core Data ScoreData store.
+ * Commit a finished play into the local Core Data ScoreData store.
  *
  * It writes the full-combo, perfect, rank, score, and play-count fields for the play's
  * difficulty, re-hashes the checksum, stamps the play date, and saves.
@@ -134,7 +134,7 @@ void readScoreDataFields(ScoreData *rec,
 void saveScoreData(PlayScore *s);
 
 /**
- * @brief The pre-save "did we beat the record" check.
+ * The pre-save "did we beat the record" check.
  *
  * It reads the current stored best for @p s, then writes the passed tallies, score, and
  * full-combo flag into @p s.
@@ -158,19 +158,19 @@ BOOL updateHighScore(PlayScore *s,
                      char fullCombo);
 
 /**
- * @brief The app-wide event and notification centre: a guarded singleton @ DAT_00187bb8, touched
+ * The app-wide event and notification centre: a guarded singleton @ DAT_00187bb8, touched
  * at launch, flushed on background or terminate, and poked on push.
  */
 class neAppEventCenter {
 public:
     /**
-     * @brief The singleton instance.
+     * The singleton instance.
      * @return The event centre.
      * @ghidraAddress 0xb150
      */
     static neAppEventCenter &shared();
     /**
-     * @brief Reset the AC-viewer's pending selection to the "none" sentinels: music id -1 and
+     * Reset the AC-viewer's pending selection to the "none" sentinels: music id -1 and
      * difficulty 0xffff. Done when the viewer is cancelled.
      *
      * Ghidra globals g_dwAcViewerSelMusicId @ 0x187bf8 and g_wAcViewerSelDifficulty @ 0x187bfc,
@@ -179,7 +179,7 @@ public:
     static void clearAcViewerSelection();
 
     /**
-     * @brief The music id the arcade-viewer list is showing right now.
+     * The music id the arcade-viewer list is showing right now.
      *
      * Read by the AC-viewer option screen to build its header. Ghidra global g_dwAcViewerMusicId
      * @ 0x187bf0.
@@ -187,36 +187,36 @@ public:
      */
     static int acViewerMusicId();
     /**
-     * @brief The difficulty the arcade-viewer list is showing right now (Ghidra global
+     * The difficulty the arcade-viewer list is showing right now (Ghidra global
      * g_wAcViewerDifficulty @ 0x187bf4).
      * @return The current browsing difficulty.
      */
     static int acViewerDifficulty();
     /**
-     * @brief Set the AC-viewer's current browsing selection.
+     * Set the AC-viewer's current browsing selection.
      * @param musicId The music id being browsed.
      * @param difficulty The difficulty being browsed.
      */
     static void setAcViewerSelection(int musicId, int difficulty);
     /**
-     * @brief The pending music id carried into the play scene, compared against the current pair
+     * The pending music id carried into the play scene, compared against the current pair
      * to decide continue versus play-from-start (Ghidra global g_dwAcViewerSelMusicId @ 0x187bf8).
      * @return The pending music id, or -1 for none.
      */
     static int acViewerSelMusicId();
     /**
-     * @brief The pending difficulty carried into the play scene (Ghidra global
+     * The pending difficulty carried into the play scene (Ghidra global
      * g_wAcViewerSelDifficulty @ 0x187bfc).
      * @return The pending difficulty.
      */
     static int acViewerSelDifficulty();
     /**
-     * @brief Commit the current browsing pair as the pending one, done when the arcade-viewer
+     * Commit the current browsing pair as the pending one, done when the arcade-viewer
      * play button is pressed.
      */
     static void commitAcViewerSelection();
     /**
-     * @brief Reset only the current AC-viewer browsing music id to the "none" sentinel (-1),
+     * Reset only the current AC-viewer browsing music id to the "none" sentinel (-1),
      * leaving the difficulty untouched.
      *
      * Done when the category list's back button cancels the viewer. Ghidra global
@@ -230,17 +230,17 @@ public:
     // @ 0x187be9 (+0x31).
 
     /**
-     * @brief The Core Data ref-id the arcade records key on.
+     * The Core Data ref-id the arcade records key on.
      * @return The ref-id, or nil before a successful link.
      */
     static id linkRefId();
     /**
-     * @brief The entered account password.
+     * The entered account password.
      * @return The password, or nil when none has been entered.
      */
     static NSString *inputPassword();
     /**
-     * @brief Whether a one-time password must still be entered.
+     * Whether a one-time password must still be entered.
      * @return true when an OTP is still required.
      */
     static bool requireOtpInput();
@@ -250,23 +250,23 @@ public:
     // POST, the returned ref-id and whether an OTP is still required.
 
     /**
-     * @brief Stash the entered account password.
+     * Stash the entered account password.
      * @param password The password.
      */
     static void setInputPassword(NSString *password);
     /**
-     * @brief Stash the ref-id returned by a successful link POST.
+     * Stash the ref-id returned by a successful link POST.
      * @param refId The Core Data ref-id.
      */
     static void setLinkRefId(id refId);
     /**
-     * @brief Record whether a one-time password must still be entered.
+     * Record whether a one-time password must still be entered.
      * @param require true when an OTP is still required.
      */
     static void setRequireOtpInput(bool require);
 
     /**
-     * @brief Whether the player has linked their pop'n-link (e-AMUSEMENT KID).
+     * Whether the player has linked their pop'n-link (e-AMUSEMENT KID).
      *
      * This is what enables the score-checker and quiz buttons on the pop'n-link top screen; while
      * false the top screen forces the KID-input screen instead. An event-centre region global read
@@ -276,7 +276,7 @@ public:
      */
     static bool linkButtonsEnabled();
     /**
-     * @brief Enable or disable the checker and quiz buttons.
+     * Enable or disable the checker and quiz buttons.
      *
      * Set once a successful pop'n-link enables them, and cleared to force the KID-input screen
      * while the link POST is in flight. Written by InputKIDViewCtrl's decide button and
@@ -286,18 +286,18 @@ public:
     static void setLinkButtonsEnabled(bool enabled);
 
     /**
-     * @brief Open the event-centre session; called at launch.
+     * Open the event-centre session; called at launch.
      * @ghidraAddress 0x28c70
      */
     void begin();
     /**
-     * @brief Flush pending events; called on background and terminate.
+     * Flush pending events; called on background and terminate.
      * @ghidraAddress 0x28c9c
      */
     void flush();
 
     /**
-     * @brief Record a finished play's result into the event centre so the result screen can read
+     * Record a finished play's result into the event centre so the result screen can read
      * it back.
      *
      * Looks up the stored high score for the current music and sheet, sets the "new record" flag
@@ -322,28 +322,28 @@ public:
     // (the result-record difficulty) that PlayResultTask reads back.
 
     /**
-     * @brief The last played music id (DAT_00187bb8, g_pNeAppEventCenter).
+     * The last played music id (DAT_00187bb8, g_pNeAppEventCenter).
      * @return The result-record music id.
      */
     int lastMusic() const;
     /**
-     * @brief The last played sheet (DAT_00187bbc, g_wResultSheet).
+     * The last played sheet (DAT_00187bbc, g_wResultSheet).
      * @return The result-record difficulty.
      */
     int lastSheet() const;
     /**
-     * @brief Set the last played music id, writing g_pNeAppEventCenter (m_lastMusic @ +0x00).
+     * Set the last played music id, writing g_pNeAppEventCenter (m_lastMusic @ +0x00).
      * @param music The music id.
      */
     void setLastMusic(int music);
     /**
-     * @brief Set the last played sheet, writing g_wResultSheet (m_lastSheet @ +0x04).
+     * Set the last played sheet, writing g_wResultSheet (m_lastSheet @ +0x04).
      * @param sheet The difficulty.
      */
     void setLastSheet(int sheet);
 
     /**
-     * @brief The guest / no-save run flag (g_bGuestNoSaveMode).
+     * The guest / no-save run flag (g_bGuestNoSaveMode).
      *
      * Set true when a guided first-play tutorial starts and false on a normal music-select entry;
      * it gates whether stopAndSave persists a result.
@@ -351,13 +351,13 @@ public:
      */
     bool guestNoSaveMode() const;
     /**
-     * @brief Set the guest / no-save run flag.
+     * Set the guest / no-save run flag.
      * @param guest true to suppress persisting the run's result.
      */
     void setGuestNoSaveMode(bool guest);
 
     /**
-     * @brief Stamp the session start time into the +0x20 ivar (_startDate).
+     * Stamp the session start time into the +0x20 ivar (_startDate).
      *
      * A sibling of setEndDate() with the same lazy-release-then-retain-[NSDate date] shape; called
      * when the player-get login response is parsed. Under ARC the strong ivar store does the
@@ -367,7 +367,7 @@ public:
     void setStartDate();
 
     /**
-     * @brief Stamp the session end time into the +0x24 ivar (_endDate).
+     * Stamp the session end time into the +0x24 ivar (_endDate).
      *
      * The binary lazily released any prior date and retained a fresh [NSDate date]; under ARC the
      * strong ivar assignment does that. Called at the end of the recommend-list download, so it
@@ -376,14 +376,14 @@ public:
      */
     void setEndDate();
     /**
-     * @brief The last recommend-list fetch time (_endDate @ +0x24).
+     * The last recommend-list fetch time (_endDate @ +0x24).
      * @return The NSDate, or nil before the first fetch.
      */
     id recommendFetchDate() const {
         return _endDate;
     }
     /**
-     * @brief The session start time (_startDate @ +0x20, DAT_00187bd8), read by the menu's
+     * The session start time (_startDate @ +0x20, DAT_00187bd8), read by the menu's
      * news-refresh throttle.
      * @return The NSDate, or nil before the session started.
      */
@@ -392,14 +392,14 @@ public:
     }
 
     /**
-     * @brief Whether a remote push notification arrived and has not been consumed yet.
+     * Whether a remote push notification arrived and has not been consumed yet.
      *
      * The recommend-list refresh throttle treats a pending push as an immediate "stale" trigger.
      * @return true while a push is pending.
      */
     bool remoteNotifyPending() const;
     /**
-     * @brief Set the pending-push flag.
+     * Set the pending-push flag.
      * @param pending true when a push has arrived and not been consumed.
      */
     void setRemoteNotifyPending(bool pending);
@@ -411,63 +411,63 @@ public:
     // singleton base (DAT_00187bb8 == +0x00); modelled as the named m_result
     // fields below.
     /**
-     * @brief The just-finished play's COOL tally (DAT_00187bc0 low).
+     * The just-finished play's COOL tally (DAT_00187bc0 low).
      * @return The COOL count.
      */
     short coolCount() const {
         return m_result.coolCount;
     }
     /**
-     * @brief The just-finished play's GREAT tally (DAT_00187bc0 high).
+     * The just-finished play's GREAT tally (DAT_00187bc0 high).
      * @return The GREAT count.
      */
     short greatCount() const {
         return m_result.greatCount;
     }
     /**
-     * @brief The just-finished play's GOOD tally (DAT_00187bc4 low).
+     * The just-finished play's GOOD tally (DAT_00187bc4 low).
      * @return The GOOD count.
      */
     short goodCount() const {
         return m_result.goodCount;
     }
     /**
-     * @brief The just-finished play's BAD tally (DAT_00187bc4 high).
+     * The just-finished play's BAD tally (DAT_00187bc4 high).
      * @return The BAD count.
      */
     short badCount() const {
         return m_result.badCount;
     }
     /**
-     * @brief The just-finished play's score (DAT_00187bc8).
+     * The just-finished play's score (DAT_00187bc8).
      * @return The score.
      */
     int playScore() const {
         return m_result.playScore;
     }
     /**
-     * @brief The just-finished play's rank (DAT_00187bcc).
+     * The just-finished play's rank (DAT_00187bcc).
      * @return The rank, 0 best to 6 fail.
      */
     short playRank() const {
         return m_result.playRank;
     }
     /**
-     * @brief The just-finished play's max combo (DAT_00187bd0, low 16 bits).
+     * The just-finished play's max combo (DAT_00187bd0, low 16 bits).
      * @return The max combo.
      */
     short maxCombo() const {
         return static_cast<short>(m_result.maxCombo);
     }
     /**
-     * @brief Whether the just-finished play cleared (DAT_00187bd4).
+     * Whether the just-finished play cleared (DAT_00187bd4).
      * @return true when the play cleared.
      */
     bool isCleared() const {
         return m_result.cleared != 0;
     }
     /**
-     * @brief Whether the just-finished play set a new record (DAT_00187bea).
+     * Whether the just-finished play set a new record (DAT_00187bea).
      * @return true on a new record.
      */
     bool isNewRecord() const {
@@ -475,7 +475,7 @@ public:
     }
 
     /**
-     * @brief The bundled-demo / sugoroku play flag (+0x33).
+     * The bundled-demo / sugoroku play flag (+0x33).
      *
      * PlayTask_init copies this raw byte into its own m_isDemoPlay to drive the tutorial and
      * auto-demo play path.
@@ -485,7 +485,7 @@ public:
         return m_resultExt.demoPlayFlag;
     }
     /**
-     * @brief Set the demo-play flag (+0x33) before spawning the guided PlayTask, so PlayTask_init
+     * Set the demo-play flag (+0x33) before spawning the guided PlayTask, so PlayTask_init
      * copies it into m_isDemoPlay (Ghidra: strb #1,[ec,#0x33] at MainTask::update 0x36d58).
      * @param flag The raw flag byte.
      */
@@ -497,14 +497,14 @@ public:
     // directly after recordPlayResult so the result screen can read them back.
 
     /**
-     * @brief Record the finished play's rank (DAT_00187bcc).
+     * Record the finished play's rank (DAT_00187bcc).
      * @param rank The rank, 0 best to 6 fail.
      */
     void setPlayRank(short rank) {
         m_result.playRank = rank;
     }
     /**
-     * @brief Record the finished play's max combo (DAT_00187bd0).
+     * Record the finished play's max combo (DAT_00187bd0).
      * @param combo The max combo.
      */
     void setMaxCombo(int combo) {
@@ -512,7 +512,7 @@ public:
     }
 
     /**
-     * @brief Read the player's stored local best for this play's music and sheet.
+     * Read the player's stored local best for this play's music and sheet.
      *
      * A thin wrapper over the free fetchScoreDataForMusic() on this singleton.
      * @param outScore Receives the stored score; may be nullptr.
@@ -525,7 +525,7 @@ public:
         int *outScore, short *outRank, int *outPlayCnt, bool *outFullCombo, bool *outPerfect);
 
     /**
-     * @brief Commit this play's result into the local Core Data ScoreData store: the full-combo,
+     * Commit this play's result into the local Core Data ScoreData store: the full-combo,
      * perfect, rank, score and play-count fields, then save.
      *
      * A thin wrapper over the free saveScoreData().
@@ -564,25 +564,25 @@ private:
 };
 
 /**
- * @brief The scene manager owning the root view controller: a guarded singleton @ DAT_00187b74.
+ * The scene manager owning the root view controller: a guarded singleton @ DAT_00187b74.
  */
 class neSceneManager {
 public:
     /**
-     * @brief The singleton instance, lazily constructed via FUN_0002c5c0 (NESceneManager_init).
+     * The singleton instance, lazily constructed via FUN_0002c5c0 (NESceneManager_init).
      * @return The scene manager.
      * @ghidraAddress 0xb194
      */
     static neSceneManager &shared();
     /**
-     * @brief Store the app's root view controller.
+     * Store the app's root view controller.
      * @param viewController The root view controller.
      * @ghidraAddress 0x2c5b8
      */
     void attachRoot(UIViewController *viewController);
 
     /**
-     * @brief The stored root view controller: the app's navigation host the title and menu flow
+     * The stored root view controller: the app's navigation host the title and menu flow
      * sends Goto*, Insert* and Delete* messages to.
      * @return The root view controller, or nil before attachRoot().
      * @ghidraAddress 0x2c5bc
@@ -593,22 +593,22 @@ public:
     // used to place notes and sprites on screen.
 
     /**
-     * @brief The live drawable width.
+     * The live drawable width.
      * @return The width, in points.
      */
     static float screenWidth();
     /**
-     * @brief The live drawable height.
+     * The live drawable height.
      * @return The height, in points.
      */
     static float screenHeight();
     /**
-     * @brief The live drawable scale.
+     * The live drawable scale.
      * @return The content scale.
      */
     static float screenScale();
     /**
-     * @brief Record the live drawable metrics; called by the GL view on layout.
+     * Record the live drawable metrics; called by the GL view on layout.
      * @param width The drawable width, in points.
      * @param height The drawable height, in points.
      * @param scale The content scale.
@@ -616,7 +616,7 @@ public:
     static void setScreenMetrics(float width, float height, float scale);
 
     /**
-     * @brief The device-class flag (Ghidra global DAT_00187b84), set at launch alongside the
+     * The device-class flag (Ghidra global DAT_00187b84), set at launch alongside the
      * metrics.
      *
      * The boot logo setup uses it to pick phone- versus pad-sized branding assets, so it is
@@ -625,7 +625,7 @@ public:
      */
     static bool isPadDisplay();
     /**
-     * @brief Set the device-class flag.
+     * Set the device-class flag.
      * @param isPad true for a pad-class display.
      */
     static void setPadDisplay(bool isPad);
@@ -635,12 +635,12 @@ public:
     // reloads it for the next scene. Both operate on this singleton, DAT_00187b74.
 
     /**
-     * @brief Release the shared system-SE pool and clean up the mixer.
+     * Release the shared system-SE pool and clean up the mixer.
      * @ghidraAddress 0x2c6bc
      */
     void releaseSystemSe();
     /**
-     * @brief Load the shared system-SE pool for the incoming scene.
+     * Load the shared system-SE pool for the incoming scene.
      * @ghidraAddress 0x2c5c8
      */
     void loadSystemSe();
@@ -649,14 +649,14 @@ public:
     // NSString, cast with __bridge on the Objective-C side, mirroring rootViewController().
 
     /**
-     * @brief The bundle resource base name of the SE previewed for a touch-sound kind, used to
+     * The bundle resource base name of the SE previewed for a touch-sound kind, used to
      * build the ".m4a" path loaded into the low-latency SE player.
      * @param soundNo The touch-sound kind index, 0..9.
      * @return A bridged NSString.
      */
     static void *hitSoundName(int soundNo);
     /**
-     * @brief The user-facing display name of a touch-sound kind, shown in the touch-sound picker
+     * The user-facing display name of a touch-sound kind, shown in the touch-sound picker
      * rows.
      * @param soundNo The touch-sound kind index, 0..9.
      * @return A bridged NSString.
@@ -683,24 +683,24 @@ private:
 // NoteMng::onResignActivePushHook (FUN_00034510).
 namespace neEngine {
 /**
- * @brief Bring up the shared texture cache at launch.
+ * Bring up the shared texture cache at launch.
  * @ghidraAddress 0x1ba2c
  */
 void bootstrapB();
 /**
- * @brief Bring up the text and glyph subsystem at launch.
+ * Bring up the text and glyph subsystem at launch.
  * @param flag The bootstrap mode the caller selects.
  * @ghidraAddress 0x1796c
  */
 void bootstrapC(int flag);
 /**
- * @brief Free every cached texture's GL name when the app enters the background.
+ * Free every cached texture's GL name when the app enters the background.
  * @ghidraAddress 0x1bdf8
  */
 void onDidEnterBackground();
 
 /**
- * @brief Nudge the running play task toward its stop state.
+ * Nudge the running play task toward its stop state.
  *
  * The caller passes the task pointer in, from AppDelegate's _mainTask. The foreground "main task"
  * during play is a PlayTask, so the field poked is PlayTask::m_state.
@@ -710,7 +710,7 @@ void onDidEnterBackground();
  */
 void stopMainTask(PlayTask *playTask);
 /**
- * @brief Nudge the running arcade task toward its stop state.
+ * Nudge the running arcade task toward its stop state.
  *
  * The caller passes the task pointer in, from AppDelegate's _acMainTask. That slot holds the
  * arcade AcViewerTask, so the field poked is AcViewerTask::m_state.
@@ -721,7 +721,7 @@ void stopMainTask(PlayTask *playTask);
 void stopAcMainTask(AcViewerTask *acViewerTask);
 
 /**
- * @brief Ask the running arcade AcViewerTask to leave play and exit back to the menu.
+ * Ask the running arcade AcViewerTask to leave play and exit back to the menu.
  *
  * It sets the play state @ +0x20c to 8 and the board-up flag @ +0x1d9 to 1.
  *
@@ -730,7 +730,7 @@ void stopAcMainTask(AcViewerTask *acViewerTask);
  */
 void acMainRequestGameExit(AcViewerTask *acViewerTask);
 /**
- * @brief Push the arcade-viewer option selections into the live AcViewerTask.
+ * Push the arcade-viewer option selections into the live AcViewerTask.
  *
  * The options are hi-speed, pop-kun, hid-sud, and ran-mir, and the task is the arcade note-play
  * task AppDelegate holds in its acMainTask property. It re-seeks the note stream and resumes the
@@ -742,19 +742,19 @@ void acMainRequestGameExit(AcViewerTask *acViewerTask);
 void acMainApplyGameplaySettings(AcViewerTask *task);
 
 /**
- * @brief Create and register the app's boot task at priority 3.
+ * Create and register the app's boot task at priority 3.
  *
  * Ghidra: operator_new(0x4c), then FUN_0002af58, then FUN_00027f08(_, 3).
  */
 void startBootTask();
 /**
- * @brief Notify every foreground observer; the observer list head is DAT_00188464.
+ * Notify every foreground observer; the observer list head is DAT_00188464.
  * @ghidraAddress 0x188ac
  */
 void notifyEnterForeground();
 
 /**
- * @brief Play a short UI system sound effect and cache its instance handle so it can be stopped
+ * Play a short UI system sound effect and cache its instance handle so it can be stopped
  * later.
  *
  * The handle is cached in the given slot of the scene manager's SE-handle table, at the
@@ -767,7 +767,7 @@ void notifyEnterForeground();
 void playSystemSe(int slot);
 
 /**
- * @brief The menu button hit-test.
+ * The menu button hit-test.
  *
  * @param gfx The render manager holding the touch pool.
  * @param touchId The active touch to test.
@@ -779,7 +779,7 @@ void playSystemSe(int slot);
 bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable);
 
 /**
- * @brief Report whether the scene manager's system-SE slot is still sounding.
+ * Report whether the scene manager's system-SE slot is still sounding.
  *
  * It probes the SE-handle table on the scene-manager global.
  *
@@ -790,7 +790,7 @@ bool menuButtonHit(void *gfx, int touchId, const int *rect, const int *enable);
 bool isSePlaying(int slot);
 
 /**
- * @brief The height of the AEP-rendered content area, in points.
+ * The height of the AEP-rendered content area, in points.
  *
  * It is used to place UIKit overlays below the GL scene. Ghidra: neAepContentHeight.
  *
@@ -800,7 +800,7 @@ int aepContentHeight();
 } // namespace neEngine
 
 /**
- * @brief The UI scale, screenScale * 0.5.
+ * The UI scale, screenScale * 0.5.
  *
  * MainViewController::loadView (@ 0xb51c) publishes it, and the tap hit-tests read it back as a
  * float (the binary uses vldr.32, for example in the menu update @ 0x6ae30). Ghidra names it

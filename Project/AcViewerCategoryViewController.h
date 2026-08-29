@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's genre-category list.
+ * The arcade (AC) viewer's genre-category list.
  *
  * A transparent, separator-less UITableView. Row 0 is
  * the "all songs" banner; the remaining rows are the non-empty genre categories (each an
@@ -17,19 +17,19 @@
 #import "AcViewerOptionViewController.h"
 
 /**
- * @brief The arcade viewer's genre-category list screen.
+ * The arcade viewer's genre-category list screen.
  */
 @interface AcViewerCategoryViewController : UITableViewController
 
 /**
- * @brief The host that hides the split panel; the iPad flow forwards it to the pushed music list.
+ * The host that hides the split panel; the iPad flow forwards it to the pushed music list.
  *
  * Stored raw with no retain, matching the binary's synthesised assign accessors.
  */
 @property(nonatomic, assign) id<AcViewerViewControllerDelegate> delegate;
 
 /**
- * @brief Build the transparent grouped table, bucketing every MusicManager AC song into one of
+ * Build the transparent grouped table, bucketing every MusicManager AC song into one of
  * 24 genre categories.
  * @param style The table style (grouped).
  * @return The initialised AcViewerCategoryViewController.
@@ -38,7 +38,7 @@
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 /**
- * @brief Initialize the receiver (grouped style) and return it wrapped in a fresh
+ * Initialize the receiver (grouped style) and return it wrapped in a fresh
  * UINavigationController with a custom back button in the left nav slot (the phone nav host).
  * @return The initialised AcViewerCategoryViewController wrapped in a UINavigationController.
  * @ghidraAddress 0x68d40
@@ -46,7 +46,7 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen + its nav view in (phone entry animation).
+ * Fade the screen + its nav view in (phone entry animation).
  * @ghidraAddress 0x69068
  */
 - (void)startOpenAnimation;

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "how to play" settings sub-screen.
+ * The "how to play" settings sub-screen.
  *
  * A two-row grouped table reached from the top Settings list (SettingTableViewController row 1).
  * Each row is a rounded, patterned tile with a coloured border and a centred label; tapping a row
@@ -21,12 +21,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The how-to settings list.
+ * The how-to settings list.
  */
 @interface SettingHowtoTableViewController : UITableViewController
 
 /**
- * @brief Wrap self in a fresh navigation controller and build the nav-bar back button, which
+ * Wrap self in a fresh navigation controller and build the nav-bar back button, which
  * targets -settingClose; the phone layout.
  * @return The navigation controller.
  * @ghidraAddress 0x80488
@@ -34,17 +34,17 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0x806ec
  */
 - (void)startOpenAnimation;
 /**
- * @brief Play the cancel SE and fade the screen out.
+ * Play the cancel SE and fade the screen out.
  * @ghidraAddress 0x80830
  */
 - (void)startCloseAnimation;
 /**
- * @brief The back-button action; it calls -startCloseAnimation.
+ * The back-button action; it calls -startCloseAnimation.
  * @ghidraAddress 0x811b8
  */
 - (void)settingClose;

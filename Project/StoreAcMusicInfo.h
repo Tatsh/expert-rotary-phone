@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One arcade-viewer song listed inside a store pack.
+ * One arcade-viewer song listed inside a store pack.
  *
  * It carries the id, title, genre, and the purchase and sample links, and is built from a server
  * dictionary.
@@ -11,7 +11,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One arcade song listed inside a store pack.
+ * One arcade song listed inside a store pack.
  */
 @interface StoreAcMusicInfo : NSObject {
     int m_AcMusicId;       /**< The arcade song id. */
@@ -22,7 +22,7 @@
 }
 
 /**
- * @brief Build an arcade song from a server dictionary.
+ * Build an arcade song from a server dictionary.
  * @param dictionary The server song dictionary.
  * @return The initialised song, or nil when the dictionary has no positive "ID".
  */
@@ -40,7 +40,7 @@
 @property(nonatomic, readonly) NSString *sampleURL;
 
 /**
- * @brief Whether this arcade song's purchased file is already on disk.
+ * Whether this arcade song's purchased file is already on disk.
  * @return YES when the file exists.
  * @ghidraAddress 0x85418
  */

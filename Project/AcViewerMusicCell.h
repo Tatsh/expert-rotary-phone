@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief An arcade-viewer song row.
+ * An arcade-viewer song row.
  *
  * Four difficulty buttons (easy, normal, hyper and ex) laid out horizontally, tagged 100..103 so
  * the table can tell which was tapped. Reconstructed from Ghidra project rb420, program
@@ -12,7 +12,7 @@
 @class AcMusicData;
 
 /**
- * @brief One arcade-viewer song row, carrying a button per difficulty.
+ * One arcade-viewer song row, carrying a button per difficulty.
  */
 @interface AcViewerMusicCell : UITableViewCell
 
@@ -29,7 +29,7 @@
 @property(atomic, retain) UIButton *exBtn;
 
 /**
- * @brief Bind the row to one arcade song: the banner background, the song or genre title, and the
+ * Bind the row to one arcade song: the banner background, the song or genre title, and the
  * level number for each available difficulty, drawn inside its difficulty button.
  * @param data The song to bind.
  * @ghidraAddress 0x409e0

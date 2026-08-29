@@ -77,14 +77,14 @@ static void setNavViewFrameFromSubview2(OverScoreLogViewController *self,
 }
 
 /**
- * @brief The score-overtake log's private transition completions and back helper.
+ * The score-overtake log's private transition completions and back helper.
  */
 @interface OverScoreLogViewController ()
-/** @brief The open transition finished: clear the re-entry guard. */
+/** The open transition finished: clear the re-entry guard. */
 - (void)endOpenAnimation;
-/** @brief The close transition finished: detach the view and notify the owner. */
+/** The close transition finished: detach the view and notify the owner. */
 - (void)endCloseAnimation;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)backButtonFunc;
 @end
 

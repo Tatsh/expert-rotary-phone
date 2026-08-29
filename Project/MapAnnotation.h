@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A map pin for the arcade-locator map.
+ * A map pin for the arcade-locator map.
  *
  * An MKAnnotation carrying a coordinate, a title and subtitle, and the arcade's model name.
  * Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -14,12 +14,12 @@
 #import <MapKit/MapKit.h>
 
 /**
- * @brief One arcade-search map pin.
+ * One arcade-search map pin.
  */
 @interface MapAnnotation : NSObject <MKAnnotation>
 
 /**
- * @brief Store the coordinate by value, and copies of the title, subtitle and model strings.
+ * Store the coordinate by value, and copies of the title, subtitle and model strings.
  * @param coordinate The pin's location.
  * @param title The callout title.
  * @param subtitle The callout subtitle.
@@ -39,7 +39,7 @@
 @property(nonatomic, readonly, copy) NSString *subtitle;
 
 /**
- * @brief The arcade's cabinet model name; an extra accessor outside MKAnnotation.
+ * The arcade's cabinet model name; an extra accessor outside MKAnnotation.
  * @return The model name.
  */
 - (NSString *)modelName;

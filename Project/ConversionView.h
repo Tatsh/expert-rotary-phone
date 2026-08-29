@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "device change" (kishu henkou, or data-transfer) panel.
+ * The "device change" (kishu henkou, or data-transfer) panel.
  *
  * It is embedded into the "Other" settings screen (SettingOtherTableViewController, section 2 row
  * 1). It shows a caution notice and a how-to, and, when the user confirms, POSTs the player's
@@ -25,17 +25,17 @@
 // forward-declares it (@protocol ViewCmnProtocol;) and pulls in this header
 // from its .mm.
 /**
- * @brief The container an embedded settings panel asks to close the whole settings overlay.
+ * The container an embedded settings panel asks to close the whole settings overlay.
  */
 @protocol ViewCmnProtocol <NSObject>
 /**
- * @brief Close the containing overlay.
+ * Close the containing overlay.
  */
 - (void)startCloseAnimation;
 @end
 
 /**
- * @brief The "device change" (data-transfer) panel embedded into the "Other" settings screen.
+ * The "device change" (data-transfer) panel embedded into the "Other" settings screen.
  */
 @interface ConversionView : UIViewController <CommonAlertViewDelegate, DownloaderDelegate>
 

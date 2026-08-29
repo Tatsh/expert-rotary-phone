@@ -23,30 +23,30 @@
 
 // Own privates (button targets + the link POST wired up by -init).
 /**
- * @brief The KONAMI ID entry screen's private actions, request helper and keyboard observers.
+ * The KONAMI ID entry screen's private actions, request helper and keyboard observers.
  */
 @interface InputKIDViewCtrl ()
 /**
- * @brief The decide button was tapped: stash the entered password, then POST the link.
+ * The decide button was tapped: stash the entered password, then POST the link.
  * @param sender The tapped button.
  */
 - (void)touchedDecideButton:(id)sender;
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;
-/** @brief Tear the screen down without a fade. */
+/** Tear the screen down without a fade. */
 - (void)endDirectCloseAnimation;
-/** @brief POST the pop'n-link request with the entered credentials. */
+/** POST the pop'n-link request with the entered credentials. */
 - (void)startLinkKidHttp;
 /**
- * @brief The keyboard appeared: scroll the form up.
+ * The keyboard appeared: scroll the form up.
  * @param notification The UIKeyboardDidShow notification.
  */
 - (void)keyboardWasShown:(NSNotification *)notification;
 /**
- * @brief The keyboard is about to hide: scroll the form back down.
+ * The keyboard is about to hide: scroll the form back down.
  * @param notification The UIKeyboardWillHide notification.
  */
 - (void)keyboardWillBeHidden:(NSNotification *)notification;

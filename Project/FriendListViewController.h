@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The friend ranking list, pushed by the friend hub's "list" button.
+ * The friend ranking list, pushed by the friend hub's "list" button.
  *
  * A grouped table of FriendListCell rows sorted by total score or best score, with the local
  * player inserted as a self row; tapping a row raises a FriendListDetail overlay. Reconstructed
@@ -13,12 +13,12 @@
 #import "DownloadMain.h" // DownloadMainDelegate (friend-list completion)
 
 /**
- * @brief The friend ranking list, pushed by the friend hub's "list" button.
+ * The friend ranking list, pushed by the friend hub's "list" button.
  */
 @interface FriendListViewController : UITableViewController <DownloadMainDelegate>
 
 /**
- * @brief The friend-list request completed. DownloadMain sends this via performSelector:.
+ * The friend-list request completed. DownloadMain sends this via performSelector:.
  * @param result An NSNumber wrapping a BOOL indicating success.
  * @ghidraAddress 0xb15ec
  */

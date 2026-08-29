@@ -30,6 +30,7 @@ assetcatalog
 atsync
 aumx
 auou
+autobrief
 autocapitalization
 autocorrection
 autorelease

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A downloadable per-song difficulty override, applied by MusicManager after building the
+ * A downloadable per-song difficulty override, applied by MusicManager after building the
  * catalogue.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. It is a plain scalar record with
@@ -10,7 +10,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One song's downloaded difficulty-level override.
+ * One song's downloaded difficulty-level override.
  */
 @interface MusicPatch : NSObject
 

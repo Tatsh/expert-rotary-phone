@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The boot "logo / warning" splash task, created by startBootTask at priority 3.
+ * The boot "logo / warning" splash task, created by startBootTask at priority 3.
  *
  * It shows three branding screens (each faded in, held ~2s or until tapped, then faded out),
  * logs into Game Center, and hands off to the next task. Reconstructed from Ghidra project
@@ -18,7 +18,7 @@ class AepManager;
 class neTextureForiOS;
 
 /**
- * @brief The boot splash task: a ten-state machine that fades the three startup logos in and out
+ * The boot splash task: a ten-state machine that fades the three startup logos in and out
  * before handing off to TitleTask.
  */
 class BootLogoTask : public ne::C_TASK {

@@ -54,14 +54,14 @@ constexpr NSInteger kTagAlertInstallAllConfirm = 0x1e; // "install all restored 
 // controllers and the purchase manager (it implements their callbacks below);
 // declare the conformances privately.
 /**
- * @brief The store's private delegate conformances and lazy jacket loader.
+ * The store's private delegate conformances and lazy jacket loader.
  */
 @interface StoreMainViewController () <StorePackViewDelegate,
                                        StorePackDetailViewPadDelegate,
                                        StoreDetailViewControllerDelegate,
                                        PurchaseManagerMusicDelegate>
 /**
- * @brief The lazy jacket loader used by -tableView:cellForRowAtIndexPath:.
+ * The lazy jacket loader used by -tableView:cellForRowAtIndexPath:.
  *
  * It has no distinct address in the binary; the loader is inlined into each cell path.
  *

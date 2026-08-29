@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPhone invite-code top screen; the iPad uses InviteTopViewControllerPad.
+ * The iPhone invite-code top screen; the iPad uses InviteTopViewControllerPad.
  *
  * MainViewController -GotoInviteTop pushes it over the game view, wrapped in its own navigation
  * controller. It is a scroll view with two panels: the "player" panel, which shows my own invite
@@ -14,14 +14,14 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The invite-code top screen.
+ * The invite-code top screen.
  */
 @interface InviteTopViewController : UIViewController {
     BOOL isAnimationing; /**< An open or close fade is running; it guards re-entry. */
 }
 
 /**
- * @brief Build the top view and its navigation controller — the custom back button, nav-bar art
+ * Build the top view and its navigation controller — the custom back button, nav-bar art
  * and the two panels.
  * @return The navigation controller.
  * @ghidraAddress 0xe6f88
@@ -29,7 +29,7 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the view and its navigation view in over 0.3 s.
+ * Fade the view and its navigation view in over 0.3 s.
  * @ghidraAddress 0xe7a38
  */
 - (void)startOpenAnimation;

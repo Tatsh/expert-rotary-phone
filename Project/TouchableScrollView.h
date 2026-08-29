@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A UIScrollView subclass that forwards began-touch events up the responder chain.
+ * A UIScrollView subclass that forwards began-touch events up the responder chain.
  *
  * Taps therefore pass through to the content behind the scroller. Reconstructed from Ghidra
  * project rb420, program PopnRhythmin (touchesBegan:withEvent: @ 0xe3114).
@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A UIScrollView that lets began-touch events through to the content behind it.
+ * A UIScrollView that lets began-touch events through to the content behind it.
  */
 @interface TouchableScrollView : UIScrollView
 

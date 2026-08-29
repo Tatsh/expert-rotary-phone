@@ -12,7 +12,7 @@
 #import "RewardNetworkUtilities.h"
 
 /**
- * @brief The recommend web view's private overlay state and helpers.
+ * The recommend web view's private overlay state and helpers.
  */
 @interface RecommendWebView () {
     UIView *parentView;                 /**< The host view for the indicator overlay. */
@@ -22,19 +22,19 @@
     int _viewType;                      /**< The ad layout selector. */
 }
 
-/** @brief Create and attach the indicator overlay when it is enabled. */
+/** Create and attach the indicator overlay when it is enabled. */
 - (void)loadRecommendView;
-/** @brief Detach and drop the indicator overlay. */
+/** Detach and drop the indicator overlay. */
 - (void)unloadRecommendView;
 /**
- * @brief Show or close the indicator overlay.
+ * Show or close the indicator overlay.
  * @param show YES to show it.
  */
 - (void)updateIndicator:(BOOL)show;
-/** @brief Unload the overlay, remove the view from its superview and drop the delegate. */
+/** Unload the overlay, remove the view from its superview and drop the delegate. */
 - (void)appliListClosed;
 /**
- * @brief The shared load-failure handler for both web-view backends.
+ * The shared load-failure handler for both web-view backends.
  * @param error What went wrong.
  */
 - (void)handleNavigationFailWithError:(NSError *)error;

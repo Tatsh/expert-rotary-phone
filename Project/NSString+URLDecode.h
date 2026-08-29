@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The ApplilinkReward SDK's NSString percent-decode category.
+ * The ApplilinkReward SDK's NSString percent-decode category.
  *
  * The reward web-view controller and the recommend core use it to unescape query values.
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
@@ -9,12 +9,12 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief Percent-unescaping on NSString.
+ * Percent-unescaping on NSString.
  */
 @interface NSString (URLDecode)
 
 /**
- * @brief Percent-unescape the receiver as UTF-8.
+ * Percent-unescape the receiver as UTF-8.
  *
  * The decompiler labelled this category method as a free function, urlDecodeString.
  * @return The decoded string.

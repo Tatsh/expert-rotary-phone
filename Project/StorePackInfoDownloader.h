@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The fetcher for a single store pack's detail JSON.
+ * The fetcher for a single store pack's detail JSON.
  *
  * It folds the result into the pack's StorePackInfo via -setDictionary:, then notifies its
  * delegate. The pack detail screens use it to lazily load full descriptions and song lists.
@@ -18,29 +18,29 @@
 @class StorePackInfoDownloader;
 
 /**
- * @brief Receives a pack-detail fetch's progress and outcome.
+ * Receives a pack-detail fetch's progress and outcome.
  */
 @protocol StorePackInfoDownloaderDelegate <NSObject>
 @optional
 /**
- * @brief The fetch made progress.
+ * The fetch made progress.
  * @param downloader The fetch in progress.
  */
 - (void)storePackInfoDownloaderProceed:(StorePackInfoDownloader *)downloader;
 /**
- * @brief The fetch completed and the pack's detail was filled in.
+ * The fetch completed and the pack's detail was filled in.
  * @param downloader The finished fetch.
  */
 - (void)storePackInfoDownloaderFinished:(StorePackInfoDownloader *)downloader;
 /**
- * @brief The fetch failed.
+ * The fetch failed.
  * @param downloader The failed fetch.
  */
 - (void)storePackInfoDownloaderError:(StorePackInfoDownloader *)downloader;
 @end
 
 /**
- * @brief Fetches one pack's detail — its description and song lists — into a StorePackInfo.
+ * Fetches one pack's detail — its description and song lists — into a StorePackInfo.
  */
 @interface StorePackInfoDownloader : NSObject <DownloaderDelegate> {
     StorePackInfo *m_PackInfo; /**< The pack whose detail this fetches. */
@@ -56,21 +56,21 @@
 @property(nonatomic, weak) id<StorePackInfoDownloaderDelegate> delegate;
 
 /**
- * @brief Wrap the pack whose detail will be fetched.
+ * Wrap the pack whose detail will be fetched.
  * @param packInfo The pack to fill in.
  * @return The initialised downloader.
  */
 - (instancetype)initWithStorePackInfo:(StorePackInfo *)packInfo;
 
 /**
- * @brief Start the detail request.
+ * Start the detail request.
  * @param userOpen YES for an explicit tap, which sends the userInfo query fragment; NO for a
  * background refresh.
  */
 - (void)downloadDetail:(BOOL)userOpen;
 
 /**
- * @brief Abort an in-flight detail fetch: cancel the wrapped Downloader and drop it.
+ * Abort an in-flight detail fetch: cancel the wrapped Downloader and drop it.
  * @ghidraAddress 0x575b8
  */
 - (void)cancel;

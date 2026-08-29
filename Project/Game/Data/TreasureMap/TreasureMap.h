@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The parsed sugoroku (board-game) map.
+ * The parsed sugoroku (board-game) map.
  *
  * A table of board squares (nodes, or areas) plus a few header fields, loaded from a bundled
  * "map_%03d.map" blob. The arcade task (AcMainTask::loadTreasureMap, Ghidra charaSelectReloadData
@@ -20,26 +20,26 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The parsed sugoroku (board-game) map: a table of board squares plus a few header fields,
+ * The parsed sugoroku (board-game) map: a table of board squares plus a few header fields,
  * loaded from a bundled "map_%03d.map" blob.
  */
 class TreasureMap {
 public:
     /**
-     * @brief Zero-initialise the 0x60-byte object; the member initialisers reproduce the five
+     * Zero-initialise the 0x60-byte object; the member initialisers reproduce the five
      * zeroed 16-byte stores.
      * @ghidraAddress 0xce2b0
      */
     TreasureMap() = default;
     /**
-     * @brief Free the node and edge tables. Kept as a declared seam; the parser module owns the
+     * Free the node and edge tables. Kept as a declared seam; the parser module owns the
      * definition. The pre-step is FUN_000ce2e4.
      * @ghidraAddress 0xce330
      */
     ~TreasureMap();
 
     /**
-     * @brief Parse a bundled ".map" blob into the node table and header fields. The large binary
+     * Parse a bundled ".map" blob into the node table and header fields. The large binary
      * parser is kept as a declared seam.
      * @param path The ".map" file path.
      * @ghidraAddress 0xce340
@@ -47,7 +47,7 @@ public:
     void load(const char *path);
 
     /**
-     * @brief The board-square kind, stored in Node::type (+0x06) and read straight from the ".map"
+     * The board-square kind, stored in Node::type (+0x06) and read straight from the ".map"
      * file.
      *
      * Ghidra-verified across the map loader (FUN_000ce340) and both draw passes (drawSquareText
@@ -85,7 +85,7 @@ public:
     // the enclosing class layout (m_nodes @ +0x50, m_startSubId @ +0x54, ...)
     // already relies on.
     /**
-     * @brief One board square. The binary's Objective-C value-type name for this record is
+     * One board square. The binary's Objective-C value-type name for this record is
      * "SquareStruct".
      */
     struct Node {
@@ -106,7 +106,7 @@ public:
     };
 
     /**
-     * @brief A resolved board edge between two squares.
+     * A resolved board edge between two squares.
      *
      * Built into the +0x58 array by load(); the binary boxes it in an NSValue with the Objective-C
      * type encoding "{ConnectStruct=^{SquareStruct}^{SquareStruct}B}" — 12 bytes: two Node* and a
@@ -119,14 +119,14 @@ public:
     };
 
     /**
-     * @brief The number of board squares (binary field @ +0x02).
+     * The number of board squares (binary field @ +0x02).
      * @return The node count.
      */
     int nodeCount() const {
         return m_count;
     }
     /**
-     * @brief The board-square table (binary field @ +0x50).
+     * The board-square table (binary field @ +0x50).
      * @return The node array, or nullptr before load().
      */
     const Node *nodes() const {
@@ -134,7 +134,7 @@ public:
     }
 
     /**
-     * @brief The node whose id matches @p subId, scanning the whole table.
+     * The node whose id matches @p subId, scanning the whole table.
      * @param subId The sub-map id to find.
      * @return The node, or nullptr when @p subId is out of range or the table is empty.
      * @ghidraAddress 0xce934
@@ -157,7 +157,7 @@ public:
     }
 
     /**
-     * @brief The board's start square id (binary field @ *(+0x54)).
+     * The board's start square id (binary field @ *(+0x54)).
      * @return The start sub-map id, or 0 when none is recorded.
      */
     int16_t startSubId() const {
@@ -169,14 +169,14 @@ public:
     // ConnectStruct* (m_edges), matching how m_nodes (+0x50) is already a real pointer.
 
     /**
-     * @brief The resolved board-edge table.
+     * The resolved board-edge table.
      * @return The edge array, or nullptr before load().
      */
     const ConnectStruct *edges() const {
         return m_edges;
     }
     /**
-     * @brief The number of board edges.
+     * The number of board edges.
      * @return The edge count.
      */
     int edgeCount() const {
@@ -184,7 +184,7 @@ public:
     }
 
     /**
-     * @brief The partner warp square sharing @p node 's slotId (its warp-pair id).
+     * The partner warp square sharing @p node 's slotId (its warp-pair id).
      * @param node The warp square; the call asserts its type is kSquareWarp.
      * @return The partner square, or nullptr when there is none.
      * @ghidraAddress 0xce96c
@@ -192,7 +192,7 @@ public:
     Node *getWarpSquare(Node *node);
 
     /**
-     * @brief Pick a random "buttobi" (fly-to) destination square.
+     * Pick a random "buttobi" (fly-to) destination square.
      *
      * The pick is a node that is not a warp, not a player-start, and not @p currentNode, walking
      * the links[0] chain when the first pick is unsuitable.
@@ -232,7 +232,7 @@ private:
 // ──────────────────────────────────────────────────────────────────────────────
 
 /**
- * @brief Count a board node's links.
+ * Count a board node's links.
  *
  * @param node The node to inspect.
  * @param checkBackLink When non-zero, return 1 if node->backLink is non-null and 0 otherwise;
@@ -243,7 +243,7 @@ private:
 unsigned int countSquareLinks(const TreasureMap::Node *node, int checkBackLink);
 
 /**
- * @brief The cardinal search direction for findAdjacentSquareIndex.
+ * The cardinal search direction for findAdjacentSquareIndex.
  *
  * The geometry is fixed by the board's screen coordinates: a lower x is further left and a lower y
  * is further up, verified in Ghidra's FUN_000ce114, whose case arms compare exactly these axes.
@@ -257,7 +257,7 @@ enum TreasureMapDirection : int {
 };
 
 /**
- * @brief Find the link slot holding the neighbour in a given cardinal direction.
+ * Find the link slot holding the neighbour in a given cardinal direction.
  *
  * It searches node->links[0..2] for a neighbour lying in that direction relative to node; the
  * same-axis coordinate must match.
@@ -270,7 +270,7 @@ enum TreasureMapDirection : int {
 int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection direction);
 
 /**
- * @brief The earned goal-star count for one map and area pair.
+ * The earned goal-star count for one map and area pair.
  *
  * It indexes kTreasureMapTable[mainMapId][subMapId] (DAT_0012fac4, row stride 0xc).
  *
@@ -282,7 +282,7 @@ int findAdjacentSquareIndex(const TreasureMap::Node *node, TreasureMapDirection 
 int getTreasureMapTableEntry(int mainMapId, int subMapId);
 
 /**
- * @brief The parent main-map id of a map, from kParentMapTable (DAT_0012fb30).
+ * The parent main-map id of a map, from kParentMapTable (DAT_0012fb30).
  * @param mapId The map id.
  * @return The parent main-map id, or -1 for a root.
  * @ghidraAddress 0xce198
@@ -290,7 +290,7 @@ int getTreasureMapTableEntry(int mainMapId, int subMapId);
 int getTreasureMapValue_fb30(int mapId);
 
 /**
- * @brief The number of character message strings for a character id.
+ * The number of character message strings for a character id.
  *
  * The id encodes a group as `id / 10`, valid for 6 and 8, and a slot as `id % 10`, valid for 0 to
  * 2. Both getCharacterAssetName and charaSelectReloadData call it. The address is an
@@ -303,7 +303,7 @@ int getTreasureMapValue_fb30(int mapId);
 int getCharacterAssetCount(int characterId);
 
 /**
- * @brief A UTF-8 character message string from the baked pool.
+ * A UTF-8 character message string from the baked pool.
  *
  * @param characterId The encoded character id.
  * @param slotIndex The message slot, which must lie in [0, getCharacterAssetCount(characterId)).
@@ -313,7 +313,7 @@ int getCharacterAssetCount(int characterId);
 const char *getCharacterAssetName(int characterId, int slotIndex);
 
 /**
- * @brief The sub-map flag for a map, from kSubMapFlagTable (DAT_0012fb54).
+ * The sub-map flag for a map, from kSubMapFlagTable (DAT_0012fb54).
  *
  * @param unused Ignored by the binary; it matches the undefined4 Ghidra type and is preserved for
  * ABI fidelity.

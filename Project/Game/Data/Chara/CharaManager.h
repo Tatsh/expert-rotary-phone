@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The owner of the three character lists the game builds at startup and after any
+ * The owner of the three character lists the game builds at startup and after any
  * download.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
@@ -24,20 +24,20 @@
 @class CharaInfo;
 
 /**
- * @brief Owns the three character lists the game builds at startup and after any download:
+ * Owns the three character lists the game builds at startup and after any download:
  * preferred sets, limited sets, and the filtered list currently available to the player.
  */
 class CharaManager {
 public:
     /**
-     * @brief Rebuild all three lists: the 30 hard-coded characters plus every character and
+     * Rebuild all three lists: the 30 hard-coded characters plus every character and
      * preferred or limited set found in the downloaded chara_%03d.chr files.
      * @ghidraAddress 0xb85bc
      */
     void reload();
 
     /**
-     * @brief The characters currently available to the player (member +0x8).
+     * The characters currently available to the player (member +0x8).
      * @return An NSArray of CharaInfo.
      * @ghidraAddress 0xb9304
      */
@@ -46,7 +46,7 @@ public:
     }
 
     /**
-     * @brief The available character with a matching id.
+     * The available character with a matching id.
      * @param charaId The character id to find.
      * @return The CharaInfo, or nil when the character is not available.
      * @ghidraAddress 0xb9308
@@ -54,7 +54,7 @@ public:
     CharaInfo *availableInfoForCharaId(short charaId) const;
 
     /**
-     * @brief Walk the preferred sets and mark any whose unlock condition is now met.
+     * Walk the preferred sets and mark any whose unlock condition is now met.
      * @return The character ids that just became unlocked, for the reveal effects.
      * @ghidraAddress 0xb93d0
      */
@@ -71,12 +71,12 @@ private:
 };
 
 /**
- * @brief The single global instance (Ghidra: DAT_00187d98).
+ * The single global instance (Ghidra: DAT_00187d98).
  */
 extern CharaManager gCharaManager;
 
 /**
- * @brief Ensure the global character lists are built exactly once, behind a lazy first-use guard.
+ * Ensure the global character lists are built exactly once, behind a lazy first-use guard.
  *
  * Ghidra: FUN_0002980c, a ___cxa_guard-protected one-shot around gCharaManager.reload()
  * (FUN_000b85b8).
@@ -101,7 +101,7 @@ class AcMainTask;
 // CharaManager.mm.
 
 /**
- * @brief Whether the player owns every currently-available character.
+ * Whether the player owns every currently-available character.
  *
  * Popcounts all 32-bit words in @p gotCharaArray and compares the total number of set bits (owned
  * characters) against `[gCharaManager.availableInfos() count]`.

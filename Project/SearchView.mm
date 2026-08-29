@@ -87,56 +87,56 @@ static NSString *const kDataErrorMessage = @"データの取得に失敗しま�
 
 // Private + class helpers not exposed in the header.
 /**
- * @brief The arcade-search screen's private location, query and animation helpers.
+ * The arcade-search screen's private location, query and animation helpers.
  */
 @interface SearchView ()
 /**
- * @brief Whether location services are on and this app is authorised.
+ * Whether location services are on and this app is authorised.
  * @return YES when the current location may be used.
  */
 + (BOOL)currentLocationEnabled;
 /**
- * @brief The map rectangle covering a region, padded by 0.6 of its span.
+ * The map rectangle covering a region, padded by 0.6 of its span.
  * @param region The region to cover.
  * @return The padded map rectangle.
  */
 + (MKMapRect)mapRectForCoordinateRegion:(MKCoordinateRegion)region;
 
 /**
- * @brief Fade the error label in with a message.
+ * Fade the error label in with a message.
  * @param message The message to show.
  */
 - (void)showError:(NSString *)message;
 /**
- * @brief Centre the map on the device's current location.
+ * Centre the map on the device's current location.
  * @return YES when the location was available.
  */
 - (BOOL)gotoCurrentPosition;
-/** @brief Fetch the marker-image and model-info master feed. */
+/** Fetch the marker-image and model-info master feed. */
 - (void)startSearchMaster;
 /**
- * @brief Query the arcades inside a region.
+ * Query the arcades inside a region.
  * @param region The region to search.
  */
 - (void)startGameCenter:(MKCoordinateRegion)region;
-/** @brief Retain the busy spinner, showing it on the first reference. */
+/** Retain the busy spinner, showing it on the first reference. */
 - (void)addIndicator;
-/** @brief Release the busy spinner, hiding it on the last reference. */
+/** Release the busy spinner, hiding it on the last reference. */
 - (void)subIndicator;
 /**
- * @brief Start the next pending marker-image download.
+ * Start the next pending marker-image download.
  * @return YES when a download was started.
  */
 - (BOOL)downloadMarkImage;
-/** @brief The current-position bar button's action. */
+/** The current-position bar button's action. */
 - (void)onCurrentPosButton;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)backButtonFunc;
-/** @brief Fade the screen out. */
+/** Fade the screen out. */
 - (void)startCloseAnimation;
-/** @brief The open fade finished; clear the animation guard. */
+/** The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief The close fade finished; tear the screen down. */
+/** The close fade finished; tear the screen down. */
 - (void)endCloseAnimation;
 @end
 

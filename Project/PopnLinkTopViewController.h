@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "pop'n link" top menu.
+ * The "pop'n link" top menu.
  *
  * Three stacked buttons over a "friman_bg" backdrop on phone, or a clear view inside the pad split
  * panel: KID info (onInKid), score checker (onScoreChecker), and quiz (onQuiz), each with a "ps_*"
@@ -23,42 +23,42 @@
 // The pad-layout host (the pop'n-link split/detail owner) receives the button
 // taps and the close request so it can drive its own detail pane.
 /**
- * @brief The iPad-layout host, the pop'n-link split or detail owner, which receives the button
+ * The iPad-layout host, the pop'n-link split or detail owner, which receives the button
  * taps and the close request so it can drive its own detail pane.
  */
 @protocol PopnLinkTopViewControllerDelegate <NSObject>
 /**
- * @brief The KONAMI-ID input button was tapped.
+ * The KONAMI-ID input button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0xcdad4
  */
 - (void)onInKidButtonTouched:(id)sender;
 /**
- * @brief The score-checker button was tapped.
+ * The score-checker button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0xcdc18
  */
 - (void)onScoreCheckerButtonTouched:(id)sender;
 /**
- * @brief The quiz button was tapped.
+ * The quiz button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0xcdd5c
  */
 - (void)onQuizButtonTouched:(id)sender;
 /**
- * @brief Close the hub.
+ * Close the hub.
  * @ghidraAddress 0xcd908
  */
 - (void)startCloseAnimation;
 @end
 
 /**
- * @brief The pop'n-link top screen: the KONAMI-ID input, score-checker and quiz buttons.
+ * The pop'n-link top screen: the KONAMI-ID input, score-checker and quiz buttons.
  */
 @interface PopnLinkTopViewController : UIViewController
 
 /**
- * @brief Lay out the three buttons and caption images — over friman_bg on phone, over a clear view
+ * Lay out the three buttons and caption images — over friman_bg on phone, over a clear view
  * on iPad — and seed the checker and quiz enabled state.
  * @return The initialised controller.
  * @ghidraAddress 0xccacc
@@ -66,7 +66,7 @@
 - (instancetype)init;
 
 /**
- * @brief Build self and wrap it in a fresh navigation controller with a back button and nav-bar
+ * Build self and wrap it in a fresh navigation controller with a back button and nav-bar
  * art; the phone layout.
  * @return The navigation controller.
  * @ghidraAddress 0xcd2e0
@@ -74,18 +74,18 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0xcd5a8
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the screen out; this is also the back-button action, which plays the cancel SE.
+ * Fade the screen out; this is also the back-button action, which plays the cancel SE.
  * @ghidraAddress 0xcd908
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Re-apply the checker and quiz enabled state from the link flag.
+ * Re-apply the checker and quiz enabled state from the link flag.
  * @ghidraAddress 0xcca48
  */
 - (void)updateButtonEnable;

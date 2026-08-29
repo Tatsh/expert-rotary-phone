@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The TouchJSON serializer that turns a Foundation object graph into UTF-8 encoded JSON
+ * The TouchJSON serializer that turns a Foundation object graph into UTF-8 encoded JSON
  * NSData.
  *
  * It handles NSNull, NSNumber, NSString, NSArray, NSDictionary, NSData, and CSerializedJSONData.
@@ -11,19 +11,19 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief Turns a Foundation object graph into UTF-8 encoded JSON NSData.
+ * Turns a Foundation object graph into UTF-8 encoded JSON NSData.
  */
 @interface CJSONDataSerializer : NSObject
 
 /**
- * @brief An autoreleased serializer.
+ * An autoreleased serializer.
  * @return The new serializer.
  * @ghidraAddress 0x66dc8
  */
 + (CJSONDataSerializer *)serializer;
 
 /**
- * @brief Serialize any supported object: NSNull, NSNumber, NSString, NSArray, NSDictionary,
+ * Serialize any supported object: NSNull, NSNumber, NSString, NSArray, NSDictionary,
  * NSData or CSerializedJSONData.
  * @param inObject The object to serialize.
  * @return The UTF-8 JSON bytes, or nil for an unsupported type.
@@ -31,31 +31,31 @@
  */
 - (NSData *)serializeObject:(id)inObject;
 /**
- * @brief Serialize a null as the JSON literal `null`.
+ * Serialize a null as the JSON literal `null`.
  * @param inNull The null to serialize.
  * @return The UTF-8 JSON bytes.
  */
 - (NSData *)serializeNull:(NSNull *)inNull;
 /**
- * @brief Serialize a number as a JSON number or boolean.
+ * Serialize a number as a JSON number or boolean.
  * @param inNumber The number to serialize.
  * @return The UTF-8 JSON bytes.
  */
 - (NSData *)serializeNumber:(NSNumber *)inNumber;
 /**
- * @brief Serialize a string as a quoted, escaped JSON string.
+ * Serialize a string as a quoted, escaped JSON string.
  * @param inString The string to serialize.
  * @return The UTF-8 JSON bytes.
  */
 - (NSData *)serializeString:(NSString *)inString;
 /**
- * @brief Serialize an array as a JSON array.
+ * Serialize an array as a JSON array.
  * @param inArray The array to serialize.
  * @return The UTF-8 JSON bytes.
  */
 - (NSData *)serializeArray:(NSArray *)inArray;
 /**
- * @brief Serialize a dictionary as a JSON object.
+ * Serialize a dictionary as a JSON object.
  * @param inDictionary The dictionary to serialize.
  * @return The UTF-8 JSON bytes.
  */

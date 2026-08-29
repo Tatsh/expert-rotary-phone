@@ -27,7 +27,7 @@ constexpr int kSeVoiceCount = 8; // onStartPlayer starts each backend with 8 voi
 // at offset 4, so group must sit at +8 rather than +4.
 static const RSND_INSTANCE_ID kFreeInstance = static_cast<RSND_INSTANCE_ID>(-1);
 /**
- * @brief One entry of the general SE instance table.
+ * One entry of the general SE instance table.
  */
 struct SeInstance {
     RSND_INSTANCE_ID handle; /**< +0x00 The playing instance, or kFreeInstance when idle. */
@@ -43,7 +43,7 @@ struct SeInstance {
 constexpr int kSeSetGroupCount = 2;
 constexpr int kSeSetGroupVoices = 8;
 /**
- * @brief One slot of the caplayer-only "SetGroup" SE pool, owning a fixed voice for its lifetime.
+ * One slot of the caplayer-only "SetGroup" SE pool, owning a fixed voice for its lifetime.
  */
 struct SeVoiceSlot {
     RSND_INSTANCE_ID handle; /**< The playing instance; kFreeInstance marks an idle slot. */

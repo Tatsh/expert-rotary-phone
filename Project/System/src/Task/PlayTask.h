@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The standard-mode note-play task: the gameplay screen itself.
+ * The standard-mode note-play task: the gameplay screen itself.
  *
  * It runs the play clock, drives the per-frame note judge and render pass (playJudgeUpdate,
  * NoteMng), handles the pause menu, fires combo SEs, watches the gauge and song end, and hands
@@ -43,7 +43,7 @@ class neAppEventCenter;
 class neTextureForiOS;
 
 /**
- * @brief Indices into PlayTask::m_sceneLayers, the +0x98 bank of AepLyrCtrl layers, some driven
+ * Indices into PlayTask::m_sceneLayers, the +0x98 bank of AepLyrCtrl layers, some driven
  * as one-shot SE cues.
  *
  * Slots 0..2 are the sustained combo-milestone effect tiers; the judge holds the crossed tier
@@ -66,7 +66,7 @@ enum SceneLayer {
 };
 
 /**
- * @brief Indices into PlayTask::m_scoreBpmLyr and m_scoreBpmFrames, the +0x154 and +0x168 handle
+ * Indices into PlayTask::m_scoreBpmLyr and m_scoreBpmFrames, the +0x154 and +0x168 handle
  * and frame-count tables.
  *
  * The names come from the getLyrNo source layer names.
@@ -80,7 +80,7 @@ enum ScoreBpmLayer {
 };
 
 /**
- * @brief Indices into PlayTask::m_effectStateLyr and m_effectStateFrames, the +0xe4 and +0x11c
+ * Indices into PlayTask::m_effectStateLyr and m_effectStateFrames, the +0xe4 and +0x11c
  * tables, in the order kEffectStateNames resolves them.
  */
 enum EffectStateLayer {
@@ -103,7 +103,7 @@ enum EffectStateLayer {
 };
 
 /**
- * @brief Indices into PlayTask::m_userSprite, the +0x2f8 user-no table.
+ * Indices into PlayTask::m_userSprite, the +0x2f8 user-no table.
  *
  * PlayTaskDraw dispatches on the AEP callback's `child` id by matching it against each slot, so
  * these name the sprite each slot drives (verified against FUN_00030944).
@@ -128,7 +128,7 @@ enum UserSprite {
 };
 
 /**
- * @brief PlayTask::m_state (+0x9fc) play state-machine values, in the order update() walks them.
+ * PlayTask::m_state (+0x9fc) play state-machine values, in the order update() walks them.
  *
  * Ghidra: FUN_0002dc14.
  */
@@ -148,7 +148,7 @@ enum PlayState {
 };
 
 /**
- * @brief The clear and fail score boundary.
+ * The clear and fail score boundary.
  *
  * A score at or above this is the "clear" tier: the hi fever-gauge layer, the high end-of-song
  * voice, a lit score star, and the clear rank jingles. Below it is the "fail" tier. The same line
@@ -158,23 +158,23 @@ enum PlayState {
 inline constexpr int kScoreClearThreshold = 70000;
 
 /**
- * @brief The standard-mode note-play task: the play scene's state machine, HUD and judge pass.
+ * The standard-mode note-play task: the play scene's state machine, HUD and judge pass.
  *
  * This class is also the flat engine work area the whole play scene shares.
  */
 class PlayTask : public ne::C_TASK {
 public:
     /**
-     * @brief Construct the play task. MainTask spawns it (Ghidra: PlayTask_init).
+     * Construct the play task. MainTask spawns it (Ghidra: PlayTask_init).
      */
     PlayTask();
     /**
-     * @brief Tear the play task down.
+     * Tear the play task down.
      * @ghidraAddress 0x2db74
      */
     ~PlayTask() override;
     /**
-     * @brief Per-frame play tick: advance the play-state machine, run the judge pass and draw the
+     * Per-frame play tick: advance the play-state machine, run the judge pass and draw the
      * HUD.
      * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
      * @ghidraAddress 0x2dc14
@@ -182,7 +182,7 @@ public:
     void update(int deltaMs) override;
 
     /**
-     * @brief Reset the play scene for a fresh attempt.
+     * Reset the play scene for a fresh attempt.
      *
      * Reloads the chart, resets the animated layers, zeroes the 0x3c-entry judge pool (@ +0x3c8,
      * stride 0x18) with sequential indices and -1 sentinels, and resets the gauge and score
@@ -192,7 +192,7 @@ public:
     void resetState();
 
     /**
-     * @brief Nudge the life gauge (@ +0x9c0, clamped to [0, 0x400]) by the per-mode delta.
+     * Nudge the life gauge (@ +0x9c0, clamped to [0, 0x400]) by the per-mode delta.
      * @param mode 0 for miss/down (+0x9d4, which also sets the "damaged" flag @ +0x9dc), 1 for
      * good (+0x9d0), 2 or 3 for great/perfect (+0x9cc).
      * @ghidraAddress 0x312cc
@@ -390,20 +390,20 @@ public:
 };
 
 /**
- * @brief Allocate the play scene for a play-data block.
+ * Allocate the play scene for a play-data block.
  * @param playData The play-data block, a PlayTask.
  * @ghidraAddress 0x2e2d8
  */
 void PlayTaskInit(void *playData);
 /**
- * @brief Transition a play-data block to the result screen.
+ * Transition a play-data block to the result screen.
  * @param playData The play-data block, a PlayTask.
  * @ghidraAddress 0x3003c
  */
 void PlayTaskGotoResult(void *playData);
 
 /**
- * @brief The current running score, or gauge value, used for the end-of-song rank SEs.
+ * The current running score, or gauge value, used for the end-of-song rank SEs.
  * @return The current score.
  * @ghidraAddress 0x2ff7c
  */

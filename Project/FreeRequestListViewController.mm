@@ -61,14 +61,14 @@
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay/rootViewController, neEngine::playSystemSe
 
 /**
- * @brief The recommended-friend list's private teardown, request, and back helpers.
+ * The recommended-friend list's private teardown, request, and back helpers.
  */
 @interface FreeRequestListViewController () <DownloaderDelegate>
-/** @brief Drop the parsed row array. */
+/** Drop the parsed row array. */
 - (void)releaseFriendList;
-/** @brief GET the recommended-friend list. */
+/** GET the recommended-friend list. */
 - (void)startGetRecommendFriendHttp;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)backButtonFunc;
 @end
 

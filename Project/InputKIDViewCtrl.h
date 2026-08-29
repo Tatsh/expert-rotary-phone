@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The e-AMUSEMENT "pop'n-link" (KONAMI ID) linking screen.
+ * The e-AMUSEMENT "pop'n-link" (KONAMI ID) linking screen.
  *
  * The pop'n-link top screen pushes it while the player has not yet linked their account. It is a
  * scrollable form over "friman_bg" with a KONAMI ID field of at most 256 characters, a secure
@@ -25,7 +25,7 @@
 @class TouchableScrollView;
 
 /**
- * @brief The pop'n-link KONAMI ID entry screen: id, password and one-time password.
+ * The pop'n-link KONAMI ID entry screen: id, password and one-time password.
  */
 // Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
 // follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the

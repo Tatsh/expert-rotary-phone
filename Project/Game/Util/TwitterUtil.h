@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The result screen's "tweet this score" helper.
+ * The result screen's "tweet this score" helper.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithText:image: @ 0x78948,
  * tweet @ 0x78a4c, tweetWithText:image: @ 0x78bb8). It is a UIViewController subclass only so it
@@ -11,27 +11,27 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A share-sheet host presented over the root view controller to post text and an image.
+ * A share-sheet host presented over the root view controller to post text and an image.
  */
 @interface TwitterUtil : UIViewController
 /**
- * @brief The text to be tweeted.
+ * The text to be tweeted.
  * @note The text is copied by the setter.
  */
 @property(nonatomic, copy) NSString *text;
 /**
- * @brief The image to be attached to the tweet.
+ * The image to be attached to the tweet.
  * @note The image is retained by the TwitterUtil instance.
  */
 @property(nonatomic, strong) UIImage *image;
 /**
- * @brief Initializes a TwitterUtil instance with no text or image.
+ * Initializes a TwitterUtil instance with no text or image.
  * @return An initialized TwitterUtil instance.
  * @ghidraAddress 0x78934
  */
 - (instancetype)init;
 /**
- * @brief Initializes a TwitterUtil instance with the given text and image.
+ * Initializes a TwitterUtil instance with the given text and image.
  * @param text The text to be tweeted.
  * @param image The image to be attached to the tweet.
  * @return An initialized TwitterUtil instance with the specified text and image.
@@ -39,13 +39,13 @@
  */
 - (instancetype)initWithText:(NSString *)text image:(UIImage *)image;
 /**
- * @brief Presents the Twitter compose sheet with the instance's text and image.
+ * Presents the Twitter compose sheet with the instance's text and image.
  * @note This method is typically called as an action from a UIButton.
  * @ghidraAddress 0x78a4c
  */
 - (void)tweet;
 /**
- * @brief Presents the Twitter compose sheet with the specified text and image.
+ * Presents the Twitter compose sheet with the specified text and image.
  * @param text The text to be tweeted.
  * @param image The image to be attached to the tweet.
  * @ghidraAddress 0x78bb8
@@ -53,7 +53,7 @@
 + (void)tweetWithText:(NSString *)text image:(UIImage *)image;
 #ifdef ENABLE_PATCHES
 /**
- * @brief Presents the system share sheet with the instance's text and image.
+ * Presents the system share sheet with the instance's text and image.
  * @param sender The control that triggered the action, used as the popover anchor on iPad.
  * @newCode
  */

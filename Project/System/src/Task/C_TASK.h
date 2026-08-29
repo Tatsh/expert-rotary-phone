@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The base class of the engine's task and scene framework.
+ * The base class of the engine's task and scene framework.
  *
  * Every gameplay and animated screen (MainTask,
  * TitleTask, AcMainTask, PlayResultTask, AcViewerTask, ...) derives from C_TASK. Reconstructed
@@ -17,23 +17,23 @@
 namespace ne {
 
 /**
- * @brief Base class of every engine task: a node in the scheduler's priority-sorted list that
+ * Base class of every engine task: a node in the scheduler's priority-sorted list that
  * receives per-frame update() and draw() callbacks.
  */
 class C_TASK {
 public:
     /**
-     * @brief Construct a task at the default priority and self-link it into the scheduler.
+     * Construct a task at the default priority and self-link it into the scheduler.
      * @ghidraAddress 0x27ea8
      */
     C_TASK();
     /**
-     * @brief Unlink the task from the scheduler list.
+     * Unlink the task from the scheduler list.
      */
     virtual ~C_TASK();
 
     /**
-     * @brief Per-frame logic hook dispatched by the scheduler; concrete tasks override it.
+     * Per-frame logic hook dispatched by the scheduler; concrete tasks override it.
      *
      * Each concrete subclass — for example BootLogoTask (constructor FUN_0002af58, vtable
      * PTR_FUN_0002b02c) — appends its own fields from +0x28 on.
@@ -41,12 +41,12 @@ public:
      */
     virtual void update(int deltaMs);
     /**
-     * @brief Per-frame render hook dispatched by the scheduler; concrete tasks override it.
+     * Per-frame render hook dispatched by the scheduler; concrete tasks override it.
      */
     virtual void draw();
 
     /**
-     * @brief Re-insert this task into the scheduler list at @p priority, keeping the list sorted.
+     * Re-insert this task into the scheduler list at @p priority, keeping the list sorted.
      *
      * Unlinks the task from its current slot, walks from the head to the first node whose
      * priority is greater than or equal to @p priority, and inserts before it.
@@ -56,7 +56,7 @@ public:
     void setPriority(int priority);
 
     /**
-     * @brief This task's scheduling priority.
+     * This task's scheduling priority.
      * @return The priority; lower values run earlier.
      */
     int priority() const {
@@ -64,14 +64,14 @@ public:
     }
 
     /**
-     * @brief Mark this task for destruction on the next scheduler pass.
+     * Mark this task for destruction on the next scheduler pass.
      */
     void kill() {
         m_killed = true;
     }
 
     /**
-     * @brief The scheduler tick: walk the priority list in order, update() every live task and
+     * The scheduler tick: walk the priority list in order, update() every live task and
      * destroy (reap) any task whose active flag is clear.
      * @param deltaMs Milliseconds elapsed since the previous tick.
      * @ghidraAddress 0x27f40
@@ -80,7 +80,7 @@ public:
 
 private:
     /**
-     * @brief The scheduler's sentinel head (Ghidra: DAT_00188468) — a self-linked node with max
+     * The scheduler's sentinel head (Ghidra: DAT_00188468) — a self-linked node with max
      * priority that bounds the circular priority list.
      * @return The sentinel node.
      */

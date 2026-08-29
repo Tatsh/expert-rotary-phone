@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A thin UIWindow subclass.
+ * A thin UIWindow subclass.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. The __objc_classlist entry's
  * class_ro (@ 0x140744) declares flags 0x10, instanceStart 0x90, instanceSize 0x90 (144), and
@@ -16,12 +16,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The app's UIWindow subclass.
+ * The app's UIWindow subclass.
  */
 @interface neWindow : UIWindow
 
 /**
- * @brief The designated initialiser; it forwards straight to UIWindow.
+ * The designated initialiser; it forwards straight to UIWindow.
  * @param frame The window frame.
  * @return The initialised window.
  * @ghidraAddress 0x28a00

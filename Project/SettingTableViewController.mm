@@ -58,18 +58,18 @@ typedef NS_ENUM(NSInteger, SettingSection) {
 // controls). Also the ConversionView delegate (id<ViewCmnProtocol>); callbacks
 // implemented below.
 /**
- * @brief The settings screen's private close helper and switch actions.
+ * The settings screen's private close helper and switch actions.
  */
 @interface SettingTableViewController () <ViewCmnProtocol>
-/** @brief Persist the settings and dismiss the screen. */
+/** Persist the settings and dismiss the screen. */
 - (void)settingClose;
 /**
- * @brief The sound-effect switch changed: store the new value.
+ * The sound-effect switch changed: store the new value.
  * @param sender The toggled switch.
  */
 - (void)onEffectOnChanged:(id)sender;
 /**
- * @brief The simple-mode switch changed: store the new value.
+ * The simple-mode switch changed: store the new value.
  * @param sender The toggled switch.
  */
 - (void)onSimpleModeChanged:(id)sender;

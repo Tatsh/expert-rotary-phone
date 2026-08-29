@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "Game" sub-settings screen, opened from row 0 of SettingTableViewController.
+ * The "Game" sub-settings screen, opened from row 0 of SettingTableViewController.
  *
  * A grouped table of three category header rows — サウンド (Sound), ゲーム演出 (Game effects), and
  * ポップ君サイズ (Pop-kun size) — each of which expands an in-line detail row hosting a dedicated
@@ -17,24 +17,24 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The gameplay settings list.
+ * The gameplay settings list.
  */
 @interface SettingGameTableViewController : UITableViewController
 
 /**
- * @brief Wrap self in a fresh navigation controller; the phone layout.
+ * Wrap self in a fresh navigation controller; the phone layout.
  * @return The navigation controller.
  * @ghidraAddress 0x88d7c
  */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0x89074
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the screen out.
+ * Fade the screen out.
  * @ghidraAddress 0x891b8
  */
 - (void)startCloseAnimation;

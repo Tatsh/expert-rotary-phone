@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad how-to overlay.
+ * The iPad how-to overlay.
  *
  * A dimmed full-screen cover view with a centred, horizontally-paged strip of how-to images (a
  * HowToView), a hidden UIPageControl driving a custom dot strip (_pageImgs, built from
@@ -14,7 +14,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The iPad how-to overlay: a paging scroll view over a dimmed cover, with a custom page-dot
+ * The iPad how-to overlay: a paging scroll view over a dimmed cover, with a custom page-dot
  * strip.
  */
 @interface HowToViewCtrlPad : UIViewController <UIScrollViewDelegate> {
@@ -29,7 +29,7 @@
 }
 
 /**
- * @brief Retain the ordered list of image names to page through.
+ * Retain the ordered list of image names to page through.
  * @param fileNameArray The page image names.
  * @return The initialised controller.
  * @ghidraAddress 0x16718
@@ -37,18 +37,18 @@
 - (instancetype)initWithFileNameArray:(NSArray *)fileNameArray;
 
 /**
- * @brief Fade the overlay and its navigation controller view in.
+ * Fade the overlay and its navigation controller view in.
  * @ghidraAddress 0x17378
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the overlay and its navigation controller view out.
+ * Fade the overlay and its navigation controller view out.
  * @ghidraAddress 0x174b8
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Rebuild the custom page-dot strip for the current page.
+ * Rebuild the custom page-dot strip for the current page.
  * @ghidraAddress 0x17634
  */
 - (void)setPageImages;

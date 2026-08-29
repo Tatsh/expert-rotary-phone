@@ -83,16 +83,16 @@ static void setNavControllerViewFrameTall(CheckerDetail *self) {
 }
 
 /**
- * @brief The music-checker detail screen's private actions.
+ * The music-checker detail screen's private actions.
  */
 @interface CheckerDetail ()
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;
 /**
- * @brief A difficulty-sheet button was tapped: show that sheet's arcade score.
+ * A difficulty-sheet button was tapped: show that sheet's arcade score.
  * @param sender The tapped button; its tag is the sheet index.
  */
 - (void)touchedSheetButton:(id)sender;

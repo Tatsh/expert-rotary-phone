@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Small shared helpers used across the app.
+ * Small shared helpers used across the app.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  */
@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /**
- * @brief Parse a property-list blob and return its root dictionary.
+ * Parse a property-list blob and return its root dictionary.
  *
  * The decoded .orb and list payloads are plists, not JSON. The original branched on iOS below 4.0
  * (CFPropertyListCreateFromXMLData) versus newer (CFPropertyListCreateWithData); it is modernised
@@ -27,7 +27,7 @@ extern "C" {
  */
 NSDictionary *RhParsePlistDict(NSData *data);
 /**
- * @brief Parse a property-list blob and return its root array.
+ * Parse a property-list blob and return its root array.
  * @param data The plist blob.
  * @return The root, or nil when it is not an array.
  * @ghidraAddress 0x5c330
@@ -35,7 +35,7 @@ NSDictionary *RhParsePlistDict(NSData *data);
 NSMutableArray *RhParsePlistArray(NSData *data);
 
 /**
- * @brief Report whether a regular file, not a directory, exists at a path.
+ * Report whether a regular file, not a directory, exists at a path.
  * @param path The path to test.
  * @return YES when a regular file exists there.
  * @ghidraAddress 0x5c434
@@ -43,7 +43,7 @@ NSMutableArray *RhParsePlistArray(NSData *data);
 BOOL RhFileExists(NSString *path);
 
 /**
- * @brief The byte size of the file at a path.
+ * The byte size of the file at a path.
  *
  * It gates on RhFileExists, then reads the NSFileSize attribute.
  *
@@ -54,7 +54,7 @@ BOOL RhFileExists(NSString *path);
 int getFileSize(NSString *path);
 
 /**
- * @brief Test one bit of an NSArray of NSNumber treated as a packed bitfield of 32 bits per
+ * Test one bit of an NSArray of NSNumber treated as a packed bitfield of 32 bits per
  * element.
  *
  * Element `bit / 32`'s intValue is tested against `1 << (bit & 31)`. Out-of-range indices read as
@@ -68,7 +68,7 @@ int getFileSize(NSString *path);
 BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit);
 
 /**
- * @brief The MD5 of a C string as a 16-byte NSData.
+ * The MD5 of a C string as a 16-byte NSData.
  *
  * It is used as the Blowfish key, which is MD5(uuId).
  *
@@ -79,14 +79,14 @@ BOOL RhTestBitInNumberArray(NSArray *numberArray, unsigned bit);
 NSData *RhMD5Data(const char *cString);
 
 /**
- * @brief The lowercase hex MD5 digest of a C string.
+ * The lowercase hex MD5 digest of a C string.
  * @param cString The string to hash.
  * @return The digest as a hex string.
  * @ghidraAddress 0x5b534
  */
 NSString *ComputeMD5HexString(const char *cString);
 /**
- * @brief The lowercase hex SHA-256 digest of a C string.
+ * The lowercase hex SHA-256 digest of a C string.
  * @param cString The string to hash.
  * @return The digest as a hex string.
  * @ghidraAddress 0x5bc04
@@ -94,7 +94,7 @@ NSString *ComputeMD5HexString(const char *cString);
 NSString *ComputeSHA256HexString(const char *cString);
 
 /**
- * @brief The wall-clock time in milliseconds, from gettimeofday as tv_sec * 1000 + tv_usec / 1000.
+ * The wall-clock time in milliseconds, from gettimeofday as tv_sec * 1000 + tv_usec / 1000.
  *
  * The original 32-bit binary returned a 32-bit long; it is kept as a long here.
  *
@@ -104,7 +104,7 @@ NSString *ComputeSHA256HexString(const char *cString);
 long getTimeMillis(void);
 
 /**
- * @brief The byte length of the UTF-8 sequence whose lead byte is s[0].
+ * The byte length of the UTF-8 sequence whose lead byte is s[0].
  *
  * Only the lead byte is inspected. Used by the neTextTexture text layout.
  *
@@ -116,7 +116,7 @@ long getTimeMillis(void);
 int utf8CharLen(const char *s);
 
 /**
- * @brief Report whether a point lies within a circle, inclusive of the boundary.
+ * Report whether a point lies within a circle, inclusive of the boundary.
  *
  * It is a pure integer squared-distance test.
  *
@@ -131,7 +131,7 @@ int utf8CharLen(const char *s);
 BOOL pointInCircle(int x, int y, int cx, int cy, int r);
 
 /**
- * @brief Load a bundled PNG, honouring the device idiom and screen scale.
+ * Load a bundled PNG, honouring the device idiom and screen scale.
  *
  * On iPad it loads a plain "name.png". On iPhone it tries the "name@2x" and "name~..." scaled
  * variants and rebuilds a scale-2 UIImage via CGImage when the retina asset is used.

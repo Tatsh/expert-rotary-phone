@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A music-checker song row.
+ * A music-checker song row.
  *
  * A banner background plus update-date, title, and genre labels. Layout x-offsets vary by iPad
  * and iOS version, computed in init. Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -12,12 +12,12 @@
 @class ArcadeScoreData;
 
 /**
- * @brief One music-checker song row.
+ * One music-checker song row.
  */
 @interface CheckerMusicCell : UITableViewCell
 
 /**
- * @brief Bind the row to one arcade song record: its update date (formatted yyyy/MM/dd), title and
+ * Bind the row to one arcade song record: its update date (formatted yyyy/MM/dd), title and
  * genre are drawn into three labels over the list banner.
  * @param scoreData The record to bind.
  */

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The engine-side renderer facade.
+ * The engine-side renderer facade.
  *
  * It covers the abstract renderer interface, the global "current renderer", the immediate drawing
  * primitives (line, triangle, rect, quad and textured quad), the 4x4 matrix helpers, the
@@ -20,7 +20,7 @@
 #include <memory>
 
 /**
- * @brief A column-major 4x4 matrix, laid out exactly like the 16-word blocks the binary builds on
+ * A column-major 4x4 matrix, laid out exactly like the 16-word blocks the binary builds on
  * the stack and hands to loadMatrix (glLoadMatrixf).
  */
 struct neMatrix4 {
@@ -28,7 +28,7 @@ struct neMatrix4 {
 };
 
 /**
- * @brief Build an identity rotation and scale with the given translation.
+ * Build an identity rotation and scale with the given translation.
  * @param out The matrix to fill.
  * @param tx Translation along x.
  * @param ty Translation along y.
@@ -38,7 +38,7 @@ struct neMatrix4 {
 void matrixSetTranslate(neMatrix4 &out, float tx, float ty, float tz);
 
 /**
- * @brief Build a rotation about the Z axis (cosine and sine on the XY block).
+ * Build a rotation about the Z axis (cosine and sine on the XY block).
  * @param out The matrix to fill.
  * @param radians The rotation angle, in radians.
  * @ghidraAddress 0x12b2c
@@ -46,7 +46,7 @@ void matrixSetTranslate(neMatrix4 &out, float tx, float ty, float tz);
 void matrixSetRotateZ(neMatrix4 &out, float radians);
 
 /**
- * @brief Build a top-left-origin orthographic projection.
+ * Build a top-left-origin orthographic projection.
  *
  * m[0] = 2/w, m[5] = -2/h (Y flipped), m[10] = 1/(far-near), m[12] = -1, m[13] = 1,
  * m[14] = -near/(far-near).
@@ -60,7 +60,7 @@ void matrixSetRotateZ(neMatrix4 &out, float radians);
 void matrixSetOrtho(neMatrix4 &out, float width, float height, float near, float far);
 
 /**
- * @brief Multiply two column-major matrices into a third, using the NEON 4x4 multiply.
+ * Multiply two column-major matrices into a third, using the NEON 4x4 multiply.
  * @param out Receives `a * b`; must not alias @p a or @p b.
  * @param a The left operand.
  * @param b The right operand.
@@ -69,7 +69,7 @@ void matrixSetOrtho(neMatrix4 &out, float width, float height, float near, float
 void matrix4MultiplyInto(neMatrix4 &out, const neMatrix4 &a, const neMatrix4 &b);
 
 /**
- * @brief Multiply in place: `inout = inout * rhs`. Copies @p inout, then calls
+ * Multiply in place: `inout = inout * rhs`. Copies @p inout, then calls
  * matrix4MultiplyInto().
  * @param inout The matrix to multiply and overwrite.
  * @param rhs The right operand.
@@ -80,7 +80,7 @@ void matrix4Multiply(neMatrix4 &inout, const neMatrix4 &rhs);
 namespace ne {
 
 /**
- * @brief The abstract renderer: the polymorphic GL-wrapper interface every primitive dispatches
+ * The abstract renderer: the polymorphic GL-wrapper interface every primitive dispatches
  * through.
  *
  * The concrete backend (ne::neGLES_11) overrides each method with a thin OpenGL ES 1.1 call. Only
@@ -93,13 +93,13 @@ namespace ne {
 class C_RENDER {
 public:
     /**
-     * @brief Destroy the renderer. Virtual so `delete` through this interface reaches the
+     * Destroy the renderer. Virtual so `delete` through this interface reaches the
      * backend.
      */
     virtual ~C_RENDER() = default;
 
     /**
-     * @brief Query the device capabilities and activate the default GL state.
+     * Query the device capabilities and activate the default GL state.
      *
      * Vtable slot +0x08. Slot +0x04 is the compiler-emitted deleting destructor (invoked by
      * neSetCurrentRenderer's `delete`), not a distinct shutdown method — the virtual destructor
@@ -108,7 +108,7 @@ public:
     virtual void initialize() = 0;
 
     /**
-     * @brief glViewport. Vtable slot +0x50.
+     * glViewport. Vtable slot +0x50.
      * @param x Left edge, in pixels.
      * @param y Bottom edge, in pixels.
      * @param w Width, in pixels.
@@ -116,75 +116,75 @@ public:
      */
     virtual void setViewport(int x, int y, int w, int h) = 0;
     /**
-     * @brief glMatrixMode followed by glLoadMatrixf. Vtable slot +0x54.
+     * glMatrixMode followed by glLoadMatrixf. Vtable slot +0x54.
      * @param mode The engine's matrix-mode ordinal.
      * @param m The matrix to load.
      */
     virtual void loadMatrix(int mode, const neMatrix4 &m) = 0;
     /**
-     * @brief glGenBuffers for a single buffer. Vtable slot +0x68.
+     * glGenBuffers for a single buffer. Vtable slot +0x68.
      * @param outName Receives the generated buffer name.
      */
     virtual void genBuffer(unsigned &outName) = 0;
     /**
-     * @brief glActiveTexture. Vtable slot +0x70.
+     * glActiveTexture. Vtable slot +0x70.
      * @param unit The texture unit to select.
      */
     virtual void selectTextureUnit(int unit) = 0;
     /**
-     * @brief glColorPointer. Vtable slot +0x78.
+     * glColorPointer. Vtable slot +0x78.
      * @param ptr The colour array.
      * @param stride The byte stride between colours.
      */
     virtual void colorPointer(const void *ptr, int stride) = 0;
     /**
-     * @brief glVertexPointer. Vtable slot +0x88.
+     * glVertexPointer. Vtable slot +0x88.
      * @param ptr The vertex array.
      * @param size Components per vertex.
      * @param stride The byte stride between vertices.
      */
     virtual void vertexPointer(const void *ptr, int size, int stride) = 0;
     /**
-     * @brief glTexCoordPointer. Vtable slot +0x94.
+     * glTexCoordPointer. Vtable slot +0x94.
      * @param ptr The texture-coordinate array.
      * @param stride The byte stride between coordinates.
      */
     virtual void texCoordPointer(const void *ptr, int stride) = 0;
     /**
-     * @brief glBindBuffer against the element-array target. Vtable slot +0xac.
+     * glBindBuffer against the element-array target. Vtable slot +0xac.
      * @param name The buffer name to bind.
      */
     virtual void bindElementBuffer(unsigned name) = 0;
     /**
-     * @brief glBufferData. Vtable slot +0xb0.
+     * glBufferData. Vtable slot +0xb0.
      * @param data The data to upload.
      * @param size The upload size, in bytes.
      * @param usage The engine's buffer-usage ordinal.
      */
     virtual void bufferData(const void *data, int size, int usage) = 0;
     /**
-     * @brief glGenTextures for a single texture. Vtable slot +0xb4.
+     * glGenTextures for a single texture. Vtable slot +0xb4.
      * @param outName Receives the generated texture name.
      */
     virtual void genTexture(unsigned &outName) = 0;
     /**
-     * @brief glDeleteTextures, then clear the bind cache. Vtable slot +0xb8.
+     * glDeleteTextures, then clear the bind cache. Vtable slot +0xb8.
      * @param name The texture name to delete.
      */
     virtual void deleteTexture(unsigned name) = 0;
     /**
-     * @brief glBindTexture, honouring the per-unit bind cache. Vtable slot +0xc0.
+     * glBindTexture, honouring the per-unit bind cache. Vtable slot +0xc0.
      * @param name The texture name to bind.
      */
     virtual void bindTexture(unsigned name) = 0;
     /**
-     * @brief glTexParameteri. Vtable slot +0xc4.
+     * glTexParameteri. Vtable slot +0xc4.
      * @param type The engine's texture-parameter ordinal.
      * @param value The value to set.
      */
     virtual void applyTexParameter(int type, int value) = 0;
     /**
-     * @brief glTexImage2D. Vtable slot +0xcc.
+     * glTexImage2D. Vtable slot +0xcc.
      * @param format The engine's pixel-format ordinal.
      * @param w Width, in texels.
      * @param h Height, in texels.
@@ -192,38 +192,38 @@ public:
      */
     virtual void uploadTexture(int format, int w, int h, const void *pixels) = 0;
     /**
-     * @brief glBlendFunc with the default blend equation. Vtable slot +0xd0.
+     * glBlendFunc with the default blend equation. Vtable slot +0xd0.
      * @param src The engine's source-factor ordinal.
      * @param dst The engine's destination-factor ordinal.
      */
     virtual void setBlendFunc(int src, int dst) = 0;
     /**
-     * @brief glBlendFunc with an explicit blend equation. Vtable slot +0xd4.
+     * glBlendFunc with an explicit blend equation. Vtable slot +0xd4.
      * @param src The engine's source-factor ordinal.
      * @param dst The engine's destination-factor ordinal.
      * @param equation The blend equation.
      */
     virtual void setBlendFuncSeparate(int src, int dst, unsigned equation) = 0;
     /**
-     * @brief glEnable or glDisable. Vtable slot +0xe0.
+     * glEnable or glDisable. Vtable slot +0xe0.
      * @param cap The engine's capability ordinal.
      * @param on YES to enable, NO to disable.
      */
     virtual void setEnable(int cap, bool on) = 0;
     /**
-     * @brief glEnableClientState or glDisableClientState. Vtable slot +0xe4.
+     * glEnableClientState or glDisableClientState. Vtable slot +0xe4.
      * @param array The engine's client-array ordinal.
      * @param on YES to enable, NO to disable.
      */
     virtual void setClientArray(int array, bool on) = 0;
     /**
-     * @brief glDrawArrays. Vtable slot +0x100.
+     * glDrawArrays. Vtable slot +0x100.
      * @param mode The engine's primitive-mode ordinal.
      * @param count The vertex count.
      */
     virtual void drawArrays(int mode, int count) = 0;
     /**
-     * @brief glDrawElements. Vtable slot +0x104.
+     * glDrawElements. Vtable slot +0x104.
      * @param mode The engine's primitive-mode ordinal.
      * @param count The index count.
      * @param offset The byte offset into the bound element buffer.
@@ -234,25 +234,25 @@ public:
 } // namespace ne
 
 /**
- * @brief The current renderer (Ghidra: g_pCurrentRenderer), lazily created by neEnsureRenderer().
+ * The current renderer (Ghidra: g_pCurrentRenderer), lazily created by neEnsureRenderer().
  * @return The current renderer, or nullptr before one has been created.
  * @ghidraAddress 0x12c14
  */
 ne::C_RENDER *neGetCurrentRenderer(void);
 /**
- * @brief Install @p r as the current renderer, deleting the previous one.
+ * Install @p r as the current renderer, deleting the previous one.
  * @param r The renderer to install; ownership transfers.
  * @ghidraAddress 0x12c24
  */
 void neSetCurrentRenderer(ne::C_RENDER *r);
 /**
- * @brief Create the current renderer if there is not one already.
+ * Create the current renderer if there is not one already.
  * @ghidraAddress 0x12c4c
  */
 void neEnsureRenderer(void);
 
 /**
- * @brief A refcounted orthographic projection plus its pixel rectangle.
+ * A refcounted orthographic projection plus its pixel rectangle.
  *
  * A non-polymorphic value type (Ghidra: refcount at +0x00, the ortho matrix at +0x10, the
  * rectangle at +0x50).
@@ -267,7 +267,7 @@ struct neViewport {
 };
 
 /**
- * @brief Build an orthographic viewport with the given projection size and glViewport rectangle.
+ * Build an orthographic viewport with the given projection size and glViewport rectangle.
  * @param width Projection width, in pixels.
  * @param height Projection height, in pixels.
  * @param x glViewport rectangle left edge.
@@ -280,14 +280,14 @@ struct neViewport {
 neViewport *neCreateOrthoViewport(float width, float height, int x, int y, int w, int h);
 
 /**
- * @brief Retain @p vp as the app-side current viewport, releasing the previous one.
+ * Retain @p vp as the app-side current viewport, releasing the previous one.
  * @param vp The viewport to install.
  * @ghidraAddress 0x14db8
  */
 void neSetCurrentViewport(neViewport *vp);
 
 /**
- * @brief If @p vp differs from the renderer's last-applied viewport, retain it, issue glViewport
+ * If @p vp differs from the renderer's last-applied viewport, retain it, issue glViewport
  * and load its projection matrix.
  * @param r The renderer to apply the viewport to.
  * @param vp The viewport to apply.
@@ -296,7 +296,7 @@ void neSetCurrentViewport(neViewport *vp);
 void neApplyViewport(ne::C_RENDER *r, neViewport *vp);
 
 /**
- * @brief The app-side current viewport, as set by neSetCurrentViewport().
+ * The app-side current viewport, as set by neSetCurrentViewport().
  *
  * Used by the primitives and by neDrawText (neTextTexture.mm) to re-apply the projection each
  * draw.
@@ -305,7 +305,7 @@ void neApplyViewport(ne::C_RENDER *r, neViewport *vp);
 neViewport *neGetCurrentViewport(void);
 
 /**
- * @brief Release one reference of a viewport, deleting it on the last one.
+ * Release one reference of a viewport, deleting it on the last one.
  *
  * The shipped generic helper is type-erased over any refcounted engine object; in this subset
  * viewports are its only clients.
@@ -318,14 +318,14 @@ void neReleaseRef(neViewport *vp);
 // the caller); colours are 0..255 (a, r, g, b) and are stored premultiplied.
 
 /**
- * @brief Reset to the default 2D draw state: apply the current viewport, load an identity model
+ * Reset to the default 2D draw state: apply the current viewport, load an identity model
  * matrix and disable every extra capability.
  * @ghidraAddress 0x14ef4
  */
 void neApplyDefaultRenderState(void);
 
 /**
- * @brief Draw a line between two points.
+ * Draw a line between two points.
  * @param x0 First endpoint x, in pixels.
  * @param y0 First endpoint y, in pixels.
  * @param x1 Second endpoint x, in pixels.
@@ -338,7 +338,7 @@ void neApplyDefaultRenderState(void);
  */
 void neDrawLine(float x0, float y0, float x1, float y1, int a, int r, int g, int b);
 /**
- * @brief Draw a filled triangle.
+ * Draw a filled triangle.
  * @param x0 First vertex x, in pixels.
  * @param y0 First vertex y, in pixels.
  * @param x1 Second vertex x, in pixels.
@@ -354,7 +354,7 @@ void neDrawLine(float x0, float y0, float x1, float y1, int a, int r, int g, int
 void neDrawTriangle(
     float x0, float y0, float x1, float y1, float x2, float y2, int a, int r, int g, int b);
 /**
- * @brief Draw a filled axis-aligned rectangle.
+ * Draw a filled axis-aligned rectangle.
  * @param x Left edge, in pixels.
  * @param y Top edge, in pixels.
  * @param w Width, in pixels.
@@ -367,7 +367,7 @@ void neDrawTriangle(
  */
 void neDrawRect(float x, float y, float w, float h, int a, int r, int g, int b);
 /**
- * @brief Draw a filled quadrilateral.
+ * Draw a filled quadrilateral.
  * @param x0 First vertex x, in pixels.
  * @param y0 First vertex y, in pixels.
  * @param x1 Second vertex x, in pixels.
@@ -396,7 +396,7 @@ void neDrawQuad(float x0,
                 int b);
 
 /**
- * @brief Blit a textured, rotated, tinted quad. The core sprite path.
+ * Blit a textured, rotated, tinted quad. The core sprite path.
  *
  * The model matrix is `translate(x, y) [* rotateZ(-rotation)] * translate(-pivotX, -pivotY)`.
  * @param sprite Carries the ne::C_TEXTURE at +0x04; a null texture draws untextured.
@@ -439,7 +439,7 @@ void neDrawTexturedQuad(void *sprite,
                         const float *clipRect);
 
 /**
- * @brief Cache-aware glTexParameteri: skips the call when @p value already matches the texture's
+ * Cache-aware glTexParameteri: skips the call when @p value already matches the texture's
  * per-type cache.
  * @param tex The texture whose parameter cache to consult.
  * @param r The renderer to issue the call through.
@@ -450,7 +450,7 @@ void neDrawTexturedQuad(void *sprite,
 void setTexParamCached(void *tex, ne::C_RENDER *r, int type, int value);
 
 /**
- * @brief A polymorphic scene-graph transform node.
+ * A polymorphic scene-graph transform node.
  *
  * A tree of per-node local and world matrices, linked into an owner list and a
  * parent/child/sibling ring. The full node vtable (draw and update slots) is outside this subset;
@@ -459,18 +459,18 @@ void setTexParamCached(void *tex, ne::C_RENDER *r, int type, int value);
 class neRenderNode {
 public:
     /**
-     * @brief Construct a detached node: every link points at itself.
+     * Construct a detached node: every link points at itself.
      * @ghidraAddress 0x14c5c
      */
     neRenderNode();
     /**
-     * @brief Destroy the node. The compiler-emitted deleting destructor is FUN_00014d70.
+     * Destroy the node. The compiler-emitted deleting destructor is FUN_00014d70.
      * @ghidraAddress 0x14cf4
      */
     virtual ~neRenderNode();
 
     /**
-     * @brief Detach this node from its parent's child ring.
+     * Detach this node from its parent's child ring.
      * @ghidraAddress 0x14d40
      */
     void unlink();

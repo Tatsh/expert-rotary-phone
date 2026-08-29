@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The dynamic text and glyph subsystem.
+ * The dynamic text and glyph subsystem.
  *
  * A singleton manager owning a cache of rendered glyphs and a list of 256x256 grayscale atlas
  * textures they are packed into, plus the string layout and draw entry point neDrawText.
@@ -16,7 +16,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One glyph atlas: a 256x256 GL_ALPHA texture (created via neCreateTextureFromData) plus
+ * One glyph atlas: a 256x256 GL_ALPHA texture (created via neCreateTextureFromData) plus
  * the CPU-side pixel buffer it was uploaded from.
  *
  * Ghidra: CreateNewTextTexture (FUN_00017b28) fills these.
@@ -24,7 +24,7 @@
 class neTextTexture {
 public:
     /**
-     * @brief Release the GL texture and free the pixel buffer.
+     * Release the GL texture and free the pixel buffer.
      * @ghidraAddress 0x180a4
      */
     ~neTextTexture();
@@ -46,7 +46,7 @@ struct neGlyph;
 #endif
 
 /**
- * @brief The text-texture manager (Ghidra: the singleton at DAT_0018845c).
+ * The text-texture manager (Ghidra: the singleton at DAT_0018845c).
  *
  * Owns the glyph cache list (+0x04) and the atlas node list (+0x0c); +0x00 is the content-scale
  * shift applied to point sizes and +0x08 the atlas count. The members below are the class methods
@@ -55,7 +55,7 @@ struct neGlyph;
 class neTextTextureMgr {
 public:
     /**
-     * @brief Free every cached glyph and destroy every atlas texture.
+     * Free every cached glyph and destroy every atlas texture.
      *
      * The binary also invokes this explicitly to evict the atlas cache once it grows past four
      * textures, after which the emptied manager keeps being used.
@@ -64,7 +64,7 @@ public:
     ~neTextTextureMgr();
 
     /**
-     * @brief Linear search of the glyph cache for the first UTF-8 character of @p utf8 at
+     * Linear search of the glyph cache for the first UTF-8 character of @p utf8 at
      * @p pointSize.
      * @param utf8 The string whose first character to look up.
      * @param pointSize The rendered point size.
@@ -74,7 +74,7 @@ public:
     neGlyph *findCachedGlyph(const char *utf8, int pointSize);
 
     /**
-     * @brief Find the atlas whose index is @p atlasId.
+     * Find the atlas whose index is @p atlasId.
      * @param atlasId The atlas index.
      * @return The atlas, or nullptr when there is no such index.
      * @ghidraAddress 0x17b10
@@ -82,13 +82,13 @@ public:
     neTextTexture *findTextTextureById(int atlasId);
 
     /**
-     * @brief Allocate a fresh 256x256 GL_ALPHA atlas and link it into the manager's list.
+     * Allocate a fresh 256x256 GL_ALPHA atlas and link it into the manager's list.
      * @ghidraAddress 0x17b28
      */
     void createNewTextTexture();
 
     /**
-     * @brief Reserve a @p w by @p h cell in the current atlas, wrapping to a new row or opening a
+     * Reserve a @p w by @p h cell in the current atlas, wrapping to a new row or opening a
      * new atlas when the current one is full.
      * @param w Cell width, in texels.
      * @param h Cell height, in texels.
@@ -100,7 +100,7 @@ public:
     bool allocGlyphAtlasSlot(int w, int h, int *outX, int *outY);
 
     /**
-     * @brief Allocate a glyph record for the first UTF-8 character of @p utf8, rasterise it into
+     * Allocate a glyph record for the first UTF-8 character of @p utf8, rasterise it into
      * an atlas, and cache it.
      * @param utf8 The string whose first character to render.
      * @param fontName The font to render with.
@@ -112,7 +112,7 @@ public:
 
 #ifdef __OBJC__
     /**
-     * @brief Rasterise @p utf8 through @p label into the reserved atlas cell and fill the glyph's
+     * Rasterise @p utf8 through @p label into the reserved atlas cell and fill the glyph's
      * placement.
      * @param utf8 The string whose first character to rasterise.
      * @param label The label configured with the target font and point size.
@@ -132,14 +132,14 @@ public:
 };
 
 /**
- * @brief The manager singleton (Ghidra: returns DAT_0018845c).
+ * The manager singleton (Ghidra: returns DAT_0018845c).
  * @return The text-texture manager.
  * @ghidraAddress 0x17998
  */
 neTextTextureMgr *neGetTextTextureMgr(void);
 
 /**
- * @brief The byte length of the UTF-8 sequence led by `*s`.
+ * The byte length of the UTF-8 sequence led by `*s`.
  * @param mgr The manager; the receiver in the binary, unused by the decode itself.
  * @param s The string to inspect.
  * @return 1..6 for a valid lead byte, -1 on an invalid lead byte, 0 on a stray continuation byte.
@@ -148,7 +148,7 @@ neTextTextureMgr *neGetTextTextureMgr(void);
 int utf8CharLen(neTextTextureMgr *mgr, const char *s);
 
 /**
- * @brief Draw @p text at (@p x, @p y).
+ * Draw @p text at (@p x, @p y).
  *
  * Glyphs are laid out through the atlas cache and rendered as batched textured quads via the
  * current renderer.

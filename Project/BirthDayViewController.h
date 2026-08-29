@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The age-gate modal shown before a purchase when no birthday is on record.
+ * The age-gate modal shown before a purchase when no birthday is on record.
  *
  * This is Japan's youth spending-limit compliance: a rounded, gradient-bordered panel that slides
  * in over a dimmed backdrop, showing an instruction text view, a YearAndMonthPicker, and OK,
@@ -17,12 +17,12 @@
 @class YearAndMonthPicker;
 
 /**
- * @brief Receives notice that the age gate closed.
+ * Receives notice that the age gate closed.
  */
 @protocol BirthDayViewControllerDelegate <NSObject>
 @optional
 /**
- * @brief The gate closed: a birthday was entered, or the user cancelled.
+ * The gate closed: a birthday was entered, or the user cancelled.
  *
  * StorePackDetailViewPad implements this.
  */
@@ -30,7 +30,7 @@
 @end
 
 /**
- * @brief The age-gate modal shown before a purchase when no birthday is on record.
+ * The age-gate modal shown before a purchase when no birthday is on record.
  */
 @interface BirthDayViewController : UIViewController {
     /** An open or close animation is running; it guards against re-entry. */
@@ -49,20 +49,20 @@
 @property(nonatomic, assign) id<BirthDayViewControllerDelegate> delegate;
 
 /**
- * @brief Slide the panel in from off-screen above and fade the dim backdrop up to 50%.
+ * Slide the panel in from off-screen above and fade the dim backdrop up to 50%.
  * @ghidraAddress 0x84c80
  */
 - (void)startOpenAnimation;
 
 /**
- * @brief Slide the panel off-screen and fade the dim backdrop out; the didStop callback notifies
+ * Slide the panel off-screen and fade the dim backdrop out; the didStop callback notifies
  * the delegate.
  * @ghidraAddress 0x84e84
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief The OK button: reveal the picker panel by sliding the info panel out and the picker
+ * The OK button: reveal the picker panel by sliding the info panel out and the picker
  * sub-panel in.
  * @param sender The tapped button.
  * @ghidraAddress 0x848d4
@@ -70,14 +70,14 @@
 - (void)onOkBtn:(id)sender;
 
 /**
- * @brief The Cancel button: record the cancellation, then close.
+ * The Cancel button: record the cancellation, then close.
  * @param sender The tapped button.
  * @ghidraAddress 0x84c30
  */
 - (void)onCancelBtn:(id)sender;
 
 /**
- * @brief The Decide button: read the year and month off the picker, save them as the birthday (the
+ * The Decide button: read the year and month off the picker, save them as the birthday (the
  * 15th of that month, at noon), clear the cancel flag, then close.
  * @param sender The tapped button.
  * @ghidraAddress 0x84af0

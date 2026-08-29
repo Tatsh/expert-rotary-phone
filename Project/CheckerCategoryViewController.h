@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The music-checker's genre-category list.
+ * The music-checker's genre-category list.
  *
  * A transparent, separator-less grouped UITableView (one CheckerCategoryCell per non-empty
  * category) with a "get data" button in its header that syncs the player's arcade scores over
@@ -17,12 +17,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The music-checker's genre-category list.
+ * The music-checker's genre-category list.
  */
 @interface CheckerCategoryViewController : UITableViewController
 
 /**
- * @brief Build the transparent grouped table and the header "get data" button and spinner cover,
+ * Build the transparent grouped table and the header "get data" button and spinner cover,
  * then load the locally-cached arcade scores into 25 per-category buckets: 24 genres plus a
  * "latest 10" bucket.
  * @param style The table style.
@@ -32,7 +32,7 @@
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 /**
- * @brief Kick off the arcade-score HTTP sync, posting the KONAMI ID, password and one-time
+ * Kick off the arcade-score HTTP sync, posting the KONAMI ID, password and one-time
  * password. The OTP-input screen calls it back once the code is entered.
  * @param otp The one-time password, or nil when none is required.
  * @ghidraAddress 0xd06b4

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "free request" friend-request confirm overlay.
+ * The "free request" friend-request confirm overlay.
  *
  * FreeRequestListViewController raises it when a recommended-friend row is tapped. A full-screen
  * dimmed UIView carrying a "frilis_window" card: the friend's character art, name, and player id,
@@ -17,12 +17,12 @@
 #import "Downloader.h"      // Downloader + DownloaderDelegate
 
 /**
- * @brief The "free request" friend-request confirm overlay.
+ * The "free request" friend-request confirm overlay.
  */
 @interface FreeRequestDetail : UIView <DownloaderDelegate, CommonAlertViewDelegate>
 
 /**
- * @brief Build the overlay for one recommended-friend row.
+ * Build the overlay for one recommended-friend row.
  * @param frame The host superview's frame; full screen.
  * @param friendData The NSValue-wrapped FriendListData (see DownloadMain.h) whose player id,
  * name, character id and rank tallies drive the card.
@@ -32,7 +32,7 @@
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData;
 
 /**
- * @brief Fade the card in, alpha 0 to 1 over 0.3 s, marking the overlay enabled and animating.
+ * Fade the card in, alpha 0 to 1 over 0.3 s, marking the overlay enabled and animating.
  * @ghidraAddress 0xe42f8
  */
 - (void)startOpenAnimation;

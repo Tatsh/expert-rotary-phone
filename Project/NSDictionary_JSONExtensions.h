@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The TouchJSON convenience category building an NSDictionary from JSON data or a string.
+ * The TouchJSON convenience category building an NSDictionary from JSON data or a string.
  *
  * It goes through CJSONDeserializer. The binary's Downloader::getDataInJSON (@ 0x62948) calls
  * +[NSDictionary dictionaryWithJSONData:error:] as its pre-iOS 5 fallback, for when
@@ -11,18 +11,18 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief TouchJSON convenience constructors that parse JSON into a dictionary.
+ * TouchJSON convenience constructors that parse JSON into a dictionary.
  */
 @interface NSDictionary (NSDictionary_JSONExtensions)
 /**
- * @brief Parse JSON bytes into a dictionary.
+ * Parse JSON bytes into a dictionary.
  * @param inData The JSON bytes.
  * @param outError Receives the parse error; may be NULL.
  * @return The parsed dictionary, or nil on failure.
  */
 + (NSDictionary *)dictionaryWithJSONData:(NSData *)inData error:(NSError **)outError;
 /**
- * @brief Parse a JSON string into a dictionary.
+ * Parse a JSON string into a dictionary.
  * @param inString The JSON text.
  * @param outError Receives the parse error; may be NULL.
  * @return The parsed dictionary, or nil on failure.

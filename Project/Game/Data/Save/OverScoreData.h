@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The OverScoreData Core Data managed object: online rival scores, added in model version
+ * The OverScoreData Core Data managed object: online rival scores, added in model version
  * v2.
  *
  * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "OverScoreData").
@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief An online rival's score for one music and sheet, keyed by their remote player id.
+ * An online rival's score for one music and sheet, keyed by their remote player id.
  */
 @interface OverScoreData : NSManagedObject
 
@@ -37,14 +37,14 @@
 // Recovered from call sites; previously declared as local category seams.
 
 /**
- * @brief A no-op stub taking a context argument. It is not the designated initialiser.
+ * A no-op stub taking a context argument. It is not the designated initialiser.
  * @param context The managed object context; ignored.
  * @ghidraAddress 0xba0a0
  */
 + (void)init:(NSManagedObjectContext *)context;
 
 /**
- * @brief Delete every persisted OverScoreData record; the device-change and initForConvert reset.
+ * Delete every persisted OverScoreData record; the device-change and initForConvert reset.
  * @param context The managed object context to delete from.
  */
 + (void)deleteAll:(NSManagedObjectContext *)context;

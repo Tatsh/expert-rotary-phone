@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The note-play result screen, spawned by the play task on a completed normal play.
+ * The note-play result screen, spawned by the play task on a completed normal play.
  *
  * Reached through PlayTaskGotoResult and PlayResultCreateTask. Reconstructed from Ghidra project
  * rb420, program PopnRhythmin (ctor FUN_0003d5bc, update FUN_0003d690).
@@ -41,22 +41,22 @@ class AepLyrCtrl;
 class neTextureForiOS;
 
 /**
- * @brief The post-play results task: the score, judgement tallies and reward presentation shown
+ * The post-play results task: the score, judgement tallies and reward presentation shown
  * once a song ends.
  */
 class PlayResultTask : public ne::C_TASK {
 public:
     /**
-     * @brief Construct the results task.
+     * Construct the results task.
      * @ghidraAddress 0x3d5bc
      */
     PlayResultTask();
     /**
-     * @brief Tear the task down. Defined out-of-line: the unique_ptr members are incomplete here.
+     * Tear the task down. Defined out-of-line: the unique_ptr members are incomplete here.
      */
     ~PlayResultTask() override;
     /**
-     * @brief Per-frame results tick: advance the presentation state machine.
+     * Per-frame results tick: advance the presentation state machine.
      * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
      * @ghidraAddress 0x3d690
      */

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A store song-pack row.
+ * A store song-pack row.
  *
  * Jacket artwork with a drop shadow, pack name, price, and "purchased" labels, and the new,
  * arcade-viewer, and chara-ticket marker icons. Reconstructed from Ghidra project rb420, program
@@ -13,7 +13,7 @@
 @class StorePackInfo;
 
 /**
- * @brief One pack row of the store catalogue table.
+ * One pack row of the store catalogue table.
  */
 @interface StorePackCell : UITableViewCell
 
@@ -30,7 +30,7 @@
 /** The "new" badge. */
 @property(nonatomic, retain) UIImageView *newMarker;
 /**
- * @brief The "new" badge.
+ * The "new" badge.
  *
  * The name begins with the ARC `new` method family, which would imply a +1 owned getter, so the
  * getter opts out — matching the objc_method_family(none) convention in AVBus.h.
@@ -46,13 +46,13 @@
 @property(nonatomic) BOOL isPurchased;
 
 /**
- * @brief Bind a pack model: the name, price, badges and the live purchased state.
+ * Bind a pack model: the name, price, badges and the live purchased state.
  * @param packInfo The pack to show.
  */
 - (void)loadPackInfo:(StorePackInfo *)packInfo;
 
 /**
- * @brief Replace the row's background image.
+ * Replace the row's background image.
  * @param image The new image.
  */
 - (void)setBgImage:(UIImage *)image;

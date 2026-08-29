@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The per-frame play and judge pass of the standard-mode main task.
+ * The per-frame play and judge pass of the standard-mode main task.
  *
  * It walks the active notes, hit-tests the current touches against each, dispatches hits to
  * NoteMng's judgement, auto-judges in demo mode, resolves holds, draws each note and its effects,
@@ -30,7 +30,7 @@
 class PlayTask;
 
 /**
- * @brief Per-note judge state.
+ * Per-note judge state.
  *
  * The play data owns a fixed pool of 60 of these at +0x3c8, each 24 bytes; FUN_0003126c looks one
  * up by note id, allocating a free slot (id below 0) on first touch.
@@ -63,7 +63,7 @@ struct NoteJudgeState {
 // which NoteMng invokes through a function pointer, stays a free function.
 
 /**
- * @brief The note engine's miss callback: apply the BAD/miss gauge penalty to the play data.
+ * The note engine's miss callback: apply the BAD/miss gauge penalty to the play data.
  *
  * It raises the missed flag, subtracts gaugeLossMiss and clamps the gauge to [0, 0x400]. The play
  * scene registers this into NoteMng at chart load (initPlayDataWithData); detectMiss fires it when

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A single arcade ("AC") song record, decoded from its zipped JSON .orb file.
+ * A single arcade ("AC") song record, decoded from its zipped JSON .orb file.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The four arcade chart difficulties, in ascending order.
+ * The four arcade chart difficulties, in ascending order.
  *
  * It keys the per-tier level, BPM, sheet and back-track lookups.
  */
@@ -24,7 +24,7 @@ typedef NS_ENUM(NSInteger, AcvDifficulty) {
 };
 
 /**
- * @brief One arcade song's metadata, charts and backing tracks.
+ * One arcade song's metadata, charts and backing tracks.
  */
 @interface AcMusicData : NSObject
 
@@ -64,7 +64,7 @@ typedef NS_ENUM(NSInteger, AcvDifficulty) {
 @property(nonatomic, copy) NSString *genreNameInitial;
 
 /**
- * @brief Decode a record from its .orb path.
+ * Decode a record from its .orb path.
  * @param path The .orb file path.
  * @param acMusicId The expected arcade music id.
  * @return The decoded record, or nil when the id does not match.
@@ -78,32 +78,32 @@ typedef NS_ENUM(NSInteger, AcvDifficulty) {
 // initPlayDataWithData:].
 
 /**
- * @brief The Easy note chart, from the "sheet_es" ZIP entry.
+ * The Easy note chart, from the "sheet_es" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0x66418
  */
 - (NSData *)sheetEasy;
 /**
- * @brief The Normal note chart, from the "sheet_n" ZIP entry.
+ * The Normal note chart, from the "sheet_n" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0x66434
  */
 - (NSData *)sheetNormal;
 /**
- * @brief The Hyper note chart, from the "sheet_h" ZIP entry.
+ * The Hyper note chart, from the "sheet_h" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0x66450
  */
 - (NSData *)sheetHyper;
 /**
- * @brief The EX note chart, from the "sheet_ex" ZIP entry.
+ * The EX note chart, from the "sheet_ex" ZIP entry.
  * @return The decrypted chart.
  * @ghidraAddress 0x6646c
  */
 - (NSData *)sheetEx;
 
 /**
- * @brief The decoded backing (BGM) track for a difficulty tier.
+ * The decoded backing (BGM) track for a difficulty tier.
  *
  * Reads the ZIP entries "bgm_es", "bgm_h" or "bgm_ex" of the .acv, BF-decrypted, and falls back to
  * "bgm_n" when the per-tier entry is absent, and for Normal.
@@ -118,56 +118,56 @@ typedef NS_ENUM(NSInteger, AcvDifficulty) {
 // defers to music name on a tie.
 
 /**
- * @brief The default comparator, by kana song name.
+ * The default comparator, by kana song name.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x66488
  */
 - (NSComparisonResult)compare:(AcMusicData *)other;
 /**
- * @brief Compare by arcade music id.
+ * Compare by arcade music id.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x664f8
  */
 - (NSComparisonResult)compareAcMusicId:(AcMusicData *)other;
 /**
- * @brief Compare by song name using NSLiteralSearch.
+ * Compare by song name using NSLiteralSearch.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x66530
  */
 - (NSComparisonResult)compareMusicNameCustom:(AcMusicData *)other;
 /**
- * @brief Compare by genre name using NSLiteralSearch, deferring to the song name on a tie.
+ * Compare by genre name using NSLiteralSearch, deferring to the song name on a tie.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x665a4
  */
 - (NSComparisonResult)compareGenreNameCustom:(AcMusicData *)other;
 /**
- * @brief Compare by Easy level.
+ * Compare by Easy level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x6660c
  */
 - (NSComparisonResult)compareLvEasy:(AcMusicData *)other;
 /**
- * @brief Compare by Normal level.
+ * Compare by Normal level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x66644
  */
 - (NSComparisonResult)compareLvNormal:(AcMusicData *)other;
 /**
- * @brief Compare by Hyper level.
+ * Compare by Hyper level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x6667c
  */
 - (NSComparisonResult)compareLvHyper:(AcMusicData *)other;
 /**
- * @brief Compare by EX level.
+ * Compare by EX level.
  * @param other The record to compare against.
  * @return The comparison result.
  * @ghidraAddress 0x666b4

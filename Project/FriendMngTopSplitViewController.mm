@@ -20,14 +20,14 @@
 #import "neEngineBridge.h" // neEngine::playSystemSe, neSceneManager::rootViewController
 
 /**
- * @brief The friend-management split screen's private transition completions and cover-tap handler.
+ * The friend-management split screen's private transition completions and cover-tap handler.
  */
 @interface FriendMngTopSplitViewController ()
-/** @brief The open transition finished: clear the re-entry guard. */
+/** The open transition finished: clear the re-entry guard. */
 - (void)endOpenAnimation;
-/** @brief The close transition finished: detach the view and notify the owner. */
+/** The close transition finished: detach the view and notify the owner. */
 - (void)endCloseAnimation;
-/** @brief A tap on the dimmed cover behind the panes: dismiss the screen. */
+/** A tap on the dimmed cover behind the panes: dismiss the screen. */
 - (void)handleTapCoverView;
 @end
 

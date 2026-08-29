@@ -34,7 +34,7 @@ static UIViewController *RootVC() {
 }
 
 /**
- * @brief The settings hub's private state and helpers.
+ * The settings hub's private state and helpers.
  */
 @interface SettingTableSplitViewController () {
 @public // the de-inlined static helpers (settingTableSyncRightViewFrame etc.)
@@ -48,16 +48,16 @@ static UIViewController *RootVC() {
     CGRect _viewFrm[4];                      /**< The right-pane frame, per tab. */
     CGRect _arrowFrm[4];                     /**< The arrow frame, per tab. */
 }
-/** @brief The open fade finished; clear the animation guard. */
+/** The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief The close fade finished; tear the hub down. */
+/** The close fade finished; tear the hub down. */
 - (void)endCloseAnimation;
 /**
- * @brief Slide the arrow to a section and cross-fade the right pane to it.
+ * Slide the arrow to a section and cross-fade the right pane to it.
  * @param index The section to show.
  */
 - (void)startViewAnimation:(SettingPane)index;
-/** @brief The dim cover was tapped; close the hub. */
+/** The dim cover was tapped; close the hub. */
 - (void)handleTapCoverView;
 @end
 

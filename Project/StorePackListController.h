@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The fetcher and cache for the store's song-pack catalogue.
+ * The fetcher and cache for the store's song-pack catalogue.
  *
  * It downloads the pack-list JSON, resolves the StoreKit products for any packs it does not yet
  * know, then builds or updates StorePackInfo models and notifies its delegate. It also holds the
@@ -24,31 +24,31 @@
 @class StorePackListController;
 
 /**
- * @brief Receives the pack-list fetch outcome.
+ * Receives the pack-list fetch outcome.
  */
 @protocol StorePackListControllerDelegate <NSObject>
 @optional
 /**
- * @brief A pack-list page arrived.
+ * A pack-list page arrived.
  * @param controller The list controller that fetched it.
  */
 - (void)packListDownloadSuccess:(StorePackListController *)controller;
 /**
- * @brief A pack-list fetch failed.
+ * A pack-list fetch failed.
  * @param controller The list controller that failed.
  * @param message The error message to surface.
  */
 - (void)packListDownloadError:(StorePackListController *)controller
                  errorMessage:(NSString *)message;
 /**
- * @brief A pack-list fetch returned no packs.
+ * A pack-list fetch returned no packs.
  * @param controller The list controller that fetched it.
  */
 - (void)packListDownloadNothing:(StorePackListController *)controller;
 @end
 
 /**
- * @brief Pages the pack catalogue in and resolves each page's StoreKit products.
+ * Pages the pack catalogue in and resolves each page's StoreKit products.
  */
 @interface StorePackListController : NSObject <DownloaderDelegate, SKProductsRequestDelegate> {
     NSMutableArray *m_ArrayPackInfo;      /**< The StorePackInfo cache, keyed by pack id. */
@@ -66,58 +66,58 @@
 @property(nonatomic, weak) id<StorePackListControllerDelegate> delegate;
 
 /**
- * @brief The store country code, cached from the last resolved product's priceLocale.
+ * The store country code, cached from the last resolved product's priceLocale.
  * @return The country code, or nil until one is known.
  * @ghidraAddress 0x577a4
  */
 + (NSString *)storeCountry;
 
 /**
- * @brief Whether a pack-list download or StoreKit lookup is in flight.
+ * Whether a pack-list download or StoreKit lookup is in flight.
  * @return YES while fetching.
  */
 - (BOOL)isFetching;
 /**
- * @brief Cancel any in-flight request.
+ * Cancel any in-flight request.
  */
 - (void)cancelFetching;
 /**
- * @brief Fetch the next page of packs, eight per page.
+ * Fetch the next page of packs, eight per page.
  * @param packId A pack id to seed the page with, or a non-positive value for none.
  * @return YES when a fetch was started.
  */
 - (BOOL)startFetchingPack:(int)packId;
 
 /**
- * @brief Look up a cached pack by id.
+ * Look up a cached pack by id.
  * @param packId The pack id.
  * @return The pack, or nil when it is not cached.
  */
 - (StorePackInfo *)getPackInfo:(int)packId;
 /**
- * @brief Look up a pack by id, creating and caching an empty one when absent.
+ * Look up a pack by id, creating and caching an empty one when absent.
  * @param packId The pack id.
  * @return The pack.
  */
 - (StorePackInfo *)addPackInfoFromID:(int)packId;
 
 /**
- * @brief The StorePackInfo cache.
+ * The StorePackInfo cache.
  * @return An array of StorePackInfo.
  */
 - (NSArray *)packInfos;
 /**
- * @brief The pack ids in display order.
+ * The pack ids in display order.
  * @return An array of NSNumber.
  */
 - (NSArray *)packIDList;
 /**
- * @brief The promotion-banner dictionaries.
+ * The promotion-banner dictionaries.
  * @return An array of dictionaries.
  */
 - (NSArray *)promotionList;
 /**
- * @brief Whether the server has more packs to page.
+ * Whether the server has more packs to page.
  * @return YES when another page is available.
  */
 - (BOOL)packlistContinued;

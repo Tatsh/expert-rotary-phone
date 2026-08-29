@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A custom iPad-style split container.
+ * A custom iPad-style split container.
  *
  * A fixed-width left view controller docked against a right view controller that fills the
  * remaining width. This is the base class the app's concrete split hubs (for example
@@ -16,7 +16,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A custom iPad-style split container: a fixed-width left view controller docked against a
+ * A custom iPad-style split container: a fixed-width left view controller docked against a
  * right view controller that fills the remaining width.
  */
 @interface CustomSplitViewController : UIViewController
@@ -28,7 +28,7 @@
 @property(nonatomic, strong) UIViewController *rightViewCtrl;
 
 /**
- * @brief Lay the two children side by side inside an explicit frame.
+ * Lay the two children side by side inside an explicit frame.
  * @param frame The container frame; CGRectZero uses the container view's own frame.
  * @param leftViewWidth The left column's width, in points.
  * @param leftViewController The left child.
@@ -42,7 +42,7 @@
              rightView:(UIViewController *)rightView;
 
 /**
- * @brief Lay the two children side by side inside the container view's own frame.
+ * Lay the two children side by side inside the container view's own frame.
  * @param leftViewWidth The left column's width, in points.
  * @param leftViewController The left child.
  * @param rightView The right child.

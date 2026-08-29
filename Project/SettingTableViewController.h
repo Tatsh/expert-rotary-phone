@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The top-level Settings screen.
+ * The top-level Settings screen.
  *
  * A grouped table of six sections whose rows open the various setting, how-to, and support
  * sub-screens. MainViewController -[GotoSetting] presents it modally. Reconstructed from Ghidra
@@ -38,24 +38,24 @@
 #import "CommonAlertView.h" // CommonAlertViewDelegate (retire-confirm callback)
 
 /**
- * @brief The account settings list, including the retire flow.
+ * The account settings list, including the retire flow.
  */
 @interface SettingTableViewController : UITableViewController <CommonAlertViewDelegate>
 
 /**
- * @brief Wrap self in a fresh navigation controller with the phone back button.
+ * Wrap self in a fresh navigation controller with the phone back button.
  * @return The navigation controller.
  * @ghidraAddress 0x7ed98
  */
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0x7efec
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the screen out.
+ * Fade the screen out.
  * @ghidraAddress 0x7f130
  */
 - (void)startCloseAnimation;

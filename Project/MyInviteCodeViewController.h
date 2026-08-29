@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The screen showing the local player's own invite code, which is their player id.
+ * The screen showing the local player's own invite code, which is their player id.
  *
  * A full-screen background, a nav-bar back button, two title images ("invite" and "player"), and
  * the player id rendered inside a patterned ID-area plate. Reconstructed from Ghidra project
@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The screen showing the local player's own invite code.
+ * The screen showing the local player's own invite code.
  */
 @interface MyInviteCodeViewController : UIViewController
 

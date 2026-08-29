@@ -62,12 +62,12 @@
 #import "neEngineBridge.h"           // neSceneManager::isPadDisplay, neEngine::playSystemSe
 
 /**
- * @brief The sent-request list's private teardown and back helpers.
+ * The sent-request list's private teardown and back helpers.
  */
 @interface FriendRequestTable () <DownloaderDelegate>
-/** @brief Drop the parsed sent-request rows. */
+/** Drop the parsed sent-request rows. */
 - (void)releaseSendDataArray;
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)backButtonFunc;
 @end
 

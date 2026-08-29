@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A recommend-list row.
+ * A recommend-list row.
  *
  * A pack thumbnail loaded asynchronously via ImageDownloader, the pack name, the recommend date,
  * the recommending player's name, and a "NEW" badge when the row is newer than the last time the
@@ -15,12 +15,12 @@
 #import "ImageDownloader.h"
 
 /**
- * @brief One recommended-pack row, which downloads its own thumbnail.
+ * One recommended-pack row, which downloads its own thumbnail.
  */
 @interface RecommendListCell : UITableViewCell <ImageDownloaderDelegate>
 
 /**
- * @brief Rebuild the row from a recommend record and kick off the pack thumbnail download.
+ * Rebuild the row from a recommend record and kick off the pack thumbnail download.
  * @param recommendValue An NSValue-wrapped RecommendData.
  */
 - (void)setRecommendData:(NSValue *)recommendValue;

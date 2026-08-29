@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A small download-progress dialog view.
+ * A small download-progress dialog view.
  *
  * It draws a "cmn_window" dialog frame and lays out, inside it, a spinning activity indicator, a
  * single-line message label, and a horizontal progress bar. -layout: recentres the message label
@@ -14,7 +14,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A small download-progress dialog: a "cmn_window" frame around a spinner, a message label
+ * A small download-progress dialog: a "cmn_window" frame around a spinner, a message label
  * and a progress bar.
  */
 @interface DownloadProgresView : UIView
@@ -31,7 +31,7 @@
 @property(nonatomic, strong, readonly) UIProgressView *progressView;
 
 /**
- * @brief Re-lay the message label for the current mode and toggle the progress bar.
+ * Re-lay the message label for the current mode and toggle the progress bar.
  * @param hidden NO shows the progress bar and puts the label 5 pt below the dialog centre; YES
  * hides the bar and puts the label 10 pt below the centre.
  * @ghidraAddress 0xde65c

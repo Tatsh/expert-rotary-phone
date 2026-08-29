@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The character and skill info popup shown when tapping the portrait in a
+ * The character and skill info popup shown when tapping the portrait in a
  * FriendListDetail.
  *
  * A framed "skill card" over a window backdrop: the friend's chara portrait, a rounded card
@@ -12,13 +12,13 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The character and skill info popup shown when tapping the portrait inside a
+ * The character and skill info popup shown when tapping the portrait inside a
  * FriendListDetail.
  */
 @interface FriendListDetailChara : UIImageView
 
 /**
- * @brief Build the popup for one friend's character.
+ * Build the popup for one friend's character.
  * @param frame The frame positioning the popup over the tapped portrait.
  * @param friendData An NSValue-wrapped FriendListData; only its charaId is used, to look up the
  * character's name, skill and art.
@@ -28,11 +28,11 @@
 - (instancetype)initWithFrame:(CGRect)frame friendData:(NSValue *)friendData;
 
 /**
- * @brief Fade the popup in over 0.3 s.
+ * Fade the popup in over 0.3 s.
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the popup out over 0.3 s, then remove it from its superview.
+ * Fade the popup out over 0.3 s, then remove it from its superview.
  */
 - (void)startCloseAnimation;
 

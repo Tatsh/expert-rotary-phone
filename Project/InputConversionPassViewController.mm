@@ -101,38 +101,38 @@ static int neSugorokuTouchSoundBit(int mainMapId) {
 
 // Own privates (selectors wired up by init / used across the download flow).
 /**
- * @brief The pass-entry screen's private actions and validation helpers.
+ * The pass-entry screen's private actions and validation helpers.
  */
 @interface InputConversionPassViewController ()
-/** @brief The back-button action. */
+/** The back-button action. */
 - (void)onBackBtn;
-/** @brief The open fade finished; clear the animation guard. */
+/** The open fade finished; clear the animation guard. */
 - (void)endOpenAnimation;
-/** @brief Fade the panel out. */
+/** Fade the panel out. */
 - (void)startCloseAnimation;
-/** @brief The close fade finished; tear the panel down. */
+/** The close fade finished; tear the panel down. */
 - (void)endCloseAnimation;
 /**
- * @brief The decide button was tapped: validate both fields, then POST.
+ * The decide button was tapped: validate both fields, then POST.
  * @param sender The tapped button.
  */
 - (void)touchedDecideButton:(id)sender;
-/** @brief The iPad dim cover was tapped; dismiss the panel. */
+/** The iPad dim cover was tapped; dismiss the panel. */
 - (void)handleTapCoverView;
 /**
- * @brief POST the device-change conversion request.
+ * POST the device-change conversion request.
  * @param playerId The entered player id.
  * @param pass The entered convert pass.
  */
 - (void)startConversionHttpWithId:(NSString *)playerId pass:(NSString *)pass;
 /**
- * @brief Whether a string contains only characters valid in a player id.
+ * Whether a string contains only characters valid in a player id.
  * @param str The string to check.
  * @return YES when every character is allowed.
  */
 - (BOOL)checkUsableCharacterForId:(NSString *)str;
 /**
- * @brief Whether a string contains only characters valid in a convert pass.
+ * Whether a string contains only characters valid in a convert pass.
  * @param str The string to check.
  * @return YES when every character is allowed.
  */

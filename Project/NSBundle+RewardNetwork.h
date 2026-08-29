@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The NSBundle category the RewardNetwork ("applilink") SDK locates its resource bundle
+ * The NSBundle category the RewardNetwork ("applilink") SDK locates its resource bundle
  * with.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. The bundle is
@@ -14,12 +14,12 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief Locates the reward-network resource bundle.
+ * Locates the reward-network resource bundle.
  */
 @interface NSBundle (RewardNetwork)
 
 /**
- * @brief The cached RewardNetworkResources.bundle, resolved once via dispatch_once.
+ * The cached RewardNetworkResources.bundle, resolved once via dispatch_once.
  * @return The resource bundle.
  * @ghidraAddress 0xfc0cc
  */

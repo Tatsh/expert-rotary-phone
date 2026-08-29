@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief An arcade-viewer option row, whose content the view controller binds.
+ * An arcade-viewer option row, whose content the view controller binds.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0x65480).
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One row of the arcade-viewer option list.
+ * One row of the arcade-viewer option list.
  */
 @interface AcViewerOptionCell : UITableViewCell
 
 /**
- * @brief Bind the row to one of the arcade-viewer option kinds and rebuild its labels.
+ * Bind the row to one of the arcade-viewer option kinds and rebuild its labels.
  *
  * The detail label shows the player's current UserSettingData value for that kind.
  * @param optionKind 0 HI-SPEED, 1 POP-KUN, 2 HID-SUD, 3 RAN-MIR.

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "send a friend request" screen, pushed from the friend hub.
+ * The "send a friend request" screen, pushed from the friend hub.
  *
  * It shows the player's own id, a text field for the target player's id (at most 7 characters,
  * uppercased), a "request" button that POSTs the request, and a right-bar button that opens the
@@ -15,7 +15,7 @@
 #import "Downloader.h" // DownloaderDelegate (friend-request POST)
 
 /**
- * @brief The "send a friend request" screen.
+ * The "send a friend request" screen.
  */
 @interface FriendRequestViewController : UIViewController <UITextFieldDelegate, DownloaderDelegate>
 @end

@@ -23,28 +23,28 @@
 
 // Own privates + adopted delegate.
 /**
- * @brief The default-data downloader's private queue helpers.
+ * The default-data downloader's private queue helpers.
  */
 @interface DefaultDataDownloadView () <DownloaderDelegate>
 /**
- * @brief Start fetching one file from the list.
+ * Start fetching one file from the list.
  * @param idx The file's index in the list.
  * @return YES when a fetch was started.
  */
 - (BOOL)downloadWithIdx:(int)idx;
-/** @brief The open fade finished; kick off the first download. */
+/** The open fade finished; kick off the first download. */
 - (void)endOpenAnimation;
-/** @brief Fade the view out. */
+/** Fade the view out. */
 - (void)startCloseAnimation;
-/** @brief The close fade finished; notify the root scene. */
+/** The close fade finished; notify the root scene. */
 - (void)endCloseAnimation;
 /**
- * @brief Whether a string is made up entirely of digits.
+ * Whether a string is made up entirely of digits.
  * @param string The string to check.
  * @return YES when every character is a digit.
  */
 - (BOOL)isDigit:(NSString *)string;
-/** @brief Fold the just-finished file's size into the committed-bytes total. */
+/** Fold the just-finished file's size into the committed-bytes total. */
 - (void)setJustDownloadedSize;
 @end
 

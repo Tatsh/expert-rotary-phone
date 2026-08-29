@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The app's shared UI typeface names.
+ * The app's shared UI typeface names.
  *
  * C-linkage (defined in AppFont.m) so the C++ (.mm) callers resolve the unmangled symbols.
  */
@@ -12,13 +12,13 @@ extern "C" {
 #endif
 
 /**
- * @brief The bundled DynaFont face used for the app's UI text.
+ * The bundled DynaFont face used for the app's UI text.
  * @return The name of the app font.
  * @ghidraAddress 0x5ef9c
  */
 NSString *AppFontName(void);
 /**
- * @brief The bundled DynaFont maru face used for the "maru" text in the app.
+ * The bundled DynaFont maru face used for the "maru" text in the app.
  * @return The name of the maru font.
  * @ghidraAddress 0x5efa8
  */

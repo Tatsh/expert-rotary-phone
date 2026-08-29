@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Konami "RewardNetwork" (Applilink) ad-SDK persistent storage, backed by named
+ * The Konami "RewardNetwork" (Applilink) ad-SDK persistent storage, backed by named
  * UIPasteboards.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin, with an NSObject superclass and
@@ -15,12 +15,12 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief Cross-app record storage backed by named pasteboards, one per storage slot.
+ * Cross-app record storage backed by named pasteboards, one per storage slot.
  */
 @interface RewardNetworkPasteBoard : NSObject
 
 /**
- * @brief The designated initialiser; it copies the service name and pasteboard data type into
+ * The designated initialiser; it copies the service name and pasteboard data type into
  * _serviceName and _dataType.
  * @param serviceName The pasteboard service name.
  * @param dataType The pasteboard data type (a UTI).
@@ -30,14 +30,14 @@
 - (instancetype)initWithServiceName:(NSString *)serviceName dataType:(NSString *)dataType;
 
 /**
- * @brief The first decoded record found by scanning every storage slot.
+ * The first decoded record found by scanning every storage slot.
  * @return The record, or nil when no slot holds one.
  * @ghidraAddress 0xf5a60
  */
 - (NSDictionary *)storageData;
 
 /**
- * @brief The decoded record at one slot.
+ * The decoded record at one slot.
  * @param storageIndex The slot index.
  * @param error Receives the failure reason; may be NULL.
  * @return The record, or nil on a miss or corruption.
@@ -46,7 +46,7 @@
 - (NSDictionary *)storageDataWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error;
 
 /**
- * @brief Write a value into the first free slot.
+ * Write a value into the first free slot.
  * @param data The value to store.
  * @param error Receives the failure reason; may be NULL.
  * @return The decoded record, or nil on failure.
@@ -55,7 +55,7 @@
 - (NSDictionary *)writeStorageData:(NSString *)data error:(NSError **)error;
 
 /**
- * @brief Write a value into one slot.
+ * Write a value into one slot.
  * @param data The value to store.
  * @param storageIndex The slot index.
  * @param error Receives the failure reason; may be NULL.
@@ -67,7 +67,7 @@
                              error:(NSError **)error;
 
 /**
- * @brief Remove the record, and its pasteboard, at one slot.
+ * Remove the record, and its pasteboard, at one slot.
  * @param storageIndex The slot index.
  * @param error Receives the failure reason; may be NULL.
  * @return YES on success.
@@ -76,7 +76,7 @@
 - (BOOL)deleteWithStorageIndex:(NSInteger)storageIndex error:(NSError **)error;
 
 /**
- * @brief Decode a stored record: add its StorageIndex and decrypt its Value to a string.
+ * Decode a stored record: add its StorageIndex and decrypt its Value to a string.
  * @param data The raw stored record.
  * @param storageIndex The slot the record came from.
  * @return The decoded record.
@@ -85,7 +85,7 @@
 - (NSDictionary *)convertToData:(NSDictionary *)data storageIndex:(NSInteger)storageIndex;
 
 /**
- * @brief The effective service name, prefixed with the reward environment when one other than "0"
+ * The effective service name, prefixed with the reward environment when one other than "0"
  * is configured.
  * @return The service name.
  * @ghidraAddress 0xf6d64
@@ -93,7 +93,7 @@
 - (NSString *)getServiceName;
 
 /**
- * @brief Scan every slot, reading its decoded value; a debug helper.
+ * Scan every slot, reading its decoded value; a debug helper.
  * @ghidraAddress 0xf6e48
  */
 - (void)debugLog;

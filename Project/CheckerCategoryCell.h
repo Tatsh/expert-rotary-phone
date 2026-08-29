@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A music-checker category row.
+ * A music-checker category row.
  *
  * Its layout offsets vary by iPad and iOS version. Reconstructed from Ghidra project rb420,
  * program PopnRhythmin (initWithStyle:reuseIdentifier: @ 0xcf49c).
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One music-checker category row.
+ * One music-checker category row.
  */
 @interface CheckerCategoryCell : UITableViewCell
 
 /**
- * @brief Bind the row to a music-checker category. The layout offsets come from the init-computed
+ * Bind the row to a music-checker category. The layout offsets come from the init-computed
  * device and OS ivars.
  * @param playedList The played songs in this category; its count drives the small "played" digit
  * badge.

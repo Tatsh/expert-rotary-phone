@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A modal progress dialog shown over the store view.
+ * A modal progress dialog shown over the store view.
  *
  * StoreViewController and StoreMainViewController raise it: a rounded, shadowed, translucent-black
  * card owning a spinner, a centred message label, a horizontal progress bar, and, when constructed
@@ -25,19 +25,19 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief Receives the store dialog's abort tap.
+ * Receives the store dialog's abort tap.
  */
 @protocol StoreDialogViewDelegate <NSObject>
 @optional
 /**
- * @brief The abort button was tapped. -btnAbort: sends it via -performSelector:withObject:.
+ * The abort button was tapped. -btnAbort: sends it via -performSelector:withObject:.
  * @param sender The dialog itself.
  */
 - (void)storeDialogCancel:(id)sender;
 @end
 
 /**
- * @brief The store's progress dialog: a spinner, a status message, a progress bar and an optional
+ * The store's progress dialog: a spinner, a status message, a progress bar and an optional
  * abort button.
  */
 @interface StoreDialogView : UIView {
@@ -49,7 +49,7 @@
 }
 
 /**
- * @brief The convenience initialiser, forwarding to -initWithFrame:abortable: with abortable set.
+ * The convenience initialiser, forwarding to -initWithFrame:abortable: with abortable set.
  * @param frame The dialog frame.
  * @return The initialised dialog.
  * @ghidraAddress 0x416dc
@@ -57,7 +57,7 @@
 - (instancetype)initWithFrame:(CGRect)frame;
 
 /**
- * @brief The designated initialiser: build the rounded, shadowed card, the spinner, the message
+ * The designated initialiser: build the rounded, shadowed card, the spinner, the message
  * label and the progress bar.
  * @param frame The dialog frame.
  * @param abortable YES to also build the "中止" button, wired to -btnAbort:.
@@ -67,7 +67,7 @@
 - (instancetype)initWithFrame:(CGRect)frame abortable:(BOOL)abortable;
 
 /**
- * @brief Toggle the progress bar and abort button, and recentre the message label.
+ * Toggle the progress bar and abort button, and recentre the message label.
  * @param hideControls NO shows the progress bar and abort button and puts the label 10 pt above
  * the card centre; YES hides them and puts the label 10 pt below centre.
  * @ghidraAddress 0x41e4c
@@ -75,7 +75,7 @@
 - (void)layout:(BOOL)hideControls;
 
 /**
- * @brief The abort button's action: forward -storeDialogCancel: to the delegate when it responds.
+ * The abort button's action: forward -storeDialogCancel: to the delegate when it responds.
  * @param sender The tapped button.
  * @ghidraAddress 0x41f38
  */

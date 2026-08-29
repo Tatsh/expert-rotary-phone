@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Fetch, insert, query and reset methods on the TreasureData entity, the sugoroku board
+ * Fetch, insert, query and reset methods on the TreasureData entity, the sugoroku board
  * progress.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
@@ -11,12 +11,12 @@
 #import "TreasureData.h"
 
 /**
- * @brief Fetch, insert, query and reset helpers for the TreasureData entity.
+ * Fetch, insert, query and reset helpers for the TreasureData entity.
  */
 @interface TreasureData (Store)
 
 /**
- * @brief The record for a main-map and sub-map cell.
+ * The record for a main-map and sub-map cell.
  * @param mainMapId The main map id.
  * @param subMapId The sub map id.
  * @param context The managed object context to fetch from.
@@ -28,7 +28,7 @@
            inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Insert a fresh (reset) record for a main-map and sub-map cell, then save.
+ * Insert a fresh (reset) record for a main-map and sub-map cell, then save.
  * @param mainMapId The main map id.
  * @param subMapId The sub map id.
  * @param context The managed object context to insert into.
@@ -40,7 +40,7 @@
                   inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Whether enough music-piece fragments have been collected on a map to unlock its song.
+ * Whether enough music-piece fragments have been collected on a map to unlock its song.
  *
  * The test is more than 8 of the low-three-bit flags summed over every sub-map row of
  * @p mainMapId.
@@ -52,7 +52,7 @@
 + (BOOL)isOpenMusic:(short)mainMapId inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Clear the collectible and progress fields to their defaults; the map ids are preserved
+ * Clear the collectible and progress fields to their defaults; the map ids are preserved
  * and fastRecord is reset to -1.
  * @ghidraAddress 0xc0c9c
  */

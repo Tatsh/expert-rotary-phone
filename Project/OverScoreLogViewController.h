@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "friend over-score" log screen.
+ * The "friend over-score" log screen.
  *
  * A grouped-style UITableViewController that downloads, via DownloadMain, the list of songs on
  * which a friend has beaten your score, and shows one OverScoreLogCell per entry over a dimmed
@@ -26,7 +26,7 @@
 class MainTask;
 
 /**
- * @brief The over-score log: the songs on which friends have beaten your score.
+ * The over-score log: the songs on which friends have beaten your score.
  */
 @interface OverScoreLogViewController : UITableViewController <DownloadMainDelegate>
 
@@ -36,7 +36,7 @@ class MainTask;
 @property(atomic, assign) MainTask *musicSelTask;
 
 /**
- * @brief Build the transparent, separator-less table: a clear spacer header, the "friman" backdrop
+ * Build the transparent, separator-less table: a clear spacer header, the "friman" backdrop
  * on phone, and a hidden dimmed spinner overlay.
  * @param style Forwarded to UITableViewController.
  * @return The initialised controller.
@@ -45,7 +45,7 @@ class MainTask;
 - (instancetype)initWithStyle:(UITableViewStyle)style;
 
 /**
- * @brief Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
+ * Keep the C++ task pointer, rebuild the table, and wrap self in a UINavigationController
  * with a back button on phone.
  * @param musicSelTask The owning music-select task.
  * @return The navigation controller.
@@ -55,13 +55,13 @@ class MainTask;
     __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the panel in on phone, or slide it in on iPad.
+ * Fade the panel in on phone, or slide it in on iPad.
  * @ghidraAddress 0x2a1b0
  */
 - (void)startOpenAnimation;
 
 /**
- * @brief Fade the panel closed on phone, or slide it closed on iPad; the completion launches the
+ * Fade the panel closed on phone, or slide it closed on iPad; the completion launches the
  * selected play.
  * @ghidraAddress 0x2a678
  */

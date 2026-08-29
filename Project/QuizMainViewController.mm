@@ -68,23 +68,23 @@ static int QuizCountDigits(int value) {
 }
 
 /**
- * @brief The quiz screen's private request and result helpers.
+ * The quiz screen's private request and result helpers.
  */
 @interface QuizMainViewController () <DownloaderDelegate>
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;
-/** @brief The quiz fetch completed; parse the question and answers. */
+/** The quiz fetch completed; parse the question and answers. */
 - (void)getQuizFinished;
-/** @brief The answer POST completed; parse the verdict. */
+/** The answer POST completed; parse the verdict. */
 - (void)replyQuizFinished;
-/** @brief POST the quiz-fetch request. */
+/** POST the quiz-fetch request. */
 - (void)startGetQuizHttp;
-/** @brief POST the chosen answer. */
+/** POST the chosen answer. */
 - (void)startReplyQuizHttp;
-/** @brief Reveal the correct answer and update the running tallies. */
+/** Reveal the correct answer and update the running tallies. */
 - (void)drawResult;
 @end
 

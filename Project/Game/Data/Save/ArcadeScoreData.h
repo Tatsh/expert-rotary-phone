@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The ArcadeScoreData Core Data managed object: the arcade-machine score mirror.
+ * The ArcadeScoreData Core Data managed object: the arcade-machine score mirror.
  *
  * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "ArcadeScoreData").
  *
@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The local mirror of one arcade-machine song record: personal, venue-mean and venue-top
+ * The local mirror of one arcade-machine song record: personal, venue-mean and venue-top
  * scores across the four arcade difficulties.
  */
 @interface ArcadeScoreData : NSManagedObject
@@ -72,7 +72,7 @@
 @property(nonatomic, retain) NSString *topNameEx;
 
 /**
- * @brief Every stored record for @p refId, sorted by category descending then title ascending.
+ * Every stored record for @p refId, sorted by category descending then title ascending.
  * @param refId The e-AMUSEMENT ref-id.
  * @param context The managed object context to fetch from.
  * @return An array of ArcadeScoreData.
@@ -81,7 +81,7 @@
 + (NSArray *)getAllData:(NSString *)refId context:(NSManagedObjectContext *)context;
 
 /**
- * @brief Delete every persisted ArcadeScoreData record; the device-change and initForConvert
+ * Delete every persisted ArcadeScoreData record; the device-change and initForConvert
  * reset.
  * @param context The managed object context to delete from.
  */

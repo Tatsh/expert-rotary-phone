@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Optional render-pipeline diagnostics.
+ * Optional render-pipeline diagnostics.
  *
  * @newCode
  *
@@ -25,7 +25,7 @@
 #pragma once
 
 #ifndef RHYDBG
-/** @brief Set to 1 by the build to compile the diagnostics in; 0 leaves them as no-ops. */
+/** Set to 1 by the build to compile the diagnostics in; 0 leaves them as no-ops. */
 #define RHYDBG 0
 #endif
 
@@ -68,22 +68,22 @@ static inline void neDebugLog(const char *fmt, ...) {
 // and NE_DBG_FIRST(n) collapses an `if (...) { ... }` diagnostic block to dead
 // code that the optimiser drops.
 /**
- * @brief Emit a diagnostic line; compiled away to nothing with RHYDBG off.
+ * Emit a diagnostic line; compiled away to nothing with RHYDBG off.
  */
 static inline void neDebugLog(const char *, ...) {
 }
 /**
- * @brief Gate a diagnostic block to the first @p limit occurrences; always false with RHYDBG off.
+ * Gate a diagnostic block to the first @p limit occurrences; always false with RHYDBG off.
  */
 #define NE_DBG_FIRST(limit) (false)
-/** @brief Wrap statements with real side effects; they vanish with RHYDBG off. */
+/** Wrap statements with real side effects; they vanish with RHYDBG off. */
 #define NE_DBG(...) ((void)0)
 
 #endif
 
 #ifndef RHYDBG_BUILD_SHA
 /**
- * @brief The build's git SHA, set by CMake at configure time.
+ * The build's git SHA, set by CMake at configure time.
  *
  * It is logged once at startup under RHYDBG so a captured os_log identifies exactly which build
  * produced it.

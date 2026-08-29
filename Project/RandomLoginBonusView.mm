@@ -14,7 +14,7 @@
 #import "neEngineBridge.h" // neSceneManager::rootViewController(), neSceneManager::isPadDisplay(), neEngine::playSystemSe(int)
 
 /**
- * @brief The bonus reveal's private state and helpers.
+ * The bonus reveal's private state and helpers.
  */
 @interface RandomLoginBonusView () {
     int _bonus;                   /**< The rolled treasure-point bonus, 0..9999. */
@@ -28,21 +28,21 @@
     BOOL _isAnimationing; /**< Guards while an open, close or lock animation runs. */
     int _state;           /**< 0 while the reels spin, 1 once locked and awaiting dismissal. */
 }
-/** @brief Roll the treasure-point bonus and credit it. */
+/** Roll the treasure-point bonus and credit it. */
 - (void)getBonus;
 /**
- * @brief A tap landed on the board.
+ * A tap landed on the board.
  * @param sender The tap recogniser.
  */
 - (void)touchEvent:(id)sender;
-/** @brief Fade the board out. */
+/** Fade the board out. */
 - (void)startCloseAnimation;
-/** @brief The close animation finished; remove the board. */
+/** The close animation finished; remove the board. */
 - (void)endCloseAnimation;
-/** @brief Show the bonus-result alert. */
+/** Show the bonus-result alert. */
 - (void)showAlertView;
 /**
- * @brief Build one spinning digit reel.
+ * Build one spinning digit reel.
  * @param digit The value the reel settles on.
  * @param images The reel's animation frames.
  * @param hiddenLeadingZero YES to hide the reel when it would show a leading zero.
@@ -52,7 +52,7 @@
                        animationImages:(NSArray *)images
                                 hidden:(BOOL)hiddenLeadingZero;
 /**
- * @brief The designated initialiser; it builds the board and its reels.
+ * The designated initialiser; it builds the board and its reels.
  * @return The initialised view.
  */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;

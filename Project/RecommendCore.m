@@ -20,7 +20,7 @@ static RecommendCore *g_pRecommendCoreInstance = nil; // @ g_pRecommendCoreInsta
 static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("RewardCore")
 
 /**
- * @brief The recommend core's private state, backing properties and helpers.
+ * The recommend core's private state, backing properties and helpers.
  */
 @interface RecommendCore () <RewardNetworkWebViewDelegate> {
     BOOL navigationBarHidden; /**< Hide the app-list navigation bar. */
@@ -40,7 +40,7 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
 @property(nonatomic, strong) NSString *countryCode;
 
 /**
- * @brief POST the install record to /ad/external/app/install/regist.php.
+ * POST the install record to /ad/external/app/install/regist.php.
  * @param adIdFrom The advertising id's origin.
  * @param countryCode The country code.
  * @param categoryId The category id.
@@ -54,7 +54,7 @@ static dispatch_queue_t g_pRewardCoreQueue = NULL;    // @ DAT_0018836c ("Reward
                                   callback:(RecommendOpenAppliListCallback)callback;
 
 /**
- * @brief Map a server response's error_code and kind to a localised RewardNetworkError.
+ * Map a server response's error_code and kind to a localised RewardNetworkError.
  * @param response The parsed server response.
  * @return The error, or nil when the response reports success.
  */

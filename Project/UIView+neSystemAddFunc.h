@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief View sizing, flash, jump, and popup animation helpers.
+ * View sizing, flash, jump, and popup animation helpers.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. These are entries in the instance
  * method_list @ 0x14af3c (entsize 12, count 16) of a category named "neSystemAddFunc" on the
@@ -14,29 +14,29 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The engine's small geometry and layer-animation helpers on UIView. The "Harf" spellings
+ * The engine's small geometry and layer-animation helpers on UIView. The "Harf" spellings
  * are the binary's.
  */
 @interface UIView (neSystemAddFunc)
 
 /**
- * @brief Halve the receiver's bounds size, keeping its origin.
+ * Halve the receiver's bounds size, keeping its origin.
  * @ghidraAddress 0x7dc90
  */
 - (void)setHarfSize;
 /**
- * @brief Halve the receiver's frame origin, keeping its size.
+ * Halve the receiver's frame origin, keeping its size.
  * @ghidraAddress 0x7dd08
  */
 - (void)setHarfOrigin;
 /**
- * @brief Halve every component of the receiver's frame.
+ * Halve every component of the receiver's frame.
  * @ghidraAddress 0x7dd88
  */
 - (void)setHarfSizeAndOrigin;
 
 /**
- * @brief Add a repeating, auto-reversing "opacity" CABasicAnimation under the key "FLUSH_ANIM".
+ * Add a repeating, auto-reversing "opacity" CABasicAnimation under the key "FLUSH_ANIM".
  * @param duration The half-cycle duration, in seconds.
  * @param startOpacity The opacity to flash from.
  * @param endOpacity The opacity to flash to.
@@ -44,13 +44,13 @@
  */
 - (void)SetFlashEffectDuration:(float)duration Start:(float)startOpacity End:(float)endOpacity;
 /**
- * @brief Start the flash effect with the default fast preset: one third of a second, 1.0 to 0.2.
+ * Start the flash effect with the default fast preset: one third of a second, 1.0 to 0.2.
  * @ghidraAddress 0x7dfd0
  */
 - (void)SetFlashEffectFast;
 
 /**
- * @brief Add a repeating "position" CAKeyframeAnimation under the key "PopAnim", bouncing the view
+ * Add a repeating "position" CAKeyframeAnimation under the key "PopAnim", bouncing the view
  * up with decreasing amplitude.
  * @param baseX The resting x the bounce returns to.
  * @param baseY The resting y the bounce returns to.
@@ -59,19 +59,19 @@
 - (void)SetJumpEffectBaseX:(float)baseX BaseY:(float)baseY;
 
 /**
- * @brief Add a "transform" scale-bounce CAKeyframeAnimation under the key "transAnimation" —
+ * Add a "transform" scale-bounce CAKeyframeAnimation under the key "transAnimation" —
  * 0, 1.2, 0.9, 1.0 — for a pop-in appearance.
  * @ghidraAddress 0x7e3c4
  */
 - (void)setPopupEffect;
 
 /**
- * @brief Remove the "FLUSH_ANIM" flash animation from the layer.
+ * Remove the "FLUSH_ANIM" flash animation from the layer.
  * @ghidraAddress 0x7df9c
  */
 - (void)RemoveFlashEffect;
 /**
- * @brief Remove the "transAnimation" popup animation from the layer.
+ * Remove the "transAnimation" popup animation from the layer.
  * @ghidraAddress 0x7eac0
  */
 - (void)removePopupEffect;

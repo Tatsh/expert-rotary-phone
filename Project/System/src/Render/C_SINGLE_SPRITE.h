@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief ne::C_SINGLE_SPRITE, a single sprite or texture tile.
+ * ne::C_SINGLE_SPRITE, a single sprite or texture tile.
  *
  * It is a refcounted bound texture plus four metadata ints (the two per-frame render-state slots
  * and the tile's default 7x7 span).
@@ -22,7 +22,7 @@ class C_TEXTURE;
 namespace ne {
 
 /**
- * @brief A polymorphic single-sprite record filling a 0x18-byte slot.
+ * A polymorphic single-sprite record filling a 0x18-byte slot.
  *
  * +0x04 is the bound texture (a refcounted C_TEXTURE, released on destroy) and +0x08..+0x17 are
  * four metadata ints: meta[0] and meta[1] are the per-frame render-state slots the draw path sets,
@@ -32,18 +32,18 @@ namespace ne {
 class C_SINGLE_SPRITE {
 public:
     /**
-     * @brief Construct an unbound sprite with the default {0, 0, 7, 7} metadata.
+     * Construct an unbound sprite with the default {0, 0, 7, 7} metadata.
      * @ghidraAddress 0x15eb4
      */
     C_SINGLE_SPRITE();
     /**
-     * @brief Release the bound texture. The deleting destructor is FUN_00015f00.
+     * Release the bound texture. The deleting destructor is FUN_00015f00.
      * @ghidraAddress 0x15edc
      */
     virtual ~C_SINGLE_SPRITE();
 
     /**
-     * @brief Set a per-frame render-state slot, stored in meta[slot].
+     * Set a per-frame render-state slot, stored in meta[slot].
      *
      * Called from the AepSprite draw path (drawAepSpriteClipped) on each frame's sprite.
      * @param slot 0 for the blend/opaque select, 1 for the clipped flag.
@@ -61,7 +61,7 @@ public:
 } // namespace ne
 
 /**
- * @brief A set of animation frames: parallel heap arrays, all frameCount long, of the per-frame
+ * A set of animation frames: parallel heap arrays, all frameCount long, of the per-frame
  * padded texture size, the cached ne::C_TEXTURE handles and the ne::C_SINGLE_SPRITE records.
  *
  * Each array is owned (RAII); the handles are additionally cache-released in the destructor.
@@ -69,7 +69,7 @@ public:
 class neTextureFrames {
 public:
     /**
-     * @brief Cache-release every texture handle and free the parallel arrays. The
+     * Cache-release every texture handle and free the parallel arrays. The
      * compiler-emitted deleting destructor is FUN_0001198c.
      * @ghidraAddress 0x11838
      */

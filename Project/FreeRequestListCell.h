@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One row in the "free request" friend list.
+ * One row in the "free request" friend list.
  *
  * A background plate carrying a chara icon, the player's name, and that player's score. The
  * subview x-positions shift between iOS 6 and 7 and between phone and pad; the offsets are
@@ -18,7 +18,7 @@
 // (FreeRequestListViewController / FreeRequestDetail) is not part of the
 // reconstructed set, so the exact struct tail is unknown.
 /**
- * @brief One record, as wrapped in the NSValue passed to -setFriendData:rank:.
+ * One record, as wrapped in the NSValue passed to -setFriendData:rank:.
  *
  * Only the name, character id and score are read by the cell; the leading word is not touched
  * here, so its name is best-effort by analogy with the sibling FriendRequestDataStruct. The
@@ -34,13 +34,13 @@ typedef struct {
 } FreeRequestDataStruct;
 
 /**
- * @brief One row in the "free request" friend list: a plate carrying a character icon, the
+ * One row in the "free request" friend list: a plate carrying a character icon, the
  * player's name and their score.
  */
 @interface FreeRequestListCell : UITableViewCell
 
 /**
- * @brief Rebuild the row from a record.
+ * Rebuild the row from a record.
  * @param friendData An NSValue-wrapped FreeRequestDataStruct.
  * @param rank Accepted but unused by the decompiled body.
  * @ghidraAddress 0xe4b60

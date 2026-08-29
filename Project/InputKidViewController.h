@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "enter an invite code" screen, pushed by InviteTopViewController's guest panel.
+ * The "enter an invite code" screen, pushed by InviteTopViewController's guest panel.
  *
  * An 8-character code field, a decide button that POSTs the code, with the device uuid, to the
  * invite endpoint, and a translucent activity spinner while the request is in flight. On success
@@ -16,7 +16,7 @@
 #import "Downloader.h"      // DownloaderDelegate
 
 /**
- * @brief The invite-code entry screen.
+ * The invite-code entry screen.
  */
 // Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
 // follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the

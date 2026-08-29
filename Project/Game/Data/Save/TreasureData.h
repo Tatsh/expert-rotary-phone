@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The TreasureData Core Data managed object: sugoroku board progress.
+ * The TreasureData Core Data managed object: sugoroku board progress.
  *
  * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "TreasureData").
  *
@@ -20,7 +20,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One row of sugoroku board progress: the player's position on a map plus everything
+ * One row of sugoroku board progress: the player's position on a map plus everything
  * collected there.
  */
 @interface TreasureData : NSManagedObject
@@ -45,7 +45,7 @@
 @property(nonatomic, retain) NSNumber *fastRecord;
 
 /**
- * @brief Fetch every persisted TreasureData record: the whole sugoroku save table.
+ * Fetch every persisted TreasureData record: the whole sugoroku save table.
  * @param context The managed object context to fetch from.
  * @return An array of TreasureData.
  * @ghidraAddress 0xc09a4
@@ -53,7 +53,7 @@
 + (NSArray<TreasureData *> *)getAllTreasureData:(NSManagedObjectContext *)context;
 
 /**
- * @brief Whether @p mainMapId is one of the two root ("default") maps, 0 or 6.
+ * Whether @p mainMapId is one of the two root ("default") maps, 0 or 6.
  * @param mainMapId The main map id to test.
  * @return YES for a root map.
  * @ghidraAddress 0xc0f64
@@ -61,13 +61,13 @@
 + (BOOL)isDefaultMap:(short)mainMapId;
 
 /**
- * @brief Delete every persisted TreasureData record; the device-change and initForConvert reset.
+ * Delete every persisted TreasureData record; the device-change and initForConvert reset.
  * @param context The managed object context to delete from.
  */
 + (void)deleteAll:(NSManagedObjectContext *)context;
 
 /**
- * @brief Seed the default treasure-map rows into the store, as part of the device-change reset.
+ * Seed the default treasure-map rows into the store, as part of the device-change reset.
  * @param context The managed object context to seed.
  * @return The seeded rows.
  */

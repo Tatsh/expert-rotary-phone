@@ -66,6 +66,7 @@ if(BUILD_DOCS OR BUILD_DOCS_ONLY)
     set(DOXYGEN_ALIASES
         [[ghidraAddress="\par Ghidra address:^^"]]
         [[newCode="\par Not in the original binary.^^"]])
+    set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
     set(DOXYGEN_MACRO_EXPANSION YES)
     set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
     set(DOXYGEN_PREDEFINED

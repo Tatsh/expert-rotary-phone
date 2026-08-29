@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A stateless NSObject-derived helper.
+ * A stateless NSObject-derived helper.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. The instance class_ro (@
  * 0x1477fc) has instanceStart 4, instanceSize 4 (just the isa, an NSObject subclass), NULL ivars,
@@ -15,12 +15,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief Shared view-construction helpers.
+ * Shared view-construction helpers.
  */
 @interface ViewUtility : NSObject
 
 /**
- * @brief Build the shared rounded gradient "banner" background view, with a 3 pt-inset inner
+ * Build the shared rounded gradient "banner" background view, with a 3 pt-inset inner
  * tiled-pattern panel added as a subview.
  * @param frame The banner frame.
  * @return The background view.

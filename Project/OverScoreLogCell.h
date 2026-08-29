@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief An over-score, or friend-score, log row.
+ * An over-score, or friend-score, log row.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0x69760).
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One row of the over-score log: a friend who beat your score on a song.
+ * One row of the over-score log: a friend who beat your score on a song.
  */
 @interface OverScoreLogCell : UITableViewCell
 
 /**
- * @brief Rebuild the row's labels and banner from one log entry.
+ * Rebuild the row's labels and banner from one log entry.
  * @param overScoreLogData An NSValue boxing an OverScoreLogData; -getValue: unboxes it.
  * @ghidraAddress 0x69804
  */

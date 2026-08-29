@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The public facade of the bundled Konami RewardNetwork ("applilink") ad and reward SDK.
+ * The public facade of the bundled Konami RewardNetwork ("applilink") ad and reward SDK.
  *
  * It opens the reward app-list web panel, queries the reward app index, reports installs, and
  * keeps a small expiring key-value cache in NSUserDefaults. Requests go through
@@ -23,27 +23,27 @@
 @class RewardNetworkWebViewController;
 
 /**
- * @brief The single result-and-error callback used by the app-index and install-report requests.
+ * The single result-and-error callback used by the app-index and install-report requests.
  * @param result The response payload, or nil on failure.
  * @param error What went wrong, or nil on success.
  */
 typedef void (^RewardNetworkCallback)(id result, NSError *error);
 
 /**
- * @brief The error-only completion used by session start, login and the install report.
+ * The error-only completion used by session start, login and the install report.
  * @param error What went wrong, or nil on success.
  */
 typedef void (^RewardNetworkErrorBlock)(NSError *error);
 
 /**
- * @brief The integer-flag completion used by the all-install-flag and banner-enabled queries.
+ * The integer-flag completion used by the all-install-flag and banner-enabled queries.
  * @param flg The returned flag.
  * @param error What went wrong, or nil on success.
  */
 typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 
 /**
- * @brief The Applilink reward SDK facade: session, UDID, install reporting and the app-list panel.
+ * The Applilink reward SDK facade: session, UDID, install reporting and the app-list panel.
  */
 @interface RewardNetwork : NSObject {
     RewardNetworkWebViewController *_webViewController; /**< The reward app-list panel. */
@@ -65,28 +65,28 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 @property(class, readonly, nonatomic) NSString *old_udid;
 
 /**
- * @brief The shared instance, created once via dispatch_once.
+ * The shared instance, created once via dispatch_once.
  * @return The singleton.
  * @ghidraAddress 0xee774
  */
 + (instancetype)sharedInstance;
 
 /**
- * @brief The campaign flag from NSUserDefaults, gated on ad-tracking and initializeFlg being 1.
+ * The campaign flag from NSUserDefaults, gated on ad-tracking and initializeFlg being 1.
  * @return The flag, or -2 when the gate fails.
  * @ghidraAddress 0xee448
  */
 + (int)campaignFlg;
 
 /**
- * @brief Whether the SDK can run on this iOS version; equivalent to +canUseRewardSdk.
+ * Whether the SDK can run on this iOS version; equivalent to +canUseRewardSdk.
  * @return YES when the SDK is usable.
  * @ghidraAddress 0xee52c
  */
 + (BOOL)isSupportediOSVersion;
 
 /**
- * @brief Persist the session appli URL, parameters and method into NSUserDefaults.
+ * Persist the session appli URL, parameters and method into NSUserDefaults.
  * @param parameters The session parameters.
  * @param url The session URL.
  * @param method The HTTP method.
@@ -95,14 +95,14 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 + (void)setSessionParameters:(id)parameters url:(NSString *)url method:(NSString *)method;
 
 /**
- * @brief Start a reward session: check login, then run the block with any error.
+ * Start a reward session: check login, then run the block with any error.
  * @param block Fired with the session error, or nil.
  * @ghidraAddress 0xeed2c
  */
 + (void)startSessionWithBlock:(RewardNetworkErrorBlock)block;
 
 /**
- * @brief Create and register the device UDID, writing to the first empty storage slot.
+ * Create and register the device UDID, writing to the first empty storage slot.
  * @param error Receives the failure reason; may be NULL.
  * @return YES on success.
  * @ghidraAddress 0xef274
@@ -110,7 +110,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 + (BOOL)createUdidWithError:(NSError **)error;
 
 /**
- * @brief POST the application-install report.
+ * POST the application-install report.
  * @param priority The report priority.
  * @param callback Fired with the report error, or nil.
  * @ghidraAddress 0xef4c4
@@ -118,21 +118,21 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 + (void)postApplicationInstallWithPriority:(int)priority callback:(RewardNetworkErrorBlock)callback;
 
 /**
- * @brief GET the login status from /reward/auth/checkLoginStatus.php.
+ * GET the login status from /reward/auth/checkLoginStatus.php.
  * @param block Fired with the status payload or the error.
  * @ghidraAddress 0xefc14
  */
 + (void)checkLoginWithBlock:(RewardNetworkCallback)block;
 
 /**
- * @brief Request an auth token using the stored session parameters.
+ * Request an auth token using the stored session parameters.
  * @param block Fired with the token or the error.
  * @ghidraAddress 0xeff88
  */
 + (void)requestTokenWithBlock:(RewardNetworkCallback)block;
 
 /**
- * @brief POST login to /reward/auth/login.php.
+ * POST login to /reward/auth/login.php.
  * @param token The auth token, or nil.
  * @param priority The request priority.
  * @param callback Fired with the login error, or nil.
@@ -143,7 +143,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                    callback:(RewardNetworkErrorBlock)callback;
 
 /**
- * @brief Query the all-install flag, cached under "appInstallFlg".
+ * Query the all-install flag, cached under "appInstallFlg".
  * @param inCompany The company filter.
  * @param callback Fired with the flag or the error.
  * @ghidraAddress 0xf16d4
@@ -152,72 +152,72 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                           callback:(RewardNetworkFlgCallback)callback;
 
 /**
- * @brief Delete every stored reward UDID slot and reset the session state.
+ * Delete every stored reward UDID slot and reset the session state.
  * @ghidraAddress 0xf2e14
  */
 + (void)clearUDID;
 /**
- * @brief Delete the legacy keychain UDID, and reset the session state once every UDID is gone.
+ * Delete the legacy keychain UDID, and reset the session state once every UDID is gone.
  * @ghidraAddress 0xf2fb4
  */
 + (void)clearKeyChainOldUDID;
 /**
- * @brief Delete every advertising reward UDID slot and reset the session state.
+ * Delete every advertising reward UDID slot and reset the session state.
  * @ghidraAddress 0xf3110
  */
 + (void)clearAdUDID;
 /**
- * @brief Delete all cookies and the stored session URL, parameters and method.
+ * Delete all cookies and the stored session URL, parameters and method.
  * @ghidraAddress 0xf3240
  */
 + (void)clearSession;
 
 /**
- * @brief GET the banner detail from /reward/banner/detail.php.
+ * GET the banner detail from /reward/banner/detail.php.
  * @param block Fired with the banner payload or the error.
  * @ghidraAddress 0xf33dc
  */
 + (void)bannerInfoWithBlock:(RewardNetworkCallback)block;
 /**
- * @brief Report whether the banner is enabled, using the banner cache while it is fresh.
+ * Report whether the banner is enabled, using the banner cache while it is fresh.
  * @param block Fired with the flag or the error.
  * @ghidraAddress 0xf3714
  */
 + (void)isEnabledBannerWithBlock:(RewardNetworkFlgCallback)block;
 /**
- * @brief Whether any UDID exists; when none does, the banner cache is evicted.
+ * Whether any UDID exists; when none does, the banner cache is evicted.
  * @return YES when the banner cache may be used.
  * @ghidraAddress 0xf3b28
  */
 + (BOOL)canUseBannerCache;
 /**
- * @brief Evict the in-memory banner cache.
+ * Evict the in-memory banner cache.
  * @ghidraAddress 0xf3bd0
  */
 + (void)clearBannerCache;
 
 /**
- * @brief The SDK initialisation state; the getter also gates on ad-tracking being enabled.
+ * The SDK initialisation state; the getter also gates on ad-tracking being enabled.
  * @return The state, or 0 when ad-tracking is disabled.
  * @ghidraAddress 0xee3f8
  */
 - (int)initializeFlg;
 /**
- * @brief Set the SDK initialisation state.
+ * Set the SDK initialisation state.
  * @param initializeFlg The new state.
  * @ghidraAddress 0xee438
  */
 - (void)setInitializeFlg:(int)initializeFlg;
 
 /**
- * @brief The queue-guarded shared-instance initialiser.
+ * The queue-guarded shared-instance initialiser.
  * @return The initialised instance.
  * @ghidraAddress 0xee634
  */
 - (instancetype)init;
 
 /**
- * @brief Open the reward app-list web panel.
+ * Open the reward app-list web panel.
  *
  * It requires the SDK to be usable and ad-tracking to be enabled; otherwise it reports the failure
  * to @p delegate. The query-value parameters other than @p campaignId are typed `id` because they
@@ -241,7 +241,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                                 delegate:(id<RewardNetworkWebViewDelegate>)delegate;
 
 /**
- * @brief Fetch the reward app index via GET /reward/app/index.php.
+ * Fetch the reward app index via GET /reward/app/index.php.
  * @param campaignId The campaign id.
  * @param inCompany The company filter.
  * @param type The listing type.
@@ -258,7 +258,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                      callback:(RewardNetworkCallback)callback;
 
 /**
- * @brief Forward a rotation to the open app-list panel.
+ * Forward a rotation to the open app-list panel.
  * @param orientation The new interface orientation.
  * @param duration The rotation duration.
  * @ghidraAddress 0xf1ff8
@@ -267,7 +267,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                                        duration:(NSTimeInterval)duration;
 
 /**
- * @brief Store a value in the expiring key/value cache backed by NSUserDefaults, archived as
+ * Store a value in the expiring key/value cache backed by NSUserDefaults, archived as
  * {Value, Expire}.
  * @param key The cache key.
  * @param value The value to store.
@@ -276,7 +276,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
  */
 - (void)setTemporaryCacheWithKey:(NSString *)key value:(id)value expiration:(NSInteger)expiration;
 /**
- * @brief Read a value from the expiring cache.
+ * Read a value from the expiring cache.
  * @param key The cache key.
  * @return The value while unexpired; otherwise the entry is evicted and nil is returned.
  * @ghidraAddress 0xf2168
@@ -284,7 +284,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 - (id)getTemporaryCacheWithKey:(NSString *)key;
 
 /**
- * @brief Fetch the installed-appli id list via GET /reward/app/install/appliid/index.php.
+ * Fetch the installed-appli id list via GET /reward/app/install/appliid/index.php.
  * @param type The listing type.
  * @param callback Fired with the id list or the error.
  * @ghidraAddress 0xf22e0
@@ -292,7 +292,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 - (void)appliIdListWithType:(int)type callback:(RewardNetworkCallback)callback;
 
 /**
- * @brief Report installed applis in batches of 10 via POST
+ * Report installed applis in batches of 10 via POST
  * /reward/app/install/report/regist.php, chaining the remainder.
  * @param appliList The applis to report.
  * @param callback Fired with the report error, or nil. The binary invokes it with a single NSError
@@ -303,7 +303,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
                                    callback:(RewardNetworkErrorBlock)callback;
 
 /**
- * @brief Query already-installed applis (type 2) and report those actually installed.
+ * Query already-installed applis (type 2) and report those actually installed.
  * @param callback Fired with the report error, or nil. The binary invokes it with a single NSError
  * argument.
  * @ghidraAddress 0xf2a48
@@ -311,7 +311,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 - (void)postAlreadyInstallAppWithCallback:(RewardNetworkErrorBlock)callback;
 
 /**
- * @brief A no-op in release builds.
+ * A no-op in release builds.
  * @ghidraAddress 0xf3bf4
  */
 - (void)debugLog;
@@ -319,14 +319,14 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 // Class helpers the methods above call, owned by this class.
 
 /**
- * @brief The SSL base URL selected from the ApplilinkReward.env default.
+ * The SSL base URL selected from the ApplilinkReward.env default.
  * @return The base URL.
  * @ghidraAddress 0xf1e88
  */
 + (NSString *)baseUrlSsl;
 
 /**
- * @brief Ensure the SDK is started, reading the persisted appli id, URL, method and environment,
+ * Ensure the SDK is started, reading the persisted appli id, URL, method and environment,
  * then run the block.
  * @param block Fired with a parameter error when any default is missing, or nil.
  * @ghidraAddress 0xef058
@@ -334,7 +334,7 @@ typedef void (^RewardNetworkFlgCallback)(NSInteger flg, NSError *error);
 + (void)startWithBlock:(void (^)(NSError *error))block;
 
 /**
- * @brief Start the Applilink SDK: persist the appli id and environment, ensure the reward UDID
+ * Start the Applilink SDK: persist the appli id and environment, ensure the reward UDID
  * exists, and post the install record.
  * @param appliId The appli id.
  * @param env The environment name.

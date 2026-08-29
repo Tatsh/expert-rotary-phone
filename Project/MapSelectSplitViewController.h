@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad sugoroku "map select" split hub.
+ * The iPad sugoroku "map select" split hub.
  *
  * A full-screen UIViewController hosting the two halves of the map-select flow side by side: the
  * left map list (MapSelectViewController, a grouped table of main maps) and the right area panel
@@ -27,12 +27,12 @@
 @class HowToViewCtrlPad;
 
 /**
- * @brief The iPad sugoroku map-select hub: a main-map list beside an area panel.
+ * The iPad sugoroku map-select hub: a main-map list beside an area panel.
  */
 @interface MapSelectSplitViewController : UIViewController <UIScrollViewDelegate>
 
 /**
- * @brief Whether an open, close or arrow-move cross-fade is running; taps and the back button are
+ * Whether an open, close or arrow-move cross-fade is running; taps and the back button are
  * swallowed until it clears. Exposed read-only for the flow controller.
  * @return YES while an animation is running.
  * @ghidraAddress 0x787d8
@@ -40,14 +40,14 @@
 - (BOOL)isAnimationing;
 
 /**
- * @brief Remember the table row the arrow points at: the pending area selection.
+ * Remember the table row the arrow points at: the pending area selection.
  * @param selectIndexPath The highlighted row.
  * @ghidraAddress 0x766b8
  */
 - (void)setSelectIndexPath:(NSIndexPath *)selectIndexPath;
 
 /**
- * @brief Slide the arrow to -setSelectIndexPath:'s row and cross-fade the right area panel to the
+ * Slide the arrow to -setSelectIndexPath:'s row and cross-fade the right area panel to the
  * freshly-built data for one main map.
  * @param treasureData The sugoroku save table snapshot.
  * @param mapHeadArray The bundled map-head records.
@@ -59,12 +59,12 @@
                     mainMapId:(int)mainMapId;
 
 /**
- * @brief Cross-fade the whole hub in; the parent navigation controller's view rides along.
+ * Cross-fade the whole hub in; the parent navigation controller's view rides along.
  * @ghidraAddress 0x766e0
  */
 - (void)startOpenAnimation;
 /**
- * @brief Cross-fade the whole hub out; the parent navigation controller's view rides along.
+ * Cross-fade the whole hub out; the parent navigation controller's view rides along.
  * @ghidraAddress 0x769c8
  */
 - (void)startCloseAnimation;

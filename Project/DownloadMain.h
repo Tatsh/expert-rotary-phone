@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The app's download manager.
+ * The app's download manager.
  *
  * A thread-safe singleton that fetches the server's downloadable-file list and drives file
  * downloads through the Downloader HTTP helper.
@@ -14,7 +14,7 @@
 #import "Downloader.h"
 
 /**
- * @brief Server result codes returned in the friend-request and free-request API's "ErrorCode"
+ * Server result codes returned in the friend-request and free-request API's "ErrorCode"
  * field.
  *
  * Codes 3..6, 8 and 9 have distinct, screen-consistent meanings. Codes 0, 1, 2 and 7 are surfaced
@@ -39,7 +39,7 @@ typedef NS_ENUM(NSInteger, FriendResultCode) {
 };
 
 /**
- * @brief One downloadable file's metadata.
+ * One downloadable file's metadata.
  *
  * Objective-C type-encoding `{DlFileListData=i@i}`, verified in getDlFileListFinished's NSValue
  * wrapping.
@@ -51,7 +51,7 @@ typedef struct {
 } DlFileListData;
 
 /**
- * @brief One friend's record.
+ * One friend's record.
  *
  * Objective-C type-encoding `{FriendListData=@@siii[3[7i]][3i][3i]}`, verified in
  * getFriendListFinished's NSValue wrapping. The two NSString * fields are retained and must be
@@ -72,7 +72,7 @@ typedef struct {
 } FriendListData;
 
 /**
- * @brief One store "information" post.
+ * One store "information" post.
  *
  * Objective-C type-encoding `{InformationData=i@@}`, verified in newsGetFinished's NSValue
  * wrapping. The two NSString * fields are retained and freed via releaseInformationData.
@@ -85,7 +85,7 @@ typedef struct {
 } InformationData;
 
 /**
- * @brief One recommended music pack.
+ * One recommended music pack.
  *
  * Objective-C type-encoding `{RecommendData=i@@@@}`, verified in getRecommendListFinished's
  * NSValue wrapping. The four NSString * fields are retained and freed via releaseRecommendData.
@@ -99,7 +99,7 @@ typedef struct {
 } RecommendData;
 
 /**
- * @brief One present-box entry.
+ * One present-box entry.
  *
  * Objective-C type-encoding `{PresentData=iii@}`, verified in getPresentListFinished's NSValue
  * wrapping. The NSString * field is retained and freed via releasePresentList.
@@ -112,7 +112,7 @@ typedef struct {
 } PresentData;
 
 /**
- * @brief One over-score log entry: a friend beat your score.
+ * One over-score log entry: a friend beat your score.
  *
  * Objective-C type-encoding `{OverScoreLogData=i@i@@ii}`, verified in getOverScoreLogFinished's
  * NSValue wrapping. The three NSString * fields are retained and freed via
@@ -139,39 +139,39 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 #endif
 
 /**
- * @brief Receives completion notices from DownloadMain's per-request delegates.
+ * Receives completion notices from DownloadMain's per-request delegates.
  */
 @protocol DownloadMainDelegate <NSObject>
 @optional
 /**
- * @brief Sent via performSelector: when a request completes.
+ * Sent via performSelector: when a request completes.
  * @param success An NSNumber wrapping a BOOL indicating success.
  */
 - (void)downloadMainFinished:(NSNumber *)success;
 @end
 
 /**
- * @brief The app's download manager: a thread-safe singleton driving every backend request through
+ * The app's download manager: a thread-safe singleton driving every backend request through
  * the Downloader HTTP helper.
  */
 @interface DownloadMain : NSObject <DownloaderDelegate>
 
 /**
- * @brief The shared instance, created under @@synchronized on first use.
+ * The shared instance, created under @@synchronized on first use.
  * @return The manager.
  * @ghidraAddress 0x93dd4
  */
 + (instancetype)getInstance;
 
 /**
- * @brief Whether the file-list request is in flight, meaning its Downloader is non-nil.
+ * Whether the file-list request is in flight, meaning its Downloader is non-nil.
  * @return YES while the request is running.
  * @ghidraAddress 0x979d8
  */
 - (BOOL)isGetDlFileListDownLoading;
 
 /**
- * @brief Whether the score-save upload is still in flight; the result screen waits on this before
+ * Whether the score-save upload is still in flight; the result screen waits on this before
  * leaving.
  * @return YES while the upload is running.
  * @ghidraAddress 0x9541c
@@ -179,14 +179,14 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 - (BOOL)isSaveScoreDownLoading;
 
 /**
- * @brief The parsed downloadable-file list.
+ * The parsed downloadable-file list.
  * @return An NSArray of NSValue-wrapped DlFileListData.
  * @ghidraAddress 0x999e8
  */
 - (NSArray *)dlFileListDataArray;
 
 /**
- * @brief POST the file-list request at the current client version.
+ * POST the file-list request at the current client version.
  * @param fileId The file to ask about, or -1 for all of them.
  * @ghidraAddress 0x978ac
  */
@@ -195,7 +195,7 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Score upload ---
 
 /**
- * @brief POST a finished play's score to the backend.
+ * POST a finished play's score to the backend.
  *
  * The result screen (Ghidra FUN_0003dfe0 @ 0x3e282) fires this; -isSaveScoreDownLoading stays YES
  * until it completes.
@@ -220,19 +220,19 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Friend list ---
 
 /**
- * @brief The parsed friend list.
+ * The parsed friend list.
  * @return An NSArray of NSValue-wrapped FriendListData.
  * @ghidraAddress 0x99914
  */
 - (NSArray *)friendListArray;
 /**
- * @brief The number of pending inbound friend requests.
+ * The number of pending inbound friend requests.
  * @return The request count.
  * @ghidraAddress 0x99734
  */
 - (int)friendRequestedCnt;
 /**
- * @brief Set the number of pending inbound friend requests.
+ * Set the number of pending inbound friend requests.
  * @param cnt The request count.
  * @ghidraAddress 0x99748
  */
@@ -241,13 +241,13 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
  * 0x99618. */
 @property(nonatomic, assign) id<DownloadMainDelegate> delegateGetFriendList;
 /**
- * @brief Whether the friend-list request is in flight.
+ * Whether the friend-list request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x958a8
  */
 - (BOOL)isGetFriendListDownLoading;
 /**
- * @brief POST "uuid=<uuId>" to the friend-list URL and start it. A no-op if already running.
+ * POST "uuid=<uuId>" to the friend-list URL and start it. A no-op if already running.
  * @ghidraAddress 0x95794
  */
 - (void)startGetFriendListHttp;
@@ -255,48 +255,48 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Block list ---
 
 /**
- * @brief The blocked players' ids, parallel to -blNameArray.
+ * The blocked players' ids, parallel to -blNameArray.
  * @return An NSArray of NSString.
  * @ghidraAddress 0x9997c
  */
 - (NSArray *)blPlayerIdArray;
 /**
- * @brief The blocked players' names, parallel to -blPlayerIdArray.
+ * The blocked players' names, parallel to -blPlayerIdArray.
  * @return An NSArray of NSString.
  * @ghidraAddress 0x99990
  */
 - (NSArray *)blNameArray;
 /**
- * @brief Whether the add-to-block-list request is in flight.
+ * Whether the add-to-block-list request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x9658c
  */
 - (BOOL)isAddBlockListDownLoading;
 /**
- * @brief Whether the block-list fetch is in flight.
+ * Whether the block-list fetch is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x96710
  */
 - (BOOL)isGetBlockListDownLoading;
 /**
- * @brief Whether the remove-from-block-list request is in flight.
+ * Whether the remove-from-block-list request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x96ae4
  */
 - (BOOL)isDelBlockListDownLoading;
 /**
- * @brief Fetch the block list.
+ * Fetch the block list.
  * @ghidraAddress 0x965fc
  */
 - (void)startGetBlockListHttp;
 /**
- * @brief Block a player. The call refuses to block yourself.
+ * Block a player. The call refuses to block yourself.
  * @param playerId The player to block.
  * @ghidraAddress 0x96440
  */
 - (void)startAddBlockListHttp:(NSString *)playerId;
 /**
- * @brief Unblock a player.
+ * Unblock a player.
  * @param playerId The player to unblock.
  * @ghidraAddress 0x969cc
  */
@@ -307,13 +307,13 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 /** The delegate notified when a cancel completes. Getter @ 0x99630, setter @ 0x99644. */
 @property(nonatomic, assign) id<DownloadMainDelegate> delegateCancelFriend;
 /**
- * @brief Whether the cancel-friend-request call is in flight.
+ * Whether the cancel-friend-request call is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x9566c
  */
 - (BOOL)isCancelFriendDownLoading;
 /**
- * @brief Cancel an outbound friend request.
+ * Cancel an outbound friend request.
  * @param playerId The player the request was sent to.
  * @ghidraAddress 0x95554
  */
@@ -322,7 +322,7 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Save treasure (sugoroku reward) ---
 
 /**
- * @brief POST the collected pieces for one map cell.
+ * POST the collected pieces for one map cell.
  * @param mapId The map cell: main map is `mapId / 10` and sub map `mapId % 10`.
  * @param visitor The visiting friend's player id.
  * @param friendship The friendship level.
@@ -330,7 +330,7 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
  */
 - (void)startSaveTreasureHttp:(short)mapId visitor:(NSString *)visitor friendship:(int)friendship;
 /**
- * @brief Whether the treasure-save upload is still in flight.
+ * Whether the treasure-save upload is still in flight.
  * @return YES while the upload is running.
  * @ghidraAddress 0x97894
  */
@@ -339,19 +339,19 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Player-get (login / profile fetch) ---
 
 /**
- * @brief POST "uuid=<uuId>&client_ver=<ver>" to the player-get URL, resetting errorGetPlayer to -1
+ * POST "uuid=<uuId>&client_ver=<ver>" to the player-get URL, resetting errorGetPlayer to -1
  * while in flight.
  * @ghidraAddress 0x93f14
  */
 - (void)startPlayerGetHttp;
 /**
- * @brief Whether the player-get request is in flight.
+ * Whether the player-get request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x94060
  */
 - (BOOL)isPlayerGetDownLoading;
 /**
- * @brief How long the active player-get request has been running.
+ * How long the active player-get request has been running.
  * @return The elapsed seconds, or 0 when idle.
  * @ghidraAddress 0x94078
  */
@@ -373,12 +373,12 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- News / store information ---
 
 /**
- * @brief POST "info_id=<lastInformationId>" to the store-info URL.
+ * POST "info_id=<lastInformationId>" to the store-info URL.
  * @ghidraAddress 0x94488
  */
 - (void)startNewsHttp;
 /**
- * @brief Whether the news request is in flight.
+ * Whether the news request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x9458c
  */
@@ -415,12 +415,12 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Recommend list ---
 
 /**
- * @brief POST "uuid=<uuId>" to the recommend-list URL.
+ * POST "uuid=<uuId>" to the recommend-list URL.
  * @ghidraAddress 0x96b54
  */
 - (void)startGetRecommendListHttp;
 /**
- * @brief Whether the recommend-list request is in flight.
+ * Whether the recommend-list request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x96c68
  */
@@ -436,14 +436,14 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Sugoroku visitor ---
 
 /**
- * @brief POST "uuid=<uuId>&map_id=<mapId>&type=<type>" to the visitor URL.
+ * POST "uuid=<uuId>&map_id=<mapId>&type=<type>" to the visitor URL.
  * @param mapId The map cell to fetch a visitor for.
  * @param type The visitor request type.
  * @ghidraAddress 0x972e4
  */
 - (void)startGetVisitorHttp:(short)mapId type:(short)type;
 /**
- * @brief Whether the visitor request is in flight.
+ * Whether the visitor request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x97410
  */
@@ -457,12 +457,12 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Present box ---
 
 /**
- * @brief POST "uuid=<uuId>" to the present-list URL.
+ * POST "uuid=<uuId>" to the present-list URL.
  * @ghidraAddress 0x97d60
  */
 - (void)startGetPresentListHttp;
 /**
- * @brief Whether the present-list request is in flight.
+ * Whether the present-list request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x97e74
  */
@@ -473,13 +473,13 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
  * 0x9969c. */
 @property(nonatomic, assign) id<DownloadMainDelegate> delegateGetPresentList;
 /**
- * @brief POST "uuid=<uuId>&present_id=<id>" to claim one present.
+ * POST "uuid=<uuId>&present_id=<id>" to claim one present.
  * @param presentId The present to claim.
  * @ghidraAddress 0x9829c
  */
 - (void)startGetPresentHttp:(int)presentId;
 /**
- * @brief Whether the present-claim request is in flight.
+ * Whether the present-claim request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x983c0
  */
@@ -493,12 +493,12 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Over-score log (friends who beat your score) ---
 
 /**
- * @brief POST "uuid=<uuId>" to the over-score-log URL.
+ * POST "uuid=<uuId>" to the over-score-log URL.
  * @ghidraAddress 0x984b4
  */
 - (void)startGetOverScoreLogHttp;
 /**
- * @brief Whether the over-score-log request is in flight.
+ * Whether the over-score-log request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x985c8
  */
@@ -512,12 +512,12 @@ class MainTask;                   // System/src/Task/MainTask.h (: ne::C_TASK); 
 // --- Event info ---
 
 /**
- * @brief POST "client_ver=<ver>" to the event-info URL.
+ * POST "client_ver=<ver>" to the event-info URL.
  * @ghidraAddress 0x98a6c
  */
 - (void)startGetEventInfoHttp;
 /**
- * @brief Whether the event-info request is in flight.
+ * Whether the event-info request is in flight.
  * @return YES while the request is running.
  * @ghidraAddress 0x98b7c
  */

@@ -10,7 +10,7 @@
 #import "neEngineBridge.h"
 
 /**
- * @brief The NSValue payload -getValue: fills for a sort-option row.
+ * The NSValue payload -getValue: fills for a sort-option row.
  */
 typedef struct {
     short sortType;          /**< The sort order this row selects. */

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The public facade of the Konami "Applilink" Recommend ad SDK that the game talks to.
+ * The public facade of the Konami "Applilink" Recommend ad SDK that the game talks to.
  *
  * A singleton whose designated initialiser runs [super init] on the shared "RewardNetwork" serial
  * dispatch queue, so instance creation is serialised against the rest of the SDK's networking, and
@@ -24,7 +24,7 @@
 #import "RecommendWebView.h" // RecommendWebView + RecommendWebViewOpenAppliListCallback
 
 /**
- * @brief The public facade over RecommendCore and RecommendWebView.
+ * The public facade over RecommendCore and RecommendWebView.
  */
 @interface RecommendNetwork : NSObject
 
@@ -32,14 +32,14 @@
 @property(nonatomic, assign) int initializeFlg;
 
 /**
- * @brief The process-wide shared facade.
+ * The process-wide shared facade.
  * @return The singleton.
  * @ghidraAddress 0xebbb4
  */
 + (instancetype)sharedInstance;
 
 /**
- * @brief Allocate the singleton: create the "RewardNetwork" serial queue and, on the first call,
+ * Allocate the singleton: create the "RewardNetwork" serial queue and, on the first call,
  * allocate the shared instance via [super allocWithZone:] and clear its initializeFlg.
  * @param zone The zone to allocate in.
  * @return The shared instance.
@@ -48,7 +48,7 @@
 + (id)allocWithZone:(NSZone *)zone;
 
 /**
- * @brief Record the country, category and environment and start, by forwarding to
+ * Record the country, category and environment and start, by forwarding to
  * [RecommendCore sharedInstance].
  * @param countryCode The country code.
  * @param categoryId The category id.
@@ -62,14 +62,14 @@
                     callback:(RecommendOpenAppliListCallback)callback;
 
 /**
- * @brief Show the modal app list with the navigation bar visible.
+ * Show the modal app list with the navigation bar visible.
  * @param callback Fired when the list is dismissed.
  * @ghidraAddress 0xebdbc
  */
 - (void)openAppliListWithCallback:(RecommendOpenAppliListCallback)callback;
 
 /**
- * @brief Host the app list inside a parent view, with the navigation bar hidden while embedded.
+ * Host the app list inside a parent view, with the navigation bar hidden while embedded.
  * @param parentView The host view.
  * @param delegate The controller delegate.
  * @ghidraAddress 0xebe4c
@@ -77,7 +77,7 @@
 - (void)openAppliListWithParentView:(UIView *)parentView delegate:(id)delegate;
 
 /**
- * @brief Host the app list inside a parent view, with the navigation bar hidden while embedded,
+ * Host the app list inside a parent view, with the navigation bar hidden while embedded,
  * and report completion.
  * @param parentView The host view.
  * @param callback Fired when the list is dismissed.
@@ -87,13 +87,13 @@
                            callback:(RecommendOpenAppliListCallback)callback;
 
 /**
- * @brief Dismiss the modal app list.
+ * Dismiss the modal app list.
  * @ghidraAddress 0xec000
  */
 - (void)closeAppliList;
 
 /**
- * @brief Create a RecommendWebView, add it to a parent, and load the recommend page.
+ * Create a RecommendWebView, add it to a parent, and load the recommend page.
  * @param rect The web view's frame.
  * @param parent The host view, or nil to use the key window.
  * @param viewType The ad layout: 0..3.
@@ -106,14 +106,14 @@
                                       callback:(RecommendWebViewOpenAppliListCallback)callback;
 
 /**
- * @brief Remove every RecommendWebView from a parent view.
+ * Remove every RecommendWebView from a parent view.
  * @param parentView The host view, or nil to use the key window.
  * @ghidraAddress 0xec170
  */
 - (void)closeRecommendPageWithParentView:(UIView *)parentView;
 
 /**
- * @brief Hide or show every RecommendWebView under a parent view.
+ * Hide or show every RecommendWebView under a parent view.
  * @param parentView The host view, or nil to use the key window.
  * @param flag YES to show the views, NO to hide them.
  * @ghidraAddress 0xec2dc
@@ -121,7 +121,7 @@
 - (void)setRecommendPageVisibleWithParentView:(UIView *)parentView flag:(BOOL)flag;
 
 /**
- * @brief Forward a rotation to the hosted app-list controller.
+ * Forward a rotation to the hosted app-list controller.
  * @param orientation The new interface orientation.
  * @param duration The rotation duration.
  * @ghidraAddress 0xec460

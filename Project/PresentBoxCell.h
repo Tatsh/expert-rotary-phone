@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A present-box, or gift, row on a clear background.
+ * A present-box, or gift, row on a clear background.
  *
  * A full-width banner, a treasure or character icon, an amount label, a one-line info label, and
  * an "acquire" button. Reconstructed from Ghidra project rb420, program PopnRhythmin
@@ -10,7 +10,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One present-box row.
+ * One present-box row.
  */
 @interface PresentBoxCell : UITableViewCell
 
@@ -18,7 +18,7 @@
 @property(readonly, strong) UIButton *getBtn;
 
 /**
- * @brief Bind a present record and rebuild the row.
+ * Bind a present record and rebuild the row.
  * @param presentData An NSValue-wrapped PresentData; see the .m.
  */
 - (void)setPresentData:(NSValue *)presentData;

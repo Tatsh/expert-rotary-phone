@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The arcade (AC) viewer's RAN-MIR option list.
+ * The arcade (AC) viewer's RAN-MIR option list.
  *
  * A UITableView of four values (OFF, RANDOM, MIRROR, S-RAN). Pushed by
  * AcViewerOptionViewController when the RAN-MIR row is tapped; selecting a value stores it into
@@ -13,7 +13,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The arcade viewer's RAN-MIR option list.
+ * The arcade viewer's RAN-MIR option list.
  */
 @interface AcViewerRanMirViewController : UITableViewController
 @end

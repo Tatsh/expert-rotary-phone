@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Konami "RewardNetwork" (Applilink) ad-SDK error factory.
+ * The Konami "RewardNetwork" (Applilink) ad-SDK error factory.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. The class holds no instance state
  * (instanceSize 4, isa only, no ivars, no instance methods); everything lives on the metaclass as
@@ -15,12 +15,12 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief Builds localised NSErrors for the reward SDK.
+ * Builds localised NSErrors for the reward SDK.
  */
 @interface RewardNetworkError : NSObject
 
 /**
- * @brief Build a localised reward-network error.
+ * Build a localised reward-network error.
  * @param code The error code.
  * @param userInfo Extra user info to attach; may be nil.
  * @return The error.
@@ -29,7 +29,7 @@
 + (NSError *)localizedRewardNetworkErrorWithCode:(NSInteger)code userInfo:(NSDictionary *)userInfo;
 
 /**
- * @brief Build a localised Applilink error, forwarding to
+ * Build a localised Applilink error, forwarding to
  * +localizedRewardNetworkErrorWithCode:userInfo: with a nil userInfo.
  * @param code The error code.
  * @return The error.
@@ -38,7 +38,7 @@
 + (NSError *)localizedApplilinkErrorWithCode:(NSInteger)code;
 
 /**
- * @brief Build a localised reward-network error with a nil userInfo.
+ * Build a localised reward-network error with a nil userInfo.
  * @param code The error code.
  * @return The error.
  */

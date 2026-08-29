@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The in-app web view hosting the Konami "Applilink" Recommend ad SDK's content.
+ * The in-app web view hosting the Konami "Applilink" Recommend ad SDK's content.
  *
  * A thin subclass of RewardNetworkWebViewController that tears the web view out of its superview
  * on unload or close, and lets RecommendCore intercept "applilink://" redirect requests, closing
@@ -22,7 +22,7 @@
 #import "RewardNetworkWebViewController.h"
 
 /**
- * @brief The recommend app-list web-view controller.
+ * The recommend app-list web-view controller.
  */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
 @interface RecommendWebViewController : RewardNetworkWebViewController <WKNavigationDelegate>
@@ -31,7 +31,7 @@
 #endif
 
 /**
- * @brief Detach the web view delegate. The hosting controller invokes it when tearing the view
+ * Detach the web view delegate. The hosting controller invokes it when tearing the view
  * down.
  */
 - (void)removeFromSuperview;

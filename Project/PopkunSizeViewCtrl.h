@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "pop-kun size" adjustment sub-screen.
+ * The "pop-kun size" adjustment sub-screen.
  *
  * SettingGameTableViewController pushes it from row 5 (ポップ君サイズ). A UISlider covering
  * 50-100% live-resizes a preview pop-kun UIImageView; a "%d%%" label tracks the current value and
@@ -22,38 +22,38 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The note ("pop-kun") size setting screen: a slider over a live preview.
+ * The note ("pop-kun") size setting screen: a slider over a live preview.
  */
 @interface PopkunSizeViewCtrl : UIViewController
 
 // Slider handlers and the reset button, exposed for the XIB-less wiring done in -viewDidLoad.
 
 /**
- * @brief The slider moved: apply the live value to the preview.
+ * The slider moved: apply the live value to the preview.
  * @param sender The slider.
  * @ghidraAddress 0x8c228
  */
 - (void)sliderValChanged:(id)sender;
 /**
- * @brief The slider was released: persist the chosen size.
+ * The slider was released: persist the chosen size.
  * @param sender The slider.
  * @ghidraAddress 0x8c270
  */
 - (void)sliderValDecide:(id)sender;
 /**
- * @brief The reset button: restore 100%.
+ * The reset button: restore 100%.
  * @param sender The tapped button.
  * @ghidraAddress 0x8c29c
  */
 - (void)touchedResetButton:(id)sender;
 /**
- * @brief The iPhone custom back-button action.
+ * The iPhone custom back-button action.
  * @ghidraAddress 0x8c30c
  */
 - (void)backButtonFunc;
 
 /**
- * @brief Apply the current size to the preview note and refresh the percentage label.
+ * Apply the current size to the preview note and refresh the percentage label.
  * @ghidraAddress 0x8c3a8
  */
 - (void)resizePopkun;

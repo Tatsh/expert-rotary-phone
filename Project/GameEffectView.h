@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "game effect" (ゲーム演出) settings sub-screen.
+ * The "game effect" (ゲーム演出) settings sub-screen.
  *
  * A two-row grouped table that toggles two boolean play-effect options persisted through
  * UserSettingData: row 0 drives isEffectOn (general note effects on or off) and row 1 drives
@@ -24,12 +24,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The game-effect settings list.
+ * The game-effect settings list.
  */
 @interface GameEffectView : UITableViewController
 
 /**
- * @brief The custom nav-bar back button action: play the cancel SE, restore the "settings_navbar"
+ * The custom nav-bar back button action: play the cancel SE, restore the "settings_navbar"
  * bar background, pop self, then re-apply the stored SE volume.
  * @ghidraAddress 0x737d8
  */

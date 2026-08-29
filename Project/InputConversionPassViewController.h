@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The device-change "input pass-code" modal: the receiving side of the machine transfer.
+ * The device-change "input pass-code" modal: the receiving side of the machine transfer.
  *
  * The player types the player id and the 6-digit convert pass issued on their old device into two
  * UITextFields, taps the decide button, and the screen POSTs uuid, player_id, and convert_code to
@@ -38,7 +38,7 @@
 #import "Downloader.h"      // DownloaderDelegate + Downloader ivar type
 
 /**
- * @brief The device-change pass-entry screen: player id plus convert pass.
+ * The device-change pass-entry screen: player id plus convert pass.
  */
 // Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
 // follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the
@@ -57,7 +57,7 @@
 // clang-format on
 
 /**
- * @brief Build the controller and wrap it in a fresh UINavigationController with a custom back
+ * Build the controller and wrap it in a fresh UINavigationController with a custom back
  * button.
  * @return The navigation host the menu adds to the scene; phone only.
  * @ghidraAddress 0x91e84
@@ -65,7 +65,7 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the panel in over 0.3 s, along with its embedded navigation view on phone.
+ * Fade the panel in over 0.3 s, along with its embedded navigation view on phone.
  * @ghidraAddress 0x920e8
  */
 - (void)startOpenAnimation;

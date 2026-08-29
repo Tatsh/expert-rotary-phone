@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A second custom modal alert, the sibling of CommonAlertView.
+ * A second custom modal alert, the sibling of CommonAlertView.
  *
  * It is built around a fixed piece of background art ("info_bg" or "gift_bg") rather than a drawn
  * gradient card. It hangs a title UILabel, a display-only CustomTextView message, and up to two
@@ -21,7 +21,7 @@
 @class CustomAlertView;
 
 /**
- * @brief The background-art style, which drives the image and the label and button layout.
+ * The background-art style, which drives the image and the label and button layout.
  */
 typedef NS_ENUM(NSInteger, CustomAlertViewType) {
     CustomAlertViewTypeInfo = 0, /**< The "info_bg" background. */
@@ -29,7 +29,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewType) {
 };
 
 /**
- * @brief The open and close animation style, set via -setOpenAnimeType: and -setCloseAnimeType:.
+ * The open and close animation style, set via -setOpenAnimeType: and -setCloseAnimeType:.
  */
 typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
     CustomAlertViewAnimeTypeFade = 0,  /**< An alpha fade. */
@@ -37,11 +37,11 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
 };
 
 /**
- * @brief Receives the alert's button taps.
+ * Receives the alert's button taps.
  */
 @protocol CustomAlertViewDelegate <NSObject>
 /**
- * @brief A button was tapped.
+ * A button was tapped.
  * @param alertView The alert that was dismissed.
  * @param index 0 for the no or cancel button, 1 for the yes or other button.
  */
@@ -49,7 +49,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
 @end
 
 /**
- * @brief A modal alert built around a fixed piece of background art rather than a drawn gradient
+ * A modal alert built around a fixed piece of background art rather than a drawn gradient
  * card.
  */
 @interface CustomAlertView : UIImageView
@@ -58,7 +58,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
 @property(nonatomic, weak) id<CustomAlertViewDelegate> delegate;
 
 /**
- * @brief Install the alert into the root scene view, centred on it.
+ * Install the alert into the root scene view, centred on it.
  * @param type The background-art style.
  * @param title The alert title.
  * @param message The alert body.
@@ -74,7 +74,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
             otherButtonTitle:(NSString *)otherButtonTitle;
 
 /**
- * @brief Install the alert into @p view, centred on it.
+ * Install the alert into @p view, centred on it.
  * @param view The host view.
  * @param type The background-art style.
  * @param title The alert title.
@@ -92,7 +92,7 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
             otherButtonTitle:(NSString *)otherButtonTitle;
 
 /**
- * @brief The designated initialiser.
+ * The designated initialiser.
  * @param view The host view.
  * @param center Where to place the alert; CGPointZero uses the host view's centre.
  * @param type The background-art style.
@@ -112,12 +112,12 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
             otherButtonTitle:(NSString *)otherButtonTitle;
 
 /**
- * @brief Reveal the alert and run its open animation.
+ * Reveal the alert and run its open animation.
  * @ghidraAddress 0x274fc
  */
 - (void)show;
 /**
- * @brief Dismiss the alert and run its close animation.
+ * Dismiss the alert and run its close animation.
  * @ghidraAddress 0x277b8
  */
 - (void)removeView;
@@ -125,38 +125,38 @@ typedef NS_ENUM(NSInteger, CustomAlertViewAnimeType) {
 // Runtime restyling of the already-built title and message widgets.
 
 /**
- * @brief Restyle the title colour.
+ * Restyle the title colour.
  * @param color The new title colour.
  * @ghidraAddress 0x268ac
  */
 - (void)setTitleColor:(UIColor *)color;
 /**
- * @brief Restyle the message colour.
+ * Restyle the message colour.
  * @param color The new message colour.
  * @ghidraAddress 0x268cc
  */
 - (void)setTextColor:(UIColor *)color;
 /**
- * @brief Restyle the title font size.
+ * Restyle the title font size.
  * @param size The new point size.
  * @ghidraAddress 0x268ec
  */
 - (void)setTitleFontSize:(CGFloat)size;
 /**
- * @brief Restyle the message font size.
+ * Restyle the message font size.
  * @param size The new point size.
  * @ghidraAddress 0x26940
  */
 - (void)setTextFontSize:(CGFloat)size;
 
 /**
- * @brief Select the open animation.
+ * Select the open animation.
  * @param type The animation style; clamped to 0..1.
  * @ghidraAddress 0x26994
  */
 - (void)setOpenAnimeType:(CustomAlertViewAnimeType)type;
 /**
- * @brief Select the close animation.
+ * Select the close animation.
  * @param type The animation style; clamped to 0..1.
  * @ghidraAddress 0x269ac
  */

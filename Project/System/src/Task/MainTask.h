@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The standard-mode music-select task, launched by MenuMainTask.
+ * The standard-mode music-select task, launched by MenuMainTask.
  *
  * Reconstructed from Ghidra project
  * rb420, program PopnRhythmin. A ne::C_TASK subclass allocated at 0xaa8 bytes
@@ -26,82 +26,82 @@ class AepManager;
 class AepLyrCtrl;
 
 /**
- * @brief Standard-mode music-select task: song list, score display, and option navigation.
+ * Standard-mode music-select task: song list, score display, and option navigation.
  */
 class MainTask : public ne::C_TASK {
 public:
     /**
-     * @brief Construct with a zero-initialised work area.
+     * Construct with a zero-initialised work area.
      * @ghidraAddress 0x34d48
      */
     MainTask();
     /**
-     * @brief Detach as DownloadMain's recommend-list delegate, then run the base task teardown.
+     * Detach as DownloadMain's recommend-list delegate, then run the base task teardown.
      * @ghidraAddress 0x34d90
      */
     ~MainTask() override;
 
     /**
-     * @brief Per-frame update: detect a tap, then step the state machine.
+     * Per-frame update: detect a tap, then step the state machine.
      * @param deltaMs Frame delta in milliseconds; unused.
      * @ghidraAddress 0x35914
      */
     void update(int deltaMs) override;
 
     /**
-     * @brief Build the state-0 scene: resolve Aep handles, load the SEs and seed the flags.
+     * Build the state-0 scene: resolve Aep handles, load the SEs and seed the flags.
      * @ghidraAddress 0x370f0
      */
     void Setup();
     /**
-     * @brief Per-frame list-scroll physics.
+     * Per-frame list-scroll physics.
      * @ghidraAddress 0x34f4c
      */
     void Update();
     /**
-     * @brief Re-sort and rebuild the music-select list.
+     * Re-sort and rebuild the music-select list.
      * @ghidraAddress 0x3835c
      */
     void rebuildList();
     /**
-     * @brief Whether every visible jacket cell is empty or fully loaded.
+     * Whether every visible jacket cell is empty or fully loaded.
      * @return true if all 27 cells are ready.
      * @ghidraAddress 0x37f38
      */
     bool AllCellsReady();
     /**
-     * @brief Per-frame highlight and badge pulse animation.
+     * Per-frame highlight and badge pulse animation.
      * @ghidraAddress 0x355fc
      */
     void UpdateHighlight();
     /**
-     * @brief State-0x10 teardown: save the selection and release the scene resources.
+     * State-0x10 teardown: save the selection and release the scene resources.
      * @ghidraAddress 0x38008
      */
     void StopAndSave();
 
     /**
-     * @brief Build the cached recommend and info panel.
+     * Build the cached recommend and info panel.
      * @param mode Panel mode selector.
      * @ghidraAddress 0x37c88
      */
     void UpdateInfoPanel(int mode);
 
     /**
-     * @brief Stream the next list column's jacket cells into a widget row.
+     * Stream the next list column's jacket cells into a widget row.
      * @param column Widget row to populate.
      * @ghidraAddress 0x35448
      */
     void MusicSelLoadColumnNext(int column);
     /**
-     * @brief Stream the previous list column's jacket cells into a widget row.
+     * Stream the previous list column's jacket cells into a widget row.
      * @param column Widget row to populate.
      * @ghidraAddress 0x35520
      */
     void MusicSelLoadColumnPrev(int column);
 
     /**
-     * @brief The music sort order rebuildList last applied.
+     * The music sort order rebuildList last applied.
      * @return The applied sort id (m_appliedSort @ +0x8fc).
      */
     int appliedSort() const {
@@ -110,7 +110,7 @@ public:
 
 public:
     /**
-     * @brief Shared body of the two column loaders.
+     * Shared body of the two column loaders.
      * @param rowBase First cell row to stream into.
      * @param delta Direction: +1 next / -1 prev.
      * @param latch Per-direction load latch byte gating the stream.
@@ -118,7 +118,7 @@ public:
     inline void loadColumn(int rowBase, int delta, uint8_t &latch);
 
     /**
-     * @brief List-scroll settle states (m_scrollState @ +0x984).
+     * List-scroll settle states (m_scrollState @ +0x984).
      */
     enum ScrollState {
         kScrollIdle = 0,      /**< No drag; settled. */
@@ -137,13 +137,13 @@ public:
     static constexpr float kFlingThreshold = 0.1f; /**< Velocity gate for fling vs snap-back. */
 
     /**
-     * @brief Pick the free jacket row not held by one of the three column-row latches.
+     * Pick the free jacket row not held by one of the three column-row latches.
      * @return The free row base index.
      */
     inline int findFreeColumnRow() const;
 
     /**
-     * @brief Music-select buttons hit-tested each frame.
+     * Music-select buttons hit-tested each frame.
      */
     enum Button {
         kBtnSettings,     /**< State 2 top row: open the settings screen. */
@@ -161,7 +161,7 @@ public:
     };
 
     /**
-     * @brief Indices into m_layers[4] (the +0x34 scene-layer bank; kLayerNames).
+     * Indices into m_layers[4] (the +0x34 scene-layer bank; kLayerNames).
      */
     enum MainSceneLayer {
         kLayerBg = 0,        /**< BG_640X1136 background. */
@@ -171,7 +171,7 @@ public:
     };
 
     /**
-     * @brief Indices into m_introLayers[2] (the +0x44 intro bank; kIntroNames).
+     * Indices into m_introLayers[2] (the +0x44 intro bank; kIntroNames).
      */
     enum IntroLayer {
         kIntroImage = 0,   /**< 640IMG / 1024IMG foreground image. */
@@ -179,7 +179,7 @@ public:
     };
 
     /**
-     * @brief Indices into m_bgLyrNo[3] and m_bgLyrFrames[3] (+0x14c; kBgLyrNames).
+     * Indices into m_bgLyrNo[3] and m_bgLyrFrames[3] (+0x14c; kBgLyrNames).
      */
     enum BgLayer {
         kBgNeko = 0,     /**< BG_NEKO. */
@@ -188,7 +188,7 @@ public:
     };
 
     /**
-     * @brief Indices into m_elemUsrNo[22] (+0x22c; kElemUsrNames) — the AepDrawCallback
+     * Indices into m_elemUsrNo[22] (+0x22c; kElemUsrNames) — the AepDrawCallback
      * per-element user-number dispatch keys.
      */
     enum ElemUsr {
@@ -217,7 +217,7 @@ public:
     };
 
     /**
-     * @brief Indices into m_arrowTex[2] (+0x4c; kArrowNames).
+     * Indices into m_arrowTex[2] (+0x4c; kArrowNames).
      */
     enum ArrowTex {
         kArrowRecommend = 0, /**< The "circle" recommend arrow. */
@@ -225,7 +225,7 @@ public:
     };
 
     /**
-     * @brief Group base offsets into m_digitTex[60] (+0x5c; kDigitAtlasNames).
+     * Group base offsets into m_digitTex[60] (+0x5c; kDigitAtlasNames).
      *
      * Each group is 10 consecutive glyphs (0..9), so the digit is `base + n`.
      */
@@ -237,7 +237,7 @@ public:
     };
 
     /**
-     * @brief Hit-test a UI-scaled button rect against a tap.
+     * Hit-test a UI-scaled button rect against a tap.
      * @param tapX Tap x in screen pixels.
      * @param tapY Tap y in screen pixels.
      * @param button Button whose rect to test.
@@ -248,31 +248,31 @@ public:
     inline bool hitButton(int tapX, int tapY, Button button, int cellIndex = -1) const;
 
     /**
-     * @brief Map a Button to its widget cell (index into m_cells).
+     * Map a Button to its widget cell (index into m_cells).
      * @param button Button to map.
      * @return The widget-cell index, or -1 for kBtnBackToMenu.
      */
     inline int widgetIndexForButton(Button button) const;
 
     /**
-     * @brief Seed the three difficulty-star background layer frame counters (@ +0x170). The
+     * Seed the three difficulty-star background layer frame counters (@ +0x170). The
      * state-3/4 seam.
      */
     inline void seedDiffStarLayerFrames();
     /**
-     * @brief Re-read the three difficulty score rows for the current song.
+     * Re-read the three difficulty score rows for the current song.
      */
     inline void refreshScoreRows();
 
     /**
-     * @brief Release the old list and clear the 27 jacket cells.
+     * Release the old list and clear the 27 jacket cells.
      * @ghidraAddress 0x3cfb0
      */
     void Cleanup();
 
     struct MusicSelCell; // forward-declared for the reference param below
     /**
-     * @brief Fetch a song's three difficulty score rows into a cell's detail block.
+     * Fetch a song's three difficulty score rows into a cell's detail block.
      * @param cell Destination jacket cell.
      * @param musicId Song id to fetch.
      * @note De-inlined from MainTask::rebuildList @ 0x3835c.
@@ -280,14 +280,14 @@ public:
     inline void loadCellScoreRows(MusicSelCell &cell, unsigned musicId);
 
     /**
-     * @brief Background jacket loader: the dispatch_async body rebuildList() starts.
+     * Background jacket loader: the dispatch_async body rebuildList() starts.
      *
      * Ghidra names it resultTaskSetup @ 0x3d048, mislabelled by binary proximity.
      */
     void backgroundCellLoader();
 
     /**
-     * @brief One widget cell of the select scene (the cell array @ +0x2d8, stride 0x38).
+     * One widget cell of the select scene (the cell array @ +0x2d8, stride 0x38).
      */
     struct MusicSelCell { // 0x38 bytes
         union {
@@ -305,7 +305,7 @@ public:
         std::unique_ptr<neTextureForiOS> texture; /**< +0x0c Uploaded jacket texture. */
         id name;                                  /**< +0x10 Truncated song-name string. */
         /**
-         * @brief +0x14 A jacket cell's per-difficulty score rows. 0x24 bytes.
+         * +0x14 A jacket cell's per-difficulty score rows. 0x24 bytes.
          */
         struct ScoreRows {
             int score[3];         /**< +0x00 Per-difficulty best score. */
@@ -315,7 +315,7 @@ public:
             uint8_t perfect[3];   /**< +0x21 Perfect medal, per difficulty. */
         };
         /**
-         * @brief A {x, y, w, h} view of a packed hit-rect (seam). 0x10 bytes.
+         * A {x, y, w, h} view of a packed hit-rect (seam). 0x10 bytes.
          */
         struct WidgetRect {
             int x; /**< Left edge, in screen pixels. */
@@ -331,7 +331,7 @@ public:
     };
 
     /**
-     * @brief The packed per-song select state (documented tail seam). 0x40 bytes.
+     * The packed per-song select state (documented tail seam). 0x40 bytes.
      */
     struct MusicSelState {
         uint8_t inviteOpen; /**< EX unlocked for this invite song. */
@@ -480,7 +480,7 @@ public:
     /** +0xaa0 Launched play / tutorial / menu sub-task. */
     ne::C_TASK *m_spawnedTask = nullptr;
     /**
-     * @brief The music-select flow states, in the order update() walks them (Ghidra:
+     * The music-select flow states, in the order update() walks them (Ghidra:
      * MainTask_update). Value 0xb is unused.
      */
     enum SelectState {

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The friend-score ranking screen for one song.
+ * The friend-score ranking screen for one song.
  *
  * A UIViewController hosting three friend-score tables (Normal, Hyper, Ex). On phone the three
  * tables are the pages of a UITabBarController, with custom tab art and iOS 7 rendering-mode
@@ -18,12 +18,12 @@
 #import "Downloader.h" // DownloaderDelegate
 
 /**
- * @brief The friend-score screen: your friends' scores on one song.
+ * The friend-score screen: your friends' scores on one song.
  */
 @interface FriendScoreMainView : UIViewController <UITabBarControllerDelegate, DownloaderDelegate>
 
 /**
- * @brief Build the whole friend-score screen for a song and wrap self in a UINavigationController
+ * Build the whole friend-score screen for a song and wrap self in a UINavigationController
  * with the custom back button and nav-bar art.
  * @param musicId The song to show scores for.
  * @return The navigation host the root MainViewController adds over the GL view.
@@ -41,7 +41,7 @@
 @property(atomic, assign, readonly) BOOL isAnimationing;
 
 /**
- * @brief Cross-fade the navigation host in and pause the render loop. The root MainViewController
+ * Cross-fade the navigation host in and pause the render loop. The root MainViewController
  * calls it right after adding the host.
  * @ghidraAddress 0xabfc8
  */

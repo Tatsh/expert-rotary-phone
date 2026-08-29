@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Aep animated frame-tree renderer.
+ * The Aep animated frame-tree renderer.
  *
  * For the current frame it walks a layer's frame-entry chain, interpolates every keyframe channel
  * (position, scale, colour/alpha, rotation) in the engine's integer fixed-point form, composes the
@@ -18,7 +18,7 @@
 class AepManager;
 
 /**
- * @brief Per-frame group draw callback installed by the play, result, and sugoroku scenes.
+ * Per-frame group draw callback installed by the play, result, and sugoroku scenes.
  *
  * The callback receives the fully-composed child transform. Scenes that only need the context still
  * install a `void(*)(void*)`; AepManager stores it as this wider type and the two forms share the
@@ -57,7 +57,7 @@ using AepGroupDrawFn = void (*)(int child,
                                 void *context);
 
 /**
- * @brief One 36-byte frame-data entry (stride 0x24).
+ * One 36-byte frame-data entry (stride 0x24).
  *
  * Each entry animates one child over the frame range [frameStart, frameEnd); `type` selects how it
  * emits. The four channel fields hold byte offsets into the group's idx buffer (0 = channel
@@ -87,7 +87,7 @@ struct AepFrameEntry {
 };
 
 /**
- * @brief A resolved 2D transform threaded into the compatibility drawLayer overload.
+ * A resolved 2D transform threaded into the compatibility drawLayer overload.
  */
 struct AepTransform {
     float x = 0;        /*!< Translation X. */
@@ -99,7 +99,7 @@ struct AepTransform {
 };
 
 /**
- * @brief Draw one already-resolved sprite handle straight into the ordering table.
+ * Draw one already-resolved sprite handle straight into the ordering table.
  *
  * Handles a note, effect, or digit atlas quad. `handle` encodes the resource group in bits 16..
  * (indexing AepManager::groupSlotForHandle) and the 8-byte sprite record in bits 0..15. The
@@ -142,7 +142,7 @@ void AepDrawSpriteHandle(AepManager *mgr,
                          uint32_t visFlag);
 
 /**
- * @brief The name the task draw passes call the sprite-handle draw by.
+ * The name the task draw passes call the sprite-handle draw by.
  *
  * The Aep group-draw callback carries the clip-rect argument as a plain int (its 32-bit ABI slot),
  * so accept it as such and thread it through. Identical to AepDrawSpriteHandle otherwise.
@@ -203,7 +203,7 @@ inline void drawAepFrameEx(AepManager *mgr,
 }
 
 /**
- * @brief Draw a single sprite-atlas frame by its packed handle with a default transform.
+ * Draw a single sprite-atlas frame by its packed handle with a default transform.
  *
  * The transform is 100%, opaque, unrotated, and un-clipped, queued straight into the ordering
  * table. `id` encodes the resource group in bits 16.. and the 8-byte sprite record in bits 0..15.
@@ -221,7 +221,7 @@ inline void drawAepFrameEx(AepManager *mgr,
 void drawAepFrame(AepManager *mgr, int id, int x, int y, uint32_t blend, uint32_t priority);
 
 /**
- * @brief The faithful full-signature core of the frame-tree renderer.
+ * The faithful full-signature core of the frame-tree renderer.
  *
  * `mgr` and `groupSlot` locate the frame-entry array, channel buffer, sprite records, ordering
  * table, group callback, and screen extents; the remaining arguments are the composed parent

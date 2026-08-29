@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The TouchJSON category on Foundation's NSCharacterSet.
+ * The TouchJSON category on Foundation's NSCharacterSet.
  *
  * It provides the set of Unicode line-break characters the comment and line scanners use: LF, FF,
  * CR, NEL, LINE SEPARATOR, and PARAGRAPH SEPARATOR.
@@ -11,12 +11,12 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief TouchJSON's extra character sets.
+ * TouchJSON's extra character sets.
  */
 @interface NSCharacterSet (Extensions)
 
 /**
- * @brief The set of line-break characters.
+ * The set of line-break characters.
  * @return The character set.
  */
 + (NSCharacterSet *)linebreaksCharacterSet;

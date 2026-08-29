@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A small synchronous-style HTTP helper built directly on NSURLConnection.
+ * A small synchronous-style HTTP helper built directly on NSURLConnection.
  *
  * It acts as an async delegate, buffers the response into an NSMutableData, tracks the HTTP
  * status code and the response text encoding (Shift-JIS versus UTF-8), and exposes the decoded
@@ -16,7 +16,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The coarse request states observed in the binary, exposed as HttpConn.status.
+ * The coarse request states observed in the binary, exposed as HttpConn.status.
  */
 enum {
     HttpConnStatusReady = 0,    /**< Idle; a new -get: or -post: is allowed. */
@@ -27,7 +27,7 @@ enum {
 };
 
 /**
- * @brief A simple HTTP request helper that decodes its response body into a string.
+ * A simple HTTP request helper that decodes its response body into a string.
  */
 @interface HttpConn : NSObject <NSURLConnectionDataDelegate> {
     NSMutableData *receivedData; /**< The response bytes accumulated so far. */
@@ -47,14 +47,14 @@ enum {
 @property(assign) int status;
 
 /**
- * @brief Fire a GET; it logs and returns if a request is already running.
+ * Fire a GET; it logs and returns if a request is already running.
  * @param urlString The URL to fetch.
  * @ghidraAddress 0x6a58c
  */
 - (void)get:(NSString *)urlString;
 
 /**
- * @brief Fire a POST with an application/x-www-form-urlencoded body.
+ * Fire a POST with an application/x-www-form-urlencoded body.
  * @param urlString The URL to post to.
  * @param paramString The form-encoded body.
  * @ghidraAddress 0x6a6c4

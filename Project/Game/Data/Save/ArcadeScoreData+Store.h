@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Fetch, insert and reset methods on the ArcadeScoreData entity, the arcade-machine score
+ * Fetch, insert and reset methods on the ArcadeScoreData entity, the arcade-machine score
  * mirror.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
@@ -11,12 +11,12 @@
 #import "ArcadeScoreData.h"
 
 /**
- * @brief Fetch, insert and reset helpers for the ArcadeScoreData entity.
+ * Fetch, insert and reset helpers for the ArcadeScoreData entity.
  */
 @interface ArcadeScoreData (Store)
 
 /**
- * @brief The record for a music id and ref-id.
+ * The record for a music id and ref-id.
  * @param musicId The arcade music track.
  * @param refId The e-AMUSEMENT ref-id.
  * @param context The managed object context to fetch from.
@@ -28,7 +28,7 @@
                  inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Up to @p limit records for @p refId, newest first (sorted by updateDate descending).
+ * Up to @p limit records for @p refId, newest first (sorted by updateDate descending).
  * @param limit The maximum number of records to return.
  * @param refId The e-AMUSEMENT ref-id.
  * @param context The managed object context to fetch from.
@@ -40,7 +40,7 @@
          inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Records for a category and ref-id, sorted by title ascending.
+ * Records for a category and ref-id, sorted by title ascending.
  * @param category The arcade song category.
  * @param refId The e-AMUSEMENT ref-id.
  * @param context The managed object context to fetch from.
@@ -52,7 +52,7 @@
           inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Insert a fresh (reset) record for a music id and ref-id, then save.
+ * Insert a fresh (reset) record for a music id and ref-id, then save.
  * @param musicId The arcade music track.
  * @param refId The e-AMUSEMENT ref-id.
  * @param context The managed object context to insert into.
@@ -64,7 +64,7 @@
                    inManagedObjectContext:(NSManagedObjectContext *)context;
 
 /**
- * @brief Clear every score, name and metadata field to its default; musicId and refId are
+ * Clear every score, name and metadata field to its default; musicId and refId are
  * preserved.
  * @ghidraAddress 0xcf220
  */

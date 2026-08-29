@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One file in a store download.
+ * One file in a store download.
  *
  * It carries the remote source URL, the local destination path, and an arbitrary object to hand
  * back or queue when the download completes. StoreDownloadManager consumes it. Reconstructed from
@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One entry of a StoreDownloadManager queue: a remote source, a local destination and a
+ * One entry of a StoreDownloadManager queue: a remote source, a local destination and a
  * caller-supplied context object.
  */
 @interface StoreDownloadTask : NSObject {
@@ -29,7 +29,7 @@
 @property(nonatomic, readonly) id addObject;
 
 /**
- * @brief Build a download task.
+ * Build a download task.
  * @param url The remote source.
  * @param path The local destination.
  * @param object The context object to hand back on completion.

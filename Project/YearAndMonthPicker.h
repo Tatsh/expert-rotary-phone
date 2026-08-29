@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A UIPickerView subclass with two wheels, used by the birthday age gate.
+ * A UIPickerView subclass with two wheels, used by the birthday age gate.
  *
  * The wheels are a year wheel (1900 plus the row) and a wrapping month wheel. It is its own data
  * source and delegate; -year and -month return the currently selected values. Reconstructed from
@@ -13,7 +13,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A two-wheel year and month picker.
+ * A two-wheel year and month picker.
  */
 @interface YearAndMonthPicker : UIPickerView <UIPickerViewDataSource, UIPickerViewDelegate> {
     int _year;  /**< The selected year, the row index plus 1900. */
@@ -23,13 +23,13 @@
 }
 
 /**
- * @brief The currently selected year.
+ * The currently selected year.
  * @return The year.
  * @ghidraAddress 0x8f410
  */
 - (int)year;
 /**
- * @brief The currently selected month.
+ * The currently selected month.
  * @return The month, 1..12.
  */
 - (int)month;

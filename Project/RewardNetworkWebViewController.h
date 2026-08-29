@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The full-screen web panel the bundled Konami RewardNetwork ("applilink") ad and reward
+ * The full-screen web panel the bundled Konami RewardNetwork ("applilink") ad and reward
  * SDK presents its app-list in.
  *
  * A UIViewController that manually hosts a web view, a UINavigationBar with a single "close"
@@ -30,7 +30,7 @@
 // call site guards with -respondsToSelector: (Ghidra @ 0xecb28 / 0xecbd8 /
 // 0xecd24).
 /**
- * @brief The notifications the panel sends back to whoever opened it.
+ * The notifications the panel sends back to whoever opened it.
  *
  * All are optional; each call site guards with -respondsToSelector: (Ghidra @ 0xecb28, 0xecbd8 and
  * 0xecd24).
@@ -38,22 +38,22 @@
 @protocol RewardNetworkWebViewDelegate <NSObject>
 @optional
 /**
- * @brief The page finished loading.
+ * The page finished loading.
  */
 - (void)appListDidAppear;
 /**
- * @brief The panel was dismissed.
+ * The panel was dismissed.
  */
 - (void)appListDidDisappear;
 /**
- * @brief The page failed to load.
+ * The page failed to load.
  * @param error What went wrong.
  */
 - (void)appListFailLoadWithError:(NSError *)error;
 @end
 
 /**
- * @brief The Applilink reward web-view panel: the app list, its navigation bar and its loading
+ * The Applilink reward web-view panel: the app list, its navigation bar and its loading
  * indicator.
  */
 #if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
@@ -74,51 +74,51 @@
 // Manual accessors: implemented rather than @synthesized, mirroring the binary exactly.
 
 /**
- * @brief The panel delegate.
+ * The panel delegate.
  * @return The delegate.
  * @ghidraAddress 0xee120
  */
 - (id<RewardNetworkWebViewDelegate>)delegate;
 /**
- * @brief Set the panel delegate, without retaining it.
+ * Set the panel delegate, without retaining it.
  * @param delegate The delegate.
  * @ghidraAddress 0xee130
  */
 - (void)setDelegate:(id<RewardNetworkWebViewDelegate>)delegate;
 /**
- * @brief Whether the top navigation bar is hidden.
+ * Whether the top navigation bar is hidden.
  * @return YES when hidden.
  * @ghidraAddress 0xee100
  */
 - (BOOL)isNavigationBarHidden;
 /**
- * @brief Set whether the top navigation bar is hidden.
+ * Set whether the top navigation bar is hidden.
  * @param hidden YES to hide the bar.
  * @ghidraAddress 0xee110
  */
 - (void)setIsNavigationBarHidden:(BOOL)hidden;
 /**
- * @brief The container the panel is added onto.
+ * The container the panel is added onto.
  * @return The parent view.
  * @ghidraAddress 0xee140
  */
 - (UIView *)parentView;
 /**
- * @brief Set the container the panel is added onto, retaining it.
+ * Set the container the panel is added onto, retaining it.
  * @param parentView The parent view.
  * @ghidraAddress 0xee150
  */
 - (void)setParentView:(UIView *)parentView;
 
 /**
- * @brief Hide or show the top navigation bar; it forwards to -setIsNavigationBarHidden:.
+ * Hide or show the top navigation bar; it forwards to -setIsNavigationBarHidden:.
  * @param hidden YES to hide the bar.
  * @ghidraAddress 0xec8a8
  */
 - (void)setNavigationBarHidden:(BOOL)hidden;
 
 /**
- * @brief Build the request from a URL and query parameters, attach the panel over the parent view
+ * Build the request from a URL and query parameters, attach the panel over the parent view
  * or the key window, and start loading.
  * @param url The page URL.
  * @param parameters The query parameters.
@@ -130,7 +130,7 @@
                   delegate:(id<RewardNetworkWebViewDelegate>)delegate;
 
 /**
- * @brief Re-lay out the hosted views for a new interface orientation.
+ * Re-lay out the hosted views for a new interface orientation.
  * @param orientation The new interface orientation.
  * @param duration The animation duration.
  * @ghidraAddress 0xed6cc
@@ -139,27 +139,27 @@
                                      duration:(NSTimeInterval)duration;
 
 /**
- * @brief Tear the panel down: remove the hosted views and drop the parent.
+ * Tear the panel down: remove the hosted views and drop the parent.
  * @ghidraAddress 0xece74
  */
 - (void)appliListClosed;
 
 /**
- * @brief Show or hide the loading indicator.
+ * Show or hide the loading indicator.
  * @param show YES to show the indicator.
  * @ghidraAddress 0xecf50
  */
 - (void)updateIndicator:(BOOL)show;
 
 /**
- * @brief The close-button action; it forwards to -appliListClosed.
+ * The close-button action; it forwards to -appliListClosed.
  * @param sender The tapped button.
  * @ghidraAddress 0xece64
  */
 - (void)btnCloseClicked:(id)sender;
 
 /**
- * @brief Walk a responder chain looking for a hosting view controller.
+ * Walk a responder chain looking for a hosting view controller.
  * @param responder The responder to walk from.
  * @return YES when a host was found.
  * @ghidraAddress 0xee000

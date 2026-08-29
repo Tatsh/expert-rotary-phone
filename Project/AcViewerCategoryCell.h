@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief An arcade-viewer category header row.
+ * An arcade-viewer category header row.
  *
  * A single full-bleed banner image whose placement varies by device (iPad versus phone) and iOS
  * version.
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief An arcade-viewer category header row showing a single full-bleed banner image.
+ * An arcade-viewer category header row showing a single full-bleed banner image.
  */
 @interface AcViewerCategoryCell : UITableViewCell
 
 /**
- * @brief Bind the row to a category: the first element of `dataList` supplies the category index
+ * Bind the row to a category: the first element of `dataList` supplies the category index
  * (0 = etc, 1 = TV, 2..23 = p01..p22) that picks the banner image; a nil list falls back to the
  * "all" banner.
  * @param dataList The category data list (first element is the category index).

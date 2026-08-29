@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A UIView that holds an image and builds a UIImageView from it on demand.
+ * A UIView that holds an image and builds a UIImageView from it on demand.
  *
  * The subview is sized to the image. The build is done in -threadFunc, which callers invoke off
  * the main path (deferred, or on a background thread, hence "Delay") so a batch of image work does
@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief A view that holds an image and builds its UIImageView off the main path, so a batch of
+ * A view that holds an image and builds its UIImageView off the main path, so a batch of
  * image work does not block.
  */
 @interface DelayImageView : UIView
@@ -21,7 +21,7 @@
 @property(nonatomic, retain) UIImage *image;
 
 /**
- * @brief Build a view for an image with a spinner overlay and start -threadFunc off-thread.
+ * Build a view for an image with a spinner overlay and start -threadFunc off-thread.
  * @param image The image to display.
  * @return The new view.
  * @ghidraAddress 0x8690
@@ -29,7 +29,7 @@
 + (instancetype)allocWithImage:(UIImage *)image;
 
 /**
- * @brief Build a UIImageView from the held image, size it to the image, and add it as a subview.
+ * Build a UIImageView from the held image, size it to the image, and add it as a subview.
  */
 - (void)threadFunc;
 

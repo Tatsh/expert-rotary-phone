@@ -11,7 +11,7 @@
 #import "neEngineBridge.h" // neSceneManager::isPadDisplay
 
 /**
- * @brief The NSValue payload -getValue: fills for a present row.
+ * The NSValue payload -getValue: fills for a present row.
  *
  * The leading id is unused by the cell; the type selects the icon and format, num is the quantity
  * and info is the blurb.

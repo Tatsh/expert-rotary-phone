@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The launch-time "default data" downloader screen.
+ * The launch-time "default data" downloader screen.
  *
  * MainViewController presents it (as _defaultDlViewController) when DownloadMain's file list
  * contains bundled data files that are missing or stale on disk; it downloads them one by one
@@ -20,7 +20,7 @@
 @class Downloader;
 
 /**
- * @brief The launch-time "default data" downloader screen.
+ * The launch-time "default data" downloader screen.
  */
 @interface DefaultDataDownloadView : UIViewController {
     /** The progress dialog: spinner, bar and label. */
@@ -38,7 +38,7 @@
 }
 
 /**
- * @brief Take the DownloadMain file list, sum the total size and build the progress dialog.
+ * Take the DownloadMain file list, sum the total size and build the progress dialog.
  * @param fileDataArray An NSArray of NSValue-wrapped DlFileListData.
  * @return The initialised controller.
  * @ghidraAddress 0xdd158
@@ -46,7 +46,7 @@
 - (instancetype)initWithFileDataArray:(NSArray *)fileDataArray;
 
 /**
- * @brief Fade the view in over 0.3 s; endOpenAnimation then kicks off the first download.
+ * Fade the view in over 0.3 s; endOpenAnimation then kicks off the first download.
  * @ghidraAddress 0xddbe8
  */
 - (void)startOpenAnimation;

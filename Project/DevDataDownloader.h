@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A fetcher for a single "dev data" file from the development host.
+ * A fetcher for a single "dev data" file from the development host.
  *
  * It reads `http://dev.apr.konaminet.jp/apr/dev_data[_old]/<title>/<file>`, writes it into the app
  * Caches directory (the devdata or acvdevdata subtree), and reports success or a formatted error
@@ -19,25 +19,25 @@
 @class DevDataDownloader;
 
 /**
- * @brief Receives the dev-data fetch result. These are the only two selectors the binary sends to
+ * Receives the dev-data fetch result. These are the only two selectors the binary sends to
  * m_Delegate.
  */
 @protocol DevDataDownloaderDelegate <NSObject>
 @optional
 /**
- * @brief The file was fetched and written, sent from downloaderFinished:.
+ * The file was fetched and written, sent from downloaderFinished:.
  * @param fileName The file that was written.
  */
 - (void)devDownloadSucceeded:(NSString *)fileName;
 /**
- * @brief The fetch failed, sent from downloaderFinished: or downloaderError:.
+ * The fetch failed, sent from downloaderFinished: or downloaderError:.
  * @param message The formatted error string.
  */
 - (void)devDownloadFailed:(NSString *)message;
 @end
 
 /**
- * @brief Fetches a single "dev data" file from the development host into the app Caches directory.
+ * Fetches a single "dev data" file from the development host into the app Caches directory.
  */
 @interface DevDataDownloader : NSObject <DownloaderDelegate> {
     Downloader *m_Downloader; /**< The in-flight request; retained. */
@@ -56,14 +56,14 @@
 @property(assign) BOOL isOld;
 
 /**
- * @brief The shared instance. Every access resets isOld to NO.
+ * The shared instance. Every access resets isOld to NO.
  * @return The downloader.
  * @ghidraAddress 0x8e894
  */
 + (instancetype)getInstance;
 
 /**
- * @brief Build the Downloader for `<title>/<fileName>` and start it.
+ * Build the Downloader for `<title>/<fileName>` and start it.
  * @param title The dev-data title.
  * @param fileName The dev-data file name.
  * @return NO if a request is already in flight.

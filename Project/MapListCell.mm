@@ -17,7 +17,7 @@
 static NSString *const kCellFont = @"DFSoGei-W5-WIN-RKSJ-H";
 
 /**
- * @brief The NSValue payload -getValue: fills for a main-map row.
+ * The NSValue payload -getValue: fills for a main-map row.
  */
 typedef struct {
     short mapId;                        /**< The map's identifier. */

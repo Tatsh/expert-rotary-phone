@@ -20,7 +20,7 @@
 #import "BFCodec.h"
 
 /**
- * @brief The Blowfish key schedule: the P-array and the four S-boxes.
+ * The Blowfish key schedule: the P-array and the four S-boxes.
  */
 typedef struct {
     uint32_t P[18];     /**< The 18-entry P-array (subkeys). */

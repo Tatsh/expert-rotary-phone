@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The lightweight in-app-purchase observer for the jewel ("popn_jewel_1") store flow.
+ * The lightweight in-app-purchase observer for the jewel ("popn_jewel_1") store flow.
  *
  * It adopts the PurchaseManager's direct-purchase delegate and just tracks whether a purchase is
  * in flight via the atomic `nowPurchasing` flag. Reconstructed from Ghidra project rb420, program
@@ -18,7 +18,7 @@
 #import "PurchaseManager.h" // <PurchaseManagerDelegate>
 
 /**
- * @brief The direct-purchase delegate: it tracks whether a purchase is in flight.
+ * The direct-purchase delegate: it tracks whether a purchase is in flight.
  */
 @interface PurchaseStore : NSObject <PurchaseManagerDelegate>
 

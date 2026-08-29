@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPhone-side pack-detail screen.
+ * The iPhone-side pack-detail screen.
  *
  * A pushed UIViewController, with a custom back button in the nav bar, showing a StorePackInfo: a
  * table of songs under a StoreDetailHeaderView carrying the jacket, name, and price or buy button,
@@ -19,28 +19,28 @@
 @class StoreDetailHeaderView;
 
 /**
- * @brief Receives the phone detail screen's purchase, re-download and close requests.
+ * Receives the phone detail screen's purchase, re-download and close requests.
  */
 @protocol StoreDetailViewControllerDelegate <NSObject>
 @optional
 /**
- * @brief Start the StoreKit purchase; the buy button's not-owned path.
+ * Start the StoreKit purchase; the buy button's not-owned path.
  * @param packInfo The pack to purchase.
  */
 - (void)detailViewStartPurchase:(StorePackInfo *)packInfo;
 /**
- * @brief Re-download an already-owned pack's songs; the buy button's owned-but-missing path.
+ * Re-download an already-owned pack's songs; the buy button's owned-but-missing path.
  * @param packInfo The pack to re-download.
  */
 - (void)reDownloadPackMusics:(StorePackInfo *)packInfo;
 /**
- * @brief The detail screen dismissed an alert and should be closed.
+ * The detail screen dismissed an alert and should be closed.
  */
 - (void)detailViewClose;
 @end
 
 /**
- * @brief The phone pack detail screen: the header card over the pack's song list.
+ * The phone pack detail screen: the header card over the pack's song list.
  */
 // Doxygen mis-parses an @interface whose line is wrapped before the ':' when an ivar block
 // follows: it reports every protocol after the first as an undocumented ivar. Breaking inside the
@@ -78,58 +78,58 @@
 @property(nonatomic, weak) id<StoreDetailViewControllerDelegate> delegate;
 
 /**
- * @brief Build the view tree: the song table, the header view, the loading overlay, the
+ * Build the view tree: the song table, the header view, the loading overlay, the
  * stretchable row backgrounds, the artwork-downloader map and the dummy cover.
  * @ghidraAddress 0x6fa3c
  */
 - (void)loadView;
 
 /**
- * @brief The nav-bar back button: pop this detail screen.
+ * The nav-bar back button: pop this detail screen.
  */
 - (void)backButtonFunc;
 
 /**
- * @brief The header's buy button was tapped: hand the purchase to the delegate.
+ * The header's buy button was tapped: hand the purchase to the delegate.
  * @param sender The tapped button.
  */
 - (void)onPurchaseButton:(id)sender;
 
 /**
- * @brief Kick off the detail load: show immediately when the songs are already present, otherwise
+ * Kick off the detail load: show immediately when the songs are already present, otherwise
  * fetch them via a StorePackInfoDownloader.
  * @ghidraAddress 0x7048c
  */
 - (void)loadInfo;
 
 /**
- * @brief The detail arrived: size and fill the header, refresh the buy button, install the header
+ * The detail arrived: size and fill the header, refresh the buy button, install the header
  * on the table, start the jacket download, then reveal and reload the table.
  * @ghidraAddress 0x702bc
  */
 - (void)showPackInfo;
 
 /**
- * @brief Stop the preview clip: fade the BGM, cancel and drop the sample download, then reload.
+ * Stop the preview clip: fade the BGM, cancel and drop the sample download, then reload.
  * @ghidraAddress 0x70550
  */
 - (void)stopSample;
 
 /**
- * @brief The preview clip finished: stop the sampling row's cell and clear the sampling index.
+ * The preview clip finished: stop the sampling row's cell and clear the sampling index.
  * @param sender The player that finished.
  * @ghidraAddress 0x70600
  */
 - (void)finishBgm:(id)sender;
 
 /**
- * @brief The not-owned purchase path: hand the pack to the delegate's StoreKit purchase.
+ * The not-owned purchase path: hand the pack to the delegate's StoreKit purchase.
  * @ghidraAddress 0x70af4
  */
 - (void)doPurchase;
 
 /**
- * @brief Whether the pack has songs and all of them are downloaded; the buy button uses it to
+ * Whether the pack has songs and all of them are downloaded; the buy button uses it to
  * offer a re-download instead of a purchase.
  * @return YES when the pack is fully installed.
  * @ghidraAddress 0x70b9c
@@ -137,7 +137,7 @@
 - (BOOL)allDownloaded;
 
 /**
- * @brief Whether this pack's id is in the recommended-pack list, which is fetched and cached
+ * Whether this pack's id is in the recommended-pack list, which is fetched and cached
  * lazily.
  * @return YES when the pack is recommended.
  * @ghidraAddress 0x70c14
@@ -145,7 +145,7 @@
 - (BOOL)isRecommended;
 
 /**
- * @brief Enable or disable the buy button for the ownership state.
+ * Enable or disable the buy button for the ownership state.
  * @param owned YES to disable the button, because the pack is already owned.
  * @ghidraAddress 0x70b54
  */

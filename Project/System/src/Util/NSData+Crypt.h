@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief AES-128-CBC helpers used to protect the user's save data.
+ * AES-128-CBC helpers used to protect the user's save data.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. Both public wrappers are thin:
  * they forward to the shared core -mainOperation:key:initVector: with kCCEncrypt / kCCDecrypt.
@@ -14,25 +14,25 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief AES-128-CBC encryption and decryption helpers for save data.
+ * AES-128-CBC encryption and decryption helpers for save data.
  */
 @interface NSData (Crypt)
 /**
- * @brief Encrypts the receiver using AES-128-CBC with the provided key and initialization vector.
+ * Encrypts the receiver using AES-128-CBC with the provided key and initialization vector.
  * @param key The 16-character key.
  * @param iv The 16-character initialization vector.
  * @return A new NSData object containing the encrypted data, or nil if encryption fails.
  */
 - (NSData *)encryptWith128Key:(NSString *)key initVector:(NSString *)iv;
 /**
- * @brief Decrypts the receiver using AES-128-CBC with the provided key and initialization vector.
+ * Decrypts the receiver using AES-128-CBC with the provided key and initialization vector.
  * @param key The 16-character key as an NSString.
  * @param iv The 16-character initialization vector as an NSString.
  * @return A new NSData object containing the decrypted data, or nil if decryption fails.
  */
 - (NSData *)decryptWith128Key:(NSString *)key initVector:(NSString *)iv;
 /**
- * @brief Performs AES-128-CBC encryption or decryption on the receiver.
+ * Performs AES-128-CBC encryption or decryption on the receiver.
  * @param op The operation to perform (kCCEncrypt or kCCDecrypt).
  * @param key The 16-character key as an NSString.
  * @param iv The 16-character initialization vector as an NSString.

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The server configuration and URL builder for the app's web APIs.
+ * The server configuration and URL builder for the app's web APIs.
  *
  * Every endpoint is built through three base URLs — the game API over HTTP and HTTPS, and the
  * official eAmusement site — plus a per-endpoint path. Reconstructed from Ghidra project rb420,
@@ -12,34 +12,34 @@
 @class SKProduct;
 
 /**
- * @brief The server-endpoint builders, StoreKit helpers and receipt-verification helpers the store
+ * The server-endpoint builders, StoreKit helpers and receipt-verification helpers the store
  * and the game API share.
  */
 @interface StoreUtil : NSObject
 
 /**
- * @brief The store and region code sent as Accept-Language.
+ * The store and region code sent as Accept-Language.
  * @return "JP".
  * @ghidraAddress 0x58904
  */
 + (NSString *)targetStore;
 
 /**
- * @brief Build a plain-HTTP game-API URL.
+ * Build a plain-HTTP game-API URL.
  * @param path The path, appended to http://apr.konaminet.jp.
  * @return The URL.
  * @ghidraAddress 0x589f4
  */
 + (NSURL *)createURL:(NSString *)path;
 /**
- * @brief Build an HTTPS game-API URL.
+ * Build an HTTPS game-API URL.
  * @param path The path, appended to https://apr-s.konaminet.jp.
  * @return The URL.
  * @ghidraAddress 0x58a58
  */
 + (NSURL *)createHttpsURL:(NSString *)path;
 /**
- * @brief Build an official eAmusement URL.
+ * Build an official eAmusement URL.
  * @param path The path, appended to http://p.eagate.573.jp.
  * @return The URL.
  * @ghidraAddress 0x59f24
@@ -47,7 +47,7 @@
 + (NSURL *)createOfficialURL:(NSString *)path;
 
 /**
- * @brief The KONAMI ID quick-entry web page.
+ * The KONAMI ID quick-entry web page.
  * @return https://&lt;KONAMI_ID_HOST&gt;/quick/Entry.
  */
 + (NSURL *)konamiIdQuickEntryURL;
@@ -56,136 +56,136 @@
 // where noted; the rest follow the identical pattern derived from the selector.
 
 /**
- * @brief The downloadable-file-list endpoint, get_dl_file_list. Verified.
+ * The downloadable-file-list endpoint, get_dl_file_list. Verified.
  * @return The URL.
  * @ghidraAddress 0x599c8
  */
 + (NSURL *)getDlFileListURL;
 /**
- * @brief The friend-list endpoint, get_friend_list. Verified.
+ * The friend-list endpoint, get_friend_list. Verified.
  * @return The URL.
  * @ghidraAddress 0x594a8
  */
 + (NSURL *)getFriendListURL;
 /**
- * @brief The event-info endpoint, get_event_info. Verified.
+ * The event-info endpoint, get_event_info. Verified.
  * @return The URL.
  * @ghidraAddress 0x59d94
  */
 + (NSURL *)getEventInfoURL;
 /**
- * @brief The convert-code endpoint, get_convert_code. Verified.
+ * The convert-code endpoint, get_convert_code. Verified.
  * @return The URL.
  * @ghidraAddress 0x59e00
  */
 + (NSURL *)getConvertCodeURL;
 /**
- * @brief The device-change convert endpoint, convert. Verified.
+ * The device-change convert endpoint, convert. Verified.
  * @return The URL.
  * @ghidraAddress 0x59e6c
  */
 + (NSURL *)convertURL;
 /**
- * @brief The sent-friend-requests endpoint, get_friend_request.
+ * The sent-friend-requests endpoint, get_friend_request.
  * @return The URL.
  * @ghidraAddress 0x592f8
  */
 + (NSURL *)getFriendRequestURL;
 /**
- * @brief The friend-score endpoint, get_friend_score.
+ * The friend-score endpoint, get_friend_score.
  * @return The URL.
  * @ghidraAddress 0x59364
  */
 + (NSURL *)getFriendScoreURL;
 /**
- * @brief The send-friend-request endpoint, request_friend. Verified.
+ * The send-friend-request endpoint, request_friend. Verified.
  * @return The URL.
  * @ghidraAddress 0x59220
  */
 + (NSURL *)requestFriendURL;
 /**
- * @brief The accept-or-reject endpoint, reply_friend. Verified.
+ * The accept-or-reject endpoint, reply_friend. Verified.
  * @return The URL.
  * @ghidraAddress 0x5928c
  */
 + (NSURL *)replyFriendURL;
 /**
- * @brief The unfriend endpoint, remove_friend. Verified.
+ * The unfriend endpoint, remove_friend. Verified.
  * @return The URL.
  * @ghidraAddress 0x5943c
  */
 + (NSURL *)removeFriendURL;
 /**
- * @brief The recommended-friend endpoint, get_recommend_friend. Verified.
+ * The recommended-friend endpoint, get_recommend_friend. Verified.
  * @return The URL.
  * @ghidraAddress 0x59a34
  */
 + (NSURL *)getRecommendFriendURL;
 /**
- * @brief The sugoroku reward-upload endpoint, save_treasure. Verified.
+ * The sugoroku reward-upload endpoint, save_treasure. Verified.
  * @return The URL.
  * @ghidraAddress 0x59884
  */
 + (NSURL *)saveTreasureURL;
 /**
- * @brief The recommended-pack endpoint, pack_recommend/index.jsp, built on the literal
+ * The recommended-pack endpoint, pack_recommend/index.jsp, built on the literal
  * "/apr/main/cgi/" base.
  * @return The URL.
  * @ghidraAddress 0x59740
  */
 + (NSURL *)recommendPackURL;
 /**
- * @brief The invite-redemption endpoint, invited/index.jsp, built on the literal "/apr/main/cgi/"
+ * The invite-redemption endpoint, invited/index.jsp, built on the literal "/apr/main/cgi/"
  * base.
  * @return The URL.
  * @ghidraAddress 0x59148
  */
 + (NSURL *)invitedURL;
 /**
- * @brief The new-player endpoint, new_player/index.jsp, built on the literal "/apr/main/cgi/"
+ * The new-player endpoint, new_player/index.jsp, built on the literal "/apr/main/cgi/"
  * base.
  * @return The URL.
  * @ghidraAddress 0x59070
  */
 + (NSURL *)playerNewURL;
 /**
- * @brief The pop'n-link endpoint, link_kid/index.jsp, built on the literal "/apr/main/cgi/" base.
+ * The pop'n-link endpoint, link_kid/index.jsp, built on the literal "/apr/main/cgi/" base.
  * @return The URL.
  * @ghidraAddress 0x598f0
  */
 + (NSURL *)linkKidURL;
 /**
- * @brief The arcade-score sync endpoint, get_arcade_score.
+ * The arcade-score sync endpoint, get_arcade_score.
  * @return The URL.
  * @ghidraAddress 0x5995c
  */
 + (NSURL *)getArcadeScoreURL;
 /**
- * @brief The over-score-log endpoint, get_over_score_log.
+ * The over-score-log endpoint, get_over_score_log.
  * @return The URL.
  * @ghidraAddress 0x59d28
  */
 + (NSURL *)getOverScoreLogURL;
 /**
- * @brief The block-list fetch endpoint, get_block_list.
+ * The block-list fetch endpoint, get_block_list.
  * @return The URL.
  * @ghidraAddress 0x59580
  */
 + (NSURL *)getBlockListURL;
 /**
- * @brief The block endpoint, add_block_list.
+ * The block endpoint, add_block_list.
  * @return The URL.
  * @ghidraAddress 0x59514
  */
 + (NSURL *)addBlockListURL;
 /**
- * @brief The unblock endpoint, del_block_list.
+ * The unblock endpoint, del_block_list.
  * @return The URL.
  * @ghidraAddress 0x595ec
  */
 + (NSURL *)delBlockListURL;
 /**
- * @brief The cancel-friend-request endpoint, cancel_friend.
+ * The cancel-friend-request endpoint, cancel_friend.
  * @return The URL.
  * @ghidraAddress 0x593d0
  */
@@ -195,20 +195,20 @@
 // "<name>/index.jsp" plus "?target=<store>" (the Ghidra format string is "%@%@?target=%@").
 
 /**
- * @brief The quiz-fetch endpoint, get_quiz/index.jsp. Verified.
+ * The quiz-fetch endpoint, get_quiz/index.jsp. Verified.
  * @return The URL.
  * @ghidraAddress 0x59658
  */
 + (NSURL *)getQuizURL;
 /**
- * @brief The quiz-answer endpoint, reply_quiz/index.jsp. Verified.
+ * The quiz-answer endpoint, reply_quiz/index.jsp. Verified.
  * @return The URL.
  * @ghidraAddress 0x596cc
  */
 + (NSURL *)replyQuizURL;
 
 /**
- * @brief The official eAmusement app-info page. Verified.
+ * The official eAmusement app-info page. Verified.
  * @return The URL.
  * @ghidraAddress 0x59f88
  */
@@ -217,7 +217,7 @@
 // StoreKit helpers.
 
 /**
- * @brief The localised currency string for a product's price.
+ * The localised currency string for a product's price.
  * @param product The StoreKit product.
  * @return The price string, or an empty string when @p product is nil.
  * @ghidraAddress 0x5a16c
@@ -225,7 +225,7 @@
 + (NSString *)priceString:(SKProduct *)product;
 
 /**
- * @brief The StoreKit product identifier for a pack, formatted "rhythmin_pack%04d".
+ * The StoreKit product identifier for a pack, formatted "rhythmin_pack%04d".
  * @param packID The pack id.
  * @return The identifier, or nil when @p packID is below 1.
  * @ghidraAddress 0x5a088
@@ -233,7 +233,7 @@
 + (NSString *)productIDForPackID:(int)packID;
 
 /**
- * @brief The inverse of +productIDForPackID:: parse the numeric pack id out of a product
+ * The inverse of +productIDForPackID:: parse the numeric pack id out of a product
  * identifier.
  * @param productID The product identifier.
  * @return The pack id, or -1 when it lacks the "rhythmin_pack" prefix or is not positive.
@@ -242,7 +242,7 @@
 + (int)packIDForProductID:(NSString *)productID;
 
 /**
- * @brief The youth-spending-limit gate.
+ * The youth-spending-limit gate.
  * @param price The purchase price, in yen.
  * @return YES when the purchase is allowed, given the user's age from the saved birthday — 18 and
  * over is unrestricted — and this month's running total.
@@ -253,7 +253,7 @@
 // Receipt verification: the server-side re-validation of StoreKit purchases.
 
 /**
- * @brief The endpoint the base64 receipt and digest are posted to: the HTTPS
+ * The endpoint the base64 receipt and digest are posted to: the HTTPS
  * /apr/main.cgi/verify_receipt/index.jsp.
  * @return The URL.
  * @ghidraAddress 0x58f04
@@ -261,21 +261,21 @@
 + (NSURL *)receiptURL;
 
 /**
- * @brief The device class, by interface idiom.
+ * The device class, by interface idiom.
  * @return "iphone" or "ipad".
  * @ghidraAddress 0x58830
  */
 + (NSString *)deviceName;
 
 /**
- * @brief The cached anonymised user token: the hexadecimal MD5 of the device UUID plus "STORE".
+ * The cached anonymised user token: the hexadecimal MD5 of the device UUID plus "STORE".
  * @return The token.
  * @ghidraAddress 0x58880
  */
 + (NSString *)identifierParams;
 
 /**
- * @brief The receipt-check request body, wrapping the receipt with client info.
+ * The receipt-check request body, wrapping the receipt with client info.
  * @param base64Receipt The base64-encoded StoreKit receipt.
  * @return The JSON body.
  * @ghidraAddress 0x5a2ac
@@ -283,7 +283,7 @@
 + (NSString *)createReceiptCheckJSON:(NSString *)base64Receipt;
 
 /**
- * @brief The tamper-binding digest: the hexadecimal SHA-256 of the embedded salt plus the JSON.
+ * The tamper-binding digest: the hexadecimal SHA-256 of the embedded salt plus the JSON.
  *
  * The selector's spelling is the binary's.
  * @param json The receipt-check body.
@@ -293,7 +293,7 @@
 + (NSString *)createReceiptChecckDigest:(NSString *)json;
 
 /**
- * @brief Whether a string is an HTTP or HTTPS URL that NSURL can parse.
+ * Whether a string is an HTTP or HTTPS URL that NSURL can parse.
  * @param urlString The string to test.
  * @return YES when it parses.
  * @ghidraAddress 0x5a240
@@ -303,14 +303,14 @@
 // Store catalogue.
 
 /**
- * @brief The common client-info query fragment: uuid, version, device, os and locale.
+ * The common client-info query fragment: uuid, version, device, os and locale.
  * @return The query fragment.
  * @ghidraAddress 0x58910
  */
 + (NSString *)userInfo;
 
 /**
- * @brief The paginated pack-list endpoint.
+ * The paginated pack-list endpoint.
  * @param head The first pack index to return.
  * @param limit How many packs to return.
  * @param packId A specific pack to include, or a non-positive value for none.
@@ -320,7 +320,7 @@
 + (NSURL *)packListURL:(unsigned int)head limit:(unsigned int)limit packId:(int)packId;
 
 /**
- * @brief The single-pack detail endpoint.
+ * The single-pack detail endpoint.
  * @param packID The pack to fetch.
  * @param userOpen YES for an explicit user tap, which appends the userInfo fragment; NO for a
  * background refresh.
@@ -330,7 +330,7 @@
 + (NSURL *)packInfoURL:(unsigned int)packID UserOpen:(BOOL)userOpen;
 
 /**
- * @brief The arcade-viewer per-song info endpoint, used to fetch a missing song's metadata before
+ * The arcade-viewer per-song info endpoint, used to fetch a missing song's metadata before
  * re-download.
  * @param acMusicId The arcade music id.
  * @return The URL.
@@ -343,22 +343,22 @@
 // Recovered from call sites; previously declared as local extern or category seams.
 
 /**
- * @brief The arcade-viewer play-log POST endpoint.
+ * The arcade-viewer play-log POST endpoint.
  * @return The URL.
  */
 + (NSURL *)logAcvPlayURL;
 /**
- * @brief The official eAmusement site path fragment.
+ * The official eAmusement site path fragment.
  * @return The path fragment.
  */
 + (NSString *)getOfficialPath;
 /**
- * @brief The official Twitter page.
+ * The official Twitter page.
  * @return The URL.
  */
 + (NSURL *)getOfficialTwitterURL;
 /**
- * @brief The store's per-song info page.
+ * The store's per-song info page.
  * @param musicId The song to show.
  * @return The URL.
  */
@@ -367,7 +367,7 @@
 // Arcade-locator ("game center" map) endpoints, used by SearchView.
 
 /**
- * @brief The master-list feed: the marker-image and model-info master consumed to build the map
+ * The master-list feed: the marker-image and model-info master consumed to build the map
  * pins.
  *
  * A GET of https://.../apr/main.cgi/search_master/index.jsp?target=&lt;store&gt;&lt;userInfo&gt;.
@@ -376,7 +376,7 @@
  */
 + (NSURL *)searchMasterURL;
 /**
- * @brief The per-region arcade query, posted a "lat=&long=&range=" body to fetch the arcades in
+ * The per-region arcade query, posted a "lat=&long=&range=" body to fetch the arcades in
  * view: https://.../apr/main.cgi/gamecenter/index.jsp.
  * @return The URL.
  * @ghidraAddress 0x59004
@@ -389,75 +389,75 @@
 // its siblings do.
 
 /**
- * @brief The register-or-refresh player info feed: the HTTPS
+ * The register-or-refresh player info feed: the HTTPS
  * /apr/main/cgi/new/index.jsp?target=JP&amp;&lt;userInfo&gt;.
  * @return The URL.
  * @ghidraAddress 0x58d8c
  */
 + (NSURL *)storeNewInfoURL;
 /**
- * @brief The completed-purchase report, tamper-bound with a trailing SHA-256 key.
+ * The completed-purchase report, tamper-bound with a trailing SHA-256 key.
  * @param pid The purchased pack id.
  * @return The URL.
  * @ghidraAddress 0x58e20
  */
 + (NSURL *)purchasedURL:(unsigned int)pid;
 /**
- * @brief The player-fetch endpoint.
+ * The player-fetch endpoint.
  * @return The URL.
  * @ghidraAddress 0x590dc
  */
 + (NSURL *)playerGetURL;
 /**
- * @brief The score-save endpoint.
+ * The score-save endpoint.
  * @return The URL.
  * @ghidraAddress 0x591b4
  */
 + (NSURL *)saveScoreURL;
 /**
- * @brief The recommend-list endpoint.
+ * The recommend-list endpoint.
  * @return The URL.
  * @ghidraAddress 0x597ac
  */
 + (NSURL *)getRecommendListURL;
 /**
- * @brief The sugoroku visitor-list endpoint.
+ * The sugoroku visitor-list endpoint.
  * @return The URL.
  * @ghidraAddress 0x59818
  */
 + (NSURL *)getVisitorURL;
 /**
- * @brief The character-lottery play-log endpoint.
+ * The character-lottery play-log endpoint.
  * @return The URL.
  * @ghidraAddress 0x59aa0
  */
 + (NSURL *)logCharaKujiURL;
 /**
- * @brief The APNs token-registration endpoint.
+ * The APNs token-registration endpoint.
  * @return The URL.
  * @ghidraAddress 0x59b78
  */
 + (NSURL *)saveApnsTokenURL;
 /**
- * @brief The reward login-token endpoint.
+ * The reward login-token endpoint.
  * @return The URL.
  * @ghidraAddress 0x59be4
  */
 + (NSURL *)getRewardLoginTokenURL;
 /**
- * @brief The present-list endpoint.
+ * The present-list endpoint.
  * @return The URL.
  * @ghidraAddress 0x59c50
  */
 + (NSURL *)getPresentListURL;
 /**
- * @brief The present-claim endpoint.
+ * The present-claim endpoint.
  * @return The URL.
  * @ghidraAddress 0x59cbc
  */
 + (NSURL *)getPresentURL;
 /**
- * @brief The official eAmusement "old info" page:
+ * The official eAmusement "old info" page:
  * /game/popn/rhythmin/app/old_info.html.
  * @return The URL.
  * @ghidraAddress 0x59ff4
@@ -467,7 +467,7 @@
 @end
 
 /**
- * @brief Percent-encode a string for use in a URL query.
+ * Percent-encode a string for use in a URL query.
  *
  * It has C linkage, and is defined in StoreUtil.m, so the C++ (.mm) callers resolve the unmangled
  * symbol.

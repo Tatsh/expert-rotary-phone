@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Aep ordering table, a per-frame sprite command buffer.
+ * The Aep ordering table, a per-frame sprite command buffer.
  *
  * Each frame the scene fills the
  * buffer with textured-quad draw commands (drawLayer -> allocEntry), bucketed by priority; the
@@ -14,13 +14,13 @@
 
 class neTextureForiOS; // the sprite/frame-atlas object a sprite command references
 
-/** @brief Maximum number of ordering-table entries reservable per frame (OT_REGIST_MAX). */
+/** Maximum number of ordering-table entries reservable per frame (OT_REGIST_MAX). */
 constexpr int kOtRegistMax = 2047;
-/** @brief Maximum number of priority buckets the ordering table supports (OT_PRI_MAX). */
+/** Maximum number of priority buckets the ordering table supports (OT_PRI_MAX). */
 constexpr int kOtPriMax = 50;
 
 /**
- * @brief The clip rectangle carried by a sprite command.
+ * The clip rectangle carried by a sprite command.
  *
  * Sixteen bytes of four ints. Defaults to the screen bounds when the fill supplies no explicit
  * rectangle.
@@ -33,7 +33,7 @@ struct AepClipRect {
 };
 
 /**
- * @brief Command-type discriminator held in AepOtSpriteCmd::wFlags.
+ * Command-type discriminator held in AepOtSpriteCmd::wFlags.
  *
  * Also overlays the AepTextCmd::nType slot at +0x04. The flush switches on it to select the
  * per-type draw handler. The underlying type is pinned to uint16_t so the field stays two bytes
@@ -50,7 +50,7 @@ enum AepOtCmdType : uint16_t {
 };
 
 /**
- * @brief Bits of the AEP blend word threaded through the frame tree.
+ * Bits of the AEP blend word threaded through the frame tree.
  *
  * These flags are stored in AepOtSpriteCmd::nVKey. The clipped-quad draw extracts the mode
  * selector `(flags & kAepBlendModeMask) >> kAepBlendModeShift`, or forces kAepBlendModeReverseSub
@@ -65,7 +65,7 @@ enum AepBlendFlag : uint32_t {
 };
 
 /**
- * @brief GL blend presets selected from the mode field of the blend word.
+ * GL blend presets selected from the mode field of the blend word.
  *
  * The clipped-quad draw picks one of these from the mode field and hands it to neDrawTexturedQuad:
  * straight alpha, additive, or reverse-subtract.
@@ -77,7 +77,7 @@ enum AepBlendMode : int {
 };
 
 /**
- * @brief One queued ordering-table draw command.
+ * One queued ordering-table draw command.
  *
  * The command block of a 0x134-byte pool entry. The first 0x50 bytes are the named payload the
  * fills (drawSprite, the transition overlay, and the sprite emitter) write; the tail is
@@ -92,7 +92,7 @@ struct AepOtSpriteCmd {
     int16_t nPriority;         /*!< Bucket priority; bookkeeping, not traversal (+0x06). */
     int32_t nBank;             /*!< Texture bank / layer slot (+0x08). */
     /**
-     * @brief Source origin, reinterpreted by command type (+0x0c/+0x10).
+     * Source origin, reinterpreted by command type (+0x0c/+0x10).
      *
      * Line, rectangle, quad, and text commands use nTexU/nTexV as plain ints; a type-0 sprite
      * instead packs its u/v/w/h source rectangle into the same eight bytes as four shorts
@@ -110,7 +110,7 @@ struct AepOtSpriteCmd {
     int32_t nPosX; /*!< Screen x position (+0x14). */
     int32_t nPosY; /*!< Screen y position (+0x18). */
     /**
-     * @brief Slot at +0x1c, read as int for cases 1-5 and as float for case 0.
+     * Slot at +0x1c, read as int for cases 1-5 and as float for case 0.
      *
      * The +0x1c/+0x20 and +0x28/+0x2c slots are reused per command type with different encodings.
      * A single 32-bit pool slot is thus float for one command and int for another, so each is a
@@ -123,7 +123,7 @@ struct AepOtSpriteCmd {
         float flPosXfF;  /*!< Float view (case 0: sprite X scale). */
     };
     /**
-     * @brief Slot at +0x20, read as int for cases 1-5 and as float for case 0.
+     * Slot at +0x20, read as int for cases 1-5 and as float for case 0.
      *
      * Holds the position or colour for cases 1-5, and the sprite Y scale for case 0.
      */
@@ -133,14 +133,14 @@ struct AepOtSpriteCmd {
     };
     int32_t nOfsX; /*!< Offset X, int slot (+0x24). */
     /**
-     * @brief Slot at +0x28, read as int for cases 0, 3, and 5, and float for case 1.
+     * Slot at +0x28, read as int for cases 0, 3, and 5, and float for case 1.
      */
     union {
         int32_t nOfsY; /*!< Int view (cases 0, 3, 5: height / offset). */
         float nOfsYF;  /*!< Float view (case 1: stretched-sprite X scale). */
     };
     /**
-     * @brief Slot at +0x2c, read as int for cases 0 and 5, and float for case 1.
+     * Slot at +0x2c, read as int for cases 0 and 5, and float for case 1.
      */
     union {
         int32_t nColorA; /*!< Int view (cases 0, 5: colour / alpha). */
@@ -153,14 +153,14 @@ struct AepOtSpriteCmd {
     int32_t nColorRGB;    /*!< Packed 0x00RRGGBB colour (+0x3c). */
     AepClipRect clipRect; /*!< Clip rectangle; defaults to screen bounds (+0x40..0x4f). */
     /**
-     * @brief Per-command / clip-spill scratch tail (+0x50..+0x5f).
+     * Per-command / clip-spill scratch tail (+0x50..+0x5f).
      *
      * The clip-spill (drawSprite) writes clipRect.nBottom plus the following 12 bytes into
      * +0x4c..+0x5b of this tail.
      */
     uint8_t scratch0[0x60 - 0x50];
     /**
-     * @brief The sprite's source texture object; rebuild-only, +0x60.
+     * The sprite's source texture object; rebuild-only, +0x60.
      *
      * Not present in the 32-bit binary's layout: the binary packs this pointer into the 32-bit
      * nTexU slot. Storing it as a real typed pointer here avoids truncating a 64-bit pointer into
@@ -172,7 +172,7 @@ struct AepOtSpriteCmd {
 };
 
 /**
- * @brief A queued text draw command.
+ * A queued text draw command.
  *
  * The type-6 entry pushAepOtTextCmd fills; it reinterprets the same 0x134-byte pool slot as
  * AepOtSpriteCmd via nType. The string occupies the slot the sprite view uses for its
@@ -195,18 +195,18 @@ struct AepTextCmd {
 };
 
 /**
- * @brief The Aep ordering table: a per-frame priority-bucketed sprite command buffer.
+ * The Aep ordering table: a per-frame priority-bucketed sprite command buffer.
  */
 class AepOrderingTable {
 public:
-    /** @brief Construct an empty ordering table ready for a new frame. */
+    /** Construct an empty ordering table ready for a new frame. */
     AepOrderingTable();
 
-    /** @brief Reset the buffer for a new frame: zero the count and clear the buckets. */
+    /** Reset the buffer for a new frame: zero the count and clear the buckets. */
     void reset();
 
     /**
-     * @brief Reserve a command entry at a priority and link it into that bucket.
+     * Reserve a command entry at a priority and link it into that bucket.
      *
      * @param priority The priority bucket to head-insert the new entry into.
      * @return The reserved command entry, ready to fill.
@@ -215,7 +215,7 @@ public:
     AepOtSpriteCmd *allocEntry(int priority);
 
     /**
-     * @brief Fill a stretched-sprite command (wFlags=1) and link it at a priority.
+     * Fill a stretched-sprite command (wFlags=1) and link it at a priority.
      *
      * Forwards position, scale, colour, blend, and clip for the sprite. This is the fill
      * neTextureForiOS::draw drives; the flush later dispatches the command through
@@ -264,7 +264,7 @@ public:
                                int nPriority);
 
     /**
-     * @brief Flush the buffer: walk the priority buckets high-to-low and dispatch each command by
+     * Flush the buffer: walk the priority buckets high-to-low and dispatch each command by
      *        wFlags to its per-type draw handler.
      *
      * @ghidraAddress 0x115d0
@@ -272,7 +272,7 @@ public:
     void flush();
 
     /**
-     * @brief Number of commands dispatched by the most recent flush.
+     * Number of commands dispatched by the most recent flush.
      *
      * @return The dispatched command count.
      * @ghidraAddress 0x117dc
@@ -282,7 +282,7 @@ public:
     }
 
     /**
-     * @brief Cache the screen extents, the per-slot texture table, and the device-pixel render
+     * Cache the screen extents, the per-slot texture table, and the device-pixel render
      *        scale on the ordering table.
      *
      * The immediate-mode primitive helpers transform their coordinates by the render scale and
@@ -296,7 +296,7 @@ public:
      */
     void setScreenParams(neTextureForiOS **textureTable, int screenW, int screenH, float scale);
     /**
-     * @brief Screen width.
+     * Screen width.
      *
      * @return The cached screen width.
      */
@@ -304,7 +304,7 @@ public:
         return m_screenW;
     } // +0x04
     /**
-     * @brief Screen height.
+     * Screen height.
      *
      * @return The cached screen height.
      */
@@ -312,7 +312,7 @@ public:
         return m_screenH;
     } // +0x08
     /**
-     * @brief The per-slot GL texture-handle table.
+     * The per-slot GL texture-handle table.
      *
      * @return The cached texture table.
      */
@@ -320,7 +320,7 @@ public:
         return m_textureTable;
     } // +0x9a1a4
     /**
-     * @brief The device-pixel render scale.
+     * The device-pixel render scale.
      *
      * @return The cached render scale.
      */
@@ -328,7 +328,7 @@ public:
         return m_renderScale;
     } // +0x9a1a8
     /**
-     * @brief Set the device-pixel render scale directly.
+     * Set the device-pixel render scale directly.
      *
      * BootLogoTask setup and finish write this to switch to native scale (1.0) for the branding
      * logos and to restore the saved UI half-scale on exit.
@@ -416,7 +416,7 @@ private:
 // ---------------------------------------------------------------------------
 
 /**
- * @brief Set the ordering table's screen extents, per-slot texture table, and render scale.
+ * Set the ordering table's screen extents, per-slot texture table, and render scale.
  *
  * @param ot The ordering table to configure.
  * @param textureTable The per-slot GL texture-handle table.
@@ -429,7 +429,7 @@ void aepOtSetScreenParams(
     AepOrderingTable *ot, neTextureForiOS **textureTable, int screenW, int screenH, float scale);
 
 /**
- * @brief Queue a text draw command (type 6) at a priority.
+ * Queue a text draw command (type 6) at a priority.
  *
  * The `colorVec` (16 bytes) overrides the per-glyph clip vector; when null it defaults to
  * {0, 0, screenW, screenH}. The first value is the size, not a position (see AepTextCmd).
@@ -462,7 +462,7 @@ void pushAepOtTextCmd(AepOrderingTable *ot,
 // declared in the class above; only the flush dispatches to them.
 
 /**
- * @brief The clipped textured-quad immediate draw.
+ * The clipped textured-quad immediate draw.
  *
  * `frameObj` is the animated texture object: it holds the sub-frame count, the per-frame width and
  * duration tables, and the render-state slots. It picks the active sub-frame from `frameTime`,

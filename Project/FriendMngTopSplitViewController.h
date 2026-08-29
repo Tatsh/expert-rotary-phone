@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad friend-management hub: a floating master-detail split panel over a dimmed
+ * The iPad friend-management hub: a floating master-detail split panel over a dimmed
  * backdrop.
  *
  * The left pane is a FriendMngTopViewController (the section-button column); the right pane is a
@@ -24,18 +24,18 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The iPad friend-management hub: a split panel whose left column selects the right pane's
+ * The iPad friend-management hub: a split panel whose left column selects the right pane's
  * section.
  */
 @interface FriendMngTopSplitViewController : UIViewController
 
 /**
- * @brief Fade the panel and its navigation view in.
+ * Fade the panel and its navigation view in.
  * @ghidraAddress 0xc3d08
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the panel and its navigation view out.
+ * Fade the panel and its navigation view out.
  * @ghidraAddress 0xc3f68
  */
 - (void)startCloseAnimation;
@@ -44,19 +44,19 @@
 // they swap the right pane's top controller and slide the selection arrow.
 
 /**
- * @brief Show the friend list in the right pane.
+ * Show the friend list in the right pane.
  * @param sender The tapped button.
  * @ghidraAddress 0xc40d0
  */
 - (void)onListButtonTouched:(id)sender;
 /**
- * @brief Show the sent friend requests in the right pane.
+ * Show the sent friend requests in the right pane.
  * @param sender The tapped button.
  * @ghidraAddress 0xc4760
  */
 - (void)onRequestButtonTouched:(id)sender;
 /**
- * @brief Show the received friend requests in the right pane.
+ * Show the received friend requests in the right pane.
  * @param sender The tapped button.
  * @ghidraAddress 0xc4df0
  */

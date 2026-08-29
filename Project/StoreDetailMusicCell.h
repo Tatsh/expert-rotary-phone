@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One song row in the iPhone StoreDetailViewController table.
+ * One song row in the iPhone StoreDetailViewController table.
  *
  * It carries the jacket, name, artist, and a "LEVEL b/m/h" line, an optional arcade-viewer badge,
  * an iTunes link, and a sample-play button with buffering and playing states. Reconstructed from
@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One song row of the phone pack-detail screen.
+ * One song row of the phone pack-detail screen.
  */
 @interface StoreDetailMusicCell : UITableViewCell
 
@@ -27,34 +27,34 @@
 @property(nonatomic, retain) UIView *arcadeViewer;
 
 /**
- * @brief The fixed content height of a song cell; the row height adds padding.
+ * The fixed content height of a song cell; the row height adds padding.
  * @return The content height.
  */
 + (CGFloat)cellHeight;
 
 /**
- * @brief Set the row's stretchable background; the caller alternates packBgImage0 and
+ * Set the row's stretchable background; the caller alternates packBgImage0 and
  * packBgImage1.
  * @param image The background image.
  */
 - (void)setBgImage:(UIImage *)image;
 
 /**
- * @brief Set the song's iTunes page URL, which the link button opens.
+ * Set the song's iTunes page URL, which the link button opens.
  * @param url The iTunes URL.
  */
 - (void)setLink:(NSString *)url;
 
 /**
- * @brief Put the sample button in its idle state.
+ * Put the sample button in its idle state.
  */
 - (void)sampleStop;
 /**
- * @brief Put the sample button in its buffering state.
+ * Put the sample button in its buffering state.
  */
 - (void)sampleDownloading;
 /**
- * @brief Put the sample button in its playing state.
+ * Put the sample button in its playing state.
  */
 - (void)samplePlaying;
 

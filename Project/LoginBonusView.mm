@@ -44,7 +44,7 @@
 // code dependency — pure baked asset data.)
 // ---------------------------------------------------------------------------
 /**
- * @brief One row of a login-bonus reward table.
+ * One row of a login-bonus reward table.
  */
 typedef struct {
     int requiredLoginCnt; /**< The login count at which this reward unlocks. */
@@ -60,7 +60,7 @@ enum {
 };
 
 /**
- * @brief The login-bonus board's private state and helpers.
+ * The login-bonus board's private state and helpers.
  */
 @interface LoginBonusView () {
     /** The "login_board" background; the stamps are its subviews. */
@@ -69,14 +69,14 @@ enum {
     BOOL m_IsTouch;    /**< Guards so the "stamp today" tap only fires once. */
 }
 /**
- * @brief A tap landed on the board.
+ * A tap landed on the board.
  * @param sender The tap recogniser.
  */
 - (void)touchEvent:(id)sender;
-/** @brief Show the reward alert. */
+/** Show the reward alert. */
 - (void)showAlertView;
 /**
- * @brief The reward table for a login-bonus id. The binary inlines this at every call site.
+ * The reward table for a login-bonus id. The binary inlines this at every call site.
  * @param loginBonusId The login-bonus id.
  * @return The reward table, terminated by a sentinel entry.
  */

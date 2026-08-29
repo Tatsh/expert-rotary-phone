@@ -31,7 +31,7 @@
 // FriendListData ([3[7i]][3i][3i]), so downloadMainFinished: can copy them
 // across.
 /**
- * @brief The aggregated tallies over every saved ScoreData row.
+ * The aggregated tallies over every saved ScoreData row.
  *
  * The layout is the one FUN_00029644 fills, 0x74 bytes. The trailing three arrays mirror the tail
  * of FriendListData ([3[7i]][3i][3i]), so -downloadMainFinished: can copy them across.

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Konami "RewardNetwork" (Applilink) ad-SDK modal busy indicator.
+ * The Konami "RewardNetwork" (Applilink) ad-SDK modal busy indicator.
  *
  * A translucent black UIView hosting a centred UIActivityIndicatorView. Reconstructed from Ghidra
  * project rb420, program PopnRhythmin, with a UIView superclass and a single `_indicator` object
@@ -10,7 +10,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The reward SDK's busy-indicator overlay.
+ * The reward SDK's busy-indicator overlay.
  */
 @interface RewardNetworkIndicator : UIView
 
@@ -18,13 +18,13 @@
 @property(nonatomic, strong) UIActivityIndicatorView *indicator;
 
 /**
- * @brief Unhide the overlay and start the spinner.
+ * Unhide the overlay and start the spinner.
  * @ghidraAddress 0xf3e14
  */
 - (void)show;
 
 /**
- * @brief Hide the overlay and stop the spinner.
+ * Hide the overlay and stop the spinner.
  * @ghidraAddress 0xf3e64
  */
 - (void)close;

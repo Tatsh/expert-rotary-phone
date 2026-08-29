@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The iPad pop'n-link hub: a floating master-detail split panel over a dimmed backdrop.
+ * The iPad pop'n-link hub: a floating master-detail split panel over a dimmed backdrop.
  *
  * The left pane is a PopnLinkTopViewController (the section-button column); the right pane is a
  * UINavigationController whose top controller is swapped between the KONAMI-ID input,
@@ -29,39 +29,39 @@
 // -onScoreCheckerButtonTouched: below. Ghidra: sent from InputKIDViewCtrl
 // -commonAlertView:clickedButtonAtIndex: @ 0xd7284.
 /**
- * @brief The callback interface the KID-input screen sends to its owning split controller once the
+ * The callback interface the KID-input screen sends to its owning split controller once the
  * pop'n-link succeeds on iPad.
  */
 @protocol PopnLinkTopSplitViewControllerDelegate <NSObject>
 /**
- * @brief Rebuild the left column's inputs after a link state change.
+ * Rebuild the left column's inputs after a link state change.
  */
 - (void)reloadLeftView;
 /**
- * @brief Re-enter the score-checker section.
+ * Re-enter the score-checker section.
  * @param sender The originating control.
  */
 - (void)onScoreCheckerButtonTouched:(id)sender;
 @end
 
 /**
- * @brief The iPad pop'n-link hub: a section column beside a detail pane.
+ * The iPad pop'n-link hub: a section column beside a detail pane.
  */
 @interface PopnLinkTopSplitViewController : UIViewController
 
 /**
- * @brief Fade the panel and its navigation view in.
+ * Fade the panel and its navigation view in.
  * @ghidraAddress 0xe1538
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the panel and its navigation view out.
+ * Fade the panel and its navigation view out.
  * @ghidraAddress 0xe1858
  */
 - (void)startCloseAnimation;
 
 /**
- * @brief Rebuild the left column's inputs and re-evaluate its button-enabled state, called back
+ * Rebuild the left column's inputs and re-evaluate its button-enabled state, called back
  * after a link state change.
  * @ghidraAddress 0xe2bb8
  */
@@ -72,19 +72,19 @@
 // back to the KONAMI-ID input while the player is not linked.
 
 /**
- * @brief Show the KONAMI-ID input in the right pane.
+ * Show the KONAMI-ID input in the right pane.
  * @param sender The tapped button.
  * @ghidraAddress 0xe19c0
  */
 - (void)onInKidButtonTouched:(id)sender;
 /**
- * @brief Show the score checker in the right pane.
+ * Show the score checker in the right pane.
  * @param sender The tapped button.
  * @ghidraAddress 0xe1fa8
  */
 - (void)onScoreCheckerButtonTouched:(id)sender;
 /**
- * @brief Show the quiz in the right pane.
+ * Show the quiz in the right pane.
  * @param sender The tapped button.
  * @ghidraAddress 0xe25b0
  */

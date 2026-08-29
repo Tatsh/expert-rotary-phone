@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The ARCADE-mode task: arcade song select, sugoroku treasure map, option select, and
+ * The ARCADE-mode task: arcade song select, sugoroku treasure map, option select, and
  * note play.
  *
  * It drives the arcade note engine (AcNoteMng) and is launched by the mode menu (MenuMainTask).
@@ -44,7 +44,7 @@ struct neTouchPoint;    // System/src/Render/neGraphics.h (touch pool record)
 class neGraphics;       // System/src/Render/neGraphics.h (applyDragScroll parameter)
 
 /**
- * @brief Draw-dispatch keys into m_boardUserNo.
+ * Draw-dispatch keys into m_boardUserNo.
  *
  * Each entry is a getUserNo element id that the group-5 board draw callback (AcMainSugorokuDraw)
  * matches the drawn `child` against to render one sugoroku or chara-select board element. The
@@ -80,7 +80,7 @@ enum BoardElem {
 };
 
 /**
- * @brief Frame handles into m_boardFrame, resolved in setup from getFrameNo(5, kFrmBoard[i]).
+ * Frame handles into m_boardFrame, resolved in setup from getFrameNo(5, kFrmBoard[i]).
  *
  * Each entry is named after its board frame asset. The DEFENSE_* and SQUARE frames are the
  * roulette-result event frames the result switch selects by outcome mode.
@@ -115,7 +115,7 @@ enum BoardFrame {
 };
 
 /**
- * @brief A resolved Aep layer handle paired with its frame count; the setup pass always resolves
+ * A resolved Aep layer handle paired with its frame count; the setup pass always resolves
  * the two together (getLyrNo then layerFrameCount).
  */
 struct AcLayerRef {
@@ -124,7 +124,7 @@ struct AcLayerRef {
 };
 
 /**
- * @brief An integer (x, y) board-panel anchor position (a grid cell's top-left after the per-cell
+ * An integer (x, y) board-panel anchor position (a grid cell's top-left after the per-cell
  * anchor offset).
  */
 struct AcAnchor {
@@ -133,7 +133,7 @@ struct AcAnchor {
 };
 
 /**
- * @brief The arcade-mode task: arcade song select, the sugoroku treasure map, option select and
+ * The arcade-mode task: arcade song select, the sugoroku treasure map, option select and
  * note play.
  *
  * This class is also the ~0xa00-byte play-data work area the binary's one megafunction dispatches
@@ -150,7 +150,7 @@ public:
     AcMainTask();
     ~AcMainTask() override;
     /**
-     * @brief Per-frame arcade-mode tick: the touch/SE preamble, then a dispatch over the play-data
+     * Per-frame arcade-mode tick: the touch/SE preamble, then a dispatch over the play-data
      * state into one handler method per state.
      * @param deltaMs Milliseconds elapsed since the previous scheduler tick.
      * @ghidraAddress 0x99d18
@@ -497,7 +497,7 @@ private:
 };
 
 /**
- * @brief The group-5 sugoroku per-frame render pass the scene installs as its draw callback.
+ * The group-5 sugoroku per-frame render pass the scene installs as its draw callback.
  *
  * AepDrawLayer's type-3 dispatch invokes it with the full per-frame draw arguments, matching
  * AepGroupDrawFn. It is a ~5.8 KB draw routine, reconstructed separately.
@@ -536,7 +536,7 @@ void AcMainSugorokuDraw(int child,
                         void *context);
 
 /**
- * @brief Unlock the board-8 bonus treasure record when its prerequisite purchased songs are
+ * Unlock the board-8 bonus treasure record when its prerequisite purchased songs are
  * present on disk.
  *
  * It goes through TreasureData and MusicManager.

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The music-checker score detail screen.
+ * The music-checker score detail screen.
  *
  * A per-song graph plotting the venue top, venue mean, and personal-best scores across the four
  * arcade sheets (EX, Hyper, Normal, Easy). Buttons switch the active sheet; tapping the top-score
@@ -13,20 +13,20 @@
 @class ArcadeScoreData;
 
 /**
- * @brief The music-checker score detail screen: a per-song graph of the venue top, venue mean and
+ * The music-checker score detail screen: a per-song graph of the venue top, venue mean and
  * personal-best scores.
  */
 @interface CheckerDetail : UIViewController
 
 /**
- * @brief Build the detail graph for one arcade song record.
+ * Build the detail graph for one arcade song record.
  * @param scoreData The record to graph.
  * @return The initialised controller.
  */
 - (instancetype)initWithScoreData:(ArcadeScoreData *)scoreData;
 
 /**
- * @brief Redraw an image into a device-gray bitmap context.
+ * Redraw an image into a device-gray bitmap context.
  * @param image The image to convert.
  * @return A greyscale copy.
  */

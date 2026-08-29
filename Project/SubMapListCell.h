@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A sub-map list row in the sugoroku map select.
+ * A sub-map list row in the sugoroku map select.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0xc0f8c).
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One sugoroku sub-map (area) row.
+ * One sugoroku sub-map (area) row.
  */
 @interface SubMapListCell : UITableViewCell
 
 /**
- * @brief Bind the row to a sub-map entry.
+ * Bind the row to a sub-map entry.
  *
  * It draws the area banner, the name, the collected-piece counts (kakera and ticket), the
  * difficulty and item headers, the earned-star row, an optional goal "daon" icon, and a "cleared"

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The e-AMUSEMENT "one-time password" entry screen.
+ * The e-AMUSEMENT "one-time password" entry screen.
  *
  * CheckerCategoryViewController pushes it when the arcade-score sync requires an OTP. It is a
  * scrollable form over the "friman_bg" backdrop with a secure text field limited to 16 characters,
@@ -21,7 +21,7 @@
 @class TouchableScrollView;
 
 /**
- * @brief The one-time-password entry screen for the arcade-score sync.
+ * The one-time-password entry screen for the arcade-score sync.
  */
 @interface InputOTPViewCtrl : UIViewController <UITextFieldDelegate> {
     /** The owner, which receives -startGetArcadeScoreHttpWithOtp:. */
@@ -35,7 +35,7 @@
 }
 
 /**
- * @brief Build the OTP form for an owner and register the keyboard-notification observers.
+ * Build the OTP form for an owner and register the keyboard-notification observers.
  * @param categoryView The owner to call back with the entered code.
  * @return The initialised controller.
  * @ghidraAddress 0x78d18

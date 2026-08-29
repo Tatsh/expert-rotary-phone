@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A sort-option row.
+ * A sort-option row.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (initWithStyle:reuseIdentifier: @
  * 0xc5418).
@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief One row of the sort-select list.
+ * One row of the sort-select list.
  */
 @interface SortCell : UITableViewCell
 
 /**
- * @brief Bind the row to a sort option.
+ * Bind the row to a sort option.
  * @param sortValue An NSValue wrapping `{ short sortType; char isChecked; }`. `sortType`, 0..5,
  * picks the title art — Title, Artist, level N, level H, level EX or no-data — and `isChecked`
  * picks the check-mark image.

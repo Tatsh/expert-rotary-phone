@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The "Sound" sub-settings screen.
+ * The "Sound" sub-settings screen.
  *
  * It is embedded as the row-1 detail sub-controller of SettingGameTableViewController, which
  * imports SoundSettingView.h and instantiates it. A grouped table of volume sliders plus an
@@ -23,7 +23,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- * @brief The "Sound" sub-settings screen: the volume sliders and touch-sound picker.
+ * The "Sound" sub-settings screen: the volume sliders and touch-sound picker.
  */
 @interface SoundSettingView : UITableViewController
 

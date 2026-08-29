@@ -2,7 +2,7 @@
 
 /**
  * @file
- * @brief Small C hashing and digest helpers shared by the reconstruction.
+ * Small C hashing and digest helpers shared by the reconstruction.
  */
 
 #ifndef RHCRYPTO_H
@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /**
- * @brief Computes the MD5 hash of the given data.
+ * Computes the MD5 hash of the given data.
  * @param data Pointer to the input data to hash.
  * @param len Length of the input data in bytes.
  * @param out16 Pointer to a buffer where the 16-byte MD5 digest will be stored.

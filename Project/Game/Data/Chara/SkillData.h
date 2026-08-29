@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The 30 built-in sugoroku (board-game mode) skill descriptions.
+ * The 30 built-in sugoroku (board-game mode) skill descriptions.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin.
  *
@@ -14,7 +14,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief One built-in skill: its description and its random-selection weight.
+ * One built-in skill: its description and its random-selection weight.
  */
 struct SkillDataStruct {
     NSString *description; /**< +0x0 The description, a constant Japanese NSString. */
@@ -22,12 +22,12 @@ struct SkillDataStruct {
 };
 
 /**
- * @brief The number of built-in skills. Ghidra bound-checks this as `index < 0x1e`.
+ * The number of built-in skills. Ghidra bound-checks this as `index < 0x1e`.
  */
 constexpr int kSkillCount = 30;
 
 /**
- * @brief Bounds-checked accessor for the built-in skills.
+ * Bounds-checked accessor for the built-in skills.
  * @param index The skill index; asserts it is below kSkillCount.
  * @return The skill record.
  * @ghidraAddress 0xcb9d0

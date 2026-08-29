@@ -21,7 +21,7 @@
 #import "RecommendCore.h"
 
 /**
- * @brief The advertising-id store's private transport and crypto helpers.
+ * The advertising-id store's private transport and crypto helpers.
  */
 @interface RecommendAdId () {
     NSString *_serviceName; /**< The pasteboard service name. */
@@ -30,7 +30,7 @@
 // The Applilink server-side external-pasteboard transport; the iOS 7 and later backend.
 
 /**
- * @brief Read the server-side pasteboard record.
+ * Read the server-side pasteboard record.
  * @param udid The device UDID.
  * @param countryCode The country code.
  * @param categoryId The category id.
@@ -42,7 +42,7 @@
                  categoryId:(NSString *)categoryId
                       error:(NSError **)error;
 /**
- * @brief Write the server-side pasteboard record.
+ * Write the server-side pasteboard record.
  * @param udid The device UDID.
  * @param countryCode The country code.
  * @param categoryId The category id.
@@ -57,7 +57,7 @@
                        adType:(NSString *)adType
                         error:(NSError **)error;
 /**
- * @brief Delete the server-side pasteboard record.
+ * Delete the server-side pasteboard record.
  * @param udid The device UDID.
  * @param countryCode The country code.
  * @param categoryId The category id.
@@ -69,7 +69,7 @@
                            error:(NSError **)error;
 
 /**
- * @brief Decrypt an archived local-pasteboard record's fields back to plaintext strings.
+ * Decrypt an archived local-pasteboard record's fields back to plaintext strings.
  * @param dict The archived record.
  * @return The decrypted record.
  */
@@ -78,19 +78,19 @@
 // Crypto helpers; their implementations below carry the Ghidra address citations.
 
 /**
- * @brief The hexadecimal SHA-1 of a string.
+ * The hexadecimal SHA-1 of a string.
  * @param string The string to hash.
  * @return The digest.
  */
 + (NSString *)sha1:(NSString *)string;
 /**
- * @brief The SHA-1 of a data blob, used to derive the per-record AES key.
+ * The SHA-1 of a data blob, used to derive the per-record AES key.
  * @param data The data to hash.
  * @return The digest.
  */
 + (NSData *)createHash:(NSData *)data;
 /**
- * @brief AES-128 with PKCS#7 padding, in either direction.
+ * AES-128 with PKCS#7 padding, in either direction.
  * @param operation kCCEncrypt or kCCDecrypt.
  * @param value The data to transform.
  * @param key The AES key.

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The ScoreData Core Data managed object: per-song play records.
+ * The ScoreData Core Data managed object: per-song play records.
  *
  * Reconstructed from ScoreData.momd/ScoreData_v2.mom (entity "ScoreData").
  *
@@ -18,7 +18,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- * @brief The per-song local play record: best score, rank, medals and play count for each of the
+ * The per-song local play record: best score, rank, medals and play count for each of the
  * three difficulties.
  */
 @interface ScoreData : NSManagedObject
@@ -67,7 +67,7 @@
 @property(nonatomic, retain) NSData *chksco;
 
 /**
- * @brief Delete every persisted ScoreData record; the device-change and initForConvert reset.
+ * Delete every persisted ScoreData record; the device-change and initForConvert reset.
  * @param context The managed object context to delete from.
  */
 + (void)deleteAll:(NSManagedObjectContext *)context;

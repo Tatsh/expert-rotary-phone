@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A single tappable song-pack tile shown in the store list.
+ * A single tappable song-pack tile shown in the store list.
  *
  * A framed jacket with a drop shadow, name, one-line comment, and price labels, a disabled
  * "purchased" button, and the new, arcade-viewer, and chara-ticket marker icons. A whole-tile tap
@@ -20,19 +20,19 @@
 // packViewSelected:
 // @ 0x45318). Invoked via -respondsToSelector:/-performSelector:withObject:.
 /**
- * @brief Receives a pack tile's tap; the hosting controller implements it.
+ * Receives a pack tile's tap; the hosting controller implements it.
  */
 @protocol StorePackViewDelegate <NSObject>
 @optional
 /**
- * @brief The tile was tapped.
+ * The tile was tapped.
  * @param packView The tapped tile.
  */
 - (void)packViewSelected:(StorePackView *)packView;
 @end
 
 /**
- * @brief One pack tile in the store catalogue: the jacket, name, blurb, price and badges.
+ * One pack tile in the store catalogue: the jacket, name, blurb, price and badges.
  */
 @interface StorePackView : UIView {
     UIImageView *m_BackGroundImageView;   /**< The full-bounds background, carrying the tap
@@ -56,32 +56,32 @@
 @property(nonatomic, readonly) unsigned int index;
 
 /**
- * @brief Bind a pack model to the tile and record its list index.
+ * Bind a pack model to the tile and record its list index.
  * @param packInfo The pack to show.
  * @param index The row index to pass back on selection.
  */
 - (void)loadPackInfo:(StorePackInfo *)packInfo index:(unsigned int)index;
 
 /**
- * @brief Replace the jacket artwork.
+ * Replace the jacket artwork.
  * @param artwork The new image.
  */
 - (void)setArtwork:(UIImage *)artwork;
 
 /**
- * @brief Replace the tile's background image.
+ * Replace the tile's background image.
  * @param image The new image.
  */
 - (void)setBgImage:(UIImage *)image;
 
 /**
- * @brief Whether the "purchased" button is visible.
+ * Whether the "purchased" button is visible.
  * @return YES when the pack is shown as purchased.
  */
 - (BOOL)isPurchased;
 
 /**
- * @brief Show or hide the "purchased" button, which is the source of truth for -isPurchased.
+ * Show or hide the "purchased" button, which is the source of truth for -isPurchased.
  * @param purchased YES to show the button.
  */
 - (void)setIsPurchased:(BOOL)purchased;

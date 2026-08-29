@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The login-bonus "stamp board" reward popup.
+ * The login-bonus "stamp board" reward popup.
  *
  * A full-screen, initially-hidden UIImageView overlay carrying a "login_board" background image
  * and a grid of "login_popn%02d" stamp icons, one per consumed login day. Tapping the board stamps
@@ -21,25 +21,25 @@
 #import "CustomAlertView.h" // CustomAlertView + CustomAlertViewDelegate (customAlertView:clickedButtonAtIndex:)
 
 /**
- * @brief The login-bonus reward board.
+ * The login-bonus reward board.
  */
 @interface LoginBonusView : UIImageView <CustomAlertViewDelegate>
 
 /**
- * @brief Reveal the board, grant the rewards and start the open animation.
+ * Reveal the board, grant the rewards and start the open animation.
  * @ghidraAddress 0x7c728
  */
 - (void)show;
 
 /**
- * @brief Grant every login-bonus reward whose unlock threshold was crossed since the board was
+ * Grant every login-bonus reward whose unlock threshold was crossed since the board was
  * last shown: treasure points and music unlocks.
  * @ghidraAddress 0x7c594
  */
 - (void)getReward;
 
 /**
- * @brief The number of reward rows defined for the active login-bonus id, found by scanning to the
+ * The number of reward rows defined for the active login-bonus id, found by scanning to the
  * table terminator.
  * @return The reward count.
  * @ghidraAddress 0x7bf70

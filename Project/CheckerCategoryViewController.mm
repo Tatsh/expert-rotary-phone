@@ -32,27 +32,27 @@ static NSString *const kMsgNoPlayData =
     @"のプレーデータは\n見つかりませんでした。";
 
 /**
- * @brief The music-checker category list's private actions and server-value converters.
+ * The music-checker category list's private actions and server-value converters.
  */
 @interface CheckerCategoryViewController () <DownloaderDelegate>
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;
 /**
- * @brief The "get data" button was tapped: start the arcade-score sync.
+ * The "get data" button was tapped: start the arcade-score sync.
  * @param sender The tapped button.
  */
 - (void)touchedGetDataButton:(id)sender;
 /**
- * @brief Replace the server's escaped characters in a string with their literal forms.
+ * Replace the server's escaped characters in a string with their literal forms.
  * @param string The server string.
  * @return The converted string.
  */
 - (NSString *)convertReplaceChara:(NSString *)string;
 /**
- * @brief Map a server category id onto the local category index.
+ * Map a server category id onto the local category index.
  * @param categoryId The server category id.
  * @return The local category index.
  */

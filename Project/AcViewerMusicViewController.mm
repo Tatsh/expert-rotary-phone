@@ -20,32 +20,32 @@
 #import "neEngineBridge.h"
 
 /**
- * @brief The arcade song list's private gesture and button handlers.
+ * The arcade song list's private gesture and button handlers.
  */
 @interface AcViewerMusicViewController ()
 /**
- * @brief The edge-pan gesture moved; drive the interactive close.
+ * The edge-pan gesture moved; drive the interactive close.
  * @param recognizer The pan recogniser.
  */
 - (void)handleGesture:(UIPanGestureRecognizer *)recognizer;
 /**
- * @brief The back-button action.
+ * The back-button action.
  * @param sender The tapped button.
  */
 - (void)touchedBackButton:(id)sender;
 /**
- * @brief The change button was tapped: toggle between song-name and genre-name ordering.
+ * The change button was tapped: toggle between song-name and genre-name ordering.
  * @param sender The tapped button.
  */
 - (void)touchedChangeButton:(id)sender;
 /**
- * @brief A difficulty button was tapped: seed the AC-viewer selection and push the option screen.
+ * A difficulty button was tapped: seed the AC-viewer selection and push the option screen.
  * @param sender The tapped button.
  * @param event The touch event, used to resolve the row.
  */
 - (void)touchedSheetButton:(id)sender event:(UIEvent *)event;
 /**
- * @brief The table row a control event landed in.
+ * The table row a control event landed in.
  * @param event The touch event.
  * @return The row's index path, or nil when the touch missed every row.
  */

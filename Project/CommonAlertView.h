@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief A custom modal alert: the styled replacement for UIAlertView, used in around 99 places.
+ * A custom modal alert: the styled replacement for UIAlertView, used in around 99 places.
  *
  * A gradient-backed rounded card with a message text view, an optional title, and up to two
  * buttons (cancel and other), shown over the root scene view with an open animation.
@@ -12,11 +12,11 @@
 @class CommonAlertView;
 
 /**
- * @brief Receives the alert's button taps.
+ * Receives the alert's button taps.
  */
 @protocol CommonAlertViewDelegate <NSObject>
 /**
- * @brief A button was tapped.
+ * A button was tapped.
  * @param alertView The alert that was dismissed.
  * @param index 0 for the cancel button, 1 for the other button.
  */
@@ -24,12 +24,12 @@
 @end
 
 /**
- * @brief A custom modal alert: a styled replacement for UIAlertView, used in roughly 99 places.
+ * A custom modal alert: a styled replacement for UIAlertView, used in roughly 99 places.
  */
 @interface CommonAlertView : UIView
 
 /**
- * @brief The UIAlertView-shaped initialiser.
+ * The UIAlertView-shaped initialiser.
  * @param title The alert title, or nil for none.
  * @param message The alert body.
  * @param delegate The delegate notified of button taps.
@@ -45,12 +45,12 @@
             otherButtonTitles:(NSString *)otherButtonTitles;
 
 /**
- * @brief Add the alert over the root view and run its open animation.
+ * Add the alert over the root view and run its open animation.
  * @ghidraAddress 0x4b4cc
  */
 - (void)show;
 /**
- * @brief Whether the alert is currently on screen.
+ * Whether the alert is currently on screen.
  * @return YES when the alert is not hidden.
  * @ghidraAddress 0x4bb9c
  */

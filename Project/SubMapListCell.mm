@@ -15,7 +15,7 @@
 #import "neEngineBridge.h"
 
 /**
- * @brief The NSValue payload -getValue: fills for a sub-map (area) row.
+ * The NSValue payload -getValue: fills for a sub-map (area) row.
  */
 typedef struct {
     short mainMapId;                    /**< The owning map's identifier. */

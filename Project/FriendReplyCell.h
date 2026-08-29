@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief One incoming friend-request row in FriendReplyViewController.
+ * One incoming friend-request row in FriendReplyViewController.
  *
  * It carries a chara icon, the requester's name and date, and OK and NG (accept and reject)
  * buttons that call back to the controller. Its subview x-offsets shift between iOS 6 and 7.
@@ -14,7 +14,7 @@
 // getFriendRequestFinished's NSValue wrapping). The four NSString* fields are
 // retained; the trailing int[7] is unused on this screen (left zero).
 /**
- * @brief One inbound request record.
+ * One inbound request record.
  *
  * Objective-C type-encoding `{ReplyDataStruct=@@@@s[7i]}`, from getFriendRequestFinished's NSValue
  * wrapping. The four NSString * fields are retained; the trailing int[7] is unused on this screen
@@ -30,11 +30,11 @@ typedef struct {
 } ReplyDataStruct;
 
 /**
- * @brief Receives the row's accept and reject taps.
+ * Receives the row's accept and reject taps.
  */
 @protocol FriendReplyCellDelegate <NSObject>
 /**
- * @brief OK or NG was tapped for a requester.
+ * OK or NG was tapped for a requester.
  * @param playerId The requester's player id.
  * @param reply 1 to accept, 0 to reject.
  */
@@ -42,7 +42,7 @@ typedef struct {
 @end
 
 /**
- * @brief One row of the received-friend-requests list, with accept and reject buttons.
+ * One row of the received-friend-requests list, with accept and reject buttons.
  */
 @interface FriendReplyCell : UITableViewCell
 
@@ -51,7 +51,7 @@ typedef struct {
 @property(nonatomic, weak) id<FriendReplyCellDelegate> delegate;
 
 /**
- * @brief Populate the row from a request record.
+ * Populate the row from a request record.
  * @param replyData An NSValue-wrapped ReplyDataStruct.
  */
 - (void)setReplyData:(NSValue *)replyData;

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The store's arcade-viewer manager tab.
+ * The store's arcade-viewer manager tab.
  *
  * It is the sibling of StoreManageViewController for arcade-viewer content, handling deletion and
  * re-download. It lists the purchased arcade-viewer songs, offers a per-row delete and re-download
@@ -20,7 +20,7 @@
 @class StoreViewController;
 
 /**
- * @brief The arcade-viewer song manager tab: it lists owned arcade songs and lets each be deleted
+ * The arcade-viewer song manager tab: it lists owned arcade songs and lets each be deleted
  * or re-downloaded.
  */
 @interface StoreAcvManageViewController : UIViewController <UITableViewDataSource,
@@ -42,7 +42,7 @@
 }
 
 /**
- * @brief Build the manager for a tab host.
+ * Build the manager for a tab host.
  * @param parent The owning store view controller.
  * @return The initialised controller.
  */

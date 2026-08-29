@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The Marsaglia xorshift128 pseudo-random generator.
+ * The Marsaglia xorshift128 pseudo-random generator.
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin. The original translation unit is
  * named in an assert string baked into the binary,
@@ -20,25 +20,25 @@
 #include <cstdint>
 
 /**
- * @brief A Marsaglia xorshift128 pseudo-random generator.
+ * A Marsaglia xorshift128 pseudo-random generator.
  */
 class Random {
 public:
     /**
-     * @brief Seed the state with the canonical xorshift128 constants.
+     * Seed the state with the canonical xorshift128 constants.
      * @ghidraAddress 0x62b20
      */
     Random();
 
     /**
-     * @brief Destroy the generator. The class is polymorphic in the binary, whose single vtable
+     * Destroy the generator. The class is polymorphic in the binary, whose single vtable
      * slot is this empty destructor.
      * @ghidraAddress 0x62b54
      */
     virtual ~Random();
 
     /**
-     * @brief Reset x, y and z to the canonical constants and take @p seed as the w word.
+     * Reset x, y and z to the canonical constants and take @p seed as the w word.
      *
      * The game seeds this with time() before a shuffle.
      * @param seed The new w word.
@@ -47,7 +47,7 @@ public:
     void setSeed(uint32_t seed);
 
     /**
-     * @brief A uniformly-distributed integer below @p max.
+     * A uniformly-distributed integer below @p max.
      *
      * Advances the generator and reduces the low 31 bits modulo @p max.
      * @param max The exclusive upper bound; asserts it is 0 or above.

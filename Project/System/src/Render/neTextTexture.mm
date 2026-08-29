@@ -34,7 +34,7 @@ static neTextTextureMgr *g_pTextTextureMgr = nullptr;
 static unsigned g_pTextQuadIndexBuffer = 0;
 
 /**
- * @brief One cached glyph record: the 0x20-byte node allocated by createTextGlyphEntry and filled
+ * One cached glyph record: the 0x20-byte node allocated by createTextGlyphEntry and filled
  * by renderGlyphToAtlas, keyed by its UTF-8 bytes and scaled point size.
  */
 struct neGlyph {
@@ -183,7 +183,7 @@ void neTextTextureMgr::createNewTextTexture() {
 }
 
 /**
- * @brief One textured glyph vertex (16 bytes): GL_FLOAT position, GL_SHORT UV, premultiplied
+ * One textured glyph vertex (16 bytes): GL_FLOAT position, GL_SHORT UV, premultiplied
  * RGBA8.
  *
  * The backend specifies the position array as GL_FLOAT (0x1406, verified in FUN_0001342c), so the

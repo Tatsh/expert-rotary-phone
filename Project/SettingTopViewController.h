@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The top-level "settings" menu: the four-button カスタム screen.
+ * The top-level "settings" menu: the four-button カスタム screen.
  *
  * The buttons are ゲーム (Game), 遊び方 (How-to), お問い合わせ (Customer inquiry), and その他
  * (Other). On the phone each button pushes the matching sub-screen onto its own navigation
@@ -23,32 +23,32 @@
 // taps so it can swap its own detail pane. NB: the binary spells the protocol
 // "Dalegate" (typo preserved).
 /**
- * @brief The iPad-layout host, the settings split or detail owner, which receives the section
+ * The iPad-layout host, the settings split or detail owner, which receives the section
  * button taps so it can swap its own detail pane.
  *
  * The binary spells the protocol "Dalegate"; the typo is preserved.
  */
 @protocol SettingTopViewControllerDalegate <NSObject>
 /**
- * @brief The gameplay-settings button was tapped.
+ * The gameplay-settings button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0x14964
  */
 - (void)onGameButtonTouched:(id)sender;
 /**
- * @brief The how-to button was tapped.
+ * The how-to button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0x14a90
  */
 - (void)onHowtoButtonTouched:(id)sender;
 /**
- * @brief The customer-support button was tapped.
+ * The customer-support button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0x14ae0
  */
 - (void)onCustomerButtonTouched:(id)sender;
 /**
- * @brief The "Other" button was tapped.
+ * The "Other" button was tapped.
  * @param sender The tapped button.
  * @ghidraAddress 0x14b30
  */
@@ -56,12 +56,12 @@
 @end
 
 /**
- * @brief The settings top screen: the four section buttons.
+ * The settings top screen: the four section buttons.
  */
 @interface SettingTopViewController : UIViewController
 
 /**
- * @brief Lay out the four custom buttons over a "friman_bg" backdrop on phone, or a clear view on
+ * Lay out the four custom buttons over a "friman_bg" backdrop on phone, or a clear view on
  * iPad.
  * @return The initialised controller.
  * @ghidraAddress 0x13fe8
@@ -69,7 +69,7 @@
 - (instancetype)init;
 
 /**
- * @brief Build self and wrap it in a fresh navigation controller with a back button and nav-bar
+ * Build self and wrap it in a fresh navigation controller with a back button and nav-bar
  * art; the phone layout.
  * @return The navigation controller.
  * @ghidraAddress 0x14464
@@ -77,12 +77,12 @@
 - (UINavigationController *)initAtNavigationController __attribute__((objc_method_family(none)));
 
 /**
- * @brief Fade the screen in.
+ * Fade the screen in.
  * @ghidraAddress 0x14694
  */
 - (void)startOpenAnimation;
 /**
- * @brief Fade the screen out; this is also the back-button action.
+ * Fade the screen out; this is also the back-button action.
  * @ghidraAddress 0x147d8
  */
 - (void)startCloseAnimation;

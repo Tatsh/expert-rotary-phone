@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief The daily-quiz screen.
+ * The daily-quiz screen.
  *
  * A UITableViewController showing one question on a "blackboard" table header with a row per
  * answer choice (QuizCell). The player taps a row to answer; the reply is posted to the server,
@@ -24,7 +24,7 @@
 #import "Downloader.h" // DownloaderDelegate
 
 /**
- * @brief The daily-quiz screen.
+ * The daily-quiz screen.
  */
 @interface QuizMainViewController : UITableViewController <DownloaderDelegate>
 
