@@ -3082,11 +3082,13 @@ void AcMainTask::sugorokuDrawFriendMeet() {
 
     // Fade out (0xa5986-0xa5998), re-reading the member as the binary does rather
     // than reusing the value cached on entry. 100 is the load-time hold, which the
-    // update state machine breaks by storing 95: conditionally at 0x9a868/0x9a86e
-    // (95 when the byte at sp+0x1dc is zero, else 0) and unconditionally at
-    // 0x9efce/0x9efd0, where the same block also sets m_rankBadgeType. Neither
-    // owning RealUpdate state is lifted yet, and m_rankBadgeType is likewise read
-    // but never written, so lifting them arms both at once.
+    // update state machine breaks by storing 95. RealUpdate state 0x11 does it at
+    // 0x9a868/0x9a86e as `m_friendOpacity = tmp.friendMeetFlag ? 0 : 95`, reading
+    // the +0x50 byte of the [UserSettingData treasureTmp] record returned into
+    // sp+0x18c: a goal whose friend meet is already recorded shows nothing, a fresh
+    // one shows the portrait and fades it. The shared tail at 0x9efce/0x9efd0
+    // stores 95 unconditionally and also sets m_rankBadgeType, which is likewise
+    // read but never written, so lifting that path arms both.
     if (m_friendOpacity <= 99) {
         int v = m_friendOpacity - 5;
         m_friendOpacity = (v <= 0) ? 0 : v;
