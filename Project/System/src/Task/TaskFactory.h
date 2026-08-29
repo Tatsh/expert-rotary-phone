@@ -25,6 +25,14 @@ ne::C_TASK *BootCreateTask();
  */
 ne::C_TASK *MenuCreateTask();
 /**
+ * Create the main menu hub task for a return from song select.
+ *
+ * The same construction as MenuCreateTask() minus the info flag, so the mode-select hub does not
+ * open the once-a-day official-info web view on this path.
+ * @return The new task.
+ */
+ne::C_TASK *MenuReturnCreateTask();
+/**
  * Create the title screen task.
  * @return The new task.
  */

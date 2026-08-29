@@ -72,6 +72,7 @@ caeagl
 cancell
 caplayer
 cate
+cbnz
 ccflags
 centered
 cfstr
@@ -137,6 +138,7 @@ easytop
 easyyou
 elif
 endforeach
+eors
 errno
 esac
 esbenp
@@ -209,6 +211,7 @@ ioapi
 iphoneos
 isspace
 itms
+ittt
 ivar
 ivars
 iwyu

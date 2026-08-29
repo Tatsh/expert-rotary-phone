@@ -139,6 +139,21 @@ public:
     bool isAnimating() const;
 
     /**
+     * Read this layer's animation-completed flag and clear it.
+     *
+     * updateAndDrawAepLayers raises the flag once, on the frame a once-play reaches the end of its
+     * travel. Clearing it on read makes a poll yield exactly one true per completed animation,
+     * which is how the music-select difficulty overlay knows to hand over from its opening sweep to
+     * its idle loop. Callers that only need "is it still moving" want isAnimating() instead.
+     * @return True when the animation has completed since the last call.
+     */
+    bool takeFinished() {
+        const bool finished = m_finished;
+        m_finished = false;
+        return finished;
+    }
+
+    /**
      * Mutable access to the resolved layer length.
      *
      * The sugoroku scene builder trims two of its roulette layers by hand after resolving them.

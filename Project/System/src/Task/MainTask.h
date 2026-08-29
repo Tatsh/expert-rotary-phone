@@ -157,7 +157,10 @@ public:
         kBtnFavToggle,    /**< State 2 song grid: toggle the song's favourite flag. */
         kBtnPlay,         /**< State 4 preview: start play at the previewed difficulty. */
         kBtnFriendScore,  /**< State 4 preview: open the friend-score panel. */
-        kBtnDifficulty,   /**< State 4 preview: cycle the previewed difficulty. */
+        /** State 4 preview: the over-score badge strip, a second way into the friend-score
+            panel that is only live once the song has an over-score entry. */
+        kBtnOverScoreBadge,
+        kBtnDifficulty, /**< State 4 preview: cycle the previewed difficulty. */
     };
 
     /**
@@ -331,7 +334,10 @@ public:
     };
 
     /**
-     * The packed per-song select state (documented tail seam). 0x40 bytes.
+     * The packed per-song select state (documented tail seam).
+     *
+     * Only the members that something actually reads are declared; the seam is addressed by
+     * name, never by offset, so its size no longer has to match the binary's 0x40 bytes.
      */
     struct MusicSelState {
         uint8_t inviteOpen; /**< EX unlocked for this invite song. */
@@ -339,11 +345,10 @@ public:
          * +0x91a Preview BGM (re)load in progress; the async loadMusicPreviewBgm block clears it.
          */
         uint8_t previewBgmLoading;
-        uint8_t diffDirty;       /**< Difficulty changed; refresh the score rows. */
-        uint8_t favorite;        /**< Favourite toggle. */
-        uint8_t tutorialOffered; /**< First-play tutorial offered for the tapped cell. */
-        uint8_t scrollLatchA;    /**< List-scroll latch (difficulty toggle). */
-        uint8_t scrollLatchB;    /**< List-scroll latch (friend score). */
+        // The five bytes that followed were aliases of fields the binary keeps outside this
+        // seam, so they are gone rather than padded over: m_showLevelNumbers (+0x91c),
+        // m_diffIntroActive (+0x91d), m_tutorialBadge (+0x91e), m_recommendBadge (+0x91f) and
+        // m_scoreRefreshPending (+0x920).
         // Always exactly the three difficulties (accessed individually, never by a
         // runtime index or loop), so these are named triples rather than [3] arrays.
         /** Full-combo medals, one per difficulty. */
@@ -360,13 +365,11 @@ public:
         } perfect;
         uint8_t _pad0[3]; /**< Alignment padding. */
         unsigned musicId; /**< Current song id. */
-        // The selected difficulty lives in the real field m_resultSheet (+0x904),
-        // the three levels in m_diffLevel (+0x908), and the fade-out handoff waits
-        // on m_loaderCursor (+0xa8c) -- all outside this seam.
-        int selectSeId;    /**< Select-SE source id. */
-        int selectSeInst;  /**< Select-SE playing instance, used to stop it. */
-        int scrollConfig;  /**< Per-column scroll config. */
-        int overRowLen[3]; /**< Over-score display row lengths (unused seam field). */
+        // Everything else the select flow needs lives in a real field outside this seam: the
+        // selected difficulty in m_resultSheet (+0x904), the three levels in m_diffLevel
+        // (+0x908), the select SE in m_seId[3] / m_seInst[3] (+0x8d0 / +0x8e4), and the
+        // fade-out handoff waits on m_loaderCursor (+0xa8c). The six words that used to
+        // trail this field were never read.
     };
 
     // ---- work-area layout (offsets are binary-exact) ----
@@ -475,7 +478,16 @@ public:
     int m_loaderCursor = 0;                   /**< +0xa8c Async jacket-loader progress cursor. */
     dispatch_semaphore_t m_cellSem = nullptr; /**< +0xa90 Guards the jacket cell array. */
     int m_highlightAnim = 0;                  /**< +0xa94 Highlight pulse phase (0..0x96). */
-    __unsafe_unretained id m_overScoreDict = nullptr; /**< +0xa98 Over-score "touched" set. */
+    /**
+     * +0xa98 Over-score "touched" set.
+     *
+     * The binary owns this: UpdateInfoPanel sends it -retain before the store (0x37dbe) and
+     * StopAndSave balances that with -release (0x38312). `+[NSMutableDictionary dictionary]`
+     * hands back an autoreleased instance, so a strong reference is what models that pair --
+     * an unowned one let the pool drain it and left the per-frame badge draws chasing a
+     * dangling pointer.
+     */
+    __strong id m_overScoreDict = nil;
     int m_overScorePulse = 0; /**< +0xa9c Over-score badge pulse phase (0..0x96). */
     /** +0xaa0 Launched play / tutorial / menu sub-task. */
     ne::C_TASK *m_spawnedTask = nullptr;

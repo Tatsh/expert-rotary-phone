@@ -35,6 +35,17 @@ ne::C_TASK *MenuCreateTask() {
     return task;             // the caller sets priority 3
 }
 
+// MainTask -> back to the mode-select hub. The same operator_new(0x1b0) +
+// MenuMainTask_ctor as MenuCreateTask, but deliberately without setInfoFlag:
+// MenuMainTask_setInfoFlag (0x6d194) has exactly one caller in the image, inside
+// the boot/title handoff at 0x2c4d2, and neither of MainTask's two creation sites
+// (MainTask_update @ 0x36c48, MainTask_StopAndSave @ 0x382aa) calls it. Leaving the
+// flag at its ctor-zeroed 0 is what keeps the once-a-day official-info web view off
+// the return-from-song-select path.
+ne::C_TASK *MenuReturnCreateTask() {
+    return new MenuMainTask();
+}
+
 // MenuMainTask -> relaunch the title. Ghidra: operator_new(0x54) +
 // TitleTask_ctor.
 ne::C_TASK *TitleTaskCreate() {

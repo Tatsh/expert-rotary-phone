@@ -59,14 +59,6 @@ locked). The choice is stored through a plain `NSUserDefaults` key (`LastPickedD
 caches in memory and is flushed by the OS; the difficulty-select state writes it back whenever the
 player changes difficulty.
 
-### Jacket loader back-off
-
-**File:** `Project/System/src/Task/MainTask.mm` — the background cell-loader routine
-
-The binary sleeps before every scan of the 27-cell jacket ring, which serialises a freshly paginated
-column into roughly one jacket every half second. The patch only sleeps once a full ring scan finds
-no outstanding work, so queued jackets decode back to back and a new page fills quickly.
-
 ### Sound-settings sliders
 
 **Files:** `Project/SoundSettingView.mm` — the `RHVolumeSliderCell` hit-test cell, `wireSliderDragFix:`,

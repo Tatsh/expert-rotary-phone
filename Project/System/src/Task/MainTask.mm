@@ -92,6 +92,8 @@ inline int MainTask::widgetIndexForButton(Button button) const {
         return 0x19;
     case kBtnFriendScore:
         return 0x19;
+    case kBtnOverScoreBadge:
+        return 0x19; // the same quad as kBtnFriendScore, nudged after scaling
     case kBtnDifficulty:
         return 0x18; // difficulty-row base 0x18 + per-row stride from 0x19
     case kBtnBackToMenu:
@@ -189,6 +191,22 @@ inline bool MainTask::hitButton(int tapX, int tapY, Button button, int cellIndex
                    m_layoutRects[36]);
     }
 
+    // Over-score badge strip (state 4): the same +0xa30 quad as kBtnFriendScore,
+    // nudged after the scaling rather than before it -- 0x3673a adds 20.0, 0x3673e
+    // adds -80.0 and 0x3677e adds -60.0 to the already-scaled floats, each ahead of
+    // its own vcvt at 0x36742 / 0x36746 / 0x36782.
+    if (button == kBtnOverScoreBadge) {
+        auto nudged = [&](int v, float nudge) {
+            return static_cast<int>(((static_cast<float>(v) * scale) + nudge));
+        };
+        return neGraphics::pointInRect(tapX,
+                                       tapY,
+                                       nudged(m_layoutRects[42], 20.0f),
+                                       nudged(m_layoutRects[43], -80.0f),
+                                       nudged(m_layoutRects[44], -60.0f),
+                                       nudged(m_layoutRects[45], 0.0f));
+    }
+
     // Back to menu (state 2): a fixed top-corner rect (14, 11, 116, 64) scaled by
     // the UI scale. Ghidra: the FloatVectorMult 14.0/11.0 + DAT_368cc (64.0) /
     // DAT_368d0 (116.0) constants.
@@ -211,18 +229,20 @@ inline void MainTask::seedDiffStarLayerFrames() {
     }
 }
 
-// Re-read the three difficulty score rows for the current song (Ghidra: the
-// diffDirty fetchScoreDataForMusic loop in update state 4 @ 0x35914). Each of
-// the three difficulties is re-fetched from the local ScoreData store into the
-// previewed song's jacket-cell score rows (the same MusicSelCell::ScoreRows
-// block loadCellScoreRows fills). The destination cell is the previewed song's
-// cell-within-column, which the binary computes as m_chosenIndex % m_columnStride
-// (___modsi3(field_0x8f8, nColorGroupStride) @ 0x35914) -- not the drag touch id.
+// Re-read the three difficulty score rows for the current song (the score-refresh
+// loop in update state 4 @ 0x35914). Each of the three difficulties is re-fetched
+// from the local ScoreData store into the previewed song's jacket-cell score rows
+// (the same MusicSelCell::ScoreRows block loadCellScoreRows fills). The
+// destination is the cell-within-column (0x35e18 ___modsi3(m_chosenIndex,
+// m_columnStride)) offset by the current column's row base, which 0x35e1c reads
+// SIGNED from m_curColLatch and 0x35e2c adds in -- without it the refresh lands in
+// whichever column happens to occupy row 0.
 inline void MainTask::refreshScoreRows() {
     if (m_columnStride <= 0) {
         return;
     }
-    const int cell = m_chosenIndex % m_columnStride;
+    const int cell =
+        (m_chosenIndex % m_columnStride) + static_cast<int>(static_cast<int8_t>(m_curColLatch));
     if (cell < 0 || cell >= 27) {
         return; // no cell in preview
     }
@@ -270,8 +290,11 @@ void MainTask::update(int /*deltaMs*/) {
     bool haveTap = false;
     for (int i = 0, n = gfx.activeTouchCount(); i < n; i++) {
         const neTouchPoint *t = gfx.touchAt(i);
-        if (t->valid && !t->released) {
-            break; // a finger is still down -> do not register a tap this frame
+        if (t->valid) {
+            // 0x359b4 reads only +0x2c and 0x359b8 `cbnz` leaves the scan outright:
+            // a slot that began this frame aborts tap detection whatever its release
+            // byte says.
+            break;
         }
         if (haveTap) {
             continue;
@@ -280,12 +303,15 @@ void MainTask::update(int /*deltaMs*/) {
             int dx = t->startX - t->x, dy = t->startY - t->y;
             // The binary's raw pixel tap slop (0xb); the touch pool stores plain pixels.
             if ((dx < 0 ? -dx : dx) < 0xb && (dy < 0 ? -dy : dy) < 0xb) {
-                // The binary hit-test (update @ 0x35914) feeds neMath::pointInRect
-                // the raw integer-pixel down point (nStartX/nStartY) and scales the
-                // button rects by g_uiScale. The touch pool stores plain device
-                // pixels (touchBegan vcvt), so read them straight.
-                tapX = t->startX;
-                tapY = t->startY;
+                // The slop is measured from the down point but the point that is
+                // kept is the release point: 0x359f2 `mov.lt r0,r2` and 0x359f8
+                // `mov.lt r3,r1` move the +0xc/+0x10 pair loaded at 0x359d0/0x359d2,
+                // not the +0x4/+0x8 pair. Only the state-4 overlay buttons read
+                // these locals; state 2 hit-tests m_touchX/m_touchY instead. The
+                // touch pool stores plain device pixels (touchBegan vcvt), so read
+                // them straight and let the rects carry the UI scale.
+                tapX = t->x;
+                tapY = t->y;
                 haveTap = true;
             }
         }
@@ -296,7 +322,10 @@ void MainTask::update(int /*deltaMs*/) {
                       // list
         Setup();
         [audio setBgmVolume:[UserSettingData bgmVolume]];
-        [audio playBgm:0];
+        // Half a second of fade, not a hard cut: 0x35a90 builds the double 0.5 and
+        // 0x35aa0 passes it in the r2:r3 pair. The other three transport calls in
+        // this function do the same (0x35dd0, 0x367b4, 0x36a32).
+        [audio playBgm:0.5f];
         if (recommendListIsStale()) {
             [dl setCppDelegateRecommendList:this];
             [dl startGetRecommendListHttp];
@@ -369,32 +398,35 @@ void MainTask::update(int /*deltaMs*/) {
             break;
         }
 
-        // The list is ready and settled: only dispatch buttons on a small tap (a
-        // drag scrolls the list).
-        if (!haveTap) {
-            break;
-        }
+        // Every state-2 rect is hit-tested against the tracked drag touch's current
+        // point (+0xa78/+0xa7c), which Update() refreshed this frame -- see the nine
+        // `ldr [this,#0xa78]` / `ldr [this,#0xa7c]` pairs feeding pointInRect at
+        // 0x35cb0, 0x36874, 0x36aba, 0x36ba4, 0x36bf4, 0x36cd2, 0x36e44, 0x36f08 and
+        // 0x36f96. The tap locals belong to state 4 alone, and `haveTap` is tested
+        // nowhere between the state-2 entry (0x35ba6) and its exit (0x3700e): the
+        // release gate above plus the |m_scrollOffset| test are the whole filter, so
+        // a tap with a little vertical finger roll still counts here.
 
         // -- top row --
-        if (hitButton(tapX, tapY, kBtnSettings)) {
+        if (hitButton(m_touchX, m_touchY, kBtnSettings)) {
             m_state = kSelGotoSettings; // -> GotoSetting
             break;
         }
-        if (hitButton(tapX, tapY, kBtnSort)) {
+        if (hitButton(m_touchX, m_touchY, kBtnSort)) {
             if (AllCellsReady()) {
                 m_state = kSelGotoSort; // -> GotoSortSelect
             }
             break;
         }
-        if (hitButton(tapX, tapY, kBtnRecommend)) {
+        if (hitButton(m_touchX, m_touchY, kBtnRecommend)) {
             if (AllCellsReady()) {
                 neEngine::playSystemSe(1);
                 [RootVC() GotoRecommend:this];
-                m_sel.favorite = 0;
+                m_recommendBadge = false; // 0x36b36 strb 0,[this,#0x91f]
             }
             break;
         }
-        if (hitButton(tapX, tapY, kBtnOverScoreLog)) {
+        if (hitButton(m_touchX, m_touchY, kBtnOverScoreLog)) {
             if (AllCellsReady()) {
                 m_state = kSelGotoScoreLog; // -> GotoOverScoreLog
             }
@@ -402,16 +434,18 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // -- overlay buttons --
-        if (hitButton(tapX, tapY, kBtnBackToMenu)) {
-            m_spawnedTask = MenuCreateTask(); // back to the mode-select hub
+        if (hitButton(m_touchX, m_touchY, kBtnBackToMenu)) {
+            // 0x36c4c raises the no-save flag before building the task; StopAndSave
+            // reads the same byte at 0x3820e to skip persisting the selection.
+            m_noSaveMode = true;
+            m_spawnedTask = MenuReturnCreateTask(); // back to the mode-select hub
             neEngine::playSystemSe(2);
             m_state = kSelFadeOut;
             break;
         }
-        if (hitButton(tapX, tapY, kBtnTutorial)) {
-            if (m_sel.tutorialOffered) {
-                m_sel.selectSeInst = static_cast<int>([audio playSe:nil
-                                                         resourceId:m_sel.selectSeId]);
+        if (hitButton(m_touchX, m_touchY, kBtnTutorial)) {
+            if (m_tutorialBadge) { // 0x36d04 reads the live +0x91e byte
+                m_seInst[3] = static_cast<int>([audio playSe:nil resourceId:m_seId[3]]);
                 neAppEventCenter::shared().setGuestNoSaveMode(
                     true); // guided first play: don't save
                 // The tutorial is a bundled-demo play: set the demo-play flag so
@@ -425,11 +459,14 @@ void MainTask::update(int /*deltaMs*/) {
             }
             break;
         }
-        if (hitButton(tapX, tapY, kBtnDiffToggle)) {
-            [audio playSe:nil resourceId:m_sel.selectSeId];
-            m_sel.scrollLatchA = 1; // list-scroll latch pair
-            m_sel.scrollLatchB = 1;
-            m_sel.scrollConfig = 0;
+        if (hitButton(m_touchX, m_touchY, kBtnDiffToggle)) {
+            // 0x36e80 sources the SE from m_seId[4] and discards the instance handle
+            // (0x36e92 clobbers r0), then 0x36e94/0x36e98/0x36e9c arm the
+            // difficulty-intro sweep and re-raise the tutorial badge.
+            [audio playSe:nil resourceId:m_seId[4]];
+            m_diffIntroActive = true;
+            m_tutorialBadge = true;
+            m_diffIntroFrame = 0;
             break;
         }
 
@@ -447,7 +484,7 @@ void MainTask::update(int /*deltaMs*/) {
             cellsInColumn = (m_songCount - 1) % m_columnStride + 1;
         }
         for (int c = 0; c < cellsInColumn; c++) {
-            if (hitButton(tapX, tapY, kBtnSongCell, c)) {
+            if (hitButton(m_touchX, m_touchY, kBtnSongCell, c)) {
                 if (AllCellsReady()) {
                     m_chosenIndex = m_columnIndex * m_columnStride + c;
                     neEngine::playSystemSe(1);
@@ -455,8 +492,10 @@ void MainTask::update(int /*deltaMs*/) {
                 }
                 goto tail; // grid consumed the tap
             }
-            if (hitButton(tapX, tapY, kBtnFavToggle, c)) {
-                m_sel.favorite ^= 1;
+            if (hitButton(m_touchX, m_touchY, kBtnFavToggle, c)) {
+                // The sub-rect flips the numeric-level display, not a favourite flag
+                // (0x37076 loads +0x91c, 0x37082 eors bit 0, 0x37088 stores it back).
+                m_showLevelNumbers = !m_showLevelNumbers;
                 neEngine::playSystemSe(1);
                 goto tail;
             }
@@ -562,20 +601,28 @@ void MainTask::update(int /*deltaMs*/) {
             if (![audio isPlayingBgm]) {
                 [audio seekBgmToTop];
                 [audio setBgmVolume:1.0f];
-                [audio playBgm:0];
+                [audio playBgm:0.5f];
             }
         }
 
-        // When the preview intro finishes, cross into its looping layer.
-        AepLyrCtrl *preview = m_layers[kLayerDiffOpen].get();
-        if (preview->isAnimating() /* Ghidra: layer[0x5c] one-shot flag, consumed here */) {
+        // When the DIFFICULTY_OPEN sweep finishes, cross into the DIFFICULTY_ROOP
+        // loop. 0x35dec-0x35e04 loads the sweep layer (+0x38), reads its completion
+        // flag (+0x5c), stores 0 back over it in the same breath and only calls
+        // AepLyrCtrl_play (0x2caf8) on the loop layer (+0x40) when the flag was set,
+        // so the handover happens on exactly one frame. State 3's stop(1) arms the
+        // sweep as a once-play from frame 0, so a live sweep still reports
+        // isAnimating(); polling that instead started the loop on the first frame of
+        // this state and left the settled loop art drawn over the sweep still
+        // travelling down behind it.
+        if (m_layers[kLayerDiffOpen]->takeFinished()) {
             m_layers[kLayerDiffLoop]->play();
         }
 
-        // A pending difficulty change re-reads the three score rows.
-        if (m_sel.diffDirty) {
+        // A pending difficulty change re-reads the three score rows. 0x35e06 reads
+        // the real +0x920 byte, not a seam copy.
+        if (m_scoreRefreshPending) {
             refreshScoreRows();
-            m_sel.diffDirty = 0;
+            m_scoreRefreshPending = false;
         }
 
         // Whether this song already has an over-score (friend-score) entry.
@@ -590,7 +637,10 @@ void MainTask::update(int /*deltaMs*/) {
         // -- PLAY --
         if (hitButton(tapX, tapY, kBtnPlay)) {
             [audio popBgm];
-            m_sel.selectSeInst = static_cast<int>([audio playSe:nil resourceId:m_sel.selectSeId]);
+            // 0x365fa sources the "HERE WE GO!" voice from m_seId[3] and 0x3660a
+            // parks the instance handle in m_seInst[3], which the teardown state
+            // polls before letting the task go.
+            m_seInst[3] = static_cast<int>([audio playSe:nil resourceId:m_seId[3]]);
             // A normal song play is never a demo: clear the flag the tutorial sets
             // (PlayTask_init copies it into m_isDemoPlay every launch), so a play
             // started after the first-run tutorial loads the selected song rather
@@ -603,10 +653,18 @@ void MainTask::update(int /*deltaMs*/) {
         }
 
         // -- FRIEND SCORE / over-score --
-        if (hitButton(tapX, tapY, kBtnFriendScore)) {
+        // The panel has two entrances: the button rect, and -- only once the song
+        // has an over-score entry -- the badge strip above it. 0x36700 tests the
+        // button, 0x3670e consults hasOverScore only on a miss, 0x36796 tests the
+        // badge, and both hits converge on the one body at 0x3679c.
+        bool friendScoreHit = hitButton(tapX, tapY, kBtnFriendScore);
+        if (!friendScoreHit && hasOverScore) {
+            friendScoreHit = hitButton(tapX, tapY, kBtnOverScoreBadge);
+        }
+        if (friendScoreHit) {
             neEngine::playSystemSe(1);
-            [audio stopBgm:0];
-            m_sel.diffDirty = 1; // Ghidra 0x367d2: field_0x920 = 1 -> refetch scores on return
+            [audio stopBgm:0.5f];
+            m_scoreRefreshPending = true; // 0x367d2: +0x920 = 1 -> refetch on return
             if (hasOverScore) {
                 [overDict removeObjectForKey:idStr];
             }
@@ -657,7 +715,7 @@ void MainTask::update(int /*deltaMs*/) {
             m_layers[kLayerDiffClose]->stop(1);
             [audio popBgm];
             [audio setBgmVolume:[UserSettingData bgmVolume]];
-            [audio playBgm:0];
+            [audio playBgm:0.5f];
             neEngine::playSystemSe(2);
             m_selectedCell = -1;
             m_state = kSelSelect;
@@ -731,7 +789,10 @@ void MainTask::update(int /*deltaMs*/) {
 
     case kSelTeardown: // handoff: tear down once the select SEs finish
         if (!neEngine::isSePlaying(2)) {
-            if (m_sel.selectSeInst >= 0 && [audio isPlayingSe:0]) {
+            // 0x360a0 loads m_seInst[3] once and uses that same value for both the
+            // sign test (0x360a6) and the isPlayingSe: argument.
+            if (m_seInst[3] >= 0 &&
+                [audio isPlayingSe:static_cast<RSND_INSTANCE_ID>(m_seInst[3])]) {
                 break; // a select SE is still sounding
             }
             StopAndSave();
@@ -1062,10 +1123,6 @@ void MainTask::Setup() {
         m_seId[i] = static_cast<int>(sid); // +0x8c4
         m_seInst[i] = -1;                  // +0x8d8 idle
     }
-    // The overlay decide/kettei button (kBtnPlay) plays m_sel.selectSeId, which the
-    // prior reconstruction never set (so it played nothing). It is the "HERE WE GO!"
-    // voice = v11 = m_seId[3].
-    m_sel.selectSeId = m_seId[3];
 #ifdef ENABLE_PATCHES
     NSString *bgmPath = [AppDelegate appAssetsPath:@"bgm02_musicsel.m4a"];
 #else
@@ -1076,7 +1133,6 @@ void MainTask::Setup() {
 
     // First-play tutorial is offered until the player has cleared it once.
     m_tutorialBadge = ![UserSettingData isTutorialPlayed];
-    m_sel.tutorialOffered = m_tutorialBadge;
     m_overScoreDict = nil; // +0xa98
 }
 
@@ -1156,16 +1212,21 @@ void MainTask::Update() {
             m_scrollOffset = off;
         }
 
-        // Fling velocity (px/ms) from the oldest still-populated sample, measured
-        // in the same offset-space as m_scrollOffset (Ghidra: numerator is
-        // nStartX - aSampleX[i]) so a leftward drag yields a positive velocity.
+        // Fling velocity (px/ms) from the oldest still-populated sample. The scan
+        // seeds at index 9 (0x35020) and stops at index 1 (0x3502a `cmp r3,#1`),
+        // so the sample this frame just wrote is never its own reference point.
+        // The numerator is curX - m_dragSampleX[i] (0x3507c `subs r0,r1,r2`, r1 =
+        // +0xa78), giving a velocity that carries the finger's own sign: a
+        // rightward drag is positive. The settle integrators below accelerate that
+        // stored value further in the direction it already has, so this sign is
+        // load-bearing, not just a comparison convention.
         float velocity = 0.0f;
         {
             float dTime = 0.0f;
-            for (int i = 9; i >= 0; i--) {
+            for (int i = 9; i >= 1; i--) {
                 if (m_dragSampleTime[i] != 0) {
                     dTime = static_cast<float>((now - m_dragSampleTime[i]));
-                    velocity = static_cast<float>((m_dragSampleX[i] - curX));
+                    velocity = static_cast<float>((curX - m_dragSampleX[i]));
                     break;
                 }
             }
@@ -1181,8 +1242,9 @@ void MainTask::Update() {
                 // toward the next column -- kScrollFlingNext continues the leftward
                 // motion to -columnWidth and does columnIndex++ -- if a fast-enough
                 // fling and not already at the last column. (Binary flick state 2 @
-                // 0x351b0.)
-                if (m_columnIndex < m_columnCount - 1 && velocity > kFlingThreshold) {
+                // 0x351b0.) The velocity gate is `< -0.1` (0x350bc vcmpe against
+                // DAT_00035438, 0x350c4 bpl), because a leftward drag is negative.
+                if (m_columnIndex < m_columnCount - 1 && velocity < -kFlingThreshold) {
                     neEngine::playSystemSe(
                         4); // SysSePlayIntoSlot(...,4) — confirm SE on a real fling
                     m_scrollState = kScrollFlingNext;
@@ -1195,8 +1257,9 @@ void MainTask::Update() {
                 // from the left, so commit toward the previous column --
                 // kScrollFlingPrev continues the rightward motion to +columnWidth and
                 // does columnIndex-- -- if a fast-enough fling and not already at the
-                // first column.
-                if (m_columnIndex > 0 && velocity < -kFlingThreshold) {
+                // first column. The gate is `> 0.1` (0x350ee vcmpe against
+                // DAT_00035434 under `ittt ge`, 0x350f6 ble).
+                if (m_columnIndex > 0 && velocity > kFlingThreshold) {
                     neEngine::playSystemSe(4); // confirm SE on a real fling
                     m_scrollState = kScrollFlingPrev;
                 } else {
@@ -1628,28 +1691,17 @@ void MainTask::backgroundCellLoader() {
     }
     const int maxNameChars = m_isPadDisplay ? 21 : 15; // Ghidra: 0x15 default, 0xf when !isPad
     unsigned i = 0;
-    int idleScans = 0; // consecutive scanned cells with no work; a full ring -> idle back-off
     do {
-#ifdef ENABLE_PATCHES
-        // The binary slept 0.3s (0x3d368) before every cell scan, which serialises a
-        // freshly-paginated column into one jacket per ~0.5s -- 5-15s of "LOADING"
-        // over the large mulist catalogue. Back off only once a full 27-cell ring
-        // finds nothing to do, so queued jackets decode back-to-back while an idle
-        // loader still parks instead of busy-spinning.
-        if (idleScans >= 27) {
-            [NSThread sleepForTimeInterval:0.3];
-            idleScans = 0;
-        }
-#else
-        [NSThread sleepForTimeInterval:0.3]; // 0x3d368 == 0.3
-#endif
+        // One frame's yield per ring step, not a back-off: the double in the literal
+        // pool at 0x3d368 (loaded by 0x3d07a `vldr.64 d8,[pc,#0x2ec]` and passed in
+        // r2:r3 at 0x3d166) is 0x3f90624dd2f1a9fc == 0.016 exactly.
+        [NSThread sleepForTimeInterval:0.016];
         dispatch_semaphore_wait(m_cellSem, DISPATCH_TIME_FOREVER);
         if (i > 26) {
             i = 0; // wrap the 27-cell ring
         }
         MusicSelCell &cell = m_cells[i];
         if (cell.loadState == 1) { // queued for load
-            idleScans = 0;
             const int songIndex = cell.songIndex;
             cell.loadState = 2; // processing
             dispatch_semaphore_signal(m_cellSem);
@@ -1698,7 +1750,6 @@ void MainTask::backgroundCellLoader() {
             }
             dispatch_semaphore_signal(m_cellSem);
         } else {
-            ++idleScans;
             dispatch_semaphore_signal(m_cellSem);
         }
         i++;
@@ -1924,7 +1975,7 @@ void MainTask::UpdateHighlight() {
                         m_layoutRects[kLR_CounterY],
                         2,
                         100,
-                        0 /* default text-style seam */,
+                        0x181818, // 0x358ce/0x358e2 build it, 0x358f0 stores it at [sp,#0xc]
                         0xc);
     }
 }
@@ -1997,7 +2048,9 @@ void MainTask::StopAndSave() {
     m_cellSem = nullptr; // Ghidra: _dispatch_release (ARC releases it here)
     m_killed = true;     // reap this task on the next scheduler pass
     if (m_spawnedTask == nullptr) {
-        m_spawnedTask = MenuCreateTask(); // no sub-task queued -> back to the menu hub
+        // 0x382aa: operator new(0x1b0) + the MenuMainTask ctor, and nothing else --
+        // no setInfoFlag on this path.
+        m_spawnedTask = MenuReturnCreateTask(); // no sub-task queued -> back to the menu hub
     }
     m_spawnedTask->setPriority(3);
     m_suppressDraw = true;
@@ -2327,6 +2380,18 @@ void MainTask::AepDrawCallback(int child,
             const int8_t nextRow = static_cast<int8_t>(self->m_nextColLatch);
             drawJacketGrid(nextRow, self->m_columnIndex + 1, self->m_screenWidth);
         }
+
+        // Incoming previous column (m_prevColLatch), shifted one screen width left.
+        // 0x38dea `cmp r0,#1 / blt` gates on m_columnIndex >= 1, 0x38df0 `ldrsb`
+        // rejects an idle latch, and 0x38e5a/0x38e68 subtract m_screenWidth from the
+        // element x. Without this the covers and selection frames of a page entered
+        // from the left never draw, while the per-cell title element below still
+        // paints that column.
+        if (self->m_columnIndex >= 1) {
+            const int8_t prevRow = static_cast<int8_t>(self->m_prevColLatch);
+            drawJacketGrid(prevRow, self->m_columnIndex - 1, -self->m_screenWidth);
+        }
+        return; // 0x38fb0 / 0x3cf9c — the grid head never falls into the tail dispatch
     }
     // ===================== Tail dispatch: every element other than the
     // current-column jacket grid. This callback fires once per named scene
@@ -2500,7 +2565,7 @@ void MainTask::AepDrawCallback(int child,
                                       cy0 + self->m_layoutRects[5],
                                       1,
                                       100,
-                                      0,
+                                      0x181818, // 0x39030/0x39034, and again per column
                                       priority);
             }
             return true;
@@ -2606,6 +2671,12 @@ void MainTask::AepDrawCallback(int child,
                 const int lvl = whichLevel == 0 ? static_cast<int>([info lvNormal]) :
                                 whichLevel == 1 ? static_cast<int>([info lvHyper]) :
                                                   static_cast<int>([info lvEx]);
+                if (lvl < 1) {
+                    // 0x39f6e `it ge` / 0x39f70 `cmp.ge r11,#1` / 0x39f74 `blt` skips
+                    // the whole digit run, so a song with no chart at this difficulty
+                    // shows nothing rather than a "0".
+                    return true;
+                }
                 drawLevelDigits(lvl, cx0 + self->m_layoutRects[2], cy0, digitPriority);
             }
             return true;
