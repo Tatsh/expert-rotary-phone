@@ -121,6 +121,18 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateBoardIdle:
         stateBoardIdle(gfx);
         break;
+    case kAcMainStateRouletteScrollArm:
+        stateRouletteScrollArm();
+        break;
+    case kAcMainStateRouletteScrollWait:
+        stateRouletteScrollWait();
+        break;
+    case kAcMainStateRouletteSpin:
+        stateRouletteSpin();
+        break;
+    case kAcMainStateRouletteStop:
+        stateRouletteStop();
+        break;
     case kAcMainStateMapDrag:
         // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
         // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at
@@ -271,6 +283,39 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
     m_scrollBaseX = m_scrollX - static_cast<float>(fx);
     m_scrollBaseY = m_scrollY - static_cast<float>(fy);
 }
+
+// Indices into m_rouletteLayers, naming the kRouletteNames slots the roulette sequence drives.
+constexpr int kRouletteLayerOpen = 0;      // ROULETTE_START_OPEN
+constexpr int kRouletteLayerLoop = 1;      // ROULETTE_START_ROOP
+constexpr int kRouletteLayerOpenEvent = 2; // ROULETTE_START_OPEN_EVENT
+constexpr int kRouletteLayerLoopEvent = 3; // ROULETTE_START_ROOP_EVENT
+constexpr int kRouletteLayerEff = 4;       // ROULETTE_EFF
+
+// Indices into kRouletteSeNames, and so into m_rouletteSe / m_rouletteSeInst.
+constexpr int kRouletteSeOpen = 0;  // se11_roulapp
+constexpr int kRouletteSeStop = 2;  // se13_roulstop
+constexpr int kRouletteSePiece = 9; // se19_peace
+
+// One wheel slot is six animation frames, so a stop always lands on a multiple of six: 0x9a390
+// to 0x9a3b4 is the divide-by-six magic multiply followed by the multiply back and the +6.
+constexpr int kRouletteSlotFrames = 6;
+// The brake drops both loop layers on frame 60 and releases the board from frame 61 (0x9a422
+// cmp #0x3c, 0x9c7c0 cmp #0x3d).
+constexpr int kRouletteStopFrames = 60;
+// The step cursor cycles the seven m_stepValues slots (0x9d5e8 to 0x9d606).
+constexpr int kStepValueCount = 7;
+// A roll uses up roulette modes 0..6 and 14..15 (0x9e382 cmp #0xf, 0x9e38c the 0xc07f mask).
+constexpr int kRouletteModeMax = 15;
+constexpr unsigned kRouletteModeOneShotMask = 0xc07f;
+// The two m_boardSquareState slots the parity-gate squares latch.
+constexpr int kBoardSquareGateOdd = 2;
+constexpr int kBoardSquareGateEven = 3;
+// The two messages a parity-gate square puts up (0x9f46c and 0x9c810, copied by the fixed
+// 40-byte block at 0x9f476). As with the board-dialogue tables, the text is copyrighted game
+// content and is not carried here, so the buffer is blank and the board draws no message.
+constexpr int kBoardGateMessageBytes = 40;
+constexpr char kBoardGateMessageNeedOdd[kBoardGateMessageBytes] = {};
+constexpr char kBoardGateMessageNeedEven[kBoardGateMessageBytes] = {};
 
 // case 0 — build the select/map scene, then start the BGM if a treasure record
 // is present (subMapId @ +0x620 >= 0); otherwise take the no-treasure path.
@@ -446,6 +491,216 @@ void AcMainTask::stateBoardIdle(neGraphics &gfx) {
     // byte-identical to the state-0x10 block at 0x9a6ba, which has no such store.
     m_fadeDir = 0;
     applyDragScroll(gfx);
+}
+
+// case 5 — recentre the board on the current square, then refill the step table. The ease
+// target is the square's pixel position (tile 0x1a, +52 x / +64 y, the same bias
+// sugorokuSetupScrollBounds and loadTreasureMap use) clamped into the map's scroll box, and the
+// ease is armed at 15 px/frame with a 2 px/frame increment: case 6 adds +0x5b4 / +0x5b8 into
+// +0x5ac / +0x5b0 every frame before running sugorokuEasePositionPairA. Ghidra: the case-5 body
+// at 0x9a1d6, whose sign arms the compiler split across 0x9c77c (x negative), 0x9c788 (shared x
+// increment store), 0x9c998 (y negative) and 0x9c9a4 (shared y increment store). The current
+// node is dereferenced unguarded, as in the binary.
+void AcMainTask::stateRouletteScrollArm() {
+    const TreasureMap::Node *cur = m_curNode; // 0x9a1d6 ldr [r10,#0x4bc]
+    // 0x9a1e0 / 0x9a1e8 ldrsh x, y; 0x9a1ec / 0x9a1ee mul 0x1a; 0x9a1f4 +0x34; 0x9a202 +0x40.
+    const float targetX = static_cast<float>(cur->x * 0x1a + 0x34);
+    const float targetY = static_cast<float>(cur->y * 0x1a + 0x40);
+    // 0x9a20c / 0x9a222 clamp x into [+0x4e0, +0x4e8]; 0x9a23c / 0x9a252 clamp y into
+    // [+0x4e4, +0x4ec]; each bound is a vcmpe with an it-mi vmov.
+    m_scrollTargetX = std::min(std::max(targetX, m_clampCentreX), m_clampCentreX2); // 0x9a234
+    m_scrollTargetY = std::min(std::max(targetY, m_clampMinY), m_clampMaxY);        // 0x9a264
+
+    // Arm the ease: 15 px/frame with a 2 px/frame increment, signed toward the target. 0x9a274
+    // vcmpe s8,s4 / 0x9a27c bpl and 0x9c798 vcmpe s4,s0 / 0x9c7a0 bpl both fall through when
+    // the scroll is below the target.
+    m_scrollVelX = (m_scrollX < m_scrollTargetX) ? 15.0f : -15.0f;
+    m_scrollAccumX = (m_scrollX < m_scrollTargetX) ? 2.0f : -2.0f;
+    m_scrollVelY = (m_scrollY < m_scrollTargetY) ? 15.0f : -15.0f;
+    m_scrollAccumY = (m_scrollY < m_scrollTargetY) ? 2.0f : -2.0f;
+
+    computeStepValues();                      // FUN_000a1950 @ 0x9c9aa
+    m_state = kAcMainStateRouletteScrollWait; // 0x9c9ae movs r0,#6
+}
+
+// case 6 — run the recentring ease. While it is still moving nothing else happens; the frame it
+// lands, the roulette opens: play se11_roulapp, arm the open one-shot (the _EVENT layer while
+// treasure event 0 or 1 is active) and set the sub-tick period, which is longer -- a slower spin
+// -- for those two events. Ghidra: 0x9a290 (velocity += acceleration, then
+// sugorokuEasePositionPairA), 0x9a2d0 (SE), 0x9a2f2 / 0x9cfa0 / 0x9df84 (the event branch),
+// shared exit at 0x9df96.
+void AcMainTask::stateRouletteScrollWait() {
+    m_scrollVelX += m_scrollAccumX;    // 0x9a298..0x9a2a8
+    m_scrollVelY += m_scrollAccumY;    // 0x9a2b0..0x9a2bc
+    if (sugorokuEasePositionPairA()) { // 0x9a2c6: still moving
+        return;
+    }
+
+    // 0x9a2dc reads m_rouletteSe[0] and 0x9a2ee stores the instance to m_rouletteSeInst[0].
+    m_rouletteSeInst[kRouletteSeOpen] =
+        static_cast<int>([[AudioManager sharedManager] playSe:nil
+                                                   resourceId:m_rouletteSe[kRouletteSeOpen]]);
+
+    // stop(true) arms play-state 3 (play once from frame 0, then idle) instead of stopping:
+    // 0x2cb24 writes 3 to the play-state and seeks the play head.
+    if (m_hudState == 0) {
+        m_rouletteLayers[kRouletteLayerOpenEvent]->stop(true);
+        m_stepSubTickLen = 16;
+    } else if (m_hudState == 1) {
+        m_rouletteLayers[kRouletteLayerOpenEvent]->stop(true);
+        m_stepSubTickLen = 9;
+    } else {
+        m_rouletteLayers[kRouletteLayerOpen]->stop(true);
+        m_stepSubTickLen = 3;
+    }
+    m_state = kAcMainStateRouletteSpin;
+}
+
+// case 7 — the roulette is opening, then spinning. While either opening one-shot is still
+// running only the step tick happens; the frame an opening completes, its matching
+// ROULETTE_START_ROOP loop starts. A finger down then stops the wheel: play se13_roulstop, latch
+// the next six-frame slot boundary as the stop frame (0 when that would run past the loop's
+// end), fire ROULETTE_EFF and zero the stop timer. Ghidra: 0x9a30e (opening polls), 0x9a32e /
+// 0x9a34c (the +0x5c completion latches), 0x9a368 (the held-touch gate), 0x9a38c (slot
+// arithmetic) and 0x9a3d8 (the step tick).
+void AcMainTask::stateRouletteSpin() {
+    AepLyrCtrl *open = m_rouletteLayers[kRouletteLayerOpen].get();
+    AepLyrCtrl *openEvent = m_rouletteLayers[kRouletteLayerOpenEvent].get();
+    if (!open->isAnimating() && !openEvent->isAnimating()) {
+        if (open->takeFinished()) { // 0x9a334 ldrb/strb +0x5c
+            m_rouletteLayers[kRouletteLayerLoop]->play();
+        }
+        if (openEvent->takeFinished()) { // 0x9a350 ldrb/strb +0x5c
+            m_rouletteLayers[kRouletteLayerLoopEvent]->play();
+        }
+        if (m_frameDragging) { // 0x9a368 cmp r4,#1
+            [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeStop]];
+            AepLyrCtrl *loop = m_rouletteLayers[kRouletteLayerLoop].get();
+            const int head = static_cast<int>(loop->curFrame());
+            const int stopFrame =
+                (head / kRouletteSlotFrames) * kRouletteSlotFrames + kRouletteSlotFrames;
+            // Past the loop's last frame the wheel wraps back to slot zero.
+            m_charaLayerTargetFrame = loop->frameCount() > stopFrame ? stopFrame : 0;
+            m_rouletteLayers[kRouletteLayerEff]->stop(1);
+            m_rouletteStopTimer = 0;
+            m_state = kAcMainStateRouletteStop;
+        }
+    }
+    advanceRouletteStepTick();
+}
+
+// case 8 — the wheel is braking. Below frame 60 it keeps spinning until the play head reaches
+// the latched stop frame, on frame 60 both loop layers are dropped, and past that the board gets
+// its move back. Every arm funnels through the shared counter bump. Ghidra: 0x9a41e, 0x9c7c0,
+// 0x9f4ac.
+void AcMainTask::stateRouletteStop() {
+    if (m_rouletteStopTimer == kRouletteStopFrames) {       // 0x9a422
+        m_rouletteLayers[kRouletteLayerLoop]->reset();      // 0x9a432
+        m_rouletteLayers[kRouletteLayerLoopEvent]->reset(); // 0x9a43c
+    } else if (m_rouletteStopTimer <= kRouletteStopFrames) {
+        rouletteStopSpin(); // 0x9c7c2
+    } else {
+        rouletteStopResolve(); // 0x9c7c6
+    }
+    m_rouletteStopTimer++; // 0x9f4ac
+}
+
+// Move the roulette step cursor on: the sub-tick wraps on m_stepSubTickLen and every wrap
+// advances the seven-slot step-value cursor. Ghidra: 0x9d5cc (the same block runs in the state-7
+// tail at 0x9a3d8).
+void AcMainTask::advanceRouletteStepTick() {
+    m_stepSubTick = (m_stepSubTick + 1) % m_stepSubTickLen;
+    if (m_stepSubTick == 0) {
+        m_stepValueIndex = (m_stepValueIndex + 1) % kStepValueCount;
+    }
+}
+
+// The braking wheel (Ghidra: 0x9d5ac). The step cursor keeps ticking while a loop layer runs;
+// the roll is committed the frame the play head reaches the latched stop frame, which for a
+// wrapped (zero) stop frame means the head is back inside slot zero.
+void AcMainTask::rouletteStopSpin() {
+    AepLyrCtrl *loop = m_rouletteLayers[kRouletteLayerLoop].get();
+    AepLyrCtrl *loopEvent = m_rouletteLayers[kRouletteLayerLoopEvent].get();
+    if (!loop->isAnimating() && !loopEvent->isAnimating()) {
+        return; // 0x9d5ba / 0x9d5c8
+    }
+    advanceRouletteStepTick(); // 0x9d5cc
+
+    AepLyrCtrl *spin = loop->isAnimating() ? loop : loopEvent; // 0x9d60a..0x9d624
+    const int head = static_cast<int>(spin->curFrame());       // 0x9d628
+    const int stopFrame = m_charaLayerTargetFrame;             // 0x9d62c
+    if (stopFrame < 1) {                                       // 0x9d634 / 0x9d63a
+        // 0x9e378 is an unsigned compare against 5, so only frames 0..5 land.
+        if (static_cast<unsigned>(head) >= static_cast<unsigned>(kRouletteSlotFrames)) {
+            return;
+        }
+    } else if (stopFrame > head) {
+        return; // 0x9d63e / 0x9d640
+    }
+    commitRouletteResult(spin, stopFrame);
+}
+
+// The wheel has landed (Ghidra: 0x9e37e). Use up a one-shot roulette mode, publish the rolled
+// step value, charge the roll's treasure points, freeze the wheel on the landed frame and
+// persist all of it. The rolled value goes to the pending record's +0x00 (0x9e404), which the
+// record otherwise carries a main map id in.
+void AcMainTask::commitRouletteResult(AepLyrCtrl *spin, int stopFrame) {
+    const int mode = m_rouletteMode; // 0x9e37e
+    if ((static_cast<unsigned>(mode) <= kRouletteModeMax) &&
+        (((1u << mode) & kRouletteModeOneShotMask) != 0u)) { // 0x9e382..0x9e390
+        m_rouletteMode = -1;                                 // 0x9e394 / 0x9e398
+    }
+
+    m_bonusCount = m_stepValues[m_stepValueIndex]; // 0x9e39c..0x9e3b4
+    m_treasurePoint -= m_listBottom;               // 0x9e3b8..0x9e3c2
+
+    spin->curFrame() = static_cast<float>(stopFrame); // 0x9e3a0 / 0x9e3c8
+    spin->pause();                                    // 0x9e3d2
+
+    TreasureTmpData tmp = [UserSettingData treasureTmp];                         // 0x9e3f4
+    tmp.mainMapId = static_cast<int16_t>(m_bonusCount);                          // 0x9e404
+    tmp.rouletteMode = static_cast<int16_t>(m_rouletteMode);                     // 0x9e40e
+    [UserSettingData saveTreasureTmp:tmp];                                       // 0x9e41a
+    [UserSettingData saveTreasurePoint:static_cast<short>(m_treasurePoint)];     // 0x9e432
+    [UserSettingData addConsumedTreasurePoint:static_cast<short>(m_listBottom)]; // 0x9e44a
+}
+
+// The wheel is parked and both opening layers have gone idle (Ghidra: 0x9c7c6), so the board
+// gets its move back. The two parity-gate squares hold the player until the roll matches their
+// parity; when it does not, the square's message goes up and the roll is discarded.
+void AcMainTask::rouletteStopResolve() {
+    if (m_rouletteLayers[kRouletteLayerOpen]->isAnimating() ||
+        m_rouletteLayers[kRouletteLayerOpenEvent]->isAnimating()) {
+        return; // 0x9c7d6 / 0x9c7e6
+    }
+    m_moveLinkIndex = -1; // 0x9c7ec strb 0xff
+
+    const bool odd = (m_bonusCount & 1) != 0;                                  // 0x9c808 / 0x9edc0
+    if (m_boardSquareState[kBoardSquareGateOdd] == kBoardSquareEventPending) { // 0x9c7f0
+        if (odd) {
+            m_boardSquareState[kBoardSquareGateOdd] = kBoardSquareIdle; // 0x9edca
+            m_state = kAcMainStateBoardIdleBonus;                       // 0x9f20c
+        } else {
+            showBoardGateMessage(kBoardGateMessageNeedOdd); // 0x9f46c
+        }
+    } else if (m_boardSquareState[kBoardSquareGateEven] == kBoardSquareEventPending) { // 0x9c7fa
+        if (odd) {
+            showBoardGateMessage(kBoardGateMessageNeedEven); // 0x9c810
+        } else {
+            m_boardSquareState[kBoardSquareGateEven] = kBoardSquareIdle; // 0x9f208
+            m_state = kAcMainStateBoardIdleBonus;                        // 0x9f20c
+        }
+    } else {
+        m_state = kAcMainStateBoardIdleBonus; // 0x9c800 -> 0x9f20c
+    }
+}
+
+// Put a parity-gate square's message into the board message buffer and discard the roll
+// (Ghidra: 0x9f476, a fixed 40-byte copy).
+void AcMainTask::showBoardGateMessage(const char *message) {
+    std::memcpy(m_skillInfoBuffer, message, kBoardGateMessageBytes);
+    m_state = kAcMainStateSquareMessageOpen; // 0x9f4a0 / 0x9f4a2
+    m_bonusCount = 0;                        // 0x9f4a6 / 0x9f4a8
 }
 
 // case 0x4b — begin the exit fade-out. Reached from stateTreasureCheck when no
@@ -700,8 +955,8 @@ void AcMainTask::setupScene() {
     m_skillInfo = (__bridge void *)info;
     m_skillData = GetSkillDataStruct(static_cast<int>(info.skillId));
 
-    // Clear the 0x3c-byte selection-index scratch to -1 (Ghidra: memset +0x474).
-    std::memset(&m_selScratch[0], 0xff, 0x3c);
+    // Mark every roulette SE slot idle (Ghidra: memset +0x474).
+    std::memset(m_rouletteSeInst, 0xff, sizeof(m_rouletteSeInst));
 
     // Cache the fade-overlay quad extents + the screen scale (Ghidra:
     // FUN_0000f498 / FUN_0000f4a4 / DAT_00187b80).
@@ -1094,7 +1349,7 @@ void AcMainTask::loadTreasureMap() {
     const int bgIndex = subMapId / 10; // board number (Ghidra: local_110)
 
     // Reset the per-map play flags + counters.
-    std::memset(&m_selScratch[0], 0xff, 0x3c);
+    std::memset(m_rouletteSeInst, 0xff, sizeof(m_rouletteSeInst));
     m_skillPanelActive = false;
     m_buttonPanelActive = false;
     m_bgmActive = true;
@@ -3536,9 +3791,10 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                 draw = true;
             } else if ((bits & (1u << (i % 3 + 8))) == 0) { // collected, not yet revealed
                 frameNo = self->m_pieceRevealFrame;
-                if (self->m_rouletteSeInst < 0) {
-                    self->m_rouletteSeInst = static_cast<int>(
-                        [[AudioManager sharedManager] playSe:0 resourceId:self->m_rouletteSe[9]]);
+                if (self->m_rouletteSeInst[kRouletteSePiece] < 0) {
+                    self->m_rouletteSeInst[kRouletteSePiece] = static_cast<int>(
+                        [[AudioManager sharedManager] playSe:0
+                                                  resourceId:self->m_rouletteSe[kRouletteSePiece]]);
                 }
                 anyNew = true;
                 draw = (frameNo >= 0);
@@ -3638,9 +3894,10 @@ void AcMainTask::AcMainSugorokuDraw(int child,
                 draw = true;
             } else if ((bits & (1u << (i % 3 + 8))) == 0) {
                 frameNo = self->m_pieceRevealFrame;
-                if (self->m_rouletteSeInst < 0) {
-                    self->m_rouletteSeInst = static_cast<int>(
-                        [[AudioManager sharedManager] playSe:0 resourceId:self->m_rouletteSe[9]]);
+                if (self->m_rouletteSeInst[kRouletteSePiece] < 0) {
+                    self->m_rouletteSeInst[kRouletteSePiece] = static_cast<int>(
+                        [[AudioManager sharedManager] playSe:0
+                                                  resourceId:self->m_rouletteSe[kRouletteSePiece]]);
                 }
                 anyNew = true;
                 draw = (frameNo >= 0);

@@ -164,9 +164,30 @@ private:
     void stateTreasureCheck(); // case 2  (read the temp-treasure record, branch)
     void stateBoardReveal();   // case 3  (fade the board in, save the tmp, arm the move count)
     void stateBoardIdle(neGraphics &gfx); // case 4 (roulette intro, drag; tap routing is TODO)
-    void stateExitBegin();                // case 0x4b (start the exit fade-out)
-    void stateExitWait();                 // case 0x4c (wait for the exit fade-out to finish)
-    void stateExitToMenu();               // case 0x4d (spawn MenuMainTask, dispose this task)
+    void stateRouletteScrollArm();        // case 5 (arm the recentre ease, fill the step table)
+    void stateRouletteScrollWait();       // case 6 (run the ease, then open the roulette)
+    void stateRouletteSpin();             // case 7 (spin, and stop the wheel on a touch)
+    void stateRouletteStop();             // case 8 (brake, commit the roll, release the board)
+    /** Advance the roulette step cursor, wrapping the sub-tick on m_stepSubTickLen. */
+    void advanceRouletteStepTick();
+    /** Run the braking wheel, committing the roll once the play head reaches the stop frame. */
+    void rouletteStopSpin();
+    /**
+     * Commit a landed roll: publish the step value, charge its cost and persist the record.
+     * @param spin The loop layer the wheel landed on.
+     * @param stopFrame The latched slot boundary the play head is frozen at.
+     */
+    void commitRouletteResult(AepLyrCtrl *spin, int stopFrame);
+    /** Release the board once the wheel has parked, honouring the two parity-gate squares. */
+    void rouletteStopResolve();
+    /**
+     * Put a parity-gate square's message up and discard the roll.
+     * @param message The 40-byte message body.
+     */
+    void showBoardGateMessage(const char *message);
+    void stateExitBegin();  // case 0x4b (start the exit fade-out)
+    void stateExitWait();   // case 0x4c (wait for the exit fade-out to finish)
+    void stateExitToMenu(); // case 0x4d (spawn MenuMainTask, dispose this task)
 
     // Scene build / map load (their own reconstruction pieces).
     void setupScene();      // Ghidra: FUN_0009fc90 (build the select/map scene)
@@ -268,28 +289,31 @@ private:
     int m_musicResultFrame = {}; // +0x24c music collection-result overlay frame
     int m_wallResultFrame = {};  // +0x250 wall collection-result overlay frame
     // +0x254: 4 bytes unused padding (dropped; runtime struct, layout not preserved)
-    AcLayerRef m_iconMental[4] = {};       // ICON_MENTAL00..03 rank-badge layers + frame
-                                           // counts (binary: lyr @+0x258, frameCount @+0x268)
-    int m_animFrameCtr = {};               // +0x278 shared per-frame animation counter
-    int m_musicPeaceLyr[9] = {};           // +0x27c MUSIC_PEACE00..08 layers
-    int m_wallPeaceLyr[9] = {};            // +0x2a0 WALL_PEACE00..08 layers
-    int m_musicPeaceFrames = {};           // +0x2c4 MUSIC_PEACE frame count
-    int m_wallPeaceFrames = {};            // +0x2c8 WALL_PEACE frame count
-    int m_pieceRevealFrame = {};           // +0x2cc frame for a newly-collected piece reveal
-    int m_boardFrame[26] = {};             // +0x2d0 board frame numbers, indexed by BoardFrame
-    int m_base1Frame[11] = {};             // +0x338 11 BASE_* square frame numbers
-    int m_rouletteMoveFrame = {};          // +0x364 BT_ROULETTE_MOVE frame (pad only)
-    int m_base08Frame[10] = {};            // +0x368 10 BASE_08_* warp frames
-    int m_base05Frame[4] = {};             // +0x390 4 BASE_05_* sub-map-flag frames
-    int m_triangle0Frame[6] = {};          // +0x3a0 TRIANGLE00_* forward-arrow frames
-    int m_triangle1Frame[6] = {};          // +0x3b8 TRIANGLE01_* back-arrow frames
-    int m_boardUserNo[26] = {};            // +0x3d0 getUserNo handles, indexed by BoardElem
-    int m_rouletteSe[15] = {};             // +0x438 15 roulette SE source ids
-    uint8_t m_selScratch[36] = {};         // +0x474 selection-index scratch (memset 0xff)
-    int m_rouletteSeInst = {};             // +0x498 roulette-hit SE playing instance (-1 idle)
-    uint8_t m_selScratch2[20] = {};        // +0x49c remainder of the selection scratch
-    std::unique_ptr<TreasureMap> m_map;    // +0x4b0 loaded TreasureMap
-    const TreasureMap::Node *m_nodes = {}; // +0x4b4 map node array
+    AcLayerRef m_iconMental[4] = {}; // ICON_MENTAL00..03 rank-badge layers + frame
+                                     // counts (binary: lyr @+0x258, frameCount @+0x268)
+    int m_animFrameCtr = {};         // +0x278 shared per-frame animation counter
+    int m_musicPeaceLyr[9] = {};     // +0x27c MUSIC_PEACE00..08 layers
+    int m_wallPeaceLyr[9] = {};      // +0x2a0 WALL_PEACE00..08 layers
+    int m_musicPeaceFrames = {};     // +0x2c4 MUSIC_PEACE frame count
+    int m_wallPeaceFrames = {};      // +0x2c8 WALL_PEACE frame count
+    int m_pieceRevealFrame = {};     // +0x2cc frame for a newly-collected piece reveal
+    int m_boardFrame[26] = {};       // +0x2d0 board frame numbers, indexed by BoardFrame
+    int m_base1Frame[11] = {};       // +0x338 11 BASE_* square frame numbers
+    int m_rouletteMoveFrame = {};    // +0x364 BT_ROULETTE_MOVE frame (pad only)
+    int m_base08Frame[10] = {};      // +0x368 10 BASE_08_* warp frames
+    int m_base05Frame[4] = {};       // +0x390 4 BASE_05_* sub-map-flag frames
+    int m_triangle0Frame[6] = {};    // +0x3a0 TRIANGLE00_* forward-arrow frames
+    int m_triangle1Frame[6] = {};    // +0x3b8 TRIANGLE01_* back-arrow frames
+    int m_boardUserNo[26] = {};      // +0x3d0 getUserNo handles, indexed by BoardElem
+    int m_rouletteSe[15] = {};       // +0x438 15 roulette SE source ids
+    // +0x474 the playing-instance id for each m_rouletteSe entry, -1 while idle. This runs
+    // parallel to m_rouletteSe and is reset by a single 0x3c-byte memset to 0xff, which is what
+    // gives it away: 0x3c is 15 ints, so the region is one array rather than the three separate
+    // members it was split into. 0x9a2ea plays m_rouletteSe[0] and 0x9a2ee stores the instance
+    // straight to +0x474, pairing the two arrays index for index.
+    int m_rouletteSeInst[15] = {};
+    std::unique_ptr<TreasureMap> m_map;             // +0x4b0 loaded TreasureMap
+    const TreasureMap::Node *m_nodes = {};          // +0x4b4 map node array
     const TreasureMap::ConnectStruct *m_edges = {}; // +0x4b8 edge (ConnectStruct) array (a real
     // pointer; the 32-bit binary held it in an int slot)
     const TreasureMap::Node *m_curNode = {}; // +0x4bc current board node
