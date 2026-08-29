@@ -14,8 +14,15 @@
 
 class neTextureForiOS; // the sprite/frame-atlas object a sprite command references
 
-/** Maximum number of ordering-table entries reservable per frame (OT_REGIST_MAX). */
-constexpr int kOtRegistMax = 2047;
+/**
+ * Maximum number of ordering-table entries reservable per frame (OT_REGIST_MAX).
+ *
+ * The allocator's guard is `cmp.w r2,#0x800` with `bge` to the "m_OtCount < OT_REGIST_MAX" assert
+ * (0x10bee), so a count of 2047 is still accepted and the pool holds 2048. The layout agrees: the
+ * count field sits at ot+0x9a00c and entry N at ot+0xc+N*0x134, and 0x9a00c - 0xc is 2048 * 0x134
+ * exactly, leaving no gap between the last entry and the count.
+ */
+constexpr int kOtRegistMax = 2048;
 /** Maximum number of priority buckets the ordering table supports (OT_PRI_MAX). */
 constexpr int kOtPriMax = 50;
 
