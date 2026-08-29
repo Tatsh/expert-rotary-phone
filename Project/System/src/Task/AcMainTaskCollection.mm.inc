@@ -492,6 +492,48 @@ void AcMainTask::stateMapReloadWait() {
     m_state = kAcMainStateFadeIn;
 }
 
+// case 0x36 — play the collection-select menu's opening overlay once. Ghidra: 0x9bbae.
+void AcMainTask::stateCollectionOpen() {
+    m_panelLayers[kPanelCollectionOpen]->playOnce(); // 0x9bbb8
+    m_state = kAcMainStateCollectionOpenWait;
+}
+
+// case 0x37 — wait for that overlay, then hide the board behind it on phones. Ghidra: 0x9bbc2.
+void AcMainTask::stateCollectionOpenWait() {
+    if (m_panelLayers[kPanelCollectionOpen]->isAnimating()) {
+        return; // 0x9bbcc
+    }
+    if (!m_padDisplay) {
+        m_bgmActive = false; // 0x9bbd6..0x9bbe0
+    }
+    m_state = kAcMainStateCollectionMenu;
+}
+
+// case 0x39 — open the music-piece collection board, arming the transition dim on a pad.
+// Ghidra: 0x9bc8c.
+void AcMainTask::stateMusicPieceOpen() {
+    if (m_padDisplay) {
+        m_fadeDir = 1; // 0x9bc96..0x9bc9a
+    }
+    AepLyrCtrl *board = m_panelLayers[kPanelMusicPieceBoard].get();
+    board->playSpeed() = 1.0f; // 0x9bca2
+    board->playOnce();         // 0x9bcaa
+    m_state = kAcMainStateMusicPieceOpenWait;
+}
+
+// case 0x3a — wait for the board to finish opening, park the collection-menu layer and hand over
+// to the board's own state. Ghidra: 0x9bcb4.
+void AcMainTask::stateMusicPieceOpenWait() {
+    if (m_panelLayers[kPanelMusicPieceBoard]->isAnimating()) {
+        return; // 0x9bcbe / 0x9bcc4
+    }
+    // Panels 4 and 5 are never built on a pad, so this really can be null.
+    if (m_panelLayers[kPanelCollectionOpen]) {           // 0x9bcce
+        m_panelLayers[kPanelCollectionOpen]->stopPlay(); // 0x9bcd8
+    }
+    m_state = kAcMainStateMusicPieceView; // 0x9c184 movs 0x3b
+}
+
 // kate: hl Objective-C++; replace-tabs on; indent-width 4; tab-width 4;
 // vim: set ft=objcpp sw=4 ts=4 et :
 // code: language=Objective-C++ insertSpaces=true tabSize=4
