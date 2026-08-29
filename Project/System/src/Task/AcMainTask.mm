@@ -133,6 +133,21 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateRouletteStop:
         stateRouletteStop();
         break;
+    case kAcMainStateBoardStepAdvance:
+        stateBoardStepAdvance();
+        break;
+    case kAcMainStateSquareMessageOpen:
+        stateSquareMessageOpen();
+        break;
+    case kAcMainStateSquareMessageRead:
+        stateSquareMessageRead();
+        break;
+    case kAcMainStateSquareArrive:
+        stateSquareArrive();
+        break;
+    case kAcMainStateShowArrows:
+        stateShowArrows();
+        break;
     case kAcMainStateMapDrag:
         // Sugoroku map-drag state: the reconstructed sub-pass here is the per-frame
         // drag-scroll normalization (NEON_ACCURACY.md #13, disasm prologue at
@@ -285,16 +300,34 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
 }
 
 // Indices into m_rouletteLayers, naming the kRouletteNames slots the roulette sequence drives.
-constexpr int kRouletteLayerOpen = 0;      // ROULETTE_START_OPEN
-constexpr int kRouletteLayerLoop = 1;      // ROULETTE_START_ROOP
-constexpr int kRouletteLayerOpenEvent = 2; // ROULETTE_START_OPEN_EVENT
-constexpr int kRouletteLayerLoopEvent = 3; // ROULETTE_START_ROOP_EVENT
-constexpr int kRouletteLayerEff = 4;       // ROULETTE_EFF
+constexpr int kRouletteLayerOpen = 0;         // ROULETTE_START_OPEN
+constexpr int kRouletteLayerLoop = 1;         // ROULETTE_START_ROOP
+constexpr int kRouletteLayerOpenEvent = 2;    // ROULETTE_START_OPEN_EVENT
+constexpr int kRouletteLayerLoopEvent = 3;    // ROULETTE_START_ROOP_EVENT
+constexpr int kRouletteLayerEff = 4;          // ROULETTE_EFF
+constexpr int kRouletteLayerCommentBoard = 7; // SUGO_COMMENT_BOARD
+constexpr int kRouletteLayerSkillKouka = 16;  // EFF_SKILL_KOUKA2
 
 // Indices into kRouletteSeNames, and so into m_rouletteSe / m_rouletteSeInst.
-constexpr int kRouletteSeOpen = 0;  // se11_roulapp
-constexpr int kRouletteSeStop = 2;  // se13_roulstop
-constexpr int kRouletteSePiece = 9; // se19_peace
+constexpr int kRouletteSeOpen = 0;   // se11_roulapp
+constexpr int kRouletteSeStop = 2;   // se13_roulstop
+constexpr int kRouletteSeMove = 3;   // se14_move
+constexpr int kRouletteSeTrap = 5;   // se16_wana
+constexpr int kRouletteSeShield = 8; // se18_shield
+constexpr int kRouletteSePiece = 9;  // se19_peace
+constexpr int kRouletteSeQuiz = 14;  // se25_quiz_x
+
+// The m_boardSquareState slot a warp square checks before it will fire.
+constexpr int kWarpGateSquareSlot = 10;
+
+// The square message board parks a fixed distance from the token, picking the nearer offset once
+// the token is far enough down the transition overlay (0x9c898 vcmpe against 420.0f, then the
+// it-lt pair at 0x9c8a2 / 0x9c8a6).
+constexpr float kSquareMessageFlipThreshold = 420.0f;
+constexpr float kSquareMessageOffsetNear = 250.0f;
+constexpr float kSquareMessageOffsetFar = 524.0f;
+// The square message text sits one line above the parked board anchor (0x9a610).
+constexpr float kSquareMessageTextRise = 31.0f;
 
 // One wheel slot is six animation frames, so a stop always lands on a multiple of six: 0x9a390
 // to 0x9a3b4 is the divide-by-six magic multiply followed by the multiply back and the +6.
@@ -491,6 +524,242 @@ void AcMainTask::stateBoardIdle(neGraphics &gfx) {
     // byte-identical to the state-0x10 block at 0x9a6ba, which has no such store.
     m_fadeDir = 0;
     applyDragScroll(gfx);
+}
+
+// Park the square message board over the player token and publish the anchor the message text is
+// drawn from. Shared by case 0x0b (0x9a512) and case 0x0d (0x9c828). The board's x is simply half
+// the transition overlay; its y follows the token in scrolled board space, then takes whichever
+// of the two fixed offsets the token's distance down the overlay selects.
+void AcMainTask::sugorokuPositionSquareMessage() {
+    const int halfW = m_overlayW / 2;             // 0x9c828..0x9c83e
+    const int halfH = m_overlayH / 2;             // 0x9c854..0x9c870
+    m_squareFrameIdx = static_cast<float>(halfW); // 0x9c84c
+
+    // 0x9c868 / 0x9c884 / 0x9c888: the token's board y, less the scroll the board draw already
+    // applies, biased by half the overlay.
+    float y = (m_playerY - (m_scrollY - m_scrollBaseY)) + static_cast<float>(halfH);
+    m_squareTextY = y; // 0x9c894
+    y += ((static_cast<float>(m_overlayH) - y) < kSquareMessageFlipThreshold) ?
+             kSquareMessageOffsetNear :
+             kSquareMessageOffsetFar; // 0x9c898..0x9c8aa
+    m_squareTextY = y;                // 0x9c8ae
+
+    AepLyrCtrl *board = m_rouletteLayers[kRouletteLayerCommentBoard].get();      // 0x9c8b6
+    board->setPosition(static_cast<int>(m_squareFrameIdx), static_cast<int>(y)); // 0x9c8ba
+}
+
+// case 0x0b — open the board-square message board. Ghidra: 0x9a4f4.
+void AcMainTask::stateSquareMessageOpen() {
+    [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeQuiz]]; // 0x9a50e
+    sugorokuPositionSquareMessage();                                                    // 0x9a512
+    m_rouletteLayers[kRouletteLayerCommentBoard]->pause();                              // 0x9a5b2
+    m_rankBadgeType = 2;                                                                // 0x9a5b8
+    m_state = kAcMainStateSquareMessageRead;                                            // 0x9a5bc
+}
+
+// case 0x0c — the square message is up. The body is redrawn every frame from the staged text
+// block at +0x8c4, one line-height above the parked board anchor; a tap dismisses it.
+// Ghidra: 0x9a5c2.
+void AcMainTask::stateSquareMessageRead() {
+    drawAepTextMultiline(reinterpret_cast<const char *>(m_skillInfoBuffer),
+                         static_cast<int>(m_squareFrameIdx),
+                         static_cast<int>(m_squareTextY - kSquareMessageTextRise),
+                         1,
+                         0x1b,
+                         0x2e,
+                         0x615245,
+                         0x18,
+                         100); // 0x9a610
+    if (!m_frameTapped) {
+        return; // 0x9a618
+    }
+    neEngine::playSystemSe(2);                             // 0x9a634
+    m_rouletteLayers[kRouletteLayerCommentBoard]->reset(); // 0x9a640
+    m_state = kAcMainStateBoardReveal;
+}
+
+// case 0x0d — the token has stopped on a square. Ghidra: 0x9a648, the shared board block at
+// 0x9c828, and the ten-way arrival table at 0x9c8f2.
+void AcMainTask::stateSquareArrive() {
+    if (m_boardMoveState == 1) { // 0x9a64c
+        m_boardMoveState = 2;
+    } else if (m_boardMoveState == 3) { // 0x9c81e
+        m_boardMoveState = 0;
+    }
+
+    sugorokuPositionSquareMessage(); // 0x9c828
+
+    // 0x9c8ca: every armed square counts one frame closer to idle. The kBoardSquareEventPending
+    // marker is negative, so the tick leaves it alone.
+    for (int8_t &square : m_boardSquareState) {
+        if (square >= 1) {
+            square = static_cast<int8_t>(square - 1);
+        }
+    }
+    m_animFrameCtr = 0; // 0x9c8de
+
+    AudioManager *audio = [AudioManager sharedManager];
+    const TreasureMap::Node *node = m_curNode;
+    switch (node->type) {                 // 0x9c8f2
+    case TreasureMap::kSquarePlayerStart: // 0x9e5b0
+    case TreasureMap::kSquareWallpaperPiece:
+    case TreasureMap::kSquareMusicPiece:
+        m_rankBadgeType = 1;
+        break;
+
+    case TreasureMap::kSquareBonus: // 0x9e580
+        [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]];
+        m_rankBadgeType = (m_rouletteMode == 0x12 || m_hudState == 2) ? 0xff : 1;
+        break;
+
+    case TreasureMap::kSquareTreasure: // 0x9e5b4
+        if (m_rouletteMode == 0x12 || m_hudState == 3) {
+            [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]]; // 0x9ecec
+            m_rankBadgeType = 0xff;
+        } else {
+            [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeTrap]]; // 0x9e5c6
+            m_rankBadgeType = 2;
+        }
+        break;
+
+    case TreasureMap::kSquareSubMapFlag: // 0x9e5e6
+        sugorokuArriveSubMapFlag();
+        break;
+
+    case TreasureMap::kSquareWarp: // 0x9c90a
+    case TreasureMap::kSquareGoalLock:
+        [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]];
+        m_rankBadgeType = 0;
+        break;
+
+    case TreasureMap::kSquareBonusTreasure: { // 0x9e744
+        TreasureTmpData tmp = [UserSettingData treasureTmp];
+        if (m_goalCharaTex && tmp.friendMeetFlag == 0) {
+            m_rankBadgeType = 1;  // 0x9efca
+            m_friendOpacity = 95; // 0x9efd0
+        } else {
+            [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]];
+            m_rankBadgeType = 0xff;
+        }
+        break;
+    }
+
+    default: // 0x9ecec: the start square, a deactivated bonus, or any other kind
+        [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]];
+        m_rankBadgeType = 0xff;
+        break;
+    }
+
+    m_state = kAcMainStateSquareMessage; // 0x9ed10
+}
+
+// The sub-map-flag arrival arm (Ghidra: 0x9e5e6 with its follow-ons at 0x9ebe8 and 0x9ec22). A
+// flag square is live while either the roulette result or the treasure-event tab names it. The
+// event tab only chimes; a roulette hit consumes the result, banks a list halve for results
+// 0x14..0x17, and starts the flag layer's reveal over the token.
+void AcMainTask::sugorokuArriveSubMapFlag() {
+    AudioManager *audio = [AudioManager sharedManager];
+    const int flag =
+        static_cast<uint16_t>(getTreasureMapValue_fb54(0, m_curNode->slotId)); // 0x9e5f4
+    const int roulette = static_cast<uint16_t>(m_rouletteMode);
+    const int hud = m_hudState;
+
+    // 0x9e5fe..0x9e688 (roulette side) and 0x9e68c..0x9e718 / 0x9ebe8 (tab side).
+    const bool rouletteLive = (roulette == 0x0a && flag == 0) || (roulette == 0x0b && flag == 1) ||
+                              (roulette == 0x0c && flag == 2) || (roulette == 0x0d && flag == 3) ||
+                              (roulette == 0x13) || (roulette == 0x14 && flag == 0) ||
+                              (roulette == 0x15 && flag == 1) || (roulette == 0x16 && flag == 2) ||
+                              (roulette == 0x17 && flag == 3);
+    const bool eventLive = (hud == 6 && flag == 0) || (hud == 7 && flag == 1) ||
+                           (hud == 8 && flag == 2) || (hud == 9 && flag == 3) || (hud == 5);
+
+    if (!rouletteLive && !eventLive) {
+        [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeTrap]]; // 0x9e71c
+        m_squareAnimActive = false;                                  // 0x9e73c
+        m_rankBadgeType = 2;                                         // 0x9e740
+        return;
+    }
+    if (eventLive) {
+        [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]]; // 0x9ecec
+        m_rankBadgeType = 0xff;
+        return;
+    }
+
+    [audio playSe:nil resourceId:m_rouletteSe[kRouletteSeShield]]; // 0x9ec3e
+    if ((roulette & ~3) == 0x14) {                                 // 0x9ec4e
+        ++m_listHalveCount;
+    }
+    m_rouletteMode = -1; // 0x9ec64
+
+    const float playerX = m_playerX; // 0x9ec70
+    const float playerY = m_playerY; // 0x9ec7e
+    const float scrollX = m_scrollX; // 0x9ec8a
+    const float scrollY = m_scrollY; // 0x9ec74
+    const int halfW = m_overlayW / 2;
+    const int halfH = m_overlayH / 2;
+
+    AepLyrCtrl *flagLayer = m_rouletteLayers[kRouletteLayerSkillKouka].get();
+    flagLayer->stop(1); // 0x9ec92
+    flagLayer->setPosition(
+        static_cast<int>((playerX - scrollX) + static_cast<float>(halfW) + 52.0f),
+        static_cast<int>((playerY - scrollY) + static_cast<float>(halfH))); // 0x9ecd6
+    m_squareAnimActive = true;                                              // 0x9ecde
+    m_rankBadgeType = 1;                                                    // 0x9ece2
+}
+
+// case 0x0f — light the direction arrows the current square can leave by, then hand over to the
+// map-drag state. Unlike the other layer kicks in this task the arrows are started
+// unconditionally, without an isAnimating() guard. Ghidra: 0x9a688.
+void AcMainTask::stateShowArrows() {
+    for (int i = 0; i < 4; ++i) {
+        const TreasureMapDirection dir = static_cast<TreasureMapDirection>(i);
+        if (findAdjacentSquareIndex(m_curNode, dir) != -1) { // 0x9a69a
+            m_arrowLayers[i]->play();                        // 0x9a6aa
+        }
+    }
+    m_state = kAcMainStateMapDrag; // 0x9a6b4
+}
+
+// case 0x0a — one step of the board walk. Hold the frame until both position eases have settled,
+// remember the square if it is a junction, then step the token onto the next square and
+// decrement +0x628. The walk stops (state 0x0d) when that counter runs out or the square reached
+// is a player start, a goal lock, or a warp whose slot-10 board state is not armed; otherwise
+// the walk SE replays and state 9 starts the next step. Ghidra: 0x9a4a0, whose tail is the
+// shared block at 0x9cda0..0x9cf9c.
+void AcMainTask::stateBoardStepAdvance() {
+    // 0x9a4a2 and 0x9a4ac: both eases are stepped every frame, so neither call may be skipped;
+    // 0x9a4b0-0x9a4b4 then holds while either reports movement.
+    const bool scrollMoving = sugorokuEasePositionPairA();
+    const bool playerMoving = sugorokuEasePositionPairB();
+    if (scrollMoving || playerMoving) {
+        return; // 0x9a4b4
+    }
+
+    if (countSquareLinks(m_curNode, 0) >= 2) { // 0x9a4c4
+        m_lastBranchNodeId = m_curNode->id;    // 0x9a4d2
+    }
+
+    // 0x9a4de: past move state 1 the walk retreats along the back link. Otherwise
+    // m_moveLinkIndex picks the forward link; its -1 idle value also means the back link,
+    // because the binary indexes links[-1] and Node::links (+0x10) minus one entry is
+    // Node::backLink (+0x0c).
+    const TreasureMap::Node *next = (m_boardMoveState > 1 || m_moveLinkIndex < 0) ?
+                                        m_curNode->backLink :
+                                        m_curNode->links[m_moveLinkIndex];
+    m_curNode = next; // 0x9cda8
+
+    const bool stop = (--m_bonusCount < 1) ||                          // 0x9cdb6
+                      next->type == TreasureMap::kSquarePlayerStart || // 0x9cdbc
+                      next->type == TreasureMap::kSquareGoalLock ||    // 0x9cdc0
+                      (next->type == TreasureMap::kSquareWarp &&       // 0x9cdc4
+                       m_boardSquareState[kWarpGateSquareSlot] <= 1);  // 0x9cdd0
+    if (stop) {
+        m_state = kAcMainStateSquareArrive; // 0x9cdd4
+    } else {
+        [[AudioManager sharedManager] playSe:nil resourceId:m_rouletteSe[kRouletteSeMove]];
+        m_state = kAcMainStateBoardIdleBonus; // 0x9cf90
+    }
+    m_moveLinkIndex = -1; // 0x9cf98
 }
 
 // case 5 — recentre the board on the current square, then refill the step table. The ease

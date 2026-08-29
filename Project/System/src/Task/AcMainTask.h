@@ -168,6 +168,15 @@ private:
     void stateRouletteScrollWait();       // case 6 (run the ease, then open the roulette)
     void stateRouletteSpin();             // case 7 (spin, and stop the wheel on a touch)
     void stateRouletteStop();             // case 8 (brake, commit the roll, release the board)
+    void stateBoardStepAdvance();         // case 0x0a (one step of the board walk)
+    void stateSquareMessageOpen();        // case 0x0b (open the square message board)
+    void stateSquareMessageRead();        // case 0x0c (hold the message until a tap)
+    void stateSquareArrive();             // case 0x0d (the token settles on a square)
+    void stateShowArrows();               // case 0x0f (light the directions the square opens on)
+    /** Park the square message board over the token and publish its text anchor. */
+    void sugorokuPositionSquareMessage();
+    /** The sub-map-flag arm of the arrival routing. */
+    void sugorokuArriveSubMapFlag();
     /** Advance the roulette step cursor, wrapping the sub-tick on m_stepSubTickLen. */
     void advanceRouletteStepTick();
     /** Run the braking wheel, committing the roll once the play head reaches the stop frame. */
