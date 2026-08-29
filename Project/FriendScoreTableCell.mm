@@ -15,7 +15,7 @@
 /**
  * @brief One friend-score row, as wrapped in the NSValue passed to -setScoreData:.
  *
- * The Objective-C type-encoding is "{ScoreDataStruct=@@iBBcsB}", verified in FriendScoreMainView's
+ * The Objective-C type-encoding is `{ScoreDataStruct=@@iBBcsB}`, verified in FriendScoreMainView's
  * -tableView:cellForRowAtIndexPath:.
  */
 typedef struct {

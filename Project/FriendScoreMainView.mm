@@ -89,7 +89,7 @@
 /**
  * @brief The NSValue payload for one friend-score row, shared with FriendScoreTableCell.
  *
- * The Objective-C type-encoding is "{ScoreDataStruct=@@iBBcsB}".
+ * The Objective-C type-encoding is `{ScoreDataStruct=@@iBBcsB}`.
  */
 typedef struct {
     /** nil marks an empty slot; non-nil with a nil name marks the local player. */

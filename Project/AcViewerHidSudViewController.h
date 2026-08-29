@@ -12,6 +12,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The arcade viewer's HID-SUD option list.
+ */
 @interface AcViewerHidSudViewController : UITableViewController
 @end
 

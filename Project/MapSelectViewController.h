@@ -19,7 +19,7 @@
 /**
  * @brief One bundled sugoroku map header.
  *
- * 0x50 bytes; the Ghidra Objective-C encoding is "{MapFileHead=ss[24c][40c]s[10c]}".
+ * 0x50 bytes; the Ghidra Objective-C encoding is `{MapFileHead=ss[24c][40c]s[10c]}`.
  */
 typedef struct MapFileHead {
     int16_t mapId;       /**< +0x00 The map id. */
@@ -74,7 +74,7 @@ bool isIndexInRange12(unsigned int index);
 /**
  * @brief The NSValue payload for one visible main-map row: the elements of -mapDataArray.
  *
- * The Objective-C type-encoding is "{MainMapData=s@}". It is owned by this controller; the iPad
+ * The Objective-C type-encoding is `{MainMapData=s@}`. It is owned by this controller; the iPad
  * split-view host reads it back to label its header banner.
  */
 typedef struct MainMapData {

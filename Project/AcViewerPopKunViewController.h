@@ -12,6 +12,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The arcade viewer's POP-KUN option list.
+ */
 @interface AcViewerPopKunViewController : UITableViewController
 @end
 

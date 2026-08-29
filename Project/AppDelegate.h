@@ -220,7 +220,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 
 /**
  * @brief Read the setting-version record.
- * @return The stored version, or @c "0" when absent.
+ * @return The stored version, or `"0"` when absent.
  * @ghidraAddress 0xa044
  */
 - (NSString *)getUsersettingVer;
@@ -303,7 +303,7 @@ typedef NS_ENUM(NSInteger, DisplayType) {
 - (NSString *)localeCountry;
 
 /**
- * @brief The current locale as @c "language_country".
+ * @brief The current locale as `"language_country"`.
  * @return The locale string.
  * @ghidraAddress 0xa4a4
  */

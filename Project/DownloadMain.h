@@ -41,7 +41,7 @@ typedef NS_ENUM(NSInteger, FriendResultCode) {
 /**
  * @brief One downloadable file's metadata.
  *
- * Objective-C type-encoding "{DlFileListData=i@i}", verified in getDlFileListFinished's NSValue
+ * Objective-C type-encoding `{DlFileListData=i@i}`, verified in getDlFileListFinished's NSValue
  * wrapping.
  */
 typedef struct {
@@ -53,7 +53,7 @@ typedef struct {
 /**
  * @brief One friend's record.
  *
- * Objective-C type-encoding "{FriendListData=@@siii[3[7i]][3i][3i]}", verified in
+ * Objective-C type-encoding `{FriendListData=@@siii[3[7i]][3i][3i]}`, verified in
  * getFriendListFinished's NSValue wrapping. The two NSString * fields are retained and must be
  * released via releaseFriendList.
  */
@@ -74,7 +74,7 @@ typedef struct {
 /**
  * @brief One store "information" post.
  *
- * Objective-C type-encoding "{InformationData=i@@}", verified in newsGetFinished's NSValue
+ * Objective-C type-encoding `{InformationData=i@@}`, verified in newsGetFinished's NSValue
  * wrapping. The two NSString * fields are retained and freed via releaseInformationData.
  */
 typedef struct {
@@ -87,7 +87,7 @@ typedef struct {
 /**
  * @brief One recommended music pack.
  *
- * Objective-C type-encoding "{RecommendData=i@@@@}", verified in getRecommendListFinished's
+ * Objective-C type-encoding `{RecommendData=i@@@@}`, verified in getRecommendListFinished's
  * NSValue wrapping. The four NSString * fields are retained and freed via releaseRecommendData.
  */
 typedef struct {
@@ -101,7 +101,7 @@ typedef struct {
 /**
  * @brief One present-box entry.
  *
- * Objective-C type-encoding "{PresentData=iii@}", verified in getPresentListFinished's NSValue
+ * Objective-C type-encoding `{PresentData=iii@}`, verified in getPresentListFinished's NSValue
  * wrapping. The NSString * field is retained and freed via releasePresentList.
  */
 typedef struct {
@@ -114,7 +114,7 @@ typedef struct {
 /**
  * @brief One over-score log entry: a friend beat your score.
  *
- * Objective-C type-encoding "{OverScoreLogData=i@i@@ii}", verified in getOverScoreLogFinished's
+ * Objective-C type-encoding `{OverScoreLogData=i@i@@ii}`, verified in getOverScoreLogFinished's
  * NSValue wrapping. The three NSString * fields are retained and freed via
  * releaseOverScoreLogArray.
  */

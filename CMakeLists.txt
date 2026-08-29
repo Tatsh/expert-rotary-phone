@@ -74,6 +74,12 @@ if(BUILD_DOCS OR BUILD_DOCS_ONLY)
         "__attribute__(x)="
         "__OBJC__=1")
     set(DOXYGEN_EXCLUDE "${CMAKE_SOURCE_DIR}/Project/System/src/Util/bf_init_bytes.inc")
+    # Every `@interface Foo ()` class extension in an implementation file is otherwise indexed as
+    # a class of its own named "Foo()", beside the real Foo, as are the private categories and
+    # file-local structs. They are implementation detail, so the index carries the public API only.
+    # EXCLUDE_SYMBOLS is not the way to do this: the unescaped pattern crashes Doxygen 1.14.0 with
+    # std::out_of_range, and the escaped form excludes less.
+    set(DOXYGEN_EXTRACT_LOCAL_CLASSES NO)
     find_package(Doxygen REQUIRED)
     doxygen_add_docs(docs README.md Project ALL)
 endif()

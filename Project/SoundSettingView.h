@@ -22,6 +22,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The "Sound" sub-settings screen: the volume sliders and touch-sound picker.
+ */
 @interface SoundSettingView : UITableViewController
 
 @end

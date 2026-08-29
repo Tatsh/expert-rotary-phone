@@ -11,8 +11,9 @@
 
 #import "AcMusicData.h"
 #import "AppDelegate.h"
-#import "BFCodec.h"      // Blowfish cipher (cipherInit:/decipher:)
-#import "DownloadMain.h" // login-bonus id/count (getInstance/loginBonusId/loginCnt)
+#import "BFCodec.h"        // Blowfish cipher (cipherInit:/decipher:)
+#import "DownloadMain.h"   // login-bonus id/count (getInstance/loginBonusId/loginCnt)
+#import "LoginBonusView.h" // +getRewardMaxCnt
 #import "MusicData.h"
 #import "MusicPatch.h"
 #import "RhUtil.h"             // RhFileExists / RhParsePlistArray / RhMD5Data
@@ -20,18 +21,6 @@
 #import "StoreMusicInfo.h"     // -musicID/name/artist/itemURL/itunesURL (addPurchasedMusic:)
 #import "TreasureData+Store.h" // +isOpenMusic:inManagedObjectContext:
 #import "UserSettingData.h"    // inviteCnt / getOpenedLoginBonusId / isBemaniCollaboOpened
-
-/**
- * @brief A UI class without a project header in this reconstruction; only its +getRewardMaxCnt
- * class method is referenced from here.
- */
-@interface LoginBonusView : NSObject
-/**
- * @brief The number of login-bonus rewards on offer.
- * @return The reward count.
- */
-+ (int)getRewardMaxCnt;
-@end
 
 // Treasure/sugoroku song IDs, one per main map.
 static const int kTreasureMusicIds[9] = {

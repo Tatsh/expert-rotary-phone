@@ -17,6 +17,10 @@
 // supplies +requestSynchronousWithURL:method:parameters:cachePolicy:error:.
 #import "RewardNetworkWebAPI.h"
 
+/**
+ * @brief The Recommend feature's web-API entry point, a behaviourless RewardNetworkWebAPI
+ * subclass.
+ */
 @interface RecommendWebAPI : RewardNetworkWebAPI
 
 @end

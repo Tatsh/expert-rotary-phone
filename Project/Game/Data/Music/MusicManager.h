@@ -311,7 +311,7 @@
  * Preservation build only. The bundle install is read-only, so @c assets/mulist / @c assets/acmulist
  * are copied into Documents on first boot and Documents is the read-write store from then on.
  *
- * @param name The list file name (@c "mulist" or @c "acmulist").
+ * @param name The list file name (`"mulist"` or `"acmulist"`).
  */
 - (void)seedListFromAssets:(NSString *)name;
 
@@ -338,8 +338,8 @@
  *
  * @param purchased The mutable purchased-song list to reconcile in place.
  * @param excluded IDs a different catalogue source already contributes (never listed as purchased).
- * @param prefix The chart file-name prefix (@c "" for @c .orb, @c "ac" for @c .acv).
- * @param suffix The chart file-name suffix (@c ".orb" or @c ".acv").
+ * @param prefix The chart file-name prefix (`""` for @c .orb, `"ac"` for @c .acv).
+ * @param suffix The chart file-name suffix (`".orb"` or `".acv"`).
  * @return @c YES when an entry was pruned or discovered.
  */
 - (BOOL)reconcileList:(NSMutableArray *)purchased

@@ -8,6 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A store promotion banner row.
+ */
 @interface StorePromotionTableCell : UITableViewCell
 @end
 

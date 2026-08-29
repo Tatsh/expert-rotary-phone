@@ -20,7 +20,7 @@
  *
  * Only these fields are read by the cell. The producing controller is not part of the
  * reconstructed set, so the exact tail of the struct, if any, is unknown. The best-effort
- * Objective-C type-encoding is "{FriendRequestDataStruct=@@@s}".
+ * Objective-C type-encoding is `{FriendRequestDataStruct=@@@s}`.
  */
 typedef struct {
     /** +0x0 The requester's id, kept for the cancel request. */

@@ -16,7 +16,7 @@
 
 @class AVBus;
 
-/** Marks an AVFoundation instance in a play handle (compare neAVCAPlayer). */
+/** @brief Marks an AVFoundation instance in a play handle (compare neAVCAPlayer). */
 constexpr uint32_t kAVSePlayerHandleFlag = 0x10000000;
 
 /**

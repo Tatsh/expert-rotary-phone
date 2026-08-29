@@ -8,8 +8,8 @@
  * A framework-class category is legitimate here.
  *
  * The method list @ 0x14ab40 (entsize 12, count 3) holds the selectors -createReverseImage: @
- * 0x7bba0, type "@12@0:4c8"; -createImageHarfBlightness @ 0x7bcc4, type "@8@0:4"; and
- * -createImagefromRect: @ 0x7be1c, type "@24@0:4{CGRect=...}8". The selector spellings "Harf",
+ * 0x7bba0, type `@12@0:4c8`; -createImageHarfBlightness @ 0x7bcc4, type `@8@0:4`; and
+ * -createImagefromRect: @ 0x7be1c, type `@24@0:4{CGRect=...}8`. The selector spellings "Harf",
  * "Blightness", and "fromRect" are the original binary's.
  */
 

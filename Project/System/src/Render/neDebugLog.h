@@ -67,6 +67,9 @@ static inline void neDebugLog(const char *fmt, ...) {
 // No-op fallbacks: a bare, unguarded log call still compiles away to nothing,
 // and NE_DBG_FIRST(n) collapses an `if (...) { ... }` diagnostic block to dead
 // code that the optimiser drops.
+/**
+ * @brief Emit a diagnostic line; compiled away to nothing with RHYDBG off.
+ */
 static inline void neDebugLog(const char *, ...) {
 }
 /**

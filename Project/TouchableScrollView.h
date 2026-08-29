@@ -8,6 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A UIScrollView that lets began-touch events through to the content behind it.
+ */
 @interface TouchableScrollView : UIScrollView
 
 @end

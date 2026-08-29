@@ -14,13 +14,14 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
 
-/** A lib_rsnd source identifier returned by loadSe. */
+/** @brief A lib_rsnd source identifier returned by loadSe. */
 typedef unsigned long RSND_SOURCE_ID;
 /**
- * A lib_rsnd playing-instance identifier returned by playSe and used to stop that instance later.
+ * @brief A lib_rsnd playing-instance identifier returned by playSe and used to stop that instance
+ * later.
  */
 typedef unsigned long RSND_INSTANCE_ID;
-/** Sentinel returned in place of a valid instance identifier when an SE operation fails. */
+/** @brief Sentinel returned in place of a valid instance identifier when an SE operation fails. */
 static const RSND_INSTANCE_ID RSND_INSTANCE_ID_ERROR = (RSND_INSTANCE_ID)-1;
 
 /**

@@ -23,6 +23,9 @@
 
 #import "Downloader.h" // DownloaderDelegate
 
+/**
+ * @brief The daily-quiz screen.
+ */
 @interface QuizMainViewController : UITableViewController <DownloaderDelegate>
 
 @end

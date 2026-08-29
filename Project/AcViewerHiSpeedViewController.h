@@ -13,6 +13,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The arcade viewer's HI-SPEED option list.
+ */
 @interface AcViewerHiSpeedViewController : UITableViewController
 @end
 

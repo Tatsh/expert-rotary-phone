@@ -8,6 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A UITableView that lets began-touch events through to the content behind it.
+ */
 @interface TouchableTableView : UITableView
 
 @end

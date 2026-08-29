@@ -10,6 +10,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The screen showing the local player's own invite code.
+ */
 @interface MyInviteCodeViewController : UIViewController
 
 @end

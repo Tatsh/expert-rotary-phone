@@ -8,6 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief A display-only UITextView used for message bodies.
+ */
 @interface CustomTextView : UITextView
 @end
 

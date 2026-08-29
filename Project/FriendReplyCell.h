@@ -16,7 +16,7 @@
 /**
  * @brief One inbound request record.
  *
- * Objective-C type-encoding "{ReplyDataStruct=@@@@s[7i]}", from getFriendRequestFinished's NSValue
+ * Objective-C type-encoding `{ReplyDataStruct=@@@@s[7i]}`, from getFriendRequestFinished's NSValue
  * wrapping. The four NSString * fields are retained; the trailing int[7] is unused on this screen
  * and left zeroed.
  */

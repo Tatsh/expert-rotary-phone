@@ -14,6 +14,9 @@
 
 #import "Downloader.h" // DownloaderDelegate (friend-request POST)
 
+/**
+ * @brief The "send a friend request" screen.
+ */
 @interface FriendRequestViewController : UIViewController <UITextFieldDelegate, DownloaderDelegate>
 @end
 

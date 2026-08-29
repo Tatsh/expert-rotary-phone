@@ -8,7 +8,7 @@
  *
  * The metaclass class_ro (@ 0x1477d4), however, carries a baseMethods list (@ 0x1477c0, count 1),
  * so the class exposes one class method: +getCommonBannerBg: @ 0x64f2c, type
- * "@24@0:4{CGRect=...}8", taking a CGRect. No categories reference ViewUtility elsewhere in the
+ * `@24@0:4{CGRect=...}8`, taking a CGRect. No categories reference ViewUtility elsewhere in the
  * binary.
  */
 

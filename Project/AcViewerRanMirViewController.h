@@ -12,6 +12,9 @@
 
 #import <UIKit/UIKit.h>
 
+/**
+ * @brief The arcade viewer's RAN-MIR option list.
+ */
 @interface AcViewerRanMirViewController : UITableViewController
 @end
 
