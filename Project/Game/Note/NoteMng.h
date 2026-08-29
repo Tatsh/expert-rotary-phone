@@ -520,6 +520,18 @@ public:
     }
 
     /**
+     * Whether the chart's type-3 END record has passed the judge line (Ghidra +0x13cb4).
+     *
+     * A reconstruction seam rather than a recovered selector: the binary has no such method and
+     * PlayTask::update reads the byte directly (@ 0x2e19e) to choose between the song-end handoff
+     * and the in-play pause hold.
+     * @return true once the END record has passed.
+     */
+    bool isEndReached() const {
+        return m_endFlag;
+    }
+
+    /**
      * The one global standard-mode manager (Ghidra: DAT_00173ea4), reached through a
      * ___cxa_guard'd lazy accessor.
      *

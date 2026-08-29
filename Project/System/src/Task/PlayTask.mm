@@ -33,11 +33,6 @@
 // stays 0. Kept as the named global.
 static int16_t g_wPlayDefaultGauge = 0;
 
-// The global attract-mode flag the title's demo playback sets; PlayTask_update
-// state 6 branches on it (auto-advance in demo mode vs the pause hit-circle in
-// normal play). Defined here as the shared global (defaults false = normal play).
-bool g_bDemoPlayMode = false;
-
 // PlayTaskInit / PlayTaskGotoResult are declared in PlayTask.h (the play-scene
 // build + results-transition seams). The play-data work area is now a real
 // named-member layout (see PlayTask.h); the former pd()+reinterpret_cast
@@ -180,7 +175,8 @@ void PlayTask::updateGauge(int mode) {
 // score/best/combo gauges keyed to the beat phase, the fever gauge, the
 // gauge-overflow band and the eased scrub/gauge bar. A literal translation of
 // the decompile's arithmetic + gate order; each HUD layer is drawn at its
-// current frame through AepManager::drawLayer with the default transform. Field
+// current frame through the full AepManager::drawLayer form, because the blend
+// word, the visibility flag and the scrub-bar y offset all vary per layer. Field
 // offsets (verified against 0x303fc): +0x9c9 m_isDemoPlay, +0x9e5 m_optEffectOn,
 // +0x9e7 m_optOldHardware, +0x9ca m_isPadDisplay gate the HUD tiers; the layer
 // ids/frame counts live in the +0x154/+0x168 (m_scoreBpm*) and +0xe4/+0x11c
@@ -209,19 +205,61 @@ void PlayTask::DrawHud() {
     if (!m_isDemoPlay) { // +0x9c9
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmScoreGauge],
                       beatFrame(m_scoreBpmFrames[kScoreBpmScoreGauge]),
-                      AepTransform{.priority = 23}, // 0x17
-                      AepManager::kDrawLoop);
+                      /*x*/ 0,
+                      /*y*/ 0,
+                      /*scaleX*/ 100,
+                      /*scaleY*/ 100,
+                      /*rotation*/ 0,
+                      /*anchorX*/ 0,
+                      /*anchorY*/ 0,
+                      /*color*/ 100,
+                      /*colorHi*/ 0,
+                      AepManager::kDrawLoop,
+                      kAepBlendAdditive, // 0x3045e
+                      /*colorRGB*/ 0xffffffff,
+                      /*clipRect*/ nullptr,
+                      /*context*/ nullptr,
+                      /*priority*/ 23, // 0x17
+                      /*visFlag*/ 0);
     }
     if (m_optEffectOn) { // +0x9e5
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmBestGauge],
                       beatFrame(m_scoreBpmFrames[kScoreBpmBestGauge]),
-                      AepTransform{.priority = 23}, // 0x17
-                      AepManager::kDrawLoop);
+                      /*x*/ 0,
+                      /*y*/ 0,
+                      /*scaleX*/ 100,
+                      /*scaleY*/ 100,
+                      /*rotation*/ 0,
+                      /*anchorX*/ 0,
+                      /*anchorY*/ 0,
+                      /*color*/ 100,
+                      /*colorHi*/ 0,
+                      AepManager::kDrawLoop,
+                      kAepBlendAlphaGateBit, // 0x304b2
+                      /*colorRGB*/ 0xffffffff,
+                      /*clipRect*/ nullptr,
+                      /*context*/ nullptr,
+                      /*priority*/ 23, // 0x17
+                      /*visFlag*/ 0);
     }
     aep.drawLayer(m_scoreBpmLyr[kScoreBpmComboGauge],
                   beatFrame(m_scoreBpmFrames[kScoreBpmComboGauge]),
-                  AepTransform{.priority = 28}, // 0x1c
-                  AepManager::kDrawLoop);
+                  /*x*/ 0,
+                  /*y*/ 0,
+                  /*scaleX*/ 100,
+                  /*scaleY*/ 100,
+                  /*rotation*/ 0,
+                  /*anchorX*/ 0,
+                  /*anchorY*/ 0,
+                  /*color*/ 100,
+                  /*colorHi*/ 0,
+                  AepManager::kDrawLoop,
+                  kAepBlendAlphaGateBit, // 0x30504
+                  /*colorRGB*/ 0xffffffff,
+                  /*clipRect*/ nullptr,
+                  /*context*/ nullptr,
+                  /*priority*/ 28, // 0x1c
+                  /*visFlag*/ 0);
 
     if (!m_optEffectOn) {
         return;
@@ -236,13 +274,41 @@ void PlayTask::DrawHud() {
     if (m_score < kScoreClearThreshold) {
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmFeverLo],
                       ((m_scoreBpmFrames[kScoreBpmFeverLo] - 1) * m_score) / kScoreClearThreshold,
-                      AepTransform{.priority = 31}, // 0x1f, Ghidra 0x305b6
-                      AepManager::kDrawLoop);
+                      /*x*/ 0,
+                      /*y*/ 0,
+                      /*scaleX*/ 100,
+                      /*scaleY*/ 100,
+                      /*rotation*/ 0,
+                      /*anchorX*/ 0,
+                      /*anchorY*/ 0,
+                      /*color*/ 100,
+                      /*colorHi*/ 0,
+                      AepManager::kDrawLoop,
+                      kAepBlendAlphaGateBit, // 0x305a6
+                      /*colorRGB*/ 0x00ffffff,
+                      /*clipRect*/ nullptr,
+                      /*context*/ nullptr,
+                      /*priority*/ 31, // 0x1f, Ghidra 0x305b6
+                      /*visFlag*/ 1);  // 0x3059e
     } else {
         aep.drawLayer(m_scoreBpmLyr[kScoreBpmFeverHi],
                       beatFrame(m_scoreBpmFrames[kScoreBpmFeverHi]),
-                      AepTransform{.priority = 31}, // 0x1f, Ghidra 0x305b6
-                      AepManager::kDrawLoop);
+                      /*x*/ 0,
+                      /*y*/ 0,
+                      /*scaleX*/ 100,
+                      /*scaleY*/ 100,
+                      /*rotation*/ 0,
+                      /*anchorX*/ 0,
+                      /*anchorY*/ 0,
+                      /*color*/ 100,
+                      /*colorHi*/ 0,
+                      AepManager::kDrawLoop,
+                      kAepBlendAlphaGateBit, // 0x305a6
+                      /*colorRGB*/ 0x00ffffff,
+                      /*clipRect*/ nullptr,
+                      /*context*/ nullptr,
+                      /*priority*/ 31, // 0x1f, Ghidra 0x305b6
+                      /*visFlag*/ 1);  // 0x3059e
     }
 
     if (!m_optEffectOn) {
@@ -261,8 +327,22 @@ void PlayTask::DrawHud() {
         }
         aep.drawLayer(m_effectStateLyr[kEffectStateTwl0Start],
                       f,
-                      AepTransform{.priority = 29}, // 0x1d, Ghidra 0x30624
-                      AepManager::kDrawLoop);
+                      /*x*/ 0,
+                      /*y*/ m_pauseOriginX, // 0x30612/0x3064c: +0x978, not 0
+                      /*scaleX*/ 100,
+                      /*scaleY*/ 100,
+                      /*rotation*/ 0,
+                      /*anchorX*/ 0,
+                      /*anchorY*/ 0,
+                      /*color*/ 100,
+                      /*colorHi*/ 0,
+                      AepManager::kDrawLoop,
+                      kAepBlendAlphaGateBit, // 0x30606
+                      /*colorRGB*/ 0x00ffffff,
+                      /*clipRect*/ nullptr,
+                      /*context*/ nullptr,
+                      /*priority*/ 29, // 0x1d, Ghidra 0x30624
+                      /*visFlag*/ 1);  // 0x305fa
         if (!m_optEffectOn) {
             return;
         }
@@ -287,11 +367,109 @@ void PlayTask::DrawHud() {
     }
     aep.drawLayer(m_effectStateLyr[kEffectStateCd],
                   m_scrubBarFrame,
-                  AepTransform{.priority = 27}, // 0x1b, Ghidra 0x306d4
-                  AepManager::kDrawLoop);
+                  /*x*/ 0,
+                  /*y*/ m_pauseOriginX, // 0x306c8/0x306ec: +0x978, not 0
+                  /*scaleX*/ 100,
+                  /*scaleY*/ 100,
+                  /*rotation*/ 0,
+                  /*anchorX*/ 0,
+                  /*anchorY*/ 0,
+                  /*color*/ 100,
+                  /*colorHi*/ 0,
+                  AepManager::kDrawLoop,
+                  kAepBlendAlphaGateBit, // 0x306c2
+                  /*colorRGB*/ 0x00ffffff,
+                  /*clipRect*/ nullptr,
+                  /*context*/ nullptr,
+                  /*priority*/ 27, // 0x1b, Ghidra 0x306d4
+                  /*visFlag*/ 1);  // 0x306b6
 
     // Advance the fever-loop frame counter.
     m_cdColorFrame = (m_cdColorFrame + 1) % (m_effectStateFrames[kEffectStateCdColor] - 1);
+}
+
+// Ghidra: the state-6 body of PlayTask_update, entered at 0x2dfc8 both from the
+// state dispatch and by fallthrough from the pause menu's resume branch
+// (0x2dfb4). Drive the note engine, then judge/render, gauge, song-end.
+void PlayTask::updatePlayingState(std::span<const float> touchXY, std::span<const int> touchIds) {
+    AudioManager *audio = [AudioManager sharedManager];
+    NoteMng &nm = NoteMng::shared();
+    neGraphics &gfx = neGraphics::shared();
+
+    nm.updatePlaying(); // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
+                        // BGM drift sync
+    playJudgeUpdate(touchXY, touchIds);
+
+    // Cache the current gauge/score for the end-of-song rank SEs. Ghidra:
+    // FUN_0002ff7c.
+    m_score = PlayCurrentScore();
+
+    // Advance the fever-hi HUD frame (wraps at its length, +0x138).
+    if (m_effectStateFrames[kEffectStateBarStar1] != 0) {
+        m_barStarFrame = (m_barStarFrame + 1) % m_effectStateFrames[kEffectStateBarStar1];
+    }
+
+    // Song-end: once every note has been judged (isFinished), latch the end
+    // position and, ~1s later, fire the score-tier voice SE + the rank cascade
+    // exactly once (m_endSeFired latch, +0x9c8; skipped in the auto-demo).
+    if (!m_endSeFired && nm.isFinished()) {
+        int pos = nm.getCurrentPosition();
+        if (m_endPos == 0) {
+            m_endPos = pos;
+        }
+        if (!m_isDemoPlay && static_cast<unsigned>(pos - m_endPos) > 999) {
+            m_endSeFired = true;
+            // The score-tier voice: below 70000 the low voice (+0x3b0), else the
+            // high voice (+0x3ac).
+            const int voice = (m_score < kScoreClearThreshold) ? m_playSeIds[2] : m_playSeIds[1];
+            [audio playSe:nil resourceId:voice];
+            playEndResultSe(m_score); // the rank / clear jingle cascade
+        }
+    }
+
+    // Advance the CD-jacket HUD frame by two (wraps at its length, +0x14c).
+    {
+        int f = m_cdFrame + 2;
+        if (m_effectStateFrames[kEffectStateHitLong] <= f) {
+            f = 0;
+        }
+        m_cdFrame = f;
+    }
+
+    if (nm.isEndReached()) { // 0x2e19e/0x2e1a0: NoteMng::m_endFlag (+0x13cb4)
+        // 0x2e1a2-0x2e1c6: hand off to the fade-out once the END record has passed
+        // the judge line and 3 s have elapsed since the last note was judged.
+        if (m_endPos != 0 && static_cast<unsigned>(nm.getCurrentPosition() - m_endPos) >= 3000) {
+            m_state = kPlayStateFadeOut;
+        }
+    } else {
+        // Normal play: pause by pressing the pause hit-circle and holding ~500ms.
+        if (m_backTouchId == -1) {
+            if (!touchIds.empty()) {
+                const float scale = m_uiScale;
+                const int cx = static_cast<int>(static_cast<float>(m_pauseTapCenterX) * scale);
+                const int cy = static_cast<int>(static_cast<float>(m_pauseTapCenterY) * scale);
+                const int r = static_cast<int>(static_cast<float>(m_pauseTapRadius) * scale);
+                // 0x2e278/0x2e264 convert touchXY[0]/[1] straight back to int
+                // (vcvt.s32.f32) to match the raw floats stored in the snapshot
+                // update() collected.
+                const int tx = static_cast<int>(touchXY[0]);
+                const int ty = static_cast<int>(touchXY[1]);
+                const bool inCircle = pointInCircle(tx, ty, cx, cy, r);
+                if (inCircle) {
+                    m_backTouchId = touchIds[0];
+                    m_backTouchTime = static_cast<int>(getTimeMillis());
+                }
+            }
+        } else if (gfx.findTouchById(m_backTouchId) == nullptr) {
+            m_backTouchId = -1; // the finger lifted before the hold completed
+        } else if (static_cast<unsigned>(static_cast<int>(getTimeMillis()) - m_backTouchTime) >
+                   500) {
+            m_backTouchId = -1;
+            nm.onResignActivePushHook();   // freeze the notes
+            m_state = kPlayStatePauseMenu; // open the pause menu
+        }
+    }
 }
 
 // Ghidra: PlayTask_update (FUN_0002dc14).
@@ -334,6 +512,15 @@ void PlayTask::update(int /*deltaMs*/) {
         }
     }
 
+    // 0x2dd2c..0x2dd4a: before the state dispatch, drop any timing-SE instance the
+    // audio manager no longer reports as playing, so the next tap does not stop a
+    // handle that has already finished.
+    for (auto &inst : m_timingSeInst) {
+        if (inst != -1 && ![audio isPlayingSe:static_cast<RSND_INSTANCE_ID>(inst)]) {
+            inst = -1;
+        }
+    }
+
     switch (m_state) {
     case kPlayStateInit:
         PlayTaskInit(this); // FUN_0002e2d8: allocate the play scene
@@ -366,10 +553,11 @@ void PlayTask::update(int /*deltaMs*/) {
         if (!m_comboLayers[3]->isAnimating()) { // Ghidra: !AepLyrCtrl::IsPlaying(pAepLyrMain[3])
             nm.startClock();                    // Ghidra: NoteMng::ResetTiming (FUN_000344c4)
             m_state = kPlayStatePlaying;
-        } else {
-            nm.primePlay(); // Ghidra: NoteMng::ResetPlayback
-            playJudgeUpdate({}, {});
         }
+        // 0x2de10 falls straight through to 0x2de14, so the transition frame runs
+        // the pair too, after the clock is armed.
+        nm.primePlay();          // Ghidra: NoteMng::ResetPlayback
+        playJudgeUpdate({}, {}); // draw the field
         break;
     case kPlayStatePauseMenu: { // pause menu: hit-test resume / retry / quit, draw the menu + field
         if (backTap) {
@@ -377,9 +565,10 @@ void PlayTask::update(int /*deltaMs*/) {
             // 0x2de40 halves the pause-menu x origin (+0x978), not the UI scale.
             const int half = m_pauseOriginX / 2;
             // backTapStartY is a plain device pixel now (the touch pool stores plain
-            // pixels). Each stacked button spans [pos + half, pos + half + width]
-            // scaled by the UI scale, hit-tested against the tap's start Y. Disasm
-            // @ 0x2de50: vcvt.f32.s32(pos+half) * scale <= vcvt.f32.s32(startY).
+            // pixels). The resume and retry buttons span [pos + half, pos + half +
+            // width] scaled by the UI scale, hit-tested against the tap's start Y.
+            // Disasm @ 0x2de50: vcvt.f32.s32(pos+half) * scale <=
+            // vcvt.f32.s32(startY).
             const float tapY = static_cast<float>(backTapStartY);
             const auto inBand = [&](int pos) -> bool {
                 const float lo = static_cast<float>(pos + half) * scale;
@@ -388,7 +577,12 @@ void PlayTask::update(int /*deltaMs*/) {
             };
             if (inBand(m_pauseBtnResumeX)) { // resume: unpause and resume play
                 nm.togglePause();            // Ghidra: NoteMng::TogglePause
-                m_state = kPlayStatePlaying; // the decompile re-enters state 6 at once
+                m_state = kPlayStatePlaying;
+                // 0x2dfb4 falls straight into the state-6 handler at 0x2dfc8, so the
+                // resume frame also runs the note engine and the judge pass over the
+                // live touch snapshot. It skips the pause overlay below (0x2de88
+                // branches past 0x2df00).
+                updatePlayingState(touchXY, {touchIds, touchCount});
                 break;
             }
             if (inBand(m_pauseBtnRetryX)) { // retry: fade out and rebuild the play
@@ -396,7 +590,12 @@ void PlayTask::update(int /*deltaMs*/) {
                 m_state = kPlayStateRetry;
                 break;
             }
-            if (inBand(m_pauseBtnQuitX)) { // quit: stop audio and go to results
+            // Unlike the two bands above, 0x2ded6 multiplies first, then
+            // 0x2dee8/0x2deec/0x2def0 load, convert and add the button width
+            // unscaled.
+            const float quitLo = static_cast<float>(m_pauseBtnQuitX + half) * scale;
+            const float quitHi = quitLo + static_cast<float>(m_pauseBtnWidth);
+            if (quitLo <= tapY && tapY <= quitHi) { // quit: stop audio and go to results
                 m_state = kPlayStateQuit;
                 break;
             }
@@ -430,89 +629,9 @@ void PlayTask::update(int /*deltaMs*/) {
         playJudgeUpdate({}, {});
         break;
     }
-    case kPlayStatePlaying: { // *** PLAYING ***: drive the note engine, then judge/render, gauge,
-                              // song-end
-        nm.updatePlaying();   // Ghidra: FUN_00033fc0 — spawn/judge/retire/scroll +
-                              // BGM drift sync
-        playJudgeUpdate(touchXY, {touchIds, touchCount});
-
-        // Cache the current gauge/score for the end-of-song rank SEs. Ghidra:
-        // FUN_0002ff7c.
-        m_score = PlayCurrentScore();
-
-        // Advance the fever-hi HUD frame (wraps at its length, +0x138).
-        if (m_effectStateFrames[kEffectStateBarStar1] != 0) {
-            m_barStarFrame = (m_barStarFrame + 1) % m_effectStateFrames[kEffectStateBarStar1];
-        }
-
-        // Song-end: once every note has been judged (isFinished), latch the end
-        // position and, ~1s later, fire the score-tier voice SE + the rank cascade
-        // exactly once (m_endSeFired latch, +0x9c8; skipped in the auto-demo).
-        if (!m_endSeFired && nm.isFinished()) {
-            int pos = nm.getCurrentPosition();
-            if (m_endPos == 0) {
-                m_endPos = pos;
-            }
-            if (!m_isDemoPlay && static_cast<unsigned>(pos - m_endPos) > 999) {
-                m_endSeFired = true;
-                // The score-tier voice: below 70000 the low voice (+0x3b0), else the
-                // high voice (+0x3ac).
-                const int voice =
-                    (m_score < kScoreClearThreshold) ? m_playSeIds[2] : m_playSeIds[1];
-                [audio playSe:nil resourceId:voice];
-                playEndResultSe(m_score); // the rank / clear jingle cascade
-            }
-        }
-
-        // Advance the CD-jacket HUD frame by two (wraps at its length, +0x14c).
-        {
-            int f = m_cdFrame + 2;
-            if (m_effectStateFrames[kEffectStateHitLong] <= f) {
-                f = 0;
-            }
-            m_cdFrame = f;
-        }
-
-        if (!g_bDemoPlayMode) {
-            // Normal play: pause by pressing the pause hit-circle and holding ~500ms.
-            if (m_backTouchId == -1) {
-                if (touchCount > 0) {
-                    const float scale = m_uiScale;
-                    const int cx = static_cast<int>(static_cast<float>(m_pauseTapCenterX) * scale);
-                    const int cy = static_cast<int>(static_cast<float>(m_pauseTapCenterY) * scale);
-                    const int r = static_cast<int>(static_cast<float>(m_pauseTapRadius) * scale);
-                    // 0x2e278/0x2e264 convert touchXY[0]/[1] straight back to int
-                    // (vcvt.s32.f32) to match the raw floats stored in the snapshot
-                    // above.
-                    const int tx = static_cast<int>(touchXY[0]);
-                    const int ty = static_cast<int>(touchXY[1]);
-                    const bool inCircle = pointInCircle(tx, ty, cx, cy, r);
-                    if (inCircle) {
-                        m_backTouchId = touchIds[0];
-                        m_backTouchTime = static_cast<int>(getTimeMillis());
-                    }
-                }
-            } else if (gfx.findTouchById(m_backTouchId) == nullptr) {
-                m_backTouchId = -1; // the finger lifted before the hold completed
-            } else if (static_cast<unsigned>(static_cast<int>(getTimeMillis()) - m_backTouchTime) >
-                       500) {
-                m_backTouchId = -1;
-                nm.onResignActivePushHook();   // freeze the notes
-                m_state = kPlayStatePauseMenu; // open the pause menu
-            }
-            // Fall through to the song-end handoff below; the pause block does not
-            // exit state 6 on its own (Ghidra: no branch to the tail here).
-        }
-
-        // Song-end handoff to the fade-out ~3s after the last note passes. Ghidra
-        // 0x2e196 gates this on NoteMng::m_endFlag (+0x13cb4), NOT the demo flag, so
-        // it runs for normal play too -- the reconstruction had it inside the
-        // demo-only branch behind a break, so a finished normal play never advanced.
-        if (m_endPos != 0 && static_cast<unsigned>(nm.getCurrentPosition() - m_endPos) >= 3000) {
-            m_state = kPlayStateFadeOut;
-        }
+    case kPlayStatePlaying: // *** PLAYING ***
+        updatePlayingState(touchXY, {touchIds, touchCount});
         break;
-    }
     case kPlayStateQuit: // quit: stop all audio, latch the stopped flag, and fall through to the
         // fade-out. 0x2df7a stores 1 to m_stopped (+0x9e8) after stopAll.
         [audio stopAll];

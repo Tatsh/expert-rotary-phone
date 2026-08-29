@@ -217,6 +217,17 @@ void AcMainTask::applyDragScroll(neGraphics &gfx) {
     }
     const neTouchPoint *t = gfx.findTouchById(m_dragAnchorId);
     if (!t) {
+        // The anchor's finger is gone, so fold the committed base back into the
+        // scroll, clear the rubber-band bank, and drop the anchor so the next drag
+        // can latch. Ghidra: 0x9e1e6 (state-0x10 copy 0x9d648), where 0x9e21a
+        // zeroes +0x514..+0x520 with one NEON store and 0x9e21e writes -1.
+        m_scrollX -= m_scrollBaseX;
+        m_scrollY -= m_scrollBaseY;
+        m_scrollBaseX = 0.0f;
+        m_scrollBaseY = 0.0f;
+        m_scrollRubberX = 0.0f;
+        m_scrollRubberY = 0.0f;
+        m_dragAnchorId = -1;
         return;
     }
 
@@ -428,8 +439,12 @@ void AcMainTask::stateBoardIdle(neGraphics &gfx) {
         return;
     }
 
-    // Otherwise run the per-frame drag / rubber-band scroll normalisation. Ghidra:
-    // 0x9cb50 (byte-identical to the state-0x10 block at 0x9a6ba).
+    // Otherwise clear the fade direction and run the per-frame drag / rubber-band
+    // scroll normalisation. Ghidra: 0x9cb50 movs r0,#0 / 0x9cb52 strb.w
+    // r0,[r10,#0x5fa], so the transition dim ramps back out on every idle frame
+    // that is not the intro one-shot; the drag block that follows is
+    // byte-identical to the state-0x10 block at 0x9a6ba, which has no such store.
+    m_fadeDir = 0;
     applyDragScroll(gfx);
 }
 
@@ -677,7 +692,10 @@ void AcMainTask::setupScene() {
 
     // Resolve the active character's skill record (Ghidra:
     // availableInfoForCharaId, then GetSkillDataStruct on its skillId).
-    const short charaId = [UserSettingData charaId];
+    short charaId = [UserSettingData charaId];
+    if (charaId < 0) { // Ghidra: 0x9fe5a cmp r4,#0 / 0x9fe62 it lt / 0x9fe64 mov.lt r4,#0
+        charaId = 0;
+    }
     CharaInfo *info = gCharaManager.availableInfoForCharaId(charaId);
     m_skillInfo = (__bridge void *)info;
     m_skillData = GetSkillDataStruct(static_cast<int>(info.skillId));
@@ -831,7 +849,7 @@ void AcMainTask::setupScene() {
 
     setupResolveHandles();
     setupBuildOverlays();
-    setupLoadTextures();
+    setupLoadTextures(charaId);
 
     // Prime the mode-select BGM (Ghidra: appAppSupportDirectory +
     // bgm01_modesel.m4a).
@@ -972,7 +990,7 @@ void AcMainTask::setupBuildOverlays() {
 // stringWithFormat regeneration below yields the identical names). Store offsets
 // (+0xd4/+0xe4/+0xdc/+0xfc/+0x124/+0x14c/+0x1ec), the per-iteration digit order,
 // and the "event_0_%03d@2x" ×12 loop were byte-verified against disassembly.
-void AcMainTask::setupLoadTextures() {
+void AcMainTask::setupLoadTextures(short charaId) {
     NSBundle *bundle = [NSBundle mainBundle];
 
     // circle / blind_circle -> +0xd4 / +0xe4.
@@ -985,8 +1003,8 @@ void AcMainTask::setupLoadTextures() {
     // The active character's board sprite from the downloadable support dir ->
     // +0xdc.
     m_charaTex = std::make_unique<neTextureForiOS>();
-    NSString *charaFile = [NSString
-        stringWithFormat:@"sugo_chara%03d.png", static_cast<int>([UserSettingData charaId])];
+    NSString *charaFile =
+        [NSString stringWithFormat:@"sugo_chara%03d.png", static_cast<int>(charaId)];
 #ifdef ENABLE_PATCHES
     NSString *charaPath = [AppDelegate appAssetsPath:charaFile];
 #else
@@ -1147,8 +1165,9 @@ void AcMainTask::loadTreasureMap() {
     m_edges = map->edges();
 
     // Choose the current board position: the pending record's node id, or the
-    // map's start node when it is out of range (id <= 0 or >= node count).
-    if (tmp.curSubMapId <= 0 || tmp.curSubMapId >= nodeCount) {
+    // map's start node when it is out of range (id < 0 or >= node count). Ghidra:
+    // 0xa0e70 cmp #0 gates a four-instruction GE block at 0xa0e72, so id 0 is kept.
+    if (tmp.curSubMapId < 0 || tmp.curSubMapId >= nodeCount) {
         tmp.curSubMapId = map->startSubId();
     }
 
@@ -1630,66 +1649,22 @@ void AcMainTask::sugorokuReleaseGoalLayer() {
 // they belong here, operating on AcMainTask *.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-#include <cmath>  // cosf, sinf, M_PI
+#include <cmath>  // cosf, sinf, M_PI, M_PI_2
 #include <cstdio> // snprintf
 
 #import "TreasureTmpData.h"
 
 namespace {
 
-// ── sprite draw helper
-// ──────────────────────────────────────────────────────── Reorders Ghidra
-// call-site arg order  (u,v,w,h,x,y,sx,sy,ex,ey,extra,color,
-// rotation,blend0,colorMul,blend1,priority) into neSpriteDrawParams field order
-// (u,v,x,y,sx,sy,w,h,ex,ey,color,rotation,blend0,blend1,colorMul,extra,
-// clip,priority).
-void drawSprite(AepManager *mgr,
-                neTextureForiOS *tex,
-                int u,
-                int v,
-                int w,
-                int h,
-                int x,
-                int y,
-                int sx,
-                int sy,
-                int ex,
-                int ey,
-                int extra,
-                int color,
-                int rotation,
-                int blend0,
-                int colorMul,
-                int blend1,
-                int priority) {
-    neSpriteDrawParams p;
-    p.u = u;
-    p.v = v;
-    p.w = w;
-    p.h = h;
-    p.x = x;
-    p.y = y;
-    p.sx = sx;
-    p.sy = sy;
-    p.ex = ex;
-    p.ey = ey;
-    p.extra = extra;
-    p.color = static_cast<uint32_t>(color);
-    p.rotation = rotation;
-    p.blend0 = static_cast<short>(blend0);
-    p.colorMul = static_cast<uint32_t>(colorMul);
-    p.blend1 = static_cast<short>(blend1);
-    p.clip = nullptr;
-    p.priority = priority;
-    tex->draw(mgr->orderingTable(), p);
-}
-
 // ── cross-file helpers (TODO: promote to their own .h/.mm when decompiled) ───
 
-// Ghidra: FUN_??? — 2-D AABB overlap cull used by sugorokuDrawBoard.
-// Tests whether node box [x0..extX] × [y0..y1] overlaps camera rect
-// [camL..camR] × [camT..camH].  The call site passes x0 twice (NEON artefact);
-// only x0, extX, y0 and y1 carry real information.
+// Ghidra: isWithinRange2D @ 0x2d9dc — 2-D AABB overlap cull used by
+// sugorokuDrawBoard. Tests whether node box [x0..extX] × [y0..y1] overlaps
+// camera rect [camL..camR] × [camT..camH]. The binary's four bounds arrive in
+// r0-r3 as distinct floats; the duplicated second argument is this
+// reconstruction's own padding, so only x0, extX, y0 and y1 are read. Every
+// comparison is inclusive (0x2d9e6 / 0x2d9f8 / 0x2da0a / 0x2da20), which decides
+// the exactly-aligned camera edge that the tight connector band produces.
 bool isWithinRange2D(float x0,
                      float /*x1*/,
                      float extX,
@@ -1699,7 +1674,7 @@ bool isWithinRange2D(float x0,
                      float camT,
                      float camR,
                      float camH) {
-    return x0 < camR && extX > camL && y0 < camH && y1 > camT;
+    return x0 <= camR && extX >= camL && y0 <= camH && y1 >= camT;
 }
 
 // Ghidra: FUN_000a2... — maps a sugoroku square id to its wall-nail texture
@@ -1750,8 +1725,8 @@ short findTreasureMapIndexById(int id) {
 // FUN_000a14a0 takes the touch point as its second parameter (r1, stored @
 // sp+0x44) and performs a single tap-distance test on raw coordinates (0xa1674:
 // x@+0xc, startX@+0x4; `subs; abs; cmp #0xa; bgt` reject when > 10 px), not the
-// internal `activeTouchCount()`/`touchAt(i)` loop below. The AEP draw, DrawText
-// labels, button geometry (iVar7-0xbb/iVar10-0xbc and iVar7+0x3f) and the 0/1/-1
+// internal `activeTouchCount()`/`touchAt(i)` loop below. The DrawText labels,
+// button geometry (iVar7-0xbb/iVar10-0xbc and iVar7+0x3f) and the 0/1/-1
 // returns were all verified faithful; the touch coords are plain pixels
 // (0xa16c0 feeds x@+0xc / y@+0x10 straight to pointInRect, no shift).
 int AcMainTask::sugorokuDrawSkillPanel() {
@@ -1767,8 +1742,26 @@ int AcMainTask::sugorokuDrawSkillPanel() {
     int iVar7 = static_cast<int>(m_playerX - scrollOffX + static_cast<float>(halfW));
     int iVar10 = static_cast<int>(m_playerY - scrollOffY + static_cast<float>(halfH));
 
-    // Draw skill panel AEP art (FUN_000a14a0 step).
-    drawAepFrame(mgr, m_skillBoard[0].lyr, iVar7 + 52, iVar10 - 300, 0x20, 0x22);
+    // Draw the skill panel as a layer tree, not a flat sprite: 0xa15a6 calls
+    // AepManager::drawLayer (0xfd64), not the 6-argument drawAepFrame (0xfc58).
+    mgr->drawLayer(m_skillBoard[0].lyr,
+                   0,
+                   iVar7 + 52,
+                   iVar10 - 300,
+                   100,
+                   100,
+                   0,
+                   254, // anchorX  (0xa1554 movs r3,#0xfe)
+                   0,
+                   100,
+                   0,
+                   1, // loopFlags (0xa156c)
+                   0x20,
+                   0x00ffffff, // colorRGB (0xa1542)
+                   nullptr,
+                   nullptr,
+                   0x14, // priority (0xa153e)
+                   1);
 
     // Skill name label (from the active character's skill record).
     __unsafe_unretained id skillObj = (__bridge id)m_skillInfo;
@@ -1789,9 +1782,11 @@ int AcMainTask::sugorokuDrawSkillPanel() {
                 [skillText UTF8String], 0x14, iVar7 + 52, iVar10 - 0xed, 1, 100, 0x59514f, 0x13);
         }
 
+        // The format string is the 39-byte constant at 0x10a7f4 and the binary's
+        // destination is the 64-byte frame slot at sp+0x4c (0xa1634).
         const int pts = m_skillData->weight;
-        char ptsBuf[16];
-        snprintf(ptsBuf, sizeof(ptsBuf), "%d pt", pts);
+        char ptsBuf[64];
+        snprintf(ptsBuf, sizeof(ptsBuf), u8"トレジャーポイント %d pt消費", pts);
         mgr->DrawText(ptsBuf, 0x12, iVar7 + 52, iVar10 - 0xca, 1, 100, 0xe10000, 0x13);
     }
 
@@ -1844,16 +1839,16 @@ int AcMainTask::sugorokuDrawSkillPanel() {
 // 2.  sugorokuDrawButtonHitTest — Ghidra: FUN_000a178c
 // ════════════════════════════════════════════════════════════════════════════
 // Draw a generic two-button dialog panel (layerId @ +0x220, layout data @
-// +0x990..+0x9b4) and return: 1 = button 1 hit, -1 = button 2 hit, 0 = miss.
+// +0x990..+0x9b4) and return: 1 = button 1 hit, 0 = button 2 hit, -1 = miss or
+// no valid touch.
 //
 // touch handling deviates from the disassembly, as with
 // sugorokuDrawSkillPanel. Ghidra FUN_000a178c takes the touch point as its
 // second parameter (r1, tested @ 0xa1810 on raw coords: `subs; abs; cmp #0xa;
 // bgt` reject when > 10 px, returning -1) rather than looping over
-// `activeTouchCount()`/`touchAt(i)`. The panel draw (drawLayer at overlayW/2,
-// overlayH/2 - panelH/2, frame = panelW/2) and both button hit-rects
-// (m_dlgBtn1*/m_dlgBtn2* @ +0x998..+0x9b4) were verified faithful; the touch
-// coords are plain pixels (0xa1830 uses x@+0xc / y@+0x10 unshifted).
+// `activeTouchCount()`/`touchAt(i)`. Both button hit-rects (m_dlgBtn1*/
+// m_dlgBtn2* @ +0x998..+0x9b4) were verified faithful; the touch coords are
+// plain pixels (0xa1830 uses x@+0xc / y@+0x10 unshifted).
 int AcMainTask::sugorokuDrawButtonHitTest() {
     AepManager *mgr = m_aep;
     const neGraphics &gfx = neGraphics::shared();
@@ -1864,24 +1859,24 @@ int AcMainTask::sugorokuDrawButtonHitTest() {
     int iVar5 = m_overlayW / 2;              // half-screen width
     int iVar6 = m_overlayH / 2 - panelH / 2; // panel top Y
 
-    // Draw panel: AEP layer handle @ +0x220, frame = panelW/2.
+    // Draw panel: AEP layer handle @ +0x220, anchored on panelW/2.
     mgr->drawLayer(m_skillBoard[1].lyr,
-                   panelW / 2,
-                   iVar5,
-                   iVar6,
+                   0,     // frame     (0xa1804 movs r2,#0x0)
+                   iVar5, // x         (0xa1806 mov r3,r5)
+                   iVar6, // y         (0xa17f8 [sp,#0x00])
                    100,
                    100,
                    0,
-                   0,
+                   panelW / 2, // anchorX   (0xa17fc [sp,#0x10])
                    0,
                    100,
                    0,
-                   0,
+                   1, // loopFlags (0xa17c6 [sp,#0x20])
                    0x20,
-                   0,
+                   0x00ffffff, // colorRGB  (0xa17da [sp,#0x28])
                    nullptr,
                    nullptr,
-                   0x20,
+                   0x14, // priority  (0xa17e4 [sp,#0x34])
                    1);
 
     // Touch hit-test.
@@ -1909,10 +1904,10 @@ int AcMainTask::sugorokuDrawButtonHitTest() {
                                     static_cast<int>((m_dlgBtn2Y + iVar6) * scale),
                                     static_cast<int>(m_dlgBtn2W * scale),
                                     static_cast<int>(m_dlgBtn2H * scale))) {
-            return -1;
+            return 0; // 0xa1946-0xa1948 sign-extend bit 0 of the inverted flag to 0
         }
     }
-    return 0;
+    return -1; // 0xa18ba mov.w r0,#0xffffffff
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2013,7 +2008,7 @@ static bool sugorokuPieceUnlocked(const uint32_t *grid, int charId, int bitIndex
 // content asset that returns null in this build, so that path draws nothing);
 // node->text is the runtime map-loaded label.
 //
-// The text-x / slot index at +0x88c is a FLOAT (writer @ 0x9a528 does
+// The text x at +0x88c is a FLOAT (writer @ 0x9a528 does
 // vcvt.f32.s32 + vstr.32; this reader does vldr.32 then vcvt.s32.f32 to truncate
 // @ 0xa1be2), so m_squareFrameIdx is a float truncated to int here. All nine
 // node-type branches, the tbb table (wallpaper/music-piece squares map to the
@@ -2032,7 +2027,7 @@ void AcMainTask::sugorokuDrawSquareText() {
     }
 
     // +0x88c is a float slot; the binary truncates it to int (vcvt.s32.f32 @
-    // 0xa1be2) for the text-x / slot index.
+    // 0xa1be2) for the text x.
     int iVar8 = static_cast<int>(m_squareFrameIdx); // task+0x88c
     enum { kNone, kCharAsset, kNodeText } pick = kNone;
 
@@ -2089,7 +2084,9 @@ void AcMainTask::sugorokuDrawSquareText() {
     const char *text = nullptr;
     unsigned style = 1; // uVar7: 1 for node text, 0 for character asset
     if (pick == kCharAsset) {
-        text = getCharacterAssetName(static_cast<int>(m_subMapId), iVar8);
+        // Ghidra: 0xa1d0a ldr.w r1,[r5,#0x8bc] — the page index is the read
+        // progress counter, not the text x that r8 carries.
+        text = getCharacterAssetName(static_cast<int>(m_subMapId), m_readNo);
         if (!text) {
             return; // content asset absent in this build
         }
@@ -2345,13 +2342,21 @@ void AcMainTask::sugorokuTaskDispose() {
     //    double-free.
     m_map.reset();
 
-    // 9. Release Objective-C objects stored in the blob (null the raw slots, as
-    // the
-    //    binary does — the retained references were already dropped by the flow
-    //    above).
-    m_mapName = nullptr;
-    m_gotCharaArray = nullptr;
-    m_treasureMusicArray = nullptr;
+    // 9. Release the Objective-C objects the blob owns (+0x944, +0x630, +0x640),
+    //    each a +1 reference the binary drops here before nulling the slot
+    //    (0xa2f10, 0xa2f32, 0xa2f54).
+    if (m_mapName) {
+        static_cast<void>((__bridge_transfer id)m_mapName);
+        m_mapName = nullptr;
+    }
+    if (m_gotCharaArray) {
+        static_cast<void>((__bridge_transfer id)m_gotCharaArray);
+        m_gotCharaArray = nullptr;
+    }
+    if (m_treasureMusicArray) {
+        static_cast<void>((__bridge_transfer id)m_treasureMusicArray);
+        m_treasureMusicArray = nullptr;
+    }
 
     // 10. Release sound effects (15 IDs at +0x438). The IDs are stored as int
     //     (4 bytes, matching the 32-bit ILP32 loadSe return).
@@ -2416,8 +2421,23 @@ void AcMainTask::sugorokuDrawBoard() {
         float bx = static_cast<float>(e->b->x * 26), by = static_cast<float>(e->b->y * 26);
         float minX = ax < bx ? ax : bx, maxX = ax > bx ? ax : bx;
         float minY = ay < by ? ay : by, maxY = ay > by ? ay : by;
-        if (isWithinRange2D(
-                minX, minX, maxX + 104.0f, minY, maxY + 128.0f, camL, camT, camR, camH)) {
+        // The cull rect is the connector band, whose orientation the binary
+        // branches on at 0xa3178 / 0xa3180. A horizontal band takes its top and
+        // bottom from a->y and a vertical one its left and right from a->x, so
+        // neither may be widened to the union of both squares.
+        float x0, x1, y0, y1;
+        if (e->sameRow) {
+            x0 = minX + 104.0f; // 0xa31ae
+            x1 = maxX;          // 0xa31a6
+            y0 = ay + 52.0f;    // 0xa31b2
+            y1 = ay + 76.0f;    // 0xa31aa
+        } else {
+            x0 = ax + 40.0f;    // 0xa31dc
+            x1 = ax + 64.0f;    // 0xa31d8
+            y0 = minY + 128.0f; // 0xa31e4
+            y1 = maxY;          // 0xa31e0
+        }
+        if (isWithinRange2D(x0, x0, x1, y0, y1, camL, camT, camR, camH)) {
             sugorokuDrawPath(e);
         }
     }
@@ -2489,8 +2509,26 @@ void AcMainTask::sugorokuDrawBackground() {
         } else {
             x = (x % (screenW * 2)) - screenW;
         }
-        drawSprite(
-            mgr, bgTex, 0, 0, bgW, bgH, x, 0, sx, sy, 0, 0, 0, 100, 0, 0x20, 0xffffff, 0, 0x25);
+        neTextureForiOS_draw(mgr,
+                             bgTex,
+                             0,
+                             0,
+                             bgW,
+                             bgH,
+                             x,
+                             0,
+                             sx,
+                             sy,
+                             0,        // rotation
+                             0,        // ex
+                             0,        // ey
+                             100,      // color
+                             0,        // alpha
+                             0x20,     // blend0
+                             0xffffff, // colorMul
+                             nullptr,  // clip
+                             0x25,     // priority (0xa33aa)
+                             1);       // layer   (0xa33ae str r4,[sp,#0x3c])
     }
 
     // Transition overlay fade.
@@ -2768,25 +2806,26 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 
     // Player sprite (hidden during warp flash).
     if (!m_warpFlash) {
-        drawSprite(mgr,
-                   m_charaTex.get(),
-                   0,
-                   0,
-                   0x228,
-                   0x228,
-                   iVar6,
-                   screenY,
-                   warpSX,
-                   0x1e,
-                   0,
-                   0x114,
-                   0x114,
-                   100,
-                   0,
-                   0x20,
-                   0xffffff,
-                   0,
-                   0x21);
+        neTextureForiOS_draw(mgr,
+                             m_charaTex.get(),
+                             0,
+                             0,
+                             0x228,
+                             0x228,
+                             iVar6,
+                             screenY,
+                             warpSX,
+                             0x1e,
+                             0,        // rotation (0xa5458 sp+0x18)
+                             0x114,    // pivot x  (0xa5408 r5, sp+0x1c)
+                             0x114,    // pivot y  (sp+0x20)
+                             100,      // color
+                             0,        // alpha
+                             0x20,     // blend0
+                             0xffffff, // colorMul
+                             nullptr,  // clip
+                             0x21,     // priority
+                             1);       // layer
     }
 
     // Rank badge (types 0..3, stored at +0x8b0; hidden if type >= 4 or during
@@ -2808,9 +2847,9 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
                        0,
                        100,
                        0,
-                       0,
+                       1, // loopFlags (0xa549a -> [sp,#0x20], r12 = 1)
                        0x20,
-                       0,
+                       0x00ffffff, // colorRGB (0xa54a0 -> [sp,#0x28], mvn #0xff000000)
                        nullptr,
                        nullptr,
                        0x20,
@@ -2818,8 +2857,9 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
         frameCtr++;
     }
 
-    // Event badge (+0x89b).
-    if (m_boardSquareState[7]) {
+    // Event badge (+0x89b), which the -1 sentinel hides: 0xa54d6 is a signed load
+    // and 0xa54da/0xa54dc a `cmp #1` / `blt`.
+    if (m_boardSquareState[7] >= 1) {
         int evHandle = m_boardFrame[kBoardFrameDefense02];
         AepDrawSpriteHandle(mgr,
                             evHandle,
@@ -2950,9 +2990,8 @@ void AcMainTask::sugorokuDrawPlayerAndUi() {
 // being drawn. The code below instead reads m_curNode (the player's node) and
 // adds a null-node fallback the binary lacks (0xa579c dereferences r1
 // unconditionally). For a friend square != the player node these differ. The
-// cos/sin bounce (frame @ +0x5e8, cos<15 / sin>=15, x30.0), the name truncation
-// (4 chars + ".."), and the fade-out (opacity-5 floored at 0) were verified
-// faithful.
+// cos/sin bounce shape (frame @ +0x5e8, cos<15 / sin>=15, x30.0) and the name
+// truncation (4 chars + "..") were verified faithful.
 void AcMainTask::sugorokuDrawFriendMeet() {
     neTextureForiOS *friendTex = m_goalCharaTex.get();
     if (!friendTex) {
@@ -2975,33 +3014,36 @@ void AcMainTask::sugorokuDrawFriendMeet() {
     // Cos/sin bounce animation (30 frames: first 15 = cos, next 15 = sin).
     int frame = m_friendAnimFrame;
     float animVal;
+    // The angular constant is the pi/2 pool word at 0xa59b0, loaded by both
+    // 0xa57ee and 0xa5812.
     if (frame < 15) {
-        animVal = cosf(static_cast<float>(static_cast<double>(frame) * M_PI / 15.0));
+        animVal = cosf(static_cast<float>(static_cast<double>(frame) * M_PI_2 / 15.0));
     } else {
-        animVal = sinf(static_cast<float>(static_cast<double>(frame - 15) * M_PI / 15.0));
+        animVal = sinf(static_cast<float>(static_cast<double>(frame - 15) * M_PI_2 / 15.0));
     }
     int animScale = static_cast<int>(animVal * 30.0f);
 
     AepManager *mgr = m_aep;
-    drawSprite(mgr,
-               friendTex,
-               0,
-               0,
-               0x228,
-               0x228,
-               iVar7,
-               iVar6,
-               animScale,
-               0x1e,
-               0,
-               0x114,
-               0x114,
-               opacity,
-               100 - opacity,
-               0x20,
-               0xffffff,
-               0,
-               0x21);
+    neTextureForiOS_draw(mgr,
+                         friendTex,
+                         0,
+                         0,
+                         0x228,
+                         0x228,
+                         iVar7,
+                         iVar6,
+                         animScale,
+                         0x1e,
+                         0,             // rotation (0xa589c sp+0x18)
+                         0x114,         // pivot x  (sp+0x1c)
+                         0x114,         // pivot y  (sp+0x20)
+                         opacity,       // color
+                         100 - opacity, // alpha
+                         0x20,          // blend0
+                         0xffffff,      // colorMul
+                         nullptr,       // clip
+                         0x21,          // priority
+                         1);            // layer
 
     // Name label.
     __unsafe_unretained NSString *nameStr = (__bridge NSString *)m_mapName;
@@ -3017,9 +3059,9 @@ void AcMainTask::sugorokuDrawFriendMeet() {
                        0,
                        100,
                        0,
-                       0,
-                       1,
-                       0x20,
+                       1,          // loopFlags  (0xa58a8 -> [sp,#0x20])
+                       0x20,       // blendFlags (0xa58aa -> [sp,#0x24])
+                       0x00ffffff, // colorRGB   (0xa58ac -> [sp,#0x28])
                        nullptr,
                        nullptr,
                        0x20,
@@ -3038,9 +3080,15 @@ void AcMainTask::sugorokuDrawFriendMeet() {
         mgr->DrawText(buf, 0x12, iVar7, iVar6 + 0x4e, 1, 100, 0x615245, 0x1f);
     }
 
-    // Fade out.
-    int v = opacity - 5;
-    m_friendOpacity = (v < 1) ? 0 : v;
+    // Fade out (0xa5986-0xa5998), re-reading the member as the binary does rather
+    // than reusing the value cached on entry. Opacity 100 is the load-time hold,
+    // which the update state machine breaks by writing 95; that store is in a
+    // state this reconstruction has not reached yet, so the portrait currently
+    // holds instead of fading.
+    if (m_friendOpacity <= 99) {
+        int v = m_friendOpacity - 5;
+        m_friendOpacity = (v <= 0) ? 0 : v;
+    }
 }
 
 // Ghidra: charaSelectDrawAndInput (FUN_000a3724) — the group-5 per-element draw
@@ -3284,7 +3332,8 @@ void AcMainTask::AcMainSugorokuDraw(int child,
         }
         CharaInfo *info = gCharaManager.availableInfoForCharaId(self->m_skillCharaId);
         const SkillDataStruct *sd = GetSkillDataStruct(static_cast<int>(info.skillId));
-        aep->DrawText("SKILL", 0xe, x, y - 0x5f, 1, color, 0x59514f, priority);
+        // Ghidra: the raw C string at 0x10a82b, referenced from 0xa3e12.
+        aep->DrawText(u8"スキル名", 0xe, x, y - 0x5f, 1, color, 0x59514f, priority);
         aep->DrawText(info.skillName.UTF8String, 0x20, x, y - 0x4e, 1, color, 0x59514f, priority);
         aep->DrawText(sd->description.UTF8String, 0x19, x, y - 0x22, 1, color, 0x7fb4, priority);
         drawAepTextMultiline(

@@ -10,10 +10,11 @@
  *
  * Reconstructed from Ghidra project rb420, program PopnRhythmin (-[UserSettingData treasureTmp:] @
  * 0x61448). The record is a raw memory image, memcpy'd straight in and out of the NSData blob, so
- * the layout below is byte-exact and the struct is packed to alignment 1. Field names are recovered
- * from the call sites (DownloadMain visitor JSON, SubMapSelectViewController defaults, AcMainTask
- * goal-apply, TreasureMap bonus pick); the few whose role no call site pins down keep an offset
- * name. The total size is 83 (0x53) bytes.
+ * the layout below is byte-exact. Field names are recovered from the call sites (DownloadMain
+ * visitor JSON, SubMapSelectViewController defaults, AcMainTask goal-apply, TreasureMap bonus
+ * pick); the few whose role no call site pins down keep an offset name. Every field is naturally
+ * aligned, so the total size is 84 (0x54) bytes, which is what the binary's read cap (0x6149e),
+ * default-record zero fill (0x614b6) and serialisation length (0x6150c) all use.
  */
 
 #pragma once
@@ -25,7 +26,7 @@
 /**
  * The byte-exact "pending treasure" save record carried across an arcade launch.
  */
-typedef struct __attribute__((packed)) TreasureTmpData {
+typedef struct TreasureTmpData {
     int16_t mainMapId; /**< +0x00 Main map id; parallels TreasureData.mainMapId. */
     int16_t subMapId;  /**< +0x02 Goal sub-map id (main*10+sub); -1 means nothing pending. */
     /** +0x04 Current board node id; out of range resets to the start square. */
@@ -56,14 +57,14 @@ typedef struct __attribute__((packed)) TreasureTmpData {
     uint8_t visitorFetchCount;
     uint8_t bonusRoll;   /**< +0x48 A random 0..99 roll, `getRandRangeInt(100)`. */
     uint8_t unused49[3]; /**< +0x49 Alignment padding before fastRecord; no access. */
-    /** +0x4c Best (minimum) fast-clear score; a misaligned int in the packed record. */
-    int32_t fastRecord;
+    int32_t fastRecord;  /**< +0x4c Best (minimum) fast-clear score. */
     /** +0x50 Non-zero when a friend was met at this goal, which bumps
      * TreasureData.friendMeetCnt. */
     uint8_t friendMeetFlag;
     uint8_t treasureProgress; /**< +0x51 Treasure progress counter, feeding m_treasureProgress. */
     uint8_t listHalveCount;   /**< +0x52 List-halve counter, feeding m_listHalveCount. */
+    /* +0x53 is trailing pad to alignof 4; the binary's record is 0x54 bytes. */
 } TreasureTmpData;
 
-static_assert(sizeof(TreasureTmpData) == 0x53,
-              "TreasureTmpData must stay 83 bytes: it is a byte-exact serialized save record");
+static_assert(sizeof(TreasureTmpData) == 0x54,
+              "TreasureTmpData must stay 84 bytes: it is a byte-exact serialized save record");

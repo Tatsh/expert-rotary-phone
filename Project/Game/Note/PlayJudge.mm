@@ -29,7 +29,7 @@
 
 #import "PlayJudge.h"
 
-#include <cmath> // lroundf, fmod (note frame), atan2/cos/sin (long-note bar angle)
+#include <cmath> // fmod (note frame), atan2/cos/sin (long-note bar angle)
 #include <span>
 
 #import <Foundation/Foundation.h>
@@ -110,16 +110,18 @@ bool g_autoPlay = false; // extern flag in the binary; false in normal play
 // gaugeGainGreat, a GOOD (result 1) adds gaugeGainGood, and a BAD/miss (result
 // 0) adds gaugeLossMiss (a negative delta) and raises the miss flag (+0x9dc).
 // Any other result leaves the value unchanged and only re-clamps. The binary
-// accumulates in fixed->float->fixed; modelled here as a float add + round.
+// accumulates in fixed->float->fixed and converts back with VCVT.S32.F32
+// (@0x3130c), which rounds towards zero, so the fractional part of each delta is
+// discarded on every note.
 void updateGaugeValue(PlayTask *playData, int result) {
     int gauge = playData->m_gaugeValue;
     if (result == 2 || result == 3) {
-        gauge = static_cast<int>(lroundf(static_cast<float>(gauge) + playData->m_gaugeGainGreat));
+        gauge = static_cast<int>(static_cast<float>(gauge) + playData->m_gaugeGainGreat);
     } else if (result == 0) {
         playData->m_damagedThisFrame = true;
-        gauge = static_cast<int>(lroundf(static_cast<float>(gauge) + playData->m_gaugeLossMiss));
+        gauge = static_cast<int>(static_cast<float>(gauge) + playData->m_gaugeLossMiss);
     } else if (result == 1) {
-        gauge = static_cast<int>(lroundf(static_cast<float>(gauge) + playData->m_gaugeGainGood));
+        gauge = static_cast<int>(static_cast<float>(gauge) + playData->m_gaugeGainGood);
     }
     if (gauge < 1) {
         gauge = 0;
@@ -138,6 +140,11 @@ void updateGaugeValue(PlayTask *playData, int result) {
 // phase's length.
 static constexpr float kFrameStepMs = 16.6f;
 
+// Ghidra 0x2f7ec/0x2f7f8 — the long-note bar body's colour multiply: dimmed while
+// the bar is idle, full brightness while it is actively pressed.
+static constexpr int kBarBodyDimColor = 60;
+static constexpr int kBarBodyFullColor = 100;
+
 namespace {
 
 // Ghidra: the retire-timestamp offset folded into FUN_0002f1f8's tail. A SPECIAL
@@ -148,6 +155,13 @@ namespace {
 inline int specialLapseOffset(int graphic, unsigned holdJudge) {
     const int8_t d = static_cast<int8_t>(graphic - static_cast<int>(holdJudge));
     return d <= 0 ? 0x118 : static_cast<int>(d) * 0x118 + 0x118;
+}
+
+// VCVT.U32.F32 (@0x2f3bc, @0x2f3fa): truncate towards zero and saturate, so a
+// negative anchor stores 0 and the `timestamp == 0` seed test re-runs next frame.
+// The strict `> 0.0f` also maps NaN to 0, matching the Advanced SIMD result.
+inline int cvtU32TruncSat(float v) {
+    return v > 0.0f ? static_cast<int>(v) : 0;
 }
 
 } // namespace
@@ -203,7 +217,7 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
             do {
                 t -= beat;
             } while (static_cast<float>(curTime) < t);
-            st->timestamp = static_cast<int>(lroundf(t));
+            st->timestamp = cvtU32TruncSat(t);
         }
 
         unsigned holdJudge = note.spawnKind; // Ghidra dwHoldJudge: hold-tap count
@@ -213,7 +227,7 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
         if (st->phase == 0 && static_cast<float>(static_cast<int>(
                                   note.startTick - static_cast<unsigned>(curTime))) <= beat) {
             st->phase = 1;
-            st->timestamp = static_cast<int>(lroundf(static_cast<float>(note.startTick) - beat));
+            st->timestamp = cvtU32TruncSat(static_cast<float>(note.startTick) - beat);
         }
 
         const bool onField = (note.flags & kFlagInactive) == 0;
@@ -489,11 +503,16 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
                     // (TONE_L1_2_PUSH). It is NOT m_barSegFrame (+0x21c = TONE_L1_2_LIGHT,
                     // the 170x178 glow the cap segment draws): drawing that 170-wide tile
                     // as the body was the "tiny grey ellipse" bug.
-                    const int barBodyFrame =
-                        ((noteFlags & kFlagHold) != 0 || (noteFlags & kFlagGraded) == 0) ?
-                            m_pauseEyeToneFrm[6] // TONE_L1_2 (+0x214), the wide bar
-                            :
-                            m_pauseEyeToneFrm[7]; // TONE_L1_2_PUSH (+0x218)
+                    // 0x2f7ea-0x2f7f8 picks the body colour from the same predicate,
+                    // so the handle and the colour cannot drift apart.
+                    const bool barIdle =
+                        ((noteFlags & kFlagHold) != 0 || (noteFlags & kFlagGraded) == 0);
+                    const int barBodyFrame = barIdle ?
+                                                 m_pauseEyeToneFrm[6] // TONE_L1_2 (+0x214), the
+                                                                      // wide bar
+                                                 :
+                                                 m_pauseEyeToneFrm[7]; // TONE_L1_2_PUSH (+0x218)
+                    const int barBodyColor = barIdle ? kBarBodyDimColor : kBarBodyFullColor;
 
                     // Temporary NE_DBG trace to diagnose why the hold bar body does
                     // not render on device (idevicesyslog). Logs the inputs to both
@@ -563,7 +582,7 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
                                    angleDeg,
                                    0,
                                    m_barSegLyr1 / 2,
-                                   100,
+                                   barBodyColor,
                                    0,
                                    0x200,
                                    0xffffffff,
@@ -667,12 +686,14 @@ void PlayTask::playJudgeUpdate(std::span<const float> touchXY, std::span<const i
                               0);
             }
 
-            // The GG_HANTEI base underlay (0x2fc54): a SPECIAL BAD fully consumed by
-            // its hold, or a LONG note without span bits, drops straight to retire.
+            // The GG_HANTEI base underlay (0x2fc54): a SPECIAL note shows it only
+            // once its taps are exhausted or when it graded BAD (0x2fc5e-0x2fc6a);
+            // one with taps still outstanding and a non-zero grade drops straight to
+            // retire.
             const bool showBase =
                 note.renderKind == NOTE_RENDER_NORMAL ||
                 (note.renderKind == NOTE_RENDER_SPECIAL &&
-                 ((holdJudge & 0xff) == 0 || st->result != 0)) ||
+                 ((holdJudge & 0xff) == 0 || st->result == 0)) ||
                 (note.renderKind == NOTE_RENDER_LONG && (noteFlags & kFlagHold) != 0);
             if (showBase && nFrameNo < m_effectStateFrames[0]) {
                 aep.drawLayer(m_effectStateLyr[0],

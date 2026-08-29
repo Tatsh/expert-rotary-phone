@@ -101,6 +101,12 @@ int NoteMng::initPlayData(std::span<const std::byte> data,
     m_maxTempoValue = 0;
     m_endValue = 0;
     m_expectedTimeBase = 0;
+    // 0x33712-0x33728 re-seeds all 64 segments with the sentinels the insert scan
+    // relies on. The manager is a process-lifetime singleton, so without this every
+    // chart after the first would start on the previous song's segment table.
+    for (auto &segment : m_scrollMap) {
+        segment = NoteScrollSegment{};
+    }
     m_scrollCount = 0;
     m_combo = 0;
     m_maxCombo = 0;
@@ -222,13 +228,15 @@ int NoteMng::advanceRegisterEvent(int bpm, uint32_t tick) {
     while (k <= 0x3e && m_scrollMap[k].startTick <= tick) {
         k++;
     }
-    for (int j = m_scrollCount; j > k; j--) {
-        m_scrollMap[j] = m_scrollMap[j - 1];
+    if (k <= 0x3e) { // 0x34c22 bgt: the scan running off segment 62 skips the insert
+        for (int j = m_scrollCount; j > k; j--) {
+            m_scrollMap[j] = m_scrollMap[j - 1];
+        }
+        m_scrollMap[k].bpm = static_cast<int16_t>(bpm);
+        m_scrollMap[k].startTick = tick;
+        m_scrollMap[k].speed = static_cast<float>(bpm << 10) / 480000.0f;
+        m_scrollCount++;
     }
-    m_scrollMap[k].bpm = static_cast<int16_t>(bpm);
-    m_scrollMap[k].startTick = tick;
-    m_scrollMap[k].speed = static_cast<float>(bpm << 10) / 480000.0f;
-    m_scrollCount++;
     recomputeSpawnLookahead(tick);
     return 0;
 }
@@ -715,6 +723,8 @@ void NoteMng::makeNote(const NoteRecord *rec) {
     note->spawnKind =
         (!m_autoPlay && k < 4) ? static_cast<uint8_t>((0x05040302u >> (k * 8)) & 0xff) : 1;
 
+    assert(note->endTick - note->startTick < 20000); // NoteMng.mm MakeNote:0x4fb
+
     // On-screen position. The hitX / buttonAX / buttonBX triplet scales off the
     // base width; the hitY / buttonAY / buttonBY triplet off the base height. Six
     // record bytes (0xe..0x13) drive the six coordinates — the binary reads them
@@ -1040,7 +1050,12 @@ void NoteMng::togglePause() {
     if (m_bgmStartPos != -1 && !m_endFlag) {
         const int pos = getCurrentPosition();
         AudioManager *am = [AudioManager sharedManager];
-        double seconds = static_cast<double>(pos - m_bgmStartPos) / 1000.0; // DAT_00034660 = 1000.0
+        // 0x3460c converts the delta with VCVT.F32.U32, so a position that has
+        // dipped below the captured start seeks far past the end of the track
+        // rather than to a negative time.
+        const uint32_t delta = static_cast<uint32_t>(pos) - static_cast<uint32_t>(m_bgmStartPos);
+        const double seconds =
+            static_cast<double>(static_cast<float>(delta) / 1000.0f); // DAT_00034660 = 1000.0f
         [am setBgmCurrentTime:seconds];
     }
     [[AudioManager sharedManager] playBgm:0];

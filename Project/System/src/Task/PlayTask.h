@@ -222,6 +222,15 @@ private:
     // touch count the binary passes separately.
     void playJudgeUpdate(std::span<const float> touchXY, std::span<const int> touchIds);
 
+    // The state-6 (playing) body: drive the note engine, run the judge/render
+    // pass over the live touches, refresh the cached score, advance the HUD
+    // frames, fire the end-of-song rank SEs and then either hand off to the
+    // fade-out or service the pause press-and-hold. Factored out of update()
+    // because the pause menu's resume branch (0x2dfb4) falls straight into the
+    // state-6 handler (0x2dfc8) on the same frame. touchXY and touchIds are the
+    // snapshot update() collected, in the same form playJudgeUpdate takes.
+    void updatePlayingState(std::span<const float> touchXY, std::span<const int> touchIds);
+
     // Play the per-tap feedback SE, restarting any still-playing instance, gated
     // by the touch-sound volume and skipped during the pause menu; playJudgeUpdate
     // calls it after a frame that resolved a note. Body in PlayScore.mm. Ghidra:

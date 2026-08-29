@@ -177,7 +177,9 @@ private:
     // FUN_0009fc90).
     void setupResolveHandles(); // the ~50 getLyrNo/getFrameNo/getUserNo tables
     void setupBuildOverlays();  // the ~35 AepLyrCtrl overlay objects
-    void setupLoadTextures();   // circle/chara/number/event textures + BGM prep
+    // circle/chara/number/event textures + BGM prep; charaId is the clamped value
+    // setupScene spills at 0x9fe6a and reloads at 0xa0776.
+    void setupLoadTextures(short charaId);
 
     // Genuine sub-routines the arcade scene builders call.
     void computeStepValues();     // Ghidra: FUN_000a1950 (fills the m_stepValues table)

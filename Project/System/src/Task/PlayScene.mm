@@ -320,7 +320,9 @@ void PlayTaskInit(void *playData) {
     static const char *const kPlaySeNames[3] = {"v12", "v29", "v30"};
     for (int i = 0; i < 3; ++i) {
         NSString *path = [[NSBundle mainBundle] pathForResource:@(kPlaySeNames[i]) ofType:@"m4a"];
-        RSND_SOURCE_ID src = [audio loadSe:path isLoop:NO callName:nil group:0];
+        // 0x2f152/0x2f154 pass group 1 (the AVFoundation pool at the SE-slider
+        // volume), unlike the tap SE at 0x30916.
+        RSND_SOURCE_ID src = [audio loadSe:path isLoop:NO callName:nil group:1];
         task->m_playSeIds[i] = static_cast<int>(src);
     }
 }
@@ -420,19 +422,6 @@ void PlayTaskGotoResult(void *playData) {
     task->m_suppressHud = true; // +0x9c7 = hand-off complete
 }
 
-// The per-tap feedback SE resource name for a touch-sound kind (clamped to
-// 0..9). Ghidra: FUN_0002c7a8 — a fixed "hit001".."hit010" table (the
-// scene-manager argument the binary threads in is unused).
-// Verified: the binary does `uxth; cmp #9; if hi kind = 0` then returns the
-// kind'th entry of a constant CFString table; rendering that table as
-// "hit%03d" (kind + 1) is behaviourally identical.
-static NSString *TouchSeResourceName(int kind) {
-    if (static_cast<unsigned>(kind) > 9) {
-        kind = 0;
-    }
-    return [NSString stringWithFormat:@"hit%03d", kind + 1];
-}
-
 // Ghidra: FUN_00030720 — resolve the picked song, kick off the async BGM +
 // tap-SE load on a first load, and parse the chosen difficulty's sheet into the
 // note manager.
@@ -442,8 +431,8 @@ static NSString *TouchSeResourceName(int kind) {
 // stopBgm:0.0 and dispatch_asyncs the BGM load, and always selects the sheet by
 // index (2 -> sheetEx, 1 -> sheetHyper, else sheetNormal) into
 // initPlayDataWithData (FUN_00033550) with the PlayApplyMissGauge callback and
-// playData; the reload == 0 tail loads the touch-kind SE (TouchSeResourceName ->
-// pathForResource:ofType:m4a) into +0x398 and setSeVolume from +0x9b4.
+// playData; the reload == 0 tail loads the touch-kind SE (the FUN_0002c7a8 name
+// table -> pathForResource:ofType:m4a) into +0x398 and setSeVolume from +0x9b4.
 void PlayLoadSong(void *playData, int reload) {
     PlayTask *task = static_cast<PlayTask *>(playData);
 
@@ -488,8 +477,8 @@ void PlayLoadSong(void *playData, int reload) {
         // The per-tap feedback SE, named by the user's touch-sound kind, at their
         // touch-sound volume.
         const int kind = [UserSettingData touchSoundKind];
-        NSString *path = [[NSBundle mainBundle] pathForResource:TouchSeResourceName(kind)
-                                                         ofType:@"m4a"];
+        NSString *name = (__bridge NSString *)neSceneManager::hitSoundName(kind);
+        NSString *path = [[NSBundle mainBundle] pathForResource:name ofType:@"m4a"];
         task->m_hitSeId = static_cast<int>([audio loadSe:path isLoop:NO callName:nil group:0]);
         [audio setSeVolume:task->m_seVolume groupId:0];
     }
@@ -703,12 +692,15 @@ const char *const kGaugeFlashFrames[4] = {
     "GG_IFL_A",
 };
 const char *const kTone08Frames[5] = {
-    // +0x280 (PTR_s_TONE_08_1)
+    // +0x280 (0x00131324). Entries 0 and 1 are the same pointer in the binary
+    // (0x00104060); index 0 is unreachable because the +0x280 lookup only runs
+    // when NoteToneState() == 1, which implies the kind is 6..9 and so def is
+    // 2..5.
+    "TONE_08_1",
     "TONE_08_1",
     "TONE_09_1",
     "TONE_10_1",
     "TONE_11_1",
-    "TONE_08_NUM1",
 };
 const char *const kTone08NumFrames[5] = {
     // +0x294 (DAT_00131338)
@@ -1275,10 +1267,12 @@ void PlayTaskDraw(int child,
     // Nested-layer tail (Ghidra: LAB_00031196 -> AepManager::drawLayer). Arg
     // mapping verified against the binary @0x31196: loopFlags = 1, p9/p10 =
     // anchorX/anchorY, colour/alpha pass straight through, blend 0x20, p15
-    // 0xffffff, p19 1; context = null (str #0 -> sp+0x30) and the priority slot
-    // (sp+0x34) is the literal 0x1a. (The callback's judgeSlot word is the judge-slot
-    // index, not used here.)
-    auto layerDraw = [&](int lyr, int lframe, int lscaleY, int *lclip, int /*unused*/) {
+    // 0xffffff, p19 1; context = null (str #0 -> sp+0x30). The priority slot
+    // (sp+0x34) varies per branch, so each call site supplies it. The callback's
+    // 14th word (0x104de) is the ordering-table priority inherited from
+    // AepDrawLayer, which PlayTask doubles as the judge-slot index because it
+    // draws each note tree at priority = slot.
+    auto layerDraw = [&](int lyr, int lframe, int lscaleY, int *lclip, int layerPriority) {
         aep.drawLayer(lyr,
                       lframe,
                       x,
@@ -1295,7 +1289,8 @@ void PlayTaskDraw(int child,
                       0xffffff,
                       lclip,
                       nullptr, // context (binary: str #0 -> null)
-                      0x1a,    // priority (binary: movs r1,#0x1a)
+                      // priority (0x30da8 / 0x30f48 / 0x30fa8 / 0x31170)
+                      static_cast<uint32_t>(layerPriority),
                       1);
     };
 
@@ -1516,7 +1511,8 @@ void PlayTaskDraw(int child,
                 p.color = color;
                 p.rotation = rotation;
                 p.blend0 = 0x20;
-                p.blend1 = static_cast<short>(alpha); // alpha rides the sub-blend
+                p.alpha = alpha; // 0x310ce/0x310d0
+                p.layer = 1;     // 0x310bc/0x310e0
                 p.colorMul = 0xffffff;
                 p.priority = static_cast<int>(judgeSlot);
                 portrait->draw(aep.orderingTable(), p);
