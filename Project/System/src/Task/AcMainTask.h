@@ -174,6 +174,10 @@ private:
     void stateSquareArrive();             // case 0x0d (the token settles on a square)
     void stateShowArrows();               // case 0x0f (light the directions the square opens on)
     void stateSquareLabelWait();          // case 0x0e (hold the label, then route the tap)
+    void stateMusicCompleteShow();        // case 0x13 (the music-collection reveal)
+    void stateWallCompleteShow();         // case 0x14 (the wallpaper-collection reveal)
+    void stateNewMapShow();               // case 0x15 (the new-area reveal, else arm the fade)
+    void stateGoalFinish();               // case 0x16 (reload the SE pool, back to map-select)
     /** Park the square message board over the token and publish its text anchor. */
     void sugorokuPositionSquareMessage();
     /** Advance and persist the tapped square's board-story page counter. */

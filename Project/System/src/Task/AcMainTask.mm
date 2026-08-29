@@ -148,6 +148,18 @@ void AcMainTask::update(int /*deltaMs*/) {
     case kAcMainStateSquareMessage:
         stateSquareLabelWait();
         break;
+    case kAcMainStateMusicCompleteShow:
+        stateMusicCompleteShow();
+        break;
+    case kAcMainStateWallCompleteShow:
+        stateWallCompleteShow();
+        break;
+    case kAcMainStateNewMapShow:
+        stateNewMapShow();
+        break;
+    case kAcMainStateGoalFinish:
+        stateGoalFinish();
+        break;
     case kAcMainStateShowArrows:
         stateShowArrows();
         break;
@@ -310,6 +322,12 @@ constexpr int kRouletteLayerLoopEvent = 3;    // ROULETTE_START_ROOP_EVENT
 constexpr int kRouletteLayerEff = 4;          // ROULETTE_EFF
 constexpr int kRouletteLayerCommentBoard = 7; // SUGO_COMMENT_BOARD
 constexpr int kRouletteLayerSkillKouka = 16;  // EFF_SKILL_KOUKA2
+constexpr int kRouletteLayerLiftMusic = 19;   // LIFTING_MUSIC
+constexpr int kRouletteLayerLiftWall = 20;    // LIFTING_WALL
+constexpr int kRouletteLayerLiftMap = 21;     // LIFTING_MAP
+// LIFTING_GAOL_BOARD_01_02 through _03_02. The goal payout kicks whichever matches its reward,
+// and each of the three collection reveals clears all of them before playing its own.
+constexpr int kRouletteGoalBoard[3] = {23, 24, 25};
 
 // Indices into kRouletteSeNames, and so into m_rouletteSe / m_rouletteSeInst.
 constexpr int kRouletteSeOpen = 0;   // se11_roulapp
@@ -708,6 +726,93 @@ void AcMainTask::sugorokuArriveSubMapFlag() {
         static_cast<int>((playerY - scrollY) + static_cast<float>(halfH))); // 0x9ecd6
     m_squareAnimActive = true;                                              // 0x9ecde
     m_rankBadgeType = 1;                                                    // 0x9ece2
+}
+
+// case 0x13 — if this goal completed the map's nine music pieces, play LIFTING_MUSIC once and
+// hold until it has finished and the player taps; otherwise fall straight through. The kick block
+// at 0x9cdd8 clears the three goal boards first, and every clear is a reset (bl 0x2cb5c), not a
+// stopPlay. Ghidra: 0x9a938.
+void AcMainTask::stateMusicCompleteShow() {
+    if (m_musicCompleteReveal) { // 0x9a938 ldrb +0x5f4
+        AepLyrCtrl *lifting = m_rouletteLayers[kRouletteLayerLiftMusic].get();
+        if (!lifting->isActive()) { // 0x9a948 / 0x9a94e
+            for (const int board : kRouletteGoalBoard) {
+                m_rouletteLayers[board]->reset(); // 0x9cdde / 0x9cde8 / 0x9cdf2
+            }
+            lifting->playOnce(); // 0x9ce62
+            return;
+        }
+        if (lifting->isAnimating() || !m_frameTapped) {
+            return; // 0x9a966
+        }
+    }
+    m_state = kAcMainStateWallCompleteShow; // 0x9a96a movs 0x14
+}
+
+// case 0x14 — the same shape as case 0x13 for the wallpaper collection, clearing the music lift
+// as well before it plays. Ghidra: 0x9a970, kick block at 0x9cdfc.
+void AcMainTask::stateWallCompleteShow() {
+    if (m_wallCompleteReveal) { // 0x9a970 ldrb +0x5f5
+        AepLyrCtrl *liftWall = m_rouletteLayers[kRouletteLayerLiftWall].get();
+        if (!liftWall->isActive()) { // 0x9a980 / 0x9a986
+            for (const int board : kRouletteGoalBoard) {
+                m_rouletteLayers[board]->reset();
+            }
+            m_rouletteLayers[kRouletteLayerLiftMusic]->reset(); // 0x9ce20
+            liftWall->playOnce();                               // 0x9ce62
+            return;
+        }
+        if (liftWall->isAnimating() || !m_frameTapped) {
+            return; // 0x9a99e
+        }
+    }
+    m_state = kAcMainStateNewMapShow; // 0x9a9a2 movs 0x15
+}
+
+// case 0x15 — if the goal opened a new area record, play LIFTING_MAP once and hold for a tap.
+// With nothing to reveal it instead arms the 30-frame fade-out the next state waits on, which is
+// why the two exits differ. Ghidra: 0x9a9a8, kick block at 0x9ce2a.
+void AcMainTask::stateNewMapShow() {
+    if (!m_newMapReveal) {                            // 0x9a9a8 ldrb +0x5f6
+        AepManager::shared().setAepTransitionMode(2); // 0x9ca40: fade out, 30 frames
+        m_state = kAcMainStateGoalFinish;
+        return;
+    }
+
+    AepLyrCtrl *liftMap = m_rouletteLayers[kRouletteLayerLiftMap].get();
+    if (!liftMap->isActive()) { // 0x9a9c2
+        for (const int board : kRouletteGoalBoard) {
+            m_rouletteLayers[board]->reset();
+        }
+        m_rouletteLayers[kRouletteLayerLiftMusic]->reset(); // 0x9ce4e
+        m_rouletteLayers[kRouletteLayerLiftWall]->reset();  // 0x9ce58
+        liftMap->playOnce();                                // 0x9ce62
+        return;
+    }
+
+    if (!liftMap->isAnimating() && m_frameTapped) {
+        m_state = kAcMainStateGoalFinish; // 0x9a9da -> 0x9ca44, no fade armed
+    }
+}
+
+// case 0x16 — once the fade-out has finished, reset the board-story read progress if the player
+// reached the last page, swap the shared system-SE pool, reload the roulette SEs and go back to
+// the map-select fade. Ghidra: 0x9a9e2.
+void AcMainTask::stateGoalFinish() {
+    if (!AepManager::shared().isTransitionDone()) { // 0x9a9ec
+        return;
+    }
+
+    if (m_readCount >= 1 && m_readCount <= m_readNo) {
+        [UserSettingData saveTreasureReadNo:m_subMapId no:0]; // 0x9aa2a
+    }
+
+    neSceneManager::shared().releaseSystemSe(); // 0x9aa46
+    [[AudioManager sharedManager] cleanupSe];   // 0x9aa5a
+    neSceneManager::shared().loadSystemSe();    // 0x9aa68
+    buildSelectListLayout();                    // 0x9aa70
+
+    m_state = kAcMainStateFadeIn;
 }
 
 // case 0x0e — the arrived square's label is on screen. It is redrawn every frame; the moment it
